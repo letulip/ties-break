@@ -6,8 +6,10 @@
 //
 // TWO ARMS, SAME SEEDS, SAME POLICY, ONE KNOB: arm A patches BEST_N_BY_TRACK.wta back to 6
 // (best-6 everywhere - the pre-W2-LADDER rule) and arm B runs the shipped split
-// {domestic 6, itf 6, wta 16}. The patch-and-restore idiom is the fatigue bench's
-// (`matchWeekRecoveryBase`), and the knob's own comment names this file as the licensed writer.
+// {domestic 6, itf 6, wta 18 since the 05.08 correction to the rulebook's own number - the file's
+// name is now one wave out of date and is kept for the git history it carries}. The
+// patch-and-restore idiom is the fatigue bench's (`matchWeekRecoveryBase`), and the knob's own
+// comment names this file as the licensed writer.
 //
 // THE CAREER is a real engine career under a simple honest policy, not a synthetic book: greedy
 // strongest-tier-first entries whenever she is genuinely fresh (condition >= 70, the strength
@@ -130,17 +132,21 @@ function runArm(label: string, wtaN: number): ArmRow[] {
   }
 }
 
+// ⚠ ARM B READS THE SHIPPED CONSTANT RATHER THAN A LITERAL 16 (points-by-the-book, 05.08). This
+// bench exists to price "the junior rule vs the professional rule", and the professional rule is now
+// the rulebook's eighteen; a hard-coded 16 would quietly have turned it into a receipt for a width
+// the game no longer uses. The label follows the number for the same reason.
 const armA = runArm('best-6', 6)
-const armB = runArm('best-16', 16)
+const armB = runArm(`best-${BEST_N_BY_TRACK.wta}`, BEST_N_BY_TRACK.wta)
 
-console.log(`BEST-16 RECEIPT - ${SEEDS} seeds x ${WEEKS} weeks, same policy, arms best-6 vs best-16 (wta only)`)
+console.log(`BEST-N RECEIPT - ${SEEDS} seeds x ${WEEKS} weeks, same policy, arms best-6 vs best-${BEST_N_BY_TRACK.wta} (wta only)`)
 for (const week of CHECKPOINTS) {
   const rows = armA
     .map((a, i) => ({ a: a.byWeek.get(week), b: armB[i].byWeek.get(week), seed: a.seed }))
     .filter((r) => r.a && r.b) as { a: Sample; b: Sample; seed: string }[]
   if (!rows.length) continue
   const dPts = rows.map((r) => r.b.wtaPoints - r.a.wtaPoints)
-  const dRank = rows.map((r) => r.b.wtaRank - r.a.wtaRank) // negative = best-16 ranks her higher
+  const dRank = rows.map((r) => r.b.wtaRank - r.a.wtaRank) // negative = the wide window ranks her higher
   const mean = (xs: number[]) => xs.reduce((s, x) => s + x, 0) / xs.length
   const med = (xs: number[]) => [...xs].sort((x, y) => x - y)[Math.floor(xs.length / 2)]
   console.log(`  week ${week} (age ~${14 + Math.floor(week / 52)}):`)
@@ -150,14 +156,14 @@ for (const week of CHECKPOINTS) {
   )
   console.log(
     `    wta rank    A mean ${mean(rows.map((r) => r.a.wtaRank)).toFixed(1)} -> B mean ${mean(rows.map((r) => r.b.wtaRank)).toFixed(1)}` +
-      `  delta mean ${mean(dRank).toFixed(1)} median ${med(dRank)} (negative = best-16 ranks her higher)`,
+      `  delta mean ${mean(dRank).toFixed(1)} median ${med(dRank)} (negative = the wide window ranks her higher)`,
   )
   console.log(
     `    W entries   A mean ${mean(rows.map((r) => r.a.wEntries)).toFixed(1)} -> B mean ${mean(rows.map((r) => r.b.wEntries)).toFixed(1)}`,
   )
   console.log(
     `    live field top-5 wta pts  A mean ${mean(rows.map((r) => r.a.fieldTop5)).toFixed(1)} -> B mean ${mean(rows.map((r) => r.b.fieldTop5)).toFixed(1)}` +
-      `  (the window's real footprint: a busy rival fills sixteen slots long before the kid does)`,
+      `  (the window's real footprint: a busy rival fills every slot long before the kid does)`,
   )
 }
 console.log(`(KID_ID ${KID_ID} careers; per-seed rows suppressed - re-run with --seeds 3 to eyeball raw careers)`)

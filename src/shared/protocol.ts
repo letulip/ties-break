@@ -305,7 +305,11 @@ export interface SeasonSummary {
   points: number
   wins: number
   losses: number
-  /** e.g. "best Semifinalist" or "no tournaments played" */
+  /** THREE ANSWERS, not two: a finish ("Semifinalist"), "no result that scored" (she entered and
+   *  nothing counted – her result row is award-only, so the ledger has nothing to invert), or
+   *  "no tournaments played" (she genuinely did not play). The middle one arrived with
+   *  fix/wallet-and-wrapup, which moved this fold off the count-capped event feed and onto
+   *  `world.results`; collapsing the first two was how a 44-19 season came to report the third. */
   bestResultText: string
   /** signed funds delta across the season (== earnedCents - spentCents, and == the change in
    *  `fundsCents` across the season window). R11-12a: this used to be a scrape of the CAPPED
@@ -326,6 +330,27 @@ export interface SeasonSummary {
    *  backing her. OPTIONAL for the same reason as the two above: a recap is a record of what was
    *  said, and summaries banked before v21 never knew this number. */
   academyCoveredCents?: number
+  /** WHICH TABLE THIS SEASON WAS PLAYED ON – the track that carried the most competitive matches
+   *  (`dominantTrackOfSeason`, engine/world/milestones.ts), falling back to `activeLadderOf` for a
+   *  season she did not play at all.
+   *
+   *  ⚠ IT EXISTS BECAUSE THE WRAP-UP NAMED THE JUNIOR TABLE FOR EVER (fix/wallet-and-wrapup, on the
+   *  owner's «на том же экране всегда показывается international, хотя мы уже давно там не
+   *  играем»). The rank line was pinned to `LADDER_LABEL.itf` in 79567f9, when a career had two
+   *  tables and the junior one was the destination; the professional table landed the next day and
+   *  nothing widened it, so a W75 player with no junior point in the 52-week window read "Unranked
+   *  – she has not played a Junior Tour event yet".
+   *
+   *  OPTIONAL, and readers fall back to the junior table exactly as before – the `weeksInjured`
+   *  precedent, so no schema bump: a summary banked before this wave never knew its own track. */
+  rankTrack?: LadderTrack
+  /** Her dense place in `rankTrack` at the wrap, or null when she holds no counting result in it.
+   *
+   *  ⚠ NOT THE SAME NUMBER AS `endRank`, which is and stays the ITF one (`world.kidRank`) so the
+   *  season-history table it also feeds keeps meaning one thing down its whole column. null follows
+   *  `LadderView.rank`: unranked is not a number, and a dense place inside the 0-point tie group is
+   *  what that rule exists to refuse to print. Same optionality as `rankTrack`. */
+  rankInTrack?: number | null
 }
 
 /** One FINISHED season, appended to the career's history at wrap-up (schema v14, R10-9).
@@ -1379,8 +1404,24 @@ export interface Offer {
    *  which is what the owner asked for («мне кажется было бы логичным их как раз к старту сезона
    *  привязывать») and what really happens: equipment deals are negotiated in November and December
    *  and align to the calendar year. Signing early buys the last off-season weeks of fresh kit as a
-   *  bonus; signing late buys the same season, minus the weeks spent thinking. */
+   *  bonus; signing late buys the same season, minus the weeks spent thinking.
+   *
+   *  ⚠ AND IT ENDS ON WEEK 49 OF ITS LAST SEASON, NOT ON WEEK 51 (schema v41, feat/sponsor-window).
+   *  The owner's own words: «заканчивать контракты вместе с сезоном на 49 неделе… т.е. чтобы с 50
+   *  точно уже было пусто». The two weeks it gives up carry no tournament and no ranking; what they
+   *  buy is a slot that is demonstrably empty while the brands' five-week window is still open, so a
+   *  running contract can never turn away the letter meant to replace it. See `contractEndWeek`. */
   untilWeek?: number
+  /** SIGNED ONLY: the FIRST week the deal covers (schema v41). Today, unless a contract she is still
+   *  under runs past today - in which case the new one starts the week the old one stops, so the two
+   *  meet exactly and leave neither an overlap nor a gap.
+   *
+   *  ⚠ IT EXISTS BECAUSE THE WINDOW OPENS BEFORE THE OLD CONTRACT CLOSES. Letters land from week 47
+   *  and a term runs to week 49, so for three weeks a year a parent can sign the next deal while the
+   *  present one is still supplying her. `decidedWeek` used to serve as the start of cover and cannot
+   *  any more: it would put two deals in force in the same week, and there is at most one
+   *  (`activeKitDeal`). Migrated careers take `decidedWeek`, which is exactly what they meant. */
+  fromWeek?: number
   /** SIGNED ONLY: what the shop has actually spent on her kit under this deal, in cents. The one
    *  number that says what signing was worth – the same job `AcademySupport.coveredCents` does for
    *  the scholarship, and reported the same way at the season boundary. */

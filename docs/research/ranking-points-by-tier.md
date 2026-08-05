@@ -224,6 +224,36 @@ Same shape as the juniors: **zero for a first-round loss at the two bottom rungs
 higher up, and the bottom rung by far the steepest (15× at W15, settling to a flat 8.3× from W50
 upward). W15 winner : Grand Slam winner = **1 : 133**. Doubles pays the same winner points as singles.
 
+### 4a. ⚠ THE FULL CELL-BY-CELL AUDIT OF OUR OWN TABLE (added 05.08, points-by-the-book)
+
+`real-ladder-pace.md` §4's correction 2 named the two rungs whose WINNER's points were wrong. The
+owner then asked for the whole array rather than index 0 – *"the finish-by-finish curve below the
+winner also has a real shape"* – so every rung in `season/calendar.ts` was diffed against the source
+table above, cell for cell. **Fourteen rungs, six cells each.** Generated from the shipped file, not
+transcribed.
+
+| rung | ours (after the 05.08 correction) | source | verdict |
+| --- | --- | --- | --- |
+| local / regional / national | 30/18/10/0 · 80/48/28/14/0 · 200/120/70/35/15/0 | – | **invented rungs**, no ITF analogue at all (§6). Every number is ours. |
+| j30 / j60 / j300 | 30/18/9/5/2/0 · 60/36/18/10/5/0 · 300/210/140/100/60/0 | Juniors Reg 31 | **exact.** The trailing 0 is Reg 31(a) – no points until you win a main-draw round – read at our 32-draw. |
+| w15 | **15/10/6/3/1/0** | WTA VIII.A.5 | **exact – corrected 05.08 from 10/6/3/2/1/0.** |
+| w35 | **35/23/14/8/4/0** | WTA VIII.A.5 | **exact – corrected 05.08 from 20/13/8/4/2/0.** |
+| w50 / w75 | 50/33/20/11/6/1 · 75/49/29/16/9/1 | WTA VIII.A.5 | exact (verified at W2-LADDER). |
+| **w100** | **100/65/40/25/12/0** | **100/65/39/21/12/1** | ⚠⚠ **DIFFERS IN THREE CELLS – semi-final 40 v 39, quarter-final 25 v 21, opening loss 0 v 1.** |
+| wta125 / 250 / 500 / 1000 / slam | 125/81/49/27/15/1 · 250/163/98/54/30/1 · 500/325/195/108/60/1 · 1000/650/390/215/120/65 · 2000/1300/780/430/240/130 | WTA VIII.A.5 | exact. |
+
+> ⚠⚠ **W100 IS THE THIRD ERROR OF THE SAME FAMILY AND IT WAS NOT IN THE APPROVED THREE.** It is the
+> last surviving member of the trio `act2-pro-tour.md` §2 ruled "canon as-is" before the research
+> existed – W15, W35 and W100 – and the other two have now been corrected against the chart. The
+> repo already anticipated this: `tests/wave-b-points.test.ts`' `NOMINAL_ONE_TIERS` comment says in
+> as many words that *"a future owner ruling that re-verifies w100's row should move it and this pin
+> together"*. **Reported, not fixed**: the owner approved three specific corrections and a fourth
+> re-pricing nobody asked for is exactly the scope creep the builder rulings forbid. The magnitude is
+> small – a semi-final and a quarter-final one and four points light, and an opening loss paying
+> nothing where the chart pays a nominal 1 – and the direction is the same one W15 and W35 had:
+> **under-priced against the rung's own published row.** Fixing it is one array plus the `w100` entry
+> in `NOMINAL_ONE_TIERS`, and it needs a measured arm of its own.
+
 **Volume repeats too.** ITF states *"approximately 600 tournaments across 65 countries"* for the
 women's tour; counting the calendar API gives 618 (2024) and 641 (2025), of which **~48% are W15** and
 ~4% W100 — the same supply pyramid as the juniors, one tier shallower.

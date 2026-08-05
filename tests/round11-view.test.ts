@@ -368,7 +368,14 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     }
     // the Home ladder no longer reaches for the tier catalogue or the age gate at all
     expect(homeScreen).not.toContain('isTierAgeOpen')
-    expect(homeScreen).not.toMatch(/TIERS\[/)
+    // ⚠ ANCHORED AT A WORD BOUNDARY (05.08). This read `/TIERS\[/`, which is a substring of the
+    // screen's OWN hand-kept list `SEASON_STRIP_TIERS` – so the day the strip's collapse rule
+    // started indexing that array (`SEASON_STRIP_TIERS[lo].short`, to name the range an ellipsis
+    // hides) the guard went red over a symbol it was never talking about. The claim is unchanged and
+    // still exact: HomeScreen must not read the ENGINE's `TIERS` catalogue. Same failure family as
+    // the componentLogic/componentFile split in CLAUDE.md – a negative assertion that is wider than
+    // its own sentence trips on a neighbour.
+    expect(homeScreen).not.toMatch(/(?<![A-Za-z0-9_$])TIERS\[/)
     // ...and the words of a point lock are written in exactly one place
     expect(homeScreen).not.toContain('Reach ')
     const lock = seasonScreen.slice(seasonScreen.indexOf('function lockLabel'), seasonScreen.indexOf('// --- R11-5a'))

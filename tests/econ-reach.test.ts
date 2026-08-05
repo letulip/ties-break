@@ -154,12 +154,30 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // than down (a family that stops entering also stops paying entry fees and travel, so the ones
     // that survive are solvent enough to keep going), and that direction is worth knowing: the
     // seventh flip is the first one the file absorbed instead of firing on.
+    // ⚠⚠ AN EIGHTH READING, AND THE FIRST THE BAND DID NOT ABSORB – LADDER-PACE STEP 1 (05.08):
+    // 21 of 30 -> **25 of 30**, one place past the ceiling the re-base chose. Re-based to 25 under
+    // this note's OWN rule (half the distance to each degenerate answer), so [12, 27].
+    //
+    // THE MECHANISM, AND IT IS THE SAME ONE THAT MOVED `kidRank` 89 -> 90 IN THREE OTHER FILES.
+    // This target is `kidRank <= REACH_PRO_RANK` or `kidPoints(itf) >= REACH_PRO_POINTS` – the
+    // JUNIOR table, which `FIELD.size` does not touch directly. What it touches is the W universe:
+    // 364 -> 520 pros makes a W event's candidate pool 719 instead of 563, `selectEntrants` spends
+    // one draw per candidate, so a different set of JUNIORS is booked into W weeks, so the J draws
+    // they were no longer free for changed. `fieldPros.ts`' own header names entrant sets as the
+    // licensed downstream class. Second-order, on a different track, and SHE DID NOTHING DIFFERENT.
+    //
+    // ⚠ THE DIRECTION IS WORTH KNOWING AND IS WHY THIS IS RE-AIMED RATHER THAN WIDENED. The drift
+    // is toward 30, i.e. toward "the proxy is becoming a formality again", which this note names as
+    // one of the two things the band exists to fire on. It fired, it was read, and the cause is a
+    // deliberate population change rather than a calibration slipping. Five of thirty still never
+    // clear it, so both branches fire and the CASE – the property this test was written for – is
+    // untouched and still asserted exactly.
     const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleHigh, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)
     expect(reachedH18, '14→18 saturated - re-read the notes above').toBeLessThan(proH18.length)
-    expect(reachedH18, '14→18 drifted (18 of 30 at the re-base) - re-read the notes above').toBeGreaterThanOrEqual(9)
-    expect(reachedH18, '14→18 drifted (18 of 30 at the re-base) - re-read the notes above').toBeLessThanOrEqual(24)
+    expect(reachedH18, '14→18 drifted (25 of 30 at ladder-pace) - re-read the notes above').toBeGreaterThanOrEqual(12)
+    expect(reachedH18, '14→18 drifted (25 of 30 at ladder-pace) - re-read the notes above').toBeLessThanOrEqual(27)
     for (const r of proH18) {
       if (r.reachedWeek !== null) {
         expect(r.reachedWeek).toBeGreaterThan(0)

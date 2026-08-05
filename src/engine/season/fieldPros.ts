@@ -69,7 +69,7 @@ import type { AiPlayer, RankingRow, TierId } from './types'
  *  ⚠ FOUR STOREYS SINCE W2-FIELD2 (act2-pro-tour.md §8.1). `tourElite` is the top of the WORLD, not
  *  the top of our calendar: she plays the 250/500/1000/Slam tour that is act-3 content, which is why
  *  her points are in the thousands while our own top rung pays 125 a title. See FIELD.tiers. */
-export type FieldStrengthTier = 'tourElite' | 'elite' | 'contender' | 'journeyman'
+export type FieldStrengthTier = 'tourElite' | 'elite' | 'contender' | 'journeyman' | 'circuit'
 
 /** One professional of the FIELD tier. An `AiPlayer` on purpose – she flows through the SAME
  *  machinery a cohort rival does (`selectEntrants`' age gate and bands, `rivalMatchPlayer`'s
@@ -226,6 +226,46 @@ export interface FieldPro extends AiPlayer {
 // which re-opens every `entrantPctBand` and the sponsor derivation that reads this size. Flagged for
 // the owner, deliberately NOT taken here.
 //
+// =================================================================================================
+// ⚠⚠ ...AND IT IS TAKEN NOW – LADDER-PACE STEP 1 (05.08). The paragraph above is its own to-do list
+// and the owner approved working through it - "I support it, we should try"
+// (docs/specs/points-economy-2026-08.md §10, ordered 1 depth · 2 compression · 3 window · 4 price).
+// =================================================================================================
+//
+// WHY DEPTH IS FIRST AND NOT LAST. Three separate measurements all reduce to the table being too
+// SHORT rather than wrong:
+//
+//   * world-strength-audit §6b: three of the ten acceptance cuts (W35 #700, W50 #550, W75 #450) sit
+//     PAST the end of the pointed table, so they refuse nobody. §6c is the consequence – one W
+//     ranking point clears W75's inert cut, `tierOutgrown` shuts W15 behind her, and the documented
+//     three-stage slide {w15,w35,w50} -> {w35,w50,w75} -> {w50,w75,w100} never happens. That is the
+//     owner's own "the 35s finished VERY quickly" seen from the engine's side.
+//   * points-economy §3b: `selectEntrants` fills a rung's percentile band from its TOP, so the
+//     bottom 150 pros are dealt zero draws a season while holding a median 207 points each.
+//   * points-economy §4a: on a 564-row table `entrantPctBand` maps every W rung onto a slice two to
+//     four times better-ranked than the real rung draws – which is why compressing the strength
+//     spread (step 2) put the reference junior's W15 title chance at 2.3% against a 15-35% target.
+//     Compression NEEDS the depth underneath it or it destroys the on-ramp.
+//
+// WHAT CHANGES, AND WHAT DELIBERATELY DOES NOT. A fifth storey is APPENDED, so `fp-0`..`fp-363`
+// keep their chairs, their storeys and their draws byte-for-byte: the top 364 rows of this table are
+// the same 364 people they were yesterday, and every number the four storeys above were calibrated
+// on is untouched. What moves is that 156 more professionals now stand BELOW them.
+//
+// THE POINTS BAND IS THE REAL CURVE'S OWN TAIL, read from the same anchors the lift above used:
+// #364 ~130 · #500 ~75. So the storey spans base 70-155 (the ceiling deliberately overlapping
+// journeyman's 150 floor, exactly as tourElite's 1400 floor meets elite's 1400 ceiling – the seam
+// is continuous by construction, not by luck).
+//
+// THE CORE BAND IS THE PYRAMID'S OWN ARITHMETIC CONTINUED: every storey steps down five and spans
+// ten (67-77, 56-66, 43-53, 38-48), so the fifth is 33-43. ⚠ THAT MAKES THE WORLD MORE SPREAD OUT,
+// NOT LESS, AND IT IS ON PURPOSE FOR ONE STEP ONLY: step 1 must be depth and NOTHING else or its
+// effect is not attributable. Step 2 re-deals every core in this table off the real Elo curve and
+// is where the spread is fixed. Read the two together, never this one alone.
+//
+// THE NAME. Not a federation's and not a trademark: on the real tour the players ranked past ~#350
+// are the ones who qualify for everything and are resident nowhere - the circuit's rank and file.
+//
 // WHAT THE FIT BUYS, checked against act2-pro-tour.md §2's own season arithmetic — which was written
 // as a design target and was not true of the old table: year 3 ("≈ 400-650 pts → #150-200") now
 // measures #183 at 400 and #132 at 650; year 4 ("700-1,000 → top-100") measures #87 at 1,000; year
@@ -235,11 +275,15 @@ export interface FieldPro extends AiPlayer {
 export const FIELD = {
   /** id prefix – the namespace that keeps field ids disjoint from `ai-*` / `ai-s*-*` / 'kid' */
   idPrefix: 'fp-',
-  /** professionals per season. 300 → 364 with the fourth storey; against 199 juniors that is the
-   *  merged ~564-row W table, still one derivation per read and still zero persisted bytes. The
-   *  pyramid grew at the TOP only: the three shipped storeys keep their counts, because their
-   *  calibration is the one thing in this file that had a bench behind it already. */
-  size: 364,
+  /** professionals per season. 300 → 364 with the fourth storey; 364 → **520** with the fifth
+   *  (ladder-pace step 1 – see the ⚠⚠ box above). Against 199 juniors that is the merged ~720-row
+   *  W table, still one derivation per read and still zero persisted bytes.
+   *
+   *  ⚠ THE PYRAMID HAS GROWN AT BOTH ENDS AND NEVER IN THE MIDDLE, WHICH IS WHAT KEEPS EVERY
+   *  CALIBRATION THIS FILE CARRIES. The fourth storey was added on top and the three below it kept
+   *  their counts; the fifth is added underneath and the four above it keep theirs. `fieldProsFor`
+   *  walks `tiers` in order handing out `fp-<n>`, so appending a storey shifts nobody's id. */
+  size: 520,
   /** THE AGES A PROFESSIONAL CAN BE SEEN AT – 16 (the ITF age-eligibility floor the W rungs use) to
    *  the hard end of a career. NO LONGER THE DRAW: since W4-LIVES an age is `debutAge + seasons
    *  since her debut`, and this pair is the envelope that span can occupy plus the anchor the points
@@ -262,6 +306,11 @@ export const FIELD = {
     { id: 'elite' as const, count: 30, core: [56, 66] as [number, number], pts: [1000, 1400] as [number, number], gamma: 1 },
     { id: 'contender' as const, count: 120, core: [43, 53] as [number, number], pts: [350, 1000] as [number, number], gamma: 1.6 },
     { id: 'journeyman' as const, count: 150, core: [38, 48] as [number, number], pts: [150, 350] as [number, number], gamma: 1.4 },
+    // ⚠ THE FIFTH STOREY (ladder-pace step 1, 05.08). Appended, never inserted – see `size` above
+    // for why the position in this literal is load-bearing. Count 156 takes the field to 520 and the
+    // merged table to ~720 rows, which is what puts W75's #450 cut and W50's #550 cut back INSIDE
+    // the pointed table so they can refuse somebody again.
+    { id: 'circuit' as const, count: 156, core: [33, 43] as [number, number], pts: [70, 155] as [number, number], gamma: 1.4 },
   ],
   /** per-attribute spread around the drawn core (uniform ± this), so a pro has a shape, not a bar */
   attrSpread: 6,
@@ -588,7 +637,14 @@ export function fieldProsFor(
   seasonIndex: number,
   takenNames: readonly string[] = [],
 ): FieldPro[] {
-  const key = `${seed} ${seasonIndex} ${takenNames.join(' ')}`
+  // ⚠ THE SEPARATOR IS WRITTEN AS AN ESCAPE, NOT AS A RAW BYTE (05.08). NUL is the right delimiter
+  // here - it cannot occur in a seed, a number or a name, so no two different inputs can collide on
+  // one key. But it had been typed as three LITERAL zero bytes in this file, and a zero byte makes
+  // grep classify the whole source as BINARY: `git grep`, `grep -r` and every repo-wide search
+  // silently skipped this file - the module that owns the professional population. Nothing warned;
+  // the file simply never appeared in results. The escape compiles to the identical character, so
+  // the runtime key is byte-for-byte what it was, and the source stays text.
+  const key = `${seed}\u0000${seasonIndex}\u0000${takenNames.join('\u0000')}`
   if (memo && memo.key === key) return memo.pros
   const taken = new Set(takenNames)
   const pros: FieldPro[] = []

@@ -27,7 +27,7 @@ import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW } from '../kidLife'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
 import { previewEvent, eventCrowd, eventTemperature } from '../season/preview'
-import { BEST_N_BY_TRACK, isCountingResult, windowedBestSum } from '../season/ranking'
+import { BEST_N_BY_TRACK, isCountingResult, windowSlots, windowedBestSum } from '../season/ranking'
 import { isFieldProId, universeForTier } from '../season/fieldPros'
 import { weekFieldExclusion } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
@@ -59,7 +59,8 @@ import { ageAtWeek, birthdayTurning, kidAgeYears, START_AGE_YEARS } from './age'
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage } from './entryCaps'
-import { acceptanceRank, fieldProsOf, fullRanking, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor } from './ladder'
+import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
@@ -281,9 +282,17 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
   // TWO LADDERS: this list EXPLAINS a ranking, so it has to be the same table as the rank beside it.
   // Hence the track argument - `ladders[track].countingResults` pairs each list with its own rank,
   // and an empty ITF list is the honest reading of "unranked internationally".
-  // The slice is the TRACK's window width (W2-LADDER §3): sixteen rows on the professional list,
+  // The slice is the TRACK's window width (W2-LADDER §3): EIGHTEEN rows on the professional list,
   // six on the others - the list's sum must equal the rank beside it, and the rank counts best-N.
-  return world.results.filter(inTrack(track))
+  //
+  // ⚠ AND IT IS `windowSlots`, NOT `.slice(0, N)` (points-by-the-book, 05.08). The professional
+  // window reserves eleven of its eighteen for Slams and 1000s, so "the counted results" and "the
+  // best N results" stopped being the same list the day a player got into those draws - and this
+  // list exists precisely to EXPLAIN the number beside it. A plain slice would show her a set of
+  // rows that does not add up to her own total, which is the one thing this function must never do.
+  // Sorted strongest-first afterwards, because `windowSlots` returns reserved rows first and a
+  // player reads this list as a league table.
+  const inWindow = world.results.filter(inTrack(track))
     .filter(
       (r) =>
         isCountingResult(r) &&
@@ -292,7 +301,8 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
         world.week - r.week <= RESULTS_WINDOW,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
-    .slice(0, BEST_N_BY_TRACK[track])
+  return windowSlots(inWindow, BEST_N_BY_TRACK[track])
+    .sort((a, b) => b.points - a.points || b.week - a.week)
     .map((r) => ({ week: r.week, tier: r.tier, points: r.points }))
 }
 
@@ -321,8 +331,16 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
  *  ledger, so a freshly-folded rank and the cached one legitimately differ by a place or two until
  *  she finishes her run. Reading the cache through one function is what makes the two agree by
  *  construction instead of by coincidence. */
+/** ⚠ THE TEST IS HER POINTS, NOT THE LENGTH OF HER RESULTS LIST (points-by-the-book, 05.08), and
+ *  the two came apart when §VIII.A.2.b's minimum landed. It used to ask `countingResults.length > 0`,
+ *  which was the same question while every counting result paid something: a player with rows had
+ *  points and a player without had neither. Two rules broke that equivalence – a `mandatoryMiss`
+ *  zero is a counting row worth nothing, and a professional below the minimum has rows that do not
+ *  put her on the list – and under either she would have read as a RANK on a total of zero, which is
+ *  the "unranked is not a number" bug this function exists to prevent, arriving from the other side.
+ *  Behaviour-identical on the domestic and ITF tables, where neither rule applies. */
 export function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
-  return computeCountingResults(world, track).length > 0 ? rankIn(world, track) : null
+  return kidPoints(world, track) > 0 ? rankIn(world, track) : null
 }
 
 export function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
@@ -343,47 +361,20 @@ export function computeLadderView(world: WorldState, track: LadderTrack): Ladder
   }
 }
 
-/** Her cached place in `track`. The caches are the authority (one writer - see recomputeKidRank), so
- *  this reads them rather than re-folding, which is what keeps a snapshot from disagreeing with the
+// ⚠ AN ORPHANED DOC-COMMENT OPENER STOOD HERE ("Her cached place in `track`. The caches are the
+// authority...") with no closing `*/` and no function under it – `rankIn` moved to world/ladder.ts
+// in the P4 decomposition and left its half-sentence behind. It compiled only because the NEXT
+// jsdoc's `*/` closed it, which meant that block's own text was silently swallowed too. Removed
+// with the move below rather than left as a trap for the next reader; the real note lives on
+// `rankIn` in world/ladder.ts, where the function is.
 
-/** HAS A W RESULT EVER COUNTED - the permanent half of `activeLadderOf`'s professional arm.
- *
- *  ⚠ THE EVIDENCE FOR "EVER" CANNOT BE THE RESULTS LEDGER: `world.results` is pruned to the 52-week
- *  window (RESULTS_WINDOW), so a pro on a long layoff would watch her own debut delete itself. The
- *  v34 migration solved the identical problem for the on-ramp latches with `bestFinishByTier` - a
- *  high-water mark written at tournament finalize and NEVER pruned - and this reads the same mark:
- *  a recorded finish whose points-table row pays > 0 was a counting result the week it landed
- *  (`isCountingResult` IS `points > 0`), and the table is monotone non-increasing, so the BEST
- *  finish paying zero means every finish did. Exact, for every save, however long ago it happened -
- *  no new persisted field, no schema bump. */
-export function wtaEverCounted(world: WorldState): boolean {
-  return (Object.keys(world.bestFinishByTier) as TierId[]).some((tier) => {
-    const finish = world.bestFinishByTier[tier]
-    return finish !== undefined && TIERS[tier].track === 'wta' && TIERS[tier].points[finish] > 0
-  })
-}
-
-/** WHICH TABLE IS SHE ACTUALLY COMPETING IN - one rule, one place, so Home, Stats and the Kid screen
- *  cannot answer it three ways.
- *
- *  docs/specs/two-ladders.md, "Which rank is her rank": the ITF one once she has it, because that is
- *  the table the international rungs open on and the one the game is about. Before her first counting
- *  ITF result she is unranked internationally and the screens show her national standing instead.
- *  "That is the real shape of a junior career, and the moment the first ITF point lands is a beat
- *  worth having."
- *
- *  ⚠ THE PROFESSIONAL ARM IS A ONE-WAY DOOR (architect's ruling, 02.08, on the owner's «для тех кому
- *  актуально уже и мировую можно показывать, она с ней до конца игры будет»). Her first counting
- *  W-series result makes the professional table her table TO THE END OF THE GAME - it never falls
- *  back to 'itf'/'domestic' when the 52-week window later empties, which is why the arm reads the
- *  never-pruned mark (`wtaEverCounted`) and not the live window alone. The junior arm stays a live
- *  read on purpose: J is a stage she passes through, the paid tour is where the story ends. The
- *  live `kidPoints` OR is the latchOnRamps discipline - the fresh fact answers correctly on its
- *  own, the memory only ever adds, so no caller is order-sensitive on when finalize last ran. */
-export function activeLadderOf(world: WorldState): LadderTrack {
-  if (wtaEverCounted(world) || kidPoints(world, 'wta') > 0) return 'wta'
-  return kidPoints(world, 'itf') > 0 ? 'itf' : 'domestic'
-}
+// wtaEverCounted / activeLadderOf: MOVED to world/ladder.ts (fix/wallet-and-wrapup, 05.08) and
+// imported back below, re-exported here under their historical names so every existing
+// `from '.../world/snapshot'` and `from '.../engine/world'` call site keeps working. They are
+// ladder facts, and the season wrap-up (world/milestones.ts) needs the same one answer to "which
+// table is hers" – but `snapshot.ts` imports `milestones.ts`, so reading it from here would have
+// been a runtime cycle. Moving the rule DOWN the graph is the fix; a second copy of it in
+// milestones.ts would have been exactly the drift `activeLadderOf` exists to prevent.
 
 export function computeStandings(world: WorldState, track: LadderTrack = 'itf'): StandingRow[] {
   const full = rankingFor(world, track)
@@ -693,6 +684,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         world.fundsCents,
       ),
     },
+    // ⚠ A WINDOW ON THE CAPPED FEED, and it is the Money screen's ledger tab. It cannot come off
+    // `financeWeeks`, which stores per-category TOTALS and has no individual transactions in it - so
+    // this is the one money surface the prune order genuinely governs (see EVENTS_ORDINARY_FLOOR).
     financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),
     seasonSupply: seasonSupply(world),

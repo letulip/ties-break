@@ -32,7 +32,7 @@ import {
   ageAtWeek,
   type WorldState,
 } from '../src/engine/world'
-import { rankIn, rankingFor } from '../src/engine/world/ladder'
+import { kidPoints, rankIn, rankingFor } from '../src/engine/world/ladder'
 import { FIELD } from '../src/engine/season/fieldPros'
 import { TIERS } from '../src/engine/season/calendar'
 import { resumeMain } from '../src/engine/rng'
@@ -116,36 +116,110 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     return world
   }
 
-  it('three W cuts sit past the end of the POINTED table, so they refuse nobody', () => {
+  // ⚠⚠ RE-AIMED BY LADDER-PACE STEP 1 (05.08), AND THE RE-AIM IS THE FIX THIS PAIR EXISTS TO CATCH.
+  // Both assertions below used to record a DEFECT: three of the ten W cuts sat past the end of the
+  // pointed table and therefore refused nobody, so one ranking point opened W75, `tierOutgrown` shut
+  // W15 behind it, and the documented three-stage slide never happened. The audit's own words were
+  // "three documented stages of the ladder do not exist".
+  //
+  // `FIELD.size` 364 -> 520 puts 156 more pointed rows underneath, so the pointed depth passes W75's
+  // #450 cut and W75 STOPS BEING INERT. Nothing about the cuts moved – `acceptsRank` is an absolute
+  // rank precisely so it survives a deeper population (TierDef.acceptsRank says so in as many words:
+  // "it is a fact about the sport, it does not move when FIELD.size does"). What moved is the table.
+  //
+  // NEITHER ASSERTION IS WEAKENED. The first still names every inert cut and still requires the two
+  // that a career stalls under to bite; the count it asserts went from three to two, and it is
+  // asserted as an exact SET rather than a loop so a fourth going inert is red. The second no longer
+  // characterises a defect, so it is turned into the POSITIVE property it was blocking – the slide
+  // is one rung at a time, W15 survives her first point, and the stages are pinned by name.
+  it('the inert W cuts are now W35 and W50 alone – W75 bites again', () => {
     const world = worldAt('cuts-truncated', 17, 0)
     const pointed = rankingFor(world, 'wta').filter((r) => r.points > 0).length
-    // 364 derived pros hold a book; the rest of the 564 rows are LIVE players, most on nothing. So
-    // the table's pointed depth is ~385 and a cut looser than that is not a cut.
-    expect(pointed).toBeGreaterThan(FIELD.size)
-    expect(pointed).toBeLessThan(420)
-    for (const tier of ['w35', 'w50', 'w75'] as const) {
-      expect(TIERS[tier].acceptsRank!, `${tier} is inert`).toBeGreaterThan(pointed)
+    // 520 derived pros hold a book; the rest of the ~719 rows are LIVE players, most on nothing.
+    expect(pointed).toBeGreaterThanOrEqual(FIELD.size)
+    expect(pointed).toBeLessThan(FIELD.size + 60)
+    // The SET of inert cuts, exactly. A cut looser than the pointed depth is not a cut.
+    const inert = (['w35', 'w50', 'w75', 'w100', 'wta125'] as const).filter(
+      (t) => TIERS[t].acceptsRank! > pointed,
+    )
+    expect(inert).toEqual(['w35', 'w50'])
+    // ...and every cut a career actually stalls under bites.
+    for (const tier of ['w75', 'w100', 'wta125'] as const) {
+      expect(TIERS[tier].acceptsRank!, `${tier} gates`).toBeLessThan(pointed)
     }
-    // ...and the two rungs that DO bite are the ones a career actually stalls under.
-    expect(TIERS.w100.acceptsRank!).toBeLessThan(pointed)
-    expect(TIERS.wta125.acceptsRank!).toBeLessThan(pointed)
   })
 
-  it('⚠ so the entry rung of the professional tour closes on her FIRST W point, from 17', () => {
+  // ⚠⚠ RE-AIMED A SECOND TIME BY POINTS-BY-THE-BOOK CORRECTION 3 (05.08), AND AGAIN THE RE-AIM IS
+  // THE FIX. This test's own subject – «her first W point» – was a state the sport does not have:
+  // 2026 WTA Rulebook §VIII.A.2.b requires points in three tournaments OR ten points before a player
+  // appears on the rankings at all, so a one-point book is now no book. The 1 below therefore stops
+  // meaning "the smallest ranking there is" and starts meaning "not ranked", which would have made
+  // the assertion vacuous rather than false – so the probe moves to the smallest book the rule
+  // ACTUALLY admits (ten points, exactly the threshold) and the one-point case is pinned separately
+  // below as the new negative property. Nothing is weakened: the same three stages are still named,
+  // still asserted as exact lists, and the "climbed" stage is untouched.
+  it('the entry rung SURVIVES her first W ranking, and the window slides one rung at a time', () => {
     // `tierOutgrown` closes a rung when the rung three above it opens. Three above W15 is W75, whose
-    // cut (#450) is past the pointed depth – so one point opens W75 and the same point shuts W15.
-    // At 16 the W75 age gate (17) short-circuits the closure, which is why this only bites from 17.
+    // cut is #450 – and a ten-point book now stands at ~#521, outside it. So the first ranking opens
+    // nothing above W50 and W15 stays hers, which is the ladder's own documented worked example.
     const at16 = worldAt('trapdoor-16', 16, 10)
     expect(tierOpenFor(at16, 'w15')).toBe(true)
 
-    const at17 = worldAt('trapdoor-17', 17, 1)
-    expect(tierFloorOpen(at17, 'w75')).toBe(true)
-    expect(tierOpenFor(at17, 'w15')).toBe(false)
+    const at17 = worldAt('trapdoor-17', 17, 10)
+    expect(tierFloorOpen(at17, 'w75')).toBe(false)
+    expect(tierOpenFor(at17, 'w15')).toBe(true)
 
-    // The documented slide is one rung at a time – `tierOutgrown`'s own worked example names the
-    // stages "{j60, j300, w15} -> {j300, w15, w35} -> {w15, w35, w50} -> {w35, w50, w75}". The
-    // engine's real floors skip straight from {w15} to {w35, w50, w75}: three at once.
+    // `tierOutgrown`'s own worked example names the stages "{j60, j300, w15} -> {j300, w15, w35} ->
+    // {w15, w35, w50} -> {w35, w50, w75}". One point is the third of those, and it is now what the
+    // engine really produces instead of skipping three rungs at once.
     const open = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at17, t))
-    expect(open).toEqual(['w35', 'w50', 'w75'])
+    expect(open).toEqual(['w15', 'w35', 'w50'])
+
+    // ...and the NEXT stage is reached by playing, not by holding one point: a book that clears
+    // W75's cut is what closes W15, exactly one rung later.
+    const climbed = worldAt('trapdoor-climbed', 17, 140)
+    expect(tierFloorOpen(climbed, 'w75')).toBe(true)
+    expect(tierOpenFor(climbed, 'w15')).toBe(false)
+    const openLater = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) =>
+      tierOpenFor(climbed, t),
+    )
+    expect(openLater).toEqual(['w35', 'w50', 'w75'])
+  })
+
+  // THE NEW POSITIVE PROPERTY, and it is the state the paragraph above used to probe with: a single
+  // ranking point is not a ranking. Both limbs of §VIII.A.2.b are pinned, and both directions –
+  // under the threshold she is off the list and the second rung stays shut; over it (by EITHER
+  // limb) she is on it and the second rung opens. Written as behaviour rather than as a constant so
+  // it survives a re-tune of the threshold itself.
+  it('§VIII.A.2.b – one W point is not a ranking, and either limb of the minimum is', () => {
+    const one = worldAt('minimum-one-point', 17, 1)
+    expect(kidPoints(one, 'wta')).toBe(0)
+    expect(tierFloorOpen(one, 'w35')).toBe(false)
+    // ...and the ladder does NOT go dark on her: the on-ramp rung has no acceptance list, so the
+    // rung she is standing on is still open. A minimum that left her nothing to enter would be the
+    // boredom failure the owner has ruled against twice.
+    expect(tierOpenFor(one, 'w15')).toBe(true)
+
+    // limb (ii): ten points in a single tournament.
+    const ten = worldAt('minimum-ten-points', 17, 10)
+    expect(kidPoints(ten, 'wta')).toBe(10)
+    expect(tierFloorOpen(ten, 'w35')).toBe(true)
+
+    // limb (i): three tournaments that scored, on a total FAR below ten – the limb that cannot be
+    // reached by making one result bigger.
+    const three = worldAt('minimum-three-events', 17, 0)
+    for (let i = 0; i < 3; i++) {
+      three.results.push({ playerId: KID_ID, week: three.week - i, points: 1, tier: 'w15' })
+    }
+    recomputeKidRank(three)
+    expect(kidPoints(three, 'wta')).toBe(3)
+    expect(tierFloorOpen(three, 'w35')).toBe(true)
+    // two of the same three is still nothing – the limb is a real edge and not a formality.
+    const two = worldAt('minimum-two-events', 17, 0)
+    for (let i = 0; i < 2; i++) {
+      two.results.push({ playerId: KID_ID, week: two.week - i, points: 1, tier: 'w15' })
+    }
+    recomputeKidRank(two)
+    expect(kidPoints(two, 'wta')).toBe(0)
   })
 })

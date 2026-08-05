@@ -49,6 +49,9 @@ import {
   hasLiveOffer,
   isOfferLive,
   isSponsorReviewWeek,
+  isSponsorWindowWeek,
+  isSponsorLetterWeek,
+  contractEndWeek,
   kitFreshCap,
   kitTermsFor,
   kitTravelShare,
@@ -58,9 +61,12 @@ import {
   raiseKitEndLetter,
   rungFor,
   shopWritesAt,
-  sponsorArtKey,
   standingClears,
+  seasonSpokenFor,
+  windowLadder,
   SPONSOR_TIERS,
+  SPONSOR_WINDOW_WEEKS,
+  SPONSOR_LETTER_WEEKS,
   TIER_COVERS,
   type SponsorStanding,
 } from '../src/engine/offers'
@@ -268,11 +274,21 @@ const pro = (wtaRank: number, over: Partial<SponsorStanding> = {}): SponsorStand
   ...over,
 })
 
-/** ⚠ RE-AIMED (01.08): the review moved from the season BOUNDARY into the first OFF-SEASON week, so
- *  a letter arrives at 49 rather than 52. Same once-a-season event, three weeks earlier - see
- *  `isSponsorReviewWeek`. Everything below reads this rather than a literal, so the day it moves
- *  again it moves once. */
-const LETTER_WEEK = WEEKS_PER_YEAR - OFF_SEASON_WEEKS // 49
+/** ⚠ RE-AIMED TWICE, AND THE SECOND TIME IS WHY IT IS A CONSTANT AT ALL.
+ *
+ *  (01.08) the review moved from the season BOUNDARY into the first OFF-SEASON week, so a letter
+ *  arrived at 49 rather than 52.
+ *
+ *  (05.08, feat/sponsor-window) the single review week became a FIVE-WEEK WINDOW - the off-season
+ *  plus the two weeks before it - with a letter landing on each of its first four weeks, one rung at
+ *  a time. So the week a career's FIRST letter arrives is the window's OPENING week, 47: the ladder
+ *  is walked weakest-first, and a girl who clears only the local rung is written to in slot 0.
+ *  Everything below reads this rather than a literal, which is what made the second move a one-line
+ *  change to a helper rather than a rewrite of forty assertions. */
+const LETTER_WEEK = WEEKS_PER_YEAR - SPONSOR_WINDOW_WEEKS // 47
+/** The window's last week - every letter in a window expires with the window, so this is the last
+ *  week any of them can be signed. */
+const WINDOW_CLOSE_WEEK = WEEKS_PER_YEAR - 1 // 51
 
 function seedTheShopWritesTo(stem: string, week = LETTER_WEEK, standing = domestic(1)): string {
   for (let attempt = 0; attempt < 20; attempt++) {
@@ -319,10 +335,17 @@ describe('the window is the feature, not a courtesy', () => {
     world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
     recomputeKidRank(world)
     const rng = rngFromSeed(world.seed)
-    for (let i = 0; i < 52; i++) tickWeek(world, rng)
+    // ⚠ RE-AIMED (05.08) ONLY IN HOW FAR IT TICKS: it used to run a full 52 weeks and still find the
+    //   letter open, because a letter raised at 49 carried a four-week deadline that reached into
+    //   week 53. Every letter now dies with the WINDOW (week 51) instead of four weeks after its own
+    //   arrival - see `SPONSOR_LETTER_WEEKS` for why - so a career ticked to 52 has already had it
+    //   taken. Nothing about what is being asserted moved: the deadline is real, the tick is what
+    //   enforces it, and nobody has to touch the letter for it to go.
+    for (let i = 0; i < WINDOW_CLOSE_WEEK; i++) tickWeek(world, rng)
     const offer = world.offers.find((o) => o.state === 'open')
     expect(offer).toBeDefined()
     const deadline = offer!.deadlineWeek
+    expect(deadline).toBe(WINDOW_CLOSE_WEEK)
     // ...still a decision on its last week...
     while (world.week < deadline) tickWeek(world, rng)
     expect(world.offers[0].state).toBe('open')
@@ -672,7 +695,17 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
     expect(atBoundary?.byCategory.sponsor ?? 0).toBe(0)
     // ...and it is said out loud, with the figure on it, because a deal ending is exactly when the
     // player needs to see what he has lost.
-    const line = world.events.find((e) => e.week === verdictWeek && e.text.includes('kitted her out all season'))
+    // ⚠ RE-AIMED (05.08): the ONE feed row a sponsor season is allowed now lands on the window's
+    //   LAST week rather than on its first. That is the feed budget rather than a preference - four
+    //   letter weeks could otherwise have become four rows, and the measurement above
+    //   `reviewSponsors` prices one extra row a season at 0.36 -> 0.64 points of radar re-widening.
+    //   Written last, one line can carry the whole winter. The news the player actually needs at the
+    //   moment of the verdict is the brand's own GOODBYE LETTER, which is still raised on the
+    //   verdict week and is what makes the inbox knock (04.08) - and that is asserted above.
+    for (let i = 0; i < SPONSOR_WINDOW_WEEKS - 1; i++) tickWeek(world, rng)
+    expect(world.week).toBe(WINDOW_CLOSE_WEEK + WEEKS_PER_YEAR)
+    const line = world.events.find((e) => e.text.includes('kitted her out all season'))
+    expect(line?.week).toBe(WINDOW_CLOSE_WEEK + WEEKS_PER_YEAR)
     expect(line?.text).toMatch(/they are done/)
   })
 
@@ -766,17 +799,23 @@ describe('the letter states its terms in words the player can act on', () => {
   })
 
   it('the letterhead is looked up BY TIER, never by a filename spelled out at a call site', () => {
-    // ⚠ RE-AIMED BY W3-ACT2, NOT WEAKENED, AND THE CLAIM IS THE SAME ONE. Three marks ship and the
-    // ladder has six rungs, so the lookup goes through the ENGINE's `sponsorArtKey` - a single
-    // function that maps the three professional rungs onto the global mark until real art exists.
-    // The property this test protects ("never a filename spelled out at a call site") is unchanged
-    // and is in fact stronger: the mapping is now one named engine fact rather than a template
-    // literal in a component.
-    expect(codeOf(letter)).toContain('images/sponsors/${sponsorArtKey(terms.value.tier)}.webp')
+    // ⚠ RE-AIMED TWICE, NEVER WEAKENED, AND THE CLAIM IS THE SAME ONE EVERY TIME. W3-ACT2 pointed
+    // the lookup at `sponsorArtKey` because three marks had to serve six rungs; on 05.08 the owner
+    // shipped the missing three, the redirect was deleted (engine/offers.ts records why an identity
+    // function was not left behind), and the tier is the key again. The property this test protects
+    // is untouched: no call site spells out a letterhead's filename.
+    expect(codeOf(letter)).toContain('images/sponsors/${terms.value.tier}.webp')
     for (const t of SPONSOR_TIERS) expect(codeOf(letter)).not.toContain(`sponsors/${t}.webp`)
-    // ...and every rung really does resolve to a mark that exists on disk.
+    // ...and every rung really does resolve to a mark that exists on disk. Asserted against the
+    // FILESYSTEM rather than against a hand-kept list of three keys, which is what the old arm did
+    // and what a redirect made necessary; there is nothing to redirect now, so the honest question
+    // is whether the file is there. (tests/art-placeholders.test.ts owns the same claim as the
+    // registry's guard; this one keeps it local to the letter that renders the mark.)
     for (const t of SPONSOR_TIERS) {
-      expect(['local', 'national', 'global']).toContain(sponsorArtKey(t))
+      expect(
+        existsSync(new URL(`../public/images/sponsors/${t}.webp`, import.meta.url)),
+        `the "${t}" rung is on the sponsor ladder but public/images/sponsors/${t}.webp does not exist`,
+      ).toBe(true)
     }
   })
 
@@ -790,10 +829,12 @@ describe('the letter states its terms in words the player can act on', () => {
     // global.webp "PLAY BEYOND – EQUIP. SUPPORT. ELEVATE." - and the middle one's tagline is the
     // coverage this slice ships, which is the strongest evidence the ladder was read off the art.
     // ⚠ SIX RUNGS SINCE W3-ACT2, and the half of this guard that never expires is untouched: the
-    // three junior-era names are still read off the artwork. The three PROFESSIONAL names are
-    // invented here rather than read off a mark, because no mark exists for them yet - stated
-    // openly, flagged for the owner in the wave report, and the art ask is three files that would
-    // replace `sponsorArtKey` with the identity.
+    // three junior-era names are still read off the artwork. The three PROFESSIONAL names were
+    // invented here for one wave, because no mark existed for them - stated openly and flagged for
+    // the owner. ⚠⚠ THAT DEBT IS PAID (05.08): he drew all three, and they are read off the artwork
+    // like the first three - tour.webp is BASELINE ATHLETIC, premium.webp MERIDIAN SPORT, icon.webp
+    // AURELIA. So every rung on the ladder now takes its name from a picture again, which is the
+    // property this guard has protected since 01.08.
     // ⚠ AND THE ORDER IS THE LADDER, not a listing. `rungFor` reverses this and takes the first
     // rung she clears, so `tour` (WTA 200) must sit BELOW `global` (WTA 87) or a #60 professional
     // would be handed the weaker brand and the stronger one would be unreachable. Pinned exactly.
@@ -803,15 +844,14 @@ describe('the letter states its terms in words the player can act on', () => {
     expect(ECONOMY.sponsorship.global.brand).toBe('Play Beyond')
     // The domestic table still reaches the local shop and only it – the rung whose gate did not move.
     for (const rank of [1, 5, 10, 11, 30]) expect(kitTermsFor(domestic(rank))!.tier).toBe('local')
-    // ...and every rung resolves to a mark that really is on disk. ⚠ THROUGH `sponsorArtKey`
-    // SINCE W3-ACT2, which is the assertion this had to become: three marks ship and the ladder has
-    // six rungs, so the professional trio borrows the global mark until real art exists. The claim
-    // is unchanged and still exhaustive - no rung may be sendable without a picture on the letter -
-    // and it is now the mapping that is checked rather than a filename convention that happened to
-    // hold. Placeholder art, flagged for the owner; three real marks would make this the identity.
+    // ...and every rung resolves to a mark that really is on disk. ⚠ BY ITS OWN NAME AGAIN (05.08).
+    // W3-ACT2 had to route this through `sponsorArtKey` because three marks served six rungs; the
+    // three real marks shipped, the redirect is deleted, and the check goes back to the filename
+    // convention - which is no longer "a convention that happened to hold" but the whole mapping.
+    // The claim is unchanged and still exhaustive: no rung may be sendable without a picture on the
+    // letter.
     for (const t of SPONSOR_TIERS) {
-      const key = sponsorArtKey(t)
-      expect(existsSync(fileURLToPath(new URL(`../public/images/sponsors/${key}.webp`, import.meta.url))), t).toBe(true)
+      expect(existsSync(fileURLToPath(new URL(`../public/images/sponsors/${t}.webp`, import.meta.url))), t).toBe(true)
     }
   })
 
@@ -1081,8 +1121,14 @@ describe('⚠ ONE BRAND AT A TIME', () => {
     expect((world.offers[0].terms as KitOfferTerms).tier).toBe('national')
     acceptOffer(world, id)
     const until = world.offers[0].untilWeek!
-    // Two seasons: signed in the off-season of season 0, covering seasons 1 and 2.
-    expect(until).toBe(3 * WEEKS_PER_YEAR - 1)
+    // Two seasons: signed in the window of season 0, covering seasons 1 and 2.
+    // ⚠ RE-AIMED (05.08): a term now ends WITH THE SEASON, on week 49 of its last year, rather than
+    //   on the calendar year's own last week - the owner's «заканчивать контракты вместе с сезоном
+    //   на 49 неделе… чтобы с 50 точно уже было пусто». Two weeks shorter, and they are the two
+    //   quiet weeks that carry no tournament; what the change buys is that a running contract can
+    //   never shut the window against its own successor. Same two seasons, same rung, same block.
+    expect(until).toBe(3 * WEEKS_PER_YEAR - OFF_SEASON_WEEKS)
+    expect(until).toBe(contractEndWeek(until))
 
     const nextReview = LETTER_WEEK + WEEKS_PER_YEAR
     expect(nextReview).toBeLessThan(until)
@@ -1096,31 +1142,63 @@ describe('⚠ ONE BRAND AT A TIME', () => {
     expect(world.offers).toHaveLength(1)
   })
 
-  it('...and an unanswered letter blocks one too', () => {
+  it('⚠ REVERSED (05.08): an unanswered letter no longer blocks – that IS the choice', () => {
+    // ⚠ THIS TEST USED TO ASSERT THE OPPOSITE AND IT WAS RIGHT TO, under a schedule where exactly one
+    //   letter a year was ever raised: with one arrival week, a second letter could only mean the
+    //   parent had accumulated two rungs at once, and "which of my lines are covered" would stop
+    //   being a question. The five-week window is built on the other side of that trade - the owner
+    //   asked for «есть время на принятие решения и выбор (если он будет конечно)», and a choice
+    //   between letters is impossible if the first one turns the second away.
+    //
+    //   WHAT STOPS IT BECOMING A COLLECTION IS NOW A DIFFERENT AND NARROWER RULE, pinned in the two
+    //   tests either side of this one: the season she is about to play may be promised to ONE brand
+    //   (`seasonSpokenFor`), signing one letter refuses every other open one in the same breath, and
+    //   `offerAnswerError` refuses a second signature even from a stale screen. So she can hold three
+    //   letters and can only ever hold one contract.
     const { world } = worldWithLetter('one-letter')
-    // She has not signed and has not refused; nobody else writes over the top of an open decision.
     const second = raiseKitOffer({
       offers: world.offers,
-      seed: world.seed,
+      seed: seedTheShopWritesTo('one-letter-roll', world.week + 1, worldly(1)),
       week: world.week + 1,
       standing: worldly(1),
     })
-    expect(second).toBeNull()
+    expect(second?.state).toBe('open')
+    expect(world.offers.filter((o) => o.state === 'open')).toHaveLength(2)
+    // ...and the moment he answers one of them, the rest are answered too.
+    acceptOffer(world, second!.id)
+    expect(world.offers.filter((o) => o.state === 'open')).toHaveLength(0)
+    expect(world.offers.filter((o) => o.state === 'signed')).toHaveLength(1)
+    expect(world.offers.filter((o) => o.state === 'refused')).toHaveLength(1)
   })
 
-  it('...and once it is over, the ladder is open again', () => {
+  it('...and once its last season is being judged, the ladder is open again', () => {
+    // ⚠ RE-AIMED (05.08), and the re-aim is the unlock itself. It used to step to the week AFTER the
+    //   term ran out, because under the old schedule a live contract turned every letter away and the
+    //   next review was a year further on. That is precisely the rule that produced the owner's
+    //   forty-seven-week hole. A contract now stops blocking as soon as the season it still covers is
+    //   the one being finished - `seasonSpokenFor` asks about the season AHEAD - so the window that
+    //   judges its last year is already open to its successor, two weeks before it formally ends.
     const { world, id } = worldWithLetter('one-brand-after')
     acceptOffer(world, id)
-    const after = world.offers[0].untilWeek! + 1
-    expect(activeKitDeal(world.offers, after)).toBeNull()
+    const until = world.offers[0].untilWeek!
+    const nextWindowOpens = LETTER_WEEK + WEEKS_PER_YEAR
+    expect(nextWindowOpens).toBeLessThan(until) // ...the old deal is still supplying her
+    expect(activeKitDeal(world.offers, nextWindowOpens)).not.toBeNull()
+    expect(seasonSpokenFor(world.offers, nextWindowOpens)).toBeNull() // ...but next season is free
     const again = raiseKitOffer({
       offers: world.offers,
-      seed: seedTheShopWritesTo('one-brand-after-roll', after, worldly(1)),
-      week: after,
+      seed: seedTheShopWritesTo('one-brand-after-roll', nextWindowOpens, worldly(1)),
+      week: nextWindowOpens,
       standing: worldly(1),
     })
     expect(again?.state).toBe('open')
     expect((again!.terms as KitOfferTerms).tier).toBe('global')
+    // ...and signing it starts cover the week the old contract stops, never a week before.
+    world.week = nextWindowOpens
+    acceptOffer(world, again!.id)
+    expect(again!.fromWeek).toBe(until + 1)
+    expect(activeKitDeal(world.offers, until)!.id).toBe(id)
+    expect(activeKitDeal(world.offers, until + 1)!.id).toBe(again!.id)
   })
 
   it('a refusal does NOT block – saying no is what leaves the ladder open', () => {
@@ -1133,6 +1211,184 @@ describe('⚠ ONE BRAND AT A TIME', () => {
       standing: worldly(1),
     })
     expect(next?.state).toBe('open')
+  })
+})
+
+// =================================================================================================
+// THE FIVE-WEEK WINDOW (05.08, feat/sponsor-window)
+// =================================================================================================
+//
+// The owner's own save is what this block exists for. Decoded, it held a local letter raised at week
+// 257 that EXPIRED unsigned at 262 and the next letter at 309 - forty-seven weeks with no deal,
+// because letters were raised on ONE week a year and the one he missed was the only one there was.
+describe('the sponsor window', () => {
+  it('is the off-season plus two, and no brand writes on its last week', () => {
+    // Swept over four seasons rather than asserted at one week, because "the window is five weeks"
+    // is a property of the year and not of a number.
+    const windowWeeks: number[] = []
+    const letterWeeks: number[] = []
+    for (let w = 0; w < 4 * WEEKS_PER_YEAR; w++) {
+      if (isSponsorWindowWeek(w)) windowWeeks.push(w % WEEKS_PER_YEAR)
+      if (isSponsorLetterWeek(w)) letterWeeks.push(w % WEEKS_PER_YEAR)
+    }
+    expect([...new Set(windowWeeks)].sort((a, b) => a - b)).toEqual([47, 48, 49, 50, 51])
+    expect([...new Set(letterWeeks)].sort((a, b) => a - b)).toEqual([47, 48, 49, 50])
+    expect(windowWeeks).toHaveLength(4 * SPONSOR_WINDOW_WEEKS)
+    expect(letterWeeks).toHaveLength(4 * SPONSOR_LETTER_WEEKS)
+    // ...and it still contains the whole off-season, which is what the two predicates share.
+    for (let w = 0; w < 4 * WEEKS_PER_YEAR; w++) {
+      if (isSponsorReviewWeek(w)) expect(isSponsorWindowWeek(w)).toBe(true)
+    }
+  })
+
+  it('⚠ walks the ladder STRONGEST first, so signing on sight is never a mistake', () => {
+    // The order is the safety property (see `windowLadder`). Weakest-first would put the shop's
+    // letter in week 47 and the global brand's in week 49, so a parent who signed the first letter
+    // he was ever sent would have thrown the better one away unseen - a trap dressed as a gamble.
+    expect(windowLadder(worldly(1))).toEqual(['global', 'national', 'local'])
+    expect(windowLadder(worldly(20))).toEqual(['national', 'local'])
+    // ...and a career that clears ONE rung gets ONE letter. Nothing is manufactured.
+    expect(windowLadder(domestic(1))).toEqual(['local'])
+    expect(windowLadder(domestic(999))).toEqual([])
+    // ...and the list is cut from the TOP, so the biggest names can never be crowded off the
+    // calendar by four smaller ones - a top-10 professional does not hear from a shop in her town.
+    const top = windowLadder(pro(1))
+    expect(top).toHaveLength(SPONSOR_LETTER_WEEKS)
+    expect(top[0]).toBe('icon')
+    expect(top).not.toContain('local')
+  })
+
+  it('raises at most one letter a week, and one per rung across the window', () => {
+    // A girl inside the world top 8 clears three rungs, so three letters land on three consecutive
+    // weeks and the fourth week has nobody left to write. Rolled with a seed that says yes to each.
+    const offers: Offer[] = []
+    const seen: string[] = []
+    for (let slot = 0; slot < SPONSOR_LETTER_WEEKS; slot++) {
+      const week = LETTER_WEEK + slot
+      const raised = raiseKitOffer({
+        offers,
+        seed: seedTheShopWritesTo(`ladder-slot-${slot}`, week, worldly(1)),
+        week,
+        standing: worldly(1),
+      })
+      if (raised) seen.push((raised.terms as KitOfferTerms).tier)
+    }
+    expect(seen).toEqual(['global', 'national', 'local'])
+    expect(offers).toHaveLength(3)
+    expect(offers.every((o) => o.deadlineWeek === WINDOW_CLOSE_WEEK)).toBe(true)
+    // ...and every one of them is still a decision on the window's last week.
+    for (const o of offers) expect(isOfferLive(o, WINDOW_CLOSE_WEEK)).toBe(true)
+    for (const o of offers) expect(isOfferLive(o, WINDOW_CLOSE_WEEK + 1)).toBe(false)
+  })
+
+  it('⚠ a contract ends WITH the season, on week 49, so week 50 is empty', () => {
+    // The owner's own rule: «заканчивать контракты вместе с сезоном на 49 неделе (если они
+    // однолетние), т.е. чтобы с 50 точно уже было пусто».
+    const { world, id } = worldWithLetter('ends-with-season')
+    acceptOffer(world, id)
+    const until = world.offers[0].untilWeek!
+    expect(until % WEEKS_PER_YEAR).toBe(WEEKS_PER_YEAR - OFF_SEASON_WEEKS)
+    expect(until).toBe(contractEndWeek(WEEKS_PER_YEAR))
+    expect(activeKitDeal(world.offers, until)).not.toBeNull()
+    expect(activeKitDeal(world.offers, until + 1)).toBeNull()
+    // ...and the slot being empty is what the NEXT window needs: nothing is spoken for at its open.
+    expect(seasonSpokenFor(world.offers, LETTER_WEEK + WEEKS_PER_YEAR)).toBeNull()
+  })
+
+  it('⚠ the deals MEET: no week under two contracts, and no week between them', () => {
+    // The seam the window created and `fromWeek` closes. She signs next year's letter three weeks
+    // before this year's contract stops, so the two would otherwise overlap - and `activeKitDeal`
+    // promises there is at most one.
+    const { world, id } = worldWithLetter('seam')
+    acceptOffer(world, id)
+    const first = world.offers[0]
+    const nextOpen = LETTER_WEEK + WEEKS_PER_YEAR
+    const second = raiseKitOffer({
+      offers: world.offers,
+      seed: seedTheShopWritesTo('seam-roll', nextOpen, domestic(1)),
+      week: nextOpen,
+      standing: domestic(1),
+    })!
+    world.week = nextOpen
+    acceptOffer(world, second.id)
+    expect(second.decidedWeek).toBe(nextOpen)
+    expect(second.fromWeek).toBe(first.untilWeek! + 1) // ...it starts the week the old one stops
+    // Swept week by week over both terms: exactly one deal in force, every week, with no hole.
+    for (let w = first.fromWeek!; w <= second.untilWeek!; w++) {
+      const live = world.offers.filter(
+        (o) => o.state === 'signed' && w >= (o.fromWeek ?? 0) && w <= (o.untilWeek ?? -1),
+      )
+      expect(live, `week ${w}`).toHaveLength(1)
+    }
+  })
+
+  it('a multi-season deal still turns the whole window away, which is what gives it bite', () => {
+    const { world, id } = worldWithLetter('multi-block', LETTER_WEEK, worldly(20))
+    acceptOffer(world, id) // ...national, two seasons
+    const until = world.offers[0].untilWeek!
+    // The window a whole season later: the deal still covers the season ahead, so nobody writes -
+    // on ANY of the four letter weeks, and however well she has done in the meantime.
+    for (let slot = 0; slot < SPONSOR_LETTER_WEEKS; slot++) {
+      const week = LETTER_WEEK + WEEKS_PER_YEAR + slot
+      expect(seasonSpokenFor(world.offers, week)?.id, `week ${week}`).toBe(id)
+      expect(
+        raiseKitOffer({
+          offers: world.offers,
+          seed: seedTheShopWritesTo(`multi-block-${slot}`, week, worldly(1)),
+          week,
+          standing: worldly(1),
+        }),
+        `a competing brand wrote at week ${week}`,
+      ).toBeNull()
+    }
+    expect(world.offers).toHaveLength(1)
+    // ...and the winter AFTER that, when its last season is the one being judged, it stops blocking.
+    expect(seasonSpokenFor(world.offers, LETTER_WEEK + 2 * WEEKS_PER_YEAR)).toBeNull()
+    expect(LETTER_WEEK + 2 * WEEKS_PER_YEAR).toBeLessThan(until)
+  })
+
+  it("⚠ THE OWNER'S OWN HOLE: a letter missed in the window costs a season, not forty-seven weeks", () => {
+    // His save, as a fixture. A local letter arrived, he did not answer it, and the next one did not
+    // come for forty-seven weeks because the schedule had exactly one arrival week a year. Under the
+    // window the same miss costs him the season the letter was FOR - which is the real price of
+    // letting a decision lapse - and the next window is a year away rather than a year and a season.
+    const world = createWorld(seedTheShopWritesTo('owners-hole'), DEFAULT_PROFILE)
+    world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
+    recomputeKidRank(world)
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 3 * WEEKS_PER_YEAR; i++) tickWeek(world, rng)
+    const kit = world.offers.filter((o) => o.kind === 'kit' && o.state !== 'info')
+    expect(kit.length).toBeGreaterThan(0)
+    // Every letter she was ever sent arrived inside a window, and none of them expired into a
+    // season she was playing - which is the half of the fault that made his lapse invisible.
+    for (const o of kit) {
+      expect(isSponsorLetterWeek(o.week), `letter at ${o.week}`).toBe(true)
+      expect(isSponsorWindowWeek(o.deadlineWeek)).toBe(true)
+      expect(o.deadlineWeek % WEEKS_PER_YEAR).toBe(WEEKS_PER_YEAR - 1)
+    }
+    // ...and the gap between one window's letters and the next is one season, by construction.
+    const windows = [...new Set(kit.map((o) => Math.floor(o.week / WEEKS_PER_YEAR)))].sort()
+    for (let i = 1; i < windows.length; i++) expect(windows[i] - windows[i - 1]).toBe(1)
+  })
+
+  it('never lets two contracts be signed for the same season, even from a stale screen', () => {
+    // The window deliberately leaves several letters open at once; this is the rule that keeps the
+    // game's oldest invariant - at most one deal - from being broken by the feature that makes
+    // signing a choice.
+    const { world, id } = worldWithLetter('stale-screen')
+    const second = raiseKitOffer({
+      offers: world.offers,
+      seed: seedTheShopWritesTo('stale-screen-roll', world.week + 1, worldly(1)),
+      week: world.week + 1,
+      standing: worldly(1),
+    })!
+    acceptOffer(world, id)
+    // The second letter was refused in the same breath, so a screen still showing it is stale...
+    expect(second.state).toBe('refused')
+    // ...and forcing it through the engine's own gate is refused with a reason, not honoured.
+    second.state = 'open' // a corrupted save / a hand-edited screen, in one line
+    expect(() => acceptOffer(world, second.id)).toThrow()
+    expect(world.offers.filter((o) => o.state === 'signed')).toHaveLength(1)
   })
 })
 
@@ -1162,16 +1418,34 @@ describe('the letter arrives in the OFF-SEASON, once', () => {
     expect(new Set(world.offers.map((o) => o.week)).size).toBe(world.offers.length)
   })
 
-  it('⚠ the window runs out of the quiet weeks and into the new year, on purpose', () => {
-    // Four weeks of thinking against a three-week off-season, so a letter raised at 49 can still be
-    // signed at 53. That is the honest shape rather than an accident: the owner asked for a real
-    // pause («давать человеку какое-то время на подумать») and shortening it to fit the calendar
-    // would be letting the calendar edit the decision. What matters is that the deal is SIGNABLE
-    // before the season opens, which it is from the day it arrives.
+  it('⚠ REVERSED (05.08): the window now ENDS with the year, and no decision runs into the season', () => {
+    // ⚠ THIS TEST USED TO ASSERT THE OPPOSITE - «four weeks of thinking against a three-week
+    //   off-season, so a letter raised at 49 can still be signed at 53» - and its reasoning was that
+    //   shortening the pause to fit the calendar «would be letting the calendar edit the decision».
+    //   The window reverses it deliberately, and gets BOTH properties instead of trading one away:
+    //     * the pause is LONGER, not shorter. The window opens two weeks before the off-season, so
+    //       the first letter of the year carries five weeks rather than four;
+    //     * and no decision is open while she is playing, which is what the 01.08 move into the
+    //       off-season was for in the first place. A per-letter deadline could not have both: a
+    //       letter raised on the window's later weeks would have run its four weeks straight through
+    //       the first tournaments of the new season, which is the fault that move existed to fix.
+    //   So the deadline is a property of the WINDOW rather than of the letter, and the guarantee
+    //   that replaces "four weeks each" is `SPONSOR_LETTER_WEEKS`: no brand writes on the closing
+    //   week, so every letter has at least two.
     const { world } = worldWithLetter('window-shape')
     expect(world.offers[0].week).toBe(LETTER_WEEK)
-    expect(world.offers[0].deadlineWeek).toBe(LETTER_WEEK + ECONOMY.sponsorship.decideWeeks)
-    expect(world.offers[0].deadlineWeek).toBeGreaterThan(WEEKS_PER_YEAR)
+    expect(world.offers[0].deadlineWeek).toBe(WINDOW_CLOSE_WEEK)
+    expect(world.offers[0].deadlineWeek).toBeLessThan(WEEKS_PER_YEAR)
+    // The window is five weeks wide, it is the off-season plus two, and it is `decideWeeks` of
+    // thinking plus the week the first letter lands - three readings of the same number.
+    expect(SPONSOR_WINDOW_WEEKS).toBe(OFF_SEASON_WEEKS + 2)
+    expect(SPONSOR_WINDOW_WEEKS).toBe(ECONOMY.sponsorship.decideWeeks + 1)
+    // ...and the shortest window any letter can get is still two whole weeks.
+    const lastLetterWeek = LETTER_WEEK + SPONSOR_LETTER_WEEKS - 1
+    expect(isSponsorLetterWeek(lastLetterWeek)).toBe(true)
+    expect(isSponsorLetterWeek(lastLetterWeek + 1)).toBe(false)
+    expect(isSponsorWindowWeek(lastLetterWeek + 1)).toBe(true)
+    expect(WINDOW_CLOSE_WEEK - lastLetterWeek + 1).toBe(2)
   })
 
   it('signing in the quiet weeks means she opens the season already kitted', () => {
@@ -1239,7 +1513,20 @@ describe('National stops being dead content on the way OUT', () => {
     expect(world.offers[0].untilWeek).toBeLessThan(until)
     expect(activeKitDeal(world.offers, review)).not.toBeNull()
     expect(activeKitDeal(world.offers, 2 * WEEKS_PER_YEAR)).toBeNull()
-    const line = world.events.find((e) => e.week === review && e.text.includes('Netrally'))
+    // ⚠ RE-AIMED (05.08): the verdict is reached on the window's OPENING week and the one feed row
+    //   it is allowed is written on its CLOSING week - see `reviewSponsors` for why the row waits
+    //   (the feed budget: four letter weeks must not become four rows). The knock the player
+    //   actually gets at the verdict is the brand's goodbye LETTER, asserted here too, because that
+    //   is the surface the 04.08 fix put it on.
+    const goodbye = world.offers.find((o) => o.state === 'info' && (o.terms as KitOfferTerms).ended)
+    expect((goodbye!.terms as KitOfferTerms).ended).toBe('standing')
+    expect(goodbye!.week).toBe(review)
+    for (let w = review + 1; w <= review + SPONSOR_WINDOW_WEEKS - 1; w++) {
+      world.week = w
+      reviewSponsors(world)
+    }
+    const line = world.events.find((e) => e.text.includes('Netrally'))
+    expect(line?.week).toBe(review + SPONSOR_WINDOW_WEEKS - 1)
     expect(line?.text).toMatch(/top 30/)
     expect(line?.text).toMatch(/they are done/)
   })
@@ -1324,9 +1611,43 @@ describe('the v33 schema step', () => {
     expect(terms.travelShare).toBe(0)
     expect(terms.seasons).toBe(1)
     // ...and nothing else about the contract moved: the term she signed is the term she gets.
-    expect(migrated.offers[0].untilWeek).toBe(103)
+    // ⚠ RE-AIMED (05.08, schema v41), and this is the one place the sponsor window can be FELT by a
+    //   career already in flight, so it is asserted rather than described. Every pre-v41 term ended
+    //   on the calendar year's last week (103 here); a term now ends WITH THE SEASON, on week 49,
+    //   and the migration snaps every running contract onto that boundary. The direction is DOWN for
+    //   this shape and for every other shape the shipped rules produce - by two weeks, and they are
+    //   off-season weeks that carry no tournament, no ranking and no entry, so what is lost is at
+    //   most a fortnight of the freshness ceiling. Anything ending EARLIER in a season is rounded UP
+    //   to the same week instead, because extending a promise is safe and shortening one is not; the
+    //   test below walks both directions off one expression.
+    expect(migrated.offers[0].untilWeek).toBe(101)
+    expect(migrated.offers[0].untilWeek).toBe(contractEndWeek(103))
+    // ...and the start of cover is back-filled EXACTLY rather than reconstructed: `decidedWeek` is
+    // what a pre-v41 deal meant by "the first week it covers", and that is what it becomes.
+    expect(migrated.offers[0].fromWeek).toBe(53)
     expect(migrated.offers[0].coveredCents).toBe(41_200)
     expect(terms.kitAllowanceCents).toBe(200_000)
+  })
+
+  it('⚠ v41 lands a mid-season term on the season boundary, and says which way it rounded', () => {
+    // The migration's own rule, both directions, on the same expression. A save whose contract dies
+    // in the middle of a competitive season - which no shipped rule produces, but a hand-edited or a
+    // future one could - is rounded UP to that season's contract end, so the player is never handed
+    // LESS cover than his letter promised. A save whose contract runs past week 49 into the two
+    // quiet weeks is rounded DOWN to the same week, which costs a fortnight of nothing.
+    const midSeason = v32WithDeal()
+    ;(midSeason.offers as { untilWeek: number }[])[0].untilWeek = 70 // ...season 1, week 18
+    const up = migrateSave(midSeason) as unknown as WorldState
+    expect(up.offers[0].untilWeek).toBe(101)
+    expect(up.offers[0].untilWeek!).toBeGreaterThan(70)
+
+    const lateSeason = v32WithDeal()
+    ;(lateSeason.offers as { untilWeek: number }[])[0].untilWeek = 103 // ...season 1, the year's end
+    const down = migrateSave(lateSeason) as unknown as WorldState
+    expect(down.offers[0].untilWeek).toBe(101)
+    expect(down.offers[0].untilWeek!).toBeLessThan(103)
+    // ...and both landings are the same week, because there is only one rule.
+    expect(up.offers[0].untilWeek).toBe(down.offers[0].untilWeek)
   })
 
   it('...so a migrated deal still keeps every line fresh, exactly as it did before the update', () => {

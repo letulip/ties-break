@@ -462,7 +462,16 @@ export const ECONOMY = {
     topMinEvents: 8,
     /** HOW LONG THE PARENT HAS TO THINK. The owner asked for exactly this - «давать человеку
      *  какое-то время на подумать» - and the number has to be long enough to be a real pause and
-     *  short enough that the letter is still the season's business. Four weeks. */
+     *  short enough that the letter is still the season's business. Four weeks.
+     *
+     *  ⚠ IT SIZES THE WINDOW NOW RATHER THAN EACH LETTER (05.08, feat/sponsor-window).
+     *  `SPONSOR_WINDOW_WEEKS` is `decideWeeks + 1` - four weeks of thinking plus the week the first
+     *  letter lands - and it is also, to the week, the owner's own «межсезонье +2». The two readings
+     *  agreeing is why the number did not have to move. What changed is that the four weeks belong
+     *  to the WINDOW: every letter raised inside one expires when it closes, so the first letter of
+     *  a winter carries five weeks and the last carries two, and none of them carries a decision
+     *  into a week she is playing. See `SPONSOR_LETTER_WEEKS` for the guarantee that replaces "four
+     *  weeks each". */
     decideWeeks: 4,
     /** WHETHER THE SHOP WRITES AT ALL in a season she qualifies for. Not 1, on purpose: an offer
      *  that is guaranteed to come round again is an offer with no cost to letting it expire, and

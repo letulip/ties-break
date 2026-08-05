@@ -107,7 +107,7 @@ const countingResults = computed(() => ladder.value?.countingResults ?? [])
 
 // --- THE WINDOW BLOCK (W2-LADDER §3: the owner's «очковое окно возможностей», made visible) ------
 // Three facts the rolling window has always had and never said: how full it is against the shown
-// table's own width (six, or sixteen on the professional table), the weakest counted value (the
+// table's own width (six, or eighteen on the professional table), the weakest counted value (the
 // bar a new result must clear once the window is full), and the NEXT DROP - the oldest counted
 // result, what it was, and the week the 52-week window lets it go. All derived from the counting
 // list the table below already shows, so the block and the table cannot disagree.

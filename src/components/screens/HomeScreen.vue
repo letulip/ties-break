@@ -49,7 +49,7 @@ import RankHelpDialog from '../RankHelpDialog.vue'
 import InboxSheet from '../InboxSheet.vue'
 // The bell's dot and the App bar's Home dot read ONE rule from here - see the module header for the
 // bug that made the extraction necessary.
-import { useNewsWatermark } from '../../composables/inboxCue'
+import { useLetterWatermark, useNewsWatermark } from '../../composables/inboxCue'
 // U0 – the shared components (docs/specs/ui-components.md). Home is one of the two screens this
 // slice ports onto them; Season is the other, and the pair is the only honest test that these are
 // components rather than one screen with a wrapper round it. Where Home still carries a rule of its
@@ -205,9 +205,28 @@ function jumpToNews(): void {
 // false. What it must never mean is "you have not looked at this": the engine cannot know that, and a
 // dot that claims to is a dot that lies on the second visit.
 const offerOpen = computed(() => game.snapshot?.offerOpen ?? false)
+
+// ⚠ ...AND THE ENGINE'S FACT ALONE WAS NOT ENOUGH (owner, 05.08: «Письма приходят, но ни маркера,
+// ни извещений нет»). `offerOpen` is `hasLiveOffer` - "a decision is waiting" - and a letter that
+// asks for no decision never sets it. Since 04.08 a kit deal ENDS with a notice (`state: 'info'`),
+// the tournament desk's entry receipts are notices too, and every one of them landed in the post
+// with this icon staying dark. `newestLetterId`'s header in composables/inboxCue.ts had already
+// written down that this is a second question and that the icon was not yet asking it.
+//
+// So the dot is now the OR of two facts, and each keeps its own way out:
+//   * a live offer clears when it is signed, refused or expires - the engine's business, untouched;
+//   * an arrival clears when he OPENS the inbox, which is the moment he has been shown it.
+// Its own storage key, per the module's rule that two surfaces watching one thing must not clear
+// each other: the App shell's Home-tab dot means "post arrived while you were on another tab" and
+// is cleared by arriving on Home, which is a different sentence from "you have not opened it".
+const { unseen: letterUnseen, markSeen: markLettersSeen } = useLetterWatermark('tb:lastSeenInboxLetter')
+const inboxDot = computed(() => offerOpen.value || letterUnseen.value)
 const showInbox = ref(false)
 function openInbox(): void {
   playSfx('clickSoft')
+  // Opening the inbox IS the reading - the letters are the whole of what the sheet shows, so there
+  // is no later moment to catch and no second surface that could still owe him the news.
+  markLettersSeen()
   showInbox.value = true
 }
 
@@ -604,27 +623,86 @@ const windowRungs = computed<readonly TierId[]>(
       upcoming: game.snapshot?.upcoming ?? [],
     }).rungs,
 )
-/** The visible span of `SEASON_STRIP_TIERS`, as [first, last] inclusive. The window is contiguous in
- *  ladder order by construction (`tierOutgrown` closes a rung when the rung three above opens), but
- *  this takes the first and last OPEN index rather than assuming it, so a future non-contiguous
- *  verdict widens the span instead of dropping a rung out of the middle of the row. */
-const stripSpan = computed<[number, number]>(() => {
+/**
+ * WHICH INDICES OF `SEASON_STRIP_TIERS` ARE ON SCREEN – the open rungs THEMSELVES, plus the one rung
+ * directly above the highest of them. A SET, never a span.
+ *
+ * ⚠ THIS IS THE BUG THE OWNER RE-REPORTED (05.08: «я просил спрятать вообще всё неактуальное кроме
+ * смежных турниров за точечки, эта штука очень много места на экране занимает» – beside three
+ * circled junior rungs). The collapse shipped, and then did nothing on the screen he was looking at,
+ * because it was written as `[firstOpen, lastOpen + 1]` and FILLED that range. The comment under it
+ * claimed the window is "contiguous in ladder order by construction" and treated a non-contiguous
+ * verdict as a case that merely "widens the span instead of dropping a rung out of the middle".
+ *
+ * The window is NOT contiguous once she ages out of the Junior Tour, and this is the engine working
+ * as written rather than a fault to fix one storey down. `tierOutgrown` closes a rung when the rung
+ * THREE ABOVE it opens, and it carries an age clause – «a door she cannot open yet cannot close the
+ * one behind her» (engine/world/ladder.ts). At nineteen the three rungs above Local, Regional and
+ * National are J30, J60 and J300, all of them shut on age for ever, so the domestic three never
+ * close again. The engine therefore holds {local, regional, national} open BESIDE {w50, w75, w100},
+ * with five dead rungs in the hole between them – and the span-fill dutifully printed all five.
+ * That is his screenshot: twelve chips, three of them the junior rungs he circled.
+ *
+ * So the row is built from the set, and the hole is where the ellipsis goes. Nothing is re-derived:
+ * `windowRungs` is still the engine's verdict, verbatim, and this only stops widening it.
+ */
+const stripVisible = computed<readonly number[]>(() => {
   const last = SEASON_STRIP_TIERS.length - 1
+  if (stripExpanded.value) return SEASON_STRIP_TIERS.map((_, i) => i)
   const open = SEASON_STRIP_TIERS.map((t, i) => (windowRungs.value.includes(t.id) ? i : -1)).filter((i) => i >= 0)
   // Nothing open at all is not a state the engine produces, and if it ever did, a row with one
-  // ellipsis and no rungs would be worse than the old twelve. Show everything.
-  if (!open.length) return [0, last]
-  return [open[0], Math.min(open[open.length - 1] + 1, last)]
+  // ellipsis and no rungs would be worse than the old sixteen. Show everything.
+  if (!open.length) return SEASON_STRIP_TIERS.map((_, i) => i)
+  // ...plus ONE rung above the top of the window - «плюс один верхний недоступный уровень». It is
+  // the rung whose unlock condition is the goal text ("Opens in the top 250"), which is the one
+  // sentence that makes the ladder legible; the rungs above THAT are years away and cost a line each.
+  const aspiration = Math.min(open[open.length - 1] + 1, last)
+  return open.includes(aspiration) ? open : [...open, aspiration]
 })
-const shownChips = computed(() =>
-  stripExpanded.value ? seasonChips.value : seasonChips.value.slice(stripSpan.value[0], stripSpan.value[1] + 1),
-)
-/** How many rungs the ellipsis is standing in for, on each side. Zero on either side means no chip
- *  there: an affordance for nothing is a control that lies about having something behind it. */
-const hiddenBelow = computed(() => (stripExpanded.value ? 0 : stripSpan.value[0]))
-const hiddenAbove = computed(() =>
-  stripExpanded.value ? 0 : SEASON_STRIP_TIERS.length - 1 - stripSpan.value[1],
-)
+
+/** One cell of the rendered row: either a rung, or the ellipsis standing in for a stretch of them.
+ *  The gap's two sentences are built in the script rather than in the template, because both have to
+ *  count: "1 levels" is the kind of thing that ships and then reads as a bug to the one player using
+ *  a screen reader, which is the surface `aria-label` exists for. */
+type StripCell =
+  | { kind: 'rung'; key: string; chip: TierChip }
+  | { kind: 'gap'; key: string; hidden: number; label: string; title: string }
+
+/**
+ * THE ROW, WITH THE ELLIPSIS WHERE THE LADDER SKIPS. A gap cell is emitted for every run of hidden
+ * rungs – before the first visible one, between any two non-adjacent visible ones, and after the
+ * last – so the affordance sits exactly where the elision is, the way a paginator's does. Each one
+ * carries its own count, because "…" that hides eleven rungs and "…" that hides one are different
+ * promises and the player is entitled to know which one he is tapping.
+ */
+const stripCells = computed<StripCell[]>(() => {
+  const cells: StripCell[] = []
+  const vis = stripVisible.value
+  const last = SEASON_STRIP_TIERS.length - 1
+  const gapFrom = (lo: number, hi: number): StripCell => {
+    const hidden = hi - lo + 1
+    const noun = hidden === 1 ? 'level' : 'levels'
+    // The RANGE in the tooltip, so the affordance says what is behind it rather than only how much:
+    // "5 levels hidden (National to W15)" is a different offer from the same count at the top of the
+    // ladder, and a player deciding whether to tap wants the names.
+    const span = hidden === 1 ? SEASON_STRIP_TIERS[lo].short : `${SEASON_STRIP_TIERS[lo].short} to ${SEASON_STRIP_TIERS[hi].short}`
+    return {
+      kind: 'gap',
+      key: `gap-${lo}`,
+      hidden,
+      label: `Show ${hidden} more ${noun}`,
+      title: `${hidden} ${noun} hidden (${span}) – tap to show the whole ladder`,
+    }
+  }
+  let prev = -1
+  for (const i of vis) {
+    if (i - prev > 1) cells.push(gapFrom(prev + 1, i - 1))
+    cells.push({ kind: 'rung', key: seasonChips.value[i].id, chip: seasonChips.value[i] })
+    prev = i
+  }
+  if (prev < last) cells.push(gapFrom(prev + 1, last))
+  return cells
+})
 
 // --- News: structured events (Package M), non-financial types only (expense/income live on the
 // Money ledger). Strictly newest-first: most recent week first, and within a week newest event
@@ -737,14 +815,15 @@ function openRankHelp(): void {
               <span v-if="newsUnseen" class="diary-tool-dot"></span>
             </button>
             <!-- THE INBOX. An envelope at the export's own 22px / 1.7 stroke, inline like the bell,
-                 so nothing can 404 and nothing needs a mask. Its dot is the ENGINE's fact - see the
-                 note beside `offerOpen` in the script for what it does and does not assert. -->
+                 so nothing can 404 and nothing needs a mask. Its dot is the engine's open-offer fact
+                 OR an unopened arrival - see the note beside `inboxDot` in the script for why one
+                 marker now answers two questions, and how each of them goes out. -->
             <button class="diary-tool" aria-label="Open the inbox" title="Inbox" @click="openInbox">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="2.5" y="5" width="19" height="14" rx="2"></rect>
                 <path d="M3 6.5 12 13l9-6.5"></path>
               </svg>
-              <span v-if="offerOpen" class="diary-tool-dot"></span>
+              <span v-if="inboxDot" class="diary-tool-dot"></span>
             </button>
             <button class="diary-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -960,37 +1039,30 @@ function openRankHelp(): void {
              and the far top of the ladder are behind the ellipsis chips, which expand the row in
              place. Nothing is deleted - see the ruling quoted at `stripExpanded` in the script. -->
         <div class="season-strip">
-          <button
-            v-if="hiddenBelow"
-            class="pill tier-chip strip-more"
-            :aria-expanded="stripExpanded"
-            :aria-label="`Show ${hiddenBelow} earlier levels`"
-            :title="`${hiddenBelow} levels she has outgrown – tap to show them`"
-            @click="stripExpanded = true"
-          >&hellip;</button>
-          <template v-for="(chip, i) in shownChips" :key="chip.id">
+          <template v-for="(cell, i) in stripCells" :key="cell.key">
+            <button
+              v-if="cell.kind === 'gap'"
+              class="pill tier-chip strip-more"
+              :aria-expanded="stripExpanded"
+              :aria-label="cell.label"
+              :title="cell.title"
+              @click="stripExpanded = true"
+            >&hellip;</button>
             <span
+              v-else
               class="pill tier-chip"
               :class="{
-                ok: chip.state === 'reached',
-                muted: chip.state === 'idle',
-                locked: chip.state === 'locked',
-                unlocked: chip.state === 'unlocked',
-                waiting: chip.state === 'waiting',
-                outgrown: chip.state === 'outgrown',
+                ok: cell.chip.state === 'reached',
+                muted: cell.chip.state === 'idle',
+                locked: cell.chip.state === 'locked',
+                unlocked: cell.chip.state === 'unlocked',
+                waiting: cell.chip.state === 'waiting',
+                outgrown: cell.chip.state === 'outgrown',
               }"
-              :title="chip.title"
-            >{{ chip.short }} &middot; {{ chip.label }}</span>
-            <span v-if="i < shownChips.length - 1" class="strip-arrow">&#8594;</span>
+              :title="cell.chip.title"
+            >{{ cell.chip.short }} &middot; {{ cell.chip.label }}</span>
+            <span v-if="i < stripCells.length - 1" class="strip-arrow">&#8594;</span>
           </template>
-          <button
-            v-if="hiddenAbove"
-            class="pill tier-chip strip-more"
-            :aria-expanded="stripExpanded"
-            :aria-label="`Show ${hiddenAbove} higher levels`"
-            :title="`${hiddenAbove} levels above her window – tap to show them`"
-            @click="stripExpanded = true"
-          >&hellip;</button>
           <button
             v-if="stripExpanded"
             class="pill tier-chip strip-more"

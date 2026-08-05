@@ -75,7 +75,7 @@ import {
 } from './academy'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
-import { BEST_N_BY_TRACK, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
+import { BEST_N_BY_TRACK, RANKABLE_MIN, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import {
   selectEntrants,
   resolveDoubleBookings,
@@ -121,6 +121,7 @@ import {
   activeKitDeal,
   expireOffers,
   isSponsorReviewWeek,
+  isSponsorWindowWeek,
   pruneEntryLetters,
 } from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
@@ -206,7 +207,7 @@ import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
 import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors, type ProDoors } from './world/ladder'
 export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors }
-import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, FINANCE_WEEKS } from './world/constants'
+import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
 // W3-ACT2 §6 - the mandatory regime. Re-exported below under its own names so the worker, the
@@ -275,7 +276,7 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
 // the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
 // end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 40
+export const SAVE_SCHEMA_VERSION = 41
 
 
 
@@ -1215,9 +1216,19 @@ function housekeep(world: WorldState): void {
  *  new result: `points` when nothing was displaced, `points − displaced` when a counted
  *  result was pushed out, `0` when the result didn't crack the best N. `bestN` is the TRACK's
  *  window width (W2-LADDER §3) so the sentence names the rule it measured against - "best 6" on a
- *  junior summary, "best 16" on a professional one - instead of quoting the junior rule at both. */
-export function rankingDeltaSuffix(points: number, delta: number, bestN: number): string {
+ *  junior summary, "best 18" on a professional one - instead of quoting the junior rule at both.
+ *  It reads the constant rather than a literal, so the 05.08 correction from sixteen to the
+ *  rulebook's eighteen changed this copy without touching this function.
+ *
+ *  ⚠ AND THE THIRD CASE IS THE MINIMUM (points-by-the-book, 05.08, §VIII.A.2.b). A player who has
+ *  scored but is not yet on the list has `after === 0` with `points > 0`, and the old two-case
+ *  sentence would have told her the result "does not improve best 18" – true of the arithmetic and
+ *  nonsense to read, because the reason is not that her window was full, it is that she has no
+ *  window yet. `notRanked` says which rule is holding her instead. It is passed by the call site
+ *  rather than derived here, because this function is a formatter and knows nothing about tables. */
+export function rankingDeltaSuffix(points: number, delta: number, bestN: number, notRanked = false): string {
   if (points <= 0) return ''
+  if (notRanked) return ` (+${points} banked – a ranking needs ${RANKABLE_MIN.tournaments} events with points, or ${RANKABLE_MIN.points})`
   if (delta <= 0) return ` (does not improve best ${bestN})`
   if (delta < points) return ` (ranking total +${delta})`
   return ''
@@ -1395,7 +1406,7 @@ function finalizeTournament(world: WorldState): void {
     type: 'tournament',
     text:
       `${tier.label} (${event.surface}, ${weekLabel(event.week)}): ${world.profile.kidName} – ` +
-      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before, BEST_N_BY_TRACK[track])}`,
+      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before, BEST_N_BY_TRACK[track], after === 0)}`,
     finishIdx: kidFinish,
   })
   // World news: who actually took the title of the draw she played in. When the kid IS the
@@ -1755,17 +1766,40 @@ function isRadarEvidence(e: WorldEvent): boolean {
   return e.match !== undefined && !e.friendly && (e.match.aId === KID_ID || e.match.bId === KID_ID)
 }
 
+// ⚠⚠ ...AND THE ORDER OF SACRIFICE IS NOT ALLOWED TO REACH ZERO (fix/wallet-and-wrapup, 05.08).
+//
+// The paragraph above is still the rule and still right: an ordinary row is cheaper to lose than one
+// of her matches. What it did not say is what happens when the protected class STOPS LEAVING ROOM,
+// and the answer was measured on the owner's own save at week 412: 382 match rows + 18 kept
+// milestones = 400 = the whole cap, `rest` empty, and therefore EVERY income and expense row of
+// EVERY week deleted on the tick that wrote it. His week recap read «FINANCES · Income +$0 · Spent
+// +$0» beside three real matches, and the Money screen's ledger tab had no transactions at all.
+//
+// The asymmetry is structural rather than accidental: ordinary rows are a FLOW (2-6 a week, for
+// ever) and her matches are a STOCK, so absolute priority for the stock is not a preference between
+// two competing classes – it is a guarantee that the flow reaches zero on a long enough career. The
+// two ledger-side fixes in this wave (the recap's money, the wrap-up's best result) mean no SCREEN
+// depends on this any more, but the feed still owns things nothing else records – the flavour lines,
+// the ledger's individual transactions, the tournament summary the travel note quotes – and none of
+// those is reconstructible from a per-category total. So the newest `EVENTS_ORDINARY_FLOOR` of them
+// are off the table until her matches have been trimmed to their own share. See constants.ts.
 function pruneEvents(world: WorldState): void {
   if (world.events.length <= EVENTS_CAP) return
   const kept = world.events.filter((e) => e.keep)
   const evidence = world.events.filter((e) => !e.keep && isRadarEvidence(e))
   const rest = world.events.filter((e) => !e.keep && !isRadarEvidence(e))
   const overflow = world.events.length - EVENTS_CAP
-  // Ordinary rows go first. Only if dropping every one of them is still not enough does the trim
-  // reach her matches, oldest-first as before.
-  const restTrimmed = overflow >= rest.length ? [] : rest.slice(overflow)
-  const stillOver = Math.max(0, overflow - rest.length)
-  const evidenceTrimmed = stillOver >= evidence.length ? [] : evidence.slice(stillOver)
+  // Ordinary rows go first, oldest-first, but only down to the floor.
+  const sacrificeable = Math.max(0, rest.length - EVENTS_ORDINARY_FLOOR)
+  const fromRest = Math.min(overflow, sacrificeable)
+  let stillOver = overflow - fromRest
+  // Then her matches, oldest-first as before.
+  const fromEvidence = Math.min(stillOver, evidence.length)
+  stillOver -= fromEvidence
+  const evidenceTrimmed = evidence.slice(fromEvidence)
+  // And only when trimming every match she has ever played is STILL not enough does the floor
+  // itself give way – a career whose kept milestones alone approach the cap.
+  const restTrimmed = rest.slice(fromRest + stillOver)
   world.events = [...kept, ...evidenceTrimmed, ...restTrimmed].sort((a, b) => a.id - b.id)
 }
 
@@ -2110,12 +2144,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         and in the real sport equipment deals are negotiated in November and December so the
   //         player opens the year already kitted.
   //
-  //         ⚠ THE ONCE-A-SEASON GUARANTEE IS NOW EXPLICIT, and it has to be. The boundary block gave
-  //         it away free – `week % 52 === 0` is one week – but the off-season is three
-  //         (OFF_SEASON_WEEKS), so the same call made naively would raise a fresh letter every one of
-  //         them. `isSponsorReviewWeek` is the FIRST off-season week and no other; it is the same
-  //         arithmetic `maybeFireSeasonWrapUp` fires on, which is the precedent for a once-a-year
-  //         off-season step.
+  //         ⚠ AND SINCE 05.08 IT IS A FIVE-WEEK WINDOW (feat/sponsor-window, and the owner's own
+  //         design: «нужно делать окно на все 5 недель (межсезонье +2)… и как раз в окно могут
+  //         приходить письма и есть время на принятие решения и выбор»). The off-season plus the two
+  //         weeks before it, `isSponsorWindowWeek`, and `reviewSponsors` is what splits the three
+  //         jobs across it - the outgoing deal is judged on the first week, a letter may land on each
+  //         of the first four, and the ONE feed row is written on the last. The once-a-season
+  //         guarantee that used to live in this predicate now lives inside: at most one letter a
+  //         week, from one rung, off a queue the week's own position indexes.
   //
   //         Placed here, in the same zero-main-draw region the boundary block occupies, and for the
   //         same reason: it takes at most one draw and that draw is on `seed:offer:<week>`, its own
@@ -2123,7 +2159,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // ⚠ AND NOBODY WRITES TO AN AMATEUR (W2-ENDINGS). A college player on a scholarship cannot take
   //   an endorsement, which is a real rule and also the only thing that keeps the four-year freeze
   //   from being free money. `reviewSponsors` draws on `seed:offer:<week>`, never MAIN.
-  if (isSponsorReviewWeek(world.week) && !inCollege(world)) reviewSponsors(world)
+  if (isSponsorWindowWeek(world.week) && !inCollege(world)) reviewSponsors(world)
 
   // 0a0c-ter (W3-ACT2 §7): AND THE PROFESSIONAL RUNGS PAY A QUARTERLY RETAINER. Four arrivals a
   //         season on fixed offsets (0 / 13 / 26 / 39) rather than one number at the boundary,

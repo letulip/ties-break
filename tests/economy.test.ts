@@ -298,7 +298,7 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     background: FamilyBackground,
     answer: 'sign' | 'refuse',
     intl: 'none' | 'world-class' = 'none',
-  ): { world: WorldState; covered: number; startOfSeason: number } {
+  ): { world: WorldState; covered: number; startOfSeason: number; rng: ReturnType<typeof rngFromSeed> } {
     const world = createWorld(seed, { ...DEFAULT_PROFILE, background })
     world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
     // ...and, for the upper rungs, a body of INTERNATIONAL results, because that is the table they
@@ -315,7 +315,11 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     else declineOffer(world, offer!.id)
     const startOfSeason = world.fundsCents
     for (let i = 0; i < 52; i++) tickWeek(world, rng)
-    return { world, covered: offer!.coveredCents ?? 0, startOfSeason }
+    // ⚠ `rng` COMES BACK OUT (05.08) so a caller can keep ticking on the SAME stream. The sponsor
+    //   window's one feed row is written on the window's LAST week rather than its first, so a test
+    //   that wants to read it has to reach week 51 of the year - and re-deriving the stream would
+    //   replay a career that has already been lived.
+    return { world, covered: offer!.coveredCents ?? 0, startOfSeason, rng }
   }
 
   it('the allowance is the SAME ceiling for every background (it does not know the family is rich)', () => {
@@ -397,7 +401,12 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     recomputeKidRank(sponsored)
     const rngA = rngFromSeed('valve-rng')
     const rngB = rngFromSeed('valve-rng')
-    for (let i = 0; i < 52; i++) {
+    // ⚠ RE-AIMED (05.08) ONLY IN WHERE IT STOPS: 51 rather than 52, because every letter now dies
+    //   with the WINDOW (the off-season's last week) instead of four weeks after its own arrival, so
+    //   a career ticked to 52 is holding an expired letter rather than an open one. The MAIN-stream
+    //   claim below is a claim about a whole year and is unaffected; the 52nd week is ticked
+    //   separately underneath, which lets the same test also pin that the expiry costs no draw.
+    for (let i = 0; i < 51; i++) {
       tickWeek(plain, rngA)
       tickWeek(sponsored, rngB)
     }
@@ -413,13 +422,19 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     expect(sponsored.fundsCents).toBe(plain.fundsCents)
     expect(sponsored.offers.filter((o) => o.state === 'open')).toHaveLength(1)
     expect(plain.offers).toHaveLength(0)
+    // ...and the week the window closes on takes the letter back without touching either stream.
+    tickWeek(plain, rngA)
+    tickWeek(sponsored, rngB)
+    expect(sponsored.offers.filter((o) => o.state === 'open')).toHaveLength(0)
+    expect(sponsored.fundsCents).toBe(plain.fundsCents)
+    expect(plain.cohort).toEqual(sponsored.cohort)
   })
 
   it('the ledger says who paid, and the boundary says what the season of kit was worth', () => {
     // Fact (2). The old mechanism was defended for being VISIBLE - one annual lump in the `sponsor`
     // income category, against a valve smeared over 25-39 invisible line-items. Kit has to clear the
     // same bar, and it clears it in two places rather than one.
-    const { world } = seasonUnderDeal('cal-2', 'middle', 'sign')
+    const { world, rng } = seasonUnderDeal('cal-2', 'middle', 'sign')
     const covered = world.events.filter(
       (e) => e.type === 'expense' && e.text.includes(ECONOMY.sponsorship.localBrand),
     )
@@ -432,6 +447,12 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     // so the obligation (`minEventsPerSeason`) went unmet and the shop is not renewing; the line still
     // says what the year of kit was worth, because a deal ending is exactly when the player needs to
     // see what he has just lost.
+    // ⚠ RE-AIMED (05.08): the review became a five-week WINDOW and its single feed row is written on
+    //   the window's last week rather than its first, so the career has to be ticked to it. That is
+    //   the feed budget speaking rather than a preference - see `reviewSponsors`: four letter weeks
+    //   must not become four rows, and one row written last can carry the whole winter. The claim
+    //   being guarded is unchanged and is still exactly one row a season.
+    while (world.week % 52 !== 51) tickWeek(world, rng)
     const report = world.events.filter((e) => e.text.includes('kitted her out all season'))
     expect(report.length).toBe(1)
     // ⚠ RE-AIMED (01.08) IN ITS WORDING ONLY: "not renewing" became "they are done", because a rung

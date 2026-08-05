@@ -177,12 +177,33 @@ const trainDayCount = computed(() => dayDots.value.filter((d) => d === 'train').
 const trainingRead = computed(() => game.snapshot?.trainingRead ?? null)
 
 const weekEvents = computed(() => (game.snapshot?.events ?? []).filter((e) => e.week === week.value))
-const incomeCents = computed(() =>
-  weekEvents.value.filter((e) => e.type === 'income').reduce((s, e) => s + (e.amountCents ?? 0), 0),
+
+// --- FINANCES (D's first card) -------------------------------------------------------------------
+//
+// ⚠⚠ OFF THE DURABLE LEDGER, NOT THE EVENT FEED (fix/wallet-and-wrapup, 05.08). This card used to
+// fold `weekEvents` – `type === 'income'` and `type === 'expense'` – and the owner played far enough
+// for that to stop working entirely: «Что-то сломалось в кошельке в конце сезона, не видно вообще
+// никаких доходов ни на каком экране, кроме Home.» His week recap for W47 2038 read
+// «Income +$0 · Spent +$0 · Balance +$0» beside a HIGHLIGHTS panel listing three real matches from
+// the same week, and his save says why: `world.events` is capped at 400 rows and `pruneEvents`
+// sacrifices ordinary rows before it touches one of her matches, so once her retained matches plus
+// the kept milestones fill the cap on their own (382 + 18 in his save) EVERY money row is deleted on
+// the tick that writes it. The matches survived; the money never existed as far as this card knew.
+//
+// `finance.weekly12` is the same per-week series the Home budget card charts, folded by the engine
+// off `financeWeeks` – the per-category ledger that prunes on a 60-WEEK WINDOW and therefore always
+// holds the week this card is showing, which is always the CURRENT one. The prune order is fixed too
+// (world.ts), so the feed carries its ordinary rows again; this card is on the ledger regardless,
+// because "the money for one week" is a question a count-capped feed must never be asked.
+//
+// SIGNS. `financeSeries` reports spend as a MAGNITUDE, while this card prints the engine's own
+// signed-negative convention and takes the balance as a plain sum – so the expense is negated here
+// and nothing below the two consts changes.
+const weekFinance = computed(
+  () => game.snapshot?.finance.weekly12.find((p) => p.week === week.value) ?? null,
 )
-const expenseCents = computed(() =>
-  weekEvents.value.filter((e) => e.type === 'expense').reduce((s, e) => s + (e.amountCents ?? 0), 0),
-)
+const incomeCents = computed(() => weekFinance.value?.incomeCents ?? 0)
+const expenseCents = computed(() => -(weekFinance.value?.expenseCents ?? 0))
 // D's Finances card closes on a BALANCE under a hairline, which we never showed and always had:
 // income and spend are two halves of one week and the parent reads the pair to get the answer. The
 // engine's own expense events are already signed negative, so the net is the plain sum.
@@ -191,6 +212,11 @@ const balanceCents = computed(() => incomeCents.value + expenseCents.value)
 // The base-cost expense event's own text doubles as this week's flavor line (world.ts
 // picks one of TRAIN_EVENTS/REST_EVENTS for it already) – and it is what D writes by hand across
 // the bottom of the painting.
+//
+// ⚠ STILL THE FEED, DELIBERATELY, and it is the one thing the ledger genuinely cannot answer: this
+// is a SENTENCE ("Restring – multifilament"), not a total, and `financeWeeks` stores cents per
+// category. `EVENTS_ORDINARY_FLOOR` is what keeps it here – see the prune note in world.ts. Empty
+// string on a week whose rows have aged out, which is what it has always fallen back to.
 const flavorText = computed(() => weekEvents.value.find((e) => e.type === 'expense')?.text ?? '')
 
 /** THE SCRAP UNDER THE PAINTING, and it has THREE possible writers now.

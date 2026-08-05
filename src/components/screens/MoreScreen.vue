@@ -767,4 +767,16 @@ const TAB_OPTIONS = [
   background: none;
   margin-bottom: 14px;
 }
+
+/* ⚠ BIGGER, FOR THE SAME MEASUREMENT AS `.money-tabs` (owner, 05.08 – he named this screen and the
+   ledger in one sentence, so they move together and by the same amount). Measured before the change
+   at his 576-wide viewport: 27px tall, against 51px for the bottom bar's `.tab-btn` and the 44px
+   the platform guidelines ask for. Scoped to this chapter picker rather than to the shared
+   `.tab-pill`, and reached through `:deep` because the pills are SegmentedRow's children – the long
+   form of both arguments is beside `.money-tabs` in MoneyScreen.vue. The bottom margin this screen
+   already had is the one the owner asked the ledger to grow, so it is unchanged. */
+.more-tabs :deep(.tab-pill) {
+  padding: 10px 18px;
+  font-size: 14px;
+}
 </style>

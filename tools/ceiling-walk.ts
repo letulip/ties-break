@@ -10,7 +10,7 @@
 // if it is true the other two are irrelevant:
 //
 //     THE CEILING IS ARITHMETIC. No amount of skill can lift her past ~#200, because the rungs she is
-//     PERMITTED to enter cannot produce a best-16 book big enough to rank her any higher.
+//     PERMITTED to enter cannot produce a counted book big enough to rank her any higher.
 //
 // It is a points-and-doors calculation and it simulates NOT ONE MATCH. She wins everything; the only
 // things allowed to stop her are the rules:
@@ -21,9 +21,12 @@
 //   * THE CALENDAR – `buildSeason` for real: how many events of each rung a season actually holds,
 //     and one entry per week (`enterEvent` refuses a second – she has one body).
 //   * THE CAPS AND THE REGIME – the WTA age-eligibility allowance (`proPerYearByAge`: 12 at 16, 16 at
-//     17, unlimited at 18+) and the mandatory tournaments, whose skips write a ZERO into her sixteen.
-//   * THE BOOK – `BEST_N_BY_TRACK.wta` = 16, folded by the engine's own `recomputeKidRank` over the
-//     real merged W table (364 derived pros carrying the real points-to-rank curve).
+//     17, unlimited at 18+) and the mandatory tournaments, whose skips write a ZERO into her window.
+//   * THE BOOK – `BEST_N_BY_TRACK.wta`, folded by the engine's own `recomputeKidRank` over the
+//     real merged W table (derived pros carrying the real points-to-rank curve). ⚠ IT IS 18 SINCE
+//     05.08, not the 16 this header used to name – the rulebook's own count (§VIII.A.4.a.i), with
+//     eleven slots reserved for Slams and 1000s that convert to open ones for a player who is in
+//     neither. This tool reads the constant everywhere, so the sweep below re-prices itself.
 //
 // THE FIXED POINT is the headline: give her a perfect season at rank R, read the rank her book
 // produces, re-open the window at THAT rank, and repeat. Where the iteration lands is the highest
@@ -55,7 +58,7 @@ import {
   WEEKS_PER_YEAR,
   OFF_SEASON_WEEKS,
 } from '../src/engine/season/calendar'
-import { BEST_N_BY_TRACK } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, RANKABLE_MIN } from '../src/engine/season/ranking'
 import { ECONOMY } from '../src/engine/economy'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -105,11 +108,19 @@ const DOORS = doors()
  *  touched. Deliberately sets the cache BY HAND rather than deriving it: the question this tool asks
  *  is "at rank R, what is open?", and pinning R is how you ask it. The gates read exactly two things
  *  – `kidPoints(world,'wta') > 0` and `world.kidRankWta` – plus the on-ramp latch, so all three are
- *  set and nothing else has to be true. */
+ *  set and nothing else has to be true.
+ *
+ *  ⚠ THE SYNTHETIC ROW IS `RANKABLE_MIN.points` AND NOT 1 (points-by-the-book, 05.08), and this is
+ *  the one place in the repo where correction 3 broke a tool outright rather than a guard. The row
+ *  used to pay ONE point, which was the smallest book that satisfied `kidPoints > 0`; §VIII.A.2.b
+ *  now says a player on one point is not on the rankings at all, so a one-point row made
+ *  `kidPoints` zero, every acceptance gate answer false, and the whole ceiling walk report that
+ *  nothing is ever open. It reads the constant so it re-fits itself if the threshold is ever
+ *  re-tuned – the failure was silent-ish exactly because a literal cannot do that. */
 function atRank(world: WorldState, rank: number, week: number): void {
   world.week = week
   world.results = world.results.filter((r) => r.playerId !== KID_ID)
-  world.results.push({ playerId: KID_ID, week, points: 1, tier: 'w15' })
+  world.results.push({ playerId: KID_ID, week, points: RANKABLE_MIN.points, tier: 'w15' })
   world.onRampCleared = { itf: true, wta: true }
   world.kidRankWta = rank
   world.proEntryWeeks = []
@@ -441,7 +452,7 @@ function bandRow(rank: number, age: number, p: WindowParams = SHIPPED, block = 5
 
 console.log('\n3. WHAT IS OFFERED, AND WHAT A PERFECT SEASON OF IT IS WORTH')
 console.log(
-  `   at rank   rungs open                        supply  entered  clash  slots/${BEST_N_BY_TRACK.wta}  best-16 book   ->  rank`,
+  `   at rank   rungs open                        supply  entered  clash  slots/${BEST_N_BY_TRACK.wta}  counted book   ->  rank`,
 )
 for (const rank of BANDS) {
   const r = bandRow(rank, AGE)

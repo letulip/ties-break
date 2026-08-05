@@ -25,6 +25,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCentsSigned } from '../shared/money'
+import { LADDER_LABEL } from '../shared/protocol'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import PaperNote from './ui/PaperNote.vue'
@@ -44,25 +45,44 @@ const summary = computed(() => game.snapshot?.lastSeasonSummary ?? null)
 const spentCents = computed(() => summary.value?.spentCents)
 const earnedCents = computed(() => summary.value?.earnedCents)
 
+// ⚠⚠ WHICH TABLE THIS SEASON WAS PLAYED ON (fix/wallet-and-wrapup, 05.08). The owner, at
+// twenty-one, on the W tour: «итоговый рейтинг сломался... и на том же экране всегда показывается
+// international, хотя мы уже давно там не играем. Это тоже надо как-то динамично делать в
+// зависимости от текущего уровня турнира, ну или доминирующего в этом году.» This card printed
+// "Final international rank – Unranked · She has not played a Junior Tour event yet" at a
+// professional whose junior rank was #74 and whose world rank was #288.
+//
+// The engine decides, at the wrap, off the season's own per-track match record
+// (`dominantTrackOfSeason`) – so the milestone line in the news and this card can never name two
+// different tables for one season. Both fields are optional: a summary banked before this wave
+// falls back to exactly what this file did before, the junior table read off the live snapshot.
+const rankTrack = computed(() => summary.value?.rankTrack ?? 'itf')
+const rankLabel = computed(() => LADDER_LABEL[rankTrack.value].toLowerCase())
+const rankInTrack = computed(() => {
+  const s = summary.value
+  if (!s) return null
+  // The legacy path, unchanged and still correct for the season it was written for: `endRank` is the
+  // ITF number and the live snapshot says whether she holds an international point at all.
+  if (s.rankTrack === undefined) return game.snapshot?.ladders.itf.rank !== null ? s.endRank : null
+  return s.rankInTrack ?? null
+})
+const ranked = computed(() => rankInTrack.value !== null)
+
 // Rank move over the season (rank improves when the number goes DOWN).
+//
+// ⚠ ITF ONLY, and it is the engine's limit rather than this card's taste: `startRank` is the v17
+// capture of `world.kidRank`, i.e. the JUNIOR table, and it cannot be back-filled for any other one
+// (see the note in engine/world/milestones.ts). Subtracting a junior start rank from a professional
+// finish rank is the cross-currency subtraction `LadderView.prevRank` exists to forbid, so on any
+// other track the card reports where she finished and shows no arrow.
 const rankMove = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
   const s = summary.value
-  if (!s || s.startRank === null || s.startRank === s.endRank) return { dir: 'flat', by: 0 }
-  return s.startRank > s.endRank
-    ? { dir: 'up', by: s.startRank - s.endRank }
-    : { dir: 'down', by: s.endRank - s.startRank }
+  const end = rankInTrack.value
+  if (!s || rankTrack.value !== 'itf' || end === null) return { dir: 'flat', by: 0 }
+  if (s.startRank === null || s.startRank === end) return { dir: 'flat', by: 0 }
+  return s.startRank > end ? { dir: 'up', by: s.startRank - end } : { dir: 'down', by: end - s.startRank }
 })
-
-// ⚠ IS SHE RANKED INTERNATIONALLY AT ALL? (30.07, fix/ranking-truth.) `endRank` is a dense rank, so a
-// girl who has never played a Junior Tour event carries the whole 0-point tie group's place - #127, not
-// a ranking. Found in the browser: this popup read "#127" while the Stats International tab read
-// "Unranked", one tab apart, which is the owner's original complaint wearing new clothes.
-//
-// Read off the LIVE snapshot rather than the stored summary, and that is correct here rather than
-// convenient: this dialog only ever shows the season that has just wrapped, so "does she hold an
-// international point right now" and "did she hold one at that wrap" are the same question. An older
-// season in the history table cannot be asked it - see two-ladders.md "Still open".
-const rankedItf = computed(() => game.snapshot?.ladders.itf.rank !== null)
+const showRankMove = computed(() => ranked.value && rankTrack.value === 'itf')
 </script>
 
 <template>
@@ -77,19 +97,26 @@ const rankedItf = computed(() => game.snapshot?.ladders.itf.rank !== null)
           <Eyebrow>Ranking</Eyebrow>
           <div class="season-rows">
             <div class="season-row">
-              <span class="season-key">Final international rank</span>
+              <span class="season-key">Final {{ rankLabel }} rank</span>
               <span class="season-val">
-                <span class="rank-value">{{ rankedItf ? '#' + summary.endRank : 'Unranked' }}</span>
-                <template v-if="rankedItf">
+                <span class="rank-value">{{ ranked ? '#' + rankInTrack : 'Unranked' }}</span>
+                <template v-if="showRankMove">
                   <span v-if="rankMove.dir === 'up'" class="rank-move up">&uarr;{{ rankMove.by }}</span>
                   <span v-else-if="rankMove.dir === 'down'" class="rank-move down">&darr;{{ rankMove.by }}</span>
                   <span v-else class="rank-move flat">–</span>
                 </template>
               </span>
             </div>
-            <p v-if="rankedItf && summary.startRank !== null" class="hint season-summary-from">from #{{ summary.startRank }}</p>
-            <p v-else-if="!rankedItf" class="hint season-summary-from">
+            <p v-if="showRankMove && summary.startRank !== null" class="hint season-summary-from">from #{{ summary.startRank }}</p>
+            <!-- The junior table keeps its own sentence: "not ranked yet" means something specific
+                 and encouraging for a girl who has not left the country. Every other table gets the
+                 plain statement, because "she has not played a Junior Tour event" is nonsense said
+                 to a professional - which is exactly the bug this replaced. -->
+            <p v-else-if="!ranked && rankTrack === 'itf'" class="hint season-summary-from">
               She has not played a Junior Tour event yet. Her national standing is on the Stats tab.
+            </p>
+            <p v-else-if="!ranked" class="hint season-summary-from">
+              No result counted on that table this season. Her other standings are on the Stats tab.
             </p>
             <div class="season-row">
               <span class="season-key">Season points</span>

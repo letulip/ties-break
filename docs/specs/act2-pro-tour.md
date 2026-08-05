@@ -923,14 +923,17 @@ swept end to end. What is still domestic-only, and whether it should be:
 
 ### 13.8 For the owner
 
-* **Placeholder art, flagged.** Eight trophy files (gold+silver × four rungs) are byte copies of the
-  WTA 125 masters, and the three professional sponsor rungs borrow `global.webp` through
-  `sponsorArtKey`. Same stand-in rule W2-LADDER used; the file names are already correct, so real art
-  replaces files rather than code, and `sponsorArtKey` would become the identity.
-* **The Home season strip is sixteen chips and wraps to three lines on a phone.** The layout decision
-  is taken the same way W2-LADDER took it: the strip is her whole climb at a glance, and the four
-  act-3 chips read `locked` for almost every career that will ever exist — which is the point of a
-  ladder you can see the top of.
+* ~~**Placeholder art, flagged.**~~ **PAID OFF 05.08.** Eight trophy files (gold+silver × four rungs)
+  were byte copies of the WTA 125 masters, and the three professional sponsor rungs borrowed
+  `global.webp` through `sponsorArtKey`. The owner has since drawn all of them: twelve trophy files
+  are now distinct by hash, the three marks ship as `tour` / `premium` / `icon`, and `sponsorArtKey`
+  is deleted rather than reduced to the identity. Only `w50-gold` / `w50-silver` are still stand-ins
+  (byte copies of W35). See `docs/art-placeholders.md`.
+* ~~**The Home season strip is sixteen chips and wraps to three lines on a phone.**~~ **SUPERSEDED
+  05.08.** The layout decision recorded here — "the strip is her whole climb at a glance" — was
+  overruled by the owner twice, and the collapse rule that replaced it is in
+  `docs/specs/home-season-strip.md`. The four act-3 chips still exist; they are one tap away rather
+  than four lines down.
 * **The `icon` rung's obligation stops climbing.** Every rung steps `minEvents` by two (6 → 8 → 10 →
   12 → 14) and `icon` holds at 16 rather than 18: a top-10 player's calendar is largely the mandatory
   regime's already, and an obligation ABOVE what the tour compels would be two systems demanding the

@@ -469,9 +469,14 @@ describe('R12-S2 — "Best result: best Champion"', () => {
     }
     const text = world.lastSeasonSummary!.bestResultText
     expect(text).not.toMatch(/^best /)
-    // It is either a finish label or the no-tournaments sentence – never a finish with an adjective.
+    // It is either a finish label or one of the two sentences – never a finish with an adjective.
+    // ⚠ RE-AIMED (05.08, fix/wallet-and-wrapup): 'no result that scored' joins the list. The fold
+    // moved off the capped event feed onto `world.results`, whose kid rows are AWARD-ONLY, so
+    // "she entered and nothing counted" and "she did not play" became two different facts and the
+    // wrap-up stopped collapsing the first into the second. The claim this test exists for - the
+    // value is the finish ALONE, no "best " adjective - is untouched.
     expect(
-      ['Champion', 'Runner-up', 'Semifinalist', 'Quarterfinalist', 'no tournaments played'].includes(text) ||
+      ['Champion', 'Runner-up', 'Semifinalist', 'Quarterfinalist', 'no result that scored', 'no tournaments played'].includes(text) ||
         /^Round of \d+$/.test(text),
     ).toBe(true)
   })

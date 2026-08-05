@@ -38,7 +38,8 @@ import {
   type Policy,
 } from './econ-bench'
 import { runToEnding, FULL_CAREER_WEEKS } from './endings-bench'
-import { answerFork, answerRetirement, type WorldState } from '../src/engine/world'
+import { answerFork, answerRetirement, kidPoints, type WorldState } from '../src/engine/world'
+import { rankingFor } from '../src/engine/world/ladder'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { CareerEndingType, WorldEventCategory } from '../src/shared/protocol'
@@ -109,12 +110,53 @@ export interface CareerMoney {
   /** index into `seasons` of the season that best rank was set in. */
   peakSeasonIdx: number
 
+  /** ⚠ THE FIRST WEEK SHE APPEARS ON THE PROFESSIONAL LIST AT ALL, and the number of professional
+   *  main draws it cost her to get there (points-by-the-book-2026-08.md, correction 3).
+   *
+   *  It is `kidPoints(world, 'wta') > 0` and NOT `firstPrizeWeek`, because those two facts came
+   *  apart the moment §VIII.A.2.b's minimum landed: every finish on a W rung pays a cheque, so
+   *  `firstPrizeWeek` fires on her first completed main draw whatever it was worth, while a RANKING
+   *  now needs points in three tournaments or ten points in one. The gap between the two is
+   *  precisely what the correction added, so both are recorded and §7 prints them side by side.
+   *
+   *  The calibration target is `docs/research/real-ladder-pace.md` §6: a real woman's age at her
+   *  first professional ranking point is **15.9-16.2**, from two independent cohort studies. */
+  firstRankedWeek: number | null
+  /** W main draws entered on or before `firstRankedWeek` – "how many events does a first ranking
+   *  cost?". Counted off the same `entriesByTier` bookkeeping the rest of the file uses. */
+  wDrawsAtFirstRanking: number
+
+  /** ⚠ THE ANTI-GIFT READOUT, taken once at the last week she lived (points-by-the-book §0's own
+   *  ship rule, and the failure mode the brief names: "measuring only her rank is how you fail to
+   *  notice that everyone floated up"). Re-pricing the two entry rungs lifts every EARNED book in
+   *  the world, not only hers – the 520 derived professionals are ISSUED their books by
+   *  `fieldPros.ts` and cannot move, but the ~200 LIVE girls earn theirs on the same table she
+   *  does. So: how many of them hold a ranking at all, and how many of them are inside the merged
+   *  top 200 beside her. If her rank improves and these two move with it, the table deflated; if
+   *  hers improves and these hold, she climbed. */
+  liveRankedAtEnd: number
+  liveTop200AtEnd: number
+
   /** whole-career spend and income by category, split at the age the tennis can first pay. */
   catsJunior: Record<WorldEventCategory, number>
   catsPro: Record<WorldEventCategory, number>
 
   entriesByTier: Record<TierId, number>
   prizeByTier: Record<TierId, number>
+  /** HOW HER TOURNAMENTS ENDED, per rung, as a histogram over the finish index (0 = champion,
+   *  `log2(drawSize)` = lost the opener). Added for `docs/specs/ladder-pace-2026-08.md`, whose
+   *  calibration target is the owner's own complaint - "losing in the first or second match VERY
+   *  often is very galling". A 32-draw exits 16 of its 32 players in round one and 8 more in round two, so
+   *  75% of any field is out by the second match BY ARITHMETIC – the question is only whether OUR
+   *  rate is worse than that floor, and that cannot be answered without measuring it.
+   *
+   *  ⚠ READ OFF THE DIARY, NOT OFF `world.results`, and that is required rather than stylistic. The
+   *  kid's ranking row is AWARD-ONLY (`world.ts`: `if (points > 0) world.results.push(...)`), so at
+   *  every rung whose table pays a first-round loser nothing – w15, w35, w100 – her R1 exits write
+   *  no result row at all and a results-based count would silently measure only the rounds she
+   *  survived. `closeTournament` is the sole writer of a `tournament` diary event and it stamps
+   *  `finishIdx` on every one, win or lose. */
+  finishByTier: Record<TierId, number[]>
   /** ⚠ THE PER-RUNG BILL, AND BOTH HALVES ARE EXACT RATHER THAN APPORTIONED. `entryFeeCents` is a
    *  flat per-tier constant charged by `enterEvent` at commit, so entries x fee is the fee to the
    *  cent. Travel is charged by `chargeTravel` in the EVENT'S OWN week, and the engine allows one
@@ -125,6 +167,14 @@ export interface CareerMoney {
 
 function zeroByTier(): Record<TierId, number> {
   return Object.fromEntries(TIER_LADDER.map((t) => [t, 0])) as Record<TierId, number>
+}
+/** The professional rungs, in ladder order – the ones a first RANKING can be earned on. */
+const W_RUNGS: readonly TierId[] = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
+/** One bucket per finish index a rung's draw can produce, `log2(drawSize) + 1` of them. */
+function zeroFinishByTier(): Record<TierId, number[]> {
+  return Object.fromEntries(
+    TIER_LADDER.map((t) => [t, new Array<number>(Math.round(Math.log2(TIERS[t].drawSize)) + 1).fill(0)]),
+  ) as Record<TierId, number[]>
 }
 function zeroCats(): Record<WorldEventCategory, number> {
   const out = {} as Record<WorldEventCategory, number>
@@ -195,10 +245,15 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
     familyTurnWeek: null,
     peakWtaRank: null,
     peakSeasonIdx: 0,
+    firstRankedWeek: null,
+    wDrawsAtFirstRanking: 0,
+    liveRankedAtEnd: 0,
+    liveTop200AtEnd: 0,
     catsJunior: zeroCats(),
     catsPro: zeroCats(),
     entriesByTier: zeroByTier(),
     prizeByTier: zeroByTier(),
+    finishByTier: zeroFinishByTier(),
     costByTier: zeroByTier(),
   }
 
@@ -264,6 +319,18 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
       }
     }
 
+    // HOW THIS WEEK'S TOURNAMENT ENDED – the finish histogram behind §8's exit-rate table.
+    // `closeTournament` is the only writer of a `tournament` diary event and stamps `finishIdx` on
+    // every one, so this is her win-loss record read at its source. The rung comes from
+    // `tierPlayedOn`, the same one-event-a-week mapping the cheque above is attributed through.
+    for (const e of world.events) {
+      if (e.week !== world.week || e.type !== 'tournament' || typeof e.finishIdx !== 'number') continue
+      const tier = tierPlayedOn.get(world.week)
+      if (!tier) continue
+      const hist = out.finishByTier[tier]
+      if (e.finishIdx >= 0 && e.finishIdx < hist.length) hist[e.finishIdx] += 1
+    }
+
     // the category decomposition, off the ledger's own rows so a line lands in the week it moved
     foldLedger(world, ledgerSeen, (week, cat, amount) => {
       const bucket = START_AGE_YEARS + Math.floor(week / WEEKS_PER_YEAR) < PRO_AGE_YEARS ? out.catsJunior : out.catsPro
@@ -281,6 +348,13 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
         }
       }
     })
+
+    // THE FIRST RANKING – see `firstRankedWeek`. Read through the engine's own `kidPoints`, so
+    // whatever the ranking rules say this week is what this number means; nothing is re-spelled.
+    if (out.firstRankedWeek === null && kidPoints(world, 'wta') > 0) {
+      out.firstRankedWeek = world.week
+      out.wDrawsAtFirstRanking = W_RUNGS.reduce((s, t) => s + out.entriesByTier[t], 0)
+    }
 
     // her place in the professional table, tracked only once she has been paid at all – see peakWtaRank
     const row = seasonOf(world.week)
@@ -301,6 +375,18 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
     }
 
     answerOpenQuestions(world, retireArm)
+  }
+
+  // THE ANTI-GIFT READOUT – see `liveRankedAtEnd`. Taken once, at the last week she lived, because
+  // it is O(cohort x results) and nothing about it needs a week-by-week series.
+  {
+    const merged = rankingFor(world, 'wta')
+    const liveIds = new Set(world.cohort.map((p) => p.id))
+    for (const r of merged) {
+      if (!liveIds.has(r.playerId)) continue
+      if (r.points > 0) out.liveRankedAtEnd++
+      if (r.points > 0 && r.rank <= 200) out.liveTop200AtEnd++
+    }
   }
 
   out.prizeCents = world.careerTotals.prizeCents
@@ -373,6 +459,11 @@ function ratio(num: number, den: number): string {
 }
 function ageOfWeek(week: number): number {
   return START_AGE_YEARS + Math.floor(week / WEEKS_PER_YEAR)
+}
+/** ...and the same thing to a decimal, because the calibration target for the first ranking is
+ *  15.9-16.2 (real-ladder-pace.md §6) and a whole-year age cannot be compared against it. */
+function exactAgeOfWeek(week: number): number {
+  return START_AGE_YEARS + week / WEEKS_PER_YEAR
 }
 
 const BANDS: { label: string; lo: number; hi: number }[] = [
@@ -732,7 +823,115 @@ export function main(argv = process.argv.slice(2)): void {
       `  peak-rank distribution        : best #${ranked[0].peakWtaRank} · p10 #${median(ranked.slice(0, Math.max(1, Math.round(ranked.length / 5))).map((r) => r.peakWtaRank!)).toFixed(0)} · ` +
         `median #${median(ranked.map((r) => r.peakWtaRank!)).toFixed(0)} · worst #${ranked[ranked.length - 1].peakWtaRank}`,
     )
+    // ⚠ THE DISTRIBUTION, NOT JUST THE BEST (points-economy-2026-08.md measurement 6). The owner's
+    // framing of the whole question is "a CHANCE at the top", so a single best-of-180 cannot answer
+    // it: one career at #90 and a conveyor delivering ninety of them are the same headline and
+    // opposite games. Counted over the careers that ever held a professional rank at all.
+    const reach = (n: number) => ranked.filter((r) => r.peakWtaRank! <= n).length
+    console.log(
+      `  careers reaching the top      : #10 ${reach(10)}/${rows.length} · #50 ${reach(50)}/${rows.length} · ` +
+        `#100 ${reach(100)}/${rows.length} · #200 ${reach(200)}/${rows.length} · ` +
+        `ever ranked ${ranked.length}/${rows.length}`,
+    )
   }
+  // --- §7b THE FIRST RANKING, AND WHO ELSE MOVED WITH HER -----------------------------------------
+  //
+  // Added by points-by-the-book (05.08). Two questions the file could not answer and the wave is
+  // graded on: WHEN does a professional ranking arrive and what does it cost in draws (§VIII.A.2.b
+  // changed both), and DID EVERYONE FLOAT UP (the gift failure re-pricing a rung invites).
+  {
+    const gotRanked = rows.filter((r) => r.firstRankedWeek !== null)
+    console.log('')
+    console.log('  ══ 7b. THE FIRST RANKING – when it arrives, what it costs, and who moved with her ══')
+    console.log('')
+    if (gotRanked.length) {
+      const weeks = gotRanked.map((r) => r.firstRankedWeek!)
+      console.log(
+        `  careers that EVER hold a professional ranking : ${gotRanked.length}/${rows.length} = ` +
+          `${((100 * gotRanked.length) / rows.length).toFixed(1)}%`,
+      )
+      console.log(
+        `  age at first ranking          : median ${exactAgeOfWeek(median(weeks)).toFixed(2)} · ` +
+          `earliest ${exactAgeOfWeek(Math.min(...weeks)).toFixed(2)} · latest ${exactAgeOfWeek(Math.max(...weeks)).toFixed(2)}` +
+          '   (real 15.9-16.2, real-ladder-pace.md §6)',
+      )
+      console.log(
+        `  W main draws it cost her      : median ${median(gotRanked.map((r) => r.wDrawsAtFirstRanking)).toFixed(1)} · ` +
+          `mean ${mean(gotRanked.map((r) => r.wDrawsAtFirstRanking)).toFixed(1)} · ` +
+          `worst ${Math.max(...gotRanked.map((r) => r.wDrawsAtFirstRanking))}`,
+      )
+      const paidFirst = gotRanked.filter((r) => r.firstPrizeWeek !== null)
+      if (paidFirst.length) {
+        console.log(
+          `  ranking LAGS the first cheque : median ${median(paidFirst.map((r) => r.firstRankedWeek! - r.firstPrizeWeek!)).toFixed(1)} weeks` +
+            '   (0 before the minimum existed – every W finish pays)',
+        )
+      }
+    } else {
+      console.log(`  careers that EVER hold a professional ranking : 0/${rows.length}`)
+    }
+    console.log(
+      `  ⚠ ANTI-GIFT – LIVE girls ranked at career end : median ${median(rows.map((r) => r.liveRankedAtEnd)).toFixed(1)} of ~200 · ` +
+        `inside the merged top 200: median ${median(rows.map((r) => r.liveTop200AtEnd)).toFixed(1)}`,
+    )
+    console.log('    (they earn on the same table she does; the 520 derived pros are ISSUED their books and cannot move.')
+    console.log('     Her rank improving while these hold is a climb; all three rising together is a deflation.)')
+  }
+  // --- §8 HOW HER TOURNAMENTS END -----------------------------------------------------------------
+  //
+  // THE OWNER'S OWN COMPLAINT, MEASURED - "losing in the first or second match VERY often is very
+  // galling".
+  // The honest way to read this table is against its own arithmetic floor. A 32-draw eliminates 16
+  // of 32 entrants in round one and 8 more in round two, so 75.0% of ANY field is gone by the second
+  // match whoever is in it – that is not a difficulty setting, it is what a knockout is. The number
+  // that carries meaning is the EXCESS over 75%, which is the part our calibration owns.
+  console.log('  ══ 8. HOW HER TOURNAMENTS END – the R1/R2 exit rate, against a knockout\'s own floor ══')
+  console.log('')
+  console.log(
+    '  ' + padEnd('rung', 9) + pad('draws', 8) + pad('R1 out', 10) + pad('R2 out', 10) + pad('out by R2', 11) +
+      pad('floor', 8) + pad('excess', 9) + pad('QF+', 8) + pad('titles', 8),
+  )
+  // ⚠ `hist.slice(0, 4)` is "quarter-final or better" only while the draw is 32 (indices 0-3 are
+  // champion / finalist / semi / quarter). Every W rung ships at drawSize 32 – see slam.drawSize for
+  // the measured reason the majors did too – so this holds today and would need re-aiming the day a
+  // 64- or 128-draw ships, at which point the QF+ column would silently start counting R16s.
+  const exitRow = (label: string, tiers: TierId[]) => {
+    let draws = 0
+    let r1 = 0
+    let r2 = 0
+    let qf = 0
+    let titles = 0
+    let floorNum = 0
+    for (const t of tiers) {
+      const hist = rows.reduce((acc: number[], r) => acc.map((v, i) => v + r.finishByTier[t][i]), new Array<number>(Math.round(Math.log2(TIERS[t].drawSize)) + 1).fill(0))
+      const n = hist.reduce((s, v) => s + v, 0)
+      if (n === 0) continue
+      const last = hist.length - 1
+      draws += n
+      r1 += hist[last]
+      r2 += hist[last - 1] ?? 0
+      qf += hist.slice(0, 4).reduce((s, v) => s + v, 0)
+      titles += hist[0]
+      // the floor is the draw's own arithmetic: half out in R1, a quarter more in R2
+      floorNum += n * 0.75
+    }
+    if (draws === 0) return
+    const outByR2 = r1 + r2
+    console.log(
+      '  ' + padEnd(label, 9) + pad(String(draws), 8) + pad(ratio(r1, draws), 10) + pad(ratio(r2, draws), 10) +
+        pad(ratio(outByR2, draws), 11) + pad(ratio(floorNum, draws), 8) +
+        pad(`${(100 * (outByR2 - floorNum) / draws >= 0 ? '+' : '')}${((100 * (outByR2 - floorNum)) / draws).toFixed(1)}pp`, 9) +
+        pad(ratio(qf, draws), 8) + pad(ratio(titles, draws), 8),
+    )
+  }
+  const W_RUNGS_ALL = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
+  for (const t of W_RUNGS_ALL) exitRow(t, [t])
+  exitRow('ALL W', W_RUNGS_ALL)
+  exitRow('ITF jr', TIER_LADDER.filter((t) => TIERS[t].track === 'itf'))
+  console.log('  "floor" = what a knockout of that draw size exits by round two with NO skill difference at all.')
+  console.log('  "excess" = ours minus the floor. Positive = she loses early more often than a coin-flip field would.')
+  console.log('')
+
   console.log(`  richest single SEASON anywhere: ${usd(bestSeasonPrize)}`)
   console.log(`  richest whole CAREER anywhere : ${usd(Math.max(...rows.map((r) => r.prizeCents)))}`)
   console.log(

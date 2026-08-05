@@ -23,8 +23,12 @@ Deriving, recolouring or generating a replacement is not a builder's job; flaggi
    row to delete – that failure is the reminder, not a problem with your art.
 3. Delete the row. Green.
 
-For an `absent` row there is one extra step, named in the row's own note: the code branch that does
-the borrowing goes too (e.g. `sponsorArtKey` becomes the identity once all six letterheads exist).
+For an `absent` row there is one extra step, named in the row's own note: **the code branch that does
+the borrowing goes too**, and it goes in the same commit as the row – remove one without the other
+and the guard is red in one direction or the other. The sponsor letterheads are the worked example,
+start to finish: `sponsorArtKey` redirected three rungs onto `global.webp`, three `absent` rows
+registered it, and on 05.08 the marks arrived, the function was **deleted** (not left as an identity –
+a redirect nobody can tell is dead is worse than the redirect) and the three rows came out together.
 
 ## The registry
 
@@ -33,26 +37,46 @@ first cell is a backticked path starting with `public/`. Keep the column order.
 
 | asset | kind | counterpart | wave | why |
 |---|---|---|---|---|
-| `public/images/trophies/w50-gold.webp` | `byte-copy` | `public/images/trophies/w35-gold.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W50 has no master of its own |
-| `public/images/trophies/w50-silver.webp` | `byte-copy` | `public/images/trophies/w35-silver.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W50 has no master of its own |
-| `public/images/trophies/w75-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W75 has no master of its own |
-| `public/images/trophies/w75-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W75 has no master of its own |
-| `public/images/trophies/wta125-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – WTA 125 has no master of its own |
-| `public/images/trophies/wta125-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – WTA 125 has no master of its own |
-| `public/images/trophies/wta250-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta250-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta500-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta500-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta1000-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta1000-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/slam-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – the Slam trophy is a W100 trophy today |
-| `public/images/trophies/slam-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – the Slam trophy is a W100 trophy today |
-| `public/images/sponsors/tour.webp` | `absent` | `public/images/sponsors/global.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – `sponsorArtKey` maps this rung to `global`; drop the branch when the mark exists |
-| `public/images/sponsors/premium.webp` | `absent` | `public/images/sponsors/global.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – `sponsorArtKey` maps this rung to `global`; drop the branch when the mark exists |
-| `public/images/sponsors/icon.webp` | `absent` | `public/images/sponsors/global.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – `sponsorArtKey` maps this rung to `global`; drop the branch when the mark exists |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-airport.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-airport.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-bus.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-bus.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-plane.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-plane.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
+| `public/images/fields/w35-clay-1.webp` | `byte-copy` | `public/images/fields/w15-clay-2.webp` | adult venues (04.08) | W35 ships no clay court of its own – the file is the W15 spare under another name |
+| `public/images/fields/w35-grass-1.webp` | `byte-copy` | `public/images/fields/w15-grass-2.webp` | adult venues (04.08) | W35 ships no grass court of its own – the file is the W15 spare under another name |
+| `public/images/fields/w35-hard-1.webp` | `byte-copy` | `public/images/fields/w15-hard-2.webp` | adult venues (04.08) | W35 ships no hard court of its own – the file is the W15 spare under another name |
+| `public/images/fields/w35-venue-1.webp` | `byte-copy` | `public/images/fields/w15-venue-3.webp` | adult venues (04.08) | W35 ships no establishing shot of its own – the file is the W15 spare under another name |
+| `public/images/fields/j60-hard-1.webp` | `absent` | `public/images/fields/j30-hard-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
+| `public/images/fields/j60-clay-1.webp` | `absent` | `public/images/fields/j30-clay-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
+| `public/images/fields/j60-grass-1.webp` | `absent` | `public/images/fields/j30-grass-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
+| `public/images/fields/j300-hard-1.webp` | `absent` | `public/images/fields/j30-hard-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
+| `public/images/fields/j300-clay-1.webp` | `absent` | `public/images/fields/j30-clay-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
+| `public/images/fields/j300-grass-1.webp` | `absent` | `public/images/fields/j30-grass-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
+
+### Cleared rows
+
+Struck through with the date, the way the venue gaps below are, so the list also records what the
+owner has already paid off. Deleted from the table above rather than left in it struck through: the
+table is machine-read and a row that is still parsed is still a claim.
+
+- ~~**Twelve trophy rows: `slam`, `w75`, `wta125`, `wta250`, `wta500`, `wta1000`, gold and silver
+  each.**~~ CLEARED 05.08 – all twelve were byte copies of `w100-gold.webp` / `w100-silver.webp`
+  (every one of them literally the same two files under six pairs of names, which is why the cabinet
+  showed one trophy for the whole top of the ladder). The owner replaced all twelve. **Verified by
+  hash, not by eye**: the twelve are now distinct from `w100` and from each other, and the only
+  byte-duplicate pairs left anywhere under `trophies/` are `w50-gold == w35-gold` and
+  `w50-silver == w35-silver` – the two rows that therefore STAY in the table above.
+- ~~**Three sponsor rows: `tour.webp`, `premium.webp`, `icon.webp`.**~~ CLEARED 05.08 – the three
+  professional rungs had no letterhead and `sponsorArtKey` redirected them onto `global.webp`. The
+  owner drew all three (Baseline Athletic → `tour`, Meridian Sport → `premium`, Aurelia → `icon`).
+  The rows and the redirect went in the same commit; see "How to clear a row" above for why the
+  function was deleted rather than reduced to the identity. All six marks hash distinct.
+- ~~**The last two trophy rows: `w50-gold`, `w50-silver`.**~~ CLEARED 05.08, hours after the twelve
+  above – the owner had already dropped the masters in as `.png` and they had simply not been
+  encoded yet. ⚠ AND THAT IS THE PART WORTH KEEPING: a master sitting in `public/images/trophies/`
+  is INVISIBLE until `npm run art` runs, because the raw formats are gitignored and the shipped
+  `.webp` is what the guard hashes. The pipeline does accept `.png` (`RASTER_RE`), it just has to be
+  asked. The registry said "placeholder" and the art had been there for a day. **After dropping any
+  master, run `npm run art`** – it encodes in place and files the master into `art-src/`. Now
+  `w50-gold` and `w50-silver` hash distinct from `w35`, and `trophies/` holds no byte-duplicate pair.
 
 ### What the two kinds mean
 
@@ -69,11 +93,34 @@ first cell is a backticked path starting with `public/`. Keep the column order.
 Real art asks, listed so they are visible, but with no single expected filename for a guard to watch.
 They are not in the table above and the test does not enforce them.
 
-- **Venue art stops at `j30`.** `public/images/fields/` holds 20 masters over `local` / `regional` /
-  `national` / `j30`. `src/art/venues.ts` maps `j60` and `j300` onto the `j30` set explicitly ("a
-  stand-in, not a compromise"), and every ADULT rung – `w15` … `slam`, ten of the sixteen – falls off
-  the end of `ART_TIER_ORDER` entirely and lands on the generic establishing-shot fallback. A WTA
-  1000 card is currently a junior-tour photograph. Biggest open art ask in the repo.
+- ~~**Venue art stops at `j30`.**~~ CLOSED 04.08 – the owner generated 42 adult masters and they are
+  registered in `FIELD_ART`. `ART_TIER_ORDER` is the full 16-rung ladder now, and every adult rung
+  from `w15` to `slam` paints its own three surfaces, so no adult card falls through to a junior
+  photograph. NOTHING is left of the row: `w50` and `w75` were registered here as `absent` for about
+  an hour each – they were the two «в процессе, так же как и трофеи» – and the owner delivered five
+  masters for each at 19:01 and 19:09 the same evening, so their six rows came straight back out.
+  **No adult rung borrows any more.** `j60` / `j300` were never painted and stay in the table above
+  for the same reason; that borrow predates this wave and is unchanged.
+- **`wta1000` grass is art the simulation cannot ask for.** `wta1000-grass-1` and `wta1000-grass-2`
+  ship and nothing will ever show them. The rung is ANCHORED – its weeks are named
+  (`anchorWeeks: [5, 8, 12, 18, 31, 37, 41, 45]` in `season/calendar.ts`) and an anchored event takes
+  its block's dominant surface – and none of those eight weeks is inside the grass window (25–30).
+  So the calendar never schedules a WTA 1000 on grass. Not fixable in the art layer and not a
+  placeholder: either the calendar gains a grass anchor for that rung, or the two masters are a
+  future-proofing spare. `tests/art/venue-rotation.test.ts` pins the pair by name, so the day a
+  grass anchor appears the list goes red and says the art is live.
+- **Six (tier, surface) pairs have a single picture, so two of them in a row must repeat.**
+  `local/clay`, `local/grass`, `regional/clay`, `regional/grass`, `slam/clay`, `slam/grass`. The
+  anti-repeat rotation (`docs/specs/venue-rotation.md`) needs two frames to rotate between, and
+  `local` / `regional` ship no establishing shot at all to fall back on. The cure is a second master
+  on those courts, not code. Pinned by name in `tests/art/venue-rotation.test.ts`, so the exemption
+  cannot quietly widen.
+- **W15 and W35 are the same four photographs.** Registered above as `byte-copy` rows, and worth
+  saying in prose because the consequence is visible: the owner's unnumbered `w15-clay.webp` /
+  `-grass` / `-hard` / `-venue` spares (renamed `w15-clay-2` etc. so the rotation can use them) are
+  byte-identical to the whole W35 set. Inside one rung nothing repeats – W15's ring holds five
+  distinct pictures – but a W15 card and a W35 card CAN show the same frame. Four real W35 masters
+  clear it. (This was three rungs until W50 got its own art on the evening of 04.08.)
 - ~~**No `regional-grass`.**~~ CLOSED 04.08 – the owner shipped `regional-grass-1.webp` and it is
   registered in `FIELD_ART`. Every tier `local`..`j30` now paints all the surfaces it plays on; the
   fallback ladder's surface-first narrowing stands, it just no longer has a live gap to prove it.

@@ -42,7 +42,6 @@
 // is the same invisibility one step later.
 import { computed } from 'vue'
 import type { EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
-import { sponsorArtKey } from '../engine/offers'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import PaperNote from './ui/PaperNote.vue'
@@ -87,14 +86,17 @@ const endBody = computed(() => {
   }
   return `That is our term served, and she held up every part of it – ${played} tournaments in our kit this season. We are stopping here for now, with thanks.`
 })
-/** THE LETTERHEAD, BY TIER. `public/images/sponsors/<key>.webp` - never a filename written out at a
- *  call site, which is why the national and global rungs needed no change here at all.
+/** THE LETTERHEAD, BY TIER. `public/images/sponsors/<tier>.webp` - never a filename written out at a
+ *  call site, which is why the national and global rungs needed no change when the ladder grew.
  *
- *  The key comes from `sponsorArtKey` rather than from the tier directly since W3-ACT2: three marks
- *  ship and the ladder has six rungs, so the professional trio borrows the global mark until real
- *  art exists. Placeholder art, flagged for the owner - the mapping is one engine function, and
- *  three real marks would replace it with the identity. */
-const markUrl = computed(() => `${base}images/sponsors/${sponsorArtKey(terms.value.tier)}.webp`)
+ *  ⚠ THE TIER *IS* THE KEY AGAIN (05.08). Between W3-ACT2 and today this went through
+ *  `sponsorArtKey`, which redirected the three professional rungs onto `global.webp` because only
+ *  three marks existed; the owner has now drawn Baseline Athletic, Meridian Sport and Aurelia, they
+ *  ship as `tour` / `premium` / `icon`, and the redirect is retired rather than left as an identity
+ *  function - `sponsorArtKey`'s own note said that is what shipping the art would mean. All six
+ *  rungs print their own mark, and `tests/art-placeholders.test.ts` asserts every rung on the ladder
+ *  has a file, so a seventh rung added without art fails there instead of silently borrowing here. */
+const markUrl = computed(() => `${base}images/sponsors/${terms.value.tier}.webp`)
 
 /** ⚠ WHAT THEY COVER, IN THE BRAND'S OWN WORDS - the sentence the whole ladder exists to make
  *  readable. The rung is COVERAGE, not prestige (see `SponsorTier`), so the line that names the

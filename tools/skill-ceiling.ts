@@ -59,7 +59,9 @@ import { fastMatchProbability } from '../src/engine/match/engine'
 import { FIELD, fieldProsFor, mergedWtaRanking } from '../src/engine/season/fieldPros'
 import { rivalMatchPlayer } from '../src/engine/season/rival'
 import { power } from '../src/engine/season/cohort'
-import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { BEST_N_BY_TRACK } from '../src/engine/season/ranking'
+import type { TierId } from '../src/engine/season/types'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type WeekPlan } from '../src/shared/protocol'
 import type { MatchPlayer } from '../src/engine/match/types'
 
@@ -947,15 +949,24 @@ function section5(peaks: { label: string; build: KidSkills }[]): void {
   // WHAT HER SKILL IS WORTH IN POINTS. Approximating a rung's whole field by its measured mean core
   // (calendar.ts's own W2-FIELD2 table), a 32-draw is five rounds of the same coin, so the finish
   // distribution is closed form and `TIERS[tier].points[finish]` prices it. `bestN` for the W table
-  // is 16, so sixteen events of that rung is the standing she would hold playing nothing else.
-  const rungs: { tier: string; core: number; points: readonly number[] }[] = [
-    { tier: 'w15', core: 48.5, points: [10, 6, 3, 2, 1, 0] },
-    { tier: 'w35', core: 50.4, points: [20, 13, 8, 4, 2, 0] },
-    { tier: 'w50', core: 55.1, points: [50, 33, 20, 11, 6, 1] },
-    { tier: 'w75', core: 60.0, points: [75, 49, 29, 16, 9, 1] },
-    { tier: 'w100', core: 65.9, points: [100, 65, 40, 25, 12, 0] },
-    { tier: 'wta125', core: 70.7, points: [125, 81, 49, 27, 15, 1] },
-  ]
+  // is `BEST_N_BY_TRACK.wta`, so that many events of one rung is the standing she would hold playing
+  // nothing else.
+  //
+  // ⚠ THE POINTS COME OFF `TIERS`, NOT OFF A COPY (points-by-the-book, 05.08). This table used to
+  // carry its own transcription of all six rows, which went stale the moment W15 and W35 were
+  // corrected to the chart they are named after – and stale silently, because a hand-copied array
+  // still adds up. Only the measured FIELD CORE is a number of this tool's own, because it comes
+  // from tools/field-quality.ts and not from the tier table.
+  const rungs: { tier: TierId; core: number; points: readonly number[] }[] = (
+    [
+      { tier: 'w15', core: 48.5 },
+      { tier: 'w35', core: 50.4 },
+      { tier: 'w50', core: 55.1 },
+      { tier: 'w75', core: 60.0 },
+      { tier: 'w100', core: 65.9 },
+      { tier: 'wta125', core: 70.7 },
+    ] as const
+  ).map((r) => ({ tier: r.tier, core: r.core, points: TIERS[r.tier].points }))
   const expectedPoints = (p: number, pts: readonly number[]): number => {
     // finish 0 = champion (5 wins), 1 = finalist, ... 5 = first-round loss
     let e = 0
@@ -966,9 +977,10 @@ function section5(peaks: { label: string; build: KidSkills }[]): void {
     }
     return e
   }
-  console.log(`\n  FROM SKILL TO POINTS – E[points] per event by rung, and the best-16 that buys:\n`)
+  const SLOTS = BEST_N_BY_TRACK.wta
+  console.log(`\n  FROM SKILL TO POINTS – E[points] per event by rung, and the best-${SLOTS} that buys:\n`)
   console.log(
-    `  ${padEnd('build', 34)}${rungs.map((r) => pad(r.tier, 10)).join('')}${pad('best-16', 10)}${pad('=> rank', 10)}`,
+    `  ${padEnd('build', 34)}${rungs.map((r) => pad(r.tier, 10)).join('')}${pad(`best-${SLOTS}`, 10)}${pad('=> rank', 10)}`,
   )
   for (const { label, build } of peaks) {
     const me = buildPlayer('me', build)
@@ -977,14 +989,14 @@ function section5(peaks: { label: string; build: KidSkills }[]): void {
       return expectedPoints(p, r.points)
     })
     const bestRung = Math.max(...perRung)
-    const best16 = 16 * bestRung
+    const best16 = SLOTS * bestRung
     console.log(
       `  ${padEnd(label, 34)}${perRung.map((e) => pad(e.toFixed(1), 10)).join('')}` +
         `${pad(best16.toFixed(0), 10)}${pad(`#${rankForPoints(best16)}`, 10)}`,
     )
   }
   console.log(
-    `\n  (best-16 = sixteen events of her BEST rung, every result counting – an upper bound on what the`,
+    `\n  (best-${SLOTS} = ${SLOTS} events of her BEST rung, every result counting – an upper bound on what the`,
   )
   console.log(`   shipped points table can pay a player of that skill, before entry gates and fatigue.)`)
 

@@ -956,6 +956,30 @@ const TAB_OPTIONS = [
   border: none;
   border-radius: 0;
   background: none;
+  /* «и с отступом внизу небольшим» (owner, 05.08). The switcher had none at all, so the first block
+     of whichever chapter is open opened flush against the pills. Same 14px `.more-tabs` has carried
+     since it shipped, so the two screens he named in one sentence breathe the same amount. */
+  margin-bottom: 14px;
+}
+
+/* ⚠ BIGGER, BECAUSE 27px IS NOT A TOUCH TARGET (owner, 05.08: «Верхние переключатели-вкладки в
+   ledger и настройках сделать немного крупнее и с отступом внизу небольшим»). MEASURED in the
+   browser at his own 576-wide viewport before touching anything: the pill was 27px tall - against
+   51px for the bottom bar's `.tab-btn`, which is the app's own answer to "how big is a thing you
+   navigate with", and against the 44px both platform guidelines ask for. It was the smallest
+   control on the page by a wide margin.
+
+   ⚠ AND IT IS SCOPED TO THE CHAPTER PICKERS, NOT TO `.tab-pill`. The shared pill in src/style.css
+   is also the draw's round switcher and the 12w/season filter six pixels below this row - growing
+   it globally would inflate a filter INSIDE a chapter to the size of the chapter picker above it,
+   which is the "two identical-looking rows stacked six pixels apart" the note above is about. So
+   the same copy-not-share the four declarations above already use, for the same reason.
+
+   `:deep`, because the pills are SegmentedRow's children: a scoped selector reaches the child's
+   ROOT (which is why the block above works unaided) and stops there. */
+.money-tabs :deep(.tab-pill) {
+  padding: 10px 18px;
+  font-size: 14px;
 }
 
 /* --- 3. THE PERIOD ---------------------------------------------------------------------------- */

@@ -138,6 +138,13 @@ export interface TierDef {
    *  real world it resolved to ~219 points, while a perfect best-16 of W15 TITLES caps at 160 — the
    *  second rung of the ladder was unreachable from the first. Measured, not argued.
    *
+   *  ⚠ THE 160 IN THAT SENTENCE IS HISTORY AND THE LIVE FIGURE IS 270 (points-by-the-book, 05.08).
+   *  Both halves of it moved on the same day and in the same direction: the professional window is
+   *  the rulebook's eighteen rather than sixteen, and a W15 title is the 15 points the rung is named
+   *  after rather than 10. 18 x 15 = 270, and a perfect W35 season likewise caps at 18 x 35 = 630.
+   *  The paragraph's ARGUMENT is untouched – it is about the unit, not the magnitude – but a reader
+   *  reaching for "160" as a current ceiling would be two corrections out of date.
+   *
    *  ITF and domestic rungs keep `enterPct`: their tables ARE population artefacts (199 juniors, no
    *  external anchor), so a share is still the right unit there. One rule per table, stated per table.
    *

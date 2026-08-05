@@ -83,10 +83,12 @@ export function tableSize(world: WorldState, track: LadderTrack): number {
 }
 
 export function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] {
-  // THE WINDOW SPLIT LANDS HERE (W2-LADDER §3): best-6 for domestic/itf, best-16 for the
-  // professional table, and because this is the ONE fold every table-reader flows through (rank
-  // caches, standings, acceptance cuts, LadderViews), no surface can count a season on the wrong
-  // rule.
+  // THE WINDOW SPLIT LANDS HERE (W2-LADDER §3): best-6 for domestic/itf, EIGHTEEN for the
+  // professional table (the rulebook's own number since 05.08, with eleven of the eighteen reserved
+  // for Slams and 1000s - `MANDATORY_SLOTS`), and because this is the ONE fold every table-reader
+  // flows through (rank caches, standings, acceptance cuts, LadderViews), no surface can count a
+  // season on the wrong rule. The same line is where §VIII.A.2.b's minimum lands, for the same
+  // reason: "does she appear on the list at all" has to have exactly one answer.
   const live = computeRanking(world.results, world.week, BEST_N_BY_TRACK[track], [...cohortIds(world), KID_ID], inTrack(track))
   // ⚠ THE W TABLE IS THE MERGED TABLE, everywhere it is read (living-field phase W, 01.08). The
   // professional table used to be ~199 zero rows and whatever the canonical W brackets had paid the
@@ -232,6 +234,53 @@ export function kidPoints(world: WorldState, track: LadderTrack): number {
 /** Her domestic best-6 - the number the domestic rungs' bands are denominated in. */
 export function kidDomesticPoints(world: WorldState): number {
   return kidPoints(world, 'domestic')
+}
+
+// =================================================================================================
+// WHICH TABLE IS HERS – moved here from world/snapshot.ts (fix/wallet-and-wrapup, 05.08) and
+// re-exported from there under its historical name. It is a LADDER fact, and the season wrap-up
+// in world/milestones.ts needs the same one answer; snapshot.ts imports milestones.ts, so reading
+// it up there would have been a runtime cycle and a second copy of the rule would have been the
+// drift this function exists to prevent. Nothing about either function changed in the move.
+// =================================================================================================
+
+/** HAS A W RESULT EVER COUNTED - the permanent half of `activeLadderOf`'s professional arm.
+ *
+ *  ⚠ THE EVIDENCE FOR "EVER" CANNOT BE THE RESULTS LEDGER: `world.results` is pruned to the 52-week
+ *  window (RESULTS_WINDOW), so a pro on a long layoff would watch her own debut delete itself. The
+ *  v34 migration solved the identical problem for the on-ramp latches with `bestFinishByTier` - a
+ *  high-water mark written at tournament finalize and NEVER pruned - and this reads the same mark:
+ *  a recorded finish whose points-table row pays > 0 was a counting result the week it landed
+ *  (`isCountingResult` IS `points > 0`), and the table is monotone non-increasing, so the BEST
+ *  finish paying zero means every finish did. Exact, for every save, however long ago it happened -
+ *  no new persisted field, no schema bump. */
+export function wtaEverCounted(world: WorldState): boolean {
+  return (Object.keys(world.bestFinishByTier) as TierId[]).some((tier) => {
+    const finish = world.bestFinishByTier[tier]
+    return finish !== undefined && TIERS[tier].track === 'wta' && TIERS[tier].points[finish] > 0
+  })
+}
+
+/** WHICH TABLE IS SHE ACTUALLY COMPETING IN - one rule, one place, so Home, Stats and the Kid screen
+ *  cannot answer it three ways.
+ *
+ *  docs/specs/two-ladders.md, "Which rank is her rank": the ITF one once she has it, because that is
+ *  the table the international rungs open on and the one the game is about. Before her first counting
+ *  ITF result she is unranked internationally and the screens show her national standing instead.
+ *  "That is the real shape of a junior career, and the moment the first ITF point lands is a beat
+ *  worth having."
+ *
+ *  ⚠ THE PROFESSIONAL ARM IS A ONE-WAY DOOR (architect's ruling, 02.08, on the owner's «для тех кому
+ *  актуально уже и мировую можно показывать, она с ней до конца игры будет»). Her first counting
+ *  W-series result makes the professional table her table TO THE END OF THE GAME - it never falls
+ *  back to 'itf'/'domestic' when the 52-week window later empties, which is why the arm reads the
+ *  never-pruned mark (`wtaEverCounted`) and not the live window alone. The junior arm stays a live
+ *  read on purpose: J is a stage she passes through, the paid tour is where the story ends. The
+ *  live `kidPoints` OR is the latchOnRamps discipline - the fresh fact answers correctly on its
+ *  own, the memory only ever adds, so no caller is order-sensitive on when finalize last ran. */
+export function activeLadderOf(world: WorldState): LadderTrack {
+  if (wtaEverCounted(world) || kidPoints(world, 'wta') > 0) return 'wta'
+  return kidPoints(world, 'itf') > 0 ? 'itf' : 'domestic'
 }
 
 /** Pure eligibility check for a tier (Phase-4 "Season Life" slice 1, increment 2). A tier is a WINDOW
