@@ -421,7 +421,26 @@ const REF = {
   // reproduce byte-for-byte and are asserted BEFORE this constant is read (line above). No
   // correction in that wave draws on any stream at all - two are constants and one is a filter over
   // the ledger - so the MAIN sequence cannot see them.
-  kidRank: 91,
+  //
+  // ⚠ AND RE-AIMED A FIFTH TIME BY POPULATION-1600 (05.08): 91 -> 87, four places, SAME SECOND-ORDER
+  // MECHANISM FOR THE FIFTH TIME RUNNING - and this is the largest move of the five for the obvious
+  // reason. `FIELD.size` 520 -> 1,600 makes the W universe 1,799 candidates instead of 719, and
+  // `selectEntrants` spends one draw per candidate off `seed:aitour:<id>` / `seed:kidtour:<id>`, so a
+  // W event's entrant set changed, so which JUNIORS a W week books changed, so the J draws those
+  // juniors were no longer free for changed. `fieldPros.ts`' own header names this as the licensed
+  // downstream class ("Entrant sets are a documented mutable class"). This constant folds the ITF
+  // table, which the population does not touch: once more SHE DID NOTHING DIFFERENT.
+  //
+  // ⚠ FIVE RE-AIMS IN FIVE WAVES IS ITSELF WORTH A SENTENCE, because "it moved again" is exactly how
+  // a guard stops being read. What makes each one safe is not that the number is small but that the
+  // MAIN capture is asserted BEFORE this line and has never moved: the constant is a companion
+  // measurement on a different track, and the invariant that blocks a merge is the hash above it.
+  //
+  // THE CAPTURE IS UNTOUCHED FOR THE FIFTH TIME: count 41550, hash e6b0c709, head and tail all
+  // reproduce byte-for-byte and are asserted BEFORE this constant is read. The three new storeys add
+  // no draw to any stream the weekly tick walks - they are 1,080 more reads of
+  // `seed:field:<n>:c<k>`, a fresh generator per player.
+  kidRank: 87,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

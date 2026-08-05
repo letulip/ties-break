@@ -69,7 +69,15 @@ import type { AiPlayer, RankingRow, TierId } from './types'
  *  ⚠ FOUR STOREYS SINCE W2-FIELD2 (act2-pro-tour.md §8.1). `tourElite` is the top of the WORLD, not
  *  the top of our calendar: she plays the 250/500/1000/Slam tour that is act-3 content, which is why
  *  her points are in the thousands while our own top rung pays 125 a title. See FIELD.tiers. */
-export type FieldStrengthTier = 'tourElite' | 'elite' | 'contender' | 'journeyman' | 'circuit'
+export type FieldStrengthTier =
+  | 'tourElite'
+  | 'elite'
+  | 'contender'
+  | 'journeyman'
+  | 'circuit'
+  | 'qualifier'
+  | 'satellite'
+  | 'newcomer'
 
 /** One professional of the FIELD tier. An `AiPlayer` on purpose – she flows through the SAME
  *  machinery a cohort rival does (`selectEntrants`' age gate and bands, `rivalMatchPlayer`'s
@@ -272,18 +280,89 @@ export interface FieldPro extends AiPlayer {
 // 5+ ("1,400+ → top-50") measures #49 at 1,400. The spec's own ladder is the curve's, to the place.
 //
 // gamma 6.5 on the top storey is what makes the head read like a real one rather than 64 co-#1s.
+//
+// =================================================================================================
+// ⚠⚠ ...AND THE POPULATION IS THE SPORT'S NOW – 520 -> 1,600 (POPULATION-1600, 05.08). The owner's
+// instruction, in substance: take the population to about 1,600 as in the real WTA – with the
+// ageing and the successions, everything exactly as we already had it. Verbatim in
+// docs/specs/population-1600-2026-08.md, which is where the owner log keeps his own words.
+// =================================================================================================
+//
+// The real WTA singles list holds ~1,550 women (docs/research/real-ladder-pace.md §3b, live August
+// 2026: the list ends at #1531 on three points). We modelled 520. Four more storeys are APPENDED,
+// exactly as the fifth was, so `fp-0`..`fp-519` keep their chairs, their storeys, their names, their
+// books and their careers byte-for-byte: the top 520 rows of the merged table are the same 520
+// people they were yesterday, and every calibration above them is untouched by construction. What
+// moves is that 1,080 more professionals now stand BELOW them.
+//
+// WHY IT IS THE PREREQUISITE AND NOT A COSMETIC. `ladder-pace-2026-08.md` §6D wrote the arithmetic
+// down before the wave was ordered: every W rung's `entrantPctBand` is a SHARE of the merged table,
+// so the population size decides where a rung's field is drawn FROM. W15's shipped band [0.22, 0.72]
+// against 719 rows opens at position #158 – it draws the world's #158-#200, a slice two to four
+// times better-ranked than the real rung's. Against 1,799 rows the identical band opens at #396,
+// and a real W15 draws from about #400 and below. **The band did not have to move; the table had to
+// be the size the share was always written for.**
+//
+// THE POINTS BANDS ARE THE REAL CURVE'S OWN TAIL, log-interpolated from the seam our own table
+// already holds (#520 ~70, the `circuit` storey's floor) to the real list's own last row (#1,550-ish
+// on 3 points). That gives #700 ~41 · #1000 ~17 · #1300 ~7 · #1600 3, which sits between our own
+// deliberately-mean tail anchors and the live 2026 curve (#700 59 · #1000 22) – i.e. it errs in the
+// direction `real-ladder-pace.md` §5 says our anchors were mean. Every seam is continuous by
+// construction: each storey's ceiling IS the floor of the storey above it.
+//
+// ⚠⚠ THE CORE BANDS CONTINUE THE PYRAMID'S OWN ARITHMETIC – DOWN FIVE, SPANNING TEN – AND THE FIRST
+// CUT OF THIS WAVE DID NOT, WHICH IS WORTH KEEPING BECAUSE IT WAS MEASURED AND WRONG. The first cut
+// stepped down TWO (four storeys, 31-41 / 29-39 / 27-37 / 25-35), reasoning from the real Elo
+// curve's own ~250-per-decade gradient that #520 -> #1,600 is only ~6 core points. It took
+// **Spearman(skill, points) from 0.888 to 0.818 and the mean gap from 10.1% of the table to 12.8%**,
+// failing this wave's first ship criterion outright – and the arithmetic says why. Points inside a
+// storey are a monotone function of the drawn core, so every inversion comes from the OVERLAP
+// between adjacent storeys: for two uniform bands of width 10 offset by 5 the chance a lower storey
+// out-draws a higher one is 12.5%, and offset by 2 it is 32%. **The fifty-per-cent overlap is not
+// decoration, it is what the correspondence is made of**, and squeezing 1,080 professionals – two
+// thirds of the population – into sixteen core points destroyed it. Restored to the pyramid's rule,
+// three storeys of 360.
+//
+// ⚠ AND YES, THAT MAKES THE WORLD MORE SPREAD OUT AGAIN, EXACTLY AS THE FIFTH STOREY'S NOTE SAID IT
+// WOULD, AND FOR THE SAME REASON: a step must be DEPTH and nothing else or its effect is not
+// attributable. Compressing the strength scale while deepening the table would have made the two
+// effects inseparable, and the compression is measured on its own arm in
+// docs/specs/population-1600-2026-08.md §5.
+//
+// ⚠ AND WHAT THE CHOICE DOES **NOT** DECIDE, measured rather than assumed: nothing any rung draws.
+// `selectEntrants` keys entry on `position + rng x drawSize`, so a 32-draw is filled from the first
+// ~50 positions of a rung's band whatever its width, and the DEEPEST band floor in the game is
+// W15's, at #396 of 1,799. Every rung therefore draws from the top 520 rows – the ones this wave
+// does not touch. The 1,080 new professionals are pure TABLE DEPTH: they change what a book is
+// worth, which acceptance cuts bite, and how far she has to climb. They are not in anybody's draw.
+//
+// THE NAMES. Fictional and generic, like `circuit`: the four rungs of a professional life below the
+// resident circuit – the woman who qualifies rather than enters, the woman on the satellite weeks,
+// the woman still hoping, and the woman who arrived this year.
+//
+// STILL DERIVED, STILL ZERO PERSISTED BYTES. `fieldProsFor` is a pure function of (seed,
+// seasonIndex); ageing, retirement and succession (`careerAt`, `seed:fieldcareer:`) are unchanged
+// and cover the new chairs by construction – the walk is keyed on (seed, n, season) and n is simply
+// larger. No schema, no migration, no golden save, no MAIN draw. `SAVE_SCHEMA_VERSION` stays where
+// the sponsor wave left it and the frozen capture (41550 / e6b0c709) cannot see this file.
 export const FIELD = {
   /** id prefix – the namespace that keeps field ids disjoint from `ai-*` / `ai-s*-*` / 'kid' */
   idPrefix: 'fp-',
-  /** professionals per season. 300 → 364 with the fourth storey; 364 → **520** with the fifth
-   *  (ladder-pace step 1 – see the ⚠⚠ box above). Against 199 juniors that is the merged ~720-row
-   *  W table, still one derivation per read and still zero persisted bytes.
+  /** professionals per season. 300 → 364 with the fourth storey; 364 → 520 with the fifth
+   *  (ladder-pace step 1); 520 → **1,600** with the sixth to ninth (population-1600 – see the ⚠⚠
+   *  box above). Against 199 juniors that is the merged ~1,800-row W table, still one derivation
+   *  per read and still zero persisted bytes.
    *
    *  ⚠ THE PYRAMID HAS GROWN AT BOTH ENDS AND NEVER IN THE MIDDLE, WHICH IS WHAT KEEPS EVERY
    *  CALIBRATION THIS FILE CARRIES. The fourth storey was added on top and the three below it kept
-   *  their counts; the fifth is added underneath and the four above it keep theirs. `fieldProsFor`
-   *  walks `tiers` in order handing out `fp-<n>`, so appending a storey shifts nobody's id. */
-  size: 520,
+   *  their counts; the fifth to ninth are added underneath and everything above them keeps theirs.
+   *  `fieldProsFor` walks `tiers` in order handing out `fp-<n>`, so appending a storey shifts
+   *  nobody's id.
+   *
+   *  ⚠ 1,600 IS THE SPORT'S OWN NUMBER, not a round one. real-ladder-pace.md §3b: the live WTA
+   *  singles list ends at #1531, ~1,550-1,600 women hold a ranking, and that denominator has been
+   *  flat for over a decade ("-1 female player per year"). */
+  size: 1600,
   /** THE AGES A PROFESSIONAL CAN BE SEEN AT – 16 (the ITF age-eligibility floor the W rungs use) to
    *  the hard end of a career. NO LONGER THE DRAW: since W4-LIVES an age is `debutAge + seasons
    *  since her debut`, and this pair is the envelope that span can occupy plus the anchor the points
@@ -311,6 +390,25 @@ export const FIELD = {
     // merged table to ~720 rows, which is what puts W75's #450 cut and W50's #550 cut back INSIDE
     // the pointed table so they can refuse somebody again.
     { id: 'circuit' as const, count: 156, core: [33, 43] as [number, number], pts: [70, 155] as [number, number], gamma: 1.4 },
+    // ⚠ THE SIXTH, SEVENTH AND EIGHTH STOREYS (population-1600, 05.08). Appended, never inserted.
+    // Three counts of 360 take the field to 1,600 and the merged table to ~1,800 rows – which is
+    // what makes W15's shipped [0.22, 0.72] band open at #396 instead of #158, and what puts W35's
+    // #700 cut and W50's #550 cut back INSIDE the pointed table so they refuse somebody again.
+    //
+    // The points bands are the real curve's tail log-interpolated from (#520, 70) to (#1600, 3);
+    // each ceiling IS the floor of the storey above, so the curve has no step in it. The core bands
+    // continue the pyramid's own arithmetic – every storey steps down five and spans ten – for the
+    // reason the ⚠ in the box above states and MEASURES: the fifty-per-cent overlap that rule
+    // produces is what the correspondence between skill order and points order is made of.
+    { id: 'qualifier' as const, count: 360, core: [28, 38] as [number, number], pts: [24, 70] as [number, number], gamma: 1.4 },
+    { id: 'satellite' as const, count: 360, core: [23, 33] as [number, number], pts: [9, 24] as [number, number], gamma: 1.4 },
+    // ⚠ THE LAST ROW OF THE TABLE IS THE LAST ROW OF THE REAL ONE: the live list ends at #1531 on
+    // three points, and §VIII.A.2.b makes three the smallest total that appears at all. The career
+    // arc and the jitter can take a base of 3 down to 1 for a professional past her peak, so the
+    // final ~100 rows sit a point or two under the real floor. Stated rather than hidden: it is
+    // cosmetic (the rows are sorted, not thresholded) and the alternative – flooring the storey at
+    // 6 so the arc lands on 3 – would put a kink in a curve whose whole virtue is that it has none.
+    { id: 'newcomer' as const, count: 360, core: [18, 28] as [number, number], pts: [3, 9] as [number, number], gamma: 1.4 },
   ],
   /** per-attribute spread around the drawn core (uniform ± this), so a pro has a shape, not a bar */
   attrSpread: 6,

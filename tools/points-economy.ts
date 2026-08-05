@@ -941,6 +941,15 @@ const REAL_ELO: { rank: number; elo: number }[] = [
   { rank: 200, elo: 1755 },
   { rank: 300, elo: 1705 },
   { rank: 364, elo: 1685 },
+  // ⚠ THE TAIL IS EXTRAPOLATED, NOT PUBLISHED, AND IT IS LABELLED SO (population-1600, 05.08). The
+  // curve above is Tennis Abstract's, which stops where a top-364 study stops. A 1,600-strong table
+  // needs the tail, and the only honest way to get it is the curve's own slope: #200 -> #300 is
+  // -284 Elo per decade of rank and #300 -> #364 is -239, so -250 is the tail's own gradient read
+  // off its last two published segments. Used ONLY by the compressed-field arms (§12, §14b); no
+  // shipped constant is derived from a row below this line without that being said where it lands.
+  { rank: 520, elo: 1646 },
+  { rank: 1000, elo: 1575 },
+  { rank: 1600, elo: 1524 },
 ]
 
 if (wants('11')) {
@@ -1197,6 +1206,139 @@ if (wants('13')) {
     const r = merged2.find((x) => x.playerId === 'kid')?.rank ?? merged2.length
     console.log(`     a LIVE book of ${pad(book, 5)} pts stands at #${r} of ${merged2.length}`)
   }
+}
+
+// =================================================================================================
+// 14. THE TAPER – the owner's approved title-chance ladder, measured for HER AT HER OWN RUNG
+// =================================================================================================
+//
+// THE TARGET, approved verbatim (docs/specs/population-1600-2026-08.md, which carries the owner's
+// own words): W15/W35 15-35% · W50/W75/W100 10-20% · WTA 125/250 5-12% · 500/1000 2-6% · Slam rare.
+// His reasoning governs the design – otherwise it is simply painful, and this is still a game –
+// against the counter-pressure that a flat band everywhere makes the rung she stands on meaningless.
+//
+// ⚠⚠ WHOSE TITLE CHANCE. This is the whole methodological question and it is settled here rather
+// than by whichever build was convenient. A FIXED reference build measured against ten fields of
+// rising strength tapers by construction and says nothing about whether the rung SHE STANDS ON is
+// winnable; a band that only holds for a prodigy is not a band. So:
+//
+//   HER OWN RUNG = THE RUNG THE ENGINE'S OWN SCHEDULER PUTS HER ON. §3's fixed point already maps a
+//   core to the rank her book buys and the window that rank opens; `earnSeason` then picks the
+//   season a rational player of that strength would actually enter (greedy on expected value over
+//   the real calendar, one entry a week, the AER cap). The rung that season enters MOST is hers.
+//
+// That maps every core to exactly one rung and every rung to a span of cores, so "the title chance
+// at rung X" is asked of the player the ladder has actually placed there. A rung no core is ever
+// scheduled onto is printed as ABSENT rather than given an invented occupant.
+//
+// P(title) = p^5 against the rung's own field: every rung in this game draws 32, so five rounds.
+// ⚠ THE CLOSED FORM IS USED AND IT IS NOT AN APPROXIMATION OF THE INSTRUMENT – IT REPRODUCES IT.
+// At ladder-pace step 1, field core 47.1 against power 56.75 gives P(match) 75.5%, and 0.755^5 =
+// 24.5%, which is what tools/field-quality.ts measured by running the real brackets. Same at the
+// baseline (70.7% -> 17.7%) and on the step-2 arm (51.2% -> 3.5%). Three agreements to a tenth.
+
+const TAPER_BANDS: { rungs: TierId[]; lo: number; hi: number; label: string }[] = [
+  { rungs: ['w15', 'w35'], lo: 15, hi: 35, label: '15-35%' },
+  { rungs: ['w50', 'w75', 'w100'], lo: 10, hi: 20, label: '10-20%' },
+  { rungs: ['wta125', 'wta250'], lo: 5, hi: 12, label: '5-12%' },
+  { rungs: ['wta500', 'wta1000'], lo: 2, hi: 6, label: '2-6%' },
+  { rungs: ['slam'], lo: 0, hi: 2, label: 'rare (<2%)' },
+]
+const bandFor = (t: TierId) => TAPER_BANDS.find((b) => b.rungs.includes(t))
+
+if (wants('14')) {
+  console.log('\n14. THE TAPER – title chance at HER OWN RUNG (the rung the scheduler puts her on)')
+
+  // --- 14a. core -> her own rung, by what the season actually enters -------------------------------
+  const CORE_LO = 30
+  const CORE_HI = 78
+  const STEP = 0.5
+  const modalOf = new Map<number, TierId | null>()
+  const rankOf = new Map<number, number>()
+  for (let c = CORE_LO; c <= CORE_HI + 1e-9; c += STEP) {
+    const core = Math.round(c * 2) / 2
+    const fp = earnFixedPoint(core)
+    rankOf.set(core, fp.rank)
+    // The season a player of this strength, standing where her book puts her, would really enter.
+    const counts = new Map<TierId, number>()
+    for (let s = 0; s < SEEDS; s++) {
+      for (const [t, n] of earnSeason(core, fp.rank, AGE, EVENTS[s]).perTier) {
+        counts.set(t, (counts.get(t) ?? 0) + n)
+      }
+    }
+    let best: TierId | null = null
+    let bestN = 0
+    for (const [t, n] of counts) if (n > bestN) ((bestN = n), (best = t))
+    modalOf.set(core, best)
+  }
+
+  const spanOf = new Map<TierId, number[]>()
+  for (const [core, t] of modalOf) {
+    if (!t) continue
+    const list = spanOf.get(t) ?? []
+    list.push(core)
+    spanOf.set(t, list)
+  }
+  for (const list of spanOf.values()) list.sort((a, b) => a - b)
+
+  console.log('    rung      cores the scheduler puts here     C(X)   her rank there   field core   P(match)   P(TITLE)   band        verdict')
+  const measured = new Map<TierId, number>()
+  for (const t of W_RUNGS) {
+    const span = spanOf.get(t)
+    const band = bandFor(t)
+    if (!span || !span.length) {
+      console.log(`    ${padE(t, 9)} ${padE('ABSENT – no core is ever scheduled here', 32)} ${padE('', 51)}${band?.label ?? ''}`)
+      continue
+    }
+    const cx = span[Math.floor(span.length / 2)]
+    const f = FIELD_CORE.get(t) ?? 50
+    const p = pWin(cx, t)
+    const title = 100 * Math.pow(p, 5)
+    measured.set(t, title)
+    const ok = band ? title >= band.lo && title <= band.hi : true
+    console.log(
+      `    ${padE(t, 9)} ${padE(`${span[0].toFixed(1)}-${span[span.length - 1].toFixed(1)} (${span.length})`, 32)}` +
+        ` ${pad(cx.toFixed(1), 5)}   ${pad('#' + rankOf.get(cx), 13)}   ${pad(f.toFixed(1), 10)}` +
+        `   ${pad((100 * p).toFixed(1) + '%', 8)}   ${pad(title.toFixed(1) + '%', 8)}   ${padE(band?.label ?? '-', 11)} ${ok ? 'IN BAND' : '✗ OUT'}`,
+    )
+  }
+  const seq = W_RUNGS.map((t) => measured.get(t)).filter((x): x is number => x !== undefined)
+  const monotone = seq.every((x, i) => i === 0 || x <= seq[i - 1] + 1e-9)
+  const inBand = W_RUNGS.filter((t) => {
+    const v = measured.get(t)
+    const b = bandFor(t)
+    return v !== undefined && b && v >= b.lo && v <= b.hi
+  }).length
+  console.log(
+    `    SHIP RULE 5:  (a) w15 in 15-35%: ${(() => {
+      const v = measured.get('w15')
+      return v !== undefined && v >= 15 && v <= 35 ? `✓ ${v.toFixed(1)}%` : `✗ ${v === undefined ? 'absent' : v.toFixed(1) + '%'}`
+    })()}` +
+      `  ·  (b) monotone non-increasing: ${monotone ? '✓' : '✗'}` +
+      `  ·  (c) ${inBand} of ${W_RUNGS.length} in band (need 8)` +
+      `  ·  (d) slam < 2%: ${(() => {
+        const v = measured.get('slam')
+        return v === undefined ? 'absent' : v < 2 ? `✓ ${v.toFixed(2)}%` : `✗ ${v.toFixed(2)}%`
+      })()}`,
+  )
+
+  // --- 14b. the continuity column – the SHIPPED instrument's fixed reference build ------------------
+  // Reported, never scored: she is the origin of the 15-35% band and the only figure comparable
+  // across every previous wave, but she is one player against ten fields (see the ⚠⚠ above).
+  console.log('\n    continuity: the fixed reference strong junior (power 56.75), the shipped instrument')
+  console.log(
+    '      ' +
+      W_RUNGS.map((t) => `${t} ${(100 * Math.pow(pWin(56.75, t), 5)).toFixed(1)}%`).join(' · '),
+  )
+  // --- 14c. the band floors, as absolute positions – the knob the taper is tuned on ----------------
+  console.log('\n    where each rung DRAWS FROM: entrantPctBand floor as an absolute position of the merged table')
+  console.log(
+    '      ' +
+      W_RUNGS.map((t) => {
+        const b = TIERS[t].entrantPctBand
+        return `${t} #${b ? Math.round(b[0] * TABLE_ROWS) : 0}-${b ? Math.round(b[1] * TABLE_ROWS) : TABLE_ROWS}`
+      }).join(' · '),
+  )
 }
 
 console.log(`\n${rule()}`)

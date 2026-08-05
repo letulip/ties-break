@@ -122,6 +122,18 @@ async function main() {
     process.exitCode = 1
     return
   }
+  // ⚠ STAMP THE OUTPUT, OR `--check` CAN NEVER BE SATISFIED (05.08, found by the owner asking
+  // whether the graph had rebuilt after a merge). Two facts combine into a trap:
+  //   1. `--check` compares the newest SOURCE mtime against the graph file's mtime, and a plain
+  //      `git checkout` / `git pull` rewrites the mtime of every file it touches even when the
+  //      content is identical. Ninety-nine files were "newer" than the graph purely from a merge.
+  //   2. graphify does not rewrite `graph.json` when the rebuilt graph is byte-identical, so the
+  //      output keeps its OLD mtime - and running the very command the warning tells you to run
+  //      leaves the warning exactly where it was.
+  // Together they pin the warning permanently on after any branch switch, which is the worst thing
+  // a trust signal can do: it trains everyone to ignore it, and a stale graph is worse than no
+  // graph. Touching the file after a successful build makes the advertised cure actually work.
+  await fs.utimes(graphFile, new Date(), new Date()).catch(() => {})
   const after = await graphStats()
   const secs = ((Date.now() - started) / 1000).toFixed(1)
   console.log(`  graph: ${after?.nodes ?? '?'} nodes / ${after?.edges ?? '?'} edges in ${secs}s, 0 model tokens`)

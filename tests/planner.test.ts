@@ -271,7 +271,15 @@ function hashOf(draws: number[]): string {
 // they were no longer free for change. ⚠⚠ AND IN THIS FILE THE A/B IS STILL THE POINT:
 // `draws.length` and `hashOf(draws)` are asserted two lines above and both pass on the re-priced
 // table, so input-independence survives a change to what the tour PAYS.
-const REF = { kidRank: 91 }
+//
+// ⚠ AND RE-AIMED A FIFTH TIME BY POPULATION-1600 (05.08): 91 -> 87, four places, SAME MECHANISM.
+// `FIELD.size` 520 -> 1,600 makes the W universe 1,799 candidates instead of 719, and
+// `selectEntrants` spends one draw per candidate off `seed:aitour:<id>` / `seed:kidtour:<id>` - so a
+// W event's entrant set changed, so which JUNIORS a W week books changed, so the J draws they were
+// no longer free for changed. ⚠⚠ AND IN THIS FILE THE A/B IS STILL THE POINT: `draws.length` and
+// `hashOf(draws)` are asserted two lines above and both pass against a world three times the size,
+// so input-independence survives tripling the population.
+const REF = { kidRank: 87 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

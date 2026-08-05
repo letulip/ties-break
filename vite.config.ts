@@ -56,8 +56,17 @@ const HEAVY_SIM_FILES = [
   '**/tests/fatigue-bench.test.ts',
   '**/tests/fatigue-bench-planner.test.ts',
   '**/tests/fatigue-bench-policy.test.ts',
+  '**/tests/fatigue-bench-policy-104w.test.ts',
   '**/tests/match/calibration.test.ts',
 ]
+
+/** THE HEAVY UNIT TAIL – regression tests, so they stay in the PR gate, but they hold a core long
+ *  enough to matter. Measured 05.08 with `--reporter=json`, summed per file under contention:
+ *  economy 44s, radar 24s solo (17s before `FIELD.size` went 520 -> 1,600), kidLife 22s. Nothing
+ *  here is near birpc's 60s window ALONE; together with 109 other files on CI's slower cores, one
+ *  of them is. `scripts/units.mjs` gives each a process; this list is what it skips in the bulk
+ *  pass. Grow it rather than trimming assertions if the tail grows. */
+const HEAVY_UNIT_FILES = ['**/tests/economy.test.ts', '**/tests/radar.test.ts', '**/tests/kidLife.test.ts']
 
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
@@ -201,7 +210,18 @@ export default defineConfig({
           // ⚠ tests/component/** MUST be excluded here: the root include is tests/**/*.test.ts, so
           // without this the node-environment unit project picks up the mounted tests and they die on
           // a missing `document`.
-          exclude: [...configDefaults.exclude, ...HEAVY_SIM_FILES, 'tests/component/**'],
+          exclude: [
+            ...configDefaults.exclude,
+            ...HEAVY_SIM_FILES,
+            'tests/component/**',
+            // ⚠ THE HEAVY UNIT TAIL, SKIPPED ONLY WHEN `scripts/units.mjs` IS ABOUT TO RUN IT
+            // ITSELF (05.08). Those three files still gate every pull request - they are regression
+            // tests, unlike the Monte-Carlo sweeps - they just get a process each so no worker holds
+            // a core past birpc's unraisable 60s window. The env var exists because vitest's CLI
+            // `--exclude` does not merge into a project that declares its own `exclude`: passing it
+            // three times still ran all 112 files, measured. Unset, nothing changes.
+            ...(process.env.TB_UNIT_SKIP_HEAVY ? HEAVY_UNIT_FILES : []),
+          ],
           // ⚠ 20s, AND IT IS A CONTENTION BUDGET RATHER THAN A SLOW-TEST ALLOWANCE (31.07).
           //
           // The owner could not merge: CI failed three runs in a row on `week-notes.test.ts` W2 with
