@@ -103,10 +103,21 @@ export function localSponsorCents(nationalRank: number): number {
  *
  *  ⚠ AND `reviewWeek` IS THE WINDOW'S OPENING WEEK, WHOEVER IS ASKING (06.08). Every caller passes
  *  `sponsorWindowOpensAt(world.week)` rather than today, because the verdict may now be taken on any
- *  week of the window and the count it is judged on must not depend on which one. Asked on week 51
- *  instead, the rolling year would have dropped weeks 47-48 of the season just played - two
+ *  week of the window and the window it counts over must not depend on which one. Asked on week 51
+ *  instead, the rolling year would have slid forward off weeks 47-48 of the season just played - two
  *  competitive weeks, real tournaments - and a deal could fail its obligation for events she had
- *  actually entered. Anchored, the same window is read on every week of the window. */
+ *  actually entered.
+ *
+ *  ⚠ AND ANCHORING THE WINDOW IS NECESSARY BUT NOT SUFFICIENT, WHICH IS WORTH KNOWING BEFORE ANYONE
+ *  TRUSTS THIS NUMBER ON A LATE WEEK. `world.results` is ITSELF pruned on a rolling 52 weeks
+ *  (`RESULTS_WINDOW`, world.ts `pruneResults`), relative to `world.week` and not to `reviewWeek`. So
+ *  the anchored window is read against a ledger that has already lost its own oldest weeks: asked on
+ *  week 48 the count is missing week 47 of the season before, on week 49 weeks 47-48, and there it
+ *  stops, because weeks 49-51 carry no events. THE NUMBER RETURNED ON A LATER WEEK IS THEREFORE A
+ *  LOWER BOUND, short by at most two competitive weeks' tournaments. `reviewSponsors` is written
+ *  around that: a lower bound may confirm that she played enough and may never declare that she did
+ *  not. Measured, not deduced - a `tour` deal counted 14 against a minimum of 14 on the window's
+ *  opening week and 13 the next, and was ended for it. */
 export function eventsPlayedInSeason(world: WorldState, reviewWeek: number): number {
   const from = reviewWeek - WEEKS_PER_YEAR
   // ⚠ THE RESULTS LEDGER, NOT THE FEED (owner, 04.08: «а какие конкретно старты они считают? я много
@@ -231,12 +242,29 @@ export function reviewSponsors(world: WorldState): void {
   const deal = dealUnderReview(world.offers, world.week)
   const dealTerms = deal ? (deal.terms as KitOfferTerms) : null
   const played = deal ? eventsPlayedInSeason(world, opened) : 0
+  // ⚠ AND A VERDICT MAY ONLY FAIL HER FROM THE WINDOW'S OPENING WEEK, WHICH IS THE ONLY WEEK THE
+  //   SEASON IT JUDGES IS STILL VISIBLE (06.08). Anchoring the review week was necessary and is not
+  //   sufficient: `world.results` is itself PRUNED on a rolling 52 weeks (`RESULTS_WINDOW`, world.ts
+  //   `pruneResults`), so the evidence underneath the anchored window erodes a week at a time. Caught
+  //   in the bench rather than reasoned about - a `tour` deal on `bench-working-2` counted 14 events
+  //   against a minimum of 14 on week 255 and 13 on week 256, because week 203's tournament had aged
+  //   out of the ledger overnight. It was ended for not playing enough, on a season it had played
+  //   enough of, and the career lost four seasons of retainer and bonus ($49,252 -> $21,960).
+  //
+  //   So `played` read on a later week is a LOWER BOUND on the true count - short by at most the two
+  //   competitive weeks 47-48 of the season before, since weeks 49-51 carry no events. A lower bound
+  //   is sound for confirming that she DID play enough and unsound for declaring that she did not,
+  //   and the same is true of the standing (see `keptAtHome`). So a later week's verdict does
+  //   everything except fail her: it identifies the deal, ends one whose TERM is up - which is
+  //   arithmetic on `untilWeek`, not a judgement - and posts the brand's goodbye. That is the whole
+  //   of what the owner's save was missing, and none of it needs evidence that has aged out.
+  const openWeekVerdict = world.week === opened
   // ⚠ FAILING EITHER CONDITION COSTS THE DEAL, NOT THE FAMILY'S SAVINGS (spec §4.1). Nothing is
   //   clawed back - a junior kit deal is not a loan, and NOT ONE LINE BELOW TOUCHES
   //   `world.fundsCents`. The contract ends with the season it failed and the brand is free to write
   //   again the year after, because the penalty is a missed season and not a blacklist. This is the
   //   promise the LETTER makes in the brand's own words, and the two have to agree.
-  const playedEnough = !dealTerms || played >= dealTerms.minEventsPerSeason
+  const playedEnough = !dealTerms || !openWeekVerdict || played >= dealTerms.minEventsPerSeason
   // ...and the second one is the national rung's own, and the reason the domestic ladder still
   // matters to a girl who has left it behind. `keepDomesticRank` is absent on every other rung, so
   // this reads true for them without a tier check.
@@ -246,14 +274,33 @@ export function reviewSponsors(world: WorldState): void {
   // a JUNIOR; a professional is not less visible than the girl they signed. `standingClears` is the
   // one place that question is answered - the same predicate that decides who WRITES to her - so a
   // deal can never be killed by a rule that would have offered it back the same winter.
+  //
+  // ⚠ AND IT IS THE OPENING WEEK'S READING OR NOBODY'S, exactly as the events count above is, and for
+  // a sibling reason: her domestic points are a rolling 52-week best-6, so during weeks 48-51 the
+  // previous year's weeks 47-48 age out of the table and her rank slides for a reason that has
+  // nothing to do with the season the brand is judging. Both halves of the verdict therefore read
+  // "she held up" on any week but the first - a later week can confirm a pass and must not declare a
+  // failure.
+  //
+  // ⚠ THE ONE ASYMMETRY IT LEAVES, stated: a career that reaches the window after its opening week
+  // has no opening-week reading, so its deal is not failed that winter. That is the SAFE direction -
+  // a deal kept, never one killed - it is confined to a career the app updated under, and the
+  // alternative is to fail her on evidence that has already begun to age out. Pinned in
+  // tests/offers.test.ts.
   const keptAtHome =
     !dealTerms?.keepDomesticRank ||
+    !openWeekVerdict ||
     nationalRank <= dealTerms.keepDomesticRank ||
     standingClears(standing, dealTerms.tier)
   const heldUp = playedEnough && keptAtHome
   // ...and the verdict is recorded ON the letter, so the inbox can still answer "what happened to
   // that deal?" a decade later. The count is the one the season really played (spec §5).
-  if (deal) deal.eventsPlayed = played
+  // ...and it is stamped from the opening week's reading alone, for the reason above: a later week's
+  // count is a lower bound, and overwriting a true number with a lower bound would make the record
+  // worse the longer the window ran. A career that only met the window later leaves this season
+  // unstamped on the contract; the brand's goodbye letter still carries the count it was written
+  // with, and the feed reads it from there.
+  if (deal && openWeekVerdict) deal.eventsPlayed = played
   // A deal that failed does not limp to its contractual end: it stops with the season it failed.
   // A deal that held up simply runs on - a two-season contract has another year to go.
   if (deal && !heldUp) endDealWithSeason(deal, world.week)
@@ -308,7 +355,12 @@ export function reviewSponsors(world: WorldState): void {
     const worth = `$${Math.round((ended.coveredCents ?? 0) / 100).toLocaleString('en-US')}`
     const goodbye = world.offers.find((o) => o.id === `kit-end-${ended.id}`)
     const why = goodbye ? (goodbye.terms as KitOfferTerms).ended : 'term'
-    const playedThen = ended.eventsPlayed ?? 0
+    // ⚠ THE COUNT COMES OFF THE GOODBYE LETTER, like the reason one line up (06.08). The letter was
+    //   written by the verdict that ended the deal and carries that verdict's own number; the
+    //   contract's `eventsPlayed` is only stamped from the window's opening week, so a career that
+    //   met the window later has a goodbye with a count and a contract without one. Reading the
+    //   paper is what keeps the feed and the letter from saying different things.
+    const playedThen = (goodbye?.terms as KitOfferTerms | undefined)?.endedEventsPlayed ?? ended.eventsPlayed ?? 0
     parts.push(
       why === 'events'
         ? `${endedTerms.brand} kitted her out all season – ${worth} of kit – but they asked for ${endedTerms.minEventsPerSeason} events and she played ${playedThen}, so they are done.`

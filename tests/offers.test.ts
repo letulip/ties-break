@@ -1533,10 +1533,24 @@ describe('the window can be entered late', () => {
       const goodbyes = arm.offers.filter((o) => o.id === 'kit-end-kit-47')
       expect(goodbyes, `week ${entry}: the brand said goodbye ${goodbyes.length} times`).toHaveLength(1)
       const deal = arm.offers.find((o) => o.id === 'kit-47')!
-      verdicts.set(entry, `${deal.eventsPlayed}/${deal.untilWeek}/${(goodbyes[0].terms as KitOfferTerms).ended}`)
+      const paper = goodbyes[0].terms as KitOfferTerms
+      verdicts.set(entry, `${paper.endedEventsPlayed}/${deal.untilWeek}/${paper.ended}`)
     }
     expect(new Set(verdicts.values()).size, `the verdict differed by entry week: ${[...verdicts]}`).toBe(1)
     expect([...verdicts.values()][0]).toBe(`16/${contractEndWeek(LATE_OPEN)}/term`)
+
+    // ⚠ AND THE COUNT ON THE CONTRACT IS THE OPENING WEEK'S OR NOTHING, which is the one thing about
+    //   the verdict that is deliberately NOT the same from every entry week. `world.results` is
+    //   pruned on a rolling 52 weeks relative to `world.week`, so a count read on a later week is a
+    //   LOWER BOUND (see `eventsPlayedInSeason`) - and a lower bound written over a true number would
+    //   make the record worse the longer the window ran. The brand's goodbye still carries the number
+    //   its own verdict used, which is what the assertion above reads and what the feed row prints.
+    const fromOpen = clone(base)
+    winterFrom(fromOpen, LATE_OPEN)
+    expect(fromOpen.offers.find((o) => o.id === 'kit-47')!.eventsPlayed).toBe(16)
+    const fromLate = clone(base)
+    winterFrom(fromLate, LATE_OPEN + 2)
+    expect(fromLate.offers.find((o) => o.id === 'kit-47')!.eventsPlayed).toBeUndefined()
   })
 
   it('...and it never judges a deal signed INSIDE the window, which has not run a season yet', () => {
@@ -1582,6 +1596,77 @@ describe('the window can be entered late', () => {
     }
     expect(armsChecked).toBe(20 * 4)
     expect(denied, 'a rung lost its turn because the career arrived late').toBe(0)
+  })
+
+  it('⚠ THE ONE ASYMMETRY: the STANDING half of the verdict is the opening week\'s or nobody\'s', () => {
+    // The events half of the verdict is anchored on the window's opening week and can therefore be
+    // re-read on any week of the window. The STANDING half cannot: her domestic points are a rolling
+    // 52-week best-6, so the previous year's weeks 47-48 age out DURING the window and her rank
+    // slides for a reason that has nothing to do with the season being judged. The reading is gone
+    // by week 48 and `pruneResults` has taken the evidence, so the rule is "the opening week's
+    // reading or none at all".
+    //
+    // MEASURED (`npm run bench:sponsor`, eager, 144 careers): judging it on every week of the window
+    // cost coverage 62.2% -> 61.8% and sponsor value $10,178 -> $9,832 on careers that were never
+    // late, purely from deals ended by a fortnight of decay. Declining to judge is the safe
+    // direction – a deal is kept, never killed – and it is confined to a career that met the window
+    // late, i.e. one the app updated under.
+    const build = (): WorldState => {
+      const world = careerInTheWindow('standing-half')
+      // ...and now she has slid out of the band the national deal keeps. The domestic and junior
+      // ranks are written directly rather than reverse-engineered out of the ledger, because
+      // competition ranking ties EVERYBODY at the floor of an empty table - strip her results and
+      // she reads as #1 of nobody, which is the trap `itfRanked` exists for and the opposite of
+      // what this fixture needs. These are the two cached numbers `sponsorStandingOf` reads.
+      world.results = world.results.filter((r) => r.tier !== 'national' && r.tier !== 'j300')
+      recomputeKidRank(world)
+      world.kidRankDomestic = 999 // out of the top 30 at home...
+      world.kidRank = 999 // ...and with no junior standing that `standingClears` would hand it back on
+      return world
+    }
+    const atOpen = build()
+    const terms = atOpen.offers.find((o) => o.id === 'kit-47')!.terms as KitOfferTerms
+    expect(terms.keepDomesticRank, 'the fixture must be a rung that keeps a domestic condition').toBeGreaterThan(0)
+    winterFrom(atOpen, LATE_OPEN)
+    const endedAtOpen = atOpen.offers.find((o) => o.id === 'kit-end-kit-47')!
+    expect((endedAtOpen.terms as KitOfferTerms).ended, 'judged at the open, she is out of the band').toBe('standing')
+
+    // ...and the career that only met the window on its second week keeps the deal, because the
+    // reading that would have ended it belongs to a week it was never present for.
+    const late = build()
+    winterFrom(late, LATE_OPEN + 1)
+    const endedLate = late.offers.find((o) => o.id === 'kit-end-kit-47')!
+    expect((endedLate.terms as KitOfferTerms).ended, 'a late arrival was failed on a reading it never had').toBe('term')
+  })
+
+  it('...and the EVENTS half the same way, because a later week can only see a lower bound', () => {
+    // The half that cost real money before it was found. `eventsPlayedInSeason` anchors its 52-week
+    // window on the window's opening week, but `world.results` is ITSELF pruned on a rolling 52 weeks
+    // relative to `world.week` – so the ledger under the anchored window loses its own oldest weeks
+    // as the window runs, and the count comes back SHORT by up to two competitive weeks.
+    //
+    // Measured in the bench, not deduced: a `tour` deal on `bench-working-2` counted 14 events
+    // against a minimum of 14 on the window's opening week and 13 the next, was ended for not playing
+    // enough, and the career lost four seasons of retainer and bonus ($49,252 -> $21,960).
+    const build = (): WorldState => {
+      const world = careerInTheWindow('events-half')
+      // She barely played: two entries against an obligation of many. Her RANKS are left where they
+      // were, so the standing half of the verdict cannot be what ends the deal.
+      world.results = world.results.filter((r) => r.tier === 'national' || r.tier === 'j300')
+      return world
+    }
+    const atOpen = build()
+    const min = (atOpen.offers.find((o) => o.id === 'kit-47')!.terms as KitOfferTerms).minEventsPerSeason
+    expect(min, 'the fixture must be short of the obligation').toBeGreaterThan(2)
+    winterFrom(atOpen, LATE_OPEN)
+    expect((atOpen.offers.find((o) => o.id === 'kit-end-kit-47')!.terms as KitOfferTerms).ended).toBe('events')
+
+    const late = build()
+    winterFrom(late, LATE_OPEN + 1)
+    expect(
+      (late.offers.find((o) => o.id === 'kit-end-kit-47')!.terms as KitOfferTerms).ended,
+      'a late arrival was failed on a count it could no longer see in full',
+    ).toBe('term')
   })
 
   it('⚠ AND PAST THE WINDOW SHE GETS NOTHING, WHICH IS THE DICE AND NOT THE SCHEDULE', () => {
