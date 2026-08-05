@@ -83,10 +83,12 @@ export function tableSize(world: WorldState, track: LadderTrack): number {
 }
 
 export function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] {
-  // THE WINDOW SPLIT LANDS HERE (W2-LADDER §3): best-6 for domestic/itf, best-16 for the
-  // professional table, and because this is the ONE fold every table-reader flows through (rank
-  // caches, standings, acceptance cuts, LadderViews), no surface can count a season on the wrong
-  // rule.
+  // THE WINDOW SPLIT LANDS HERE (W2-LADDER §3): best-6 for domestic/itf, EIGHTEEN for the
+  // professional table (the rulebook's own number since 05.08, with eleven of the eighteen reserved
+  // for Slams and 1000s - `MANDATORY_SLOTS`), and because this is the ONE fold every table-reader
+  // flows through (rank caches, standings, acceptance cuts, LadderViews), no surface can count a
+  // season on the wrong rule. The same line is where §VIII.A.2.b's minimum lands, for the same
+  // reason: "does she appear on the list at all" has to have exactly one answer.
   const live = computeRanking(world.results, world.week, BEST_N_BY_TRACK[track], [...cohortIds(world), KID_ID], inTrack(track))
   // ⚠ THE W TABLE IS THE MERGED TABLE, everywhere it is read (living-field phase W, 01.08). The
   // professional table used to be ~199 zero rows and whatever the canonical W brackets had paid the

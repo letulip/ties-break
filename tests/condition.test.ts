@@ -408,7 +408,20 @@ const REF = {
   // reproduce byte-for-byte and are checked BEFORE this constant is read. The fifth storey adds no
   // draw to any stream the weekly tick walks - it is 156 more reads of `seed:field:<n>:c<k>`, which
   // is a fresh generator per player.
-  kidRank: 90,
+  //
+  // ⚠ AND RE-AIMED A FOURTH TIME BY POINTS-BY-THE-BOOK (05.08): 90 -> 91, ONE place, and it is the
+  // SAME SECOND-ORDER MECHANISM for the fourth time running. Correction 2 re-prices W15 (10 -> 15)
+  // and W35 (20 -> 35) to the rulebook's own chart, so every LIVE girl's professional BOOK changes,
+  // so her row moves in the merged W table, so `selectEntrants`' percentile bands land on different
+  // people, so which JUNIORS a W week books changes, so the J draws those juniors were no longer
+  // free for change. This constant folds the ITF table, which no correction in that wave touches:
+  // once again SHE DID NOTHING DIFFERENT and the number moved on a different track.
+  //
+  // THE CAPTURE IS UNTOUCHED FOR THE FOURTH TIME: count 41550, hash e6b0c709, head and tail all
+  // reproduce byte-for-byte and are asserted BEFORE this constant is read (line above). No
+  // correction in that wave draws on any stream at all - two are constants and one is a filter over
+  // the ledger - so the MAIN sequence cannot see them.
+  kidRank: 91,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

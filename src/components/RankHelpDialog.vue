@@ -55,9 +55,12 @@ const blocks = computed(() =>
       </section>
       <ul class="rank-help-rules">
         <!-- W2-LADDER §3: the window width is per table now - six for National and Junior Tour,
-             sixteen on the professional table (the WTA's own rule). One sentence, both numbers,
-             because this dialog shows all the tables at once. -->
-        <li class="hint">Each ranking = the sum of her best results from the last 52 weeks in that table – the best 6, or the best 16 on the Pro table.</li>
+             EIGHTEEN on the professional table (the WTA's own rule, §VIII.A.4.a.i; it read sixteen
+             until the 05.08 correction). One sentence, both numbers, because this dialog shows all
+             the tables at once. The eleven reserved slots are deliberately NOT spelled out here:
+             they convert to open ones for a player who has never been in a Slam or a 1000 draw,
+             which is every player this dialog is read by until she is inside the top 50. -->
+        <li class="hint">Each ranking = the sum of her best results from the last 52 weeks in that table – the best 6, or the best 18 on the Pro table.</li>
         <li class="hint">A new result only raises the total if it beats the weakest counted one.</li>
         <li class="hint">Results older than 52 weeks drop out of the window – points must be defended.</li>
         <li class="hint">National points are what open her next tier. The Junior Tour reads her international rank.</li>

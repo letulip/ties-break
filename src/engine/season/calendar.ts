@@ -248,11 +248,28 @@ export const TIERS: Record<TierId, TierDef> = {
   // somewhere to GROW every half-season instead of one distant cliff - and the 125 gives W100 the
   // same "one rung above you" pull W100 gives W75. 250s and up are act 3.
   //
-  // THE POINTS ARE THE WTA TABLE'S OWN: a W15 title is 10 points, a W35 title 20, a W100 title 100.
+  // THE POINTS ARE THE WTA TABLE'S OWN: a W15 title is 15 points, a W35 title 35, a W100 title 100.
   // ⚠ AND THEY LOOK TINY BESIDE THE JUNIOR NUMBERS ON PURPOSE - a J300 title pays 300 and a W15 title
-  // pays 10. That is not a scaling mistake, it is the whole point of the fork at 19: she arrives at
+  // pays 15. That is not a scaling mistake, it is the whole point of the fork at 19: she arrives at
   // the adult tour with a junior ranking that buys her nothing, and starts again at the bottom of a
   // table where the numbers are smaller and mean more. The two columns are never added.
+  //
+  // ⚠⚠ W15 AND W35 WERE THE TWO RUNGS THAT DISAGREED WITH THE RULE THE OTHER EIGHT KEEP, AND THEY
+  // WERE CORRECTED ON 05.08 (docs/specs/points-by-the-book-2026-08.md; owner: «с очками надо
+  // разобраться точно совершенно ... надо сделать как в реальности»). We shipped 10 and 20 against
+  // a real 15 and 35 - 67% and 57% of the figures the rungs are NAMED after, while every rung from
+  // W50 up was already exact. The naming rule is the sport's own and it is the one thing both real
+  // ladders share: the 2024 restructure renamed W25/W40/W60 to W35/W50/W75 explicitly "to align the
+  // tournament naming with the points awarded to the Winner", so a tier called "World Tour 35" that
+  // paid 20 was our own table contradicting our own research (ranking-points-by-tier.md §4).
+  //
+  // ⚠ AND THE WHOLE ROW MOVED, NOT ONLY THE TITLE, because the shipped rows below the winner were
+  // the wrong winner's curve rescaled rather than the chart's. The 2026 chart's own rows, verbatim:
+  // W15 = 15/10/6/3/1/0 and W35 = 35/23/14/8/4/0. Two shapes come back with them. (a) The title ÷
+  // one-match-won ratio at W15 becomes the real 15.0x (it was 10.0x) - the entry rung is
+  // winner-take-most in reality, and showing up is supposed to buy almost nothing. (b) The seam
+  // W35 -> W50 falls from the compressed x2.5 the note below records to the real x1.43, which is the
+  // one place this correction pays a debt that note explicitly booked.
   //
   // ⚠ W50/W75/WTA125 CARRY THE REAL 2026 CHART'S OWN ROWS, VERIFIED, NOT THE SPEC'S DESIGN VALUES
   // (W2-LADDER; docs/research/ranking-points-by-tier.md §4, 2026 WTA Official Rulebook VIII.A.5).
@@ -325,7 +342,9 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 32,
     entryFeeCents: 300_00,
     travelCostCents: [1000_00, 2200_00],
-    points: [10, 6, 3, 2, 1, 0],
+    // The 2026 WTA chart's W15 row, exactly (research §4). Title ÷ one win = 15.0x, the steepest
+    // rung either real ladder has.
+    points: [15, 10, 6, 3, 1, 0],
     // $2,200 / $1,300 / $750 / $450 / $250 / $130.
     prizeCents: [2200_00, 1300_00, 750_00, 450_00, 250_00, 130_00],
     // The dense entry rung of the adult game, exactly as j30 is of the junior one.
@@ -411,7 +430,10 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 32,
     entryFeeCents: 400_00,
     travelCostCents: [1300_00, 2800_00],
-    points: [20, 13, 8, 4, 2, 0],
+    // The 2026 WTA chart's W35 row, exactly (research §4). ⚠ ITF Appendix K and the WTA Rulebook
+    // disagree on the 48-draw W35 row (ITF 35/30/18/9/5/3); we take the WTA's, which are the
+    // governing figures for WTA points and match every neighbouring tier's geometry - research §7b.
+    points: [35, 23, 14, 8, 4, 0],
     // $5,000 / $2,900 / $1,700 / $1,000 / $550 / $290.
     prizeCents: [5000_00, 2900_00, 1700_00, 1000_00, 550_00, 290_00],
     everyNWeeks: 3,

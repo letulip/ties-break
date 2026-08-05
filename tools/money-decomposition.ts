@@ -38,7 +38,8 @@ import {
   type Policy,
 } from './econ-bench'
 import { runToEnding, FULL_CAREER_WEEKS } from './endings-bench'
-import { answerFork, answerRetirement, type WorldState } from '../src/engine/world'
+import { answerFork, answerRetirement, kidPoints, type WorldState } from '../src/engine/world'
+import { rankingFor } from '../src/engine/world/ladder'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { CareerEndingType, WorldEventCategory } from '../src/shared/protocol'
@@ -109,6 +110,33 @@ export interface CareerMoney {
   /** index into `seasons` of the season that best rank was set in. */
   peakSeasonIdx: number
 
+  /** ⚠ THE FIRST WEEK SHE APPEARS ON THE PROFESSIONAL LIST AT ALL, and the number of professional
+   *  main draws it cost her to get there (points-by-the-book-2026-08.md, correction 3).
+   *
+   *  It is `kidPoints(world, 'wta') > 0` and NOT `firstPrizeWeek`, because those two facts came
+   *  apart the moment §VIII.A.2.b's minimum landed: every finish on a W rung pays a cheque, so
+   *  `firstPrizeWeek` fires on her first completed main draw whatever it was worth, while a RANKING
+   *  now needs points in three tournaments or ten points in one. The gap between the two is
+   *  precisely what the correction added, so both are recorded and §7 prints them side by side.
+   *
+   *  The calibration target is `docs/research/real-ladder-pace.md` §6: a real woman's age at her
+   *  first professional ranking point is **15.9-16.2**, from two independent cohort studies. */
+  firstRankedWeek: number | null
+  /** W main draws entered on or before `firstRankedWeek` – "how many events does a first ranking
+   *  cost?". Counted off the same `entriesByTier` bookkeeping the rest of the file uses. */
+  wDrawsAtFirstRanking: number
+
+  /** ⚠ THE ANTI-GIFT READOUT, taken once at the last week she lived (points-by-the-book §0's own
+   *  ship rule, and the failure mode the brief names: "measuring only her rank is how you fail to
+   *  notice that everyone floated up"). Re-pricing the two entry rungs lifts every EARNED book in
+   *  the world, not only hers – the 520 derived professionals are ISSUED their books by
+   *  `fieldPros.ts` and cannot move, but the ~200 LIVE girls earn theirs on the same table she
+   *  does. So: how many of them hold a ranking at all, and how many of them are inside the merged
+   *  top 200 beside her. If her rank improves and these two move with it, the table deflated; if
+   *  hers improves and these hold, she climbed. */
+  liveRankedAtEnd: number
+  liveTop200AtEnd: number
+
   /** whole-career spend and income by category, split at the age the tennis can first pay. */
   catsJunior: Record<WorldEventCategory, number>
   catsPro: Record<WorldEventCategory, number>
@@ -140,6 +168,8 @@ export interface CareerMoney {
 function zeroByTier(): Record<TierId, number> {
   return Object.fromEntries(TIER_LADDER.map((t) => [t, 0])) as Record<TierId, number>
 }
+/** The professional rungs, in ladder order – the ones a first RANKING can be earned on. */
+const W_RUNGS: readonly TierId[] = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
 /** One bucket per finish index a rung's draw can produce, `log2(drawSize) + 1` of them. */
 function zeroFinishByTier(): Record<TierId, number[]> {
   return Object.fromEntries(
@@ -215,6 +245,10 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
     familyTurnWeek: null,
     peakWtaRank: null,
     peakSeasonIdx: 0,
+    firstRankedWeek: null,
+    wDrawsAtFirstRanking: 0,
+    liveRankedAtEnd: 0,
+    liveTop200AtEnd: 0,
     catsJunior: zeroCats(),
     catsPro: zeroCats(),
     entriesByTier: zeroByTier(),
@@ -315,6 +349,13 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
       }
     })
 
+    // THE FIRST RANKING – see `firstRankedWeek`. Read through the engine's own `kidPoints`, so
+    // whatever the ranking rules say this week is what this number means; nothing is re-spelled.
+    if (out.firstRankedWeek === null && kidPoints(world, 'wta') > 0) {
+      out.firstRankedWeek = world.week
+      out.wDrawsAtFirstRanking = W_RUNGS.reduce((s, t) => s + out.entriesByTier[t], 0)
+    }
+
     // her place in the professional table, tracked only once she has been paid at all – see peakWtaRank
     const row = seasonOf(world.week)
     if (world.careerTotals.prizeCents > 0) {
@@ -334,6 +375,18 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
     }
 
     answerOpenQuestions(world, retireArm)
+  }
+
+  // THE ANTI-GIFT READOUT – see `liveRankedAtEnd`. Taken once, at the last week she lived, because
+  // it is O(cohort x results) and nothing about it needs a week-by-week series.
+  {
+    const merged = rankingFor(world, 'wta')
+    const liveIds = new Set(world.cohort.map((p) => p.id))
+    for (const r of merged) {
+      if (!liveIds.has(r.playerId)) continue
+      if (r.points > 0) out.liveRankedAtEnd++
+      if (r.points > 0 && r.rank <= 200) out.liveTop200AtEnd++
+    }
   }
 
   out.prizeCents = world.careerTotals.prizeCents
@@ -406,6 +459,11 @@ function ratio(num: number, den: number): string {
 }
 function ageOfWeek(week: number): number {
   return START_AGE_YEARS + Math.floor(week / WEEKS_PER_YEAR)
+}
+/** ...and the same thing to a decimal, because the calibration target for the first ranking is
+ *  15.9-16.2 (real-ladder-pace.md §6) and a whole-year age cannot be compared against it. */
+function exactAgeOfWeek(week: number): number {
+  return START_AGE_YEARS + week / WEEKS_PER_YEAR
 }
 
 const BANDS: { label: string; lo: number; hi: number }[] = [
@@ -775,6 +833,49 @@ export function main(argv = process.argv.slice(2)): void {
         `#100 ${reach(100)}/${rows.length} · #200 ${reach(200)}/${rows.length} · ` +
         `ever ranked ${ranked.length}/${rows.length}`,
     )
+  }
+  // --- §7b THE FIRST RANKING, AND WHO ELSE MOVED WITH HER -----------------------------------------
+  //
+  // Added by points-by-the-book (05.08). Two questions the file could not answer and the wave is
+  // graded on: WHEN does a professional ranking arrive and what does it cost in draws (§VIII.A.2.b
+  // changed both), and DID EVERYONE FLOAT UP (the gift failure re-pricing a rung invites).
+  {
+    const gotRanked = rows.filter((r) => r.firstRankedWeek !== null)
+    console.log('')
+    console.log('  ══ 7b. THE FIRST RANKING – when it arrives, what it costs, and who moved with her ══')
+    console.log('')
+    if (gotRanked.length) {
+      const weeks = gotRanked.map((r) => r.firstRankedWeek!)
+      console.log(
+        `  careers that EVER hold a professional ranking : ${gotRanked.length}/${rows.length} = ` +
+          `${((100 * gotRanked.length) / rows.length).toFixed(1)}%`,
+      )
+      console.log(
+        `  age at first ranking          : median ${exactAgeOfWeek(median(weeks)).toFixed(2)} · ` +
+          `earliest ${exactAgeOfWeek(Math.min(...weeks)).toFixed(2)} · latest ${exactAgeOfWeek(Math.max(...weeks)).toFixed(2)}` +
+          '   (real 15.9-16.2, real-ladder-pace.md §6)',
+      )
+      console.log(
+        `  W main draws it cost her      : median ${median(gotRanked.map((r) => r.wDrawsAtFirstRanking)).toFixed(1)} · ` +
+          `mean ${mean(gotRanked.map((r) => r.wDrawsAtFirstRanking)).toFixed(1)} · ` +
+          `worst ${Math.max(...gotRanked.map((r) => r.wDrawsAtFirstRanking))}`,
+      )
+      const paidFirst = gotRanked.filter((r) => r.firstPrizeWeek !== null)
+      if (paidFirst.length) {
+        console.log(
+          `  ranking LAGS the first cheque : median ${median(paidFirst.map((r) => r.firstRankedWeek! - r.firstPrizeWeek!)).toFixed(1)} weeks` +
+            '   (0 before the minimum existed – every W finish pays)',
+        )
+      }
+    } else {
+      console.log(`  careers that EVER hold a professional ranking : 0/${rows.length}`)
+    }
+    console.log(
+      `  ⚠ ANTI-GIFT – LIVE girls ranked at career end : median ${median(rows.map((r) => r.liveRankedAtEnd)).toFixed(1)} of ~200 · ` +
+        `inside the merged top 200: median ${median(rows.map((r) => r.liveTop200AtEnd)).toFixed(1)}`,
+    )
+    console.log('    (they earn on the same table she does; the 520 derived pros are ISSUED their books and cannot move.')
+    console.log('     Her rank improving while these hold is a climb; all three rising together is a deflation.)')
   }
   // --- §8 HOW HER TOURNAMENTS END -----------------------------------------------------------------
   //

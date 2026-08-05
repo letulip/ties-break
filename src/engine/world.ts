@@ -1215,7 +1215,9 @@ function housekeep(world: WorldState): void {
  *  new result: `points` when nothing was displaced, `points − displaced` when a counted
  *  result was pushed out, `0` when the result didn't crack the best N. `bestN` is the TRACK's
  *  window width (W2-LADDER §3) so the sentence names the rule it measured against - "best 6" on a
- *  junior summary, "best 16" on a professional one - instead of quoting the junior rule at both. */
+ *  junior summary, "best 18" on a professional one - instead of quoting the junior rule at both.
+ *  It reads the constant rather than a literal, so the 05.08 correction from sixteen to the
+ *  rulebook's eighteen changed this copy without touching this function. */
 export function rankingDeltaSuffix(points: number, delta: number, bestN: number): string {
   if (points <= 0) return ''
   if (delta <= 0) return ` (does not improve best ${bestN})`
