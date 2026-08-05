@@ -288,3 +288,52 @@ reproduce-then-fix numbers in `docs/specs/wallet-and-wrapup.md`; the rulings, fo
   plays is 260-300 weeks and the regime begins around week 430. Our tests only ever looked at young
   careers, and the ones that looked at old careers did not play tennis in them.
   `tests/long-career-ledgers.test.ts` closes it, mutation-verified against all four fixes.
+
+## 2026-08-05 – School ends, and "training doubles" did not survive the check (`feat/school-ends-at-18`)
+
+Owner, from his own playtest, twice: «Школа должна когда-то закончиться, ей уже 21, а тренировки и
+прогресс должны удвоиться, соответственно, как мне кажется. Школа уже после 18 вроде не должна быть.»
+and, a day later, «и школа с уроками в 22 года всё еще со мной». Full numbers in
+`docs/specs/school-ends-2026-08.md` and `docs/research/real-training-hours.md`; the rulings, for the
+log:
+
+- **School ends at the end of the school year, and that is his own ruling** – «Конец школы – в конце
+  учебного года.» Measured over all twelve birth months it lands at career week **242** (born
+  January-August) or **294** (September-December), always on the 1 September the school year turns
+  over on, and always at a REAL age between **18.00 and 18.92**. Never before eighteen, never at
+  nineteen, so it clears the act-3 fork (`ENDINGS.forkAgeYears` = 19) before that fork is raised –
+  she leaves school, then is asked whether to turn professional, which is the order those questions
+  come in for a real player.
+- **The school calendar was already there and nothing read it.** `kidLife.ts`'s `gradeOf` has
+  modelled a 1-September school year with twelve grades since the School tile shipped, and already
+  returned "School's done" past the last one. `isExamWeek` was a pure function of the season week, so
+  every other surface disagreed with it. The fix is that the rest of the game now reads the one
+  calendar that existed rather than a new one being invented.
+- **It is a MOMENT, not a flag.** A new `MilestoneType: 'school'` fires the week it happens – "School
+  is behind her. From Monday the mornings are hers too." – and joins the album's scroll. The calendar
+  drops the eight-o'clock lesson block and the evening homework hour from that Monday (`weekGrid.ts`
+  gained the `full-time` band its own header reserved for exactly this decision).
+- **⚠ «Тренировки должны удвоиться» is a claim about the world and it is measurably wrong.** He asked
+  to have it checked – «это про то, как реальные спортсменки тренируются, на сколько я знаю.
+  Проверь.» – and the answer is **1.2-1.4x, not 2x**. The school-age baseline is already high: the
+  LTA's own TERM-TIME standard for an 18U girl is 18 h on court + 5 in the gym = 23 h/week, against
+  measured professional weeks of 17-23. Every same-institution comparison lands between 1.0x and
+  1.6x. What genuinely steps up at eighteen is COMPETITION – the WTA age rule caps a seventeen-year-
+  old at 16 events and lifts to unlimited – and more tournaments means LESS training, not more.
+- **And the bench agrees for a different reason.** Doubling the load buys **+0.69 peak skill, 0.29 of
+  one junior year**, because `docs/specs/skill-model-audit-2026-08.md` had already measured
+  realisation at 94% and the dial is fighting over the six points of headroom left. 1.4 buys +0.36.
+  The gap between his number and the researched one is a third of a skill point over twenty-four
+  seasons. **Shipped at 1.4** – which is `ECONOMY.summerBlock.loadFactor`'s own number, because a
+  school-free week in July at sixteen and one in October at nineteen are the same week.
+- **⚠ AND THE CONDITION COST IS ZERO, on the ruling.** Charging the summer block's 3 points
+  year-round buys **+0.00 skill** at either multiplier and costs **+3.1 weeks in the treatment room
+  per career**, five points of mean condition, six at the off-season door and a season's worth of
+  entries. A change that makes her more injured BECAUSE she left school is the game punishing her for
+  growing up: «мы ни за что не наказываем» governs, and there was nothing on the other side of the
+  bill to weigh against it.
+- **Schema v43, and the migration is the part he sees first.** The FACT needs no migration –
+  `schoolIsOver(week, birthMonth)` is a pure function of two numbers every save has carried – so his
+  twenty-two-year-old career is out of school the moment the build reads it. What v43 back-fills is
+  the MOMENT: without it the album's scroll has a hole where a life changed. ⚠ v42 is a deliberate
+  no-op bridge reserved for a concurrent wave; the merge instruction is written at the rung itself.

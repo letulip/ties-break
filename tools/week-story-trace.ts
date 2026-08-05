@@ -79,7 +79,7 @@ for (let i = 0; i < weeks; i++) {
   if (f.vacationWeek) what.push('holiday')
   if (f.knockChoice) what.push(`knock:${f.knockChoice} (${f.knockPart})`)
   if (f.playedPractice) what.push('friendly')
-  if (isExamWeek(snap.week)) what.push('exams')
+  if (isExamWeek(snap.week, snap.week >= snap.schoolEndsWeek)) what.push('exams')
   if (isOffSeasonWeek(snap.week)) what.push('off-season')
   if (what.length === 0) what.push(`training ${f.trainPct}/${100 - f.trainPct}`)
 

@@ -175,9 +175,20 @@ export type AgeBand = 'school' | 'senior-school' | 'full-time'
  *  A career today opens at fourteen and the game does not run long enough to leave the first band. */
 const BAND_FROM: readonly { from: number; band: AgeBand }[] = [{ from: 0, band: 'school' }]
 
-/** Which band an age falls in. Reads `Snapshot.ageYears` at the call site, so the calendar can never
- *  disagree with the Kid screen about how old she is - it does not compute her age itself. */
-export function bandFor(ageYears: number): AgeBand {
+/** Which band a week falls in.
+ *
+ *  ⚠ `full-time` IS NOT AN AGE RUNG AND THAT IS NOT AN OVERSIGHT (W4-SCHOOL). The note above says the
+ *  content of the later bands was "a design decision nobody has taken yet"; the owner has now taken
+ *  it - «Школа должна когда-то закончиться... Конец школы – в конце учебного года» - and the answer
+ *  is not expressible as an age. School ends at the SEPTEMBER after her last grade, which for a girl
+ *  born in September falls a whole year later in absolute time than for one born in August; a rung
+ *  keyed on `ageYears` would put one of the two in the wrong room. So `schoolOver` arrives as data on
+ *  `CalendarWeek` - the same route `offSeason` and `summer` take, and for the same reason: this
+ *  module may not ask the engine anything.
+ *
+ *  `senior-school` stays unimplemented and unreachable, exactly as before. */
+export function bandFor(ageYears: number, schoolOver = false): AgeBand {
+  if (schoolOver) return 'full-time'
   let band: AgeBand = BAND_FROM[0].band
   for (const rung of BAND_FROM) if (ageYears >= rung.from) band = rung.band
   return band
@@ -254,6 +265,30 @@ const DAY_SHAPES: Partial<Record<AgeBand, Record<OrdinaryKind, readonly DayBlock
       { start: 15, span: 3, kind: 'rest', label: 'Rest' },
       { start: 18, span: 1, kind: 'study', label: 'Study' },
     ],
+  },
+  // ⚠ NINETEEN, AND SHE IS NOT AT SCHOOL (W4-SCHOOL). The owner's own report was about this table
+  // and nothing else: «и школа с уроками в 22 года всё еще со мной» - the eight o'clock block and
+  // the evening homework hour were drawn at every age, for ever, because `BAND_FROM` had one rung.
+  //
+  // ⚠ AND IT IS THE SUMMER DAY, DELIBERATELY, RATHER THAN A NEW INVENTION. `summerOrdinary` has been
+  // drawing exactly this day since W3-SUMMER - school out, no homework hour, a morning session on
+  // the days the plan already bought a court - and the engine prices that week through the same
+  // `loadFactor` channel whether it is July at sixteen or October at nineteen. Two tables that drew
+  // the same week differently would be two answers to one question. The header's rule still holds:
+  // the morning session takes the 09-11 slot school used to own, so the day is no LONGER than a
+  // term-time day, it is differently filled.
+  //
+  // ⚠ COURT DAYS ONLY, like the summer's own rule. The holidays do not repeal the plan and neither
+  // does growing up: a rest day is still a rest day, the gym day keeps its one session, and the
+  // booked friendly owns its Saturday.
+  'full-time': {
+    court: [
+      { start: 9, span: 2, kind: 'trainingAlt', label: 'Early hit' },
+      { start: 15, span: 2, kind: 'drills', label: 'Tennis drills' },
+    ],
+    gym: [{ start: 15, span: 2, kind: 'gym', label: 'Gym' }],
+    match: [{ start: 10, span: 3, kind: 'matchLong', label: 'Match play' }],
+    rest: [{ start: 15, span: 3, kind: 'rest', label: 'Rest' }],
   },
 }
 
@@ -340,6 +375,12 @@ function examDay(shapes: BandShapes, day: DayContext): readonly DayBlock[] {
   const role = day.role === 'match' ? 'court' : day.role
   // The daily block BREAKS UP: it is removed, and what replaces it is a paper or nothing at all.
   const rest = shapes[role].filter((b) => b.kind !== 'school' && b.kind !== 'schoolLong')
+  // ⚠ NO TERM, NO PAPER (W4-SCHOOL). A band whose day carries no school block is a band with no
+  // exams in it, and `isExamWeek` agrees - past her last school year the fortnight never comes, so
+  // `weekDays.ts` cannot produce this kind at all. It is handled anyway, for exactly the reason the
+  // unreachable `match` role above is: an unreachable path that DREW something would have put
+  // Monday's 09:00 paper straight through the full-time day's 09:00 morning session, silently.
+  if (rest.length === shapes[role].length) return rest
   if (!paper) return rest
   return [{ start: paper[0], span: paper[1], kind: 'school', label: 'Exam' }, ...rest]
 }
@@ -648,8 +689,12 @@ export function dayBlocksFor(kind: DayKind, band: AgeBand, day: DayContext = ANY
   if (!shapes) return []
   // R15-8: the holidays reshape the ORDINARY kinds only - the four whole-week kinds keep their own
   // arcs whatever the season says (see the note over `summerOrdinary` for the owner's boundary).
+  // ⚠ `band === 'school'` GUARDS THE SUMMER TRANSFORM (W4-SCHOOL). `summerOrdinary` REMOVES the
+  // school furniture and ADDS the morning session; the `full-time` row has already had both applied
+  // to it, so running it again would draw a second "Early hit" on every court day of July. The
+  // holidays are a school fact and a girl who has left school does not have them.
   const blocks = isOrdinaryKind(kind)
-    ? day.summer === true
+    ? day.summer === true && band === 'school'
       ? summerOrdinary(shapes[kind], kind, day.index)
       : shapes[kind]
     : WEEK_SHAPES[kind](shapes, day)
@@ -747,6 +792,22 @@ function dropOffSeasonStudy(offSeason: boolean, kind: DayKind, blocks: DayBlock[
   return blocks.filter((b) => b.kind !== 'study')
 }
 
+/** ⚠ AND PAST SCHOOL THERE IS NO TERM AT ALL (W4-SCHOOL) – the same rule as its two neighbours, one
+ *  band wider. `DAY_SHAPES['full-time']` already carries no school and no homework hour, but the FOUR
+ *  WHOLE-WEEK ARCS are hand-written tables that do: `FAMILY_ARC` and all six `VACATION_ARCS` put a
+ *  Study block on every weekday, because a holiday taken in term time still has next year's exams
+ *  coming. At twenty-two it does not.
+ *
+ *  ⚠ WRITTEN AS A COMPOSITION RULE RATHER THAN AS SEVEN TABLE EDITS, and that is the point: it covers
+ *  every arc that exists and every arc anybody adds later, it can only ever REMOVE (the discipline
+ *  `dropWeekendSchool` and `dropOffSeasonStudy` already keep, and the reason this file cannot invent
+ *  a day), and the fact is handed in on `CalendarWeek` rather than fetched - this module still
+ *  imports nothing from `../engine/`. */
+function dropSchoolFurniture(schoolOver: boolean, blocks: DayBlock[]): DayBlock[] {
+  if (!schoolOver) return blocks
+  return blocks.filter((b) => b.kind !== 'school' && b.kind !== 'schoolLong' && b.kind !== 'study')
+}
+
 // =================================================================================================
 // WHAT THE SESSION ACTUALLY WAS — variety without a second session
 // =================================================================================================
@@ -833,7 +894,7 @@ export function weekGridFor(
   dates: readonly number[],
   seed = '',
 ): GridDay[] {
-  const band = bandFor(ageYears)
+  const band = bandFor(ageYears, week.schoolOver)
   const roles = planRoles(week)
   return week.days.map((d: CalendarDay, i) => ({
     index: d.index,
@@ -842,18 +903,21 @@ export function weekGridFor(
     kind: d.kind,
     beat: d.beat,
     blocks: namedSession(
-      dropOffSeasonStudy(
-        week.offSeason,
-        d.kind,
-        dropWeekendSchool(
-          d.index,
-          dayBlocksFor(d.kind, band, {
+      dropSchoolFurniture(
+        week.schoolOver,
+        dropOffSeasonStudy(
+          week.offSeason,
+          d.kind,
+          dropWeekendSchool(
+            d.index,
+            dayBlocksFor(d.kind, band, {
             index: d.index,
             role: roles[i],
-            offSeason: week.offSeason,
-            summer: week.summer,
-            vacationId: week.vacationId,
-          }),
+              offSeason: week.offSeason,
+              summer: week.summer,
+              vacationId: week.vacationId,
+            }),
+          ),
         ),
       ),
       seed,

@@ -44,6 +44,7 @@ import {
   skipTournament,
   closeTournament,
   isBlackoutWeek,
+  schoolIsOver,
   layoffCovering,
   medicalBlock,
   recomputeKidRank,
@@ -80,7 +81,7 @@ function sweepWeek(world: WorldState): void {
     // The guard's own exclusions (§5's "non-rest, non-blackout"): a blackout week offers nothing
     // to anybody, and a week her own body rules out - a layoff covering it, or the doctor's veto
     // today - is a REST week, not a boredom week: nothing the calendar offered could be played.
-    if (isBlackoutWeek(week)) continue
+    if (isBlackoutWeek(week, schoolIsOver(week, world.profile.birthMonth))) continue
     if (layoffCovering(world, week) !== null || medicalBlock(world.condition) !== null) continue
     cappedWeeks++
     const alternatives = world.season.filter((e) => {

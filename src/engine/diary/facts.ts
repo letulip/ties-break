@@ -78,6 +78,9 @@ export function milestoneKey(m: Milestone): string {
     // thing is that the tennis paid her at all, not which rung wrote the cheque (the tier rides on
     // the row for the memory line, it is just not the identity).
     case 'prize':
+    // W4-SCHOOL: once per career, and the week rides on the row rather than being the identity -
+    // so a back-filled row and a captured one are the SAME milestone and cannot double.
+    case 'school':
       return m.type
     case 'season-rank':
       return `season-rank:${m.seasonIndex ?? -1}`
@@ -106,6 +109,10 @@ export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   // R15-5: the first cheque is the other moment that earned the smile - it is the week the tennis
   // stopped being only a bill.
   prize: 'happy',
+  // W4-SCHOOL: `norm`, not `happy`. Leaving school is a change rather than a triumph - nobody beat
+  // anybody - and a grin on the polaroid would be the game telling her how to feel about a Tuesday
+  // in September. The composed face is what a girl walking out of a building for the last time has.
+  school: 'norm',
   international: 'norm',
   injury: 'injury',
   'season-rank': 'norm',
@@ -121,6 +128,12 @@ export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
 export interface DiaryWorldView {
   seed: string
   week: number
+  /** W4-SCHOOL: is she past her last school year in THIS week? The diary owns no calendar
+   *  arithmetic, so the answer arrives with the facts – `schoolIsOver(week, birthMonth)`. A view
+   *  that omits it is a view about a schoolgirl, which is why it is required rather than optional:
+   *  the exam pool's licences all read `examsWeek`, and a defaulted `false` puts revision notes in a
+   *  twenty-two-year-old's diary, which is the bug this wave is here to fix. */
+  schoolOver: boolean
   kidId: string
   startAgeYears: number
   condition: number

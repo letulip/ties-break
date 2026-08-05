@@ -994,6 +994,12 @@ export type MilestoneType =
    *  is empty for everybody who earned it. Career-total counters (`careerTotals`, v39) are what
    *  make the test cheap enough to run every week. */
   | 'break-even'
+  /** ⚠ W4-SCHOOL: THE LAST DAY OF SCHOOL, and it is here because the owner's ruling on how this game
+   *  tells a story requires it. School ending is a thing that happens to a family, and a flag that
+   *  flipped silently between two weeks would be the wrong shape for it: «Школа должна когда-то
+   *  закончиться». Captured the week it happens, back-filled by the v43 migration for every career
+   *  already past it - his own is twenty-two - so the scroll never has a hole where a life changed. */
+  | 'school'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
@@ -1909,6 +1915,18 @@ export interface Snapshot {
   week: number
   /** derived: detailed simulation starts at 14 */
   ageYears: number
+  /** W4-SCHOOL – THE CAREER WEEK HER SCHOOL YEARS END, and the only school fact the UI is given.
+   *
+   *  ⚠ A WEEK AND NOT A BOOLEAN, and that is the whole reason it is shaped this way. Three surfaces
+   *  ask about weeks that are not this one – the calendar's seven-week look-ahead, the Season
+   *  screen's rows, the planner's future bookings – and a boolean captured at the current week would
+   *  paint a lesson block on a week she will not be at school in. Every caller asks the same
+   *  question: `w >= snap.schoolEndsWeek`.
+   *
+   *  DERIVED, never persisted: `schoolEndWeek(profile.birthMonth)`, a pure function of her birth
+   *  month, so a save from any version answers it the moment it is loaded and nothing can drift out
+   *  of step with `world.week`. */
+  schoolEndsWeek: number
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan

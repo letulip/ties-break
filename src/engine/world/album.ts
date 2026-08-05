@@ -392,6 +392,7 @@ const SCROLL_LABEL: Record<Milestone['type'], string> = {
   injury: 'First injury',
   'season-rank': 'Season close',
   'break-even': 'The money turned',
+  school: 'School behind her',
 }
 
 function scrollDetail(m: Milestone): string | null {
@@ -408,6 +409,8 @@ function scrollDetail(m: Milestone): string | null {
     case 'break-even':
       // Two crossings, one type – say which. See `milestoneKey` in diary/facts.ts.
       return m.kind === 'week' ? 'one week of it' : 'the whole of it'
+    case 'school':
+      return 'the last school year is over'
   }
 }
 

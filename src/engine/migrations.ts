@@ -33,6 +33,7 @@ import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt, type MainRngState } from './rng'
 import { OFF_SEASON_WEEKS, TIERS, tierFromLabel, WEEKS_PER_YEAR } from './season/calendar'
 import { milestoneKey } from './diary'
+import { schoolEndWeek } from './kidLife'
 import { WEEKS_IN_SEASON, weekYear } from '../shared/dates'
 import type { TierId } from './season/types'
 
@@ -1147,6 +1148,61 @@ export function migrateSave(raw: unknown): WorldState {
       }
     }
     v = 41
+  }
+
+  // ⚠⚠ v42 IS RESERVED FOR A CONCURRENT WAVE AND THIS RUNG IS A DELIBERATE NO-OP.
+  //
+  // The school wave was told to take v43 because another agent may take v42 on a branch that has not
+  // landed. The ladder has to be TOTAL on this branch or `migrateSave` throws on every fixture, so
+  // this bridge exists purely to carry a v41 save across an empty rung.
+  //
+  // ⚠ WHOEVER MERGES SECOND DELETES THESE THREE LINES. The other wave's own v41 -> v42 step replaces
+  // them and MUST sit here, ABOVE the v42 -> v43 block below: the ladder is walked in file order, so
+  // a real 41 -> 42 step placed after this bridge would never fire. That is the whole hazard, and it
+  // is written here rather than in a merge note nobody reads.
+  if (v === 41) {
+    v = 42
+  }
+
+  // v43 – SCHOOL ENDS, AND A CAREER ALREADY PAST IT LEAVES ON LOAD
+  // (docs/specs/school-ends-2026-08.md).
+  //
+  // THE FACT NEEDS NO MIGRATION AND THAT IS WORTH SAYING FIRST. `schoolIsOver(week, birthMonth)` is a
+  // pure function of two numbers a save has always carried, so the moment this build reads the
+  // owner's twenty-two-year-old career the exam fortnight is gone, the calendar draws a
+  // professional's day and the School tile says "School's done". Nothing is stored and nothing can
+  // drift.
+  //
+  // WHAT THE MIGRATION IS FOR IS THE MOMENT. `markSchoolEnd` fires on exactly one week, and for every
+  // career already past that week it never fired - so the album's scroll would have a hole where a
+  // life changed, and the owner, whose report this whole wave answers, would be the one player who
+  // never sees the thing he asked for. This back-fills the milestone row at the week it happened.
+  //
+  // ⚠ THE MILESTONE ONLY, NOT THE FEED LINE, AND THE ASYMMETRY IS DELIBERATE. `world.events` is a
+  // NEWS FEED: `pruneEvents` caps it at 400 rows oldest-first and the screens read its tail. A row
+  // dated three seasons ago is either already past that horizon or arrives as an old headline in a
+  // current feed. `milestones` is the durable ledger that is never pruned and is exactly where a
+  // past moment belongs - the same reasoning v10 used when it rebuilt `bestFinishByTier` from
+  // history rather than re-announcing it.
+  //
+  // ⚠ EXACT, NOT RECONSTRUCTED. The week is `schoolEndWeek(birthMonth)` - the same function the tick
+  // calls - so a back-filled row and a captured one are byte-identical, and `milestoneKey` makes the
+  // type its identity, so a save that already holds one is left alone.
+  //
+  // Defensive and idempotent in v30's sense; zero draws on any stream, so the frozen MAIN capture
+  // (41550 / e6b0c709) is untouched by construction.
+  if (v === 42) {
+    const birthMonth = (save.profile as { birthMonth?: unknown } | undefined)?.birthMonth
+    const week = save.week
+    if (typeof birthMonth === 'number' && Number.isFinite(birthMonth) && typeof week === 'number') {
+      const endWeek = schoolEndWeek(birthMonth)
+      const rows = Array.isArray(save.milestones) ? (save.milestones as Milestone[]) : []
+      if (week >= endWeek && !rows.some((m) => m && m.type === 'school')) {
+        rows.push({ type: 'school', week: endWeek })
+        save.milestones = rows
+      }
+    }
+    v = 43
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

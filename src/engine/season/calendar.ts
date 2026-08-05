@@ -1048,17 +1048,31 @@ export function isOffSeasonWeek(week: number): boolean {
  *  honestly ("School exams") instead of calling it a training week.
  *  (Lives here, with its off-season sibling, since the rival-life slice: a week's TYPE is a
  *  property of the calendar, and the cohort's condition accrual has to read it without
- *  importing world.ts. world.ts re-exports both under their historical names.) */
-export function isExamWeek(week: number): boolean {
+ *  importing world.ts. world.ts re-exports both under their historical names.)
+ *
+ *  ⚠ AND IT TAKES `schoolOver` (W4-SCHOOL), WHICH IS THE WHOLE POINT OF THE SECOND PARAMETER. This
+ *  used to be a pure function of the week, so a twenty-two-year-old professional still had an exam
+ *  fortnight every June - the owner's own career: «и школа с уроками в 22 года всё еще со мной». The
+ *  calendar cannot answer whether she is still at school (that needs her birth month, and rivals have
+ *  none), so the caller brings the answer: `schoolIsOver(week, birthMonth)` in the engine,
+ *  `schoolIsOverForBand(week)` for the cohort, `week >= snap.schoolEndsWeek` in the UI.
+ *
+ *  ⚠ REQUIRED, NOT DEFAULTED, and deliberately so: a defaulted `false` restores the bug silently at
+ *  every call site somebody forgets, and there were twenty of them. Making it required turned the
+ *  change into twenty compiler errors, which is the only kind of exhaustive search that cannot miss.
+ *
+ *  ⚠ AND IT IS THE WEEK'S OWN ANSWER, not "now". Every look-ahead surface asks about future weeks. */
+export function isExamWeek(week: number, schoolOver: boolean): boolean {
+  if (schoolOver) return false
   const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
   return ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
 }
 
 /** A "blackout" week for tournaments: the off-season tail (already event-free) or a school-exam
  *  block. Used by the condition accumulators (extra recovery, for the kid AND the cohort) and by
- *  the availability gate. */
-export function isBlackoutWeek(week: number): boolean {
-  return isOffSeasonWeek(week) || isExamWeek(week)
+ *  the availability gate. Past school it is the off-season and nothing else. */
+export function isBlackoutWeek(week: number, schoolOver: boolean): boolean {
+  return isOffSeasonWeek(week) || isExamWeek(week, schoolOver)
 }
 
 /** THE SUMMER HOLIDAYS, as season-week offsets (R15-8, owner 01.08: «2 месяца обычно после

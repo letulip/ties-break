@@ -165,6 +165,12 @@ export interface CalendarWeek {
    *  `offSeason` is - the grid may not ask the calendar itself - and read by the grid to swap the
    *  school furniture of an ORDINARY week for the holidays' light study. See `SUMMER_WEEKS`. */
   summer: boolean
+  /** IS SHE PAST HER LAST SCHOOL YEAR IN THIS WEEK (W4-SCHOOL)? Carried as data for the same reason
+   *  `offSeason` and `summer` are: the grid may not ask the engine. It is what swaps the eight
+   *  o'clock lesson block and the evening homework hour for a professional's day – the owner's own
+   *  «и школа с уроками в 22 года всё еще со мной». Per-WEEK, not per-career: the calendar draws
+   *  weeks either side of the leaving September and both must be right. */
+  schoolOver: boolean
   /** WHICH family package she is on, when she is on one – the catalogue's own id, or undefined on
    *  every other week. Carried as data for the same reason `offSeason` is: `weekGrid.ts` may not
    *  import from the engine, so the composer looks the booking up and the grid only ever reads. */
@@ -187,7 +193,12 @@ export type CalendarWeekFacts = Pick<
   Snapshot,
   'week' | 'plan' | 'profile' | 'injury' | 'knock' | 'vacations' | 'practices' | 'upcoming' | 'arrival' | 'pending'
 > &
-  Partial<Pick<Snapshot, 'tierOpen' | 'ageYears'>>
+  Partial<Pick<Snapshot, 'tierOpen' | 'ageYears'>> &
+  // W4-SCHOOL: the week her school years end, so this file can answer the question for ANY week it
+  // is asked about rather than only for `snap.week`. Optional for the same reason `ageYears` is –
+  // hand-built fixtures pre-date it – and a fixture that omits it gets a schoolgirl, which is what
+  // every one of them was written about.
+  Partial<Pick<Snapshot, 'schoolEndsWeek'>>
 
 /** ⚠ THE SUMMER WINDOW MOVED INTO THE ENGINE (W3-SUMMER) AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
  *  NAMES, so every existing caller and every test that imports `SUMMER_WEEKS` / `isSummerWeek` from
@@ -268,6 +279,9 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     // grid may not ask it itself. Summer travels the same way (R15-8).
     offSeason: isOffSeasonWeek(week),
     summer: isSummerWeek(week),
+    // ⚠ THE DRAWN WEEK, NOT `snap.week`. A calendar showing the first week of September in the year
+    // she leaves has one week of school and one without, and the grid has to draw the right one.
+    schoolOver: snap.schoolEndsWeek !== undefined && week >= snap.schoolEndsWeek,
     animates: !snap.pending,
   }
 
@@ -352,7 +366,7 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       readout: 'The tour is closed – this is the block where next year gets built.',
     }
   }
-  if (isExamWeek(week)) {
+  if (isExamWeek(week, base.schoolOver)) {
     return {
       ...base,
       days: uniform('school', null, 'Exams'),
@@ -412,7 +426,11 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     // labelled "Training week" while the sim is running a block would be the screen under-reporting a
     // real decision the player is living with. A knock she is resting outranks it, because that is
     // what the week actually is.
-    title: base.summer && !resting ? 'Summer block' : 'Training week',
+    // ⚠ 'Summer block' NAMES A WINDOW SHE NO LONGER HAS (W4-SCHOOL). Past her last school year the
+    // holidays are not a block – every week is school-free and the engine prices them all the same –
+    // so calling one week of July special would be the screen inventing a distinction the sim does
+    // not make. She is a professional; her weeks are training weeks.
+    title: base.summer && !base.schoolOver && !resting ? 'Summer block' : 'Training week',
     readout: trainingReadout({
       sessions,
       courtDays,
@@ -421,6 +439,7 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       knockPart: knock?.part ?? null,
       matchIndex,
       summer: base.summer,
+      schoolOver: base.schoolOver,
     }),
   }
 }
@@ -437,6 +456,9 @@ function trainingReadout(x: {
   matchIndex: number | null
   /** W3-SUMMER: the holidays, in which the ENGINE runs two sessions a day. See the note below. */
   summer?: boolean
+  /** W4-SCHOOL: ...and past her last school year, EVERY week is one of those. Same engine rule
+   *  (`summerLoadFactor`), so the same sentence – minus the clause about school, which is over. */
+  schoolOver?: boolean
 }): string {
   if (x.resting) {
     // ⚠ A BOOKED FRIENDLY IS NOT CANCELLED BY A RESTED KNOCK - only `rollInjury` cancels bookings - so
@@ -456,11 +478,13 @@ function trainingReadout(x: {
   const plan =
     x.sessions === 0
       ? 'No sessions – a full week off court.'
-      : x.summer === true
-        ? `${x.sessions} days on, two sessions a day – no school, so the work doubles up.`
-        : x.gymIndex === null
-          ? `${x.sessions} sessions, all of them on court.`
-          : `${x.sessions} sessions – ${x.courtDays} on court, 1 in the gym.`
+      : x.schoolOver === true
+        ? `${x.sessions} days on, two sessions a day – the mornings are hers now.`
+        : x.summer === true
+          ? `${x.sessions} days on, two sessions a day – no school, so the work doubles up.`
+          : x.gymIndex === null
+            ? `${x.sessions} sessions, all of them on court.`
+            : `${x.sessions} sessions – ${x.courtDays} on court, 1 in the gym.`
   const match = x.matchIndex === null ? '' : ` Practice match on ${DAY_LONG[x.matchIndex]}.`
   const knock = x.knockPart === null ? '' : ` She is training on a sore ${x.knockPart}.`
   return `${plan}${match}${knock}`
@@ -540,7 +564,7 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
     const event = preferredWeekEvent(
       snap.upcoming.filter((e) => e.week === w && isSuitable(e, snap.week) && feedShows(e, feed)),
     )
-    const exam = isExamWeek(w)
+    const exam = isExamWeek(w, snap.schoolEndsWeek !== undefined && w >= snap.schoolEndsWeek)
     const offSeason = isOffSeasonWeek(w)
     const kind: LookAheadRow['kind'] = vacation
       ? 'vacation'
