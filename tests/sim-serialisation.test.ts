@@ -56,8 +56,23 @@ describe('the sim project runs serialised', () => {
   })
 
   it('the unit project is NOT serialised – it is 100+ fast files and parallelism is the point', () => {
+    // ⚠ RE-AIMED 05.08, and it caught a real change before it could ship – which is the point of it.
+    //
+    // `npm test` used to be a literal vitest invocation, so the guard could read the flags straight
+    // off the script string. It is now `node scripts/units.mjs`, because the population going
+    // 520 -> 1,600 pushed the unit suite past birpc's unraisable 60s RPC window on CI (everything
+    // green, exit 1 — see that script's header). The heavy tail gets a process each; the other 109
+    // files still run in parallel, which is what this test actually cares about.
+    //
+    // So the assertion moves from the SCRIPT STRING to the THING IT RUNS. Serialisation is still
+    // forbidden, now checked wherever the unit project is actually invoked, and the runner must
+    // still be pointed at the unit project. Not weakened: it reads the real command now instead of
+    // a string that happened to contain it.
     const unit = pkg.scripts['test']
-    expect(unit).toContain('--project unit')
-    expect(unit).not.toContain('--no-file-parallelism')
+    const runner = unit.includes('scripts/units.mjs')
+      ? readFileSync(fileURLToPath(new URL('../scripts/units.mjs', import.meta.url)), 'utf8')
+      : unit
+    expect(runner, 'the unit suite must run the unit project').toContain("'--project', 'unit'")
+    expect(runner, 'the unit project must never be serialised').not.toContain('--no-file-parallelism')
   })
 })
