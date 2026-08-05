@@ -121,6 +121,7 @@ import {
   activeKitDeal,
   expireOffers,
   isSponsorReviewWeek,
+  isSponsorWindowWeek,
   pruneEntryLetters,
 } from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
@@ -275,7 +276,7 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
 // the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
 // end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 40
+export const SAVE_SCHEMA_VERSION = 41
 
 
 
@@ -2143,12 +2144,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         and in the real sport equipment deals are negotiated in November and December so the
   //         player opens the year already kitted.
   //
-  //         ⚠ THE ONCE-A-SEASON GUARANTEE IS NOW EXPLICIT, and it has to be. The boundary block gave
-  //         it away free – `week % 52 === 0` is one week – but the off-season is three
-  //         (OFF_SEASON_WEEKS), so the same call made naively would raise a fresh letter every one of
-  //         them. `isSponsorReviewWeek` is the FIRST off-season week and no other; it is the same
-  //         arithmetic `maybeFireSeasonWrapUp` fires on, which is the precedent for a once-a-year
-  //         off-season step.
+  //         ⚠ AND SINCE 05.08 IT IS A FIVE-WEEK WINDOW (feat/sponsor-window, and the owner's own
+  //         design: «нужно делать окно на все 5 недель (межсезонье +2)… и как раз в окно могут
+  //         приходить письма и есть время на принятие решения и выбор»). The off-season plus the two
+  //         weeks before it, `isSponsorWindowWeek`, and `reviewSponsors` is what splits the three
+  //         jobs across it - the outgoing deal is judged on the first week, a letter may land on each
+  //         of the first four, and the ONE feed row is written on the last. The once-a-season
+  //         guarantee that used to live in this predicate now lives inside: at most one letter a
+  //         week, from one rung, off a queue the week's own position indexes.
   //
   //         Placed here, in the same zero-main-draw region the boundary block occupies, and for the
   //         same reason: it takes at most one draw and that draw is on `seed:offer:<week>`, its own
@@ -2156,7 +2159,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // ⚠ AND NOBODY WRITES TO AN AMATEUR (W2-ENDINGS). A college player on a scholarship cannot take
   //   an endorsement, which is a real rule and also the only thing that keeps the four-year freeze
   //   from being free money. `reviewSponsors` draws on `seed:offer:<week>`, never MAIN.
-  if (isSponsorReviewWeek(world.week) && !inCollege(world)) reviewSponsors(world)
+  if (isSponsorWindowWeek(world.week) && !inCollege(world)) reviewSponsors(world)
 
   // 0a0c-ter (W3-ACT2 §7): AND THE PROFESSIONAL RUNGS PAY A QUARTERLY RETAINER. Four arrivals a
   //         season on fixed offsets (0 / 13 / 26 / 39) rather than one number at the boundary,

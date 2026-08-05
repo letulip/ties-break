@@ -13,7 +13,7 @@
 import { ECONOMY } from '../economy'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
-import { activeKitDeal, dealUnderReview, endDealWithSeason, kitTravelShare, raiseKitEndLetter, raiseKitOffer, refuseOffer as refuseOfferIn, seasonLastWeek, signOffer as signOfferIn, standingClears } from '../offers'
+import { activeKitDeal, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowOpenWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseKitEndLetter, raiseKitOffer, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
@@ -91,12 +91,15 @@ export function localSponsorCents(nationalRank: number): number {
  *  double-count a withdrawal, so it reads the one record that is written per entry and never
  *  rewritten: the tournament events her season produced.
  *
- *  ⚠ THE 52-WEEK WINDOW STILL LANDS ON EXACTLY ONE SEASON now that the review moved into the
- *  off-season, and that is worth stating because it looks as though it should not. The window is
- *  `[reviewWeek - 52, reviewWeek)`, which from the first off-season week reaches back over this
- *  season's whole competitive block AND the previous season's three off-season weeks – and those are
- *  event-free by construction (`isOffSeasonWeek`; the calendar schedules nothing in them). So the
- *  count is this season's tournaments and no other's. */
+ *  ⚠ IT IS A ROLLING YEAR, AND SINCE THE WINDOW OPENED TWO WEEKS EARLY THAT IS THE HONEST NAME FOR
+ *  IT (05.08). While the review fired on the first off-season week the 52-week window
+ *  `[reviewWeek - 52, reviewWeek)` landed on exactly one season - it reached back over this season's
+ *  whole competitive block and the previous season's three event-free off-season weeks. The review
+ *  now runs on week 47, so the same window reaches back over weeks 0-46 of this season and weeks
+ *  47-48 of the last one. It is still 49 competitive weeks - a full year of tennis, which is the
+ *  unit the obligation is written in ("at least N tournaments a season") - it is simply offset by a
+ *  fortnight, and the alternative was to judge a season block with two of its weeks unplayed and
+ *  fail a girl for events she had not had the chance to enter yet. */
 export function eventsPlayedInSeason(world: WorldState, reviewWeek: number): number {
   const from = reviewWeek - WEEKS_PER_YEAR
   // ⚠ THE RESULTS LEDGER, NOT THE FEED (owner, 04.08: «а какие конкретно старты они считают? я много
@@ -136,7 +139,23 @@ export function eventsPlayedInSeason(world: WorldState, reviewWeek: number): num
 // worth, and whether they are writing again. Signing, refusing and expiring write NOTHING here - the
 // player took those actions himself (behind a confirm, in the case of the one that matters), and the
 // inbox holds all three states for the life of the career, which the feed could never do anyway.
+//
+// ⚠ AND SINCE 05.08 IT RUNS ON EVERY WEEK OF A FIVE-WEEK WINDOW rather than on one week a year, with
+// its three jobs split across it (feat/sponsor-window, docs/specs/sponsor-window-2026-08.md):
+//
+//   * THE WINDOW'S FIRST WEEK (47) JUDGES THE OUTGOING DEAL and posts the brand's goodbye. It has to
+//     be the first: the verdict is what decides whether anybody may write at all, and the first
+//     letter goes out the same week.
+//   * EVERY LETTER WEEK (47-50) RAISES AT MOST ONE LETTER, from one rung off `windowLadder`.
+//   * THE WINDOW'S LAST WEEK (51) WRITES THE ONE FEED ROW. Not the first, because by the last week
+//     the row can report the whole winter - what the season of kit was worth, who wrote, and whether
+//     anything was signed - in a single line. That is not a preference: the feed budget below is a
+//     MEASURED constraint of one row per season, and four letter weeks could otherwise become four
+//     rows and cost the radar its evidence base.
 export function reviewSponsors(world: WorldState): void {
+  // Belt and braces: the tick already gates on the window, and a second caller (a test, a bench, a
+  // future dev tool) must not be able to raise a letter in April.
+  if (!isSponsorWindowWeek(world.week)) return
   // Both cached ranks, with the same fallback rankIn uses: a career that has never held a point in a
   // table sits below the whole field rather than at the top of an empty one. `itfRanked` is the
   // guard that stops an empty table reading as a standing at all - see `SponsorStanding`.
@@ -157,8 +176,9 @@ export function reviewSponsors(world: WorldState): void {
 
   // 1. THE SEASON NOW FINISHING, IF IT WAS UNDER A DEAL. What the brand actually spent is the one
   //    number that says what signing was worth - the same job `AcademySupport.coveredCents` does -
-  //    and the two conditions below are what decide whether it stays.
-  const deal = dealUnderReview(world.offers, world.week)
+  //    and the two conditions below are what decide whether it stays. ⚠ ON THE WINDOW'S FIRST WEEK
+  //    AND NO OTHER: the verdict decides who may write, and the first letter goes out today.
+  const deal = isSponsorWindowOpenWeek(world.week) ? dealUnderReview(world.offers, world.week) : null
   const dealTerms = deal ? (deal.terms as KitOfferTerms) : null
   const played = deal ? eventsPlayedInSeason(world, world.week) : 0
   // ⚠ FAILING EITHER CONDITION COSTS THE DEAL, NOT THE FAMILY'S SAVINGS (spec §4.1). Nothing is
@@ -194,53 +214,78 @@ export function reviewSponsors(world: WorldState): void {
   // paying. So a NEW letter lands in the inbox - which is the surface that knocks - for BOTH ways a
   // deal can end: the terms it failed, and a term served in full. `untilWeek` is now final either
   // way, so "does it cover next season" is the one question asked here.
-  if (deal && dealTerms && (deal.untilWeek ?? -1) <= seasonLastWeek(world.week)) {
+  if (deal && dealTerms && (deal.untilWeek ?? -1) <= contractEndWeek(world.week)) {
     const reason: KitEndReason = !playedEnough ? 'events' : !keptAtHome ? 'standing' : 'term'
     raiseKitEndLetter(world.offers, world.week, deal, reason, played)
   }
 
-  // 2. AND WHETHER ANYBODY WRITES. ⚠ ONE BRAND AT A TIME is enforced inside `raiseKitOffer`, which
-  //    refuses while a deal is running or a letter is unanswered - so a multi-season contract that
-  //    is only halfway through turns the next rung away by itself and there is no second rule here
-  //    to keep in step with it. What this line adds is the ONE case the offers module cannot see: a
-  //    brand that was let down this season does not turn round and write a fresh letter in the same
-  //    winter, even though its own contract has just been ended.
-  const offer = heldUp
-    ? raiseKitOffer({ offers: world.offers, seed: world.seed, week: world.week, standing })
-    : null
+  // 2. AND WHETHER ANYBODY WRITES, THIS WEEK. ⚠ ONE BRAND AT A TIME is enforced inside
+  //    `raiseKitOffer` - `seasonSpokenFor`, so a multi-season contract with a year left to run turns
+  //    the whole window away by itself and there is no second rule here to keep in step with it.
+  //    What this line adds is the ONE case the offers module cannot see: a brand that was let down
+  //    this season does not turn round and write a fresh letter in the same winter, even though its
+  //    own contract has just been ended.
+  //
+  //    ⚠ AND IT HAS TO SURVIVE THE WHOLE WINDOW, not just the week it was decided on. The verdict is
+  //    reached on week 47 and letters go out until week 50, so `letDownThisWindow` re-reads it off
+  //    the goodbye letter already in the inbox rather than carrying a flag across four ticks. One
+  //    fact, one place it is written down.
+  const letDown = !heldUp || letDownThisWindow(world.offers, world.week)
+  if (!letDown) raiseKitOffer({ offers: world.offers, seed: world.seed, week: world.week, standing })
 
-  // 3. ONE LINE, CARRYING WHICHEVER OF THOSE ACTUALLY HAPPENED. It names the TABLE the letter was
-  //    gated on, because the whole point of the 30.07 fix was that the player could not tell which
-  //    ladder any gate was reading - and the brand ladder makes that question sharper rather than
-  //    softer, since the rungs read different tables on purpose. And it names the INBOX, because a
-  //    letter nobody opens is worse than the cheque it replaced.
+  // 3. ONE LINE A SEASON, ON THE WINDOW'S LAST WEEK, CARRYING WHICHEVER OF THOSE HAPPENED. It names
+  //    the TABLE the letters were gated on, because the whole point of the 30.07 fix was that the
+  //    player could not tell which ladder any gate was reading - and the brand ladder makes that
+  //    question sharper rather than softer, since the rungs read different tables on purpose. And it
+  //    names the INBOX, because a letter nobody opens is worse than the cheque it replaced.
+  //
+  //    ⚠ WRITTEN LAST RATHER THAN FIRST, WHICH IS THE FEED BUDGET SPEAKING. Four letter weeks could
+  //    have become four rows; the measurement above this function says one extra row a season is
+  //    already worth 0.36 -> 0.64 points of radar re-widening, so four is not available. Waiting
+  //    until the window closes is what turns four possible rows back into one, and it can then say
+  //    MORE than the old line could - what the year of kit was worth, who wrote, and what he did
+  //    about it.
+  if (!isSponsorWindowCloseWeek(world.week)) return
   const parts: string[] = []
-  if (deal && dealTerms) {
+  const ended = dealEndingWithSeason(world.offers, world.week)
+  const endedTerms = ended ? (ended.terms as KitOfferTerms) : null
+  if (ended && endedTerms) {
     // ⚠ WHAT THE SEASON OF KIT WAS WORTH IS REPORTED EITHER WAY, and the failure case is the one
     //   that needs it most: a deal that ends is precisely the moment the player should be able to
     //   see what he just lost. Reporting the value only on a renewal would make the number a reward
-    //   for having done well, which is the opposite of what it is for.
-    const worth = `$${Math.round((deal.coveredCents ?? 0) / 100).toLocaleString('en-US')}`
-    const running = (deal.untilWeek ?? 0) > seasonLastWeek(world.week)
+    //   for having done well, which is the opposite of what it is for. The REASON is read off the
+    //   goodbye letter the brand already posted, so the feed and the paper cannot disagree.
+    const worth = `$${Math.round((ended.coveredCents ?? 0) / 100).toLocaleString('en-US')}`
+    const goodbye = world.offers.find((o) => o.id === `kit-end-${ended.id}`)
+    const why = goodbye ? (goodbye.terms as KitOfferTerms).ended : 'term'
+    const playedThen = ended.eventsPlayed ?? 0
     parts.push(
-      !playedEnough
-        ? `${dealTerms.brand} kitted her out all season – ${worth} of kit – but they asked for ${dealTerms.minEventsPerSeason} events and she played ${played}, so they are done.`
-        : !keptAtHome
-          ? `${dealTerms.brand} kitted her out all season – ${worth} of kit – but they back a girl inside the ${LADDER_LABEL.domestic} top ${dealTerms.keepDomesticRank} and she is #${nationalRank}, so they are done.`
-          : running
-            ? `${dealTerms.brand} kitted her out all season – ${worth} of kit, ${played} events played. They have another year to run.`
-            : `${dealTerms.brand} kitted her out all season – ${worth} of kit, ${played} events played.`,
+      why === 'events'
+        ? `${endedTerms.brand} kitted her out all season – ${worth} of kit – but they asked for ${endedTerms.minEventsPerSeason} events and she played ${playedThen}, so they are done.`
+        : why === 'standing'
+          ? `${endedTerms.brand} kitted her out all season – ${worth} of kit – but they back a girl inside the ${LADDER_LABEL.domestic} top ${endedTerms.keepDomesticRank} and she is #${nationalRank}, so they are done.`
+          : `${endedTerms.brand} kitted her out all season – ${worth} of kit, ${playedThen} events played.`,
     )
   }
-  if (offer) {
-    const terms = offer.terms as KitOfferTerms
-    // WHICH TABLE EARNED IT, named, because the three rungs deliberately read two different ones and
-    // "why is this brand writing to me" is exactly the question a player should be able to answer.
-    const gate =
-      terms.tier === 'local'
-        ? `${LADDER_LABEL.domestic} #${nationalRank}`
-        : `${LADDER_LABEL.itf} #${world.kidRank}`
-    parts.push(`A letter from ${terms.brand} – they want to put her in their kit (${gate}). It is in the inbox.`)
+  // THE WINTER'S POST, as one clause however many brands wrote. `signed` is checked first because it
+  // is the news: a letter already answered should not be described as waiting in the inbox.
+  const opened = sponsorWindowOpensAt(world.week)
+  const post = world.offers.filter((o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info')
+  const signedNow = post.find((o) => o.state === 'signed')
+  if (signedNow) {
+    const terms = signedNow.terms as KitOfferTerms
+    parts.push(`She is in ${terms.brand}'s kit for next season.`)
+  } else if (post.length > 0) {
+    const gate = post.every((o) => (o.terms as KitOfferTerms).tier === 'local')
+      ? `${LADDER_LABEL.domestic} #${nationalRank}`
+      : `${LADDER_LABEL.itf} #${world.kidRank}`
+    const names = post.map((o) => (o.terms as KitOfferTerms).brand)
+    const brands = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0]
+    parts.push(
+      post.length === 1
+        ? `A letter from ${brands} – they want to put her in their kit (${gate}). It is in the inbox.`
+        : `Letters from ${brands} – they all want to put her in their kit (${gate}). They are in the inbox.`,
+    )
   }
   if (parts.length === 0) return
   addEvent(world, { week: world.week, type: 'info', text: parts.join(' ') })
