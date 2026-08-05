@@ -637,7 +637,14 @@ export function fieldProsFor(
   seasonIndex: number,
   takenNames: readonly string[] = [],
 ): FieldPro[] {
-  const key = `${seed} ${seasonIndex} ${takenNames.join(' ')}`
+  // ⚠ THE SEPARATOR IS WRITTEN AS AN ESCAPE, NOT AS A RAW BYTE (05.08). NUL is the right delimiter
+  // here - it cannot occur in a seed, a number or a name, so no two different inputs can collide on
+  // one key. But it had been typed as three LITERAL zero bytes in this file, and a zero byte makes
+  // grep classify the whole source as BINARY: `git grep`, `grep -r` and every repo-wide search
+  // silently skipped this file - the module that owns the professional population. Nothing warned;
+  // the file simply never appeared in results. The escape compiles to the identical character, so
+  // the runtime key is byte-for-byte what it was, and the source stays text.
+  const key = `${seed}\u0000${seasonIndex}\u0000${takenNames.join('\u0000')}`
   if (memo && memo.key === key) return memo.pros
   const taken = new Set(takenNames)
   const pros: FieldPro[] = []
