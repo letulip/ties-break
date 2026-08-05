@@ -58,7 +58,6 @@ import {
   raiseKitEndLetter,
   rungFor,
   shopWritesAt,
-  sponsorArtKey,
   standingClears,
   SPONSOR_TIERS,
   TIER_COVERS,
@@ -766,17 +765,23 @@ describe('the letter states its terms in words the player can act on', () => {
   })
 
   it('the letterhead is looked up BY TIER, never by a filename spelled out at a call site', () => {
-    // ⚠ RE-AIMED BY W3-ACT2, NOT WEAKENED, AND THE CLAIM IS THE SAME ONE. Three marks ship and the
-    // ladder has six rungs, so the lookup goes through the ENGINE's `sponsorArtKey` - a single
-    // function that maps the three professional rungs onto the global mark until real art exists.
-    // The property this test protects ("never a filename spelled out at a call site") is unchanged
-    // and is in fact stronger: the mapping is now one named engine fact rather than a template
-    // literal in a component.
-    expect(codeOf(letter)).toContain('images/sponsors/${sponsorArtKey(terms.value.tier)}.webp')
+    // ⚠ RE-AIMED TWICE, NEVER WEAKENED, AND THE CLAIM IS THE SAME ONE EVERY TIME. W3-ACT2 pointed
+    // the lookup at `sponsorArtKey` because three marks had to serve six rungs; on 05.08 the owner
+    // shipped the missing three, the redirect was deleted (engine/offers.ts records why an identity
+    // function was not left behind), and the tier is the key again. The property this test protects
+    // is untouched: no call site spells out a letterhead's filename.
+    expect(codeOf(letter)).toContain('images/sponsors/${terms.value.tier}.webp')
     for (const t of SPONSOR_TIERS) expect(codeOf(letter)).not.toContain(`sponsors/${t}.webp`)
-    // ...and every rung really does resolve to a mark that exists on disk.
+    // ...and every rung really does resolve to a mark that exists on disk. Asserted against the
+    // FILESYSTEM rather than against a hand-kept list of three keys, which is what the old arm did
+    // and what a redirect made necessary; there is nothing to redirect now, so the honest question
+    // is whether the file is there. (tests/art-placeholders.test.ts owns the same claim as the
+    // registry's guard; this one keeps it local to the letter that renders the mark.)
     for (const t of SPONSOR_TIERS) {
-      expect(['local', 'national', 'global']).toContain(sponsorArtKey(t))
+      expect(
+        existsSync(new URL(`../public/images/sponsors/${t}.webp`, import.meta.url)),
+        `the "${t}" rung is on the sponsor ladder but public/images/sponsors/${t}.webp does not exist`,
+      ).toBe(true)
     }
   })
 
@@ -790,10 +795,12 @@ describe('the letter states its terms in words the player can act on', () => {
     // global.webp "PLAY BEYOND – EQUIP. SUPPORT. ELEVATE." - and the middle one's tagline is the
     // coverage this slice ships, which is the strongest evidence the ladder was read off the art.
     // ⚠ SIX RUNGS SINCE W3-ACT2, and the half of this guard that never expires is untouched: the
-    // three junior-era names are still read off the artwork. The three PROFESSIONAL names are
-    // invented here rather than read off a mark, because no mark exists for them yet - stated
-    // openly, flagged for the owner in the wave report, and the art ask is three files that would
-    // replace `sponsorArtKey` with the identity.
+    // three junior-era names are still read off the artwork. The three PROFESSIONAL names were
+    // invented here for one wave, because no mark existed for them - stated openly and flagged for
+    // the owner. ⚠⚠ THAT DEBT IS PAID (05.08): he drew all three, and they are read off the artwork
+    // like the first three - tour.webp is BASELINE ATHLETIC, premium.webp MERIDIAN SPORT, icon.webp
+    // AURELIA. So every rung on the ladder now takes its name from a picture again, which is the
+    // property this guard has protected since 01.08.
     // ⚠ AND THE ORDER IS THE LADDER, not a listing. `rungFor` reverses this and takes the first
     // rung she clears, so `tour` (WTA 200) must sit BELOW `global` (WTA 87) or a #60 professional
     // would be handed the weaker brand and the stronger one would be unreachable. Pinned exactly.
@@ -803,15 +810,14 @@ describe('the letter states its terms in words the player can act on', () => {
     expect(ECONOMY.sponsorship.global.brand).toBe('Play Beyond')
     // The domestic table still reaches the local shop and only it – the rung whose gate did not move.
     for (const rank of [1, 5, 10, 11, 30]) expect(kitTermsFor(domestic(rank))!.tier).toBe('local')
-    // ...and every rung resolves to a mark that really is on disk. ⚠ THROUGH `sponsorArtKey`
-    // SINCE W3-ACT2, which is the assertion this had to become: three marks ship and the ladder has
-    // six rungs, so the professional trio borrows the global mark until real art exists. The claim
-    // is unchanged and still exhaustive - no rung may be sendable without a picture on the letter -
-    // and it is now the mapping that is checked rather than a filename convention that happened to
-    // hold. Placeholder art, flagged for the owner; three real marks would make this the identity.
+    // ...and every rung resolves to a mark that really is on disk. ⚠ BY ITS OWN NAME AGAIN (05.08).
+    // W3-ACT2 had to route this through `sponsorArtKey` because three marks served six rungs; the
+    // three real marks shipped, the redirect is deleted, and the check goes back to the filename
+    // convention - which is no longer "a convention that happened to hold" but the whole mapping.
+    // The claim is unchanged and still exhaustive: no rung may be sendable without a picture on the
+    // letter.
     for (const t of SPONSOR_TIERS) {
-      const key = sponsorArtKey(t)
-      expect(existsSync(fileURLToPath(new URL(`../public/images/sponsors/${key}.webp`, import.meta.url))), t).toBe(true)
+      expect(existsSync(fileURLToPath(new URL(`../public/images/sponsors/${t}.webp`, import.meta.url))), t).toBe(true)
     }
   })
 
