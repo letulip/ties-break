@@ -1325,14 +1325,26 @@ describe('the sponsor window', () => {
   it('a multi-season deal still turns the whole window away, which is what gives it bite', () => {
     const { world, id } = worldWithLetter('multi-block', LETTER_WEEK, worldly(20))
     acceptOffer(world, id) // ...national, two seasons
-    // The window a whole season later: the deal still covers the season ahead, so nobody writes.
+    const until = world.offers[0].untilWeek!
+    // The window a whole season later: the deal still covers the season ahead, so nobody writes -
+    // on ANY of the four letter weeks, and however well she has done in the meantime.
     for (let slot = 0; slot < SPONSOR_LETTER_WEEKS; slot++) {
-      const week = LETTER_WEEK + WEEKS_PER_YEAR - WEEKS_PER_YEAR + slot // this winter, all four weeks
+      const week = LETTER_WEEK + WEEKS_PER_YEAR + slot
+      expect(seasonSpokenFor(world.offers, week)?.id, `week ${week}`).toBe(id)
       expect(
-        raiseKitOffer({ offers: world.offers, seed: world.seed, week, standing: worldly(1) }),
+        raiseKitOffer({
+          offers: world.offers,
+          seed: seedTheShopWritesTo(`multi-block-${slot}`, week, worldly(1)),
+          week,
+          standing: worldly(1),
+        }),
+        `a competing brand wrote at week ${week}`,
       ).toBeNull()
     }
     expect(world.offers).toHaveLength(1)
+    // ...and the winter AFTER that, when its last season is the one being judged, it stops blocking.
+    expect(seasonSpokenFor(world.offers, LETTER_WEEK + 2 * WEEKS_PER_YEAR)).toBeNull()
+    expect(LETTER_WEEK + 2 * WEEKS_PER_YEAR).toBeLessThan(until)
   })
 
   it("⚠ THE OWNER'S OWN HOLE: a letter missed in the window costs a season, not forty-seven weeks", () => {
