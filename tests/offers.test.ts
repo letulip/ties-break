@@ -28,6 +28,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
   cancelEntry,
+  releaseEntry,
   createWorld,
   enterEvent,
   tickWeek,
@@ -75,6 +76,8 @@ import { migrateSave } from '../src/engine/migrations'
 import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
+import { rollInjury } from '../src/engine/world/injury'
+import { layoffCovering } from '../src/engine/world/medical'
 import { OFF_SEASON_WEEKS, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { SeasonEvent } from '../src/engine/season/types'
 import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../src/shared/protocol'
@@ -2044,6 +2047,73 @@ describe('the tournament desk writes on W-rung registration, and only then', () 
     // ...and a re-registration is a THIRD record, never an overwrite: the inbox is a history.
     enterEvent(world, wEvent.id)
     expect(world.offers.filter((o) => o.kind === 'entry')).toHaveLength(3)
+  })
+
+  // ===============================================================================================
+  // WHO ENDED IT (fix/outgrown-entry, 05.08) – the third state of a desk letter.
+  //
+  // The owner was shown «Your withdrawal from the World Tour 50 ... is confirmed – in time, free of
+  // charge, and nothing is recorded against her» for an entry the ENGINE had cancelled. He had taken
+  // no decision, so the letter was a receipt for something he never did. `releasedBy` is what makes
+  // the two cases distinguishable on the paper; these tests are what keep them distinguishable.
+  // ===============================================================================================
+
+  it("the parent's own withdrawal is byte-identical to what it always was: no releasedBy key at all", () => {
+    const { world, wEvent } = wWorld('desk-by-parent')
+    enterEvent(world, wEvent.id)
+    cancelEntry(world, wEvent.id)
+    const terms = world.offers.filter((o) => o.kind === 'entry')[1].terms as EntryLetterTerms
+    expect(terms.cancelled).toBe(true)
+    // ⚠ ABSENT, not `'parent'`. Old saves carry letters without the key and must keep rendering the
+    // voluntary arm; writing the default would make "absent" and "parent" two things to keep in step.
+    expect('releasedBy' in terms).toBe(false)
+  })
+
+  it('an INJURY release says so on the paper – the desk acted, and the letter names it', () => {
+    const { world, wEvent } = wWorld('desk-by-injury')
+    enterEvent(world, wEvent.id)
+    // A layoff that swallows the event week, with the list still open: the auto-withdraw's own
+    // two conditions (see the loop in engine/world/injury.ts).
+    world.week = wEvent.deadlineWeek - 1
+    world.injury = {
+      kind: 'stress reaction',
+      severity: 'severe',
+      weeksRemaining: 12,
+      totalWeeks: 12,
+      sinceWeek: world.week,
+    }
+    releaseEntry(world, wEvent.id, 'injury')
+    const letters = world.offers.filter((o) => o.kind === 'entry')
+    const terms = letters[letters.length - 1].terms as EntryLetterTerms
+    expect(terms.cancelled).toBe(true)
+    expect(terms.releasedBy).toBe('injury')
+    // ...and the FEED row does not put the verb in the parent's mouth either.
+    const row = world.events.filter((e) => e.type === 'entry').pop()!
+    expect(row.text).not.toMatch(/^Withdrew/)
+    expect(row.text).toMatch(/^Taken out of World Tour 15/)
+    expect(row.text).toMatch(/not fit for that week/)
+  })
+
+  it('END TO END: the injury auto-withdraw inside rollInjury reaches that same path', () => {
+    // ⚠ THE REASON IS ONLY WORTH HAVING IF THE ENGINE'S OWN CALLER PASSES IT, so this drives the
+    // real onset rather than calling `releaseEntry` by hand. It is the one automatic release left
+    // after the outgrown step was retired (05.08), which makes it the whole of the released arm's
+    // reachable surface. Seed-hunted for an onset long enough to swallow the event week – the same
+    // idiom tests/injuries.test.ts uses (`findFiringSeed`), against the real distribution.
+    for (let i = 0; i < 3000; i++) {
+      const { world, wEvent } = wWorld(`desk-injury-e2e-${i}`)
+      world.week = wEvent.deadlineWeek - 2 // list still open, four weeks before she is due on court
+      enterEvent(world, wEvent.id) // entered fit, as a parent would
+      world.condition = 0 // ...and then ground down: the highest-risk arm of `injuryTau`
+      rollInjury(world)
+      if (world.injury === null || layoffCovering(world, wEvent.week) === null) continue
+      expect(world.entries).not.toContain(wEvent.id)
+      const letters = world.offers.filter((o) => o.kind === 'entry')
+      expect((letters[letters.length - 1].terms as EntryLetterTerms).releasedBy).toBe('injury')
+      expect(world.events.filter((e) => e.type === 'entry').pop()!.text).toMatch(/^Taken out of/)
+      return
+    }
+    throw new Error('no seed produced a layoff covering the event week')
   })
 
   it('desk letters age out after a year; sponsor letters never do', () => {

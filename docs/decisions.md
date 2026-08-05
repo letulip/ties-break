@@ -3,7 +3,7 @@ type: decision-log
 status: current
 area: governance
 canonical: true
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-05
 ---
 
 # Design decisions log
@@ -337,3 +337,69 @@ log:
   twenty-two-year-old career is out of school the moment the build reads it. What v43 back-fills is
   the MOMENT: without it the album's scroll has a hole where a life changed. ⚠ v42 is a deliberate
   no-op bridge reserved for a concurrent wave; the merge instruction is written at the rung itself.
+
+## 2026-08-05 – The entry she had already taken (`fix/outgrown-entry`)
+
+Owner, at twenty-two on the W tour: «моя уже 22 летняя выиграла 2 w50 подряд и ее автоматом сняли с
+3-го письмом без объяснения причины – я понимаю, что она переросла, но это ощущается очень странно.
+Надо поправить.» Full reproduce-then-measure in `docs/specs/honouring-the-entry-2026-08.md`; the
+rulings, for the log:
+
+- **An entry already taken is honoured.** In the sport, acceptance into a draw is not revoked because
+  your ranking improved between the entry deadline and the tournament: she plays, and it is her last
+  event at that level. A rung closing governs what she may enter NEXT – it removes the rung from the
+  feed and the offer list, never from her schedule. `releaseOutgrownEntries` is retired.
+- **The two ceilings still agree, and now the two sides of the deadline do too.** `outgrewTier` and
+  `tierOutgrown` had the same consequence as a release and have the same consequence as no release.
+  What went away is the asymmetry a player could actually feel: the PRE-deadline entry was cancelled
+  while the POST-deadline one played on (R12-3), so which of two identical commitments survived
+  depended on a date he was not thinking about.
+- **⚠ THE LETTER WAS THE WORSE HALF, AND HE UNDERSTATED IT.** He said «без объяснения причины». The
+  letter he was shown said *"Your withdrawal from the World Tour 50 is confirmed – in time, free of
+  charge, and nothing is recorded against her"* – a receipt for a decision he never took, reassuring
+  him about the consequences of a choice he had not made. The feed row beside it said *"Withdrew
+  from World Tour 50"*, the same misattribution. A letter that cannot say who acted is worse than no
+  letter. `releaseEntry` now carries an `EntryReleaseReason` and the desk's paper has a third arm –
+  entered / withdrew / **released** – which names the actor first and the cause second.
+- **The injury auto-withdraw had been sending that same wrong letter since it shipped**, on every
+  W-rung entry a layoff swallowed. It is the one automatic release left, and it is now the released
+  arm's whole reachable surface.
+- **He did not miss the feed row.** Measured over 76 releases on 90 full careers: the `info` row is
+  inside the 60-row snapshot the News list is built from on the week it lands, at +1 and at +4 weeks.
+  It reached him; the letter simply contradicted it, and the letter is the surface with the dot.
+- **No schema bump.** `EntryLetterTerms` gains `releasedBy?`, additive and optional with a defaulting
+  reader – the `wallet-and-wrapup` precedent of three days earlier, and the entry-letter family's own
+  (commit `2763caa` added the whole `entry` kind at `SAVE_SCHEMA_VERSION` 36 and left it there).
+  v44 was reserved for this wave, is not used, and remains free.
+- **⚠ Nothing can SETTLE on an outgrown rung, but the tail is longer than one event and the number
+  is worth knowing.** `entryStatus` still refuses a NEW entry at a closed rung, so the only draws
+  playable there are ones committed before the crossing – the run is bounded by how far ahead the
+  parent commits and it cannot be topped up. On the bench's own 3-week horizon the longest unbroken
+  run is unchanged at 2. For a parent who books a quarter ahead it reaches **6**, i.e. he can spend
+  six weeks finishing commitments at a rung he has walked past. It pays 20.1 points a draw, it runs
+  down on its own, and `cancelEntry` still hands the fee back and frees the week – the decision is
+  his now, which is the ruling. Watch for it in playtest; if six weeks reads as a stall, the lever is
+  the commitment horizon, not the entry.
+
+**...and the same shape from the other side, same day: the dead weeks.** «у меня сейчас там висит 5
+w-серий подряд, т.е. я вообще 5 недель не могу нигде играть, хотя j30, j60, j300 мне вполне
+доступны.» Measured with `tools/dead-week-probe.ts` (`npm run bench:deadweek`, 54 careers) before
+proposing anything, because display and supply have completely different repairs:
+
+- **It is common, not a corner.** 13–16% of card-bearing weeks show a card she cannot act on; the
+  longest run on one screen reaches 8 (median 6); 51 of 54 careers hit 3 or more in a row.
+- **The PICK was a real defect and it is the smaller half – taken.** Both feed surfaces collapse a
+  stacked week through `preferredWeekEvent`, which asked only which rung was taller. It now asks
+  entered, then **enterable**, then tallest. Of the weeks whose card refused her for a spent pro
+  allowance, 16% (grinder) and 38% (player) had an enterable event on that same week being hidden –
+  "w35 hid j60", "w15 hid j30", "w50 hid j300". After the change the display column is 0 everywhere.
+  A week where nothing is enterable still shows its tallest card: a re-order, never a filter.
+- **The larger half is SUPPLY and is NOT taken.** On those weeks the calendar is not empty – only
+  13–27 of several hundred carried no other event – it is full of rungs she has not reached
+  (`locked`) or has passed on points (`outgrown`).
+- **⚠ And the `outgrown` slice is backlog #84's own case, with a named cause.** Ruling 2's boredom
+  guard lifts the LADDER ceiling when the pro allowance is spent (`tierOutgrown`), but the DOMESTIC
+  POINT BAND is a second ceiling in a different function and is not lifted – so «если не w-серии то
+  где-то еще» is delivered for the J rungs and not for local/regional/national. Same "two ceilings
+  must agree" argument as the entry ruling above, but an ENGINE gate change with balance
+  consequences, so it is filed rather than taken.

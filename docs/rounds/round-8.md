@@ -20,6 +20,11 @@ Status legend: [ ] open · [x] done · (triage) = size/route.
   band, auto-withdraw+refund her still-pending entries for that tier (mirror slice-C's
   injury auto-withdraw; pure state, no draws). (small engine fix + test)
   → `src/engine/world.ts` + `tests/outgrownWithdraw.test.ts` (round8-ui pt1)
+  → ⚠ **SUPERSEDED 05.08 – see `docs/specs/honouring-the-entry-2026-08.md`.** The real-world rule is
+  right and was applied to the wrong moment: a list closes with the entrants it accepted, and
+  acceptance is not revoked because her ranking improved after she entered. The owner played into it
+  at twenty-two and the game cancelled a W50 she had already committed to. An entry already taken is
+  now honoured on BOTH sides of the deadline; the rung closing governs only what she may enter next.
 - [x] **R8-2. Music: pause when the phone screen locks / tab hidden, resume on return.** Page
   Visibility API (`visibilitychange` → pause/resume both menu + match music). (small)
   → `src/audio/music.ts` (resume only if audible when hidden; mute + duck keep winning)

@@ -268,7 +268,10 @@ export function rollInjury(world: WorldState): void {
   for (const id of [...world.entries]) {
     const e = eventById(world, id)
     if (e && layoffCovering(world, e.week) !== null && world.week <= e.deadlineWeek) {
-      releaseEntry(world, id)
+      // ⚠ AND IT SAYS SO ON THE PAPER (fix/outgrown-entry, 05.08). This is the DESK acting, not the
+      // parent - so the letter it raises must not come back reading "Your withdrawal is confirmed".
+      // See the note on `releaseEntry`: the reason is the difference between a record and a lie.
+      releaseEntry(world, id, 'injury')
     }
   }
 

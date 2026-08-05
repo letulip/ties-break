@@ -2086,34 +2086,44 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   delete save.log
 }
 
-// --- Round-8 R8-7a: entry lists close at the deadline --------------------------
-// Real-world rule (owner 25.07): players out of band at close are removed and refunded.
-// If the kid's points have grown OUT of a tier's band while she still holds a
-// still-refundable (pre-deadline) entry of that tier, the organisers release the entry
-// at the top of the weekly tick: full refund via the existing withdrawEvent (mirror of
-// slice C's injury auto-withdraw) + an info beat. A POST-deadline entry is never touched
-// – the list closed with her in band, the fee is committed and the event still plays.
-// Pure state, ZERO RNG draws – the B1/C1 main-stream invariance freezes stay untouched.
-function releaseOutgrownEntries(world: WorldState): void {
-  if (world.entries.length === 0) return
-  const points = kidPoints(world, 'domestic')
-  for (const id of [...world.entries]) {
-    const event = eventById(world, id)
-    if (!event || world.week > event.deadlineWeek) continue // closed list – fee committed
-    // ⚠ BOTH CEILINGS SINCE W2-WINDOW. `outgrewTier` is the DOMESTIC one (her points passed the
-    // band); `tierOutgrown` is the ladder's own (the rung three above has opened, so she has walked
-    // past this one - act2-pro-tour.md §11). They are the same event for the player and must have
-    // the same consequence, or a W15 entry taken the week before W75 opened would sit in her
-    // schedule as the one card the gate refuses to explain.
-    if (!outgrewTier(event.tier, points) && !tierOutgrown(world, event.tier)) continue
-    releaseEntry(world, id)
-    addEvent(world, {
-      week: world.week,
-      type: 'info',
-      text: `Entry released – she's outgrown ${TIERS[event.tier].label}. Fee refunded.`,
-    })
-  }
-}
+// --- R8-7a, RETIRED 05.08: AN ENTRY ALREADY TAKEN IS HONOURED -------------------------------------
+//
+// THE STEP THAT USED TO BE HERE. `releaseOutgrownEntries` ran at the top of every tick, walked the
+// still-refundable (pre-deadline) entries, and cancelled any whose rung had closed under her -
+// refunding the fee and writing «Entry released – she's outgrown W50. Fee refunded.» into the feed.
+// Both ceilings triggered it: `outgrewTier` (her domestic points passed the band) and `tierOutgrown`
+// (the ladder's own sliding window, act2-pro-tour.md §11). It was read from a real rule - «players
+// out of band at close are removed and refunded» (owner 25.07) - and applied to the wrong moment.
+//
+// ⚠ THE OWNER PLAYED IT AND IT WAS WRONG (05.08): «моя уже 22 летняя выиграла 2 w50 подряд и ее
+// автоматом сняли с 3-го письмом без объяснения причины – я понимаю, что она переросла, но это
+// ощущается очень странно. Надо поправить.» She won two W50s, the points those wins earned closed
+// the rung, and the game cancelled the W50 she had ALREADY ENTERED.
+//
+// ⚠⚠ IN THE SPORT, ACCEPTANCE INTO A DRAW IS NOT REVOKED BECAUSE YOUR RANKING IMPROVED. You play,
+// and it is your last event at that level. Outgrowing a rung is a statement about what she may enter
+// NEXT; it is not a retroactive claim on what she has already committed to. So a rung closing now
+// removes it from the FEED and the OFFER LIST - which is what `tierOpenFor` and `entryStatus` have
+// always done, untouched by this change - and never from her SCHEDULE.
+//
+// ⚠ THE TWO CEILINGS STILL AGREE, which is what the retired comment demanded of them: `outgrewTier`
+// and `tierOutgrown` "are the same event for the player and must have the same consequence". They
+// do - the consequence is now identically NOTHING for a committed entry and identically "closed" for
+// the next one, on both. The asymmetry this deletes is the one that was actually visible: the
+// PRE-deadline entry was cancelled while the POST-deadline entry played on, so which of two
+// identical commitments survived depended on a date the player was not thinking about.
+//
+// ⚠ AND THE DEAD END IT ONCE GUARDED IS GUARDED ELSEWHERE, twice over, which is why this can simply
+// go. R10-3's trap - an entry to a rung she outgrew that could be neither played, planned nor
+// abandoned - was closed by `cancelEntry` (R10-13, the escape hatch, still there) and by
+// `arrivalStatus` returning `verdict: 'play'` with `outgrown: true` (R12-3, pinned in
+// tests/round12.test.ts, still there). The week is playable, the card is visible, the button says
+// "(outgrown)", and the parent may still pull her out himself if he wants the fee back.
+//
+// MEASURED before it was removed (tools/outgrown-entry-probe.ts, and see the report on this branch):
+// the release fired on the domestic rungs at fourteen in almost every career and on a professional
+// rung only for the careers strong enough to climb past one - exactly the owner's case. Honouring
+// the entry costs her a low-paying draw she was going to play anyway.
 
 // Full weekly resolution. The MAIN stream carries exactly TWO things, in this fixed order:
 // resolveBaseCosts (3 draws, 4 when the sponsor roll hits) and driftCohort (4 per cohort player).
@@ -2228,9 +2238,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)
 
-  // 0a. Round-8 R8-7a: release (refund) still-refundable entries whose tier she has
-  //     outgrown. Pure state, ZERO draws, so it sits safely ahead of every RNG step.
-  releaseOutgrownEntries(world)
+  // 0a. RETIRED 05.08 – `releaseOutgrownEntries` stood here. An entry already taken is honoured;
+  //     see the note where the function used to live. It drew nothing, so removing it moves no
+  //     stream: the frozen MAIN capture (41550 / e6b0c709) and the B1/C1 invariance freezes are
+  //     untouched by construction.
 
   // 0. parent's weekly contribution BEFORE costs (no RNG draw)
   resolveParentIncome(world)

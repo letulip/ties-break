@@ -385,3 +385,110 @@ describe('OfferLetter – every rung prints its OWN mark now', () => {
     expect(SPONSOR_TIERS).toHaveLength(6)
   })
 })
+
+// =================================================================================================
+// 5. THE TOURNAMENT DESK'S THREE ARMS – entered / withdrew / released (fix/outgrown-entry, 05.08)
+// =================================================================================================
+//
+// ⚠ WHAT THE OWNER WAS SHOWN, AND WHY A THIRD ARM RATHER THAN BETTER WORDS ON THE SECOND. His inbox
+// said, for an entry the ENGINE had cancelled: «Your withdrawal from the World Tour 50 (Mar 28 –
+// Apr 3, 2039) is confirmed – in time, free of charge, and nothing is recorded against her. The
+// entry fee is on its way back. – Tournament desk». He had taken no decision. Three things are
+// wrong in that paragraph and they compound: the AGENCY is misattributed ("your withdrawal"), there
+// is no CAUSE, and the reassurances answer a question only a voluntary exit asks. Rewording the
+// second arm would fix the third of those and leave the first two.
+//
+// Mounted rather than source-pinned, per CLAUDE.md's own gotcha, and every assertion below was
+// mutation-verified against the pre-fix component (which renders the withdrawal arm for all three).
+function entryLetter(terms: Record<string, unknown>): Offer {
+  return {
+    id: 'entry-x-1',
+    kind: 'entry',
+    week: 426,
+    deadlineWeek: 430,
+    state: 'info',
+    terms,
+  } as unknown as Offer
+}
+
+const W50 = { tier: 'w50', label: 'World Tour 50', eventWeek: 432, freeUntilWeek: 430 }
+
+describe("OfferLetter – the desk's letter says WHO ended the entry", () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('the registration arm is unchanged: she is in the draw', () => {
+    const w = mount(OfferLetter, { props: { offer: entryLetter({ ...W50 }), week: 426 } as never })
+    expect(w.text()).toContain('Your entry for the World Tour 50 is confirmed')
+    // ("Withdrawal is free until..." is the registration arm's own third term – the claim here is
+    //  only that neither EXIT arm has rendered.)
+    expect(w.text()).not.toContain('Your withdrawal')
+    expect(w.text()).not.toContain('We have taken her name off')
+    w.unmount()
+  })
+
+  it("the parent's own withdrawal keeps its words exactly – it is the one case where they are true", () => {
+    const w = mount(OfferLetter, {
+      props: { offer: entryLetter({ ...W50, cancelled: true }), week: 427 } as never,
+    })
+    expect(w.text()).toContain('Your withdrawal from the World Tour 50')
+    expect(w.text()).toContain('in time, free of charge, and nothing is recorded against her')
+    w.unmount()
+  })
+
+  it('a letter with no releasedBy at all – every save written before the field – reads as HIS withdrawal', () => {
+    // The back-compatibility claim, mounted: absent must not fall into the released arm.
+    const terms = { ...W50, cancelled: true }
+    expect('releasedBy' in terms).toBe(false)
+    const w = mount(OfferLetter, { props: { offer: entryLetter(terms), week: 427 } as never })
+    expect(w.text()).toContain('Your withdrawal from the World Tour 50')
+    w.unmount()
+  })
+
+  it('a RELEASED entry never says he withdrew her – the desk names itself as the actor', () => {
+    const w = mount(OfferLetter, {
+      props: { offer: entryLetter({ ...W50, cancelled: true, releasedBy: 'injury' }), week: 427 } as never,
+    })
+    const text = w.text()
+    // 1. THE AGENCY. The defect he actually reported, and the first thing the paragraph must fix.
+    expect(text).not.toContain('Your withdrawal')
+    expect(text).toContain('We have taken her name off the entry list')
+    expect(text).toContain('we have withdrawn her ourselves')
+    // 2. THE CAUSE, in the desk's own voice rather than as a system code.
+    expect(text).toContain('She is not fit to play that week')
+    // 3. THE REASSURANCES THAT BELONG TO A VOLUNTARY EXIT ARE GONE, and the one that belongs here
+    //    is re-pointed at the right subject: it is the DESK's decision, not hers.
+    expect(text).not.toContain('in time, free of charge')
+    expect(text).toContain('This is our decision, not hers')
+    expect(text).toContain('The entry fee is refunded in full')
+    // ...and it is still the desk's paper: same sheet, same sign-off, no buttons.
+    expect(text).toContain('– Tournament desk')
+    expect(w.findAll('button')).toHaveLength(0)
+    w.unmount()
+  })
+
+  it('an UNKNOWN desk-side reason falls back to a true sentence, never to the voluntary one', () => {
+    // ⚠ THE TRAP THIS CLOSES IS THE BUG ITSELF ARRIVING BY INHERITANCE. A reason the template has no
+    // arm for must not land in "Your withdrawal is confirmed" – so the fallback says only what is
+    // true of every desk-side release. (The engine's own copy switch will not compile against a new
+    // reason, so this is a second line of defence, not a substitute for writing the arm.)
+    const w = mount(OfferLetter, {
+      props: { offer: entryLetter({ ...W50, cancelled: true, releasedBy: 'suspension' }), week: 427 } as never,
+    })
+    const text = w.text()
+    expect(text).not.toContain('Your withdrawal')
+    expect(text).toContain('We have taken her name off the entry list')
+    expect(text).toContain('This is our decision, not hers')
+    // ...and it must NOT claim a cause it was not told about.
+    expect(text).not.toContain('not fit to play')
+    w.unmount()
+  })
+
+  it('the released arm carries no long dash and no Cyrillic – the copy rules, on the rendered text', () => {
+    const w = mount(OfferLetter, {
+      props: { offer: entryLetter({ ...W50, cancelled: true, releasedBy: 'injury' }), week: 427 } as never,
+    })
+    expect(w.text()).not.toContain('—')
+    expect(w.text()).not.toMatch(/[Ѐ-ӿ]/)
+    w.unmount()
+  })
+})

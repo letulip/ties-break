@@ -381,11 +381,15 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
  *  de-duplication, not a behaviour change.
  *
  *  SCOPE, and this is the subtle half of R10-5/R10-3: this gate governs ENTERING. It does NOT
- *  govern an entry already made. Once a list has CLOSED with her on it the fee is committed and the
- *  event plays (the owner's real-world rule, see `releaseOutgrownEntries`) – so a committed entry
- *  she has since outgrown is not "illegal", it is a decision that needs an exit, which is what
- *  `cancelEntry` (R10-13) is. Treating the entry gate's verdict as a lock on a committed entry is
- *  precisely what removed the escape and produced the R10-3 dead end.
+ *  govern an entry already made. An entry already taken is HONOURED and the event plays – so a
+ *  committed entry she has since outgrown is not "illegal", it is a decision that needs an exit,
+ *  which is what `cancelEntry` (R10-13) is. Treating the entry gate's verdict as a lock on a
+ *  committed entry is precisely what removed the escape and produced the R10-3 dead end.
+ *
+ *  ⚠ AND SINCE 05.08 THAT IS TRUE ON BOTH SIDES OF THE DEADLINE. `releaseOutgrownEntries` used to
+ *  cancel the still-refundable half of the same commitment, so which of two identical entries
+ *  survived depended on a date; the owner played into it and it read as the game taking a tournament
+ *  off her for winning. The step is retired – see the note where it used to live in world.ts.
  *
  *  Pure state, ZERO RNG draws. */
 export interface EntryStatus {
