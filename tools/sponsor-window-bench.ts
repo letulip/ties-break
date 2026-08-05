@@ -34,7 +34,11 @@
 import { writeFileSync } from 'node:fs'
 import { acceptOffer, type WorldState } from '../src/engine/world'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
-import { activeKitDeal, isOfferLive, SPONSOR_TIERS } from '../src/engine/offers'
+import {
+  activeKitDeal, isOfferLive, isSponsorWindowCloseWeek, isSponsorWindowOpenWeek, letDownThisWindow,
+  seasonSpokenFor, sponsorWindowOpensAt, windowLadder, SPONSOR_TIERS, SPONSOR_WINDOW_WEEKS,
+} from '../src/engine/offers'
+import { reviewSponsors, sponsorStandingOf } from '../src/engine/world/sponsors'
 import type { KitOfferTerms, Offer, SponsorTier } from '../src/shared/protocol'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean, median, type Preset, type Policy } from './econ-bench'
 
@@ -131,6 +135,32 @@ export interface CareerResult {
   /** tournaments entered over the career – the axis "was she competing at all" is read on. */
   eventsPlayed: number
   endedWeek: number | null
+  // --- THE CATCH-UP NUMBERS (06.08, fix/sponsor-catchup) -------------------------------------------
+  //
+  // "How often does a career enter a window and receive nothing?" is the question the catch-up
+  // argument turns on, and it splits into two that must be kept apart:
+  //
+  //   * THE SCHEDULE. A rung on her ladder whose turn came and went without a roll. This is the
+  //     defect, and it must be ZERO: `rungsClear - rungsRolled`, since every rung her standing
+  //     clears now gets exactly one roll whichever week of the window the career reaches first.
+  //   * THE DICE. A winter she was eligible for in which every rung said no. This is the DESIGN -
+  //     «nothing is manufactured» - and it is the number that says what a catch-up on the far side
+  //     of the window would be re-rolling if one were ever built.
+  //
+  // Counted only over winters that were genuinely OPEN to her: she cleared at least one rung, the
+  // season ahead was not already promised to a multi-season deal, and no brand had just been let
+  // down. A winter turned away by any of those is not silence, it is the rule working.
+  /** winters in which the post was open to her at all. */
+  wintersOpen: number
+  /** ...of those, the ones in which no brand wrote. */
+  wintersSilent: number
+  /** winters probed by replaying them from every entry week (see `probeTheWinter`). */
+  wintersProbed: number
+  /** ...of those, the ones where an arm that arrived late got a DIFFERENT winter. Must be 0. */
+  wintersEntryDependent: number
+  /** ...and the letters an arriving-late arm lost against the arm that was there from the open.
+   *  The schedule's own number, and the one that was 2 for the owner. Must be 0. */
+  lettersLostToLateEntry: number
 }
 
 const RETAINER_RE = / retainer – quarterly$/
@@ -140,6 +170,50 @@ const BONUS_RE = /^Sponsor bonus – /
  *  Brand 25%` or `Travel to X – Brand covers 25%`. The line's own amount is what the family paid
  *  AFTER both covers, so the brand's contribution back-solves as net * s / (1 - s). */
 const TRAVEL_SHARE_RE = /(\d+)%\s*$/
+
+/** A world the sponsor review can be run against without touching the career it came from.
+ *
+ *  `reviewSponsors` writes to exactly three places - `offers` (it pushes letters and stamps the
+ *  outgoing deal), `events` and `nextEventId` - and reads everything else. So a shallow spread with
+ *  those three replaced is a complete and CHEAP isolation: a full structural clone of a world would
+ *  copy a 1,600-strong cohort and a rolling calendar per arm, and this bench takes five arms per
+ *  winter per career. */
+function reviewArm(world: WorldState): WorldState {
+  return { ...world, offers: JSON.parse(JSON.stringify(world.offers)), events: [...world.events] }
+}
+
+/** ⚠ THE CATCH-UP MEASUREMENT (06.08). Replay this winter from every week it could be entered on, and
+ *  report whether the post that comes out of it depends on WHEN the career met the window.
+ *
+ *  This is the owner's bug as a number. He merged the window wave, loaded a career sitting at season
+ *  week 48 - one week past the window's opening week - and was written to by the LOCAL shop where the
+ *  same standing at week 47 was written to by the NATIONAL brand, with no verdict on the outgoing
+ *  deal and no goodbye. Entered at 47: three letters. Entered at 48: one, from a worse rung.
+ *
+ *  Run against the real bench population rather than a fixture, because "the winter does not depend
+ *  on the entry week" is a property of every standing and not of a convenient one. Returns the arms'
+ *  posts as strings, strongest-rung-first, in arrival order. */
+function probeTheWinter(world: WorldState): string[] {
+  const opened = sponsorWindowOpensAt(world.week)
+  const closed = opened + SPONSOR_WINDOW_WEEKS - 1
+  const base = reviewArm(world)
+  const known = new Set(base.offers.map((o) => o.id))
+  const arms: string[] = []
+  for (let entry = opened; entry <= closed; entry++) {
+    const arm = reviewArm(base)
+    for (let w = entry; w <= closed; w++) {
+      arm.week = w
+      reviewSponsors(arm)
+    }
+    arms.push(
+      arm.offers
+        .filter((o) => o.kind === 'kit' && !known.has(o.id) && o.state !== 'info')
+        .map((o) => (o.terms as KitOfferTerms).tier)
+        .join(','),
+    )
+  }
+  return arms
+}
 
 export function runSponsorCareer(
   preset: Preset,
@@ -163,9 +237,41 @@ export function runSponsorCareer(
   let incomeCents = 0
   let eventsPlayed = 0
   const seenFinanceWeeks = new Set<number>()
+  let wintersOpen = 0
+  let wintersSilent = 0
+  let wintersProbed = 0
+  let wintersEntryDependent = 0
+  let lettersLostToLateEntry = 0
+  let windowRungs = 0
+  let windowBlocked = false
 
   for (let i = 0; i < HORIZON_WEEKS; i++) {
     const week = world.week
+    // 0. THE WINTER, WATCHED FROM BOTH ENDS – read at the TOP of the week, before the tick runs this
+    //    week's review, so the standing and the block are exactly the ones the review will read.
+    if (!world.ending && isSponsorWindowOpenWeek(week)) {
+      windowRungs = windowLadder(sponsorStandingOf(world)).length
+      // A season already promised to a multi-season deal is not silence, it is the rule biting.
+      windowBlocked = seasonSpokenFor(world.offers, week) !== null
+      if (windowRungs > 0 && !windowBlocked) {
+        const arms = probeTheWinter(world)
+        wintersProbed++
+        if (new Set(arms).size > 1) wintersEntryDependent++
+        const fromOpen = arms[0] === '' ? 0 : arms[0].split(',').length
+        for (const arm of arms.slice(1)) {
+          lettersLostToLateEntry += Math.max(0, fromOpen - (arm === '' ? 0 : arm.split(',').length))
+        }
+      }
+    }
+    if (!world.ending && isSponsorWindowCloseWeek(week) && windowRungs > 0 && !windowBlocked) {
+      const opened = sponsorWindowOpensAt(week)
+      // ...and a brand that was let down this winter is not silence either: it is the obligation.
+      if (!letDownThisWindow(world.offers, week)) {
+        wintersOpen++
+        const post = world.offers.filter((o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info')
+        if (post.length === 0) wintersSilent++
+      }
+    }
     // 1. THE POST, answered before the week is played – the same order a player acts in.
     if (!world.ending) answerThePost(world, sign)
 
@@ -264,6 +370,11 @@ export function runSponsorCareer(
     incomeCents,
     eventsPlayed,
     endedWeek: world.ending ? world.week : null,
+    wintersOpen,
+    wintersSilent,
+    wintersProbed,
+    wintersEntryDependent,
+    lettersLostToLateEntry,
   }
 }
 
@@ -356,6 +467,20 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     )
     console.log(
       `  quieter half:                       cover ${pct(mean(quiet.map((r) => r.coverage)))}, letters ${mean(quiet.map((r) => Object.values(r.raisedByTier).reduce((a, b) => a + b, 0))).toFixed(1)}`,
+    )
+
+    // ⚠ THE CATCH-UP NUMBERS (06.08). Two questions that a single "she got nothing" would have run
+    // together, and the whole argument turns on keeping them apart.
+    const probed = arm.reduce((a, r) => a + r.wintersProbed, 0)
+    const dependent = arm.reduce((a, r) => a + r.wintersEntryDependent, 0)
+    const lost = arm.reduce((a, r) => a + r.lettersLostToLateEntry, 0)
+    const open = arm.reduce((a, r) => a + r.wintersOpen, 0)
+    const silent = arm.reduce((a, r) => a + r.wintersSilent, 0)
+    console.log(
+      `  THE SCHEDULE: ${probed} winters replayed from every entry week – ${dependent} came out different (${pct(probed > 0 ? dependent / probed : 0)}), ${lost} letters lost to arriving late`,
+    )
+    console.log(
+      `  THE DICE:     ${open} winters open to her – ${silent} in which no brand wrote (${pct(open > 0 ? silent / open : 0)}); that is offerChance, and it is the design`,
     )
 
     // BY RUNG – which brands actually wrote, so a change in the schedule cannot hide behind a total.

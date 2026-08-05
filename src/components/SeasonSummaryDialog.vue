@@ -36,6 +36,17 @@ defineEmits<{ continue: [] }>()
 const game = useGameStore()
 const summary = computed(() => game.snapshot?.lastSeasonSummary ?? null)
 
+/** W4-SCHOOL: the closing scrap, minus the thing she no longer has. It is the same sentence the
+ *  engine writes into the feed on the same week (`world/milestones.ts`), read off the same fact -
+ *  `schoolEndsWeek` - so the dialog and the ledger cannot disagree about whether she is at school. */
+const closingScrap = computed(() => {
+  const snap = game.snapshot
+  const over = snap !== null && snap.week >= snap.schoolEndsWeek
+  return over
+    ? 'Off-season now: rest, family time, and the block where next year gets built.'
+    : 'Off-season now: rest, school, family time.'
+})
+
 
 // R11-12a: the owner read the single net-delta line as the season's SPEND and compared it against
 // the wallet's "This season" total, which is gross spend – two right numbers that look like one
@@ -178,8 +189,10 @@ const showRankMove = computed(() => ranked.value && rankTrack.value === 'itf')
 
       <!-- D's closing scrap. It was already the most human line in this dialog and it was set as a
            grey hint; on paper it reads as what it is – the parent's own note about the year. -->
+      <!-- W4-SCHOOL: past her last school year the list is one item shorter, and the engine's own
+           off-season note (world/milestones.ts) says the same thing in the same week. -->
       <PaperNote class="season-note" :tilt="-0.5" ruled torn tape>
-        Off-season now: rest, school, family time.
+        {{ closingScrap }}
       </PaperNote>
 
       <div class="dialog-actions">

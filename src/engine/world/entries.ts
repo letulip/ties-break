@@ -21,6 +21,7 @@ import { entryStatus } from './medical'
 import { isCappedTier, isCappedProTier } from './entryCaps'
 import { chargeMandatoryPenalty, mandatoryBinds } from './mandatory'
 import { ECONOMY } from '../economy'
+import type { EntryReleaseReason } from '../../shared/protocol'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
 
@@ -96,8 +97,8 @@ export function enterEvent(world: WorldState, eventId: string): void {
  *
  *  ⚠ W2-ENDINGS – THE GUARD IS ON THIS FUNCTION AND NOT ON THE BODY BELOW IT, and the split is the
  *  fix for a measured bug rather than tidiness. This is BOTH a player command and an ENGINE step:
- *  the injury auto-withdraw and `releaseOutgrownEntries` both come through here, and both run
- *  inside `tickWeek`. Guarding the shared implementation made `tickWeek` throw the moment a career
+ *  the injury auto-withdraw comes through here (as `releaseOutgrownEntries` did until 05.08) and
+ *  runs inside `tickWeek`. Guarding the shared implementation made `tickWeek` throw the moment a career
  *  latched while holding an open entry - which is `tickWeek` failing to be total, the one property
  *  the whole ending design is built on. So the PLAYER's door is guarded and the engine's own path
  *  goes straight to `releaseEntry`. Found by tests/travel-home.test.ts, which plays a real career. */
@@ -106,8 +107,21 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   releaseEntry(world, eventId)
 }
 
-/** The withdrawal itself, with no command guard on it – the engine's own path. */
-export function releaseEntry(world: WorldState, eventId: string): void {
+/** The withdrawal itself, with no command guard on it – the engine's own path.
+ *
+ *  ⚠ `releasedBy` IS NOT DECORATION, IT IS THE BUG (fix/outgrown-entry, 05.08). Two callers reach
+ *  here and only ONE of them is the parent deciding something: his in-time withdrawal, and the
+ *  injury auto-withdraw that runs inside `tickWeek`. Both used to write the same two sentences -
+ *  a feed row reading «Withdrew from World Tour 50» and a desk letter reading «Your withdrawal ...
+ *  is confirmed – in time, free of charge, and nothing is recorded against her» - so the ENGINE's
+ *  own action was reported back to the player as a receipt for a choice he never made. The owner
+ *  hit it and said so: «ее автоматом сняли с 3-го письмом без объяснения причины». The missing
+ *  reason was the smaller half; the misattributed agency was the disorienting one.
+ *
+ *  The default is `'parent'`, and every byte of that arm is unchanged - same feed text, same letter
+ *  terms, same ids. Only a caller that is NOT the parent has to say so, which is the shape that
+ *  makes the next engine-side release impossible to add silently. */
+export function releaseEntry(world: WorldState, eventId: string, releasedBy: EntryReleaseReason = 'parent'): void {
   if (!world.entries.includes(eventId)) throw new Error('Not entered in this event')
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')
@@ -119,8 +133,8 @@ export function releaseEntry(world: WorldState, eventId: string): void {
   // one that hands the year's slot back – the ITF counts PARTICIPATION, and a name taken off an
   // open list never participated. Every forfeiting exit keeps both (cancelEntry past the deadline,
   // skipEvent on the week, the medical withdrawal in tickWeek): the list closed with her on it, so
-  // she was an entrant. Nothing else needs to know the rule, because the two automatic pull-outs
-  // that DO refund – the injury auto-withdraw and releaseOutgrownEntries – both come through here.
+  // she was an entrant. Nothing else needs to know the rule, because the automatic pull-out that
+  // DOES refund – the injury auto-withdraw – comes through here.
   if (isCappedTier(event.tier)) {
     const at = world.internationalEntryWeeks.indexOf(event.week)
     if (at >= 0) world.internationalEntryWeeks.splice(at, 1)
@@ -130,10 +144,10 @@ export function releaseEntry(world: WorldState, eventId: string): void {
   if (isCappedProTier(event.tier)) {
     const at = world.proEntryWeeks.indexOf(event.week)
     if (at >= 0) world.proEntryWeeks.splice(at, 1)
-    // The desk confirms a free, in-time cancellation in writing (§6 step 2) - this path IS the
-    // inside-the-deadline exit (`cancelEntry` delegates here before the deadline; the forfeiting
-    // exits never come through, and act 3 is where those grow teeth).
-    raiseEntryCancelLetter(world.offers, world.week, event, TIERS[event.tier].label)
+    // The desk confirms an inside-the-deadline exit in writing (§6 step 2) - this path IS that exit
+    // (`cancelEntry` delegates here before the deadline; the forfeiting exits never come through,
+    // and act 3 is where those grow teeth). WHO took it goes on the paper.
+    raiseEntryCancelLetter(world.offers, world.week, event, TIERS[event.tier].label, releasedBy)
   }
   addEvent(world, {
     week: world.week,
@@ -142,11 +156,24 @@ export function releaseEntry(world: WorldState, eventId: string): void {
     text: `Entry refunded: ${TIERS[event.tier].label}`,
     amountCents: fee,
   })
-  addEvent(world, {
-    week: world.week,
-    type: 'entry',
-    text: `Withdrew from ${TIERS[event.tier].label} – ${weekLabel(event.week)}`,
-  })
+  // ⚠ THE FEED ROW OBEYS THE SAME RULE AS THE LETTER, and it has to: the letter is one tap away in
+  // the inbox, this line is in the news, and a player who reads only the news must not be told he
+  // withdrew her either. "Withdrew" is the parent's own verb and stays exactly as it was.
+  //
+  // ⚠ EXHAUSTIVE ON PURPOSE (no `default`, no ternary): a new `EntryReleaseReason` must not be able
+  // to inherit somebody else's sentence. TypeScript refuses the switch the day one is added, which
+  // is the only mechanism that reliably makes an author write the copy.
+  const label = TIERS[event.tier].label
+  let line: string
+  switch (releasedBy) {
+    case 'parent':
+      line = `Withdrew from ${label} – ${weekLabel(event.week)}`
+      break
+    case 'injury':
+      line = `Taken out of ${label} – ${weekLabel(event.week)}, she is not fit for that week.`
+      break
+  }
+  addEvent(world, { week: world.week, type: 'entry', text: line })
 }
 
 /** R10-13: CANCEL an entry, at any point before its week starts. THE ESCAPE HATCH.

@@ -1082,6 +1082,48 @@ export const ECONOMY = {
     conditionCost: 3,
   },
 
+  // =================================================================================================
+  // SCHOOL, AND THE WEEK AFTER IT (W4-SCHOOL) - the summer block's own logic, made permanent
+  // =================================================================================================
+  //
+  // THE OWNER, from his own playtest, twice: «Школа должна когда-то закончиться, ей уже 21, а
+  // тренировки и прогресс должны удвоиться, соответственно, как мне кажется. Школа уже после 18 вроде
+  // не должна быть.» and, a day later, «и школа с уроками в 22 года всё еще со мной». School had no
+  // end at all: `isExamWeek` was a pure function of the season week, so a twenty-two-year-old
+  // professional still sat two exam papers every June and her calendar still drew a lesson block at
+  // eight in the morning.
+  //
+  // AND WHEN IT ENDS IS HIS SECOND RULING: «Конец школы – в конце учебного года.» Not her birthday -
+  // the school year containing it, which is what happens to a person and which the calendar already
+  // has a boundary for (`SCHOOL_YEAR_TURNS_AT`, 1 September). `kidLife.ts`'s `gradeOf` has modelled
+  // exactly that since the School tile shipped, and it already returns null - "School's done" - past
+  // the last grade. Nothing else in the game read it. Now everything does.
+  //
+  // ⚠ THE LOAD HALF IS THE SUMMER BLOCK'S ARGUMENT WITH A LONGER WINDOW, AND IT IS DELIBERATELY THE
+  // SAME NUMBER. The owner's summer ruling was about a week «с 2 тренировками в день» because there
+  // is no school in it; a week in October when she is nineteen is the same week for the same reason.
+  // One school-free week may not be worth 1.4 in July and 2.0 in October, so `loadFactor` here IS
+  // `summerBlock.loadFactor` - a separate knob only because the WINDOW is thirty-odd weeks a year
+  // instead of nine, and a knob whose window changes by a factor of four has to be swept on its own.
+  // See docs/specs/school-ends-2026-08.md for predicted vs measured, and for why "doubles" did not
+  // survive the bench.
+  school: {
+    /** The last grade of school. `gradeOf` returns null past it, which is what ENDS school; read
+     *  live (not captured at module load) so the bench can sweep it - `tools/school-bench.ts` sets
+     *  it to 99 to re-play the shipped game, where school never ended at all. */
+    lastGrade: 12,
+    /** The multiplier on a post-school week's development rate, through `growWeek`'s `loadFactor` -
+     *  the same channel and the same value as `summerBlock.loadFactor`, for the reason above. */
+    loadFactor: 1.4,
+    /** ...and what the fuller week costs her, in condition points. ⚠ ZERO, AND THAT IS A MEASURED
+     *  DECISION RATHER THAN AN OMISSION - see docs/specs/school-ends-2026-08.md §5. The summer
+     *  block charges 3 for nine weeks; charging 3 for thirty-odd takes the off-season door from 73
+     *  to the fifties and lifts injury prevalence, i.e. it makes leaving school a thing that hurts
+     *  her, and «мы ни за что не наказываем» governs. The hours school took back were never on a
+     *  court, so giving them back is not a heavier week than a summer one - it is more of them. */
+    conditionCost: 0,
+  },
+
   // THE ACADEMY SCHOLARSHIP (see engine/academy.ts for the whole argument). Reviewed once a year at
   // the season boundary; the level is continuous, so every knob below scales rather than switches.
   academy: {

@@ -24,7 +24,7 @@ import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
 import { hasLiveOffer, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
-import { buildKidLife, FRIENDS_WINDOW } from '../kidLife'
+import { buildKidLife, FRIENDS_WINDOW, schoolEndWeek, schoolIsOver } from '../kidLife'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
 import { previewEvent, eventCrowd, eventTemperature } from '../season/preview'
 import { BEST_N_BY_TRACK, isCountingResult, windowSlots, windowedBestSum } from '../season/ranking'
@@ -547,6 +547,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   const diary = buildDiarySnapshot({
     seed: world.seed,
     week: world.week,
+    schoolOver: schoolIsOver(world.week, world.profile.birthMonth),
     kidId: KID_ID,
     startAgeYears: START_AGE_YEARS,
     condition: world.condition,
@@ -632,6 +633,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     seed: world.seed,
     week: world.week,
     ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
+    schoolEndsWeek: schoolEndWeek(world.profile.birthMonth),
     fundsCents: world.fundsCents,
     profile: world.profile,
     plan: world.plan,

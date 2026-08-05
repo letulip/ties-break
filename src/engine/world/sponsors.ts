@@ -13,7 +13,7 @@
 import { ECONOMY } from '../economy'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
-import { activeKitDeal, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowOpenWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseKitEndLetter, raiseKitOffer, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears } from '../offers'
+import { activeKitDeal, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseKitEndLetter, raiseKitOffers, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
@@ -65,7 +65,7 @@ import { guardNotEnded } from './endings'
 //
 // RNG DISCIPLINE. Reads two cached numbers, counts entries off a persisted ledger, and takes at most
 // ONE draw – on `seed:offer:<week>`, its own purpose-scoped sub-stream, created and discarded inside
-// `raiseKitOffer`. ZERO draws on the main weekly stream, so the frozen MAIN capture (41550 draws /
+// `raiseKitOffers`. ZERO draws on the main weekly stream, so the frozen MAIN capture (41550 draws /
 // e6b0c709) cannot move by one. It runs in the same zero-draw region at the top of the tick that the
 // season-boundary block occupies, and on the same reading of her year: the rank she carries out of
 // the season just played, before the next one can touch it.
@@ -99,7 +99,25 @@ export function localSponsorCents(nationalRank: number): number {
  *  47-48 of the last one. It is still 49 competitive weeks - a full year of tennis, which is the
  *  unit the obligation is written in ("at least N tournaments a season") - it is simply offset by a
  *  fortnight, and the alternative was to judge a season block with two of its weeks unplayed and
- *  fail a girl for events she had not had the chance to enter yet. */
+ *  fail a girl for events she had not had the chance to enter yet.
+ *
+ *  ⚠ AND `reviewWeek` IS THE WINDOW'S OPENING WEEK, WHOEVER IS ASKING (06.08). Every caller passes
+ *  `sponsorWindowOpensAt(world.week)` rather than today, because the verdict may now be taken on any
+ *  week of the window and the window it counts over must not depend on which one. Asked on week 51
+ *  instead, the rolling year would have slid forward off weeks 47-48 of the season just played - two
+ *  competitive weeks, real tournaments - and a deal could fail its obligation for events she had
+ *  actually entered.
+ *
+ *  ⚠ AND ANCHORING THE WINDOW IS NECESSARY BUT NOT SUFFICIENT, WHICH IS WORTH KNOWING BEFORE ANYONE
+ *  TRUSTS THIS NUMBER ON A LATE WEEK. `world.results` is ITSELF pruned on a rolling 52 weeks
+ *  (`RESULTS_WINDOW`, world.ts `pruneResults`), relative to `world.week` and not to `reviewWeek`. So
+ *  the anchored window is read against a ledger that has already lost its own oldest weeks: asked on
+ *  week 48 the count is missing week 47 of the season before, on week 49 weeks 47-48, and there it
+ *  stops, because weeks 49-51 carry no events. THE NUMBER RETURNED ON A LATER WEEK IS THEREFORE A
+ *  LOWER BOUND, short by at most two competitive weeks' tournaments. `reviewSponsors` is written
+ *  around that: a lower bound may confirm that she played enough and may never declare that she did
+ *  not. Measured, not deduced - a `tour` deal counted 14 against a minimum of 14 on the window's
+ *  opening week and 13 the next, and was ended for it. */
 export function eventsPlayedInSeason(world: WorldState, reviewWeek: number): number {
   const from = reviewWeek - WEEKS_PER_YEAR
   // ⚠ THE RESULTS LEDGER, NOT THE FEED (owner, 04.08: «а какие конкретно старты они считают? я много
@@ -143,25 +161,34 @@ export function eventsPlayedInSeason(world: WorldState, reviewWeek: number): num
 // ⚠ AND SINCE 05.08 IT RUNS ON EVERY WEEK OF A FIVE-WEEK WINDOW rather than on one week a year, with
 // its three jobs split across it (feat/sponsor-window, docs/specs/sponsor-window-2026-08.md):
 //
-//   * THE WINDOW'S FIRST WEEK (47) JUDGES THE OUTGOING DEAL and posts the brand's goodbye. It has to
-//     be the first: the verdict is what decides whether anybody may write at all, and the first
-//     letter goes out the same week.
-//   * EVERY LETTER WEEK (47-50) RAISES AT MOST ONE LETTER, from one rung off `windowLadder`.
+//   * THE OUTGOING DEAL IS JUDGED ONCE A SEASON and the brand's goodbye posted with the verdict.
+//     ⚠ SINCE 06.08 THAT IS "ONCE, ON WHICHEVER WEEK OF THE WINDOW THE CAREER FIRST REACHES", not
+//     "on week 47" (fix/sponsor-catchup). Pinning it to the opening week made that one week do work
+//     no other week could do, so a career that arrived at week 48 - which is where the owner's own
+//     save sat when the wave merged - skipped the year's verdict entirely. See the note above
+//     `reviewSponsors` for the three things that make re-reading it return the same answer.
+//   * EVERY WEEK OF THE WINDOW RAISES WHATEVER OF `windowLadder` HAS COME DUE and has not yet
+//     written - which is at most one letter a week for a career that has been here since the window
+//     opened, and the whole queue in one post for one that has only just arrived.
 //   * THE WINDOW'S LAST WEEK (51) WRITES THE ONE FEED ROW. Not the first, because by the last week
 //     the row can report the whole winter - what the season of kit was worth, who wrote, and whether
 //     anything was signed - in a single line. That is not a preference: the feed budget below is a
 //     MEASURED constraint of one row per season, and four letter weeks could otherwise become four
 //     rows and cost the radar its evidence base.
-export function reviewSponsors(world: WorldState): void {
-  // Belt and braces: the tick already gates on the window, and a second caller (a test, a bench, a
-  // future dev tool) must not be able to raise a letter in April.
-  if (!isSponsorWindowWeek(world.week)) return
+/** WHERE SHE STANDS, AS THE BRAND LADDER READS IT – the one place the three tables are assembled
+ *  into the object `standingClears` / `windowLadder` / `kitTermsFor` all take.
+ *
+ *  ⚠ EXTRACTED FROM `reviewSponsors` (06.08) SO THAT THE BENCH CAN ASK THE ENGINE'S OWN QUESTION.
+ *  `tools/sponsor-window-bench.ts` now reports how often a winter passes with a clear ladder and no
+ *  letter, which is the number the catch-up argument turns on - and it can only be an HONEST number
+ *  if the bench reads the same standing the review does. A second copy of these five lines in a tool
+ *  would have been a measurement of the copy. Nothing about the values moved in the extraction. */
+export function sponsorStandingOf(world: WorldState): SponsorStanding {
   // Both cached ranks, with the same fallback rankIn uses: a career that has never held a point in a
   // table sits below the whole field rather than at the top of an empty one. `itfRanked` is the
   // guard that stops an empty table reading as a standing at all - see `SponsorStanding`.
-  const nationalRank = world.kidRankDomestic ?? tableSize(world, 'domestic')
-  const standing = {
-    nationalRank,
+  return {
+    nationalRank: world.kidRankDomestic ?? tableSize(world, 'domestic'),
     itfRank: world.kidRank,
     itfRanked: kidPoints(world, 'itf') > 0,
     // The third table, on the same terms as the other two (02.08). `wtaRanked` uses the LIVE
@@ -173,20 +200,71 @@ export function reviewSponsors(world: WorldState): void {
     wtaRank: world.kidRankWta ?? tableSize(world, 'wta'),
     wtaRanked: kidPoints(world, 'wta') > 0,
   }
+}
+
+export function reviewSponsors(world: WorldState): void {
+  // Belt and braces: the tick already gates on the window, and a second caller (a test, a bench, a
+  // future dev tool) must not be able to raise a letter in April.
+  if (!isSponsorWindowWeek(world.week)) return
+  const standing = sponsorStandingOf(world)
+  const nationalRank = standing.nationalRank
 
   // 1. THE SEASON NOW FINISHING, IF IT WAS UNDER A DEAL. What the brand actually spent is the one
   //    number that says what signing was worth - the same job `AcademySupport.coveredCents` does -
-  //    and the two conditions below are what decide whether it stays. ⚠ ON THE WINDOW'S FIRST WEEK
-  //    AND NO OTHER: the verdict decides who may write, and the first letter goes out today.
-  const deal = isSponsorWindowOpenWeek(world.week) ? dealUnderReview(world.offers, world.week) : null
+  //    and the two conditions below are what decide whether it stays.
+  //
+  // ⚠ ONCE A SEASON, ON WHICHEVER WEEK OF THE WINDOW THE CAREER FIRST REACHES - NOT ON WEEK 47
+  //   (06.08, fix/sponsor-catchup). It used to be gated on `isSponsorWindowOpenWeek`, which made the
+  //   window's opening week do work no other week could do: a career that was at week 48 when the
+  //   code changed under it never had a week 47, so its season's verdict was never taken, the brand
+  //   never said goodbye, and `letDownThisWindow` could not see a failure that had never been
+  //   judged. The owner hit exactly that on the first career he loaded after the wave merged. The
+  //   shipped spec called it a known consequence for migrated saves (§4); it is not only a migration
+  //   problem - any career inside the window when the app updates has the same hole - so the fix is
+  //   to make the verdict IDEMPOTENT PER SEASON rather than to pin it to a different week.
+  //
+  //   Three things make re-reading it on every week of the window return the same verdict, which is
+  //   what "idempotent" has to mean here:
+  //     * ITS SUBJECT is `dealUnderReview`, anchored on the window's opening week - the deal that was
+  //       already running when the brands' window opened. Constant across the window, and it cannot
+  //       accidentally pick up a letter signed on week 47 and end it before it starts.
+  //     * ITS COUNT is `eventsPlayedInSeason` read at the window's OPENING week rather than today, so
+  //       the rolling year it judges is the same rolling year on week 51 as on week 47. Judging a
+  //       later week's window would drop the two competitive weeks 47-48 of the season just gone and
+  //       could fail a girl for events she did play.
+  //     * ITS OUTPUTS are idempotent one by one: `endDealWithSeason` snaps to the same
+  //       `contractEndWeek` from any week of the window, and `raiseKitEndLetter` now returns the
+  //       notice already in the inbox instead of posting a second copy.
+  //   The one input that is still read fresh each week is her STANDING, which is the same reading the
+  //   letters themselves are gated on - a brand judges what the table says today, and a girl who has
+  //   slid out of the band is neither kept nor written to.
+  const opened = sponsorWindowOpensAt(world.week)
+  const deal = dealUnderReview(world.offers, world.week)
   const dealTerms = deal ? (deal.terms as KitOfferTerms) : null
-  const played = deal ? eventsPlayedInSeason(world, world.week) : 0
+  const played = deal ? eventsPlayedInSeason(world, opened) : 0
+  // ⚠ AND A VERDICT MAY ONLY FAIL HER FROM THE WINDOW'S OPENING WEEK, WHICH IS THE ONLY WEEK THE
+  //   SEASON IT JUDGES IS STILL VISIBLE (06.08). Anchoring the review week was necessary and is not
+  //   sufficient: `world.results` is itself PRUNED on a rolling 52 weeks (`RESULTS_WINDOW`, world.ts
+  //   `pruneResults`), so the evidence underneath the anchored window erodes a week at a time. Caught
+  //   in the bench rather than reasoned about - a `tour` deal on `bench-working-2` counted 14 events
+  //   against a minimum of 14 on week 255 and 13 on week 256, because week 203's tournament had aged
+  //   out of the ledger overnight. It was ended for not playing enough, on a season it had played
+  //   enough of, and the career lost four seasons of retainer and bonus ($49,252 -> $21,960).
+  //
+  //   So `played` read on a later week is a LOWER BOUND on the true count - short by at most the two
+  //   competitive weeks 47-48 of the season before, since weeks 49-51 carry no events. A lower bound
+  //   is sound for confirming that she DID play enough and unsound for declaring that she did not,
+  //   and the same is true of the standing (see `keptAtHome`). So a later week's verdict does
+  //   everything except fail her: it identifies the deal, ends one whose TERM is up - which is
+  //   arithmetic on `untilWeek`, not a judgement - and posts the brand's goodbye. That is the whole
+  //   of what the owner's save was missing, and none of it needs evidence that has aged out.
+  const openWeekVerdict = world.week === opened
   // ⚠ FAILING EITHER CONDITION COSTS THE DEAL, NOT THE FAMILY'S SAVINGS (spec §4.1). Nothing is
   //   clawed back - a junior kit deal is not a loan, and NOT ONE LINE BELOW TOUCHES
   //   `world.fundsCents`. The contract ends with the season it failed and the brand is free to write
   //   again the year after, because the penalty is a missed season and not a blacklist. This is the
   //   promise the LETTER makes in the brand's own words, and the two have to agree.
-  const playedEnough = !dealTerms || played >= dealTerms.minEventsPerSeason
+  const playedEnough = !dealTerms || !openWeekVerdict || played >= dealTerms.minEventsPerSeason
   // ...and the second one is the national rung's own, and the reason the domestic ladder still
   // matters to a girl who has left it behind. `keepDomesticRank` is absent on every other rung, so
   // this reads true for them without a tier check.
@@ -196,14 +274,33 @@ export function reviewSponsors(world: WorldState): void {
   // a JUNIOR; a professional is not less visible than the girl they signed. `standingClears` is the
   // one place that question is answered - the same predicate that decides who WRITES to her - so a
   // deal can never be killed by a rule that would have offered it back the same winter.
+  //
+  // ⚠ AND IT IS THE OPENING WEEK'S READING OR NOBODY'S, exactly as the events count above is, and for
+  // a sibling reason: her domestic points are a rolling 52-week best-6, so during weeks 48-51 the
+  // previous year's weeks 47-48 age out of the table and her rank slides for a reason that has
+  // nothing to do with the season the brand is judging. Both halves of the verdict therefore read
+  // "she held up" on any week but the first - a later week can confirm a pass and must not declare a
+  // failure.
+  //
+  // ⚠ THE ONE ASYMMETRY IT LEAVES, stated: a career that reaches the window after its opening week
+  // has no opening-week reading, so its deal is not failed that winter. That is the SAFE direction -
+  // a deal kept, never one killed - it is confined to a career the app updated under, and the
+  // alternative is to fail her on evidence that has already begun to age out. Pinned in
+  // tests/offers.test.ts.
   const keptAtHome =
     !dealTerms?.keepDomesticRank ||
+    !openWeekVerdict ||
     nationalRank <= dealTerms.keepDomesticRank ||
     standingClears(standing, dealTerms.tier)
   const heldUp = playedEnough && keptAtHome
   // ...and the verdict is recorded ON the letter, so the inbox can still answer "what happened to
   // that deal?" a decade later. The count is the one the season really played (spec §5).
-  if (deal) deal.eventsPlayed = played
+  // ...and it is stamped from the opening week's reading alone, for the reason above: a later week's
+  // count is a lower bound, and overwriting a true number with a lower bound would make the record
+  // worse the longer the window ran. A career that only met the window later leaves this season
+  // unstamped on the contract; the brand's goodbye letter still carries the count it was written
+  // with, and the feed reads it from there.
+  if (deal && openWeekVerdict) deal.eventsPlayed = played
   // A deal that failed does not limp to its contractual end: it stops with the season it failed.
   // A deal that held up simply runs on - a two-season contract has another year to go.
   if (deal && !heldUp) endDealWithSeason(deal, world.week)
@@ -220,7 +317,7 @@ export function reviewSponsors(world: WorldState): void {
   }
 
   // 2. AND WHETHER ANYBODY WRITES, THIS WEEK. ⚠ ONE BRAND AT A TIME is enforced inside
-  //    `raiseKitOffer` - `seasonSpokenFor`, so a multi-season contract with a year left to run turns
+  //    `raiseKitOffers` - `seasonSpokenFor`, so a multi-season contract with a year left to run turns
   //    the whole window away by itself and there is no second rule here to keep in step with it.
   //    What this line adds is the ONE case the offers module cannot see: a brand that was let down
   //    this season does not turn round and write a fresh letter in the same winter, even though its
@@ -231,7 +328,7 @@ export function reviewSponsors(world: WorldState): void {
   //    the goodbye letter already in the inbox rather than carrying a flag across four ticks. One
   //    fact, one place it is written down.
   const letDown = !heldUp || letDownThisWindow(world.offers, world.week)
-  if (!letDown) raiseKitOffer({ offers: world.offers, seed: world.seed, week: world.week, standing })
+  if (!letDown) raiseKitOffers({ offers: world.offers, seed: world.seed, week: world.week, standing })
 
   // 3. ONE LINE A SEASON, ON THE WINDOW'S LAST WEEK, CARRYING WHICHEVER OF THOSE HAPPENED. It names
   //    the TABLE the letters were gated on, because the whole point of the 30.07 fix was that the
@@ -258,7 +355,12 @@ export function reviewSponsors(world: WorldState): void {
     const worth = `$${Math.round((ended.coveredCents ?? 0) / 100).toLocaleString('en-US')}`
     const goodbye = world.offers.find((o) => o.id === `kit-end-${ended.id}`)
     const why = goodbye ? (goodbye.terms as KitOfferTerms).ended : 'term'
-    const playedThen = ended.eventsPlayed ?? 0
+    // ⚠ THE COUNT COMES OFF THE GOODBYE LETTER, like the reason one line up (06.08). The letter was
+    //   written by the verdict that ended the deal and carries that verdict's own number; the
+    //   contract's `eventsPlayed` is only stamped from the window's opening week, so a career that
+    //   met the window later has a goodbye with a count and a contract without one. Reading the
+    //   paper is what keeps the feed and the letter from saying different things.
+    const playedThen = (goodbye?.terms as KitOfferTerms | undefined)?.endedEventsPlayed ?? ended.eventsPlayed ?? 0
     parts.push(
       why === 'events'
         ? `${endedTerms.brand} kitted her out all season – ${worth} of kit – but they asked for ${endedTerms.minEventsPerSeason} events and she played ${playedThen}, so they are done.`
@@ -269,7 +371,6 @@ export function reviewSponsors(world: WorldState): void {
   }
   // THE WINTER'S POST, as one clause however many brands wrote. `signed` is checked first because it
   // is the news: a letter already answered should not be described as waiting in the inbox.
-  const opened = sponsorWindowOpensAt(world.week)
   const post = world.offers.filter((o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info')
   const signedNow = post.find((o) => o.state === 'signed')
   if (signedNow) {

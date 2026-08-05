@@ -15,7 +15,8 @@
 // the frozen MAIN capture cannot notice this file.
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { TIERS, isBlackoutWeek, tierAgeBlock } from '../season/calendar'
+import { TIERS, isBlackoutWeek, isOffSeasonWeek, tierAgeBlock } from '../season/calendar'
+import { schoolIsOver } from '../kidLife'
 import type { LadderTrack, SeasonEvent } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
 import { ageAtWeek } from './age'
@@ -65,7 +66,9 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
       ? c.recoveryBase
       : c.recoveryBase + restRecoveryBonus(world.plan.rest)
   if (world.physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
-  if (isBlackoutWeek(world.week)) recovery += c.blackoutBonus
+  if (isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))) {
+    recovery += c.blackoutBonus
+  }
   world.condition = clamp(world.condition + recovery, c.min, c.max)
 }
 
@@ -337,8 +340,18 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   if (vacation) {
     return { level: 'blocked', reason: 'unavailable', detail: vacationBlackoutDetail(vacation) }
   }
-  if (isBlackoutWeek(event.week)) {
-    return { level: 'blocked', reason: 'unavailable', detail: 'School exams this week – no tournaments.' }
+  // ⚠ THE WEEK'S OWN ANSWER, NOT THIS WEEK'S (W4-SCHOOL). Entries commit weeks ahead, so a girl
+  // entering in August for a June that falls after her last school year must not be refused for an
+  // exam she will never sit.
+  if (isBlackoutWeek(event.week, schoolIsOver(event.week, world.profile.birthMonth))) {
+    return {
+      level: 'blocked',
+      reason: 'unavailable',
+      // Off-season weeks reach here too, and past school they are the ONLY ones that do.
+      detail: isOffSeasonWeek(event.week)
+        ? 'Off-season – the tour is closed.'
+        : 'School exams this week – no tournaments.',
+    }
   }
   // THE DOCTOR'S VETO: under the medical floor no tier is enterable, at any price. Ranked AFTER
   // the week-level blackouts (a vacation/exam week is unenterable for everyone, so it names the
@@ -368,11 +381,15 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
  *  de-duplication, not a behaviour change.
  *
  *  SCOPE, and this is the subtle half of R10-5/R10-3: this gate governs ENTERING. It does NOT
- *  govern an entry already made. Once a list has CLOSED with her on it the fee is committed and the
- *  event plays (the owner's real-world rule, see `releaseOutgrownEntries`) – so a committed entry
- *  she has since outgrown is not "illegal", it is a decision that needs an exit, which is what
- *  `cancelEntry` (R10-13) is. Treating the entry gate's verdict as a lock on a committed entry is
- *  precisely what removed the escape and produced the R10-3 dead end.
+ *  govern an entry already made. An entry already taken is HONOURED and the event plays – so a
+ *  committed entry she has since outgrown is not "illegal", it is a decision that needs an exit,
+ *  which is what `cancelEntry` (R10-13) is. Treating the entry gate's verdict as a lock on a
+ *  committed entry is precisely what removed the escape and produced the R10-3 dead end.
+ *
+ *  ⚠ AND SINCE 05.08 THAT IS TRUE ON BOTH SIDES OF THE DEADLINE. `releaseOutgrownEntries` used to
+ *  cancel the still-refundable half of the same commitment, so which of two identical entries
+ *  survived depended on a date; the owner played into it and it read as the game taking a tournament
+ *  off her for winning. The step is retired – see the note where it used to live in world.ts.
  *
  *  Pure state, ZERO RNG draws. */
 export interface EntryStatus {

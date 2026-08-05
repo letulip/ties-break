@@ -13,6 +13,7 @@
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS, TIER_LADDER, TIERS } from '../season/calendar'
 import { seasonYear } from '../../shared/dates'
 import { milestoneKey } from '../diary'
+import { schoolEndWeek, schoolIsOver } from '../kidLife'
 import type { LadderTrack, TierId } from '../season/types'
 import { LADDER_LABEL, type Milestone, type TierTrophies, type WorldEventCategory } from '../../shared/protocol'
 import { addEvent, financeWindow, seasonIndexOf, seasonStartWeek } from './ledger'
@@ -34,6 +35,29 @@ export function captureMilestone(world: WorldState, m: Milestone): void {
   const key = milestoneKey(m)
   if (world.milestones.some((x) => milestoneKey(x) === key)) return
   world.milestones.push(m)
+}
+
+/** THE LAST DAY OF SCHOOL (W4-SCHOOL), as a moment the player is shown rather than a flag that flips.
+ *
+ *  THE OWNER'S RULING is that school ends – «Школа должна когда-то закончиться» – and the register of
+ *  this game is that things happen to a family and get noticed. School evaporating quietly between
+ *  two weeks would have been the wrong shape for the biggest change to her week since the career
+ *  opened: from this September the mornings are hers, the exam fortnight never comes again, and the
+ *  calendar draws a professional's day.
+ *
+ *  TWO SURFACES, ONE EVENT: the news feed keeps the line (`keep: true`, so the ledger's 400-row prune
+ *  can never lose it) and the album's scroll keeps the row. Both are idempotent by key, so a replay,
+ *  a reload or the v43 back-fill cannot double it.
+ *
+ *  ⚠ EXACTLY ONE WEEK, AND IT IS THE ONE `schoolEndWeek` NAMES – the 1 September on which she would
+ *  have started a thirteenth grade. Not her birthday: «Конец школы – в конце учебного года.»
+ *
+ *  ZERO DRAWS on any stream: a comparison of two integers and two idempotent writes. The frozen MAIN
+ *  capture (41550 / e6b0c709) cannot see it. */
+export function markSchoolEnd(world: WorldState): void {
+  if (world.week !== schoolEndWeek(world.profile.birthMonth)) return
+  fireMilestone(world, 'school', 'School is behind her. From Monday the mornings are hers too.')
+  captureMilestone(world, { type: 'school', week: world.week })
 }
 
 /** ⚠ THE TURN, CAPTURED THE WEEK IT HAPPENS AND NEVER RECONSTRUCTED (contract §9.4, and the wave
@@ -334,7 +358,15 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
     `Season ${displayYear} wrap-up: ${rankText} · ` +
       `${seasonPoints} pts this season · ${bestText} · ${wins}-${losses} (W-L) · funds ${fundsText}`,
   )
-  addEvent(world, { week: world.week, type: 'info', text: 'Off-season: rest, school, family time.' })
+  // W4-SCHOOL: the same beat, minus the thing she no longer has. The off-season is still the three
+  // weeks the family gets back; what fills them at fourteen and at twenty-two is not the same list.
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: schoolIsOver(world.week, world.profile.birthMonth)
+      ? 'Off-season: rest, family time, and the block where next year gets built.'
+      : 'Off-season: rest, school, family time.',
+  })
 
   world.lastSeasonSummary = {
     seasonYear: displayYear,

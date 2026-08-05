@@ -28,6 +28,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
   cancelEntry,
+  releaseEntry,
   createWorld,
   enterEvent,
   tickWeek,
@@ -57,7 +58,7 @@ import {
   kitTravelShare,
   offerChanceFor,
   pruneEntryLetters,
-  raiseKitOffer,
+  raiseKitOffers,
   raiseKitEndLetter,
   rungFor,
   shopWritesAt,
@@ -75,6 +76,8 @@ import { migrateSave } from '../src/engine/migrations'
 import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
+import { rollInjury } from '../src/engine/world/injury'
+import { layoffCovering } from '../src/engine/world/medical'
 import { OFF_SEASON_WEEKS, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { SeasonEvent } from '../src/engine/season/types'
 import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../src/shared/protocol'
@@ -206,7 +209,7 @@ describe('the offer module draws only on its own purpose-scoped sub-stream', () 
     // The structural half of the guarantee, and the idiom tests/injuries.test.ts keeps for
     // rollInjury/resolvePhysio/injuryTau. A signature that cannot accept the weekly stream cannot
     // spend it.
-    expect(raiseKitOffer.length).toBe(1) // ({ offers, seed, week, nationalRank })
+    expect(raiseKitOffers.length).toBe(1) // ({ offers, seed, week, standing })
     expect(expireOffers.length).toBe(2) // (offers, week)
     expect(shopWritesAt.length).toBe(3) // (seed, week, chance)
     expect(kitFreshCap.length).toBe(2) // (offers, week)
@@ -306,7 +309,7 @@ function worldWithLetter(
   for (let attempt = 0; attempt < 20; attempt++) {
     const world = createWorld(`${seed}-${attempt}`, DEFAULT_PROFILE)
     world.week = week
-    const offer = raiseKitOffer({ offers: world.offers, seed: world.seed, week, standing })
+    const [offer] = raiseKitOffers({ offers: world.offers, seed: world.seed, week, standing })
     if (offer) return { world, id: offer.id }
   }
   throw new Error(`no seed near "${seed}" was written to in 20 tries – the offer roll has broken`)
@@ -375,12 +378,12 @@ describe('the window is the feature, not a courtesy', () => {
     // Rank 25 is the STANDARD deal, so `offerChance` (not `topOfferChance`) is the roll to satisfy.
     const world = createWorld(seedTheShopWritesTo('frozen-terms', LETTER_WEEK, domestic(25)), DEFAULT_PROFILE)
     world.week = LETTER_WEEK
-    const offer = raiseKitOffer({
+    const [offer] = raiseKitOffers({
       offers: world.offers,
       seed: world.seed,
       week: LETTER_WEEK,
       standing: domestic(25),
-    })!
+    })
     expect(offer, 'no letter to freeze').toBeTruthy()
     const atArrival = JSON.parse(JSON.stringify(offer.terms))
     // ...the standard deal, so there is a better one to be had.
@@ -541,12 +544,12 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
     const signedW = createWorld(seed, { ...DEFAULT_PROFILE, background: 'working' })
     const plainW = createWorld(seed, { ...DEFAULT_PROFILE, background: 'working' })
     for (const w of [signedW, plainW]) w.week = LETTER_WEEK
-    const offer = raiseKitOffer({
+    const [offer] = raiseKitOffers({
       offers: signedW.offers,
       seed: signedW.seed,
       week: LETTER_WEEK,
       standing: domestic(1),
-    })!
+    })
     acceptOffer(signedW, offer.id)
 
     // A week deep enough into the string's 5-week life that the family's own cadence has let it go.
@@ -581,7 +584,7 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
     const openAt = (standing: SponsorStanding) => {
       const w = createWorld(seed, { ...DEFAULT_PROFILE, background: 'working' })
       w.week = LETTER_WEEK
-      const offer = raiseKitOffer({ offers: w.offers, seed: w.seed, week: LETTER_WEEK, standing })!
+      const [offer] = raiseKitOffers({ offers: w.offers, seed: w.seed, week: LETTER_WEEK, standing })
       acceptOffer(w, offer.id)
       return w
     }
@@ -715,13 +718,13 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
     const world = createWorld('lapse-then', DEFAULT_PROFILE)
     world.week = LETTER_WEEK + 2 * WEEKS_PER_YEAR
     // No deal is running at this review, so it is free to roll again.
-    const again = raiseKitOffer({
+    const again = raiseKitOffers({
       offers: world.offers,
       seed: world.seed,
       week: world.week,
       standing: domestic(1),
     })
-    expect(again === null || again.state === 'open').toBe(true)
+    expect(again.length === 0 || again[0].state === 'open').toBe(true)
   })
 
   it('the ALLOWANCE and the GATE are ECONOMY.sponsorship\'s, unmoved', () => {
@@ -1132,13 +1135,13 @@ describe('⚠ ONE BRAND AT A TIME', () => {
 
     const nextReview = LETTER_WEEK + WEEKS_PER_YEAR
     expect(nextReview).toBeLessThan(until)
-    const blocked = raiseKitOffer({
+    const blocked = raiseKitOffers({
       offers: world.offers,
       seed: world.seed,
       week: nextReview,
       standing: worldly(1), // ...she is top 8 in the world now, and it does not matter
     })
-    expect(blocked, 'a competing brand wrote while a deal was running').toBeNull()
+    expect(blocked, 'a competing brand wrote while a deal was running').toEqual([])
     expect(world.offers).toHaveLength(1)
   })
 
@@ -1156,7 +1159,7 @@ describe('⚠ ONE BRAND AT A TIME', () => {
     //   `offerAnswerError` refuses a second signature even from a stale screen. So she can hold three
     //   letters and can only ever hold one contract.
     const { world } = worldWithLetter('one-letter')
-    const second = raiseKitOffer({
+    const [second] = raiseKitOffers({
       offers: world.offers,
       seed: seedTheShopWritesTo('one-letter-roll', world.week + 1, worldly(1)),
       week: world.week + 1,
@@ -1185,7 +1188,7 @@ describe('⚠ ONE BRAND AT A TIME', () => {
     expect(nextWindowOpens).toBeLessThan(until) // ...the old deal is still supplying her
     expect(activeKitDeal(world.offers, nextWindowOpens)).not.toBeNull()
     expect(seasonSpokenFor(world.offers, nextWindowOpens)).toBeNull() // ...but next season is free
-    const again = raiseKitOffer({
+    const [again] = raiseKitOffers({
       offers: world.offers,
       seed: seedTheShopWritesTo('one-brand-after-roll', nextWindowOpens, worldly(1)),
       week: nextWindowOpens,
@@ -1204,7 +1207,7 @@ describe('⚠ ONE BRAND AT A TIME', () => {
   it('a refusal does NOT block – saying no is what leaves the ladder open', () => {
     const { world, id } = worldWithLetter('refuse-then')
     declineOffer(world, id)
-    const next = raiseKitOffer({
+    const [next] = raiseKitOffers({
       offers: world.offers,
       seed: seedTheShopWritesTo('refuse-then-roll', world.week + 1, worldly(1)),
       week: world.week + 1,
@@ -1265,13 +1268,13 @@ describe('the sponsor window', () => {
     const seen: string[] = []
     for (let slot = 0; slot < SPONSOR_LETTER_WEEKS; slot++) {
       const week = LETTER_WEEK + slot
-      const raised = raiseKitOffer({
+      const raised = raiseKitOffers({
         offers,
         seed: seedTheShopWritesTo(`ladder-slot-${slot}`, week, worldly(1)),
         week,
         standing: worldly(1),
       })
-      if (raised) seen.push((raised.terms as KitOfferTerms).tier)
+      for (const o of raised) seen.push((o.terms as KitOfferTerms).tier)
     }
     expect(seen).toEqual(['global', 'national', 'local'])
     expect(offers).toHaveLength(3)
@@ -1303,12 +1306,12 @@ describe('the sponsor window', () => {
     acceptOffer(world, id)
     const first = world.offers[0]
     const nextOpen = LETTER_WEEK + WEEKS_PER_YEAR
-    const second = raiseKitOffer({
+    const [second] = raiseKitOffers({
       offers: world.offers,
       seed: seedTheShopWritesTo('seam-roll', nextOpen, domestic(1)),
       week: nextOpen,
       standing: domestic(1),
-    })!
+    })
     world.week = nextOpen
     acceptOffer(world, second.id)
     expect(second.decidedWeek).toBe(nextOpen)
@@ -1332,14 +1335,14 @@ describe('the sponsor window', () => {
       const week = LETTER_WEEK + WEEKS_PER_YEAR + slot
       expect(seasonSpokenFor(world.offers, week)?.id, `week ${week}`).toBe(id)
       expect(
-        raiseKitOffer({
+        raiseKitOffers({
           offers: world.offers,
           seed: seedTheShopWritesTo(`multi-block-${slot}`, week, worldly(1)),
           week,
           standing: worldly(1),
         }),
         `a competing brand wrote at week ${week}`,
-      ).toBeNull()
+      ).toEqual([])
     }
     expect(world.offers).toHaveLength(1)
     // ...and the winter AFTER that, when its last season is the one being judged, it stops blocking.
@@ -1376,12 +1379,12 @@ describe('the sponsor window', () => {
     // game's oldest invariant - at most one deal - from being broken by the feature that makes
     // signing a choice.
     const { world, id } = worldWithLetter('stale-screen')
-    const second = raiseKitOffer({
+    const [second] = raiseKitOffers({
       offers: world.offers,
       seed: seedTheShopWritesTo('stale-screen-roll', world.week + 1, worldly(1)),
       week: world.week + 1,
       standing: worldly(1),
-    })!
+    })
     acceptOffer(world, id)
     // The second letter was refused in the same breath, so a screen still showing it is stale...
     expect(second.state).toBe('refused')
@@ -1389,6 +1392,304 @@ describe('the sponsor window', () => {
     second.state = 'open' // a corrupted save / a hand-edited screen, in one line
     expect(() => acceptOffer(world, second.id)).toThrow()
     expect(world.offers.filter((o) => o.state === 'signed')).toHaveLength(1)
+  })
+})
+
+// =================================================================================================
+// ARRIVING LATE (06.08, fix/sponsor-catchup)
+// =================================================================================================
+//
+// The owner merged the window wave, loaded his own career and got NO SPONSOR LETTER AT ALL - which is
+// the exact outcome the wave existed to prevent. His save sits at week 412: season week 48, one week
+// past the window's opening week. Two faults fell out of it and they are different.
+//
+//   1. THE OPENING WEEK DID WORK NO OTHER WEEK COULD DO. The outgoing deal's verdict, its
+//      `eventsPlayed`, the ending of a failed deal and the brand's goodbye were all gated on week 47,
+//      so a career that never had a week 47 never had its season judged. The shipped spec called that
+//      a known consequence for a migrated save; he hit it on the first career he loaded, and it is
+//      not only a migration problem - any career inside the window when the app updates has it.
+//   2. THE RUNG WAS INDEXED BY THE CALENDAR. Loaded at 411 he was written to by `national`; loaded at
+//      412, the SAME standing one week later, by `local`. The better brand was never offered and he
+//      was never told it existed - the precise trap `windowLadder`'s strongest-first order exists to
+//      close, since «signing on sight is never a mistake» only holds if the strongest rung she clears
+//      is the one that writes first FROM WHEREVER SHE IS.
+//
+// Everything below is one property in several voices: nothing about her winter may depend on which
+// week of it the code met her.
+describe('the window can be entered late', () => {
+  /** The window of season 1 – the second one a career ever sees, which is where these fixtures put
+   *  her so that there is an OUTGOING deal to be judged. */
+  const LATE_OPEN = LETTER_WEEK + WEEKS_PER_YEAR // 99
+  const LATE_CLOSE = WINDOW_CLOSE_WEEK + WEEKS_PER_YEAR // 103
+
+  /** A career standing in a window with a one-season deal finishing under it, and a standing deep
+   *  enough to clear three rungs. Built once per test and CLONED per arm, so every arm is the same
+   *  career picked up at a different week – which is the whole point.
+   *
+   *  The seed is searched rather than asserted: the dice are real (`shopWritesAt`), and a fixture
+   *  that needed a particular career to be written to by all three rungs has to find one rather than
+   *  pretend the roll always says yes. */
+  function careerInTheWindow(stem: string, rungsWanted = 3): WorldState {
+    for (let attempt = 0; attempt < 60; attempt++) {
+      const world = createWorld(`${stem}-${attempt}`, DEFAULT_PROFILE)
+      // #1 at home and #1 in the world juniors, so her ladder is global -> national -> local.
+      world.results.push({ playerId: KID_ID, week: 60, points: 100_000, tier: 'national' })
+      world.results.push({ playerId: KID_ID, week: 60, points: 100_000, tier: 'j300' })
+      // ...and she played her season, so the outgoing deal's obligation is comfortably met.
+      for (let i = 0; i < 12; i++) {
+        world.results.push({ playerId: KID_ID, week: 60 + i, points: 10, tier: 'j60' })
+      }
+      // ⚠ AND TWO OF THEM ARE IN WEEKS 47-48 OF THE SEASON BEFORE, which is what makes the rolling
+      //   year the verdict is judged on actually ROLL. `eventsPlayedInSeason` reads a 52-week window
+      //   ending at the review week, so these two fall out of it the moment the review week moves -
+      //   they are the difference between a verdict taken on the window's opening week and the same
+      //   verdict taken on its last. Without them the count is accidentally the same either way and
+      //   "the count does not drift with the entry week" is untested rather than true.
+      world.results.push({ playerId: KID_ID, week: LETTER_WEEK, points: 10, tier: 'j60' })
+      world.results.push({ playerId: KID_ID, week: LETTER_WEEK + 1, points: 10, tier: 'j60' })
+      world.week = LATE_OPEN
+      recomputeKidRank(world)
+      world.offers.push({
+        id: 'kit-47',
+        kind: 'kit',
+        week: LETTER_WEEK,
+        deadlineWeek: WINDOW_CLOSE_WEEK,
+        terms: kitTermsFor(worldly(1), 'national')!,
+        state: 'signed',
+        decidedWeek: LETTER_WEEK,
+        fromWeek: LETTER_WEEK,
+        untilWeek: contractEndWeek(LATE_OPEN),
+        coveredCents: 40_000,
+      })
+      const probe = JSON.parse(JSON.stringify(world)) as WorldState
+      if (winterFrom(probe, LATE_OPEN).filter((l) => !l.startsWith('kit-end')).length === rungsWanted) {
+        return world
+      }
+    }
+    throw new Error(`no career near "${stem}" was written to by ${rungsWanted} rungs in 60 tries`)
+  }
+
+  /** Load the career at `entryWeek` and play the rest of the winter: what does the post look like?
+   *  Returns `<id>/<rung>` per kit letter that was not already on file, in the order they were
+   *  raised – the letters, the rungs and the order, which is the whole claim. */
+  function winterFrom(world: WorldState, entryWeek: number): string[] {
+    const before = new Set(world.offers.map((o) => o.id))
+    for (let week = entryWeek; week <= LATE_CLOSE + 1; week++) {
+      world.week = week
+      reviewSponsors(world)
+    }
+    return world.offers
+      .filter((o) => o.kind === 'kit' && !before.has(o.id))
+      .map((o) => `${o.id}/${(o.terms as KitOfferTerms).tier}`)
+  }
+
+  const clone = (world: WorldState): WorldState => JSON.parse(JSON.stringify(world)) as WorldState
+
+  it('⚠ THE PROPERTY: weeks 46-51 all end the winter with the SAME letters, rungs and order', () => {
+    // The one the whole fix is for. Every arm is the same career - same seed, same standing, same
+    // inbox - loaded at a different week, and every arm must finish the winter holding the same post.
+    // Before the fix, arm 47 got three letters and arm 48 got one, from a WORSE rung.
+    const base = careerInTheWindow('late-entry')
+    const winters = new Map<number, string[]>()
+    for (let entry = LATE_OPEN - 1; entry <= LATE_CLOSE; entry++) {
+      winters.set(entry, winterFrom(clone(base), entry))
+    }
+    const opening = winters.get(LATE_OPEN)!
+    // The strongest rung she clears writes FIRST, which is what makes signing on sight safe.
+    expect(opening.filter((l) => !l.startsWith('kit-end'))).toEqual([
+      'kit-99/global',
+      'kit-100/national',
+      'kit-101/local',
+    ])
+    for (const [entry, winter] of winters) {
+      expect(winter, `a career loaded at week ${entry % WEEKS_PER_YEAR} got a different winter`).toEqual(opening)
+    }
+  })
+
+  it('...including the CLOSING week, which is the last moment a career can still be caught', () => {
+    // A career whose first week inside the window is its LAST week would otherwise have the whole
+    // winter's post cancelled by `isSponsorLetterWeek` - a rule written to guarantee every letter two
+    // weeks of thinking time, turning into a rule that guarantees a year of silence. It gets the week
+    // it has, which is the whole of what was left to give it, and every letter is live on it.
+    const base = careerInTheWindow('late-close')
+    const arm = clone(base)
+    const winter = winterFrom(arm, LATE_CLOSE)
+    expect(winter).toEqual(winterFrom(clone(base), LATE_OPEN))
+    const post = arm.offers.filter((o) => o.kind === 'kit' && o.state === 'open')
+    expect(post).toHaveLength(3)
+    for (const o of post) {
+      expect(o.week, 'a caught-up letter is dated the week it landed').toBe(LATE_CLOSE)
+      expect(isOfferLive(o, LATE_CLOSE), 'a letter he can never answer is worse than none').toBe(true)
+    }
+  })
+
+  it('⚠ THE VERDICT IS ONCE A SEASON, NOT ONCE ON WEEK 47 – and it is taken exactly once', () => {
+    // Fault 1. Every arm judges the same deal, on the same count, and posts exactly ONE goodbye -
+    // `eventsPlayed` is read at the window's OPENING week whichever week the verdict is taken on, so
+    // the rolling year it is judged against cannot drift with the entry week, and
+    // `raiseKitEndLetter` returns the notice already in the inbox rather than posting a second copy.
+    const base = careerInTheWindow('late-verdict')
+    const verdicts = new Map<number, string>()
+    for (let entry = LATE_OPEN - 1; entry <= LATE_CLOSE; entry++) {
+      const arm = clone(base)
+      winterFrom(arm, entry)
+      const goodbyes = arm.offers.filter((o) => o.id === 'kit-end-kit-47')
+      expect(goodbyes, `week ${entry}: the brand said goodbye ${goodbyes.length} times`).toHaveLength(1)
+      const deal = arm.offers.find((o) => o.id === 'kit-47')!
+      const paper = goodbyes[0].terms as KitOfferTerms
+      verdicts.set(entry, `${paper.endedEventsPlayed}/${deal.untilWeek}/${paper.ended}`)
+    }
+    expect(new Set(verdicts.values()).size, `the verdict differed by entry week: ${[...verdicts]}`).toBe(1)
+    expect([...verdicts.values()][0]).toBe(`16/${contractEndWeek(LATE_OPEN)}/term`)
+
+    // ⚠ AND THE COUNT ON THE CONTRACT IS THE OPENING WEEK'S OR NOTHING, which is the one thing about
+    //   the verdict that is deliberately NOT the same from every entry week. `world.results` is
+    //   pruned on a rolling 52 weeks relative to `world.week`, so a count read on a later week is a
+    //   LOWER BOUND (see `eventsPlayedInSeason`) - and a lower bound written over a true number would
+    //   make the record worse the longer the window ran. The brand's goodbye still carries the number
+    //   its own verdict used, which is what the assertion above reads and what the feed row prints.
+    const fromOpen = clone(base)
+    winterFrom(fromOpen, LATE_OPEN)
+    expect(fromOpen.offers.find((o) => o.id === 'kit-47')!.eventsPlayed).toBe(16)
+    const fromLate = clone(base)
+    winterFrom(fromLate, LATE_OPEN + 2)
+    expect(fromLate.offers.find((o) => o.id === 'kit-47')!.eventsPlayed).toBeUndefined()
+  })
+
+  it('...and it never judges a deal signed INSIDE the window, which has not run a season yet', () => {
+    // The trap the verdict's own subject had to be re-aimed around. Once the verdict runs on every
+    // week of the window, "the deal in force today" stops meaning "the deal that covered the season
+    // now finishing" - by week 49 it is the letter he signed on week 47. Judged on a season it did
+    // not cover, a brand-new two-season contract would fail its obligation and be ended before it
+    // began. `dealUnderReview` is anchored on the window's opening week, so it cannot see it.
+    const world = careerInTheWindow('late-signed-inside')
+    world.week = LATE_OPEN
+    reviewSponsors(world)
+    const fresh = world.offers.find((o) => o.state === 'open' && (o.terms as KitOfferTerms).tier === 'global')!
+    acceptOffer(world, fresh.id)
+    const untilAtSignature = fresh.untilWeek
+    for (let week = LATE_OPEN + 1; week <= LATE_CLOSE; week++) {
+      world.week = week
+      reviewSponsors(world)
+    }
+    expect(fresh.untilWeek, 'the new deal was ended before it started').toBe(untilAtSignature)
+    expect(fresh.eventsPlayed, 'the new deal was judged on a season it did not cover').toBeUndefined()
+    expect(world.offers.filter((o) => o.id === `kit-end-${fresh.id}`)).toHaveLength(0)
+  })
+
+  it('a rung is never denied its ROLL by the calendar – only ever by its own dice', () => {
+    // The zero-valued number: whichever week the career arrives on, every rung on her ladder gets
+    // exactly one roll, and it is the SAME roll (`shopWritesAt` is keyed on the rung's place in the
+    // queue, not on the day the letter lands). So the post can only ever differ from the full ladder
+    // because a shop said no - never because a week went by without her.
+    //
+    // Rolled over twenty careers rather than one, because "no rung is skipped" is a property of the
+    // schedule and a single seed cannot show it.
+    let denied = 0
+    let armsChecked = 0
+    for (let n = 0; n < 20; n++) {
+      const base = careerInTheWindow(`no-rung-denied-${n}`, 3)
+      const fromOpen = winterFrom(clone(base), LATE_OPEN).filter((l) => !l.startsWith('kit-end'))
+      for (let entry = LATE_OPEN + 1; entry <= LATE_CLOSE; entry++) {
+        armsChecked++
+        if (winterFrom(clone(base), entry).filter((l) => !l.startsWith('kit-end')).length < fromOpen.length) {
+          denied++
+        }
+      }
+    }
+    expect(armsChecked).toBe(20 * 4)
+    expect(denied, 'a rung lost its turn because the career arrived late').toBe(0)
+  })
+
+  it('⚠ THE ONE ASYMMETRY: the STANDING half of the verdict is the opening week\'s or nobody\'s', () => {
+    // The events half of the verdict is anchored on the window's opening week and can therefore be
+    // re-read on any week of the window. The STANDING half cannot: her domestic points are a rolling
+    // 52-week best-6, so the previous year's weeks 47-48 age out DURING the window and her rank
+    // slides for a reason that has nothing to do with the season being judged. The reading is gone
+    // by week 48 and `pruneResults` has taken the evidence, so the rule is "the opening week's
+    // reading or none at all".
+    //
+    // MEASURED (`npm run bench:sponsor`, eager, 144 careers): judging it on every week of the window
+    // cost coverage 62.2% -> 61.8% and sponsor value $10,178 -> $9,832 on careers that were never
+    // late, purely from deals ended by a fortnight of decay. Declining to judge is the safe
+    // direction – a deal is kept, never killed – and it is confined to a career that met the window
+    // late, i.e. one the app updated under.
+    const build = (): WorldState => {
+      const world = careerInTheWindow('standing-half')
+      // ...and now she has slid out of the band the national deal keeps. The domestic and junior
+      // ranks are written directly rather than reverse-engineered out of the ledger, because
+      // competition ranking ties EVERYBODY at the floor of an empty table - strip her results and
+      // she reads as #1 of nobody, which is the trap `itfRanked` exists for and the opposite of
+      // what this fixture needs. These are the two cached numbers `sponsorStandingOf` reads.
+      world.results = world.results.filter((r) => r.tier !== 'national' && r.tier !== 'j300')
+      recomputeKidRank(world)
+      world.kidRankDomestic = 999 // out of the top 30 at home...
+      world.kidRank = 999 // ...and with no junior standing that `standingClears` would hand it back on
+      return world
+    }
+    const atOpen = build()
+    const terms = atOpen.offers.find((o) => o.id === 'kit-47')!.terms as KitOfferTerms
+    expect(terms.keepDomesticRank, 'the fixture must be a rung that keeps a domestic condition').toBeGreaterThan(0)
+    winterFrom(atOpen, LATE_OPEN)
+    const endedAtOpen = atOpen.offers.find((o) => o.id === 'kit-end-kit-47')!
+    expect((endedAtOpen.terms as KitOfferTerms).ended, 'judged at the open, she is out of the band').toBe('standing')
+
+    // ...and the career that only met the window on its second week keeps the deal, because the
+    // reading that would have ended it belongs to a week it was never present for.
+    const late = build()
+    winterFrom(late, LATE_OPEN + 1)
+    const endedLate = late.offers.find((o) => o.id === 'kit-end-kit-47')!
+    expect((endedLate.terms as KitOfferTerms).ended, 'a late arrival was failed on a reading it never had').toBe('term')
+  })
+
+  it('...and the EVENTS half the same way, because a later week can only see a lower bound', () => {
+    // The half that cost real money before it was found. `eventsPlayedInSeason` anchors its 52-week
+    // window on the window's opening week, but `world.results` is ITSELF pruned on a rolling 52 weeks
+    // relative to `world.week` – so the ledger under the anchored window loses its own oldest weeks
+    // as the window runs, and the count comes back SHORT by up to two competitive weeks.
+    //
+    // Measured in the bench, not deduced: a `tour` deal on `bench-working-2` counted 14 events
+    // against a minimum of 14 on the window's opening week and 13 the next, was ended for not playing
+    // enough, and the career lost four seasons of retainer and bonus ($49,252 -> $21,960).
+    const build = (): WorldState => {
+      const world = careerInTheWindow('events-half')
+      // She barely played: two entries against an obligation of many. Her RANKS are left where they
+      // were, so the standing half of the verdict cannot be what ends the deal.
+      world.results = world.results.filter((r) => r.tier === 'national' || r.tier === 'j300')
+      return world
+    }
+    const atOpen = build()
+    const min = (atOpen.offers.find((o) => o.id === 'kit-47')!.terms as KitOfferTerms).minEventsPerSeason
+    expect(min, 'the fixture must be short of the obligation').toBeGreaterThan(2)
+    winterFrom(atOpen, LATE_OPEN)
+    expect((atOpen.offers.find((o) => o.id === 'kit-end-kit-47')!.terms as KitOfferTerms).ended).toBe('events')
+
+    const late = build()
+    winterFrom(late, LATE_OPEN + 1)
+    expect(
+      (late.offers.find((o) => o.id === 'kit-end-kit-47')!.terms as KitOfferTerms).ended,
+      'a late arrival was failed on a count it could no longer see in full',
+    ).toBe('term')
+  })
+
+  it('⚠ AND PAST THE WINDOW SHE GETS NOTHING, WHICH IS THE DICE AND NOT THE SCHEDULE', () => {
+    // The one arm that is NOT equal to the others, stated rather than hidden. A career that is past
+    // the window's close never entered it, and there is no honest way to tell "she was not here" from
+    // "the shops said no" without persisting a mark - so a catch-up on the far side would re-roll the
+    // dice for every career the brands genuinely passed on, which is exactly the manufacturing
+    // `windowLadder` promises not to do («nothing is manufactured»).
+    //
+    // It costs nothing, because it cannot happen to a career that is being PLAYED: the tick advances
+    // one week at a time (`world.week += 1` is the only writer), so weeks 47-51 cannot be jumped. It
+    // is reachable only by loading a save written before the window existed - and that code's own
+    // review week, `isSponsorReviewWeek`, is INSIDE this window, so such a save has already had its
+    // winter transacted by whichever code was running. See docs/specs/sponsor-window-2026-08.md §4.
+    const base = careerInTheWindow('past-the-window')
+    expect(winterFrom(clone(base), LATE_CLOSE + 1)).toEqual([])
+    // ...and the old schedule's one review week is inside the new window, which is why it is safe.
+    for (let w = 0; w < 4 * WEEKS_PER_YEAR; w++) {
+      if (isSponsorReviewWeek(w)) expect(isSponsorWindowWeek(w)).toBe(true)
+    }
   })
 })
 
@@ -1672,12 +1973,12 @@ describe('the v33 schema step', () => {
   it('a fresh career needs no back-fill at all – its letters are born with the fields', () => {
     const world = createWorld('v33-fresh', DEFAULT_PROFILE)
     world.week = LETTER_WEEK
-    const offer = raiseKitOffer({
+    const [offer] = raiseKitOffers({
       offers: world.offers,
       seed: seedTheShopWritesTo('v33-fresh-roll', LETTER_WEEK, domestic(1)),
       week: LETTER_WEEK,
       standing: domestic(1),
-    })!
+    })
     const terms = offer.terms as KitOfferTerms
     expect(terms.covers).toEqual(TIER_COVERS.local)
     expect(terms.travelShare).toBe(0)
@@ -1746,6 +2047,73 @@ describe('the tournament desk writes on W-rung registration, and only then', () 
     // ...and a re-registration is a THIRD record, never an overwrite: the inbox is a history.
     enterEvent(world, wEvent.id)
     expect(world.offers.filter((o) => o.kind === 'entry')).toHaveLength(3)
+  })
+
+  // ===============================================================================================
+  // WHO ENDED IT (fix/outgrown-entry, 05.08) – the third state of a desk letter.
+  //
+  // The owner was shown «Your withdrawal from the World Tour 50 ... is confirmed – in time, free of
+  // charge, and nothing is recorded against her» for an entry the ENGINE had cancelled. He had taken
+  // no decision, so the letter was a receipt for something he never did. `releasedBy` is what makes
+  // the two cases distinguishable on the paper; these tests are what keep them distinguishable.
+  // ===============================================================================================
+
+  it("the parent's own withdrawal is byte-identical to what it always was: no releasedBy key at all", () => {
+    const { world, wEvent } = wWorld('desk-by-parent')
+    enterEvent(world, wEvent.id)
+    cancelEntry(world, wEvent.id)
+    const terms = world.offers.filter((o) => o.kind === 'entry')[1].terms as EntryLetterTerms
+    expect(terms.cancelled).toBe(true)
+    // ⚠ ABSENT, not `'parent'`. Old saves carry letters without the key and must keep rendering the
+    // voluntary arm; writing the default would make "absent" and "parent" two things to keep in step.
+    expect('releasedBy' in terms).toBe(false)
+  })
+
+  it('an INJURY release says so on the paper – the desk acted, and the letter names it', () => {
+    const { world, wEvent } = wWorld('desk-by-injury')
+    enterEvent(world, wEvent.id)
+    // A layoff that swallows the event week, with the list still open: the auto-withdraw's own
+    // two conditions (see the loop in engine/world/injury.ts).
+    world.week = wEvent.deadlineWeek - 1
+    world.injury = {
+      kind: 'stress reaction',
+      severity: 'severe',
+      weeksRemaining: 12,
+      totalWeeks: 12,
+      sinceWeek: world.week,
+    }
+    releaseEntry(world, wEvent.id, 'injury')
+    const letters = world.offers.filter((o) => o.kind === 'entry')
+    const terms = letters[letters.length - 1].terms as EntryLetterTerms
+    expect(terms.cancelled).toBe(true)
+    expect(terms.releasedBy).toBe('injury')
+    // ...and the FEED row does not put the verb in the parent's mouth either.
+    const row = world.events.filter((e) => e.type === 'entry').pop()!
+    expect(row.text).not.toMatch(/^Withdrew/)
+    expect(row.text).toMatch(/^Taken out of World Tour 15/)
+    expect(row.text).toMatch(/not fit for that week/)
+  })
+
+  it('END TO END: the injury auto-withdraw inside rollInjury reaches that same path', () => {
+    // ⚠ THE REASON IS ONLY WORTH HAVING IF THE ENGINE'S OWN CALLER PASSES IT, so this drives the
+    // real onset rather than calling `releaseEntry` by hand. It is the one automatic release left
+    // after the outgrown step was retired (05.08), which makes it the whole of the released arm's
+    // reachable surface. Seed-hunted for an onset long enough to swallow the event week – the same
+    // idiom tests/injuries.test.ts uses (`findFiringSeed`), against the real distribution.
+    for (let i = 0; i < 3000; i++) {
+      const { world, wEvent } = wWorld(`desk-injury-e2e-${i}`)
+      world.week = wEvent.deadlineWeek - 2 // list still open, four weeks before she is due on court
+      enterEvent(world, wEvent.id) // entered fit, as a parent would
+      world.condition = 0 // ...and then ground down: the highest-risk arm of `injuryTau`
+      rollInjury(world)
+      if (world.injury === null || layoffCovering(world, wEvent.week) === null) continue
+      expect(world.entries).not.toContain(wEvent.id)
+      const letters = world.offers.filter((o) => o.kind === 'entry')
+      expect((letters[letters.length - 1].terms as EntryLetterTerms).releasedBy).toBe('injury')
+      expect(world.events.filter((e) => e.type === 'entry').pop()!.text).toMatch(/^Taken out of/)
+      return
+    }
+    throw new Error('no seed produced a layoff covering the event week')
   })
 
   it('desk letters age out after a year; sponsor letters never do', () => {

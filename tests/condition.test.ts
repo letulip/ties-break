@@ -943,7 +943,11 @@ describe('B5 — school exam gate', () => {
     w.week = 20
     w.condition = 100
     const ev = injectEvent(w, { week: 24, tier: 'local' }) // offset 24 ∈ examWeeks
-    expect(isBlackoutWeek(24)).toBe(true)
+    // ⚠ `false` = SHE IS STILL AT SCHOOL (W4-SCHOOL); this world is at week 20, age 14.
+    expect(isBlackoutWeek(24, false)).toBe(true)
+    // ...AND THE GUARD THIS WAVE ADDS: past her last school year the same week is NOT a blackout.
+    // That is the whole bug the owner reported – «и школа с уроками в 22 года всё еще со мной».
+    expect(isBlackoutWeek(24, true)).toBe(false)
     expect(() => enterEvent(w, ev.id)).toThrow('School exams this week – no tournaments.')
     const ue = toSnapshot(w).upcoming.find((e) => e.id === ev.id)!
     expect(ue.eligible).toBe(false)

@@ -16,6 +16,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import type { KitOfferTerms, Offer } from '../shared/protocol'
+import { SPONSOR_TIERS } from '../engine/offers'
 import OfferLetter from './OfferLetter.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import IconButton from './ui/IconButton.vue'
@@ -25,8 +26,25 @@ defineEmits<{ close: [] }>()
 
 const game = useGameStore()
 const week = computed(() => game.snapshot?.week ?? 0)
-/** Newest first: the letter that needs answering is the one that just arrived. */
-const letters = computed(() => [...(game.snapshot?.offers ?? [])].reverse())
+/** Newest first: the letter that needs answering is the one that just arrived.
+ *
+ *  ⚠ AND WITHIN ONE WEEK, THE BIGGEST NAME AT THE TOP OF THE PILE (06.08, fix/sponsor-catchup). A
+ *  career that reaches the sponsor window late is handed the whole queue in ONE post - see
+ *  `raiseKitOffers` - so several kit letters can share an arrival week, and a plain reverse would
+ *  order them by which happened to be pushed last, i.e. weakest rung first. That is the same trap the
+ *  ladder's strongest-first order exists to close: a parent who opens the inbox and signs the letter
+ *  on top must never be signing the worst one on the table. `SPONSOR_TIERS` is weakest-first (it is
+ *  the ladder itself), so a higher index is a bigger brand. Everything that is not a kit letter, and
+ *  every letter from a different week, keeps exactly the order it had. */
+const RUNG_RANK = new Map<string, number>(SPONSOR_TIERS.map((t, i) => [t, i]))
+const rungOf = (o: Offer): number =>
+  o.kind === 'kit' ? (RUNG_RANK.get((o.terms as KitOfferTerms).tier) ?? -1) : -1
+const letters = computed(() =>
+  [...(game.snapshot?.offers ?? [])]
+    .map((o, i) => ({ o, i }))
+    .sort((a, b) => b.o.week - a.o.week || rungOf(b.o) - rungOf(a.o) || b.i - a.i)
+    .map((x) => x.o),
+)
 const open = computed(() => letters.value.filter((o) => o.state === 'open' && week.value <= o.deadlineWeek))
 
 const pendingSign = ref<Offer | null>(null)

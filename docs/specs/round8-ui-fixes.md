@@ -65,6 +65,10 @@ No schema bump (Snapshot is derived, WorldState already persists the fields). Un
 snapshot exposure.
 
 ### 8. R8-7a — entered-then-outgrown → auto-withdraw + refund (small engine fix)
+> ⚠ **SUPERSEDED 05.08 by `honouring-the-entry-2026-08.md`.** Shipped as written below and retired
+> after the owner played into it: an entry already taken is honoured, and the ceiling governs only
+> what she may enter next. Kept here as the record of what was built and why.
+
 Real-world rule: entry lists close at the deadline; players out of band at close are removed and
 refunded. Implement: on the weekly tick, if the kid holds an entry for a future event whose tier
 she has now OUTGROWN (points above `enterPointBand` max), auto-withdraw it via the existing

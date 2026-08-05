@@ -180,15 +180,30 @@ describe('the layout table is complete for every band it carries', () => {
     // some - she starts at 14 and the adult-tour spec ends careers well before 60.
     for (let age = 0; age <= 60; age++) {
       expect(populatedBands(), `age ${age} lands on an unpopulated band`).toContain(bandFor(age))
+      // ⚠ AND THE SAME HOLE ON THE OTHER AXIS (W4-SCHOOL): `bandFor` gained a second argument, so
+      // the sweep has to cover both answers or a half-added `full-time` row ships unnoticed.
+      expect(populatedBands(), `age ${age}, school over, lands nowhere`).toContain(bandFor(age, true))
     }
   })
 
   it('she starts at fourteen, and fourteen is the school band', () => {
     expect(bandFor(14)).toBe('school')
-    // ...and the other two rows exist in the TYPE and deliberately not in the table, which is what
-    // makes them a place to put a decision rather than a decision already taken.
     expect(module_).toContain("export type AgeBand = 'school' | 'senior-school' | 'full-time'")
-    expect(populatedBands()).toEqual(['school'])
+    // ⚠ RE-AIMED, NOT WEAKENED (W4-SCHOOL). This read `toEqual(['school'])` and its note said the
+    // other two rows are "a place to put a decision rather than a decision already taken". The owner
+    // has now taken one of them – «Школа должна когда-то закончиться... Конец школы – в конце
+    // учебного года» – so `full-time` is populated and `senior-school` is still not. The property
+    // the line was defending is unchanged and is asserted below: a band in the table is COMPLETE,
+    // and a band that is not in it draws nothing rather than borrowing somebody else's day.
+    expect(populatedBands().sort()).toEqual(['full-time', 'school'])
+    expect(populatedBands()).not.toContain('senior-school')
+    // ⚠ AND IT IS NOT AN AGE RUNG, which is the part a future reader will get wrong. School ends at
+    // the September after her last grade, and for a September-born girl that is a whole year later
+    // in absolute time than for an August-born one – so the answer arrives as DATA on the week and
+    // an age alone can never produce it. Twenty-two and still at school is a real (if unhappy) row.
+    expect(bandFor(22)).toBe('school')
+    expect(bandFor(14, true)).toBe('full-time')
+    expect(bandFor(22, true)).toBe('full-time')
   })
 
   it('a band with no row draws nothing rather than borrowing the school day', () => {
@@ -199,7 +214,10 @@ describe('the layout table is complete for every band it carries', () => {
     // ⚠ AND THE GATE IS ON THE BAND, WHICH IS WHY THE TRIP WEEK IS IN THIS SWEEP TOO. A trip arc
     // carries no school furniture, so it was tempting to let it answer for any band - and that is
     // precisely how a half-added band would ship looking half-finished instead of failing here.
-    for (const band of ['senior-school', 'full-time'] as AgeBand[]) {
+    // ⚠ RE-AIMED (W4-SCHOOL): `full-time` left this list because it has a row now. The rule and its
+    // sweep are untouched – `senior-school` is still the band nobody has designed, and it is still
+    // required to draw an empty column rather than a fourteen-year-old's school day.
+    for (const band of ['senior-school'] as AgeBand[]) {
       for (const kind of ALL_KINDS) {
         for (const index of DAY_INDEXES) expect(dayBlocksFor(kind, band, { index, role: 'court' })).toEqual([])
       }
@@ -217,13 +235,28 @@ describe('the layout table is complete for every band it carries', () => {
     // signature's opening rather than its full arity, the same way the screen's call-site pin below
     // stopped re-typing every argument the composable earns.
     expect(module_).toContain('export function dayBlocksFor(kind: DayKind, band: AgeBand')
-    expect(module_).toContain('export function bandFor(ageYears: number): AgeBand')
+    // ⚠ RE-AIMED to the signature's OPENING for the same reason `dayBlocksFor`'s pin already is
+    // (W4-SCHOOL): `bandFor` gained `schoolOver`, because school ending is not expressible as an age.
+    expect(module_).toContain('export function bandFor(ageYears: number')
   })
 })
 
 // =================================================================================================
 // (a) THE BLOCKS THEMSELVES – inside the canvas, and never a fact the week does not contain
 // =================================================================================================
+/** WHAT THE WEEK BOUGHT, in sessions, for the day this sweep is looking at (W4-SCHOOL).
+ *
+ *  ⚠ IT IS A PROPERTY OF THE BAND AND NOT A LOOSENING OF THE RULE. The `school` band buys one
+ *  session a day, the `full-time` band buys two on a court day – the morning school used to own,
+ *  which is exactly what `ECONOMY.school.loadFactor` prices and what the read-out under the grid
+ *  says out loud. Every other day of every band still buys one, and the exam kind resolves to its
+ *  plan ROLE (`examDay`), so it is asked the role's question. */
+function sessionsBought(band: AgeBand, kind: DayKind, role: OrdinaryKind): number {
+  if (band !== 'full-time') return 1
+  const effective = kind === 'school' ? (role === 'match' ? 'court' : role) : kind
+  return effective === 'court' ? 2 : 1
+}
+
 describe('a block is drawable, and it is not an invention', () => {
   it('every block starts and ends inside the 07:00–19:00 span the grid draws', () => {
     for (const b of ALL_BLOCKS()) {
@@ -288,11 +321,19 @@ describe('a block is drawable, and it is not an invention', () => {
             const blocks = dayBlocksFor(kind, band, { index, role })
             const tennis = blocks.filter((b) => TENNIS.includes(b.kind))
             const gym = blocks.filter((b) => b.kind === 'gym')
-            expect(tennis.length + gym.length, `${where} draws more than one session`).toBeLessThanOrEqual(1)
+            // ⚠ RE-AIMED FOR THE FULL-TIME BAND (W4-SCHOOL), THE SAME WAY THE HOLIDAYS ARM ALREADY
+            // RE-AIMED IT, AND FOR THE SAME REASON. The rule was never "one block of tennis" for its
+            // own sake – it is «the picture cannot claim more tennis than the WEEK bought», and past
+            // school the week buys two on a court day: `summerLoadFactor` returns
+            // `ECONOMY.school.loadFactor` on it and `trainingReadout` says "two sessions a day"
+            // underneath the grid. A guard that kept insisting on one would have made the picture
+            // quieter than the week the engine is running, which is the failure it exists to catch.
+            const bought = sessionsBought(band, kind, role)
+            expect(tennis.length + gym.length, `${where} draws more than the ${bought} it bought`).toBeLessThanOrEqual(bought)
 
             // (1) the ordinary four, exactly as before – the day kinds that ARE a session draw one,
             // or the grid would be quieter than the week it is drawing.
-            if (kind === 'court' || kind === 'match') expect(tennis.length, where).toBe(1)
+            if (kind === 'court' || kind === 'match') expect(tennis.length, where).toBe(bought)
             if (kind === 'gym') expect(gym.length, where).toBe(1)
             if (kind === 'rest') expect(tennis.length + gym.length, where).toBe(0)
 
@@ -339,7 +380,14 @@ describe('a block is drawable, and it is not an invention', () => {
               expect(blocks.filter((b) => b.kind === 'drills').length, where).toBe(1)
               expect(blocks.filter((b) => b.kind === 'trainingAlt').length, where).toBe(1)
             } else {
-              expect(sport.length, `${where} draws a second session the week did not buy`).toBeLessThanOrEqual(1)
+              // ⚠ RE-AIMED FOR THE FULL-TIME BAND (W4-SCHOOL). In that band the holidays are not a
+              // window at all – every week is school-free – so `dayBlocksFor` does NOT run the
+              // summer transform there and a court-role day already draws its two. Same rule, asked
+              // of the band it is being asked in.
+              expect(
+                sport.length,
+                `${where} draws a second session the week did not buy`,
+              ).toBeLessThanOrEqual(sessionsBought(band, kind, role))
             }
             // ⚠ AND THE DAY IS NO LONGER THAN A TERM-TIME DAY. The extra hour lives INSIDE the span
             // school used to own, which is the whole reason it may be drawn at all - the holidays give

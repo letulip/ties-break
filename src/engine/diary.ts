@@ -68,7 +68,9 @@ export type { DiaryWorldView } from './diary/facts'
  *  captures its final – the louder fact wins). R15-5: `prize` sits under the results themselves -
  *  a first W15 title week also banks the first cheque, and "she won it" is the louder fact than
  *  "it paid" - but above the passport and the rest. */
-const MILESTONE_PRIORITY: readonly MilestoneType[] = ['title', 'final', 'prize', 'international', 'injury', 'season-rank']
+// ⚠ 'school' IS LAST ON PURPOSE (W4-SCHOOL). Leaving school lands on a fixed September week and a
+// title can land on the same one; a result she played for outranks a date on a calendar, every time.
+const MILESTONE_PRIORITY: readonly MilestoneType[] = ['title', 'final', 'prize', 'international', 'injury', 'season-rank', 'school']
 
 /** Assemble the facts – every field read off state that already exists, and (since R14-2) exactly
  *  TWO that are drawn: `travelHomeScene` and the coin inside `travelHomeMood`, each on its own
@@ -131,7 +133,9 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
       (e) => e.type === 'tournament' || (e.match !== undefined && !e.friendly),
     ),
     playedPractice: thisWeek.some((e) => e.match !== undefined && e.friendly === true),
-    examsWeek: isExamWeek(week),
+    // W4-SCHOOL: `schoolOver` comes off the view rather than being re-derived here – the diary is
+    // a reporter and this module owns no calendar arithmetic of its own.
+    examsWeek: isExamWeek(week, view.schoolOver),
     offSeasonWeek: isOffSeasonWeek(week),
     vacationWeek: view.vacationWeek,
     vacationPackageId: view.vacationPackageId ?? null,

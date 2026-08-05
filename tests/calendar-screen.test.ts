@@ -292,7 +292,9 @@ describe('a week belongs to exactly one thing, in one order', () => {
     expect(off.days.every((d) => d.kind === 'off')).toBe(true)
 
     const exam = ECONOMY.availability.examWeeks[0][0]
-    expect(isExamWeek(exam)).toBe(true)
+    // ⚠ `false` = SHE IS STILL AT SCHOOL (W4-SCHOOL). This fixture is a girl of 14-17; the second
+    // argument exists because the predicate used to be age-blind and a 22-year-old still sat papers.
+    expect(isExamWeek(exam, false)).toBe(true)
     const school = calendarWeekFor(facts({ week: exam - 1 }), exam)
     expect(school.title).toBe('Exams')
     expect(school.days.every((d) => d.kind === 'school')).toBe(true)

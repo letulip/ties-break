@@ -994,6 +994,12 @@ export type MilestoneType =
    *  is empty for everybody who earned it. Career-total counters (`careerTotals`, v39) are what
    *  make the test cheap enough to run every week. */
   | 'break-even'
+  /** ⚠ W4-SCHOOL: THE LAST DAY OF SCHOOL, and it is here because the owner's ruling on how this game
+   *  tells a story requires it. School ending is a thing that happens to a family, and a flag that
+   *  flipped silently between two weeks would be the wrong shape for it: «Школа должна когда-то
+   *  закончиться». Captured the week it happens, back-filled by the v43 migration for every career
+   *  already past it - his own is twenty-two - so the scroll never has a hole where a life changed. */
+  | 'school'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
@@ -1178,7 +1184,7 @@ export type SponsorTier = 'local' | 'national' | 'global' | 'tour' | 'premium' |
  *      national 350  >  tour 200  >  global 87  >  premium 50  >  icon 10
  *
  *  which is a single monotone ladder with `tour` slotting in between the two junior-era rungs rather
- *  than colliding with either. `rungFor` reads it strongest-first and `raiseKitOffer` allows one deal
+ *  than colliding with either. `rungFor` reads it strongest-first and `raiseKitOffers` allows one deal
  *  at a time, so "side by side, one deal across both" is what ships - and it needed no new rule.
  *
  *  AND NONE OF IT SCALES WITH THE WEALTH CORRIDOR (the principle section 7 carries over). A
@@ -1360,9 +1366,34 @@ export interface EntryLetterTerms {
    *  the event's own entry deadline, restated on paper so the player plans against a date the
    *  engine actually enforces */
   freeUntilWeek: number
-  /** true on the short confirmation the desk sends back for a free, in-time cancellation */
+  /** true on the short confirmation the desk sends back when an entry ENDS before the deadline */
   cancelled?: boolean
+  /** ...and WHO ended it (fix/outgrown-entry, 05.08). Absent = the parent's own withdrawal, which
+   *  is what every letter written before this field meant and what `withdrawEvent`/`cancelEntry`
+   *  still mean. Present = the DESK took her name off, and the letter has to say so - see
+   *  `EntryReleaseReason` and the released arm of OfferLetter.vue.
+   *
+   *  ⚠ ADDITIVE AND OPTIONAL, SO NO SCHEMA BUMP - the same move the whole `entry` letter family
+   *  shipped as (commit 2763caa left SAVE_SCHEMA_VERSION at 36 while adding the kind, the terms
+   *  shape and `cancelled` itself). An old save's letters simply lack it and render exactly as they
+   *  did; there is nothing to back-fill, because the reason was never recorded to recover. */
+  releasedBy?: EntryReleaseReason
 }
+
+/** WHY AN ENTRY ENDED, on the letter the desk sends when it does (owner, 05.08: «моя уже 22 летняя
+ *  выиграла 2 w50 подряд и ее автоматом сняли с 3-го письмом без объяснения причины – я понимаю, что
+ *  она переросла, но это ощущается очень странно»).
+ *
+ *  ⚠ THE MISSING REASON WAS THE SMALLER HALF OF THAT BUG. The letter he was shown said «Your
+ *  withdrawal ... is confirmed – in time, free of charge, and nothing is recorded against her»: a
+ *  RECEIPT FOR A DECISION HE NEVER TOOK, reassuring him about consequences of a choice he had not
+ *  made. Agency first, cause second - that is the order this type exists to fix. `'parent'` is the
+ *  only value that keeps the old copy, because it is the only one where the old copy is true. */
+export type EntryReleaseReason =
+  /** she withdrew, in time and by choice – `withdrawEvent` / `cancelEntry` before the deadline */
+  | 'parent'
+  /** an injury layoff swallows the event week, so the desk takes her name off the list */
+  | 'injury'
 
 /** WHY A DEAL STOPPED, on the letter the brand sends when it does (owner, 04.08: «I've figured out
  *  there's no active sponsor. I believe we need to send an email with the termination message»).
@@ -1909,6 +1940,18 @@ export interface Snapshot {
   week: number
   /** derived: detailed simulation starts at 14 */
   ageYears: number
+  /** W4-SCHOOL – THE CAREER WEEK HER SCHOOL YEARS END, and the only school fact the UI is given.
+   *
+   *  ⚠ A WEEK AND NOT A BOOLEAN, and that is the whole reason it is shaped this way. Three surfaces
+   *  ask about weeks that are not this one – the calendar's seven-week look-ahead, the Season
+   *  screen's rows, the planner's future bookings – and a boolean captured at the current week would
+   *  paint a lesson block on a week she will not be at school in. Every caller asks the same
+   *  question: `w >= snap.schoolEndsWeek`.
+   *
+   *  DERIVED, never persisted: `schoolEndWeek(profile.birthMonth)`, a pure function of her birth
+   *  month, so a save from any version answers it the moment it is loaded and nothing can drift out
+   *  of step with `world.week`. */
+  schoolEndsWeek: number
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan

@@ -60,6 +60,21 @@ const base = import.meta.env.BASE_URL
 const isEntry = computed(() => props.offer.kind === 'entry')
 const entryTerms = computed(() => props.offer.terms as EntryLetterTerms)
 
+// ⚠ THREE ARMS, NOT TWO – ENTERED / WITHDREW / RELEASED (fix/outgrown-entry, 05.08), and the third
+// one exists because of the letter the owner was actually shown. An engine-side pull-out reached
+// the SECOND arm and came back to him as «Your withdrawal from the World Tour 50 ... is confirmed –
+// in time, free of charge, and nothing is recorded against her»: a receipt for a decision he never
+// took, reassuring him about the consequences of a choice he had not made. Three things were wrong
+// in that one paragraph and only the smallest of them was the missing reason.
+//
+// So the arm is chosen by WHO ACTED, not by re-wording the one that was there. `releasedBy` absent
+// means the parent - which is what it means on every letter written before the field existed, and
+// on every voluntary withdrawal since - so this reads `true` only when the desk itself acted.
+const entryReleased = computed(
+  () => entryTerms.value.cancelled === true && (entryTerms.value.releasedBy ?? 'parent') !== 'parent',
+)
+const entryWithdrew = computed(() => entryTerms.value.cancelled === true && !entryReleased.value)
+
 // THE TOUR'S OWN LETTERS (W3-ACT2, act2-pro-tour.md section 6). Three notices, one sheet, no
 // buttons: a rule is not a decision.
 //
@@ -178,7 +193,14 @@ const settled = computed(() => {
 <template>
   <!-- THE TOURNAMENT DESK (W2-LADDER, §6's informational half): same paper, held square like every
        letter addressed to you, no letterhead and no buttons - a registration is a record, not a
-       decision. The cancellation confirmation is the same sheet, shorter. -->
+       decision. The two exits are the same sheet, shorter.
+
+       ⚠ THE THIRD ARM IS THE DESK ACTING, and it must never borrow the second arm's words. "Your
+       withdrawal is confirmed" and "nothing is recorded against her" are written to settle a parent
+       who CHOSE to pull out and is worried about the cost of it; addressed to one who chose nothing
+       they read as a receipt for something he did not do. So the released arm names the actor in its
+       first three words, gives the reason in the next sentence, and drops the reassurances that only
+       answer a question a voluntary exit asks. -->
   <article v-if="isEntry" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <template v-if="!entryTerms.cancelled">
@@ -195,11 +217,38 @@ const settled = computed(() => {
           <li>After that the tournament's rules apply – the tour records late withdrawals and absences.</li>
         </ul>
       </template>
-      <template v-else>
+      <template v-else-if="entryWithdrew">
         <p class="offer-body">
           Your withdrawal from the {{ entryTerms.label }} ({{ weekRange(entryTerms.eventWeek) }})
           is confirmed – in time, free of charge, and nothing is recorded against her. The entry
           fee is on its way back.
+        </p>
+      </template>
+      <template v-else-if="entryTerms.releasedBy === 'injury'">
+        <p class="offer-body">
+          We have taken her name off the entry list for the {{ entryTerms.label }}
+          ({{ weekRange(entryTerms.eventWeek) }}). She is not fit to play that week, and our list
+          closes before she is due back on court – so rather than leave her in a draw she cannot
+          make, we have withdrawn her ourselves.
+        </p>
+        <ul class="offer-terms">
+          <li>The entry fee is refunded in full, and the year's entry is returned.</li>
+          <li>This is our decision, not hers – nothing is recorded against her.</li>
+          <li>Her place goes to the next name on the list. We hope to see her back soon.</li>
+        </ul>
+      </template>
+      <!-- ⚠ THE FALLBACK IS DELIBERATELY GENERIC RATHER THAN THE NEAREST NICE PARAGRAPH, and that
+           is the whole lesson of this fix. A future `EntryReleaseReason` that fell through to the
+           voluntary arm would tell the player he withdrew her - which is the bug, arriving again by
+           inheritance. So an unknown desk-side release says only what is true of EVERY desk-side
+           release: we acted, the money is back. The engine's own copy switch (world/entries.ts) is
+           exhaustive and will not compile against a new reason, so this is a second line rather
+           than a licence to skip writing one. -->
+      <template v-else>
+        <p class="offer-body">
+          We have taken her name off the entry list for the {{ entryTerms.label }}
+          ({{ weekRange(entryTerms.eventWeek) }}). This is our decision, not hers, and the entry fee
+          is refunded in full.
         </p>
       </template>
       <p class="offer-sign-off">– Tournament desk</p>

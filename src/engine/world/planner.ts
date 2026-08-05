@@ -17,6 +17,7 @@
 import { ECONOMY, practiceFeeCents, vacationPackage, vacationPriceCents } from '../economy'
 import { pickInt, rngFromSeed, type Rng } from '../rng'
 import { isExamWeek, isOffSeasonWeek } from '../season/calendar'
+import { schoolIsOver } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
 import { simulateMatch } from '../match/engine'
 import { clamp, matchDrain } from '../condition'
@@ -65,7 +66,9 @@ export function assertPlannable(world: WorldState, week: number, kind: 'vacation
   if (!Number.isInteger(week) || week <= world.week) throw new Error('Only a future week can be planned')
   const layoff = layoffCovering(world, week) // the shared R10-17 window
   if (layoff !== null) throw new Error(`Injured – back in ${layoff.weeksRemaining} weeks.`)
-  if (isExamWeek(week)) throw new Error('School exams that week – no matches, no trips')
+  if (isExamWeek(week, schoolIsOver(week, world.profile.birthMonth))) {
+    throw new Error('School exams that week – no matches, no trips')
+  }
   if (kind === 'practice' && isOffSeasonWeek(week)) throw new Error('Off-season – family time, no matches')
   if (vacationForWeek(world, week)) throw new Error('That week is already a family vacation')
   if (practiceForWeek(world, week)) throw new Error('A practice match is already booked that week')

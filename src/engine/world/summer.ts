@@ -24,19 +24,32 @@
 //
 // ⚠ DEPENDENCY DIRECTION. `WorldState` is TYPE-ONLY, so world.ts imports these values with no runtime
 // cycle - the shape every `world/*.ts` leaf keeps.
+// ⚠ AND SINCE W4-SCHOOL THE SAME FILE OWNS THE WEEK AFTER SCHOOL, because it is the same week. The
+// owner: «Школа должна когда-то закончиться... а тренировки и прогресс должны удвоиться». Once the
+// last school year is over, EVERY week has no school in it - so the summer block's predicate stopped
+// being about the summer and started being about school, which is what it was always describing.
+// One predicate, one set of refusals, two windows: the holidays while she is still at school, and
+// the whole year once she is not. `ECONOMY.school.loadFactor` is a knob of its own only because its
+// window is four times as wide and had to be swept separately (docs/specs/school-ends-2026-08.md).
 import { ECONOMY } from '../economy'
 import { isSummerWeek } from '../season/calendar'
+import { schoolIsOver } from '../kidLife'
 import { knockRestWeek } from '../knock'
 import { vacationForWeek } from './bookings'
 import { isCompetitionWeek } from './knock'
 import type { WorldState } from '../world'
 
+/** Is she out of school this week? The world's own answer, so no caller re-derives it. */
+export function pastSchool(world: WorldState): boolean {
+  return schoolIsOver(world.week, world.profile.birthMonth)
+}
+
 /**
- * IS THIS WEEK A REAL SUMMER TRAINING BLOCK WEEK? The single predicate both halves read, so the
+ * IS THIS WEEK A REAL SCHOOL-FREE TRAINING WEEK? The single predicate both halves read, so the
  * development bonus and the fatigue cost can never disagree about which weeks are which.
  *
  * The five refusals, and each one is a week she is not doing two sessions a day in:
- *   * it is not the holidays at all;
+ *   * SCHOOL HAS IT. Neither the holidays nor past the last grade, so the lessons are on;
  *   * SHE IS HURT. A layoff is a layoff; `rollInjury` runs earlier in the tick, so this is current;
  *   * THE FAMILY IS AWAY. The booked holiday is the trade the owner's own habit describes - she
  *     loses the block, and `resolveVacation` pays her the package's rest instead;
@@ -48,7 +61,7 @@ import type { WorldState } from '../world'
  *     would otherwise multiply into something that is neither.
  */
 export function summerBlockWeek(world: WorldState): boolean {
-  if (!isSummerWeek(world.week)) return false
+  if (!isSummerWeek(world.week) && !pastSchool(world)) return false
   if (world.injury !== null) return false
   if (vacationForWeek(world, world.week) !== undefined) return false
   if (isCompetitionWeek(world)) return false
@@ -57,14 +70,20 @@ export function summerBlockWeek(world: WorldState): boolean {
 }
 
 /** The multiplier the block puts on `growWeek`'s whole rate, or exactly 1 on every other week - so a
- *  career that never sees a summer training week is byte-identical to the one it was. */
+ *  career that never sees a school-free training week is byte-identical to the one it was.
+ *
+ *  ⚠ THE TWO WINDOWS NEVER STACK. Past school every week is school-free, holidays included, so the
+ *  post-school factor is read FIRST and a September at nineteen and a July at nineteen are the same
+ *  week - which they are. */
 export function summerLoadFactor(world: WorldState): number {
-  return summerBlockWeek(world) ? ECONOMY.summerBlock.loadFactor : 1
+  if (!summerBlockWeek(world)) return 1
+  return pastSchool(world) ? ECONOMY.school.loadFactor : ECONOMY.summerBlock.loadFactor
 }
 
 /** ...and what the fuller week costs her, in condition points, or 0. Integer, like every other term
  *  in the accumulator. Applied BESIDE `accrueCondition` (see the knob's own note for why it is not
  *  applied inside it). */
 export function summerConditionCost(world: WorldState): number {
-  return summerBlockWeek(world) ? ECONOMY.summerBlock.conditionCost : 0
+  if (!summerBlockWeek(world)) return 0
+  return pastSchool(world) ? ECONOMY.school.conditionCost : ECONOMY.summerBlock.conditionCost
 }

@@ -154,7 +154,7 @@ export { enterEvent, withdrawEvent, releaseEntry, cancelEntry }
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { fireMilestone, captureMilestone, captureBreakEven, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
+import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
 export { emptySeasonRecord, emptyTrophyLedger, captureBreakEven }
 // W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
 // snapshot, the tests and the bench all read the one implementation - the same contract every other
@@ -202,6 +202,9 @@ export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, E
 // re-exported here so the ~111 modules importing them from  keep working.
 export { matchDrain, runFatigueExtra, tournamentRunStrain, conditionMatchFactor } from './condition'
 export { isExamWeek, isBlackoutWeek } from './season/calendar'
+// W4-SCHOOL: the school calendar. Lives in kidLife.ts with `gradeOf`, whose arithmetic it is.
+import { schoolEndWeek, schoolIsOver, schoolIsOverForBand } from './kidLife'
+export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
@@ -276,7 +279,7 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
 // the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
 // end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 41
+export const SAVE_SCHEMA_VERSION = 43
 
 
 
@@ -654,6 +657,10 @@ const TRAIN_EVENTS = [
   'Video session: studying her last matches',
 ]
 
+// ⚠ SAME LENGTH, ONE LINE DIFFERENT (W4-SCHOOL), and the length is load-bearing: `pickInt` spends
+// exactly ONE draw whatever the list holds, so swapping a list of the same length is RNG-neutral by
+// construction and the frozen MAIN capture cannot notice. A twenty-two-year-old has no school to
+// catch up on; what a light week catches up on then is the rest of a life lived in hotels.
 const REST_EVENTS = [
   'Light week: school catches up',
   'Family weekend away from the courts',
@@ -670,12 +677,21 @@ const WORKING_TRAIN_EVENTS = TRAIN_EVENTS.map((e) =>
 // wealthy adds premium recovery lines to the rest pool.
 const WEALTHY_REST_EVENTS = [...REST_EVENTS, 'Physio session', 'Massage & recovery']
 
+// W4-SCHOOL: the same pools with the one school line swapped, built by `map` so the LENGTH is
+// structurally identical to its parent and the single `pickInt` draw stays one draw. Same idiom
+// `WORKING_TRAIN_EVENTS` already uses for the background swap, one axis over.
+const AFTER_SCHOOL = (e: string): string =>
+  e === 'Light week: school catches up' ? 'Light week: the rest of life catches up' : e
+const POST_SCHOOL_REST_EVENTS = REST_EVENTS.map(AFTER_SCHOOL)
+const POST_SCHOOL_WEALTHY_REST_EVENTS = WEALTHY_REST_EVENTS.map(AFTER_SCHOOL)
+
 function trainFlavors(background: FamilyBackground): string[] {
   return background === 'working' ? WORKING_TRAIN_EVENTS : TRAIN_EVENTS
 }
 
-function restFlavors(background: FamilyBackground): string[] {
-  return background === 'wealthy' ? WEALTHY_REST_EVENTS : REST_EVENTS
+function restFlavors(background: FamilyBackground, schoolOver: boolean): string[] {
+  if (background === 'wealthy') return schoolOver ? POST_SCHOOL_WEALTHY_REST_EVENTS : WEALTHY_REST_EVENTS
+  return schoolOver ? POST_SCHOOL_REST_EVENTS : REST_EVENTS
 }
 
 
@@ -827,7 +843,10 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
     ? Math.round(coachWeeklyCents(rate, world.plan, world.profile.background, corridor) * jitter)
     : 0
   world.fundsCents -= expense
-  const flavors = world.plan.train >= 70 ? trainFlavors(world.profile.background) : restFlavors(world.profile.background)
+  const flavors =
+    world.plan.train >= 70
+      ? trainFlavors(world.profile.background)
+      : restFlavors(world.profile.background, schoolIsOver(world.week, world.profile.birthMonth))
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
   // The $0 line is still EMITTED, the way a sponsor-covered gear item is: the Money breakdown should
   // show why a coaching week cost nothing, not silently drop the row.
@@ -2067,34 +2086,44 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   delete save.log
 }
 
-// --- Round-8 R8-7a: entry lists close at the deadline --------------------------
-// Real-world rule (owner 25.07): players out of band at close are removed and refunded.
-// If the kid's points have grown OUT of a tier's band while she still holds a
-// still-refundable (pre-deadline) entry of that tier, the organisers release the entry
-// at the top of the weekly tick: full refund via the existing withdrawEvent (mirror of
-// slice C's injury auto-withdraw) + an info beat. A POST-deadline entry is never touched
-// – the list closed with her in band, the fee is committed and the event still plays.
-// Pure state, ZERO RNG draws – the B1/C1 main-stream invariance freezes stay untouched.
-function releaseOutgrownEntries(world: WorldState): void {
-  if (world.entries.length === 0) return
-  const points = kidPoints(world, 'domestic')
-  for (const id of [...world.entries]) {
-    const event = eventById(world, id)
-    if (!event || world.week > event.deadlineWeek) continue // closed list – fee committed
-    // ⚠ BOTH CEILINGS SINCE W2-WINDOW. `outgrewTier` is the DOMESTIC one (her points passed the
-    // band); `tierOutgrown` is the ladder's own (the rung three above has opened, so she has walked
-    // past this one - act2-pro-tour.md §11). They are the same event for the player and must have
-    // the same consequence, or a W15 entry taken the week before W75 opened would sit in her
-    // schedule as the one card the gate refuses to explain.
-    if (!outgrewTier(event.tier, points) && !tierOutgrown(world, event.tier)) continue
-    releaseEntry(world, id)
-    addEvent(world, {
-      week: world.week,
-      type: 'info',
-      text: `Entry released – she's outgrown ${TIERS[event.tier].label}. Fee refunded.`,
-    })
-  }
-}
+// --- R8-7a, RETIRED 05.08: AN ENTRY ALREADY TAKEN IS HONOURED -------------------------------------
+//
+// THE STEP THAT USED TO BE HERE. `releaseOutgrownEntries` ran at the top of every tick, walked the
+// still-refundable (pre-deadline) entries, and cancelled any whose rung had closed under her -
+// refunding the fee and writing «Entry released – she's outgrown W50. Fee refunded.» into the feed.
+// Both ceilings triggered it: `outgrewTier` (her domestic points passed the band) and `tierOutgrown`
+// (the ladder's own sliding window, act2-pro-tour.md §11). It was read from a real rule - «players
+// out of band at close are removed and refunded» (owner 25.07) - and applied to the wrong moment.
+//
+// ⚠ THE OWNER PLAYED IT AND IT WAS WRONG (05.08): «моя уже 22 летняя выиграла 2 w50 подряд и ее
+// автоматом сняли с 3-го письмом без объяснения причины – я понимаю, что она переросла, но это
+// ощущается очень странно. Надо поправить.» She won two W50s, the points those wins earned closed
+// the rung, and the game cancelled the W50 she had ALREADY ENTERED.
+//
+// ⚠⚠ IN THE SPORT, ACCEPTANCE INTO A DRAW IS NOT REVOKED BECAUSE YOUR RANKING IMPROVED. You play,
+// and it is your last event at that level. Outgrowing a rung is a statement about what she may enter
+// NEXT; it is not a retroactive claim on what she has already committed to. So a rung closing now
+// removes it from the FEED and the OFFER LIST - which is what `tierOpenFor` and `entryStatus` have
+// always done, untouched by this change - and never from her SCHEDULE.
+//
+// ⚠ THE TWO CEILINGS STILL AGREE, which is what the retired comment demanded of them: `outgrewTier`
+// and `tierOutgrown` "are the same event for the player and must have the same consequence". They
+// do - the consequence is now identically NOTHING for a committed entry and identically "closed" for
+// the next one, on both. The asymmetry this deletes is the one that was actually visible: the
+// PRE-deadline entry was cancelled while the POST-deadline entry played on, so which of two
+// identical commitments survived depended on a date the player was not thinking about.
+//
+// ⚠ AND THE DEAD END IT ONCE GUARDED IS GUARDED ELSEWHERE, twice over, which is why this can simply
+// go. R10-3's trap - an entry to a rung she outgrew that could be neither played, planned nor
+// abandoned - was closed by `cancelEntry` (R10-13, the escape hatch, still there) and by
+// `arrivalStatus` returning `verdict: 'play'` with `outgrown: true` (R12-3, pinned in
+// tests/round12.test.ts, still there). The week is playable, the card is visible, the button says
+// "(outgrown)", and the parent may still pull her out himself if he wants the fee back.
+//
+// MEASURED before it was removed (tools/outgrown-entry-probe.ts, and see the report on this branch):
+// the release fired on the domestic rungs at fourteen in almost every career and on a professional
+// rung only for the careers strong enough to climb past one - exactly the owner's case. Honouring
+// the entry costs her a low-paying draw she was going to play anyway.
 
 // Full weekly resolution. The MAIN stream carries exactly TWO things, in this fixed order:
 // resolveBaseCosts (3 draws, 4 when the sponsor roll hits) and driftCohort (4 per cohort player).
@@ -2209,9 +2238,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)
 
-  // 0a. Round-8 R8-7a: release (refund) still-refundable entries whose tier she has
-  //     outgrown. Pure state, ZERO draws, so it sits safely ahead of every RNG step.
-  releaseOutgrownEntries(world)
+  // 0a. RETIRED 05.08 – `releaseOutgrownEntries` stood here. An entry already taken is honoured;
+  //     see the note where the function used to live. It drew nothing, so removing it moves no
+  //     stream: the frozen MAIN capture (41550 / e6b0c709) and the B1/C1 invariance freezes are
+  //     untouched by construction.
 
   // 0. parent's weekly contribution BEFORE costs (no RNG draw)
   resolveParentIncome(world)
@@ -2532,6 +2562,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     ZERO DRAWS: a calendar comparison. Placed after `rollKnock` so a birthday week that also carries
   //     a knock reads in the order it happened - she came off court sore, and it was her birthday.
   markBirthday(world)
+
+  // 3e. ...AND ONE SEPTEMBER SHE DOES NOT GO BACK (W4-SCHOOL). The owner: «Школа должна когда-то
+  //     закончиться, ей уже 21» and «Конец школы – в конце учебного года». Beside the birthday for
+  //     the same reason the birthday is here: it is a date on the family's calendar rather than a
+  //     result, it fires at most once, and it costs one integer comparison and no draws. AFTER the
+  //     birthday, because the year she leaves she is already eighteen and the two lines read in that
+  //     order.
+  markSchoolEnd(world)
 
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer

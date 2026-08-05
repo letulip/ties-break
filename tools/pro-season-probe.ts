@@ -427,7 +427,10 @@ console.log(
     .join(' · ')}`,
 )
 console.log(
-  `    blackout weeks a season: ${Array.from({ length: WEEKS_PER_YEAR }, (_, w) => w).filter(isBlackoutWeek).length}` +
+  // W4-SCHOOL: a season's blackout weeks are now an age question. The probe's own player is a
+  // schoolgirl for three of its four seasons, so this reports the SCHOOL-AGE season, which is the
+  // one the acceptance numbers above were written against.
+  `    blackout weeks a season: ${Array.from({ length: WEEKS_PER_YEAR }, (_, w) => w).filter((w) => isBlackoutWeek(w, false)).length}` +
     ` · W rung ages: ${W_RUNGS.map((t) => `${t} ${TIERS[t].minAgeYears}+`).join(' ')}`,
 )
 

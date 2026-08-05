@@ -221,9 +221,22 @@ describe('⚠ the v31 back-fill is a deliberate NO-OP – it creates the shape, 
     for (const tier of TIER_LADDER) {
       expect(migrated.trophiesByTier[tier], tier).toEqual({ titles: [], finals: [] })
     }
-    // The evidence is untouched – the migration reads nothing and rewrites nothing.
+    // The evidence is untouched – THIS migration reads nothing and rewrites nothing.
     expect(migrated.bestFinishByTier).toEqual({ local: 0, regional: 0, national: 1 })
-    expect(migrated.milestones).toHaveLength(3)
+    // ⚠ RE-AIMED, NOT WEAKENED (W4-SCHOOL). The count moved 3 -> 4 because a LATER rung of the
+    // ladder adds a row: v43 back-fills the `school` milestone for any career already past its
+    // leaving September, and this fixture is one - it sits at week 300 and a May-born girl leaves
+    // at 242. That is the wave working, on the very shape it was written for.
+    // The property v31 is defending is unchanged and is asserted precisely: v31 mines NOTHING from
+    // the evidence in front of it, so every row it was given is still there, untouched and in
+    // order. Asserting a bare LENGTH made this test a tripwire for every future migration rather
+    // than a guard on the one it is about.
+    expect(migrated.milestones.slice(0, 3)).toEqual([
+      { type: 'title', week: 40, tier: 'local' },
+      { type: 'final', week: 40, tier: 'local' },
+      { type: 'title', week: 150, tier: 'regional' },
+    ])
+    expect(migrated.milestones.filter((m) => m.type === 'title' || m.type === 'final')).toHaveLength(3)
   })
 
   it('WHY: the evidence that survives would give a confident WRONG count, not a partial one', () => {

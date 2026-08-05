@@ -32,6 +32,11 @@ import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from '..
 import { ECONOMY } from '../economy'
 import { rngFromSeed } from '../rng'
 import { TIERS, TIER_LADDER, isBlackoutWeek } from './calendar'
+// W4-SCHOOL: the rivals leave school too. They carry no birth month, so they leave on the BAND's own
+// September – see `schoolIsOverForBand`. Without it the exam fortnight would keep paying THEM the
+// blackout week's extra recovery for the rest of their careers while it stopped paying her, which is
+// the tour quietly favouring the field for two weeks a year.
+import { schoolIsOverForBand } from '../kidLife'
 import type { SeasonResult } from './ranking'
 import type { AiPlayer, TierId } from './types'
 import { applySurfaceStyle } from '../match/style'
@@ -177,7 +182,7 @@ function walkWindow(runs: Map<number, RivalRun[]>, week: number): number {
     const played = runs.get(w)
     const recovery = played
       ? c.matchWeekRecoveryBase
-      : c.recoveryBase + (isBlackoutWeek(w) ? c.blackoutBonus : 0)
+      : c.recoveryBase + (isBlackoutWeek(w, schoolIsOverForBand(w)) ? c.blackoutBonus : 0)
     condition = clamp(condition + recovery, c.min, c.max)
     if (played) {
       for (const run of played) condition = clamp(condition - run.strain, c.min, c.max)

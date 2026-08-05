@@ -15,6 +15,9 @@ import { coachById, tierOf } from '../coach'
 import { drawKnock, knockUntilWeek, offCooldown } from '../knock'
 import { coachEscalates, coachKnockCall, coachManagesLoad, type CoachLoadView } from '../coachLoad'
 import { isBlackoutWeek } from '../season/calendar'
+// ⚠ FROM kidLife, NOT FROM ./summer's `pastSchool`: summer.ts imports `isCompetitionWeek` from THIS
+// file, so that edge would close a runtime cycle. kidLife is a leaf and has none.
+import { schoolIsOver } from '../kidLife'
 import type { KnockChoice } from '../../shared/protocol'
 import { axisConfidence, axisEvidence, shownSkill, type RadarWorldView } from '../radar'
 import { addEvent } from './ledger'
@@ -60,7 +63,7 @@ export function ordinaryTrainingWeek(world: WorldState): boolean {
     world.injury === null &&
     world.pendingTournament === null &&
     !isCompetitionWeek(world) &&
-    !isBlackoutWeek(world.week) &&
+    !isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth)) &&
     vacationForWeek(world, world.week) === undefined &&
     practiceForWeek(world, world.week) === undefined
   )

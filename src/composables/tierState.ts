@@ -152,13 +152,32 @@ export function feedShows(e: Pick<FeedEventFacts, 'id' | 'tier' | 'entered'>, ct
   return e.entered || ctx.rungs.includes(e.tier)
 }
 
-/** THE PICK for a week that stacks several events into one slot: the entered one if any (she is IN
- *  it - R10-3's lesson), otherwise the highest rung. The Season rows and the Calendar markers both
- *  pick through this, because the old shape - a Map whose LAST write won - showed the WEAKEST tier
- *  of every stacked week (buildSeason sorts a week strongest-first, so last is weakest), which is
- *  exactly why the owner never saw a J300 in the feed: every J300 week also holds a denser rung,
- *  and the denser rung always overwrote it. */
-export function preferredWeekEvent<E extends { tier: TierId; entered: boolean }>(events: readonly E[]): E | null {
+/** THE PICK for a week that stacks several events into one slot. Three tiebreaks, in this order:
+ *  the ENTERED one (she is IN it - R10-3's lesson), then one she may actually ENTER, then the
+ *  highest rung. The Season rows and the Calendar markers both pick through this, because the old
+ *  shape - a Map whose LAST write won - showed the WEAKEST tier of every stacked week (buildSeason
+ *  sorts a week strongest-first, so last is weakest), which is exactly why the owner never saw a
+ *  J300 in the feed: every J300 week also holds a denser rung, and the denser rung always overwrote
+ *  it.
+ *
+ *  ⚠ THE MIDDLE TIEBREAK IS NEW (05.08) AND IT IS A SECOND OWNER REPORT, ON THE SAME SHAPE AS THE
+ *  OUTGROWN-ENTRY ONE: «у меня сейчас там висит 5 w-серий подряд, т.е. я вообще 5 недель не могу
+ *  нигде играть, хотя j30, j60, j300 мне вполне доступны. Вместо этого я вижу 5 карточек с
+ *  недоступными турнирами.» His professional allowance was spent (the AER, §5), so five weeks of W
+ *  cards refused him - while the J events sitting on those same weeks, which ruling 2's boredom
+ *  guard deliberately re-opens when the allowance runs out, were never shown. The pick asked only
+ *  which rung was TALLER, never which one she could walk into, so the taller blocked card won every
+ *  time. MEASURED before the change (tools/dead-week-probe.ts, 54 careers, 8 seasons): of the weeks
+ *  whose card refused her for a spent allowance, 16% (grinder) and 38% (player) had an enterable
+ *  event on the same week that this function was hiding - "w35 hid j60", "w15 hid j30", "w50 hid
+ *  j300". The rest is supply rather than display and is NOT fixed here; see the probe's own header.
+ *
+ *  ⚠ AND A WEEK WHERE NOTHING IS ENTERABLE STILL SHOWS ITS TALLEST CARD. The feed is also how she
+ *  learns what is out there - a locked rung is aspiration (see `tierState`) - so this reorders a
+ *  stacked week and never empties one. */
+export function preferredWeekEvent<E extends { tier: TierId; entered: boolean; eligible: boolean }>(
+  events: readonly E[],
+): E | null {
   let best: E | null = null
   for (const e of events) {
     if (!best) {
@@ -167,6 +186,13 @@ export function preferredWeekEvent<E extends { tier: TierId; entered: boolean }>
     }
     if (e.entered !== best.entered) {
       if (e.entered) best = e
+      continue
+    }
+    // ...then ACTIONABLE over merely tall. An entered card never reaches this line, so a committed
+    // week is untouched by it - `eligible` is the ENTRY verdict and says nothing about a list that
+    // closed with her on it (R10-3, and see `UpcomingEvent.eligible`'s own note).
+    if (e.eligible !== best.eligible) {
+      if (e.eligible) best = e
       continue
     }
     if (TIER_LADDER.indexOf(e.tier) > TIER_LADDER.indexOf(best.tier)) best = e

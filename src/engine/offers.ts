@@ -31,7 +31,7 @@
 //
 //   1. THE GATES ARE ON DIFFERENT TABLES. `local` keeps the domestic gate it always had; `national`
 //      and `global` read the ITF one. `rungFor` is the only function that answers "who writes".
-//   2. ONE BRAND AT A TIME. `raiseKitOffer` refuses to write while a deal is running or a letter is
+//   2. ONE BRAND AT A TIME. `raiseKitOffers` refuses to write while the season ahead is already promised, or a letter is
 //      unanswered. Without it a career collects all three rungs and the ladder means nothing.
 //   3. THE LETTER ARRIVES IN THE OFF-SEASON. `isSponsorReviewWeek` - the first quiet week and no
 //      other - so the contract is signed before the year she plays it opens.
@@ -54,15 +54,19 @@
 // Four rules, each enforced in exactly one place in this file:
 //
 //   5. THE WINDOW IS FIVE WEEKS, NOT ONE. `isSponsorWindowWeek` - the off-season plus the two weeks
-//      before it. Letters land ONE PER WEEK across the first four (`isSponsorLetterWeek`), so a
-//      choice can accumulate; the fifth is the parent's alone and no brand writes on it.
-//   6. THE RUNGS SHE CLEARS WRITE, STRONGEST OF THEM FIRST. `windowLadder` - the biggest name that
-//      would have her writes on the opening week, exactly as `rungFor` always said, and the rungs
-//      below it write on the following weeks as ALTERNATIVES rather than as replacements. So by the
-//      middle of the window a girl who clears three rungs holds three letters and may take any of
-//      them, and signing the first one she is sent is never a mistake. NOTHING is manufactured -
-//      every letter is from a rung her standing genuinely clears, and a career that clears one rung
-//      gets one letter.
+//      before it. A rung's turn comes on one of the first four (`isSponsorLetterWeek`), so a choice
+//      can accumulate; the fifth is the parent's alone and no brand's turn falls on it.
+//   6. THE RUNGS SHE CLEARS WRITE, STRONGEST OF THEM FIRST, FROM WHEREVER SHE IS. `windowLadder`
+//      names them and `raiseKitOffers` walks that list from the top on every week of the window: the
+//      biggest name that would have her writes first, exactly as `rungFor` always said, and the rungs
+//      below it follow as ALTERNATIVES rather than as replacements. So by the middle of the window a
+//      girl who clears three rungs holds three letters and may take any of them, and signing the
+//      first one she is sent is never a mistake. NOTHING is manufactured - every letter is from a
+//      rung her standing genuinely clears, and a career that clears one rung gets one letter.
+//      ⚠ "FROM WHEREVER SHE IS" IS THE 06.08 FIX (fix/sponsor-catchup). The rung used to be chosen by
+//      the week's own position in the window, so a career that reached the window a week late was
+//      silently offered the second-best brand and never told the best one existed - which is the
+//      exact trap the strongest-first order exists to prevent. See `raiseKitOffers`.
 //   7. A CONTRACT ENDS WITH THE SEASON, ON WEEK 49. `contractEndWeek`, and `dealUntilWeek` is built
 //      on it, so by week 50 the slot is empty and the letters already in the inbox are for a season
 //      nobody has a claim on.
@@ -78,7 +82,7 @@ import { isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from './season/cale
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
-  KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier,
+  EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -174,7 +178,7 @@ export function hasLiveOffer(offers: Offer[], week: number): boolean {
  *
  * ⚠ THERE IS AT MOST ONE, AND SINCE THE BRAND LADDER THAT IS ENFORCED RATHER THAN MERELY TRUE. It
  * used to hold by accident of the schedule (one review a season, one-season terms); the upper rungs
- * run for two and three seasons, so `raiseKitOffer` refuses to write a competing letter for a season
+ * run for two and three seasons, so `raiseKitOffers` refuses to write a competing letter for a season
  * that is already promised (`seasonSpokenFor`). The `find` is still written to be honest about the
  * invariant rather than to permit a second deal.
  *
@@ -357,7 +361,7 @@ const SPONSOR_TIERS_STRONGEST_FIRST: readonly SponsorTier[] = [...SPONSOR_TIERS]
  *  every existing caller reads exactly as it did. It has to be an argument because the window raises
  *  a letter per rung rather than one letter from the best - see `windowLadder` - and the terms of a
  *  local deal offered to a girl who also clears National are the LOCAL terms. Passing a rung she does
- *  not clear is not defended against here; `raiseKitOffer` only ever passes one off her own ladder. */
+ *  not clear is not defended against here; `raiseKitOffers` only ever passes one off her own ladder. */
 export function kitTermsFor(standing: SponsorStanding, tier = rungFor(standing)): KitOfferTerms | null {
   const s = ECONOMY.sponsorship
   if (!tier) return null
@@ -521,9 +525,12 @@ export function letDownThisWindow(offers: Offer[], week: number): boolean {
   })
 }
 
-/** The identity of a letter. The week is enough on its own - at most one brand writes per week, and
- *  `isSponsorLetterWeek` bounds the candidate weeks to four a season - and it keeps the id stable
- *  across a replay, which a counter would not. */
+/** The identity of a letter, and it is the identity of its PLACE IN THE QUEUE rather than of the
+ *  week it happened to land on (06.08, fix/sponsor-catchup). `kitOfferId(sponsorWindowOpensAt(w) + slot)`
+ *  is what `raiseKitOffers` passes: one id per rung per window, stable across a replay and stable
+ *  across the week a career actually reaches the window on, which a counter would not be and which
+ *  the arrival week no longer is. For a career that is present from the window's opening week the
+ *  two are the same number, so nothing about a normally-played career's ids moved. */
 export function kitOfferId(week: number): string {
   return `kit-${week}`
 }
@@ -609,14 +616,23 @@ export function isSponsorWindowCloseWeek(week: number): boolean {
   return week === sponsorWindowClosesAt(week)
 }
 
-/** Is a brand allowed to write this week? The first `SPONSOR_LETTER_WEEKS` of the window. */
+/** Does a rung's TURN fall on this week? The first `SPONSOR_LETTER_WEEKS` of the window.
+ *
+ *  ⚠ IT IS "WHOSE TURN IT IS", NOT "MAY A LETTER LAND TODAY" (06.08). Those were the same question
+ *  while the rung was chosen by the week; they are not once the queue is walked from wherever the
+ *  career actually is. A rung whose turn fell on week 47 lands on week 50 for a career that only
+ *  reached the window on week 50, and lands on the CLOSING week for one that only reached it there -
+ *  see `raiseKitOffers`, which is why it no longer gates on this predicate. What the predicate still
+ *  says, and says exactly, is that no FIFTH rung ever gets a turn: the last week of the window
+ *  belongs to the parent, and `SPONSOR_LETTER_WEEKS` is what bounds the queue. */
 export function isSponsorLetterWeek(week: number): boolean {
   return isSponsorWindowWeek(week) && week - sponsorWindowOpensAt(week) < SPONSOR_LETTER_WEEKS
 }
 
 /** Which slot of the window this week is - 0 for the opening week. The slot IS the rung's place in
- *  the queue, which is what makes "one letter a week, weakest first" a lookup rather than a loop
- *  with state to persist. */
+ *  the queue, which is what makes "the strongest rung first, one a week" a lookup rather than a loop
+ *  with state to persist - and, since 06.08, what lets a career that arrives on slot 3 be handed
+ *  slots 0 through 3 in one post without a record of what it missed. */
 export function sponsorWindowSlot(week: number): number {
   return week - sponsorWindowOpensAt(week)
 }
@@ -635,56 +651,97 @@ export function contractEndWeek(week: number): number {
 }
 
 /**
- * RAISE THE LETTER. Called on every week of the window from the tick; returns the offer it added, or
- * null when nothing was written.
+ * RAISE THE WINTER'S POST. Called on every week of the window from the tick; returns the letters it
+ * added - none or one on an ordinary week, and the whole queue that has come due on the week a
+ * career first reaches the window.
  *
- * ⚠ AT MOST ONE A WEEK, AND WHOSE IT IS COMES OFF `windowLadder` BY POSITION. The week's slot indexes
- * the queue, so nothing about "which brand has already written this winter" has to be persisted or
- * recomputed - a replayed week writes the same letter from the same rung, and a career that clears
- * two rungs cannot be handed the same one twice.
+ * ⚠ THE QUEUE IS WALKED FROM WHERE SHE ACTUALLY IS, NOT FROM THE CALENDAR (06.08,
+ * fix/sponsor-catchup). It used to be `windowLadder(standing)[sponsorWindowSlot(week)]` - the rung
+ * was chosen by WHICH WEEK OF THE WINDOW IT WAS - and the owner hit what that costs on the first
+ * career he loaded after the wave merged. His save sits at season week 48, one week past the
+ * window's opening week, so slot 0 had already gone by when the code changed under him: the national
+ * brand's letter was never raised at all and the local shop's arrived in its place. Same standing,
+ * one week apart, silently offered the worse brand and never told the stronger one existed.
  *
- * ZERO main-stream draws - the only randomness is `shopWritesAt`'s single read of its own
- * sub-stream, keyed on the week, so the four letter weeks roll four independent dice and no other
- * stream shifts by a draw. Idempotent on the id, so a week replayed twice cannot post the same
- * letter twice.
+ * That is the exact inversion `windowLadder` exists to prevent - «signing on sight is never a
+ * mistake; waiting is optional» is only true if THE STRONGEST RUNG SHE CLEARS IS THE ONE THAT WRITES
+ * FIRST FROM WHEREVER SHE IS. So the walk starts at the top of the ladder every week, and each rung
+ * writes on the first week of the window she is present for at or after its own turn. A career that
+ * reaches the window late finds the letters it had already earned waiting for it, in ladder order,
+ * in one post.
+ *
+ * ⚠ AND THE DICE ARE KEYED ON THE RUNG'S PLACE IN THE QUEUE, NOT ON THE DAY IT LANDS. `shopWritesAt`
+ * is read at `sponsorWindowOpensAt(week) + slot`, so a rung's one roll is the same roll however late
+ * the career picks the window up - which is what makes "the same letters, from the same rungs, in
+ * the same order" a property rather than a hope, and what makes a career that was present from the
+ * opening week roll exactly the dice it always rolled. Nothing about a normally-played career moves:
+ * for it, slot and week are the same number.
+ *
+ * ⚠ WHAT DOES *NOT* CHANGE: nothing is manufactured. Every letter is still from a rung
+ * `standingClears` says would have her, still rolls its own dice at its own chance, and a rung that
+ * misses stays missed for the whole window - the roll is deterministic in (seed, window, slot), so
+ * re-reading it on a later week returns the same answer rather than a second chance. A career that
+ * clears no rung still gets no post. The one input that is read fresh each week is her STANDING, and
+ * it always was: a brand writes on what the table says today.
+ *
+ * ⚠ AND THE CLOSING WEEK RAISES A LETTER NOW WHEN - AND ONLY WHEN - THE CAREER HAS JUST ARRIVED.
+ * `isSponsorLetterWeek` is no longer the gate, because a career whose first week inside the window IS
+ * the closing week would otherwise get the whole winter's post cancelled by a calendar rule written
+ * to protect it. For a career that has been here since the opening week the closing week is still
+ * silent by construction: every rung has already written or already missed.
+ *
+ * ZERO main-stream draws - the only randomness is `shopWritesAt`'s read of its own sub-stream.
+ * Idempotent on the ids, so a week replayed twice cannot post the same letter twice.
  */
-export function raiseKitOffer(args: {
+export function raiseKitOffers(args: {
   offers: Offer[]
   seed: string
   week: number
   standing: SponsorStanding
-}): Offer | null {
+}): Offer[] {
   const { offers, seed, week, standing } = args
-  if (!isSponsorLetterWeek(week)) return null
-  const id = kitOfferId(week)
-  if (offers.some((o) => o.id === id)) return null
+  const raised: Offer[] = []
+  if (!isSponsorWindowWeek(week)) return raised
   // ⚠ ONE BRAND AT A TIME, and it is enforced HERE so that no caller can forget it (spec §4.1 as the
   // ladder extends it). The season she is about to play may be promised to ONE brand, so a
   // multi-season contract that is only halfway through turns the whole window away - sign the
   // two-season national deal and the global letter next winter finds her busy. See `seasonSpokenFor`
   // for why that is the right shape of the rule and "is anything running" was not.
-  if (seasonSpokenFor(offers, week)) return null
-  const tier = windowLadder(standing)[sponsorWindowSlot(week)]
-  if (!tier) return null
-  const terms = kitTermsFor(standing, tier)
-  if (!terms) return null
-  if (!shopWritesAt(seed, week, offerChanceFor(standing, tier))) return null
-  const offer: Offer = {
-    id,
-    kind: 'kit',
-    week,
-    // ⚠ EVERY LETTER IN A WINDOW DIES WITH THE WINDOW, not `decideWeeks` after its own arrival. Two
-    // things follow and both are the point: no decision is ever open while she is playing (the whole
-    // reason the review moved into the off-season on 01.08), and a letter that arrives late is worth
-    // less than one that arrives early - which is the cost of the weakest-first order, paid by the
-    // brand rather than by the parent. `SPONSOR_LETTER_WEEKS` is what guarantees the shortest window
-    // is still two weeks long.
-    deadlineWeek: sponsorWindowClosesAt(week),
-    terms,
-    state: 'open',
+  if (seasonSpokenFor(offers, week)) return raised
+  const opened = sponsorWindowOpensAt(week)
+  const ladder = windowLadder(standing)
+  // Every rung whose turn has come by this week - which for a career that has been here all along is
+  // "the one whose turn is today", because the earlier ones have already written or already missed.
+  const dueThrough = Math.min(sponsorWindowSlot(week), SPONSOR_LETTER_WEEKS - 1)
+  for (let slot = 0; slot <= dueThrough; slot++) {
+    const tier = ladder[slot]
+    if (!tier) break
+    const id = kitOfferId(opened + slot)
+    if (offers.some((o) => o.id === id)) continue
+    const terms = kitTermsFor(standing, tier)
+    if (!terms) continue
+    if (!shopWritesAt(seed, opened + slot, offerChanceFor(standing, tier))) continue
+    const offer: Offer = {
+      id,
+      kind: 'kit',
+      // The week it LANDED, which is what the paper is dated and what the feed reports. The slot it
+      // came from lives in the id; the two differ only for a career that reached the window late.
+      week,
+      // ⚠ EVERY LETTER IN A WINDOW DIES WITH THE WINDOW, not `decideWeeks` after its own arrival. Two
+      // things follow and both are the point: no decision is ever open while she is playing (the whole
+      // reason the review moved into the off-season on 01.08), and a letter that arrives late is worth
+      // less than one that arrives early - which is the cost of the weakest-first order, paid by the
+      // brand rather than by the parent. `SPONSOR_LETTER_WEEKS` is what guarantees the shortest window
+      // is still two weeks long FOR A CAREER THAT WAS HERE WHEN IT OPENED; one that arrives on the
+      // closing week gets that week, which is the whole of what was left to give it.
+      deadlineWeek: sponsorWindowClosesAt(week),
+      terms,
+      state: 'open',
+    }
+    offers.push(offer)
+    raised.push(offer)
   }
-  offers.push(offer)
-  return offer
+  return raised
 }
 
 /**
@@ -840,20 +897,40 @@ export function raiseEntryLetter(
   return offer
 }
 
-/** The short confirmation for a free, in-time cancellation, raised by `withdrawEvent`. */
+/** The confirmation the desk sends when an entry ENDS before the deadline, raised by `releaseEntry`.
+ *
+ *  ⚠ IT CARRIES WHO ENDED IT, AND THAT IS THE WHOLE POINT OF THE PARAMETER (fix/outgrown-entry,
+ *  05.08). Two paths reach `releaseEntry` and only one of them is a decision the PARENT took: his
+ *  own in-time withdrawal, and the injury auto-withdraw inside `tickWeek`. For three releases both
+ *  produced the identical sheet - «Your withdrawal ... is confirmed – in time, free of charge, and
+ *  nothing is recorded against her» - so the engine's own action came back to the player as a
+ *  receipt for a choice he had not made, complete with reassurances about consequences he had not
+ *  risked. A letter that cannot say who acted is worse than no letter: it is a wrong one.
+ *
+ *  `'parent'` writes exactly the terms this function has always written (no `releasedBy` key at
+ *  all), so every existing letter, save and test of the voluntary exit is byte-identical. */
 export function raiseEntryCancelLetter(
   offers: Offer[],
   week: number,
   event: { id: string; tier: TierId; week: number; deadlineWeek: number },
   label: string,
+  releasedBy: EntryReleaseReason = 'parent',
 ): Offer {
   const n = offers.filter((o) => o.kind === 'entry' && o.id.startsWith(`entry-${event.id}-`)).length
+  const terms: EntryLetterTerms = {
+    tier: event.tier,
+    label,
+    eventWeek: event.week,
+    freeUntilWeek: event.deadlineWeek,
+    cancelled: true,
+  }
+  if (releasedBy !== 'parent') terms.releasedBy = releasedBy
   const offer: Offer = {
     id: `entry-${event.id}-${n}`,
     kind: 'entry',
     week,
     deadlineWeek: event.deadlineWeek,
-    terms: { tier: event.tier, label, eventWeek: event.week, freeUntilWeek: event.deadlineWeek, cancelled: true },
+    terms,
     state: 'info',
   }
   offers.push(offer)
@@ -986,13 +1063,30 @@ export function pruneEntryLetters(offers: Offer[], week: number): Offer[] {
 /** The deal that covered the season now finishing, if any - what the off-season review has to judge
  *  before it decides whether anybody writes again.
  *
- *  ⚠ IT IS SIMPLY THE ACTIVE DEAL NOW, and the reason is the move into the off-season. The review
- *  used to run on week 1 of the new year, by which time a one-season deal had already ended, so it
- *  had to go looking for a contract that had expired yesterday. It now runs in the quiet weeks
- *  BEFORE the year turns, while the deal is still live - which is both simpler and the honest
- *  reading: a brand sits down with the family before the contract runs out, not after. */
+ *  ⚠ IT IS THE DEAL THAT WAS ALREADY RUNNING WHEN THE WINDOW OPENED, and that is a stricter question
+ *  than "the deal in force today" (06.08, fix/sponsor-catchup). It used to be exactly
+ *  `activeKitDeal(offers, reviewWeek)`, which was safe for as long as the verdict was pinned to the
+ *  window's opening week: nothing can have been signed yet on the first tick of a window. The verdict
+ *  is now taken on whichever week of the window the career first reaches, and by week 49 a letter
+ *  signed on week 47 IS the deal in force - so the old reading would have handed the review a
+ *  contract that has not begun, judged it on a season it did not cover, and ended it before it
+ *  started. Anchoring on the window's opening week also makes the answer the same on every week of
+ *  the window, which is half of what makes the verdict idempotent.
+ *
+ *  The two clauses are one sentence: it was running when the brands' window opened, and it had not
+ *  already stopped. A letter signed inside the window starts at `dealStartsAt` - today or later - so
+ *  it can never satisfy the first. */
 export function dealUnderReview(offers: Offer[], reviewWeek: number): Offer | null {
-  return activeKitDeal(offers, reviewWeek)
+  const opened = sponsorWindowOpensAt(reviewWeek)
+  return (
+    offers.find(
+      (o) =>
+        o.kind === 'kit' &&
+        o.state === 'signed' &&
+        (o.fromWeek ?? o.decidedWeek ?? 0) < opened &&
+        (o.untilWeek ?? -1) >= opened,
+    ) ?? null
+  )
 }
 
 /** The last week of the SEASON YEAR containing `week` - offset 51, the last of the three quiet
@@ -1027,13 +1121,19 @@ export function endDealWithSeason(offer: Offer, reviewWeek: number): void {
  *  already correct and already unread, which is exactly the failure this closes.
  *
  *  ⚠ IT IS A NOTICE, NOT AN OFFER: `state: 'info'`, so nothing about it can be signed, refused or
- *  expire, and `raiseKitOffer`'s one-brand-at-a-time rule cannot see it as a live letter. The terms
+ *  expire, and `raiseKitOffers`'s one-brand-at-a-time rule cannot see it as a live letter. The terms
  *  are copied from the ended deal so the notice quotes its own numbers instead of re-deriving them
  *  from a world that has already moved on.
  *
  *  ⚠ AND IT IS RAISED FOR EVERY ENDING, including a term served in full — a contract that simply
  *  ran out is the moment a player most needs to know the bills are his again. `reason` is what the
- *  copy differs on; see KitEndReason. */
+ *  copy differs on; see KitEndReason.
+ *
+ *  ⚠ AND IT IS IDEMPOTENT ON ITS ID, like every other letter this file raises (06.08). It used to be
+ *  the one `raise*` here that pushed unconditionally, which was safe only because its single caller
+ *  was gated to one week a year. The verdict is now taken on whichever week of the window the career
+ *  reaches first and re-read on the rest of them, so "post the goodbye once" has to be a property of
+ *  this function rather than of its call site — the same guard the tour's three letters keep. */
 export function raiseKitEndLetter(
   offers: Offer[],
   week: number,
@@ -1051,6 +1151,8 @@ export function raiseKitEndLetter(
     terms: { ...terms, ended: reason, endedEventsPlayed: eventsPlayed },
     state: 'info',
   }
+  const already = offers.find((o) => o.id === notice.id)
+  if (already) return already
   offers.push(notice)
   return notice
 }
