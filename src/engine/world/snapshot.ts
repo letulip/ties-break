@@ -27,7 +27,7 @@ import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW } from '../kidLife'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
 import { previewEvent, eventCrowd, eventTemperature } from '../season/preview'
-import { BEST_N_BY_TRACK, isCountingResult, windowedBestSum } from '../season/ranking'
+import { BEST_N_BY_TRACK, isCountingResult, windowSlots, windowedBestSum } from '../season/ranking'
 import { isFieldProId, universeForTier } from '../season/fieldPros'
 import { weekFieldExclusion } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
@@ -282,9 +282,17 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
   // TWO LADDERS: this list EXPLAINS a ranking, so it has to be the same table as the rank beside it.
   // Hence the track argument - `ladders[track].countingResults` pairs each list with its own rank,
   // and an empty ITF list is the honest reading of "unranked internationally".
-  // The slice is the TRACK's window width (W2-LADDER §3): sixteen rows on the professional list,
+  // The slice is the TRACK's window width (W2-LADDER §3): EIGHTEEN rows on the professional list,
   // six on the others - the list's sum must equal the rank beside it, and the rank counts best-N.
-  return world.results.filter(inTrack(track))
+  //
+  // ⚠ AND IT IS `windowSlots`, NOT `.slice(0, N)` (points-by-the-book, 05.08). The professional
+  // window reserves eleven of its eighteen for Slams and 1000s, so "the counted results" and "the
+  // best N results" stopped being the same list the day a player got into those draws - and this
+  // list exists precisely to EXPLAIN the number beside it. A plain slice would show her a set of
+  // rows that does not add up to her own total, which is the one thing this function must never do.
+  // Sorted strongest-first afterwards, because `windowSlots` returns reserved rows first and a
+  // player reads this list as a league table.
+  const inWindow = world.results.filter(inTrack(track))
     .filter(
       (r) =>
         isCountingResult(r) &&
@@ -293,7 +301,8 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
         world.week - r.week <= RESULTS_WINDOW,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
-    .slice(0, BEST_N_BY_TRACK[track])
+  return windowSlots(inWindow, BEST_N_BY_TRACK[track])
+    .sort((a, b) => b.points - a.points || b.week - a.week)
     .map((r) => ({ week: r.week, tier: r.tier, points: r.points }))
 }
 

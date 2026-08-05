@@ -16,7 +16,7 @@
 import { describe, it, expect } from 'vitest'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { runTournament } from '../src/engine/season/tournament'
-import { computeRanking, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
 import { rivalCondition } from '../src/engine/season/rival'
 import { generateCohort } from '../src/engine/season/cohort'
 import { generatePreHistory } from '../src/engine/season/prehistory'
@@ -194,7 +194,15 @@ describe('W-B3 — the participation floor is gone', () => {
     }
     expect(zeroSide).toEqual([]) // the grindable rungs leave no row at all (finalize guards on > 0)
     expect(windowedBestSum(oneSide, 52, 'kid', 6)).toBe(6) // best-6 of pure 1s: one point per slot
-    expect(windowedBestSum(oneSide, 52, 'kid', 16)).toBeLessThan(TIERS.w50.points[2]) // < one W50 SF (best-16 too: 16 x 1 < 20)
+    // ⚠ RE-AIMED BY POINTS-BY-THE-BOOK (05.08): the professional window is the rulebook's EIGHTEEN
+    // now, not sixteen, so the literal 16 stopped naming the rule this line is about. It reads the
+    // constant instead, which is what the paragraph above always meant by "one point per counted
+    // slot" – and the bound still holds at the wider window: 18 x 1 = 18 is under W50's 20-point
+    // semi-final. It is now within two points of failing, which is exactly the kind of margin a
+    // guard should state rather than leave for the next widening to discover, so both halves are
+    // asserted: the arithmetic, and the fact that it is the arithmetic that carries it.
+    expect(windowedBestSum(oneSide, 52, 'kid', BEST_N_BY_TRACK.wta)).toBe(BEST_N_BY_TRACK.wta)
+    expect(windowedBestSum(oneSide, 52, 'kid', BEST_N_BY_TRACK.wta)).toBeLessThan(TIERS.w50.points[2])
     // The third bucket is exactly the two rungs named above - never a fourth by accident.
     expect([...new Set(realSide.map((r) => r.tier))].sort()).toEqual(['slam', 'wta1000'])
   })

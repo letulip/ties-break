@@ -574,13 +574,18 @@ function doorWalk(seed: string): void {
   }
   const books = [0, 1, 10, 30, 60, 100, 137, 160, 200, 256, 300, 345, 400, 500, 710, 828, 1000, 1177, 1400]
   const setBook = (book: number) => {
-    // One synthetic W row per slice, inside the best-16 window, so the book is exactly `book` and
+    // One synthetic W row per slice, inside the counted window, so the book is exactly `book` and
     // the ledger's SHAPE is not a second variable.
+    //
+    // ⚠ THE WIDTH IS THE CONSTANT, NOT A LITERAL 16 (points-by-the-book, 05.08). A hard-coded 16
+    // against a shipped window of 18 would have folded every slice on a rule the game no longer
+    // uses, and silently: the book would still come out right, only the SHAPE would be a lie.
+    const slots = BEST_N_BY_TRACK.wta
     world.results = world.results.filter((r) => r.playerId !== KID_ID)
     if (book > 0) {
-      const per = Math.ceil(book / 16)
+      const per = Math.ceil(book / slots)
       let left = book
-      for (let i = 0; i < 16 && left > 0; i++) {
+      for (let i = 0; i < slots && left > 0; i++) {
         const pts = Math.min(per, left)
         world.results.push({ playerId: KID_ID, week: world.week - i, points: pts, tier: 'w15' })
         left -= pts

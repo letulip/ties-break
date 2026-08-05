@@ -449,6 +449,9 @@ export const TIERS: Record<TierId, TierDef> = {
     // window of nothing but W15 TITLES caps at 160. The second rung of the ladder was unreachable
     // from the first. Measured on this branch before the fix, not argued.
     //
+    // ⚠ 160 IS HISTORY; THE LIVE CEILING IS 270 (points-by-the-book, 05.08) - eighteen counted slots
+    // at the rung's own 15 a title. The argument above is about the UNIT and stands unchanged.
+    //
     // WHAT REPLACES IT: the real tour's own acceptance ranges. An entry list is a rank cut, and it
     // is the same cut whether 500 or 5,000 players exist - it was never a share of anything.
     //

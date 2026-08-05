@@ -167,10 +167,14 @@ const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
 const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
 // THE WINDOW WIDTH IS THE TABLE'S OWN (W2-LADDER §3): six on the junior and national tables,
-// sixteen on the professional one - so the heading and the sentence below follow the ladder this
-// card is actually about, off the engine's own constant rather than a copied number.
+// EIGHTEEN on the professional one (the WTA's own §VIII.A.4.a.i; it read sixteen until the 05.08
+// correction) - so the heading and the sentence below follow the ladder this card is actually
+// about, off the engine's own constant rather than a copied number.
 const bestN = computed(() => BEST_N_BY_TRACK[activeLadder.value])
-const BEST_N_WORDS: Record<number, string> = { 6: 'six', 16: 'sixteen' }
+// ⚠ SIXTEEN STAYS IN THE MAP even though nothing produces it today: this is a lookup with a
+// numeric fallback, so a stale entry costs nothing and a MISSING one would print a digit in the
+// middle of an English sentence. Cheaper to keep than to re-discover.
+const BEST_N_WORDS: Record<number, string> = { 6: 'six', 16: 'sixteen', 18: 'eighteen' }
 const bestNWord = computed(() => BEST_N_WORDS[bestN.value] ?? String(bestN.value))
 const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ladder.value?.rank != null))
 const pointsTotal = computed(() => ladder.value?.points ?? 0)
