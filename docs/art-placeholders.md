@@ -37,8 +37,6 @@ first cell is a backticked path starting with `public/`. Keep the column order.
 
 | asset | kind | counterpart | wave | why |
 |---|---|---|---|---|
-| `public/images/trophies/w50-gold.webp` | `byte-copy` | `public/images/trophies/w35-gold.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W50 has no master of its own |
-| `public/images/trophies/w50-silver.webp` | `byte-copy` | `public/images/trophies/w35-silver.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W50 has no master of its own |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-airport.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-airport.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-bus.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-bus.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-plane.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-plane.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
@@ -71,6 +69,14 @@ table is machine-read and a row that is still parsed is still a claim.
   owner drew all three (Baseline Athletic → `tour`, Meridian Sport → `premium`, Aurelia → `icon`).
   The rows and the redirect went in the same commit; see "How to clear a row" above for why the
   function was deleted rather than reduced to the identity. All six marks hash distinct.
+- ~~**The last two trophy rows: `w50-gold`, `w50-silver`.**~~ CLEARED 05.08, hours after the twelve
+  above – the owner had already dropped the masters in as `.png` and they had simply not been
+  encoded yet. ⚠ AND THAT IS THE PART WORTH KEEPING: a master sitting in `public/images/trophies/`
+  is INVISIBLE until `npm run art` runs, because the raw formats are gitignored and the shipped
+  `.webp` is what the guard hashes. The pipeline does accept `.png` (`RASTER_RE`), it just has to be
+  asked. The registry said "placeholder" and the art had been there for a day. **After dropping any
+  master, run `npm run art`** – it encodes in place and files the master into `art-src/`. Now
+  `w50-gold` and `w50-silver` hash distinct from `w35`, and `trophies/` holds no byte-duplicate pair.
 
 ### What the two kinds mean
 
