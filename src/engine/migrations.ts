@@ -10,6 +10,7 @@ import {
   type WorldEventCategory,
 } from '../shared/protocol'
 import {
+  emptySeasonEntries,
   emptySeasonRecord,
   emptyTrophyLedger,
   isCappedTier,
@@ -1226,6 +1227,39 @@ export function migrateSave(raw: unknown): WorldState {
   // Zero draws on any stream; the frozen MAIN capture is untouched by construction.
   if (v === 43) {
     v = 44
+  }
+
+  // v45 – THE SEASON MIRROR OPENS ITS LEDGER, AND DELIBERATELY BACK-FILLS NOTHING
+  // (docs/specs/season-mirror-2026-08.md).
+  //
+  // `seasonEntries` counts, at the moment each entry is committed, how many of the season's tournaments
+  // were entered into a best-N book that could not have taken their title. The wrap-up prints the pair.
+  //
+  // ⚠ IT CANNOT BE BACK-FILLED AND IT MUST NOT PRETEND TO BE, which is the whole content of this step.
+  // The judgement is about the book she held ON THE WEEK SHE ENTERED – her results over the 52 weeks
+  // before it – and `pruneResults` keeps only `world.week - r.week <= 52`, so the book behind an entry
+  // made two weeks ago is already partly gone and the book behind one made in week 3 of a season being
+  // wrapped in week 49 is gone entirely. That is the same 49-week hole `seasonStartRank` (v17) exists
+  // because of, and it is why this is a capture rather than a fold.
+  //
+  // So the ledger opens AT THE LOAD WEEK and claims nothing about what came before it. The wrap-up's own
+  // test is `fromWeek <= yearStart`: a career loaded mid-season shows NO LINE for the season in progress
+  // and a real one from the next wrap onward. A zero would have been the wrong silence – "0 could not
+  // move her ranking" is the good news, and printing it over a season nobody counted is the defect that
+  // reported "no tournaments played" over a 44-19 record.
+  //
+  // ⚠ AND NOTE WHAT IS NOT CAPTURED, because it is what keeps the card self-consistent: each row stores
+  // the two facts about her BOOK (both of which decay) plus the tier's own track (which does not). The
+  // comparison against the table the season was played on happens at the WRAP, against the same
+  // `rankTrack` the card prints two rows above the line.
+  //
+  // Idempotent in v30's sense (the field is only written when absent), and zero draws on any stream, so
+  // the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 44) {
+    if (!save.seasonEntries && typeof save.week === 'number') {
+      save.seasonEntries = emptySeasonEntries(save.week)
+    }
+    v = 45
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

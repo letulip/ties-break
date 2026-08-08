@@ -15,11 +15,11 @@ import { seasonYear } from '../../shared/dates'
 import { milestoneKey } from '../diary'
 import { schoolEndWeek, schoolIsOver } from '../kidLife'
 import type { LadderTrack, TierId } from '../season/types'
-import { LADDER_LABEL, type Milestone, type TierTrophies, type WorldEventCategory } from '../../shared/protocol'
+import { LADDER_LABEL, type Milestone, type SeasonEntryLedger, type TierTrophies, type WorldEventCategory } from '../../shared/protocol'
 import { addEvent, financeWindow, seasonIndexOf, seasonStartWeek } from './ledger'
 import { KID_ID } from './constants'
 import { finishLabel } from './labels'
-import { activeLadderOf, kidPoints, rankIn } from './ladder'
+import { activeLadderOf, entryCouldNotMove, kidPoints, rankIn } from './ladder'
 import type { WorldState } from '../world'
 
 // --- milestones (never pruned) -----------------------------------------------
@@ -335,6 +335,31 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // to the right table instead of always to the junior one.
   const rankTrack = dominantTrackOfSeason(world, yearStart, wrapWeek)
   const rankInTrack = kidPoints(world, rankTrack) > 0 ? rankIn(world, rankTrack) : null
+  // v45 – WHAT THE SEASON COULD NOT DO, folded here and CAPTURED at each commit. The honesty of it is
+  // in two places, and both were found the hard way.
+  //
+  // ⚠ THE `fromWeek` TEST. The ledger has been counting since `fromWeek`; the season being wrapped
+  // begins at `yearStart`. If the ledger opened LATER – the only way being a save migrated mid-season,
+  // because every other opening is a wrap three weeks before a season starts – then it holds part of a
+  // season, and a part is not this season's statistic. There is no honest repair: the judgement is
+  // about the book she held on each entry week, and `pruneResults` deleted those books weeks ago. So
+  // the field is OMITTED, the card shows no line, and the season after this one is the first that can.
+  // A ZERO WOULD HAVE BEEN THE WRONG SILENCE: "0 could not move her ranking" is a claim – the good news
+  // – and printing it over a season nobody counted is the class of defect that reported "no tournaments
+  // played" over a 44-19 record.
+  //
+  // ⚠ AND IT IS JUDGED AGAINST `rankTrack`, WHICH IS THE TABLE THE CARD ITSELF NAMES. Judged instead
+  // against `activeLadderOf` at entry time, this printed «Final national rank #3» over «13 could not
+  // move her ranking» – and all thirteen were the domestic events that had made her third. One card,
+  // two tables. `entryCouldNotMove` takes the table as an argument so that cannot recur.
+  const ledger = world.seasonEntries
+  const entryMirror =
+    ledger && ledger.fromWeek <= yearStart
+      ? {
+          entered: ledger.rows.length,
+          couldNotMove: ledger.rows.filter((r) => entryCouldNotMove(r, rankTrack)).length,
+        }
+      : null
   // ⚠ THE MOVEMENT ARROW IS ITF-ONLY, AND THAT IS A LIMIT RATHER THAN AN OVERSIGHT.
   // `seasonStartRank` (v17) is one persisted number and it is the ITF rank – widening it to three
   // tracks is a schema change, and it cannot be back-filled because the rank AT the season's first
@@ -390,6 +415,8 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
     // both defaulted by every reader, which is the `weeksInjured` precedent: no schema bump.
     rankTrack,
     rankInTrack,
+    // v45: what the season could NOT do – omitted entirely when the ledger did not cover the season.
+    ...(entryMirror === null ? {} : { entryMirror }),
   }
   // R10-9: the same figures also APPEND to the career history (the summary above is overwritten
   // every year). Guarded on the season INDEX, so a re-entry for a season already banked is a no-op –
@@ -431,6 +458,19 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   world.seasonWins = 0
   world.seasonLosses = 0
   world.seasonRecord = emptySeasonRecord()
+  // v45: ...and the entry ledger with them, from THIS week rather than from the next season's first.
+  // Weeks 50 and 51 still take entries – for events in the season ahead, which is the season this
+  // ledger is now counting – and `fromWeek` here is three weeks before that season starts, so the
+  // "began at or before the first week" test above passes for it. Resetting at week 52 instead would
+  // drop the off-season's own entries on the floor.
+  world.seasonEntries = emptySeasonEntries(wrapWeek)
+}
+
+/** A zeroed entry ledger, opened at a stated week. Three callers, exactly as `emptySeasonRecord` has:
+ *  the season reset above, `createWorld`, and the v45 migration – which needs the same shape from the
+ *  week the old save happens to be sitting on. */
+export function emptySeasonEntries(fromWeek: number): SeasonEntryLedger {
+  return { fromWeek, rows: [] }
 }
 
 /** A zeroed per-ladder W-L, spelled once. Two callers – the season reset above and `createWorld` –
