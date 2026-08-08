@@ -26,6 +26,7 @@
     "bench:skill": "vite-node tools/skill-ceiling.ts",
     "bench:sponsor": "vite-node tools/sponsor-window-bench.ts",
     "bench:world": "vite-node tools/world-turnover.ts",
+    "e2e:fixtures": "vite-node tools/e2e-fixtures.ts",
     "test": "node scripts/units.mjs --verbose",
     "test:watch": "vitest",
     "test:sim": "node scripts/sim.mjs",
