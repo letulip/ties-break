@@ -174,19 +174,67 @@ corridor's ceiling (1.3) that is:
 | 17–22 | $68.64/h |
 | 23+ | **$74.88/h** |
 
-**It is comfortably inside real premium court hire, and not near the top of it** `[S]`: Roosevelt Island
-Racquet Club, New York, indoor clay, weekday prime, is **$132 member / $250 non-member**; the
-International Tennis Hall of Fame's grass courts at Newport are **$250/h**; Islington's indoor courts
-are **£40** non-member. So neither axis is doing the other's job at their product – our dearest possible
-court is a quarter of the dearest court anyone in the research publishes.
+⚠ **THE SPANISH AND GULF EVIDENCE THIS CHECK WAS MISSING HAS SINCE ARRIVED, and it splits the verdict.**
+The first version of this section passed the corner against North American premium alone and flagged
+that it *"would fail on evidence I do not have"*. That evidence is now in `real-coaching-costs.md` §2e
+and §2f, and the honest answer is that **there is no single premium anchor** – the world's dearest
+courts differ by **x20** for functionally the same hour:
 
-⚠ **One caveat on that check, stated rather than smoothed over.** The coordinator's reconciliation cited
-a European premium ceiling near €30/h and a Dubai indoor near $95/h. **Neither figure is in the court
-research this document rests on** – the Spain and UAE arms returned nothing usable, which
-`real-coaching-costs.md` §2c records as its largest gap. Against a €30/h ceiling our $62–75 corner would
-be *above* the market and the elite factor would want cutting to roughly x1.2. **The check passes on the
-evidence I have and would fail on evidence I do not**, so it is worth one Spanish municipal *tarifas*
-PDF before the number is treated as settled.
+| anchor | an all-in premium hour, no membership | our corner against it | verdict |
+| --- | --- | --- | --- |
+| **EUROPE** | **$33–44** (RCCVM Madrid non-member €31.35; La Manga peak €37 + lights) | $62.40 is **x1.4–1.9** of it; $74.88 is **x1.7–2.3** | ⚠ **FAILS** |
+| **THE GULF** | **$54–95** (Zayed evening $54.46; ISD Dubai indoor $95.30) | **inside**, above the floor and below the ceiling | passes |
+| **THE ANGLOSPHERE** | **$56–250** (MIT $56; Hall of Fame $110; RIRC New York $250) | **inside, near the bottom** – a quarter of the dearest | passes |
+
+**So: it fails on Europe, exactly as the earlier caveat predicted it might, and passes on the other
+two.** Said plainly because that is what was promised.
+
+### 3d. Does the elite factor want trimming? The number says it cannot be, and here is the number
+
+**To reach the European anchor, `elite` would have to be x1.52** – $38 (the middle of $33–44) divided
+by the base court $20 times the wealthy corridor's midpoint 1.25. **`high` is x1.9.** So an elite family
+would train on a *cheaper* court than a `high` family, which is «более дорогой тренер = более дорогой
+корт» inverted. **The European anchor is unreachable inside the owner's own ruling**, and reaching it
+would mean trimming `high` and `middle` too – compressing the ladder back toward the flat court he just
+ruled against.
+
+**The largest trim the ruling permits is 2.4 → 2.0**, since `elite` must stay above `high`'s 1.9. It
+buys:
+
+| | now (2.4) | trimmed (2.0) | Europe wants |
+| --- | --- | --- | --- |
+| elite court, 12–16, wealthy midpoint | $60.00 | $50.00 | ~$38 |
+| the same at the corridor ceiling | $62.40 | $52.00 | |
+| 23+, wealthy ceiling | $74.88 | $62.40 | |
+| the step from `high` to `elite`, 12–16 mid corridor | $38 → $48 | $38 → $40 | |
+
+**Still above Europe, still inside the Gulf – and it costs the ladder its top step.** A $2/h difference
+between a performance centre and the best court in the game is not a step, it is a rounding.
+
+**What it costs on the bench: nothing, and that is provable rather than measured.** `weeklyBillSplit`
+computes `totalCents` from the rate, the plan, the background, the corridor and the jitter – **`tier`
+does not appear in it.** `courtTierFactor` enters only `facilityCents`, bounded by `Math.min(totalCents, …)`,
+and the only sim-visible consequence is the `split.coachCents > 0` gate on emitting a coaching row,
+which §3b's band-low guard forbids from ever firing at a hired rung. So **any** value of
+`courtTierFactor` that passes the guards leaves `world.fundsCents` identical on every week of every
+career. Two independent bench runs already demonstrate the theorem at two different values (§4a and
+§4b, 538 of 1,620 both times, all 17 identity columns identical), and `tests/split-the-bill.test.ts`
+now pins it directly.
+
+⚠⚠ **WHICH MEANS THE BENCH CANNOT DECIDE THIS QUESTION.** A trim is free in survival terms, so there is
+no measurement that argues for or against it. **The decision is evidential, and the evidence is that we
+model no membership.** §2f's finding is the reason: RCCVM charges its members **€6.25/h for a hard
+court, less than Madrid's own municipal rate of €6.90**, because a European premium club sells
+*belonging* and hands the court over at cost – the €11.50-per-person non-member supplement is where the
+money is. Our economy has no joining fee, no subscription and no member column, so the European member
+price is a number our model cannot mean and the non-member price is an artefact of a business we do not
+run. **The Gulf and the Anglosphere sell the court itself, and that is what our facility line is.**
+
+> **RECOMMENDATION: DO NOT TRIM. Keep `elite` at 2.4.** Not because $62–75 is provably right, but
+> because the only anchor that argues for less is unreachable without inverting the owner's ruling, and
+> it comes from the one market whose pricing model we do not implement. **This is brought, not shipped** –
+> the trim is a one-character change and the bench will say 538 either way, so if the owner prefers the
+> European anchor it costs nothing but the top step.
 
 ### The composition, after
 
@@ -430,6 +478,15 @@ way the venue ladder could plausibly be broken by a later hand:
 | `budget` 1.0 → 1.3 | moves the cheap end the owner's data confirms | **3** |
 | `elite` 2.4 → 4.2 | the court passes the elite band's low, so a drawn coach books $0 | **2** |
 | `FACILITY_VENUE.wealthy` collapsed to one string | the receipt stops naming the venue it charges for | **1** |
+| `middle` 1.2 → 1.0 | breaks «более дорогой тренер = более дорогой корт» | **1** |
+| `middle` 1.2 → 1.3 | the court passes half a `middle` bill | **2** |
+| `elite` 2.4 → 1.5 | the ladder stops being monotone | **2** |
+| **`tier` leaked into `totalCents`** | the partition becomes a re-price | **7** |
+
+⚠ **The last one is the theorem, and it is the most valuable assertion on the branch.** It holds
+`totalCents` identical across all five rungs over every background, age row and plan – so the claim
+"any court ladder is free in survival terms" is arithmetic in the test suite rather than a paragraph in
+a document, and a future hand that makes the court affect the wallet is told immediately.
 
 Three assertions were re-aimed rather than dropped, each with a ⚠ comment quoting the new prices:
 the flat-court guard (now *within a rung*, and it asserts the across-rung movement too), the

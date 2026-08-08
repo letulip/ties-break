@@ -386,6 +386,30 @@ describe('RNG discipline - one draw produced two lines', () => {
     expect(facilityRateCents(14, 'self')).toBe(20_00)
   })
 
+  it('cannot move the TOTAL whatever the venue ladder says - the theorem, pinned', () => {
+    // ⚠⚠ THIS IS WHY A COURT RE-PRICE IS FREE, AND IT IS WORTH AN ASSERTION RATHER THAN AN ARGUMENT
+    // (docs/specs/court-follows-the-coach-2026-08.md §3d). `totalCents` is computed from the rate, the
+    // plan, the background, the corridor and the jitter - `tier` does not appear in it. So ANY value of
+    // `courtTierFactor` that clears the guards above leaves `world.fundsCents` identical on every week
+    // of every career, and the bench can only ever report the survival rate it already had.
+    //
+    // The consequence the owner should know: the bench CANNOT decide what the court ladder should be.
+    // It is free in survival terms, so the question is evidential and not economic. Two full bench runs
+    // demonstrated it at two different ladders (538 of 1,620 both times); this holds it as arithmetic,
+    // which is cheaper and stricter than a third run.
+    for (const background of BACKGROUNDS) {
+      for (const age of AGES) {
+        for (const plan of PLANS) {
+          const rate = 100_00
+          const totals = COACH_TIERS.map(
+            (tier) => weeklyBillSplit({ rateCents: rate, ageYears: age, tier, plan, background }).totalCents,
+          )
+          for (const t of totals) expect(t, `${background}/${age}`).toBe(totals[0])
+        }
+      }
+    }
+  })
+
   it('keeps the venue ladder inside the two ceilings that pin it', () => {
     // ⚠ NEITHER CEILING IS A STYLE PREFERENCE; each is a place the model breaks.
     //

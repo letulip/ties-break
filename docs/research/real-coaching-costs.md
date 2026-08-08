@@ -54,11 +54,24 @@ the constants do.
 > so lifting it even to his own $22 would leave the cheapest Budget coach in the game **$2/h**. It shares
 > the club court with `self`, and that is arithmetic rather than a shortcut.
 >
-> **(2b) AND HIS ONE CHECKABLE CLAIM IS THE ONE THAT FAILS – in our favour.** *«теннисные стоят похожих
-> денег»*. At every venue publishing both on one card, **padel is dearer per court-hour than tennis**,
-> x1.00 to x3.83. So a tennis court for the 1-on-1 hour our engine bills is at or **below** his padel
-> figures. His $22 is a safe upper bound for the cheap end, which makes our $20 a better fit for tennis
-> than it was for the sport he quoted it from.
+> **(2b) HIS ONE CHECKABLE CLAIM HOLDS, AND I GOT IT WRONG FIRST.** *«теннисные стоят похожих денег»*.
+> On a UK-commercial sample padel looked dearer (x1.00 to x3.83) and §2b concluded the claim failed.
+> **With Spain in, it does not:** the **Ayuntamiento de Madrid's 2026 tariff prices tennis and padel as
+> literally the same line item** – `PISTA DE TENIS, PADEL O VOLEY PLAYA`, €6.90 outdoor – and **La Manga
+> Club prices padel BELOW tennis at every season band** (x0.75–0.93). The real ratio is a scarcity
+> range, **x0.75 to x3.83**, sitting at x1.00 by construction in the market with more padel courts than
+> the rest of Europe combined. **He was right; the first reading was over-read from one market.** The
+> correction is left visible in §2e rather than quietly edited.
+>
+> **(2c) THE ELITE CORNER FAILS ON ONE ANCHOR OF THREE, AND IT IS THE ONE WE CANNOT USE.** Our dearest
+> court is $62.40/h at 12–16 and $74.88 at 23+. Against an all-in premium hour with no membership:
+> **Europe $33–44 – FAILS at x1.4–2.3**; the Gulf $54–95 – inside; the Anglosphere $56–250 – inside,
+> near the bottom. ⚠ **A x20 spread for the same hour, and it is a business-model difference:** Real
+> Club de Campo charges members **€6.25/h, less than Madrid's own municipal court**, because a European
+> premium club sells *belonging* (€11.50 per head for non-members) and hands the court over at cost.
+> **We model no membership at all**, so the European anchor describes a business we do not run – and
+> reaching it would need `elite` at **x1.52, below `high`'s x1.9**, inverting the owner's own ruling.
+> **Recommendation: no trim, brought not shipped** (`court-follows-the-coach-2026-08.md` §3d).
 >
 > **(3) THE WEEKLY NUMBER IS BIG, AND IT IS BIG IN THE RIGHT PLACES AND FOR THE WRONG REASON.** At
 > five hours a week an Elite coach costs a middle family **141%** of everything it puts into tennis
@@ -272,15 +285,108 @@ Liverpool Tennis Centre unbundles on the face of the card: *"Individual lessons 
 £12.50 Indoor · £7.50 Outdoor · From £17.10 Coach fee"* `[S]` – `[I]` a court share of **30–42%** of
 the all-in, which is the same band as Sofia's 43%.
 
-`[GAP]` **Spain and the UAE returned nothing usable**, which is the largest hole here – Spanish
-municipal *tarifas* are the likeliest place to find tennis and padel on one official card with
-con luz / sin luz bands. `[GAP]` No UK page states in plain words that a court fee is bundled into a
-lesson price. `[GAP]` **Queen's Club, Roehampton Club, Royal South Yarra and Kooyong publish nothing** –
+⚠ **THE SPAIN/UAE GAP THIS SECTION ORIGINALLY REPORTED IS NOW CLOSED – see §2e**, and it changed one
+of this page's own conclusions rather than just adding rows to it. The gap statement is kept here so
+the sequence is legible: it was a real absence, it was named as one, and it was filled.
+`[GAP]` No UK page states in plain words that a court fee is bundled into a lesson price. `[GAP]` **Queen's Club, Roehampton Club, Royal South Yarra and Kooyong publish nothing** –
 verified absence, not a failed search, so the very top of the real court market is unpriced. Padium
 and Rocket Padel figures circulating on blogs were checked against the venues' own sites and **do not
 exist there**; they are excluded. Los Angeles Rec & Parks, NYC Parks' own page, Ku-ring-gai Council and
 David Lloyd are all bot-blocked and were either sourced through an official concession operator or
 dropped.
+
+### 2e. Spain and the UAE – the gap closed, and it overturns one of my own findings
+
+⚠ **A NOTE ON CURRENCY, because the next two sections turn on it.** Nothing above this line was
+converted. From here it has to be, so: **AED is pegged to USD at 3.6725** (UAE central bank, since
+1997), which makes those conversions arithmetic and they are tagged `[I]`. **EUR is not pegged**, so
+every euro figure is given as a **band across EUR/USD 1.05–1.20** – the range the rate has occupied
+for several years – with the multiplication shown. ⚠ **The band is an assumption, not a source**, and
+where a verdict depends on it that is said out loud.
+
+**Spain, municipal** `[S]`:
+
+| rate | venue, year | note |
+| --- | --- | --- |
+| **outdoor €6.90/h · covered €8.90/h**, lighting **+€3.70/h** | **Ayuntamiento de Madrid, 2026** | ⚠ the line item reads `PISTA DE TENIS, PADEL O VOLEY PLAYA` |
+| outdoor €10.85 unlit / €12.65 lit; indoor padel €12.45 / €14.25; member ≈ half | FDM Valencia | ⚠ **2020 PDF – not current**, directional only |
+| tennis clay €10/€13, **hard €2/€4**; padel €10/€12 | Antequera | |
+| tennis €4.70/€6.20; padel **€7.20 for two, €10.00 for four** | Cartagena | padel priced by head count on one court |
+
+**Spain, premium** `[S]`:
+
+| rate | venue, year |
+| --- | --- |
+| member tennis **€6.25** hard/grass, **€8.35** clay/covered; padel €7.10 outdoor, **€12.00 indoor**; lighting €4–5 | **Real Club de Campo Villa de Madrid, 2026** |
+| ⚠ **non-member supplement €11.50 PER PERSON** | the same card |
+| tennis **€30 / €28 / €20** by season; padel **€28 / €22 / €15**; lights €7 | **La Manga Club, 2026** |
+
+**UAE** `[S]`, converted at the peg `[I]`:
+
+| rate | AED | USD | venue |
+| --- | --- | --- | --- |
+| tennis, 6am–5pm | 100/h | **$27.23** | Zayed Sports City, Abu Dhabi |
+| tennis, 5–11pm | 200/h | **$54.46** | Zayed Sports City |
+| padel, outdoor single | 150/h | $40.84 | ISD Dubai |
+| padel, outdoor | 290/h | $78.96 | ISD Dubai |
+| **padel, indoor (air-conditioned)** | **350/h** | **$95.30** | ISD Dubai |
+| padel, indoor | 210/h | $57.18 | Dubai Sports World |
+
+`[I]` **Same venue, same hour, ISD Dubai: indoor is +20.7% on outdoor** – which is the cheapest
+indoor/outdoor premium in the whole set (§2a measured x1.29–3.00 in the UK).
+
+#### ⚠⚠ THIS OVERTURNS §2b's VERDICT ON THE OWNER'S CLAIM, AND HE WAS RIGHT
+
+§2b concluded that *«теннисные стоят похожих денег»* **fails**, on a sample that turned out to be
+UK-commercial-heavy. With Spain in, that conclusion does not survive:
+
+* **Madrid 2026 prices tennis and padel as literally the same line item** – `PISTA DE TENIS, PADEL O
+  VOLEY PLAYA`, €6.90 outdoor, €8.90 covered. A municipality of three million cannot tell them apart
+  for pricing purposes. **That is a stronger form of his claim than he made.**
+* **La Manga Club prices padel BELOW tennis at every season band** – €28/€22/€15 against €30/€28/€20,
+  `[I]` **x0.93 / x0.79 / x0.75.** A direct counter-example to the earlier finding.
+* Antequera: padel €10/€12 against clay tennis €10/€13 – parity `[I]`.
+* RCCVM: member padel €7.10–12.00 against member tennis €6.25–8.35 – `[I]` x1.14–1.44, a mild premium.
+
+`[I]` **The honest ratio is not a number, it is a range driven by scarcity: x0.75 (La Manga, padel
+cheaper) to x3.83 (Wandsworth), with municipal Spain at exactly x1.00 by construction.** Where padel
+courts are new and few – UK commercial – they command a premium; where they are mature and everywhere –
+Spain, which has more padel courts than the rest of Europe combined – they price at or below tennis.
+
+> **So the correction is: his claim holds in his own frame and the earlier "it fails" was over-read
+> from one market.** It is left in §2b with this pointer rather than deleted, because a page that
+> silently edits its own wrong conclusion teaches the next reader nothing.
+
+And the cheap end gains a third independent confirmation `[I]`: Madrid's **covered court plus lighting
+is €12.60/h → $13.23–15.12**, against our working-corridor club court at **$14.00/h**. Different
+continent, different sport, same number.
+
+### 2f. The three premium anchors, and why the world's dearest courts differ by x20
+
+`[I]` from the `[S]` rows in §2a and §2e. The comparator is deliberately **what an hour on court costs
+someone with no membership** – because that is what our `facility` line is. A coaching hour puts two
+people on the court, so where a club charges per head both are counted.
+
+| anchor | what an all-in premium hour costs | rows behind it |
+| --- | --- | --- |
+| **EUROPE** | **$33–44** | RCCVM non-member tennis €8.35 + 2 x €11.50 = **€31.35** → $32.92–37.62 · La Manga peak €30 + €7 lights = **€37** → $38.85–44.40 |
+| **THE GULF** | **$54–95** | Zayed Sports City evening AED 200 = **$54.46** · Dubai Sports World indoor AED 210 = $57.18 · ISD Dubai indoor AED 350 = **$95.30** |
+| **THE ANGLOSPHERE** | **$56–250** | MIT indoor prime $56 · Islington indoor non-member £40 · Hall of Fame indoor non-member $110 · **RIRC New York indoor clay prime $250** · Newport grass $250 |
+
+⚠⚠ **A x20 SPREAD FOR FUNCTIONALLY THE SAME HOUR – AND IT IS A BUSINESS-MODEL DIFFERENCE, NOT A MARKET
+ONE.** The tell is one number: **Real Club de Campo Villa de Madrid charges its members €6.25/h for a
+hard court, which is LESS than the Ayuntamiento de Madrid charges anyone for a municipal one (€6.90).**
+A premium club undercutting the city it sits in only makes sense if the court is not the product. **The
+product is belonging** – and the price of that is the **€11.50 per person** a non-member pays to walk
+on. Roosevelt Island sells the opposite: $250 an hour, and the membership merely discounts it to $132.
+
+**Which matters to us because we model no membership at all.** There is no joining fee, no annual
+subscription and no member/non-member column anywhere in the economy, so the European *member* price is
+a number our model structurally cannot mean, and the European *non-member* price is an artefact of a
+business we do not run. **The markets that sell the court itself – the Gulf, the US, the UK, Australia –
+are the ones our facility line resembles**, and that is the reason §3c of
+`court-follows-the-coach-2026-08.md` anchors where it does rather than a preference for the larger
+number.
 
 ⚠ **Two published contradictions, left unreconciled on purpose.** Seattle's own 2025-26 fee PDF gives
 outdoor tennis as $16.00/h on p.8 and $8.25/h on p.19. Lee Valley's live page shows £34.00/£14.00 where
@@ -687,6 +793,18 @@ band `[I]` from `[S]`.
    Escuela Tenis Barcelona 47.4%, Meadows 35.7%. Our Budget is **60% of Middle**. So if the group
    fiction is meant literally, Budget is a rung too dear; if it is only a flavour, it is fine. Recorded,
    not proposed – it moves the working family's only affordable rung and that is not a free change.
+
+⚠ **THE STRUCTURE WE CHOSE NOT TO MODEL, and it is the most interesting thing in the whole court set.**
+A European premium club prices the **court** at or below its own municipality – Real Club de Campo Villa
+de Madrid charges members **€6.25/h** for a hard court against the Ayuntamiento's **€6.90** – and
+charges instead for **belonging**, at **€11.50 per person** for anyone who does not. Roosevelt Island
+sells the mirror image: $250 an hour, membership merely discounting it to $132. **Ours is the second
+model and there is no membership line anywhere in the economy** – no joining fee, no subscription, no
+member column. That is a deliberate omission rather than an oversight: a membership is a *fixed* cost
+against a variable one, and the whole legibility argument of the bill split is that the family should be
+able to read its week off its week. **Recorded so that the next person who notices RCCVM's €6.25 knows
+it was seen and declined**, and so that the corner check in
+`court-follows-the-coach-2026-08.md` §3d has its reasoning on this page too.
 
 ⚠ **THE SEAM, AND IT IS DELIBERATELY NOT BUILT.** Past the professional career a player may
 plausibly buy her own court – she has prize money, a manager and a reason to train somewhere better
