@@ -23,9 +23,9 @@ import {
 import { aceSpeedFactor, ACE_SPEED_FLOOR, ACE_SPEED_REF, ACE_SPEED_MAX_FACTOR } from '../src/engine/match/rally'
 import { basePServe, paceAdvantage } from '../src/engine/match/point'
 import { SKILL_POINTS_PER_YEAR } from '../src/engine/development'
-import { createWorld, kidMatchPlayerFor, setKitGrade, tickWeek } from '../src/engine/world'
+import { createWorld, kidMatchPlayerFor, setKitGrade, kitLineViews, goodWeeksFor, tickWeek } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import type { FamilyBackground, KitGrade, KitState } from '../src/shared/protocol'
+import type { FamilyBackground, KitGrade, KitLine, KitState } from '../src/shared/protocol'
 import type { MatchOptions, MatchPlayer } from '../src/engine/match/types'
 
 // ---------------------------------------------------------------------------
@@ -483,6 +483,130 @@ describe('the quality ladder — both axes, and it can never buy destiny', () =>
     // ...and the ledger says what was bought.
     expect(world.events.some((e) => e.text.startsWith('Bought:'))).toBe(true)
     expect(() => setKitGrade(world, 'frame', 'titanium' as KitGrade)).toThrow()
+  })
+
+  // ⚠ THE PURCHASE PATH CONSULTS THE DEAL (owner, 08.08). The letter said «up to $X of kit over the
+  // season, on us», the Money screen printed "Her sponsor supplies this line" directly under the
+  // buttons, and `setKitGrade` charged the family in full - it was the one place in the game that
+  // spent money on kit without asking whether somebody had promised to pay for it. His report:
+  // «Несмотря на наличие спонсора, закрывающего струны и ракетки, в разделе bills я выбрал новые,
+  // нажал купить, и они списались со счёта. Спонсор не покрыл - мне кажется, это неправильно.»
+  //
+  // And what the rungs GIVE, which he could not tell either: «Еще вообще хорошо бы дать понять что
+  // разные тиры шмота дают вообще.» (Both quotes live here rather than in the templates, which ban
+  // Cyrillic - tests/template-copy-rules.test.ts.)
+  describe('the sponsor pays for a line it covers (08.08)', () => {
+    /** A world holding a signed deal over `covers`, with `allowance` cents left in the pot. */
+    function withDeal(covers: KitLine[], allowanceCents: number, spentCents = 0) {
+      const world = createWorld('kit-cover')
+      world.offers.push({
+        id: 'kit-test',
+        kind: 'kit',
+        week: 0,
+        deadlineWeek: 4,
+        state: 'signed',
+        decidedWeek: 1,
+        fromWeek: 0,
+        untilWeek: world.week + 200,
+        coveredCents: spentCents,
+        terms: {
+          tier: 'national',
+          brand: 'Netrally Distribution',
+          kitAllowanceCents: allowanceCents,
+          freshCap: 0.3,
+          minEventsPerSeason: 10,
+          covers,
+          travelShare: 0,
+          seasons: 2,
+        },
+      } as (typeof world.offers)[number])
+      return world
+    }
+
+    it('charges the family nothing when the allowance covers the whole purchase', () => {
+      const world = withDeal(['strings', 'frame'], 3_000_00)
+      const before = world.fundsCents
+      const price = kitLinePriceCents(world.profile.background, 'frame', 'pro')
+      expect(price).toBeLessThan(3_000_00) // ...the fixture really does have room
+      setKitGrade(world, 'frame', 'pro')
+      expect(world.fundsCents).toBe(before) // not a cent
+      expect(world.kit!.grade.frame).toBe('pro') // ...and she is holding the frame
+      // The row is still EMITTED at what the family paid, so the breakdown explains the $0.
+      const row = world.events.find((e) => e.text.startsWith('Bought:'))!
+      expect(row.amountCents).toBe(0)
+      expect(row.text).toContain('Netrally Distribution')
+      // ...and the pot really was spent, which is what stops this being free money on every line.
+      expect(world.offers[0].coveredCents).toBe(price)
+    })
+
+    it('splits the bill when the allowance runs out mid-purchase', () => {
+      const price = kitLinePriceCents(createWorld('kit-cover').profile.background, 'frame', 'pro')
+      const world = withDeal(['frame'], price, price - 40_00) // $40 of pot left
+      const before = world.fundsCents
+      setKitGrade(world, 'frame', 'pro')
+      expect(world.fundsCents).toBe(before - (price - 40_00))
+      expect(world.offers[0].coveredCents).toBe(price) // the pot is now exactly empty
+    })
+
+    it('does NOT cover a line the deal leaves hers, which is the whole brand ladder', () => {
+      const world = withDeal(['strings', 'frame'], 3_000_00) // national: shoes stay hers
+      const before = world.fundsCents
+      const price = kitLinePriceCents(world.profile.background, 'shoes', 'pro')
+      setKitGrade(world, 'shoes', 'pro')
+      expect(world.fundsCents).toBe(before - price)
+      expect(world.offers[0].coveredCents).toBe(0)
+    })
+
+    it('quotes the same answer on the button as the till charges', () => {
+      // The screen may not work the discount out for itself - `payableCents` is the till's own
+      // number, and until 08.08 the two disagreed by the entire price.
+      const world = withDeal(['strings'], 3_000_00)
+      const view = kitLineViews(world).find((v) => v.line === 'strings')!
+      const pro = view.rungs.find((r) => r.grade === 'pro')!
+      const before = world.fundsCents
+      setKitGrade(world, 'strings', 'pro')
+      expect(before - world.fundsCents).toBe(pro.payableCents)
+      // ...and an uncovered line quotes its sticker unchanged.
+      const shoes = kitLineViews(world).find((v) => v.line === 'shoes')!
+      for (const r of shoes.rungs) expect(r.payableCents).toBe(r.priceCents)
+    })
+  })
+
+  // ⚠ WHAT A RUNG BUYS, AND WHY IT IS MEASURED IN WEEKS. engine/equipment.ts is explicit that fresh
+  // kit is EXACTLY neutral at every rung and that wear only ever subtracts - so there is no power
+  // figure to print, and a screen claiming one would be inventing it. What a rung really buys is
+  // time before the line goes off, which is what `goodWeeksFor` states.
+  it('a dearer rung buys WEEKS, monotonically, and never a bonus', () => {
+    for (const line of ['strings', 'frame', 'shoes'] as KitLine[]) {
+      const weeks = KIT_GRADES.map((g) => goodWeeksFor(line, g))
+      // Strictly increasing up the ladder: this is the sentence the Money screen prints.
+      for (let i = 1; i < weeks.length; i++) {
+        expect(weeks[i], `${line}: ${KIT_GRADES[i]} is not better than ${KIT_GRADES[i - 1]}`).toBeGreaterThan(weeks[i - 1])
+      }
+      expect(weeks[0]).toBeGreaterThan(0) // even the starter lasts SOME weeks
+    }
+    // And the claim underneath it: from `composite` up, brand-new kit is byte-identical at every
+    // rung, so the ladder can never be sold as an upside - it is bounded above by fresh kit.
+    // `alloy` is the one rung that starts partway down its own curve, which is the handicap it is.
+    for (const g of KIT_GRADES) {
+      const fresh = kitWearAt('neutral', 'middle', 0, null, {
+        grade: { strings: g, frame: g, shoes: g },
+        sinceWeek: { strings: 0, frame: 0, shoes: 0 },
+      })
+      if (g === 'alloy') {
+        expect(fresh.strings).toBeGreaterThan(0)
+        expect(fresh.shoes).toBeGreaterThan(0)
+        // ⚠ ...but NOT the frame, and that is the model rather than an omission: the frame has a
+        //   flat head 13 weeks long ("sound is sound however old"), so even a cheap one is neutral
+        //   the day it is bought and only becomes the patched racket once the head is past. It is
+        //   why `goodWeeksFor` treats the frame separately.
+        expect(fresh.frame).toBe(0)
+      } else {
+        expect(fresh.strings).toBe(0)
+        expect(fresh.frame).toBe(0)
+        expect(fresh.shoes).toBe(0)
+      }
+    }
   })
 
   it('a signed deal supplies a covered line whatever rung she picked', () => {

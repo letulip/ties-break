@@ -439,6 +439,7 @@ interface PendingKit {
   grade: KitGrade
   label: string
   priceCents: number
+  payableCents: number
 }
 const pendingKit = ref<PendingKit | null>(null)
 
@@ -450,8 +451,30 @@ function chooseRung(view: KitLineView, rung: KitLineView['rungs'][number]): void
     void game.setKitGrade(view.line, rung.grade)
     return
   }
-  pendingKit.value = { line: view.line, grade: rung.grade, label: rung.label, priceCents: rung.priceCents }
+  pendingKit.value = {
+    line: view.line,
+    grade: rung.grade,
+    label: rung.label,
+    priceCents: rung.priceCents,
+    payableCents: rung.payableCents,
+  }
 }
+
+/** ⚠ THE DIALOG HAS TO NAME THE PRICE THE FAMILY IS ACTUALLY PAYING (08.08). It used to quote
+ *  `priceCents` unconditionally, so a sponsored line asked "Buy the Kestra Pro Stock for $340?" and
+ *  then took $340 - which was true only because the till was ignoring the deal. Now the till honours
+ *  the allowance, and a dialog still quoting the sticker would be the same lie in the other
+ *  direction. Both numbers come off the engine; this only chooses the sentence. */
+const kitConfirmMessage = computed(() => {
+  const p = pendingKit.value
+  if (!p) return ''
+  const tail = 'She plays with it from this week, and every replacement is billed at this level.'
+  if (p.payableCents >= p.priceCents) return `Buy the ${p.label} for ${formatCents(p.priceCents)}? ${tail}`
+  if (p.payableCents === 0) {
+    return `Buy the ${p.label}? Her sponsor covers it in full – ${formatCents(p.priceCents)} off her allowance. ${tail}`
+  }
+  return `Buy the ${p.label} for ${formatCents(p.payableCents)}? Her sponsor covers ${formatCents(p.priceCents - p.payableCents)} of the ${formatCents(p.priceCents)}. ${tail}`
+})
 
 function confirmKit(): void {
   const pending = pendingKit.value
@@ -734,9 +757,17 @@ const TAB_OPTIONS = [
            name and condition word comes off the snapshot - see the script. -->
       <Card v-if="screenTab === 'bills'" class="money-panel money-kit">
         <Eyebrow as="h2">Her kit</Eyebrow>
+        <!-- ⚠ THE OLD LINE SAID "plays truer" AND THAT WAS THE ONE THING IT DOES NOT DO (08.08).
+             engine/equipment.ts is explicit: fresh kit is EXACTLY neutral at every rung, every
+             multiplier is 1, and wear only ever subtracts - so a pro frame is not better than a new
+             composite one, it is still good in week 24 when the composite is not. The owner asked to
+             be told what the tiers actually give (his words are in tests/equipment.test.ts - THIS IS
+             A TEMPLATE, and tests/template-copy-rules.test.ts bans Cyrillic in one, comments
+             included). He could not tell, and the reason is that the screen was promising an upside
+             the model refuses to give. What it says now is the true and more interesting sentence. -->
         <p class="money-panel-note">
-          Better kit lasts longer, plays truer and is kinder to her body – and it is billed every time
-          the family replaces it, not once.
+          New kit plays the same whatever it cost – what a better rung buys is TIME before it goes
+          off, and it is billed every time the family replaces it, not once.
         </p>
         <div v-for="view in kitLines" :key="view.line" class="kit-line">
           <div class="kit-line-head">
@@ -744,6 +775,9 @@ const TAB_OPTIONS = [
             <span class="kit-line-state">{{ wearWord(view.wear) }}</span>
           </div>
           <p class="kit-line-blurb">{{ view.blurb }}</p>
+          <!-- Each rung now carries what it BUYS (weeks of good kit) beside what it costs, and the
+               price is the engine's `payableCents` - what the family really hands over once a deal's
+               allowance is applied - never a discount this screen worked out for itself. -->
           <div class="kit-rungs">
             <button
               v-for="rung in view.rungs"
@@ -755,11 +789,17 @@ const TAB_OPTIONS = [
               @click="chooseRung(view, rung)"
             >
               <span class="kit-rung-name">{{ rung.label }}</span>
-              <span class="kit-rung-price">{{ formatCents(rung.priceCents) }}</span>
+              <span class="kit-rung-good">{{ rung.goodWeeks }} good weeks</span>
+              <span v-if="rung.payableCents < rung.priceCents" class="kit-rung-price is-covered">
+                <s>{{ formatCents(rung.priceCents) }}</s>
+                {{ rung.payableCents === 0 ? 'free' : formatCents(rung.payableCents) }}
+              </span>
+              <span v-else class="kit-rung-price">{{ formatCents(rung.priceCents) }}</span>
             </button>
           </div>
           <p v-if="view.sponsored" class="kit-line-sponsored">
-            Her sponsor supplies this line – they keep it fresh whatever she plays.
+            Her sponsor supplies this line – they keep it fresh whatever she plays, and they pay for
+            what she buys until the season's allowance runs out.
           </p>
         </div>
       </Card>
@@ -809,7 +849,7 @@ const TAB_OPTIONS = [
 
       <ConfirmDialog
         v-if="pendingKit"
-        :message="`Buy the ${pendingKit.label} for ${formatCents(pendingKit.priceCents)}? She plays with it from this week, and every replacement is billed at this level.`"
+        :message="kitConfirmMessage"
         confirm-label="Buy it"
         @confirm="confirmKit"
         @cancel="pendingKit = null"
@@ -1231,6 +1271,26 @@ const TAB_OPTIONS = [
   font-weight: 600;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
+}
+
+/* ⚠ WHAT THE RUNG BUYS, ABOVE WHAT IT COSTS (08.08). It is quieter than the price because the price
+   is still what the parent is deciding with - but it has to be ON the button, because the button is
+   where the four-times bill gets pressed and "24 good weeks against 9" is the whole argument for it. */
+.kit-rung-good {
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A line the brand is paying for: the sticker is struck through and what the family actually hands
+   over sits beside it, in the money-in colour the ledger already uses for somebody else's money. */
+.kit-rung-price.is-covered {
+  color: var(--money-in);
+}
+.kit-rung-price.is-covered s {
+  color: var(--ink-soft);
+  opacity: 0.7;
+  margin-right: 4px;
 }
 
 .kit-line-sponsored {

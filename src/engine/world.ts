@@ -135,13 +135,13 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachLadderNote, coachMarket } from './world/coachMarket'
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachLadderNote, coachMarket }
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachLadderNote, coachMarket, coachRoomNote } from './world/coachMarket'
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachLadderNote, coachMarket, coachRoomNote }
 // W3-KIT: the till and the shop window. `GEAR_CATEGORY_LINE` comes back from equipment.ts, where it
 // moved so that a rung could be PRICED below world.ts - see the note at `resolveGear`.
 import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
-import { setKitGrade, kitLineViews, kitStateOf, KIT_LINES } from './world/kit'
-export { setKitGrade, kitLineViews, kitStateOf, KIT_LINES }
+import { setKitGrade, kitLineViews, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES } from './world/kit'
+export { setKitGrade, kitLineViews, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES }
 // W3-SUMMER: the holidays as a real training block - one predicate, both halves.
 import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }
@@ -190,11 +190,11 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
-export { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor }
+export { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, rolloverKitAllowance }
 import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
@@ -792,7 +792,29 @@ function resolveParentIncome(world: WorldState): void {
  *
  *  ⚠ AND SO DOES THE EXAM FORTNIGHT - «на тренировку можно доехать». She is home, blacked out from
  *  tournaments, not from training. What was wrong on those weeks was the COPY, not the money: the notes
- *  claimed the racquet never left the hall while $933 of coaching was billed. Fixed in engine/diary.ts. */
+ *  claimed the racquet never left the hall while $933 of coaching was billed. Fixed in engine/diary.ts.
+ *
+ *  ⚠⚠ AND A COMPETITION WEEK IS A COACHING WEEK AGAIN (owner, 08.08). This is a REVERSAL of the R4
+ *  rule that used to live on the last line, and the owner's correction is that R4 ran two different
+ *  questions together:
+ *
+ *      «я не отрицаю, мы общались про поездки тренера с игроком... а сейчас я говорю про еженедельное
+ *       списание тренерских сумм на неделях турниров - тренер продолжает работать там и давать прогресс»
+ *
+ *  The two are:
+ *    * DOES HE TRAVEL WITH HER - the 29.07 conversation, and the model he does not dispute. That is
+ *      `coachOnEventWeeks`, which is still a persisted stance and still the (locked) row on screen T.
+ *    * IS THE WEEKLY RETAINER CHARGED WHILE SHE IS AWAY - and it is, because a retainer does not stop
+ *      being a retainer because she is at an event. He keeps working and she keeps progressing.
+ *  R4 implemented the first question's toggle over the second question's arithmetic, so a girl playing
+ *  a full adult calendar had her coach stood down for 43% of her season (measured on the owner's own
+ *  save, weeks 196-255: 34 weeks billed, 26 not) while the market screen quoted her a rung computed as
+ *  if he came every week. The retainer is therefore unconditional here, and `coachOnEventWeeks` is no
+ *  longer read by this predicate at all - it means travel, and only travel, until the travel mechanic
+ *  is built. Priced in docs/specs/coach-retainer-2026-08.md.
+ *
+ *  ⚠ THE TWO EXEMPTIONS THAT SURVIVE ARE THE TWO THE OWNER RULED ON, and neither is a competition
+ *  week: college (the family stops paying) and a booked family holiday (he is not at the seaside). */
 export function coachWorksThisWeek(world: WorldState): boolean {
   // ⚠ AND FOUR YEARS AT COLLEGE ARE NOT COACHING WEEKS EITHER (W2-ENDINGS, §5.1: «the family stops
   // paying»). The scholarship is the whole economic point of that fork - it is the only place in
@@ -801,7 +823,7 @@ export function coachWorksThisWeek(world: WorldState): boolean {
   // the reason both of them read this predicate and not a copy of it.
   if (inCollege(world)) return false
   if (vacationForWeek(world, world.week) !== undefined) return false
-  return world.coachOnEventWeeks || !isCompetitionWeek(world)
+  return true
 }
 
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
@@ -827,17 +849,17 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const jitter = pickInt(rng, jLo, jHi) / 10_000
   const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background)
-  // ⚠ A COMPETITION WEEK IS NOT A COACHING WEEK (owner, R4): «мы автоматически можем не считать
-  // соревновательные и турнирные недели тренерскими, а давать игроку возможность самому отдельным
-  // переключателем добавить тренера и на эти недели тоже». She spends that week in a draw, not on
-  // his court, so by default she is not billed a retainer for it - and `coachOnEventWeeks` buys him
-  // for those weeks anyway, because a coach who travels and works between matches is exactly what
-  // the expensive rungs are for.
+  // ⚠ THE RETAINER RUNS ON A COMPETITION WEEK (owner, 08.08) - a REVERSAL of R4, whose argument used
+  // to sit here. «сейчас я говорю про еженедельное списание тренерских сумм на неделях турниров -
+  // тренер продолжает работать там и давать прогресс». A weekly retainer does not stop being owed
+  // because she is away at an event, and he does not stop working: the tournament week is where the
+  // scouting, the warm-ups and the between-match work happen. The full argument, and what R4 ran
+  // together, is on `coachWorksThisWeek`.
   //
-  // THE DRAWS HAPPEN EITHER WAY. Both pickInts above and below run on every week whatever this
-  // resolves to, and only the ARITHMETIC after them changes - the same discipline the sponsor
-  // cameo uses when it discards a gift for an ineligible background. The frozen MAIN capture
-  // cannot see a toggle.
+  // THE DRAWS HAPPEN EITHER WAY, and that has not changed. Both pickInts above and below run on
+  // every week whatever this resolves to, and only the ARITHMETIC after them changes - the same
+  // discipline the sponsor cameo uses when it discards a gift for an ineligible background. The
+  // frozen MAIN capture cannot see whether the coach was billed.
   const works = coachWorksThisWeek(world)
   const expense = works
     ? Math.round(coachWeeklyCents(rate, world.plan, world.profile.background, corridor) * jitter)
@@ -850,11 +872,19 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
   // The $0 line is still EMITTED, the way a sponsor-covered gear item is: the Money breakdown should
   // show why a coaching week cost nothing, not silently drop the row.
+  //
+  // ⚠ AND IT NAMES THE RIGHT REASON NOW. It used to say "Competition week - no coaching billed" for
+  // every unbilled week, which was the only reason it could be until 08.08 and is now never the
+  // reason at all. The two survivors are the two the owner ruled on, and they are different stories.
   addEvent(world, {
     week: world.week,
     type: 'expense',
     category: 'coaching',
-    text: works ? flavor : 'Competition week – no coaching billed',
+    text: works
+      ? flavor
+      : inCollege(world)
+        ? 'At college – the programme coaches her, not us'
+        : 'A week away as a family – no coaching billed',
     amountCents: works ? -expense : 0,
   })
   // Local-sponsor cameo: the ROLL (and the gift draw when it hits) run for EVERY background so
@@ -2163,6 +2193,24 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // of her standing among those players, not among their replacements. ZERO main-stream draws:
     // the conveyor runs entirely on `seed:conveyor:<season>`. See season/conveyor.ts.
     turnOverField(world, seasonIndexOf(world.week))
+    // 0a0e (08.08): AND THE KIT ALLOWANCE STARTS AGAIN, because the letter says it does.
+    //
+    // ⚠ THE PAPER PROMISED A SEASON AND THE CODE DELIVERED A TERM. `signOffer` zeroes `coveredCents`
+    // once, at signature, and nothing ever reset it again – so on the two- and three-season rungs
+    // «up to $3,000 of kit OVER THE SEASON» was really $3,000 over the whole contract, and a player
+    // who read the paper was being over-promised by a factor of `seasons`. The owner's save is a
+    // two-season national deal that had spent $2,463.78 of one $3,000 pot across a hundred weeks.
+    //
+    // ⚠ HERE RATHER THAN IN THE SPONSOR REVIEW, and that is what makes it idempotent WITHOUT a new
+    // persisted field. `tickWeek` visits each week exactly once, so a reset hung on week ≡ 0 fires
+    // exactly once per season by construction – no `coveredSeasonIndex`, no schema bump, no
+    // migration. The sponsor window sits at weeks 47-49 and would have reset it three weeks early,
+    // inside the season it was still measuring.
+    //
+    // AND IT REPAIRS THE GOODBYE LETTER FOR FREE: `reviewSponsors` reports `coveredCents` as
+    // "kitted her out all season – $X of kit", read at the window close, which is now the season's
+    // own spend rather than the term's. Zero draws.
+    rolloverKitAllowance(world)
   }
 
   // 0a0c-bis (30.07, MOVED 01.08): AND THE SPONSORS DECIDE – in the OFF-SEASON, which is where a
@@ -2511,10 +2559,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // `seed:growth:<week>`.
     ageYears: kidAgeExact(world.week, world.profile.birthMonth),
     plan: world.plan,
-    // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR (R4). A competition week she has not bought him
-    //     for is a week he is not there, so it develops at the self-coached rate - which is what
-    //     makes `coachOnEventWeeks` a decision rather than free money. Same predicate the bill used
-    //     at step 1, so the two can never disagree about whether he came.
+    // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR, and since 08.08 that is every week except college
+    //     and a booked family holiday. The pairing is the invariant, not the list: a week the family
+    //     is billed for is a week he is there, and a week it is not billed for develops at the
+    //     self-coached rate. Same predicate the bill used at step 1, so the two can never disagree
+    //     about whether he came - which is what made the R4 reversal a one-line change here.
     coach: coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null,
     playStyle: world.profile.playStyle,
     matchesThisWeek,

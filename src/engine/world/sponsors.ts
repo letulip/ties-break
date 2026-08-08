@@ -70,6 +70,31 @@ import { guardNotEnded } from './endings'
 // season-boundary block occupies, and on the same reading of her year: the rank she carries out of
 // the season just played, before the next one can touch it.
 
+/**
+ * THE KIT ALLOWANCE STARTS AGAIN AT THE SEASON BOUNDARY (owner, 08.08) - because the letter has
+ * always said «up to {allowance} of kit OVER THE SEASON», and until this wave it was over the TERM.
+ *
+ * `signOffer` sets `coveredCents` to 0 once, at signature; `resolveGear` and now `setKitGrade` only
+ * ever add to it. So a one-season rung was correct by accident and every multi-season rung - the
+ * national deal runs two, the global three - quietly gave the brand one pot to cover the whole
+ * contract. A parent reading the paper had no way to know his second season came with nothing.
+ *
+ * ⚠ THE CALLER IS `tickWeek`'s SEASON-BOUNDARY BLOCK, and that placement is what makes this
+ * idempotent without a persisted `coveredSeasonIndex`: a week happens exactly once, so a reset hung
+ * on `week % WEEKS_PER_YEAR === 0` fires exactly once per season by construction. No schema bump, no
+ * migration, no golden fixture - which is the whole reason it is written as a week-triggered reset
+ * rather than as a lazy "is this a new season" check inside the till.
+ *
+ * ⚠ IT RESETS THE ACTIVE DEAL ONLY. An expired contract keeps whatever it spent, because that number
+ * is read after the fact by the season wrap ("$X of kit") and by the trophy-cabinet ledger; zeroing
+ * a finished deal would erase the record of what signing it was worth. Pure state, zero draws.
+ */
+export function rolloverKitAllowance(world: WorldState): void {
+  const deal = activeKitDeal(world.offers ?? [], world.week)
+  if (!deal) return
+  deal.coveredCents = 0
+}
+
 /** What the local shop's deal is worth this season, in cents – 0 if she is not on their radar.
  *  Pure, so the tests and the bench can ask directly. `nationalRank` is her place in the DOMESTIC
  *  table (`world.kidRankDomestic`), never the ITF one.

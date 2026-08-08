@@ -11,7 +11,7 @@
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
 import { bestFitCoachAt, buildCoachRoster, coachById, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, selfRateCents } from '../coach'
-import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
@@ -150,9 +150,17 @@ export function matchesEverPlayed(world: WorldState): number {
   )
 }
 
-/** THE TOURNAMENT-WEEK TOGGLE. Pure state, zero draws on any stream - it changes only what the
- *  arithmetic downstream of an unchanged pickInt does with the number it drew, so the frozen MAIN
- *  capture cannot move. Takes effect from the NEXT tick; this week's bill is already written. */
+/** THE COACH-TRAVELS-WITH-HER STANCE. Pure state, zero draws on any stream - it changes only what
+ *  the arithmetic downstream of an unchanged pickInt does with the number it drew, so the frozen
+ *  MAIN capture cannot move. Takes effect from the NEXT tick; this week's bill is already written.
+ *
+ *  ⚠ IT NO LONGER MOVES THE RETAINER (owner, 08.08). Until this wave the flag decided whether the
+ *  weekly bill was charged on a competition week at all, which conflated travel with the retainer -
+ *  see `coachWorksThisWeek` for the owner's own separation of the two. The retainer is now
+ *  unconditional and this flag means travel, so it is a persisted stance with no arithmetic behind
+ *  it yet: the travel mechanic itself is still deferred (locked row on screen T, 30.07). The field,
+ *  the command and the copy are kept so the mechanic has somewhere to land - deleting them would
+ *  cost a schema change now and a second one when travel ships. */
 export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
   // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
   // because the worker is not the gate - a tab left open behind the epilogue must not be able to
@@ -164,43 +172,75 @@ export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
     week: world.week,
     type: 'info',
     text: on
-      ? 'Your coach travels to tournaments now – billed on competition weeks too.'
-      : 'Your coach stays home on tournament weeks – those weeks are no longer billed.',
+      ? 'Your coach travels to tournaments with her now.'
+      : 'Your coach no longer travels to tournaments – he works with her at home.',
   })
 }
 
-/** WHAT THE COACH COSTS OVER A SEASON, both ways, so the toggle can be priced rather than guessed.
+/** WHAT THE COACH COSTS OVER A SEASON - one number, because since 08.08 there is only one.
  *
- *  `weeklyCents` is the same either way - what differs is HOW MANY weeks are billed, so the honest
- *  pair of numbers is the season, not the week. Counted off the season she is actually in: the
- *  off-season weeks are already unbilled for everyone, and `eventWeeks` is the weeks of it she is
- *  entered for. Derived at snapshot time; persists nothing. */
+ *  ⚠ THE PAIR IS GONE AND SO IS THE 49-WEEK QUOTE, and the second half is a bug this wave found.
+ *  The old shape returned `seasonOffCents` / `seasonOnCents` priced over `WEEKS_PER_YEAR -
+ *  OFF_SEASON_WEEKS` = 49 weeks, on the reasoning that the off-season is unbilled for everyone. It
+ *  is not: `resolveBaseCosts` runs on every tick and `coachWorksThisWeek` never asked about the
+ *  off-season, so the coach has always billed all 52 - confirmed on the owner's save, where weeks
+ *  205/206/207 cost $309/$329/$321. The quote was understating his real season by three weeks. It
+ *  now prices exactly what the engine charges: every week of the year except the ones a booked
+ *  holiday stands him down for.
+ *
+ *  ⚠ `eventWeeks` IS READ OFF THE SEASON SHE IS IN *OR* THE ONE SHE JUST PLAYED. `world.entries`
+ *  empties when the calendar rolls, so a save taken in the off-season used to report 0 tournament
+ *  weeks - the owner's own save did, at week 255. It is no longer load-bearing for the bill, but it
+ *  is still shown, and a figure that silently reads zero for three weeks a year is worse than none.
+ *
+ *  Derived at snapshot time; persists nothing. */
 export function coachBilling(world: WorldState): {
   onEventWeeks: boolean
   weeklyCents: number
   eventWeeks: number
-  seasonOffCents: number
-  seasonOnCents: number
+  /** the weeks of the coming year the retainer is actually charged for */
+  billedWeeks: number
+  seasonCents: number
 } {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
   const rate = coach ? coach.rateCents : selfRateCents(age)
   const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background)
   const seasonStart = seasonStartWeek(world.week)
-  const seasonEnd = seasonStart + WEEKS_PER_YEAR
-  const inSeason = (w: number) => w >= seasonStart && w < seasonEnd
-  const eventWeeks = new Set(
-    world.season.filter((e) => inSeason(e.week) && world.entries.includes(e.id)).map((e) => e.week),
-  ).size
-  // The playable weeks of a season are everything but the off-season block.
-  const playableWeeks = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+  const countEntered = (from: number) => {
+    const to = from + WEEKS_PER_YEAR
+    return new Set(
+      world.season.filter((e) => e.week >= from && e.week < to && world.entries.includes(e.id)).map((e) => e.week),
+    ).size
+  }
+  // The season she is in; and if the calendar has just rolled and she has entered nothing yet, the
+  // one she has just finished, which is the honest answer to "how much of her year is tournaments".
+  const eventWeeks = countEntered(seasonStart) || countEntered(seasonStart - WEEKS_PER_YEAR)
+  const billedWeeks = Math.max(0, WEEKS_PER_YEAR - coachedWeeksLostToRest(world))
   return {
     onEventWeeks: world.coachOnEventWeeks,
     weeklyCents,
     eventWeeks,
-    seasonOffCents: weeklyCents * Math.max(0, playableWeeks - eventWeeks),
-    seasonOnCents: weeklyCents * playableWeeks,
+    billedWeeks,
+    seasonCents: weeklyCents * billedWeeks,
   }
+}
+
+/** How many of the NEXT `WEEKS_PER_YEAR` weeks the coach is stood down for, which since 08.08 is
+ *  booked family holidays and nothing else. College is not counted here: a career inside the fork is
+ *  not shopping for a coach, and the market screen is the only caller.
+ *
+ *  ⚠ IT IS THE ONE PLACE "how much of him does she actually get" IS ANSWERED, and both callers need
+ *  the same answer: the season price above, and `coachMarket`'s uplift below. A rung quoted over 52
+ *  coached weeks that she only buys 49 of is exactly the over-quote this wave exists to remove, and
+ *  two copies of this arithmetic would drift the first time a third exemption is added. */
+function coachedWeeksLostToRest(world: WorldState): number {
+  // A VacationBooking is exactly one week - `vacationForWeek` matches on `v.week === week` - so a
+  // fortnight at the sea is two bookings and counting rows is counting weeks.
+  const from = world.week
+  const to = from + WEEKS_PER_YEAR
+  const weeks = new Set((world.vacations ?? []).map((v) => v.week).filter((w) => w >= from && w < to))
+  return Math.min(WEEKS_PER_YEAR, weeks.size)
 }
 
 /** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and
@@ -213,6 +253,9 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
   const age = ageAtWeek(world.week)
   const points = kidPoints(world, 'domestic') // ⚠ the Elite gate's currency – see hireCoach above
   const weeklyIncome = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
+  // ⚠ THE QUOTE IS OVER THE WEEKS SHE WILL ACTUALLY HAVE HIM (08.08). Same arithmetic the season
+  // price uses, from the same helper, so the card and the bill can never describe different years.
+  const coachedWeeks = ECONOMY.coach.upliftHorizonWeeks - coachedWeeksLostToRest(world)
   return buildCoachRoster(world.seed, age).map((coach) => {
     const fit = coachFitFor(coach, world.profile.playStyle)
     const [upliftLo, upliftHi] = coachSeasonUplift({
@@ -223,6 +266,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       fit,
       ageFactor: ageFactor(age),
       trainFactor: trainFactor(world.plan),
+      coachedWeeks,
     })
     return {
       id: coach.id,
@@ -241,6 +285,37 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       loadNote: coachLoadNote(coach.tier),
     }
   })
+}
+
+/**
+ * HOW MUCH ROOM IS LEFT IN HER, in one sentence - the context every number on screen T is relative to.
+ *
+ * ⚠ WHY THIS EXISTS (owner, 08.08). `coachSeasonUplift` is a share of REMAINING headroom, so as she
+ * fills her ceiling every rung's quote collapses towards zero AND towards each other. Measured on the
+ * owner's own save at 93.4% realised: the cheapest budget coach prints +0.1-0.2% and the dearest elite
+ * one +0.2-0.5%, so the entire ladder fits inside four tenths of a point and his $312/wk high coach
+ * reads identically to the elite rung above it. The market had stopped discriminating and the screen
+ * said nothing about why - which is how a number that moves on its own reads as a swindle.
+ *
+ * ⚠ IT IS A SENTENCE, NOT A STAT, and deliberately: `KidScreen` keeps her ceiling behind a fog of war
+ * («the truth never crosses this line - `Snapshot` carries no `skills`»), so printing "93.4% of her
+ * potential" here would hand the player through the back door the whole radar design exists to shut.
+ * A band of four phrasings says the thing that changes a decision - is a better coach worth buying -
+ * without ever quoting the ceiling itself.
+ *
+ * Pure, zero draws, derived at snapshot time.
+ */
+export function coachRoomNote(world: WorldState): string {
+  const skills = SKILL_KEYS.map((k) => world.skills[k])
+  const headroom = SKILL_KEYS.map((k) => Math.max(0, world.potential[k] - world.skills[k]))
+  const level = skills.reduce((a, b) => a + b, 0) / skills.length
+  const room = headroom.reduce((a, b) => a + b, 0) / headroom.length
+  if (level + room <= 0) return ''
+  const realised = level / (level + room)
+  if (realised < 0.6) return 'She has a long way to go – this is where a coach buys the most.'
+  if (realised < 0.8) return 'There is real room left in her game, and a coach is what buys it.'
+  if (realised < 0.92) return 'She is closing on her own ceiling – every rung is worth less than it was.'
+  return 'She is near her own ceiling now. No coach can add much more, whatever he costs.'
 }
 
 /** WHAT EACH RUNG DOES ABOUT HER BODY, for the market card - the load wave's two new differences said

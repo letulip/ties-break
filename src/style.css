@@ -3337,6 +3337,15 @@ tr.kid-row td {
   font-variant-numeric: tabular-nums;
 }
 
+/* ⚠ HOW MUCH ROOM IS LEFT IN HER (08.08) - the sentence the falling uplift needed beside it. It reads
+   as a remark rather than as a stat, which is deliberate: it is the only thing on this screen that is
+   about HER rather than about a coach, and printing it in the numeric register would make it look like
+   the ceiling figure the radar's fog of war exists to withhold. */
+.cm-room-note {
+  margin: 6px 0 0;
+  font-style: italic;
+}
+
 /* A tier is a SECTION, not a filter (design §T.1): dot, name, count, price range. */
 .tier-block {
   margin-bottom: 18px;
