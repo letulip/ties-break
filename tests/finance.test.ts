@@ -151,26 +151,22 @@ describe('financeWeeks — the persisted per-week finance aggregate', () => {
     // is now a flat annual grant instead (see ECONOMY.sponsorship). No gear line is ever $0 again,
     // and a fixture that pushes a 100k result can no longer force this state at all.
     //
-    // The surviving producer is the COACHING line on a competition week: `coachWorksThisWeek` is
-    // false when `coachOnEventWeeks` is off (the default) and she is in a draw, and the row is still
-    // emitted at $0 - "Competition week – no coaching billed" - for exactly the reason this test
-    // guards. So the fixture enters her in a tournament, which is a more honest way to reach the
-    // state anyway: it is the one the shipped game actually reaches every time she plays.
+    // ⚠ FIXTURE RE-AIMED AGAIN 08.08, AND THE ASSERTION IS STILL UNTOUCHED. The producer it used was
+    // the COACHING line on a competition week, which the owner has now reversed: the retainer runs
+    // on tournament weeks («тренер продолжает работать там и давать прогресс»), so a competition
+    // week is billed and can no longer be $0. The surviving producer is a BOOKED FAMILY HOLIDAY -
+    // the 30.07 ruling that he is not at the seaside and is not owed - which is still a week the
+    // shipped game reaches, still emits its row, and still must not leave a 0 in the aggregate.
     const world = createWorld('zero', { ...DEFAULT_PROFILE, background: 'middle' })
-    expect(world.coachOnEventWeeks).toBe(false) // ...the precondition the $0 coaching row needs
     const rng = rngFromSeed(world.seed)
-    let entered = 0
+    let rests = 0
     for (let i = 0; i < 40; i++) {
-      // Enter every affordable local event as its deadline nears – local's floor is 0 points, so a
-      // fresh kid qualifies without any grant.
-      for (const e of world.season) {
-        if (e.tier !== 'local' || world.entries.includes(e.id)) continue
-        if (world.week > e.deadlineWeek || e.deadlineWeek - world.week > 2) continue
-        if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
-        if (!tierOpenFor(world, e.tier)) continue
-        if (availabilityStatus(world, e).level === 'blocked') continue
-        enterEvent(world, e.id)
-        entered++
+      // A week at the sea every fifth week - booked directly, because what this fixture needs is the
+      // stood-down coaching row and not the planner's own pricing path. Booked for the week the tick
+      // is ABOUT to live: `tickWeek` advances `world.week` before it bills.
+      if (world.week % 5 === 2) {
+        world.vacations.push({ week: world.week + 1, packageId: 'seaside', paidCents: 0 })
+        rests++
       }
       tickWeek(world, rng)
       if (world.pendingTournament) {
@@ -178,7 +174,7 @@ describe('financeWeeks — the persisted per-week finance aggregate', () => {
         closeTournament(world)
       }
     }
-    expect(entered).toBeGreaterThan(0) // the fixture really did put her in draws
+    expect(rests).toBeGreaterThan(0) // the fixture really did stand the coach down
     // $0 line-items really are being emitted...
     expect(world.events.some((e) => e.amountCents === 0 && e.category === 'coaching')).toBe(true)
     // ...but they never leave a 0 sitting in the aggregate (skipped, since no cash moved).

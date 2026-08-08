@@ -64,7 +64,7 @@ export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
-import { coachBilling, coachEntryLine, coachMarket } from './coachMarket'
+import { coachBilling, coachEntryLine, coachMarket, coachRoomNote } from './coachMarket'
 import { kitLineViews } from './kit'
 import { copyTrophyLedger, emptySeasonRecord } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
@@ -738,6 +738,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     coachId: world.coachId,
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),
+    coachRoomNote: coachRoomNote(world),
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),

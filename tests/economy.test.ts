@@ -28,6 +28,12 @@ import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground } from '../src/s
 // staying cheap.
 const SEEDS = Array.from({ length: 16 }, (_, i) => `cal-${i + 1}`)
 
+/** The first week of the season a kit deal signed in the first off-season actually COVERS.
+ *  `coveredSeasonStart(49)` – the letter is for the season ahead, not the fortnight it arrives in.
+ *  Named because three assertions now measure the ledger over exactly that block, since 08.08 made
+ *  `coveredCents` a per-season counter rather than a per-term one. */
+const COVERED_SEASON_START = 52
+
 /** The season's physio/medical spend in cents (a positive number). Season-Life slice C layered
  *  injuries + physio ON TOP of the base economy; the owner's net-burn bands below were frozen
  *  BEFORE that layer, so the calibration excludes the 'physio' bucket (a stochastic medical tail
@@ -314,7 +320,15 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     if (answer === 'sign') acceptOffer(world, offer!.id)
     else declineOffer(world, offer!.id)
     const startOfSeason = world.fundsCents
-    for (let i = 0; i < 52; i++) tickWeek(world, rng)
+    // ⚠ 52 -> 54 TICKS, AND `coveredCents` IS NOW A PER-SEASON COUNTER (08.08). The allowance resets
+    //   at the season boundary, because the letter has always promised «up to $X of kit OVER THE
+    //   SEASON» and a multi-season rung used to get one pot for the whole term. The consequence for
+    //   this helper is that "52 ticks from the signature" stopped being a season: the deal runs from
+    //   the week he signs (49) and the COVERED season is the calendar block 52-103, so the old
+    //   window straddled the reset and read a fragment. Ticking to week 103 measures exactly one
+    //   covered season, which is what every assertion below was always trying to ask - and it now
+    //   also reaches the sponsor window's last week, which the note below says a caller wants.
+    for (let i = 0; i < 54; i++) tickWeek(world, rng)
     // ⚠ `rng` COMES BACK OUT (05.08) so a caller can keep ticking on the SAME stream. The sponsor
     //   window's one feed row is written on the window's LAST week rather than its first, so a test
     //   that wants to read it has to reach week 51 of the year - and re-deriving the stream would
@@ -334,19 +348,37 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
       expect(covered, `${bg} spent more than the allowance`).toBeLessThanOrEqual(cap)
       expect(covered, `${bg} got nothing out of a signed deal`).toBeGreaterThan(0)
     }
-    // ...and the ceiling BINDS at the top of the corridor, which is what makes the sentence above a
-    // claim rather than an accident of small numbers: a wealthy family's kit bill runs past the
-    // allowance, so it takes the whole thing and not a cent more.
-    // ⚠ RE-AIMED ONTO THE RUNG WHERE THE ALLOWANCE STILL DESCRIBES THE DEAL (01.08) - see the block
-    //   note above. `local` covers one line now and a $2,000 top allowance no longer bites on a
-    //   ~$1,495 string bill; `global` covers all three and its $5,000 ceiling does. The claim being
-    //   guarded ("the corridor can raise the BILL and never the CAP") is the same claim, measured
-    //   where it is measurable, and `topSeasonCents` being sized for a deal it no longer describes
-    //   is reported as a tuning question rather than answered here.
-    const top = ECONOMY.sponsorship.global.seasonCents
-    const rich = seasonUnderDeal('flat-rich-top', 'wealthy', 'sign', 'world-class')
-    expect((rich.world.offers[0].terms as { tier: string }).tier).toBe('global')
-    expect(rich.covered).toBe(top)
+    // ...and the CAP ITSELF is background-independent, which is the claim above stated exactly.
+    //
+    // ⚠ RE-AIMED 08.08, AND THE OLD FORM WAS ONLY TRUE BECAUSE OF THE BUG IT SAT ON. It used to
+    //   assert `rich.covered === global.seasonCents` - the wealthy family spends the ceiling exactly
+    //   - and that held because `coveredCents` never reset, so the accumulator was measuring the
+    //   whole TERM against a cap the letter promises per SEASON. With the reset in place a clean
+    //   covered season measures (seed flat-rich-top, weeks 52-103, global rung, all three lines):
+    //
+    //       covered $4,446 · family paid $1,288 (apparel, which no kit deal has ever covered)
+    //       gross kit bill $5,734 · cap $5,000
+    //
+    //   so the covered LINES come to $4,446 against a $5,000 pot and the ceiling does not bite for a
+    //   single season of cadence buying. That is not a regression, it is the fix showing through: a
+    //   per-season pot is bigger than a per-term one. The invariant is unchanged and is now asserted
+    //   where it cannot be an accident of window length - on the TERMS, which is where "it does not
+    //   know the family is rich" actually lives - plus the bound on what is spent, which is kept.
+    //
+    // ⚠ FOR THE OWNER, a tuning question this exposed and does not answer: `global.seasonCents` at
+    //   $5,000 is now larger than a wealthy family's whole annual covered-lines bill, so the top rung
+    //   effectively covers everything she buys on cadence. It only starts to bite when she also buys
+    //   UP the ladder, which since 08.08 spends the same pot. Sized deliberately or not, it is a
+    //   number to look at with the per-season reading in mind.
+    const caps = new Set<number>()
+    for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+      const { world } = seasonUnderDeal(`flat-top-${bg}`, bg, 'sign', 'world-class')
+      const terms = world.offers[0].terms as { tier: string; kitAllowanceCents: number }
+      expect(terms.tier, `${bg} was not written to by the top rung`).toBe('global')
+      caps.add(terms.kitAllowanceCents)
+    }
+    expect(caps.size, 'the allowance differs by background').toBe(1)
+    expect([...caps][0]).toBe(ECONOMY.sponsorship.global.seasonCents)
   })
 
   it('a middle kid on a full deal keeps >= $1.5k more over the covered season than one who refused', () => {
@@ -368,11 +400,84 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     // covered total, and correctly so: money she did not spend sits in the account earning R9-1's
     // savings interest, so the balances diverge by a few dollars more than the kit did. Comparing the
     // gear buckets instead measures the mechanism rather than its second-order tail.)
+    // ⚠ THE LEDGER WINDOW IS THE COVERED SEASON NOW, NOT WEEK 0 (08.08). `covered` counts one
+    //   season since the allowance started resetting at the boundary, so a ledger summed from week 0
+    //   includes the three off-season weeks between the signature (49) and the season it is FOR (52)
+    //   and would exceed it. Same assertion, same mechanism, measured over the same window as the
+    //   number it is compared against - which is what makes the equality meaningful rather than
+    //   coincidental.
     const kitSpend = (w: WorldState) => {
-      const cats = financeWindow(w.financeWeeks, 0).byCategory
+      const cats = financeWindow(w.financeWeeks, COVERED_SEASON_START).byCategory
       return -((cats.gear ?? 0) + (cats.stringing ?? 0))
     }
     expect(kitSpend(refused.world) - kitSpend(signed.world)).toBe(signed.covered)
+  })
+
+  // ⚠ THE ALLOWANCE IS PER SEASON, BECAUSE THE LETTER SAYS SO (owner, 08.08). `signOffer` zeroed
+  // `coveredCents` once, at signature, and nothing reset it again - so «up to $X of kit over the
+  // season» was really $X over the whole TERM, and the two- and three-season rungs quietly gave the
+  // brand one pot to cover two or three years. The owner's own save is a two-season national deal
+  // that had spent $2,463.78 of a single $3,000 pot across a hundred weeks.
+  //
+  // ⚠ TESTED ON A DEAL BUILT HERE RATHER THAN THROUGH `seasonUnderDeal`, and the reason is worth
+  // recording because it cost a debugging pass: that fixture enters NO tournaments, so the brand
+  // reviews her at the first window, finds `minEventsPerSeason` unmet and walks. Its deal is already
+  // over by week 101 - `activeKitDeal` returns nothing at 103 - so it could never have reached a
+  // season boundary alive. What is under test is the rollover, not the obligation.
+  it('the kit allowance starts again at the season boundary, once per season', () => {
+    const world = createWorld('kit-rollover', { ...DEFAULT_PROFILE, background: 'middle' })
+    const deal = {
+      id: 'kit-roll',
+      kind: 'kit' as const,
+      week: 0,
+      deadlineWeek: 4,
+      state: 'signed' as const,
+      decidedWeek: 1,
+      fromWeek: 0,
+      untilWeek: 400,
+      coveredCents: 1_234_00,
+      terms: {
+        tier: 'national',
+        brand: 'Netrally Distribution',
+        kitAllowanceCents: 3_000_00,
+        freshCap: 0.3,
+        // ⚠ ZERO, so the brand cannot walk at the first window for an unmet obligation - which is
+        //   exactly what ends `seasonUnderDeal`'s contract before it ever reaches a boundary. What
+        //   is under test is the rollover, not the obligation.
+        minEventsPerSeason: 0,
+        covers: ['strings', 'frame'],
+        travelShare: 0,
+        seasons: 2,
+      },
+    }
+    world.offers.push(deal as unknown as (typeof world.offers)[number])
+    const rng = rngFromSeed(world.seed)
+
+    // Mid-season weeks leave the pot alone (it only ever grows, as gear is billed onto it).
+    for (let i = 0; i < 10; i++) tickWeek(world, rng)
+    expect(world.week).toBe(10)
+    expect(deal.coveredCents).toBeGreaterThanOrEqual(1_234_00)
+
+    // ...and the boundary clears it. ⚠ IDEMPOTENT BY CONSTRUCTION, which is why this needed no
+    // persisted `coveredSeasonIndex` and no schema bump: the reset hangs on a WEEK, and a week
+    // happens exactly once. So it must fire at 52 and never again until 104.
+    while (world.week < 51) tickWeek(world, rng)
+    const beforeBoundary = deal.coveredCents
+    expect(beforeBoundary).toBeGreaterThan(0)
+    tickWeek(world, rng) // -> week 52
+    expect(world.week).toBe(52)
+    expect(deal.coveredCents).toBe(0)
+
+    // The new season spends the NEW pot, and nothing clears it again inside the year. Twenty weeks
+    // is plenty to see it grow monotonically - the file is already the slowest in the suite.
+    let peak = 0
+    for (let i = 0; i < 20; i++) {
+      tickWeek(world, rng)
+      const now = deal.coveredCents ?? 0
+      expect(now, `cleared mid-season at week ${world.week}`).toBeGreaterThanOrEqual(peak)
+      peak = now
+    }
+    expect(peak).toBeGreaterThan(0)
   })
 
   it('⚠ ...and the local shop is still worth REAL money – less of it, and only on her strings', () => {
@@ -384,8 +489,9 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     const refused = seasonUnderDeal('cal-local-worth', 'middle', 'refuse')
     expect((signed.world.offers[0].terms as { tier: string }).tier).toBe('local')
     expect(signed.covered / 100).toBeGreaterThan(200)
+    // Same covered-season window as the test above, and for the same reason (08.08).
     const bucket = (w: WorldState, cat: 'gear' | 'stringing') =>
-      -(financeWindow(w.financeWeeks, 0).byCategory[cat] ?? 0)
+      -(financeWindow(w.financeWeeks, COVERED_SEASON_START).byCategory[cat] ?? 0)
     // Strings: the shop paid for them, so the family's own stringing bill fell by exactly that much.
     expect(bucket(refused.world, 'stringing') - bucket(signed.world, 'stringing')).toBe(signed.covered)
     // ⚠ Racquets and shoes: NOT one cent. They are on the `gear` line and they stayed hers, which is

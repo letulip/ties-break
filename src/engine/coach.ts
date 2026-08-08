@@ -413,6 +413,21 @@ function headroomShareTaken(rateWeekly: number, luck: number, weeks: number): nu
   return 1 - Math.pow(Math.max(0, 1 - rateWeekly * luck), weeks)
 }
 
+/** ...and the same thing for a season she does not buy the whole of: `coached` weeks at his rate and
+ *  the rest at the parent's. The two factors compound in either order, so this is exact rather than
+ *  an interpolation - which matters, because the quantity it corrects used to be wrong by 43%. */
+function headroomShareTakenMixed(
+  rateCoach: number,
+  rateSelf: number,
+  luck: number,
+  weeks: number,
+  coached: number,
+): number {
+  const withHim = Math.pow(Math.max(0, 1 - rateCoach * luck), coached)
+  const without = Math.pow(Math.max(0, 1 - rateSelf * luck), Math.max(0, weeks - coached))
+  return 1 - withHim * without
+}
+
 /** WHAT THIS COACH WOULD ADD, FOR HER, RIGHT NOW - the projection screen T prints on a coach row.
  *
  *  THE OWNER ASKED FOR THIS AS A NUMBER and sketched the answer himself: «"budget может добавить
@@ -433,6 +448,13 @@ function headroomShareTaken(rateWeekly: number, luck: number, weeks: number): nu
  *  A RANGE, NEVER A NUMBER: the weekly luck draw is real spread (0.55-1.45), so the two ends are
  *  that band's ends. And never a promise - the copy says what a rung CAN add.
  *
+ *  ⚠⚠ AND IT QUOTES THE WEEKS SHE ACTUALLY BUYS (owner, 08.08). This projected over 52 COACHED weeks
+ *  unconditionally and never asked how many weeks of the year the coach is really there - so under
+ *  the R4 rule, which stood him down for every competition week, the owner's own save was quoted
+ *  +0.2-0.5% a season on a rung it was delivering 57% of. He was being shown a number the game had
+ *  no intention of paying. `coachedWeeks` is now an input, the mixed compounding above is exact, and
+ *  the two can no longer drift: whatever stands the coach down, the quote follows it.
+ *
  *  Pure: zero draws on any stream. Returns [lo, hi] as percentages of her current level. */
 export function coachSeasonUplift(input: {
   /** her attributes today, in any fixed order */
@@ -447,6 +469,10 @@ export function coachSeasonUplift(input: {
   /** the age and train factors, injected so this file does not import development.ts back */
   ageFactor: number
   trainFactor: number
+  /** how many of the horizon's weeks he is actually there for. Defaults to the whole horizon, which
+   *  is what every pure caller that has no world to ask means - and what the projection assumed
+   *  silently before 08.08. */
+  coachedWeeks?: number
 }): [number, number] {
   const n = input.skills.length
   if (n === 0) return [0, 0]
@@ -455,13 +481,20 @@ export function coachSeasonUplift(input: {
   if (current <= 0 || headroom <= 0) return [0, 0]
 
   const weeks = ECONOMY.coach.upliftHorizonWeeks
+  const coached = Math.max(0, Math.min(weeks, input.coachedWeeks ?? weeks))
   const [luckLo, luckHi] = ECONOMY.development.weekLuck
   const base = input.ageFactor * input.trainFactor
   const rateCoach = base * coachFactor(input.tier, input.fit)
   const rateSelf = base * coachFactor('self', ECONOMY.coach.selfFit)
 
+  // The baseline is a WHOLE season self-coached, because that is the free option end to end. The
+  // coached arm is the mixed season she would really get, so a rung she only buys 40 weeks of is
+  // quoted at what 40 weeks of it is worth.
   const at = (luck: number): number =>
-    ((headroomShareTaken(rateCoach, luck, weeks) - headroomShareTaken(rateSelf, luck, weeks)) * headroom * 100) /
+    ((headroomShareTakenMixed(rateCoach, rateSelf, luck, weeks, coached) -
+      headroomShareTaken(rateSelf, luck, weeks)) *
+      headroom *
+      100) /
     current
 
   // Luck is shared by both arms, so the ends of the band are the ends of the DIFFERENCE too: a

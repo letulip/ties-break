@@ -403,3 +403,61 @@ proposing anything, because display and supply have completely different repairs
   где-то еще» is delivered for the J rungs and not for local/regional/national. Same "two ceilings
   must agree" argument as the entry ruling above, but an ENGINE gate change with balance
   consequences, so it is filed rather than taken.
+
+## 2026-08-08 – Round 14 Group D: the coach is on a retainer, and the sponsor pays the till (`fix/coach-and-cover`)
+
+Three items from the 06.08 playtest, and the owner corrected the framing on two of them. Full
+measurement and every figure: `docs/specs/coach-retainer-2026-08.md`.
+
+**1. ⚠ R4 IS REVERSED – a competition week IS a coaching week.** «я не отрицаю, мы общались про
+поездки тренера с игроком (кстати можно наверное какое-то уведомление игроку давать, что поездки
+теперь возможны), а сейчас я говорю про еженедельное списание тренерских сумм на неделях турниров –
+тренер продолжает работать там и давать прогресс».
+
+R4 (29.07) had run TWO questions together and this separates them for good:
+- **does he travel with her** – `coachOnEventWeeks`, still a persisted stance, still the locked row on
+  screen T, mechanic still cancelled (30.07). It no longer moves any money.
+- **is the weekly retainer owed while she is away** – yes, always. A retainer does not stop being owed
+  because she is at an event, and he does not stop working.
+
+This is the model the owner had already stated on 30.07 and nobody implemented: «Здесь просто пусть
+списывается недельный кост и капает навык – всё.» The only exemptions left are college and a booked
+family holiday, both of which are his own earlier rulings.
+
+⚠ **It is an expensive fix and it shipped anyway.** 108 careers per arm, 14→20: bankruptcy 40.7% →
+52.8%, career coaching spend +56.6% (+$4,197 on the median season), for +0.285 peak skill points and
+**no rank movement at all**. Shipped because it is a correctness fix, not a tuning choice – the family
+was being told it employed a coach and was employing one for 57% of the year.
+
+⚠ **Do NOT build a "he contributes differently at a tournament" mechanic.** All three versions of that
+idea were built and measured on 30.07 and all three failed (the boolean: +$21k for +0.6 skill; a run-
+fatigue discount: 2 condition points out of ~36; a match-strength edge: elite results got WORSE, 12.7
+wins → 5.8). The record is in commit `77e08aa`.
+
+⚠ **STILL OPEN – the travel notification he suggested.** It cannot be built yet: travel never becomes
+possible (the row is hardcoded `disabled` and the mechanic is cancelled), so a notice saying it is now
+available would be false. Needs the unlock ruled on first.
+
+**2. The coach's falling percentage was honest AND over-quoted 1.76x.** «У выбранного тренера
+поменялся % через некоторое время, сначала было 0,5–1,0, потом стало 0,4–0,9, сейчас уже 0,3–0,7.»
+The fall is real – growth is a share of remaining headroom and the age curve eases – and the model
+reproduces his three sightings from his own save. But the projection assumed 52 COACHED weeks while
+R4 stood the coach down for 43% of his season, so it quoted a rung it delivered 57% of. `coachedWeeks`
+is now an input. A one-line engine-computed note also says how much room is left in her, because at
+93.4% realised the whole ladder collapses into four tenths of a point and nothing said so. It never
+quotes a figure – her ceiling stays behind the radar's fog of war.
+
+**3. The sponsor now pays at the till, and the allowance is per SEASON.** «ну надо что-то с этим
+сделать, а то совсем непонятный механизм сейчас. Еще вообще хорошо бы дать понять что разные тиры
+шмота дают вообще.» `setKitGrade` never consulted the deal – the one place in the game that spent
+money on kit without asking who had promised to pay. And `coveredCents` was zeroed only at signature,
+so «up to $3,000 over the season» was $3,000 over a two- or three-season TERM. Both fixed, with no
+schema change: the reset hangs on the season-boundary week, which happens exactly once.
+
+⚠ **A tuning question this exposed:** with a per-season pot, `global.seasonCents` ($5,000) is now
+larger than a wealthy family's whole annual covered-lines bill ($4,446 measured), so the top rung
+covers everything she buys on cadence and only bites when she also buys UP the ladder.
+
+**And the kit tiers say what they give.** A rung buys TIME, never power – `equipment.ts` is explicit
+that fresh kit is exactly neutral at every rung and wear only ever subtracts. The screen said "plays
+truer", which was the one thing it does not do; it now shows weeks-before-Worn per rung.

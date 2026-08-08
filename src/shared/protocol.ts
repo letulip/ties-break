@@ -1244,8 +1244,25 @@ export interface KitLineView {
   /** her CONDITION on this line right now, 0 = as new, 1 = spent (`kitWearAt`'s units) */
   wear: number
   /** what the family's recurring bill for this line costs at each rung, cents - the mid of the
-   *  background's own band times the rung's price factor, so the corridor is visible at the till */
-  rungs: { grade: KitGrade; label: string; blurb: string; priceCents: number; owned: boolean }[]
+   *  background's own band times the rung's price factor, so the corridor is visible at the till.
+   *
+   *  `payableCents` is what the FAMILY would actually hand over for that rung today, after a signed
+   *  deal's allowance (08.08). It equals `priceCents` when nobody is covering the line, and the
+   *  screen must print IT rather than deriving the discount itself - the till is the only authority
+   *  on what a purchase costs, and until this wave the two disagreed by the whole price.
+   *
+   *  `goodWeeks` is what the rung BUYS, in weeks before the line reads "Worn" - the only honest unit
+   *  for a model in which fresh kit is exactly neutral and wear only ever subtracts. See
+   *  `goodWeeksFor`; it is not a power figure because there is no power figure to give. */
+  rungs: {
+    grade: KitGrade
+    label: string
+    blurb: string
+    priceCents: number
+    payableCents: number
+    goodWeeks: number
+    owned: boolean
+  }[]
   /** true while a signed deal covers this line - the brand is supplying her, so the rung she picks
    *  changes what she is billed and almost nothing about how fresh she is (see `kitFreshCap`) */
   sponsored: boolean
@@ -2028,16 +2045,25 @@ export interface Snapshot {
   coachId: string | null
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
   coachMarket: CoachMarketRow[]
-  /** What the coach costs over a season with tournament weeks OFF and ON, so the toggle can be
-   *  priced rather than guessed. The weekly rate is the same either way; the week COUNT differs. */
+  /** What the coach costs, weekly and over the coming year.
+   *
+   *  ⚠ ONE SEASON FIGURE SINCE 08.08, not the OFF/ON pair. The retainer is charged on every week the
+   *  coach is not stood down - which is no longer a question the tournament calendar answers - so
+   *  there is nothing left to compare. See `coachWorksThisWeek`. */
   coachBilling: {
+    /** does he TRAVEL with her (a persisted stance; the mechanic itself is still deferred) */
     onEventWeeks: boolean
     weeklyCents: number
-    /** weeks of the current season she is entered for */
+    /** weeks of the season she is entered for – the season she is in, or the one just finished */
     eventWeeks: number
-    seasonOffCents: number
-    seasonOnCents: number
+    /** weeks of the coming year the retainer is actually charged for */
+    billedWeeks: number
+    seasonCents: number
   }
+  /** ONE SENTENCE ABOUT HOW MUCH ROOM IS LEFT IN HER (08.08) – the context every uplift on screen T
+   *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
+   *  fills her ceiling. Never quotes the ceiling itself; see `coachRoomNote`. */
+  coachRoomNote: string
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */
   vacations: VacationBooking[]

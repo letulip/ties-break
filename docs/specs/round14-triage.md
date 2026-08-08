@@ -79,16 +79,20 @@ playable, and whether an outgrown rung that now pays points changes her climb.
   yes/no on delete.
 - **Onboarding is width-capped on desktop**, like every other screen.
 
-### Group D – money and the coach *(4, 6, 10)*
-- **His coach's percentage keeps falling** – 0.5–1.0, then 0.4–0.9, now 0.3–0.7. The likely answer is
-  that it is honest and unexplained: growth is a share of REMAINING headroom, she is at ~94% of her
-  ceiling, and the age curve eases past eighteen. If so the fix is legibility, not arithmetic – but
-  it is measured before it is asserted.
-- **`coachOnEventWeeks` is `false`** in his save, and `coachActive` reads
-  `world.coachOnEventWeeks || !isCompetitionWeek(world)`. He remembers deciding the opposite. Find
-  the decision, honour it, and if there is no record, treat his memory as the ruling.
-- **A sponsor covering strings and frame did not cover a purchase** made from the bills screen. Either
-  the coverage is not consulted on that path, or it is and the copy lies about what is covered.
+### Group D – money and the coach *(4, 6, 10)* — **DONE**, `fix/coach-and-cover`
+Shipped and measured: `docs/specs/coach-retainer-2026-08.md`. The triage's reading was half right on
+item 4 and the other half was a real bug.
+
+- **His coach's percentage keeps falling.** The FALL is honest – headroom plus the age curve, and the
+  model reproduces his three sightings off his own save. But the projection assumed 52 *coached* weeks
+  while the R4 rule stood the coach down for 43% of his season, so it **over-quoted by 1.76x**. Both
+  halves fixed: `coachSeasonUplift` takes `coachedWeeks`, and a room note explains the fall.
+- **`coachOnEventWeeks`** — the predicate is `coachWorksThisWeek`, not `coachActive`. There WAS a
+  record and it did not contradict him: R4 asked for a toggle, 30.07 deferred the toggle, and the same
+  30.07 ruling stated the flat model in words nobody implemented. The owner separated travel from the
+  retainer on 08.08; **the retainer is now unconditional** and the flag means travel only.
+- **The sponsor** — explanation (a): coverage was genuinely never consulted on the purchase path.
+  Wired. And the allowance was per-TERM against a letter promising per-SEASON; that is fixed too.
 
 ### Group E – stats and ages *(3, 8)*
 - **Opponent ages** in matches and in the stats tables.
