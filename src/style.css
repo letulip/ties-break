@@ -155,6 +155,12 @@
      record of what the owner sent, and the grid simply no longer paints with it. Three hues below
      have no wallet side at all (school, study, rest are hours, not spending) and exist for the grid. */
   --cat-coaching: #cfe152;
+  /* ⚠ THE COURT IS COACHING'S OWN HUE, DESATURATED AND A SHADE DEEPER (v44, the bill split). It is
+     the one pair in this table that must read as ONE THING IN TWO PARTS rather than as two
+     unrelated spends - a family looking at the wallet should see the training bill as a lime block
+     with a quieter half, which is exactly what it is. Same hue family (72deg), lower chroma and
+     lightness, and it still clears the donut's dark card. */
+  --cat-facility: #9aa855;
   --cat-travel: #9a86e0;
   --cat-entry: #e5a23c;
   --cat-gear: #d97f52;

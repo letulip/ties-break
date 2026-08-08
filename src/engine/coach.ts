@@ -121,12 +121,18 @@ export function coachHoursForPlan(plan: WeekPlan): number {
   return anchors[anchors.length - 1][1]
 }
 
-/** What the parent's rung costs an hour: the MIDDLE of the self band.
+/** WHAT THE COURT COSTS AN HOUR - the middle of the `self` band.
+ *
+ *  ⚠ THIS USED TO BE CALLED `selfRateCents` AND THE RENAME IS THE WHOLE POINT OF THE SPLIT
+ *  (docs/specs/split-the-bill-2026-08.md). The band expresses "court time costs $10-30/h" and the
+ *  self rung took the middle of it because a parent's hour is free and the court's is not - so the
+ *  number was ALWAYS the facility price wearing a coaching name, and the owner could not read his own
+ *  bill because of it. It is now named for what it is and it is charged to every rung, not just the
+ *  parent's: `self` pays this and nothing else, and a hired rung's price is inclusive of it.
  *
  *  Self has no roster and nobody to be dearer than, so unlike a hired coach it does not draw a rate
- *  of its own - the band expresses "court time costs $10-30/h" and the rung takes the middle of it.
- *  Rounded to whole cents so the ledger stays integer. */
-export function selfRateCents(ageYears: number): number {
+ *  of its own. Rounded to whole cents so the ledger stays integer. */
+export function facilityRateCents(ageYears: number): number {
   const [lo, hi] = coachRateBandCents('self', ageYears)
   return Math.round((lo + hi) / 2)
 }
@@ -161,6 +167,81 @@ export function coachWeeklyCents(
   corridor: number = coachCorridorMid(background),
 ): number {
   return Math.round(rateCents * coachHoursForPlan(plan) * corridor)
+}
+
+// =================================================================================================
+// ⚠ TWO LINES, ONE TOTAL - the split (docs/specs/split-the-bill-2026-08.md)
+// =================================================================================================
+//
+// THE OWNER COULD NOT READ HIS OWN BILL, and both halves of his report are true:
+//
+//   «на неделях всё еще списывается какая-то рандомная сумма и как будто не за тренера, мне кажется
+//    нам нужно отдельной строчкой списывать тренера, а отдельной рент залов и прочего»
+//
+// The "random" half is the week jitter, which is real, deliberate and stays (see weekJitterBps). The
+// "as if not for the coach" half is the one that was actually wrong: coach-tiers.md §3 ruled that
+// "simpler to keep the tier price inclusive [of court rental] and say so", and the consequence
+// nobody stated is that a SELF-COACHED family's line labelled `coaching` is 100% court rental for a
+// parent who works free, while every hired rung is coach plus court in one number that cannot be
+// decomposed by anyone, including us.
+//
+// ⚠ THIS REVERSES §3, and it reverses it as a PARTITION rather than a re-price. The facility line is
+// the court rental the `self` rung was already priced at; the coach line is what is left of his rate
+// above it. So `coach + facility` is byte-identical to the number the ledger charged before, at
+// every rung, in every corridor, on every week - which is the claim the bench and
+// tests/split-the-bill.test.ts both hold, and the reason a legibility fix cannot smuggle a balance
+// change. What changes is that the family can SEE the two, and that `self` books no coach line at
+// all.
+//
+// ⚠ THE CORRIDOR IS ALREADY ON THE FACILITY LINE and needed nothing added: the corridor multiplies
+// the whole bill, so splitting it splits the corridor with it. That is the owner's own second ask
+// («с разным тиром для разного уровня семей») satisfied by arithmetic that was already there - a
+// working-class club charges 0.7-0.8 of the court, a premium academy 1.2-1.3.
+//
+// ⚠ ONE DRAW PRODUCES BOTH LINES, and that is a design choice rather than a constraint we were stuck
+// with. The frozen MAIN capture is a documented measurement and not a change-gate (CLAUDE.md
+// invariant 2: "a wave that legitimately adds a MAIN draw updates the pin"), so a second jitter was
+// available and was not taken. THE REASON IS THE FICTION: the jitter is a property of the WEEK - a
+// session moved, an extra half hour, a court at a busy time - and not of the coach or of the court
+// separately. Two independent wobbles would read as noise; one week's jitter carried by both lines
+// reads as a week. So the week's single `pickInt` is passed IN as `jitter` and every quantity here
+// is a post-draw multiply off pure look-ups. The capture cannot see the split.
+
+/** The weekly training bill, decomposed. `coachCents + facilityCents === totalCents` exactly. */
+export interface WeeklyBillSplit {
+  /** what the family pays this week - the SAME number the unsplit bill charged */
+  totalCents: number
+  /** his labour: the rate above the court, 0 at the `self` rung */
+  coachCents: number
+  /** the court, the hall and the queue for it - corridor-priced, charged at every rung */
+  facilityCents: number
+}
+
+/** THE SPLIT, in one place so the ledger, the Money screen and the market cannot disagree.
+ *
+ *  `rateCents` is the WHOLE hourly rate the family pays - her coach's own rate, or `facilityRateCents`
+ *  when nobody is hired. The facility half is that same arithmetic run at the court's rate, and the
+ *  coach half is the remainder, so the two are guaranteed to sum to the total whatever the roundings
+ *  do. `Math.min` is a floor and not a fix: no rung's band reaches below the `self` band, so a
+ *  facility quote can only exceed the total if someone re-prices one of them, and a negative coach
+ *  line would be worse than a zero one. */
+export function weeklyBillSplit(input: {
+  rateCents: number
+  ageYears: number
+  plan: WeekPlan
+  background: FamilyBackground
+  /** the week's own corridor roll; defaults to the quoting midpoint */
+  corridor?: number
+  /** the week's own jitter as a multiplier; 1 = the quote */
+  jitter?: number
+}): WeeklyBillSplit {
+  const corridor = input.corridor ?? coachCorridorMid(input.background)
+  const jitter = input.jitter ?? 1
+  const at = (rate: number): number =>
+    Math.round(coachWeeklyCents(rate, input.plan, input.background, corridor) * jitter)
+  const totalCents = at(input.rateCents)
+  const facilityCents = Math.min(totalCents, at(facilityRateCents(input.ageYears)))
+  return { totalCents, coachCents: totalCents - facilityCents, facilityCents }
 }
 
 /** The [lo, hi] weekly bill ONE rate can produce here - what the family's own coaching line will

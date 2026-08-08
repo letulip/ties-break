@@ -1205,6 +1205,29 @@ export function migrateSave(raw: unknown): WorldState {
     v = 43
   }
 
+  // v44 – THE WEEKLY BILL SPLITS IN TWO, AND AN OLD SAVE'S HISTORY IS LEFT ALONE
+  // (docs/specs/split-the-bill-2026-08.md).
+  //
+  // WHAT CHANGED IS THE PROTOCOL, NOT THE STATE. `WorldEventCategory` gains 'facility' – the court
+  // half of the training bill, split off 'coaching' because the owner could not read his own bill
+  // («нам нужно отдельной строчкой списывать тренера, а отдельной рент залов и прочего»). A new
+  // member of that union is a schema change by the rule in CLAUDE.md §3, so the version moves and
+  // this step exists; there is no field to add, rename or default.
+  //
+  // ⚠ AND IT DELIBERATELY BACK-FILLS NOTHING. Every 'coaching' row a v43 save holds – in `events`
+  // and in `financeWeeks[].byCategory` – is the number that was ACTUALLY charged as one line, and
+  // there is no honest way to say which cents of it were the court: the split needs the hourly rate
+  // and the hours of the week it was drawn in, and `financeWeeks` keeps a total per category and
+  // nothing else. A reconstruction would be a guess wearing a ledger's clothes. So history stays as
+  // it was billed, the next tick starts splitting, and the Money screen's category list simply gains
+  // a row that begins at the load week. `byCategory` is a Partial record, so a missing 'facility'
+  // key reads as absent everywhere rather than as zero.
+  //
+  // Zero draws on any stream; the frozen MAIN capture is untouched by construction.
+  if (v === 43) {
+    v = 44
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

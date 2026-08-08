@@ -689,14 +689,22 @@ describe('gear cadence (round-7 a) – each category fires within its window', (
 describe('the coaching bill is priced in the family\'s own market (the wealth corridor)', () => {
   const BACKGROUNDS: FamilyBackground[] = ['working', 'middle', 'wealthy']
 
-  // Tick one week and return the week-1 coaching bill in cents.
+  // Tick one week and return the week-1 TRAINING bill in cents.
+  //
+  // ⚠ RE-AIMED BY THE SPLIT, NOT WEAKENED (v44, docs/specs/split-the-bill-2026-08.md). The bill books
+  // on two rows now - the coach's labour and the court's hire - and the corridor multiplies BOTH, so
+  // the claim these tests make ("working < middle < wealthy for the same rung, every week, off the
+  // same roll") is a claim about the sum. Reading one row would have quietly measured a fraction and
+  // still passed, which is the failure mode worth naming: the ordering survives any partition.
   function weekOneCoaching(seed: string, background: FamilyBackground, coachTier: CoachTier): number {
     const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachTier })
     const rng = rngFromSeed(world.seed)
     tickWeek(world, rng)
-    const bill = world.events.find((e) => e.week === 1 && e.category === 'coaching')
-    expect(bill).toBeDefined()
-    return -bill!.amountCents!
+    const rows = world.events.filter(
+      (e) => e.week === 1 && (e.category === 'coaching' || e.category === 'facility'),
+    )
+    expect(rows.length).toBeGreaterThan(0)
+    return rows.reduce((s, e) => s - (e.amountCents ?? 0), 0)
   }
 
   it('orders working < middle < wealthy for the SAME rung, per week, off the same roll', () => {

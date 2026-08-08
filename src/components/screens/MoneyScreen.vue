@@ -53,6 +53,9 @@ import { ECONOMY } from '../../engine/economy'
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
 import { STARTING_FUNDS_CENTS } from '../../engine/world'
+// The bill's own arithmetic, so the note under the breakdown quotes the number the engine charges
+// rather than a mirror of it - the same rule `startingBudget` above is written under.
+import { coachBillRangeCents, coachById, facilityRateCents, weeklyBillSplit } from '../../engine/coach'
 import type {
   FinanceWindow,
   KitGrade,
@@ -129,6 +132,35 @@ const activeFinance = computed<FinanceWindow | undefined>(() =>
   breakdownWindow.value === '12w' ? game.snapshot?.finance.window12w : game.snapshot?.finance.season,
 )
 
+// --- WHY THE TRAINING BILL IS NEVER THE QUOTE ---------------------------------------------------
+//
+// ⚠ THE OWNER'S OTHER HALF (08.08): «на неделях всё еще списывается какая-то рандомная сумма». The
+// wobble is real and it stays - `ECONOMY.coach.weekJitterBps` is +/-8% on the weekly bill, the week
+// itself varying rather than a bug - but he met it as an unexplained number, and an unexplained
+// number in a wallet reads as a swindle rather than as life. This is the sentence that lets him look
+// at a week and know why it is not the figure on the coach's card.
+//
+// EVERY FIGURE IS THE ENGINE'S OWN. `weeklyBillSplit` is the function `resolveBaseCosts` bills
+// through and `coachBillRangeCents` is the envelope it lands in, so the note cannot drift from the
+// charge the way a hand-written "±8%" would the moment the band is retuned.
+const trainingBillNote = computed<string | null>(() => {
+  const snap = game.snapshot
+  if (!snap) return null
+  const coach = coachById(snap.seed, snap.ageYears, snap.coachId)
+  const rate = coach ? coach.rateCents : facilityRateCents(snap.ageYears)
+  const split = weeklyBillSplit({
+    rateCents: rate,
+    ageYears: snap.ageYears,
+    plan: snap.plan,
+    background: snap.profile.background,
+  })
+  const [lo, hi] = coachBillRangeCents(rate, snap.plan, snap.profile.background)
+  const quote = coach
+    ? `Training quotes at ${formatCents(split.totalCents)} a week – ${formatCents(split.coachCents)} coaching, ${formatCents(split.facilityCents)} courts.`
+    : `Court time quotes at ${formatCents(split.facilityCents)} a week – you coach her, so there is no coaching line.`
+  return `${quote} No week bills exactly that: a session moves, a court books at a busier hour. Yours runs ${formatCents(lo)}–${formatCents(hi)}.`
+})
+
 const incomeCents = computed(() => activeFinance.value?.incomeCents ?? 0)
 const spentCents = computed(() => activeFinance.value?.expenseCents ?? 0)
 const netCents = computed(() => activeFinance.value?.netCents ?? 0)
@@ -141,6 +173,12 @@ const netCents = computed(() => activeFinance.value?.netCents ?? 0)
 type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy'>
 const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   { key: 'coaching', label: 'Coaching' },
+  // ⚠ THE COURT IS ITS OWN ROW (v44, docs/specs/split-the-bill-2026-08.md, owner 08.08: «нам нужно
+  // отдельной строчкой списывать тренера, а отдельной рент залов и прочего»). It sits immediately
+  // under Coaching because the two are one bill split in two, and the reader should meet them
+  // together: the man, then the place. A self-coached family has only the second, which is the
+  // honest thing the split fixes - it was being shown "Coaching" for a parent who works free.
+  { key: 'facility', label: 'Courts & facility' },
   { key: 'travel', label: 'Travel' },
   { key: 'entry', label: 'Entry fees' },
   { key: 'gear', label: 'Gear' },
@@ -164,6 +202,10 @@ const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
 // comes from. Anything still here is a glyph he has not replaced.
 const ICON_PATHS: Record<string, string[]> = {
   coaching: ['M12 5.2a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4z', 'M5.5 19.5c0-3.3 2.9-5.2 6.5-5.2s6.5 1.9 6.5 5.2'],
+  // A court seen from above: the outer fence, the baseline pair and the net across the middle. Drawn
+  // on the same 24x24 / 1.5-stroke grid as its neighbours, and deliberately NOT a racket - stringing
+  // already owns that picture, and this row is the PLACE rather than the kit.
+  facility: ['M4 4.5h16v15H4z', 'M4 12h16', 'M7.5 4.5v15M16.5 4.5v15'],
   travel: ['M3 15.5l18-5.6-2-3.2-4.6 1.5-5.2-4.4-2.2.7 3 4.9-4 1.3-2.6-1.9-1.6.5z', 'M4.5 19.5h15'],
   practice: ['M12 3.6a8.4 8.4 0 1 1 0 16.8 8.4 8.4 0 0 1 0-16.8z', 'M5.2 6.6c3.6 2.2 3.6 8.6 0 10.8M18.8 6.6c-3.6 2.2-3.6 8.6 0 10.8'],
   other: ['M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15z', 'M12 8.2V12l2.4 1.6'],
@@ -182,6 +224,7 @@ const ICON_PATHS: Record<string, string[]> = {
 // than the export's, and why they are not the `--event-*` family). Nothing here may spell a hex.
 const CAT_COLOR: Record<string, string> = {
   coaching: 'var(--cat-coaching)',
+  facility: 'var(--cat-facility)',
   travel: 'var(--cat-travel)',
   entry: 'var(--cat-entry)',
   gear: 'var(--cat-gear)',
@@ -674,6 +717,11 @@ const TAB_OPTIONS = [
               ></span>
             </template>
           </StatRow>
+
+          <!-- The jitter, said out loud. It sits UNDER the rows it explains and above the CTA, so a
+               reader who has just noticed that Coaching is not the number on the coach's card finds
+               the reason in the next line rather than in a help screen. -->
+          <p v-if="trainingBillNote" class="money-panel-note money-bill-note">{{ trainingBillNote }}</p>
 
           <PrimaryPill class="money-cta" variant="cta" @click="showAllTransactions">
             View all transactions
@@ -1170,6 +1218,12 @@ const TAB_OPTIONS = [
   line-height: 1.4;
   color: var(--ink-soft);
   text-wrap: pretty;
+}
+
+/* The bill note lives in the category COLUMN rather than inside a panel, so it needs the breathing
+   room a Card would otherwise have given it. Nothing else about it differs. */
+.money-bill-note {
+  margin: 14px 2px 0;
 }
 
 .money-panel .physio-toggle {

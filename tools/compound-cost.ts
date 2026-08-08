@@ -214,11 +214,18 @@ function run(index: number): Row {
         seen[cat] = amt
         if (delta < 0) row.spendCents += -delta
         if (delta < 0 && alive) row.liveSpendCents += -delta
-        if (cat === 'coaching' && delta < 0) {
+        // ⚠ THE TRAINING BILL IS TWO ROWS SINCE v44 (docs/specs/split-the-bill-2026-08.md): the
+        // coach's labour under 'coaching' and the court's hire under 'facility'. This column means
+        // "what training cost", so it sums both and keeps reading the same quantity every compound
+        // -cost run before the split measured.
+        if ((cat === 'coaching' || cat === 'facility') && delta < 0) {
           row.coachingCents += -delta
-          row.coachedWeeks++
           if (alive) row.liveCoachingCents += -delta
         }
+        // ...but the WEEK is counted once, off the row every billed week has exactly one of. Counting
+        // it on 'coaching' would miss a self-coached family entirely (it has no coach line at all)
+        // and counting it on both would double every hired week.
+        if (cat === 'facility' && delta < 0) row.coachedWeeks++
         if (cat === 'entry' && delta < 0) row.entryCents += -delta
         if (cat === 'travel' && delta < 0) row.travelCents += -delta
         if (cat === 'prize' && delta > 0) row.prizeCents += delta

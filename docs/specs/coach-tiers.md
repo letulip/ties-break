@@ -94,6 +94,36 @@ the coach raises* rather than a second mechanic.
 Adding it to coaching too would be double-counting unless the coaching bill is explicitly
 "coach only"; simpler to keep the tier price inclusive and say so.
 
+> ### ⚠ REVERSED ON 08.08 – the court IS its own line now
+>
+> The paragraph above is what shipped, and the owner read the consequence off his own wallet:
+>
+> > «на неделях всё еще списывается какая-то рандомная сумма и как будто не за тренера, мне кажется
+> > нам нужно отдельной строчкой списывать тренера, а отдельной рент залов и прочего»
+>
+> **What the ruling missed is who it charged.** "Keep the tier price inclusive and say so" is a fine
+> simplification for a hired rung, but `self` is priced at *exactly* the court rental – that is the
+> whole design of the rung, and the argument for it is three paragraphs up in §2. So a self-coached
+> family's line labelled **Coaching** was 100% court rental for a parent who works free, and the game
+> had no way to tell it otherwise. For everyone else the number was coach plus court in one figure
+> that nobody could decompose, including us.
+>
+> **"Simpler" was doing the work, and it turned out to cost more than it saved.** The reversal is a
+> *partition*, not a re-price: the facility line is the court rental this section already quotes and
+> the coach line is what is left of his rate above it, so `coach + facility` is byte-identical to the
+> number the ledger charged before – measured, 3,120 weekly figures across 15 corridor/rung arms, zero
+> mismatches. The tier price is *still* inclusive of the court. It is simply now inclusive **visibly**.
+>
+> **Double-counting was the right fear and it does not arise**, because the split subtracts rather than
+> adds: nothing new is charged and the practice-match court fee is untouched (it is a different court on
+> a different day, booked by the planner and billed under `practice`).
+>
+> The corridor needed nothing added – it multiplies the whole bill, so it multiplies the court with it,
+> which is the owner's own second ask («с разным тиром для разного уровня семей») already satisfied by
+> arithmetic that was in the model. Priced and measured in
+> [split-the-bill-2026-08.md](split-the-bill-2026-08.md); `WorldEventCategory` gains `facility` at
+> save schema v44.
+
 ## 4. What has to be measured
 
 - `bench:econ`, 120 seeds, 14→18, before and after. The claim to test is specific: **25k middle

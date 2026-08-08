@@ -36,7 +36,7 @@ const dismissedRecapKey = moduleRef<string | null>(null)
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type WorldMatch } from '../../shared/protocol'
-import { coachBillRangeCents, coachById, selfRateCents } from '../../engine/coach'
+import { coachBillRangeCents, coachById, facilityRateCents } from '../../engine/coach'
 import { weekDateLine, weekLabel } from '../../shared/dates'
 import { KID_ID, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
@@ -149,7 +149,7 @@ const spendRange = computed<[number, number]>(() => {
   // still moves is the corridor roll and the week's jitter. `coachBillRangeCents` is the same
   // arithmetic resolveBaseCosts bills through, so the estimate cannot drift from the charge.
   const coach = coachById(snap.seed, snap.ageYears, snap.coachId)
-  const rate = coach ? coach.rateCents : selfRateCents(snap.ageYears)
+  const rate = coach ? coach.rateCents : facilityRateCents(snap.ageYears)
   const [lo, hi] = coachBillRangeCents(rate, snap.plan, snap.profile.background)
   return [Math.round(lo / 100), Math.round(hi / 100)]
 })
