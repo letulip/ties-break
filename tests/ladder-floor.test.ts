@@ -34,10 +34,13 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
+import { bookClosedTo, coachLadderNote, openingCoachId } from '../src/engine/world'
 import { feedContext, feedShows, preferredWeekEvent } from '../src/composables/tierState'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { BEST_N_BY_TRACK } from '../src/engine/season/ranking'
 import { resumeMain } from '../src/engine/rng'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import type { CoachTier } from '../src/shared/protocol'
 
 function injectEvent(world: WorldState, week: number, tier: TierId): SeasonEvent {
   const e: SeasonEvent = {
@@ -261,6 +264,139 @@ describe('the ceiling is carried to the UI as a label, never as a lock', () => {
   })
 
   it('the card still leads with the rung she has NOT passed', () => {
+    // «Lead with the more relevant tournament of the week when there is one» – and the rule that
+    // expresses it is the LADDER tiebreak, not an outgrown one. See `preferredWeekEvent`'s note for
+    // why a "prefer not-outgrown" clause would have been wrong.
+    const ev = (tier: TierId) => ({ tier, entered: false, eligible: true, id: tier })
+    expect(preferredWeekEvent([ev('local'), ev('w50')])!.tier).toBe('w50')
+    expect(preferredWeekEvent([ev('w50'), ev('local')])!.tier).toBe('w50')
+    // ...and a week that only carries the rung beneath her still offers it, rather than nothing.
+    expect(preferredWeekEvent([ev('local')])!.tier).toBe('local')
+  })
+})
+
+// =================================================================================================
+// 6. THE COACH AS SCHEDULER – his opinion about WHICH EVENT (the owner, 08.08)
+// =================================================================================================
+//
+// The ladder floor put a decision in the player's hands that the engine used to make by refusing.
+// This is the person he is already paying making that decision informed. What it must be:
+//   * SILENT about the rung she is on – her working rung is where the coach wants her;
+//   * SILENT when there is nothing better – she should play, which is exactly what the owner ruled;
+//   * SILENT on a self-coached career – nobody is being paid to have a view (the load wave's rule);
+//   * GRADED BY HIS OWN RUNG, which is what makes paying for him a decision again;
+//   * ADVICE, never a block, at every rung – the standing rule of this game.
+
+describe('the coach has an opinion about WHICH event, and it is only ever advice', () => {
+  const rungOf = (t: CoachTier) => t
+
+  it('he says nothing about the rung she is on', () => {
+    const world = proWorld('coach-working', 17, 140)
+    const w75 = injectEvent(world, world.week + 3, 'w75')
+    expect(hasOutgrown(world, 'w75')).toBe(false)
+    expect(coachLadderNote(world, w75, rungOf('elite'))).toBeNull()
+  })
+
+  it('he says nothing when there is nothing better – she should play', () => {
+    // A rung she has passed, an empty calendar around it, and a book with room: no argument, so no
+    // sentence. This is the case the owner's ruling is ABOUT and the one a nagging coach would ruin.
+    const world = proWorld('coach-silent', 17, 140)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    expect(hasOutgrown(world, 'w15')).toBe(true)
+    expect(coachLadderNote(world, w15, rungOf('elite'))).toBeNull()
+  })
+
+  it('nobody is being paid to have a view on a self-coached career', () => {
+    const world = proWorld('coach-self', 17, 140)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    injectEvent(world, world.week + 3, 'w75')
+    expect(coachLadderNote(world, w15, rungOf('elite'))).not.toBeNull()
+    expect(coachLadderNote(world, w15, rungOf('self'))).toBeNull()
+  })
+
+  it('THIS WEEK: he names the better event on the same week, at every hired rung', () => {
+    const world = proWorld('coach-thisweek', 17, 140)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    injectEvent(world, world.week + 3, 'w75')
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      const said = coachLadderNote(world, w15, tier)
+      expect(said, tier).toContain(TIERS.w75.label)
+      expect(said, tier).toContain('is the week')
+    }
+  })
+
+  it('THE BLOCK AHEAD: how far he sees is his own rung, which is what paying for him buys', () => {
+    const world = proWorld('coach-ahead', 17, 140)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    injectEvent(world, world.week + 6, 'w75') // three weeks after the trip in question
+    // A budget coach is on the court with her and does not volunteer a plan three weeks out.
+    expect(coachLadderNote(world, w15, rungOf('budget'))).toBeNull()
+    expect(coachLadderNote(world, w15, rungOf('middle'))).toBeNull() // horizon 2
+    // ...and the rungs that plan see it, and NAME it - a caution that only says no is a guard rail.
+    for (const tier of ['high', 'elite'] as const) {
+      const said = coachLadderNote(world, w15, tier)
+      expect(said, tier).toContain(TIERS.w75.label)
+      expect(said, tier).toContain('in 3 weeks')
+    }
+  })
+
+  it('THE BOOK: only a coach who keeps it can make the arithmetic argument', () => {
+    // Eighteen counting W results, every one of them worth more than a W15 title: her window is
+    // full and nothing here can enter it. That is a fact about a ledger somebody has to be keeping.
+    const world = proWorld('coach-book', 19, 0)
+    for (let i = 0; i < BEST_N_BY_TRACK.wta; i++) {
+      world.results.push({ playerId: KID_ID, week: world.week - i, points: 100, tier: 'w75' })
+    }
+    recomputeKidRank(world)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    expect(hasOutgrown(world, 'w15')).toBe(true)
+    expect(bookClosedTo(world, 'w15')).toBe(true)
+    expect(coachLadderNote(world, w15, rungOf('budget'))).toBeNull()
+    for (const tier of ['middle', 'high', 'elite'] as const) {
+      expect(coachLadderNote(world, w15, tier), tier).toContain('would not move her ranking')
+    }
+  })
+
+  it('...and a window with ROOM is never called closed', () => {
+    const world = proWorld('coach-book-room', 19, 0)
+    for (let i = 0; i < BEST_N_BY_TRACK.wta - 1; i++) {
+      world.results.push({ playerId: KID_ID, week: world.week - i, points: 100, tier: 'w75' })
+    }
+    recomputeKidRank(world)
+    expect(bookClosedTo(world, 'w15')).toBe(false)
+  })
+
+  it('⚠ IT IS ADVICE AND NEVER A BLOCK – at every rung, on every line he has', () => {
+    // The standing rule of this game: the parent may push. `coachCaution` turns the button from
+    // "Enter" into "Push through"; it must never turn it off.
+    const world = proWorld('coach-never-blocks', 17, 140)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    injectEvent(world, world.week + 3, 'w75')
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      expect(coachLadderNote(world, w15, tier), tier).not.toBeNull()
+      expect(entryStatus(world, w15).level, tier).not.toBe('blocked')
+    }
+    expect(() => enterEvent(world, w15.id)).not.toThrow()
+  })
+
+  it('the card carries what he says, and only about a trip she can take', () => {
+    const world = proWorld('coach-card', 17, 140)
+    world.coachId = openingCoachId(world.seed, { ...world.profile, coachTier: 'elite' })
+    injectEvent(world, world.week + 3, 'w15')
+    injectEvent(world, world.week + 3, 'w75')
+    const up = toSnapshot(world).upcoming.find((e) => e.tier === 'w15')!
+    expect(up.eligible).toBe(true)
+    expect(up.coachCaution).toBeTruthy()
+    // ...and never on a card the gate refuses: he speaks about trips she can take (the load wave's
+    // own rule, and the reason "the advice never locks a card" stays verifiable).
+    for (const e of toSnapshot(world).upcoming) {
+      if (!e.eligible && !e.entered) expect(e.coachCaution, e.tier).toBeUndefined()
+    }
+  })
+})
+
+describe('the leftovers', () => {
+  it('the card still leads with the rung she has NOT passed (regression guard)', () => {
     // «Lead with the more relevant tournament of the week when there is one» – and the rule that
     // expresses it is the LADDER tiebreak, not an outgrown one. See `preferredWeekEvent`'s note for
     // why a "prefer not-outgrown" clause would have been wrong.

@@ -623,7 +623,13 @@ function askEnter(e: UpcomingEvent): void {
       ? `${said}${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
         `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? Entry fee ${formatCents(e.entryFeeCents)}.`
       : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? Entry fee ${formatCents(e.entryFeeCents)}.`,
-    confirmLabel: fatigued || e.coachCaution ? 'Push through' : 'Enter',
+    // ⚠ TWO VERBS FOR TWO KINDS OF ADVICE (08.08). "Push through" is a BODY word – it is what you do
+    // to tiredness – and since the coach also has an opinion about the SCHEDULE now, it would have
+    // been the wrong verb on half the cautions he raises: there is nothing to push through about a
+    // club draw in a week when the W50 is the better tournament. Both keep the affordance the load
+    // slice built (the button stops saying "Enter", so the player notices he is overruling somebody);
+    // only the word matches what is being overruled.
+    confirmLabel: fatigued ? 'Push through' : e.coachCaution ? 'Enter anyway' : 'Enter',
     onConfirm: () => game.enterEvent(e.id),
   }
 }

@@ -64,7 +64,7 @@ export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
-import { coachBilling, coachEntryLine, coachMarket } from './coachMarket'
+import { coachBilling, coachEntryLine, coachLadderNote, coachMarket } from './coachMarket'
 import { kitLineViews } from './kit'
 import { copyTrophyLedger, emptySeasonRecord } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
@@ -201,12 +201,27 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
       // has spent - so a coach was giving his view on a tournament that is not on offer. Worse, it made
       // "the advice never locks a card" unverifiable, because the card was already locked for its own
       // reasons and the two were indistinguishable on screen. He speaks about trips she can take.
-      const coachSay =
+      //
+      // ⚠ AND SINCE 08.08 HE HAS A SECOND SUBJECT: THE LADDER, not only the body (the owner's ruling
+      // on the ladder floor - having somewhere to play is the correct state of the world, what she
+      // does with the week is the PLAYER's decision, and giving the coach a voice is how that
+      // decision stops being blind). Precedence is BODY FIRST and it is not a coin toss: one of them
+      // is about getting hurt and the other is about a wasted week. He says one thing, because a
+      // card with two coach lines on it is a dialog, and he is a person.
+      const bodySay =
         gate.level !== 'blocked' &&
         coachLoad !== null &&
         coachWarnsEntry(coachLoad, ECONOMY.availability.minConditionToEnter[e.tier])
-          ? { coachCaution: coachEntryLine(e.tier, world.condition) }
-          : {}
+          ? coachEntryLine(e.tier, world.condition)
+          : null
+      // The same "only about trips she can take" rule the body arm has always had, and the same
+      // "nobody is being paid to have a view" one: a self-coached career hears nothing, from either.
+      const ladderSay =
+        bodySay === null && gate.level !== 'blocked' && coachLoad !== null
+          ? coachLadderNote(world, e, coachTier)
+          : null
+      const say = bodySay ?? ladderSay
+      const coachSay = say !== null ? { coachCaution: say } : {}
       return {
         id: e.id,
         week: e.week,

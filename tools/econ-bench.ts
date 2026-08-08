@@ -67,7 +67,7 @@ import type { CoachTier, FamilyBackground, PlayerProfile, WorldEventCategory } f
 import { COACH_TIER_LABEL, coachWeeklyBandCents } from '../src/engine/coach'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
-import type { TierId } from '../src/engine/season/types'
+import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 export { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -360,10 +360,20 @@ export const POLICIES: Policy[] = [
 /** Advance ONE career week under a policy, then tick and resolve any spawned tournament. Returns
  *  the per-tier entries committed this week. Shared by runCareer and the tests so the world
  *  evolution is defined in exactly one place (no duplication of the entry policy). */
+/** ⚠ AN OPTIONAL VETO, AND ITS DEFAULT IS WHAT KEEPS EVERY EARLIER NUMBER IN THIS FILE'S HISTORY
+ *  REPRODUCIBLE (08.08, docs/specs/ladder-floor-2026-08.md §4). The ladder floor put a decision in
+ *  the PLAYER's hands that the engine used to make by refusing, and the owner's answer to that is a
+ *  coach who says so on the card - so "does a parent who listens to his coach get a different
+ *  career?" became a measurable question and there was nothing to measure it with. Passing a veto is
+ *  the only way to ask it without a second copy of the entry policy, which is the duplication this
+ *  function exists to prevent. Undefined is the historical arm, byte for byte. */
+export type EntryVeto = (world: WorldState, event: SeasonEvent) => boolean
+
 export function stepCareerWeek(
   world: WorldState,
   rng: Rng,
   policy: Policy = POLICIES[0],
+  veto?: EntryVeto,
 ): Record<TierId, number> {
   const entered = zeroByTier()
   // ⚠ W2-ENDINGS: A CAREER THAT HAS ENDED ENTERS NOTHING, and the week still ticks. Since v39 a
@@ -395,6 +405,10 @@ export function stepCareerWeek(
     // Two ladders: the domestic rungs read her domestic best-6 and the international ones read her
     // ITF RANK, so the policy asks the engine's own single gate instead of re-deriving either.
     if (!tierOpenFor(world, e.tier)) continue
+    // ...and the VETO, if this arm has one: a parent who does what his coach tells him. It sits
+    // AFTER the ranking gate and BEFORE affordability on purpose - an opinion is only worth asking
+    // for about a trip she is actually allowed to take.
+    if (veto && veto(world, e)) continue
     // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
     // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
     if (availabilityStatus(world, e).level === 'blocked') continue

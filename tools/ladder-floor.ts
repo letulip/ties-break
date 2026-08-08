@@ -44,9 +44,12 @@ import {
 import { rankIn } from '../src/engine/world/ladder'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { feedContext, feedShows, preferredWeekEvent } from '../src/composables/tierState'
+import { coachLadderNote } from '../src/engine/world'
+import { coachById, tierOf } from '../src/engine/coach'
+import { coachManagesLoad } from '../src/engine/coachLoad'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean, median, type Policy } from './econ-bench'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
-import type { TierOpenMap } from '../src/shared/protocol'
+import type { CoachTier, TierOpenMap } from '../src/shared/protocol'
 
 const argv = process.argv.slice(2)
 const argOf = (name: string, fallback: number): number => {
@@ -59,6 +62,26 @@ const strOf = (name: string, fallback: string): string => {
 }
 const padE = (s: string | number, w: number) => String(s).padEnd(w)
 const pct = (n: number, d: number): string => (d === 0 ? '   – ' : `${((100 * n) / d).toFixed(1)}%`)
+
+/** ⚠ IS ANYBODY BEING PAID TO HAVE A VIEW – the same gate `toSnapshot` puts on both of the coach's
+ *  opinions, so this tool cannot hear a line the screen would not print. A self-coached career gets
+ *  silence, which is the rule the load wave set and this wave inherits. */
+function hasCoach(world: WorldState): boolean {
+  return coachManagesLoad(tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)))
+}
+
+/** HIS RUNG, the one `toSnapshot` computes once per snapshot for the body arm. */
+function coachTierOf(world: WorldState): CoachTier {
+  return tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId))
+}
+
+/** WHAT THE COACH SAYS ABOUT THIS TRIP'S LADDER, exactly as the card would carry it – the engine's
+ *  own `coachLadderNote`, never re-derived here. Null when he has nothing to say, which the speak
+ *  rate below is the whole point of measuring. */
+function coachSays(world: WorldState, e: SeasonEvent): string | null {
+  if (!hasCoach(world)) return null
+  return coachLadderNote(world, e, coachTierOf(world))
+}
 
 /** The engine's per-rung verdict, built exactly as `toSnapshot` builds it – so the feed this tool
  *  reads is the feed the screen draws, without paying for a whole snapshot every week. */
@@ -170,6 +193,21 @@ interface CareerRow {
   /** the card pick: weeks where the shown card refuses her, split by whether one was available */
   shownDead: number
   shownDeadWithAlternative: number
+  /** THE SPEAK RATE – cards judged, and cards the coach had something to say about. A coach who
+   *  cautions every week is wallpaper, so this is a first-class number rather than a footnote. */
+  cardsJudged: number
+  coachSpoke: number
+  /** ...and the same two on the card the feed ACTUALLY SHOWS, which is the only rate a player can
+   *  experience: both feeds collapse a stacked week through `preferredWeekEvent`, so a line on a
+   *  card that never renders is not wallpaper - it is not there at all. */
+  shownCards: number
+  shownSpoke: number
+  /** ...and which of his three arguments it was */
+  byLine: Map<string, number>
+  /** his rung, for the tier attribution */
+  coachTier: string
+  /** entries he advised against that were taken anyway (0 on the listening arm by construction) */
+  vetoed: number
   /** her best (lowest) rank ever held, per table */
   peakWta: number | null
   peakItf: number | null
@@ -184,7 +222,7 @@ function answerWhateverIsOpen(world: WorldState): void {
   }
 }
 
-function runCareer(presetIndex: number, index: number, policy: Policy, weeks: number): CareerRow {
+function runCareer(presetIndex: number, index: number, policy: Policy, weeks: number, listen: boolean): CareerRow {
   const { world, rng } = openCareer(PRESETS[presetIndex], index, policy)
   const row: CareerRow = {
     policy: policy.id,
@@ -196,12 +234,29 @@ function runCareer(presetIndex: number, index: number, policy: Policy, weeks: nu
     byTier: new Map(),
     shownDead: 0,
     shownDeadWithAlternative: 0,
+    cardsJudged: 0,
+    coachSpoke: 0,
+    shownCards: 0,
+    shownSpoke: 0,
+    byLine: new Map(),
+    coachTier: 'self',
+    vetoed: 0,
     peakWta: null,
     peakItf: null,
     endWtaPoints: 0,
   }
+  // ⚠ THE LISTENING ARM IS A PLAYER, NOT A RULE. The veto is the parent doing what his coach tells
+  // him – the engine refuses nothing, which is the whole of the owner's ruling. `undefined` is the
+  // historical arm byte for byte (see `EntryVeto` in econ-bench.ts).
+  const veto = listen
+    ? (w: WorldState, e: SeasonEvent) => {
+        const said = coachSays(w, e)
+        if (said !== null) row.vetoed++
+        return said !== null
+      }
+    : undefined
   for (let i = 0; i < weeks && world.ending === null; i++) {
-    const entered = stepCareerWeek(world, rng, policy)
+    const entered = stepCareerWeek(world, rng, policy, veto)
     answerWhateverIsOpen(world)
     for (const t of TIER_LADDER) {
       if (entered[t] > 0) {
@@ -217,6 +272,18 @@ function runCareer(presetIndex: number, index: number, policy: Policy, weeks: nu
     if (onWeek.length > 0) {
       const facts = onWeek.map((e) => factsFor(world, e))
       row.weeksWithEvent++
+      // THE SPEAK RATE, on the cards a player would actually be looking at: enterable ones, judged
+      // once each at the same fixed distance. A card he cannot speak about (blocked) is not a card
+      // he was silent on.
+      for (let k = 0; k < onWeek.length; k++) {
+        if (!facts[k].eligible && !facts[k].entered) continue
+        row.cardsJudged++
+        const said = coachSays(world, onWeek[k])
+        if (said === null) continue
+        row.coachSpoke++
+        const kind = said.includes('is the week') ? 'this week' : said.includes('would not move') ? 'the book' : 'the block ahead'
+        row.byLine.set(kind, (row.byLine.get(kind) ?? 0) + 1)
+      }
       const hadEnterable = facts.some((f) => f.eligible || f.entered)
       if (hadEnterable) row.playableWeeks++
       const feed = feedContext({ ageYears: ageAtWeek(world.week), tierOpen: tierOpenMap(world), upcoming: facts })
@@ -224,6 +291,11 @@ function runCareer(presetIndex: number, index: number, policy: Policy, weeks: nu
       if (shown && !(shown.entered || shown.eligible)) {
         row.shownDead++
         if (hadEnterable) row.shownDeadWithAlternative++
+      }
+      if (shown && (shown.entered || shown.eligible)) {
+        row.shownCards++
+        const ev = onWeek.find((e) => e.id === shown.id)
+        if (ev && coachSays(world, ev) !== null) row.shownSpoke++
       }
     }
     const wta = rankIn(world, 'wta')
@@ -233,6 +305,7 @@ function runCareer(presetIndex: number, index: number, policy: Policy, weeks: nu
   }
   row.seasons = row.weeks / WEEKS_PER_YEAR
   row.endWtaPoints = kidPoints(world, 'wta')
+  row.coachTier = coachTierOf(world)
   return row
 }
 
@@ -258,6 +331,33 @@ function report(rows: CareerRow[], label: string): void {
     `  the card pick: DEAD cards ${sum((r) => r.shownDead)} of ${weeksWithEvent} weeks judged` +
       ` · of those, ${sum((r) => r.shownDeadWithAlternative)} had an enterable event on the same week (the DISPLAY column)`,
   )
+  // THE COACH – how often he speaks, which argument he uses, and whether his rung changed it. A
+  // coach who cautions every week is wallpaper; a high rate here is a wrong threshold.
+  const cards = sum((r) => r.cardsJudged)
+  const spoke = sum((r) => r.coachSpoke)
+  const lines = new Map<string, number>()
+  for (const r of rows) for (const [k, n] of r.byLine) lines.set(k, (lines.get(k) ?? 0) + n)
+  console.log(
+    `  THE COACH, as the player MEETS him: ${sum((r) => r.shownSpoke)} of ${sum((r) => r.shownCards)} rendered cards` +
+      ` (${pct(sum((r) => r.shownSpoke), sum((r) => r.shownCards))}) – both feeds show ONE card a week`,
+  )
+  console.log(
+    `  ...over every enterable card, rendered or not: ${spoke} of ${cards} (${pct(spoke, cards)})` +
+      (lines.size ? ` · ${[...lines.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(' · ')}` : ''),
+  )
+  const byRung = new Map<string, { cards: number; spoke: number; careers: number }>()
+  for (const r of rows) {
+    const acc = byRung.get(r.coachTier) ?? { cards: 0, spoke: 0, careers: 0 }
+    acc.cards += r.cardsJudged
+    acc.spoke += r.coachSpoke
+    acc.careers += 1
+    byRung.set(r.coachTier, acc)
+  }
+  console.log(
+    `  ...by HIS rung : ` +
+      [...byRung.entries()].map(([t, v]) => `${t} ${pct(v.spoke, v.cards)} (${v.careers} careers)`).join(' · '),
+  )
+  if (sum((r) => r.vetoed) > 0) console.log(`  entries he talked her out of                    : ${sum((r) => r.vetoed)}`)
   const wta = rows.map((r) => r.peakWta).filter((x): x is number => x !== null).sort((a, b) => a - b)
   const itf = rows.map((r) => r.peakItf).filter((x): x is number => x !== null).sort((a, b) => a - b)
   const p10 = (xs: number[]) => (xs.length ? xs[Math.min(xs.length - 1, Math.max(0, Math.round(xs.length / 10) - 1))] : 0)
@@ -280,16 +380,20 @@ async function main(): Promise<void> {
   const seeds = argOf('seeds', 4)
   const weeks = argOf('weeks', 8 * WEEKS_PER_YEAR)
   const policyArg = strOf('policy', 'both')
+  const listen = argv.includes('--listen')
   const policies = policyArg === 'both' ? POLICIES : POLICIES.filter((p) => p.id === policyArg)
   console.log('')
   console.log('THE LADDER FLOOR – playable weeks, entries, the tier mix and her climb')
-  console.log(`  ${PRESETS.length} presets x ${seeds} seeds x ${policies.length} policies · ${weeks} weeks · card judged 4 weeks out`)
+  console.log(
+    `  ${PRESETS.length} presets x ${seeds} seeds x ${policies.length} policies · ${weeks} weeks · card judged 4 weeks out` +
+      (listen ? ' · LISTENING ARM: the parent does what his coach says' : ''),
+  )
   for (const policy of policies) {
     const rows: CareerRow[] = []
     for (let p = 0; p < PRESETS.length; p++) {
-      for (let i = 0; i < seeds; i++) rows.push(runCareer(p, i, policy, weeks))
+      for (let i = 0; i < seeds; i++) rows.push(runCareer(p, i, policy, weeks, listen))
     }
-    report(rows, `POLICY ${policy.label}`)
+    report(rows, `POLICY ${policy.label}${listen ? ' + LISTENS' : ''}`)
   }
   console.log('')
 }
