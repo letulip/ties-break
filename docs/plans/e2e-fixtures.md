@@ -1,6 +1,6 @@
 ---
 type: plan
-status: shipped
+status: current
 area: testing
 canonical: true
 last-reviewed: 2026-08-08
@@ -8,6 +8,24 @@ last-reviewed: 2026-08-08
 
 # The e2e fixture engine
 
+
+## Current truth
+
+- **Five committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the sponsor
+  window) · `broke` (one week short of the bankruptcy latch) · `ending` (past the fork at nineteen).
+  288 KiB in total, written by the shipped `saveCodec` so a fixture can never disagree with what the
+  product reads.
+- **Found, not forced.** Every state is reached by walking a real career under a real policy and
+  stopping when the engine says so – `broke` is `bankruptcyGraceWeeks - 1`, not "week 88". A fixture
+  that could not have happened in play would test nothing.
+- **`tests/e2e-fixtures.test.ts` is the rot alarm**, on the PR gate: each fixture loads through BOTH
+  doors (export file and database), its manifest facts are re-derived, and one assertion **goes red
+  deliberately on the next schema bump** – otherwise a stale fixture would pass everything else and
+  the e2e layer would silently be testing a migrated old save.
+- **Regenerate with `npm run e2e:fixtures`** (~4 s, byte-identical across runs).
+- **This is not the golden-save corpus.** `tests/fixtures/saves/` is one save per schema version, for
+  ever, proving *migrations work*. This is five states at the current version, regenerated rather than
+  migrated, providing *somewhere for a browser to start*. Neither can do the other's job.
 **This is the build of §3 of `docs/plans/playwright.md`** – the load-bearing idea of the whole
 Playwright integration: *a test starts at week 412 instead of clicking through 412 weeks.* Nothing
 here needs a browser, and none of it depends on the harness; it is a node tool, five binaries, a

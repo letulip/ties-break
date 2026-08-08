@@ -1,6 +1,6 @@
 ---
 type: plan
-status: proposed
+status: draft
 area: testing
 canonical: false
 last-reviewed: 2026-08-06
@@ -8,7 +8,7 @@ last-reviewed: 2026-08-06
 
 # Playwright: the fourth layer
 
-**Status: a plan, nothing built.** Written 06.08.2026. The repo has no `@playwright/test`, no `e2e/`
+**Status: S0 and S1a built (06.08), S1b-S3 planned.** Written 06.08.2026. The repo has no `@playwright/test`, no `e2e/`
 directory and exactly **zero** `data-testid` attributes today – so this starts from nothing, which is
 the honest place to start from.
 
