@@ -35,6 +35,19 @@ export interface SceneState {
   /** Round 4 item 1: which match Side is serving the current point, for the accent
    *  ring; null before the match has started. */
   serverSide?: Side | null
+  /**
+   * OUR GIRL'S SIDE, so her dot is the accent one (owner, 06.08: «давай во время матча точку нашей
+   * девочки тоже жёлтой сделаем, так нагляднее будет точно»). The accent marks her everywhere else
+   * in the app - her name on the panel, her digit in the point score, her line on the momentum
+   * curve - and the court was the one surface where the two dots were the same colour.
+   *
+   * ⚠ NULL WHEN SHE IS NOT IN THIS MATCH, and that is the whole reason it is a separate field from
+   * `serverSide` rather than a boolean. Three of the viewer's callers hand it a match she is in;
+   * TournamentFlow ALSO walks the rounds she is not in (the spectate walk), and there the accent
+   * would be painting somebody at random. `matchReadout.kidSide` is already exactly this question
+   * and already answers null - see the note there.
+   */
+  heroSide?: Side | null
   /** Playback clock (timeline seconds) – drives the server ring's subtle pulse phase. */
   time?: number
   /**
@@ -276,10 +289,13 @@ function drawPlayers(ctx: CanvasRenderingContext2D, vp: Viewport, scene: SceneSt
   const players = scene.players ?? RECOVER_CENTER
   const serverSide = scene.serverSide ?? null
 
-  ctx.fillStyle = PLAYER
+  // Her dot takes the accent; everybody else stays the neutral player tone. `fillStyle` is set per
+  // dot rather than once for the pair, which is what lets exactly one of the two be hers.
+  const heroSide = scene.heroSide ?? null
   for (let side = 0; side < 2; side++) {
     const p = players[side] ?? RECOVER_CENTER[side]
     const c = toCanvas(p, vp, swapped)
+    ctx.fillStyle = side === heroSide ? ACCENT : PLAYER
     ctx.beginPath()
     ctx.arc(c.x, c.y, PLAYER_RADIUS, 0, Math.PI * 2)
     ctx.fill()
