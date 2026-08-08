@@ -121,7 +121,8 @@ export function coachHoursForPlan(plan: WeekPlan): number {
   return anchors[anchors.length - 1][1]
 }
 
-/** WHAT THE COURT COSTS AN HOUR - the middle of the `self` band.
+/** WHAT THE COURT COSTS AN HOUR AT ONE RUNG - the middle of the `self` band, times the venue that
+ *  rung trains at (`ECONOMY.coach.courtTierFactor`).
  *
  *  ⚠ THIS USED TO BE CALLED `selfRateCents` AND THE RENAME IS THE WHOLE POINT OF THE SPLIT
  *  (docs/specs/split-the-bill-2026-08.md). The band expresses "court time costs $10-30/h" and the
@@ -130,11 +131,18 @@ export function coachHoursForPlan(plan: WeekPlan): number {
  *  bill because of it. It is now named for what it is and it is charged to every rung, not just the
  *  parent's: `self` pays this and nothing else, and a hired rung's price is inclusive of it.
  *
+ *  ⚠ AND IT USED TO TAKE NO RUNG ARGUMENT AT ALL, which is what the 08.08 pass fixed
+ *  (docs/specs/court-follows-the-coach-2026-08.md): an Elite coach worked on the same court as a
+ *  self-coaching parent, because her age and the corridor were the court's only inputs. `tier` is
+ *  REQUIRED rather than defaulted on purpose - a default would let a forgotten argument silently hand
+ *  the coach line the court's money, and the type checker finding every call site is the cheap way to
+ *  be sure none of them did.
+ *
  *  Self has no roster and nobody to be dearer than, so unlike a hired coach it does not draw a rate
  *  of its own. Rounded to whole cents so the ledger stays integer. */
-export function facilityRateCents(ageYears: number): number {
+export function facilityRateCents(ageYears: number, tier: CoachTier): number {
   const [lo, hi] = coachRateBandCents('self', ageYears)
-  return Math.round((lo + hi) / 2)
+  return Math.round(((lo + hi) / 2) * ECONOMY.coach.courtTierFactor[tier])
 }
 
 /** The middle of a background's wealth corridor - the number a QUOTE uses.
@@ -222,12 +230,15 @@ export interface WeeklyBillSplit {
  *  `rateCents` is the WHOLE hourly rate the family pays - her coach's own rate, or `facilityRateCents`
  *  when nobody is hired. The facility half is that same arithmetic run at the court's rate, and the
  *  coach half is the remainder, so the two are guaranteed to sum to the total whatever the roundings
- *  do. `Math.min` is a floor and not a fix: no rung's band reaches below the `self` band, so a
- *  facility quote can only exceed the total if someone re-prices one of them, and a negative coach
- *  line would be worse than a zero one. */
+ *  do. `Math.min` is a floor and not a fix: every rung's band LOW is above its OWN court
+ *  (asserted over the whole table in tests/split-the-bill.test.ts, and it is the constraint that pins
+ *  `courtTierFactor`'s top two values), so a facility quote can only exceed the total if someone
+ *  re-prices one of them, and a negative coach line would be worse than a zero one. */
 export function weeklyBillSplit(input: {
   rateCents: number
   ageYears: number
+  /** the rung she trains at - `tierOf(coach)`. It picks the VENUE, not the coach's own price. */
+  tier: CoachTier
   plan: WeekPlan
   background: FamilyBackground
   /** the week's own corridor roll; defaults to the quoting midpoint */
@@ -240,7 +251,7 @@ export function weeklyBillSplit(input: {
   const at = (rate: number): number =>
     Math.round(coachWeeklyCents(rate, input.plan, input.background, corridor) * jitter)
   const totalCents = at(input.rateCents)
-  const facilityCents = Math.min(totalCents, at(facilityRateCents(input.ageYears)))
+  const facilityCents = Math.min(totalCents, at(facilityRateCents(input.ageYears, input.tier)))
   return { totalCents, coachCents: totalCents - facilityCents, facilityCents }
 }
 

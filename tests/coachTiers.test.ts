@@ -226,7 +226,13 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
     // name - the self rung takes the MIDDLE of the self band rather than drawing a rate of its own,
     // and that middle is what the facility line charges at every rung. The protected fact and the
     // asserted value are unchanged.
-    expect(facilityRateCents(14)).toBe(20_00)
+    //
+    // ⚠ RE-AIMED AGAIN 08.08, AND THE VALUE STILL DOES NOT MOVE
+    // (docs/specs/court-follows-the-coach-2026-08.md). `facilityRateCents` now takes the RUNG, because
+    // the court was flat across all five and an Elite coach worked on a parent's court. The club rung
+    // is deliberately x1.0, so the number this line has always asserted is byte-identical - which is
+    // the whole claim of the venue ladder at the cheap end, stated as an assertion.
+    expect(facilityRateCents(14, 'self')).toBe(20_00)
   })
 })
 
