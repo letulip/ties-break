@@ -47,18 +47,29 @@ fixture.
 
 | | baseline, grinder | baseline, player |
 | --- | --- | --- |
-| playable weeks / season (>=1 enterable event) | **27.2** of 47.8 that carry one | *(filled in §2)* |
-| ...as a share of the weeks that carry an event | **57.0%** | *(§2)* |
-| entries / season | 26.7 | *(§2)* |
-| her peak W rank – best / p10 / median / worst | **#120 / #176 / #257 / #612** | *(§2)* |
-| careers that ever held a professional ranking | 40/54 | *(§2)* |
-| her W book at career end (median) | 114 pts | *(§2)* |
-| the card pick's DISPLAY column | **0** of 2,011 dead cards | *(§2)* |
+| playable weeks / season (>=1 enterable event) | **27.2** of 47.8 that carry one | **24.0** of 47.8 |
+| ...as a share of the weeks that carry an event | **57.0%** | **50.3%** |
+| entries / season | 26.7 | 17.2 |
+| her peak W rank – best / p10 / median / worst | **#120 / #176 / #257 / #612** | **#98 / #127 / #162 / #706** |
+| careers that ever held a professional ranking | 40/54 | 42/54 |
+| her W book at career end (median) | 114 pts | 261 pts |
+| the card pick's DISPLAY column | **0** of 2,011 dead cards | **0** of 1,339 |
 
 **HEAD ARM** – 180 careers to the ending horizon, both policy arms
 (`npm run bench:money -- --no-verify --policy <arm>`), which is where the project's published
 peak-rank figures come from (`docs/specs/population-1600-2026-08.md` §4). Re-measured here, not
-quoted: *(filled in §2)*.
+quoted:
+
+| 180 careers | baseline, grinder | baseline, player |
+| --- | --- | --- |
+| peak rank – best / p10 / median / worst | **#110 / #154 / #235 / #1,611** | **#11 / #118 / #152 / #706** |
+| reaching the top 100 / 200 | 0 / **53** of 180 | 4 / **118** of 180 |
+| ever held a professional ranking | **134/180** | **138/180** |
+
+⚠ The brief carried **grinder best #98 / median #228, player best #22 / median #155** from
+`population-1600-2026-08.md` §4. This head re-measures the same command at **#110 / #235** and
+**#11 / #152** – a wave boundary and a different machine, not an error, and every before/after pair
+below is same-command, same-tree, same machine.
 
 ### 0b. The six criteria
 
@@ -126,9 +137,9 @@ a defect fix.
 ⚠ **The triage's phrase "the screen is full of tournaments explaining why not" is not quite what he
 sees, and the difference matters.** The feed only renders the rungs the engine holds open
 (`feedShows`), and on his save the engine held three – so on 27 of his 46 event weeks nothing was
-open, nothing rendered, and **the calendar looked EMPTY**. That is why one owner reported "four empty
-weeks at seventeen" and another reported "cards I cannot enter": they are the same defect seen from
-the two sides of the feed's own filter. The measurement is in the same table either way.
+open, nothing rendered, and **the calendar looked EMPTY**. That is why he reported "four empty weeks
+at seventeen" as one item and "cards I cannot enter" as another: they are one defect seen from the
+two sides of the feed's own filter. The measurement is in the same table either way.
 
 ### 1b. What changed
 
@@ -270,6 +281,26 @@ card is now enterable used to show the tall one and now shows the short one. Tha
 "actionable over aspiration" rule doing its job on a much wider set of weeks, and it is the visible
 shape of the fix.
 
+### 2e. The head arm – 180 careers, both policy arms, her peak rank
+
+`npm run bench:money -- --no-verify --policy <arm>`, the command the project's published rank figures
+come from, baseline in the detached worktree at `3eb0a15`.
+
+| 180 careers | grinder base | **grinder shipped** | player base | **player shipped** |
+| --- | --- | --- | --- | --- |
+| best | #110 | **#181** | #11 | **#118** |
+| p10 | #154 | **#217** | #118 | **#139** |
+| **median** | **#235** | **#285** | **#152** | **#169** |
+| worst | #1,611 | #1,616 | #706 | #733 |
+| reaching the **top 100** | 0 | **0** | 4 | **0** |
+| reaching the **top 200** | **53** | **4** | **118** | **96** |
+| ever held a professional ranking | 134 | **94** | 138 | **124** |
+
+⚠ **This is the gift guard reading in reverse and it is the whole finding.** Nothing climbs: the top
+100 empties on the player arm and the top 200 falls from 53 careers to 4 on the grinder arm. A change
+that was watched for inflating her rank deflated it instead, and by more than any bar in §0 was
+sized to catch in that direction.
+
 ---
 
 ## 3. The ship rule, judged
@@ -280,8 +311,8 @@ Judged against §0, written before any engine line was touched, and **not revise
 | --- | --- | --- | --- | --- |
 | 1 | **the gain** | his save: dead weeks <= 6 of 46 · career arm: >= 85% of event-carrying weeks playable, both arms | **6 of 46** ✓ · **71.6% grinder · 79.6% player** ✗ | ⚠ **HALF** |
 | 2 | the two ceilings agree | one consequence, pinned by a test | `hasOutgrown` is the one answer; `tests/ladder-floor.test.ts` asserts the equivalence over 5 worlds x 16 rungs, mutation-verified | ✅ PASS |
-| 3 | **the gift guard** | median peak W rank improves by <= 25% · top-100 < 30 of 180, each arm | her rank did not improve on any arm – it **got worse** · top 100: **0 / 0 of 180** | ✅ PASS, from the wrong side |
-| 4 | **the climb survives** | W-track entries/season do not fall · ever-ranked share falls <= 5pp · boredom guard exits 0 | grinder W entries **10.0 -> 7.5** ✗ · ever-ranked **74% -> 44%** (−30pp) ✗ | ❌ **FAIL** |
+| 3 | **the gift guard** | median peak W rank improves by <= 25% · top-100 < 30 of 180, each arm | her median got **worse** on both arms (#235 -> #285, #152 -> #169) · top 100 **0 and 0 of 180** | ✅ PASS, from the wrong side |
+| 4 | **the climb survives** | W-track entries/season do not fall · ever-ranked share falls <= 5pp · boredom guard exits 0 | grinder W entries **10.0 -> 7.5** ✗ · ever-ranked, 180 careers, **134 -> 94** grinder and **138 -> 124** player (−22pp, −8pp) ✗ · top 200 **53 -> 4** grinder · boredom guard **improves, 56 -> 32 stranded weeks**, its bar unmeetable (see 3a) | ❌ **FAIL** |
 | 5 | the display does not regress | DISPLAY column 0 on the save, no rise on the career arm; no Local in front of an enterable W75 | **0** everywhere (save, and 4,195 dead cards over 108 careers); the ladder tiebreak orders it | ✅ PASS |
 | 6 | cost and the ledger | tick within 10% · no persisted field · suite green | no persisted field changed (**v44 unmoved**, no migration, no fixture) · 114 files / 2,444 tests green | ✅ PASS |
 
@@ -311,6 +342,14 @@ So the cost is real on both arms and much larger on the one with no judgement in
 
 **The game's only brake on over-entry is the fatigue CAUTION, and a caution is not a brake.** That is
 the design fact this wave surfaces and does not decide.
+
+⚠ **AND THE THIRD LIMB OF CRITERION 4 WAS MIS-SPECIFIED BY ME, WHICH IS REPORTED RATHER THAN
+QUIETLY DROPPED.** "`tools/boredom-guard.ts` must still exit 0" assumed it exits 0 today. It does
+not, and its own header says why: the stranded weeks are a **calendar-coverage gap** (season offsets
+that carry W events and no non-W event at all), which no ladder rule can close. Measured on the same
+command, 8 careers x 260 weeks: weeks where the pro cap refuses her and NOTHING else is playable go
+**56 -> 32**, and the domestic fallback family covers 12 weeks before and **50 after**. The limb as
+written is unmeetable; the direction it was reaching for is the wave's strongest single result.
 
 ### 3b. The owner's other option, measured – it is not the answer either
 
