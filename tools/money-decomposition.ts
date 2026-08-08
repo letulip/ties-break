@@ -578,7 +578,19 @@ export function main(argv = process.argv.slice(2)): void {
         pad(usd(median(sub.map((r) => r.prizeCents))), 12) +
         pad(usd(median(sub.map((r) => r.spentCents))), 13) +
         pad(ratio(median(sub.map((r) => r.prizeCents)), median(sub.map((r) => r.spentCents))), 8) +
-        pad(usd(median(sub.map((r) => r.catsJunior.coaching + r.catsPro.coaching))), 13) +
+        // ⚠ COACHING IS TWO CATEGORIES SINCE v44 (docs/specs/split-the-bill-2026-08.md) - the coach's
+        // labour and the court's hire. The column's claim is about the largest BILL in the game, so
+        // it sums both and stays comparable with every figure this file has published.
+        pad(
+          usd(
+            median(
+              sub.map(
+                (r) => r.catsJunior.coaching + r.catsPro.coaching + r.catsJunior.facility + r.catsPro.facility,
+              ),
+            ),
+          ),
+          13,
+        ) +
         pad(peaks.length ? `#${median(peaks).toFixed(0)}` : 'never', 10),
     )
   }

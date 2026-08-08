@@ -102,6 +102,21 @@ export type WorldEventType =
  *  under the SAME category, so a cancelled booking nets to zero on the Money breakdown. */
 export type WorldEventCategory =
   | 'coaching'
+  /** 'facility' (v44, docs/specs/split-the-bill-2026-08.md) is the COURT half of the weekly training
+   *  bill, split off 'coaching' so the family can read what it is paying for.
+   *
+   *  ⚠ IT IS A SPLIT, NOT A NEW CHARGE. `ECONOMY.coach.hourlyRateCents` has always priced every rung
+   *  INCLUSIVE of court rental – the recorded decision this reverses is coach-tiers.md §3 – so the
+   *  two lines are a partition of a total that did not move: `coaching + facility` this week equals
+   *  what `coaching` alone was charged before. Its sharpest consequence is that a SELF-COACHED family
+   *  now books nothing under 'coaching' at all, which is the honest reading of a parent who works
+   *  free: what it was being billed for was always the court.
+   *
+   *  ⚠ AND AN OLD SAVE HAS NO ROWS OF IT, BY CONSTRUCTION. `byCategory` is a partial record and the
+   *  migration back-fills nothing (see migrations.ts v43 -> v44): a career loaded from v43 keeps its
+   *  history under 'coaching' and starts splitting from the next tick, so the ledger stays truthful
+   *  about what it actually charged rather than being retconned. */
+  | 'facility'
   | 'travel'
   | 'entry'
   | 'gear'

@@ -64,9 +64,10 @@ import { growWeek, rollPotential, type KidSkills } from './development'
 import {
   coachById,
   coachCorridorFactor,
+  coachHoursForPlan,
   coachIncludesPhysio,
-  coachWeeklyCents,
-  selfRateCents,
+  facilityRateCents,
+  weeklyBillSplit,
 } from './coach'
 import {
   kitGrantCents,
@@ -279,7 +280,7 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
 // the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
 // end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 43
+export const SAVE_SCHEMA_VERSION = 44
 
 
 
@@ -694,6 +695,27 @@ function restFlavors(background: FamilyBackground, schoolOver: boolean): string[
   return schoolOver ? POST_SCHOOL_REST_EVENTS : REST_EVENTS
 }
 
+/** WHERE SHE TRAINS, AND FOR HOW LONG - the facility row's words
+ *  (docs/specs/split-the-bill-2026-08.md).
+ *
+ *  ⚠ A PURE LOOK-UP AND NOT A FLAVOUR DRAW, and that is a constraint rather than a preference: the
+ *  weekly bill spends exactly one main-stream `pickInt` and the training row already holds it. A
+ *  second story would need a second draw or a sub-stream, and the honest thing for a standing charge
+ *  is not a story anyway - a court hire reads the same every week because it IS the same every week.
+ *
+ *  ⚠ IT NAMES THE CORRIDOR, which is the owner's own argument made visible («с разным тиром для
+ *  разного уровня семей»). The price difference between these three venues is already in the bill -
+ *  `wealthCorridor` multiplies it - and this is the sentence that says why the numbers differ. The
+ *  hours are the other half of "why is it not the quote": rate x hours is the whole line bar jitter. */
+function facilityFlavor(background: FamilyBackground, hours: number): string {
+  const venue =
+    background === 'working' ? 'Club courts' : background === 'wealthy' ? 'Academy courts' : 'Court hire'
+  // Whole hours at the three plan presets (4 / 5 / 6); one decimal only when a custom split lands
+  // between them, so the common case reads as a clean number.
+  const shown = Math.round(hours * 10) / 10
+  return `${venue} – ${shown} h`
+}
+
 
 // THE LEDGER PRIMITIVES moved to world/ledger.ts (P4 extraction). `addEvent`/`accrueFinance` are
 // imported at the top of this file; the pure finance folds are re-exported here under their
@@ -844,8 +866,9 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // working-class club, an ordinary academy and a premium one, and the wealthy family pays MORE for
   // the same coach. POST-draw multiply, so the main-stream sequence still cannot depend on
   // background (the invariance test in economy.test.ts holds it to that).
-  const coach = coachById(world.seed, ageAtWeek(world.week), world.coachId)
-  const rate = coach ? coach.rateCents : selfRateCents(ageAtWeek(world.week))
+  const age = ageAtWeek(world.week)
+  const coach = coachById(world.seed, age, world.coachId)
+  const rate = coach ? coach.rateCents : facilityRateCents(age)
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const jitter = pickInt(rng, jLo, jHi) / 10_000
   const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background)
@@ -861,14 +884,29 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // discipline the sponsor cameo uses when it discards a gift for an ineligible background. The
   // frozen MAIN capture cannot see whether the coach was billed.
   const works = coachWorksThisWeek(world)
-  const expense = works
-    ? Math.round(coachWeeklyCents(rate, world.plan, world.profile.background, corridor) * jitter)
-    : 0
+  // ⚠ TWO LINES, ONE TOTAL (docs/specs/split-the-bill-2026-08.md, owner 08.08: «нам нужно отдельной
+  // строчкой списывать тренера, а отдельной рент залов и прочего»). `split.totalCents` is the SAME
+  // expression this line has always charged - `weeklyBillSplit` runs it and then partitions it - so
+  // the wallet, the bench and every survival number are untouched by construction. What the family
+  // gains is that it can see which half is the man and which half is the court.
+  const split = weeklyBillSplit({
+    rateCents: rate,
+    ageYears: age,
+    plan: world.plan,
+    background: world.profile.background,
+    corridor,
+    jitter,
+  })
+  const expense = works ? split.totalCents : 0
   world.fundsCents -= expense
   const flavors =
     world.plan.train >= 70
       ? trainFlavors(world.profile.background)
       : restFlavors(world.profile.background, schoolIsOver(world.week, world.profile.birthMonth))
+  // ⚠ STILL EXACTLY TWO MAIN-STREAM DRAWS IN THIS FUNCTION, and the split added neither. The facility
+  // row's words are a pure look-up off the corridor (see facilityFlavor) rather than a third `pickInt`
+  // - which is the whole reason it names the venue instead of telling a little story the way the
+  // training row does. The frozen MAIN capture cannot see the second line.
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
   // The $0 line is still EMITTED, the way a sponsor-covered gear item is: the Money breakdown should
   // show why a coaching week cost nothing, not silently drop the row.
@@ -876,17 +914,57 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // ⚠ AND IT NAMES THE RIGHT REASON NOW. It used to say "Competition week - no coaching billed" for
   // every unbilled week, which was the only reason it could be until 08.08 and is now never the
   // reason at all. The two survivors are the two the owner ruled on, and they are different stories.
-  addEvent(world, {
-    week: world.week,
-    type: 'expense',
-    category: 'coaching',
-    text: works
-      ? flavor
-      : inCollege(world)
+  //
+  // ⚠ THE STOOD-DOWN WEEK STAYS ONE ROW, DELIBERATELY. Nothing is billed - not the coach and not the
+  // court - so splitting zero into two zeroes would double the noise in the feed to say the same
+  // thing twice. It keeps the `coaching` category because that is the story the text tells and
+  // because a v43 save's history reads the same way.
+  if (!works) {
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: 'coaching',
+      text: inCollege(world)
         ? 'At college – the programme coaches her, not us'
         : 'A week away as a family – no coaching billed',
-    amountCents: works ? -expense : 0,
-  })
+      amountCents: 0,
+    })
+  } else {
+    // ⚠ THE COACH GOES FIRST, AND THE ORDER IS LOAD-BEARING RATHER THAN TIDY. `WeekRecapCard`'s
+    // handwritten scrap is `weekEvents.find(e => e.type === 'expense').text` - the week's FIRST
+    // expense - so emitting the court above the coach would have replaced every hired family's
+    // training flavour ("Coaching block: technique drills") with a court receipt on roughly two
+    // ordinary weeks in three, which is the one object on the Weekly Story that carries the week's
+    // texture. Coach first keeps that byte-identical, and it reads the way the Money screen's rows
+    // are ordered: the man, then the place.
+    //
+    // ⚠ A SELF-COACHED FAMILY BOOKS NO COACH LINE AT ALL - the sharpest thing the split fixes. The
+    // parent works free, so `split.coachCents` is 0 by arithmetic and a row for it would be the same
+    // lie in a smaller font. A hired rung always has one: `coachRateBandCents` gives no rung a band
+    // that reaches down to the court's price (asserted in tests/split-the-bill.test.ts).
+    //
+    // ⚠ SO THEIR SCRAP BECOMES THE COURT LINE, and that is a fix rather than a loss. It used to read
+    // "Coaching block: technique drills" to a family with no coach - the same category error the
+    // owner reported, in the game's most-read sentence - and "Club courts - 5 h" is a true receipt in
+    // exactly the genre that scrap is written in. The prose `weekNote` still lands on one week in
+    // three either way.
+    if (split.coachCents > 0) {
+      addEvent(world, {
+        week: world.week,
+        type: 'expense',
+        category: 'coaching',
+        text: flavor,
+        amountCents: -split.coachCents,
+      })
+    }
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: 'facility',
+      text: facilityFlavor(world.profile.background, coachHoursForPlan(world.plan)),
+      amountCents: -split.facilityCents,
+    })
+  }
   // Local-sponsor cameo: the ROLL (and the gift draw when it hits) run for EVERY background so
   // the main-stream draw count is background-independent (round-7 keeps the draws exactly as they
   // were). The payout is now NEED-BASED: only an eligible (working) kid actually banks it; for

@@ -27,7 +27,7 @@ import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { TIER_LADDER, TIER_SHORT } from '../../src/engine/season/calendar'
 import { latestNewsId, newestLetterId, useLetterWatermark } from '../../src/composables/inboxCue'
-import type { Snapshot } from '../../src/shared/protocol'
+import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 
 /** A real career, walked `weeks` weeks. */
 function snapshotAfter(weeks: number, seed = 'component-round20'): Snapshot {
@@ -132,6 +132,50 @@ describe('MoneyScreen - the budget is grouped into tabs', () => {
     expect(
       wrapper.findAll('.money-tabs .tab-pill').find((t) => t.text() === 'History')!.attributes('aria-pressed'),
     ).toBe('true')
+    wrapper.unmount()
+  })
+
+  // =================================================================================================
+  // THE BILL SPLIT (v44, docs/specs/split-the-bill-2026-08.md) - MOUNTED, because the whole slice is
+  // about what the family can SEE. A source pin on EXPENSE_META would pass on a screen that renders
+  // no rows at all, which is precisely the failure this has to catch: the owner's report is that he
+  // could not read his own wallet.
+  // =================================================================================================
+  it('shows the coach and the court as two rows, and says why neither is exactly the quote', () => {
+    withSnapshot(snapshotAfter(30))
+    const wrapper = mount(MoneyScreen, mountOpts)
+    const labels = wrapper.findAll('.money-list .money-row').map((r) => r.text())
+    expect(labels.some((t) => t.includes('Coaching'))).toBe(true)
+    expect(labels.some((t) => t.includes('Courts & facility'))).toBe(true)
+
+    // The jitter, explained where it is met. Every figure in it is the engine's own, so this asserts
+    // the SHAPE of the sentence rather than a number that a retune would move.
+    const note = wrapper.find('.money-bill-note')
+    expect(note.exists()).toBe(true)
+    const text = note.text()
+    expect(text).toContain('Training quotes at')
+    expect(text).toContain('coaching')
+    expect(text).toContain('courts')
+    expect(text).toContain('No week bills exactly that')
+    // Player copy rules: short dash only, no Cyrillic.
+    expect(text).not.toContain('—')
+    expect(text).not.toMatch(/[Ѐ-ӿ]/)
+    wrapper.unmount()
+  })
+
+  it('tells a self-coached family it has no coaching line at all', () => {
+    // ⚠ THE WORST OF WHAT THE OLD MODEL SHOWED HIM. `self` is priced at exactly the court rental, so
+    // the row labelled "Coaching" was 100% court hire for a parent who works free. Asserted on the
+    // rendered screen, because the fix is a thing the player reads.
+    const world = createWorld('component-self-coached', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 30; i++) tickWeek(world, rng)
+    withSnapshot(toSnapshot(world))
+    const wrapper = mount(MoneyScreen, mountOpts)
+    const labels = wrapper.findAll('.money-list .money-row').map((r) => r.text())
+    expect(labels.some((t) => t.includes('Courts & facility'))).toBe(true)
+    expect(labels.some((t) => t.includes('Coaching'))).toBe(false)
+    expect(wrapper.find('.money-bill-note').text()).toContain('you coach her, so there is no coaching line')
     wrapper.unmount()
   })
 })

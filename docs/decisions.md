@@ -461,3 +461,51 @@ covers everything she buys on cadence and only bites when she also buys UP the l
 **And the kit tiers say what they give.** A rung buys TIME, never power – `equipment.ts` is explicit
 that fresh kit is exactly neutral at every rung and wear only ever subtracts. The screen said "plays
 truer", which was the one thing it does not do; it now shows weeks-before-Worn per rung.
+
+## 2026-08-08 – The bill splits in two: the coach, and the court (`feat/split-the-bill`)
+
+> «на неделях всё еще списывается какая-то рандомная сумма и как будто не за тренера, мне кажется нам
+> нужно отдельной строчкой списывать тренера, а отдельной рент залов и прочего с разным тиром для
+> разного уровня семей или вынести снова отдельной ручкой выбора наравне с экипом»
+
+**Both halves of his report were true, and one of them was a recorded decision rather than a bug.**
+`coach-tiers.md` §3 ruled that court rental stays folded into every tier price – "simpler to keep the
+tier price inclusive and say so". What the ruling missed is who it charged: §2 of the same spec prices
+`self` at *exactly* the court rental, so a self-coached family's line labelled **Coaching** was 100%
+court rental for a parent who works free, and every other family saw coach + court in one figure
+nobody could decompose. **Reversed, and the reversal is recorded in §3 next to the sentence it
+overturns** – a decision that lives only in a new document is one the next reader makes again.
+
+**It is a partition, not a re-price, and that is measured rather than asserted.** `weeklyBillSplit`
+runs the same expression the tick always charged and then divides it; the coach line is the remainder,
+so the two sum exactly. Verified in a worktree at the unmodified `HEAD` against this branch: **3,120
+weekly figures across 15 corridor/rung arms, zero mismatches**, and `bench:econ` per-seed identical on
+seventeen columns across all **1,620 careers**, including gross expense, net, end funds and the week
+each one went red. **Bankruptcies 538/1,620 before, 538/1,620 after** – the rate the brief said must
+move by zero moved by zero.
+
+**`self` is honest now** – no coach line at all. And the corridor needed nothing added: it multiplies
+the whole bill, so it multiplies the court with it, which is his second ask already satisfied by
+arithmetic that was in the model.
+
+⚠ **The finding worth his attention: two thirds of a Budget family's training bill is the court.** A
+Budget coach's own labour is $8/h against a $20/h court at 14. Not new – it is what "inclusive" always
+meant – but never visible, and it explains why the cheapest rung feels expensive for what it gives.
+Reported, not patched.
+
+**The jitter stays and now explains itself.** ±8% is the week varying, not a bug; the Money screen says
+so in one line, with the engine's own quote and envelope. ⚠ But its provenance is a slot rather than a
+reason – the roll became jitter to preserve the draw position when the coach ladder replaced the old
+expense band – so it should justify itself on its merits or go. The merit is stated in the spec §6 for
+the owner to accept or reject; not decided here.
+
+⚠ **His second option – the facility as a CHOICE, «отдельной ручкой наравне с экипом» – is measured
+and NOT built.** It is a real decision with the model already behind it, but it adds a screen to a wave
+that has just added four, the corridor prices five things and forking one of them drifts, and the room
+at the rung that would use it is ±$25/wk. Recommendation in spec §7: ship the split, hold the handle,
+and if he still wants it after a week with the visible line, build it as one row on the Coach Market
+rather than a fourth screen. **His call, not mine.**
+
+Save schema **v44** (`WorldEventCategory` `+facility`); the migration back-fills nothing, on purpose –
+nothing in a v43 save can say which cents of a coaching row were the court, and a reconstruction would
+be a guess wearing a ledger's clothes.

@@ -228,7 +228,14 @@ export const PRESETS: Preset[] = [
  *  'vacation' / 'practice' (season planner, v13) are expense buckets: the econ bench never books
  *  either (it has no planner policy – that is the fatigue bench's axis), so they read $0 here and
  *  exist only to keep the category fold exhaustive. */
-export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'other']
+/** ⚠ 'facility' SITS BESIDE 'coaching' BECAUSE THEY ARE ONE BILL (v44,
+ *  docs/specs/split-the-bill-2026-08.md): the weekly training charge is now booked as the coach's
+ *  labour and the court's hire on two rows, and `coaching + facility` here is exactly the single
+ *  'coaching' figure every table before v44 printed. Adding the row is what makes the split legible
+ *  in the bench too - GROSS EXPENSE is folded from the ledger's own `expenseCents` and not from this
+ *  list, so it was never at risk, but a category the bench does not name is a category the reader
+ *  cannot see. */
+export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'facility', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'other']
 /** ⚠ 'prize' LEADS THE INCOME LIST because it is the only one of the four the TENNIS produces – the
  *  other three are a parent, a shop and a bank. It reads $0 for every career under 16 and for every
  *  career that never opens a W15, which is information rather than an empty column. */
@@ -306,6 +313,7 @@ export interface SeedResult {
 function zeroCats(): Record<WorldEventCategory, number> {
   return {
     coaching: 0,
+    facility: 0,
     travel: 0,
     entry: 0,
     gear: 0,

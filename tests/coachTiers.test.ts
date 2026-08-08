@@ -18,7 +18,7 @@ import {
   eliteGateShortfall,
   coachFitFor,
   styleFitBetween,
-  selfRateCents,
+  facilityRateCents,
   HIREABLE_TIERS,
 } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
@@ -53,15 +53,30 @@ import { ageFactor, SKILL_KEYS, trainFactor } from '../src/engine/development'
 
 const PLAY_STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
 
-/** The week-1 coaching bill in cents for one (seed, rung, plan). */
+/** The week-1 TRAINING bill in cents for one (seed, rung, plan).
+ *
+ *  ⚠ RE-AIMED BY THE SPLIT, NOT WEAKENED (v44, docs/specs/split-the-bill-2026-08.md). The weekly
+ *  charge now books on two rows - the coach's labour under 'coaching', the court's hire under
+ *  'facility' - so reading one category would silently measure a fraction of the bill and every
+ *  band, ordering and ratio assertion below it would be about the wrong number. Summing them is the
+ *  quantity all of those tests were always about, and it is STRICTLY STRONGER than what it replaced:
+ *  a split that failed to sum back to the old total would now break them. */
 function weekOneBill(seed: string, tier: CoachTier, train = 75): number {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: tier })
   world.plan = { train, rest: 100 - train }
   const rng = rngFromSeed(world.seed)
   tickWeek(world, rng)
-  const bill = world.events.find((e) => e.week === 1 && e.category === 'coaching')
-  expect(bill).toBeDefined()
-  return -bill!.amountCents!
+  return weekTrainingBill(world, 1)
+}
+
+/** The two rows one week's training bill lands on, summed. `self` has no coach row at all - which is
+ *  the point of the split - so an absent row counts as zero rather than failing. */
+function weekTrainingBill(world: { events: { week: number; category?: string; amountCents?: number }[] }, week: number): number {
+  const rows = world.events.filter(
+    (e) => e.week === week && (e.category === 'coaching' || e.category === 'facility'),
+  )
+  expect(rows.length, `no training rows on week ${week}`).toBeGreaterThan(0)
+  return rows.reduce((s, e) => s - (e.amountCents ?? 0), 0)
 }
 
 describe('RNG discipline – one draw, whatever the ladder does', () => {
@@ -206,8 +221,12 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
         expect(bill).toBeLessThanOrEqual(hi)
       }
     }
-    // The parent's rung takes the MIDDLE of the self band rather than drawing a rate of its own.
-    expect(selfRateCents(14)).toBe(20_00)
+    // ⚠ RE-AIMED BY THE SPLIT, NOT WEAKENED (docs/specs/split-the-bill-2026-08.md). `selfRateCents`
+    // is now `facilityRateCents`, because the number was always the COURT price wearing a coaching
+    // name - the self rung takes the MIDDLE of the self band rather than drawing a rate of its own,
+    // and that middle is what the facility line charges at every rung. The protected fact and the
+    // asserted value are unchanged.
+    expect(facilityRateCents(14)).toBe(20_00)
   })
 })
 
@@ -472,8 +491,17 @@ describe('a competition week IS a coaching week (owner, 08.08 – reverses R4)',
         closeTournament(world)
       }
     }
-    const bill = world.events.find((e) => e.week === week && e.category === 'coaching')!
-    return { cents: Math.abs(bill.amountCents ?? 0), text: bill.text }
+    // ⚠ BOTH ROWS OF THE WEEK (v44 split). `cents` is the whole training bill, which is what "the
+    // retainer is charged on an event week" has always meant; `text` joins the rows so the copy
+    // assertions below still see every word the week wrote.
+    const rows = world.events.filter(
+      (e) => e.week === week && (e.category === 'coaching' || e.category === 'facility'),
+    )
+    expect(rows.length).toBeGreaterThan(0)
+    return {
+      cents: rows.reduce((s, e) => s + Math.abs(e.amountCents ?? 0), 0),
+      text: rows.map((e) => e.text).join(' | '),
+    }
   }
 
   // A fresh kid has no points, so the only tier she can enter is `local` - the same gate the bench
@@ -499,7 +527,7 @@ describe('a competition week IS a coaching week (owner, 08.08 – reverses R4)',
     const world = createWorld('event-week', { ...DEFAULT_PROFILE, coachTier: 'middle' })
     const rng = rngFromSeed(world.seed)
     tickWeek(world, rng)
-    expect(-(world.events.find((e) => e.week === 1 && e.category === 'coaching')!.amountCents ?? 0)).toBeGreaterThan(0)
+    expect(weekTrainingBill(world, 1)).toBeGreaterThan(0)
   })
 
   it('the travel stance no longer moves the bill at all – it is not the retainer', () => {
@@ -517,7 +545,7 @@ describe('a competition week IS a coaching week (owner, 08.08 – reverses R4)',
     expect(world.season.length).toBeGreaterThan(0)
     expect(world.entries).toHaveLength(0)
     expect(isCompetitionWeek(world)).toBe(false)
-    expect(-(world.events.find((e) => e.week === 1 && e.category === 'coaching')!.amountCents ?? 0)).toBeGreaterThan(0)
+    expect(weekTrainingBill(world, 1)).toBeGreaterThan(0)
   })
 
   // ⚠ RE-AIMED, AND THE PROPERTY IT PROTECTS IS UNCHANGED: a week the family is BILLED for is a week
