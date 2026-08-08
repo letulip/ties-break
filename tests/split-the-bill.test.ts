@@ -35,9 +35,9 @@ const BACKGROUNDS: FamilyBackground[] = ['working', 'middle', 'wealthy']
 const PLANS = [WEEK_PLAN_PRESETS.light, WEEK_PLAN_PRESETS.balanced, WEEK_PLAN_PRESETS.grind]
 const AGES = [14, 16, 17, 22, 23, 28]
 
-/** Every rung's midpoint rate at one age - `self` being the court itself. */
+/** Every rung's midpoint rate at one age - `self` being the court itself, at the club. */
 function midRate(tier: CoachTier, age: number): number {
-  if (tier === 'self') return facilityRateCents(age)
+  if (tier === 'self') return facilityRateCents(age, 'self')
   const [lo, hi] = coachRateBandCents(tier, age)
   return Math.round((lo + hi) / 2)
 }
@@ -73,7 +73,7 @@ describe('the total did not move - the split is a partition, not a re-price', ()
               const corridor = coachCorridorMid(background)
               const jitter = bps / 10_000
               const wasCharged = Math.round(coachWeeklyCents(rate, plan, background, corridor) * jitter)
-              const split = weeklyBillSplit({ rateCents: rate, ageYears: age, plan, background, corridor, jitter })
+              const split = weeklyBillSplit({ rateCents: rate, ageYears: age, tier, plan, background, corridor, jitter })
               expect(split.totalCents, `${background}/${tier}/${age}/${bps}`).toBe(wasCharged)
               expect(split.coachCents + split.facilityCents).toBe(split.totalCents)
               expect(split.coachCents).toBeGreaterThanOrEqual(0)
@@ -143,6 +143,7 @@ describe('what the family can now see', () => {
       const s = weeklyBillSplit({
         rateCents: midRate(tier, 14),
         ageYears: 14,
+        tier,
         plan: WEEK_PLAN_PRESETS.balanced,
         background: 'middle',
       })
@@ -151,6 +152,7 @@ describe('what the family can now see', () => {
     const budget = weeklyBillSplit({
       rateCents: midRate('budget', 14),
       ageYears: 14,
+      tier: 'budget',
       plan: WEEK_PLAN_PRESETS.balanced,
       background: 'middle',
     })
@@ -201,8 +203,17 @@ describe('what the family can now see', () => {
   it('says where she trains and for how long, in the app\'s own voice', () => {
     // The row has to be readable on its own: a venue that names the corridor and the hours the plan
     // buys, which together are the whole line bar the week's jitter.
+    //
+    // ⚠ RE-AIMED 08.08 FROM `coachTier: 'middle'` TO `'budget'`, AND NOT WEAKENED
+    // (docs/specs/court-follows-the-coach-2026-08.md, owner: «более дорогой тренер = более дорогой
+    // корт»). These three strings are the CLUB row - the venue `self` and `budget` share - and they are
+    // byte-identical to what shipped with the split. `middle` used to be a club rung too and is now one
+    // step up the venue ladder, so the fixture moves to a rung that still trains at the club and the
+    // asserted copy does not move at all. The protected fact is unchanged: the row names the corridor's
+    // venue and the hours the plan buys. Every OTHER cell of the 3 x 4 table is pinned in the test below,
+    // which also asserts that no two rungs in one corridor can share words at different prices.
     const texts = BACKGROUNDS.map((background) => {
-      const world = createWorld('court-copy', { ...DEFAULT_PROFILE, background, coachTier: 'middle' })
+      const world = createWorld('court-copy', { ...DEFAULT_PROFILE, background, coachTier: 'budget' })
       const rng = rngFromSeed(world.seed)
       tickWeek(world, rng)
       return world.events.find((e) => e.week === 1 && e.category === 'facility')!.text
@@ -212,12 +223,73 @@ describe('what the family can now see', () => {
     expect(texts[2]).toBe('Academy courts – 5 h')
     // Short dash only, and no long dash anywhere in player-facing copy.
     for (const t of texts) expect(t).not.toContain('—')
-    // The plan really does drive the hours the row prints.
-    const world = createWorld('court-copy-grind', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    // The plan really does drive the hours the row prints. (Same re-aim: a club rung, so the venue words
+    // are the ones this test has always asserted and only the hour count is under examination.)
+    const world = createWorld('court-copy-grind', { ...DEFAULT_PROFILE, coachTier: 'budget' })
     world.plan = WEEK_PLAN_PRESETS.grind
     const rng = rngFromSeed(world.seed)
     tickWeek(world, rng)
     expect(world.events.find((e) => e.week === 1 && e.category === 'facility')!.text).toBe('Court hire – 6 h')
+  })
+
+  it('names the RUNG\'S venue too, because the court price now moves with it', () => {
+    // ⚠ THE COPY HAD TO GROW WITH `courtTierFactor`, and it is not decoration
+    // (docs/specs/court-follows-the-coach-2026-08.md). A `high` family and a `budget` family in the SAME
+    // corridor now pay different court prices; if the row said the same words to both, we would have
+    // re-created the unexplained-charge complaint the bill split exists to remove - the same number
+    // wearing no explanation. So the look-up is 3 corridors x 3 venue steps.
+    //
+    // ⚠ THE THREE STRINGS THE TEST ABOVE PINS SURVIVE VERBATIM as the club row (self / budget / middle),
+    // which is the copy half of "the cheap end did not move". This test is the OTHER two rows.
+    const venueFor = (background: FamilyBackground, coachTier: CoachTier): string => {
+      const world = createWorld(`venue-${background}-${coachTier}`, { ...DEFAULT_PROFILE, background, coachTier })
+      const rng = rngFromSeed(world.seed)
+      tickWeek(world, rng)
+      return world.events.find((e) => e.week === 1 && e.category === 'facility')!.text
+    }
+    // ⚠ ONE VENUE STEP PER DISTINCT COURT PRICE, which is the rule that makes the copy honest: rungs
+    // that pay the same read the same, and rungs that pay differently say so. `self` and `budget` share
+    // the club row - and that row is the string that shipped with the split, unchanged, because their
+    // court price did not move one cent.
+    for (const tier of ['self', 'budget'] as CoachTier[]) {
+      expect(venueFor('working', tier), tier).toBe('Club courts – 5 h')
+      expect(venueFor('middle', tier), tier).toBe('Court hire – 5 h')
+      expect(venueFor('wealthy', tier), tier).toBe('Academy courts – 5 h')
+    }
+    // ...and the three rungs that pay more each say so. The ladders OVERLAP between corridors on
+    // purpose: a working family's best venue is a middle family's ordinary one, which is what a real
+    // market looks like from inside it.
+    expect(venueFor('working', 'middle')).toBe('Indoor courts – 5 h')
+    expect(venueFor('working', 'high')).toBe('Academy courts – 5 h')
+    expect(venueFor('working', 'elite')).toBe('Performance centre – 5 h')
+    expect(venueFor('middle', 'middle')).toBe('Academy courts – 5 h')
+    expect(venueFor('middle', 'high')).toBe('Performance centre – 5 h')
+    expect(venueFor('middle', 'elite')).toBe('Show courts – 5 h')
+    expect(venueFor('wealthy', 'middle')).toBe('Performance centre – 5 h')
+    expect(venueFor('wealthy', 'high')).toBe('Show courts – 5 h')
+    expect(venueFor('wealthy', 'elite')).toBe('Centre court – 5 h')
+
+    // ⚠ AND THE COPY MUST NOT SAY THE SAME THING AT TWO DIFFERENT PRICES, inside one corridor. That is
+    // the whole reason this test exists rather than a spot-check: it is the exact bug the bill split was
+    // built to remove, one level deeper.
+    for (const bg of BACKGROUNDS) {
+      const seen = new Map<string, number>()
+      for (const tier of COACH_TIERS) {
+        const price = facilityRateCents(14, tier)
+        const words = venueFor(bg, tier)
+        const already = seen.get(words)
+        if (already !== undefined) expect(price, `${bg}/${tier}`).toBe(already)
+        seen.set(words, price)
+      }
+    }
+    // Short dash only, no Cyrillic, in every one of the nine.
+    for (const bg of BACKGROUNDS) {
+      for (const tier of COACH_TIERS) {
+        const t = venueFor(bg, tier)
+        expect(t).not.toContain('—')
+        expect(t).not.toMatch(/[Ѐ-ӿ]/)
+      }
+    }
   })
 })
 
@@ -244,16 +316,102 @@ describe('RNG discipline - one draw produced two lines', () => {
     for (const tier of COACH_TIERS) expect(capture(tier), tier).toBe(reference)
   })
 
-  it('puts the whole price difference between two coaches on the COACH line', () => {
-    // The court is the court: two families in the same market, at the same plan and the same age,
-    // pay the same for it whoever they hired. Everything a dearer coach costs lands on his own line,
-    // which is what makes the two rows answer different questions instead of both drifting together.
-    const at = (rateCents: number) =>
-      weeklyBillSplit({ rateCents, ageYears: 15, plan: WEEK_PLAN_PRESETS.balanced, background: 'middle' })
-    const cheap = at(30_00)
-    const dear = at(120_00)
-    expect(dear.facilityCents).toBe(cheap.facilityCents)
-    expect(dear.coachCents - cheap.coachCents).toBe(dear.totalCents - cheap.totalCents)
+  it('puts the whole price difference between two coaches AT ONE RUNG on the COACH line', () => {
+    // ⚠ RE-AIMED 08.08 FROM "two coaches" TO "two coaches AT ONE RUNG", NOT WEAKENED
+    // (docs/specs/court-follows-the-coach-2026-08.md). It used to compare a $30/h coach against a
+    // $120/h one and assert an identical facility line, which was true only because
+    // `facilityRateCents` took no rung argument at all - and that WAS the defect: an Elite coach
+    // worked on the same court as a self-coaching parent. The owner's own venue ladder is $22 club /
+    // $44+ elsewhere / dearer again at elite, and a published single-venue coach card spans only
+    // x1.13-1.43 against our x4.0 rung ladder, so our four rungs are four VENUES.
+    //
+    // THE PROTECTED FACT IS UNCHANGED AND IS NOW ASSERTED TWICE, which is why this is a re-aim: the
+    // court is a property of WHERE she trains and never of WHO she hired, so (a) two coaches at the
+    // same rung pay the identical court however far apart their own rates are - the arm below, and
+    // the one the original test was really about - and (b) the court moves ONLY when the rung does.
+    const at = (rateCents: number, tier: CoachTier) =>
+      weeklyBillSplit({ rateCents, ageYears: 15, tier, plan: WEEK_PLAN_PRESETS.balanced, background: 'middle' })
+
+    // (a) WITHIN a rung: the elite band is $96-144/h at 12-16, so these are two real elite coaches.
+    const cheapElite = at(96_00, 'elite')
+    const dearElite = at(144_00, 'elite')
+    expect(dearElite.facilityCents).toBe(cheapElite.facilityCents)
+    expect(dearElite.coachCents - cheapElite.coachCents).toBe(dearElite.totalCents - cheapElite.totalCents)
+
+    // ...and it holds at the bottom rung too, where the court is most of the bill.
+    const cheapBudget = at(24_00, 'budget')
+    const dearBudget = at(36_00, 'budget')
+    expect(dearBudget.facilityCents).toBe(cheapBudget.facilityCents)
+
+    // (b) ACROSS rungs the court DOES move, and it moves by `courtTierFactor` and nothing else. At the
+    // same rate, same age, same plan, same corridor: an elite venue is x2.4 a club court and a `high`
+    // one x1.9, so a coach who somehow charged $100/h would pay a different court at each rung.
+    const club = at(100_00, 'middle')
+    const better = at(100_00, 'high')
+    const best = at(100_00, 'elite')
+    expect(better.facilityCents).toBeGreaterThan(club.facilityCents)
+    expect(best.facilityCents).toBeGreaterThan(better.facilityCents)
+    expect(club.totalCents).toBe(best.totalCents) // the TOTAL is the rate's, not the venue's
+  })
+
+  it('climbs with the rung - a dearer coach means a dearer court, which is the owner\'s rule', () => {
+    // ⚠ HIS RULING, 08.08, and the ladder's shape is it verbatim:
+    //     «Можно вообще стоимость корта по тиру к тиру тренера привязывать и всё.
+    //      Более дорогой тренер = более дорогой корт.»
+    // So the court is a monotone non-decreasing function of the rung, at EVERY age row, and it is
+    // strictly increasing everywhere the arithmetic allows.
+    for (const age of AGES) {
+      let prev = 0
+      for (const tier of COACH_TIERS) {
+        const court = facilityRateCents(age, tier)
+        expect(court, `${tier} @ ${age} must not be cheaper than the rung below`).toBeGreaterThanOrEqual(prev)
+        prev = court
+      }
+      // Strict at the three rungs that can take a step.
+      const club = facilityRateCents(age, 'self')
+      expect(facilityRateCents(age, 'middle'), `middle @ ${age}`).toBeGreaterThan(club)
+      expect(facilityRateCents(age, 'high'), `high @ ${age}`).toBeGreaterThan(facilityRateCents(age, 'middle'))
+      expect(facilityRateCents(age, 'elite'), `elite @ ${age}`).toBeGreaterThan(facilityRateCents(age, 'high'))
+      // ⚠ AND `budget` IS THE ONE CELL HIS RULE CANNOT REACH, asserted so the reason survives as code.
+      // A Budget coach's whole bill is $30/h at 12-16 and $20 of it is already the court, so his labour
+      // is $10 at the midpoint and $4 at the bottom of his band. Lifting his court even to the owner's
+      // own $22 club figure would leave the cheapest Budget coach in the game $2/h - below every
+      // published coaching rate anywhere in docs/research/real-coaching-costs.md §3a. It shares the
+      // club with `self`, and the fiction is exact: a club coach uses the club's courts, which are the
+      // same courts the parent books for herself.
+      expect(facilityRateCents(age, 'budget'), `budget @ ${age}`).toBe(club)
+    }
+    // And the club court is still the number the owner signed off on 29.07: the middle of $10-30. The
+    // cheap end was already right (research §7) and a re-price there would be inventing a correction.
+    expect(facilityRateCents(14, 'self')).toBe(20_00)
+  })
+
+  it('keeps the venue ladder inside the two ceilings that pin it', () => {
+    // ⚠ NEITHER CEILING IS A STYLE PREFERENCE; each is a place the model breaks.
+    //
+    // (1) A rung's court must stay UNDER HALF its midpoint bill, or the room becomes the larger half
+    //     and the "Budget is mostly the court, Elite is mostly the man" shape inverts. This is why
+    //     `middle` gets no step at all - its $50/h midpoint caps the court at $25/h, a x1.25 ceiling
+    //     too small to be a decision - and why `high` is 1.9 rather than the 2.0 his "$44 vs $22"
+    //     implies: at 2.0 the court is EXACTLY half an $80 bill and the assertion above turns on a
+    //     rounding.
+    // (2) Every hired rung's band LOW must exceed its OWN court, or a coach drawn at the bottom of his
+    //     rung books a $0 coach line and the ledger says a coach worked free.
+    for (const age of AGES) {
+      for (const tier of ['budget', 'middle', 'high', 'elite'] as CoachTier[]) {
+        const court = facilityRateCents(age, tier)
+        const [lo, hi] = coachRateBandCents(tier, age)
+        expect(lo, `${tier} @ ${age}: band low vs its own court`).toBeGreaterThan(court)
+        if (tier !== 'budget') {
+          // Budget is court-dominated by design (the rung above asserts it); everything above is not.
+          // The midpoint is (lo + hi) / 2 and the court must be under half of THAT, so the comparison
+          // is `court * 4 < lo + hi`. ⚠ Written as an integer inequality rather than `court < mid / 2`
+          // so a rung sitting exactly on the line fails rather than surviving on a rounding - which is
+          // the case that actually bites, since `high` at x2.0 lands precisely there.
+          expect(court * 4, `${tier} @ ${age}: court vs half the midpoint`).toBeLessThan(lo + hi)
+        }
+      }
+    }
   })
 })
 
@@ -292,9 +450,14 @@ describe('an old save still reads, and its history is not retconned', () => {
  *  line for a hired rung and the ledger would say a coach worked free. Asserted over the whole rate
  *  table rather than at one age, because it is a property of the PRICES and the prices are tuned. */
 describe('the price table keeps every hired rung above the court', () => {
-  it('leaves daylight between the self band and the cheapest rung, at every age row', () => {
+  it('leaves daylight between the club court and the cheapest rung, at every age row', () => {
+    // ⚠ RE-AIMED 08.08: `facilityRateCents` now takes the rung, so this arm reads the CLUB court and
+    // the per-rung version of the same claim moved into "keeps the venue ladder inside the two
+    // ceilings that pin it" above, where it is asserted against each rung's OWN court. Both survive:
+    // this one is about the cheap end (no rung starts below the club court) and that one is about the
+    // top (no rung's low falls below its own dearer venue).
     for (const age of AGES) {
-      const court = facilityRateCents(age)
+      const court = facilityRateCents(age, 'self')
       for (const tier of ['budget', 'middle', 'high', 'elite'] as CoachTier[]) {
         const [lo] = coachRateBandCents(tier, age)
         expect(lo, `${tier} @ ${age}`).toBeGreaterThan(court)
@@ -305,8 +468,9 @@ describe('the price table keeps every hired rung above the court', () => {
   it('never books a coach line for a rung whose coach is the parent', () => {
     for (const age of AGES) {
       const s = weeklyBillSplit({
-        rateCents: facilityRateCents(age),
+        rateCents: facilityRateCents(age, 'self'),
         ageYears: age,
+        tier: 'self',
         plan: WEEK_PLAN_PRESETS.balanced,
         background: 'middle',
       })
@@ -325,15 +489,21 @@ describe('the coach line is HIS price, not the rung\'s', () => {
     const expected = weeklyBillSplit({
       rateCents: coach.rateCents,
       ageYears: 14,
+      tier: coach.tier,
       plan: world.plan,
       background: world.profile.background,
     })
     // The quote's midpoint corridor, so this compares like with like against the market card.
     expect(expected.coachCents).toBeGreaterThan(0)
+    // ⚠ RE-AIMED 08.08: the reference court is HIS RUNG'S court, not the club's. An elite career pays
+    // an elite venue (x2.4), so comparing against `facilityRateCents(14, 'self')` would now be
+    // comparing against a court she never books. The protected fact is the same one - the facility
+    // line is exactly what the court alone would cost at her plan and corridor.
     expect(expected.facilityCents).toBe(
       weeklyBillSplit({
-        rateCents: facilityRateCents(14),
+        rateCents: facilityRateCents(14, coach.tier),
         ageYears: 14,
+        tier: coach.tier,
         plan: world.plan,
         background: world.profile.background,
       }).totalCents,

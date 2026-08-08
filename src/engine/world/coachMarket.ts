@@ -10,7 +10,7 @@
 // is the market card's own copy, and it had two callers in two different concerns.
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
-import { bestFitCoachAt, buildCoachRoster, coachById, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents } from '../coach'
+import { bestFitCoachAt, buildCoachRoster, coachById, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { SeasonEvent, TierId } from '../season/types'
@@ -204,7 +204,7 @@ export function coachBilling(world: WorldState): {
 } {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
-  const rate = coach ? coach.rateCents : facilityRateCents(age)
+  const rate = coach ? coach.rateCents : facilityRateCents(age, tierOf(coach))
   const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background)
   const seasonStart = seasonStartWeek(world.week)
   const countEntered = (from: number) => {

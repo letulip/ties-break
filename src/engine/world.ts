@@ -7,6 +7,7 @@ import {
   type CareerTotals,
   type CollegeState,
   type FamilyBackground,
+  type CoachTier,
   type FinanceWeek,
   type ForkState,
   type RetirementOffer,
@@ -67,6 +68,7 @@ import {
   coachHoursForPlan,
   coachIncludesPhysio,
   facilityRateCents,
+  tierOf,
   weeklyBillSplit,
 } from './coach'
 import {
@@ -706,10 +708,32 @@ function restFlavors(background: FamilyBackground, schoolOver: boolean): string[
  *  ⚠ IT NAMES THE CORRIDOR, which is the owner's own argument made visible («с разным тиром для
  *  разного уровня семей»). The price difference between these three venues is already in the bill -
  *  `wealthCorridor` multiplies it - and this is the sentence that says why the numbers differ. The
- *  hours are the other half of "why is it not the quote": rate x hours is the whole line bar jitter. */
-function facilityFlavor(background: FamilyBackground, hours: number): string {
-  const venue =
-    background === 'working' ? 'Club courts' : background === 'wealthy' ? 'Academy courts' : 'Court hire'
+ *  hours are the other half of "why is it not the quote": rate x hours is the whole line bar jitter.
+ *
+ *  ⚠ AND SINCE 08.08 IT NAMES THE RUNG'S VENUE TOO, BECAUSE IT HAS TO
+ *  (docs/specs/court-follows-the-coach-2026-08.md, owner: «более дорогой тренер = более дорогой
+ *  корт»). `courtTierFactor` makes a dearer rung's court dearer in the SAME corridor, and words that
+ *  did not move with the number would put two families on one street looking at the same sentence and
+ *  different money - which is precisely the unexplained-charge complaint the bill split exists to
+ *  remove. So the look-up is 3 corridors x 4 venue steps, ONE STEP PER DISTINCT COURT PRICE: if two
+ *  rungs pay the same they read the same, and if they pay differently they say so.
+ *
+ *  ⚠ `self` AND `budget` SHARE THE CLUB ROW, so the FIRST STRING OF EACH CORRIDOR IS THE ONE THAT
+ *  SHIPPED WITH THE SPLIT, verbatim. Those two rungs' court price did not move one cent and their
+ *  receipt should not either. The fiction is exact: a club coach uses the club's courts, which are the
+ *  same courts the parent books for herself.
+ *
+ *  The ladders OVERLAP between corridors on purpose - a working family's best venue is a middle
+ *  family's ordinary one - which is what a real market looks like from inside it. */
+const FACILITY_VENUE: Record<FamilyBackground, [string, string, string, string]> = {
+  working: ['Club courts', 'Indoor courts', 'Academy courts', 'Performance centre'],
+  middle: ['Court hire', 'Academy courts', 'Performance centre', 'Show courts'],
+  wealthy: ['Academy courts', 'Performance centre', 'Show courts', 'Centre court'],
+}
+
+function facilityFlavor(background: FamilyBackground, tier: CoachTier, hours: number): string {
+  const step = tier === 'elite' ? 3 : tier === 'high' ? 2 : tier === 'middle' ? 1 : 0
+  const venue = FACILITY_VENUE[background][step]
   // Whole hours at the three plan presets (4 / 5 / 6); one decimal only when a custom split lands
   // between them, so the common case reads as a clean number.
   const shown = Math.round(hours * 10) / 10
@@ -868,7 +892,8 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // background (the invariance test in economy.test.ts holds it to that).
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
-  const rate = coach ? coach.rateCents : facilityRateCents(age)
+  const tier = tierOf(coach)
+  const rate = coach ? coach.rateCents : facilityRateCents(age, tier)
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const jitter = pickInt(rng, jLo, jHi) / 10_000
   const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background)
@@ -892,6 +917,7 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const split = weeklyBillSplit({
     rateCents: rate,
     ageYears: age,
+    tier,
     plan: world.plan,
     background: world.profile.background,
     corridor,
@@ -961,7 +987,7 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
       week: world.week,
       type: 'expense',
       category: 'facility',
-      text: facilityFlavor(world.profile.background, coachHoursForPlan(world.plan)),
+      text: facilityFlavor(world.profile.background, tier, coachHoursForPlan(world.plan)),
       amountCents: -split.facilityCents,
     })
   }

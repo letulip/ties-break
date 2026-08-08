@@ -55,7 +55,7 @@ import { ECONOMY } from '../../engine/economy'
 import { STARTING_FUNDS_CENTS } from '../../engine/world'
 // The bill's own arithmetic, so the note under the breakdown quotes the number the engine charges
 // rather than a mirror of it - the same rule `startingBudget` above is written under.
-import { coachBillRangeCents, coachById, facilityRateCents, weeklyBillSplit } from '../../engine/coach'
+import { coachBillRangeCents, coachById, facilityRateCents, tierOf, weeklyBillSplit } from '../../engine/coach'
 import type {
   FinanceWindow,
   KitGrade,
@@ -147,10 +147,12 @@ const trainingBillNote = computed<string | null>(() => {
   const snap = game.snapshot
   if (!snap) return null
   const coach = coachById(snap.seed, snap.ageYears, snap.coachId)
-  const rate = coach ? coach.rateCents : facilityRateCents(snap.ageYears)
+  const tier = tierOf(coach)
+  const rate = coach ? coach.rateCents : facilityRateCents(snap.ageYears, tier)
   const split = weeklyBillSplit({
     rateCents: rate,
     ageYears: snap.ageYears,
+    tier,
     plan: snap.plan,
     background: snap.profile.background,
   })

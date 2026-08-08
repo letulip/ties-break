@@ -155,6 +155,25 @@ gives. The court is a floor under the whole ladder, and at the bottom the floor 
 
 Nothing was re-priced to fix that. It is reported, not patched.
 
+> ### ⚠ FOLLOWED UP THE SAME DAY, and the follow-up found a bigger one
+>
+> Reported here so the next reader of this section does not have to notice it twice. The table above
+> has a column that takes **no rung argument at all** – the court was $20/h whoever was standing on
+> it, so an Elite coach worked on the same court as a self-coaching parent. The owner then priced the
+> real thing first-hand («корты за 22 доллара в час … и за 44+ доллара в час в других местах, есть и
+> дороже всякие элитные корты»), and two things came out of measuring it:
+>
+> * **The cheap end was already right, and he had confirmed it twice without meaning to.** $20 court
+>   against his $22; $10/h Budget labour against his "from $10/h". **The 67% court share above is not a
+>   defect** – his own figures give **69%**, because padel's court is expensive relative to its coach.
+> * **The court's whole spread was x1.86, and one family's was x1.00.** A real single city runs x5.1 to
+>   x16.7. The owner ruled – «более дорогой тренер = более дорогой корт» – so the court now climbs with
+>   the rung, **total-preserving**: every figure in §3 and §5 of this document still holds cent for cent,
+>   and the composition in §4 changes at `middle`, `high` and `elite`.
+>
+> [`court-follows-the-coach-2026-08.md`](court-follows-the-coach-2026-08.md) is the decision and
+> [`../research/real-coaching-costs.md`](../research/real-coaching-costs.md) is the evidence.
+
 ---
 
 ## 5. The effect on `econ-bench`: zero
