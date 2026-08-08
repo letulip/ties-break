@@ -53,6 +53,12 @@ public/images/*-jpeg/
 # so they turn up in the working tree routinely. They are throwaway state - two of them were
 # swept into a commit on 29.07 and had to be filtered back out.
 *.tsave
+# ...EXCEPT the e2e fixture set, which is generated ON PURPOSE and committed. `tools/e2e-fixtures.ts`
+# writes five career saves that Playwright seeds into IndexedDB before the app boots, so they are
+# test data rather than throwaway state - regenerate with `npm run e2e:fixtures` (byte-identical
+# every time) and see docs/plans/e2e-fixtures.md. The negation is anchored to the one directory:
+# an exported save anywhere else is still ignored, which is what the rule above is for.
+!e2e/fixtures/*.tsave
 
 graphify-out/
 
