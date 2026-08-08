@@ -40,8 +40,7 @@
  * exists to prove MIGRATIONS work; these are five playable STATES at the current version and exist
  * to give a browser somewhere to start. See docs/plans/e2e-fixtures.md §"Two corpora".
  */
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs'
 import {
   answerFork,
   answerRetirement,
@@ -62,117 +61,58 @@ import { FIRST_NAMES, pickSurname } from '../src/engine/season/cohort'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayerProfile } from '../src/shared/protocol'
 import { POLICIES, stepCareerWeek, type Policy } from './econ-bench'
+import {
+  careerIdFor,
+  ENVELOPE_HEADER_BYTES,
+  FIXTURE_DIR,
+  FIXTURE_NAMES,
+  MANIFEST_FILE,
+  loadManifest as readManifestFile,
+  readFixtureBytes,
+  slotFor,
+  splitEnvelope,
+  type FixtureEntry as FixtureRow,
+  type FixtureFacts,
+  type FixtureManifest as FixtureManifestFile,
+  type FixtureName,
+} from './e2e-fixtures-read'
 
-// --- where they live ------------------------------------------------------------------------------
+// --- reading (the rot alarm and the Playwright harness both come through here) --------------------
+//
+// ⚠ THE READER LIVES IN `./e2e-fixtures-read.ts` AND IS RE-EXPORTED HERE UNCHANGED, so this module's
+// public surface is exactly what it was and `tests/e2e-fixtures.test.ts` imports the same names from
+// the same path. The split is for the BROWSER HARNESS, which needs the manifest and the envelope
+// offset and must not drag the engine this file imports into every Playwright worker to get them –
+// the reader's own header argues it at length.
 
-export const FIXTURE_DIR = fileURLToPath(new URL('../e2e/fixtures/', import.meta.url))
-export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
-
-export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'broke', 'ending'] as const
-export type FixtureName = (typeof FIXTURE_NAMES)[number]
-
-/** The header layout `encodeExportFile` writes: MAGIC(8) | schemaVersion u32 BE | sha256(32) | gzip.
- *  Named here so the harness's IndexedDB seeding and the rot alarm slice it in one place. */
-export const ENVELOPE_HEADER_BYTES = 44
-
-// --- what a test is told about a fixture ----------------------------------------------------------
-
-/** The facts a spec may stand on. Every one of them is RE-DERIVED from the loaded world by the rot
- *  alarm (tests/e2e-fixtures.test.ts) and compared to what the manifest claims, so a fixture whose
- *  numbers have drifted out from under it fails on the PR gate rather than in a browser. */
-export interface FixtureFacts {
-  week: number
-  seasonIndex: number
-  ageYears: number
-  fundsCents: number
-  kidRank: number
-  /** ranked at all – the engine's own test, `points > 0`, not the length of a results list.
-   *  ⚠ THREE TABLES, THREE CURRENCIES (season/types.ts): National, junior International and
-   *  Professional. A career reads as unranked on two of them for most of its life – the junior
-   *  columns empty out as she ages past the J rungs – so a spec has to name the table it means. */
-  rankedDomestic: boolean
-  rankedItf: boolean
-  rankedWta: boolean
-  domesticPoints: number
-  itfPoints: number
-  wtaPoints: number
-  seasonsPlayed: number
-  resultRows: number
-  feedEvents: number
-  financeWeeks: number
-  cohortSize: number
-  endingType: string | null
-  /** consecutive weeks below zero, counting this one – 0 when solvent */
-  debtWeeks: number
-  inSponsorWindow: boolean
-  openKitLetters: number
-  hasActiveKitDeal: boolean
-  rngMain: { s: number; n: number }
+export {
+  careerIdFor,
+  ENVELOPE_HEADER_BYTES,
+  FIXTURE_DIR,
+  FIXTURE_NAMES,
+  MANIFEST_FILE,
+  readFixtureBytes,
+  slotFor,
+  splitEnvelope,
 }
+export type { FixtureFacts, FixtureName }
 
-export interface FixtureEntry {
-  name: FixtureName
-  file: string
-  /** one sentence: which seam a spec would reach for this fixture to test */
-  purpose: string
-  seed: string
-  careerId: string
-  /** the IndexedDB slot the harness should write it to (src/db/saves.ts naming) */
-  slot: string
-  /** the week the recipe aimed at – for the searched fixtures, the week it was FOUND at */
-  targetWeek: number
-  schemaVersion: number
+/** The manifest row with the engine's own types back on it. The reader carries `background`,
+ *  `coachTier` and `policy` as plain strings because their unions live in modules that import the
+ *  engine; this side already has those imports, so the generator writes them typed and the rot alarm
+ *  reads them typed – `STARTING_FUNDS_CENTS[entry.background]` is an index, and it has to be. */
+export interface FixtureEntry extends FixtureRow {
   background: FamilyBackground
   coachTier: CoachTier
   policy: Policy['id']
-  profile: { kidName: string; kidLastName: string; country: string }
-  bytes: number
-  payloadBytes: number
-  /** SHA-256 of the WHOLE envelope, hex. The envelope's own checksum covers the payload; this one
-   *  covers the header too, so a truncated or re-headered file is caught before it is decoded. */
-  sha256: string
-  /** how many seeds the search tried before this one was accepted (1 = the first) */
-  seedsTried: number
-  facts: FixtureFacts
 }
 
-export interface FixtureManifest {
-  generatedBy: string
-  command: string
-  /** the schema every fixture in this manifest was written at */
-  schemaVersion: number
+export interface FixtureManifest extends FixtureManifestFile {
   fixtures: FixtureEntry[]
 }
 
-// --- reading (the rot alarm and the Playwright harness both come through here) --------------------
-
 export function loadManifest(): FixtureManifest {
-  return JSON.parse(readFileSync(MANIFEST_FILE, 'utf8')) as FixtureManifest
-}
-
-export function readFixtureBytes(file: string): Uint8Array {
-  return new Uint8Array(readFileSync(`${FIXTURE_DIR}${file}`))
-}
-
-/**
- * The export envelope, cut into the two fields an IndexedDB save record holds.
- *
- * ⚠ THIS IS A SLICE, NOT A RE-ENCODE. `compressWorld` produced exactly these bytes and
- * `decompressWorld` verifies the checksum against them on read, so a record built this way is
- * byte-identical to one the app wrote itself. The alternative – decode the file and re-compress –
- * would put a second gzip implementation between the fixture and the product.
- */
-export function splitEnvelope(bytes: Uint8Array): {
-  schemaVersion: number
-  checksum: Uint8Array
-  payload: Uint8Array
-} {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
-  return {
-    schemaVersion: view.getUint32(8),
-    checksum: bytes.subarray(12, ENVELOPE_HEADER_BYTES),
-    payload: bytes.subarray(ENVELOPE_HEADER_BYTES),
-  }
+  return readManifestFile() as FixtureManifest
 }
 
 /** Everything a spec asserts on, read off a world. The single definition – the generator writes the
@@ -241,14 +181,6 @@ function openFixtureCareer(
   const world = createWorld(seed, profile, careerIdFor(name))
   world.coachOnEventWeeks = policy.coachOnEventWeeks
   return { world, rng: resumeMain(world.rngMain) }
-}
-
-export function careerIdFor(name: FixtureName): string {
-  return `c-e2e-${name}`
-}
-
-export function slotFor(name: FixtureName): string {
-  return `auto:${careerIdFor(name)}:a`
 }
 
 /** Answer whatever the engine has asked, the way tools/endings-bench.ts does – the fork at nineteen

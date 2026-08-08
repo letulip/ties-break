@@ -23,6 +23,13 @@ last-reviewed: 2026-08-08
   deliberately on the next schema bump** – otherwise a stale fixture would pass everything else and
   the e2e layer would silently be testing a migrated old save.
 - **Regenerate with `npm run e2e:fixtures`** (~4 s, byte-identical across runs).
+- **The browser harness reaches them through `careerAt`** (`e2e/careerAt.ts`, built 08.08): a save
+  written into IndexedDB inside the database-creation transaction, before the app's first script, so
+  the store's single `listCareers` finds a career instead of an empty install. **Measured at
+  0.43–0.57 s to a week-412 career on screen** – the same cost as walking the wizard to an empty one.
+- ⚠ **Reading and generating are separate modules.** `tools/e2e-fixtures-read.ts` imports nothing and
+  is what a spec may import; `tools/e2e-fixtures.ts` imports the engine, self-executes as a CLI, and
+  re-exports the reader so every existing import path still resolves.
 - **This is not the golden-save corpus.** `tests/fixtures/saves/` is one save per schema version, for
   ever, proving *migrations work*. This is five states at the current version, regenerated rather than
   migrated, providing *somewhere for a browser to start*. Neither can do the other's job.
@@ -159,13 +166,28 @@ The record the harness writes (see `src/db/saves.ts` for the shape) needs `slot`
 `savedAt`, `week`, `seed`, `bytes`, `kidName`, `country`, `revision`, `checksum`, `payload` – every
 one of which is in the manifest or the envelope. The manifest already names the slot
 (`auto:c-e2e-<name>:a`), and a `careers` row must be written in the same transaction or the career
-list will not show it.
+list will not show it. ⚠ `bytes` is the **payload's** length (`payloadBytes`), not the file's:
+`src/db/saves.ts` stores what `compressWorld` returned, and the envelope is 44 bytes longer.
 
-Import the reader from the generator rather than re-deriving any of it:
+**BUILT, 08.08:** `e2e/careerAt.ts` does all of that, and `e2e/README.md` §"Seeding a career" is the
+page to read. The one thing worth repeating here, because it is a property of these fixtures rather
+than of Playwright: the record is written **inside the transaction that creates the database**, so
+the app's own `openDB` queues behind it and cannot read an empty store. Nothing about the seeding is
+a race the fixtures have to win.
+
+Import the reader from `tools/e2e-fixtures-read.ts` rather than re-deriving any of it:
 
 ```ts
-import { loadManifest, readFixtureBytes, splitEnvelope } from '../tools/e2e-fixtures'
+import { loadManifest, readFixtureBytes, splitEnvelope } from '../tools/e2e-fixtures-read'
 ```
+
+⚠ **That is a different path from the generator, on purpose.** `tools/e2e-fixtures.ts` imports the
+whole engine to *make* fixtures and self-executes when its name shows up in `process.argv` – neither
+is welcome in a test runner. The reading half therefore lives in `tools/e2e-fixtures-read.ts`, which
+imports nothing at all, and the generator imports it back and re-exports every name unchanged, so
+`tests/e2e-fixtures.test.ts` and this document's older import line both still work. The reader is
+also the only `tools/` file listed in `tsconfig.e2e.json`, and its own header says why nothing else
+may join it.
 
 ## The rot alarm
 

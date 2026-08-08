@@ -3,14 +3,16 @@ type: plan
 status: draft
 area: testing
 canonical: false
-last-reviewed: 2026-08-06
+last-reviewed: 2026-08-08
 ---
 
 # Playwright: the fourth layer
 
-**Status: S0 and S1a built (06.08), S1b-S3 planned.** Written 06.08.2026. The repo has no `@playwright/test`, no `e2e/`
-directory and exactly **zero** `data-testid` attributes today – so this starts from nothing, which is
-the honest place to start from.
+**Status: S0, S1a and S1b built (06–08.08), S2–S3 planned.** Written 06.08.2026, when the repo had no
+`@playwright/test`, no `e2e/` directory and exactly **zero** `data-testid` attributes – which was the
+honest place to start from. **It still has zero:** the harness, the five fixtures and the seeding
+fixture were all written against role and accessible name alone (§4), and the two places that came
+closest are recorded where they were met rather than papered over with an attribute.
 
 ## 1. Why this app is an unusually good subject
 
@@ -102,6 +104,30 @@ sponsor window, full ledgers), `broke` (near the bankruptcy fork), `ending` (pas
 purpose, the rot alarm and why this set and the golden-save corpus cannot do each other's job.
 All five were found on the first seed tried, total 288 KiB.
 
+**AND THE JOIN, 08.08** – `e2e/careerAt.ts`, the typed fixture above, with one thin spec per career in
+`e2e/seeded-careers.spec.ts`. The measurement the claim above rests on, taken rather than assumed:
+
+| route to a career at week 412 | measured, 5+ runs |
+|---|---|
+| `careerAt('pro')` – seeded, booted, week and funds asserted on screen | **0.43–0.57 s** |
+| the onboarding wizard alone, which reaches week **0** | 0.35–0.68 s |
+| one press of the shipped `▶▶ 52 (dev)` fast-forward | 0.09–0.20 s, **and it does not advance 52 weeks** |
+
+Two things worth saying, and the second is the real one.
+
+**Seeding a week-412 career costs the same as creating an empty one.** Not "faster than clicking to
+week 412" – the same as the cheapest thing the UI can do at all, which is why every scenario in §5
+becomes affordable rather than merely cheaper.
+
+**And the clicked route does not terminate unattended.** `▶▶ 52` returns in a tenth of a second
+because it *stops at the first thing the engine has to show* – the press above came back with the
+week's story open and two controls waiting to be dismissed. It is a fast-forward that halts on every
+tournament, knock and question, exactly as `sim.worker.ts`'s tick guards intend, so "eight presses"
+is not a route: it is hundreds of interactions, each of which has to be answered. Two attempts to
+drive it to week 412 were abandoned at ten minutes. The argument for state injection is therefore not
+a stopwatch at all – it is that the alternative is not automatable, and a stopwatch is what it looks
+like from the outside.
+
 ## 4. Selector policy – decide it once, now
 
 Zero `data-testid` exist. That is an opportunity to get the policy right rather than sprinkle them.
@@ -113,6 +139,22 @@ Zero `data-testid` exist. That is an opportunity to get the policy right rather 
    week cards, the rung strip. Add them deliberately, with a comment saying why, in the same spirit
    as every other decision in this codebase.
 3. **Never CSS classes or DOM structure.** They change with every UI wave and this project has many.
+
+**Measured after S1b, and the count is still zero.** Two of the three places S0 predicted a testid
+would be needed were actually met, and neither one needed it:
+
+- **Home's composite cards take their whole text as their accessible name.** The Family budget card
+  is a `Card as="button"`, so `{ name: /^Family budget/ }` addresses it by the *start* of that name
+  and the figure is asserted inside it with `toContainText`. Scoping was load-bearing rather than
+  tidy: on `fresh` the starting funds also appear in the engine's first diary line, so an unscoped
+  text match is a strict-mode violation – and the tempting fix is a testid on a control that already
+  has a perfectly good name.
+- **Landmarks are not unique, and that is the app being right.** `getByRole('navigation')` matched
+  the epilogue's own album arrows as well as the tab bar. The fix was to ask a better question –
+  name a control only the tab bar has – not to label the tab bar.
+
+The third (country tiles carry a flag emoji) is unchanged: the smoke spec still clicks
+`United States` by name.
 
 ## 5. The stages
 
@@ -128,17 +170,29 @@ gate: **chromium only, smoke only.** Trace and video on first retry, HTML report
 The point of S0 is the harness, not the coverage. It proves the shape works before anything is built
 on it.
 
-### S1 – the fixture engine (one day)
+### S1 – the fixture engine (one day) – BUILT
 
 The `careerAt` fixture from section 3, the generator script, the five fixtures. Plus the two hazards
-this app will hit and most apps do not:
+this app will hit and most apps do not – and a third that only showed up once the two halves met:
 
-- **The service worker must be controlled.** An update prompt appearing mid-test is a flake factory.
-  Register it off by default in the e2e build, and turn it on explicitly for the one spec that tests
-  the update flow.
-- **IndexedDB must be clean per test.** Playwright's isolated contexts give this for free, but the
-  app also writes `localStorage` (`tb:lastSeenInboxLetter:<careerId>`, `tb-muted`) – seed or clear
-  those in the same fixture, or the mail-marker specs will lie.
+- **The service worker must be controlled.** ✅ `VITE_TB_SW=off` on the `webServer` (S0). Still holds
+  across the extra navigations seeding adds; the smoke spec asserts no worker is registered, and the
+  switch stays a switch for the S2 spec that needs it back on.
+- **IndexedDB must be clean per test.** ✅ Isolated contexts give that, and `careerAt` clears
+  `localStorage` in the same step and lets a spec write keys back. ⚠ The finding underneath it:
+  clearing the marker is *not* the same as making it unseen. `inboxCue.ts` seeds a missing watermark
+  to "now" on purpose, so `pro`'s two unopened letters raise the inbox dot through the engine's
+  `offerOpen` and not through `letterUnseen`. A mail-marker spec has to pin the watermark behind the
+  letters, and `CareerAtOptions` documents how.
+- ⚠ **The store reads the database exactly once, and a late seed is silent.** `game.init()` calls
+  `listCareers` one time; an empty answer hands the player to the wizard and nothing knocks again.
+  IndexedDB writes are async, so "runs before the app's scripts" does not by itself mean "lands
+  before the app's read" – and when it loses, no assertion fails, the spec just tests a fresh career.
+  ✅ Closed by construction rather than by margin: the record is written **inside the
+  `versionchange` transaction that creates the database**, and an `open` cannot complete while an
+  upgrade transaction is running, so the app's own `openDB` blocks until the bytes are in. The same
+  property makes the seed a one-shot, which is what keeps `addInitScript` from re-seeding on the
+  reload that S2's persistence spec depends on.
 
 ### S2 – the journeys (two days)
 
