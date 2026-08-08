@@ -533,6 +533,7 @@ overruling somebody.
 | | rendered cards | every enterable card |
 | --- | --- | --- |
 | **grinder, the voice shipped** | **22.0%** | 31.1% |
+| **player, the voice shipped** | **26.1%** | 36.5% |
 | grinder, a parent who listens | **14.5%** | – |
 
 ⚠ **THE RENDERED RATE IS THE ONLY ONE A PLAYER CAN EXPERIENCE**, and the gap between the columns is
@@ -541,8 +542,13 @@ week where the better event exists it is the better event that renders and he sa
 one week in five carries a line from him.** On the listening arm it falls to one in seven, because
 the weeks he would have commented on are the weeks that parent no longer enters.
 
-**By his own rung**, over every enterable card: self **0.0%** · budget **26.3%** · middle **47.5%** ·
-high **48.0%** · elite **47.7%**.
+**By his own rung**, over every enterable card – grinder: self **0.0%** · budget **26.3%** · middle
+**47.5%** · high **48.0%** · elite **47.7%**. Player: **0.0 / 36.6 / 56.9 / 54.5 / 54.8**.
+
+**Which argument he uses**, grinder: this week **5,872** · the block ahead **1,745** · the book
+**369**. ⚠ The book line is the rarest by an order of magnitude and it is the one only middle-and-up
+can make, which is the tier read doing exactly what it was built for: the expensive coach is not
+louder, he is the one who can tell you a week is arithmetically worthless.
 
 ⚠ **THE RATE SEPARATES THE FIRST THREE RUNGS AND THEN SATURATES, and that is a finding rather than a
 target.** Nobody / the obvious / the book is a real ladder; above middle what changes is WHICH
