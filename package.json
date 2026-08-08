@@ -16,6 +16,7 @@
     "bench:econ": "vite-node tools/econ-bench.ts",
     "bench:endings": "vite-node tools/endings-bench.ts",
     "bench:fatigue": "vite-node tools/fatigue-bench.ts",
+    "bench:floor": "vite-node tools/ladder-floor.ts",
     "bench:knock": "vite-node tools/knock-rate.ts",
     "bench:load": "vite-node tools/load-bench.ts",
     "bench:money": "vite-node tools/money-decomposition.ts",
