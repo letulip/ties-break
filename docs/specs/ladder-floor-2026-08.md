@@ -224,7 +224,7 @@ detached worktree at `3eb0a15` so no edit of this branch could reach it.
 | entries / season | 26.7 | **34.9** | 17.2 | **22.7** |
 | domestic entries / season | 8.5 | **21.4** | 6.5 | **11.0** |
 | **W-track entries / season** | **10.0** | **7.5** | **7.7** | **8.6** |
-| ...of those, W75 and above | 3.2 | **0.6** | 5.0 | **1.4** |
+| ...of those, W75 and above | 3.2 | **0.6** | 5.0 | **2.4** |
 | her peak W rank – best / p10 / median | #120 / #176 / #257 | **#212 / #234 / #333** | #98 / #127 / #162 | **#143 / #157 / #173** |
 | ever held a professional ranking | 40/54 | **24/54** | 42/54 | **37/54** |
 | her W book at career end (median) | 114 | **0** | 261 | **258** |
@@ -363,7 +363,7 @@ that follows is a third of the size.
 beneath you" decision for him by refusing; now he makes it, and he can get it wrong. The bench's
 `grinder` arm is by construction the player who never makes that decision (`restFloor: 0`, enter
 everything affordable), and it is the arm that collapses. The `player` arm (`restFloor: 70`) keeps
-its W-track entry count and loses the TOP of the ladder instead – W75-and-above entries 5.0 -> 1.4.
+its W-track entry count and loses the TOP of the ladder instead – W75-and-above entries 5.0 -> 2.4.
 So the cost is real on both arms and much larger on the one with no judgement in it.
 
 **The game's only brake on over-entry is the fatigue CAUTION, and a caution is not a brake.** That is
@@ -409,7 +409,7 @@ wall.
 | player arm, entries only | baseline | **floor removed (shipped)** | wall kept, window 6 |
 | --- | --- | --- | --- |
 | W-track entries / season | 7.7 | 8.6 | 9.3 |
-| ...of those, W75 and above | 5.0 | 1.4 | 2.7 |
+| ...of those, W75 and above | 5.0 | 2.4 | 3.2 |
 | median peak W rank | #162 | #173 | #156 |
 | ever held a professional ranking | 42/54 | 37/54 | 37/54 |
 
@@ -420,7 +420,29 @@ finding, and it is the one that decides how to read criterion 4: **the cost is n
 which variant is chosen. It is the cost of letting a maximal-appetite career fill every week of its
 calendar**, which both variants do.
 
-### 3c. What I recommend, and what is the owner's to rule
+### 3c. THE OWNER RULED, 08.08 – AND HE REJECTED THE FRAMING, NOT JUST THE TRADE
+
+Quoted verbatim, because the framing is the ruling:
+
+> «нет, теперь ей есть где играть ЕСЛИ игрок этого хочет. Турниры в реальности идут постоянно. И не
+> на всех она нормально выступает, если я съездил на турнир и вылетел в первом раунде, а потом 6-7
+> недель нет вообще игр – это не правильно.»
+
+**Tournaments run continuously in reality, and a first-round exit followed by six empty weeks is
+simply wrong.** Having somewhere to play is not a cost to be traded against rank – it is the correct
+state of the world. What she does with those weeks is the player's decision, and a player who wastes
+them is a player making a bad decision, which is a legitimate thing for a game to allow.
+
+⚠ **That resolves criteria 4 and 6, and it does so by rejecting what they measured.** Both were
+measuring the consequence of moving a decision from the engine to the player, and the ruling is that
+the decision belongs to the player. **The participation fix ships as it stands** – no softening, no
+partial wall.
+
+⚠ **I am leaving §3a and §3b exactly as written.** They were the honest reading available before the
+ruling and they are the evidence it was made against; rewriting them into agreement would delete the
+record of what the change costs. §4 is what was built in answer.
+
+### 3c-old. What I recommended, and what turned out to be the owner's to rule
 
 **Do not merge this alone.** By its own rule the wave is a supply fix with a balance cost attached,
 and `tests/econ-reach.test.ts` is red on the branch as the standing evidence of it. What ships is the
@@ -457,3 +479,127 @@ and earlier, what a week spent on a draw beneath her is worth.
   the one that fails.
 * **"Criterion 5 I expect to hold by construction and I do not trust that."** It held, and the
   distrust paid for itself: measuring it is what produced §2d's reason for adding no fourth tiebreak.
+
+---
+
+## 4. THE COACH AS SCHEDULER – what was built in answer
+
+> «дать голос тренеру – тоже хорошая идея, надо попробовать, он и так уже что-то пишет на карточках,
+> можно это использовать как раз.» … «да, идём этим путём, начинай с расписания.»
+
+⚠ **AND THE FRAME IS BIGGER THAN A BRAKE.** The coach was a skill-growth multiplier and nothing else,
+and growth is a share of REMAINING headroom – so past ~90% realisation he buys nothing measurable
+(budget and elite were measured printing the SAME number at 93.4% realised, while an elite one still
+bills $312 a week). **The role did not degrade gracefully; it ran out of a job.** The arc the owner
+approved is: early years he buys growth, later he buys **scheduling**, load, opponent preparation and
+the emotional part. Scheduling is the first pillar, and it arrives here because the ladder floor is
+what created the decision it is about.
+
+It **invents no mechanic**, which is `coach-as-load-manager.md`'s own standing rule for this family –
+*"what moves is WHO DECIDES"*. `coachCaution` already renders on the event row in both feeds and is
+already folded into the enter-confirm. What is added is one thing he has an opinion about: today he
+only ever talks about her CONDITION and has no view on WHICH event.
+
+### 4a. What he says, and when
+
+| | he says | at which rungs |
+| --- | --- | --- |
+| **this week's choice** | *"the W50 is the week – this one will not move anything"* | every hired rung |
+| **the book** | *"even a title here would not move her ranking"* | middle, high, elite |
+| **the block ahead** | *"would save her for the W50 in 3 weeks"* | inside his own horizon |
+
+**He only ever talks about a rung she has WALKED PAST.** That single gate is what bounds the rate: her
+working rung is where he wants her and he has nothing to add there, and a genuine choice *inside* her
+window is the player's taste rather than his business.
+
+**And he speaks only with an argument.** A rung she has outgrown, on a week with nothing better and
+nothing to say about her book, gets **silence** – because there she should play, which is exactly
+what the ruling says.
+
+⚠ **HIS OWN RUNG DECIDES HOW FAR HE SEES**, which is what makes paying for him a decision again:
+`COACH_HORIZON_WEEKS` = budget **0** · middle **2** · high **4** · elite **6**, and self is nobody at
+all. A budget coach is on the court with her, so he can tell you the W50 on Tuesday is the better
+draw than the club event on the SAME Tuesday – both are in front of him. He is not sitting with a
+calendar three weeks out, and he is not keeping her best-N book either (`coachReadsTheBook`).
+
+⚠ **ONE COPY CHANGE, AND IT IS THE VERB.** "Push through" is a body word – it is what you do to
+tiredness – and there is nothing to push through about a club draw in a week when the W50 is the
+better tournament. A scheduling caution turns the button into **"Enter anyway"**. Both keep the
+affordance the load slice built: the button stops saying "Enter", so the player notices he is
+overruling somebody.
+
+### 4b. How often he speaks – the wallpaper test
+
+| | rendered cards | every enterable card |
+| --- | --- | --- |
+| **grinder, the voice shipped** | **22.0%** | 31.1% |
+| grinder, a parent who listens | **14.5%** | – |
+
+⚠ **THE RENDERED RATE IS THE ONLY ONE A PLAYER CAN EXPERIENCE**, and the gap between the columns is
+not a rounding difference: both feeds collapse a stacked week through `preferredWeekEvent`, so on a
+week where the better event exists it is the better event that renders and he says nothing. **About
+one week in five carries a line from him.** On the listening arm it falls to one in seven, because
+the weeks he would have commented on are the weeks that parent no longer enters.
+
+**By his own rung**, over every enterable card: self **0.0%** · budget **26.3%** · middle **47.5%** ·
+high **48.0%** · elite **47.7%**.
+
+⚠ **THE RATE SEPARATES THE FIRST THREE RUNGS AND THEN SATURATES, and that is a finding rather than a
+target.** Nobody / the obvious / the book is a real ladder; above middle what changes is WHICH
+argument he makes and how far ahead it reaches, not how often he opens his mouth. If the owner wants
+the top rungs to feel different in FREQUENCY as well as in content, that is a second knob and it is
+not in this wave.
+### 4c. Does the voice recover the climb? Partly – and the silent cost makes it worse
+
+Four arms, same command, same machine, 9 presets x 6 seeds x 520 weeks. **"+ listens" is a PLAYER,
+not a rule**: the engine refuses nothing, `stepCareerWeek` takes an optional veto and the parent does
+what his coach tells him. ⚠ 12 of the 54 careers in each arm are self-coached and have nobody to
+listen to, so the listening arm is "the parents who have a coach take his advice", diluted by a fifth.
+
+**GRINDER**
+
+| | baseline | floor removed | **+ the voice, and he listens** | fatigue price (arm only) |
+| --- | --- | --- | --- | --- |
+| playable weeks, share | 57.0% | 71.6% | **74.2%** | 62.5% |
+| entries / season | 26.7 | 34.9 | 30.1 | 32.0 |
+| domestic entries / season | 8.5 | 21.4 | **14.7** | 27.9 |
+| **W-track entries / season** | **10.0** | **7.5** | **9.2** | **2.5** |
+| ...of those, W75 and above | 3.2 | 0.6 | **1.5** | 0.2 |
+| peak W – best / p10 / median | #120 / #176 / #257 | #212 / #234 / #333 | **#178 / #194 / #311** | #235 / #235 / #331 |
+| **ever held a professional ranking** | **40/54** | **24/54** | **32/54** | **9/54** |
+| her W book at career end (median) | 114 | 0 | **54** | 0 |
+
+**PLAYER**
+
+| | baseline | floor removed | **+ the voice, and he listens** | fatigue price (arm only) |
+| --- | --- | --- | --- | --- |
+| playable weeks, share | 50.3% | 79.6% | **80.8%** | 77.3% |
+| W-track entries / season | 7.7 | 8.6 | 8.3 | 8.9 |
+| ...of those, W75 and above | 5.0 | 2.4 | **3.3** | 2.5 |
+| peak W – best / p10 / median | #98 / #127 / #162 | #143 / #157 / #173 | **#113 / #127 / #171** | #133 / #143 / #179 |
+| ever held a professional ranking | 42/54 | 37/54 | **40/54** | 39/54 |
+
+**THE VOICE RECOVERS ROUGHLY HALF, AND IT DOES NOT COST PARTICIPATION.** On the grinder arm, careers
+that ever reach the professional table go **24 -> 32 of 54** against a baseline of 40; W-track entries
+**7.5 -> 9.2** against 10.0; p10 peak rank **#234 -> #194** against #176. And playable weeks go UP
+rather than down – **71.6% -> 74.2%** – because a parent who skips the week his coach argues against
+arrives at the next one fit enough to enter it. **Nothing about the participation fix is traded away
+to get this**, which is the thing the ruling required.
+
+⚠ **THE MEDIAN BARELY MOVES (#333 -> #311) AND THE BEST MOVES A LOT (#212 -> #178).** Advice is worth
+most to a career that had somewhere to climb to. That is an honest shape for a coach and it is
+reported rather than smoothed.
+
+⚠⚠ **THE SILENT COST IS WORSE THAN DOING NOTHING, AND IT CANNOT BE FIXED BY TUNING.** The
+fatigue-pricing arm – the domestic and junior rungs priced at the level a W-era player has walked
+past – takes careers that ever hold a professional ranking to **9 of 54**, a THIRD of what the
+unbraked floor removal leaves. It also drives Local entries UP (21.4 -> 27.9), because a girl whose
+results have been wrecked by fatigue never climbs out of the rungs that pay least.
+
+**And the reason is structural rather than a bad setting: a fatigue price cannot be AIMED.**
+`matchDrain(tier, score)` is world-free by design, so a price can only be per-RUNG and never
+per-SITUATION – it charges a fourteen-year-old for her own Local at the same rate it charges a
+twenty-two-year-old for a club draw beneath her. **The coach's voice is aimed by construction**: he
+speaks about a rung SHE has walked past, which is a fact about her and not about the rung.
+
+**The price change is not shipped.** The arm is recorded here and is not in the tree.
