@@ -172,6 +172,44 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // deliberate population change rather than a calibration slipping. Five of thirty still never
     // clear it, so both branches fire and the CASE – the property this test was written for – is
     // untouched and still asserted exactly.
+    // ⚠⚠ A NINTH READING, AND IT IS EVIDENCE RATHER THAN A RE-AIM – probe/compound-cost, 08.08.
+    // NOTHING BELOW THIS COMMENT IS CHANGED: not the case, not the band, not a constant. This line
+    // reads **1 of 30** on the assembled tree and is left RED, because at one career re-basing is
+    // erasure and the number is the finding. The attribution is in docs/specs/compound-cost-2026-08.md
+    // and the four arms are trees rather than flags (one detached worktree per wave boundary), each
+    // cross-checked against `runCareer` itself with zero per-career mismatches:
+    //
+    //     baseline (d9efb4e, both waves absent)      16 of 30      <- NOT 25; see below
+    //     + the ladder floor alone   (6d80792)       19 of 30
+    //     + the coach retainer alone (d9efb4e+bf00acb) 9 of 30
+    //     + BOTH                     (HEAD)           1 of 30
+    //     + both, and the parent takes his coach's advice  9 of 30
+    //     ...all four cells again, with a wallet that cannot empty:  29 · 28 · 29 · 25
+    //
+    // THREE THINGS THE NEXT READER SHOULD NOT HAVE TO RE-DERIVE.
+    //
+    // (1) THE "25 of 30 at ladder-pace" PINNED ABOVE IS NOT ON THIS LINEAGE AND HAS NOT BEEN SINCE
+    //     05.08. It reproduces exactly on the branch it was measured on (3ccb65d = 25, and its merge
+    //     bf80729 = 25) and then decayed with no wave claiming it: PR #79 -> 24, PR #80 -> 19,
+    //     PR #82 (wave/sponsor-catchup) -> 16, where it sat until the two waves above landed. The
+    //     band absorbed all three, which is what a band is for and is also how its anchor went stale
+    //     three merges before anyone read it. **The two waves are answerable for 16 -> 1, not 25 -> 1.**
+    //
+    // (2) THE TWO WAVES DO NOT PUSH THIS NUMBER THE SAME WAY. The ladder floor alone pushes it UP
+    //     (16 -> 19) because under R4 the coach was stood down on competition weeks, so doubling her
+    //     entries took his billed weeks from 76.7% to 48.9% and his bill from $17,345 to $11,136 a
+    //     season - more than the extra travel cost. The retainer pins billed weeks at 100% and the
+    //     bill at $22,208 against a family income of $23,892. The interaction is that removing a
+    //     defect removed a subsidy the other wave's benefit was riding on; it is superadditive
+    //     (+3, -7, together -15) and both rulings are still correct.
+    //
+    // (3) WITH MONEY REMOVED, ALL FOUR CELLS READ 25-29. Of the fifteen careers lost, four are the
+    //     tennis (W-track entries 6.26 -> 2.53 a season, the fatigue mechanism ladder-floor's §2c
+    //     traces) and eleven are the family going bankrupt. **On this fixture the 14->18 PRO proxy is
+    //     currently decided by the bank balance rather than by the tennis** - and this file's own
+    //     docstring for `middleHigh` already says it is "the cell where the coaching bill eventually
+    //     stops the career". That is a fixture question for the owner, not a band question, and the
+    //     spec's §7 lays out the two defensible rulings. Do not re-base [12, 27] to fit 1 of 30.
     const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleHigh, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)
