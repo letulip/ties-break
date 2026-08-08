@@ -19,6 +19,7 @@
     "bench:floor": "vite-node tools/ladder-floor.ts",
     "bench:knock": "vite-node tools/knock-rate.ts",
     "bench:load": "vite-node tools/load-bench.ts",
+    "bench:mirror": "vite-node tools/season-mirror.ts",
     "bench:money": "vite-node tools/money-decomposition.ts",
     "bench:deadweek": "vite-node tools/dead-week-probe.ts",
     "bench:outgrown": "vite-node tools/outgrown-entry-probe.ts",

@@ -16,7 +16,8 @@ import { weekLabel } from '../../shared/dates'
 import { raiseEntryLetter, raiseEntryCancelLetter } from '../offers'
 import { addEvent } from './ledger'
 import { eventById, refundPractice, practiceForWeek } from './bookings'
-import { captureMilestone } from './milestones'
+import { captureEntryRow } from './ladder'
+import { captureMilestone, emptySeasonEntries } from './milestones'
 import { entryStatus } from './medical'
 import { isCappedTier, isCappedProTier } from './entryCaps'
 import { chargeMandatoryPenalty, mandatoryBinds } from './mandatory'
@@ -60,6 +61,25 @@ export function enterEvent(world: WorldState, eventId: string): void {
   if (collidingPractice) refundPractice(world, collidingPractice, 'Cancelled')
   world.fundsCents -= fee
   world.entries.push(eventId)
+  // v45 – THE SEASON MIRROR, CAPTURED HERE BECAUSE HERE IS THE ONLY PLACE IT IS TRUE.
+  //
+  // `captureEntryRow` reads her live best-N book – twice, in that rung's own currency – and her book is
+  // her results over the last 52 weeks. The wrap-up asks about it up to 49 weeks later, by which time
+  // `pruneResults` has deleted the rows it was computed from. So this is a capture in the branch that
+  // commits the entry, on the `weeksLostToInjury` precedent, and not a fold at the end of the year.
+  // Three wrap-up lines have already been wrong in this project for reading a pruned ledger after the
+  // fact; this one does not read one. The rule that later reads these facts is `entryCouldNotMove`.
+  //
+  // ⚠ THE ROW IS WRITTEN WHATEVER THE FACTS SAY. The denominator has to come from the same commit as
+  // the numerator or the line is a ratio of two different seasons – `world.results` is award-only (a
+  // season of lost openers leaves no row) and `world.events` is capped at 400, so neither can supply it.
+  //
+  // ⚠ AND IT IS NOT GATED ON THE COACH. `coachLadderNote` makes the same argument on the card, but only
+  // at `coachReadsTheBook` rungs and only about a rung she has walked past. The arithmetic is true for a
+  // self-coached family too, and a parent who cannot afford a coach is the last one who should be left to
+  // work it out unaided. Pure state, zero draws – the frozen MAIN capture cannot see this.
+  const ledger = (world.seasonEntries ??= emptySeasonEntries(world.week))
+  ledger.rows.push(captureEntryRow(world, eventId, event.tier))
   // ITF annual cap: an international entry spends one of the year's slots. Recorded by the EVENT's
   // week, which is both the slot's identity (one tournament a week) and the season it belongs to.
   if (isCappedTier(event.tier)) {
@@ -138,6 +158,18 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
   if (isCappedTier(event.tier)) {
     const at = world.internationalEntryWeeks.indexOf(event.week)
     if (at >= 0) world.internationalEntryWeeks.splice(at, 1)
+  }
+  // v45: AND THE SEASON MIRROR FOLLOWS THE FEE BY THE SAME RULE, which is why it is written here rather
+  // than beside the other two exits. A withdrawal inside the deadline is money back and a week back, so
+  // it was not a wasted entry and the season must not count it. Every forfeiting exit keeps it – a late
+  // cancel, a skip on the week, the medical forfeit – because she paid and the week went.
+  //
+  // ⚠ THE ROW CARRIES ITS ID AND THAT IS WHAT MAKES THIS SAFE ACROSS A SEASON BOUNDARY. An entry taken
+  // in week 45 can be withdrawn in week 2 of the next season, after the wrap has banked and reset; a
+  // bare counter would debit a season that never counted it. `filter` on the id can only ever remove a
+  // row this ledger actually holds, so the stale case is a no-op instead of an off-by-one.
+  if (world.seasonEntries) {
+    world.seasonEntries.rows = world.seasonEntries.rows.filter((r) => r.id !== eventId)
   }
   // The pro slot follows the fee by the same rule: only the refunding withdrawal hands it back
   // (a name off an open list never participated); every forfeiting exit keeps it.

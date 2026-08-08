@@ -366,6 +366,94 @@ export interface SeasonSummary {
    *  `LadderView.rank`: unranked is not a number, and a dense place inside the 0-point tie group is
    *  what that rule exists to refuse to print. Same optionality as `rankTrack`. */
   rankInTrack?: number | null
+  /** WHAT THE SEASON COULD NOT DO – the entries it spent on rungs whose title could not have entered
+   *  her book (schema v45, docs/specs/season-mirror-2026-08.md).
+   *
+   *  ⚠ IT EXISTS BECAUSE THE LADDER FLOOR GREW A DECISION WHOSE WRONG ANSWER IS INVISIBLE. With the
+   *  lower bound gone (`ladder-floor-2026-08.md`, the owner's ruling of 08.08) a rung she has outgrown
+   *  is enterable, which is correct – but `human-arm-forward-2026-08.md` then measured a season paying
+   *  10.3 entries into rungs that cannot move her, with **six of nine axes still inside the human
+   *  envelope**: the matches, the win rate and the money all look like a career that is working. The
+   *  coach already says the same thing on the card (`coachLadderNote`), about 1,150 times a career,
+   *  which is background rather than signal. This is the season's own count of it.
+   *
+   *  ⚠ CAPTURED AT ENTRY, NEVER RECONSTRUCTED, and that is the whole reason it is persisted state
+   *  rather than a fold. The judgement is «could a title here have entered the book SHE HELD THAT
+   *  WEEK», and the book at week W is her results over [W-52, W] – rows `pruneResults` has already
+   *  deleted by the wrap. Two ledgers have produced a wrong wrap-up line here for exactly this reason
+   *  (`bestResultText` off the 400-row event feed; the season money off the same feed), so this one is
+   *  counted in the branch that commits the entry and read at the wrap.
+   *
+   *  OPTIONAL, AND ABSENT MEANS ABSENT. A migration cannot back-fill a judgement made at a week whose
+   *  evidence is gone, so a season that began before the counter did carries no pair at all and the
+   *  card shows no line – which is honest, where a 0 would read as "none of them". */
+  entryMirror?: SeasonEntryMirror
+}
+
+/** The pair the wrap-up prints: how many tournaments the season entered, and how many of those were
+ *  entered into a book that could not have taken their title.
+ *
+ *  ⚠ BOTH NUMBERS COME FROM ONE LEDGER, WHICH IS THE POINT OF PUTTING THEM IN ONE OBJECT. The
+ *  denominator cannot be counted off `world.results` – a result row is AWARD-ONLY, so a season of lost
+ *  openers leaves no row (see `seasonBestFinish`) – and it cannot be counted off `world.events`, which
+ *  is capped at 400 rows. Counting both at the same commit is what stops the line from being a ratio
+ *  of two different seasons. */
+export interface SeasonEntryMirror {
+  /** tournaments entered during the season and PAID FOR. The count follows the fee: a withdrawal
+   *  inside the deadline hands the money back and is un-counted with it, every forfeiting exit (a
+   *  late cancel, a skip, a medical forfeit) keeps its entry – the same rule `releaseEntry` already
+   *  applies to the ITF participation slot. */
+  entered: number
+  /** ...of those, how many could not have moved her on the table this card names. See
+   *  `entryCouldNotMove` in engine/world/ladder.ts for the rule and the measurement that chose it. */
+  couldNotMove: number
+}
+
+/** THE PERSISTED HALF: the season's entry ledger, written at the entry choke point and reset by the
+ *  wrap-up (schema v45). `SeasonEntryMirror` above is what the wrap BANKS out of this.
+ *
+ *  ⚠ IDS AND NOT TWO COUNTERS, and the reason is a measured off-by-a-season. The count follows the
+ *  fee, so a refunding withdrawal has to un-count its entry – and an entry taken in week 45 of one
+ *  season can be withdrawn in week 2 of the next, after the wrap has already banked and reset. Two
+ *  bare integers would then decrement a season that never counted that entry. The id says which
+ *  season's ledger owns the row, so the wrong one cannot be debited.
+ *
+ *  ⚠ AND `closed` IS A SUBSET OF `entered`, WRITTEN AT THE SAME MOMENT rather than re-derived on the
+ *  way out. `bookClosedTo` at withdrawal time would answer about a book that has since moved, which is
+ *  the recomputation this whole field exists to avoid.
+ *
+ *  Bounded by construction: one entry per week is a rule (`enterEvent`), and the ledger resets every
+ *  52 weeks, so neither array can exceed a season's worth of ids. */
+export interface SeasonEntryLedger {
+  /** the week the ledger began counting. The wrap prints its pair only when this is at or before the
+   *  season's first week – a ledger that started mid-season describes part of a season, and a part is
+   *  not a statistic. */
+  fromWeek: number
+  /** one row per entry committed since `fromWeek` and not refunded. */
+  rows: SeasonEntryRow[]
+}
+
+/** ONE ENTRY, AS THE WEEK IT WAS MADE SAW IT.
+ *
+ *  ⚠ THE SPLIT BETWEEN WHAT IS CAPTURED AND WHAT IS FOLDED IS THE WHOLE DESIGN, and it is a fix for a
+ *  contradiction found in the browser. Two of these three facts are about her BOOK, which
+ *  `pruneResults` deletes 52 weeks later, so they must be captured. The third – which table the rung
+ *  pays into – is a property of the calendar and never decays, so it is stored raw and compared at the
+ *  wrap against `SeasonSummary.rankTrack`, the table the card itself names two rows above the line.
+ *
+ *  Judging the table at ENTRY time instead (against `activeLadderOf`) printed a card reading
+ *  «Final national rank #3» over «13 could not move her ranking», where all thirteen were the domestic
+ *  events that had made her third. One card, two tables, and the reader is right and the card is
+ *  wrong – which is the same defect the wrap-up's junior-rank line was, arriving through a new door. */
+export interface SeasonEntryRow {
+  id: string
+  /** which table this rung pays into. Durable: a property of the tier, not of her. */
+  track: LadderTrack
+  /** CAPTURED: she had already climbed past the rung when she entered (`hasOutgrown`). */
+  outgrown: boolean
+  /** CAPTURED: her best-N book on that rung's own table was shut to its title (`bookClosedTo`) – the
+   *  window was full and its weakest counted row already paid at least what winning would pay. */
+  bookShut: boolean
 }
 
 /** One FINISHED season, appended to the career's history at wrap-up (schema v14, R10-9).

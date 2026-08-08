@@ -21,6 +21,7 @@ import {
   type PlayerProfile,
   type PracticeBooking,
   type RecoveryBuff,
+  type SeasonEntryLedger,
   type SeasonHistoryEntry,
   type SeasonSummary,
   type SnapshotInjury,
@@ -155,8 +156,8 @@ export { enterEvent, withdrawEvent, releaseEntry, cancelEntry }
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
-export { emptySeasonRecord, emptyTrophyLedger, captureBreakEven }
+import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger } from './world/milestones'
+export { emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, captureBreakEven }
 // W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
 // snapshot, the tests and the bench all read the one implementation - the same contract every other
 // extracted module here keeps.
@@ -209,8 +210,8 @@ export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, proDoors, type ProDoors } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, proDoors }
+import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, type ProDoors } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
@@ -280,7 +281,13 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
 // the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
 // end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 44
+// ⚠ v45 = ONE FIELD, `seasonEntries` – the season's entry ledger, and it is v40's argument arriving on
+// a different ledger. `world.results` prunes at 52 weeks, so "could a title at this rung have entered
+// the book she held that week" is unanswerable three weeks after the fact; the wrap-up needs it a year
+// later. So it is captured in the branch that commits the entry, exactly as `weeksLostToInjury` is
+// counted in the branch that ends a layoff (docs/specs/season-mirror-2026-08.md). Pure state, zero
+// draws on any stream – the frozen MAIN capture cannot see it either.
+export const SAVE_SCHEMA_VERSION = 45
 
 
 
@@ -456,6 +463,19 @@ export interface WorldState {
    *  Optional so a pre-v28 save's `undefined` is a shape the readers already handle; the migration
    *  fills it in (see migrations.ts v28) and `finalizeTournament` maintains it from there. */
   seasonRecord?: Record<LadderTrack, { wins: number; losses: number }>
+  /** THE SEASON'S ENTRY LEDGER (v45) – what she entered, and how much of it her book could not take.
+   *  Written by `enterEvent`/`releaseEntry`, read and reset by `maybeFireSeasonWrapUp`. Same family as
+   *  the two counters above: a per-season running total that only a season boundary clears.
+   *
+   *  ⚠ CAPTURE, NOT A FOLD, and it is the third surface in a week to need saying so. The judgement is
+   *  about the book she held ON THE WEEK SHE ENTERED, and `pruneResults` has deleted that book by the
+   *  time the wrap runs (the same 49-week gap that made `seasonStartRank` a persisted capture in v17).
+   *  See `SeasonEntryMirror` in protocol.ts for the rest of the argument and
+   *  docs/specs/season-mirror-2026-08.md for the measurement.
+   *
+   *  Optional so a hand-built probe world loads without it; every writer guards with `??=`, exactly as
+   *  `careerTotals` does. */
+  seasonEntries?: SeasonEntryLedger
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
    *  point and pruned to a 60-week trailing window. Feeds the Money breakdown/ledger so they
    *  survive the 60-event snapshot cap; see FinanceWeek in protocol.ts. */
@@ -2060,6 +2080,10 @@ export function createWorld(
     seasonWins: 0,
     seasonLosses: 0,
     seasonRecord: emptySeasonRecord(),
+    // v45: week 0 IS season 0's first week, so a career born here is tracked from its first entry and
+    // its very first wrap-up can print the line. `emptySeasonEntries` is shared with the wrap's reset
+    // and with the migration, which needs the same shape from a different starting week.
+    seasonEntries: emptySeasonEntries(0),
     financeWeeks: [],
     condition: ECONOMY.condition.start,
     injury: null,

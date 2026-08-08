@@ -12,8 +12,10 @@ last-reviewed: 2026-08-03
 
 - The simulation worker owns the mutable `WorldState`; UI code communicates through the typed
   protocol and consumes snapshots.
-- `SAVE_SCHEMA_VERSION` is v36. The persisted main RNG position was introduced at v35, so current
-  loads resume `{s, n}` rather than replaying the whole career to recover the stream.
+- `SAVE_SCHEMA_VERSION` is v45. The persisted main RNG position was introduced at v35, so current
+  loads resume `{s, n}` rather than replaying the whole career to recover the stream. ⚠ This bullet
+  had said v36 since 03.08 while nine versions shipped past it – read `src/engine/world.ts` for the
+  number, and correct this line in the same commit that moves it.
 - Every schema version from v0 through the current version has a golden fixture, and the golden-save
   test requires a new fixture whenever the version increases.
 - Exported saves use a versioned binary envelope, gzip payload, and SHA-256 integrity check. Import

@@ -14,6 +14,7 @@
 import { TIERS, TIER_LADDER, hasAcceptanceList, isTierAgeOpen } from '../season/calendar'
 import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
 import type { LadderTrack, RankingRow, TierId } from '../season/types'
+import type { SeasonEntryRow } from '../../shared/protocol'
 import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPros'
 import { seasonIndexOf } from './ledger'
 import { ageAtWeek } from './age'
@@ -640,6 +641,56 @@ export function bookClosedTo(world: WorldState, tier: TierId): boolean {
   if (counted.length < bestN) return false // a window with room takes anything
   const title = TIERS[tier].points[0]
   return counted.every((r) => r.points >= title)
+}
+
+/** COULD THIS ENTRY HAVE MOVED HER RANKING AT ALL – the season mirror's whole definition, in one
+ *  place, so the wrap-up's sentence and the arithmetic behind it cannot drift apart.
+ *  docs/specs/season-mirror-2026-08.md.
+ *
+ *  TRUE when BOTH hold:
+ *
+ *  1. **She had already climbed past the rung** when she entered (`hasOutgrown` – either ceiling, the
+ *     ladder's own answer and the same gate the coach's voice uses). ⚠ THIS CLAUSE IS WHAT STOPS THE
+ *     COUNTER FROM FLAGGING THE CLIMB. Without it the second clause alone counts a fourteen-year-old's
+ *     first J30 – a junior title pays no domestic point, so it cannot move the only table she is on
+ *     yet – and a line that scolds a parent for stepping UP would be worse than no line at all.
+ *
+ *  2. **A title there could not have changed her position on `against`**, which happens two ways and
+ *     they are the same fact in two currencies:
+ *       - the rung pays into a DIFFERENT table. A Local title is thirty domestic points and thirty
+ *         domestic points are exactly zero on the professional list;
+ *       - or it pays into that table and her book there was shut to it: the best-N window was full and
+ *         its weakest counted row already paid at least the title, so winning the thing outright would
+ *         have displaced nothing.
+ *
+ *  ⚠ `against` IS THE TABLE THE CARD ITSELF NAMES, and passing it in rather than reading it here is a
+ *  fix for a contradiction found in the browser. Judged against `activeLadderOf` at ENTRY time, the
+ *  wrap-up printed «Final national rank #3» over «13 could not move her ranking» – and all thirteen
+ *  were the domestic events that had made her third. The season's table is `dominantTrackOfSeason`,
+ *  which only the wrap knows, so the wrap is where the comparison belongs. The two clauses that need
+ *  her live BOOK are captured at the commit (`SeasonEntryRow`); this one needs a fact about the
+ *  calendar, which does not decay.
+ *
+ *  ⚠ THE SECOND CLAUSE'S FIRST TERM IS THE ONE THE MEASUREMENT ADDED, and it is why this is not simply
+ *  `bookClosedTo`. `bookClosedTo` alone is exact and very nearly silent: measured over 7,869 entries on
+ *  the econ bench's own careers it fires on 6.4% of them and its MEDIAN is zero in five seasons of six,
+ *  so the line it produced would have read "0 could not move her ranking" on most seasons of most
+ *  careers – decoration, not statistics. The full table is in the spec; the point here is that the
+ *  definition was chosen from a measurement rather than from an argument. */
+export function entryCouldNotMove(row: SeasonEntryRow, against: LadderTrack): boolean {
+  return row.outgrown && (row.track !== against || row.bookShut)
+}
+
+/** The two facts about her BOOK that an entry has to carry out of the week it was made in, because
+ *  `pruneResults` deletes the evidence for both 52 weeks later and the wrap-up asks 49 weeks later.
+ *  The third field is the tier's own track, which never decays. */
+export function captureEntryRow(world: WorldState, id: string, tier: TierId): SeasonEntryRow {
+  return {
+    id,
+    track: TIERS[tier].track,
+    outgrown: hasOutgrown(world, tier),
+    bookShut: bookClosedTo(world, tier),
+  }
 }
 
 /** HER PLACE in one named table – the one number every rank surface reads, so a chip and the entry
