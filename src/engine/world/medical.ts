@@ -21,7 +21,7 @@ import type { LadderTrack, SeasonEvent } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
 import { ageAtWeek } from './age'
 import { entryCapUsage, proEntryCapUsage, isCappedTier, isCappedProTier } from './entryCaps'
-import { acceptanceRank, kidPoints, onRampOpen, outgrewTier, rankIn, tierOutgrown } from './ladder'
+import { acceptanceRank, hasOutgrown, kidPoints, onRampOpen, rankIn } from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
 import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
@@ -407,8 +407,26 @@ export interface EntryStatus {
   rankToEnter?: number
   /** 'capped' only: the season allowance behind the verdict (see AvailabilityStatus.entryCap). */
   entryCap?: EntryCapUsage
+  /** SHE HAS PASSED THIS RUNG – and since 06.08 that is a LABEL, never a refusal (the owner's ruling
+   *  on backlog #84, quoted verbatim in docs/specs/ladder-floor-2026-08.md: no lower bound at all,
+   *  let her play, lead with the more relevant tournament of the week when there is one). Either
+   *  ceiling sets it – `hasOutgrown` is the one answer both of them now have – so a card can say
+   *  "outgrown" while staying enterable, which is exactly what the ruling asks for. Absent from
+   *  `availabilityStatus`' own returns: it is a LADDER fact, and `entryStatus` is where the ladder
+   *  and the body are combined. */
+  outgrown?: boolean
 }
+/** ⚠ ONE READ, BOTH CEILINGS, AND IT RIDES ON EVERY RETURN OF THE VERDICT BELOW – which is why the
+ *  verdict is a separate function and this is a two-line wrapper rather than a flag threaded through
+ *  seven return statements. `hasOutgrown` folds the domestic band's ceiling (`outgrewTier`) and the
+ *  sliding window's (`tierOutgrown`) into the one verdict world.ts demands they have; the two arms
+ *  below used to spell one of them each and each returned `blocked/outgrown`. The ruling of 06.08 is
+ *  that NEITHER refuses – see `tierOpenFor` and docs/specs/ladder-floor-2026-08.md. */
 export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus {
+  return { ...entryVerdict(world, event), outgrown: hasOutgrown(world, event.tier) }
+}
+
+function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
   const tier = TIERS[event.tier]
   // AN ITF OR WTA RUNG IS AN ACCEPTANCE LIST, not a points threshold (docs/specs/two-ladders.md).
   // She gets in on her RANK IN THAT TABLE, the same signal the AI field is drawn on, so the two
@@ -430,29 +448,21 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
     // closed loop; so J30 reads her DOMESTIC points and W15 reads her ITF JUNIOR points. Above the
     // on-ramp the acceptance list takes over, in the rung's own table's currency.
     const onRamp: LadderTrack = tier.track === 'itf' ? 'domestic' : 'itf'
-    // ⚠ THE CEILING, AND IT IS THE SAME SENTENCE THE DOMESTIC ARM HAS ALWAYS ENDED WITH (W2-WINDOW,
-    // act2-pro-tour.md §11). Every rung has BOTH bounds now: the domestic rungs graduate her out on
-    // points (see `outgrewTier` at the bottom of this function) and the ITF/W rungs graduate her out
-    // when the rung three above opens - a rung she has passed CLOSES rather than being filtered out
-    // of a feed. Measured on the owner's W230 career before this landed: 48 of the 64 entries left in
-    // his season sat at rungs whose STRONGEST entrant is weaker than she is, and every one of them
-    // was enterable.
+    // ⚠ THE CEILING USED TO REFUSE HERE, AND SINCE 06.08 IT DOES NOT (docs/specs/
+    // ladder-floor-2026-08.md). W2-WINDOW gave every rung both bounds and this branch was the ITF/W
+    // half of it: a rung she had passed CLOSED. It was right about the junk (measured on the owner's
+    // W230 career: 48 of the 64 entries left in his season sat at rungs whose strongest entrant is
+    // weaker than she is) and wrong about the remedy - measured on his NEXT save, the same rule left
+    // 112 of 165 blocked events saying `outgrown` and 27 of his 46 remaining event weeks with nothing
+    // enterable on them at all. The junk is now sorted below rather than refused; `outgrown` above
+    // carries the fact to the card and to the feed's per-week pick.
     //
-    // ⚠⚠ IT SITS ABOVE THE ON-RAMP BRANCH, AND THE FIRST CUT DID NOT - which is the on-ramp's own
-    // trap, one release later. J30 and W15 have no acceptance list, so `accepts` is undefined for
-    // them and the branch below RETURNS before anything else is asked: `tierOpenFor` was closing
-    // J30 for an eighteen-year-old professional while this gate went on letting her in, and the
-    // Season planner's supply counter (which asks THIS function) advertised eight of them. Found in
-    // the browser on a W-era career, which is exactly where R10-5 says these disagreements surface.
-    // Asked FIRST, it is also the true message: a rung she has outgrown is not a rung that refused
-    // her, and not a rung she has yet to reach.
-    if (tierOutgrown(world, event.tier)) {
-      return {
-        level: 'blocked',
-        reason: 'outgrown',
-        detail: `You've outgrown ${tier.label} – she is past this level`,
-      }
-    }
+    // ⚠ THE TRAP THIS BRANCH ONCE FIXED IS GONE WITH IT, not left behind. It had to sit ABOVE the
+    // on-ramp branch, because J30 and W15 have no acceptance list, so `accepts` is undefined for them
+    // and the branch below RETURNS - which let `tierOpenFor` close J30 for an eighteen-year-old while
+    // this gate went on admitting her (R10-5's disagreement, found in the browser). With the ceiling
+    // out of BOTH gates the two agree again by construction: `tierOpenFor` is `tierFloorOpen`, and
+    // this arm is the same floor asked event by event.
     const accepts = acceptanceRank(world, event.tier)
     if (accepts === undefined) {
       const [minPoints] = tier.enterPointBand
@@ -511,27 +521,14 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
       pointsToEnter: minPoints,
     }
   }
-  if (outgrewTier(event.tier, points)) {
-    return {
-      level: 'blocked',
-      reason: 'outgrown',
-      detail: `You've outgrown ${tier.label} (${points} ${LADDER_POINTS_LABEL.domestic})`,
-    }
-  }
-  // ⚠ ...AND THE LADDER'S OWN CEILING, WHICH THE DOMESTIC RUNGS GET TOO (W2-WINDOW). The band's
-  // ceiling above answers "her points passed this rung"; this one answers "the rung three above
-  // opened, so she has walked past it" - and National's band has no ceiling at all, so without this
-  // arm the top domestic rung would have stayed enterable for ever while `tierOpenFor` called it
-  // shut. `tests/rankingGate.test.ts` caught exactly that ("local: the calendar says shut, the
-  // turnstile lets her through"), which is the R10-5 discipline doing its job: the calendar's
-  // verdict and the turnstile's are one rule or they are a bug.
-  if (tierOutgrown(world, event.tier)) {
-    return {
-      level: 'blocked',
-      reason: 'outgrown',
-      detail: `You've outgrown ${tier.label} – she is past this level`,
-    }
-  }
+  // ⚠ THE DOMESTIC ARM'S TWO CEILINGS USED TO REFUSE HERE, AND THEY WERE TWO BRANCHES: the band's
+  // own (`outgrewTier` – "her points passed this rung") and the ladder's (`tierOutgrown` – "the rung
+  // three above opened, so she has walked past it"). Both are folded into `entryStatus`'
+  // `hasOutgrown` now, and neither refuses. Keeping them as two branches here was the standing risk
+  // world.ts's own note names: they must have the same consequence, and two branches is two places
+  // to change. What `tests/rankingGate.test.ts` caught when this arm was one branch short ("local:
+  // the calendar says shut, the turnstile lets her through") cannot recur in either direction – the
+  // calendar's verdict is `tierFloorOpen` and so is this one.
   return availabilityStatus(world, event)
 }
 
@@ -589,7 +586,13 @@ export interface ArrivalStatus {
  *  injured > medical – so the entry gate and the arrival gate can never disagree about which beat
  *  fires. */
 export function arrivalStatus(world: WorldState, event: SeasonEvent): ArrivalStatus {
-  const outgrown = outgrewTier(event.tier, kidPoints(world, 'domestic'))
+  // ⚠ BOTH CEILINGS, THE SAME ONE `entryStatus` READS (06.08). This used to be `outgrewTier` alone,
+  // which was the domestic band only – so a committed W50 whose rung the SLIDING window had closed
+  // arrived announcing nothing, while a Local whose band she had passed said "(outgrown)". Two
+  // ceilings, one consequence: `hasOutgrown` is where that is now true by construction rather than
+  // by two call sites agreeing. It matters more since the floor stopped refusing, because she now
+  // routinely ENTERS the rungs she has passed and the arrival is where the game says so.
+  const outgrown = hasOutgrown(world, event.tier)
   const layoff = layoffCovering(world, event.week)
   if (layoff !== null) return { verdict: 'injured', detail: injuredDetail(layoff.weeksRemaining), outgrown }
   const medical = medicalBlock(world.condition)

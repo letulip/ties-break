@@ -128,18 +128,22 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
     expect(world.entries).not.toContain(event.id)
   })
 
-  it('rejects a graduated (past-the-ceiling) total with an "outgrown" message', () => {
+  // ⚠⚠ RE-AIMED 06.08 (docs/specs/ladder-floor-2026-08.md), AND IT IS THE OPPOSITE ASSERTION ON
+  // PURPOSE. It read "rejects a graduated (past-the-ceiling) total with an 'outgrown' message", and
+  // that refusal is the defect the owner ruled on: the lower bound stops being a wall and becomes a
+  // sorting key, so a rung she has passed is ENTERABLE and simply loses the week's card to anything
+  // better. The claim worth keeping is not "she is refused" – it never was – it is that the gate
+  // KNOWS she is past the rung and SAYS so, which is what the old message was really protecting.
+  // That half is asserted here in its new home (`EntryStatus.outgrown`), so a regression that
+  // silently forgot the fact still fails.
+  it('a graduated (past-the-ceiling) total is admitted, and the gate says she is past it', () => {
     const { world, event } = firstEventOfTier('gate-grad', 'local')
     giveKidPoints(world, 120) // 120 > local maxPoints (85)
-    // ⚠ RE-AIMED 31.07 (fix/ladder-separation), and it is STRICTER than what it replaced. The copy
-    // said "ranking points" / "(120 pts)" while the game holds two point tables that never convert
-    // into one another, so the sentence was checkable against the wrong number. The assertion now
-    // reads the unit out of `LADDER_POINTS_LABEL` rather than spelling it, so it pins that the gate
-    // NAMES ITS CURRENCY without freezing which word that currency is called by.
-    expect(() => enterEvent(world, event.id)).toThrow(
-      `You've outgrown ${TIERS.local.label} (120 ${LADDER_POINTS_LABEL.domestic})`,
-    )
-    expect(world.entries).not.toContain(event.id)
+    const gate = entryStatus(world, event)
+    expect(gate.level).not.toBe('blocked')
+    expect(gate.outgrown, 'the ceiling is still computed, it just does not refuse').toBe(true)
+    expect(() => enterEvent(world, event.id)).not.toThrow()
+    expect(world.entries).toContain(event.id)
   })
 
   it('succeeds when the points are inside the band', () => {
@@ -256,8 +260,15 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
           expect(e.rankToEnter).toBe(acceptanceRank(world, e.tier)) // W35 / W100: the list
         }
       } else {
-        expect(e.eligible).toBe(false)
-        expect(e.ineligibleReason).toBe('outgrown') // 700 is past the ceiling – too good now
+        // ⚠ RE-AIMED 06.08 (docs/specs/ladder-floor-2026-08.md). This arm asserted
+        // `eligible: false` + `ineligibleReason: 'outgrown'`, and both halves moved: a rung she has
+        // passed no longer refuses her, and `outgrown` left `ineligibleReason` for a field of its
+        // own so the compiler stops a surface reading it as a lock. What the case is ABOUT survives
+        // intact and is what is asserted – the ladder still knows 700 is past these bands, and still
+        // says so on the card.
+        expect(e.eligible, 'the lower bound is a sorting key, not a wall').toBe(true)
+        expect(e.ineligibleReason).toBeUndefined()
+        expect(e.outgrown, '700 is past the ceiling – still hers, and beneath her').toBe(true)
       }
     }
   })

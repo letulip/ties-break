@@ -24,7 +24,6 @@ import {
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
-import { LADDER_POINTS_LABEL } from '../src/shared/protocol'
 import type { StopReason } from '../src/shared/protocol'
 
 // ---------------------------------------------------------------------------
@@ -203,7 +202,7 @@ describe('R10-17 — the injury gate is read against the EVENT week, not the cur
 // ===========================================================================
 describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
   it('entryStatus folds the point band AND availability, band first', () => {
-    // below the floor -> 'locked' with the threshold; above the ceiling -> 'outgrown'
+    // below the floor -> 'locked' with the threshold
     const low = createWorld('r10-5-low')
     low.condition = 100
     const nat = injectEvent(low, { week: 3, tier: 'national', deadlineWeek: 1 })
@@ -212,23 +211,42 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     expect(lockedStatus.reason).toBe('locked')
     expect(lockedStatus.pointsToEnter).toBe(TIERS.national.enterPointBand[0])
 
+    // ⚠ RE-AIMED 06.08 (docs/specs/ladder-floor-2026-08.md): above the ceiling used to be
+    // `blocked/outgrown` and is now `outgrown` WITHOUT a block. R10-5's subject is untouched and is
+    // what this case is for – one rule drives every surface – so the ceiling is still asserted here,
+    // in the field it now lives in.
     const high = createWorld('r10-5-high')
     high.condition = 100
     giveKidPoints(high, 122) // the owner's figure – local's band is [0, 85]
     const loc = injectEvent(high, { week: 3, tier: 'local', deadlineWeek: 1 })
     const outgrown = entryStatus(high, loc)
-    expect(outgrown.level).toBe('blocked')
-    expect(outgrown.reason).toBe('outgrown')
+    expect(outgrown.level).not.toBe('blocked')
+    expect(outgrown.outgrown).toBe(true)
 
-    // the band outranks a hard availability block, exactly as upcomingEvents documented
+    // ⚠ ...AND THE PRECEDENCE CASE BELOW SWAPPED SIDES WITH IT, which is the honest consequence
+    // rather than a loss. It pinned that the BAND outranks a hard availability block ("reason ===
+    // 'outgrown'" on an injured week), and the band's ceiling no longer produces a reason at all –
+    // so the injury is the only verdict left and it must be the one that speaks. The precedence that
+    // still exists is still pinned: the LOCK half of the band outranks availability (`low` above is
+    // asserted 'locked' with no injury; here the injured week reports the injury and carries the
+    // ceiling as a label beside it).
     const both = createWorld('r10-5-both')
     giveKidPoints(both, 122)
     setInjury(both, 4)
     const locB = injectEvent(both, { week: 2, tier: 'local', deadlineWeek: 0 })
-    expect(entryStatus(both, locB).reason).toBe('outgrown')
+    const bothStatus = entryStatus(both, locB)
+    expect(bothStatus.level).toBe('blocked')
+    expect(bothStatus.reason).toBe('injured')
+    expect(bothStatus.outgrown, 'the ceiling rides on every verdict, blocked or not').toBe(true)
   })
 
-  it('the owner\'s 122-point Local is refused by the gate AND labelled by the snapshot', () => {
+  // ⚠⚠ RE-AIMED 06.08 (docs/specs/ladder-floor-2026-08.md), TITLE INCLUDED, because the title was
+  // half the claim. The owner's 122-point Local is no longer REFUSED – his later ruling on backlog
+  // #84 is that a rung she has passed must stay playable – but "labelled by the snapshot" is the
+  // half R10-5 is really about (one rule, every surface, no re-derivation) and it is asserted here
+  // in full. The surface that used to prove it by THROWING now proves it by admitting her while
+  // still knowing the fact.
+  it("the owner's 122-point Local is playable AND labelled by every surface", () => {
     const w = createWorld('r10-5-surfaces')
     w.condition = 100
     w.fundsCents = 5_000_00
@@ -236,18 +254,16 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     giveKidPoints(w, 122)
     const loc = injectEvent(w, { week: 3, tier: 'local', deadlineWeek: 1 })
 
-    // surface 1: entry refuses, with the direction-aware copy
-    // ⚠ RE-AIMED 31.07 (fix/ladder-separation): "(122 pts)" is now "(122 national pts)". R10-5's
-    // subject is that ONE rule drives all three surfaces, and that is untouched; only the unit the
-    // rule states its number in has been made explicit, because there are two of them.
-    expect(() => enterEvent(w, loc.id)).toThrow(
-      `You've outgrown Local Open (122 ${LADDER_POINTS_LABEL.domestic})`,
-    )
-    expect(w.entries).toEqual([])
-    // surface 2: the snapshot names the same reason
+    // surface 1: the entry is taken, and the gate carries the ceiling rather than throwing it
+    expect(entryStatus(w, loc).outgrown).toBe(true)
+    expect(() => enterEvent(w, loc.id)).not.toThrow()
+    expect(w.entries).toEqual([loc.id])
+    withdrawEvent(w, loc.id)
+    // surface 2: the snapshot names the same fact, on an eligible card
     const up = toSnapshot(w).upcoming.find((e) => e.id === loc.id)!
-    expect(up.eligible).toBe(false)
-    expect(up.ineligibleReason).toBe('outgrown')
+    expect(up.eligible).toBe(true)
+    expect(up.ineligibleReason).toBeUndefined()
+    expect(up.outgrown).toBe(true)
     // surface 3: the advance never stops for a deadline she cannot act on
     const nat = injectEvent(w, { week: w.week + 3, tier: 'regional', deadlineWeek: w.week + 1, id: 'reg-ok' })
     expect(isTierEligible(nat.tier, kidPoints(w, 'domestic'))).toBe(true) // regional IS open at 122
@@ -269,7 +285,13 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     // INSIDE the same gate: `entryStatus`'s international branch reads it for the on-ramp rung,
     // whose bar is domestic points rather than an ITF rank. The protected fact is unchanged - no
     // SURFACE re-implements the band, every one of them still goes through entryStatus.
-    expect(readers.length).toBeLessThanOrEqual(4)
+    // ⚠ RE-PINNED 4 -> 5 on 06.08 (docs/specs/ladder-floor-2026-08.md), and the new reader is a
+    // SPLIT rather than an addition: `tierFloorOpen`'s domestic arm used to read the whole band
+    // through `isTierEligible` and now reads `enterPointBand[0]` by name, because the ceiling had to
+    // come OUT of the floor test when it stopped refusing. Had it not, the calendar would have shut
+    // Local at 86 points while the turnstile admitted her – the R10-5 desync this guard is for,
+    // arriving from the other side. Still zero surfaces: the reader is the ladder itself.
+    expect(readers.length).toBeLessThanOrEqual(5)
     // enterEvent must not destructure the band itself any more
     const enterFn = worldFunction('enterEvent')
     expect(enterFn).not.toBe('')

@@ -320,6 +320,34 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // pass this run - it is the minimum the file's own world sweep already recorded**, and 5 sits
     // inside it with room, so the guard still bites on a real collapse.
     //
+    // ⚠⚠ AND IT FIRED THE EIGHTH TIME (08.08, fix/ladder-window-floor) - AT ZERO, AND THE CAUSE IS A
+    // RULING RATHER THAN A DRIFT. Recorded here in the owner's own words because that is what makes
+    // the re-base checkable rather than convenient:
+    //
+    //   "Now she has somewhere to play IF THE PLAYER WANTS IT. Tournaments run continuously in
+    //    reality. And she does not do well at all of them - if I travelled to a tournament and went
+    //    out in the first round, and then there are no events at all for six or seven weeks, that is
+    //    not right."   (quoted verbatim in docs/specs/ladder-floor-2026-08.md §3c)
+    //
+    // The ladder's lower bound stopped refusing (docs/specs/ladder-floor-2026-08.md): having
+    // somewhere to play every week is the CORRECT state of the world, and what she does with those
+    // weeks is the PLAYER's decision. **The domestic ladder therefore no longer PUSHES her up it by
+    // closing Local behind her**, and a bench policy that enters everything spends its early weeks on
+    // club draws. 320 - "she is WINNING at the top of the domestic ladder by sixteen" - went to
+    // **0 of 30**, which is the same non-measurement 150 was from the other end.
+    //
+    // RE-BASED 320 -> 250 BY THE PROCEDURE THIS FILE ITSELF PRESCRIBES three paragraphs up: re-run
+    // `tools/reach-sweep.ts`, read the plateau column, and re-base to the next milestone the domestic
+    // table NAMES rather than to the number that restores eleven. **250 is the most-named number in
+    // that table** - Regional's `enterPointBand` ceiling AND J30's floor, which act2-pro-tour.md
+    // §12.2 records as one decision - so the proxy becomes "by sixteen she has crossed the
+    // INTERNATIONAL DOOR". Swept on this tree: 150 -> 29 of 30 (a formality again), 200 -> 20,
+    // **250 -> 9**, 270 -> 6, 320 -> 0. Nine sits inside the pinned band with room on both sides.
+    //
+    // ⚠ NOTHING BELOW IS WEAKENED. The case assertions (0 < n < 30) and the band [4, 20] are the
+    // ones that were here yesterday, to the digit. What moved is the constant they are asked about,
+    // and it moved to a number the game names.
+    //
     // THE CASE ASSERTIONS ARE UNTOUCHED (0 < n < 30), and they are the part that is not a taste.
     const reachedH16 = workingH16.filter((r) => r.reachedWeek !== null).length
     expect(reachedH16, '14→16 collapsed to never - re-read the notes above').toBeGreaterThan(0)

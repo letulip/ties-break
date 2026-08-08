@@ -63,6 +63,12 @@ gap and she has fallen into it. Same investigation.
 Above. Engine change with balance consequences, so it is measured: how much of a season becomes
 playable, and whether an outgrown rung that now pays points changes her climb.
 
+> **BUILT AND MEASURED, 08.08 – `docs/specs/ladder-floor-2026-08.md`.** The lower bound is a sorting
+> key now. On this save the dead weeks go **27 of 46 to 6**, and the two `regional`/`national` locks
+> below turn out to be the SAME defect: her domestic book had decayed to zero and the only rung that
+> could pay it back was the Local the ceiling had shut. ⚠ It carries a **measured cost** as well as
+> the fix – see that spec's §3, which the owner has to read before this ships.
+
 ### Group B – the match viewer *(11, 12, 14)*
 - **full / key does nothing**, and the running commentary did not appear at all in a WTA 250. Two
   bugs or one, to be established.

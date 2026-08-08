@@ -11,15 +11,15 @@
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
 import { bestFitCoachAt, buildCoachRoster, coachById, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, selfRateCents } from '../coach'
-import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../season/calendar'
+import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
-import type { TierId } from '../season/types'
+import type { SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import type { CoachMarketRow, CoachTier, PlayerProfile } from '../../shared/protocol'
 import { parentIncomeForWeekCents } from '../economy'
 import { addEvent, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
-import { kidPoints } from './ladder'
+import { bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
 
@@ -276,4 +276,109 @@ export function coachEntryLine(tier: TierId, condition: number): string {
   if (condition < floor - 5) return 'Your coach would not take her. She is empty.'
   if (condition < floor) return 'Your coach would skip this one and get her legs back.'
   return 'Your coach thinks she is a week short of her best for this.'
+}
+
+// =================================================================================================
+// THE COACH AS SCHEDULER – his opinion about WHICH EVENT (the owner's ruling of 08.08, quoted
+// verbatim in docs/specs/ladder-floor-2026-08.md §4: yes, take that route, start with scheduling)
+// =================================================================================================
+//
+// ⚠ WHY THIS EXISTS, AND IT IS NOT A BRAKE BOLTED ONTO A LADDER FIX. The coach was a skill-growth
+// multiplier and nothing else, and growth is a share of REMAINING headroom - so past ~90% realised
+// he buys nothing measurable (budget and elite were measured printing the SAME number at 93.4%
+// realised, while elite still bills $312 a week). The role did not degrade gracefully; it ran out of
+// a job. The owner's answer is an arc: early years he buys growth, later he buys SCHEDULING, load,
+// opponent preparation and the emotional part. The reason to pay him at twenty-two is not that he
+// makes her better - she is at her ceiling - it is that he stops her wasting seasons.
+//
+// SCHEDULING IS THE FIRST PILLAR AND THIS IS IT. It arrives with the ladder floor because the floor
+// is what created the decision: having somewhere to play every week is the correct state of the
+// world (his ruling), what she does with those weeks is the PLAYER's, and this is the person he is
+// already paying making that decision informed rather than blind.
+//
+// ⚠ IT INVENTS NO MECHANIC, which is `docs/specs/coach-as-load-manager.md`'s own standing rule for
+// this family - "what moves is WHO DECIDES". The surface is built: `coachCaution` renders on the
+// event row in both feeds, and SeasonScreen already folds it into the enter-confirm and turns the
+// button from "Enter" into "Push through" when he speaks. What is added is one thing he has an
+// opinion about. Today he only ever talks about her CONDITION and has no view on WHICH event.
+//
+// ⚠ HE ONLY EVER TALKS ABOUT A RUNG SHE HAS WALKED PAST. That single gate is what bounds the rate:
+// her working rung is where he wants her and he has nothing to add there, and a genuine choice
+// INSIDE her window is the player's taste, not his business. Measured in
+// docs/specs/ladder-floor-2026-08.md §4.
+//
+// ⚠ AND HE SPEAKS ONLY WITH AN ARGUMENT. A rung she has outgrown on a week with nothing better and
+// nothing to say about her book gets SILENCE - because there she should play, which is exactly what
+// the owner ruled. A caution on every row is wallpaper inside two seasons; a high rate is a wrong
+// threshold, not thoroughness.
+
+/** HOW FAR AHEAD HE PLANS, by his own rung – and it is what makes paying for him a decision again.
+ *
+ *  The owner's arc in one constant: «a budget coach notices the obvious, an elite one sees the block
+ *  ahead». A budget coach is on the court with her, so he can tell you the W50 on Tuesday is a
+ *  better draw than the club event on the SAME Tuesday - both are in front of him. He is not sitting
+ *  with a calendar three weeks out. Nobody is on a self-coached career, which is the load wave's own
+ *  rule ("nobody is being paid to have a view") read one storey up.
+ *
+ *  ⚠ ZERO IS NOT "SILENT". A budget coach still answers the same-week question, which is the one a
+ *  player asks most often; what a horizon of 0 buys is that he never volunteers a plan. */
+export const COACH_HORIZON_WEEKS: Record<CoachTier, number> = {
+  self: -1,
+  budget: 0,
+  middle: 2,
+  high: 4,
+  elite: 6,
+}
+
+/** ...AND WHETHER HE IS TRACKING HER RANKING WINDOW AT ALL – the other half of the tier read, and
+ *  the same distinction stated as a job rather than as a number. "Even a title here would not move
+ *  her ranking" is not something you see from the court: it is a fact about her best-N book that
+ *  somebody has to be keeping. Budget does not; middle and up do, which is precisely what
+ *  `coachLoadNote` already promises of those rungs ("Proper physio. He decides most weeks himself"). */
+export function coachReadsTheBook(tier: CoachTier): boolean {
+  return tier === 'middle' || tier === 'high' || tier === 'elite'
+}
+
+/** WOULD HE RATHER SHE SPENT THIS WEEK SOMEWHERE ELSE? Null when he has nothing to say, which is
+ *  most of the time by construction.
+ *
+ *  The clauses, in the order a player needs them:
+ *    0. she has not passed this rung, or nobody is paid to have a view -> silence.
+ *    1. THIS WEEK'S CHOICE. A rung she has NOT passed is on the same week -> he names it. The most
+ *       actionable thing he can say, because it tells the player what to click instead.
+ *    2. THE BOOK. Even a title here cannot enter her ranking window -> he says so. Arithmetic rather
+ *       than opinion, and only from a coach who keeps the book (see `coachReadsTheBook`).
+ *    3. THE BLOCK AHEAD. A rung she has not passed lands inside HIS horizon -> he would save her for
+ *       it, and he NAMES it: a caution that only says no is a guard rail, not a coach.
+ *    4. otherwise -> silence. Nothing better exists, so playing is right.
+ *
+ *  ⚠ THE ALTERNATIVES ARE A RUNG TEST AND NOT AN EVENT GATE, deliberately. Asking `entryStatus` of
+ *  every candidate would put a second full gate walk inside the snapshot's per-card loop for an
+ *  opinion, and the honest content of the sentence is "there is a W50 on the calendar in three
+ *  weeks", which is a fact about the RUNG. If she turns out to be unavailable that week he was wrong
+ *  about a Tuesday, which is a thing a coach is allowed to be.
+ *
+ *  ⚠ THE TIER IS A PARAMETER RATHER THAN A LOOKUP. `coachById` rebuilds the whole roster from the
+ *  seed, and the caller already holds the answer (`toSnapshot` computes it once per snapshot for the
+ *  body arm). Passing it in also makes whose opinion this is impossible to get wrong. */
+export function coachLadderNote(world: WorldState, event: SeasonEvent, coachTier: CoachTier): string | null {
+  const horizon = COACH_HORIZON_WEEKS[coachTier]
+  if (horizon < 0) return null
+  if (!hasOutgrown(world, event.tier)) return null
+  const better = (from: number, to: number) =>
+    world.season
+      .filter((e) => e.week >= from && e.week <= to && tierOpenFor(world, e.tier) && !hasOutgrown(world, e.tier))
+      .sort((a, b) => a.week - b.week || TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))[0]
+  const sameWeek = better(event.week, event.week)
+  if (sameWeek) {
+    return `Your coach says the ${TIERS[sameWeek.tier].label} is the week – this one will not move anything.`
+  }
+  if (coachReadsTheBook(coachTier) && bookClosedTo(world, event.tier)) {
+    return 'Your coach says even a title here would not move her ranking.'
+  }
+  const ahead = horizon > 0 ? better(event.week + 1, event.week + horizon) : undefined
+  if (!ahead) return null
+  const weeks = ahead.week - event.week
+  const when = weeks === 1 ? 'next week' : `in ${weeks} weeks`
+  return `Your coach would save her for the ${TIERS[ahead.tier].label} ${when}.`
 }

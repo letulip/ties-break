@@ -1,5 +1,12 @@
 # The coach's real job — and the parent who has to do it himself
 
+> ⚠ **SECOND PILLAR SHIPPED 08.08 — SCHEDULING.** This spec is about his opinion on her BODY. He now
+> has one about her CALENDAR as well, and it is the same design one storey up: the mechanic is not
+> new, what moves is who decides. See `docs/specs/ladder-floor-2026-08.md` §4. The owner's ruling
+> that ordered it («да, идём этим путём, начинай с расписания») is also the answer to the problem §1
+> below opens with — the growth multiplier fades to nothing by ~90% realisation, so the reason to pay
+> him at twenty-two has to be something other than making her better.
+
 The owner, 30.07, extending my own proposal further than I took it:
 
 > «тогда у нашего self coach появятся ручки, чтобы он ощутил каково это быть тренером. А остальные

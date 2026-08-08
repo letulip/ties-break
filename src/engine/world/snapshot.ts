@@ -59,12 +59,12 @@ import { ageAtWeek, birthdayTurning, kidAgeYears, START_AGE_YEARS } from './age'
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage } from './entryCaps'
-import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
-import { coachBilling, coachEntryLine, coachMarket } from './coachMarket'
+import { coachBilling, coachEntryLine, coachLadderNote, coachMarket } from './coachMarket'
 import { kitLineViews } from './kit'
 import { copyTrophyLedger, emptySeasonRecord } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
@@ -174,7 +174,6 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
           ? {
               ineligibleReason: gate.reason as
                 | 'locked'
-                | 'outgrown'
                 | 'injured'
                 | 'unavailable'
                 | 'medical'
@@ -202,12 +201,27 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
       // has spent - so a coach was giving his view on a tournament that is not on offer. Worse, it made
       // "the advice never locks a card" unverifiable, because the card was already locked for its own
       // reasons and the two were indistinguishable on screen. He speaks about trips she can take.
-      const coachSay =
+      //
+      // ⚠ AND SINCE 08.08 HE HAS A SECOND SUBJECT: THE LADDER, not only the body (the owner's ruling
+      // on the ladder floor - having somewhere to play is the correct state of the world, what she
+      // does with the week is the PLAYER's decision, and giving the coach a voice is how that
+      // decision stops being blind). Precedence is BODY FIRST and it is not a coin toss: one of them
+      // is about getting hurt and the other is about a wasted week. He says one thing, because a
+      // card with two coach lines on it is a dialog, and he is a person.
+      const bodySay =
         gate.level !== 'blocked' &&
         coachLoad !== null &&
         coachWarnsEntry(coachLoad, ECONOMY.availability.minConditionToEnter[e.tier])
-          ? { coachCaution: coachEntryLine(e.tier, world.condition) }
-          : {}
+          ? coachEntryLine(e.tier, world.condition)
+          : null
+      // The same "only about trips she can take" rule the body arm has always had, and the same
+      // "nobody is being paid to have a view" one: a self-coached career hears nothing, from either.
+      const ladderSay =
+        bodySay === null && gate.level !== 'blocked' && coachLoad !== null
+          ? coachLadderNote(world, e, coachTier)
+          : null
+      const say = bodySay ?? ladderSay
+      const coachSay = say !== null ? { coachCaution: say } : {}
       return {
         id: e.id,
         week: e.week,
@@ -240,6 +254,10 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // the only window in which cancelling costs the fee and frees the week. Every row here is
         // a FUTURE week by construction, so the closed list is the whole condition.
         cancellable: isEntered && world.week > e.deadlineWeek,
+        // ⚠ SHE HAS PASSED THIS RUNG, AND IT IS NOT A LOCK (06.08). Carried BESIDE `eligible` rather
+        // than inside `ineligibleReason`, which is where it used to live: the two are orthogonal now,
+        // and the card has to be able to say "still yours, and beneath you" in one breath.
+        ...(gate.outgrown ? { outgrown: true } : {}),
         ...reason,
         ...coachSay,
       }
@@ -723,6 +741,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // THE ENGINE'S OWN VERDICT PER RUNG (see TierOpenMap in protocol.ts). `tierOpenFor` is the same
     // function `enterEvent` validates against, so a screen can no longer disagree with the gate.
     tierOpen: Object.fromEntries(TIER_LADDER.map((t) => [t, tierOpenFor(world, t)])) as TierOpenMap,
+    // ...AND THE SAME DISCIPLINE FOR THE CEILING (06.08). `tierOpenFor` is the FLOOR alone now, so
+    // "open" no longer distinguishes her working rung from one she has walked past – and a screen
+    // that re-derived that from a point band would be the visibility-vs-access bug for the fourth
+    // time (the J and W bands are `[0, MAX]` and cannot express it at all). One engine answer.
+    tierOutgrown: Object.fromEntries(TIER_LADDER.map((t) => [t, hasOutgrown(world, t)])) as TierOpenMap,
     // ...AND THE POSITION EACH ACCEPTANCE LIST CUTS AT, for the rungs that have one. Same discipline
     // as `tierOpen` directly above: the screen asks the engine for the number rather than deriving a
     // share of a field it would have to be told the size of. Absent on every rung that gates on
