@@ -565,6 +565,7 @@ target.** Nobody / the obvious / the book is a real ladder; above middle what ch
 argument he makes and how far ahead it reaches, not how often he opens his mouth. If the owner wants
 the top rungs to feel different in FREQUENCY as well as in content, that is a second knob and it is
 not in this wave.
+
 ### 4c. Does the voice recover the climb? Partly – and the silent cost makes it worse
 
 Four arms, same command, same machine, 9 presets x 6 seeds x 520 weeks. **"+ listens" is a PLAYER,
