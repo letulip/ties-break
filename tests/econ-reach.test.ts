@@ -324,9 +324,10 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // RULING RATHER THAN A DRIFT. Recorded here in the owner's own words because that is what makes
     // the re-base checkable rather than convenient:
     //
-    //   «нет, теперь ей есть где играть ЕСЛИ игрок этого хочет. Турниры в реальности идут постоянно.
-    //    И не на всех она нормально выступает, если я съездил на турнир и вылетел в первом раунде, а
-    //    потом 6-7 недель нет вообще игр - это не правильно.»
+    //   "Now she has somewhere to play IF THE PLAYER WANTS IT. Tournaments run continuously in
+    //    reality. And she does not do well at all of them - if I travelled to a tournament and went
+    //    out in the first round, and then there are no events at all for six or seven weeks, that is
+    //    not right."   (quoted verbatim in docs/specs/ladder-floor-2026-08.md §3c)
     //
     // The ladder's lower bound stopped refusing (docs/specs/ladder-floor-2026-08.md): having
     // somewhere to play every week is the CORRECT state of the world, and what she does with those

@@ -279,8 +279,8 @@ export function coachEntryLine(tier: TierId, condition: number): string {
 }
 
 // =================================================================================================
-// THE COACH AS SCHEDULER – his opinion about WHICH EVENT (the owner, 08.08: «да, идём этим путём,
-// начинай с расписания»)
+// THE COACH AS SCHEDULER – his opinion about WHICH EVENT (the owner's ruling of 08.08, quoted
+// verbatim in docs/specs/ladder-floor-2026-08.md §4: yes, take that route, start with scheduling)
 // =================================================================================================
 //
 // ⚠ WHY THIS EXISTS, AND IT IS NOT A BRAKE BOLTED ONTO A LADDER FIX. The coach was a skill-growth
