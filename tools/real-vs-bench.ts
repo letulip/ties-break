@@ -33,21 +33,38 @@
  */
 import { readFileSync } from 'node:fs'
 import { decodeExportFile } from '../src/engine/saveCodec'
-import type { WorldState } from '../src/engine/world'
-import { hireCoach } from '../src/engine/world/coachMarket'
+import {
+  acceptOffer,
+  answerFork,
+  bookVacation,
+  hireCoach,
+  type WorldState,
+} from '../src/engine/world'
+import { SPONSOR_TIERS } from '../src/engine/offers'
 import { buildCoachRoster, coachById, tierOf, COACH_TIER_LABEL } from '../src/engine/coach'
-import type { CoachTier, FamilyBackground } from '../src/shared/protocol'
+import type { CoachTier, FamilyBackground, SponsorTier } from '../src/shared/protocol'
 import { WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
-import type { TierId } from '../src/engine/season/types'
+import type { SeasonEvent, TierId } from '../src/engine/season/types'
+
+/** ⚠ RESOLVED LAZILY, AND THE REASON IS THE WAVE ATTRIBUTION ITSELF. `coachLadderNote` is the LADDER
+ *  wave's own counterweight, so it does not exist on the two pre-ladder arms this same file is run
+ *  on (§10: `d9efb4e` and `d9efb4e + bf00acb` both lack it). A static import would make the tool
+ *  unloadable there – the arm would report nothing rather than a number, which is the worst possible
+ *  outcome for a measurement. So the coach-voice bracket asks for the function at start-up and, when
+ *  the tree has no such thing, says so and skips itself. */
+type LadderNote = (w: WorldState, e: SeasonEvent, t: CoachTier) => string | null
+let COACH_NOTE: LadderNote | null = null
 import {
   PRESETS,
   POLICIES,
   START_AGE_YEARS,
+  SEASON_WRAP_OFFSET,
   openCareer,
   stepCareerWeek,
   zeroByTier,
   mean,
   median,
+  type EntryVeto,
   type Policy,
   type Preset,
 } from './econ-bench'
@@ -71,6 +88,18 @@ interface SeasonRow {
   entriesEst: number | null
   /** bench only – the entries the policy actually committed. Null on the human side, always. */
   entriesTrue: number | null
+  /** bench only – that season's entries split by rung, for the tier-mix axis. */
+  entriesByTier?: Record<TierId, number>
+  /** sampled AT THE WRAP, not derived from the row: career-cumulative prize and spend, the top rung
+   *  reached so far, her W rank, the rung she was being coached at, and the mean condition she
+   *  played the season at. A row alone cannot say any of these and they are what the deep read is
+   *  for. */
+  prizeToDateCents?: number
+  spentToDateCents?: number
+  topRungToDate?: TierId | null
+  kidRankWta?: number | null
+  coachTierNow?: CoachTier
+  meanCondition?: number
   /** gross spend, positive cents. Absent on rows written before schema v-W7 backfilled it. */
   spentCents: number | null
   earnedCents: number | null
@@ -111,6 +140,9 @@ interface Career {
   /** kit-deal offers by outcome – the decisions the player made about money coming IN. */
   offers: { signed: number; refused: number; expired: number; open: number }
   vacations: number
+  /** bench only – what the arm actually DID, so a claim about a behaviour is never taken on the
+   *  strength of the flag that asked for it. */
+  acts?: { signed: number; refused: number; holidays: number; vetoed: number; forkAnswered: number }
   /** best (lowest) end-of-season rank across the seasons banked. */
   bestSeasonRank: number
   kidRankWta: number | null
@@ -275,6 +307,25 @@ interface Arm {
   coachLadder?: { upgradeAtCents: number; minWeeksBetween: number; ladder: CoachTier[] }
   /** does she take the family holiday the planner offers? Human careers do; no bench arm ever has. */
   vacations?: boolean
+  /** DERIVED (§9a): sign every kit offer at this sponsor rung or better, and never one below it.
+   *  Six of six decided offers across the two saves fit that rule with no exceptions. */
+  signOffersFrom?: SponsorTier
+  /** DERIVED (§9a): answer the age-19 fork 'continue', which is literally what the owner's save
+   *  records (`fork: { askedWeek: 265, answer: 'continue' }`). It is also the only way a bench arm
+   *  models a real player past nineteen at all – `advanceWeeks` returns `['fork']` and REFUSES to
+   *  tick while the fork is open, but `tickWeek` has no such guard, so an unanswered fork stops a
+   *  human's career and the bench sails straight through it. */
+  answerForkContinue?: boolean
+  /** ⚠ SENSITIVITY BRACKET, NOT PART OF THE MODEL (§9b). Book the free staycation once a season.
+   *  Evidence: ONE staycation, once, at week 408 of 412, and none at all in the other career. That
+   *  is far too thin to model as a recurring habit, so it is measured as a bound on what the
+   *  holiday lever is worth and never folded into the derived arm. */
+  holidayEachSeason?: boolean
+  /** ⚠ SENSITIVITY BRACKET, NOT PART OF THE MODEL (§9b). Do whatever the coach says about every
+   *  trip, via the engine's own `coachLadderNote` – the veto `tools/ladder-floor.ts` §4c uses. No
+   *  save can record an entry a parent DIDN'T make, so there is no direct evidence either way; what
+   *  the saves do say is that his entry rate sits between the grinder's and this arm's. */
+  coachVoice?: boolean
 }
 
 /** ⚠ THE UPGRADE THRESHOLD IS READ OFF THE TWO CAREERS, NOT CHOSEN FOR AN OUTCOME. Both humans
@@ -319,10 +370,22 @@ function armsFor(): Arm[] {
   ]
 }
 
-/** The human arm collapses the bench's nine cells to three, and that IS the finding it encodes:
- *  the nine differ only in a coach rung held for life, and no human holds one. */
-function humanCells(): { preset: Preset; arm: Arm }[] {
-  const arm: Arm = {
+/** ⚠ THE SPONSOR RUNG HE SIGNS AT, AND IT IS THE CLEANEST DERIVATION IN THIS FILE. Every kit offer
+ *  either save ever decided, with its rung and his answer:
+ *
+ *      owner  w153  global    SIGNED        zoe  w99   local     expired
+ *      owner  w257  local     expired       zoe  w151  national  SIGNED
+ *      owner  w309  national  SIGNED        zoe  w152  local     REFUSED
+ *
+ *  Three signed, and all three are `national` or better. Three not signed, and all three are
+ *  `local` – one of them refused outright while a national letter sat in the same inbox the
+ *  following week. **Six of six, no exceptions.** So the rule is `national`, and it is read off the
+ *  decisions rather than chosen to make an arm survive. */
+const HUMAN_SIGNS_FROM: SponsorTier = 'national'
+
+/** The base derived arm: the coach ladder plus the fork answer. Both are things the saves record. */
+function humanArm(): Arm {
+  return {
     label: 'human',
     policy: POLICIES[1],
     coachLadder: {
@@ -330,16 +393,45 @@ function humanCells(): { preset: Preset; arm: Arm }[] {
       minWeeksBetween: HUMAN_MIN_WEEKS_BETWEEN_UPGRADES,
       ladder: HUMAN_LADDER,
     },
+    answerForkContinue: true,
   }
+}
+
+/** THE ADAPTING ARM – the derived arm plus the one decision the bench has never made. */
+function adaptArm(): Arm {
+  return { ...humanArm(), label: 'human+signs', signOffersFrom: HUMAN_SIGNS_FROM }
+}
+
+/** The two sensitivity brackets, kept apart from the model on purpose (§9b). */
+function bracketArms(): Arm[] {
+  return [
+    { ...adaptArm(), label: 'human+signs+holiday', holidayEachSeason: true },
+    { ...adaptArm(), label: 'human+signs+coachvoice', coachVoice: true },
+  ]
+}
+
+const CLIMB_LABEL: Record<FamilyBackground, string> = {
+  working: '8k   · working · climbs',
+  middle: '25k  · middle  · climbs',
+  wealthy: '120k · wealthy · climbs',
+}
+
+/** The human arm collapses the bench's nine cells to three, and that IS the finding it encodes:
+ *  the nine differ only in a coach rung held for life, and no human holds one. */
+function humanCells(arm: Arm = humanArm()): { preset: Preset; arm: Arm }[] {
   return (['working', 'middle', 'wealthy'] as FamilyBackground[]).map((background) => ({
-    preset: {
-      label:
-        background === 'working' ? '8k   · working · climbs' : background === 'middle' ? '25k  · middle  · climbs' : '120k · wealthy · climbs',
-      background,
-      coachTier: 'self' as CoachTier,
-    },
+    preset: { label: CLIMB_LABEL[background], background, coachTier: 'self' as CoachTier },
     arm,
   }))
+}
+
+/** The owner's own family and plan: 8k working, self-coached at the start, climbing. Both saved
+ *  careers are this cell, so it is the one the deep read and the wave attribution use. */
+function ownerCell(arm: Arm): { preset: Preset; arm: Arm } {
+  return {
+    preset: { label: CLIMB_LABEL.working, background: 'working', coachTier: 'self' },
+    arm,
+  }
 }
 
 /** Run one bench career for `seasons` seasons and characterise it on the SAME axes as a human save.
@@ -361,6 +453,25 @@ function runBenchCareer(preset: Preset, index: number, seasons: number, arm: Arm
   // at 21 – an end-of-run read is always null. See Career.academy.
   let academyEver = false
   let academyPeakCents = 0
+  // Per-season instrumentation, sampled inside the loop because none of it survives to the end.
+  const tierBySeason = new Map<number, Record<TierId, number>>()
+  const wrap = new Map<
+    number,
+    { prize: number; spent: number; rung: TierId | null; wta: number | null; coach: CoachTier; cond: number }
+  >()
+  const condSum = new Map<number, { sum: number; n: number }>()
+  const acts = { signed: 0, refused: 0, holidays: 0, vetoed: 0, forkAnswered: 0 }
+
+  // ⚠ THE COACH'S VOICE, through the engine's own note rather than a second opinion of it. Only
+  // built when the arm asks for it, so the default arm's MAIN stream is untouched.
+  const veto: EntryVeto | undefined = arm.coachVoice
+    ? (w, e) => {
+        if (!COACH_NOTE) return false
+        const said = COACH_NOTE(w, e, tierOfCoachId(w, w.coachId))
+        if (said !== null) acts.vetoed++
+        return said !== null
+      }
+    : undefined
 
   for (let i = 0; i < weeks; i++) {
     // The coach ladder, if this arm climbs one: upgrade when the family can visibly afford it.
@@ -382,18 +493,82 @@ function runBenchCareer(preset: Preset, index: number, seasons: number, arm: Arm
         }
       }
     }
-    const e = stepCareerWeek(world, rng, arm.policy)
+    // THE DECISIONS A HUMAN MAKES AND NO BENCH POLICY EVER HAS. All of them BEFORE the tick, which
+    // is where a player makes them (the inbox and the planner are opened during the week, not after
+    // it), and all of them guarded on `world.ending` – a career that has stopped decides nothing.
+    if (!world.ending) {
+      if (arm.answerForkContinue && world.fork !== null && world.fork.answer === null) {
+        answerFork(world, 'continue')
+        acts.forkAnswered++
+      }
+      if (arm.signOffersFrom) {
+        // ⚠ COMPARED AS STRINGS ON PURPOSE. `Offer.terms.tier` is a union across offer kinds –
+        // a kit letter carries a SponsorTier and an entry card carries a TierId – and the `kind`
+        // test above does not narrow `terms`. Ranking by position in SPONSOR_TIERS over strings is
+        // honest about that; a cast would assert a narrowing the type system has not done.
+        const ladder: readonly string[] = SPONSOR_TIERS
+        const floor = ladder.indexOf(arm.signOffersFrom)
+        for (const o of world.offers) {
+          if (o.kind !== 'kit' || o.state !== 'open') continue
+          if (world.week > o.deadlineWeek) continue
+          const tier = o.terms?.tier
+          const rank = tier === undefined ? -1 : ladder.indexOf(String(tier))
+          if (rank < floor) continue // a local letter is left to lapse, exactly as both saves show
+          // acceptOffer throws on the one-brand rule; a parent who already has a deal simply does
+          // not sign a second, so a refusal here is the rule working and not an error to swallow.
+          try {
+            acceptOffer(world, o.id)
+            acts.signed++
+          } catch {
+            /* already spoken for this season – nothing to do */
+          }
+        }
+      }
+      // ⚠ SENSITIVITY ONLY. One free staycation, booked in the first competition week of the season
+      // it can be booked in. `bookVacation` validates the week itself and throws when it cannot.
+      if (arm.holidayEachSeason && world.week % WEEKS_PER_YEAR === 1) {
+        try {
+          bookVacation(world, world.week + 1, 'staycation')
+          acts.holidays++
+        } catch {
+          /* not bookable that week */
+        }
+      }
+    }
+
+    const e = stepCareerWeek(world, rng, arm.policy, veto)
     let n = 0
+    // The entry is committed in the week the parent commits, so it belongs to THAT week's season.
+    const s = seasonOf(world.week - 1)
+    const tm = tierBySeason.get(s) ?? zeroByTier()
     for (const t of Object.keys(e) as TierId[]) {
       n += e[t]
       byTier[t] += e[t]
+      tm[t] += e[t]
     }
-    // The entry is committed in the week the parent commits, so it belongs to THAT week's season.
-    const s = seasonOf(world.week - 1)
+    tierBySeason.set(s, tm)
     entriesBySeason.set(s, (entriesBySeason.get(s) ?? 0) + n)
+    const c = condSum.get(s) ?? { sum: 0, n: 0 }
+    c.sum += world.condition
+    c.n++
+    condSum.set(s, c)
     if (world.academy) {
       academyEver = true
       if (world.academy.coveredCents > academyPeakCents) academyPeakCents = world.academy.coveredCents
+    }
+    // The wrap: `maybeFireSeasonWrapUp` has already appended the row by now, so this samples the
+    // career-cumulative facts a row cannot carry, keyed on the same season index the row uses.
+    if (world.week % WEEKS_PER_YEAR === SEASON_WRAP_OFFSET) {
+      const si = Math.floor(world.week / WEEKS_PER_YEAR)
+      const cc = condSum.get(si)
+      wrap.set(si, {
+        prize: world.careerTotals.prizeCents,
+        spent: world.careerTotals.spentCents,
+        rung: topRungOf(world).topRung,
+        wta: world.kidRankWta ?? null,
+        coach: tierOfCoachId(world, world.coachId),
+        cond: cc && cc.n ? cc.sum / cc.n : 0,
+      })
     }
   }
 
@@ -410,6 +585,13 @@ function runBenchCareer(preset: Preset, index: number, seasons: number, arm: Arm
       titles: t,
       entriesEst: h.losses + t,
       entriesTrue: entriesBySeason.get(h.seasonIndex) ?? 0,
+      entriesByTier: tierBySeason.get(h.seasonIndex) ?? zeroByTier(),
+      prizeToDateCents: wrap.get(h.seasonIndex)?.prize,
+      spentToDateCents: wrap.get(h.seasonIndex)?.spent,
+      topRungToDate: wrap.get(h.seasonIndex)?.rung ?? null,
+      kidRankWta: wrap.get(h.seasonIndex)?.wta ?? null,
+      coachTierNow: wrap.get(h.seasonIndex)?.coach,
+      meanCondition: wrap.get(h.seasonIndex)?.cond,
       spentCents: h.spentCents ?? null,
       earnedCents: h.earnedCents ?? null,
       fundsDeltaCents: h.fundsDeltaCents,
@@ -445,7 +627,8 @@ function runBenchCareer(preset: Preset, index: number, seasons: number, arm: Arm
     academy: academyEver,
     academyCoveredCents: academyPeakCents,
     offers,
-    vacations: 0,
+    vacations: world.vacations.length,
+    acts,
     bestSeasonRank: rows.length ? Math.min(...rows.map((r) => r.endRank)) : world.kidRank,
     kidRankWta: world.kidRankWta ?? null,
     ...topRungOf(world),
@@ -727,6 +910,158 @@ function cellArms(preset: Preset, seeds: number, seasons: number, arms: Arm[]): 
   return out
 }
 
+// --- the deep read ----------------------------------------------------------
+
+/** SEASON BY SEASON, one arm, on every axis the envelope is drawn on – plus the four things a
+ *  season row cannot say (cumulative prize ratio, top rung reached, W rank, mean condition).
+ *
+ *  Medians across the seeds, per season, because a mean over a population where some careers have
+ *  stopped is the censoring trap `compound-cost-2026-08.md` §1a warns about. Every column also
+ *  carries the count of careers still alive, so a row that looks calm because it is nearly empty
+ *  says so. */
+function deepReport(cell: { preset: Preset; arm: Arm }, seeds: number, seasons: number, env: Envelope): string[] {
+  const out: string[] = []
+  const careers: Career[] = []
+  for (let i = 0; i < seeds; i++) careers.push(runBenchCareer(cell.preset, i, seasons, cell.arm))
+  out.push('')
+  out.push(`  ${cell.preset.label} · ${cell.arm.label} – ${seeds} seeds, ${seasons} seasons, medians`)
+  const a = careers[0]?.acts
+  if (a) {
+    const tot = careers.reduce(
+      (s, c) => ({
+        signed: s.signed + (c.acts?.signed ?? 0),
+        holidays: s.holidays + (c.acts?.holidays ?? 0),
+        vetoed: s.vetoed + (c.acts?.vetoed ?? 0),
+        forkAnswered: s.forkAnswered + (c.acts?.forkAnswered ?? 0),
+      }),
+      { signed: 0, holidays: 0, vetoed: 0, forkAnswered: 0 },
+    )
+    out.push(
+      `  what the arm DID, per career: kit deals signed ${(tot.signed / seeds).toFixed(1)}` +
+        ` · holidays ${(tot.holidays / seeds).toFixed(1)}` +
+        ` · entries the coach talked her out of ${(tot.vetoed / seeds).toFixed(1)}` +
+        ` · fork answered ${(tot.forkAnswered / seeds).toFixed(2)}`,
+    )
+  }
+  out.push('')
+  const head = ['alive', 'matches', 'W-L', 'entries', 'win%', 'cond', 'spend', 'earned', 'endFunds', 'prize/sp', 'topRung', 'coach', 'WTA']
+  const w = [7, 9, 9, 9, 7, 6, 10, 10, 11, 10, 9, 8, 7]
+  out.push('  ' + padE('season', 8) + head.map((h, i) => pad(h, w[i])).join(''))
+  for (let k = 0; k < seasons; k++) {
+    const rows = careers.map((c) => c.seasons[k]).filter((r): r is SeasonRow => r !== undefined)
+    if (!rows.length) continue
+    const live = careers.filter((c) => c.endingWeek === null || c.endingWeek > (k + 1) * WEEKS_PER_YEAR).length
+    const wins = rows.reduce((s, r) => s + r.wins, 0)
+    const losses = rows.reduce((s, r) => s + r.losses, 0)
+    const pz = rows.filter((r) => (r.spentToDateCents ?? 0) > 0)
+    const ratio = pz.length
+      ? median(pz.map((r) => (r.prizeToDateCents as number) / (r.spentToDateCents as number)))
+      : 0
+    const rungIdx = rows.map((r) => (r.topRungToDate ? TIER_LADDER.indexOf(r.topRungToDate) : -1))
+    const wta = rows
+      .map((r) => r.kidRankWta)
+      .filter((x): x is number => x !== null && x !== undefined && x > 0)
+    out.push(
+      '  ' +
+        padE('s' + k, 8) +
+        pad(`${live}/${seeds}`, w[0]) +
+        pad(r1(median(rows.map((r) => r.matches))), w[1]) +
+        pad(`${Math.round(median(rows.map((r) => r.wins)))}-${Math.round(median(rows.map((r) => r.losses)))}`, w[2]) +
+        pad(r1(median(rows.map((r) => r.entriesTrue ?? 0))), w[3]) +
+        pad(wins + losses ? ((wins / (wins + losses)) * 100).toFixed(0) + '%' : '–', w[4]) +
+        pad(r1(median(rows.map((r) => r.meanCondition ?? 0))), w[5]) +
+        pad(fmt$(median(rows.map((r) => r.spentCents ?? 0))), w[6]) +
+        pad(fmt$(median(rows.map((r) => r.earnedCents ?? 0))), w[7]) +
+        pad(fmt$(median(rows.map((r) => r.endFundsCents))), w[8]) +
+        pad((ratio * 100).toFixed(1) + '%', w[9]) +
+        pad(TIER_LADDER[Math.round(median(rungIdx))] ?? '–', w[10]) +
+        pad(rows[0].coachTierNow ?? '–', w[11]) +
+        pad(wta.length ? '#' + Math.round(median(wta)) : '–', w[12]),
+    )
+  }
+  // The tier mix, summed across seeds and normalised per career – "what did she actually play".
+  out.push('')
+  out.push('  TIER MIX, entries per career per season:')
+  out.push('  ' + padE('season', 8) + TIER_LADDER.slice(0, 13).map((t) => pad(t, 8)).join(''))
+  for (let k = 0; k < seasons; k++) {
+    const rows = careers.map((c) => c.seasons[k]).filter((r): r is SeasonRow => r !== undefined)
+    if (!rows.length) continue
+    out.push(
+      '  ' +
+        padE('s' + k, 8) +
+        TIER_LADDER.slice(0, 13)
+          .map((t) => {
+            const v = mean(rows.map((r) => r.entriesByTier?.[t] ?? 0))
+            return pad(v === 0 ? '·' : v.toFixed(1), 8)
+          })
+          .join(''),
+    )
+  }
+  // And the verdict, so the deep read carries its own envelope answer.
+  const axes = foldAxes(careers)
+  const { hits, misses } = insideCount(axes, env)
+  out.push('')
+  out.push(`  ENVELOPE: ${hits.length}/${AXES.length} inside` + (misses.length ? ` · outside: ${misses.join(', ')}` : ' · FULLY INSIDE'))
+  out.push(axesHeader())
+  out.push(axesRow(cell.preset.label + ' · ' + cell.arm.label, axes))
+  const ends = new Map<string, number>()
+  for (const c of careers) if (c.ending) ends.set(c.ending, (ends.get(c.ending) ?? 0) + 1)
+  out.push(
+    `  endings: ${[...ends].map(([k, n]) => `${k} ${n}/${seeds}`).join(' · ') || 'none'}` +
+      ` · ever red at a wrap: ${careers.filter((c) => c.seasons.some((r) => r.endFundsCents < 0)).length}/${seeds}`,
+  )
+  return out
+}
+
+/** ⚠ THE RESERVE SWEEP, AND IT EXISTS BECAUSE HIS OWN SAVE FALSIFIES THE INHERITED NUMBER.
+ *
+ *  `POLICIES[1]` keeps a $5,000 reserve and refuses any trip that would break it. The owner's save
+ *  wraps season 1 on **$4,055** and then enters fifteen events in season 2 – so whatever reserve he
+ *  was keeping, it did not lock him out at four thousand dollars. A $5,000 floor is not a
+ *  conservative assumption about him; it is contradicted by what he did.
+ *
+ *  This is a SWEEP rather than a new number, because picking the value that makes the arm survive is
+ *  the trap. The sweep reports the whole curve and the saves bound it from above: any reserve at or
+ *  above ~$4,000 is inconsistent with his season 2. Where the lock-out appears in that range is the
+ *  measurement. */
+function reserveSweep(cell: { preset: Preset; arm: Arm }, seeds: number, seasons: number, reserves: number[], env: Envelope): string[] {
+  const out: string[] = ['', '  RESERVE SWEEP on the derived arm – his save bounds this from above at ~$4,000', '']
+  out.push(
+    '  ' +
+      padE('reserve', 12) +
+      [['entries/yr', 12], ['first DEAD season', 19], ['matches/yr', 12], ['prize/spend', 12], ['topRung', 9], ['bankrupt', 10], ['inside', 8]]
+        .map(([h, w]) => pad(h as string, w as number))
+        .join(''),
+  )
+  for (const reserveCents of reserves) {
+    const arm: Arm = { ...cell.arm, policy: { ...cell.arm.policy, reserveCents } }
+    const careers: Career[] = []
+    for (let i = 0; i < seeds; i++) careers.push(runBenchCareer(cell.preset, i, seasons, arm))
+    // A DEAD season is one she entered nothing at all in – not bankruptcy, not retirement: a
+    // calendar she is locked out of while the coach is still billed. It is the failure this sweep
+    // was written to find and it has no name anywhere else in the bench.
+    const deadFrom = careers.map((c) => {
+      const k = c.seasons.findIndex((r) => (r.entriesTrue ?? 0) === 0)
+      return k < 0 ? Infinity : k
+    })
+    const everDead = deadFrom.filter((k) => k !== Infinity)
+    const axes = foldAxes(careers)
+    const { hits } = insideCount(axes, env)
+    out.push(
+      '  ' +
+        padE(fmt$(reserveCents), 12) +
+        pad(r1(axes.entries ?? 0), 12) +
+        pad(everDead.length ? `s${median(everDead).toFixed(1)} (${everDead.length}/${seeds})` : 'never', 19) +
+        pad(r1(axes.matches), 12) +
+        pad((axes.prizeOverSpend * 100).toFixed(1) + '%', 12) +
+        pad(axes.topRung < 0 ? '–' : (TIER_LADDER[Math.round(axes.topRung)] ?? '–'), 9) +
+        pad(`${careers.filter((c) => c.ending === 'bankruptcy').length}/${seeds}`, 10) +
+        pad(`${hits.length}/${AXES.length}`, 8),
+    )
+  }
+  return out
+}
+
 // --- the estimator's receipt -------------------------------------------------
 
 /** `entries = losses + titles` is an identity only if every entry is played out. It is used on the
@@ -772,6 +1107,16 @@ function argOf(flag: string, fallback: number): number {
 async function main(): Promise<void> {
   const argv = process.argv.slice(2)
   console.log(`RUN real-vs-bench · ${process.cwd()}`)
+  // The coach's voice, if this tree has one. See the LadderNote note above.
+  try {
+    const mod = (await import('../src/engine/world')) as unknown as Record<string, unknown>
+    if (typeof mod.coachLadderNote === 'function') COACH_NOTE = mod.coachLadderNote as LadderNote
+  } catch {
+    COACH_NOTE = null
+  }
+  console.log(
+    `  coach's scheduling voice on this tree: ${COACH_NOTE ? 'present' : 'ABSENT (pre-ladder-wave) – the coachvoice bracket will read as a no-op'}`,
+  )
 
   const savePaths: string[] = []
   for (let i = 0; i < argv.length; i++) if (argv[i] === '--save' && argv[i + 1]) savePaths.push(argv[i + 1])
@@ -864,6 +1209,10 @@ async function main(): Promise<void> {
   const plan: { preset: Preset; arm: Arm }[] = []
   for (const preset of PRESETS) for (const arm of arms) plan.push({ preset, arm })
   if (argv.includes('--human')) plan.push(...humanCells())
+  if (argv.includes('--adapt')) {
+    plan.push(ownerCell(adaptArm()))
+    for (const b of bracketArms()) plan.push(ownerCell(b))
+  }
 
   const cells: { label: string; axes: Axes; careers: Career[] }[] = []
   for (const { preset, arm } of plan) {
@@ -911,6 +1260,17 @@ async function main(): Promise<void> {
   console.log(`  best cell: ${best.label} at ${best.hits}/${n} axes inside the human envelope.`)
   const fully = cells.filter((c) => insideCount(c.axes, env).misses.length === 0)
   console.log(`  cells fully inside: ${fully.length ? fully.map((c) => c.label).join(', ') : 'NONE'}`)
+
+  // --- 3b. the deep read on his own cell --------------------------------------
+  if (argv.includes('--deep')) {
+    console.log('')
+    console.log('══ 3b. THE DERIVED ARM, SEASON BY SEASON, ON HIS OWN CELL ══')
+    for (const arm of [humanArm(), adaptArm(), ...bracketArms()]) {
+      for (const line of deepReport(ownerCell(arm), seeds, seasons, env)) console.log(line)
+    }
+    for (const line of reserveSweep(ownerCell(adaptArm()), seeds, seasons, [0, 1_000_00, 2_000_00, 3_000_00, 4_000_00, 5_000_00], env))
+      console.log(line)
+  }
 
   // --- 4. the 25k middle-coach claim ------------------------------------------
   if (argv.includes('--cell')) {
