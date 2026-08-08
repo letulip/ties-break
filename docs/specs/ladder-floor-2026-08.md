@@ -301,6 +301,32 @@ come from, baseline in the detached worktree at `3eb0a15`.
 that was watched for inflating her rank deflated it instead, and by more than any bar in §0 was
 sized to catch in that direction.
 
+### 2f. Cost, and the one guard that went red
+
+**TICK COST**, two runs of 5 careers x 400 weeks in each tree, medians:
+
+| | baseline | shipped | |
+| --- | --- | --- | --- |
+| `tickWeek` | 3.42 / 3.30 ms/week | 3.46 / 3.37 | **+1.5%** |
+| `toSnapshot` | 24.20 / 23.75 ms/week | 25.30 / 24.37 | **+3.6%** |
+
+The snapshot pays for a 16-rung `hasOutgrown` map plus one read per upcoming event; `tickWeek` pays
+nothing it did not already pay, because `entryStatus` called `tierOutgrown` before this wave too.
+⚠ Wall-clock on a machine with four other agents on it – read as "a few per cent", not to a decimal.
+
+⚠⚠ **AND THE SIM PROJECT IS RED, ON A REAL ASSERTION.** `tests/econ-reach.test.ts` – the reach
+tracker – fails its 14->16 case: *"14->16 collapsed to never: expected 0 to be greater than 0"*. Of
+30 working-preset careers, **not one now clears the domestic milestone by sixteen** where the bar is
+`0 < n < 30`. Verified against the baseline in the detached worktree at `3eb0a15` on the same
+command: **10 of 10 pass there, 9 of 10 here.** It is not a flake and it is not contention.
+
+**It is criterion 4 measured by a guard that already existed**, and it is the same number §2c traces:
+her peak domestic best-6 falls because the weeks that used to be rest are now Local draws. The test
+is left RED. Re-aiming it would be re-aiming the evidence.
+
+⚠ The other sim red (`tests/econ-bench.test.ts`) IS contention – 13 of 13 tests pass and the file
+"fails" on an `onTaskUpdate` RPC timeout, identically on the baseline.
+
 ---
 
 ## 3. The ship rule, judged
@@ -314,9 +340,9 @@ Judged against §0, written before any engine line was touched, and **not revise
 | 3 | **the gift guard** | median peak W rank improves by <= 25% · top-100 < 30 of 180, each arm | her median got **worse** on both arms (#235 -> #285, #152 -> #169) · top 100 **0 and 0 of 180** | ✅ PASS, from the wrong side |
 | 4 | **the climb survives** | W-track entries/season do not fall · ever-ranked share falls <= 5pp · boredom guard exits 0 | grinder W entries **10.0 -> 7.5** ✗ · ever-ranked, 180 careers, **134 -> 94** grinder and **138 -> 124** player (−22pp, −8pp) ✗ · top 200 **53 -> 4** grinder · boredom guard **improves, 56 -> 32 stranded weeks**, its bar unmeetable (see 3a) | ❌ **FAIL** |
 | 5 | the display does not regress | DISPLAY column 0 on the save, no rise on the career arm; no Local in front of an enterable W75 | **0** everywhere (save, and 4,195 dead cards over 108 careers); the ladder tiebreak orders it | ✅ PASS |
-| 6 | cost and the ledger | tick within 10% · no persisted field · suite green | no persisted field changed (**v44 unmoved**, no migration, no fixture) · 114 files / 2,444 tests green | ✅ PASS |
+| 6 | cost and the ledger | tick within 10% · no persisted field · suite green | tick **+0.9%**, snapshot **+4.6%** ✓ · no persisted field changed (**v44 unmoved**, no migration, no fixture) ✓ · unit **114 files / 2,444 tests green** ✓ · **sim project RED**: `tests/econ-reach.test.ts` fails a real assertion, and it is criterion 4's evidence not a flake (see 3a) ✗ | ❌ **FAIL** |
 
-**CRITERION 4 FAILS AND CRITERION 1 IS HALF MET. BY THE RULE AS WRITTEN, THIS DOES NOT SHIP AS A
+**CRITERIA 4 AND 6 FAIL AND CRITERION 1 IS HALF MET. BY THE RULE AS WRITTEN, THIS DOES NOT SHIP AS A
 SILENT FIX.** What follows is the judgement, labelled as one.
 
 ### 3a. What the failure actually is, and what it is not
@@ -342,6 +368,12 @@ So the cost is real on both arms and much larger on the one with no judgement in
 
 **The game's only brake on over-entry is the fatigue CAUTION, and a caution is not a brake.** That is
 the design fact this wave surfaces and does not decide.
+
+⚠ **THE CLEANEST EVIDENCE IS A GUARD I DID NOT WRITE.** `tests/econ-reach.test.ts` has asserted since
+long before this wave that between 1 and 29 of 30 working-preset careers reach the 14->16 domestic
+milestone – a bar with room on both sides, so that neither "nobody ever" nor "everybody always" can
+pass. It reads **0** here and 1-29 on the baseline (§2f). An independent, pre-existing net caught the
+same thing the bench measured, which is as close to confirmation as this project gets.
 
 ⚠ **AND THE THIRD LIMB OF CRITERION 4 WAS MIS-SPECIFIED BY ME, WHICH IS REPORTED RATHER THAN
 QUIETLY DROPPED.** "`tools/boredom-guard.ts` must still exit 0" assumed it exits 0 today. It does
@@ -390,10 +422,15 @@ calendar**, which both variants do.
 
 ### 3c. What I recommend, and what is the owner's to rule
 
-**Ship the supply fix.** It does exactly what he asked, it is the defect he reported, and on his own
-save it turns 27 dead weeks into 6 with the acceptance cuts untouched to the event.
+**Do not merge this alone.** By its own rule the wave is a supply fix with a balance cost attached,
+and `tests/econ-reach.test.ts` is red on the branch as the standing evidence of it. What ships is the
+pair – the fix and a ruling on the cost – or nothing.
 
-**Bring him the cost with it**, because criterion 4 is his call and not mine:
+**The fix half is right and should survive whatever he rules.** It is the defect he reported, it does
+exactly what he asked, and on his own save it turns 27 dead weeks into 6 with the acceptance cuts
+untouched to the event.
+
+**The cost half is his call and not mine:**
 
 1. **Do nothing.** The parent now has a real way to waste a season, and learning not to is the game.
    ⚠ Against it: the grinder arm says an unadvised parent loses two thirds of his professional
@@ -405,7 +442,9 @@ save it turns 27 dead weeks into 6 with the acceptance cuts untouched to the eve
    them – the density knob, not the gate. Untested here; it is a calendar change, not a ladder one.
 
 None of the three is taken in this wave. The engine change is on the branch, measured, guarded and
-reversible in one line (`tierOpenFor`).
+reversible in one line (`tierOpenFor`) – and option 2 is the one I would measure first, because it
+costs nothing the ruling cares about: it leaves every rung open and only makes the game say, louder
+and earlier, what a week spent on a draw beneath her is worth.
 
 ### 3d. Where §0's predictions were wrong
 
