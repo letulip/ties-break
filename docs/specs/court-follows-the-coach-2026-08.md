@@ -1,6 +1,6 @@
 ---
 type: spec
-status: draft
+status: current
 area: economy
 canonical: false
 last-reviewed: 2026-08-08
