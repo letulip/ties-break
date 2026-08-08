@@ -119,14 +119,263 @@ a defect fix.
 
 ---
 
-## 1. The defect, and what the domestic gap turned out to be
+## 1. The defect, what shipped, and what the domestic gap turned out to be
 
-*(filled in below)*
+### 1a. What was actually on his screen
+
+⚠ **The triage's phrase "the screen is full of tournaments explaining why not" is not quite what he
+sees, and the difference matters.** The feed only renders the rungs the engine holds open
+(`feedShows`), and on his save the engine held three – so on 27 of his 46 event weeks nothing was
+open, nothing rendered, and **the calendar looked EMPTY**. That is why one owner reported "four empty
+weeks at seventeen" and another reported "cards I cannot enter": they are the same defect seen from
+the two sides of the feed's own filter. The measurement is in the same table either way.
+
+### 1b. What changed
+
+* `tierOpenFor` is **`tierFloorOpen` alone**. The ceiling is still computed, still named, still
+  shown – it no longer refuses.
+* **`hasOutgrown` folds BOTH ceilings into one answer.** `outgrewTier` (a domestic band's ceiling)
+  and `tierOutgrown` (the sliding window's) had been kept in step by hand at three call sites and by
+  a comment in `world.ts` demanding they *"have the same consequence"*. They are one function now, so
+  the drift is unrepresentable rather than remembered, and the answer is read in the band's **own
+  currency** (a W rung's band is ITF junior points, everything else's is domestic).
+* ⚠ **`tierFloorOpen`'s domestic arm had the ceiling inside it** – it read the whole band through
+  `isTierEligible`. Taking the ceiling out of `tierOpenFor` alone would have shut Local on the
+  calendar at 86 domestic points while `entryStatus`, which only ever tested the floor, admitted her:
+  the R10-5 desync from the opposite side. It reads `enterPointBand[0]` now, and the sweep in
+  `tests/ladder-floor.test.ts` is what fails if it ever creeps back.
+* The fact reaches the screen as a **label**: `EntryStatus.outgrown`, `UpcomingEvent.outgrown`,
+  `Snapshot.tierOutgrown`. `'outgrown'` left the `ineligibleReason` union so the **compiler** refuses
+  the old reading.
+* `feedContext` splits **`rungs`** (what may be offered – now including the rungs beneath her, which
+  is the whole point) from **`working`** (the rungs her career is about). The Season feed reads the
+  first; the Home strip's collapse reads the second, or removing the wall would have put the owner's
+  twelve chips over three lines straight back.
+
+**No persisted field changed.** Every new field is derived at snapshot time, so `SAVE_SCHEMA_VERSION`
+stays at **v44**, with no migration and no golden fixture.
+
+### 1c. The domestic gap – SAME DEFECT, and it was a closed loop
+
+The brief asked whether `regional(locked)` / `national(locked)` at domestic #106 is this defect or a
+separate band error. **It is this defect, and the wall was the thing holding it shut.**
+
+Her domestic book is **0**. It is not a band error: the domestic bands are Local `[0, 85]`, Regional
+`[65, 250]`, National `[150, MAX]` and they overlap correctly. What happened is that domestic results
+age out of the 52-week window, she has been on the W tour for years, and the book decayed to nothing.
+Regional and National then refuse her on their **floors** – 65 and 150 points she does not have.
+
+The loop closed because the only rung that could pay those points was **Local, and Local was
+`outgrown`**. No domestic entry was possible, so no domestic point could be earned, so the floors
+could never be cleared, for the rest of the career.
+
+With the floor gone, **Local is enterable again** (a title pays 30), so three Local titles re-open
+Regional and five re-open National. The gap stops being a trapdoor and becomes a climb.
+⚠ **The two locks themselves are correct and are NOT touched** – they are the upper bound, and the
+ruling keeps it.
+
+---
 
 ## 2. Measured
 
-*(filled in below)*
+### 2a. The save arm – his own career, every future event
+
+| | baseline | **shipped** |
+| --- | --- | --- |
+| future events, blocked · enterable | 165 · 24 (**12.7%**) | 98 · 91 (**48.1%**) |
+| **weeks where NOTHING is enterable** | **27 of 46 (58.7%)** | **6 of 46 (13.0%)** |
+| why the blocked ones refuse | **outgrown 112** · locked 53 | locked **53** · unavailable 45 |
+| the card the feed shows | 19 of 46 actionable | **40 of 46** actionable |
+| the card pick's DISPLAY column | 0 | **0** |
+| the rungs the engine opens | W50, W75, W100 | Local, J30, J60, J300, W15, W35, W50, W75, W100 |
+
+⚠ **`locked` is 53 either side, to the event.** The upper bound did not move, which is the half of
+the ruling that had to be provable rather than asserted.
+
+⚠ **`unavailable 45` is not new blocking, it is newly VISIBLE.** Those events were reported
+`outgrown` before because the ceiling was asked first; they are off-season, exam and vacation weeks
+and were unenterable for a week-level reason all along.
+
+**The six weeks that stay dead are legitimately dead**, which is why criterion 1 could not aim at
+zero: four are off-season / exam / vacation weeks (`unavailable`), and two carry only events above
+her acceptance cut – one week with a WTA 500, one with a Slam, a WTA 125 and the Regional she has no
+domestic points for.
+
+### 2b. The career arm – the bench presets, ticked for real
+
+9 presets x 6 seeds x 2 policies x 520 weeks, same command, same machine, baseline measured in a
+detached worktree at `3eb0a15` so no edit of this branch could reach it.
+
+| | grinder base | **grinder shipped** | player base | **player shipped** |
+| --- | --- | --- | --- | --- |
+| **playable weeks / season** | 27.2 | **34.2** | 24.0 | **38.0** |
+| ...as a share of event-carrying weeks | 57.0% | **71.6%** | 50.3% | **79.6%** |
+| entries / season | 26.7 | **34.9** | 17.2 | **22.7** |
+| domestic entries / season | 8.5 | **21.4** | 6.5 | **11.0** |
+| **W-track entries / season** | **10.0** | **7.5** | **7.7** | **8.6** |
+| ...of those, W75 and above | 3.2 | **0.6** | 5.0 | **1.4** |
+| her peak W rank – best / p10 / median | #120 / #176 / #257 | **#212 / #234 / #333** | #98 / #127 / #162 | **#143 / #157 / #173** |
+| ever held a professional ranking | 40/54 | **24/54** | 42/54 | **37/54** |
+| her W book at career end (median) | 114 | **0** | 261 | **258** |
+| the card pick's DISPLAY column | 0 of 2,011 | **0 of 2,397** | 0 of 1,339 | **0 of 1,798** |
+
+⚠⚠ **THE HEADLINE AND THE DAMAGE ARE IN THE SAME TABLE, and the damage is the bigger number.**
+Playable weeks rise by a quarter on the grinder arm and by more than half on the player arm – the
+defect is fixed. And the grinder's professional career collapses: entries above W75 fall **3.2 → 0.6
+a season**, careers that ever hold a professional ranking fall **40 → 24 of 54**, and the median peak
+rank goes **#257 → #333**.
+
+### 2c. The mechanism, traced on one career
+
+Reproduced end to end on seed `ace-parent-1`, which is the career `tests/travel-home.test.ts` walks,
+measured either side of the change with an identical loop:
+
+| | baseline | shipped |
+| --- | --- | --- |
+| Local entries in 130 weeks | 24 | **57** |
+| Regional / National entries | 25 / 13 | 25 / 13 |
+| J30 entries | 19 | **7** |
+| **her peak domestic best-6** | **491** | **298** |
+| the week the ITF on-ramp latches (J30 wants 250 domestic) | **90** | **104** |
+
+**It is not that the Local steals the week from the J30** – every real entry path takes the strongest
+rung on a week, and the two are rarely on the same one. **It is that the Local steals the BODY.**
+Thirty-three extra draws a career leave her arriving at the rungs that actually pay worn out, so the
+same 25 Regionals and 13 Nationals produce a peak book of 298 instead of 491, the ITF door opens
+fourteen weeks later, and the international career that follows is a third of the size.
+
+⚠ **The game's only defence against over-entry is the fatigue caution, and it is a caution.** The
+grinder arm ignores it by definition (`restFloor: 0`), which is exactly why the two arms separate:
+the player arm (`restFloor: 70`) keeps its W-track entry count and loses "only" the top of the ladder.
+
+### 2d. The card pick, re-measured under the wider meaning of "enterable"
+
+The brief's warning – that the ordering might now put a Local in front of a W75 – **does not
+happen**, and the reason is worth writing down because it is why no fourth tiebreak was added.
+
+* The DISPLAY column stays at **0** everywhere: on the owner's save, and on 4,195 dead cards across
+  108 bench careers. The pick never shows a card she cannot act on while an enterable event sits on
+  the same week.
+* The card is **actionable on 40 of his 46 event weeks**, up from 19.
+* An outgrown rung is **below her working rung on `TIER_LADDER` by construction** (`tierOutgrown(t)`
+  is true only when the floor of `t+3` is open), so the existing "tallest" tiebreak already expresses
+  «lead with the more relevant tournament».
+* ⚠ **A "prefer the rung she has not outgrown" clause would have been WRONG.** At nineteen the junior
+  rungs are age-shut, so the ceiling's age clause leaves **Local not outgrown while W15 is** – and
+  that clause would have led with the club draw over the professional event. Height IS relevance on
+  this ladder; outgrown-ness is only correlated with it.
+
+The one thing that genuinely changes on his feed: a week whose tall card is LOCKED and whose short
+card is now enterable used to show the tall one and now shows the short one. That is the 05.08
+"actionable over aspiration" rule doing its job on a much wider set of weeks, and it is the visible
+shape of the fix.
+
+---
 
 ## 3. The ship rule, judged
 
-*(filled in below)*
+Judged against §0, written before any engine line was touched, and **not revised after the numbers**.
+
+| # | criterion | bar | measured | |
+| --- | --- | --- | --- | --- |
+| 1 | **the gain** | his save: dead weeks <= 6 of 46 · career arm: >= 85% of event-carrying weeks playable, both arms | **6 of 46** ✓ · **71.6% grinder · 79.6% player** ✗ | ⚠ **HALF** |
+| 2 | the two ceilings agree | one consequence, pinned by a test | `hasOutgrown` is the one answer; `tests/ladder-floor.test.ts` asserts the equivalence over 5 worlds x 16 rungs, mutation-verified | ✅ PASS |
+| 3 | **the gift guard** | median peak W rank improves by <= 25% · top-100 < 30 of 180, each arm | her rank did not improve on any arm – it **got worse** · top 100: **0 / 0 of 180** | ✅ PASS, from the wrong side |
+| 4 | **the climb survives** | W-track entries/season do not fall · ever-ranked share falls <= 5pp · boredom guard exits 0 | grinder W entries **10.0 -> 7.5** ✗ · ever-ranked **74% -> 44%** (−30pp) ✗ | ❌ **FAIL** |
+| 5 | the display does not regress | DISPLAY column 0 on the save, no rise on the career arm; no Local in front of an enterable W75 | **0** everywhere (save, and 4,195 dead cards over 108 careers); the ladder tiebreak orders it | ✅ PASS |
+| 6 | cost and the ledger | tick within 10% · no persisted field · suite green | no persisted field changed (**v44 unmoved**, no migration, no fixture) · 114 files / 2,444 tests green | ✅ PASS |
+
+**CRITERION 4 FAILS AND CRITERION 1 IS HALF MET. BY THE RULE AS WRITTEN, THIS DOES NOT SHIP AS A
+SILENT FIX.** What follows is the judgement, labelled as one.
+
+### 3a. What the failure actually is, and what it is not
+
+**It is not the gift the brief warned about.** Cheap points at outgrown rungs do not inflate her rank:
+nothing reaches the top 100 on either arm, the best-18 window does not fill with junk, and her median
+peak rank moves the OTHER way. The failure is the mirror image – **the world did not get easier, her
+career got busier, and the busyness costs her the climb.**
+
+**The mechanism is fatigue, and it is measured in §2c.** The removed floor converts REST weeks into
+Local weeks. On the grinder arm domestic entries go 8.5 -> 21.4 a season, and the same girl playing
+the same 25 Regionals and 13 Nationals earns a peak domestic book of 298 instead of 491, because she
+arrives at them worn out. The ITF door then opens fourteen weeks later and the professional career
+that follows is a third of the size.
+
+⚠ **THE HONEST READING, LABELLED AS A READING RATHER THAN A NUMBER.** The change moves a decision
+**from the engine to the player**. Before it, the ladder made the "do not waste a week on a draw
+beneath you" decision for him by refusing; now he makes it, and he can get it wrong. The bench's
+`grinder` arm is by construction the player who never makes that decision (`restFloor: 0`, enter
+everything affordable), and it is the arm that collapses. The `player` arm (`restFloor: 70`) keeps
+its W-track entry count and loses the TOP of the ladder instead – W75-and-above entries 5.0 -> 1.4.
+So the cost is real on both arms and much larger on the one with no judgement in it.
+
+**The game's only brake on over-entry is the fatigue CAUTION, and a caution is not a brake.** That is
+the design fact this wave surfaces and does not decide.
+
+### 3b. The owner's other option, measured – it is not the answer either
+
+His ruling named two: *"align our windows, or better, do not have a lower bound at all"*. The first
+option is measured here on the same command, as a labelled arm that is **not in the tree** – a
+detached worktree at this branch's head with the wall restored in `tierOpenFor` and `WINDOW_RUNGS`
+3 -> 6, `TERMINAL_RUNGS` 4 -> 6.
+
+⚠ **READ ONLY THE ENTRY ROWS OF THIS ARM.** The patch restores the wall in `tierOpenFor` and not in
+`entryStatus`, so the arm's *supply* figures (playable weeks, blocked/enterable, the display column)
+measure a deliberately desynced pair of gates and are void – exactly the R10-5 disagreement §1b
+describes, reproduced by accident and worth recording as such. What IS clean is everything driven by
+what she ENTERS: the bench's entry policy gates on `tierOpenFor`, so it really did meet the widened
+wall.
+
+| grinder arm, entries only | baseline | **floor removed (shipped)** | wall kept, window 6 |
+| --- | --- | --- | --- |
+| entries / season | 26.7 | 34.9 | 32.7 |
+| domestic entries / season | 8.5 | 21.4 | 18.6 |
+| W-track entries / season | 10.0 | 7.5 | 8.0 |
+| ...of those, W75 and above | 3.2 | 0.6 | 1.2 |
+| median peak W rank | #257 | #333 | **#250** |
+| **ever held a professional ranking** | **40/54** | **24/54** | **24/54** |
+
+| player arm, entries only | baseline | **floor removed (shipped)** | wall kept, window 6 |
+| --- | --- | --- | --- |
+| W-track entries / season | 7.7 | 8.6 | 9.3 |
+| ...of those, W75 and above | 5.0 | 1.4 | 2.7 |
+| median peak W rank | #162 | #173 | #156 |
+| ever held a professional ranking | 42/54 | 37/54 | 37/54 |
+
+**Widening the window recovers about half the rank damage and NONE of the participation damage.** The
+share of careers that ever reach the professional table is **24 of 54 on both variants** against 40
+in the baseline, on the grinder arm, and 37 on both against 42 on the player arm. That is the useful
+finding, and it is the one that decides how to read criterion 4: **the cost is not a property of
+which variant is chosen. It is the cost of letting a maximal-appetite career fill every week of its
+calendar**, which both variants do.
+
+### 3c. What I recommend, and what is the owner's to rule
+
+**Ship the supply fix.** It does exactly what he asked, it is the defect he reported, and on his own
+save it turns 27 dead weeks into 6 with the acceptance cuts untouched to the event.
+
+**Bring him the cost with it**, because criterion 4 is his call and not mine:
+
+1. **Do nothing.** The parent now has a real way to waste a season, and learning not to is the game.
+   ⚠ Against it: the grinder arm says an unadvised parent loses two thirds of his professional
+   careers, and the game currently warns about that with one soft caution line.
+2. **Give the brake teeth.** Price fatigue at a rung she has outgrown higher than at her working one,
+   or let the hired coach speak against it (`coachCaution` already exists on the card and is already
+   suppressed on blocked ones). Cheap, measurable, and does not touch the ruling.
+3. **A softer floor rather than none.** Keep the rungs open but stop the CALENDAR offering as many of
+   them – the density knob, not the gate. Untested here; it is a calendar change, not a ladder one.
+
+None of the three is taken in this wave. The engine change is on the branch, measured, guarded and
+reversible in one line (`tierOpenFor`).
+
+### 3d. Where §0's predictions were wrong
+
+* **"Criterion 1 passes with room; the dead-week count should land at 2, not 6."** Wrong, and
+  usefully so: 25 of his 27 dead weeks carry an outgrown event, but four of those weeks are also
+  off-season / exam / vacation weeks, so the ceiling was hiding an availability block underneath it.
+  The measured number is exactly the bar.
+* **"Criterion 3 is the one at risk."** Wrong. It passes comfortably, and from the opposite side.
+* **"Criterion 4 is the second risk, through fatigue rather than through taste."** Right, and it is
+  the one that fails.
+* **"Criterion 5 I expect to hold by construction and I do not trust that."** It held, and the
+  distrust paid for itself: measuring it is what produced §2d's reason for adding no fourth tiebreak.
