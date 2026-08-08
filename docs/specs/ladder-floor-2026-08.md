@@ -8,9 +8,19 @@ last-reviewed: 2026-08-08
 
 # The ladder floor – the lower bound stops being a wall
 
-**Status: §0 (the ship rule) written before any engine line was touched, against baselines measured
-on this branch's head (`34e75a9`, i.e. `main` + the round-14 triage). Everything below §0 is
-measured.**
+**Status: SHIPPED. §0 (the ship rule) was written before any engine line was touched, against
+baselines measured on this branch's head (`34e75a9`, i.e. `main` + the round-14 triage). Everything
+below §0 is measured.**
+
+> **THE WAVE IN FIVE LINES.** The window's lower bound stops refusing and becomes a label. On the
+> owner's own save the weeks with nothing enterable go **27 of 46 → 6**, with the acceptance cuts
+> untouched to the event (`locked` reads 53 either side). It cost the climb – careers that ever hold
+> a professional ranking fell 134 → 94 of 180 on the grinder arm – and **the owner ruled that the
+> cost is not a cost**: having somewhere to play is the correct state of the world, and what she does
+> with the week is the player's decision. The answer to THAT is the **coach as scheduler**, the first
+> pillar of his designed role: he now has an opinion about WHICH event, graded by his own rung, and
+> a parent who takes it recovers about half the climb (grinder ever-ranked 24 → 32 of 54) **while
+> playable weeks go UP**. Zero schema: v44 unmoved, no migration, no fixture.
 
 Backlog #84, round-14 items 7 / 15 / 18, and the owner's ruling of 06.08:
 
