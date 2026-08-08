@@ -603,3 +603,44 @@ twenty-two-year-old for a club draw beneath her. **The coach's voice is aimed by
 speaks about a rung SHE has walked past, which is a fact about her and not about the rung.
 
 **The price change is not shipped.** The arm is recorded here and is not in the tree.
+### 4d. `tests/econ-reach.test.ts` – decided, and re-aimed by the file's own procedure
+
+It was left RED while the change was unruled, which was right: re-aiming the evidence before the
+verdict is how a measurement stops being one. **It is ruled now, and the guard is re-aimed rather
+than deleted or weakened.**
+
+**What it measures:** of 30 working-preset careers, how many reach a domestic-points milestone by
+sixteen. It has fired seven times before, always on a world change, and its own note prescribes what
+to do on the eighth: *"re-run `tools/reach-sweep.ts`, read the plateau column, and re-base to the
+next milestone the domestic table NAMES rather than to the number that restores 11."*
+
+**Why it fired, and it is the ruling arriving rather than a side effect:** the domestic ladder used
+to PUSH her up itself, by closing Local behind her. It no longer does. A bench policy that enters
+everything therefore spends its early weeks on club draws, and the incumbent target of 320 – *"she is
+WINNING at the top of the domestic ladder by sixteen"* – went to **0 of 30**. A proxy nobody meets is
+the same non-measurement 150 was from the other end.
+
+**The sweep, run on this tree** (careers of 30 clearing each candidate, the working preset the band
+is asserted against; median peak 224):
+
+| target | 150 | 200 | **250** | 270 | 280 | 290 | 300 | 320 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| working · self-coached | 29 | 20 | **9** | 6 | 3 | 1 | 1 | **0** |
+
+**Re-based 320 → 250.** It is the most-named number in the domestic table – Regional's
+`enterPointBand` ceiling **and** J30's floor, which `act2-pro-tour.md` §12.2 records as *one
+decision that must move together* – so the proxy becomes **"by sixteen she has crossed the
+international door"**, a milestone the game is built around rather than a threshold picked to make a
+test interesting. It reads **9 of 30** against the pinned band of `[4, 20]`, with room on both sides,
+and both case branches (`0 < n < 30`) still fire.
+
+⚠ **Nothing in the test was weakened**: the case assertions and the band are the ones that were there
+yesterday, to the digit. What moved is the constant they ask about. The ruling is quoted verbatim in
+the ⚠ comment, which is what makes the re-base checkable rather than convenient.
+
+### 4e. The seam left open, named
+
+**Tier changes WHAT he says and how far he sees; it does not yet change how OFTEN.** The rate
+saturates above middle (47.5 / 48.0 / 47.7). If the owner wants the top rungs to feel different in
+frequency as well as in content, that is a second knob – it belongs with the rest of the arc
+(load, opponent preparation, the emotional part) and is not in this wave.
