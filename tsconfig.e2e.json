@@ -25,5 +25,32 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["e2e/**/*.ts", "playwright.config.ts"]
+  // ⚠ THE THREE NON-e2e FILES ARE DELIBERATE, AND THE RULE IS "DEPENDENCY-FREE OR NOT AT ALL".
+  //
+  // A composite project must list every file it imports, so each of these is here because a spec
+  // imports it - and each was chosen because it imports NOTHING itself:
+  //
+  //   tools/e2e-fixtures-read.ts  the manifest, the fixture bytes and the envelope offset. Split out
+  //                               of tools/e2e-fixtures.ts for exactly this reason; its header has
+  //                               the full argument.
+  //   src/shared/dates.ts         weekDateLine - so a spec asserts "the manifest's week, rendered the
+  //   src/shared/money.ts         formatCents  - way the app renders it" instead of hard-coding
+  //                               "W49 2038" and "$102,448", which would rot on the next regeneration.
+  //
+  // Using the product's own formatters is the same principle that makes the seeded bytes
+  // trustworthy: one implementation, no second copy to disagree with it. The arithmetic behind them
+  // is owned by the unit layer (plan §2 - this layer must not duplicate it).
+  //
+  // ⚠ AND THE BOUNDARY ENFORCES ITSELF. The day one of these three grows an import, `vue-tsc -b`
+  // fails here with TS6307 naming the file it now needs - which is the signal to stop, not to add
+  // another line below. What must never be listed is anything that reaches the engine: that would
+  // type-check ~200 modules a second time under a different `types` set, and Playwright would load
+  // every one of them in every worker.
+  "include": [
+    "e2e/**/*.ts",
+    "playwright.config.ts",
+    "tools/e2e-fixtures-read.ts",
+    "src/shared/dates.ts",
+    "src/shared/money.ts"
+  ]
 }

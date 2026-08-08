@@ -92,6 +92,66 @@ by `baseURL` – so the specs that want a worker get a real one, and the rest ke
 surprise them. Turning the flag off globally instead would hand every other spec those three races
 back.
 
+## Seeding a career: `careerAt`
+
+The load-bearing idea of the whole layer (`docs/plans/playwright.md` §3): **a test starts at week 412
+instead of clicking through 412 weeks.**
+
+```ts
+import { test, expect } from './careerAt'
+
+test('week 412 is on screen', async ({ page, careerAt }) => {
+  const pro = await careerAt('pro')          // seeded, booted, splash dismissed
+  await expect(page.getByText(weekDateLine(pro.facts.week))).toBeVisible()
+})
+```
+
+`careerAt(name)` writes one of the five committed careers (`docs/plans/e2e-fixtures.md`) straight
+into IndexedDB before the app's first script runs, then loads the app and returns the manifest entry
+so the spec can assert on the fixture's own facts. **Measured: 0.43–0.57 s to a week-412 career on
+screen – the same as walking the wizard to an empty week-0 career (0.35–0.68 s).** The UI route to
+week 412 was not merely slower: it does not terminate unattended, because `▶▶ 52 (dev)` stops at the
+first thing the engine has to show. `docs/plans/playwright.md` §3 has the table.
+
+**The record is the product's own.** `splitEnvelope` slices a file the shipped `saveCodec` wrote into
+the `checksum` and `payload` an IndexedDB record holds, and `src/db/saves.ts` is where the record's
+shape and the slot naming come from. Nothing re-encodes anything, so `decompressWorld` verifies that
+checksum against those bytes exactly as it does for a save the app wrote itself.
+
+**Why the write is inside the `versionchange` transaction, and why that is not a detail.** The app
+boots once: `game.init()` asks the worker to `listCareers` a single time, and an empty answer sends
+the player to the onboarding wizard and never asks again. IndexedDB writes are asynchronous, so a
+seed that merely *starts* before the app can still finish after it – and when it does, nothing fails.
+The spec runs against a fresh career and passes whatever a fresh career happens to satisfy. So the
+seed writes inside the database-creation transaction: an `open` cannot complete while an upgrade
+transaction is running, and the app's own `openDB` is queued behind ours, so it *blocks* until the
+record is in. The ordering is a guarantee, not a margin.
+
+That also makes the seed a **one-shot**. `page.addInitScript` re-runs on every navigation, and
+re-seeding on a reload would quietly break S2's headline spec – "a career survives a reload with its
+funds, rank and week intact" would pass whether persistence works or not. `onupgradeneeded` only
+fires when the database is being created, so the second navigation writes nothing.
+
+**`localStorage` is cleared, deliberately, in the same step.** Isolated contexts give a clean
+IndexedDB and a clean `localStorage`, but a second navigation inside one test does not – so the
+fixture clears every key and writes back only what the spec asked for, behind its own synchronous
+latch (`src/audio/sfx.ts` reads `tb-muted` while its module is still evaluating, which is earlier
+than any database callback can land).
+
+⚠ **The watermarks seed themselves, and a mail-marker spec must know it.** `src/composables/inboxCue.ts`
+writes the *current* newest id the first time it finds no stored watermark ("claim nothing"). So on a
+freshly seeded career `pro`'s two unopened kit letters raise the inbox dot through the engine's half
+of the predicate (`snapshot.offerOpen`) and **not** through `letterUnseen`, which reads false by
+design. A spec that wants the arrival half pins the watermark behind the letters:
+
+```ts
+await careerAt('pro', { localStorage: { [`tb:lastSeenInboxLetter:${careerIdFor('pro')}`]: '' } })
+```
+
+**One career per test.** A second `careerAt` in the same test throws rather than silently writing
+nothing – the latch above means it could not land, and a silent no-op is exactly what this fixture
+exists to make impossible.
+
 ## Debugging a failure
 
 The HTML report is the artefact:
@@ -129,12 +189,11 @@ To get a trace for something that passes on CI and fails for you, run it with `-
 
 ## Not here yet
 
-- **S1, the fixture engine** – `careerAt(...)`, writing a prepared save straight into IndexedDB
-  before the app boots, so a spec can start at week 412 instead of clicking through 412 weeks.
-  That is the load-bearing idea in the plan and it lands on its own branch. It will also need to
-  clear or seed the app's `localStorage` markers (`tb:lastSeenInboxLetter:<careerId>`, `tb-muted`
-  and friends), which isolated contexts do not do for you in the way IndexedDB is done for you.
-- **S2, the journeys** – roughly a dozen specs, one per seam.
+- **S2, the journeys** – roughly a dozen specs, one per seam. `careerAt` is what they start from;
+  `e2e/seeded-careers.spec.ts` is one thin proof per fixture that they can.
+- **The service worker back ON** for the update-flow spec – a second `webServer` on another port,
+  built without `VITE_TB_SW`, and a project pinned to it by `baseURL`. Nothing in the seeding work
+  changed that switch, and the smoke spec still asserts it is in force.
 - **S3, the showcase** – visual regression, the device matrix, `@axe-core/playwright`, and the
   report published beside the app. Its workflow is `e2e-full.yml`, nightly, and it is where the
   matrix lives. It is not this job.
