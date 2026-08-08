@@ -26,6 +26,7 @@ import {
   createWorld,
   recomputeKidRank,
   tableSize,
+  hasOutgrown,
   tierFloorOpen,
   tierOpenFor,
   tickWeek,
@@ -208,15 +209,25 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     const stage3 = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at50, t))
     expect(stage3).toEqual(['w15', 'w35', 'w50'])
 
-    // STAGE 4 – and the entry rung closes only when the rung THREE above it opens, exactly one book
-    // later. This is the assertion the whole family exists for and it is untouched.
+    // STAGE 4 – and the entry rung is PASSED only when the rung THREE above it opens, exactly one
+    // book later. This is the assertion the whole family exists for.
+    //
+    // ⚠ RE-AIMED 06.08 (docs/specs/ladder-floor-2026-08.md) FROM `tierOpenFor` TO `hasOutgrown`, and
+    // the claim is the same claim: the window slides one rung at a time. What changed is which
+    // function carries the ceiling. `tierOpenFor` is the FLOOR alone since the owner's ruling on
+    // backlog #84 – the lower bound stops being a wall and becomes a sorting key – so asking it
+    // about the slide would now be asking the wrong function and the case would pass on a rule it is
+    // not about. Both halves are asserted: W15 is still HERS (open) and it is now BEHIND her.
     const climbed = worldAt('trapdoor-climbed', 17, 140)
     expect(tierFloorOpen(climbed, 'w75')).toBe(true)
-    expect(tierOpenFor(climbed, 'w15')).toBe(false)
-    const openLater = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) =>
-      tierOpenFor(climbed, t),
+    expect(hasOutgrown(climbed, 'w15')).toBe(true)
+    expect(tierOpenFor(climbed, 'w15'), 'passed, and still enterable').toBe(true)
+    // ...and one book earlier it was not: the slide is one rung at a time, which is the property.
+    expect(hasOutgrown(at50, 'w15')).toBe(false)
+    const workingLater = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter(
+      (t) => tierOpenFor(climbed, t) && !hasOutgrown(climbed, t),
     )
-    expect(openLater).toEqual(['w35', 'w50', 'w75'])
+    expect(workingLater).toEqual(['w35', 'w50', 'w75'])
   })
 
   // THE NEW POSITIVE PROPERTY, and it is the state the paragraph above used to probe with: a single

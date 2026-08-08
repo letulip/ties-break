@@ -553,10 +553,17 @@ const seasonChips = computed<TierChip[]>(() =>
     // Her earned result outranks every open state: once a tier is on the books the chip's job is to
     // show the finish, and the availability lives in the tooltip.
     const reached = isTierOpen(avail) && best !== undefined
+    // ⚠ 'outgrown' IS NO LONGER A `kind` FOR A REAL SNAPSHOT (06.08, docs/specs/
+    // ladder-floor-2026-08.md): the lower bound stopped refusing, so a rung she has passed comes
+    // back 'scheduled'/'unscheduled' WITH the `outgrown` flag set. The kind arm stays for the pure
+    // callers that pass no oracle - both readings mean the same thing to this chip, and reading the
+    // flag is what keeps the strip's «show the current window» rule (below) working now that the
+    // engine holds the rungs beneath her open.
+    const past = avail.outgrown === true || avail.kind === 'outgrown'
     const state: TierChipState =
       avail.kind === 'age-locked' || avail.kind === 'locked'
         ? 'locked'
-        : avail.kind === 'outgrown'
+        : past
           ? 'outgrown'
           : reached
             ? 'reached'
@@ -615,13 +622,20 @@ const seasonChips = computed<TierChip[]>(() =>
 // недоступный уровень»). Everything else - the rungs she has outgrown below, and the far top of the
 // ladder above - sits behind an ellipsis chip that expands the row in place.
 const stripExpanded = ref(false)
+// ⚠ `.working`, NOT `.rungs`, SINCE 06.08 – and the strip is the reason the two exist. The lower
+// bound stopped refusing (docs/specs/ladder-floor-2026-08.md), so `tierOpen` is now true for every
+// rung she has ever reached and `.rungs` would put the whole climb back on screen: exactly the
+// twelve chips over three lines the collapse below was built to end. The FEED wants `.rungs` (a week
+// whose only event is beneath her is still a week she can play); this row wants the rungs her career
+// is about. Still asked, still never re-derived.
 const windowRungs = computed<readonly TierId[]>(
   () =>
     feedContext({
       ageYears: game.snapshot?.ageYears ?? 0,
       tierOpen: game.snapshot?.tierOpen,
+      tierOutgrown: game.snapshot?.tierOutgrown,
       upcoming: game.snapshot?.upcoming ?? [],
-    }).rungs,
+    }).working,
 )
 /**
  * WHICH INDICES OF `SEASON_STRIP_TIERS` ARE ON SCREEN – the open rungs THEMSELVES, plus the one rung

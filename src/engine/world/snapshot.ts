@@ -59,7 +59,7 @@ import { ageAtWeek, birthdayTurning, kidAgeYears, START_AGE_YEARS } from './age'
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage } from './entryCaps'
-import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
@@ -174,7 +174,6 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
           ? {
               ineligibleReason: gate.reason as
                 | 'locked'
-                | 'outgrown'
                 | 'injured'
                 | 'unavailable'
                 | 'medical'
@@ -240,6 +239,10 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // the only window in which cancelling costs the fee and frees the week. Every row here is
         // a FUTURE week by construction, so the closed list is the whole condition.
         cancellable: isEntered && world.week > e.deadlineWeek,
+        // ⚠ SHE HAS PASSED THIS RUNG, AND IT IS NOT A LOCK (06.08). Carried BESIDE `eligible` rather
+        // than inside `ineligibleReason`, which is where it used to live: the two are orthogonal now,
+        // and the card has to be able to say "still yours, and beneath you" in one breath.
+        ...(gate.outgrown ? { outgrown: true } : {}),
         ...reason,
         ...coachSay,
       }
@@ -723,6 +726,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // THE ENGINE'S OWN VERDICT PER RUNG (see TierOpenMap in protocol.ts). `tierOpenFor` is the same
     // function `enterEvent` validates against, so a screen can no longer disagree with the gate.
     tierOpen: Object.fromEntries(TIER_LADDER.map((t) => [t, tierOpenFor(world, t)])) as TierOpenMap,
+    // ...AND THE SAME DISCIPLINE FOR THE CEILING (06.08). `tierOpenFor` is the FLOOR alone now, so
+    // "open" no longer distinguishes her working rung from one she has walked past – and a screen
+    // that re-derived that from a point band would be the visibility-vs-access bug for the fourth
+    // time (the J and W bands are `[0, MAX]` and cannot express it at all). One engine answer.
+    tierOutgrown: Object.fromEntries(TIER_LADDER.map((t) => [t, hasOutgrown(world, t)])) as TierOpenMap,
     // ...AND THE POSITION EACH ACCEPTANCE LIST CUTS AT, for the rungs that have one. Same discipline
     // as `tierOpen` directly above: the screen asks the engine for the number rather than deriving a
     // share of a field it would have to be told the size of. Absent on every rung that gates on

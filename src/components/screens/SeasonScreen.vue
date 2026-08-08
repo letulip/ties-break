@@ -522,13 +522,14 @@ function fundsShort(e: UpcomingEvent): boolean {
 }
 // The HARD-lock label (Season-Life slice B): point-band (locked) or a hard availability
 // block (injured / school exams / a booked family vacation). Fatigue is NOT here – it stays
-// enterable with a soft caution. OUTGROWN never reaches this label any more: those events are
-// filtered off the calendar (spec §1), so the case stays only as a defensive fallback.
+// enterable with a soft caution.
+// ⚠ OUTGROWN IS NOT A LOCK AT ALL SINCE 06.08 and its arm here is deleted rather than left as a
+// defensive fallback: `UpcomingEvent.outgrown` is a separate flag and the compiler refuses the old
+// spelling, which is the point of moving it out of `ineligibleReason` (see protocol.ts). The rung
+// she has passed is ENTERABLE and says so on its own pill below.
 // The injured detail names the return week (slice C) so the parent can plan around the layoff.
 function lockLabel(e: UpcomingEvent): string {
   switch (e.ineligibleReason) {
-    case 'outgrown':
-      return 'Outgrown'
     case 'injured': {
       const s = game.snapshot
       return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : 'Injured – rest up'
@@ -1111,9 +1112,14 @@ function closeExhibition(): void {
               </span>
               <!-- R10-5: an entry that survived the band crossing is COMMITTED, not illegal – but it
                    must SAY so. The owner played a Local at 122 points with nothing on screen to
-                   explain it, because the card had been decluttered away entirely. -->
-              <span v-if="row.event.entered && row.event.ineligibleReason === 'outgrown'" class="pill muted lock">
-                🔒 Outgrown – she is past this level
+                   explain it, because the card had been decluttered away entirely.
+                   ⚠ AND SINCE 06.08 IT IS SAID ON EVERY OUTGROWN CARD, not only an entered one, and
+                   it is no longer a padlock. The rung she has passed stays open (see `tierOpenFor`),
+                   so the pill's job changed from explaining a stranded commitment to labelling a
+                   choice she may still make – which is what «lead with the more relevant tournament»
+                   needs the weaker card to look like. -->
+              <span v-if="row.event.outgrown" class="pill muted">
+                Outgrown – she is past this level
               </span>
             </div>
 

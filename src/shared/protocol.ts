@@ -708,9 +708,10 @@ export interface UpcomingEvent {
    *  or a family vacation. Before the deadline the same control is an ordinary refunded withdrawal;
    *  once the week starts, the tournament flow's Skip owns it. */
   cancellable: boolean
-  /** why the kid HARD-cannot enter, for the UI lock label; absent when eligible. Point-band reasons:
-   *  'locked' = not enough ranking points yet (below the tier's minPoints); 'outgrown' = past its
-   *  ceiling now. Hard availability blocks (Season-Life slice B, checked after the point band):
+  /** why the kid HARD-cannot enter, for the UI lock label; absent when eligible. Point-band reason:
+   *  'locked' = not enough ranking points yet (below the tier's minPoints), or below an acceptance
+   *  cut. ⚠ 'outgrown' LEFT THIS UNION on 06.08 and is `outgrown` below – a rung she has passed no
+   *  longer refuses her. Hard availability blocks (Season-Life slice B, checked after the point band):
    *  'unavailable' = school exams / off-season / a booked family vacation; 'injured' = she is out;
    *  'medical' = the doctor's veto below ECONOMY.availability.medicalFloor (the one hard body-gate
    *  – see availabilityStatus). Ordinary fatigue is NOT here – it is a soft, warned CHOICE (see
@@ -718,7 +719,15 @@ export interface UpcomingEvent {
    *  'capped' = she has spent her year's allowance of INTERNATIONAL entries (the ITF annual entry
    *  cap, docs/research/ranking-points-by-tier.md §2) – a hard block, but one that lifts by itself
    *  when the season turns, which is why it is its own reason and not folded into 'unavailable'. */
-  ineligibleReason?: 'locked' | 'outgrown' | 'injured' | 'unavailable' | 'medical' | 'capped'
+  ineligibleReason?: 'locked' | 'injured' | 'unavailable' | 'medical' | 'capped'
+  /** SHE HAS PASSED THIS RUNG – and it is not a lock (the owner's ruling on backlog #84, 06.08,
+   *  quoted verbatim in docs/specs/ladder-floor-2026-08.md: no lower bound at all, let her play, and
+   *  lead with the more relevant tournament of the week when there is one). 'outgrown' used to be an
+   *  `ineligibleReason` above and is deliberately no longer in
+   *  that union: it is orthogonal to whether she may enter, so the compiler is what stops a surface
+   *  from reading it as a refusal again. An outgrown card is ENTERABLE, says so, and loses the week's
+   *  slot to any rung she has not passed – see `preferredWeekEvent`. */
+  outgrown?: boolean
   /** a SOFT warning on an event the kid CAN still enter (eligible stays true): 'fatigued' = her
    *  condition is below the tier's floor, so racing risks a deeper hole / injury. The owner's call
    *  is that a tired body is a tough-parent decision, not a hard rule. */
@@ -2006,6 +2015,14 @@ export interface Snapshot {
   proEntryCap: EntryCapUsage
   /** the engine's own per-tier entry verdict - see TierOpenMap */
   tierOpen: TierOpenMap
+  /** ...AND WHICH OF THE OPEN ONES SHE HAS ALREADY PASSED (`hasOutgrown`, 06.08). Since the lower
+   *  bound stopped refusing, `tierOpen` alone can no longer tell a working rung from one she has
+   *  outgrown – they are both `true` – and the two are a completely different sentence on a screen.
+   *  ⚠ IT IS NOT A LOCK AND NO SURFACE MAY DRAW IT AS ONE: it is the ladder's own "she is past this
+   *  level", and the reason the feed's per-week pick can lead with the more relevant rung.
+   *  Derived at snapshot time, persists nothing, and every rung it is true of is a rung she may
+   *  still enter. */
+  tierOutgrown: TierOpenMap
   /** THE ACCEPTANCE LIST, AS A POSITION, per rung that has one – `acceptanceRank(world, tier)`, absent
    *  for every rung that gates on points instead.
    *

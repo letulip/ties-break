@@ -345,9 +345,24 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
  *  table she is standing in, not the one she is stepping into - exactly as J30's [250, MAX] is read
  *  against her DOMESTIC total. The tier comments in season/calendar.ts spell out what 120 buys; this
  *  is the code they describe. Note the on-ramp is detected the same way in both arms - by the tier
- *  having no `enterPct` at all - so a future W50 that gains an acceptance list needs no change here. */
+ *  having no `enterPct` at all - so a future W50 that gains an acceptance list needs no change here.
+ *
+ *  ⚠⚠ AND SINCE 06.08 IT IS THE FLOOR ALONE. The ceiling is still computed, still named, still shown
+ *  - it is simply not a REFUSAL any more. The owner's ruling on backlog #84, quoted verbatim in
+ *  docs/specs/ladder-floor-2026-08.md: do not have a lower bound at all, let her play, and just lead
+ *  with the more relevant tournament of the week when there is one. Measured on his own save before
+ *  the change: 165 of 189 future events blocked, 112 of them for `outgrown`, and 27 of his 46
+ *  remaining event weeks with nothing enterable on them at all - three fifths of a season spent
+ *  standing in a slot one rung wide. The upper bound stays exactly where it was: an acceptance cut
+ *  is the tour's own rule and is not ours to waive.
+ *
+ *  WHERE THE LOWER BOUND WENT, rather than what deleted it: `hasOutgrown` is the same verdict as a
+ *  SORTING KEY. It rides on `EntryStatus.outgrown` and on `Snapshot.tierOutgrown`, the feed's
+ *  per-week pick prefers the rung she has NOT passed (`preferredWeekEvent`'s ladder tiebreak, and
+ *  an outgrown rung is below her working one by construction), and the card says so. See
+ *  docs/specs/ladder-floor-2026-08.md. */
 export function tierOpenFor(world: WorldState, tier: TierId): boolean {
-  return tierFloorOpen(world, tier) && !tierOutgrown(world, tier)
+  return tierFloorOpen(world, tier)
 }
 
 /** HOW MANY RUNGS OF THE LADDER ARE LIVE AT ONCE – the sliding window's width (act2-pro-tour.md §11,
@@ -449,7 +464,17 @@ export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
     // `cohort.length + 1` a missing cache read as world #200 and cleared this cut and five above it.
     return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? tableSize(world, 'wta')) <= accepts
   }
-  return isTierEligible(tier, kidPoints(world, 'domestic'))
+  // ⚠⚠ THE FLOOR HALF ONLY, AND THIS LINE IS WHERE THE 06.08 RULING NEARLY LEAKED PAST. It read
+  // `isTierEligible(tier, ...)`, which is the WHOLE band - both bounds - so the domestic ceiling was
+  // living inside the FLOOR test as well as in `tierOutgrown`. Taking the ceiling out of
+  // `tierOpenFor` alone would therefore have left Local shut at 86 domestic points while
+  // `entryStatus`' domestic arm (which only ever tested `points < minPoints` for the floor) admitted
+  // her - the calendar saying shut and the turnstile letting her through, which is the exact R10-5
+  // disagreement `tests/rankingGate.test.ts` was written for, arriving from the opposite side.
+  // `isTierEligible` stays as it is: it is the BAND predicate, and its only other readers are the
+  // on-ramps, whose bands have no ceiling (`[250, MAX]`, `[120, MAX]`) so the two readings agree
+  // there by construction.
+  return kidPoints(world, 'domestic') >= TIERS[tier].enterPointBand[0]
 }
 
 // =================================================================================================
@@ -553,6 +578,29 @@ export function proDoors(world: WorldState, merged: readonly RankingRow[]): ProD
  *  by hand – which is how "outgrown" came to mean slightly different things on different surfaces. */
 export function outgrewTier(tier: TierId, points: number): boolean {
   return points > TIERS[tier].enterPointBand[1]
+}
+
+/** HAS SHE PASSED THIS RUNG – EITHER CEILING, ONE ANSWER, ONE CONSEQUENCE.
+ *
+ *  ⚠ THIS FUNCTION IS THE INVARIANT, not a convenience. `world.ts` states the rule the retired
+ *  `releaseOutgrownEntries` left behind: `outgrewTier` (a domestic band's ceiling) and
+ *  `tierOutgrown` (the sliding window's) *"are the same event for the player and must have the same
+ *  consequence"*. They were kept in step by hand at three call sites and by a comment; a player who
+ *  meets one gate and not the other meets a rule that cannot be explained. Written as one function
+ *  the drift is unrepresentable, which is what the comment was asking for.
+ *
+ *  ⚠ AND THE BAND IS READ IN THE BAND'S OWN CURRENCY, never in a convenient one. A rung's
+ *  `enterPointBand` is denominated in the table BELOW it - the on-ramp rule, `entryBandTrack`'s and
+ *  `entryStatus`' both - so a W rung's band is ITF junior points and everything else's is domestic.
+ *  Only the domestic three carry a finite ceiling today, so the first term is inert above them; it
+ *  is written in its right currency anyway, because the day a J or W rung gains a ceiling this
+ *  should not need to be found again.
+ *
+ *  Since 06.08 the consequence is NOT a refusal (see `tierOpenFor`): it is a label the card carries
+ *  and a key the feed's per-week pick sorts on. */
+export function hasOutgrown(world: WorldState, tier: TierId): boolean {
+  const bandTrack: LadderTrack = TIERS[tier].track === 'wta' ? 'itf' : 'domestic'
+  return outgrewTier(tier, kidPoints(world, bandTrack)) || tierOutgrown(world, tier)
 }
 
 /** HER PLACE in one named table – the one number every rank surface reads, so a chip and the entry

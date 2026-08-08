@@ -8,9 +8,10 @@
 // NOTHING enterable, and the reason split is the whole story – everything beneath her says
 // `outgrown`, everything above says `locked`. The calendar is full; she may not enter it.
 //
-// His ruling (06.08): «не делать нижний порог вообще, пусть играет, просто по приоритету более
-// актуальный турнир показывать, если есть» – the lower bound stops being a wall and becomes a
-// SORTING KEY. The upper bound (an acceptance cut) is the tour's own rule and stays.
+// His ruling (06.08), quoted verbatim in docs/specs/ladder-floor-2026-08.md: do not have a lower
+// bound at all, let her play, and just lead with the more relevant tournament of the week when there
+// is one. The lower bound stops being a wall and becomes a SORTING KEY. The upper bound (an
+// acceptance cut) is the tour's own rule and stays.
 //
 // THE TWO ARMS, because the defect has two witnesses and they answer different questions:
 //
@@ -56,7 +57,6 @@ const strOf = (name: string, fallback: string): string => {
   const i = argv.indexOf(`--${name}`)
   return i >= 0 && argv[i + 1] ? argv[i + 1] : fallback
 }
-const pad = (s: string | number, w: number) => String(s).padStart(w)
 const padE = (s: string | number, w: number) => String(s).padEnd(w)
 const pct = (n: number, d: number): string => (d === 0 ? '   – ' : `${((100 * n) / d).toFixed(1)}%`)
 

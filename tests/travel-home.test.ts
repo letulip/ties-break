@@ -884,7 +884,21 @@ describe('ui/travel-set — on a real career', () => {
     const rng = rngFromSeed(world.seed)
     let firsts = 0
     let abroadTrips = 0
-    for (let i = 0; i < 130; i++) {
+    // ⚠ THE HORIZON WENT 130 -> 208 WEEKS ON 06.08, AND IT IS A RE-AIM THAT MAKES THIS CASE HARDER
+    // (docs/specs/ladder-floor-2026-08.md). Nothing about `firstAbroad` moved; what moved is when
+    // this career first LEAVES the country, and the assertion at the bottom needs it to. Measured on
+    // this exact seed, either side of the ladder-floor change: the ITF on-ramp (J30's 250 domestic
+    // points) latches at week 90 before it and at week 104 after, because the lower bound stopped
+    // refusing and a maximally naive "enter everything" loop now fills its early weeks with Local
+    // draws - 24 of them before, 57 after - and arrives at the rungs that PAY too worn to do as well
+    // there (her peak domestic best-6 goes 491 -> 298). Inside 130 weeks that leaves her 2 trips
+    // abroad, and the bar below asks for more than 3.
+    // ⚠ LENGTHENING IS THE HONEST REPAIR HERE AND LOWERING THE BAR IS NOT: `firsts === 1` is the
+    // invariant, and giving the career 78 more weeks gives a SECOND "first trip abroad" 78 more
+    // chances to fire. The guard gets stronger, not weaker; only the fixture's patience changed.
+    // The pace finding itself is not swept under this comment - it is criterion 4 of the wave's own
+    // ship rule, measured at bench scale in the spec.
+    for (let i = 0; i < 208; i++) {
       for (const e of world.season) {
         if (e.week > world.week && world.week <= e.deadlineWeek && !world.entries.includes(e.id)) {
           try { enterEvent(world, e.id) } catch { /* not this test's business */ }
