@@ -572,6 +572,10 @@ function render(): void {
     surface: props.surface,
     players: playerPos,
     serverSide: liveServer.value,
+    // `kidSide`, NOT `heroSide`: the second falls back to side 0 for the momentum curve's point of
+    // view, which is right for a chart and wrong for a colour - it would paint a stranger's dot in
+    // her accent on every match she is not in. See courtRenderer's SceneState.heroSide.
+    heroSide: kidSide.value,
     time: clock,
     endsSwapped: endsSwappedRef.value,
     changingEnds: currentEvent?.kind === 'change-ends',
@@ -879,13 +883,34 @@ const { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, setCells, cou
 
 // --- THE COMMENTARY (viz/commentary.ts) --------------------------------------------------------
 // Built once per match, revealed in step with the score: a beat appears exactly when the point it
-// is anchored to has been played on screen. So a 'key'-mode watch reveals them in bursts and a
-// 'skip' hands over the whole story at once, and in all three the text is the same text.
+// is anchored to has been played on screen.
+//
+// ⚠ AND THE VIEW MODE NOW PICKS THE LIST, WHICH IS THE 06.08 ITEM (owner: «сам матч идёт быстрее и
+// показывает ключевые моменты, но в тексте трансляции вообще ничего не меняется, надо это
+// синхронизировать ... может быть мы можем full/key моменты сделать больше отличий»).
+//
+// WHAT WAS ACTUALLY WRONG, because "the switch is broken" was the symptom and not the fault: the
+// switch was never wired to the text at all. `buildTimeline(match, mode)` is what 'key' reached -
+// it drops the points the mode does not show - and this line built ONE list per MATCH and revealed
+// it off `displayedPointIndex`. Both modes therefore printed the same rows, in the same order, and
+// the only difference a viewer could see was that 'key' revealed them in bursts, several points
+// behind the ball. The header said "key moments" and the log went on reading out every one.
+//
+// ⚠ THE CUT IS NOT MADE HERE. `Beat.keyMoment` is decided inside buildCommentary from the engine's
+// own live win probability (viz/commentary.ts, THE KEY CUT) - so this component switches lists and
+// holds no opinion about which moments matter. Putting the rule here would have meant a second
+// implementation of "what counts", in the one file that must not own that question.
+//
+// 'skip' takes the FULL list deliberately: it hands over the whole story at once, and somebody who
+// skipped the match wants the account of it, not the trailer.
 const commentary = computed(() => buildCommentary(props.match, props.playerA.name, props.playerB.name))
+const modeCommentary = computed(() =>
+  viewMode.value === 'key' ? commentary.value.filter((b) => b.keyMoment) : commentary.value,
+)
 
 /** Newest first, the way the export stacks the log. */
 const visibleBeats = computed(() =>
-  commentary.value.filter((b) => b.pointIndex <= displayedPointIndex.value).slice().reverse(),
+  modeCommentary.value.filter((b) => b.pointIndex <= displayedPointIndex.value).slice().reverse(),
 )
 
 // --- THE SHOUT (owner, 30.07: «можем какой-то набор фраз в дропдаун селект сделать и кнопку рядом.
@@ -999,20 +1024,34 @@ const visibleRows = computed<LogRow[]>(() => {
   return merged.map((m) => m.row)
 })
 
-/** The export's log is a fixed-height window with "Show more" under it; four rows is what fits. */
-const LOG_ROWS = 4
-const logExpanded = ref(false)
-const shownRows = computed(() =>
-  logExpanded.value ? visibleRows.value : visibleRows.value.slice(0, LOG_ROWS),
-)
+// ⚠ THE FOUR-ROW WINDOW AND ITS "Show more" ARE GONE, AND THE PINNED BLOCK IS WHY (owner, 06.08:
+// «давай вообще этот блок full/key/speed/shout кнопок внизу экрана в матче закрепим просто, а
+// текстовая трансляция будет до него "разворачиваться"»). The window existed because the log was a
+// box of its own height in a page that scrolled past it: four rows is what the export drew, and
+// anything more pushed the controls off the bottom - the very bug the sticky bar was added for.
+// The log is now the part of the column that GIVES (`.mv-log` is the only flexible row), so it is
+// exactly as tall as the space between the court and the pinned block and scrolls inside itself.
+// A fixed window inside a box that is already the size of the space would be a second, smaller
+// clamp on the same content, and the newest beat is at the top either way - so there is nothing a
+// "Show more" could still reveal that scrolling does not.
 
 // --- controls: the app's segmented row rather than two <select>s -------------------------------
 // SegmentedRow speaks in VALUES; speed is a number, so this is the one adapter between them (the
 // same shape BracketTabs uses for round ids).
+//
+// ⚠ TWO OPTIONS, NOT THREE: 'skip' LEFT THIS SWITCH ON 06.08 (owner: «а skip оттуда из этого
+// переключателя вообще надо убрать – оно полностью матч пропускает, это вообще неявно в этом
+// месте»). Full and Key are RESOLUTIONS - two answers to "how much of this match do I watch", and
+// either one leaves you watching. Skip ends the watching. A segmented control says "these are the
+// same kind of thing, pick one", and it was saying it about a control that closes the match: the
+// third pill of a settings plate is the last place a player expects to lose the whole match, and
+// he lost one to it.
+// THE CAPABILITY IS UNTOUCHED - `viewMode` still takes 'skip' and every path that reads it
+// (resetPlayback -> jumpToEnd, retimeForMode's exemption, More's default-view picker) is exactly as
+// it was. What moved is the door: `.mv-skip` below, which says what it does out loud.
 const VIEW_OPTIONS = [
   { value: 'full', label: 'Every point', short: 'Full' },
   { value: 'key', label: 'Key points only', short: 'Key' },
-  { value: 'skip', label: 'Skip to the result', short: 'Skip' },
 ] as const
 const SPEED_OPTIONS = [
   { value: '1', label: 'Normal speed', short: '1×' },
@@ -1034,6 +1073,24 @@ const speedSeg = computed({
     playSfx('clickSoft')
   },
 })
+
+/**
+ * SKIP TO THE RESULT - the capability the third pill used to carry, as an action that names itself.
+ *
+ * It sets exactly the same ref the pill set, so `retimeForMode`'s "'skip' is not a position" branch,
+ * `resetPlayback`'s jump and the silence of `jumpToEnd` are all reached by the same road they always
+ * were. What is different is only what the player is looking at when they take it: a link that says
+ * where it goes, under the two plates rather than inside one of them.
+ *
+ * A player who has set Skip as their DEFAULT view (More -> match settings) opens straight onto the
+ * finished match, so this control is already spent and hides itself with `finished` - and the two
+ * pills sit unselected, which is the honest reading of "you asked not to watch this one". Pressing
+ * either starts the walk, through the same out-of-skip path as before.
+ */
+function skipToResult(): void {
+  playSfx('clickSoft')
+  viewMode.value = 'skip'
+}
 
 // Final full stats: aces/DFs computed from rallies (per spec); everything else
 // read straight from the authoritative MatchResult.stats.
@@ -1249,10 +1306,10 @@ function servePct(side: Side): number {
            as a beat so the rail and the dots still line up down one column. See `visibleRows` for
            why the two lists only ever meet at the render. -->
       <Card variant="photo" class="mv-log" pad="8px 12px 10px">
-        <p v-if="!shownRows.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
+        <p v-if="!visibleRows.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
         <ol v-else class="mv-log-list">
           <li
-            v-for="(row, i) in shownRows"
+            v-for="(row, i) in visibleRows"
             :key="row.key"
             class="mv-beat"
             :class="{ latest: i === 0, said: row.kind === 'shout' }"
@@ -1269,13 +1326,6 @@ function servePct(side: Side): number {
             <span v-if="row.score" class="mv-beat-score num">{{ row.score }}</span>
           </li>
         </ol>
-        <button
-          v-if="visibleRows.length > LOG_ROWS"
-          class="link mv-log-more"
-          @click="logExpanded = !logExpanded"
-        >
-          {{ logExpanded ? 'Show less ⌃' : 'Show more ⌄' }}
-        </button>
       </Card>
 
       <!-- ===== CONTROLS =======================================================================
@@ -1326,6 +1376,15 @@ function servePct(side: Side): number {
           </select>
           <button class="mv-shout-go" @click="shoutIt">Shout 📣</button>
         </div>
+        <!-- ⚠ WHERE "Skip" WENT (owner, 06.08). It was the third pill of the view plate, beside Full
+             and Key, and it does not belong in a switch: those two are resolutions and this one ends
+             the match. It is a LINK, not a pill and not a button plate, and that is deliberate on two
+             counts - it reads as a way OUT rather than as a setting, and a text row costs ~22px of a
+             phone where a third plate row would have cost ~53 on a screen the same owner has twice
+             asked to give its height to the court and the log. Same shape as the log's own
+             "Show more ⌄" a few lines up, which is the app's existing vocabulary for this weight of
+             control. Hidden once the match is over, because there is nothing left to skip. -->
+        <button v-if="!finished" class="link mv-skip" @click="skipToResult">Skip to the result</button>
       </div>
       <!-- WHAT IS LEFT OUTSIDE THE PINNED BAR, and it is one button on one mode: "Watch again" only
            means anything once the match is over, and a replay is never watched while you are waiting
@@ -1405,10 +1464,39 @@ function servePct(side: Side): number {
    Home and Season). Nothing shared is re-declared: `.pill`, `.link`, `.num`, `table` and `.primary`
    all still come from the sheet. */
 
+/* ⚠ THE VIEWER FILLS THE TAKEOVER, WHICH IS WHAT PUTS THE CONTROL BLOCK ON THE FLOOR OF THE SCREEN
+   (owner, 06.08: «давай вообще этот блок full/key/speed/shout кнопок внизу экрана в матче закрепим
+   просто, а текстовая трансляция будет до него "разворачиваться"»).
+   ⚠ THE BAR WAS ALREADY STICKY AND THAT WAS NOT THE ASK. Sticky only bites when the bar would
+   otherwise be BELOW the fold; on a tall phone it never is, so the block sat wherever the log's last
+   row left it with dead page under it - measured at 576x1280 (his screen): the block ended at
+   y=1110 and 170px of empty scroller ran on beneath it. Sticky cannot fix that, because there is
+   nothing to stick to: the column is shorter than the scrollport.
+   THE FIX IS THE COLUMN, NOT THE BAR. `.mv` grows to fill `.tf-body` (a column flex container - see
+   src/style.css), `.mv-below` takes what is left under the court, and `.mv-log` is the ONE flexible
+   row in the whole stack. So the log is exactly the space between the court and the block, and the
+   block lands on the bottom edge whatever the screen height is. `flex: 1` degrades to nothing in a
+   container that is not a flex column, and everything below still overflows and scrolls the moment
+   the box score appears - which is the case the sticky bar is still there for, and it stays. */
 .mv {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
+  /* ...and `min-height: 0` is what lets the flexible row actually give: without it a flex item's
+     automatic minimum size is its content, so a long log would push the block back off the bottom
+     instead of scrolling inside itself. */
+  min-height: 0;
+}
+
+/* Everything except the log is fixed furniture. Stated rather than left to the defaults, because
+   `flex: 0 1 auto` lets a box SHRINK, and in a deficit the court and the box score would give up
+   height alongside the log they are meant to be framing. */
+.mv-panel,
+.mv-controls,
+.mv-actions,
+.mv-boxscore {
+  flex: none;
 }
 
 /* --- 1. THE COURT ---------------------------------------------------------------------------
@@ -1992,13 +2080,6 @@ function servePct(side: Side): number {
   color: var(--muted);
 }
 
-.mv-log-more {
-  display: block;
-  margin: 2px auto 0;
-  text-decoration: none;
-  font-weight: 600;
-}
-
 /* --- CONTROLS -------------------------------------------------------------------------------- */
 
 /* EVERYTHING BELOW THE COURT, and the reason it is one element: it is the sticky bar's containing
@@ -2010,6 +2091,19 @@ function servePct(side: Side): number {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+/* THE LOG IS THE PART THAT GIVES - see the note on `.mv`. It takes every pixel between the court and
+   the pinned block and scrolls inside itself past that, which is the "разворачивается до него" half
+   of the 06.08 ask. The floor is two rows plus the card's own inset: below that the box stops being
+   a log and starts being a hint, and a phone in landscape would otherwise squeeze it to nothing.
+   `overflow-y` beats the `overflow: hidden` a photo Card carries for its art - this one has none. */
+.mv-log {
+  flex: 1 1 auto;
+  min-height: 92px;
+  overflow-y: auto;
 }
 
 /* THE PINNED CONTROL BAR (owner, 30.07: «maybe we need to make lower buttons on match screen fixed
@@ -2102,6 +2196,17 @@ function servePct(side: Side): number {
 
 .mv-shout-go {
   flex: none;
+}
+
+/* "Skip to the result" - a row of the pinned block, and a LINK rather than a plate. See the
+   template note: it is a way out, not a setting, and a text row is ~22px where a third plate row
+   would have been ~53 on the screen the owner has twice asked to give its height back. */
+.mv-skip {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: 2px;
+  text-decoration: none;
+  font-weight: 600;
 }
 
 /* ⚠ "Skip" USED TO RENDER AS "Ski", AND THE SPEED PLATE SAT ON TOP OF IT. The two rows want

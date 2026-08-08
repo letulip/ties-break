@@ -42,6 +42,40 @@
 // tests/viz/commentary.test.ts, which FAILS if the density drifts back toward a point log).
 //
 // ---------------------------------------------------------------------------------------------
+// THE KEY CUT - what 'key' shows that 'full' does not (owner, 06.08)
+// ---------------------------------------------------------------------------------------------
+// «Сам матч идёт быстрее и показывает ключевые моменты, но в тексте трансляции вообще ничего не
+// меняется, надо это синхронизировать ... может быть мы можем как-то всё-таки full/key моменты
+// сделать больше отличий.»
+//
+// ⚠ THE SWITCH USED TO REACH THE TIMELINE AND NOTHING ELSE. `buildTimeline(match, mode)` drops the
+// points 'key' does not show; the log was built once per MATCH and revealed off `displayedPointIndex`,
+// so both modes always printed the same rows in the same order - the only difference being that 'key'
+// revealed them in bursts, several points behind the ball. Every beat now decides for itself whether
+// it is in the key cut, and the viewer picks a list. `full` is unchanged.
+//
+// WHAT DECIDES IT, and it is NOT a second opinion about tennis. Two tests, in this order:
+//
+//   1. STRUCTURE. `open`, `set`, `tiebreak` and `match` are always in. They are the anchor, the two
+//      ways a set changes hands, and the ending - a highlights package without them is a list of
+//      incidents with no shape. Four rows, at most, in a whole match.
+//
+//   2. THE MATCH MOVED. Everything else (break, hold, streak, rally) is in only when the ENGINE's
+//      own live win probability - `AnnotatedPoint.winProbA`, from match/liveProb.ts, the same number
+//      the momentum curve is drawn from - moved by at least KEY_SWING across the span the beat
+//      describes: the whole GAME for a break or a hold, the whole RUN for a streak, the point itself
+//      for a rally. That is the difference between "she broke at 2-0" and "she broke back serving to
+//      stay in the set", and the probability model already knows which is which. Nothing here counts
+//      games or reads the score to guess at drama.
+//
+// ⚠ THE SPAN IS THE POINT OF (2). A per-POINT swing would have thrown every streak away: six points
+// in a row move the match a long way, and no single one of them moves it much. Measured on the corpus
+// below, a per-point test kept 0 of 41 streak beats; the run's own span keeps the ones that turned a
+// set and drops the ones that only tidied up a game already won.
+//
+// KEY_SWING IS MEASURED, NOT CHOSEN. See the constant.
+//
+// ---------------------------------------------------------------------------------------------
 // THE DETERMINISM RULE
 // ---------------------------------------------------------------------------------------------
 // The same match must narrate identically, every replay, forever. This module therefore draws
@@ -76,6 +110,10 @@ export interface Beat {
   score: string
   /** 1-based set the beat belongs to - the log's left rail label */
   set: number
+  /** ⚠ IS THIS BEAT IN THE 'key' CUT? See THE KEY CUT below. Pure function of the match like every
+   *  other field here - a beat's own answer, decided once, so the viewer switches lists rather than
+   *  re-deciding editorial policy on every mode click. */
+  keyMoment: boolean
 }
 
 /** ⚠ THE ROW'S BUDGET, AND THE BUILDER NOW KEEPS IT RATHER THAN HAPPENING TO.
@@ -118,6 +156,37 @@ const STREAK_MIN = 6
 const RALLY_MIN = 12
 /** Two break points saved is a story; one is a Tuesday. */
 const SAVES_MIN = 2
+
+/**
+ * ⚠ HOW FAR THE MATCH HAS TO MOVE FOR A NON-STRUCTURAL BEAT TO MAKE THE KEY CUT - in units of side
+ * A's match-win probability, the engine's own `winProbA`.
+ *
+ * MEASURED (tools sweep, 209 matches: 200 seeded builds across the three surfaces plus the nine real
+ * matches stored in the owner's W255 save, three of them WTA 250s). `full` is 15.5 beats a match
+ * throughout - the cut only ever decides what `key` keeps:
+ *
+ *   KEY_SWING   key/match   key as % of full   matches left with < 4 rows
+ *     0.05        12.8            83%                    0%
+ *     0.08        10.6            69%                    2%
+ *     0.10         8.9            58%                    4%
+ *     0.12         7.6            49%                   10%
+ *     0.15         6.3            41%                   17%
+ *     0.20         4.9            32%                   32%
+ *
+ * 0.10 is the pick, and it is the last two columns read together. The cut has to be big enough that
+ * the two modes are visibly different rather than subtly different (58% - the log roughly halves),
+ * and small enough that a match is not reduced to its own scaffolding. Four rows is that floor: the
+ * three structural beats of a straight-sets match (open, one set, match) plus one thing that
+ * happened. At 0.12 one match in ten falls through it and at 0.20 one in three does, which is not a
+ * highlights package, it is a scoreline with a caption.
+ *
+ * WHAT IT KEEPS AT 0.10, by kind: 50% of breaks, 84% of streaks, 26% of holds, 2% of rallies. That
+ * ordering is the finding rather than a target. A break moves the match by construction; a run of
+ * six points nearly always does; a hold restores the position it started from, so only the ones that
+ * came back from somewhere survive; and a long rally is one point - it is colour, and colour already
+ * rides on the beats it belongs to as their manner clause.
+ */
+const KEY_SWING = 0.1
 
 // One beat per point. When two candidates land on the same point the bigger one wins and SAYS the
 // smaller one - a set won on a break is a set beat that mentions the break, not two rows.
@@ -433,7 +502,39 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
   const lastIndex = points.length - 1
   const cands: Candidate[] = []
 
-  const push = (pointIndex: number, kind: BeatKind, lead: string | null, text: string, score?: string): void => {
+  /**
+   * How far the match TRAVELLED across (from, to], read off the engine's own live win probability:
+   * the furthest any point in the span got from where the span started. `from` is the last point
+   * BEFORE the thing being measured, so what comes back is what the thing itself did.
+   *
+   * ⚠ TRAVELLED, NOT MOVED, AND THE DIFFERENCE IS THE HOLDS. Net displacement (`|end - start|`) is
+   * the obvious reading and it is blind to exactly the game a person retells: serving at love-forty
+   * and holding ENDS where it started, so its net swing is ~0 and the measure threw every one of
+   * them away (measured: 29 of 294 hold beats survived at 0.10, against 76 once the span is read as
+   * an excursion). A break is unaffected - its furthest point is its last one.
+   *
+   * The very first game of a match has no point before it, so it is measured from point 0 and reads
+   * a shade low. That is the one span in the file that understates itself, and the first game of a
+   * match is the last place a highlights package needs the benefit of the doubt.
+   */
+  const swing = (from: number, to: number): number => {
+    const start = Math.max(0, from)
+    const base = points[start]?.winProbA ?? 0
+    let most = 0
+    for (let i = start + 1; i <= to; i++) most = Math.max(most, Math.abs((points[i]?.winProbA ?? base) - base))
+    return most
+  }
+
+  // `keyMoment` defaults to TRUE because the four structural beats (open/set/tiebreak/match) are the
+  // ones that omit it - see THE KEY CUT. Everything else passes its own measured answer.
+  const push = (
+    pointIndex: number,
+    kind: BeatKind,
+    lead: string | null,
+    text: string,
+    score?: string,
+    keyMoment = true,
+  ): void => {
     cands.push({
       pointIndex,
       kind,
@@ -441,6 +542,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
       text,
       score: score ?? s.gamesAt[pointIndex] ?? '0-0',
       set: (s.setOf[pointIndex] ?? 0) + 1,
+      keyMoment,
       priority: PRIORITY[kind],
     })
   }
@@ -465,11 +567,17 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
   )
 
   // --- per game: break / hold / tiebreak / set ----------------------------------------------
+  // `prevGameLast` is the last point of the PREVIOUS game, i.e. the point immediately before this
+  // game began - the `from` end of a game's swing (see `swing`). 0 for the first game of the match.
+  let prevGameLast = 0
   for (const g of s.games) {
     const p = points[g.last]
     const w = g.winner
     const loser: Side = w === 0 ? 1 : 0
     const manner = mannerLine(mannerOf(p), names, w, g.setEnd)
+    // Read before the `continue`s below, so every branch of this loop leaves it correct.
+    const gameMoved = swing(prevGameLast, g.last) >= KEY_SWING
+    prevGameLast = g.last
 
     if (g.setEnd) {
       // The LAST set is told by the match beat, which says it better (and outranks this anyway).
@@ -515,7 +623,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
       // else, and the tour is women's (JUNIOR_TOUR = 'wta'; the cohort's given-name pool is
       // female). Naming her twice in two short sentences reads like a machine.
       const tail = g.gamesAfter[w] === 5 && g.gamesAfter[loser] <= 4 ? ' She serves for the set next.' : ''
-      push(g.last, 'break', 'Break!', clauses(`${base}${tail}`, manner))
+      push(g.last, 'break', 'Break!', clauses(`${base}${tail}`, manner), undefined, gameMoved)
       continue
     }
 
@@ -535,7 +643,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
             ? `${names[w]} saves ${nPoints(g.bpFaced, 'break point')} and holds.`
             : ''
     if (!base) continue
-    push(g.last, 'hold', 'Held.', clauses(base, manner))
+    push(g.last, 'hold', 'Held.', clauses(base, manner), undefined, gameMoved)
   }
 
   // --- streaks: the longest run of >= STREAK_MIN points in each set, at the point it ended ----
@@ -548,7 +656,16 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
       if (!cur || r.len > cur.len) best.set(setIdx, r)
     }
     for (const r of best.values()) {
-      push(r.end, 'streak', 'Streak.', `${Num(r.len)} points in a row for ${names[r.side]}.`)
+      // THE RUN's own span, not the point it ended on - see THE KEY CUT for the measurement that
+      // sent this back: six points in a row move the match a long way and no one of them much.
+      push(
+        r.end,
+        'streak',
+        'Streak.',
+        `${Num(r.len)} points in a row for ${names[r.side]}.`,
+        undefined,
+        swing(r.end - r.len, r.end) >= KEY_SWING,
+      )
     }
   }
 
@@ -571,6 +688,8 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
         'rally',
         'Rally.',
         `${Num(r.shots)} shots, and ${names[last.by]} puts it away ${rallyPhrase(String(last.direction))}.`,
+        undefined,
+        swing(r.index - 1, r.index) >= KEY_SWING,
       )
     }
   }
