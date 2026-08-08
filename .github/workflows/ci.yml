@@ -25,3 +25,50 @@ jobs:
       # catches a UI regression: every other component test in this repo reads source text.
       - run: npm run test:component
       - run: npm run build
+
+  # THE E2E SMOKE, AND ONLY THE SMOKE (S0 of docs/plans/playwright.md).
+  #
+  # ⚠ THE SCOPE OF THIS JOB IS simulation.yml's LESSON APPLIED BEFORE THE FIRST RED BUILD RATHER THAN
+  # AFTER IT: "a gate that fails for reasons unrelated to the code teaches people to ignore the gate,
+  # which is worse than not having one." A browser suite is the easiest thing in this repo to break
+  # that rule with, so the gate takes the cheapest useful slice:
+  #   ONE BROWSER - chromium. Firefox and WebKit are several hundred MiB more of download, for a
+  #                 smoke test that would assert exactly the same three facts in each of them.
+  #   ONE SPEC    - the app boots, a career starts, week 1 renders. ~1s of test time.
+  #   ONE RETRY   - and a spec that NEEDS it gets fixed, not tolerated (playwright.config.ts).
+  # The full device matrix, visual regression and a11y belong to S3, in a nightly workflow of their
+  # own. Do not grow this job into that: a PR gate that spends minutes driving three browsers is the
+  # Monte-Carlo story a second time, and it ends the same way.
+  #
+  # A SEPARATE JOB RATHER THAN TWO MORE STEPS ON `test-build`: it runs alongside the typecheck and
+  # the unit suite instead of stacking onto them, so it costs a PR roughly nothing in wall clock -
+  # and a red `e2e-smoke` names what broke without anyone reading a log to find out.
+  e2e-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # ⚠ THE BROWSER IS NOT AN NPM DEPENDENCY. `npm ci` installs the harness; this fetches the
+      # ~273 MiB of Chromium it drives, plus the system libraries a headless browser needs on a bare
+      # runner (`--with-deps`). Deliberately NOT cached: a GitHub cache entry of that size restores
+      # at about the speed the CDN serves it, and it would share - and evict - the same 10 GB quota
+      # the npm cache above is already using, which would slow every other job to speed up this one.
+      - run: npx playwright install --with-deps chromium
+      # No build step: playwright.config.ts's webServer runs `vite build` and serves the result with
+      # `vite preview`, so the suite always tests the artefact a player gets rather than a dev server
+      # - and can never test a dist someone else's step happened to leave behind.
+      - run: npm run test:e2e
+      # ⚠ ON FAILURE ONLY, WHICH IS THE ONLY TIME THE REPORT IS OPENED. It carries the trace and the
+      # video the config records on the first retry - a clickable recording of what the browser
+      # actually did, which is the whole reason to keep a report at all. A green run's report is
+      # noise, and artifact storage is not free.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
