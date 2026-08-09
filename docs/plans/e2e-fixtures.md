@@ -53,8 +53,13 @@ npm run e2e:fixtures -- --budget 40  # how many seeds a search may try before it
 
 ## The five
 
-Generated 08.08.2026 at schema **v43**. Every one was found on the FIRST seed tried – these are
-ordinary careers, not lottery tickets.
+Generated 08.08.2026, regenerated 09.08 at schema **v45**. Every one was found on the FIRST seed
+tried – these are ordinary careers, not lottery tickets.
+
+⚠ THIS LINE HAS ALREADY BEEN STALE ONCE, which is the argument for never reading it as authority.
+It said v43 while `e2e/fixtures/manifest.json` said v45, because the fixtures were regenerated with
+the schema and the prose was not. **The manifest is the version of record**; this sentence is
+narration, and `tests/e2e-fixtures.test.ts` gates the manifest rather than the prose.
 
 | fixture | seed | week | age | funds | rank | size | what it is for |
 |---|---|---|---|---|---|---|---|
