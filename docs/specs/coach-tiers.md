@@ -94,6 +94,55 @@ the coach raises* rather than a second mechanic.
 Adding it to coaching too would be double-counting unless the coaching bill is explicitly
 "coach only"; simpler to keep the tier price inclusive and say so.
 
+> ### ⚠ REVERSED ON 08.08 – the court IS its own line now
+>
+> The paragraph above is what shipped, and the owner read the consequence off his own wallet:
+>
+> > «на неделях всё еще списывается какая-то рандомная сумма и как будто не за тренера, мне кажется
+> > нам нужно отдельной строчкой списывать тренера, а отдельной рент залов и прочего»
+>
+> **What the ruling missed is who it charged.** "Keep the tier price inclusive and say so" is a fine
+> simplification for a hired rung, but `self` is priced at *exactly* the court rental – that is the
+> whole design of the rung, and the argument for it is three paragraphs up in §2. So a self-coached
+> family's line labelled **Coaching** was 100% court rental for a parent who works free, and the game
+> had no way to tell it otherwise. For everyone else the number was coach plus court in one figure
+> that nobody could decompose, including us.
+>
+> **"Simpler" was doing the work, and it turned out to cost more than it saved.** The reversal is a
+> *partition*, not a re-price: the facility line is the court rental this section already quotes and
+> the coach line is what is left of his rate above it, so `coach + facility` is byte-identical to the
+> number the ledger charged before – measured, 3,120 weekly figures across 15 corridor/rung arms, zero
+> mismatches. The tier price is *still* inclusive of the court. It is simply now inclusive **visibly**.
+>
+> **Double-counting was the right fear and it does not arise**, because the split subtracts rather than
+> adds: nothing new is charged and the practice-match court fee is untouched (it is a different court on
+> a different day, booked by the planner and billed under `practice`).
+>
+> The corridor needed nothing added – it multiplies the whole bill, so it multiplies the court with it,
+> which is the owner's own second ask («с разным тиром для разного уровня семей») already satisfied by
+> arithmetic that was in the model. Priced and measured in
+> [split-the-bill-2026-08.md](split-the-bill-2026-08.md); `WorldEventCategory` gains `facility` at
+> save schema v44.
+>
+> ### ⚠ AND THE COURT IS NO LONGER THE SAME PRICE AT EVERY RUNG (08.08, later the same day)
+>
+> "The tier price is still inclusive of the court" survives untouched. What did not survive is the
+> sentence above it: the court rental this section quotes at $10–30/h was charged **identically at
+> every rung**, so an Elite coach worked on a self-coaching parent's court. The owner priced the real
+> venue ladder himself – $22 at his club, $44+ elsewhere, elite courts dearer again – and the
+> measurement found our court's whole spread was **x1.86** against a real single city's **x5.1 to
+> x16.7**, and **x1.00 within one family**.
+>
+> **His ruling, the same day: «Можно вообще стоимость корта по тиру к тиру тренера привязывать и всё.
+> Более дорогой тренер = более дорогой корт.»** So `ECONOMY.coach.courtTierFactor` climbs the ladder –
+> x1.0 / 1.0 / 1.2 / 1.9 / 2.4 – and `self` and `budget` keep exactly the price they already charged,
+> because §2's own $10–30/h band turned out to be **right**, confirmed twice by the owner's own
+> independent figures, and because a Budget coach's labour is only $10/h above that court to begin with.
+>
+> **And «наши цифры подходят» keeps §2's price table frozen**, so this is a partition again rather than a
+> re-price: `hourlyRateCents` is untouched and bankruptcies moved by zero over 1,620 careers.
+> [court-follows-the-coach-2026-08.md](court-follows-the-coach-2026-08.md).
+
 ## 4. What has to be measured
 
 - `bench:econ`, 120 seeds, 14→18, before and after. The claim to test is specific: **25k middle

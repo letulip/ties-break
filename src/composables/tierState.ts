@@ -124,9 +124,18 @@ export interface FeedEventFacts {
  *  substitutes riding inside it. Derived once per snapshot, consumed by both feed surfaces (the
  *  Season rows and the Calendar look-ahead), so the two cannot disagree. */
 export interface FeedContext {
-  /** THE WINDOW - every rung the engine holds open, ladder order. Three wide through the climb,
-   *  four at the top, one at the very start; never a pick made here. */
+  /** EVERY RUNG THE ENGINE HOLDS OPEN, ladder order – what may be OFFERED. Since 06.08 that is every
+   *  rung she has reached, the ones beneath her included: the lower bound stopped refusing, so a week
+   *  whose only event is a rung she has outgrown is a week she can play rather than an empty one.
+   *  Never a pick made here. */
   rungs: readonly TierId[]
+  /** ...AND THE WORKING WINDOW INSIDE IT – the open rungs she has NOT walked past. This is what the
+   *  old `rungs` used to be, and the two had to come apart on 06.08 because they answer different
+   *  questions: `rungs` is "may this card render at all", `working` is "which rungs is her career
+   *  ABOUT". The Home strip's collapse (the owner, 05.08: hide everything irrelevant behind the
+   *  ellipsis) is denominated in the second one; the feed is denominated in the first, or removing
+   *  the wall would have put the empty weeks straight back. */
+  working: readonly TierId[]
 }
 
 export function feedContext(input: {
@@ -134,17 +143,25 @@ export function feedContext(input: {
   /** the engine's per-rung verdict (`Snapshot.tierOpen`); absent (old fixtures, no snapshot yet)
    *  means hide nothing - the safe direction, exactly as the old latch rule read undefined */
   tierOpen?: Partial<Record<TierId, boolean>> | null
+  /** ...and the engine's CEILING verdict (`Snapshot.tierOutgrown`); absent means "nothing is behind
+   *  her", so `working` degenerates to `rungs` and every pre-06.08 caller reads exactly as it did. */
+  tierOutgrown?: Partial<Record<TierId, boolean>> | null
   upcoming: readonly FeedEventFacts[]
 }): FeedContext {
   const open = input.tierOpen
-  if (!open) return { rungs: [...TIER_LADDER] }
+  if (!open) return { rungs: [...TIER_LADDER], working: [...TIER_LADDER] }
   // THE WINDOW IS THE ORACLE'S ANSWER, VERBATIM. Every arm the old pair rule needed - pick the
   // working rung, find the adjacent one, skip an age-dead door, fall back when the horizon is
   // empty - existed to manufacture a width the ladder did not have. The ladder has it now
   // (`tierOutgrown`), so there is nothing left to decide: what is open is what is offered.
   const rungs = TIER_LADDER.filter((t) => open[t])
-
-  return { rungs }
+  const past = input.tierOutgrown
+  // ⚠ AND THE WORKING WINDOW IS THE SAME ORACLE MINUS ITS CEILING, never a second derivation. An
+  // ALL-outgrown answer would be a row with nothing in it, so it falls back to the whole open set:
+  // "everything is behind her" and "nothing is hers" are not the same sentence, and the second one
+  // is the one a blank strip would say.
+  const working = past ? rungs.filter((t) => !past[t]) : rungs
+  return { rungs, working: working.length ? working : rungs }
 }
 
 /** Does the feed show this event? The whole rule, one predicate, both consumers. */
@@ -174,7 +191,17 @@ export function feedShows(e: Pick<FeedEventFacts, 'id' | 'tier' | 'entered'>, ct
  *
  *  ⚠ AND A WEEK WHERE NOTHING IS ENTERABLE STILL SHOWS ITS TALLEST CARD. The feed is also how she
  *  learns what is out there - a locked rung is aspiration (see `tierState`) - so this reorders a
- *  stacked week and never empties one. */
+ *  stacked week and never empties one.
+ *
+ *  ⚠⚠ THE LADDER TIEBREAK IS WHAT «LEAD WITH THE MORE RELEVANT TOURNAMENT» MEANS, and on 06.08 it
+ *  became load-bearing rather than cosmetic. The lower bound stopped refusing, so a week now
+ *  routinely stacks several ENTERABLE rungs where it used to stack one - and the third tiebreak is
+ *  the whole of what keeps her W75 in front of the Local sitting on the same week. It needed no
+ *  fourth clause, and a "prefer the rung she has not outgrown" clause would have been WRONG: at
+ *  nineteen the junior rungs are age-shut, so `tierOutgrown`'s age clause leaves Local NOT outgrown
+ *  while W15 is - and that clause would have led with the club draw over the professional event.
+ *  Height IS relevance on this ladder; outgrown-ness is not, and is only correlated with it.
+ *  MEASURED on the change: docs/specs/ladder-floor-2026-08.md §2. */
 export function preferredWeekEvent<E extends { tier: TierId; entered: boolean; eligible: boolean }>(
   events: readonly E[],
 ): E | null {
@@ -406,6 +433,13 @@ export interface TierState {
   note: string
   /** The long form, for a title/tooltip: same verdict, room for the date. */
   title: string
+  /** ⚠ SHE HAS PASSED THIS RUNG, AND IT IS ORTHOGONAL TO `kind` (06.08). It rides BESIDE the kind
+   *  rather than being one, because since the lower bound stopped refusing an outgrown rung is
+   *  'scheduled' or 'unscheduled' – open, enterable, and beneath her all at once – and folding that
+   *  into `kind` would break `isTierOpen` and put a padlock back on a tournament she may enter. The
+   *  engine's own answer (`Snapshot.tierOutgrown`), never re-derived from a band here: the J and W
+   *  bands are `[0, MAX]` and cannot express it at all. */
+  outgrown?: boolean
 }
 
 /** Everything the rule needs, all of it already on the Snapshot. Kept as a plain input (rather than
@@ -451,6 +485,11 @@ export interface TierStateInput {
    *  playing the game, not by a test: every guard on the entry rule watches the ENGINE, and this is
    *  the UI's copy of it. The rule is not re-derived here any more; it is asked. */
   engineOpen?: boolean
+  /** THE ENGINE'S CEILING VERDICT (`Snapshot.tierOutgrown[id]`) – "she is past this level", which
+   *  since 06.08 is a label rather than a refusal. Undefined for the pure callers that predate it,
+   *  and then the band arm below answers as it always did (which is exactly right for them: it is
+   *  the only ceiling a caller with no oracle can know about). */
+  engineOutgrown?: boolean
   /** THIS RUNG'S ACCEPTANCE CUT (`Snapshot.tierAcceptance[id]`), or undefined for a rung that gates on
    *  points instead. The engine's own number, never re-derived – see `tierOpensWhen`. */
   acceptsRank?: number
@@ -633,6 +672,12 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     }
   }
   // She can enter it. The only question left is whether the calendar has one.
+  //
+  // ⚠ ...AND WHETHER SHE HAS WALKED PAST IT (06.08). Both open states carry the flag, and the COPY
+  // changes with it rather than the kind: "Open – she is past this level" is a true sentence about a
+  // rung she may still enter, and it is the sentence the ladder needs so that a player reading three
+  // open domestic rungs under an open W50 can tell which one the game thinks is hers.
+  const outgrown = input.engineOutgrown === true
   const nextWeek = input.upcoming
     .filter((e) => e.tier === id)
     .reduce<number | null>((best, e) => (best === null || e.week < best ? e.week : best), null)
@@ -641,18 +686,22 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       id,
       kind: 'scheduled',
       nextWeek,
-      note: 'Open – on the calendar',
+      ...(outgrown ? { outgrown } : {}),
+      note: outgrown ? 'Past this level – still open' : 'Open – on the calendar',
       // The DATE, not the week number: R11-6 owns week-number rendering, and a date needs no
       // in-season/absolute decision to be correct.
-      title: `${tier.label} – open to her, next one ${weekRange(nextWeek)}`,
+      title: outgrown
+        ? `${tier.label} – she is past this level, and it is still hers to enter: next one ${weekRange(nextWeek)}. The stronger rung on a week takes the card.`
+        : `${tier.label} – open to her, next one ${weekRange(nextWeek)}`,
     }
   }
   return {
     id,
     kind: 'unscheduled',
-    note: `Open – none in ${input.horizonWeeks} weeks`,
+    ...(outgrown ? { outgrown } : {}),
+    note: outgrown ? `Past this level – none in ${input.horizonWeeks} weeks` : `Open – none in ${input.horizonWeeks} weeks`,
     title:
-      `${tier.label} – open to her, but none is scheduled in the next ${input.horizonWeeks} weeks. ` +
+      `${tier.label} – ${outgrown ? 'past this level but still hers to enter' : 'open to her'}, but none is scheduled in the next ${input.horizonWeeks} weeks. ` +
       `This tier comes round less often than the others; it is not locked.`,
   }
 }
@@ -692,6 +741,9 @@ export function useTierStates(): ComputedRef<TierState[]> {
       tierState(id, {
         ...input,
         engineOpen: snap?.tierOpen?.[id],
+        // ...and the engine's CEILING beside its floor (06.08). Two verdicts, because since the
+        // lower bound stopped refusing they are two different facts about one rung.
+        engineOutgrown: snap?.tierOutgrown?.[id],
         acceptsRank: snap?.tierAcceptance?.[id],
         itfRank: snap?.ladders.itf.rank ?? null,
         // ...and her ITF junior total, for the one band denominated there (w15 - see itfPoints).

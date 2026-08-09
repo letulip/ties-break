@@ -29,6 +29,7 @@ import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
 import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
 import { buildTimeline } from '../../src/viz/timeline'
+import { buildCommentary } from '../../src/viz/commentary'
 import type { AnnotatedMatch } from '../../src/viz/types'
 import type { MatchOptions, MatchPlayer, Side } from '../../src/engine/match/types'
 
@@ -49,6 +50,10 @@ function mountViewer(mode: 'live' | 'replay' = 'replay') {
   const { a, b, match } = fixture()
   return mount(MatchViewer, { props: { match, playerA: a, playerB: b, surface: 'hard' as const, mode } })
 }
+
+/** The control that used to be the view switch's third pill (06.08). Named once, because every test
+ *  that reached for "Skip" reaches for this instead and a typo would silently find no button. */
+const SKIP_LABEL = 'Skip to the result'
 
 describe('MatchViewer – the fixture itself is deterministic', () => {
   it('the same seed reproduces the same match, which is what makes every test below stable', () => {
@@ -88,13 +93,23 @@ describe('MatchViewer – it mounts and shows the match', () => {
     wrapper.unmount()
   })
 
-  it('offers the three viewing modes the concept promises, as real controls', () => {
+  it('offers the two viewing RESOLUTIONS as a switch, and skipping as its own named control', () => {
     // skip / key points / full - docs/decisions.md, the first design round. Asserted on BUTTONS
     // rather than on the page text: a substring check would pass on any stray occurrence of "key",
     // which is exactly the kind of vacuous pin this file exists to replace.
+    //
+    // ⚠ RE-AIMED 06.08, and the re-aim IS the item (owner: «а skip оттуда из этого переключателя
+    // вообще надо убрать - оно полностью матч пропускает, это вообще неявно в этом месте»). This
+    // used to assert all three as one `arrayContaining(['Full','Key','Skip'])`, which is exactly
+    // what a switch of three peers looks like - and skipping is not a peer of the other two: they
+    // choose how much of the match to watch, it ends the watching. The capability is still here and
+    // still one click away; what the test now says is that it is not a third pill, and that the
+    // control it did move to says out loud what it does.
     const wrapper = mountViewer()
     const labels = wrapper.findAll('button').map((b) => b.text())
-    expect(labels).toEqual(expect.arrayContaining(['Full', 'Key', 'Skip']))
+    expect(labels).toEqual(expect.arrayContaining(['Full', 'Key']))
+    expect(labels, 'a bare "Skip" pill is back in the view switch').not.toContain('Skip')
+    expect(labels).toContain(SKIP_LABEL)
     wrapper.unmount()
   })
 
@@ -126,7 +141,7 @@ describe('MatchViewer – THE MODE CONTRACT, which is what a split must not brea
     // most refactor-fragile behaviour in the component and the reason this file exists.
     const wrapper = mountViewer()
     expect(wrapper.text()).toContain('Not started')
-    await clickMode(wrapper, 'Skip')
+    await clickMode(wrapper, SKIP_LABEL)
     expect(wrapper.text()).not.toContain('Not started')
     wrapper.unmount()
   })
@@ -138,7 +153,7 @@ describe('MatchViewer – THE MODE CONTRACT, which is what a split must not brea
     const wrapper = mount(MatchViewer, {
       props: { match, playerA: a, playerB: b, surface: 'hard' as const, mode: 'replay' as const },
     })
-    await clickMode(wrapper, 'Skip')
+    await clickMode(wrapper, SKIP_LABEL)
     // `winner` is a Side (0 = playerA, 1 = playerB), not a player id.
     const winnerName = match.result.winner === 0 ? a.name : b.name
     expect(wrapper.text()).toContain(winnerName)
@@ -149,7 +164,7 @@ describe('MatchViewer – THE MODE CONTRACT, which is what a split must not brea
     // `resetPlayback` rebuilds the timeline and puts the point cursor back to -1. A split that
     // forgets to reset would leave the finished score on screen under a Full-match label.
     const wrapper = mountViewer()
-    await clickMode(wrapper, 'Skip')
+    await clickMode(wrapper, SKIP_LABEL)
     expect(wrapper.text()).not.toContain('Not started')
     await clickMode(wrapper, 'Full')
     expect(wrapper.text()).toContain('Not started')
@@ -509,7 +524,7 @@ describe('changing the view mode mid-match does not start the match over', () =>
     const { wrapper, match } = fixtureAndViewer()
     await d.start()
     await d.frames(80)
-    await clickMode(wrapper, 'Skip')
+    await clickMode(wrapper, SKIP_LABEL)
     expect(scoreText(wrapper)).toBe(`${match.points.length}points`)
     wrapper.unmount()
   })
@@ -523,10 +538,86 @@ describe('changing the view mode mid-match does not start the match over', () =>
     const wrapper = mountViewer()
     await d.start()
     await d.frames(80)
-    await clickMode(wrapper, 'Skip')
+    await clickMode(wrapper, SKIP_LABEL)
     await clickMode(wrapper, 'Key')
     expect(wrapper.text()).toContain('Not started')
     expect(scoreText(wrapper)).toBe('0-0')
+    wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// BUG (owner, 06.08): «сломался переключатель full, key в матче - ничего не происходит ... сам матч
+// идёт быстрее и показывает что ключевые моменты, но в тексте трансляции вообще ничего не меняется,
+// надо это синхронизировать».
+//
+// ⚠ AND "СЛОМАЛСЯ" WAS THE SYMPTOM, NOT THE FAULT: the switch was never wired to the text at all.
+// `buildTimeline(match, mode)` is what it reached - the PLAYBACK - while the log was built once per
+// match and revealed off `displayedPointIndex`, so both modes printed the same rows in the same
+// order and the only observable difference was the pace they arrived at. The viewer now picks a
+// list (`modeCommentary`), and the cut itself is decided in viz/commentary.ts off the engine's live
+// win probability - never here.
+//
+// These read the RENDERED LOG at one fixed point of one match, which is the only place the owner
+// could see the difference: same clock position, one click apart.
+// =================================================================================================
+describe('the view switch reaches the commentary, not only the playback', () => {
+  async function clickMode(w: ReturnType<typeof mountViewer>, label: string) {
+    const button = w.findAll('button').find((b) => b.text() === label)
+    expect(button, `no "${label}" button`).toBeTruthy()
+    await button!.trigger('click')
+    await nextTick()
+  }
+  const logRows = (w: ReturnType<typeof mountViewer>): string[] =>
+    w.findAll('.mv-beat').map((r) => r.text().replace(/\s+/g, ' ').trim())
+
+  it('⚠ Key -> Full at the same moment of the match ADDS rows, and Key is a subset of them', async () => {
+    // The assertion the old behaviour could not pass: mid-match, one click, no clock movement in
+    // between (`retimeForMode` deliberately keeps `displayedPointIndex`, which is what makes this a
+    // fair comparison at all). Before the fix both readings were byte-identical - reproduced in the
+    // browser on 06.08 as well as here.
+    const d = (liveDriver = driver())
+    const wrapper = mountViewer() // opens in 'key'
+    await d.start()
+    await d.frames(300)
+    const key = logRows(wrapper)
+    expect(key.length, 'the clock never reached a beat - the comparison would be vacuous').toBeGreaterThan(2)
+
+    await clickMode(wrapper, 'Full')
+    const full = logRows(wrapper)
+
+    expect(full.length, 'Full showed no more of the story than Key did').toBeGreaterThan(key.length)
+    // ...and it is the SAME story with more of it, not a different one: nothing Key showed is gone.
+    for (const row of key) expect(full, `Full lost a row Key was showing: ${row}`).toContain(row)
+    wrapper.unmount()
+  })
+
+  it('⚠ ...and back again: Full -> Key takes those rows away, so the switch reads both ways', async () => {
+    const d = (liveDriver = driver())
+    const wrapper = mountViewer()
+    await d.start()
+    await d.frames(300)
+    await clickMode(wrapper, 'Full')
+    const full = logRows(wrapper)
+    await clickMode(wrapper, 'Key')
+    const key = logRows(wrapper)
+    expect(key.length).toBeLessThan(full.length)
+    for (const row of key) expect(full).toContain(row)
+    wrapper.unmount()
+  })
+
+  it('⚠ skipping hands over the WHOLE account, not the trailer', async () => {
+    // Deliberate, and stated because it is the one place 'key' does not narrow anything: a player
+    // who skipped the match wants what happened in it, and `modeCommentary` filters on 'key' alone.
+    // Counted against the match's own beat list rather than against "more than Key showed" - the
+    // weaker form passed even with skip wrongly filtered, because skip also reveals every point.
+    const { wrapper, match } = fixtureAndViewer()
+    const every = buildCommentary(match, 'Vera Novak', 'Ines Duval')
+    expect(every.filter((b) => b.keyMoment).length, 'the fixture has no cut to speak of').toBeLessThan(
+      every.length,
+    )
+    await clickMode(wrapper, SKIP_LABEL)
+    expect(logRows(wrapper), 'the skipped account was cut down to the key moments').toHaveLength(every.length)
     wrapper.unmount()
   })
 })

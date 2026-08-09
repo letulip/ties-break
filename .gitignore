@@ -53,5 +53,27 @@ public/images/*-jpeg/
 # so they turn up in the working tree routinely. They are throwaway state - two of them were
 # swept into a commit on 29.07 and had to be filtered back out.
 *.tsave
+# ...EXCEPT the e2e fixture set, which is generated ON PURPOSE and committed. `tools/e2e-fixtures.ts`
+# writes five career saves that Playwright seeds into IndexedDB before the app boots, so they are
+# test data rather than throwaway state - regenerate with `npm run e2e:fixtures` (byte-identical
+# every time) and see docs/plans/e2e-fixtures.md. The negation is anchored to the one directory:
+# an exported save anywhere else is still ignored, which is what the rule above is for.
+!e2e/fixtures/*.tsave
 
 graphify-out/
+
+# --- Playwright (e2e) -------------------------------------------------------------------
+# Everything a RUN produces, and nothing a run needs. `test-results/` holds the traces, videos and
+# failure screenshots the config records on a first retry; `playwright-report/` is the HTML report
+# (CI uploads it as an artefact instead - see .github/workflows/ci.yml); `blob-report/` is the
+# per-shard intermediate a sharded run writes, which S3's nightly matrix will produce.
+test-results/
+playwright-report/
+blob-report/
+
+# The browser itself. Playwright downloads Chromium into a per-USER cache (~/Library/Caches or
+# ~/.cache/ms-playwright), not into the repo - but PLAYWRIGHT_BROWSERS_PATH=0 relocates it to
+# node_modules, and CI recipes sometimes point it at a project-local folder to make it cacheable.
+# Named here so that choice can never turn ~273 MiB of binary into a commit.
+ms-playwright/
+.cache/ms-playwright/

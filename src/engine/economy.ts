@@ -59,10 +59,19 @@ export interface GearLine {
 // budget trips, middle = standard, wealthy = private everything. Retuned when real incomes (prize
 // money) land – this constant is the single knob.
 //
-// ⚠ COACHING LEFT THE CORRIDOR (coach-tiers slice, docs/specs/coach-tiers.md §2). The weekly
-// coaching bill used to be its fourth customer, via a roll from `seed:coachbg:week` in world.ts
-// resolveBaseCosts. The coach TIER now states the family's price level explicitly, so the corridor
-// would have charged the same difference twice. Everything else it prices is untouched.
+// ⚠⚠ THIS COMMENT SAID "COACHING LEFT THE CORRIDOR" AND HAD BEEN WRONG SINCE 29.07. That was the
+// coach-tiers slice's FIRST model - the tier states the family's price level, so keeping the corridor
+// would charge the difference twice - and the owner reversed it in Round 2 the same week
+// («для 8к все тиры стоят согласно их коридору, для 25к – свои цены, для 120к стоят дороже всего»):
+// the corridor is not a discount for being poor, it is THE MARKET SHE TRAINS IN. The reversal landed
+// in `coach.coachCorridorFactor` and in world.ts, and this line was never updated, so the one place a
+// reader looks up what the corridor prices has been listing three customers where there are five.
+//
+// ITS REAL CUSTOMERS, all of them referencing this ONE object: travel, medical, the planner's
+// packages, THE WEEKLY COACHING BILL (via `seed:coachbg:<week>` in resolveBaseCosts) and - since the
+// bill split, docs/specs/split-the-bill-2026-08.md - the FACILITY line that came out of it. The last
+// of those is the corridor at its most literal: the same court costs less in a working-class club
+// than in a premium academy, and the family can now see the number.
 const WEALTH_CORRIDOR = {
   working: [0.7, 0.8],
   middle: [0.95, 1.05],
@@ -181,11 +190,103 @@ export const ECONOMY = {
       elite: [[96_00, 144_00], [128_00, 192_00], [160_00, 240_00]],
     } as Record<CoachTier, [number, number][]>,
 
+    // THE VENUE, BY THE RUNG THAT TRAINS THERE (docs/specs/court-follows-the-coach-2026-08.md).
+    //
+    // ⚠ UNTIL 08.08 THE COURT TOOK NO RUNG ARGUMENT AT ALL, so an Elite coach worked on the same
+    // court as a self-coaching parent. The owner priced the real thing himself, from the sport he
+    // plays:
+    //
+    //   «у нас есть корты за 22 доллара в час (кстати, теннисные стоят похожих денег) и за 44+
+    //    доллара в час в других местах, есть и дороже всякие элитные корты»
+    //
+    // ⚠⚠ AND THE OWNER RULED ON THE SHAPE THE SAME DAY, which is why this is a ladder and not the
+    // two-step at the top it shipped as for an hour:
+    //
+    //   «Можно вообще стоимость корта по тиру к тиру тренера привязывать и всё.
+    //    Более дорогой тренер = более дорогой корт.»
+    //
+    // So the court rises with the RUNG, every rung, and that is the whole rule. Multiplies
+    // `facilityRateCents`, which is the middle of the `self` band - so at 12-16, middle corridor, the
+    // court runs $20 / $20 / $24 / $38 / $48 an hour. x2.4 inside one corridor, x4.46 from the cheapest
+    // court in the game to the dearest, against a measured x1.86 before and a real single-city spread
+    // of x5.1 (Sydney, one municipal operator) to x16.7 (New York, $15 public clay to $250 indoor).
+    //
+    // ⚠ `budget` IS THE ONE CELL HIS RULE CANNOT REACH, and it is arithmetic rather than an oversight.
+    // A Budget coach's whole bill is $30/h at 12-16 and $20 of it is already the court, so his labour
+    // is $10 at the midpoint and $4 at the bottom of his own band. Lifting his court to the owner's
+    // own $22 club figure would leave the cheapest Budget coach in the game **$2/h** - below every
+    // published coaching rate on Earth, and it would deepen the finding that
+    // docs/research/real-coaching-costs.md §7.3 already reports about that corner. The club court is
+    // therefore shared by `self` and `budget`, and the fiction is exact: a club coach uses the club's
+    // courts, which are the same courts the parent books for herself.
+    //
+    // ⚠ IT IS A PARTITION AND NOT A RE-PRICE. `hourlyRateCents` is untouched, so `split.totalCents`
+    // is the same integer on every week of every career and no survival number can move - measured,
+    // 1,620 careers, 538 bankrupt before and after. What changes is which half of the bill the family
+    // is looking at.
+    //
+    // ⚠ THE THREE CHEAP RUNGS ARE 1.0 ON PURPOSE, and it is the one thing here that is NOT a
+    // compromise. docs/research/real-coaching-costs.md §7 records that our cheap end was already
+    // right and that the owner confirmed it twice without meaning to: his 29.07 research put a Budget
+    // coach at $30/h, and his 08.08 figures put the court at $22 and Budget labour at "from $10" -
+    // $32, two independent statements 7% apart, with our $20 + $10 = $30 between them. Re-pricing
+    // there would be manufacturing a correction.
+    //
+    // ⚠ WHY `middle` IS 1.2 AND CANNOT BE MORE. Its midpoint total is $50/h, so ANY court above $25/h
+    // makes the room the larger half of an ordinary academy's bill and inverts the composition the
+    // whole ladder is built on (tests/split-the-bill.test.ts holds Budget court-dominated and
+    // everything above it coach-dominated). The hard ceiling is x1.25; 1.2 is the largest step that
+    // clears it without landing on the line, and it leaves $26 of coach against $24 of court.
+    //
+    // ⚠ AND WHY `high` IS 1.9 RATHER THAN THE 2.0 HIS "$44 vs $22" IMPLIES: at 2.0 its court is
+    // EXACTLY half its $80 bill, and `coachCents > facilityCents` inverts on a rounding. 1.9 leaves
+    // $42 of coach against $38 of court. The other binding constraint is that every rung's band LOW
+    // must stay above its own court or a coach drawn at the bottom of his rung books a $0 coach line:
+    // high $64/$80/$96 against $38.00/$41.80/$45.60 and elite $96/$128/$160 against
+    // $48.00/$52.80/$57.60, per age row. Both are asserted, not assumed.
+    //
+    // ⚠ THE CORNER WHERE THE TWO AXES MEET, checked because it is the one cell two multipliers can turn
+    // into nonsense: ELITE x WEALTHY. At the corridor's ceiling that is $62.40/h at 12-16 and $74.88/h
+    // at 23+. Against real premium court hire it is comfortably inside - Roosevelt Island Racquet Club,
+    // New York, indoor clay, weekday prime: $132 member / $250 non-member; Hall of Fame Newport grass
+    // $250/h; Islington indoor GBP 40 non-member. The corridor and the rung are different axes (the
+    // market she trains in, and the venue that market's coaches work at), and at their product the
+    // model still sits below the dearest courts anyone actually publishes.
+    //
+    // THE EMPIRICAL CASE, because "it looks wrong" is not one: a published SINGLE-VENUE coach ladder
+    // is only x1.13-1.43 wide (Central Park NYC, Meadows, Oak Hollow, Duke, Pure Tennis, Crawley
+    // LTC) and the LTA's own certification ladder is x1.91 - while OUR rung ladder is x4.0. So our
+    // four rungs are not four colleagues at one club, they are four VENUES, and a court price
+    // identical across them is the thing that does not survive contact with the evidence. One
+    // venue's own court card shows how far it should move: Pure Tennis Academy, Wexford PA, $22
+    // member / $44 non-prime / $60 prime = x2.7 - to the dollar, the owner's own two numbers.
+    courtTierFactor: {
+      self: 1.0,
+      budget: 1.0,
+      middle: 1.2,
+      high: 1.9,
+      elite: 2.4,
+    } as Record<CoachTier, number>,
+
     // THE WEEK'S JITTER, in basis points, and the ONE main-stream draw the bill spends. A coach has
     // a rate; a WEEK still varies - a session moved, a court booked at a worse hour, an extra half
     // hour before a tournament. +/-8% keeps the bill recognisably his price while leaving the
-    // Money screen something to show, and it is what preserves the frozen MAIN capture: exactly one
-    // pickInt, in exactly the slot the old expense draw held.
+    // Money screen something to show.
+    //
+    // ⚠ THIS LINE USED TO END "and it is what preserves the frozen MAIN capture: exactly one pickInt,
+    // in exactly the slot the old expense draw held" - WHICH OVERSTATED THE RULE AND WAS CORRECTED ON
+    // 08.08. CLAUDE.md invariant 2 is explicit that the capture is "a documented measurement, not a
+    // change-gate since v35" and that "a wave that legitimately adds a MAIN draw updates the pin";
+    // the pin has already moved three times (45239 -> 51642 -> 41550). What IS permanent is
+    // input-independence and the sub-stream rule, and neither of those is about the draw COUNT.
+    //
+    // ⚠ WHICH LEAVES THE JITTER OWING A REASON OF ITS OWN, because the sentence above records that
+    // the roll became jitter partly to keep a slot - provenance, not merit. The merit it should stand
+    // or fall on: a real weekly bill is not the same number 52 times, and at +/-8% it is small enough
+    // that the rung stays recognisable in the figure and large enough that the family notices the
+    // week. The owner has been asked to accept or reject that on its own terms
+    // (docs/specs/split-the-bill-2026-08.md §6); removing it is a one-line change costing one MAIN
+    // draw and a re-pinned capture, and it is HIS call rather than a thing to inherit by accident.
     weekJitterBps: [9200, 10800] as [number, number],
 
     // THE ROSTER (Round 2). «примерно по 4 тренера на тир, по одному на стиль игры» - what makes

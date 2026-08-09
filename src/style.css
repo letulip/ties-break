@@ -155,6 +155,12 @@
      record of what the owner sent, and the grid simply no longer paints with it. Three hues below
      have no wallet side at all (school, study, rest are hours, not spending) and exist for the grid. */
   --cat-coaching: #cfe152;
+  /* ⚠ THE COURT IS COACHING'S OWN HUE, DESATURATED AND A SHADE DEEPER (v44, the bill split). It is
+     the one pair in this table that must read as ONE THING IN TWO PARTS rather than as two
+     unrelated spends - a family looking at the wallet should see the training bill as a lime block
+     with a quieter half, which is exactly what it is. Same hue family (72deg), lower chroma and
+     lightness, and it still clears the donut's dark card. */
+  --cat-facility: #9aa855;
   --cat-travel: #9a86e0;
   --cat-entry: #e5a23c;
   --cat-gear: #d97f52;
@@ -3335,6 +3341,15 @@ tr.kid-row td {
 .cm-travel-cost strong {
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* ⚠ HOW MUCH ROOM IS LEFT IN HER (08.08) - the sentence the falling uplift needed beside it. It reads
+   as a remark rather than as a stat, which is deliberate: it is the only thing on this screen that is
+   about HER rather than about a coach, and printing it in the numeric register would make it look like
+   the ceiling figure the radar's fog of war exists to withhold. */
+.cm-room-note {
+  margin: 6px 0 0;
+  font-style: italic;
 }
 
 /* A tier is a SECTION, not a filter (design §T.1): dot, name, count, price range. */

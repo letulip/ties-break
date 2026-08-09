@@ -7,6 +7,7 @@ import {
   type CareerTotals,
   type CollegeState,
   type FamilyBackground,
+  type CoachTier,
   type FinanceWeek,
   type ForkState,
   type RetirementOffer,
@@ -21,6 +22,7 @@ import {
   type PlayerProfile,
   type PracticeBooking,
   type RecoveryBuff,
+  type SeasonEntryLedger,
   type SeasonHistoryEntry,
   type SeasonSummary,
   type SnapshotInjury,
@@ -64,9 +66,11 @@ import { growWeek, rollPotential, type KidSkills } from './development'
 import {
   coachById,
   coachCorridorFactor,
+  coachHoursForPlan,
   coachIncludesPhysio,
-  coachWeeklyCents,
-  selfRateCents,
+  facilityRateCents,
+  tierOf,
+  weeklyBillSplit,
 } from './coach'
 import {
   kitGrantCents,
@@ -135,13 +139,13 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket } from './world/coachMarket'
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket }
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachLadderNote, coachMarket, coachRoomNote } from './world/coachMarket'
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachLadderNote, coachMarket, coachRoomNote }
 // W3-KIT: the till and the shop window. `GEAR_CATEGORY_LINE` comes back from equipment.ts, where it
 // moved so that a rung could be PRICED below world.ts - see the note at `resolveGear`.
 import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
-import { setKitGrade, kitLineViews, kitStateOf, KIT_LINES } from './world/kit'
-export { setKitGrade, kitLineViews, kitStateOf, KIT_LINES }
+import { setKitGrade, kitLineViews, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES } from './world/kit'
+export { setKitGrade, kitLineViews, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES }
 // W3-SUMMER: the holidays as a real training block - one predicate, both halves.
 import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }
@@ -154,8 +158,8 @@ export { enterEvent, withdrawEvent, releaseEntry, cancelEntry }
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
-export { emptySeasonRecord, emptyTrophyLedger, captureBreakEven }
+import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger } from './world/milestones'
+export { emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, captureBreakEven }
 // W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
 // snapshot, the tests and the bench all read the one implementation - the same contract every other
 // extracted module here keeps.
@@ -190,11 +194,11 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
-export { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor }
+export { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, rolloverKitAllowance }
 import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
@@ -208,8 +212,8 @@ export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors, type ProDoors } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors }
+import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, type ProDoors } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
@@ -279,7 +283,13 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
 // the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
 // end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 43
+// ⚠ v45 = ONE FIELD, `seasonEntries` – the season's entry ledger, and it is v40's argument arriving on
+// a different ledger. `world.results` prunes at 52 weeks, so "could a title at this rung have entered
+// the book she held that week" is unanswerable three weeks after the fact; the wrap-up needs it a year
+// later. So it is captured in the branch that commits the entry, exactly as `weeksLostToInjury` is
+// counted in the branch that ends a layoff (docs/specs/season-mirror-2026-08.md). Pure state, zero
+// draws on any stream – the frozen MAIN capture cannot see it either.
+export const SAVE_SCHEMA_VERSION = 45
 
 
 
@@ -455,6 +465,19 @@ export interface WorldState {
    *  Optional so a pre-v28 save's `undefined` is a shape the readers already handle; the migration
    *  fills it in (see migrations.ts v28) and `finalizeTournament` maintains it from there. */
   seasonRecord?: Record<LadderTrack, { wins: number; losses: number }>
+  /** THE SEASON'S ENTRY LEDGER (v45) – what she entered, and how much of it her book could not take.
+   *  Written by `enterEvent`/`releaseEntry`, read and reset by `maybeFireSeasonWrapUp`. Same family as
+   *  the two counters above: a per-season running total that only a season boundary clears.
+   *
+   *  ⚠ CAPTURE, NOT A FOLD, and it is the third surface in a week to need saying so. The judgement is
+   *  about the book she held ON THE WEEK SHE ENTERED, and `pruneResults` has deleted that book by the
+   *  time the wrap runs (the same 49-week gap that made `seasonStartRank` a persisted capture in v17).
+   *  See `SeasonEntryMirror` in protocol.ts for the rest of the argument and
+   *  docs/specs/season-mirror-2026-08.md for the measurement.
+   *
+   *  Optional so a hand-built probe world loads without it; every writer guards with `??=`, exactly as
+   *  `careerTotals` does. */
+  seasonEntries?: SeasonEntryLedger
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
    *  point and pruned to a 60-week trailing window. Feeds the Money breakdown/ledger so they
    *  survive the 60-event snapshot cap; see FinanceWeek in protocol.ts. */
@@ -694,6 +717,49 @@ function restFlavors(background: FamilyBackground, schoolOver: boolean): string[
   return schoolOver ? POST_SCHOOL_REST_EVENTS : REST_EVENTS
 }
 
+/** WHERE SHE TRAINS, AND FOR HOW LONG - the facility row's words
+ *  (docs/specs/split-the-bill-2026-08.md).
+ *
+ *  ⚠ A PURE LOOK-UP AND NOT A FLAVOUR DRAW, and that is a constraint rather than a preference: the
+ *  weekly bill spends exactly one main-stream `pickInt` and the training row already holds it. A
+ *  second story would need a second draw or a sub-stream, and the honest thing for a standing charge
+ *  is not a story anyway - a court hire reads the same every week because it IS the same every week.
+ *
+ *  ⚠ IT NAMES THE CORRIDOR, which is the owner's own argument made visible («с разным тиром для
+ *  разного уровня семей»). The price difference between these three venues is already in the bill -
+ *  `wealthCorridor` multiplies it - and this is the sentence that says why the numbers differ. The
+ *  hours are the other half of "why is it not the quote": rate x hours is the whole line bar jitter.
+ *
+ *  ⚠ AND SINCE 08.08 IT NAMES THE RUNG'S VENUE TOO, BECAUSE IT HAS TO
+ *  (docs/specs/court-follows-the-coach-2026-08.md, owner: «более дорогой тренер = более дорогой
+ *  корт»). `courtTierFactor` makes a dearer rung's court dearer in the SAME corridor, and words that
+ *  did not move with the number would put two families on one street looking at the same sentence and
+ *  different money - which is precisely the unexplained-charge complaint the bill split exists to
+ *  remove. So the look-up is 3 corridors x 4 venue steps, ONE STEP PER DISTINCT COURT PRICE: if two
+ *  rungs pay the same they read the same, and if they pay differently they say so.
+ *
+ *  ⚠ `self` AND `budget` SHARE THE CLUB ROW, so the FIRST STRING OF EACH CORRIDOR IS THE ONE THAT
+ *  SHIPPED WITH THE SPLIT, verbatim. Those two rungs' court price did not move one cent and their
+ *  receipt should not either. The fiction is exact: a club coach uses the club's courts, which are the
+ *  same courts the parent books for herself.
+ *
+ *  The ladders OVERLAP between corridors on purpose - a working family's best venue is a middle
+ *  family's ordinary one - which is what a real market looks like from inside it. */
+const FACILITY_VENUE: Record<FamilyBackground, [string, string, string, string]> = {
+  working: ['Club courts', 'Indoor courts', 'Academy courts', 'Performance centre'],
+  middle: ['Court hire', 'Academy courts', 'Performance centre', 'Show courts'],
+  wealthy: ['Academy courts', 'Performance centre', 'Show courts', 'Centre court'],
+}
+
+function facilityFlavor(background: FamilyBackground, tier: CoachTier, hours: number): string {
+  const step = tier === 'elite' ? 3 : tier === 'high' ? 2 : tier === 'middle' ? 1 : 0
+  const venue = FACILITY_VENUE[background][step]
+  // Whole hours at the three plan presets (4 / 5 / 6); one decimal only when a custom split lands
+  // between them, so the common case reads as a clean number.
+  const shown = Math.round(hours * 10) / 10
+  return `${venue} – ${shown} h`
+}
+
 
 // THE LEDGER PRIMITIVES moved to world/ledger.ts (P4 extraction). `addEvent`/`accrueFinance` are
 // imported at the top of this file; the pure finance folds are re-exported here under their
@@ -792,7 +858,29 @@ function resolveParentIncome(world: WorldState): void {
  *
  *  ⚠ AND SO DOES THE EXAM FORTNIGHT - «на тренировку можно доехать». She is home, blacked out from
  *  tournaments, not from training. What was wrong on those weeks was the COPY, not the money: the notes
- *  claimed the racquet never left the hall while $933 of coaching was billed. Fixed in engine/diary.ts. */
+ *  claimed the racquet never left the hall while $933 of coaching was billed. Fixed in engine/diary.ts.
+ *
+ *  ⚠⚠ AND A COMPETITION WEEK IS A COACHING WEEK AGAIN (owner, 08.08). This is a REVERSAL of the R4
+ *  rule that used to live on the last line, and the owner's correction is that R4 ran two different
+ *  questions together:
+ *
+ *      «я не отрицаю, мы общались про поездки тренера с игроком... а сейчас я говорю про еженедельное
+ *       списание тренерских сумм на неделях турниров - тренер продолжает работать там и давать прогресс»
+ *
+ *  The two are:
+ *    * DOES HE TRAVEL WITH HER - the 29.07 conversation, and the model he does not dispute. That is
+ *      `coachOnEventWeeks`, which is still a persisted stance and still the (locked) row on screen T.
+ *    * IS THE WEEKLY RETAINER CHARGED WHILE SHE IS AWAY - and it is, because a retainer does not stop
+ *      being a retainer because she is at an event. He keeps working and she keeps progressing.
+ *  R4 implemented the first question's toggle over the second question's arithmetic, so a girl playing
+ *  a full adult calendar had her coach stood down for 43% of her season (measured on the owner's own
+ *  save, weeks 196-255: 34 weeks billed, 26 not) while the market screen quoted her a rung computed as
+ *  if he came every week. The retainer is therefore unconditional here, and `coachOnEventWeeks` is no
+ *  longer read by this predicate at all - it means travel, and only travel, until the travel mechanic
+ *  is built. Priced in docs/specs/coach-retainer-2026-08.md.
+ *
+ *  ⚠ THE TWO EXEMPTIONS THAT SURVIVE ARE THE TWO THE OWNER RULED ON, and neither is a competition
+ *  week: college (the family stops paying) and a booked family holiday (he is not at the seaside). */
 export function coachWorksThisWeek(world: WorldState): boolean {
   // ⚠ AND FOUR YEARS AT COLLEGE ARE NOT COACHING WEEKS EITHER (W2-ENDINGS, §5.1: «the family stops
   // paying»). The scholarship is the whole economic point of that fork - it is the only place in
@@ -801,7 +889,7 @@ export function coachWorksThisWeek(world: WorldState): boolean {
   // the reason both of them read this predicate and not a copy of it.
   if (inCollege(world)) return false
   if (vacationForWeek(world, world.week) !== undefined) return false
-  return world.coachOnEventWeeks || !isCompetitionWeek(world)
+  return true
 }
 
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
@@ -822,41 +910,107 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // working-class club, an ordinary academy and a premium one, and the wealthy family pays MORE for
   // the same coach. POST-draw multiply, so the main-stream sequence still cannot depend on
   // background (the invariance test in economy.test.ts holds it to that).
-  const coach = coachById(world.seed, ageAtWeek(world.week), world.coachId)
-  const rate = coach ? coach.rateCents : selfRateCents(ageAtWeek(world.week))
+  const age = ageAtWeek(world.week)
+  const coach = coachById(world.seed, age, world.coachId)
+  const tier = tierOf(coach)
+  const rate = coach ? coach.rateCents : facilityRateCents(age, tier)
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const jitter = pickInt(rng, jLo, jHi) / 10_000
   const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background)
-  // ⚠ A COMPETITION WEEK IS NOT A COACHING WEEK (owner, R4): «мы автоматически можем не считать
-  // соревновательные и турнирные недели тренерскими, а давать игроку возможность самому отдельным
-  // переключателем добавить тренера и на эти недели тоже». She spends that week in a draw, not on
-  // his court, so by default she is not billed a retainer for it - and `coachOnEventWeeks` buys him
-  // for those weeks anyway, because a coach who travels and works between matches is exactly what
-  // the expensive rungs are for.
+  // ⚠ THE RETAINER RUNS ON A COMPETITION WEEK (owner, 08.08) - a REVERSAL of R4, whose argument used
+  // to sit here. «сейчас я говорю про еженедельное списание тренерских сумм на неделях турниров -
+  // тренер продолжает работать там и давать прогресс». A weekly retainer does not stop being owed
+  // because she is away at an event, and he does not stop working: the tournament week is where the
+  // scouting, the warm-ups and the between-match work happen. The full argument, and what R4 ran
+  // together, is on `coachWorksThisWeek`.
   //
-  // THE DRAWS HAPPEN EITHER WAY. Both pickInts above and below run on every week whatever this
-  // resolves to, and only the ARITHMETIC after them changes - the same discipline the sponsor
-  // cameo uses when it discards a gift for an ineligible background. The frozen MAIN capture
-  // cannot see a toggle.
+  // THE DRAWS HAPPEN EITHER WAY, and that has not changed. Both pickInts above and below run on
+  // every week whatever this resolves to, and only the ARITHMETIC after them changes - the same
+  // discipline the sponsor cameo uses when it discards a gift for an ineligible background. The
+  // frozen MAIN capture cannot see whether the coach was billed.
   const works = coachWorksThisWeek(world)
-  const expense = works
-    ? Math.round(coachWeeklyCents(rate, world.plan, world.profile.background, corridor) * jitter)
-    : 0
+  // ⚠ TWO LINES, ONE TOTAL (docs/specs/split-the-bill-2026-08.md, owner 08.08: «нам нужно отдельной
+  // строчкой списывать тренера, а отдельной рент залов и прочего»). `split.totalCents` is the SAME
+  // expression this line has always charged - `weeklyBillSplit` runs it and then partitions it - so
+  // the wallet, the bench and every survival number are untouched by construction. What the family
+  // gains is that it can see which half is the man and which half is the court.
+  const split = weeklyBillSplit({
+    rateCents: rate,
+    ageYears: age,
+    tier,
+    plan: world.plan,
+    background: world.profile.background,
+    corridor,
+    jitter,
+  })
+  const expense = works ? split.totalCents : 0
   world.fundsCents -= expense
   const flavors =
     world.plan.train >= 70
       ? trainFlavors(world.profile.background)
       : restFlavors(world.profile.background, schoolIsOver(world.week, world.profile.birthMonth))
+  // ⚠ STILL EXACTLY TWO MAIN-STREAM DRAWS IN THIS FUNCTION, and the split added neither. The facility
+  // row's words are a pure look-up off the corridor (see facilityFlavor) rather than a third `pickInt`
+  // - which is the whole reason it names the venue instead of telling a little story the way the
+  // training row does. The frozen MAIN capture cannot see the second line.
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
   // The $0 line is still EMITTED, the way a sponsor-covered gear item is: the Money breakdown should
   // show why a coaching week cost nothing, not silently drop the row.
-  addEvent(world, {
-    week: world.week,
-    type: 'expense',
-    category: 'coaching',
-    text: works ? flavor : 'Competition week – no coaching billed',
-    amountCents: works ? -expense : 0,
-  })
+  //
+  // ⚠ AND IT NAMES THE RIGHT REASON NOW. It used to say "Competition week - no coaching billed" for
+  // every unbilled week, which was the only reason it could be until 08.08 and is now never the
+  // reason at all. The two survivors are the two the owner ruled on, and they are different stories.
+  //
+  // ⚠ THE STOOD-DOWN WEEK STAYS ONE ROW, DELIBERATELY. Nothing is billed - not the coach and not the
+  // court - so splitting zero into two zeroes would double the noise in the feed to say the same
+  // thing twice. It keeps the `coaching` category because that is the story the text tells and
+  // because a v43 save's history reads the same way.
+  if (!works) {
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: 'coaching',
+      text: inCollege(world)
+        ? 'At college – the programme coaches her, not us'
+        : 'A week away as a family – no coaching billed',
+      amountCents: 0,
+    })
+  } else {
+    // ⚠ THE COACH GOES FIRST, AND THE ORDER IS LOAD-BEARING RATHER THAN TIDY. `WeekRecapCard`'s
+    // handwritten scrap is `weekEvents.find(e => e.type === 'expense').text` - the week's FIRST
+    // expense - so emitting the court above the coach would have replaced every hired family's
+    // training flavour ("Coaching block: technique drills") with a court receipt on roughly two
+    // ordinary weeks in three, which is the one object on the Weekly Story that carries the week's
+    // texture. Coach first keeps that byte-identical, and it reads the way the Money screen's rows
+    // are ordered: the man, then the place.
+    //
+    // ⚠ A SELF-COACHED FAMILY BOOKS NO COACH LINE AT ALL - the sharpest thing the split fixes. The
+    // parent works free, so `split.coachCents` is 0 by arithmetic and a row for it would be the same
+    // lie in a smaller font. A hired rung always has one: `coachRateBandCents` gives no rung a band
+    // that reaches down to the court's price (asserted in tests/split-the-bill.test.ts).
+    //
+    // ⚠ SO THEIR SCRAP BECOMES THE COURT LINE, and that is a fix rather than a loss. It used to read
+    // "Coaching block: technique drills" to a family with no coach - the same category error the
+    // owner reported, in the game's most-read sentence - and "Club courts - 5 h" is a true receipt in
+    // exactly the genre that scrap is written in. The prose `weekNote` still lands on one week in
+    // three either way.
+    if (split.coachCents > 0) {
+      addEvent(world, {
+        week: world.week,
+        type: 'expense',
+        category: 'coaching',
+        text: flavor,
+        amountCents: -split.coachCents,
+      })
+    }
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: 'facility',
+      text: facilityFlavor(world.profile.background, tier, coachHoursForPlan(world.plan)),
+      amountCents: -split.facilityCents,
+    })
+  }
   // Local-sponsor cameo: the ROLL (and the gift draw when it hits) run for EVERY background so
   // the main-stream draw count is background-independent (round-7 keeps the draws exactly as they
   // were). The payout is now NEED-BASED: only an eligible (working) kid actually banks it; for
@@ -1952,6 +2106,10 @@ export function createWorld(
     seasonWins: 0,
     seasonLosses: 0,
     seasonRecord: emptySeasonRecord(),
+    // v45: week 0 IS season 0's first week, so a career born here is tracked from its first entry and
+    // its very first wrap-up can print the line. `emptySeasonEntries` is shared with the wrap's reset
+    // and with the migration, which needs the same shape from a different starting week.
+    seasonEntries: emptySeasonEntries(0),
     financeWeeks: [],
     condition: ECONOMY.condition.start,
     injury: null,
@@ -2163,6 +2321,24 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // of her standing among those players, not among their replacements. ZERO main-stream draws:
     // the conveyor runs entirely on `seed:conveyor:<season>`. See season/conveyor.ts.
     turnOverField(world, seasonIndexOf(world.week))
+    // 0a0e (08.08): AND THE KIT ALLOWANCE STARTS AGAIN, because the letter says it does.
+    //
+    // ⚠ THE PAPER PROMISED A SEASON AND THE CODE DELIVERED A TERM. `signOffer` zeroes `coveredCents`
+    // once, at signature, and nothing ever reset it again – so on the two- and three-season rungs
+    // «up to $3,000 of kit OVER THE SEASON» was really $3,000 over the whole contract, and a player
+    // who read the paper was being over-promised by a factor of `seasons`. The owner's save is a
+    // two-season national deal that had spent $2,463.78 of one $3,000 pot across a hundred weeks.
+    //
+    // ⚠ HERE RATHER THAN IN THE SPONSOR REVIEW, and that is what makes it idempotent WITHOUT a new
+    // persisted field. `tickWeek` visits each week exactly once, so a reset hung on week ≡ 0 fires
+    // exactly once per season by construction – no `coveredSeasonIndex`, no schema bump, no
+    // migration. The sponsor window sits at weeks 47-49 and would have reset it three weeks early,
+    // inside the season it was still measuring.
+    //
+    // AND IT REPAIRS THE GOODBYE LETTER FOR FREE: `reviewSponsors` reports `coveredCents` as
+    // "kitted her out all season – $X of kit", read at the window close, which is now the season's
+    // own spend rather than the term's. Zero draws.
+    rolloverKitAllowance(world)
   }
 
   // 0a0c-bis (30.07, MOVED 01.08): AND THE SPONSORS DECIDE – in the OFF-SEASON, which is where a
@@ -2511,10 +2687,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // `seed:growth:<week>`.
     ageYears: kidAgeExact(world.week, world.profile.birthMonth),
     plan: world.plan,
-    // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR (R4). A competition week she has not bought him
-    //     for is a week he is not there, so it develops at the self-coached rate - which is what
-    //     makes `coachOnEventWeeks` a decision rather than free money. Same predicate the bill used
-    //     at step 1, so the two can never disagree about whether he came.
+    // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR, and since 08.08 that is every week except college
+    //     and a booked family holiday. The pairing is the invariant, not the list: a week the family
+    //     is billed for is a week he is there, and a week it is not billed for develops at the
+    //     self-coached rate. Same predicate the bill used at step 1, so the two can never disagree
+    //     about whether he came - which is what made the R4 reversal a one-line change here.
     coach: coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null,
     playStyle: world.profile.playStyle,
     matchesThisWeek,

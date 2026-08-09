@@ -67,7 +67,7 @@ import type { CoachTier, FamilyBackground, PlayerProfile, WorldEventCategory } f
 import { COACH_TIER_LABEL, coachWeeklyBandCents } from '../src/engine/coach'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
-import type { TierId } from '../src/engine/season/types'
+import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 export { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -139,8 +139,37 @@ export const HORIZONS: Horizon[] = [
  *  side. And it is deliberately NOT a knife edge: the count is flat for every threshold in
  *  [319, 323] on the tightest preset and [314, 361] on the loosest, so it sits on a plateau rather
  *  than between two adjacent careers. The four flips this tripwire took between 2026-07-31 and
- *  2026-08-02 were all ONE career crossing ONE line; a plateau is what stops the fifth. */
-export const REACH_TARGET_MONEY = 320
+ *  2026-08-02 were all ONE career crossing ONE line; a plateau is what stops the fifth.
+ *
+ *  ⚠⚠ RE-BASED AGAIN 320 → 250 ON 08.08, AND THIS ONE IS A RULING RATHER THAN A DRIFT
+ *  (docs/specs/ladder-floor-2026-08.md §4d). The ladder floor stopped refusing a rung she has
+ *  outgrown, on the owner's ruling that having somewhere to play every week is the CORRECT state of
+ *  the world - tournaments run continuously in reality, and a first-round exit followed by six empty
+ *  weeks is simply wrong - and that what she does with those weeks is the PLAYER's decision.
+ *
+ *  WHAT THAT DID TO THIS PROXY, and it is not a side effect, it is the ruling arriving: the domestic
+ *  ladder used to PUSH her up it by closing Local behind her. It no longer does, so a parent who
+ *  enters everything spends his early weeks on club draws, and 320 - "she is WINNING at the top of
+ *  the domestic ladder by sixteen" - went to **0 of 30** on the working preset. A proxy 0 of 270
+ *  careers meet is the same non-measurement 150 was, from the other end.
+ *
+ *  WHY 250 AND NOT THE NUMBER THAT RESTORES ELEVEN. The note above says it: re-base to the next
+ *  milestone the domestic table NAMES. **250 is the most-named number in that table** - it is
+ *  Regional's `enterPointBand` ceiling AND J30's floor, and act2-pro-tour.md §12.2 records that the
+ *  two "are one decision and must move together". The proxy therefore becomes "by sixteen she has
+ *  crossed the INTERNATIONAL DOOR", which is a milestone the game itself is built around rather than
+ *  a threshold chosen to make a test interesting.
+ *
+ *  MEASURED, `npx vite-node tools/reach-sweep.ts` on this tree, careers of 30 clearing each
+ *  candidate on the working preset (the one the band is asserted against):
+ *
+ *      target   150  200  250  270  280  290  300  320
+ *      working·self-coached   29   20    9    6    3    1    1    0      <- median peak 224
+ *
+ *  150 is a formality again (29 of 30), 320 is nobody, and **250 reads 9 - inside the pinned
+ *  [4, 20] with room on both sides**, on the preset that fires. Across all nine presets 250 reads
+ *  9-21. */
+export const REACH_TARGET_MONEY = 250
 /** 14→18 "pro" proxy: a top-50 rank ONCE she is actually ranked (has a counting result) OR a points
  *  threshold. The `hasResults` guard on the rank arm is REQUIRED – see reachedTarget. */
 export const REACH_PRO_RANK = 50
@@ -199,7 +228,14 @@ export const PRESETS: Preset[] = [
  *  'vacation' / 'practice' (season planner, v13) are expense buckets: the econ bench never books
  *  either (it has no planner policy – that is the fatigue bench's axis), so they read $0 here and
  *  exist only to keep the category fold exhaustive. */
-export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'other']
+/** ⚠ 'facility' SITS BESIDE 'coaching' BECAUSE THEY ARE ONE BILL (v44,
+ *  docs/specs/split-the-bill-2026-08.md): the weekly training charge is now booked as the coach's
+ *  labour and the court's hire on two rows, and `coaching + facility` here is exactly the single
+ *  'coaching' figure every table before v44 printed. Adding the row is what makes the split legible
+ *  in the bench too - GROSS EXPENSE is folded from the ledger's own `expenseCents` and not from this
+ *  list, so it was never at risk, but a category the bench does not name is a category the reader
+ *  cannot see. */
+export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'facility', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'other']
 /** ⚠ 'prize' LEADS THE INCOME LIST because it is the only one of the four the TENNIS produces – the
  *  other three are a parent, a shop and a bank. It reads $0 for every career under 16 and for every
  *  career that never opens a W15, which is information rather than an empty column. */
@@ -277,6 +313,7 @@ export interface SeedResult {
 function zeroCats(): Record<WorldEventCategory, number> {
   return {
     coaching: 0,
+    facility: 0,
     travel: 0,
     entry: 0,
     gear: 0,
@@ -360,10 +397,20 @@ export const POLICIES: Policy[] = [
 /** Advance ONE career week under a policy, then tick and resolve any spawned tournament. Returns
  *  the per-tier entries committed this week. Shared by runCareer and the tests so the world
  *  evolution is defined in exactly one place (no duplication of the entry policy). */
+/** ⚠ AN OPTIONAL VETO, AND ITS DEFAULT IS WHAT KEEPS EVERY EARLIER NUMBER IN THIS FILE'S HISTORY
+ *  REPRODUCIBLE (08.08, docs/specs/ladder-floor-2026-08.md §4). The ladder floor put a decision in
+ *  the PLAYER's hands that the engine used to make by refusing, and the owner's answer to that is a
+ *  coach who says so on the card - so "does a parent who listens to his coach get a different
+ *  career?" became a measurable question and there was nothing to measure it with. Passing a veto is
+ *  the only way to ask it without a second copy of the entry policy, which is the duplication this
+ *  function exists to prevent. Undefined is the historical arm, byte for byte. */
+export type EntryVeto = (world: WorldState, event: SeasonEvent) => boolean
+
 export function stepCareerWeek(
   world: WorldState,
   rng: Rng,
   policy: Policy = POLICIES[0],
+  veto?: EntryVeto,
 ): Record<TierId, number> {
   const entered = zeroByTier()
   // ⚠ W2-ENDINGS: A CAREER THAT HAS ENDED ENTERS NOTHING, and the week still ticks. Since v39 a
@@ -395,6 +442,10 @@ export function stepCareerWeek(
     // Two ladders: the domestic rungs read her domestic best-6 and the international ones read her
     // ITF RANK, so the policy asks the engine's own single gate instead of re-deriving either.
     if (!tierOpenFor(world, e.tier)) continue
+    // ...and the VETO, if this arm has one: a parent who does what his coach tells him. It sits
+    // AFTER the ranking gate and BEFORE affordability on purpose - an opinion is only worth asking
+    // for about a trip she is actually allowed to take.
+    if (veto && veto(world, e)) continue
     // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
     // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
     if (availabilityStatus(world, e).level === 'blocked') continue

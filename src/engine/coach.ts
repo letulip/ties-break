@@ -121,14 +121,28 @@ export function coachHoursForPlan(plan: WeekPlan): number {
   return anchors[anchors.length - 1][1]
 }
 
-/** What the parent's rung costs an hour: the MIDDLE of the self band.
+/** WHAT THE COURT COSTS AN HOUR AT ONE RUNG - the middle of the `self` band, times the venue that
+ *  rung trains at (`ECONOMY.coach.courtTierFactor`).
+ *
+ *  ⚠ THIS USED TO BE CALLED `selfRateCents` AND THE RENAME IS THE WHOLE POINT OF THE SPLIT
+ *  (docs/specs/split-the-bill-2026-08.md). The band expresses "court time costs $10-30/h" and the
+ *  self rung took the middle of it because a parent's hour is free and the court's is not - so the
+ *  number was ALWAYS the facility price wearing a coaching name, and the owner could not read his own
+ *  bill because of it. It is now named for what it is and it is charged to every rung, not just the
+ *  parent's: `self` pays this and nothing else, and a hired rung's price is inclusive of it.
+ *
+ *  ⚠ AND IT USED TO TAKE NO RUNG ARGUMENT AT ALL, which is what the 08.08 pass fixed
+ *  (docs/specs/court-follows-the-coach-2026-08.md): an Elite coach worked on the same court as a
+ *  self-coaching parent, because her age and the corridor were the court's only inputs. `tier` is
+ *  REQUIRED rather than defaulted on purpose - a default would let a forgotten argument silently hand
+ *  the coach line the court's money, and the type checker finding every call site is the cheap way to
+ *  be sure none of them did.
  *
  *  Self has no roster and nobody to be dearer than, so unlike a hired coach it does not draw a rate
- *  of its own - the band expresses "court time costs $10-30/h" and the rung takes the middle of it.
- *  Rounded to whole cents so the ledger stays integer. */
-export function selfRateCents(ageYears: number): number {
+ *  of its own. Rounded to whole cents so the ledger stays integer. */
+export function facilityRateCents(ageYears: number, tier: CoachTier): number {
   const [lo, hi] = coachRateBandCents('self', ageYears)
-  return Math.round((lo + hi) / 2)
+  return Math.round(((lo + hi) / 2) * ECONOMY.coach.courtTierFactor[tier])
 }
 
 /** The middle of a background's wealth corridor - the number a QUOTE uses.
@@ -161,6 +175,84 @@ export function coachWeeklyCents(
   corridor: number = coachCorridorMid(background),
 ): number {
   return Math.round(rateCents * coachHoursForPlan(plan) * corridor)
+}
+
+// =================================================================================================
+// ⚠ TWO LINES, ONE TOTAL - the split (docs/specs/split-the-bill-2026-08.md)
+// =================================================================================================
+//
+// THE OWNER COULD NOT READ HIS OWN BILL, and both halves of his report are true:
+//
+//   «на неделях всё еще списывается какая-то рандомная сумма и как будто не за тренера, мне кажется
+//    нам нужно отдельной строчкой списывать тренера, а отдельной рент залов и прочего»
+//
+// The "random" half is the week jitter, which is real, deliberate and stays (see weekJitterBps). The
+// "as if not for the coach" half is the one that was actually wrong: coach-tiers.md §3 ruled that
+// "simpler to keep the tier price inclusive [of court rental] and say so", and the consequence
+// nobody stated is that a SELF-COACHED family's line labelled `coaching` is 100% court rental for a
+// parent who works free, while every hired rung is coach plus court in one number that cannot be
+// decomposed by anyone, including us.
+//
+// ⚠ THIS REVERSES §3, and it reverses it as a PARTITION rather than a re-price. The facility line is
+// the court rental the `self` rung was already priced at; the coach line is what is left of his rate
+// above it. So `coach + facility` is byte-identical to the number the ledger charged before, at
+// every rung, in every corridor, on every week - which is the claim the bench and
+// tests/split-the-bill.test.ts both hold, and the reason a legibility fix cannot smuggle a balance
+// change. What changes is that the family can SEE the two, and that `self` books no coach line at
+// all.
+//
+// ⚠ THE CORRIDOR IS ALREADY ON THE FACILITY LINE and needed nothing added: the corridor multiplies
+// the whole bill, so splitting it splits the corridor with it. That is the owner's own second ask
+// («с разным тиром для разного уровня семей») satisfied by arithmetic that was already there - a
+// working-class club charges 0.7-0.8 of the court, a premium academy 1.2-1.3.
+//
+// ⚠ ONE DRAW PRODUCES BOTH LINES, and that is a design choice rather than a constraint we were stuck
+// with. The frozen MAIN capture is a documented measurement and not a change-gate (CLAUDE.md
+// invariant 2: "a wave that legitimately adds a MAIN draw updates the pin"), so a second jitter was
+// available and was not taken. THE REASON IS THE FICTION: the jitter is a property of the WEEK - a
+// session moved, an extra half hour, a court at a busy time - and not of the coach or of the court
+// separately. Two independent wobbles would read as noise; one week's jitter carried by both lines
+// reads as a week. So the week's single `pickInt` is passed IN as `jitter` and every quantity here
+// is a post-draw multiply off pure look-ups. The capture cannot see the split.
+
+/** The weekly training bill, decomposed. `coachCents + facilityCents === totalCents` exactly. */
+export interface WeeklyBillSplit {
+  /** what the family pays this week - the SAME number the unsplit bill charged */
+  totalCents: number
+  /** his labour: the rate above the court, 0 at the `self` rung */
+  coachCents: number
+  /** the court, the hall and the queue for it - corridor-priced, charged at every rung */
+  facilityCents: number
+}
+
+/** THE SPLIT, in one place so the ledger, the Money screen and the market cannot disagree.
+ *
+ *  `rateCents` is the WHOLE hourly rate the family pays - her coach's own rate, or `facilityRateCents`
+ *  when nobody is hired. The facility half is that same arithmetic run at the court's rate, and the
+ *  coach half is the remainder, so the two are guaranteed to sum to the total whatever the roundings
+ *  do. `Math.min` is a floor and not a fix: every rung's band LOW is above its OWN court
+ *  (asserted over the whole table in tests/split-the-bill.test.ts, and it is the constraint that pins
+ *  `courtTierFactor`'s top two values), so a facility quote can only exceed the total if someone
+ *  re-prices one of them, and a negative coach line would be worse than a zero one. */
+export function weeklyBillSplit(input: {
+  rateCents: number
+  ageYears: number
+  /** the rung she trains at - `tierOf(coach)`. It picks the VENUE, not the coach's own price. */
+  tier: CoachTier
+  plan: WeekPlan
+  background: FamilyBackground
+  /** the week's own corridor roll; defaults to the quoting midpoint */
+  corridor?: number
+  /** the week's own jitter as a multiplier; 1 = the quote */
+  jitter?: number
+}): WeeklyBillSplit {
+  const corridor = input.corridor ?? coachCorridorMid(input.background)
+  const jitter = input.jitter ?? 1
+  const at = (rate: number): number =>
+    Math.round(coachWeeklyCents(rate, input.plan, input.background, corridor) * jitter)
+  const totalCents = at(input.rateCents)
+  const facilityCents = Math.min(totalCents, at(facilityRateCents(input.ageYears, input.tier)))
+  return { totalCents, coachCents: totalCents - facilityCents, facilityCents }
 }
 
 /** The [lo, hi] weekly bill ONE rate can produce here - what the family's own coaching line will
@@ -413,6 +505,21 @@ function headroomShareTaken(rateWeekly: number, luck: number, weeks: number): nu
   return 1 - Math.pow(Math.max(0, 1 - rateWeekly * luck), weeks)
 }
 
+/** ...and the same thing for a season she does not buy the whole of: `coached` weeks at his rate and
+ *  the rest at the parent's. The two factors compound in either order, so this is exact rather than
+ *  an interpolation - which matters, because the quantity it corrects used to be wrong by 43%. */
+function headroomShareTakenMixed(
+  rateCoach: number,
+  rateSelf: number,
+  luck: number,
+  weeks: number,
+  coached: number,
+): number {
+  const withHim = Math.pow(Math.max(0, 1 - rateCoach * luck), coached)
+  const without = Math.pow(Math.max(0, 1 - rateSelf * luck), Math.max(0, weeks - coached))
+  return 1 - withHim * without
+}
+
 /** WHAT THIS COACH WOULD ADD, FOR HER, RIGHT NOW - the projection screen T prints on a coach row.
  *
  *  THE OWNER ASKED FOR THIS AS A NUMBER and sketched the answer himself: «"budget может добавить
@@ -433,6 +540,13 @@ function headroomShareTaken(rateWeekly: number, luck: number, weeks: number): nu
  *  A RANGE, NEVER A NUMBER: the weekly luck draw is real spread (0.55-1.45), so the two ends are
  *  that band's ends. And never a promise - the copy says what a rung CAN add.
  *
+ *  ⚠⚠ AND IT QUOTES THE WEEKS SHE ACTUALLY BUYS (owner, 08.08). This projected over 52 COACHED weeks
+ *  unconditionally and never asked how many weeks of the year the coach is really there - so under
+ *  the R4 rule, which stood him down for every competition week, the owner's own save was quoted
+ *  +0.2-0.5% a season on a rung it was delivering 57% of. He was being shown a number the game had
+ *  no intention of paying. `coachedWeeks` is now an input, the mixed compounding above is exact, and
+ *  the two can no longer drift: whatever stands the coach down, the quote follows it.
+ *
  *  Pure: zero draws on any stream. Returns [lo, hi] as percentages of her current level. */
 export function coachSeasonUplift(input: {
   /** her attributes today, in any fixed order */
@@ -447,6 +561,10 @@ export function coachSeasonUplift(input: {
   /** the age and train factors, injected so this file does not import development.ts back */
   ageFactor: number
   trainFactor: number
+  /** how many of the horizon's weeks he is actually there for. Defaults to the whole horizon, which
+   *  is what every pure caller that has no world to ask means - and what the projection assumed
+   *  silently before 08.08. */
+  coachedWeeks?: number
 }): [number, number] {
   const n = input.skills.length
   if (n === 0) return [0, 0]
@@ -455,13 +573,20 @@ export function coachSeasonUplift(input: {
   if (current <= 0 || headroom <= 0) return [0, 0]
 
   const weeks = ECONOMY.coach.upliftHorizonWeeks
+  const coached = Math.max(0, Math.min(weeks, input.coachedWeeks ?? weeks))
   const [luckLo, luckHi] = ECONOMY.development.weekLuck
   const base = input.ageFactor * input.trainFactor
   const rateCoach = base * coachFactor(input.tier, input.fit)
   const rateSelf = base * coachFactor('self', ECONOMY.coach.selfFit)
 
+  // The baseline is a WHOLE season self-coached, because that is the free option end to end. The
+  // coached arm is the mixed season she would really get, so a rung she only buys 40 weeks of is
+  // quoted at what 40 weeks of it is worth.
   const at = (luck: number): number =>
-    ((headroomShareTaken(rateCoach, luck, weeks) - headroomShareTaken(rateSelf, luck, weeks)) * headroom * 100) /
+    ((headroomShareTakenMixed(rateCoach, rateSelf, luck, weeks, coached) -
+      headroomShareTaken(rateSelf, luck, weeks)) *
+      headroom *
+      100) /
     current
 
   // Luck is shared by both arms, so the ends of the band are the ends of the DIFFERENCE too: a

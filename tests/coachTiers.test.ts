@@ -18,7 +18,7 @@ import {
   eliteGateShortfall,
   coachFitFor,
   styleFitBetween,
-  selfRateCents,
+  facilityRateCents,
   HIREABLE_TIERS,
 } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
@@ -27,6 +27,7 @@ import {
   closeTournament,
   coachBilling,
   coachMarket,
+  coachRoomNote,
   createWorld,
   enterEvent,
   hireCoach,
@@ -37,6 +38,7 @@ import {
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
+import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type PlayStyle } from '../src/shared/protocol'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../src/engine/development'
 
@@ -51,15 +53,30 @@ import { ageFactor, SKILL_KEYS, trainFactor } from '../src/engine/development'
 
 const PLAY_STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
 
-/** The week-1 coaching bill in cents for one (seed, rung, plan). */
+/** The week-1 TRAINING bill in cents for one (seed, rung, plan).
+ *
+ *  ⚠ RE-AIMED BY THE SPLIT, NOT WEAKENED (v44, docs/specs/split-the-bill-2026-08.md). The weekly
+ *  charge now books on two rows - the coach's labour under 'coaching', the court's hire under
+ *  'facility' - so reading one category would silently measure a fraction of the bill and every
+ *  band, ordering and ratio assertion below it would be about the wrong number. Summing them is the
+ *  quantity all of those tests were always about, and it is STRICTLY STRONGER than what it replaced:
+ *  a split that failed to sum back to the old total would now break them. */
 function weekOneBill(seed: string, tier: CoachTier, train = 75): number {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: tier })
   world.plan = { train, rest: 100 - train }
   const rng = rngFromSeed(world.seed)
   tickWeek(world, rng)
-  const bill = world.events.find((e) => e.week === 1 && e.category === 'coaching')
-  expect(bill).toBeDefined()
-  return -bill!.amountCents!
+  return weekTrainingBill(world, 1)
+}
+
+/** The two rows one week's training bill lands on, summed. `self` has no coach row at all - which is
+ *  the point of the split - so an absent row counts as zero rather than failing. */
+function weekTrainingBill(world: { events: { week: number; category?: string; amountCents?: number }[] }, week: number): number {
+  const rows = world.events.filter(
+    (e) => e.week === week && (e.category === 'coaching' || e.category === 'facility'),
+  )
+  expect(rows.length, `no training rows on week ${week}`).toBeGreaterThan(0)
+  return rows.reduce((s, e) => s - (e.amountCents ?? 0), 0)
 }
 
 describe('RNG discipline – one draw, whatever the ladder does', () => {
@@ -204,8 +221,18 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
         expect(bill).toBeLessThanOrEqual(hi)
       }
     }
-    // The parent's rung takes the MIDDLE of the self band rather than drawing a rate of its own.
-    expect(selfRateCents(14)).toBe(20_00)
+    // ⚠ RE-AIMED BY THE SPLIT, NOT WEAKENED (docs/specs/split-the-bill-2026-08.md). `selfRateCents`
+    // is now `facilityRateCents`, because the number was always the COURT price wearing a coaching
+    // name - the self rung takes the MIDDLE of the self band rather than drawing a rate of its own,
+    // and that middle is what the facility line charges at every rung. The protected fact and the
+    // asserted value are unchanged.
+    //
+    // ⚠ RE-AIMED AGAIN 08.08, AND THE VALUE STILL DOES NOT MOVE
+    // (docs/specs/court-follows-the-coach-2026-08.md). `facilityRateCents` now takes the RUNG, because
+    // the court was flat across all five and an Elite coach worked on a parent's court. The club rung
+    // is deliberately x1.0, so the number this line has always asserted is byte-identical - which is
+    // the whole claim of the venue ladder at the cheap end, stated as an assertion.
+    expect(facilityRateCents(14, 'self')).toBe(20_00)
   })
 })
 
@@ -439,7 +466,22 @@ describe('the roster – a market, not a menu', () => {
   })
 })
 
-describe('a competition week is not a coaching week (R4)', () => {
+// ⚠ RE-AIMED 08.08, AND THE RULE UNDER IT WAS REVERSED BY THE OWNER RATHER THAN REFINED. This block
+// used to be called "a competition week is not a coaching week (R4)" and guarded exactly that. His
+// correction is that R4 ran two questions together:
+//
+//   «я не отрицаю, мы общались про поездки тренера с игроком... а сейчас я говорю про еженедельное
+//    списание тренерских сумм на неделях турниров - тренер продолжает работать там и давать прогресс»
+//
+// So the RETAINER is unconditional now (he keeps working, she keeps progressing) and
+// `coachOnEventWeeks` means TRAVEL, which is still a deferred mechanic. What is guarded here is
+// therefore inverted where it was about the bill and KEPT INTACT where it was about the two things
+// that made R4 safe - the draw-invariance and the bill/development pairing - because those are
+// properties of the design, not of the rule that has changed. Nothing is deleted: every assertion
+// below either still asks its original question or asks the reversed one explicitly.
+//
+// The measurement is docs/specs/coach-retainer-2026-08.md (108 careers per arm).
+describe('a competition week IS a coaching week (owner, 08.08 – reverses R4)', () => {
   /** Put her in an event on `week` and tick to it, returning the coaching line for that week. */
   function coachingOn(week: number, onEventWeeks: boolean): { cents: number; text: string } {
     const world = createWorld('event-week', { ...DEFAULT_PROFILE, coachTier: 'middle' })
@@ -455,8 +497,17 @@ describe('a competition week is not a coaching week (R4)', () => {
         closeTournament(world)
       }
     }
-    const bill = world.events.find((e) => e.week === week && e.category === 'coaching')!
-    return { cents: Math.abs(bill.amountCents ?? 0), text: bill.text }
+    // ⚠ BOTH ROWS OF THE WEEK (v44 split). `cents` is the whole training bill, which is what "the
+    // retainer is charged on an event week" has always meant; `text` joins the rows so the copy
+    // assertions below still see every word the week wrote.
+    const rows = world.events.filter(
+      (e) => e.week === week && (e.category === 'coaching' || e.category === 'facility'),
+    )
+    expect(rows.length).toBeGreaterThan(0)
+    return {
+      cents: rows.reduce((s, e) => s + Math.abs(e.amountCents ?? 0), 0),
+      text: rows.map((e) => e.text).join(' | '),
+    }
   }
 
   // A fresh kid has no points, so the only tier she can enter is `local` - the same gate the bench
@@ -466,21 +517,29 @@ describe('a competition week is not a coaching week (R4)', () => {
     return w.season.find((e) => e.tier === 'local' && e.deadlineWeek >= w.week && e.week > w.week + 1)!.week
   })()
 
-  it('bills nothing on a week she is entered for, and says why', () => {
-    const off = coachingOn(playWeek, false)
-    expect(off.cents).toBe(0)
-    expect(off.text).toContain('Competition week')
-    // ...and the neighbouring training week IS billed, so this is the week and not the career.
+  // ⚠ INVERTED, deliberately and by ruling. The assertion used to be `off.cents === 0` and
+  // `off.text` naming a competition week. A weekly retainer does not stop being owed because she is
+  // away at an event, so the week is billed - and the OLD copy is now unreachable, which is the half
+  // that matters: an unbilled week can no longer claim "Competition week" as its reason, because
+  // that is never the reason any more.
+  it('bills the retainer on a week she is entered for, whatever the travel stance', () => {
+    for (const travels of [false, true]) {
+      const billed = coachingOn(playWeek, travels)
+      expect(billed.cents, `travel=${travels}`).toBeGreaterThan(0)
+      expect(billed.text).not.toContain('Competition week')
+      expect(billed.text).not.toContain('no coaching billed')
+    }
+    // ...and the neighbouring training week is billed too, so the week and the career agree.
     const world = createWorld('event-week', { ...DEFAULT_PROFILE, coachTier: 'middle' })
     const rng = rngFromSeed(world.seed)
     tickWeek(world, rng)
-    expect(-(world.events.find((e) => e.week === 1 && e.category === 'coaching')!.amountCents ?? 0)).toBeGreaterThan(0)
+    expect(weekTrainingBill(world, 1)).toBeGreaterThan(0)
   })
 
-  it('bills it when the toggle buys him for tournaments', () => {
-    const on = coachingOn(playWeek, true)
-    expect(on.cents).toBeGreaterThan(0)
-    expect(on.text).not.toContain('Competition week')
+  it('the travel stance no longer moves the bill at all – it is not the retainer', () => {
+    // The whole point of the owner's separation: these are two different questions, and only one of
+    // them is about money this wave. Same week, same seed, same everything but the stance.
+    expect(coachingOn(playWeek, true).cents).toBe(coachingOn(playWeek, false).cents)
   })
 
   it('a calendar full of events she did NOT enter is a training week', () => {
@@ -492,16 +551,25 @@ describe('a competition week is not a coaching week (R4)', () => {
     expect(world.season.length).toBeGreaterThan(0)
     expect(world.entries).toHaveLength(0)
     expect(isCompetitionWeek(world)).toBe(false)
-    expect(-(world.events.find((e) => e.week === 1 && e.category === 'coaching')!.amountCents ?? 0)).toBeGreaterThan(0)
+    expect(weekTrainingBill(world, 1)).toBeGreaterThan(0)
   })
 
-  it('he is ABSENT from the weeks he is not paid for – the toggle is not free money', () => {
-    // The whole reason this is a decision: an unbilled competition week develops at the
-    // self-coached rate, because a coach who is not paid for a week is not at that week.
-    const build = (onEventWeeks: boolean) => {
+  // ⚠ RE-AIMED, AND THE PROPERTY IT PROTECTS IS UNCHANGED: a week the family is BILLED for is a week
+  // he is there, and a week it is not billed for develops at the self-coached rate. R4 proved that
+  // with the tournament toggle because that was the only thing that could stand him down; the
+  // survivor of the reversal is a booked family holiday, which is the owner's own 30.07 ruling («он
+  // не там, он не должен»). Same pairing, same one predicate, different lever - so this still fails
+  // the moment somebody bills a week `growWeek` treats as coached, or the reverse.
+  it('he is ABSENT from the weeks he is not paid for – the bill and the development agree', () => {
+    const build = (bookHolidays: boolean) => {
       const world = createWorld('dev-week', { ...DEFAULT_PROFILE, coachTier: 'elite' })
       world.fundsCents = 500_000_00
-      world.coachOnEventWeeks = onEventWeeks
+      if (bookHolidays) {
+        // Ten weeks at the sea across the run: he is not there for any of them.
+        for (let w = 2; w < 40; w += 4) {
+          world.vacations.push({ week: w, packageId: 'seaside', paidCents: 0 })
+        }
+      }
       const rng = rngFromSeed(world.seed)
       for (let i = 0; i < 40; i++) {
         for (const e of world.season) {
@@ -520,9 +588,17 @@ describe('a competition week is not a coaching week (R4)', () => {
           closeTournament(world)
         }
       }
-      return SKILL_KEYS.reduce((a, k) => a + world.skills[k], 0) / SKILL_KEYS.length
+      return { world, mean: SKILL_KEYS.reduce((a, k) => a + world.skills[k], 0) / SKILL_KEYS.length }
     }
-    expect(build(true)).toBeGreaterThan(build(false))
+    // Weeks he is not paid for are weeks she does not get - so the holiday arm ends up behind.
+    expect(build(true).mean).toBeLessThan(build(false).mean)
+
+    // ...and the pairing itself, asserted directly rather than only through the outcome: on the
+    // stood-down week the coaching row is EMITTED and it is zero, which is the invariant that keeps
+    // `resolveBaseCosts` and `growWeek` reading one predicate instead of two.
+    const rested = build(true).world.events.filter((e) => e.category === 'coaching' && e.amountCents === 0)
+    expect(rested.length).toBeGreaterThan(0)
+    for (const row of rested) expect(row.text).toContain('week away as a family')
   })
 
   it('spends the SAME main-stream draws either way, 52 weeks (the frozen capture cannot see it)', () => {
@@ -559,15 +635,53 @@ describe('a competition week is not a coaching week (R4)', () => {
     expect(capture(true)).toBe(capture(false))
   })
 
-  it('prices the toggle over a SEASON, because only the week count differs', () => {
+  // ⚠ RE-AIMED 08.08: THE PAIR IS GONE AND THE QUOTE WAS THREE WEEKS SHORT. There is nothing left to
+  // compare once the retainer is unconditional, and while removing the pair I found the surviving
+  // half was wrong anyway - it priced a season over `WEEKS_PER_YEAR - OFF_SEASON_WEEKS` = 49 on the
+  // reasoning that nobody is billed in the off-season, and `resolveBaseCosts` has always billed all
+  // 52 (the owner's save: weeks 205/206/207 cost $309/$329/$321). What is guarded now is that the
+  // quote equals what the engine CHARGES, which is the fact the old test should have been asking.
+  it('prices the season at what the engine actually bills, all 52 weeks of it', () => {
     const world = createWorld('billing', { ...DEFAULT_PROFILE, coachTier: 'middle' })
     const b = coachBilling(world)
-    expect(b.onEventWeeks).toBe(false)
     expect(b.weeklyCents).toBeGreaterThan(0)
-    expect(b.seasonOnCents).toBeGreaterThanOrEqual(b.seasonOffCents)
-    // With nothing entered the two agree - the toggle costs exactly the weeks she plays.
-    expect(b.eventWeeks).toBe(0)
-    expect(b.seasonOffCents).toBe(b.seasonOnCents)
+    expect(b.billedWeeks).toBe(WEEKS_PER_YEAR) // ...not 49: the off-season is billed too
+    expect(b.seasonCents).toBe(b.weeklyCents * WEEKS_PER_YEAR)
+
+    // A booked holiday is the one thing that still stands him down, and it moves BOTH figures.
+    world.vacations.push({ week: world.week + 3, packageId: 'seaside', paidCents: 0 })
+    const rested = coachBilling(world)
+    expect(rested.billedWeeks).toBe(WEEKS_PER_YEAR - 1)
+    expect(rested.seasonCents).toBe(rested.weeklyCents * (WEEKS_PER_YEAR - 1))
+  })
+
+  // ⚠ THE ROLLED-SEASON READ (08.08). `world.entries` empties when the calendar turns over, so this
+  // reported 0 tournament weeks for the three off-season weeks of every year - the owner's own save
+  // did exactly that at week 255. It falls back to the season just finished, which is the honest
+  // answer to "how much of her year is tournaments" on a week when next year has not started.
+  it('reads eventWeeks off the season just played when the calendar has rolled', () => {
+    const world = createWorld('rolled', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    world.fundsCents = 500_000_00
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < WEEKS_PER_YEAR + 1; i++) {
+      for (const e of world.season) {
+        if (world.entries.includes(e.id)) continue
+        if (world.week > e.deadlineWeek || e.deadlineWeek - world.week > 3) continue
+        if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
+        try {
+          enterEvent(world, e.id)
+        } catch {
+          /* gate refused */
+        }
+      }
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+    }
+    // She has played a season; whatever the entry ledger looks like now, the figure is not a lie.
+    expect(coachBilling(world).eventWeeks).toBeGreaterThan(0)
   })
 
   it('the command is idempotent, logs the change, and draws nothing', () => {
@@ -578,6 +692,83 @@ describe('a competition week is not a coaching week (R4)', () => {
     setCoachOnEventWeeks(world, true)
     expect(world.coachOnEventWeeks).toBe(true)
     expect(world.events.length).toBe(before + 1)
+  })
+})
+
+// ⚠ THE OVER-QUOTE (owner, 08.08). He asked why his coach's number kept moving on its own:
+// «У выбранного тренера поменялся % через некоторое время, сначала было 0,5-1,0, потом стало 0,4-0,9,
+// сейчас уже 0,3-0,7. С чем это связано и почему так происходит?»
+//
+// The FALL is honest - a rung's worth is a share of remaining headroom, and it shrinks as she fills
+// her ceiling and the age curve eases. Reconstructed on his own save (week 255, 93.4% realised,
+// high-3, great fit) the model reproduces his three sightings almost exactly: +1.1-2.2% at 14,
+// +0.7-1.4% at 15, +0.4-1.0% at 16, +0.3-0.7% at 17, +0.2-0.5% at 18.
+//
+// What was NOT honest is that the projection ran over 52 COACHED weeks unconditionally while the R4
+// rule stood the coach down for every competition week - 43% of his season - so the screen quoted a
+// rung it was delivering 57% of. The retainer reversal fixes the delivery; this fixes the quote, and
+// the two are held together here so neither can drift back.
+describe('the uplift quotes the weeks she actually buys (08.08)', () => {
+  const her = { skills: [48, 48, 48, 48], potential: [63, 63, 63, 63] }
+  const quote = (coachedWeeks?: number) =>
+    coachSeasonUplift({
+      ...her,
+      plan: WEEK_PLAN_PRESETS.balanced,
+      tier: 'high',
+      fit: 'great',
+      ageFactor: ageFactor(14),
+      trainFactor: trainFactor(WEEK_PLAN_PRESETS.balanced),
+      coachedWeeks,
+    })
+
+  it('a season she only half buys is worth measurably less than a whole one', () => {
+    const [wholeLo, wholeHi] = quote()
+    const [halfLo, halfHi] = quote(26)
+    expect(halfLo).toBeLessThan(wholeLo)
+    expect(halfHi).toBeLessThan(wholeHi)
+    // ...and it is a large correction, not a rounding one - which is why it was worth finding.
+    expect(halfHi).toBeLessThan(wholeHi * 0.75)
+  })
+
+  it('buying none of him is worth nothing at all, which is the baseline stated exactly', () => {
+    expect(quote(0)).toEqual([0, 0])
+  })
+
+  it('defaults to the whole horizon, so every pure caller is byte-identical to before', () => {
+    expect(quote()).toEqual(quote(ECONOMY.coach.upliftHorizonWeeks))
+  })
+
+  it('and the MARKET asks for the weeks a booked holiday leaves her', () => {
+    const world = createWorld('quote-rest', { ...DEFAULT_PROFILE, coachTier: 'high' })
+    const before = coachMarket(world).find((r) => r.tier === 'high')!.upliftPct
+    for (let w = 1; w <= 12; w++) world.vacations.push({ week: world.week + w, packageId: 'seaside', paidCents: 0 })
+    const after = coachMarket(world).find((r) => r.tier === 'high')!.upliftPct
+    expect(after[1]).toBeLessThan(before[1])
+  })
+})
+
+// ⚠ AND THE SENTENCE THAT EXPLAINS THE FALL, which is the half the owner could not read anywhere.
+// At 93.4% realised the whole ladder collapses into four tenths of a point (his save: budget
+// +0.1-0.2%, elite +0.2-0.5%), so the market stops discriminating and the screen said nothing.
+describe('the room note says why the numbers are what they are', () => {
+  function at(realised: number): string {
+    const world = createWorld('room', DEFAULT_PROFILE)
+    for (const k of SKILL_KEYS) {
+      world.potential[k] = 60
+      world.skills[k] = 60 * realised
+    }
+    return coachRoomNote(world)
+  }
+
+  it('moves through four bands as she fills her ceiling, and never quotes the ceiling', () => {
+    const notes = [at(0.4), at(0.7), at(0.87), at(0.97)]
+    expect(new Set(notes).size).toBe(4) // four distinct readings, not one string
+    // ⚠ IT MUST NEVER PRINT A FIGURE. KidScreen keeps her ceiling behind a fog of war, and a
+    //   percentage here would be the back door through it.
+    for (const n of notes) expect(n).not.toMatch(/\d/)
+    // The top band is the one his save is in, and it has to say the useful thing out loud.
+    expect(notes[3]).toMatch(/near her own ceiling/i)
+    expect(notes[0]).toMatch(/long way to go/i)
   })
 })
 

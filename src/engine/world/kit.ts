@@ -31,8 +31,8 @@ import {
   kitLinePriceCents,
   kitWearAt,
 } from '../equipment'
-import { kitFreshCap } from '../offers'
-import type { KitGrade, KitLine, KitLineView } from '../../shared/protocol'
+import { activeKitDeal, kitFreshCap } from '../offers'
+import type { KitGrade, KitLine, KitLineView, KitOfferTerms } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
@@ -52,6 +52,42 @@ function rungIndex(grade: KitGrade): number {
   return KIT_GRADES.indexOf(grade)
 }
 
+/** The wear at which the Money screen's own vocabulary stops calling a line usable. `wearWord` bands
+ *  it Fresh / Fine / Worn / Gone at 0.25 / 0.55 / 0.85, so this is the "Worn" edge - the week the
+ *  parent would look at the row and think about replacing it. */
+const WORN_AT = 0.55
+
+/**
+ * HOW MANY WEEKS A NEW ONE OF THESE STAYS OUT OF "WORN" - what a rung actually buys, in the only
+ * unit that is honest about it.
+ *
+ * ⚠ READ engine/equipment.ts BEFORE CHANGING THIS. A rung does exactly two things and NEITHER of
+ * them is an upside: `startWear` puts a cheap line partway down its own curve the day it is bought,
+ * and `lifeFactor` stretches or shortens the curve. Fresh kit is EXACTLY neutral at every rung -
+ * `startWear` is 0 from `composite` up, every multiplier is 1, and the file's own promise is that
+ * "wear only ever subtracts". So a `pro` frame does not hit harder than a `composite` one; it is
+ * simply still sound in week 24 when the composite is not.
+ *
+ * That is why this returns TIME and not a power figure: a screen that said "pro: +3% serve" would be
+ * inventing a bonus the model refuses to give, and a screen that said nothing at all (which is what
+ * shipped) leaves the parent buying a four-times bill on faith. Weeks-until-Worn is the true
+ * sentence, it is derived from the same constants the wear curve uses, and it moves the moment a
+ * knob does.
+ *
+ * The frame carries its flat head (`frameSoundWeeks`, "sound is sound however old"); strings and
+ * shoes decay from the first week. Pure, no draws, no world needed.
+ */
+export function goodWeeksFor(line: KitLine, grade: KitGrade): number {
+  const e = ECONOMY.equipment
+  const rung = e.grades[grade]
+  const room = Math.max(0, WORN_AT - rung.startWear[line])
+  if (line === 'frame') {
+    return Math.round(rung.lifeFactor * (e.frameSoundWeeks + room * e.framePatchWeeks))
+  }
+  const life = line === 'strings' ? e.stringLifeWeeks : e.shoeLifeWeeks
+  return Math.round(room * life * rung.lifeFactor)
+}
+
 /**
  * MOVE ONE LINE OF HER KIT ONTO ANOTHER RUNG. The only way `world.kit.grade` ever changes.
  *
@@ -68,6 +104,21 @@ function rungIndex(grade: KitGrade): number {
  * family that cannot afford a restring buys it anyway and goes further into the red" - so refusing a
  * chosen purchase for want of funds would make the ONE gear decision the player controls stricter
  * than the ones he does not. The screen shows the balance and the price; the parent decides.
+ *
+ * ⚠⚠ AND THE SPONSOR PAYS FOR A LINE IT COVERS (owner, 08.08). Until this wave this function was the
+ * ONE place in the game that spent money on kit without asking whether somebody else had promised to
+ * pay for it: `resolveGear` consulted `activeKitDeal` for the recurring bill and `kitFreshCap` held
+ * the wear down, and the till here did neither. So the letter said «Her strings and frames - up to
+ * $3,000 of kit over the season, on us», the Money screen printed "Her sponsor supplies this line"
+ * directly under the buttons, and pressing one charged the family in full. Measured on the owner's
+ * own save: a national deal covering strings and frame, $536.22 of allowance still unspent, and both
+ * pro purchases billed at 100%. «ну надо что-то с этим сделать, а то совсем непонятный механизм
+ * сейчас.»
+ *
+ * The arithmetic is `resolveGear`'s, deliberately - same `Math.min(amount, remaining)`, same
+ * allowance ceiling, same "the line is still EMITTED at what the family actually paid" so a $0 row
+ * explains itself in the breakdown instead of vanishing. Buying up therefore does not buy MORE
+ * sponsorship; it spends the same allowance faster, which is the honest trade and needed no new rule.
  *
  * Zero draws, and the whole thing is idempotent: setting the rung she is already on does nothing at
  * all, so a double-tap cannot buy two frames.
@@ -90,16 +141,56 @@ export function setKitGrade(world: WorldState, line: KitLine, grade: KitGrade): 
 
   const costCents = kitLinePriceCents(world.profile.background, line, grade)
   kit.sinceWeek[line] = world.week
-  world.fundsCents -= costCents
+  const { paidCents, coveredCents, brand } = chargeKitPurchase(world, line, costCents)
+  world.fundsCents -= paidCents
   addEvent(world, {
     week: world.week,
     type: 'expense',
     // The ledger's own split, not a new bucket: stringing has had its own row on the Money pie since
     // round 7 because it recurs far more often than the rest, and a bought string bed is stringing.
     category: ECONOMY.gear[LINE_GEAR_CATEGORY[line]].breakdown,
-    text: `Bought: ${ECONOMY.equipment.gradeCopy[grade][line].label}`,
-    amountCents: -costCents,
+    text: coveredCents > 0
+      ? `Bought: ${ECONOMY.equipment.gradeCopy[grade][line].label} – on ${brand}`
+      : `Bought: ${ECONOMY.equipment.gradeCopy[grade][line].label}`,
+    // `|| 0` because a fully covered purchase makes `-paidCents` the NEGATIVE ZERO, which survives
+    // into the ledger and out through any formatter as "-$0". JSON round-trips it to 0 anyway, so
+    // this only ever changes what a screen would print.
+    amountCents: -paidCents || 0,
   })
+}
+
+/** WHAT THE FAMILY ACTUALLY PAYS FOR ONE OVER-THE-COUNTER PURCHASE, and what the brand picks up.
+ *
+ *  ⚠ THE ONE PLACE THE PURCHASE PATH ASKS ABOUT THE DEAL, and it mutates `coveredCents` because the
+ *  allowance is a single shared pot: a frame bought at the shop and a restring billed on cadence are
+ *  spending the same $3,000, which is what stops "buy up on every line" being free money. Exported
+ *  so `kitLineViews` can quote the SAME answer on the button the parent is about to press - a screen
+ *  that priced this itself is a screen that can disagree with the till. */
+export function kitPurchaseSplit(
+  world: WorldState,
+  line: KitLine,
+  costCents: number,
+): { paidCents: number; coveredCents: number; brand: string } {
+  const deal = activeKitDeal(world.offers ?? [], world.week)
+  const terms = deal ? (deal.terms as KitOfferTerms) : null
+  if (!deal || !terms || !terms.covers.includes(line)) return { paidCents: costCents, coveredCents: 0, brand: '' }
+  const remaining = Math.max(0, terms.kitAllowanceCents - (deal.coveredCents ?? 0))
+  const coveredCents = Math.min(costCents, remaining)
+  return { paidCents: costCents - coveredCents, coveredCents, brand: terms.brand }
+}
+
+/** The same split, and it BANKS the spend against the allowance. Only the till may call this. */
+function chargeKitPurchase(
+  world: WorldState,
+  line: KitLine,
+  costCents: number,
+): { paidCents: number; coveredCents: number; brand: string } {
+  const split = kitPurchaseSplit(world, line, costCents)
+  if (split.coveredCents > 0) {
+    const deal = activeKitDeal(world.offers ?? [], world.week)!
+    deal.coveredCents = (deal.coveredCents ?? 0) + split.coveredCents
+  }
+  return split
 }
 
 /**
@@ -123,13 +214,24 @@ export function kitLineViews(world: WorldState): KitLineView[] {
       label: ECONOMY.equipment.gradeCopy[grade][line].label,
       blurb: ECONOMY.equipment.gradeCopy[grade][line].blurb,
       wear: wear[line],
-      rungs: KIT_GRADES.map((g) => ({
-        grade: g,
-        label: ECONOMY.equipment.gradeCopy[g][line].label,
-        blurb: ECONOMY.equipment.gradeCopy[g][line].blurb,
-        priceCents: kitLinePriceCents(bg, line, g),
-        owned: g === grade,
-      })),
+      rungs: KIT_GRADES.map((g) => {
+        const priceCents = kitLinePriceCents(bg, line, g)
+        return {
+          grade: g,
+          label: ECONOMY.equipment.gradeCopy[g][line].label,
+          blurb: ECONOMY.equipment.gradeCopy[g][line].blurb,
+          priceCents,
+          // ⚠ WHAT THE FAMILY WOULD ACTUALLY HAND OVER, engine-computed (08.08). The sticker price
+          // and the bill are two different numbers the moment a deal covers this line, and the
+          // screen may not derive the second from the first - it is the till's answer or nothing.
+          payableCents: kitPurchaseSplit(world, line, priceCents).paidCents,
+          // ⚠ AND WHAT THE RUNG BUYS, IN WEEKS (owner, 08.08: «хорошо бы дать понять что разные
+          // тиры шмота дают вообще»). See `goodWeeksFor` - it is the only honest unit here, because
+          // a rung buys TIME on good kit and never a bonus.
+          goodWeeks: goodWeeksFor(line, g),
+          owned: g === grade,
+        }
+      }),
       // ⚠ WORTH SAYING OUT LOUD ON THE SCREEN, because it changes what buying up is FOR. A signed
       // deal holds a covered line's wear under `freshCap` whatever rung she is on, so on that line
       // the ladder mostly moves the BILL (which the brand is paying, until the allowance runs out)

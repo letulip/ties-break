@@ -100,6 +100,81 @@ describe('commentary – volume discipline', () => {
   })
 })
 
+// =================================================================================================
+// THE KEY CUT (owner, 06.08): «сам матч идёт быстрее и показывает ключевые моменты, но в тексте
+// трансляции вообще ничего не меняется, надо это синхронизировать ... может быть мы можем full/key
+// моменты сделать больше отличий».
+//
+// The switch used to reach `buildTimeline` and nothing else, so both modes always printed the same
+// log. `Beat.keyMoment` is the tighter cut, and these are its properties as a CUT - the module's own
+// header states the rule, and a test that re-derived the rule could only ever agree with it. So what
+// is asserted here is what the cut has to be TRUE OF whatever the rule is: a real subset, never
+// empty, never everything, and never missing the beats that give a match its shape.
+// =================================================================================================
+describe('commentary – the key cut', () => {
+  const STRUCTURAL = new Set(['open', 'set', 'tiebreak', 'match'])
+
+  it('⚠ is a strict, proper subset: smaller than the full log on nearly every match, never larger', () => {
+    let smaller = 0
+    let full = 0
+    let key = 0
+    const matches = corpus(200)
+    for (const m of matches) {
+      const beats = commentate(m)
+      const cut = beats.filter((b) => b.keyMoment)
+      // Same beats, not new ones: the cut is a filter over the list the full mode shows.
+      for (const b of cut) expect(beats).toContain(b)
+      expect(cut.length).toBeLessThanOrEqual(beats.length)
+      if (cut.length < beats.length) smaller++
+      full += beats.length
+      key += cut.length
+    }
+    // If this drops, the switch has stopped being visible to a player - which IS the reported bug.
+    expect(smaller / matches.length, 'the cut left most matches untouched').toBeGreaterThan(0.95)
+    // ...and the density band. Measured at 58% (KEY_SWING = 0.10, see the constant's own table); the
+    // band is wide enough to survive a tuning nudge and narrow enough to fail "keep everything"
+    // (100%) and "keep only the scaffolding" (~30%).
+    const share = key / full
+    expect(share, `key kept ${(share * 100).toFixed(0)}% of full`).toBeGreaterThan(0.4)
+    expect(share, `key kept ${(share * 100).toFixed(0)}% of full`).toBeLessThan(0.75)
+  })
+
+  it('⚠ always keeps the shape of the match: the opener, every set, every tiebreak, the ending', () => {
+    // A highlights package that can lose the set it was won in is not a highlights package. These
+    // four kinds are in by construction and this is what says so - it is the assertion that fails if
+    // the swing test is ever let loose on them.
+    for (const m of corpus(120)) {
+      for (const b of commentate(m)) {
+        if (STRUCTURAL.has(b.kind)) expect(b.keyMoment, `${b.kind} beat dropped from the key cut`).toBe(true)
+      }
+    }
+  })
+
+  it('⚠ still tells a story: no match is cut down to its scaffolding alone', () => {
+    // The floor the constant was chosen against. Four rows is the three structural beats of a
+    // straight-sets match plus one thing that actually happened; below that the log stops being
+    // commentary. Measured at KEY_SWING = 0.10: 4% of matches sit at the floor, none under it.
+    let thin = 0
+    const matches = corpus(200)
+    for (const m of matches) {
+      const cut = commentate(m).filter((b) => b.keyMoment)
+      expect(cut.length, 'a match with nothing in its key log at all').toBeGreaterThanOrEqual(2)
+      if (cut.length < 4) thin++
+    }
+    expect(thin / matches.length, `${thin} of ${matches.length} matches fell to scaffolding`).toBeLessThan(0.1)
+  })
+
+  it('⚠ is decided by the match and nothing else - the same match cuts the same way twice', () => {
+    // The determinism rule reaches the new field too: `keyMoment` reads winProbA, which is the
+    // engine's, and draws nothing of its own.
+    for (const seed of ['cut-a', 'cut-b', 'cut-c']) {
+      const one = commentate(play(seed)).map((b) => `${b.pointIndex}:${b.keyMoment}`)
+      const two = commentate(play(seed)).map((b) => `${b.pointIndex}:${b.keyMoment}`)
+      expect(two).toEqual(one)
+    }
+  })
+})
+
 describe('commentary – shape', () => {
   it('is chronological, one beat per point, and bracketed by the opener and the match beat', () => {
     for (const m of corpus(60)) {

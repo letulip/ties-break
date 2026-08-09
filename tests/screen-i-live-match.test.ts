@@ -354,6 +354,65 @@ describe('the pinned control bar can never reach the playing surface', () => {
     expect(stylesOf(viewer)).toContain('.mv-below {')
   })
 
+  it('⚠ ...and the block sits on the FLOOR of the screen, with the log as the only row that gives', () => {
+    // ⚠ ADDED 06.08 (owner: «давай вообще этот блок full/key/speed/shout кнопок внизу экрана в матче
+    // закрепим просто, а текстовая трансляция будет до него "разворачиваться"») - and the reason it
+    // is a separate fact from `position: sticky` above is that sticky did not deliver it. Sticky only
+    // bites when the bar would otherwise be BELOW the fold; on a tall phone it never is, so the block
+    // sat wherever the log's last row left it. MEASURED AT 576x1280, his own screen, before this:
+    // the block ended at y=1110 with 170px of empty scroller under it. After: log 568->1120 (its
+    // content 617px, so it scrolls inside itself), block 1120->1256, and `.tf-body` no longer
+    // scrolls at all (scrollHeight === clientHeight === 1206).
+    //
+    // The guarantee is a chain of four rules and every link is load-bearing, so all four are pinned:
+    // the viewer grows into the takeover's column, the wrapper takes what is left, the log is the one
+    // flexible row, and `min-height: 0` is what lets a long log scroll inside itself instead of
+    // pushing the block back off the bottom.
+    const styles = stylesOf(viewer)
+    const rule = (sel: string): string => {
+      const at = styles.indexOf(`${sel} {`)
+      expect(at, `no ${sel} rule`).toBeGreaterThan(-1)
+      return styles.slice(at, styles.indexOf('}', at))
+    }
+    expect(rule('.mv')).toMatch(/flex:\s*1/)
+    expect(rule('.mv'), 'without this the log cannot shrink and the block is pushed off').toMatch(
+      /min-height:\s*0/,
+    )
+    expect(rule('.mv-below')).toMatch(/flex:\s*1/)
+    expect(rule('.mv-below')).toMatch(/min-height:\s*0/)
+    const log = rule('.mv-log')
+    expect(log, 'the log is not the row that gives').toMatch(/flex:\s*1/)
+    expect(log, 'a log that cannot scroll inside itself pushes the block away').toMatch(
+      /overflow-y:\s*auto/,
+    )
+    // ...and the furniture around it does NOT give, or the court and the box score would shrink
+    // alongside it in a deficit.
+    expect(styles).toMatch(/\.mv-panel,[\s\S]{0,120}\{\s*flex:\s*none/)
+  })
+
+  it('⚠ "Skip" left the view switch for a control that says what it does', () => {
+    // Owner, 06.08: «а skip оттуда из этого переключателя вообще надо убрать - оно полностью матч
+    // пропускает, это вообще неявно в этом месте». Full and Key are two answers to "how much of this
+    // match do I watch"; skipping ends the watching, and a segmented control's third pill is the last
+    // place a player expects to lose the whole match.
+    // THE CAPABILITY IS NOT GONE and this pins that too - `viewMode` still takes 'skip', so every
+    // path that reads it (jumpToEnd, retimeForMode's exemption, More's default-view picker) is
+    // reached exactly as before. What is pinned is that the door is named and that it is inside the
+    // block, where a control you reach for mid-match belongs.
+    const logic = componentLogic('components/MatchViewer.vue')
+    const options = logic.slice(logic.indexOf('const VIEW_OPTIONS'), logic.indexOf('const SPEED_OPTIONS'))
+    expect(options).toContain("value: 'full'")
+    expect(options).toContain("value: 'key'")
+    expect(options, 'skip is back in the view switch').not.toContain("value: 'skip'")
+    const markup = markupOf(viewer)
+    const bar = markup.slice(markup.indexOf('class="mv-controls"'), markup.indexOf('class="mv-actions"'))
+    expect(bar).toContain('mv-skip')
+    expect(bar).toContain('Skip to the result')
+    expect(logic, 'the skip capability itself was deleted rather than moved').toContain(
+      "viewMode.value = 'skip'",
+    )
+  })
+
   it('pins everything you reach for mid-rally, and nothing you do not', () => {
     // ⚠ RE-AIMED 30.07 (owner: «на экране live матча кнопку shout тоже надо оставить в sticky блоке»).
     // The old line drew the boundary at SETTINGS-vs-ACTIONS and pinned Shout OUT of the bar on that

@@ -100,6 +100,13 @@ const sessionsNow = computed(() => (game.snapshot ? coachHoursForPlan(game.snaps
 // the screen never does this arithmetic itself.
 const billing = computed(() => game.snapshot?.coachBilling ?? null)
 
+// ⚠ THE CONTEXT THE UPLIFT NUMBERS ARE RELATIVE TO. The owner watched his coach's number fall from
+// 0.5-1.0 to 0.4-0.9 to 0.3-0.7 and asked what it was tied to (his words verbatim are in
+// tests/coachTiers.test.ts). The answer is that a rung's worth is a share of her REMAINING headroom,
+// so it falls as she fills her ceiling and as the age curve eases - honestly, and until now
+// silently. Engine-computed (`coachRoomNote`); this screen only prints it.
+const roomNote = computed(() => game.snapshot?.coachRoomNote ?? '')
+
 type SortMode = 'fit' | 'price'
 const sort = ref<SortMode>('fit')
 function toggleSort(): void {
@@ -289,10 +296,26 @@ function scrollToTier(tier: CoachTier): void {
          is no "with", but "he costs $X a week" is true whatever she books and is the one number the
          regulator above is spending. The rows below quote a rate PER COACH; this is what HER coach costs at
          HER plan, which is the number the budget meter draws against. Engine-computed - the screen formats
-         cents and derives none. -->
+         cents and derives none.
+
+         ⚠ AND THE SEASON FIGURE IS BESIDE IT NOW (08.08). The retainer runs every week he is not stood
+         down, so "a week" no longer tells a parent what a coach costs a YEAR - which is the number the
+         reversal actually changed, and the one he is deciding against. `billedWeeks` is the engine's
+         own count, so a booked holiday shows up in both figures or in neither. -->
     <p v-if="billing" class="hint cm-travel-cost">
-      <strong>{{ formatCents(billing.weeklyCents) }}</strong> a week at her current plan.
+      <strong>{{ formatCents(billing.weeklyCents) }}</strong> a week at her current plan –
+      {{ formatCents(billing.seasonCents) }} over {{ billing.billedWeeks }} weeks.
     </p>
+
+    <!-- ⚠ HOW MUCH ROOM IS LEFT IN HER, and it is the context every percentage below is relative to.
+         Without it the market is unreadable at the top of a career: the uplift is a share of REMAINING
+         headroom, so a girl near her ceiling sees every rung collapse towards zero AND towards each
+         other (measured on the owner's save at 93.4% realised: budget +0.1-0.2%, elite +0.2-0.5%, the
+         whole ladder inside four tenths of a point). He asked why his coach's number kept falling; this
+         is the sentence that answers it, and it is engine-computed so it can never contradict the rows.
+         It deliberately quotes no figure - `KidScreen` keeps her ceiling behind a fog of war and this
+         must not be the back door through it. -->
+    <p v-if="roomNote" class="hint cm-room-note">{{ roomNote }}</p>
 
     <!-- Tier chips SCROLL to a section rather than filtering the list to nothing (design §T.1). -->
     <div class="controls market-chips">

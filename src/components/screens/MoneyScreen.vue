@@ -53,6 +53,9 @@ import { ECONOMY } from '../../engine/economy'
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
 import { STARTING_FUNDS_CENTS } from '../../engine/world'
+// The bill's own arithmetic, so the note under the breakdown quotes the number the engine charges
+// rather than a mirror of it - the same rule `startingBudget` above is written under.
+import { coachBillRangeCents, coachById, facilityRateCents, tierOf, weeklyBillSplit } from '../../engine/coach'
 import type {
   FinanceWindow,
   KitGrade,
@@ -129,6 +132,37 @@ const activeFinance = computed<FinanceWindow | undefined>(() =>
   breakdownWindow.value === '12w' ? game.snapshot?.finance.window12w : game.snapshot?.finance.season,
 )
 
+// --- WHY THE TRAINING BILL IS NEVER THE QUOTE ---------------------------------------------------
+//
+// ⚠ THE OWNER'S OTHER HALF (08.08): «на неделях всё еще списывается какая-то рандомная сумма». The
+// wobble is real and it stays - `ECONOMY.coach.weekJitterBps` is +/-8% on the weekly bill, the week
+// itself varying rather than a bug - but he met it as an unexplained number, and an unexplained
+// number in a wallet reads as a swindle rather than as life. This is the sentence that lets him look
+// at a week and know why it is not the figure on the coach's card.
+//
+// EVERY FIGURE IS THE ENGINE'S OWN. `weeklyBillSplit` is the function `resolveBaseCosts` bills
+// through and `coachBillRangeCents` is the envelope it lands in, so the note cannot drift from the
+// charge the way a hand-written "±8%" would the moment the band is retuned.
+const trainingBillNote = computed<string | null>(() => {
+  const snap = game.snapshot
+  if (!snap) return null
+  const coach = coachById(snap.seed, snap.ageYears, snap.coachId)
+  const tier = tierOf(coach)
+  const rate = coach ? coach.rateCents : facilityRateCents(snap.ageYears, tier)
+  const split = weeklyBillSplit({
+    rateCents: rate,
+    ageYears: snap.ageYears,
+    tier,
+    plan: snap.plan,
+    background: snap.profile.background,
+  })
+  const [lo, hi] = coachBillRangeCents(rate, snap.plan, snap.profile.background)
+  const quote = coach
+    ? `Training quotes at ${formatCents(split.totalCents)} a week – ${formatCents(split.coachCents)} coaching, ${formatCents(split.facilityCents)} courts.`
+    : `Court time quotes at ${formatCents(split.facilityCents)} a week – you coach her, so there is no coaching line.`
+  return `${quote} No week bills exactly that: a session moves, a court books at a busier hour. Yours runs ${formatCents(lo)}–${formatCents(hi)}.`
+})
+
 const incomeCents = computed(() => activeFinance.value?.incomeCents ?? 0)
 const spentCents = computed(() => activeFinance.value?.expenseCents ?? 0)
 const netCents = computed(() => activeFinance.value?.netCents ?? 0)
@@ -141,6 +175,12 @@ const netCents = computed(() => activeFinance.value?.netCents ?? 0)
 type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy'>
 const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   { key: 'coaching', label: 'Coaching' },
+  // ⚠ THE COURT IS ITS OWN ROW (v44, docs/specs/split-the-bill-2026-08.md, owner 08.08: «нам нужно
+  // отдельной строчкой списывать тренера, а отдельной рент залов и прочего»). It sits immediately
+  // under Coaching because the two are one bill split in two, and the reader should meet them
+  // together: the man, then the place. A self-coached family has only the second, which is the
+  // honest thing the split fixes - it was being shown "Coaching" for a parent who works free.
+  { key: 'facility', label: 'Courts & facility' },
   { key: 'travel', label: 'Travel' },
   { key: 'entry', label: 'Entry fees' },
   { key: 'gear', label: 'Gear' },
@@ -164,6 +204,10 @@ const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
 // comes from. Anything still here is a glyph he has not replaced.
 const ICON_PATHS: Record<string, string[]> = {
   coaching: ['M12 5.2a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4z', 'M5.5 19.5c0-3.3 2.9-5.2 6.5-5.2s6.5 1.9 6.5 5.2'],
+  // A court seen from above: the outer fence, the baseline pair and the net across the middle. Drawn
+  // on the same 24x24 / 1.5-stroke grid as its neighbours, and deliberately NOT a racket - stringing
+  // already owns that picture, and this row is the PLACE rather than the kit.
+  facility: ['M4 4.5h16v15H4z', 'M4 12h16', 'M7.5 4.5v15M16.5 4.5v15'],
   travel: ['M3 15.5l18-5.6-2-3.2-4.6 1.5-5.2-4.4-2.2.7 3 4.9-4 1.3-2.6-1.9-1.6.5z', 'M4.5 19.5h15'],
   practice: ['M12 3.6a8.4 8.4 0 1 1 0 16.8 8.4 8.4 0 0 1 0-16.8z', 'M5.2 6.6c3.6 2.2 3.6 8.6 0 10.8M18.8 6.6c-3.6 2.2-3.6 8.6 0 10.8'],
   other: ['M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15z', 'M12 8.2V12l2.4 1.6'],
@@ -182,6 +226,7 @@ const ICON_PATHS: Record<string, string[]> = {
 // than the export's, and why they are not the `--event-*` family). Nothing here may spell a hex.
 const CAT_COLOR: Record<string, string> = {
   coaching: 'var(--cat-coaching)',
+  facility: 'var(--cat-facility)',
   travel: 'var(--cat-travel)',
   entry: 'var(--cat-entry)',
   gear: 'var(--cat-gear)',
@@ -439,6 +484,7 @@ interface PendingKit {
   grade: KitGrade
   label: string
   priceCents: number
+  payableCents: number
 }
 const pendingKit = ref<PendingKit | null>(null)
 
@@ -450,8 +496,30 @@ function chooseRung(view: KitLineView, rung: KitLineView['rungs'][number]): void
     void game.setKitGrade(view.line, rung.grade)
     return
   }
-  pendingKit.value = { line: view.line, grade: rung.grade, label: rung.label, priceCents: rung.priceCents }
+  pendingKit.value = {
+    line: view.line,
+    grade: rung.grade,
+    label: rung.label,
+    priceCents: rung.priceCents,
+    payableCents: rung.payableCents,
+  }
 }
+
+/** ⚠ THE DIALOG HAS TO NAME THE PRICE THE FAMILY IS ACTUALLY PAYING (08.08). It used to quote
+ *  `priceCents` unconditionally, so a sponsored line asked "Buy the Kestra Pro Stock for $340?" and
+ *  then took $340 - which was true only because the till was ignoring the deal. Now the till honours
+ *  the allowance, and a dialog still quoting the sticker would be the same lie in the other
+ *  direction. Both numbers come off the engine; this only chooses the sentence. */
+const kitConfirmMessage = computed(() => {
+  const p = pendingKit.value
+  if (!p) return ''
+  const tail = 'She plays with it from this week, and every replacement is billed at this level.'
+  if (p.payableCents >= p.priceCents) return `Buy the ${p.label} for ${formatCents(p.priceCents)}? ${tail}`
+  if (p.payableCents === 0) {
+    return `Buy the ${p.label}? Her sponsor covers it in full – ${formatCents(p.priceCents)} off her allowance. ${tail}`
+  }
+  return `Buy the ${p.label} for ${formatCents(p.payableCents)}? Her sponsor covers ${formatCents(p.priceCents - p.payableCents)} of the ${formatCents(p.priceCents)}. ${tail}`
+})
 
 function confirmKit(): void {
   const pending = pendingKit.value
@@ -652,6 +720,11 @@ const TAB_OPTIONS = [
             </template>
           </StatRow>
 
+          <!-- The jitter, said out loud. It sits UNDER the rows it explains and above the CTA, so a
+               reader who has just noticed that Coaching is not the number on the coach's card finds
+               the reason in the next line rather than in a help screen. -->
+          <p v-if="trainingBillNote" class="money-panel-note money-bill-note">{{ trainingBillNote }}</p>
+
           <PrimaryPill class="money-cta" variant="cta" @click="showAllTransactions">
             View all transactions
           </PrimaryPill>
@@ -734,9 +807,17 @@ const TAB_OPTIONS = [
            name and condition word comes off the snapshot - see the script. -->
       <Card v-if="screenTab === 'bills'" class="money-panel money-kit">
         <Eyebrow as="h2">Her kit</Eyebrow>
+        <!-- ⚠ THE OLD LINE SAID "plays truer" AND THAT WAS THE ONE THING IT DOES NOT DO (08.08).
+             engine/equipment.ts is explicit: fresh kit is EXACTLY neutral at every rung, every
+             multiplier is 1, and wear only ever subtracts - so a pro frame is not better than a new
+             composite one, it is still good in week 24 when the composite is not. The owner asked to
+             be told what the tiers actually give (his words are in tests/equipment.test.ts - THIS IS
+             A TEMPLATE, and tests/template-copy-rules.test.ts bans Cyrillic in one, comments
+             included). He could not tell, and the reason is that the screen was promising an upside
+             the model refuses to give. What it says now is the true and more interesting sentence. -->
         <p class="money-panel-note">
-          Better kit lasts longer, plays truer and is kinder to her body – and it is billed every time
-          the family replaces it, not once.
+          New kit plays the same whatever it cost – what a better rung buys is TIME before it goes
+          off, and it is billed every time the family replaces it, not once.
         </p>
         <div v-for="view in kitLines" :key="view.line" class="kit-line">
           <div class="kit-line-head">
@@ -744,6 +825,9 @@ const TAB_OPTIONS = [
             <span class="kit-line-state">{{ wearWord(view.wear) }}</span>
           </div>
           <p class="kit-line-blurb">{{ view.blurb }}</p>
+          <!-- Each rung now carries what it BUYS (weeks of good kit) beside what it costs, and the
+               price is the engine's `payableCents` - what the family really hands over once a deal's
+               allowance is applied - never a discount this screen worked out for itself. -->
           <div class="kit-rungs">
             <button
               v-for="rung in view.rungs"
@@ -755,11 +839,17 @@ const TAB_OPTIONS = [
               @click="chooseRung(view, rung)"
             >
               <span class="kit-rung-name">{{ rung.label }}</span>
-              <span class="kit-rung-price">{{ formatCents(rung.priceCents) }}</span>
+              <span class="kit-rung-good">{{ rung.goodWeeks }} good weeks</span>
+              <span v-if="rung.payableCents < rung.priceCents" class="kit-rung-price is-covered">
+                <s>{{ formatCents(rung.priceCents) }}</s>
+                {{ rung.payableCents === 0 ? 'free' : formatCents(rung.payableCents) }}
+              </span>
+              <span v-else class="kit-rung-price">{{ formatCents(rung.priceCents) }}</span>
             </button>
           </div>
           <p v-if="view.sponsored" class="kit-line-sponsored">
-            Her sponsor supplies this line – they keep it fresh whatever she plays.
+            Her sponsor supplies this line – they keep it fresh whatever she plays, and they pay for
+            what she buys until the season's allowance runs out.
           </p>
         </div>
       </Card>
@@ -809,7 +899,7 @@ const TAB_OPTIONS = [
 
       <ConfirmDialog
         v-if="pendingKit"
-        :message="`Buy the ${pendingKit.label} for ${formatCents(pendingKit.priceCents)}? She plays with it from this week, and every replacement is billed at this level.`"
+        :message="kitConfirmMessage"
         confirm-label="Buy it"
         @confirm="confirmKit"
         @cancel="pendingKit = null"
@@ -1132,6 +1222,12 @@ const TAB_OPTIONS = [
   text-wrap: pretty;
 }
 
+/* The bill note lives in the category COLUMN rather than inside a panel, so it needs the breathing
+   room a Card would otherwise have given it. Nothing else about it differs. */
+.money-bill-note {
+  margin: 14px 2px 0;
+}
+
 .money-panel .physio-toggle {
   margin-top: 10px;
 }
@@ -1231,6 +1327,26 @@ const TAB_OPTIONS = [
   font-weight: 600;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
+}
+
+/* ⚠ WHAT THE RUNG BUYS, ABOVE WHAT IT COSTS (08.08). It is quieter than the price because the price
+   is still what the parent is deciding with - but it has to be ON the button, because the button is
+   where the four-times bill gets pressed and "24 good weeks against 9" is the whole argument for it. */
+.kit-rung-good {
+  font-size: 10.5px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A line the brand is paying for: the sticker is struck through and what the family actually hands
+   over sits beside it, in the money-in colour the ledger already uses for somebody else's money. */
+.kit-rung-price.is-covered {
+  color: var(--money-in);
+}
+.kit-rung-price.is-covered s {
+  color: var(--ink-soft);
+  opacity: 0.7;
+  margin-right: 4px;
 }
 
 .kit-line-sponsored {

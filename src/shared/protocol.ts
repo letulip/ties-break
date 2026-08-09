@@ -102,6 +102,21 @@ export type WorldEventType =
  *  under the SAME category, so a cancelled booking nets to zero on the Money breakdown. */
 export type WorldEventCategory =
   | 'coaching'
+  /** 'facility' (v44, docs/specs/split-the-bill-2026-08.md) is the COURT half of the weekly training
+   *  bill, split off 'coaching' so the family can read what it is paying for.
+   *
+   *  ⚠ IT IS A SPLIT, NOT A NEW CHARGE. `ECONOMY.coach.hourlyRateCents` has always priced every rung
+   *  INCLUSIVE of court rental – the recorded decision this reverses is coach-tiers.md §3 – so the
+   *  two lines are a partition of a total that did not move: `coaching + facility` this week equals
+   *  what `coaching` alone was charged before. Its sharpest consequence is that a SELF-COACHED family
+   *  now books nothing under 'coaching' at all, which is the honest reading of a parent who works
+   *  free: what it was being billed for was always the court.
+   *
+   *  ⚠ AND AN OLD SAVE HAS NO ROWS OF IT, BY CONSTRUCTION. `byCategory` is a partial record and the
+   *  migration back-fills nothing (see migrations.ts v43 -> v44): a career loaded from v43 keeps its
+   *  history under 'coaching' and starts splitting from the next tick, so the ledger stays truthful
+   *  about what it actually charged rather than being retconned. */
+  | 'facility'
   | 'travel'
   | 'entry'
   | 'gear'
@@ -351,6 +366,94 @@ export interface SeasonSummary {
    *  `LadderView.rank`: unranked is not a number, and a dense place inside the 0-point tie group is
    *  what that rule exists to refuse to print. Same optionality as `rankTrack`. */
   rankInTrack?: number | null
+  /** WHAT THE SEASON COULD NOT DO – the entries it spent on rungs whose title could not have entered
+   *  her book (schema v45, docs/specs/season-mirror-2026-08.md).
+   *
+   *  ⚠ IT EXISTS BECAUSE THE LADDER FLOOR GREW A DECISION WHOSE WRONG ANSWER IS INVISIBLE. With the
+   *  lower bound gone (`ladder-floor-2026-08.md`, the owner's ruling of 08.08) a rung she has outgrown
+   *  is enterable, which is correct – but `human-arm-forward-2026-08.md` then measured a season paying
+   *  10.3 entries into rungs that cannot move her, with **six of nine axes still inside the human
+   *  envelope**: the matches, the win rate and the money all look like a career that is working. The
+   *  coach already says the same thing on the card (`coachLadderNote`), about 1,150 times a career,
+   *  which is background rather than signal. This is the season's own count of it.
+   *
+   *  ⚠ CAPTURED AT ENTRY, NEVER RECONSTRUCTED, and that is the whole reason it is persisted state
+   *  rather than a fold. The judgement is «could a title here have entered the book SHE HELD THAT
+   *  WEEK», and the book at week W is her results over [W-52, W] – rows `pruneResults` has already
+   *  deleted by the wrap. Two ledgers have produced a wrong wrap-up line here for exactly this reason
+   *  (`bestResultText` off the 400-row event feed; the season money off the same feed), so this one is
+   *  counted in the branch that commits the entry and read at the wrap.
+   *
+   *  OPTIONAL, AND ABSENT MEANS ABSENT. A migration cannot back-fill a judgement made at a week whose
+   *  evidence is gone, so a season that began before the counter did carries no pair at all and the
+   *  card shows no line – which is honest, where a 0 would read as "none of them". */
+  entryMirror?: SeasonEntryMirror
+}
+
+/** The pair the wrap-up prints: how many tournaments the season entered, and how many of those were
+ *  entered into a book that could not have taken their title.
+ *
+ *  ⚠ BOTH NUMBERS COME FROM ONE LEDGER, WHICH IS THE POINT OF PUTTING THEM IN ONE OBJECT. The
+ *  denominator cannot be counted off `world.results` – a result row is AWARD-ONLY, so a season of lost
+ *  openers leaves no row (see `seasonBestFinish`) – and it cannot be counted off `world.events`, which
+ *  is capped at 400 rows. Counting both at the same commit is what stops the line from being a ratio
+ *  of two different seasons. */
+export interface SeasonEntryMirror {
+  /** tournaments entered during the season and PAID FOR. The count follows the fee: a withdrawal
+   *  inside the deadline hands the money back and is un-counted with it, every forfeiting exit (a
+   *  late cancel, a skip, a medical forfeit) keeps its entry – the same rule `releaseEntry` already
+   *  applies to the ITF participation slot. */
+  entered: number
+  /** ...of those, how many could not have moved her on the table this card names. See
+   *  `entryCouldNotMove` in engine/world/ladder.ts for the rule and the measurement that chose it. */
+  couldNotMove: number
+}
+
+/** THE PERSISTED HALF: the season's entry ledger, written at the entry choke point and reset by the
+ *  wrap-up (schema v45). `SeasonEntryMirror` above is what the wrap BANKS out of this.
+ *
+ *  ⚠ IDS AND NOT TWO COUNTERS, and the reason is a measured off-by-a-season. The count follows the
+ *  fee, so a refunding withdrawal has to un-count its entry – and an entry taken in week 45 of one
+ *  season can be withdrawn in week 2 of the next, after the wrap has already banked and reset. Two
+ *  bare integers would then decrement a season that never counted that entry. The id says which
+ *  season's ledger owns the row, so the wrong one cannot be debited.
+ *
+ *  ⚠ AND `closed` IS A SUBSET OF `entered`, WRITTEN AT THE SAME MOMENT rather than re-derived on the
+ *  way out. `bookClosedTo` at withdrawal time would answer about a book that has since moved, which is
+ *  the recomputation this whole field exists to avoid.
+ *
+ *  Bounded by construction: one entry per week is a rule (`enterEvent`), and the ledger resets every
+ *  52 weeks, so neither array can exceed a season's worth of ids. */
+export interface SeasonEntryLedger {
+  /** the week the ledger began counting. The wrap prints its pair only when this is at or before the
+   *  season's first week – a ledger that started mid-season describes part of a season, and a part is
+   *  not a statistic. */
+  fromWeek: number
+  /** one row per entry committed since `fromWeek` and not refunded. */
+  rows: SeasonEntryRow[]
+}
+
+/** ONE ENTRY, AS THE WEEK IT WAS MADE SAW IT.
+ *
+ *  ⚠ THE SPLIT BETWEEN WHAT IS CAPTURED AND WHAT IS FOLDED IS THE WHOLE DESIGN, and it is a fix for a
+ *  contradiction found in the browser. Two of these three facts are about her BOOK, which
+ *  `pruneResults` deletes 52 weeks later, so they must be captured. The third – which table the rung
+ *  pays into – is a property of the calendar and never decays, so it is stored raw and compared at the
+ *  wrap against `SeasonSummary.rankTrack`, the table the card itself names two rows above the line.
+ *
+ *  Judging the table at ENTRY time instead (against `activeLadderOf`) printed a card reading
+ *  «Final national rank #3» over «13 could not move her ranking», where all thirteen were the domestic
+ *  events that had made her third. One card, two tables, and the reader is right and the card is
+ *  wrong – which is the same defect the wrap-up's junior-rank line was, arriving through a new door. */
+export interface SeasonEntryRow {
+  id: string
+  /** which table this rung pays into. Durable: a property of the tier, not of her. */
+  track: LadderTrack
+  /** CAPTURED: she had already climbed past the rung when she entered (`hasOutgrown`). */
+  outgrown: boolean
+  /** CAPTURED: her best-N book on that rung's own table was shut to its title (`bookClosedTo`) – the
+   *  window was full and its weakest counted row already paid at least what winning would pay. */
+  bookShut: boolean
 }
 
 /** One FINISHED season, appended to the career's history at wrap-up (schema v14, R10-9).
@@ -708,9 +811,10 @@ export interface UpcomingEvent {
    *  or a family vacation. Before the deadline the same control is an ordinary refunded withdrawal;
    *  once the week starts, the tournament flow's Skip owns it. */
   cancellable: boolean
-  /** why the kid HARD-cannot enter, for the UI lock label; absent when eligible. Point-band reasons:
-   *  'locked' = not enough ranking points yet (below the tier's minPoints); 'outgrown' = past its
-   *  ceiling now. Hard availability blocks (Season-Life slice B, checked after the point band):
+  /** why the kid HARD-cannot enter, for the UI lock label; absent when eligible. Point-band reason:
+   *  'locked' = not enough ranking points yet (below the tier's minPoints), or below an acceptance
+   *  cut. ⚠ 'outgrown' LEFT THIS UNION on 06.08 and is `outgrown` below – a rung she has passed no
+   *  longer refuses her. Hard availability blocks (Season-Life slice B, checked after the point band):
    *  'unavailable' = school exams / off-season / a booked family vacation; 'injured' = she is out;
    *  'medical' = the doctor's veto below ECONOMY.availability.medicalFloor (the one hard body-gate
    *  – see availabilityStatus). Ordinary fatigue is NOT here – it is a soft, warned CHOICE (see
@@ -718,7 +822,15 @@ export interface UpcomingEvent {
    *  'capped' = she has spent her year's allowance of INTERNATIONAL entries (the ITF annual entry
    *  cap, docs/research/ranking-points-by-tier.md §2) – a hard block, but one that lifts by itself
    *  when the season turns, which is why it is its own reason and not folded into 'unavailable'. */
-  ineligibleReason?: 'locked' | 'outgrown' | 'injured' | 'unavailable' | 'medical' | 'capped'
+  ineligibleReason?: 'locked' | 'injured' | 'unavailable' | 'medical' | 'capped'
+  /** SHE HAS PASSED THIS RUNG – and it is not a lock (the owner's ruling on backlog #84, 06.08,
+   *  quoted verbatim in docs/specs/ladder-floor-2026-08.md: no lower bound at all, let her play, and
+   *  lead with the more relevant tournament of the week when there is one). 'outgrown' used to be an
+   *  `ineligibleReason` above and is deliberately no longer in
+   *  that union: it is orthogonal to whether she may enter, so the compiler is what stops a surface
+   *  from reading it as a refusal again. An outgrown card is ENTERABLE, says so, and loses the week's
+   *  slot to any rung she has not passed – see `preferredWeekEvent`. */
+  outgrown?: boolean
   /** a SOFT warning on an event the kid CAN still enter (eligible stays true): 'fatigued' = her
    *  condition is below the tier's floor, so racing risks a deeper hole / injury. The owner's call
    *  is that a tired body is a tough-parent decision, not a hard rule. */
@@ -1244,8 +1356,25 @@ export interface KitLineView {
   /** her CONDITION on this line right now, 0 = as new, 1 = spent (`kitWearAt`'s units) */
   wear: number
   /** what the family's recurring bill for this line costs at each rung, cents - the mid of the
-   *  background's own band times the rung's price factor, so the corridor is visible at the till */
-  rungs: { grade: KitGrade; label: string; blurb: string; priceCents: number; owned: boolean }[]
+   *  background's own band times the rung's price factor, so the corridor is visible at the till.
+   *
+   *  `payableCents` is what the FAMILY would actually hand over for that rung today, after a signed
+   *  deal's allowance (08.08). It equals `priceCents` when nobody is covering the line, and the
+   *  screen must print IT rather than deriving the discount itself - the till is the only authority
+   *  on what a purchase costs, and until this wave the two disagreed by the whole price.
+   *
+   *  `goodWeeks` is what the rung BUYS, in weeks before the line reads "Worn" - the only honest unit
+   *  for a model in which fresh kit is exactly neutral and wear only ever subtracts. See
+   *  `goodWeeksFor`; it is not a power figure because there is no power figure to give. */
+  rungs: {
+    grade: KitGrade
+    label: string
+    blurb: string
+    priceCents: number
+    payableCents: number
+    goodWeeks: number
+    owned: boolean
+  }[]
   /** true while a signed deal covers this line - the brand is supplying her, so the rung she picks
    *  changes what she is billed and almost nothing about how fresh she is (see `kitFreshCap`) */
   sponsored: boolean
@@ -2006,6 +2135,14 @@ export interface Snapshot {
   proEntryCap: EntryCapUsage
   /** the engine's own per-tier entry verdict - see TierOpenMap */
   tierOpen: TierOpenMap
+  /** ...AND WHICH OF THE OPEN ONES SHE HAS ALREADY PASSED (`hasOutgrown`, 06.08). Since the lower
+   *  bound stopped refusing, `tierOpen` alone can no longer tell a working rung from one she has
+   *  outgrown – they are both `true` – and the two are a completely different sentence on a screen.
+   *  ⚠ IT IS NOT A LOCK AND NO SURFACE MAY DRAW IT AS ONE: it is the ladder's own "she is past this
+   *  level", and the reason the feed's per-week pick can lead with the more relevant rung.
+   *  Derived at snapshot time, persists nothing, and every rung it is true of is a rung she may
+   *  still enter. */
+  tierOutgrown: TierOpenMap
   /** THE ACCEPTANCE LIST, AS A POSITION, per rung that has one – `acceptanceRank(world, tier)`, absent
    *  for every rung that gates on points instead.
    *
@@ -2028,16 +2165,25 @@ export interface Snapshot {
   coachId: string | null
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
   coachMarket: CoachMarketRow[]
-  /** What the coach costs over a season with tournament weeks OFF and ON, so the toggle can be
-   *  priced rather than guessed. The weekly rate is the same either way; the week COUNT differs. */
+  /** What the coach costs, weekly and over the coming year.
+   *
+   *  ⚠ ONE SEASON FIGURE SINCE 08.08, not the OFF/ON pair. The retainer is charged on every week the
+   *  coach is not stood down - which is no longer a question the tournament calendar answers - so
+   *  there is nothing left to compare. See `coachWorksThisWeek`. */
   coachBilling: {
+    /** does he TRAVEL with her (a persisted stance; the mechanic itself is still deferred) */
     onEventWeeks: boolean
     weeklyCents: number
-    /** weeks of the current season she is entered for */
+    /** weeks of the season she is entered for – the season she is in, or the one just finished */
     eventWeeks: number
-    seasonOffCents: number
-    seasonOnCents: number
+    /** weeks of the coming year the retainer is actually charged for */
+    billedWeeks: number
+    seasonCents: number
   }
+  /** ONE SENTENCE ABOUT HOW MUCH ROOM IS LEFT IN HER (08.08) – the context every uplift on screen T
+   *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
+   *  fills her ceiling. Never quotes the ceiling itself; see `coachRoomNote`. */
+  coachRoomNote: string
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */
   vacations: VacationBooking[]

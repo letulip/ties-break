@@ -438,11 +438,22 @@ describe('a marker is a tournament she can act on, and nothing else', () => {
     expect(isSuitable(event({ entered: true, eligible: false, deadlineWeek: 4 }), 5)).toBe(true)
   })
 
-  it('...and NOT a locked-ahead one, a closed one, or one she has outgrown', () => {
+  it('...and NOT a locked-ahead one, a closed one, or one she cannot enter', () => {
     expect(isSuitable(event({ eligible: false, ineligibleReason: 'locked', pointsToEnter: 180 }), 5)).toBe(false)
     expect(isSuitable(event({ eligible: true, deadlineWeek: 4 }), 5)).toBe(false) // list closed
-    expect(isSuitable(event({ eligible: false, ineligibleReason: 'outgrown' }), 5)).toBe(false)
     expect(isSuitable(event({ eligible: false, ineligibleReason: 'injured' }), 5)).toBe(false)
+  })
+
+  // ⚠ RE-AIMED, NOT DELETED (06.08, docs/specs/ladder-floor-2026-08.md). The case above used to end
+  // with `ineligibleReason: 'outgrown'` asserted UNSUITABLE, and the reason that assertion is gone is
+  // that the state it described no longer exists: the lower bound stopped refusing, so an outgrown
+  // rung is enterable and `outgrown` is a label beside `eligible` rather than a value inside it. The
+  // claim worth keeping is the one this rung's marker is really about - she can ACT on it - so it is
+  // re-pointed at the new state rather than dropped.
+  it('an outgrown event she may still enter IS a marker – the lower bound is not a wall', () => {
+    expect(isSuitable(event({ eligible: true, outgrown: true, deadlineWeek: 6 }), 5)).toBe(true)
+    // ...and the ceiling still cannot rescue a rung she has NOT reached.
+    expect(isSuitable(event({ eligible: false, outgrown: true, ineligibleReason: 'locked' }), 5)).toBe(false)
   })
 
   it('a week whose only tournament is unreachable reads as the training week it IS for her', () => {

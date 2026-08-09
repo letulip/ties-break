@@ -16,8 +16,10 @@
     "bench:econ": "vite-node tools/econ-bench.ts",
     "bench:endings": "vite-node tools/endings-bench.ts",
     "bench:fatigue": "vite-node tools/fatigue-bench.ts",
+    "bench:floor": "vite-node tools/ladder-floor.ts",
     "bench:knock": "vite-node tools/knock-rate.ts",
     "bench:load": "vite-node tools/load-bench.ts",
+    "bench:mirror": "vite-node tools/season-mirror.ts",
     "bench:money": "vite-node tools/money-decomposition.ts",
     "bench:deadweek": "vite-node tools/dead-week-probe.ts",
     "bench:outgrown": "vite-node tools/outgrown-entry-probe.ts",
@@ -26,6 +28,7 @@
     "bench:skill": "vite-node tools/skill-ceiling.ts",
     "bench:sponsor": "vite-node tools/sponsor-window-bench.ts",
     "bench:world": "vite-node tools/world-turnover.ts",
+    "e2e:fixtures": "vite-node tools/e2e-fixtures.ts",
     "test": "node scripts/units.mjs --verbose",
     "test:watch": "vitest",
     "test:sim": "node scripts/sim.mjs",
@@ -33,6 +36,8 @@
     "test:quiet": "node scripts/units.mjs",
     "test:sim:quiet": "node scripts/sim.mjs",
     "test:component": "vitest run --project component",
+    "test:e2e": "node scripts/e2e.mjs",
+    "test:e2e:ui": "node scripts/e2e.mjs --ui",
     "prepare": "git config core.hooksPath .githooks || true",
     "graph": "node scripts/graph.mjs",
     "graph:check": "node scripts/graph.mjs --check"
@@ -42,6 +47,7 @@
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/node": "^24.0.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vue/test-utils": "^2.4.11",

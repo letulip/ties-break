@@ -40,6 +40,24 @@ let updateSW: ((reloadPage?: boolean) => Promise<void>) | undefined
 export const UPDATE_CHECK_MS = 60 * 60 * 1000
 
 export function initPwa(): void {
+  // ⚠ THE E2E BUILD DOES NOT REGISTER THE WORKER, AND THAT IS THIS LINE (S0, 08.08).
+  //
+  // Everything above describes a worker that installs itself, precaches the app and one day raises a
+  // banner the player must answer. Every one of those is a race an end-to-end run can lose: a worker
+  // activating between `goto` and the first assertion, a precache serving the PREVIOUS build to the
+  // next spec, and an update prompt landing on top of the control a test was about to click. The
+  // suite would then go red for reasons that have nothing to do with the code - the exact failure
+  // mode .github/workflows/simulation.yml already ruled against.
+  //
+  // What is NOT done: the plugin still runs and `sw.js`, the manifest and the precache manifest are
+  // all still built and served, so the artefact under test stays the production artefact. Only the
+  // registration call is withheld. And nothing here ships as a test branch: `import.meta.env` is
+  // inlined at BUILD time, so a player's bundle contains the registration and no switch at all.
+  //
+  // ⚠ IT IS A SWITCH, NOT A DELETION. S2's update-flow spec needs the worker back ON, and it gets
+  // there by building without this variable - see e2e/README.md, "The service worker".
+  if (import.meta.env.VITE_TB_SW === 'off') return
+
   updateSW = registerSW({
     immediate: true,
     onRegisteredSW(_swUrl, registration) {

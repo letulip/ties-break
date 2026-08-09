@@ -1111,11 +1111,34 @@ describe('P8 — deadline stop respects the point band', () => {
     expect(advanceWeeks(w, rngFromSeed(w.seed), 4)).toContain('deadline')
   })
 
-  it('an OUTGROWN tier never stops the sim either (points past the ceiling)', () => {
+  // ⚠⚠ RE-AIMED 06.08 (docs/specs/ladder-floor-2026-08.md), AND IT IS THE OPPOSITE ASSERTION. It
+  // read "an OUTGROWN tier never stops the sim either", and it was right for the rule it was written
+  // against: a deadline stop asks "do you want to enter this?", so it must not fire for an event she
+  // cannot enter. The owner's ruling on backlog #84 makes an outgrown rung ENTERABLE, which means
+  // the question is now a real one and the stop is now correct rather than noise. What P8 protects
+  // is unchanged and is what is asserted: the stop fires exactly when the gate would admit her.
+  it('an OUTGROWN tier DOES stop the sim now – the deadline asks a question she can answer', () => {
     const w = createWorld('p8-outgrown')
-    giveKidPoints(w, 400) // past regional's 230 ceiling; national needs no stop here
+    giveKidPoints(w, 400) // past regional's 250 ceiling
     const reg = injectEvent(w, { week: w.week + 4, tier: 'regional', deadlineWeek: w.week + 2 })
     w.season = [reg]
+    // ⚠ W4: no knock may interrupt the advance under test - see noKnocksFor.
+    noKnocksFor(w)
+    const gate = entryStatus(w, reg)
+    expect(gate.level, 'the lower bound is a sorting key, not a wall').not.toBe('blocked')
+    expect(gate.outgrown, '400 is past the band – still hers, and beneath her').toBe(true)
+    expect(advanceWeeks(w, rngFromSeed(w.seed), 4)).toContain('deadline')
+  })
+
+  // ...and the half of the old claim that is still true, kept as its own case rather than lost with
+  // it: a rung she has NOT REACHED still never stops the sim, because there she really can do
+  // nothing. That is the 'locked' half of the band, and it is untouched by the 06.08 ruling.
+  it('a rung below her floor still never stops the sim', () => {
+    const w = createWorld('p8-below-floor')
+    const nat = injectEvent(w, { week: w.week + 4, tier: 'national', deadlineWeek: w.week + 2 })
+    w.season = [nat]
+    noKnocksFor(w)
+    expect(entryStatus(w, nat).reason).toBe('locked')
     expect(advanceWeeks(w, rngFromSeed(w.seed), 4)).not.toContain('deadline')
   })
 })

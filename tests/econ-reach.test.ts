@@ -172,6 +172,44 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // deliberate population change rather than a calibration slipping. Five of thirty still never
     // clear it, so both branches fire and the CASE – the property this test was written for – is
     // untouched and still asserted exactly.
+    // ⚠⚠ A NINTH READING, AND IT IS EVIDENCE RATHER THAN A RE-AIM – probe/compound-cost, 08.08.
+    // NOTHING BELOW THIS COMMENT IS CHANGED: not the case, not the band, not a constant. This line
+    // reads **1 of 30** on the assembled tree and is left RED, because at one career re-basing is
+    // erasure and the number is the finding. The attribution is in docs/specs/compound-cost-2026-08.md
+    // and the four arms are trees rather than flags (one detached worktree per wave boundary), each
+    // cross-checked against `runCareer` itself with zero per-career mismatches:
+    //
+    //     baseline (d9efb4e, both waves absent)      16 of 30      <- NOT 25; see below
+    //     + the ladder floor alone   (6d80792)       19 of 30
+    //     + the coach retainer alone (d9efb4e+bf00acb) 9 of 30
+    //     + BOTH                     (HEAD)           1 of 30
+    //     + both, and the parent takes his coach's advice  9 of 30
+    //     ...all four cells again, with a wallet that cannot empty:  29 · 28 · 29 · 25
+    //
+    // THREE THINGS THE NEXT READER SHOULD NOT HAVE TO RE-DERIVE.
+    //
+    // (1) THE "25 of 30 at ladder-pace" PINNED ABOVE IS NOT ON THIS LINEAGE AND HAS NOT BEEN SINCE
+    //     05.08. It reproduces exactly on the branch it was measured on (3ccb65d = 25, and its merge
+    //     bf80729 = 25) and then decayed with no wave claiming it: PR #79 -> 24, PR #80 -> 19,
+    //     PR #82 (wave/sponsor-catchup) -> 16, where it sat until the two waves above landed. The
+    //     band absorbed all three, which is what a band is for and is also how its anchor went stale
+    //     three merges before anyone read it. **The two waves are answerable for 16 -> 1, not 25 -> 1.**
+    //
+    // (2) THE TWO WAVES DO NOT PUSH THIS NUMBER THE SAME WAY. The ladder floor alone pushes it UP
+    //     (16 -> 19) because under R4 the coach was stood down on competition weeks, so doubling her
+    //     entries took his billed weeks from 76.7% to 48.9% and his bill from $17,345 to $11,136 a
+    //     season - more than the extra travel cost. The retainer pins billed weeks at 100% and the
+    //     bill at $22,208 against a family income of $23,892. The interaction is that removing a
+    //     defect removed a subsidy the other wave's benefit was riding on; it is superadditive
+    //     (+3, -7, together -15) and both rulings are still correct.
+    //
+    // (3) WITH MONEY REMOVED, ALL FOUR CELLS READ 25-29. Of the fifteen careers lost, four are the
+    //     tennis (W-track entries 6.26 -> 2.53 a season, the fatigue mechanism ladder-floor's §2c
+    //     traces) and eleven are the family going bankrupt. **On this fixture the 14->18 PRO proxy is
+    //     currently decided by the bank balance rather than by the tennis** - and this file's own
+    //     docstring for `middleHigh` already says it is "the cell where the coaching bill eventually
+    //     stops the career". That is a fixture question for the owner, not a band question, and the
+    //     spec's §7 lays out the two defensible rulings. Do not re-base [12, 27] to fit 1 of 30.
     const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleHigh, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)
@@ -319,6 +357,34 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // records as harmless, and it did: 4 appears twice in that table. **4 is not a number chosen to
     // pass this run - it is the minimum the file's own world sweep already recorded**, and 5 sits
     // inside it with room, so the guard still bites on a real collapse.
+    //
+    // ⚠⚠ AND IT FIRED THE EIGHTH TIME (08.08, fix/ladder-window-floor) - AT ZERO, AND THE CAUSE IS A
+    // RULING RATHER THAN A DRIFT. Recorded here in the owner's own words because that is what makes
+    // the re-base checkable rather than convenient:
+    //
+    //   "Now she has somewhere to play IF THE PLAYER WANTS IT. Tournaments run continuously in
+    //    reality. And she does not do well at all of them - if I travelled to a tournament and went
+    //    out in the first round, and then there are no events at all for six or seven weeks, that is
+    //    not right."   (quoted verbatim in docs/specs/ladder-floor-2026-08.md §3c)
+    //
+    // The ladder's lower bound stopped refusing (docs/specs/ladder-floor-2026-08.md): having
+    // somewhere to play every week is the CORRECT state of the world, and what she does with those
+    // weeks is the PLAYER's decision. **The domestic ladder therefore no longer PUSHES her up it by
+    // closing Local behind her**, and a bench policy that enters everything spends its early weeks on
+    // club draws. 320 - "she is WINNING at the top of the domestic ladder by sixteen" - went to
+    // **0 of 30**, which is the same non-measurement 150 was from the other end.
+    //
+    // RE-BASED 320 -> 250 BY THE PROCEDURE THIS FILE ITSELF PRESCRIBES three paragraphs up: re-run
+    // `tools/reach-sweep.ts`, read the plateau column, and re-base to the next milestone the domestic
+    // table NAMES rather than to the number that restores eleven. **250 is the most-named number in
+    // that table** - Regional's `enterPointBand` ceiling AND J30's floor, which act2-pro-tour.md
+    // §12.2 records as one decision - so the proxy becomes "by sixteen she has crossed the
+    // INTERNATIONAL DOOR". Swept on this tree: 150 -> 29 of 30 (a formality again), 200 -> 20,
+    // **250 -> 9**, 270 -> 6, 320 -> 0. Nine sits inside the pinned band with room on both sides.
+    //
+    // ⚠ NOTHING BELOW IS WEAKENED. The case assertions (0 < n < 30) and the band [4, 20] are the
+    // ones that were here yesterday, to the digit. What moved is the constant they are asked about,
+    // and it moved to a number the game names.
     //
     // THE CASE ASSERTIONS ARE UNTOUCHED (0 < n < 30), and they are the part that is not a taste.
     const reachedH16 = workingH16.filter((r) => r.reachedWeek !== null).length

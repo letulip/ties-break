@@ -94,6 +94,22 @@ const rankMove = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
   return s.startRank > end ? { dir: 'up', by: s.startRank - end } : { dir: 'down', by: end - s.startRank }
 })
 const showRankMove = computed(() => ranked.value && rankTrack.value === 'itf')
+
+// ⚠ WHAT THE SEASON COULD NOT DO (feat/season-mirror, docs/specs/season-mirror-2026-08.md). The ladder
+// floor made every rung beneath her enterable, which is the owner's ruling and is right - and a probe
+// then measured a career that stops climbing while the matches, the win rate and the money all stay
+// inside the human envelope, so the mistake was invisible from THIS VERY CARD. It is one number now.
+//
+// ⚠ THE ENGINE BANKED IT AT THE WRAP AND THIS FILE DOES NOT SECOND-GUESS IT. `entered` is what she
+// entered and paid for; `couldNotMove` is how many of those could not have moved her on the table this
+// same card names in its RANKING tile. The facts behind the second number were captured in the branch
+// that committed each entry, which is the only week they are answerable at - so there is nothing here
+// to re-derive and nothing that could disagree.
+//
+// ⚠ AND ABSENT IS ABSENT. The pair is missing on every summary banked before v45 and on the first wrap
+// of a career migrated mid-season, because the counter cannot honestly speak for weeks it did not
+// watch. No row, rather than a zero that would read as "none of them" - the `spentCents` precedent.
+const entryMirror = computed(() => summary.value?.entryMirror)
 </script>
 
 <template>
@@ -153,6 +169,23 @@ const showRankMove = computed(() => ranked.value && rankTrack.value === 'itf')
               <!-- weeksInjured is optional (pre-slice-C summaries never stored it): default 0 -->
               <span class="season-val num">{{ summary.weeksInjured ?? 0 }} wk</span>
             </div>
+            <!-- The mirror sits in MATCHES rather than in RANKING on purpose: the number it corrects is
+                 the record two rows above it. A season of 47 matches at 67% reads as a career that is
+                 working, and it is the reading the probe found a parent cannot get past. -->
+            <template v-if="entryMirror">
+              <div class="season-row">
+                <span class="season-key">Tournaments entered</span>
+                <span class="season-val num">{{ entryMirror.entered }}</span>
+              </div>
+              <!-- ⚠ IT NAMES THE SAME TABLE THE ROW ABOVE NAMES, and that is not decoration. The
+                   engine judged this count against `rankTrack` – the season's own table – so saying
+                   which one makes the agreement visible instead of merely true. An earlier build
+                   judged it against the LIVE table and printed "13 could not move her ranking" under
+                   "Final national rank #3", about the very events that had made her third. -->
+              <p class="hint season-mirror-note">
+                {{ entryMirror.couldNotMove }} could not move her {{ rankLabel }} ranking
+              </p>
+            </template>
           </div>
         </Card>
 
@@ -256,6 +289,14 @@ const showRankMove = computed(() => ranked.value && rankTrack.value === 'itf')
 }
 
 .season-summary-from {
+  margin: -4px 0 0;
+  font-size: 12px;
+}
+
+/* Tucked under its own row, exactly as `.season-summary-from` sits under the rank. It WRAPS: a
+   half-width tile in a 360px dialog is about 26 characters a line, so this reads as two on a phone,
+   which is the reason it is a sentence under the number rather than a value beside it. */
+.season-mirror-note {
   margin: -4px 0 0;
   font-size: 12px;
 }

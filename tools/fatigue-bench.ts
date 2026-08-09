@@ -95,6 +95,10 @@ export const RIVAL_SAMPLE_EVERY = 4
  *  module runs its own CLI on import. */
 export const EXPENSE_CATEGORIES: readonly WorldEventCategory[] = [
   'coaching',
+  // ⚠ v44: the weekly training bill books on TWO rows now (docs/specs/split-the-bill-2026-08.md) -
+  // the coach's labour under 'coaching' and the court's hire under 'facility'. Missing it here would
+  // have silently under-counted `totalSpendCents`, which is the one number this list actually feeds.
+  'facility',
   'travel',
   'entry',
   'gear',
@@ -827,8 +831,11 @@ export function stepFatigueWeek(
   const physioSpendCents = newEvents
     .filter((ev) => ev.category === 'physio' && (ev.amountCents ?? 0) < 0)
     .reduce((s, ev) => s - (ev.amountCents ?? 0), 0)
+  // ⚠ BOTH HALVES OF THE TRAINING BILL (v44). The column has always meant "what the week's training
+  // cost", and since the split that is the coach's row plus the court's - so it keeps reading the
+  // same quantity as every fatigue run before it rather than dropping the court silently.
   const coachingSpendCents = newEvents
-    .filter((ev) => ev.category === 'coaching' && (ev.amountCents ?? 0) < 0)
+    .filter((ev) => (ev.category === 'coaching' || ev.category === 'facility') && (ev.amountCents ?? 0) < 0)
     .reduce((s, ev) => s - (ev.amountCents ?? 0), 0)
   // Planner spend nets refunds (a cancelled/injury-refunded booking is credited under the SAME
   // category, so the sum is what the family really parted with). The same netting gives the
