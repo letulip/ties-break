@@ -71,7 +71,7 @@ narration, and `tests/e2e-fixtures.test.ts` gates the manifest rather than the p
 
 **281 KiB of saves** (288 KiB with the manifest), the largest single file 77 KiB. That is not a nuisance and there is no
 trade to propose: for comparison, the golden-save corpus these sit next to is **9.8 MB** of
-uncompressed JSON, and `v43.json` alone is 372 KB – nearly five times the week-412 fixture, because
+uncompressed JSON, and `v45.json` alone is 372 KB – nearly five times the week-412 fixture, because
 these are gzipped by the product's own codec. If the set ever does grow (more fixtures, a bigger
 world), the lever to reach for first is fewer fixtures rather than smaller ones: a fixture that has
 been trimmed to fit is no longer a career the app could have written.
@@ -89,7 +89,7 @@ migrate these instead of regenerating them) breaks both.
 | | `tests/fixtures/saves/` – the golden corpus | `e2e/fixtures/` – this set |
 |---|---|---|
 | **question it answers** | does every historical save still load? | where does a browser test start? |
-| **one per** | schema version (v0 … v43, all of them, for ever) | career STATE (five, at the current version) |
+| **one per** | schema version (v0 … v45, all of them, for ever) | career STATE (five, at the current version) |
 | **format** | raw world JSON, no envelope | the app's own export file: envelope + gzip + SHA-256 |
 | **when the schema moves** | a NEW file is added; old ones are never touched | all five are REGENERATED; the old bytes are replaced |
 | **what it must contain** | shapes nobody writes any more | only shapes the app writes today |
