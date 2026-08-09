@@ -158,8 +158,19 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   // --- THE SILVER --------------------------------------------------------------------------------
   // The owner named this one himself («победила, серебро, старалась»). It is a good result and it
   // still stings, and a parent's note does not try to fix that – it just sits next to her.
+  //
+  // ⚠ R15-10 REPLACED THE FIRST LINE OF THIS BLOCK, and it was rule 3 of this file's own four being
+  // broken by the one line that sounded most like a compliment. Owner, 09.08: «на проигрыше в финале
+  // записка на week recap пишет one match short – как будто хорошо, 2е место, а они "не говорят об
+  // этом"». "One match short" MEASURES the result – it is the distance from the trophy, said out
+  // loud, which is the commentator's framing and not the parent's – and "neither have we" then reads
+  // as the family being tactful about good news. Both halves land as praise on the week a girl has
+  // just lost a final. Rule 3 is that a loss gets support and never a consolation prize: NOTICE her,
+  // do not grade her. So the replacement keeps the silence, which is the true observation, and drops
+  // the scoreboard that was framing it: nobody knowing what to say is what the room actually sounds
+  // like, and it is the same fact without the medal held up beside it.
   {
-    text: 'One match short. She has not said a word about it, and neither have we.',
+    text: 'She lost the final. Nobody has found the right thing to say yet.',
     claims: { runnerUp: true, lost: true },
     license: (t) => ordinary(t) && t.lostFinal,
   },

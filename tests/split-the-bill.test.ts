@@ -200,6 +200,20 @@ describe('what the family can now see', () => {
     expect(m).toBeLessThan(r)
   })
 
+  // ⚠ THE ROW GREW A WEEK CLAUSE (R15-17), SO THE TWO COPY TESTS BELOW READ ITS HEAD - AND NOTHING
+  // ELSE ABOUT THEM MOVED. `facilityFlavor` now returns "<venue> – <hours> h, <when>", where the
+  // clause is a fact about THIS WEEK's booking (peak / off-peak read off the jitter the bill already
+  // drew, or an ordinary slot off the private `seed:court:<week>` sub-stream). The owner's sighting
+  // was that the head alone was byte-identical for 208 weeks on a self-coached career, which is the
+  // line their recap scrap shows them.
+  //
+  // The protected fact these two tests exist for is a claim about the HEAD: the row names the
+  // corridor's venue and the hours the plan buys, and one venue step per distinct court price. That
+  // claim is asserted here exactly as before, against the same nine strings, byte for byte - the
+  // slice is what re-aims, not the assertion. Comparing whole strings would instead pin the DICE,
+  // which is the opposite of what this file is for.
+  const head = (text: string): string => text.split(', ')[0]
+
   it('says where she trains and for how long, in the app\'s own voice', () => {
     // The row has to be readable on its own: a venue that names the corridor and the hours the plan
     // buys, which together are the whole line bar the week's jitter.
@@ -218,9 +232,15 @@ describe('what the family can now see', () => {
       tickWeek(world, rng)
       return world.events.find((e) => e.week === 1 && e.category === 'facility')!.text
     })
-    expect(texts[0]).toBe('Club courts – 5 h')
-    expect(texts[1]).toBe('Court hire – 5 h')
-    expect(texts[2]).toBe('Academy courts – 5 h')
+    expect(head(texts[0])).toBe('Club courts – 5 h')
+    expect(head(texts[1])).toBe('Court hire – 5 h')
+    expect(head(texts[2])).toBe('Academy courts – 5 h')
+    // ...and R15-17's clause is really there, on every one of them, so the re-aim above cannot be
+    // satisfied by a row that quietly went back to printing the head alone.
+    for (const t of texts) {
+      expect(t.startsWith(`${head(t)}, `), t).toBe(true)
+      expect(t.slice(head(t).length + 2).length, t).toBeGreaterThan(0)
+    }
     // Short dash only, and no long dash anywhere in player-facing copy.
     for (const t of texts) expect(t).not.toContain('—')
     // The plan really does drive the hours the row prints. (Same re-aim: a club rung, so the venue words
@@ -229,7 +249,7 @@ describe('what the family can now see', () => {
     world.plan = WEEK_PLAN_PRESETS.grind
     const rng = rngFromSeed(world.seed)
     tickWeek(world, rng)
-    expect(world.events.find((e) => e.week === 1 && e.category === 'facility')!.text).toBe('Court hire – 6 h')
+    expect(head(world.events.find((e) => e.week === 1 && e.category === 'facility')!.text)).toBe('Court hire – 6 h')
   })
 
   it('names the RUNG\'S venue too, because the court price now moves with it', () => {
@@ -241,12 +261,18 @@ describe('what the family can now see', () => {
     //
     // ⚠ THE THREE STRINGS THE TEST ABOVE PINS SURVIVE VERBATIM as the club row (self / budget / middle),
     // which is the copy half of "the cheap end did not move". This test is the OTHER two rows.
-    const venueFor = (background: FamilyBackground, coachTier: CoachTier): string => {
+    // ⚠ READS THE HEAD (R15-17) - see the note above the previous test. Every cell below is the same
+    // string it has always been; the week clause is stripped because it is a property of the WEEK and
+    // each of these nine worlds runs a different seed, so leaving it in would have turned a copy pin
+    // into a dice pin. `venueRaw` keeps the whole row for the two sweeps that need it.
+    const venueRaw = (background: FamilyBackground, coachTier: CoachTier): string => {
       const world = createWorld(`venue-${background}-${coachTier}`, { ...DEFAULT_PROFILE, background, coachTier })
       const rng = rngFromSeed(world.seed)
       tickWeek(world, rng)
       return world.events.find((e) => e.week === 1 && e.category === 'facility')!.text
     }
+    const venueFor = (background: FamilyBackground, coachTier: CoachTier): string =>
+      head(venueRaw(background, coachTier))
     // ⚠ ONE VENUE STEP PER DISTINCT COURT PRICE, which is the rule that makes the copy honest: rungs
     // that pay the same read the same, and rungs that pay differently say so. `self` and `budget` share
     // the club row - and that row is the string that shipped with the split, unchanged, because their
@@ -282,14 +308,128 @@ describe('what the family can now see', () => {
         seen.set(words, price)
       }
     }
-    // Short dash only, no Cyrillic, in every one of the nine.
+    // Short dash only, no Cyrillic, in every one of the nine – and this sweep reads the WHOLE row,
+    // clause included, because a copy rule that stopped at the comma would be no rule at all.
     for (const bg of BACKGROUNDS) {
       for (const tier of COACH_TIERS) {
-        const t = venueFor(bg, tier)
+        const t = venueRaw(bg, tier)
         expect(t).not.toContain('—')
         expect(t).not.toMatch(/[Ѐ-ӿ]/)
       }
     }
+  })
+})
+
+// =================================================================================================
+// R15-17 - "Club courts – 5 h", every week, for a whole career.
+//
+// Owner, 09.08. `facilityFlavor` was `FACILITY_VENUE[background][coachStep]` plus the plan's hours,
+// and for a self-coached family at a fixed background BOTH inputs are constant - so the string was
+// byte-identical on all 208 weeks. It is also the line those families read most: a self-coached
+// family books no coach row at all, so the court row is what WeekRecapCard puts on the handwritten
+// scrap under the painting.
+//
+// ⚠ THE FIX MAY NOT COST THE MAIN STREAM A DRAW and may not turn a receipt into a story. Both halves
+// are asserted below, and the first one is also held from the other end by the frozen MAIN capture in
+// tests/condition.test.ts - a new `pickInt` here would move `e6b0c709` and that file would go red.
+// =================================================================================================
+describe('R15-17 - the court receipt stops being one string for a career', () => {
+  /** The facility row for each of the first `weeks` weeks of a self-coached working career - the
+   *  owner's own cell, the one where every other input is constant. */
+  function facilityRows(weeks: number, seed = 'court-variety'): string[] {
+    const world = createWorld(seed, { ...DEFAULT_PROFILE, background: 'working', coachTier: 'self' })
+    world.fundsCents = 10_000_000_00
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < weeks; i++) tickWeek(world, rng)
+    return world.events.filter((e) => e.category === 'facility').map((e) => e.text)
+  }
+
+  it('the same family, same background, same plan, no longer reads one sentence for ever', () => {
+    const rows = facilityRows(40)
+    expect(rows.length).toBeGreaterThan(30)
+    // The defect, stated: before this wave `new Set(rows).size` was 1.
+    expect(new Set(rows).size).toBeGreaterThan(3)
+  })
+
+  it('...and it is still a RECEIPT: every row names the venue and the hours it charged for', () => {
+    // The variation may not cost the line its job. The head is the thing the family is paying for,
+    // and it is the same head on every week because the venue and the plan really did not move.
+    const rows = facilityRows(40)
+    for (const r of rows) expect(r.startsWith('Club courts – 5 h, '), r).toBe(true)
+    // ...and the clause is short enough for the scrap it lands on (see facilityFlavor's own note:
+    // the training flavours sharing that paper already run to 40 characters).
+    for (const r of rows) expect(r.length, r).toBeLessThanOrEqual(40)
+  })
+
+  it('it is DETERMINISTIC - the same career replays the same receipts', () => {
+    // A career is a replay of its seed. A line that re-rolled on every load would be the one thing a
+    // ledger may never do, whatever else it varies.
+    expect(facilityRows(30)).toEqual(facilityRows(30))
+    // ...and a different career is a different sequence, so the pin above is not vacuous.
+    expect(facilityRows(30)).not.toEqual(facilityRows(30, 'court-variety-two'))
+  })
+
+  it('it costs the MAIN stream nothing - the clause rides the jitter and a private sub-stream', () => {
+    // ⚠ INVARIANT 2. The `seed:court:<week>` stream is re-derived at the call site and persists
+    // nothing; the peak/off-peak half is read off the jitter `resolveBaseCosts` already drew. So the
+    // draw COUNT and the draw VALUES for a whole season must be identical to a run where the words
+    // could not vary - which is what a self-coached and an elite career being byte-identical proves,
+    // since the two take different branches through the row emission entirely.
+    const capture = (tier: CoachTier): string => {
+      const world = createWorld('court-rng', { ...DEFAULT_PROFILE, coachTier: tier })
+      world.fundsCents = 10_000_000_00
+      const base = rngFromSeed(world.seed)
+      const draws: number[] = []
+      const rng = () => {
+        const v = base()
+        draws.push(v)
+        return v
+      }
+      for (let i = 0; i < 52; i++) tickWeek(world, rng)
+      return `${draws.length}:${draws.join(',')}`
+    }
+    expect(capture('self')).toBe(capture('elite'))
+  })
+
+  it('the clause is a READING OF THE CHARGE - peak weeks really do cost more than off-peak ones', () => {
+    // ⚠ THE HALF WORTH HAVING, AND THE ONE THAT MAKES IT A RECEIPT RATHER THAN DECORATION. `jitter`
+    // is the one MAIN `pickInt` the bill already draws and it multiplies the facility line, so weeks
+    // genuinely cost different money - and until this wave the row said nothing about why. The peak
+    // and off-peak wordings are read off that same draw, so they must sort with the price.
+    //
+    // ⚠ ASSERTED ON MEANS, NOT ON THE TOP AND BOTTOM ROWS, and that is arithmetic rather than
+    // caution. The corridor roll (`seed:coachbg:<week>`) is a SECOND multiplier of comparable width -
+    // working is [0.7, 0.8], ±6.7%, against the jitter's ±8% - so a single dear week can be cheaper
+    // than a single quiet one and the price ORDER does not track the jitter order row by row. Over a
+    // season the corridor averages out and the ~11% gap between the two jitter bands does not.
+    //
+    // The two wordings are named here because they are copy, and pinning copy is what this file
+    // already does with the nine venue strings above.
+    const DEAR = new Set(['peak slots', 'peak rate', 'prime time', 'the busy hours'])
+    const CHEAP = new Set(['off-peak', 'quiet hours', 'early slots', 'off-peak rate'])
+
+    const world = createWorld('court-price-words', { ...DEFAULT_PROFILE, background: 'working', coachTier: 'self' })
+    world.fundsCents = 10_000_000_00
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 104; i++) tickWeek(world, rng)
+    const rows = world.events
+      .filter((e) => e.category === 'facility')
+      .map((e) => ({ cents: -(e.amountCents ?? 0), clause: e.text.split(', ')[1] }))
+    expect(rows.length).toBeGreaterThan(40)
+
+    // All THREE bands are live: the two price bands and the ordinary one in between. A branch that
+    // never reached one of them would still pass the variety test above.
+    const dear = rows.filter((r) => DEAR.has(r.clause))
+    const cheap = rows.filter((r) => CHEAP.has(r.clause))
+    const ordinary = rows.filter((r) => !DEAR.has(r.clause) && !CHEAP.has(r.clause))
+    expect(dear.length, 'no week ever read as a peak week').toBeGreaterThan(3)
+    expect(cheap.length, 'no week ever read as an off-peak week').toBeGreaterThan(3)
+    expect(ordinary.length, 'no week ever read as an ordinary booking').toBeGreaterThan(3)
+
+    const mean = (xs: { cents: number }[]): number => xs.reduce((s, x) => s + x.cents, 0) / xs.length
+    expect(mean(dear), 'peak weeks must bill more than off-peak ones').toBeGreaterThan(mean(cheap))
+    expect(mean(dear)).toBeGreaterThan(mean(ordinary))
+    expect(mean(ordinary)).toBeGreaterThan(mean(cheap))
   })
 })
 

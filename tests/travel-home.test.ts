@@ -792,10 +792,28 @@ describe('ui/travel-set — the note is the PARENT, and it fits on a scrap of pa
     // that reads as a coaching assessment would put the same person on the card twice.
     const CONSOLATION = /\bwell played\b|\bgood effort\b|\bproud of\b|\bnext time\b|\bunlucky\b|\bso close\b/i
     const COACH = /\bwe (?:build|fix|work on)\b|\bthe job\b|\bher weapon\b|\bthis year\b|\bat her age\b/i
+    // ⚠ GREW A THIRD BAND FOR R15-10, AND THE TWO ABOVE ARE UNTOUCHED. This guard already existed
+    // and "One match short. She has not said a word about it, and neither have we." walked straight
+    // through it - it uses none of those six phrases - which is the exact failure the calendar
+    // screen's sweep already wrote down once: the copy is data, and data with a rule needs a test or
+    // the rule is a habit. Owner, 09.08: «на проигрыше в финале записка на week recap пишет one
+    // match short – как будто хорошо, 2е место, а они "не говорят об этом"».
+    //
+    // The missing band is the SCOREBOARD one. Consolation says "bad luck"; this says "you nearly
+    // won", which is the same congratulation in a commentator's mouth - it grades her by measuring
+    // the distance to the trophy, and a parent does not hold a medal up beside her on the drive
+    // home. Rule 3 of travelNotes.ts's own four, held mechanically instead of by intention.
+    const NEAR_MISS = /\b(?:one|two|a) (?:match|game|point|win|set)s? (?:short|away|from)\b|\bjust short\b|\bcame up short\b|\bfell short\b|\bnearly (?:won|had|did) it\b|\balmost (?:won|had) it\b|\bone away\b/i
     for (const t of texts) {
       expect(CONSOLATION.test(t), `consolation prize in "${t}"`).toBe(false)
       expect(COACH.test(t), `coach's register in "${t}"`).toBe(false)
+      expect(NEAR_MISS.test(t), `the scoreboard, not the girl, in "${t}"`).toBe(false)
     }
+    // ...and the scanner really does fire on the line that started this, which is what stops the
+    // band above from being three regexes that match nothing. A guard nobody has watched fail is a
+    // guard that has never been tested.
+    expect(NEAR_MISS.test('One match short. She has not said a word about it, and neither have we.')).toBe(true)
+    expect(NEAR_MISS.test('She lost the final. Nobody has found the right thing to say yet.')).toBe(false)
   })
 
   it('no two lines are the same line', () => {

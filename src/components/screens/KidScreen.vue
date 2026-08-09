@@ -201,6 +201,23 @@ const coachTierLabel = computed(() =>
   coachRow.value ? `${COACH_TIER_LABEL[coachRow.value.tier]} tier` : COACH_TIER_LABEL['self'],
 )
 
+/** WHO IS DOING THE READING, on the panel under the tile (R15-18, one screen over).
+ *
+ *  ⚠ THE SAME DEFECT THE OWNER FOUND ON THE SEASON CARDS. The tile directly above this already
+ *  prints "You" for a family paying nobody - `coachRow` is null and has been for as long as the tile
+ *  has existed - and the sentence under it still credited a coach with the reading. The radar's model
+ *  knows the difference perfectly well (engine/radar.ts prices the `self` rung's read lowest and
+ *  never lets it resolve); it was only the sentence naming somebody who is not there.
+ *
+ *  ⚠ VOICE, NOT VALUE. Identical shapes, identical fog, identical axis notes - those speak in the
+ *  first person plural and belong to whoever is holding the pen. What changes is the pronoun on the
+ *  frame, which is the whole of the owner's complaint and none of the mechanic. */
+const radarBlurb = computed(() =>
+  coachRow.value
+    ? 'What her coach can tell so far. The solid shape is where she is; the haze around it is how far she might go. Both sharpen as the coach learns her.'
+    : 'What you can tell so far. The solid shape is where she is; the haze around it is how far she might go. Both sharpen as you learn her.',
+)
+
 // --- IMPORTANT MOMENTS ---------------------------------------------------------------------
 // The export's timeline: a lime rule with dated nodes on it. Ours reads the milestone EVENTS the
 // engine already fires (`type: 'milestone'`, `keep: true`) and always ends on Today.
@@ -414,10 +431,11 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            decisions.md #11, finally built. No numbers anywhere on it, ever. -->
       <Card class="kid-panel">
         <Eyebrow as="h2">Skills</Eyebrow>
-        <p class="kid-panel-note">
-          What her coach can tell so far. The solid shape is where she is; the haze around it is how
-          far she might go. Both sharpen as he learns her.
-        </p>
+        <!-- R15-7: no pronoun names the coach - women are on every roster by construction. R15-15:
+             this sentence names the two SHAPES; the key for the two LINES lives with the drawing, in
+             SkillsRadar.vue, so it travels wherever the picture does. R15-18: and it names the right
+             READER - see `radarBlurb`, which is the season card's plaque one screen over. -->
+        <p class="kid-panel-note">{{ radarBlurb }}</p>
         <SkillsRadar
           :axes="radarAxes"
           title="Her skills: serve, return, composure and stamina. The solid contour is where she

@@ -76,7 +76,11 @@ async function main(): Promise<void> {
           (r.bestFinish !== undefined ? `  best ${r.bestFinish}` : ''),
       )
     }
-    const totals = w.careerTotals as Record<string, number> | undefined
+    // ⚠ VIA `unknown` (R15 surfaces wave). `CareerTotals` is a closed interface with no index
+    // signature, so the direct assertion is a compile error - it compiled under vite-node, which
+    // strips types, and only `vue-tsc -b --force` in `npm run check` ever saw it. Type-level only:
+    // the value and everything printed from it are unchanged.
+    const totals = w.careerTotals as unknown as Record<string, number> | undefined
     if (totals) console.log(`  careerTotals: ${JSON.stringify(totals)}`)
 
     // finance categories over the retained window
@@ -92,13 +96,18 @@ async function main(): Promise<void> {
     // ---- 3. SPONSOR / ACADEMY ------------------------------------------------------------
     console.log(`\n[3] OFFERS`)
     for (const o of w.offers) {
-      const t = o.terms as Record<string, unknown>
+      // Same story as `careerTotals` above: `OfferTerms` is a union of closed shapes, so the widen
+      // goes through `unknown`. And `spentCents` is not on `Offer` at all - the ternary below was
+      // always taking its `-` branch at runtime; it is read through a cast rather than deleted so the
+      // line keeps printing exactly what it printed when the triage was run.
+      const t = o.terms as unknown as Record<string, unknown>
+      const spent = (o as { spentCents?: number }).spentCents
       console.log(
         `   ${o.kind.padEnd(10)} ${o.state.padEnd(8)} arrived w${o.week} deadline w${o.deadlineWeek}` +
           ` ${o.decidedWeek !== undefined ? `decided w${o.decidedWeek}` : ''}` +
           ` ${o.fromWeek !== undefined ? `from w${o.fromWeek}` : ''}` +
           ` ${o.untilWeek !== undefined ? `until w${o.untilWeek}` : ''}` +
-          ` spent ${o.spentCents !== undefined ? money(o.spentCents as number) : '-'}`,
+          ` spent ${spent !== undefined ? money(spent) : '-'}`,
       )
       console.log(`     terms: ${JSON.stringify(t)}`)
     }

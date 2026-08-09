@@ -755,11 +755,17 @@ describe('the calendar reads the snapshot and nothing else', () => {
   // nothing was reading the pools. A sweep is: the copy is data, and data with a rule needs a test or
   // the rule is a habit. Second person is banned outright rather than pattern-matched on "You should",
   // so the next variant cannot slip through in a different sentence.
+  // ⚠ THE SWEEP GREW WITH THE POOLS AND WAS NOT LOOSENED (R15-18). `coachSays` now has TWO authors -
+  // a hired coach and, since the owner found "Coach says:" on a card belonging to a family paying
+  // nobody, a self-coached parent reading a draw sheet (SELF_FIELD_LINES). The parent pool sits
+  // inside the same slice, so it inherits this rule automatically, which is the point: the second
+  // person is banned for whoever is holding the pen. The count moves 12 -> 24 because there are
+  // twice as many lines to be wrong, not because anything here got easier.
   it('the coach speaks about her in the third person - never to the daughter', () => {
     const season = read('../src/components/screens/SeasonScreen.vue')
     const pools = season.slice(season.indexOf('COACH_FIELD_LINES'), season.indexOf('function coachSays'))
     const lines = [...pools.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((l) => /[a-z]/.test(l))
-    expect(lines.length, 'the pools should still be twelve lines').toBeGreaterThanOrEqual(12)
+    expect(lines.length, 'the pools should still be twenty-four lines').toBeGreaterThanOrEqual(24)
     for (const line of lines) {
       expect(line, `"${line}" addresses the daughter as "you"`).not.toMatch(/\b(you|your|yours|you're)\b/i)
     }
