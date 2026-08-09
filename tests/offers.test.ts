@@ -990,6 +990,54 @@ describe('the three rungs, and the tables they read', () => {
     expect(s.global.maxItfRank).toBeLessThan(s.national.maxItfRank)
   })
 
+  it('⚠ ...and the FLOOR is that same draw run the other way - a whole season of it', () => {
+    // 09.08 (fix/sponsor-floor). The local rung grew a junior arm because the domestic one alone is
+    // inverted - see ECONOMY.sponsorship.localMaxItfRank - and its number is read off the SAME tier
+    // row its two neighbours are, so the ladder stays one decision rather than three.
+    //
+    // TWO READINGS, ONE NUMBER, which is why it is 128 and not a figure that felt about right:
+    //   * the ladder's own step is a factor of four (32 -> 8 climbing), so one rung DOWN is 32 x 4;
+    //   * J300 runs every 13 weeks, i.e. four a season, so 128 is every main-draw place at the
+    //     prestige rung over a year - "good enough to be in a J300 draw at some point this season".
+    expect(s.localMaxItfRank).toBe(TIERS.j300.drawSize * 4)
+    expect(s.localMaxItfRank).toBe(TIERS.j300.drawSize * (WEEKS_PER_YEAR / TIERS.j300.everyNWeeks))
+    // ...and the shop is WIDER than the distributor, which is the whole point of a floor: it must
+    // catch the careers the bigger brands passed on, not the same ones under another name.
+    expect(s.localMaxItfRank).toBeGreaterThan(s.national.maxItfRank)
+  })
+
+  it('⚠ THE INVERTED GATE: a girl the world ranks is not refused by the shop in her own town', () => {
+    // THE OWNER'S OWN SAVE, 09.08, as a fixture: Olivia at week 104 stands national #67, ITF #4, no
+    // professional ranking. She cleared `global` and `national` and the LOCAL shop refused her,
+    // because her domestic points had decayed while she was abroad - so her window carried two
+    // letters instead of three and both dice missed.
+    const olivia: SponsorStanding = { nationalRank: 67, itfRank: 4, itfRanked: true, ...unranked.wta }
+    expect(standingClears(olivia, 'global')).toBe(true)
+    expect(standingClears(olivia, 'national')).toBe(true)
+    expect(standingClears(olivia, 'local')).toBe(true)
+    // ...and the whole ladder writes to her, strongest first, which is the letter that was missing.
+    expect(windowLadder(olivia)).toEqual(['global', 'national', 'local'])
+    // The rung she is OFFERED is unchanged: the floor is an alternative below the best brand, never
+    // a replacement for it (`rungFor` is still strongest-first).
+    expect(rungFor(olivia)).toBe('global')
+  })
+
+  it('⚠ ...and it is a floor, not an amnesty - three things it still refuses', () => {
+    // The counterweight, because a gate that never says no is not a gate.
+    //   1. NO STANDING ANYWHERE. Outside the domestic top 30, no live junior points, no W ranking:
+    //      the shop has genuinely not heard of her, and «nothing is manufactured» still holds.
+    expect(rungFor(domestic(31))).toBeNull()
+    //   2. AN EMPTY TABLE IS NOT A RANKING. Competition ranking ties everyone without a counting
+    //      result at the floor, so `itfRanked` guards the new arm exactly as it guards the two above.
+    expect(standingClears({ nationalRank: 99, itfRank: 1, itfRanked: false, ...unranked.wta }, 'local')).toBe(false)
+    //   3. AND IT HAS A CEILING. It reads as "ranked at all" only because today's junior table is
+    //      shallower than the cut; past it the shop still says no, and it starts biting again the day
+    //      the cohort outgrows the number.
+    const deep = { nationalRank: 99, itfRank: s.localMaxItfRank + 1, itfRanked: true, ...unranked.wta }
+    expect(standingClears(deep, 'local')).toBe(false)
+    expect(standingClears({ ...deep, itfRank: s.localMaxItfRank }, 'local')).toBe(true)
+  })
+
   it('⚠ ...and the professional pair is the SAME reading of the professional draw', () => {
     // 02.08: National signs the girl who would be IN the prestige draw, Global the one still in it
     // on the last day - one sentence, read twice, once per table. On the professional side the

@@ -529,6 +529,57 @@ export const ECONOMY = {
     maxRank: 30,
     /** ...and at which the deal steps up - she is one of the best juniors in the country. */
     topMaxRank: 10,
+    /** ⚠ ...AND THE JUNIOR TABLE, BECAUSE THE DOMESTIC GATE ON ITS OWN IS INVERTED (09.08, the owner:
+     *  «у нас 3 тира этих спонсоров, а мне достается только 1 самый первый… у неё кончился контракт,
+     *  а нового не дали»).
+     *
+     *  THE DEFECT, ON HIS OWN SAVE. Olivia at week 104 stands national #67, ITF #4, no professional
+     *  ranking. She CLEARS `global` and she CLEARS `national` - and `local` REFUSED her, because the
+     *  only evidence the shop would look at was `maxRank` above and she had slid to #67 at home by
+     *  playing abroad. Her five-week window therefore carried two letters instead of three, both dice
+     *  missed (0.3 x 0.3 = 9%), and she opened the season with no deal at all.
+     *
+     *  ⚠ AND THAT IS THIS BLOCK'S OWN 30.07 ERROR WITH THE TWO TABLES SWAPPED. The note above records
+     *  a local sponsorship gated on a table she does not hold (the ITF one, when her standing was
+     *  domestic) and fixes it by reading the national table. The same sentence is true again in the
+     *  other direction the moment she leaves home: her domestic points are a rolling 52-week best-6,
+     *  so a season on the international calendar decays them to nothing, and a gate that reads only
+     *  that table says «the better she gets abroad, the more certainly the shop in her own town
+     *  refuses her». A floor that turns away the careers the big brands passed on is not a floor.
+     *  So the local rung reads WHICHEVER table she is on, exactly as `national` and `global` learned
+     *  to on 02.08 - `standingClears` already carried `|| standing.wtaRanked` as the professional
+     *  escape hatch, and this is the junior one it was missing.
+     *
+     *  ⚠ 128 = `TIERS.j300.drawSize` x 4, AND IT IS THE LADDER'S OWN STEP RUN DOWNWARDS. National is
+     *  the J300 main draw (32) and Global is the last eight of it (32 / 4), so the rungs divide by
+     *  four as they climb; the rung BELOW national multiplies by four. Pinned as an equality in
+     *  tests/offers.test.ts beside its two neighbours, for the reason they are pinned there: this
+     *  file cannot import the calendar, so a J300 that ever changed its draw would otherwise detach
+     *  the ladder from the ladder it describes.
+     *
+     *  A SECOND READING OF THE SAME TIER ROW LANDS ON THE SAME NUMBER, which is why it is this one
+     *  and not a round figure that felt right: J300 runs `everyNWeeks: 13`, i.e. four a season, so
+     *  128 is every main-draw place at the prestige rung over a whole year. National signs the girl
+     *  who is IN this draw; Global the one still in it on the last day; the shop backs the girl good
+     *  enough to be in a J300 draw at some point this season. That is what a home-town shop knows
+     *  about a girl - that she plays at that level - and it is deliberately WIDER than the
+     *  distributor's gate, because a shop should be more eager to back a girl the world ranks, not
+     *  less.
+     *
+     *  ⚠ WHERE IT BITES TODAY, MEASURED, BECAUSE THE NUMBER SHOULD NOT BE TRUSTED WITHOUT THIS. The
+     *  junior table is the cohort (200 rows) and 75-122 of them hold a counting result in any given
+     *  winter (min 75, p50 90, max 122 over 30 observations - three presets x two seeds x five
+     *  winters, `rankingFor` at the window's opening week), so a cut at 128 sits just PAST the ranked
+     *  depth: in today's population this arm reads "she holds a junior world ranking at all". That is
+     *  the same shape the professional arm one line below it already has, and it is the intended
+     *  reading - but the ceiling is written down anyway, because the cohort has grown once already
+     *  (FIELD 520 -> 1,600) and a rule spelled "any ranking" would silently stay unbounded when the
+     *  table outgrows it, while this one starts biting again the day it does.
+     *
+     *  ⚠ AND IT CANNOT BECOME A PENSION. `itfRanked` is a LIVE 52-week window (`sponsorStandingOf`),
+     *  so a girl who stops entering loses the arm on her own - the escape hatch holds only while she
+     *  is actually competing, which is the same thing `minEvents` asks of the deal itself. */
+    localMaxItfRank: 128,
     /** What the season's kit deal is worth, flat, every background the same. `~$1k+/yr value`,
      *  02-tennis-economics.md's figure for a junior product deal, taken at its stated midpoint.
      *  Now a CEILING ON WHAT THE SHOP SPENDS on her kit rather than a cheque - see the note above. */

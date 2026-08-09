@@ -144,8 +144,8 @@ export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matche
 // W3-KIT: the till and the shop window. `GEAR_CATEGORY_LINE` comes back from equipment.ts, where it
 // moved so that a rung could be PRICED below world.ts - see the note at `resolveGear`.
 import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
-import { setKitGrade, kitLineViews, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES } from './world/kit'
-export { setKitGrade, kitLineViews, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES }
+import { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES } from './world/kit'
+export { setKitGrade, kitLineViews, kitDealView, kitAllowanceRemainingCents, kitStateOf, kitPurchaseSplit, goodWeeksFor, KIT_LINES }
 // W3-SUMMER: the holidays as a real training block - one predicate, both halves.
 import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }

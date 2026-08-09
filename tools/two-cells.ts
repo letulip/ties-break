@@ -29,7 +29,7 @@ import { buildCoachRoster } from '../src/engine/coach'
 import { stepCareerWeek, POLICIES } from './econ-bench'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
-import type { FamilyBackground, PlayerProfile } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type FamilyBackground, type PlayerProfile } from '../src/shared/protocol'
 import type { CoachTier } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
 
@@ -91,13 +91,15 @@ function pct(n: number, of: number): string {
 }
 
 function runCareer(arm: Arm, seed: string, weeks: number): Career {
+  // ⚠ BUILT OFF `DEFAULT_PROFILE` (09.08, fix/sponsor-floor). The literal below carried a `name`
+  // field that `PlayerProfile` does not have and was missing five that it does, so the cast was a
+  // TS2352 and `vue-tsc -b --force` was red on this file - the shared gate with it. Spreading the
+  // shipped default is what every other bench does (`openCareer`, econ-bench.ts) and it means a new
+  // profile field cannot silently leave this tool behind.
   const profile: PlayerProfile = {
-    name: 'Bench',
+    ...DEFAULT_PROFILE,
     background: arm.background,
-    playStyle: 'all-court',
-    birthMonth: 6,
-    birthDay: 15,
-  } as PlayerProfile
+  }
   const world: WorldState = createWorld(seed, profile)
   const rng = rngFromSeed(`${seed}:bench`)
 
@@ -159,11 +161,13 @@ function runCareer(arm: Arm, seed: string, weeks: number): Career {
     if (row?.titles?.length) bestTier = tier as TierId
   }
 
-  const totals = world.careerTotals as { prizeCents?: number; spentCents?: number }
+  const totals = world.careerTotals as unknown as { prizeCents?: number; spentCents?: number }
   return {
     endFundsCents: world.fundsCents,
     minFundsCents: minFunds,
-    bankrupt: world.ending?.kind === 'bankruptcy' || minFunds < 0,
+    // ⚠ `type`, NOT `kind` (09.08): `CareerEnding`'s discriminant is `type`, so this read undefined
+    // and every bankruptcy was counted only by the funds fallback beside it.
+    bankrupt: world.ending?.type === 'bankruptcy' || minFunds < 0,
     prizeCents: totals?.prizeCents ?? 0,
     sponsorCents,
     academyCents,

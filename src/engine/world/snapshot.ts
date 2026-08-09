@@ -65,7 +65,7 @@ import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote } from './coachMarket'
-import { kitLineViews } from './kit'
+import { kitDealView, kitLineViews } from './kit'
 import { copyTrophyLedger, emptySeasonRecord } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
@@ -724,6 +724,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // shop window - the owner's own suggestion («может быть в ledger?») - and it reads the engine's
     // prices rather than multiplying a band itself.
     kit: kitLineViews(world),
+    // ...AND THE DEAL THOSE LINES ARE UNDER (09.08): the brand, what is LEFT of the season's
+    // allowance, and how long the contract runs. The quota was computed and never shown, so kit that
+    // was free last week was charged this week with no warning - see `KitDealView`.
+    kitDeal: kitDealView(world),
     academy: world.academy
       ? {
           coverShare: travelCoverShare(world.academy),

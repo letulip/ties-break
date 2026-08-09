@@ -16,7 +16,8 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import type { KitOfferTerms, Offer } from '../shared/protocol'
-import { SPONSOR_TIERS } from '../engine/offers'
+import { SPONSOR_TIERS, dealUntilWeek } from '../engine/offers'
+import { weekLabel } from '../shared/dates'
 import OfferLetter from './OfferLetter.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import IconButton from './ui/IconButton.vue'
@@ -59,11 +60,17 @@ const confirmMessage = computed(() => {
   const words = t.covers.map((l) => LINE_WORDS[l] ?? l)
   const covered = words.length === 1 ? words[0] : `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
   const seasons = (t.seasons ?? 1) === 1 ? 'a season' : `${t.seasons} seasons`
+  // ⚠ ...AND THE WEEK IT RUNS TO (09.08, the owner: «Непонятно на какое количество лет спонсор
+  // контракт заключает, нигде не видно этой информации»). "Three seasons" is a length; the last
+  // thing a parent reads before an irreversible signature should also say WHEN, and `dealUntilWeek`
+  // is the engine function `signOffer` is about to write onto the offer - so the confirm quotes the
+  // week the contract will actually carry rather than a number this sheet worked out.
+  const until = weekLabel(dealUntilWeek(pendingSign.value))
   // The deal, restated, and the one thing the letter cannot say for itself: that this cannot be
   // undone. No editorialising beyond that – the game does not tell him whether it is a good idea,
   // and in particular it does not mention that signing turns other brands away. That is a term, it
   // is on the paper, and a confirm that argued the case would be counselling rather than confirming.
-  return `Sign with ${t.brand}? They cover her ${covered} for ${seasons} – up to ${value} – and she must enter at least ${t.minEventsPerSeason} tournaments a season. This cannot be undone.`
+  return `Sign with ${t.brand}? They cover her ${covered} for ${seasons} – up to ${value}, to ${until} – and she must enter at least ${t.minEventsPerSeason} tournaments a season. This cannot be undone.`
 })
 
 function askSign(id: string): void {

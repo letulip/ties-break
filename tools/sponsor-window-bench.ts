@@ -39,6 +39,7 @@ import {
   seasonSpokenFor, sponsorWindowOpensAt, windowLadder, SPONSOR_TIERS, SPONSOR_WINDOW_WEEKS,
 } from '../src/engine/offers'
 import { reviewSponsors, sponsorStandingOf } from '../src/engine/world/sponsors'
+import { ECONOMY } from '../src/engine/economy'
 import type { KitOfferTerms, Offer, SponsorTier } from '../src/shared/protocol'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean, median, type Preset, type Policy } from './econ-bench'
 
@@ -150,6 +151,35 @@ export interface CareerResult {
   // Counted only over winters that were genuinely OPEN to her: she cleared at least one rung, the
   // season ahead was not already promised to a multi-season deal, and no brand had just been let
   // down. A winter turned away by any of those is not silence, it is the rule working.
+  // --- THE FLOOR (09.08, fix/sponsor-floor) --------------------------------------------------------
+  //
+  // ⚠ THE OWNER'S OWN SENTENCE AS A COUNTER: «у нее кончился контракт, а нового не дали». Coverage and
+  // the gap are both WEEK counts, and a week count cannot answer the question he actually asked -
+  // which is about a SEASON opening with nothing. A career can carry 60% coverage and still open two
+  // of its four seasons in no kit at all, and those two are the ones he felt. Read at the season's
+  // first week, which is the week the new contract would have come into force (`dealStartsAt`).
+  /** seasons whose opening week could have been covered - i.e. every season after the first, since
+   *  the first letter of a career cannot be written before week 47 of season 0. */
+  seasonsOpened: number
+  /** ...of those, the ones that opened with no kit deal in force. */
+  seasonsOpenedBare: number
+  /** ⚠ THE FLOOR'S OWN POPULATION, AND IT IS GATE-INDEPENDENT ON PURPOSE (09.08). Winters in which
+   *  the local shop's DOMESTIC gate alone would refuse her - she has slid past `maxRank` at home and
+   *  holds no professional ranking - and, of those, the junior world ranks she was actually holding.
+   *  This is the group the local rung's junior arm is sized against, so it is collected rather than
+   *  argued: a cut has to be read off what the careers refused by the domestic table look like. */
+  domesticRefusedWinters: number
+  domesticRefusedItfRanks: number[]
+  /** ⚠ EVERY WINTER, BY WHY IT DID OR DID NOT PRODUCE A DEAL (09.08). `wintersOpen`/`wintersSilent`
+   *  below count only the winters the post was open in, which is the right denominator for the DICE
+   *  and the wrong one for the FLOOR: a season can open bare because nobody wrote, because she
+   *  cleared no rung at all, or because she had just let a brand down - three different verdicts on
+   *  the fix, and a single "she got nothing" runs them together. `spokenFor` is the fourth and is the
+   *  one that does NOT make a season bare: the deal she is under still covers it. */
+  wintersReached: number
+  wintersNoRung: number
+  wintersSpokenFor: number
+  wintersLetDown: number
   /** winters in which the post was open to her at all. */
   wintersOpen: number
   /** ...of those, the ones in which no brand wrote. */
@@ -237,6 +267,14 @@ export function runSponsorCareer(
   let incomeCents = 0
   let eventsPlayed = 0
   const seenFinanceWeeks = new Set<number>()
+  let seasonsOpened = 0
+  let seasonsOpenedBare = 0
+  let domesticRefusedWinters = 0
+  const domesticRefusedItfRanks: number[] = []
+  let wintersReached = 0
+  let wintersNoRung = 0
+  let wintersSpokenFor = 0
+  let wintersLetDown = 0
   let wintersOpen = 0
   let wintersSilent = 0
   let wintersProbed = 0
@@ -250,7 +288,23 @@ export function runSponsorCareer(
     // 0. THE WINTER, WATCHED FROM BOTH ENDS – read at the TOP of the week, before the tick runs this
     //    week's review, so the standing and the block are exactly the ones the review will read.
     if (!world.ending && isSponsorWindowOpenWeek(week)) {
-      windowRungs = windowLadder(sponsorStandingOf(world)).length
+      const standing = sponsorStandingOf(world)
+      windowRungs = windowLadder(standing).length
+      // ⚠ WHO THE DOMESTIC GATE ALONE TURNS AWAY (09.08). Deliberately written out rather than
+      // asked of `standingClears`, because the point of the count is to describe the POPULATION on
+      // both sides of the gate change - a call to the predicate would answer with whichever gate
+      // happens to be compiled in and could not be compared across the two runs.
+      if (standing.nationalRank > ECONOMY.sponsorship.maxRank && !standing.wtaRanked) {
+        domesticRefusedWinters++
+        if (standing.itfRanked) domesticRefusedItfRanks.push(standing.itfRank)
+      }
+      // ...and the winter's own verdict. Two of the four kinds are legible HERE; the let-down is
+      // not, because this reads the top of the opening week and the goodbye letter it is written on
+      // has not been posted yet - `reviewSponsors` runs later in this same tick. It is counted at
+      // the close instead, where the block below already asks the question.
+      wintersReached++
+      if (windowRungs === 0) wintersNoRung++
+      else if (windowBlocked) wintersSpokenFor++
       // A season already promised to a multi-season deal is not silence, it is the rule biting.
       windowBlocked = seasonSpokenFor(world.offers, week) !== null
       if (windowRungs > 0 && !windowBlocked) {
@@ -270,7 +324,17 @@ export function runSponsorCareer(
         wintersOpen++
         const post = world.offers.filter((o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info')
         if (post.length === 0) wintersSilent++
-      }
+      } else wintersLetDown++
+    }
+    // 0b. THE SEASON OPENING IN SOMEBODY'S KIT, OR IN NOBODY'S (09.08, fix/sponsor-floor). Read
+    //     BEFORE the post is answered, because a letter cannot be signed into force in a week that
+    //     has already begun - `dealStartsAt` starts cover the week the parent signs, and the window
+    //     that could have covered this season closed at week 51 of the one before. So this is
+    //     exactly "she went into the new year with nothing", which is the owner's own report.
+    //     Season 0 is skipped: nobody can be written to before week 47 of it.
+    if (!world.ending && week > 0 && week % WEEKS_PER_YEAR === 0) {
+      seasonsOpened++
+      if (!activeKitDeal(world.offers, week)) seasonsOpenedBare++
     }
     // 1. THE POST, answered before the week is played – the same order a player acts in.
     if (!world.ending) answerThePost(world, sign)
@@ -370,6 +434,14 @@ export function runSponsorCareer(
     incomeCents,
     eventsPlayed,
     endedWeek: world.ending ? world.week : null,
+    seasonsOpened,
+    seasonsOpenedBare,
+    domesticRefusedWinters,
+    domesticRefusedItfRanks,
+    wintersReached,
+    wintersNoRung,
+    wintersSpokenFor,
+    wintersLetDown,
     wintersOpen,
     wintersSilent,
     wintersProbed,
@@ -467,6 +539,32 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     )
     console.log(
       `  quieter half:                       cover ${pct(mean(quiet.map((r) => r.coverage)))}, letters ${mean(quiet.map((r) => Object.values(r.raisedByTier).reduce((a, b) => a + b, 0))).toFixed(1)}`,
+    )
+
+    // ⚠ THE FLOOR, AS THE OWNER COUNTS IT (09.08). Not weeks - SEASONS that began with nothing.
+    const opened = arm.reduce((a, r) => a + r.seasonsOpened, 0)
+    const bare = arm.reduce((a, r) => a + r.seasonsOpenedBare, 0)
+    const bareShare = arm.map((r) => (r.seasonsOpened > 0 ? r.seasonsOpenedBare / r.seasonsOpened : 0))
+    console.log(
+      `  THE FLOOR:    ${opened} seasons opened (season 1+) – ${bare} of them with NO kit deal (${pct(opened > 0 ? bare / opened : 0)}); per career p50 ${pct(median(bareShare))}, careers never bare ${arm.filter((r) => r.seasonsOpenedBare === 0).length}/${arm.length}`,
+    )
+    // ...and WHY the bare ones were bare. Four verdicts, and only three of them can leave a season
+    // uncovered - a winter turned away by a running multi-season deal is the deal still working.
+    const reached = arm.reduce((a, r) => a + r.wintersReached, 0)
+    const noRung = arm.reduce((a, r) => a + r.wintersNoRung, 0)
+    const spoken = arm.reduce((a, r) => a + r.wintersSpokenFor, 0)
+    const letDown = arm.reduce((a, r) => a + r.wintersLetDown, 0)
+    console.log(
+      `  ...${reached} winters reached: ${noRung} cleared no rung, ${spoken} already promised, ${letDown} let a brand down, ${arm.reduce((a, r) => a + r.wintersOpen, 0)} open to her`,
+    )
+    // ...and WHO the domestic gate turns away, which is the number the junior arm's cut is read off.
+    const refused = arm.reduce((a, r) => a + r.domesticRefusedWinters, 0)
+    const refusedRanks = arm.flatMap((r) => r.domesticRefusedItfRanks)
+    console.log(
+      `  ...the shop's domestic gate refused her in ${refused} winters; ${refusedRanks.length} of those held a junior world rank` +
+        (refusedRanks.length > 0
+          ? ` – ITF p10 ${quantile(refusedRanks, 0.1).toFixed(0)} p50 ${median(refusedRanks).toFixed(0)} p90 ${quantile(refusedRanks, 0.9).toFixed(0)}; inside 8: ${refusedRanks.filter((r) => r <= 8).length}, 32: ${refusedRanks.filter((r) => r <= 32).length}, 128: ${refusedRanks.filter((r) => r <= 128).length}`
+          : ''),
     )
 
     // ⚠ THE CATCH-UP NUMBERS (06.08). Two questions that a single "she got nothing" would have run
