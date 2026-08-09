@@ -27,6 +27,30 @@ The intersection nobody occupies:
 
 Concept / planning phase (July 2026). See [docs/decisions.md](docs/decisions.md) and [docs/research/](docs/research/).
 
+## Tests: what is covered, and how to see it
+
+**[docs/specs/e2e-coverage.md](docs/specs/e2e-coverage.md) is the map** – every mechanic and every
+screen, which of the four layers owns it, and why that layer. Its section 6 is the one to read first:
+**what is deliberately not covered end to end, with the reason.** A coverage claim that cannot name
+its own gaps is not a claim.
+
+```bash
+npm run test:e2e          # the browser suite, quiet (~20 s)
+npm run test:e2e:report   # the same run with a trace on every test, then opens the HTML report
+npm run test:e2e:ui       # Playwright's watch mode, for writing a spec
+```
+
+| layer | where | owns |
+|---|---|---|
+| unit | `tests/*.test.ts` | engine arithmetic, ledgers, schema migrations |
+| component | `tests/component/` | mounted component behaviour (happy-dom) |
+| simulation | vitest `sim` project | balance calibration, Monte-Carlo |
+| **end to end** | `e2e/*.spec.ts` | **the seams**: worker boundary, IndexedDB, the file door, the service worker, real layout |
+
+There is **no hosted dashboard** – the report is generated on demand and lives on the machine that
+ran it. The document above is the living artefact, and `e2e/coverage-map.spec.ts` fails when it
+drifts from the repo.
+
 ## Source Code & License
 
 This project is **source-available** under the [PolyForm Shield License 1.0.0](LICENSE).
