@@ -36,7 +36,9 @@
 // Run: npx vite-node tools/j30-onramp-lock.ts
 
 import { PRESETS, POLICIES, openCareer, stepCareerWeek } from './econ-bench'
-import { ageAtWeek, kidPoints, tierOpenFor } from '../src/engine/world'
+// HER age, not the band: the J rungs gate on the one clock since 09.08 (src/engine/world/age.ts),
+// so a bench that counted the 18+ wall off the band would count it up to eleven months early.
+import { kidAgeAt, kidPoints, tierOpenFor } from '../src/engine/world'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 
 const WEEKS = 312 // 14 -> 20, the horizon the adult tour needs
@@ -97,7 +99,7 @@ for (const preset of PRESETS) {
         // measure reads 0/216 while saying nothing. A nineteen-year-old entering local domestic
         // events is not a career. The honest test is whether any rung of the two REAL tables - the
         // international one she came up on and the professional one she is stepping into - is open.
-        if (ageAtWeek(world.week) >= TIERS.j30.maxAgeYears!) {
+        if (kidAgeAt(world, world.week) >= TIERS.j30.maxAgeYears!) {
           const real = TIER_LADDER.filter((t) => TIERS[t].track !== 'domestic')
           if (!real.some((t) => tierOpenFor(world, t))) stranded++
         }
@@ -108,7 +110,7 @@ for (const preset of PRESETS) {
         onTable = true
         // The J rungs are U18 whatever her points do, so an 18-year-old locked out is the AGE rule
         // doing its job and is not this question.
-        if (ageAtWeek(world.week) >= TIERS.j30.maxAgeYears!) continue
+        if (kidAgeAt(world, world.week) >= TIERS.j30.maxAgeYears!) continue
         if (tierOpenFor(world, 'j30')) {
           wasOpen = true
           continue

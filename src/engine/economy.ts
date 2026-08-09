@@ -1671,9 +1671,17 @@ export const ECONOMY = {
   // award did NOT reduce the grind (docs/specs/wave-b-first-round-zero.md) – the count is driven by
   // eligibility, affordability and calendar density, and this is the eligibility half.
   //
-  // Counted birthday-to-birthday in the real rule; here that is exactly the 52-week season block,
-  // because `ageAtWeek` and `seasonStartWeek` are the same arithmetic (world.ts) – so the reset is
-  // the season boundary and no second definition of "this year" was invented.
+  // Counted birthday-to-birthday in the real rule. The game keeps the 52-week SEASON BLOCK as the
+  // window – one allowance, reset at the season boundary, which is what the copy promises and what
+  // `seasonStartWeek` already defines – and reads the LIMIT off the age she actually is in the week
+  // of the event (`kidAgeAt`, world/age.ts).
+  //
+  // ⚠ THOSE TWO USED TO BE THE SAME SENTENCE AND ARE NOT ANY MORE. This note said the block "IS the
+  // real rule's birthday year, because `ageAtWeek` and `seasonStartWeek` are the same arithmetic",
+  // which held only for a girl born in the first week of January: everyone else's birthday falls
+  // inside a block. Since the one-clock ruling (09.08) the window and the birthday are two facts, and
+  // the visible consequence is that her allowance can RISE mid-season on her birthday and never
+  // falls – see entryCaps.ts for why that direction is the safe one.
   entryCap: {
     // WHY ONLY THESE THREE, and please do not "fix" it later: `local` / `regional` / `national` are
     // OUR OWN INVENTION – no national result of any kind produces an ITF junior ranking point
@@ -1723,19 +1731,40 @@ export const ECONOMY = {
     // opens at 17), which is the honest amount: the allowance is a rule about children, and by the
     // time her ranking clears a 1000's acceptance list she is not one.
     cappedProTiers: ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as readonly TierId[],
-    // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited. 14 and 15 carry 8 and 10
-    // in the real rulebook (research §4) and are DELIBERATELY absent here: every W rung's
-    // `minAgeYears` is 16+, so availabilityStatus refuses a fourteen-year-old on AGE before the
-    // cap is ever consulted - the same "the age gate is the honest place for 'not eligible'"
-    // argument the junior table's note makes about 12-and-under. A rung that ever opens at 14
-    // (the real W15 does, via junior-reserved places) must bring those rows with it.
+    // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited.
+    //
+    // ⚠⚠ 14 -> 8 AND 15 -> 10 ARE HERE SINCE THE ONE-CLOCK RULING (owner 1, 09.08), AND THE
+    // ARGUMENT THAT KEPT THEM OUT IS WORTH KEEPING RATHER THAN DELETING. It ran: "14 and 15 carry 8
+    // and 10 in the real rulebook (research §4) and are DELIBERATELY absent here: every W rung's
+    // `minAgeYears` is 16+, so availabilityStatus refuses a fourteen-year-old on AGE before the cap
+    // is ever consulted - the same 'the age gate is the honest place for not eligible' argument the
+    // junior table's note makes about 12-and-under. A rung that ever opens at 14 (the real W15 does,
+    // via junior-reserved places) must bring those rows with it."
+    //
+    // THE ARGUMENT WAS FALSE FOR EVERY GIRL BORN AFTER JUNE, and the reason is the defect the ruling
+    // fixes: the gate was asking `ageAtWeek` - the BAND - so a fifteen-year-old born in March was
+    // "16" from week 104, the age gate let her through, and the AER then had no row to refuse her
+    // with. She entered W15s at 15.83 against an allowance of `default`, i.e. unlimited. Both halves
+    // are mended: the gate reads HER age now (world/age.ts), and the table covers the ages a girl can
+    // be, so `default` - a rule about adults - can never answer for a child again. The rows are the
+    // rulebook's own (research/real-ladder-pace.md: <14 = 0, 14 = 8, 15 = 10, 16 = 12, 17 = 16, 18+
+    // unlimited), so the game does not invent a number even where the gate makes it unreachable.
+    //
+    // ⚠ AND 13 IS DELIBERATELY NOT A ROW, THOUGH THE RULEBOOK HAS ONE (0 events). Two reasons, and
+    // the second is a trap. (a) "Not eligible at all" belongs in the age gate, exactly as the junior
+    // table's note says of 12-and-under - a 0 in an allowance table is a rule pretending to be a
+    // budget. (b) A limit of 0 makes `remaining <= 0` TRUE for a thirteen-year-old who has entered
+    // nothing, and `tierOutgrown` (world/ladder.ts) reads precisely that expression to re-open the
+    // rungs below her when her pro allowance is spent - so a 13 row would silently disable the
+    // ladder's ceiling for the whole first season of every career except a January one. Named here
+    // rather than discovered later.
     //
     // NOT MODELLED, DELIBERATELY - the merited increases (a year-end top-5 junior earns up to 4
     // extra pro events). Same ruling as the junior table's: keyed to a world ranking ours cannot
     // honestly map, and the spec names it phase 2 or act 3 ("v1 ships the flat table if the bench
     // says it already paces well" - the boredom-guard receipt in tools/boredom-guard.ts is that
     // bench).
-    proPerYearByAge: { 16: 12, 17: 16, default: Number.MAX_SAFE_INTEGER } as {
+    proPerYearByAge: { 14: 8, 15: 10, 16: 12, 17: 16, default: Number.MAX_SAFE_INTEGER } as {
       [age: number]: number
       default: number
     },

@@ -2367,6 +2367,15 @@ export interface CareerMeta {
    *  anchor every autosave write checks before it may clobber (see src/db/saves.ts). Optional for
    *  rows written before this wave; absent reads as 0. */
   revision?: number
+  /** Her birth month, 1-12 – carried so the Careers list can print HER age (one-clock ruling, 09.08,
+   *  engine/world/age.ts) instead of the birth-month-free band it was inlining.
+   *
+   *  ⚠ ON THE INDEX ROW, NOT IN THE SAVE PAYLOAD, so this is NOT a schema change and needs no bump:
+   *  the same place `revision` lives, and for the same reason. It cannot be derived from anything
+   *  else on the row either – the birthday is chosen at onboarding, not drawn from the seed – which
+   *  is why the field exists at all. Optional: rows written before this wave have none, and the list
+   *  falls back to the band for them rather than inventing a birthday. */
+  birthMonth?: number
 }
 
 /** W1-INTEGRITY-A: machine-readable error kinds the UI can dispatch on. Everything else stays a

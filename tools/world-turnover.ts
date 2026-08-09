@@ -53,7 +53,7 @@ import {
   tierFloorOpen,
   tierOutgrown,
   isTierAgeOpen,
-  ageAtWeek,
+  kidAgeAt,
 } from '../src/engine/world'
 import { BEST_N_BY_TRACK, computeRanking, windowedBestSum } from '../src/engine/season/ranking'
 import { resumeMain } from '../src/engine/rng'
@@ -570,7 +570,9 @@ function doorWalk(seed: string): void {
   // A live mid-career world: real weeks, so the cohort has its own W rows and the table she is
   // measured against is the one a career actually meets rather than week 0's all-zero one.
   const setAge = (age: number) => {
-    while (ageAtWeek(world.week) < age) tickWeek(world, rng)
+    // HER age, the one every rung gates on since 09.08 - ticking to the band left the fixture a
+    // year older than the doors it then asks about (same re-aim as tests/unranked-sentinel).
+    while (kidAgeAt(world, world.week) < age) tickWeek(world, rng)
   }
   const books = [0, 1, 10, 30, 60, 100, 137, 160, 200, 256, 300, 345, 400, 500, 710, 828, 1000, 1177, 1400]
   const setBook = (book: number) => {
@@ -614,7 +616,7 @@ function doorWalk(seed: string): void {
       setBook(book)
       const table = mergedTable(world)
       const chair = table.findIndex((r) => r.playerId === KID_ID) + 1
-      const age0 = ageAtWeek(world.week)
+      const age0 = kidAgeAt(world, world.week)
       const open = W_RUNGS.filter((t) => tierOpenFor(world, t) && isTierAgeOpen(t, age0))
       const shut = W_RUNGS.filter((t) => tierFloorOpen(world, t) && tierOutgrown(world, t) && isTierAgeOpen(t, age0))
       console.log(

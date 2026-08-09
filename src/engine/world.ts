@@ -249,8 +249,8 @@ export {
 export { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage }
 import { finishLabel, prizeCentsFor } from './world/labels'
 export { finishLabel, prizeCentsFor }
-import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, birthdayWeek, birthdayTurning, markBirthday } from './world/age'
-export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, birthdayWeek, birthdayTurning }
+import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, birthdayWeek, birthdayTurning, markBirthday } from './world/age'
+export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, birthdayWeek, birthdayTurning }
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -1155,7 +1155,11 @@ export function reviewAcademy(world: WorldState): void {
   const prev = world.academy
   if (prev && prev.seasonIndex === seasonIndex) return // idempotent per season
 
-  const ageYears = ageAtWeek(world.week)
+  // ⚠ HER AGE, NOT THE BAND'S (owner ruling 1, 09.08 - world/age.ts). The academy's junior programme
+  // has an age band (`ECONOMY.academy.ageBand`, 13-18) and «she has aged out of their junior
+  // programme» is a sentence about the girl the letter is addressed to. Reading the band told a
+  // December seventeen-year-old she was eighteen and closed the scholarship a season early.
+  const ageYears = kidAgeAt(world, world.week)
   const playedLastYear = world.results.filter((r) => r.playerId === KID_ID && world.week - r.week <= RESULTS_WINDOW).length
   const level = reviewLevel({
     rank: world.kidRank,

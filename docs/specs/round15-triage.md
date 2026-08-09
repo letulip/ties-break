@@ -296,3 +296,136 @@ shoe wear (rehab is on her feet). Left open.
    is negative. Either pillars 2–4 get built so the price buys something, or the price comes down to
    what a growth multiplier is worth.
 5. **Do vacations pause kit wear?** And if they do, does an injury layoff pause it too?
+
+## One clock: measured
+
+Ruling 1 shipped on `fix/one-clock`. `kidAgeYears` is now her age at every gate that asks how old she
+is; `ageAtWeek` keeps its one job – `coachById(seed, ageAtWeek(week), coachId)` and the prices derived
+from it – and the cohort keeps its own band. Measured before and after with `tools/one-clock.ts`
+(`npx vite-node tools/one-clock.ts -- --seeds 6 --weeks 208`), three birthdays, the same six seeds and
+the same `player` policy on both sides, so every row below is a PAIRED comparison rather than two
+samples.
+
+### The gate, through `availabilityStatus`
+
+| birthday | J30 opens | W15 opens | W35 opens | WTA 250 opens | J30 closes |
+|---|---|---|---|---|---|
+| before, all three | w0 | w104 | w104 | w156 | w260 |
+| January | w0 | w104 | w104 | w156 | w261 |
+| June | w0 | **w126** | w126 | w178 | **w282** |
+| December | w0 | **w152** | w152 | w204 | **w308** |
+
+**J30 does not move, and that is the floor doing its job**: `minAgeYears` is 13 and every girl in the
+band is at least 13 in week 0, so no birthday is refused at the bottom of the international ladder –
+the clock change costs a December career nothing on the rung she actually starts on. The **pro AER**
+has no opening week of its own: W15 is the lowest capped pro tier, so the allowance first binds in
+the week that column opens (w104 / w126 / w152) and the season it lands in is the one whose row the
+next table quotes.
+
+**Forty-eight weeks between a January girl's W15 and a December girl's**, and the same forty-eight at
+the other end of the junior tour. That is the relative age effect in its primary form, it is what the
+ruling asked for, and it is symmetric – the December career pays eleven months at the top of the
+junior ladder and is paid eleven months back at the bottom of it.
+
+### The two allowances, per season block
+
+| birthday | ITF junior (s0–s3) | 4-season total | WTA AER (s0–s3) |
+|---|---|---|---|
+| before, all three | 14 · 18 · 25 · unlim | 97 | unlim · unlim · 12 · 16 |
+| January | 14 · 18 · 25 · unlim | 97 | 8 · 10 · 12 · 16 |
+| June | **10 · 14 · 18 · 25** | **67** | unlim · 8 · 10 · 12 |
+| December | **10 · 14 · 18 · 25** | **67** | unlim · 8 · 10 · 12 |
+
+A late-birthday career holds **one row less of ITF allowance in every season** – 67 international
+entries over four seasons against 97. That is the ITF's own table doing what it says: a girl who is
+genuinely 13 in her first January is allowed ten events, not fourteen. The domestic ladder is uncapped
+and is what she plays instead.
+
+The AER's season-0 `unlim` for June and December is the 13 row, deliberately absent: `default` answers
+and nothing reaches it, because every W rung refuses a thirteen-year-old on AGE. Writing the
+rulebook's own `13 -> 0` there would make `remaining <= 0` true for a girl who has entered nothing,
+and `tierOutgrown` reads exactly that expression to re-open the rungs below her – so it would silently
+disable the ladder's ceiling for the first season of every career but a January one. The argument is
+in `economy.ts` beside the table.
+
+### The career: 6 seeds x 208 weeks, `player` policy, self-coached
+
+| birthday | | entries | intl | pro | playable wks | dead wks | funds | ITF rank |
+|---|---|---|---|---|---|---|---|---|
+| January | before | 97 | 32.5 | 22 | 156.5 | 29 | $28,512 | #53 |
+| | after | 97 | 32.5 | 22 | 156.5 | 29 | $28,512 | #53 |
+| June | before | 97.5 | 34.5 | 25 | 158 | 27.5 | $17,917 | #49 |
+| | after | 97.5 | **38.5** | **19.5** | 155 | 30.5 | $15,426 | **#44.5** |
+| December | before | 101.5 | 34.5 | 17 | 159 | 27.5 | $18,801 | #52 |
+| | after | 100.5 | **40** | **13.5** | 153.5 | **32** | $20,419 | **#47** |
+
+**The January arm is identical in every column**, which is the invariance the change predicts: the two
+clocks agree for a girl born in the first week of January, so nothing about her career can move. Every
+number that did move belongs to a birthday the old code was lying about.
+
+**A December career does not lose its season.** It plays 100.5 tournaments against 101.5 – within a
+seed – and the mix SUBSTITUTES rather than shrinks: international entries rise 34.5 → 40 and
+professional ones fall 17 → 13.5, because the W rungs open forty-eight weeks later and the entry
+policy spends those weeks on the junior tour instead. **Dead weeks rise from 27.5 to 32 of the ~186
+weeks that carry an event – 14.7% to 17.3%, 2.5 percentage points** – and her ITF ranking ends BETTER (#52 → #47),
+which is the same substitution seen from the ranking table. The tighter junior allowance (67 against
+97) never binds, because no career in the bench reached even 40 international entries in four seasons.
+
+⚠ WHAT THE BENCH DOES NOT SAY. `funds` and `ITF rank` move by more than the structural columns and
+n = 6 medians are not the place to read a money finding; they are quoted because the brief asked for
+them, not as a balance result. And the birthday also moves her STARTING SKILLS (`relativeAgeHeadStart`,
+unchanged by this wave), so the June and December columns are the whole relative-age effect and not the
+clock alone.
+
+### What still reads the band, on purpose
+
+`coachById` and the coach/facility prices derived from it (`world.ts` weekly bill, `growWeek`,
+`coachMarket.ts` x4, `injury.ts` x2, `knock.ts` x2, `snapshot.ts` upcoming cards,
+`PlanWeekSheet.vue`); the COHORT's own `p.ageYears` in `season/tournament.ts`; and
+`kidLife.schoolIsOverForBand`. One more is a FINDING rather than a decision: `Snapshot.diary`'s
+`startAgeYears` still drives `portraitStage(startAgeYears + floor(week/52))`, so the avatar's art band
+crosses 16 → 17 on the season boundary rather than on her birthday. It prints no number and gates no
+rule, and moving it means changing the `DiaryView` contract, so it is left for the owner to rule on
+rather than folded in silently.
+
+### ⚠ What the change BROKE on its way through, and where the last piece of it still is
+
+`Snapshot.ageYears` did not just get more accurate – **it changed meaning**, from the band to the girl.
+Everything asking "how old is she" improved for free. Two kinds of reader got quietly WORSE, and
+neither answers to `git grep ageAtWeek`, which is why the audit had to be run the other way round –
+from `Snapshot.ageYears`' consumers back.
+
+1. **The coach price, on two screens.** `coachById(seed, age, id)` and `facilityRateCents(age, tier)`
+   are keyed on the market's restocking clock, and the engine still bills through it
+   (`resolveBaseCosts`). A screen passing `snap.ageYears` matched the engine *exactly* while that field
+   WAS the band, and stops matching it the moment the two straddle a coach rate row (12-16 / 17-22 /
+   23+). A December girl is 16 from week 156 to week 204 while the market has restocked at 17: **49
+   weeks of quoting the development rate against a bill charged at the professional one.**
+   `ThisWeekScreen.vue` is fixed here (`ageAtWeek(snap.week)`, the idiom `PlanWeekSheet.vue` already
+   used) and guarded by a mounted, mutation-verified test in `tests/component/one-clock-ui.test.ts`.
+   **`MoneyScreen.vue:149/151/154` has the identical defect and is owned by another branch** – the
+   same three-line change, and its own comment («EVERY FIGURE IS THE ENGINE'S OWN … so the note cannot
+   drift from the charge») is the promise it is currently breaking.
+
+2. **An inlined band in the Careers list.** `MoreScreen.vue` printed `14 + Math.floor(c.week / 52)` –
+   the same hiding place `Snapshot.ageYears` itself was in, and the reason a grep never found either.
+   It told the career picker a December girl was 14 in the week her own Home screen said 13. Fixed;
+   `CareerMeta` now carries `birthMonth` (an INDEX-row field beside `revision`, not in the save
+   payload – **no schema bump**), and a row written before this wave falls back to the band rather
+   than to an invented birthday.
+
+**One sim guard is RED on this branch and was RED before it.** `tests/econ-reach.test.ts`'s
+`14→18` band reads **1 of 30** against a floor of 12. Measured at the merge-base as well as here –
+same file, same assertion, same number – so the one-clock wave does not move it. Its own note says
+why it is left that way: *"at one career re-basing is erasure and the number is the finding"*, with
+the attribution in `docs/specs/compound-cost-2026-08.md` and an explicit instruction not to re-base
+the band to fit. Nothing here softens it. Two other sim files (`econ-bench`,
+`fatigue-bench-policy`) report every test green and then exit 1 on birpc's `onTaskUpdate` wall,
+which is the contention artefact `scripts/sim.mjs`'s own header documents.
+
+**And a hole in the guard, found by mutation testing rather than by reading.** The source pin that
+forbids the nine converted functions from containing `ageAtWeek(` cannot see a *constant*: putting a
+literal `14` back into the album's opening caption leaves the banned expression absent and the pin
+green. `tests/relative-age.test.ts` now asserts the caption's number behaviourally for three
+birthdays. Nine of the ten one-clock call sites were already mutation-red; that tenth was the reason
+to run the battery.

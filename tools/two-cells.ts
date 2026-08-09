@@ -97,7 +97,7 @@ function runCareer(arm: Arm, seed: string, weeks: number): Career {
     playStyle: 'all-court',
     birthMonth: 6,
     birthDay: 15,
-  } as PlayerProfile
+  } as unknown as PlayerProfile
   const world: WorldState = createWorld(seed, profile)
   const rng = rngFromSeed(`${seed}:bench`)
 
@@ -163,7 +163,10 @@ function runCareer(arm: Arm, seed: string, weeks: number): Career {
   return {
     endFundsCents: world.fundsCents,
     minFundsCents: minFunds,
-    bankrupt: world.ending?.kind === 'bankruptcy' || minFunds < 0,
+    // `CareerEnding.type`, not `.kind` – the property never existed, so this arm was dead and the
+    // count came entirely from `minFunds`. It cannot change a number (a bankruptcy ending IS eight
+    // weeks under water, so the second clause already held wherever the first now does).
+    bankrupt: world.ending?.type === 'bankruptcy' || minFunds < 0,
     prizeCents: totals?.prizeCents ?? 0,
     sponsorCents,
     academyCents,

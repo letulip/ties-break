@@ -51,10 +51,15 @@ export const TILE_LINE_MAX = 16
 // 1. SCHOOL - two cut-offs that do not agree, which is the whole interest of this tile
 // =================================================================================================
 //
-// THE TENNIS YEAR RUNS ON 1 JANUARY. ITF junior age groups are by YEAR OF BIRTH, which is exactly
-// what the engine already models: `ageYears` is START_AGE_YEARS + floor(week/52), so she "turns"
-// on the season boundary whatever month she was actually born in. A January girl is up to eleven
-// months older than a December girl in the same draw (docs/specs/relative-age.md §2).
+// THE TENNIS YEAR RUNS ON 1 JANUARY. ITF junior age groups are by YEAR OF BIRTH, so a January girl
+// is up to eleven months older than a December girl in the same draw (docs/specs/relative-age.md §2)
+// - and the DRAW is what bands by the year, never the girl.
+//
+// ⚠ SO `ageYears` HERE IS HERS, NOT THE BAND'S, since the one-clock ruling (09.08, world/age.ts).
+// This note used to say it was "START_AGE_YEARS + floor(week/52), so she turns on the season boundary
+// whatever month she was actually born in", which was the defect rather than the design: this tile
+// takes `birthMonth` two arguments later, so the old wiring let the School line reason from her real
+// birthday while the age beside it came off a clock that had never heard of it.
 //
 // THE SCHOOL YEAR RUNS ON 1 SEPTEMBER. The convention this module picks, and states here as the
 // spec asks:
@@ -103,8 +108,8 @@ function schoolCohortYear(birthYear: number, birthMonth: number): number {
 
 /** Her grade in the school year running NOW, or null once she is past the last one.
  *
- *  `birthYear` is her ITF birth year (the season year minus `ageYears` - the game's own age is the
- *  calendar-year one). `schoolYearStart` is the calendar year the current school year began in.
+ *  `birthYear` is her ITF birth year - the BAND's year, which is the same for every girl in it and is
+ *  what `kidBirthYear()` returns. `schoolYearStart` is the calendar year the current school year began in.
  *  Grade G runs from age G+5 to G+6 on 1 September, which gives G = start - cohort - 6. */
 export function gradeOf(birthYear: number, birthMonth: number, schoolYearStart: number): number | null {
   const grade = schoolYearStart - schoolCohortYear(birthYear, birthMonth) - 6
@@ -207,8 +212,16 @@ function classStanding(birthMonth: number): string {
  *  week IS; the exam fortnight still outranks it, and cannot collide with it anyway (weeks 23-24
  *  against 25-33). */
 export function schoolTile(view: KidLifeWorldView): KidLifeTile {
-  // Her ITF birth year: `ageYears` is the calendar-year age, so this is total and exact.
-  const birthYear = view.seasonYear - view.ageYears
+  // ⚠ HER BIRTH YEAR IS THE BAND'S YEAR, NOT `seasonYear - ageYears` (one-clock ruling, 09.08). The
+  // subtraction was exact only while `ageYears` was the band's - the two agreed by construction. They
+  // do not now: a girl born in April is 13 through the January of 2031 and 14 from the April, so the
+  // subtraction would call her born in 2018 for three months and 2017 for the rest, and her GRADE
+  // would step a year in the middle of a school year and step back at the season boundary.
+  //
+  // `kidBirthYear()` is the career constant `schoolEndWeek` already reads, which is what makes this
+  // literally «the SAME arithmetic» as `schoolIsOver` rather than merely a similar one - the claim
+  // the note on this tile's `note` branch depends on.
+  const birthYear = kidBirthYear()
   // Which September the school year running NOW began in: this season's, once it has passed.
   const schoolYearStart = view.seasonYear - (pastSeptember(view.week) ? 0 : 1)
   const grade = gradeOf(birthYear, view.birthMonth, schoolYearStart)
@@ -436,7 +449,13 @@ function seedSafe(seed: string): string {
 export interface KidLifeWorldView {
   seed: string
   week: number
-  /** the game's own calendar-year age (14 + season index) */
+  /** HER age in whole years, off her own birth date (`kidAgeAt`) - not the 14 + season-index band it
+   *  used to be (one-clock ruling, 09.08).
+   *
+   *  ⚠ AND `schoolTile` DELIBERATELY DOES NOT DERIVE HER BIRTH YEAR FROM IT. Standard age arithmetic
+   *  is off by one before a birthday, so `seasonYear - ageYears` would move her school cohort twice a
+   *  year; the tile reads `kidBirthYear()` instead. Kept on the view because it is the module's
+   *  declared slice of the world, not because the school line still needs it. */
   ageYears: number
   /** the display year of the CURRENT season - `seasonYear(floor(week/52))`, the one year identity
    *  the whole app agrees on (shared/dates.ts). Passed in rather than re-derived, so this module

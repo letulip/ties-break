@@ -1992,8 +1992,14 @@ describe('the v33 schema step', () => {
 describe('the tournament desk writes on W-rung registration, and only then', () => {
   /** An open world aged into the W era by the EVENT's week (the gate reads age there), with the
    *  books the W15 on-ramp wants. Same idiom as the pro-cap suite in tests/age-caps.test.ts. */
+  /** ⚠ THE JANUARY BIRTHDAY IS LOAD-BEARING AND IS A RE-AIM, NOT A WEAKENING (one-clock ruling,
+   *  09.08). Every letter below is raised by an entry into `wEvent`, a W15 in week 110, and W15 opens
+   *  at 16 – asked of HER age now rather than of the birth-month-free band. `DEFAULT_PROFILE` is a
+   *  June girl, who is fifteen in week 110 and is correctly refused, so the desk fixture would have
+   *  been measuring the age gate instead of the desk. A January girl is sixteen there, which is what
+   *  this file has always assumed and never said. No assertion changed. */
   function wWorld(seed: string): { world: WorldState; wEvent: SeasonEvent; jEvent: SeasonEvent } {
-    const world = createWorld(seed)
+    const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 6 })
     world.fundsCents = 9_999_999_00
     world.results.push({ playerId: KID_ID, week: 0, points: 1500, tier: 'national' })
     for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: 0, points: 300, tier: 'j300' })

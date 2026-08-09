@@ -320,6 +320,8 @@ async function runAutosaveTx(
           lastPlayedAt: savedAt,
           week: world.week,
           revision,
+          // One clock, on the Careers list too (09.08) – the row printed the band before this.
+          birthMonth: world.profile.birthMonth,
         }
         saves.put(record)
         careers.put(meta)
@@ -454,6 +456,8 @@ export async function writeNamed(world: WorldState, name: string, revision: numb
         lastPlayedAt: savedAt,
         week: ahead ? world.week : (existing?.week ?? world.week),
         revision: ahead ? revision : existing?.revision,
+        // One clock, on the Careers list too (09.08) – the row printed the band before this.
+        birthMonth: world.profile.birthMonth,
       } satisfies CareerMeta)
       out = toMeta(record)
     }

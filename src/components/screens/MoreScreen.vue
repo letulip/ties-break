@@ -9,6 +9,7 @@ import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SlotMeta } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
+import { ageAtWeek, kidAgeYears } from '../../engine/world'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -121,6 +122,20 @@ function flagEmoji(code: string): string {
 
 function fmtDate(ts: number) {
   return new Date(ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
+/** HOW OLD SHE IS on a career the player has not loaded – the Careers list's own copy of the one
+ *  clock (owner ruling 1, 09.08; engine/world/age.ts).
+ *
+ *  ⚠ THIS LINE USED TO INLINE THE BAND, as `14 + Math.floor(c.week / 52)`, which is why a grep for
+ *  `ageAtWeek` never found it: the same hiding place `Snapshot.ageYears` was in. It made the picker
+ *  say 14 about the very December career whose Home screen says 13.
+ *
+ *  The fallback is the band and is deliberate: `birthMonth` reaches the index row only from this
+ *  wave on (shared/protocol.ts), so a career last saved before it has no birthday to read and the
+ *  band is the honest best guess rather than an invented one. One autosave replaces it. */
+function careerAge(c: CareerMeta): number {
+  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth)
 }
 
 // Coarse relative time for the autosave row – doesn't need second-level precision.
@@ -400,7 +415,7 @@ const TAB_OPTIONS = [
           <span v-if="c.careerId === activeCareerId" class="pill ok">Active</span>
         </div>
         <div class="hint">
-          {{ weekLabel(c.week) }} · age {{ 14 + Math.floor(c.week / 52) }} · last played {{ fmtDate(c.lastPlayedAt) }}
+          {{ weekLabel(c.week) }} · age {{ careerAge(c) }} · last played {{ fmtDate(c.lastPlayedAt) }}
         </div>
       </div>
       <div class="controls">

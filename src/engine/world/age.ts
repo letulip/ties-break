@@ -12,7 +12,7 @@ import type { WorldState } from '../world'
 export const START_AGE_YEARS = 14
 
 // =================================================================================================
-// HOW OLD SHE IS – the band, and the girl. Two different questions, and they had one answer.
+// ONE CLOCK, AND IT IS HERS. The owner's ruling of 09.08, and what is left of the other one.
 // =================================================================================================
 //
 // The owner, 30.07: «девочка, родившаяся в декабре, по идее, в этой возрастной группе должна на момент
@@ -31,24 +31,39 @@ export const START_AGE_YEARS = 14
 //   girls. That is the relative age effect in its primary form, and it is a fact about her age rather
 //   than a modifier applied to it.
 //
-// SO THERE ARE TWO QUESTIONS AND THEY NEEDED TWO FUNCTIONS:
+// ⚠⚠ AND THEN THE SPLIT WAS MADE INTO TWO AGES, WHICH WAS THE MISTAKE. This file used to describe
+// `ageAtWeek` as "THE BAND / THE CAREER CLOCK" and hand it to every gate in the game, so a December
+// girl was told she was 14 while `growWeek` developed her as 13, and the two numbers disagreed by a
+// full year FOR THE WHOLE CAREER (measured on the owner's own save: band 14 / girl 13 at week 0, band
+// 18 / girl 17 at week 208). It printed 16 on Home from week 104 while her own birthday note said «She
+// is sixteen this week» at week 154 - fifty weeks apart, both from the engine - and it let a girl born
+// in March enter a W15 at 15.83 because `TIERS.w15.minAgeYears = 16` was being asked of the band.
 //
-//   `ageAtWeek`     THE BAND / THE CAREER CLOCK. Birth-month-free by construction: 14 at week 0, 15 at
-//                   week 52, for everyone. This is what her AGE GROUP is, and what the season's own
-//                   ageing is keyed to.
-//   `kidAgeExact`   THE GIRL. Her real age, from a real birth date on the game's real calendar.
+// The owner's ruling, 09.08: «Есть год рождения и дата. Это всё. Если она родилась в середине декабря
+// и пошла на теннис, то на начало игры ей всё ещё 13, кстати, так же, как и всем остальным, кто
+// родился НЕ на 1й неделе января. Дальше когда ДР – тогда и +1 год.»
 //
-// ⚠ AND `ageAtWeek` MUST NOT LEARN ABOUT BIRTH MONTHS, which is the reason this is two functions rather
-// than one with a parameter. `coachById(world.seed, ageAtWeek(world.week), world.coachId)` DERIVES THE
-// COACH ROSTER FROM THE AGE - it is a purely functional roster with nothing persisted but the chosen id,
-// which is what lets a saved coach resolve years later without a migration. Make the age depend on her
-// birthday and every December career's roster re-rolls, and their hired coach resolves to a different
-// person or to nobody. Eleven of the nineteen `ageAtWeek` call sites are that roster and its prices.
-// The band is the right input there: a market of coaches for 14-year-olds does not restock because one
-// girl has a late birthday.
+//   `kidAgeExact` / `kidAgeYears` IS HER AGE. Everywhere a surface prints one and everywhere a rule
+//   asks how old she is: the printed age, the tier gates, both entry allowances, the medical refusal,
+//   the academy band, the album. One clock, off a birth date, and it is the only one she has.
+//
+// ⚠ `ageAtWeek` DID NOT DISAPPEAR - IT STOPPED BEING AN AGE. It keeps exactly one job, and the job is
+// not about her at all: `coachById(world.seed, ageAtWeek(world.week), world.coachId)` DERIVES THE COACH
+// ROSTER, a purely functional market with nothing persisted but the chosen id, which is what lets a
+// saved coach resolve years later without a migration. Make that input depend on her birthday and every
+// December career's roster re-rolls and their hired coach resolves to a different person or to nobody.
+// So it is THE MARKET'S RESTOCKING CLOCK: a market of coaches for 14-year-olds does not restock because
+// one girl has a late birthday. Read `ageAtWeek` for the coach and his prices, `kidAgeYears` for her.
+//
+// THE COHORT IS THE OTHER EXCEPTION, and it is not one. Rival players carry their OWN `ageYears` and
+// `season/tournament.ts` asks `isTierAgeOpen(event.tier, p.ageYears)` of it - a band, because a cohort
+// player has no birth date to be exact about. That is their clock, not hers, and it stays.
 
-/** THE BAND, and the career clock: whole years since the career opened, birth month deliberately absent.
- *  See the note above for why this must stay birth-month-free - the coach roster is derived from it. */
+/** THE COACH MARKET'S RESTOCKING CLOCK - NOT HER AGE. Whole years since the career opened, birth month
+ *  deliberately absent, so the derived roster is the same for every girl in the band.
+ *
+ *  ⚠ IF YOU ARE ASKING HOW OLD SHE IS, THIS IS THE WRONG FUNCTION - use `kidAgeYears` / `kidAgeAt`. See
+ *  the note above: this input must stay birth-month-free or every December career's coach re-rolls. */
 export function ageAtWeek(week: number): number {
   return START_AGE_YEARS + Math.floor(week / WEEKS_PER_YEAR)
 }
@@ -75,6 +90,18 @@ export function kidAgeExact(week: number, birthMonth: number): number {
 /** ...and the whole-years version, which is what the age-keyed tables want. */
 export function kidAgeYears(week: number, birthMonth: number): number {
   return Math.floor(kidAgeExact(week, birthMonth))
+}
+
+/** HER AGE IN `week`, whole years, read off the world's own profile - the ONE clock, at the call sites
+ *  that hold a world and a week rather than a birth month.
+ *
+ *  ⚠ IT EXISTS SO THE RULING HAS ONE SPELLING. Nine gates (both entry caps, the tier age block, the
+ *  ladder ceiling, both mandatory arms, the academy band, the snapshot, the album) each had
+ *  `ageAtWeek(week)` and each would otherwise have grown its own `kidAgeYears(week,
+ *  world.profile.birthMonth)`. One name means a later question about which age a rule reads has one
+ *  place to be answered, and it is why `git grep kidAgeAt` is the audit of the ruling. */
+export function kidAgeAt(world: WorldState, week: number): number {
+  return kidAgeYears(week, world.profile.birthMonth)
 }
 
 /** The career week her birthday falls in for the calendar year containing `week`, or null if that date is
