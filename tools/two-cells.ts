@@ -22,14 +22,12 @@ import { rngFromSeed } from '../src/engine/rng'
 import {
   acceptOffer,
   createWorld,
-  hireCoach,
   type WorldState,
 } from '../src/engine/world'
-import { buildCoachRoster } from '../src/engine/coach'
 import { stepCareerWeek, POLICIES } from './econ-bench'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
-import type { FamilyBackground, PlayerProfile } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type FamilyBackground, type PlayerProfile } from '../src/shared/protocol'
 import type { CoachTier } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
 
@@ -91,25 +89,34 @@ function pct(n: number, of: number): string {
 }
 
 function runCareer(arm: Arm, seed: string, weeks: number): Career {
-  // ⚠ VIA `unknown` (R15 surfaces wave). `name` is not a `PlayerProfile` field and five required
-  // ones are missing, so the direct assertion is a compile error - it only ever ran under vite-node,
-  // which strips types. Left as a partial rather than completed, because `createWorld` merges over
-  // DEFAULT_PROFILE and filling the gaps here would silently re-anchor a published bench.
+  // ⚠ BUILT OFF `DEFAULT_PROFILE`, AND THE FIRST VERSION OF THIS FUNCTION PUBLISHED A CONTAMINATED
+  // BENCH. The literal it used carried a `name` field `PlayerProfile` does not have and was missing
+  // five it does - a TS2352 that only `vue-tsc -b --force` ever saw, because vite-node strips types.
+  // The comment that stood here claimed `createWorld` merges over `DEFAULT_PROFILE` and that a
+  // partial was therefore safe. **It does not merge**: it takes the profile as given, so the missing
+  // fields were `undefined` at runtime and two of them are read at creation.
+  //
+  //   `coachIncludesPhysio(undefined)` is `undefined !== 'self'` -> TRUE, so every arm opened with
+  //   `physioActive`, INCLUDING the two self-coached ones. Physio feeds the injury and recovery
+  //   model, so the arms that were supposed to buy nothing were quietly buying medical cover.
+  //   `openingCoachId` took its non-self branch with an undefined tier.
+  //
+  // The numbers this file printed on 09.08 were published before that was found. They are re-run
+  // here and the corrected table is in docs/specs/round15-triage.md; the original is kept beside it
+  // rather than deleted, because a measurement that moved is itself a finding.
+  //
+  // ⚠ AND THE COACH IS SET ON THE PROFILE, NOT HIRED AFTERWARDS. `DEFAULT_PROFILE.coachTier` is
+  // `middle`, so spreading it alone would have given the self-coached arms a coach at week 0 - the
+  // same class of error one layer up. `openingCoachId` is the engine's own opening path and picks
+  // the BEST FIT at the rung, which is what a real career gets; the old `roster.find(first at tier)`
+  // picked a different person at a different rate.
   const profile: PlayerProfile = {
-    name: 'Bench',
+    ...DEFAULT_PROFILE,
     background: arm.background,
-    playStyle: 'all-court',
-    birthMonth: 6,
-    birthDay: 15,
-  } as unknown as PlayerProfile
+    coachTier: arm.coach ?? 'self',
+  }
   const world: WorldState = createWorld(seed, profile)
   const rng = rngFromSeed(`${seed}:bench`)
-
-  if (arm.coach) {
-    const roster = buildCoachRoster(world.seed, 14)
-    const pick = roster.find((c) => c.tier === arm.coach)
-    if (pick) hireCoach(world, pick.id)
-  }
 
   let minFunds = world.fundsCents
   let entries = 0
@@ -163,16 +170,12 @@ function runCareer(arm: Arm, seed: string, weeks: number): Career {
     if (row?.titles?.length) bestTier = tier as TierId
   }
 
-  const totals = world.careerTotals as { prizeCents?: number; spentCents?: number }
+  const totals = world.careerTotals as unknown as { prizeCents?: number; spentCents?: number }
   return {
     endFundsCents: world.fundsCents,
     minFundsCents: minFunds,
-    // ⚠ `.type`, WAS `.kind`, and this one is a real bug rather than a cast. `CareerEnding` has no
-    // `kind`, so the left arm was `undefined === 'bankruptcy'` on every career and the bench's
-    // bankruptcy count came entirely from `minFunds < 0`. In practice the two agree - the bankruptcy
-    // ending only fires after a debt spell, which requires funds to have gone negative first - so
-    // the published 1/50 is not expected to move; it should be re-run before it is quoted again all
-    // the same.
+    // ⚠ `type`, NOT `kind` (09.08): `CareerEnding`'s discriminant is `type`, so this read undefined
+    // and every bankruptcy was counted only by the funds fallback beside it.
     bankrupt: world.ending?.type === 'bankruptcy' || minFunds < 0,
     prizeCents: totals?.prizeCents ?? 0,
     sponsorCents,

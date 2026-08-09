@@ -32,7 +32,7 @@ import {
   kitWearAt,
 } from '../equipment'
 import { activeKitDeal, kitFreshCap } from '../offers'
-import type { KitGrade, KitLine, KitLineView, KitOfferTerms } from '../../shared/protocol'
+import type { KitDealView, KitGrade, KitLine, KitLineView, KitOfferTerms } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
@@ -174,9 +174,46 @@ export function kitPurchaseSplit(
   const deal = activeKitDeal(world.offers ?? [], world.week)
   const terms = deal ? (deal.terms as KitOfferTerms) : null
   if (!deal || !terms || !terms.covers.includes(line)) return { paidCents: costCents, coveredCents: 0, brand: '' }
-  const remaining = Math.max(0, terms.kitAllowanceCents - (deal.coveredCents ?? 0))
+  const remaining = kitAllowanceRemainingCents(terms, deal.coveredCents ?? 0)
   const coveredCents = Math.min(costCents, remaining)
   return { paidCents: costCents - coveredCents, coveredCents, brand: terms.brand }
+}
+
+/** WHAT IS LEFT OF THE SEASON'S ALLOWANCE, in cents - the one number the Bills page never had.
+ *
+ *  ⚠ IT IS THE TILL'S OWN EXPRESSION, LIFTED RATHER THAN COPIED. `kitPurchaseSplit` reads exactly
+ *  this to decide what a purchase costs, and `resolveGear` reads the same shape for the recurring
+ *  bill; a screen that subtracted `coveredCents` for itself would be a third computation of a number
+ *  two others already own, and the whole defect this fixes is two surfaces disagreeing about it. */
+export function kitAllowanceRemainingCents(terms: KitOfferTerms, spentCents: number): number {
+  return Math.max(0, terms.kitAllowanceCents - spentCents)
+}
+
+/** HER KIT DEAL AS THE BILLS PAGE READS IT - the running contract, its remaining quota and its term.
+ *
+ *  Null when nobody is kitting her out. Derived at snapshot time and persisting nothing, exactly as
+ *  `kitLineViews` is; see `KitDealView` for why every field on it is there. */
+export function kitDealView(world: WorldState): KitDealView | null {
+  const deal = activeKitDeal(world.offers ?? [], world.week)
+  if (!deal) return null
+  const terms = deal.terms as KitOfferTerms
+  const spentCents = deal.coveredCents ?? 0
+  return {
+    tier: terms.tier,
+    brand: terms.brand,
+    // A COPY, like every array on this message: the snapshot is never a live view of engine state,
+    // and `covers` is a persisted term on the offer itself.
+    covers: [...terms.covers],
+    allowanceCents: terms.kitAllowanceCents,
+    spentCents,
+    remainingCents: kitAllowanceRemainingCents(terms, spentCents),
+    seasons: terms.seasons ?? 1,
+    // A deal in force HAS both weeks - `signOffer` writes them and the v41 migration back-filled
+    // every shipped contract - so the fallbacks are for a hand-edited save rather than a real one.
+    fromWeek: deal.fromWeek ?? deal.decidedWeek ?? deal.week,
+    untilWeek: deal.untilWeek ?? deal.week,
+    minEventsPerSeason: terms.minEventsPerSeason,
+  }
 }
 
 /** The same split, and it BANKS the spend against the allowance. Only the till may call this. */

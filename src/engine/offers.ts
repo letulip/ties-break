@@ -305,7 +305,16 @@ export interface SponsorStanding {
  *  same quarter: 8 of 32, 31 of 125). See `ECONOMY.sponsorship.*.maxWtaRank`.
  *
  *  A professional also always clears the LOCAL shop: the whole rung is "a shop that has heard of
- *  her", and a girl on the world tour has cleared that bar by definition. */
+ *  her", and a girl on the world tour has cleared that bar by definition.
+ *
+ *  ⚠ AND SINCE 09.08 A RANKED JUNIOR DOES TOO, WHICH IS THE FLOOR THIS PREDICATE WAS MISSING. The
+ *  local arm read the domestic table and the professional escape hatch and NOTHING ELSE, so a girl
+ *  who had gone abroad - decaying the only points the shop would look at - was refused by the one
+ *  rung that exists to catch a career the bigger brands passed on. The owner's own save is the case:
+ *  ITF #4, national #67, cleared `global` and `national`, and `local` said no. See
+ *  `ECONOMY.sponsorship.localMaxItfRank` for the whole argument and for where 128 comes from; the
+ *  short version is that this is the 30.07 error with the two tables swapped, and the rule that
+ *  fixes it is the one the two rungs above already keep: read whichever table she is actually on. */
 export function standingClears(standing: SponsorStanding, tier: SponsorTier): boolean {
   const s = ECONOMY.sponsorship
   // W3-ACT2 section 7: the three professional rungs read the W table AND NOTHING ELSE, which is the
@@ -331,7 +340,13 @@ export function standingClears(standing: SponsorStanding, tier: SponsorTier): bo
       (standing.wtaRanked && standing.wtaRank <= s.national.maxWtaRank)
     )
   }
-  return standing.nationalRank <= s.maxRank || standing.wtaRanked
+  // THE FLOOR, AND IT READS ALL THREE TABLES: her place at home, her place in the junior world, or
+  // any professional standing at all. The order is the order a shop would ask them in.
+  return (
+    standing.nationalRank <= s.maxRank ||
+    (standing.itfRanked && standing.itfRank <= s.localMaxItfRank) ||
+    standing.wtaRanked
+  )
 }
 
 /** WHICH RUNG WRITES TO HER, or null when nobody does - the whole gate, in one function, so no

@@ -19,6 +19,8 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { ECONOMY, GEAR_CATEGORIES, gearHitsUpTo } from '../src/engine/economy'
+import { kitTermsFor, standingClears } from '../src/engine/offers'
+import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { rngFromSeed } from '../src/engine/rng'
 import { COACH_TIERS, coachWeeklyBandCents } from '../src/engine/coach'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground } from '../src/shared/protocol'
@@ -596,12 +598,27 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     // The regression that made this dead content, pinned. A kid who is #1 in the world and unranked
     // at home is not somebody a local shop has heard of; more to the point, the reverse is the case
     // this mechanic exists for and the two must not be confused again.
+    //
+    // ⚠ RE-AIMED IN ITS MEANING, NOT IN ITS ASSERTIONS (09.08, fix/sponsor-floor). Every line below
+    // still holds and none of them moved: `localSponsorCents` is the AMOUNT, it is read off the
+    // domestic table, and a girl who is nobody at home is worth $0 of the STEPPED-UP local deal.
+    // What the owner overturned is the sentence in the paragraph above - "a kid who is #1 in the
+    // world … is not somebody a local shop has heard of". She is, and refusing her is the same error
+    // this block was rebuilt to fix with the two tables swapped. That is a change to WHO IS WRITTEN
+    // TO (`standingClears`, offers.ts) and not to what the domestic ladder pays, so the ladder's
+    // fixture is asserted here beside the amount rather than left to be inferred: the shop now
+    // clears her on her junior standing, and still pays her the ordinary figure because the
+    // step-up at `topMaxRank` is a DOMESTIC reward and stays one.
     const world = createWorld('gate-table', { ...DEFAULT_PROFILE, background: 'working' })
     world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
     recomputeKidRank(world)
     expect(world.kidRank).toBe(1) // top of the international table...
     expect(world.kidRankDomestic!).toBeGreaterThan(ECONOMY.sponsorship.maxRank) // ...nobody at home
     expect(localSponsorCents(world.kidRankDomestic!)).toBe(0)
+    // ...and the 09.08 half: the shop WRITES to her on the world table, at the ordinary allowance.
+    const standing = sponsorStandingOf(world)
+    expect(standingClears(standing, 'local')).toBe(true)
+    expect(kitTermsFor(standing, 'local')!.kitAllowanceCents).toBe(ECONOMY.sponsorship.seasonCents)
   })
 })
 

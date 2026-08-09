@@ -1380,6 +1380,45 @@ export interface KitLineView {
   sponsored: boolean
 }
 
+/** THE SIGNED KIT DEAL AS THE BILLS PAGE READS IT - one running contract, or null.
+ *
+ * ⚠ IT EXISTS BECAUSE THE QUOTA WAS INVISIBLE (09.08, and the owner diagnosed it himself): «Списались
+ * расходы на весь шмот на 38 неделе 34 года, несмотря на наличие спонсора, bills подсвечивает, что
+ * всё на нём, но значки free ушли… а почему цена в bills отличается от цены в списаниях? Я понял
+ * почему – видимо мы выбрали квоту.»
+ *
+ * `kitAllowanceCents` is a per-SEASON pot and `world/kit.ts` has always computed what is left of it,
+ * but only the purchase dialog ever quoted the figure - so kit that was free last week was charged
+ * this week with no warning, the "free" badges vanished unexplained, and the Bills sticker disagreed
+ * with the ledger's charge. Both are the same fact seen from two sides, and the missing half is the
+ * RUNNING BALANCE. Derived at snapshot time from the persisted offer, like every other view block:
+ * a screen that subtracted `coveredCents` itself would be a second authority on the one number the
+ * till is the authority on.
+ *
+ * ⚠ AND IT CARRIES THE TERM (`fromWeek` / `untilWeek` / `seasons`), which is the other half of the
+ * same complaint - «Непонятно на какое количество лет спонсор контракт заключает, нигде не видно
+ * этой информации». All three were persisted and none of them reached a surface. */
+export interface KitDealView {
+  /** whose kit she is in - see SponsorTier. */
+  tier: SponsorTier
+  /** the brand as it signs, frozen on the deal at arrival. */
+  brand: string
+  /** which of her three lines this deal pays for. */
+  covers: readonly KitLine[]
+  /** the season's pot, in cents - what the brand will spend on her kit before it stops. */
+  allowanceCents: number
+  /** ...how much of it this season has already been spent (`Offer.coveredCents`). */
+  spentCents: number
+  /** ...and what is left, which is the number the parent needs and never had. Never negative. */
+  remainingCents: number
+  /** how many seasons the contract runs for, and the two weeks that bound it. */
+  seasons: number
+  fromWeek: number
+  untilWeek: number
+  /** tournaments she owes them this season, so the obligation is legible where the money is. */
+  minEventsPerSeason: number
+}
+
 /** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from
  *  `ECONOMY` afterwards, which is the rule that makes the deadline mean something: a letter held for
  *  three weeks is the same letter, and the spec's §2 warning ("terms never improve while you hold
@@ -2197,6 +2236,9 @@ export interface Snapshot {
    *  never prices a rung or reads a wear curve, for the reason every other derived block on this
    *  snapshot exists. */
   kit: KitLineView[]
+  /** THE DEAL BEHIND THOSE LINES, or null when nobody is kitting her out. See `KitDealView` - the
+   *  running allowance is the fact the Bills page was missing. */
+  kitDeal: KitDealView | null
   /** her academy scholarship, or null when nobody is backing her (schema v21). Surfaced because
    *  every travel figure the planner quotes is already net of it, and a smaller number with no
    *  explanation is worse than no discount at all. */
