@@ -19,6 +19,19 @@ import { defineConfig, devices } from '@playwright/test'
  *  then be talking to whatever was already serving. */
 const PORT = 4173
 
+/** ⚠ THE SECOND BUILD, WITH THE SERVICE WORKER ACTUALLY REGISTERED (S2, 09.08).
+ *
+ *  Seam #3 - the service worker - was the one seam S0 and S1 could not touch, because the whole
+ *  harness deliberately builds with `VITE_TB_SW=off` (see `webServer` below for the three races that
+ *  buys off). Turning the flag off globally to test offline would hand every other spec those races
+ *  back, so the plan's own route is taken instead: a SECOND production build, on its own port, with
+ *  its own `dist-sw/` output, and one Playwright project pinned to it by `baseURL`.
+ *
+ *  The specs that want a worker get a real one; the eleven that do not keep a build that cannot
+ *  surprise them. Measured cost of the extra build: the two run concurrently, so it is the slower of
+ *  the two rather than their sum. */
+const SW_PORT = 4174
+
 export default defineConfig({
   testDir: './e2e',
 
@@ -73,6 +86,9 @@ export default defineConfig({
       // and a11y belongs to S3's nightly `e2e-full.yml`. One browser is also ~273 MiB of download
       // per cold CI run; three would be most of the job's wall-clock, for a smoke test.
       name: 'chromium',
+      // Every spec except the one that needs a live service worker. Named by file rather than by a
+      // tag so the exclusion is greppable from the spec itself.
+      testIgnore: /offline\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         // THE OWNER'S PHONE, and this app is phone-first: 576x1280 is the width the redesign was
@@ -82,6 +98,19 @@ export default defineConfig({
         // behaviour as well as size, and choosing which of those the suite asserts against is S3's
         // matrix decision, not a side effect of picking a viewport.
         viewport: { width: 576, height: 1280 },
+      },
+    },
+    {
+      // ⚠ ONE SPEC, ONE BUILD, ONE PORT. This project exists so that `offline.spec.ts` - and only it -
+      // meets a registered service worker. It is a separate PROJECT rather than a `test.use` inside
+      // the spec because `baseURL` decides which of the two builds `page.goto('/')` reaches, and that
+      // is a property of the server, not of a test.
+      name: 'chromium-sw',
+      testMatch: /offline\.spec\.ts/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 576, height: 1280 },
+        baseURL: `http://localhost:${SW_PORT}`,
       },
     },
   ],
@@ -94,7 +123,8 @@ export default defineConfig({
   // `noEmit` - the dist it produces is byte-for-byte the one below. The types are checked by their
   // own CI job (and by `npm run check`), so paying for a second full typecheck here buys nothing and
   // costs a minute of every local run.
-  webServer: {
+  webServer: [
+    {
     command: `npx vite build && npx vite preview --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}/`,
     // ⚠ NEVER REUSE, not even locally, and the default here is the wrong one for this command.
@@ -112,5 +142,16 @@ export default defineConfig({
     // wrong in the code. S2's update-flow spec needs it back ON and gets there by building without
     // this variable - the reasoning and the route are in e2e/README.md.
     env: { VITE_TB_SW: 'off' },
-  },
+    },
+    {
+      // ⚠ THE SAME PRODUCTION BUILD WITH THE SWITCH LEFT ALONE - no `env` here, so `src/pwa.ts` runs
+      // `registerSW` exactly as a player's build does. Its own `dist-sw/` because two concurrent
+      // `vite build`s into one directory would clobber each other, and its own port because two
+      // servers cannot share one.
+      command: `npx vite build --outDir dist-sw && npx vite preview --outDir dist-sw --port ${SW_PORT} --strictPort`,
+      url: `http://localhost:${SW_PORT}/`,
+      reuseExistingServer: false,
+      timeout: 180_000,
+    },
+  ],
 })
