@@ -153,6 +153,33 @@ const groups = computed<TierGroup[]>(() =>
   }).filter((g) => g.rows.length > 0),
 )
 
+/** WHAT A ROW IS, SAID ONCE (a11y, filed by the e2e sweep 09.08: the coach rows are unlabelled).
+ *
+ *  ⚠ THE ROW IS A BUTTON WITH SEVEN CHILDREN, which is exactly the problem. Its accessible name was
+ *  whatever the name, the pill, the style tag, the uplift range, the load note, the price and the
+ *  action word concatenated to - so the one thing a listener needed first (who, and how much) sat
+ *  behind two sentences of prose, and the row read as an unpunctuated paragraph. The card is a
+ *  DECISION, so its label is the decision: who, which rung, whether the coach suits her, what the
+ *  week costs, and what pressing it would do. (No pronoun here either - R15-7 is a rule about this
+ *  screen's copy and there is no reason for a new comment to break it.)
+ *
+ *  It reads the same four facts the card prints, in the card's own words (`FIT_LABEL`,
+ *  `COACH_TIER_LABEL`, `formatCents`) rather than a second vocabulary - a label that drifts from the
+ *  row it labels is worse than none. The uplift and the load note are deliberately NOT in it: they
+ *  are the card's argument, not its identity, and a name a listener has to sit through is the defect
+ *  wearing a different hat. */
+function rowLabel(r: Row): string {
+  const state =
+    r.current
+      ? 'her coach now'
+      : r.lockedPoints !== null
+        ? `locked, ${r.lockedPoints} ranking points short`
+        : r.overBudgetCents > 0
+          ? `over budget by ${formatCents(r.overBudgetCents)}`
+          : 'hire'
+  return `${r.name}, ${COACH_TIER_LABEL[r.tier]} tier, ${FIT_LABEL[r.fitNow]}, ${formatCents(r.weeklyCents)} a week – ${state}`
+}
+
 // --- the budget meter ---------------------------------------------------------------------------
 // The design's three numbers, all real: what she pays now, what a week brings in, and the gap. The
 // cap is the parent contribution because that is the money the decision is actually made against -
@@ -255,8 +282,12 @@ function scrollToTier(tier: CoachTier): void {
         {{ planLabel(k) }}
       </button>
     </div>
+    <!-- R15-7: no pronoun names a coach on this screen. The roster puts women on every list by
+         construction (COACH_FIRST_F), and "More of him costs more" was the copy guessing - on the
+         one screen where the player is looking at their faces. The owner's own fix: drop it and join
+         the two halves with a dash. -->
     <p class="hint cm-plan-note">
-      Every price below is {{ sessionsNow }} sessions a week. More of him costs more.
+      Every price below is {{ sessionsNow }} sessions a week – more sessions, more money.
     </p>
 
     <!-- ⚠ THE TOURNAMENT-TRAVEL TOGGLE IS LOCKED. The owner cancelled the mechanic behind it on 30.07
@@ -324,12 +355,32 @@ function scrollToTier(tier: CoachTier): void {
       </button>
     </div>
 
+    <!-- ⚠ A CONTROL MAY NOT RENAME ITSELF WHEN IT IS PRESSED (a11y, filed by the e2e sweep 09.08).
+         Both of these are cycle buttons whose visible text is LABEL + CURRENT VALUE, so the whole
+         thing was the accessible name: a screen-reader user pressed "Sort Best fit" and landed on a
+         button called "Sort Price", with no way to tell whether the control had changed or the focus
+         had moved. `aria-labelledby` pins the name to the STATIC half - "Sort", "Style", which is
+         also the visible word a speech-input user would say - and `aria-describedby` hands the
+         changing half over as the description, where a value belongs. Nothing moves on screen. -->
     <div class="controls market-controls">
-      <button class="market-drop" :class="{ active: styleLens !== null }" @click="cycleStyle">
-        <span class="drop-label">Style</span> <strong>{{ PLAY_STYLE_LABEL[lensStyle] }}</strong>
+      <button
+        class="market-drop"
+        :class="{ active: styleLens !== null }"
+        aria-labelledby="cm-style-label"
+        aria-describedby="cm-style-value"
+        @click="cycleStyle"
+      >
+        <span id="cm-style-label" class="drop-label">Style</span>
+        <strong id="cm-style-value">{{ PLAY_STYLE_LABEL[lensStyle] }}</strong>
       </button>
-      <button class="market-drop" @click="toggleSort">
-        <span class="drop-label">Sort</span> <strong>{{ sort === 'fit' ? 'Best fit' : 'Price' }}</strong>
+      <button
+        class="market-drop"
+        aria-labelledby="cm-sort-label"
+        aria-describedby="cm-sort-value"
+        @click="toggleSort"
+      >
+        <span id="cm-sort-label" class="drop-label">Sort</span>
+        <strong id="cm-sort-value">{{ sort === 'fit' ? 'Best fit' : 'Price' }}</strong>
       </button>
     </div>
     <p v-if="styleLens !== null" class="hint market-lens-note">
@@ -353,9 +404,12 @@ function scrollToTier(tier: CoachTier): void {
         class="cm-row"
         :class="{ current: r.current, blocked: r.overBudgetCents > 0 || r.lockedPoints !== null }"
         :disabled="r.current || r.lockedPoints !== null"
+        :aria-label="rowLabel(r)"
         @click="askHire(r)"
       >
-        <span class="cm-art"><img :src="coachPortraitUrl(r.id)" :alt="r.name" loading="lazy" /></span>
+        <!-- `alt=""` now that the row carries its own label: the portrait's only text was the name,
+             which the label already says, and Home's coach card decorates the same way. -->
+        <span class="cm-art"><img :src="coachPortraitUrl(r.id)" alt="" loading="lazy" /></span>
         <span class="cm-body">
           <span class="cm-name">{{ r.name }}</span>
           <span class="cm-meta">

@@ -1323,9 +1323,22 @@ describe('the doctor on ARRIVAL — the play-week re-check', () => {
     const warning = weekEvents.find((e) => e.text.startsWith("Doctor's warning"))
     expect(warning).toBeDefined()
     expect(warning!.type).toBe('info') // somebody SAID something; nothing happened to her body
+    // ⚠ RE-AIMED 09.08 FOR R15-7, AND NOT WEAKENED. The second sentence used to read "He can warn
+    // you; he cannot forbid it". The owner's sighting was the coach roster - `buildCoachRoster` draws
+    // from COACH_FIRST_M *or* COACH_FIRST_F, so women are on it by construction and the copy called
+    // them all "he" - and the doctor is the same defect with even less behind it: the doctor is never
+    // named, never pictured and never gendered anywhere in the engine, so the pronoun was pure guess.
+    // Same fix as the coach lines: drop it. The protected facts are unchanged and all still asserted
+    // here - the event names the doctor, names the TIER she was cleared for, says the clearance is
+    // marginal, and says the warning cannot stop her.
     expect(warning!.text).toBe(
-      `Doctor's warning – she is cleared for the ${TIERS.local.label}, but only just. He can warn you; he cannot forbid it.`,
+      `Doctor's warning – she is cleared for the ${TIERS.local.label}, but only just. A warning is all it is; nobody can forbid it.`,
     )
+    expect(warning!.text).toContain('but only just')
+    expect(warning!.text).toMatch(/nobody can forbid it/)
+    // ...and no pronoun guesses at a professional the game never gendered. "she" stays, obviously -
+    // that one is the girl, and she is the one fact in this sentence nobody is guessing at.
+    expect(warning!.text).not.toMatch(/\b(he|his|him|himself)\b/i)
     expect(warning!.text).not.toMatch(/[—А-Яа-яЁё]/) // short dash only, no Cyrillic in player copy
     skipTournament(world)
     closeTournament(world)

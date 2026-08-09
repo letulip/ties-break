@@ -76,6 +76,10 @@ async function main(): Promise<void> {
           (r.bestFinish !== undefined ? `  best ${r.bestFinish}` : ''),
       )
     }
+    // ⚠ VIA `unknown`. `CareerTotals` is a closed interface with no index signature, so the direct
+    // assertion is a compile error - it compiled under vite-node, which strips types, and only
+    // `vue-tsc -b --force` in `npm run check` ever saw it. Type-level only: the value and everything
+    // printed from it are unchanged.
     const totals = w.careerTotals as unknown as Record<string, number> | undefined
     if (totals) console.log(`  careerTotals: ${JSON.stringify(totals)}`)
 
@@ -92,14 +96,18 @@ async function main(): Promise<void> {
     // ---- 3. SPONSOR / ACADEMY ------------------------------------------------------------
     console.log(`\n[3] OFFERS`)
     for (const o of w.offers) {
+      // Same story as `careerTotals` above: `OfferTerms` is a union of closed shapes, so the widen
+      // goes through `unknown`.
       const t = o.terms as unknown as Record<string, unknown>
       console.log(
         `   ${o.kind.padEnd(10)} ${o.state.padEnd(8)} arrived w${o.week} deadline w${o.deadlineWeek}` +
           ` ${o.decidedWeek !== undefined ? `decided w${o.decidedWeek}` : ''}` +
           ` ${o.fromWeek !== undefined ? `from w${o.fromWeek}` : ''}` +
           ` ${o.untilWeek !== undefined ? `until w${o.untilWeek}` : ''}` +
-          // `Offer.coveredCents` is the field's name – "what the shop has actually spent on her kit
-          // under this deal". There is no `spentCents` on an Offer; that name lives on CareerTotals.
+          // ⚠ `coveredCents`, WAS `spentCents` - a name that is not on `Offer` at all, so this
+          // column took its `-` branch on every row of the round-15 triage and reported nothing
+          // where the field had a number. `spentCents` lives on `CareerTotals`; the shop's spend
+          // under one deal is `coveredCents`, the same job `AcademySupport.coveredCents` does.
           ` covered ${o.coveredCents !== undefined ? money(o.coveredCents) : '-'}`,
       )
       console.log(`     terms: ${JSON.stringify(t)}`)

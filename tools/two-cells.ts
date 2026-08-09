@@ -91,6 +91,10 @@ function pct(n: number, of: number): string {
 }
 
 function runCareer(arm: Arm, seed: string, weeks: number): Career {
+  // ⚠ VIA `unknown` (R15 surfaces wave). `name` is not a `PlayerProfile` field and five required
+  // ones are missing, so the direct assertion is a compile error - it only ever ran under vite-node,
+  // which strips types. Left as a partial rather than completed, because `createWorld` merges over
+  // DEFAULT_PROFILE and filling the gaps here would silently re-anchor a published bench.
   const profile: PlayerProfile = {
     name: 'Bench',
     background: arm.background,
@@ -163,9 +167,12 @@ function runCareer(arm: Arm, seed: string, weeks: number): Career {
   return {
     endFundsCents: world.fundsCents,
     minFundsCents: minFunds,
-    // `CareerEnding.type`, not `.kind` – the property never existed, so this arm was dead and the
-    // count came entirely from `minFunds`. It cannot change a number (a bankruptcy ending IS eight
-    // weeks under water, so the second clause already held wherever the first now does).
+    // ⚠ `.type`, WAS `.kind`, and this one is a real bug rather than a cast. `CareerEnding` has no
+    // `kind`, so the left arm was `undefined === 'bankruptcy'` on every career and the bench's
+    // bankruptcy count came entirely from `minFunds < 0`. In practice the two agree - the bankruptcy
+    // ending only fires after a debt spell, which requires funds to have gone negative first - so
+    // the published 1/50 is not expected to move; it should be re-run before it is quoted again all
+    // the same.
     bankrupt: world.ending?.type === 'bankruptcy' || minFunds < 0,
     prizeCents: totals?.prizeCents ?? 0,
     sponsorCents,

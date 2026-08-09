@@ -126,7 +126,27 @@ const ceilingPath = computed(() =>
  *  tiated glow, and the whole "two shapes, two questions" idea is lost at the exact moment it
  *  matters most. It is a range boundary and not a number, so it is inside the ruling: spec §3's
  *  guard against reverse-engineering is the FLOOR WIDTH of the band, not the invisibility of its
- *  edge - "you learn the range, never the number". */
+ *  edge - "you learn the range, never the number".
+ *
+ *  ⚠ AND SINCE R15-15 SOMETHING SAYS SO. Owner, 09.08: «а что значит пунктирная линия на нашей розе
+ *  скиллов?» The drawing was right and the file's own comments explained it perfectly - to a reader
+ *  of the source. Nothing on the screen did, so a player meeting a faint dashed polygon could only
+ *  read it as decoration, or worse, as a second measurement of something else. The `.radar-legend`
+ *  block in the template is the fix, and it is built to three rules:
+ *
+ *   1. TWO KEYS, BECAUSE THE PICTURE IS TWO SHAPES. "Where she is" for the solid contour, "How far
+ *      she could go" for the dashed edge - the headings of this file's own header, verbatim, so the
+ *      legend and the drawing can never drift into calling one thing two names.
+ *   2. THE SWATCH IS THE STROKE. Each key is a two-point path wearing the SAME class as the path it
+ *      explains (`radar-core` / `radar-ceiling-edge`), and the solid one carries the same `sharpness`
+ *      binding. A restyled contour restyles its own key; a legend that lies about the picture is not
+ *      constructible. Hand-picked swatch colours would have been free to drift on the next restyle.
+ *   3. THE DESIGN'S SECOND PRINCIPLE, IN WORDS. Both bands are one accent at two strengths, never a
+ *      second hue, "because they are the same uncertainty at two distances" - so the caption under
+ *      the keys says exactly that ("the fainter the line, the less anyone can tell") rather than
+ *      letting the dashed one read as a different KIND of thing.
+ *
+ *  It carries no numbers, which keeps it inside decisions.md #11 along with everything else here. */
 const ceilingEdge = computed(() => polygon(ordered.value.map((a) => a.ceilingHi)))
 
 /** HOW SHARPLY THE CONTOUR IS DRAWN. decisions.md #11 is not "a shape plus a fog", it is «contour
@@ -219,14 +239,39 @@ const notes = computed(() =>
       </text>
     </svg>
 
-    <!-- WHAT STANDS IN FOR THE NUMBERS. One sentence per axis he has read; nothing for the rest. -->
+    <!-- THE LEGEND (R15-15). Two keys because the picture is two shapes; the swatches are the REAL
+         strokes, wearing the same classes as the paths they stand for. The owner's question and the
+         whole argument are in the script block above - see the note over `ceilingEdge`. -->
+    <ul class="radar-legend">
+      <li>
+        <svg class="radar-key" viewBox="0 0 24 6" aria-hidden="true">
+          <path
+            class="radar-core"
+            d="M1 3 H23"
+            :style="{ strokeOpacity: sharpness, strokeWidth: `${(1.2 + 0.7 * sharpness).toFixed(2)}px` }"
+          />
+        </svg>
+        <span>Where she is</span>
+      </li>
+      <li>
+        <svg class="radar-key" viewBox="0 0 24 6" aria-hidden="true">
+          <path class="radar-ceiling-edge" d="M1 3 H23" />
+        </svg>
+        <span>How far she could go</span>
+      </li>
+    </ul>
+    <p class="radar-legend-note">The fainter the line, the less anyone can tell.</p>
+
+    <!-- WHAT STANDS IN FOR THE NUMBERS. One sentence per axis the coach has read; nothing for the
+         rest. R15-7: no pronoun names the coach on this screen either - women are on every roster by
+         construction, and the quiet line used to call one of them "he". -->
     <ul v-if="notes.length" class="radar-notes">
       <li v-for="n in notes" :key="n.key">
         <span class="radar-note-axis">{{ n.label }}</span>
         <span class="radar-note-text">{{ n.note }}</span>
       </li>
     </ul>
-    <p v-else class="radar-quiet">Too early to say. He is still learning what she has.</p>
+    <p v-else class="radar-quiet">Too early to say – still learning what she has.</p>
   </div>
 </template>
 
@@ -290,6 +335,57 @@ const notes = computed(() =>
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+/* THE LEGEND. One row, centred under the picture, in the same small-caps hand the axis labels of the
+   note list use - it is chrome for the drawing, so it must not out-shout the coach's sentences below
+   it. `flex-wrap` because two labels plus their keys are ~230px and the narrowest frame is 390 minus
+   the screen's own padding. */
+.radar-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 16px;
+}
+
+.radar-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* The swatch box. `overflow: visible` for the same reason the picture has it - a 1.9px stroke on a
+   6-unit-tall viewBox rounds outward.
+
+   ⚠ THE KEY BORROWS `.radar-core` AND `.radar-ceiling-edge`, so it inherits their FILL too - and the
+   core's is a translucent accent. On a two-point path the fill area is zero, so it draws nothing;
+   that is stated rather than relied on silently, because the day a key becomes a polygon it will
+   suddenly have a filled interior nobody asked for. */
+.radar-key {
+  display: block;
+  width: 24px;
+  height: 6px;
+  flex: none;
+  overflow: visible;
+}
+
+.radar-legend-note {
+  /* Pulled up out of the column's 10px gap so the caption reads as part of the legend rather than
+     floating equidistant between the keys above it and the coach's sentences below. */
+  margin: -4px 0 0;
+  text-align: center;
+  font-family: var(--font-hand);
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--ink-soft);
 }
 
 .radar-notes {

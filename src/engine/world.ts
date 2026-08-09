@@ -751,13 +751,82 @@ const FACILITY_VENUE: Record<FamilyBackground, [string, string, string, string]>
   wealthy: ['Academy courts', 'Performance centre', 'Show courts', 'Centre court'],
 }
 
-function facilityFlavor(background: FamilyBackground, tier: CoachTier, hours: number): string {
+/** WHEN THE HOURS WERE BOOKED - the clause that stops the most-read line in the game from being one
+ *  string for a whole career (R15-17, owner 09.08).
+ *
+ *  ⚠ THE DEFECT WAS THE OTHER HALF OF THE LOOK-UP'S OWN VIRTUE. `FACILITY_VENUE[background][step]`
+ *  plus the plan's hours is a pure look-up, and for a SELF-COACHED family at a fixed background both
+ *  inputs are constant - so "Club courts – 5 h" was byte-identical on all 208 weeks of a career, on
+ *  the line the WeekRecapCard scrap shows them (a self-coached family books no coach row at all, so
+ *  the court row IS their handwritten scrap). A charge that never varies its words stops being read.
+ *
+ *  ⚠ IT IS STILL A RECEIPT AND NOT A STORY, which is the constraint the venue look-up was written
+ *  under and the reason none of these clauses says what she DID. Every one of them is a fact about a
+ *  BOOKING - which slots, at what rate - so the line cannot describe a week that did not happen: an
+ *  injured week, a blacked-out exam fortnight and a full training week all book the same court, and
+ *  the family is charged for all three. What she did with the hours is the training row's job.
+ *
+ *  ⚠ TWO OF THE THREE BANDS ARE READ OFF THE WEEK'S REAL PRICE, and that is the half worth having.
+ *  `jitter` is the ONE main-stream `pickInt` `resolveBaseCosts` already draws, and it multiplies the
+ *  facility line along with everything else - so a dear week really did cost more than a cheap one,
+ *  and the row now says why instead of leaving an unexplained wobble under an unchanging sentence.
+ *  The fiction is the one this repo already recorded for that draw in tests/split-the-bill.test.ts
+ *  ("a session moved, a court at a busier hour"); this is that sentence made visible. Strictly, the
+ *  jitter moves the coach line too, but it is attributed here because the court is the thing with
+ *  peak hours, and the court's own share genuinely moved by exactly this factor.
+ *
+ *  ⚠ THE MIDDLE BAND IS THE ONLY PLACE A DRAW HAPPENS, and it is a PURPOSE-SCOPED SUB-STREAM
+ *  (`seed:court:<week>`), never MAIN - invariant 2, and the same discipline `coachCorridorFactor`
+ *  uses two lines above on `seed:coachbg:<week>`. Zero new main-stream draws, so the frozen capture
+ *  (41550 / e6b0c709) cannot see this and input-independence is untouched: the key holds the seed and
+ *  the week and nothing a player decides.
+ *
+ *  ⚠ AND SCHOOL DECIDES WHICH ORDINARY POOL, because "after school" stops being true. A twenty-two
+ *  year old on tour has no school to come from, exactly as `restFlavors` already knows one line over.
+ *
+ *  ⚠ EVERY CLAUSE IS 14 CHARACTERS OR FEWER, and that is a measurement rather than taste. The scrap
+ *  under the recap painting sets a ledger fragment at 23px in a ~300px column; the longest head this
+ *  can produce is "Performance centre – 5 h" at 24, and the training flavours it shares that paper
+ *  with already run to 40 ("Coaching block: footwork and conditioning"). A short clause keeps the
+ *  worst case at the length the scrap is already proven to hold and off the third line the
+ *  `--travel` rule in WeekRecapCard.vue exists to prevent. */
+const COURT_WHEN_DEAR = ['peak slots', 'peak rate', 'prime time', 'the busy hours']
+const COURT_WHEN_CHEAP = ['off-peak', 'quiet hours', 'early slots', 'off-peak rate']
+const COURT_WHEN_SCHOOL = ['after school', 'evenings', 'the usual slot', 'weekday hours']
+const COURT_WHEN_FREE = ['daytime slots', 'mornings', 'the usual slot', 'midweek']
+
+function facilityFlavor(input: {
+  background: FamilyBackground
+  tier: CoachTier
+  hours: number
+  /** the career seed - the sub-stream is derived from it and persists nothing */
+  seed: string
+  week: number
+  /** the week's own jitter as a multiplier, exactly as `weeklyBillSplit` was handed it */
+  jitter: number
+  /** has she finished school - `restFlavors`' own question, one line over */
+  schoolOver: boolean
+}): string {
+  const { background, tier, hours, seed, week, jitter, schoolOver } = input
   const step = tier === 'elite' ? 3 : tier === 'high' ? 2 : tier === 'middle' ? 1 : 0
   const venue = FACILITY_VENUE[background][step]
   // Whole hours at the three plan presets (4 / 5 / 6); one decimal only when a custom split lands
   // between them, so the common case reads as a clean number.
   const shown = Math.round(hours * 10) / 10
-  return `${venue} – ${shown} h`
+  // Where this week's price sits in its own band, 0 = the cheapest week the jitter can produce and
+  // 1 = the dearest. Read off ECONOMY rather than hard-coded, so re-tuning the band re-tunes the
+  // words with it and a widened jitter cannot leave every week reading "the usual slot".
+  const [jLo, jHi] = ECONOMY.coach.weekJitterBps
+  const at = (jHi - jLo > 0 ? (jitter * 10_000 - jLo) / (jHi - jLo) : 0.5)
+  const pool =
+    at >= 2 / 3 ? COURT_WHEN_DEAR : at <= 1 / 3 ? COURT_WHEN_CHEAP : schoolOver ? COURT_WHEN_FREE : COURT_WHEN_SCHOOL
+  const clause = pool[Math.floor(rngFromSeed(`${seed}:court:${week}`)() * pool.length) % pool.length]
+  // ⚠ THE HEAD IS BYTE-IDENTICAL TO WHAT SHIPPED WITH THE SPLIT, and the clause is a suffix after a
+  // comma rather than a rewording. tests/split-the-bill.test.ts pins all nine corridor x rung cells
+  // against that head, and the rule it protects - one venue step per distinct court price, so two
+  // rungs that pay the same read the same - is a claim about the HEAD alone. The clause is a
+  // property of the week; letting it into that comparison would have made the pin about the dice.
+  return `${venue} – ${shown} h, ${clause}`
 }
 
 
@@ -945,14 +1014,16 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   })
   const expense = works ? split.totalCents : 0
   world.fundsCents -= expense
+  const schoolOver = schoolIsOver(world.week, world.profile.birthMonth)
   const flavors =
     world.plan.train >= 70
       ? trainFlavors(world.profile.background)
-      : restFlavors(world.profile.background, schoolIsOver(world.week, world.profile.birthMonth))
-  // ⚠ STILL EXACTLY TWO MAIN-STREAM DRAWS IN THIS FUNCTION, and the split added neither. The facility
-  // row's words are a pure look-up off the corridor (see facilityFlavor) rather than a third `pickInt`
-  // - which is the whole reason it names the venue instead of telling a little story the way the
-  // training row does. The frozen MAIN capture cannot see the second line.
+      : restFlavors(world.profile.background, schoolOver)
+  // ⚠ STILL EXACTLY TWO MAIN-STREAM DRAWS IN THIS FUNCTION, and neither the split nor R15-17 added a
+  // third. The facility row's VENUE is a pure look-up off the corridor, and the week-to-week clause
+  // that R15-17 gave it comes off the private `seed:court:<week>` sub-stream and off the jitter this
+  // function has already drawn - never a `pickInt` of its own. See facilityFlavor for why that is a
+  // constraint rather than a preference. The frozen MAIN capture cannot see the second line.
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
   // The $0 line is still EMITTED, the way a sponsor-covered gear item is: the Money breakdown should
   // show why a coaching week cost nothing, not silently drop the row.
@@ -991,9 +1062,13 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
     //
     // ⚠ SO THEIR SCRAP BECOMES THE COURT LINE, and that is a fix rather than a loss. It used to read
     // "Coaching block: technique drills" to a family with no coach - the same category error the
-    // owner reported, in the game's most-read sentence - and "Club courts - 5 h" is a true receipt in
-    // exactly the genre that scrap is written in. The prose `weekNote` still lands on one week in
-    // three either way.
+    // owner reported, in the game's most-read sentence - and "Club courts – 5 h, after school" is a
+    // true receipt in exactly the genre that scrap is written in. The prose `weekNote` still lands on
+    // one week in three either way.
+    //
+    // ⚠ AND IT IS THE REASON R15-17 EXISTS. Being the scrap is exactly what made an unvarying string
+    // expensive: this family reads that one line every week for 208 weeks, and until this wave it was
+    // the same eighteen characters every time. See `facilityFlavor` for what varies and what may not.
     if (split.coachCents > 0) {
       addEvent(world, {
         week: world.week,
@@ -1007,7 +1082,15 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
       week: world.week,
       type: 'expense',
       category: 'facility',
-      text: facilityFlavor(world.profile.background, tier, coachHoursForPlan(world.plan)),
+      text: facilityFlavor({
+        background: world.profile.background,
+        tier,
+        hours: coachHoursForPlan(world.plan),
+        seed: world.seed,
+        week: world.week,
+        jitter,
+        schoolOver,
+      }),
       amountCents: -split.facilityCents,
     })
   }
@@ -2638,7 +2721,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
       addEvent(world, {
         week: world.week,
         type: 'info',
-        text: `Doctor's warning – she is cleared for the ${TIERS[enteredThisWeek.tier].label}, but only just. He can warn you; he cannot forbid it.`,
+        // ⚠ NO PRONOUN FOR THE DOCTOR EITHER (R15-7). The owner's sighting was the coach roster, where
+        // women are on the list by construction – but the doctor is never named, never pictured and
+        // never gendered anywhere in the engine, so "he" here was the same guess with nothing behind
+        // it. Same fix, same dash.
+        text: `Doctor's warning – she is cleared for the ${TIERS[enteredThisWeek.tier].label}, but only just. A warning is all it is; nobody can forbid it.`,
       })
     }
     world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue)
