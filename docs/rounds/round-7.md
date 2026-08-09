@@ -98,6 +98,13 @@ baseline + 4 new timeline-gap tests), `npm run build` clean, live-verified at 37
 - [ ] **Экраны детализации по дням** – отложено: не будет иметь смысла, пока не появится система
       "тренировка даёт эффект" → **Phase 4** (явно зафиксировано как деферрал в
       `docs/specs/round7-match-audio.md`).
+      → **STILL OPEN, correctly – and no longer blocked, as of 09.08.** Re-audited: nothing has been
+      built. The deferral's own condition has now been ruled on from the other side. Owner, ruling 3
+      of round 15 (`docs/specs/round15-triage.md`): «вся программа тренировок как была
+      автоматической, так и осталась, мы обсуждали ручки что и в какие дни тренировать, чтобы игрок
+      имел весь контроль и все последствия» – so the per-day training CONTROLS come first, and the
+      coach becomes the person who works them. `world.plan` is still one train/rest split. Design in
+      progress on `docs/training-dials`. This is the same thread as R8-10's unbuilt half.
 - [x] **«Closed W{n}» прошедшим временем на закрытых событиях** – плашка календарного события
       читается "Closed W{n}", как только `week > deadlineWeek`, иначе "closes W{n}"
       → `SeasonScreen.vue`.
