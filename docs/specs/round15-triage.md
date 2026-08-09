@@ -204,7 +204,81 @@ Still genuinely open and old: **R8-1**, **R8-3**, round-14 groups **C** (cancel 
 client, onboarding width) and **E** (opponent ages, per-track season history), and the art
 (`w75-hard`, `wta250` trophy, `wta250-clay`).
 
-## The five questions
+## The owner's rulings, 09.08 – all five answered
+
+**1. ONE CLOCK, AND IT IS HERS.** «Есть год рождения и дата. Это всё. Если она родилась в середине
+декабря и пошла на теннис, то на начало игры ей всё ещё 13, кстати, так же, как и всем остальным,
+кто родился НЕ на 1й неделе января. Дальше когда ДР – тогда и +1 год.»
+
+So `kidAgeExact` is her age everywhere a surface prints one and everywhere a rule asks how old she
+is: the printed age, the eligibility gates (`isTierAgeOpen`), the AER allowances, the medical gate,
+the academy band. `ageAtWeek` does not disappear – **it stops being an age and becomes what it always
+was, a BAND** – and keeps exactly one job: `coachById(seed, ageAtWeek(week), coachId)`, where it is
+the market's restocking clock rather than her birthday. That is the split age.ts's own header already
+argued for; what was wrong was that nineteen call sites read the band as if it were her.
+
+⚠ TWO CONSEQUENCES THAT ARE THE RULING WORKING, NOT REGRESSIONS. A December girl becomes W15-eligible
+eleven months later than a January girl – and keeps eleven months more junior eligibility at the
+other end. That is the relative age effect in its primary form, which is the thing this game set out
+to model. And `ECONOMY.entryCap.proPerYearByAge` must grow its 14/15 rows: economy.ts's note argues
+they are unreachable because "the age gate refuses first", and under the band that was false for
+every girl born after June.
+
+**2. THE RUNGS EXIST AND THE FLOOR IS MISSING.** «У нас 3 тира этих спонсоров, а мне достается только
+1 самый первый… у нее кончился контракт, а нового не дали.»
+
+Measured through the engine's own predicates on his two saves:
+
+```
+olivia w104   standing {national #67, itf #4, wta unranked}
+              local  –        national CLEARS   global CLEARS
+              rungFor: global      window ladder: global -> national
+              offer chance: 0.7 per letter      season spoken for: NO
+ines   w208   standing {national #90, itf #23, wta #184}
+              local CLEARS   national CLEARS   tour CLEARS
+              rungFor: tour        window ladder: tour -> national -> local
+```
+
+The ladder climbs (Ines went `local` -> `global` between seasons 0 and 1), so the mechanic is not
+stuck at rung one. **What failed is the floor.** Olivia is ITF **#4** – she clears `global` – and her
+window carried exactly TWO letters at 70% each, because **`local` REFUSES her**: its gate is
+`nationalRank <= 30` and she has slid to #67 domestically by playing abroad. Both dice missed (~9%)
+and she opened season 2 with no deal at all.
+
+⚠ AND THE GATE IS INVERTED, WHICH IS THE REAL DEFECT. The better she gets internationally, the more
+certainly the shop in her home town refuses her – because the only evidence it will look at is a
+domestic ranking she stops defending the moment she leaves. This is the SAME error `ECONOMY.sponsorship`
+was rebuilt to fix on 30.07 (a local sponsorship gated on a table she does not hold), with the two
+tables swapped. `standingClears`'s local arm already carries `|| standing.wtaRanked` as an escape;
+it needs the junior one too, and then the ladder's own promise – «у нее есть спонсоры в том или ином
+виде на протяжении всей карьеры» – is true by construction rather than by dice.
+
+**3. JUNIOR TITLES PAY NOTHING – AND THAT WAS NOT THE QUESTION.** «Нет, как в жизни. Я имел в виду,
+что самокоуч, по сути, ничем в данный момент не отличается от коуча, кроме того, что ничего не стоит –
+вся программа тренировок как была автоматической, так и осталась, мы обсуждали ручки что и в какие
+дни тренировать, чтобы игрок имел весь контроль и все последствия.»
+
+**This supersedes the question and it answers #4 as well.** The coach cannot be better than
+self-coaching at a thing neither of them does. `world.plan` is one train/rest split and the week
+resolves itself; there is no training decision in the game for a coach to be good at. So the order
+is: **build the per-day training controls first**, and the coach becomes the person who works them –
+his rung deciding how good the plan he proposes is, and self-coaching meaning a blank sheet and the
+consequences.
+
+**4. THE COACH DOES NOT GET CHEAPER, HE GETS A JOB.** Same ruling as 3. «Есть мир, там есть тренеры,
+они стоят денег и не просто так, вот нам надо как-то показать почему они столько стоят.» The price
+stays; what has to change is that something is bought with it. The 2x2 above is the measurement of
+what happens while nothing is: at today's prices a family that hires ends four seasons **poorer AND
+with a lower-ranked daughter** than one that does not.
+
+**5. A VACATION PAUSES WEAR. AN INJURY IS OPEN.** «Ну да, занятий же нет, по-моему логично… С другой
+стороны травмы бывают долгими и рехаб может быть с вещами, я бы тут еще подумал.»
+
+Vacation weeks stop the wear clock. The injury half stays unruled, and the honest shape for it is
+probably not binary: a layoff stops racquet and string wear (she is not hitting) and does not stop
+shoe wear (rehab is on her feet). Left open.
+
+## The five questions *(answered above, kept for the record)*
 
 1. **Which clock is hers?** Eligibility, the AER allowance and every printed age read the BAND today;
    only development reads the girl. Tennis really does band by year of birth, so the band is

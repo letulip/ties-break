@@ -15,6 +15,8 @@ import { decodeExportFile } from '../src/engine/saveCodec'
 import type { WorldState } from '../src/engine/world'
 import { ageAtWeek, kidAgeExact, birthdayWeek } from '../src/engine/world/age'
 import { WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
+import { sponsorStandingOf } from '../src/engine/world/sponsors'
+import { SPONSOR_TIERS, standingClears, rungFor, windowLadder, offerChanceFor, seasonSpokenFor } from '../src/engine/offers'
 import { weekYear, weekMonth, seasonYear } from '../src/shared/dates'
 
 function money(cents: number): string {
@@ -101,6 +103,22 @@ async function main(): Promise<void> {
       console.log(`     terms: ${JSON.stringify(t)}`)
     }
     console.log(`  academy: ${w.academy ? JSON.stringify(w.academy) : 'none'}`)
+
+    // ---- 3b. WHICH SPONSOR RUNGS WOULD WRITE TO HER --------------------------------------
+    // The owner, 09.08: «у нас 3 тира этих спонсоров, а мне достается только 1 самый первый…
+    // у нее кончился контракт, а нового не дали». So: read her standing through the engine's own
+    // predicate and print the ladder the last window WOULD have offered.
+    const standing = sponsorStandingOf(w)
+    console.log(`\n[3b] SPONSOR LADDER`)
+    console.log(`  standing: ${JSON.stringify(standing)}`)
+    for (const t of SPONSOR_TIERS) {
+      const clears = standingClears(standing, t)
+      console.log(`    ${t.padEnd(9)} ${clears ? 'CLEARS' : '  -   '}`)
+    }
+    console.log(`  best rung (rungFor): ${rungFor(standing) ?? 'none'}`)
+    console.log(`  window ladder:       ${windowLadder(standing).join(' -> ') || 'empty'}`)
+    console.log(`  offer chance at that rung: ${offerChanceFor(standing)}`)
+    console.log(`  season already spoken for: ${seasonSpokenFor(w.offers, w.week)?.id ?? 'no'}`)
 
     // ---- 4. RESULTS / WINS ---------------------------------------------------------------
     console.log(`\n[4] RESULTS  (rolling window: ${w.results.length} rows)`)
