@@ -148,8 +148,18 @@ const PHASE_STRIP = SURFACE_BLOCKS.map((b) => ({
 }))
 const activePhaseId = computed(() => surfaceBlockFor(week.value).id)
 
-/** Her age band, for the band-scoped exam frame. The same one-line derivation `headerAvatar` makes off
- *  `ageYears`, and not `useKidEmotion` - this screen wants the BAND and none of the emotion machinery. */
+/** WHICH PAINTING OF HER the exam frame wears. The same one-line derivation `headerAvatar` makes off
+ *  `ageYears`, and not `useKidEmotion` - this screen wants the ART band and none of the emotion
+ *  machinery.
+ *
+ *  ⚠ "BAND" HERE IS THE PORTRAIT BAND, NOT THE AGE BAND, and the word had to be disambiguated once
+ *  the one-clock wave gave `ageAtWeek` a name of its own. `portraitStage` cuts jun/young/teen/adult/
+ *  milf for the ART; `ageAtWeek` is the coach market's restocking clock, which is the single job that
+ *  ruling left it (PlanWeekSheet.vue prices a booked practice week through it, and that IS the
+ *  market's question). So this line is CORRECT as it stands and must not be re-pointed: `ageYears` is
+ *  now her real age, and a picture of her should follow the girl rather than a calendar-year cohort.
+ *  Reading `ageAtWeek(week)` here would put a thirteen-year-old December girl in the next band's
+ *  painting for a year - the exact defect the one-clock ruling was made to end. */
 const kidStage = computed(() => portraitStage(game.snapshot?.ageYears ?? 14))
 
 /** The painting for a week with no tournament. Every such week has one: the three off-season weeks
