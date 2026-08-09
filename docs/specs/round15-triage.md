@@ -25,10 +25,35 @@ It has, and the cause is not the background. It is the coach.
 
 `tools/two-cells.ts`, 50 careers per cell, `player` policy, four seasons, medians:
 
+⚠ **RE-RUN 09.08 ON A CORRECTED PROFILE, AND THE FIRST TABLE IS KEPT BELOW IT.** The first version of
+`tools/two-cells.ts` built its `PlayerProfile` as a partial with a `name` field the type does not
+have – a TS2352 that `vite-node` strips and only `vue-tsc -b --force` ever saw. The comment that
+excused it claimed `createWorld` merges over `DEFAULT_PROFILE`. **It does not merge**, so
+`coachIncludesPhysio(undefined)` read `undefined !== 'self'` → **true and every arm opened with a
+physio, including both self-coached ones** – the arms that were supposed to buy nothing were paying
+for medical cover. Corrected numbers first; the contaminated ones after, because a measurement that
+moved is itself a finding.
+
 | | self-coached | middle coach | what the coach buys |
 |---|---|---|---|
-| **8k / working** | **$19,522** · prize 33/50 · ITF #48 · 101 entries | $5,453 · prize 10/50 · ITF #56 · 85 entries | **-$14,069, -23 prize careers, -8 places** |
-| **25k / middle** | **$22,712** · prize 42/50 · ITF #44 · 101 entries | $5,998 · prize 22/50 · ITF #57 · 97 entries | **-$16,714, -20 prize careers, -13 places** |
+| **8k / working** | **$25,626** · prize 37/50 · ITF #42 · 94 entries | $5,453 · prize 10/50 · ITF #57 · 84 entries | **-$20,173, -27 prize careers, -15 places** |
+| **25k / middle** | **$39,001** · prize 44/50 · ITF #44 · 95 entries | $5,943 · prize 21/50 · ITF #56 · 96 entries | **-$33,058, -23 prize careers, -12 places** |
+
+*As first published (contaminated): 8k $19,522 / $5,453 · 25k $22,712 / $5,998.* The direction did
+not move and the magnitude grew by roughly half – the physio the self-coached arms should never have
+had was a bill they should never have paid.
+
+⚠ **AND ONE CLAIM BESIDE THE TABLE DID NOT SURVIVE.** The contaminated run made the two backgrounds
+look nearly equal when self-coached ($19,522 against $22,712, a 16% gap) and that was read as "the
+cameo has all but erased the difficulty setting". Corrected, **25k self-coached ends 52% richer than
+8k self-coached** ($39,001 against $25,626). The INCOME claim is unchanged and still holds – the
+cameo is 22.6% of a working family's parent income and closes 44% of the 1.73x income gap – but the
+OUTCOME gap between backgrounds is real and was being hidden by an artefact.
+
+What the owner actually played is the DIAGONAL, and it is the sharpest number here: his 8k
+self-coached career against his 25k coached one is **$25,626 against $5,943 – 4.3x**, up from 3.3x
+in the contaminated run. His complaint was right and the cause is the coach, more strongly than the
+first table said.
 
 **Hiring a coach makes the career worse on every axis that is measured, at both backgrounds.** Not
 merely costlier – worse ranked, less prize money, and two to three times fewer careers that earn a
