@@ -38,7 +38,7 @@ import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type WorldMatch } from '../../shared/protocol'
 import { coachBillRangeCents, coachById, facilityRateCents, tierOf } from '../../engine/coach'
 import { weekDateLine, weekLabel } from '../../shared/dates'
-import { KID_ID, flipScore } from '../../engine/world'
+import { KID_ID, ageAtWeek, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
@@ -148,8 +148,16 @@ const spendRange = computed<[number, number]>(() => {
   // HER coach's own rate, not the rung's band: once someone is hired his price is fixed, and what
   // still moves is the corridor roll and the week's jitter. `coachBillRangeCents` is the same
   // arithmetic resolveBaseCosts bills through, so the estimate cannot drift from the charge.
-  const coach = coachById(snap.seed, snap.ageYears, snap.coachId)
-  const rate = coach ? coach.rateCents : facilityRateCents(snap.ageYears, tierOf(coach))
+  //
+  // ⚠ AND THE PRICE IS THE MARKET'S CLOCK, NOT HERS - `ageAtWeek(snap.week)`, which is exactly what
+  // `resolveBaseCosts` bills at (world.ts). This read `snap.ageYears` while that field WAS the band;
+  // since the one-clock ruling (09.08, engine/world/age.ts) it is her real age, and the two part
+  // company for a whole season whenever they straddle a coach rate row (12-16 / 17-22 / 23+): a
+  // December girl is 16 from week 156 to week 204 while the market has already restocked at 17, so
+  // this estimate would have quoted the development rate against a bill charged at the pro one.
+  const marketAge = ageAtWeek(snap.week)
+  const coach = coachById(snap.seed, marketAge, snap.coachId)
+  const rate = coach ? coach.rateCents : facilityRateCents(marketAge, tierOf(coach))
   const [lo, hi] = coachBillRangeCents(rate, snap.plan, snap.profile.background)
   return [Math.round(lo / 100), Math.round(hi / 100)]
 })

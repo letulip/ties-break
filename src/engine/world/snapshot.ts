@@ -54,7 +54,7 @@ import {
   UPCOMING_WEEKS,
 } from './constants'
 import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
-import { ageAtWeek, birthdayTurning, kidAgeYears, START_AGE_YEARS } from './age'
+import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears, START_AGE_YEARS } from './age'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
@@ -650,7 +650,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     careerId: world.careerId,
     seed: world.seed,
     week: world.week,
-    ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
+    // ⚠ HER AGE, NOT THE BAND'S (owner ruling 1, 09.08 - world/age.ts). THIS ONE LINE is what Home,
+    // Kid, Stats, Money and Season all print, and it was an INLINED copy of `ageAtWeek` - which is why
+    // a grep for the band's name did not find it. It said 16 from week 104 while her own birthday note
+    // said «She is sixteen this week» at week 154: fifty weeks apart, both from the engine, and it was
+    // the first thing the owner saw. One clock now, and `birthdayTurning` below reads the same one.
+    ageYears: kidAgeAt(world, world.week),
     schoolEndsWeek: schoolEndWeek(world.profile.birthMonth),
     fundsCents: world.fundsCents,
     profile: world.profile,
@@ -816,7 +821,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     life: buildKidLife({
       seed: world.seed,
       week: world.week,
-      ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
+      // HER age, the same one the header prints – the School tile already takes `birthMonth` below,
+      // so a second clock here would have let one tile call her 14 while the one beside it said 13.
+      ageYears: kidAgeAt(world, world.week),
       // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
       // arithmetic can never disagree with the year the rest of the game prints.
       seasonYear: seasonYear(seasonIndexOf(world.week)),

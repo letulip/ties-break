@@ -30,7 +30,7 @@ import {
   tierFloorOpen,
   tierOpenFor,
   tickWeek,
-  ageAtWeek,
+  kidAgeYears,
   type WorldState,
 } from '../src/engine/world'
 import { kidPoints, rankIn, rankingFor } from '../src/engine/world/ladder'
@@ -106,11 +106,17 @@ describe('the unranked sentinel is denominated in the table it is a rank in', ()
 // =================================================================================================
 
 describe('⚠ the acceptance cuts against a truncated table (characterisation, not an invariant)', () => {
-  /** A live mid-career world at `age`, with the ITF on-ramp latched and a synthetic W book. */
+  /** A live mid-career world at `age`, with the ITF on-ramp latched and a synthetic W book.
+   *
+   *  ⚠ RE-AIMED, NOT WEAKENED (one-clock ruling, 09.08): it ticked until `ageAtWeek` reached `age`,
+   *  which is now the coach market's restocking clock and not her. Every rung it then asks about gates
+   *  on HER age, so a June default profile arrived at week 156 aged sixteen and W75 refused her - the
+   *  helper's own contract («a world AT `age`») had quietly stopped being true. It ticks to her real
+   *  age now, which costs the fixture a few more weeks and not one assertion. */
   function worldAt(seed: string, age: number, book: number): WorldState {
     const world = createWorld(seed)
     const rng = resumeMain(world.rngMain)
-    while (ageAtWeek(world.week) < age) tickWeek(world, rng)
+    while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
     if (book > 0) world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
     world.onRampCleared = { itf: true, wta: true }
     recomputeKidRank(world)

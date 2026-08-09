@@ -76,7 +76,7 @@ async function main(): Promise<void> {
           (r.bestFinish !== undefined ? `  best ${r.bestFinish}` : ''),
       )
     }
-    const totals = w.careerTotals as Record<string, number> | undefined
+    const totals = w.careerTotals as unknown as Record<string, number> | undefined
     if (totals) console.log(`  careerTotals: ${JSON.stringify(totals)}`)
 
     // finance categories over the retained window
@@ -92,13 +92,15 @@ async function main(): Promise<void> {
     // ---- 3. SPONSOR / ACADEMY ------------------------------------------------------------
     console.log(`\n[3] OFFERS`)
     for (const o of w.offers) {
-      const t = o.terms as Record<string, unknown>
+      const t = o.terms as unknown as Record<string, unknown>
       console.log(
         `   ${o.kind.padEnd(10)} ${o.state.padEnd(8)} arrived w${o.week} deadline w${o.deadlineWeek}` +
           ` ${o.decidedWeek !== undefined ? `decided w${o.decidedWeek}` : ''}` +
           ` ${o.fromWeek !== undefined ? `from w${o.fromWeek}` : ''}` +
           ` ${o.untilWeek !== undefined ? `until w${o.untilWeek}` : ''}` +
-          ` spent ${o.spentCents !== undefined ? money(o.spentCents as number) : '-'}`,
+          // `Offer.coveredCents` is the field's name – "what the shop has actually spent on her kit
+          // under this deal". There is no `spentCents` on an Offer; that name lives on CareerTotals.
+          ` covered ${o.coveredCents !== undefined ? money(o.coveredCents) : '-'}`,
       )
       console.log(`     terms: ${JSON.stringify(t)}`)
     }

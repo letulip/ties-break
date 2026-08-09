@@ -29,7 +29,7 @@ import {
   kidPoints,
   recomputeKidRank,
   tickWeek,
-  ageAtWeek,
+  kidAgeYears,
   toSnapshot,
   KID_ID,
   type WorldState,
@@ -69,11 +69,17 @@ function domesticWorld(seed: string, points: number): WorldState {
 }
 
 /** ...and one with a PROFESSIONAL book, aged into the W era – the arm where the ceiling is the
- *  sliding window rather than a band. Same shape as the unranked-sentinel suite's `worldAt`. */
+ *  sliding window rather than a band. Same shape as the unranked-sentinel suite's `worldAt`.
+ *
+ *  ⚠ RE-AIMED, NOT WEAKENED (one-clock ruling, 09.08): it ticked until `ageAtWeek` reached `age`, and
+ *  that is the coach market's restocking clock now, not hers. `tierOutgrown` gates on HER age, so a
+ *  June default profile arrived at week 156 aged SIXTEEN, W75 (17+) refused her, and the window
+ *  ceiling this file is about stopped existing. Ticking to her real age restores the fixture's own
+ *  contract and costs not one assertion. */
 function proWorld(seed: string, age: number, book: number): WorldState {
   const world = createWorld(seed)
   const rng = resumeMain(world.rngMain)
-  while (ageAtWeek(world.week) < age) tickWeek(world, rng)
+  while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
   world.condition = 100
   world.fundsCents = 50_000_00
   world.season = []
