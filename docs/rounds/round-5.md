@@ -110,22 +110,54 @@ item, it's the infrastructure the playtest items assume.
 
 ## Backlog additions (7 items) – from the W53 balance-snapshot discussion
 
+**Re-audited 09.08 (backlog #88): three of these seven shipped and were never ticked.** Phase 5
+arrived and took them; the boxes stayed as the discussion left them in July.
+
 - [ ] **Player-uuid friendly exchange** (offline PvP via a shareable player id)
-      → deferred, **Phase 6 backlog**.
-- [ ] **Vacations as a class differentiator** affecting recovery
-      → deferred, **Phase 4/5**.
+      → deferred, **Phase 6 backlog**. Verified 09.08: no trace in `src/`. Still open.
+- [x] **Vacations as a class differentiator** affecting recovery
+      → **SHIPPED** as the season planner's vacation ladder – `ECONOMY.vacation.packages` in
+      `src/engine/economy.ts`, six rungs from a free staycation to a $4,000–7,000 elite recovery
+      programme, quoted through `vacationPriceCents` × the wealth corridor
+      (`docs/specs/econ-wealth-corridor.md`). Only the top two rungs carry a `buffFactor` (resort
+      0.9, elite 0.85), and that buff is a post-draw multiply on the injury threshold in
+      `src/engine/world/injury.ts` – so **what a family can afford decides how much recovery a
+      holiday buys**, which is the item.
+      ⚠ ONE HALF IS DELIBERATELY NOT CLASS-SCALED: the condition GAIN is flat for every family
+      («the same package restores the same condition for every family»), pinned in
+      `tests/planner.test.ts` P3. The corridor prices the holiday; it never scales the benefit.
 - [ ] **Relationship/trust UI**
-      → deferred, **Phase 6**.
+      → deferred, **Phase 6**. Verified 09.08: no trace in `src/`. Still open. (The family diary,
+      `docs/specs/family-diary.md`, is the nearest shipped thing and is not this – it reports, it
+      does not model a relationship.)
 - [ ] **Attend-vs-watch-on-TV parenting mechanic** – shouts only work in person
       ("кричите в телевизор сколько хотите – её там не слышно")
-      → deferred, **Phase 6**.
-- [ ] **Equipment wear line-items**
-      → deferred, **Phase 5**.
+      → deferred, **Phase 6**. Verified 09.08: no trace in `src/`. Still open.
+- [x] **Equipment wear line-items**
+      → **SHIPPED** – `src/engine/equipment.ts`: each of the three lines (strings, frame, shoes)
+      carries a CONDITION that decays with the weeks since its purchase and is restored by buying,
+      `kitWearAt` derives it from `kit.sinceWeek` with nothing persisted, and the wear reaches the
+      injury threshold through `kitInjuryFactor` (`src/engine/world/injury.ts`). The bills are
+      per-line. ⚠ AND ITS OWN LIMIT IS RECORDED: round 14's item 13 answers that fresh kit is
+      exactly neutral – wear only ever subtracts, so gear stops her getting worse rather than making
+      her better. Whether that wants an upside is the owner's call, not a defect.
 - [ ] **Academy invitation** (~$55k/yr) as the wealthy-track money sink
-      → accepted direction, not built yet → **Phase 5**.
-- [ ] **Scholarship-chance event** for working/middle after a strong season, with a hard family
+      → **STILL OPEN, and the academy that DID ship goes the other way.**
+      `src/engine/academy.ts` / `docs/specs/academy-support.md` is a need-weighted SCHOLARSHIP –
+      «не проигрывающего, а малоимущего, но талантливого» – whose need input is working 1, middle
+      0.6, **wealthy 0**. So the wealthy family's $55k/yr money sink does not exist; a poor family's
+      subsidy does. Deliberately not ticked: the sibling box below is the half that shipped.
+- [x] **Scholarship-chance event** for working/middle after a strong season, with a hard family
       choice
-      → accepted direction, not built yet → **Phase 5**.
+      → **SHIPPED** as **the academy scholarship**, schema **v21** – `src/engine/academy.ts`,
+      `docs/specs/academy-support.md`, reviewed once a year at the season boundary on the rank she
+      carries in, weighted by need (working/middle only) and by the scout's read of her ceiling,
+      and requiring that she actually competed. It pays a share of every trip and one kit grant a
+      year, and it announces itself ("An academy has taken her on…", `reviewAcademy` in
+      `src/engine/world.ts`). Measured: the 8k working preset survives 18/120 → **44/120** careers.
+      ⚠ THE "HARD FAMILY CHOICE" HALF DID NOT SHIP. It arrives as a reviewed RATE, not a decision –
+      the owner's own stated preference («регулировать размер помощи – вот это мне кажется лучше»),
+      recorded here so the difference between what was asked and what was built stays visible.
 
 ## Fairness principle (1 item)
 
