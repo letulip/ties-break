@@ -224,6 +224,15 @@ const JUNIOR_WEEK = 120
  *  the family is still standing on the wrong side of the money, which is the state the warning
  *  phase exists for. */
 const BROKE_DEBT_WEEKS = ENDINGS.bankruptcyGraceWeeks - 1
+/** HALFWAY DOWN THE SAME SLOPE, and the halving is what the fixture is for rather than a number
+ *  somebody liked. `broke` sits on the last week before the latch, so the advance that would show a
+ *  player the warning INSTEAD ends the career – measured, in e2e/week-advance.spec.ts, by writing
+ *  that spec and watching it fail on the epilogue. A fixture whose next tick is still an ordinary
+ *  week needs weeks in hand on both sides: enough spent under water that the countdown is real
+ *  (not week one of a spell), and enough left that nothing latches. `graceWeeks / 2` is the only
+ *  point that is maximally far from both ends, and it moves with the constant instead of drifting
+ *  away from it the next time the grace window is retuned. */
+const SINKING_DEBT_WEEKS = Math.floor(ENDINGS.bankruptcyGraceWeeks / 2)
 /** The fork is her nineteenth birthday week – five seasons and a bit. The cap is generous so a late
  *  birthday still lands inside it. */
 const FORK_CAP_WEEK = 6 * WEEKS_PER_YEAR
@@ -277,6 +286,30 @@ const RECIPES: Recipe[] = [
       const openLetters = world.offers.filter((o) => o.kind === 'kit' && o.state === 'open').length
       if (openLetters === 0 && activeKitDeal(world.offers, world.week) === null) return 'no kit letter and no live deal'
       return null
+    },
+  },
+  {
+    name: 'sinking',
+    // The same corridor and the same reckless arm as `broke`; the only difference is where the walk
+    // is stopped. See SINKING_DEBT_WEEKS for why halfway, and for the measurement that made a second
+    // fixture on one slope the right answer rather than a duplicate.
+    purpose: 'Under water with weeks in hand – the warning a career can still be ticked out of.',
+    background: 'working',
+    coachTier: 'middle',
+    policy: GRINDER,
+    fork: 'continue',
+    drive: (world, rng, recipe) => {
+      // Deliberately the same walk as `broke`, stopping earlier. Every spell that reaches the latch
+      // passes through this week too, so the state is on the way to bankruptcy rather than staged
+      // beside it – and the career still has room to be advanced without ending.
+      while (world.week < FORK_CAP_WEEK && world.ending === null) {
+        stepCareerWeek(world, rng, recipe.policy)
+        answerOpenQuestions(world, recipe.fork)
+        if (debtWeeks(autoEndingViewOf(world)) === SINKING_DEBT_WEEKS) return null
+      }
+      return world.ending !== null
+        ? `career ended (${world.ending.type}) without a ${SINKING_DEBT_WEEKS}-week spell`
+        : 'never spent that long under water'
     },
   },
   {

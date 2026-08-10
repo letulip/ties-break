@@ -92,6 +92,19 @@ test.describe('a seeded career boots into the state the manifest describes', () 
     await expect(page.getByRole('button', { name: 'Open the inbox' })).toBeVisible()
   })
 
+  test('sinking: under water with weeks in hand, and still playable', async ({ page, careerAt }) => {
+    const { facts } = await careerAt('sinking')
+
+    await expect(page.getByText(onScreenWeek(facts.week))).toBeVisible()
+    expect(facts.fundsCents, 'the sinking fixture is meant to be under water').toBeLessThan(0)
+    await expect(page.getByRole('button', BUDGET_CARD)).toContainText(formatCents(facts.fundsCents))
+    // ⚠ THE DIFFERENCE FROM `broke` IS THE ONLY REASON THIS FIXTURE EXISTS, so it is what this test
+    // asserts on screen: she is under water and the career is still a career. `ending` proves what
+    // the alternative looks like - the epilogue REPLACES the tab shell - so the tab bar being here
+    // is the positive form of "nothing has latched".
+    await expect(page.getByRole('navigation').getByRole('button', { name: 'Home' })).toBeVisible()
+  })
+
   test('broke: eleven weeks under water, the balance below zero', async ({ page, careerAt }) => {
     const { facts } = await careerAt('broke')
 

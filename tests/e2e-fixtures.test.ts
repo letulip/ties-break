@@ -229,6 +229,23 @@ describe('e2e fixtures: each is the state its name promises', () => {
     expect(f.seasonsPlayed).toBeGreaterThanOrEqual(7)
   })
 
+  // ⚠ THE TWO DEBT FIXTURES ARE CHECKED AGAINST EACH OTHER, NOT ONLY AGAINST THE CONSTANT, because
+  // the thing that makes them two fixtures rather than one is the DISTANCE between them. `sinking`
+  // exists so that a spec can advance a week and still have a career on the other side of it; a
+  // regeneration that let it drift up against the latch would take that away while every assertion
+  // written per-fixture still passed.
+  it('sinking is under water with weeks in hand – advanceable, and not against the latch', () => {
+    const f = facts('sinking')
+    expect(f.fundsCents).toBeLessThan(0)
+    expect(f.debtWeeks).toBe(Math.floor(ENDINGS.bankruptcyGraceWeeks / 2))
+    // Room on BOTH sides: a spell already long enough to have a countdown worth printing, and at
+    // least two weeks before anything latches, so one advance cannot end the career.
+    expect(f.debtWeeks).toBeGreaterThan(1)
+    expect(ENDINGS.bankruptcyGraceWeeks - f.debtWeeks).toBeGreaterThan(1)
+    expect(f.debtWeeks).toBeLessThan(facts('broke').debtWeeks)
+    expect(f.endingType).toBeNull()
+  })
+
   it('broke is under water and exactly one week short of the bankruptcy latch', () => {
     const f = facts('broke')
     expect(f.fundsCents).toBeLessThan(0)

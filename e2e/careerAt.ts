@@ -71,7 +71,45 @@ const SEEDED_REVISION = 1
  *  SYNCHRONOUSLY, before the app's first module reads a preference key. */
 const LATCH_KEY = 'tb-e2e-seeded'
 
+/**
+ * HOW THE BROWSER'S OWN STORAGE BEHAVES FOR THIS TEST.
+ *
+ * ⚠ THIS IS AN ENVIRONMENT CONDITION, NOT A CAREER STATE, and the distinction is what keeps
+ * "fixtures are found, not forged" intact (docs/plans/e2e-fixtures.md). Every WORLD this harness
+ * writes is one the engine played out and the shipped codec encoded. What varies here is the DATABASE
+ * around it - which version it is at, and whether the newest generation survived the write - and both
+ * of those are things a real browser does to a real player, on a path `src/db/saves.ts` already has
+ * code for. Nothing about the career is poked into shape.
+ *
+ *   * `ok`          - the database the app expects, holding the fixture. The default.
+ *   * `unreachable` - the record is there, in a database at a version this build cannot open. The
+ *                     browser refuses the open with its own `VersionError`, which is the failure
+ *                     `game.init()` turns into `phase === 'recovery'`. Reachable in play the moment a
+ *                     `DB_VERSION` bump ships and an older bundle runs against it - which, in a PWA
+ *                     with a precache and a `registerType: 'prompt'` update banner, is not exotic.
+ *                     ⚠ THE APP NEVER REACHES THE SPLASH IN THIS STATE, so `careerAt` does not click
+ *                     one; the recovery screen is deliberately rendered ahead of it (App.vue: "a
+ *                     player whose database is broken must meet the choices, not a wordmark waiting
+ *                     on data").
+ */
+export type StorageState = 'ok' | 'unreachable'
+
+/**
+ * WHETHER THE NEWEST AUTOSAVE GENERATION SURVIVED ITS WRITE.
+ *
+ * `damaged` seeds TWO generations: `b` carries a higher revision and a payload with one byte flipped,
+ * `a` carries the fixture. `readLatestAutosave` takes the newest, fails its SHA-256, falls back to the
+ * older one and reports `recovered: true` - the path behind the "Autosave was damaged" banner. The
+ * flipped byte is the honest shape of the fault: a torn write or a bad block leaves a record that is
+ * present, well-formed and wrong, which is exactly what a checksum is for.
+ */
+export type AutosaveState = 'intact' | 'damaged'
+
 export interface CareerAtOptions {
+  /** see `StorageState` */
+  storage?: StorageState
+  /** see `AutosaveState` */
+  autosave?: AutosaveState
   /**
    * localStorage to write for this career, applied AFTER the clear.
    *
@@ -98,6 +136,24 @@ export interface CareerAtOptions {
 
 export type CareerAt = (name: FixtureName, options?: CareerAtOptions) => Promise<FixtureEntry>
 
+/**
+ * THE ENVIRONMENT COMES BACK: rebuild the database at the version this build asks for, holding the
+ * same career, WITHOUT NAVIGATING.
+ *
+ * ⚠ THE "WITHOUT NAVIGATING" IS THE WHOLE POINT, and it is what the spec that uses this is about.
+ * `src/db/saves.ts` memoises its connection promise, and it used to memoise a REJECTED one with equal
+ * enthusiasm: a single denied open at boot poisoned every later call, including the recovery screen's
+ * own Retry, until the tab was reloaded (W1-INTEGRITY-B / TB-06). The fix - clearing the cache on the
+ * way out of a rejection - can only be observed by asking a live page to open the database a second
+ * time and succeed. A reload would prove nothing, because a reload works either way.
+ *
+ * What this does to the browser is exactly what the recovery screen promises a player: the storage
+ * comes back and the careers are still there. The bytes are the same product-written bytes the seed
+ * carried in, replayed from the page where the init script parked them - nothing is re-encoded, and
+ * the app has no idea anything happened.
+ */
+export type StorageComesBack = () => Promise<void>
+
 /** The manifest is read once per worker process, not once per test: it is a 7 KiB JSON file and
  *  five saves totalling 281 KiB, and re-reading them for every test would be the one slow thing in
  *  a fixture whose entire selling point is that it is fast. */
@@ -107,25 +163,32 @@ const manifest = loadManifest()
  *  arguments, and a `Uint8Array` does NOT survive that trip - it arrives as `{0: 31, 1: 139, ...}`,
  *  a plain object that `decompressWorld` would refuse. So the two byte fields cross as base64 and
  *  are rebuilt into real typed arrays inside the page, where structured clone can store them. */
+interface SeedRecord {
+  slot: string
+  careerId: string
+  savedAt: number
+  week: number
+  seed: string
+  bytes: number
+  kidName: string
+  country: string
+  revision: number
+  checksumB64: string
+  payloadB64: string
+}
+
 interface SeedPayload {
   dbName: string
+  /** the version the database is CREATED at. `DB_VERSION` normally; one higher for `unreachable`. */
   dbVersion: number
+  /** the version the app will ask for - what a repair has to rebuild at */
+  appDbVersion: number
   savesStore: string
   careersStore: string
   latchKey: string
-  record: {
-    slot: string
-    careerId: string
-    savedAt: number
-    week: number
-    seed: string
-    bytes: number
-    kidName: string
-    country: string
-    revision: number
-    checksumB64: string
-    payloadB64: string
-  }
+  /** ⚠ A LIST, NOT ONE RECORD, because the two autosave generations are the point of the `damaged`
+   *  case. Ordinarily it holds exactly one: generation `a`, the fixture. */
+  records: SeedRecord[]
   meta: {
     careerId: string
     kidName: string
@@ -143,30 +206,62 @@ interface SeedPayload {
  *  awaiting this is awaiting the transaction's `complete` event - not a guess about it. */
 type SeedState = 'seeded' | 'already-seeded'
 
-function payloadFor(entry: FixtureEntry, storage: Record<string, string>): SeedPayload {
+/** One byte of a real payload, flipped. See `AutosaveState`: the fault a checksum exists to catch is
+ *  a record that is present and well-formed and wrong, not one that is missing. The byte is picked
+ *  deep inside the gzip stream rather than at index 0 so the damage is a corrupt member rather than a
+ *  wrong magic - either fails, and this one fails the way disk rot does. */
+function flipOneByte(payload: Uint8Array): Uint8Array {
+  const damaged = Uint8Array.from(payload)
+  const at = Math.floor(damaged.length / 2)
+  damaged[at] = damaged[at] ^ 0xff
+  return damaged
+}
+
+function payloadFor(entry: FixtureEntry, options: CareerAtOptions): SeedPayload {
   const { checksum, payload } = splitEnvelope(readFixtureBytes(entry.file))
+  const b64 = (bytes: Uint8Array): string => Buffer.from(bytes).toString('base64')
+  const damaged = options.autosave === 'damaged'
+  const unreachable = options.storage === 'unreachable'
+
+  const generation = (gen: 'a' | 'b', bytes: Uint8Array, revision: number): SeedRecord => ({
+    // The slot naming is src/db/saves.ts's own (`auto:{careerId}:{gen}`); the manifest already
+    // carries generation `a`, so only the second one is composed here.
+    slot: gen === 'a' ? entry.slot : `auto:${entry.careerId}:b`,
+    careerId: entry.careerId,
+    savedAt: SEEDED_AT + (gen === 'b' ? 1 : 0),
+    week: entry.facts.week,
+    seed: entry.seed,
+    // ⚠ THE PAYLOAD'S LENGTH, NOT THE FILE'S. src/db/saves.ts writes `bytes: payload.byteLength`,
+    // so the manifest's `bytes` (the whole envelope, header included) is the wrong one of the two
+    // and would show the player a save 44 bytes larger than it is.
+    bytes: bytes.byteLength,
+    kidName: entry.profile.kidName,
+    country: entry.profile.country,
+    revision,
+    checksumB64: b64(checksum),
+    payloadB64: b64(bytes),
+  })
+
+  // ⚠ THE DAMAGED GENERATION IS THE NEWER ONE, AND ITS CHECKSUM IS THE UNDAMAGED ONE'S. That pairing
+  // is the fault: `compressWorld` wrote a checksum over bytes that are no longer the bytes on disk,
+  // which is precisely what `decompressWorld`'s `verifyChecksum` is there to notice. Generation `b`
+  // carries the higher revision, so `recNewer` picks it first and the fallback to `a` is a real
+  // fallback rather than an ordering accident.
+  const records = damaged
+    ? [generation('a', payload, SEEDED_REVISION), generation('b', flipOneByte(payload), SEEDED_REVISION + 1)]
+    : [generation('a', payload, SEEDED_REVISION)]
+
   return {
     dbName: DB_NAME,
-    dbVersion: DB_VERSION,
+    // ⚠ ONE HIGHER, WHICH IS A VERSION IndexedDB WILL NOT LET THE APP DOWNGRADE TO. Derived from
+    // `DB_VERSION` rather than written as a literal, so the day the schema of the DATABASE moves,
+    // this stays "one the app cannot open" instead of quietly becoming one it can.
+    dbVersion: unreachable ? DB_VERSION + 1 : DB_VERSION,
+    appDbVersion: DB_VERSION,
     savesStore: SAVES_STORE,
     careersStore: CAREERS_STORE,
     latchKey: LATCH_KEY,
-    record: {
-      slot: entry.slot,
-      careerId: entry.careerId,
-      savedAt: SEEDED_AT,
-      week: entry.facts.week,
-      seed: entry.seed,
-      // ⚠ THE PAYLOAD'S LENGTH, NOT THE FILE'S. src/db/saves.ts writes `bytes: payload.byteLength`,
-      // so the manifest's `bytes` (the whole envelope, header included) is the wrong one of the two
-      // and would show the player a save 44 bytes larger than it is.
-      bytes: entry.payloadBytes,
-      kidName: entry.profile.kidName,
-      country: entry.profile.country,
-      revision: SEEDED_REVISION,
-      checksumB64: Buffer.from(checksum).toString('base64'),
-      payloadB64: Buffer.from(payload).toString('base64'),
-    },
+    records,
     meta: {
       careerId: entry.careerId,
       kidName: entry.profile.kidName,
@@ -175,9 +270,11 @@ function payloadFor(entry: FixtureEntry, storage: Record<string, string>): SeedP
       createdAt: SEEDED_AT,
       lastPlayedAt: SEEDED_AT,
       week: entry.facts.week,
-      revision: SEEDED_REVISION,
+      // The compare-and-swap anchor has to agree with the newest generation, or the pair is a torn
+      // write no real commit could produce (see SEEDED_REVISION).
+      revision: records[records.length - 1].revision,
     },
-    storage,
+    storage: options.localStorage ?? {},
   }
 }
 
@@ -212,6 +309,10 @@ function payloadFor(entry: FixtureEntry, storage: Record<string, string>): SeedP
  * whether or not persistence works at all. `onupgradeneeded` only fires when the database is being
  * created, so the second navigation finds v2 already there and writes nothing. The latch is the
  * database's own existence; there is nothing to remember to reset.
+ *
+ * ⚠ AND IT PARKS ITS OWN PAYLOAD, for `storageComesBack`. A repair has to write the SAME product
+ * bytes, and the only copy of them inside the page is the one this argument carried in - re-sending
+ * them from Node would be a second delivery of the same 77 KiB and a second thing to keep in step.
  */
 function seedIndexedDb(payload: SeedPayload): void {
   const bytes = (b64: string): Uint8Array => {
@@ -220,6 +321,7 @@ function seedIndexedDb(payload: SeedPayload): void {
     for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i)
     return out
   }
+  ;(window as unknown as { __tbSeedPayload?: SeedPayload }).__tbSeedPayload = payload
 
   // localStorage is done FIRST and synchronously, before a single byte of app code runs. It has to
   // be: `src/audio/sfx.ts` reads `tb-muted` while its module is evaluating, and a preference written
@@ -257,12 +359,10 @@ function seedIndexedDb(payload: SeedPayload): void {
       if (!db.objectStoreNames.contains(payload.careersStore)) {
         db.createObjectStore(payload.careersStore, { keyPath: 'careerId' })
       }
-      const { checksumB64, payloadB64, ...rest } = payload.record
-      transaction.objectStore(payload.savesStore).put({
-        ...rest,
-        checksum: bytes(checksumB64),
-        payload: bytes(payloadB64),
-      })
+      const saves = transaction.objectStore(payload.savesStore)
+      for (const { checksumB64, payloadB64, ...rest } of payload.records) {
+        saves.put({ ...rest, checksum: bytes(checksumB64), payload: bytes(payloadB64) })
+      }
       transaction.objectStore(payload.careersStore).put(payload.meta)
       report.state = 'seeded'
     }
@@ -299,7 +399,65 @@ async function seedOutcome(page: Page): Promise<{ state: SeedState | null; error
   })
 }
 
-export const test = base.extend<{ careerAt: CareerAt }>({
+/**
+ * Rebuild the database at the version the app asks for, holding the same records.
+ *
+ * Runs in the page through `page.evaluate`, off the payload `seedIndexedDb` parked there. Deleting
+ * first is what makes it a DOWNGRADE, which IndexedDB has no other route to: a database at v3 cannot
+ * be reopened at v2, and that refusal is the fault being repaired.
+ */
+function rebuildIndexedDb(): Promise<'rebuilt'> {
+  const payload = (window as unknown as { __tbSeedPayload?: SeedPayload }).__tbSeedPayload
+  if (!payload) return Promise.reject(new Error('the init script never parked its payload'))
+
+  const bytes = (b64: string): Uint8Array => {
+    const binary = atob(b64)
+    const out = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i)
+    return out
+  }
+
+  return new Promise<'rebuilt'>((resolve, reject) => {
+    const drop = indexedDB.deleteDatabase(payload.dbName)
+    // ⚠ `onblocked` IS AN ASSERTION, NOT HOUSEKEEPING. A delete is blocked only while some connection
+    // is still open on that database, and in this state there should be none - the app's open FAILED,
+    // so it never got one. If this ever fires, the premise of the spec using it is wrong and it must
+    // say so rather than hang until Playwright's timeout blames the wrong thing.
+    drop.onblocked = () => reject(new Error('deleteDatabase was blocked - something still holds the database open'))
+    drop.onerror = () => reject(drop.error ?? new Error('deleteDatabase failed'))
+    drop.onsuccess = () => {
+      const request = indexedDB.open(payload.dbName, payload.appDbVersion)
+      request.onupgradeneeded = () => {
+        const db = request.result
+        const transaction = request.transaction!
+        if (!db.objectStoreNames.contains(payload.savesStore)) {
+          db.createObjectStore(payload.savesStore, { keyPath: 'slot' })
+        }
+        if (!db.objectStoreNames.contains(payload.careersStore)) {
+          db.createObjectStore(payload.careersStore, { keyPath: 'careerId' })
+        }
+        const saves = transaction.objectStore(payload.savesStore)
+        for (const { checksumB64, payloadB64, ...rest } of payload.records) {
+          saves.put({ ...rest, checksum: bytes(checksumB64), payload: bytes(payloadB64) })
+        }
+        transaction.objectStore(payload.careersStore).put(payload.meta)
+      }
+      request.onsuccess = () => {
+        request.result.close()
+        resolve('rebuilt')
+      }
+      request.onerror = () => reject(request.error ?? new Error('re-open failed'))
+    }
+  })
+}
+
+export const test = base.extend<{ careerAt: CareerAt; storageComesBack: StorageComesBack }>({
+  storageComesBack: async ({ page }, use) => {
+    await use(async () => {
+      await page.evaluate(rebuildIndexedDb)
+    })
+  },
+
   careerAt: async ({ page }, use) => {
     let seeded: FixtureName | null = null
 
@@ -322,7 +480,7 @@ export const test = base.extend<{ careerAt: CareerAt }>({
         throw new Error(`No fixture named '${name}' in e2e/fixtures/manifest.json`)
       }
 
-      await page.addInitScript(seedIndexedDb, payloadFor(entry, options.localStorage ?? {}))
+      await page.addInitScript(seedIndexedDb, payloadFor(entry, options))
       await page.goto('/')
 
       const outcome = await seedOutcome(page)
@@ -334,6 +492,13 @@ export const test = base.extend<{ careerAt: CareerAt }>({
         outcome.state,
         `seeding '${name}' wrote nothing - the database already existed when the page loaded`,
       ).toBe('seeded')
+
+      // ⚠ NO SPLASH TO CLICK WHEN THE DATABASE CANNOT BE OPENED, and that is the app's own decision
+      // rather than a gap here: App.vue branches on `phase === 'recovery'` AHEAD of the splash, so a
+      // player whose storage is broken meets the three doors instead of a wordmark waiting on data
+      // that will never arrive. Clicking for one would hang until Playwright's timeout and blame the
+      // splash for a database fault.
+      if (options.storage === 'unreachable') return entry
 
       // The splash shows on EVERY launch and waits for `game.init()` to settle, so this click is
       // also the wait for the store to have finished asking the worker for its careers. Clicking it
