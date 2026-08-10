@@ -189,7 +189,24 @@ describe('commentary – shape', () => {
       expect(beats.filter((b) => b.kind === 'match')).toHaveLength(1)
       expect(beats.filter((b) => b.kind === 'open')).toHaveLength(1)
       // The LAST set is told by the match beat, so a `set` beat exists for every set but that one.
-      expect(beats.filter((b) => b.kind === 'set')).toHaveLength(m.result.sets.length - 1)
+      //
+      // ⚠ RE-AIMED, NOT RELAXED (10.08, the retirement slice). The claim above is a statement about
+      // COMPLETED sets that could be written as `sets.length - 1` only while the last element of
+      // `sets` was always the one the match beat tells. A retirement stops mid-set, so its last
+      // element is a set nobody won and no `set` beat may claim – and when she stops at a change of
+      // ends the partial set is trimmed altogether, which is the case that failed here (2 completed
+      // sets, 2 elements, and the old arithmetic asked for 1). The assertion is now the sentence it
+      // always meant: ONE `set` BEAT PER SET THE POINT LOG ACTUALLY ENDED, minus the last one on a
+      // completed match because the match beat tells it. Counted off the log rather than off
+      // `sets.length`, so it can never drift from the thing it is about again.
+      const setEnds = m.points.filter((p) => p.setEnd).length
+      expect(beats.filter((b) => b.kind === 'set')).toHaveLength(
+        m.result.retired ? setEnds : setEnds - 1,
+      )
+      // ...and the old arithmetic is still asserted on every match it was ever true of.
+      if (!m.result.retired) {
+        expect(beats.filter((b) => b.kind === 'set')).toHaveLength(m.result.sets.length - 1)
+      }
       for (const b of beats) expect(b.set).toBeGreaterThanOrEqual(1)
     }
   })
@@ -231,13 +248,62 @@ describe('commentary – honesty (a beat may claim nothing the point log does no
         expect(b.pointIndex).not.toBe(m.points.length - 1)
       }
       const match = beats[beats.length - 1]
-      expect(m.points[match.pointIndex].setEnd).toBe(true)
-      // It names the actual winner and carries the actual scoreline.
-      const winnerName = m.result.winner === 0 ? 'Bianca' : 'Dana'
-      expect(match.text.startsWith(winnerName)).toBe(true)
+      // It carries the actual scoreline, whichever way the match ended.
       expect(match.score).toBe(m.result.sets.map((s) => `${s.a}-${s.b}`).join('  '))
-      expect(match.text).toContain(m.result.sets.length === 3 ? 'in three' : 'straight sets')
+      // ⚠ RE-AIMED, NOT RELAXED (10.08, the retirement slice). "The match beat sits on a set end" was
+      // true because a match could only end by somebody winning a set. A RETIREMENT ends a match
+      // WITHOUT ending a set – she stops at 4-6 6-4 4-2 – so the beat now has two shapes and both are
+      // asserted, in full. Nothing above is weakened: every completed match still has to satisfy the
+      // original three claims, verbatim, in the else branch.
+      const winnerName = m.result.winner === 0 ? 'Bianca' : 'Dana'
+      const retiredName = m.result.retired?.side === 0 ? 'Bianca' : 'Dana'
+      if (m.result.retired) {
+        // The beat may not claim a set was won. It must name who stopped and who went through, and
+        // must NOT contain either of the completed-match phrases – "takes it in straight sets" on a
+        // retirement is the exact lie this block exists to stop.
+        expect(match.lead).toBe('Retired.')
+        expect(match.text.startsWith(retiredName)).toBe(true)
+        expect(match.text).toContain(winnerName)
+        expect(match.text).not.toContain('straight sets')
+        expect(match.text).not.toContain('in three')
+      } else {
+        expect(m.points[match.pointIndex].setEnd).toBe(true)
+        // It names the actual winner and carries the actual scoreline.
+        expect(match.text.startsWith(winnerName)).toBe(true)
+        expect(match.text).toContain(m.result.sets.length === 3 ? 'in three' : 'straight sets')
+      }
     }
+  })
+
+  // ⚠ AND THE SWEEP ABOVE HAS TO ACTUALLY REACH ONE (10.08). A retirement fires in ~2.7% of matches,
+  // so a 60-match corpus sees it about four times in five runs – i.e. the two re-aimed branches above
+  // could have gone green on a corpus that never took the new arm at all. This builds the case
+  // directly instead of hoping for it: a pair with nothing left in the tank, played until one of them
+  // stops, then narrated.
+  it('a RETIREMENT is narrated as one, and the corpus can really produce it', () => {
+    const spent: MatchPlayer = { ...A, stamina: 10 }
+    const other: MatchPlayer = { ...B, stamina: 10 }
+    let found = 0
+    for (let i = 0; i < 400 && found < 5; i++) {
+      const opts: MatchOptions = { surface: 'hard', tour: 'wta', seed: `ret-narr-${i}` }
+      const res = simulateMatch(spent, other, opts)
+      if (!res.retired) continue
+      found++
+      const m = annotateMatch(res, spent, other, opts)
+      const beats = buildCommentary(m, spent.name, other.name)
+      const last = beats[beats.length - 1]
+      expect(last.kind).toBe('match')
+      expect(last.lead).toBe('Retired.')
+      expect(last.pointIndex).toBe(m.points.length - 1)
+      expect(m.points[last.pointIndex].setEnd, 'a retirement does not end a set').toBe(false)
+      expect(last.text).not.toContain('straight sets')
+      // Every other honesty property still holds: chronological, unique indices, opener first.
+      const indices = beats.map((b) => b.pointIndex)
+      expect([...indices].sort((x, y) => x - y)).toEqual(indices)
+      expect(new Set(indices).size).toBe(indices.length)
+      expect(beats[0].kind).toBe('open')
+    }
+    expect(found, 'the fixture must actually produce retirements').toBeGreaterThan(0)
   })
 
   it('a `streak` beat counts a run that really ended on that point', () => {

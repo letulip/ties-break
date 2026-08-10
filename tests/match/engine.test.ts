@@ -59,21 +59,50 @@ describe('simulateMatch — result integrity', () => {
     for (let i = 0; i < 40; i++) {
       const r = simulateMatch(a, b, opts({ seed: `integrity-${i}`, tour: i % 2 ? 'wta' : 'atp' }))
 
-      // winner has exactly two completed set wins
-      const wins = setWins(r.sets)
-      expect(wins[r.winner]).toBe(2)
-      expect(wins[1 - r.winner]).toBeLessThanOrEqual(1)
-
-      // every completed set is a legal tennis score
-      for (const s of r.sets) expect(isLegalSet(s)).toBe(true)
+      // ⚠ RE-AIMED, NOT RELAXED (10.08, the retirement slice). Both claims below were written when
+      // the only way to end a match was to win two sets, and both stay asserted verbatim on every
+      // match that ends that way. A RETIREMENT ends one without: the last element of `sets` is the
+      // set she stopped IN, which is legal tennis in progress and illegal as a finished set (4-2),
+      // and the winner has at most one completed set. So the retirement arm asserts the properties a
+      // stopped match genuinely has, and they are STRICTER, not weaker – it must be undecided.
+      // An UNfinished set can only ever be the last element, and there is at most one of them: she
+      // stops in the set she is in. (When she stops at a change of ends there is none at all – the
+      // empty set is trimmed – which is why this is read off the SCORE and not off the position.)
+      const completed = r.sets.filter(isLegalSet)
+      expect(r.sets.length - completed.length, 'at most one unfinished set').toBeLessThanOrEqual(1)
+      for (const s of r.sets.slice(0, r.sets.length - 1)) {
+        expect(isLegalSet(s), 'only the LAST set may be unfinished').toBe(true)
+      }
+      const wins = setWins(completed)
+      if (r.retired) {
+        // Nobody had won it. That is what makes it a retirement rather than a stolen result.
+        expect(wins[0], 'a decided match cannot be retired from').toBeLessThanOrEqual(1)
+        expect(wins[1], 'a decided match cannot be retired from').toBeLessThanOrEqual(1)
+        // The winner is the side that did NOT stop, and the loser is the one who did.
+        expect(r.winner).toBe(r.retired.side === 0 ? 1 : 0)
+      } else {
+        // winner has exactly two completed set wins
+        expect(r.sets.length, 'a finished match has no unfinished set').toBe(completed.length)
+        expect(wins[r.winner]).toBe(2)
+        expect(wins[1 - r.winner]).toBeLessThanOrEqual(1)
+      }
 
       // one log entry per point
       expect(r.totalPoints).toBe(r.log.length)
       expect(r.totalPoints).toBeGreaterThan(0)
 
       // the final log entry's scoreAfter equals the final match score string
+      //
+      // ⚠ RE-AIMED, NOT RELAXED (10.08, the retirement slice). On a completed match the last point IS
+      // the match, so the two strings are equal and that is still asserted verbatim. A retirement's
+      // last point is an ordinary point in an ordinary game, so its `scoreAfter` carries the live
+      // game on the end ("7-6 6-7 0-0 15-40") – and the property that survives is the STRONGER one
+      // worth having: the sets on the result sheet are a PREFIX of the score at the moment she
+      // stopped. That is what makes the truncation honest rather than a rewrite.
       const finalScore = r.sets.map((s) => `${s.a}-${s.b}`).join(' ')
-      expect(r.log[r.log.length - 1].scoreAfter).toBe(finalScore)
+      const lastScore = r.log[r.log.length - 1].scoreAfter
+      if (r.retired) expect(lastScore.startsWith(finalScore), `${lastScore} vs ${finalScore}`).toBe(true)
+      else expect(lastScore).toBe(finalScore)
 
       // seed echoed back
       expect(r.seed).toBe(`integrity-${i}`)

@@ -405,8 +405,13 @@ describe('the copy', () => {
     // The onset copy branches on the CAUSE – the owner's «с учетом момента, когда она была».
     expect(injury).toContain("cause === 'retirement'")
     expect(injury).toContain('She had to stop')
-    // ...and the news line carries the sport's own marker.
-    expect(engineModuleSource('world/matchNews')).toContain("' ret.'")
+    // ...and the news line says who stopped, in the VERB – the score has to stay the trailing token
+    // because SeasonScreen's plaque splits on it (see the note in matchNews.ts and the pin in
+    // tests/round12-view.test.ts).
+    const news = engineModuleSource('world/matchNews')
+    expect(news).toContain("'retired against'")
+    expect(news).toContain("'beat a retiring'")
+    expect(news).toContain("${formatShortName(oppName)} ${kidScore ?? ''}`.trim()")
     // ...and the summary says it without touching the points beside it.
     expect(worldSource()).toContain('she retired hurt')
   })
