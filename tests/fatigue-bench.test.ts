@@ -310,6 +310,34 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
     })
   })
 
+  // ⚠⚠ THE ARM THIS BENCH CANNOT REACH, MEASURED RATHER THAN ASSUMED (v47).
+  //
+  // Every entry in `POLICIES` carries a `WEEK_PLAN_PRESETS` plan, which has no `week` and is therefore
+  // never doubled – so the two tests above pin the recomputation at `doubledShare === 0`. That is the
+  // arm a MIGRATED career lands on and it is the important one, but it is not the whole dial, and this
+  // note exists because I tried to widen it here and the widening did not work.
+  //
+  // WHAT I TRIED: the same machinery driven with two hand-written plans the bench has no policy for –
+  // five sessions with one of two possible days doubled (share 1/2) and with both (share 1). The
+  // traces DID diverge between the arms, which looks like coverage and is not: the divergence comes
+  // through `summerLoadFactor` (different skills -> different matches), not through the condition
+  // charge. Mutating the charge to `Math.floor` and then to `0` left both arms GREEN, which is the
+  // definition of a test that is green about the thing it claims to test, so it was removed.
+  //
+  // WHY IT CANNOT WORK HERE, and it is a fact about the bench rather than about v47: every policy is
+  // enter-all, so she is COMPETING through the holidays – `summerBlockWeek` refuses on a competition
+  // week (a tournament week already has its own bonus and its own bill), which is the same finding
+  // tools/summer-bench.ts reports from the other side (a racing career sees 3.9 block weeks a season
+  // against a training-only career's 9.0). The handful that survive land where this bench's careers
+  // spend their summers, near the condition FLOOR, and `clamp(c - 3)` and `clamp(c - 2)` are both 0
+  // there. Reaching the arm would need a training-only policy, which would add a cell to a published
+  // measurement to serve a test – the wrong trade.
+  //
+  // WHERE THE NON-ZERO ARMS ARE PINNED INSTEAD: tests/plan.test.ts §6, in the unit project, against
+  // `summerLoadFactor` and `summerConditionCost` directly – both ends and the middle, mutation-verified
+  // against `Math.floor`, against a vanished charge, against a mis-counted `doubledDays` and against
+  // the window rule coming back.
+
   it('physio wiring: careful forces on; grinder/balanced follow the coach default; grid "off" forces off', () => {
     expect(openFatigueCareer(middleSelf, careful, 0).world.physioActive).toBe(true)
     expect(openFatigueCareer(middleSelf, grinder, 0).world.physioActive).toBe(false)

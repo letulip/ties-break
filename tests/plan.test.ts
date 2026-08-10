@@ -518,6 +518,16 @@ describe('§6 the summer bonus is the price of a doubled day', () => {
     expect(summerConditionCost(oneOfThree)).toBe(1)
     expect(Number.isInteger(summerConditionCost(oneOfThree))).toBe(true)
     expect(summerLoadFactor(oneOfThree)).toBeCloseTo(1 + (ECONOMY.summerBlock.loadFactor - 1) / 3, 12)
+
+    // ⚠ AND THE SHARE THAT LANDS BETWEEN TWO CONDITION POINTS, which is the ONLY case that can tell
+    // the owner's rounding rule from a truncation – and the case this test did not have. Five
+    // sessions can double twice; doubling once is share 1/2, and 3 x 0.5 is 1.5. `Math.round` pays 2,
+    // `Math.floor` would pay 1, and every other share in the game is a whole number of points, so
+    // without this line the rule was unpinned. (Found by mutation: `floor` walked through the whole
+    // suite, unit and sim, until this assertion existed.)
+    const oneOfTwo = summerWorld([['serve', 'serve'], ['rally'], ['fitness'], ['general'], [], [], []])
+    expect(doublingShare(planWeek(oneOfTwo.plan))).toBe(0.5)
+    expect(summerConditionCost(oneOfTwo)).toBe(2)
   })
 
   it('a migrated career is never doubled, so its school-free weeks come back at 1.0', () => {
