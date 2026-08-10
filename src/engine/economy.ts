@@ -443,14 +443,69 @@ export const ECONOMY = {
   // coach ladder replaces it with HOURS (ECONOMY.coach.sessionsAt60/85), which move the bill 2x
   // end to end, because hours are what a coach actually charges for.
 
-  // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), but round-7 b makes the
-  // payout NEED-BASED: only a `working`-background kid actually banks it – for everyone else
-  // the roll result is ignored (no event), the draws still happen so the main stream is
-  // background-independent. Amounts unchanged.
+  // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), and round-7 b made the payout
+  // NEED-BASED – for everyone else the roll result is ignored (no event), the draws still happen so
+  // the main stream is background-independent. Amounts unchanged.
+  //
+  // ⚠ AND SINCE 10.08 "NEED" IS THE BALANCE RATHER THAN THE PROFILE ROW. `eligible: ['working']` is
+  // GONE. The intent was need from the start – docs/rounds/round-7.md, 24.07: «спонсор
+  // нужде-ориентирован (платит только working)» – and background was a proxy for it because at the
+  // time the two coincided. docs/specs/round15-triage.md measured how far they have since come apart.
+  // The owner, 10.08: «порог по деньгам на счету, а не по строчке в анкете – всё именно так, и с
+  // самого начала так и затевалось».
+  //
+  // The predicate is `sponsorNeedMet` in engine/world/sponsors.ts and the whole argument for its
+  // SHAPE is written there – why a runway and not a dollar figure, why the court and not the whole
+  // bill, why a rung cut and not a spend cut. The numbers, and only the numbers, are here.
+  // Measured in docs/specs/need-not-background-2026-08.md (tools/runway-probe.ts, tools/two-cells.ts).
   sponsor: {
     rollChance: 0.06,
     amountCents: [500_00, 1500_00] as [number, number],
-    eligible: ['working'] as FamilyBackground[],
+
+    /** HOW MANY WEEKS OF COURT HIRE THE BALANCE MUST NO LONGER COVER for a shop to chip in.
+     *
+     *  ⚠ 62 IS THE MIDDLE OF A MEASURED BAND, not a chosen figure, and both of its walls are numbers
+     *  rather than opinions (50 seeds x 4 seasons on the round-15 2x2, plus a ten-arm rung sweep):
+     *    * NOT BELOW ~58, because under that the gate pays the `middle` background MORE of the cameo
+     *      than the `working` one and the difficulty setting inverts. The crossover measures at 55-56
+     *      and it is the wealth corridor doing it: a middle-market court costs more, so the same
+     *      balance buys fewer weeks of it. What puts working back on top above the crossover is the
+     *      thing that should – it opens the game $17,000 poorer.
+     *    * NOT ABOVE ~68, because past that the two SELF-COACHED cells start collecting it, and they
+     *      are the definition of a family that does not need it: they finish four seasons at +$25,626
+     *      and +$39,001 and neither goes under water once in 50 careers. They cross 2% of weeks at 72
+     *      and reach 10% at 90.
+     *    * AND NEVER ABOVE 81 whatever else is true: 81.5 is the worst week-0 runway any eligible cell
+     *      holds over 50 seeds, and NOBODY IS IN NEED BEFORE A BALL IS STRUCK. That is round-15 item
+     *      16 in one number - the cameo paid the owner's own career in week 2 - and it is the one
+     *      bound here that is a correctness condition rather than a balance preference.
+     *
+     *  ⚠ IT IS DENOMINATED IN COURT WEEKS, WHICH ARE NOT MONEY WEEKS. The court is roughly a quarter
+     *  of what a family actually spends in a week (measured: $77 of a $335 week self-coached, $92 of
+     *  $357 with a middle coach), so 62 court weeks is nearer 15 weeks of the real burn. The unit is
+     *  the court because the court is the part she cannot get out of; the number is 62 because that
+     *  is where the band is. */
+    runwayWeeks: 62,
+
+    /** ...AND ABOVE THIS RUNG NOBODY CHIPS IN, however empty the account (owner, 10.08: «у нас есть
+     *  маркер трат в неделю, если тренер стоит дороже, то нечего и помогать»). A shop backs the girl
+     *  whose family is doing this on a shoestring, not the one that has hired the best coach in the
+     *  city – a story rule first and an anti-exploit second.
+     *
+     *  ⚠ `middle` AND NOT LOWER, because the owner's own two careers are 8k self-coached and 25k
+     *  middle and both stay inside it. ⚠ AND NOT HIGHER, because `high` and `elite` are exactly where
+     *  a need gate would start paying for the coach: measured at this threshold, a `high` rung holds
+     *  the cameo's gate open for 99% of a working career's weeks and an `elite` one for 100% – against
+     *  53-60% at `middle`, 9-14% at `budget` and 1-2% self-coached.
+     *  The rung ladder's own comment already says what the top of it is – "The steps between them
+     *  shrink as they climb while the price roughly doubles every two rungs. Elite is a luxury, not an
+     *  optimisation" – so cutting above `middle` reads a property `ECONOMY.coach` asserts about itself.
+     *
+     *  ⚠ THE CUT IS ON THE RUNG AND NOT ON THE WEEKLY DOLLARS. See `sponsorNeedMet`: the corridor
+     *  prices the same rung differently by background, so a dollar cut would refuse a wealthy family's
+     *  `middle` coach and allow a working family's – background back through the side door, in the one
+     *  mechanic this wave exists to take it out of. */
+    maxCoachTier: 'middle' as CoachTier,
   },
 
   // THE LOCAL SPONSOR – a shop in her town backing the local girl who is doing well locally.

@@ -194,11 +194,11 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
-export { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, rolloverKitAllowance }
+export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, rolloverKitAllowance }
 import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
@@ -1094,18 +1094,35 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
       amountCents: -split.facilityCents,
     })
   }
-  // Local-sponsor cameo: the ROLL (and the gift draw when it hits) run for EVERY background so
-  // the main-stream draw count is background-independent (round-7 keeps the draws exactly as they
-  // were). The payout is now NEED-BASED: only an eligible (working) kid actually banks it; for
+  // Local-sponsor cameo: the ROLL (and the gift draw when it hits) run for EVERY family so the
+  // main-stream draw count cannot depend on who she is (round-7 keeps the draws exactly as they
+  // were). The payout is NEED-BASED: only a family the gate says is short actually banks it; for
   // everyone else the drawn result is discarded – no funds move, no event.
+  //
+  // ⚠ THE GATE READS THE BALANCE NOW, NOT THE PROFILE ROW (10.08, the owner: «порог по деньгам на
+  // счету, а не по строчке в анкете»). `ECONOMY.sponsor.eligible` is gone and `sponsorNeedMet` has
+  // taken its place: fewer than `runwayWeeks` weeks of her COURT left in the account, and no coach
+  // dearer than `maxCoachTier`. Everything about WHY it is a runway, why the court rather than the
+  // whole bill, and why the cut is on the rung is written above `sponsorNeedMet` in world/sponsors.ts;
+  // the numbers are on `ECONOMY.sponsor`; the measurement is docs/specs/need-not-background-2026-08.md.
+  //
+  // ⚠ AND THE DRAW SHAPE IS UNTOUCHED BY IT, WHICH IS THE CONSTRAINT THE WHOLE CHANGE HAD TO FIT
+  // INSIDE. The roll is still one `rng()` and the gift is still one `pickInt` taken whenever that
+  // roll hits, for EVERY family, before anything is asked about her – so the per-week MAIN count is
+  // still 3 or 4 base-cost draws exactly as `tests/condition.test.ts` and `tests/rivals.test.ts` pin
+  // it, and the frozen capture (41550 / e6b0c709) cannot see this wave. The gate is post-draw
+  // arithmetic on `split`, which was computed above off draws that had already happened.
   if (rng() < ECONOMY.sponsor.rollChance) {
     const [glo, ghi] = ECONOMY.sponsor.amountCents
     const gift = pickInt(rng, glo, ghi)
     // ⚠ AND AN AMATEUR ON A SCHOLARSHIP TAKES NO SPONSOR MONEY (W2-ENDINGS). Same post-draw
-    // discipline as the background clause it rides on: the roll and the gift draw BOTH still happen,
+    // discipline as the need clause it rides on: the roll and the gift draw BOTH still happen,
     // and only the payout is discarded, so the MAIN sequence cannot depend on a player's answer at
     // the fork. That is invariant 2 - player choices may never re-roll the world's dice.
-    if (!inCollege(world) && ECONOMY.sponsor.eligible.includes(world.profile.background)) {
+    if (
+      !inCollege(world) &&
+      sponsorNeedMet({ fundsCents: world.fundsCents, courtCents: split.facilityCents, tier })
+    ) {
       world.fundsCents += gift
       addEvent(world, {
         week: world.week,

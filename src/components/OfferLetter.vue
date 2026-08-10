@@ -350,7 +350,17 @@ const settled = computed(() => {
     <!-- tilt is 0 and STAYS 0 – see the block comment at the top of this file. -->
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <img class="offer-mark" :src="markUrl" :alt="terms.brand" />
-      <p class="offer-body">
+      <!-- ⚠ ONE LINE IS THE WHOLE DIFFERENCE, AND IT HAS TO BE THERE. A renewal (10.08) carries the
+           SAME terms as the contract that is ending – `raiseKitRenewal` copies them verbatim, because
+           that is what renewing is – so without this arm the incumbent's letter would introduce
+           itself to a family it has kitted out all season, in the voice of a stranger. Everything
+           below is unchanged and stays true of a second year: the coverage, the freshness, the
+           events she owes, the exclusivity and the term. -->
+      <p v-if="terms.renewal" class="offer-body">
+        She has been in our kit all season and we have enjoyed every week of it. We would like to keep
+        her in it – the same deal, another year.
+      </p>
+      <p v-else class="offer-body">
         We have been watching your daughter play all season, and we would like to put her in our kit.
       </p>
       <!-- THE DEAL, IN THE WORDS THE BUTTON COMMITS TO. Generated from the terms themselves; the

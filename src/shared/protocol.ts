@@ -1517,6 +1517,16 @@ export interface KitOfferTerms {
   ended?: KitEndReason
   /** end-of-deal letter only: how many events she actually entered in the season under review. */
   endedEventsPlayed?: number
+  /** ⚠ THIS LETTER IS THE BRAND SHE HAS BEEN WITH ASKING FOR ANOTHER YEAR (owner, 10.08), not a new
+   *  brand introducing itself. Every other field is copied verbatim from the contract that is ending -
+   *  a renewal is the same deal offered again, on the same paper - so this flag is the ONLY thing that
+   *  tells the two apart, and the letter's opening line is what it changes. See `raiseKitRenewal` for
+   *  why it arrives on the window's LAST week and why it rolls no dice.
+   *
+   *  ⚠ ADDITIVE AND OPTIONAL, SO NO SCHEMA BUMP - the same move `EntryLetterTerms.releasedBy` shipped
+   *  as. An old save's letters simply lack it and render exactly as they did; there is nothing to
+   *  back-fill, because before this wave no letter was ever a renewal. */
+  renewal?: boolean
 }
 
 /** What a TOURNAMENT-DESK letter states (W2-LADDER §6, the informational half of the entry
