@@ -13,9 +13,12 @@
 import { ECONOMY } from '../economy'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
-import { activeKitDeal, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseKitEndLetter, raiseKitOffers, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+// The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
+// nothing else), so this runs one way exactly as every other import in this file does.
+import { COACH_TIERS } from '../coach'
+import { activeKitDeal, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
-import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
+import { LADDER_LABEL, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidPoints, tableSize } from './ladder'
 import { KID_ID } from './constants'
@@ -108,6 +111,89 @@ export function localSponsorCents(nationalRank: number): number {
   if (nationalRank <= s.topMaxRank) return s.topSeasonCents
   if (nationalRank <= s.maxRank) return s.seasonCents
   return 0
+}
+
+// =================================================================================================
+// THE WEEKLY CAMEO'S GATE – NEED, NOT BACKGROUND (10.08)
+// =================================================================================================
+//
+// ⚠ THE INTENT WAS ALWAYS NEED AND THE IMPLEMENTATION WAS A PROXY FOR IT. `docs/rounds/round-7.md`,
+// 24.07, records the original design in one line: «спонсор нужде-ориентирован (платит только
+// working)». Background was taken as a stand-in for need because at the time the two coincided. They
+// have come apart, and `docs/specs/round15-triage.md` measured how far: the cameo was worth a median
+// $12,866 over four seasons – 22.6% of a working family's parent income, fired for 50/50 careers –
+// against $0 and 0/50 for `middle`, with no cause, no relationship and no player agency. It paid the
+// owner's own career in week 2, before a ball was struck.
+//
+// The owner, 10.08: «порог по деньгам на счету, а не по строчке в анкете – всё именно так, и с самого
+// начала так и затевалось». So the gate reads the BALANCE.
+//
+// ⚠ AND IT IS A RUNWAY, NOT A DOLLAR FIGURE, for the reason `ECONOMY.sponsorship` already argues at
+// length about the valve it replaced: a flat threshold is not the same test in two families. The
+// weekly bill runs through the coach rung, the court that follows it and the wealth corridor, so
+// $3,000 is most of a season to one family and a fortnight to another. "Fewer than N weeks of the
+// bill" is the same test everywhere, and it is background-blind by construction.
+//
+// ⚠ THE DENOMINATOR IS THE COURT AND NOT THE WHOLE BILL, and that is the anti-exploit half. The
+// owner named the hazard himself: «порог по нужде награждает трату – найми элиту, приблизишься к
+// благотворительности». Measured against the TOTAL bill it is real and large – tools/runway-probe.ts,
+// 50 seeds x 4 seasons, the same 2x2 tools/two-cells.ts runs – because hiring up shrinks the runway
+// twice over: it drains the balance AND inflates the unit the balance is measured in. Against the
+// COURT (`weeklyBillSplit().facilityCents`, the half she cannot get out of – you cannot train without
+// booking one, and it is charged at every rung including `self`) only the first of those two survives,
+// and the first one is not an exploit: hiring an expensive coach genuinely makes a family poorer, and
+// a gate that did not notice would not be a need gate at all. The split that separates the man from
+// the court was built in the split-the-bill wave for a different reason; this is the second thing it
+// turns out to be for.
+//
+// ⚠ AND ABOVE `maxCoachTier` NOBODY WRITES AT ALL, which is the owner's own rule and is a STORY rule
+// before it is an anti-exploit one: «у нас есть маркер трат в неделю, если тренер стоит дороже, то
+// нечего и помогать». A shop backs the girl whose family is doing this on a shoestring, not the one
+// that has hired the best coach in the city. Both of his own careers – 8k self-coached, 25k middle –
+// stay inside it.
+//
+// ⚠ IT CUTS ON THE RUNG AND NOT ON THE WEEKLY DOLLARS, and the difference matters here more than
+// anywhere else in the file. The wealth corridor prices the SAME rung differently by background
+// (`coachCorridorFactor`: ~0.7-0.8x working against 1.2-1.3x wealthy), so a dollar cut would refuse a
+// wealthy family's `middle` coach while allowing a working family's – background sneaking back in
+// through the side door, in the exact mechanic this wave exists to take it out of. THE RUNG IS THE
+// CHOICE; THE PRICE IS THE MARKET. Cut on the choice.
+//
+// ⚠ THE TWO RULES DO NOT DOUBLE-COUNT, checked rather than assumed. The court denominator flattens the
+// GRADIENT below the cut (`courtTierFactor` is 1.0 / 1.0 / 1.2 across self / budget / middle, against
+// the total bill's measured 1.0 / 1.5 / 2.5) and the cut removes the TOP of the ladder outright.
+// Neither does the other's job: without the cut a `high` or `elite` family is the likeliest recipient
+// in the game (99-100% of its weeks inside the gate against 53-60% at `middle`), and without the court
+// denominator the same gate is an order of magnitude more lopsided across the eligible rungs – the
+// self-to-middle ratio measures 39x on the court and 409x on the total bill.
+//
+// ⚠ AND WHAT IS *NOT* REMOVED, STATED PLAINLY, because it cannot be and a comment that implied
+// otherwise would be lying. Below the cut, hiring up still raises the chance of the cameo – not
+// because the unit moved but because THE FAMILY IS POORER, and a need gate that could not see that
+// would not be a need gate. What is removable is the PRICE of the gradient, and it is measured: a
+// working family that goes from self-coached to `budget` pays $8,320 more over four seasons and gets
+// $1,196 more cameo (14 cents on the dollar); to `middle`, $23,504 more for $6,830 (29 cents). The
+// step after that is the cut, where the extra $46,176 buys MINUS the whole cameo. Nobody farms an
+// instrument that pays 29 cents on the dollar and then confiscates itself, and that is before
+// docs/specs/round15-triage.md's finding that the coach is a net negative on every measured axis
+// anyway. Reported per rung in docs/specs/need-not-background-2026-08.md §4.
+
+/** IS THIS FAMILY IN NEED? – the whole gate under the weekly local-sponsor cameo, in one function so
+ *  the engine, the bench and the tests cannot answer it differently. Pure, zero draws, no `world`.
+ *
+ *  `fundsCents` is the balance AT THE MOMENT THE CAMEO IS DECIDED – after the week's training bill
+ *  has been taken, which is where `resolveBaseCosts` sits. A negative balance is deep need and
+ *  returns true, as it must.
+ *
+ *  ⚠ MULTIPLIES RATHER THAN DIVIDES, so a zero court can never produce a NaN or an Infinity that
+ *  reads as "in need". The guard above it is belt and braces – `weeklyBillSplit` cannot return a zero
+ *  facility line for any rung the market offers – but a silent NaN here would pay every family in the
+ *  game and nothing downstream would notice. */
+export function sponsorNeedMet(input: { fundsCents: number; courtCents: number; tier: CoachTier }): boolean {
+  const s = ECONOMY.sponsor
+  if (COACH_TIERS.indexOf(input.tier) > COACH_TIERS.indexOf(s.maxCoachTier)) return false
+  if (input.courtCents <= 0) return false
+  return input.fundsCents < s.runwayWeeks * input.courtCents
 }
 
 /** How many tournaments she entered in the season that is finishing at `reviewWeek` – the count a kit
@@ -367,10 +453,22 @@ export function reviewSponsors(world: WorldState): void {
   //    until the window closes is what turns four possible rows back into one, and it can then say
   //    MORE than the old line could - what the year of kit was worth, who wrote, and what he did
   //    about it.
+  // ⚠ ...AND IT IS ALSO THE WEEK THE INCUMBENT WRITES, WHICH IS THE 10.08 ADDITION (owner: renewal is
+  //    a letter, not an automatic re-signing; new letters still arrive; the five-week window stays).
+  //    Everything above this line has already happened by the time the closing week runs - every rung
+  //    she clears has had its turn (`raiseKitOffers` walks slots 0-3) - so the brand she already knows
+  //    is the LAST letter on the table and can never crowd a better one out. That ordering is the
+  //    whole design and the reason it is here rather than beside the goodbye: see `raiseKitRenewal`,
+  //    and see `seasonSpokenFor` for the trap it is written around.
   if (!isSponsorWindowCloseWeek(world.week)) return
   const parts: string[] = []
   const ended = dealEndingWithSeason(world.offers, world.week)
   const endedTerms = ended ? (ended.terms as KitOfferTerms) : null
+  // Raised BEFORE the row is composed, so the one line a season can report it - and so `post` below
+  // sees it. `raiseKitRenewal` holds every condition itself (the closing week, one brand at a time,
+  // and a term served rather than a relationship failed), which is why there is no second test here
+  // to keep in step with it.
+  const renewal = ended ? raiseKitRenewal(world.offers, world.week, ended) : null
   if (ended && endedTerms) {
     // ⚠ WHAT THE SEASON OF KIT WAS WORTH IS REPORTED EITHER WAY, and the failure case is the one
     //   that needs it most: a deal that ends is precisely the moment the player should be able to
@@ -396,7 +494,14 @@ export function reviewSponsors(world: WorldState): void {
   }
   // THE WINTER'S POST, as one clause however many brands wrote. `signed` is checked first because it
   // is the news: a letter already answered should not be described as waiting in the inbox.
-  const post = world.offers.filter((o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info')
+  //
+  // ⚠ THE RENEWAL IS EXCLUDED HERE AND REPORTED ON ITS OWN CLAUSE BELOW. It is a kit offer raised
+  // this window, so it would otherwise be swept into "letters from X and Y – they all want to put her
+  // in their kit", which is the one thing a renewal is not: they already have her, and the row would
+  // name the same brand twice in two different voices one sentence apart.
+  const post = world.offers.filter(
+    (o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info' && o !== renewal,
+  )
   const signedNow = post.find((o) => o.state === 'signed')
   if (signedNow) {
     const terms = signedNow.terms as KitOfferTerms
@@ -412,6 +517,15 @@ export function reviewSponsors(world: WorldState): void {
         ? `A letter from ${brands} – they want to put her in their kit (${gate}). It is in the inbox.`
         : `Letters from ${brands} – they all want to put her in their kit (${gate}). They are in the inbox.`,
     )
+  }
+  // ⚠ AND THE INCUMBENT GETS ITS OWN SENTENCE, in its own voice. It is the last clause because it is
+  //   the last letter: by the time the parent reads this line every rung that would have her has
+  //   already written, and this is the one he can still take instead. It says the deadline out loud
+  //   because the renewal's deadline is TODAY - the window closes with this week - and a letter whose
+  //   window is one week long is the one case where "it is in the inbox" is not enough on its own.
+  if (renewal) {
+    const t = renewal.terms as KitOfferTerms
+    parts.push(`${t.brand} would like another season on the same terms – their letter is in the inbox, and it goes when the season opens.`)
   }
   if (parts.length === 0) return
   addEvent(world, { week: world.week, type: 'info', text: parts.join(' ') })

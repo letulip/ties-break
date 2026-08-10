@@ -240,9 +240,15 @@ function main(): void {
     if (args[i] === '--weeks') weeks = Number(args[++i])
   }
   console.log(`two-cells: ${seeds} seeds x ${weeks} weeks (${(weeks / WEEKS_PER_YEAR).toFixed(0)} seasons)`)
+  // ⚠ THE BANNER FOLLOWED THE GATE (10.08). It used to print `eligible: working` – the profile row the
+  // cameo read until this wave – and that field no longer exists: the gate is NEED now
+  // (`sponsorNeedMet`), so the banner names the runway and the rung cut instead. Nothing about what
+  // this file MEASURES moved, which is the whole point of touching only the header line: the
+  // before/after tables in docs/specs/need-not-background-2026-08.md are the same instrument twice.
   console.log(`the local-sponsor cameo as shipped: ${(100 * ECONOMY.sponsor.rollChance).toFixed(0)}% a week, ` +
     `${money(ECONOMY.sponsor.amountCents[0])}-${money(ECONOMY.sponsor.amountCents[1])}, ` +
-    `eligible: ${ECONOMY.sponsor.eligible.join('/')}`)
+    `need gate: under ${ECONOMY.sponsor.runwayWeeks} weeks of court in the bank, ` +
+    `no coach above ${ECONOMY.sponsor.maxCoachTier}`)
 
   const all: Array<[Arm, Career[]]> = []
   for (const arm of ARMS) {

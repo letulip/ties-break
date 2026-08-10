@@ -760,6 +760,82 @@ export function raiseKitOffers(args: {
 }
 
 /**
+ * THE BRAND SHE HAS BEEN WITH ASKS FOR ANOTHER YEAR (owner, 10.08).
+ *
+ * ⚠ IT IS A LETTER, NOT AN AUTOMATIC RE-SIGNING, and that is the owner's own word on the shape. A
+ * contract that renewed itself would be the one place in this file where the parent is not asked, and
+ * the whole reason the inbox exists is that he is («попапчик получить с письмом-предложением… И
+ * кнопка sign/refuse»). So a renewal is an ordinary `open` kit offer: refusable, expirable, and
+ * closed by `signOffer` if he takes somebody else instead.
+ *
+ * ⚠ AND IT LANDS ON THE WINDOW'S CLOSING WEEK - THE LAST WEEK, WHICH IS THE WHOLE DESIGN AND NOT A
+ * SCHEDULING DETAIL. `seasonSpokenFor` is the trap: the season ahead may be promised to ONE brand, so
+ * the moment a letter is SIGNED every other rung is turned away for as long as its term runs, and
+ * `raiseKitOffers` stops writing. A renewal offered on the window's opening week would therefore let
+ * the shop in her home town crowd out the global brand that would have written on week three - the
+ * exact inversion `windowLadder` exists to prevent, and it would be worse here than the weakest-first
+ * ordering that argument was written against, because the incumbent is the letter a parent is most
+ * likely to sign on sight.
+ *
+ * So the queue is: the rungs she clears write first, strongest of them first (slots 0-3), and the
+ * brand she already knows writes LAST. It is the last letter she can still take, and taking it is
+ * always a choice made with every other letter of the winter already on the table.
+ *
+ * ⚠ THE CLOSING WEEK IS "THE PARENT'S OWN" AND THIS DOES NOT TAKE IT BACK. `SPONSOR_LETTER_WEEKS`
+ * reserves it so that no RUNG's turn falls there and every competitive letter has had at least two
+ * weeks in his hand. A renewal is not a rung's turn - it is the relationship he is already in, on
+ * terms he has been reading all season - so the week it needs is the week it is answered on. Its
+ * deadline is the window's own close, like every other letter here, which on this week is today.
+ *
+ * ⚠ NO DICE. `shopWritesAt` is not consulted and no sub-stream is touched: a brand that has kitted
+ * her out for a season and been paid back in tournaments does not roll to decide whether it has
+ * noticed her. It is a relationship, not a competitive selection. That also means this function adds
+ * ZERO draws to any stream, main or scoped.
+ *
+ * ⚠ AND IT IS NOT A FLOOR UNDER THE DICE, which is the one thing it must not become (owner, 10.08:
+ * a season opening with no kit deal stays as it is - `docs/research/junior-economics.md` says a
+ * sponsorless junior season is the norm). Nothing here manufactures a first deal: a renewal exists
+ * only where a deal already existed, was signed by the parent, and was honoured on both sides.
+ * `offerChance` is untouched, and a career that has never been written to is written to exactly as
+ * often as before.
+ *
+ * ⚠ ON THE SAME PAPER, DELIBERATELY. The terms are copied from the contract that is ending rather
+ * than re-derived through `kitTermsFor`, because that is what a renewal IS - the brand extending what
+ * it already gave her - and because re-deriving would silently re-price a relationship against
+ * today's standing and today's ECONOMY. It is `kitTermsFor`'s own snapshot rule («terms are a
+ * snapshot, not a formula») applied to the second year of the same deal. A signed deal's terms never
+ * carry `ended` / `endedEventsPlayed`: those are written onto the goodbye NOTICE and never onto a
+ * contract, so there is nothing to strip.
+ *
+ * Returns the letter, or null when nobody is renewing. Idempotent on its id, like every other letter
+ * this file raises.
+ */
+export function raiseKitRenewal(offers: Offer[], week: number, ended: Offer): Offer | null {
+  if (!isSponsorWindowCloseWeek(week)) return null
+  // ONE BRAND AT A TIME, the same rule `raiseKitOffers` keeps and read from the same predicate: if he
+  // has already signed somebody for next season, the incumbent has been answered by that signature.
+  if (seasonSpokenFor(offers, week)) return null
+  // ...AND A BRAND THAT WAS LET DOWN DOES NOT ASK FOR MORE OF THE SAME. Read off the goodbye letter
+  // the review already posted, exactly as the feed row reads it - one fact, one place it is written
+  // down. A deal ended for `events` or `standing` is a relationship that failed; only a term served
+  // in full earns the offer of another one.
+  if (letDownThisWindow(offers, week)) return null
+  const id = `kit-renew-${ended.id}`
+  const already = offers.find((o) => o.id === id)
+  if (already) return already
+  const offer: Offer = {
+    id,
+    kind: 'kit',
+    week,
+    deadlineWeek: sponsorWindowClosesAt(week),
+    terms: { ...(ended.terms as KitOfferTerms), renewal: true },
+    state: 'open',
+  }
+  offers.push(offer)
+  return offer
+}
+
+/**
  * ⚠ THE WINDOW IS THE FEATURE, NOT A COURTESY (spec §2). An offer left past its deadline is GONE,
  * and it is gone whether or not the player ever opened it - which is the whole of what makes waiting
  * a real gamble rather than a free option.

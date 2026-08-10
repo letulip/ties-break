@@ -20,9 +20,9 @@ import {
 } from '../src/engine/world'
 import { ECONOMY, GEAR_CATEGORIES, gearHitsUpTo } from '../src/engine/economy'
 import { kitTermsFor, standingClears } from '../src/engine/offers'
-import { sponsorStandingOf } from '../src/engine/world/sponsors'
+import { sponsorNeedMet, sponsorStandingOf } from '../src/engine/world/sponsors'
 import { rngFromSeed } from '../src/engine/rng'
-import { COACH_TIERS, coachWeeklyBandCents } from '../src/engine/coach'
+import { COACH_TIERS, coachWeeklyBandCents, facilityRateCents, weeklyBillSplit } from '../src/engine/coach'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground } from '../src/shared/protocol'
 
 // Fixed calibration batch. 16 seeds so the mean is stable against the working-class sponsor's
@@ -165,8 +165,23 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     const [lo, hi] = BANDS.working
     expect(mean(burns)).toBeGreaterThanOrEqual(lo)
     expect(mean(burns)).toBeLessThanOrEqual(hi)
-    // The cameo really is being excluded (the branch is exercised, not a no-op on this batch).
-    expect(mean(batchBurns('working'))).toBeLessThan(mean(burns))
+    // ⚠ RE-AIMED 10.08 (fix/sponsor-need), NOT WEAKENED – SAME TWO QUANTITIES, AND THE RELATION
+    //   BETWEEN THEM IS NOW THE STRONGER CLAIM. This read `toBeLessThan`, on the note "the branch is
+    //   exercised, not a no-op on this batch", and that was true only because the cameo paid EVERY
+    //   working family EVERY week whatever its balance. `ECONOMY.sponsor.eligible` is gone: the gate
+    //   is need now (`sponsorNeedMet`), and this calibration career is the textbook family that has
+    //   none of it. She enters nothing all year, so she pays fixed costs only, so her balance never
+    //   drops within `runwayWeeks` weeks of her court – she opens on 104 weeks of it and rises.
+    //
+    //   So the exclusion is a no-op HERE, by design, and equality is what says so. And because cameo
+    //   income can never be negative, `mean(inclusive) === mean(exclusive)` over the batch is not a
+    //   weaker statement than the old inequality – it proves EVERY seed banked EXACTLY ZERO, where
+    //   the old line only proved that at least one banked something.
+    //
+    //   This block is titled "unsponsored kid" and the case above it asserts that against the ANNUAL
+    //   GRANT. This is the same claim against the CAMEO – the mechanism that made the title a
+    //   half-truth for the whole of this file's life.
+    expect(mean(batchBurns('working'))).toBe(mean(burns))
   })
 
   it('middle (middle coach) lands in the -$8.5k..-$6k band (mean, and every seed inside slack)', () => {
@@ -783,5 +798,174 @@ describe('the coaching bill is priced in the family\'s own market (the wealth co
     expect(r.length).toBe(m.length)
     expect(w.join(',')).toBe(m.join(','))
     expect(r.join(',')).toBe(m.join(','))
+  })
+})
+
+// =================================================================================================
+// ⚠ THE CAMEO GATES ON NEED, NOT ON BACKGROUND (10.08)
+// =================================================================================================
+//
+// `ECONOMY.sponsor.eligible` is gone. The intent was need from the start – docs/rounds/round-7.md,
+// 24.07: «спонсор нужде-ориентирован (платит только working)» – and the profile row was a PROXY for
+// it, taken because at the time the two coincided. docs/specs/round15-triage.md measured how far
+// they had come apart: a median $12,866 over four seasons, 22.6% of a working family's parent
+// income, fired for 50/50 careers, against $0 and 0/50 for `middle` – with no cause, no relationship
+// and no player agency. The owner, 10.08: «порог по деньгам на счету, а не по строчке в анкете».
+//
+// The gate is now `sponsorNeedMet`, and it is two rules: fewer than `runwayWeeks` weeks of her COURT
+// left in the account, and no coach dearer than `maxCoachTier`. The argument for the shape is on the
+// function; the measurement is docs/specs/need-not-background-2026-08.md.
+describe('⚠ the local-sponsor cameo gates on NEED, not on the row in the profile', () => {
+  const AGE = ageAtWeek(0)
+
+  /** The court a family at this rung and in this corridor really books, per week – the engine's own
+   *  number (`weeklyBillSplit().facilityCents`), so these fixtures are denominated in the same unit
+   *  the gate is rather than in a figure invented here. */
+  function courtCentsFor(background: FamilyBackground, tier: CoachTier): number {
+    const world = createWorld(`court-${background}-${tier}`, { ...DEFAULT_PROFILE, background, coachTier: tier })
+    return weeklyBillSplit({
+      rateCents: facilityRateCents(AGE, tier),
+      ageYears: AGE,
+      tier,
+      plan: world.plan,
+      background,
+    }).facilityCents
+  }
+
+  /** Every cameo cent banked over `weeks`, folded week by week.
+   *
+   *  ⚠ FOLDS THE WEEK JUST RESOLVED RATHER THAN READING THE TAIL. `world.events` is COUNT-pruned
+   *  (EVENTS_CAP, oldest-first), so a suffix read at the end would silently lose the early hits –
+   *  the same ledger-cap family as the wallet bug. Rows for `world.week - 1` are this tick's own and
+   *  cannot have been pruned yet, so this is exact. */
+  function cameoCentsOver(world: WorldState, weeks: number): number {
+    const rng = rngFromSeed(world.seed)
+    let total = 0
+    for (let i = 0; i < weeks; i++) {
+      tickWeek(world, rng)
+      for (const e of world.events) {
+        if (e.week !== world.week - 1) continue
+        if (e.type === 'income' && e.category === 'sponsor') total += e.amountCents ?? 0
+      }
+    }
+    return total
+  }
+
+  it('⚠ NEED, NOT WEALTH: a middle family near the floor qualifies, a working one on savings does not', () => {
+    // The whole point of the wave, as two calls. The `middle` family has spent itself down to a month
+    // of court hire and IS in need; the `working` family is two years of court ahead and is not,
+    // whatever the row in its profile says. Before 10.08 this pair answered exactly the other way.
+    const middleCourt = courtCentsFor('middle', 'middle')
+    const workingCourt = courtCentsFor('working', 'self')
+    expect(sponsorNeedMet({ fundsCents: 4 * middleCourt, courtCents: middleCourt, tier: 'middle' })).toBe(true)
+    expect(sponsorNeedMet({ fundsCents: 104 * workingCourt, courtCents: workingCourt, tier: 'self' })).toBe(false)
+  })
+
+  it('the gate is exactly "fewer than runwayWeeks weeks of court", to the cent', () => {
+    const court = 100_00
+    const n = ECONOMY.sponsor.runwayWeeks
+    expect(sponsorNeedMet({ fundsCents: n * court, courtCents: court, tier: 'self' })).toBe(false)
+    expect(sponsorNeedMet({ fundsCents: n * court - 1, courtCents: court, tier: 'self' })).toBe(true)
+    // ...and an empty account is need however it got that way.
+    expect(sponsorNeedMet({ fundsCents: 0, courtCents: court, tier: 'self' })).toBe(true)
+    expect(sponsorNeedMet({ fundsCents: -50_000_00, courtCents: court, tier: 'self' })).toBe(true)
+    // ⚠ AND A ZERO COURT IS NOT INFINITE NEED. The predicate multiplies rather than divides, so a
+    // court that somehow came back as zero can never produce the NaN that would pay everybody.
+    expect(sponsorNeedMet({ fundsCents: -1, courtCents: 0, tier: 'self' })).toBe(false)
+    // ⚠ AND THE CONSTANT ITSELF STAYS INSIDE THE BAND IT WAS MEASURED FROM, which is the whole of
+    //   what "tuning is measured, not guessed" can be checked as. Both walls are numbers rather than
+    //   opinions and both are in docs/specs/need-not-background-2026-08.md:
+    //     * under ~58 the gate pays the `middle` background MORE of the cameo than `working` and the
+    //       difficulty setting inverts (measured crossover 55-56);
+    //     * over ~68 the two SELF-COACHED cells start collecting it, and they finish four seasons at
+    //       +$25,626 and +$39,001 without going under water once in 50 careers.
+    //   A future retune is welcome and has to move the spec's measurement with it - which is exactly
+    //   the conversation this assertion exists to force.
+    expect(n, 'runwayWeeks left its measured band – re-run tools/runway-probe.ts before moving it').toBeGreaterThanOrEqual(58)
+    expect(n, 'runwayWeeks left its measured band – re-run tools/runway-probe.ts before moving it').toBeLessThanOrEqual(68)
+  })
+
+  it('⚠ BACKGROUND-BLIND BY CONSTRUCTION: the same RUNWAY answers the same way in every corridor', () => {
+    // A flat dollar threshold is not the same test in two families – the wealth corridor prices the
+    // same court differently, which is the whole reason `ECONOMY.sponsorship` rejected one. A runway
+    // is the same test everywhere: the dollars differ, the verdict does not.
+    const backgrounds: FamilyBackground[] = ['working', 'middle', 'wealthy']
+    const courts = backgrounds.map((bg) => courtCentsFor(bg, 'self'))
+    expect(new Set(courts).size, 'the corridor really does price the same court differently').toBe(3)
+    const n = ECONOMY.sponsor.runwayWeeks
+    for (const court of courts) {
+      expect(sponsorNeedMet({ fundsCents: (n - 1) * court, courtCents: court, tier: 'self' })).toBe(true)
+      expect(sponsorNeedMet({ fundsCents: (n + 1) * court, courtCents: court, tier: 'self' })).toBe(false)
+    }
+  })
+
+  it('⚠ above the cut nobody chips in, however empty the account', () => {
+    // The owner's rule, 10.08: «если тренер стоит дороже, то нечего и помогать». A shop backs the
+    // girl whose family is doing this on a shoestring, not the one that has hired the best coach in
+    // the city – and `high` / `elite` are exactly where a need gate would start paying for the coach.
+    const cut = COACH_TIERS.indexOf(ECONOMY.sponsor.maxCoachTier)
+    expect(cut).toBeGreaterThanOrEqual(0)
+    for (const tier of COACH_TIERS) {
+      expect(
+        sponsorNeedMet({ fundsCents: 0, courtCents: 100_00, tier }),
+        `${tier}: a family with nothing in the bank got the wrong answer`,
+      ).toBe(COACH_TIERS.indexOf(tier) <= cut)
+    }
+    // ...and both of the owner's own careers stay inside it.
+    expect(COACH_TIERS.slice(0, cut + 1)).toContain('self')
+    expect(COACH_TIERS.slice(0, cut + 1)).toContain('middle')
+  })
+
+  it('⚠ the cut is on the RUNG and not on the weekly dollars – or background walks back in', () => {
+    // The sharp one, and the reason `maxCoachTier` is a tier rather than a number of cents. The
+    // corridor is THE MARKET SHE TRAINS IN, not a choice she made, so the price bands of two adjacent
+    // rungs OVERLAP across backgrounds: a wealthy family's `middle` week can cost more than a working
+    // family's `high` week. No dollar threshold can separate those two, so a dollar cut would refuse
+    // the wealthy family's ordinary coach and allow the working family's expensive one – which is
+    // background sneaking back into the one mechanic this wave exists to take it out of.
+    const plan = createWorld('cut-on-the-rung', DEFAULT_PROFILE).plan
+    const [, wealthyMiddleHi] = coachWeeklyBandCents('middle', AGE, plan, 'wealthy')
+    const [workingHighLo] = coachWeeklyBandCents('high', AGE, plan, 'working')
+    expect(wealthyMiddleHi, 'the two rungs no longer overlap; re-read this test before touching it')
+      .toBeGreaterThan(workingHighLo)
+    // ...and the RUNG is what the gate reads, so the dearer week is the eligible one.
+    expect(sponsorNeedMet({ fundsCents: 0, courtCents: courtCentsFor('wealthy', 'middle'), tier: 'middle' })).toBe(true)
+    expect(sponsorNeedMet({ fundsCents: 0, courtCents: courtCentsFor('working', 'high'), tier: 'high' })).toBe(false)
+  })
+
+  it('⚠ END TO END: the same career banks the cameo when it is short and nothing when it is not', () => {
+    // One career, one seed, two balances – so the ONLY thing that can differ is the gate. A `middle`
+    // background, which under `eligible: ['working']` could never bank a cent of this however broke
+    // it was.
+    const short = createWorld('need-e2e', { ...DEFAULT_PROFILE, background: 'middle', coachTier: 'middle' })
+    short.fundsCents = 1_000_00
+    const flush = createWorld('need-e2e', { ...DEFAULT_PROFILE, background: 'middle', coachTier: 'middle' })
+    flush.fundsCents = 5_000_000_00
+    expect(cameoCentsOver(short, 104), 'a middle family scraping the floor got nothing').toBeGreaterThan(0)
+    expect(cameoCentsOver(flush, 104), 'a family sitting on millions was handed charity').toBe(0)
+  })
+
+  it('⚠ RNG: the gate is POST-DRAW – a broke career and a rich one tap identical MAIN sequences', () => {
+    // Invariant 2, checked at the one place this wave could have broken it. The roll and the gift are
+    // drawn for EVERY family before anything is asked about her, and only the PAYOUT is discarded –
+    // so a career's own balance, its coach and its background may never re-base the world's dice.
+    const record = (funds: number, background: FamilyBackground, tier: CoachTier): number[] => {
+      const world = createWorld('need-rng', { ...DEFAULT_PROFILE, background, coachTier: tier })
+      world.fundsCents = funds
+      const base = rngFromSeed(world.seed)
+      const draws: number[] = []
+      const rng = () => {
+        const v = base()
+        draws.push(v)
+        return v
+      }
+      for (let i = 0; i < 52; i++) tickWeek(world, rng)
+      return draws
+    }
+    const broke = record(2_000_00, 'middle', 'middle')
+    expect(record(50_000_000_00, 'middle', 'middle'), 'the balance re-rolled the world').toEqual(broke)
+    // ...and neither may the row the gate used to read, nor the rung the cut reads now.
+    expect(record(2_000_00, 'working', 'middle'), 'background re-rolled the world').toEqual(broke)
+    expect(record(2_000_00, 'middle', 'elite').length, 'the coach rung moved the draw COUNT').toBe(broke.length)
   })
 })
