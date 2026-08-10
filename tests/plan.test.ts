@@ -35,7 +35,7 @@ import {
   type KnockWorldView,
 } from '../src/engine/knock'
 import { coachHoursForPlan } from '../src/engine/coach'
-import { createWorld, restRecoveryBonus, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
+import { createWorld, restRecoveryBonus, tickWeek, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
 import {
   pastSchool,
   summerBlockWeek,
@@ -46,7 +46,7 @@ import {
 import { isSummerWeek } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
 import { migrateSave } from '../src/engine/migrations'
-import { rngFromSeed } from '../src/engine/rng'
+import { resumeMain, rngFromSeed } from '../src/engine/rng'
 import { WEEK_PLAN_PRESETS, SESSION_KINDS, type SessionKind, type WeekPlan } from '../src/shared/protocol'
 
 // =================================================================================================
@@ -242,6 +242,33 @@ describe('§2 a career saved under the old single-number plan reads back as itse
     expect(restRecoveryBonus(after.rest)).toBe(restRecoveryBonus(before.rest))
     // ...and the knock's part table is the SHIPPED array itself, not a renormalised copy of it.
     expect(knockPartWeights(after.week!)).toBe(KNOCK_PARTS)
+  })
+
+  it('⚠ §12 CRITERION 8, END TO END: a v46 fixture ticked one week banks identical skills', () => {
+    // ⚠ THE UNIT PROOFS ABOVE ARE NOT THIS ONE. `growWeek` byte-identity says the aim multiply is 1;
+    // this says the WHOLE WEEK is – the same tick, the same order, the same condition accrual, the
+    // same knock roll – with the only difference being that one world carries the field v47 added and
+    // the other is the plan exactly as v46 held it.
+    const withWeek = migrateSave(loadFixture(46))
+    const without = migrateSave(loadFixture(46))
+    without.plan = { train: without.plan.train, rest: without.plan.rest }
+    expect(withWeek.plan.week).toBeDefined()
+    expect(without.plan.week).toBeUndefined()
+    // ⚠ AND THE SCOPE IS CHECKED RATHER THAN ASSUMED. The one place v47 legitimately differs from v46
+    // is a school-free week, so this test states out loud that the week it is about is not one – if a
+    // future fixture lands inside the holidays, this line fails instead of the claim quietly weakening.
+    const ahead = { ...withWeek, week: withWeek.week + 1 } as WorldState
+    expect(summerBlockWeek(ahead), 'the fixture ticks into a school-free week').toBe(false)
+
+    tickWeek(withWeek, resumeMain(withWeek.rngMain))
+    tickWeek(without, resumeMain(without.rngMain))
+    expect(withWeek.skills).toEqual(without.skills)
+    for (const k of SKILL_KEYS) expect(Object.is(withWeek.skills[k], without.skills[k]), k).toBe(true)
+    // ...and the rest of the week with them: the bill, the body and the dice all landed the same.
+    expect(withWeek.fundsCents).toBe(without.fundsCents)
+    expect(withWeek.condition).toBe(without.condition)
+    expect(withWeek.rngMain).toEqual(without.rngMain)
+    expect(withWeek.knock).toEqual(without.knock)
   })
 
   it('every fixture in the corpus migrates to a plan whose week is the one its scalar drew', () => {

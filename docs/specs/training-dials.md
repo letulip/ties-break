@@ -1,9 +1,9 @@
 ---
 type: spec
-status: draft
+status: partly-built (engine slice shipped; §7 §8 §9 open)
 area: training/plan
 canonical: false
-last-reviewed: 2026-08-09
+last-reviewed: 2026-08-10
 ---
 
 # The week is the plan – making the calendar real, and giving the coach a job
@@ -39,6 +39,75 @@ Home's "Coach note" card makes the coach's claim to a family paying nobody. The 
 самотренера надо убрать пока картинку оттуда и подпись, а мысль пусть останется.» The thought stays,
 the portrait and the signature go. That is a `HomeScreen.vue` change and belongs to whichever wave
 touches it, not to this design.
+
+---
+
+## 🔨 What is BUILT, and the three places the code contradicted this page
+
+**Slice 1 of the wave – the ENGINE – shipped on `feat/dials-engine`.** §2, §3, §4, §5, §6, §10 and §11
+are built and under test. **§7 (the coach's proposal), §8 (on-court coaching) and §9 (the screen) are
+NOT built** – the seams are left open for them and named at the bottom of this block.
+
+### ⚠ Three corrections, found by building it
+
+1. **`SAVE_SCHEMA_VERSION` was 46, not 45, so the move is 46 → 47.** §10 was written against a branch
+   point that the season-by-table wave had already moved past. Everything §10 says is otherwise
+   unchanged; substitute 47 for 46 and 46 for 45 throughout it. The fixture is
+   `tests/fixtures/saves/v47.json`.
+2. **`WeekPlan.week` ships OPTIONAL, not required.** §10 specifies `week: SessionKind[][]`. Required
+   would have forced a seven-day matrix onto **48 `{ train, rest }` literals across 17 files** –
+   including `tests/condition.test.ts`'s RNG-invariance variants, whose entire job is to poke a
+   *hostile* plan (`{ train: 100, rest: 0 }`) at the tick. That is the one guard this slice most has to
+   leave alone. Absence is a shape with a meaning rather than a hole: `planWeek()` reads it back as the
+   week the calendar has been drawing all along, which is byte-for-byte what the migration writes.
+3. **The plan outlives the week it was built in, and §3 does not say what happens then.** Three doubled
+   days in July are still three doubled days in September, when school takes the second session back.
+   Dropping the overflow would silently take hours off the bill; refusing the plan would make
+   `setPlan`'s verdict depend on which week he happened to be looking at. `resolveWeek` **moves** it:
+   the session count, the kinds, the bill, the rate and the knock chance are untouched, and the only
+   thing school takes away is the DOUBLING – which is what school takes away in the fiction.
+   `planShapeError` therefore validates the SHAPE (7 days, ≤2 a day, 4–6 sessions) and never the
+   current week's capacity.
+
+### The answers the bench and the build settled
+
+* **§12 item 1 – the headline.** Measured on `school-ends-2026-08.md` §10, that page's own harness.
+  Not doubling costs **0.14 junior years** on the careful-player arm (0.39 on the grinder) and moves
+  the median ranking five places in the direction of noise. **The fallback was NOT taken**: the
+  magnitude is right, and the change leaves both arms *fresher* because the −3 is no longer charged for
+  a week she did not double.
+* **§12 item 2 – the partly doubled week's condition charge.** `Math.round(cost × doublingShare)`. It
+  stays integer («no fractions») and reproduces 0 and 3 at the ends exactly; a six-session week
+  doubling one of its three possible days pays 1.
+* **§12 item 3 – zero or a floor for an untargeted skill.** Ships at **zero**, which is what §5's own
+  worked table states, and is wired as one constant (`SESSION_SPILL`, engine/development.ts) so the
+  other reading is a one-line sweep. A kind that already aims at everything has nothing to spill, so
+  `general` reads exactly 1.0 at any value and the migration's byte-identity survives the knob.
+* **§12 criterion 7 – RNG.** The frozen capture is **unchanged at 41550 / `e6b0c709`**, and `B1d` in
+  `tests/condition.test.ts` repaints the whole week before every one of 52 ticks – all five kinds, all
+  three volumes, a fully doubled week – against an identical MAIN sequence.
+* **§12 criterion 8 – schema.** Proved twice: `aimWeights` is `Object.is`-exactly 1 on every skill at
+  every session count for a migrated week, and a v46 fixture ticked one whole week under v47 code banks
+  byte-identical `skills`, funds, condition, knock and `rngMain`. A one-part-in-10¹⁰ drift in the aim
+  vector turns three tests red.
+
+### ⚠ The one thing that is deliberately NOT byte-identical, and it is ruled
+
+**A migrated career's school-free weeks come back at 1.0 instead of the automatic 1.4** until the
+player ticks a second session onto a day. §10's own ⚠ predicted this and the owner ruled the direction
+in advance. §10's byte-identity claim is therefore scoped, and the scope is *tested* rather than
+asserted: on every week `summerBlockWeek` refuses – every school week, plus injury, tournament, family
+week and rested knock – the two versions agree at 1, whatever the player ticked.
+
+### The seams left open
+
+| for | what exists | where |
+|---|---|---|
+| **§9, the screen** | `planWeek` / `planSessions` / `sessionCounts` / `resolveWeek` / `planShapeError` / `planFromWeek`, and `Snapshot.planDayCapacity` – the day-head capacity for the week the main button plays, carried as data because `summerBlockWeek` is not a predicate a screen could re-derive | `src/engine/plan.ts`, `src/shared/protocol.ts` |
+| **§9, the command** | `setPlan` takes a `plan.week`, re-validates the shape engine-side and DERIVES `train`/`rest` from it – the caller's own pair is ignored, so there is exactly one writer | `src/worker/sim.worker.ts` |
+| **§7, the coach's intervention** | nothing built, and nothing in the way: a proposal is a `SessionKind[][]` written through the same `setPlan` path, and `planShapeError` is the only rule it has to satisfy | – |
+| **§7 + §9, the Calendar** | ⚠ **NOT DONE, AND IT IS A REAL GAP.** `calendarWeekFor` still lays its days out with the preset expander (`sessionsForPlan` + `sessionDays`) rather than reading `plan.week`, so the moment a player ticks a custom week the Calendar will draw the wrong DAYS. It is identical for every legacy and migrated plan, which is why it is not a defect today – it becomes one when §9 ships. The switch is `resolveWeek(planWeek(plan), snap.planDayCapacity)`, plus a decision about what `gymIndex` means once Fitness is a real kind | `src/composables/weekDays.ts` |
+
 
 ---
 
