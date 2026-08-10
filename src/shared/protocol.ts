@@ -276,7 +276,23 @@ export type StopReason =
   /** R12-15: an entered tournament came round while she was still inside her layoff, so the week
    *  resolved as a WALKOVER – 0 points, and the entry fee forfeited (the list had closed with her on
    *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
-   *  'medical', and it used to pass in complete silence. */
+   *  'medical', and it used to pass in complete silence.
+   *
+   *  ⚠ THE NAME IS OURS AND IT IS THE WRONG WORD, which is worth knowing now that the game also has a
+   *  RETIREMENT to tell it apart from. In all four rulebooks a WALKOVER is something a player
+   *  RECEIVES – her opponent failed to appear – and is never something she does; what this member
+   *  describes (entered, medically unable, never took the court) the rules call a **withdrawal**, and
+   *  it is priced differently from the retirement precisely so that a player has a reason to start
+   *  the match: an ITF first-round withdrawal "will receive no prize money, and the Tournament shall
+   *  not count on their record" (2026 WTT Regs, Women's §XII.C.5.b.i.2.d) while a retirement in the
+   *  same round is paid in full. Our engine gets the BEHAVIOUR right on both counts – this member
+   *  pays nothing and a retirement pays the round reached – so this is a naming bug and not a
+   *  behaviour bug.
+   *
+   *  DELIBERATELY NOT RENAMED, on the research's own recommendation (docs/research/
+   *  retirement-and-withdrawal.md §10.1 Q4): the identifier is persisted and player-visible copy
+   *  quotes it in three surfaces, so a rename is a schema bump plus a UI sweep to fix a noun. This
+   *  comment is the cheap half, and it exists to stop the next reader repeating the confusion. */
   | 'walkover'
   /** W4: she came off court with a KNOCK and the parent has not answered yet. Unlike every reason
    *  above it does not merely halt the advance, it BLOCKS it – `advanceWeeks` refuses to tick at all

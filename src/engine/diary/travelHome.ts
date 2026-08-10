@@ -254,6 +254,19 @@ export interface TravelHomeFacts {
   firstAbroad: boolean
   /** she is carrying an injury the week she gets home */
   injured: boolean
+  /** SHE DID NOT FINISH. She stopped in one of her matches at this event and came home hurt.
+   *
+   *  ⚠ STRICTLY STRONGER THAN `injured`, AND THE PAIR IS THE WHOLE POINT OF THE FIELD. The owner,
+   *  10.08: «не забудь про соответствующие записочки по итогам недели если была травма с учетом
+   *  момента, когда она была». `injured` says her week ends in a brace; this says WHEN it started,
+   *  and the two produce genuinely different weeks – a girl who got home and then got the news, and
+   *  a girl who walked off a court with a set and a half on the board and an umpire watching.
+   *  `retired` implies `injured` by construction (`retirementInjury` opens the layoff at the same
+   *  commit point that records the retirement); the reverse does not hold and is the common case.
+   *
+   *  Read off the match rows (`WorldMatch.retiredId`), which are persisted – so this survives a
+   *  reload, unlike the derived `walkoverWeek` marker on the world. */
+  retired: boolean
   /** how long that injury keeps her out in total, in weeks – 0 when she is healthy. A niggle and a
    *  season-ending one are not the same note, and the pool splits on it. */
   injuryWeeks: number
@@ -438,13 +451,27 @@ export function travelHomeMoodFor(args: {
   condition: number
   seed: string
   week: number
+  /** SHE DID NOT FINISH – see `TravelHomeFacts.retired`. Optional and defaulted so every existing
+   *  caller is byte-identical; only a retirement week passes it. */
+  retired?: boolean
 }): TravelHomeMood {
   const roll = rngFromSeed(`${args.seed}:travelmood:${args.week}`)()
   // W7: was `roll < 0.5 ? 'happy' : 'sleepy'`, a flat coin that drew a title week as an ordinary one
   // half the time. Note the direction went with it: a LOW roll is now "she slept" on both branches,
   // so one number means one thing whichever way the week went, and the two curves can be compared
   // at a glance instead of one of them reading backwards.
-  if (args.reachedFinal) return roll < travelFinalSleepChance(args.condition) ? 'sleepy' : 'happy'
+  //
+  // ⚠ A RETIREMENT NEVER TAKES THE FINAL'S BRANCH, and this is the only line of the retirement slice
+  // that touches a picture. `reachedFinal` is read off `finishIdx`, and the owner's ruling makes a
+  // girl who stopped in the final a RUNNER-UP – correctly, that is the round she reached and she is
+  // paid for it. But the happy painting is of a girl on a podium, and she was not on one: she was
+  // being helped off a court. Everything else about her week is a runner-up's; her face is not.
+  //
+  // ⚠ POST-DRAW, ZERO NEW DRAWS. `roll` is taken above, unconditionally, off the same
+  // `seed:travelmood:<week>` sub-stream; this only decides which curve the already-drawn number is
+  // compared against. The invariance pin in tests/travel-home.test.ts re-derives 41550 / e6b0c709
+  // from a live career and cannot see it.
+  if (args.reachedFinal && !args.retired) return roll < travelFinalSleepChance(args.condition) ? 'sleepy' : 'happy'
   return roll < travelSleepChance(args.condition) ? 'sleepy' : 'sad'
 }
 
@@ -480,10 +507,11 @@ export function travelHomeFactsFor(args: {
   const conditionBand = conditionBandOf(args.condition)
   const reachedFinal = wonTitle || lostFinal
   const abroad = TIERS[tier].track === 'itf'
+  const retired = matches.some((e) => e.match!.retiredId === args.kidId)
   return {
     week: args.week,
     scene,
-    mood: travelHomeMoodFor({ reachedFinal, condition: args.condition, seed: args.seed, week: args.week }),
+    mood: travelHomeMoodFor({ reachedFinal, condition: args.condition, seed: args.seed, week: args.week, retired }),
     tier,
     abroad,
     finishIdx,
@@ -502,6 +530,10 @@ export function travelHomeFactsFor(args: {
     // "was THIS the trip". Pinned on a live career in tests/travel-home.test.ts.
     firstAbroad: abroad && firstAbroadIn(args.events, args.milestones, args.week),
     injured: args.injury !== null,
+    // Off the same `matches` list every other fact here is read from – no new argument, no new
+    // state. `retiredId` is written by the tournament and rides on the persisted match row, so a
+    // reload re-reads the same week rather than re-deriving it.
+    retired,
     injuryWeeks: args.injury?.totalWeeks ?? 0,
     conditionBand,
   }

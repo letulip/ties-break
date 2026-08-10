@@ -71,6 +71,14 @@ export interface TravelClaims {
   firstRound?: true
   /** asserts she is carrying an injury */
   injured?: true
+  /** asserts SHE STOPPED MID-MATCH – unselectable unless the trip carries a retirement of hers.
+   *
+   *  ⚠ STRICTLY STRONGER THAN `injured`, and the pin checks it separately for the same reason it
+   *  checks `justHurt` separately from `injured` in the photo pool: "she came home hurt" and "she
+   *  walked off a court" are two different weeks, and only the second one licenses a sentence about
+   *  an umpire, a crowd or an unfinished match. A line claiming this on an ordinary layoff week is a
+   *  failing test, not a matter of taste. */
+  retired?: true
   /** asserts a worn-out girl – unselectable above the `drained` rung */
   tired?: true
   /** asserts the trip crossed a BORDER – the ITF ladder. Says nothing about the vehicle.
@@ -441,10 +449,32 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   // --- SHE CAME HOME HURT ------------------------------------------------------------------------
   // ⚠ THE INJURY TAKES THE NOTE, whatever else the week held. A line about chips on a week she has
   // just been told she is out for six is tone-deaf, so the licences above all carry `!t.injured` and
-  // these are the only ones left standing. On the engine's own timing the news lands the week she
-  // gets back (`rollInjury` runs at the top of a week, and an injury the week BEFORE would have
-  // walked the tournament over and left no journey at all), so none of these claims she was hurt at
-  // the tournament – they are about a girl who got home and then got the news.
+  // these are the only ones left standing.
+  //
+  // ⚠⚠ RESTATED BY THE RETIREMENT SLICE (10.08), AND THE PARAGRAPH THAT USED TO BE HERE IS NOW FALSE.
+  // It read: "On the engine's own timing the news lands the week she gets back (`rollInjury` runs at
+  // the top of a week, and an injury the week BEFORE would have walked the tournament over and left
+  // no journey at all), so none of these claims she was hurt at the tournament – they are about a
+  // girl who got home and then got the news."
+  //
+  // That reasoning was exactly right and it is what the slice removed. There is now a SECOND way to
+  // come home hurt – `retirementInjury`, opened at `finalizeTournament` on the week she played – and
+  // on it she WAS hurt at the tournament, in front of an umpire, with the match unfinished. So the
+  // band splits, on the owner's own instruction («записочки ... с учетом момента, когда она была»):
+  //
+  //   `t.injured && !t.retired`  – the old timing, and the five lines it was written for. Four of
+  //       them are kept verbatim: they are about a house with an ice pack in it and they do not care
+  //       how the ice pack got there. The entry-fee line is the one that had to be fenced – it is a
+  //       parent worrying about a receipt for a tournament she never really played, and on a
+  //       retirement the receipt is settled (she is paid for the round she reached), so it would be
+  //       worrying about a question with an answer.
+  //   `t.retired`                – six new lines, and every one of them is about the WALK OFF: the
+  //       thing that happened in public, in the middle of something, that a week of layoff notes has
+  //       no vocabulary for.
+  //
+  // One line survives the split unfenced and it is the best evidence the split is real: "She is on
+  // the sofa with the ice on, working out who she would have played next" is true of both weeks, and
+  // is a better sentence on a retirement than it ever was on the other one.
   {
     text: 'The bag has not been unpacked. She is not allowed to lift it anyway.',
     claims: { injured: true },
@@ -478,9 +508,48 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
     license: (t) => t.injured,
   },
   {
+    // ⚠ FENCED OFF THE RETIREMENT (10.08). She played, so the fee bought her a tournament and the
+    // round she reached is paid – there is nothing to ask. See the restated note above.
     text: 'She is worried about the wrong thing. She asked if the entry fee comes back.',
     claims: { injured: true },
-    license: (t) => t.injured,
+    license: (t) => t.injured && !t.retired,
+  },
+  // --- SHE DID NOT FINISH ------------------------------------------------------------------------
+  // The week she walked off. Register unchanged – the parent observing, plain, present tense,
+  // nothing an adult in that house could not have seen – but the SUBJECT is new: the unfinished
+  // thing, the people who watched it, and a girl who is embarrassed as well as hurt. Nothing here
+  // names a body part (`bodyGroupOf` is the week-note pool's job) and nothing quotes a number.
+  {
+    text: 'She shook the umpire\'s hand and did not look at anybody on the way out.',
+    claims: { injured: true, retired: true },
+    license: (t) => t.retired,
+  },
+  {
+    text: 'She keeps saying she could have finished it. She could not.',
+    claims: { injured: true, retired: true },
+    license: (t) => t.retired,
+  },
+  {
+    text: 'Somebody clapped her off. She has not mentioned that part.',
+    claims: { injured: true, retired: true },
+    license: (t) => t.retired,
+  },
+  {
+    text: 'Her racquet went in the bag mid-match. That is the bit she keeps coming back to.',
+    claims: { injured: true, retired: true },
+    license: (t) => t.retired,
+  },
+  {
+    // The short layoffs only, where "it went in a week" is roughly what happens – the same cap the
+    // "it is nothing" line above carries, and for the same reason.
+    text: 'Out of a match and into the car. She was fine by the services, or said so.',
+    claims: { injured: true, retired: true },
+    license: (t) => t.retired && t.injuryWeeks <= 3,
+  },
+  {
+    text: 'She asked whether stopping counts as losing. We said it counts as sensible.',
+    claims: { injured: true, retired: true },
+    license: (t) => t.retired && t.injuryWeeks >= 6,
   },
 ]
 
