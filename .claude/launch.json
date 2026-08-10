@@ -2,10 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "tb-dials",
+      "name": "tb-endings",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "--port", "5783", "--strictPort"],
-      "port": 5783
+      "runtimeArgs": ["vite", "--port", "5781", "--strictPort"],
+      "port": 5781
     }
   ]
 }
