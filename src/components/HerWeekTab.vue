@@ -227,10 +227,12 @@ function boxLabel(kind: SessionKind, day: number): string {
       </button>
     </div>
 
-    <!-- 2. THE DAY HEADS, and the per-day limit shown as dots that fill (owner: «Есть ограничение у
-         нас по количеству тренировок в день в обычные дни и без школы, это тоже надо показать»). One
-         dot on a school day, two on a day with no school. This is the ONLY place the limit is drawn,
-         and it is drawn before he bumps into it rather than arriving as a refusal. -->
+    <!-- 2. THE DAY HEADS, and the per-day limit shown as dots that fill. One dot on a school day,
+         two on a day with no school, drawn before he bumps into the limit rather than arriving as a
+         refusal. The owner asked for it by name and his words are in the script above this template:
+         THIS IS A TEMPLATE, and the app's rule (pinned in tests/round13-nav.test.ts) is that no
+         Cyrillic appears inside one, comments included. I put the quote here first and the guard
+         caught it, which is the guard working - the same note CoachMarketScreen.vue carries. -->
     <div class="hw-heads" role="group" aria-label="The week, day by day">
       <div v-for="d in days" :key="d" class="hw-head" role="img" :aria-label="dayHeadLabel(d)">
         <span class="hw-head-name" aria-hidden="true">{{ DAY_SHORT[d] }}</span>
