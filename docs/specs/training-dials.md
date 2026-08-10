@@ -1,12 +1,16 @@
 ---
 type: spec
-status: partly-built (engine slice shipped; §7 §8 §9 open)
+status: current
 area: training/plan
 canonical: false
 last-reviewed: 2026-08-10
 ---
 
 # The week is the plan – making the calendar real, and giving the coach a job
+
+**Status: the ENGINE slice (§2–§6, §10, §11) is BUILT and shipped; §7, §8 and §9 are designed and NOT
+built.** See the 🔨 block below for what landed, the three places the code contradicted this page, and
+the seams the remaining slices plug into.
 
 **Design proposal. Nothing here is built, and nothing in `src/` was touched to write it.** Third
 draft, 09.08, after the owner's corrections to the layout. Where a number cannot be established
