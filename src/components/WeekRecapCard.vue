@@ -38,7 +38,7 @@ import { useKidEmotion } from '../composables/kidEmotion'
 import { nextGoalFor } from '../composables/nextGoal'
 // The day layout, ONCE: screen H's calendar grid and this card's dot row are the same fact about the
 // same week, seen from either end of it. See the note above `dayDots`.
-import { sessionDays, sessionsForPlan } from '../composables/weekDays'
+import { planWeek } from '../engine/plan'
 import { vacationPackage } from '../engine/economy'
 import { weekArtUrl, weekSceneArtUrl } from '../art/weeks'
 import { weekLabel } from '../shared/dates'
@@ -147,12 +147,24 @@ const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 // computed `Math.round(plan.train / 100 * 7)`, which is what `sessionsForPlan` is - so nothing about
 // how many dots are lit has changed, only which ones, and now only one file can answer that.
 //
+// ⚠ AND AT v47 THAT ONE FILE STOPPED BEING THE PRESET EXPANDER. It read
+// `sessionDays(sessionsForPlan(plan.train))` - the arrangement a SCALAR draws - which was the same
+// answer for every plan that could exist until the player could tick his own days. The moment he can,
+// the scalar's arrangement and his are different weeks, and this card would have gone back to
+// disagreeing with the calendar about the same Sunday: the exact defect the paragraph above is
+// about, reintroduced from the other end. `planWeek` is the plan itself, and a save that predates
+// v47 still reads back through the expander inside it, so nothing about a legacy career moves.
+//
+// ⚠ AND IT IS THE PLAN AS TICKED, NOT `resolveWeek`'d. The capacity on the snapshot is next week's;
+// this card is a week that has already happened, and re-laying a past week under a future week's
+// school calendar would be worse than drawing the plan he set.
+//
 // The dots stay TRAIN/REST rather than learning the calendar's court-versus-gym distinction: this tile
 // is a two-number summary of a week that has already happened (see the pin in tests/radar.test.ts for
 // how tightly it is bounded), and the gym day is a detail the grid on screen H has room for.
 const dayDots = computed<('train' | 'rest')[]>(() => {
-  const on = new Set(sessionDays(sessionsForPlan(plan.value.train)))
-  return DAY_LETTERS.map((_, i) => (on.has(i) ? 'train' : 'rest'))
+  const week = planWeek(plan.value)
+  return DAY_LETTERS.map((_, i) => ((week[i]?.length ?? 0) > 0 ? 'train' : 'rest'))
 })
 const trainDayCount = computed(() => dayDots.value.filter((d) => d === 'train').length)
 

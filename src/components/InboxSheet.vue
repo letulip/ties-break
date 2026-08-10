@@ -286,10 +286,18 @@ async function doRefuse(id: string): Promise<void> {
     </div>
   </div>
 
+  <!-- ⚠ `Sign it` AND NOT `Sign`, AND THE EXTRA WORD IS THE WHOLE FIX (D13, docs/specs/e2e-coverage.md
+       §12 – the highest-priority item in that register). `OfferLetter` draws a `Sign` button and this
+       confirm drew a second one, both on screen at once, so the app's ONE irreversible press was a
+       strict-mode collision: `getByRole('button', { name: 'Sign' })` resolved to two elements, and
+       `ConfirmDialog` is also one of D1's roleless overlays, so it could not be scoped by dialog
+       either. The register's own words: "a confirm-label that extends rather than repeats the verb
+       costs nothing", which is what the other three callers already do (`Delete`, `Withdraw`, `Push
+       through`). The visible word is still the first word of the name, so WCAG 2.5.3 holds. -->
   <ConfirmDialog
     v-if="pendingSign"
     :message="confirmMessage"
-    confirm-label="Sign"
+    confirm-label="Sign it"
     @confirm="doSign"
     @cancel="pendingSign = null"
   />

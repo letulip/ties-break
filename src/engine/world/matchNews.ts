@@ -48,8 +48,29 @@ export function kidMatchEvent(
   const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
   const a = { ...(players[m.aId] ?? fallbackPlayer(m.aId)) }
   const b = { ...(players[m.bId] ?? fallbackPlayer(m.bId)) }
+  // ⚠ THE MARKER GOES IN THE VERB, AND THE SCORE STAYS THE TRAILING TOKEN. A result sheet writes
+  // "6-4 2-1 ret." and the obvious edit is to append those three letters – but this sentence has a
+  // READER: SeasonScreen's `plaqueLines` splits the bracket plaque into a title and a score by
+  // testing `e.text.endsWith(score)`, and tests/round12-view.test.ts pins that dependency in as many
+  // words ("if that sentence is ever reworded so the score stops being the trailing token, the
+  // plaque silently degrades to one line"). Appending to the tail would have degraded every
+  // retirement row in the bracket, silently, in a file this wave must not touch. Putting the fact in
+  // the verb says the same thing and leaves the contract alone.
+  //
+  // ⚠ TWO VERBS, BECAUSE A RETIREMENT HAS TWO SIDES AND THEY ARE NOT SYMMETRICAL. Hers is
+  // "retired against"; her opponent's is "beat a retiring", and `beat` is the honest word there
+  // rather than a hedge – the winner of a retirement gets a full, undiscounted win (2026 ITF WTT
+  // Regs, Women's §XII.C.1.b, and §VI.B's System of Merit says it from the other side: retirement
+  // wins count, walkovers do not). It is the WALKOVER the rules discount, and the game models none.
+  const verb = m.retiredId
+    ? m.retiredId === KID_ID
+      ? 'retired against'
+      : 'beat a retiring'
+    : kidWon
+      ? 'beat'
+      : 'lost to'
   return {
-    text: `${stage}: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(oppName)} ${kidScore ?? ''}`.trim(),
+    text: `${stage}: ${kidShort} ${verb} ${formatShortName(oppName)} ${kidScore ?? ''}`.trim(),
     match: { ...m, eventId: event.id, surface: event.surface, oppName, a, b },
   }
 }

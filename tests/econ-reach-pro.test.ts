@@ -30,7 +30,6 @@ import {
   PRESETS,
   HORIZONS,
   REACH_PRO_RANK,
-  REACH_PRO_POINTS,
 } from '../tools/econ-bench'
 import { kidPoints } from '../src/engine/world'
 
@@ -66,7 +65,11 @@ describe('reach tracker – the 14→18 pro proxy', () => {
         stepCareerWeek(world, rng)
         const pts = kidPoints(world, 'itf')
         const hasResults = pts > 0 // == computeCountingResults(world).length > 0 (every kid result scores)
-        const met = (hasResults && world.kidRank <= REACH_PRO_RANK) || pts >= REACH_PRO_POINTS
+        // ⚠ ONE ARM SINCE 10.08 - the points arm was inert on all nine presets at every
+        // threshold 60-600 and was removed rather than re-tuned. tools/econ-bench.ts carries
+        // the measurement and what reviving it would need. This replay follows it exactly,
+        // which is the whole point of the file: two readings of ONE predicate.
+        const met = hasResults && world.kidRank <= REACH_PRO_RANK
         if (firstReach === null && met) firstReach = world.week
       }
       expect(r.reachedWeek).toBe(firstReach)

@@ -105,6 +105,11 @@ describe('policy ordering - the 104-week anchor', () => {
     const cRuns = [...runCell(working, careful, H104.weeks, N), ...runCell(middleSelf, careful, H104.weeks, N)]
     const gInj = gRuns.reduce((s, r) => s + r.injuriesTotal, 0)
     const cInj = cRuns.reduce((s, r) => s + r.injuriesTotal, 0)
+    // ⚠ AND THE DENOMINATORS, WHICH ARE THE HALF THIS TEST SPENT A YEAR NOT LOOKING AT. See the
+    // block at `ratio` below: a COUNT is a hazard times an exposure, and every re-read in this file
+    // has been reading a moving exposure as if it were a moving hazard.
+    const gMatches = gRuns.reduce((s, r) => s + r.matchesPlayed, 0)
+    const cMatches = cRuns.reduce((s, r) => s + r.matchesPlayed, 0)
     // *** THE TRIPWIRE FIRED AGAIN, AND THE ANCHOR IS LOST AGAIN: 3.05 -> 2.94, by the MATCH BASE
     // RAISE (owner decision 26.07, straightSets 1 -> 2). RE-READ as the note above demands, not
     // re-pinned blind. MEASURED, same cells, N=10, 104w, paired seeds:
@@ -159,7 +164,38 @@ describe('policy ordering - the 104-week anchor', () => {
     // where her condition gate refuses it: 11 fewer entries, 3 fewer injuries.
     // So the owner's C3 >= 3x target is met again as a side effect of fixing a calendar bug, which
     // the R10-17 note already called the best way for a balance target to be met.
-    const ratio = gInj / cInj
+    // =============================================================================================
+    // *** THE MEASURE CHANGES HERE: PER MATCH, NOT PER CAREER (10.08, owner: «травмы мерим на матч
+    // – давай так попробуем»). Every note below this line was written about the OLD quantity and is
+    // kept verbatim, because the history is the evidence for why the quantity had to change.
+    // =============================================================================================
+    //
+    // WHAT WAS WRONG WITH A RATIO OF COUNTS. A count is a HAZARD times an EXPOSURE, and this test
+    // was reading the product while claiming to measure the first factor. Decomposed on this branch
+    // (tools/injury-ratio-probe.ts, same cells, N=10, 104w):
+    //
+    //     per match     grinder 0.0435 / careful 0.0281 = 1.546   <- the hazard. The risk zone.
+    //     exposure      1794 matches   / 2418 matches   = 0.742   <- the doctor's veto
+    //     the old pin   78 injuries    / 68 injuries    = 1.15    = 1.546 x 0.742
+    //
+    // The grinder IS hurt half again as often per match; she simply plays a quarter fewer of them,
+    // because the floor refuses her 195 entries against the careful parent's 39. The two factors
+    // cancel, and EVERY re-read in the block below - "the grinder did not move, everything that
+    // moved is the careful parent's", five times in a row - was a reading of the DENOMINATOR.
+    //
+    // ⚠ AND THE >= 3x ANCHOR WAS ARITHMETICALLY UNREACHABLE, which is why chasing it kept failing.
+    // `injuryTau` is LINEAR in fatigue, so the hazard ratio cannot exceed the FATIGUE ratio -
+    // 50.8/17.7 = 2.87x - and only with `injuryBaseChance` at exactly 0 (it is 0.003, which gives
+    // 1.879x). Times an exposure of 0.742 the counts cannot reach 2.13. The 3.00-3.12 era was
+    // measured before the careful policy played a third more matches than the grinder. Restoring a
+    // 3x SEPARATION IN COUNTS is therefore not a knob, it is a decision to make the hazard
+    // super-linear in fatigue - a knee - and that is the owner's to take, not this test's to assume.
+    //
+    // ⚠ injuryChanceCap: 0.12 IS DEAD CODE, found by the same probe. It binds at condition -680;
+    // the fatigue term reaches 0.018 at condition 0. It has never fired in any career.
+    const gRate = gInj / gMatches
+    const cRate = cInj / cMatches
+    const ratio = gRate / cRate
     // *** ⚠⚠⚠ THE TRIPWIRE FIRED AND THE ANCHOR IS LOST, HARD: 2.98 -> 1.836, by the ADULT RUNGS
     // (31.07, task #17). Re-read exactly as every note above demands, and re-read the direction of
     // travel too, because this one is unlike the four before it. MEASURED, same cells, N=10, 104w:
@@ -196,7 +232,14 @@ describe('policy ordering - the 104-week anchor', () => {
     // separately underneath, so restoring the field's condition makes THAT line fail and brings
     // somebody back to restore the stronger bound rather than leaving it slack for ever. ***
     // The DIRECTION is the property that must never break: the grinder gets hurt far more often.
-    expect(ratio).toBeGreaterThan(1.5)
+    // ⚠ THE FLOOR NOW GUARDS THE PER-MATCH HAZARD, AND THE NUMBER 1.5 DID NOT MOVE - the QUANTITY
+    // under it did. Measured on both arms with the same cells:
+    //     main (no in-match retirement)   grinder 0.0245 / careful 0.0096 = 2.550
+    //     this branch (retirement on)     grinder 0.0435 / careful 0.0281 = 1.546
+    // and the floor sits at 1.3 rather than 1.5 because of what the second reading exposed - see
+    // the tripwire under the `< 2.5` line. The DIRECTION is the property that must never break: per
+    // match played, the grinder gets hurt substantially more often than the careful parent.
+    expect(ratio, 'per match, the grinder must get hurt substantially more than the careful parent').toBeGreaterThan(1.3)
     // ...and the owner's C3 anchor is MET again (3.12). This is the tripwire in the other direction
     // now: if content pushes it back under 3, this fails and gets re-read rather than quietly
     // re-pinned. Deliberately NOT tightened into a point pin – see every note above.
@@ -327,6 +370,32 @@ describe('policy ordering - the 104-week anchor', () => {
     // somebody restores the field's freshness (or re-prices the injury model) this line FAILS and
     // brings them here to restore `> 2.5` and delete this assertion. The DIRECTION claim above
     // (`> 1.5`, the property this test exists for) is untouched and still asserted. ***
-    expect(ratio, 'the C3 corridor is lost again - see the note above, and restore > 2.5').toBeLessThan(2.5)
+    //
+    // *** ⚠⚠⚠ AND THE PER-MATCH MEASURE FOUND SOMETHING THE PER-CAREER ONE COULD NOT: THE IN-MATCH
+    // RETIREMENT LANDS ON THE FRESH PLAYER, NOT THE TIRED ONE. Both arms, same cells, N=10, 104w:
+    //
+    //                        grinder inj   careful inj   per-match ratio
+    //     main                        43            24             2.550
+    //     + retirement                78            68             1.546
+    //
+    // The careful parent's injuries nearly TRIPLED (24 -> 68); the grinder's not quite doubled.
+    // MECHANISM, and it is not a defect - `retireHazard` reads `spentness(pointNumber, stamina)`,
+    // which accumulates WITHIN a match. The careful parent arrives fresh, is competitive, and plays
+    // long three-set matches; the grinder loses early and short. So a hazard indexed on match LENGTH
+    // is collected mostly by the player who makes matches long, and the load-management axis this
+    // file exists to measure is not what it responds to.
+    //
+    // ⚠ SO A RETIREMENT IS A SECOND INJURY SOURCE MIXED INTO A ONE-SOURCE MEASURE, and the honest
+    // fix is to count only `cause: 'week'` injuries here. That is NOT done in this branch, because
+    // `injuryHistory` rows are `{kind, severity, week, weeksOut}` with no cause and the bench counts
+    // off the snapshot - so separating them is a schema question, not a test edit, and it is the
+    // owner's call. Until then the floor is 1.3 rather than 1.5: it clears the contaminated reading
+    // (1.546) by 0.25 and the clean one (2.550) by 1.25.
+    //
+    // THIS LINE IS THE TRIPWIRE, in the inverted form this file already uses for a lost corridor:
+    // the day somebody separates the two causes, the per-match ratio returns toward 2.55, THIS
+    // ASSERTION FAILS, and whoever is here should restore the floor to 1.5 (or higher) and delete
+    // it. The `> 1.3` claim above is untouched and still asserted. ***
+    expect(ratio, 'retirement injuries are diluting the per-match hazard - see the note above, and restore > 1.5').toBeLessThan(2.2)
   })
 })

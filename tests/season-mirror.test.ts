@@ -28,11 +28,33 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
+import { planFromWeek } from '../src/engine/plan'
 import { resumeMain } from '../src/engine/rng'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS, TIER_LADDER } from '../src/engine/season/calendar'
 import { RESULTS_WINDOW } from '../src/engine/world/constants'
 import { DEFAULT_PROFILE, type PlayerProfile, type SeasonEntryRow } from '../src/shared/protocol'
 import type { LadderTrack, TierId } from '../src/engine/season/types'
+
+/**
+ * ⚠ v47 – THE CAREER THESE WALKS ALWAYS ASSUMED IT WAS, NOW STATED. No assertion in this file moved;
+ * one line of the fixture did, and it is this one.
+ *
+ * `WEEK_PLAN_PRESETS.balanced` is five sessions, and until v47 a school-free week was granted +40% rate
+ * and −3 condition AUTOMATICALLY, because the plan was one scalar and «two sessions a day» was
+ * something the engine asserted on her behalf. v47 makes the days the plan, and the owner ruled that
+ * the bonus follows the DOUBLING rather than the calendar (10.08: «да») – so an undoubled career now
+ * gets 1.0 in the holidays, develops a shade slower, climbs a shade later, and this file's «the fixture
+ * is not vacuous» check went vacuous: 102 weeks were no longer enough for her to outgrow a rung.
+ *
+ * This is five sessions with the two doublings the block was always claiming, so `train`/`rest` are the
+ * IDENTICAL 75/25 the preset was, every legacy reader is unmoved, `doublingShare` is 1 and the summer
+ * weeks pay exactly the 1.4 and −3 they paid before. The career these tests walk is therefore
+ * byte-identical to the one they walked at v46 – which is the only re-aim that proves nothing else in
+ * this file changed.
+ */
+function summerDoubledBalanced() {
+  return planFromWeek([['general', 'general'], ['general', 'general'], ['general'], [], [], [], []])
+}
 
 const WRAP_OFFSET = WEEKS_PER_YEAR - OFF_SEASON_WEEKS // 49
 
@@ -59,6 +81,7 @@ function walk(
 ): { world: WorldState; committed: Committed[] } {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, ...profile })
   world.fundsCents = 500_000_00
+  world.plan = summerDoubledBalanced()
   const rng = resumeMain(world.rngMain)
   const committed: Committed[] = []
   for (let w = 0; w < weeks; w++) {
@@ -88,6 +111,7 @@ function walk(
 function walkNear(weeks: number, seed: string): WorldState {
   const world = createWorld(seed, DEFAULT_PROFILE)
   world.fundsCents = 500_000_00
+  world.plan = summerDoubledBalanced()
   const rng = resumeMain(world.rngMain)
   for (let w = 0; w < weeks; w++) {
     const byRung = [...world.season].sort(

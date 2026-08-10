@@ -553,16 +553,28 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
   // --- match --------------------------------------------------------------------------------
   const winner = match.result.winner
   const scoreline = match.result.sets.map((set) => `${set.a}-${set.b}`).join('  ')
+  // ⚠ A RETIREMENT ENDS A MATCH WITHOUT ENDING A SET, and every line below assumed those were the
+  // same thing. "Takes it in straight sets" is false of a match that stopped at 4-6 6-4 4-2, and so
+  // is the MANNER line, which is passed `setEnd: true` and would describe the last point as though
+  // it had won something. Both are replaced rather than patched: the beat's job is to say how the
+  // match ended, and how this one ended is that somebody could not go on.
+  //
+  // The beat still sits on `lastIndex` and still carries the real scoreline, so the honesty
+  // properties every other beat is held to are unchanged – it is the SET-END property alone that a
+  // retirement does not have, and it never claimed to be one.
+  const retired = match.result.retired
   push(
     lastIndex,
     'match',
-    'Match.',
-    clauses(
-      match.result.sets.length === 3
-        ? `${names[winner]} takes it in three.`
-        : `${names[winner]} takes it in straight sets.`,
-      mannerLine(mannerOf(points[lastIndex]), names, winner, true),
-    ),
+    retired ? 'Retired.' : 'Match.',
+    retired
+      ? `${names[retired.side]} cannot continue. ${names[winner]} goes through.`
+      : clauses(
+          match.result.sets.length === 3
+            ? `${names[winner]} takes it in three.`
+            : `${names[winner]} takes it in straight sets.`,
+          mannerLine(mannerOf(points[lastIndex]), names, winner, true),
+        ),
     scoreline,
   )
 

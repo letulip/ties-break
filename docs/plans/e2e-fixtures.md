@@ -11,10 +11,10 @@ last-reviewed: 2026-08-08
 
 ## Current truth
 
-- **Five committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the sponsor
-  window) · `broke` (one week short of the bankruptcy latch) · `ending` (past the fork at nineteen).
-  288 KiB in total, written by the shipped `saveCodec` so a fixture can never disagree with what the
-  product reads.
+- **Six committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the sponsor
+  window) · **`sinking` (halfway through a debt spell)** · `broke` (one week short of the bankruptcy
+  latch) · `ending` (past the fork at nineteen). 342 KiB in total, written by the shipped `saveCodec`
+  so a fixture can never disagree with what the product reads.
 - **Found, not forced.** Every state is reached by walking a real career under a real policy and
   stopping when the engine says so – `broke` is `bankruptcyGraceWeeks - 1`, not "week 88". A fixture
   that could not have happened in play would test nothing.
@@ -22,7 +22,10 @@ last-reviewed: 2026-08-08
   doors (export file and database), its manifest facts are re-derived, and one assertion **goes red
   deliberately on the next schema bump** – otherwise a stale fixture would pass everything else and
   the e2e layer would silently be testing a migrated old save.
-- **Regenerate with `npm run e2e:fixtures`** (~4 s, byte-identical across runs).
+- **Regenerate with `npm run e2e:fixtures`** (~4 s, byte-identical across runs). ⚠ Verified again on
+  10.08 when `sinking` was added: the other five `.tsave` files came back **byte-for-byte identical**
+  and only the manifest changed. A generator that quietly re-rolled its neighbours would make every
+  addition a five-fixture change.
 - **The browser harness reaches them through `careerAt`** (`e2e/careerAt.ts`, built 08.08): a save
   written into IndexedDB inside the database-creation transaction, before the app's first script, so
   the store's single `listCareers` finds a career instead of an empty install. **Measured at
@@ -31,48 +34,52 @@ last-reviewed: 2026-08-08
   is what a spec may import; `tools/e2e-fixtures.ts` imports the engine, self-executes as a CLI, and
   re-exports the reader so every existing import path still resolves.
 - **This is not the golden-save corpus.** `tests/fixtures/saves/` is one save per schema version, for
-  ever, proving *migrations work*. This is five states at the current version, regenerated rather than
+  ever, proving *migrations work*. This is six states at the current version, regenerated rather than
   migrated, providing *somewhere for a browser to start*. Neither can do the other's job.
 **This is the build of §3 of `docs/plans/playwright.md`** – the load-bearing idea of the whole
 Playwright integration: *a test starts at week 412 instead of clicking through 412 weeks.* Nothing
-here needs a browser, and none of it depends on the harness; it is a node tool, five binaries, a
+here needs a browser, and none of it depends on the harness; it is a node tool, six binaries, a
 manifest and a test.
 
 ```bash
-npm run e2e:fixtures                 # regenerate all five (~4 s, byte-identical every time)
-npm run e2e:fixtures -- --only pro   # one of them; the other four keep their manifest rows
+npm run e2e:fixtures                 # regenerate all six (~4 s, byte-identical every time)
+npm run e2e:fixtures -- --only pro   # one of them; the other five keep their manifest rows
 npm run e2e:fixtures -- --budget 40  # how many seeds a search may try before it gives up
 ```
 
 | file | what it is |
 |---|---|
 | `tools/e2e-fixtures.ts` | the generator, and the reader the harness and the test both come through |
-| `e2e/fixtures/*.tsave` | five career saves in the app's own export format |
+| `e2e/fixtures/*.tsave` | six career saves in the app's own export format |
 | `e2e/fixtures/manifest.json` | seed, week, schema version and the facts a spec may assert on |
 | `tests/e2e-fixtures.test.ts` | the rot alarm, in the `unit` project, on the PR gate |
 
-## The five
+## The six
 
-Generated 08.08.2026, regenerated 09.08 at schema **v45**. Every one was found on the FIRST seed
-tried – these are ordinary careers, not lottery tickets.
+Generated 08.08.2026, regenerated 09.08 and again 10.08 when the sixth was added. Every one was found
+on the FIRST seed tried – these are ordinary careers, not lottery tickets.
 
-⚠ THIS LINE HAS ALREADY BEEN STALE ONCE, which is the argument for never reading it as authority.
-It said v43 while `e2e/fixtures/manifest.json` said v45, because the fixtures were regenerated with
-the schema and the prose was not. **The manifest is the version of record**; this sentence is
-narration, and `tests/e2e-fixtures.test.ts` gates the manifest rather than the prose.
+⚠ THIS LINE USED TO CARRY THE SCHEMA VERSION AND WAS STALE WITHIN A DAY – it said v43 while
+`e2e/fixtures/manifest.json` said v45, because the fixtures were regenerated with the schema and the
+prose was not. **The manifest is the version of record**, and the version has been taken out of this
+sentence rather than corrected in it: a number nobody can gate is a number that will be wrong again.
+`tests/e2e-fixtures.test.ts` gates the manifest; this paragraph is narration. The table below is
+regenerated by hand and carries the same risk, which is why every FACT a spec stands on is read from
+the manifest at runtime and none of it is read from here.
 
 | fixture | seed | week | age | funds | rank | size | what it is for |
 |---|---|---|---|---|---|---|---|
 | `fresh` | `e2e-fresh-0` | 0 | 13 | $25,000 | 120 | 23.4 KiB | the boot path, onboarding, the empty screens |
-| `junior` | `e2e-junior-0` | 120 | 15 | $8,085 | 59 | 54.6 KiB | first ranking earned – ladder, standings, a feed with something in it |
-| `pro` | `e2e-pro-0` | 412 | 21 | $102,448 | 83 | 77.0 KiB | eight seasons in, **inside the sponsor window with two unopened letters**, ledgers full |
-| `broke` | `e2e-broke-0` | 88 | 15 | **-$461** | 59 | 51.8 KiB | eleven weeks under water – one week short of the bankruptcy latch |
-| `ending` | `e2e-ending-0` | 282 | 19 | $66,989 | 95 | 74.4 KiB | past the fork at nineteen, racket down, career read-only |
+| `junior` | `e2e-junior-0` | 120 | 15 | $9,464 | 60 | 60.2 KiB | first ranking earned – ladder, standings, a feed with something in it |
+| `pro` | `e2e-pro-0` | 412 | 21 | $38,851 | 83 | 76.6 KiB | eight seasons in, **inside the sponsor window with two unopened letters**, ledgers full |
+| `sinking` | `e2e-sinking-0` | 67 | 14 | **-$506** | 89 | 53.1 KiB | **six weeks under water of twelve** – a warning a career can still be ticked out of |
+| `broke` | `e2e-broke-0` | 73 | 14 | **-$2,502** | 67 | 52.0 KiB | eleven weeks under water – one week short of the bankruptcy latch |
+| `ending` | `e2e-ending-0` | 282 | 19 | $6,822 | 41 | 77.0 KiB | past the fork at nineteen, racket down, career read-only |
 
-**281 KiB of saves** (288 KiB with the manifest), the largest single file 77 KiB. That is not a nuisance and there is no
+**342 KiB of saves**, the largest single file 77 KiB. That is not a nuisance and there is no
 trade to propose: for comparison, the golden-save corpus these sit next to is **9.8 MB** of
-uncompressed JSON, and `v45.json` alone is 372 KB – nearly five times the week-412 fixture, because
-these are gzipped by the product's own codec. If the set ever does grow (more fixtures, a bigger
+uncompressed JSON, and one version's JSON alone is ~372 KB – nearly five times the week-412 fixture,
+because these are gzipped by the product's own codec. If the set ever does grow (more fixtures, a bigger
 world), the lever to reach for first is fewer fixtures rather than smaller ones: a fixture that has
 been trimmed to fit is no longer a career the app could have written.
 
@@ -89,9 +96,9 @@ migrate these instead of regenerating them) breaks both.
 | | `tests/fixtures/saves/` – the golden corpus | `e2e/fixtures/` – this set |
 |---|---|---|
 | **question it answers** | does every historical save still load? | where does a browser test start? |
-| **one per** | schema version (v0 … v45, all of them, for ever) | career STATE (five, at the current version) |
+| **one per** | schema version (v0 … vN, all of them, for ever) | career STATE (six, at the current version) |
 | **format** | raw world JSON, no envelope | the app's own export file: envelope + gzip + SHA-256 |
-| **when the schema moves** | a NEW file is added; old ones are never touched | all five are REGENERATED; the old bytes are replaced |
+| **when the schema moves** | a NEW file is added; old ones are never touched | all six are REGENERATED; the old bytes are replaced |
 | **what it must contain** | shapes nobody writes any more | only shapes the app writes today |
 | **enforced by** | `tests/goldenSaves.test.ts` (one fixture per version) | `tests/e2e-fixtures.test.ts` (facts still hold, version is current) |
 
@@ -122,6 +129,22 @@ on. Two consequences worth spelling out:
   birthday week; the recipe answers `stop` through `answerFork`, which is one of the three taps a
   player has. The career then refuses every command (`guardNotEnded`), which is exactly the
   read-only state the app is in after the epilogue.
+- **`sinking` is the SAME WALK as `broke`, stopped halfway** – same corridor, same reckless policy,
+  same week-by-week loop, and it stops the first week the spell reaches
+  `floor(ENDINGS.bankruptcyGraceWeeks / 2)`. Two fixtures on one slope needs a reason, and the reason
+  was measured rather than argued: the funds **stop toast** could not be reached from `broke` at all,
+  because the advance that raises it raises the bankruptcy ending instead and the epilogue replaces
+  the whole shell. `e2e/week-advance.spec.ts` records that measurement and this fixture is the answer
+  to it. Halfway is not a taste – it is the only depth maximally far from both ends: deep enough that
+  the countdown on the banner is a real number, shallow enough that one advance cannot latch anything.
+
+⚠ **Adding a sixth fixture is a five-file change and all five are in this repo's own rules.** For the
+record, so the next one costs an hour rather than a morning: the name goes in `FIXTURE_NAMES`
+(`tools/e2e-fixtures-read.ts`), the recipe in `RECIPES` (`tools/e2e-fixtures.ts`), a state assertion
+in `tests/e2e-fixtures.test.ts` (§"each is the state its name promises" – tie it to an engine
+constant, never to the number the search happened to find), a row in `e2e/seeded-careers.spec.ts`
+(whose header promises one test per fixture and would otherwise start lying), and a row in the table
+above. The binary and the manifest are then written by `npm run e2e:fixtures`.
 
 The one thing the generator does choose is `careerId` – and only because the engine does not own it
 either: the worker mints one from `Date.now()` outside the deterministic engine, so the fixtures pin
@@ -196,7 +219,7 @@ may join it.
 
 ## The rot alarm
 
-`tests/e2e-fixtures.test.ts`, 33 assertions, ~0.6 s (1.4 s with a whole other suite running beside
+`tests/e2e-fixtures.test.ts`, 39 assertions, ~0.8 s (1.4 s with a whole other suite running beside
 it), in the `unit` project – so it runs on the PR gate for free rather than waiting for a nightly
 browser job. For every fixture it:
 
@@ -214,7 +237,10 @@ browser job. For every fixture it:
 7. asserts each fixture is still the STATE its name promises, against the engine's own constants –
    `broke` is `ENDINGS.bankruptcyGraceWeeks - 1` weeks under water, not "11"; `ending` is past
    `ENDINGS.forkAgeYears`. A balance change that moves a state out from under a fixture is caught as
-   well as a stale binary.
+   well as a stale binary. ⚠ **`sinking` is checked against `broke` as well as against the constant**,
+   because what makes them two fixtures rather than one is the DISTANCE between them: a regeneration
+   that let `sinking` drift up against the latch would take away the only thing it is for, while every
+   per-fixture assertion still passed.
 
 Then one assertion for the whole set: **the manifest's schema version is the current one.** It goes
 red on the next `SAVE_SCHEMA_VERSION` bump, and it is meant to. Everything above would still pass on

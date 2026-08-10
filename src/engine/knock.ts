@@ -83,6 +83,8 @@
 // on purpose (buildTrainingRead's idiom): he is a man with an opinion, not a probability readout.
 
 import { rngFromSeed } from './rng'
+import { planWeek, planSessions, sessionCounts } from './plan'
+import { SESSION_KINDS, type SessionKind } from '../shared/protocol'
 import type { Knock, KnockChoice, KnockPrompt, KnockRecord, WeekPlan } from '../shared/protocol'
 
 // =================================================================================================
@@ -143,7 +145,7 @@ export const KNOCK_REST_CONDITION = 3
 
 /** Where a training knock lands, weighted. Roughly the load-bearing half of the injury table,
  *  renormalised - the joints a week of drilling actually complains about. */
-const KNOCK_PARTS: readonly { part: string; weight: number }[] = [
+export const KNOCK_PARTS: readonly { part: string; weight: number }[] = [
   { part: 'shoulder', weight: 0.18 },
   { part: 'knee', weight: 0.17 },
   { part: 'ankle', weight: 0.15 },
@@ -154,14 +156,100 @@ const KNOCK_PARTS: readonly { part: string; weight: number }[] = [
   { part: 'foot', weight: 0.06 },
 ]
 
+// =================================================================================================
+// ⚠ A KNOCK LANDS WHERE SHE WORKED (v47, docs/specs/training-dials.md §5) – AND IT COSTS NO NEW DRAW
+// =================================================================================================
+//
+// This is the fourth of the four things that make a monomaniac week self-limiting without a rule
+// against it, and it is the one that turns the other three into a STORY. Six weeks of serving develops
+// a shoulder; `pushedParts`' accumulating thread then makes that shoulder her career's rather than a
+// series of unrelated Fridays.
+//
+// ⚠ THE DRAW DOES NOT MOVE, AND THAT IS THE WHOLE MECHANISM. `drawKnock` takes arrival, repeat and
+// part unconditionally and in a fixed order BEFORE it compares anything; weighting the table changes
+// what `partRoll` MAPS TO, never what `partRoll` IS. The same single uniform, a different table. Zero
+// draws added, on any stream, so the frozen MAIN capture cannot see this at all.
+
+/** What each kind of session LOADS – the joints, not the skills, which is why this table lives here
+ *  and not beside `SESSION_AIM`. Same argument the note above `KNOCK_PARTS` already makes for keeping
+ *  this list separate from `BODY_REGIONS`: a knock is a complaint, not a diagnosis, and the anatomy of
+ *  what a drill does to a fifteen-year-old is knock.ts's own subject.
+ *
+ *  ⚠ `general` LOADS NOTHING, AND THAT IS NOT AN OMISSION. An ordinary mixed week is what the shipped
+ *  table already describes – it is where those eight weights came from – so a week of general practice
+ *  must draw through `KNOCK_PARTS` untouched. It is also what makes a v46 career's knocks land exactly
+ *  where they landed before. */
+const KIND_LOADS: Record<SessionKind, readonly string[]> = {
+  general: [],
+  serve: ['shoulder', 'elbow', 'wrist', 'lower back'],
+  rally: ['wrist', 'elbow', 'shoulder', 'lower back'],
+  fitness: ['knee', 'ankle', 'foot', 'hip'],
+  matchplay: ['knee', 'ankle', 'hip', 'lower back'],
+}
+
+/** How far a week that is ENTIRELY one kind tilts its joints. 2.0 – a fully aimed week roughly doubles
+ *  the odds on the parts it loads, before renormalisation pulls the rest down to pay for it.
+ *
+ *  ⚠ IT IS A TILT AND NOT A RISK. `knockChance` – how OFTEN a knock arrives – is untouched by any of
+ *  this and still reads only fatigue and the session count, so aiming a week cannot make her pick more
+ *  things up. It decides WHERE, given that one arrived, which is the difference between a consequence
+ *  and a penalty («мы ни за что не наказываем»). */
+export const KNOCK_AIM_TILT = 2.0
+
+/** WHAT THIS WEEK LOADED, as a share of the week per part - the fold both tilted tables read.
+ *
+ *  Empty when the week holds no sessions, and empty when every session was `general` (which loads
+ *  nothing by design - see `KIND_LOADS`). An empty map is the signal to return the shipped table
+ *  untouched, which is what makes an ordinary week byte-identical.
+ *
+ *  ⚠ EXPORTED FOR THE INJURY SIDE (docs/specs/match-retirement.md §5), and only the FOLD is shared,
+ *  not the table. `KNOCK_PARTS` is what a fifteen-year-old mentions in a car on a Friday;
+ *  `BODY_REGIONS` is the epidemiology of tennis injuries, twelve entries including an abdominal
+ *  tear. Sharing this map lets a retirement land where she worked without either module inheriting
+ *  the other's anatomy - the note above `KNOCK_PARTS` argues at length for keeping those apart and
+ *  that argument is unchanged. Pure; zero draws. */
+export function loadedPartShares(week: readonly (readonly SessionKind[])[]): ReadonlyMap<string, number> {
+  const out = new Map<string, number>()
+  const sessions = planSessions(week)
+  if (sessions === 0) return out
+  const counts = sessionCounts(week)
+  for (const kind of SESSION_KINDS) {
+    const n = counts[kind]
+    if (n === 0) continue
+    for (const part of KIND_LOADS[kind]) out.set(part, (out.get(part) ?? 0) + n / sessions)
+  }
+  return out
+}
+
+/** The part table this week draws through. Returns the SHIPPED array itself when nothing tilts it, so
+ *  an ordinary week walks byte-identical cumulative sums.
+ *
+ *  ⚠ THE IDENTITY RETURN IS LOAD-BEARING, NOT AN OPTIMISATION. `KNOCK_PARTS`' eight weights sum to 1.0
+ *  in decimal and not necessarily in binary, so a renormalising pass over an all-ones tilt would divide
+ *  every weight by something like 0.9999999999999999 and could flip a boundary uniform into the
+ *  neighbouring part. That is a shipped career's knock moving for no reason anyone could see. */
+export function knockPartWeights(week: readonly (readonly SessionKind[])[]): readonly { part: string; weight: number }[] {
+  const loaded = loadedPartShares(week)
+  if (loaded.size === 0) return KNOCK_PARTS
+  let total = 0
+  const tilted = KNOCK_PARTS.map((p) => {
+    const share = loaded.get(p.part) ?? 0
+    const weight = p.weight * (1 + (KNOCK_AIM_TILT - 1) * share)
+    total += weight
+    return { part: p.part, weight }
+  })
+  // Renormalise: the tilt REDISTRIBUTES where a knock lands, it never changes how often one arrives.
+  return tilted.map((p) => ({ part: p.part, weight: p.weight / total }))
+}
+
 /** One pull, walked cumulatively - the same shape `drawBodyRegion` uses. */
-function drawPart(u: number): string {
+function drawPart(u: number, table: readonly { part: string; weight: number }[]): string {
   let cum = 0
-  for (const p of KNOCK_PARTS) {
+  for (const p of table) {
     cum += p.weight
     if (u < cum) return p.part
   }
-  return KNOCK_PARTS[KNOCK_PARTS.length - 1].part
+  return table[table.length - 1].part
 }
 
 /** How often a new knock lands on a part he has already sent her back out on, when there is one.
@@ -231,7 +319,9 @@ export function drawKnock(view: KnockWorldView): Knock | null {
 
   const pushed = pushedParts(view.history)
   const repeatPart = pushed.length > 0 && repeatRoll < KNOCK_REPEAT_CHANCE ? pushed[0] : null
-  const part = repeatPart ?? drawPart(partRoll)
+  // ⚠ THE SAME `partRoll`, A DIFFERENT TABLE (v47, §5). One uniform in, one part out, exactly as
+  // before – see `knockPartWeights`. Zero draws added.
+  const part = repeatPart ?? drawPart(partRoll, knockPartWeights(planWeek(view.plan)))
   return {
     part,
     sinceWeek: view.week,

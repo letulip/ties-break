@@ -249,6 +249,24 @@ export interface MatchRecord {
   /** engine seed IF the user's kid played (replayable); AI-AI matches sim via closed form */
   seed?: string
   score?: string // final scoreline for kid matches, e.g. "6-4 3-6 7-6"
+  /** WHO STOPPED. The id of the player who RETIRED, on the ~2.7% of played matches that ended that
+   *  way; absent on every other row, which is what an old save and every hand-built fixture mean.
+   *
+   *  ⚠ AN ID AND NOT A SIDE, and not a boolean. `winnerId` is already an id, so this reads without
+   *  the reader having to remember which of `aId`/`bId` "side 1" is; and it says both things at once
+   *  – that the match was a retirement, and which way round – so `retiredId === KID_ID` is the whole
+   *  test for "she got hurt" and `retiredId && retiredId !== KID_ID` is the whole test for "her
+   *  opponent did". A boolean would have needed `winnerId` consulted to mean anything.
+   *
+   *  ⚠ IT CANNOT APPEAR ON AN AI-AI ROW. Those resolve through the closed form, which plays no
+   *  points and therefore has no in-match fatigue to read. Rival retirements are a real thing the
+   *  game does not model – see docs/research/retirement-and-withdrawal.md §10.3 on the walkover, the
+   *  same missing half – and this field is deliberately not the place to fake one.
+   *
+   *  `winnerId` is the OTHER player, at full value: the rules discount a walkover, never a
+   *  retirement (2026 ITF WTT Regs, Women's §XII.C.1.b). `score` is the partial scoreline she
+   *  stopped at, so it is short by construction and needs no "ret." marker to be recognised. */
+  retiredId?: string
 }
 export interface TournamentResult {
   eventId: string

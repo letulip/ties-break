@@ -12,7 +12,7 @@ import type {
   Side,
 } from './types'
 import { createScore, awardPoint, contextOf, formatScore } from './scoring'
-import { basePServe, modifiedPServe, type Streak } from './point'
+import { basePServe, modifiedPServe, retireHazard, type Streak } from './point'
 import { pMatchBo3 } from './closedForm'
 import { rngFromSeed } from '../rng'
 
@@ -41,10 +41,57 @@ function winsGameNext(myPts: number, oppPts: number): boolean {
   return Math.max(m, oppPts) >= 4 && m - oppPts >= 2
 }
 
+// =================================================================================================
+// SHE CAN STOP – the retirement, and why it is sampled the way it is
+// =================================================================================================
+//
+// ⚠ THE ONE THING THAT MATTERS ABOUT THIS CODE: IT ADDS NO DRAW TO `rngFromSeed(opts.seed)`.
+//
+// The obvious implementation – one uniform per point inside the loop, against the hazard – would
+// have re-based the point sequence of EVERY match in the game. Not the MAIN weekly stream (a match
+// runs on `seed:<eventId>:r<round>`, an event-scoped sub-stream), so the frozen capture would have
+// survived; but every scoreline in every save, every calibration band, every pinned box score and
+// every re-run the visualiser performs would have moved, for a feature that fires in 2.73% of
+// matches. That is a very large blast radius bought for nothing.
+//
+// So the two uniforms – ONE PER SIDE, drawn unconditionally, before the first point – come off
+// `seed:ret`, a sub-stream private to this match seed. Consequences, all of them load-bearing:
+//
+//   * a match in which nobody retires is BYTE-IDENTICAL to the same match before this slice. Same
+//     points, same winner, same stats, same log. Verified by reproduction, not asserted.
+//   * the retirement is a pure function of `(a, b, opts)` exactly as the rest of the match is, so
+//     MatchReplay / TournamentFlow / PracticeFlow re-run the stored `WorldMatch` and get the SAME
+//     truncated match back with no new field to pass. That is the whole reason it lives in here
+//     rather than being decided by the world after the fact.
+//   * conditional pulls are impossible: both uniforms are taken before anything is compared.
+//
+// THE SAMPLER. Per point, per side, `retireHazard` gives a small probability that this player stops
+// after it. Walking those forward and firing at the first point where the running SUM passes the
+// side's uniform samples the stopping point from exactly that discrete hazard (the linear form –
+// the sum is 0.03-0.10 over a whole match, where the union bound and 1-exp(-H) agree to a fraction
+// of a percent, and a sum that never reaches u is the common case: she plays it out).
+//
+// ⚠ TRUNCATION IS NOT AN APPROXIMATION. The points up to n are the points this match played,
+// whatever happens after n – the hazard reads only state up to n, so cutting the trajectory at n
+// gives precisely the match that was played up to the moment she stopped. Nothing is "rewritten".
+//
+// ⚠ BOTH SIDES CARRY IT, and neither is "the kid": this function has never known which side the
+// player is and must not learn. The rate is therefore calibrated as the research states it – the
+// share of MATCHES that end in a retirement by either player – and the world decides what a
+// retirement MEANS for the side it happens to (engine/world.ts finalizeTournament). Her opponent
+// stopping is a full, undiscounted win for her, which is what the rulebooks say and what
+// `MatchResult.winner` already means.
+
 export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions): MatchResult {
   const rng = rngFromSeed(opts.seed)
   const score = createScore(opts.firstServer)
   const players: [MatchPlayer, MatchPlayer] = [a, b]
+  // The two retirement uniforms and their running hazards. Drawn HERE, unconditionally and off a
+  // stream nothing else touches – see the block comment above for why that is the whole feature.
+  const retRng = rngFromSeed(`${opts.seed}:ret`)
+  const retU: [number, number] = [retRng(), retRng()]
+  const retH: [number, number] = [0, 0]
+  let retired: { side: Side; pointNumber: number } | null = null
   // Base serve-win prob per server; constant across the match (skills/surface only).
   const baseServe: [number, number] = [basePServe(a, b, opts), basePServe(b, a, opts)]
   const momentumOn = opts.momentum !== false
@@ -140,14 +187,42 @@ export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions
     if (streakLen > stats[streakSide].longestPointStreak) {
       stats[streakSide].longestPointStreak = streakLen
     }
+
+    // ...and then, between points, one of them may not come back out. Checked AFTER the point is
+    // scored because that is when a player retires: the point she was in the middle of is played.
+    // Skipped once the match is already decided – you cannot retire from a match you have just won,
+    // and without this guard a hazard that fires on match point would steal a completed result.
+    if (score.winner === null) {
+      retH[0] += retireHazard(pointNumber, players[0].stamina)
+      retH[1] += retireHazard(pointNumber, players[1].stamina)
+      // Side 0 is asked first purely so the tie is TOTAL rather than order-of-evaluation-dependent.
+      // Both firing on the same point needs two independent uniforms to be passed by two sums that
+      // differ by the stamina ratio, on the same point, and has never been observed.
+      const side: Side | null = retH[0] > retU[0] ? 0 : retH[1] > retU[1] ? 1 : null
+      if (side !== null) {
+        retired = { side, pointNumber }
+        score.winner = side === 0 ? 1 : 0
+      }
+    }
+  }
+
+  // A retirement at the change of ends leaves an empty set on the sheet. Real result sheets print
+  // "6-4 ret.", not "6-4 0-0 ret." – it is the one case where the partial set says nothing that the
+  // completed sets have not already said. Anything with a point in it is kept.
+  const sets = score.sets
+  if (retired && sets.length > 1 && sets[sets.length - 1].a === 0 && sets[sets.length - 1].b === 0) {
+    sets.pop()
   }
 
   return {
     winner: score.winner as Side,
-    sets: score.sets,
+    sets,
     stats,
     log,
     totalPoints: pointNumber,
     seed: opts.seed,
+    // Absent, not `undefined`-valued, on the overwhelming majority of matches: an optional key that
+    // is never written is the shape every historical save and every hand-built fixture already has.
+    ...(retired ? { retired } : {}),
   }
 }

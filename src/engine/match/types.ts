@@ -109,11 +109,39 @@ export interface SideMatchStats {
 }
 
 export interface MatchResult {
+  /** ⚠ ON A RETIREMENT THIS IS THE PLAYER WHO WAS STILL STANDING, AT FULL VALUE. The rulebooks are
+   *  unanimous and unusually explicit about it – "a match won by retirement, default or walkover
+   *  will count as a match won for ranking points and prize money" (2026 ITF WTT Regs, Women's
+   *  §XII.C.1.b), and the WTT's System of Merit spells out the contrast: retirement wins count,
+   *  walkovers do not. It is the WALKOVER the rules discount, never the retirement. So there is no
+   *  "win by retirement" variant here and there must not be one: `winner` means the same thing on
+   *  every row. See docs/research/retirement-and-withdrawal.md §4. */
   winner: Side
-  /** completed sets only, e.g. [{a:6,b:4},{a:7,b:6}] */
+  /** completed sets, e.g. [{a:6,b:4},{a:7,b:6}].
+   *
+   *  ⚠ ON A RETIREMENT THE LAST ELEMENT IS THE SET SHE STOPPED IN, and it is deliberately not
+   *  completed – "6-4 2-1 ret." is what a real result sheet prints, and dropping the partial set
+   *  would throw away the only part of a retirement scoreline that says WHEN. A trailing 0-0 is
+   *  trimmed by `simulateMatch` (she stopped at the change of ends, so the sheet reads "6-4 ret."),
+   *  which is the one case where the partial set carries no information. */
   sets: SetGames[]
   stats: [SideMatchStats, SideMatchStats]
   log: PointLogEntry[]
   totalPoints: number
   seed: string
+  /** SHE STOPPED. Present iff the match ended in a RETIREMENT rather than on a match point.
+   *
+   *  ⚠ OPTIONAL, AND THAT IS THE WHOLE REASON THE EXTENSION IS THIS AND NOT A WIDER ONE. Three
+   *  shapes were on the table: a `MatchResult` union (`{kind:'completed'} | {kind:'retired'}`), a
+   *  required `retired: Retirement | null`, and this. The union re-types eleven call sites and every
+   *  fixture for a case that fires in under three percent of matches; a required field breaks every
+   *  hand-built `MatchResult` in the test corpus and every historical save that carries one. An
+   *  OPTIONAL field is read as "absent = she played it out", which is exactly what an old save
+   *  means, so no migration is owed and `SAVE_SCHEMA_VERSION` did not move for this slice.
+   *
+   *  `side` is the player who STOPPED – i.e. the loser, `winner` is the other one. `pointNumber` is
+   *  the last point actually played, so `totalPoints === pointNumber` and `log` ends there: a
+   *  truncated match is a real, shorter match in every field, which is what lets the visualiser,
+   *  the box score, `annotateMatch` and `matchDrain` read it without knowing this field exists. */
+  retired?: { side: Side; pointNumber: number }
 }

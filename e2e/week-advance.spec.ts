@@ -167,22 +167,87 @@ test.describe('advancing a week', () => {
     expect(crashes, 'the app threw while advancing a week').toEqual([])
   })
 
-  // ⚠ THE THIRD KIND OF WEEK - ONE THAT STOPS AND SAYS WHY - IS NOT REACHABLE FROM THIS FIXTURE SET,
-  // AND THAT IS WORTH WRITING DOWN RATHER THAN LEAVING FOR THE NEXT PERSON TO REDISCOVER. The two
-  // tests above end in a dialog with a Continue; the app's OTHER way of reporting a week is the top
-  // banner (`.stop-toast`), which is the surface defect D11 was filed against, and no journey here
-  // can produce one:
+  // ⚠ THE THIRD KIND OF WEEK - ONE THAT STOPS AND SAYS WHY - AND IT TOOK A NEW FIXTURE TO REACH IT.
+  //
+  // The two tests above both end in a dialog with a Continue. The app's OTHER way of reporting a week
+  // is the top banner (`.stop-toast`), and until 10.08 no journey here could produce one. The reason
+  // was measured rather than assumed, and it is worth keeping because it is what the fixture was
+  // built from:
   //
   //   * a stop only speaks through the banner when its reason HAS copy - `injury`, `tournament` and
   //     `season-end` deliberately do not, because each owns a dialog instead (App.vue,
   //     STOP_REASON_TEXT). That leaves `funds`, `deadline`, `medical` and `walkover`.
-  //   * `funds` is the only one a fixture holds deterministically, and `broke` cannot deliver it:
-  //     it is ELEVEN weeks under water against a twelve-week grace window, so the advance that
-  //     would raise the toast raises the BANKRUPTCY ENDING instead, and the epilogue replaces the
-  //     whole shell. Measured, not reasoned: this test existed, ran, and failed on the epilogue.
+  //   * `funds` is the only one a fixture can hold deterministically, and `broke` cannot deliver it:
+  //     it is ELEVEN weeks under water against a twelve-week grace window, so the advance that would
+  //     raise the toast raises the BANKRUPTCY ENDING instead and the epilogue replaces the whole
+  //     shell. That test existed, ran, and failed on the epilogue.
   //   * the other three are injury- and calendar-dependent, which is a coin toss, not a journey.
   //
-  // Reaching it needs a fixture that is under water with room to spare (`debtWeeks` ~6 of 12) -
-  // a change to tools/e2e-fixtures.ts, not to this file. Until then the banner's names are pinned
-  // negatively in tests/a11y-banner-names.test.ts, which says exactly what it can and cannot claim.
+  // So `sinking` was added: the same walk down the same corridor as `broke`, stopped at HALF the
+  // grace window, which is the only depth maximally far from both ends - deep enough that the
+  // countdown is real, shallow enough that one advance cannot latch anything. See
+  // `SINKING_DEBT_WEEKS` in tools/e2e-fixtures.ts.
+  test('a week that stops without ending: the reason, the count, and the notice it is', async ({
+    page,
+    careerAt,
+  }) => {
+    const crashes: string[] = []
+    page.on('pageerror', (error) => crashes.push(error.message))
+
+    const { facts } = await careerAt('sinking')
+    await answerOpeningKnock(page)
+    expect(facts.debtWeeks, 'the sinking fixture is meant to boot under water').toBeGreaterThan(0)
+
+    await weekButton(page).click()
+
+    // The week resolved, so its story opened by itself - the tick really ran and was not refused at
+    // the door. That matters here more than in the tests above: a stop is a week that HAPPENED and
+    // then halted the advance, not a week that never started.
+    await expect(page.getByRole('region', { name: /^Week story/ })).toBeVisible()
+
+    // ⚠ THE COUNT IS `debtWeeks + 1`, AND THAT IS THE WHOLE ASSERTION - the same discipline every
+    // reload spec in this suite uses. The number on this banner is `snapshot.debt`, kept by the
+    // engine inside the worker and incremented by the tick that just ran. Asserting the SEEDED depth
+    // would pass in a world where the advance did nothing, a world where the toast is a static
+    // string, and a working one. Asserting a depth the fixture has never been at leaves exactly one
+    // explanation. The weeks REMAINING are the same arithmetic seen from the other end and belong to
+    // the engine, so they are matched as a number and not as a value.
+    await expect(
+      page.getByText(
+        new RegExp(
+          `^Stopped: ${facts.debtWeeks + 1} weeks below zero – \\d+ before the money runs out for good\\.$`,
+        ),
+      ),
+      'the advance did not stop on funds, or the countdown did not move. If this is the only red ' +
+        'assertion after a fixture regeneration, `sinking` no longer spends the week after it ' +
+        'under water: raise its debt spell in tools/e2e-fixtures.ts rather than deleting this.',
+    ).toBeVisible()
+
+    // ...and the career is still hers to play. This is what `broke` could not give: the shell is
+    // still here rather than replaced by an epilogue, so the stop is a WARNING and not an ending.
+    // The bar is only an advance control once the week's story has been left, which is why this
+    // follows the same `Proceed to Home` the season-end test walks through.
+    await page.getByRole('button', { name: 'Proceed to Home' }).click()
+    await expect(weekButton(page)).toBeEnabled()
+    // The banner is a strip over the whole shell, not a panel on one screen - so it is still here
+    // after a change of screen, which is the difference between it and the two dialogs above.
+    await expect(page.getByText(/^Stopped: /)).toBeVisible()
+
+    // AND THE NOTICE SAYS WHICH NOTICE IT IS (defect D11). Two banners can stack on this strip and
+    // both used to carry a button reading `Dismiss` and nothing else - one word, one shape, one
+    // position. The mirrored claim is made from the other banner's side in
+    // e2e/storage-recovery.spec.ts; between them, each name is shown to reach exactly one control on
+    // a screen where the other is absent, which is the defect stated as a pair.
+    //
+    // ⚠ MUTATION-VERIFIED AS A PAIR: both buttons in App.vue renamed back to `Dismiss` -> this line
+    // and its mirror in storage-recovery.spec.ts go red together, each on its own name, with the app
+    // otherwise working exactly as before. Two specs, two banners, one defect.
+    await expect(page.getByRole('button', { name: 'Dismiss autosave notice' })).toHaveCount(0)
+    const dismiss = page.getByRole('button', { name: 'Dismiss stop notice' })
+    await expect(dismiss).toBeVisible()
+    await dismiss.click()
+    await expect(page.getByText(/^Stopped: /)).toHaveCount(0)
+
+    expect(crashes, 'the app threw while stopping a week for funds').toEqual([])
+  })
 })

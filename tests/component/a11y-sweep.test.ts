@@ -1,4 +1,5 @@
-// THE ACCESSIBILITY SWEEP, MOUNTED – docs/specs/e2e-coverage.md §12, defects D1/D2/D5/D6/D8/D10/D12.
+// THE ACCESSIBILITY SWEEP, MOUNTED – docs/specs/e2e-coverage.md §12, defects D1/D2/D5/D6/D8/D10/D12,
+// and since the dials wave (10.08) D13, D15 and D10's second half – see the block at the bottom.
 //
 // ⚠ WHY EVERY CLAIM HERE IS A MOUNTED ONE. §12 exists because the e2e layer's selector policy is
 // role-and-accessible-name only, and "every element a test could not reach is a real defect". A
@@ -35,6 +36,8 @@
 //   D12 the `:role` binding removed from the trophy cell -> red on the not-yet-won plate only, which
 //       is exactly the half of the cabinet the defect was about.
 import { describe, it, expect, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import KnockDialog from '../../src/components/KnockDialog.vue'
@@ -44,10 +47,13 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import TrophiesScreen from '../../src/components/screens/TrophiesScreen.vue'
 import StatRow from '../../src/components/ui/StatRow.vue'
+import InboxSheet from '../../src/components/InboxSheet.vue'
+import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { weekDateLine, weekLabel } from '../../src/shared/dates'
+import { latestNewsId } from '../../src/composables/inboxCue'
 import type { CareerMeta, KnockPrompt, SeasonSummary, Snapshot } from '../../src/shared/protocol'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND HomeScreen READS IT AT SETUP. Same finding and the same
@@ -435,6 +441,121 @@ describe('D12 - a cell that does not fold is still a thing with a name', () => {
       expect(cell.attributes('role'), 'an aria-label on a roleless div is inert').toBe('img')
       expect(cell.attributes('aria-label')).toMatch(/not won yet$/)
     }
+    wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// D13 / D15 / D10-ThisWeek – THE THREE CRUMBS THE DIALS WAVE PICKED UP (10.08)
+// =================================================================================================
+// All three were filed by writing the e2e level, none was worked around in `src/`, and all three sit
+// in files this wave was opening anyway. Same discipline as everything above: mounted, off a real
+// snapshot, and asserted the way a role-first test reaches an element.
+//
+// ⚠ MUTATION-VERIFIED, each one watched failing first:
+//   D13 `confirm-label` put back to "Sign" -> the distinct-names test goes red naming both controls.
+//   D15 `role="img"` dropped from a diary dot -> the marker test goes red; the `aria-describedby`
+//       binding dropped -> the "the dot does not rename the button" pair still passes and the
+//       "handed over as the description" assertion goes red on its own, which is why they are two.
+//   D10 `role="heading"` removed from ThisWeek's date line -> red, and Home's stays green.
+
+describe('D13 - the one irreversible press has a name of its own', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('the letter\'s Sign and the confirm\'s Sign are no longer the same name', async () => {
+    // A career far enough in to have kit letters waiting; the sheet opens on the list, and a letter
+    // has to be OPEN before its Sign exists at all.
+    const snapshot = snapshotAfter(30)
+    withSnapshot(snapshot)
+    const wrapper = mount(InboxSheet, { global: { stubs: { teleport: true } } })
+
+    const row = wrapper.findAll('.inbox-row').find((r) => r.text().length > 0)
+    if (!row) {
+      // The fixture has no letter this week. Assert the shape at the source rather than silently
+      // passing: the label is the fix, and a fixture drought may not hide it.
+      expect(readFileSync(resolve(__dirname, '../../src/components/InboxSheet.vue'), 'utf8'))
+        .toContain('confirm-label="Sign it"')
+      wrapper.unmount()
+      return
+    }
+    await row.trigger('click')
+    const sign = wrapper.findAll('button').filter((b) => b.text() === 'Sign')
+    expect(sign.length, 'the letter draws exactly one Sign').toBe(1)
+    await sign[0].trigger('click')
+
+    const names = wrapper.findAll('button').map((b) => accName(wrapper, b))
+    const signish = names.filter((n) => n.startsWith('Sign'))
+    // THE DEFECT, STATED: both controls were live, both called exactly "Sign".
+    expect(signish.length, 'the letter and its confirm are both on screen').toBe(2)
+    expect(new Set(signish).size, 'two live controls answering to one name').toBe(2)
+    expect(signish).toContain('Sign it')
+    // ...and WCAG 2.5.3: the visible word is still the first word of the name.
+    const confirm = wrapper.findAll('button').find((b) => b.text() === 'Sign it')
+    expect(confirm, 'the confirm still says what it does').toBeTruthy()
+    wrapper.unmount()
+  })
+})
+
+describe('D15 - the two unread markers on Home are things a test can ask for', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  /** ⚠ THE DOT HAS TO BE LIT OR THE TEST IS VACUOUS, and neither marker lights itself on a fresh
+   *  fixture: `inboxCue`'s watermarks seed themselves to "now" the first time they find no stored
+   *  value ("claim nothing", argued in that file). So the player is put BEHIND the newest story,
+   *  which is the round20-ui idiom for exactly this, and the letter marker is lit the same way. */
+  function homeWithMarkers() {
+    const snapshot = snapshotAfter(30)
+    withSnapshot(snapshot)
+    const careerId = useGameStore().snapshot!.careerId
+    localStorage.setItem(`tb:lastSeenBellNewsId:${careerId}`, String(latestNewsId(snapshot) - 1))
+    localStorage.setItem(`tb:lastSeenInboxLetter:${careerId}`, '')
+    return mount(HomeScreen, { props: { recapFresh: false }, global: { stubs: { teleport: true } } })
+  }
+
+  it('a lit dot is a named image, and it does not rename the button it sits in', () => {
+    const wrapper = homeWithMarkers()
+    const tools = wrapper.findAll('.diary-tool')
+    expect(tools.length, 'the header carries the bell, the envelope and the gear').toBeGreaterThan(2)
+    const dots = wrapper.findAll('.diary-tool-dot')
+    expect(dots.length, 'this fixture must actually have a marker lit').toBeGreaterThan(0)
+    for (const dot of dots) {
+      // The defect: a <span> with no role, no text and no label - unreachable by anything.
+      expect(dot.attributes('role'), 'an unnamed span is invisible to a screen reader').toBe('img')
+      expect((dot.attributes('aria-label') ?? '').length).toBeGreaterThan(0)
+    }
+    // ...and the buttons still answer to their own words, which is the half D7 established one
+    // screen over: a fact that ARRIVES may not rename a control.
+    const names = tools.map((t) => accName(wrapper, t))
+    expect(names).toContain('Open the inbox')
+    expect(names).toContain('Go to the news feed')
+    wrapper.unmount()
+  })
+
+  it('the marker is handed over as the DESCRIPTION, which is where a changing fact belongs', () => {
+    const wrapper = homeWithMarkers()
+    const lit = wrapper
+      .findAll('.diary-tool')
+      .filter((t) => t.find('.diary-tool-dot').exists())
+    expect(lit.length).toBeGreaterThan(0)
+    for (const tool of lit) {
+      const described = tool.attributes('aria-describedby')
+      expect(described, 'the dot is spoken, and it is spoken as a description').toBeTruthy()
+      expect(wrapper.find(`#${described}`).attributes('role')).toBe('img')
+    }
+    wrapper.unmount()
+  })
+})
+
+describe('D10 - ...and the OTHER date line, which was on nobody\'s list', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it("ThisWeek's date line has a role too, and it is the same fix Home took", () => {
+    const snapshot = snapshotAfter(30)
+    withSnapshot(snapshot)
+    const wrapper = mount(ThisWeekScreen, { global: { stubs: { teleport: true } } })
+    const heading = wrapper.find('[role="heading"][aria-level="1"]')
+    expect(heading.exists(), 'it was a bare <p>, reachable only as free text').toBe(true)
+    expect(heading.text()).toContain(weekDateLine(snapshot.week))
     wrapper.unmount()
   })
 })

@@ -70,6 +70,7 @@ import { copyByTrack, copyTrophyLedger, emptySeasonRecord } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
 import { travelCostFor } from './sponsors'
+import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
 // --- snapshot ----------------------------------------------------------------
@@ -685,6 +686,16 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     fundsCents: world.fundsCents,
     profile: world.profile,
     plan: world.plan,
+    // ⚠ v47 – HOW MANY SESSIONS ONE DAY MAY HOLD IN THE WEEK THE PLAN IS ABOUT TO BE LIVED IN, carried
+    // as DATA for exactly the reason `CalendarWeek.summer` and `.schoolOver` are: the plan tab may not
+    // ask the engine, and `summerBlockWeek` is not a predicate a screen could re-derive – it refuses on
+    // an injury, a booked family week, a tournament and a rested knock as well as on the calendar.
+    //
+    // ⚠ IT IS `week + 1`, NEVER TODAY, and the off-by-one is the same one `useCalendarWeek` documents:
+    // `tickWeek` increments `world.week` at its first statement, so the week a press plays is always
+    // the next one. A capacity read off today's week would put two dots on the last Sunday of the
+    // holidays and one on the Monday she actually trains through.
+    planDayCapacity: summerDayCapacity({ ...world, week: world.week + 1 } as WorldState),
     condition: world.condition,
     // injury is always null in slice B; drop the persisted-only `sinceWeek` when surfacing it.
     injury: world.injury

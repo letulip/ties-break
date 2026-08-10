@@ -1,12 +1,16 @@
 ---
 type: spec
-status: draft
+status: current
 area: training/plan
 canonical: false
-last-reviewed: 2026-08-09
+last-reviewed: 2026-08-10
 ---
 
 # The week is the plan – making the calendar real, and giving the coach a job
+
+**Status: the ENGINE slice (§2–§6, §10, §11) and the SCREEN (§9) are BUILT and shipped; §7 and §8 are
+designed and NOT built.** See the 🔨 block below for what landed, the places the code contradicted
+this page, and the seams the remaining slices plug into.
 
 **Design proposal. Nothing here is built, and nothing in `src/` was touched to write it.** Third
 draft, 09.08, after the owner's corrections to the layout. Where a number cannot be established
@@ -39,6 +43,75 @@ Home's "Coach note" card makes the coach's claim to a family paying nobody. The 
 самотренера надо убрать пока картинку оттуда и подпись, а мысль пусть останется.» The thought stays,
 the portrait and the signature go. That is a `HomeScreen.vue` change and belongs to whichever wave
 touches it, not to this design.
+
+---
+
+## 🔨 What is BUILT, and the three places the code contradicted this page
+
+**Slice 1 of the wave – the ENGINE – shipped on `feat/dials-engine`.** §2, §3, §4, §5, §6, §10 and §11
+are built and under test. **§7 (the coach's proposal), §8 (on-court coaching) and §9 (the screen) are
+NOT built** – the seams are left open for them and named at the bottom of this block.
+
+### ⚠ Three corrections, found by building it
+
+1. **`SAVE_SCHEMA_VERSION` was 46, not 45, so the move is 46 → 47.** §10 was written against a branch
+   point that the season-by-table wave had already moved past. Everything §10 says is otherwise
+   unchanged; substitute 47 for 46 and 46 for 45 throughout it. The fixture is
+   `tests/fixtures/saves/v47.json`.
+2. **`WeekPlan.week` ships OPTIONAL, not required.** §10 specifies `week: SessionKind[][]`. Required
+   would have forced a seven-day matrix onto **48 `{ train, rest }` literals across 17 files** –
+   including `tests/condition.test.ts`'s RNG-invariance variants, whose entire job is to poke a
+   *hostile* plan (`{ train: 100, rest: 0 }`) at the tick. That is the one guard this slice most has to
+   leave alone. Absence is a shape with a meaning rather than a hole: `planWeek()` reads it back as the
+   week the calendar has been drawing all along, which is byte-for-byte what the migration writes.
+3. **The plan outlives the week it was built in, and §3 does not say what happens then.** Three doubled
+   days in July are still three doubled days in September, when school takes the second session back.
+   Dropping the overflow would silently take hours off the bill; refusing the plan would make
+   `setPlan`'s verdict depend on which week he happened to be looking at. `resolveWeek` **moves** it:
+   the session count, the kinds, the bill, the rate and the knock chance are untouched, and the only
+   thing school takes away is the DOUBLING – which is what school takes away in the fiction.
+   `planShapeError` therefore validates the SHAPE (7 days, ≤2 a day, 4–6 sessions) and never the
+   current week's capacity.
+
+### The answers the bench and the build settled
+
+* **§12 item 1 – the headline.** Measured on `school-ends-2026-08.md` §10, that page's own harness.
+  Not doubling costs **0.14 junior years** on the careful-player arm (0.39 on the grinder) and moves
+  the median ranking five places in the direction of noise. **The fallback was NOT taken**: the
+  magnitude is right, and the change leaves both arms *fresher* because the −3 is no longer charged for
+  a week she did not double.
+* **§12 item 2 – the partly doubled week's condition charge.** `Math.round(cost × doublingShare)`. It
+  stays integer («no fractions») and reproduces 0 and 3 at the ends exactly; a six-session week
+  doubling one of its three possible days pays 1.
+* **§12 item 3 – zero or a floor for an untargeted skill.** Ships at **zero**, which is what §5's own
+  worked table states, and is wired as one constant (`SESSION_SPILL`, engine/development.ts) so the
+  other reading is a one-line sweep. A kind that already aims at everything has nothing to spill, so
+  `general` reads exactly 1.0 at any value and the migration's byte-identity survives the knob.
+* **§12 criterion 7 – RNG.** The frozen capture is **unchanged at 41550 / `e6b0c709`**, and `B1d` in
+  `tests/condition.test.ts` repaints the whole week before every one of 52 ticks – all five kinds, all
+  three volumes, a fully doubled week – against an identical MAIN sequence.
+* **§12 criterion 8 – schema.** Proved twice: `aimWeights` is `Object.is`-exactly 1 on every skill at
+  every session count for a migrated week, and a v46 fixture ticked one whole week under v47 code banks
+  byte-identical `skills`, funds, condition, knock and `rngMain`. A one-part-in-10¹⁰ drift in the aim
+  vector turns three tests red.
+
+### ⚠ The one thing that is deliberately NOT byte-identical, and it is ruled
+
+**A migrated career's school-free weeks come back at 1.0 instead of the automatic 1.4** until the
+player ticks a second session onto a day. §10's own ⚠ predicted this and the owner ruled the direction
+in advance. §10's byte-identity claim is therefore scoped, and the scope is *tested* rather than
+asserted: on every week `summerBlockWeek` refuses – every school week, plus injury, tournament, family
+week and rested knock – the two versions agree at 1, whatever the player ticked.
+
+### The seams left open
+
+| for | what exists | where |
+|---|---|---|
+| **§9, the screen** | `planWeek` / `planSessions` / `sessionCounts` / `resolveWeek` / `planShapeError` / `planFromWeek`, and `Snapshot.planDayCapacity` – the day-head capacity for the week the main button plays, carried as data because `summerBlockWeek` is not a predicate a screen could re-derive | `src/engine/plan.ts`, `src/shared/protocol.ts` |
+| **§9, the command** | `setPlan` takes a `plan.week`, re-validates the shape engine-side and DERIVES `train`/`rest` from it – the caller's own pair is ignored, so there is exactly one writer | `src/worker/sim.worker.ts` |
+| **§7, the coach's intervention** | nothing built, and nothing in the way: a proposal is a `SessionKind[][]` written through the same `setPlan` path, and `planShapeError` is the only rule it has to satisfy | – |
+| **§7 + §9, the Calendar** | ✅ **DONE with the screen (10.08).** `calendarWeekFor` reads `resolveWeek(planWeek(plan), snap.planDayCapacity)`, and `gymIndex` is gone: a matrix has no single gym index, so `CalendarWeek` carries `planDays` (`rest` / `court` / `gym` per day) and `weekGrid.ts` stops re-deriving the answer from a session COUNT. The owner ruled what the gym slot becomes (10.08, «либо тренер решает – это и остается в текущем варианте, либо родитель галочки проставит – тогда что прокликал, то и ставим»), so Tuesday stops being a convention and a preset – which ticks `general` seven times over – draws no gym day at all, which is the migration consequence §10 predicted | `src/composables/weekDays.ts`, `src/composables/weekGrid.ts` |
+
 
 ---
 
@@ -477,6 +550,40 @@ no accordion anywhere.
 
 A week the player does not own – away, off, exams, rehab – draws as it does today and the checkboxes
 are inert, with the sentence saying why.
+
+### ✅ 9b/9c/9d as BUILT (10.08) – and the four things that did not survive contact with the code
+
+`src/components/HerWeekTab.vue`, on `CoachMarketScreen`'s new `SegmentedRow`. Measured in a real
+browser through the e2e harness, not computed from the sheet:
+
+| | 375×667 | 390×844 |
+|---|---|---|
+| column width | **45.56px** (§9c predicted 45.6) | 47.70px |
+| gap | 4px | 4px |
+| cell height | 44px | 44px |
+| tab height | **560px** against ~567px of visible content | 560px |
+| page scroll | 839 vs 667 – 172px, all of it the market head above the tab | **none: 844 vs 844** |
+| horizontal overflow | none | none |
+
+1. **The block is a `div`, not a `section`.** The app's bare `section` rule is a padded panel and it
+   took the columns to **40.7px** – under the tap target. Caught in the browser; §9c's arithmetic was
+   right and its assumption about the element was not.
+2. **The per-day limit needed WORDS as well as dots.** On an ordinary school week five of seven
+   columns are full, so four of the five blocks render almost entirely disabled and the tab reads as
+   a broken screen. One line under the day heads says the rule.
+3. **The per-block subtitle from §2's table is not on screen.** Drawn once, measured at +85px down a
+   tab whose whole argument is that it is one screen and a nudge. §9b's own layout is a title line
+   and seven boxes; the names carry what each row works on.
+4. **The checkboxes stay LIVE on a week she is away**, where §9b says they should be inert. A plan is
+   a standing statement, `setPlan` accepts one on any week, and the exam fortnight KEEPS her sessions
+   – freezing the grid would stop him planning the week after, which is a refusal the engine does not
+   make. A strip carries the calendar's own sentence about the coming week instead, and claims
+   nothing about whether the plan runs in it. ⚠ An earlier draft DID claim it ("this plan starts when
+   she is back") and put that on the off-season, whose own read-out says the opposite.
+
+Also built: the day heads are `DAY_SHORT` (`MON`…`SUN`) rather than §9b's `M T W T F S S` sketch –
+§9d's own rule, and two Ts and two Ss are not a legend. §9b item 2 (the coach's line) is absent
+because §7 is not built; there is nothing to render.
 
 ### 9c. 375px, measured
 

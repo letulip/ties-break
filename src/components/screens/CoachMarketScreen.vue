@@ -24,10 +24,22 @@
 // numbers are not in this file, or in any file: engine/coach.ts derives them from HER remaining
 // headroom, which is what "всё зависит от ребенка" actually is. A range, never a single number,
 // because the weekly luck draw is real spread - and phrased as what a rung CAN add, never a promise.
+// ⚠ AND SINCE v47 IT IS TWO TABS - `Her week` and `Coaches` (docs/specs/training-dials.md §9a). Two
+// arguments, both settled there and neither re-opened here:
+//
+//   * IT IS NOT `Self-coaching` / `Coaches`. `COACH_TIERS` is literally
+//     ['self','budget','middle','high','elite'] and `coachFactor`, `COACH_EYE`, `COACH_ACCURACY` and
+//     `physioQuality` all have a `self` row - ONE ladder, self on the bottom rung, which is the
+//     owner's own «ничем не отличается, кроме того, что ничего не стоит». Two tabs on that axis would
+//     assert they are different KINDS of thing and hide the one comparison this screen exists to make.
+//   * IT IS A SWITCHER AND NOT AN ACCORDION. An accordion expands in place and makes the page longer,
+//     which is the longread he is avoiding; the app has no accordion anywhere.
 import { computed, ref, watchEffect } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
+import HerWeekTab from '../HerWeekTab.vue'
 import IconButton from '../ui/IconButton.vue'
+import SegmentedRow from '../ui/SegmentedRow.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
 import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
@@ -35,6 +47,15 @@ import { formatCents } from '../../shared/money'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
+
+/** THE TWO HALVES OF ONE DECISION: what she does with her week, and who she does it with. `Her week`
+ *  opens first because it is the half that is free, always available, and the one the owner has been
+ *  waiting for; `Coaches` is where it was. */
+const TABS = [
+  { value: 'week', label: 'Her week' },
+  { value: 'coaches', label: 'Coaches' },
+] as const
+const tab = ref<string>('week')
 
 const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
   aggressive: 'Aggressive baseliner',
@@ -254,6 +275,16 @@ function scrollToTier(tier: CoachTier): void {
       </div>
     </section>
 
+    <SegmentedRow
+      v-model="tab"
+      class="cm-tabs"
+      :options="TABS"
+      group-label="What this screen is about"
+    />
+
+    <HerWeekTab v-if="tab === 'week'" />
+
+    <template v-else>
     <!-- The budget meter: what she pays now, what a week brings in, and what is left. -->
     <section class="budget-meter">
       <div class="budget-top">
@@ -453,6 +484,7 @@ function scrollToTier(tier: CoachTier): void {
       </p>
       <button v-if="current" :disabled="game.busy" @click="goSelfCoached">Coach her yourself</button>
     </section>
+    </template>
 
     <ConfirmDialog
       v-if="pending"

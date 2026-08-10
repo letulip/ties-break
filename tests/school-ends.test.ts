@@ -26,12 +26,13 @@ import { markSchoolEnd } from '../src/engine/world/milestones'
 import { schoolTile } from '../src/engine/kidLife'
 import { kidAgeExact } from '../src/engine/world/age'
 import { ECONOMY } from '../src/engine/economy'
+import { planFromWeek } from '../src/engine/plan'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { SCHOOL_YEAR_TURNS_AT } from '../src/engine/kidLife'
 import { seasonYear } from '../src/shared/dates'
 import { calendarWeekFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { weekGridFor, bandFor } from '../src/composables/weekGrid'
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type SessionKind } from '../src/shared/protocol'
 import type { WorldState } from '../src/engine/world'
 
 const BIRTH_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
@@ -167,11 +168,28 @@ describe('W4-SCHOOL – the freed hours, and the five weeks that are not hers to
     return w
   }
 
+  // ⚠⚠ RE-AIMED FOR v47, NOT WEAKENED – BOTH ASSERTIONS ARE THE ONES THAT WERE HERE, PLUS THE ARM THAT
+  // IS NEW. The freed hours are still worth `ECONOMY.school.loadFactor`; what changed is that she has
+  // to actually take them. Until v47 the post-school bonus was a property of the WINDOW, granted
+  // whether or not she was on court twice a day, because the plan was one scalar and nobody could
+  // decide that she was. The owner ruled the consequence in advance (10.08: «да»): the bonus follows
+  // the DOUBLING, not the calendar – see docs/specs/training-dials.md §3 and engine/world/summer.ts.
+  // «а тренировки и прогресс должны удвоиться» is unchanged as a claim about what leaving school MAKES
+  // POSSIBLE; it is now his to take rather than the calendar's to hand over.
   it('a post-school training week develops at ECONOMY.school.loadFactor and costs its conditionCost', () => {
     const w = past('school-load')
+    // she is on court twice a day – six sessions across three days, which is what the mornings buy
+    w.plan = planFromWeek([['general', 'general'], ['general', 'general'], ['general', 'general'], [], [], [], []])
     expect(summerBlockWeek(w)).toBe(true)
     expect(summerLoadFactor(w)).toBe(ECONOMY.school.loadFactor)
     expect(summerConditionCost(w)).toBe(ECONOMY.school.conditionCost)
+    // ...and the new arm: the same week, the same freed mornings, spent as six single days. The window
+    // opened and she did not walk through it, so it buys nothing – which is the whole v47 change, and
+    // the reason a MIGRATED career's post-school weeks come back at 1 until he ticks a second session.
+    w.plan = planFromWeek([['general'], ['general'], ['general'], ['general'], ['general'], ['general'], []])
+    expect(summerBlockWeek(w)).toBe(true)
+    expect(summerLoadFactor(w)).toBe(1)
+    expect(summerConditionCost(w)).toBe(0)
   })
 
   it('...and a week at school is byte-identical to the one it was', () => {
@@ -279,10 +297,22 @@ describe('W4-SCHOOL – the calendar stops drawing lessons', () => {
     w.week = examAfter - 6
     expect(() => assertPlannable(w, examAfter, 'practice')).not.toThrow()
 
-    const cal = calendarWeekFor(facts({ week: end + 3 }), end + 4)
+    // ⚠ RE-AIMED AT v47 (spec §3, ruled in advance by the owner). «Two sessions a day» used to be a
+    // property of the WINDOW – printed on every school-free week, over a plan that could not double
+    // anything. `summerLoadFactor` now follows `doublingShare`, so the sentence follows what he built.
+    // Both assertions are kept, on a week whose plan really does double; the flat week gets its own.
+    const doubled: SessionKind[][] = [['general', 'serve'], [], ['general', 'rally'], [], ['general'], [], []]
+    const cal = calendarWeekFor(
+      facts({ week: end + 3, plan: { ...WEEK_PLAN_PRESETS.balanced, week: doubled }, planDayCapacity: 2 }),
+      end + 4,
+    )
     expect(cal.title).toBe('Training week')
     expect(cal.readout).not.toContain('school')
     expect(cal.readout).toContain('two sessions a day')
+
+    const flat = calendarWeekFor(facts({ week: end + 3, planDayCapacity: 2 }), end + 4)
+    expect(flat.readout).not.toContain('two sessions a day')
+    expect(flat.readout).toContain('room to double up')
   })
 
   it('the snapshot carries the WEEK and not a boolean, so a look-ahead can ask about a future week', () => {

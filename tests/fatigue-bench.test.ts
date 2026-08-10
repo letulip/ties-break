@@ -37,6 +37,7 @@ import { matchDrain } from '../src/engine/condition'
 import { reconstructRun } from '../src/engine/season/rival'
 import { TIERS, WEEKS_PER_YEAR, OFF_SEASON_WEEKS, SUMMER_WEEKS } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
+import type { WeekPlan } from '../src/shared/protocol'
 
 // The fatigue bench is a MEASUREMENT tool for the round-9 condition math: it must be
 // deterministic, its policy ordering must reflect the load-management axis it exists to compare,
@@ -127,8 +128,20 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
   // +physio bonus, +blackout bonus, then the per-match drains (straight sets 1 / 3-setter-or-TB
   // 2 / +1 past two TB sets, + tier surcharge), each side clamped to [min,max] exactly like the
   // engine's accrue-then-commit order. NO engine condition function is imported.
-  function independentTrace(facts: WeekFacts[], restPercent: number, physioActive: boolean): number[] {
+  function independentTrace(facts: WeekFacts[], plan: WeekPlan, physioActive: boolean): number[] {
     const k = ECONOMY.condition
+    const restPercent = plan.rest
+    // ⚠ v47 – HOW DOUBLED THE WEEK IS, RE-DERIVED HERE FROM THE PLAN'S OWN MATRIX rather than by
+    // calling `doublingShare`, for the same reason the blackout and summer arms re-derive their
+    // windows: this trace's whole job is to recompute the arithmetic WITHOUT the engine's helpers, or
+    // it would only be checking that a function equals itself. An ABSENT `week` is the legacy plan and
+    // is never doubled, which is exactly what `planWeek` expands it to – so a bench whose policies
+    // carry `WEEK_PLAN_PRESETS` reads 0 here, which is the whole point of the v47 change.
+    const planned = plan.week ?? []
+    const plannedSessions = planned.reduce((t, d) => t + d.length, 0)
+    const plannedDoubled = planned.filter((d) => d.length >= 2).length
+    const mostDoubles = Math.floor(plannedSessions / 2)
+    const doubledShare = mostDoubles > 0 ? Math.min(1, plannedDoubled / mostDoubles) : 0
     const clamp = (x: number) => Math.min(k.max, Math.max(k.min, x))
     /** the season-planner drain of a friendly, re-derived from its SCORELINE: max(1, scoreline − 1).
      *  ⚠ THE TIER SURCHARGE IS NOT IN IT SINCE W2-WINDOW, and it never meant to be: the engine's
@@ -200,7 +213,16 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
       const inSummer = summerOffset >= SUMMER_WEEKS[0] && summerOffset <= SUMMER_WEEKS[1]
       const competed = f.played || f.medicalWithdrawal
       if (inSummer && !f.injured && !competed && !f.vacationResolvedId) {
-        c = clamp(c - ECONOMY.summerBlock.conditionCost)
+        // ⚠⚠ RE-AIMED FOR v47, NOT WEAKENED, AND THIS GUARD CAUGHT THE CHANGE – WHICH IS WHY IT EXISTS.
+        // The charge is unchanged in value and unchanged in slot; what changed is what it is the price
+        // OF. Until v47 `summerBlock.conditionCost` was a property of the WINDOW, taken from every
+        // school-free training week whether or not she was on court twice a day, because the plan was
+        // one number and nobody could decide that she was. v47 makes the days the plan and the owner
+        // ruled the consequence in advance (10.08: «да»): the cost follows the DOUBLING. A fully
+        // doubled week still pays exactly 3, an undoubled one pays 0, and `Math.round` keeps the middle
+        // integer – «no fractions», the owner's own rule for this accumulator. See
+        // engine/world/summer.ts and docs/specs/school-ends-2026-08.md §10.
+        c = clamp(c - Math.round(ECONOMY.summerBlock.conditionCost * doubledShare))
       }
       // then the planner's own two effects, in the engine's order: the vacation package's gain,
       // then the friendly's drain.
@@ -254,7 +276,7 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
       for (let i = 0; i < H104.weeks; i++) facts.push(stepFatigueWeek(world, rng, policy, plannerState))
 
       const engineTrace = facts.map((f) => f.condition)
-      const recomputed = independentTrace(facts, policy.plan.rest, physioActive)
+      const recomputed = independentTrace(facts, policy.plan, physioActive)
       expect(JSON.stringify(recomputed)).toBe(JSON.stringify(engineTrace)) // byte-equal
 
       // and the runner reports the same trace (runFatigueCareer wraps stepFatigueWeek)
@@ -280,13 +302,41 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
         const plannerState = { practiceEligibleIdx: 0, seaBookedYears: new Set<number>() }
         for (let i = 0; i < H104.weeks; i++) facts.push(stepFatigueWeek(world, rng, policy, plannerState))
         const engineTrace = facts.map((f) => f.condition)
-        expect(JSON.stringify(independentTrace(facts, policy.plan.rest, physioActive))).toBe(
+        expect(JSON.stringify(independentTrace(facts, policy.plan, physioActive))).toBe(
           JSON.stringify(engineTrace),
         )
         expect(facts.some((f) => f.matchScores.length > 0)).toBe(true)
       }
     })
   })
+
+  // ⚠⚠ THE ARM THIS BENCH CANNOT REACH, MEASURED RATHER THAN ASSUMED (v47).
+  //
+  // Every entry in `POLICIES` carries a `WEEK_PLAN_PRESETS` plan, which has no `week` and is therefore
+  // never doubled – so the two tests above pin the recomputation at `doubledShare === 0`. That is the
+  // arm a MIGRATED career lands on and it is the important one, but it is not the whole dial, and this
+  // note exists because I tried to widen it here and the widening did not work.
+  //
+  // WHAT I TRIED: the same machinery driven with two hand-written plans the bench has no policy for –
+  // five sessions with one of two possible days doubled (share 1/2) and with both (share 1). The
+  // traces DID diverge between the arms, which looks like coverage and is not: the divergence comes
+  // through `summerLoadFactor` (different skills -> different matches), not through the condition
+  // charge. Mutating the charge to `Math.floor` and then to `0` left both arms GREEN, which is the
+  // definition of a test that is green about the thing it claims to test, so it was removed.
+  //
+  // WHY IT CANNOT WORK HERE, and it is a fact about the bench rather than about v47: every policy is
+  // enter-all, so she is COMPETING through the holidays – `summerBlockWeek` refuses on a competition
+  // week (a tournament week already has its own bonus and its own bill), which is the same finding
+  // tools/summer-bench.ts reports from the other side (a racing career sees 3.9 block weeks a season
+  // against a training-only career's 9.0). The handful that survive land where this bench's careers
+  // spend their summers, near the condition FLOOR, and `clamp(c - 3)` and `clamp(c - 2)` are both 0
+  // there. Reaching the arm would need a training-only policy, which would add a cell to a published
+  // measurement to serve a test – the wrong trade.
+  //
+  // WHERE THE NON-ZERO ARMS ARE PINNED INSTEAD: tests/plan.test.ts §6, in the unit project, against
+  // `summerLoadFactor` and `summerConditionCost` directly – both ends and the middle, mutation-verified
+  // against `Math.floor`, against a vanished charge, against a mis-counted `doubledDays` and against
+  // the window rule coming back.
 
   it('physio wiring: careful forces on; grinder/balanced follow the coach default; grid "off" forces off', () => {
     expect(openFatigueCareer(middleSelf, careful, 0).world.physioActive).toBe(true)

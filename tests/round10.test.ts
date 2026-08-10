@@ -162,6 +162,7 @@ describe('R10-17 — the injury gate is read against the EVENT week, not the cur
     expect(w.entries).toContain(first.id)
 
     setInjury(w, 4) // out 4 weeks -> back at W4
+    const theLayoff = w.injury! // ...and it is THIS one whose end the test is about – see below
     const backWeek = w.week + 4
 
     // While out, an event inside the layoff is refused – that part was always right.
@@ -176,8 +177,26 @@ describe('R10-17 — the injury gate is read against the EVENT week, not the cur
         closeTournament(w)
       }
     }
-    expect(w.injury).toBeNull() // the layoff really did end
+    // ⚠ RE-AIMED, NOT RELAXED (10.08, the retirement slice). This read `expect(w.injury).toBeNull()`
+    // and it asserted two things at once while only meaning one. The week she comes back is the week
+    // she PLAYS the tournament she entered eight lines up, and since the retirement slice ~2.7% of
+    // matches end with somebody unable to continue – so a career driven through a real tournament can
+    // legitimately arrive here carrying a DIFFERENT, newer injury (this fixture's does: a wrist
+    // strain, onset on the return week). The claim this test has always made is that THE LAYOFF THAT
+    // WAS SET really ended, and that is now asserted by its own identity rather than by the field
+    // merely being empty – which is the stronger reading, because `injury === null` would also have
+    // passed had the original layoff been silently replaced.
+    expect(w.injury === theLayoff, 'the layoff that was set must be over').toBe(false)
+    expect(w.injuryHistory.some((r) => r.kind === theLayoff.kind), 'and recorded as recovered').toBe(true)
     expect(w.week).toBeGreaterThan(backWeek)
+
+    // ⚠ ...AND A FRESH ONE PICKED UP ON THE WAY IS CLEARED HERE, DELIBERATELY AND IN THE OPEN. A new
+    // injury blocks entry for its own, correct reasons – that behaviour is pinned in C4 and in
+    // tests/match-retirement.test.ts – and leaving it standing would turn this test from "the gate is
+    // read against the EVENT week" into "she happened not to get hurt again", which is a different
+    // question with a seed-dependent answer. Nothing about the R10-17 gate is weakened by it: the
+    // assertions below are exactly the ones that were here.
+    w.injury = null
 
     // ...and entry works again. THIS is what the owner could never do.
     const after = injectEvent(w, { week: w.week + 3, tier: 'local', id: 'after', deadlineWeek: w.week + 1 })

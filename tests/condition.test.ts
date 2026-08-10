@@ -23,6 +23,9 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
+// v47: the week joins the RNG-invariance sweep – see the ⚠ in `variants` and B1d below.
+import { planFromWeek } from '../src/engine/plan'
+import { SESSION_KINDS, type SessionKind } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { SUMMER_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR, isSummerWeek } from '../src/engine/season/calendar'
@@ -499,6 +502,23 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
       (w) => (w.fundsCents = 9_999_999_00),
       (w) => (w.physioActive = true),
       (w) => (w.physioActive = false),
+      // ⚠ v47 – THE WEEK IS THE PLAN, SO IT JOINS THE SWEEP (docs/specs/training-dials.md §11 item 8).
+      //   Nothing above is removed or relaxed; these are added beside it. `plan.week` is the largest
+      //   piece of player input the tick has ever read - seven days of session kinds - and invariant 2
+      //   says a player's choices may never re-roll the world's dice. Every dial: each kind swept
+      //   across a whole week, the volume at both ends, and a fully doubled week.
+      ...SESSION_KINDS.map((kind) => (w: WorldState) => {
+        w.plan = planFromWeek([[kind], [kind], [kind], [kind], [kind], [kind], []])
+      }),
+      (w) => (w.plan = planFromWeek([['general'], ['general'], ['general'], ['general'], [], [], []])),
+      (w) =>
+        (w.plan = planFromWeek([
+          ['serve', 'serve'], ['rally', 'rally'], ['fitness', 'fitness'], [], [], [], [],
+        ])),
+      (w) =>
+        (w.plan = planFromWeek([
+          ['matchplay'], ['general', 'fitness'], [], ['serve'], ['rally'], ['serve'], [],
+        ])),
     ]
     for (const mutate of variants) {
       const v = recordRun(mutate)
@@ -536,6 +556,57 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
     expect(aiResults(world)).toEqual(aiResults(base.world))
     // ...but she actually played, so the entered run left a kid match record the baseline lacks.
     expect(world.events.some((e) => e.type === 'match')).toBe(true)
+  })
+
+  // ---------------------------------------------------------------------------
+  // B1d — REPAINTING THE WHOLE WEEK, EVERY WEEK (v47, docs/specs/training-dials.md §11 item 8 and
+  // §12 criterion 7). The variants above set a plan ONCE and let the career run; this is the
+  // adversarial version of the same claim, and it is the one the training-dials wave owes.
+  //
+  // WHY IT IS A SEPARATE TEST. `plan.week` is the first control in the game the player can move every
+  // single week, and it feeds three different consumers: `aimWeights` (a post-draw multiply inside
+  // growWeek), `knockPartWeights` (a different TABLE for a draw that was already taken) and
+  // `doublingShare` (integer arithmetic beside accrueCondition). A static plan exercises none of the
+  // transitions between them. So this run rewrites the entire matrix before every tick, cycling
+  // through all five kinds, all three volumes and a fully doubled week, and asserts the MAIN sequence
+  // is byte-identical to a career where nobody touched anything.
+  //
+  // ⚠ WHAT IT WOULD CATCH: any draw whose COUNT or ORDER became a function of the ticks. That is the
+  // one defect class this slice could have introduced and the one the brief calls a report-and-stop.
+  // ---------------------------------------------------------------------------
+  it('B1d — every dial swept every week taps an identical MAIN sequence to a no-action run', () => {
+    const base = recordRun()
+    const weeks: SessionKind[][][] = [
+      [['general'], ['general'], ['general'], ['general'], ['general'], [], []],
+      [['serve'], ['serve'], ['serve'], ['serve'], ['serve'], ['serve'], []],
+      [['rally'], [], ['rally'], [], ['rally'], [], ['rally']],
+      [['fitness', 'fitness'], ['matchplay', 'matchplay'], [], [], [], [], []],
+      [['matchplay'], ['general'], ['serve'], ['rally'], [], [], []],
+      [['serve', 'rally'], ['fitness', 'matchplay'], ['general', 'serve'], [], [], [], []],
+    ]
+    const world = createWorld('bench-working-0')
+    const raw = rngFromSeed(world.seed)
+    const draws: number[] = []
+    const rng = () => {
+      const v = raw()
+      draws.push(v)
+      return v
+    }
+    for (let i = 0; i < 52; i++) {
+      // repainted BEFORE the tick, so the week that is about to resolve is the one he just built
+      world.plan = planFromWeek(weeks[i % weeks.length])
+      tickWeek(world, rng)
+    }
+    expect(draws.length).toBe(base.draws.length)
+    expect(hashOf(draws)).toBe(hashOf(base.draws))
+    expect(draws.slice(0, 8)).toEqual(base.draws.slice(0, 8))
+    expect(draws.slice(-8)).toEqual(base.draws.slice(-8))
+    expect(world.cohort).toEqual(base.world.cohort)
+    expect(aiResults(world)).toEqual(aiResults(base.world))
+    expect(world.kidRank).toBe(base.world.kidRank)
+    // ...and the run really did aim the weeks somewhere, so this is not a green test about nothing.
+    expect(world.plan.week).toBeDefined()
+    expect(world.skills).not.toEqual(base.world.skills)
   })
 
   // ---------------------------------------------------------------------------
@@ -1492,8 +1563,24 @@ describe('the summer training block — volume, its price, and the trade', () =>
     expect(summerBlockWeek(playing), 'a tournament week').toBe(false)
   })
 
+  // ⚠⚠ RE-AIMED FOR v47, NOT WEAKENED – EVERY ASSERTION BELOW IS THE ONE THAT WAS HERE, PLUS TWO.
+  //
+  // WHAT CHANGED AND WHY. Until v47 these two knobs were a property of the WINDOW: granted
+  // automatically to every school-free training week, whether or not she was actually on court twice a
+  // day, because the plan was one scalar and nobody could decide that she was. The read-out has been
+  // printing «N days on, two sessions a day» over a plan that could not express it. v47 makes the days
+  // the plan (docs/specs/training-dials.md), and the owner ruled the consequence IN ADVANCE, 10.08:
+  // «да» – the bonus follows the DOUBLING, not the calendar, because paying it regardless would pay
+  // him for a choice he did not make and would leave the doubled week and the undoubled one identical.
+  //
+  // So the test now says what the block was always describing: a FULLY DOUBLED school-free week
+  // reproduces 1.4 and −3 exactly – the same numbers, unmoved – and the arm that is new is the
+  // undoubled one, which gets 1.0 and 0. The line that used to be implicit («she is on court twice a
+  // day») is now a fact on the world instead of an assumption in the fixture.
   it('the two knobs are the two halves, and they move in opposite directions', () => {
     const w = worldAt(summerWeek)
+    // she is on court twice a day – which is what this block has always MEANT, now stated
+    w.plan = planFromWeek([['general', 'general'], ['general', 'general'], ['general', 'general'], [], [], [], []])
     expect(summerLoadFactor(w)).toBe(ECONOMY.summerBlock.loadFactor)
     expect(summerLoadFactor(w)).toBeGreaterThan(1) // she develops MORE
     expect(summerConditionCost(w)).toBe(ECONOMY.summerBlock.conditionCost)
@@ -1502,6 +1589,11 @@ describe('the summer training block — volume, its price, and the trade', () =>
     // block may never turn an ordinary week into a net drain, or nine of them in a row would be a
     // punishment rather than a choice.
     expect(ECONOMY.summerBlock.conditionCost).toBeLessThan(ECONOMY.condition.recoveryBase)
+    // ⚠ AND THE NEW HALF: a week she did NOT double is inside the same window and buys nothing. That
+    // is the whole of the v47 change, and it is the reason a migrated career's summers come back at 1.
+    w.plan = planFromWeek([['general'], ['general'], ['general'], ['general'], ['general'], [], []])
+    expect(summerLoadFactor(w)).toBe(1)
+    expect(summerConditionCost(w)).toBe(0)
   })
 
   it('a real career runs the block and pays for it, and the MAIN capture cannot see it', () => {
@@ -1520,6 +1612,13 @@ describe('the summer training block — volume, its price, and the trade', () =>
       Object.assign(ECONOMY.summerBlock, { loadFactor, conditionCost })
       try {
         const w = createWorld('summer-e2e')
+        // ⚠ RE-AIMED FOR v47, NOT WEAKENED (see the note on the knobs test above). Since the bonus
+        // follows the doubling rather than the calendar, the arm that is supposed to RUN the block has
+        // to be a week she actually doubled – six sessions across three days, which is what «two
+        // sessions a day» has always meant. Both arms below run this identical plan, so the only thing
+        // that varies between them is still the pair of knobs, and every assertion is the one that was
+        // here before.
+        w.plan = planFromWeek([['general', 'general'], ['general', 'general'], ['general', 'general'], [], [], [], []])
         const rng = rngFromSeed(w.seed)
         for (let i = 0; i < SUMMER_WEEKS[0] - 1; i++) tickWeek(w, rng)
         w.condition = 20 // a body carrying half a season, which is whose summer this is

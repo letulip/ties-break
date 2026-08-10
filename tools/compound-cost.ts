@@ -40,7 +40,6 @@ import {
   stepCareerWeek,
   runCareer,
   REACH_PRO_RANK,
-  REACH_PRO_POINTS,
   WEEKS_PER_YEAR,
 } from './econ-bench'
 // ⚠ A NAMESPACE IMPORT AND NOT A NAMED ONE, because this file runs in FOUR trees and two of them
@@ -93,7 +92,9 @@ function coachSays(world: WorldState, e: SeasonEvent): string | null {
 function reachedH18(world: WorldState): boolean {
   const points = kidPoints(world, 'itf')
   const hasResults = points > 0
-  return (hasResults && world.kidRank <= REACH_PRO_RANK) || points >= REACH_PRO_POINTS
+  // ⚠ ONE ARM SINCE 10.08 – the points arm was inert on all nine presets and was removed
+  // rather than re-tuned; tools/econ-bench.ts carries the measurement. This copy follows it.
+  return hasResults && world.kidRank <= REACH_PRO_RANK
 }
 
 interface Row {
