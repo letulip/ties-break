@@ -509,3 +509,29 @@ rather than a fourth screen. **His call, not mine.**
 Save schema **v44** (`WorldEventCategory` `+facility`); the migration back-fills nothing, on purpose –
 nothing in a v43 save can say which cents of a coaching row were the court, and a reconstruction would
 be a guess wearing a ledger's clothes.
+
+## 2026-08-10 – A 25k family that buys a high coach should go broke; the tripwire moves cell (`fix/reach-fixture`)
+
+`docs/specs/compound-cost-2026-08.md` §7 put one question to the owner and he took the first answer:
+
+> «Первый: семья за 25к, покупающая высокого тренера, и ДОЛЖНА разоряться – по-моему да, мы на их
+> выбор не влияем.»
+
+**So the balance is right and the FIXTURE was wrong.** Nothing in the engine moves – not the coach
+retainer, not the ladder floor, not `REACH_PRO_RANK` / `REACH_PRO_POINTS`. What moves is which family
+`tests/econ-reach.test.ts`'s 14→18 arm asks about, because a PRO proxy that is decided by the bank
+balance is measuring the wrong thing whichever way the balance is ruled: §5 of that spec found eleven
+of `middleHigh`'s fifteen lost careers were the family going bankrupt and four were the tennis.
+
+**Re-pointed at `25k · middle · self-coached`, chosen by `tools/reach-sweep.ts` across all nine
+presets exactly as `middleHigh` was.** It reads **13 of 30**, and the same 13 with a wallet that
+cannot empty – so all seventeen misses are the tennis, two careers of thirty ever go red and none
+goes bankrupt. Band re-measured on that cell by the file's own rule (half the distance to each
+degenerate answer): **[7, 21]**. **`[12, 27]` was not re-based to fit 1 of 30** – that was the one
+option §7 forbade, and 1 of 30 stands as a true reading of the cell it was taken on.
+
+⚠ **The cost of the choice, recorded because it is a real loss:** a self-coached family pays no
+coaching bill, so this arm can no longer notice a wave that re-prices coaches. That is what makes it
+durable and it is also what it gives up; the money question now lives entirely in
+`tools/compound-cost.ts`, `endings-bench` and the survival rows of `bench:econ`. Full write-up,
+tables and the solvency-versus-tennis split for all nine presets: `compound-cost-2026-08.md` §9.
