@@ -152,6 +152,48 @@ different questions and it would be easy to quote the wrong one. The research's 
 as retired if either player stopped, which is what 2.81% is; a career of ~20 matches a season sees her
 own retirement about once every three or four seasons, and one of her opponents' about as often.
 
+### 4.1 ⚠ THE ONE THING NEITHER THE RULING NOR THE RESEARCH ANTICIPATED – it dilutes the C3 anchor
+
+**Two sim tripwires fire on this branch, both by design of what they are for, and neither is a defect
+in this code. They need the owner, not a re-pin.**
+
+| Test | Assertion | Without the retirement (`RETIRE_K = 0`) | With it (`0.07`) |
+|---|---|---|---|
+| `fatigue-bench-policy-104w` | grinder/careful injury ratio `> 1.5` | **1.708** | **1.147** |
+| `fatigue-bench-planner` | grinder medical blocks `>` managed's | passes (9/9) | **66 vs 66 – a tie** |
+
+Measured by running each file twice on this branch, the only difference being `RETIRE_K`.
+
+**THE MECHANISM, AND IT IS A PROPERTY OF THE DESIGN INSTRUCTION RATHER THAN A BUG.** The hazard is
+zero for the first `FATIGUE_START` (120) points, which was chosen deliberately – the fiction is
+exhaustion, not an accident. It follows that **a retirement is a thing that happens in LONG matches**,
+and long matches are what the CAREFUL parent plays: she arrives fresh, `conditionMatchFactor` leaves
+her skills intact, she wins rounds and contests them. The GRINDER lives at condition ~27, is scaled
+down by the same factor, and loses her opener in ninety points – **collecting no retirement hazard at
+all**. A second, smaller effect pushes the same way: an injury week takes the weekly occurrence roll
+off the table entirely (`rollInjury` returns early while `world.injury` is set), so extra layoff weeks
+partly SUBSTITUTE for the fatigue-driven injuries in the arm that is already at `injuryChanceCap`.
+
+So the retirement is **not a grinding punisher**, and the fatigue model's "grinding hurts you" signal
+is measurably diluted by it. That is worth the owner's attention because C3 is his own target.
+
+⚠ **The 3× anchor was ALREADY LOST before this wave.** The baseline on this branch is **1.708**, not
+the 3.12 the test's own comment records, and it was sitting 0.2 above a 1.5 tripwire. This slice is
+the straw, not the load. **The two tests are left FAILING and NOT re-pinned**: taking an owner's
+balance target from 1.5 to 1.1 is his call, and a corridor quietly widened to admit the change that
+broke it is the failure mode every note in that file was written to prevent.
+
+**If the signal has to be restored, the levers, in order of honesty:**
+
+1. **Nothing** – accept that a retirement is a long-match event and that C3 is now carried by the
+   weekly model alone. The rate is right and the fiction is right; only the METRIC is diluted.
+2. **Re-read the 104w anchor against the pre-existing 1.708 drift first.** Whatever is taking that
+   number from 3.12 to 1.71 is bigger than this feature and is not in this branch.
+3. **Lower `FATIGUE_START` for the hazard alone** (a second constant, not the shipped 120), so a
+   worn girl who loses a 100-point opener can still stop. It buys back the correlation with fatigue –
+   and it costs the fiction the design instruction bought: she would stop in matches that were not
+   long. **Recommended against without a ruling.**
+
 ## 5. Where the injury lands – the same uniform, a different table
 
 `src/engine/body.ts`, `tiltedBodyRegions(loaded, pushed)`. The twelve `BODY_REGIONS` weights are
