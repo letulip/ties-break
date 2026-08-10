@@ -295,7 +295,7 @@ what kind of coverage each row has rather than only whether it has any.
 | Knocks: the decision that stops the week | [season-life-03-injuries.md](season-life-03-injuries.md) | yes – `week-advance` | **e2e** – the engine refuses to tick and the UI must show that refusal before the player presses anything |
 | Tournament entry through the UI | [season-planner.md](season-planner.md) | yes – `tournament-entry` | **e2e** – one command, three screens that must agree about its result, and a spend with no tick behind it |
 | Tournament draw, reveal and result | [tournament-experience.md](tournament-experience.md) | yes – `tournament`, `persistence` | **e2e** – the longest loop in the app and the only one that pauses the world mid-command |
-| A week that stops and says why | [season-planner.md](season-planner.md) | yes – `week-advance` | **e2e** – the shell's banner is unmountable below this level (`virtual:pwa-register`), and the count on it is the engine's |
+| A week that stops and says why | [season-planner.md](season-planner.md) | yes – `week-advance` | **e2e** – the shell's banner is unmountable below this level (`virtual:pwa-register`), and the count on it is the engine's `snapshot.debt`. The warning phase the count belongs to is [adult-tour-and-endings.md](adult-tour-and-endings.md) |
 | Season roll-over and the wrap-up card | [season-mirror-2026-08.md](season-mirror-2026-08.md) | yes – `week-advance` | **e2e** – ~50 lines of accounting inside the worker; the card's contents are component-owned |
 | The family budget and the ledger | [economy-wave.md](economy-wave.md) | partial – the ledger is reached and non-empty | **unit** – every figure is unit-owned; e2e asserts only that a week's money arrived |
 | Ranking tables | [two-ladders.md](two-ladders.md) | partial – the rank chip renders from the snapshot | **unit** – three ladders, points, decay: all arithmetic |
@@ -304,7 +304,7 @@ what kind of coverage each row has rather than only whether it has any.
 | The Home season strip | [home-season-strip.md](home-season-strip.md) | yes – `responsive` | **e2e** – a wrap regression, and happy-dom cannot wrap |
 | Match engine: points, scoring, rallies | [phase1-match-engine.md](phase1-match-engine.md) | no | **unit + sim** – see 8.3 |
 | Match visualisation | [phase2-match-viz.md](phase2-match-viz.md) | no | **component** – `match-viewer` is mounted and mutation-verified |
-| Sponsor window, letters and the inbox | [offers-and-the-inbox.md](offers-and-the-inbox.md) | yes – `sponsor-inbox` | **e2e** – one signature has to close a letter nobody touched and raise a contract on another screen; the terms stay unit-owned |
+| Sponsor window, letters and the inbox | [sponsor-window-2026-08.md](sponsor-window-2026-08.md) | yes – `sponsor-inbox` | **e2e** – one signature has to close a letter nobody touched and raise a contract on another screen; the terms stay unit-owned. The sheet's own spec is [offers-and-the-inbox.md](offers-and-the-inbox.md) |
 | The coach market | [what-a-coach-is-for.md](what-a-coach-is-for.md) | no | see 8.2 – **a real gap**, unblocked and deliberately deferred |
 | Endings, the fork and the album | [endings-and-the-album.md](endings-and-the-album.md) | partial – `seeded-careers` proves the epilogue replaces the shell | **component** – `endings-ui`, `finale-applause` |
 | Storage recovery | [career-contract-v1.md](career-contract-v1.md) | yes – `storage-recovery` | **e2e** – a real IndexedDB refusing a real open, and a real SHA-256 failing on a real generation. Nothing below this level has either |

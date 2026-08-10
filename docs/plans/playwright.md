@@ -11,11 +11,13 @@ last-reviewed: 2026-08-08
 **Status: S0, S1 and S2 built (06–09.08); S3's report built, its matrix not.** The coverage map –
 what is covered, at which layer, and what is deliberately not – is
 [`docs/specs/e2e-coverage.md`](../specs/e2e-coverage.md), and `e2e/coverage-map.spec.ts` keeps that
-document honest against the repo. **18 tests, ~25 s.** Written 06.08.2026, when the repo had no
+document honest against the repo. **25 tests, ~21 s** (18 on 09.08; the S2 wave of 10.08 closed the
+three writable gaps in that document's risk register). Written 06.08.2026, when the repo had no
 `@playwright/test`, no `e2e/` directory and exactly **zero** `data-testid` attributes – which was the
-honest place to start from. **It still has zero:** the harness, the five fixtures and the seeding
-fixture were all written against role and accessible name alone (§4), and the two places that came
-closest are recorded where they were met rather than papered over with an attribute.
+honest place to start from. **It still has zero:** the harness, the six fixtures and the seeding
+fixture were all written against role and accessible name alone (§4), and every place that came close
+is recorded where it was met rather than papered over with an attribute – fifteen of them now, in
+`e2e-coverage.md` §12, three raised by the last wave.
 
 ## 1. Why this app is an unusually good subject
 
@@ -175,7 +177,8 @@ on it.
 
 ### S1 – the fixture engine (one day) – BUILT
 
-The `careerAt` fixture from section 3, the generator script, the five fixtures. Plus the two hazards
+The `careerAt` fixture from section 3, the generator script, the fixtures – five then, six since
+`sinking` was added on 10.08 so a week could be stopped without ending a career. Plus the two hazards
 this app will hit and most apps do not – and a third that only showed up once the two halves met:
 
 - **The service worker must be controlled.** ✅ `VITE_TB_SW=off` on the `webServer` (S0). Still holds
