@@ -252,7 +252,7 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
   // public/icons: dollar sign for a tournament enter page, back and close icons»), normalised into the
   // repo's convention. `trophy` and `spectators` are the two tournament-tile glyphs he supplied
   // nothing for, lifted from TournamentFlow's inline SVG.
-  const ASSETS = ['back', 'close', 'dollar', 'trophy', 'spectators']
+  const ASSETS = ['back', 'close', 'dollar', 'trophy', 'spectators', 'bin']
 
   it('the artwork he asked for exists as real SVG under public/', () => {
     for (const name of ASSETS) {
@@ -302,6 +302,43 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
     }
     sweep(join(root, 'public'))
     expect(strays.join('\n')).toBe('')
+  })
+
+  // ⚠ THE TEST ABOVE AND THE PLUGIN BELOW GUARD DIFFERENT THINGS, and keeping both is the point.
+  // The test protects the REPOSITORY: a file that does not belong is sitting in the working tree,
+  // and somebody has been in the folder by hand. `vite.config.ts`'s `no-stowaways` protects the
+  // PLAYER: whatever Finder wrote, it cannot reach dist/. Deleting the test because the plugin now
+  // catches it would trade a smoke alarm for a fire blanket - the owner's own request was for the
+  // build to stop shipping junk, not for the gate to stop noticing it.
+  //
+  // ⚠ AND THE PLUGIN SWEEPS THE OUTPUT, NOT THE SOURCE, which is the non-obvious half. Cleaning
+  // public/ before the copy is a race the build cannot win: Finder writes `.DS_Store` when a folder
+  // is VIEWED, so it can appear after `buildStart` and before Vite copies. Only the output placement
+  // holds regardless of when the file arrived.
+  it('the build strips stowaways from dist, and does it after the copy', () => {
+    const config = readFileSync(join(root, 'vite.config.ts'), 'utf8')
+    expect(config, 'the plugin must be declared').toContain("name: 'ties-break:no-stowaways'")
+    expect(config, 'and wired into the plugin list').toContain('noStowaways(),')
+    // closeBundle, not buildStart: see the note above. A move to buildStart re-opens the race.
+    const plugin = config.slice(config.indexOf('function noStowaways'))
+    expect(plugin.slice(0, plugin.indexOf('\n}')), 'must run after the copy').toContain('closeBundle')
+  })
+
+  // The list is from experience rather than from a catalogue of known-bad names: `.textClipping` is
+  // here because dragging a Finder search result produces one, and one landed in public/icons/ on
+  // 10.08 wearing the name of an icon it did not contain.
+  it('the stowaway list catches what has actually turned up, and nothing a player needs', () => {
+    const config = readFileSync(join(root, 'vite.config.ts'), 'utf8')
+    const src = config.match(/const STOWAWAYS = (\/.*\/)\n/)?.[1]
+    expect(src, 'STOWAWAYS must be a literal regex this test can read').toBeTruthy()
+    const re = new RegExp(src!.slice(1, -1))
+    for (const junk of ['.DS_Store', 'Thumbs.db', 'desktop.ini', '._icon.svg', 'bin.textClipping']) {
+      expect(re.test(junk), junk).toBe(true)
+    }
+    // The other half of the claim, and the one a careless widening would break.
+    for (const real of ['bin.svg', 'index.html', 'sw.js', 'pwa-512.png', 'manifest.webmanifest']) {
+      expect(re.test(real), real).toBe(false)
+    }
   })
 
   // ⚠ THE BUDGET'S CATEGORY GLYPHS ARE THE SAME MECHANISM WITH A DIFFERENT FAILURE MODE, and it had

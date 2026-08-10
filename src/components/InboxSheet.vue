@@ -262,21 +262,24 @@ async function doRefuse(id: string): Promise<void> {
               <span class="inbox-subject">{{ row.subject }}</span>
               <span class="hint inbox-meta">{{ row.meta }}</span>
             </button>
-            <!-- ⚠ A WORD, NOT A BIN GLYPH – AND THAT IS A FLAGGED ART GAP, not a design choice.
-                 The owner asked for a bin icon per row, and `public/icons/` has no bin: AppIcon
-                 draws files from that folder and this repo does not invent artwork. A named control
-                 is the honest stand-in and it is strictly better for a screen reader; the swap is
-                 one element (`<IconButton icon="bin" :label="...">`) the day the master lands.
-                 The accessible name CONTAINS the visible word, which is what WCAG 2.5.3 asks. -->
-            <button
+            <!-- THE BIN GLYPH, AND THE GAP IS CLOSED (10.08). This shipped as the WORD `Delete`
+                 while `public/icons/` had no bin - a flagged art gap, never a design choice - and
+                 the note here said the swap would be one element the day the master landed. The
+                 owner drew it, so this is that one element.
+                 ⚠ THE NAME DID NOT CHANGE WITH THE PICTURE. A glyph is `aria-hidden` inside
+                 IconButton, so the label IS the control's whole accessible name, and it still names
+                 the letter rather than the verb - two rows both called "Delete" would be the D11
+                 defect one screen over. It no longer needs to contain a visible word because there
+                 is no longer a visible word to contain (WCAG 2.5.3 binds a name to visible TEXT). -->
+            <IconButton
               v-if="row.removable"
               class="inbox-bin"
-              type="button"
-              :aria-label="`Delete the letter: ${row.from} – ${row.subject}`"
+              icon="bin"
+              variant="bare"
+              :icon-size="16"
+              :label="`Delete the letter: ${row.from} – ${row.subject}`"
               @click="askBin(row.offer)"
-            >
-              Delete
-            </button>
+            />
           </li>
         </ul>
       </template>

@@ -1,0 +1,15 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- THE BIN - THE OWNER'S OWN ASSET (10.08). Round 14 asked for "a bin per row once read" in the
+     inbox; the mail client shipped with the word `Delete` because `public/icons/` had no bin, and
+     the gap was filed rather than filled. This is the fill.
+     NORMALISED, NOT REDRAWN - see back.svg for the full account. His 24 grid lands on the repo's 100
+     grid by one transform (100/24 = 4.1666667), and his `stroke="#1C1C1C"` becomes `currentColor`,
+     which is what lets one file be muted grey on a read row and the accent under a thumb.
+     ⚠ IT IS A STROKED GLYPH, not a filled one, and that is fine here: AppIcon paints it as a MASK,
+     so only the alpha matters. `stroke-width` rides the same transform, so 1.7 on his grid stays
+     visually 1.7 on ours - a rewritten width would have changed the drawing rather than its size. -->
+<g transform="scale(4.1666667)" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+<path d="M5.73708 6.54391V18.9857C5.73708 19.7449 6.35257 20.3604 7.11182 20.3604H16.8893C17.6485 20.3604 18.264 19.7449 18.264 18.9857V6.54391M2.90906 6.54391H21.0909"/>
+<path d="M8 6V4.41421C8 3.63317 8.63317 3 9.41421 3H14.5858C15.3668 3 16 3.63317 16 4.41421V6"/>
+</g>
+</svg>
