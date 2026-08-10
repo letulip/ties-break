@@ -278,7 +278,9 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
           {{ windowInfo.dropInWeeks }} {{ windowInfo.dropInWeeks === 1 ? 'week' : 'weeks' }}.
         </p>
       </template>
-      <CountingResultsTable :results="countingResults" />
+      <!-- D8 again: it says WHICH table's results, because the list changes with the picker above and
+           a reader arriving by role has no other way to tell which one she is in. -->
+      <CountingResultsTable :results="countingResults" :label="`${LADDER_LABEL[shown]} counting results`" />
     </section>
   </template>
 </template>
