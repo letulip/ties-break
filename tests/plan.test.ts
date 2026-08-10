@@ -35,7 +35,16 @@ import {
   type KnockWorldView,
 } from '../src/engine/knock'
 import { coachHoursForPlan } from '../src/engine/coach'
-import { restRecoveryBonus, SAVE_SCHEMA_VERSION } from '../src/engine/world'
+import { createWorld, restRecoveryBonus, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
+import {
+  pastSchool,
+  summerBlockWeek,
+  summerConditionCost,
+  summerDayCapacity,
+  summerLoadFactor,
+} from '../src/engine/world/summer'
+import { isSummerWeek } from '../src/engine/season/calendar'
+import { ECONOMY } from '../src/engine/economy'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEK_PLAN_PRESETS, SESSION_KINDS, type SessionKind, type WeekPlan } from '../src/shared/protocol'
@@ -432,5 +441,100 @@ describe('§5 the knock table is tilted by the week, at zero cost in draws', () 
         knockChance(55, planFromWeek(generalWeek(6))),
       )
     }
+  })
+})
+
+// =================================================================================================
+// §6  THE SCHOOL-FREE BONUS FOLLOWS THE DOUBLING, NOT THE CALENDAR – the owner ruled it in advance
+// =================================================================================================
+
+describe('§6 the summer bonus is the price of a doubled day', () => {
+  /** A world parked on a school-free training week, with the plan under test. */
+  function summerWorld(week: SessionKind[][]): WorldState {
+    const world = createWorld('dials-summer')
+    // walk to the first week inside SUMMER_WEEKS, so `summerBlockWeek`'s own predicate is what says
+    // school-free rather than a flag the test set
+    let w = world.week + 1
+    while (!isSummerWeek(w)) w++
+    world.week = w
+    world.plan = planFromWeek(week)
+    return world
+  }
+
+  /** ⚠ THE SHIPPED v46 RULE, SPELLED OUT HERE SO THE DELTA IS NAMED RATHER THAN IMPLIED. This is the
+   *  function as it stood before this slice: a property of the WINDOW, granted automatically. */
+  function loadFactorV46(world: WorldState): number {
+    if (!summerBlockWeek(world)) return 1
+    return pastSchool(world) ? ECONOMY.school.loadFactor : ECONOMY.summerBlock.loadFactor
+  }
+
+  it('a fully doubled school-free week reproduces 1.4 and −3 EXACTLY', () => {
+    const doubled = summerWorld([['serve', 'serve'], ['rally', 'rally'], ['fitness', 'fitness'], [], [], [], []])
+    expect(summerBlockWeek(doubled)).toBe(true)
+    expect(summerLoadFactor(doubled)).toBeCloseTo(ECONOMY.summerBlock.loadFactor, 12)
+    expect(summerConditionCost(doubled)).toBe(ECONOMY.summerBlock.conditionCost)
+    // ...which is the same number the shipped window granted, so nothing is lost by doing the work.
+    expect(summerLoadFactor(doubled)).toBeCloseTo(loadFactorV46(doubled), 12)
+  })
+
+  it('an undoubled one gets 1.0 and 0 – and that is the whole behavioural change', () => {
+    const flat = summerWorld(generalWeek(6))
+    expect(summerBlockWeek(flat)).toBe(true)
+    expect(summerLoadFactor(flat)).toBe(1)
+    expect(summerConditionCost(flat)).toBe(0)
+    // ⚠ NAMED, NOT HIDDEN: this is exactly where a migrated career now differs from the one it was.
+    expect(loadFactorV46(flat)).toBe(ECONOMY.summerBlock.loadFactor)
+  })
+
+  it('the middle stays integer and reproduces both ends – §12 item 2', () => {
+    const oneOfThree = summerWorld([['serve', 'serve'], ['rally'], ['fitness'], ['rally'], ['general'], [], []])
+    expect(summerConditionCost(oneOfThree)).toBe(1)
+    expect(Number.isInteger(summerConditionCost(oneOfThree))).toBe(true)
+    expect(summerLoadFactor(oneOfThree)).toBeCloseTo(1 + (ECONOMY.summerBlock.loadFactor - 1) / 3, 12)
+  })
+
+  it('a migrated career is never doubled, so its school-free weeks come back at 1.0', () => {
+    const migrated = migrateSave(loadFixture(46))
+    const world = summerWorld(generalWeek(4))
+    world.plan = migrated.plan
+    expect(doubledDays(planWeek(world.plan))).toBe(0)
+    expect(summerLoadFactor(world)).toBe(1)
+    expect(summerConditionCost(world)).toBe(0)
+  })
+
+  it('every week the block refuses is byte-identical to v46, doubled plan or not', () => {
+    // ⚠ THE EXACT SCOPE OF THE BYTE-IDENTITY CLAIM. On every week `summerBlockWeek` refuses – which is
+    // every school week, plus injury / tournament / family week / rested knock – the two versions agree
+    // at 1, whatever the player ticked. The delta is confined to school-free training weeks.
+    const world = createWorld('dials-scope')
+    let agreed = 0
+    let differed = 0
+    for (let w = 1; w <= 120; w++) {
+      world.week = w
+      for (const week of [generalWeek(6), [['serve', 'serve'], ['rally', 'rally'], ['fitness', 'fitness'], [], [], [], []] as SessionKind[][]]) {
+        world.plan = planFromWeek(week)
+        const now = summerLoadFactor(world)
+        const then = loadFactorV46(world)
+        if (now === then) agreed++
+        else {
+          differed++
+          // it can only ever be LOWER, only on a school-free week, and only on an undoubled plan
+          expect(summerBlockWeek(world)).toBe(true)
+          expect(now).toBeLessThan(then)
+          expect(doublingShare(week)).toBeLessThan(1)
+        }
+      }
+    }
+    expect(agreed).toBeGreaterThan(0)
+    expect(differed).toBeGreaterThan(0)
+  })
+
+  it('names the per-day limit the plan tab has to draw', () => {
+    const summer = summerWorld(generalWeek(5))
+    expect(summerDayCapacity(summer)).toBe(DAY_CAPACITY_FREE)
+    const school = createWorld('dials-school')
+    school.week = 1
+    expect(isSummerWeek(school.week)).toBe(false)
+    expect(summerDayCapacity(school)).toBe(DAY_CAPACITY_SCHOOL)
   })
 })

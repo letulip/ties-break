@@ -26,6 +26,7 @@ import { markSchoolEnd } from '../src/engine/world/milestones'
 import { schoolTile } from '../src/engine/kidLife'
 import { kidAgeExact } from '../src/engine/world/age'
 import { ECONOMY } from '../src/engine/economy'
+import { planFromWeek } from '../src/engine/plan'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { SCHOOL_YEAR_TURNS_AT } from '../src/engine/kidLife'
 import { seasonYear } from '../src/shared/dates'
@@ -167,11 +168,28 @@ describe('W4-SCHOOL – the freed hours, and the five weeks that are not hers to
     return w
   }
 
+  // ⚠⚠ RE-AIMED FOR v47, NOT WEAKENED – BOTH ASSERTIONS ARE THE ONES THAT WERE HERE, PLUS THE ARM THAT
+  // IS NEW. The freed hours are still worth `ECONOMY.school.loadFactor`; what changed is that she has
+  // to actually take them. Until v47 the post-school bonus was a property of the WINDOW, granted
+  // whether or not she was on court twice a day, because the plan was one scalar and nobody could
+  // decide that she was. The owner ruled the consequence in advance (10.08: «да»): the bonus follows
+  // the DOUBLING, not the calendar – see docs/specs/training-dials.md §3 and engine/world/summer.ts.
+  // «а тренировки и прогресс должны удвоиться» is unchanged as a claim about what leaving school MAKES
+  // POSSIBLE; it is now his to take rather than the calendar's to hand over.
   it('a post-school training week develops at ECONOMY.school.loadFactor and costs its conditionCost', () => {
     const w = past('school-load')
+    // she is on court twice a day – six sessions across three days, which is what the mornings buy
+    w.plan = planFromWeek([['general', 'general'], ['general', 'general'], ['general', 'general'], [], [], [], []])
     expect(summerBlockWeek(w)).toBe(true)
     expect(summerLoadFactor(w)).toBe(ECONOMY.school.loadFactor)
     expect(summerConditionCost(w)).toBe(ECONOMY.school.conditionCost)
+    // ...and the new arm: the same week, the same freed mornings, spent as six single days. The window
+    // opened and she did not walk through it, so it buys nothing – which is the whole v47 change, and
+    // the reason a MIGRATED career's post-school weeks come back at 1 until he ticks a second session.
+    w.plan = planFromWeek([['general'], ['general'], ['general'], ['general'], ['general'], ['general'], []])
+    expect(summerBlockWeek(w)).toBe(true)
+    expect(summerLoadFactor(w)).toBe(1)
+    expect(summerConditionCost(w)).toBe(0)
   })
 
   it('...and a week at school is byte-identical to the one it was', () => {

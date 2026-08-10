@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
 import { mainStateConsistent } from '../src/engine/rng'
+import { planSessions, planWeek } from '../src/engine/plan'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 
 describe('save migrations', () => {
@@ -50,7 +51,17 @@ describe('save migrations', () => {
     }
     const migrated = migrateSave(v3)
     expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
-    expect(migrated.plan).toEqual(WEEK_PLAN_PRESETS.balanced)
+    // ⚠ RE-AIMED FOR v47, NOT WEAKENED: the two fields this test was written about are asserted
+    // EXACTLY as before, and the third is the one v47 added. A v3 save gains the default split at the
+    // v3 -> v4 step and then, at v46 -> v47, the WEEK that split has always been drawing – five
+    // ordinary practice sessions laid out by `sessionDays`. `toEqual` against the preset would now
+    // assert the absence of a field that every migrated save carries, which is the opposite claim.
+    expect(migrated.plan.train).toBe(WEEK_PLAN_PRESETS.balanced.train)
+    expect(migrated.plan.rest).toBe(WEEK_PLAN_PRESETS.balanced.rest)
+    expect(migrated.plan.week).toEqual(
+      planWeek({ train: WEEK_PLAN_PRESETS.balanced.train, rest: WEEK_PLAN_PRESETS.balanced.rest }),
+    )
+    expect(planSessions(migrated.plan.week!)).toBe(5)
   })
 
   it('upgrades a v4 save: careerId backfilled as legacy-<seed>', () => {
