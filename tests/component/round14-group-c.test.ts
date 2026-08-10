@@ -8,6 +8,8 @@
 // ⚠ NO WORKER IS SPAWNED. `src/worker/client.ts` creates one lazily, so a pre-filled store touches
 // nothing; the store's own command methods are stubbed where a test needs to see one dispatched.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
@@ -146,5 +148,53 @@ describe('R14-1 – the booked family week is cancellable through the planner', 
     expect(sheet.find('.plan-tabs').exists()).toBe(true)
     expect(sheet.text()).not.toContain('Cancel the trip')
     wrapper.unmount()
+  })
+})
+
+// ===========================================================================
+// ITEM 9 – onboarding is width-capped on desktop, like every other screen.
+//
+// It never was, and the reason is structural: the cap lives on `#app`, and the wizard is a
+// `position: fixed` takeover pinned to the viewport, so it is the ONE screen outside that frame.
+// The fix reuses `#app`'s own declaration through a token rather than inventing a second cap –
+// which is why the pin below reads BOTH call sites and asserts they are the same one.
+// ===========================================================================
+describe('R14-9 – the onboarding wizard wears the app frame', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  // ⚠ `import.meta.url` IS NOT A FILE URL IN THIS PROJECT. The `component` project runs under
+  // happy-dom, where it resolves to an http scheme and `new URL(..., import.meta.url)` throws
+  // "The URL must be of scheme file" at COLLECT time – i.e. the whole file reports "no tests"
+  // rather than one red assertion. Vitest's cwd is the repo root, so that is what these resolve
+  // against; the length bounds below are what would catch it if it ever stopped being true.
+  const repo = (rel: string) => readFileSync(resolve(process.cwd(), rel), 'utf8')
+  const wizardSrc = repo('src/components/OnboardingWizard.vue')
+  const sheet = repo('src/style.css')
+
+  it('the shell the cap is written for is the element the wizard actually renders', () => {
+    // The mounted half. Scoped SFC styles are not injected by test-utils, so no assertion about
+    // WIDTH is possible here – what is provable, and what rots, is that `.ob-shell` still exists
+    // and is still the takeover's own child. Rename it in the template and this goes red.
+    const wrapper = mount(OnboardingWizard, { global: { stubs: { teleport: true } } })
+    const shell = wrapper.find('.onboarding > .ob-shell')
+    expect(shell.exists()).toBe(true)
+    // and it is the whole wizard, not one pane of it: the step rail, the copy and the footer are
+    // all inside the capped box, so nothing runs wider than the column it belongs to.
+    expect(shell.find('.ob-steps').exists()).toBe(true)
+    expect(shell.find('.ob-foot').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('...and it is capped, centred, at the SAME width `#app` uses – one mechanism, not two', () => {
+    const scoped = wizardSrc.slice(wizardSrc.indexOf('<style scoped>'))
+    expect(scoped.length).toBeGreaterThan(500) // a real bound, never a silent empty slice
+    const shellRule = scoped.slice(scoped.indexOf('\n.ob-shell {'), scoped.indexOf('/* --- the step rail'))
+    expect(shellRule).toContain('max-width: var(--app-max-width)')
+    expect(shellRule).toContain('margin-inline: auto')
+    // THE TOKEN IS THE POINT. A hard-coded 880 here would be a second cap that drifts the first
+    // time the app frame moves; `#app` has to be reading the same declaration.
+    expect(sheet).toContain('--app-max-width: 880px')
+    expect(sheet).toMatch(/#app \{\n\s+max-width: var\(--app-max-width\)/)
+    expect(scoped).not.toContain('880px')
   })
 })
