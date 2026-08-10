@@ -376,7 +376,9 @@ function boxLabel(kind: SessionKind, day: number): string {
   width: 22px;
   height: 22px;
   margin: 0;
-  border: 1.5px solid var(--accent-soft);
+  /* One hairline, like every other edge in this app (`--stroke-hair`, pinned by
+     tests/ui-control-system.test.ts - which caught this file bringing its own 2px ring). */
+  border: var(--stroke-hair) solid var(--accent-soft);
   border-radius: 6px;
   background: transparent;
   cursor: inherit;
@@ -385,7 +387,9 @@ function boxLabel(kind: SessionKind, day: number): string {
   background: var(--accent);
   border-color: var(--accent);
 }
-/* The tick itself, drawn rather than fetched - two rules, no asset (§9d). */
+/* The tick itself, drawn rather than fetched - two rules, no asset (§9d). 1.7px because it is ICON
+   ARTWORK on the design's own 24x24 / 1.5-1.9 grid, not an edge: the hairline rule is about what goes
+   AROUND an object, and `.surface-ring` is the precedent the guard's own note names. */
 .hw-box:checked::after {
   content: '';
   display: block;
@@ -393,13 +397,11 @@ function boxLabel(kind: SessionKind, day: number): string {
   height: 11px;
   margin: 1px auto 0;
   border: solid var(--on-lime);
-  border-width: 0 2px 2px 0;
+  border-width: 0 1.7px 1.7px 0;
   transform: rotate(45deg);
 }
-.hw-box:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+/* ⚠ AND NO FOCUS RING OF ITS OWN. The app declares exactly one, in src/style.css, and three files
+   once brought their own - which is the defect that test exists for. */
 
 .hw-limit {
   margin: 2px 0 6px;
