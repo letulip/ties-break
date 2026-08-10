@@ -38,7 +38,7 @@ import {
   raiseSuspensionLetter,
 } from '../offers'
 import { addEvent, seasonStartWeek } from './ledger'
-import { ageAtWeek } from './age'
+import { kidAgeAt } from './age'
 import { acceptanceRank } from './ladder'
 import { KID_ID } from './constants'
 import type { PenaltyReason, PenaltyRow } from '../../shared/protocol'
@@ -90,7 +90,11 @@ export function mandatoryBinds(world: WorldState, event: SeasonEvent): boolean {
   if (!mandatoryBindsRank(world)) return false
   if (world.injury !== null) return false
   if (isSuspendedAt(world, event.week)) return false
-  if (!isTierAgeOpen(event.tier, ageAtWeek(event.week))) return false
+  // ⚠ HER AGE, NOT THE BAND'S (owner ruling 1, 09.08 - world/age.ts). This is the «too young for the
+  // rung» clause of «an obligation she could not have met is not an obligation», and it must ask the
+  // same age `availabilityStatus` refuses on, or the regime could fine her for skipping an event the
+  // entry gate would have turned her away from.
+  if (!isTierAgeOpen(event.tier, kidAgeAt(world, event.week))) return false
   const accepts = acceptanceRank(world, event.tier)
   if (accepts !== undefined && (world.kidRankWta ?? Number.MAX_SAFE_INTEGER) > accepts) return false
   // One body, one week: an event she cannot enter because she is already entered somewhere that
@@ -214,7 +218,8 @@ export function quotaShortfallAt(world: WorldState, week: number): number {
       e.tier === tier &&
       e.week >= from &&
       e.week < from + WEEKS_PER_YEAR &&
-      isTierAgeOpen(tier, ageAtWeek(e.week)) &&
+      // HER age, the same clock `mandatoryBinds` reads – a quota may only count what she could enter.
+      isTierAgeOpen(tier, kidAgeAt(world, e.week)) &&
       (accepts === undefined || (world.kidRankWta ?? Number.MAX_SAFE_INTEGER) <= accepts),
   ).length
   const owed = Math.min(ECONOMY.mandatory.quota, offered)

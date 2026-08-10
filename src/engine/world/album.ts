@@ -29,7 +29,7 @@ import type {
   ScrollSeason,
 } from '../../shared/protocol'
 import { ENDING_TITLE } from '../ending'
-import { ageAtWeek, START_AGE_YEARS } from './age'
+import { kidAgeAt } from './age'
 import { seasonIndexOf } from './ledger'
 import { finishLabel } from './labels'
 import type { WorldState } from '../world'
@@ -62,15 +62,17 @@ const EMOTION_BY_ENDING: Record<CareerEndingType, AvatarEmotion> = {
   plateau: 'serious',
 }
 
-/** ⚠ THE BAND, NOT THE GIRL, AND THAT IS THE OPPOSITE OF WHAT THE ENDING ITSELF USES. Two ages live
- *  in this engine (world/age.ts says so at length): `ageAtWeek` is the career band and
- *  `kidAgeYears` folds her birth month into the real calendar, so a June girl is 13.5 in week zero.
- *  The DECISIONS read the girl - the fork fires on her nineteenth birthday, not on a band boundary -
- *  but everything the app PRINTS reads the band, because `Snapshot.ageYears` does and Home says «14
- *  years old» on week zero. Caught in the browser: the scroll's season header read «2031 – she was
- *  13» while Home, about the same week, read 14. Two surfaces, one week, two numbers. */
-function ageAt(_world: WorldState, week: number): number {
-  return ageAtWeek(week)
+/** ⚠ THE GIRL, AND IT USED TO BE THE BAND – the defect this comment used to describe is now fixed
+ *  rather than documented. It read `ageAtWeek(week)` and argued that "everything the app PRINTS reads
+ *  the band, because `Snapshot.ageYears` does", which was true and was the bug: the scroll's season
+ *  header said «2031 – she was 13» while Home, about the same week, read 14. Two surfaces, one week,
+ *  two numbers, caught in the browser.
+ *
+ *  Owner ruling 1, 09.08 (world/age.ts): there is ONE clock and it is hers. `Snapshot.ageYears` reads
+ *  `kidAgeAt` now and so does this, so the album, the header and the ending all name the same age -
+ *  and the ending's `kidAgeYears` was the one that was right all along. */
+function ageAt(world: WorldState, week: number): number {
+  return kidAgeAt(world, week)
 }
 
 function page(
@@ -126,10 +128,15 @@ const seasonLabel = weekLabel
  *  other). A second `MilestoneType` would have bought it, at the price of a field no migrated save
  *  could back-fill honestly.
  *
- *  So the page is the true beginning instead: week zero, the week she was fourteen and the family
- *  counted what it had. It is never empty by construction, it is the same page for every career –
- *  which is right for a page called "The beginning" – and her first passport week rides on it as
- *  the fact when she ever had one. */
+ *  So the page is the true beginning instead: week zero, the week the family counted what it had.
+ *  It is never empty by construction, it is the same page for every career – which is right for a
+ *  page called "The beginning" – and her first passport week rides on it as the fact when she ever
+ *  had one.
+ *
+ *  ⚠ THE CAPTION NAMES HER AGE AND NOT THE BAND'S (owner ruling 1, 09.08). It was the constant
+ *  `START_AGE_YEARS`, so every album in the game opened on «14 years old, and we said yes» – including
+ *  the December careers whose girl was thirteen that week, and whose own birthday note said so nine
+ *  months later. Same page for every career, her own number on it. */
 export function slotBeginning(world: WorldState): AlbumPage {
   const first = earliest(world.milestones, 'international')
   const fact = first
@@ -139,7 +146,7 @@ export function slotBeginning(world: WorldState): AlbumPage {
     world,
     1,
     'Where it started – every album opens on the same page',
-    `${START_AGE_YEARS} years old, and we said yes`,
+    `${ageAt(world, 0)} years old, and we said yes`,
     fact,
     0,
     'norm',

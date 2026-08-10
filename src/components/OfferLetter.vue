@@ -44,6 +44,7 @@ import { computed } from 'vue'
 import type { EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
+import { dealUntilWeek } from '../engine/offers'
 import PaperNote from './ui/PaperNote.vue'
 
 const props = defineProps<{ offer: Offer; week: number }>()
@@ -149,6 +150,29 @@ const SEASON_WORDS = ['', 'One season', 'Two seasons', 'Three seasons', 'Four se
 const seasonWord = computed(() => {
   const n = terms.value.seasons ?? 1
   return SEASON_WORDS[n] ?? `${n} seasons`
+})
+
+/** ⚠ HOW LONG IT ACTUALLY RUNS, IN WEEKS AND NOT ONLY IN SEASONS (09.08, the owner: «Непонятно на
+ *  какое количество лет спонсор контракт заключает, нигде не видно этой информации»).
+ *
+ *  `terms.seasons`, `Offer.fromWeek` and `Offer.untilWeek` are all persisted - a global deal in his
+ *  own save reads `from w102 until w257` - and until this line NOTHING printed any of them. The
+ *  paper said "Three seasons" and stopped, so the one question a parent asks about a contract («до
+ *  какой недели?») had no answer on any surface in the game.
+ *
+ *  ⚠ AND THE UNSIGNED LETTER READS THE ENGINE'S OWN FUNCTION rather than adding 52 to something.
+ *  `dealUntilWeek` is exactly what `signOffer` will write onto the offer, so the week quoted on the
+ *  paper is the week the contract gets - a screen that computed the term itself is a screen that can
+ *  promise a season the till does not honour, which is the same class of error the kit price had.
+ *  The START is deliberately NOT quoted here: `dealStartsAt` needs the whole inbox (a deal already
+ *  running pushes the new one behind it), and this component is handed one letter. A signed offer
+ *  knows both, because the engine froze them onto it. */
+const runsToWeek = computed(() => props.offer.untilWeek ?? dealUntilWeek(props.offer))
+/** The signed contract as an interval, for the letter that is now a record rather than a decision. */
+const signedRun = computed(() => {
+  const o = props.offer
+  if (o.state !== 'signed' || o.fromWeek === undefined || o.untilWeek === undefined) return ''
+  return `In their kit ${weekLabel(o.fromWeek)} – ${weekLabel(o.untilWeek)} · ${seasonWord.value.toLowerCase()}`
 })
 
 const live = computed(() => props.offer.state === 'open' && props.week <= props.offer.deadlineWeek)
@@ -326,7 +350,17 @@ const settled = computed(() => {
     <!-- tilt is 0 and STAYS 0 – see the block comment at the top of this file. -->
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <img class="offer-mark" :src="markUrl" :alt="terms.brand" />
-      <p class="offer-body">
+      <!-- ⚠ ONE LINE IS THE WHOLE DIFFERENCE, AND IT HAS TO BE THERE. A renewal (10.08) carries the
+           SAME terms as the contract that is ending – `raiseKitRenewal` copies them verbatim, because
+           that is what renewing is – so without this arm the incumbent's letter would introduce
+           itself to a family it has kitted out all season, in the voice of a stranger. Everything
+           below is unchanged and stays true of a second year: the coverage, the freshness, the
+           events she owes, the exclusivity and the term. -->
+      <p v-if="terms.renewal" class="offer-body">
+        She has been in our kit all season and we have enjoyed every week of it. We would like to keep
+        her in it – the same deal, another year.
+      </p>
+      <p v-else class="offer-body">
         We have been watching your daughter play all season, and we would like to put her in our kit.
       </p>
       <!-- THE DEAL, IN THE WORDS THE BUTTON COMMITS TO. Generated from the terms themselves; the
@@ -348,7 +382,11 @@ const settled = computed(() => {
              voice, plainly, the way a commercial term is really written. -->
         <li>And while she is in our kit she is in nobody else's.</li>
         <li>
-          {{ seasonWord }}, starting with the one ahead.
+          <!-- HOW LONG IT RUNS, in seasons AND in weeks. "Three seasons" left the parent counting
+               off a calendar he cannot see, and the end week was persisted on the offer all along -
+               see `runsToWeek` in the script for why the letter may not compute it itself. -->
+          {{ seasonWord }}, starting with the one ahead – she is in our kit to
+          {{ weekLabel(runsToWeek) }}.
           <template v-if="terms.keepDomesticRank">
             We back a girl who is somebody at home, so she stays inside the national top
             {{ terms.keepDomesticRank }} while we are with her.
@@ -365,6 +403,10 @@ const settled = computed(() => {
         {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
       </p>
       <p v-else class="offer-window settled">{{ settled }}</p>
+      <!-- THE CONTRACT AS AN INTERVAL, once it is a record rather than a decision. Both weeks are
+           the engine's own (`fromWeek` / `untilWeek`), so the letter says exactly which weeks the
+           brand is committed to and the parent stops having to count seasons. -->
+      <p v-if="signedRun" class="offer-window settled">{{ signedRun }}</p>
       <div v-if="live" class="offer-actions">
         <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
         <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>

@@ -22,8 +22,9 @@
 // not a tidy. The kicker also stays MUTED rather than becoming the lime eyebrow: `src/style.css`
 // and `ui/Eyebrow.vue` both say `.season-summary-kicker` is the app's muted label, a different
 // object, and recolouring it is the owner's call and he has not made it.
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { formatCentsSigned } from '../shared/money'
 import { LADDER_LABEL } from '../shared/protocol'
 import Card from './ui/Card.vue'
@@ -31,10 +32,17 @@ import Eyebrow from './ui/Eyebrow.vue'
 import PaperNote from './ui/PaperNote.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 
-defineEmits<{ continue: [] }>()
+const emit = defineEmits<{ continue: [] }>()
 
 const game = useGameStore()
 const summary = computed(() => game.snapshot?.lastSeasonSummary ?? null)
+
+// D1 – IT IS A MODAL, AND NOW IT SAYS SO AND HOLDS THE KEYBOARD (see composables/dialogFocus.ts).
+// Escape IS wired here, unlike the knock's: this card already closes on a click outside it, so the
+// key is the keyboard's spelling of a gesture the mouse has always had, and refusing it would leave
+// a trapped keyboard with no exit at all. Same emit, so there is one way out and not two.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card, () => emit('continue'))
 
 /** W4-SCHOOL: the closing scrap, minus the thing she no longer has. It is the same sentence the
  *  engine writes into the feed on the same week (`world/milestones.ts`), read off the same fact -
@@ -113,10 +121,20 @@ const entryMirror = computed(() => summary.value?.entryMirror)
 </script>
 
 <template>
-  <div v-if="summary" class="dialog-overlay" @click.self="$emit('continue')">
-    <div class="dialog-card season-summary">
-      <p class="season-summary-kicker">Season {{ summary.seasonYear }} · wrap-up</p>
-      <h2 class="season-summary-title">That's a season.</h2>
+  <div v-if="summary" class="dialog-overlay" @click.self="emit('continue')">
+    <!-- role/aria-modal on the CARD and not on the scrim: the backdrop is not part of the dialog,
+         it is what the dialog is over. Both lines are the name, in the order they are read - the
+         year this card is about, then what the card is. -->
+    <div
+      ref="card"
+      class="dialog-card season-summary"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="season-summary-kicker season-summary-title"
+      tabindex="-1"
+    >
+      <p id="season-summary-kicker" class="season-summary-kicker">Season {{ summary.seasonYear }} · wrap-up</p>
+      <h2 id="season-summary-title" class="season-summary-title">That's a season.</h2>
 
       <div class="season-grid">
         <!-- WHERE SHE FINISHED -->
@@ -229,7 +247,7 @@ const entryMirror = computed(() => summary.value?.entryMirror)
       </PaperNote>
 
       <div class="dialog-actions">
-        <PrimaryPill @click="$emit('continue')">Continue</PrimaryPill>
+        <PrimaryPill @click="emit('continue')">Continue</PrimaryPill>
       </div>
     </div>
   </div>

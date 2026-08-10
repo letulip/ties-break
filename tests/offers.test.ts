@@ -60,6 +60,7 @@ import {
   pruneEntryLetters,
   raiseKitOffers,
   raiseKitEndLetter,
+  raiseKitRenewal,
   rungFor,
   shopWritesAt,
   standingClears,
@@ -76,6 +77,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
+import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { rollInjury } from '../src/engine/world/injury'
 import { layoffCovering } from '../src/engine/world/medical'
 import { OFF_SEASON_WEEKS, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -990,6 +992,54 @@ describe('the three rungs, and the tables they read', () => {
     expect(s.global.maxItfRank).toBeLessThan(s.national.maxItfRank)
   })
 
+  it('⚠ ...and the FLOOR is that same draw run the other way - a whole season of it', () => {
+    // 09.08 (fix/sponsor-floor). The local rung grew a junior arm because the domestic one alone is
+    // inverted - see ECONOMY.sponsorship.localMaxItfRank - and its number is read off the SAME tier
+    // row its two neighbours are, so the ladder stays one decision rather than three.
+    //
+    // TWO READINGS, ONE NUMBER, which is why it is 128 and not a figure that felt about right:
+    //   * the ladder's own step is a factor of four (32 -> 8 climbing), so one rung DOWN is 32 x 4;
+    //   * J300 runs every 13 weeks, i.e. four a season, so 128 is every main-draw place at the
+    //     prestige rung over a year - "good enough to be in a J300 draw at some point this season".
+    expect(s.localMaxItfRank).toBe(TIERS.j300.drawSize * 4)
+    expect(s.localMaxItfRank).toBe(TIERS.j300.drawSize * (WEEKS_PER_YEAR / TIERS.j300.everyNWeeks))
+    // ...and the shop is WIDER than the distributor, which is the whole point of a floor: it must
+    // catch the careers the bigger brands passed on, not the same ones under another name.
+    expect(s.localMaxItfRank).toBeGreaterThan(s.national.maxItfRank)
+  })
+
+  it('⚠ THE INVERTED GATE: a girl the world ranks is not refused by the shop in her own town', () => {
+    // THE OWNER'S OWN SAVE, 09.08, as a fixture: Olivia at week 104 stands national #67, ITF #4, no
+    // professional ranking. She cleared `global` and `national` and the LOCAL shop refused her,
+    // because her domestic points had decayed while she was abroad - so her window carried two
+    // letters instead of three and both dice missed.
+    const olivia: SponsorStanding = { nationalRank: 67, itfRank: 4, itfRanked: true, ...unranked.wta }
+    expect(standingClears(olivia, 'global')).toBe(true)
+    expect(standingClears(olivia, 'national')).toBe(true)
+    expect(standingClears(olivia, 'local')).toBe(true)
+    // ...and the whole ladder writes to her, strongest first, which is the letter that was missing.
+    expect(windowLadder(olivia)).toEqual(['global', 'national', 'local'])
+    // The rung she is OFFERED is unchanged: the floor is an alternative below the best brand, never
+    // a replacement for it (`rungFor` is still strongest-first).
+    expect(rungFor(olivia)).toBe('global')
+  })
+
+  it('⚠ ...and it is a floor, not an amnesty - three things it still refuses', () => {
+    // The counterweight, because a gate that never says no is not a gate.
+    //   1. NO STANDING ANYWHERE. Outside the domestic top 30, no live junior points, no W ranking:
+    //      the shop has genuinely not heard of her, and «nothing is manufactured» still holds.
+    expect(rungFor(domestic(31))).toBeNull()
+    //   2. AN EMPTY TABLE IS NOT A RANKING. Competition ranking ties everyone without a counting
+    //      result at the floor, so `itfRanked` guards the new arm exactly as it guards the two above.
+    expect(standingClears({ nationalRank: 99, itfRank: 1, itfRanked: false, ...unranked.wta }, 'local')).toBe(false)
+    //   3. AND IT HAS A CEILING. It reads as "ranked at all" only because today's junior table is
+    //      shallower than the cut; past it the shop still says no, and it starts biting again the day
+    //      the cohort outgrows the number.
+    const deep = { nationalRank: 99, itfRank: s.localMaxItfRank + 1, itfRanked: true, ...unranked.wta }
+    expect(standingClears(deep, 'local')).toBe(false)
+    expect(standingClears({ ...deep, itfRank: s.localMaxItfRank }, 'local')).toBe(true)
+  })
+
   it('⚠ ...and the professional pair is the SAME reading of the professional draw', () => {
     // 02.08: National signs the girl who would be IN the prestige draw, Global the one still in it
     // on the last day - one sentence, read twice, once per table. On the professional side the
@@ -1462,7 +1512,7 @@ describe('the window can be entered late', () => {
         coveredCents: 40_000,
       })
       const probe = JSON.parse(JSON.stringify(world)) as WorldState
-      if (winterFrom(probe, LATE_OPEN).filter((l) => !l.startsWith('kit-end')).length === rungsWanted) {
+      if (winterFrom(probe, LATE_OPEN).filter(rungLetter).length === rungsWanted) {
         return world
       }
     }
@@ -1485,6 +1535,19 @@ describe('the window can be entered late', () => {
 
   const clone = (world: WorldState): WorldState => JSON.parse(JSON.stringify(world)) as WorldState
 
+  /** IS THIS A RUNG'S LETTER? – as opposed to the two letters the review writes that are not a rung's
+   *  turn: the brand's goodbye (`kit-end-*`) and, since 10.08, the incumbent's renewal
+   *  (`kit-renew-*`).
+   *
+   *  ⚠ ADDED WITH THE RENEWAL, AND IT WIDENS AN EXISTING FILTER RATHER THAN CHANGING WHAT ANYTHING
+   *  ASSERTS. Every claim in this block is about THE LADDER - which rungs wrote, in which order, and
+   *  whether a late entry cost her one - and `raiseKitRenewal` is neither a rung nor a roll (it takes
+   *  no dice at all). Counting it would have silently redefined "she was written to by three rungs"
+   *  in the fixture search below, which is exactly what it did before this predicate existed: the
+   *  search started accepting careers where two rungs wrote and the renewal made up the third. */
+  const rungLetter = (letter: string): boolean =>
+    !letter.startsWith('kit-end') && !letter.startsWith('kit-renew')
+
   it('⚠ THE PROPERTY: weeks 46-51 all end the winter with the SAME letters, rungs and order', () => {
     // The one the whole fix is for. Every arm is the same career - same seed, same standing, same
     // inbox - loaded at a different week, and every arm must finish the winter holding the same post.
@@ -1496,11 +1559,18 @@ describe('the window can be entered late', () => {
     }
     const opening = winters.get(LATE_OPEN)!
     // The strongest rung she clears writes FIRST, which is what makes signing on sight safe.
-    expect(opening.filter((l) => !l.startsWith('kit-end'))).toEqual([
+    expect(opening.filter(rungLetter)).toEqual([
       'kit-99/global',
       'kit-100/national',
       'kit-101/local',
     ])
+    // ⚠ ...AND THE FAMILIAR BRAND WRITES LAST, WHICH IS THE 10.08 PLACEMENT AS A PROPERTY RATHER THAN
+    //   AS A COMMENT. `seasonSpokenFor` turns every other rung away the moment a letter is signed, so
+    //   a renewal offered on the window's OPENING week would let the shop she is already with crowd
+    //   out the global brand that writes on week 99 - the exact inversion `windowLadder` exists to
+    //   prevent. Asserted as "it is the last letter of the winter", because that is the whole of what
+    //   makes it safe, and the loop below then holds it true from EVERY entry week.
+    expect(opening[opening.length - 1]).toBe('kit-renew-kit-47/national')
     for (const [entry, winter] of winters) {
       expect(winter, `a career loaded at week ${entry % WEEKS_PER_YEAR} got a different winter`).toEqual(opening)
     }
@@ -1516,7 +1586,14 @@ describe('the window can be entered late', () => {
     const winter = winterFrom(arm, LATE_CLOSE)
     expect(winter).toEqual(winterFrom(clone(base), LATE_OPEN))
     const post = arm.offers.filter((o) => o.kind === 'kit' && o.state === 'open')
-    expect(post).toHaveLength(3)
+    // ⚠ THE RUNG COUNT IS UNCHANGED AND IS STILL THREE; what is new is a FOURTH paper (10.08). The
+    //   incumbent's renewal always lands on the window's closing week - that IS its placement, see
+    //   `raiseKitRenewal` - so a career caught on the very last week is handed its whole winter AND
+    //   the offer of another year, and the loop below then holds every one of the four to the same
+    //   two facts: dated the week it landed, and still answerable on it. Split in two rather than
+    //   changed to 4, so the claim about the LADDER stays exactly the claim it was.
+    expect(post.filter((o) => !o.id.startsWith('kit-renew'))).toHaveLength(3)
+    expect(post).toHaveLength(4)
     for (const o of post) {
       expect(o.week, 'a caught-up letter is dated the week it landed').toBe(LATE_CLOSE)
       expect(isOfferLive(o, LATE_CLOSE), 'a letter he can never answer is worse than none').toBe(true)
@@ -1589,10 +1666,10 @@ describe('the window can be entered late', () => {
     let armsChecked = 0
     for (let n = 0; n < 20; n++) {
       const base = careerInTheWindow(`no-rung-denied-${n}`, 3)
-      const fromOpen = winterFrom(clone(base), LATE_OPEN).filter((l) => !l.startsWith('kit-end'))
+      const fromOpen = winterFrom(clone(base), LATE_OPEN).filter(rungLetter)
       for (let entry = LATE_OPEN + 1; entry <= LATE_CLOSE; entry++) {
         armsChecked++
-        if (winterFrom(clone(base), entry).filter((l) => !l.startsWith('kit-end')).length < fromOpen.length) {
+        if (winterFrom(clone(base), entry).filter(rungLetter).length < fromOpen.length) {
           denied++
         }
       }
@@ -1690,6 +1767,226 @@ describe('the window can be entered late', () => {
     for (let w = 0; w < 4 * WEEKS_PER_YEAR; w++) {
       if (isSponsorReviewWeek(w)) expect(isSponsorWindowWeek(w)).toBe(true)
     }
+  })
+})
+
+// =================================================================================================
+// ⚠ THE RENEWAL (10.08) - the brand she has been with asks for another year, and it asks LAST
+// =================================================================================================
+//
+// The owner's own shape: renewal is A LETTER, not an automatic re-signing; new letters still arrive;
+// the five-week window stays. The whole design argument is on `raiseKitRenewal`; what this block
+// holds is the part a reader would otherwise have to take on trust - WHERE in the window it lands,
+// and why that placement is not a scheduling preference.
+//
+// THE TRAP IT IS WRITTEN AROUND, in one sentence: `seasonSpokenFor` turns every other rung away the
+// moment a letter is SIGNED, so a renewal offered early would let the shop in her home town crowd out
+// a global brand that would have written two weeks later - the exact inversion `windowLadder` exists
+// to prevent, and worse than the weakest-first ordering that argument was written against, because
+// the incumbent is the letter a parent is likeliest to sign on sight.
+describe('⚠ THE RENEWAL – the familiar brand writes last, and only last', () => {
+  const LATE_OPEN = LETTER_WEEK + WEEKS_PER_YEAR // 99
+  const LATE_CLOSE = WINDOW_CLOSE_WEEK + WEEKS_PER_YEAR // 103
+
+  /** A career standing in a window with a one-season LOCAL deal finishing under it.
+   *
+   *  `ranked` decides whether any rung ALSO writes this winter (she needs an international standing
+   *  for that); `events` is how much of her end of the bargain she kept - the rows are pushed with
+   *  zero points on purpose, so the obligation and the ranking are two dials and not one. */
+  function careerWithExpiringDeal(
+    seed: string,
+    opts: { ranked?: boolean; events?: number } = {},
+  ): WorldState {
+    const { ranked = false, events = 20 } = opts
+    const world = createWorld(seed, DEFAULT_PROFILE)
+    if (ranked) {
+      world.results.push({ playerId: KID_ID, week: 60, points: 100_000, tier: 'national' })
+      world.results.push({ playerId: KID_ID, week: 60, points: 100_000, tier: 'j300' })
+    }
+    for (let i = 0; i < events; i++) {
+      world.results.push({ playerId: KID_ID, week: 60 + i, points: 0, tier: 'j60' })
+    }
+    world.week = LATE_OPEN
+    recomputeKidRank(world)
+    world.offers.push({
+      id: 'kit-47',
+      kind: 'kit',
+      week: LETTER_WEEK,
+      deadlineWeek: WINDOW_CLOSE_WEEK,
+      terms: kitTermsFor(domestic(1), 'local')!,
+      state: 'signed',
+      decidedWeek: LETTER_WEEK,
+      fromWeek: LETTER_WEEK,
+      untilWeek: contractEndWeek(LATE_OPEN),
+      coveredCents: 30_000,
+    })
+    return world
+  }
+
+  function playWinter(world: WorldState, from = LATE_OPEN, to = LATE_CLOSE): void {
+    for (let week = from; week <= to; week++) {
+      world.week = week
+      reviewSponsors(world)
+    }
+  }
+
+  const renewalIn = (world: WorldState): Offer | undefined =>
+    world.offers.find((o) => o.id.startsWith('kit-renew'))
+
+  it('⚠ arrives on the window\'s LAST week and on no earlier one', () => {
+    // The placement IS the feature. Asserted as a sweep of the window rather than at one week,
+    // because "it writes last" is a property of the winter and not of a number.
+    const world = careerWithExpiringDeal('renew-when')
+    for (let week = LATE_OPEN; week < LATE_CLOSE; week++) {
+      world.week = week
+      reviewSponsors(world)
+      expect(
+        renewalIn(world),
+        `the incumbent wrote on week ${week % WEEKS_PER_YEAR}, before every rung had had its turn`,
+      ).toBeUndefined()
+    }
+    world.week = LATE_CLOSE
+    reviewSponsors(world)
+    const renewal = renewalIn(world)
+    expect(renewal, 'the brand she held up her end for never wrote at all').toBeDefined()
+    expect(renewal!.week).toBe(LATE_CLOSE)
+    expect(renewal!.state).toBe('open')
+    // ...and the week it lands on is still not a RUNG's turn: `SPONSOR_LETTER_WEEKS` is untouched,
+    // so no fifth rung was given a slot to make room for it.
+    expect(isSponsorLetterWeek(LATE_CLOSE)).toBe(false)
+  })
+
+  it('⚠ ...and refuses to write on any other week even when a caller asks it to directly', () => {
+    // BELT AND BRACES, and the reason the placement is not merely a property of `reviewSponsors`'s
+    // early return. The test above cannot tell the two gates apart - it goes through the review, so
+    // the call site alone would satisfy it - and the placement is far too load-bearing to rest on one
+    // `return`. A second caller (a test, a bench, a future dev tool) must not be able to post the
+    // incumbent's letter on the window's opening week and hand the shop in her home town a veto over
+    // every rung above it. Same discipline `reviewSponsors` keeps about April.
+    const world = careerWithExpiringDeal('renew-direct')
+    const ended = world.offers.find((o) => o.id === 'kit-47')!
+    for (let week = LATE_OPEN; week < LATE_CLOSE; week++) {
+      expect(
+        raiseKitRenewal(world.offers, week, ended),
+        `it wrote on week ${week % WEEKS_PER_YEAR} when asked directly`,
+      ).toBeNull()
+    }
+    expect(raiseKitRenewal(world.offers, LATE_CLOSE, ended)).not.toBeNull()
+  })
+
+  it('is the same paper, marked as a renewal, and refusable like any other letter', () => {
+    const world = careerWithExpiringDeal('renew-terms')
+    playWinter(world)
+    const renewal = renewalIn(world)!
+    const old = world.offers.find((o) => o.id === 'kit-47')!.terms as KitOfferTerms
+    const terms = renewal.terms as KitOfferTerms
+    // ⚠ THE SAME TERMS, NOT RE-DERIVED. A renewal is the brand extending what it already gave her;
+    // re-reading `kitTermsFor` would silently re-price the relationship against today's standing.
+    expect(terms.renewal).toBe(true)
+    expect({ ...terms, renewal: undefined }).toEqual({ ...old, renewal: undefined })
+    expect(isOfferLive(renewal, LATE_CLOSE)).toBe(true)
+    declineOffer(world, renewal.id)
+    expect(renewal.state, 'a renewal he cannot say no to is a re-signing').toBe('refused')
+  })
+
+  it('expires with the window, so waiting past it is still a decision', () => {
+    const world = careerWithExpiringDeal('renew-expire')
+    playWinter(world)
+    const renewal = renewalIn(world)!
+    expect(renewal.deadlineWeek).toBe(LATE_CLOSE)
+    expect(isOfferLive(renewal, LATE_CLOSE)).toBe(true)
+    expect(isOfferLive(renewal, LATE_CLOSE + 1)).toBe(false)
+    expireOffers(world.offers, LATE_CLOSE + 1)
+    expect(renewal.state).toBe('expired')
+  })
+
+  it('⚠ takes NO dice and asks no table – it is a relationship, not a competitive selection', () => {
+    // A girl who has slid out of every rung's gate hears from nobody new... and still hears from the
+    // brand she has been with, because they know her. That is what makes this a renewal rather than
+    // a sixth rung, and it is why `raiseKitRenewal` consults neither `shopWritesAt` nor
+    // `standingClears`. The obligation she DID keep is the whole of what earns it.
+    const world = careerWithExpiringDeal('renew-nodice', { ranked: false, events: 20 })
+    // Out of the top 30 at home and with no junior standing `standingClears` would hand it back on -
+    // the same two lines the standing-verdict fixture above uses, and for the same reason: an
+    // early-season field is young enough that zero points can still rank inside the band.
+    world.kidRankDomestic = 999
+    world.kidRank = 999
+    expect(windowLadder(sponsorStandingOf(world)), 'the fixture must clear no rung at all').toEqual([])
+    playWinter(world)
+    const fresh = world.offers.filter(
+      (o) => o.kind === 'kit' && o.id !== 'kit-47' && !o.id.startsWith('kit-end') && !o.id.startsWith('kit-renew'),
+    )
+    expect(fresh, 'a rung wrote to a career that clears none').toHaveLength(0)
+    expect(renewalIn(world), 'the relationship rolled dice it was not supposed to have').toBeDefined()
+  })
+
+  it('does not write over a signature – one brand at a time still holds', () => {
+    // He took a better rung on the window's opening week. The incumbent is answered by that
+    // signature and does not turn round and post a competing letter four weeks later.
+    let world: WorldState | null = null
+    for (let attempt = 0; attempt < 40 && !world; attempt++) {
+      const probe = careerWithExpiringDeal(`renew-spoken-${attempt}`, { ranked: true })
+      probe.week = LATE_OPEN
+      reviewSponsors(probe)
+      if (probe.offers.some((o) => o.state === 'open')) world = probe
+    }
+    expect(world, 'no seed in 40 tries was written to on the window\'s opening week').not.toBeNull()
+    const open = world!.offers.find((o) => o.state === 'open')!
+    acceptOffer(world!, open.id)
+    playWinter(world!, LATE_OPEN + 1)
+    expect(seasonSpokenFor(world!.offers, LATE_CLOSE)).not.toBeNull()
+    expect(renewalIn(world!), 'the incumbent wrote over a season already promised').toBeUndefined()
+  })
+
+  it('⚠ a brand that was let down does not ask for more of the same', () => {
+    // The one condition that is a JUDGEMENT rather than a schedule. A deal ended for `events` or
+    // `standing` is a relationship that failed, and only a term served in full earns the offer of
+    // another one - read off the goodbye letter the review already posted, so the letter and the
+    // feed row cannot disagree about what happened.
+    const world = careerWithExpiringDeal('renew-letdown', { events: 0 })
+    playWinter(world)
+    const goodbye = world.offers.find((o) => o.id === 'kit-end-kit-47')!
+    expect((goodbye.terms as KitOfferTerms).ended, 'the fixture must FAIL its obligation').toBe('events')
+    expect(renewalIn(world), 'a brand that was let down asked for another year').toBeUndefined()
+  })
+
+  it('is raised once however often the window is re-read, and the season\'s one row names it', () => {
+    const world = careerWithExpiringDeal('renew-once')
+    playWinter(world)
+    const brand = (world.offers.find((o) => o.id === 'kit-47')!.terms as KitOfferTerms).brand
+    const rows = world.events.filter((e) => e.week === LATE_CLOSE && e.type === 'info')
+    expect(rows.some((e) => e.text.includes(`${brand} would like another season`))).toBe(true)
+    // ...and the row does not ALSO describe it as a stranger writing in, one sentence apart.
+    expect(rows.some((e) => e.text.includes(`Letters from ${brand}`))).toBe(false)
+    reviewSponsors(world)
+    reviewSponsors(world)
+    expect(world.offers.filter((o) => o.id.startsWith('kit-renew'))).toHaveLength(1)
+  })
+
+  it('signing it covers the season ahead, and no week is ever under two contracts', () => {
+    const world = careerWithExpiringDeal('renew-sign')
+    playWinter(world)
+    const renewal = renewalIn(world)!
+    acceptOffer(world, renewal.id)
+    const old = world.offers.find((o) => o.id === 'kit-47')!
+    // ⚠ COVER STARTS TODAY, NOT THE WEEK AFTER THE OLD DEAL STOPPED, and the difference is the
+    //   fortnight `contractEndWeek` deliberately gives to nobody: the outgoing term ends on week 49
+    //   of its season so that the window's last two weeks are unencumbered («чтобы с 50 точно уже
+    //   было пусто»). `dealStartsAt` is "today, unless a contract she is still under runs past
+    //   today" - and by the closing week the old one has already stopped. So week 102 carries no
+    //   deal, by design, and that is a gap in the calendar rather than a gap in the cover: it holds
+    //   no tournament and no ranking.
+    expect(renewal.fromWeek).toBe(LATE_CLOSE)
+    expect(renewal.untilWeek).toBe(contractEndWeek(LATE_CLOSE + WEEKS_PER_YEAR))
+    expect(activeKitDeal(world.offers, old.untilWeek!)!.id, 'the old deal was cut short').toBe('kit-47')
+    expect(activeKitDeal(world.offers, old.untilWeek! + 1), 'the unencumbered fortnight is spoken for').toBeNull()
+    expect(activeKitDeal(world.offers, LATE_CLOSE)!.id).toBe(renewal.id)
+    // ...and it really does cover the season she is about to play, start to finish.
+    expect(activeKitDeal(world.offers, LATE_CLOSE + 1)!.id).toBe(renewal.id)
+    expect(activeKitDeal(world.offers, renewal.untilWeek!)!.id).toBe(renewal.id)
+    expect(activeKitDeal(world.offers, renewal.untilWeek! + 1)).toBeNull()
+    // ...and the allowance starts again, rather than the second year inheriting the first's spend.
+    expect(renewal.coveredCents).toBe(0)
   })
 })
 
@@ -1992,8 +2289,14 @@ describe('the v33 schema step', () => {
 describe('the tournament desk writes on W-rung registration, and only then', () => {
   /** An open world aged into the W era by the EVENT's week (the gate reads age there), with the
    *  books the W15 on-ramp wants. Same idiom as the pro-cap suite in tests/age-caps.test.ts. */
+  /** ⚠ THE JANUARY BIRTHDAY IS LOAD-BEARING AND IS A RE-AIM, NOT A WEAKENING (one-clock ruling,
+   *  09.08). Every letter below is raised by an entry into `wEvent`, a W15 in week 110, and W15 opens
+   *  at 16 – asked of HER age now rather than of the birth-month-free band. `DEFAULT_PROFILE` is a
+   *  June girl, who is fifteen in week 110 and is correctly refused, so the desk fixture would have
+   *  been measuring the age gate instead of the desk. A January girl is sixteen there, which is what
+   *  this file has always assumed and never said. No assertion changed. */
   function wWorld(seed: string): { world: WorldState; wEvent: SeasonEvent; jEvent: SeasonEvent } {
-    const world = createWorld(seed)
+    const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 6 })
     world.fundsCents = 9_999_999_00
     world.results.push({ playerId: KID_ID, week: 0, points: 1500, tier: 'national' })
     for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: 0, points: 300, tier: 'j300' })

@@ -443,14 +443,69 @@ export const ECONOMY = {
   // coach ladder replaces it with HOURS (ECONOMY.coach.sessionsAt60/85), which move the bill 2x
   // end to end, because hours are what a coach actually charges for.
 
-  // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), but round-7 b makes the
-  // payout NEED-BASED: only a `working`-background kid actually banks it – for everyone else
-  // the roll result is ignored (no event), the draws still happen so the main stream is
-  // background-independent. Amounts unchanged.
+  // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), and round-7 b made the payout
+  // NEED-BASED – for everyone else the roll result is ignored (no event), the draws still happen so
+  // the main stream is background-independent. Amounts unchanged.
+  //
+  // ⚠ AND SINCE 10.08 "NEED" IS THE BALANCE RATHER THAN THE PROFILE ROW. `eligible: ['working']` is
+  // GONE. The intent was need from the start – docs/rounds/round-7.md, 24.07: «спонсор
+  // нужде-ориентирован (платит только working)» – and background was a proxy for it because at the
+  // time the two coincided. docs/specs/round15-triage.md measured how far they have since come apart.
+  // The owner, 10.08: «порог по деньгам на счету, а не по строчке в анкете – всё именно так, и с
+  // самого начала так и затевалось».
+  //
+  // The predicate is `sponsorNeedMet` in engine/world/sponsors.ts and the whole argument for its
+  // SHAPE is written there – why a runway and not a dollar figure, why the court and not the whole
+  // bill, why a rung cut and not a spend cut. The numbers, and only the numbers, are here.
+  // Measured in docs/specs/need-not-background-2026-08.md (tools/runway-probe.ts, tools/two-cells.ts).
   sponsor: {
     rollChance: 0.06,
     amountCents: [500_00, 1500_00] as [number, number],
-    eligible: ['working'] as FamilyBackground[],
+
+    /** HOW MANY WEEKS OF COURT HIRE THE BALANCE MUST NO LONGER COVER for a shop to chip in.
+     *
+     *  ⚠ 62 IS THE MIDDLE OF A MEASURED BAND, not a chosen figure, and both of its walls are numbers
+     *  rather than opinions (50 seeds x 4 seasons on the round-15 2x2, plus a ten-arm rung sweep):
+     *    * NOT BELOW ~58, because under that the gate pays the `middle` background MORE of the cameo
+     *      than the `working` one and the difficulty setting inverts. The crossover measures at 55-56
+     *      and it is the wealth corridor doing it: a middle-market court costs more, so the same
+     *      balance buys fewer weeks of it. What puts working back on top above the crossover is the
+     *      thing that should – it opens the game $17,000 poorer.
+     *    * NOT ABOVE ~68, because past that the two SELF-COACHED cells start collecting it, and they
+     *      are the definition of a family that does not need it: they finish four seasons at +$25,626
+     *      and +$39,001 and neither goes under water once in 50 careers. They cross 2% of weeks at 72
+     *      and reach 10% at 90.
+     *    * AND NEVER ABOVE 81 whatever else is true: 81.5 is the worst week-0 runway any eligible cell
+     *      holds over 50 seeds, and NOBODY IS IN NEED BEFORE A BALL IS STRUCK. That is round-15 item
+     *      16 in one number - the cameo paid the owner's own career in week 2 - and it is the one
+     *      bound here that is a correctness condition rather than a balance preference.
+     *
+     *  ⚠ IT IS DENOMINATED IN COURT WEEKS, WHICH ARE NOT MONEY WEEKS. The court is roughly a quarter
+     *  of what a family actually spends in a week (measured: $77 of a $335 week self-coached, $92 of
+     *  $357 with a middle coach), so 62 court weeks is nearer 15 weeks of the real burn. The unit is
+     *  the court because the court is the part she cannot get out of; the number is 62 because that
+     *  is where the band is. */
+    runwayWeeks: 62,
+
+    /** ...AND ABOVE THIS RUNG NOBODY CHIPS IN, however empty the account (owner, 10.08: «у нас есть
+     *  маркер трат в неделю, если тренер стоит дороже, то нечего и помогать»). A shop backs the girl
+     *  whose family is doing this on a shoestring, not the one that has hired the best coach in the
+     *  city – a story rule first and an anti-exploit second.
+     *
+     *  ⚠ `middle` AND NOT LOWER, because the owner's own two careers are 8k self-coached and 25k
+     *  middle and both stay inside it. ⚠ AND NOT HIGHER, because `high` and `elite` are exactly where
+     *  a need gate would start paying for the coach: measured at this threshold, a `high` rung holds
+     *  the cameo's gate open for 99% of a working career's weeks and an `elite` one for 100% – against
+     *  53-60% at `middle`, 9-14% at `budget` and 1-2% self-coached.
+     *  The rung ladder's own comment already says what the top of it is – "The steps between them
+     *  shrink as they climb while the price roughly doubles every two rungs. Elite is a luxury, not an
+     *  optimisation" – so cutting above `middle` reads a property `ECONOMY.coach` asserts about itself.
+     *
+     *  ⚠ THE CUT IS ON THE RUNG AND NOT ON THE WEEKLY DOLLARS. See `sponsorNeedMet`: the corridor
+     *  prices the same rung differently by background, so a dollar cut would refuse a wealthy family's
+     *  `middle` coach and allow a working family's – background back through the side door, in the one
+     *  mechanic this wave exists to take it out of. */
+    maxCoachTier: 'middle' as CoachTier,
   },
 
   // THE LOCAL SPONSOR – a shop in her town backing the local girl who is doing well locally.
@@ -529,6 +584,57 @@ export const ECONOMY = {
     maxRank: 30,
     /** ...and at which the deal steps up - she is one of the best juniors in the country. */
     topMaxRank: 10,
+    /** ⚠ ...AND THE JUNIOR TABLE, BECAUSE THE DOMESTIC GATE ON ITS OWN IS INVERTED (09.08, the owner:
+     *  «у нас 3 тира этих спонсоров, а мне достается только 1 самый первый… у неё кончился контракт,
+     *  а нового не дали»).
+     *
+     *  THE DEFECT, ON HIS OWN SAVE. Olivia at week 104 stands national #67, ITF #4, no professional
+     *  ranking. She CLEARS `global` and she CLEARS `national` - and `local` REFUSED her, because the
+     *  only evidence the shop would look at was `maxRank` above and she had slid to #67 at home by
+     *  playing abroad. Her five-week window therefore carried two letters instead of three, both dice
+     *  missed (0.3 x 0.3 = 9%), and she opened the season with no deal at all.
+     *
+     *  ⚠ AND THAT IS THIS BLOCK'S OWN 30.07 ERROR WITH THE TWO TABLES SWAPPED. The note above records
+     *  a local sponsorship gated on a table she does not hold (the ITF one, when her standing was
+     *  domestic) and fixes it by reading the national table. The same sentence is true again in the
+     *  other direction the moment she leaves home: her domestic points are a rolling 52-week best-6,
+     *  so a season on the international calendar decays them to nothing, and a gate that reads only
+     *  that table says «the better she gets abroad, the more certainly the shop in her own town
+     *  refuses her». A floor that turns away the careers the big brands passed on is not a floor.
+     *  So the local rung reads WHICHEVER table she is on, exactly as `national` and `global` learned
+     *  to on 02.08 - `standingClears` already carried `|| standing.wtaRanked` as the professional
+     *  escape hatch, and this is the junior one it was missing.
+     *
+     *  ⚠ 128 = `TIERS.j300.drawSize` x 4, AND IT IS THE LADDER'S OWN STEP RUN DOWNWARDS. National is
+     *  the J300 main draw (32) and Global is the last eight of it (32 / 4), so the rungs divide by
+     *  four as they climb; the rung BELOW national multiplies by four. Pinned as an equality in
+     *  tests/offers.test.ts beside its two neighbours, for the reason they are pinned there: this
+     *  file cannot import the calendar, so a J300 that ever changed its draw would otherwise detach
+     *  the ladder from the ladder it describes.
+     *
+     *  A SECOND READING OF THE SAME TIER ROW LANDS ON THE SAME NUMBER, which is why it is this one
+     *  and not a round figure that felt right: J300 runs `everyNWeeks: 13`, i.e. four a season, so
+     *  128 is every main-draw place at the prestige rung over a whole year. National signs the girl
+     *  who is IN this draw; Global the one still in it on the last day; the shop backs the girl good
+     *  enough to be in a J300 draw at some point this season. That is what a home-town shop knows
+     *  about a girl - that she plays at that level - and it is deliberately WIDER than the
+     *  distributor's gate, because a shop should be more eager to back a girl the world ranks, not
+     *  less.
+     *
+     *  ⚠ WHERE IT BITES TODAY, MEASURED, BECAUSE THE NUMBER SHOULD NOT BE TRUSTED WITHOUT THIS. The
+     *  junior table is the cohort (200 rows) and 75-122 of them hold a counting result in any given
+     *  winter (min 75, p50 90, max 122 over 30 observations - three presets x two seeds x five
+     *  winters, `rankingFor` at the window's opening week), so a cut at 128 sits just PAST the ranked
+     *  depth: in today's population this arm reads "she holds a junior world ranking at all". That is
+     *  the same shape the professional arm one line below it already has, and it is the intended
+     *  reading - but the ceiling is written down anyway, because the cohort has grown once already
+     *  (FIELD 520 -> 1,600) and a rule spelled "any ranking" would silently stay unbounded when the
+     *  table outgrows it, while this one starts biting again the day it does.
+     *
+     *  ⚠ AND IT CANNOT BECOME A PENSION. `itfRanked` is a LIVE 52-week window (`sponsorStandingOf`),
+     *  so a girl who stops entering loses the arm on her own - the escape hatch holds only while she
+     *  is actually competing, which is the same thing `minEvents` asks of the deal itself. */
+    localMaxItfRank: 128,
     /** What the season's kit deal is worth, flat, every background the same. `~$1k+/yr value`,
      *  02-tennis-economics.md's figure for a junior product deal, taken at its stated midpoint.
      *  Now a CEILING ON WHAT THE SHOP SPENDS on her kit rather than a cheque - see the note above. */
@@ -1671,9 +1777,17 @@ export const ECONOMY = {
   // award did NOT reduce the grind (docs/specs/wave-b-first-round-zero.md) – the count is driven by
   // eligibility, affordability and calendar density, and this is the eligibility half.
   //
-  // Counted birthday-to-birthday in the real rule; here that is exactly the 52-week season block,
-  // because `ageAtWeek` and `seasonStartWeek` are the same arithmetic (world.ts) – so the reset is
-  // the season boundary and no second definition of "this year" was invented.
+  // Counted birthday-to-birthday in the real rule. The game keeps the 52-week SEASON BLOCK as the
+  // window – one allowance, reset at the season boundary, which is what the copy promises and what
+  // `seasonStartWeek` already defines – and reads the LIMIT off the age she actually is in the week
+  // of the event (`kidAgeAt`, world/age.ts).
+  //
+  // ⚠ THOSE TWO USED TO BE THE SAME SENTENCE AND ARE NOT ANY MORE. This note said the block "IS the
+  // real rule's birthday year, because `ageAtWeek` and `seasonStartWeek` are the same arithmetic",
+  // which held only for a girl born in the first week of January: everyone else's birthday falls
+  // inside a block. Since the one-clock ruling (09.08) the window and the birthday are two facts, and
+  // the visible consequence is that her allowance can RISE mid-season on her birthday and never
+  // falls – see entryCaps.ts for why that direction is the safe one.
   entryCap: {
     // WHY ONLY THESE THREE, and please do not "fix" it later: `local` / `regional` / `national` are
     // OUR OWN INVENTION – no national result of any kind produces an ITF junior ranking point
@@ -1723,19 +1837,40 @@ export const ECONOMY = {
     // opens at 17), which is the honest amount: the allowance is a rule about children, and by the
     // time her ranking clears a 1000's acceptance list she is not one.
     cappedProTiers: ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as readonly TierId[],
-    // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited. 14 and 15 carry 8 and 10
-    // in the real rulebook (research §4) and are DELIBERATELY absent here: every W rung's
-    // `minAgeYears` is 16+, so availabilityStatus refuses a fourteen-year-old on AGE before the
-    // cap is ever consulted - the same "the age gate is the honest place for 'not eligible'"
-    // argument the junior table's note makes about 12-and-under. A rung that ever opens at 14
-    // (the real W15 does, via junior-reserved places) must bring those rows with it.
+    // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited.
+    //
+    // ⚠⚠ 14 -> 8 AND 15 -> 10 ARE HERE SINCE THE ONE-CLOCK RULING (owner 1, 09.08), AND THE
+    // ARGUMENT THAT KEPT THEM OUT IS WORTH KEEPING RATHER THAN DELETING. It ran: "14 and 15 carry 8
+    // and 10 in the real rulebook (research §4) and are DELIBERATELY absent here: every W rung's
+    // `minAgeYears` is 16+, so availabilityStatus refuses a fourteen-year-old on AGE before the cap
+    // is ever consulted - the same 'the age gate is the honest place for not eligible' argument the
+    // junior table's note makes about 12-and-under. A rung that ever opens at 14 (the real W15 does,
+    // via junior-reserved places) must bring those rows with it."
+    //
+    // THE ARGUMENT WAS FALSE FOR EVERY GIRL BORN AFTER JUNE, and the reason is the defect the ruling
+    // fixes: the gate was asking `ageAtWeek` - the BAND - so a fifteen-year-old born in March was
+    // "16" from week 104, the age gate let her through, and the AER then had no row to refuse her
+    // with. She entered W15s at 15.83 against an allowance of `default`, i.e. unlimited. Both halves
+    // are mended: the gate reads HER age now (world/age.ts), and the table covers the ages a girl can
+    // be, so `default` - a rule about adults - can never answer for a child again. The rows are the
+    // rulebook's own (research/real-ladder-pace.md: <14 = 0, 14 = 8, 15 = 10, 16 = 12, 17 = 16, 18+
+    // unlimited), so the game does not invent a number even where the gate makes it unreachable.
+    //
+    // ⚠ AND 13 IS DELIBERATELY NOT A ROW, THOUGH THE RULEBOOK HAS ONE (0 events). Two reasons, and
+    // the second is a trap. (a) "Not eligible at all" belongs in the age gate, exactly as the junior
+    // table's note says of 12-and-under - a 0 in an allowance table is a rule pretending to be a
+    // budget. (b) A limit of 0 makes `remaining <= 0` TRUE for a thirteen-year-old who has entered
+    // nothing, and `tierOutgrown` (world/ladder.ts) reads precisely that expression to re-open the
+    // rungs below her when her pro allowance is spent - so a 13 row would silently disable the
+    // ladder's ceiling for the whole first season of every career except a January one. Named here
+    // rather than discovered later.
     //
     // NOT MODELLED, DELIBERATELY - the merited increases (a year-end top-5 junior earns up to 4
     // extra pro events). Same ruling as the junior table's: keyed to a world ranking ours cannot
     // honestly map, and the spec names it phase 2 or act 3 ("v1 ships the flat table if the bench
     // says it already paces well" - the boredom-guard receipt in tools/boredom-guard.ts is that
     // bench).
-    proPerYearByAge: { 16: 12, 17: 16, default: Number.MAX_SAFE_INTEGER } as {
+    proPerYearByAge: { 14: 8, 15: 10, 16: 12, 17: 16, default: Number.MAX_SAFE_INTEGER } as {
       [age: number]: number
       default: number
     },

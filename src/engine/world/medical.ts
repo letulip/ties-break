@@ -19,7 +19,7 @@ import { TIERS, isBlackoutWeek, isOffSeasonWeek, tierAgeBlock } from '../season/
 import { schoolIsOver } from '../kidLife'
 import type { LadderTrack, SeasonEvent } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
-import { ageAtWeek } from './age'
+import { kidAgeAt } from './age'
 import { entryCapUsage, proEntryCapUsage, isCappedTier, isCappedProTier } from './entryCaps'
 import { acceptanceRank, hasOutgrown, kidPoints, onRampOpen, rankIn } from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
@@ -276,7 +276,15 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   // FORK that makes this a decision instead of an event – rank, balance, the ended scholarship, what
   // a W15 costs against what it pays – is §4.2 A / B2, still to come, and the copy below is
   // deliberately plain until it exists so nothing promises a screen that is not there.
-  const ageBlock = tierAgeBlock(event.tier, ageAtWeek(event.week))
+  //
+  // ⚠ AND IT IS ASKED OF HER, NOT OF THE BAND (owner ruling 1, 09.08 - see world/age.ts). This read
+  // `ageAtWeek(event.week)` until the one-clock wave, which is why a girl born on 15 March was offered
+  // and entered a W15 at week 104 while she was 15.83: `minAgeYears = 16` was being asked of the band.
+  // The consequence of the fix is the ruling working rather than a regression - a December girl becomes
+  // W15-eligible eleven months later than a January one, and keeps eleven months MORE junior
+  // eligibility at the other end, because the U18 ceiling is the same clock read from the top.
+  const ageYears = kidAgeAt(world, event.week)
+  const ageBlock = tierAgeBlock(event.tier, ageYears)
   if (ageBlock !== null) {
     const tier = TIERS[event.tier]
     return {
@@ -285,7 +293,7 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
       detail:
         ageBlock === 'young'
           ? `${tier.label} opens at ${tier.minAgeYears} – she is too young.`
-          : `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${ageAtWeek(event.week)} she has aged out.`,
+          : `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${ageYears} she has aged out.`,
     }
   }
   // THE ITF ANNUAL ENTRY CAP – she has used her year's international allowance.
@@ -309,7 +317,7 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
         // spent all fourteen has to understand she is capped for the season, not shut out.
         detail:
           `Year limit reached – ${cap.used} of ${cap.limit} international events at ` +
-          `${ageAtWeek(event.week)}. A fresh allowance next season.`,
+          `${ageYears}. A fresh allowance next season.`,
         entryCap: cap,
       }
     }
@@ -327,7 +335,7 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
         level: 'blocked',
         reason: 'capped',
         detail:
-          `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageAtWeek(event.week)}. ` +
+          `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. ` +
           `A fresh allowance next season; the junior and national events stay open.`,
         entryCap: cap,
       }

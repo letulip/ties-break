@@ -51,6 +51,9 @@ import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
 // feed rule (`feedContext`/`feedShows`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
 import { HORIZON_WEEKS, entryBandTrack, feedContext, feedShows, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
+// D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with the
+// Calendar so the two surfaces cannot call the same tournament two different things.
+import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
@@ -148,8 +151,18 @@ const PHASE_STRIP = SURFACE_BLOCKS.map((b) => ({
 }))
 const activePhaseId = computed(() => surfaceBlockFor(week.value).id)
 
-/** Her age band, for the band-scoped exam frame. The same one-line derivation `headerAvatar` makes off
- *  `ageYears`, and not `useKidEmotion` - this screen wants the BAND and none of the emotion machinery. */
+/** WHICH PAINTING OF HER the exam frame wears. The same one-line derivation `headerAvatar` makes off
+ *  `ageYears`, and not `useKidEmotion` - this screen wants the ART band and none of the emotion
+ *  machinery.
+ *
+ *  ⚠ "BAND" HERE IS THE PORTRAIT BAND, NOT THE AGE BAND, and the word had to be disambiguated once
+ *  the one-clock wave gave `ageAtWeek` a name of its own. `portraitStage` cuts jun/young/teen/adult/
+ *  milf for the ART; `ageAtWeek` is the coach market's restocking clock, which is the single job that
+ *  ruling left it (PlanWeekSheet.vue prices a booked practice week through it, and that IS the
+ *  market's question). So this line is CORRECT as it stands and must not be re-pointed: `ageYears` is
+ *  now her real age, and a picture of her should follow the girl rather than a calendar-year cohort.
+ *  Reading `ageAtWeek(week)` here would put a thirteen-year-old December girl in the next band's
+ *  painting for a year - the exact defect the one-clock ruling was made to end. */
 const kidStage = computed(() => portraitStage(game.snapshot?.ageYears ?? 14))
 
 /** The painting for a week with no tournament. Every such week has one: the three off-season weeks
@@ -262,8 +275,51 @@ const RING_HARD = 0.35
 const RING_CERTAIN = 0.85
 
 /** Wordings that imply the result is in doubt. Held apart from the pools rather than removed: they
- *  are good lines on a card where the doubt is real, and only wrong where it is not. */
+ *  are good lines on a card where the doubt is real, and only wrong where it is not.
+ *
+ *  It holds no SELF_FIELD_LINES member and that is a fact rather than an oversight: none of the
+ *  parent wordings below hedges the RESULT. They hedge the READING, which stays honest at any ring
+ *  because a parent squinting at a draw sheet really is unsure of the reading at 92 percent too. */
 const HEDGED_LINES = new Set(['On paper this is hers to lose.', 'A field she should be beating.'])
+
+// ⚠ AND WHEN NOBODY IS HIRED, NOBODY PROFESSIONAL IS SPEAKING (R15-18, owner 09.08: «на 8к без
+// тренера на карточках в season написано coach says и очень профессионально… непонятно чем этот
+// вариант отличается от тренера»).
+//
+// `coachSays` read `e.preview` alone and never asked whether a coach was hired, so a family paying
+// nothing was handed professional draw analysis under a plaque that said Coach says. Two separate
+// wrongs in one line: it credits a person who does not exist, and it makes the free option look
+// identical to the one that costs money every week.
+//
+// THE FIX IS A REGISTER, NOT A DELETION. A blank card is worse than a plain one, and the ring beside
+// the plaque is the same number either way, so nothing is withheld here. What changes is WHO is
+// talking: a parent at the kitchen table with a printed draw sheet, reading names and recognising
+// some of them, rather than a professional reading a field. Same verdicts, same seam, same
+// sub-stream, different mouth.
+//
+// ⚠ THE MECHANICAL ANSWER TO «чем этот вариант отличается» IS NOT HERE. What a coach actually buys
+// is the per-day training controls the owner ruled on in the same session, and this line must not
+// pre-empt them by inventing a difference in what the preview contains. `preview` is untouched.
+const SELF_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
+  strong: [
+    'Reading down the list, most of these names are above her.',
+    'This one looks hard on paper.',
+    'A lot of good players in this draw. More than usual.',
+    'We do not recognise half of them, and that is usually the bad half.',
+  ],
+  even: [
+    'Names we half know, and some we do not.',
+    'Looks like the girls she usually plays.',
+    'Nothing on this sheet we have not seen before.',
+    'An ordinary week, as far as we can tell.',
+  ],
+  favourite: [
+    'Reading the sheet, she may be the best name on it.',
+    'We have watched her beat most of these.',
+    'Nobody on this list has frightened us before.',
+    'She is the one to beat here, unless we are reading it wrong.',
+  ],
+}
 
 /** What the coach adds when the draw cuts against the field – three wordings each, off the event's
  *  own sub-stream like the field line, so a card never changes between renders and two cards on
@@ -282,6 +338,18 @@ const DRAW_CLAUSES: Record<'kind' | 'cruel', readonly string[]> = {
   ],
 }
 
+/** IS ANYBODY HIRED. `coachId` is null for the parent on the court and a roster id otherwise – the
+ *  engine's own answer, on the snapshot, so the screen derives no fact of its own. */
+const selfCoached = computed(() => !game.snapshot?.coachId)
+
+/** WHOSE PLAQUE THIS IS. The label has to move with the voice or the register change below is
+ *  invisible: the whole complaint was that the words said "Coach says" to a family with no coach. */
+const readLabel = computed(() => (selfCoached.value ? 'Your read:' : 'Coach says:'))
+
+/** The plaque's sentence. It keeps the name `coachSays` because a hired coach is its author on most
+ *  careers – and because three source pins use `function coachSays` as a slice marker, where a
+ *  vanished marker makes `indexOf` return -1 and the slice collapse. It is the ONE entry point
+ *  either way: the branch is inside, so nothing can render one author under the other one's label. */
 function coachSays(e: UpcomingEvent): string {
   // `surfaceFit` is the engine's own verdict with the surface name sliced off (R11-15) – the card
   // names the court once, beside its ring, so the coach must not name it a second time.
@@ -293,7 +361,11 @@ function coachSays(e: UpcomingEvent): string {
 
   // Filtering shortens the pool and therefore changes which line the same draw lands on – still
   // deterministic per event, which is all the sub-stream ever promised.
-  const all = COACH_FIELD_LINES[strength]
+  //
+  // ⚠ THE SALT DOES NOT MOVE WITH THE AUTHOR, deliberately. Both pools are read at the same index of
+  // the same `seed:coachsay:<eventId>` draw, so hiring somebody mid-season re-voices the card and
+  // never re-rolls it – the same property the event sub-stream was chosen for in the first place.
+  const all = (selfCoached.value ? SELF_FIELD_LINES : COACH_FIELD_LINES)[strength]
   const pool = chance >= RING_CERTAIN ? all.filter((l) => !HEDGED_LINES.has(l)) : all
   const parts = [pick(pool.length ? pool : all, 'coachsay')]
 
@@ -698,15 +770,25 @@ function confirmVacation(v: { week: number; packageId: string; label: string; pr
   planSheet.value = null
 }
 
-function askCancelVacation(row: CalendarRow): void {
-  const booking = row.vacation!
+/** R14-1: ONE CONFIRM, TWO DOORS. The un-painted fallback row's own Cancel and the planner sheet's
+ *  both land here, so the sentence the parent reads before a refund cannot depend on which surface
+ *  he came through. It takes the booking rather than a `CalendarRow` for exactly that reason – the
+ *  sheet has no row. */
+function askCancelVacation(week: number, booking: VacationBooking): void {
   pendingConfirm.value = {
-    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(row.week)}? ${
+    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(week)}? ${
       booking.paidCents > 0 ? `${formatCents(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
     }`,
     confirmLabel: 'Cancel the trip',
-    onConfirm: () => game.cancelVacation(row.week),
+    onConfirm: () => game.cancelVacation(week),
   }
+}
+/** The planner sheet asked to unbook the week it was opened on (R14-1). The sheet closes first, the
+ *  same way `confirmVacation`/`confirmPractice` hand over: the confirm is the only thing on screen
+ *  while the decision is being taken. */
+function cancelVacationFromPlanner(v: { week: number; packageId: string; label: string; paidCents: number }): void {
+  planSheet.value = null
+  askCancelVacation(v.week, { week: v.week, packageId: v.packageId, paidCents: v.paidCents })
 }
 function askCancelPractice(row: CalendarRow): void {
   const booking = row.practice!
@@ -1129,11 +1211,17 @@ function closeExhibition(): void {
               </span>
             </div>
 
-            <!-- THE COACH PLAQUE. His read on the court and the field, and her real odds in round
-                 one - see engine/season/preview.ts for what that number does and does not claim. -->
+            <!-- THE PLAQUE. A read on the court and the field, and her real odds in round one - see
+                 engine/season/preview.ts for what that number does and does not claim.
+
+                 R15-18: it has TWO authors and the label names which one. A hired coach reads a
+                 field; a self-coached family reads a draw sheet at the kitchen table, and until this
+                 wave both were printed under "Coach says:" to a family paying nobody. The ring and
+                 the preview behind it are identical either way - this is the voice, not the value.
+                 See `readLabel` and SELF_FIELD_LINES in the script. -->
             <div class="event-coach">
               <div class="event-coach-said">
-                <p class="event-coach-label">Coach says:</p>
+                <p class="event-coach-label">{{ readLabel }}</p>
                 <p class="event-coach-line">{{ coachSays(row.event) }}</p>
               </div>
               <ProgressRing
@@ -1175,9 +1263,17 @@ function closeExhibition(): void {
               <template v-else>
                 <!-- Fatigued is a soft, warned CHOICE: the Enter stays ACTIVE and amber, with a
                      "race anyway?" warning – never greyed out. -->
+                <!-- ⚠ THE NAME SAYS WHICH TOURNAMENT (defect D4, docs/specs/e2e-coverage.md §12 -
+                     the highest-priority item on that list, and the direct cause of gap 8.1). The
+                     feed draws one of these per card and the whole accessible name was the word
+                     "Enter", so eight cards were eight controls a selector cannot tell apart. The
+                     VISIBLE word is unchanged and is still the first word of the name, which is what
+                     WCAG 2.5.3 asks; `enterActionName` is shared with the Calendar so the two
+                     surfaces cannot call the same event two different things. -->
                 <PrimaryPill
                   :risky="row.event.cautionReason === 'fatigued'"
                   :disabled="fundsShort(row.event) || game.busy"
+                  :aria-label="enterActionName(row.event)"
                   @click="askEnter(row.event)"
                 >
                   Enter
@@ -1263,7 +1359,7 @@ function closeExhibition(): void {
               </span>
             </span>
             <span class="planned-actions">
-              <button :disabled="game.busy" @click="askCancelVacation(row)">Cancel</button>
+              <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">Cancel</button>
             </span>
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
@@ -1359,8 +1455,17 @@ function closeExhibition(): void {
         </div>
         <PrimaryPill class="friendly-go" @click="playExhibition">Play match</PrimaryPill>
       </Card>
+      <!-- ⚠ IT HAS A LABEL NOW (defect D9, docs/specs/e2e-coverage.md §12: unlabelled text inputs,
+           placeholder only). A placeholder is not a name - it is content that disappears the moment
+           anything is typed - so this box was not reachable as a named textbox at all, and a screen
+           reader announced an anonymous edit field beside a Play button. A real `<label for>` is the
+           fix rather than an `aria-label`, because the one thing this control needed was to say what
+           it is to EVERYBODY, sighted users included: "seed (optional)" vanished on the first
+           keystroke, which is exactly when the field is hardest to identify. The placeholder stays
+           as the hint it always was, with the word the label now carries taken out of it. -->
       <div class="controls friendly-seed">
-        <input v-model="exhibitionSeed" type="text" placeholder="seed (optional)" />
+        <label class="hint friendly-seed-label" for="friendly-seed">Seed</label>
+        <input id="friendly-seed" v-model="exhibitionSeed" type="text" placeholder="optional" />
       </div>
       <!-- ⚠ THE VIEWER USED TO BE RIGHT HERE, INLINE, and that was the fourth-place bug the owner
            found on 30.07 - there is a fourth place the match viewer lives, and all four should open
@@ -1412,6 +1517,7 @@ function closeExhibition(): void {
       :highlight-package-id="planSheet.highlightPackageId"
       @book-practice="confirmPractice"
       @book-vacation="confirmVacation"
+      @cancel-vacation="cancelVacationFromPlanner"
       @close="planSheet = null"
     />
     <ConfirmDialog
@@ -1876,6 +1982,12 @@ section.bare .event-cards {
 /* The seed box is a developer affordance, not part of the card. */
 .friendly-seed {
   margin-top: 10px;
+}
+
+/* D9's label. `.controls` is already a flex row, so the word sits beside the field; it takes the
+   muted `.hint` ink because it names a developer affordance rather than a decision. */
+.friendly-seed-label {
+  margin: 0;
 }
 
 /* The entry fee sits with the deadline chips but is NOT one – it is a figure, so it reads white and

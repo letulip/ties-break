@@ -5,6 +5,89 @@ off the code, not guessed; the ones still open say so.
 
 ---
 
+## Status, audited 09.08 (backlog #88)
+
+This round was written as prose, so it never had boxes and the README row therefore said "nothing
+started" for a fortnight after the work landed. **Waves A, C, D and E all shipped; wave B shipped in
+two of three parts.** The tick list below is the round's own tags – seventeen of them across the
+owner's fifteen items – with where each one landed. The analysis under each heading is unchanged; it
+is the record of what was found, and it stays as written.
+
+**Correctness – wave A, all shipped**
+
+- [x] **R11-1** the swallowed injury popup → an advance now reports the SET of reasons it stopped
+      for, in a surfacing order the protocol names (`src/shared/protocol.ts`,
+      `src/worker/sim.worker.ts`, `src/engine/world.ts`, `src/components/InjuryStopDialog.vue`).
+      The second gate went too: `src/App.vue` no longer requires the Home tab, and says so where the
+      old assumption used to sit.
+- [x] **R11-12a** the wrap-up spend that did not match the wallet → root-caused and reconciled.
+      `src/engine/world/milestones.ts` ("THE MONEY BUG"), the season window defined once in
+      `src/engine/world/ledger.ts` so a season cannot mean two spans on two surfaces, the gross
+      banked on `SeasonSummary`, and `src/components/SeasonSummaryDialog.vue` reading it. Older
+      summaries banked before the fix say so rather than showing a wrong number.
+- [x] **R11-5a** "locked" vs "nothing scheduled" → ONE tier-state rule in
+      `src/composables/tierState.ts`, shared by the Home ladder and the Season screen, plus the line
+      the owner never had ("open to her, but the calendar has none in the horizon").
+- [x] **R11-6** week numbering resets each year → the single week label in `src/shared/dates.ts`
+      ("the ONE week label"), which is the formatter this item said did not exist. Absolute weeks are
+      untouched in the engine, exactly as required.
+
+**Balance – wave B, two of three**
+
+- [x] **R11-5b** J30 strictly dominant → the retable happened, in stages and each one measured:
+      `tune/first-round-zero` zeroed the first-round award at every rung
+      (`docs/specs/wave-b-first-round-zero.md`, the cheapest step this item named), then
+      `docs/specs/points-by-the-book-2026-08.md` ("three sourced corrections, all approved before a
+      line was written") and `docs/specs/points-economy-2026-08.md`. The ladder itself was rebuilt
+      around two tracks – `docs/specs/two-ladders.md`.
+- [ ] **R11-1b** post-return fragility → **GENUINELY OPEN.** Verified 09.08: `injuryTau` in
+      `src/engine/world/injury.ts` carries age, load, the playing week, physio, the vacation buff,
+      kit wear and the knock – and **no memory of a previous injury**. There is no fragility window
+      and no re-injury bias anywhere in `src/`. The finding this item recorded still stands.
+- [x] **R11-11** wealthy income still wrong → shipped as **R12-9** on `tune/wealthy-income`: 430 →
+      750, the middle of his 700–800, with the burn-band calibration test moved deliberately. See
+      `round-12.md` § Answered.
+- [x] **R11-3** the 21-15 vs 15-23 spread → answered, no work. Nothing to build.
+
+**Presentation – wave C, all shipped**
+
+- [x] **R11-2** no avatar swap for practice matches → one predicate, named in every place that reads
+      it: `src/shared/avatarEmotion.ts`, `src/composables/kidEmotion.ts`, and the same rule reused by
+      the radar and the diary so a friendly is never evidence anywhere.
+- [x] **R11-14** "Practice match + with coach" on one line → the booking text and its controls are
+      two stacked bands instead of two columns fighting over 285 px
+      (`src/components/screens/SeasonScreen.vue`, `src/style.css`).
+- [x] **R11-15** the surface pill back in the card corner → done, and it says out loud that it
+      REVERTS R10-11 (`src/components/screens/SeasonScreen.vue`, `src/style.css`). The fit line below
+      never repeats the surface name.
+
+**New work – waves D and E, all shipped**
+
+- [x] **R11-4** per-season history → shipped in a **narrower shape than asked, deliberately and on
+      the record**. The wallet lists one true row per season – what the year cost, what came in, what
+      was left (`src/components/screens/MoneyScreen.vue`) – and the results dynamic is on Stats
+      (`src/components/SeasonHistoryTable.vue`). The per-category spend breakdown per season **cannot
+      be drawn and was not faked**: `pruneFinanceWeeks` keeps 60 weeks of category detail, so a
+      five-year career has already deleted four years of it. That reasoning is written into
+      `MoneyScreen.vue` rather than left in an agent's report.
+- [x] **R11-9** preload the art, and settle offline → `src/art/preload.ts` +
+      `src/art/autoPreload.ts`, warmed from `src/main.ts` when a career opens and again when a tick
+      rolls her into a new year, pinned by `tests/art/preload.test.ts` against the same URLs the
+      components ask for. The precache half was audited and answered deliberately: the art is
+      runtime-cached, not precached, because precaching all 2,348 KiB would more than double the
+      install weight.
+- [x] **R11-13** more surnames → `SURNAMES` in `src/engine/season/cohort.ts` grew **44 → 210**, and
+      the draw-order hazard this item flagged was checked before the array moved: growth and the
+      frozen MAIN capture are byte-identical.
+- [x] **R11-10** the lore and setting document → `docs/lore/setting.md`, the world/tone/art bible.
+
+**Answered, no work**
+
+- [x] **R11-7** injury risk across several vacations – it does not accumulate.
+- [x] **R11-8** planning something else on a tournament week – keep the rule, fix the copy.
+
+---
+
 ## 🔴 Correctness
 
 ### R11-1 the injury popup is lost whenever another stop fires the same week (worst item)
@@ -256,8 +339,12 @@ plannable is the design working.
 
 ## Waves
 
-Nothing starts until the five open branches are merged — every wave below assumes main contains
+~~Nothing starts until the five open branches are merged~~ – every wave below assumed main contained
 r10/view, ui/pill-radius, tune/match-base-2, tune/practice-medical-gate and bench/runfat-resweep.
+**That gate was cleared long ago and the waves ran.** Kept struck through rather than deleted,
+because "waits on the five open branches" is the sentence the README index repeated for a fortnight
+after the work had shipped. See the status list at the top of this file for where each item landed;
+only **R11-1b** (post-return fragility) is still open.
 
 | wave | items | shape |
 |---|---|---|

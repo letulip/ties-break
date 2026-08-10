@@ -32,7 +32,7 @@ import type { KitState } from '../src/shared/protocol'
 import { SKILL_POINTS_PER_YEAR, growWeek, rollPotential, SKILL_KEYS, type KidSkills } from '../src/engine/development'
 import { COACH_TIERS, bestFitCoachAt, tierOf } from '../src/engine/coach'
 import type { CoachTier } from '../src/shared/protocol'
-import { startingSkills, ageAtWeek } from '../src/engine/world'
+import { startingSkills, kidAgeYears } from '../src/engine/world'
 import { simulateMatch } from '../src/engine/match/engine'
 import { paceAdvantage } from '../src/engine/match/point'
 import { serveSpeedBase, expectedServeSpeed } from '../src/engine/match/serveSpeed'
@@ -152,7 +152,9 @@ function careerAt(rung: CoachTier, seed: string): number {
     skills = growWeek({
       skills,
       potential,
-      ageYears: ageAtWeek(w),
+      // `growWeek` has always developed HER, not the band (world.ts) - so the bench feeds the same
+      // clock the engine does rather than the market's restocking one.
+      ageYears: kidAgeYears(w, profile.birthMonth),
       plan: { train: 70, rest: 30 },
       coach,
       playStyle: profile.playStyle,

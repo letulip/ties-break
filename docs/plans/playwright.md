@@ -8,7 +8,10 @@ last-reviewed: 2026-08-08
 
 # Playwright: the fourth layer
 
-**Status: S0, S1a and S1b built (06–08.08), S2–S3 planned.** Written 06.08.2026, when the repo had no
+**Status: S0, S1 and S2 built (06–09.08); S3's report built, its matrix not.** The coverage map –
+what is covered, at which layer, and what is deliberately not – is
+[`docs/specs/e2e-coverage.md`](../specs/e2e-coverage.md), and `e2e/coverage-map.spec.ts` keeps that
+document honest against the repo. **18 tests, ~25 s.** Written 06.08.2026, when the repo had no
 `@playwright/test`, no `e2e/` directory and exactly **zero** `data-testid` attributes – which was the
 honest place to start from. **It still has zero:** the harness, the five fixtures and the seeding
 fixture were all written against role and accessible name alone (§4), and the two places that came
@@ -43,7 +46,7 @@ what none of them can reach.
 | `unit` | node | engine arithmetic, ledgers, migrations | ~2,318 |
 | `component` | happy-dom, mounted | component behaviour and rendering | 94 |
 | `sim` | node, Monte-Carlo | balance calibration (weekly, not a PR gate) | 9 files |
-| **`e2e`** | **real Chromium** | **the seams between them** | **0** |
+| **`e2e`** | **real Chromium** | **the seams between them** | **18** |
 
 **The seams, concretely – every one of these is currently untested by anything:**
 
@@ -194,9 +197,28 @@ this app will hit and most apps do not – and a third that only showed up once 
   property makes the seed a one-shot, which is what keeps `addInitScript` from re-seeding on the
   reload that S2's persistence spec depends on.
 
-### S2 – the journeys (two days)
+### S2 – the journeys (two days) – BUILT, 09.08
 
-Roughly a dozen specs, one per seam, each stated as a sentence a non-engineer can read:
+Six journey specs on top of the harness, twelve tests, each stated as a sentence a non-engineer can
+read. **The map is [`docs/specs/e2e-coverage.md`](../specs/e2e-coverage.md)** – per screen and per
+mechanic, what is covered, at which layer and why, plus the section that makes the rest believable:
+what is deliberately *not* covered end-to-end, with the reason.
+
+Four things worth carrying forward from building it:
+
+- **All six seams are now touched**, including #3. The service worker got the second `webServer` this
+  plan predicted: a second production build in `dist-sw/` on port 4174, one project pinned to it,
+  one spec. The other eleven specs keep the `VITE_TB_SW=off` build.
+- **The load-bearing reload assertion is `week + 1`, not `week`.** A reload spec that asserted the
+  *seeded* state would pass in three different broken worlds - no autosave, a silent re-seed, or a
+  working one. Every persistence claim is on a week the fixture has never been at.
+- **The selector policy paid a dividend nobody planned for.** Role-and-name only turned the journey
+  work into a **defect list**: twelve real accessibility gaps, tabulated in §10 of the coverage
+  document. Two of them (ambiguous `Enter`, unlabelled coach rows) are the direct cause of two
+  coverage gaps - so the map records "not covered, and here is the defect that blocks it".
+- **The count is still zero `data-testid`.**
+
+The original list, kept for the record:
 
 - a career survives a reload with its funds, rank and week intact *(worker + IndexedDB)*
 - entering a tournament, playing it, and seeing the prize land in the ledger *(worker pipeline)*
@@ -206,9 +228,20 @@ Roughly a dozen specs, one per seam, each stated as a sentence a non-engineer ca
 - a corrupt save is refused and the storage-recovery UI offers the way out *(a path with real
   consequences and no coverage at all today)*
 
-### S3 – the showcase layer (one to two days)
+### S3 – the showcase layer (one to two days) – REPORTING BUILT, THE MATRIX NOT
 
-The part that makes it a portfolio piece rather than a smoke test.
+`npm run test:e2e:report` runs the suite with a trace for **every** test, green ones included, and
+opens the HTML report at the end. The default run stays fast and quiet - `trace: 'on-first-retry'`
+records nothing on a green run - so the report is a second mode rather than a tax on every run.
+
+⚠ **Visual regression is NOT built, and that is now a decision rather than a gap.** The argument
+below still holds in theory, and the reason not to spend it is in `docs/specs/e2e-coverage.md` §6.6:
+a screenshot suite goes red on every *intended* restyle, and this project restyles often. What
+replaced it is two invariants at 375 px that hold for any design - the page does not scroll sideways,
+and the Home season strip does not grow (measured: 148.9 px, ceiling 170). Those catch the two
+layout failures this app has actually shipped, and they survive a repaint.
+
+The rest of S3, unbuilt:
 
 - **Visual regression that can actually pass.** Deterministic seed + fixed viewport + a stubbed
   clock. Snapshot the screens with real weight: a match in progress, the trophy cabinet, the
@@ -217,10 +250,13 @@ The part that makes it a portfolio piece rather than a smoke test.
 - **Device matrix.** Mobile 576×1280 (the owner's actual phone), tablet, desktop – plus dark and
   light. The SEASON strip regression is a concrete thing to pin at mobile width.
 - **Accessibility.** `@axe-core/playwright` over the main screens, failing on serious and critical.
-  Given the selector policy, most of this comes free.
-- **Reporting.** HTML report + traces published to GitHub Pages next to the app itself. **This is
-  the artefact to put in a job application** – a live, browsable report with traces someone can
-  actually click through beats any description of a test strategy.
+  ⚠ *"Given the selector policy, most of this comes free"* was optimistic, and S2 measured it: the
+  selector policy found **twelve** real gaps (coverage document §10), including five settings
+  toggles whose only accessible name is `ON`/`OFF`. An axe run would land on a screen that is not
+  ready for it. **Fix the twelve first** – that is a `src/` branch, not a test branch, and it is the
+  single highest-value follow-up from this wave.
+- **Publishing the report to GitHub Pages** beside the app. `npm run test:e2e:report` produces it
+  locally today; nothing publishes it yet.
 
 ## 6. CI, with the project's own cost lesson applied
 

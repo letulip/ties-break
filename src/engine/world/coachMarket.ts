@@ -171,9 +171,10 @@ export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
   addEvent(world, {
     week: world.week,
     type: 'info',
+    // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see the note on `coachLoadNote` below for the ruling.
     text: on
       ? 'Your coach travels to tournaments with her now.'
-      : 'Your coach no longer travels to tournaments – he works with her at home.',
+      : 'Your coach no longer travels to tournaments – the work happens at home.',
   })
 }
 
@@ -315,7 +316,7 @@ export function coachRoomNote(world: WorldState): string {
   if (realised < 0.6) return 'She has a long way to go – this is where a coach buys the most.'
   if (realised < 0.8) return 'There is real room left in her game, and a coach is what buys it.'
   if (realised < 0.92) return 'She is closing on her own ceiling – every rung is worth less than it was.'
-  return 'She is near her own ceiling now. No coach can add much more, whatever he costs.'
+  return 'She is near her own ceiling now. No coach can add much more, whatever the price.'
 }
 
 /** WHAT EACH RUNG DOES ABOUT HER BODY, for the market card - the load wave's two new differences said
@@ -324,19 +325,26 @@ export function coachRoomNote(world: WorldState): string {
  *  Written as PROSE rather than numbers on purpose. The measured spread between hired rungs is a few
  *  injury weeks over four years - real, and far too small to print as a figure without promising a
  *  precision 120 seeds do not support. What IS crisply different is the second half (taps per career run
- *  6.7 at budget to 2.0 at elite, a 3.4x ladder), and that is a thing a sentence can say honestly. */
+ *  6.7 at budget to 2.0 at elite, a 3.4x ladder), and that is a thing a sentence can say honestly.
+ *
+ *  ⚠ AND NO PRONOUN NAMES THE COACH ON ANY OF THEM (R15-7, owner 09.08). `buildCoachRoster` picks a
+ *  first name off COACH_FIRST_M *or* COACH_FIRST_F by `slot.gender`, so a woman sits on every roster
+ *  by construction, and these four rungs all called her "he". The owner's own fix: drop the pronoun
+ *  and join the two halves with a dash. The LADDER these sentences draw is untouched - each rung still
+ *  says how good the medical team is and how much of the deciding comes off the parent - and the
+ *  parent stays the subject wherever the sentence has one, so none of them slid into a form's voice. */
 export function coachLoadNote(tier: CoachTier): string {
   switch (tier) {
     case 'self':
       return 'You manage her load – every call is yours, and nobody is watching her but you.'
     case 'budget':
-      return 'Basic physio. He handles the easy calls and brings you the rest.'
+      return 'Basic physio – the easy calls are handled, and the rest come to you.'
     case 'middle':
-      return 'Proper physio. He decides most weeks himself.'
+      return 'Proper physio – most weeks are decided without you.'
     case 'high':
-      return 'A good medical team. He rarely needs to ask you.'
+      return 'A good medical team – you are rarely the one asked.'
     case 'elite':
-      return 'The best medical team money buys. He handles her body, and you hear about it after.'
+      return 'The best medical team money buys – her body is handled, and you hear about it after.'
   }
 }
 
@@ -409,7 +417,8 @@ export const COACH_HORIZON_WEEKS: Record<CoachTier, number> = {
  *  the same distinction stated as a job rather than as a number. "Even a title here would not move
  *  her ranking" is not something you see from the court: it is a fact about her best-N book that
  *  somebody has to be keeping. Budget does not; middle and up do, which is precisely what
- *  `coachLoadNote` already promises of those rungs ("Proper physio. He decides most weeks himself"). */
+ *  `coachLoadNote` already promises of those rungs ("Proper physio – most weeks are decided without
+ *  you"). */
 export function coachReadsTheBook(tier: CoachTier): boolean {
   return tier === 'middle' || tier === 'high' || tier === 'elite'
 }

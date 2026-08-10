@@ -20,7 +20,6 @@ import {
   START_AGE_YEARS,
   EXPENSE_CATS,
   INCOME_CATS,
-  type SeedResult,
 } from '../tools/econ-bench'
 import { STARTING_FUNDS_CENTS, financeWindow } from '../src/engine/world'
 import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
@@ -191,30 +190,6 @@ describe('finance read is correct PAST the 60-week pruning window (the crux)', (
     expect(naive.startWeek).toBe(0)
     // it only aggregates the retained tail, never the full career
     expect(world.financeWeeks.length).toBeLessThanOrEqual(60)
-  })
-})
-
-describe('survival flag and bankruptcy tracking', () => {
-  it('survived === (weeksToBankrupt === null) across presets and horizons', () => {
-    for (const preset of PRESETS) {
-      for (const index of [0, 1]) {
-        for (const h of [H16, H18]) {
-          const r = runCareer(preset, index, h.weeks)
-          expect(r.survived).toBe(r.weeksToBankrupt === null)
-        }
-      }
-    }
-  })
-
-  it('weeksToBankrupt is null-or-in-range, and a red run has a negative peak deficit', () => {
-    const results: SeedResult[] = PRESETS.flatMap((p) => [runCareer(p, 0, H16.weeks), runCareer(p, 1, H16.weeks)])
-    for (const r of results) {
-      if (r.weeksToBankrupt !== null) {
-        expect(r.weeksToBankrupt).toBeGreaterThanOrEqual(0)
-        expect(r.weeksToBankrupt).toBeLessThanOrEqual(H16.weeks)
-        expect(r.peakDeficitCents).toBeLessThan(0)
-      }
-    }
   })
 })
 

@@ -8,6 +8,14 @@ import { describe, it, expect, vi } from 'vitest'
 // own, and the whole-PRESETS loops become it.each so the event loop yields between presets and no
 // single test body can block tens of seconds on the weekly runner's slower cores.
 // Every assertion, comment block, owner decision and RE-PIN note below is carried over verbatim.
+//
+// ⚠ AND IT DIVIDED AGAIN ON 10.08 — the nine per-preset agreement tests moved to
+// tests/econ-reach-agree.test.ts. Same reason a third time, and this time the CAUSE was our own:
+// re-pointing the 14→18 fixture at a cell that measures the tennis (compound-cost §9) put careers
+// in it that SURVIVE, so more weeks are simulated and the file reached 64s. Measured before cutting
+// — nine tests at 33.1s against one at 30.7s — so it divided at a seam, not in half. THIS file
+// keeps the name because the name is what nine documents and the compound-cost spec's nine readings
+// point at, and all of them mean the band below.
 
 // Whole-horizon career replays are deterministic but SLOW, and they sit close enough to vitest's
 // 5s default that a busy run tips them over - the gate then goes red on timing, not on a claim.
@@ -15,13 +23,9 @@ import { describe, it, expect, vi } from 'vitest'
 vi.setConfig({ testTimeout: 240_000 })
 import {
   runCareer,
-  openCareer,
-  stepCareerWeek,
   PRESETS,
   HORIZONS,
-  REACH_TARGET_MONEY,
 } from '../tools/econ-bench'
-import { kidPoints } from '../src/engine/world'
 
 const working = PRESETS.find((p) => p.background === 'working')!
 /** The 14→18 fixture: the cell where the PRO proxy still splits the field (18 of 30 clear it under
@@ -35,33 +39,49 @@ const working = PRESETS.find((p) => p.background === 'working')!
  *  measured across all nine presets the pro proxy runs 18/30 … 30/30, and the three cells that still
  *  split are the ones where the coaching bill eventually stops the career (working·middle 28,
  *  middle·middle 27, middle·high 18). This one is the widest split and therefore the most durable
- *  fixture. `working` above is the self-coached one, which is 29 of 30 at this horizon. */
-const middleHigh = PRESETS.find((p) => p.background === 'middle' && p.coachTier === 'high')!
+ *  fixture. `working` above is the self-coached one, which is 29 of 30 at this horizon.
+ *
+ *  ⚠⚠ RE-POINTED AGAIN, `middleHigh` -> `middleSelf` (10.08, fix/reach-fixture), AND THE REASON IS A
+ *  SECOND PROPERTY RATHER THAN A DRIFT IN THE FIRST. Everything above stands: a fixture must fire
+ *  both branches, and that is still necessary. It is not sufficient. `middleHigh` was still firing
+ *  both branches at 1 of 30 and was still the wrong cell, because
+ *  docs/specs/compound-cost-2026-08.md §5 showed ELEVEN of its fifteen lost careers were the family
+ *  going bankrupt and only four were the tennis - a PRO proxy decided by the bank balance. The
+ *  owner ruled on 10.08 that the balance is right and the fixture is wrong (§9 of that spec quotes
+ *  him), so the cell moves and the bar does not.
+ *
+ *  WHY THIS CELL, measured by `tools/reach-sweep.ts --float=100000000` across all nine presets - the
+ *  same tool that chose `middleHigh`, now also reporting what §5 measured by hand. Careers of 30
+ *  clearing 14→18 as the game charges it, then the same careers with a wallet that cannot empty:
+ *
+ *      preset                    as charged   with float   SOLVENCY  TENNIS   latched
+ *      8k   working self-coached      10           14          4       16      0/30
+ *      8k   working budget            19           26          7        4      9/30
+ *      8k   working middle             3           26         23        4     22/30
+ *      25k  middle  SELF-COACHED      13           13          0       17      0/30   <- this one
+ *      25k  middle  budget            19           24          5        6      6/30
+ *      25k  middle  middle            14           27         13        3     17/30
+ *      25k  middle  high               1           25         24        5     29/30   <- the old one
+ *      120k wealthy high              26           26          0        4      6/30
+ *      120k wealthy elite             24           26          2        4     23/30
+ *
+ *  **SOLVENCY 0.** Thirteen of thirty reach it and the SAME thirteen reach it when money cannot run
+ *  out, so every one of the seventeen misses is the tennis: ten of them never hold a counting ITF
+ *  result at all and seven peak outside the top 50. Two careers of thirty ever go red and NONE
+ *  latches bankruptcy, so there is no bill here to decide anything. `middle·middle` splits one career
+ *  wider (14) and was rejected on the same measurement: thirteen of its sixteen misses are the money.
+ *
+ *  ⚠ WHAT THIS FIXTURE CAN NO LONGER NOTICE, said plainly rather than discovered later: a family that
+ *  coaches its own daughter pays no coaching bill, so a future wave that re-prices coaches will not
+ *  move this line. That is the point - it is why the cell is durable - but it is also a real loss of
+ *  reach, and the money question now belongs entirely to the instruments built for it
+ *  (`endings-bench`, `tools/compound-cost.ts`, the survival rows of `bench:econ`). */
+const middleSelf = PRESETS.find((p) => p.background === 'middle' && p.coachTier === 'self')!
 
 const H16 = HORIZONS.find((h) => h.weeks === 104)!
 const H18 = HORIZONS.find((h) => h.weeks === 208)!
 
 describe('reach tracker (points/rank proxy – NOT the prize-money question, which A4 measures)', () => {
-  it.each(PRESETS)('reachedWeek is the FIRST week the target predicate holds (14→16 = the domestic arm) – $label', (preset) => {
-    // Independent replay of the SAME deterministic career: find the first week kidPoints crosses the
-    // domestic reach proxy (>= REACH_TARGET_MONEY) and confirm runCareer recorded exactly that.
-    // The DOMESTIC table, because that arm is denominated in domestic points – see reachedTarget,
-    // whose 14→16 arm was reading the ITF one against it.
-    // ⚠ THRESHOLD-AGNOSTIC BY CONSTRUCTION, which is why the 150 → 320 re-base left it alone: it
-    // asserts that two readings of the same predicate AGREE, so it holds at any target, and it keeps
-    // firing both branches at 320 (of these five careers per preset, some cross and some do not).
-    for (const index of [0, 1, 2, 3, 4]) {
-      const r = runCareer(preset, index, H16.weeks)
-      const { world, rng } = openCareer(preset, index)
-      let firstCross: number | null = null
-      for (let i = 0; i < H16.weeks; i++) {
-        stepCareerWeek(world, rng)
-        if (firstCross === null && kidPoints(world, 'domestic') >= REACH_TARGET_MONEY) firstCross = world.week
-      }
-      expect(r.reachedWeek).toBe(firstCross)
-    }
-  })
-
   it('a career that clears the target has a non-null reachedWeek; one that never does is null', () => {
     // The 14→16 money proxy (DOMESTIC kidPoints >= 150) is a genuine climb, so some working careers
     // clear it and others never accumulate 150 points inside 104 weeks – exercising BOTH the non-null
@@ -210,12 +230,65 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     //     docstring for `middleHigh` already says it is "the cell where the coaching bill eventually
     //     stops the career". That is a fixture question for the owner, not a band question, and the
     //     spec's §7 lays out the two defensible rulings. Do not re-base [12, 27] to fit 1 of 30.
-    const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleHigh, i, H18.weeks))
+    //
+    // ⚠⚠ A TENTH READING, AND IT IS THE OWNER ANSWERING THE NINTH - fix/reach-fixture, 10.08. The
+    // ninth left this line RED on purpose and put one question in front of him; he took the first of
+    // the two answers §7 offered, in his own words:
+    //
+    //   «Первый: семья за 25к, покупающая высокого тренера, и ДОЛЖНА разоряться - по-моему да, мы
+    //    на их выбор не влияем.»
+    //
+    // So the BALANCE is right and the FIXTURE is wrong, and §7's own sentence for that branch is what
+    // was done: "re-point the fixture at a cell where both branches fire for tennis reasons, chosen
+    // by tools/reach-sweep.ts across the nine presets exactly as `middleHigh` itself was chosen."
+    // Full write-up, tables and reproduction in docs/specs/compound-cost-2026-08.md §9.
+    //
+    // ⚠ THIS IS NOT THE THIRD OPTION §7 FORBIDS, AND THE DIFFERENCE IS WORTH BEING PEDANTIC ABOUT.
+    // [12, 27] was never re-based to fit 1 of 30; that number is left exactly where the ninth reading
+    // found it, and it stands as a true reading of `middleHigh`. What moved is which cell this line
+    // asks about. A band is "the measured count on THIS fixture, half the distance to each degenerate
+    // answer" - it is a property of a fixture, not a bar that travels between them - so carrying
+    // [12, 27] onto a different cell would have been the staleness §3 of that spec is a complaint
+    // about, committed deliberately.
+    //
+    // THE FIXTURE, and the measurement behind it, is in the `middleSelf` docstring above: nine
+    // presets, 30 careers each, each replayed a second time with a wallet that cannot empty. This
+    // cell reads 13 of 30 either way - SOLVENCY 0 - so all seventeen misses are the tennis, where
+    // `middleHigh` reads 1 as charged and 25 with the float, i.e. 24 of its 29 misses are the money
+    // (and 30 of 30 of it goes red). Cross-checked through `runCareer` itself, which is what this line
+    // calls: 13 of 30, agreeing with the sweep's replay career for career.
+    //
+    // THE BAND, RE-MEASURED ON THE TREE AND THE CELL IT IS ASSERTED AGAINST, which is the thing §3
+    // says nobody did for three merges. Same rule as every band above - half the distance to each
+    // degenerate answer - so 13 of 30 gives 13 - 6.5 = 6.5 and 13 + 8.5 = 21.5. On a half the band
+    // rounds INWARD, following [6, 20]-from-11 below (5.5 -> 6, 20.5 -> 20) rather than
+    // [12, 27]-from-25, which rounded its floor the other way; the tighter reading is the one that
+    // cannot be accused of having been chosen to pass. **[7, 21] around 13 of 30.**
+    //
+    // AND IT IS NOT A KNIFE EDGE, checked the way the 320 re-base checked its own: the count is flat
+    // at 13 for every rank cut-off in [48, 51], the nearest career below the line peaks at #49 and
+    // the nearest above at #52. Ten of the thirty never hold a counting ITF result at all, so no
+    // re-spacing of the calendar brings them near it.
+    //
+    // ⚠ A FINDING THIS SWEEP TURNED UP THAT NOBODY ASKED FOR: `REACH_PRO_POINTS` IS CURRENTLY INERT.
+    // The pro predicate is (ranked AND rank <= 50) OR itf >= 60, and across all nine presets the
+    // union equals the RANK arm alone at every candidate threshold from 60 to 600 - every career that
+    // reaches 60 ITF points was already inside the top 50 while holding a counting result. Re-basing
+    // REACH_PRO_POINTS therefore moves no number in this file. Reported, not acted on; the disjunction
+    // is still the right predicate and the points arm is what stops the proxy depending on a rank
+    // table alone.
+    const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleSelf, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)
     expect(reachedH18, '14→18 saturated - re-read the notes above').toBeLessThan(proH18.length)
-    expect(reachedH18, '14→18 drifted (25 of 30 at ladder-pace) - re-read the notes above').toBeGreaterThanOrEqual(12)
-    expect(reachedH18, '14→18 drifted (25 of 30 at ladder-pace) - re-read the notes above').toBeLessThanOrEqual(27)
+    expect(
+      reachedH18,
+      `14→18 drifted (13 of 30 on middle·self-coached at the 10.08 re-point, measured ${reachedH18}) - re-read the notes above`,
+    ).toBeGreaterThanOrEqual(7)
+    expect(
+      reachedH18,
+      `14→18 drifted (13 of 30 on middle·self-coached at the 10.08 re-point, measured ${reachedH18}) - re-read the notes above`,
+    ).toBeLessThanOrEqual(21)
     for (const r of proH18) {
       if (r.reachedWeek !== null) {
         expect(r.reachedWeek).toBeGreaterThan(0)

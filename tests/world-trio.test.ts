@@ -42,7 +42,15 @@ import {
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+import { LADDER_TRACKS } from '../src/shared/protocol'
 import { seasonYear, weekLabel, weekYear, WEEKS_IN_SEASON } from '../src/shared/dates'
+
+/** "Numbers all the way down", asked of the LEAVES so v46's nested `byTrack` is covered rather than
+ *  waved through. Same helper and same words in tests/goldenSaves.test.ts and round10-view.test.ts. */
+function numericLeaves(value: unknown): boolean {
+  if (typeof value === 'object' && value !== null) return Object.values(value).every(numericLeaves)
+  return typeof value === 'number'
+}
 import {
   avatarEmotion,
   ANGER_STREAK_MAX,
@@ -195,7 +203,19 @@ describe('item 1 — the collision that ate a season', () => {
     expect(Number.isFinite(row.points)).toBe(true)
     expect(row.wins + row.losses).toBeGreaterThanOrEqual(0)
     // no strings: the row stays the tiny numeric record R10-9 promised
-    expect(Object.values(row).every((v) => typeof v === 'number')).toBe(true)
+    // ⚠ RE-AIMED FOR v46, NOT RELAXED – `byTrack` is a nested record of numbers, so the claim is asked
+    // of the LEAVES now and therefore covers strictly more of the row than the flat scan did. Same
+    // helper and same reasoning in tests/round10-view.test.ts and tests/goldenSaves.test.ts.
+    expect(numericLeaves(row)).toBe(true)
+    // ...and v46's own promise about this row: the split adds up to the fold it splits. Both come off
+    // the same season's matches, so a disagreement means one of them lost a tournament.
+    const byTrack = row.byTrack!
+    expect(byTrack).toBeDefined()
+    const sum = (pick: 'wins' | 'losses' | 'points'): number =>
+      LADDER_TRACKS.reduce((t, track) => t + byTrack[track][pick], 0)
+    expect(sum('wins')).toBe(row.wins)
+    expect(sum('losses')).toBe(row.losses)
+    expect(sum('points')).toBe(row.points)
   })
 
   it('surfaces the six seasons on the snapshot, oldest first', () => {

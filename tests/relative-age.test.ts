@@ -28,19 +28,28 @@ import {
   SKILL_POINTS_PER_YEAR,
 } from '../src/engine/development'
 import {
+  KID_ID,
   ageAtWeek,
+  annualEntryLimit,
+  availabilityStatus,
   birthdayTurning,
   birthdayWeek,
+  buildAlbum,
   closeTournament,
   createWorld,
   decideKnock,
+  entryCapUsage,
+  isTierAgeOpen,
   kidAgeExact,
   kidAgeYears,
   pendingKnock,
+  recomputeKidRank,
   skipTournament,
   tickWeek,
   toSnapshot,
 } from '../src/engine/world'
+import { engineModuleSource } from './worldSource'
+import type { SeasonEvent } from '../src/engine/season/types'
 import { DIARY_POOL, WEEK_NOTES } from '../src/engine/diary'
 import { weekMonth } from '../src/shared/dates'
 import { applyRelativeAge, juniorBirthMonth, makeJunior, power } from '../src/engine/season/cohort'
@@ -127,6 +136,187 @@ describe('the band and the girl are two different numbers', () => {
       expect(spoke.length, 'a birthday must not pass in silence').toBeGreaterThan(0)
     }
     expect(seen, 'the fixture has to reach her birthday').toBe(true)
+  })
+
+  // ===============================================================================================
+  // ONE CLOCK, AND IT IS HERS – the owner's ruling of 09.08, wired through every gate that asks how
+  // old she is. «Есть год рождения и дата. Это всё. Если она родилась в середине декабря и пошла на
+  // теннис, то на начало игры ей всё ещё 13, кстати, так же, как и всем остальным, кто родился НЕ на
+  // 1й неделе января. Дальше когда ДР – тогда и +1 год.»
+  //
+  // The two blocks above pin that the two NUMBERS differ. These pin that the ENGINE reads the right
+  // one – which is the whole of the defect, because both functions were already correct and nineteen
+  // call sites asked the wrong one. Every claim below fails if a single gate is put back on the band.
+  // ===============================================================================================
+
+  it('⚠ THE PRINTED AGE IS HERS, and it can never contradict her own birthday note', () => {
+    // The owner's first sighting: Home said 16 from week 104 while the feed said «She is sixteen this
+    // week» at week 154. Fifty weeks apart, both from the engine. The property that forbids it is
+    // that the two read one clock, so this asserts the AGREEMENT rather than either number.
+    for (const birthMonth of [1, 6, 12]) {
+      const world = createWorld('one-clock-print', { ...DEFAULT_PROFILE, birthMonth, birthDay: 15, coachTier: 'self' })
+      for (const week of [0, 26, 52, 104, 130, 156, 208]) {
+        world.week = week
+        const snap = toSnapshot(world)
+        expect(snap.ageYears, `bm ${birthMonth} w${week}`).toBe(kidAgeYears(week, birthMonth))
+        const turning = birthdayTurning(week, birthMonth, 15)
+        if (turning !== null) {
+          expect(turning, `the note and the header, bm ${birthMonth} w${week}`).toBe(snap.ageYears)
+        }
+      }
+      // ...and at week 0 that is THIRTEEN for everyone not born in the first week of January
+      world.week = 0
+      expect(toSnapshot(world).ageYears).toBe(birthMonth === 1 ? 14 : 13)
+    }
+  })
+
+  it('⚠ W15 OPENS ON HER SIXTEENTH BIRTHDAY – eleven months apart across the band (item 19a)', () => {
+    // The defect, verbatim: a girl born 15 March was offered and ENTERED a W15 at week 104, at a real
+    // age of 15.83, because `TIERS.w15.minAgeYears = 16` was being asked of the band. Asked of the
+    // girl, the door opens on her birthday - so a December career waits eleven months longer than a
+    // January one, which is the relative age effect in its primary form and is the ruling working.
+    const opensFor = (birthMonth: number): number => {
+      const world = createWorld('one-clock-w15', { ...DEFAULT_PROFILE, birthMonth, birthDay: 15 })
+      world.fundsCents = 9_999_999_00
+      world.results.push({ playerId: KID_ID, week: 0, points: 1000, tier: 'national' })
+      world.results.push({ playerId: KID_ID, week: 0, points: 400, tier: 'w100' })
+      world.onRampCleared = { itf: true, wta: true }
+      recomputeKidRank(world)
+      for (let w = 90; w < 4 * 52; w++) {
+        const e: SeasonEvent = {
+          id: `w15-probe-${w}`, week: w, tier: 'w15', surface: 'hard', travelCostCents: 100_00, deadlineWeek: w - 2,
+        }
+        if (!(availabilityStatus(world, e).detail ?? '').includes('opens at')) return w
+      }
+      throw new Error('W15 never opened')
+    }
+    const jan = opensFor(1)
+    const mar = opensFor(3)
+    const dec = opensFor(12)
+    // she is sixteen in the week it opens, on every birthday - that is the claim, not a week number
+    expect(kidAgeYears(jan, 1), 'January').toBe(16)
+    expect(kidAgeYears(mar, 3), 'March').toBe(16)
+    expect(kidAgeYears(dec, 12), 'December').toBe(16)
+    // ...and week 104 is NOT it for the March girl, which is exactly item 19a
+    expect(mar, 'the March girl is not admitted at week 104').toBeGreaterThan(104)
+    expect(dec - jan, 'eleven months of it, in weeks').toBeGreaterThanOrEqual(44)
+  })
+
+  it('⚠ ...AND SHE KEEPS THE JUNIOR RUNGS ELEVEN MONTHS LONGER at the other end', () => {
+    // The same clock read from the top: J30 is under-18, so a December girl ages out of the junior
+    // tour eleven months after a January one. The give and the take are ONE rule, and pinning only
+    // the take would let somebody "fix" the cost by putting the ceiling back on the band.
+    const agesOut = (birthMonth: number): number => {
+      for (let w = 4 * 52; w < 8 * 52; w++) if (!isTierAgeOpen('j30', kidAgeYears(w, birthMonth))) return w
+      throw new Error('never aged out')
+    }
+    expect(agesOut(12) - agesOut(1), 'eleven months of junior eligibility').toBeGreaterThanOrEqual(44)
+    expect(kidAgeYears(agesOut(12), 12), 'and it is her nineteenth that closes it').toBe(19)
+  })
+
+  it('⚠ THE ITF ALLOWANCE IS HER AGE\'S – a December girl opens on 13\'s ten, not 14\'s fourteen', () => {
+    for (const [birthMonth, expected] of [[1, 14], [6, 10], [12, 10]] as const) {
+      const world = createWorld(`one-clock-cap-${birthMonth}`, { ...DEFAULT_PROFILE, birthMonth, birthDay: 15 })
+      expect(entryCapUsage(world, 0).limit, `bm ${birthMonth}`).toBe(expected)
+      expect(entryCapUsage(world, 0).limit).toBe(annualEntryLimit(kidAgeYears(0, birthMonth)))
+    }
+    // ⚠ AND IT RISES ON HER BIRTHDAY AND NEVER FALLS inside a season block - the property that makes
+    // an entry impossible to retro-invalidate. See engine/world/entryCaps.ts.
+    const june = createWorld('one-clock-cap-rise', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15 })
+    for (let w = 1; w < 4 * 52; w++) {
+      if (w % 52 === 0) continue // a new block resets the ledger, not the monotonicity claim
+      expect(entryCapUsage(june, w).limit, `w${w}`).toBeGreaterThanOrEqual(entryCapUsage(june, w - 1).limit)
+    }
+    // ⚠ THE STEP IS AT MONTH RESOLUTION, which is `kidAgeExact`'s own design (shared/protocol.ts:
+    // the relative age effect is a position INSIDE the birth year, so the age turns with the month
+    // while the birthday CARD lands on the day). So the last May week still holds 13's ten.
+    const lastMay = 20
+    expect(weekMonth(lastMay), 'the fixture week really is May').toBe(5)
+    expect(weekMonth(lastMay + 1), '...and the next one is her June').toBe(6)
+    expect(entryCapUsage(june, lastMay).limit, 'still 13 in May').toBe(10)
+    expect(entryCapUsage(june, lastMay + 1).limit, '...and 14 from her June').toBe(14)
+  })
+
+  it('⚠ THE BAND KEEPS EXACTLY ONE JOB: the coach roster and his price, and NOTHING else', () => {
+    // The other half of the ruling, and the reason `ageAtWeek` still exists. The roster is derived
+    // from the seed and the age with nothing persisted but the chosen id, so a birth-month-aware
+    // input would re-roll every December career's market and resolve their hired coach to somebody
+    // else. Twelve birthdays, one market - and the price he charges is the same too.
+    const ids = (birthMonth: number) => {
+      const w = createWorld('band-job', { ...DEFAULT_PROFILE, birthMonth })
+      const snap = toSnapshot(w)
+      return snap.coachMarket.map((c) => `${c.id}:${c.tier}:${c.weeklyCents}`)
+    }
+    const jan = ids(1)
+    for (let m = 2; m <= 12; m++) expect(ids(m), `birthMonth ${m}`).toEqual(jan)
+  })
+
+  it('⚠ ...AND NO GATE READS THE BAND – the nine converted call sites, pinned by name', () => {
+    // A SOURCE PIN, deliberately, and the reason is that the two ages AGREE for a January girl: a
+    // behavioural test can only catch a gate put back on the band if its fixture has a late birthday,
+    // and the next person to write one will reach for `DEFAULT_PROFILE`. The four tests above own the
+    // behaviour for December and June; this one owns the ones with no cheap behavioural handle
+    // (`mandatoryBinds` needs a top-50 world, `reviewAcademy` a scholarship) and states the rule once.
+    //
+    // Comments are stripped first – the same idiom tests/unranked-sentinel.test.ts uses, and for the
+    // same reason: several of these functions QUOTE the banned expression to explain the ruling.
+    const stripped = (s: string): string =>
+      s
+        .split('\n')
+        .filter((l) => {
+          const t = l.trim()
+          return !t.startsWith('//') && !t.startsWith('*') && !t.startsWith('/*')
+        })
+        .join('\n')
+    // ⚠ ITS OWN EXTRACTOR, AND MUTATION TESTING IS WHY. `engineModuleFunction` matches on
+    // `function ${name}` with no parenthesis and cuts at the first line-initial `}`, so
+    // `mandatoryBinds` silently resolved to `mandatoryBindsRank` - a PREFIX COLLISION - and the pin
+    // passed green against a function that had never read the band at all. Caught by breaking the
+    // mandatory call site and watching this test stay green, which is the only way it could have
+    // been caught. The paren makes the match exact and the brace walk makes the slice exact.
+    const body = (src: string, name: string): string => {
+      const at = src.indexOf(`function ${name}(`)
+      if (at < 0) return ''
+      const open = src.indexOf('{', at)
+      if (open < 0) return ''
+      let depth = 0
+      for (let j = open; j < src.length; j++) {
+        if (src[j] === '{') depth++
+        else if (src[j] === '}' && --depth === 0) return src.slice(at, j + 1)
+      }
+      return ''
+    }
+    const source = engineModuleSource('world')
+    for (const fn of [
+      'entryCapUsage', // the ITF annual allowance
+      'proEntryCapUsage', // the WTA AER
+      'availabilityStatus', // the tier age gate and its refusal copy
+      'tierOutgrown', // the ladder's ceiling
+      'mandatoryBinds', // «an obligation she could not have met is not an obligation»
+      'quotaShortfallAt', // ...and the 500 quota it settles
+      'reviewAcademy', // the academy's junior band
+      'toSnapshot', // the printed age every screen reads
+      'slotBeginning', // «14 years old, and we said yes»
+    ]) {
+      const src = body(source, fn)
+      expect(src.startsWith(`function ${fn}(`), `${fn}: the extractor found the wrong function`).toBe(true)
+      expect(src.length, `${fn} not found – the pin would pass on an empty string`).toBeGreaterThan(50)
+      expect(stripped(src), `${fn} reads the band`).not.toContain('ageAtWeek(')
+    }
+  })
+
+  it('⚠ THE ALBUM OPENS ON HER OWN AGE, and the source pin above cannot say so', () => {
+    // ⚠ THIS TEST EXISTS BECAUSE THE PIN ABOVE HAS A HOLE, found by mutation testing rather than by
+    // reading: `slotBeginning`'s caption was the CONSTANT `START_AGE_YEARS`, so putting a literal
+    // 14 back into the string leaves the banned expression absent and the pin green. A ban on one
+    // spelling of the band is not a claim about the number that reaches the page. This one is.
+    for (const [birthMonth, expected] of [[1, 14], [6, 13], [12, 13]] as const) {
+      const world = createWorld(`one-clock-album-${birthMonth}`, { ...DEFAULT_PROFILE, birthMonth, birthDay: 15 })
+      const beginning = buildAlbum(world).find((p) => p.slot === 1)!
+      expect(beginning.caption, `bm ${birthMonth}`).toBe(`${expected} years old, and we said yes`)
+      // ...and it is the same number the header prints in that very week, which is the whole ruling
+      expect(beginning.caption.startsWith(`${toSnapshot(world).ageYears} `), `bm ${birthMonth}`).toBe(true)
+    }
   })
 
   it('the birthday copy obeys the app rules and never names a body part', () => {

@@ -36,11 +36,15 @@ import { chromium } from '@playwright/test'
 /** Parsed out of playwright.config.ts so the two cannot drift - the same idiom scripts/sim.mjs uses
  *  to read HEAVY_SIM_FILES out of vite.config.ts. A port checked here that the config no longer
  *  serves on would be worse than not checking at all. */
-function servePort() {
+function servePorts() {
   const config = readFileSync(new URL('../playwright.config.ts', import.meta.url), 'utf8')
-  const match = config.match(/^const PORT = (\d+)$/m)
-  if (!match) throw new Error('scripts/e2e.mjs: PORT not found in playwright.config.ts')
-  return Number(match[1])
+  // ⚠ BOTH PORTS, NOT ONE. Since S2 the config serves TWO production builds: the ordinary one on
+  // PORT, and a second on SW_PORT built without VITE_TB_SW so `offline.spec.ts` meets a real service
+  // worker. Either being occupied kills the run the same way, so both are checked - and the pattern
+  // matches any `*_PORT` const so a third server would be picked up without editing this line.
+  const ports = [...config.matchAll(/^const (?:\w+_)?PORT = (\d+)$/gm)].map((m) => Number(m[1]))
+  if (ports.length === 0) throw new Error('scripts/e2e.mjs: no PORT const found in playwright.config.ts')
+  return ports
 }
 
 /** Is anything already listening? Asked by binding, which is the only answer that cannot be stale. */
@@ -64,8 +68,8 @@ if (!existsSync(chromium.executablePath())) {
   process.exit(1)
 }
 
-const port = servePort()
-if (!(await portIsFree(port))) {
+for (const port of servePorts()) {
+  if (await portIsFree(port)) continue
   console.error(`  e2e: port ${port} is already in use, and the suite serves its own build there.`)
   console.error('       A leftover `npm run preview` is the usual culprit - stop it and re-run.')
   console.error(`       (The config sets strictPort + reuseExistingServer:false so a stale dist can`)
@@ -73,11 +77,31 @@ if (!(await portIsFree(port))) {
   process.exit(1)
 }
 
+// ⚠ `--report` IS THE SHOWCASE MODE, AND IT IS A SECOND MODE ON PURPOSE (S3). The default run is
+// deliberately fast and quiet: `trace: 'on-first-retry'` in playwright.config.ts records nothing at
+// all on a green run, because a trace is tens of MB and the only run anyone opens is the one that
+// went wrong. `npm run test:e2e:report` inverts that for one run - a trace for EVERY test, green
+// ones included, and the HTML report opened at the end. That is the artefact to hand somebody: a
+// browsable recording with a DOM snapshot per action, the console, and the exact locator each step
+// used. It is not a tax on every run, which is the whole reason it lives behind a flag.
+const wantsReport = args.includes('--report')
+const passThrough = args.filter((a) => a !== '--report')
+const playwrightArgs = wantsReport
+  ? ['playwright', 'test', '--trace', 'on', '--reporter=html,list', ...passThrough]
+  : ['playwright', 'test', ...passThrough]
+
 const started = Date.now()
-const run = spawnSync('npx', ['playwright', 'test', ...args], { stdio: 'inherit' })
+const run = spawnSync('npx', playwrightArgs, { stdio: 'inherit' })
 const secs = ((Date.now() - started) / 1000).toFixed(0)
 
-if (run.status === 0) {
+if (wantsReport) {
+  // Opened regardless of the result: in this mode the report IS the output, and a green report with
+  // traces is the thing worth showing. `show-report` serves it and blocks until Ctrl-C, which is
+  // what makes it browsable rather than a folder of JSON.
+  console.log(`  e2e: ${run.status === 0 ? 'green' : 'FAILED'} in ${secs}s - opening the report`)
+  spawnSync('npx', ['playwright', 'show-report'], { stdio: 'inherit' })
+  process.exitCode = run.status ?? 1
+} else if (run.status === 0) {
   console.log(`  e2e: green in ${secs}s`)
 } else {
   // The HTML report is the thing to open, and it is also what CI uploads - so name it in both

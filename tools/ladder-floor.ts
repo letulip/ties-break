@@ -35,6 +35,9 @@ import {
   entryStatus,
   tierOpenFor,
   kidPoints,
+  // TWO CLOCKS ON PURPOSE (09.08): `kidAgeAt` is HER age and gates every rung; `ageAtWeek` is the
+  // coach market's restocking clock and is only ever an argument to `coachById`.
+  kidAgeAt,
   ageAtWeek,
   refreshDerivedRankCaches,
   answerFork,
@@ -118,7 +121,9 @@ function factsFor(world: WorldState, e: SeasonEvent): EventFacts {
 async function saveArm(path: string): Promise<void> {
   const world = await decodeExportFile(new Uint8Array(readFileSync(path)))
   refreshDerivedRankCaches(world)
-  const age = ageAtWeek(world.week)
+  // HER age (one clock, 09.08) - the same number `entryStatus` below gates on, so the header
+  // cannot print one age while the rows are refused on another.
+  const age = kidAgeAt(world, world.week)
   console.log('')
   console.log('SAVE ARM – every future event on the persisted season blocks, through `entryStatus`')
   console.log(
@@ -286,7 +291,7 @@ function runCareer(presetIndex: number, index: number, policy: Policy, weeks: nu
       }
       const hadEnterable = facts.some((f) => f.eligible || f.entered)
       if (hadEnterable) row.playableWeeks++
-      const feed = feedContext({ ageYears: ageAtWeek(world.week), tierOpen: tierOpenMap(world), upcoming: facts })
+      const feed = feedContext({ ageYears: kidAgeAt(world, world.week), tierOpen: tierOpenMap(world), upcoming: facts })
       const shown = preferredWeekEvent(facts.filter((f) => feedShows(f, feed)))
       if (shown && !(shown.entered || shown.eligible)) {
         row.shownDead++

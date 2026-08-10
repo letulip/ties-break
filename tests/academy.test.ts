@@ -14,6 +14,7 @@ import {
   travelCostFor,
   reviewAcademy,
   toSnapshot,
+  kidAgeYears,
   SAVE_SCHEMA_VERSION,
   type WorldState,
 } from '../src/engine/world'
@@ -61,6 +62,13 @@ function runCareer(seed: string, background: FamilyBackground, weeks: number): W
     }
   }
   return world
+}
+
+/** The first career week in which SHE is `age`, off her own birth date – the one clock every gate in
+ *  the game reads since 09.08 (src/engine/world/age.ts). */
+function firstWeekAged(world: WorldState, age: number): number {
+  for (let w = 0; w < 52 * 30; w++) if (kidAgeYears(w, world.profile.birthMonth) >= age) return w
+  throw new Error(`no week reaches age ${age}`)
 }
 
 describe('the academy verdict (pure)', () => {
@@ -184,9 +192,16 @@ describe('the academy in a career', () => {
       return w
     }
 
-    // Aged out: the band tops out at 18, so the review that makes her 19 closes it.
+    // Aged out: the programme tops out at 18, so the review that makes her 19 closes it.
+    //
+    // ⚠ RE-AIMED, NOT WEAKENED (one-clock ruling, 09.08). The week used to be `(ageBand[1] + 1 - 14)
+    // * 52` – the BAND's own arithmetic, which the review no longer reads. `reviewAcademy` asks HER
+    // age (`kidAgeAt`), and the default profile is a June girl who is still eighteen in week 260, so
+    // the fixture is SEARCHED for the week that makes her nineteen instead of computed from a clock
+    // that stopped gating anything. Every assertion below is untouched, and this now works for any
+    // birthday rather than for a January one by accident.
     const older = backed()
-    older.week = (ECONOMY.academy.ageBand[1] + 1 - 14) * 52
+    older.week = firstWeekAged(older, ECONOMY.academy.ageBand[1] + 1)
     reviewAcademy(older)
     expect(older.academy).toBeNull()
     expect(lastEnding(older)).toContain('aged out')

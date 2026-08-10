@@ -17,7 +17,7 @@ import type { LadderTrack, RankingRow, TierId } from '../season/types'
 import type { SeasonEntryRow } from '../../shared/protocol'
 import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPros'
 import { seasonIndexOf } from './ledger'
-import { ageAtWeek } from './age'
+import { kidAgeAt } from './age'
 import { proEntryCapUsage } from './entryCaps'
 import { KID_ID, RESULTS_WINDOW } from './constants'
 import type { WorldState } from '../world'
@@ -438,7 +438,11 @@ export function tierOutgrown(world: WorldState, tier: TierId): boolean {
   // the reason a twenty-year-old is offered a J30, because `proPerYearByAge` is unlimited from 18.
   if (TIERS[tier].track !== 'wta' && proEntryCapUsage(world, world.week).remaining <= 0) return false
   const above = TIER_LADDER[i + WINDOW_RUNGS]
-  if (!isTierAgeOpen(above, ageAtWeek(world.week))) return false
+  // ⚠ HER AGE, NOT THE BAND'S (owner ruling 1, 09.08 - world/age.ts). «A door she cannot open yet
+  // cannot close the one behind her» is the rule this line implements, and the door in question opens
+  // on HER birthday: a December girl keeps her junior rungs eleven months longer than a January one
+  // because W15 is eleven months further away from her. Reading the band shut them a year early.
+  if (!isTierAgeOpen(above, kidAgeAt(world, world.week))) return false
   return tierFloorOpen(world, above)
 }
 

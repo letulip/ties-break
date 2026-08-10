@@ -444,10 +444,17 @@ body {
   --app-pad-top: 24px;
   --app-pad-x: 16px;
   --app-pad-bottom: 48px;
+  /* ⚠ THE CONTENT CAP, AND IT IS A TOKEN BECAUSE A SECOND SURFACE NEEDED IT (R14-9, the owner:
+     onboarding is not width-capped on desktop, unlike every other screen). It was a bare 880 on
+     `#app`, which caps every TAB screen - and the onboarding wizard is a `position: fixed` takeover,
+     so it is outside `#app` and inherited nothing. Naming the number is what lets the wizard reuse
+     this cap instead of growing a second one; the same argument as `--app-pad-x` two lines up, which
+     exists because one pair of numbers was spelled in two places and drifted. */
+  --app-max-width: 880px;
 }
 
 #app {
-  max-width: 880px;
+  max-width: var(--app-max-width);
   margin: 0 auto;
   padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom);
 }

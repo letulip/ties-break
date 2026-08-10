@@ -23,8 +23,19 @@
  * `openCareer` nor `stepCareerWeek` reads the horizon), so each career is replayed ONCE to 208 and
  * both horizons are read off the same pass.
  *
+ * ⚠ AND SINCE 10.08 IT ALSO ANSWERS "FOR TENNIS REASONS?", WHICH IS A SECOND PROPERTY A FIXTURE HAS
+ * TO HAVE (docs/specs/compound-cost-2026-08.md §9). Both branches firing is necessary and is what the
+ * tables below were built for; it is not sufficient. `middleHigh` split 18/30 when it was chosen and
+ * still split when the compound-cost probe read it – but §5 of that spec showed ELEVEN of its fifteen
+ * lost careers were the family going bankrupt and only four were the tennis, so a 14→18 PRO proxy was
+ * being decided by the bank balance. `--float=<cents>` replays every career a second time with a
+ * wallet that cannot empty, exactly as that probe's arm 6 did, and prints the split per preset. The
+ * flag is OFF by default, so a bare run is byte-identical in behaviour and runtime to every earlier
+ * one.
+ *
  *   npx vite-node tools/reach-sweep.ts              # all 9 presets x 30 indices (~the full bench)
  *   npx vite-node tools/reach-sweep.ts --indices=5  # a quick shape check
+ *   npx vite-node tools/reach-sweep.ts --float=100000000   # + the solvency-vs-tennis split ($1M)
  */
 import { openCareer, stepCareerWeek, PRESETS, REACH_TARGET_MONEY, REACH_PRO_RANK, REACH_PRO_POINTS } from './econ-bench'
 import { kidPoints } from '../src/engine/world'
@@ -37,6 +48,17 @@ const arg = (name: string, fallback: number): number => {
 const INDICES = arg('indices', 30)
 const H16 = 104
 const H18 = 208
+/** ⚠ A MEASURING INSTRUMENT AND NOT A PROPOSAL, copied in intent from `tools/compound-cost.ts`'s
+ *  arm 6: cents added to the opening balance so the family can never run out. It answers ONE
+ *  question about a candidate fixture – are the careers that miss the 14→18 proxy missing it because
+ *  the tennis is not there, or because the money is not? Nothing about it is shippable.
+ *
+ *  ⚠ AND WHAT THE DELTA IS, EXACTLY, because it is an upper bound and not an attribution. A float
+ *  removes affordability refusal, the debt spell AND the bankruptcy latch in one move, so
+ *  `reached(float) − reached(as charged)` is the MOST careers the bank balance could be deciding. A
+ *  cell with a large delta is disqualified; a cell with a small one is cleared, and that direction is
+ *  the one a bound can carry. */
+const FLOAT_CENTS = arg('float', 0)
 
 /** Candidate DOMESTIC thresholds for the 14→16 arm. Every one is a level the domestic ladder itself
  *  names, so whichever wins can be defended as a milestone rather than a number that made the test
@@ -60,15 +82,22 @@ interface CareerSummary {
   /** best (lowest) kidRank reached in any week she held a counting ITF result – the rank half.
    *  Infinity ⇔ she never held one, so the rank arm can never fire for her at any cut-off. */
   bestRankedRank208: number
+  /** first week fundsCents went below zero, or null – the solvency half of the fixture question. */
+  bankruptWeek: number | null
+  /** the v39 ending latch, or null. 'bankruptcy' here means the CAREER STOPPED, not merely went red. */
+  endingType: string | null
 }
 
-function replay(presetIndex: number, index: number): CareerSummary {
+function replay(presetIndex: number, index: number, floatCents = 0): CareerSummary {
   const preset = PRESETS[presetIndex]
   const { world, rng } = openCareer(preset, index)
+  if (floatCents > 0) world.fundsCents += floatCents
   let maxDomestic104 = 0
   let maxDomestic208 = 0
   let maxItf208 = 0
   let bestRankedRank208 = Infinity
+  let bankruptWeek: number | null = world.fundsCents < 0 ? 0 : null
+  let endingType: string | null = null
   for (let i = 0; i < H18; i++) {
     stepCareerWeek(world, rng)
     const dom = kidPoints(world, 'domestic')
@@ -78,9 +107,29 @@ function replay(presetIndex: number, index: number): CareerSummary {
     if (itf > maxItf208) maxItf208 = itf
     // `hasResults` in reachedTarget is exactly `points > 0` – mirror it, do not re-derive it.
     if (itf > 0 && world.kidRank < bestRankedRank208) bestRankedRank208 = world.kidRank
+    if (bankruptWeek === null && world.fundsCents < 0) bankruptWeek = world.week
+    if (endingType === null && world.ending) endingType = world.ending.type
   }
-  return { preset: preset.label, index, maxDomestic104, maxDomestic208, maxItf208, bestRankedRank208 }
+  return {
+    preset: preset.label,
+    index,
+    maxDomestic104,
+    maxDomestic208,
+    maxItf208,
+    bestRankedRank208,
+    bankruptWeek,
+    endingType,
+  }
 }
+
+/** The 14→18 PRO predicate at the INCUMBENT constants, i.e. exactly the number
+ *  `tests/econ-reach.test.ts` reads. Written once because three tables below ask for it.
+ *
+ *  It is the disjunction of two per-career maxima and that is not an approximation: `reachedTarget`
+ *  holds in SOME week iff (∃ week: itf > 0 ∧ rank <= R) ∨ (∃ week: itf >= P), which is exactly
+ *  `bestRankedRank208 <= R ∨ maxItf208 >= P`. */
+const reachedPro = (r: CareerSummary): boolean =>
+  r.bestRankedRank208 <= REACH_PRO_RANK || r.maxItf208 >= REACH_PRO_POINTS
 
 const pad = (s: string | number, n: number) => String(s).padEnd(n)
 const padL = (s: string | number, n: number) => String(s).padStart(n)
@@ -152,3 +201,61 @@ for (let p = 0; p < PRESETS.length; p++) {
 
 // Raw summaries, so any candidate not in the grids above can be scored without a re-run.
 console.log(`\nRAW ${JSON.stringify(rows.flat())}`)
+
+// --- THE FIXTURE ARM: is this cell's 14→18 answer about the tennis or about the bank? -------------
+//
+// ⚠ THIS IS THE SECOND PROPERTY A FIXTURE NEEDS AND THE TABLES ABOVE CANNOT SEE IT. They answer "do
+// both branches fire", which is necessary; `middleHigh` had it and was still the wrong fixture,
+// because eleven of its fifteen lost careers were the family going broke (compound-cost-2026-08.md
+// §5). Run with `--float=100000000` and every career is replayed with a wallet that cannot empty, so
+// the careers that STILL miss are the ones the tennis missed.
+//
+// ⚠ AND THE CAVEAT THAT ARM CARRIES, CARRIED WITH IT: a float changes the world in more ways than
+// one (no affordability refusal, no debt spell, no latch), so the delta is an UPPER BOUND on what the
+// bank balance decides and never an attribution of it. Reading a small delta as "this cell is
+// tennis-decided" is sound; reading a large one as "exactly N careers are the money" is not.
+if (FLOAT_CENTS > 0) {
+  const floatRows: CareerSummary[][] = []
+  const tf = Date.now()
+  for (let p = 0; p < PRESETS.length; p++) {
+    const list: CareerSummary[] = []
+    for (let i = 0; i < INDICES; i++) list.push(replay(p, i, FLOAT_CENTS))
+    floatRows.push(list)
+    console.log(`… float arm: ${PRESETS[p].label} done (${((Date.now() - tf) / 1000).toFixed(0)}s)`)
+  }
+
+  console.log(
+    `\n14→18 SOLVENCY vs TENNIS – the same ${INDICES} careers replayed with $${Math.round(FLOAT_CENTS / 100).toLocaleString('en-US')} added to the opening balance`,
+  )
+  console.log(
+    pad('preset', 30) +
+      padL('as charged', 12) +
+      padL('with float', 12) +
+      padL('SOLVENCY', 10) +
+      padL('TENNIS', 8) +
+      padL('went red', 10) +
+      padL('latched', 9),
+  )
+  for (let p = 0; p < PRESETS.length; p++) {
+    const charged = rows[p].filter(reachedPro).length
+    const floated = floatRows[p].filter(reachedPro).length
+    const red = rows[p].filter((r) => r.bankruptWeek !== null).length
+    const latched = rows[p].filter((r) => r.endingType === 'bankruptcy').length
+    console.log(
+      pad(PRESETS[p].label, 30) +
+        padL(`${charged}/${INDICES}`, 12) +
+        padL(`${floated}/${INDICES}`, 12) +
+        // Of the careers that MISS as charged, how many would have reached with money (solvency) and
+        // how many miss even with it (tennis). The two always sum to INDICES − charged.
+        padL(floated - charged, 10) +
+        padL(INDICES - floated, 8) +
+        padL(`${red}/${INDICES}`, 10) +
+        padL(`${latched}/${INDICES}`, 9),
+    )
+  }
+  console.log(
+    `\n  SOLVENCY = careers that miss as charged but reach with the float (upper bound on what the bank decides).` +
+      `\n  TENNIS   = careers that miss even with a wallet that cannot empty.` +
+      `\n  A fixture for the 14→18 PRO proxy wants both branches firing AND the SOLVENCY column small.`,
+  )
+}

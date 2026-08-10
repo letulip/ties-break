@@ -4,6 +4,10 @@
 # repo into a sibling worktree). Slashless matches the directory and the symlink both.
 node_modules
 dist/
+# The e2e suite's SECOND production build - identical to dist/ except that it is built without
+# VITE_TB_SW, so `src/pwa.ts` registers the service worker and e2e/offline.spec.ts has one to test.
+# playwright.config.ts builds and serves it on its own port; nothing else ever looks at it.
+dist-sw/
 dev-dist/
 *.local
 .DS_Store

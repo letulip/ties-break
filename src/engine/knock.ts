@@ -302,10 +302,10 @@ export function knockGoverns(knock: Knock | null, week: number): boolean {
 //
 //   the LINE     - what happened. The parent's own sentence, in the diary's register.
 //   the READ     - what the coach makes of it. FOGGED, deliberately: `buildTrainingRead`'s idiom is
-//                  that this man gives opinions, not percentages, and a dialog that printed "+9.9%
+//                  that this person gives opinions, not percentages, and a dialog that printed "+9.9%
 //                  injury risk for 3 weeks" would turn a decision into arithmetic. The fog varies
-//                  with the two facts he can actually see - how worn she is, and whether this is the
-//                  same part as last time.
+//                  with the two facts the coach can actually see - how worn she is, and whether this
+//                  is the same part as last time.
 //   the two COSTS - one plain sentence each, and this is the "legible" requirement: the player must
 //                  be able to see what he traded. They name the currency (a week's work / the odds),
 //                  never a number.
@@ -329,30 +329,39 @@ function knockLineFor(part: string, repeat: boolean, pick: number): string {
   return pool[pick % pool.length]
 }
 
-/** The coach's read. He can see two things - how worn she is, and the record - so those are the two
- *  axes, and every line is a plain opinion with no number in it. */
+/** The coach's read. The coach can see two things - how worn she is, and the record - so those are
+ *  the two axes, and every line is a plain opinion with no number in it.
+ *
+ *  ⚠ NO PRONOUN FOR THE COACH, ANYWHERE (R15-7, owner 09.08: «у Тернеров в списке везде "He", хотя
+ *  там есть и женщины, можем просто убрать это и через дефис оба предложения написать, тогда не надо
+ *  будет угадывать»). `buildCoachRoster` draws a first name from COACH_FIRST_M *or* COACH_FIRST_F by
+ *  `slot.gender`, so a woman is on every roster by construction and every one of these lines used to
+ *  call her "he". His own fix is the one taken: drop the pronoun, and join the two sentences with a
+ *  dash so nothing has to guess. The VOICE is the thing that must survive it - these are somebody
+ *  speaking, and a line rewritten into the passive to dodge a pronoun would trade one wrong note for
+ *  a worse one. */
 function knockReadFor(condition: number, repeat: boolean, pick: number): string {
   if (repeat) {
     const pool = [
-      'The coach was blunter this time. He has seen this one before and he does not like it.',
-      'The coach remembers the last time. He would sit her down and he said so twice.',
-      'The coach asked how long it has been doing this. He did not like the answer.',
+      'The coach was blunter this time – has seen this one before, and does not like it.',
+      'The coach remembers the last time – would sit her down, and said so twice.',
+      'The coach asked how long it has been doing this – and did not like the answer.',
     ]
     return pool[pick % pool.length]
   }
   if (condition < 50) {
     const pool = [
       'The coach thinks she is running on empty and the body is saying so.',
-      'The coach has seen her tired for weeks. He would take the week.',
-      'The coach says a body this flat picks things up. He would rather not find out.',
+      'The coach has seen her tired for weeks – would take the week.',
+      'The coach says a body this flat picks things up – and would rather not find out.',
     ]
     return pool[pick % pool.length]
   }
   const pool = [
-    'The coach is not worried. He is also not telling us to ignore it.',
-    'The coach shrugged. He would let her train and keep an eye on it.',
-    'The coach says it is probably nothing. Probably is his word, not ours.',
-    'The coach says these come and go at her age. He left the decision with us.',
+    'The coach is not worried – and is not telling us to ignore it either.',
+    'The coach shrugged – would let her train and keep an eye on it.',
+    'The coach says it is probably nothing – probably, and that word is not ours.',
+    'The coach says these come and go at her age – and left the decision with us.',
   ]
   return pool[pick % pool.length]
 }

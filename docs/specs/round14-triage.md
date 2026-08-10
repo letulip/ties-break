@@ -79,11 +79,33 @@ playable, and whether an outgrown rung that now pays points changes her climb.
 - **her dot goes yellow**, like every other place the accent marks her.
 
 ### Group C – mail, vacation, onboarding *(1, 2, 9)*
-- **A booked vacation cannot be cancelled.** `cancelVacation` is exported from the planner and
-  nothing calls it – an engine capability with no way in.
+
+> **BUILT, 10.08 – `fix/r14-group-c`.** All three shipped. The reading of item 1 below was **wrong**
+> and is left standing with its correction beside it, because the correction is the more useful
+> finding: this was not an unreachable capability, it was the second half of a shipped decision that
+> nobody built.
+
+- ~~**A booked vacation cannot be cancelled.** `cancelVacation` is exported from the planner and
+  nothing calls it – an engine capability with no way in.~~
+  ⚠ **NOT SO.** `cancelVacation` is wired end to end – planner → worker → store → `askCancelVacation`
+  in `SeasonScreen.vue` – and a Cancel exists. It renders **only on the un-painted fallback row**.
+  The painted vacation Card carries none by the owner's explicit 29.07 ruling (*"a booked week is a
+  statement, not a control, and cancelling lives where booking does – tap the card and the planner
+  opens"*), **and the planner sheet never grew it**. Every package has art, so every card is painted,
+  so nothing was cancellable and the one control that worked was unreachable. The 29.07 routing was
+  KEPT and the missing half built: `PlanWeekSheet` has a third pane for a week already booked. It
+  also retired a dead control – the sheet used to open a booked week on Practice, where every Book
+  could only throw `assertPlannable`'s "That week is already a family vacation".
 - **The inbox becomes a mail client**: a list, unread bold, click to open, a bin per row once read,
-  yes/no on delete.
-- **Onboarding is width-capped on desktop**, like every other screen.
+  yes/no on delete. **Delete is DISMISS FROM THE LIST, never destroy** – there is no engine command
+  for it and adding one would be a schema change whose purpose is to destroy records `activeKitDeal`,
+  the season-boundary review and `raiseKitRenewal` still read. Two states carry no bin at all: a
+  letter still inside its deadline (that is a decision he can still take) and a signed deal still
+  running (its letter is the only surface stating the contract she is under). ⚠ The bin is the WORD
+  "Delete" – `public/icons/` has no bin glyph, and that is a **flagged art gap**, not a design choice.
+- **Onboarding is width-capped on desktop**, like every other screen. The cause was structural: the
+  cap lives on `#app` and the wizard is a `position: fixed` takeover, so it is the one screen outside
+  that frame. The 880 is a token (`--app-max-width`) now and both call sites read it.
 
 ### Group D – money and the coach *(4, 6, 10)* — **DONE**, `fix/coach-and-cover`
 Shipped and measured: `docs/specs/coach-retainer-2026-08.md`. The triage's reading was half right on

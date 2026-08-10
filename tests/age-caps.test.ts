@@ -25,6 +25,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { tierState, type TierStateInput } from '../src/composables/tierState'
 import { rngFromSeed } from '../src/engine/rng'
+import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // ---------------------------------------------------------------------------
@@ -77,8 +78,19 @@ function injectEvent(
  *  national one. Both halves are therefore seeded – 1000 domestic points to clear every band, and
  *  an ITF book to put her inside the top 50 – or the cap tests below would be proving the entry
  *  gate refuses an unranked kid, which is a different test that already exists. */
+/** ⚠ RE-AIMED, NOT WEAKENED, BY THE ONE-CLOCK RULING (09.08 – docs/specs/round15-triage.md ruling 1).
+ *  Every allowance below is now read off HER age (`kidAgeAt`) instead of the birth-month-free band, and
+ *  this file's whole arithmetic – "she is 14 at week 0", `AGE16_FROM = 104` – is the arithmetic of a
+ *  girl whose birthday coincides with the season boundary. That is a JANUARY girl and nobody else:
+ *  `DEFAULT_PROFILE` is a June one, who is genuinely 13 in the opening January and 15 at week 104.
+ *
+ *  So the birthday is PINNED rather than the numbers moved. Not one assertion in this file changes, and
+ *  the file goes on measuring what it is named for – the per-age table and the gate that reads it – on
+ *  the one birthday for which "the season block" and "the year she is 14" are the same interval. The
+ *  December and June arms of the same rule are guarded in `tests/relative-age.test.ts`, which is where
+ *  a claim ABOUT the birth month belongs. */
 function openWorld(seed = 'agecap'): WorldState {
-  const world = createWorld(seed)
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 6 })
   world.fundsCents = 9_999_999_00
   giveKidPoints(world, 1000) // clears every domestic enterPointBand, and j30's on-ramp at 150
   giveKidItfStanding(world) // ...and the acceptance list above it
@@ -483,7 +495,8 @@ import {
   proEntryCapUsage,
 } from '../src/engine/world'
 
-/** Her age-16 season: weeks 104-155 (START_AGE 14 at week 0). */
+/** Her age-16 season: weeks 104-155 (START_AGE 14 at week 0, and `openWorld`'s January birthday, so
+ *  the season block and the year she is sixteen are the same 52 weeks – see `openWorld`'s note). */
 const AGE16_FROM = 104
 
 /** Clean weeks of the age-16 season (no off-season 49-51, no exams 23-24), for injected events. */
@@ -535,9 +548,32 @@ describe('P1 — the pro table (spec §5 design values over the real rulebook sh
     expect(annualProEntryLimit(25)).toBe(Number.MAX_SAFE_INTEGER)
   })
 
+  it('⚠ ...and 14 -> 8 / 15 -> 10, which the one-clock ruling put in the table', () => {
+    // Owner ruling 1, 09.08: the AER was being asked of the BAND, so a March girl was "16" from week
+    // 104 at a real 15.83, cleared the age gate and then met `default` – i.e. UNLIMITED professional
+    // entries – because the table had no row for her. The gate reads her own age now; these rows are
+    // the second half, so `default` (a rule about adults) can never answer for a child again.
+    expect(annualProEntryLimit(14)).toBe(8)
+    expect(annualProEntryLimit(15)).toBe(10)
+    // the rulebook's shape, and it must stay monotone or an older girl would be allowed fewer events
+    for (let age = 14; age < 20; age++) {
+      expect(annualProEntryLimit(age + 1), `${age} -> ${age + 1}`).toBeGreaterThanOrEqual(annualProEntryLimit(age))
+    }
+    // ⚠ AND 13 IS DELIBERATELY NOT A ROW even though the rulebook has one (0 events). A limit of 0
+    // makes `remaining <= 0` true for a girl who has entered nothing, and `tierOutgrown` reads exactly
+    // that to re-open the rungs below her – so a 13 row would silently disable the ladder ceiling for
+    // the first season of every career but a January one. See the knob's note in economy.ts.
+    expect(ECONOMY.entryCap.proPerYearByAge[13]).toBeUndefined()
+    expect(annualProEntryLimit(13)).toBe(Number.MAX_SAFE_INTEGER)
+  })
+
   it('14 and 15 never reach the table: every W rung refuses them on AGE first', () => {
-    // The knob comment's own claim, asserted: the rulebook's 14 -> 8 / 15 -> 10 rows are absent
-    // BECAUSE the doorway is closed at those ages, so the honest refusal is the age gate's.
+    // ⚠ RE-AIMED, EVERY ASSERTION KEPT (one-clock, 09.08). This used to read "the rulebook's
+    // 14 -> 8 / 15 -> 10 rows are ABSENT because the doorway is closed at those ages". The rows are
+    // present now – but the claim the assertions actually make is about the DOORWAY, and it is the
+    // claim that was false under the band and is true again: `availabilityStatus` asks `tierAgeBlock`
+    // before it asks any cap, and it asks it of her real age. The rows exist as the honest table
+    // rather than as a live gate, which is why both facts are pinned and neither is dropped.
     for (const t of ECONOMY.entryCap.cappedProTiers) {
       expect(isTierAgeOpen(t, 14), t).toBe(false)
       expect(isTierAgeOpen(t, 15), t).toBe(false)

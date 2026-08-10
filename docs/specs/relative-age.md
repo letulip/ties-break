@@ -115,15 +115,25 @@ before this the engine said "14" for everyone.
 
 | | what it answers | keyed on |
 | --- | --- | --- |
-| `ageAtWeek(week)` | **the band** / the career clock | week only — birth-month-free |
-| `kidAgeExact(week, birthMonth)` | **the girl** | her real birth date |
+| `ageAtWeek(week)` | ~~**the band** / the career clock~~ **the coach market's restocking clock** | week only — birth-month-free |
+| `kidAgeExact(week, birthMonth)` / `kidAgeYears` / `kidAgeAt(world, week)` | **the girl – her age, everywhere** | her real birth date |
 
-⚠ **`ageAtWeek` must never learn about birth months.** `coachById(seed, ageAtWeek(week), coachId)`
-*derives the coach roster from the age*, with nothing persisted but the chosen id — that is what lets a
-saved coach resolve years later with no migration. Make the age depend on her birthday and every December
-career's roster re-rolls and their hired coach resolves to somebody else. Eleven of the nineteen
-`ageAtWeek` call sites are that roster. A market of coaches for 14-year-olds does not restock because one
-girl has a late birthday.
+⚠⚠ **SUPERSEDED IN PART BY THE OWNER'S RULING OF 09.08 (`docs/specs/round15-triage.md` ruling 1), and the
+struck-out cell above is the part.** «Есть год рождения и дата. Это всё… Дальше когда ДР – тогда и +1 год.»
+There is **one** age and it is hers: the printed age, the tier gates, both entry allowances, the medical
+refusal, the academy band and the album all read `kidAgeYears` now. What this section got right was that
+the two *numbers* are different; what it got wrong was **which one the game should ask**, and the answer
+below ("the band, deliberately") is the specific sentence the ruling reverses. The measurement is in
+round15-triage.md under *One clock: measured*.
+
+⚠ **`ageAtWeek` must never learn about birth months**, and that half stands untouched.
+`coachById(seed, ageAtWeek(week), coachId)` *derives the coach roster from the age*, with nothing persisted
+but the chosen id — that is what lets a saved coach resolve years later with no migration. Make the age
+depend on her birthday and every December career's roster re-rolls and their hired coach resolves to
+somebody else. **Since 09.08 that roster is the ONLY thing `ageAtWeek` feeds** – a market of coaches for
+14-year-olds does not restock because one girl has a late birthday. The COHORT is the other band-reader and
+is not an exception: a rival has no birth date, so `season/tournament.ts` asks `isTierAgeOpen(tier,
+p.ageYears)` of their own whole-year age. That is their clock, not hers.
 
 **Where the girl's real age is used, and where it deliberately is not:**
 
@@ -132,9 +142,14 @@ girl has a late birthday.
 - **injury risk** (`ageInjuryFactor`) — her real age. Risk is a fact about a body. `13` is now an explicit
   row at 0.85, which is what it already resolved to via `default`; naming it at the same value changes no
   balance and stops a later re-tune of `default` (a rule about adults) from silently moving thirteen-year-olds.
-- **the ITF entry allowance** (`entryCapUsage`) — **the band, deliberately.** The annual limit is a
+- ~~**the ITF entry allowance** (`entryCapUsage`) — **the band, deliberately.** The annual limit is a
   birth-year rule, and that function's own note already argued it. Routing it to her real age would have
-  been wrong, and I nearly did.
+  been wrong, and I nearly did.~~ **REVERSED 09.08 and kept here rather than deleted, because it is the
+  exact argument the owner overruled.** The *window* is still the season block – one allowance, reset at
+  the season boundary – but the *limit* is now read off the age she actually is in the week of the event
+  (`kidAgeAt`), which is how the ITF's own Appendix F reads: it caps the year you are 14, not the year the
+  tour calls you 14. The same reversal applies to the pro AER, and it forced `proPerYearByAge` to grow its
+  14 → 8 and 15 → 10 rows.
 
 ### 3. Measured — 40 seeds × 208 weeks, birth month the only variable
 

@@ -9,6 +9,7 @@ import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SlotMeta } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
+import { ageAtWeek, kidAgeYears } from '../../engine/world'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -121,6 +122,20 @@ function flagEmoji(code: string): string {
 
 function fmtDate(ts: number) {
   return new Date(ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
+/** HOW OLD SHE IS on a career the player has not loaded – the Careers list's own copy of the one
+ *  clock (owner ruling 1, 09.08; engine/world/age.ts).
+ *
+ *  ⚠ THIS LINE USED TO INLINE THE BAND, as `14 + Math.floor(c.week / 52)`, which is why a grep for
+ *  `ageAtWeek` never found it: the same hiding place `Snapshot.ageYears` was in. It made the picker
+ *  say 14 about the very December career whose Home screen says 13.
+ *
+ *  The fallback is the band and is deliberate: `birthMonth` reaches the index row only from this
+ *  wave on (shared/protocol.ts), so a career last saved before it has no birthday to read and the
+ *  band is the honest best guess rather than an invented one. One autosave replaces it. */
+function careerAge(c: CareerMeta): number {
+  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth)
 }
 
 // Coarse relative time for the autosave row – doesn't need second-level precision.
@@ -400,12 +415,27 @@ const TAB_OPTIONS = [
           <span v-if="c.careerId === activeCareerId" class="pill ok">Active</span>
         </div>
         <div class="hint">
-          {{ weekLabel(c.week) }} · age {{ 14 + Math.floor(c.week / 52) }} · last played {{ fmtDate(c.lastPlayedAt) }}
+          {{ weekLabel(c.week) }} · age {{ careerAge(c) }} · last played {{ fmtDate(c.lastPlayedAt) }}
         </div>
       </div>
+      <!-- D11 – TWO CONTROLS CALLED `Load` COEXIST ON THIS SCREEN, and two called `Delete`: one pair
+           per career here, one pair per named save in the table below. The visible word is right in
+           both places (a column of rows does not want its noun repeated on every button), so the
+           name is EXTENDED rather than replaced - "Load" is still the first word of "Load career –
+           Emma", which is what WCAG 2.5.3 asks for and what a speech-input user would say. The
+           pattern is this file's own: the slot's delete has said `Delete save {name}` since TB-19. -->
       <div class="controls">
-        <button :disabled="game.busy || c.careerId === activeCareerId" @click="askLoadCareer(c)">Load</button>
-        <button class="danger" :disabled="game.busy" @click="askDeleteCareer(c)">Delete</button>
+        <button
+          :disabled="game.busy || c.careerId === activeCareerId"
+          :aria-label="`Load career – ${c.kidName}`"
+          @click="askLoadCareer(c)"
+        >Load</button>
+        <button
+          class="danger"
+          :disabled="game.busy"
+          :aria-label="`Delete career – ${c.kidName}`"
+          @click="askDeleteCareer(c)"
+        >Delete</button>
       </div>
     </div>
   </section>
@@ -420,7 +450,10 @@ const TAB_OPTIONS = [
       <button v-if="previousAutosave" class="link" @click="askRestorePrevious">Restore previous</button>
     </div>
 
-    <table v-if="namedSlots.length" style="margin-top: 12px">
+    <!-- D8 – A TABLE WITH NO NAME cannot be reached by `getByRole('table', { name })`, and a screen
+         reader announces it as "table, 5 columns" with nothing said about what is in it. This screen
+         has two, so both are named and the names say which. -->
+    <table v-if="namedSlots.length" style="margin-top: 12px" aria-label="Named saves">
       <thead>
         <tr>
           <th>Name</th>
@@ -441,7 +474,11 @@ const TAB_OPTIONS = [
                  goes through restoreSlot - committed as the newest autosave before the button
                  unbusies, and therefore still the active state after a relaunch. Wrapped in B's
                  `tracked` so the TB-19 status row can offer Retry on exactly this operation. -->
-            <button :disabled="game.busy" @click="tracked(() => game.restoreSlot(s.slot))">Load</button>
+            <button
+              :disabled="game.busy"
+              :aria-label="`Load save ${s.name}`"
+              @click="tracked(() => game.restoreSlot(s.slot))"
+            >Load</button>
             <!-- TB-19: the delete beside it is routed through the shared ConfirmDialog - it was
                  the screen's one unconfirmed irreversible action. See askDeleteSlot. -->
             <IconButton
@@ -458,7 +495,18 @@ const TAB_OPTIONS = [
     </table>
 
     <div class="controls" style="margin-top: 12px">
-      <input v-model="saveName" type="text" placeholder="save name" :disabled="game.busy" @keyup.enter="trySaveAs" />
+      <!-- ⚠ NOT ON THIS BRANCH'S LIST, and it is one attribute in a file the list already opened.
+           D9's other half is SeasonScreen's and belongs to another branch. A placeholder is not a
+           label: it is announced as a value hint, it is gone the moment anything is typed, and
+           `getByRole('textbox', { name: 'Save name' })` had nothing to match. -->
+      <input
+        v-model="saveName"
+        type="text"
+        placeholder="save name"
+        aria-label="Save name"
+        :disabled="game.busy"
+        @keyup.enter="trySaveAs"
+      />
       <button :disabled="game.busy || !saveName.trim()" @click="trySaveAs">Save as…</button>
     </div>
 
@@ -526,15 +574,26 @@ const TAB_OPTIONS = [
     <p v-if="game.error && game.error !== game.saveOp?.message" class="error">{{ game.error }}</p>
   </section>
 
+  <!-- D2 – FIVE SWITCHES THAT WERE ALL CALLED `ON` OR `OFF`. Each one already carried `role="switch"`
+       and an honest `aria-checked`, and each one's visible label was a SIBLING with nothing tying the
+       two together - so every switch on this screen took its name from its own content, which is the
+       state word inside it. Five controls, two names between them, and `getByRole('switch', { name:
+       'Sound effects' })` could not work.
+
+       `aria-labelledby` AND NOT `aria-label`, on purpose: the name is then literally the text on
+       screen, so it cannot drift from the label the way a hand-written copy of it can. Where a row's
+       left half is a label PLUS a hint, only the label carries the id - a switch called "Haptics" and
+       not "Haptics Not supported on this device". -->
   <section v-if="screenTab === 'play'">
     <h2>Sound</h2>
     <div class="career-row">
-      <div>Sound effects</div>
+      <div id="more-sfx-label">Sound effects</div>
       <button
         class="sound-switch"
         :class="{ on: !soundMuted }"
         role="switch"
         :aria-checked="!soundMuted"
+        aria-labelledby="more-sfx-label"
         @click="toggleSound"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
@@ -542,12 +601,13 @@ const TAB_OPTIONS = [
       </button>
     </div>
     <div class="career-row">
-      <div>Music</div>
+      <div id="more-music-label">Music</div>
       <button
         class="sound-switch"
         :class="{ on: !musicMuted }"
         role="switch"
         :aria-checked="!musicMuted"
+        aria-labelledby="more-music-label"
         @click="toggleMusic"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
@@ -556,7 +616,7 @@ const TAB_OPTIONS = [
     </div>
     <div class="career-row">
       <div>
-        Haptics
+        <span id="more-haptics-label">Haptics</span>
         <span v-if="!hapticsSupported" class="hint" style="margin: 2px 0 0">Not supported on this device</span>
       </div>
       <button
@@ -564,6 +624,7 @@ const TAB_OPTIONS = [
         :class="{ on: !hapticsOff }"
         role="switch"
         :aria-checked="!hapticsOff"
+        aria-labelledby="more-haptics-label"
         @click="toggleHaptics"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
@@ -578,7 +639,7 @@ const TAB_OPTIONS = [
     <h2>Week story</h2>
     <div class="career-row">
       <div>
-        Open at the end of a week
+        <span id="more-weekstory-label">Open at the end of a week</span>
         <!-- ⚠ `display: block`, and it is not a nicety: `.hint` is styled for a <p> and this is a
              <span>, so at 375 the sentence ran on from the label ("...end of a week Off: the story
              stays...") and read as one line of nonsense. Caught in the browser. Haptics' own hint has
@@ -593,6 +654,7 @@ const TAB_OPTIONS = [
         :class="{ on: !weekStoryOff }"
         role="switch"
         :aria-checked="!weekStoryOff"
+        aria-labelledby="more-weekstory-label"
         @click="toggleWeekStory"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
@@ -607,7 +669,7 @@ const TAB_OPTIONS = [
     <h2>Calendar animation</h2>
     <div class="career-row">
       <div>
-        Cross out the days
+        <span id="more-daycross-label">Cross out the days</span>
         <span class="hint" style="display: block; margin: 2px 0 0">
           Off: the week plays straight through, as before
         </span>
@@ -620,6 +682,7 @@ const TAB_OPTIONS = [
         :class="{ on: !dayCrossOff }"
         role="switch"
         :aria-checked="!dayCrossOff"
+        aria-labelledby="more-daycross-label"
         @click="toggleDayCross"
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
@@ -692,7 +755,8 @@ const TAB_OPTIONS = [
 
   <section v-if="screenTab === 'about'">
     <h2>About</h2>
-    <table>
+    <!-- D8, the screen's second table. See the note beside the saves table above. -->
+    <table aria-label="About this app">
       <tbody>
         <tr>
           <th>App</th>

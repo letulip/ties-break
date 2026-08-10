@@ -41,6 +41,63 @@ function artPipeline(): Plugin {
   }
 }
 
+/**
+ * build/no-stowaways — desktop junk never reaches a player, whenever it was created.
+ *
+ * Vite copies `public/` into `dist/` VERBATIM, so a `.DS_Store` Finder wrote while the owner was
+ * dropping an icon ships to everyone. It has reddened the gate twice in one day, and the second time
+ * there were two of them – `public/` and `public/icons/`, the folder he had just opened.
+ *
+ * ⚠ WHY THIS SWEEPS `dist/` AFTER THE BUILD RATHER THAN `public/` BEFORE IT. Cleaning the source
+ * would be a race the build cannot win: Finder writes `.DS_Store` when a folder is *viewed*, so it
+ * can appear after `buildStart` and before the copy. Sweeping the OUTPUT is the only placement where
+ * the guarantee holds regardless of when the file arrived – and it never deletes anything of the
+ * owner's, because `dist/` is generated.
+ *
+ * ⚠ AND IT DOES NOT REPLACE `tests/ui-control-system.test.ts`'s `.DS_Store` CHECK. The two guard
+ * different things and both are wanted: this plugin protects the PLAYER (junk cannot ship), the test
+ * protects the REPOSITORY (something that does not belong is sitting in the working tree, and
+ * somebody has been in the folder by hand). Deleting the test because the plugin now catches it
+ * would trade a smoke alarm for a fire blanket.
+ *
+ * `.textClipping` is on the list from experience, not from a list of known-bad names: dragging a
+ * search result out of Finder produces one, and one landed in `public/icons/` on 10.08 wearing the
+ * name of an icon it did not contain.
+ */
+const STOWAWAYS = /^(\.DS_Store|Thumbs\.db|desktop\.ini|\._.*|.*\.textClipping)$/
+
+function noStowaways(): Plugin {
+  return {
+    name: 'ties-break:no-stowaways',
+    apply: 'build',
+    async closeBundle() {
+      const { readdir, rm } = await import('node:fs/promises')
+      const { join } = await import('node:path')
+      const removed: string[] = []
+      const sweep = async (dir: string): Promise<void> => {
+        let entries
+        try {
+          entries = await readdir(dir, { withFileTypes: true })
+        } catch {
+          return // no dist/ (a build that failed earlier, or a dry run) is not this plugin's problem
+        }
+        for (const e of entries) {
+          const full = join(dir, e.name)
+          if (e.isDirectory()) await sweep(full)
+          else if (STOWAWAYS.test(e.name)) {
+            await rm(full, { force: true })
+            removed.push(full)
+          }
+        }
+      }
+      await sweep('dist')
+      // Loud on purpose. A silent sweep would hide that the working tree keeps growing these, which
+      // is the thing the test is trying to tell somebody.
+      if (removed.length) this.warn(`stripped ${removed.length} stowaway(s) from dist: ${removed.join(', ')}`)
+    },
+  }
+}
+
 // BASE_PATH is set by CI to "/<repo-name>/" for GitHub Pages; locally the app serves from "/".
 /** The Monte-Carlo files: 104s of the suite's 183s, and the reason CI's reporter RPC times out.
  *  Declared once so the two projects below cannot disagree about which files are heavy.
@@ -48,7 +105,9 @@ function artPipeline(): Plugin {
  *  was ~40s, and no sim file may sit near birpc's hard 60s RPC ceiling on a 2-core runner. */
 const HEAVY_SIM_FILES = [
   '**/tests/econ-bench.test.ts',
+  '**/tests/econ-bench-survival.test.ts',
   '**/tests/econ-reach.test.ts',
+  '**/tests/econ-reach-agree.test.ts',
   '**/tests/econ-reach-pro.test.ts',
   // W2-ENDINGS: the bench gate. Small by design (see its header) but it drives full careers, so it
   // belongs on the serialised side of the split like every other Monte-Carlo file.
@@ -72,6 +131,7 @@ export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [
     artPipeline(),
+    noStowaways(),
     vue(),
     VitePWA({
       // 'prompt': a new build waits for the user to tap "Update" (App.vue UpdateBanner),

@@ -1,14 +1,19 @@
 # The e2e layer
 
-Playwright over a **real production build** in **real Chromium**. This is S0 of
-`docs/plans/playwright.md` – the harness and one smoke spec. Nothing here is coverage yet.
+Playwright over a **real production build** in **real Chromium**. S0–S2 of
+`docs/plans/playwright.md` – the harness, the state-seeding fixture and the journeys.
+
+**👉 What is covered, at which layer, and what is deliberately not:
+[`docs/specs/e2e-coverage.md`](../docs/specs/e2e-coverage.md).** That document is the map, and
+`coverage-map.spec.ts` in this directory keeps it honest against the repo.
 
 ```bash
-npm run test:e2e            # the suite: builds, serves, runs. ~7 s cold today.
+npm run test:e2e            # the suite: builds twice, serves both, runs. 18 tests, ~25 s cold.
+npm run test:e2e:report     # the same run with a trace for EVERY test, then opens the HTML report
 npm run test:e2e:ui         # the time-travel UI – pick a spec, watch it, step back through it
 npm run test:e2e -- --headed        # watch the browser do it
 npm run test:e2e -- --debug         # the inspector, one action at a time
-npm run test:e2e -- -g "week 1"     # one spec by name
+npm run test:e2e -- -g "reload"     # one journey by name
 ```
 
 First run on a new machine needs the browser, which npm does not install:
@@ -86,11 +91,25 @@ string `serviceWorker` does not appear in the bundle; without it, it does.
 The smoke spec asserts `navigator.serviceWorker.getRegistrations()` is empty, so if the switch is
 ever lost the next run says so instead of the suite going quietly flaky three waves later.
 
-**S2 needs it back ON** for the one spec that tests the update flow. The route is a second
-`webServer` entry on another port, built without `VITE_TB_SW`, and a Playwright project pinned to it
-by `baseURL` – so the specs that want a worker get a real one, and the rest keep a build that cannot
-surprise them. Turning the flag off globally instead would hand every other spec those three races
+**And S2 turned it back on – for one spec.** `playwright.config.ts` now runs a **second** production
+build into `dist-sw/`, served on port 4174, with the switch left alone so `src/pwa.ts` registers the
+worker exactly as a player's build does. The `chromium-sw` project is pinned to it by `baseURL` and
+matches exactly one file, `offline.spec.ts`. Every other spec keeps the build that cannot surprise
+it. Turning the flag off globally instead would have handed all eleven of them those three races
 back.
+
+The two builds are proven to be two different things, from both ends: `smoke.spec.ts` asserts the
+default build registers **no** worker, and `offline.spec.ts` asserts its build registers one, takes
+control on the second visit (`registerType: 'prompt'` deliberately does not claim an open page), and
+then serves the whole app with the network cut.
+
+Cost: the two builds run concurrently, so the suite went from ~13 s to ~25 s. Still not part of
+`npm run check`.
+
+**Still not covered: the update flow itself** – a second build landing, `needRefresh` flipping, the
+banner appearing, `Update` applying it. That needs two builds served in sequence on one origin,
+which this harness cannot yet express. It is recorded in the coverage document rather than left to
+be discovered.
 
 ## Seeding a career: `careerAt`
 
@@ -187,13 +206,35 @@ To get a trace for something that passes on CI and fails for you, run it with `-
 - **The specs are type-checked.** Playwright strips types with esbuild without checking them, so
   `tsconfig.e2e.json` covers `e2e/**` and `playwright.config.ts`, and `vue-tsc -b` includes it.
 
+## The journeys, and the one rule for adding another
+
+Eight spec files. `smoke` and `seeded-careers` prove the harness; the other six are the journeys, and
+each one's header names the seam it owns and why no cheaper layer reaches it:
+
+| file | seam |
+|---|---|
+| `week-advance.spec.ts` | the worker boundary – a decision gate, a tick, a season roll-over, three screens |
+| `persistence.spec.ts` | a real reload – at a week the fixture has never been at, and mid-tournament-pause |
+| `tournament.spec.ts` | the full loop – reveal, play out, result into the feed and the ledger |
+| `save-file.spec.ts` | the file door – a round trip, and two refusals at the untrusted-input guard |
+| `responsive.spec.ts` | real layout at 375 px – happy-dom has no layout engine at all |
+| `offline.spec.ts` | the service worker – the app boots with the network cut |
+| `coverage-map.spec.ts` | the coverage document has not rotted |
+
+`journey.ts` holds the shared locator vocabulary. It contains **locators and navigation steps only,
+never assertion helpers**: a spec that hides its claims behind `expectEverythingIsFine(page)` reads
+green and says nothing.
+
+**Before adding a spec, answer the question in the table above.** If it does not name a seam, it
+belongs in `tests/component/`. And add its row to `docs/specs/e2e-coverage.md` §2 – `coverage-map.spec.ts`
+fails if you do not.
+
 ## Not here yet
 
-- **S2, the journeys** – roughly a dozen specs, one per seam. `careerAt` is what they start from;
-  `e2e/seeded-careers.spec.ts` is one thin proof per fixture that they can.
-- **The service worker back ON** for the update-flow spec – a second `webServer` on another port,
-  built without `VITE_TB_SW`, and a project pinned to it by `baseURL`. Nothing in the seeding work
-  changed that switch, and the smoke spec still asserts it is in force.
-- **S3, the showcase** – visual regression, the device matrix, `@axe-core/playwright`, and the
-  report published beside the app. Its workflow is `e2e-full.yml`, nightly, and it is where the
-  matrix lives. It is not this job.
+- **The sponsor/inbox loop and storage recovery** – the two highest-value uncovered journeys, both
+  argued in `docs/specs/e2e-coverage.md` §6.4 and §6.5.
+- **Tournament entry through the UI**, blocked on an accessibility gap rather than on effort: both
+  `Enter` controls are ambiguous by name (§6.1).
+- **S3's visual regression, device matrix and `@axe-core/playwright`.** The report half of S3 is
+  built (`npm run test:e2e:report`); the matrix half belongs in a nightly `e2e-full.yml`.
+  There are **no screenshot baselines in this repo**, deliberately – see §6.6.

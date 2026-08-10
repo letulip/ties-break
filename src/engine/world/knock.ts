@@ -158,9 +158,11 @@ export function coachDecidesKnock(world: WorldState): void {
     addEvent(world, {
       week: world.week,
       type: 'info',
+      // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see `coachLoadNote` in world/coachMarket.ts for the
+      // owner's ruling and why the dash is doing the work a guessed "he" used to do.
       text: k.repeat
         ? `The coach wants to talk about her ${k.part} before anyone decides.`
-        : `The coach is in two minds about the ${k.part}. He is asking us.`,
+        : `The coach is in two minds about the ${k.part} – and is asking us.`,
     })
     return
   }

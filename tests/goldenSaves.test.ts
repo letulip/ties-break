@@ -5,6 +5,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION, maxMainDraws } from '../src/engine/world'
 import { mainStateConsistent } from '../src/engine/rng'
 import { COACH_TIERS } from '../src/engine/coach'
+import { LADDER_TRACKS } from '../src/shared/protocol'
 import { daysInBirthMonth } from '../src/shared/dates'
 
 // Backward compatibility is a hard product guarantee: every historical save shape must still
@@ -18,6 +19,14 @@ const FILES = readdirSync(DIR)
 
 function load(file: string): unknown {
   return JSON.parse(readFileSync(`${DIR}/${file}`, 'utf8'))
+}
+
+/** "This record is numbers all the way down" – the season-history row's size guarantee, asked of the
+ *  LEAVES rather than of the top level so a nested value (v46's `byTrack`) is covered rather than
+ *  waved through. Arrays and objects recurse; anything else must be a number. */
+function numericLeaves(value: unknown): boolean {
+  if (typeof value === 'object' && value !== null) return Object.values(value).every(numericLeaves)
+  return typeof value === 'number'
 }
 
 describe('golden saves corpus', () => {
@@ -135,7 +144,37 @@ describe('golden saves corpus', () => {
         expect(typeof h.wins).toBe('number')
         expect(typeof h.losses).toBe('number')
         expect(typeof h.fundsDeltaCents).toBe('number')
-        expect(Object.values(h).every((v) => typeof v === 'number')).toBe(true)
+        // ⚠ RE-AIMED FOR v46, NOT RELAXED. This read `Object.values(h).every(number)`, and the CLAIM it
+        // was making is "no strings, so a long career can't bloat the save". v46 gives the row ONE
+        // nested value – `byTrack`, three records of four numbers – so a flat scan is no longer the
+        // shape of the claim, and left alone it would have failed on a row that contains nothing but
+        // numbers. `numericLeaves` walks to the leaves instead: every assertion above is kept, and this
+        // one now covers strictly more of the row than it did before (a string hidden one level down
+        // used to pass it).
+        expect(numericLeaves(h)).toBe(true)
+        // v46: absent is the shape a pre-v46 row keeps – see the v45 -> v46 migration. When it IS
+        // present it is TOTAL over the three tables, its W-L is a pair of numbers per table exactly as
+        // `seasonRecord` is, and a rank is either a real place or ABSENT (never 0, which would be a
+        // place nobody can hold, and never the tie floor `LadderView.rank`'s null exists to refuse).
+        if (h.byTrack !== undefined) {
+          for (const track of LADDER_TRACKS) {
+            const row = h.byTrack[track]
+            expect(row, `${file}: byTrack is missing ${track}`).toBeDefined()
+            expect(typeof row.points).toBe('number')
+            expect(typeof row.wins).toBe('number')
+            expect(typeof row.losses).toBe('number')
+            if ('endRank' in row) expect(row.endRank).toBeGreaterThan(0)
+          }
+          // The split adds up to the fold it splits: the per-track figures and the whole-season ones
+          // are the same matches counted twice, so a row where they disagree is a row that lost a
+          // tournament somewhere. (Points can only diverge on pre-r5 rows with no `tier` – no fixture
+          // carries one INSIDE a byTrack row, since byTrack only ever appears on rows this build wrote.)
+          const sum = (pick: 'points' | 'wins' | 'losses'): number =>
+            LADDER_TRACKS.reduce((t, track) => t + h.byTrack![track][pick], 0)
+          expect(sum('wins'), `${file}: season ${h.seasonIndex} wins`).toBe(h.wins)
+          expect(sum('losses'), `${file}: season ${h.seasonIndex} losses`).toBe(h.losses)
+          expect(sum('points'), `${file}: season ${h.seasonIndex} points`).toBe(h.points)
+        }
       }
     })
   }

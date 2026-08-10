@@ -52,7 +52,7 @@ import { ECONOMY } from '../../engine/economy'
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
-import { STARTING_FUNDS_CENTS } from '../../engine/world'
+import { STARTING_FUNDS_CENTS, ageAtWeek } from '../../engine/world'
 // The bill's own arithmetic, so the note under the breakdown quotes the number the engine charges
 // rather than a mirror of it - the same rule `startingBudget` above is written under.
 import { coachBillRangeCents, coachById, facilityRateCents, tierOf, weeklyBillSplit } from '../../engine/coach'
@@ -146,12 +146,29 @@ const activeFinance = computed<FinanceWindow | undefined>(() =>
 const trainingBillNote = computed<string | null>(() => {
   const snap = game.snapshot
   if (!snap) return null
-  const coach = coachById(snap.seed, snap.ageYears, snap.coachId)
+  // ⚠ THE BAND, NOT THE AGE ON THE SCREEN (09.08). `resolveBaseCosts` opens with
+  // `const age = ageAtWeek(world.week)` and hands THAT to all three of the calls below - the roster,
+  // the facility rate and the split - so a note priced off `snap.ageYears` is quoting a different
+  // clock from the one the till charges, and this block's own header ("EVERY FIGURE IS THE ENGINE'S
+  // OWN … cannot drift from the charge") is the promise that breaks.
+  //
+  // It read the same number until now only by accident: `ageYears` WAS the band. The one-clock
+  // ruling («есть год рождения и дата. Это всё») makes it HER REAL AGE, while the coach market must
+  // stay on the band on purpose - the roster is a pure function of the age with nothing persisted
+  // but the chosen id, so keying it to her birthday re-rolls every December career's coach (see the
+  // note on `ageAtWeek`). Measured on the identical bug one screen over: a December girl is 16 from
+  // week 156 to week 204 while the market had restocked at 17, so the screen spent 49 weeks quoting
+  // the development rate against a bill charged at the professional one. The rate rows are
+  // 12-16 / 17-22 / 23+, so it bites whenever the two clocks straddle a row.
+  //
+  // `ageAtWeek(snap.week)` is the idiom `PlanWeekSheet.vue` already prices with.
+  const age = ageAtWeek(snap.week)
+  const coach = coachById(snap.seed, age, snap.coachId)
   const tier = tierOf(coach)
-  const rate = coach ? coach.rateCents : facilityRateCents(snap.ageYears, tier)
+  const rate = coach ? coach.rateCents : facilityRateCents(age, tier)
   const split = weeklyBillSplit({
     rateCents: rate,
-    ageYears: snap.ageYears,
+    ageYears: age,
     tier,
     plan: snap.plan,
     background: snap.profile.background,
@@ -477,6 +494,66 @@ function wearWord(wear: number): string {
   if (wear < 0.55) return 'Fine'
   if (wear < 0.85) return 'Worn'
   return 'Gone'
+}
+
+// --- THE DEAL BEHIND THE KIT, AND WHAT IS LEFT OF IT (09.08) --------------------------------------
+//
+// THE OWNER DIAGNOSED THIS ONE HIMSELF AND HE IS RIGHT: «Списались расходы на весь шмот на 38 неделе
+// 34 года, несмотря на наличие спонсора, bills подсвечивает, что всё на нём, но значки free ушли… а
+// почему цена в bills отличается от цены в списаниях?… Я понял почему – видимо мы выбрали квоту.
+// Значит надо где-то на странице bills писать доступную еще квоту к распределению.»
+//
+// The allowance is a per-SEASON pot, `world/kit.ts` has always known what was left of it, and the
+// purchase dialog was the ONLY surface that ever said so. So the page that promises "her sponsor
+// supplies this line" went on promising it after the pot was empty, the `free` badges disappeared
+// with no sentence anywhere, and the sticker on this page stopped agreeing with the charge in the
+// ledger - which is the same fact, seen from the till's side.
+//
+// ⚠ NOTHING HERE CHANGES WHAT IS CHARGED. Every figure is `snapshot.kitDeal`, computed by the engine
+// off the signed offer (see `KitDealView`); this screen does not subtract a spend from an allowance,
+// because the disagreement between two surfaces about that subtraction IS the bug being fixed.
+const kitDeal = computed(() => game.snapshot?.kitDeal ?? null)
+/** The covered lines in the LETTER's words - the paper says "racquets", the equipment model says
+ *  "frame", and a parent reading both must not meet two vocabularies for one thing. */
+const KIT_LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
+const dealCovers = computed(() => {
+  const words = (kitDeal.value?.covers ?? []).map((l) => KIT_LINE_WORDS[l] ?? l)
+  if (words.length === 0) return ''
+  if (words.length === 1) return words[0]
+  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
+})
+/** HOW LONG THE CONTRACT RUNS, which was persisted on the offer and printed nowhere (the owner:
+ *  «Непонятно на какое количество лет спонсор контракт заключает, нигде не видно этой информации»).
+ *  Seasons AND the two weeks that bound it, because "three seasons" alone still leaves the parent
+ *  counting off a calendar he cannot see. */
+const SEASON_WORDS = ['', 'One season', 'Two seasons', 'Three seasons', 'Four seasons']
+const dealTerm = computed(() => {
+  const d = kitDeal.value
+  if (!d) return ''
+  const seasons = SEASON_WORDS[d.seasons] ?? `${d.seasons} seasons`
+  return `${seasons} · ${weekLabel(d.fromWeek)} – ${weekLabel(d.untilWeek)}`
+})
+
+// --- THE ACADEMY, WHICH PAYS AND IS NEVER SEEN (backlog #90, measured 09.08) ----------------------
+//
+// The scholarship is held by half the careers on the bench and it folded $948 of `academy` income
+// over four seasons - and it pays as a DISCOUNT ON TRAVEL, so it never appears as a line the family
+// can point at. The Calendar's event cards say "academy covers 75%" at the moment of a trip and
+// nothing anywhere says what it has been worth. `AcademySupport.coveredCents` has always carried
+// exactly that number: travel they have paid since the last annual review.
+//
+// It belongs on THIS page and beside the sponsor for one reason: they are the same fact from the
+// family's side - somebody else is paying part of the bill, and the parent cannot plan against a
+// subsidy he cannot see. Read-only, engine-derived, and it changes nothing about what is charged.
+const academy = computed(() => game.snapshot?.academy ?? null)
+const academyCoverPct = computed(() => Math.round((academy.value?.coverShare ?? 0) * 100))
+
+/** Is any rung on this line PART-paid - the brand covering some of it and the family the rest? That
+ *  only ever happens on the purchase that empties the pot, and it is exactly the case the owner
+ *  could not explain («почему цена в bills отличается от цены в списаниях»). Read off the engine's
+ *  own `payableCents`, never re-derived from the allowance. */
+function partCovered(view: KitLineView): boolean {
+  return view.rungs.some((r) => r.payableCents > 0 && r.payableCents < r.priceCents)
 }
 
 interface PendingKit {
@@ -819,6 +896,34 @@ const TAB_OPTIONS = [
           New kit plays the same whatever it cost – what a better rung buys is TIME before it goes
           off, and it is billed every time the family replaces it, not once.
         </p>
+        <!-- ⚠ THE SPONSOR'S RUNNING BALANCE, AND IT IS THE POINT OF THIS BLOCK. The allowance is a
+             pot for the season, not a discount rate: once it is spent the same kit is billed to the
+             family at the sticker price, which is why the free badges vanish and why this page and
+             the ledger looked as though they disagreed. The term is here for the same reason - how
+             many seasons the contract runs was persisted and printed on no surface at all. Every
+             number is the engine's (`snapshot.kitDeal`). -->
+        <div v-if="kitDeal" class="kit-deal">
+          <div class="kit-deal-head">
+            <span class="kit-deal-brand">{{ kitDeal.brand }}</span>
+            <span class="kit-deal-term">{{ dealTerm }}</span>
+          </div>
+          <p class="kit-deal-note">
+            They supply her {{ dealCovers }}, and she enters at least
+            {{ kitDeal.minEventsPerSeason }} tournaments a season.
+          </p>
+          <StatRow
+            class="money-row"
+            label="Allowance left this season"
+            :meta="`${formatCents(kitDeal.spentCents)} of ${formatCents(kitDeal.allowanceCents)} used`"
+            :value="formatCents(kitDeal.remainingCents)"
+            :tone="kitDeal.remainingCents > 0 ? 'positive' : 'negative'"
+          />
+          <p v-if="kitDeal.remainingCents === 0" class="kit-deal-note is-spent">
+            The season's allowance is spent. Her {{ dealCovers }} are billed to the family at full
+            price until the new season starts – the deal still keeps them fresh, and it still pays
+            again from the first week of next season.
+          </p>
+        </div>
         <div v-for="view in kitLines" :key="view.line" class="kit-line">
           <div class="kit-line-head">
             <span class="kit-line-name">{{ LINE_TITLE[view.line] ?? view.line }}</span>
@@ -847,11 +952,50 @@ const TAB_OPTIONS = [
               <span v-else class="kit-rung-price">{{ formatCents(rung.priceCents) }}</span>
             </button>
           </div>
-          <p v-if="view.sponsored" class="kit-line-sponsored">
-            Her sponsor supplies this line – they keep it fresh whatever she plays, and they pay for
-            what she buys until the season's allowance runs out.
+          <!-- ⚠ THE SECOND HALF OF THE SAME FIX. "They pay for what she buys until the allowance
+               runs out" was true and unfalsifiable: the parent could not tell whether it had. The
+               three arms are the three states the till can actually be in, and the middle one is
+               the one that produced the complaint - a struck price with money still beside it is
+               the allowance ending mid-purchase, not a discount rate. -->
+          <p v-if="view.sponsored && kitDeal" class="kit-line-sponsored">
+            <template v-if="kitDeal.remainingCents === 0">
+              Her sponsor keeps this line fresh, but the season's allowance is gone – this one is
+              the family's to buy until next season.
+            </template>
+            <template v-else-if="partCovered(view)">
+              Her sponsor supplies this line and keeps it fresh. Only
+              {{ formatCents(kitDeal.remainingCents) }} of the allowance is left, so a dearer rung is
+              part-paid – the struck price is the sticker and the price beside it is the family's
+              share.
+            </template>
+            <template v-else>
+              Her sponsor supplies this line – they keep it fresh whatever she plays, and they pay
+              for what she buys while {{ formatCents(kitDeal.remainingCents) }} of this season's
+              allowance is left.
+            </template>
           </p>
         </div>
+      </Card>
+
+      <!-- ======================= 5c. HER ACADEMY, AND WHAT IT HAS PAID ===============
+           Backlog #90. The scholarship pays as a discount on every fare, so it never becomes a line
+           the family can see - the calendar says "academy covers 75%" at the moment of a trip and
+           the total is nowhere. `coveredCents` is the engine's own running figure since the last
+           annual review, which is the same shape as the sponsor's allowance above it. -->
+      <Card v-if="screenTab === 'bills' && academy" class="money-panel">
+        <Eyebrow as="h2">Her academy</Eyebrow>
+        <p class="money-panel-note">
+          They take {{ academyCoverPct }}% off every trip she enters – the travel figures on the
+          calendar and in the ledger are already net of it, and it is reviewed once a year.
+        </p>
+        <StatRow
+          class="money-row"
+          label="Travel they have paid"
+          meta="since the last review"
+          :value="formatCents(academy.coveredCents)"
+          tone="positive"
+        />
+        <p class="money-panel-note">With them since {{ weekLabel(academy.sinceWeek) }}.</p>
       </Card>
 
       <!-- ============================== 6. THE CAREER, BY YEAR ======================
@@ -1240,6 +1384,52 @@ const TAB_OPTIONS = [
    Three stacked lines, each with a row of four rungs. The rungs WRAP rather than scroll: at 375px
    four labels of up to sixteen characters cannot sit on one row, and a horizontally scrolling strip
    of buttons hides the very option a player came to find. Two by two is legible and complete. */
+/* THE DEAL, ABOVE THE THREE LINES IT PAYS FOR. It sits inside the same card rather than in one of
+   its own: the allowance is not a second subject, it is the reason the prices below it read the way
+   they do, and a card between them would put a page break in the middle of one sentence. */
+.kit-deal {
+  margin-bottom: 4px;
+}
+
+.kit-deal-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kit-deal-brand {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+/* The term. Quiet, tabular and on the same line as the brand, because "how long does this run" is a
+   fact the reader wants beside the name and never instead of it. */
+.kit-deal-term {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.kit-deal-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+/* An empty pot is the one state on this card that changes what the family pays, so it is the one
+   that is allowed a colour. */
+.kit-deal-note.is-spent {
+  color: var(--ink);
+}
+
 .kit-line {
   margin-top: 16px;
   padding-top: 14px;

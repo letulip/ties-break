@@ -3,7 +3,7 @@ type: specification
 status: current
 area: simulation-and-balance
 canonical: false
-last-reviewed: 2026-08-08
+last-reviewed: 2026-08-10
 ---
 
 # The compound cost – what two rulings cost together that neither costs alone
@@ -13,7 +13,14 @@ ruling is reverted anywhere except inside a detached worktree that exists to be 
 
 ## Current truth
 
-`tests/econ-reach.test.ts`'s 14→18 arm reads **1 of 30** on the assembled tree against a pinned floor
+**⚠ RULED 10.08, AND ACTED ON – §9 IS THE RECORD.** The owner took the first of §7's two answers: a
+25k family that buys a high coach **should** go bankrupt, so the balance is right and the FIXTURE was
+wrong. `tests/econ-reach.test.ts`'s 14→18 arm no longer runs on `middleHigh`; it runs on
+**`25k · middle · self-coached`**, reads **13 of 30**, and pins **[7, 21]** – a band measured on that
+cell, on this tree. **`[12, 27]` was not re-based**, and neither was any constant in the engine.
+Everything below is unchanged and is the reading of `middleHigh` that produced the question.
+
+`tests/econ-reach.test.ts`'s 14→18 arm read **1 of 30** on the assembled tree against a pinned floor
 of 12. Six arms, same fixture, same seeds, one tree per arm:
 
 | # | arm | tree | **reachedH18** |
@@ -379,3 +386,201 @@ npx vite-node tools/compound-cost.ts -- --careers 30 --float 100000000     # arm
 
 ⚠ Every run prints `RUN compound-cost · <cwd> · HEAD <rev>` on its first line. A number whose banner
 does not name the worktree it was supposed to come from is not evidence.
+
+---
+
+## 9. 2026-08-10 – the owner's ruling, and the fixture that came out of it (`fix/reach-fixture`)
+
+**§7 IS NOT EDITED AND IS NOT SUPERSEDED.** It is the record of a question correctly put, and the
+answer arrived on 10.08. This section is the answer and what was done about it; §§0-8 are as they
+were written.
+
+### 9a. The ruling
+
+> «Первый: семья за 25к, покупающая высокого тренера, и ДОЛЖНА разоряться – по-моему да, мы на их
+> выбор не влияем.»
+
+That is §7's option 1, verbatim: **the balance is right and the fixture is wrong.** The retainer is
+not re-priced, the ladder floor is not touched, `REACH_PRO_RANK` and `REACH_PRO_POINTS` do not move,
+and `[12, 27]` is not re-based. **The only thing that changes is which cell the 14→18 arm asks
+about**, which is what §7's own words for this branch prescribe: *"re-point the fixture at a cell
+where both branches fire for tennis reasons, chosen by `tools/reach-sweep.ts` across the nine presets
+exactly as `middleHigh` itself was chosen. That is a fixture change with a sweep behind it, not a
+re-based bar."*
+
+### 9b. The sweep – both branches, which is necessary
+
+`npx vite-node tools/reach-sweep.ts`, nine presets x 30 careers, grinder policy, 208 weeks, at the
+incumbent constants (R=50, P=60). Reproduced twice, identical both times:
+
+| preset | 14→18 of 30 |
+| --- | --- |
+| 8k · working · self-coached | 10 |
+| 8k · working · budget coach | 19 |
+| 8k · working · middle coach | 3 |
+| **25k · middle · self-coached** | **13** |
+| 25k · middle · budget coach | 19 |
+| 25k · middle · middle coach | 14 |
+| 25k · middle · high coach (`middleHigh`) | **1** |
+| 120k · wealthy · high coach | 26 |
+| 120k · wealthy · elite coach | 24 |
+
+**All nine split**, so "both branches fire" no longer discriminates between candidates at all – which
+is precisely why `middleHigh` survived as a fixture while becoming a solvency test. The `1` reproduces
+the tripwire's own red exactly, which is the sweep proving itself against the instrument it is being
+used to re-aim.
+
+### 9c. The second property – and it is measured, not asserted
+
+**`tools/reach-sweep.ts` gained a `--float=<cents>` arm**, off by default so a bare run is unchanged
+in behaviour and runtime. It replays every career a second time with a wallet that cannot empty –
+exactly arm 6 of §5, generalised from one cell to nine – so the question §5 answered by hand for
+`middleHigh` can now be asked of any candidate:
+
+```
+npx vite-node tools/reach-sweep.ts --float=100000000
+```
+
+| preset | as charged | with float | **SOLVENCY** | **TENNIS** | ever red | latched |
+| --- | --- | --- | --- | --- | --- | --- |
+| 8k · working · self-coached | 10/30 | 14/30 | 4 | 16 | 5/30 | 0/30 |
+| 8k · working · budget coach | 19/30 | 26/30 | 7 | 4 | 23/30 | 9/30 |
+| 8k · working · middle coach | 3/30 | 26/30 | 23 | 4 | 25/30 | 22/30 |
+| **25k · middle · self-coached** | **13/30** | **13/30** | **0** | **17** | **2/30** | **0/30** |
+| 25k · middle · budget coach | 19/30 | 24/30 | 5 | 6 | 23/30 | 6/30 |
+| 25k · middle · middle coach | 14/30 | 27/30 | 13 | 3 | 27/30 | 17/30 |
+| 25k · middle · high coach | 1/30 | 25/30 | **24** | 5 | 30/30 | 29/30 |
+| 120k · wealthy · high coach | 26/30 | 26/30 | 0 | 4 | 12/30 | 6/30 |
+| 120k · wealthy · elite coach | 24/30 | 26/30 | 2 | 4 | 23/30 | 23/30 |
+
+SOLVENCY = careers that miss as charged but reach once money cannot run out. TENNIS = careers that
+miss even then.
+
+⚠ **THE DELTA IS AN UPPER BOUND, NOT AN ATTRIBUTION**, and §5's caveat travels with it: a float
+removes affordability refusal, the debt spell and the bankruptcy latch in one move, so
+`float − charged` is the **most** the bank balance could be deciding. That asymmetry is why the
+column is usable here – a **small** delta is a sound clearance, a large one is only a disqualification.
+
+### 9d. The cell, and why the other eight are not it
+
+**`25k · middle · self-coached`.** Thirteen of thirty reach the pro proxy and the **same thirteen**
+reach it with a wallet that cannot empty. **SOLVENCY 0.** All seventeen misses are the tennis: ten
+never hold a counting ITF result at all, seven peak outside the top 50 (best ranks #52, #53, #54,
+#54, #54, #59, #61). **Two careers of thirty ever go red and none latches bankruptcy** – there is no
+bill in this cell for the proxy to be measuring.
+
+Against §5's reading of the old fixture the contrast is the whole point: `middleHigh` latches
+bankruptcy in **29 of 30** careers, and **24 of its 29 misses are the money**; this cell latches none
+and **0 of its 17 misses are**.
+
+* **`25k · middle · middle coach` (14 of 30) splits one career wider and was rejected on the
+  measurement.** Thirteen of its sixteen misses are the money and 17 of 30 latch bankruptcy. It is
+  `middleHigh`'s failure mode one rung down, not a different kind of cell – which is worth knowing on
+  its own, because `real-vs-bench-2026-08.md` §5c establishes this as the cell the owner actually
+  plays. Under the **player** policy that document measures it at 0 of 10 bankruptcies; under the
+  grinder this tripwire calls, 17 of 30. The fixture question and the balance question part company
+  here, and only the fixture question is settled by this section.
+* **`120k · wealthy · high coach` also reads SOLVENCY 0**, and is rejected for the first property
+  instead: at 26 of 30 it is four careers from saturation, and the file's whole history is of single
+  careers crossing single lines.
+* **The two `budget` cells (19 of 30) sit between the two failures** – 5 to 7 careers of solvency
+  each, and 23 of 30 ever red. Cleaner than `middleHigh`, not clean.
+
+⚠ **AND WHAT THE NEW FIXTURE CANNOT SEE.** A family that coaches its own daughter pays no coaching
+bill, so no future re-pricing of a coach will move this line. That is exactly why the cell is durable
+and it is also a real loss of coverage, stated here rather than discovered later: the 14→18 arm is now
+a tennis instrument only, and the money question belongs entirely to the tools built for it –
+`tools/compound-cost.ts`, `endings-bench`, and the survival rows of `bench:econ`.
+
+⚠ **THIS IS NOT `real-vs-bench-2026-08.md` §7.2's CORRECTION AND DOES NOT PRE-EMPT IT.** That page
+recommends reading the tripwire's arms on `POLICIES[1]` beside `POLICIES[0]`, because the grinder
+forgoes every dollar of prize money and sponsorship in the game. The fixture stays on the grinder here
+– changing the policy would make every number in the test's nine-reading history incomparable, and it
+is a separate decision with its own sweep. Both changes are compatible; this one does not make that
+one less needed.
+
+### 9e. The band – re-measured, which is the thing §3 says nobody did
+
+§7's middle bullet asks for the anchor to be **re-measured rather than re-chosen**, and §3 traces the
+old one decaying 25 → 24 → 19 → 16 across three merges that nobody attributed. So the band here is
+derived from a reading taken on **this tree** and on **this cell**, by the rule the test file has used
+for every band it carries – *half the distance to each degenerate answer*:
+
+```
+measured                13 of 30
+distance to 0  = 13     half =  6.5     floor = 13 − 6.5 =  6.5
+distance to 30 = 17     half =  8.5     ceiling = 13 + 8.5 = 21.5
+                                        →  [7, 21]
+```
+
+⚠ **THE HALVES ROUND INWARD, AND THE FILE IS NOT CONSISTENT ABOUT THIS, SO IT IS STATED.** The
+`[6, 20]`-around-11 band rounds both ends inward (5.5 → 6, 20.5 → 20); the `[12, 27]`-around-25 band
+rounds its ceiling inward and its floor outward. The tighter reading is followed here, because a band
+that rounds outward on the run that sets it is a band chosen to pass.
+
+**CROSS-CHECKED THROUGH `runCareer`, which is what the test calls** and which is not what the sweep
+replays – the same discipline §0 applied to the probe's own harness. `runCareer(middleSelf, i, 208)`
+over indices 0-29 reads **13 of 30**, agreeing with the sweep career for career.
+
+**AND IT IS NOT A KNIFE EDGE**, checked the way the `320` re-base checked its own plateau: the count is
+flat at 13 for every rank cut-off in **[48, 51]**, the nearest career below the line peaks at **#49**
+and the nearest above at **#52**. Ten of the thirty never hold a counting result at all, so no
+calendar re-spacing brings them near it.
+
+### 9f. A finding nobody asked for: `REACH_PRO_POINTS` is inert
+
+The pro predicate is `(ranked AND kidRank <= 50) OR itf >= 60`, and the sweep prints both halves
+alone. **Across all nine presets the union equals the RANK arm alone at every candidate threshold
+from 60 to 600** – every career that reaches 60 ITF points was already inside the top 50 while
+holding a counting result, so the points half is a strict subset and contributes nothing.
+
+Consequence worth recording: **re-basing `REACH_PRO_POINTS` currently moves no number in
+`tests/econ-reach.test.ts`.** Reported, not acted on. The disjunction is still the right predicate –
+the points arm is what stops the proxy depending on a rank table alone, and a population change could
+make it bind again tomorrow – but anyone reaching for it as a tuning lever should know it is not
+connected to anything at this revision.
+
+### 9g. What changed, and the gates
+
+**Four files.** No engine line, no balance constant, no save schema, no migration.
+
+* `tools/reach-sweep.ts` – the `--float` arm and its table. Default-off; a bare run is byte-identical
+  in behaviour to every earlier one.
+* `tests/econ-reach.test.ts` – the fixture const `middleHigh` → `middleSelf`, the band `[12, 27]` →
+  `[7, 21]` on the new cell, and a tenth reading APPENDED to the comment block. **The CASE
+  (`0 < n < 30`) is untouched**, both branches still asserted exactly, and nothing in the nine
+  readings above it is rewritten – including §3's finding that *"the two waves are answerable for
+  16 → 1, not 25 → 1"*, which is a fact about `middleHigh` and stays true.
+* `docs/decisions.md` – the ruling itself, because a decision that lives only in a spec is one the
+  next reader takes again.
+* this section, and the one paragraph of `## Current truth` that would otherwise still say the arm
+  reads 1 of 30. §7's argument is untouched.
+
+**THE GATES, on a quiet machine:**
+
+```
+npm run test:sim   9 files green in 298s, exit 0
+                     econ-bench 58s · econ-reach 56s · econ-reach-pro 35s · endings-bench 10s
+                     fatigue-bench 25s · -planner 20s · -policy 61s · -policy-104w 17s
+                     match/calibration 14s
+npm run check      exit 0 – context audit ok (171 docs) · vue-tsc -b --force clean
+                     units green in 150s (2,453 + 30 + 61 + 22 tests)
+                     component 12 files / 135 tests · vite build ok
+```
+
+⚠ **AND THE FIRST SIM RUN WAS THROWN AWAY, WHICH IS WORTH RECORDING BECAUSE THE OUTPUT LOOKED LIKE A
+FAILURE.** It exited 1 with `econ-bench` and `econ-reach` each "STALLED TWICE (runner, not tests)" –
+both reporting **every test passed** (13 of 13 and 10 of 10) and failing only birpc's `onTaskUpdate`
+ack. A neighbouring agent was running a 30-seed x 208-week bench in a sibling worktree at the time
+and the machine was at load 6.6, rising to 33. Re-run once it cleared, the same two files pass in 58s
+and 56s. This is exactly the contention hazard `scripts/sim.mjs`' own header documents, and the second
+run is the one quoted above. **`econ-reach` at 56s is also the answer to the fair question the change
+raises about runtime**: the new cell's careers survive where `middleHigh`'s stopped entering after
+bankruptcy, so the file is marginally slower, and it still sits under birpc's 60s ceiling with room.
+
+```bash
+npx vite-node tools/reach-sweep.ts                     # the nine-preset table, ~190s
+npx vite-node tools/reach-sweep.ts --float=100000000   # + the solvency arm, ~370s
+npm run test:sim
+npm run check
+```

@@ -54,7 +54,7 @@ import {
   UPCOMING_WEEKS,
 } from './constants'
 import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
-import { ageAtWeek, birthdayTurning, kidAgeYears, START_AGE_YEARS } from './age'
+import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears, START_AGE_YEARS } from './age'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
@@ -65,8 +65,8 @@ import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote } from './coachMarket'
-import { kitLineViews } from './kit'
-import { copyTrophyLedger, emptySeasonRecord } from './milestones'
+import { kitDealView, kitLineViews } from './kit'
+import { copyByTrack, copyTrophyLedger, emptySeasonRecord } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
 import { travelCostFor } from './sponsors'
@@ -396,21 +396,39 @@ export function computeLadderView(world: WorldState, track: LadderTrack): Ladder
 
 export function computeStandings(world: WorldState, track: LadderTrack = 'itf'): StandingRow[] {
   const full = rankingFor(world, track)
-  const meta = new Map<string, { name: string; nation: string }>()
-  for (const p of world.cohort) meta.set(p.id, { name: p.name, nation: p.nation })
+  // ⚠ AGE JOINS NAME AND NATION (R14 group E, the owner's «возраста девочек добавить в stats доп
+  // колонкой»), and it is HER OWN – see `StandingRow.ageYears`. A rival's is the `ageYears` her cohort
+  // row has carried since v20: drawn once per girl and advanced at each season boundary, the same
+  // number `rivalMatchPlayer` hands the serve-speed curve. Not the band – `COHORT.ageBand` is the
+  // RANGE the draw comes from, and nobody stores it.
+  const meta = new Map<string, { name: string; nation: string; ageYears?: number }>()
+  for (const p of world.cohort) meta.set(p.id, { name: p.name, nation: p.nation, ageYears: p.ageYears })
   // The W table's virtual rows carry real names and flags too (living-field phase W, 01.08) – the
   // fallback below would otherwise print "fp-141" the day the Stats screen grows its World Tour
   // tab. The table itself stays windowed exactly as every table always was (top 10 + around the
   // kid, built a few lines down), so ~500 rows cost the snapshot nothing.
-  if (track === 'wta') for (const p of fieldProsOf(world)) meta.set(p.id, { name: p.name, nation: p.nation })
+  if (track === 'wta') {
+    for (const p of fieldProsOf(world)) meta.set(p.id, { name: p.name, nation: p.nation, ageYears: p.ageYears })
+  }
   // Full name so the UI can render "V. Last" for the kid like everyone else (formatShortName).
+  // ⚠ AND HER AGE IS `kidAgeAt`, THE ONE CLOCK (ruling of 09.08) – off her birth date, so a December
+  // girl reads 13 in the January her January-born rivals read 14. `ageAtWeek` would have printed the
+  // band here and put the Stats table a year ahead of her own birthday note.
   meta.set(KID_ID, {
     name: `${world.profile.kidName} ${world.profile.kidLastName}`.trim(),
     nation: world.profile.country,
+    ageYears: kidAgeAt(world, world.week),
   })
   const enrich = (r: RankingRow, gapBefore: boolean): StandingRow => {
     const m = meta.get(r.playerId) ?? { name: r.playerId, nation: '' }
-    return { ...r, name: m.name, nation: m.nation, isKid: r.playerId === KID_ID, gapBefore }
+    return {
+      ...r,
+      name: m.name,
+      nation: m.nation,
+      isKid: r.playerId === KID_ID,
+      gapBefore,
+      ...(m.ageYears === undefined ? {} : { ageYears: m.ageYears }),
+    }
   }
   // Top 10 + a window around the kid, as *positions in `full`* rather than as slices
   // deduped by id – tracking the underlying index (not the rank number) is what lets
@@ -499,6 +517,7 @@ export function pendingView(world: WorldState): PendingView | undefined {
   const track = tier.track
   const ranks = new Map(rankingFor(world, track).map((r) => [r.playerId, r.rank]))
   const oppNation = world.cohort.find((c) => c.id === oppId)?.nation ?? ''
+  const oppAge = p.players[oppId]?.age
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   // UNRANKED IS NOT A NUMBER, for either girl, and it is the same rule `computeLadderView` applies to
   // the kid: with nobody holding a point in this table the whole field ties at zero and competition
@@ -537,6 +556,12 @@ export function pendingView(world: WorldState): PendingView | undefined {
       name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
       nation: oppNation,
       rank: oppRankIn(oppId),
+      // HOW OLD SHE IS (the owner: «и в турнирах перед матчем тоже можно показывать»), off the FROZEN
+      // player rather than off today's cohort row – see `PendingView.opponent`. `rivalMatchPlayer` sets
+      // `age` from her `ageYears` at composition, so this is her age on the day of the match; a reveal
+      // frozen before that field existed has none, and the card prints nothing rather than a default
+      // (LEGACY_SNAPSHOT_AGE is the match engine's fallback for arithmetic, not a fact about a person).
+      ageYears: oppAge === undefined || !Number.isFinite(oppAge) ? null : Math.floor(oppAge),
     },
     // Only expose a record to watch while there is still an unrevealed round.
     kidMatch: revealed < kidMatches.length ? kidMatchEvent(world, event, current, p.players).match : undefined,
@@ -650,7 +675,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     careerId: world.careerId,
     seed: world.seed,
     week: world.week,
-    ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
+    // ⚠ HER AGE, NOT THE BAND'S (owner ruling 1, 09.08 - world/age.ts). THIS ONE LINE is what Home,
+    // Kid, Stats, Money and Season all print, and it was an INLINED copy of `ageAtWeek` - which is why
+    // a grep for the band's name did not find it. It said 16 from week 104 while her own birthday note
+    // said «She is sixteen this week» at week 154: fifty weeks apart, both from the engine, and it was
+    // the first thing the owner saw. One clock now, and `birthdayTurning` below reads the same one.
+    ageYears: kidAgeAt(world, world.week),
     schoolEndsWeek: schoolEndWeek(world.profile.birthMonth),
     fundsCents: world.fundsCents,
     profile: world.profile,
@@ -724,6 +754,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // shop window - the owner's own suggestion («может быть в ledger?») - and it reads the engine's
     // prices rather than multiplying a band itself.
     kit: kitLineViews(world),
+    // ...AND THE DEAL THOSE LINES ARE UNDER (09.08): the brand, what is LEFT of the season's
+    // allowance, and how long the contract runs. The quota was computed and never shown, so kit that
+    // was free last week was charged this week with no warning - see `KitDealView`.
+    kitDeal: kitDealView(world),
     academy: world.academy
       ? {
           coverShare: travelCoverShare(world.academy),
@@ -816,7 +850,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     life: buildKidLife({
       seed: world.seed,
       week: world.week,
-      ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
+      // HER age, the same one the header prints – the School tile already takes `birthMonth` below,
+      // so a second clock here would have let one tile call her 14 while the one beside it said 13.
+      ageYears: kidAgeAt(world, world.week),
       // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
       // arithmetic can never disagree with the year the rest of the game prints.
       seasonYear: seasonYear(seasonIndexOf(world.week)),
@@ -849,7 +885,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     trainingRead: buildTrainingRead(radarView, radarReadings),
     lastSeasonSummary: world.lastSeasonSummary,
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
-    seasonHistory: world.seasonHistory.map((h) => ({ ...h })),
+    // ⚠ ONE LEVEL DEEPER SINCE v46, exactly as `copyTrophyLedger` is and for the same reason: a row's
+    // `byTrack` is an OBJECT, so a bare spread would hand the UI the very record the world is holding.
+    // Absent stays absent – a row banked before v46 has no per-track figures and must not grow three
+    // zeroed ones on its way through a snapshot (see the v45 -> v46 migration for why a zero is a lie
+    // here and a blank is not).
+    seasonHistory: world.seasonHistory.map((h) => ({ ...h, ...(h.byTrack ? { byTrack: copyByTrack(h.byTrack) } : {}) })),
     // W2-ENDINGS (v39). The epilogue and the three open questions, all as SNAPSHOT FIELDS rather
     // than as stop reasons. A stop reason is a property of the last advance and it is gone the next
     // time anything refreshes; the ending, the fork and the offer are permanent state that has to
