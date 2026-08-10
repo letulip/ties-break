@@ -57,28 +57,50 @@ said `locked`.
 
 ## Group C – mail, vacation, onboarding *(1, 2, 9)*
 
-**Not started.** All three still open at 09.08.
+**SHIPPED on `fix/r14-group-c`, 10.08.** All three, each proved by a mounted test in
+`tests/component/round14-group-c.test.ts` (27 of them, every one mutation-verified).
 
-- [ ] **1. A booked vacation cannot be cancelled.**
-  → **OPEN, with a sharper root cause than the triage had.** The triage read `cancelVacation` as an
-  engine capability with no way in; the truth is narrower and worse. The door exists and is wired
-  end to end (`src/engine/world/planner.ts` → `src/worker/sim.worker.ts` → `src/stores/game.ts`), and
-  `src/components/screens/SeasonScreen.vue` has a `Cancel` button for a booked family week – but only
-  on the **un-painted fallback row** ("A package with no painting yet keeps the old row, Cancel
-  included"). The painted vacation Card above it carries no button by an explicit 29.07 decision:
-  "a booked week is a statement, not a control, and cancelling lives where booking does – tap the
-  card and the planner opens". **The planner sheet never grew the cancel.** So every package that has
-  art – which is all of them – is uncancellable, and the one that would work is unreachable.
-- [ ] **2. The inbox must become a mail client** – a list, unread bold, click to open, a bin per row
-  once read, yes/no on delete.
-  → **OPEN.** `src/components/InboxSheet.vue` is still the letters-newest-first overlay. There is no
-  unread state to bold: `src/shared/protocol.ts` states the engine cannot know what the player has
-  looked at ("the bell's dot asserts one FACT and not the 'unread' it cannot know"), so unread is a
-  client-side concept this item has to introduce. No delete path exists.
-- [ ] **9. Onboarding is not width-capped on desktop**, unlike every other screen.
-  → **OPEN.** `src/components/OnboardingWizard.vue` renders through `ScreenShell`, which owns the
-  vertical stack and an opt-in gutter (22 px, the documented onboarding exception) and deliberately
-  owns no width cap.
+- [x] **1. A booked vacation cannot be cancelled.**
+  → **The triage's root cause was WRONG, and the correction is the more useful finding.** It read
+  `cancelVacation` as an engine capability with no way in; the truth is narrower and worse. The door
+  exists and is wired end to end (`src/engine/world/planner.ts` → `src/worker/sim.worker.ts` →
+  `src/stores/game.ts`), and `src/components/screens/SeasonScreen.vue` has a `Cancel` button for a
+  booked family week – but only on the **un-painted fallback row** ("A package with no painting yet
+  keeps the old row, Cancel included"). The painted vacation Card above it carries no button by an
+  explicit 29.07 decision: "a booked week is a statement, not a control, and cancelling lives where
+  booking does – tap the card and the planner opens". **The planner sheet never grew the cancel.** So
+  every package that has art – which is all of them – was uncancellable, and the one that would work
+  was unreachable.
+  → **The 29.07 routing is KEPT and the missing half built.** `PlanWeekSheet.vue` has a third pane
+  for a week that is already booked: the package, what was paid, the refund, and `Cancel the trip`.
+  It emits and SeasonScreen confirms, exactly as booking does, so one sentence covers both doors to
+  the refund. ⚠ It also retires a **dead control** of the R10-16 class: opened on a booked week the
+  sheet used to show the Practice tab, whose Book could only throw `assertPlannable`'s "That week is
+  already a family vacation".
+- [x] **2. The inbox is a mail client** – a list, unread bold, click to open, a bin per row once
+  read, yes/no on delete.
+  → **`src/composables/inboxMail.ts` is the new client-side half**, at per-letter grain, per career,
+  in localStorage and never in the save – the discipline `inboxCue.ts` already records, one step
+  further on because "unread" cannot be answered by a high-water mark (a player opens the interesting
+  letter first).
+  → ⚠ **DELETE MEANS DISMISS FROM THE LIST, NEVER DESTROY**, and `letterDeletable` carries the
+  reasoning. There is no engine command to delete a letter and adding one would be a schema change
+  whose purpose is to destroy records other surfaces still read – `activeKitDeal`, the
+  season-boundary review that writes `eventsPlayed` back onto a signed offer, `raiseKitRenewal`, the
+  tour's penalty ledger – and a letter that lapsed still explains what happened. Two states carry no
+  bin at all: **open inside its deadline** (deleting it deletes a decision he can still take) and
+  **signed while still running** (that letter is the only surface stating the contract she is under).
+  Everything else clears once read.
+  → ⚠ **A FLAGGED ART GAP**: `public/icons/` has no bin glyph and this repo does not invent artwork,
+  so the control is the word `Delete` with an accessible name naming the letter. The swap to
+  `<IconButton icon="bin">` is one element the day a master lands.
+- [x] **9. Onboarding is not width-capped on desktop**, unlike every other screen.
+  → **The cause was structural rather than an oversight.** The cap lives on `#app`, and
+  `src/components/OnboardingWizard.vue` renders inside `.onboarding` – a `position: fixed` takeover
+  pinned to the viewport – so it is the one screen in the game hanging outside the frame every other
+  screen inherits. `ScreenShell` never owned a width cap and still does not.
+  → The 880 is a token now (`--app-max-width` in `src/style.css`) and **both call sites read it**, so
+  this is the existing mechanism reused rather than a second cap. Same argument as `--app-pad-x`.
 
 ## Group D – money and the coach *(4, 6, 10)*
 

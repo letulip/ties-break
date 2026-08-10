@@ -74,6 +74,8 @@ import { useWeekAction } from '../../composables/weekAction'
 import { DAY_CROSS_PACE, dayCrossPace, dayCrossRuns, dayCrossSchedule } from '../../composables/dayCross'
 import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
 import { formatCents } from '../../shared/money'
+// D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
+import { enterActionName } from '../../composables/eventName'
 import { surfaceStyleHint } from '../../engine/match/style'
 import { venueArtUrl } from '../../art/venues'
 import ScreenShell from '../ui/ScreenShell.vue'
@@ -643,9 +645,16 @@ const showGo = computed(() => !game.snapshot?.pending)
             <p class="hint cal-card-done">She is in. Withdrawing lives on the Season tab.</p>
           </template>
           <template v-else>
+            <!-- ⚠ THE NAME SAYS WHICH TOURNAMENT (defect D4, docs/specs/e2e-coverage.md §12). This
+                 card is a takeover about ONE event, so the ambiguity here is across screens rather
+                 than within one - the same word, on two live surfaces, meaning two different
+                 tournaments. It reads the same `enterActionName` Season's feed does, so the two can
+                 never name one event differently; the visible word is unchanged and is still the
+                 first word of the name (WCAG 2.5.3). -->
             <PrimaryPill
               :risky="marker.cautionReason === 'fatigued'"
               :disabled="fundsShort(marker) || game.busy"
+              :aria-label="enterActionName(marker)"
               @click="enterMarker(marker)"
             >
               Enter

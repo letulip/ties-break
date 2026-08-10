@@ -13,6 +13,7 @@ import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
+import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
 import PlanWeekSheet from '../../src/components/PlanWeekSheet.vue'
 import InboxSheet from '../../src/components/InboxSheet.vue'
 import OnboardingWizard from '../../src/components/OnboardingWizard.vue'
@@ -21,6 +22,8 @@ import { createWorld, tickWeek, toSnapshot, bookVacation } from '../../src/engin
 import { rngFromSeed } from '../../src/engine/rng'
 import { vacationPackage } from '../../src/engine/economy'
 import { letterDeletable } from '../../src/composables/inboxMail'
+import { enterActionName } from '../../src/composables/eventName'
+import { weekRange } from '../../src/shared/dates'
 import type { Offer, Snapshot } from '../../src/shared/protocol'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND ITEM 2 IS ABOUT localStorage. The same shim
@@ -451,5 +454,118 @@ describe('R14-2 – the bin, and what delete means for each state', () => {
     expect(at(kitOffer({ state: 'refused' }), 102)).toBe(true)
     expect(at(kitOffer({ state: 'expired' }), 102)).toBe(true)
     expect(at(deskLetter(), 102)).toBe(true)
+  })
+})
+
+// ===========================================================================
+// DEFECT D4 – `Enter` is ambiguous (docs/specs/e2e-coverage.md §12).
+//
+// The highest-priority item on that list, and the reason gap 8.1 exists: entering a tournament
+// through the UI has no end-to-end coverage at all, because a feed of eight cards renders eight
+// buttons whose entire accessible name is the word "Enter". Its own sentence: "Fixing D4 alone
+// unlocks 8.1."
+//
+// ⚠ AND THE VISIBLE LABEL MUST STILL BE IN THE NAME (WCAG 2.5.3, Label in Name) – a speech-input
+// user who says "Enter" has to reach the button that reads Enter. So the assertions below check
+// BOTH halves: the name identifies the event AND begins with the word on the button.
+// ===========================================================================
+describe('D4 – every Enter says which tournament it enters', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  /** A career whose feed really draws an Enter. Which week that is depends on the seed's own
+   *  calendar and her band, so it is FOUND rather than assumed. */
+  function seasonShowingEnter() {
+    for (const weeks of [6, 10, 14, 20, 26, 32, 40, 48]) {
+      const snapshot = toSnapshot(worldAfter(weeks))
+      const wrapper = mountSeason(snapshot)
+      const enters = wrapper.findAll('button').filter((b) => b.text() === 'Enter')
+      if (enters.length) return { wrapper, snapshot, enters }
+      wrapper.unmount()
+    }
+    throw new Error('no enterable event in the first 48 weeks of this career')
+  }
+
+  it('the fixture really draws one, so the assertions below are not vacuous', () => {
+    const { wrapper, enters } = seasonShowingEnter()
+    expect(enters.length).toBeGreaterThan(0)
+    wrapper.unmount()
+  })
+
+  it('names the event and the week – and still begins with the visible word', () => {
+    const { wrapper, snapshot, enters } = seasonShowingEnter()
+    for (const button of enters) {
+      const name = button.attributes('aria-label')
+      expect(name, 'an Enter with no accessible name is defect D4 itself').toBeTruthy()
+      // WCAG 2.5.3: the accessible name CONTAINS the visible label.
+      expect(name!).toContain(button.text())
+      expect(name!.startsWith('Enter')).toBe(true)
+      // ...and it identifies a real event on this snapshot, by name AND by its dates.
+      const named = snapshot.upcoming.filter((e) => name!.includes(e.label))
+      expect(named.length, `"${name}" names no event in the snapshot`).toBeGreaterThan(0)
+      expect(named.some((e) => name!.includes(weekRange(e.week)))).toBe(true)
+    }
+    wrapper.unmount()
+  })
+
+  it('...and two cards never share one name, which is the whole defect', () => {
+    // A season carries the same rung more than once, so the label alone is not an identity - the
+    // week is what makes it one. If a career only ever shows a single Enter this is trivially true,
+    // so the claim is stated over whatever the feed drew.
+    const { wrapper, enters } = seasonShowingEnter()
+    const names = enters.map((b) => b.attributes('aria-label'))
+    expect(new Set(names).size).toBe(names.length)
+    wrapper.unmount()
+  })
+
+  it("the CALENDAR's Enter carries the same kind of name – the defect names both screens", async () => {
+    // Mounted, not pinned: open a marker, which is the only way to that button, and read the name
+    // off the rendered control.
+    const snapshot = toSnapshot(worldAfter(12))
+    useGameStore().snapshot = snapshot
+    const wrapper = mount(CalendarScreen, { global: { stubs: { teleport: true } } })
+    const markers = wrapper.findAll('.cal-marker')
+    expect(markers.length, 'the calendar drew no enterable marker to open').toBeGreaterThan(0)
+    await markers[0].trigger('click')
+
+    const enter = wrapper.findAll('button').find((b) => b.text() === 'Enter')
+    expect(enter, 'the marker card has no Enter to name').toBeTruthy()
+    const name = enter!.attributes('aria-label')
+    expect(name).toBeTruthy()
+    expect(name!).toContain(enter!.text())
+    expect(name!.startsWith('Enter')).toBe(true)
+    const named = snapshot.upcoming.find((e) => name!.includes(e.label) && name!.includes(weekRange(e.week)))
+    expect(named, `"${name}" names no event in the snapshot`).toBeTruthy()
+    wrapper.unmount()
+  })
+
+  it('...and it is literally the same function, so the two surfaces cannot drift', () => {
+    // D11's family: duplicate names across live surfaces. One helper, two callers.
+    const event = { label: 'World Tour 50', week: 432 }
+    expect(enterActionName(event)).toBe(`Enter the World Tour 50, ${weekRange(432)}`)
+    for (const rel of ['src/components/screens/SeasonScreen.vue', 'src/components/screens/CalendarScreen.vue']) {
+      const src = repoFile(rel)
+      expect(src.length).toBeGreaterThan(500)
+      expect(src, `${rel} does not read the shared name`).toContain("from '../../composables/eventName'")
+    }
+  })
+})
+
+// ===========================================================================
+// DEFECT D9 – the seed input was placeholder-only (docs/specs/e2e-coverage.md §12).
+// ===========================================================================
+describe('D9 – the friendly-match seed is a NAMED textbox', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('has a real label bound to it, not a placeholder standing in for one', () => {
+    const wrapper = mountSeason(toSnapshot(worldAfter(8)))
+    const input = wrapper.find('input#friendly-seed')
+    expect(input.exists()).toBe(true)
+
+    const label = wrapper.find('label[for="friendly-seed"]')
+    expect(label.exists(), 'a placeholder is not a name - it disappears on the first keystroke').toBe(true)
+    expect(label.text().length).toBeGreaterThan(0)
+    // ...and the placeholder is a hint again rather than the only thing naming the field
+    expect(input.attributes('placeholder')).not.toContain('seed')
+    wrapper.unmount()
   })
 })
