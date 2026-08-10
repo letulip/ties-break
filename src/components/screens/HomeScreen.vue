@@ -864,25 +864,60 @@ function openRankHelp(): void {
                margins. Same semantics, and not one pixel moves. -->
           <p class="diary-date" role="heading" aria-level="1">{{ dateLine }}</p>
           <div class="diary-tools">
-            <button class="diary-tool" aria-label="Go to the news feed" title="News" @click="jumpToNews">
+            <!-- ⚠ D15 (docs/specs/e2e-coverage.md §12) – THE TWO DOTS ON THIS HEADER, AS WORDS. Both
+                 were `<span class="diary-tool-dot"></span>`: no role, no text, no label, so the app's
+                 two unread markers were invisible to a screen reader AND to the e2e level, which is
+                 why `sponsor-inbox.spec.ts` can assert that signing empties the letter table but not
+                 that the marker goes out - the fact a player actually navigates by.
+                 It is D7's fix, one screen over, applied verbatim: the dot is a named `role="img"`
+                 handed to the button as its DESCRIPTION, never as part of its name. Both buttons
+                 already carry an explicit `aria-label`, so a dot arriving cannot rename them - which
+                 is the half of D7 that mattered and is free here. -->
+            <button
+              class="diary-tool"
+              aria-label="Go to the news feed"
+              title="News"
+              :aria-describedby="newsUnseen ? 'diary-dot-news' : undefined"
+              @click="jumpToNews"
+            >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
               </svg>
               <!-- It goes out when the bell is tapped - see `newsUnseen` in the script for the
                    ruling and for what the dot used to assert instead. -->
-              <span v-if="newsUnseen" class="diary-tool-dot"></span>
+              <span
+                v-if="newsUnseen"
+                id="diary-dot-news"
+                class="diary-tool-dot"
+                role="img"
+                aria-label="Unread news"
+              ></span>
             </button>
             <!-- THE INBOX. An envelope at the export's own 22px / 1.7 stroke, inline like the bell,
                  so nothing can 404 and nothing needs a mask. Its dot is the engine's open-offer fact
                  OR an unopened arrival - see the note beside `inboxDot` in the script for why one
                  marker now answers two questions, and how each of them goes out. -->
-            <button class="diary-tool" aria-label="Open the inbox" title="Inbox" @click="openInbox">
+            <button
+              class="diary-tool"
+              aria-label="Open the inbox"
+              title="Inbox"
+              :aria-describedby="inboxDot ? 'diary-dot-inbox' : undefined"
+              @click="openInbox"
+            >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="2.5" y="5" width="19" height="14" rx="2"></rect>
                 <path d="M3 6.5 12 13l9-6.5"></path>
               </svg>
-              <span v-if="inboxDot" class="diary-tool-dot"></span>
+              <!-- ONE MARKER, TWO QUESTIONS, and the sentence says both – see `inboxDot` in the
+                   script: an offer the engine is holding open, OR a letter that arrived unopened. -->
+              <span
+                v-if="inboxDot"
+                id="diary-dot-inbox"
+                class="diary-tool-dot"
+                role="img"
+                aria-label="A letter waiting on an answer"
+              ></span>
             </button>
             <button class="diary-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

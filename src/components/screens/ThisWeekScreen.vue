@@ -170,7 +170,16 @@ const spendRange = computed<[number, number]>(() => {
     <template #header>
       <div class="week-topbar">
         <span class="week-topbar-slot" aria-hidden="true"></span>
-        <p class="week-topbar-line">{{ dateLine }}</p>
+        <!-- ⚠ D10 (docs/specs/e2e-coverage.md §12), the half that was on nobody's list. This is the
+             app's most-asserted string and it was a plain `<p>`: the one line that says WHICH week
+             this screen is about could not be reached as a heading, so a screen-reader user landing
+             on the takeover had no landmark for it and a spec had to address it as free text.
+             `role`/`aria-level` on the existing `<p>` rather than an `<h1>`, which is Home's own
+             ruling on the identical line: `.week-topbar-line` carries its own size and weight inside
+             the three-slot header row, and a real `<h1>` would arrive with the browser's font-size
+             and margins and break the centring against the ×. Same semantics, not one pixel moves.
+             Level 1 because it is the screen's title and the two `<h2>`s below it are its sections. -->
+        <p class="week-topbar-line" role="heading" aria-level="1">{{ dateLine }}</p>
         <button
           v-if="showRecap"
           class="week-topbar-slot week-close"

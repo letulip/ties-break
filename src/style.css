@@ -3685,3 +3685,9 @@ button.linkish:hover:not(:disabled) {
   line-height: 1.4;
   color: var(--muted);
 }
+
+/* THE PLAN / MARKET SWITCHER (docs/specs/training-dials.md §9a). The app's one segmented row, so no
+   component is invented; it only needs the air under it that every other head on this screen has. */
+.cm-tabs {
+  margin-bottom: 12px;
+}

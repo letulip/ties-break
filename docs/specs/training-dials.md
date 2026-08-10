@@ -8,9 +8,9 @@ last-reviewed: 2026-08-10
 
 # The week is the plan – making the calendar real, and giving the coach a job
 
-**Status: the ENGINE slice (§2–§6, §10, §11) is BUILT and shipped; §7, §8 and §9 are designed and NOT
-built.** See the 🔨 block below for what landed, the three places the code contradicted this page, and
-the seams the remaining slices plug into.
+**Status: the ENGINE slice (§2–§6, §10, §11) and the SCREEN (§9) are BUILT and shipped; §7 and §8 are
+designed and NOT built.** See the 🔨 block below for what landed, the places the code contradicted
+this page, and the seams the remaining slices plug into.
 
 **Design proposal. Nothing here is built, and nothing in `src/` was touched to write it.** Third
 draft, 09.08, after the owner's corrections to the layout. Where a number cannot be established
@@ -110,7 +110,7 @@ week and rested knock – the two versions agree at 1, whatever the player ticke
 | **§9, the screen** | `planWeek` / `planSessions` / `sessionCounts` / `resolveWeek` / `planShapeError` / `planFromWeek`, and `Snapshot.planDayCapacity` – the day-head capacity for the week the main button plays, carried as data because `summerBlockWeek` is not a predicate a screen could re-derive | `src/engine/plan.ts`, `src/shared/protocol.ts` |
 | **§9, the command** | `setPlan` takes a `plan.week`, re-validates the shape engine-side and DERIVES `train`/`rest` from it – the caller's own pair is ignored, so there is exactly one writer | `src/worker/sim.worker.ts` |
 | **§7, the coach's intervention** | nothing built, and nothing in the way: a proposal is a `SessionKind[][]` written through the same `setPlan` path, and `planShapeError` is the only rule it has to satisfy | – |
-| **§7 + §9, the Calendar** | ⚠ **NOT DONE, AND IT IS A REAL GAP.** `calendarWeekFor` still lays its days out with the preset expander (`sessionsForPlan` + `sessionDays`) rather than reading `plan.week`, so the moment a player ticks a custom week the Calendar will draw the wrong DAYS. It is identical for every legacy and migrated plan, which is why it is not a defect today – it becomes one when §9 ships. The switch is `resolveWeek(planWeek(plan), snap.planDayCapacity)`, plus a decision about what `gymIndex` means once Fitness is a real kind | `src/composables/weekDays.ts` |
+| **§7 + §9, the Calendar** | ✅ **DONE with the screen (10.08).** `calendarWeekFor` reads `resolveWeek(planWeek(plan), snap.planDayCapacity)`, and `gymIndex` is gone: a matrix has no single gym index, so `CalendarWeek` carries `planDays` (`rest` / `court` / `gym` per day) and `weekGrid.ts` stops re-deriving the answer from a session COUNT. The owner ruled what the gym slot becomes (10.08, «либо тренер решает – это и остается в текущем варианте, либо родитель галочки проставит – тогда что прокликал, то и ставим»), so Tuesday stops being a convention and a preset – which ticks `general` seven times over – draws no gym day at all, which is the migration consequence §10 predicted | `src/composables/weekDays.ts`, `src/composables/weekGrid.ts` |
 
 
 ---
@@ -550,6 +550,40 @@ no accordion anywhere.
 
 A week the player does not own – away, off, exams, rehab – draws as it does today and the checkboxes
 are inert, with the sentence saying why.
+
+### ✅ 9b/9c/9d as BUILT (10.08) – and the four things that did not survive contact with the code
+
+`src/components/HerWeekTab.vue`, on `CoachMarketScreen`'s new `SegmentedRow`. Measured in a real
+browser through the e2e harness, not computed from the sheet:
+
+| | 375×667 | 390×844 |
+|---|---|---|
+| column width | **45.56px** (§9c predicted 45.6) | 47.70px |
+| gap | 4px | 4px |
+| cell height | 44px | 44px |
+| tab height | **560px** against ~567px of visible content | 560px |
+| page scroll | 839 vs 667 – 172px, all of it the market head above the tab | **none: 844 vs 844** |
+| horizontal overflow | none | none |
+
+1. **The block is a `div`, not a `section`.** The app's bare `section` rule is a padded panel and it
+   took the columns to **40.7px** – under the tap target. Caught in the browser; §9c's arithmetic was
+   right and its assumption about the element was not.
+2. **The per-day limit needed WORDS as well as dots.** On an ordinary school week five of seven
+   columns are full, so four of the five blocks render almost entirely disabled and the tab reads as
+   a broken screen. One line under the day heads says the rule.
+3. **The per-block subtitle from §2's table is not on screen.** Drawn once, measured at +85px down a
+   tab whose whole argument is that it is one screen and a nudge. §9b's own layout is a title line
+   and seven boxes; the names carry what each row works on.
+4. **The checkboxes stay LIVE on a week she is away**, where §9b says they should be inert. A plan is
+   a standing statement, `setPlan` accepts one on any week, and the exam fortnight KEEPS her sessions
+   – freezing the grid would stop him planning the week after, which is a refusal the engine does not
+   make. A strip carries the calendar's own sentence about the coming week instead, and claims
+   nothing about whether the plan runs in it. ⚠ An earlier draft DID claim it ("this plan starts when
+   she is back") and put that on the off-season, whose own read-out says the opposite.
+
+Also built: the day heads are `DAY_SHORT` (`MON`…`SUN`) rather than §9b's `M T W T F S S` sketch –
+§9d's own rule, and two Ts and two Ss are not a legend. §9b item 2 (the coach's line) is absent
+because §7 is not built; there is nothing to render.
 
 ### 9c. 375px, measured
 

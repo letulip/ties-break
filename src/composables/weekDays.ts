@@ -35,28 +35,23 @@
 // WHERE EVERY NUMBER COMES FROM, because a calendar that invents facts is worse than no calendar
 // -------------------------------------------------------------------------------------------------
 //
-// HOW MANY SESSIONS: `plan.train` per cent OF SEVEN DAYS, rounded. It is not a lookup table, and that
-// matters - `train` already MEANS "the share of the week she is on court" (protocol.ts WeekPlan: train
-// + rest === 100), so the day count is that sentence read literally. The three presets fall out of it
-// exactly as the owner named them, with nothing to keep in sync:
+// HOW MANY SESSIONS, AND WHICH DAYS: `planWeek(plan)` - the save's own seven-day matrix, or, for a
+// career that predates v47, the arrangement that scalar has always been drawn as. Neither number is
+// invented here any more. What this file adds is `resolveWeek(..., capacity)`: the plan is a STANDING
+// statement and outlives the week it was built in, so three doubled days built in July are laid back
+// out across seven single days in September rather than drawn as a week the engine will not run.
 //
-//     light   60/40  ->  60% of 7 = 4.2  ->  4 sessions
-//     balanced 75/25 ->  75% of 7 = 5.25 ->  5 sessions
-//     grind   85/15  ->  85% of 7 = 5.95 ->  6 sessions
+// ⚠ THE CAPACITY TRAVELS AS DATA (`Snapshot.planDayCapacity`) AND MAY NOT BE RE-DERIVED HERE.
+// `summerBlockWeek` refuses a doubled day on an injury, a booked family week, a tournament and a
+// rested knock as well as on the calendar - that is not a predicate a screen could reconstruct, which
+// is the same argument `CalendarWeek.schoolOver` and `summer` already travel under. Absent, it reads
+// as a school day (capacity 1), which is a no-op for every legacy plan: none of them doubles anything.
 //
-// A fourth preset, or a plan that stops being a preset at all, needs no edit here.
-//
-// WHICH DAYS: rest is claimed in a FIXED priority - Sunday first, then midweek, then Friday - so no
-// two rest days are ever adjacent at any of the three plans and the week always opens on court. This
-// is a display convention and it is written down as one; the engine resolves whole WEEKS and knows
-// nothing of days (there is no day resolution anywhere in the sim), so the alternative to a stated
-// convention is not a truer layout, it is no layout.
-//
-// THE ONE GYM DAY: everything above the four sessions the lightest plan buys goes on court, and one
-// session a week is fitness whatever the plan. So the plan reads as court time - 3 / 4 / 5 court days
-// against a constant gym day - which is the legible consequence the owner is paying for. Tuesday gets
-// it at all three plans (see GYM_PRIORITY), so the shape of her week does not shuffle when he moves a
-// preset.
+// THE GYM DAY IS WHEREVER FITNESS IS TICKED - owner, 10.08: «либо тренер решает - это и остается в
+// текущем варианте, либо родитель галочки проставит - тогда что прокликал, то и ставим». Tuesday
+// stops being a convention. The visible consequence for a loaded career is the one §10 of the spec
+// predicted and ruled: the migration writes `general` on every session day, so a v46 career opens
+// with NO gym day drawn, and the plan tab's first invitation is to decide whether one of them is one.
 //
 // THE MATCH DAY: a booked practice match takes the week's LAST court day, which is Saturday at every
 // plan. Same class of convention as the rest days, same reason.
@@ -84,7 +79,15 @@ import {
   surfaceBlockFor,
 } from '../engine/season/calendar'
 import { layoffCoversWeek } from '../engine/world'
-import { sessionDays, sessionsForPlan } from '../engine/plan'
+import {
+  DAY_CAPACITY_FREE,
+  DAY_CAPACITY_SCHOOL,
+  planSessions,
+  planWeek,
+  resolveWeek,
+  sessionDays,
+  sessionsForPlan,
+} from '../engine/plan'
 import { knockGoverns } from '../engine/knock'
 import { surfaceStyleHint } from '../engine/match/style'
 import { vacationPackage } from '../engine/economy'
@@ -93,7 +96,7 @@ import { vacationPackage } from '../engine/economy'
 import { feedContext, feedShows, preferredWeekEvent } from './tierState'
 import { weekLabel, weekSpan } from '../shared/dates'
 import type { Surface } from '../engine/match/types'
-import type { Snapshot, UpcomingEvent } from '../shared/protocol'
+import type { SessionKind, Snapshot, UpcomingEvent } from '../shared/protocol'
 
 /** The grid's column heads, Monday first – the same Monday..Sunday span `shared/dates.ts` builds
  *  every date range from, so the columns and the printed dates cannot disagree about which day is
@@ -104,10 +107,30 @@ export const DAY_LONG = [
   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
 ] as const
 
-/** The fitness day is claimed in THIS order among the days that are already sessions, which lands it
- *  on Tuesday at all three presets. Deliberately stable: a player moving grind -> light should see
- *  court days disappear, not his whole week re-shuffle. */
+/** ⚠ THE TUESDAY CONVENTION, AND NOTHING DRAWS FROM IT ANY MORE (v47, owner 10.08). The fitness day
+ *  used to be claimed in THIS order among the days that were already sessions, which landed it on
+ *  Tuesday at all three presets. Since the player ticks Fitness himself, the calendar draws the gym
+ *  wherever he ticked it and this order decides nothing - it is kept because `gymDayIndex` below is
+ *  the answer to "which day was the drawn gym day BEFORE the plan became a matrix", which is a
+ *  question the v46 -> v47 migration's own note (engine/migrations.ts) refers to and the tests pin. */
 const GYM_PRIORITY: readonly number[] = [1, 3, 5, 0, 2, 4, 6]
+
+/** WHAT THE PLAN MADE OF ONE DAY: a day off, a day on court, or a day in the gym.
+ *
+ *  ⚠ ONE DERIVATION, AND IT IS THE REASON `CalendarWeek` CARRIES `planDays` AT ALL. `weekGrid.ts`
+ *  used to re-derive the same three-way answer from `sessionDays` + the week's single `gymIndex`,
+ *  under a note warning that a second spelling is how the picture and the plan drift apart on the one
+ *  week nobody looks at twice. A matrix has no single gym index, so the choice was a second spelling
+ *  or none; this is none.
+ *
+ *  A DOUBLED DAY THAT MIXES THE TWO IS A COURT DAY. The mark answers "what is this day", one word,
+ *  and she is on court that day - `DayKind` gained nothing at v47 (spec §9d) and a day that is only
+ *  fitness is the only day the gym owns outright. */
+export type PlanRole = 'rest' | 'court' | 'gym'
+export function planRoleFor(day: readonly SessionKind[]): PlanRole {
+  if (day.length === 0) return 'rest'
+  return day.every((k) => k === 'fitness') ? 'gym' : 'court'
+}
 
 /** What one cell of the grid is. */
 export type DayKind =
@@ -152,11 +175,17 @@ export interface CalendarWeek {
   /** the absolute career week these days belong to */
   week: number
   days: CalendarDay[]
-  /** sessions the plan buys (court + gym), 0..7 */
+  /** sessions the plan buys (court + gym). ⚠ NOT A DAY COUNT SINCE v47 – a school-free week may put
+   *  two on one day, so this can exceed the number of days she trains on. */
   sessions: number
+  /** DAYS with court work on them – days, not sessions, and the same for `planDays`'s `gym`. */
   courtDays: number
-  /** the gym day's index, or null when the plan buys too little for one */
-  gymIndex: number | null
+  /** ⚠ WHAT THE PLAN MADE OF EACH DAY, Monday..Sunday, WHATEVER THIS WEEK'S OWN IDENTITY OVERWROTE
+   *  `days[].kind` WITH. On an ordinary week it agrees with `days[].kind` by construction; on the
+   *  exam fortnight and the layoff week `days` is flattened to one kind – the week's identity
+   *  outranks the plan there – but the plan is still bought and still billed, so the grid needs to
+   *  know which days it paid for. `weekGrid.ts` reads this instead of re-deriving it. */
+  planDays: PlanRole[]
   /** the block's court, for the grid's tint */
   surface: Surface
   /** the engine's own verdict on that court for her build, or null when it is neutral */
@@ -209,7 +238,11 @@ export type CalendarWeekFacts = Pick<
   // is asked about rather than only for `snap.week`. Optional for the same reason `ageYears` is –
   // hand-built fixtures pre-date it – and a fixture that omits it gets a schoolgirl, which is what
   // every one of them was written about.
-  Partial<Pick<Snapshot, 'schoolEndsWeek'>>
+  Partial<Pick<Snapshot, 'schoolEndsWeek'>> &
+  // v47: how many sessions ONE DAY of the drawn week may hold (1, or 2 with no school). Optional for
+  // the same reason, and absence means a school day – which is a no-op for every plan written before
+  // v47, since none of them puts two sessions anywhere.
+  Partial<Pick<Snapshot, 'planDayCapacity'>>
 
 /** ⚠ THE SUMMER WINDOW MOVED INTO THE ENGINE (W3-SUMMER) AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
  *  NAMES, so every existing caller and every test that imports `SUMMER_WEEKS` / `isSummerWeek` from
@@ -268,15 +301,21 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   const block = surfaceBlockFor(week)
   const surface = dominantSurface(block)
   const surfaceNote = surfaceStyleHint(snap.profile.playStyle, surface)
-  const sessions = sessionsForPlan(snap.plan.train)
-  const gymIndex = gymDayIndex(sessions)
-  const session = sessionDays(sessions)
-  const courtDays = session.filter((d) => d !== gymIndex).length
+  // ⚠ THE PLAN, LIVED IN THIS WEEK. See the header: `planWeek` is the save's own matrix (or the
+  // arrangement a pre-v47 scalar has always been drawn as) and `resolveWeek` is what a standing plan
+  // does when the week it is spent in cannot hold it. Both are the ENGINE's, imported rather than
+  // re-spelled, so the days the calendar draws and the days the tick bills can never disagree.
+  const capacity = snap.planDayCapacity ?? DAY_CAPACITY_SCHOOL
+  const laid = resolveWeek(planWeek(snap.plan), capacity)
+  const planDays = laid.map(planRoleFor)
+  const sessions = planSessions(laid)
+  const session = planDays.flatMap((role, d) => (role === 'rest' ? [] : [d]))
+  const courtDays = planDays.filter((role) => role === 'court').length
   const base = {
     week,
     sessions,
     courtDays,
-    gymIndex,
+    planDays,
     surface,
     surfaceNote,
     // Asked once, here, and carried on the week - see the field's note on CalendarWeek for why the
@@ -391,7 +430,9 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
 
   // 5. AN ORDINARY TRAINING WEEK: the plan, read back as days.
   const practice = snap.practices.find((p) => p.week === week)
-  const matchIndex = practice ? (session.filter((d) => d !== gymIndex).at(-1) ?? null) : null
+  const matchIndex = practice
+    ? (planDays.flatMap((role, d) => (role === 'court' ? [d] : [])).at(-1) ?? null)
+    : null
   // A KNOCK THE DECISION GOVERNS.
   //
   // ⚠ `knockGoverns`, NEVER `knockLive`, AND THE ENGINE HAS ALREADY PAID FOR THIS ONE. `knockLive` is
@@ -407,8 +448,8 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   const knockIndex = knock ? (session[0] ?? 0) : null
 
   const days: CalendarDay[] = DAY_SHORT.map((short, index) => {
-    const isSession = session.includes(index) && !resting
-    const kind: DayKind = index === matchIndex ? 'match' : !isSession ? 'rest' : index === gymIndex ? 'gym' : 'court'
+    const role = resting ? 'rest' : planDays[index]
+    const kind: DayKind = index === matchIndex ? 'match' : role
     const beat: DayBeat | null =
       index === matchIndex ? 'match' : knock !== null && index === knockIndex ? 'knock' : null
     return {
@@ -438,12 +479,13 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     readout: trainingReadout({
       sessions,
       courtDays,
-      gymIndex,
+      gymDays: planDays.filter((role) => role === 'gym').length,
+      trainingDays: session.length,
+      doubled: laid.filter((day) => day.length >= DAY_CAPACITY_FREE).length,
+      canDouble: capacity >= DAY_CAPACITY_FREE,
       resting,
       knockPart: knock?.part ?? null,
       matchIndex,
-      summer: base.summer,
-      schoolOver: base.schoolOver,
     }),
   }
 }
@@ -454,15 +496,16 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
 function trainingReadout(x: {
   sessions: number
   courtDays: number
-  gymIndex: number | null
+  gymDays: number
+  /** DAYS she trains on – `sessions` when nothing is doubled, and fewer when something is. */
+  trainingDays: number
+  /** days carrying two sessions. What `summerBlock.loadFactor` is now the price OF. */
+  doubled: number
+  /** may a day of THIS week hold two at all? `Snapshot.planDayCapacity`, read as a yes/no. */
+  canDouble: boolean
   resting: boolean
   knockPart: string | null
   matchIndex: number | null
-  /** W3-SUMMER: the holidays, in which the ENGINE runs two sessions a day. See the note below. */
-  summer?: boolean
-  /** W4-SCHOOL: ...and past her last school year, EVERY week is one of those. Same engine rule
-   *  (`summerLoadFactor`), so the same sentence – minus the clause about school, which is over. */
-  schoolOver?: boolean
 }): string {
   if (x.resting) {
     // ⚠ A BOOKED FRIENDLY IS NOT CANCELLED BY A RESTED KNOCK - only `rollInjury` cancels bookings - so
@@ -471,24 +514,25 @@ function trainingReadout(x: {
     const match = x.matchIndex === null ? '' : ` The booked match on ${DAY_LONG[x.matchIndex]} still stands.`
     return `Resting the ${x.knockPart ?? 'knock'} – off the training court all week.${match}`
   }
-  // ⚠ THE SUMMER SENTENCE IS THE ENGINE'S, NOT A FLOURISH (W3-SUMMER). Every other clause here reads
-  // the plan back; this one reports a rule the sim runs - `summerBlockWeek` doubles the day's sessions
-  // through `growWeek`'s loadFactor and charges the week 3 condition for it - and the owner's whole
-  // point is that the block must be legible: «сделает прокачку эффективнее и более полной». A player
-  // who cannot see it will book his family holiday straight through it without knowing what he traded.
+  // ⚠ THE TWO-A-DAY SENTENCE NOW FOLLOWS WHAT HE BUILT, NOT WHAT MONTH IT IS (v47, spec §3). It used
+  // to fire on `summer`/`schoolOver` alone: «N days on, two sessions a day – no school, so the work
+  // doubles up», printed over a plan that could not express a doubled day at all. The engine stopped
+  // paying for the calendar in this wave – `summerLoadFactor` follows `doublingShare` – so a sentence
+  // that kept promising two-a-day on an undoubled week would be the screen billing him for a choice he
+  // did not make, which is the exact double-count that change removed.
   //
-  // It replaces the session line rather than being appended to it, because the count IS different: the
-  // plan's four or five sessions are being run twice a day.
+  // The school-free week that is NOT doubled says so instead, because that is the invitation §3 is
+  // about: the block is visible for the first time and he is the one who takes it.
   const plan =
     x.sessions === 0
       ? 'No sessions – a full week off court.'
-      : x.schoolOver === true
-        ? `${x.sessions} days on, two sessions a day – the mornings are hers now.`
-        : x.summer === true
-          ? `${x.sessions} days on, two sessions a day – no school, so the work doubles up.`
-          : x.gymIndex === null
+      : x.doubled > 0
+        ? `${x.sessions} sessions over ${x.trainingDays} days – ${x.doubled} of them two sessions a day.`
+        : x.canDouble
+          ? `${x.sessions} sessions, one a day – no school, so there is room to double up.`
+          : x.gymDays === 0
             ? `${x.sessions} sessions, all of them on court.`
-            : `${x.sessions} sessions – ${x.courtDays} on court, 1 in the gym.`
+            : `${x.sessions} sessions – ${x.courtDays} on court, ${x.gymDays} in the gym.`
   const match = x.matchIndex === null ? '' : ` Practice match on ${DAY_LONG[x.matchIndex]}.`
   const knock = x.knockPart === null ? '' : ` She is training on a sore ${x.knockPart}.`
   return `${plan}${match}${knock}`

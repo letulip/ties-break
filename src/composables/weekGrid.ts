@@ -95,10 +95,10 @@
 // itself: a rule with content in it - a table of shapes, a band, an arc for a week away - is a rule
 // worth pinning on values, and a rule inside a template is decoration that cannot be tested. The
 // screen composes; this file decides.
+// ⚠ AND SINCE v47 IT TAKES NO VALUE FROM THAT MODULE AT ALL. It used to import `sessionDays` to
+// re-derive which day indexes the plan bought; the plan is a matrix now and the week carries the
+// answer as `planDays` - see `planRoles` below for why that is a repair rather than a rename.
 import type { CalendarDay, CalendarWeek, DayBeat, DayKind } from './weekDays'
-// ...and the one VALUE this file takes from the day layout: which day indexes the plan bought. It is
-// imported rather than re-derived on purpose - see `planRoles`.
-import { sessionDays } from './weekDays'
 import { hash32 } from './fridgeNote'
 
 /** One coloured block in the grid. Hours are PRESENTATION – see the header. */
@@ -872,13 +872,14 @@ function namedSession(blocks: DayBlock[], seed: string, week: number, index: num
  *  identity outranks the plan there - but the plan is still bought and still billed, so the shape
  *  needs to know which days it paid for.
  *
- *  ⚠ IT IS THE SAME RULE, NOT A SECOND COPY OF IT: `sessionDays` and the week's own `gymIndex` are
- *  `weekDays.ts`'s, imported rather than re-derived, so the exam week's sessions land on exactly the
- *  days an ordinary week's would. A second spelling here is how the picture and the plan would drift
- *  apart on the one week nobody looks at twice. */
+ *  ⚠ IT IS NOT A RULE ANY MORE, IT IS A FIELD (v47). It used to re-derive the three-way answer from
+ *  `sessionDays(week.sessions)` and the week's single `gymIndex`, under this note's own warning that a
+ *  second spelling is how the picture and the plan drift apart on the one week nobody looks at twice.
+ *  A ticked week is a MATRIX with no single gym index and no fixed rest priority, so re-deriving it
+ *  from a session COUNT stopped being possible at all - which is what made the warning come true
+ *  rather than what let it be ignored. `weekDays.ts` computes `planDays` once and this reads it. */
 function planRoles(week: CalendarWeek): OrdinaryKind[] {
-  const session = new Set(sessionDays(week.sessions))
-  return week.days.map((d) => (!session.has(d.index) ? 'rest' : d.index === week.gymIndex ? 'gym' : 'court'))
+  return [...week.planDays]
 }
 
 /** The seven columns for a week. EVERY week – the grid is drawn on all eight day kinds and only the
