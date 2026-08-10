@@ -196,6 +196,31 @@ const KIND_LOADS: Record<SessionKind, readonly string[]> = {
  *  and a penalty («мы ни за что не наказываем»). */
 export const KNOCK_AIM_TILT = 2.0
 
+/** WHAT THIS WEEK LOADED, as a share of the week per part - the fold both tilted tables read.
+ *
+ *  Empty when the week holds no sessions, and empty when every session was `general` (which loads
+ *  nothing by design - see `KIND_LOADS`). An empty map is the signal to return the shipped table
+ *  untouched, which is what makes an ordinary week byte-identical.
+ *
+ *  ⚠ EXPORTED FOR THE INJURY SIDE (docs/specs/match-retirement.md §5), and only the FOLD is shared,
+ *  not the table. `KNOCK_PARTS` is what a fifteen-year-old mentions in a car on a Friday;
+ *  `BODY_REGIONS` is the epidemiology of tennis injuries, twelve entries including an abdominal
+ *  tear. Sharing this map lets a retirement land where she worked without either module inheriting
+ *  the other's anatomy - the note above `KNOCK_PARTS` argues at length for keeping those apart and
+ *  that argument is unchanged. Pure; zero draws. */
+export function loadedPartShares(week: readonly (readonly SessionKind[])[]): ReadonlyMap<string, number> {
+  const out = new Map<string, number>()
+  const sessions = planSessions(week)
+  if (sessions === 0) return out
+  const counts = sessionCounts(week)
+  for (const kind of SESSION_KINDS) {
+    const n = counts[kind]
+    if (n === 0) continue
+    for (const part of KIND_LOADS[kind]) out.set(part, (out.get(part) ?? 0) + n / sessions)
+  }
+  return out
+}
+
 /** The part table this week draws through. Returns the SHIPPED array itself when nothing tilts it, so
  *  an ordinary week walks byte-identical cumulative sums.
  *
@@ -204,19 +229,11 @@ export const KNOCK_AIM_TILT = 2.0
  *  every weight by something like 0.9999999999999999 and could flip a boundary uniform into the
  *  neighbouring part. That is a shipped career's knock moving for no reason anyone could see. */
 export function knockPartWeights(week: readonly (readonly SessionKind[])[]): readonly { part: string; weight: number }[] {
-  const sessions = planSessions(week)
-  if (sessions === 0) return KNOCK_PARTS
-  const counts = sessionCounts(week)
-  const loaded = new Map<string, number>()
-  for (const kind of SESSION_KINDS) {
-    const n = counts[kind]
-    if (n === 0) continue
-    for (const part of KIND_LOADS[kind]) loaded.set(part, (loaded.get(part) ?? 0) + n)
-  }
+  const loaded = loadedPartShares(week)
   if (loaded.size === 0) return KNOCK_PARTS
   let total = 0
   const tilted = KNOCK_PARTS.map((p) => {
-    const share = (loaded.get(p.part) ?? 0) / sessions
+    const share = loaded.get(p.part) ?? 0
     const weight = p.weight * (1 + (KNOCK_AIM_TILT - 1) * share)
     total += weight
     return { part: p.part, weight }

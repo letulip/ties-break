@@ -148,7 +148,7 @@ export function retireHazard(pointNumber: number, stamina: number): number {
  *  ITF World Tennis Tour, 7,291 of ~266,900 matches (PLOS ONE, June 2024; see
  *  docs/research/retirement-and-withdrawal.md §7). Measured against a full career corpus in
  *  docs/specs/match-retirement.md §4; re-measure there before moving this number. */
-export const RETIRE_K = 0.08
+export const RETIRE_K = 0.07
 
 export function modifiedPServe(
   base: number,

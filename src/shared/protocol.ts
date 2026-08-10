@@ -2450,6 +2450,16 @@ export interface Snapshot {
    *  never reaches finalize (R11-2: nothing was on the line), and a walkover or a medical withdrawal
    *  never reaches it either, because she never took the court.
    *
+   *  ⚠⚠ RESTATED BY THE RETIREMENT SLICE (10.08), because the clause after the dash is now a
+   *  half-truth and a reader would take the wrong rule out of it. "She never took the court" is still
+   *  the correct test and still excludes the walkover and the medical withdrawal – but she CAN now
+   *  take the court and not finish, and a RETIREMENT does reach finalize. It is counted, and counted
+   *  as a LOSS in the event's own track, which is what it is: the tournament counts on her record and
+   *  the opponent's win counts on theirs (2026 ITF WTT Regs, Women's §XII.C.1.b; the WTT's System of
+   *  Merit §VI.B says it from the other side – "wins by retirement or default (after the match has
+   *  started) count as wins, but byes and walkovers do not"). Two comments in engine/world.ts, at the
+   *  prize money and the appearance fee, carried the same assumption and are restated there.
+   *
    *  ⚠ WHY A SPLIT W-L IS NOT MERELY COSMETIC. The Stats screen switches every other figure it shows
    *  – rank, points, the standings table, the counting results – with the ladder picker at the top of
    *  it, and left this one figure standing still underneath. A 24–9 that does not move when the

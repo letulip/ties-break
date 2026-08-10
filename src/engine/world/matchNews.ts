@@ -48,8 +48,20 @@ export function kidMatchEvent(
   const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
   const a = { ...(players[m.aId] ?? fallbackPlayer(m.aId)) }
   const b = { ...(players[m.bId] ?? fallbackPlayer(m.bId)) }
+  // ⚠ "ret." IS THE WHOLE MARKER, and it is the sport's own. A result sheet prints the score she
+  // stopped at with three letters after it – "lost to J. Novak 6-4 2-1 ret." – and every reader of
+  // tennis knows what that means without a sentence being spent on it. The scoreline is already
+  // short by construction (`simulateMatch` truncates), so this is the one token that tells the two
+  // apart, and it reads correctly in both directions: SHE retired, or the girl across the net did
+  // and she is through without having earned the last games.
+  //
+  // ⚠ SAME SUFFIX WHOEVER STOPPED, DIFFERENT VERB BEFORE IT, and that asymmetry is the rulebooks'
+  // and not ours: the winner of a retirement gets a full, undiscounted win (ITF WTT Women's
+  // §XII.C.1.b), so `beat` is the honest verb for the row where her opponent stopped. It is the
+  // WALKOVER the rules discount, and the game does not model one.
+  const ret = m.retiredId ? ' ret.' : ''
   return {
-    text: `${stage}: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(oppName)} ${kidScore ?? ''}`.trim(),
+    text: `${stage}: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(oppName)} ${kidScore ?? ''}${ret}`.trim(),
     match: { ...m, eventId: event.id, surface: event.surface, oppName, a, b },
   }
 }
