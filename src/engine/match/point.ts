@@ -102,9 +102,53 @@ export function paceAdvantage(server: MatchPlayer, receiver: MatchPlayer): numbe
 }
 
 // Per-point term (already min-capped at FATIGUE_CAP) for one player's stamina.
-function fatigueTerm(pointNumber: number, stamina: number): number {
+//
+// ⚠ EXPORTED SINCE THE RETIREMENT SLICE, and the export is the whole design of that feature rather
+// than a convenience. See `retireHazard` directly below.
+export function fatigueTerm(pointNumber: number, stamina: number): number {
   return Math.min(FATIGUE_CAP, (pointNumber - FATIGUE_START) * FATIGUE_RATE * (1 - stamina / 100))
 }
+
+/** How much she is spent, per point, as a NON-NEGATIVE number – `fatigueTerm` clamped at zero.
+ *
+ *  `fatigueTerm` is allowed to go negative (it is subtracted from p before `FATIGUE_START`, where
+ *  the multiplication by a negative point offset is harmless because the caller gates on
+ *  `ctx.pointNumber > FATIGUE_START`). A hazard cannot be negative, so the gate is expressed here
+ *  instead of being assumed by every reader. Exactly 0 for a player with stamina 100 and for every
+ *  point up to and including FATIGUE_START. */
+export function spentness(pointNumber: number, stamina: number): number {
+  return pointNumber <= FATIGUE_START ? 0 : Math.max(0, fatigueTerm(pointNumber, stamina))
+}
+
+/** THE RETIREMENT HAZARD – the per-point chance that this player stops.
+ *
+ *  ⚠ IT IS NOT A TIER KNOB, AND THAT IS THE DESIGN INSTRUCTION, NOT AN ECONOMY. A retirement rate
+ *  scaled by the sign on the door would say "W100s break girls, J30s do not", which is a statement
+ *  about tournaments; this says "a long match on tired legs breaks girls", which is a statement
+ *  about a body. Tier-dependence arrives anyway and for free: a harder draw plays longer matches
+ *  and more of them, so it integrates more hazard – measured, not asserted, in
+ *  docs/specs/match-retirement.md §4.
+ *
+ *  It reads `spentness`, i.e. THE SAME QUANTITY `modifiedPServe` already subtracts from p past
+ *  FATIGUE_START. One fatigue curve in this file, two consumers: it costs her points first and then,
+ *  at RETIRE_K times the same number, it costs her the match. A girl with stamina 100 can never
+ *  retire, and neither can anybody inside the first FATIGUE_START points – which is the honest
+ *  shape, because the fiction is exhaustion and not a slipped ankle at 2-2. See §7 of the spec for
+ *  what that deliberately does not model.
+ *
+ *  ⚠ ZERO DRAWS. This is arithmetic; the single uniform per side is drawn by `simulateMatch` off a
+ *  sub-stream private to the match seed, so adding this moved no existing sequence anywhere. */
+export function retireHazard(pointNumber: number, stamina: number): number {
+  return RETIRE_K * spentness(pointNumber, stamina)
+}
+
+/** The multiplier that turns "how spent she is" into "how likely she is to stop".
+ *
+ *  CALIBRATED, NOT CHOSEN. Target: 2.73% of matches end in a retirement by either player – women's
+ *  ITF World Tennis Tour, 7,291 of ~266,900 matches (PLOS ONE, June 2024; see
+ *  docs/research/retirement-and-withdrawal.md §7). Measured against a full career corpus in
+ *  docs/specs/match-retirement.md §4; re-measure there before moving this number. */
+export const RETIRE_K = 0.08
 
 export function modifiedPServe(
   base: number,
