@@ -595,6 +595,34 @@ const seasonChips = computed<TierChip[]>(() =>
   }),
 )
 
+// D6 – WHAT A CHIP SAYS WHEN NOBODY CAN SEE IT (a11y, docs/specs/e2e-coverage.md §12).
+//
+// A rung was a `<span class="pill tier-chip">` with a `title` tooltip: no role, no accessible name,
+// and – the part that actually loses information – its STATE living entirely in a CSS class. Six
+// states, six colours, and a screen reader hears the same six words whichever one is on. `title` is
+// not a fix: it is a tooltip, it is not spoken by default, and it never reaches a touch device at
+// all.
+//
+// So each chip becomes a named image (the label REPLACES the dense visual shorthand, which is the
+// same contract the trophy cabinet's cells keep) and the label says the state out loud. Every arm
+// below is built from what is already on the chip; nothing is re-derived and no new fact is
+// invented. `locked` reads `title` rather than `label` on purpose - the visible label opens with a
+// padlock emoji, and "lock emoji, Reach 150 pts" is not a sentence.
+function chipName(chip: TierChip): string {
+  switch (chip.state) {
+    case 'reached':
+      return `${chip.short}: reached, best finish ${chip.label}`
+    case 'outgrown':
+      return `${chip.short}: outgrown – ${chip.label}`
+    case 'locked':
+      return `${chip.short}: locked – ${chip.title}`
+    case 'waiting':
+      return `${chip.short}: open – ${chip.label}`
+    default:
+      return `${chip.short}: ${chip.label}`
+  }
+}
+
 // --- THE STRIP ONLY SHOWS THE RUNGS THAT ARE ABOUT HER (owner, 04.08) --------------------------
 //
 // «На домашнем экране давай из раздела season убирать j серию, когда переросла. Вообще для экономии
@@ -816,8 +844,19 @@ function openRankHelp(): void {
             <img class="diary-avatar" :src="headerAvatarUrl" alt="" />
           </button>
           <!-- OWNER'S RULING over the export, which prints a plain calendar date here: our week
-               label with the year in full, then the week's real days. shared/dates.ts owns it. -->
-          <p class="diary-date">{{ dateLine }}</p>
+               label with the year in full, then the week's real days. shared/dates.ts owns it.
+
+               D10 – IT IS THE PAGE'S HEADING AND IT HAD NO ROLE. This string is the most-asserted
+               one in the whole product ("W18 2033 · May 2 – May 8") and every test that wanted it
+               had to fall back to `getByText`, because a diary page whose subject is a WEEK carried
+               its subject in a bare `<p>`. Home has no other level-1 heading, and this is what a
+               diary entry is headed by, so that is the level.
+
+               ⚠ `role`/`aria-level` ON THE `<p>` RATHER THAN AN `<h1>` ELEMENT, and that is the one
+               decision here: `.diary-date` is laid over the photograph with its own size, weight and
+               shadow, and a real `<h1>` would arrive carrying the browser's own font-size and
+               margins. Same semantics, and not one pixel moves. -->
+          <p class="diary-date" role="heading" aria-level="1">{{ dateLine }}</p>
           <div class="diary-tools">
             <button class="diary-tool" aria-label="Go to the news feed" title="News" @click="jumpToNews">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1052,7 +1091,9 @@ function openRankHelp(): void {
         <!-- THE ROW IS THE ENGINE'S OPEN WINDOW PLUS ONE RUNG ABOVE IT; the rungs she has outgrown
              and the far top of the ladder are behind the ellipsis chips, which expand the row in
              place. Nothing is deleted - see the ruling quoted at `stripExpanded` in the script. -->
-        <div class="season-strip">
+        <!-- D6: the row is a named group (a `list` would be a lie - the ellipsis affordances inside
+             it are buttons, not list items) and every rung is a named image. See `chipName`. -->
+        <div class="season-strip" role="group" aria-label="Season ladder">
           <template v-for="(cell, i) in stripCells" :key="cell.key">
             <button
               v-if="cell.kind === 'gap'"
@@ -1073,9 +1114,12 @@ function openRankHelp(): void {
                 waiting: cell.chip.state === 'waiting',
                 outgrown: cell.chip.state === 'outgrown',
               }"
+              role="img"
+              :aria-label="chipName(cell.chip)"
               :title="cell.chip.title"
             >{{ cell.chip.short }} &middot; {{ cell.chip.label }}</span>
-            <span v-if="i < stripCells.length - 1" class="strip-arrow">&#8594;</span>
+            <!-- Decoration: the arrows say "and then", which the reading order already says. -->
+            <span v-if="i < stripCells.length - 1" class="strip-arrow" aria-hidden="true">&#8594;</span>
           </template>
           <button
             v-if="stripExpanded"
@@ -1094,7 +1138,11 @@ function openRankHelp(): void {
           <p v-if="!newsGroups.length" class="hint" style="margin: 0">No news yet.</p>
           <div v-for="group in newsGroups" :key="group.week" class="news-week">
             <p class="news-week-label">{{ weekLabel(group.week) }}</p>
-            <table>
+            <!-- D8: one table PER WEEK, so an unnamed one is not merely anonymous - a reader landing
+                 on it cannot tell which week's it is, and `getByRole('table', { name })` had a dozen
+                 identical candidates. The name is the label already printed above it, plus the noun,
+                 because "W12 2032" on its own does not say what the table holds. -->
+            <table :aria-label="`News – ${weekLabel(group.week)}`">
               <tbody>
                 <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">
                   <td v-if="e.type === 'match' && e.match" class="news-match-cell">

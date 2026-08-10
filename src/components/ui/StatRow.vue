@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 // U0 #9 – STAT ROW. «label … value», with the value carrying a MEANING in its colour. The handoff
 // names it as component 8 of 31 ("«лейбл … значение» с семантическим цветом (бюджет, тренировки)")
 // and docs/specs/ui-components.md deliberately left it out of the U0 slice: "it comes with the
@@ -24,7 +25,7 @@
 //
 // The geometry is design G's category row, verbatim: 11px gap, 14px/2px inset, the 17px glyph
 // slot, 13.5px/600 on the name and 13.5px/700 on the figure.
-withDefaults(
+const props = withDefaults(
   defineProps<{
     /** What the row is about. Falls back to the `label` slot when a caller needs markup. */
     label?: string
@@ -46,10 +47,41 @@ withDefaults(
 // 844px screen; ours has between one and nine and the owner's Q5 ruling is that real content may
 // scroll. A prop with no caller is a guess, and this component exists because the last one was
 // not taken.
+
+// =================================================================================================
+// D5 – A ROW WITH NO ROLE (a11y, docs/specs/e2e-coverage.md §12)
+// =================================================================================================
+// This component is the Money screen's ledger, its expense breakdown, its per-season history, the
+// sponsor's allowance and the academy's total - between five and forty rows on a screen - and every
+// one of them was a `<div>` of `<span>`s. Nothing there has a role, so the whole ledger was ONE run
+// of text as far as any test or any screen reader was concerned: no boundary between rows, no way to
+// ask for one, and the label, the running balance and the amount arriving as an unpunctuated
+// paragraph.
+//
+// `role="group"` + a name is the honest repair and `role="listitem"` is not: a listitem outside a
+// list is invalid ARIA and half the callers here are a SINGLE row inside a card (the academy total,
+// the sponsor's allowance), not a member of anything. A group is exactly "these parts belong
+// together", it is valid anywhere, it takes a name, and `getByRole('group', { name: /Entry fee/ })`
+// reaches the row a test means.
+//
+// ⚠ THE NAME IS BUILT FROM THE PROPS AND NOT FROM THE SLOTS, and that is a real limit rather than an
+// oversight. Every caller in the app passes `label`/`meta`/`value` as strings (they are engine
+// figures put through a formatter), so the name is the row's own visible text in its own order. A
+// future caller that renders its value through the default slot would get a name missing that half -
+// and would be telling this component something it has no way to read. Slots stay for markup, props
+// carry the sentence.
+const rowName = computed(() =>
+  [props.label, props.meta, props.value].filter((part) => part !== '').join(' – '),
+)
 </script>
 
 <template>
-  <div class="tb-statrow" :class="[`tb-statrow--${tone}`, { 'tb-statrow--ruled': divider }]">
+  <div
+    class="tb-statrow"
+    :class="[`tb-statrow--${tone}`, { 'tb-statrow--ruled': divider }]"
+    role="group"
+    :aria-label="rowName"
+  >
     <span v-if="$slots.icon" class="tb-statrow-icon"><slot name="icon" /></span>
     <span class="tb-statrow-label"><slot name="label">{{ label }}</slot></span>
     <span v-if="meta || $slots.meta" class="tb-statrow-meta"><slot name="meta">{{ meta }}</slot></span>

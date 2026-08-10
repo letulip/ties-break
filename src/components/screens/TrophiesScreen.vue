@@ -229,7 +229,18 @@ function hiddenCount(cell: Cell): number {
 }
 
 /** What a screen reader hears. The visual chips are dense shorthand (`3x'31`) that reads as noise
- *  when spoken, so the whole cell carries one honest sentence instead. */
+ *  when spoken, so the whole cell carries one honest sentence instead.
+ *
+ *  ⚠ D12 – AND FOR HALF THE CABINET IT HEARD NOTHING AT ALL (a11y, docs/specs/e2e-coverage.md §12).
+ *  A cell is a `<button>` only when it FOLDS - won, with more years than fit - so every not-yet-won
+ *  cell and every won-but-short one rendered as a `<div>` with this label on it, and a `<div>` has no
+ *  role for an `aria-label` to attach to. The attribute was inert: not spoken, and
+ *  `getByRole(..., { name })` had nothing to match, so the eighteen locked plates were unreachable.
+ *
+ *  The fix is `role="img"` on exactly those cells, and it is this function's own contract written
+ *  down rather than a new idea: "the whole cell carries one honest sentence instead" IS the img
+ *  contract - one name, standing in for content a reader should not be walked through. The foldable
+ *  ones stay buttons and keep taking their name from the same sentence. */
 function cellLabel(cell: Cell, shelf: Shelf): string {
   if (!cell.won) return `${shelf.full}, ${cell.label}: not won yet`
   const years = cell.chips.join(', ')
@@ -259,6 +270,7 @@ function cellLabel(cell: Cell, shelf: Shelf): string {
             :type="foldable(cell) ? 'button' : undefined"
             :aria-expanded="foldable(cell) ? isOpen(cell) : undefined"
             :aria-label="cellLabel(cell, shelf)"
+            :role="foldable(cell) ? undefined : 'img'"
             @click="toggle(cell)"
           >
             <span class="trophy-plate">
