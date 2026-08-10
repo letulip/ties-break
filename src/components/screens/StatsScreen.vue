@@ -141,6 +141,14 @@ const windowInfo = computed(() => {
 // Every match behind the number is a tournament match, so the split needs no new fact and no guess:
 // see `Snapshot.seasonRecord`. Practice friendlies and walkovers are not in either bucket because
 // they were never counted at all.
+// AGE_COLUMN – the owner, item 12 of 06.08 and again 09.08: «я просил возраста девочек добавить в
+// stats доп колонкой и в турнирах перед матчем тоже можно показывать».
+//
+// The column is in the standings table below, and the pre-match half is in TournamentFlow.vue. There
+// is nothing to compute here: `StandingRow.ageYears` arrives on the snapshot already resolved, which
+// is deliberate – it is HER OWN age on both sides of the row (`kidAgeAt` for the kid, the rival's own
+// `ageYears` for everybody else) and neither is a band. A screen deriving an age from a week and a
+// birth month would be a second clock, which is the thing the 09.08 ruling exists to prevent.
 const seasonRecord = computed(() => game.snapshot?.seasonRecord[shown.value] ?? { wins: 0, losses: 0 })
 const seasonWins = computed(() => seasonRecord.value.wins)
 const seasonLosses = computed(() => seasonRecord.value.losses)
@@ -207,26 +215,38 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
       <p v-if="!archiveShown" class="hint stats-no-exchange">{{ noExchange }}</p>
     </section>
 
-    <SeasonHistoryTable />
+    <!-- ⚠ IT TAKES THE TRACK NOW (v46). The owner reported twice that this table showed the same
+         thing under every tab, and it did, because a `SeasonHistoryEntry` held one rank and three
+         folds - see SeasonHistoryTable.vue and the v45 -> v46 migration for what an old row may say. -->
+    <SeasonHistoryTable :track="shown" />
 
     <section v-if="!archiveShown">
       <h2>{{ LADDER_LABEL[shown] }} ranking</h2>
-      <table v-if="standings.length">
+      <!-- D8: the table answers to a name (docs/specs/e2e-coverage.md §12). It says WHICH table,
+           because all three render through this one element and a reader arriving by role has no
+           other way to tell which one she landed in. -->
+      <table v-if="standings.length" :aria-label="`${LADDER_LABEL[shown]} ranking`">
         <thead>
           <tr>
             <th>#</th>
             <th>Player</th>
+            <!-- THE AGE COLUMN - the owner's own ask, twice; his words are quoted at AGE_COLUMN in
+                 the script block, where the house convention allows the original. -->
+            <th>Age</th>
             <th>Pts</th>
           </tr>
         </thead>
         <tbody>
           <template v-for="r in standings" :key="r.playerId">
             <tr v-if="r.gapBefore" class="standings-gap">
-              <td colspan="3">…</td>
+              <td colspan="4">…</td>
             </tr>
             <tr :class="{ 'kid-row': r.isKid }">
               <td class="num">{{ r.rank }}</td>
               <td>{{ formatShortName(r.name) }}</td>
+              <!-- Her OWN age, whole years - never the band; see StandingRow.ageYears. A dash rather
+                   than a zero for a row with nobody behind it: a missing age is not an age of none. -->
+              <td class="num">{{ r.ageYears === undefined ? '–' : r.ageYears }}</td>
               <td class="num">{{ r.points }}</td>
             </tr>
           </template>

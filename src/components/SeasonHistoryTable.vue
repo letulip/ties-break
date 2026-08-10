@@ -41,7 +41,28 @@ import { useGameStore } from '../stores/game'
 import { finishLabel } from '../engine/world'
 import { seasonYear } from '../shared/dates'
 import { formatCents, formatCentsSigned } from '../shared/money'
-import type { SeasonHistoryEntry } from '../shared/protocol'
+import { LADDER_LABEL, type SeasonHistoryEntry } from '../shared/protocol'
+import type { LadderTrack } from '../engine/season/types'
+
+// ⚠ IT FOLLOWS THE TABLE PICKER NOW (v46, R14 group E). The owner, twice, most recently 09.08:
+// «Season by season в stats в разных вкладках всё ещё одно и то же показывает.»
+//
+// He was right and the screen was never the defect – the note at the foot of this table said so
+// itself, back in July: Pts and W-L were "banked per season, one number each, with no record of which
+// ladder they came from – so telling them apart is a schema decision rather than a copy fix". v46 is
+// that schema decision. `SeasonHistoryEntry.byTrack` carries {endRank?, points, wins, losses} per
+// table, so this component takes the shown track as a prop and every column under it moves.
+const props = defineProps<{ track: LadderTrack }>()
+
+// The rank column's heading. `LADDER_LABEL` is the player-facing name and stays the authority for
+// prose; these are its abbreviations, and they exist because this column sits in a five-column table
+// on a 375px phone (see the 375px note above). A TOTAL Record, the house rule: a fourth table cannot
+// ship until somebody has decided what its column is called.
+const RANK_HEAD: Record<LadderTrack, string> = {
+  domestic: 'Nat. rank',
+  itf: 'Int. rank',
+  wta: 'Pro rank',
+}
 
 const game = useGameStore()
 
@@ -49,6 +70,43 @@ const game = useGameStore()
 // the engine stores the list oldest-first (append-only).
 const rows = computed<SeasonHistoryEntry[]>(() => [...(game.snapshot?.seasonHistory ?? [])].reverse())
 
+/** WHAT A ROW SHOWS, and the whole of the honesty is here. THREE answers, not two:
+ *
+ *   * `split` – a season banked on v46 or later. Every figure is that table's own.
+ *   * `legacyItf` – a season banked BEFORE v46, read under International. Its stored `endRank` IS the
+ *     ITF rank (the wrap writes `world.kidRank`), so the rank column is exact; its points and W-L are
+ *     the three tables added together and are marked as such.
+ *   * `legacyOther` – the same old season under National or Professional. NO RANK: the only rank it
+ *     holds belongs to another table, and «Professional rank #128» over a junior number is the class of
+ *     claim that put «Rank #4» on Home against «#128» in Stats. The fold is still shown and still
+ *     marked – deleting it would lose the one place a 44-19 season survives.
+ *
+ * Nothing here invents a per-track figure for an old season, because nothing can: `pruneResults`
+ * keeps a rolling 52 weeks, so the results behind those seasons were deleted years ago. The reasoning
+ * is recorded once, in the v45 -> v46 step of engine/migrations.ts; this function obeys it. */
+function cellsFor(r: SeasonHistoryEntry, track: LadderTrack) {
+  const split = r.byTrack?.[track]
+  if (split) {
+    return {
+      kind: 'split' as const,
+      rank: split.endRank ?? null,
+      points: split.points,
+      wins: split.wins,
+      losses: split.losses,
+    }
+  }
+  return {
+    kind: 'legacy' as const,
+    rank: track === 'itf' ? r.endRank : null,
+    points: r.points,
+    wins: r.wins,
+    losses: r.losses,
+  }
+}
+
+const cells = computed(() => rows.value.map((r) => ({ row: r, ...cellsFor(r, props.track) })))
+/** One footnote, and only when a row on screen actually needs it. */
+const anyLegacy = computed(() => cells.value.some((c) => c.kind === 'legacy'))
 </script>
 
 <template>
@@ -62,11 +120,18 @@ const rows = computed<SeasonHistoryEntry[]>(() => [...(game.snapshot?.seasonHist
       <!-- THE SCROLLER. `tabindex="0"` because a region that scrolls must be reachable without a
            pointer, and `role="group"` + a name so a screen reader says what it has landed in. -->
       <div class="season-history-scroll" tabindex="0" role="group" aria-label="Season by season, scrollable">
-        <table>
+        <!-- D8 (docs/specs/e2e-coverage.md §12): every table on this screen answers to a NAME now, so
+             `getByRole('table', { name })` reaches it. `aria-label` rather than a `<caption>` because
+             the heading above already says "Season by season" on the page and a caption would print it
+             twice; the name states which table's figures are inside, which is the fact a reader
+             arriving by role cannot otherwise get. -->
+        <table :aria-label="`Season by season, ${LADDER_LABEL[track].toLowerCase()} figures`">
           <thead>
             <tr>
               <th>Season</th>
-              <th>Int. rank</th>
+              <!-- The rank column names its TABLE, because the figure under it changed meaning with
+                   the picker above. It used to read "Int. rank" on all three tabs. -->
+              <th style="white-space: nowrap">{{ RANK_HEAD[track] }}</th>
               <th>Pts</th>
               <!-- narrow phones: "W–L" must not break across two lines (the column is the tightest) -->
               <th style="white-space: nowrap">W–L</th>
@@ -78,36 +143,47 @@ const rows = computed<SeasonHistoryEntry[]>(() => [...(game.snapshot?.seasonHist
                  (shared/dates seasonYear – the same function weekLabel uses, so a row and the week
                  labels inside that season always name the same year). Keying on the printed year is
                  what dropped season 5 from this table; see SeasonHistoryEntry.seasonIndex. -->
-            <tr v-for="r in rows" :key="r.seasonIndex">
+            <tr v-for="c in cells" :key="c.row.seasonIndex">
               <th>
-                <span class="ph-name">{{ seasonYear(r.seasonIndex) }}</span>
+                <span class="ph-name">{{ seasonYear(c.row.seasonIndex) }}</span>
                 <!-- Best result of that season, in the same wording the finale card uses. Absent on
                      a season with no tournaments, and on rows the v14 migration backfilled. -->
-                <span v-if="r.bestFinish !== undefined" class="ph-rank">{{ finishLabel(r.bestFinish) }}</span>
+                <span v-if="c.row.bestFinish !== undefined" class="ph-rank">{{ finishLabel(c.row.bestFinish) }}</span>
               </th>
-              <td class="num">#{{ r.endRank }}</td>
-              <td class="num">{{ r.points }}</td>
-              <td class="num" style="white-space: nowrap">{{ r.wins }}–{{ r.losses }}</td>
+              <!-- A DASH IS THE ANSWER "no rank in this table", and it is not a zero. Either she was
+                   never ranked here (v46 omits `endRank` rather than printing the tie floor every
+                   pointless player shares), or the season predates v46 and the only rank it kept
+                   belongs to another table. -->
+              <td class="num">{{ c.rank === null ? '–' : `#${c.rank}` }}</td>
+              <td class="num">{{ c.points }}<span v-if="c.kind === 'legacy'" class="sh-fold">*</span></td>
+              <td class="num" style="white-space: nowrap">
+                {{ c.wins }}–{{ c.losses }}<span v-if="c.kind === 'legacy'" class="sh-fold">*</span>
+              </td>
               <td class="num">
-                <span class="ph-name" :class="r.fundsDeltaCents < 0 ? 'negative' : 'positive'">
-                  {{ formatCentsSigned(r.fundsDeltaCents) }}
+                <span class="ph-name" :class="c.row.fundsDeltaCents < 0 ? 'negative' : 'positive'">
+                  {{ formatCentsSigned(c.row.fundsDeltaCents) }}
                 </span>
-                <span class="ph-rank">{{ formatCents(r.endFundsCents) }} left</span>
+                <span class="ph-rank">{{ formatCents(c.row.endFundsCents) }} left</span>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <!-- ⚠ AND WHAT THE MIDDLE TWO COLUMNS ARE, because the tiles directly above them now switch
-           tables and these do not (31.07, fix/ladder-separation). Pts and W-L are BANKED per season
-           in `SeasonSummary` / `SeasonHistoryEntry`, one number each, with no record of which ladder
-           they came from - so telling them apart is a schema decision rather than a copy fix, and it
-           is already on the open list (docs/specs/two-ladders.md, "Still open"). Saying plainly what
-           they are costs nothing and stops the reader taking them for the tab they sit under. -->
+      <!-- ⚠ THE NOTE THAT USED TO STAND HERE HAS BEEN ANSWERED RATHER THAN REWORDED. It read "Points
+           and W-L are the whole season, both tables together", and explained that telling them apart
+           was "a schema decision rather than a copy fix". v46 took that decision, so the columns now
+           follow the picker and the sentence has nothing left to excuse.
+
+           What is left is FUNDS, which is career-wide by nature (a family has one wallet), and the
+           star – shown only while a season banked before v46 is on screen. -->
       <p class="hint">
-        Funds is the season's net – underneath it, what the family had left when the year ended.
-        Points and W–L are the whole season, both tables together – unlike the tiles above, which
-        show one table at a time.
+        Funds is the season's net – underneath it, what the family had left when the year ended. It is
+        the family's whole year, not this table's.
+      </p>
+      <p v-if="anyLegacy" class="hint">
+        * Seasons played before this update kept one set of figures for all three tables, so their
+        points and W–L are the whole year added together and cannot be split back apart. Their rank is
+        shown on the International tab, which is the table it was always measured in.
       </p>
     </template>
   </section>
@@ -149,6 +225,13 @@ const rows = computed<SeasonHistoryEntry[]>(() => [...(game.snapshot?.seasonHist
 .season-history-scroll th:last-child,
 .season-history-scroll td:last-child {
   padding-right: 0;
+}
+
+/* The star that marks a pre-v46 season's folded figures. Quiet on purpose – it qualifies a number,
+   it is not a second number: the footnote under the table carries the meaning. */
+.sh-fold {
+  color: var(--muted);
+  margin-left: 1px;
 }
 
 /* The last row's hairline: the sheet's `tr:last-child td { border-bottom: none }` only reaches the

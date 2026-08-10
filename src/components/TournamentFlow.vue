@@ -92,6 +92,19 @@ const ladderLabel = computed(() => LADDER_LABEL[pending.value?.ladder ?? 'domest
 /** ...and the shared "#N or Unranked" rule, so a girl with no counting result in THIS table is not
  *  introduced on the splash as the tie floor she shares with half the field. */
 const kidRankText = computed(() => rankLabel(kidRank.value ?? 0, kidRank.value !== null))
+// HOW OLD THE TWO OF THEM ARE, on the card that introduces them (the owner: «и в турнирах перед
+// матчем тоже можно показывать»). BOTH sides or neither: one girl's age printed opposite a blank is
+// a comparison the reader cannot finish, and the comparison is the point at a junior event.
+//
+// ⚠ TWO CLOCKS AND THEY ARE BOTH HONEST. Hers moves on her birthday (`kidAgeAt`, the one-clock ruling
+// of 09.08); a rival's moves at the season boundary, because a cohort girl has no birth date to be
+// exact about (engine/world/age.ts says so in as many words). Whole years on both sides, so what the
+// card compares is like with like. The opponent's rides on the pending view off the FROZEN match
+// player - see `PendingView.opponent` - and is null on a reveal saved before ages were composed.
+const kidAge = computed<number | null>(() => game.snapshot?.ageYears ?? null)
+const oppAge = computed<number | null>(() => pending.value?.opponent.ageYears ?? null)
+/** Print an age only when BOTH are known, for the reason above. */
+const showAges = computed(() => kidAge.value !== null && oppAge.value !== null)
 // Snapshot.week stays pinned to the event's own week for the whole reveal (tickWeek never
 // advances again while paused), so this doubles as the tournament's real date range.
 const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
@@ -784,6 +797,8 @@ const matchMeta = computed(() => {
             <div class="tf-first-flag">{{ kidFlag }}</div>
             <div class="tf-first-name">{{ kidShort }}</div>
             <div class="tf-first-rank">{{ kidRankText }}</div>
+            <!-- Age, both sides or neither - see `showAges`. -->
+            <div v-if="showAges" class="tf-first-age">Age {{ kidAge }}</div>
           </div>
           <div class="tf-first-vs">VS</div>
           <div class="tf-first-side mirrored">
@@ -792,6 +807,7 @@ const matchMeta = computed(() => {
             <div class="tf-first-rank">
               {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank }}
             </div>
+            <div v-if="showAges" class="tf-first-age">Age {{ oppAge }}</div>
           </div>
         </div>
         <p class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
@@ -925,13 +941,16 @@ const matchMeta = computed(() => {
       <div class="tf-scene-grid">
         <div class="tf-scene-side">
           <div class="tf-scene-name">{{ kidShort }} {{ kidFlag }}</div>
-          <div class="tf-scene-rank">{{ kidRankText }}</div>
+          <!-- The pre-match card carries the age too - the same two facts as the splash, in the
+               screen's own register. Both sides or neither; see `showAges`. -->
+          <div class="tf-scene-rank">{{ kidRankText }}<template v-if="showAges"> · Age {{ kidAge }}</template></div>
         </div>
         <div class="tf-scene-vs">vs</div>
         <div class="tf-scene-side mirrored">
           <div class="tf-scene-name">{{ pending.opponent.name }} {{ flagEmoji(pending.opponent.nation) }}</div>
           <div class="tf-scene-rank">
-            {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank }}
+            {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank
+            }}<template v-if="showAges"> · Age {{ oppAge }}</template>
           </div>
         </div>
       </div>
@@ -1382,6 +1401,15 @@ const matchMeta = computed(() => {
   font-size: 11.5px;
   font-weight: 500;
   color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Her age, one step quieter than the rank above it: on this card the rank is the headline and the
+   age is context. Same tabular figures, so the two sides line up. */
+.tf-first-age {
+  margin-top: 1px;
+  font-size: 11px;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
