@@ -32,6 +32,7 @@ import {
   planWeek,
   resolveWeek,
 } from '../engine/plan'
+import { coachHoursForPlan } from '../engine/coach'
 import { DAY_LONG, DAY_SHORT, useCalendarWeek } from '../composables/weekDays'
 import { SESSION_KINDS, WEEK_PLAN_PRESETS, type SessionKind } from '../shared/protocol'
 import { formatCents } from '../shared/money'
@@ -77,9 +78,12 @@ watch(savedWeek, (week) => (draft.value = week), { deep: true })
 const capacity = computed(() => game.snapshot?.planDayCapacity ?? 1)
 
 const sessions = computed(() => planSessions(draft.value))
-/** Every session is one billed hour of him – `coachHoursForPlan`'s own conversion, so the hours on
- *  every title line are true by construction and no new arithmetic is added (§4). */
-const hours = computed(() => sessions.value)
+/** WHAT THE WEEK BUYS OF HIM, and it is the ENGINE's conversion rather than this file asserting that
+ *  a session is an hour. §4 says every session is one billed hour and `coachHoursForPlan` is where
+ *  that is spelled – so the total is READ from it, while each block's line counts its own ticks. If
+ *  the two ever stopped agreeing the screen would say so out loud, which is the point of not
+ *  duplicating the identity here. */
+const hours = computed(() => Math.round(coachHoursForPlan(planFromWeek(draft.value))))
 const perKind = computed<Record<SessionKind, number>>(() => {
   const out = {} as Record<SessionKind, number>
   for (const kind of SESSION_KINDS) out[kind] = 0
@@ -141,6 +145,10 @@ async function toggle(kind: SessionKind, day: number): Promise<void> {
   // `planFromWeek` rather than a hand-built literal: one projection, computed in one place, and the
   // command carries an object that is already true instead of one the worker has to correct.
   await game.setPlan(planFromWeek(next))
+  // ⚠ AND IF THE ENGINE REFUSED, THE SCREEN GOES BACK TO WHAT THE WORLD SAYS. The three limits above
+  // mean a refusal should be unreachable - which is exactly the belief a stale screen is made of. A
+  // refused command leaves `snapshot` untouched, so nothing else would ever put the boxes back.
+  if (game.error) draft.value = savedWeek.value
 }
 
 async function applyPreset(key: (typeof PLAN_ORDER)[number]): Promise<void> {
