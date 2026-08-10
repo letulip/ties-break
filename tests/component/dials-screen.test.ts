@@ -28,6 +28,8 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import HerWeekTab from '../../src/components/HerWeekTab.vue'
 import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
+import WeekRecapCard from '../../src/components/WeekRecapCard.vue'
+import { calendarWeekFor } from '../../src/composables/weekDays'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
@@ -299,5 +301,52 @@ describe('the tab it lives on', () => {
     expect(wrapper.findAll('details').length).toBe(0)
     expect(wrapper.findAll('.hw-row').length + wrapper.findAll('.cm-row').length).toBe(5)
     wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// ONE RULE, BOTH ENDS OF THE WEEK – the thing a source pin could not say
+// =================================================================================================
+// tests/calendar-screen.test.ts has pinned "the card imports the calendar's rule" since round 7,
+// because the two once spread the same week differently and the calendar drew Sunday off on the way
+// INTO a week while the story drew her on court that Sunday on the way out of it. That pin can only
+// ever assert an IMPORT. The claim underneath it is that the two DRAW the same days - which was
+// unfalsifiable while every plan that could exist was a preset, and is falsifiable now.
+//
+// ⚠ MUTATION-VERIFIED: `dayDots` put back to `sessionDays(sessionsForPlan(plan.value.train))` -> this
+// goes red on the hand-built week and stays green on the preset, which is exactly the gap that made
+// the old spelling look safe.
+describe('the week story and the calendar draw the same days', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  function dotsFor(snapshot: Snapshot): ('train' | 'rest')[] {
+    useGameStore().snapshot = snapshot
+    const wrapper = mount(WeekRecapCard, { global: { stubs: { teleport: true } } })
+    const dots = wrapper.findAll('.recap-dot').map((d) => (d.classes().includes('rest') ? 'rest' : 'train'))
+    wrapper.unmount()
+    return dots as ('train' | 'rest')[]
+  }
+
+  it('agrees on a HAND-BUILT week, which is the case the old spelling could not see', () => {
+    // Sunday on, Monday off - the exact inversion of the preset arrangement, so a card still reading
+    // the scalar would answer the calendar's week rather than his.
+    const hand: SessionKind[][] = [[], ['serve'], ['general'], [], ['fitness'], ['general'], ['general']]
+    const snapshot = { ...snapshotAfter(), plan: plan(hand) }
+    const dots = dotsFor(snapshot)
+    expect(dots.length).toBe(7)
+    const week = calendarWeekFor({ ...snapshot, planDayCapacity: 1 }, snapshot.week + 1)
+    expect(dots).toEqual(week.planDays.map((r) => (r === 'rest' ? 'rest' : 'train')))
+    // ...and it is really his week, not the preset's: Monday off, Sunday on.
+    expect(dots[0]).toBe('rest')
+    expect(dots[6]).toBe('train')
+  })
+
+  it('...and still agrees on a legacy career, whose plan carries no matrix at all', () => {
+    const snapshot = { ...snapshotAfter(), plan: { train: 75, rest: 25 } }
+    const dots = dotsFor(snapshot)
+    const week = calendarWeekFor({ ...snapshot, planDayCapacity: 1 }, snapshot.week + 1)
+    expect(dots).toEqual(week.planDays.map((r) => (r === 'rest' ? 'rest' : 'train')))
+    // The week the calendar has always drawn for that scalar: five on, Sunday and Wednesday off.
+    expect(dots).toEqual(['train', 'train', 'rest', 'train', 'train', 'train', 'rest'])
   })
 })

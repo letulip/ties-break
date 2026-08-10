@@ -192,12 +192,22 @@ describe('the plan, read back as days', () => {
   // first. Both were defensible alone; together they meant the calendar drew Sunday off on the way INTO
   // a week and the story drew her on court that Sunday on the way out of it, off the identical
   // `plan.train`. The card imports the rule now, so the two cannot answer differently again.
+  // ⚠ RE-AIMED AT v47, AND THE CLAIM IS STRONGER THAN IT WAS. The card imported the PRESET EXPANDER
+  // (`sessionDays(sessionsForPlan(plan.train))`), which was the same answer as the calendar's for
+  // every plan that could exist until the player could tick his own days. The moment he can, the
+  // scalar's arrangement and his are different weeks - so importing the expander would have put the
+  // card straight back to disagreeing with the calendar about the same Sunday, from the other end.
+  // Both read `planWeek(plan)` now: the plan itself, with the expander INSIDE it for a save that
+  // predates v47. Every assertion below is kept and repointed, and the behavioural half of the claim -
+  // that a HAND-BUILT week draws the same days at both ends - is a mount, in
+  // tests/component/dials-screen.test.ts, which is what a source pin could never say.
   it('the week\'s story draws the SAME days – one rule, both ends of the week', () => {
     const card = read('../src/components/WeekRecapCard.vue')
-    expect(card).toContain("import { sessionDays, sessionsForPlan } from '../composables/weekDays'")
-    expect(card).toContain('const on = new Set(sessionDays(sessionsForPlan(plan.value.train)))')
-    // ...and the rule it used to keep is GONE from the file rather than merely bypassed
+    expect(card).toContain("import { planWeek } from '../engine/plan'")
+    expect(card).toContain('const week = planWeek(plan.value)')
+    // ...and BOTH rules it used to keep are GONE from the file rather than merely bypassed
     expect(card).not.toContain('Math.floor((i * trainDays) / 7)')
+    expect(card).not.toContain('sessionDays(sessionsForPlan(')
     // the COUNT never differed - both were `round(train% of 7)` - which is why only the placement moved
     expect(sessionsForPlan(75)).toBe(Math.round((75 / 100) * 7))
   })
