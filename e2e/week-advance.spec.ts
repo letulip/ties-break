@@ -53,6 +53,9 @@ test.describe('advancing a week', () => {
     // reader was never told a decision was blocking. It is asserted here because this is the spec
     // that already owns "a decision on the table stops the week" - the role is the same claim, said
     // in the app's own vocabulary.
+    //
+    // ⚠ MUTATION-VERIFIED: `role="dialog"` off KnockDialog's card -> red here, on
+    // `getByRole('dialog')`, with the app otherwise working exactly as before. That is the defect.
     const knock = page.getByRole('dialog')
     await expect(knock).toBeVisible()
     await expect(knock).toHaveAttribute('aria-modal', 'true')
@@ -153,6 +156,9 @@ test.describe('advancing a week', () => {
     // reader were both concerned - which is why the line above had to be phrased as the absence of an
     // empty-state string. Each row is a named group now, so the claim can be about ROWS. Counted
     // rather than named: which transactions eight seasons produce is the economy's business.
+    //
+    // ⚠ MUTATION-VERIFIED: `role="group"` off `ui/StatRow.vue` -> `Expected: > 3 / Received: 0`,
+    // which is the ledger as this layer used to see it.
     expect(
       await page.getByRole('group').filter({ hasText: /\$/ }).count(),
       'the ledger reached the page as rows a reader can be walked through',
@@ -161,39 +167,22 @@ test.describe('advancing a week', () => {
     expect(crashes, 'the app threw while advancing a week').toEqual([])
   })
 
-  // ⚠ THE THIRD KIND OF WEEK: ONE THAT STOPS AND SAYS WHY. The two above end in a dialog with a
-  // Continue; this one ends in the top banner, which is the app's other way of reporting a week -
-  // and the surface D11 was filed against. There are TWO of those banners (the damaged-autosave
-  // notice is the other), they can be on screen together, and both carried a button that said
-  // `Dismiss` and nothing else: identical to a strict-mode locator and, more to the point,
-  // identical to anyone looking at them.
+  // ⚠ THE THIRD KIND OF WEEK - ONE THAT STOPS AND SAYS WHY - IS NOT REACHABLE FROM THIS FIXTURE SET,
+  // AND THAT IS WORTH WRITING DOWN RATHER THAN LEAVING FOR THE NEXT PERSON TO REDISCOVER. The two
+  // tests above end in a dialog with a Continue; the app's OTHER way of reporting a week is the top
+  // banner (`.stop-toast`), which is the surface defect D11 was filed against, and no journey here
+  // can produce one:
   //
-  // ⚠ THIRD CANARY ON FIXTURE STATE, and it is the cheapest of the three. `broke` is eleven weeks
-  // under water at -$2,070; the engine raises the `funds` stop on any week that ends below zero, so
-  // one advance is enough. If a regenerated `broke` ever boots solvent this test goes red naming the
-  // reason, exactly like the knock canary above.
-  test('a week that stops: the notice says what it is, and no other control shares its name', async ({
-    page,
-    careerAt,
-  }) => {
-    const crashes: string[] = []
-    page.on('pageerror', (error) => crashes.push(error.message))
-
-    await careerAt('broke')
-    await answerOpeningKnock(page)
-    await weekButton(page).click()
-
-    // The engine's own countdown copy, so this is the stop reaching the player rather than a banner
-    // that renders whatever it is handed.
-    await expect(page.getByText(/^Stopped: /)).toBeVisible()
-    // THE DEFECT, STATED: this used to be a button called `Dismiss`, and so was the other banner.
-    const dismiss = page.getByRole('button', { name: /^Dismiss/ })
-    await expect(dismiss).toHaveCount(1)
-    await expect(dismiss).toHaveAccessibleName('Dismiss stop notice')
-    // ...and the rename did not cost the control its job.
-    await dismiss.click()
-    await expect(page.getByText(/^Stopped: /)).toHaveCount(0)
-
-    expect(crashes, 'the app threw while a week stopped').toEqual([])
-  })
+  //   * a stop only speaks through the banner when its reason HAS copy - `injury`, `tournament` and
+  //     `season-end` deliberately do not, because each owns a dialog instead (App.vue,
+  //     STOP_REASON_TEXT). That leaves `funds`, `deadline`, `medical` and `walkover`.
+  //   * `funds` is the only one a fixture holds deterministically, and `broke` cannot deliver it:
+  //     it is ELEVEN weeks under water against a twelve-week grace window, so the advance that
+  //     would raise the toast raises the BANKRUPTCY ENDING instead, and the epilogue replaces the
+  //     whole shell. Measured, not reasoned: this test existed, ran, and failed on the epilogue.
+  //   * the other three are injury- and calendar-dependent, which is a coin toss, not a journey.
+  //
+  // Reaching it needs a fixture that is under water with room to spare (`debtWeeks` ~6 of 12) -
+  // a change to tools/e2e-fixtures.ts, not to this file. Until then the banner's names are pinned
+  // negatively in tests/a11y-banner-names.test.ts, which says exactly what it can and cannot claim.
 })

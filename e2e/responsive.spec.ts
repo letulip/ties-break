@@ -76,6 +76,10 @@ test('at 375 px the app does not scroll sideways, and the season strip stays sho
   // "she has reached this" is written down. Asserted at this width because this is the one file that
   // renders the strip in a real browser; the shape of each name is
   // tests/component/a11y-sweep.test.ts's.
+  //
+  // ⚠ MUTATION-VERIFIED: the `role`/`aria-label` pair off `.season-strip` -> red on the group below,
+  // while the heading-to-heading measurement above stays green. That split is the point of keeping
+  // both: they are two different claims about the same row.
   const ladder = page.getByRole('group', { name: 'Season ladder' })
   await expect(ladder).toBeVisible()
   expect(await ladder.getByRole('img').count(), 'the ladder drew no addressable rung').toBeGreaterThan(1)

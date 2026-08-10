@@ -34,7 +34,10 @@ const fixture = (name: string): (typeof manifest.fixtures)[number] =>
  *  shared two names between them and `getByRole('switch', { name: 'Sound effects' })` could not
  *  work (defect D2, docs/specs/e2e-coverage.md §12). One named switch is enough to say the
  *  association reaches a real browser; which five, and what each is called, is
- *  tests/component/a11y-sweep.test.ts's claim. */
+ *  tests/component/a11y-sweep.test.ts's claim.
+ *
+ *  ⚠ MUTATION-VERIFIED: `aria-labelledby` off the sound switch -> both tests in this file go red on
+ *  this line, which is what a helper on the shared path is supposed to do. */
 async function openSaves(page: Page): Promise<void> {
   await openMore(page)
   await expect(page.getByRole('switch', { name: 'Sound effects' })).toBeVisible()

@@ -98,6 +98,10 @@ test('the app boots, a new career starts, and week 1 renders', async ({ page }) 
   // seeded-careers.spec.ts found that the hard way - so "the navigation" was never a unique thing to
   // ask for. `aria-current` matters because which tab you are on lived only in a CSS class: a screen
   // reader was told nothing, and no test could ask.
+  //
+  // ⚠ MUTATION-VERIFIED, all three of this file's new lines: `aria-label="Main"` off the `<nav>` ->
+  // red on the landmark; the `:aria-current` binding off the tab -> red with `Expected: "page" /
+  // Received: ""`; `role="heading"` off the date line -> red on the heading above.
   const bar = page.getByRole('navigation', { name: 'Main' })
   await expect(bar.getByRole('button', { name: 'Home', exact: true })).toHaveAttribute('aria-current', 'page')
   // ...and a tab you are NOT on does not claim it. A bar where every button is current says as
