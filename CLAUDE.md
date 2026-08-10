@@ -20,7 +20,7 @@ Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:l
 ## Graphify (code graph) — what it is and is not for
 
 ```bash
-npm run graph        # rebuild — ~5 s, zero model tokens, 5,376 nodes / 13,764 edges
+npm run graph        # rebuild — ~18 s, zero model tokens, 7,750 nodes / 20,244 edges
 npm run graph:check  # is it stale? exits 1 if source moved since the build
 ```
 
