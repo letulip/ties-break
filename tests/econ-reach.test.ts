@@ -8,6 +8,14 @@ import { describe, it, expect, vi } from 'vitest'
 // own, and the whole-PRESETS loops become it.each so the event loop yields between presets and no
 // single test body can block tens of seconds on the weekly runner's slower cores.
 // Every assertion, comment block, owner decision and RE-PIN note below is carried over verbatim.
+//
+// ⚠ AND IT DIVIDED AGAIN ON 10.08 — the nine per-preset agreement tests moved to
+// tests/econ-reach-agree.test.ts. Same reason a third time, and this time the CAUSE was our own:
+// re-pointing the 14→18 fixture at a cell that measures the tennis (compound-cost §9) put careers
+// in it that SURVIVE, so more weeks are simulated and the file reached 64s. Measured before cutting
+// — nine tests at 33.1s against one at 30.7s — so it divided at a seam, not in half. THIS file
+// keeps the name because the name is what nine documents and the compound-cost spec's nine readings
+// point at, and all of them mean the band below.
 
 // Whole-horizon career replays are deterministic but SLOW, and they sit close enough to vitest's
 // 5s default that a busy run tips them over - the gate then goes red on timing, not on a claim.
@@ -15,13 +23,9 @@ import { describe, it, expect, vi } from 'vitest'
 vi.setConfig({ testTimeout: 240_000 })
 import {
   runCareer,
-  openCareer,
-  stepCareerWeek,
   PRESETS,
   HORIZONS,
-  REACH_TARGET_MONEY,
 } from '../tools/econ-bench'
-import { kidPoints } from '../src/engine/world'
 
 const working = PRESETS.find((p) => p.background === 'working')!
 /** The 14→18 fixture: the cell where the PRO proxy still splits the field (18 of 30 clear it under
@@ -78,26 +82,6 @@ const H16 = HORIZONS.find((h) => h.weeks === 104)!
 const H18 = HORIZONS.find((h) => h.weeks === 208)!
 
 describe('reach tracker (points/rank proxy – NOT the prize-money question, which A4 measures)', () => {
-  it.each(PRESETS)('reachedWeek is the FIRST week the target predicate holds (14→16 = the domestic arm) – $label', (preset) => {
-    // Independent replay of the SAME deterministic career: find the first week kidPoints crosses the
-    // domestic reach proxy (>= REACH_TARGET_MONEY) and confirm runCareer recorded exactly that.
-    // The DOMESTIC table, because that arm is denominated in domestic points – see reachedTarget,
-    // whose 14→16 arm was reading the ITF one against it.
-    // ⚠ THRESHOLD-AGNOSTIC BY CONSTRUCTION, which is why the 150 → 320 re-base left it alone: it
-    // asserts that two readings of the same predicate AGREE, so it holds at any target, and it keeps
-    // firing both branches at 320 (of these five careers per preset, some cross and some do not).
-    for (const index of [0, 1, 2, 3, 4]) {
-      const r = runCareer(preset, index, H16.weeks)
-      const { world, rng } = openCareer(preset, index)
-      let firstCross: number | null = null
-      for (let i = 0; i < H16.weeks; i++) {
-        stepCareerWeek(world, rng)
-        if (firstCross === null && kidPoints(world, 'domestic') >= REACH_TARGET_MONEY) firstCross = world.week
-      }
-      expect(r.reachedWeek).toBe(firstCross)
-    }
-  })
-
   it('a career that clears the target has a non-null reachedWeek; one that never does is null', () => {
     // The 14→16 money proxy (DOMESTIC kidPoints >= 150) is a genuine climb, so some working careers
     // clear it and others never accumulate 150 points inside 104 weeks – exercising BOTH the non-null

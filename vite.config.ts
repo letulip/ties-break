@@ -106,6 +106,7 @@ function noStowaways(): Plugin {
 const HEAVY_SIM_FILES = [
   '**/tests/econ-bench.test.ts',
   '**/tests/econ-reach.test.ts',
+  '**/tests/econ-reach-agree.test.ts',
   '**/tests/econ-reach-pro.test.ts',
   // W2-ENDINGS: the bench gate. Small by design (see its header) but it drives full careers, so it
   // belongs on the serialised side of the split like every other Monte-Carlo file.
