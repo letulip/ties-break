@@ -20,7 +20,30 @@ import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot, bookVacation } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { vacationPackage } from '../../src/engine/economy'
+import { letterDeletable } from '../../src/composables/inboxMail'
 import type { Offer, Snapshot } from '../../src/shared/protocol'
+
+// ⚠ THIS RUNNER HAS NO localStorage, AND ITEM 2 IS ABOUT localStorage. The same shim
+// tests/component/home-strip-and-mail.test.ts and round20-ui.test.ts already carry, for the same
+// reason, quoted in full in the first of them: happy-dom is configured here without web storage,
+// every reader in src/ wraps it in try/catch and answers "claim nothing" when it throws, and that
+// correct production fallback makes a per-career annotation UNTESTABLE by accident - nothing is
+// ever stored, so nothing can ever be read back. The test supplies the browser's own object rather
+// than weakening the code to suit the runner.
+const backing = new Map<string, string>()
+Object.defineProperty(globalThis, 'localStorage', {
+  configurable: true,
+  value: {
+    getItem: (k: string) => (backing.has(k) ? backing.get(k)! : null),
+    setItem: (k: string, v: string) => void backing.set(k, String(v)),
+    removeItem: (k: string) => void backing.delete(k),
+    clear: () => backing.clear(),
+    key: (i: number) => [...backing.keys()][i] ?? null,
+    get length() {
+      return backing.size
+    },
+  },
+})
 
 /** A real career, walked `weeks` weeks. */
 function worldAfter(weeks: number, seed = 'r14-group-c') {
@@ -47,6 +70,13 @@ function careerWithVacation(packageId = 'seaside'): { snapshot: Snapshot; week: 
   }
   throw new Error('no bookable week in the feed horizon')
 }
+
+/** ⚠ `import.meta.url` IS NOT A FILE URL IN THIS PROJECT. The `component` project runs under
+ *  happy-dom, where it resolves to an http scheme and `new URL(..., import.meta.url)` throws
+ *  "The URL must be of scheme file" at COLLECT time - i.e. the whole file reports "no tests" rather
+ *  than one red assertion. Vitest's cwd is the repo root, so that is what these resolve against; the
+ *  length bounds at every call site are what would catch it if that stopped being true. */
+const repoFile = (rel: string): string => readFileSync(resolve(process.cwd(), rel), 'utf8')
 
 function mountSeason(snapshot: Snapshot) {
   useGameStore().snapshot = snapshot
@@ -162,14 +192,8 @@ describe('R14-1 – the booked family week is cancellable through the planner', 
 describe('R14-9 – the onboarding wizard wears the app frame', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  // ⚠ `import.meta.url` IS NOT A FILE URL IN THIS PROJECT. The `component` project runs under
-  // happy-dom, where it resolves to an http scheme and `new URL(..., import.meta.url)` throws
-  // "The URL must be of scheme file" at COLLECT time – i.e. the whole file reports "no tests"
-  // rather than one red assertion. Vitest's cwd is the repo root, so that is what these resolve
-  // against; the length bounds below are what would catch it if it ever stopped being true.
-  const repo = (rel: string) => readFileSync(resolve(process.cwd(), rel), 'utf8')
-  const wizardSrc = repo('src/components/OnboardingWizard.vue')
-  const sheet = repo('src/style.css')
+  const wizardSrc = repoFile('src/components/OnboardingWizard.vue')
+  const sheet = repoFile('src/style.css')
 
   it('the shell the cap is written for is the element the wizard actually renders', () => {
     // The mounted half. Scoped SFC styles are not injected by test-utils, so no assertion about
@@ -196,5 +220,236 @@ describe('R14-9 – the onboarding wizard wears the app frame', () => {
     expect(sheet).toContain('--app-max-width: 880px')
     expect(sheet).toMatch(/#app \{\n\s+max-width: var\(--app-max-width\)/)
     expect(scoped).not.toContain('880px')
+  })
+})
+
+// ===========================================================================
+// ITEM 2 – the inbox becomes a mail client.
+//
+// The owner: a list, unread bold, click to open, a bin per row once read, yes/no on delete.
+//
+// ⚠ WHAT "DELETE" MEANS, PER STATE, is the part this item had to decide before the bin could be
+// drawn, and `letterDeletable` is that decision. Delete is DISMISS FROM THE LIST: the record stays
+// in the save, because a letter that lapsed still explains what happened and a signed one is the
+// only surface stating the contract she is under. Two states carry no bin at all – a letter still
+// inside its deadline (deleting it would delete a decision he can still take) and a signed deal
+// still running (its terms are live). The reasoning is on `letterDeletable` itself.
+// ===========================================================================
+function kitOffer(over: Record<string, unknown> = {}, terms: Record<string, unknown> = {}): Offer {
+  return {
+    id: 'kit-1',
+    kind: 'kit',
+    state: 'open',
+    week: 100,
+    deadlineWeek: 104,
+    ...over,
+    terms: {
+      kind: 'kit',
+      tier: 'local',
+      brand: 'String House',
+      covers: ['strings'],
+      kitAllowanceCents: 200_00,
+      minEventsPerSeason: 8,
+      seasons: 1,
+      travelShare: 0,
+      ...terms,
+    },
+  } as unknown as Offer
+}
+
+function deskLetter(id = 'desk-1'): Offer {
+  return {
+    id,
+    kind: 'entry',
+    state: 'info',
+    week: 99,
+    deadlineWeek: 99,
+    terms: { tier: 'w50', label: 'World Tour 50', eventWeek: 105, freeUntilWeek: 103 },
+  } as unknown as Offer
+}
+
+function mountInbox(offers: Offer[], week = 102) {
+  const base = toSnapshot(worldAfter(6))
+  useGameStore().snapshot = { ...base, week, offers, careerId: 'r14-inbox' }
+  return mount(InboxSheet, { global: { stubs: { teleport: true } } })
+}
+
+const rows = (w: ReturnType<typeof mountInbox>) => w.findAll('.inbox-row')
+const openRow = async (w: ReturnType<typeof mountInbox>, i: number) => {
+  await rows(w)[i].find('.inbox-open').trigger('click')
+}
+const backToList = async (w: ReturnType<typeof mountInbox>) => {
+  await w.find('button[aria-label="Back to all letters"]').trigger('click')
+}
+
+describe('R14-2 – the inbox is a list you open letters from', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    localStorage.clear()
+  })
+
+  it('renders one ROW per letter and no open paper at all', () => {
+    const wrapper = mountInbox([kitOffer(), deskLetter()])
+    expect(rows(wrapper)).toHaveLength(2)
+    // the whole complaint: every letter used to be open at once
+    expect(wrapper.findAll('.offer-letter')).toHaveLength(0)
+    // ...and a row says who wrote and what about, so the pile is readable without opening it
+    expect(wrapper.text()).toContain('String House')
+    expect(wrapper.text()).toContain('World Tour 50')
+    wrapper.unmount()
+  })
+
+  it('clicking a row opens THAT letter, and only that one', async () => {
+    const wrapper = mountInbox([kitOffer(), deskLetter()])
+    await openRow(wrapper, 1) // newest first puts the kit letter (week 100) above the desk's (99)
+    expect(wrapper.findAll('.offer-letter')).toHaveLength(1)
+    expect(wrapper.text()).toContain('Your entry for the World Tour 50 is confirmed')
+    expect(rows(wrapper)).toHaveLength(0)
+    // ...and there is a way back to the pile
+    await backToList(wrapper)
+    expect(rows(wrapper)).toHaveLength(2)
+    wrapper.unmount()
+  })
+
+  it('every letter starts unread, and opening one is what marks it read', async () => {
+    const wrapper = mountInbox([kitOffer(), deskLetter()])
+    expect(wrapper.findAll('.inbox-row.unread')).toHaveLength(2)
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    expect(wrapper.findAll('.inbox-row.unread')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('...and it SURVIVES a remount, because a mail client that forgets is not one', async () => {
+    // Per career, in localStorage, never in the save – the discipline inboxCue.ts records at length.
+    // App.vue mounts every screen fresh on each tab visit, so a read state that did not persist would
+    // come straight back bold on the next visit.
+    const wrapper = mountInbox([kitOffer(), deskLetter()])
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    wrapper.unmount()
+
+    const again = mountInbox([kitOffer(), deskLetter()])
+    expect(again.findAll('.inbox-row.unread')).toHaveLength(1)
+    again.unmount()
+  })
+
+  it('unread is BOLD, not merely a class nobody paints', () => {
+    // Scoped SFC styles are not injected by test-utils, so the class is what the mount can prove and
+    // the rule that paints it is pinned in the source it lives in. Two halves of one claim.
+    const src = repoFile('src/components/InboxSheet.vue')
+    const scoped = src.slice(src.indexOf('<style scoped>'))
+    expect(scoped.length).toBeGreaterThan(300)
+    const rule = scoped.slice(scoped.indexOf('.inbox-row.unread'))
+    expect(rule.slice(0, rule.indexOf('}'))).toContain('font-weight: 700')
+  })
+})
+
+describe('R14-2 – the bin, and what delete means for each state', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    localStorage.clear()
+  })
+
+  const bins = (w: ReturnType<typeof mountInbox>) => w.findAll('.inbox-bin')
+
+  it('no bin until the letter has been read – the owner asked for it "once read"', async () => {
+    const wrapper = mountInbox([kitOffer({ id: 'refused-1', state: 'refused' })])
+    expect(bins(wrapper)).toHaveLength(0)
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    expect(bins(wrapper)).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('⚠ a letter that can still be ANSWERED never grows one, however often it is opened', async () => {
+    // Deleting an answerable offer deletes the decision, not a record of one. Week 102 is inside the
+    // deadline of 104, so this letter is still a live choice.
+    const wrapper = mountInbox([kitOffer()], 102)
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    expect(bins(wrapper)).toHaveLength(0)
+    // and the row says so, which is why it is not simply missing a control
+    expect(wrapper.text()).toContain('Needs an answer')
+    wrapper.unmount()
+  })
+
+  it('⚠ nor does a SIGNED deal while it is still running – the letter is the live contract', async () => {
+    const running = kitOffer({ id: 'signed-1', state: 'signed', fromWeek: 100, untilWeek: 150 })
+    const wrapper = mountInbox([running], 120)
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    expect(bins(wrapper)).toHaveLength(0)
+    wrapper.unmount()
+  })
+
+  it('...and it DOES once that deal has run its course, so nothing is uncleanable for ever', async () => {
+    const finished = kitOffer({ id: 'signed-1', state: 'signed', fromWeek: 100, untilWeek: 150 })
+    const wrapper = mountInbox([finished], 151)
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    expect(bins(wrapper)).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('the bin asks yes/no, and a NO leaves the row exactly where it was', async () => {
+    const wrapper = mountInbox([kitOffer({ id: 'refused-1', state: 'refused' })])
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    await bins(wrapper)[0].trigger('click')
+
+    const dialog = wrapper.find('.dialog-card')
+    expect(dialog.exists()).toBe(true)
+    expect(dialog.text()).toContain('String House')
+    expect(rows(wrapper)).toHaveLength(1)
+
+    await dialog.findAll('button').find((b) => b.text() === 'Keep it')!.trigger('click')
+    expect(wrapper.find('.dialog-card').exists()).toBe(false)
+    expect(rows(wrapper)).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('a YES takes it off the list – and the LETTER ITSELF is untouched in the save', async () => {
+    const wrapper = mountInbox([kitOffer({ id: 'refused-1', state: 'refused' }), deskLetter()])
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    await bins(wrapper)[0].trigger('click')
+    await wrapper.find('.dialog-card').findAll('button').find((b) => b.text() === 'Delete')!.trigger('click')
+
+    expect(rows(wrapper)).toHaveLength(1)
+    // ⚠ THE RECORD SURVIVES. Delete is dismiss-from-the-list: the season summary, the renewal path
+    // and "what did I do about that?" all still read this letter off the world.
+    expect(useGameStore().snapshot!.offers.map((o) => o.id)).toContain('refused-1')
+    wrapper.unmount()
+  })
+
+  it('...and it stays off across a remount, without ever reaching the engine', async () => {
+    const offers = [kitOffer({ id: 'refused-1', state: 'refused' }), deskLetter()]
+    const wrapper = mountInbox(offers)
+    await openRow(wrapper, 0)
+    await backToList(wrapper)
+    await bins(wrapper)[0].trigger('click')
+    await wrapper.find('.dialog-card').findAll('button').find((b) => b.text() === 'Delete')!.trigger('click')
+    wrapper.unmount()
+
+    const again = mountInbox(offers)
+    expect(rows(again)).toHaveLength(1)
+    again.unmount()
+  })
+
+  it('letterDeletable, stated as a table – the rule the bin is drawn from', () => {
+    const at = (o: Offer, week: number) => letterDeletable(o, week)
+    // open, inside its deadline: NO. Past it, the letter is already "Expired" and may go.
+    expect(at(kitOffer(), 102)).toBe(false)
+    expect(at(kitOffer(), 104)).toBe(false)
+    expect(at(kitOffer(), 105)).toBe(true)
+    // signed: not while it runs, yes once it has
+    const signed = kitOffer({ state: 'signed', untilWeek: 150 })
+    expect(at(signed, 150)).toBe(false)
+    expect(at(signed, 151)).toBe(true)
+    // the terminal records: always
+    expect(at(kitOffer({ state: 'refused' }), 102)).toBe(true)
+    expect(at(kitOffer({ state: 'expired' }), 102)).toBe(true)
+    expect(at(deskLetter(), 102)).toBe(true)
   })
 })
