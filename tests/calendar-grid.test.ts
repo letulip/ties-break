@@ -63,7 +63,7 @@ import {
   type DayKind,
 } from '../src/composables/weekDays'
 import { weekDayNumbers } from '../src/shared/dates'
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type SessionKind } from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
 import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -79,6 +79,12 @@ const codeOf = (src: string) =>
 const screen = read('../src/components/screens/CalendarScreen.vue')
 const module_ = read('../src/composables/weekGrid.ts')
 const sheet = read('../src/style.css')
+
+/** A v47 ticked week with FITNESS on the Wednesday and general practice on four other days – five
+ *  sessions, so `planShapeError` would accept it. Used to prove the gym follows the tick. */
+const FITNESS_ON_WEDNESDAY: SessionKind[][] = [
+  ['general'], ['general'], ['fitness'], ['general'], [], ['general'], [],
+]
 
 /** A plain snapshot-shaped fact bag – the `facts()` idiom tests/calendar-screen.test.ts keeps. */
 function facts(over: Partial<CalendarWeekFacts> = {}): CalendarWeekFacts {
@@ -106,7 +112,12 @@ function gridFor(over: Partial<CalendarWeekFacts> = {}, week = 6, age = 14) {
  *  week's sessions on the days the plan bought, this diverges instead of agreeing with the bug. */
 function planRoleOf(week: CalendarWeek, index: number): OrdinaryKind {
   const session = new Set(sessionDays(week.sessions))
-  return !session.has(index) ? 'rest' : index === week.gymIndex ? 'gym' : 'court'
+  // ⚠ RE-AIMED AT v47, WITH THE SPELLING STILL INDEPENDENT. It used to read `week.gymIndex`, which no
+  // longer exists: the plan is a seven-day matrix and the gym is wherever Fitness is TICKED (owner,
+  // 10.08), so there is no single gym index to compare an index against. Both call sites below hand
+  // in a PRESET plan, and a preset expands to `general` on every session day - so the honest second
+  // spelling of "what did this plan make of this day" is court-or-rest, with no gym in it at all.
+  return !session.has(index) ? 'rest' : 'court'
 }
 
 /** Every day kind there is – the four the plan mixes, and the four a whole week is made of. Spelled
@@ -428,7 +439,23 @@ describe('a block is drawable, and it is not an invention', () => {
       const courtCols = grid.filter((d) => d.blocks.some((b) => b.kind === 'drills')).length
       const gymCols = grid.filter((d) => d.blocks.some((b) => b.kind === 'gym')).length
       expect(courtCols, `${preset.train}: court days`).toBe(week.courtDays)
-      expect(gymCols, `${preset.train}: the one gym day`).toBe(gymDayIndex(sessionsForPlan(preset.train)) === null ? 0 : 1)
+      // ⚠ RE-AIMED AT v47 AND THE ASSERTION IS KEPT, POINTED AT THE RULING THAT MOVED IT. A preset
+      // used to lay one FITNESS day down by convention (Tuesday, `gymDayIndex`), and the owner ruled
+      // on 10.08 that «что прокликал, то и ставим» – the gym is drawn where Fitness is ticked and
+      // nowhere else. A preset ticks `general` seven times over, so it now buys NO gym day, which is
+      // exactly the migration consequence spec §10 wrote down in advance. The function that computed
+      // the old convention still exists and is still pinned in tests/calendar-screen.test.ts; what
+      // changed is that nothing draws from it.
+      expect(gymCols, `${preset.train}: a preset buys no gym day now`).toBe(0)
+      expect(gymDayIndex(sessionsForPlan(preset.train)), `${preset.train}: the old convention`).toBe(1)
+      // ...and a TICKED fitness day does draw one, on the day it was ticked – the other half of the
+      // ruling, which an assertion of "zero gym" alone would be satisfied by a grid that lost the kind.
+      const ticked = calendarWeekFor(
+        facts({ plan: { train: preset.train, rest: preset.rest, week: FITNESS_ON_WEDNESDAY } }),
+        6,
+      )
+      const tickedGrid = weekGridFor(ticked, 14, weekDayNumbers(6))
+      expect(tickedGrid.filter((d) => d.blocks.some((b) => b.kind === 'gym')).map((d) => d.index)).toEqual([2])
 
       // ⚠ AND THE EXAM FORTNIGHT BUYS THE SAME TENNIS, which is the owner's whole point: «расходы на
       // тренера... всё еще при нас, просто ежедневная школа разбивается на ряд экзаменов». The coach

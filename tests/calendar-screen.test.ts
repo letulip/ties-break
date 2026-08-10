@@ -34,7 +34,13 @@ import {
   DAY_CROSS_PACE_LABEL,
   dayCrossSchedule,
 } from '../src/composables/dayCross'
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Snapshot, type UpcomingEvent } from '../src/shared/protocol'
+import {
+  DEFAULT_PROFILE,
+  WEEK_PLAN_PRESETS,
+  type SessionKind,
+  type Snapshot,
+  type UpcomingEvent,
+} from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
 import { OFF_SEASON_WEEKS, SUMMER_WEEKS, WEEKS_PER_YEAR, isExamWeek, isOffSeasonWeek } from '../src/engine/season/calendar'
 
@@ -48,6 +54,16 @@ const cross = read('../src/composables/dayCross.ts')
  *  convention, in the script AND in the styles, so every copy sweep is bounded to the template –
  *  the same extraction round13-nav.test.ts settled on. */
 const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
+
+/** v47 ticked weeks. Five sessions each, so `planShapeError` would accept either.
+ *  `GYM_ON_WEDNESDAY` puts the one fitness session midweek; `DOUBLED_SUMMER` puts five sessions into
+ *  three days, which only a school-free week (capacity 2) can hold. */
+const GYM_ON_WEDNESDAY: SessionKind[][] = [
+  ['general'], ['general'], ['fitness'], ['general'], [], ['general'], [],
+]
+const DOUBLED_SUMMER: SessionKind[][] = [
+  ['general', 'serve'], [], ['general', 'rally'], [], ['general'], [], [],
+]
 
 /** A plain snapshot-shaped fact bag. `calendarWeekFor` takes a `Pick`, so no engine is needed. */
 function facts(over: Partial<CalendarWeekFacts> = {}): CalendarWeekFacts {
@@ -140,12 +156,24 @@ describe('the plan, read back as days', () => {
     expect(gymDayIndex(0)).toBeNull()
   })
 
-  it('THE PLAN READS AS COURT TIME: 3 / 4 / 5 court days against one constant gym day', () => {
+  // ⚠ RE-AIMED AT v47 (owner, 10.08: «либо родитель галочки проставит – тогда что прокликал, то и
+  // ставим»). This used to read "3 / 4 / 5 court days against one constant gym day", and the constant
+  // gym day is the half that went: a preset ticks `general` on every session day, so a preset week is
+  // 4 / 5 / 6 court days and NO gym – which is exactly the migration consequence spec §10 wrote down
+  // ("a loaded career opens with no gym day ticked"). Every one of the three assertions is kept, each
+  // one day higher, and the gym half is now asserted where it lives: on the tick.
+  it('THE PLAN READS AS COURT TIME: 4 / 5 / 6 court days, and the gym is wherever Fitness is ticked', () => {
     const courtDaysFor = (train: number) =>
       calendarWeekFor(facts({ plan: { train, rest: 100 - train } }), 6).courtDays
-    expect(courtDaysFor(WEEK_PLAN_PRESETS.light.train)).toBe(3)
-    expect(courtDaysFor(WEEK_PLAN_PRESETS.balanced.train)).toBe(4)
-    expect(courtDaysFor(WEEK_PLAN_PRESETS.grind.train)).toBe(5)
+    expect(courtDaysFor(WEEK_PLAN_PRESETS.light.train)).toBe(4)
+    expect(courtDaysFor(WEEK_PLAN_PRESETS.balanced.train)).toBe(5)
+    expect(courtDaysFor(WEEK_PLAN_PRESETS.grind.train)).toBe(6)
+
+    const ticked = calendarWeekFor(facts({ plan: { ...WEEK_PLAN_PRESETS.balanced, week: GYM_ON_WEDNESDAY } }), 6)
+    expect(ticked.courtDays, 'the ticked gym day is not a court day').toBe(4)
+    expect(ticked.planDays[2]).toBe('gym')
+    expect(ticked.days[2].kind).toBe('gym')
+    expect(ticked.days[2].note).toBe('Gym')
   })
 
   it('a booked practice match takes Saturday – the week\'s last court day – at every preset', () => {
@@ -309,11 +337,19 @@ describe('a week belongs to exactly one thing, in one order', () => {
     expect(school.readout).not.toContain('nothing is hers to plan')
   })
 
+  // ⚠ RE-AIMED AT v47, SAME CLAIM, TWO WEEKS INSTEAD OF ONE. A preset no longer buys a gym day (see
+  // the court-time test above for the ruling), so the mixed grid this test is about is now the week a
+  // player TICKED – and both assertions survive on it, unchanged in shape.
   it('an ordinary week is the plan, and that is the only kind with a mixed grid', () => {
     const w = calendarWeekFor(facts(), 6)
     expect(w.title).toBe('Training week')
-    expect(new Set(w.days.map((d) => d.kind))).toEqual(new Set(['court', 'gym', 'rest']))
-    expect(w.readout).toBe('5 sessions – 4 on court, 1 in the gym.')
+    expect(new Set(w.days.map((d) => d.kind))).toEqual(new Set(['court', 'rest']))
+    expect(w.readout).toBe('5 sessions, all of them on court.')
+
+    const ticked = calendarWeekFor(facts({ plan: { ...WEEK_PLAN_PRESETS.balanced, week: GYM_ON_WEDNESDAY } }), 6)
+    expect(ticked.title).toBe('Training week')
+    expect(new Set(ticked.days.map((d) => d.kind))).toEqual(new Set(['court', 'gym', 'rest']))
+    expect(ticked.readout).toBe('5 sessions – 4 on court, 1 in the gym.')
   })
 
   // ⚠ W3-SUMMER - THE HOLIDAYS ARE A DIFFERENT WEEK, AND THE SCREEN HAS TO SAY WHICH. The owner's
@@ -321,14 +357,30 @@ describe('a week belongs to exactly one thing, in one order', () => {
   // player who cannot see it will book his family holiday straight through it without knowing what he
   // traded. So the title changes and the sentence names the doubled load, and both are pinned here
   // rather than left to a careful author.
+  // ⚠ RE-AIMED AT v47, AND THE MOVE IS THE SPEC'S HEADLINE (§3, ruled by the owner in advance). The
+  // sentence used to fire on the CALENDAR: any summer week said «two sessions a day» whether or not
+  // the plan doubled anything, because a scalar plan could not double anything at all. The engine
+  // stopped paying for the calendar in this wave (`summerLoadFactor` follows `doublingShare`), so a
+  // sentence that still promised two-a-day on an undoubled week would be the screen billing him for a
+  // choice he did not make. Every assertion below is kept and pointed at a week that IS doubled; the
+  // undoubled school-free week gets its own, because that is the invitation §3 is about.
   it('a summer week says it is a block, and says what the block IS', () => {
-    const w = calendarWeekFor(facts({ week: SUMMER_WEEKS[0] }), SUMMER_WEEKS[0] + 1)
+    const w = calendarWeekFor(
+      facts({ week: SUMMER_WEEKS[0], plan: { ...WEEK_PLAN_PRESETS.balanced, week: DOUBLED_SUMMER }, planDayCapacity: 2 }),
+      SUMMER_WEEKS[0] + 1,
+    )
     expect(w.summer).toBe(true)
     expect(w.title).toBe('Summer block')
     expect(w.readout).toContain('two sessions a day')
-    expect(w.readout).toContain('no school')
-    // ...and it is still HER PLAN underneath: the day count is the plan's, not the season's.
-    expect(w.readout).toContain(`${w.sessions} days on`)
+    // ...and it is still HER PLAN underneath: the count is the plan's, not the season's.
+    expect(w.readout).toContain(`${w.sessions} sessions`)
+
+    // THE SAME WEEK, UNDOUBLED: no promise, and the room said out loud.
+    const flat = calendarWeekFor(facts({ week: SUMMER_WEEKS[0], planDayCapacity: 2 }), SUMMER_WEEKS[0] + 1)
+    expect(flat.title).toBe('Summer block')
+    expect(flat.readout).not.toContain('two sessions a day')
+    expect(flat.readout).toContain('no school')
+    expect(flat.readout).toContain('room to double up')
     // A knock she is resting outranks it - that is what the week actually is.
     const rested = calendarWeekFor(
       facts({
