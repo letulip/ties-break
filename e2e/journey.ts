@@ -38,6 +38,33 @@ export function weekButton(page: Page): Locator {
   return page.getByRole('button', { name: WEEK_ACTION_NAME })
 }
 
+/**
+ * THE CONFIRM BEHIND AN ENTRY, whose button does not always say the same word - and that is a
+ * product decision rather than an inconsistency, so it is transcribed here the way `WEEK_ACTION_NAME`
+ * transcribes the advance bar's label set.
+ *
+ * `SeasonScreen.askEnter` picks one of three verbs, and each says what is being OVERRULED:
+ *
+ *   * `Enter`        - nobody objects;
+ *   * `Push through` - she is fatigued, and pushing through is what you do to tiredness;
+ *   * `Enter anyway` - the hired coach has an opinion about the SCHEDULE, which is not a body word.
+ *
+ * A CLOSED SET, for the same reason the advance bar's is: a loose `/.+/` would happily press some
+ * other button after a layout change and report an entry that never happened, and a fourth verb
+ * should go red here - on the control that spends the family's money - rather than pass quietly.
+ *
+ * ⚠ THE SET IS ALSO WHY THIS IS UNAMBIGUOUS. `ConfirmDialog` is one of the eight overlays that are
+ * still roleless divs (defect D1), so it cannot be scoped by `getByRole('dialog')`; what keeps this
+ * locator honest instead is that none of the three verbs is a whole accessible name anywhere else on
+ * Season - the event pills are named `Enter the <event>, <dates>` (D4's fix), so `^Enter$` misses
+ * them by construction.
+ */
+export const ENTER_CONFIRM_NAME = /^(Enter|Enter anyway|Push through)$/
+
+export function enterConfirmButton(page: Page): Locator {
+  return page.getByRole('button', { name: ENTER_CONFIRM_NAME })
+}
+
 /** Home's date line for a given career week, as the app itself writes it - "W18 2033 · May 2 – May 8".
  *
  *  Anchored at the start because the line continues past the dates. The absolute career week the

@@ -8,7 +8,7 @@ Playwright over a **real production build** in **real Chromium**. S0–S2 of
 `coverage-map.spec.ts` in this directory keeps it honest against the repo.
 
 ```bash
-npm run test:e2e            # the suite: builds twice, serves both, runs. 18 tests, ~25 s cold.
+npm run test:e2e            # the suite: builds twice, serves both, runs. 25 tests, ~21 s cold.
 npm run test:e2e:report     # the same run with a trace for EVERY test, then opens the HTML report
 npm run test:e2e:ui         # the time-travel UI – pick a spec, watch it, step back through it
 npm run test:e2e -- --headed        # watch the browser do it
@@ -125,7 +125,7 @@ test('week 412 is on screen', async ({ page, careerAt }) => {
 })
 ```
 
-`careerAt(name)` writes one of the five committed careers (`docs/plans/e2e-fixtures.md`) straight
+`careerAt(name)` writes one of the six committed careers (`docs/plans/e2e-fixtures.md`) straight
 into IndexedDB before the app's first script runs, then loads the app and returns the manifest entry
 so the spec can assert on the fixture's own facts. **Measured: 0.43–0.57 s to a week-412 career on
 screen – the same as walking the wizard to an empty week-0 career (0.35–0.68 s).** The UI route to
@@ -171,6 +171,28 @@ await careerAt('pro', { localStorage: { [`tb:lastSeenInboxLetter:${careerIdFor('
 nothing – the latch above means it could not land, and a silent no-op is exactly what this fixture
 exists to make impossible.
 
+### Seeding a career the browser cannot reach
+
+Two options put the *database* in a bad state around an ordinary fixture, for `storage-recovery.spec.ts`:
+
+```ts
+await careerAt('pro', { storage: 'unreachable' })   // the record is there, at a DB version this build cannot open
+await careerAt('junior', { autosave: 'damaged' })   // the NEWEST generation fails its checksum; the fixture is the older one
+await storageComesBack()                            // rebuild the database at the version the app asks for, without navigating
+```
+
+⚠ **This does not weaken "found, not forged", and the boundary is worth stating because it is exactly
+the licence that would end the rule.** Every WORLD is still one the engine played out and the shipped
+codec encoded. What these arrange is the environment: which version the database is at, and whether
+one of the two autosave generations survived its write. Both are things a real browser does to a real
+player, on paths `src/db/saves.ts` already carries code for – a version downgrade is refused by
+IndexedDB itself, and a generation that is present, well-formed and wrong is what a checksum exists
+to catch. `StorageState` and `AutosaveState` in `careerAt.ts` carry the long version.
+
+`storageComesBack()` replays the same product bytes the init script parked in the page, at the app's
+own DB version, **without a navigation** – because "Retry works without a reload" is the whole claim
+of the spec that uses it, and a reload would prove nothing since a reload works either way.
+
 ## Debugging a failure
 
 The HTML report is the artefact:
@@ -208,14 +230,17 @@ To get a trace for something that passes on CI and fails for you, run it with `-
 
 ## The journeys, and the one rule for adding another
 
-Eight spec files. `smoke` and `seeded-careers` prove the harness; the other six are the journeys, and
-each one's header names the seam it owns and why no cheaper layer reaches it:
+Twelve spec files. `smoke` and `seeded-careers` prove the harness; the other ten are the journeys,
+and each one's header names the seam it owns and why no cheaper layer reaches it:
 
 | file | seam |
 |---|---|
-| `week-advance.spec.ts` | the worker boundary – a decision gate, a tick, a season roll-over, three screens |
+| `week-advance.spec.ts` | the worker boundary – a decision gate, a tick, a season roll-over, a stop that is not an ending, three screens |
 | `persistence.spec.ts` | a real reload – at a week the fixture has never been at, and mid-tournament-pause |
+| `tournament-entry.spec.ts` | one command, three screens that must agree about its result – and a spend with no tick behind it |
 | `tournament.spec.ts` | the full loop – reveal, play out, result into the feed and the ledger |
+| `sponsor-inbox.spec.ts` | a signature that closes a letter nobody touched, and becomes a contract on another screen |
+| `storage-recovery.spec.ts` | storage that REFUSES – the half of seam 2 the reload specs cannot reach, because they need it to work |
 | `save-file.spec.ts` | the file door – a round trip, and two refusals at the untrusted-input guard |
 | `responsive.spec.ts` | real layout at 375 px – happy-dom has no layout engine at all |
 | `offline.spec.ts` | the service worker – the app boots with the network cut |
@@ -231,10 +256,14 @@ fails if you do not.
 
 ## Not here yet
 
-- **The sponsor/inbox loop and storage recovery** – the two highest-value uncovered journeys, both
-  argued in `docs/specs/e2e-coverage.md` §6.4 and §6.5.
-- **Tournament entry through the UI**, blocked on an accessibility gap rather than on effort: both
-  `Enter` controls are ambiguous by name (§6.1).
+- **The coach market.** Unblocked – D3 is closed – and **deliberately deferred**, which is not the
+  same as blocked and is recorded that way in `docs/specs/e2e-coverage.md` §8.2:
+  `docs/specs/training-dials.md` §9 is rebuilding that screen around a `Her week` / `Coaches`
+  switcher, and a journey written against today's version would be rewritten within the week. The
+  trigger for writing it is the switcher landing.
+- **The three other stop reasons** – `deadline`, `medical`, `walkover`. The banner itself is covered
+  through `funds`; those three are injury- and calendar-dependent, which is a coin toss rather than a
+  journey (§8.9).
 - **S3's visual regression, device matrix and `@axe-core/playwright`.** The report half of S3 is
   built (`npm run test:e2e:report`); the matrix half belongs in a nightly `e2e-full.yml`.
-  There are **no screenshot baselines in this repo**, deliberately – see §6.6.
+  There are **no screenshot baselines in this repo**, deliberately – see §8.6.

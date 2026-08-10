@@ -151,6 +151,55 @@
       }
     },
     {
+      "name": "sinking",
+      "file": "sinking.tsave",
+      "purpose": "Under water with weeks in hand – the warning a career can still be ticked out of.",
+      "seed": "e2e-sinking-0",
+      "careerId": "c-e2e-sinking",
+      "slot": "auto:c-e2e-sinking:a",
+      "targetWeek": 67,
+      "schemaVersion": 46,
+      "background": "working",
+      "coachTier": "middle",
+      "policy": "grinder",
+      "profile": {
+        "kidName": "Luca",
+        "kidLastName": "Vukovic",
+        "country": "US"
+      },
+      "bytes": 54403,
+      "payloadBytes": 54359,
+      "sha256": "4e47aa282ecd3c5c36bc1e640f340f3a70186ec03a17e42ac519c9120ad44dff",
+      "seedsTried": 1,
+      "facts": {
+        "week": 67,
+        "seasonIndex": 1,
+        "ageYears": 14,
+        "fundsCents": -50576,
+        "kidRank": 89,
+        "rankedDomestic": true,
+        "rankedItf": false,
+        "rankedWta": false,
+        "domesticPoints": 278,
+        "itfPoints": 0,
+        "wtaPoints": 0,
+        "seasonsPlayed": 1,
+        "resultRows": 2237,
+        "feedEvents": 400,
+        "financeWeeks": 60,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 6,
+        "inSponsorWindow": false,
+        "openKitLetters": 0,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": 156611906,
+          "n": 53534
+        }
+      }
+    },
+    {
       "name": "broke",
       "file": "broke.tsave",
       "purpose": "Eleven weeks under water, one week short of the bankruptcy latch – the warning phase.",

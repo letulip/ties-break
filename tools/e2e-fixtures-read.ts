@@ -36,7 +36,14 @@ import { fileURLToPath } from 'node:url'
 export const FIXTURE_DIR = fileURLToPath(new URL('../e2e/fixtures/', import.meta.url))
 export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
 
-export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'broke', 'ending'] as const
+// ⚠ `sinking` AND `broke` ARE THE SAME SPELL AT TWO DEPTHS, AND THAT IS THE POINT OF HAVING BOTH.
+// `broke` is the last week before the latch, so the very next advance ENDS the career - which is
+// what makes it the right fixture for the ending and the wrong one for anything that happens while
+// the family is still playing. `sinking` is the same walk stopped halfway down, with weeks in hand,
+// so a spec can tick it and still have a career afterwards. The measurement that forced the split is
+// in e2e/week-advance.spec.ts: the funds stop toast could not be reached from `broke` at all,
+// because the advance that raises it latches the bankruptcy ending instead.
+export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending'] as const
 export type FixtureName = (typeof FIXTURE_NAMES)[number]
 
 /** The header layout `encodeExportFile` writes: MAGIC(8) | schemaVersion u32 BE | sha256(32) | gzip.
