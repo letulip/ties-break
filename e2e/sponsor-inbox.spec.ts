@@ -91,6 +91,10 @@ test('signing a kit letter closes the whole table, and the deal reaches the mone
   // call, so the table empties from one press. This is the assertion the journey exists for: nothing
   // in the sheet could have produced it, and no fixture state satisfies it either - `pro` boots with
   // two waiting and has never been at zero.
+  //
+  // ⚠ MUTATION-VERIFIED: the `for (const other of offers)` loop deleted from `signOffer` -> this
+  // line goes red with `Expected: 0 / Received: 1`, and everything else in the test still passes.
+  // That gap between "the letter I signed changed" and "the table cleared" is the rule.
   await page.getByRole('button', { name: 'Back to all letters' }).click()
   await expect(page.getByRole('button', WAITING_ROW)).toHaveCount(0)
   await expect(page.getByText('Nothing waiting on an answer.')).toBeVisible()

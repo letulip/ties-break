@@ -66,6 +66,11 @@ test.describe('when the browser will not open the database', () => {
     //
     // So: no wizard, and no splash either - a wordmark waiting on data that will never arrive is the
     // same lie told more slowly.
+    //
+    // ⚠ MUTATION-VERIFIED AGAINST THE HISTORICAL BUG ITSELF. `init()`'s `if (!res.ok)` arm was
+    // changed back to `ready` (which is what swallowing the probe amounted to) -> this test goes red
+    // on the heading, having been handed the onboarding wizard, which is precisely the report the
+    // player never got.
     await expect(page.getByRole('heading', { name: 'Raise a Champion. Together.' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'Tap to start' })).toHaveCount(0)
 
@@ -123,6 +128,10 @@ test.describe('when the browser will not open the database', () => {
     // MEMOISE its rejected open, so one denied open at boot poisoned every later call, Retry
     // included, until the tab was reloaded (W1-INTEGRITY-B / TB-06). Retry succeeding in a page that
     // has been alive the whole time is the only shape of evidence that fix has.
+    //
+    // ⚠ MUTATION-VERIFIED AGAINST THAT EXACT BUG: the `.catch` that clears `dbPromise` was removed
+    // from `src/db/saves.ts` -> this test hangs on the splash below and fails, because Retry re-awaits
+    // the dead promise and `init()` never settles. Nothing else in the suite noticed.
     await page.evaluate(() => {
       ;(window as unknown as { __tbSameDocument?: true }).__tbSameDocument = true
     })
@@ -190,9 +199,9 @@ test('a damaged newest autosave falls back to the previous one, and the shell sa
   //    the OTHER banner answers to reaches nothing. e2e/week-advance.spec.ts makes the mirrored
   //    claim from the stop toast's side, which is the only other place either name is reachable.
   //
-  //    ⚠ MUTATION-VERIFIED: both buttons renamed back to `Dismiss` -> this line and its mirror in
-  //    week-advance.spec.ts both go red, on the name, with the app otherwise working. That pair is
-  //    the defect.
+  //    ⚠ MUTATION-VERIFIED AS A PAIR: both buttons in App.vue renamed back to `Dismiss` -> this line
+  //    and its mirror in week-advance.spec.ts go red together, each on its own name, with the app
+  //    otherwise working exactly as before. Two specs, two banners, one defect.
   await expect(page.getByRole('button', { name: 'Dismiss stop notice' })).toHaveCount(0)
   const dismiss = page.getByRole('button', { name: 'Dismiss autosave notice' })
   await expect(dismiss).toBeVisible()

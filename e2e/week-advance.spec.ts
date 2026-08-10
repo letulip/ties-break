@@ -238,6 +238,10 @@ test.describe('advancing a week', () => {
     // position. The mirrored claim is made from the other banner's side in
     // e2e/storage-recovery.spec.ts; between them, each name is shown to reach exactly one control on
     // a screen where the other is absent, which is the defect stated as a pair.
+    //
+    // ⚠ MUTATION-VERIFIED AS A PAIR: both buttons in App.vue renamed back to `Dismiss` -> this line
+    // and its mirror in storage-recovery.spec.ts go red together, each on its own name, with the app
+    // otherwise working exactly as before. Two specs, two banners, one defect.
     await expect(page.getByRole('button', { name: 'Dismiss autosave notice' })).toHaveCount(0)
     const dismiss = page.getByRole('button', { name: 'Dismiss stop notice' })
     await expect(dismiss).toBeVisible()

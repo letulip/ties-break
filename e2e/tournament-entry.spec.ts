@@ -55,6 +55,10 @@ test('a tournament is entered on Season, and Home and the Calendar both say so',
   // the shared helper exists to make good, and it is not a claim any mounted test makes: the
   // component layer renders one card at a time against a snapshot it wrote itself, so a feed is the
   // only place two names can collide.
+  //
+  // ⚠ MUTATION-VERIFIED: `:aria-label="enterActionName(row.event)"` taken off the pill in
+  // SeasonScreen.vue -> `Received: 0`, because with the name back to the bare visible word there is
+  // no `Enter the …` control on the page at all. That zero is what this journey used to be.
   const names = await enters.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label') ?? ''))
   expect(names.length, 'the pro fixture is meant to boot with a feed of enterable events').toBeGreaterThan(1)
   expect(new Set(names).size, `two Enter controls answer to one name - D4 is back: ${names.join(' / ')}`).toBe(
