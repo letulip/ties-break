@@ -176,6 +176,36 @@ It is also, precisely, the complaint that started round 15: his 8k self-coached 
 
 **Reported, not smuggled. The owner's ruling is wanted before this is called settled.**
 
+### ⚠ RULED, 10.08: the rule was wrong and is withdrawn
+
+The owner: «снимай правило или делай менее жестким». **It is withdrawn, and the fault is in how it
+was written rather than in what the build did.**
+
+I wrote rule 3 to guard against one specific failure – *the subsidy quietly paying for the coach* –
+and then expressed it as "nothing may make the coached cells better off", which is a much larger
+claim. Those two are not the same rule, and the difference is exactly the case that fired: a cameo
+returning **7% of a coaching bill** to the poorest cell in the grid is not paying for a coach. The
+rule as written forbade help reaching the family most in need of it, which is the opposite of what
+the mechanic is for and the opposite of what rule 1 demands.
+
+**The replacement, and it says what rule 3 meant to say:**
+
+> **3'. The cameo may not return a material share of a coaching bill.** Measured as the cameo's
+> season total against the coach's season total, at every rung below the cut. **Ship at ≤ 15%;
+> today it reads 7% on 25k-coached and 0% on both self-coached cells** (they pay no coaching bill,
+> so the ratio is undefined rather than favourable – state it that way, do not report a zero as a
+> pass).
+
+This is falsifiable, it is denominated in the thing the original fear was about, and it stays red in
+the case anybody actually worried about: if a future re-pricing made the cameo worth a third of a
+coach, 3' fires and the old rule would not have, because that world could easily leave "better off"
+false while the subsidy became real.
+
+⚠ **A ship rule withdrawn after it fires needs its reasoning in public**, which is why this is an
+appended section rather than an edit to the rule above. The failed reading stays visible: a rule
+that was too broad and fired correctly against its own wording is a different artefact from a rule
+that was wrong about the world, and only the first can be safely replaced.
+
 ## 6. The renewal – a letter, at the END of the window
 
 Owner, 10.08, confirming the shape: renewal is **a letter, not an automatic re-signing**, new letters
