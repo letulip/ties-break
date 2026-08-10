@@ -212,6 +212,14 @@ returned after one pull, so re-deriving it at finalize would hand back that same
 severity roll: the severity of every retirement would be a function of the number that had just
 decided she was fit.
 
+**A PRACTICE FRIENDLY IS A MATCH TOO**, and `resolvePractice` handles it the same way. `simulateMatch`
+does not know it is a hit-out at the home club – same fatigue curve, same hazard – so a friendly can
+end with her walking off, and when it does she gets the ordinary layoff off the same
+`seed:retire:<week>` stream and the news verb says which side stopped. Left unwired it would have been
+the "no consequence" version of the feature: a short scoreline, a loss, and no explanation anywhere.
+No refund, unlike the medical branch above it: that one gives the court fee back because she never
+took the court, and she took this one.
+
 **Surfacing.** A retirement week already stops the advance for `'tournament'`, and the tournament flow
 IS the surface: the match line carries `ret.`, the summary line carries ` – she retired hurt`, the
 injury event and the scans expense follow it, and Home shows the injured chip. The `'injury'` stop
@@ -248,6 +256,19 @@ four are **restated in place** rather than quietly broken, and the restatements 
 the journey-home notes carried a paragraph explaining that **"none of these claims she was hurt at the
 tournament – they are about a girl who got home and then got the news"**, and gave the engine's own
 timing as the proof. That reasoning was correct and is exactly what this slice removed. See §9.
+
+**...AND A SIXTH THING THE RESEARCH DID NOT ANTICIPATE, which is a COUPLING rather than a comment.**
+The obvious way to mark a stopped match is the sport's own: append `ret.` to the scoreline, "lost to
+J. Novak 6-4 2-1 ret." That sentence has a **reader**. `SeasonScreen`'s `plaqueLines` splits the
+bracket plaque into a title line and a score line by testing `e.text.endsWith(score)`, and
+`tests/round12-view.test.ts` pins the dependency in as many words – *"if that sentence is ever
+reworded so the score stops being the trailing token, the plaque silently degrades to one line"*.
+Appending would have degraded every retirement row in the bracket, silently, in a file this wave must
+not touch. **The marker went into the VERB instead** – "retired against" / "beat a retiring" – which
+says the same thing, keeps the score as the trailing token, and left the pin passing unchanged. The
+alternative considered and rejected was putting `ret.` inside `MatchRecord.score` itself: it is
+arguably the more correct scoreline, and `readScoreline` already tolerates it, but it would have
+reached three component renderers and `matchDrain`'s set count, none of which this wave can verify.
 
 ## 8. Save schema: NOT bumped
 
@@ -303,7 +324,23 @@ and not re-drawn (by tapping the generator), the four restated comments, and the
 `tests/travel-home.test.ts` – `sweepTravel` widened over `retired` (which implies `injured`, so the
 impossible corner is not swept), `HOLDS` gains the claim, and a new two-directional test: a retirement
 week must be offered a line only it can have, and an ordinary layoff week must never be offered one.
-**Mutation-verified**: re-licensing one retirement line on `t.injured` fails two tests.
+
+**Four guards were RE-AIMED, none weakened**, each keeping every original assertion in an explicit
+branch plus a ⚠ note naming what changed and why:
+
+| Guard | What it assumed | What it asserts now |
+|---|---|---|
+| `match/engine.test.ts` set integrity | a match ends by somebody winning two sets | the completed arm verbatim; the retirement arm is **stricter** – it must be undecided |
+| `match/engine.test.ts` `scoreAfter` | the last point's score IS the final scoreline | equality on a completed match; the sets are a **prefix** of the live score on a retirement |
+| `viz/commentary.test.ts` set/match beats | "the match ended" == "a set ended" | both shapes, in full, plus a test that BUILDS a retirement rather than hoping a 60-match corpus contains one |
+| `round10.test.ts` R10-17 | `injury === null` after the layoff | the layoff's **own identity** is gone and recorded – which `injury === null` would have passed even if it had been silently replaced |
+
+**MUTATION-VERIFIED, ten mutations, ten killed.** Retirement uniforms taken from the match stream
+instead of the private one (kills 3 tests); the decided-match guard dropped; `tiltedBodyRegions`
+losing its identity return; the retirement's points **discounted to zero**; the layoff not opened; the
+part table ignoring the pushed record; the news verb no longer saying who stopped; the commentary
+calling a retirement "straight sets" again; a tier multiplier in the hazard; and the walkover marker
+moved (the other half of the ruling).
 
 ## 11. Not built, deliberately
 
@@ -314,9 +351,15 @@ week must be offered a line only it can have, and an ordinary layoff week must n
   is three features rather than one.
 * **The junior medical certificate** (Juniors Reg 31 b) – research §10.1 Q5.3 recommends against it,
   and the owner's ruling settles the question anyway: «в юниорской то же самое, ничем не отличается».
-* **Rival retirements as an injury** – her opponent stopping gives her a full win and a `ret.` on the
-  line, which is the rulebooks' answer, but the cohort carries no injury state so nothing follows for
-  that girl. Same missing half as the walkover (research §10.3).
+* **Rival retirements as an injury** – her opponent stopping gives her a full, undiscounted win and a
+  line that says so, which is the rulebooks' answer, but the cohort carries no injury state so nothing
+  follows for that girl. Same missing half as the walkover (research §10.3).
+* **A separate between-matches withdrawal** – see §1. The outcome the ruling settles is identical and
+  the engine has no inter-match tick to hang it on.
+* **A blocking dialog for the retirement** – the tournament flow is already the surface. See §6.
+* **Tilting `rollInjury`'s own body-region table** – see §5. It would move which part every existing
+  career's ordinary injuries land on, with no draw moving: a shipped-behaviour change with its own
+  tuning question, and not this slice's to make.
 * **Renaming our "walkover" to "withdrawal"** – research §10.1 Q4's own recommendation is to fix the
   player-facing copy and leave the identifier; the copy lives in three surfaces two of which another
   agent owns this wave, so a partial rename would be worse than none. A comment at the `'walkover'`
