@@ -607,7 +607,13 @@ const seasonChips = computed<TierChip[]>(() =>
 // same contract the trophy cabinet's cells keep) and the label says the state out loud. Every arm
 // below is built from what is already on the chip; nothing is re-derived and no new fact is
 // invented. `locked` reads `title` rather than `label` on purpose - the visible label opens with a
-// padlock emoji, and "lock emoji, Reach 150 pts" is not a sentence.
+// padlock emoji, and a spoken name that starts by pronouncing an emoji is not a sentence.
+//
+// ⚠ AND THE WORDS OF A POINT LOCK ARE STILL WRITTEN IN EXACTLY ONE PLACE - composables/tierState.ts.
+// tests/round11-view.test.ts guards that with a plain substring search over this whole file, which
+// has no parser and cannot tell code from prose: this comment quoted an example lock label and the
+// guard went red over a sentence. It was right to. Same family as the no-curly-brace note on
+// `.stop-toast` in src/style.css - do not quote a lock's copy here, not even as an example.
 function chipName(chip: TierChip): string {
   switch (chip.state) {
     case 'reached':
