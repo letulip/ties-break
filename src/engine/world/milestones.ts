@@ -15,7 +15,15 @@ import { seasonYear } from '../../shared/dates'
 import { milestoneKey } from '../diary'
 import { schoolEndWeek, schoolIsOver } from '../kidLife'
 import type { LadderTrack, TierId } from '../season/types'
-import { LADDER_LABEL, type Milestone, type SeasonEntryLedger, type TierTrophies, type WorldEventCategory } from '../../shared/protocol'
+import {
+  LADDER_LABEL,
+  LADDER_TRACKS,
+  type Milestone,
+  type SeasonEntryLedger,
+  type SeasonTrackRow,
+  type TierTrophies,
+  type WorldEventCategory,
+} from '../../shared/protocol'
 import { addEvent, financeWindow, seasonIndexOf, seasonStartWeek } from './ledger'
 import { KID_ID } from './constants'
 import { finishLabel } from './labels'
@@ -158,16 +166,62 @@ function seasonBestFinish(world: WorldState, fromWeek: number, toWeek: number): 
  *  ⚠ AND A SEASON SHE DID NOT PLAY AT ALL falls back to `activeLadderOf` – the game's ONE answer to
  *  "which table is hers", the same one Home's chip, Stats and the Kid screen read. A year lost to
  *  injury does not demote a professional to the junior tour. */
-function dominantTrackOfSeason(world: WorldState, fromWeek: number, toWeek: number): LadderTrack {
+/** The season's ranking points, TOLD APART BY TABLE – one fold, two callers (the dominant-track rule
+ *  below and the per-track history row v46 banks), so the two can never disagree about what a season
+ *  scored where.
+ *
+ *  ⚠ A ROW WITH NO TIER CONTRIBUTES NOTHING, deliberately. `SeasonResult.tier` is optional because
+ *  pre-r5 kid results were written without it, and a row that cannot name its rung cannot name its
+ *  table either – adding it to a bucket would be a guess, and adding it to all three would double-count
+ *  the season. The tierless rows are pre-r5 only, so this is a statement about a corner of history and
+ *  not about any season this build writes. */
+function seasonPointsByTrack(world: WorldState, fromWeek: number, toWeek: number): Record<LadderTrack, number> {
   const pointsBy: Record<LadderTrack, number> = { domestic: 0, itf: 0, wta: 0 }
   for (const r of world.results) {
     if (r.playerId !== KID_ID || r.week < fromWeek || r.week >= toWeek) continue
     if (!r.tier) continue
     pointsBy[TIERS[r.tier].track] += r.points
   }
+  return pointsBy
+}
+
+/** THE SEASON, ONE ROW PER TABLE (v46) – what the wrap-up banks into `SeasonHistoryEntry.byTrack`.
+ *
+ *  Read at the wrap and nowhere else, because every term is about to stop being readable: the points
+ *  come off `world.results` (pruned to a rolling 52 weeks), the W-L off `world.seasonRecord` (reset by
+ *  the wrap itself), and the ranks off the caches the wrap's own recompute has just settled.
+ *
+ *  ⚠ IT IS `emptySeasonRecord()`'s SHAPE PLUS TWO FIELDS, on purpose – see `SeasonTrackRow`. The W-L
+ *  halves are literally copied out of `seasonRecord`, so the history row and the live tiles on the
+ *  Stats screen are the same counters at two moments rather than two counts of one season. */
+function seasonHistoryByTrack(
+  world: WorldState,
+  fromWeek: number,
+  toWeek: number,
+): Record<LadderTrack, SeasonTrackRow> {
+  const pointsBy = seasonPointsByTrack(world, fromWeek, toWeek)
   const record = world.seasonRecord ?? emptySeasonRecord()
-  // Lowest table first, so a strictly-greater test lets the HIGHER table win a dead heat.
-  const order: LadderTrack[] = ['domestic', 'itf', 'wta']
+  const rows = {} as Record<LadderTrack, SeasonTrackRow>
+  for (const track of LADDER_TRACKS) {
+    const wl = record[track] ?? { wins: 0, losses: 0 }
+    // "Unranked is not a number", per table – the same guard `rankInTrack` applies to the card.
+    const endRank = kidPoints(world, track) > 0 ? rankIn(world, track) : undefined
+    rows[track] = {
+      points: pointsBy[track],
+      wins: wl.wins,
+      losses: wl.losses,
+      ...(endRank === undefined ? {} : { endRank }),
+    }
+  }
+  return rows
+}
+
+function dominantTrackOfSeason(world: WorldState, fromWeek: number, toWeek: number): LadderTrack {
+  const pointsBy = seasonPointsByTrack(world, fromWeek, toWeek)
+  const record = world.seasonRecord ?? emptySeasonRecord()
+  // Lowest table first, so a strictly-greater test lets the HIGHER table win a dead heat. The order is
+  // `LADDER_TRACKS`' own (see its note in protocol.ts) rather than a second copy of the ladder here.
+  const order = LADDER_TRACKS
   let best: LadderTrack | null = null
   let bestMatches = 0
   for (const track of order) {
@@ -429,6 +483,21 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
       points: seasonPoints,
       wins,
       losses,
+      // v46 – ...AND THE SAME SEASON TOLD APART BY TABLE. The four figures above are one ITF rank and
+      // three folds, which is why the Stats screen showed the identical row under all three tabs for
+      // two rounds running: there was nothing else in the record to show. See `SeasonHistoryEntry.byTrack`.
+      //
+      // ⚠ BANKED HERE OR GONE, the `spentCents` argument at a different ledger. Every term is a read of
+      // something that decays: the points come off `world.results`, which `pruneResults` trims to a
+      // rolling 52 weeks; the W-L comes off `world.seasonRecord`, which THIS FUNCTION resets nine lines
+      // below. At the wrap the whole season is still inside both, and a week later it is not.
+      //
+      // ⚠ AND THE RANK USES THE WRAP-UP'S OWN "UNRANKED IS NOT A NUMBER" RULE, per table. `rankIn` always
+      // returns a number – the tie floor when nobody in the table holds a point – so it is asked only
+      // where `kidPoints > 0`, exactly as `rankInTrack` above is. Omitted otherwise, and the reader
+      // prints silence: a place in a table she was never in is the class of claim that put «Rank #4» on
+      // Home against «#128» in Stats.
+      byTrack: seasonHistoryByTrack(world, yearStart, wrapWeek),
       fundsDeltaCents,
       endFundsCents: world.fundsCents,
       ...(bestFinish === null ? {} : { bestFinish }),
@@ -484,6 +553,15 @@ export function emptySeasonEntries(fromWeek: number): SeasonEntryLedger {
  *  `finalizeTournament` would throw on `undefined` the first time she won a W15 match. */
 export function emptySeasonRecord(): Record<LadderTrack, { wins: number; losses: number }> {
   return { domestic: { wins: 0, losses: 0 }, itf: { wins: 0, losses: 0 }, wta: { wins: 0, losses: 0 } }
+}
+
+/** A history row's per-track trio, copied a level deep for the snapshot (v46) – `copyTrophyLedger`'s
+ *  job on a smaller record, and the same hazard: the values are objects, so the `{ ...h }` the season
+ *  history is spread with would hand the UI three records the world is still writing into. */
+export function copyByTrack(rows: Record<LadderTrack, SeasonTrackRow>): Record<LadderTrack, SeasonTrackRow> {
+  const out = {} as Record<LadderTrack, SeasonTrackRow>
+  for (const track of LADDER_TRACKS) out[track] = { ...rows[track] }
+  return out
 }
 
 /** A career with nothing in the cabinet yet: every tier present, both arrays empty (v31).

@@ -23,6 +23,14 @@ import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { seasonYear } from '../src/shared/dates'
 import type { WorldEvent } from '../src/shared/protocol'
 
+/** "Numbers all the way down" – the season-history row's size guarantee, asked of the LEAVES so v46's
+ *  nested `byTrack` is covered rather than waved through. Same helper, same words, in
+ *  tests/goldenSaves.test.ts and tests/world-trio.test.ts, which make the same claim about the same row. */
+function numericLeaves(value: unknown): boolean {
+  if (typeof value === 'object' && value !== null) return Object.values(value).every(numericLeaves)
+  return typeof value === 'number'
+}
+
 // ---------------------------------------------------------------------------
 // Round 10, the viewing + history branch.
 //   R10-9  season history (schema v14): the append-only per-season record.
@@ -91,9 +99,21 @@ describe('R10-9 — season history (v14)', () => {
     expect(shortRun.seasonHistory.length).toBe(1)
     expect(longRun.seasonHistory.length).toBe(2) // 50 more weeks -> exactly one more row
     for (const row of longRun.seasonHistory) {
-      // No strings anywhere: the save must not grow by prose per season.
-      expect(Object.values(row).every((v) => typeof v === 'number')).toBe(true)
-      expect(JSON.stringify(row).length).toBeLessThan(160)
+      // ⚠ RE-AIMED FOR v46, AND BOTH HALVES OF THE ORIGINAL CLAIM ARE KEPT AND WIDENED.
+      //
+      // (a) NO STRINGS ANYWHERE. `byTrack` is a nested record of numbers, so a flat
+      //     `Object.values(row).every(number)` no longer describes the row - it would have gone red on
+      //     a row containing nothing but numbers. `numericLeaves` walks to the leaves instead, which
+      //     covers strictly MORE than the flat scan did (a string one level down used to pass).
+      // (b) THE SIZE BUDGET, which was never really "160" - it was "a season costs bytes, not
+      //     kilobytes". v46 adds up to twelve numbers a row; measured on the v46 golden save a full
+      //     three-track row is 340 characters and a pre-v46 row is 174. So the whole row is held to
+      //     400, and the part that existed BEFORE v46 is still held to the original 160 - the older
+      //     half cannot quietly grow either, which a single loosened number would have allowed.
+      expect(numericLeaves(row)).toBe(true)
+      expect(JSON.stringify(row).length).toBeLessThan(400)
+      const { byTrack: _byTrack, ...beforeV46 } = row
+      expect(JSON.stringify(beforeV46).length).toBeLessThan(160)
     }
   })
 

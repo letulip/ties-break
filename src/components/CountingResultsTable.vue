@@ -18,6 +18,15 @@ const props = defineProps<{
    *  exchange rate. A prop rather than a second paragraph at the call site, so the empty state stays
    *  one sentence in one place. */
   emptyNote?: string
+  /** D8 (docs/specs/e2e-coverage.md §12): the table's ACCESSIBLE NAME, so `getByRole('table', { name })`
+   *  can reach it.
+   *
+   *  ⚠ OPTIONAL, WITH NO DEFAULT, AND THAT IS THE CONSERVATIVE CHOICE RATHER THAN A HALF-FIX. Three
+   *  surfaces render this component, and one of them (RankHelpDialog) renders TWO side by side - so a
+   *  default name would hand that dialog a pair of tables called the same thing, which is D11 (duplicate
+   *  names across live surfaces) bought with D8's money. A caller that has a name to give passes one;
+   *  the others are exactly as reachable as they were. */
+  label?: string
 }>()
 
 const total = computed(() => props.results.reduce((sum, c) => sum + c.points, 0))
@@ -28,7 +37,7 @@ function tierLabel(tier?: TierId): string {
 </script>
 
 <template>
-  <table v-if="results.length">
+  <table v-if="results.length" :aria-label="label">
     <thead>
       <tr>
         <th>Week</th>
