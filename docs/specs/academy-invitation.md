@@ -6,141 +6,171 @@ canonical: false
 last-reviewed: 2026-08-10
 ---
 
-# The academy invites her, and bills her family
+# The academy is a ladder you buy into, and a place you can win
 
-**Design proposal, nothing built.** It resolves a contradiction that has been sitting in the repo since
-round 5 without anybody noticing it was one.
+**Design proposal. Nothing built.** Second draft, 10.08, after the owner replaced the model in the
+first one. The first draft had the academy scouting her and deciding whether to invite; his version is
+better and simpler:
 
-## The contradiction
+> «Шанс туда попасть у всех сословий одинаковый – оплатил и пошел. Другой вопрос, что не все могут
+> себе это позволить… бывают бюджетные места в академиях (это для 8к применимо, особенно если хорошо
+> играет)… может быть какие-то менее дорогие места для 25к, тогда подразумевается, что тренер будет
+> включен в стоимость академии как и часть поездок. Академии, я уверен, тоже бывают разных уровней
+> платности.»
 
-Round 5's list carries an unchecked item: **«Academy invitation (~$55k/yr) as the wealthy-track money
-sink»**. The round-ledger audit of 10.08 could not tick it and could not honestly call it open either,
-because the code says something that looks like its opposite:
+**An academy is a business, not a talent scout.** You pay tuition and you go. What merit buys is not
+admission – it is a funded place, and a funded place only changes anything for a family that could
+not have paid.
 
-```ts
-needFactor: { working: 1, middle: 0.6, wealthy: 0 }   // ECONOMY.academy
-```
+## 0. The headline, and it is that the numbers were already right
 
-A wealthy family gets **zero**. Read as "who gets invited", that is the academy refusing the richest
-girl in the game – which is neither the round-5 item nor anything that happens in tennis. The owner,
-10.08:
+`ECONOMY.academy.needFactor` reads `{ working: 1, middle: 0.6, wealthy: 0 }` and the round-ledger
+audit could not decide whether round 5's «academy invitation as the wealthy-track money sink» was
+done or open, because read as *who gets in* those numbers say the academy refuses the richest girl in
+the game.
 
-> «Всех же могут в реальности пригласить, ведь так? Просто уровни разные, как мне кажется.»
+**They were never about who gets in. They are about what a funded place is WORTH to a family**, and
+under that reading every one of them is correct and unchanged:
 
-He is right, and the fix is not a number. **The two entries are not in conflict; they are two halves
-of one mechanic that only one half of was built.**
+| background | `needFactor` | what it means now |
+|---|---|---|
+| working | **1** | a funded place is everything – without it she does not go |
+| middle | **0.6** | a funded place is most of it – they could stretch, at a cost |
+| wealthy | **0** | a funded place changes nothing – they were paying anyway |
 
-## The rule this turns on
+Zero stops being "she is refused" and becomes **"she is admitted, and it costs them nothing they were
+not already spending"**. Same constant, correct noun.
 
-> **The invitation is about HER. The terms are about THEM.**
+## 1. The model
 
-An academy scouts a girl because of her results and her ceiling. What it then *offers* depends on
-what her family can pay – and in both directions. A family that cannot pay is offered a scholarship;
-a family that can is offered a place, at full price. Same letter, same trigger, different second
-paragraph.
+### 1a. Academies are a price ladder, like coaches
 
-So `needFactor` is not "who gets in". **It is what share of the bill the academy carries**, and zero
-is a true and useful number: a wealthy family is invited and pays for itself.
+Three or four rungs, priced per season. **The rung is the environment**, and the game already prices
+environments: `coachFactor(tier, fit)` and `facilityRateCents(age, tier)` are a ladder from `self` to
+`elite`, and the wealth corridor already says the same rung costs different money in different
+markets.
 
-## What is already right, and must not be touched
+⚠ **The fee is a BUNDLE, and that is the whole design** (the owner: *"тренер будет включен в
+стоимость академии как и часть поездок"*). One season's fee replaces:
 
-`reviewLevel` (`src/engine/academy.ts`) is the invitation and it is already about her alone:
+* the **weekly coach bill** – the academy's coaches are the academy's;
+* the **court** – `facilityRateCents`, which since 08.08 follows the coach rung anyway;
+* **part of the travel** – `travelCoverShare`, which is the one thing the academy already does today.
 
-* `resultScore(rank)` – her ranking against `rankFull: 40` / `rankNone: 130`;
-* `scoutScore(ceiling)` – her potential against the measured population band `[56, 70]`;
-* `scoutWeight: 0.5` – half her results, half the scout's eye;
-* `ageBand: [13, 18]` and `minEventsPerYear: 3` – she has to be the right age and actually be playing.
+So an academy place is not a fourth bill beside three others. **It is the same three bills, bought as
+a season instead of by the week, from one seller.**
 
-**Not one of those reads the family's money**, and that is the design working. The defect is
-downstream: `needFactor` multiplies the LEVEL rather than the TERMS, so a zero erases the
-relationship instead of pricing it.
+### 1b. Which makes it a real decision, with a real shape
 
-## The change, in three parts
+| | assemble it yourself | buy a place |
+|---|---|---|
+| **coach** | choose the person, change your mind any week | the academy's, and you do not pick |
+| **court** | follows the rung you hired | included |
+| **travel** | you pay | part of it included |
+| **cost** | weekly, and you can stop | a season, committed up front |
+| **what you buy** | control | reach – a rung you could not hire by the week |
 
-### 1. Separate the invitation from its terms
+**The trade has to be genuine or it is not a decision.** A place must be **dearer per unit** than
+assembling the same rung yourself – you are paying for a bundle and for reach – while buying access
+to a rung the weekly market does not sell you. If it comes out strictly cheaper it is a free upgrade;
+if strictly dearer with nothing extra it is a tax. §4's ship rule pins both.
 
-`reviewLevel` keeps deciding **whether** an academy is interested and **how much** it wants her.
-`needFactor` moves off that verdict and onto the offer's money. Two fields where there is one:
+### 1c. A funded place is scarce, and that is how it is filtered
 
-* **`level`** – how much the academy wants her. Hers, background-blind.
-* **`coverShare`** – how much of the bill it carries. `needFactor(background)`, unchanged numbers.
+The owner: *«осталось только понять как это отфильтровать»*. **Not with a threshold. With scarcity.**
 
-A wealthy family then reads `level 0.8, coverShare 0` – *wanted, and paying* – which is a sentence
-the current shape cannot say at all.
+Each academy rung has **k funded places a season**, and they go to the best k applicants in the field
+she is actually in – which the game can compute, because it has a living cohort with rankings and a
+domestic table.
 
-⚠ **This is a schema change** and it is the three-part move (CLAUDE.md invariant 3): bump, an
-append-only migration, a golden fixture. A career saved before it has one number; the migration
-gives it `coverShare = needFactor(background)`, which reproduces today's behaviour exactly, and
-that byte-identity is the thing a test has to prove rather than assert.
+Why scarcity rather than a bar:
 
-### 2. The place, which is what a wealthy family is buying
+* **It is what a scholarship is.** You do not qualify for one, you win one.
+* **It moves with the field.** The junior conveyor already brings a new generation in every season, so
+  the same girl can win a place one year and lose it the next – and that is the game's own living-world
+  property, not a new system.
+* **A static rank bar has bitten this project before.** `ECONOMY.sponsorship` was gated at
+  `world.kidRank <= 30`, fired for **nobody** across 120 seeds in any preset, and had to be rebuilt
+  (30.07). A threshold is a number somebody guesses; a rank against the field is a measurement.
 
-Today the academy pays: `travelCoverShare` against `ECONOMY.academy.travelCover`, and
-`kitGrantCents(level)`. Both are **discounts**. A family paying full price is not buying a discount,
-so the offer needs something to be.
+⚠ **And merit decides the place, never the price.** A wealthy girl can win a funded place – in life
+she does, academies want the best players – and `needFactor: 0` means it changes nothing for her
+family's money. The place is about her; the money it saves is about them. **That is the same rule the
+first draft got right and the reason those constants survive.**
 
-**It buys the training environment, and the game already prices one.** `coachFactor(tier, fit)` and
-`facilityRateCents(age, tier)` are a ladder from `self` to `elite`, and the wealth corridor already
-says the same rung costs different money in different markets. **An academy place is a rung she could
-not otherwise reach, bought as a season rather than as a weekly hire.**
+### 1d. What `reviewLevel` becomes
 
-That gives the round-5 item its shape: **~$55k a year, and what it buys is a rung.** It is a real
-decision because the same money would buy roughly a season of a `high` coach hired weekly – so the
-question is whether a squad, a court and a fixed environment beat a person you chose.
+It stops being "does an academy want her" and becomes **"where does she rank among the applicants"**.
+Its inputs are already exactly right for that and not one of them touches the family's money:
 
-⚠ **What it must NOT be is a fourth number multiplied into growth.** `coach-as-load-manager.md`'s
-standing rule holds: what moves is who decides and what they have an opinion about, never a new
-system bolted beside the old one. The place sets her coach rung and her court; it does not add a
-multiplier of its own.
+* `resultScore(rank)` – her results;
+* `scoutScore(ceiling)` – her potential, through the scout's eye;
+* `scoutWeight: 0.5` – half and half;
+* `ageBand`, `minEventsPerYear` – she has to be the right age and actually be playing.
 
-### 3. The letter says which one it is
+So the function survives; what changes is that its output is compared **against other applicants**
+rather than against a bar.
 
-One offer kind, two second paragraphs. The scholarship letter is the one that ships today. The place
-letter names the fee, names the rung, and is refusable like every other offer – it arrives through
-`world.offers` and answers to `acceptOffer` / `declineOffer`, so nothing new is invented to carry it.
+## 2. What this does to the coach – and it is a collision worth naming
 
-⚠ **And it can be REFUSED, which is the point.** A wealthy family that says no keeps its money and
-its chosen coach. Today the academy is a thing that happens to you; this makes it a thing you answer.
+**If the academy provides the coach, the academy decides the training plan.** `docs/specs/training-dials.md`
+has just made the week a thing the player fills in day by day, with a hired coach proposing and the
+parent overriding. An academy place has to answer the same question, and the honest answer is the one
+that makes it a trade:
 
-## What this is not
+**you get the academy's plan, and you may still override it** – exactly as with a hired coach – **but
+you cannot choose the coach who writes it.** That is what "you do not pick" costs, and it is the
+sharpest difference between the two routes.
 
-* **Not a difficulty lever.** The trigger stays background-blind, so it cannot become "the rich get
-  scouted". If a measurement shows wealthy careers reaching the academy more often, that is a
-  finding about `resultScore` and it belongs to a different wave.
-* **Not a second subsidy.** `need-not-background-2026-08.md` has just moved the local-sponsor cameo
-  off backgrounds and onto need; this does the same thing one layer up, in the other direction. The
-  two must be measured together or the 2x2 will move for a reason nobody attributes.
-* **Not a fix for #90.** Making academy support LEGIBLE is a separate open item, and the bench still
-  reads only **$948 of `academy` income across four seasons** while 50 of 50 careers hold a
-  scholarship – because it pays as a discount on travel and never as a line. That stays true after
-  this change and gets worse: a place is a bill, so the family will see the money leave and still not
-  see what arrived.
+⚠ **This must not become a second training system.** `coach-as-load-manager.md`'s standing rule: what
+moves is who decides, never a new mechanic bolted beside the old one. An academy coach is a coach at
+a rung, proposing through the same `setPlan`.
 
-## The ship rule, authored before anything is built
+## 3. What it is not
 
-`tools/two-cells.ts` is the instrument – background x coach, 50 careers, four seasons – and it now
-has to grow a fifth cell: **a wealthy family offered a place.**
+* **Not a difficulty lever.** Admission is money, and money is the background – so the temptation is
+  to let the academy sort the classes. The funded places are what stop it: merit is the only thing
+  that moves a poor girl up this ladder, and it must move her all the way. If a measurement shows
+  `working` careers never reaching a rung `wealthy` careers routinely buy, the funded count is wrong.
+* **Not a fix for #90.** Making academy support **legible** is a separate open item and gets *harder*
+  here: the bench reads only **$948 of `academy` income across four seasons** while 50 of 50 careers
+  hold a scholarship, because it pays as a discount on travel and never as a line. A bundled fee makes
+  the money leave visibly and what arrived still invisible.
+* **Not the end of the weekly coach market.** Most careers will never buy a place. The Coach Market
+  screen stays exactly what it is, with the academy as one more thing that can be true about a season.
 
-1. **The invitation rate must not move by background.** Measured share of careers ever offered an
-   academy, per background, before and after: the three numbers must be within noise of each other
-   and of today's `working` figure. If they diverge, `needFactor` is still leaking into the verdict.
-2. **A refused place must cost nothing.** A career that declines ends within noise of one never
-   offered.
-3. **An accepted place must be a real trade, not a tax.** Against the same seed with a weekly `high`
-   coach at comparable spend: end funds within one season's fees, and a ranking difference that is
-   nameable in one direction or the other. **If it is strictly worse it does not ship**, and if it is
-   strictly better it is not a decision.
-4. **The scholarship arm does not move.** `working` and `middle` end funds, cameo share and ITF rank
-   all within noise of today. This wave is additive at the bottom of the ladder or it is wrong.
+## 4. The ship rule, authored before anything is built
 
-## Open, and the owner's to answer
+`tools/two-cells.ts` is the instrument – background × coach, 50 careers, four seasons – and it grows
+an academy arm per background.
 
-1. **What rung does a place buy, and is it the same rung for everyone?** A fixed `high`, or one that
-   follows `level` – the girl the academy wants most gets the best environment.
-2. **Does a place end?** A kit deal has a term and a review; the scholarship is re-decided every
-   season by `reviewAcademy`. A place probably should be too, and a family dropped after a season is
-   a real story – but it is also a second review to write.
-3. **$55k is round-5's figure and is not yet checked against this game's money.** A `middle` family's
-   whole parent income is ~$22k a season. So either the figure is wrong for our scale, or a place is
-   a wealthy-only offer by arithmetic rather than by design – which would be a fine answer, stated
-   rather than stumbled into.
+1. **Admission must not sort by background.** The share of careers that could afford a rung, per
+   background, must be explainable entirely by price. If a `working` career cannot reach a rung a
+   `middle` one can *even when funded*, the funded places are not doing their job.
+2. **A funded place must be winnable by a poor girl who plays well.** Measure it directly: of
+   `working` careers in the top decile of the domestic table, what share hold a funded place? If it
+   is not most of them, the scarcity is set wrong.
+3. **The bundle must be a trade, not a tax.** Against the same seed assembling the same rung weekly:
+   end funds within one season's fee, and a ranking difference nameable in one direction. **Strictly
+   worse does not ship; strictly better is not a decision.**
+4. **The scholarship arm must not move.** `working` and `middle` end funds, cameo share and ITF rank
+   within noise of today. This is additive or it is wrong.
+5. **RNG.** Buying a place is a player choice, so it may not change how many times MAIN is drawn.
+   Invariant 2, and the same discipline the cameo already uses: draw unconditionally, let only the
+   arithmetic depend on the answer.
+
+## 5. Open, and the owner's to answer
+
+1. **How many rungs, and does the top one exist for anybody?** Three is enough to be a ladder. A
+   fourth that only a `wealthy` career ever reaches is defensible – the game already has an `elite`
+   coach most careers never hire – but it should be chosen rather than fallen into.
+2. **How many funded places per rung?** This is the one number the whole thing turns on and §4/2 is
+   how it gets measured. My instinct is that the lowest rung has several and the top rung has one or
+   none, because that is how it works – but it wants a sweep, not an instinct.
+3. **~$55k was round 5's figure and it is not this game's scale.** A `middle` family's whole parent
+   income is **~$22k a season**. So either the number belongs to a different economy, or the top rung
+   is wealthy-only by arithmetic rather than by design. Both are fine answers; it should be a choice.
+4. **Does a place have a term, and can it be lost?** A kit deal has a term and a review; the
+   scholarship is re-decided every season by `reviewAcademy`. A funded place probably should be too,
+   and losing one after a bad year is a real story – but it is a second review to write, and it is the
+   difference between a relationship and a purchase.
