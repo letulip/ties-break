@@ -267,7 +267,7 @@ judgement, not an industry table.
 
 | # | uncovered item | impact | likelihood | why not covered | mitigation in place |
 |---|---|---|---|---|---|
-| 8.1 | tournament entry through the UI | high | medium | blocked by defect D4 (ambiguous `Enter`) | the entry command is unit-tested; only the wiring is unproven |
+| 8.1 | tournament entry through the UI | high | medium | **unblocked 10.08** – D4 is fixed, the journey is not yet written | the entry command is unit-tested; the `Enter` is now selectable by name at the component level |
 | 8.2 | the coach market | high | medium | blocked by defect D3 (unlabelled rows, mutating sort name) | engine pricing is unit-tested; the screen has no coverage at all |
 | 8.3 | match outcomes and scorelines | low | low | owned by `unit` + `sim` + `component`; asserting here would duplicate two levels and hostage a third | `tournament.spec.ts` takes `Skip all rounds`, which runs the same engine over the same draw |
 | 8.4 | sponsor window and inbox | medium | medium | time – the next journey to write | `pro` holds two unopened letters, so the fixture is ready |
@@ -282,6 +282,13 @@ make this level slower and less precise while adding nothing.
 ⚠ **Two of these gaps are caused by defects, not by effort.** 8.1 and 8.2 are downstream of D3 and
 D4 in §12. Fixing D4 alone unlocks 8.1. That is the most useful single sentence in this document for
 anyone deciding what to do next.
+
+> **D4 IS FIXED (10.08, `fix/r14-group-c`).** Every `Enter` on Season and on the Calendar now carries
+> an accessible name that identifies the tournament and its week – `Enter the World Tour 50, May
+> 9–15, 2039` – from one shared helper (`src/composables/eventName.ts`), so the two surfaces cannot
+> name one event differently. **8.1 is unblocked but still uncovered**: the selector obstacle is gone
+> and the journey has not been written. It is now the cheapest high-impact item on this list, and it
+> is a `e2e/` job rather than a `src/` one. 8.2 is untouched – D3 stands.
 
 ## 9. Entry and exit criteria (CTFL §5.1.3)
 
@@ -350,26 +357,32 @@ lies more slowly, in one half only, and now you know which half.**
 ## 12. Defect reports raised by writing this level (CTFL §5.5)
 
 The role-and-name selector policy has a side effect worth having: **every element a test could not
-reach is a real defect.** None was fixed in this wave – `src/` was owned by other branches – so these
-are reported, not resolved. Severity is the accessibility impact; priority is what it costs coverage.
+reach is a real defect.** None was fixed in the wave that raised them – `src/` was owned by other
+branches – so they were reported, not resolved. Severity is the accessibility impact; priority is
+what it costs coverage.
+
+⚠ **Two are fixed now** (10.08, `fix/r14-group-c`, which owned those two files): **D4** and **D9**.
+Their rows are struck through rather than deleted – a defect register that quietly loses its closed
+rows cannot be audited, and D4 in particular is the one this document spent a paragraph on.
 
 | # | defect | component | severity | priority | consequence |
 |---|---|---|---|---|---|
 | D1 | **Modals are not modals.** The knock dialog blocks the page but exposes no `role="dialog"`; `getByRole('dialog')` returns nothing while it is open. The wrap-up card is the same | `KnockDialog`, `SeasonSummaryDialog` | high | medium | a screen-reader user is not told a decision is blocking the app |
 | D2 | **Five settings toggles have no names** – `role="switch"` with the visible label an unassociated sibling, so all five collapse to `ON`/`OFF` | `MoreScreen.vue` | high | low | `getByRole('switch', { name: 'Sound effects' })` cannot work |
 | D3 | **Coach rows carry no label**, and the sort control's accessible name changes when pressed (`Sort Best fit` ⇄ `Sort Price`) | `CoachMarketScreen.vue` | medium | **high** | direct cause of gap 8.2 |
-| D4 | **`Enter` is ambiguous** – one per event card, with no event in the name | `SeasonScreen.vue`, `CalendarScreen.vue` | medium | **high** | direct cause of gap 8.1 |
+| ~~D4~~ | ~~**`Enter` is ambiguous** – one per event card, with no event in the name~~ **FIXED 10.08**: the name is `Enter the <event>, <dates>`, from one shared helper both screens read. The visible word is still the first word of the name (WCAG 2.5.3) | `SeasonScreen.vue`, `CalendarScreen.vue` | medium | **high** | was the direct cause of gap 8.1 |
 | D5 | Ledger and expense rows have no role – `StatRow` renders bare `div`/`span` | `MoneyScreen.vue` | medium | low | the ledger can only be asserted as free text |
 | D6 | Season-strip tier chips have no role or label; state lives in CSS classes | `HomeScreen.vue` | medium | low | invisible to a screen reader |
 | D7 | Tabs announce no selected state; the tab bar `<nav>` has no label; unread dots are empty spans | `App.vue` | high | medium | the active tab cannot be asserted by role; the dot cannot be asserted at all |
 | D8 | Tables have no accessible names | `StatsScreen.vue`, `MoreScreen.vue`, `HomeScreen.vue` | medium | low | `getByRole('table', { name })` never works |
-| D9 | Unlabelled text inputs – placeholder only | `SeasonScreen.vue`, `MoreScreen.vue` | medium | low | not reachable as named textboxes |
+| D9 | Unlabelled text inputs – placeholder only. **Half fixed 10.08**: Season's friendly-match seed has a real `<label for>` now; `MoreScreen.vue` still stands and was not this branch's file | ~~`SeasonScreen.vue`~~, `MoreScreen.vue` | medium | low | not reachable as named textboxes |
 | D10 | Date lines are plain `<p>` on three screens | Home, Calendar, ThisWeek | low | medium | the app's most-asserted string has no role |
 | D11 | Duplicate names across live surfaces – two `Dismiss` banners can coexist; `Load` means both a career and a slot | `App.vue`, `MoreScreen.vue`, `CalendarScreen.vue` | low | medium | strict-mode collisions; every journey stays on Home to avoid the last one |
 | D12 | `aria-label` on a non-interactive `div` – inert, a `div` has no role to carry it | `TrophiesScreen.vue` | low | low | the not-yet-won cells are unreachable |
 
-**D3 and D4 are the highest-priority items in this document**, not because they are the worst
-accessibility defects – D1, D2 and D7 are – but because they are the two that cost coverage.
+**D3 and D4 were the highest-priority items in this document**, not because they are the worst
+accessibility defects – D1, D2 and D7 are – but because they are the two that cost coverage. **D4 is
+closed; D3 stands**, and it is now the single highest-priority item here.
 
 ## 13. Metrics (CTFL §5.3)
 
@@ -382,7 +395,7 @@ accessibility defects – D1, D2 and D7 are – but because they are the two tha
 | screens touched end-to-end | 6 of 10 |
 | mechanics with an e2e claim | 8 of 18 covered, 4 partial, 6 delegated |
 | accepted risk items | 7, each with impact, likelihood and reason |
-| defects raised by this work | 12, none fixed here |
+| defects raised by this work | 12 raised; **2 closed** (D4, D9's Season half) on `fix/r14-group-c` |
 | `data-testid` in the repository | 0 |
 
 **Coverage is deliberately not reported as a percentage.** A single number over levels this different

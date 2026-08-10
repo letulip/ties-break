@@ -51,6 +51,9 @@ import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
 // feed rule (`feedContext`/`feedShows`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
 import { HORIZON_WEEKS, entryBandTrack, feedContext, feedShows, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
+// D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with the
+// Calendar so the two surfaces cannot call the same tournament two different things.
+import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
@@ -767,15 +770,25 @@ function confirmVacation(v: { week: number; packageId: string; label: string; pr
   planSheet.value = null
 }
 
-function askCancelVacation(row: CalendarRow): void {
-  const booking = row.vacation!
+/** R14-1: ONE CONFIRM, TWO DOORS. The un-painted fallback row's own Cancel and the planner sheet's
+ *  both land here, so the sentence the parent reads before a refund cannot depend on which surface
+ *  he came through. It takes the booking rather than a `CalendarRow` for exactly that reason – the
+ *  sheet has no row. */
+function askCancelVacation(week: number, booking: VacationBooking): void {
   pendingConfirm.value = {
-    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(row.week)}? ${
+    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(week)}? ${
       booking.paidCents > 0 ? `${formatCents(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
     }`,
     confirmLabel: 'Cancel the trip',
-    onConfirm: () => game.cancelVacation(row.week),
+    onConfirm: () => game.cancelVacation(week),
   }
+}
+/** The planner sheet asked to unbook the week it was opened on (R14-1). The sheet closes first, the
+ *  same way `confirmVacation`/`confirmPractice` hand over: the confirm is the only thing on screen
+ *  while the decision is being taken. */
+function cancelVacationFromPlanner(v: { week: number; packageId: string; label: string; paidCents: number }): void {
+  planSheet.value = null
+  askCancelVacation(v.week, { week: v.week, packageId: v.packageId, paidCents: v.paidCents })
 }
 function askCancelPractice(row: CalendarRow): void {
   const booking = row.practice!
@@ -1250,9 +1263,17 @@ function closeExhibition(): void {
               <template v-else>
                 <!-- Fatigued is a soft, warned CHOICE: the Enter stays ACTIVE and amber, with a
                      "race anyway?" warning – never greyed out. -->
+                <!-- ⚠ THE NAME SAYS WHICH TOURNAMENT (defect D4, docs/specs/e2e-coverage.md §12 -
+                     the highest-priority item on that list, and the direct cause of gap 8.1). The
+                     feed draws one of these per card and the whole accessible name was the word
+                     "Enter", so eight cards were eight controls a selector cannot tell apart. The
+                     VISIBLE word is unchanged and is still the first word of the name, which is what
+                     WCAG 2.5.3 asks; `enterActionName` is shared with the Calendar so the two
+                     surfaces cannot call the same event two different things. -->
                 <PrimaryPill
                   :risky="row.event.cautionReason === 'fatigued'"
                   :disabled="fundsShort(row.event) || game.busy"
+                  :aria-label="enterActionName(row.event)"
                   @click="askEnter(row.event)"
                 >
                   Enter
@@ -1338,7 +1359,7 @@ function closeExhibition(): void {
               </span>
             </span>
             <span class="planned-actions">
-              <button :disabled="game.busy" @click="askCancelVacation(row)">Cancel</button>
+              <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">Cancel</button>
             </span>
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
@@ -1434,8 +1455,17 @@ function closeExhibition(): void {
         </div>
         <PrimaryPill class="friendly-go" @click="playExhibition">Play match</PrimaryPill>
       </Card>
+      <!-- ⚠ IT HAS A LABEL NOW (defect D9, docs/specs/e2e-coverage.md §12: unlabelled text inputs,
+           placeholder only). A placeholder is not a name - it is content that disappears the moment
+           anything is typed - so this box was not reachable as a named textbox at all, and a screen
+           reader announced an anonymous edit field beside a Play button. A real `<label for>` is the
+           fix rather than an `aria-label`, because the one thing this control needed was to say what
+           it is to EVERYBODY, sighted users included: "seed (optional)" vanished on the first
+           keystroke, which is exactly when the field is hardest to identify. The placeholder stays
+           as the hint it always was, with the word the label now carries taken out of it. -->
       <div class="controls friendly-seed">
-        <input v-model="exhibitionSeed" type="text" placeholder="seed (optional)" />
+        <label class="hint friendly-seed-label" for="friendly-seed">Seed</label>
+        <input id="friendly-seed" v-model="exhibitionSeed" type="text" placeholder="optional" />
       </div>
       <!-- ⚠ THE VIEWER USED TO BE RIGHT HERE, INLINE, and that was the fourth-place bug the owner
            found on 30.07 - there is a fourth place the match viewer lives, and all four should open
@@ -1487,6 +1517,7 @@ function closeExhibition(): void {
       :highlight-package-id="planSheet.highlightPackageId"
       @book-practice="confirmPractice"
       @book-vacation="confirmVacation"
+      @cancel-vacation="cancelVacationFromPlanner"
       @close="planSheet = null"
     />
     <ConfirmDialog
@@ -1951,6 +1982,12 @@ section.bare .event-cards {
 /* The seed box is a developer affordance, not part of the card. */
 .friendly-seed {
   margin-top: 10px;
+}
+
+/* D9's label. `.controls` is already a flex row, so the word sits beside the field; it takes the
+   muted `.hint` ink because it names a developer affordance rather than a decision. */
+.friendly-seed-label {
+  margin: 0;
 }
 
 /* The entry fee sits with the deadline chips but is NOT one – it is a figure, so it reads white and

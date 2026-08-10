@@ -713,10 +713,27 @@ function start(): void {
    The names moved to the `playStyle` ids for the same reason the pose files did: one vocabulary. */
 
 /* `.onboarding` (shared with the splash and the tournament flow) already fixes this to the
-   viewport as a column; the shell takes what is left of it. */
+   viewport as a column; the shell takes what is left of it.
+
+   ⚠ AND IT IS CAPPED AT THE APP'S OWN WIDTH (R14-9, the owner: onboarding is not width-capped on
+   desktop, unlike every other screen). It never was, and the reason is structural rather than an
+   oversight: the cap lives on `#app`, and `.onboarding` is a `position: fixed` takeover pinned to
+   the viewport, so this wizard is the one screen in the game that hangs OUTSIDE the frame every
+   other screen inherits. On a 1440px display the rail, the headings, the fields and the footer pair
+   all ran the full width while the tab shell behind them was 880.
+
+   The cap is `--app-max-width` – the SAME declaration `#app` uses, named in src/style.css for this
+   call site – and not a second number of this screen's own. It goes on the shell rather than on
+   `.onboarding` because the takeover is also what paints the page behind it: capping the painted box
+   would letterbox the wizard in the page colour instead of centring its column on it.
+   `margin-inline: auto` is the centring half - a flex item with a max-width is left-aligned in a
+   column container until it is told otherwise, which is `margin: 0 auto`'s job on `#app` too. */
 .ob-shell {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  max-width: var(--app-max-width);
+  margin-inline: auto;
 }
 
 /* --- the step rail --------------------------------------------------------- */

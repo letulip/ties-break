@@ -6,18 +6,39 @@
 // `.guide-card` already is - because this is a popup over the diary page rather than a screen, and
 // the owner asked for exactly that: «попапчик получить с письмом-предложением».
 //
+// ⚠ AND SINCE R14-2 IT IS A MAIL CLIENT RATHER THAN A STACK OF OPEN PAPER. The owner's words: a
+// list, unread in bold, click to open, a bin per row once read, yes/no on delete. Every letter used
+// to render in full, one under another, so a career with forty of them handed the player forty
+// sheets of paper and no way to see what was in the pile - the one that needed an answer was
+// somewhere in the middle of it, and the one he had already dealt with never went away.
+//
+// So there are two views in one sheet now: the LIST, and one letter OPEN. The letter itself is
+// unchanged - `OfferLetter` renders it exactly as it always did, sign and refuse included - because
+// the paper was never the problem.
+//
+// ⚠ "UNREAD" AND "DELETED" ARE THIS DEVICE'S FACTS, NOT THE WORLD'S, and both live in
+// `composables/inboxMail.ts` with the argument written out there. In short: the protocol states the
+// engine cannot know what the player has looked at, so unread is a client-side concept; and DELETE
+// MEANS DISMISS FROM THE LIST, never destroy - a letter that lapsed still explains what happened,
+// and a signed one is the only surface stating the contract she is under.
+//
 // ⚠ SIGNING GOES THROUGH `ConfirmDialog`, AND IT IS THE ONE IRREVERSIBLE THING IN HERE. Every
 // destructive action in More is behind that gate; a contract the parent cannot take back deserves
 // the same one. Refusing is terminal too, and is deliberately NOT gated: a refusal costs nothing that
 // was ever his, and a confirm on both buttons would read as the game asking him to be sure about
 // having an opinion. What is on the confirm is the deal itself, so the last thing he reads before
 // committing is the same sentence the letter made.
+//
+// Removing a letter from the list gets its own confirm because the owner asked for one, and because
+// a control that empties a row on a single press is one mis-tap from a pile the player cannot get
+// back - even though nothing behind it is destroyed.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
-import type { KitOfferTerms, Offer } from '../shared/protocol'
+import type { EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
 import { SPONSOR_TIERS, dealUntilWeek } from '../engine/offers'
 import { weekLabel } from '../shared/dates'
+import { letterDeletable, useInboxMail } from '../composables/inboxMail'
 import OfferLetter from './OfferLetter.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import IconButton from './ui/IconButton.vue'
@@ -26,6 +47,7 @@ import { playSfx } from '../audio/sfx'
 defineEmits<{ close: [] }>()
 
 const game = useGameStore()
+const mail = useInboxMail()
 const week = computed(() => game.snapshot?.week ?? 0)
 /** Newest first: the letter that needs answering is the one that just arrived.
  *
@@ -46,8 +68,113 @@ const letters = computed(() =>
     .sort((a, b) => b.o.week - a.o.week || rungOf(b.o) - rungOf(a.o) || b.i - a.i)
     .map((x) => x.o),
 )
-const open = computed(() => letters.value.filter((o) => o.state === 'open' && week.value <= o.deadlineWeek))
+const live = (o: Offer): boolean => o.state === 'open' && week.value <= o.deadlineWeek
+const open = computed(() => letters.value.filter(live))
 
+// --- the list ------------------------------------------------------------------------------
+/** WHO WROTE. The letterhead in one line: a brand signs with its own name, and the two desks that
+ *  have no brand say which desk they are - the same distinction `OfferLetter` draws when it decides
+ *  whether to print a mark at all. */
+function senderOf(o: Offer): string {
+  if (o.kind === 'entry') return 'Tournament desk'
+  if (o.kind === 'tour') return 'Tour office'
+  return (o.terms as KitOfferTerms).brand
+}
+
+/** WHAT IT IS ABOUT, in the words the paper itself uses. Every arm here has a matching arm in
+ *  `OfferLetter`'s template, and that is the rule: a subject line that promised something the sheet
+ *  does not say would be worse than no subject line, because it is what the player decides to open
+ *  on. Nothing is invented - each one restates its own letter's first sentence. */
+function subjectOf(o: Offer): string {
+  if (o.kind === 'entry') {
+    const t = o.terms as EntryLetterTerms
+    if (!t.cancelled) return `Entry confirmed – ${t.label}`
+    // The desk acting and the parent acting are two different letters (fix/outgrown-entry): a
+    // release the parent never asked for must not be titled as his own withdrawal.
+    return (t.releasedBy ?? 'parent') !== 'parent' ? `Withdrawn by the desk – ${t.label}` : `Withdrawal confirmed – ${t.label}`
+  }
+  if (o.kind === 'tour') {
+    const t = o.terms as TourLetterTerms
+    if (t.notice === 'due') return `Required event – ${t.label ?? 'the tour'}`
+    if (t.notice === 'penalty') return 'Penalty points recorded'
+    return 'Entries suspended'
+  }
+  const t = o.terms as KitOfferTerms
+  if (t.ended) return 'The kit deal has ended'
+  return t.renewal ? 'Another year in our kit' : 'A kit deal for your daughter'
+}
+
+/** The quiet second line: when it arrived, and whether it is still waiting on him. The weeks-left
+ *  count is the same one the paper prints under itself. */
+function metaOf(o: Offer): string {
+  const filed = weekLabel(o.week)
+  if (!live(o)) return filed
+  const weeksLeft = Math.max(0, o.deadlineWeek - week.value + 1)
+  return `${filed} · ${weeksLeft} ${weeksLeft === 1 ? 'week' : 'weeks'} to decide`
+}
+
+interface Row {
+  offer: Offer
+  from: string
+  subject: string
+  meta: string
+  unread: boolean
+  /** the bin shows once the letter has been READ and is no longer live – see `letterDeletable` */
+  removable: boolean
+  /** still waiting on an answer: the row wears the accent, the way the inbox dot does */
+  waiting: boolean
+}
+const rows = computed<Row[]>(() =>
+  letters.value
+    .filter((o) => !mail.isBinned(o.id))
+    .map((o) => ({
+      offer: o,
+      from: senderOf(o),
+      subject: subjectOf(o),
+      meta: metaOf(o),
+      unread: !mail.isRead(o.id),
+      removable: mail.isRead(o.id) && letterDeletable(o, week.value),
+      waiting: live(o),
+    })),
+)
+
+/** Which letter is being read, or null for the list. The sheet is its own little two-screen stack:
+ *  there is no route to push and nothing to remember once it closes. */
+const openId = ref<string | null>(null)
+const openLetter = computed(() => rows.value.find((r) => r.offer.id === openId.value)?.offer ?? null)
+
+function openRow(id: string): void {
+  playSfx('clickSoft')
+  // OPENING IS THE READING, exactly as tapping the bell is the looking (composables/inboxCue.ts).
+  // Nothing else in the app can mark a letter read, because nothing else shows it.
+  mail.markRead(id)
+  openId.value = id
+}
+function backToList(): void {
+  playSfx('clickSoft')
+  openId.value = null
+}
+
+// --- taking a letter off the list ------------------------------------------------------------
+const pendingBin = ref<Offer | null>(null)
+const binMessage = computed(() =>
+  pendingBin.value
+    ? `Take this letter from ${senderOf(pendingBin.value)} off your list? Nothing that happened is undone – it stays in her history, it just stops showing here.`
+    : '',
+)
+function askBin(o: Offer): void {
+  playSfx('clickSoft')
+  pendingBin.value = o
+}
+function doBin(): void {
+  const o = pendingBin.value
+  pendingBin.value = null
+  if (!o) return
+  mail.bin(o.id)
+  if (openId.value === o.id) openId.value = null
+}
+
+// --- signing ---------------------------------------------------------------------------------
 const pendingSign = ref<Offer | null>(null)
 /** WHAT SIGNING COVERS, in the same words the paper used. `frame` is a racquet to a reader and a
  *  frame to the equipment model; the letter already made that translation and the confirm must not
@@ -101,19 +228,58 @@ async function doRefuse(id: string): Promise<void> {
     <div class="guide-card">
       <IconButton class="replay-close" icon="close" label="Close" title="Close" @click="$emit('close')" />
       <p class="guide-title">Inbox</p>
-      <p v-if="letters.length === 0" class="hint">
-        Nothing yet. Sponsors write to players they have been watching for a season.
-      </p>
-      <p v-else-if="open.length === 0" class="hint">Nothing waiting on an answer.</p>
-      <OfferLetter
-        v-for="o in letters"
-        :key="o.id"
-        class="inbox-letter"
-        :offer="o"
-        :week="week"
-        @sign="askSign"
-        @refuse="doRefuse"
-      />
+
+      <!-- ══ ONE LETTER, OPEN ══ -->
+      <!-- The paper is untouched: this is the same `OfferLetter` the sheet used to stack, with the
+           same two controls under it. All that is new is that it is the only one on screen. -->
+      <template v-if="openLetter">
+        <!-- The app has ONE back control and this is it (IconButton, bare) – see its own header for
+             why the hand-written arrow character was retired everywhere. -->
+        <IconButton class="inbox-back" icon="back" label="Back to all letters" variant="bare" @click="backToList" />
+        <OfferLetter class="inbox-letter" :offer="openLetter" :week="week" @sign="askSign" @refuse="doRefuse" />
+      </template>
+
+      <!-- ══ THE LIST ══ -->
+      <template v-else>
+        <p v-if="letters.length === 0" class="hint">
+          Nothing yet. Sponsors write to players they have been watching for a season.
+        </p>
+        <p v-else-if="rows.length === 0" class="hint">
+          Your inbox is clear. Everything you took off the list is still in her history.
+        </p>
+        <p v-else-if="open.length === 0" class="hint">Nothing waiting on an answer.</p>
+
+        <ul v-if="rows.length" class="inbox-list">
+          <li v-for="row in rows" :key="row.offer.id" class="inbox-row" :class="{ unread: row.unread }">
+            <!-- THE ROW IS A BUTTON AND THE BIN IS A SECOND ONE, side by side rather than nested:
+                 a button inside a button is not a thing, and a row that swallowed the bin's click
+                 would open the letter it was asked to remove. -->
+            <button class="inbox-open" type="button" @click="openRow(row.offer.id)">
+              <span class="inbox-line">
+                <span class="inbox-from">{{ row.from }}</span>
+                <span v-if="row.waiting" class="pill ok inbox-waiting">Needs an answer</span>
+              </span>
+              <span class="inbox-subject">{{ row.subject }}</span>
+              <span class="hint inbox-meta">{{ row.meta }}</span>
+            </button>
+            <!-- ⚠ A WORD, NOT A BIN GLYPH – AND THAT IS A FLAGGED ART GAP, not a design choice.
+                 The owner asked for a bin icon per row, and `public/icons/` has no bin: AppIcon
+                 draws files from that folder and this repo does not invent artwork. A named control
+                 is the honest stand-in and it is strictly better for a screen reader; the swap is
+                 one element (`<IconButton icon="bin" :label="...">`) the day the master lands.
+                 The accessible name CONTAINS the visible word, which is what WCAG 2.5.3 asks. -->
+            <button
+              v-if="row.removable"
+              class="inbox-bin"
+              type="button"
+              :aria-label="`Delete the letter: ${row.from} – ${row.subject}`"
+              @click="askBin(row.offer)"
+            >
+              Delete
+            </button>
+          </li>
+        </ul>
+      </template>
     </div>
   </div>
 
@@ -124,6 +290,16 @@ async function doRefuse(id: string): Promise<void> {
     @confirm="doSign"
     @cancel="pendingSign = null"
   />
+
+  <ConfirmDialog
+    v-if="pendingBin"
+    :message="binMessage"
+    confirm-label="Delete"
+    cancel-label="Keep it"
+    danger
+    @confirm="doBin"
+    @cancel="pendingBin = null"
+  />
 </template>
 
 <style scoped>
@@ -133,5 +309,101 @@ async function doRefuse(id: string): Promise<void> {
    it without the card needing a rule of its own. */
 .inbox-letter {
   margin-top: 18px;
+}
+
+/* Back out of one letter, into the list. `.guide-card` is a plain block, so this is pulled left by
+   a negative margin that cancels the 32px control's own box rather than by an alignment property
+   the parent has no flow to honour. */
+.inbox-back {
+  margin: 8px 0 0 -6px;
+}
+
+/* THE LIST. Rows separated by a hairline, which is right here and wrong for the letters above: a
+   mail list is one object with rows in it, not a stack of separate objects. */
+.inbox-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.inbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.inbox-row:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.inbox-open {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.inbox-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inbox-from {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.inbox-subject {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inbox-meta {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* UNREAD IS BOLD, and it is bold on the two lines that say what the letter IS – the sender and the
+   subject. The date line stays quiet in both states: a bold timestamp is noise, and the owner asked
+   for the unread letter to stand out, not for the row to shout. */
+.inbox-row.unread .inbox-from,
+.inbox-row.unread .inbox-subject {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.inbox-waiting {
+  flex: none;
+}
+
+/* The bin, as a word until there is a glyph for it (see the template). Quiet by default so a list of
+   read letters is not a column of shouting controls, and it takes the app's own danger ink on hover
+   rather than a colour of its own. */
+.inbox-bin {
+  flex: none;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.inbox-bin:hover {
+  border-color: var(--danger);
+  color: var(--danger);
 }
 </style>
