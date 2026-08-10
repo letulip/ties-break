@@ -12,6 +12,34 @@ last-reviewed: 2026-08-09
 draft, 09.08, after the owner's corrections to the layout. Where a number cannot be established
 without a bench run it is listed in §12 rather than guessed.
 
+## ✅ Approved to build – the owner's rulings, 10.08
+
+The design is cleared. Three answers, and one of them pre-empts a bench item:
+
+1. **WHEN is not counted as a separate term.** «когда – не считаем пока что, покликаю и скажу потом
+   если что не так.» The run-length term stays removed (§6): the per-day cap and the school/no-school
+   difference already supply that pressure from constants that ship today. ⚠ **Held open by the owner
+   himself, not by us** – he intends to play the built version and re-open it if placement turns out
+   not to bite. Do not treat its absence as settled design; treat it as a measurement he will take by
+   hand.
+2. **The coach reaches inside the match.** «да.» The mechanism in §8 is approved as specified:
+   `applySurfaceStyle` takes her `MatchPlayer` and returns an adjusted one with zero RNG, and what
+   moves is **composure**, which the point model spends precisely at break points
+   (`p -= (1 - composure/100) * BIG_POINT_MAX_PENALTY`). It does not fade with headroom, which is the
+   whole answer to «он нам вообще зачем?» at +0.2–0.4% a season. Only its **size by rung** is still
+   open (§12 item 4).
+3. **`summerLoadFactor` follows the doubling, not the calendar.** «да.» §12's headline bench item is
+   ruled **in advance**: the direction is decided and the sweep measures the SIZE, not whether to do
+   it. ⚠ This is a behavioural change to a shipped, measured window – `school-ends-2026-08.md` owns
+   the harness – so the fallback in §12 item 1 stays available if the sweep says the magnitude is
+   wrong, but the fallback may no longer be chosen merely because the change is inconvenient.
+
+**And one ruling that lands outside this spec**, recorded here because it is the same question:
+Home's "Coach note" card makes the coach's claim to a family paying nobody. The owner, 10.08: «для
+самотренера надо убрать пока картинку оттуда и подпись, а мысль пусть останется.» The thought stays,
+the portrait and the signature go. That is a `HomeScreen.vue` change and belongs to whichever wave
+touches it, not to this design.
+
 ---
 
 ## 1. What a training week is today: a picture of one number
@@ -648,9 +676,11 @@ a punishment. The fix in that case is `COACH_ACCURACY.self`, never a cap on anyb
 
 ### What still needs a number before it ships
 
-No open questions for the owner – these are bench items.
+No open questions for the owner – these are bench items, and item 1's DIRECTION is now ruled
+(see the approvals block at the top); what is left of it is a magnitude.
 
-1. **⚠ THE HEADLINE. Does `summerLoadFactor` follow the doubling instead of the calendar (§3)?** The
+1. **⚠ THE HEADLINE, AND THE OWNER RULED IT IN ADVANCE (10.08): `summerLoadFactor` DOES follow the
+   doubling instead of the calendar (§3).** So the sweep measures the SIZE, not the direction. The
    claim to test: a post-school career that doubles its days lands where today's does, and one that does
    not lands measurably lower **as a choice rather than a trap**. `school-ends-2026-08.md` already has
    the harness. **Fallback if the sweep dislikes it:** keep the window bonus automatic as it ships and
