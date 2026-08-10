@@ -235,9 +235,12 @@ function askVacation(row: PackageRow): void {
            an action, so nothing here is the recommended one. The refund is stated before the press
            and again on the confirm, because it is the fact that makes this reversible. -->
       <template v-if="tab === 'booked'">
+        <!-- "booked for this week" was the first draft and it was ambiguous in the browser: the
+             sheet is about a FUTURE week and the title above already names it, so "this week" read
+             as the one the player is standing in. -->
         <p class="plan-lead">
-          {{ bookedLabel }} – booked for this week, {{ feeLabel(booked!.paidCents) }}. She plays no
-          tournament while she is away.
+          {{ bookedLabel }} – booked, {{ feeLabel(booked!.paidCents) }}. She plays no tournament
+          while she is away.
         </p>
         <p class="hint">
           Cancel any time before the week starts and
