@@ -205,9 +205,14 @@ describe('the plan, read back as days', () => {
     const card = read('../src/components/WeekRecapCard.vue')
     expect(card).toContain("import { planWeek } from '../engine/plan'")
     expect(card).toContain('const week = planWeek(plan.value)')
-    // ...and BOTH rules it used to keep are GONE from the file rather than merely bypassed
-    expect(card).not.toContain('Math.floor((i * trainDays) / 7)')
-    expect(card).not.toContain('sessionDays(sessionsForPlan(')
+    // ...and BOTH rules it used to keep are GONE from the file rather than merely bypassed.
+    // ⚠ THROUGH `codeOf`, WHICH IS THE HOUSE HELPER AND EXISTS FOR EXACTLY THIS. This codebase
+    // documents what it deliberately did NOT do, so the card's own header explains the expander it
+    // stopped importing - and a `not.toContain` over raw source fails on a note that merely names the
+    // thing it forbids. It did, the first time this assertion ran.
+    const code = codeOf(card)
+    expect(code).not.toContain('Math.floor((i * trainDays) / 7)')
+    expect(code).not.toContain('sessionDays(sessionsForPlan(')
     // the COUNT never differed - both were `round(train% of 7)` - which is why only the placement moved
     expect(sessionsForPlan(75)).toBe(Math.round((75 / 100) * 7))
   })
