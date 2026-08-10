@@ -105,6 +105,7 @@ function noStowaways(): Plugin {
  *  was ~40s, and no sim file may sit near birpc's hard 60s RPC ceiling on a 2-core runner. */
 const HEAVY_SIM_FILES = [
   '**/tests/econ-bench.test.ts',
+  '**/tests/econ-bench-survival.test.ts',
   '**/tests/econ-reach.test.ts',
   '**/tests/econ-reach-agree.test.ts',
   '**/tests/econ-reach-pro.test.ts',
