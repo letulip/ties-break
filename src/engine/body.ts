@@ -48,13 +48,84 @@ export const BODY_REGIONS: readonly { part: string; weight: number }[] = [
 ]
 
 export function drawBodyRegion(rng: Rng): string {
+  return drawBodyRegionFrom(rng, BODY_REGIONS)
+}
+
+/** The same single pull, walked against ANY table of the same shape.
+ *
+ *  ⚠ `drawBodyRegion` IS NOW THIS FUNCTION WITH THE SHIPPED TABLE, and that identity is the reason
+ *  the extraction is safe: one pull, one cumulative walk, same fallback. The `seed:injury:<week>`
+ *  sequence and the frozen MAIN capture (41550 / e6b0c709) cannot see a refactor that changes
+ *  neither the number of draws nor their order. */
+export function drawBodyRegionFrom(rng: Rng, table: readonly { part: string; weight: number }[]): string {
   const u = rng() // exactly one pull
   let cum = 0
-  for (const region of BODY_REGIONS) {
+  for (const region of table) {
     cum += region.weight
     if (u < cum) return region.part
   }
-  return BODY_REGIONS[BODY_REGIONS.length - 1].part
+  return table[table.length - 1].part
+}
+
+// =================================================================================================
+// ⚠ AND AN INJURY LANDS WHERE SHE WORKED (docs/specs/match-retirement.md §5) - THE SAME UNIFORM
+// =================================================================================================
+//
+// knock.ts made this argument first, for knocks, and it is repeated here rather than referenced
+// because it is the property that has to survive every future edit of this file:
+//
+//   THE DRAW DOES NOT MOVE. `drawBodyRegionFrom` takes exactly one pull whatever table it is handed;
+//   weighting the table changes what that uniform MAPS TO, never what the uniform IS. Zero draws
+//   added, on any stream, so nothing that ships today moves and the frozen MAIN capture cannot see
+//   this at all. That claim is proved by reproduction in tests/match-retirement.test.ts (the same
+//   generator, tapped, gives the same pull count and the same residual sequence under both tables)
+//   rather than asserted here.
+//
+// TWO TILTS, and they answer two different questions about the same body:
+//
+//   THE WEEK  - what she has been drilling, off `loadedPartShares` (knock.ts's fold over the session
+//               grid). Six weeks of serving develops a shoulder; this is what makes the shoulder pay
+//               for it. Shares sum to at most 1 per part-set, so a fully aimed week roughly doubles
+//               the odds on the four joints that kind of session loads.
+//   THE RECORD - the parts he has already sent her back out on (`pushedParts`). A career that keeps
+//               pushing does not collect a series of unrelated Fridays; it breaks the shoulder it
+//               has been ignoring. Same argument `KNOCK_REPEAT_TAU` makes, applied to WHERE rather
+//               than to HOW LIKELY.
+//
+// ⚠ IT IS A TILT AND NOT A RISK, exactly as `KNOCK_AIM_TILT` is. Nothing here changes how often she
+// gets hurt - `retireHazard` reads fatigue and nothing else - only where it lands when she does.
+// That is the difference between a consequence and a penalty.
+
+/** How far a part the week ENTIRELY loaded is tilted. Matches `KNOCK_AIM_TILT` deliberately: it is
+ *  the same claim about the same week, and two numbers for one idea would drift apart. */
+export const BODY_AIM_TILT = 2.0
+/** ...and how far a part already on the record is. Above the aim tilt because it is a stronger
+ *  statement: the week is what she did, the record is what has already given way once. */
+export const BODY_PUSHED_TILT = 2.6
+
+/** `BODY_REGIONS`, tilted toward what this week loaded and what the career has already broken.
+ *
+ *  ⚠ RETURNS THE SHIPPED ARRAY ITSELF WHEN NOTHING TILTS IT, and that identity return is load-bearing
+ *  for precisely the reason knock.ts states: these twelve weights are written as the owner's research
+ *  left them (`0.48 * 0.3`) and sum to 1.0 in decimal but not necessarily in binary, so a
+ *  renormalising pass over an all-ones tilt could divide by 0.9999999999999999 and flip a boundary
+ *  uniform into the neighbouring part. A career with a generic week and a clean record must walk
+ *  byte-identical cumulative sums. */
+export function tiltedBodyRegions(
+  loaded: ReadonlyMap<string, number>,
+  pushed: readonly string[],
+): readonly { part: string; weight: number }[] {
+  if (loaded.size === 0 && pushed.length === 0) return BODY_REGIONS
+  let total = 0
+  const tilted = BODY_REGIONS.map((r) => {
+    const share = loaded.get(r.part) ?? 0
+    const onRecord = pushed.includes(r.part) ? BODY_PUSHED_TILT : 1
+    const weight = r.weight * (1 + (BODY_AIM_TILT - 1) * share) * onRecord
+    total += weight
+    return { part: r.part, weight }
+  })
+  // Renormalise: the tilt REDISTRIBUTES where it lands, it never changes how often.
+  return tilted.map((r) => ({ part: r.part, weight: r.weight / total }))
 }
 
 // =================================================================================================

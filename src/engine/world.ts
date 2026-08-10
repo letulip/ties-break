@@ -151,8 +151,8 @@ import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/
 export { summerBlockWeek, summerLoadFactor, summerConditionCost }
 import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from './world/player'
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
-import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio } from './world/injury'
-export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio }
+import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
+export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry }
 import { eventById } from './world/bookings'
@@ -1543,6 +1543,20 @@ function finalizeTournament(world: WorldState): void {
   const tier = TIERS[event.tier]
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   const points = tier.points[kidFinish] ?? 0
+  // ⚠ SHE STOPPED, AND THE OWNER'S RULING IS THAT NOTHING ON THIS LINE CHANGES (10.08: «если травма
+  // до матча – ничего не защитываем, если во время – защитываем поражение в текущей ступени»).
+  // A retirement is a defeat in the round she reached and pays that round in full - the same finish
+  // index, the same points table, the same cheque. There is no partial credit and no haircut, at any
+  // level: ITF WTT Regs Women's §XII.C.5.b ("she shall receive the loser's prize money / points for
+  // the round in which she retired"), WTA §VIII.B.3.a.i(b) + §IX.C.1.a.ii, ITF Juniors Reg 31 a) i)
+  // (where the question does not arise because juniors are paid nothing, ever). See
+  // docs/research/retirement-and-withdrawal.md §§2-3 and docs/specs/match-retirement.md §3.
+  //
+  // ⚠ WHICH IS WHY THIS IS A LOOKUP AND NOT A BRANCH. `retiredRound` is read purely to write the
+  // right sentence and to open the injury; the arithmetic above it never sees it. A version of this
+  // feature that discounted the points would have needed a reason, and there is not one anywhere in
+  // four rulebooks.
+  const retiredMatch = kidMatchesOf(p.result).find((m) => m.retiredId === KID_ID)
 
   // v10: remember the kid's best (smallest) finish index per tier – drives the Home season strip.
   const priorBest = world.bestFinishByTier[event.tier]
@@ -1599,7 +1613,29 @@ function finalizeTournament(world: WorldState): void {
 
   // A2: AND THIS IS WHERE THE TENNIS FINALLY PAYS HER (task #17). Same commit point as the points,
   // off the same finish index, out of the tier's own table – so a result cannot award one without
-  // the other and a skipped event or a walkover pays nothing because it never reaches finalize.
+  // the other and a skipped event or a medical withdrawal pays nothing because it never reaches
+  // finalize.
+  //
+  // ⚠⚠ RESTATED BY THE RETIREMENT SLICE (10.08), AND READ THIS BEFORE TRUSTING THE SENTENCE ABOVE.
+  // It used to end "...a skipped event or a walkover pays nothing because it never reaches
+  // finalize", and a reader took from it the rule that AN INJURY WEEK NEVER PAYS. That rule is now
+  // FALSE, and leaving the old wording would have been worse than no comment at all. What is true:
+  //
+  //   NEVER REACHES FINALIZE (still, and unchanged): a skipped event; the walkover branch in
+  //     tickWeek (entered, the layoff covers the week, she never takes the court); the medical
+  //     withdrawal. All three are the rulebooks' WITHDRAWAL, not their walkover – see the note on
+  //     `arrivalStatus`' verdict and research §1 – and all three correctly pay nothing.
+  //   REACHES FINALIZE AND IS PAID IN FULL (new): a RETIREMENT. She took the court and stopped, so
+  //     the round she had reached is hers, cheque included. This is the whole of the owner's ruling
+  //     and it is also what every rulebook says.
+  //
+  // The distinguishing question was never "did she get hurt" – it is "did she strike a ball". The
+  // real tours price exactly that difference deliberately, to make a player start the match: an ITF
+  // first-round WITHDRAWAL "will receive no prize money, and the Tournament shall not count on their
+  // record" (§XII.C.5.b.i.2.d) while a retirement in the same round is paid. Two more comments in
+  // this file (the appearance fee, ~40 lines down; the run's condition strain, ~70 down) and one in
+  // shared/protocol.ts (`SeasonSummary.prizeCents`) leaned on the same invariant and are restated in
+  // the same terms.
   //
   // ⚠ NO WEALTH CORRIDOR ON THIS LINE, AND THAT IS THE WHOLE POINT OF IT. Everything else the family
   // touches is priced by where they come from: the trip that got her here was multiplied by
@@ -1645,6 +1681,14 @@ function finalizeTournament(world: WorldState): void {
   // APPEARING: a skipped event, a walkover or a medical withdrawal never reaches finalize, so
   // neither line pays. And neither scales with the wealth corridor - see the prize note above, which
   // is the same rule for the same reason.
+  //
+  // ⚠⚠ RESTATED BY THE RETIREMENT SLICE (10.08). "Conditional on APPEARING" is still exactly right,
+  // and the retirement is the case that shows what the word was always doing: she DID appear. She
+  // was on the poster, she walked out, she played. So both lines pay on a retirement, and that is
+  // not a loophole – an appearance fee is money for being there, and she was. What still pays
+  // nothing is the trio that never reaches this function: a skipped event, the injury walkover and
+  // the medical withdrawal, none of which put her on a court. See the fuller restatement above the
+  // prize money.
   const appearance = appearanceFeeFor(world, event.tier)
   if (appearance > 0) {
     world.fundsCents += appearance
@@ -1670,6 +1714,14 @@ function finalizeTournament(world: WorldState): void {
 
   // R9-7: the run's physical toll lands HERE, when it commits – per-match, not flat per tier.
   // A skipped event week (R9-9) or a walkover never reaches finalize, so neither costs strain.
+  //
+  // ⚠⚠ RESTATED BY THE RETIREMENT SLICE (10.08). A RETIREMENT DOES REACH FINALIZE, so it DOES cost
+  // strain – and it costs the honest amount without a rule of its own, which is the point worth
+  // recording. `tournamentRunStrain` folds `matchDrain` over the run's records and `matchDrain`
+  // reads the SCORELINE; a retirement's scoreline is the partial one she stopped at, so a match she
+  // walked off after five games is priced as the shorter thing it was. Her body then takes the
+  // layoff on top, opened below by `retirementInjury` – so the week charges her for the tennis she
+  // played and for the injury separately, which is the truth of it.
   world.condition = clamp(
     world.condition - tournamentRunStrain(event.tier, kidMatchesOf(p.result)),
     ECONOMY.condition.min,
@@ -1701,9 +1753,31 @@ function finalizeTournament(world: WorldState): void {
     type: 'tournament',
     text:
       `${tier.label} (${event.surface}, ${weekLabel(event.week)}): ${world.profile.kidName} – ` +
-      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before, BEST_N_BY_TRACK[track], after === 0)}`,
+      // ⚠ A CLAUSE ON THE END, NOT A REPLACEMENT FOR THE FINISH. `finishLabel` is a NOUN – she is the
+      // Semifinalist, and she still is: that is the owner's ruling («защитываем поражение в текущей
+      // ступени») and it must be the first thing the line says, unqualified and with the points
+      // beside it. What no existing token can say is that she did not finish, and a week that ended
+      // with her walking off court must not read identically to a week she was beaten in. So the
+      // clause comes AFTER the arithmetic, which is the sentence doing its second job: the player
+      // reads "Semifinalist (+30 pts) – she retired hurt" on one line and learns the rule (the round
+      // she reached is hers, in full) without ever being told it.
+      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before, BEST_N_BY_TRACK[track], after === 0)}${retiredMatch ? ' – she retired hurt' : ''}`,
     finishIdx: kidFinish,
   })
+  // ...AND THE BODY GETS ITS BILL. Opened here, at the commit point, for the same reason the cheque
+  // is: the run is over and its result is final, so nothing that follows can be re-decided by it.
+  //
+  // ⚠ AFTER the summary line and BEFORE the champion's, so the feed reads in the order it happened –
+  // she stopped, the run is scored, the clinic says how long. `retirementInjury` emits its own
+  // `'injury'` event and its own scans expense, sweeps the entries the layoff swallows and retires a
+  // live knock, exactly as an ordinary onset does; it draws only from `seed:retire:<week>`.
+  //
+  // ⚠ AND IT CANNOT DOUBLE-OPEN ONE. `finalizeTournament` returns at its first line when `p.finished`
+  // (the reveal trio all pass through it, more than once by construction), so this runs exactly once
+  // per run. `rollInjury` at step 1c has already run this week and found her healthy – if it had
+  // not, the walkover branch in `tickWeek` would have resolved the week and no run would exist to
+  // finalize.
+  if (retiredMatch) retirementInjury(world)
   // World news: who actually took the title of the draw she played in. When the kid IS the
   // champion, the summary + first-title milestone already celebrate it, so only report others.
   const championId = Object.entries(p.result.finishes).find(([, f]) => f === 0)?.[0]

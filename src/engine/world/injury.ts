@@ -14,11 +14,12 @@
 // measured at 8 call-backs in wave 0, 0 here.
 import { ECONOMY } from '../economy'
 import { pickInt, rngFromSeed, type Rng } from '../rng'
-import { drawBodyRegion } from '../body'
+import { BODY_REGIONS, drawBodyRegionFrom, tiltedBodyRegions } from '../body'
 import { clamp } from '../condition'
 import { kitInjuryFactor, kitWearAt } from '../equipment'
 import { kitFreshCap } from '../offers'
-import { knockLive, knockTauFactor } from '../knock'
+import { knockLive, knockTauFactor, loadedPartShares, pushedParts } from '../knock'
+import { planWeek } from '../plan'
 import { coachById, physioRecoveryFactor, physioRiskFactor, tierOf } from '../coach'
 import type { InjurySeverity } from '../../shared/protocol'
 import { addEvent } from './ledger'
@@ -201,22 +202,55 @@ export function rollInjury(world: WorldState): void {
   const roll = injuryRng() // unconditional every healthy week – only tau moves
   if (roll >= injuryTau(world)) return
 
-  // Injured. Severity band, weeks-out and body region pull from the SAME per-week generator
-  // (invariance-safe: it is private to this (seed, week)).
+  onsetInjury(world, injuryRng, 'week', BODY_REGIONS)
+}
+
+/** WHERE AN INJURY COMES FROM. Two doors into the same body, and the distinction is the owner's
+ *  ruling of 10.08 rather than a taxonomy: `'week'` is the ordinary weekly roll (between
+ *  tournaments, or on arrival at one – she never takes the court, nothing counts); `'retirement'`
+ *  is the one that happened ON COURT, mid-match, where the round she had already reached is hers.
+ *  The BODY does not care which; the copy and the accounting do. */
+export type InjuryCause = 'week' | 'retirement'
+
+/**
+ * THE ONE INJURY-ONSET WRITER. Sets `world.injury`, bills the scans, sweeps the entries and
+ * practices the layoff swallows, captures the milestone, retires any live knock, and emits the news
+ * line. Everything a career carries out of an injury is decided here, whichever door it came in by.
+ *
+ * ⚠ EXTRACTED, NOT REWRITTEN, and the draw ORDER is the reason that matters. `rollInjury` used to
+ * hold this block inline and spent its pulls in exactly this sequence – severity, weeks-out, region –
+ * off `seed:injury:<week>` after the occurrence roll. Moving it changes neither the generator, the
+ * count, nor the order, so every existing career's injury timeline is byte-identical. The frozen
+ * MAIN capture (41550 / e6b0c709) never saw this stream at all.
+ *
+ * `rng` is the generator to spend, `table` the body-region table to walk – three pulls from the
+ * caller's stream, always in this order, always unconditionally.
+ */
+export function onsetInjury(
+  world: WorldState,
+  rng: Rng,
+  cause: InjuryCause,
+  table: readonly { part: string; weight: number }[],
+): void {
   const bands = ECONOMY.availability.severityBands
-  const sevRoll = injuryRng()
+  const sevRoll = rng()
   const band = bands.find((b) => sevRoll < b.cum) ?? bands[bands.length - 1]
-  let weeksOut = pickInt(injuryRng, band.weeksLo, band.weeksHi)
+  let weeksOut = pickInt(rng, band.weeksLo, band.weeksHi)
   // W4 – THE THREAD'S BILL. When she is mid-push on a knock, the injury lands on THAT part. This is
   // the payoff the accumulating thread exists for: a career that keeps sending her back out does not
   // collect a series of unrelated Fridays, it breaks the shoulder it has been ignoring, and the news
   // line says so in as many words.
   //
-  // ⚠ A POST-DRAW OVERRIDE, NOT A SKIPPED DRAW. `drawBodyRegion` still spends its one pull exactly
-  // where it always did – the override replaces the RESULT, so the `seed:injury:<week>` sequence is
+  // ⚠ A POST-DRAW OVERRIDE, NOT A SKIPPED DRAW. `drawBodyRegionFrom` still spends its one pull exactly
+  // where it always did – the override replaces the RESULT, so the caller's sequence is
   // byte-identical and every downstream draw (there are none after this, but the property is what
   // makes it safe) keeps its position. A career with no knock is untouched, so nothing shipped moves.
-  const drawnPart = drawBodyRegion(injuryRng)
+  //
+  // ⚠ AND THE TILT RIDES ON THE TABLE, NOT ON A SECOND DRAW (docs/specs/match-retirement.md §5). The
+  // retirement door hands in `tiltedBodyRegions(...)` – the same twelve parts, re-weighted toward
+  // what the week loaded and what the record has already broken. One uniform in, one part out, at
+  // this line, exactly as before.
+  const drawnPart = drawBodyRegionFrom(rng, table)
   const pushing = knockLive(world.knock, world.week) && world.knock!.choice === 'push'
   const part = pushing ? world.knock!.part : drawnPart
   // ...and the same rung scaling on how long she is out. Budget = today's 12% exactly.
@@ -284,15 +318,30 @@ export function rollInjury(world: WorldState): void {
   }
 
   const wks = `${weeksOut} wk${weeksOut === 1 ? '' : 's'}`
+  // ⚠ THE RETIREMENT GETS ITS OWN SENTENCE, AND NOT BECAUSE IT IS A DIFFERENT INJURY. The owner,
+  // 10.08: «не забудь про соответствующие записочки по итогам недели если была травма с учетом
+  // момента, когда она была». The MOMENT is the whole of what makes these weeks different – the same
+  // ankle, the same five weeks out, and one of them happened in a car park and the other happened in
+  // front of an umpire with a set and a half already on the board. Reusing "Injury: ankle strain –
+  // out ~5 wks" here would be stretching a sentence over a situation it was not written for: it says
+  // nothing about the match she was in, so the news feed would carry a retirement and a Tuesday in
+  // identical words. The three retirement lines below are new; the four ordinary ones above them are
+  // the shipped copy, untouched.
   addEvent(world, {
     week: world.week,
     type: 'injury',
     text:
-      band.severity === 'severe'
-        ? `Bad news from the clinic: ${kind} – out ~${wks}. The dream takes a hit.`
-        : pushing
-          ? `Injury: ${kind} – out ~${wks}. The knock we trained through.`
-          : `Injury: ${kind} – out ~${wks}.`,
+      cause === 'retirement'
+        ? band.severity === 'severe'
+          ? `She stopped, and this time it is serious: ${kind} – out ~${wks}. The dream takes a hit.`
+          : pushing
+            ? `She had to stop: ${kind} – out ~${wks}. The knock we trained through, in front of everybody.`
+            : `She had to stop: ${kind} – out ~${wks}.`
+        : band.severity === 'severe'
+          ? `Bad news from the clinic: ${kind} – out ~${wks}. The dream takes a hit.`
+          : pushing
+            ? `Injury: ${kind} – out ~${wks}. The knock we trained through.`
+            : `Injury: ${kind} – out ~${wks}.`,
   })
   // ...and the knock is retired, marked with what it cost. An injury SUPERSEDES a knock in both
   // directions: there is nothing left to load (she is not training) and nothing left to decide, and
@@ -300,6 +349,38 @@ export function rollInjury(world: WorldState): void {
   // pushed and this is the bill". Retired here rather than left to expire so a nine-week layoff
   // cannot come back to a live knock on a body that has been resting.
   if (world.knock !== null) retireKnock(world, pushing)
+}
+
+/**
+ * SHE STOPPED ON COURT. The injury behind a mid-match retirement, opened at `finalizeTournament`
+ * once the run has committed.
+ *
+ * ⚠ IT IS THE ORDINARY INJURY MODEL THROUGH A DIFFERENT DOOR, and that is a deliberate choice with
+ * the research behind it (docs/research/retirement-and-withdrawal.md §10.2: "the cheapest coherent
+ * model is that a retirement IS an injury onset that happened to land during a played week, and the
+ * layoff that follows is the ordinary one. Nothing in the rules argues against that."). Same
+ * severity bands, same weeks-out, same scans, same entry sweep, same recovery. A second layoff
+ * model would have been a second thing to balance for no fiction anybody could feel.
+ *
+ * ⚠ ITS OWN STREAM, `seed:retire:<week>`, and the alternative was a bug. `seed:injury:<week>` has
+ * ALREADY been opened this week by `rollInjury` – which found her healthy and returned after one
+ * pull – so re-deriving it here would hand back that same first uniform as this injury's severity
+ * roll. Not merely correlated: the severity of every retirement would be a function of the number
+ * that had just decided she was fit. A private purpose-scoped stream, re-derived at the call site
+ * and persisting nothing, is the pattern this file's header already requires; the frozen MAIN
+ * capture (41550 / e6b0c709) cannot see it.
+ *
+ * ⚠ AND IT LANDS WHERE SHE WORKED – `tiltedBodyRegions` off the week's sessions and the parts the
+ * record already shows her being sent back out on. NO NEW DRAW: the same single uniform is walked
+ * against a different table. See the note above `tiltedBodyRegions` in body.ts.
+ */
+export function retirementInjury(world: WorldState): void {
+  onsetInjury(
+    world,
+    rngFromSeed(`${world.seed}:retire:${world.week}`),
+    'retirement',
+    tiltedBodyRegions(loadedPartShares(planWeek(world.plan)), pushedParts(world.knockHistory)),
+  )
 }
 
 /** Weekly physio/medical billing (tick step 1c, LAST). Injured weeks bill rehab regardless of

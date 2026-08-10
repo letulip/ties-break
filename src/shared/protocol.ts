@@ -276,7 +276,23 @@ export type StopReason =
   /** R12-15: an entered tournament came round while she was still inside her layoff, so the week
    *  resolved as a WALKOVER – 0 points, and the entry fee forfeited (the list had closed with her on
    *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
-   *  'medical', and it used to pass in complete silence. */
+   *  'medical', and it used to pass in complete silence.
+   *
+   *  ⚠ THE NAME IS OURS AND IT IS THE WRONG WORD, which is worth knowing now that the game also has a
+   *  RETIREMENT to tell it apart from. In all four rulebooks a WALKOVER is something a player
+   *  RECEIVES – her opponent failed to appear – and is never something she does; what this member
+   *  describes (entered, medically unable, never took the court) the rules call a **withdrawal**, and
+   *  it is priced differently from the retirement precisely so that a player has a reason to start
+   *  the match: an ITF first-round withdrawal "will receive no prize money, and the Tournament shall
+   *  not count on their record" (2026 WTT Regs, Women's §XII.C.5.b.i.2.d) while a retirement in the
+   *  same round is paid in full. Our engine gets the BEHAVIOUR right on both counts – this member
+   *  pays nothing and a retirement pays the round reached – so this is a naming bug and not a
+   *  behaviour bug.
+   *
+   *  DELIBERATELY NOT RENAMED, on the research's own recommendation (docs/research/
+   *  retirement-and-withdrawal.md §10.1 Q4): the identifier is persisted and player-visible copy
+   *  quotes it in three surfaces, so a rename is a schema bump plus a UI sweep to fix a noun. This
+   *  comment is the cheap half, and it exists to stop the next reader repeating the confusion. */
   | 'walkover'
   /** W4: she came off court with a KNOCK and the parent has not answered yet. Unlike every reason
    *  above it does not merely halt the advance, it BLOCKS it – `advanceWeeks` refuses to tick at all
@@ -2449,6 +2465,16 @@ export interface Snapshot {
    *  knows its track. Nothing lands in neither bucket and nothing lands in both – a practice friendly
    *  never reaches finalize (R11-2: nothing was on the line), and a walkover or a medical withdrawal
    *  never reaches it either, because she never took the court.
+   *
+   *  ⚠⚠ RESTATED BY THE RETIREMENT SLICE (10.08), because the clause after the dash is now a
+   *  half-truth and a reader would take the wrong rule out of it. "She never took the court" is still
+   *  the correct test and still excludes the walkover and the medical withdrawal – but she CAN now
+   *  take the court and not finish, and a RETIREMENT does reach finalize. It is counted, and counted
+   *  as a LOSS in the event's own track, which is what it is: the tournament counts on her record and
+   *  the opponent's win counts on theirs (2026 ITF WTT Regs, Women's §XII.C.1.b; the WTT's System of
+   *  Merit §VI.B says it from the other side – "wins by retirement or default (after the match has
+   *  started) count as wins, but byes and walkovers do not"). Two comments in engine/world.ts, at the
+   *  prize money and the appearance fee, carried the same assumption and are restated there.
    *
    *  ⚠ WHY A SPLIT W-L IS NOT MERELY COSMETIC. The Stats screen switches every other figure it shows
    *  – rank, points, the standings table, the counting results – with the ladder picker at the top of

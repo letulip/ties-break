@@ -762,6 +762,20 @@ function playMatch(
     const res = simulateMatch(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed })
     const winnerId = res.winner === 0 ? a.id : b.id
     const score = res.sets.map((s) => `${s.a}-${s.b}`).join(' ')
+    // SHE (or her opponent) STOPPED. `simulateMatch` has already done the work: the loser is the
+    // side that retired, the winner is the other one at full value, and `sets` is the partial
+    // scoreline. Nothing here decides anything – it carries one id onto the record so the bracket
+    // above and `finalizeTournament` below do not have to re-simulate the match to find out.
+    //
+    // ⚠ THE BRACKET NEEDS NO BRANCH FOR IT, which is the whole reason this shape was chosen.
+    // `runTournament` reads `winnerId` and advances that player; a retirement is a loss like any
+    // other loss, so her opponent goes through and the round she reached is `rounds - round` by the
+    // arithmetic that was already there. That IS the owner's ruling («защитываем поражение в текущей
+    // ступени») – it needed no code, only the guarantee that the run still reaches finalize.
+    if (res.retired) {
+      const retiredId = res.retired.side === 0 ? a.id : b.id
+      return { round, aId: a.id, bId: b.id, winnerId, seed, score, retiredId }
+    }
     return { round, aId: a.id, bId: b.id, winnerId, seed, score }
   }
   const p = fastMatchProbability(a, b, { surface: event.surface, tour: JUNIOR_TOUR, seed: '' })

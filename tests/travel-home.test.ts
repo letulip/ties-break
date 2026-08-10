@@ -505,6 +505,12 @@ function* sweepTravel(): Generator<TravelHomeFacts> {
           for (const band of BANDS) {
             for (const injured of [true, false]) {
               for (const injuryWeeks of injured ? [1, 3, 4, 6, 12] : [0])
+              // ⚠ WIDENED BY THE RETIREMENT SLICE (10.08), AND ONLY WHERE THE ENGINE CAN GO. `retired`
+              // implies `injured` by construction – `retirementInjury` opens the layoff at the same
+              // commit point that records the retirement – so a `{retired: true, injured: false}`
+              // fixture would sweep a week the engine cannot produce and would demand copy for it.
+              // Every assertion below is unchanged and now runs over twice the injured space.
+              for (const retired of injured ? [true, false] : [false])
               for (const firstAbroad of abroad ? [true, false] : [false]) {
                 yield {
                   // ⚠ W4 deleted `awayWeek` from TravelHomeFacts: it was documented as "always
@@ -529,6 +535,7 @@ function* sweepTravel(): Generator<TravelHomeFacts> {
                   // pool splits on the length of the layoff and a one-week band would leave half of
                   // it unswept.
                   injuryWeeks: injured ? injuryWeeks : 0,
+                  retired,
                   conditionBand: band,
                 }
               }
@@ -685,6 +692,12 @@ describe('ui/travel-set — the note may not lie', () => {
     wonTwo: (t) => t.matchesWon === 2,
     firstRound: (t) => t.firstRound,
     injured: (t) => t.injured,
+    // ⚠ ADDED WITH THE CLAIM IT CHECKS (10.08), and re-derived independently of the licence exactly as
+    // every entry here is. It is the pair `injured`/`justHurt` already are in the photo pool: a
+    // sentence about an umpire, a crowd or a match left unfinished is true of a girl who walked off
+    // and false of a girl who came home and then got the news, and only a separate claim can tell the
+    // pin the difference.
+    retired: (t) => t.retired,
     tired: (t) => t.conditionBand === 'drained',
     abroad: (t) => t.abroad,
     firstAbroad: (t) => t.firstAbroad,
@@ -737,6 +750,36 @@ describe('ui/travel-set — the note may not lie', () => {
       expect(licensed.length, 'an injured week must still have words').toBeGreaterThan(0)
       for (const n of licensed) expect(n.claims.injured, `"${n.text}" on an injured week`).toBe(true)
     }
+  })
+
+  // ⚠ THE OWNER'S «с учетом момента, когда она была», AS A TEST RATHER THAN AS A HOPE (10.08). The
+  // band above proves an injured week is never offered a line about chips; it cannot prove that the
+  // week she WALKED OFF reads differently from the week she got home and got the news, because both
+  // are `injured` and the old pool answered them with one set of sentences. These two do.
+  it('a retirement week gets words the ordinary layoff week cannot have, and vice versa', () => {
+    let retiredSeen = 0
+    let layoffSeen = 0
+    for (const t of sweepTravel()) {
+      if (!t.injured) continue
+      const licensed = TRAVEL_NOTES.filter((n) => n.license(t))
+      expect(licensed.length, 'every injured week must still have words').toBeGreaterThan(0)
+      if (t.retired) {
+        retiredSeen++
+        // At least one line that could ONLY have been written for this week.
+        expect(
+          licensed.some((n) => n.claims.retired === true),
+          `a retirement week with nothing about the walk off: ${JSON.stringify({ weeks: t.injuryWeeks })}`,
+        ).toBe(true)
+      } else {
+        layoffSeen++
+        // ...and the reverse: nothing that claims she stopped mid-match may reach a week she did not.
+        for (const n of licensed) {
+          expect(n.claims.retired, `"${n.text}" on an ordinary layoff week`).not.toBe(true)
+        }
+      }
+    }
+    expect(retiredSeen, 'the sweep must actually reach a retirement').toBeGreaterThan(0)
+    expect(layoffSeen, 'the sweep must actually reach an ordinary layoff').toBeGreaterThan(0)
   })
 
   it('every journey the engine can produce has something to say', () => {
