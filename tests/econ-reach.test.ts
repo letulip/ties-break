@@ -136,7 +136,7 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // ⚠⚠ THE SIXTH FLIP IS THE RE-BASE THE FIVE ABOVE KEPT ASKING FOR (chore/reach-and-art), and it
     // carries a MECHANICAL CORRECTION that the fifth note got wrong. `REACH_TARGET_MONEY` does not
     // govern this line and never did: `reachedTarget` keys on `targetAge`, so `targetAge >= 18`
-    // takes the PRO arm (ranked AND kidRank <= REACH_PRO_RANK, OR itf >= REACH_PRO_POINTS) and only
+    // takes the PRO arm (ranked AND kidRank <= REACH_PRO_RANK - one arm since 10.08, see below) and only
     // 14→16 reads REACH_TARGET_MONEY at all. The act-3 report's "re-basing the target un-saturates
     // both horizons" was therefore not available: re-basing it moves the line BELOW and nothing
     // here. Anyone reading the fifth note's "the proxy no longer discriminates ANYWHERE" should read
@@ -179,7 +179,7 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // this note's OWN rule (half the distance to each degenerate answer), so [12, 27].
     //
     // THE MECHANISM, AND IT IS THE SAME ONE THAT MOVED `kidRank` 89 -> 90 IN THREE OTHER FILES.
-    // This target is `kidRank <= REACH_PRO_RANK` or `kidPoints(itf) >= REACH_PRO_POINTS` – the
+    // This target is `kidRank <= REACH_PRO_RANK` (the points arm was removed 10.08 as inert) – the
     // JUNIOR table, which `FIELD.size` does not touch directly. What it touches is the W universe:
     // 364 -> 520 pros makes a W event's candidate pool 719 instead of 563, `selectEntrants` spends
     // one draw per candidate, so a different set of JUNIORS is booked into W weeks, so the J draws
@@ -270,13 +270,19 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // the nearest above at #52. Ten of the thirty never hold a counting ITF result at all, so no
     // re-spacing of the calendar brings them near it.
     //
-    // ⚠ A FINDING THIS SWEEP TURNED UP THAT NOBODY ASKED FOR: `REACH_PRO_POINTS` IS CURRENTLY INERT.
-    // The pro predicate is (ranked AND rank <= 50) OR itf >= 60, and across all nine presets the
-    // union equals the RANK arm alone at every candidate threshold from 60 to 600 - every career that
-    // reaches 60 ITF points was already inside the top 50 while holding a counting result. Re-basing
-    // REACH_PRO_POINTS therefore moves no number in this file. Reported, not acted on; the disjunction
-    // is still the right predicate and the points arm is what stops the proxy depending on a rank
-    // table alone.
+    // ⚠ A FINDING THIS SWEEP TURNED UP THAT NOBODY ASKED FOR, AND IT HAS SINCE BEEN ACTED ON.
+    // `REACH_PRO_POINTS` WAS INERT: the pro predicate was (ranked AND rank <= 50) OR itf >= 60, and
+    // across all nine presets the union equalled the RANK arm alone at every candidate threshold from
+    // 60 to 600 - every career reaching 60 ITF points was already inside the top 50 holding a counting
+    // result. Reported on 10.08 and REMOVED the same day (owner: «убери, раз мёртвый, надо будет -
+    // сделаем снова»); the predicate is one arm now.
+    //
+    // ⚠ REMOVED RATHER THAN RE-TUNED, and the distinction is the reason this note survives the
+    // deletion. An inert arm is not a mis-set threshold: the two arms were not independent, because
+    // the POINTS are what produce the RANK, so no value of the constant could have made it bite.
+    // Reviving it needs a reason to believe a career could go points-rich and rank-poor - a much
+    // larger field would do it - and `tools/reach-sweep.ts` still prints the retired arm's columns
+    // as a watch, so that day would show up there first.
     const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleSelf, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)

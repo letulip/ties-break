@@ -173,12 +173,17 @@ export const REACH_TARGET_MONEY = 250
 /** 14→18 "pro" proxy: a top-50 rank ONCE she is actually ranked (has a counting result) OR a points
  *  threshold. The `hasResults` guard on the rank arm is REQUIRED – see reachedTarget. */
 export const REACH_PRO_RANK = 50
-/** ⚠ RE-BASED for the two-ladder slice. This used to be 300 points on the old MIXED scale, where a
- *  J30 title paid 400 - so it meant "about one good international week". On the real ITF scale 300
- *  points IS a J300 title, which is a career-defining result and nobody's "pro attempt proxy". The
- *  equivalent milestone is a real body of international results: 60 ITF points is a J60 title, or a
- *  J30 title plus a J30 final, or six J30 quarter-finals. */
-export const REACH_PRO_POINTS = 60
+/** ⚠ `REACH_PRO_POINTS` LIVED HERE AND IS GONE (10.08, owner: «убери, раз мёртвый, надо будет -
+ *  сделаем снова»). It was 60 ITF points, the second arm of a disjunction with the rank test below,
+ *  and it was INERT: measured across all nine presets at every threshold from 60 to 600, the union
+ *  equalled the rank arm alone, because every career reaching 60 points was already inside the top
+ *  fifty holding a counting result. It moved no number in any file.
+ *
+ *  ⚠ REMOVED, NOT RE-TUNED, and the difference matters if it comes back. An inert arm is not a
+ *  mis-set threshold - the two arms are not independent, the points ARE what produce the rank - so
+ *  raising or lowering it buys nothing. Reviving it needs a reason to believe a career could be
+ *  points-rich and rank-poor (a much larger field would do it), and then it is one line here plus
+ *  one in `econ-reach-pro.test.ts`'s replay. */
 
 export interface Preset {
   /** table label, e.g. "25k  · middle · hired coach" */
@@ -477,7 +482,7 @@ export function stepCareerWeek(
  *  ⚠ WHICH CONSTANT A HORIZON READS IS DECIDED HERE AND NOWHERE ELSE, and it is the first thing to
  *  check before attributing a horizon's numbers to a re-base: `targetAge >= 18` takes the PRO arm,
  *  so 14→18 and 14→20 never read REACH_TARGET_MONEY at all. Re-basing it moves 14→16 and only
- *  14→16. The 14→18 horizon is REACH_PRO_RANK / REACH_PRO_POINTS or it is nothing.
+ *  14→16. The 14→18 horizon is REACH_PRO_RANK or it is nothing.
  *
  *  ⚠ THE TWO ARMS READ TWO DIFFERENT TABLES, and they have to (docs/specs/two-ladders.md). This used
  *  to be one `points` local, which was right while there was one ledger and became wrong the moment
@@ -500,10 +505,11 @@ function reachedTarget(world: WorldState, horizonWeeks: number): boolean {
     // `countingResults.length > 0`): the kid isn't really ranked until she owns a counting result.
     // Every kid result carries points > 0 (finalizeTournament only pushes scoring results), so
     // `points > 0` IS `computeCountingResults(world).length > 0`. The guard is REQUIRED: without it the
-    // point-less field ties at dense-rank 1, firing kidRank<=50 at week 1 for everyone. The points arm
-    // stays UNGUARDED (earned, not tie-degenerate).
+    // point-less field ties at dense-rank 1, firing kidRank<=50 at week 1 for everyone.
+    // ⚠ ONE ARM NOW, not two - see the note where REACH_PRO_POINTS used to be declared. `points` is
+    // still read, and still does the work: it IS the ranked signal.
     const hasResults = points > 0
-    return (hasResults && world.kidRank <= REACH_PRO_RANK) || points >= REACH_PRO_POINTS
+    return hasResults && world.kidRank <= REACH_PRO_RANK
   }
   return kidPoints(world, 'domestic') >= REACH_TARGET_MONEY
 }

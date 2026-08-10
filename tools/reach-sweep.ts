@@ -15,9 +15,12 @@
  * ⚠ THE TWO HORIZONS DO NOT READ THE SAME CONSTANT, which is the thing to know before reading the
  * table. `reachedTarget` keys on `targetAge`: 14→16 is the DOMESTIC arm (`kidPoints(world,
  * 'domestic') >= REACH_TARGET_MONEY`), 14→18 and 14→20 are the PRO arm ((ranked AND kidRank <=
- * REACH_PRO_RANK) OR `kidPoints(world, 'itf') >= REACH_PRO_POINTS`). Re-basing REACH_TARGET_MONEY
+ * REACH_PRO_RANK). ⚠ THE SECOND ARM IS GONE (10.08): THIS SWEEP is what measured it inert –
+ * the union equalled the rank arm at every threshold 60-600 on all nine presets – and the
+ * owner removed it rather than re-tune a threshold that could not matter. Re-basing REACH_TARGET_MONEY
  * therefore cannot move a single 14→18 number – that horizon is governed by REACH_PRO_RANK and
- * REACH_PRO_POINTS – so both arms are swept here or the second horizon is being guessed at.
+ * still needs a sweep, and `maxItf208` is still reported so a future field large enough to
+ * make a career points-rich and rank-poor would show up here first.
  *
  * The first 104 weeks of a 208-week replay are byte-identical to a 104-week replay (neither
  * `openCareer` nor `stepCareerWeek` reads the horizon), so each career is replayed ONCE to 208 and
@@ -37,7 +40,7 @@
  *   npx vite-node tools/reach-sweep.ts --indices=5  # a quick shape check
  *   npx vite-node tools/reach-sweep.ts --float=100000000   # + the solvency-vs-tennis split ($1M)
  */
-import { openCareer, stepCareerWeek, PRESETS, REACH_TARGET_MONEY, REACH_PRO_RANK, REACH_PRO_POINTS } from './econ-bench'
+import { openCareer, stepCareerWeek, PRESETS, REACH_TARGET_MONEY, REACH_PRO_RANK } from './econ-bench'
 import { kidPoints } from '../src/engine/world'
 
 const arg = (name: string, fallback: number): number => {
@@ -129,7 +132,7 @@ function replay(presetIndex: number, index: number, floatCents = 0): CareerSumma
  *  holds in SOME week iff (∃ week: itf > 0 ∧ rank <= R) ∨ (∃ week: itf >= P), which is exactly
  *  `bestRankedRank208 <= R ∨ maxItf208 >= P`. */
 const reachedPro = (r: CareerSummary): boolean =>
-  r.bestRankedRank208 <= REACH_PRO_RANK || r.maxItf208 >= REACH_PRO_POINTS
+  r.bestRankedRank208 <= REACH_PRO_RANK
 
 const pad = (s: string | number, n: number) => String(s).padEnd(n)
 const padL = (s: string | number, n: number) => String(s).padStart(n)
@@ -157,7 +160,9 @@ for (let p = 0; p < PRESETS.length; p++) {
   )
 }
 
-console.log(`\n14→18, PRO arm: careers of ${INDICES} clearing (ranked AND rank<=R) OR itf>=P (incumbent R=${REACH_PRO_RANK}, P=${REACH_PRO_POINTS})`)
+console.log(`\n14→18, PRO arm: careers of ${INDICES} clearing (ranked AND rank<=${REACH_PRO_RANK}).` +
+  ` The P columns are the RETIRED points arm, kept as a watch: if one ever exceeds the rank arm,` +
+  ` a career has gone points-rich and rank-poor and the second arm is worth reviving.`)
 console.log(pad('preset', 30) + padL('rank arm alone', 16) + ITF_CANDIDATES.map((c) => padL(`P${c}`, 6)).join(''))
 for (let p = 0; p < PRESETS.length; p++) {
   const rankArm = rows[p].filter((r) => r.bestRankedRank208 <= REACH_PRO_RANK).length
