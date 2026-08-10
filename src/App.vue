@@ -526,6 +526,35 @@ const { flight: trophyFlight } = useTrophyFlight()
 const trophyTabDot = computed(() =>
   trophyDotShows(trophyPieceCount.value, seenTrophyPieces.value, trophyFlight.value !== null),
 )
+
+// =================================================================================================
+// D7 – THE BAR'S DOTS, AS WORDS (a11y, docs/specs/e2e-coverage.md §12)
+// =================================================================================================
+// Three tabs can carry a dot and all three drew it as `<span class="tab-dot"></span>` – an element
+// with no role, no text and no label. Nothing could reach it: not a test, not a screen reader, not
+// the player who cannot see a 6px circle. The three facts were already distinct in the script (the
+// season has something new, the news feed or the letterbox has something unread, the cabinet has
+// something that arrived since it was last opened), so they get three distinct sentences rather than
+// one word for all three.
+//
+// ⚠ AND THE TAB'S OWN NAME MUST NOT MOVE WHEN A DOT ARRIVES. A named descendant is folded into a
+// button's name, so labelling the dot alone would rename the Home tab to "Home Unread news" every
+// time the feed gained a line – the same defect the coach market's sort control was just fixed for,
+// one screen over. So the button carries an explicit `aria-label` (identical to the visible word, so
+// nothing disagrees) which pins the name, and the dot is handed over as the DESCRIPTION, which is
+// where a changing fact belongs. `getByRole('button', { name: 'Home', exact: true })` keeps working
+// in every state, which is what four e2e specs already assume.
+const TAB_DOT_LABEL: Partial<Record<TabId, string>> = {
+  play: 'New on the season calendar',
+  home: 'Unread news',
+  trophies: 'A new trophy in the cabinet',
+}
+function tabDot(id: TabId): boolean {
+  if (id === 'play') return seasonHasNew.value
+  if (id === 'home') return homeHasNews.value
+  if (id === 'trophies') return trophyTabDot.value
+  return false
+}
 /** Where the flying trophy is, how big, and how far it still has to go – handed to the element as
  *  custom properties, the ConfettiBurst idiom: one keyframe, and everything that varies is a number
  *  set per element. */
@@ -862,9 +891,15 @@ function dismissSeasonSummary(): void {
          genuinely lost is the week number and the balance on Season / Stats / More; the owner ruled
          that acceptable, and Season prints the week on every calendar row anyway. -->
 
+    <!-- D11 – TWO BANNERS, ONE SHAPE, AND THEY CAN BE ON SCREEN TOGETHER. Both said `Dismiss` and
+         nothing else, so the pair collided in strict mode AND, more to the point, looked identical
+         to anyone reading them: two grey strips stacked at the top of the page with the same word on
+         the same button. This is the one place in the sweep where the honest fix is the VISIBLE
+         copy rather than a label under it - an `aria-label` saying which is which would have left a
+         sighted player with the ambiguity that started this. -->
     <div v-if="game.recovered" class="recovered-banner">
       <span>Autosave was damaged – restored the previous one.</span>
-      <button @click="dismissRecovered">Dismiss</button>
+      <button @click="dismissRecovered">Dismiss autosave notice</button>
     </div>
 
     <!-- R11-1: NOT gated on the Home tab any more – an advance can be triggered from the Season
@@ -872,7 +907,9 @@ function dismissSeasonSummary(): void {
          happen as far as they are concerned. -->
     <div v-if="showStopToast" class="stop-toast">
       <span>{{ stopReasonText }}</span>
-      <button @click="dismissStopToast">Dismiss</button>
+      <!-- Its message always opens with the word "Stopped:", so this is the sentence's own noun and
+           not a new one invented for the button. -->
+      <button @click="dismissStopToast">Dismiss stop notice</button>
     </div>
 
     <!-- R13-12: the paused-tournament banner is GONE – the sticky bar below is global now, and
@@ -964,28 +1001,38 @@ function dismissSeasonSummary(): void {
       </button>
     </div>
 
-    <nav class="tab-bar">
+    <!-- D7: the landmark is named (the epilogue's album has a `<nav>` too, so "the navigation" was
+         never a unique thing to ask for), and the active tab announces itself through `aria-current`
+         instead of only through a CSS class. `aria-current="page"` and not `role="tab"`: these
+         buttons swap the whole screen and there is no `tabpanel` behind them to point at, so a
+         tablist would be a costume. -->
+    <nav class="tab-bar" aria-label="Main">
       <button
         v-for="t in TABS"
         :key="t.id"
         class="tab-btn"
         :class="{ active: tab === t.id }"
         :data-tour="`tab-${t.id}`"
+        :aria-label="t.label"
+        :aria-current="tab === t.id ? 'page' : undefined"
+        :aria-describedby="tabDot(t.id) ? `tab-dot-${t.id}` : undefined"
         @click="openNav(t)"
       >
         <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
-        <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
-        <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. Since 04.08 it also
-             carries an unopened LETTER - one dot, two facts, argued at `homeHasNews`. -->
-        <span v-else-if="t.id === 'home' && homeHasNews" class="tab-dot"></span>
-        <!-- The trophy dot, and it is the SAME object as the two above: same class, same accent, no
-             private treatment. What differs is the sentence it asserts, and that is a fact rather
-             than a guess about attention – the cabinet holds something that arrived since it was
-             last opened. See `trophyTabDot` in the script. -->
-        <span v-else-if="t.id === 'trophies' && trophyTabDot" class="tab-dot"></span>
-        <!-- epic/redesign-home: the fresh-recap dot left this bar with the This-week tab – it is on
+        <!-- ONE DOT ELEMENT FOR THREE FACTS, which is what it always was: same class, same accent,
+             no private treatment - R9-21b's unread-news dot (news OR an unopened letter, argued at
+             `homeHasNews`), the season's, and the cabinet's. What differs is the sentence, and the
+             three sentences are in `TAB_DOT_LABEL` beside the rule that picks them.
+             epic/redesign-home: the fresh-recap dot left this bar with the This-week tab - it is on
              Home's Next-tournament card now, which is the door to that screen. -->
+        <span
+          v-if="tabDot(t.id)"
+          :id="`tab-dot-${t.id}`"
+          class="tab-dot"
+          role="img"
+          :aria-label="TAB_DOT_LABEL[t.id]"
+        ></span>
       </button>
     </nav>
 

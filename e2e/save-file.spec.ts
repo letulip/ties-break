@@ -25,9 +25,22 @@ const manifest = loadManifest()
 const fixture = (name: string): (typeof manifest.fixtures)[number] =>
   manifest.fixtures.find((f) => f.name === name)!
 
-/** More > Saves - where both doors live. */
+/** More > Saves - where both doors live.
+ *
+ *  ⚠ THE ONE ASSERTION ON THE WAY THROUGH IS NOT NAVIGATION SCAFFOLDING, and it is here rather than
+ *  inside a test because this is the only journey in the suite that opens More at all. The screen
+ *  lands on its Play tab first, which holds five `role="switch"` controls that until this wave were
+ *  ALL called `ON` or `OFF`: their visible labels were unassociated siblings, so five controls
+ *  shared two names between them and `getByRole('switch', { name: 'Sound effects' })` could not
+ *  work (defect D2, docs/specs/e2e-coverage.md §12). One named switch is enough to say the
+ *  association reaches a real browser; which five, and what each is called, is
+ *  tests/component/a11y-sweep.test.ts's claim.
+ *
+ *  ⚠ MUTATION-VERIFIED: `aria-labelledby` off the sound switch -> both tests in this file go red on
+ *  this line, which is what a helper on the shared path is supposed to do. */
 async function openSaves(page: Page): Promise<void> {
   await openMore(page)
+  await expect(page.getByRole('switch', { name: 'Sound effects' })).toBeVisible()
   await page.getByRole('group', { name: 'Which settings' }).getByRole('button', { name: 'Saves' }).click()
   await expect(page.getByRole('button', { name: 'Export to file' })).toBeVisible()
 }

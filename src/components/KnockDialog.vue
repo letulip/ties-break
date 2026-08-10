@@ -19,8 +19,9 @@
 // coach's read and the two cost sentences, all assembled in the engine (buildKnockPrompt) where they
 // can be tested – the same rule KidScreen keeps. The template's own words are the two verbs and the
 // two labels, and nothing else.
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
 
@@ -45,15 +46,35 @@ async function decide(choice: 'rest' | 'push'): Promise<void> {
 // The same alert the injury stop uses. Deliberately the SAME sound and not a new one: to the parent
 // this is the same kind of moment, one notch quieter, and a bespoke sting would oversell it.
 onMounted(() => playSfx('ooh'))
+
+// D1 – IT IS A MODAL, AND NOW IT SAYS SO AND HOLDS THE KEYBOARD. `useDialogFocus`'s header carries
+// the argument and the honest limit; the one thing decided HERE is that Escape is passed no handler,
+// because this dialog has no way out that is not an answer (see the ⚠ note at the top of this file).
+// Escape falls through to the browser, which does nothing with it, and the card keeps the focus.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card)
 </script>
 
 <template>
   <div v-if="prompt" class="dialog-overlay">
-    <div class="dialog-card season-summary injury-stop knock-dialog">
-      <p class="season-summary-kicker">
+    <!-- role/aria-modal on the CARD and not on the scrim: the backdrop is not part of the dialog,
+         it is what the dialog is over. `tabindex="-1"` is the focus trap's landing place for the
+         case where a dialog has no controls; this one always has two. -->
+    <div
+      ref="card"
+      class="dialog-card season-summary injury-stop knock-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="knock-dialog-kicker knock-dialog-title"
+      tabindex="-1"
+    >
+      <!-- BOTH LINES ARE THE NAME, in the order they are read on screen: the kicker says which week
+           and whether it has happened before, the title says which part of her. Either one alone
+           would name the dialog worse than the card names itself to somebody looking at it. -->
+      <p id="knock-dialog-kicker" class="season-summary-kicker">
         {{ prompt.repeat ? 'The same knock again' : 'A knock' }} – {{ weekLabel(week) }}
       </p>
-      <h2 class="season-summary-title">Her {{ prompt.part }}.</h2>
+      <h2 id="knock-dialog-title" class="season-summary-title">Her {{ prompt.part }}.</h2>
       <p class="knock-line">{{ prompt.line }}</p>
       <p class="hint knock-read">{{ prompt.read }}</p>
 

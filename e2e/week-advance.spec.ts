@@ -47,6 +47,22 @@ test.describe('advancing a week', () => {
     // ...and nothing moved while it was open.
     await expect(page.getByText(onScreenWeek(facts.week))).toBeVisible()
 
+    // ⚠ AND IT IS A DIALOG NOW (a11y D1, docs/specs/e2e-coverage.md §12). Until this wave the thing
+    // blocking the app was a `<div>`: `getByRole('dialog')` returned nothing while a knock was open,
+    // so the ONE state in this game that stops the world could not be asked for by role, and a screen
+    // reader was never told a decision was blocking. It is asserted here because this is the spec
+    // that already owns "a decision on the table stops the week" - the role is the same claim, said
+    // in the app's own vocabulary.
+    //
+    // ⚠ MUTATION-VERIFIED: `role="dialog"` off KnockDialog's card -> red here, on
+    // `getByRole('dialog')`, with the app otherwise working exactly as before. That is the defect.
+    const knock = page.getByRole('dialog')
+    await expect(knock).toBeVisible()
+    await expect(knock).toHaveAttribute('aria-modal', 'true')
+    // Its name is the two lines a player reads on the card, so a listener knows which week's knock
+    // and which part of her before the two costs are read out.
+    await expect(knock).toHaveAccessibleName(/^(A knock|The same knock again) – W\d+ '\d{2} Her /)
+
     // Answer it. The button re-enabling is the worker's reply, not a guess about one.
     await page.getByRole('button', { name: /^Rest it/ }).click()
     await expect(weekButton(page)).toBeEnabled()
@@ -97,7 +113,16 @@ test.describe('advancing a week', () => {
     //     The two labels asserted are the ones that do not depend on which ladder she ended on.
     await expect(page.getByText('Season points')).toBeVisible()
     await expect(page.getByText('Tournaments entered')).toBeVisible()
+    // ⚠ AND THE CARD IS A DIALOG (a11y D1). Same defect and same fix as the knock above, one beat
+    // later in the same tick: it covers the week's story, and until this wave it said so to nobody.
+    // Named by the season it closes, because "That's a season." on its own does not say which.
+    const wrapUp = page.getByRole('dialog')
+    await expect(wrapUp).toHaveAttribute('aria-modal', 'true')
+    await expect(wrapUp).toHaveAccessibleName(/^Season \d{4} · wrap-up/)
     await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    // ...and it goes when it is answered, which is what makes the assertion above a statement about
+    // THIS card rather than about any dialog that happens to be up.
+    await expect(page.getByRole('dialog')).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Proceed to Home' }).click()
 
@@ -126,7 +151,38 @@ test.describe('advancing a week', () => {
     // is the honest form of the claim: a spec that asserted a particular row would be re-testing the
     // ledger's arithmetic, which tests/ already owns.
     await expect(page.getByText('No transactions yet.')).toHaveCount(0)
+    // ⚠ AND IT IS POPULATED WITH ROWS, NOT WITH TEXT (a11y D5). `StatRow` rendered a bare `<div>` of
+    // `<span>`s, so a forty-row ledger was one undifferentiated run as far as this layer and a screen
+    // reader were both concerned - which is why the line above had to be phrased as the absence of an
+    // empty-state string. Each row is a named group now, so the claim can be about ROWS. Counted
+    // rather than named: which transactions eight seasons produce is the economy's business.
+    //
+    // ⚠ MUTATION-VERIFIED: `role="group"` off `ui/StatRow.vue` -> `Expected: > 3 / Received: 0`,
+    // which is the ledger as this layer used to see it.
+    expect(
+      await page.getByRole('group').filter({ hasText: /\$/ }).count(),
+      'the ledger reached the page as rows a reader can be walked through',
+    ).toBeGreaterThan(3)
 
     expect(crashes, 'the app threw while advancing a week').toEqual([])
   })
+
+  // ⚠ THE THIRD KIND OF WEEK - ONE THAT STOPS AND SAYS WHY - IS NOT REACHABLE FROM THIS FIXTURE SET,
+  // AND THAT IS WORTH WRITING DOWN RATHER THAN LEAVING FOR THE NEXT PERSON TO REDISCOVER. The two
+  // tests above end in a dialog with a Continue; the app's OTHER way of reporting a week is the top
+  // banner (`.stop-toast`), which is the surface defect D11 was filed against, and no journey here
+  // can produce one:
+  //
+  //   * a stop only speaks through the banner when its reason HAS copy - `injury`, `tournament` and
+  //     `season-end` deliberately do not, because each owns a dialog instead (App.vue,
+  //     STOP_REASON_TEXT). That leaves `funds`, `deadline`, `medical` and `walkover`.
+  //   * `funds` is the only one a fixture holds deterministically, and `broke` cannot deliver it:
+  //     it is ELEVEN weeks under water against a twelve-week grace window, so the advance that
+  //     would raise the toast raises the BANKRUPTCY ENDING instead, and the epilogue replaces the
+  //     whole shell. Measured, not reasoned: this test existed, ran, and failed on the epilogue.
+  //   * the other three are injury- and calendar-dependent, which is a coin toss, not a journey.
+  //
+  // Reaching it needs a fixture that is under water with room to spare (`debtWeeks` ~6 of 12) -
+  // a change to tools/e2e-fixtures.ts, not to this file. Until then the banner's names are pinned
+  // negatively in tests/a11y-banner-names.test.ts, which says exactly what it can and cannot claim.
 })

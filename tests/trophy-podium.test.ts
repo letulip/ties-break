@@ -199,7 +199,27 @@ describe('⚠ THE TAB DOT ASSERTS A FACT, not the "unread" it cannot know', () =
 
   it('the dot is the SAME object as Season\'s and Home\'s – no private treatment for one tab', () => {
     const app = read(SHELL)
-    expect(app).toContain(`<span v-else-if="t.id === 'trophies' && trophyTabDot" class="tab-dot"></span>`)
+    // ⚠ RE-AIMED, NOT WEAKENED (fix/a11y-sweep, accessibility defect D7). This line used to quote the
+    // trophy dot's own `<span v-else-if="t.id === 'trophies' && trophyTabDot" class="tab-dot">`, one
+    // of THREE sibling spans that drew the same object three times. The a11y sweep had to name the
+    // dot (an empty span is unreachable by a test and silent to a screen reader) and three copies of
+    // one element is how three names drift apart, so the siblings were merged into one element fed by
+    // `tabDot(id)`.
+    //
+    // THE CLAIM IS UNCHANGED AND IS NOW STRICTLY STRONGER. "No private treatment for one tab" used to
+    // mean "the three spans happen to agree today"; it now means there is exactly ONE dot element in
+    // the shell and the trophy fact is one of the three arms that light it. A private trophy dot
+    // cannot be added without failing the first line below, where before it could have been added as
+    // a fourth sibling that merely looked like the others.
+    //
+    // ⚠ ANCHORED TO ITS OWN LINE, which is not fussiness: a bare substring count also finds the
+    // class quoted inside the comment that explains the merge, so the guard reported two dots for a
+    // shell that has one. Exactly the failure family round11-view.test.ts's `Reach ` pin hit in the
+    // same wave - a text search has no parser and cannot tell code from prose.
+    expect(app.match(/^\s*class="tab-dot"$/gm) ?? [], 'one dot element, not one per tab').toHaveLength(1)
+    expect(app).toMatch(/if \(id === 'trophies'\) return trophyTabDot\.value/)
+    // ...and its NAME comes out of the same map as the other two, for the same reason.
+    expect(app).toMatch(/const TAB_DOT_LABEL[\s\S]{0,240}trophies:/)
     // exactly one `.tab-dot` rule in the sheet, and the trophy dot did not grow a modifier
     const sheet = read(SHEET)
     expect(sheet.match(/^\.tab-dot\s*\{/gm) ?? []).toHaveLength(1)
