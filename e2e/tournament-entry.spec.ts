@@ -3,8 +3,8 @@
 // SEAMS OWNED: #1 (the Web Worker boundary) and #5 (real input). One press on a Season card is a
 // command across `postMessage`; the engine validates it, spends the entry fee, writes the entry onto
 // the world and commits an autosave; and the snapshot that comes back has to repaint THREE
-// independent readers of it - the card itself, the app's sticky week button, and the Calendar's own
-// takeover for that week, which is a different screen composing a different view of the same fact.
+// independent readers of it - the card itself, Home's next-tournament card, and the Calendar's own
+// takeover for that week, each a different screen composing its own view of the same fact.
 //
 // WHY NO CHEAPER LAYER REACHES IT. `tests/component/` mounts these screens against a hand-written
 // snapshot, so it can say what a card renders GIVEN an entered event - and that is worth having. What
@@ -16,8 +16,18 @@
 // 10.08 every event card on Season drew a button whose entire accessible name was the word "Enter",
 // so a feed of five cards was five controls no selector could tell apart, and this journey could not
 // be written at all (defect D4). `src/composables/eventName.ts` now names them
-// `Enter the <event>, <dates>`, from ONE helper both screens read - which is why the Calendar step
-// below can address the same event by a name it never had to be told.
+// `Enter the <event>, <dates>`, from ONE helper - and BOTH `Enter` controls in the app read it, the
+// one on a Season card and the one inside the Calendar's takeover. That shared name is asserted
+// positively below, across the two screens, which is the only place it can be.
+//
+// ⚠ THE CALENDAR'S GRID MARKER IS THE ONE CONTROL THAT DOES NOT READ IT (defect D16, added 10.08).
+// The marker - the row you press to open the takeover - composes its own name in the template:
+// `<event>, <weekLabel>, <weekSpan> – open this tournament`. Season says `Jan 3–9, 2039`
+// (`weekRange`); the marker says `W2 '39, Jan 3 – Jan 9` (`weekLabel` + `weekSpan`). The two FORMATS
+// are deliberate and argued in `weekSpan`'s own header - a span next to a week label that already
+// carries the year must not repeat it - so this is not "one of them is wrong". What is missing is a
+// shared TOKEN: no single string identifies one event across the app's three naming surfaces, and
+// the cost lands here, as the `weekPrintedAs` translation below. §12 has the report.
 //
 // ⚠ WHAT IS DELIBERATELY NOT HERE: what happens when the entered week ARRIVES. The reveal, the draw
 // and the result are e2e/tournament.spec.ts's journey, and the pause surviving a reload is
@@ -25,11 +35,36 @@
 
 import { test, expect } from './careerAt'
 import { answerOpeningKnock, enterConfirmButton } from './journey'
+import { weekLabel, weekRange } from '../src/shared/dates'
 import { formatCents } from '../src/shared/money'
 
 /** Regex-safe: an event label is the engine's string and a date range is `weekRange`'s, and neither
  *  is this spec's to promise the shape of. */
 const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+/**
+ * THE CAREER WEEK THE APP PRINTS AS `range` - the inverse of `weekRange`, by asking `weekRange`.
+ *
+ * ⚠ THIS EXISTS BECAUSE OF D16 AND SHOULD NOT SURVIVE ITS FIX. Season names an event with
+ * `weekRange`; the Calendar's grid marker names the same event with `weekLabel`. To carry ONE event's
+ * identity from the screen it was entered on to the screen that has to agree about it, this spec has
+ * to translate between the two vocabularies - and the only honest translator is the app's own
+ * formatter, run forwards until it produces the string that is already on screen. Nothing here
+ * re-implements a date: `weekRange` is imported, and a week is identified by the app agreeing with
+ * itself.
+ *
+ * The search is bounded and the failure is loud. `weekRange` is self-contained - it always carries
+ * the year, in three widths depending on whether the week crosses a month or a year - so it is
+ * injective and a hit is the week, not a week. `-1` is asserted on at the call site rather than
+ * quietly flowing into a locator: an unfound week would otherwise build `^<label>, W-1 '…` and fail
+ * ten seconds later, blaming the Calendar for a parse.
+ */
+function weekPrintedAs(range: string, from: number, horizon = 104): number {
+  for (let week = from; week < from + horizon; week++) {
+    if (weekRange(week) === range) return week
+  }
+  return -1
+}
 
 test('a tournament is entered on Season, and Home and the Calendar both say so', async ({
   page,
@@ -55,6 +90,14 @@ test('a tournament is entered on Season, and Home and the Calendar both say so',
   // the shared helper exists to make good, and it is not a claim any mounted test makes: the
   // component layer renders one card at a time against a snapshot it wrote itself, so a feed is the
   // only place two names can collide.
+  //
+  // ⚠ AND SINCE THE v47 REGENERATION IT IS NO LONGER A HYPOTHETICAL. `enterActionName`'s own header
+  // justifies including the week like this: "a season carries the same rung several times, and
+  // 'Enter the World Tour 50' would be ambiguous the moment two of them sit in one feed". `pro` now
+  // holds exactly that - TWO World Tour 35 weeks - so the line below is the first time this repo has
+  // measured the case the helper was designed for rather than argued it. It passes because the week
+  // is in the name; the same fixture change broke the Calendar step, which had no week in its
+  // locator. One fixture, both halves of the lesson.
   //
   // ⚠ MUTATION-VERIFIED: `:aria-label="enterActionName(row.event)"` taken off the pill in
   // SeasonScreen.vue -> `Received: 0`, because with the name back to the bare visible word there is
@@ -88,6 +131,49 @@ test('a tournament is entered on Season, and Home and the Calendar both say so',
   const parts = entryName.match(/^Enter the (.+?), (.+)$/)
   expect(parts, `the Enter control is not named "Enter the <event>, <dates>": "${entryName}"`).not.toBeNull()
   const [, eventLabel, eventDates] = parts!
+
+  // THE WEEK, which is the other half of this event's identity and the half the Calendar uses. See
+  // `weekPrintedAs` for why the translation is needed at all (D16) and why it is a lookup rather
+  // than arithmetic. Asserted here, at the point it is derived, so a failure names the parse.
+  const eventWeek = weekPrintedAs(eventDates, facts.week)
+  expect(
+    eventWeek,
+    `no career week within two seasons of ${facts.week} is printed as "${eventDates}" - the Season ` +
+      'pill and src/shared/dates.ts have stopped agreeing about how a week is written',
+  ).toBeGreaterThan(facts.week)
+
+  /** The Calendar's row for that one week: `<event>, <weekLabel>, <weekSpan> – open this tournament`.
+   *
+   *  ⚠ EVENT **AND** WEEK, AND THE TIER ALONE IS NOT AN EVENT. This locator was `^<label>, W` until
+   *  the v47 fixtures landed, at which point `pro` grew a second World Tour 35 and it resolved to two
+   *  elements. The tier is a rung she plays several times a season; only the week makes it an
+   *  identity, which is the argument `enterActionName` already makes for the Season pill. A fixture
+   *  carrying three W35s would not touch this. */
+  const marker = page.getByRole('button', {
+    name: new RegExp(`^${escapeRegExp(eventLabel)}, ${escapeRegExp(weekLabel(eventWeek))},`),
+  })
+
+  // --- 0. the two Enter controls in this app are ONE name -----------------------------------------
+  // Before anything is pressed: the Calendar's takeover for this event offers an Enter whose
+  // accessible name is CHARACTER-FOR-CHARACTER the one read off Season a moment ago. Neither screen
+  // was told the other's string - they both call `enterActionName` - so this is the shared helper
+  // doing the job it was added for, observed across two screens off one snapshot. `tests/component/`
+  // can check the helper's output; it cannot check that two different screens both route through it.
+  //
+  // ⚠ THIS ALSO EARNS THE ABSENCE ASSERTION AT THE END, and that is why it is worth two extra taps.
+  // "the Enter is gone from the Calendar" passes in a world where the Calendar never had that name
+  // at all - a broken world, by the standard the rest of this suite is held to. Establish the
+  // presence, act, then assert the absence: the same shape as the recovery spec's broken database.
+  //
+  // ⚠ MUTATION-VERIFIED, AND IT IS THE MUTATION THE OLD VERSION SURVIVED: `:aria-label` taken off
+  // the takeover's pill in CalendarScreen.vue -> red HERE, on this line. Before this step existed,
+  // that same mutation left the test GREEN - the closing `toHaveCount(0)` simply counted zero for
+  // the wrong reason. One weak assertion, found by fixing an unrelated locator.
+  await page.getByRole('navigation').getByRole('button', { name: 'Calendar', exact: true }).click()
+  await marker.click()
+  await expect(page.getByRole('button', { name: entryName, exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Close this tournament' }).click()
+  await page.getByRole('navigation').getByRole('button', { name: 'Season', exact: true }).click()
 
   // --- the press ---------------------------------------------------------------------------------
   await entry.click()
@@ -128,16 +214,16 @@ test('a tournament is entered on Season, and Home and the Calendar both say so',
     formatCents(facts.fundsCents),
   )
 
-  // --- 3. and a third screen, which offers the same event and now refuses to ---------------------
-  // The Calendar draws one marker per enterable week and opens a takeover about ONE event. Its Enter
-  // reads the SAME `enterActionName` Season's feed does, so this marker is addressed by a name this
-  // spec never had to be told - and what the takeover says now is the entry rather than an offer of
-  // one.
+  // --- 3. and the third screen, which offered the same event and now refuses to ------------------
+  // The same marker, opened again. `preferredWeekEvent` is what decides which tournament a week IS,
+  // and both this screen and the Season feed read it - so the row addressed here and the card pressed
+  // above are the same event by construction, not by coincidence. What has changed is the takeover's
+  // answer.
   await page.getByRole('navigation').getByRole('button', { name: 'Calendar', exact: true }).click()
-  await page.getByRole('button', { name: new RegExp(`^${escapeRegExp(eventLabel)}, W`) }).click()
+  await marker.click()
   await expect(page.getByText('She is in. Withdrawing lives on the Season tab.')).toBeVisible()
-  // ...and the door it replaced is closed on this screen too. Three surfaces, one world.
-  await expect(page.getByRole('button', { name: entryName })).toHaveCount(0)
+  // ...and the Enter that step 0 saw here, under that exact name, is gone. Three surfaces, one world.
+  await expect(page.getByRole('button', { name: entryName, exact: true })).toHaveCount(0)
 
   expect(crashes, 'the app threw while entering a tournament').toEqual([])
 })

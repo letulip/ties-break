@@ -448,10 +448,10 @@ what it costs coverage.
 Their rows are struck through rather than deleted – a defect register that quietly loses its closed
 rows cannot be audited, and D4 in particular is the one this document spent a paragraph on.
 
-⚠ **And three are new** (10.08, `test/e2e-journeys`): **D13**, **D14** and **D15**, all three raised
-by the sponsor/inbox journey and none of them worked around in `src/`. That branch owns `e2e/` and
-`docs/`, so they are reported here, which is the same discipline the first twelve were reported
-under.
+⚠ **And four are new** (10.08): **D13**, **D14** and **D15**, all three raised by the sponsor/inbox
+journey, and **D16**, raised on `wave/dials` when the v47 fixture regeneration broke the entry
+journey's Calendar locator. None was worked around in `src/`; that work owns `e2e/` and `docs/`, so
+they are reported here, which is the same discipline the first twelve were reported under.
 
 | # | defect | component | severity | priority | consequence |
 |---|---|---|---|---|---|
@@ -470,6 +470,7 @@ under.
 | D13 | **The inbox's one irreversible control shares its name with the control that opens it.** `OfferLetter` draws `Sign`; the `ConfirmDialog` it raises draws `Sign` too, and both are on screen together – so `getByRole('button', { name: 'Sign' })` is a strict-mode collision on the single press in this app that cannot be taken back. `ConfirmDialog` is also one of D1's eight roleless overlays, so it cannot be scoped by `getByRole('dialog')` either; between the two there is no name-based reading, and `sponsor-inbox.spec.ts` presses `.last()` with the defect cited at the point of use. The fix is one prop – the confirm's label already varies per caller (`Delete`, `Withdraw`, `Push through`), so a confirm-label that extends rather than repeats the verb costs nothing | `InboxSheet.vue` (and every caller that reuses a verb) | medium | **high** | the one control a mis-press cannot be undone on is the one a test cannot name |
 | D14 | **An inbox row's accessible name changes every week.** A row is a `<button>` with no `aria-label`, so its name is its whole text – letterhead, subject, filing week **and** a countdown the engine rewrites weekly (`4 weeks to decide`, then `3 weeks…`). There is therefore no stable name for "the letter from X": a spec has to read the letterhead out of the row's text, which is what `sponsor-inbox.spec.ts` does and says so. This is the rule D7 established one screen over, applied backwards – its fix note is explicit that a *changing* fact belongs in the DESCRIPTION (`aria-describedby`) and the name must be pinned, precisely so a dot arriving could not rename the Home tab. Same shape, opposite outcome | `InboxSheet.vue` | low | medium | letters cannot be addressed by name, only by position or by parsing |
 | D15 | **Home's two diary-tool dots are unnamed** – `<span class="diary-tool-dot">` beside the bell and the inbox: no role, no text, no label. This is exactly the D7 defect one screen over, and D7 is closed: the tab bar's three dots were merged into one named element exposed through `aria-describedby`, with the argument written out in `App.vue`. The two on Home were not in that branch's files. The consequence for coverage is concrete – `sponsor-inbox.spec.ts` can assert that signing empties the letter table but **not** that the inbox marker goes out, which is the fact a player actually navigates by | `HomeScreen.vue` | medium | low | the app's two unread markers are invisible to a screen reader and to this level |
+| D16 | **The Calendar's grid marker is the one control that names a tournament without the shared helper.** Three live surfaces name an event: Season's `Enter` pill, the Calendar takeover's `Enter` – both read `enterActionName`, which is what D4 bought – and the Calendar's grid MARKER, which composes its own name in the template: `` `${row.note}, ${row.label}, ${row.dates} – open this tournament` `` (`CalendarScreen.vue`, fed by `lookAheadFor` in `weekDays.ts`). So one event is `Enter the World Tour 35, Dec 27, 2038 – Jan 2, 2039` on one screen and `World Tour 35, W1 '39, Dec 27 – Jan 2 – open this tournament` on the other. ⚠ **The two date FORMATS are deliberate and must not be unified** – `weekSpan`'s own header argues it: a span printed beside a week label that already carries the year must not repeat it. What is missing is a shared TOKEN, not a shared format, so the fix is a marker-name helper beside `enterActionName` in `src/composables/eventName.ts`, in the grid's vocabulary. Measured cost: `tournament-entry.spec.ts` has to run `weekRange` forwards to translate one screen's week into the other's before it can address the row (`weekPrintedAs`), and that helper says it should not survive this fix | `CalendarScreen.vue`, `src/composables/weekDays.ts` | low | medium | no single string identifies one event across the app's naming surfaces |
 
 **D3 and D4 were the highest-priority items in this document**, not because they are the worst
 accessibility defects – D1, D2 and D7 are – but because they are the two that cost coverage. **Both
@@ -480,6 +481,13 @@ forced a positional selector onto an irreversible control, and it is a one-prop 
 working as intended: role-and-name selectors turn every unreachable element into a defect report
 instead of a `data-testid`. Three of the four journeys in this wave needed no new names at all; the
 inbox needed three, and none was added.
+
+⚠ **D16 was raised by a FIXTURE REGENERATION, which is a different and rarer way to find one.** The
+v47 bump gave `pro` a second World Tour 35, and the entry journey's Calendar locator – which named
+the tier and not the event – resolved to two elements. The failure was the spec's; the finding
+underneath it was the app's, and it had been sitting there since the Calendar was built. **A test
+suite that only ever runs against one frozen fixture set cannot find this class of defect at all**,
+which is an argument for regenerating on every schema bump rather than migrating.
 
 ## 13. Metrics (CTFL §5.3)
 
@@ -493,16 +501,25 @@ inbox needed three, and none was added.
 | mechanics with an e2e claim | **11 of 20** covered, 3 partial, 6 delegated | 8 of 18, 4 partial, 6 delegated |
 | accepted risk items | **6 open** (8.2, 8.3, 8.6, 8.7, 8.9, 8.10), **3 closed** (8.1, 8.4, 8.5) | 7 open |
 | committed career states | **6** – `sinking` added so a stop could be reached without an ending | 5 |
-| defects raised by this work | **15 raised**; 2 closed (D4, D9's Season half) on `fix/r14-group-c`, D3 closed on the round-15 surfaces; **3 new** (D13–D15) | 12 raised, 2 closed |
+| defects raised by this work | **16 raised**; 2 closed (D4, D9's Season half) on `fix/r14-group-c`, D3 closed on the round-15 surfaces; **4 new** (D13–D16) | 12 raised, 2 closed |
 | `data-testid` in the repository | 0 | 0 |
 
-**Four new tests carry a `MUTATION-VERIFIED` note, and every one of them was actually run.** Five
-mutations, in five different files, each producing red on the intended line and nowhere else:
+**Five new tests carry a `MUTATION-VERIFIED` note, and every one of them was actually run.** Six
+mutations, in six different files, each producing red on the intended line and nowhere else:
 `signOffer`'s refusal loop deleted (`sponsor-inbox`), both banner labels reverted to `Dismiss`
 (`week-advance` **and** `storage-recovery`, together), the `Enter` pill's `aria-label` removed
 (`tournament-entry`), `init()`'s failed-probe arm changed back to `ready` (`storage-recovery`), and
-the `.catch` that clears a rejected `dbPromise` removed from `src/db/saves.ts` (`storage-recovery`).
-`src/` was restored from git after each round; the branch touches no source file.
+the `.catch` that clears a rejected `dbPromise` removed from `src/db/saves.ts` (`storage-recovery`),
+and the takeover pill's `aria-label` removed from `CalendarScreen.vue` (`tournament-entry`, step 0).
+`src/` was restored from git after each round; this work touches no source file.
+
+⚠ **That last mutation is the one worth reading, because the suite USED TO SURVIVE IT.** Until 10.08
+the entry journey's only claim about the Calendar's `Enter` was that it had gone after the entry –
+and `toHaveCount(0)` counts zero just as happily when the name was never there. Removing the label
+left the test green. The fix was to assert the name is PRESENT before the press and absent after, so
+the absence is evidence rather than a coincidence; it cost two taps. **An absence assertion is only
+worth what the presence assertion beside it is worth**, and this suite now has one instance of that
+lesson found the expensive way.
 
 **Coverage is deliberately not reported as a percentage.** A single number over levels this different
 would be an average of incomparable things, and the ISTQB warning it would be walking into is the
