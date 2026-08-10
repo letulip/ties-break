@@ -7,6 +7,7 @@ import {
   type KitLine,
   type Milestone,
   type SeasonHistoryEntry,
+  type SessionKind,
   type WorldEventCategory,
 } from '../shared/protocol'
 import {
@@ -25,6 +26,11 @@ import {
   type WorldState,
 } from './world'
 import { rollPotential } from './development'
+// v47: the migration lays a week out, so the two layout functions it needs live in the ENGINE now
+// (engine/plan.ts) and `composables/weekDays.ts` re-exports them under their historical names. The
+// engine may not import a composable – CLAUDE.md invariant 1 – and a second spelling of REST_PRIORITY
+// would be two conventions the calendar and the save could drift apart on.
+import { PLAN_DAYS, sessionDays, sessionsForPlan } from './plan'
 import { coachIncludesPhysio } from './coach'
 import { COHORT } from './season/cohort'
 import type { PlayerProfile } from '../shared/protocol'
@@ -1301,6 +1307,61 @@ export function migrateSave(raw: unknown): WorldState {
   // e6b0c709) is untouched by construction.
   if (v === 45) {
     v = 46
+  }
+
+  // v47 – THE WEEK BECOMES THE PLAN, AND A SHIPPED CAREER READS BACK AS ITSELF
+  // (docs/specs/training-dials.md §10).
+  //
+  // `WeekPlan` gains `week: SessionKind[][]` – Monday..Sunday, each day holding the kinds she trains
+  // that day. `train`/`rest` are kept as a PROJECTION of it, so every existing reader (`trainFactor`,
+  // `coachHoursForPlan`, `knockChance`, `restRecoveryBonus`, `sessionsForPlan`) is untouched.
+  //
+  // ⚠⚠ THE MIGRATION HAS EXACTLY ONE HONEST ANSWER, AND `general` EXISTS SO THAT IT DOES. Every career
+  // ever shipped has been running a single number: `growWeek` grows all five skills at one shared rate
+  // off one shared luck draw, which is precisely what a week of `general` sessions means in v47. So the
+  // week is rebuilt out of the display conventions the Calendar has been drawing all along –
+  //
+  //     sessions = sessionsForPlan(save.plan.train)   // 4 / 5 / 6, unchanged
+  //     sessionDays(sessions)                         // which indexes are sessions, unchanged
+  //     every session day -> ['general'],  every other day -> []
+  //
+  // – and the loaded career has the same session count, the same rate, the same bill, the same knock
+  // chance and the same recovery it had before. `aimWeights` returns the all-ones vector for a week of
+  // nothing but general practice, EXACTLY (integer arithmetic – see AIM_UNIT), so the skills it banks
+  // on the week it is loaded are byte-identical rather than approximately so. That is §12 criterion 8
+  // and tests/plan.test.ts proves it rather than asserting it.
+  //
+  // ⚠ THE DRAWN GYM DAY MIGRATES TO `general`, NOT `fitness`, AND THAT IS DELIBERATE. The gym day has
+  // never been simulated – `growWeek` has never heard of it, and `gymDayIndex` is a display convention
+  // that exists so the Calendar's Tuesday does not shuffle when a preset moves – so promoting it to a
+  // real Fitness session on load would be the migration changing his game. The visible consequence is
+  // small and honest: a loaded career opens with no gym day ticked, and the plan tab's first invitation
+  // is to decide whether one of those days is one.
+  //
+  // ⚠ AND IT DOES NOT CLAMP TO 4..6 SESSIONS. A save poked to `train: 100` draws seven session days
+  // today and must keep billing and developing exactly as it does (both readers clamp on their own).
+  // The 4..6 band is a rule about new PLAYER input and is enforced in `setPlan`; applying it here would
+  // be the migration editing a career rather than reading it.
+  //
+  // ⚠ WHAT THIS STEP DOES **NOT** MAKE IDENTICAL, stated here because it is the slice's one ruled
+  // behavioural change and hiding it in a spec would be the wrong place: a migrated week is never
+  // DOUBLED, and since v47 `summerLoadFactor` follows the doubling rather than the calendar (owner,
+  // 10.08: «да»). So a loaded career's school-free weeks – the summer holidays, and every week past her
+  // last school year – come back at 1.0 instead of the automatic 1.4 until he ticks a second session
+  // onto a day. On every other week the load factor is 1 in both versions and the arithmetic is exact.
+  // Measured on `school-ends-2026-08.md`'s own harness; see tools/school-bench.ts §4.
+  //
+  // Idempotent in v30's sense (the field is only written when absent), and zero draws on any stream, so
+  // the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 46) {
+    const plan = save.plan as { train?: number; week?: unknown } | undefined
+    if (plan && !plan.week && typeof plan.train === 'number') {
+      const days = new Set(sessionDays(sessionsForPlan(plan.train)))
+      const week: SessionKind[][] = []
+      for (let d = 0; d < PLAN_DAYS; d++) week.push(days.has(d) ? ['general'] : [])
+      ;(plan as { week?: SessionKind[][] }).week = week
+    }
+    v = 47
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

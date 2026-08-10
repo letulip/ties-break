@@ -322,6 +322,81 @@ The frozen MAIN capture (41550 / `e6b0c709`) re-derives byte-for-byte and its pi
 | `ECONOMY.summerBlock` (1.4 / 3) | **no change** – §4, its window is nine weeks and its cost is right for nine |
 | every injury and fatigue knob | **no change** – §5, nothing left its band |
 | `ECONOMY.entryCap` / an age-eligibility rule | **NOT BUILT** – §7, named rather than half-built |
+| ⚠ **v47: the bonus follows the DOUBLING, not the calendar** | **SHIPPED** – §10. The numbers above are unchanged; what changed is that she has to take the mornings. Owner ruled the direction in advance (10.08); measured at 0.14 junior years on the careful arm, so §12 item 1's fallback was not taken |
+
+---
+
+## 10. ⚠ v47 – THE WINDOW BONUS NOW FOLLOWS THE DOUBLING, AND THIS IS WHAT IT COST
+
+**The owner ruled the DIRECTION in advance** (10.08, on `docs/specs/training-dials.md` §3: «да»), so
+this section measures the **size**, not whether to do it. Bench: `npx vite-node tools/school-bench.ts
+--only 4 --seeds 4` – 36 careers a cell, full careers 14→38, and every figure below is that run.
+
+### What changed
+
+Until v47 `summerLoadFactor` was a property of the **window**: +40% rate and −3 condition granted
+automatically to every school-free training week, whether or not she was on court twice a day –
+because the plan was one number and nobody could decide that she was. `weekDays.ts` has been printing
+*«N days on, two sessions a day – the mornings are hers now»* over a plan that could not express it.
+v47 makes the days the plan, so the bonus is now the **price of a doubled day**: a fully doubled
+school-free week reproduces **1.4 and −3 exactly**, an undoubled one gets **1.0 and 0**, and the middle
+interpolates on `doublingShare` with `Math.round` keeping the condition charge integer (§12 item 2 of
+the dials spec, answered).
+
+### The A/B, and why it is exact
+
+Both arms are **five sessions**, so `train`/`rest` are the identical 75/25 and `trainFactor`,
+`coachHoursForPlan`, `knockChance` and `restRecoveryBonus` are byte-identical between them. The only
+thing that varies is whether the school-free weeks are doubled. **Arm A is therefore the shipped v46
+game, reproduced rather than approximated**; **arm B is what a migrated career loads as**, because the
+v46 → v47 migration writes one session per session day and never invents a doubled one.
+
+| | peak | realised % | peakAge | median WTA | ev/season | seasons | wksLost |
+|---|---|---|---|---|---|---|---|
+| **PLAYER (careful)** A doubled – *the v46 game* | 60.18 | 83.7 | 23.4 | #177 | 20.9 | 10.5 | 17.9 |
+| **PLAYER (careful)** B undoubled – *a migrated save* | 59.84 | 81.2 | 22.9 | #172 | 21.1 | 9.5 | 13.9 |
+| **GRINDER** A doubled | 59.46 | 78.1 | 21.7 | #317 | 31.0 | 8.6 | 19.1 |
+| **GRINDER** B undoubled | 58.51 | 71.8 | 20.0 | #540 | 29.9 | 6.8 | 13.3 |
+
+**What not doubling costs (B − A):**
+
+| | peak skill | = junior years | median WTA rank | entries/season | door condition |
+|---|---|---|---|---|---|
+| PLAYER (careful) | **−0.34** | **0.14** | **−5** (marginally better) | +0.16 | +0.7 fresher |
+| GRINDER | **−0.95** | **0.39** | **+223** worse | −1.17 | +0.5 fresher |
+
+### The verdict: the magnitude is right, and §12 item 1's fallback is NOT taken
+
+**On the population the game actually ships – the careful player – the change is worth 0.14 of one
+junior year and moves the median ranking by five places in the direction of noise.** Against the
+yardstick this page has used since §4 (one junior year = 2.4 skill points, the whole coach ladder =
+2.26) that is a seventh of a junior year: measurably lower, exactly as §12 item 1 asked, and nowhere
+near a trap. A player who ticks the second session gets every point of it back, and the plan tab's
+capacity dots (`Snapshot.planDayCapacity`) put the offer on screen before he can miss it – which is
+more than the shipped game ever did, since the +40% was invisible and unsettable.
+
+**It bites hardest on the GRINDER policy, and that is the change landing rather than failing.** The
+grinder is the arm that enters everything and rests nothing; taking the automatic bonus away from a
+career that never chose to double costs it 0.39 junior years, a slower climb and – the second-order
+half – **1.8 fewer seasons lived** (6.8 against 8.6), because a career that develops less plateaus
+sooner and the retirement latch reads that. ⚠ **The +223 median WTA places is mostly that second-order
+effect and not a rate effect**, and at 36 careers a cell it is a coarse reading; the honest headline
+number is the peak-skill delta, which is the one the growth model actually produces.
+
+⚠ **And note which direction the body moved.** Both arms come out of the change *fresher* (+0.5 / +0.7
+at the off-season door, 4–6 fewer weeks lost to injury a career), because the −3 is no longer charged
+for a week she did not double. That is the honest half of the same coin and it is why the fallback in
+§12 item 1 – *"keep the window bonus automatic, charge condition for doubling only"* – would have been
+the worse trade: it keeps the free rate and adds a cost, which is the shape «мы ни за что не наказываем»
+governs against.
+
+### What did NOT move
+
+`ECONOMY.school.loadFactor` (1.4), `ECONOMY.school.conditionCost` (0), `ECONOMY.summerBlock` (1.4 / 3)
+and `lastGrade` (12) are all **unchanged**. This wave re-aimed what the numbers are the price OF; it
+re-tuned none of them. §6's argument for 1.4 over 2.0 stands untouched, and a fully doubled week still
+lands on exactly the figures §4 and §5 measured.
+
 
 **Guard tests: five re-aimed with a ⚠ and a reason, none deleted or weakened, and two of the
 re-aimings are STRICTER than what they replaced.** `round12-view.test.ts` keeps every original

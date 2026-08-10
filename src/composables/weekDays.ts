@@ -4,15 +4,32 @@
 // screen, which feels thin next to a tournament trip. He asked for the day layout from her training
 // plan (4/5/6 sessions a week) shown across the days, with matches marked.
 //
-// ⚠ THIS IS A READABLE CONSEQUENCE, NOT SEVEN DROPDOWNS, and that is a settled decision rather than a
-// scope call. docs/specs/coach-as-load-manager.md risk (b): "Weekly load sliders are exactly the chore
-// the story screen was designed to avoid. It has to be a few decisions with consequences, in the shape
-// the knock already proved." So NOTHING here is editable. Every day below is derived from state the
-// player has already set somewhere else - the plan preset on the This-week screen, the bookings on the
-// Season screen, her play style from onboarding - and the screen's whole job is to say what those
-// choices MEAN for the seven days she is about to live. It shows what the week went on. It is not a
-// form, and a per-day editor is not a later refinement of this file, it is the thing this file exists
-// instead of.
+// ⚠⚠ THE STANDING RULE OF THIS FILE CHANGED AT v47, DELIBERATELY AND BY AN OWNER RULING – REWRITTEN
+// RATHER THAN QUIETLY CONTRADICTED (docs/specs/training-dials.md §9e).
+//
+// What it used to say, and it was correct for as long as the plan was one scalar: "NOTHING here is
+// editable... a per-day editor is not a later refinement of this file, it is the thing this file exists
+// instead of." The argument behind it was docs/specs/coach-as-load-manager.md risk (b) – "Weekly load
+// sliders are exactly the chore the story screen was designed to avoid" – and that argument still
+// stands against SLIDERS. The owner has ruled that the days themselves are the control: «у нас есть
+// расписание недели и на каждый день там идут разные тренировки – это и есть ручки... надо сделать
+// строчку с названием занятия а ниже набор из 7 галочек на каждый день недели».
+//
+// WHAT SURVIVES, and it is the whole of what this file is for:
+//
+//   The ticks are the plan. What the engine reads from them is how many sessions there are, which
+//   kinds, which days, and how many share a day – NEVER a time of day. `REST_PRIORITY` and
+//   `GYM_PRIORITY` stop being the model and become the PRESET EXPANDER: the arrangement a preset lays
+//   down, and the arrangement a migrated career reads back as.
+//
+// `REST_PRIORITY` and `sessionsForPlan`/`sessionDays` therefore MOVED INTO THE ENGINE (engine/plan.ts)
+// and are re-exported below under their historical names – the v46 -> v47 migration has to lay a week
+// out and the engine may not import a composable. `weekGrid.ts` is untouched: the sim still has no
+// hours, and «Времени суток у движка нет и не будет» stands.
+//
+// This file is still not a form – the CALENDAR remains a description of a week, and the checkbox matrix
+// is a different screen (§9, `Her week` on the Coach Market tab). What changed is where its numbers come
+// from: `plan.week`, when the save carries one, rather than `plan.train` read as a percentage.
 //
 // -------------------------------------------------------------------------------------------------
 // WHERE EVERY NUMBER COMES FROM, because a calendar that invents facts is worse than no calendar
@@ -67,6 +84,7 @@ import {
   surfaceBlockFor,
 } from '../engine/season/calendar'
 import { layoffCoversWeek } from '../engine/world'
+import { sessionDays, sessionsForPlan } from '../engine/plan'
 import { knockGoverns } from '../engine/knock'
 import { surfaceStyleHint } from '../engine/match/style'
 import { vacationPackage } from '../engine/economy'
@@ -86,13 +104,6 @@ export const DAY_LONG = [
   'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
 ] as const
 
-const DAYS = DAY_SHORT.length
-
-/** Rest days are claimed in THIS order: Sunday (the week's day off), then Wednesday (the midweek
- *  breather), then Friday. At 6 / 5 / 4 sessions that gives one, two and three rest days and never
- *  two of them side by side - the shape a junior's week actually has. The tail exists only so the
- *  function is total for a plan nobody has set yet. */
-const REST_PRIORITY: readonly number[] = [6, 2, 4, 1, 5, 3, 0]
 /** The fitness day is claimed in THIS order among the days that are already sessions, which lands it
  *  on Tuesday at all three presets. Deliberately stable: a player moving grind -> light should see
  *  court days disappear, not his whole week re-shuffle. */
@@ -214,20 +225,13 @@ export type CalendarWeekFacts = Pick<
  *  it as DATA on `CalendarWeek`: weekGrid.ts may not import from the engine, and still does not. */
 export { SUMMER_WEEKS, isSummerWeek }
 
-/** How many sessions `plan.train` buys, as a share of the seven days. Total and monotone: a higher
- *  train percentage can never buy fewer sessions. */
-export function sessionsForPlan(trainPct: number): number {
-  const raw = Math.round((trainPct / 100) * DAYS)
-  return Math.max(0, Math.min(DAYS, raw))
-}
-
-/** Which day indexes are sessions, by REST_PRIORITY. Ascending, Monday first. */
-export function sessionDays(sessions: number): number[] {
-  const resting = new Set(REST_PRIORITY.slice(0, Math.max(0, DAYS - Math.max(0, Math.min(DAYS, sessions)))))
-  const out: number[] = []
-  for (let d = 0; d < DAYS; d++) if (!resting.has(d)) out.push(d)
-  return out
-}
+/** ⚠ THE PRESET EXPANDER MOVED INTO THE ENGINE AT v47 AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
+ *  NAMES, so every existing caller and every test that imports `sessionsForPlan` / `sessionDays` from
+ *  this module keeps working unchanged – the same shape `SUMMER_WEEKS` / `isSummerWeek` took when the
+ *  summer window moved (W3-SUMMER), and for the same reason: the v46 -> v47 migration has to lay a week
+ *  out, and the engine may not import a composable (CLAUDE.md invariant 1). `REST_PRIORITY` went with
+ *  them, so there is still exactly one convention and the save and the calendar cannot drift apart. */
+export { sessionsForPlan, sessionDays }
 
 /** The week's one fitness day, or null when the plan buys fewer than two sessions (a single session
  *  a week is on court – there is no week in which the only tennis she does is a gym). */

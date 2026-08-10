@@ -63,10 +63,46 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   birthDay: 15,
 }
 
+/** WHAT ONE KIND OF SESSION IS (v47, docs/specs/training-dials.md §2). Five blocks, one line each on
+ *  the plan tab, seven checkboxes under it.
+ *
+ *  ⚠ `general` IS A KIND AND NOT AN ABSENCE OF ONE, and the whole migration rests on it. Four ticks
+ *  across four kinds would also be "a bit of everything", and it is not the same thing: four ticks is
+ *  four sessions and four billed hours, while ONE general tick is one session that touches all five
+ *  skills. It is also what every shipped career has been doing – `growWeek` has always grown the five
+ *  at one shared rate – which is precisely why a v46 save reads back as itself (§10).
+ *
+ *  ⚠ REST IS THE ABSENCE OF A TICK, not a sixth kind. A day whose array is empty is a day off, which
+ *  removes the whole class of "what happens if you tick rest and serve on the same day". */
+export type SessionKind = 'general' | 'serve' | 'rally' | 'fitness' | 'matchplay'
+
+/** ⚠ APPEND-ONLY, like `SKILL_KEYS`, and for a weaker reason than that one: no draw walks this array,
+ *  but the plan tab's block order is read off it and a save carries the strings. Order is display. */
+export const SESSION_KINDS: readonly SessionKind[] = ['general', 'serve', 'rally', 'fitness', 'matchplay']
+
 /** Weekly time split in percent; train + rest === 100. */
 export interface WeekPlan {
+  /** ⚠ LEGACY AND KEPT, AND SINCE v47 A PROJECTION OF `week` RATHER THAN THE PLAN ITSELF: 4 sessions
+   *  -> 60/40, 5 -> 75/25, 6 -> 85/15 (`planTrainPct`). Four engine systems and two screens read it –
+   *  `trainFactor`, `coachHoursForPlan`, `knockChance`, `restRecoveryBonus` – so keeping it as a
+   *  projection is what makes every one of those readers byte-identical and the migration a pure
+   *  default. The drift risk is real and the answer is the one `weeklyBillSplit` uses for
+   *  `coach + facility === total`: `setPlan` is the ONLY writer of either field. */
   train: number
   rest: number
+  /** v47 – Monday..Sunday. THE PLAN (docs/specs/training-dials.md §2, §10). Each day holds the kinds
+   *  she trains that day: an empty array is a day off, and a day may hold at most two (§3 – one
+   *  session on a school day, two on a day with no school). Between 4 and 6 sessions across the week.
+   *
+   *  ⚠ OPTIONAL, AND THE SPEC ASKED FOR IT REQUIRED. Making it required would have forced a seven-day
+   *  matrix onto 48 `{ train, rest }` literals across 17 files – including `tests/condition.test.ts`'s
+   *  RNG-invariance variants, whose whole job is to poke a HOSTILE plan (`{ train: 100, rest: 0 }`) at
+   *  the tick, i.e. it would have meant rewriting the guard this slice most has to leave alone.
+   *  Absence is also a shape with a meaning here rather than a hole: it reads back as the week the
+   *  calendar has been DRAWING all along (`planWeek` – `sessionsForPlan` days, all of them general),
+   *  which is exactly what the v46 -> v47 migration writes. One derivation, two callers, and a save
+   *  that predates the field can never disagree with a save that carries it. */
+  week?: SessionKind[][]
 }
 
 export const WEEK_PLAN_PRESETS: Record<'grind' | 'balanced' | 'light', WeekPlan> = {
@@ -2213,6 +2249,16 @@ export interface Snapshot {
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan
+  /** v47 – HOW MANY SESSIONS ONE DAY MAY HOLD in the week the plan is about to be lived in: 1 on an
+   *  ordinary school day, 2 on a day with no school (docs/specs/training-dials.md §3). THE PLAN TAB'S
+   *  CAPACITY DOTS READ THIS, so the limit is visible before he bumps into it rather than arriving as
+   *  a refusal.
+   *
+   *  DERIVED, never persisted, and carried as data for the reason `CalendarWeek.schoolOver` is: the
+   *  screen may not ask the engine, and `summerBlockWeek` is not a predicate it could re-derive – it
+   *  refuses on an injury, a booked family week, a tournament and a rested knock as well as on the
+   *  calendar. It is the capacity of `week + 1`, the week the main button plays. */
+  planDayCapacity: number
   /** the kid's per-week condition 0..100 (100 = fresh); fatigue is the derived 100 - condition
    *  (Season-Life slice B, schema v12). */
   condition: number
