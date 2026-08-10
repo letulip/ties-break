@@ -162,7 +162,9 @@ in this code. They need the owner, not a re-pin.**
 | `fatigue-bench-policy-104w` | grinder/careful injury ratio `> 1.5` | **1.708** | **1.147** |
 | `fatigue-bench-planner` | grinder medical blocks `>` managed's | passes (9/9) | **66 vs 66 – a tie** |
 
-Measured by running each file twice on this branch, the only difference being `RETIRE_K`.
+Measured by running each file twice on this branch, the only difference being `RETIRE_K`. Both are
+**reproducible on an uncontended machine** – a clean `npm run test:sim` is 9/11 green with no stalls
+and exactly these two, to the same decimals – so neither is a flake.
 
 **THE MECHANISM, AND IT IS A PROPERTY OF THE DESIGN INSTRUCTION RATHER THAN A BUG.** The hazard is
 zero for the first `FATIGUE_START` (120) points, which was chosen deliberately – the fiction is
