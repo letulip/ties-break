@@ -2249,6 +2249,16 @@ export interface Snapshot {
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan
+  /** v47 – HOW MANY SESSIONS ONE DAY MAY HOLD in the week the plan is about to be lived in: 1 on an
+   *  ordinary school day, 2 on a day with no school (docs/specs/training-dials.md §3). THE PLAN TAB'S
+   *  CAPACITY DOTS READ THIS, so the limit is visible before he bumps into it rather than arriving as
+   *  a refusal.
+   *
+   *  DERIVED, never persisted, and carried as data for the reason `CalendarWeek.schoolOver` is: the
+   *  screen may not ask the engine, and `summerBlockWeek` is not a predicate it could re-derive – it
+   *  refuses on an injury, a booked family week, a tournament and a rested knock as well as on the
+   *  calendar. It is the capacity of `week + 1`, the week the main button plays. */
+  planDayCapacity: number
   /** the kid's per-week condition 0..100 (100 = fresh); fatigue is the derived 100 - condition
    *  (Season-Life slice B, schema v12). */
   condition: number

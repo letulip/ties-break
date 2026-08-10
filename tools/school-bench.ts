@@ -22,6 +22,7 @@
 //   npx vite-node tools/school-bench.ts                 # everything, 2 seeds a preset
 //   npx vite-node tools/school-bench.ts --seeds 4
 //   npx vite-node tools/school-bench.ts --only 0,1      # sections, comma separated
+//   npx vite-node tools/school-bench.ts --only 4      # v47: what NOT doubling costs (§4)
 import { openCareer, stepCareerWeek, PRESETS, POLICIES, type Preset, type Policy } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
 import { answerFork, answerRetirement, type WorldState } from '../src/engine/world'
@@ -30,6 +31,8 @@ import { schoolEndWeek } from '../src/engine/kidLife'
 import { summerBlockWeek, pastSchool } from '../src/engine/world/summer'
 import { SKILL_KEYS, type KidSkills } from '../src/engine/development'
 import { ECONOMY } from '../src/engine/economy'
+import { planFromWeek } from '../src/engine/plan'
+import type { SessionKind, WeekPlan } from '../src/shared/protocol'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
 const args = process.argv.slice(2)
@@ -112,10 +115,16 @@ interface Row {
 interface ArmOpts {
   playsOn?: boolean
   noBankruptcy?: boolean
+  /** ⚠ v47 – THE WEEK IS THE PLAN, so an arm can now state what she actually does with her days
+   *  (docs/specs/training-dials.md §3). Omitted = whatever `openCareer` opens with, which is
+   *  `WEEK_PLAN_PRESETS.balanced` and therefore an UNDOUBLED week – the shape a migrated career
+   *  loads as. §4 is the A/B this exists for. */
+  plan?: WeekPlan
 }
 
 function runCareer(preset: Preset, index: number, policy: Policy, opts: ArmOpts = {}): Row {
   const { world, rng } = openCareer(preset, index, policy)
+  if (opts.plan) world.plan = { ...opts.plan, week: opts.plan.week?.map((d) => [...d]) }
   const start: KidSkills = { ...world.skills }
   const potential: KidSkills = { ...world.potential }
   const peak: KidSkills = { ...world.skills }
@@ -357,6 +366,54 @@ if (wants('3')) {
     console.log(BODY_HEAD)
     for (const { s, rows } of banked) console.log(bodyLine(s.label, rows))
   }
+}
+
+// -------------------------------------------------------------------------------------------------
+if (wants('4')) {
+  console.log(`\n${rule()}`)
+  console.log('§4  v47 – THE BONUS FOLLOWS THE DOUBLING, NOT THE CALENDAR (docs/specs/training-dials.md §3)')
+  console.log('    THE OWNER RULED THE DIRECTION IN ADVANCE (10.08: «да»), so this measures the SIZE.')
+  console.log('    The A/B is exact: both arms are FIVE sessions and therefore train/rest 75/25, so')
+  console.log('    `trainFactor`, `coachHoursForPlan`, `knockChance` and `restRecoveryBonus` are')
+  console.log('    identical and the ONLY thing that varies is whether the school-free weeks are')
+  console.log('    doubled. Arm A reproduces the shipped v46 game exactly (a fully doubled week is')
+  console.log('    1.4 and -3 by construction); arm B is what a MIGRATED career loads as.')
+  console.log(rule())
+  const DOUBLED: WeekPlan = planFromWeek([
+    ['general', 'general'], ['general', 'general'], ['general'], [], [], [], [],
+  ] as SessionKind[][])
+  const FLAT: WeekPlan = planFromWeek([
+    ['general'], ['general'], ['general'], ['general'], ['general'], [], [],
+  ] as SessionKind[][])
+  console.log(`  both arms: train ${DOUBLED.train}/${DOUBLED.rest}, 5 sessions, 5 billed hours`)
+  for (const [name, policy] of [['GRINDER', POLICIES[0]], ['PLAYER (careful)', POLICIES[1]]] as const) {
+    console.log(`\n  ${name} policy – ${PRESETS.length * SEEDS} careers`)
+    console.log(SKILL_HEAD)
+    const doubled = population(policy, { plan: DOUBLED })
+    const flat = population(policy, { plan: FLAT })
+    console.log(skillLine('A doubled (= the v46 game)', doubled))
+    console.log(skillLine('B undoubled (= a migrated save)', flat))
+    console.log(BODY_HEAD)
+    console.log(bodyLine('A doubled (= the v46 game)', doubled))
+    console.log(bodyLine('B undoubled (= a migrated save)', flat))
+    const dPeak = mean(flat.map((r) => r.peakMean)) - mean(doubled.map((r) => r.peakMean))
+    const rank = (rows: Row[]): number => {
+      const r = rows.filter((x) => x.wtaRank !== null).map((x) => x.wtaRank as number)
+      return r.length ? pctl(r, 0.5) : NaN
+    }
+    const dRank = rank(flat) - rank(doubled)
+    const dEntries = mean(flat.map((r) => r.entriesPerSeason)) - mean(doubled.map((r) => r.entriesPerSeason))
+    const dDoor = mean(flat.map((r) => r.doorCondition)) - mean(doubled.map((r) => r.doorCondition))
+    console.log(`\n  WHAT NOT DOUBLING COSTS (B - A):`)
+    console.log(`  ${padE('peak skill', 30)}${pad(dPeak.toFixed(2), 10)}  = ${(dPeak / 2.4).toFixed(2)} junior years`)
+    console.log(`  ${padE('median WTA rank', 30)}${pad(dRank.toFixed(0), 10)}  (+ = worse)`)
+    console.log(`  ${padE('entries / season', 30)}${pad(dEntries.toFixed(2), 10)}`)
+    console.log(`  ${padE('off-season door condition', 30)}${pad(dDoor.toFixed(1), 10)}  (+ = fresher, the -3 not paid)`)
+  }
+  console.log(`\n  THE YARDSTICK: one junior year = 2.4 skill points (SKILL_POINTS_PER_YEAR); the whole`)
+  console.log(`  coach ladder is 2.26. A cost far above that would mean the change is a trap rather than`)
+  console.log(`  a choice – §12 item 1's fallback (keep the window bonus automatic, charge condition for`)
+  console.log(`  doubling only) is what that verdict buys.`)
 }
 
 console.log('')
