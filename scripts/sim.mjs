@@ -57,12 +57,19 @@
 //     and it always fails. A retry loop over real failures would be the actual sin here.
 //
 // ⚠ AND THE DISTINCTION IS READ OFF VITEST'S OWN SUMMARY, not off a timeout message, because the
-// text of the stall varies and the summary does not. `summaryOf` looks for "N failed" in the Tests
-// and Test Files lines; if it cannot find a summary AT ALL the file is treated as a real failure,
-// which is the safe direction — a crashed runner that printed nothing must never read as "green".
+// text of the stall varies and the summary does not. If there is no summary AT ALL the file is
+// treated as a real failure, which is the safe direction — a crashed runner that printed nothing
+// must never read as "green".
+//
+// ⚠ THE CLASSIFIER MOVED TO scripts/lib/stall.mjs (10.08) BECAUSE THE UNIT PROJECT HIT THE SAME
+// WALL ON CI – `Tests 61 passed (61)` on the radar shard at 62.63 s, exit 1 – and two copies of one
+// rule is how the rule drifts. That reading also settles what the wall is about: it is not this
+// project, not this Mac and not contention alone. It is a 60 s ceiling meeting whatever machine
+// happens to be running, and both gates now answer it the same way.
 
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { classify, recoveredNote } from './lib/stall.mjs'
 
 /** Parsed out of vite.config.ts so the list cannot drift from the project definition. */
 function simFiles() {
@@ -70,18 +77,6 @@ function simFiles() {
   const block = config.match(/const HEAVY_SIM_FILES = \[([\s\S]*?)\]/)
   if (!block) throw new Error('scripts/sim.mjs: HEAVY_SIM_FILES not found in vite.config.ts')
   return [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1].replace(/^\*\*\//, ''))
-}
-
-/** What vitest itself says happened, independent of the exit code.
- *
- *  Returns `null` when no summary was printed at all — a runner that died before reporting. That
- *  case must NOT be read as "no failures"; the caller treats null as a real failure. */
-function summaryOf(output) {
-  const tests = output.match(/Tests\s+(.+)/)
-  const files = output.match(/Test Files\s+(.+)/)
-  if (!tests && !files) return null
-  const line = `${tests?.[1] ?? ''} ${files?.[1] ?? ''}`
-  return { failedTests: /\d+\s+failed/.test(line), line: line.trim() }
 }
 
 function runFile(file) {
@@ -92,14 +87,9 @@ function runFile(file) {
     { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8' },
   )
   const output = (run.stdout || '') + (run.stderr || '')
-  const summary = summaryOf(output)
-  return {
-    secs: ((Date.now() - at) / 1000).toFixed(0),
-    output,
-    // Green tests, non-zero exit: the shape this whole file exists to name.
-    stalled: run.status !== 0 && summary !== null && !summary.failedTests,
-    failed: run.status !== 0 && (summary === null || summary.failedTests),
-  }
+  // The classifier is shared with scripts/units.mjs – the same wall hit the unit project on CI, and
+  // a rule written twice is a rule that drifts. See scripts/lib/stall.mjs.
+  return { secs: ((Date.now() - at) / 1000).toFixed(0), output, ...classify(run.status, output) }
 }
 
 const files = simFiles()
@@ -143,13 +133,7 @@ const total = ((Date.now() - started) / 1000).toFixed(0)
 // The stalls are printed whether or not they cost the run its exit code. Swallowing a recovered
 // stall would rebuild the same lie one level down: the gate would be quietly retrying a machine
 // that is falling over, and nobody would know until it stopped recovering.
-for (const r of recovered) {
-  console.error(
-    `\n  ⚠ ${r.file} stalled at ${r.firstSecs}s with every test green, and passed on the retry.` +
-      `\n    That is machine contention, not a defect – but a machine that does it often is a` +
-      `\n    finding of its own. Check load and swap before trusting a timing figure from this run.`,
-  )
-}
+for (const r of recovered) console.error(recoveredNote(r.file, r.firstSecs))
 
 if (failed.length === 0 && stalled.length === 0) {
   const tail = recovered.length ? ` (${recovered.length} recovered after a stall)` : ''

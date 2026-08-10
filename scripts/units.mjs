@@ -30,6 +30,7 @@
 // with coverage, and that trade should be made deliberately and measured, never as a side effect.
 
 import { spawnSync } from 'node:child_process'
+import { classify, recoveredNote } from './lib/stall.mjs'
 
 /** Measured, not guessed: the three slowest files under contention, and the only ones holding a
  *  core for double digits of seconds. Re-derive with `--reporter=json` and sum per file. */
@@ -38,23 +39,51 @@ const HEAVY_UNIT_FILES = ['tests/economy.test.ts', 'tests/radar.test.ts', 'tests
 const reporter = process.argv.includes('--verbose') ? 'default' : 'dot'
 const started = Date.now()
 const failed = []
+const stalled = []
+const recovered = []
 
-function run(label, args, env = {}) {
+function once(args, env) {
   const at = Date.now()
-  process.stdout.write(`  unit  ${label} … `)
   const r = spawnSync('npx', ['vitest', 'run', '--project', 'unit', '--reporter', reporter, ...args], {
     stdio: ['ignore', 'pipe', 'pipe'],
     encoding: 'utf8',
     env: { ...process.env, ...env },
   })
-  const secs = ((Date.now() - at) / 1000).toFixed(0)
   const out = (r.stdout || '') + (r.stderr || '')
-  if (r.status === 0) {
-    const m = out.match(/Tests\s+(\d+) passed/)
-    console.log(`ok (${secs}s${m ? `, ${m[1]} tests` : ''})`)
+  return { secs: ((Date.now() - at) / 1000).toFixed(0), out, ...classify(r.status, out) }
+}
+
+// ⚠ ONE RETRY, AND ONLY FOR THE ALL-GREEN-NON-ZERO SHAPE (10.08). CI went red with
+// `Tests 61 passed (61)` and `Timeout calling "onTaskUpdate"` on the radar shard at 62.63s - the
+// same birpc wall this file's header already describes, arriving on a slower runner rather than on
+// a bigger suite. A failing ASSERTION is never retried: see scripts/lib/stall.mjs for why the
+// distinction is mechanical rather than a judgement here.
+function run(label, args, env = {}) {
+  process.stdout.write(`  unit  ${label} … `)
+  let r = once(args, env)
+
+  if (r.stalled) {
+    process.stdout.write(`stalled (${r.secs}s, every test green) – retrying once … `)
+    const first = r
+    r = once(args, env)
+    if (!r.stalled && !r.failed) {
+      recovered.push({ label, firstSecs: first.secs })
+      console.log(`ok (${r.secs}s, recovered)`)
+      return
+    }
+    if (r.stalled) {
+      stalled.push({ label, out: r.out })
+      console.log(`STALLED TWICE (${r.secs}s) – runner, not tests`)
+      return
+    }
+  }
+
+  if (r.failed) {
+    console.log(`FAILED (${r.secs}s)`)
+    failed.push({ label, out: r.out })
   } else {
-    console.log(`FAILED (${secs}s)`)
-    failed.push({ label, out })
+    const m = r.out.match(/Tests\s+(\d+) passed/)
+    console.log(`ok (${r.secs}s${m ? `, ${m[1]} tests` : ''})`)
   }
 }
 
@@ -67,10 +96,16 @@ for (const file of HEAVY_UNIT_FILES) {
 }
 
 const total = ((Date.now() - started) / 1000).toFixed(0)
-if (failed.length === 0) {
-  console.log(`  unit: green in ${total}s`)
+for (const r of recovered) console.error(recoveredNote(r.label, r.firstSecs))
+
+if (failed.length === 0 && stalled.length === 0) {
+  const tail = recovered.length ? ` (${recovered.length} recovered after a stall)` : ''
+  console.log(`  unit: green in ${total}s${tail}`)
 } else {
-  for (const f of failed) console.error(`\n===== ${f.label} =====\n${f.out}`)
-  console.error(`  unit: ${failed.length} run(s) FAILED (${total}s)`)
+  for (const f of [...failed, ...stalled]) console.error(`\n===== ${f.label} =====\n${f.out}`)
+  const parts = []
+  if (failed.length) parts.push(`${failed.length} run(s) FAILED`)
+  if (stalled.length) parts.push(`${stalled.length} stalled twice (runner, not tests)`)
+  console.error(`  unit: ${parts.join(', ')} (${total}s)`)
   process.exitCode = 1
 }
