@@ -47,12 +47,14 @@ test('at 375 px the app does not scroll sideways, and the season strip stays sho
 
   // THE SEASON STRIP, pinned by the distance between two headings that both have real roles.
   //
-  // ⚠ MEASURED THIS WAY BECAUSE THE STRIP ITSELF CANNOT BE ADDRESSED. Its tier chips are plain
+  // ⚠ MEASURED THIS WAY BECAUSE THE STRIP ITSELF COULD NOT BE ADDRESSED - and that half of the note
+  // is now history, which is why it is re-aimed rather than deleted. Its tier chips WERE plain
   // `<span class="pill tier-chip">` - no role, no label, invisible to `getByRole` and to a screen
-  // reader alike (recorded in docs/specs/e2e-coverage.md's gap table). Rather than reach for a CSS
-  // selector, the section is measured by its two bookends: the `Season` heading and the `News`
-  // heading are both `role=heading`, so the gap between their tops IS the strip's block, addressed
-  // entirely by role.
+  // reader alike (defect D6 in docs/specs/e2e-coverage.md §12, fixed on fix/a11y-sweep: each rung is
+  // a named image inside a group called `Season ladder`). The measurement below is UNCHANGED anyway,
+  // and deliberately: the two bookends are what pin the strip's HEIGHT, which is the regression this
+  // test exists for, and a chip you can now name still cannot tell you how many rows it wrapped to.
+  // What the fix buys this file is the assertion under the measurement, not a different measurement.
   //
   // THE CEILING IS MEASURED, NOT GUESSED (CLAUDE.md invariant 4). Measured on this build at this
   // width: 148.9 px, heading to heading. The ceiling below leaves ~21 px of headroom - enough for a
@@ -67,6 +69,16 @@ test('at 375 px the app does not scroll sideways, and the season strip stays sho
     newsTop! - seasonTop!,
     'the Home season strip has grown - it wrapped to four rows once before and was fixed to two',
   ).toBeLessThan(170)
+
+  // ⚠ AND THE RUNGS INSIDE IT ARE REACHABLE NOW (a11y D6). This is the half the note above says the
+  // fix buys: the strip is a named group, every rung in it is a named image, and the name carries
+  // the STATE that used to live only in a CSS class - so a chip's colour is no longer the only place
+  // "she has reached this" is written down. Asserted at this width because this is the one file that
+  // renders the strip in a real browser; the shape of each name is
+  // tests/component/a11y-sweep.test.ts's.
+  const ladder = page.getByRole('group', { name: 'Season ladder' })
+  await expect(ladder).toBeVisible()
+  expect(await ladder.getByRole('img').count(), 'the ladder drew no addressable rung').toBeGreaterThan(1)
 
   // --- the two heaviest other screens ------------------------------------------------------------
   // Season is the widest content in the app (a planner grid and a calendar); Money carries a ledger

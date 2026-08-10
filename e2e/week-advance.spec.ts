@@ -47,6 +47,19 @@ test.describe('advancing a week', () => {
     // ...and nothing moved while it was open.
     await expect(page.getByText(onScreenWeek(facts.week))).toBeVisible()
 
+    // ⚠ AND IT IS A DIALOG NOW (a11y D1, docs/specs/e2e-coverage.md §12). Until this wave the thing
+    // blocking the app was a `<div>`: `getByRole('dialog')` returned nothing while a knock was open,
+    // so the ONE state in this game that stops the world could not be asked for by role, and a screen
+    // reader was never told a decision was blocking. It is asserted here because this is the spec
+    // that already owns "a decision on the table stops the week" - the role is the same claim, said
+    // in the app's own vocabulary.
+    const knock = page.getByRole('dialog')
+    await expect(knock).toBeVisible()
+    await expect(knock).toHaveAttribute('aria-modal', 'true')
+    // Its name is the two lines a player reads on the card, so a listener knows which week's knock
+    // and which part of her before the two costs are read out.
+    await expect(knock).toHaveAccessibleName(/^(A knock|The same knock again) – W\d+ '\d{2} Her /)
+
     // Answer it. The button re-enabling is the worker's reply, not a guess about one.
     await page.getByRole('button', { name: /^Rest it/ }).click()
     await expect(weekButton(page)).toBeEnabled()
@@ -97,7 +110,16 @@ test.describe('advancing a week', () => {
     //     The two labels asserted are the ones that do not depend on which ladder she ended on.
     await expect(page.getByText('Season points')).toBeVisible()
     await expect(page.getByText('Tournaments entered')).toBeVisible()
+    // ⚠ AND THE CARD IS A DIALOG (a11y D1). Same defect and same fix as the knock above, one beat
+    // later in the same tick: it covers the week's story, and until this wave it said so to nobody.
+    // Named by the season it closes, because "That's a season." on its own does not say which.
+    const wrapUp = page.getByRole('dialog')
+    await expect(wrapUp).toHaveAttribute('aria-modal', 'true')
+    await expect(wrapUp).toHaveAccessibleName(/^Season \d{4} · wrap-up/)
     await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    // ...and it goes when it is answered, which is what makes the assertion above a statement about
+    // THIS card rather than about any dialog that happens to be up.
+    await expect(page.getByRole('dialog')).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Proceed to Home' }).click()
 
@@ -126,7 +148,52 @@ test.describe('advancing a week', () => {
     // is the honest form of the claim: a spec that asserted a particular row would be re-testing the
     // ledger's arithmetic, which tests/ already owns.
     await expect(page.getByText('No transactions yet.')).toHaveCount(0)
+    // ⚠ AND IT IS POPULATED WITH ROWS, NOT WITH TEXT (a11y D5). `StatRow` rendered a bare `<div>` of
+    // `<span>`s, so a forty-row ledger was one undifferentiated run as far as this layer and a screen
+    // reader were both concerned - which is why the line above had to be phrased as the absence of an
+    // empty-state string. Each row is a named group now, so the claim can be about ROWS. Counted
+    // rather than named: which transactions eight seasons produce is the economy's business.
+    expect(
+      await page.getByRole('group').filter({ hasText: /\$/ }).count(),
+      'the ledger reached the page as rows a reader can be walked through',
+    ).toBeGreaterThan(3)
 
     expect(crashes, 'the app threw while advancing a week').toEqual([])
+  })
+
+  // ⚠ THE THIRD KIND OF WEEK: ONE THAT STOPS AND SAYS WHY. The two above end in a dialog with a
+  // Continue; this one ends in the top banner, which is the app's other way of reporting a week -
+  // and the surface D11 was filed against. There are TWO of those banners (the damaged-autosave
+  // notice is the other), they can be on screen together, and both carried a button that said
+  // `Dismiss` and nothing else: identical to a strict-mode locator and, more to the point,
+  // identical to anyone looking at them.
+  //
+  // ⚠ THIRD CANARY ON FIXTURE STATE, and it is the cheapest of the three. `broke` is eleven weeks
+  // under water at -$2,070; the engine raises the `funds` stop on any week that ends below zero, so
+  // one advance is enough. If a regenerated `broke` ever boots solvent this test goes red naming the
+  // reason, exactly like the knock canary above.
+  test('a week that stops: the notice says what it is, and no other control shares its name', async ({
+    page,
+    careerAt,
+  }) => {
+    const crashes: string[] = []
+    page.on('pageerror', (error) => crashes.push(error.message))
+
+    await careerAt('broke')
+    await answerOpeningKnock(page)
+    await weekButton(page).click()
+
+    // The engine's own countdown copy, so this is the stop reaching the player rather than a banner
+    // that renders whatever it is handed.
+    await expect(page.getByText(/^Stopped: /)).toBeVisible()
+    // THE DEFECT, STATED: this used to be a button called `Dismiss`, and so was the other banner.
+    const dismiss = page.getByRole('button', { name: /^Dismiss/ })
+    await expect(dismiss).toHaveCount(1)
+    await expect(dismiss).toHaveAccessibleName('Dismiss stop notice')
+    // ...and the rename did not cost the control its job.
+    await dismiss.click()
+    await expect(page.getByText(/^Stopped: /)).toHaveCount(0)
+
+    expect(crashes, 'the app threw while a week stopped').toEqual([])
   })
 })
