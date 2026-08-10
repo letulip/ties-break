@@ -31,6 +31,7 @@ import {
   type WorldState,
 } from '../engine/world'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
+import { planFromWeek, planShapeError, planWeek } from '../engine/plan'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
 import {
   commitAutosave,
@@ -324,14 +325,33 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'resumeFromCollege': {
       return mutate(msg.id, msg.baseRevision, (world, rng) => resumeFromCollege(world, rng))
     }
+    // ⚠ v47 – THE ONE WRITER OF `train`/`rest`, AND SINCE THE WEEK BECAME THE PLAN IT DERIVES THEM
+    // (docs/specs/training-dials.md §10). Keeping the legacy pair as a PROJECTION is what makes every
+    // existing reader byte-identical, and the drift risk that creates has exactly one answer: this
+    // handler is the only place either field is ever assigned – the discipline `weeklyBillSplit` uses
+    // to guarantee `coach + facility === total`. So a command that carries a week is projected here
+    // and the caller's own `train`/`rest` are IGNORED rather than trusted.
     case 'setPlan': {
       return mutate(msg.id, msg.baseRevision, (world) => {
         guardNotEnded(world)
+        if (msg.plan.week !== undefined) {
+          // The engine re-validates every command, so a stale screen cannot corrupt a career. It checks
+          // the SHAPE and never this week's capacity - see `planShapeError` for why a standing plan may
+          // not be judged against the week the player happens to be looking at.
+          const bad = planShapeError(msg.plan.week)
+          if (bad) throw new Error(`Week plan: ${bad}`)
+          world.plan = planFromWeek(msg.plan.week)
+          return
+        }
         const total = msg.plan.train + msg.plan.rest
         if (total !== 100 || msg.plan.train < 0 || msg.plan.rest < 0) {
           throw new Error('Week plan must split 100% between training and rest')
         }
-        world.plan = { train: msg.plan.train, rest: msg.plan.rest }
+        // ⚠ THE PRESET PATH, AND IT LAYS A WEEK DOWN RATHER THAN LEAVING ONE ABSENT. `WEEK_PLAN_PRESETS`
+        // is still what the three pills send, and `planWeek` expands it through exactly the convention
+        // the migration uses - so tapping Balanced and loading a v46 career produce the identical
+        // matrix, and the plan tab never has to render "no week".
+        world.plan = { train: msg.plan.train, rest: msg.plan.rest, week: planWeek(msg.plan) }
       })
     }
     // W4: the parent answers the knock. This is the ONLY command that can clear an undecided one, and

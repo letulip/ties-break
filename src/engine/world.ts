@@ -297,7 +297,17 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 // wrap-up off ledgers that are about to be pruned or reset. Rows banked BEFORE it carry no per-track
 // figures and none are invented – see the v45 -> v46 step in migrations.ts. Pure state, zero draws on
 // any stream: the wrap folds ledgers that already exist, so the frozen MAIN capture cannot see it.
-export const SAVE_SCHEMA_VERSION = 46
+// ⚠ v47 = ONE FIELD, `plan.week` – SEVEN DAYS OF SESSION KINDS, and it is the slice where the calendar
+// stops being a drawing of a scalar and becomes the plan (docs/specs/training-dials.md). The owner:
+// «у нас есть расписание недели и на каждый день там идут разные тренировки – это и есть ручки».
+// `train`/`rest` are KEPT and become a projection of the ticked week (4/5/6 sessions -> 60/75/85), so
+// all four engine readers of `plan.train` are byte-identical and the migration is a pure default: a
+// v46 career lays down `sessionsForPlan` days of `general`, which is exactly the week `growWeek` has
+// been running since week one. Pure state, zero draws on any stream. The one BEHAVIOURAL change rides
+// on the same field and is ruled rather than implied – `summerLoadFactor` now follows the doubling
+// instead of the calendar (owner, 10.08: «да»), so a migrated career's school-free weeks come back at
+// 1.0 until he ticks a second session onto a day. See engine/world/summer.ts and the v46 -> v47 step.
+export const SAVE_SCHEMA_VERSION = 47
 
 
 

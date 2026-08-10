@@ -37,7 +37,8 @@
 import { rngFromSeed } from './rng'
 import { ECONOMY } from './economy'
 import { coachFactor, coachFitFor, tierOf, type Coach } from './coach'
-import type { PlayStyle, WeekPlan } from '../shared/protocol'
+import { planWeek, sessionCounts, planSessions } from './plan'
+import { SESSION_KINDS, type PlayStyle, type SessionKind, type WeekPlan } from '../shared/protocol'
 
 /** The attributes the match engine reads. Kept as a bare record so it serialises into the save as
  *  numbers and nothing else.
@@ -207,11 +208,104 @@ export function declineFactor(ageYears: number): number {
   return c.declineRate * (1 + (ageYears - c.declineStart) * c.declineAccel)
 }
 
-/** The training split, as a multiplier. `plan.train` runs 60 (light) to 85 (grind). */
+/** The training split, as a multiplier. `plan.train` runs 60 (light) to 85 (grind).
+ *
+ *  ⚠ SINCE v47 `plan.train` IS A PROJECTION OF THE TICKED WEEK (4/5/6 sessions -> 60/75/85), so this
+ *  function is unchanged and now means "how BIG the week is". Where it points is `aimWeights` below,
+ *  and the two are deliberately different channels: the size buys the rate, the aim spends it. */
 export function trainFactor(plan: WeekPlan): number {
   const { trainAt60, trainAt85 } = ECONOMY.development
   const t = Math.max(0, Math.min(1, (plan.train - 60) / 25))
   return trainAt60 + (trainAt85 - trainAt60) * t
+}
+
+// =================================================================================================
+// WHERE THE WEEK POINTS (v47, docs/specs/training-dials.md §4) – and it REDISTRIBUTES, never adds
+// =================================================================================================
+//
+// ⚠⚠ THE WEEK'S TOTAL RATE IS FIXED BY ITS SIZE; THE ROWS ONLY DECIDE WHERE IT LANDS. Six serve
+// sessions do not improve her MORE than six mixed ones – they improve her DIFFERENTLY. If a row added
+// rate rather than redirecting it, the choice would be a button marked "yes please", and knock.ts's
+// standing rule is that a branch which always ends better is not a decision. The weight vector below
+// therefore RENORMALISES: it always sums to `SKILL_KEYS.length`, so its mean is exactly 1 and the
+// week's rate is conserved by construction rather than by tuning.
+//
+// ⚠ AND NO PENALTY TERM EXISTS OR IS NEEDED, which is the other half of «мы ни за что не наказываем».
+// A season aimed at one wing is self-limiting through arithmetic that already ships: `growWeek` takes
+// a share of the REMAINING distance to her ceiling, so a week pointed at a nearly-full wing converts
+// into almost nothing – `max(0, potential[k] - skills[k])` is small – while the cohort keeps drifting
+// up. The exploit eats itself, and nothing was added to make it.
+//
+// ⚠ THE BYTE-IDENTITY OF A MIGRATED CAREER LIVES IN THIS TABLE. `general` aims at all five, so a week
+// of nothing but general sessions produces the all-ones vector for ANY session count – and it does so
+// EXACTLY, in integer arithmetic, not by floating-point luck (see AIM_UNIT). That is what makes a v46
+// save read back as itself: every shipped career has been running a general week since week one.
+
+/** What each kind of session works on. The kinds the owner named, mapped onto the five attributes the
+ *  match engine actually reads.
+ *
+ *  ⚠ `serve` IS TWO SKILLS AND THAT IS THE POINT: the block is «Serve & return», the first two shots
+ *  of the point, and `basePServe` spends them as a pair. A block that trained only the serve would
+ *  leave the return with no home at all. */
+export const SESSION_AIM: Record<SessionKind, readonly SkillKey[]> = {
+  general: SKILL_KEYS,
+  serve: ['serve', 'ret'],
+  rally: ['groundstrokes'],
+  fitness: ['stamina'],
+  matchplay: ['composure'],
+}
+
+/** ⚠ AIM IS ACCUMULATED IN INTEGER UNITS, AND THE REASON IS THE MIGRATION. A session spreads one unit
+ *  of aim across its targets, and the target counts are 1, 2 and 5 – so a denominator of 10 makes
+ *  every contribution a whole number and `5 * aim / (10 * sessions)` comes out at EXACTLY 1.0 for an
+ *  all-general week of any size. Computed in floats it would not: `5 * (6/5) / 6` happens to land on 1
+ *  today and is one rounding rule away from 0.9999999999999999, which would move a shipped career's
+ *  skills in the seventh decimal and break §12 criterion 8 in a way no reader could see. */
+const AIM_UNIT = 10
+
+/** ⚠ §12 ITEM 3, OPEN AND WIRED RATHER THAN HALF-BUILT: does an untargeted skill get zero, or a floor?
+ *  A serve session still involves moving, so a small spill is the truer fiction – and the spec's own
+ *  answer is that BALANCE DOES NOT DEPEND ON IT (§5's asymptote does the work either way), so it is a
+ *  fiction choice with a number attached and the number is the owner's to pick.
+ *
+ *  SHIPS AT 0, which is what §5's worked table states out loud ("groundstrokes, stamina and composure
+ *  take none"). A bench that wants the other reading moves this one constant: the spill is defined as
+ *  the share of a session's aim that spreads evenly over all five skills, so 0.1 gives every skill a
+ *  tenth of every session and the identity above survives untouched – a kind that already aims at
+ *  everything has nothing to spill, so `general` stays exactly 1.0 at any value. */
+export const SESSION_SPILL: number = 0
+
+/** WHERE THE WEEK POINTS, as a multiplier per skill. Sums to `SKILL_KEYS.length`; all ones for a week
+ *  of ordinary practice. ZERO draws – pure arithmetic over a matrix of strings. */
+export function aimWeights(week: readonly (readonly SessionKind[])[]): Record<SkillKey, number> {
+  const out = {} as Record<SkillKey, number>
+  const sessions = planSessions(week)
+  // A week with no sessions in it has nothing to aim: the all-ones vector is what every pre-v47 career
+  // ran, and it keeps `growWeek` byte-identical on a week the plan buys nothing in.
+  if (sessions === 0) {
+    for (const k of SKILL_KEYS) out[k] = 1
+    return out
+  }
+  const counts = sessionCounts(week)
+  const aim = {} as Record<SkillKey, number>
+  for (const k of SKILL_KEYS) aim[k] = 0
+  for (const kind of SESSION_KINDS) {
+    const n = counts[kind]
+    if (n === 0) continue
+    const targets = SESSION_AIM[kind]
+    if (targets.length === SKILL_KEYS.length) {
+      // It already aims at everything, so there is nothing for the spill to spread – and taking this
+      // arm keeps `general` on the exact integer path whatever SESSION_SPILL is set to.
+      for (const k of SKILL_KEYS) aim[k] += (n * AIM_UNIT) / targets.length
+      continue
+    }
+    for (const k of targets) aim[k] += (n * AIM_UNIT * (1 - SESSION_SPILL)) / targets.length
+    if (SESSION_SPILL > 0) {
+      for (const k of SKILL_KEYS) aim[k] += (n * AIM_UNIT * SESSION_SPILL) / SKILL_KEYS.length
+    }
+  }
+  for (const k of SKILL_KEYS) out[k] = (SKILL_KEYS.length * aim[k]) / (AIM_UNIT * sessions)
+  return out
 }
 
 // ⚠ RE-AIMED: `coachFactor` moved to engine/coach.ts, and it is no longer a two-way switch – it
@@ -259,13 +353,24 @@ export function growWeek(args: {
 
   // One draw for the whole week, shared across the attributes: a good week is a good week, and four
   // independent rolls would average into a smooth line that never feels like anything.
+  //
+  // ⚠ AND THE TICKS MAY NEVER MOVE IT (v47, spec §11 item 2). The luck value is drawn BEFORE the
+  // per-skill loop, in the same position, off the same key, so a career's week 30 draws the same
+  // number under every week the player can possibly build. What the ticks change is what is DONE with
+  // it – `aim[k]` below is a post-draw multiply and nothing else. That is CLAUDE.md invariant 2 read
+  // literally: the plan is player input, and player input may not re-roll the world's dice.
   const rng = rngFromSeed(`${args.seed}:growth:${args.week}`)
   const luck = d.weekLuck[0] + rng() * (d.weekLuck[1] - d.weekLuck[0])
+
+  // WHERE THE WEEK POINTED. All ones for an ordinary practice week – which is every week of every
+  // career shipped before v47 – so this multiply is exactly 1.0 on a migrated save and its skills come
+  // out byte-identical. See `aimWeights`.
+  const aim = aimWeights(planWeek(plan))
 
   const out = {} as KidSkills
   for (const k of SKILL_KEYS) {
     const headroom = Math.max(0, potential[k] - skills[k])
-    const gain = rate * headroom * luck
+    const gain = rate * headroom * luck * aim[k]
     // Composure keeps rising past the peak – experience is the one thing that does not fade.
     const loss = decline > 0 && k !== 'composure' ? decline * skills[k] : 0
     const veteranPoise = decline > 0 && k === 'composure' ? d.veteranPoise : 0
