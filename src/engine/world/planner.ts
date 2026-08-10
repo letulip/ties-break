@@ -30,6 +30,7 @@ import { addEvent, seasonStartWeek } from './ledger'
 import { KID_ID } from './constants'
 import { practiceForWeek, refundPractice, vacationForWeek } from './bookings'
 import { layoffCovering, medicalBlock, medicalClearance, restRecoveryBonus } from './medical'
+import { retirementInjury } from './injury'
 import { kidMatchPlayerFor } from './player'
 import { fullRanking } from './ladder'
 import { practiceCoachRateFor } from './coachMarket'
@@ -351,11 +352,29 @@ export function resolvePractice(world: WorldState): void {
   const drain = Math.max(1, matchDrain('local', score) - ECONOMY.condition.tierMatchFatigue.local - 1)
   world.condition = clamp(world.condition - drain, ECONOMY.condition.min, ECONOMY.condition.max)
   const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+  // ⚠ A FRIENDLY IS A MATCH, AND SHE CAN STOP IN ONE (10.08, the retirement slice). The owner's
+  // ruling is about the BODY – «травма и травма, нет разницы» – and `simulateMatch` does not know
+  // this is a hit-out at the home club: the same fatigue curve, the same hazard. Two things follow
+  // and both are handled here rather than left to leak:
+  //
+  //   THE SENTENCE. "lost to M. Ruiz 4-6 6-4 2-1" with no explanation is the lie a short scoreline
+  //   tells by itself, so the verb says what happened, exactly as the tournament's news line does.
+  //   `retiredId` rides on the record too, so the Weekly Story and the box score read the same fact.
+  //   THE BODY. She really is hurt, so the ordinary layoff opens – `retirementInjury`, the same one
+  //   the tournament path uses, on the same `seed:retire:<week>` sub-stream. A friendly that ended
+  //   with her walking off and cost her nothing would be the "no consequence" version of the feature.
+  //
+  // ⚠ NO REFUND, and the asymmetry with the medical branch forty lines up is deliberate: that one
+  // gives the court fee back because she never took the court. She took this one.
+  const retiredId = result.retired ? (result.retired.side === 0 ? KID_ID : opp.id) : undefined
   addEvent(world, {
     week: world.week,
     type: 'match',
     friendly: true,
-    text: `Practice match: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(opp.name)} ${score} – no ranking points`,
+    text:
+      `Practice match: ${kidShort} ` +
+      `${retiredId === KID_ID ? 'had to stop against' : retiredId ? 'was playing a retiring' : kidWon ? 'beat' : 'lost to'} ` +
+      `${formatShortName(opp.name)} ${score} – no ranking points`,
     match: {
       round: 0,
       aId: KID_ID,
@@ -363,6 +382,7 @@ export function resolvePractice(world: WorldState): void {
       winnerId: kidWon ? KID_ID : opp.id,
       seed,
       score,
+      ...(retiredId ? { retiredId } : {}),
       eventId: `practice-w${world.week}`,
       surface,
       oppName: opp.name,
@@ -370,6 +390,9 @@ export function resolvePractice(world: WorldState): void {
       b: { ...opp },
     },
   })
+  // ...and LAST, after the event that describes the match, so the feed reads in the order it
+  // happened: the practice set, then the clinic. `retirementInjury` emits its own lines.
+  if (retiredId === KID_ID) retirementInjury(world)
 }
 
 /** Housekeeping: bookings are kept for a short TRAILING window after their week resolves, not

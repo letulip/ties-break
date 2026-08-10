@@ -35,7 +35,17 @@ import { BODY_REGIONS, drawBodyRegionFrom, tiltedBodyRegions } from '../src/engi
 import { loadedPartShares } from '../src/engine/knock'
 import { rngFromSeed } from '../src/engine/rng'
 import { runTournament } from '../src/engine/season/tournament'
-import { TIERS } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { ECONOMY } from '../src/engine/economy'
+import {
+  KID_ID,
+  closeTournament,
+  createWorld,
+  enterEvent,
+  prizeCentsFor,
+  skipTournament,
+  tickWeek,
+} from '../src/engine/world'
 import { worldSource, engineModuleSource } from './worldSource'
 import type { MatchPlayer, MatchOptions, Side } from '../src/engine/match/types'
 import type { SeasonEvent } from '../src/engine/season/types'
@@ -272,6 +282,117 @@ describe('a retirement is a defeat in the round she reached', () => {
       const res = runTournament({ ...EVENT, id: `${EVENT.id}-ai-${s}` }, field, null, `ai-${s}`, rngFromSeed(`ai-rng-${s}`))
       for (const m of res.matches) expect(m.retiredId, 'a closed-form match cannot retire').toBeUndefined()
     }
+  })
+})
+
+// =================================================================================================
+// 3b. THE RULING, END TO END ON A LIVE CAREER (blocks merge)
+// =================================================================================================
+//
+// The owner, 10.08: «если травма до матча – ничего не защитываем, если во время – защитываем
+// поражение в текущей ступени». Everything above is about the mechanism; this is about the money and
+// the points, driven through `createWorld` / `tickWeek` / `skipTournament` rather than asserted off a
+// fixture, because a rule about what a result is WORTH can only be checked where results are paid.
+
+describe('⚠ the round she reached is hers, in full', () => {
+  it('a retirement reaches finalizeTournament and is paid exactly like a defeat in that round', () => {
+    let seen = 0
+    for (let s = 0; s < 14 && seen < 4; s++) {
+      const world = createWorld(`ruling-${s}`)
+      const rng = rngFromSeed(world.seed)
+      const strongestFirst = [...TIER_LADDER].reverse()
+      for (let i = 0; i < 52 * 4 && seen < 4; i++) {
+        world.fundsCents = Math.max(world.fundsCents, 1_000_000_00)
+        if (world.condition >= ECONOMY.condition.matchStrengthKnee) {
+          for (const tier of strongestFirst) {
+            const e = world.season.find(
+              (x) =>
+                x.tier === tier &&
+                x.deadlineWeek >= world.week &&
+                x.deadlineWeek - world.week <= 2 &&
+                !world.entries.includes(x.id) &&
+                !world.season.some((y) => y.week === x.week && world.entries.includes(y.id)),
+            )
+            if (!e) continue
+            try { enterEvent(world, e.id); break } catch { /* the policy tries the next rung down */ }
+          }
+        }
+        tickWeek(world, rng)
+        const p = world.pendingTournament
+        if (!p) continue
+        const hit = p.result.matches.find((m) => m.retiredId === KID_ID)
+        const event = world.season.find((e) => e.id === p.eventId)!
+        const tier = TIERS[event.tier]
+        const finish = p.result.finishes[KID_ID]!
+        const fundsBefore = world.fundsCents
+        const lossesBefore = world.seasonLosses
+        skipTournament(world)
+        closeTournament(world)
+        if (!hit) continue
+        seen++
+
+        // 1. THE POINTS. Exactly the table's value for the round she reached – no partial credit,
+        //    no haircut. `finalizeTournament` writes a ledger row only when points > 0.
+        const owed = tier.points[finish] ?? 0
+        const row = world.results.find((r) => r.playerId === KID_ID && r.week === world.week && r.tier === event.tier)
+        if (owed > 0) expect(row?.points, `${tier.label} finish ${finish}`).toBe(owed)
+        else expect(row, 'a zero-point round writes no row, retirement or not').toBeUndefined()
+
+        // 2. THE CHEQUE. Same finish index, same table, and it really reached the balance.
+        const prize = prizeCentsFor(event.tier, finish)
+        const paid = world.events
+          .filter((e) => e.week === world.week && e.category === 'prize')
+          .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
+        expect(paid, `${tier.label} prize for finish ${finish}`).toBe(prize)
+        if (prize > 0) expect(world.fundsCents).toBeGreaterThan(fundsBefore - prize)
+
+        // 3. THE RUN IS ON HER RECORD, and the stopped match is counted as the loss it is.
+        expect(world.seasonLosses).toBeGreaterThan(lossesBefore)
+        expect(world.events.some((e) => e.week === world.week && e.type === 'tournament')).toBe(true)
+
+        // 4. THE BODY. The layoff opened, this week, through the ordinary model.
+        expect(world.injury, 'she stopped because she is hurt').not.toBeNull()
+        expect(world.injury!.sinceWeek).toBe(world.week)
+        expect(world.injury!.weeksRemaining).toBe(world.injury!.totalWeeks)
+        expect(world.events.some((e) => e.week === world.week && e.type === 'injury')).toBe(true)
+
+        // 5. THE OPPONENT went through on a full win – she is not in the draw after that round.
+        expect(hit!.winnerId).not.toBe(KID_ID)
+      }
+    }
+    expect(seen, 'the sweep must reach a retirement on a live career').toBeGreaterThan(0)
+  })
+
+  it('hurt BEFORE her first match still counts for nothing – the walkover branch is untouched', () => {
+    // The other half of the ruling, and the half that must NOT have moved: an entry that comes round
+    // inside a layoff resolves as a walkover, 0 points, and never reaches finalize.
+    const world = createWorld('ruling-walkover')
+    const rng = rngFromSeed(world.seed)
+    let target: { id: string; week: number } | undefined
+    for (let i = 0; i < 52 && !target; i++) {
+      world.fundsCents = 1_000_000_00
+      target = world.season
+        .filter((e) => e.deadlineWeek >= world.week && e.week > world.week)
+        .find((e) => {
+          try { enterEvent(world, e.id); return true } catch { return false }
+        })
+      if (!target) tickWeek(world, rng)
+    }
+    expect(target, 'the fixture needs an enterable event').toBeDefined()
+    // Tick up to the week before it plays, keeping her healthy the whole way.
+    while (world.week < target!.week - 1) {
+      world.injury = null
+      tickWeek(world, rng)
+      if (world.pendingTournament) { skipTournament(world); closeTournament(world) }
+    }
+    // Hurt AFTER the list closed, so the fee is committed and the entry cannot be withdrawn.
+    world.injury = { kind: 'ankle strain', severity: 'moderate', weeksRemaining: 4, totalWeeks: 4, sinceWeek: world.week }
+    tickWeek(world, rng)
+    expect(world.week).toBe(target!.week)
+    expect(world.pendingTournament, 'she never took the court').toBeNull()
+    expect(world.results.some((r) => r.playerId === KID_ID && r.week === world.week)).toBe(false)
+    expect(world.events.some((e) => e.week === world.week && e.category === 'prize')).toBe(false)
+    expect(world.walkoverWeek).toBe(world.week)
   })
 })
 
