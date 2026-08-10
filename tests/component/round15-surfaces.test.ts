@@ -286,11 +286,24 @@ function accessibleName(wrapper: ReturnType<typeof mountWithSnapshot>, selector:
   return el.text()
 }
 
+/** ⚠ THE MARKET IS BEHIND A TAB SINCE v47 (docs/specs/training-dials.md §9a) – the Coach Market
+ *  screen is `Her week` / `Coaches` on the app's one segmented row, and it opens on the plan. So the
+ *  six tests below have to be ON the tab they are about before they can assert anything, which is a
+ *  navigation step and not a weakening: every assertion in this describe is unchanged, and the click
+ *  is the same one a player makes. It is asserted rather than assumed, so a renamed tab is loud. */
+async function openCoaches(wrapper: ReturnType<typeof mountWithSnapshot>): Promise<void> {
+  const tab = wrapper.findAll('.tb-seg .tab-pill').find((b) => b.text() === 'Coaches')
+  expect(tab, 'the Coaches tab is gone from the market screen').toBeTruthy()
+  await tab!.trigger('click')
+  expect(wrapper.findAll('.cm-row').length, 'the Coaches tab drew no rows').toBeGreaterThan(0)
+}
+
 describe('a11y - the coach market announces itself honestly', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('the sort control keeps its name when it is pressed, and its VALUE still changes', async () => {
     const wrapper = mountWithSnapshot(CoachMarketScreen, snapshotAt('middle'))
+    await openCoaches(wrapper)
     const buttons = wrapper.findAll('.market-drop')
     const sort = buttons[buttons.length - 1]
     const before = accessibleName(wrapper, '.market-controls .market-drop:last-child')
@@ -314,6 +327,7 @@ describe('a11y - the coach market announces itself honestly', () => {
 
   it('the style control has the same shape and the same fix', async () => {
     const wrapper = mountWithSnapshot(CoachMarketScreen, snapshotAt('middle'))
+    await openCoaches(wrapper)
     const style = wrapper.findAll('.market-drop')[0]
     const before = accessibleName(wrapper, '.market-controls .market-drop:first-child')
     const valueBefore = style.find('strong').text()
@@ -324,8 +338,9 @@ describe('a11y - the coach market announces itself honestly', () => {
     wrapper.unmount()
   })
 
-  it('every coach row has a label, and it is the DECISION: who, which rung, the fit, the price', () => {
+  it('every coach row has a label, and it is the DECISION: who, which rung, the fit, the price', async () => {
     const wrapper = mountWithSnapshot(CoachMarketScreen, snapshotAt('middle'))
+    await openCoaches(wrapper)
     const rows = wrapper.findAll('.cm-row')
     expect(rows.length).toBeGreaterThan(3)
     for (const row of rows) {
@@ -347,8 +362,9 @@ describe('a11y - the coach market announces itself honestly', () => {
     wrapper.unmount()
   })
 
-  it('the label says what pressing it would DO, and the current coach is not offered for hire', () => {
+  it('the label says what pressing it would DO, and the current coach is not offered for hire', async () => {
     const wrapper = mountWithSnapshot(CoachMarketScreen, snapshotAt('middle'))
+    await openCoaches(wrapper)
     const rows = wrapper.findAll('.cm-row')
     const current = rows.filter((r) => r.classes().includes('current'))
     expect(current.length, 'the fixture must have somebody hired').toBe(1)
@@ -365,13 +381,14 @@ describe('a11y - the coach market announces itself honestly', () => {
     wrapper.unmount()
   })
 
-  it('R15-7, MOUNTED on the screen he was looking at: nothing rendered here says "he"', () => {
+  it('R15-7, MOUNTED on the screen he was looking at: nothing rendered here says "he"', async () => {
     // ⚠ THE CORPUS CLAIM LIVES IN tests/coach-voice.test.ts and cannot be mounted - "no surface
     // anywhere" is not a thing any number of mounts can prove. THIS is the other half: the owner's
     // sighting was «у Тернеров в списке везде "He"», i.e. this list, so the screen he named renders
     // its whole self here - rows, load notes, price note, room note and the labels a screen reader
     // gets - and no masculine pronoun survives in any of it.
     const wrapper = mountWithSnapshot(CoachMarketScreen, snapshotAt('middle'))
+    await openCoaches(wrapper)
     const spoken = [
       wrapper.text(),
       ...wrapper.findAll('[aria-label]').map((n) => n.attributes('aria-label') ?? ''),
@@ -382,8 +399,9 @@ describe('a11y - the coach market announces itself honestly', () => {
     wrapper.unmount()
   })
 
-  it('the portrait is decorative now the row is labelled - the name is not announced twice', () => {
+  it('the portrait is decorative now the row is labelled - the name is not announced twice', async () => {
     const wrapper = mountWithSnapshot(CoachMarketScreen, snapshotAt('middle'))
+    await openCoaches(wrapper)
     const arts = wrapper.findAll('.cm-art img')
     expect(arts.length).toBeGreaterThan(3)
     for (const img of arts) expect(img.attributes('alt')).toBe('')

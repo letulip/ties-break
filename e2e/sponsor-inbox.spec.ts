@@ -77,14 +77,13 @@ test('signing a kit letter closes the whole table, and the deal reaches the mone
   await expect(page.getByText(new RegExp(`^Sign with ${brand}\\?`))).toBeVisible()
   await expect(page.getByText(/This cannot be undone\./)).toBeVisible()
 
-  // ⚠ POSITIONAL, AND IT IS THE SECOND HALF OF DEFECT D13 RATHER THAN A PREFERENCE. The confirm's
-  // button and the letter's own button are both called `Sign`, both live, both on screen together -
-  // a strict-mode collision on the single irreversible control in this sheet. `ConfirmDialog` is
-  // also one of the eight overlays still rendered as a roleless `<div>` (D1), so it cannot be scoped
-  // by `getByRole('dialog')` either. Between the two, `.last()` - the confirm is a sibling mounted
-  // AFTER the sheet, so it is the topmost of the pair - is the only reading left. Both halves are
-  // filed; neither is worked around anywhere else.
-  await page.getByRole('button', { name: 'Sign', exact: true }).last().click()
+  // ⚠ D13 IS CLOSED, AND THIS LINE IS WHAT IT BOUGHT. It used to read
+  // `getByRole('button', { name: 'Sign', exact: true }).last()` - positional, on the single
+  // irreversible control in this app, because the letter's own button and the confirm's were both
+  // called `Sign` and `ConfirmDialog` is one of D1's roleless overlays, so neither a name nor a
+  // dialog scope could tell them apart. The confirm's label is `Sign it` now: one prop, and the two
+  // controls have distinct exact names. The visible word is still the first word of the name.
+  await page.getByRole('button', { name: 'Sign it', exact: true }).click()
 
   // --- 1. the letter she signed -------------------------------------------------------------------
   // ...and 2. THE ONE SHE NEVER TOUCHED. `signOffer` refuses every other open kit offer in the same
