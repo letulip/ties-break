@@ -10,9 +10,20 @@
 // same ConfirmDialog an entry uses, so money always gets a confirm and the guardrail warning
 // lands INSIDE that confirm. Prices come from the engine's own pure quote functions
 // (economy.ts), keyed on (seed, week, package) – exactly what bookVacation/bookPractice charge.
+//
+// ⚠ AND IT UNBOOKS A FAMILY WEEK TOO (R14-1) – the second half of a decision that shipped without
+// it. The owner ruled on 29.07 that the painted vacation card carries NO button: "a booked week is a
+// statement, not a control, and cancelling lives where booking does – tap the card and the planner
+// opens". The card duly opens this sheet; this sheet never grew the cancel. Every package has art,
+// so every card is painted, so no booking was cancellable – the one Cancel that did exist sat on the
+// un-painted fallback row, which nothing can reach. It lives here now, where booking lives.
+//
+// That also retires a DEAD CONTROL of the R10-16 class this planner must never grow: opened on a
+// booked week the sheet used to show the Practice tab, whose Book buttons could only ever throw
+// `assertPlannable`'s "That week is already a family vacation".
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
-import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPriceCents } from '../engine/economy'
+import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPackage, vacationPriceCents } from '../engine/economy'
 import { practiceCoachRateCents } from '../engine/coach'
 import { formatCents } from '../shared/money'
 import { ageAtWeek } from '../engine/world'
@@ -34,6 +45,10 @@ const emit = defineEmits<{
   close: []
   bookPractice: [{ week: number; withCoach: boolean; feeCents: number; caution: PracticeCaution }]
   bookVacation: [{ week: number; packageId: string; label: string; priceCents: number; gain: number }]
+  /** R14-1: the booked week's undo. Emitted, never dispatched – the same routing every other money
+   *  decision in this sheet takes, so the refund gets SeasonScreen's ConfirmDialog like the booking
+   *  got it. */
+  cancelVacation: [{ week: number; packageId: string; label: string; paidCents: number }]
 }>()
 
 const game = useGameStore()
@@ -42,15 +57,32 @@ const game = useGameStore()
 // print "$0", and a court that costs nothing to book reads better as a word than as a zero.
 const feeLabel = (cents: number): string => (cents === 0 ? 'free' : formatCents(cents))
 
-const tab = ref<'practice' | 'vacation'>(props.initialTab ?? 'practice')
-const withCoach = ref(false)
-
 const seed = computed(() => game.snapshot?.seed ?? '')
 const background = computed(() => game.snapshot?.profile.background ?? 'middle')
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const condition = computed(() => game.snapshot?.condition ?? 0)
 const dates = computed(() => weekRange(props.week))
 const offSeason = computed(() => isOffSeasonWeek(props.week))
+
+// --- an ALREADY BOOKED family week (R14-1) ------------------------------------------------
+// Read off the SNAPSHOT rather than passed in, for the same reason the prices are: the sheet and
+// the calendar card that opened it must not be able to disagree about whether the week is booked.
+const booked = computed(() => (game.snapshot?.vacations ?? []).find((v) => v.week === props.week) ?? null)
+const bookedLabel = computed(() =>
+  booked.value ? (vacationPackage(booked.value.packageId)?.label ?? booked.value.packageId) : '',
+)
+function askCancelVacation(): void {
+  const b = booked.value
+  if (!b) return
+  emit('cancelVacation', { week: props.week, packageId: b.packageId, label: bookedLabel.value, paidCents: b.paidCents })
+}
+
+/** ⚠ A THIRD PANE, NOT A THIRD TAB. `booked` is a fact about the week, not a choice the parent
+ *  makes, so it is not offered beside Practice and Vacation – it REPLACES both, and the tab strip
+ *  stands down with them. The value is settled at open because the sheet is `v-if`-mounted per
+ *  week: SeasonScreen tears it down to raise the confirm, so there is no state to keep in sync. */
+const tab = ref<'practice' | 'vacation' | 'booked'>(booked.value ? 'booked' : (props.initialTab ?? 'practice'))
+const withCoach = ref(false)
 
 // --- Practice tab -------------------------------------------------------------------------
 // The off-season is family time – no friendlies there (the engine refuses too), so the tab
@@ -196,7 +228,28 @@ function askVacation(row: PackageRow): void {
       <p class="guide-title">Plan {{ weekLabel(week) }}</p>
       <p class="hint" style="margin-top: -6px">{{ dates }} · condition {{ condition }}/100</p>
 
-      <div class="plan-tabs">
+      <!-- ---------------- Already booked ---------------- -->
+      <!-- R14-1: THE UNDO, WHERE THE BOOKING LIVES. The painted vacation card carries no control by
+           the owner's 29.07 ruling and opens this sheet instead; this is the half of that routing
+           that was never built. Two plain buttons and no primary: leaving a booked trip alone is not
+           an action, so nothing here is the recommended one. The refund is stated before the press
+           and again on the confirm, because it is the fact that makes this reversible. -->
+      <template v-if="tab === 'booked'">
+        <p class="plan-lead">
+          {{ bookedLabel }} – booked for this week, {{ feeLabel(booked!.paidCents) }}. She plays no
+          tournament while she is away.
+        </p>
+        <p class="hint">
+          Cancel any time before the week starts and
+          {{ booked!.paidCents > 0 ? 'the money comes back in full' : 'nothing is owed either way' }}.
+        </p>
+        <div class="dialog-actions" style="margin-top: 12px">
+          <button @click="emit('close')">Keep it</button>
+          <button class="danger" :disabled="game.busy" @click="askCancelVacation">Cancel the trip</button>
+        </div>
+      </template>
+
+      <div v-if="tab !== 'booked'" class="plan-tabs">
         <button class="option-pill" :class="{ selected: tab === 'practice' }" @click="tab = 'practice'">
           Practice
         </button>
@@ -253,7 +306,9 @@ function askVacation(row: PackageRow): void {
       </template>
 
       <!-- ---------------- Vacation ---------------- -->
-      <template v-else>
+      <!-- ⚠ `v-else-if` RATHER THAN `v-else` since R14-1: a booked week is a third pane, and a bare
+           `v-else` would have drawn the package picker underneath it. -->
+      <template v-else-if="tab === 'vacation'">
         <p class="plan-lead">
           A week away – no tournaments that week, and she comes back fresher. Cancel any time
           before the week starts for a full refund.

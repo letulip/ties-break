@@ -767,15 +767,25 @@ function confirmVacation(v: { week: number; packageId: string; label: string; pr
   planSheet.value = null
 }
 
-function askCancelVacation(row: CalendarRow): void {
-  const booking = row.vacation!
+/** R14-1: ONE CONFIRM, TWO DOORS. The un-painted fallback row's own Cancel and the planner sheet's
+ *  both land here, so the sentence the parent reads before a refund cannot depend on which surface
+ *  he came through. It takes the booking rather than a `CalendarRow` for exactly that reason – the
+ *  sheet has no row. */
+function askCancelVacation(week: number, booking: VacationBooking): void {
   pendingConfirm.value = {
-    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(row.week)}? ${
+    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(week)}? ${
       booking.paidCents > 0 ? `${formatCents(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
     }`,
     confirmLabel: 'Cancel the trip',
-    onConfirm: () => game.cancelVacation(row.week),
+    onConfirm: () => game.cancelVacation(week),
   }
+}
+/** The planner sheet asked to unbook the week it was opened on (R14-1). The sheet closes first, the
+ *  same way `confirmVacation`/`confirmPractice` hand over: the confirm is the only thing on screen
+ *  while the decision is being taken. */
+function cancelVacationFromPlanner(v: { week: number; packageId: string; label: string; paidCents: number }): void {
+  planSheet.value = null
+  askCancelVacation(v.week, { week: v.week, packageId: v.packageId, paidCents: v.paidCents })
 }
 function askCancelPractice(row: CalendarRow): void {
   const booking = row.practice!
@@ -1338,7 +1348,7 @@ function closeExhibition(): void {
               </span>
             </span>
             <span class="planned-actions">
-              <button :disabled="game.busy" @click="askCancelVacation(row)">Cancel</button>
+              <button :disabled="game.busy" @click="askCancelVacation(row.week, row.vacation)">Cancel</button>
             </span>
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
@@ -1487,6 +1497,7 @@ function closeExhibition(): void {
       :highlight-package-id="planSheet.highlightPackageId"
       @book-practice="confirmPractice"
       @book-vacation="confirmVacation"
+      @cancel-vacation="cancelVacationFromPlanner"
       @close="planSheet = null"
     />
     <ConfirmDialog
