@@ -289,7 +289,15 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 // later. So it is captured in the branch that commits the entry, exactly as `weeksLostToInjury` is
 // counted in the branch that ends a layoff (docs/specs/season-mirror-2026-08.md). Pure state, zero
 // draws on any stream – the frozen MAIN capture cannot see it either.
-export const SAVE_SCHEMA_VERSION = 45
+// ⚠ v46 = ONE FIELD, `seasonHistory[].byTrack` – a finished season told apart by table, and it is a
+// SCHEMA change because it could not be anything else. The Stats screen showed the identical
+// season-by-season table under all three tabs (the owner, twice, most recently 09.08), and no work on
+// that screen could have fixed it: the record carried one rank and three folds, so the tabs had nothing
+// to differ by. What v46 adds is a per-track {endRank?, points, wins, losses} beside them, banked at the
+// wrap-up off ledgers that are about to be pruned or reset. Rows banked BEFORE it carry no per-track
+// figures and none are invented – see the v45 -> v46 step in migrations.ts. Pure state, zero draws on
+// any stream: the wrap folds ledgers that already exist, so the frozen MAIN capture cannot see it.
+export const SAVE_SCHEMA_VERSION = 46
 
 
 

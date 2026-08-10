@@ -1262,6 +1262,47 @@ export function migrateSave(raw: unknown): WorldState {
     v = 45
   }
 
+  // v46 – THE SEASON HISTORY LEARNS WHICH TABLE IT IS TALKING ABOUT, AND AN OLD ROW KEEPS ITS ONE
+  // HONEST FIGURE.
+  //
+  // The owner, twice, most recently 09.08: «Season by season в stats в разных вкладках всё ещё одно и
+  // то же показывает.» He is right, the screen was not at fault, and this step is the reason it could
+  // not have been: a `SeasonHistoryEntry` carried ONE `endRank` (the ITF one – the wrap writes
+  // `world.kidRank`) and three folds (`points`, `wins`, `losses`, all three tables added together). The
+  // three tabs showed one row because the record held one row. v46 banks `byTrack` beside them, and
+  // every season wrapped from here on differs per table.
+  //
+  // ⚠⚠ AND THIS STEP DELIBERATELY BACK-FILLS NOTHING, WHICH IS THE WHOLE OF IT. A career saved before
+  // v46 has one number per season per figure and NO WAY TO RECOVER THE OTHER TWO – not "expensively",
+  // not "approximately": the evidence is deleted. `pruneResults` keeps `world.week - r.week <= 52`, so
+  // the results that made season 1 were gone before season 3 opened; `events` caps at 400 rows;
+  // `bestFinishByTier` is a career high-water mark with no year on it; `milestones` keeps the season's
+  // rank and that rank is the ITF one again. This is the same 49-week hole `seasonStartRank` (v17) and
+  // the season mirror (v45) both exist because of, and the same answer both gave.
+  //
+  // ⚠ WHAT AN OLD ROW THEREFORE SHOWS, stated here because this is where the decision is made rather
+  // than in the component that obeys it:
+  //   * INTERNATIONAL – its stored `endRank`. That number always WAS the ITF rank, so printing it under
+  //     the international tab is not a reconstruction, it is the field being read where it belongs.
+  //   * NATIONAL and PROFESSIONAL – no rank. A blank, never a zero and never the ITF number wearing
+  //     another table's heading: «Professional rank #128» over a junior rank is exactly the class of
+  //     claim that put «Rank #4» on Home against «#128» in Stats, and «Final national rank #3» over
+  //     thirteen domestic events.
+  //   * POINTS and W-L on every tab – the fold, marked as the fold. They are three tables added
+  //     together and there is no tab they belong to, so the row says so instead of pretending. Deleting
+  //     them would have been the other error: a 44-19 season is not nothing, and this table is the only
+  //     place it survives.
+  // A BLANK MEANS "NOT RECORDED" AND A ZERO MEANS "SHE SCORED NOTHING", and this project has been bitten
+  // by that distinction before – which is why `byTrack` is left ABSENT here rather than written as three
+  // zeroed rows. Absent is a shape the reader can recognise; three zeros are a lie it cannot.
+  //
+  // No field is added, renamed or defaulted, so the step is a bump – v44's own shape (`WorldEventCategory
+  // +facility`), for v44's own reason. Zero draws on any stream: the frozen MAIN capture (41550 /
+  // e6b0c709) is untouched by construction.
+  if (v === 45) {
+    v = 46
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

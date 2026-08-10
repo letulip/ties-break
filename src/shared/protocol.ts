@@ -456,11 +456,36 @@ export interface SeasonEntryRow {
   bookShut: boolean
 }
 
+/** ONE SEASON, ON ONE TABLE (schema v46) – the per-track half of a `SeasonHistoryEntry`.
+ *
+ *  ⚠ IT IS `seasonRecord`'S SHAPE, WIDENED, AND DELIBERATELY NOT A SECOND CONVENTION.
+ *  `Snapshot.seasonRecord` is `Record<LadderTrack, { wins, losses }>` – the live season's W-L told
+ *  apart by table – and this is the same record with the two figures a FINISHED season also has:
+ *  where she ended and what she earned. A career's history is therefore read with the same keys and
+ *  the same mental model as the season in progress, and the wrap-up banks one from the other.
+ *
+ *  ⚠ `endRank` IS OPTIONAL AND THE OPTIONALITY IS LOAD-BEARING – the `spentCents` contract, one
+ *  field over. Absent means SHE HELD NO COUNTING RESULT IN THIS TABLE, which is not a place: with
+ *  nobody holding a point the whole field ties at zero and competition ranking hands every member of
+ *  that tie the same number, which is the tie-floor `LadderView.rank`'s null exists to refuse to
+ *  print. A surface reading this prints silence, never a number and never a zero.
+ *
+ *  The other three are always written, because a season that was played on another table really did
+ *  score nothing here, win nothing here and lose nothing here – those zeros are measurements. */
+export interface SeasonTrackRow {
+  /** her dense place in THIS table at the wrap; absent when she was not ranked in it at all */
+  endRank?: number
+  /** ranking points earned in-season IN THIS TABLE'S CURRENCY – never added to another track's */
+  points: number
+  wins: number
+  losses: number
+}
+
 /** One FINISHED season, appended to the career's history at wrap-up (schema v14, R10-9).
  *  `lastSeasonSummary` above is overwritten every year, so there was no way to compare against
  *  last season; this is the append-only list behind the Stats screen's season-by-season table.
- *  Deliberately TINY – seven numbers per SEASON (never per week), so a decade of career costs
- *  bytes, not kilobytes: no strings, and the full recap keeps living in SeasonSummary. */
+ *  Deliberately TINY – a couple of dozen numbers per SEASON (never per week), so a decade of career
+ *  costs bytes, not kilobytes: no strings, and the full recap keeps living in SeasonSummary. */
 export interface SeasonHistoryEntry {
   /** THE SEASON'S IDENTITY: its 0-based index (`floor(week / WEEKS_PER_YEAR)`), schema v16.
    *
@@ -475,12 +500,32 @@ export interface SeasonHistoryEntry {
    *  PRINTS is derived from it (`seasonYear(seasonIndex)`, shared/dates.ts) – the same function
    *  `weekLabel` uses, so a row's header and the week labels inside that season always agree. */
   seasonIndex: number
-  /** her dense rank at the season's wrap-up */
+  /** her dense rank at the season's wrap-up. ⚠ THE ITF ONE, always – the wrap writes `world.kidRank`,
+   *  which is the international alias. See `byTrack` below for the other two tables. */
   endRank: number
-  /** ranking points earned in-season */
+  /** ranking points earned in-season, ALL THREE TABLES ADDED TOGETHER. A fold, and it is kept as one
+   *  because `matchesEverPlayed` and the radar's confidence read these totals; `byTrack` splits them. */
   points: number
   wins: number
   losses: number
+  /** v46 – THE SAME SEASON, TOLD APART BY TABLE (the owner, twice: «Season by season в stats в разных
+   *  вкладках всё ещё одно и то же показывает»).
+   *
+   *  ⚠ IT HAD TO BE A SCHEMA CHANGE AND COULD NOT BE FIXED ON THE SCREEN. The four figures above are
+   *  one rank (the ITF one) and three folds, so the Stats table showed the identical row under all
+   *  three tabs for the only possible reason: the record had nothing else in it. No amount of work in
+   *  `StatsScreen.vue` can split a number that was never stored apart.
+   *
+   *  ⚠ OPTIONAL, AND ABSENT MEANS "NOT RECORDED" RATHER THAN "ZERO" – the distinction the season
+   *  mirror was built around (v45: a zero is a claim, and «0 could not move her ranking» is the good
+   *  news printed over a season nobody counted). Rows banked before v46 have no per-track figures and
+   *  none can be invented: `pruneResults` keeps a rolling 52 weeks, so the results that produced those
+   *  seasons were deleted years before the question was asked. See the v45 -> v46 step in
+   *  engine/migrations.ts for what an old row is therefore allowed to say.
+   *
+   *  TOTAL over `LadderTrack` on purpose, like `seasonRecord`: a fourth table cannot ship without a
+   *  season history that knows about it. */
+  byTrack?: Record<LadderTrack, SeasonTrackRow>
   /** signed funds delta across the season */
   fundsDeltaCents: number
   /** the balance she ended the season with (the "how much is left" figure) */
@@ -585,10 +630,16 @@ export interface PendingView {
    *  on top of that. So a fourteen-year-old walking into her first Local Open was introduced on the
    *  splash as "Rank #119". */
   kidRank: number | null
-  /** the kid's opponent this round: short name, ISO-2 nation, and her rank IN THE SAME TABLE –
-   *  null when she holds no counting result in it, by the identical rule. A rank printed beside
-   *  another rank has to be measured in the same units or the comparison the card invites is a lie. */
-  opponent: { name: string; nation: string; rank: number | null }
+  /** the kid's opponent this round: short name, ISO-2 nation, her rank IN THE SAME TABLE – null when
+   *  she holds no counting result in it, by the identical rule; a rank printed beside another rank has
+   *  to be measured in the same units or the comparison the card invites is a lie – and HOW OLD SHE IS
+   *  (the owner: «и в турнирах перед матчем тоже можно показывать»).
+   *
+   *  ⚠ THE AGE COMES OFF THE FROZEN MATCH PLAYER, not off today's cohort row, and that is the same
+   *  ruling `MatchPlayer.age` carries: the composed player is what the save keeps, so a card re-opened
+   *  three seasons later reports the girl who played, not the girl she has since become. `null` on a
+   *  reveal frozen before ages were composed (see LEGACY_SNAPSHOT_AGE) – a blank, never a guess. */
+  opponent: { name: string; nation: string; rank: number | null; ageYears: number | null }
   /** the current round's record – MatchReplay source + post-match stats */
   kidMatch?: WorldMatch
   /** revealed rounds so far, the kid's path (oldest first) */
@@ -897,6 +948,23 @@ export interface StandingRow extends RankingRow {
   name: string
   nation: string
   isKid: boolean
+  /** HOW OLD SHE IS – the owner, twice: «я просил возраста девочек добавить в stats доп колонкой».
+   *
+   *  ⚠ HER OWN AGE, NEVER THE BAND. For a rival that is `AiPlayer.ageYears`, which is a PERSON's age
+   *  and not the cohort's band: it is drawn once per girl at intake (`COHORT.ageBand` is the range the
+   *  draw comes from, not a value anybody carries) and advanced by one at each season boundary, and it
+   *  is the same number the match engine feeds the serve-speed curve – so a sixteen-year-old on this
+   *  table serves like a sixteen-year-old in the box score. For the KID it is `kidAgeYears`, off her
+   *  birth date, per the one-clock ruling of 09.08; `ageAtWeek` is the coach market's restocking clock
+   *  and is not an age at all (engine/world/age.ts).
+   *
+   *  ⚠ THE TWO CLOCKS TICK DIFFERENTLY AND BOTH ARE HONEST. Hers moves on her birthday, a rival's at
+   *  the season boundary, because a cohort girl has no birth date to be exact about (the one-clock note
+   *  says so in as many words). Whole years on both sides, so the column compares like with like.
+   *
+   *  Optional: an id with no row behind it (the `?? { name: playerId }` fallback in `computeStandings`)
+   *  has no age to state, and a blank is the honest answer rather than a zero. */
+  ageYears?: number
   /** true when one or more ranked players were omitted between this row and the
    *  previous displayed row (the standings table shows top 10 + a window around the
    *  kid, not the full field). Competition ranking means a rank number jumping by
@@ -965,6 +1033,18 @@ export const LADDER_LABEL: Record<LadderTrack, string> = {
   itf: 'International',
   wta: 'Professional',
 }
+
+/** EVERY TABLE, LOWEST FIRST – the one list, for the loops that must cover all of them.
+ *
+ *  ⚠ DERIVED FROM `LADDER_LABEL` RATHER THAN WRITTEN OUT, and that is what makes it exhaustive: the
+ *  label map is a TOTAL Record, so a fourth table cannot ship without a name, and the day it gets one
+ *  it joins this array too. A hand-written list is the drift `emptySeasonRecord` had to be patched for
+ *  when `LadderTrack` gained `wta` – three call sites, one of them forgotten.
+ *
+ *  ⚠ AND THE ORDER IS MEANING, NOT ALPHABET. Lowest table first: `dominantTrackOfSeason` walks it with
+ *  a strictly-greater test so the HIGHER table wins a dead heat, and the Stats switch renders in it.
+ *  Reordering `LADDER_LABEL` above moves both. */
+export const LADDER_TRACKS = Object.keys(LADDER_LABEL) as LadderTrack[]
 
 /** HER LADDER AND HER PLACE ON IT, resolved once for the surfaces that want "her rank" and have no
  *  table of their own to be about.
