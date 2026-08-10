@@ -70,13 +70,15 @@ const game = useGameStore()
 // the engine stores the list oldest-first (append-only).
 const rows = computed<SeasonHistoryEntry[]>(() => [...(game.snapshot?.seasonHistory ?? [])].reverse())
 
-/** WHAT A ROW SHOWS, and the whole of the honesty is here. THREE answers, not two:
+/** WHAT A ROW SHOWS, and the whole of the honesty is here. THREE answers, not two – two `kind`s,
+ *  because the old row answers differently depending on which tab is asking:
  *
- *   * `split` – a season banked on v46 or later. Every figure is that table's own.
- *   * `legacyItf` – a season banked BEFORE v46, read under International. Its stored `endRank` IS the
- *     ITF rank (the wrap writes `world.kidRank`), so the rank column is exact; its points and W-L are
- *     the three tables added together and are marked as such.
- *   * `legacyOther` – the same old season under National or Professional. NO RANK: the only rank it
+ *   * `split` – a season banked on v46 or later. Every figure is that table's own, and a missing
+ *     `endRank` means she was never ranked there (not that she placed nothing).
+ *   * `legacy` under INTERNATIONAL – a season banked before v46. Its stored `endRank` IS the ITF rank
+ *     (the wrap writes `world.kidRank`), so the rank column is exact; its points and W-L are the three
+ *     tables added together and are marked as such.
+ *   * `legacy` under NATIONAL or PROFESSIONAL – the same old season, and NO RANK: the only rank it
  *     holds belongs to another table, and «Professional rank #128» over a junior number is the class of
  *     claim that put «Rank #4» on Home against «#128» in Stats. The fold is still shown and still
  *     marked – deleting it would lose the one place a 44-19 season survives.
