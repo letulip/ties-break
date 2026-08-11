@@ -99,13 +99,20 @@ describe('the band and the girl are two different numbers', () => {
     expect(toSnapshot(dec).coachMarket.map((c) => c.id)).toEqual(toSnapshot(jan).coachMarket.map((c) => c.id))
   })
 
-  it('she really does turn a year older, once, on her own month', () => {
+  // ⚠ RE-AIMED, NOT WEAKENED (round-16 #100). Every claim below is unchanged and still passes; what
+  // changed is what they are ALLOWED to prove. All three read birth DAY 15, and the 15th of a month is
+  // always in a week whose Monday is the 9th-15th – the same month. So the two clocks agree here BY
+  // CONSTRUCTION, and the identity on the last line is a fact about day 15, not a general law: for a
+  // girl born on the 1st-6th the announcement leads the month clock by up to one week, on purpose and
+  // measured. That is the whole of #100 and it is pinned in tests/birthday-announce.test.ts, which
+  // sweeps all 365 dates. Do not widen this block to other days expecting it to hold.
+  it('she really does turn a year older, once, on her own month (birth day 15)', () => {
     for (const birthMonth of [1, 6, 12]) {
       const turns = [...Array(52).keys()].filter((w) => birthdayTurning(w, birthMonth, 15) !== null)
       expect(turns.length, `birthMonth ${birthMonth}: one birthday a season`).toBe(1)
       const w = turns[0]
       expect(weekMonth(w), 'and it lands in her own month').toBe(birthMonth)
-      // the age she turns is the age she then is
+      // the age she turns is the age she then is – for day 15, see the ⚠ note above
       expect(birthdayTurning(w, birthMonth, 15)).toBe(kidAgeYears(w, birthMonth))
     }
   })
@@ -153,6 +160,13 @@ describe('the band and the girl are two different numbers', () => {
     // The owner's first sighting: Home said 16 from week 104 while the feed said «She is sixteen this
     // week» at week 154. Fifty weeks apart, both from the engine. The property that forbids it is
     // that the two read one clock, so this asserts the AGREEMENT rather than either number.
+    //
+    // ⚠ AND THE AGREEMENT IS EXACT HERE BECAUSE THE BIRTH DAY IS 15 (round-16 #100 – see the note
+    // above the day-15 block). The defect this pin exists to forbid is TWO CLOCKS a year apart. What
+    // #100 introduced is ONE clock read on two days of the same week: for a girl born on the 1st-6th
+    // the announcement can lead `snap.ageYears` by a single week, closing on the next Monday, because
+    // she turns her age on a Sunday the month clock has not reached yet. Bounded and swept over all
+    // 365 dates in tests/birthday-announce.test.ts. Fifty weeks is still forbidden; one is the truth.
     for (const birthMonth of [1, 6, 12]) {
       const world = createWorld('one-clock-print', { ...DEFAULT_PROFILE, birthMonth, birthDay: 15, coachTier: 'self' })
       for (const week of [0, 26, 52, 104, 130, 156, 208]) {

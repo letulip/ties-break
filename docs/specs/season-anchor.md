@@ -226,7 +226,7 @@ this slice**; that is a separate decision and the owner's.
   the re-anchor bought. `tests/dates.test.ts` gains the root-cause pins, so a future return to a
   continuous epoch fails there first, with one obvious reason.
 
-## 7. Found in passing, NOT fixed here
+## 7. Found in passing, NOT fixed here – ✅ FIXED SINCE, round-16 #100
 
 `birthdayTurning` announces the wrong age when her birthday falls in the tail of a week whose Monday
 is in the previous month. On naomi's save (born 2 February) it announces **15 twice** (seasons 1 and
@@ -237,3 +237,20 @@ days a year.
 **It is not caused by this change and is not fixed by it**: the announced ages are byte-identical
 before and after on all seven saves. It matters now because `docs/specs/birthday-and-gifts.md` is
 about to put that number in a popup and attach a gift to it.
+
+> **✅ Fixed in the birthday slice.** `birthdayTurning` now takes the age off the birthday's own
+> calendar year and never asks the month clock. Naomi's save reads 14, 15, 16, 17, 18, 19, 20, 21 –
+> no repeat, no gap. Swept over all 365 birth dates × 14 seasons: **466 wrong announcements over 66
+> dates before, 0 after**. `kidAgeExact` is deliberately untouched, so **no tier rung moved and no
+> injury age-factor input moved** – measured on all seven saves with
+> `tools/birthday-age-read.ts`, run either side of the fix: identical rung-opening weeks and
+> identical digests. Pinned in `tests/birthday-announce.test.ts`.
+>
+> **And the sibling the re-anchor created was found and fixed with it.** `birthdayWeek` asked
+> `weekOfDate(m, d, weekYear(week))`, and `weekYear` names the **Monday's** year. Since §2 a season's
+> last week can straddle New Year (Monday 30 Dec, Sunday 5 Jan), so a girl born **1–5 January** had
+> her birthday land in a week that then looked up the previous January – and the week after is the
+> next season's offset 0, which looks up the same date one week too late. Her birthday was not off by
+> one; it was **gone for that year, silently**: **29 lost birthdays over 14 seasons across those five
+> dates, 0 after**. The single honest loss §3e records (31 December, season 9) is untouched – a date
+> inside the skipped calendar week still has no career week, which is the right answer.

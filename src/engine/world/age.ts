@@ -104,6 +104,35 @@ export function kidAgeAt(world: WorldState, week: number): number {
   return kidAgeYears(week, world.profile.birthMonth)
 }
 
+/** Her birth date, clamped to a date a calendar can hold. Both entry points below clamp through this
+ *  one helper, so a nonsense profile cannot make them disagree about which date they are discussing. */
+function birthDate(birthMonth: number, birthDay: number): { month: number; day: number } {
+  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
+  return { month, day: Math.max(1, Math.min(daysInBirthMonth(month), Math.round(birthDay))) }
+}
+
+/** THE CALENDAR YEAR of the birthday that falls INSIDE `week`, or null when none does. The primitive
+ *  both public functions below are written on, so they cannot answer differently.
+ *
+ *  ⚠ TWO CANDIDATE YEARS, AND THE SECOND ONE IS NOT DEFENSIVE - it is a whole class of lost birthdays.
+ *  A career week is Monday..Sunday, and since the season re-anchor a season's LAST week can straddle New
+ *  Year (Monday 30 Dec, Sunday 5 Jan). `weekYear` names the MONDAY's year, so asking only that year for
+ *  a girl born 1-5 January looked up the January TWELVE MONTHS EARLIER and found a different week - and
+ *  the week after is the next season's offset 0, which looks up the same date one week too late. Her
+ *  birthday was not off by one. It was GONE for that year, in silence: measured before the fix over
+ *  fourteen seasons, 29 lost birthdays across the five dates 1-5 January, and none after
+ *  (`npx vite-node tools/birthday-age-read.ts`).
+ *
+ *  What this does NOT invent is a birthday the calendar does not contain: in a year the real calendar
+ *  needs 53 weeks for, one week belongs to no career week at all, and a date inside it still has none
+ *  (see `weekOfDate` - 31 December loses season 9 that way, and honestly). */
+function birthdayYearIn(week: number, birthMonth: number, birthDay: number): number | null {
+  const { month, day } = birthDate(birthMonth, birthDay)
+  const monday = weekYear(week)
+  for (const year of [monday, monday + 1]) if (weekOfDate(month, day, year) === week) return year
+  return null
+}
+
 /** The career week her birthday falls in for the calendar year containing `week`, or null if that date is
  *  off the calendar.
  *
@@ -113,21 +142,40 @@ export function kidAgeAt(world: WorldState, week: number): number {
  *
  *  CAN BE NEGATIVE, and the caller must not assume every season has one: a girl born 1-5 January had her
  *  birthday before week 0 began, so her first in-game one is the following year. `birthdayTurning`
- *  compares against the current week, so that resolves itself. */
+ *  compares against the current week, so that resolves itself.
+ *
+ *  ⚠ IF THE BIRTHDAY IS IN `week`, THE ANSWER IS `week` - which is what keeps `week === birthdayWeek(week,
+ *  ...)` an honest predicate across the New Year straddle (see `birthdayYearIn`). Only when it is NOT
+ *  this week does the Monday's year decide which of the season's weeks to name. */
 export function birthdayWeek(week: number, birthMonth: number, birthDay: number): number | null {
-  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
-  const day = Math.max(1, Math.min(daysInBirthMonth(month), Math.round(birthDay)))
+  if (birthdayYearIn(week, birthMonth, birthDay) !== null) return week
+  const { month, day } = birthDate(birthMonth, birthDay)
   return weekOfDate(month, day, weekYear(week))
 }
 
 /** Is `week` her birthday week, and if so what age does she turn? Null on every other week.
  *
  *  DERIVED, NOT PERSISTED - a pure comparison of the calendar against her birth date, so it cannot drift
- *  out of step with `kidAgeExact`; both read the profile and nothing else. */
+ *  out of step with the profile; it reads the profile and nothing else.
+ *
+ *  ⚠ THE AGE COMES OFF THE BIRTHDAY'S OWN CALENDAR YEAR, AND NOTHING ELSE GETS A VOTE (round-16 #100).
+ *  It used to return `kidAgeYears(week, birthMonth)` - the MONTH clock, read off the week's MONDAY - and
+ *  that is a year LOW for every girl born on the 1st-6th of a month, because a week that contains the 4th
+ *  starts on a Monday that is usually still in the month before. Found by the season-anchor slice on the
+ *  owner's own save (docs/specs/season-anchor.md §7): born 2 February, the game announced FIFTEEN TWICE
+ *  and never announced nineteen. Measured across all 365 birth dates it was 466 wrong announcements over
+ *  66 dates - the 1st to the 6th of all eleven months from February on.
+ *
+ *  ⚠ AND `kidAgeExact` IS NOT THE BUG, WHICH IS WHY IT IS UNTOUCHED. It takes a birth MONTH and no day,
+ *  by signature and on purpose: it is the development / injury / tier-gate clock, and it answers "how old
+ *  is she at the START of this week" - the right question for a rule that governs a whole week. An
+ *  ANNOUNCEMENT is about a DATE. So this reads the date, that reads the month, and the two are allowed to
+ *  differ for the ONE week a year between her birthday and the Monday after it (pinned, bounded at one
+ *  week, in tests/birthday-announce.test.ts). No age-keyed gate moved: measured on all seven of the
+ *  owner's saves, every tier rung opens in exactly the week it opened in before. */
 export function birthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
-  if (week !== birthdayWeek(week, birthMonth, birthDay)) return null
-  // On her birthday week she has just reached this age, so the floor of her exact age IS the new number.
-  return kidAgeYears(week, birthMonth)
+  const year = birthdayYearIn(week, birthMonth, birthDay)
+  return year === null ? null : year - kidBirthYear()
 }
 
 /** Numbers she is old enough to be told in words. The notes are somebody's voice, and a parent does not
