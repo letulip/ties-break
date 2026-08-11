@@ -18,9 +18,15 @@ import {
   financeWindow,
   skipTournament,
   closeTournament,
+  retirementInjury,
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
+// C12 (round 16 #13): the two doors and the lookup between them. Imported from the leaf rather than
+// through world.ts because neither is part of the historical public API – see the re-export list in
+// world.ts, which carries only what 111 files already import.
+import { onsetInjury, severityBandsFor } from '../src/engine/world/injury'
+import { BODY_REGIONS } from '../src/engine/body'
 import { migrateSave } from '../src/engine/migrations'
 import { weeksLostSoFar } from '../src/engine/ending'
 import { rngFromSeed } from '../src/engine/rng'
@@ -1272,6 +1278,156 @@ describe('SeasonSummary.weeksInjured', () => {
     }
     expect(w.lastSeasonSummary).not.toBeNull()
     expect(w.lastSeasonSummary!.weeksInjured ?? 0).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C12 – TWO DOORS, TWO SEVERITY TABLES (round 16 #13, owner ruling 11.08).
+//
+// THE RULING: «RETIRE_K оставляем как есть, дверь схода надо показывать, а 3 мощные травмы 6-4-4
+// недели подряд одна за одной – это слишком… это значит, что у нас с механикой что-то не то.»
+// So the RATE is fixed and the CONSEQUENCE is what moved: `retirementInjury` no longer draws its
+// severity from the weekly roll's table. The argument is on the knob
+// (`ECONOMY.availability.retirementSeverityBands`) and the measurement is
+// docs/specs/round16-injuries.md §9.
+//
+// ⚠ THE FIRST TEST IS THE ONE THAT MATTERS AND IT IS ABOUT RNG, NOT BALANCE. A per-cause table is
+// only safe because it changes what an already-drawn uniform MEANS, never how many are drawn. If a
+// future edit ever makes one door spend a different number of pulls, every existing career's
+// `seed:retire:<week>` and `seed:injury:<week>` sub-streams re-base from that week on – silently,
+// and only for the careers that got hurt. That test is the tripwire.
+// ---------------------------------------------------------------------------
+describe('C12 – the retirement door has its own severity table', () => {
+  /** A generator that counts its pulls, wrapping a real seeded stream so the values are honest. */
+  function counting(seed: string): { rng: () => number; count: () => number } {
+    const inner = rngFromSeed(seed)
+    let n = 0
+    return {
+      rng: () => {
+        n += 1
+        return inner()
+      },
+      count: () => n,
+    }
+  }
+
+  it('⚠ BOTH DOORS SPEND EXACTLY THREE PULLS, IN THE SAME ORDER – the sub-streams cannot re-base', () => {
+    // Same seed, same world state, same call: only the cause differs. `onsetInjury` is documented as
+    // "three pulls from the caller's stream, always in this order, always unconditionally" – severity,
+    // weeks-out, region – and a table lookup must not touch that. `pickInt` takes one pull for any
+    // range (a collapsed range still draws) and `drawBodyRegionFrom` one for any table.
+    const counts: number[] = []
+    for (const cause of ['week', 'retirement'] as const) {
+      resetForRoll(rollWorld, 'c12-arity')
+      rollWorld.week = 1
+      const c = counting('c12-arity:onset:1')
+      onsetInjury(rollWorld, c.rng, cause, BODY_REGIONS)
+      counts.push(c.count())
+    }
+    expect(counts[0]).toBe(3)
+    expect(counts[1]).toBe(3)
+    expect(counts[0]).toBe(counts[1])
+  })
+
+  it('⚠ AND THE THREE PULLS ARE THE SAME THREE NUMBERS – only their MEANING differs by door', () => {
+    // The stronger form of the test above: not merely "the same count" but "the same stream
+    // position afterwards". Feed both doors the identical generator instance one after the other and
+    // the second onset must see the 4th, 5th and 6th uniforms – i.e. the first onset left the stream
+    // exactly three steps on, whichever table it read.
+    const c = counting('c12-position')
+    const reference = rngFromSeed('c12-position')
+    resetForRoll(rollWorld, 'c12-position')
+    rollWorld.week = 1
+    onsetInjury(rollWorld, c.rng, 'retirement', BODY_REGIONS)
+    reference() // 1
+    reference() // 2
+    reference() // 3
+    expect(c.rng()).toBe(reference())
+  })
+
+  it('the two tables are well-formed and the retirement one is the shorter of the two', () => {
+    const week = severityBandsFor('week')
+    const retire = severityBandsFor('retirement')
+    expect(week).toBe(ECONOMY.availability.severityBands)
+    expect(retire).toBe(ECONOMY.availability.retirementSeverityBands)
+    expect(retire).not.toBe(week)
+
+    // Well-formed: the same four labels in the same order, cumulative, ending at exactly 1 – a table
+    // whose last `cum` fell short would silently fall through to the last band on the high rolls.
+    for (const bands of [week, retire]) {
+      expect(bands.map((b) => b.severity)).toEqual(['minor', 'moderate', 'major', 'severe'])
+      expect(bands[bands.length - 1].cum).toBe(1)
+      for (let i = 1; i < bands.length; i++) expect(bands[i].cum).toBeGreaterThan(bands[i - 1].cum)
+      for (const b of bands) expect(b.weeksHi).toBeGreaterThanOrEqual(b.weeksLo)
+    }
+
+    // The property the owner asked for, stated as a direction rather than as the numbers: a
+    // mid-match retirement is likelier to be a niggle and less likely to be a long layoff.
+    const mean = (bands: typeof week) =>
+      bands.reduce((s, b, i) => s + (b.cum - (i === 0 ? 0 : bands[i - 1].cum)) * ((b.weeksLo + b.weeksHi) / 2), 0)
+    expect(retire[0].cum).toBeGreaterThan(week[0].cum) // more minors
+    expect(mean(retire)).toBeLessThan(mean(week))
+
+    // ...AND THE TAIL SURVIVES, which is the guard in the other direction. A retirement that always
+    // costs a week stops being an event at all, and the copy has a sentence only `severe` reaches
+    // ("She stopped, and this time it is serious: … The dream takes a hit."). A band nobody ever
+    // draws is a sentence nobody ever reads.
+    const severeShare = retire[3].cum - retire[2].cum
+    expect(severeShare).toBeGreaterThan(0)
+    expect(retire[3].weeksHi).toBe(week[3].weeksHi) // when the body DOES break, it breaks the same
+    expect(retire[2].weeksHi).toBe(week[2].weeksHi)
+  })
+
+  it('a retirement onset draws the RETIREMENT mix, not the weekly one (Monte-Carlo, 600 seeds)', () => {
+    // Through the real door – `retirementInjury`, off `seed:retire:<week>`, exactly as
+    // `finalizeTournament` calls it. Mutation-verified: pointing `severityBandsFor` at the weekly
+    // table kills this and leaves the weekly-mix test in C7 green, which is the pair that proves the
+    // two doors are genuinely separate.
+    const out: InjurySeverity[] = []
+    for (let s = 0; s < 600; s++) {
+      resetForRoll(rollWorld, `c12-mc-${s}`)
+      rollWorld.week = 1
+      retirementInjury(rollWorld)
+      out.push(rollWorld.injury!.severity as InjurySeverity)
+    }
+    const share = (sev: InjurySeverity) => out.filter((s) => s === sev).length / out.length
+    const designed = (i: number) => {
+      const b = ECONOMY.availability.retirementSeverityBands
+      return b[i].cum - (i === 0 ? 0 : b[i - 1].cum)
+    }
+    // Loose corridors – a 600-draw Monte-Carlo, same discipline as C7's 60/30/10 check. What must
+    // hold is that the mix sits on the RETIREMENT design and is nowhere near the weekly one: minor
+    // is designed at 80% here against 60% there, so a 5-point corridor separates the hypotheses by
+    // four standard errors.
+    expect(share('minor')).toBeGreaterThan(designed(0) - 0.05)
+    expect(share('minor')).toBeLessThan(designed(0) + 0.05)
+    expect(share('moderate')).toBeLessThan(ECONOMY.availability.severityBands[1].cum - ECONOMY.availability.severityBands[0].cum)
+    expect(share('major') + share('severe')).toBeLessThan(0.1)
+    // ...and the length that follows it. `weeksHi` of the retirement's moderate band is 5, so a
+    // retirement can no longer produce the owner's six weeks from anything but a major-or-worse.
+    expect(ECONOMY.availability.retirementSeverityBands[1].weeksHi).toBeLessThan(
+      ECONOMY.availability.severityBands[1].weeksHi,
+    )
+  })
+
+  it('the weekly cause is untouched – it still reads the table it always read', () => {
+    // The negative half of the pair above, and it is deliberately the SYMMETRIC call: the same
+    // writer, the same 600 seeds, the same generator shape, one argument different. The end-to-end
+    // claim about `rollInjury` is already proven by C7's 60/30/10 sample, which is untouched by this
+    // ruling and would go red if the weekly door had been re-pointed – so this one is here to make
+    // the comparison a controlled A/B rather than two measurements taken different ways.
+    const out: InjurySeverity[] = []
+    for (let s = 0; s < 600; s++) {
+      resetForRoll(rollWorld, `c12-mc-${s}`)
+      rollWorld.week = 1
+      onsetInjury(rollWorld, rngFromSeed(`c12-week-${s}`), 'week', BODY_REGIONS)
+      out.push(rollWorld.injury!.severity as InjurySeverity)
+    }
+    const minor = out.filter((s) => s === 'minor').length / out.length
+    // The weekly table's minor band is 60%; the retirement's is 80%. This sample must land on the
+    // former, and the corridor is drawn so that the retirement mix would fail it.
+    expect(minor).toBeGreaterThan(0.5)
+    expect(minor).toBeLessThan(0.72)
   })
 })
 
