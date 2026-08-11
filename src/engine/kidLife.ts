@@ -87,10 +87,25 @@ export const TILE_LINE_MAX = 16
 export const SCHOOL_CUTOFF_MONTH = 9
 
 /** The season-week offset whose Monday is 1 September. Career week 0 is Monday 6 Jan 2031
- *  (shared/dates.ts), and 6 Jan + 34*7 days = 1 Sep 2031 exactly. A season is 364 days, so this
- *  Monday drifts ~1.25 days earlier per season - by the last season of a career it is 27 August,
- *  which changes nothing a player can see and keeps the derivation pure integer arithmetic instead
- *  of a date lookup. */
+ *  (shared/dates.ts), and 6 Jan + 34*7 days = 1 Sep 2031 exactly.
+ *
+ *  ⚠ IT IS APPROXIMATE, AND SINCE THE SEASON RE-ANCHOR IT IS APPROXIMATE BY A BOUNDED AMOUNT. This
+ *  used to say the Monday "drifts ~1.25 days earlier per season" and leave it there, which was true
+ *  and unbounded: a 364-day season against a Gregorian 365.2425 walked it out of September for good
+ *  (27 Aug by season 4, 26 Aug by 5, 20 Aug by 10 - the round-16 #16 report). `shared/dates.ts` now
+ *  anchors each season to the first Monday of its OWN year, so a season's first Monday is always
+ *  Jan 1-7 and this offset can only ever land in the seven days Aug 27 - Sep 2, cycling rather than
+ *  walking away. Measured:
+ *
+ *      s0 Sep 1 '31   s1 Aug 30 '32   s2 Aug 29 '33   s3 Aug 28 '34   s4 Aug 27 '35
+ *      s5 Sep 1 '36   s6 Aug 31 '37   s7 Aug 30 '38   s8 Aug 29 '39   s9 Aug 27 '40
+ *
+ *  ⚠⚠ SO IT IS STILL AUGUST MOST SEASONS, AND `isSummerWeek`'S CALENDAR CEILING IS STILL WHAT KEEPS
+ *  SCHOOL OUT OF IT. Re-anchoring bounded the error; it did not remove it. Do not read the fix in
+ *  shared/dates.ts as licence to revert 7dd25d8 - see docs/specs/season-anchor.md §3d.
+ *
+ *  Kept as an offset because the derivation stays pure integer arithmetic instead of a date lookup,
+ *  and because school ending is a SEASON fact (the last grade's September), not a date lookup. */
 export const SCHOOL_YEAR_TURNS_AT = 34
 
 /** True once the current season has passed its September - i.e. the school year that is running

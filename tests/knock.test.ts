@@ -39,6 +39,9 @@ import {
   KNOCK_HISTORY_MAX,
   ordinaryTrainingWeek,
   pendingKnock,
+  pendingBirthday,
+  birthdayOffer,
+  chooseGift,
   rollKnock,
   tickWeek,
   toSnapshot,
@@ -245,7 +248,7 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
   })
 
   it('⚠ a CLOSED allowlist of sub-streams, and no Math.random anywhere', () => {
-    // Same shape as tests/preview.test.ts's and tests/radar.test.ts's allowlists, and closed for the
+    // Same shape as tests/preview.test.ts's and tests/radar-read.test.ts's allowlists, and closed for the
     // same reason: a fourth stream must be added by somebody who has read this file.
     const code = codeOf('../src/engine/knock.ts')
     expect(code).not.toContain('Math.random')
@@ -328,6 +331,13 @@ describe('W4 — an unanswered knock BLOCKS time, it does not merely halt it', (
       if (stops.includes('knock')) sawKnockStop = true
       if (pendingKnock(world)) decideKnock(world, 'rest')
       else if (world.pendingTournament) break
+      // ⚠ v48: THE BIRTHDAY BLOCKS TOO, and this loop met it first. Her birthday landed before the
+      // first knock did, so without an answer here the advance returned ['birthday'] for every one of
+      // the sixty iterations and the knock this test is about was never reached – "a grinding career
+      // must be asked inside its first season" failed on a career that was never asked anything else.
+      // A gift moves nothing the knock model reads; it only lets time move.
+      const turning = pendingBirthday(world)
+      if (turning !== null) chooseGift(world, birthdayOffer(world.seed, turning).options[0].id)
     }
     expect(sawKnockStop, 'a grinding career must be asked inside its first season').toBe(true)
   })

@@ -4,6 +4,8 @@ import {
   advanceWeeks,
   maxMainDraws,
   pendingKnock,
+  pendingBirthday,
+  chooseGift,
   replayMainState,
   enterEvent,
   withdrawEvent,
@@ -249,11 +251,20 @@ async function handle(msg: ToWorker): Promise<ToUI> {
         const decisionOpen = (w: WorldState): boolean =>
           w.pendingTournament !== null ||
           pendingKnock(w) ||
+          // ⭐ v48: ...AND THE BIRTHDAY, for the reason the whole list exists. The dev fast-forward
+          // ships in EVERY build (an owner ruling), so a `▶▶ 52` that outran an unanswered birthday
+          // would tick a year past the one popup the owner asked to fire ALWAYS, with nobody
+          // answering it – which is exactly the hole the knock and the fork are on this list to close.
+          pendingBirthday(w) !== null ||
           w.ending !== null ||
           (w.fork !== null && w.fork.answer === null) ||
           w.retirementOffer !== null
+        // ⚠ THE SHAPE AND THE WORDING ARE BOTH PINNED (tests/dev-fast-forward.test.ts): it matches
+        // `if (decisionOpen(world)) {` followed immediately by the throw, and asserts the substring
+        // "resolve the tournament or knock". So v48's birthday joins the parenthesis rather than
+        // rewriting the sentence, and this note sits ABOVE the `if` rather than inside it.
         if (decisionOpen(world)) {
-          throw new Error('A decision is open – resolve the tournament or knock (or the fork, the offer, the ending) before skipping weeks')
+          throw new Error('A decision is open – resolve the tournament or knock (or the birthday, the fork, the offer, the ending) before skipping weeks')
         }
         for (let i = 0; i < msg.weeks; i++) {
           tickWeek(world, rng)
@@ -360,6 +371,13 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     // double-tap (or a stale dialog on a reloaded save) from re-deciding a week.
     case 'decideKnock': {
       return mutate(msg.id, msg.baseRevision, (world) => decideKnock(world, msg.choice))
+    }
+    // ⭐ v48: the parent answers the birthday. Same contract as the knock above – the ONLY command
+    // that can clear a pending birthday, and until it runs `advanceWeeks` refuses to tick. `chooseGift`
+    // throws on a week with no birthday and on a gift this birthday never offered, which is what keeps
+    // a double-tap (or a stale dialog on a reloaded save) from recording a second row for one year.
+    case 'chooseGift': {
+      return mutate(msg.id, msg.baseRevision, (world) => chooseGift(world, msg.giftId))
     }
     // THE INBOX (v32): the parent answers a letter. Both handlers go through the engine, which
     // re-checks the deadline - the UI's disabled button is a courtesy and the engine's refusal is the

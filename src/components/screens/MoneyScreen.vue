@@ -96,13 +96,26 @@ const physioActive = computed(() => game.snapshot?.physioActive ?? false)
 function togglePhysio(): void {
   game.setPhysio(!physioActive.value)
 }
-const physioCostLabel = computed(() => {
+/** One band, corridor-scaled to the family's means, as the `$lo-hi/wk` the toggle prints. Both rates
+ *  go through it so the two figures on this panel are computed the same way. */
+function weeklyBand(band: readonly [number, number]): string {
   const background = game.snapshot?.profile.background
   if (!background) return ''
-  const [lo, hi] = ECONOMY.physio.retainerPerWeekCents
   const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[background]
-  return `$${Math.round((lo * cLo) / 100)}-${Math.round((hi * cHi) / 100)}/wk`
-})
+  return `$${Math.round((band[0] * cLo) / 100)}-${Math.round((band[1] * cHi) / 100)}/wk`
+}
+const physioCostLabel = computed(() => weeklyBand(ECONOMY.physio.retainerPerWeekCents))
+// ⚠ THE NUMBER THE BILLS TAB HAS NEVER QUOTED (round-16 #15). `resolvePhysio` (world/injury.ts)
+// bills the REHAB rate on every injured week - `if (world.injury !== null)`, BEFORE it looks at the
+// toggle at all - and the retainer rate only on a healthy week while the retainer runs. So the one
+// figure on this panel described the cheaper of the two rates and the one that is NOT charged while
+// she is hurt, and a family with the toggle off read the physio line as $0 on a week that was
+// charging them more than the toggle ever would. The behaviour is correct and stays exactly as it
+// is; what was wrong is that the screen quoting the family's recurring costs quoted one of them.
+const physioRehabLabel = computed(() => weeklyBand(ECONOMY.physio.rehabPerWeekCents))
+/** Is she being billed the rehab rate RIGHT NOW - the same test the engine makes (`world.injury !==
+ *  null`), so the panel and the ledger cannot disagree about which week this is. */
+const injuredNow = computed(() => game.snapshot?.injury != null)
 
 const week = computed(() => game.snapshot?.week ?? 0)
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
@@ -873,7 +886,19 @@ const TAB_OPTIONS = [
         </label>
         <p class="money-panel-note">
           Weekly retainer - lowers injury risk, shortens recoveries and adds a little condition each
-          week.
+          week. Charged on the weeks she is fit.
+        </p>
+        <!-- ⚠ THE SECOND RATE, AND IT IS NOT A SECOND LEVER (round-16 #15). Rehab is not something
+             the family switches on: the engine bills it on every injured week whether the toggle is
+             set or not, because a hurt girl is being treated. The line therefore sits OUTSIDE the
+             toggle's own note and says so in as many words - a figure indented under a checkbox
+             would read as a second thing to turn off. Emphasised only while she is actually hurt,
+             which is the week it stops being a number and starts being the bill. -->
+        <p class="money-panel-note" :class="{ 'money-panel-note-live': injuredNow }">
+          <template v-if="injuredNow">She is hurt, so this week bills rehab:</template>
+          <template v-else>An injured week bills rehab instead:</template>
+          <b>{{ physioRehabLabel }}</b
+          >, with or without the retainer above.
         </p>
         <p class="money-panel-note">Started this career with {{ startingBudget }}.</p>
       </Card>
@@ -1364,6 +1389,13 @@ const TAB_OPTIONS = [
   line-height: 1.4;
   color: var(--ink-soft);
   text-wrap: pretty;
+}
+
+/* The rehab line while she is actually hurt: the same note, in the body colour, because on that week
+   it describes money leaving the account rather than money that might. No new register, no plate -
+   a bill is not an alert. */
+.money-panel-note-live {
+  color: var(--text);
 }
 
 /* The bill note lives in the category COLUMN rather than inside a panel, so it needs the breathing

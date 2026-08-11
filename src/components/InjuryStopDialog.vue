@@ -15,9 +15,22 @@
 // it – so the emotion here is a CONSTANT, not a decision, and it deliberately does not reach for
 // the emotion composable at all (the same shape OnboardingWizard uses for its fixed jun-norm
 // frame). The only thing that varies is her age band.
+//
+// R16 #18/#19 – AND IT SAYS WHEN AND WHY NOW, because the popup it used to be could only ever fire
+// for the weekly roll. The gate moved onto the snapshot (App.vue `showInjuryStop`), so this dialog
+// is now the surface for the RETIREMENT too – 61% of this game's injuries, and the door whose worst
+// case the owner reported as a scoreline with no explanation attached to it. Two injuries that cost
+// the same four weeks are not the same week, and the copy has to be able to tell them apart.
+//
+// ⚠ THE CIRCUMSTANCE IS READ OFF STATE, NOT OFF THE NEWS TEXT. `WorldEvent.match.retiredId` is the
+// persisted fact that she stopped on court – the same field `travelHome` and the season plaque read –
+// so this asks the world what happened rather than pattern-matching the sentence the world wrote
+// about it. Presentation-only, exactly like the withdrawn-entry list below: no engine extension, no
+// schema change, and `InjuryCause` stays private to engine/world/injury.ts where it belongs.
 import { computed, onMounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import { playSfx } from '../audio/sfx'
+import { KID_ID } from '../engine/world'
 import type { InjurySeverity } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
@@ -39,6 +52,32 @@ const SEVERITY_LABEL: Record<InjurySeverity, string> = {
 }
 const severityLabel = computed(() => (injury.value ? SEVERITY_LABEL[injury.value.severity] : ''))
 const backWeek = computed(() => week.value + (injury.value?.weeksRemaining ?? 0))
+// WHEN: the layoff's own week, off the injury rather than off "now". They are the same number on the
+// week this dialog mounts, and reading the injury is the one that stays true if it ever is not.
+const onsetWeek = computed(() => injury.value?.sinceWeek ?? week.value)
+
+// WHY, as far as the model knows. The retirement match she stopped in, if this injury came in by
+// that door – `retiredId === KID_ID` is the whole test (see season/types.ts on the field).
+const retiredMatch = computed(
+  () =>
+    (game.snapshot?.events ?? []).find(
+      (e) => e.week === onsetWeek.value && e.match?.retiredId === KID_ID,
+    ) ?? null,
+)
+/** One sentence naming the MOMENT: on court mid-match, or a body that gave way between them. */
+const circumstance = computed(() => {
+  const e = retiredMatch.value
+  // ⚠ VAGUE ON PURPOSE, AND NOT LAZINESS. The weekly roll can land on a training week, a travel
+  // week, an arrival week or a family holiday (`injuryVacationFactor` is nonzero – holidays do
+  // sprain ankles), and the engine records which of those it was NOWHERE. "She felt it in training"
+  // would be a sentence this dialog cannot support, on the same honesty rule the commentary and the
+  // diary are held to: say only what the model knows.
+  if (!e) return 'Off court – it came on between matches.'
+  const opp = e.match?.oppName
+  return e.friendly
+    ? `On court – she had to stop during a practice match${opp ? ` against ${opp}` : ''}.`
+    : `On court – she had to stop mid-match${opp ? ` against ${opp}` : ''}. The round she had reached is hers.`
+})
 
 // The painting of the moment, in her own age band. Already warmed: `injury` stays in the preloaded
 // per-band set precisely because this surface and the Memory card can still request it.
@@ -74,8 +113,8 @@ onMounted(() => playSfx('ooh'))
   <div v-if="injury" class="dialog-overlay" @click.self="$emit('continue')">
     <div class="dialog-card season-summary injury-stop">
       <img class="injury-stop-art" :src="artUrl" :style="artStyle" alt="" />
-      <p class="season-summary-kicker">Injury – {{ weekLabel(week) }}</p>
-      <h2 class="season-summary-title">She's hurt.</h2>
+      <p class="season-summary-kicker">Injury – {{ weekLabel(onsetWeek) }}</p>
+      <h2 class="season-summary-title">{{ retiredMatch ? 'She had to stop.' : "She's hurt." }}</h2>
       <table class="season-summary-table">
         <tbody>
           <tr>
@@ -85,6 +124,10 @@ onMounted(() => playSfx('ooh'))
           <tr>
             <th>Severity</th>
             <td>{{ severityLabel }}</td>
+          </tr>
+          <tr>
+            <th>How</th>
+            <td>{{ circumstance }}</td>
           </tr>
           <tr>
             <th>Out for</th>

@@ -32,6 +32,7 @@ import { buildTimeline } from '../../src/viz/timeline'
 import { buildCommentary } from '../../src/viz/commentary'
 import type { AnnotatedMatch } from '../../src/viz/types'
 import type { MatchOptions, MatchPlayer, Side } from '../../src/engine/match/types'
+import type { TierId } from '../../src/engine/season/types'
 
 function player(overrides: Partial<MatchPlayer> = {}): MatchPlayer {
   return { id: 'p', name: 'P', serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50, ...overrides }
@@ -568,8 +569,12 @@ describe('the view switch reaches the commentary, not only the playback', () => 
     await button!.trigger('click')
     await nextTick()
   }
+  // ⚠ `:not(.intro)` BECAUSE THE LOG GAINED A SECOND KIND OF ROW (round 16, the pre-match preview).
+  // The commentator's intro rides the same grid and the same class so it lines up on the same rail,
+  // and it is not a beat - it is what was said before the first ball. Every assertion in this block
+  // is about what the VIEW SWITCH does to the commentary, and the switch does not reach the intro.
   const logRows = (w: ReturnType<typeof mountViewer>): string[] =>
-    w.findAll('.mv-beat').map((r) => r.text().replace(/\s+/g, ' ').trim())
+    w.findAll('.mv-beat:not(.intro)').map((r) => r.text().replace(/\s+/g, ' ').trim())
 
   it('⚠ Key -> Full at the same moment of the match ADDS rows, and Key is a subset of them', async () => {
     // The assertion the old behaviour could not pass: mid-match, one click, no clock movement in
@@ -621,3 +626,95 @@ describe('the view switch reaches the commentary, not only the playback', () => 
     wrapper.unmount()
   })
 })
+
+// =================================================================================================
+// ROUND 16 – THE PRE-MATCH PREVIEW ON SCREEN (owner: «комментаторы дают какую-то короткую информацию
+// об участниках, их шансе на победу или на продвижение в таблице»).
+//
+// `tests/viz/preview.test.ts` owns the LADDER – what each storey may say. What is owned here is the
+// half that file cannot see: that the lines reach the log at all, that they sit at the BOTTOM (the
+// log reads newest-first, and the intro is older than the first ball), and that they are not
+// mistaken for beats by anything that counts beats.
+// =================================================================================================
+describe('MatchViewer – the pre-match preview', () => {
+  const introRows = (w: ReturnType<typeof mountViewer>): string[] =>
+    w.findAll('.mv-beat.intro').map((r) => r.text().replace(/\s+/g, ' ').trim())
+  const allRows = (w: ReturnType<typeof mountViewer>): string[] =>
+    w.findAll('.mv-beat').map((r) => r.text().replace(/\s+/g, ' ').trim())
+
+  it('⚠ is on screen BEFORE a ball is struck, where the empty state used to be', () => {
+    const wrapper = mountViewer()
+    expect(wrapper.text(), 'the match has not started').toContain('Not started')
+    const intro = introRows(wrapper)
+    expect(intro.length, 'no intro rows at all').toBeGreaterThanOrEqual(3)
+    // The girl across the net is the line the owner asked for by name.
+    expect(intro.join(' ')).toContain('Ines')
+    // ...and the old "nothing here yet" paragraph is not what a player sees any more.
+    expect(wrapper.find('.mv-log-empty').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('⚠ sits at the BOTTOM of the log, under every beat, because it is the oldest thing in it', async () => {
+    const wrapper = mountViewer()
+    await clickModeOn(wrapper, SKIP_LABEL) // reveals the whole match, so there are beats above it
+    const rows = allRows(wrapper)
+    const intro = introRows(wrapper)
+    expect(intro.length).toBeGreaterThanOrEqual(3)
+    // Every intro row is in the last `intro.length` rows of the log, in order.
+    expect(rows.slice(rows.length - intro.length)).toEqual(intro)
+    wrapper.unmount()
+  })
+
+  it('⚠ says MORE at a high rung than at a low one – the ladder, seen through the component', async () => {
+    const { a, b, match } = fixture()
+    const at = (previewEvent: { tier: TierId; roundLabel: string } | null): string[] => {
+      const w = mount(MatchViewer, {
+        props: { match, playerA: a, playerB: b, surface: 'hard' as const, mode: 'replay' as const, previewEvent },
+      })
+      const rows = w.findAll('.mv-beat.intro').map((r) => r.text().replace(/\s+/g, ' ').trim())
+      w.unmount()
+      return rows
+    }
+    const local = at({ tier: 'local', roundLabel: 'Quarterfinal' })
+    const junior = at({ tier: 'j30', roundLabel: 'Quarterfinal' })
+    const pro = at({ tier: 'w50', roundLabel: 'Quarterfinal' })
+    const top = at({ tier: 'wta1000', roundLabel: 'Quarterfinal' })
+    expect(local.length).toBeLessThan(junior.length)
+    expect(junior.length).toBeLessThan(pro.length)
+    expect(pro.length).toBeLessThan(top.length)
+    // ...and the caller that has no tournament behind it still gets the thinnest one, never nothing.
+    expect(at(null).length).toBe(local.length)
+    // The numbers arrive at the W rungs and not before – the one content rule the ladder turns on.
+    expect(junior.join(' ')).not.toMatch(/\d+%/)
+    expect(pro.join(' ')).toMatch(/\d+%/)
+    wrapperlessCheck(local, junior, pro, top)
+  })
+
+  it('an intro row is not a beat: no set label, no score, and it never takes the "latest" glow', () => {
+    const wrapper = mountViewer()
+    for (const row of wrapper.findAll('.mv-beat.intro')) {
+      expect(row.find('.mv-beat-set').text(), 'an intro row claimed a set').toBe('')
+      expect(row.find('.mv-beat-score').exists(), 'an intro row claimed a score').toBe(false)
+      expect(row.classes(), 'an intro row took the newest-row glow').not.toContain('latest')
+    }
+    wrapper.unmount()
+  })
+})
+
+/** Every intro row is a finished sentence at every storey – cheap, and it is the one copy rule that
+ *  would show up as a broken row on the phone rather than as a failing string comparison. */
+function wrapperlessCheck(...groups: string[][]): void {
+  for (const group of groups) {
+    for (const line of group) {
+      expect(line.endsWith('.'), line).toBe(true)
+      expect(line, 'player copy uses the short dash only').not.toContain('—')
+    }
+  }
+}
+
+async function clickModeOn(w: ReturnType<typeof mountViewer>, label: string): Promise<void> {
+  const button = w.findAll('button').find((b) => b.text() === label)
+  expect(button, `no "${label}" button`).toBeTruthy()
+  await button!.trigger('click')
+  await nextTick()
+}

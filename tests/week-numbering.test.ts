@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { WEEKS_IN_SEASON, weekLabel, weekRange, weekYear } from '../src/shared/dates'
+// The OLD continuous calendar, frozen in migrations.ts because the shipped v16 back-fill inverts it.
+// Read here so the collision pin below can still state the defect it was written for – see its note.
+import { legacyWeekYear } from '../src/engine/migrations'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS, isOffSeasonWeek } from '../src/engine/season/calendar'
 
 // ---------------------------------------------------------------------------
@@ -102,16 +105,33 @@ describe('weekLabel – the season year is the SEASON INDEX, not weekYear()', ()
     }
   })
 
-  it('DIVERGES from weekYear at season 5 – and that divergence is the point', () => {
-    // A season is exactly 52 weeks = 364 days, so a season's opening Monday walks ~1.25 days
-    // earlier every year and steps back over New Year at season 5: seasons 4 and 5 BOTH start in
-    // a week whose Monday falls in 2035 (Jan 1, 2035 and Dec 31, 2035).
-    expect(weekYear(4 * WEEKS_IN_SEASON)).toBe(2035)
-    expect(weekYear(5 * WEEKS_IN_SEASON)).toBe(2035)
-    // A label built on weekYear would print two consecutive seasons as '35 and the player could
+  // ⚠ RE-AIMED BY THE SEASON RE-ANCHOR (wave/flags-grant). This asserted that the LIVE `weekYear`
+  // diverges from the label at season 5. It no longer can: `shared/dates.ts` anchors each season to
+  // the first Monday of its own year, so the ~1.24-day-a-season slide that produced the divergence
+  // is gone and `weekYear(week) === seasonYear(floor(week / 52))` identically.
+  //
+  // NOT DELETED, AND NOT WEAKENED. The claim it was making has two halves and only one of them was
+  // about the drift. The divergence is now stated against `legacyWeekYear` – the historical calendar
+  // frozen in migrations.ts, which the shipped v16 back-fill still has to invert – so the reason the
+  // label was built on the index survives; and the OUTPUT assertions are untouched, because what the
+  // player reads must not move whatever the calendar underneath is doing.
+  //
+  // Blast radius measured on the owner's seven real saves before shipping: no rung opening week
+  // moved, no season gained or lost a birthday. tools/season-anchor-read.ts, docs/specs/season-anchor.md.
+  it('DIVERGED from weekYear at season 5 – and that divergence is why the label reads the index', () => {
+    // A season is exactly 52 weeks = 364 days, so under the OLD continuous calendar a season's
+    // opening Monday walked ~1.25 days earlier every year and stepped back over New Year at season
+    // 5: seasons 4 and 5 BOTH started in a week whose Monday fell in 2035 (Jan 1 and Dec 31, 2035).
+    expect(legacyWeekYear(4 * WEEKS_IN_SEASON)).toBe(2035)
+    expect(legacyWeekYear(5 * WEEKS_IN_SEASON)).toBe(2035)
+    // A label built on that would have printed two consecutive seasons as '35 and the player could
     // not tell them apart – the one thing this label exists to do. The season index cannot drift.
     expect(weekLabel(4 * WEEKS_IN_SEASON)).toBe("W1 '35")
     expect(weekLabel(5 * WEEKS_IN_SEASON)).toBe("W1 '36")
+    // ...and the shipped calendar now agrees with the label instead of fighting it, which is the
+    // belt beside those braces rather than a replacement for them.
+    expect(weekYear(4 * WEEKS_IN_SEASON)).toBe(2035)
+    expect(weekYear(5 * WEEKS_IN_SEASON)).toBe(2036)
   })
 
   it('never labels two different seasons the same, over a 15-season career', () => {

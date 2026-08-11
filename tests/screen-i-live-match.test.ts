@@ -35,6 +35,39 @@ const stylesOf = (sfc: string): string =>
 describe('screen I – the commentary is actually on the screen', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
 
+  // ⚠ ROUND 16 ITEM 14 (owner, 11.08: align the commentary bullets with the rail, nudge them left).
+  // A SOURCE-SHAPED PIN, and deliberately so: this is pure layout arithmetic, happy-dom runs no layout
+  // engine, and `tests/component/` therefore cannot see a two-pixel misalignment at all. What is
+  // protected is the DECISION that closed the bug rather than the number - the rail and the dots used
+  // to be placed by two unrelated mechanisms that happened to nearly agree (an absolute `left: 33px`
+  // against a grid column's centre), and nearly is what the owner was looking at.
+  it('the rail and the commentary dots are placed from ONE number, so they cannot drift apart', () => {
+    const styles = stylesOf(viewer)
+    const rule = (sel: string): string => {
+      const at = styles.indexOf(`${sel} {`)
+      expect(at, `no ${sel} rule`).toBeGreaterThan(-1)
+      return styles.slice(at, styles.indexOf('}', at))
+    }
+    // The custom property is declared once, on the list that owns the rail...
+    expect(rule('.mv-log-list')).toMatch(/--mv-rail-x:\s*[\d.]+px/)
+    // ...and BOTH the rail and the dot are positioned off it. Either one carrying a bare number is
+    // the state this item was reported from.
+    expect(rule('.mv-log-list::before'), 'the rail is back on a hand-written offset').toMatch(
+      /left:\s*calc\(var\(--mv-rail-x\)/,
+    )
+    const dot = rule('.mv-beat-dot')
+    expect(dot, 'the dot is centred in its grid column again, not placed on the rail').toContain(
+      'justify-self: start',
+    )
+    expect(dot).toMatch(/margin-left:\s*calc\(var\(--mv-rail-x\)/)
+    // ...and the arithmetic still refers to the grid it is placed in: column 1 (22px) + the gap (8px)
+    // opens column 2 at 30px, and a 9px dot needs half of itself back. 30 + 4.5 = 34.5.
+    expect(rule('.mv-beat')).toMatch(/grid-template-columns:\s*22px 12px/)
+    expect(rule('.mv-beat')).toMatch(/gap:\s*8px/)
+    expect(dot).toContain('34.5px')
+    expect(dot).toMatch(/width:\s*9px/)
+  })
+
   it('the viewer builds the commentary and renders it as the log', () => {
     // A derivation nobody calls is not a feature. The whole point of the slice is that the beats
     // reach the player, so the wiring is pinned as hard as the derivation itself.

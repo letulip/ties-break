@@ -70,45 +70,44 @@ const game = useGameStore()
 // the engine stores the list oldest-first (append-only).
 const rows = computed<SeasonHistoryEntry[]>(() => [...(game.snapshot?.seasonHistory ?? [])].reverse())
 
-/** WHAT A ROW SHOWS, and the whole of the honesty is here. THREE answers, not two – two `kind`s,
- *  because the old row answers differently depending on which tab is asking:
+/** WHAT A ROW SHOWS UNDER THIS TAB, or NULL when it has nothing to show under it.
  *
  *   * `split` – a season banked on v46 or later. Every figure is that table's own, and a missing
  *     `endRank` means she was never ranked there (not that she placed nothing).
- *   * `legacy` under INTERNATIONAL – a season banked before v46. Its stored `endRank` IS the ITF rank
- *     (the wrap writes `world.kidRank`), so the rank column is exact; its points and W-L are the three
- *     tables added together and are marked as such.
- *   * `legacy` under NATIONAL or PROFESSIONAL – the same old season, and NO RANK: the only rank it
- *     holds belongs to another table, and «Professional rank #128» over a junior number is the class of
- *     claim that put «Rank #4» on Home against «#128» in Stats. The fold is still shown and still
- *     marked – deleting it would lose the one place a 44-19 season survives.
+ *   * a season banked BEFORE v46 kept one rank and one fold for all three tables. Its stored
+ *     `endRank` IS the ITF rank (the wrap writes `world.kidRank`), so it belongs to the
+ *     INTERNATIONAL tab and is shown there. Under National or Professional it is another table's
+ *     row, and it is now dropped.
  *
- * Nothing here invents a per-track figure for an old season, because nothing can: `pruneResults`
- * keeps a rolling 52 weeks, so the results behind those seasons were deleted years ago. The reasoning
- * is recorded once, in the v45 -> v46 step of engine/migrations.ts; this function obeys it. */
+ * ⚠ IT USED TO BE SHOWN EVERYWHERE WITH A STAR (round-16 #4). The old row appeared under all three
+ * tabs, rankless on two of them, with an asterisk on its points and W-L and a footnote explaining
+ * that pre-v46 seasons could not be split back apart. The owner's ruling, 11.08: there is one player
+ * in this game, so there is nobody to disclaim to – remove the extra rows and the asterisk. What is
+ * lost is stated rather than discovered later: a career that spans the v46 boundary sees its early
+ * seasons on the International tab only, and their points column is still the three tables added
+ * together. Nothing can fix that number – `pruneResults` keeps a rolling 52 weeks, so the results
+ * behind those seasons were deleted years ago (the reasoning is recorded once, in the v45 -> v46 step
+ * of engine/migrations.ts). What changes is that the game no longer explains itself about it. */
 function cellsFor(r: SeasonHistoryEntry, track: LadderTrack) {
   const split = r.byTrack?.[track]
   if (split) {
     return {
-      kind: 'split' as const,
       rank: split.endRank ?? null,
       points: split.points,
       wins: split.wins,
       losses: split.losses,
     }
   }
-  return {
-    kind: 'legacy' as const,
-    rank: track === 'itf' ? r.endRank : null,
-    points: r.points,
-    wins: r.wins,
-    losses: r.losses,
-  }
+  if (track !== 'itf') return null
+  return { rank: r.endRank, points: r.points, wins: r.wins, losses: r.losses }
 }
 
-const cells = computed(() => rows.value.map((r) => ({ row: r, ...cellsFor(r, props.track) })))
-/** One footnote, and only when a row on screen actually needs it. */
-const anyLegacy = computed(() => cells.value.some((c) => c.kind === 'legacy'))
+const cells = computed(() =>
+  rows.value.flatMap((r) => {
+    const c = cellsFor(r, props.track)
+    return c ? [{ row: r, ...c }] : []
+  }),
+)
 </script>
 
 <template>
@@ -117,6 +116,13 @@ const anyLegacy = computed(() => cells.value.some((c) => c.kind === 'legacy'))
     <p v-if="!rows.length" class="hint" style="margin-top: 0">
       Her first season is still running – it lands here at the year's wrap-up, and every season
       after it stacks on top.
+    </p>
+    <!-- ⚠ SEASONS EXIST, BUT NONE OF THEM IS THIS TABLE'S (round-16 #4). Since the old folded rows
+         stopped appearing under the two tabs they never belonged to, a career that spans the v46
+         boundary can reach a tab with nothing on it – and an empty table under a heading reads as a
+         screen that failed to load. It says which of the two it is. -->
+    <p v-else-if="!cells.length" class="hint" style="margin-top: 0">
+      Nothing on this table yet – her finished seasons were played on another one.
     </p>
     <template v-else>
       <!-- THE SCROLLER. `tabindex="0"` because a region that scrolls must be reachable without a
@@ -157,10 +163,8 @@ const anyLegacy = computed(() => cells.value.some((c) => c.kind === 'legacy'))
                    pointless player shares), or the season predates v46 and the only rank it kept
                    belongs to another table. -->
               <td class="num">{{ c.rank === null ? '–' : `#${c.rank}` }}</td>
-              <td class="num">{{ c.points }}<span v-if="c.kind === 'legacy'" class="sh-fold">*</span></td>
-              <td class="num" style="white-space: nowrap">
-                {{ c.wins }}–{{ c.losses }}<span v-if="c.kind === 'legacy'" class="sh-fold">*</span>
-              </td>
+              <td class="num">{{ c.points }}</td>
+              <td class="num" style="white-space: nowrap">{{ c.wins }}–{{ c.losses }}</td>
               <td class="num">
                 <span class="ph-name" :class="c.row.fundsDeltaCents < 0 ? 'negative' : 'positive'">
                   {{ formatCentsSigned(c.row.fundsDeltaCents) }}
@@ -171,21 +175,15 @@ const anyLegacy = computed(() => cells.value.some((c) => c.kind === 'legacy'))
           </tbody>
         </table>
       </div>
-      <!-- ⚠ THE NOTE THAT USED TO STAND HERE HAS BEEN ANSWERED RATHER THAN REWORDED. It read "Points
-           and W-L are the whole season, both tables together", and explained that telling them apart
-           was "a schema decision rather than a copy fix". v46 took that decision, so the columns now
-           follow the picker and the sentence has nothing left to excuse.
-
-           What is left is FUNDS, which is career-wide by nature (a family has one wallet), and the
-           star – shown only while a season banked before v46 is on screen. -->
+      <!-- ⚠ TWO NOTES USED TO STAND HERE AND ONE IS GONE (round-16 #4). The star's footnote –
+           "seasons played before this update kept one set of figures for all three tables" – went
+           with the rows it was excusing: the owner's ruling is that a single-player game has nobody
+           to disclaim to. What survives is FUNDS, which is not a disclaimer at all: the wallet really
+           is career-wide (a family has one), so the column genuinely means something different from
+           the four beside it and would be misread without the sentence. -->
       <p class="hint">
         Funds is the season's net – underneath it, what the family had left when the year ended. It is
         the family's whole year, not this table's.
-      </p>
-      <p v-if="anyLegacy" class="hint">
-        * Seasons played before this update kept one set of figures for all three tables, so their
-        points and W–L are the whole year added together and cannot be split back apart. Their rank is
-        shown on the International tab, which is the table it was always measured in.
       </p>
     </template>
   </section>
@@ -229,12 +227,11 @@ const anyLegacy = computed(() => cells.value.some((c) => c.kind === 'legacy'))
   padding-right: 0;
 }
 
-/* The star that marks a pre-v46 season's folded figures. Quiet on purpose – it qualifies a number,
-   it is not a second number: the footnote under the table carries the meaning. */
-.sh-fold {
-  color: var(--muted);
-  margin-left: 1px;
-}
+/* ⚠ `.sh-fold` – the star that marked a pre-v46 season's folded figures – is GONE with the rows it
+   qualified (round-16 #4, the owner: there is one player, so there is nobody to show an asterisk and
+   a disclaimer to). Recorded rather than silently deleted, because the rule it encoded is still true
+   of the DATA: an old season's points and W-L really are the three tables added together, and the
+   International tab is still the only one that shows them. See `cellsFor`. */
 
 /* The last row's hairline: the sheet's `tr:last-child td { border-bottom: none }` only reaches the
    `td`s, and this table's first cell in every row is a `th` - so the bottom row was closed by a

@@ -9,16 +9,21 @@
 //      the silver plate lights up the first time she WINS something and its count claims finals she
 //      never lost. Nothing else in the app would notice.
 //
-//   2. THE YEAR COLLIDING. A season is 364 days, so `weekYear` repeats at season 5 and two
-//      consecutive seasons of trophies merge into one group under a year that never held them.
-//      That has already happened once, to the Stats history table (the v16 migration).
+//   2. THE YEAR COLLIDING. A season is 364 days, so the old continuous `weekYear` repeated at season
+//      5 and two consecutive seasons of trophies merged into one group under a year that never held
+//      them. That has already happened once, to the Stats history table (the v16 migration). The
+//      calendar itself was re-anchored a wave later so the repeat is now impossible – but the
+//      cabinet keeps deriving its year from the SEASON, because that is what the year means here.
 //
 // Everything here reads a LIVE career rather than a hand-built world where possible: the ledger's
 // invariants are claims about what `finalizeTournament` does, not about what a fixture says.
 import { describe, it, expect } from 'vitest'
 import {
   advanceWeeks,
+  birthdayOffer,
+  chooseGift,
   closeTournament,
+  pendingBirthday,
   createWorld,
   emptyTrophyLedger,
   enterEvent,
@@ -28,11 +33,25 @@ import {
   SAVE_SCHEMA_VERSION,
   type WorldState,
 } from '../src/engine/world'
-import { migrateSave } from '../src/engine/migrations'
+// `legacyWeekYear` is the OLD continuous calendar, frozen in migrations.ts because the shipped v16
+// back-fill inverts what it wrote. Read here so the collision pins can still state the real defect.
+import { migrateSave, legacyWeekYear } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import { seasonYear, weekYear, WEEKS_IN_SEASON } from '../src/shared/dates'
 import type { TierId } from '../src/engine/season/types'
+
+/** ⚠ v48: ANSWER HER BIRTHDAY, so the harness can keep moving. A pending birthday blocks
+ *  `advanceWeeks` exactly as an unanswered knock does, so any loop that drives a career past one has
+ *  to answer it – the same obligation `pendingKnock` already puts on every harness in this repo.
+ *
+ *  Whatever the engine offered first: a gift moves no skill, no condition, no kit and no money (spec
+ *  §4.1/§4.3, asserted in tests/birthday-gifts.test.ts), so the choice cannot reach anything a
+ *  harness measures. It only lets time move. */
+function answerBirthday(world: WorldState): void {
+  const age = pendingBirthday(world)
+  if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+}
 
 /** A real career, played the way a player plays one: enter what she can, resolve every draw. */
 function playCareer(seed: string, weeks: number): WorldState {
@@ -50,6 +69,12 @@ function playCareer(seed: string, weeks: number): WorldState {
       }
     }
     if (world.knock && world.knock.choice === null) world.knock.choice = 'rest'
+    // ⚠ v48: ...AND THE BIRTHDAY, which BLOCKS the advance exactly as an unanswered knock does. A
+    // harness that never answers it spins on the same week for ever and this suite's five-season
+    // career stopped producing silverware at all. Answered with whatever the engine offered first:
+    // a gift moves no skill, no condition, no kit and no money, so which one is chosen cannot reach
+    // anything these tests measure – it only lets time move.
+    answerBirthday(world)
     advanceWeeks(world, rng, 1)
     while (world.pendingTournament) {
       if (!world.pendingTournament.finished) skipTournament(world)
@@ -153,12 +178,38 @@ describe('⚠ gold and silver are DISJOINT: `finals` means she LOST the final', 
   })
 })
 
-describe('⚠ the year under a trophy is the SEASON year, and `weekYear` would collide', () => {
-  it('the collision is real and this is the shape of it: seasons 4 and 5 share a calendar year', () => {
+// ⚠ RE-AIMED BY THE SEASON RE-ANCHOR (wave/flags-grant), and the cabinet's own choice is unchanged.
+//
+// These two pins used to ask the LIVE `weekYear` to collide. It cannot any more: `shared/dates.ts`
+// anchors each season to the first Monday of its own year instead of running one continuous 364-day
+// cycle, so the ~1.24-day-a-season slide that walked season 5's opening Monday back over New Year is
+// gone and `weekYear(week) === seasonYear(floor(week / 52))` identically.
+//
+// THE CABINET STILL READS `seasonYear`, and this describe still exists, because "the year under a
+// trophy" is a claim about a SEASON and must be derived from the season. The two agreeing today is
+// arithmetic; only one of them is intent. So: the historical collision is stated against
+// `legacyWeekYear` (frozen in migrations.ts for the v16 back-fill), and a new pin asserts the
+// property the re-anchor bought – no pair of seasons shares a calendar year, anywhere in a career.
+//
+// Measured on the owner's seven real saves before shipping (tools/season-anchor-read.ts): no rung
+// opening week moved, no season gained or lost a birthday, no birthday crossed a save's current
+// week. docs/specs/season-anchor.md.
+describe('⚠ the year under a trophy is the SEASON year, and `weekYear` used to collide', () => {
+  it('the collision was real and this is the shape of it: seasons 4 and 5 shared a calendar year', () => {
     // The exact pair shared/dates.ts documents, re-derived here so the cabinet's choice is defended
     // by a fact rather than by a comment.
-    expect(weekYear(208)).toBe(weekYear(260))
+    expect(legacyWeekYear(208)).toBe(legacyWeekYear(260))
     expect(seasonYear(4)).not.toBe(seasonYear(5))
+  })
+
+  it('...and the shipped calendar has closed it at the root – no two seasons share a year', () => {
+    const years = new Set<number>()
+    for (let s = 0; s < 40; s++) {
+      const year = weekYear(s * WEEKS_IN_SEASON)
+      expect(years.has(year), `season ${s} re-uses ${year}`).toBe(false)
+      years.add(year)
+      expect(year).toBe(seasonYear(s))
+    }
   })
 
   it('seasonYear(floor(week / 52)) is total and strictly increasing across a whole career', () => {
@@ -179,8 +230,8 @@ describe('⚠ the year under a trophy is the SEASON year, and `weekYear` would c
     const weeks = [208, 260] // one title in season 4, one in season 5
     const years = new Set(weeks.map((w) => seasonYear(Math.floor(w / WEEKS_IN_SEASON))))
     expect(years.size).toBe(2)
-    // ...whereas the wrong derivation would have shown a single "2x'35"
-    expect(new Set(weeks.map(weekYear)).size).toBe(1)
+    // ...whereas the wrong derivation, on the calendar that shipped with it, showed a single "2x'35"
+    expect(new Set(weeks.map(legacyWeekYear)).size).toBe(1)
   })
 })
 

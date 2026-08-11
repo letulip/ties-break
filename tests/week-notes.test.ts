@@ -51,6 +51,8 @@ import {
 import { WEEK_PLAN_PRESETS, type ConditionBand, type DiaryFacts, type FundsPressure } from '../src/shared/protocol'
 // W6c: the anatomy the pin re-derives from, so a claim about her body is checked against her body.
 import { BODY_REGIONS, bodyGroupOf, bodyPartOf, type BodyGroup } from '../src/engine/body'
+// v48: the birthday catalogue, so the scrap budget is measured on the longest noun it can produce.
+import { BIRTHDAY_BANDS, giftNoun } from '../src/engine/world'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -92,6 +94,10 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     // fixture is a week with nothing wrong with her, which is what these suites are about.
     knockChoice: null,
     birthdayAge: null,
+    // v48: the birthday gift, unread by this builder - the default is "he has not answered".
+    birthdayGift: null,
+    birthdayWanted: false,
+    birthdayRepeatAge: null,
     knockPart: null,
     fundsPressure: 'ok',
     freshMilestone: null,
@@ -177,7 +183,23 @@ function render(note: (typeof WEEK_NOTES)[number], f: DiaryFacts): string {
 /** Every line in the pool, rendered against a week that names a part - so the templates resolve to a
  *  real sentence rather than to "undefined". */
 function renderAll(): string[] {
-  const f = homeWeek({ knockChoice: 'rest', knockPart: 'ankle' })
+  // ⚠ RE-AIMED (v48), AND THE MEASUREMENT IS WHY. This built facts with `birthdayGift: null`, so the
+  // four birthday-present templates were rendered with the string "null" – four characters – and the
+  // 80-character scrap budget below was measured on a sentence nobody will ever read. Their first
+  // draft was up to 28 characters over and sailed straight through. It now renders the WORST CASE the
+  // catalogue can actually produce: `giftNoun` swept over every band, longest first (31 characters,
+  // "the one thing she would not buy"), plus a two-digit repeat age. Derived rather than pasted, so a
+  // longer noun added to the catalogue tightens this guard automatically instead of ageing out of it.
+  const longestGiftNoun = BIRTHDAY_BANDS.flatMap((b) => b.gifts)
+    .map((g) => giftNoun(g.id) ?? '')
+    .sort((a, b) => b.length - a.length)[0]
+  const f = homeWeek({
+    knockChoice: 'rest',
+    knockPart: 'ankle',
+    birthdayGift: longestGiftNoun,
+    birthdayWanted: true,
+    birthdayRepeatAge: 19,
+  })
   const out = WEEK_NOTES.map((n) => render(n, f))
   // The whole point of resolving: an unresolved template would sail through every guard below.
   for (const t of out) expect(t, 'a template that did not resolve').not.toContain('undefined')

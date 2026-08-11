@@ -48,6 +48,7 @@ import {
   createWorld,
   kidAgeYears,
   kidPoints,
+  pendingKnock,
   seasonIndexOf,
   SAVE_SCHEMA_VERSION,
   STARTING_FUNDS_CENTS,
@@ -261,6 +262,22 @@ const RECIPES: Recipe[] = [
       if (world.ending !== null) return `career ended (${world.ending.type}) before week ${JUNIOR_WEEK}`
       if (kidPoints(world, 'domestic') <= 0) return 'never earned a domestic ranking'
       if (world.seasonHistory.length < 2) return 'fewer than two seasons behind her'
+      // ⚠ AND SHE MUST BOOT HOLDING AN OPEN KNOCK, which is a REQUIREMENT of this fixture rather
+      // than a lucky property of it (11.08). `e2e/week-advance.spec.ts` uses this career to prove
+      // that a real worker's real world state disables the week button - the engine refuses to
+      // advance while `pendingKnock` holds, and the UI has to show that refusal BEFORE the player
+      // presses anything. No other fixture can carry that claim: it needs a live, un-answered
+      // decision sitting on a bootable save.
+      //
+      // It used to hold one by accident, and this wave's schema bump regenerated the corpus and took
+      // it away - CI went red on that one spec with every unit test green. The spec's own failure
+      // message named both remedies ("move this canary to a fixture that does, or teach
+      // tools/e2e-fixtures.ts to search for one"), and the owner chose the search: a seed filter
+      // survives the NEXT regeneration, a relocated canary only survives until the next one.
+      //
+      // The search is free - the loop already tries `budget` seeds and prints why each was rejected,
+      // so this is one more clause in a predicate that was always there, not a new mechanism.
+      if (!pendingKnock(world)) return 'boots without an open knock (week-advance.spec needs one)'
       return null
     },
   },

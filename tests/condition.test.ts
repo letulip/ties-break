@@ -29,6 +29,8 @@ import { SESSION_KINDS, type SessionKind } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { SUMMER_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR, isSummerWeek } from '../src/engine/season/calendar'
+// The holidays' ceiling is a REAL-CALENDAR fact since round-16 #16 - see `isSummerWeek`.
+import { weekMonth } from '../src/shared/dates'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 /** ⚠ W4: PUT THE CAREER INSIDE THE KNOCK COOLDOWN, so the advance under test cannot be interrupted.
@@ -1522,6 +1524,11 @@ describe('the summer training block — volume, its price, and the trade', () =>
   }
 
   it('fires only inside the window, and the window is the calendar’s', () => {
+    // ⚠ SEASON 0 ONLY, AND THAT IS NOW STATED RATHER THAN ASSUMED (round-16 #16). This walk pinned
+    // `offset >= 25 && offset <= 33` and called it "the calendar's window" - but a season is 364
+    // days and the calendar's year is 365.25, so the two only agree in season 0. The season-0 walk
+    // is unchanged by the fix (offset 34 of season 0 is Monday 1 September 2031, which is September
+    // on both readings); the test below is the half this one could never see.
     for (let w = 0; w < WEEKS_PER_YEAR; w++) {
       const inWindow = w >= SUMMER_WEEKS[0] && w <= SUMMER_WEEKS[1]
       expect(summerBlockWeek(worldAt(w)), `week ${w}`).toBe(inWindow)
@@ -1529,6 +1536,32 @@ describe('the summer training block — volume, its price, and the trade', () =>
     }
     // ...every season, not just the first.
     expect(summerBlockWeek(worldAt(summerWeek + WEEKS_PER_YEAR * 3))).toBe(true)
+  })
+
+  it('⚠ and the holidays never end before September, however far the season has drifted', () => {
+    // THE OWNER'S RULE, measured (round-16 #16, tools/round16-read.ts on his own save): «после
+    // экзаменов каникулы и удвоенные тренировки до сентября». The old ceiling was the season offset
+    // alone, so from season 1 the first week outside it started in AUGUST and the calendar drew a
+    // school week there - w86 Mon 30 Aug 2032, w138 Mon 29 Aug 2033, w190 Mon 28 Aug 2034.
+    //
+    // Asserted on `isSummerWeek` rather than `summerBlockWeek` deliberately: this is the CALENDAR's
+    // predicate and it is pure, where the block's answer also depends on whether the girl in the
+    // world has left school by then (`pastSchool`), which is a different question.
+    for (const w of [86, 138, 190]) {
+      expect(weekMonth(w), `w${w} is an August Monday`).toBe(8)
+      expect(isSummerWeek(w), `w${w} is holidays, not school`).toBe(true)
+    }
+    // ...and September is school again, on the same three seasons and on season 0, which never drifted.
+    for (const w of [34, 87, 139, 191]) {
+      expect(weekMonth(w), `w${w} is a September Monday`).toBe(9)
+      expect(isSummerWeek(w), `w${w} is school`).toBe(false)
+    }
+    // The floor is untouched: the drift can never open the window before the last exam paper.
+    const exam = ECONOMY.availability.examWeeks[0]
+    for (const s of [0, 1, 2, 3]) {
+      expect(isSummerWeek(exam[1] + s * WEEKS_PER_YEAR), `exam week, season ${s}`).toBe(false)
+      expect(isSummerWeek(exam[1] + 1 + s * WEEKS_PER_YEAR), `first holiday week, season ${s}`).toBe(true)
+    }
   })
 
   it('⚠ IT IS NEVER MANDATORY: a family week in July loses the block, and that is the trade', () => {

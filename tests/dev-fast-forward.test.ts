@@ -57,9 +57,14 @@ describe('layer 1 — the source carries the ruling and the guard', () => {
   it("the worker's tick case refuses at entry and stops mid-loop, on every predicate advanceWeeks blocks on", () => {
     expect(worker).toMatch(/import \{[\s\S]*?pendingKnock,[\s\S]*?\} from '\.\.\/engine\/world'/)
     const tickCase = worker.slice(worker.indexOf("case 'tick':"), worker.indexOf("case 'advance':"))
-    // the predicate names all five, so nothing the engine blocks on can be missing from the loop
+    // the predicate names all SIX, so nothing the engine blocks on can be missing from the loop
+    // ⚠ WIDENED AT v48, NOT WEAKENED: the birthday is the sixth thing `advanceWeeks` refuses to tick
+    // past, and the dev fast-forward ships in every build – so a `▶▶ 52` that outran it would carry a
+    // year of her life past the one popup the owner asked to fire ALWAYS, with nobody answering it.
+    // That is the exact hole this list exists to close, one member wider.
     expect(tickCase).toContain('w.pendingTournament !== null')
     expect(tickCase).toContain('pendingKnock(w)')
+    expect(tickCase).toContain('pendingBirthday(w) !== null')
     expect(tickCase).toContain('w.ending !== null')
     expect(tickCase).toContain('w.fork !== null && w.fork.answer === null')
     expect(tickCase).toContain('w.retirementOffer !== null')

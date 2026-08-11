@@ -46,7 +46,7 @@ import CountingResultsTable from '../CountingResultsTable.vue'
 import SkillsRadar from '../SkillsRadar.vue'
 import type { RadarAxis } from '../../shared/protocol'
 import { useKidEmotion } from '../../composables/kidEmotion'
-import { weekLabel } from '../../shared/dates'
+import { birthDateLabel, weekLabel } from '../../shared/dates'
 import { rankLabel } from '../../shared/format'
 // ⚠ MERGE: `FamilyBackground` left with the Family tile (screen C now draws the export's six, and
 // family background lives on the Money screen where it prices things). `PortraitEmotion`, not
@@ -139,6 +139,16 @@ const kidFullName = computed(() => {
   return p ? `${p.kidName} ${p.kidLastName}`.trim() : ''
 })
 const ageYears = computed(() => game.snapshot?.ageYears ?? 0)
+// ⭐ v48 – HER BIRTHDAY, BESIDE HER AGE. The owner, 11.08: «на странице био девочки тоже можно день и
+// месяц рождения добавить возле возраста. А то у нас нет этого нигде.» He is right, and it was worse
+// than an omission: both numbers have been on the profile since v25 and drive the relative-age effect,
+// her development, the injury curve and the birthday itself, and the player was never told either.
+// Day and month only – `birthDateLabel` owns the shape (dates.ts), and no week and no year is his
+// ruling: «а можно просто день и месяц без недель? B-Day 12 june или вроде того».
+const birthDate = computed(() => {
+  const p = game.snapshot?.profile
+  return p ? birthDateLabel(p.birthMonth, p.birthDay) : ''
+})
 const countryFlag = computed(() => flagEmoji(game.snapshot?.profile.country ?? ''))
 const countryName = computed(() => {
   const code = game.snapshot?.profile.country ?? ''
@@ -366,7 +376,9 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              `.kid-age` in the style block). It used to sit under her name in the top header, where
              it landed across her face; the painting itself is untouched - same size, same framing,
              the line simply moved to the one strip of the picture that is already scrim. -->
-        <p class="kid-age">{{ ageYears }} years old</p>
+        <!-- v48: ...and her birth date beside it, which is the one fact about her the game used to
+             withhold entirely. Day and month, no week and no year – see `birthDate` on the script side. -->
+        <p class="kid-age">{{ ageYears }} years old · B-Day {{ birthDate }}</p>
       </div>
 
       <!-- ======================== 2. THE ATTRIBUTE GRID ========================

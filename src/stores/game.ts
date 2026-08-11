@@ -388,6 +388,15 @@ export const useGameStore = defineStore('game', {
         if (res.type === 'snapshot') this.snapshot = res.snapshot
       })
     },
+    /** ⭐ v48: answer the birthday. Like `decideKnock` above, nothing else can clear it and the sim
+     *  will not tick until it is answered – and unlike the knock there is no "skip" branch to reach
+     *  for, because all four options are presents in their own way. */
+    async chooseGift(giftId: string) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'chooseGift', giftId, baseRevision: this.revision }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+      })
+    },
     /** THE INBOX (v32): sign a letter. Irreversible – the UI puts a ConfirmDialog in front of this
      *  and there is no unsign command to reach for afterwards. */
     async signOffer(offerId: string) {

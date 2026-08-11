@@ -5,6 +5,9 @@
 import { rngFromSeed, pickInt, type Rng } from '../rng'
 import type { Surface } from '../match/types'
 import type { FamilyBackground } from '../../shared/protocol'
+// ⚠ THE ONE DATE IMPORT, and it is the CEILING of the summer window (see `isSummerWeek`). Pure
+// arithmetic over the fixed epoch, no engine state, no cycle: `shared/dates.ts` imports nothing.
+import { weekMonth } from '../../shared/dates'
 import { ECONOMY } from '../economy'
 import type { SeasonEvent, TierDef, TierId } from './types'
 
@@ -1091,10 +1094,50 @@ export function isBlackoutWeek(week: number, schoolOver: boolean): boolean {
  *  existing caller and test is untouched. */
 export const SUMMER_WEEKS: readonly [number, number] = [25, 33]
 
-/** Is this week inside the school summer holidays? Season-week arithmetic, total over any week. */
+/** The last calendar month the holidays may run in. School starts in September, so a week whose
+ *  Monday has reached September is a school week however the season offset falls – see
+ *  `isSummerWeek` for the drift this closes. */
+const SUMMER_LAST_MONTH = 8
+
+/** Is this week inside the school summer holidays? Season-week arithmetic for the FLOOR, the real
+ *  calendar for the CEILING.
+ *
+ *  ⚠⚠ THE CEILING IS THE CALENDAR'S, NOT THE SEASON'S (round-16 #16, the owner: school was drawn in
+ *  August). This used to be `offset >= 25 && offset <= 33` on both ends, and a season is 52 weeks =
+ *  364 days against a Gregorian year of 365.25 – so the window walks ~1.25 days EARLIER against the
+ *  real dates the calendar screen prints, every season, for ever. Measured on the owner's own save
+ *  (tools/round16-read.ts), offset 34 – the first week outside the old window:
+ *
+ *      season 0   w34   Mon 1 Sep 2031     September, correct
+ *      season 1   w86   Mon 30 Aug 2032    AUGUST, and drawn as a school week
+ *      season 2   w138  Mon 29 Aug 2033    AUGUST
+ *      season 3   w190  Mon 28 Aug 2034    AUGUST   <- five weeks before he reported it
+ *
+ *  So exactly one week a season, from season 1 onward, was a school week in August: «после экзаменов
+ *  каникулы и удвоенные тренировки до сентября». The FILE said the predicate is about school; the
+ *  arithmetic was about a 364-day year. This is the rule as stated – the holidays run their nine
+ *  weeks and never end before September.
+ *
+ *  ⚠ IT IS BOUNDED AT BOTH ENDS BY CONSTRUCTION, which is why it is an `||` and not a replacement.
+ *  The floor stays the season's (the holidays open the week after the last paper, and the exam
+ *  fortnight is season-week arithmetic too), so the drift can never open the window early; and the
+ *  extension can never reach past 31 August, so the widest the block can ever be is the nine weeks
+ *  plus whatever of August the drift has pushed out of them. Over a full career (about six seasons)
+ *  that is one extra week a season and, at the very end, two.
+ *
+ *  ⚠ RNG: still nothing draws. `weekMonth` is date arithmetic on a fixed epoch, so the frozen MAIN
+ *  capture cannot see this line – the block's own note in world/summer.ts covers the rest.
+ *
+ *  ⚠⚠ THE ROOT WAS FIXED A WAVE LATER AND THIS CEILING STILL EARNS ITS PLACE. `shared/dates.ts` now
+ *  re-anchors every season to the first Monday of its own year, so the walk above is no longer
+ *  unbounded – offset 34 cycles inside Aug 27 – Sep 2 instead of leaving September for good. But it
+ *  is still AUGUST in nine seasons out of twelve (s1-s4, s6-s9 above and below), so this line is what
+ *  keeps school out of it, exactly as it was. Belt and braces, and both are load-bearing:
+ *  docs/specs/season-anchor.md §3d has the measured table. DO NOT revert this as "fixed upstream". */
 export function isSummerWeek(week: number): boolean {
   const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
-  return offset >= SUMMER_WEEKS[0] && offset <= SUMMER_WEEKS[1]
+  if (offset < SUMMER_WEEKS[0]) return false
+  return offset <= SUMMER_WEEKS[1] || weekMonth(week) === SUMMER_LAST_MONTH
 }
 
 // --- SEASON STRUCTURE BY SURFACE (owner approved 26.07: "звучит круто") ---------------------

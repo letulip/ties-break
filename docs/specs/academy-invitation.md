@@ -1,12 +1,31 @@
 ---
 type: spec
-status: draft
+status: superseded
+superseded-by: docs/specs/federation-grant.md
 area: economy/academy
 canonical: false
 last-reviewed: 2026-08-10
 ---
 
 # The academy is a ladder you buy into, and a place you can win
+
+> ## ⚠ SUPERSEDED, 10.08 – the research overturned this spec's premise
+>
+> **Not deleted, because the reasoning is the evidence.** `docs/research/tennis-academies.md` found
+> that an academy place does **not** buy a rung the weekly market refuses to sell: our coach ladder
+> already IS the academy ladder – `coachFactor(tier, fit)` and `facilityRateCents(age, tier)` price
+> the environment, and hiring that rung by the week gets you the same environment. §1b's whole trade
+> ("reach – a rung you could not hire by the week") therefore has nothing to sell.
+>
+> What federations actually sell is **a cash grant to a family that keeps its own coach**, which is
+> a different product and is not in the game at all. The owner, 10.08: «давай так попробуем, грант
+> во многих исследованиях фигурировал.» That is **`docs/specs/federation-grant.md`**, and it is what
+> gets built.
+>
+> **What survives from this draft and is carried into that one:** §0's reading of `needFactor`
+> (`{working: 1, middle: 0.6, wealthy: 0}` prices what support is WORTH, never who gets it), §1c's
+> scarcity-not-a-threshold argument with the `kidRank <= 30` precedent that fired for nobody, and
+> §3's warning that support must never become a difficulty lever.
 
 **Design proposal. Nothing built.** Second draft, 10.08, after the owner replaced the model in the
 first one. The first draft had the academy scouting her and deciding whether to invite; his version is

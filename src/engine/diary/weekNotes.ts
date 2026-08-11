@@ -9,7 +9,7 @@
 // note is also RATIONED (WEEK_NOTE_CHANCE) - a quiet week that says nothing is the point.
 import { rngFromSeed } from '../rng'
 import { bodyGroupOf, bodyPartOf, type BodyGroup } from '../body'
-import type { DiaryFacts } from '../../shared/protocol'
+import { BIRTHDAY_DAY_NOUN, type DiaryFacts } from '../../shared/protocol'
 import { ageWord, capitalise } from './words'
 
 // --- W2: THE ORDINARY WEEK GETS THE SAME SCRAP AND THE SAME HAND ------------------------------
@@ -454,6 +454,56 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     text: 'Her birthday. She wanted a restring and a new grip, and nothing else.',
     claims: { birthday: true, athome: true },
     license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+  },
+  // =============================================================================================
+  // ⭐ v48 – AND WHAT HE GAVE HER. docs/specs/birthday-and-gifts.md §2b: «the DIARY reads it
+  // immediately, which is the whole visible payoff today – and it can call back in later years».
+  // =============================================================================================
+  //
+  // ⚠ FOUR ARMS, AND THEY ARE THE FOUR THINGS THAT CAN HAVE HAPPENED, which is exactly the outcome
+  // split the record was shaped to buy (spec §2ab): she got what she was asking for, she got
+  // something else, she got the day, or she has been given this same thing before. "Gave the wrong
+  // thing" and "gave nothing" are not the same act and a parent knows it – so no line here says
+  // "nothing", because the fourth option is a DAY and the copy has to treat it as the present it is.
+  //
+  // ⚠ THEY LICENSE OFF `birthdayGift`, WHICH IS NULL UNTIL HE ANSWERS. So the birthday week's scrap
+  // reads as one of the four above while the dialog is up and gains the present the moment he
+  // chooses – the same week reading back richer, rather than a second entry about the same day.
+  //
+  // ⚠ AND NOTHING HERE PRICES ANYTHING. The owner: «про цену момент, давай не будем это учитывать в
+  // нашем кошельке вообще.» There is no number to print, and a diary that admired an expensive
+  // present would put the wealth gate back through the one door §0 could not close from the engine.
+  // ⚠ AND THEY FIT ON THE SCRAP – 80 characters, RENDERED WITH THE LONGEST NOUN THE CATALOGUE HOLDS
+  // ("the one thing she would not buy", 31). The first draft of these four blew the budget by up to
+  // 28 characters and the guard did not catch it, because `renderAll` was building facts with
+  // `birthdayGift: null` and measuring the string "null". Two fixes, and both were needed: the lines
+  // are shorter, and the builder in tests/week-notes.test.ts now supplies a worst-case noun so the
+  // budget is measured on what the player actually reads. The catalogue's three longest nouns were
+  // shortened in the same pass, which is why 31 is the number.
+  {
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. She asked for ${f.birthdayGift}, and got it.`,
+    claims: { birthday: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null &&
+      f.birthdayGift !== null && f.birthdayWanted && f.birthdayRepeatAge === null && f.birthdayGift !== BIRTHDAY_DAY_NOUN,
+  },
+  {
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. She got ${f.birthdayGift}. Not what she asked for.`,
+    claims: { birthday: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null &&
+      f.birthdayGift !== null && !f.birthdayWanted && f.birthdayRepeatAge === null && f.birthdayGift !== BIRTHDAY_DAY_NOUN,
+  },
+  // THE DAY, and it gets its own arm because it is the one answer that is not a thing. It must read
+  // as one of the good choices or the scene collapses into a menu with a correct order (spec §0).
+  {
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. No present – the whole day, nothing booked.`,
+    claims: { birthday: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null && f.birthdayGift === BIRTHDAY_DAY_NOUN,
+  },
+  // ⭐ THE CALLBACK, and it is the line this whole slice was built to be able to write.
+  {
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')} again, like at ${f.birthdayRepeatAge}.`,
+    claims: { birthday: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null && f.birthdayRepeatAge !== null,
   },
   // ...and the same week with a brace on it. Both facts, one sentence each.
   {

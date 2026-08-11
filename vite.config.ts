@@ -124,8 +124,21 @@ const HEAVY_SIM_FILES = [
  *  economy 44s, radar 24s solo (17s before `FIELD.size` went 520 -> 1,600), kidLife 22s. Nothing
  *  here is near birpc's 60s window ALONE; together with 109 other files on CI's slower cores, one
  *  of them is. `scripts/units.mjs` gives each a process; this list is what it skips in the bulk
- *  pass. Grow it rather than trimming assertions if the tail grows. */
-const HEAVY_UNIT_FILES = ['**/tests/economy.test.ts', '**/tests/radar.test.ts', '**/tests/kidLife.test.ts']
+ *  pass. Grow it rather than trimming assertions if the tail grows.
+ *
+ *  ⚠ 11.08: A PROCESS OF ITS OWN STOPPED BEING ENOUGH FOR RADAR. It grew to 34.2s solo and went
+ *  over birpc's window on CI at 64.51s - every test green, exit 1 - and it was already alone in its
+ *  process, so there was nothing left to shard. The FILE was the unit, so the file was split into
+ *  the three listed below (same 61 tests, same seeds, same week counts; scripts/units.mjs's header
+ *  carries the measurement). All three stay heavy: 9.3s / 15.0s / 10.3s solo, so the largest is
+ *  about where the original stood when this list was first written. */
+const HEAVY_UNIT_FILES = [
+  '**/tests/economy.test.ts',
+  '**/tests/radar.test.ts',
+  '**/tests/radar-read.test.ts',
+  '**/tests/radar-training.test.ts',
+  '**/tests/kidLife.test.ts',
+]
 
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',

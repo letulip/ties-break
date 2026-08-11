@@ -153,6 +153,11 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // W4: what the knock is doing to this week. Read, not drawn - it is a decision the player made
     // and the world persisted, which is the whole reason the knock cost a schema bump.
     birthdayAge: view.birthdayAge,
+    // ⭐ v48: ...and what he gave her for it. Read, not drawn – a decision the player made and the
+    // world persisted, exactly like the knock above, and the whole reason the birthday cost a bump.
+    birthdayGift: view.birthdayGift,
+    birthdayWanted: view.birthdayWanted,
+    birthdayRepeatAge: view.birthdayRepeatAge,
     knockChoice: view.knockChoice,
     knockPart: view.knockPart,
   }

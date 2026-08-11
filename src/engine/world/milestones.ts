@@ -275,11 +275,18 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // label, the history row and its dedup guard) reads one of these two, so they cannot disagree.
   //
   // ⚠ THE BUG THIS REPLACES (fix/world-trio). The label and the identity were the same value –
-  // `weekYear(yearStart)`, the calendar year of the season's first Monday – and that value repeats:
-  // 52 weeks is 364 days, so the opening Monday walks ~1.25 days earlier a year and steps back over
-  // New Year at season 5. weekYear(208) and weekYear(260) are BOTH 2035, so when season 5 wrapped,
-  // the `some(h => h.year === …)` guard below saw 2035 already banked (by season 4) and dropped
-  // season 5's row on the floor. A whole season vanished from the Stats table at age 19.
+  // `weekYear(yearStart)`, the calendar year of the season's first Monday – and that value repeated:
+  // 52 weeks is 364 days, so the opening Monday walked ~1.25 days earlier a year and stepped back
+  // over New Year at season 5. weekYear(208) and weekYear(260) were BOTH 2035, so when season 5
+  // wrapped, the `some(h => h.year === …)` guard below saw 2035 already banked (by season 4) and
+  // dropped season 5's row on the floor. A whole season vanished from the Stats table at age 19.
+  //
+  // ⚠ AND THE CAUSE IS GONE TOO (wave/flags-grant): `shared/dates.ts` re-anchors each season to the
+  // first Monday of its own year, so `weekYear` can no longer repeat. NOTHING HERE CHANGES, and that
+  // is deliberate rather than laziness – there is no workaround in this function to unwind. It reads
+  // `seasonIndexOf` for the identity and `seasonYear` for the label, which is what a season record
+  // should be keyed on whatever the calendar underneath is doing. The paragraph above is now history
+  // rather than a live hazard; it stays because it is why these two lines are two lines.
   const seasonIndex = seasonIndexOf(world.week)
   const displayYear = seasonYear(seasonIndex)
   const yearStart = seasonStartWeek(world.week)

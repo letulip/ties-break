@@ -30,8 +30,15 @@
 //     so the two halves of the rule are pinned separately and neither can be dropped quietly.
 //   * `split.endRank ?? null` changed to `split.endRank ?? 0` -> "a table she was never ranked in
 //     prints a dash" goes red on '#0'.
-//   * the `sh-fold` star dropped from the points cell -> the marker test goes red.
-//   * `anyLegacy` pinned to false -> the footnote test goes red.
+//   * (RETIRED, round-16 #4) the `sh-fold` star and its footnote. Two `it`s pinned that an old
+//     season's folded figures appeared under every tab carrying a star, and that the note under the
+//     table explained the fold. The owner's ruling of 11.08 - «there is one player, so there is
+//     nobody to show an asterisk and a disclaimer to» - deleted the rows AND the star, so the pair
+//     was RE-AIMED at the stronger claim underneath it: the row is absent from the two tabs it never
+//     belonged to. Re-verified by mutation: `cellsFor`'s `if (track !== 'itf') return null` removed
+//     -> "an old season is GONE from the other two tabs" goes red on the fold reappearing under
+//     National; the same line changed to an unconditional `return null` -> "it keeps its home on
+//     International" goes red.
 //   * `ageYears` dropped from `computeStandings`' `enrich` -> the age-column test goes red on every
 //     row printing a dash.
 //   * `meta.set(KID_ID, ...)` given `ageAtWeek(world.week)` instead of `kidAgeAt` -> the one-clock
@@ -150,24 +157,54 @@ describe('R14-E - season by season answers to the tab (v46)', () => {
     }
   })
 
-  it('an old season\'s points and W-L are MARKED as the fold they are, and the footnote says why', async () => {
+  // ⚠ RE-AIMED, NOT DELETED (round-16 #4). This pair used to assert the OPPOSITE of what it asserts
+  // now: that an old season's folded points and W-L appear under National and Professional carrying a
+  // star, and that the footnote under the table explains the fold. The owner's ruling of 11.08 is
+  // that a single-player game has nobody to show an asterisk and a disclaimer to - so the row itself
+  // is gone from the two tabs it never belonged to, and the star and the footnote went with it.
+  //
+  // The MEASUREMENT the old pair protected is still protected, and it is the one that matters: an old
+  // season's figures must never be printed under a table they were not earned in. That claim is now
+  // stronger, because the row is absent rather than merely annotated. Its sibling above ("shows NO
+  // rank on the other two tabs") is the same rule on the rank column and is untouched.
+  it('⚠ an old season is GONE from the other two tabs, and so are the star and its footnote', async () => {
     const snap = goldenSnapshot()
     const legacy = snap.seasonHistory.find((h) => !h.byTrack)!
     const wrapper = mountStats(snap)
     await showTrack(wrapper, 'National')
     const rows = historyRows(wrapper)
-    const row = rows.find((r) => r.includes(`${legacy.points}*`))
-    expect(row, `no starred fold in: ${rows.join(' /// ')}`).toBeTruthy()
-    expect(row).toContain(`${legacy.wins}–${legacy.losses}*`)
-    expect(wrapper.text()).toContain('kept one set of figures for all three tables')
+    expect(
+      rows.some((r) => r.includes(String(legacy.points))),
+      `the fold is still on the National tab: ${rows.join(' /// ')}`,
+    ).toBe(false)
+    expect(rows.join(' ')).not.toContain('*')
+    expect(wrapper.text()).not.toContain('kept one set of figures for all three tables')
   })
 
-  it('a career with nothing but v46 seasons is never told about the star', async () => {
+  it('...and it keeps its home on International, where the rank it holds was earned', async () => {
     const snap = goldenSnapshot()
-    snap.seasonHistory = snap.seasonHistory.filter((h) => h.byTrack)
+    const legacy = snap.seasonHistory.find((h) => !h.byTrack)!
     const wrapper = mountStats(snap)
-    expect(wrapper.text()).not.toContain('kept one set of figures for all three tables')
-    expect(historyRows(wrapper).join(' ')).not.toContain('*')
+    await showTrack(wrapper, 'International')
+    const rows = historyRows(wrapper)
+    expect(rows.some((r) => r.includes(String(legacy.points)))).toBe(true)
+    expect(rows.join(' ')).not.toContain('*')
+  })
+
+  it('a tab whose seasons were all played on another table says so instead of drawing nothing', async () => {
+    const snap = goldenSnapshot()
+    // Every finished season predates the per-track split, so the Professional tab has no row at all.
+    snap.seasonHistory = snap.seasonHistory.filter((h) => !h.byTrack).map((h) => ({ ...h }))
+    expect(snap.seasonHistory.length).toBeGreaterThan(0)
+    const wrapper = mountStats(snap)
+    await showTrack(wrapper, 'Professional')
+    // The table itself is gone, not merely empty - `historyRows` would fail its own D8 name check.
+    const named = wrapper.findAll('table').map((t) => t.attributes('aria-label') ?? '')
+    expect(named.some((n) => n.startsWith('Season by season'))).toBe(false)
+    expect(wrapper.text()).toContain('played on another one')
+    // ...and it is NOT the "first season is still running" message, which would be a lie about a
+    // career that has finished several.
+    expect(wrapper.text()).not.toContain('Her first season is still running')
   })
 
   it('D8: EVERY table on this screen answers to a name, and the name says which table', async () => {

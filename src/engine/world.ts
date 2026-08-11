@@ -11,6 +11,7 @@ import {
   type FinanceWeek,
   type ForkState,
   type RetirementOffer,
+  type BirthdayRecord,
   type Knock,
   type KnockRecord,
   type Milestone,
@@ -251,6 +252,10 @@ import { finishLabel, prizeCentsFor } from './world/labels'
 export { finishLabel, prizeCentsFor }
 import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, birthdayWeek, birthdayTurning, markBirthday } from './world/age'
 export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, birthdayWeek, birthdayTurning }
+// ⭐ v48 – THE BIRTHDAY POPUP AND THE GIFT (docs/specs/birthday-and-gifts.md). Re-exported under the
+// historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
+import { birthdayOffer, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_DAY_TOGETHER } from './world/birthday'
+export { birthdayOffer, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_DAY_TOGETHER }
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -307,7 +312,21 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 // on the same field and is ruled rather than implied – `summerLoadFactor` now follows the doubling
 // instead of the calendar (owner, 10.08: «да»), so a migrated career's school-free weeks come back at
 // 1.0 until he ticks a second session onto a day. See engine/world/summer.ts and the v46 -> v47 step.
-export const SAVE_SCHEMA_VERSION = 47
+// ⭐ v48 = ONE FIELD, `birthdays` – ONE ROW PER BIRTHDAY, and it is the whole persisted footprint of
+// docs/specs/birthday-and-gifts.md. The week, the age she turned, what she had been asking for and
+// what was chosen. The DIARY reads it; nothing else does – no morale, no condition, no mood modifier,
+// because that system does not exist yet and this slice only lays the ground (owner, 11.08: «мораль и
+// психологи у нас в будущем, так что сейчас можно просто подготовку сделать»). It is a SCHEMA change
+// because it could not be anything else: the choice is a decision the player made, and a decision that
+// evaporates on reload is not one – the same argument that made `knock.choice` v26's only field.
+// ⚠ THE MIGRATION IS A PURE DEFAULT, `[]`, AND THAT IS "no birthdays recorded" RATHER THAN "gave
+// nothing every year". Absent is not zero – the distinction v45 and v46 were both built around, and
+// spec ship rule 5. Zero draws on any stream (the ask rides a purpose-scoped `seed:birthday:<age>`
+// sub-stream and persists nothing), so the frozen MAIN capture cannot see this either.
+// ⚠ AND THE NUMBER IS 48, NOT THE 49 THE SPEC SAYS. The spec was written assuming the flags/grant wave
+// would take 48, but that wave is still documents and nothing has claimed 48 in code – so this takes
+// 48 and docs/plans/wave-flags-grant.md now reserves 49. Two waves must not both take one number.
+export const SAVE_SCHEMA_VERSION = 48
 
 
 
@@ -504,8 +523,10 @@ export interface WorldState {
    *  (pure arithmetic, zero main-stream RNG); fatigue is the derived 100 - condition, not stored. */
   condition: number
   /** the kid's active injury, or null when healthy. Wired in slice B but ALWAYS null here – Slice C
-   *  populates it. The snapshot omits `sinceWeek`. */
-  injury: (SnapshotInjury & { sinceWeek: number }) | null
+   *  populates it. ⚠ The snapshot used to omit `sinceWeek` and carries it since round-16 #19, so
+   *  the persisted shape and the surfaced one are now the same four-plus-one fields – see
+   *  `SnapshotInjury`. Still a VIEW change only: the save has always held this field. */
+  injury: SnapshotInjury | null
   /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B). */
   injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number }>
   /** whether physio recovery is active (default = `coachIncludesPhysio(profile.coachTier)`, i.e.
@@ -541,6 +562,17 @@ export interface WorldState {
    *  next one land there ~55% of the time and bite harder when it does. A counter could not say WHICH
    *  shoulder. It also feeds the cooldown, so one field carries both halves of the rate limit. */
   knockHistory: KnockRecord[]
+  /** ⭐ v48: EVERY BIRTHDAY SHE HAS HAD, oldest first – the week, the age, what she asked for and what
+   *  was chosen. docs/specs/birthday-and-gifts.md §2b; the mechanism is engine/world/birthday.ts.
+   *
+   *  ⚠ NOT PRUNED, unlike `knockHistory` and `events`. A career is a few dozen rows of four numbers,
+   *  and the whole point is the CALLBACK three seasons later («the headphones you gave her still go
+   *  everywhere») – a list that forgets the early years forgets exactly the years worth remembering.
+   *
+   *  ⚠ THE ROW IS ALSO THE "answered" FLAG, which is why there is no second field beside it. A
+   *  birthday is pending exactly while no row carries its week (`pendingBirthday`), so a reload cannot
+   *  land in a state where a boolean and the record disagree about whether he was asked. */
+  birthdays: BirthdayRecord[]
   /** THE INBOX (v32): every letter this career has been sent, oldest first – open, signed, refused
    *  and expired alike. docs/specs/offers-and-the-inbox.md §2; the mechanism is engine/offers.ts.
    *
@@ -2326,6 +2358,9 @@ export function createWorld(
     // something doing it.
     knock: null,
     knockHistory: [],
+    // ⭐ v48: no birthday has been lived yet. Her FIRST one lands on whatever week the calendar puts
+    // it – a girl born in February has it inside the opening month, a December girl waits eleven.
+    birthdays: [],
     // v32: nobody has written to her yet, and nobody can until she has put a season in front of
     // them. The first review is the season boundary at week 52 - the same moment the academy makes
     // up its mind, and for the same reason.
@@ -3113,6 +3148,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   // `decideKnock` runs. Both branches of the dialog are valid answers, so this can never dead-end a
   // career (see KnockDialog: there is no third button and no way out that is not a choice).
   if (pendingKnock(world)) return ['knock']
+  // ⭐ v48 – AND SO DOES AN UNANSWERED BIRTHDAY, on the identical contract, because the owner asked
+  // for the popup to fire ALWAYS («я бы оставил попап на ДР всегда») and a popup a `+4` ticks past
+  // does not always fire. It also forces the shape of the dialog: if the advance could roll on, then
+  // walking away would silently become the "gave nothing" branch and the player would pick it by
+  // accident, every year, and never know. Four buttons, all of them answers, and no other way out.
+  if (pendingBirthday(world) !== null) return ['birthday']
   // ⚠ ...AND SO DOES AN UNANSWERED FORK OR AN UNANSWERED OFFER, on the identical contract. Two of
   // the fork's three answers END the career, so a player who could press +4 past it would have the
   // engine choosing "continue" for him – which is exactly the «просто скипались» complaint the knock
@@ -3164,6 +3205,10 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // W4: she came off court sore and the parent has to answer. The `break` below then ends the
     // advance, and the guard at the top of this function refuses to restart it until he has.
     if (pendingKnock(world)) stops.add('knock')
+    // ⭐ v48: it is her birthday and nobody has answered it. Collected rather than returned early for
+    // R11-1's own reason – a birthday CAN land on a week that is also a tournament, an injury or the
+    // season wrap, and a week that is several things must report all of them.
+    if (pendingBirthday(world) !== null) stops.add('birthday')
     // Season just wrapped up (the tick landed on the year's first off-season week, week 49 of
     // the year): stop AFTER the wrap-up resolved, before week 50, so the season-summary popup
     // shows. Off-season weeks never carry a tournament, so this can't collide with 'tournament'.

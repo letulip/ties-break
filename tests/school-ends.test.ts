@@ -41,7 +41,28 @@ const BIRTH_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
 // 1. WHEN
 // =================================================================================================
 describe('W4-SCHOOL – school ends at the end of the school year, and never at nineteen', () => {
-  it('every birth month leaves on a 1 September, at a real age between 18.00 and 18.92', () => {
+  // ⚠ THE UPPER BOUND MOVED 18.92 -> 19.00 WHEN THE CALENDAR WAS RE-ANCHORED (wave/flags-grant),
+  // and the old bound was passing on a bug rather than on the rule.
+  //
+  // `SCHOOL_YEAR_TURNS_AT` is a season-week OFFSET whose Monday is meant to be 1 September. Under the
+  // old continuous calendar the whole year slid ~1.24 days earlier a season, so by season 5 that
+  // Monday had walked into AUGUST – the same drift that drew school in August (round-16 #16) – and a
+  // September-born girl's leaving week read as month 8, one twelfth of a year short of nineteen.
+  // Measured, both calendars, tools/season-anchor-read.ts:
+  //
+  //     birth month   leaving week   month before   month after   age before   age after
+  //       1-8            242              8              8          18.00-18.58  unchanged
+  //       9              294              8              9          18.92        19.00
+  //       10-12          294              8              9          18.67-18.83  +1 month
+  //
+  // 19.00 IS THE RULE, NOT A REGRESSION. The cut-off is September (`SCHOOL_CUTOFF_MONTH`), so a
+  // September-born girl is the youngest in her school cohort and leaves a full school year after an
+  // August-born one – this file asserts exactly that two `it`s below. Her leaving September IS the
+  // September she turns nineteen, and `schoolIsOver` is `week >= schoolEndWeek`, so on that week she
+  // is already OUT. Nothing here is "still at school at nineteen" – the owner's report («и школа с
+  // уроками в 22 года всё еще со мной») is about school running on for YEARS, which the strict upper
+  // bound below still refuses.
+  it('every birth month leaves on a 1 September, at a real age between 18.00 and 19.00', () => {
     // The owner's ruling: «Конец школы – в конце учебного года.» So the leaving week is always the
     // September the school year turns over on – never her birthday, which falls mid-term for eleven
     // girls in twelve.
@@ -50,8 +71,21 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
       expect(w % WEEKS_PER_YEAR, `month ${bm} does not leave in September`).toBe(SCHOOL_YEAR_TURNS_AT)
       const age = kidAgeExact(w, bm)
       expect(age, `month ${bm} leaves before eighteen`).toBeGreaterThanOrEqual(18)
-      expect(age, `month ${bm} is still at school at nineteen`).toBeLessThan(19)
+      expect(age, `month ${bm} is still at school AFTER nineteen`).toBeLessThanOrEqual(19)
     }
+  })
+
+  // ⚠ BOTH ENDS OF THE COHORT, PINNED EXACTLY, so the bound above cannot be quietly relaxed again.
+  // Widening `< 19` to `<= 19` bought room for one case and one only; these two assertions say which
+  // case, and they fail on any drift in either direction rather than tolerating it.
+  it('...and the two ends of the school cohort are exact: August 18.00, September 19.00', () => {
+    // An August-born girl is the OLDEST in her school cohort (the cut-off is September) and leaves on
+    // the September she turns eighteen. A September-born girl is the youngest, leaves a full school
+    // year later, and her leaving September IS the September she turns nineteen.
+    expect(kidAgeExact(schoolEndWeek(8), 8), 'the oldest in the class').toBe(18)
+    expect(kidAgeExact(schoolEndWeek(9), 9), 'the youngest in the class').toBe(19)
+    // ...and they are a whole school year apart, which is the cut-off doing its job.
+    expect(schoolEndWeek(9) - schoolEndWeek(8)).toBe(WEEKS_PER_YEAR)
   })
 
   it('...and it is the same arithmetic the School tile has always used', () => {

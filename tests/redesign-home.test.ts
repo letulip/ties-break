@@ -149,6 +149,10 @@ function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
     // fixture is a week with nothing wrong with her, which is what these suites are about.
     knockChoice: null,
     birthdayAge: null,
+    // v48: the birthday gift, unread by this builder - the default is "he has not answered".
+    birthdayGift: null,
+    birthdayWanted: false,
+    birthdayRepeatAge: null,
     knockPart: null,
     fundsPressure: 'ok',
     freshMilestone: null,

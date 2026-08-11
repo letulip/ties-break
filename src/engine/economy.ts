@@ -1759,10 +1759,94 @@ export const ECONOMY = {
     consecutivePlayFactor: [1.0, 1.0, 1.2, 1.5, 1.8] as number[],
     // Cumulative over the severity draw (owner split 60/30/10; the 10% "heavy" splits
     // 7.5 major / 2.5 severe).
+    //
+    // ⚠ THIS IS THE WEEKLY ROLL'S TABLE AND ONLY THE WEEKLY ROLL'S, since round 16. The retirement
+    // door draws from `retirementSeverityBands` below – see the note there for the argument, the
+    // measurement and the owner's ruling. Nothing about THIS table moved.
     severityBands: [
       { cum: 0.6, severity: 'minor', weeksLo: 1, weeksHi: 2 },
       { cum: 0.9, severity: 'moderate', weeksLo: 3, weeksHi: 6 },
       { cum: 0.975, severity: 'major', weeksLo: 8, weeksHi: 14 },
+      { cum: 1.0, severity: 'severe', weeksLo: 16, weeksHi: 22 },
+    ] as { cum: number; severity: InjurySeverity; weeksLo: number; weeksHi: number }[],
+
+    // --- THE RETIREMENT DOOR'S OWN SEVERITY TABLE (round 16 #13) --------------------------------
+    //
+    // THE OWNER, 11.08: «RETIRE_K оставляем как есть, дверь схода надо показывать, а 3 мощные травмы
+    // 6-4-4 недели подряд одна за одной – это слишком… это значит, что у нас с механикой что-то не
+    // то. Это надо чинить.» So the RATE does not move – `RETIRE_K = 0.07` is on its own measured
+    // calibration (docs/specs/match-retirement.md §4) and is untouched – and the door stays visible.
+    // What is wrong is the CONSEQUENCE, and this table is the whole of the fix.
+    //
+    // WHAT IT WAS. `retirementInjury` called `onsetInjury`, which read `severityBands` above – the
+    // SAME table a weekly roll uses. So a girl who stopped mid-match had a 30% chance of losing 3-6
+    // weeks and a 10% chance of losing 8+. Measured over 400 season-years at careful policy
+    // (docs/specs/round16-injuries.md §9): 36.3% of retirements cost 3+ weeks, 16.8% cost 6+, and
+    // 61% of ALL her injuries – 68% at high condition – arrive through this door. So the acute-injury
+    // table was most of what the player actually experienced.
+    //
+    // THE ARGUMENT, AND IT IS ABOUT THE MECHANISM RATHER THAN THE FEEL. A girl who stops because her
+    // legs are gone is not the same event as a girl who tears something, and this engine knows which
+    // one it is rolling:
+    //
+    //   1. THE TRIGGER IS EXHAUSTION, BY CONSTRUCTION. `retireHazard = RETIRE_K * spentness(n,
+    //      stamina)` is zero for the first 120 points and rises with IN-MATCH fatigue –
+    //      match-retirement.md §3 says it in as many words: "A retirement in this engine is
+    //      exhaustion, not accident", and names the rolled ankle at 2-2 in the first set as the thing
+    //      it deliberately does NOT model. A hazard indexed on how spent she is should hand out the
+    //      consequences of being spent.
+    //   2. AND THE RULEBOOKS PUT THAT CATEGORY OUTSIDE INJURY ALTOGETHER. The tour's medical rules
+    //      (docs/research/retirement-and-withdrawal.md §6) refuse a medical time-out for cramping and
+    //      list "general player fatigue" as non-treatable – not because they are cruel but because
+    //      there is nothing to treat. Cramp, heat and a spent body are what this hazard fires on, and
+    //      they are back on court in days.
+    //   3. THE 2.73% ANCHOR IS A STOPPAGE RATE, NOT AN INJURY RATE. `RETIRE_K` is calibrated against
+    //      PLOS ONE 2024, and that study's own caveat (research §7 flag (b)) is that it counts matches
+    //      "that started but did not finish FOR ANY REASON – illness, injury and anything else are
+    //      pooled". A rate borrowed from a pooled population must carry that population's severity
+    //      mix, and that mix is dominated by things that are not a torn anything.
+    //   4. THE RULES ARE WRITTEN AROUND HER PLAYING THE FOLLOWING WEEK. WTA §IV.C.1 is an entire
+    //      clause about the player who retires and is entered next week – examined here, form
+    //      submitted there, examined again on arrival – and the ITF junior certificate
+    //      (CoC §III.B.2.b) is scoped by DEFAULT to "the following week's" tournament, with §III.B.2.c
+    //      as the extension for anything longer. Rulebooks do not spend paragraphs on the exception.
+    //
+    // THE TABLE, BAND BY BAND, AND WHY EACH IS WHERE IT IS:
+    //
+    //   minor 60% -> 80%, still 1-2 weeks. The modal mid-match stoppage is cramp, heat or a tweak
+    //     that settles, and a 1-week layoff in this engine is exactly "she plays the following week"
+    //     (`rollInjury` clears at step 1c of the next tick, before she is asked to enter anything).
+    //     Four in five, because that is what "the normal case, but not the only one" looks like.
+    //   moderate 30% -> 15%, and 3-6 -> 3-5 weeks. A spent body moves badly and does pull things, so
+    //     this must survive – but as the minority, not as a third of them. The CEILING comes down one
+    //     week because six is the owner's own number: a six-week layoff is an acute event, and acute
+    //     events belong to the band below.
+    //   major 7.5% -> 4%, LENGTH UNCHANGED at 8-14. And that is the line this table draws: minor and
+    //     moderate are the EXHAUSTION outcomes and their lengths follow the mechanism, but major and
+    //     severe are the ACCIDENT outcomes – the body genuinely broke – and a stress reaction does
+    //     not heal faster because it happened at 5-5 in the third. What changes above moderate is how
+    //     OFTEN you get there, never what it costs when you do.
+    //   severe 2.5% -> 1%, LENGTH UNCHANGED at 16-22. KEPT DELIBERATELY, and it is what stops this
+    //     fix going too far in the other direction. The retirement copy has a sentence only this band
+    //     reaches – "She stopped, and this time it is serious: … The dream takes a hit." – and a
+    //     retirement must be able to be the moment a career changes. At ~0.73 retirements a season
+    //     that is roughly one career in fourteen over ten seasons: rare enough to be a story, on the
+    //     same standard `ENDINGS.injuryPriorWeeksOut` was measured to (4.4% of full-life careers).
+    //
+    // ⚠ ZERO DRAWS ADDED OR REMOVED, WHICH IS WHY NO CAREER RE-BASES. `onsetInjury` spends exactly
+    // three pulls in exactly one order – severity, weeks-out, region – and this changes only the
+    // NUMBERS the second and third are compared against. `pickInt` takes one pull for any range
+    // (a collapsed range still draws) and `drawBodyRegionFrom` takes one for any table. So the
+    // `seed:retire:<week>` and `seed:injury:<week>` sequences are byte-identical to before, and the
+    // frozen MAIN capture (41550 / e6b0c709) never saw either.
+    //
+    // ⚠ AND THE FOUR SEVERITY LABELS ARE THE SAME FOUR. `InjurySeverity` is untouched, so
+    // `SEVERITY_DESCRIPTOR`, `onsetCostCents`, the snapshot, the dialog and every persisted
+    // `injuryHistory` row keep their vocabulary. NO SCHEMA CHANGE.
+    retirementSeverityBands: [
+      { cum: 0.8, severity: 'minor', weeksLo: 1, weeksHi: 2 },
+      { cum: 0.95, severity: 'moderate', weeksLo: 3, weeksHi: 5 },
+      { cum: 0.99, severity: 'major', weeksLo: 8, weeksHi: 14 },
       { cum: 1.0, severity: 'severe', weeksLo: 16, weeksHi: 22 },
     ] as { cum: number; severity: InjurySeverity; weeksLo: number; weeksHi: number }[],
   },

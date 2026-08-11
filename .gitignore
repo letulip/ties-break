@@ -81,3 +81,6 @@ blob-report/
 # Named here so that choice can never turn ~273 MiB of binary into a commit.
 ms-playwright/
 .cache/ms-playwright/
+
+# Agent worktrees – transient, created by isolated subagent runs. Never committed.
+.claude/worktrees/

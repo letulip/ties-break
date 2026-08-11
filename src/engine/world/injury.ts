@@ -213,6 +213,26 @@ export function rollInjury(world: WorldState): void {
 export type InjuryCause = 'week' | 'retirement'
 
 /**
+ * WHICH SEVERITY TABLE THE DOOR DRAWS FROM (round 16 #13, the owner's ruling of 11.08). A table
+ * lookup and nothing more – the branch point already existed, because `onsetInjury` has taken the
+ * cause since the retirement slice.
+ *
+ * ⚠ THE WHOLE ARGUMENT LIVES ON `ECONOMY.availability.retirementSeverityBands`, band by band, and
+ * it is not repeated here. The one-line version: the retirement hazard reads `spentness`, so it
+ * fires on a girl who is spent rather than on a girl who broke, and the layoff it hands out should
+ * be the one being spent actually costs. The weekly roll's table is untouched.
+ *
+ * ⚠ AND IT CANNOT MOVE A DRAW. Both tables are read AFTER the severity uniform has been pulled and
+ * only decide what that already-drawn number MEANS – the same post-draw discipline `injuryTau`'s
+ * multipliers and `ENDINGS.injuryPriorWeeksOut` are both built on. See the arity note in
+ * `onsetInjury`.
+ */
+export function severityBandsFor(cause: InjuryCause) {
+  const a = ECONOMY.availability
+  return cause === 'retirement' ? a.retirementSeverityBands : a.severityBands
+}
+
+/**
  * THE ONE INJURY-ONSET WRITER. Sets `world.injury`, bills the scans, sweeps the entries and
  * practices the layoff swallows, captures the milestone, retires any live knock, and emits the news
  * line. Everything a career carries out of an injury is decided here, whichever door it came in by.
@@ -232,7 +252,11 @@ export function onsetInjury(
   cause: InjuryCause,
   table: readonly { part: string; weight: number }[],
 ): void {
-  const bands = ECONOMY.availability.severityBands
+  // ⚠ THE DOOR CHOOSES THE TABLE, AND THAT IS THE ONLY THING ROUND 16 CHANGED HERE (#13). It is a
+  // lookup, not a branch in the draw: the uniform below is pulled unconditionally either way, and
+  // `pickInt`/`drawBodyRegionFrom` each take exactly one pull for any range and any table. The arity
+  // note below still holds to the letter – three pulls, this order, always.
+  const bands = severityBandsFor(cause)
   const sevRoll = rng()
   const band = bands.find((b) => sevRoll < b.cum) ?? bands[bands.length - 1]
   let weeksOut = pickInt(rng, band.weeksLo, band.weeksHi)
@@ -358,9 +382,18 @@ export function onsetInjury(
  * ⚠ IT IS THE ORDINARY INJURY MODEL THROUGH A DIFFERENT DOOR, and that is a deliberate choice with
  * the research behind it (docs/research/retirement-and-withdrawal.md §10.2: "the cheapest coherent
  * model is that a retirement IS an injury onset that happened to land during a played week, and the
- * layoff that follows is the ordinary one. Nothing in the rules argues against that."). Same
- * severity bands, same weeks-out, same scans, same entry sweep, same recovery. A second layoff
- * model would have been a second thing to balance for no fiction anybody could feel.
+ * layoff that follows is the ordinary one. Nothing in the rules argues against that."). Same onset
+ * writer, same weeks-out draw, same scans, same entry sweep, same recovery. A second layoff model
+ * would have been a second thing to balance for no fiction anybody could feel.
+ *
+ * ⚠ RESTATED, NOT LEFT LYING – THE ONE CLAUSE THAT IS NO LONGER TRUE (round 16 #13). This note used
+ * to open with "Same severity bands", and since 11.08 it is not: the door draws from
+ * `ECONOMY.availability.retirementSeverityBands`, which is skewed short (80/15/4/1 against the
+ * weekly 60/30/7.5/2.5). The paragraph above still holds in every other respect and the reasoning
+ * behind it is unchanged – what moved is the ODDS, on the argument that this hazard reads
+ * `spentness` and therefore fires on a girl who is spent rather than on one who broke. The
+ * measurement that forced it is docs/specs/round16-injuries.md §9; `severityBandsFor` is the lookup
+ * and the knob carries the band-by-band argument.
  *
  * ⚠ ITS OWN STREAM, `seed:retire:<week>`, and the alternative was a bug. `seed:injury:<week>` has
  * ALREADY been opened this week by `rollInjury` – which found her healthy and returned after one

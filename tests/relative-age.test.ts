@@ -36,6 +36,7 @@ import {
   birthdayWeek,
   buildAlbum,
   closeTournament,
+  giftNoun,
   createWorld,
   decideKnock,
   entryCapUsage,
@@ -99,13 +100,20 @@ describe('the band and the girl are two different numbers', () => {
     expect(toSnapshot(dec).coachMarket.map((c) => c.id)).toEqual(toSnapshot(jan).coachMarket.map((c) => c.id))
   })
 
-  it('she really does turn a year older, once, on her own month', () => {
+  // ⚠ RE-AIMED, NOT WEAKENED (round-16 #100). Every claim below is unchanged and still passes; what
+  // changed is what they are ALLOWED to prove. All three read birth DAY 15, and the 15th of a month is
+  // always in a week whose Monday is the 9th-15th – the same month. So the two clocks agree here BY
+  // CONSTRUCTION, and the identity on the last line is a fact about day 15, not a general law: for a
+  // girl born on the 1st-6th the announcement leads the month clock by up to one week, on purpose and
+  // measured. That is the whole of #100 and it is pinned in tests/birthday-announce.test.ts, which
+  // sweeps all 365 dates. Do not widen this block to other days expecting it to hold.
+  it('she really does turn a year older, once, on her own month (birth day 15)', () => {
     for (const birthMonth of [1, 6, 12]) {
       const turns = [...Array(52).keys()].filter((w) => birthdayTurning(w, birthMonth, 15) !== null)
       expect(turns.length, `birthMonth ${birthMonth}: one birthday a season`).toBe(1)
       const w = turns[0]
       expect(weekMonth(w), 'and it lands in her own month').toBe(birthMonth)
-      // the age she turns is the age she then is
+      // the age she turns is the age she then is – for day 15, see the ⚠ note above
       expect(birthdayTurning(w, birthMonth, 15)).toBe(kidAgeYears(w, birthMonth))
     }
   })
@@ -153,6 +161,13 @@ describe('the band and the girl are two different numbers', () => {
     // The owner's first sighting: Home said 16 from week 104 while the feed said «She is sixteen this
     // week» at week 154. Fifty weeks apart, both from the engine. The property that forbids it is
     // that the two read one clock, so this asserts the AGREEMENT rather than either number.
+    //
+    // ⚠ AND THE AGREEMENT IS EXACT HERE BECAUSE THE BIRTH DAY IS 15 (round-16 #100 – see the note
+    // above the day-15 block). The defect this pin exists to forbid is TWO CLOCKS a year apart. What
+    // #100 introduced is ONE clock read on two days of the same week: for a girl born on the 1st-6th
+    // the announcement can lead `snap.ageYears` by a single week, closing on the next Monday, because
+    // she turns her age on a Sunday the month clock has not reached yet. Bounded and swept over all
+    // 365 dates in tests/birthday-announce.test.ts. Fifty weeks is still forbidden; one is the truth.
     for (const birthMonth of [1, 6, 12]) {
       const world = createWorld('one-clock-print', { ...DEFAULT_PROFILE, birthMonth, birthDay: 15, coachTier: 'self' })
       for (const week of [0, 26, 52, 104, 130, 156, 208]) {
@@ -322,7 +337,19 @@ describe('the band and the girl are two different numbers', () => {
   it('the birthday copy obeys the app rules and never names a body part', () => {
     const lines = [...DIARY_POOL.filter((p) => p.claims.birthday), ...WEEK_NOTES.filter((n) => n.claims.birthday)]
     expect(lines.length, 'the bands have to exist').toBeGreaterThan(4)
-    const f = { birthdayAge: 15, injured: { kind: 'wrist strain', weeksRemaining: 3, totalWeeks: 6 } }
+    // ⚠ RE-AIMED (v48), AND THE `undefined` CHECK BELOW IS WHY IT HAD TO BE. Four birthday notes now
+    // read the PRESENT as well as the age, and this builder knew only about the age – so they
+    // rendered "She asked for undefined" and the unresolved-template guard on the next-but-one line
+    // caught it, exactly as designed. The facts gain the three gift fields rather than the guard
+    // losing the four lines: a present is part of the birthday copy now, and it has to obey the same
+    // rules. A REAL noun from the catalogue, so the anatomy and dash checks see what a player sees.
+    const f = {
+      birthdayAge: 15,
+      injured: { kind: 'wrist strain', weeksRemaining: 3, totalWeeks: 6 },
+      birthdayGift: giftNoun('headphones'),
+      birthdayWanted: true,
+      birthdayRepeatAge: 14,
+    }
     for (const l of lines) {
       const text = typeof l.text === 'function' ? l.text(f as never) : (l.text ?? '')
       expect(text, `long dash in "${text}"`).not.toContain('—')

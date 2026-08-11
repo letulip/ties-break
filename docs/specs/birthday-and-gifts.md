@@ -1,0 +1,271 @@
+---
+type: spec
+status: current
+area: content/birthday
+canonical: true
+last-reviewed: 2026-08-11
+---
+
+# The birthday, and what you give her
+
+## Current truth
+
+**SHIPPED at schema v48.** The owner, 11.08: «День рождения как-то незаметно проходит… Важный момент,
+всё-таки» – round-16 item #9. His three rulings on the mechanic are in §2 and they settle the shape;
+nothing in this document was redesigned on the way in.
+
+**Where it lives.** `src/engine/world/birthday.ts` is the whole mechanic – the catalogue, the ask, the
+record and the one command. `src/components/BirthdayDialog.vue` prints what the engine hands it.
+`tests/birthday-gifts.test.ts` is §4's ship rule, one block per clause;
+`tests/component/birthday-dialog.test.ts` is the mounted card, and each of its blocks names the
+mutation that was applied to prove it fails.
+
+**What ships:** the popup fires on her birthday week and blocks the advance until one of four column
+buttons is pressed; she asks for one thing in prose and exactly one option answers it, unmarked; no
+money moves and no price is shown; one row per birthday is persisted and the diary reads it; her
+birth date is on the bio page as `B-Day 12 June`; confetti falls on Home for the week.
+
+⚠ **THE SCHEMA NUMBER IS 48, NOT THE 49 §2b PREDICTED**, and §2b has been corrected in place. The
+prediction assumed `wave/flags-grant` would take 48; that wave was still documents and nothing had
+claimed 48 in code, so this took it and `docs/plans/wave-flags-grant.md` now reserves 49. The rule is
+"whoever lands in code first owns the number", and it is written into both documents so the next
+reader does not have to reconstruct which wave won.
+
+⚠ **AND IT SHIPPED ON TOP OF A FIX TO THE NUMBER IT PRINTS.** §3's popup names the age she turns, and
+`birthdayTurning` was announcing it a year low for every girl born on the 1st–6th of a month – on the
+owner's own save, «15» twice and never «19». Round-16 #100, fixed first and separately
+(`docs/specs/season-anchor.md` §7): a popup built on a wrong number would have shipped the wrong
+number four times a career, in a dialog nobody can dismiss.
+
+## 0. The three rules that make it a gift and not a shop
+
+**A gift gives no skill.** The moment a frame is worth +2 serve, the player stops choosing a present
+and starts optimising a purchase, and the scene is dead. The effect is on the relationship and on
+what gets remembered – never on the radar, never on condition.
+
+**⭐ A GIFT COSTS NOTHING IN THE LEDGER.** The owner, 11.08: «про цену момент, давай не будем это
+учитывать в нашем кошельке вообще.» No charge, no line in Money, no corridor pricing, **and no price
+shown** – a displayed price that is never taken would be a lie on the screen.
+
+⚠ **This is the ruling that saves the feature, and it is worth understanding why.** A priced
+catalogue would have made the ask (§2ab) a wealth gate by arithmetic: the `working` family
+disappoints her every year because it cannot reach what she wanted, the `wealthy` one never does,
+and a scene about a parent silently becomes a scene about a balance. With no price, **the four
+options differ only in WHAT THEY ARE**, so the choice is entirely "what do I think she wants" –
+which is the only question this scene was ever about.
+
+It also settles the catalogue: one list for every background, no `working`/`wealthy` variants, no
+affordability test anywhere in the code.
+
+**"Nothing" must be a real answer.** A day off together has to read as one of the good choices, or
+the scene collapses into a menu with a correct order.
+
+## 1. The catalogue, by age
+
+Written as what is TRUE about her life at that age, not as a price ladder.
+
+### 14 – she is still a child, and the gift should know it
+A bicycle · a phone · **something not about tennis at all** – a book, paints, a game · her first
+racquet bag that is hers · a poster of a player she admires.
+
+⚠ **The trap here is deliberate and stays.** A parent who gives a fourteen-year-old nothing but
+equipment is a character, and the game should let somebody be that character without ever nudging
+them into it. The non-tennis option is always present and is never marked as the correct one.
+
+### 15 – she has started travelling
+Headphones for the road · a camera · her own suitcase · **tickets to WATCH a professional
+tournament** – not to play in one. A very real thing in tennis families.
+
+### 16 – the year it turns serious
+Our own W series opens at 16 (`TIERS.w15.minAgeYears`), so this birthday is already a threshold in
+the model. A frame chosen **with** her rather than for her · driving lessons · a document wallet,
+because the travelling is now her job · a proper winter coat for the indoor season.
+
+### 17 – the last full school year
+A laptop – school and tournament admin both · a suitcase built to survive a season · a watch.
+
+### 18 – school ends, the professional begins
+**The biggest birthday in the game**, and the gift should mark the threshold. Her own bank card and
+account, because she is earning now · the classic eighteenth watch · a trip that is not a tournament.
+
+### 19 to 21 – independence
+A deposit towards her own place · a car · something for a home that is no longer yours.
+
+### 22 to 28 – the peak, where things matter less
+A week with the family between seasons · jewellery · the thing she would never buy herself.
+
+### 29 and after – the late career
+**An album of the whole career** – and it is both the most moving option and the cheapest to build,
+because the data is already there: the diary, the memories, `captureMilestone`'s first title and
+first final per tier.
+
+## 2. The mechanic – the owner's three rulings, 11.08
+
+### 2a. The popup ALWAYS fires
+> «я бы оставил попап на ДР всегда»
+
+Unconditional on the birthday week. It follows the repo's existing blocking-dialog pattern (round 14
+defect D1: the blocking popups are real dialogs and hold the keyboard), not a toast.
+
+⚠ **AND THAT FORCES ONE CONSEQUENCE: "nothing" must be an explicit BUTTON, never a dismissal.** If
+the dialog can be closed with an X, then closing it silently becomes the "gave nothing" branch and
+the player will make that choice by accident, repeatedly, and never know. The options are the three
+priced gifts plus **"just the day together"** – all four are choices, and the dialog does not close
+any other way.
+
+**Laid out in a COLUMN** (owner, 11.08: «в колонку ставь, там хватит места»), which settles the
+375px question §5 used to ask: four stacked rows fit where four side-by-side buttons would not.
+
+### 2ab. ⭐ SHE ASKS FOR SOMETHING, and one of the options is it
+
+The owner, 11.08, turning §5's open question into the design: «отличный ход написать в этом попапе
+что-то вроде "она просила …" и один из вариантов это удовлетворит, другие нет».
+
+This is the piece that makes the scene a scene. The dialog opens with a line about what she has been
+asking for; **exactly one of the four options answers it** and the others do not. And it costs
+almost nothing, because the want is only DISPLAYED and RECORDED – nothing consumes it yet, so it
+needs no morale system to exist (§2b).
+
+⚠ **IT SPLITS THE OUTCOME INTO THREE WHERE THERE WERE TWO**, which is the whole gain for the future:
+
+| what happened | recorded as |
+|---|---|
+| she got what she asked for | `asked` + `given` match |
+| she got something else, and it was a real present | they differ |
+| she got nothing | `given` is null |
+
+"Gave the wrong thing" and "gave nothing" are not the same act and a parent knows it. One field
+buys that distinction.
+
+⚠ **The ask is drawn ACROSS the catalogue, and the day together must be reachable** – she does not
+want a thing, she wants you, and that is the best case the scene has. (The price-correlation hazard
+this rule used to guard against is gone: §0's no-cost ruling removed it at the root. Recorded here
+because a future reader may wonder why the ask is unconstrained.)
+
+**RNG:** the ask is drawn from a purpose-scoped sub-stream keyed on (seed, age) – never MAIN, and
+never on anything the player has done, so it cannot re-roll the world and cannot be re-rolled by
+reloading. Same discipline as `seed:injury:<week>`.
+
+### 2b. A refusal counts, but the system that reads it is not built yet
+> «я бы сказал влияет, но мораль и психологи у нас в будущем, так что сейчас можно просто подготовку
+> сделать»
+
+So this slice **records and does not consume**. The minimum that makes the future possible:
+
+* persist one row per birthday – the week, the age she turned, **what she asked for**, and what was
+  chosen (a gift id, the day together, or nothing);
+* the **diary** reads it immediately, which is the whole visible payoff today – and it can call back
+  in later years («the headphones you gave her still go everywhere»);
+* nothing else reads it. No morale, no condition, no mood modifier. When
+  `docs/specs/form-and-slump.md` and the psychologist arrive, the history is already there to read.
+
+⚠ **Schema.** One append-only field, and it is a three-part move (bump + migration + golden fixture,
+CLAUDE.md invariant 3). ~~⚠ `docs/plans/wave-flags-grant.md` already claims v48, so this is v49 unless
+the owner reorders – stated here so two waves cannot both take the same number.~~
+
+> **✅ SHIPPED AT v48**, and the reservation above was resolved the other way. `wave/flags-grant` was
+> still documents when this was built and nothing had claimed 48 in code, so this took 48 and that
+> plan now reserves 49. The field is `WorldState.birthdays: BirthdayRecord[]`; the migration is a pure
+> default (`[]`) and the golden fixture is `tests/fixtures/saves/v48.json`.
+>
+> ⚠ **`[]` MEANS "no birthdays recorded", NOT "gave nothing every year"** – ship rule 5, and the
+> migration comment spells out the temptation it refuses. A v47 career HAD birthdays: the feed said
+> «She is sixteen this week» every year and `birthdayWeek` can name every one of them exactly. Walking
+> the calendar and writing a row per year with `given: null` would have been easy, and the statement
+> it made would be that this parent gave his daughter nothing on every birthday of her life. He was
+> never asked.
+>
+> **AND ONE MORE PLACE IS ABSENT RATHER THAN ZERO, decided in the build:** the four years at college.
+> `resumeFromCollege` spends them in ONE call with nobody able to answer, so a blocking birthday there
+> would strand the jump – the identical reason `rollKnock` is skipped inside the freeze. Her birthday
+> still reaches the FEED those years; what the engine does not do is invent a parent's decision out of
+> a freeze, so those birthdays carry no row.
+
+### 2c. The gift never returns to equipment
+> «я бы сказал нет»
+
+A frame or a bag does NOT reset kit wear. The moment it does, the gift is useful, and a useful gift
+is a purchase. `kitState` is untouched by this whole feature.
+
+## 3. What is shown
+
+* **The popup**, on the birthday week, with the four choices in a column.
+* **Confetti on Home** for that week, the owner's own suggestion.
+* **A diary entry**, and it is the thing that will still matter three seasons later.
+* **⭐ HER BIRTH DATE ON THE BIO PAGE, beside her age.** Owner, 11.08: «на странице био девочки тоже
+  можно день и месяц рождения добавить возле возраста. А то у нас нет этого нигде.» He is right and
+  it is worse than an omission: `profile.birthDay` and `profile.birthMonth` have existed since v25,
+  they drive the relative-age effect, `kidAgeExact`, the injury age curve and the birthday itself –
+  and **the player is never told either of them.** A parent who does not know their daughter's
+  birthday is the one fact the game must not withhold. Independent of the rest of this spec and
+  cheap: two numbers already on the profile.
+
+**Format: day and month, no week and no year.** Owner, 11.08: «а можно просто день и месяц без
+недель? B-Day 12 june или вроде того». So `B-Day 12 June`, beside her age – not a career week, not a
+birth year (the year is derivable from her age and would only add width).
+
+⚠ **AND THAT FORMAT IS ALSO WHAT MAKES IT IMMUNE TO THE CALENDAR RE-ANCHOR (task #99).**
+`birthdayWeek` is one of the two engine nodes that branch on a real date, so the WEEK her birthday
+lands in can move when the drift fix ships. The day and the month cannot – they are her birth date,
+stored on the profile since v25. Printing the date rather than the week is therefore both what he
+asked for and the version that never needs revisiting.
+
+## 4. The ship rule, authored before anything is built
+
+1. **No skill, no condition, no mood moves.** Assert it: the same seed, run with every gift option
+   and with none, produces byte-identical skills, condition and results. If any of those move, this
+   became a shop.
+2. **RNG.** The catalogue offered is a function of her age and the family's means, both of which are
+   state. If any draw is wanted (which of three same-age options are offered), it goes on a
+   purpose-scoped sub-stream, never MAIN – and it must not depend on what the player picked LAST
+   year, or the choice re-rolls the world. CLAUDE.md invariant 2.
+3. **The ledger does not move.** Assert it directly: the same seed run through every gift option
+   ends the season on identical `fundsCents`. No `expense` event, no Money line, no corridor.
+   ⚠ This is the assertion that keeps §0's ruling true after somebody later "just adds a small cost
+   for realism".
+4. **The catalogue is background-blind.** The four options offered at a given age are the same for
+   `working`, `middle` and `wealthy`. If a background ever changes what is offered, the wealth gate
+   has come back through a different door.
+5. **The record survives a save round-trip**, and an old career migrated forward reads as "no
+   birthdays recorded" rather than as "gave nothing every year". Absent is not zero – the same
+   distinction v45 and v46 were built around.
+
+## 5. Settled by the owner, 11.08 – all three of this section's questions
+
+1. **Four buttons, in a column.** «в колонку ставь, там хватит места» – see §2a.
+2. **The catalogue repeats.** «вполне можно» – the same present at 15 and at 16 is real parent
+   behaviour and a content saving, **and the diary is expected to notice**. A callback on a repeat
+   is content the system gets for free.
+3. **She asks, and one option answers it.** Promoted out of "open" and into the design – §2ab.
+
+4. **The ask is stated in PROSE and nothing is marked.** Owner, 11.08: «не помечай, пусть игрок
+   читает». No highlight, no badge, no reordering that puts the answer first – the line says what
+   she has been asking for and the four options say what they are. A marked answer would turn the
+   scene into a quiz and collapse the choice.
+
+## 6. Still open
+
+1. **Can she ask for something not on the list?** A want the catalogue cannot satisfy is the
+   sharpest version of the scene and the cruellest. Out of scope here; noted.
+
+## 7. What the build settled that this document did not ask
+
+Three questions the spec did not reach, each answered the way its own rulings pointed:
+
+1. **How the "exactly one option answers it" guarantee is bought.** The ask is drawn from the FOUR
+   OFFERED rather than from the catalogue and then matched – so the property is true by construction
+   rather than by a test, and `day` being one of the four is what makes it reachable as the ask.
+   Sub-stream `seed:birthday:<age>`: keyed on immutable state only, so it cannot be re-rolled by
+   reloading and last year's choice cannot move this year's want.
+2. **⭐ The ask id is NOT ON THE WIRE.** «не помечай, пусть игрок читает» could have been kept as a
+   promise the component makes; instead the client is never told which option answers, and
+   `chooseGift` re-derives it engine-side. No future component can mark it even by accident. The only
+   correspondence between the ask and an option is the English, which is the scene.
+3. **Where four options come from at 29+.** §1 names only the album for the late career, and §2a
+   requires four. The peak band's three come with it – §5.2's licensed repeat rather than invented
+   content – so the album is chosen alongside things she has been given before, which is the callback
+   the diary was built to notice.
+
+**Measured, not asserted:** the same seed through all four options ends the season on identical
+`fundsCents`, identical `careerTotals` and the identical count of Money lines; identical skills,
+condition and `kitState`; and a birthday week taps no MAIN draw a quiet week does not.

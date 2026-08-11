@@ -300,6 +300,11 @@ export type StopReason =
    *  the owner's complaint was that training weeks «просто скипались», and a stop the player can
    *  skip past is not a decision. See engine/knock.ts. */
   | 'knock'
+  /** ⭐ v48: IT IS HER BIRTHDAY AND NOBODY HAS ANSWERED IT. Blocks exactly like a knock, and for the
+   *  ruling's own reason rather than by imitation: the owner asked for the popup to fire ALWAYS
+   *  («я бы оставил попап на ДР всегда»), and a popup a `+4` can tick straight past does not always
+   *  fire. All four buttons are valid answers, so this can never dead-end a career. */
+  | 'birthday'
   /** W2-ENDINGS: the story has no next week. It outranks everything because its surface REPLACES
    *  the app shell rather than laying a dialog over it – there is nothing behind an epilogue left
    *  to stop for. `advanceWeeks` refuses to tick at all while it is latched. */
@@ -339,6 +344,14 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // an ordinary training week – no tournament, no off-season), but it CAN co-occur with 'deadline'
   // and 'funds', which is exactly the ordering this line decides.
   'knock',
+  // ⭐ v48: THE BIRTHDAY, immediately below the knock and above everything dismissable, because it
+  // BLOCKS for the same mechanical reason and costs nothing by the time it fires. It sits BELOW the
+  // knock rather than above because a knock is about her BODY and the week it governs starts now,
+  // while the birthday is a day on the family's calendar that will still be there after the sore
+  // shoulder is answered. Unlike a knock it CAN co-occur with 'tournament' and with 'season-end' – a
+  // birthday lands wherever the date lands, including a playing week and the off-season – which is
+  // exactly the ordering this line decides.
+  'birthday',
   // W2-ENDINGS. The fork and the natural end's offer sit here, below the knock and above everything
   // that owns a dismissable toast, because they BLOCK: `advanceWeeks` refuses to restart until they
   // are answered. They are below the medical trio for the trio's own reason – those have already
@@ -717,13 +730,28 @@ export interface PendingView {
 export type InjurySeverity = 'minor' | 'moderate' | 'major' | 'severe'
 
 /** The kid's active injury as surfaced to the UI (schema v12). null = healthy. Always null in
- *  slice B – Slice C (injuries + physio) brings it alive. The persisted world carries one extra
- *  field (`sinceWeek`) that the snapshot omits. */
+ *  slice B – Slice C (injuries + physio) brings it alive.
+ *
+ *  ⚠ `sinceWeek` IS NOW SURFACED (round-16 #19), and it used to be the one persisted field the
+ *  snapshot deliberately dropped. It is here because the injury popup must be a consequence of
+ *  STATE rather than of a screen having been open: the owner took three injuries and was told about
+ *  none of them, because `InjuryStopDialog` was gated on the `'injury'` STOP REASON and only
+ *  `advanceWeeks` ever sets one. A retirement opens its layoff in `finalizeTournament`, which runs
+ *  from the reveal's own command long after the advance returned, so that whole door reported
+ *  nothing. `sinceWeek === week` is the same predicate `advanceWeeks` uses, asked where the answer
+ *  survives – exactly the argument App.vue's knock gate already makes for reading a snapshot field
+ *  instead of a stop reason. See docs/specs/round16-injuries.md §3.
+ *
+ *  ⚠ NOT A SAVE-SCHEMA CHANGE. `Snapshot` is the derived view the worker posts to the UI; the save
+ *  is `WorldState`, which has carried `sinceWeek` since slice C. Nothing is persisted here, so
+ *  `SAVE_SCHEMA_VERSION` and `engine/migrations.ts` are untouched. */
 export interface SnapshotInjury {
   kind: string
   severity: InjurySeverity
   weeksRemaining: number
   totalWeeks: number
+  /** the week the layoff opened. `sinceWeek === Snapshot.week` is "this happened just now". */
+  sinceWeek: number
 }
 
 // --- Season planner (schema v13) ---------------------------------------------
@@ -778,6 +806,91 @@ export interface Knock {
   /** the last week this knock still matters. Set when the choice is made (knockUntilWeek): the rest
    *  week for `rest`, KNOCK_PUSH_WEEKS out for `push`. Equals `sinceWeek` while undecided. */
   untilWeek: number
+}
+
+// =================================================================================================
+// THE BIRTHDAY AND THE GIFT (v48) – docs/specs/birthday-and-gifts.md
+// =================================================================================================
+
+/** One gift in the catalogue. Content, and the ENGINE owns every word of it (engine/world/
+ *  birthday.ts) – the dialog prints what it is handed, exactly as KnockDialog does.
+ *
+ *  ⚠ THERE IS NO PRICE FIELD, AND ITS ABSENCE IS THE RULING. The owner, 11.08: «про цену момент,
+ *  давай не будем это учитывать в нашем кошельке вообще.» No charge, no Money line, no corridor
+ *  pricing and NO PRICE SHOWN. Adding a cents field here is a schema change and a ship-rule failure,
+ *  which is exactly the friction the ruling wants: with no price the four options differ only in
+ *  WHAT THEY ARE, and the choice stays "what do I think she wants". */
+export interface BirthdayGift {
+  id: string
+  /** the button's own words */
+  label: string
+  /** the line under it – what it is, in the parent's voice */
+  note: string
+  /** the prose line at the top of the dialog when THIS is the thing she has been asking for */
+  ask: string
+  /** the diary's noun for it – "the headphones" – so a callback three seasons later reads as English */
+  short: string
+}
+
+/** ⚠ THE DIARY'S NOUN FOR "just the day together", AND THE ONE SPELLING OF IT.
+ *
+ *  The diary has to tell the day apart from a thing – "we gave her the day" is a different sentence
+ *  from "she got the camera" – and it owns no catalogue, so it cannot ask the gift what it is. This
+ *  is the seam: the catalogue sets `DAY_TOGETHER.short` to it and the note licences compare against
+ *  it, so the two cannot drift into a state where the day silently reads as an object. A bare literal
+ *  on each side would fail SILENTLY on any rewording – the day's arm would stop being licensed and a
+ *  present arm would take the week with a sentence about a thing nobody gave her. */
+export const BIRTHDAY_DAY_NOUN = 'the day together'
+
+/** A gift as the DIALOG sees it: what to print on the row, and the id to send back.
+ *
+ *  ⚠ `ask` AND `short` ARE DELIBERATELY ABSENT, and so is any marker of which row answers the ask.
+ *  The owner, 11.08: «не помечай, пусть игрок читает». The client is never told the answer – it is
+ *  re-derived engine-side – so no future component can mark it even by accident. */
+export interface BirthdayOption {
+  id: string
+  label: string
+  note: string
+}
+
+/** THE POPUP, on her birthday week. Always fires (owner: «я бы оставил попап на ДР всегда»), and
+ *  because it always fires "nothing" has to be an explicit BUTTON rather than a dismissal – so the
+ *  four options are three gifts plus "just the day together" and the dialog closes no other way. */
+export interface BirthdayPrompt {
+  week: number
+  /** the age she turns – `birthdayTurning`, which is day-exact since round-16 #100 */
+  age: number
+  /** ⭐ what she has been asking for, in prose. EXACTLY ONE of the four options answers it, and
+   *  nothing marks which (spec §2ab / §5.4). */
+  ask: string
+  /** four, in a COLUMN (owner: «в колонку ставь, там хватит места»), in the order to show them.
+   *  The order is drawn, so the answer's position carries no information. */
+  options: BirthdayOption[]
+}
+
+/** ⭐ ONE ROW PER BIRTHDAY (v48). The DIARY reads it and nothing else does: no morale, no condition,
+ *  no mood modifier – that system does not exist yet and this slice only lays the ground (spec §2b,
+ *  owner: «мораль и психологи у нас в будущем, так что сейчас можно просто подготовку сделать»).
+ *
+ *  ⚠ IT SPLITS THE OUTCOME INTO THREE WHERE THERE WERE TWO, which is the whole gain for the future:
+ *  she got what she asked for (`asked === given`), she got something else and it was a real present
+ *  (they differ), or she got nothing (`given` is null). "Gave the wrong thing" and "gave nothing" are
+ *  not the same act and a parent knows it; one field buys that distinction. */
+export interface BirthdayRecord {
+  /** the career week the birthday fell in */
+  week: number
+  /** the age she turned */
+  age: number
+  /** the gift id she had been asking for – always one of the four she was offered */
+  asked: string
+  /** what was chosen: a gift id, `'day'` for the day together, or null for nothing.
+   *
+   *  ⚠ NULL IS NOT REACHABLE THROUGH THE POPUP, and that is the popup working. All four buttons are
+   *  real answers and the dialog has no other exit, so a parent who is asked always answers. It is
+   *  carried because the outcome above is a real one the record must be able to state, and because
+   *  ABSENT IS NOT ZERO: a birthday nobody was asked about (a migrated career, or the four years at
+   *  college) has NO ROW AT ALL rather than a row saying he gave nothing. Spec §5.5. */
+  given: string | null
 }
 
 /** A retired knock, for the accumulating thread. Bounded by pruning, like `injuryHistory`. */
@@ -1056,6 +1169,26 @@ export interface LadderView {
   /** Her windowed best-6 total IN THIS TABLE'S CURRENCY. National points and ITF points are different
    *  units and must never be added, compared or silently swapped for one another. */
   points: number
+  /** WHAT SHE HAS WON THAT THE TABLE IS NOT SHOWING YET – present ONLY while §VIII.A.2.b is
+   *  withholding her total, absent on every other row and on every other table.
+   *
+   *  ⚠ THE OWNER FILED THIS AS A CACHE BUG (round-16 #3): *"the professional table shows 0 points
+   *  after the second match while the result row shows 6, and the third match onward counts"*. It is
+   *  not a cache. It is the WTA's own minimum, shipped deliberately in `rankableTotal` – *"Players
+   *  must earn ranking points in at least three (3) valid Tournaments, or a minimum of ten (10)
+   *  singles ranking points ... in order to appear on the WTA Rankings"* – so a professional on two
+   *  results worth six points reads ZERO on the table while her counting-results list beside it
+   *  shows both rows. Reproduced against his own save (tools/round16-read.ts): her first professional
+   *  result in the window paid 8 and the table showed 0; the second took her past ten and the table
+   *  showed 16. Correct arithmetic, and a screen with no way to say so.
+   *
+   *  ⚠ THE ENGINE OWNS THE NUMBER, THE SCREEN OWNS THE SENTENCE. This is the sum of the same counted
+   *  rows `countingResults` lists, BEFORE the minimum is applied – so the two cannot disagree about
+   *  what is being withheld. `RANKABLE_MIN` stays the one place the thresholds are written down.
+   *
+   *  ABSENT rather than 0 when nothing is withheld: a 0 here would be indistinguishable from "she is
+   *  on the list with no points", which is the same "unranked is not a number" trap `rank` avoids. */
+  banked?: number
   /** Top 10 + a window around her, rank order - this table only. */
   standings: StandingRow[]
   /** The results THIS table counted, strongest first. Pairs with `rank`: a rank and the results that
@@ -1876,6 +2009,21 @@ export interface DiaryFacts {
    *  the last month of a season she played as a thirteen-year-old is the relative-age story told in one
    *  line, and it is where the player first meets it. */
   birthdayAge: number | null
+  /** ⭐ v48: WHAT HE GAVE HER, as the diary's own noun – "the headphones". Null on every week that is
+   *  not a birthday, and on a birthday week he has not answered yet (the note completes when he does).
+   *
+   *  A NOUN AND NOT AN ID, so the diary imports no catalogue and stays a reporter: `giftNoun` is
+   *  resolved once, in the engine, over the WHOLE catalogue rather than this year's band – a callback
+   *  is by definition about a gift given at a different age. */
+  birthdayGift: string | null
+  /** ⭐ v48: did it answer what she had been asking for? False when he gave her something else, which
+   *  is a different act from giving nothing and the record keeps them apart (spec §2ab). */
+  birthdayWanted: boolean
+  /** ⭐ v48: the age she was the last time she was given THIS EXACT THING, or null the first time.
+   *
+   *  The owner ruled the catalogue may repeat (11.08: «вполне можно») «and the diary is expected to
+   *  notice» – so a repeat is content the system gets for free, and this is the field that buys it. */
+  birthdayRepeatAge: number | null
 }
 
 /** THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на
@@ -2291,6 +2439,13 @@ export interface Snapshot {
    *  the state it is assembled from lives on the world. Once he answers, this goes null while the
    *  knock itself stays live for its weeks – there is nothing left to ask. */
   knockPrompt: KnockPrompt | null
+  /** ⭐ v48 – HER BIRTHDAY, AND THE QUESTION IT ASKS. Non-null on exactly the weeks a birthday is
+   *  waiting to be answered, which is the same condition `advanceWeeks` blocks on – so the dialog and
+   *  the engine can never disagree about whether the career is waiting for him.
+   *
+   *  DERIVED, not persisted: assembled per snapshot (buildBirthdayPrompt) off the birth date and the
+   *  record. Once he answers, the row appears in `birthdays` and this goes null. */
+  birthdayPrompt: BirthdayPrompt | null
   /** W4: the knock that is LIVE this week, decided or not – what the week is being spent under.
    *  Null on a week with nothing wrong. The UI reads `choice` off this to say "resting the ankle"
    *  rather than re-deriving anything. */
@@ -2615,6 +2770,10 @@ export type ToWorker =
   | { id: number; type: 'setPlan'; plan: WeekPlan; baseRevision: number }
   // W4: answer the knock. The ONLY way an undecided knock clears, and the only way time moves again.
   | { id: number; type: 'decideKnock'; choice: KnockChoice; baseRevision: number }
+  // ⭐ v48: answer the birthday. The ONLY way a pending birthday clears, and the only way time moves
+  // again on her birthday week. `giftId` is re-validated against the four the engine itself offered –
+  // the worker is not the gate, so a stale dialog cannot record a gift this birthday never had.
+  | { id: number; type: 'chooseGift'; giftId: string; baseRevision: number }
   // THE INBOX (v32): answer a letter. Both are refused past the deadline – the window is the
   // feature, not a courtesy – and `signOffer` is irreversible by design, which is why the UI puts a
   // ConfirmDialog in front of it and the engine puts nothing in front of the confirm.

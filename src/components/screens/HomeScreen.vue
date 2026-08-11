@@ -45,6 +45,8 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 import { feedContext, isTierOpen, useTierStates } from '../../composables/tierState'
 import MatchReplay from '../MatchReplay.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
+// v48: the podium's own paper, on the one week a year that is about her rather than about tennis.
+import ConfettiBurst from '../ui/ConfettiBurst.vue'
 // THE INBOX (docs/specs/offers-and-the-inbox.md) – the popup behind the second tool, beside the bell.
 import InboxSheet from '../InboxSheet.vue'
 // The bell's dot and the App bar's Home dot read ONE rule from here - see the module header for the
@@ -103,6 +105,11 @@ const photoStyle = computed(() => {
 // on this page, which is the rule the redesign is most careful about: the greeting above is a time
 // of day and never a second copy of it (engine/diary.ts greetingFor).
 const photoLine = computed(() => game.snapshot?.diary.photoLine ?? null)
+// v48: is this her birthday week? The SAME fact the diary's birthday lines license off
+// (`facts.birthdayAge`), so the confetti and the words can never disagree about whose week it is –
+// and it stays true for the whole week rather than only while the popup is up, because a birthday is
+// a week in this game and the celebration should outlast the choice.
+const birthdayWeek = computed(() => game.snapshot?.diary.facts.birthdayAge != null)
 // THE GREETING FOLLOWS THE PLAYER'S OWN CLOCK (owner, 29.07).
 //
 // The engine picks one off `seed:greet:<week>` because the engine may not read a wall clock - its
@@ -837,6 +844,14 @@ function openRankHelp(): void {
         <div class="diary-hero-left"></div>
         <div class="diary-hero-fade"></div>
 
+        <!-- v48: CONFETTI ON HER BIRTHDAY WEEK, the owner's own suggestion (docs/specs/
+             birthday-and-gifts.md §3). Over the scrims and under the header, so it falls across the
+             painting rather than across the date; `.diary-hero` is already `position: relative` and
+             `overflow: hidden`, so the burst is clipped to the square with no new positioning
+             context. Gated on `birthdayAge`, the SAME fact the diary's own birthday lines license
+             off, so the picture and the words can never disagree about whose week this is. -->
+        <ConfettiBurst v-if="birthdayWeek" class="diary-hero-confetti" />
+
         <header class="diary-head">
           <!-- A2: the app header is gone; its avatar lives here, left of the date, and is still the
                door to her profile. The crop stays F45-1's age-only `norm` – chrome, not an
@@ -1273,6 +1288,14 @@ function openRankHelp(): void {
   aspect-ratio: 1 / 1;
   max-height: 60vh;
   overflow: hidden;
+}
+
+/* v48: the birthday burst. Above the three scrims (z 0) and below `.diary-head`, so the paper falls
+   across the painting and never over the date or the icons. `pointer-events: none` because the hero
+   carries the avatar button and the tools, and confetti must not eat a tap. */
+.diary-hero-confetti {
+  z-index: 1;
+  pointer-events: none;
 }
 
 /* The hero photograph fills its square – see the shared rule up by .event-art img. */
