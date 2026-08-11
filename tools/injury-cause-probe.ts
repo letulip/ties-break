@@ -76,6 +76,22 @@ interface SeasonRow {
   expectedWeekOnsets: number
   matchesPlayed: number
   weeksOut: number
+  /** ⚠ THE NUMBER THE OWNER ACTUALLY FEELS, and it is not the one above. `weeksOut` counts the
+   *  weeks of THIS season she spent injured – so a layoff that straddles the season boundary is
+   *  split across two rows, which is right for "how much of that season did she lose" and wrong for
+   *  "how long was the injury". These two carry the LAYOFFS THEMSELVES, attributed to the season the
+   *  onset landed in: `weeksOutOnsetWeek` / `weeksOutOnsetRetire` sum `totalWeeks` per door. The
+   *  owner's «6-4-4» is three of these, not three of the above. */
+  weeksOutOnsetWeek: number
+  weeksOutOnsetRetire: number
+}
+
+/** One onset, kept whole – the length distribution is the finding this round is about, and a mean
+ *  cannot show that a third of retirements cost 3+ weeks. */
+interface Onset {
+  cause: Cause
+  severity: string
+  weeksOut: number
 }
 
 interface Disagreement {
@@ -96,6 +112,7 @@ function runCareer(
   index: number,
   horizonWeeks: number,
   disagreements: Disagreement[],
+  onsets: Onset[],
 ): SeasonRow[] {
   const { world, rng, seed } = openFatigueCareer(profile, policy, index)
   const plannerState = { practiceEligibleIdx: 0, seaBookedYears: new Set<number>() }
@@ -117,6 +134,8 @@ function runCareer(
         expectedWeekOnsets: 0,
         matchesPlayed: 0,
         weeksOut: 0,
+        weeksOutOnsetWeek: 0,
+        weeksOutOnsetRetire: 0,
       }
       seasons.set(idx, row)
     }
@@ -171,6 +190,14 @@ function runCareer(
     if ((textCause === 'retirement') !== retiredRow) {
       disagreements.push({ seed, week: f.week, textCause, retiredRow })
     }
+    // `stepFatigueWeek` already hands back the onset whole – severity plus the weeks-out that was
+    // actually rolled (post-physio scaling, which is what she serves). Kept per onset rather than
+    // summed: the finding this round is about is the SHAPE of that distribution.
+    if (f.injuryOnset) {
+      onsets.push({ cause: textCause, severity: f.injuryOnset.severity, weeksOut: f.injuryOnset.weeksOut })
+      if (textCause === 'retirement') row.weeksOutOnsetRetire += f.injuryOnset.weeksOut
+      else row.weeksOutOnsetWeek += f.injuryOnset.weeksOut
+    }
     if (textCause === 'retirement') row.retireOnsets += 1
     else row.weekOnsets += 1
   }
@@ -200,8 +227,64 @@ function printBand(label: string, rows: SeasonRow[]): void {
   console.log(
     `  ${label.padEnd(30)} ${String(seasons).padStart(7)} ${n(sum((r) => r.meanCondition) / seasons, 8, 1)} ` +
       `${n(week / seasons, 9, 3)} ${n(ret / seasons, 9, 3)} ${n(total / seasons, 9, 3)} ` +
-      `${n(total === 0 ? 0 : (100 * ret) / total, 8, 1)}% ${n(exp / seasons, 9, 3)}`,
+      `${n(total === 0 ? 0 : (100 * ret) / total, 8, 1)}% ${n(exp / seasons, 9, 3)} ` +
+      `${n(sum((r) => r.weeksOut) / seasons, 9, 2)} ${n(sum((r) => r.weeksOutOnsetWeek) / seasons, 8, 2)} ` +
+      `${n(sum((r) => r.weeksOutOnsetRetire) / seasons, 8, 2)}`,
   )
+}
+
+/** THE CONSEQUENCE, NOT THE COUNT (round-16 item #13, the owner's ruling of 11.08: «RETIRE_K
+ *  оставляем как есть … 3 мощные травмы 6-4-4 недели подряд одна за одной – это слишком»). The rate
+ *  is not what he objected to; the length of the layoffs it hands out is. So the length distribution
+ *  is reported per door, whole, with the two thresholds his sentence names: 3+ weeks (the band that
+ *  produced his 4s) and 6+ weeks (his 6). */
+function printLayoffLengths(onsets: Onset[]): void {
+  console.log(`\nHOW LONG A LAYOFF LASTS, BY THE DOOR IT CAME IN BY – the CONSEQUENCE, not the rate`)
+  console.log(`  door           onsets   mean wks    median   >= 3 wks   >= 6 wks   >= 8 wks    worst`)
+  for (const cause of ['week', 'retirement'] as Cause[]) {
+    const rows = onsets.filter((o) => o.cause === cause).map((o) => o.weeksOut)
+    if (rows.length === 0) {
+      console.log(`  ${cause.padEnd(14)} ${String(0).padStart(6)}   (none)`)
+      continue
+    }
+    const sorted = [...rows].sort((a, b) => a - b)
+    const median = sorted[Math.floor(sorted.length / 2)]
+    const share = (p: (w: number) => boolean) => (100 * rows.filter(p).length) / rows.length
+    console.log(
+      `  ${cause.padEnd(14)} ${String(rows.length).padStart(6)} ${n(rows.reduce((s, w) => s + w, 0) / rows.length, 10, 2)} ` +
+        `${String(median).padStart(9)} ${n(share((w) => w >= 3), 9, 1)}% ${n(share((w) => w >= 6), 9, 1)}% ` +
+        `${n(share((w) => w >= 8), 9, 1)}% ${String(sorted[sorted.length - 1]).padStart(8)}`,
+    )
+  }
+  console.log(`\n  severity mix, as the two tables draw it:`)
+  console.log(`  door           minor   moderate      major     severe`)
+  for (const cause of ['week', 'retirement'] as Cause[]) {
+    const rows = onsets.filter((o) => o.cause === cause)
+    if (rows.length === 0) continue
+    const sh = (s: string) => (100 * rows.filter((o) => o.severity === s).length) / rows.length
+    console.log(
+      `  ${cause.padEnd(14)} ${n(sh('minor'), 6, 1)}% ${n(sh('moderate'), 9, 1)}% ${n(sh('major'), 9, 1)}% ${n(sh('severe'), 9, 1)}%`,
+    )
+  }
+  console.log(
+    `\n  ⚠ 'mean wks' is the layoff SERVED, after the physio recovery factor – it is what she loses,\n` +
+      `  not what the band nominally rolled, so it reads a little short of the table's own mean.`,
+  )
+}
+
+/** ⚠ AND THE FAILURE MODE ON THE OTHER SIDE. A retirement that costs nothing stops being an event:
+ *  if the whole distribution collapses onto one week the door becomes a shrug and #18's dialog is a
+ *  popup about nothing. This prints the share of retirements that still cost her a tournament week
+ *  or more, so "it went too far" is visible in the same table as "it went far enough". */
+function printStillMatters(onsets: Onset[]): void {
+  const ret = onsets.filter((o) => o.cause === 'retirement')
+  if (ret.length === 0) return
+  const share = (p: (o: Onset) => boolean) => (100 * ret.filter(p).length) / ret.length
+  console.log(`\nDOES THE RETIREMENT DOOR STILL READ AS A REAL EVENT?`)
+  console.log(`  she is back the following week (1 wk)      : ${n(share((o) => o.weeksOut === 1), 6, 1)}%`)
+  console.log(`  she misses at least one more week (2+ wks) : ${n(share((o) => o.weeksOut >= 2), 6, 1)}%`)
+  console.log(`  a real layoff (3+ wks)                     : ${n(share((o) => o.weeksOut >= 3), 6, 1)}%`)
+  console.log(`  the one that changes a season (8+ wks)     : ${n(share((o) => o.weeksOut >= 8), 6, 1)}%`)
 }
 
 function printDistribution(label: string, rows: SeasonRow[]): void {
@@ -221,6 +304,18 @@ function printDistribution(label: string, rows: SeasonRow[]): void {
   )
   const worst = [...totals].sort((a, b) => b - a)[0] ?? 0
   console.log(`  worst season observed: ${worst} injuries`)
+  // ⚠ AND THE SAME QUESTION IN WEEKS, WHICH IS THE ONE HE ASKED. «3 мощные травмы 6-4-4 недели» is a
+  // statement about 14 weeks, not about the number 3 – a season of three one-week niggles is a
+  // different season from a season of three six-week layoffs, and the count above cannot tell them
+  // apart. Layoffs are attributed to the season the ONSET landed in, so the three numbers he named
+  // would appear here as one season carrying 14.
+  const lost = rows.map((r) => r.weeksOutOnsetWeek + r.weeksOutOnsetRetire)
+  const pctAtLeast = (k: number) => (100 * lost.filter((w) => w >= k).length) / Math.max(1, lost.length)
+  console.log(
+    `  weeks lost (layoffs opened this season): mean ${n(lost.reduce((s, w) => s + w, 0) / Math.max(1, lost.length), 5, 2)}  ` +
+      `P(>=6wk) ${n(pctAtLeast(6), 5, 1)}%  P(>=10wk) ${n(pctAtLeast(10), 5, 1)}%  ` +
+      `P(3+ injuries AND >=10wk) ${n((100 * rows.filter((r) => r.weekOnsets + r.retireOnsets >= 3 && r.weeksOutOnsetWeek + r.weeksOutOnsetRetire >= 10).length) / Math.max(1, rows.length), 5, 1)}%`,
+  )
 }
 
 function main(): void {
@@ -242,14 +337,17 @@ function main(): void {
   )
 
   const disagreements: Disagreement[] = []
+  const onsets: Onset[] = []
   const rows: SeasonRow[] = []
   for (const profile of profiles) {
-    for (let i = 0; i < seeds; i++) rows.push(...runCareer(profile, policy, i, horizon, disagreements))
+    for (let i = 0; i < seeds; i++) rows.push(...runCareer(profile, policy, i, horizon, disagreements, onsets))
   }
 
   // ── 1. THE SPLIT ────────────────────────────────────────────────────────────
   console.log(`INJURIES PER SEASON, BY THE DOOR THEY CAME IN BY`)
-  console.log(`  band                          seasons  meanCond    weekly  retired     total  retired%  predicted`)
+  console.log(
+    `  band                          seasons  meanCond    weekly  retired     total  retired%  predicted   wksLost  wkDoor   retDoor`,
+  )
   printBand('ALL', rows)
   printBand('mean condition >= 80', rows.filter((r) => r.meanCondition >= 80))
   printBand('mean condition 70-79', rows.filter((r) => r.meanCondition >= 70 && r.meanCondition < 80))
@@ -258,8 +356,14 @@ function main(): void {
   console.log(
     `\n  'predicted' = Σ injuryTau over her at-risk weeks – what the WEEKLY roll alone is designed to\n` +
       `  deliver. Compare it with the 'weekly' column, never with 'total': the retirement is a second\n` +
-      `  door and the weekly model has never claimed to account for it.`,
+      `  door and the weekly model has never claimed to account for it.\n` +
+      `  'wksLost' = weeks of THIS season spent injured (a straddling layoff is split). 'wkDoor'/'retDoor'\n` +
+      `  = the layoffs OPENED this season, whole, per door – those two need not sum to 'wksLost'.`,
   )
+
+  // ── 1b. THE CONSEQUENCE, WHICH IS WHAT ROUND 16 CHANGED ─────────────────────
+  printLayoffLengths(onsets)
+  printStillMatters(onsets)
 
   // ── 2. THE DISTRIBUTION, WHICH IS THE OWNER'S ACTUAL QUESTION ───────────────
   const high = rows.filter((r) => r.meanCondition >= 70)
@@ -305,6 +409,20 @@ function main(): void {
   console.log(`  injuryBaseChance ${a.injuryBaseChance} · injuryFatigueSlope ${a.injuryFatigueSlope} · cap ${a.injuryChanceCap}`)
   console.log(`  injuryPlayingMultiplier ${a.injuryPlayingMultiplier} · injuryVacationFactor ${a.injuryVacationFactor}`)
   console.log(`  nominal tau at condition 100 (zero fatigue, before every multiplier): ${a.injuryBaseChance}`)
+  // ⚠ THE TWO TABLES, PRINTED SIDE BY SIDE, because since round 16 the door decides which one is
+  // read and a reader of this output must not have to guess which produced the mix above.
+  const show = (label: string, bands: typeof a.severityBands) => {
+    let prev = 0
+    const parts = bands.map((b) => {
+      const p = b.cum - prev
+      prev = b.cum
+      return `${b.severity} ${(100 * p).toFixed(1)}% ${b.weeksLo}-${b.weeksHi}w`
+    })
+    const mean = bands.reduce((s, b, i) => s + (b.cum - (i === 0 ? 0 : bands[i - 1].cum)) * ((b.weeksLo + b.weeksHi) / 2), 0)
+    console.log(`  ${label.padEnd(24)} ${parts.join(' · ')}   [nominal mean ${mean.toFixed(2)} wk]`)
+  }
+  show('severityBands (week)', a.severityBands)
+  show('retirementSeverityBands', a.retirementSeverityBands)
 }
 
 main()

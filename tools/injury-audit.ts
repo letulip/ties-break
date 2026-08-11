@@ -247,7 +247,13 @@ console.log('     seasons with >= 1 onset of any severity   ' + pct(seasons.filt
 console.log('     onsets per season                         ' + f(mean(seasons.map((s) => s.onsets.length))).padStart(6))
 console.log('     weeks lost per season                     ' + f(mean(seasons.map((s) => s.weeksInjured)), 1).padStart(6))
 console.log('     mean condition                            ' + f(mean(seasons.map((s) => s.meanCondition)), 0).padStart(6))
-console.log('\n     severity      onsets/season   seasons carrying >=1   mean weeks out   band')
+// ⚠ THE 'band' COLUMN IS THE WEEKLY ROLL'S TABLE, AND SINCE ROUND 16 THAT IS NOT THE ONLY ONE (#13).
+// The retirement door draws from `retirementSeverityBands` – same four labels, different odds and a
+// shorter moderate – so an onset counted here may have been rolled against a band this column does
+// not print. This audit's population is careers, which contain both doors, so read the column as
+// "the weekly roll's design", never as "the band this onset came from".
+// `tools/injury-cause-probe.ts` is the instrument that separates them; it reports the mix per door.
+console.log('\n     severity      onsets/season   seasons carrying >=1   mean weeks out   band (WEEKLY roll)')
 for (const sev of SEVERITIES) {
   const band = ECONOMY.availability.severityBands.find((b) => b.severity === sev)!
   const share = onsets.filter((o) => o.severity === sev)
@@ -322,13 +328,23 @@ console.log(
   `     severes per career                          mean ${f(mean(careers.map((c) => c.onsets.filter((o) => o.severity === 'severe').length)))}  ` +
     `max ${Math.max(0, ...careers.map((c) => c.onsets.filter((o) => o.severity === 'severe').length))}`,
 )
-console.log('     observed severity mix vs the designed bands:')
+// ⚠ 'designed' IS THE WEEKLY ROLL'S DESIGN AND THE OBSERVED MIX IS A BLEND OF TWO DOORS (round 16
+// #13). Both columns are printed unchanged because the weekly design is still the reference this
+// audit was built to grade – but a gap between them is NOT automatically a defect any more: the
+// retirement door draws 80/15/4/1, and it supplies ~61% of a career's onsets, so the blend is
+// expected to read lighter than the weekly design at every band above minor. Use
+// `tools/injury-cause-probe.ts` to see the two apart before concluding anything from a gap here.
+console.log('     observed severity mix (BOTH doors) vs the WEEKLY roll\'s designed bands:')
 for (const sev of SEVERITIES) {
   const band = ECONOMY.availability.severityBands
   const i = band.findIndex((b) => b.severity === sev)
   const designed = band[i].cum - (i === 0 ? 0 : band[i - 1].cum)
+  const ret = ECONOMY.availability.retirementSeverityBands
+  const j = ret.findIndex((b) => b.severity === sev)
+  const retDesigned = ret[j].cum - (j === 0 ? 0 : ret[j - 1].cum)
   console.log(
-    `       ${sev.padEnd(9)} observed ${pct(onsets.filter((o) => o.severity === sev).length, onsets.length)}   designed ${(100 * designed).toFixed(1).padStart(5)}%`,
+    `       ${sev.padEnd(9)} observed ${pct(onsets.filter((o) => o.severity === sev).length, onsets.length)}   ` +
+      `designed ${(100 * designed).toFixed(1).padStart(5)}% weekly / ${(100 * retDesigned).toFixed(1).padStart(5)}% retirement`,
   )
 }
 console.log(

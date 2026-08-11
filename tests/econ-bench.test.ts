@@ -139,6 +139,9 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
       const r = runCareer(middle, 0, h.weeks)
       const { world, rng } = openCareer(middle, 0)
       let refundsCents = 0
+      // Every sponsor-category row the fold captures, kept WHOLE rather than summed – see the
+      // re-aim note below for why a sum is the wrong shape for this claim.
+      const sponsorRows: number[] = []
       for (let i = 0; i < h.weeks; i++) {
         stepCareerWeek(world, rng)
         const year = Math.floor(world.week / WEEKS_PER_YEAR)
@@ -146,21 +149,63 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
           world.week % WEEKS_PER_YEAR <= SEASON_WRAP_OFFSET && // inside the fold window [52k .. 52k+49]
           year * WEEKS_PER_YEAR + SEASON_WRAP_OFFSET <= h.weeks // ...of a season whose wrap lands in-horizon
         if (!capturedWeek) continue
-        refundsCents += world.events
-          .filter((e) => e.week === world.week && e.text.startsWith('Entry refunded'))
-          .reduce((s, e) => s + (e.amountCents ?? 0), 0)
+        // ONE pass over the week's rows for both counters. This file already sits inside birpc's
+        // 60s RPC window (see the note at the top of the sim project); a second full scan of the
+        // event ledger per captured week is not free.
+        for (const e of world.events) {
+          if (e.week !== world.week) continue
+          if (e.text.startsWith('Entry refunded')) refundsCents += e.amountCents ?? 0
+          if (e.category === 'sponsor') sponsorRows.push(e.amountCents ?? 0)
+        }
       }
       expect(r.cats.income).toBe(capturedIncomeCents(h.weeks) + refundsCents)
-      // The sponsor bucket holds ONLY whole annual grants for a middle career (no cameo, which is
-      // working-only), so it is an exact multiple of one of the two grant sizes and never a stray
-      // fraction of the income line.
-      const { seasonCents, topSeasonCents } = ECONOMY.sponsorship
-      expect(r.cats.sponsor % seasonCents === 0 || r.cats.sponsor % topSeasonCents === 0).toBe(true)
-      // ...and it is capped by the number of season boundaries inside the horizon: a grant lands at
-      // weeks 52, 104, 156, 208, and the LAST one falls outside the finance fold (which closes at the
-      // wrap, week 52k+49), so at most `floor(weeks/52) - 1` grants can appear in this bucket.
-      const foldedBoundaries = Math.max(0, Math.floor(h.weeks / WEEKS_PER_YEAR) - 1)
-      expect(r.cats.sponsor).toBeLessThanOrEqual(foldedBoundaries * topSeasonCents)
+      // ⚠⚠ RE-AIMED 11.08 (round-16 #13, the retirement severity table), AND THE OLD ASSERTION WAS
+      // TESTING A PREMISE THAT NO LONGER EXISTS. It read:
+      //
+      //     const { seasonCents, topSeasonCents } = ECONOMY.sponsorship
+      //     expect(r.cats.sponsor % seasonCents === 0 || r.cats.sponsor % topSeasonCents === 0)
+      //     expect(r.cats.sponsor).toBeLessThanOrEqual(foldedBoundaries * topSeasonCents)
+      //
+      // on the stated reasoning that "the sponsor bucket holds ONLY whole annual grants for a middle
+      // career (no cameo, which is working-only)". BOTH halves of that sentence were retired by
+      // owner rulings before this wave, and the assertion survived only because this cell was
+      // VACUOUS: measured on the base commit, `r.cats.sponsor` was **0** at both horizons, so
+      // `0 % anything === 0` passed and the cap passed, and nobody had to notice.
+      //
+      //   1. THE GRANT IS NOT CASH ANY MORE (31.07, «кит вместо денег»). It is paid in KIT – the shop
+      //      pays her racquet / string / shoe bills up to `sponsorship.seasonCents` – and
+      //      `economy.ts` says in as many words that "the money never reaches the balance". Grep
+      //      confirms it: `category: 'sponsor'` has exactly ONE emitter in the whole engine, and it
+      //      is the cameo. A whole annual grant can no longer appear in this bucket at all, so the
+      //      modulus was checking for something the engine had stopped producing.
+      //   2. THE CAMEO IS NOT BACKGROUND-GATED ANY MORE (10.08, the owner: «порог по деньгам на счету,
+      //      а не по строчке в анкете»). `ECONOMY.sponsor.eligible` is GONE and `sponsorNeedMet`
+      //      replaced it – a runway test on the balance. A middle career banks the cameo the moment
+      //      it runs short, which is exactly what it is for.
+      //
+      // WHAT MADE IT FIRE, and it is the round-16 change working as designed: shorter retirement
+      // layoffs put her back on court, she enters and travels more, her runway drops under
+      // `ECONOMY.sponsor.runwayWeeks` in seasons 2 and 3, and the shop chips in. Measured on this
+      // branch, middle/seed 0, 208 weeks: 7 cameos totalling $8,433.36, every one of them inside the
+      // $500-$1,500 band, none of them a multiple of $1,000. The old line went red on the FIRST
+      // career it had ever actually been asked about.
+      //
+      // THE PROTECTED FACT IS THE ONE ABOVE, AND IT IS UNTOUCHED: `cats.income` must equal the
+      // independently-replayed parent contribution plus refunds EXACTLY – no sponsor money has
+      // leaked into the income bucket. That is what this case is for.
+      //
+      // The replacement is STRICTER than what it replaces, not looser: a modulus on a SUM could be
+      // satisfied by any number of wrong rows that happened to add up, whereas this checks EVERY row
+      // against the only instrument that can legally produce one. A grant leaking back into cash, or
+      // any third instrument arriving in this bucket, fails it.
+      const [cameoLo, cameoHi] = ECONOMY.sponsor.amountCents
+      for (const row of sponsorRows) {
+        expect(row, `sponsor row at week ${row} outside the cameo band`).toBeGreaterThanOrEqual(cameoLo)
+        expect(row).toBeLessThanOrEqual(cameoHi)
+      }
+      // ...and the bucket is exactly those rows, which is the reconciliation the old cap was reaching
+      // for: the bench's captured total cannot contain a cent the replay did not see.
+      expect(r.cats.sponsor).toBe(sponsorRows.reduce((s, a) => s + a, 0))
     }
   })
 })
