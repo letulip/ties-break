@@ -1,12 +1,60 @@
 // Round 5 item 1 – real dates. Pure: week N -> a calendar date range, no engine/DOM deps.
-// The career's week 0 always starts Monday, Jan 6, 2031 (a fixed fictional epoch), so every
-// week is a deterministic function of its index: week N spans
-// [epoch + 7*N days, epoch + 7*N + 6 days] (Monday..Sunday).
+// The career's week 0 always starts Monday, Jan 6, 2031 (a fixed fictional epoch), and every
+// week spans a Monday..Sunday of the real calendar.
 //
 // Dash style (owner instruction): en dash "–" only, never an em dash, in all display text.
+//
+// =================================================================================================
+// ⚠⚠ THE CALENDAR RE-ANCHORS EVERY SEASON. Owner approved 11.08, and it is the ROOT this file used
+// to have three separate workarounds for.
+// =================================================================================================
+//
+// It used to run CONTINUOUSLY off one epoch: `weekStart(week) = Jan 6 2031 + 7*week days`. A season
+// is 52 weeks = 364 days and a Gregorian year is 365.2425, so the whole career SLID ~1.24 days
+// earlier every season – a full week every ~5.6 seasons, and a long career meets the consequences
+// three or four times. Three symptoms were paid for separately before the cause was named:
+//
+//   * SEASON 5 VANISHED from the Stats table. `weekYear(208) === weekYear(260) === 2035` – the
+//     season's opening Monday had walked back over New Year – so the wrap-up's dedup guard read
+//     season 5 as already banked and dropped its row. Worked around with a season-index re-key
+//     (migrations v16) and `seasonYear`, not fixed.
+//   * SCHOOL WAS DRAWN IN AUGUST (round-16 #16): season-week offset 34, the first week after the
+//     summer holidays, is 1 Sep 2031 in season 0 and then 30 Aug '32, 29 Aug '33, 28 Aug '34.
+//   * The surface blocks and the exam fortnight are season-week spans that name real months in
+//     their comments, and every one of those names was going quietly stale.
+//
+// THE FIX: a season is anchored to the FIRST MONDAY OF ITS OWN YEAR, not to the season before it.
+//
+//     seasonIndex   = floor(week / WEEKS_IN_SEASON)
+//     weekStart(w)  = firstMonday(EPOCH_YEAR + seasonIndex) + (w mod WEEKS_IN_SEASON) * 7 days
+//
+// No drift, ever. The ~1.24 days a season are absorbed at the New Year boundary, where nobody can
+// look: in a year the calendar needs 53 weeks to cover, the gap between one season's last Monday
+// and the next season's first Monday is 14 days instead of 7, and one real calendar week simply
+// belongs to no career week. The player only ever reads dates, and the dates are now permanently
+// correct.
+//
+// ⚠ AND `weekYear` STOPPED BEING ABLE TO COLLIDE. Season N opens in EPOCH_YEAR + N by construction,
+// so `weekYear(week) === seasonYear(floor(week / WEEKS_IN_SEASON))` identically, for every week of
+// every career. The season-5 collision is not scanned around any more – it cannot be expressed.
+// See the note on `weekYear` for what that does and does NOT license.
+//
+// ⚠ WHAT THIS DELIBERATELY DOES NOT TOUCH. The ENGINE's week index is still absolute and still
+// counts straight through (`seed:injury:87`, the frozen MAIN capture, the save format, every bench).
+// Nothing here draws from any RNG stream; this file imports nothing at all.
 
-const EPOCH_UTC = Date.UTC(2031, 0, 6) // Monday, Jan 6, 2031
 const MS_PER_DAY = 24 * 60 * 60 * 1000
+
+/** The calendar year season 0 opens in – Monday 6 Jan 2031 is still week 0.
+ *
+ *  ⚠ A LITERAL, where it used to be `weekYear(0)`. `weekYear` now anchors on the season, so deriving
+ *  the epoch year from it would be circular (and a temporal-dead-zone crash at module load). This is
+ *  the ONE place the epoch year is stated; `weekYear(0)` still returns it, and tests pin that. */
+const EPOCH_YEAR = 2031
+
+/** A season is exactly 52 career weeks. === WEEKS_PER_YEAR in engine/season/calendar.ts (pinned in
+ *  tests). Declared up here because `weekStart` is now a function OF the season index. */
+export const WEEKS_IN_SEASON = 52
 
 const MONTHS = [
   'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
@@ -18,19 +66,40 @@ interface Ymd {
   year: number
 }
 
-function dateAtDay(dayOffset: number): Ymd {
-  const d = new Date(EPOCH_UTC + dayOffset * MS_PER_DAY)
+/** UTC ms of the first Monday of `year` – the anchor a whole season hangs off.
+ *
+ *  Jan 1 falls on some weekday; the first Monday is 0..6 days later, so the anchor is always in
+ *  Jan 1..Jan 7. `getUTCDay` is 0=Sunday, hence the Sunday-is-7 fold. */
+function firstMondayUtc(year: number): number {
+  const jan1 = Date.UTC(year, 0, 1)
+  const dow = new Date(jan1).getUTCDay() || 7 // 1 Mon .. 7 Sun
+  return jan1 + ((8 - dow) % 7) * MS_PER_DAY
+}
+
+/** UTC ms of the Monday that opens career `week`. THE ONE place the mapping lives.
+ *
+ *  Total for negative weeks too, and it has to be: entry deadlines and `weekOfDate` both reach
+ *  behind week 0. Week -1 is season -1's offset 51, i.e. the Monday before the career opened. */
+function weekStartUtc(week: number): number {
+  const w = Math.floor(week)
+  const seasonIndex = Math.floor(w / WEEKS_IN_SEASON)
+  const offset = w - seasonIndex * WEEKS_IN_SEASON // 0..51 for every integer, negatives included
+  return firstMondayUtc(EPOCH_YEAR + seasonIndex) + offset * 7 * MS_PER_DAY
+}
+
+function ymdAt(utc: number): Ymd {
+  const d = new Date(utc)
   return { month: d.getUTCMonth(), day: d.getUTCDate(), year: d.getUTCFullYear() }
 }
 
 /** First day (Monday) of the given career week, as {month, day, year}. */
 function weekStart(week: number): Ymd {
-  return dateAtDay(week * 7)
+  return ymdAt(weekStartUtc(week))
 }
 
 /** Last day (Sunday) of the given career week, as {month, day, year}. */
 function weekEnd(week: number): Ymd {
-  return dateAtDay(week * 7 + 6)
+  return ymdAt(weekStartUtc(week) + 6 * MS_PER_DAY)
 }
 
 /** THE CALENDAR MONTH the week's Monday falls in, 1-12.
@@ -38,7 +107,13 @@ function weekEnd(week: number): Ymd {
  *  Exported for the age model (world.ts `kidAgeExact`) and for her birthday. A REAL-CALENDAR fact about a
  *  date, like `weekYear` below and with the same warning: it is not a season identity. The epoch is Monday
  *  6 Jan 2031, so week 0 is January and the season's own week 1 is too - see the note on the season start
- *  in docs/specs/relative-age.md. */
+ *  in docs/specs/relative-age.md.
+ *
+ *  ⚠ THAT LAST SENTENCE IS NOW A GUARANTEE RATHER THAN AN OBSERVATION. Since the re-anchor every season
+ *  opens on the first Monday of its own year, which is always Jan 1-7, so EVERY season's week 1 is in
+ *  January - it used to be true of the early seasons and to walk off with the drift. What did NOT become
+ *  a guarantee is any later offset: offset 34, the school-year turn, still lands in August most seasons
+ *  (docs/specs/season-anchor.md §3d). A season-week offset is not a month. */
 export function weekMonth(week: number): number {
   return weekStart(week).month + 1
 }
@@ -61,34 +136,68 @@ export function daysInBirthMonth(month: number): number {
  *  falls in week -1: a girl born on 3 January has already had her birthday by the time the career opens,
  *  and her first in-game one is in 2032. That is the honest answer rather than a bug - the career started
  *  after her birthday - and it is why the birthday check compares against the CURRENT week rather than
- *  assuming every season contains one. */
+ *  assuming every season contains one.
+ *
+ *  ⚠ AND NULL IS NOW REACHABLE MID-CAREER, not only off the ends. Seasons re-anchor, so the calendar
+ *  weeks a career covers are no longer one unbroken run: in a year that needs 53 weeks the New Year gap
+ *  is 14 days rather than 7, and the real week inside that gap belongs to NO career week. A date there
+ *  is honestly reported as absent, which is why the search below tries the season that owns `year` and
+ *  then the tail of the one before it rather than doing division and trusting the answer.
+ *
+ *  ⚠ MEASURED ON ALL 365 BIRTH DATES BEFORE SHIPPING, twelve seasons each, because a birthday is the
+ *  one thing this can silently take away. The re-anchor GIVES nine dates a birthday back (22-30
+ *  December had eleven in twelve seasons on the old calendar and now have twelve) and costs exactly
+ *  ONE date one: a girl born 31 December has no birthday week in season 9, because 31 Dec 2040 is the
+ *  first day of a skipped week. 355 dates are unchanged. Not silently swallowed - `birthdayTurning`
+ *  compares against the current week and already treats "no birthday this year" as a real answer, for
+ *  the reason above. docs/specs/season-anchor.md §3e; whether she should be given it early is a policy
+ *  question and the owner's. */
 export function weekOfDate(month: number, day: number, year: number): number | null {
   const target = Date.UTC(year, Math.max(1, Math.min(12, Math.round(month))) - 1, Math.max(1, day))
-  const dayOffset = Math.floor((target - EPOCH_UTC) / MS_PER_DAY)
-  const week = Math.floor(dayOffset / 7)
-  // Guard against a date so far out that the arithmetic stops being meaningful.
-  return Number.isFinite(week) ? week : null
-}
-
-/** The FIRST career week whose Monday falls in `month` of `year`, or null when that month is outside the
- *  career's calendar. Used to find the week her birthday lands in.
- *
- *  Walks rather than computes: the epoch is a Monday and months are not week-aligned, so closed-form
- *  arithmetic would be off by up to six days twelve times a year. A career is a few hundred weeks and this
- *  is called once per season, so the loop is free. */
-export function firstWeekOfMonth(month: number, year: number): number | null {
-  for (let w = 0; w < 52 * 40; w++) {
-    const d = weekStart(w)
-    if (d.year === year && d.month + 1 === month) return w
-    if (d.year > year || (d.year === year && d.month + 1 > month)) return null
+  if (!Number.isFinite(target)) return null
+  const seasonIndex = year - EPOCH_YEAR
+  // A date in `year` sits either inside that year's own season or in the December tail of the season
+  // before it (whose offset-51 Monday is always in December). Two candidates, both verified.
+  for (const s of [seasonIndex, seasonIndex - 1]) {
+    const offset = Math.floor((target - firstMondayUtc(EPOCH_YEAR + s)) / (7 * MS_PER_DAY))
+    if (offset >= 0 && offset < WEEKS_IN_SEASON) return s * WEEKS_IN_SEASON + offset
   }
   return null
 }
 
-/** The calendar year the week's Monday falls in. A REAL-CALENDAR fact about a date, and nothing
- *  more – it is NOT a season identity and must never be used as one (see `seasonYear` below and
- *  the note above WEEKS_IN_SEASON: it collides at season 5). Kept because the date range genuinely
- *  needs the calendar year, and because the tests that pin the collision have to be able to name it. */
+/** The FIRST career week whose Monday falls in `month` of `year`, or null when that month is outside the
+ *  career's calendar.
+ *
+ *  Walks rather than computes: a season's anchor is a Monday and months are not week-aligned, so
+ *  closed-form arithmetic would be off by up to six days twelve times a year. One season is 52
+ *  comparisons and this is called at most once per season, so the loop is free.
+ *
+ *  ⚠ SCANS ONE SEASON, not the whole career, because re-anchoring made that exact: season N covers
+ *  `year` = EPOCH_YEAR + N from its first Monday (always Jan 1-7) to its offset-51 Monday (always in
+ *  December). No month of `year` can be reached from any other season's weeks. */
+export function firstWeekOfMonth(month: number, year: number): number | null {
+  const seasonIndex = year - EPOCH_YEAR
+  for (let offset = 0; offset < WEEKS_IN_SEASON; offset++) {
+    const w = seasonIndex * WEEKS_IN_SEASON + offset
+    const d = weekStart(w)
+    if (d.year === year && d.month + 1 === month) return w
+  }
+  return null
+}
+
+/** The calendar year the week's Monday falls in.
+ *
+ *  ⚠ IT CAN NO LONGER COLLIDE, AND THAT IS A PROPERTY, NOT A LICENCE. Since the re-anchor (see the
+ *  header) season N opens on the first Monday of EPOCH_YEAR + N, so this is identically
+ *  `seasonYear(floor(week / WEEKS_IN_SEASON))` for every week of every career – the season-5 clash
+ *  that ate a row out of the Stats table is now unexpressible rather than worked around.
+ *
+ *  KEEP CALLING `seasonYear` WHERE YOU MEAN A SEASON. The two agreeing is arithmetic, not intent: this
+ *  one answers "what does the calendar say", `seasonYear` answers "which season is this", and only the
+ *  second is an identity you may key a record on. A future owner ruling that moves a season off its own
+ *  January (a southern-hemisphere calendar, a split year) would part them again, and every call site
+ *  that had quietly started meaning "season" would break at once. `tests/round13-nav.test.ts` still
+ *  refuses `weekYear(` in the trophy cabinet for exactly this reason. */
 export function weekYear(week: number): number {
   return weekStart(week).year
 }
@@ -111,22 +220,27 @@ export function weekYear(week: number): number {
 //   * the year is the same one the wrap-up popup and the season-by-season table already name
 //     ("Season 2031"), so there is nothing new to learn – '31 IS that season.
 //
-// The season year is the SEASON INDEX off the epoch year, NOT weekYear(week). A season is
-// exactly 52 weeks = 364 days, so a season's opening Monday drifts ~1.25 days earlier each year and
-// crosses back over New Year at season 5: weekYear(208) and weekYear(260) are BOTH 2035. A label
-// built on that would print two consecutive seasons as '35 – the one thing it exists to prevent.
-export const WEEKS_IN_SEASON = 52 // === WEEKS_PER_YEAR in engine/season/calendar.ts (pinned in tests)
-const EPOCH_YEAR = weekYear(0) // 2031
+// The season year is the SEASON INDEX off the epoch year, NOT weekYear(week) – and it was written
+// that way BEFORE the re-anchor, when the two genuinely disagreed: a continuous 364-day season slid
+// ~1.25 days a year and crossed back over New Year at season 5, so weekYear(208) and weekYear(260)
+// were BOTH 2035 and a label built on the date would have printed two consecutive seasons as '35.
+// The re-anchor removed that disagreement at the root (weekYear is now the same number), and this
+// derivation stays exactly as it is: the label is naming a SEASON, and it should say so in code.
+// `WEEKS_IN_SEASON` and `EPOCH_YEAR` now have to be declared above `weekStart`, which reads them.
 
 /** THE ONE definition of a season's DISPLAY year, from its 0-based INDEX and nothing else.
  *
  *  Extracted out of `weekLabel` (fix/world-trio) because the label was not the only surface that
  *  needed it: the season wrap-up milestone, the wrap-up popup and the Stats season-by-season table
  *  each derived their own "Season 2035" from `weekYear(seasonFirstWeek)` – the exact date-derived
- *  year the note above says drifts – and the history table went further and used it as a season's
+ *  year the note above says drifted – and the history table went further and used it as a season's
  *  IDENTITY, which silently dropped season 5 (both it and season 4 hashed to 2035). The identity is
  *  now the index everywhere; this is the only place that turns an index into a year to print, so
  *  every surface that names a season names the same one.
+ *
+ *  ⚠ THE RE-ANCHOR DID NOT MAKE THIS REDUNDANT. `weekYear` now returns the same number, but this is
+ *  the function that MEANS a season – it is total for indices no career reaches and it needs no date
+ *  arithmetic to be right. Reading a season's year off a week's date would be correct by coincidence.
  *
  *  Total and strictly increasing by construction – two different seasons can never print alike. */
 export function seasonYear(seasonIndex: number): number {
@@ -175,7 +289,7 @@ export function weekSpan(week: number): string {
  *  the span printed in the header above them cannot disagree about which Monday this is. A month
  *  boundary needs no special case - the numbers come from real dates, one day apart. */
 export function weekDayNumbers(week: number): number[] {
-  return [0, 1, 2, 3, 4, 5, 6].map((d) => dateAtDay(week * 7 + d).day)
+  return [0, 1, 2, 3, 4, 5, 6].map((d) => ymdAt(weekStartUtc(week) + d * MS_PER_DAY).day)
 }
 
 /** "W27 2033 · Jun 3 – Jun 9" – THE date line of the redesigned Home header (epic/redesign-home).

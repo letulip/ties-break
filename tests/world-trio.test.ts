@@ -2,10 +2,16 @@
 //
 //   1. A WHOLE SEASON DISAPPEARED from the career history. `maybeFireSeasonWrapUp` keyed
 //      `seasonHistory` on `weekYear(seasonFirstWeek)` — a CALENDAR year derived from a date — and
-//      that value repeats: a season is 52 weeks = 364 days, so its opening Monday walks ~1.25 days
-//      earlier a year and steps back over New Year at season 5. `weekYear(208)` and `weekYear(260)`
-//      are BOTH 2035, so the dedup guard read season 5 as already banked and dropped its row. The
+//      that value repeated: a season is 52 weeks = 364 days, so its opening Monday walked ~1.25 days
+//      earlier a year and stepped back over New Year at season 5. `weekYear(208)` and `weekYear(260)`
+//      were BOTH 2035, so the dedup guard read season 5 as already banked and dropped its row. The
 //      identity is now the SEASON INDEX; the year is derived from the index, for display only.
+//
+//      ⚠ AND THE CAUSE IS FIXED TOO, one wave later (wave/flags-grant): `shared/dates.ts` re-anchors
+//      each season to the first Monday of its own year, so the drift is gone and `weekYear` cannot
+//      repeat. The index-keyed identity STAYS – it is what a record should be keyed on whatever the
+//      calendar does – and item 1's pins now prove both halves: that the collision was real (against
+//      the frozen `legacyWeekYear`) and that the shipped calendar cannot produce one.
 //
 //   2. THE ENGINE STILL PRINTED THE ABSOLUTE WEEK. `ui/week-numbering` (R11-6) introduced
 //      `weekLabel()` and swept 33 render sites, but 14 strings written by the ENGINE still embedded
@@ -39,7 +45,7 @@ import {
   SAVE_SCHEMA_VERSION,
   type WorldState,
 } from '../src/engine/world'
-import { migrateSave } from '../src/engine/migrations'
+import { migrateSave, legacyWeekYear } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { LADDER_TRACKS } from '../src/shared/protocol'
@@ -109,21 +115,58 @@ function playCareer(seed: string, weeks: number, onWeek?: (w: WorldState) => boo
 // ===========================================================================
 
 describe('item 1 — the collision that ate a season', () => {
-  it('THE MECHANISM: two consecutive seasons really do open in the same calendar year', () => {
+  // ⚠ RE-AIMED BY THE SEASON RE-ANCHOR (wave/flags-grant), AND IT GOT STRONGER RATHER THAN WEAKER.
+  //
+  // This used to ask the LIVE `weekYear` to reproduce the collision, because the live calendar was
+  // the thing with the bug in it: one continuous 364-day cycle off a fixed epoch, sliding ~1.24 days
+  // earlier a season against a Gregorian 365.2425, until season 5's opening Monday stepped back over
+  // New Year. `shared/dates.ts` now anchors every season to the first Monday of its OWN year, so
+  // `weekYear(week) === seasonYear(floor(week / 52))` identically and there is no live arithmetic
+  // left that can collide.
+  //
+  // Deleting the pin would have thrown away the half that still matters – that the defect was REAL
+  // and this is its shape – so the mechanism is now stated against `legacyWeekYear`, the historical
+  // calendar frozen in migrations.ts (the v16 back-fill has to keep inverting what the old writer
+  // wrote, so the arithmetic had to survive there anyway). The second half is new and is the whole
+  // point of the re-anchor: the SHIPPED calendar produces no collision at all, over 40 seasons.
+  //
+  // Measured on the owner's own saves before shipping (tools/season-anchor-read.ts): no rung's
+  // opening week moved on any of seven careers, no season gained or lost a birthday, and no
+  // birthday crossed a save's current week. docs/specs/season-anchor.md.
+  it('THE MECHANISM: two consecutive seasons really did open in the same calendar year', () => {
     // Not a hypothetical. This is the arithmetic the old key was built on, stated out loud.
-    expect(weekYear(4 * WEEKS_IN_SEASON)).toBe(2035) // season 4 opens Jan 1, 2035
-    expect(weekYear(5 * WEEKS_IN_SEASON)).toBe(2035) // season 5 opens Dec 31, 2035
+    expect(legacyWeekYear(4 * WEEKS_IN_SEASON)).toBe(2035) // season 4 opened Jan 1, 2035
+    expect(legacyWeekYear(5 * WEEKS_IN_SEASON)).toBe(2035) // season 5 opened Dec 31, 2035
     expect(seasonStartWeek(wrapWeekOf(4))).toBe(208)
     expect(seasonStartWeek(wrapWeekOf(5))).toBe(260)
-    // ...and it is the ONLY such pair inside any career the game can reach, which is exactly what
+    // ...and it was the ONLY such pair inside any career the game can reach, which is exactly what
     // made it survive four rounds of tests: a suite that stops at season 2 can never see it.
     const collisions = []
     for (let k = 0; k < 40; k++) {
       for (let j = 0; j < k; j++) {
-        if (weekYear(k * WEEKS_IN_SEASON) === weekYear(j * WEEKS_IN_SEASON)) collisions.push([j, k])
+        if (legacyWeekYear(k * WEEKS_IN_SEASON) === legacyWeekYear(j * WEEKS_IN_SEASON)) collisions.push([j, k])
       }
     }
     expect(collisions).toEqual([[4, 5]])
+  })
+
+  it('THE ROOT FIX: the shipped calendar cannot express that collision at all', () => {
+    // Season N opens on the first Monday of EPOCH_YEAR + N, so the date-derived year and the season
+    // identity are the same number for every week of every career – 40 seasons, no pair, no scan.
+    const clashes = []
+    for (let k = 0; k < 40; k++) {
+      for (let j = 0; j < k; j++) {
+        if (weekYear(k * WEEKS_IN_SEASON) === weekYear(j * WEEKS_IN_SEASON)) clashes.push([j, k])
+      }
+    }
+    expect(clashes).toEqual([])
+    // ...and the pair that used to clash now reads as the two seasons it always was.
+    expect(weekYear(208)).toBe(2035)
+    expect(weekYear(260)).toBe(2036)
+    // The identity and the date agree WEEK BY WEEK, not only at the season's first one.
+    for (let w = 0; w < 40 * WEEKS_IN_SEASON; w += 7) {
+      expect(weekYear(w), `week ${w}`).toBe(seasonYear(Math.floor(w / WEEKS_IN_SEASON)))
+    }
   })
 
   it('THE FIX: the identity is the index, and an index cannot collide', () => {

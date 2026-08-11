@@ -1126,7 +1126,14 @@ const SUMMER_LAST_MONTH = 8
  *  that is one extra week a season and, at the very end, two.
  *
  *  ⚠ RNG: still nothing draws. `weekMonth` is date arithmetic on a fixed epoch, so the frozen MAIN
- *  capture cannot see this line – the block's own note in world/summer.ts covers the rest. */
+ *  capture cannot see this line – the block's own note in world/summer.ts covers the rest.
+ *
+ *  ⚠⚠ THE ROOT WAS FIXED A WAVE LATER AND THIS CEILING STILL EARNS ITS PLACE. `shared/dates.ts` now
+ *  re-anchors every season to the first Monday of its own year, so the walk above is no longer
+ *  unbounded – offset 34 cycles inside Aug 27 – Sep 2 instead of leaving September for good. But it
+ *  is still AUGUST in nine seasons out of twelve (s1-s4, s6-s9 above and below), so this line is what
+ *  keeps school out of it, exactly as it was. Belt and braces, and both are load-bearing:
+ *  docs/specs/season-anchor.md §3d has the measured table. DO NOT revert this as "fixed upstream". */
 export function isSummerWeek(week: number): boolean {
   const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
   if (offset < SUMMER_WEEKS[0]) return false

@@ -535,3 +535,54 @@ coaching bill, so this arm can no longer notice a wave that re-prices coaches. T
 durable and it is also what it gives up; the money question now lives entirely in
 `tools/compound-cost.ts`, `endings-bench` and the survival rows of `bench:econ`. Full write-up,
 tables and the solvency-versus-tennis split for all nine presets: `compound-cost-2026-08.md` §9.
+
+## 2026-08-11 – The calendar re-anchors every season, and the drift is over (`wave/flags-grant`)
+
+The owner approved the shape on 11.08: re-anchor per season instead of running continuously.
+
+`shared/dates.ts` mapped a career week to a real date as `epoch + 7*week days` – one unbroken
+364-day cycle against a Gregorian 365.2425, sliding **~1.24 days earlier every season, for ever**.
+The game had already paid for that three times without naming it: season 5 vanishing out of the Stats
+table (`weekYear(208) === weekYear(260) === 2035`, worked around with a season-index re-key and a
+scan), school drawn in August (round-16 #16, fixed for one window in `7dd25d8`), and the surface
+blocks quietly outgrowing the months their own comments name.
+
+Each season now hangs off the **first Monday of its own year**. No drift, ever; the slack lands at
+New Year, where two boundaries in twelve seasons skip a real calendar week that nobody plays.
+`weekYear(week)` is now identically `seasonYear(floor(week / 52))`, so **the season-5 collision is
+unexpressible rather than scanned around**.
+
+**Shipped as a pure re-derivation – NO migration, and that is measured rather than assumed.** Nothing
+about the mapping is persisted; the question was only whether re-deriving changes a live career, and
+the answer on the owner's seven real saves (weeks 104-412, four birth months, read through the
+engine's own import door by `tools/season-anchor-read.ts` – the saves are personal and nothing is
+derived from one beyond the aggregates) is **no**:
+
+* **not one of sixteen age gates moves its opening week**, on any save;
+* **no season gains or loses a birthday**, and the age announced on every birthday is identical;
+* **no birthday crosses a save's current week** – 8 behind her before, 8 after, on the deepest career
+  on file, so a load can neither skip nor repeat one.
+
+And because four birth months cannot cover a change that lands at New Year, **all 365 birth dates**
+were swept as well, twelve seasons each. Ten differ, and the net is positive: 22-30 December (nine
+dates) had **eleven** birthdays in twelve seasons on the old calendar and now have twelve, and one
+date – 31 December – loses one, in season 9 only. The other 355 are identical. Whether a
+31-December girl should be given that birthday early rather than not at all is a policy question and
+**his**, not decided here.
+
+The frozen MAIN capture (41550 draws / `e6b0c709`) **does not move**, verified rather than assumed:
+`shared/dates.ts` taps no stream and `ageInjuryFactor` is a post-draw multiply.
+
+⚠ **One place the ENGINE's behaviour moves, not just what it prints.** `isSummerWeek`'s ceiling reads
+`weekMonth`, so the set of summer weeks moves with the calendar – and a summer week develops and
+fatigues differently. It touches exactly one offset (34) in three seasons of twelve (5, 10, 11), and
+in all three that week genuinely IS September on the re-anchored calendar, so losing it is his own
+rule being obeyed: «после экзаменов каникулы и удвоенные тренировки до сентября». The round-16
+measurement (72 -> 81 school-free weeks over eight seasons) is unchanged over its own window.
+
+⚠ **Two things stay, and both are load-bearing.** `isSummerWeek`'s calendar ceiling (`7dd25d8`) is
+NOT redundant – re-anchoring bounds the school-year offset to Aug 27 – Sep 2 but it is still August
+in nine seasons of twelve, so that line is what keeps school out of it. And `migrations.ts`'s v16
+scan cannot collapse to `year - 2031`: it inverts what the OLD writer wrote, so the historical
+arithmetic is frozen beside it as `legacyWeekYear`. Full measurement, tables and the
+migration-or-not reasoning: `docs/specs/season-anchor.md`.
