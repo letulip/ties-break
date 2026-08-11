@@ -184,6 +184,23 @@ const watchedRoundLabel = computed(() => {
   return p.bracket[p.bracket.length - 1]?.roundLabel ?? p.roundLabel
 })
 
+/**
+ * THE PRE-MATCH PREVIEW'S CONTEXT, for the viewer's commentator intro (round 16, owner's own ask).
+ *
+ * Two fields and both are already on the pending view: the tier decides how much the intro says (the
+ * ladder of voices - viz/preview.ts) and, with the round, what winning this match is worth.
+ *
+ * ⚠ IT READS `watchedRoundLabel`, NOT `pending.roundLabel`, for the reason that computed exists: on
+ * the "Watch again" path the reveal has already advanced the pointer, so the round on deck is not the
+ * round in the viewer. Getting that wrong here would be worse than on the badge - the badge would
+ * name the wrong round, this would also quote the wrong POINTS for it.
+ */
+const viewerPreviewEvent = computed(() => {
+  const p = pending.value
+  if (!p) return null
+  return { tier: p.tier, roundLabel: watchedRoundLabel.value }
+})
+
 /** WHICH SCREEN THIS FLOW IS SHOWING, for the takeover's scroll reset (owner, 31.07 - see the
  *  `screen` prop on `ui/TakeoverShell.vue`). `phase` is most of it and is not all of it: `replayOpen`
  *  swaps the live match in and out INSIDE the 'pre' and 'post' phases, and going from the match to
@@ -919,6 +936,7 @@ const matchMeta = computed(() => {
       :rank-b="viewerRankB"
       :final-match="isFinalRound"
       :temperature-c="pending?.temperatureC ?? null"
+      :preview-event="viewerPreviewEvent"
       :mode="replayAdvances ? 'live' : 'replay'"
       @finish="endReplay"
       @end-applause="noteEndApplause"

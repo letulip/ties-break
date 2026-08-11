@@ -12,6 +12,8 @@ import { buildTimeline, computeEndsSwaps, type EndsState } from '../viz/timeline
 import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
 import { buildCommentary } from '../viz/commentary'
+import { buildPreview, type PreviewEvent } from '../viz/preview'
+import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { initSfx, playSfx, primeSfx } from '../audio/sfx'
 import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
@@ -71,8 +73,19 @@ const props = withDefaults(
      *  world.ts for `eventTemperature`, so that guard is the owner's to re-aim, not mine.
      *  null (default) draws no plate at all, so nothing shows a made-up number in the meantime. */
     temperatureC?: number | null
+    /** THE PRE-MATCH PREVIEW'S TOURNAMENT CONTEXT (round 16, owner's own ask) - the tier and the
+     *  round, which together decide BOTH how much the intro says (the ladder of voices, four
+     *  storeys - see viz/preview.ts) and what winning this match is worth in points.
+     *
+     *  ⚠ null (default) IS A REAL ANSWER, NOT A MISSING ONE, and it is why this is optional rather
+     *  than required. Two of the four callers genuinely have no tournament behind the match - the
+     *  friendly and the sandbox hit-out - and for them "no draw, nothing on it" is the truth. They
+     *  still get an intro; it is the thinnest one, which is exactly the owner's ruling («убирать
+     *  совсем я бы всё-таки не стал»). Compare `mode`, which has no default because every caller
+     *  has an answer and three of them were getting it wrong by silence. */
+    previewEvent?: PreviewEvent | null
   }>(),
-  { rankA: null, rankB: null, finalMatch: false, temperatureC: null },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null },
 )
 // `finish` fires once when playback reaches the end (used by TournamentFlow to auto-advance to
 // the post-match card; other callers can ignore it).
@@ -309,8 +322,9 @@ let musicDuckedForRun = false
 //
 //   ×1  – everything, except `out` fires only intermittently (~1 in 3–5 out/net points,
 //         seeded per match – see the outRng block below) so a miss-heavy rally doesn't spam it.
-//   ×2  – `hit`, `applauseShort` at game-end/set-end (tiebreak sets use `applauseShort`
-//         here too, not `oohApplause`) and match-end, plus the `takeYourSeats` pre-match beat.
+//   ×2  – `hit`, `out` AT HALF THE ×1 RATE (round 16 item 12, owner), `applauseShort` at
+//         game-end/set-end (tiebreak sets use `applauseShort` here too, not `oohApplause`) and
+//         match-end, plus the `takeYourSeats` pre-match beat.
 //   ×4  – only `hit` and a single applause at match-end (no game/set applause, no
 //         `takeYourSeats`).
 //
@@ -334,6 +348,29 @@ let outRng: Rng = rngFromSeed(props.match.result.seed + ':outcall')
 let outCounter = 0
 let outThreshold = pickInt(outRng, 3, 5)
 
+/**
+ * ⚠ ROUND 16 ITEM 12 (owner, 11.08): the `out` call now reaches ×2, at HALF the ×1 rate.
+ *
+ * It was silent above ×1 because the whole miss-heavy soundscape was, and a call every third miss at
+ * double speed is a call every ~1.4 seconds. Half the rate is what makes it a punctuation mark again:
+ * the ear still gets told a ball went out, roughly as often per WALL-CLOCK second as it does at ×1,
+ * because the points are arriving twice as fast.
+ *
+ * ⚠ THE RATE IS APPLIED AT THE COMPARISON, NOT AT THE DRAW, and that is what keeps the stream
+ * identical. `outRng` is seeded from the match seed, so a replay must hear the same pattern; halving
+ * the rate by drawing 6–10 instead of 3–5 would have made the sequence depend on which speed the
+ * player happened to be on when each draw came up. Drawing 3–5 always and doubling the TARGET means
+ * a mid-match speed change takes effect on the very next miss and changes nothing about what was
+ * drawn – the same property the shipped mode switch already has.
+ */
+function outCallDue(): boolean {
+  outCounter++
+  if (outCounter < outThreshold * (speed.value === 2 ? 2 : 1)) return false
+  outCounter = 0
+  outThreshold = pickInt(outRng, 3, 5)
+  return true
+}
+
 // R9-24: the LONG cues (applause family + take-your-seats) play rate-matched to the clip at
 // ×2 so they stop dragging behind a sped-up match – capped at 2 inside playSfx (rate-4
 // applause is noise; ×4 already gates most cues off anyway). Short percussive cues (hit /
@@ -350,7 +387,11 @@ function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
   }
   if (speed.value === 2) {
     if (site === 'hit') playSfx('hit')
-    else if (site === 'seats') playLong('takeYourSeats')
+    // Short and percussive, so it plays at rate 1 like every other cue in its family - `playLong`
+    // is for the applause clips alone (R9-24).
+    else if (site === 'out') {
+      if (outCallDue()) playSfx('out')
+    } else if (site === 'seats') playLong('takeYourSeats')
     else if (site === 'matchEnd') playLong(opts?.final ? 'applauseFinal' : 'applauseShort')
     else if (site === 'gameEnd' || site === 'setEnd' || site === 'setEndTiebreak') {
       playLong('applauseShort')
@@ -363,12 +404,7 @@ function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
       playSfx('hit')
       return
     case 'out':
-      outCounter++
-      if (outCounter >= outThreshold) {
-        playSfx('out')
-        outCounter = 0
-        outThreshold = pickInt(outRng, 3, 5)
-      }
+      if (outCallDue()) playSfx('out')
       return
     case 'ooh':
       playSfx('ooh')
@@ -981,13 +1017,41 @@ function shoutIt(): void {
   playSfx('click')
 }
 
+// --- THE PRE-MATCH PREVIEW (viz/preview.ts) ----------------------------------------------------
+// Owner, 11.08: «комментаторы дают какую-то короткую информацию об участниках, их шансе на победу
+// или на продвижение в таблице». A commentator's intro, and the cheapest good thing on the round-16
+// list: every fact it needs already exists and none of it is new state.
+//
+// ⚠ IT IS NOT PART OF THE COMMENTARY AND MUST NOT BE. `buildCommentary` is a pure function of the
+// MATCH with a determinism pin on it; a preview is a function of the DRAW - the tier, the round, the
+// two ranks, the day's temperature - none of which the match carries and none of which a replay of
+// the match could reproduce. So it is a second pure builder with its own inputs, and the two meet
+// where the shout already meets them: in `visibleRows`, at render time.
+//
+// ⚠ HOW MUCH IT SAYS IS THE LADDER, not a setting. See viz/preview.ts - four storeys, monotone, and
+// a friendly with no tournament behind it still gets the thinnest one rather than nothing.
+const previewRows = computed<LogRow[]>(() =>
+  buildPreview({
+    a: props.playerA,
+    b: props.playerB,
+    heroSide: heroSide.value,
+    surface: props.surface,
+    tour: JUNIOR_TOUR,
+    heroRank: heroSide.value === 0 ? props.rankA : props.rankB,
+    oppRank: heroSide.value === 0 ? props.rankB : props.rankA,
+    event: props.previewEvent,
+    temperatureC: props.temperatureC,
+  }).map((line) => ({ key: `p-${line.key}`, kind: 'intro', rail: '', lead: null, text: line.text, score: '' })),
+)
+
 /** A row of the log: a commentary beat, or something the parent shouted. ONE flat shape rather than
  *  a discriminated union, because the template has to read `lead`/`score` off it and a union would
  *  need narrowing inside the markup to type-check. A shout carries no lead and no score. */
 interface LogRow {
   key: string
-  kind: 'beat' | 'shout'
-  set: number
+  kind: 'beat' | 'shout' | 'intro'
+  /** the left-rail label ("S2"), or '' for a row that belongs to no set - see `previewRows` */
+  rail: string
   lead: string | null
   text: string
   score: string
@@ -1011,17 +1075,21 @@ const visibleRows = computed<LogRow[]>(() => {
   const merged: { pointIndex: number; order: number; row: LogRow }[] = visibleBeats.value.map((b) => ({
     pointIndex: b.pointIndex,
     order: 0,
-    row: { key: `b${b.pointIndex}`, kind: 'beat', set: b.set, lead: b.lead, text: b.text, score: b.score },
+    row: { key: `b${b.pointIndex}`, kind: 'beat', rail: `S${b.set}`, lead: b.lead, text: b.text, score: b.score },
   }))
   for (const s of shouts.value) {
     merged.push({
       pointIndex: s.pointIndex,
       order: s.n,
-      row: { key: `s${s.n}`, kind: 'shout', set: s.set, lead: null, text: s.text, score: '' },
+      row: { key: `s${s.n}`, kind: 'shout', rail: `S${s.set}`, lead: null, text: s.text, score: '' },
     })
   }
   merged.sort((x, y) => y.pointIndex - x.pointIndex || y.order - x.order)
-  return merged.map((m) => m.row)
+  // ⚠ THE PREVIEW SITS UNDER EVERYTHING, and that is chronology rather than layout. The log reads
+  // NEWEST FIRST, so the oldest thing in it belongs at the bottom - and the intro is older than the
+  // first ball. It is appended here rather than merged above because it has no point index at all:
+  // it is not anchored to the match, it is what was said before the match. See `previewRows`.
+  return [...merged.map((m) => m.row), ...previewRows.value]
 })
 
 // ⚠ THE FOUR-ROW WINDOW AND ITS "Show more" ARE GONE, AND THE PINNED BLOCK IS WHY (owner, 06.08:
@@ -1318,7 +1386,14 @@ function servePct(side: Side): number {
            reader announces a quotation rather than two typed characters - with no lead and no score,
            because a shout is not a point and has no games standing after it. It takes the SAME grid
            as a beat so the rail and the dots still line up down one column. See `visibleRows` for
-           why the two lists only ever meet at the render. -->
+           why the two lists only ever meet at the render.
+           ⚠ AND IT OPENS WITH THE PRE-MATCH PREVIEW, AT THE BOTTOM (round 16, owner's own ask). The
+           log is newest-first, so the oldest thing in it is its last row - and the commentator's
+           intro is older than the first ball. Before a point is played the preview IS the log, which
+           is why the "Warming up" empty state below is now only ever reached if a caller has no
+           players at all. An intro row has no set label and no score, and its dot is hollow: it is
+           on the rail because it is part of the same story, and it is not a moment IN the match.
+           How much it says is the ladder of voices - see viz/preview.ts. -->
       <Card variant="photo" class="mv-log" pad="8px 12px 10px">
         <p v-if="!visibleRows.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
         <ol v-else class="mv-log-list">
@@ -1326,9 +1401,13 @@ function servePct(side: Side): number {
             v-for="(row, i) in visibleRows"
             :key="row.key"
             class="mv-beat"
-            :class="{ latest: i === 0, said: row.kind === 'shout' }"
+            :class="{
+              latest: i === 0 && row.kind !== 'intro',
+              said: row.kind === 'shout',
+              intro: row.kind === 'intro',
+            }"
           >
-            <span class="mv-beat-set">S{{ row.set }}</span>
+            <span class="mv-beat-set">{{ row.rail }}</span>
             <span class="mv-beat-dot" aria-hidden="true"></span>
             <span class="mv-beat-text">
               <q v-if="row.kind === 'shout'">{{ row.text }}</q>
@@ -1992,7 +2071,19 @@ function servePct(side: Side): number {
 }
 
 /* --- THE COMMENTARY LOG ---------------------------------------------------------------------- */
+/* ⚠ ROUND 16 ITEM 14 (owner, 11.08: align the commentary bullets with the rail, nudge them left).
+   The rail and the dots were positioned by two unrelated mechanisms that happened to nearly agree:
+   the rail is absolutely placed at a hand-written offset, the dots are centred in the grid's second
+   column. MEASURED on the shipped rule - column 1 is 22px, the gap is 8px, so column 2 opens at
+   30px and a 9px dot centred in a 12px column sits at 36px, while the 1.5px rail at left:33px has
+   its centre at 33.75px. Two and a quarter pixels, which on a 9px dot is exactly the "the line
+   comes out of the side of the circle" the owner is looking at.
+
+   ONE NUMBER OWNS BOTH NOW. `--mv-rail-x` is the rail's CENTRE LINE, the rail is drawn half its
+   width either side of it, and the dot's left edge is placed half a dot to the left of it. Neither
+   can drift from the other again, and moving the column is one edit. */
 .mv-log-list {
+  --mv-rail-x: 33.75px;
   position: relative;
   list-style: none;
   margin: 0;
@@ -2004,7 +2095,7 @@ function servePct(side: Side): number {
 .mv-log-list::before {
   content: '';
   position: absolute;
-  left: 33px;
+  left: calc(var(--mv-rail-x) - 0.75px);
   top: 12px;
   bottom: 12px;
   width: 1.5px;
@@ -2031,10 +2122,14 @@ function servePct(side: Side): number {
 }
 
 .mv-beat-dot {
-  justify-self: center;
+  /* Placed off the rail rather than centred in its column - see `--mv-rail-x`. `start` puts the
+     dot's left edge at the column's own start (22px label + 8px gap = 30px), and the margin walks
+     it back to half a dot left of the rail's centre line. */
+  justify-self: start;
   align-self: center;
   width: 9px;
   height: 9px;
+  margin-left: calc(var(--mv-rail-x) - 34.5px);
   border-radius: 50%;
   background: var(--ink-dim);
 }
@@ -2091,6 +2186,20 @@ function servePct(side: Side): number {
 .mv-beat.said.latest .mv-beat-dot {
   opacity: 1;
   box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* AN INTRO ROW (the pre-match preview). Same grid, same rail, same dot position - it is part of the
+   same story and reads down the same column. What tells it apart is that the dot is HOLLOW: the
+   filled dots are moments in the match and this is not one, it is what was said before there was a
+   match to have moments in. It never takes `.latest`, because before the first ball nothing has
+   just happened (see the template's `:class`). */
+.mv-beat.intro .mv-beat-dot {
+  background: transparent;
+  border: 1.5px solid var(--ink-dim);
+}
+
+.mv-beat.intro .mv-beat-text {
+  color: var(--muted);
 }
 
 .mv-log-empty {

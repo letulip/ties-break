@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { buildCommentary, type Beat } from '../../src/viz/commentary'
+import { buildCommentary, pointImportance, PEAK_IMPORTANCE, type Beat } from '../../src/viz/commentary'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
 import type { AnnotatedMatch } from '../../src/viz/types'
@@ -421,5 +421,247 @@ describe('commentary – copy rules', () => {
       expect(b.text, b.text).not.toMatch(/\bTop\b(?! seed)/)
       if (b.text.includes('Vera')) expect(b.text).not.toContain('Vera Martin')
     }
+  })
+})
+
+// =================================================================================================
+// ROUND 16 ITEM 11 (owner, 11.08): «full показывает почти ничего». What he was looking at was not a
+// row count – `full` sits at ~16 beats a match and always has – it was the SAMENESS. Three fixes,
+// and these are their properties as BEHAVIOUR: what the log has to be true of, not what the file
+// says. See the module header for the mechanisms.
+// =================================================================================================
+describe('commentary – item 11: it stopped repeating itself', () => {
+  it('⚠ never prints the same sentence twice in a row, and rarely twice in a match', () => {
+    // THE ROTOR'S WHOLE JOB. `variant()` is a hash of the point index with no memory, so a break-heavy
+    // set could print "Bianca breaks." three times, twice of them adjacent. Adjacency is the hard
+    // rule (it is what a reader actually notices); the whole-log rate is the softer one, and it is
+    // measured rather than asserted at zero because two different sets legitimately containing the
+    // identical event should say the identical true thing.
+    let rows = 0
+    let repeats = 0
+    for (const m of corpus(200)) {
+      const beats = commentate(m)
+      const seen = new Map<string, number>()
+      for (let i = 0; i < beats.length; i++) {
+        rows++
+        if (i > 0) {
+          expect(beats[i].text, `two identical rows in a row: "${beats[i].text}"`).not.toBe(beats[i - 1].text)
+        }
+        const n = (seen.get(beats[i].text) ?? 0) + 1
+        seen.set(beats[i].text, n)
+        if (n > 1) repeats++
+      }
+    }
+    // Measured: 2.4% before the rotor, 1.4% after. The band is wide enough to survive a copy change
+    // and tight enough to fail a regression to the memoryless hash.
+    const rate = repeats / rows
+    expect(rate, `${(100 * rate).toFixed(1)}% of rows repeat a sentence already in their own log`).toBeLessThan(0.02)
+  })
+
+  it('⚠ the industry template really is in use, and it is honest about the ball', () => {
+    // `{Player} {wins|loses} the {point|game|set} with {a descriptor}` – the shape every real
+    // deterministic feed emits. Two things are checked: that it FIRES (a mould nothing reaches is
+    // not a mould), and that every descriptor it emits is backed by the shot the point ended on.
+    let used = 0
+    for (const m of corpus(120)) {
+      for (const b of commentate(m)) {
+        const withPhrase = /(wins|loses) the (point|game|set) with (.+)\./.exec(b.text)
+        if (!withPhrase) continue
+        used++
+        const descriptor = withPhrase[3]
+        const p = m.points[b.pointIndex]
+        const shots = p.rally.shots
+        const last = shots[shots.length - 1]
+        if (descriptor.includes('ace')) {
+          expect(p.rally.ace, `"${b.text}" claims an ace`).toBe(true)
+          // ...and "second-serve" is a claim about which delivery it was.
+          if (descriptor.includes('second-serve')) expect(last.kind).toBe('serve2')
+          else expect(last.kind).toBe('serve1')
+        } else if (descriptor.includes('double fault')) {
+          expect(p.rally.doubleFault, `"${b.text}" claims a double fault`).toBe(true)
+        } else if (descriptor.includes('winner')) {
+          expect(last.result, `"${b.text}" claims a winner`).toBe('winner')
+        } else {
+          // An error. The miss direction and whether it was struck on the RETURN are both derived,
+          // so both are checked against the rally.
+          expect(last.result === 'net' || last.result === 'out', b.text).toBe(true)
+          if (descriptor.includes('netted')) expect(last.result).toBe('net')
+          const firstRally = shots.findIndex((s) => s.kind === 'rally')
+          const onReturn = firstRally >= 0 && firstRally === shots.length - 1
+          expect(descriptor.includes('return'), `"${b.text}" vs shot ${shots.length - 1}/${firstRally}`).toBe(onReturn)
+        }
+        // ⚠ AND NEVER A WING. We model no forehand/backhand, so the descriptor may not have one –
+        // this is the exact slot the real feeds fill and we deliberately cannot.
+        expect(descriptor, 'a wing was invented').not.toMatch(/forehand|backhand|volley|smash/)
+      }
+    }
+    expect(used, 'the industry mould never fired at all').toBeGreaterThan(100)
+  })
+
+  it('⚠ the score is never inside a sentence – it is a separate element, as in every real feed', () => {
+    // live-text-adult-tour.md §2.2, and it is universal across IBM, Infosys, Flashscore and
+    // Sofascore. `Beat.score` is that element. A game score in the prose would be the tell.
+    for (const m of corpus(80)) {
+      for (const b of commentate(m)) {
+        expect(b.text, `"${b.text}" carries a game score`).not.toMatch(/\b\d+\s*[-:]\s*\d+\b/)
+      }
+    }
+  })
+
+  it('a `games` beat counts a run of GAMES that really happened, and only the longest in its set', () => {
+    const NUM: Record<string, number> = {
+      Four: 4, Five: 5, Six: 6, Seven: 7, Eight: 8, Nine: 9, Ten: 10, Eleven: 11, Twelve: 12,
+    }
+    let seen = 0
+    for (const m of corpus(120)) {
+      const perSet = new Map<number, number>()
+      for (const b of commentate(m).filter((x) => x.kind === 'games')) {
+        const claimed = NUM[b.text.split(' ')[0]] ?? Number(b.text.split(' ')[0])
+        expect(Number.isFinite(claimed), b.text).toBe(true)
+        expect(claimed).toBeGreaterThanOrEqual(4)
+        // It sits on a game end, and the run really is there: walk back over game ends.
+        const p = m.points[b.pointIndex]
+        expect(p.gameEnd, 'a games beat sits on a game end').toBe(true)
+        const side = p.entry.winner
+        let actual = 0
+        for (let i = b.pointIndex; i >= 0; i--) {
+          if (!m.points[i].gameEnd) continue
+          if (m.points[i].entry.winner !== side) break
+          actual++
+        }
+        expect(actual, b.text).toBe(claimed)
+        expect(b.text).toContain(side === 0 ? 'Bianca' : 'Dana')
+        perSet.set(b.set, (perSet.get(b.set) ?? 0) + 1)
+        seen++
+      }
+      for (const [set, n] of perSet) expect(n, `set ${set} has ${n} run beats`).toBe(1)
+    }
+    // ⚠ THE FLOOR IS LOW ON PURPOSE, and finding out why is what this number is for. A run of four
+    // exists 0.43 times a set, but its anchor is a game end - where a `break` or `hold` beat also
+    // sits and outranks it. So most runs are absorbed by the game's own story and the score column
+    // beside it, and what survives is the quiet game in the middle of a rout: measured at 49 over
+    // 120 matches, i.e. the beat fires in about a third of them. See PRIORITY for the reasoning.
+    expect(seen, 'the corpus must actually contain game runs').toBeGreaterThan(25)
+  })
+})
+
+describe('commentary – item 11: the register ladder', () => {
+  // The escalation ladder (docs/research/commentary-lexicon.md §5.3) says the top of a match is not
+  // the bottom of it with more adjectives: it is SHORTER and it stops looking ahead. `pointImportance`
+  // is the same arithmetic the builder used, so these assert the rules rather than the source text.
+  it('⚠ a peak beat is shorter than the ordinary budget and never looks ahead', () => {
+    let peaks = 0
+    for (const m of corpus(200)) {
+      const imp = pointImportance(m)
+      for (const b of commentate(m)) {
+        if (b.kind === 'match' || b.kind === 'open') continue // the match beat writes its own ending
+        if ((imp[b.pointIndex] ?? 0) < PEAK_IMPORTANCE) continue
+        peaks++
+        expect(b.text.length, `peak row over budget: "${b.text}"`).toBeLessThanOrEqual(88)
+        expect(b.text, `a peak row looked ahead: "${b.text}"`).not.toContain('serves for the set next')
+      }
+    }
+    expect(peaks, 'nothing in the corpus ever reached the top of the ladder').toBeGreaterThan(150)
+  })
+
+  it('⚠ ...and the ladder has a bottom too, so the constant is not just "everything"', () => {
+    // Anti-vacuity, and the measurement the constant was chosen against: 11% of beats at 0.15.
+    let peak = 0
+    let all = 0
+    for (const m of corpus(200)) {
+      const imp = pointImportance(m)
+      for (const b of commentate(m)) {
+        all++
+        if ((imp[b.pointIndex] ?? 0) >= PEAK_IMPORTANCE) peak++
+      }
+    }
+    const share = peak / all
+    expect(share, `${(100 * share).toFixed(0)}% of beats are at the peak`).toBeGreaterThan(0.04)
+    expect(share, `${(100 * share).toFixed(0)}% of beats are at the peak`).toBeLessThan(0.25)
+  })
+
+  it('importance is exact, deterministic, and agrees with the engine about who is winning', () => {
+    // Morris importance is a difference of two match-win probabilities, so it is bounded, and the
+    // most important point of a match must be at least as important as its median. Both are
+    // properties of the definition rather than of our thresholds.
+    for (const seed of ['imp-a', 'imp-b', 'imp-c']) {
+      const m = play(seed)
+      const one = pointImportance(m)
+      expect(pointImportance(play(seed))).toEqual(one)
+      for (const x of one) {
+        expect(x).toBeGreaterThanOrEqual(0)
+        expect(x).toBeLessThanOrEqual(1)
+      }
+      const sorted = [...one].sort((a, b) => a - b)
+      expect(Math.max(...one)).toBeGreaterThan(sorted[Math.floor(sorted.length / 2)])
+    }
+  })
+})
+
+// =================================================================================================
+// ROUND 16 ITEM 18 – the retirement, which the owner called «максимально неявно». The beat existed
+// and said almost nothing; what it has to do now is say that a BODY stopped, why, and that the
+// opponent ADVANCED rather than won.
+// =================================================================================================
+describe('commentary – item 18: a retirement is explained, not just recorded', () => {
+  const spent: MatchPlayer = { ...A, stamina: 10 }
+  const other: MatchPlayer = { ...B, stamina: 10 }
+
+  /** Retirements, built directly rather than hoped for – the same fixture the shape suite uses. */
+  function retirements(n: number): { m: AnnotatedMatch; a: MatchPlayer; b: MatchPlayer }[] {
+    const out: { m: AnnotatedMatch; a: MatchPlayer; b: MatchPlayer }[] = []
+    for (let i = 0; i < 600 && out.length < n; i++) {
+      const opts: MatchOptions = { surface: 'hard', tour: 'wta', seed: `ret-16-${i}` }
+      const res = simulateMatch(spent, other, opts)
+      if (!res.retired) continue
+      out.push({ m: annotateMatch(res, spent, other, opts), a: spent, b: other })
+    }
+    return out
+  }
+
+  it('⚠ says a body stopped, says the winner ADVANCED, and never says she was beaten', () => {
+    const cases = retirements(8)
+    expect(cases.length, 'the fixture must actually produce retirements').toBeGreaterThan(4)
+    for (const { m } of cases) {
+      const beats = buildCommentary(m, spent.name, other.name)
+      const last = beats[beats.length - 1]
+      const stopped = m.result.retired!.side === 0 ? 'Bianca' : 'Dana'
+      const through = m.result.winner === 0 ? 'Bianca' : 'Dana'
+      expect(last.lead).toBe('Retired.')
+      expect(last.text.startsWith(stopped), last.text).toBe(true)
+      // ⚠ THE VERB IS THE POINT. The rulebooks are explicit that the opponent ADVANCES and did not
+      // beat her (commentary-lexicon.md §4.6), and the scoreboard word "goes through" is what the
+      // owner read as an event with no explanation.
+      expect(last.text, last.text).toContain(`${through} advances`)
+      expect(last.text, 'a retirement was narrated as a defeat').not.toMatch(/\bbeats\b|\bbeat\b|takes it in/)
+      // ...and it explains itself rather than only recording.
+      expect(last.text, last.text).toMatch(/cannot go on/)
+      expect(last.text.length, last.text).toBeLessThanOrEqual(120)
+    }
+  })
+
+  it('⚠ "a long match on tired legs" is licensed by the engine, not by the copywriter', () => {
+    // `retireHazard` is RETIRE_K * spentness(...), and spentness is EXACTLY ZERO up to FATIGUE_START.
+    // So every retirement this engine can produce happened past 120 points – which is what makes the
+    // sentence true by construction rather than a guess. If the hazard ever stops reading fatigue,
+    // this fails and the sentence must go with it.
+    const cases = retirements(8)
+    for (const { m } of cases) {
+      expect(m.points.length, 'a retirement inside the fatigue-free window').toBeGreaterThan(120)
+      const last = buildCommentary(m, spent.name, other.name).slice(-1)[0]
+      expect(last.text).toContain('A long match on tired legs.')
+    }
+  })
+
+  it('the explanation degrades before the claim does, when two players share a first name', () => {
+    // Both names go formal on a clash, which costs the row eleven characters. The CAUSE has to
+    // survive that and only the flourish may go – `clauses()`'s ordering doing real work.
+    const { m } = retirements(1)[0]
+    const clash = buildCommentary(m, 'Mila Tran', 'Mila Delgado')
+    const last = clash[clash.length - 1]
+    expect(last.text).toContain('cannot go on')
+    expect(last.text).toContain('advances')
+    expect(last.text).toContain('A long match on tired legs.')
+    expect(last.text.length).toBeLessThanOrEqual(120)
   })
 })

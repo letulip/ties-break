@@ -23,6 +23,11 @@
 //   streak    six or more points in a row. The owner's own example, and it is the one beat that
 //             is invisible in a scoreline - "she won six straight" never shows up as 6-4.
 //   rally     one exchange so long it is its own memory. Twelve shots plus, ending in a winner.
+//   games     a run of GAMES, not points - four or more in a row. Round 16 item 11: the research
+//             names it as the thing a 6-1 set is entirely made of and that nothing here ever said
+//             (commentary-generation.md §5.2, "visible in 6-1 but never said"). A streak of points
+//             lives inside one or two games; this is the set running away, and the two are
+//             different facts. One per set, the longest, like the streak beat beside it.
 //   set       a set decided (except the last - the match beat says it better).
 //   match     the final point, with the scoreline and how it ended.
 //
@@ -76,6 +81,44 @@
 // KEY_SWING IS MEASURED, NOT CHOSEN. See the constant.
 //
 // ---------------------------------------------------------------------------------------------
+// ROUND 16 ITEM 11 - "full shows almost nothing" (owner, 11.08)
+// ---------------------------------------------------------------------------------------------
+// What he was actually looking at was not a row COUNT. `full` sits at ~15 beats a match by
+// measurement, which is the density this design was written to. It was the SAMENESS: every repeated
+// beat reached into a pool of five authored strings behind `variant()`, a hash of the point index
+// with no memory, so a break-heavy set really could print the same sentence three times, and the
+// manner clause after it only ever had one shape. Three fixes, all named by the research
+// (docs/research/commentary-generation.md §5, live-text-adult-tour.md §2.1), all RNG-free:
+//
+//   1. A USED-RECENTLY ROTOR (`rotor`). MIKE's recency decay, in its minimal form - the research's
+//      own suggestion, `variant(pointIndex, n)` walked forward until it lands on something the
+//      family has not just said. A pure accumulator over the beat sequence, so it is still a
+//      function of the match alone. This is the single highest-leverage change in the file.
+//
+//   2. THE INDUSTRY TEMPLATE (`outcomeLine`). Every deterministic point-by-point feed in adult
+//      tennis - IBM's at two Slams, Infosys's at the other two - emits ONE sentence shape:
+//      `{Player} {wins|loses} the {point|game|set|match} with {a descriptor}`, where the subject is
+//      whoever hit the last ball and the verb flips on whether that ball was a winner or a miss.
+//      Its whole input is `(pointWinner, endingShot)`, which this file already reads. It rotates
+//      against the existing hero-relative `mannerLine`, so one event now has two sentence moulds.
+//      ⚠ THE DESCRIPTOR IS NARROWER THAN THE REAL FEEDS' AND MUST STAY THAT WAY. Theirs is
+//      `[wing] [shotType] [outcome]`; we model no wing and no volley, so ours is
+//      `[serve|return|groundstroke] [outcome]` and never says forehand or backhand. Inventing a
+//      wing would be the exact thing the honesty rule below forbids.
+//
+//   3. MORRIS (1977) POINT IMPORTANCE (`importanceAt`). The published measure of how much a point
+//      matters: the gap between winning and losing it, in match-win probability. Exact here, not
+//      estimated - `matchWinProbability` is the engine's own solver and takes an arbitrary score,
+//      so both branches of a point are two calls on a cloned `MatchScore`. It is never printed;
+//      it decides REGISTER (`registerAt`), which is the lexicon's escalation ladder: at the top of
+//      a match the sentence gets SHORTER and drops its colour clause rather than gaining adjectives
+//      (docs/research/commentary-lexicon.md §5.3 - "tier 5 is not tier 1 with more adjectives").
+//
+// ⚠ AND THE SCORE IS STILL NEVER INSIDE A SENTENCE. Universal across IBM, Infosys, Flashscore and
+// Sofascore (live-text-adult-tour.md §2.2): the score is a separate rendered element. `Beat.score`
+// is that element and no template below interpolates it.
+//
+// ---------------------------------------------------------------------------------------------
 // THE DETERMINISM RULE
 // ---------------------------------------------------------------------------------------------
 // The same match must narrate identically, every replay, forever. This module therefore draws
@@ -94,9 +137,20 @@
 
 import type { AnnotatedMatch, AnnotatedPoint } from './types'
 import { COURT } from './types'
-import type { Side } from '../engine/match/types'
+import type { MatchScore, SetGames, Side } from '../engine/match/types'
+import { awardPoint } from '../engine/match/scoring'
+import { matchWinProbability } from '../engine/match/liveProb'
 
-export type BeatKind = 'open' | 'break' | 'hold' | 'tiebreak' | 'streak' | 'rally' | 'set' | 'match'
+export type BeatKind =
+  | 'open'
+  | 'break'
+  | 'hold'
+  | 'tiebreak'
+  | 'streak'
+  | 'rally'
+  | 'games'
+  | 'set'
+  | 'match'
 
 export interface Beat {
   /** index into match.points - the point this beat is anchored to (drives progressive reveal) */
@@ -138,17 +192,30 @@ const BEAT_MAX_CHARS = 120
  *  tail, and the beats are all written with the same ordering discipline for exactly that reason:
  *  the CLAIM first, then what the score means next, and the rally's COLOUR last. Colour is what a
  *  human editor would cut too. */
-function clauses(...parts: (string | null | undefined)[]): string {
+function clausesUpTo(max: number, ...parts: (string | null | undefined)[]): string {
   const kept: string[] = []
   for (const part of parts) {
     const p = part?.trim()
     if (!p) continue
     const next = kept.length === 0 ? p : `${kept.join(' ')} ${p}`
-    if (kept.length > 0 && next.length > BEAT_MAX_CHARS) continue
+    if (kept.length > 0 && next.length > max) continue
     kept.push(p)
   }
   return kept.join(' ')
 }
+
+function clauses(...parts: (string | null | undefined)[]): string {
+  return clausesUpTo(BEAT_MAX_CHARS, ...parts)
+}
+
+/** ⚠ THE PEAK'S BUDGET, AND IT IS SMALLER ON PURPOSE (round 16 item 11).
+ *
+ *  The escalation ladder in docs/research/commentary-lexicon.md §5.3 is explicit that the top of a
+ *  match is not the bottom of it with more adjectives: tier 5 has FEWER modifiers and more concrete
+ *  detail, and its strongest device is a beat of nothing. A generator has no silence to spend inside
+ *  a row it has already decided to print, so what it can spend instead is LENGTH - the colour clause
+ *  is the first thing `clausesUpTo` drops, and at a match point the colour is what a person cuts. */
+const PEAK_MAX_CHARS = 88
 
 /** Six in a row is where a run stops being noise and becomes the thing you remember. */
 const STREAK_MIN = 6
@@ -156,6 +223,15 @@ const STREAK_MIN = 6
 const RALLY_MIN = 12
 /** Two break points saved is a story; one is a Tuesday. */
 const SAVES_MIN = 2
+/** Four GAMES in a row. Round 16 item 11.
+ *
+ *  MEASURED, not chosen (tools/commentary-register-probe.ts, 200 matches / 506 sets): the longest
+ *  run per set fires 0.87 times a set at three, 0.43 at four and 0.24 at five. Three is most of a
+ *  6-3 and every 6-2, so it would be saying out loud what the score column already prints; five is
+ *  rare enough that a straight-sets match would usually never see one. At four it is the set that
+ *  got away - the fact this beat exists to state - and it costs the log ~1.1 rows a match, well
+ *  inside the density band the volume test pins. */
+const GAMES_MIN = 4
 
 /**
  * ⚠ HOW FAR THE MATCH HAS TO MOVE FOR A NON-STRUCTURAL BEAT TO MAKE THE KEY CUT - in units of side
@@ -201,8 +277,24 @@ const PRIORITY: Record<BeatKind, number> = {
   tiebreak: 2,
   break: 3,
   hold: 3,
-  streak: 4,
-  rally: 5,
+  // A GAME run outranks a point streak and a rally: it is the biggest of the three (a whole set
+  // getting away), and when it lands on the same point as one of them the reader should be told the
+  // larger fact.
+  //
+  // ⚠ IT SITS BELOW break/hold, AND THAT DECIDES WHEN IT IS HEARD FROM AT ALL. Its anchor is the
+  // last point of the run's last game, which is exactly where a break or hold beat would also sit,
+  // and the game's own story is the more specific claim. MEASURED: a run of four exists 0.43 times
+  // a set, and 49 of ~130 in a 120-match corpus survive the collision - the ones whose closing game
+  // was a routine hold with nothing else to say.
+  //
+  // That is the right outcome rather than a loss. This file's rule is that the bigger beat SAYS the
+  // smaller one, and here the SCORE COLUMN does it: "Break! Bianca breaks." next to `5-0` already
+  // tells a reader the set is gone. The run beat exists for the case that column cannot carry alone
+  // - a quiet game in the middle of a rout - and it fires in about a third of matches, which is
+  // what a beat about a set running away should do.
+  games: 4,
+  streak: 5,
+  rally: 6,
 }
 
 const ORDINAL = ['first', 'second', 'third', 'fourth', 'fifth'] as const
@@ -254,6 +346,47 @@ const LEVEL_LINES: readonly ((who: string) => string)[] = [
  *  (a plain `index % n` correlates with the alternating serve and reads as a pattern). */
 function variant(pointIndex: number, n: number): number {
   return (Math.imul(pointIndex + 1, 2654435761) >>> 0) % n
+}
+
+/** How many of a family's recent picks are remembered. Two is enough to make a three-string pool
+ *  cycle rather than repeat, and it is the most a pool of three can carry: remembering all three
+ *  would leave nothing to say. */
+const ROTOR_MEMORY = 2
+
+/**
+ * ⚠ THE USED-RECENTLY ROTOR - THE ANTI-REPETITION FIX, AND THE HIGHEST-LEVERAGE LINE IN THE FILE
+ * (round 16 item 11).
+ *
+ * `variant()` above is MEMORYLESS. It is a hash of the point index, so it is deterministic and it
+ * spreads - but it has no way to know it just said the same thing, and a match with five breaks
+ * really did print "Bianca breaks." three times, twice in a row. That is the failure mode the
+ * automated-journalism literature names first ("one construction dominates the whole match",
+ * live-text-adult-tour.md §2.3) and the one a bigger phrase pool does not fix.
+ *
+ * This is MIKE's recency decay in the minimal form the research itself proposes: keep the hash as
+ * the STARTING position - so a match still varies with its own data rather than always opening on
+ * variant 0 - then walk forward until it lands on something this family has not just used.
+ *
+ * ⚠ STILL ZERO RNG, AND STILL A PURE FUNCTION OF THE MATCH. It is an accumulator over the beat
+ * sequence, which is itself a function of the point log; the rotor is created inside
+ * `buildCommentary` and dies with the call, so two builds of the same match walk it identically.
+ * See THE DETERMINISM RULE.
+ *
+ * ⚠ IT IS FED IN CHRONOLOGICAL ORDER OR IT IS FEEDING ON THE WRONG NEIGHBOUR. The per-game loop
+ * below walks `s.games`, which is in play order, so "what was just said" means what the reader will
+ * just have read. Candidates pushed outside that loop (streaks, rallies) do not use the rotor.
+ */
+function rotor(): (family: string, pointIndex: number, n: number) => number {
+  const recent = new Map<string, number[]>()
+  return (family, pointIndex, n) => {
+    const seen = recent.get(family) ?? []
+    let k = variant(pointIndex, n)
+    for (let step = 0; step < n && seen.includes(k); step++) k = (k + 1) % n
+    seen.push(k)
+    while (seen.length > Math.min(ROTOR_MEMORY, n - 1)) seen.shift()
+    recent.set(family, seen)
+    return k
+  }
 }
 
 // --- names --------------------------------------------------------------------------------------
@@ -312,12 +445,21 @@ interface Scan {
   gamesAt: string[]
   /** per point: 0-based set index */
   setOf: number[]
+  /** ⚠ per point: the full engine `MatchScore` as it stood BEFORE the point was played (round 16
+   *  item 11). The one thing Morris importance needs and the only thing the point log does not
+   *  already hand over in a usable shape - `PointLogEntry.scoreAfter` is a formatted string, and a
+   *  DP solver cannot read a string. Everything in it was already being tracked here to answer other
+   *  questions; this just stops throwing it away. */
+  before: MatchScore[]
 }
 
 function scan(points: readonly AnnotatedPoint[]): Scan {
-  const out: Scan = { games: [], gamesAt: [], setOf: [] }
+  const out: Scan = { games: [], gamesAt: [], setOf: [], before: [] }
   const games: [number, number] = [0, 0]
   const sets: [number, number] = [0, 0]
+  /** completed sets in play order - the head of a `MatchScore.sets`, whose last element is the
+   *  in-progress one. `sets` above counts them; this one remembers what they said. */
+  const done: SetGames[] = []
   let setIdx = 0
   let bpFaced = 0
   const spFaced: [number, number] = [0, 0]
@@ -329,6 +471,19 @@ function scan(points: readonly AnnotatedPoint[]): Scan {
   for (let i = 0; i < points.length; i++) {
     const p = points[i]
     out.setOf.push(setIdx)
+    // ⚠ CAPTURED AT THE TOP OF THE LOOP, WHICH IS WHAT MAKES IT THE *PRE*-POINT SCORE. Every counter
+    // below is advanced by this point further down; read here they still say what the scoreboard
+    // said as she walked to the line. `inTiebreak` comes off the entry rather than the local
+    // `tiebreak` flag because the entry's copy is the engine's own PointContext, decided before the
+    // point, and the local one is a per-game latch that has not been set yet on the first point of a
+    // breaker.
+    out.before.push({
+      sets: [...done.map((st) => ({ a: st.a, b: st.b })), { a: games[0], b: games[1] }],
+      game: { a: gamePts[0], b: gamePts[1] },
+      inTiebreak: p.entry.tiebreak,
+      server: p.entry.server,
+      winner: null,
+    })
     if (p.entry.breakPoint) bpFaced++
     // setPointFor/matchPointFor name who WINS by taking the point, so the other side is the one
     // one point from losing the set/match - which is the side whose survival is the story.
@@ -374,6 +529,7 @@ function scan(points: readonly AnnotatedPoint[]): Scan {
       tiebreak = false
       if (p.setEnd) {
         sets[w]++
+        done.push({ a: games[0], b: games[1] })
         games[0] = 0
         games[1] = 0
         setIdx++
@@ -390,23 +546,46 @@ function scan(points: readonly AnnotatedPoint[]): Scan {
 // itself deterministic from the match seed. Never a beat of its own - always an adjective on one.
 
 type Manner =
-  | { kind: 'ace'; by: Side; direction: string }
+  | { kind: 'ace'; by: Side; direction: string; second: boolean }
   | { kind: 'df'; by: Side }
   | { kind: 'winner'; by: Side; shots: number; direction: string }
-  | { kind: 'error'; by: Side; how: 'net' | 'long' | 'wide'; shots: number }
+  | { kind: 'error'; by: Side; how: 'net' | 'long' | 'wide'; shots: number; onReturn: boolean }
 
 function mannerOf(p: AnnotatedPoint): Manner | null {
   const shots = p.rally.shots
   const last = shots[shots.length - 1]
   if (!last) return null
-  if (p.rally.ace) return { kind: 'ace', by: p.entry.server, direction: String(last.direction) }
+  if (p.rally.ace) {
+    // ⚠ A SECOND-SERVE ACE IS A REAL FACT AND IT IS FREE: `Shot.kind` already distinguishes the two
+    // deliveries, and the lexicon lists the flat second serve as "a story in itself" (§1.1). It is
+    // read here rather than asserted anywhere else - nothing infers spin, which we do not model.
+    return {
+      kind: 'ace',
+      by: p.entry.server,
+      direction: String(last.direction),
+      second: last.kind === 'serve2',
+    }
+  }
   if (p.rally.doubleFault) return { kind: 'df', by: p.entry.server }
   if (last.result === 'winner') {
     return { kind: 'winner', by: last.by, shots: shots.length, direction: String(last.direction) }
   }
   const how: 'net' | 'long' | 'wide' =
     last.result === 'net' ? 'net' : Math.abs(last.bounce.y) > COURT.halfLength ? 'long' : 'wide'
-  return { kind: 'error', by: last.by, how, shots: shots.length }
+  // ⚠ "ON THE RETURN" IS DERIVED, NOT GUESSED, and the derivation is the reason it is not simply
+  // `shots.length === 2`: a first-serve fault REPEATS the server, so the returner's first ball can
+  // sit at index 1 or index 2. The first `rally`-kind shot in the list is the return by
+  // construction (rally.ts alternates hitters from the server once the serve is in), so being that
+  // shot is exactly what makes a miss a return error. Everything past it is a groundstroke - which
+  // is all we may say, because this engine models no volley and no wing.
+  const firstRally = shots.findIndex((s) => s.kind === 'rally')
+  return {
+    kind: 'error',
+    by: last.by,
+    how,
+    shots: shots.length,
+    onReturn: firstRally >= 0 && firstRally === shots.length - 1,
+  }
 }
 
 /** Serve placement, in words. The design's own log copy is "Ace! Clean serve down the T." */
@@ -461,6 +640,69 @@ function mannerLine(m: Manner | null, names: [string, string], hero: Side | null
   }
 }
 
+// --- the industry template (round 16 item 11) -------------------------------------------------
+// `{Player} {wins|loses} the {point|game|set|match} with {a descriptor}` - the ONE sentence shape
+// every deterministic point-by-point feed in adult tennis emits, at two Slams from IBM and at the
+// other two from Infosys, with no other shape between them (live-text-adult-tour.md §2.1). Its
+// elegance is a single rule: the SUBJECT is whoever hit the last ball, and the VERB flips on whether
+// that ball was a winner or a miss. That is `(pointWinner, endingShot)` and nothing else, which is
+// precisely what a Markov engine has.
+//
+// It is a second MOULD for a fact the file could already state, not a second fact - `mannerLine`
+// above says the same thing hero-relatively ("Dana sends it long") and this says it feed-style
+// ("Dana loses the game with a long groundstroke"). The rotor alternates them, so one event has two
+// shapes and a break-heavy set stops reading like one sentence with the names swapped.
+
+/** The `[shot] [outcome]` half. ⚠ NARROWER THAN THE REAL FEEDS' `[wing] [shotType] [outcome]`, on
+ *  purpose: we model no forehand/backhand and no volley, and the honesty rule at the head of this
+ *  file forbids asserting either. What is left is true of every ball this engine hits. */
+function descriptorOf(m: Manner): string {
+  switch (m.kind) {
+    case 'ace':
+      return `${m.second ? 'a second-serve ace' : 'an ace'} ${servePhrase(m.direction)}`
+    case 'df':
+      return 'a double fault'
+    case 'winner':
+      return `a winner ${rallyPhrase(m.direction)}`
+    case 'error': {
+      const shot = m.onReturn ? 'return' : 'groundstroke'
+      if (m.how === 'net') return `a netted ${shot}`
+      return `a ${m.how} ${shot}`
+    }
+  }
+}
+
+/** What the point that ended decided, in the feeds' own vocabulary. */
+type Unit = 'game' | 'set'
+
+/**
+ * ⚠ TWO SHAPES, AND THE SECOND ONE IS REFERRING-EXPRESSION GENERATION rather than a template
+ * variant. Read straight off real output, which is the only way this was ever going to be caught:
+ * the plain template printed "Bianca breaks. Bianca wins the game with a winner cross-court." - the
+ * name twice in two short sentences, which is the exact thing this file already refuses one line
+ * further down ("naming her twice in two short sentences reads like a machine"), and a UNIT the
+ * claim had just announced.
+ *
+ * So when the ball was the HERO's own, the sentence pronominalises and drops down a unit: she did
+ * not win "the game" a second time, she won the POINT that won it. The pronoun is safe here for the
+ * reason the `tail` clause below gives - the sentence it follows names her and names nobody else.
+ * When the ball was the OTHER player's, the name is the whole information and the unit is the real
+ * one, which is the feeds' own grammar verbatim.
+ *
+ * (There is no third case. If the non-hero had struck a winner they would have won the point, and
+ * then the hero could not have won the game on it - so a ball hit by the loser of a game is always
+ * a miss, and the verb is always `loses`.)
+ */
+function outcomeLine(m: Manner | null, names: [string, string], unit: Unit, hero: Side | null): string {
+  if (!m) return ''
+  // The verb is the whole rule: a winner or an ace WINS it for the player who struck it, an error or
+  // a double fault LOSES it for them. No third case exists in the observed inventory.
+  const won = m.kind === 'ace' || m.kind === 'winner'
+  const verb = won ? 'wins' : 'loses'
+  if (m.by === hero) return `She ${verb} the point with ${descriptorOf(m)}.`
+  return `${names[m.by]} ${verb} the ${unit} with ${descriptorOf(m)}.`
+}
+
 // --- streak scan ----------------------------------------------------------------------------
 
 interface Run {
@@ -486,6 +728,154 @@ function runs(points: readonly AnnotatedPoint[]): Run[] {
   }
   out.push({ side, len, end: points.length - 1 })
   return out
+}
+
+// --- Morris (1977) point importance, and the register it decides ------------------------------
+//
+// «I(state) = P(A wins | A wins this point) - P(A wins | A loses this point)» - the published
+// definition of how much a point matters, and the one this engine already half-believes: point.ts
+// applies the Klaassen-Magnus big-point penalty and names them in its own comment. What it never did
+// was NARRATE from it.
+//
+// ⚠ EXACT, NOT ESTIMATED, AND THE TWO INPUTS ARE BOTH ALREADY IN THE LOG.
+//   * the pre-point score - `Scan.before`, reconstructed above from the point log;
+//   * pA / pB, each side's base point-win-on-serve - recovered below, exactly.
+// Then it is two calls on the engine's own solver over a cloned score. Pure arithmetic, zero draws.
+//
+// ⚠ IT IS NEVER PRINTED, AND THAT IS WHY IT MAY BE A JUDGEMENT AT ALL. The honesty rule says a beat
+// may assert nothing the point log does not carry; importance asserts nothing, it only decides how
+// much of what the log DOES carry gets said. Compare `swing()` below, which is the retrospective
+// (WPA-family) measure and keeps its own job: deciding the `key` cut.
+
+/**
+ * THE TWO BASE SERVE PROBABILITIES, RECOVERED FROM THE LOG.
+ *
+ * `PointLogEntry.pServe` is the MODIFIED probability - `modifiedPServe` has already added momentum,
+ * subtracted the big-point penalty and subtracted fatigue. But all three modifiers are gated, and a
+ * point where none of them fires carries the base value untouched:
+ *
+ *   * momentum needs a running streak of >= 3 points (point.ts, MOMENTUM_MIN_STREAK);
+ *   * the big-point penalty needs `ctx.breakPoint`;
+ *   * fatigue needs `ctx.pointNumber > FATIGUE_START` (120).
+ *
+ * The final clamp cannot bite either: it is [0.3, 0.9] and the base is already clamped to
+ * [0.42, 0.82]. So the FIRST point of the match is always clean by construction (no prior points, no
+ * break point at love-all, point one), and the other side's first clean service point is found the
+ * same way. Both are present in every real match; the fallback is the tour average, and it is there
+ * so a hand-built fixture cannot throw.
+ */
+function baseServeProbabilities(points: readonly AnnotatedPoint[]): [number, number] {
+  const found: [number | null, number | null] = [null, null]
+  let streakSide: Side = points[0].entry.winner
+  let streakLen = 0
+  for (const p of points) {
+    const e = p.entry
+    const clean = streakLen < 3 && !e.breakPoint && e.pointNumber <= 120
+    if (clean && found[e.server] === null) found[e.server] = e.pServe
+    if (streakLen > 0 && streakSide === e.winner) streakLen++
+    else {
+      streakSide = e.winner
+      streakLen = 1
+    }
+    if (found[0] !== null && found[1] !== null) break
+  }
+  // 0.57 is TOUR_AVG_P.wta - the women's tour average this whole model is calibrated around.
+  return [found[0] ?? 0.57, found[1] ?? 0.57]
+}
+
+/**
+ * ⚠ WHERE THE TOP OF THE LADDER STARTS, in units of Morris importance. MEASURED, NOT CHOSEN
+ * (`tools/commentary-register-probe.ts`, 200 seeded matches over the three surfaces, 32,641 points,
+ * importance evaluated at every one):
+ *
+ *   all points     mean 0.064   median 0.051   p90 0.121   p99 0.241   max 0.511
+ *   break points   mean 0.097   median 0.086
+ *   set points     mean 0.090   median 0.059
+ *   match points   mean 0.112   median 0.077
+ *   at BEATS       mean 0.077   median 0.061   p90 0.154   p99 0.303   max 0.511
+ *
+ * and the sweep that picked it, read over BEATS - the population that matters, because a beat has
+ * already survived one salience gate:
+ *
+ *   peak    share of beats   per match   ...and on a real set/match point
+ *   0.10         23%            3.6                  27%
+ *   0.12         16%            2.5                  33%
+ *   0.15         11%            1.7                  41%
+ *   0.18          6%            0.9                  40%
+ *   0.20          4%            0.6                  48%
+ *   0.25          2%            0.3                  61%
+ *
+ * 0.15 is the pick and the last two columns are why. The top of the ladder has to be somewhere a
+ * match actually GOES - at 0.20 and above most matches never reach it once - and it has to be about
+ * the stakes without being only about them: 41% of what it keeps sits on a game containing a real
+ * set or match point, and the rest is the other thing that genuinely is one, a break at 5-5 in a
+ * decider. Once or twice a match is the frequency the escalation ladder describes for its top tier.
+ *
+ * ⚠ TWO STEPS, NOT THE THREE THE RESEARCH PROPOSES, and the measurement is the reason.
+ * `commentary-generation.md` §5.3.3 recommends flat / raised / peak. Built and measured, the middle
+ * bucket changed nothing a reader could see: the register's levers here are the sentence mould and
+ * the row's budget, and at any threshold that left a real top step the middle band's rows came out
+ * byte-identical to the flat ones (a claim plus a manner clause is 90-100 characters, so a budget
+ * between 104 and 120 never cuts). A third name that renders the same string is a comment pretending
+ * to be a feature. Recorded here rather than quietly dropped - invariant 4 cuts both ways.
+ */
+export const PEAK_IMPORTANCE = 0.15
+
+type Register = 'flat' | 'peak'
+
+/**
+ * A reader for Morris importance over one match: `at(i)` is how much point `i` mattered.
+ *
+ * ⚠ LAZY AND MEMOISED, WHICH IS A COST DECISION AND NOT A STYLE ONE. The DP is the only thing in
+ * this file that is not O(1), and a build asks about ~15 anchors out of ~180 points. Computed
+ * eagerly across the whole log, the commentary suite's own corpora (about 1,500 matches over its
+ * describe blocks) went from 15 seconds to well over a minute for numbers nobody read.
+ */
+function importanceReader(before: readonly MatchScore[], pA: number, pB: number): (i: number) => number {
+  const memo = new Map<number, number>()
+  return (i) => {
+    const cached = memo.get(i)
+    if (cached !== undefined) return cached
+    const state = before[i]
+    let value = 0
+    if (state) {
+      // Clone and award, once each way. `awardPoint` mutates, so each branch gets its own copy; the
+      // sets array is the only nested part.
+      const branch = (to: Side): number => {
+        const copy: MatchScore = {
+          sets: state.sets.map((st) => ({ a: st.a, b: st.b })),
+          game: { a: state.game.a, b: state.game.b },
+          inTiebreak: state.inTiebreak,
+          server: state.server,
+          winner: null,
+        }
+        awardPoint(copy, to)
+        return matchWinProbability(copy, pA, pB)
+      }
+      value = Math.abs(branch(0) - branch(1))
+    }
+    memo.set(i, value)
+    return value
+  }
+}
+
+/**
+ * Morris importance at every point of a match, in play order.
+ *
+ * ⚠ EXPORTED AS A TESTING AND MEASUREMENT SEAM, not because anything else renders it. The register
+ * ladder is a rule about a number, and a test that cannot see the number can only pin the source
+ * text - which CLAUDE.md is explicit about preferring not to do. With this, `tests/viz/commentary
+ * .test.ts` asserts the actual rules ("a peak beat never carries a forward look", "a peak beat fits
+ * the shorter budget") against the same arithmetic the builder used.
+ *
+ * Pure, and the same zero-RNG guarantee as everything else here.
+ */
+export function pointImportance(match: AnnotatedMatch): number[] {
+  const points = match.points
+  if (points.length === 0) return []
+  const [pA, pB] = baseServeProbabilities(points)
+  const at = importanceReader(scan(points).before, pA, pB)
+  return points.map((_, i) => at(i))
 }
 
 // --- the build ----------------------------------------------------------------------------------
@@ -525,6 +915,37 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
     return most
   }
 
+  // MORRIS IMPORTANCE at one point - see the block above the build for what it is and why it is
+  // exact. Memoised because a beat asks for its own anchor twice (register, then the budget) and
+  // because the solver is the only thing in this file that is not O(1).
+  const [pA, pB] = baseServeProbabilities(points)
+  const importanceAt = importanceReader(s.before, pA, pB)
+  const registerAt = (i: number): Register => (importanceAt(i) >= PEAK_IMPORTANCE ? 'peak' : 'flat')
+
+  // The used-recently rotor (see `rotor`). One per build, walked in play order by the per-game loop.
+  const pick = rotor()
+
+  /** The manner clause for a beat, in whichever of the two moulds has not just been used, and cut to
+   *  whatever the register allows. `hero` is the beat's protagonist; `unit` is what the point
+   *  decided, which is the industry mould's object slot. */
+  const mannerFor = (
+    m: Manner | null,
+    hero: Side | null,
+    unit: Unit,
+    closing: boolean,
+    at: number,
+  ): string => {
+    if (!m) return ''
+    // ⚠ AT THE PEAK THERE IS NO CHOICE TO MAKE. The escalation ladder wants the top of a match said
+    // plainly and short, and the feed mould IS the plain one - subject, verb, what the ball did, no
+    // shot count and no "a long exchange, and". The rotor is not consulted, so a match point never
+    // reads as a stylistic decision.
+    if (registerAt(at) === 'peak') return outcomeLine(m, names, unit, hero)
+    return pick('manner', at, 2) === 0
+      ? mannerLine(m, names, hero, closing)
+      : outcomeLine(m, names, unit, hero)
+  }
+
   // `keyMoment` defaults to TRUE because the four structural beats (open/set/tiebreak/match) are the
   // ones that omit it - see THE KEY CUT. Everything else passes its own measured answer.
   const push = (
@@ -562,13 +983,47 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
   // The beat still sits on `lastIndex` and still carries the real scoreline, so the honesty
   // properties every other beat is held to are unchanged – it is the SET-END property alone that a
   // retirement does not have, and it never claimed to be one.
+  // ⚠ ROUND 16 ITEM 18 - "максимально неявно" (owner, 11.08). The beat above EXISTED and still said
+  // almost nothing: "cannot continue. Bianca goes through." is scoreboard language, and next to the
+  // score column it read as the fragment he reported - «4-5 cannot continue» - an event with no
+  // explanation attached. Three things are wrong with that line and all three are fixed here.
+  //
+  //   1. IT DID NOT SAY WHAT HAPPENED. A reader is told a match stopped and not that a BODY stopped.
+  //      "She retires hurt" is the world's own wording for this already (the tournament summary
+  //      prints "Semifinalist (+30 pts) – she retired hurt", match-retirement.md §9), so the log now
+  //      agrees with the rest of the game instead of inventing a quieter phrase for the same fact.
+  //   2. IT DID NOT SAY WHY, and the model has an answer. `retireHazard` (point.ts) is
+  //      `RETIRE_K * spentness(pointNumber, stamina)` and `spentness` is EXACTLY ZERO up to
+  //      FATIGUE_START, so every retirement this engine can produce happened past 120 points to a
+  //      girl who is not fresh. "A long match on tired legs" is that file's own summary of its own
+  //      mechanism and it is true of every match that reaches this branch by construction - which is
+  //      the standard the honesty rule sets. `tests/viz/commentary.test.ts` asserts the >120
+  //      property directly, so the sentence cannot outlive the mechanism that licenses it.
+  //   3. "GOES THROUGH" IS THE WRONG VERB, and the rulebooks are explicit about which one is right:
+  //      the opponent ADVANCES, and did not beat her (docs/research/commentary-lexicon.md §4.6). The
+  //      distinction is the whole reason a retirement is not a loss like any other in the TEXT even
+  //      though the bracket treats it as one.
+  //
+  // ⚠ AND THERE IS NO EARLIER BEAT, deliberately. The obvious ask is a line when she starts to
+  // struggle - and the engine gives no such signal: the hazard is a per-point coin the log does not
+  // record, so a "she is labouring" row would be the narrator inventing a fact. The retirement is
+  // knowable at exactly one point, and this is it.
   const retired = match.result.retired
   push(
     lastIndex,
     'match',
     retired ? 'Retired.' : 'Match.',
     retired
-      ? `${names[retired.side]} cannot continue. ${names[winner]} goes through.`
+      ? clauses(
+          `${names[retired.side]} cannot go on. ${names[winner]} advances.`,
+          'A long match on tired legs.',
+          // ⚠ THE CLAUSES ARE SPLIT RATHER THAN JOINED, and it is `clauses()`'s degradation order
+          // doing real work: two players who share a first name both fall back to full names (see
+          // `speakingNames`), which costs this row eleven characters. Written as one long colour
+          // sentence the whole explanation fell off that case; written as two, the CAUSE survives
+          // and only the flourish goes.
+          'It ends with a handshake, not a winner.',
+        )
       : clauses(
           match.result.sets.length === 3
             ? `${names[winner]} takes it in three.`
@@ -586,7 +1041,21 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
     const p = points[g.last]
     const w = g.winner
     const loser: Side = w === 0 ? 1 : 0
-    const manner = mannerLine(mannerOf(p), names, w, g.setEnd)
+    // ⚠ TWO MOULDS NOW, PICKED BY THE ROTOR AND OVERRIDDEN AT THE PEAK - see `mannerFor`. The unit
+    // is what the point actually decided, which is the industry mould's object slot.
+    //
+    // ⚠ AND IT IS LAZY, WHICH IS NOT A MICRO-OPTIMISATION - IT IS THE ROTOR'S CORRECTNESS. This loop
+    // walks EVERY game, and most of them print nothing (a routine hold falls out at `if (!base)
+    // continue` below). Computed eagerly, the rotor was advanced by rows nobody would ever read, so
+    // two visible beats with silent games between them could still land on the same mould. Found by
+    // reading real output rather than by reasoning: the first build printed "Bianca breaks. Bianca
+    // wins the game with a winner cross-court." twice in one set, two rows apart, with the rotor
+    // having "alternated" across a game that printed nothing in between. "What was just said" has to
+    // mean what was just PRINTED, so nothing may touch the rotor until a row is going in.
+    const manner = (): string => mannerFor(mannerOf(p), w, g.setEnd ? 'set' : 'game', g.setEnd, g.last)
+    // The row's budget shrinks at the top of a match, so the colour clause is cut where a human
+    // editor would cut it. Read once per game, beside the manner it governs.
+    const budget = registerAt(g.last) === 'peak' ? PEAK_MAX_CHARS : BEAT_MAX_CHARS
     // Read before the `continue`s below, so every branch of this loop leaves it correct.
     const gameMoved = swing(prevGameLast, g.last) >= KEY_SWING
     prevGameLast = g.last
@@ -601,7 +1070,13 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
       // A non-final second set can only ever have been won by whoever lost the first, so it is
       // always the leveller. The first set needs no standing - it IS the standing.
       const standing = g.set === 0 ? '' : ' One set each.'
-      push(g.last, 'set', 'Set.', clauses(`${how}${standing}`, manner), `${g.gamesAfter[0]}-${g.gamesAfter[1]}`)
+      push(
+        g.last,
+        'set',
+        'Set.',
+        clausesUpTo(budget, `${how}${standing}`, manner()),
+        `${g.gamesAfter[0]}-${g.gamesAfter[1]}`,
+      )
       continue
     }
 
@@ -629,13 +1104,23 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
           : g.loveForty[w]
             ? `${names[w]} breaks from love-forty down.`
             : level
-              ? LEVEL_LINES[variant(g.last, LEVEL_LINES.length)](names[w])
-              : BREAK_LINES[variant(g.last, BREAK_LINES.length)](names[w])
+              ? // ⚠ THE ROTOR, NOT THE BARE HASH (round 16 item 11). Same pools, same starting
+                // position - what changed is that the pool now knows what it just said, so a
+                // break-heavy set cycles instead of repeating. See `rotor`.
+                LEVEL_LINES[pick('level', g.last, LEVEL_LINES.length)](names[w])
+              : BREAK_LINES[pick('break', g.last, BREAK_LINES.length)](names[w])
       // "She" is safe here and only here: the sentence it follows names her and names nobody
       // else, and the tour is women's (JUNIOR_TOUR = 'wta'; the cohort's given-name pool is
       // female). Naming her twice in two short sentences reads like a machine.
-      const tail = g.gamesAfter[w] === 5 && g.gamesAfter[loser] <= 4 ? ' She serves for the set next.' : ''
-      push(g.last, 'break', 'Break!', clauses(`${base}${tail}`, manner), undefined, gameMoved)
+      //
+      // ⚠ AND IT IS DROPPED AT THE PEAK, which is the second half of the escalation ladder's rule.
+      // This clause is a FORWARD LOOK - what the next game is now - and the top of a match is where
+      // real commentary stops looking ahead and stays with the ball that just landed
+      // (commentary-lexicon.md §5.3: tier 4 "slows down. Shorter sentences."). It is glued to the
+      // claim rather than passed as its own clause, so the budget alone could never cut it.
+      const forward = g.gamesAfter[w] === 5 && g.gamesAfter[loser] <= 4
+      const tail = forward && budget !== PEAK_MAX_CHARS ? ' She serves for the set next.' : ''
+      push(g.last, 'break', 'Break!', clausesUpTo(budget, `${base}${tail}`, manner()), undefined, gameMoved)
       continue
     }
 
@@ -655,7 +1140,45 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
             ? `${names[w]} saves ${nPoints(g.bpFaced, 'break point')} and holds.`
             : ''
     if (!base) continue
-    push(g.last, 'hold', 'Held.', clauses(base, manner), undefined, gameMoved)
+    push(g.last, 'hold', 'Held.', clausesUpTo(budget, base, manner()), undefined, gameMoved)
+  }
+
+  // --- game runs: the longest run of >= GAMES_MIN consecutive games in each set ---------------
+  // Round 16 item 11, and the research's own example of a fact the log could not state: a 6-1 set is
+  // made entirely of a run of games, and nothing here ever said so. A POINT streak lives inside one
+  // or two games; this is the set itself running away, which is a different thing and reads as one.
+  //
+  // Anchored to the last point of the run's last game, and the key cut is asked the same question
+  // every non-structural beat is asked: did the match MOVE across the run's own span.
+  {
+    const best = new Map<number, { side: Side; len: number; from: number; last: number }>()
+    let side: Side | null = null
+    let len = 0
+    let firstPoint = 0
+    for (const g of s.games) {
+      if (g.winner === side) len++
+      else {
+        side = g.winner
+        len = 1
+        firstPoint = g.last
+      }
+      // A run is claimed for the set its LAST game sits in, so a run that straddles a set break is
+      // told once, where it finished. `firstPoint` is the last point of the run's FIRST game, which
+      // is the point just before the run began doing anything - exactly `swing`'s `from`.
+      if (len < GAMES_MIN) continue
+      const cur = best.get(g.set)
+      if (!cur || len > cur.len) best.set(g.set, { side, len, from: firstPoint, last: g.last })
+    }
+    for (const r of best.values()) {
+      push(
+        r.last,
+        'games',
+        'Run.',
+        `${Num(r.len)} games in a row for ${names[r.side]}.`,
+        undefined,
+        swing(r.from, r.last) >= KEY_SWING,
+      )
+    }
   }
 
   // --- streaks: the longest run of >= STREAK_MIN points in each set, at the point it ended ----
