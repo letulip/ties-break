@@ -364,7 +364,16 @@ export function kidLadderRank(world: WorldState, track: LadderTrack): number | n
 
 export function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
   const counting = computeCountingResults(world, track)
+  const points = kidPoints(world, track)
+  // ⚠ WHAT §VIII.A.2.b IS WITHHOLDING, so a screen can say it (round-16 #3 – see `LadderView.banked`
+  // for the owner's report and the measurement). The counted rows are the ones the list beside the
+  // number already shows, so "banked" and "counting results" are folded from one array and cannot
+  // drift; `rankableTotal` is the only thing between this sum and `points`, which is exactly the
+  // gap the sentence has to explain. Absent whenever the two agree, which is every domestic row,
+  // every ITF row, and every professional row past the minimum.
+  const banked = counting.reduce((sum, r) => sum + r.points, 0)
   return {
+    ...(points === 0 && banked > 0 ? { banked } : {}),
     // Her place a week ago IN THIS TABLE - see `prevKidRankDomestic` on WorldState for why both are
     // carried rather than one shared "previous rank".
     prevRank: prevRankIn(world, track),
@@ -374,7 +383,7 @@ export function computeLadderView(world: WorldState, track: LadderTrack): Ladder
     // > 0` themselves; making it null HERE means they cannot forget, and the two questions ("where
     // is she?" and "is she ranked at all?") stop being one field.
     rank: kidLadderRank(world, track),
-    points: kidPoints(world, track),
+    points,
     standings: computeStandings(world, track),
     countingResults: counting,
   }

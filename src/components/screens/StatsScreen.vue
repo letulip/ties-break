@@ -30,7 +30,7 @@ import { useGameStore } from '../../stores/game'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { LADDER_LABEL } from '../../shared/protocol'
 import { TIERS, TIER_SHORT } from '../../engine/season/calendar'
-import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
+import { BEST_N_BY_TRACK, RANKABLE_MIN } from '../../engine/season/ranking'
 import { finishPhrase } from '../../composables/tierState'
 import type { LadderTrack } from '../../engine/season/types'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -104,6 +104,25 @@ const ranked = computed(() => ladder.value?.rank !== null && ladder.value?.rank 
 const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ranked.value))
 const points = computed(() => ladder.value?.points ?? 0)
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
+
+// ⚠ WHY THE TABLE SAYS 0 WHILE THE RESULTS UNDER IT SAY 6 (round-16 #3, and the owner filed it as a
+// cache refreshing one event late). It is the WTA's own eligibility minimum, and the engine has been
+// applying it correctly since points-by-the-book: a professional appears on the rankings only once
+// she has scored in three tournaments or banked ten points. Until then her total reads zero - beside
+// a counting-results list showing every row she has won, which is what makes it read as a bug.
+//
+// `LadderView.banked` is the engine's own number for what is being withheld (absent unless it IS
+// being withheld, on any table); the thresholds are read from `RANKABLE_MIN` so this screen and the
+// tournament summary's own sentence (`rankingDeltaSuffix`) quote one rule. Nothing is re-derived
+// here: if the engine ever stops withholding, the field goes and the line goes with it.
+const banked = computed(() => ladder.value?.banked ?? null)
+const bankedNote = computed(() =>
+  banked.value === null
+    ? null
+    : `${banked.value} pts banked. A ${LADDER_LABEL[shown.value].toLowerCase()} ranking needs ` +
+      `${RANKABLE_MIN.tournaments} events with points, or ${RANKABLE_MIN.points} points – ` +
+      `until then the table shows nothing, and every result below still counts towards it.`,
+)
 
 // --- THE WINDOW BLOCK (W2-LADDER §3: the owner's «очковое окно возможностей», made visible) ------
 // Three facts the rolling window has always had and never said: how full it is against the shown
@@ -212,6 +231,10 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
           <span class="stats-tile-value num">{{ seasonWins }}–{{ seasonLosses }}</span>
         </div>
       </div>
+      <!-- ⚠ THE ZERO THAT IS NOT A BUG (round-16 #3). Drawn only while the engine is actually
+           withholding her total - `LadderView.banked` is absent otherwise - and placed directly
+           under the tiles, because the tile it explains is the one reading 0. -->
+      <p v-if="!archiveShown && bankedNote" class="hint stats-banked">{{ bankedNote }}</p>
       <p v-if="!archiveShown" class="hint stats-no-exchange">{{ noExchange }}</p>
     </section>
 
@@ -290,6 +313,17 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
    shared `.hint` spacing is tuned for standalone paragraphs, and src/style.css is off limits. */
 .stats-no-exchange {
   margin-top: 8px;
+}
+
+/* The banked line sits between the tiles and the no-exchange note, so the 8px above belongs to
+   whichever of the two is first on screen. It is the same quiet `.hint` register: it explains a
+   figure, it is not a second figure. */
+.stats-banked {
+  margin-top: 8px;
+}
+
+.stats-banked + .stats-no-exchange {
+  margin-top: 4px;
 }
 
 /* THE ARCHIVE PLATE (W2-LADDER §4): quiet, final, one card - the visual register of a record

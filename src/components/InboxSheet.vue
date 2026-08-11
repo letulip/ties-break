@@ -42,6 +42,8 @@ import { letterDeletable, useInboxMail } from '../composables/inboxMail'
 import OfferLetter from './OfferLetter.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import IconButton from './ui/IconButton.vue'
+// Round-16 #1: the inbox is a screen that covers the tabs, not a popup over the diary page.
+import TakeoverShell from './ui/TakeoverShell.vue'
 import { playSfx } from '../audio/sfx'
 
 defineEmits<{ close: [] }>()
@@ -218,17 +220,29 @@ async function doRefuse(id: string): Promise<void> {
 </script>
 
 <template>
-  <!-- ⚠ THE CONFIRM IS A SIBLING OF THIS OVERLAY, NOT A CHILD OF IT, and that is structural rather
-       than tidy. This overlay dismisses on `@click.self`, so a confirm nested inside it would sit in
-       a box whose backdrop is listening for clicks - and every click that misses the confirm's own
-       card would then be one `.self` check away from tearing down the sheet underneath the decision
-       it is asking about. Two roots keep the two layers independent, which is how MoreScreen mounts
-       its own confirm. -->
-  <div class="dialog-overlay" @click.self="$emit('close')">
-    <div class="guide-card">
-      <IconButton class="replay-close" icon="close" label="Close" title="Close" @click="$emit('close')" />
-      <p class="guide-title">Inbox</p>
+  <!-- ⚠ FULL SCREEN SINCE ROUND-16 #1 (the owner). It was a `.dialog-overlay` + `.guide-card` - a
+       popup over the diary page - and a mail client is not a popup: on a 375px phone the card's own
+       inset plus the overlay's left the list about 280px to hold a sender, a subject, a date and a
+       bin, and a career with a season of letters in it scrolled inside a box inside a page.
+       `TakeoverShell` is the app's one answer to "a screen that covers the tabs" and four surfaces
+       already render through it, so this is a re-home rather than a new layout: same list, same
+       letter, same controls.
+       ⚠ AND THE BACKDROP TAP IS GONE WITH THE BACKDROP. There is no longer anything behind this to
+       tap, so the close control in the header is the way out - which is what every other takeover in
+       the app already does. `@click.self` had been the second exit; the note below about the confirm
+       being a SIBLING is unchanged and is the reason it still is one.
+       ⚠ `:screen` IS THE SHELL'S SCROLL RESET, and this surface is exactly the case the prop exists
+       for: the list and an open letter are two screens in one scroller, so without it a letter opened
+       from the bottom of a long list arrived already scrolled past its own first line. -->
+  <TakeoverShell title="Inbox" :screen="openLetter?.id ?? 'list'">
+    <template #exit>
+      <IconButton icon="close" label="Close" title="Close" @click="$emit('close')" />
+    </template>
 
+    <!-- ⚠ ONE WRAPPER, because `.tf-body` is a flex column with a 16px gap and this surface is a
+         single object (a list, or one letter) rather than a stack of cards. Without it every
+         paragraph and the list itself became a gap-separated band. -->
+    <div class="inbox-body">
       <!-- ══ ONE LETTER, OPEN ══ -->
       <!-- The paper is untouched: this is the same `OfferLetter` the sheet used to stack, with the
            same two controls under it. All that is new is that it is the only one on screen. -->
@@ -284,7 +298,7 @@ async function doRefuse(id: string): Promise<void> {
         </ul>
       </template>
     </div>
-  </div>
+  </TakeoverShell>
 
   <!-- ⚠ `Sign it` AND NOT `Sign`, AND THE EXTRA WORD IS THE WHOLE FIX (D13, docs/specs/e2e-coverage.md
        §12 – the highest-priority item in that register). `OfferLetter` draws a `Sign` button and this
@@ -314,6 +328,13 @@ async function doRefuse(id: string): Promise<void> {
 </template>
 
 <style scoped>
+/* THE ONE CHILD OF `.tf-body` (round-16 #1). The shell's body is a flex column with a 16px gap, which
+   is right for a stack of cards and wrong for a mail client - so this surface hands it a single block
+   and keeps its own vertical rhythm inside, exactly as it did inside `.guide-card`. */
+.inbox-body {
+  min-width: 0;
+}
+
 /* Letters are separated by air rather than by a rule: they are separate sheets of paper, and a
    divider between two pieces of paper is a line that belongs to neither. The top margin applies to
    every letter, including the first, so the stack clears the title (or the empty-state hint) above

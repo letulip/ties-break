@@ -396,6 +396,30 @@ const condition = computed(() => game.snapshot?.condition ?? 0)
 // scholarship is a rate, not a per-event deal – so each card can print it without re-deriving it.
 const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.coverShare ?? 0) * 100))
 
+// ⚠ HER PROFESSIONAL ALLOWANCE, ON EVERY W CARD (round-16 #7). It used to appear in exactly one
+// place: the lock pill, on the card that had already run out ("Tour age rule – 12 of 12"). So the
+// one number a parent needs in order to SPEND the allowance sensibly only ever arrived after it was
+// spent - which is the same shape as a fuel gauge that lights up when the tank is empty.
+//
+// The engine's own figure (`Snapshot.proEntryCap`, `proEntryCapUsage`), never re-derived: the season
+// the counter describes is the CURRENT one, which is what every card inside the eight-week horizon
+// is in except across the year boundary - and a capped card there still prints the engine's
+// per-EVENT verdict on the lock pill, which is the number that actually refuses her.
+//
+// SILENT FROM EIGHTEEN, because the rule is: `proPerYearByAge` is unlimited from 18 and the protocol
+// spells "unlimited" as MAX_SAFE_INTEGER, so a counter there would be a fraction with no denominator.
+const proEntries = computed(() => {
+  const cap = game.snapshot?.proEntryCap
+  if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
+  return `pro entries ${cap.used} / ${cap.limit}`
+})
+/** WHICH CARDS CARRY IT – the rungs the tour's age rule actually counts (`ECONOMY.entryCap
+ *  .cappedProTiers`, read through the engine's own predicate). That is every W and WTA rung and no
+ *  junior or domestic one, so "every W card" is a property of the tier rather than a list here. */
+function showsProEntries(e: UpcomingEvent): boolean {
+  return proEntries.value !== null && isCappedProTier(e.tier)
+}
+
 // SEASON STRUCTURE BY SURFACE (owner approved 26.07). The calendar shows 8 weeks, so a 15-week clay
 // swing would otherwise only become visible once she is standing in it – and the whole point of the
 // block schedule is that the calendar tells her when her surface ARRIVES. One strip above the
@@ -1295,6 +1319,19 @@ function closeExhibition(): void {
               <!-- R12-1/14: on an exam week the button does not vanish SILENTLY – the card says why
                    SHE cannot go (the tournament still runs; school owns her week). -->
               <span v-else-if="examReasonShows(row)" class="pill muted lock">Exams this week</span>
+              <!-- ⚠ THE ALLOWANCE, BOTTOM RIGHT, ON EVERY W CARD (round-16 #7, the owner). LAST in
+                   the row and pushed over by `margin-left: auto`, so it is the last thing read on the
+                   card and never competes with the control beside it. `.controls` wraps, and the
+                   owner has accepted the second line this takes on the one crowded combination
+                   ("Entries closed" + "Exams this week" + the counter). Quiet, and deliberately not a
+                   lock: it is a budget, and the card it sits on is usually one she may still enter. -->
+              <span
+                v-if="showsProEntries(row.event)"
+                class="pill muted pro-entries"
+                :title="`The tour's age rule caps how many professional tournaments she may enter this season. This is where she stands against it.`"
+              >
+                {{ proEntries }}
+              </span>
             </div>
           </Card>
 
@@ -1636,6 +1673,17 @@ section.bare .event-cards {
 .defend-chip {
   color: var(--accent);
   border-color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* THE PRO ALLOWANCE, BOTTOM RIGHT (round-16 #7). `.controls` is `display: flex; flex-wrap: wrap`, so
+   `margin-left: auto` is the whole of "right" - and when the row is already full the chip wraps onto
+   a line of its own and the auto margin keeps it on the right of that one. That wrap is the case the
+   owner accepted in advance ("Entries closed" + "Exams this week" + this).
+   ⚠ `margin-left: auto` AND NOT `justify-content`: the row's other children are laid out from the
+   left and must stay there. A justification would move all of them to say one thing about this one. */
+.pro-entries {
+  margin-left: auto;
   font-variant-numeric: tabular-nums;
 }
 

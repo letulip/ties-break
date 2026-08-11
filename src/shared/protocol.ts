@@ -1056,6 +1056,26 @@ export interface LadderView {
   /** Her windowed best-6 total IN THIS TABLE'S CURRENCY. National points and ITF points are different
    *  units and must never be added, compared or silently swapped for one another. */
   points: number
+  /** WHAT SHE HAS WON THAT THE TABLE IS NOT SHOWING YET – present ONLY while §VIII.A.2.b is
+   *  withholding her total, absent on every other row and on every other table.
+   *
+   *  ⚠ THE OWNER FILED THIS AS A CACHE BUG (round-16 #3): *"the professional table shows 0 points
+   *  after the second match while the result row shows 6, and the third match onward counts"*. It is
+   *  not a cache. It is the WTA's own minimum, shipped deliberately in `rankableTotal` – *"Players
+   *  must earn ranking points in at least three (3) valid Tournaments, or a minimum of ten (10)
+   *  singles ranking points ... in order to appear on the WTA Rankings"* – so a professional on two
+   *  results worth six points reads ZERO on the table while her counting-results list beside it
+   *  shows both rows. Reproduced against his own save (tools/round16-read.ts): her first professional
+   *  result in the window paid 8 and the table showed 0; the second took her past ten and the table
+   *  showed 16. Correct arithmetic, and a screen with no way to say so.
+   *
+   *  ⚠ THE ENGINE OWNS THE NUMBER, THE SCREEN OWNS THE SENTENCE. This is the sum of the same counted
+   *  rows `countingResults` lists, BEFORE the minimum is applied – so the two cannot disagree about
+   *  what is being withheld. `RANKABLE_MIN` stays the one place the thresholds are written down.
+   *
+   *  ABSENT rather than 0 when nothing is withheld: a 0 here would be indistinguishable from "she is
+   *  on the list with no points", which is the same "unranked is not a number" trap `rank` avoids. */
+  banked?: number
   /** Top 10 + a window around her, rank order - this table only. */
   standings: StandingRow[]
   /** The results THIS table counted, strongest first. Pairs with `rank`: a rank and the results that
