@@ -46,9 +46,28 @@ Decide the point winner first (Markov), then generate a plausible rally for rend
 
 ## Data sources (free)
 
-- [tennis_atp](https://github.com/JeffSackmann/tennis_atp) / tennis_wta – every match since 1968 with serve stats (aces, df, svpt, 1stIn, 1stWon, 2ndWon, bpSaved) → fit rating→p mapping by surface.
-- [Match Charting Project](https://github.com/JeffSackmann/tennis_MatchChartingProject) – 17,808 matches, 2.77M points, **10.5M coded shots** with directions. License CC BY-NC-SA – fine for deriving aggregate parameters, attribute it.
-- tennis_slam_pointbypoint – Slam point-by-point.
+> ### ⚠ TWO OF THE THREE ARE GONE (verified 11.08.2026)
+>
+> `JeffSackmann/tennis_atp`, `/tennis_wta` and `/tennis_slam_pointbypoint` all return **404**.
+> Measured by the live-text research: `tennis_atp` last returned 200 on **14 March 2026** and first
+> 404'd on **24 June 2026**. The links below are kept rather than deleted because the parameters this
+> project already derived from them were taken while they were live, and a reader needs to know where
+> a shipped number came from – but nothing new can be fitted from them.
+>
+> **The surviving mirror** is a HuggingFace archive (`Aneeshers/tennis-sackmann-archive`, 473 files);
+> a thinner 2011-2015 mirror of the Slam point-by-point data exists at `halepmania/tennis_slam_pointbypoint`,
+> unlicensed. Both are in `docs/research/live-text-adult-tour.md` with URLs.
+>
+> ⚠ **AND THE ONE THAT SURVIVED IS NON-COMMERCIAL.** Match Charting Project is CC BY-NC-SA 4.0, and
+> this project is commercial (see CLAUDE.md). The line below reads "fine for deriving aggregate
+> parameters, attribute it" – that was a judgement made when it was one free source among three, and
+> it is now the ONLY one. Whether an NC-SA corpus may be used to fit constants that ship in a
+> commercial product is a real question and it is the owner's to answer, not this document's to
+> assume. Nothing currently depends on it that was not already derived.
+
+- [tennis_atp](https://github.com/JeffSackmann/tennis_atp) / tennis_wta – **DEAD (404)**. Was: every match since 1968 with serve stats (aces, df, svpt, 1stIn, 1stWon, 2ndWon, bpSaved) → fit rating→p mapping by surface.
+- [Match Charting Project](https://github.com/JeffSackmann/tennis_MatchChartingProject) – **live**, 17,808 matches, 2.77M points, **10.5M coded shots** with directions. License CC BY-NC-SA 4.0 – see the warning above.
+- tennis_slam_pointbypoint – **DEAD (404)**. Was: Slam point-by-point.
 
 ## Visualization references
 
