@@ -586,3 +586,33 @@ in nine seasons of twelve, so that line is what keeps school out of it. And `mig
 scan cannot collapse to `year - 2031`: it inverts what the OLD writer wrote, so the historical
 arithmetic is frozen beside it as `legacyWeekYear`. Full measurement, tables and the
 migration-or-not reasoning: `docs/specs/season-anchor.md`.
+
+## 2026-08-11 – The rose stops reading as a verdict (`wave/flags-grant`)
+
+Three owner rulings on the skills radar in one sitting, all of them the same complaint: **the chart
+made a live career look finished.** On his own save at seventeen the girl had between 1.3 and 7.3
+points of headroom left on her five wings – she was born with 7.5 – and the picture drew that sliver
+and nothing else. She is 255th in the world and bringing prize money home. The chart was wrong about
+her.
+
+1. **Draw where she started.** «на розе как раз показывать "старт" – т.е. с чего начала, может быть
+   так будет приятнее и нагляднее». Her return had gone 50.7 → 62.8 and the rose said nothing about
+   it. `RadarAxis.startValue`, derived at snapshot time from the seed – no storage, no schema, no
+   migration – and read through the SAME misreading as `shownValue`, so the start contour is always
+   inside the current one and the gap between them is a real distance.
+2. **The dashed ceiling edge goes; the blurred zone stays.** «контур "безнадежности" текущий надо
+   убрать… мы знаем в игре её потолок, потому что он запрограммирован нами, но в жизни потолок можно
+   только по прогрессу в играх увидеть. Заблюренная зона это ок.» A soft region reads as "somewhere
+   out there"; a drawn line reads as a number the game has already decided.
+3. **The axis ends where the game ends.** «если мы до 100 вообще не можем дорасти, то явно имеет
+   смысл цену деления пересмотреть на графике, чтобы максимумы упирались в максимумы… Блюр при этом
+   может и за границы оверлапом выходить, не вижу проблем». Nothing can exceed 86 – the top of the
+   starting band (60) plus the top of `potentialBand` (26), two constants nobody picked together – so
+   the outer seventh of every rose was unreachable. **Derived, not hard-coded**, so widening the band
+   moves the picture on the same commit.
+
+⚠ **One thing moved that he did not ask for, and it is a correctness fix.** The radar's view of
+"where she began" was the BIRTH build, without the relative-age head start – so the Weekly Story's
+Training card was charging up to 1.1 points of "being eleven months older than your band" to the
+coach's work. It is now the week-one build both readers share. Full argument and measurements:
+`docs/specs/skills-radar.md` §6.

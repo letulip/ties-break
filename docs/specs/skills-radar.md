@@ -271,3 +271,84 @@ same career — which is the property v19 established and worth keeping.
   stats panel yet; inventing one is the match-viz slice's call, not this one's.
 - **No new axis on the AI's `styleOf`.** A rival's style is still read off serve/ret/stamina, which
   are the three she stores.
+
+# 6. Three contours, no ceiling line, and an axis that ends where the game ends (owner, 11.08)
+
+Three rulings on one day, all of them about the same complaint: **on a live career the picture read
+as a verdict.** Measured on his own save at seventeen (`olivia-o1p7_w195`), derived with
+`startingSkills` + `withHeadStart` against `world.potential`:
+
+| skill | start | now | ceiling | grown | left |
+|---|---|---|---|---|---|
+| serve | 51.7 | 53.8 | 55.1 | 2.1 | 1.3 |
+| return | 50.7 | 62.8 | 70.1 | 12.1 | 7.3 |
+| composure | 37.7 | 39.5 | 41.5 | 1.8 | 2.0 |
+| stamina | 42.7 | 45.0 | 46.5 | 2.3 | 1.4 |
+| groundstrokes | 58.7 | 63.2 | 65.9 | 4.5 | 2.7 |
+
+She was born with 7.5 points of headroom an attribute. The rose drew the sliver that was **left** and
+nothing else – so a girl ranked 255th in the world, paying her own way, was drawn as a career already
+over. **The chart was wrong about her, not the other way round.**
+
+## 6.1 Draw where she started
+
+> «на розе как раз показывать "старт" – т.е. с чего начала, может быть так будет приятнее и нагляднее»
+
+`RadarAxis` gains **`startValue`**, and it needs no storage, no schema bump and no migration: the
+week-one build is `withHeadStart(startingSkills(seed, profile), birthMonth)`, a pure function of the
+seed and the profile, derived at snapshot time like every other number on that object.
+
+**It goes through the same fog, on the same draw.** `readAs` in `engine/radar.ts` is the misreading
+`shownValue` already used, factored out: one draw off `seed:read:<axis>`, once per career, so the
+coach is wrong about her past by exactly the amount he is wrong about her present. Two consequences,
+and both are wanted:
+
+- The start contour is **inside** the current one on any career that has gone forward, always. An
+  independent draw would put "where she began" outside "where she is" whenever the gain was smaller
+  than the error – a *false* claim, not an uncertain one.
+- The **distance between the two shapes is her true career gain, exactly**. That is the one exact
+  thing on the picture, and it is a distance and never a value: neither contour says where she is,
+  the axes carry no digits or ticks to read it off, and one career-long distance does not integrate
+  into a build the way the weekly deltas §"what moved this week" forbids would.
+
+At week one the two contours coincide exactly, which is the honest opening: the story is the two
+coming apart.
+
+## 6.2 The dashed ceiling edge goes; the haze stays
+
+> «контур "безнадежности" текущий надо убрать… мы знаем в игре её потолок, потому что он
+> запрограммирован нами, но в жизни потолок можно только по прогрессу в играх увидеть. Заблюренная
+> зона это ок.»
+
+`ceilingEdge` and `.radar-ceiling-edge` are deleted; `ceilingPath` – the blurred band between
+`ceilingLo` and `ceilingHi` – is untouched, and so is every constant in §3. The old argument for the
+hairline (an early career's fog and haze overlap and read as one glow) was a good one and it lost on
+a point it never addressed: **a soft region reads as "somewhere out there"; a drawn polygon reads as
+a number the game has already decided about her.** The argument is kept in the component's own
+comments, marked superseded, per this repo's habit.
+
+The legend (R15-15) grows to three keys, and the haze's key becomes a filled rect: `.radar-ceiling`
+is a fill with no stroke now, so a line wearing it would draw nothing.
+
+## 6.3 The axis ends at the maximum, not at 100
+
+> «если мы до 100 вообще не можем дорасти, то явно имеет смысл цену деления пересмотреть на графике,
+> чтобы максимумы упирались в максимумы… Блюр при этом может и за границы оверлапом выходить, не вижу
+> проблем»
+
+Nothing this game can produce exceeds **`SKILL_CEILING_MAX` = 86**, and nobody chose that number: it
+is the top of `STARTING_SKILL_BAND` (stamina, 60) plus the top of `ECONOMY.development.potentialBand`
+(26), two constants picked separately. `rollPotential` is the only thing that sets a ceiling and
+growth is asymptotic toward it, so 86 bounds every career for every seed – a supremum, strictly
+(`rng()` is in `[0, 1)`; the best of 60,000 seeds was 85.998). The outer seventh of the rose was
+therefore unreachable, always.
+
+**The constant is DERIVED in `engine/development.ts` and imported by the component, never written
+down there.** Widening `potentialBand` is a live question (`skill-model-audit-2026-08.md`'s first
+dial); a literal `86` in a Vue file would go out of date silently on that commit, with every mounted
+assertion still green. That is why `radar.test.ts` §12 pins the import as well – see the note there
+for the second mutation only source can catch.
+
+**Zero stays at the centre** (a skill of 30 must not read as nothing) and the contract's own `0..100`
+clamp stays, so a haze the engine clamps at 100 draws *outside* the ring rather than being flattened
+onto it – explicitly allowed above.

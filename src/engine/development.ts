@@ -67,6 +67,49 @@ export type SkillKey = keyof KidSkills
  *  existence from that position on. */
 export const SKILL_KEYS: readonly SkillKey[] = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes']
 
+/** WHERE SHE CAN BE BORN, per attribute – the range `startingSkills` (engine/world/player.ts) draws
+ *  each birth value out of.
+ *
+ *  ⚠ IT IS A NAMED CONSTANT SO THAT `SKILL_CEILING_MAX` BELOW CAN BE DERIVED. The five ranges used to
+ *  be literals inside `startingSkills`, which was fine while nothing else needed to know them - and
+ *  then the radar had to draw an axis whose top is the top of THIS plus the top of `potentialBand`,
+ *  and a hand-copied 86 in a Vue file would have been a third place for the same fact to live.
+ *
+ *  ⚠ THE RANGES ARE UNCHANGED AND SO IS THE DRAW ORDER. `startingSkills` reads these keys in exactly
+ *  the order its object literal used to spell them out, which is `SKILL_KEYS`'s order, which is the
+ *  order the `seed:kid` sub-stream is walked in. Every career that already exists is born with the
+ *  build it was born with, to the hundredth - see the note on SKILL_KEYS for why that matters. */
+export const STARTING_SKILL_BAND: Record<SkillKey, readonly [number, number]> = {
+  serve: [40, 58],
+  ret: [40, 58],
+  composure: [35, 55],
+  stamina: [40, 60],
+  groundstrokes: [40, 58],
+}
+
+/** ⚠ THE HIGHEST NUMBER THIS GAME CAN PRODUCE – AND NOBODY EVER CHOSE IT.
+ *
+ *  It is the accidental sum of two constants picked separately and years apart: the top of
+ *  `STARTING_SKILL_BAND` (stamina, 60 - the others stop at 55 or 58) and the top of
+ *  `ECONOMY.development.potentialBand` (26). Nothing in a career can go past their sum, because
+ *  `rollPotential` is the only thing that sets a ceiling and it adds the second to the first; growth
+ *  is asymptotic toward that ceiling and never overshoots it. A supremum rather than a maximum,
+ *  strictly: `rng()` is in [0, 1), so the number itself is approached and not reached (85.998 was the
+ *  best of sixty thousand seeds).
+ *
+ *  WHY IT IS EXPORTED. The skills radar drew a 0..100 rose, so the outer seventh of the picture was
+ *  unreachable in every career for every seed, and the best girl the engine can roll still stopped a
+ *  seventh short of the edge with nowhere left to go. Owner, 11.08: «если мы до 100 вообще не можем
+ *  дорасти, то явно имеет смысл цену деления пересмотреть на графике, чтобы максимумы упирались в
+ *  максимумы». This is the number the axis now ends at.
+ *
+ *  ⚠ AND IT IS DERIVED RATHER THAN WRITTEN DOWN, deliberately. The day `potentialBand` is widened -
+ *  which is a live question, see docs/specs/skill-model-audit-2026-08.md's first dial - the chart has
+ *  to follow on its own. A literal 86 in a component would go silently out of date on that commit and
+ *  the picture would start lying about the top of the game with nothing failing. */
+export const SKILL_CEILING_MAX =
+  Math.max(...SKILL_KEYS.map((k) => STARTING_SKILL_BAND[k][1])) + ECONOMY.development.potentialBand[1]
+
 /** Her ceiling, rolled once per career and never displayed. The band is deliberately wide: a career
  *  where the ceiling is barely above the floor is a real career, and it is the one the game has
  *  never been able to tell.

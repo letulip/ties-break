@@ -2174,6 +2174,17 @@ export interface RadarAxis {
    *  that is FIXED for the career (drawn once off `seed:read:<axis>`), so the contour converges
    *  instead of breathing week to week. */
   shownValue: number
+  /** WHERE SHE BEGAN, 0..100 – the same estimate of her WEEK-ONE build, displaced by the same
+   *  misreading (`engine/radar.ts`, `readAs`), so the true starting value is inside
+   *  [startValue - band, startValue + band] exactly as `shownValue` is inside its own.
+   *
+   *  ⚠ THE RADAR USED TO DRAW ONLY THE GAP THAT WAS LEFT, and on a live career that is a verdict.
+   *  Owner, 11.08: «на розе как раз показывать "старт" – т.е. с чего начала, может быть так будет
+   *  приятнее и нагляднее». Measured on his own save at seventeen, her return had gone 50.7 -> 62.8
+   *  and the chart said nothing whatever about it. It carries NO number and needs no storage: the
+   *  starting build is a pure function of the seed and the profile, derived at snapshot time like
+   *  everything else in this block. */
+  startValue: number
   /** THE FOG: how far the estimate may be from the truth, in the same points. The true value is
    *  ALWAYS inside [shownValue - band, shownValue + band] – the band is an honest claim, not a
    *  decoration. 0 = fully discovered; `RADAR_BAND_MAX` (12) = she is a stranger. */

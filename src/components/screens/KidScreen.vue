@@ -221,11 +221,17 @@ const coachTierLabel = computed(() =>
  *
  *  ⚠ VOICE, NOT VALUE. Identical shapes, identical fog, identical axis notes - those speak in the
  *  first person plural and belong to whoever is holding the pen. What changes is the pronoun on the
- *  frame, which is the whole of the owner's complaint and none of the mechanic. */
+ *  frame, which is the whole of the owner's complaint and none of the mechanic.
+ *
+ *  ⚠ THREE SHAPES SINCE 11.08, NOT TWO. The picture grew a "where she started" contour (owner: «на
+ *  розе как раз показывать "старт"»), so the sentence that names the shapes had to grow with it - a
+ *  frame that describes two of three drawings is worse than one that describes none, because the
+ *  reader assumes the third is something else. Both registers moved together, which is the item's
+ *  whole rule: voice, not value. */
 const radarBlurb = computed(() =>
   coachRow.value
-    ? 'What her coach can tell so far. The solid shape is where she is; the haze around it is how far she might go. Both sharpen as the coach learns her.'
-    : 'What you can tell so far. The solid shape is where she is; the haze around it is how far she might go. Both sharpen as you learn her.',
+    ? 'What her coach can tell so far. The dashed shape is where she started, the solid shape is where she is, and the haze around them is how far she might go. All three sharpen as the coach learns her.'
+    : 'What you can tell so far. The dashed shape is where she started, the solid shape is where she is, and the haze around them is how far she might go. All three sharpen as you learn her.',
 )
 
 // --- IMPORTANT MOMENTS ---------------------------------------------------------------------
@@ -448,10 +454,14 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              SkillsRadar.vue, so it travels wherever the picture does. R15-18: and it names the right
              READER - see `radarBlurb`, which is the season card's plaque one screen over. -->
         <p class="kid-panel-note">{{ radarBlurb }}</p>
+        <!-- ⚠ THE ACCESSIBLE NAME NAMES ALL FIVE WINGS AND ALL THREE SHAPES. It named four wings
+             until 11.08, a v25 miss nothing could fail on: the picture had grown a groundstroke axis
+             and the only description a screen reader ever hears still listed the original four. -->
         <SkillsRadar
           :axes="radarAxes"
-          title="Her skills: serve, return, composure and stamina. The solid contour is where she
-                 is today, the haze around it is how far she could go."
+          title="Her skills: serve, return, composure, stamina and groundstrokes. The dashed contour
+                 is where she started, the solid one is where she is today, and the haze around them
+                 is how far she could go."
         />
       </Card>
 

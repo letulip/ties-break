@@ -32,9 +32,10 @@ import {
   RADAR_AXIS_LABEL,
   RADAR_BAND_MAX,
 } from '../src/engine/radar'
-import { SKILL_KEYS } from '../src/engine/development'
+import { SKILL_CEILING_MAX, SKILL_KEYS } from '../src/engine/development'
 import { COACH_TIERS } from '../src/engine/coach'
-import { createWorld, matchesEverPlayed, toSnapshot } from '../src/engine/world'
+import { createWorld, matchesEverPlayed, startingSkills, toSnapshot } from '../src/engine/world'
+import { withHeadStart } from '../src/engine/world/player'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 import { read, runCareer, synthView } from './radarFixtures'
 
@@ -48,11 +49,17 @@ describe('radar – the contract the UI is given', () => {
     expect(snap.radar.map((a) => a.key)).toEqual([...SKILL_KEYS])
   })
 
-  it('every axis carries exactly the six fields of the spec – no truth smuggled alongside', () => {
+  // ⚠ RE-AIMED FOR THE THIRD CONTOUR (11.08): six fields -> seven. The claim is NOT "six" and never
+  // was - it is "an exhaustive list, so a truth cannot ride along unnoticed". `startValue` is an
+  // ESTIMATE and not a truth: it goes through the same `readAs` misreading `shownValue` does, and the
+  // honesty sweep below now holds it to the same promise the band makes about her current build. The
+  // test that would catch a leak here is the one under it, which walks the payload for her real
+  // numbers; this one is the guard that a field cannot appear without somebody deciding it should.
+  it('every axis carries exactly the seven fields of the spec – no truth smuggled alongside', () => {
     const snap = toSnapshot(runCareer('radar-shape', 'middle', 30))
     for (const axis of snap.radar) {
       expect(Object.keys(axis).sort()).toEqual(
-        ['band', 'ceilingHi', 'ceilingLo', 'key', 'note', 'shownValue'].sort(),
+        ['band', 'ceilingHi', 'ceilingLo', 'key', 'note', 'shownValue', 'startValue'].sort(),
       )
     }
   })
@@ -83,6 +90,13 @@ describe('radar – the contract the UI is given', () => {
       for (const a of snap.radar) {
         expect(a.shownValue).toBeGreaterThanOrEqual(0)
         expect(a.shownValue).toBeLessThanOrEqual(100)
+        // The third contour lives on the same axis, and on a career that has only gone forward it is
+        // drawn INSIDE the second one - the two carry one misreading, so the order of the truths
+        // survives into the drawing. A start contour outside the current one would tell a girl who
+        // has improved for forty weeks that she has gone backwards.
+        expect(a.startValue).toBeGreaterThanOrEqual(0)
+        expect(a.startValue).toBeLessThanOrEqual(100)
+        expect(a.startValue).toBeLessThanOrEqual(a.shownValue + 1e-9)
         expect(a.band).toBeGreaterThanOrEqual(0)
         expect(a.band).toBeLessThanOrEqual(RADAR_BAND_MAX)
         // The screen draws the haze OUTSIDE the contour: a ceiling below where she already stands
@@ -112,9 +126,16 @@ describe('radar – the fog is an honest claim', () => {
     for (const tier of ['self', 'middle', 'elite'] as CoachTier[]) {
       for (const seed of ['radar-h1', 'radar-h2']) {
         runCareer(seed, tier, 40, (world) => {
+          // WHERE SHE BEGAN, recomputed the way the engine does it - a pure function of the seed and
+          // the profile, stored nowhere. It is the week-one build, head start included, which is
+          // exactly the object `createWorld` seeded `world.skills` with.
+          const born = withHeadStart(startingSkills(world.seed, world.profile), world.profile.birthMonth)
           for (const a of toSnapshot(world).radar) {
             // the inner contour: `band` is a promise about where she really is...
             expect(Math.abs(a.shownValue - world.skills[a.key])).toBeLessThanOrEqual(a.band + 1e-9)
+            // ...the START contour makes the SAME promise about where she began. It is an estimate
+            // and not a memory: the third shape may not claim a precision the other two do not have.
+            expect(Math.abs(a.startValue - born[a.key])).toBeLessThanOrEqual(a.band + 1e-9)
             // ...and the outer haze contains what it is a haze about.
             expect(a.ceilingHi + 1e-9).toBeGreaterThanOrEqual(world.potential[a.key])
           }
@@ -136,9 +157,14 @@ describe('radar – the fog is an honest claim', () => {
         week: i,
         skills: { serve: 20 + (i % 60), ret: 90 - (i % 60), composure: 50, stamina: 35, groundstrokes: 45 + (i % 30) },
         potential: { serve: 26 + (i % 60), ret: 96 - (i % 60), composure: 78, stamina: 36, groundstrokes: 55 + (i % 30) },
+        // A girl who has genuinely moved, so the start contour is a DIFFERENT shape from the current
+        // one rather than the fixture's default of "she has not developed at all".
+        startSkills: { serve: 18 + (i % 60), ret: 84 - (i % 60), composure: 41, stamina: 35, groundstrokes: 40 + (i % 30) },
       })
       for (const a of buildRadar(view)) {
         expect(Math.abs(a.shownValue - view.skills[a.key])).toBeLessThanOrEqual(a.band + 1e-9)
+        expect(Math.abs(a.startValue - view.startSkills[a.key])).toBeLessThanOrEqual(a.band + 1e-9)
+        expect(a.startValue).toBeLessThanOrEqual(a.shownValue + 1e-9)
         expect(a.ceilingHi + 1e-9).toBeGreaterThanOrEqual(view.potential[a.key])
         expect(a.ceilingLo).toBeGreaterThanOrEqual(a.shownValue - 1e-9)
       }
@@ -226,6 +252,11 @@ describe('radar – a fourteen-year-old in week 1', () => {
       expect(a.band).toBeGreaterThan(RADAR_BAND_MAX * 0.9) // she is a stranger
       expect(a.ceilingHi - a.ceilingLo).toBeGreaterThan(2 * CEILING_FLOOR_HALF)
       expect(a.shownValue).toBeGreaterThan(0)
+      // ⚠ AND THE TWO CONTOURS COINCIDE, EXACTLY. In week 1 she has not moved, so "where she began"
+      // and "where she is" are the same girl seen through the same misreading - the picture opens as
+      // one line and the story is drawn by it coming apart. This is also the sharpest available check
+      // that the third contour shares `readAs`'s draw rather than rolling one of its own.
+      expect(a.startValue).toBe(a.shownValue)
     }
     // The three technical wings are silent; the two the scoreline speaks for are not.
     const silent = snap.radar.filter((a) => a.note === null).map((a) => a.key)
@@ -317,6 +348,35 @@ describe('the radar draws every word the engine can hand it', () => {
     expect(radar).not.toMatch(/type RadarAxisKey/)
     expect(radar).not.toMatch(/index \* 90/)
     // ...and the guide rings are built from the axis count rather than listed.
-    expect(radar).toContain('ORDER.map(() => 100)')
+    // ⚠ RE-AIMED 11.08: the ring used to be spelled `ORDER.map(() => 100)`. The top of the axis is no
+    // longer 100 - see `SKILL_CEILING_MAX` - and the same claim now reads through the constant.
+    expect(radar).toContain('ORDER.map(() => AXIS_MAX)')
+  })
+
+  // ⚠ THE AXIS TOP IS DERIVED, AND THIS IS THE HALF A MOUNTED TEST CANNOT ASK. The behavioural claim
+  // - a skill at the maximum touches the outer ring - is asserted mounted, in
+  // tests/component/radar-story.test.ts, which is the honest way round. TWO THINGS ONLY SOURCE CAN
+  // SAY, and both were found by mutating the mounted tests and watching them stay green:
+  //
+  //   1. THE NUMBER WAS IMPORTED, NOT COPIED. A component with a hard-coded 86 draws an identical
+  //      picture today and a wrong one on the commit that widens `potentialBand`. Every mounted
+  //      assertion in the world stays green through exactly the regression this exists to stop.
+  //   2. THE SCALE DIVISOR IS THE RING. Every shape on the rose - contours, guide rings, spokes and
+  //      the label anchors - goes through `pointAt`, so dividing by 100 again while the rings sit at
+  //      `AXIS_MAX` shrinks the WHOLE drawing to 86% and leaves it internally consistent: the maximum
+  //      still lands on the ring, and the mounted tests are all still right. What that mutation costs
+  //      is a seventh of the picture's size for nothing, which no comparison inside one rendering can
+  //      see. Verified by doing it.
+  it('takes the top of its axis from the engine and never writes the number down', () => {
+    expect(radar).toContain('SKILL_CEILING_MAX')
+    expect(radar).toContain('const AXIS_MAX = SKILL_CEILING_MAX')
+    expect(radar, 'the rose is scaled by something other than the ring it draws').toContain(
+      'const r = (clamp(value) / AXIS_MAX) * R',
+    )
+    const script = radar.slice(radar.indexOf('<script setup'), radar.indexOf('</script>', radar.indexOf('<script setup')))
+    const code = script.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+    expect(code, 'the axis top is spelled out somewhere instead of derived').not.toMatch(
+      new RegExp(`(?<![.\\d])${SKILL_CEILING_MAX}(?![.\\d])`),
+    )
   })
 })
