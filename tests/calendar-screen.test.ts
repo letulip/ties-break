@@ -220,7 +220,7 @@ describe('the plan, read back as days', () => {
   it('the grid is always seven days, Monday first, whatever kind of week it is', () => {
     const weeks = [
       facts(),
-      facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }),
+      facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4, sinceWeek: 5 } }),
       facts({ vacations: [{ week: 6, packageId: 'seaside', paidCents: 40000 }] }),
       facts({ practices: [{ week: 6, paidCents: 3000, withCoach: true }] }),
     ]
@@ -237,7 +237,7 @@ describe('the plan, read back as days', () => {
 // PRECEDENCE – whose week is it? The screen must never show her training through a layoff.
 // =================================================================================================
 describe('a week belongs to exactly one thing, in one order', () => {
-  const injury = { kind: 'ankle soreness', severity: 'minor', totalWeeks: 4, weeksRemaining: 3 } as const
+  const injury = { kind: 'ankle soreness', severity: 'minor', totalWeeks: 4, weeksRemaining: 3, sinceWeek: 5 } as const
 
   it('HER BODY OUTRANKS EVERYTHING: a covered week is rehab even with a booking on it', () => {
     const w = calendarWeekFor(
@@ -421,7 +421,7 @@ describe('the three beats, and why they can only be these three', () => {
     expect(practice.days.filter((d) => d.beat === 'match').length).toBe(1)
 
     const hurt = calendarWeekFor(
-      facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }),
+      facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4, sinceWeek: 5 } }),
       6,
     )
     expect(hurt.days.filter((d) => d.beat === 'injury').length).toBe(1)
@@ -554,7 +554,7 @@ describe('a marker is a tournament she can act on, and nothing else', () => {
     const rows = lookAheadFor(
       facts({
         week: 5,
-        injury: { kind: 'ankle', severity: 'moderate', weeksRemaining: 6, totalWeeks: 8 },
+        injury: { kind: 'ankle', severity: 'moderate', weeksRemaining: 6, totalWeeks: 8, sinceWeek: 5 },
         vacations: [{ week: 8, packageId: 'seaside', paidCents: 40000 }],
         practices: [{ week: 9, paidCents: 3000, withCoach: true }],
         upcoming: [event({ week: 7, label: 'Local Open' })],
@@ -1040,7 +1040,7 @@ describe('player copy', () => {
       facts({ plan: { train: 0, rest: 100 } }),
       facts({ practices: [{ week: 6, paidCents: 3000, withCoach: false }] }),
       facts({ vacations: [{ week: 6, packageId: 'grandma', paidCents: 0 }] }),
-      facts({ injury: { kind: 'wrist strain', severity: 'minor', weeksRemaining: 2, totalWeeks: 3 } }),
+      facts({ injury: { kind: 'wrist strain', severity: 'minor', weeksRemaining: 2, totalWeeks: 3, sinceWeek: 5 } }),
       facts({ knock: { part: 'shoulder', sinceWeek: 5, repeat: false, choice: 'push', untilWeek: 8 } }),
       facts({ knock: { part: 'shoulder', sinceWeek: 5, repeat: false, choice: 'rest', untilWeek: 6 } }),
       facts({ week: WEEKS_PER_YEAR - OFF_SEASON_WEEKS - 1 }),

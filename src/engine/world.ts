@@ -504,8 +504,10 @@ export interface WorldState {
    *  (pure arithmetic, zero main-stream RNG); fatigue is the derived 100 - condition, not stored. */
   condition: number
   /** the kid's active injury, or null when healthy. Wired in slice B but ALWAYS null here – Slice C
-   *  populates it. The snapshot omits `sinceWeek`. */
-  injury: (SnapshotInjury & { sinceWeek: number }) | null
+   *  populates it. ⚠ The snapshot used to omit `sinceWeek` and carries it since round-16 #19, so
+   *  the persisted shape and the surfaced one are now the same four-plus-one fields – see
+   *  `SnapshotInjury`. Still a VIEW change only: the save has always held this field. */
+  injury: SnapshotInjury | null
   /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B). */
   injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number }>
   /** whether physio recovery is active (default = `coachIncludesPhysio(profile.coachTier)`, i.e.

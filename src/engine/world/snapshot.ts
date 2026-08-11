@@ -706,13 +706,20 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // holidays and one on the Monday she actually trains through.
     planDayCapacity: summerDayCapacity({ ...world, week: world.week + 1 } as WorldState),
     condition: world.condition,
-    // injury is always null in slice B; drop the persisted-only `sinceWeek` when surfacing it.
+    // injury is always null in slice B.
+    // ⚠ `sinceWeek` IS CARRIED NOW (round-16 #19). It used to be dropped here as "persisted-only",
+    // and that omission is what left the injury popup unable to ask its own question: the dialog had
+    // to be told by a stop reason that an injury was fresh, and a stop reason only exists for the
+    // duration of the advance that produced it. The retirement door never produces one at all
+    // (`finalizeTournament` runs from the reveal's command), so it surfaced nothing. Explaining the
+    // field is one number; the UI now reads `sinceWeek === week` and cannot be lied to about it.
     injury: world.injury
       ? {
           kind: world.injury.kind,
           severity: world.injury.severity,
           weeksRemaining: world.injury.weeksRemaining,
           totalWeeks: world.injury.totalWeeks,
+          sinceWeek: world.injury.sinceWeek,
         }
       : null,
     physioActive: world.physioActive,

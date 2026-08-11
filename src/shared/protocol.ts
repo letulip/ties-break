@@ -717,13 +717,28 @@ export interface PendingView {
 export type InjurySeverity = 'minor' | 'moderate' | 'major' | 'severe'
 
 /** The kid's active injury as surfaced to the UI (schema v12). null = healthy. Always null in
- *  slice B – Slice C (injuries + physio) brings it alive. The persisted world carries one extra
- *  field (`sinceWeek`) that the snapshot omits. */
+ *  slice B – Slice C (injuries + physio) brings it alive.
+ *
+ *  ⚠ `sinceWeek` IS NOW SURFACED (round-16 #19), and it used to be the one persisted field the
+ *  snapshot deliberately dropped. It is here because the injury popup must be a consequence of
+ *  STATE rather than of a screen having been open: the owner took three injuries and was told about
+ *  none of them, because `InjuryStopDialog` was gated on the `'injury'` STOP REASON and only
+ *  `advanceWeeks` ever sets one. A retirement opens its layoff in `finalizeTournament`, which runs
+ *  from the reveal's own command long after the advance returned, so that whole door reported
+ *  nothing. `sinceWeek === week` is the same predicate `advanceWeeks` uses, asked where the answer
+ *  survives – exactly the argument App.vue's knock gate already makes for reading a snapshot field
+ *  instead of a stop reason. See docs/specs/round16-injuries.md §3.
+ *
+ *  ⚠ NOT A SAVE-SCHEMA CHANGE. `Snapshot` is the derived view the worker posts to the UI; the save
+ *  is `WorldState`, which has carried `sinceWeek` since slice C. Nothing is persisted here, so
+ *  `SAVE_SCHEMA_VERSION` and `engine/migrations.ts` are untouched. */
 export interface SnapshotInjury {
   kind: string
   severity: InjurySeverity
   weeksRemaining: number
   totalWeeks: number
+  /** the week the layoff opened. `sinceWeek === Snapshot.week` is "this happened just now". */
+  sinceWeek: number
 }
 
 // --- Season planner (schema v13) ---------------------------------------------

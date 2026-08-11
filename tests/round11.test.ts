@@ -258,7 +258,31 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
   it('both dialogs read the SET, and the wrap-up defers to the injury (one overlay, defined order)', () => {
     const injury = APP.slice(APP.indexOf('const showInjuryStop'), APP.indexOf('const showSeasonSummary'))
     const summary = APP.slice(APP.indexOf('const showSeasonSummary'), APP.indexOf('function dismissSeasonSummary'))
-    expect(injury).toContain("stopReasons.value.includes('injury')")
+    // ⚠ RE-AIMED, NOT RELAXED (11.08, round-16 #18/#19). R11-1's property is the ORDERING – one
+    // overlay at a time, the injury first, and never a dead end – and every assertion that states it
+    // is below, verbatim. What moved is the injury gate's INPUT, and it moved because reading the
+    // stop reason was measured to be unable to answer the question at all for the biggest source of
+    // injuries in the game.
+    //
+    // THE MEASUREMENT (docs/specs/round16-injuries.md §2, 400 season-years per policy): **61% of
+    // injuries at high condition arrive through the RETIREMENT door**, and `retirementInjury` is
+    // opened by `finalizeTournament` – which runs from `closeTournament`, the reveal's own command,
+    // long after `advanceWeeks` returned. A stop reason exists only for the duration of the advance
+    // that produced it, so that entire door reported nothing, in any career, ever. The owner took
+    // three injuries in one season and was told about none of them.
+    //
+    // So the injury gate now asks the ENGINE's own predicate – `injury.sinceWeek === week`, the
+    // identical test `advanceWeeks` runs – on the SNAPSHOT, where the answer survives the command
+    // that produced it. That is the argument App.vue's knock gate has made since W4.
+    //
+    // ⚠ R11-1 ITSELF IS UNTOUCHED AND STILL PROVEN. The engine half of this file (the wrap-up-week
+    // collision test above) asserts `advanceWeeks` returns BOTH 'injury' and 'season-end', injury
+    // first, and it is green – the stop reason is still collected and still halts a multi-week
+    // advance. It simply is not what raises the dialog any more.
+    expect(injury).toContain('sinceWeek === game.snapshot.week')
+    // ...and the SEASON SUMMARY is deliberately still stop-reason gated, which is correct rather
+    // than an inconsistency: a wrap-up is produced by an advance and by nothing else, so its reason
+    // cannot be missed the way an injury's could.
     expect(summary).toContain("stopReasons.value.includes('season-end')")
     // The wrap-up waits behind the injury dialog – never both overlays at once, and never a dead
     // end: dismissing the injury re-evaluates this gate and the summary appears.

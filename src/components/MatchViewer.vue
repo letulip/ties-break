@@ -1106,6 +1106,20 @@ const finalAcesDfs = computed<{ aces: [number, number]; dfs: [number, number] }>
 
 const finalScoreLine = computed(() => props.match.result.sets.map((s) => `${s.a}-${s.b}`).join('  '))
 const winnerName = computed(() => playerName(props.match.result.winner))
+/**
+ * R16 #18 – WHO STOPPED, IF ANYBODY DID. The box score's one headline was
+ * `{{ winnerName }} wins {{ finalScoreLine }}`, and on a retirement that is the sentence the owner
+ * reported: **"wins 4-5"** – a winner with fewer games than the loser, no marker, no explanation,
+ * on the one screen that is supposed to say what happened. `result.retired` has been on the match
+ * since the retirement slice and nothing in this component had ever read it.
+ *
+ * The marker is the sport's own – `ret.` after the scoreline – plus one plain line under it, because
+ * three letters are a convention a parent watching her daughter's first season has no reason to know.
+ */
+const retiredName = computed(() => {
+  const r = props.match.result.retired
+  return r ? playerName(r.side) : null
+})
 
 function servePct(side: Side): number {
   const s = props.match.result.stats[side]
@@ -1405,7 +1419,13 @@ function servePct(side: Side): number {
 
       <!-- ===== THE BOX SCORE, once it is over ================================================ -->
       <Card v-if="finished" variant="photo" class="mv-boxscore" pad="12px 14px 14px">
-        <p class="mv-final">{{ winnerName }} wins <span class="num">{{ finalScoreLine }}</span></p>
+        <p class="mv-final">
+          {{ winnerName }} wins <span class="num">{{ finalScoreLine }}</span>
+          <span v-if="retiredName" class="mv-final-ret">ret.</span>
+        </p>
+        <!-- R16 #18: three letters are the sport's marker, not an explanation. This is the
+             explanation, and it is the line whose absence the owner reported. -->
+        <p v-if="retiredName" class="mv-final-note">{{ retiredName }} retired hurt.</p>
         <table>
           <thead>
             <tr>
@@ -2258,5 +2278,20 @@ function servePct(side: Side): number {
 .mv-final .num {
   margin-left: 6px;
   color: var(--text);
+}
+
+/* R16 #18: the retirement marker rides WITH the scoreline, in the score's own colour, so
+   "wins 4-5" can never again be read as a completed result. */
+.mv-final-ret {
+  margin-left: 5px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.mv-final-note {
+  margin: -6px 0 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
 }
 </style>

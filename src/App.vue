@@ -617,14 +617,46 @@ const stopToastDismissed = ref(false)
 // snapshot resets both dismiss flags (any action re-arms them).
 const seasonSummaryDismissed = ref(false)
 // R9-21a: the injury stop is owned by the blocking InjuryStopDialog (the quiet toast buried
-// it – the owner only noticed the withdrawal three weeks later). Same dismiss lifecycle.
-const injuryStopDismissed = ref(false)
+// it – the owner only noticed the withdrawal three weeks later).
+//
+// ⚠ ROUND-16 #19 – IT IS ACKNOWLEDGED BY IDENTITY NOW, NOT RESET PER SNAPSHOT, and that is the other
+// half of moving the gate off the stop reason (see `showInjuryStop`). A per-snapshot dismiss flag
+// only works for a gate that is ALSO per advance: `stopReasons` dies with the advance that produced
+// it, so "reset the flag, the reason is gone anyway" was self-consistent. A STATE gate outlives the
+// advance, so the flag has to name WHICH injury was reported – otherwise setting the plan or
+// entering an event on the onset week would raise the same popup again, forever.
+//
+// The identity is `sinceWeek:kind`, which is exactly what makes two injuries two events, and it is
+// stored per career in localStorage like the news / This-week / trophy watermarks (careers advance
+// independently, so a global key would collide – the R9-21b lesson). Persisting it is what stops a
+// reload on the onset week from re-raising a report the player has already read.
+//
+// ⚠ AND AN UNKNOWN INJURY IS AN UNREPORTED ONE – the opposite default to `storedTrophyWatermark`,
+// on purpose. A dot that cannot know whether the cabinet was opened must not claim it was; a popup
+// that cannot know whether she was told she is hurt must ASSUME SHE WAS NOT. #19's whole complaint
+// is a report that never arrived, and the failure modes are not symmetric: showing it twice costs a
+// tap, never showing it costs the player three injuries she found out about from a plaque.
+const injurySeenKey = () => `tb:injuryReported:${game.snapshot?.careerId ?? ''}`
+const injuryIdentity = computed(() => {
+  const inj = game.snapshot?.injury
+  return inj ? `${inj.sinceWeek}:${inj.kind}` : null
+})
+const injuryReported = ref<string | null>(localStorage.getItem(injurySeenKey()))
+function dismissInjuryStop(): void {
+  injuryReported.value = injuryIdentity.value
+  if (injuryIdentity.value !== null) localStorage.setItem(injurySeenKey(), injuryIdentity.value)
+}
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    injuryReported.value = localStorage.getItem(injurySeenKey())
+  },
+)
 watch(
   () => game.snapshot,
   () => {
     stopToastDismissed.value = false
     seasonSummaryDismissed.value = false
-    injuryStopDismissed.value = false
   },
 )
 
@@ -795,6 +827,26 @@ const showRetirement = computed(() => !!game.snapshot?.retirementOffer && !showF
 // an injury rolled on that very tick showed nothing at all. The dialog is a full-screen overlay
 // with its own dismiss – there is no tab it cannot open over, and the dismiss flags are per
 // snapshot, so it can never re-appear after Continue.
+//
+// ⚠ ROUND-16 #19 – IT READS THE SNAPSHOT NOW, NOT THE STOP REASON, and this is the same argument the
+// knock gate above makes, arriving late at the one popup that most needed it. The owner's ruling:
+// the report is owed whether she was hurt in a live match, in a skipped one, or in a week he never
+// watched – «it is a consequence of STATE, not of a screen having been open».
+//
+// WHAT THE STOP REASON COULD NOT SEE, measured: `advanceWeeks` collects `'injury'` from
+// `world.injury.sinceWeek === world.week` immediately after `tickWeek`, so it catches the weekly roll
+// and the practice friendly (both resolve INSIDE the tick). It cannot catch a TOURNAMENT retirement,
+// because `retirementInjury` is opened by `finalizeTournament`, which runs from the reveal's own
+// command – `closeTournament` – long after the advance returned with `'tournament'`. That door is
+// where 61% of this game's injuries come in (docs/specs/round16-injuries.md §2), and it reported
+// nothing at all: no popup, in a career, ever. `match-retirement.md` §6 called that deliberate ("a
+// second dialog over the finale would be two popups for one beat"); #18 is the owner overruling it,
+// having watched a retirement go by as a scoreline and no explanation.
+//
+// The predicate is the ENGINE's own – `sinceWeek === week`, the identical test `advanceWeeks` runs –
+// asked where the answer survives the command that produced it. `!pending` is what keeps the promise
+// the old note was really making: the report waits for the reveal to be resolved and then lands, so
+// it is one popup after one beat rather than one popup over it.
 const showInjuryStop = computed(
   () =>
     // W2-ENDINGS: ...and behind the epilogue and the two blocking questions, for the reason the
@@ -803,9 +855,12 @@ const showInjuryStop = computed(
     !showEnding.value &&
     !showFork.value &&
     !showRetirement.value &&
-    stopReasons.value.includes('injury') &&
     !!game.snapshot?.injury &&
-    !injuryStopDismissed.value &&
+    game.snapshot.injury.sinceWeek === game.snapshot.week &&
+    // Behind the tournament takeover: a pending reveal is the screen that is mid-sentence, and the
+    // retirement's own layoff does not even exist until it closes.
+    !game.snapshot.pending &&
+    injuryReported.value !== injuryIdentity.value &&
     // W4: one overlay at a time. A knock and a fresh injury cannot land on the same week (a knock only
     // arrives on a week with no injury, and `rollInjury` retires the live one at onset), so this is
     // belt-and-braces rather than a real collision – but the ordering rule is worth stating once and
@@ -1071,9 +1126,10 @@ function dismissSeasonSummary(): void {
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />
 
-    <!-- R9-21a: a fresh injury stops the advance with a BLOCKING popup (kind, layoff, what was
-         auto-withdrawn + refunds) and an alert sfx – no more quiet missable toast. -->
-    <InjuryStopDialog v-if="showInjuryStop" @continue="injuryStopDismissed = true" />
+    <!-- R9-21a: a fresh injury raises a BLOCKING popup (kind, layoff, what was auto-withdrawn +
+         refunds) and an alert sfx – no more quiet missable toast. R16 #19: gated on the SNAPSHOT,
+         so the retirement door raises it too and no week can swallow it. -->
+    <InjuryStopDialog v-if="showInjuryStop" @continue="dismissInjuryStop" />
 
     <!-- W4: the ordinary training week's one decision – rest the knock or train through it. It emits
          no event and has no dismiss: answering it IS the exit, and until it is answered the engine

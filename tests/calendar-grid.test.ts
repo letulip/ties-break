@@ -497,7 +497,7 @@ describe('a block is drawable, and it is not an invention', () => {
     }
     // a layoff week is still a school week: she is off the court, not off the register
     const hurt = weekGridFor(
-      calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }), 6),
+      calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4, sinceWeek: 5 } }), 6),
       14,
       weekDayNumbers(6),
     )
@@ -516,7 +516,7 @@ describe('a block is drawable, and it is not an invention', () => {
     const weeks: [string, CalendarWeek][] = [
       ['ordinary', calendarWeekFor(facts(), 6)],
       ['exams', calendarWeekFor(facts({ week: ECONOMY.availability.examWeeks[0][0] - 1 }), ECONOMY.availability.examWeeks[0][0])],
-      ['layoff', calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }), 6)],
+      ['layoff', calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4, sinceWeek: 5 } }), 6)],
     ]
     for (const [what, week] of weeks) {
       const grid = weekGridFor(week, 14, weekDayNumbers(week.week))
@@ -605,7 +605,7 @@ describe('⚠ the grid is drawn on EVERY week, and only its content differs', ()
     return weekGridFor(calendarWeekFor(facts({ week: w - 1 }), w), 14, weekDayNumbers(w))
   }
   const family = () => gridFor({ vacations: [{ week: 6, packageId: 'seaside', paidCents: 40000 }] })
-  const layoff = () => gridFor({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } })
+  const layoff = () => gridFor({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4, sinceWeek: 5 } })
 
   it('⚠ not one of the five weeks that used to stand down draws an empty column', () => {
     const cases: [string, ReturnType<typeof gridFor>][] = [
@@ -689,7 +689,7 @@ describe('⚠ the grid is drawn on EVERY week, and only its content differs', ()
       expect(blocks.some((b) => b.kind === kind), `a laid-up week drew ${kind}`).toBe(false)
     }
     // the physio hours land on the days the plan bought – the coach still works the week
-    const week = calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }), 6)
+    const week = calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4, sinceWeek: 5 } }), 6)
     const worked = grid.filter((d) => d.blocks.some((b) => b.kind === 'physio')).map((d) => d.index)
     expect(worked).toEqual(sessionDays(week.sessions))
   })
