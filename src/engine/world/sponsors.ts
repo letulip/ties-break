@@ -261,7 +261,7 @@ export function eventsPlayedInSeason(world: WorldState, reviewWeek: number): num
 // radar's rate over exactly the matches that window still holds. Measured on the radar bench's own
 // careers (radar-mono-elite, 150 weeks): adding ONE extra row a season - an "offer expired" line -
 // pushed the worst weekly re-widening of the fog from 0.36 to 0.64 points, straight through the 0.5
-// bound tests/radar.test.ts guards, without anything about the radar itself changing. The evidence
+// bound tests/radar-read.test.ts guards, without anything about the radar itself changing. The evidence
 // base got thinner, which is exactly what that test is for.
 //
 // So this function says everything the sponsor has to say in ONE line: what last season's deal was

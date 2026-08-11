@@ -245,7 +245,7 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
   })
 
   it('⚠ a CLOSED allowlist of sub-streams, and no Math.random anywhere', () => {
-    // Same shape as tests/preview.test.ts's and tests/radar.test.ts's allowlists, and closed for the
+    // Same shape as tests/preview.test.ts's and tests/radar-read.test.ts's allowlists, and closed for the
     // same reason: a fourth stream must be added by somebody who has read this file.
     const code = codeOf('../src/engine/knock.ts')
     expect(code).not.toContain('Math.random')
