@@ -114,8 +114,14 @@ the national table.
 
 ### 2.2 Schema
 One field: the live grant `{ seasonIndex, amountCents }` or null. **Bump `SAVE_SCHEMA_VERSION`
-(47 → 48), append-only migration, golden fixture** – CLAUDE.md invariant 3, all three parts.
+(48 → 49), append-only migration, golden fixture** – CLAUDE.md invariant 3, all three parts.
 Migration is a pure default: `null`, i.e. a career that has never been reviewed holds no grant.
+
+> ⚠ **THIS WAVE NOW TAKES 49, NOT 48.** It reserved 48 while it was still documents, and the birthday
+> slice shipped first and took it – `SAVE_SCHEMA_VERSION` is **48** in code today (`birthdays`,
+> `docs/specs/birthday-and-gifts.md`). The rule that decided it is "whoever lands in code first owns
+> the number"; the spec that had assumed the other order has been corrected the same way. Nothing here
+> depends on which integer it is, and migrations are append-only either way.
 
 ### 2.3 RNG
 The award is a consequence of results, not a player choice. If any draw is needed (tie-breaking),
@@ -150,7 +156,7 @@ Money breakdown line, and one sentence wherever the season review speaks. **No n
 
     day 1   slice 1 engine + tests + MAIN re-derive
             → measure nation depth against real draw sizes; report before going on
-    day 2   slice 2 engine + schema v48 + migration + fixture
+    day 2   slice 2 engine + schema v49 + migration + fixture
     day 3   the six ship-rule measurements, spec updated with predicted vs measured
             → one report, then the owner's gate
 

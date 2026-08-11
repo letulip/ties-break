@@ -1390,6 +1390,33 @@ export function migrateSave(raw: unknown): WorldState {
     v = 47
   }
 
+  // ⭐ v48 – THE BIRTHDAY BECOMES A THING THAT HAPPENED (docs/specs/birthday-and-gifts.md §2b).
+  //
+  // `birthdays: BirthdayRecord[]` – one row per birthday: the week, the age she turned, what she had
+  // been asking for, and what was chosen.
+  //
+  // ⚠⚠ THE DEFAULT IS `[]` AND IT MEANS "NO BIRTHDAYS RECORDED" – NOT "gave nothing every year", and
+  // the difference is the whole reason this step is three lines rather than a backfill. A career
+  // shipped before this wave HAD birthdays: the feed said «She is sixteen this week» every year, and
+  // `birthdayWeek` can name every one of them exactly. It would be easy, and wrong, to walk the
+  // calendar and write a row per year with `given: null` – because that row is a STATEMENT, and the
+  // statement would be that this parent gave his daughter nothing on every birthday of her life. He
+  // was never asked. Absent is not zero (spec ship rule 5; the same distinction v45 and v46 were both
+  // built around), and the diary is written to say nothing at all where there is no row.
+  //
+  // ⚠ AND NOTHING IS INVENTED FOR THE BIRTHDAY THE SAVE IS SITTING ON, either. A career loaded ON its
+  // birthday week finds `pendingBirthday` non-null and gets the popup, which is exactly right: that
+  // birthday has not been answered, because nobody could answer it before this build existed.
+  //
+  // Idempotent in v30's sense (the field is only written when absent), and zero draws on any stream –
+  // the ask rides a purpose-scoped `seed:birthday:<age>` sub-stream that persists nothing – so the
+  // frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 47) {
+    const w = save as { birthdays?: unknown }
+    if (!Array.isArray(w.birthdays)) w.birthdays = []
+    v = 48
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

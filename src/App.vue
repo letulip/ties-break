@@ -45,6 +45,7 @@ import PracticeFlow from './components/PracticeFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import KnockDialog from './components/KnockDialog.vue'
+import BirthdayDialog from './components/BirthdayDialog.vue'
 import EndingScreen from './components/EndingScreen.vue'
 import ForkDialog from './components/ForkDialog.vue'
 import RetirementDialog from './components/RetirementDialog.vue'
@@ -818,6 +819,25 @@ const showEnding = computed(() => !!game.snapshot?.ending)
 const showFork = computed(() => !!game.snapshot?.fork)
 const showRetirement = computed(() => !!game.snapshot?.retirementOffer && !showFork.value)
 
+// ⭐ v48 – HER BIRTHDAY. Reads `birthdayPrompt`, a SNAPSHOT FIELD, for exactly the argument the knock
+// gate above makes: the engine sets it from `pendingBirthday`, the identical predicate `advanceWeeks`
+// blocks on, so the dialog is up exactly when the sim is waiting and cannot be cleared by any action
+// that produces a fresh snapshot. No dismiss flag, because there is nothing to dismiss – the owner
+// asked for the popup to fire ALWAYS, which is what makes "nothing" a button rather than a close box.
+//
+// ⚠ BEHIND THE KNOCK, and that ordering is STOP_PRECEDENCE's own (see its 'birthday' member): a knock
+// is about her BODY and the week it governs starts now, while the birthday is a day on the family's
+// calendar that will still be there after the sore shoulder has been answered. Behind the epilogue and
+// the two endings questions for the reason every overlay is – an ending replaces the shell entirely.
+const showBirthday = computed(
+  () =>
+    !!game.snapshot?.birthdayPrompt &&
+    !showEnding.value &&
+    !showFork.value &&
+    !showRetirement.value &&
+    !showKnock.value,
+)
+
 // R9-21a: the injury stop popup – blocking, until Continue. The dialog itself plays the alert sfx
 // on mount.
 //
@@ -1135,6 +1155,11 @@ function dismissSeasonSummary(): void {
          no event and has no dismiss: answering it IS the exit, and until it is answered the engine
          will not tick a week. Last in the template so it paints over anything else that is up. -->
     <KnockDialog v-if="showKnock" />
+
+    <!-- v48: her birthday, and the four presents. Like the knock it emits no event and has no
+         dismiss – answering IS the exit – but here that is the owner's ruling rather than a
+         consequence: the popup fires ALWAYS, so "nothing" has to be a button (see BirthdayDialog). -->
+    <BirthdayDialog v-if="showBirthday" />
 
     <!-- W2-ENDINGS: the two blocking questions. Neither has a dismiss and neither has a third
          button - answering IS the exit, and until one is answered the engine will not tick a week.

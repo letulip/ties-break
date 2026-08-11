@@ -47,6 +47,10 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     travelHomeScene: null,
     travelHomeMood: null,
     birthdayAge: null,
+    // v48: the birthday gift, unread by this builder - the default is "he has not answered".
+    birthdayGift: null,
+    birthdayWanted: false,
+    birthdayRepeatAge: null,
     week: 10,
     emotion: 'sad', // recomputed below
     resultFresh: true,
@@ -312,6 +316,10 @@ describe('R13-10 — the ordinary-week pool', () => {
     travelHomeScene: null,
     travelHomeMood: null,
     birthdayAge: null,
+    // v48: the birthday gift, unread by this builder - the default is "he has not answered".
+    birthdayGift: null,
+    birthdayWanted: false,
+    birthdayRepeatAge: null,
     week: 10,
     emotion: 'norm',
     resultFresh: false,

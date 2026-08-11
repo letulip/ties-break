@@ -1,16 +1,41 @@
 ---
 type: spec
-status: draft
+status: current
 area: content/birthday
-canonical: false
+canonical: true
 last-reviewed: 2026-08-11
 ---
 
 # The birthday, and what you give her
 
-**Design proposal. Nothing built.** The owner, 11.08: «День рождения как-то незаметно проходит…
-Важный момент, всё-таки» – round-16 item #9. His three rulings on the mechanic are in §2 and they
-settle the shape.
+## Current truth
+
+**SHIPPED at schema v48.** The owner, 11.08: «День рождения как-то незаметно проходит… Важный момент,
+всё-таки» – round-16 item #9. His three rulings on the mechanic are in §2 and they settle the shape;
+nothing in this document was redesigned on the way in.
+
+**Where it lives.** `src/engine/world/birthday.ts` is the whole mechanic – the catalogue, the ask, the
+record and the one command. `src/components/BirthdayDialog.vue` prints what the engine hands it.
+`tests/birthday-gifts.test.ts` is §4's ship rule, one block per clause;
+`tests/component/birthday-dialog.test.ts` is the mounted card, and each of its blocks names the
+mutation that was applied to prove it fails.
+
+**What ships:** the popup fires on her birthday week and blocks the advance until one of four column
+buttons is pressed; she asks for one thing in prose and exactly one option answers it, unmarked; no
+money moves and no price is shown; one row per birthday is persisted and the diary reads it; her
+birth date is on the bio page as `B-Day 12 June`; confetti falls on Home for the week.
+
+⚠ **THE SCHEMA NUMBER IS 48, NOT THE 49 §2b PREDICTED**, and §2b has been corrected in place. The
+prediction assumed `wave/flags-grant` would take 48; that wave was still documents and nothing had
+claimed 48 in code, so this took it and `docs/plans/wave-flags-grant.md` now reserves 49. The rule is
+"whoever lands in code first owns the number", and it is written into both documents so the next
+reader does not have to reconstruct which wave won.
+
+⚠ **AND IT SHIPPED ON TOP OF A FIX TO THE NUMBER IT PRINTS.** §3's popup names the age she turns, and
+`birthdayTurning` was announcing it a year low for every girl born on the 1st–6th of a month – on the
+owner's own save, «15» twice and never «19». Round-16 #100, fixed first and separately
+(`docs/specs/season-anchor.md` §7): a popup built on a wrong number would have shipped the wrong
+number four times a career, in a dialog nobody can dismiss.
 
 ## 0. The three rules that make it a gift and not a shop
 
@@ -135,8 +160,26 @@ So this slice **records and does not consume**. The minimum that makes the futur
   `docs/specs/form-and-slump.md` and the psychologist arrive, the history is already there to read.
 
 ⚠ **Schema.** One append-only field, and it is a three-part move (bump + migration + golden fixture,
-CLAUDE.md invariant 3). ⚠ **`docs/plans/wave-flags-grant.md` already claims v48**, so this is v49
-unless the owner reorders – stated here so two waves cannot both take the same number.
+CLAUDE.md invariant 3). ~~⚠ `docs/plans/wave-flags-grant.md` already claims v48, so this is v49 unless
+the owner reorders – stated here so two waves cannot both take the same number.~~
+
+> **✅ SHIPPED AT v48**, and the reservation above was resolved the other way. `wave/flags-grant` was
+> still documents when this was built and nothing had claimed 48 in code, so this took 48 and that
+> plan now reserves 49. The field is `WorldState.birthdays: BirthdayRecord[]`; the migration is a pure
+> default (`[]`) and the golden fixture is `tests/fixtures/saves/v48.json`.
+>
+> ⚠ **`[]` MEANS "no birthdays recorded", NOT "gave nothing every year"** – ship rule 5, and the
+> migration comment spells out the temptation it refuses. A v47 career HAD birthdays: the feed said
+> «She is sixteen this week» every year and `birthdayWeek` can name every one of them exactly. Walking
+> the calendar and writing a row per year with `given: null` would have been easy, and the statement
+> it made would be that this parent gave his daughter nothing on every birthday of her life. He was
+> never asked.
+>
+> **AND ONE MORE PLACE IS ABSENT RATHER THAN ZERO, decided in the build:** the four years at college.
+> `resumeFromCollege` spends them in ONE call with nobody able to answer, so a blocking birthday there
+> would strand the jump – the identical reason `rollKnock` is skipped inside the freeze. Her birthday
+> still reaches the FEED those years; what the engine does not do is invent a parent's decision out of
+> a freeze, so those birthdays carry no row.
 
 ### 2c. The gift never returns to equipment
 > «я бы сказал нет»
@@ -204,3 +247,25 @@ asked for and the version that never needs revisiting.
 
 1. **Can she ask for something not on the list?** A want the catalogue cannot satisfy is the
    sharpest version of the scene and the cruellest. Out of scope here; noted.
+
+## 7. What the build settled that this document did not ask
+
+Three questions the spec did not reach, each answered the way its own rulings pointed:
+
+1. **How the "exactly one option answers it" guarantee is bought.** The ask is drawn from the FOUR
+   OFFERED rather than from the catalogue and then matched – so the property is true by construction
+   rather than by a test, and `day` being one of the four is what makes it reachable as the ask.
+   Sub-stream `seed:birthday:<age>`: keyed on immutable state only, so it cannot be re-rolled by
+   reloading and last year's choice cannot move this year's want.
+2. **⭐ The ask id is NOT ON THE WIRE.** «не помечай, пусть игрок читает» could have been kept as a
+   promise the component makes; instead the client is never told which option answers, and
+   `chooseGift` re-derives it engine-side. No future component can mark it even by accident. The only
+   correspondence between the ask and an option is the English, which is the scene.
+3. **Where four options come from at 29+.** §1 names only the album for the late career, and §2a
+   requires four. The peak band's three come with it – §5.2's licensed repeat rather than invented
+   content – so the album is chosen alongside things she has been given before, which is the callback
+   the diary was built to notice.
+
+**Measured, not asserted:** the same seed through all four options ends the season on identical
+`fundsCents`, identical `careerTotals` and the identical count of Money lines; identical skills,
+condition and `kitState`; and a birthday week taps no MAIN draw a quiet week does not.

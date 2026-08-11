@@ -118,6 +118,34 @@ export function weekMonth(week: number): number {
   return weekStart(week).month + 1
 }
 
+/** Month names in full, for the ONE label that is about a person rather than about a week. */
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+] as const
+
+/** ⭐ "12 June" – HER BIRTH DATE. Day and month, NO WEEK AND NO YEAR (owner, 11.08: «а можно просто
+ *  день и месяц без недель? B-Day 12 june или вроде того»).
+ *
+ *  ⚠ IT EXISTS BECAUSE THE PLAYER WAS NEVER TOLD EITHER NUMBER. `profile.birthDay` and
+ *  `profile.birthMonth` have existed since v25 and they drive the relative-age effect, `kidAgeExact`,
+ *  the injury age curve and the birthday itself – and no surface printed them. A parent who does not
+ *  know their daughter's birthday is the one fact the game must not withhold.
+ *
+ *  ⚠ AND THE FORMAT IS WHAT MAKES IT IMMUNE TO A CALENDAR CHANGE. The WEEK her birthday lands in is
+ *  derived (`birthdayWeek`) and moved once already when the seasons re-anchored; the day and the month
+ *  cannot move, because they are her birth date and have been stored since v25. Printing the DATE
+ *  rather than the week is therefore both what he asked for and the version that never needs revisiting.
+ *
+ *  Here rather than on the screen for the reason every other formatter in this file is: the moment a
+ *  component spells a date itself, two components spell it two ways. Full month names and not the
+ *  three-letter `MONTHS`, because this line sits beside her age in prose and "12 Jun" reads as a fixture. */
+export function birthDateLabel(birthMonth: number, birthDay: number): string {
+  const m = Math.max(1, Math.min(12, Math.round(birthMonth)))
+  const d = Math.max(1, Math.min(daysInBirthMonth(m), Math.round(birthDay)))
+  return `${d} ${MONTH_NAMES[m - 1]}`
+}
+
 /** How many days her birth month has.
  *
  *  ⚠ FEBRUARY IS 28, NOT 29, AND THAT IS PRINCIPLED RATHER THAN LAZY. Her birth year is the band's year -

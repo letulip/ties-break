@@ -155,6 +155,10 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
       birthdayAge: null,
+      // v48: the birthday gift, unread by this builder - the default is "he has not answered".
+      birthdayGift: null,
+      birthdayWanted: false,
+      birthdayRepeatAge: null,
       knockPart: null,
       ...over,
     })
@@ -243,6 +247,10 @@ function makeFacts(input: {
     // W4: no knock on this fixture - the default week is one with nothing wrong with her.
     knockChoice: null,
     birthdayAge: null,
+    // v48: the birthday gift, unread by this builder - the default is "he has not answered".
+    birthdayGift: null,
+    birthdayWanted: false,
+    birthdayRepeatAge: null,
     knockPart: null,
     fundsPressure: fundsPressureOf(input.fundsCents ?? 50_000_00),
     freshMilestone: null,

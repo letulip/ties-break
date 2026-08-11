@@ -103,6 +103,10 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   trainPct: 75,
   knockChoice: null,
   birthdayAge: null,
+  // v48: the birthday gift, unread by this builder - the default is "he has not answered".
+  birthdayGift: null,
+  birthdayWanted: false,
+  birthdayRepeatAge: null,
   knockPart: null,
   ...over,
 })

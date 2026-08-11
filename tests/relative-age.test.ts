@@ -36,6 +36,7 @@ import {
   birthdayWeek,
   buildAlbum,
   closeTournament,
+  giftNoun,
   createWorld,
   decideKnock,
   entryCapUsage,
@@ -336,7 +337,19 @@ describe('the band and the girl are two different numbers', () => {
   it('the birthday copy obeys the app rules and never names a body part', () => {
     const lines = [...DIARY_POOL.filter((p) => p.claims.birthday), ...WEEK_NOTES.filter((n) => n.claims.birthday)]
     expect(lines.length, 'the bands have to exist').toBeGreaterThan(4)
-    const f = { birthdayAge: 15, injured: { kind: 'wrist strain', weeksRemaining: 3, totalWeeks: 6 } }
+    // ⚠ RE-AIMED (v48), AND THE `undefined` CHECK BELOW IS WHY IT HAD TO BE. Four birthday notes now
+    // read the PRESENT as well as the age, and this builder knew only about the age – so they
+    // rendered "She asked for undefined" and the unresolved-template guard on the next-but-one line
+    // caught it, exactly as designed. The facts gain the three gift fields rather than the guard
+    // losing the four lines: a present is part of the birthday copy now, and it has to obey the same
+    // rules. A REAL noun from the catalogue, so the anatomy and dash checks see what a player sees.
+    const f = {
+      birthdayAge: 15,
+      injured: { kind: 'wrist strain', weeksRemaining: 3, totalWeeks: 6 },
+      birthdayGift: giftNoun('headphones'),
+      birthdayWanted: true,
+      birthdayRepeatAge: 14,
+    }
     for (const l of lines) {
       const text = typeof l.text === 'function' ? l.text(f as never) : (l.text ?? '')
       expect(text, `long dash in "${text}"`).not.toContain('—')

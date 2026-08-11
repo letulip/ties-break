@@ -55,6 +55,8 @@ import {
 } from './constants'
 import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears, START_AGE_YEARS } from './age'
+// ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
+import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
@@ -589,6 +591,30 @@ export function pendingView(world: WorldState): PendingView | undefined {
   }
 }
 
+/** ⭐ v48 – THE PRESENT, AS THREE FACTS THE DIARY CAN PRINT WITHOUT KNOWING WHAT A CATALOGUE IS.
+ *
+ *  Reads THIS week's row, which exists only once he has answered – so all three are the empty answer
+ *  on every other week and on a birthday still waiting for him.
+ *
+ *  ⚠ THE REPEAT LOOKS BACKWARDS ONLY, and past THIS row rather than including it, or every present
+ *  would be a repeat of itself. It is the field that pays for the owner's ruling that the catalogue
+ *  may repeat (11.08: «вполне можно») «and the diary is expected to notice». */
+function birthdayGiftFactsOf(world: WorldState): {
+  birthdayGift: string | null
+  birthdayWanted: boolean
+  birthdayRepeatAge: number | null
+} {
+  const history = birthdayHistory(world)
+  const today = history.find((b) => b.week === world.week)
+  if (!today || today.given === null) return { birthdayGift: null, birthdayWanted: false, birthdayRepeatAge: null }
+  const earlier = history.filter((b) => b.week < world.week && b.given === today.given)
+  return {
+    birthdayGift: giftNoun(today.given),
+    birthdayWanted: today.given === today.asked,
+    birthdayRepeatAge: earlier.length ? earlier[earlier.length - 1].age : null,
+  }
+}
+
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
   // Computed ONCE and shared by the snapshot field and the diary facts – two computations could
@@ -667,6 +693,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // agree with the arithmetic instead of with each other.
     // ...and the one week a year that is about HER rather than about tennis.
     birthdayAge: birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay),
+    // ⭐ v48: ...AND WHAT HE GAVE HER FOR IT. Folded here rather than in the diary because the diary
+    // is a reporter and owns no catalogue: it is handed a NOUN and a pair of booleans, and prints them.
+    //
+    // ⚠ ALL THREE ARE NULL/FALSE UNTIL HE ANSWERS, and the note completing on the answer is the point –
+    // the birthday week's scrap says "She is sixteen today" while the dialog is up and gains the present
+    // the moment he chooses one, which is the same week reading back richer rather than a second entry.
+    ...birthdayGiftFactsOf(world),
     knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,
     knockPart: knockGoverns(world.knock, world.week) ? world.knock!.part : null,
   })
@@ -732,6 +765,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // and cannot be up on a week it has not.
     knock: knockLive(world.knock, world.week) ? world.knock : null,
     knockPrompt: pendingKnock(world) ? buildKnockPrompt(world.knock!, world.seed, world.condition) : null,
+    // ⭐ v48: HER BIRTHDAY, AND THE QUESTION IT ASKS. Same contract as `knockPrompt` above and for the
+    // same reason: non-null on exactly the weeks `pendingBirthday` is non-null, which is the predicate
+    // `advanceWeeks` blocks on, so the dialog cannot be missing on a week the engine has stopped.
+    // `buildBirthdayPrompt` re-checks the predicate itself, so this is one call rather than two.
+    birthdayPrompt: buildBirthdayPrompt(world),
     events: world.events.slice(-SNAPSHOT_EVENTS),
     // ⚠ THE DURABLE LEDGER, WHOLE, and it is here because the 60-event window above is exactly the
     // wrong source for it. Milestone EVENTS carry `keep: true` so they survive `pruneEvents` in the

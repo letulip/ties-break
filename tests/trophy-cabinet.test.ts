@@ -20,7 +20,10 @@
 import { describe, it, expect } from 'vitest'
 import {
   advanceWeeks,
+  birthdayOffer,
+  chooseGift,
   closeTournament,
+  pendingBirthday,
   createWorld,
   emptyTrophyLedger,
   enterEvent,
@@ -38,6 +41,18 @@ import { TIER_LADDER } from '../src/engine/season/calendar'
 import { seasonYear, weekYear, WEEKS_IN_SEASON } from '../src/shared/dates'
 import type { TierId } from '../src/engine/season/types'
 
+/** ⚠ v48: ANSWER HER BIRTHDAY, so the harness can keep moving. A pending birthday blocks
+ *  `advanceWeeks` exactly as an unanswered knock does, so any loop that drives a career past one has
+ *  to answer it – the same obligation `pendingKnock` already puts on every harness in this repo.
+ *
+ *  Whatever the engine offered first: a gift moves no skill, no condition, no kit and no money (spec
+ *  §4.1/§4.3, asserted in tests/birthday-gifts.test.ts), so the choice cannot reach anything a
+ *  harness measures. It only lets time move. */
+function answerBirthday(world: WorldState): void {
+  const age = pendingBirthday(world)
+  if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+}
+
 /** A real career, played the way a player plays one: enter what she can, resolve every draw. */
 function playCareer(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
@@ -54,6 +69,12 @@ function playCareer(seed: string, weeks: number): WorldState {
       }
     }
     if (world.knock && world.knock.choice === null) world.knock.choice = 'rest'
+    // ⚠ v48: ...AND THE BIRTHDAY, which BLOCKS the advance exactly as an unanswered knock does. A
+    // harness that never answers it spins on the same week for ever and this suite's five-season
+    // career stopped producing silverware at all. Answered with whatever the engine offered first:
+    // a gift moves no skill, no condition, no kit and no money, so which one is chosen cannot reach
+    // anything these tests measure – it only lets time move.
+    answerBirthday(world)
     advanceWeeks(world, rng, 1)
     while (world.pendingTournament) {
       if (!world.pendingTournament.finished) skipTournament(world)

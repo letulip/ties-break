@@ -41,6 +41,9 @@ import {
   closeTournament,
   toSnapshot,
   pendingKnock,
+  pendingBirthday,
+  birthdayOffer,
+  chooseGift,
   decideKnock,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
@@ -366,6 +369,12 @@ describe('a real career', () => {
       // spins on the same week for ever. Answered 'push' so the career under test keeps training as
       // planned and nothing else about it moves.
       if (pendingKnock(world)) decideKnock(world, 'push')
+      // ⚠ v48: ...AND SO DOES THE BIRTHDAY, on the identical contract. Without this the career never
+      // got past its first one and the age assertion below read 14 instead of 17. Whatever the engine
+      // offered first: a gift moves no skill, no condition, no kit and no money, so it cannot reach
+      // any of the three tiles this suite is about – it only lets time move.
+      const turning = pendingBirthday(world)
+      if (turning !== null) chooseGift(world, birthdayOffer(world.seed, turning).options[0].id)
       if (world.pendingTournament) {
         skipTournament(world)
         closeTournament(world)

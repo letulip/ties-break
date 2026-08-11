@@ -180,6 +180,12 @@ export interface DiaryWorldView {
   knockPart: string | null
   /** the age she turns this week, or null - world.ts derives it from her birth month */
   birthdayAge: number | null
+  /** ⭐ v48: what he gave her, as a noun ("the headphones"), or null until he has answered. */
+  birthdayGift: string | null
+  /** ⭐ v48: whether it answered what she had been asking for. */
+  birthdayWanted: boolean
+  /** ⭐ v48: the age she was the last time she was given this exact thing, or null the first time. */
+  birthdayRepeatAge: number | null
 }
 
 /** Condition, as the word Home speaks (D3). The 80/60/40 rungs mirror the idle-emotion ladder
