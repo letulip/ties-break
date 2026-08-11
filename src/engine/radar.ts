@@ -10,8 +10,10 @@
 // carries a true value. The screen cannot leak what it has never been given.
 //
 //   shownValue   the ESTIMATE. At low confidence it is deliberately wrong.
+//   startValue   the same estimate of WHERE SHE BEGAN, through the same misreading (see `readAs`).
 //   band         how wide that error can be. This is the fog - and it is honest: the true value is
-//                ALWAYS inside [shownValue - band, shownValue + band], by construction.
+//                ALWAYS inside [shownValue - band, shownValue + band], by construction. It is an
+//                honest claim about `startValue` and her starting build too.
 //   ceilingLo/Hi the outer haze over `potential`, which narrows toward a FLOOR and stops there.
 //   note         the coach's sentence for that axis, in words, or null when he has nothing to say.
 //
@@ -284,10 +286,21 @@ export interface RadarWorldView {
   kidId: string
   /** her true build. Never leaves the engine. */
   skills: KidSkills
-  /** THE BUILD SHE WAS BORN WITH - `startingSkills(seed)`, a pure function of the seed and stored
-   *  nowhere. `skills - startSkills` is her whole career's development, which is what the Weekly
-   *  Story's Training card reads (see `buildTrainingRead`). Never leaves the engine either: the
-   *  difference is turned into a sentence here and the sentence is all the UI is given. */
+  /** THE BUILD SHE STOOD UP WITH IN WEEK ONE - `withHeadStart(startingSkills(seed, profile),
+   *  birthMonth)`, a pure function of the seed and the profile, stored nowhere. `skills -
+   *  startSkills` is her whole career's development, which is what the Weekly Story's Training card
+   *  reads (see `buildTrainingRead`) and what the radar's third contour draws (see `buildRadar`).
+   *
+   *  ⚠ HEAD START INCLUDED SINCE 11.08, AND IT USED TO BE THE BIRTH BUILD ALONE. The two differ by up
+   *  to 1.1 points (`relativeAgeHeadStart`, +-0.458 years x 2.4 points), and the old spelling charged
+   *  that difference to TRAINING: a January girl's card counted the eleven months she was older than
+   *  her band as work the coach had done, and a December girl's paid it back. Being further along
+   *  inside your own year is not a thing anybody trained for. The radar makes it visible - the third
+   *  contour is where she began, and where she began is where she stood in week one - so the two
+   *  readers now share one honest answer instead of one convenient one.
+   *
+   *  Never leaves the engine: the difference is turned into a sentence here, and into a shape that has
+   *  been through the same fog as every other shape on the picture. */
   startSkills: KidSkills
   /** her true ceiling. Never leaves the engine. */
   potential: KidSkills
@@ -830,8 +843,37 @@ export function axisReadings(view: RadarWorldView): Record<SkillKey, { evidence:
  * one hash and one multiply once the band is known.
  */
 export function shownSkill(view: RadarWorldView, key: SkillKey, confidence: number): number {
+  return readAs(view, key, view.skills[key], confidence)
+}
+
+/** THE MISREADING ITSELF, applied to ANY value on one axis - because the coach's error belongs to the
+ * COACH, not to the week he is looking at.
+ *
+ * ⚠ THIS IS WHAT LETS THE RADAR DRAW WHERE SHE STARTED (owner, 11.08: «на розе как раз показывать
+ * "старт" - т.е. с чего начала, может быть так будет приятнее и нагляднее»), and the shared draw is the
+ * model's own logic rather than a convenience. `seed:read:<axis>` is drawn ONCE PER CAREER: the man is
+ * wrong about her backhand in a fixed direction by a shrinking amount, so when he thinks back to what
+ * she was, he is wrong about that by the same amount. Handing the past its own independent draw would
+ * make it a different man remembering a different girl - and, worse, would let the "where she began"
+ * contour be drawn OUTSIDE "where she is now" on a career that has only improved, which is a false
+ * claim rather than an uncertain one.
+ *
+ * ⚠ WHAT THAT HANDS OVER, STATED PLAINLY, BECAUSE IT IS THE ONE EXACT THING ON THE PICTURE. The two
+ * contours carry the same offset, so the DISTANCE between them is her true career gain, exactly. Three
+ * reasons that is inside decisions.md #11 rather than a hole in it:
+ *   - IT IS A DISTANCE AND NEVER A VALUE. Neither contour says where she IS; both are honest to within
+ *     `band`, and her build and her ceiling stay behind their own fog exactly as before.
+ *   - THE AXES CARRY NO NUMBERS AND NO TICKS, which is the actual ruling. There is no scale to read a
+ *     distance off, so what the drawing communicates is "a long way" or "barely", which is the whole
+ *     of what the owner asked to be able to see.
+ *   - IT IS NOT THE TRAINING CARD'S FORBIDDEN CHANNEL. That rule (see rule 2 above TRAINING_MIN_CONFI-
+ *     DENCE) is about a WEEKLY series of deltas, which sums to her exact build. One career-long
+ *     distance sums to nothing: without the starting number - which is fogged - it cannot be turned
+ *     into where she stands.
+ */
+function readAs(view: RadarWorldView, key: SkillKey, value: number, confidence: number): number {
   const u = rngFromSeed(`${view.seed}:read:${key}`)()
-  return clamp(view.skills[key] + (2 * u - 1) * bandFor(confidence), 0, 100)
+  return clamp(value + (2 * u - 1) * bandFor(confidence), 0, 100)
 }
 
 export function buildRadar(view: RadarWorldView, readings: ReturnType<typeof axisReadings> = axisReadings(view)): RadarAxis[] {
@@ -865,6 +907,9 @@ export function buildRadar(view: RadarWorldView, readings: ReturnType<typeof axi
     return {
       key,
       shownValue: shown[key],
+      // WHERE SHE BEGAN, read by the same eye that is reading her now - see `readAs` for why it is the
+      // same draw and what that does and does not hand over.
+      startValue: readAs(view, key, view.startSkills[key], confidence[key]),
       band: band[key],
       ceilingLo: lo,
       ceilingHi: hi,

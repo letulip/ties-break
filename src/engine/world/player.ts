@@ -11,7 +11,7 @@ import { applySurfaceStyle } from '../match/style'
 import { applyKit, kitWearAt } from '../equipment'
 import { kitFreshCap } from '../offers'
 import { conditionMatchFactor } from '../condition'
-import { relativeAgeHeadStart, SKILL_KEYS, type KidSkills } from '../development'
+import { relativeAgeHeadStart, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
 import type { MatchPlayer, Surface } from '../match/types'
 import type { KitState, Offer, PlayerProfile } from '../../shared/protocol'
 import { KID_ID } from './constants'
@@ -23,21 +23,27 @@ import { kidAgeExact } from './age'
 // career, and snapshotted into every kid-match event for replay.
 /** The build she is BORN with – the pre-Phase-4 derivation, unchanged, from `seed:kid`.
  *  createWorld seeds `world.skills` with it and the v19 migration back-fills old saves with it, so
- *  adding development moved nobody's starting point by a hundredth. */
+ *  adding development moved nobody's starting point by a hundredth.
+ *
+ *  ⚠ THE FIVE RANGES MOVED OUT TO `STARTING_SKILL_BAND` (engine/development.ts) AND NOT ONE OF THEM
+ *  CHANGED. They are read here in the same order the literals stood in, which is `SKILL_KEYS`'s
+ *  order, which is the order this sub-stream is walked in - so the draws are byte-identical and no
+ *  career's birth build moves. The reason they are named at all is that the radar's axis top has to
+ *  be DERIVED from them plus `potentialBand`; see the constant. */
 export function startingSkills(seed: string, _profile: PlayerProfile): KidSkills {
   const r = rngFromSeed(seed + ':kid')
   return {
-    serve: pickInt(r, 40, 58),
-    ret: pickInt(r, 40, 58),
-    composure: pickInt(r, 35, 55),
-    stamina: pickInt(r, 40, 60),
+    serve: pickInt(r, ...STARTING_SKILL_BAND.serve),
+    ret: pickInt(r, ...STARTING_SKILL_BAND.ret),
+    composure: pickInt(r, ...STARTING_SKILL_BAND.composure),
+    stamina: pickInt(r, ...STARTING_SKILL_BAND.stamina),
     // ⚠ APPENDED LAST, AND THAT POSITION IS THE WHOLE MIGRATION STORY (v25). A fifth draw at the END
     // of a purpose-scoped sub-stream leaves the four above byte-identical - verified, not assumed -
     // so every career that already exists keeps the exact build it was born with and simply learns
     // what its forehand was. Putting it anywhere else in this literal would re-roll the world.
     // The band matches serve/ret: she is a junior, and her groundstroke is neither her best nor her
     // worst wing by construction.
-    groundstrokes: pickInt(r, 40, 58),
+    groundstrokes: pickInt(r, ...STARTING_SKILL_BAND.groundstrokes),
   }
 }
 

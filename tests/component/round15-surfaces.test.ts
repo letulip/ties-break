@@ -17,7 +17,7 @@
 //   * the SELF_FIELD_LINES branch removed from `coachSays` -> the register test goes red on the
 //     coach pool leaking onto a self-coached card.
 //   * the `<ul class="radar-legend">` block deleted -> all four legend tests go red.
-//   * the dashed key given its own class instead of `radar-ceiling-edge` -> the "the key IS the
+//   * a key given its own class instead of the one the shape it explains wears -> the "the key IS the
 //     stroke" test goes red while the label test still passes, which is why they are separate.
 //   * `radarBlurb`'s condition pinned to `true` -> the self-coached panel test goes red.
 //   * the self branch of `radarBlurb` stripped of the two shapes -> "the PICTURE is untouched" goes
@@ -142,46 +142,63 @@ describe('R15-18 - the plaque names whoever is actually reading the draw', () =>
 // =================================================================================================
 // R15-15 - the dashed line on the radar had no legend.
 //
-// Owner, 09.08: «а что значит пунктирная линия на нашей розе скиллов?» It is `.radar-ceiling-edge`,
+// Owner, 09.08: «а что значит пунктирная линия на нашей розе скиллов?» It was `.radar-ceiling-edge`,
 // the far edge of the ceiling haze - where the coach believes her potential is - deliberately faint
 // and dashed against the solid contour of what has actually been seen. The DRAWING was right;
 // nothing anywhere said so.
+//
+// ⚠ RE-AIMED 11.08, NOT WEAKENED, AND THE PICTURE MOVED UNDER IT TWICE OVER. The owner then ruled
+// that edge OFF - «контур "безнадежности" текущий надо убрать… Заблюренная зона это ок.» - and had
+// the rose grow a THIRD shape, "where she started". So the legend this block guards now has three
+// keys instead of two, and the shape the third one explains is a filled region rather than a stroke.
+// Every claim below is the same claim: one key per shape, each wearing the paint of the shape it
+// stands for, present before the coach has said a word, carrying no digits. The count and the class
+// names are what moved, and both are read off the picture rather than asserted from memory.
 // =================================================================================================
 
-/** Axes with a real fog and a real ceiling band, so both shapes are drawn. `note` is null on all of
- *  them deliberately - the legend must not depend on the coach having found something to say. */
+/** Axes with a real fog, a real ceiling band and a real starting point, so all three shapes are
+ *  drawn. `note` is null on all of them deliberately - the legend must not depend on the coach having
+ *  found something to say. `startValue` sits below `shownValue`, which is what a career that has gone
+ *  forward looks like. */
 const AXES: RadarAxis[] = SKILL_KEYS.map((key, i) => ({
   key,
   shownValue: 40 + i * 3,
+  startValue: 31 + i * 3,
   band: 9,
   ceilingLo: 62 + i * 2,
   ceilingHi: 80 + i * 2,
   note: null,
 }))
 
-describe('R15-15 - the radar says what its two lines mean', () => {
-  it('there is a legend, and it names both shapes', () => {
+describe('R15-15 - the radar says what its lines mean', () => {
+  it('there is a legend, and it names every shape the picture draws', () => {
     const wrapper = mount(SkillsRadar, { props: { axes: AXES, title: 'Her game' } })
     const keys = wrapper.findAll('.radar-legend li').map((n) => n.text())
-    expect(keys).toHaveLength(2)
-    expect(keys[0]).toContain('Where she is')
-    expect(keys[1]).toContain('How far she could go')
+    expect(keys).toHaveLength(3)
+    expect(keys[0]).toContain('Where she started')
+    expect(keys[1]).toContain('Where she is')
+    expect(keys[2]).toContain('How far she could go')
     wrapper.unmount()
   })
 
-  it('...and the keys ARE the strokes they stand for, not a second drawing of them', () => {
-    // ⚠ THE DESIGN'S OWN PRINCIPLE, MECHANICALLY. The file's comment: both bands are one accent at
-    // two strengths, "because they are the same uncertainty at two distances". A legend with hand-
-    // picked swatch colours would be free to drift from the picture on the very next restyle. Each
-    // key is a two-point path wearing the SAME class as the path it explains, so a restyled contour
-    // restyles its own key and a legend that lies about the drawing is not constructible.
+  it('...and the keys ARE the paint they stand for, not a second drawing of it', () => {
+    // ⚠ THE DESIGN'S OWN PRINCIPLE, MECHANICALLY. The file's comment: every shape is one accent at a
+    // different strength, "because they are the same uncertainty at two distances". A legend with
+    // hand-picked swatch colours would be free to drift from the picture on the very next restyle.
+    // Each key wears the SAME class as the shape it explains, so a restyled contour restyles its own
+    // key and a legend that lies about the drawing is not constructible.
     const wrapper = mount(SkillsRadar, { props: { axes: AXES, title: 'Her game' } })
     const items = wrapper.findAll('.radar-legend li')
-    expect(items[0].find('path').classes()).toContain('radar-core')
-    expect(items[1].find('path').classes()).toContain('radar-ceiling-edge')
-    // The picture really does draw those two, so the keys are keys to something.
+    expect(items[0].find('path').classes()).toContain('radar-start')
+    expect(items[1].find('path').classes()).toContain('radar-core')
+    // ⚠ THE HAZE'S KEY IS A RECT AND THAT IS THE POINT, not an inconsistency. `.radar-ceiling` is a
+    // FILL with no stroke - it lost its outline on 11.08 - so a two-point path wearing it would draw
+    // literally nothing. A key that renders empty is worse than no key.
+    expect(items[2].find('rect').classes()).toContain('radar-ceiling')
+    // The picture really does draw all three, so the keys are keys to something.
+    expect(wrapper.find('svg.radar-svg path.radar-start').exists()).toBe(true)
     expect(wrapper.find('svg.radar-svg path.radar-core').exists()).toBe(true)
-    expect(wrapper.find('svg.radar-svg path.radar-ceiling-edge').exists()).toBe(true)
+    expect(wrapper.find('svg.radar-svg path.radar-ceiling').exists()).toBe(true)
     wrapper.unmount()
   })
 
@@ -192,7 +209,7 @@ describe('R15-15 - the radar says what its two lines mean', () => {
     const wrapper = mount(SkillsRadar, { props: { axes: AXES, title: 'Her game' } })
     expect(wrapper.find('.radar-notes').exists()).toBe(false)
     expect(wrapper.find('.radar-quiet').exists()).toBe(true)
-    expect(wrapper.findAll('.radar-legend li')).toHaveLength(2)
+    expect(wrapper.findAll('.radar-legend li')).toHaveLength(3)
     wrapper.unmount()
   })
 
@@ -242,19 +259,27 @@ describe('R15-18 - the radar panel names whoever is actually watching her', () =
     wrapper.unmount()
   })
 
-  it('the PICTURE is untouched - both shapes are still drawn, and so is the legend', () => {
+  it('the PICTURE is untouched - every shape is still drawn, and so is the legend', () => {
     // ⚠ VOICE, NOT VALUE, asserted rather than promised. The register change may not cost the
-    // self-coached family anything the paying one gets: same two contours, same fog, same legend,
-    // and the same two sentences describing them. Only the reader's name moves.
+    // self-coached family anything the paying one gets: same contours, same fog, same legend, and the
+    // same sentences describing them. Only the reader's name moves.
+    //
+    // ⚠ RE-AIMED 11.08 AT THE PICTURE THE OWNER RULED FOR, and it is the same claim about the same
+    // thing: the shapes named in the frame are the shapes on the page, for both registers. The dashed
+    // CEILING edge went (it read as a verdict about how far she could go); a dashed START contour
+    // arrived, and the sentence grew a third clause to match. So the assertion moved from "the two
+    // shapes" to "all three", which is strictly more than it held before.
     for (const tier of ['self', 'middle'] as const) {
       setActivePinia(createPinia())
       const wrapper = mountWithSnapshot(KidScreen, snapshotAt(tier))
+      expect(wrapper.find('svg.radar-svg path.radar-start').exists(), tier).toBe(true)
       expect(wrapper.find('svg.radar-svg path.radar-core').exists(), tier).toBe(true)
-      expect(wrapper.find('svg.radar-svg path.radar-ceiling-edge').exists(), tier).toBe(true)
-      expect(wrapper.findAll('.radar-legend li'), tier).toHaveLength(2)
+      expect(wrapper.find('svg.radar-svg path.radar-ceiling').exists(), tier).toBe(true)
+      expect(wrapper.findAll('.radar-legend li'), tier).toHaveLength(3)
       const note = wrapper.find('.kid-panel-note').text()
-      expect(note, tier).toContain('The solid shape is where she is')
-      expect(note, tier).toContain('the haze around it is how far she might go')
+      expect(note, tier).toContain('The dashed shape is where she started')
+      expect(note, tier).toContain('the solid shape is where she is')
+      expect(note, tier).toContain('the haze around them is how far she might go')
       wrapper.unmount()
     }
   })

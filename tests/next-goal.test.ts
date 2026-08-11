@@ -57,7 +57,10 @@ function ladder(results: CountingResult[] = []): LadderView {
   return { rank: null, prevRank: null, points: 0, standings: [], countingResults: results }
 }
 function axis(over: Partial<RadarAxis> = {}): RadarAxis {
-  return { key: 'serve', shownValue: 50, band: 6, ceilingLo: 60, ceilingHi: 80, note: null, ...over }
+  // ⚠ `startValue` ARRIVED WITH THE THIRD CONTOUR (11.08) and defaults BELOW `shownValue`, which is
+  // what a career that has gone forward looks like. This file is about the next-goal card and never
+  // reads it; the default is here so the shape stays a real `RadarAxis` rather than a cast.
+  return { key: 'serve', shownValue: 50, startValue: 42, band: 6, ceilingLo: 60, ceilingHi: 80, note: null, ...over }
 }
 function event(over: Partial<UpcomingEvent> = {}): UpcomingEvent {
   return {

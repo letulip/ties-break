@@ -27,7 +27,7 @@ import { playedWeeksInTrailing4 } from './injury'
 import { retireKnock } from './knockHistory'
 import { practiceForWeek, vacationForWeek } from './bookings'
 import { coachSinceWeek, matchesEverPlayed } from './coachMarket'
-import { startingSkills } from './player'
+import { startingSkills, withHeadStart } from './player'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
 
@@ -208,7 +208,12 @@ export function radarViewOf(world: WorldState): RadarWorldView {
     // Where she began, recomputed from the seed rather than stored - see RadarWorldView.startSkills.
     // `growWeek` is the only thing in the engine that moves `world.skills`, so the difference between
     // these two IS her development, and neither of them ever leaves this object.
-    startSkills: startingSkills(world.seed, world.profile),
+    //
+    // ⚠ AND IT IS THE WEEK-ONE BUILD, HEAD START INCLUDED - the exact object `createWorld` seeds
+    // `world.skills` with (see world.ts, `withHeadStart(startingSkills(seed, profile), birthMonth)`).
+    // It used to be the birth build alone, which is up to 1.1 points away and charged the relative-age
+    // head start to training. See RadarWorldView.startSkills for the argument.
+    startSkills: withHeadStart(startingSkills(world.seed, world.profile), world.profile.birthMonth),
     potential: world.potential,
     coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
     coachSinceWeek: coachSinceWeek(world),
