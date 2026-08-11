@@ -64,13 +64,33 @@ function nineteenthBirthdayWeek(birthMonth: number, cap: number): number {
 
 const EPOCH_SEASON_YEAR = weekYear(0) // 2031 – the year season 0 opened in
 
+/** The calendar year a season's first Monday fell in UNDER THE OLD CONTINUOUS CALENDAR, frozen here
+ *  as literal arithmetic. The career used to run 364 days a season straight off one epoch (Monday 6
+ *  Jan 2031), which slid ~1.24 days earlier every year; `shared/dates.ts` re-anchors each season to
+ *  its own January, so the live `weekYear` no longer answers this question and MUST NOT be asked it.
+ *
+ *  ⚠ IT IS FROZEN BECAUSE THE MIGRATION IT SERVES IS SHIPPED. v16 below inverts a value written by
+ *  the OLD writer against the OLD calendar; if this followed `weekYear` into the re-anchor, a save
+ *  that migrated one way in a shipped build would migrate a different way in the next one – seasons
+ *  6+ would land an index off. Append-only means the OUTPUT is append-only, not just the source text,
+ *  so the historical arithmetic has to be carried rather than re-derived.
+ *
+ *  ⚠ EXPORTED FOR THE COLLISION PINS, and for nothing else. Three test files (world-trio,
+ *  week-numbering, trophy-cabinet) exist to prove the season-5 clash was REAL before proving the
+ *  shipped calendar cannot produce it. They need the historical arithmetic to say so, and a fact
+ *  stated in four places is a fact that will disagree with itself. Do not read this in app code. */
+export function legacyWeekYear(week: number): number {
+  const LEGACY_EPOCH_UTC = Date.UTC(2031, 0, 6) // Monday, Jan 6, 2031
+  return new Date(LEGACY_EPOCH_UTC + week * 7 * 24 * 60 * 60 * 1000).getUTCFullYear()
+}
+
 /** v16 helper: invert the pre-v16 `year` field back to the season index that wrote it.
  *
- *  The old wrap-up stamped `weekYear(seasonIndex * WEEKS_IN_SEASON)` and refused to write a year
- *  already present, so the smallest index yielding a given year IS the index that produced the row.
- *  Bounded well past the game's horizon; falls back to the flat offset if it ever runs off the end. */
+ *  The old wrap-up stamped `legacyWeekYear(seasonIndex * WEEKS_IN_SEASON)` and refused to write a
+ *  year already present, so the smallest index yielding a given year IS the index that produced the
+ *  row. Bounded well past the game's horizon; falls back to the flat offset if it runs off the end. */
 function seasonIndexOfLegacyYear(year: number): number {
-  for (let k = 0; k <= 200; k++) if (weekYear(k * WEEKS_IN_SEASON) === year) return k
+  for (let k = 0; k <= 200; k++) if (legacyWeekYear(k * WEEKS_IN_SEASON) === year) return k
   return Math.max(0, year - EPOCH_SEASON_YEAR)
 }
 
@@ -295,9 +315,15 @@ export function migrateSave(raw: unknown): WorldState {
     // THE BACKFILL IS EXACT, not best-effort, because the buggy writer's own guard makes it
     // invertible: it kept the FIRST season to claim a year and dropped every later claimant, so a
     // legacy `year` can only ever have come from the SMALLEST index that yields it. Recovering that
-    // index is a short scan over `weekYear(k * WEEKS_IN_SEASON)`. (2035 is the only collision inside
-    // 40 seasons, so in practice this shifts nothing below season 5 and re-labels seasons 6+ by the
-    // one year the drop had cost them.) Idempotent: a row that already has an index is left alone.
+    // index is a short scan over `legacyWeekYear(k * WEEKS_IN_SEASON)`. (2035 is the only collision
+    // inside 40 seasons, so in practice this shifts nothing below season 5 and re-labels seasons 6+
+    // by the one year the drop had cost them.) Idempotent: a row that already has an index is left alone.
+    //
+    // ⚠ THE SCAN CANNOT BE COLLAPSED TO `year - 2031`, NOW OR EVER, even though the calendar was
+    // re-anchored a wave later and the live `weekYear(k * 52)` IS `2031 + k`. The whole point of this
+    // block is that the value it inverts was written by a writer that skipped 2035's second claimant:
+    // the smallest legacy index yielding 2036 is SIX, and `year - 2031` would say five. Simplifying
+    // it would silently re-label every legacy season past the collision. See docs/specs/season-anchor.md §6.
     if (Array.isArray(save.seasonHistory)) {
       save.seasonHistory = save.seasonHistory.map((h) => {
         const row = h as SeasonHistoryEntry & { year?: number }
