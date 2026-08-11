@@ -160,8 +160,9 @@ const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 // school calendar would be worse than drawing the plan he set.
 //
 // The dots stay TRAIN/REST rather than learning the calendar's court-versus-gym distinction: this tile
-// is a two-number summary of a week that has already happened (see the pin in tests/radar.test.ts for
-// how tightly it is bounded), and the gym day is a detail the grid on screen H has room for.
+// is a two-number summary of a week that has already happened (see the pin in
+// tests/radar-training.test.ts for how tightly it is bounded), and the gym day is a detail the grid
+// on screen H has room for.
 const dayDots = computed<('train' | 'rest')[]>(() => {
   const week = planWeek(plan.value)
   return DAY_LETTERS.map((_, i) => ((week[i]?.length ?? 0) > 0 ? 'train' : 'rest'))
@@ -615,7 +616,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    week's note is the same length under the same 80-character cap, so it wants the same treatment –
    so the hook is now `noteIsProse` and reads WHICH HAND wrote the scrap rather than which picture is
    above it. Same measurement, same two lines; the name `--travel` stays because the guards in
-   tests/travel-home.test.ts and tests/radar.test.ts read this file for it. */
+   tests/travel-home.test.ts and tests/radar-training.test.ts read this file for it. */
 .recap-note--travel .recap-note-text {
   font-size: 19px;
   line-height: 1.34;

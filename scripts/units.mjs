@@ -28,13 +28,54 @@
 // Same coverage, same gate, ~2 s of process start per heavy file. If the tail grows, add to
 // HEAVY_UNIT_FILES rather than trimming assertions — cutting seeds until a suite fits buys speed
 // with coverage, and that trade should be made deliberately and measured, never as a side effect.
+//
+// ⚠ THE SECOND TIME, AND THE RETRY BELOW COULD NOT COVER IT (11.08). The radar shard stalled TWICE
+// on the all-green-non-zero shape, which is exactly the shape the retry exists for – because a
+// retry is a fix for a file NEAR the wall, and radar had stopped being one. It was OVER it:
+//
+//     24 s solo when this header was written -> 34.2 s solo re-measured -> 64.51 s on CI
+//
+// AND THERE WAS NOTHING LEFT TO SHARD: radar already ran alone, in a process of its own, from the
+// line below. When a file is its own shard the FILE is the unit, so the file has to be cut. It is
+// now three, sharing tests/radarFixtures.ts, and they run the SAME 61 tests under the SAME names –
+// not one seed and not one week count was trimmed, per the rule in the paragraph above:
+//
+//     radar            §1 §2 §3 §9 §12   16 tests    9.3 s solo   (CI ~18 s)
+//     radar-read       §4 §5 §7 §8       24 tests   15.0 s solo   (CI ~29 s)
+//     radar-training   §6 §10 §11 §13    21 tests   10.3 s solo   (CI ~20 s)
+//                                        ---------
+//                                        61 tests, the same 61
+//
+// `--reporter default`, one file at a time, against the ambient desktop load the 34.2 s baseline was
+// taken under (no competing suite; verified before each run). CI runs ~1.9x local – radar's own
+// 34.2 s -> 64.51 s IS that calibration rather than a guess – so the worst of the three now lands at
+// about HALF the window, and can double before it is anywhere near the wall again.
+//
+// ⚠ AND THE SEAM IS NOT "RADAR VERSUS TRAINING READ", which is the obvious cut and the wrong one.
+// Six tests each spin a LIVE career through the engine and are 30.7 s of the old file's 34.2 s –
+// 90 % of it – and they are spread across BOTH subjects, so the split had to separate those six
+// from EACH OTHER rather than separating the topics.
+//
+// ⚠ AND THIS IS WHERE THE NEXT CUT GOES, measured so nobody has to re-derive it under pressure:
+// `radar – the estimate does not shimmer` is 13.9 s of radar-read's 14.5 s of test time – 96 %, so
+// that file essentially IS that one describe, and two live sweeps inside it are the whole cost
+// (5.5 s "THE MISREADING KEEPS ITS SIGN", 8.4 s "the fog can re-widen"). There is no describe left
+// to move out of it: the next cut splits that describe, putting those two sweeps in different
+// files. Do that before trimming a seed from either of them.
 
 import { spawnSync } from 'node:child_process'
 import { classify, recoveredNote } from './lib/stall.mjs'
 
-/** Measured, not guessed: the three slowest files under contention, and the only ones holding a
- *  core for double digits of seconds. Re-derive with `--reporter=json` and sum per file. */
-const HEAVY_UNIT_FILES = ['tests/economy.test.ts', 'tests/radar.test.ts', 'tests/kidLife.test.ts']
+/** Measured, not guessed: the slowest files under contention, and the only ones holding a core for
+ *  double digits of seconds. Re-derive with `--reporter=json` and sum per file. The three radar
+ *  entries were one file until 11.08 – see THE SECOND TIME, above. */
+const HEAVY_UNIT_FILES = [
+  'tests/economy.test.ts',
+  'tests/radar.test.ts',
+  'tests/radar-read.test.ts',
+  'tests/radar-training.test.ts',
+  'tests/kidLife.test.ts',
+]
 
 const reporter = process.argv.includes('--verbose') ? 'default' : 'dot'
 const started = Date.now()
