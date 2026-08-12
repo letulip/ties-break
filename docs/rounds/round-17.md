@@ -80,14 +80,17 @@ cost of not keeping it: #14 was reported shipped and was not fixed on his screen
 - [x] **F. The whole dialog class lost its panel** – a dangling comma after `.plan-sheet`'s deletion
   swallowed the shared rule; ALL ten modals were bare text. Restored, and
   `tests/stylesheet-integrity.test.ts` now fails on exactly that shape of edit.
-- [>] **G. The coach's "will not move anything" is FALSE** – 78.1% of the events it dismissed would
-  have moved a table. Fix in flight (the sentence becomes conditional on `bookClosedTo`, and says
-  "wrong currency" when that is the truth).
+- [x] **G. The coach's "will not move anything" is FALSE** – at the probe's committed defaults,
+  87.1% of the cards it dismissed had room in their own book. The strong sentence now asks
+  `bookClosedTo` before it speaks, a wrong-table card gets "pays national points, not the table she
+  is climbing", and the false rate is 0 of 137 firings. Probe re-synced against the real function.
 - [ ] **H. Domestic rungs in a 22-year-old's season list** – task #84, unchanged this round; the
   same filter that gates the J tiers reaches it in two lines when the owner asks.
 - [x] **I. Replay clock centred.**
-- [>] **J. The stats "beard" under the match buttons goes** – deletion in flight; the retirement
-  line survives in the commentary, which is what un-blocks it.
+- [x] **J. The stats "beard" under the match buttons is gone.** The retirement kept its witness:
+  the newest commentary row carries "Retired. Ines cannot go on…" – verified on a REAL engine
+  retirement mounted through the actual component, and hiding that beat turns five pins red. The
+  control row stays exactly where it was: `Watch again ↻ | Proceed`, nothing under it.
 - [x] **Vacation re-step** («шифт-8»): gains 18/22 → 10/18, third rung up untouched; planner pins
   re-aimed, tightest sim anchor re-run green.
 - [x] **Retirement copy** – «her words, not the game's» broke the fourth wall; same meaning, said
