@@ -13,13 +13,14 @@
 import { bestFitCoachAt, buildCoachRoster, coachById, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
-import type { SeasonEvent, TierId } from '../season/types'
+import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
+import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachMarketRow, CoachTier, PlayerProfile } from '../../shared/protocol'
 import { parentIncomeForWeekCents } from '../economy'
 import { addEvent, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
-import { bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
+import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
 
@@ -428,13 +429,42 @@ export function coachReadsTheBook(tier: CoachTier): boolean {
  *
  *  The clauses, in the order a player needs them:
  *    0. she has not passed this rung, or nobody is paid to have a view -> silence.
- *    1. THIS WEEK'S CHOICE. A rung she has NOT passed is on the same week -> he names it. The most
- *       actionable thing he can say, because it tells the player what to click instead.
+ *    1. THIS WEEK'S CHOICE. A rung she has NOT passed, on a table she is CLIMBING, is on the same
+ *       week -> he names it. The most actionable thing he can say, because it tells the player what
+ *       to click instead. The half-sentence after the dash is whichever of three claims is TRUE:
+ *         a. the card pays into a table she is not climbing -> he says THAT, and names the currency.
+ *            Checked FIRST, even when that dead table's window also happens to be full: the track is
+ *            the situation's own name, and it stays true when the window empties. A National Series
+ *            title may still move her national standing - it just is not the table her career is on.
+ *         b. her book is shut to this card's title -> "this one will not move anything". The
+ *            strongest claim in the function, and it is bookClosedTo's sentence, so it now asks
+ *            bookClosedTo - and only a coach who keeps the book may say it (`coachReadsTheBook`).
+ *            After (a), the card is on a climbing table, so a shut window really does mean nothing
+ *            anywhere can move: a title pays into exactly one table.
+ *         c. otherwise -> "she has outgrown this one", the gate that let him speak at all. A result
+ *            here could still move her ranking, so no stronger claim is available to him.
  *    2. THE BOOK. Even a title here cannot enter her ranking window -> he says so. Arithmetic rather
  *       than opinion, and only from a coach who keeps the book (see `coachReadsTheBook`).
  *    3. THE BLOCK AHEAD. A rung she has not passed lands inside HIS horizon -> he would save her for
  *       it, and he NAMES it: a caution that only says no is a guard rail, not a coach.
  *    4. otherwise -> silence. Nothing better exists, so playing is right.
+ *
+ *  ⚠ WHY 1b IS GATED AND 1a/1c ARE NOT (the owner's card of 12.08: «the National Series is the week
+ *  - this one will not move anything» on a World Tour 35 whose book had room). "Will not move
+ *  anything" borrowed clause 2's arithmetic without asking clause 2's question: measured on the
+ *  probe's careers (tools/coach-ladder-claim-probe.ts), 87% of the cards it dismissed had room in
+ *  their own best-N book - the sentence was false - and 84% of the alternatives it held up paid into
+ *  a DIFFERENT table, usually a domestic rung held up against her professional card. The claim is
+ *  arithmetic, so it now fires only when the arithmetic says it (a shut book moves nothing anywhere:
+ *  a title pays into exactly one table, and that table's window cannot take it). Which table an
+ *  event pays into and which table she is on are court-visible facts, so 1a/1c stay open to every
+ *  hired rung - the same license split clause 2 has always had.
+ *
+ *  ⚠ AND THE ALTERNATIVE MUST BE ON A TABLE SHE IS CLIMBING - `activeLadderOf` and up, never down.
+ *  `better()` used to rank candidates by TIER_LADDER alone, so a domestic rung whose band her decayed
+ *  domestic points no longer clear ("not outgrown" by the window's arithmetic, not by her level)
+ *  outranked nothing-this-week on a professional card. The professional arm is a one-way door
+ *  (activeLadderOf's own rule); the coach does not point back through it.
  *
  *  ⚠ THE ALTERNATIVES ARE A RUNG TEST AND NOT AN EVENT GATE, deliberately. Asking `entryStatus` of
  *  every candidate would put a second full gate walk inside the snapshot's per-card loop for an
@@ -449,17 +479,27 @@ export function coachLadderNote(world: WorldState, event: SeasonEvent, coachTier
   const horizon = COACH_HORIZON_WEEKS[coachTier]
   if (horizon < 0) return null
   if (!hasOutgrown(world, event.tier)) return null
+  const firstClimbed = LADDER_TRACKS.indexOf(activeLadderOf(world))
+  const climbs = (track: LadderTrack): boolean => LADDER_TRACKS.indexOf(track) >= firstClimbed
   const better = (from: number, to: number) =>
     world.season
-      .filter((e) => e.week >= from && e.week <= to && tierOpenFor(world, e.tier) && !hasOutgrown(world, e.tier))
+      .filter(
+        (e) =>
+          e.week >= from && e.week <= to && climbs(TIERS[e.tier].track) && tierOpenFor(world, e.tier) && !hasOutgrown(world, e.tier),
+      )
       .sort((a, b) => a.week - b.week || TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))[0]
+  const shut = coachReadsTheBook(coachTier) && bookClosedTo(world, event.tier)
   const sameWeek = better(event.week, event.week)
   if (sameWeek) {
-    return `Your coach says the ${TIERS[sameWeek.tier].label} is the week – this one will not move anything.`
+    const alt = TIERS[sameWeek.tier].label
+    if (!climbs(TIERS[event.tier].track)) {
+      const currency = LADDER_LABEL[TIERS[event.tier].track].toLowerCase()
+      return `Your coach says the ${alt} is the week – this pays ${currency} points, not the table she is climbing.`
+    }
+    if (shut) return `Your coach says the ${alt} is the week – this one will not move anything.`
+    return `Your coach says the ${alt} is the week – she has outgrown this one.`
   }
-  if (coachReadsTheBook(coachTier) && bookClosedTo(world, event.tier)) {
-    return 'Your coach says even a title here would not move her ranking.'
-  }
+  if (shut) return 'Your coach says even a title here would not move her ranking.'
   const ahead = horizon > 0 ? better(event.week + 1, event.week + horizon) : undefined
   if (!ahead) return null
   const weeks = ahead.week - event.week
