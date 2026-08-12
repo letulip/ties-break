@@ -95,4 +95,8 @@ cost of not keeping it: #14 was reported shipped and was not fixed on his screen
   re-aimed, tightest sim anchor re-run green.
 - [x] **Retirement copy** – «her words, not the game's» broke the fourth wall; same meaning, said
   in-fiction now.
-- [>] **Coach-as-the-eye measurement** – running; decides what is built first, at the owner's word.
+- [x] **The wall / L1 measurement** (grew out of coach-as-the-eye) – done, folded into
+  `docs/specs/the-wall-2026-08.md` §Measured: the owner's per-match edge is a real coach product
+  (~$40-50k prize where solvent; wealthy·high now pays for himself) but does NOT breach the wall
+  (top-100 and Slam 0.0% at every dose incl. 2x); flat vs decay = same careers, pick by legibility.
+  What is built first awaits the owner's word.
