@@ -928,7 +928,8 @@ const matchMeta = computed(() => {
            ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO, WHICH IS THE OTHER 36px - the owner, 30.07:
            the match screen has a double frame that eats space, drop the outer contour.
            It was a 16px-padded, hairline-bordered panel wrapped around a STACK of panels
-           the viewer draws itself - `.mv-panel`, `.mv-log`, `.mv-boxscore` are each a `Card`, so
+           the viewer draws itself - `.mv-panel`, `.mv-log` (and, until 12.08, `.mv-boxscore`) are
+           each a `Card`, so
            the outer box was a second border around a border and 34px of horizontal padding around
            nothing. Measured at 375pt: the canvas went 291 -> 327px wide and the painted court with
            it (244.4 -> 274.9px), and the panel lost 32px of height. The viewer now hangs straight

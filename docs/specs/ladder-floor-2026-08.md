@@ -514,9 +514,29 @@ only ever talks about her CONDITION and has no view on WHICH event.
 
 | | he says | at which rungs |
 | --- | --- | --- |
-| **this week's choice** | *"the W50 is the week – this one will not move anything"* | every hired rung |
+| **this week's choice** | *"the W50 is the week – "* + whichever claim is TRUE (see 12.08 note) | every hired rung |
+| ↳ wrong table | *"…this pays national points, not the table she is climbing"* | every hired rung |
+| ↳ shut book | *"…this one will not move anything"* | middle, high, elite |
+| ↳ otherwise | *"…she has outgrown this one"* | every hired rung |
 | **the book** | *"even a title here would not move her ranking"* | middle, high, elite |
 | **the block ahead** | *"would save her for the W50 in 3 weeks"* | inside his own horizon |
+
+⚠ **RE-LICENSED 12.08 – the claim, not the wording** (the owner, on his own entry confirm: «the
+National Series is the week – this one will not move anything. Enter World Tour 35?» ... «если
+знаешь что и зачем чинить – чини»). The strongest sentence in the voice was made by the branch that
+did the least work: it asked `hasOutgrown` plus a same-week rung and NEVER asked `bookClosedTo`, and
+its `better()` never compared tracks – so it dismissed cards whose own best-N book had room, and
+held up domestic rungs against her professional card. Measured on `tools/coach-ladder-claim-probe.ts`
+(24 seeds × 260 weeks, middle rung): **fired on 2,658 cards, 87.1% of them with ROOM in the card's
+own book – the sentence was false – and 84.5% with the alternative on another table.** After the fix
+the strong claim fires on 137 cards, **0 with room (0.0%), 0 with the alternative off her climbing
+tables or below the card's own** (the owner's shape); the control clause stays 0 of 239. The
+alternative picker now only offers rungs on a table she is climbing (`activeLadderOf` and up – the
+one-way door read as coaching), and a card paying into a table she has left is told THAT, by name,
+because it is the useful sentence and it stays true whether or not the dead table's window happens
+to be full. The probe cross-checks the shipped `coachLadderNote` against its replica per card
+(0 disagreements) and reports where the old firing set went: 2,015 wrong-table, 430 outgrown, 137
+true strong claims, 72 horizon, 2 book, 2 silence.
 
 **He only ever talks about a rung she has WALKED PAST.** That single gate is what bounds the rate: her
 working rung is where he wants her and he has nothing to add there, and a genuine choice *inside* her

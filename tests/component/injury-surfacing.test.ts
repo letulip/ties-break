@@ -182,19 +182,37 @@ async function mountFinished(f: ReturnType<typeof retiredFixture>) {
 }
 
 describe('#18 – a match that ended in a retirement says so where the result is read', () => {
-  it('the box score carries the sport’s marker AND a sentence, so "wins 4-5" cannot stand alone', async () => {
+  // ⚠ RE-AIMED 12.08, AND WHERE THE RESULT IS READ MOVED WITH THE OWNER'S RULING. This block used
+  // to pin the box score's `ret.` marker and its "X retired hurt." sentence; the owner then had
+  // that panel deleted («просто вот эта нижняя "борода" под кнопками на экране матча не нужна
+  // всё»), and the deletion was licensed by exactly one thing: the commentary's final beat carries
+  // the story now - lead "Retired.", "X cannot go on. Y advances." (viz/commentary.ts) - at the TOP
+  // of the log the moment the match ends, on the screen itself rather than under it. So the claim
+  // #18 was raised for is unchanged and asserted on a REAL engine retirement: a match that ended in
+  // a retirement says so, in words, where the player is standing when it ends - and a completed
+  // match never borrows the language.
+  it('the end screen NAMES the retirement - the log leads with it, so a scoreline cannot stand alone', async () => {
     const f = retiredFixture()
     const w = await mountFinished(f)
-    const retiredName = f.match.result.retired!.side === 0 ? 'Vera Novak' : 'Ines Duval'
-    expect(w.find('.mv-final').text()).toContain('ret.')
-    expect(w.find('.mv-final-note').text()).toBe(`${retiredName} retired hurt.`)
+    // The commentary speaks in first names (`speakingNames` falls back to full ones only on a
+    // clash), so the witness is asserted the way it is actually said.
+    const retiredFirstName = f.match.result.retired!.side === 0 ? 'Vera' : 'Ines'
+    const latest = w.find('.mv-beat')
+    expect(latest.exists(), 'no log row at the end of the match').toBe(true)
+    expect(latest.text()).toContain('Retired.')
+    expect(latest.text()).toContain(`${retiredFirstName} cannot go on`)
+    // ...and nothing above it: the retirement beat IS the newest row, visible without scrolling.
+    expect(latest.classes()).toContain('latest')
     w.unmount()
   })
 
-  it('...and a completed match carries neither, so the marker means something', async () => {
+  it('...and a completed match never says it, so the language means something', async () => {
     const w = await mountFinished(completedFixture())
-    expect(w.find('.mv-final').text()).not.toContain('ret.')
-    expect(w.find('.mv-final-note').exists()).toBe(false)
+    const latest = w.find('.mv-beat')
+    expect(latest.text()).toContain('Match.')
+    expect(w.text()).not.toContain('Retired.')
+    expect(w.text()).not.toContain('cannot go on')
+    expect(w.text()).not.toContain('retired hurt')
     w.unmount()
   })
 })

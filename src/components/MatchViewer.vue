@@ -100,24 +100,27 @@ const props = withDefaults(
      *
      * ⚠ null (default) IS A REAL ANSWER, like `previewEvent`'s. Two of the four callers have nowhere
      * to proceed TO - MatchReplay is opened on top of a finished match and closes back to where it
-     * came from, and the Season sandbox's friendly ends on its own box score - so a Proceed button
-     * there would be a control that does nothing. Those two keep the old behaviour exactly: `finish`
-     * fires when playback ends and they ignore it. A caller that names a label gets the button, and
-     * `finish` waits for the press.
+     * came from, and the Season sandbox's friendly ends where it stands, the log's final beat being
+     * the result - so a Proceed button there would be a control that does nothing. Those two keep
+     * the old behaviour exactly: `finish` fires when playback ends and they ignore it. A caller that
+     * names a label gets the button, and `finish` waits for the press.
      *
      * ⚠ AND THE OWNER CORRECTED HOW THIS LANDED, 12.08 - the words the template below cannot hold:
      * «я просил чтобы просто кнопки управления менялись на proceed, сейчас так происходит, но
      * почему-то весь этот блок поднимается, а под ним еще какой-то счет и статистика матча пишется -
      * не надо этого. Можно сделать 2 кнопки рядом просто в этом нижнем блоке с контролами и все:
-     * Watch again | Proceed»
+     * Watch again | Proceed» - and, pressed on the panel that first stayed: «просто вот эта нижняя
+     * "борода" под кнопками на экране матча не нужна всё».
      *
-     * The ROW is done: the finished bar is `Watch again ↻` beside the proceed label, on the same two
-     * tracks the speed and view plates stand on, so nothing shifts sideways when the match ends.
-     * THE PANEL UNDER IT IS NOT, and the reason is written at the box score itself: that card holds
-     * the only sentence in the app that explains an OPPONENT's retirement (`.mv-hurt` is raised for
-     * HER only, by ruling), and `WorldMatch` carries no `retired` field, so a flow's result card
-     * cannot inherit the line. Removing the card would send a retirement to the result screen as a
-     * scoreline - the round-16 report this very prop was added to close. Reported, not built.
+     * The ROW is the finished bar: `Watch again ↻` beside the proceed label, on the same two tracks
+     * the speed and view plates stand on, so nothing shifts sideways when the match ends. THE PANEL
+     * UNDER IT IS GONE with the second ruling. It survived the first one because it carried the only
+     * sentence explaining an OPPONENT's retirement (`.mv-hurt` is raised for HER only, by ruling) -
+     * that witness now lives in the commentary log's own final beat ("Retired. X cannot go on. Y
+     * advances.", viz/commentary.ts), which is on this screen when the match ends and is pinned
+     * visible there by tests/component/injury-surfacing.test.ts and match-viewer.test.ts. The stats
+     * the panel duplicated are one press away on the flow's own result card, which is the owner's
+     * point.
      */
     proceedLabel?: string | null
   }>(),
@@ -1216,39 +1219,22 @@ function skipToResult(): void {
   viewMode.value = 'skip'
 }
 
-// Final full stats: aces/DFs computed from rallies (per spec); everything else
-// read straight from the authoritative MatchResult.stats.
-const finalAcesDfs = computed<{ aces: [number, number]; dfs: [number, number] }>(() => {
-  const aces: [number, number] = [0, 0]
-  const dfs: [number, number] = [0, 0]
-  for (const p of props.match.points) {
-    if (p.rally.ace) aces[p.entry.server]++
-    if (p.rally.doubleFault) dfs[p.entry.server]++
-  }
-  return { aces, dfs }
-})
-
+// ⚠ THE BOX SCORE'S OWN BINDINGS (finalAcesDfs, winnerName, servePct) WENT WITH ITS CARD - the
+// owner, 12.08: the panel under the finished controls duplicated the flow's result card. What
+// remains here is what the retirement POPUP still reads: the scoreline, and who stopped.
 const finalScoreLine = computed(() => props.match.result.sets.map((s) => `${s.a}-${s.b}`).join('  '))
-const winnerName = computed(() => playerName(props.match.result.winner))
 /**
- * R16 #18 – WHO STOPPED, IF ANYBODY DID. The box score's one headline was
- * `{{ winnerName }} wins {{ finalScoreLine }}`, and on a retirement that is the sentence the owner
- * reported: **"wins 4-5"** – a winner with fewer games than the loser, no marker, no explanation,
- * on the one screen that is supposed to say what happened. `result.retired` has been on the match
- * since the retirement slice and nothing in this component had ever read it.
- *
- * The marker is the sport's own – `ret.` after the scoreline – plus one plain line under it, because
- * three letters are a convention a parent watching her daughter's first season has no reason to know.
+ * R16 #18 – WHO STOPPED, IF ANYBODY DID. `result.retired` has been on the match since the
+ * retirement slice, and the owner's original report was a retirement going by as a bare scoreline
+ * ("wins 4-5" – a winner with fewer games than the loser, no explanation). The fact is told twice
+ * now: the commentary log's final beat says it to everyone ("Retired. X cannot go on...",
+ * viz/commentary.ts), and when the one who stopped is HERS this name headlines the `.mv-hurt`
+ * popup below.
  */
 const retiredName = computed(() => {
   const r = props.match.result.retired
   return r ? playerName(r.side) : null
 })
-
-function servePct(side: Side): number {
-  const s = props.match.result.stats[side]
-  return s.servePointsPlayed ? Math.round((s.servePointsWon / s.servePointsPlayed) * 100) : 0
-}
 
 // --- R17 #10: THE MATCH ENDS WHERE THE PLAYER IS, AND SHE IS TOLD WHY IT ENDED ------------------
 //
@@ -1438,9 +1424,9 @@ watch(finished, (isFinished) => {
                height at all.
            So the row itself had nothing left to hold, and a row is worth ~33px of a phone that is
            mostly court and log. Its `border-top` went with it; `.mv-stats` draws its own, so the
-           panel's hairline rhythm is unchanged. "Final" went too: the box score directly below says
-           "<winner> wins 6-4 6-3", which is that word plus everything it left out, and the Live badge
-           disappearing at the same instant says it a second time. -->
+           panel's hairline rhythm is unchanged. "Final" went too: the log's own last beat says it in
+           words ("Match. X takes it in straight sets."), and the Live badge disappearing plus the
+           control bar swapping to Watch again | Proceed say it again. -->
 
       <div class="mv-stats">
         <div class="mv-stat">
@@ -1646,90 +1632,23 @@ watch(finished, (isFinished) => {
         <PrimaryPill class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
       </div>
 
-      <!-- ===== THE BOX SCORE, once it is over ================================================
-           ⚠ THE OWNER ASKED FOR THIS CARD TO GO AND IT IS STILL HERE, DELIBERATELY - 12.08, on the
-           finished match screen; his words are with the `proceedLabel` prop on the script side,
-           because THIS IS A TEMPLATE and no Cyrillic may appear in one, comments included
-           (tests/template-copy-rules.test.ts). He is right that it is a duplicate: under a caller
-           with a `proceedLabel` the same
-           aces, double faults, serve % and break points are one press away on the flow's own result
-           card, and this card is also what makes the control bar rise (the bar is `position: sticky;
-           bottom: 0`, so a card beneath it in the same scroller lifts it off the floor). The two-
-           button row above IS shipped; removing this card is not, and the reason is one line of it.
-           ⚠ IT CARRIES THE ONLY SENTENCE THAT EXPLAINS AN OPPONENT'S RETIREMENT. `.mv-hurt`, the
-           popup R17 #10 added, is raised for HER only - that is a ruling, pinned in
-           tests/component/match-viewer.test.ts ("the OPPONENT stopping is not an injury to this
-           family, and raises nothing") - so when the other girl stops, `{{ retiredName }} retired
-           hurt.` two lines below is where the player is told. TournamentFlow's and PracticeFlow's
-           result cards cannot say it: `WorldMatch` carries no `retired` field at all, so the
-           scoreline is the only trace that reaches them, which is EXACTLY the round-16 report
-           («she retired hurt» going by as a scoreline) that #10 was raised to close. Deleting this
-           card would re-open it on the opponent's side.
-           So the honest move is to put the sentence on the screen `Proceed` leads to and then take
-           this card away - and that needs a field on `WorldMatch`, which is a protocol change and
-           the owner's call, not a tidy-up inside this file. Reported, not built. -->
-      <Card v-if="finished" variant="photo" class="mv-boxscore" pad="12px 14px 14px">
-        <p class="mv-final">
-          {{ winnerName }} wins <span class="num">{{ finalScoreLine }}</span>
-          <span v-if="retiredName" class="mv-final-ret">ret.</span>
-        </p>
-        <!-- R16 #18: three letters are the sport's marker, not an explanation. This is the
-             explanation, and it is the line whose absence the owner reported. -->
-        <p v-if="retiredName" class="mv-final-note">{{ retiredName }} retired hurt.</p>
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th>
-                <span class="ph-name">{{ playerA.name }}</span>
-                <span v-if="rankA != null" class="ph-rank">#{{ rankA }}</span>
-              </th>
-              <th>
-                <span class="ph-name">{{ playerB.name }}</span>
-                <span v-if="rankB != null" class="ph-rank">#{{ rankB }}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th>Aces</th>
-              <td class="num">{{ finalAcesDfs.aces[0] }}</td>
-              <td class="num">{{ finalAcesDfs.aces[1] }}</td>
-            </tr>
-            <tr>
-              <th>Double faults</th>
-              <td class="num">{{ finalAcesDfs.dfs[0] }}</td>
-              <td class="num">{{ finalAcesDfs.dfs[1] }}</td>
-            </tr>
-            <tr>
-              <th>Serve %</th>
-              <td class="num">{{ servePct(0) }}%</td>
-              <td class="num">{{ servePct(1) }}%</td>
-            </tr>
-            <tr>
-              <th>Break points</th>
-              <td class="num">{{ match.result.stats[0].breakPointsSaved }}/{{ match.result.stats[0].breakPointsFaced }}</td>
-              <td class="num">{{ match.result.stats[1].breakPointsSaved }}/{{ match.result.stats[1].breakPointsFaced }}</td>
-            </tr>
-            <tr>
-              <th>Breaks</th>
-              <td class="num">{{ match.result.stats[0].breaksWon }}</td>
-              <td class="num">{{ match.result.stats[1].breaksWon }}</td>
-            </tr>
-            <tr>
-              <th>Longest streak</th>
-              <td class="num">{{ match.result.stats[0].longestPointStreak }}</td>
-              <td class="num">{{ match.result.stats[1].longestPointStreak }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </Card>
+      <!-- ===== WHERE THE BOX SCORE WENT (owner, 12.08) ========================================
+           The card that stood here duplicated the flow's own result card and lifted the sticky bar
+           off the floor; the owner asked for it to go, twice - his words are with the `proceedLabel`
+           prop on the script side, because THIS IS A TEMPLATE and no Cyrillic may appear in one,
+           comments included (tests/template-copy-rules.test.ts). The one line of it that was not a
+           duplicate - the only sentence explaining an OPPONENT's retirement, since `.mv-hurt` is
+           raised for HER only - lives in the commentary log's final beat now ("Retired. X cannot
+           go on. Y advances.", viz/commentary.ts), on this same screen, at the top of the log the
+           moment the match ends. That beat is pinned VISIBLE at end-of-match by
+           tests/component/injury-surfacing.test.ts and tests/component/match-viewer.test.ts; do not
+           bring the card back to say it a second time. -->
     </div>
 
     <!-- ===== SHE COULD NOT CONTINUE (R17 #10) ==================================================
          ⚠ IT IS A POPUP OVER THE MATCH, NOT A DOOR OUT OF IT. That is the item in one sentence, and
          the owner's own is on the script side at the `proceedLabel` prop. Dismissing it puts her back
-         on the match screen with the box score under it, and she leaves when she presses Proceed.
+         on the match screen with the log under it, and she leaves when she presses Proceed.
          ⚠ AND IT SAYS ONLY WHAT THE MODEL KNOWS. The layoff - how many weeks, what it withdrew,
          what came back - does not exist yet: a tournament retirement opens it in `finalizeTournament`,
          which runs when the reveal is CLOSED, long after this screen. That report is
@@ -1771,7 +1690,7 @@ watch(finished, (isFinished) => {
    row in the whole stack. So the log is exactly the space between the court and the block, and the
    block lands on the bottom edge whatever the screen height is. `flex: 1` degrades to nothing in a
    container that is not a flex column, and everything below still overflows and scrolls the moment
-   the box score appears - which is the case the sticky bar is still there for, and it stays. */
+   the column outgrows the port - which is the case the sticky bar is still there for, and it stays. */
 .mv {
   display: flex;
   flex-direction: column;
@@ -1784,12 +1703,11 @@ watch(finished, (isFinished) => {
 }
 
 /* Everything except the log is fixed furniture. Stated rather than left to the defaults, because
-   `flex: 0 1 auto` lets a box SHRINK, and in a deficit the court and the box score would give up
+   `flex: 0 1 auto` lets a box SHRINK, and in a deficit the court and the controls would give up
    height alongside the log they are meant to be framing. */
 .mv-panel,
 .mv-controls,
-.mv-actions,
-.mv-boxscore {
+.mv-actions {
   flex: none;
 }
 
@@ -2495,7 +2413,7 @@ watch(finished, (isFinished) => {
    fixed that by taking ~53px off the scroller permanently, for the whole watch, including the
    first point when nothing was wrong; sticky takes NOTHING until the row would otherwise be gone,
    and then puts it exactly where a fixed bar would have been. Same recovery, none of the rent.
-   The floor is opaque so the log and the box score pass UNDER the bar rather than through it, and it
+   The floor is opaque so the log passes UNDER the bar rather than through it, and it
    is the tone of whatever the viewer is standing on, so the plate is invisible until it pins.
    ⚠ THAT TONE CHANGED WITH THE OUTER FRAME, 30.07. It was `--panel`, because all three match screens
    used to put the viewer inside a `--panel`-toned `.tf-card`; the owner has now taken that frame off
@@ -2641,39 +2559,10 @@ watch(finished, (isFinished) => {
   gap: 8px;
 }
 
-/* --- THE BOX SCORE --------------------------------------------------------------------------- */
-.mv-final {
-  margin: 0 0 10px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.mv-final .num {
-  margin-left: 6px;
-  color: var(--text);
-}
-
-/* R16 #18: the retirement marker rides WITH the scoreline, in the score's own colour, so
-   "wins 4-5" can never again be read as a completed result. */
-.mv-final-ret {
-  margin-left: 5px;
-  color: var(--text);
-  font-weight: 600;
-}
-
-.mv-final-note {
-  margin: -6px 0 10px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-}
-
 /* --- R17 #10: THE "SHE COULD NOT CONTINUE" POPUP ----------------------------------------------
    The shared dialog box (`.dialog-card` in src/style.css) plus a title line, and nothing else is
-   redeclared here. The title takes the box score's own `.mv-final` weight and the accent it uses for
-   the headline of a finished match, because this popup and that line are the same fact arriving
-   twice - once as an interruption, once as the record. */
+   redeclared here. The title keeps the 15px/700 accent headline the finished box score used to set
+   (the card went with the owner's 12.08 ruling; this popup was its twin and keeps the voice). */
 .mv-hurt-title {
   margin: 0 0 8px;
   font-size: 15px;
