@@ -159,16 +159,35 @@ describe('the birthday popup', () => {
   // ===============================================================================================
   // §4.2 – RNG: A SUB-STREAM, NEVER MAIN, AND NOT RE-ROLLABLE BY RELOADING
   // ===============================================================================================
-  it('⚠ the ask cannot be re-rolled by reloading, and does not depend on what he chose last year', () => {
+  // ⚠ RE-AIMED, round-17 #18, AND THE MEASUREMENT IS WHY. This block used to assert that the ask
+  // "does not depend on what he chose last year" in the widest possible sense – that a birthday
+  // answered could not move ANY later ask. On the owner's own save that produced
+  // `age 19: asked day, given car` followed by `age 20: asked car`: he had bought her a car twelve
+  // months before and she asked him for a car, which is the one thing a parent would notice.
+  //
+  // WHAT THE OLD ASSERTION WAS PROTECTING is in §4.2's own wording – "must not depend on what the
+  // player picked LAST year, OR THE CHOICE RE-ROLLS THE WORLD". The hazard is CLAUDE.md invariant 2,
+  // input-independence, and it is untouched: same key, same sub-stream, same number of draws, same
+  // four options, MAIN never reached. So the clause is re-aimed onto the property it was defending
+  // (the STREAM and the OPTIONS are independent of last year) and off the one that was a bug (which
+  // of the four she names). The narrowed half is now pinned positively in the block below.
+  it('⚠ the ask cannot be re-rolled by reloading, and last year cannot move the stream or the options', () => {
     // Keyed on (seed, age) and nothing else: immutable state, so the same career asks for the same
-    // thing however many times it is loaded, and last year's present cannot move this year's want.
+    // thing however many times it is loaded.
     const a = birthdayOffer('stable', 16)
     const b = birthdayOffer('stable', 16)
     expect(b.askedId).toBe(a.askedId)
     expect(b.options.map((o) => o.id)).toEqual(a.options.map((o) => o.id))
 
-    // ...and answering one birthday does not change the NEXT one, which is the "never on anything the
-    // player has done" half. Two worlds on one seed, one of which was given a present at 14.
+    // ...and a career that has been given things is offered the IDENTICAL four in the identical
+    // order. §5.2's licensed repeat is intact – the catalogue may still offer what she already has.
+    const given = birthdayOffer('stable', 16, ['bike', 'phone', 'camera', 'laptop', 'car'])
+    expect(given.options.map((o) => o.id), 'the offer is untouched by the record').toEqual(
+      a.options.map((o) => o.id),
+    )
+
+    // ...and answering one birthday does not change the NEXT one's stream. Two worlds on one seed,
+    // one of which was given a present at 14: the sub-stream is re-derived, not advanced.
     const untouched = birthdayOffer('stable', 17)
     const world = career('stable')
     const rng = rngFromSeed(world.seed)
@@ -176,6 +195,82 @@ describe('the birthday popup', () => {
     const first = birthdayOffer(world.seed, pendingBirthday(world)!)
     chooseGift(world, first.options[0].id)
     expect(birthdayOffer('stable', 17).askedId).toBe(untouched.askedId)
+  })
+
+  // ===============================================================================================
+  // ⭐ ROUND-17 #18 – THE GIFT MEMORY HOLDS: she does not ask for something already in the house
+  // ===============================================================================================
+  it('⭐ never asks for a present she has already been given', () => {
+    // REPRODUCED ON THE OWNER'S SAVE before it was written: `age 19: asked day, given car` then
+    // `age 20: asked car`. The 19-21 band is exactly three material gifts (deposit / car / home) plus
+    // the day, so all four are offered every year of that band and a repeat ask was a 1-in-4 every
+    // birthday. Mutation-verified by dropping the `spent` filter in `birthdayOffer`: the sweep below
+    // finds repeats again and this fails.
+    for (const band of BIRTHDAY_BANDS) {
+      // The first band opens at 0 so `bandFor` is total below the start age; the age a career can
+      // actually reach in it is 14.
+      const age = Math.max(band.from, 14)
+      for (const gift of band.gifts) {
+        for (let s = 0; s < 40; s++) {
+          const { askedId } = birthdayOffer(`memory-${s}`, age, [gift.id])
+          expect(askedId, `age ${age} still asked for ${gift.id} after it was given`).not.toBe(gift.id)
+        }
+      }
+    }
+  })
+
+  it('⭐ ...and the day together is never spent – she may want one every year of her life', () => {
+    // The exclusion is about POSSESSIONS. A day with her parents is not one, and excluding it would
+    // make §2ab's best case unreachable for any career that ever chose it.
+    let reachedDay = 0
+    for (let s = 0; s < 200; s++) {
+      const { askedId } = birthdayOffer(`day-again-${s}`, 20, [BIRTHDAY_DAY_TOGETHER.id, 'car', 'deposit', 'home'])
+      if (askedId === BIRTHDAY_DAY_TOGETHER.id) reachedDay++
+    }
+    // Every material gift of the 19-21 band is spent here, so the day is the ONLY unspent option and
+    // the pool is a single row: it must be the ask every time.
+    expect(reachedDay, 'the day is still askable after it has been given').toBe(200)
+  })
+
+  it('⚠ a band with every gift spent still prints a scene rather than crashing', () => {
+    // Total-function insurance for the fallback. `canAsk` cannot actually empty (the day is never
+    // spent), but the branch exists so that a future catalogue change cannot turn an unanswerable
+    // birthday into an exception on a dialog the player cannot dismiss.
+    const all = [BIRTHDAY_DAY_TOGETHER.id, ...BIRTHDAY_BANDS.flatMap((b) => b.gifts.map((g) => g.id))]
+    for (const band of BIRTHDAY_BANDS) {
+      const { options, askedId } = birthdayOffer('all-spent', band.from, all)
+      expect(options).toHaveLength(4)
+      expect(options.map((o) => o.id), 'the ask is still one of the four').toContain(askedId)
+    }
+  })
+
+  it('⚠ the record read is the one WITHOUT this birthday, so the prompt and the record agree', () => {
+    // `chooseGift` re-derives `askedId` to write it down, and it must derive the same ask the dialog
+    // printed. That holds only because the row for THIS birthday is pushed after the derivation.
+    // Mutation-verified by moving `world.birthdays.push` above the `birthdayOffer` call: the recorded
+    // `asked` diverges from the prompt's and this fails.
+    const world = career('record-agrees')
+    const rng = rngFromSeed(world.seed)
+    for (let year = 0; year < 3; year++) {
+      const week = runToBirthday(world, rng)
+      expect(week, 'the fixture has to keep reaching birthdays').toBeGreaterThan(0)
+      const prompt = toSnapshot(world).birthdayPrompt!
+      const asked = prompt.options.find((o) => o.note !== undefined && prompt.ask.length > 0)
+      expect(asked, 'the prompt is real').toBeDefined()
+      const age = pendingBirthday(world)!
+      chooseGift(world, prompt.options[0].id)
+      const row = world.birthdays[world.birthdays.length - 1]
+      expect(row.age).toBe(age)
+      // The recorded ask is one of the four that were on screen, every year.
+      expect(prompt.options.map((o) => o.id)).toContain(row.asked)
+      tickWeek(world, rng)
+    }
+    // ...and across those three years she was never asked for something already given.
+    const givenSoFar: string[] = []
+    for (const r of world.birthdays) {
+      expect(givenSoFar, `asked for ${r.asked} at ${r.age} after it was given`).not.toContain(r.asked)
+      if (r.given !== null) givenSoFar.push(r.given)
+    }
   })
 
   it('⚠ NO NEW MAIN DRAW – a birthday week costs the world exactly what it always cost', () => {

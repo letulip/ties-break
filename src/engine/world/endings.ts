@@ -11,7 +11,7 @@
 //
 // ⚠ RNG: NOTHING HERE DRAWS. Every ending is deterministic – a counter, a post-draw predicate over
 // an injury the `seed:injury:<week>` stream has already rolled, an age comparison, or an answer.
-import { TIERS, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
 import { formatCents } from '../../shared/money'
 import type { AutoEndingView, PlateauView } from '../ending'
 import {
@@ -198,11 +198,39 @@ export function resolveEndings(world: WorldState): void {
 
 // --- the two answers ----------------------------------------------------------------------------
 
+/** ⭐ IS THE SCHOLARSHIP STILL A DOOR SHE CAN WALK THROUGH? Round-17 #6.
+ *
+ *  The owner: the fork «offers the academy to a girl already earning on W75+». It had no
+ *  precondition at all, so a nineteen-year-old with a professional ranking and prize money in the
+ *  bank was offered four years of student tennis as an equal third of the card.
+ *
+ *  ⚠ DERIVED, NEVER PERSISTED, which is what keeps this out of CLAUDE.md invariant 3. It is a pure
+ *  read of `bestFinishByTier` - state that already exists - so no save field is added and no
+ *  migration is needed; a career loaded from any version answers the question the same way.
+ *
+ *  ⚠ AND IT IS A COUNTING RESULT, not an entry. Playing a W75 and losing in the first round is a
+ *  junior trying the tour; a result that scored is a professional on it. `wtaEverCounted` uses the
+ *  identical test one table down, so the two cannot mean different things by "it counted". */
+export function collegeStillOpen(world: WorldState): boolean {
+  const from = TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier)
+  return !(Object.keys(world.bestFinishByTier) as TierId[]).some((tier) => {
+    const finish = world.bestFinishByTier[tier]
+    if (finish === undefined) return false
+    if (TIER_LADDER.indexOf(tier) < from) return false
+    return TIERS[tier].points[finish] > 0
+  })
+}
+
 /** THE MOST EXPENSIVE CLICK IN THE GAME (adult spec's own risk note). Three answers, two of which
  *  end the career, and «стоп» must be able to be the right one. */
 export function answerFork(world: WorldState, answer: ForkAnswer): void {
   guardNotEnded(world)
   if (world.fork === null || world.fork.answer !== null) throw new Error('The fork is not open')
+  // ⭐ #6: re-validated ENGINE-SIDE, because the worker is not the gate (CLAUDE.md invariant 1). The
+  // dialog stops drawing the button, and this is what makes that a rule rather than a decoration.
+  if (answer === 'college' && !collegeStillOpen(world)) {
+    throw new Error('She has taken professional prize money – the scholarship is not open to her')
+  }
   world.fork = { ...world.fork, answer }
   if (answer === 'college') {
     world.college = {

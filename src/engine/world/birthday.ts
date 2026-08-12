@@ -388,13 +388,59 @@ function shuffled<T>(items: readonly T[], rng: () => number): T[] {
  *  ⚠ THE ASK IS DRAWN FROM THE FOUR OFFERED, WHICH IS WHAT MAKES "exactly one option answers it"
  *  TRUE BY CONSTRUCTION rather than by a test. `DAY_TOGETHER` is one of the four, so it is reachable
  *  as the ask (spec §2ab: «she does not want a thing, she wants you, and that is the best case the
- *  scene has»), and the draw is over the SHUFFLED list, so the answer's position is uniform. */
-export function birthdayOffer(seed: string, age: number): { options: BirthdayGift[]; askedId: string } {
+ *  scene has»), and the draw is over the SHUFFLED list, so the answer's position is uniform.
+ *
+ *  ⭐ AND SHE DOES NOT ASK FOR SOMETHING SHE WAS ALREADY GIVEN – round-17 #18. On the owner's own
+ *  save: `age 19: asked day, given car` and then `age 20: asked car`. He had bought her a car twelve
+ *  months earlier and she asked him for a car. The record §2b persists was already being written and
+ *  the diary was already reading it; the ASK was the one derivation that never looked.
+ *
+ *  ⚠ THIS IS THE SHIP RULE §4.2 SAID NOT TO DO, AND THE DIFFERENCE MATTERS. That rule reads "it must
+ *  not depend on what the player picked LAST year, **or the choice re-rolls the world**" – the reason
+ *  is the clause after the comma, and it is CLAUDE.md invariant 2, input-independence. Nothing here
+ *  touches it. The KEY is still `seed:birthday:<age>` and nothing else; the stream is drawn exactly
+ *  as many times as before (the ask is one `rng()` whether the pool was filtered or not, which is
+ *  why the filter is applied to the POOL and never to the draw); the four OPTIONS are byte-identical
+ *  to what they were, so §5.2's licensed repeat still happens. MAIN is not reached at all. What the
+ *  record moves is one line of prose, and it moves it only by REMOVING a want she has already had
+ *  answered – so it can never invent a want, only decline to repeat one.
+ *
+ *  ⚠ AND IT IS STILL IMMUTABLE, which is the property that actually protects the scene. A birthday's
+ *  row is written once and never edited, and the row for THIS birthday does not exist yet when this
+ *  runs (`pendingBirthday` returns null the moment it does, and both callers return on that). So the
+ *  input is fixed before the dialog opens and reloading cannot move it – which is the whole of what
+ *  "never re-rollable" was protecting.
+ *
+ *  `alreadyGiven` defaults to empty so the catalogue sweeps in tests can still ask what a fresh
+ *  career of a given age is offered without building a world. */
+export function birthdayOffer(
+  seed: string,
+  age: number,
+  alreadyGiven: readonly string[] = [],
+): { options: BirthdayGift[]; askedId: string } {
   const rng = rngFromSeed(`${seed}:birthday:${age}`)
   const band = bandFor(age)
   const material = shuffled(band.gifts, rng).slice(0, MATERIAL_OPTIONS)
   const options = shuffled([...material, DAY_TOGETHER], rng)
-  return { options, askedId: options[Math.floor(rng() * options.length)].id }
+  // ⚠ THE DAY TOGETHER IS NEVER SPENT. Every other option is a THING she now owns, and asking for it
+  // twice is the bug; a day with her parents is not a possession and she may want one every year of
+  // her life. Excluding it here would also make the best case the scene has (§2ab) unreachable for
+  // any career that ever chose it.
+  const spent = new Set(alreadyGiven)
+  const canAsk = options.filter((g) => g.id === DAY_TOGETHER.id || !spent.has(g.id))
+  // Total: a band whose every material gift has been given still has the day, so this is never empty
+  // – but the fallback is kept because `canAsk` being empty must print a scene rather than crash.
+  const pool = canAsk.length ? canAsk : options
+  return { options, askedId: pool[Math.floor(rng() * pool.length)].id }
+}
+
+/** What she has already been given, across every birthday on the record – the input to the ask above.
+ *
+ *  ⚠ THE GIFTS, NOT THE ASKS. A want she was never given is still a want and may be asked for again;
+ *  the thing this refuses to repeat is a present that is already in the house. `given` is null only
+ *  for a birthday nobody was asked about (spec §5.5), and null is not a gift. */
+function giftsAlreadyGiven(world: WorldState): string[] {
+  return (world.birthdays ?? []).map((b) => b.given).filter((g): g is string => g !== null)
 }
 
 /** IS A BIRTHDAY WAITING TO BE ANSWERED, and if so what age is she turning? Null on every other week.
@@ -434,7 +480,7 @@ export function pendingBirthday(world: WorldState): number | null {
 export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
   const age = pendingBirthday(world)
   if (age === null) return null
-  const { options, askedId } = birthdayOffer(world.seed, age)
+  const { options, askedId } = birthdayOffer(world.seed, age, giftsAlreadyGiven(world))
   const asked = options.find((g) => g.id === askedId)!
   return {
     week: world.week,
@@ -461,7 +507,10 @@ export function chooseGift(world: WorldState, giftId: string): void {
   guardNotEnded(world)
   const age = pendingBirthday(world)
   if (age === null) throw new Error('There is no birthday to answer this week')
-  const { options, askedId } = birthdayOffer(world.seed, age)
+  // ⚠ DERIVED BEFORE THE PUSH BELOW, which is what keeps this the SAME ask the dialog printed: the
+  // row for this birthday does not exist yet, so `giftsAlreadyGiven` sees exactly what
+  // `buildBirthdayPrompt` saw. Re-ordering these two lines would record an ask nobody was shown.
+  const { options, askedId } = birthdayOffer(world.seed, age, giftsAlreadyGiven(world))
   const given = options.find((g) => g.id === giftId)
   // Re-validated engine-side because the worker is not the gate (CLAUDE.md invariant 1): a stale
   // dialog from another week must not be able to record an option this birthday never offered.

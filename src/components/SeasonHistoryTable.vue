@@ -40,7 +40,7 @@ import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { finishLabel } from '../engine/world'
 import { seasonYear } from '../shared/dates'
-import { formatCents, formatCentsSigned } from '../shared/money'
+import { formatCentsSigned } from '../shared/money'
 import { LADDER_LABEL, type SeasonHistoryEntry } from '../shared/protocol'
 import type { LadderTrack } from '../engine/season/types'
 
@@ -65,6 +65,30 @@ const RANK_HEAD: Record<LadderTrack, string> = {
 }
 
 const game = useGameStore()
+
+// ⭐ ROUND-17 #13 – THE FUNDS COLUMN IS ONE FIGURE NOW, AND THE ONE THAT LEFT IS THE RUNNING BALANCE.
+//
+// The owner, 12.08, on the season money row: «там некуда добавлять, и так же на "кашу" похоже, надо
+// подумать что там лучше показывать, а лишнее убрать вообще.» His steer for THIS table in particular
+// was that the row already carries rank, points and W-L - the season's story - so the money is the
+// thing that should SHRINK rather than grow. (His words live on this side of the file because a Vue
+// `<template>` may carry no Cyrillic, tests/template-copy-rules.test.ts.)
+//
+// The cell used to print the signed delta with `$14,783 left` under it. What went is that second
+// line, for three reasons that all point the same way:
+//   * it is a CAREER total sitting in a per-season row, in a table whose every other column is that
+//     season's own;
+//   * it is duplicated on the Money screen, which is where a running balance belongs;
+//   * and it is the term that made the numbers look unrelated. MEASURED on the owner's save:
+//     `income - spend = delta` holds exactly, all seven seasons - but `previous end + delta = end`
+//     FAILS on every chained row (out by $1,103 / $402 / -$930 / -$1,336 / -$1,049 / -$1,645),
+//     because the season window ends at the wrap-up week and the off-season still moves the balance
+//     (see `SeasonHistoryEntry.spentCents`). Putting the terms side by side would have invited the
+//     player to check an identity that does not close.
+// The signed delta stays: "what did this year do to us" is the one money question this row is for.
+//
+// It also buys the 375px note above a column back: this table's widest cell was the one that had two
+// figures stacked in it.
 
 // Newest season first – the comparison the player came for is "this season vs last season", and
 // the engine stores the list oldest-first (append-only).
@@ -165,11 +189,13 @@ const cells = computed(() =>
               <td class="num">{{ c.rank === null ? '–' : `#${c.rank}` }}</td>
               <td class="num">{{ c.points }}</td>
               <td class="num" style="white-space: nowrap">{{ c.wins }}–{{ c.losses }}</td>
+              <!-- ⭐ ROUND-17 #13 – ONE FIGURE, NOT TWO. The owner's words and the measurement behind
+                   this are on the script side (the no-Cyrillic-in-a-template rule keeps his quotes
+                   there); the short version is that the running balance left this cell. -->
               <td class="num">
                 <span class="ph-name" :class="c.row.fundsDeltaCents < 0 ? 'negative' : 'positive'">
                   {{ formatCentsSigned(c.row.fundsDeltaCents) }}
                 </span>
-                <span class="ph-rank">{{ formatCents(c.row.endFundsCents) }} left</span>
               </td>
             </tr>
           </tbody>
@@ -181,9 +207,11 @@ const cells = computed(() =>
            to disclaim to. What survives is FUNDS, which is not a disclaimer at all: the wallet really
            is career-wide (a family has one), so the column genuinely means something different from
            the four beside it and would be misread without the sentence. -->
+      <!-- ⭐ #13: the second sentence went with the balance it was explaining. What is left still
+           needs saying, and for the original reason – the wallet is career-wide, so this column
+           genuinely means something different from the four beside it. -->
       <p class="hint">
-        Funds is the season's net – underneath it, what the family had left when the year ended. It is
-        the family's whole year, not this table's.
+        Funds is the season's net – the family's whole year, not this table's.
       </p>
     </template>
   </section>

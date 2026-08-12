@@ -43,7 +43,7 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import InboxSheet from '../../src/components/InboxSheet.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, toSnapshot, KID_ID, isCappedProTier, type WorldState } from '../../src/engine/world'
+import { createWorld, toSnapshot, KID_ID, isCappedProTier, seasonStartWeek, type WorldState } from '../../src/engine/world'
 import { migrateSave } from '../../src/engine/migrations'
 import { RANKABLE_MIN } from '../../src/engine/season/ranking'
 import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
@@ -216,7 +216,6 @@ describe('R16-7 - the pro-entry allowance rides on the W cards, not only the spe
 
   it('every professional card on screen carries the counter, and no junior one does', () => {
     const snap = feedSnapshot()
-    expect(snap.proEntryCap.limit, 'the fixture must be under the tour age rule').toBeLessThan(100)
     const wrapper = mountWith(SeasonScreen, snap)
     const cards = drawnCards(wrapper)
     expect(cards.length, 'the feed must draw cards').toBeGreaterThan(0)
@@ -227,14 +226,60 @@ describe('R16-7 - the pro-entry allowance rides on the W cards, not only the spe
     expect(junior.length, '...and at least one that is not').toBeGreaterThan(0)
     for (const c of pro) expect(c.hasChip, `${c.tier} card has no allowance chip`).toBe(true)
     for (const c of junior) expect(c.hasChip, `${c.tier} card should not carry it`).toBe(false)
-    // ...and the figure is the engine's own, not a re-derivation.
-    expect(pro[0].text).toContain(`pro entries ${snap.proEntryCap.used} / ${snap.proEntryCap.limit}`)
+    // ⚠ RE-AIMED, round-17 #2, AND THE FIXTURE IS THE REPRODUCTION. This line used to read
+    // `pro entries ${snap.proEntryCap.used} / ${snap.proEntryCap.limit}` – the SNAPSHOT-wide figure –
+    // and it passed while being wrong on every card it checked. MEASURED on this very fixture: the
+    // v46 save sits at week 155, the LAST week of its season (seasonStart 104), and its whole
+    // eight-week horizon (w156..w163) belongs to the NEXT season block (seasonStart 156). The
+    // snapshot-wide cap there is `{used 5, limit 12}` and every card's own cap is `{used 1,
+    // limit 12}` – so the chip overstated her spent allowance by four on every professional card in
+    // the feed, at exactly the moment a player is planning the new season. That is the owner's
+    // "pro entries 16/16 carries over into the new season", already frozen in a shipped fixture.
+    //
+    // The claim is now the CARD's own figure, which is what makes it a real check rather than a
+    // tautology against the number the screen happened to be printing.
+    for (const c of pro) {
+      const event = snap.upcoming.find((e) => e.tier === c.tier && e.proEntryCap !== undefined)!
+      expect(c.text, `${c.tier} card must print its OWN season's allowance`).toContain(
+        `pro entries ${event.proEntryCap!.used} / ${event.proEntryCap!.limit}`,
+      )
+    }
+  })
+
+  // ⭐ ROUND-17 #2 – THE ALLOWANCE DOES NOT CARRY OVER, and this is the whole of the claim.
+  it('⭐ a card in the NEXT season prints the next season\'s allowance, not this season\'s', () => {
+    const snap = feedSnapshot()
+    // The fixture's own shape, asserted so the test cannot go vacuous if a future fixture moves:
+    // she is in the last week of a season and everything ahead of her is in the following one.
+    const proCards = snap.upcoming.filter((e) => e.proEntryCap !== undefined)
+    expect(proCards.length, 'the fixture must hold professional cards').toBeGreaterThan(0)
+    const crossing = proCards.filter((e) => seasonStartWeek(e.week) !== seasonStartWeek(snap.week))
+    expect(crossing.length, 'the fixture must cross the year boundary – that is the case').toBeGreaterThan(0)
+
+    // THE BUG: the old chip showed this on every one of them.
+    expect(snap.proEntryCap.used, 'this season is well spent').toBe(5)
+    // THE FIX: each card is judged against the season the EVENT is in, where almost nothing is spent.
+    for (const e of crossing) {
+      expect(e.proEntryCap!.used, `w${e.week} must read the next season's ledger`).toBeLessThan(
+        snap.proEntryCap.used,
+      )
+    }
+    // ...and it is on screen, not merely on the wire.
+    const wrapper = mountWith(SeasonScreen, snap)
+    expect(wrapper.text(), 'the stale count must be gone from the feed').not.toContain(
+      `pro entries ${snap.proEntryCap.used} / ${snap.proEntryCap.limit}`,
+    )
+    expect(wrapper.findAll('.pro-entries').length).toBeGreaterThan(0)
   })
 
   it('⚠ and it goes silent at eighteen, where the tour stops counting', () => {
     const snap = feedSnapshot()
-    // `proPerYearByAge` is unlimited from 18 and the protocol spells that MAX_SAFE_INTEGER.
-    snap.proEntryCap = { used: 20, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER }
+    // ⚠ RE-AIMED with the chip's source, round-17 #2: the number is per-CARD now, so blanking the
+    // snapshot-wide field would no longer silence anything. `proPerYearByAge` is unlimited from 18
+    // and the protocol spells that MAX_SAFE_INTEGER, on whichever cap the chip reads.
+    const unlimited = { used: 20, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER }
+    snap.proEntryCap = unlimited
+    for (const e of snap.upcoming) if (e.proEntryCap) e.proEntryCap = { ...unlimited }
     const wrapper = mountWith(SeasonScreen, snap)
     expect(wrapper.findAll('.pro-entries').length).toBe(0)
     expect(wrapper.text()).not.toContain('pro entries')

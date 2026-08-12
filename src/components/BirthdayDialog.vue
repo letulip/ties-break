@@ -108,12 +108,27 @@ useDialogFocus(card)
 <style scoped>
 /* Shares `dialog-overlay` / `dialog-card` / `season-summary*` with the other blocking popups, so the
    scrim, the card and the two heading lines cannot drift apart from them. What is local is the ask
-   line and the column of four. */
+   line and the column of four.
+
+   ⚠ EVERY COLOUR HERE IS A DECLARED APP TOKEN WITH NO FALLBACK, AND THAT IS THE FIX FOR ROUND-17 #3.
+   This block shipped writing `background: var(--card, #fff)` and `color: var(--ink, #1c1c1e)` – a
+   light-theme pair, in a dark app. `--card` and `--hairline` are declared NOWHERE in this codebase,
+   so the fallbacks won and the buttons painted white; `--ink` IS declared, at `#f2f6f8`. The result
+   was four buttons of near-white text on white – a MEASURED 1.09:1 – on the one dialog in the game
+   the player cannot dismiss, so a player who could not read them was looking at four blank rows with
+   no way past. `tests/component/birthday-dialog.test.ts` now measures the ratio through the real
+   cascade; `tests/design-tokens.test.ts` rule A never could, because it skips any `var()` that
+   carries a fallback, which is what both broken references were.
+
+   THE TOKENS ARE KNOCKDIALOG'S, not a new palette: `.knock-choice` is the same object – a stacked
+   two-line choice row in a blocking popup – and the two should not drift apart. A fallback is only
+   honest when the token is optional; for a colour that must be legible it is a second, unreviewed
+   design nobody ever looks at. */
 .birthday-ask {
   margin: 10px 0 14px;
   font-size: 15px;
   line-height: 1.45;
-  color: var(--ink, #1c1c1e);
+  color: var(--text);
 }
 
 .birthday-choices {
@@ -132,10 +147,16 @@ useDialogFocus(card)
   width: 100%;
   padding: 11px 13px;
   text-align: left;
-  border: 1px solid var(--hairline, rgba(0, 0, 0, 0.12));
-  border-radius: 12px;
-  background: var(--card, #fff);
+  border: 1px solid var(--accent-soft);
+  border-radius: var(--radius-frame);
+  background: var(--accent-wash);
+  color: var(--text);
   cursor: pointer;
+}
+
+/* All four together, so the hover cannot become a mark either. */
+.birthday-choice:hover:not(:disabled) {
+  background: var(--accent-fill);
 }
 
 .birthday-choice:disabled {
@@ -146,12 +167,12 @@ useDialogFocus(card)
 .birthday-choice-label {
   font-size: 15px;
   font-weight: 600;
-  color: var(--ink, #1c1c1e);
+  color: var(--text);
 }
 
 .birthday-choice-note {
   font-size: 12.5px;
   line-height: 1.35;
-  color: var(--ink-soft, rgba(0, 0, 0, 0.55));
+  color: var(--muted);
 }
 </style>

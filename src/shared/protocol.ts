@@ -1039,6 +1039,30 @@ export interface UpcomingEvent {
    *  cap, docs/research/ranking-points-by-tier.md §2) – a hard block, but one that lifts by itself
    *  when the season turns, which is why it is its own reason and not folded into 'unavailable'. */
   ineligibleReason?: 'locked' | 'injured' | 'unavailable' | 'medical' | 'capped'
+  /** ⭐ THE ENGINE'S OWN SENTENCE for the refusal above – `cautionDetail`'s twin, one gate up.
+   *
+   *  ⚠ IT EXISTS BECAUSE 'unavailable' IS FIVE REFUSALS WEARING ONE CODE (round-17 #19): a tour
+   *  suspension, the tier's age door, a booked family vacation, a school exam week and the
+   *  off-season all arrive as `'unavailable'`, and a client holding only the code cannot tell them
+   *  apart. SeasonScreen's lock pill guessed, and its guess was "Exams this week" – which it printed
+   *  on a Junior Tour 30 offered to a twenty-year-old, two years past her last exam. `availabilityStatus`
+   *  writes the true sentence for every arm and it was being discarded at this boundary.
+   *
+   *  Absent on old fixtures and on any gate that produced no detail, so every reader must keep a
+   *  fallback – but the fallback must not be a SECOND GUESS at which refusal this was. */
+  ineligibleDetail?: string
+  /** ⭐ THE TOUR'S PRO ALLOWANCE FOR **THIS EVENT'S** SEASON – present on every rung the rule counts
+   *  (`ECONOMY.entryCap.cappedProTiers`), whether or not this card is blocked.
+   *
+   *  ⚠ IT IS PER-EVENT AND `Snapshot.proEntryCap` IS NOT, and round-17 #2 is the difference. The
+   *  season card's budget chip read the snapshot-wide number – one read, at `world.week` – and
+   *  attached it to every W card in an EIGHT-WEEK horizon. From about week 44 that horizon holds
+   *  cards belonging to the next season block, so each of them printed the OLD season's `16 / 16`
+   *  and the allowance looked as though it never reset. It always reset: `proEntryCapUsage` filters
+   *  `proEntryWeeks` to `seasonStartWeek(week)`, so the counter is a filter and a missed reset is
+   *  unexpressible. What was wrong was the WEEK it was asked about – the same lesson `pointsToEnter`
+   *  and `entryCap` already carry. */
+  proEntryCap?: EntryCapUsage
   /** SHE HAS PASSED THIS RUNG – and it is not a lock (the owner's ruling on backlog #84, 06.08,
    *  quoted verbatim in docs/specs/ladder-floor-2026-08.md: no lower bound at all, let her play, and
    *  lead with the more relevant tournament of the week when there is one). 'outgrown' used to be an
@@ -1247,7 +1271,12 @@ export function activeLadderOfSnapshot(
   snap: Pick<Snapshot, 'ladders' | 'activeLadder'> | null | undefined,
 ): { track: LadderTrack; label: string; rank: number | null; points: number } {
   const track = snap?.activeLadder ?? 'domestic'
-  const view = snap?.ladders[track]
+  // ⚠ `?.` ON `ladders` TOO, not only on `snap`. The signature already promises to survive a null
+  // snapshot, and a snapshot whose `ladders` has not been built yet is the same absence one level
+  // down – it threw `Cannot read properties of undefined (reading 'domestic')` the first time a
+  // partial fixture reached it (round-17 #6, ForkDialog). A total helper is the whole reason this
+  // exists rather than every screen indexing `ladders` itself.
+  const view = snap?.ladders?.[track]
   return { track, label: LADDER_LABEL[track], rank: view?.rank ?? null, points: view?.points ?? 0 }
 }
 
@@ -2700,7 +2729,15 @@ export interface Snapshot {
   /** the debt spell while she is under water, else null – the warning phase before bankruptcy */
   debt: DebtView | null
   /** the fork at nineteen while it is OPEN and unanswered, else null */
-  fork: { askedWeek: number; ageYears: number } | null
+  fork: {
+    askedWeek: number
+    ageYears: number
+    /** ⭐ IS THE SCHOLARSHIP STILL AN ANSWER? Round-17 #6: the college branch had NO precondition, so a
+     *  nineteen-year-old already earning on the professional tour was offered four years of student
+     *  tennis as an equal third of the card. DERIVED from `bestFinishByTier` (`collegeStillOpen`),
+     *  never persisted, so no save field and no migration. `answerFork` enforces the same rule. */
+    collegeOpen: boolean
+  } | null
   /** the natural end's offer while it is OPEN and unanswered, else null */
   retirementOffer: RetirementOffer | null
   /** her four years at college, once she has chosen them – null for every career that did not */

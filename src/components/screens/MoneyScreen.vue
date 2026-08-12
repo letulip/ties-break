@@ -407,12 +407,31 @@ const seasonRows = computed(() => {
         seasonIndex: r.seasonIndex,
         yearLabel: `Season ${r.seasonIndex + 1} – ${seasonYear(r.seasonIndex)}`,
         recorded,
-        // The headline is what the year COST - his question - and the sub-line carries the other
-        // two halves of it: what came in, and what was left when it closed.
+        // ⭐ ROUND-17 #13 – TWO FIGURES ABOUT ONE YEAR, and the third one is gone rather than joined
+        // by a fourth. The owner, 12.08: «там некуда добавлять, и так же на "кашу" похоже, надо
+        // подумать что там лучше показывать, а лишнее убрать вообще.»
+        //
+        // WHAT HE WAS READING: `18598 in · 14783 left · -11815` - the cost, what came in, and the
+        // family's balance at the year's end. Three numbers that look unrelated, and they ARE
+        // unrelated: the first two are about THE SEASON and the third is a running career total.
+        //
+        // ⚠ AND THE ARITHMETIC THAT WOULD HAVE JOINED THEM DOES NOT CLOSE - MEASURED, on his own
+        // save, every season of it. `income - spend = delta` holds exactly (7 of 7). The other half,
+        // `previous end + delta = end`, FAILS on every chained row: 2032 is out by $1,103, 2033 by
+        // $402, 2034 by -$930, 2035 by -$1,336, 2036 by -$1,049, 2037 by -$1,645. That is not a bug
+        // in the ledger - the season window deliberately ENDS AT THE WRAP-UP WEEK and excludes the
+        // off-season (see `SeasonHistoryEntry.spentCents` and `maybeFireSeasonWrapUp`), so weeks
+        // 50-51 move the balance without moving the delta. Printing all four terms and inviting the
+        // player to check them would therefore have shipped an identity that is false by ~$1,600.
+        //
+        // SO THE BALANCE LEAVES THE ROW. The headline stays what the year COST, which is the
+        // question this panel was built to answer and the owner's own earlier ask («история затрат
+        // за карьеру по годам»); the sub-line stays what came IN, because a cost with no income
+        // beside it is the same shrug in reverse. Both are about the same twelve months and in the
+        // same units, so a reader can relate them without being told to. The family's balance is on
+        // this screen's own header, where a running total belongs.
         value: recorded ? formatCentsSigned(-r.spentCents!) : '–',
-        meta: recorded
-          ? `${formatCentsSigned(r.earnedCents ?? 0)} in – ${formatCents(r.endFundsCents)} left`
-          : `${formatCents(r.endFundsCents)} left`,
+        meta: recorded ? `${formatCentsSigned(r.earnedCents ?? 0)} in` : 'not recorded',
       }
     })
 })

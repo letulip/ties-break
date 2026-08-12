@@ -219,6 +219,18 @@ asked for and the version that never needs revisiting.
    state. If any draw is wanted (which of three same-age options are offered), it goes on a
    purpose-scoped sub-stream, never MAIN – and it must not depend on what the player picked LAST
    year, or the choice re-rolls the world. CLAUDE.md invariant 2.
+
+   ⚠ **NARROWED, ROUND-17 #18, AND THE CLAUSE AFTER THE COMMA IS WHY.** The hazard this rule names is
+   "*or the choice re-rolls the world*" – input-independence – and that is what stays absolute. What
+   was too wide is the sentence before it. On the owner's own save the ask ignored the record the
+   feature was already writing: `age 19: asked day, given car`, then `age 20: asked car`. He had
+   bought her a car twelve months earlier and she asked him for a car.
+   **So the ask now reads `birthdays[]` – but only to REMOVE a present she already has.** The key is
+   still `seed:birthday:<age>` and nothing else, the stream is drawn exactly as many times as before,
+   the four options are byte-identical (§5.2's licensed repeat is intact), and MAIN is not reached.
+   The record is immutable and this birthday's own row does not exist yet when the draw happens, so
+   reloading cannot move it – which is the whole of what "never re-rollable" was protecting.
+   The day together is never spent: it is not a possession, and she may want one every year.
 3. **The ledger does not move.** Assert it directly: the same seed run through every gift option
    ends the season on identical `fundsCents`. No `expense` event, no Money line, no corridor.
    ⚠ This is the assertion that keeps §0's ruling true after somebody later "just adds a small cost
