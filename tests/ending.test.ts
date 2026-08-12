@@ -31,6 +31,7 @@ import {
   tickWeek,
   answerFork,
   answerRetirement,
+  collegeStillOpen,
   resumeFromCollege,
   enterEvent,
   hireCoach,
@@ -297,6 +298,52 @@ describe('the latch, on a real world', () => {
     const { world } = freshWorld()
     expect(() => answerFork(world, 'stop')).toThrow(/not open/)
     expect(() => answerRetirement(world, true)).toThrow(/asked/)
+  })
+
+  // ===============================================================================================
+  // ⭐ ROUND-17 #6 – THE SCHOLARSHIP IS NOT OFFERED TO A GIRL ALREADY ON THE TOUR
+  // ===============================================================================================
+  // The owner: the fork «offers the academy to a girl already earning on W75+». It did – the college
+  // branch had no precondition of any kind. A player who has taken professional prize money has
+  // spent her college eligibility, so it is not an answer she can choose; the card was offering a
+  // door that is not there. `ENDINGS.collegeClosedFromTier` carries the reasoning and the marker is
+  // the owner's own W75.
+  it('⭐ the college answer closes once a professional result has counted', () => {
+    const { world } = freshWorld('fork-college-gate')
+    // A junior who has TRIED the tour keeps it: w15 opens at 16 and the game wants her to play some.
+    world.bestFinishByTier = { w15: 1, j300: 0 }
+    expect(collegeStillOpen(world), 'a W15 result is a junior trying the tour').toBe(true)
+
+    // ...and a counting result at the owner's own marker closes it.
+    world.bestFinishByTier = { w15: 1, w75: 2 }
+    expect(collegeStillOpen(world), 'a W75 result is a professional on it').toBe(false)
+    // ...as does anything above it.
+    world.bestFinishByTier = { wta250: 3 }
+    expect(collegeStillOpen(world)).toBe(false)
+  })
+
+  it('⭐ ...and the engine refuses the answer, not just the button', () => {
+    // CLAUDE.md invariant 1: the worker is not the gate. Hiding the button is the courtesy; this is
+    // the rule. Mutation-verified by deleting the `collegeStillOpen` guard in `answerFork` – the
+    // throw stops happening and this fails.
+    const { world } = freshWorld('fork-college-refuse')
+    world.bestFinishByTier = { w75: 1 }
+    world.fork = { askedWeek: world.week, answer: null }
+    expect(() => answerFork(world, 'college')).toThrow(/scholarship/)
+    // ...and the fork is still open afterwards, so the career is not stranded by the refusal.
+    expect(world.fork?.answer).toBeNull()
+    // The other two answers are untouched – this removes an option, it does not steer.
+    answerFork(world, 'continue')
+    expect(world.ending).toBeNull()
+  })
+
+  it('⭐ ...and the card is told, so it never draws a button the engine would refuse', () => {
+    const { world } = freshWorld('fork-college-wire')
+    world.bestFinishByTier = { w75: 1 }
+    world.fork = { askedWeek: world.week, answer: null }
+    expect(toSnapshot(world).fork?.collegeOpen).toBe(false)
+    world.bestFinishByTier = { j300: 0 }
+    expect(toSnapshot(world).fork?.collegeOpen).toBe(true)
   })
 
   it('⚠ the last offer cannot be refused, because the question has run out', () => {

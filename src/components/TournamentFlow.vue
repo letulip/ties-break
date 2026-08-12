@@ -35,9 +35,9 @@ import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { TIERS } from '../engine/season/calendar'
 import { KID_ID, flipScore, prizeCentsFor } from '../engine/world'
 import { LADDER_LABEL } from '../shared/protocol'
-import { formatShortName, rankLabel } from '../shared/format'
+import { formatShortName, rankLabel, shortTierLabel } from '../shared/format'
 import { formatCents } from '../shared/money'
-import { weekRange } from '../shared/dates'
+import { weekLabel, weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
 import type { MatchOptions, Side } from '../engine/match/types'
 import type { WorldMatch } from '../shared/protocol'
@@ -108,6 +108,11 @@ const showAges = computed(() => kidAge.value !== null && oppAge.value !== null)
 // Snapshot.week stays pinned to the event's own week for the whole reveal (tickWeek never
 // advances again while paused), so this doubles as the tournament's real date range.
 const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
+/** THE SAME WEEK, IN THE GAME'S OWN SHORT FORM: "W36 '35" (owner, R17 #9). `weekLabel` is where that
+ *  format is spelled and it already ships on Home and in the practice header - the header line has
+ *  room for a week, not for "Sep 1-7, 2035", and re-spelling it here is how two screens come to name
+ *  the same week two ways (shared/dates.ts says so at the top of `weekLabel`). */
+const weekShort = computed(() => weekLabel(game.snapshot?.week ?? 0))
 
 // --- Round 5 item 6: pre-tournament splash ------------------------------------
 const tier = computed(() => (pending.value ? TIERS[pending.value.tier] : null))
@@ -621,9 +626,16 @@ const matchMeta = computed(() => {
   <!-- `tf-fit` marks the ONE phase whose body is a fitted column rather than a scroller: the
        pre-match card. The class lands on the shell's root via Vue's attribute fallthrough, and the
        scoped rules below reach the body through it - see the F section of the style block. -->
+  <!-- ⚠ THE TITLE DROPS THE TOURNAMENT'S GENERIC NOUN WHILE A MATCH IS ON SCREEN, and only there
+       (owner, R17 #9: the word "Championship" can come off in the header). "Regional Championship"
+       is "Regional" on the one line that is short of room and that the reader is already inside;
+       the brief, the pre-match card, the box score, the poster and every letter still say the whole
+       name. See `shortTierLabel` in shared/format.ts for why it is a list of three and not a
+       drop-the-last-word rule. -->
   <TakeoverShell
     v-if="pending"
-    :title="phase === 'splash' ? null : pending.tierLabel"
+    :title="phase === 'splash' ? null : replayOpen ? shortTierLabel(pending.tierLabel) : pending.tierLabel"
+    :headline-meta="replayOpen ? [weekShort, watchedRoundLabel] : null"
     :screen="watchedScreen"
     :class="{ 'tf-fit': phase === 'pre' && !replayOpen }"
   >
@@ -631,34 +643,32 @@ const matchMeta = computed(() => {
          the tournament's name, its court and its dates, and the design gives that screen a bare
          back-arrow rather than a title bar. Every other phase still needs to be told which
          tournament this is. -->
-    <template #sub>
-      <!-- ⚠ THE SURFACE STEPS ASIDE WHILE A MATCH IS ON SCREEN, and it is the one readout on
-           this line that can: the court is painted in it about 20px lower, so "clay" is being
-           said twice and the second saying is the one made of pixels. That is what pays for the
-           round badge below - the line has room for the date plus a full round name, but not for
-           all three (measured at 375pt: 88.5 + 85 fits the 215px the header control leaves,
-           65.3 + 88.5 + 85 does not, and it wrapped, which put 23px BACK onto the header and
-           undid the row we had just recovered). Every other phase keeps the pill: the preview,
-           the pre-match card, the box score and the poster have no court to read it off. -->
+    <!-- ⚠ THE SUB LINE IS NOT DRAWN AT ALL WHILE A MATCH IS ON SCREEN (owner, R17 #9: the date
+         becomes "W36 '35", and the date and the round move up onto the tournament's line).
+         It has moved onto the title line as `headline-meta` above, and the row it used to occupy is
+         25.75px of a 667px-tall phone - measured, in Chromium: the header goes 74.39 -> 48.64px, and
+         the commentary log under the court is the flexible row that takes it (MatchViewer's
+         `.mv-log` is the only thing in the stack that gives).
+         ⚠ THE ROUND IS SPELLED OUT AND IT FITS, WHICH IS A MEASUREMENT AND NOT A HOPE. It was the
+         item's own risk: with the full tournament name, `Regional Championship` (188.5px of Sora
+         17/600) + `W36 '35` (44.2) + `Quarterfinal` (68) is 320.3px against the 283.8px the exit
+         control leaves at the 16px gutter - it wraps, and a wrapped line hands the row straight back.
+         Dropping the generic noun from the name (see the title binding above) is what bought the
+         room: the worst line in the whole ladder is now `Junior Tour 300` + the week + `Round of 128`
+         = 254.6px, 29.2px inside the budget, so nothing has to be abbreviated. Re-run
+         `node tools/header-probe.mjs` if either string ever grows.
+         The SURFACE was already standing down here (the court is painted in it 20px lower, so the
+         word was the second saying of a fact made of pixels), so nothing else is lost. Every other
+         phase keeps the whole sub line: the preview, the pre-match card, the box score and the
+         poster have no court to read the surface off and no match to be short for. -->
+    <template v-if="!replayOpen" #sub>
       <!-- ⚠ ADOPTED AT THE INTEGRATION MERGE: this was the last hand-written surface readout, and
            the icon-system branch that made `SurfaceMark` listed this exact line as its pending
            adoption. Its own note is worth keeping in mind - one of the three copies had `surf-clay`
            HARD-CODED beside the word "clay", so every other court showed an orange ring labelled
-           clay. The conditional below is the one thing the component does not own and must
-           survive: WHETHER the surface is said at all on this line. -->
-      <SurfaceMark v-if="!replayOpen" :surface="pending.surface" size="sm" />
+           clay. -->
+      <SurfaceMark :surface="pending.surface" size="sm" />
       <span class="hint tf-week-dates">{{ weekDates }}</span>
-      <!-- ⚠ THE ROUND BADGE MOVED UP HERE, ONTO THE DATE LINE (owner, 30.07: «on tournament
-           match screen move quarterfinal badge higher nearby date»). It used to sit in the
-           match card's own head row, which existed only to hold it, so the row went with it -
-           see the note at the replay section. Same `.tf-replay-round` capsule, deliberately:
-           it is still the same fact wearing the same clothes, it just costs no row now, because
-           the sub line was already being drawn. Full round name rather than the draw's "QF" -
-           there is room for it once the surface pill stands down, and the badge the owner asked
-           to move said "Quarterfinal". Only while a match is on screen: between rounds the path
-           strip and the draw name their own rounds. And it names the round IN THE VIEWER, not the
-           round on deck - see `watchedRoundLabel` for the mislabel it inherited. -->
-      <span v-if="replayOpen" class="tf-replay-round">{{ watchedRoundLabel }}</span>
     </template>
 
     <template #exit>
@@ -925,7 +935,14 @@ const matchMeta = computed(() => {
            an outcome he does not know; a re-watch is a recording of one he does.
            `replayAdvances` is exactly that distinction and always was (true when opened from the
            pre-match card, false on the box score's "Watch again"), so the badge and the shout land on
-           a round's first watch and stay off every re-watch. -->
+           a round's first watch and stay off every re-watch.
+           ⚠ AND IT DOES NOT EJECT ANY MORE (R17 #10, `proceed-label`). `@finish` used to fire the
+           instant the last beat played and `endReplay` swapped the phase in the same flush - so the
+           viewer's own box score, the one round 16 put "she retired hurt" on, never painted a single
+           frame and the owner watched a retirement go by as a scoreline for a second round running.
+           The handler is unchanged; naming a label is what turns the eject into a button the player
+           presses when she is ready. "To the result" is the header exit's own words, because it goes
+           to the same place. -->
     <MatchViewer
       v-if="replayOpen && annotated && currentMatch"
       :match="annotated"
@@ -938,6 +955,7 @@ const matchMeta = computed(() => {
       :temperature-c="pending?.temperatureC ?? null"
       :preview-event="viewerPreviewEvent"
       :mode="replayAdvances ? 'live' : 'replay'"
+      proceed-label="To the result"
       @finish="endReplay"
       @end-applause="noteEndApplause"
     />
@@ -1204,20 +1222,14 @@ const matchMeta = computed(() => {
 
 /* --- The header's sub line ---------------------------------------------------------------------- */
 
-/* THE ROUND BADGE, NOW A THIRD ITEM ON THE DATE LINE (owner, 30.07). Two corrections it needs to
-   ride there, neither of which belongs in the sheet - the capsule itself is shared vocabulary and
-   its other consumer is still the friendly's own header:
-     * the 8px is the rhythm `.tf-week-dates` already sets between the surface pill and the date, so
-       the badge keeps the same step instead of butting against "Mar 10–16, 2031";
-     * `inline-block`, because the capsule has vertical padding and an inline box would not reserve
-       height for it - it read as a pill only by luck of the line box.
-   Vue's whitespace-condense drops the newline between the two spans in the template, so the gap has
-   to be a margin; a space in the markup would not survive the compile. */
-.tf-sub .tf-replay-round {
-  display: inline-block;
-  margin-left: 8px;
-  vertical-align: middle;
-}
+/* ⚠ `.tf-sub .tf-replay-round` WENT WITH THE SUB LINE (R17 #9). It was two corrections the round
+   badge needed to ride on the date line - an 8px step and `inline-block`, because the capsule has
+   vertical padding and an inline box would not reserve height for it. The date line is not drawn at
+   all while a match is on screen now (the date and the round are up on the tournament's own line),
+   so there is nothing left for those two declarations to correct. The CAPSULE itself is shared
+   vocabulary and stays in `src/style.css`; what is gone is this screen's override of it, on the same
+   rule `.mv-weather` went by: a selector with nothing to select is the next thing somebody re-adds a
+   rule to. */
 
 /* ⚠ `.tf-top > button { white-space: nowrap }` LEFT THIS BLOCK FOR `src/style.css`, 30.07. It is
    what keeps a header exit on one line ("To result →" wrapped in the first draft of the 30.07 slice

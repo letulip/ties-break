@@ -108,6 +108,59 @@ describe('the window: exactly what the engine holds open', () => {
     expect(windowOf(stages[stages.length - 1])).toEqual(['wta250', 'wta500', 'wta1000', 'slam'])
   })
 
+  // ===============================================================================================
+  // ⭐ ROUND-17 #19 – A RUNG SHE HAS AGED OUT OF IS NOT OFFERED
+  // ===============================================================================================
+  // THE REPORT: a Junior Tour 30 card, at twenty. `TIERS.j30.maxAgeYears` is 18 and the engine's
+  // turnstile refused it correctly the whole time - which is why it was a card that could not be
+  // entered rather than a broken career, and why nothing caught it.
+  //
+  // THE CAUSE: `feedContext` took `ageYears` and NEVER READ IT. Its own comment said the age arm had
+  // been deleted because the ladder carried the clause - and the ladder does not. `tierOpenFor` is
+  // `tierFloorOpen`, and for j30 that is `onRampOpen('itf')`, A LATCH: crossed once at fourteen and
+  // true for ever after, at any age.
+  it('⭐ a junior rung she has aged out of leaves the feed, however open the ladder says it is', () => {
+    // The ladder's own answer is UNCHANGED here - all three J rungs latched open - which is the
+    // point: the age door is a second question and the oracle does not answer it.
+    const open = openMap(['j30', 'j60', 'j300', 'w75', 'w100'])
+    const at18 = feedContext({ ageYears: 18, tierOpen: open, upcoming: [] })
+    const at19 = feedContext({ ageYears: 19, tierOpen: open, upcoming: [] })
+    const at20 = feedContext({ ageYears: 20, tierOpen: open, upcoming: [] })
+
+    // 18 is the last year of the junior tour (`maxAgeYears: 18`), so they are still hers.
+    expect(at18.rungs, 'the junior rungs are open at 18').toEqual(['j30', 'j60', 'j300', 'w75', 'w100'])
+    expect(feedShows(row('j30', 9), at18)).toBe(true)
+
+    // 19 is the first year they are shut, and it is permanent - the one gate in the game that closes
+    // behind her (see `availabilityStatus`).
+    expect(at19.rungs, 'and gone the season she turns 19').toEqual(['w75', 'w100'])
+    expect(feedShows(row('j30', 9), at19)).toBe(false)
+    expect(feedShows(row('j60', 9), at19)).toBe(false)
+    expect(feedShows(row('j300', 9), at19)).toBe(false)
+
+    // ...and the owner's actual card, at twenty.
+    expect(feedShows(row('j30', 9), at20), 'the reported card').toBe(false)
+    // The adult rungs are untouched: this hides an age-dead door, not a ladder.
+    expect(feedShows(row('w75', 9), at20)).toBe(true)
+  })
+
+  it('⚠ ...but a rung she is too YOUNG for still shows - a locked rung is aspiration', () => {
+    // The asymmetry is deliberate and is the difference between the two ends of the age gate. Too
+    // OLD can never reopen, so the card is dead furniture; too YOUNG opens on a birthday, and the
+    // feed is also how she learns what is out there. Hiding those would be the empty-weeks
+    // regression the 06.08 ladder-floor ruling was about.
+    const ctx = feedContext({ ageYears: 14, tierOpen: openMap(['local', 'j30', 'w15']), upcoming: [] })
+    expect(feedShows(row('w15', 9), ctx), 'W15 opens at 16 and she is 14').toBe(true)
+    expect(ctx.rungs).toEqual(['local', 'j30', 'w15'])
+  })
+
+  it('⚠ an ENTERED aged-out event still shows - R10-3 outranks the age door', () => {
+    // She committed to it before the birthday; a committed week must stay actionable, and the age
+    // filter must not be the thing that strands one. `feedShows` reads `entered` first.
+    const at20 = feedContext({ ageYears: 20, tierOpen: openMap(['j30', 'w75']), upcoming: [] })
+    expect(feedShows(row('j30', 9, { entered: true }), at20)).toBe(true)
+  })
+
   it('no oracle (old fixture, no snapshot yet) hides nothing - the safe direction', () => {
     const ctx = feedContext({ ageYears: 14, tierOpen: undefined, upcoming: [] })
     for (const tier of TIER_LADDER) expect(feedShows(row(tier, 5), ctx), tier).toBe(true)

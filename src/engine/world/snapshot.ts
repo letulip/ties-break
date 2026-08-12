@@ -58,9 +58,9 @@ import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears, START_AGE_YEARS } fr
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
-import { buildDebtView, buildEndingView } from './endings'
+import { buildDebtView, buildEndingView, collegeStillOpen } from './endings'
 import { finishLabel, stageLabel } from './labels'
-import { entryCapUsage, proEntryCapUsage } from './entryCaps'
+import { entryCapUsage, proEntryCapUsage, isCappedProTier } from './entryCaps'
 import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
@@ -187,6 +187,15 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
               // be judged against a different season's allowance than today's, so the number it
               // prints has to be the one the gate actually used.
               ...(gate.entryCap !== undefined ? { entryCap: gate.entryCap } : {}),
+              // ⭐ THE REFUSAL'S OWN WORDS, round-17 #19. `cautionDetail`'s exact twin, and it exists
+              // for the same reason: 'unavailable' is FIVE different refusals collapsed into one code
+              // (suspension, the tier's age door, a booked vacation, exam week, off-season), and a
+              // client holding only the code has to guess which. SeasonScreen guessed "Exams this
+              // week" and printed it on a Junior Tour 30 shown to a twenty-year-old - a girl two
+              // years past her last exam, refused for a reason that no longer exists in her life.
+              // The engine already writes the true sentence for every arm; it was simply dropped
+              // here. Carrying it costs one optional string and removes the guess at the root.
+              ...(gate.detail !== undefined ? { ineligibleDetail: gate.detail } : {}),
             }
           : gate.level === 'caution'
             ? { cautionReason: gate.reason as 'fatigued', cautionDetail: gate.detail }
@@ -249,6 +258,18 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         deadlineWeek: e.deadlineWeek,
         entryFeeCents: TIERS[e.tier].entryFeeCents,
         label: TIERS[e.tier].label,
+        // ⭐ HER PRO ALLOWANCE FOR **THIS EVENT'S** SEASON (round-17 #2). Read at `e.week`, exactly
+        // as `entryCap` above is and for the identical reason: the feed's horizon is eight weeks, so
+        // from about week 44 it holds cards that belong to the NEXT season block. The card's chip was
+        // printing `Snapshot.proEntryCap` - one number, read at `world.week` - so every one of those
+        // cards announced "pro entries 16 / 16" against a season the event is not in, and the
+        // allowance appeared to survive the new year. `proEntryCapUsage` self-resets by filtering
+        // `proEntryWeeks` to `seasonStartWeek(week)`, so asking it about the EVENT's week is the
+        // whole fix; nothing about the reset was ever broken.
+        //
+        // Only on the rungs the tour's rule counts, so the chip's own "which cards carry it" question
+        // is answered by the engine's predicate rather than by a list in the screen.
+        ...(isCappedProTier(e.tier) ? { proEntryCap: proEntryCapUsage(world, e.week) } : {}),
         entered: isEntered,
         // A fatigued event is a CAUTION, not a block: she stays eligible. Only a HARD block
         // (point band, injured, unavailable, medical) removes eligibility.
@@ -963,7 +984,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     ending: buildEndingView(world),
     debt: buildDebtView(world),
     fork: world.fork && world.fork.answer === null
-      ? { askedWeek: world.fork.askedWeek, ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth) }
+      ? {
+          askedWeek: world.fork.askedWeek,
+          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth),
+          // ⭐ #6: DERIVED, never stored – so no save field and no migration (see `collegeStillOpen`).
+          collegeOpen: collegeStillOpen(world),
+        }
       : null,
     retirementOffer: world.retirementOffer,
     college: world.college,

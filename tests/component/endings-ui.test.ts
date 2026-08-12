@@ -160,12 +160,20 @@ describe('the fork at nineteen', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('offers three answers and has no way out that is not one of them', () => {
-    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19 } })
+    // ⭐ #6: `collegeOpen` is now part of the fork's payload – true here, which is the case this
+    // block is about (three answers). The closed case has its own block below.
+    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, collegeOpen: true } })
     const w = mount(ForkDialog)
     const answers = w.findAll('.fork-answer')
     expect(answers).toHaveLength(3)
     expect(w.text()).toContain('Turn professional')
-    expect(w.text()).toContain('Take the scholarship')
+    // ⚠ RE-AIMED 12.08 (round-17 B), NOT WEAKENED. The button read "Take the scholarship" and now
+    // reads "Take the college place": the academy's travel grant is also called a scholarship, in
+    // the feed and on two screens, and the owner read the two as one thing and asked whether a W75+
+    // result before nineteen would cost her the academy. It cannot – they are separate mechanisms –
+    // so the word had to stop being shared. The assertion follows the button; the claim is
+    // unchanged, and it is stricter for naming college explicitly.
+    expect(w.text()).toContain('Take the college place')
     expect(w.text()).toContain('Stop here')
     // ⚠ NO PRIMARY. «Stop» must be able to be the right answer, so the card may not style one of
     // them as the correct one - all three carry the same class and none is a PrimaryPill.
@@ -174,12 +182,73 @@ describe('the fork at nineteen', () => {
   })
 
   it('an answer is a command, and it is the only exit', async () => {
-    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19 } })
+    // ⭐ #6: `collegeOpen` is now part of the fork's payload – true here, which is the case this
+    // block is about (three answers). The closed case has its own block below.
+    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, collegeOpen: true } })
     const game = useGameStore()
     const spy = vi.spyOn(game, 'answerFork').mockResolvedValue(undefined)
     const w = mount(ForkDialog)
     await w.findAll('.fork-answer')[2].trigger('click')
     expect(spy).toHaveBeenCalledWith('stop')
+    w.unmount()
+  })
+
+  // ⭐ ROUND-17 #6 – THE COLLEGE PLACE IS NOT DRAWN FOR A GIRL WHO CANNOT TAKE IT
+  // ⚠ RE-AIMED 12.08 (round-17 B) with the block above – the button names college now, and the
+  // negative assertion had to follow it or it would have gone vacuously green on the new copy.
+  // That is the whole hazard of a text pin, and it is why the positive assertion below is kept
+  // beside it: "the college answer is gone" and "the other two are still here" are two claims.
+  it('⭐ drops the college place once she is earning on the tour, and keeps the other two equal', () => {
+    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, collegeOpen: false } })
+    const w = mount(ForkDialog)
+    expect(w.findAll('.fork-answer')).toHaveLength(2)
+    expect(w.text()).not.toContain('Take the college place')
+    expect(w.text()).not.toContain('student tennis')
+    expect(w.text()).toContain('Turn professional')
+    expect(w.text()).toContain('Stop here')
+    // ...and still no primary: removing an answer must not become a recommendation.
+    expect(w.findAll('.tb-pill')).toHaveLength(0)
+    w.unmount()
+  })
+
+  // ⭐ ROUND-17 #6/#16 – THE RANK ON THIS CARD NAMES ITS TABLE
+  it('⭐ names the table the rank comes from, and it is the one that is hers', () => {
+    // It printed `#${snap.kidRank}` under a bare "Her rank" – the INTERNATIONAL (junior) alias, on
+    // the one card whose own headline is "The junior ladder is behind her."
+    patchSnapshot({
+      fork: { askedWeek: 265, ageYears: 19, collegeOpen: true },
+      kidRank: 88,
+      activeLadder: 'wta',
+      ladders: {
+        domestic: { rank: 5, points: 300 },
+        itf: { rank: 88, points: 400 },
+        wta: { rank: 210, points: 120 },
+      },
+    })
+    const w = mount(ForkDialog)
+    const text = w.text()
+    expect(text, 'the table is named').toContain('Her professional rank')
+    expect(text, 'and the number is that table\'s').toContain('#210')
+    expect(text, 'not the junior alias it used to print').not.toContain('#88')
+    w.unmount()
+  })
+
+  it('⭐ ...and unranked is a reachable answer again, not the tie floor dressed as a standing', () => {
+    // `kidRank` is never null (it falls back to `tableSize`), so the old ternary's `unranked` branch
+    // was dead. `LadderView.rank` is nullable and means it.
+    patchSnapshot({
+      fork: { askedWeek: 265, ageYears: 19, collegeOpen: true },
+      kidRank: 512,
+      activeLadder: 'wta',
+      ladders: {
+        domestic: { rank: null, points: 0 },
+        itf: { rank: null, points: 0 },
+        wta: { rank: null, points: 0 },
+      },
+    })
+    const w = mount(ForkDialog)
+    expect(w.text()).toContain('unranked')
+    expect(w.text()).not.toContain('#512')
     w.unmount()
   })
 })

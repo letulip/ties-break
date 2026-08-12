@@ -16,11 +16,30 @@ import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
 import { formatCents } from '../shared/money'
-import type { ForkAnswer } from '../shared/protocol'
+import { activeLadderOfSnapshot, type ForkAnswer } from '../shared/protocol'
 
 const game = useGameStore()
 const fork = computed(() => game.snapshot?.fork ?? null)
 const snap = computed(() => game.snapshot ?? null)
+
+// ⭐ ROUND-17 #6/#16 – A RANK PRINTED WITHOUT ITS TABLE IS NOT A FACT, and this card was the worst
+// place in the game to make that mistake.
+//
+// It read `snap.kidRank`, which is an ALIAS of the INTERNATIONAL (junior) table - and this card is
+// the one that opens with "The junior ladder is behind her." So the most expensive click in the game
+// was being decided on a number from the table that had just closed, under a label that named no
+// table at all. `activeLadderOfSnapshot` is the repo's own answer to "which rank is her rank" and it
+// exists, in its own words, "BECAUSE `snapshot.kidRank` IS THE WRONG ANSWER TO AN OBVIOUS QUESTION";
+// this card had simply never been converted.
+//
+// ⚠ AND `unranked` WAS UNREACHABLE, which is the second half of the same defect. `kidRank` is never
+// null - `recomputeKidRank` falls back to `tableSize(...)`, the tie floor - so the ternary always
+// took its first branch and a girl with no counting result printed her floor position as if it were
+// a standing. `LadderView.rank` IS nullable and means it, so the honest branch is live again.
+// `label` comes off the helper itself, so this card cannot invent a name for a table.
+const ladder = computed(() => activeLadderOfSnapshot(snap.value))
+const rankHead = computed(() => `Her ${ladder.value.label.toLowerCase()} rank`)
+const rankValue = computed(() => (ladder.value.rank === null ? 'unranked' : `#${ladder.value.rank}`))
 
 const stage = computed(() => portraitStage(snap.value?.ageYears ?? 19))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -51,8 +70,8 @@ async function answer(a: ForkAnswer): Promise<void> {
           <dd>{{ formatCents(snap?.fundsCents ?? 0) }}</dd>
         </div>
         <div>
-          <dt>Her rank</dt>
-          <dd>{{ snap?.kidRank ? `#${snap.kidRank}` : 'unranked' }}</dd>
+          <dt>{{ rankHead }}</dt>
+          <dd>{{ rankValue }}</dd>
         </div>
         <div>
           <dt>Spent so far</dt>
@@ -69,9 +88,28 @@ async function answer(a: ForkAnswer): Promise<void> {
           <strong>Turn professional</strong>
           <span>W15 and up. Real cheques, real bills, and the family keeps paying.</span>
         </button>
-        <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('college')">
-          <strong>Take the scholarship</strong>
-          <span>Four years of student tennis. No ranking points, and the money goes the other way.</span>
+        <!-- ⭐ ROUND-17 #6: THE COLLEGE PLACE IS NOT ALWAYS ON THE TABLE. A girl who has already
+             scored at W75 or above has taken professional prize money, and that spends her college
+             eligibility – the reasoning is on `ENDINGS.collegeClosedFromTier`. Absent rather than
+             disabled: a greyed button with a tooltip would still read as an answer she is refusing,
+             and this card «may not recommend». `answerFork` refuses it engine-side regardless.
+
+             ⚠ AND IT SAYS "COLLEGE", NOT "THE SCHOLARSHIP" (round-17 B, 12.08). It used to read
+             "Take the scholarship", which is the SAME WORD the academy's travel grant uses in the
+             feed, on the Money screen and on the season card – and the academy is a thing she may
+             be holding right now. The owner read the two as one and asked whether a W75+ result
+             before nineteen would cost her the academy. It does not, and cannot: they are separate
+             mechanisms that shared a noun. `docs/specs/round17-triage.md` §B has the evidence; this
+             button's job is to make sure nobody has to go and read it. -->
+        <button
+          v-if="fork.collegeOpen"
+          class="fork-answer"
+          type="button"
+          :disabled="game.busy"
+          @click="answer('college')"
+        >
+          <strong>Take the college place</strong>
+          <span>Four years of student tennis on a college scholarship. No ranking points, and the money goes the other way.</span>
         </button>
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
           <strong>Stop here</strong>

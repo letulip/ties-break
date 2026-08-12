@@ -151,10 +151,29 @@ export function feedContext(input: {
   const open = input.tierOpen
   if (!open) return { rungs: [...TIER_LADDER], working: [...TIER_LADDER] }
   // THE WINDOW IS THE ORACLE'S ANSWER, VERBATIM. Every arm the old pair rule needed - pick the
-  // working rung, find the adjacent one, skip an age-dead door, fall back when the horizon is
-  // empty - existed to manufacture a width the ladder did not have. The ladder has it now
-  // (`tierOutgrown`), so there is nothing left to decide: what is open is what is offered.
-  const rungs = TIER_LADDER.filter((t) => open[t])
+  // working rung, find the adjacent one, fall back when the horizon is empty - existed to
+  // manufacture a width the ladder did not have. The ladder has it now (`tierOutgrown`), so there
+  // is nothing left to decide: what is open is what is offered.
+  //
+  // ⚠ EXCEPT THE AGE DOOR, AND ROUND-17 #19 IS THE BILL FOR ASSUMING THE LADDER CARRIED IT. The
+  // sentence above used to list "skip an age-dead door" among the arms it had deleted, and `ageYears`
+  // was left on the input, accepted and never read. It does not carry it: `tierOpenFor` is
+  // `tierFloorOpen`, and for j30 that is `onRampOpen('itf')` - A LATCH on points crossed once and
+  // never re-examined. So `tierOpen.j30` stays true for ever and the feed offered a Junior Tour 30
+  // to a twenty-year-old, on the owner's own save. The engine's turnstile refused it correctly the
+  // whole time (`availabilityStatus`), which is exactly what made it a card that could not be
+  // entered rather than a career-breaking bug - and exactly why nothing caught it.
+  //
+  // ⚠ 'old' ONLY, NEVER 'young'. A rung she has AGED OUT of can never open again, so its card is
+  // dead furniture; a rung she is too YOUNG for opens on a birthday, and the feed is also how she
+  // learns what is out there ("a locked rung is aspiration" - see `tierState`). Hiding those would
+  // be the empty-weeks regression the 06.08 ruling was about.
+  //
+  // ⚠ AND READING TODAY'S AGE FOR AN EIGHT-WEEK HORIZON IS SAFE IN THIS DIRECTION, which is why it
+  // needs no per-event age. Age is monotone in the week, so a rung she has already aged out of today
+  // is aged out for every week in the horizon: this can hide a card that is dead later, and never a
+  // card that is live.
+  const rungs = TIER_LADDER.filter((t) => open[t] && tierAgeBlock(t, input.ageYears) !== 'old')
   const past = input.tierOutgrown
   // ⚠ AND THE WORKING WINDOW IS THE SAME ORACLE MINUS ITS CEILING, never a second derivation. An
   // ALL-outgrown answer would be a row with nothing in it, so it falls back to the whole open set:

@@ -1334,6 +1334,83 @@ describe('the sponsor window', () => {
     for (const o of offers) expect(isOfferLive(o, WINDOW_CLOSE_WEEK + 1)).toBe(false)
   })
 
+  // ===============================================================================================
+  // ⭐ ROUND-17 #27 – ONE LETTER PER RUNG PER WINDOW, EVEN WHEN THE LADDER MOVES UNDER IT
+  // ===============================================================================================
+  // THE REPORT: two identical Baseline Athletics letters, W48 and W49. REPRODUCED on the owner's own
+  // save before this was written - `w359 kit open tour Baseline Athletic` and `w360 kit open tour
+  // Baseline Athletic`, identical brand, allowance, covers, travel share and term; then `w361`
+  // correctly moved on to national. The ladder had gained a rung at the top between the two weeks.
+  //
+  // THE CAUSE: a letter's IDENTITY is its slot (`kit-<opened+slot>`) and its CONTENT is its tier
+  // (`ladder[slot]`), and `windowLadder` is recomputed from a LIVE standing every week of the window.
+  // A rung that starts clearing mid-window shifts every rung below it down one slot, so the same tier
+  // lands on a slot whose id has never been seen, rolls a fresh independent draw, and writes again.
+  it('⭐ the tour rung that slides down a slot mid-window does not write twice', () => {
+    // ⚠ THE STANDINGS ARE THE OWNER'S CASE, MEASURED. `pro(100)` puts `tour` at slot 0 and `pro(60)`
+    // slides it to slot 1 by adding `global` above it - which is precisely what his save shows
+    // between w359 and w360, and `tour`'s brand is Baseline Athletic.
+    const offers: Offer[] = []
+    const before = pro(100)
+    const after = pro(60)
+    expect(windowLadder(before), 'tour leads the ladder in week 47').toEqual(['tour', 'national', 'local'])
+    expect(windowLadder(after), 'and a rung appears above it in week 48').toEqual([
+      'global',
+      'tour',
+      'national',
+      'local',
+    ])
+
+    const first = raiseKitOffers({
+      offers,
+      seed: seedTheShopWritesTo('sliding-ladder', LETTER_WEEK, before),
+      week: LETTER_WEEK,
+      standing: before,
+    })
+    expect(first.map((o) => (o.terms as KitOfferTerms).tier)).toEqual(['tour'])
+    const brand = (first[0].terms as KitOfferTerms).brand
+
+    // WEEK 48: slot 0's id is already taken, so it is skipped - and slot 1, which has never been
+    // written, now carries `tour`. Its roll is a fresh, independent draw.
+    const second = raiseKitOffers({
+      offers,
+      seed: seedTheShopWritesTo('sliding-ladder', LETTER_WEEK + 1, after),
+      week: LETTER_WEEK + 1,
+      standing: after,
+    })
+    // THE CLAIM. Mutation-verified by deleting the `alreadyWritten.has(tier)` guard in
+    // `raiseKitOffers`: a second `tour` letter appears from the same brand and this fails.
+    expect(second.map((o) => (o.terms as KitOfferTerms).tier), 'the same rung must not write twice').not.toContain('tour')
+    expect(second.map((o) => (o.terms as KitOfferTerms).brand), `${brand} wrote twice`).not.toContain(brand)
+
+    // ...and across the whole window no rung and no brand is ever heard from twice.
+    const tiers = offers.map((o) => (o.terms as KitOfferTerms).tier)
+    expect(new Set(tiers).size, `one letter per rung, got ${tiers.join(', ')}`).toBe(tiers.length)
+    const brands = offers.map((o) => (o.terms as KitOfferTerms).brand)
+    expect(new Set(brands).size, `one letter per brand, got ${brands.join(', ')}`).toBe(brands.length)
+  })
+
+  it('⭐ ...and the whole window is duplicate-free however the standing wanders', () => {
+    // The general claim rather than one worked case: walk the window with a standing that climbs on
+    // every week, which is the shape that re-maps the slots the hardest.
+    const climb = [domestic(1), worldly(20), worldly(1), pro(1)]
+    for (let s = 0; s < 12; s++) {
+      const offers: Offer[] = []
+      for (let slot = 0; slot < SPONSOR_LETTER_WEEKS; slot++) {
+        const week = LETTER_WEEK + slot
+        const standing = climb[slot]
+        raiseKitOffers({
+          offers,
+          seed: seedTheShopWritesTo(`wander-${s}`, week, standing),
+          week,
+          standing,
+        })
+      }
+      const tiers = offers.map((o) => (o.terms as KitOfferTerms).tier)
+      expect(new Set(tiers).size, `seed ${s}: ${tiers.join(', ')}`).toBe(tiers.length)
+    }
+  })
+
   it('⚠ a contract ends WITH the season, on week 49, so week 50 is empty', () => {
     // The owner's own rule: «заканчивать контракты вместе с сезоном на 49 неделе (если они
     // однолетние), т.е. чтобы с 50 точно уже было пусто».
@@ -2419,7 +2496,13 @@ describe('the tournament desk writes on W-rung registration, and only then', () 
     throw new Error('no seed produced a layoff covering the event week')
   })
 
-  it('desk letters age out after a year; sponsor letters never do', () => {
+  // ⚠ RE-AIMED FOR ROUND-17 #1, NOT WEAKENED. The claim was "desk letters age out after a year";
+  // the owner asked for last SEASON's tournament letters to go, and a rolling year never crosses a
+  // boundary - a week-3 letter survived to week 3 of the next season, so a new season opened with
+  // almost all of the old one still in the inbox. The window is `seasonIndexOf` now. Every original
+  // assertion still holds at the same call (a year-old letter is by then two seasons back), and the
+  // block gains the cases the new clock has to get right.
+  it('tournament letters go with their season; sponsor letters never do', () => {
     const world = createWorld('desk-prune')
     world.offers.push(
       { id: 'entry-old-0', kind: 'entry', week: 0, deadlineWeek: 0, state: 'info',
@@ -2431,5 +2514,51 @@ describe('the tournament desk writes on W-rung registration, and only then', () 
     const pruned = pruneEntryLetters(world.offers, WEEKS_PER_YEAR + 1)
     expect(pruned.some((o) => o.id === 'entry-old-0')).toBe(false)
     expect(pruned.some((o) => o.id === 'kit-old')).toBe(true)
+  })
+
+  it('⭐ #1 – a letter from LAST season goes the week the season turns, not a year later', () => {
+    // The bug in one line: at week 53 (the first week of season 1) a letter written in week 40 of
+    // season 0 was 13 weeks old, so the rolling year kept it - and kept it until week 92.
+    const late = [
+      { id: 'entry-late', kind: 'entry', week: 40, deadlineWeek: 40, state: 'info',
+        terms: { tier: 'w15', label: 'World Tour 15', eventWeek: 42, freeUntilWeek: 40 } },
+    ] as Offer[]
+    expect(pruneEntryLetters(late, 50).some((o) => o.id === 'entry-late'), 'its own season keeps it').toBe(true)
+    expect(pruneEntryLetters(late, WEEKS_PER_YEAR).some((o) => o.id === 'entry-late'), 'the new season does not').toBe(false)
+  })
+
+  it('⭐ #1 – but an entry for an event that has NOT been played survives the boundary', () => {
+    // Entries for the opening weeks of a season are written in the off-season before it. Deleting
+    // the confirmation for an event she is about to play would be the prune doing real damage.
+    const ahead = [
+      { id: 'entry-ahead', kind: 'entry', week: 48, deadlineWeek: 48, state: 'info',
+        terms: { tier: 'w15', label: 'World Tour 15', eventWeek: WEEKS_PER_YEAR + 2, freeUntilWeek: 48 } },
+    ] as Offer[]
+    expect(pruneEntryLetters(ahead, WEEKS_PER_YEAR).some((o) => o.id === 'entry-ahead')).toBe(true)
+    // ...and it goes once the event is behind her.
+    expect(pruneEntryLetters(ahead, WEEKS_PER_YEAR + 3).some((o) => o.id === 'entry-ahead')).toBe(false)
+  })
+
+  it('⭐ #1 – and a LIVE suspension keeps its paper, whatever season imposed it', () => {
+    // The only document that says why her entries are being refused. A suspension imposed in
+    // November runs into the new year; this is the case where deleting "last season's letters"
+    // would leave the player with a broken game and no explanation.
+    const susp = [
+      { id: 'tour-susp', kind: 'tour', week: 46, deadlineWeek: 46, state: 'info',
+        terms: { notice: 'suspension', untilWeek: WEEKS_PER_YEAR + 6 } },
+    ] as Offer[]
+    expect(pruneEntryLetters(susp, WEEKS_PER_YEAR + 1).some((o) => o.id === 'tour-susp'), 'still serving it').toBe(true)
+    expect(pruneEntryLetters(susp, WEEKS_PER_YEAR + 7).some((o) => o.id === 'tour-susp'), 'served, and gone').toBe(false)
+  })
+
+  it('⭐ #1 – nothing that is not a tournament letter is touched, at any distance', () => {
+    // The owner's second half, said as plainly as he said it. A refused kit offer from four seasons
+    // ago is still the record of a decision he made.
+    const kits = [
+      { id: 'kit-refused', kind: 'kit', week: 3, deadlineWeek: 7, state: 'refused', decidedWeek: 5,
+        terms: { tier: 'local', brand: 'x', kitAllowanceCents: 1, freshCap: 1, minEventsPerSeason: 1,
+          covers: ['strings'], travelShare: 0, seasons: 1 } },
+    ] as Offer[]
+    expect(pruneEntryLetters(kits, WEEKS_PER_YEAR * 4).some((o) => o.id === 'kit-refused')).toBe(true)
   })
 })

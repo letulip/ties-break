@@ -79,6 +79,11 @@
 import { ECONOMY } from './economy'
 import { rngFromSeed } from './rng'
 import { isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from './season/calendar'
+// The ONE definition of "which season is this week in" – the same one the Money screen's "This
+// season" window and the end-of-season wrap-up read, so the inbox cannot mean a different span by
+// it. `world/ledger.ts` type-imports `WorldState` and runtime-imports only the calendar, so this
+// is not a cycle.
+import { seasonIndexOf } from './world/ledger'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
@@ -725,6 +730,34 @@ export function raiseKitOffers(args: {
   if (seasonSpokenFor(offers, week)) return raised
   const opened = sponsorWindowOpensAt(week)
   const ladder = windowLadder(standing)
+  // ⭐ WHICH RUNGS HAVE ALREADY WRITTEN IN THIS WINDOW - round-17 #27, and the identity is the TIER.
+  //
+  // THE REPORT: two identical Baseline Athletics letters, W48 and W49. Reproduced on the owner's own
+  // save - `w359 kit open tour Baseline Athletic` and `w360 kit open tour Baseline Athletic`, same
+  // brand, same allowance, same covers, same everything but the id and the date.
+  //
+  // THE CAUSE IS THE SEAM BETWEEN A LETTER'S IDENTITY AND ITS CONTENT. The identity is the SLOT
+  // (`kit-<opened+slot>`) and the content is the TIER (`ladder[slot]`), and the two are allowed to
+  // disagree because `windowLadder` is recomputed from a LIVE standing on every week of the window -
+  // which the header above states as a feature ("the one input that is read fresh each week is her
+  // STANDING"). When a stronger rung starts clearing mid-window the whole ladder shifts down by one,
+  // so a tier that wrote from slot 1 on Monday is at slot 2 on the following Monday, that slot's id
+  // has never been seen, its roll is a fresh independent draw, and the same brand writes twice. On
+  // the owner's save the ladder gained a rung at the top between w359 and w360 and `tour` slid from
+  // slot 0 to slot 1. The same shift silently SKIPS a rung when her standing falls.
+  //
+  // ⚠ FIXED ON THE TIER RATHER THAN BY RE-KEYING THE ID, deliberately: offer ids are PERSISTED in
+  // `world.offers`, so changing the id scheme would make every career currently inside a window fail
+  // to recognise its own letters and post them all a second time. This reads the window's own slot
+  // ids - the canonical ones - and asks which tiers they carry, which needs no migration and no new
+  // field. Everything the header promises is untouched: nothing is manufactured, every letter still
+  // rolls its own dice at its own chance on the same sub-stream, and a rung that missed stays missed.
+  const alreadyWritten = new Set<SponsorTier>()
+  for (let s = 0; s < SPONSOR_LETTER_WEEKS; s++) {
+    const seen = offers.find((o) => o.id === kitOfferId(opened + s))
+    const seenTier = (seen?.terms as { tier?: SponsorTier } | undefined)?.tier
+    if (seenTier) alreadyWritten.add(seenTier)
+  }
   // Every rung whose turn has come by this week - which for a career that has been here all along is
   // "the one whose turn is today", because the earlier ones have already written or already missed.
   const dueThrough = Math.min(sponsorWindowSlot(week), SPONSOR_LETTER_WEEKS - 1)
@@ -733,6 +766,9 @@ export function raiseKitOffers(args: {
     if (!tier) break
     const id = kitOfferId(opened + slot)
     if (offers.some((o) => o.id === id)) continue
+    // ⭐ ONE LETTER PER RUNG PER WINDOW. A brand that has already written this winter does not write
+    // again because the ladder moved under it.
+    if (alreadyWritten.has(tier)) continue
     const terms = kitTermsFor(standing, tier)
     if (!terms) continue
     if (!shopWritesAt(seed, opened + slot, offerChanceFor(standing, tier))) continue
@@ -755,6 +791,10 @@ export function raiseKitOffers(args: {
     }
     offers.push(offer)
     raised.push(offer)
+    // ...and it counts against this window immediately, so two slots resolved inside ONE call (a
+    // career that reaches the window late catches up through several at once) cannot double up
+    // either. The re-read at the top of the function only sees letters from earlier weeks.
+    alreadyWritten.add(tier)
   }
   return raised
 }
@@ -1136,19 +1176,55 @@ export function raiseSuspensionLetter(
   return offer
 }
 
+/** Is there anything about this tournament letter that has not happened yet? The two dates a desk
+ *  or tour letter can carry that reach FORWARD: the event it confirms, and the week a suspension
+ *  lifts. Either one in the future means the letter is still doing a job.
+ *
+ *  ⚠ THIS IS THE HALF THAT MAKES A SEASON PRUNE SAFE. Both of these routinely cross the boundary:
+ *  entries for the first weeks of a season are written in the off-season before it, and a
+ *  suspension imposed in November runs into the new year. Dropping "last season's letters" without
+ *  it would delete the confirmation for an event she is about to play and the only paper that says
+ *  why her entries are refused. */
+function letterReachesForward(o: Offer, week: number): boolean {
+  const t = o.terms as { eventWeek?: number; untilWeek?: number }
+  return (t.eventWeek ?? -1) >= week || (t.untilWeek ?? -1) >= week
+}
+
 /** THE INBOX STAYS BOUNDED (the `Snapshot.offers` note promises "never pruned" about CONTRACTS,
  *  and it can only keep that promise if the receipts do not pile up for ever): a professional
  *  career writes ~15-30 desk letters a season, so unlike the sponsor's handful they must age out.
- *  A year is the window - long enough that "what did I do about that?" still has its answer, and
- *  the same 52 weeks every other rolling record in the game keeps. Sponsor letters are NEVER
- *  touched here: a signed deal outlives every prune, which is the whole reason the inbox exists. */
+ *  Sponsor letters are NEVER touched here: a signed deal outlives every prune, which is the whole
+ *  reason the inbox exists.
+ *
+ *  ⭐ THE WINDOW IS THE SEASON NOW, NOT A ROLLING YEAR – round-17 #1, the owner: auto-delete last
+ *  season's tournament letters, and keep anything that is not one.
+ *
+ *  ⚠ AND "A YEAR" IS WHY HE HAD TO ASK, WHICH IS THE WHOLE FINDING. The rule already dropped exactly
+ *  the right KINDS - `entry` and `tour`, never `kit` - so this was never a missing feature. It was
+ *  the wrong clock: a rolling 52 weeks means a letter written in week 3 survives until week 3 of the
+ *  NEXT season, so a player who opens the inbox in a new season is looking at almost a full year of
+ *  the last one, and the newer the letter the longer it outstays. "Last season's" is a statement
+ *  about a BOUNDARY, and a rolling window never crosses one. `seasonIndexOf` is the same definition
+ *  of a season the money screens and the wrap-up use (world/ledger.ts), so the inbox now empties on
+ *  the week the season table does.
+ *
+ *  ⚠ ONE AUTHORITY OVER ONE LIFETIME. `composables/inboxMail.ts` records the ruling that the bin
+ *  icon is DISMISS-FROM-THE-LIST and not destroy, precisely so there are not two owners of when a
+ *  letter dies. This is still the only destructor, running where it always ran (`housekeep`, every
+ *  tick, idempotent) - it changed its mind about the date, not about who decides. */
 export function pruneEntryLetters(offers: Offer[], week: number): Offer[] {
-  // ⚠ THE TOUR'S OWN LETTERS AGE OUT ON THE SAME 52 WEEKS (W3-ACT2), and for the same reason the
-  // desk's do: a professional season writes a handful of due-notices and (rarely) a charge, and a
-  // record nobody can find is not a record. The PENALTY LEDGER itself is never pruned - the letter
-  // is the announcement, `world.penalties` is the account - so a charge stays readable on the Stats
-  // screen long after its paper has left the inbox, and the rolling window is what forgives it.
-  return offers.filter((o) => (o.kind !== 'entry' && o.kind !== 'tour') || week - o.week <= WEEKS_PER_YEAR)
+  // ⚠ THE TOUR'S OWN LETTERS AGE OUT WITH THE DESK'S (W3-ACT2), and for the same reason: a
+  // professional season writes a handful of due-notices and (rarely) a charge, and a record nobody
+  // can find is not a record. The PENALTY LEDGER itself is never pruned - the letter is the
+  // announcement, `world.penalties` is the account - so a charge stays readable on the Stats screen
+  // long after its paper has left the inbox, and the season boundary is what forgives it.
+  const season = seasonIndexOf(week)
+  return offers.filter(
+    (o) =>
+      (o.kind !== 'entry' && o.kind !== 'tour') ||
+      seasonIndexOf(o.week) >= season ||
+      letterReachesForward(o, week),
+  )
 }
 
 /** The deal that covered the season now finishing, if any - what the off-season review has to judge

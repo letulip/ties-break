@@ -32,6 +32,7 @@ import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekLabel, weekRange } from '../shared/dates'
 import { vacationArtUrl } from '../art/weeks'
 import IconButton from './ui/IconButton.vue'
+import TakeoverShell from './ui/TakeoverShell.vue'
 
 const props = defineProps<{
   week: number
@@ -222,12 +223,31 @@ function askVacation(row: PackageRow): void {
 </script>
 
 <template>
-  <div class="dialog-overlay" @click.self="emit('close')">
-    <div class="plan-sheet">
-      <IconButton class="replay-close" icon="close" label="Close planner" title="Close" @click="emit('close')" />
-      <p class="guide-title">Plan {{ weekLabel(week) }}</p>
-      <p class="hint" style="margin-top: -6px">{{ dates }} · condition {{ condition }}/100</p>
+  <!-- ⭐ FULL SCREEN SINCE ROUND-17 #5 (the owner), the same move the Inbox made in round 16 and for
+       the same measured reason. This was a `.dialog-overlay` + `.plan-sheet` capped at 420px and
+       86vh, holding two tabs, a price table and SIX vacation packages each with a painting, a name,
+       a note and a Book button - a scroller inside a card inside a page, on a surface whose whole
+       job is comparing six things side by side. `TakeoverShell` is the app's one answer to "a screen
+       that covers the tabs" and five surfaces already render through it, so this is a re-home rather
+       than a new layout: same tabs, same rows, same controls, same confirms.
+       ⚠ AND THE BACKDROP TAP GOES WITH THE BACKDROP. `@click.self` was one of the two exits; there
+       is nothing behind a takeover to tap, so the header's close control is the way out - which is
+       what every other takeover in the app already does.
+       ⚠ `:screen` IS THE SCROLL RESET, and the tabs are exactly what it is for: Practice and
+       Vacation are two screens in one scroller, so switching to Vacation from the bottom of the
+       Practice tab used to arrive already scrolled past the first package. -->
+  <TakeoverShell :title="`Plan ${weekLabel(week)}`" :screen="tab">
+    <template #exit>
+      <IconButton icon="close" label="Close planner" title="Close" @click="emit('close')" />
+    </template>
+    <!-- The week's dates and where her condition stands - the two facts every tab is chosen
+         against, so they belong to the header rather than to either tab. -->
+    <template #sub>{{ dates }} · condition {{ condition }}/100</template>
 
+    <!-- ⚠ ONE WRAPPER, for the reason InboxSheet's has one: `.tf-body` is a flex column with a 16px
+         gap, and without a wrapper every paragraph, hint and tab strip becomes a gap-separated band
+         instead of a page. -->
+    <div class="plan-body">
       <!-- ---------------- Already booked ---------------- -->
       <!-- R14-1: THE UNDO, WHERE THE BOOKING LIVES. The painted vacation card carries no control by
            the owner's 29.07 ruling and opens this sheet instead; this is the half of that routing
@@ -316,11 +336,14 @@ function askVacation(row: PackageRow): void {
           A week away – no tournaments that week, and she comes back fresher. Cancel any time
           before the week starts for a full refund.
         </p>
-        <!-- R12-8b: the layoff's hard no, rendered BEFORE a click instead of thrown after one.
-             The doctor is not the blocker here – the layoff owns the week. -->
-        <p v-if="layoff" class="caution-note">
-          {{ layoffNote }} The layoff covers this week, so a family trip cannot be booked – the
-          planner frees up once she is back.
+        <!-- ⭐ ROUND-17 #11: THE LAYOFF NO LONGER REFUSES A HOLIDAY, and the refusal that used to
+             live here is gone rather than restyled. It read "The layoff covers this week, so a
+             family trip cannot be booked", which made a twelve-week injury twelve weeks in which the
+             parent could plan nothing at all. The owner's reasoning is on `assertPlannable`.
+             The layoff is still SAID, because it is a fact about the week worth knowing while
+             choosing – it is simply not a block any more. -->
+        <p v-if="layoff" class="hint">
+          {{ layoffNote }} A week away is still hers to book – the trip is rest, not tennis.
         </p>
         <div class="pkg-list">
           <div v-for="row in packageRows" :key="row.id" class="pkg-row" :class="{ recommended: row.recommended }">
@@ -347,16 +370,17 @@ function askVacation(row: PackageRow): void {
             </p>
             <div class="pkg-actions">
               <span v-if="row.recommended" class="pill ok">Recommended</span>
-              <span v-if="!layoff && !row.affordable" class="hint pkg-unaffordable">Out of reach</span>
+              <span v-if="!row.affordable" class="hint pkg-unaffordable">Out of reach</span>
               <!-- ⚠ THE PRICE IS NOT A PILL ANY MORE (owner, 30.07 – his words are on `packageRows`
                    in the script). `.pill` is this app's CHIP: a 12px capsule in muted ink with a
                    hairline round it, which is a LABEL treatment, and it was wrong twice over on the
                    one number the parent is choosing between. It is a FIGURE now - see `.pkg-price` in
                    src/style.css for the two rungs and where they come from. -->
               <span class="num pkg-price" :class="{ ok: row.recommended }">{{ feeLabel(row.priceCents) }}</span>
-              <!-- R12-8b: disabled during the layoff (the note above carries the reason) – a Book
-                   that can only throw is the R10-16 dead control this sheet must never grow. -->
-              <button class="primary" :disabled="!!layoff || !row.affordable || game.busy" @click="askVacation(row)">
+              <!-- ⭐ #11: the layoff no longer disables Book. It still must not become a control that
+                   can only throw (R10-16), which is why the ENGINE gate came off first – the button
+                   is live here exactly because `assertPlannable` will now accept it. -->
+              <button class="primary" :disabled="!row.affordable || game.busy" @click="askVacation(row)">
                 Book
               </button>
             </div>
@@ -364,5 +388,5 @@ function askVacation(row: PackageRow): void {
         </div>
       </template>
     </div>
-  </div>
+  </TakeoverShell>
 </template>

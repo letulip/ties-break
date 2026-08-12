@@ -73,7 +73,7 @@ import { useWeekAction } from '../../composables/weekAction'
 // the beat holds, the localStorage pair); what is here is the seven spans and the timers.
 import { DAY_CROSS_PACE, dayCrossPace, dayCrossRuns, dayCrossSchedule } from '../../composables/dayCross'
 import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
-import { formatCents } from '../../shared/money'
+import { formatCents, entryFeeLabel } from '../../shared/money'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
 import { enterActionName } from '../../composables/eventName'
 import { surfaceStyleHint } from '../../engine/match/style'
@@ -614,7 +614,8 @@ const showGo = computed(() => !game.snapshot?.pending)
         </div>
 
         <div class="controls cal-card-chips">
-          <span class="entry-fee">entry {{ formatCents(marker.entryFeeCents) }}</span>
+          <!-- ⭐ #28: see SeasonScreen - "no entry fee" is a fact, "$0" is a hole. -->
+          <span class="entry-fee">{{ entryFeeLabel(marker.entryFeeCents) }}</span>
           <span class="pill">closes {{ weekLabel(marker.deadlineWeek) }}</span>
           <span v-if="marker.entered" class="pill ok">Entered</span>
         </div>

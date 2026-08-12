@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
-import { computeMatchStats, formatDuration, POINT_SECONDS } from '../../src/engine/match/matchStats'
+import { computeMatchStats, formatDuration } from '../../src/engine/match/matchStats'
+import { matchDurationSeconds } from '../../src/viz/matchClock'
 import type { MatchOptions, MatchPlayer, Surface } from '../../src/engine/match/types'
 import {
   expectedServeSpeed,
@@ -180,12 +181,25 @@ describe('computeMatchStats', () => {
     }
   })
 
-  it('duration estimate is totalPoints * 42 s formatted h:mm', () => {
+  /**
+   * ⚠ RE-AIMED, R17 #24, AND THE RE-AIM IS THE ITEM. This used to read "duration estimate is
+   * totalPoints * 42 s formatted h:mm" and it pinned exactly that: a flat constant per point,
+   * whatever the point contained. The owner asked for a live elapsed clock on the court, which needs
+   * to know where INSIDE a match a reading stands - a total cannot answer that - so the model moved
+   * to viz/matchClock.ts and counts what the match holds (rally shots, changeovers, set breaks).
+   *
+   * WHAT THE PIN IS FOR is unchanged and is the half that matters: the box score's duration and the
+   * clock over the court are ONE number, so this asserts the box score reads the shared model rather
+   * than keeping arithmetic of its own. The second assertion is the reason the first one matters -
+   * the two derivations are genuinely different, so agreeing is a fact and not a tautology.
+   */
+  it('duration comes from the shared match clock, not from arithmetic of its own', () => {
     const a = P({ id: 'a', name: 'A' })
     const b = P({ id: 'b', name: 'B' })
     const { annotated, result } = annotate('dur', a, b)
     const s = computeMatchStats(annotated, a, b)
-    expect(s.durationEstimate).toBe(formatDuration(result.totalPoints * POINT_SECONDS))
+    expect(s.durationEstimate).toBe(formatDuration(matchDurationSeconds(annotated)))
+    expect(s.durationEstimate).not.toBe(formatDuration(result.totalPoints * 42))
   })
 })
 

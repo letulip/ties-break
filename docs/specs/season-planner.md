@@ -117,6 +117,23 @@ friendly at condition 0"*:
   recovery instead of the practice-week rung.
 - **No warning band for a friendly** (hard block below 15, the guardrail's soft caution above it),
   and **vacations are never gated**: refusing rest below the floor would be the R10-3 dead end again.
+
+⭐ **AND THAT NOW HOLDS FOR THE INJURY LAYOFF TOO (round-17 #11).** The owner, 12.08: «люди
+путешествуют с травмами вообще». `assertPlannable` was refusing a vacation for any week inside a
+layoff, and the block was **incidental rather than ruled**: it was written unconditionally beside the
+condition-floor veto that the line above argues into being practice-only, it carried no reason of its
+own, and no spec ever stated it – the whole of its recorded justification was a parity argument
+living in a test ("the SAME boundary the planner already uses – one rule, two surfaces"), which is
+about a boundary being spelled once, not about whether a hurt girl may be taken away for a week.
+
+It also produced the very dead end the rule above exists to prevent, at a longer range: a twelve-week
+layoff was twelve weeks in which the parent could plan **nothing at all** – and a week away is both
+what a real family does with a season that has just been taken from them and, mechanically, the thing
+that helps (a vacation's `conditionGain` is exactly what an injured week wants).
+
+**The friendly keeps the gate**, for the reason the medical floor reaches it: a practice match IS a
+match, and she cannot play one while she is laid up. So the two kinds part at the layoff exactly as
+they already part at the floor.
 - Measured: weeks at condition 0 in the degenerate cell **32.7% → 2.9%** (pooled 1.40% → 0.36%);
   `balanced`/`careful` unchanged to the week. See docs/specs/fatigue-reference.md.
 

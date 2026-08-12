@@ -1907,9 +1907,16 @@ button.note-card:active:not(:disabled) {
   width: auto;
 }
 
+/* ⭐ ROUND-17 #14 – 54px WAS THE STRIP, NOT THE PICTURE, and that is why his words sat on him.
+   `.coach-art` is `height: 100%; width: auto`, so the portrait is as wide as its own aspect ratio
+   makes it – 54 is where the container was reasoned about, not where the man ends. The mask holds
+   him fully opaque to 34% and only reaches transparent at 96%, so between those two the text was
+   running over a face that is still clearly there. The owner asked for 10-15px; 12 is the middle of
+   his range and it clears the opaque band on every card width the layout produces. It costs the
+   quote 12px of its column at 375pt, which `text-wrap: pretty` absorbs without a new line. */
 .coach-body {
   position: relative;
-  margin-left: 54px;
+  margin-left: 66px;
   padding: 13px 11px 11px;
   display: flex;
   flex-direction: column;
