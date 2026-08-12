@@ -23,6 +23,10 @@
 import type { AnnotatedMatch } from '../../viz/types'
 import type { MatchPlayer, Side } from './types'
 import { pointServeSpeeds } from './serveSpeed'
+// R17 #24: the duration is derived by viz/matchClock.ts and read here rather than computed again.
+// Same rule the serve speed above lives by, and the same reason - the live clock on the court and
+// the "duration" row of this box score are ONE number, so there is one place that decides it.
+import { matchDurationSeconds } from '../../viz/matchClock'
 
 export interface MatchStats {
   /** rally shots that ended the point as a clean winner, by side */
@@ -35,7 +39,7 @@ export interface MatchStats {
   meanRallyLength: number
   /** deterministic serve speeds in km/h, avg + max per side */
   serveSpeed: { avg: [number, number]; max: [number, number] }
-  /** rough wall-clock estimate, `totalPoints * 42 s`, formatted `h:mm` */
+  /** how long the match took, formatted `h:mm` – see viz/matchClock.ts for where it comes from */
   durationEstimate: string
 }
 
@@ -57,7 +61,13 @@ export function formatDuration(totalSeconds: number): string {
   return `${hours}:${String(minutes).padStart(2, '0')}`
 }
 
-export const POINT_SECONDS = 42
+// ⚠ `POINT_SECONDS = 42` WAS THE WHOLE DURATION MODEL AND IT IS GONE (R17 #24). A flat forty-two
+// seconds per point, whatever the point contained: measured over 400 seeded matches it read 1:31 for
+// the MEDIAN two-setter - a straight-sets match as long as most three-setters - because a constant
+// per point cannot know that a set break is two minutes, a changeover ninety seconds and a point
+// twenty-three. `viz/matchClock.ts` counts those four terms and puts the same median at 1:19. The
+// item that removed it is the LIVE clock on the court, which needs to know where inside the match a
+// reading stands and not merely what the whole thing came to.
 
 export function computeMatchStats(
   annotated: AnnotatedMatch,
@@ -106,6 +116,6 @@ export function computeMatchStats(
     doubleFaults,
     meanRallyLength: points ? shotTotal / points : 0,
     serveSpeed: { avg: [avg(0), avg(1)], max: speedMax },
-    durationEstimate: formatDuration(annotated.result.totalPoints * POINT_SECONDS),
+    durationEstimate: formatDuration(matchDurationSeconds(annotated)),
   }
 }

@@ -981,6 +981,25 @@ select {
   padding: 8px 24px 24px;
 }
 
+/* ⚠ THE TAKEOVER'S SIDE GUTTER IS THE APP'S GUTTER NOW (owner, R17 #8: «на экране матча поля слева
+   и справа шире, чем на других экранах - надо привести к общему виду; корт станет больше»).
+   It was 24px against `--app-pad-x`'s 16 everywhere else, and the match screen is the one surface
+   where that difference is not a matter of taste: the court is a canvas at a fixed aspect ratio, so
+   the gutter is the only thing deciding how big the tennis is. Measured at 375pt: the content column
+   goes 327 -> 343px, the canvas with it, and the painted court 274.9 -> 288.3px.
+   ⚠ IT IS A TOKEN, NOT A SECOND 16. `--app-pad-x` is what `#app` pads every tabbed screen by and
+   what Home's and Kid's full-bleed heroes CANCEL by; a takeover that agreed with it by coincidence
+   would drift the first time the token moved.
+   ⚠ AND `.tf-top` TAKES THE SAME MOVE, in the rule further down the sheet. The header and the body
+   are one column to the eye, and insetting them differently is more obviously wrong than either
+   number is on its own.
+   `.onboarding-body` keeps its 24: the wizard is a reading surface with no canvas in it, its own
+   handoff spec asks for a WIDER gutter than the app's (22px), and it is not the screen the owner is
+   looking at. That is why this override exists instead of the shared declaration above changing. */
+.tf-body {
+  padding-inline: var(--app-pad-x);
+}
+
 /* ⚠ THE TAKEOVER'S BOTTOM ROOM IS CONTENT, NOT THE SCROLLPORT'S PADDING - AND IT HAD TO BECOME ONE
    (owner, 31.07: on the live match screen «the bottom buttons float in the air: there is unpainted
    space beneath them through which the text commentary shows. Paint it»).
@@ -1916,7 +1935,8 @@ tr.kid-row td {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding: 16px 24px 8px;
+  /* R17 #8: the side gutter is `--app-pad-x`, matching the body under it - see `.tf-body`. */
+  padding: 16px var(--app-pad-x) 8px;
 }
 
 /* THE HEADER CONTROL NEVER WRAPS. A wrapped exit is how the tournament's header went from 75px to
@@ -1931,6 +1951,40 @@ tr.kid-row td {
    this. */
 .tf-top > button {
   white-space: nowrap;
+}
+
+/* R17 #9: THE TITLE'S OWN LINE, and whatever short facts ride on it. `min-width: 0` on both boxes is
+   the load-bearing half - without it a flex item's automatic minimum size is its content, so a long
+   tournament name would push the exit control off the right edge instead of ellipsising. */
+.tf-headline-col {
+  min-width: 0;
+}
+
+.tf-headline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tf-headline .tf-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ⚠ THE META NEVER WRAPS AND NEVER SHRINKS; THE TITLE IS WHAT GIVES. Same ranking `.tf-top > button`
+   states two rules up and for the same reason - a name reads fine cut short, a reading does not, and
+   a wrapped header line hands back the whole row this item exists to buy. Measured at 375x667
+   (tools/header-probe.mjs) the worst line the ladder can produce is 254.6px against 283.8px of room,
+   so nothing ellipsises in practice; this rule is what decides WHAT WOULD if a longer name ships. */
+.tf-meta {
+  flex: none;
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
 }
 
 .tf-title {

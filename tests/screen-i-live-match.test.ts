@@ -107,7 +107,13 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // TournamentFlow and PracticeFlow became replays in the same round and both already hand the player
     // a box score with a "Watch again" of their own the instant playback ends. The protected fact is
     // unchanged and narrower: the re-watch belongs to the ONE caller that has no screen after the match.
-    expect(markupOf(viewer)).toMatch(/v-if="props\.mode === 'replay' && finished"[\s\S]{0,120}Watch again/)
+    // ⚠ RE-AIMED R17 #10, AND THE GATE GOT STRONGER AGAIN FOR THE REASON ABOVE. "The instant playback
+    // ends" is no longer true: a caller that names a `proceedLabel` keeps the viewer on screen until
+    // the player presses it, so on a re-watch this button WOULD have appeared beside Proceed - which
+    // is exactly the duplication the paragraph above forbids. The condition it grew says so directly.
+    expect(markupOf(viewer)).toMatch(
+      /v-if="props\.mode === 'replay' && finished && !props\.proceedLabel"[\s\S]{0,200}Watch again/,
+    )
     // ⚠ RE-AIMED 30.07, AND THE GATE GOT STRONGER RATHER THAN WEAKER. Shout used to be the `v-else`
     // of the "Watch again" branch, so "the replay does not shout" was true only as a side effect of
     // the two sharing one row. The owner moved it into the pinned bar («на экране live матча кнопку
@@ -324,20 +330,40 @@ describe('screen I – the design and the rulings it has to keep', () => {
     expect(plate).not.toMatch(/m\/s|km\/h|mph/)
   })
 
-  it('the export\'s clock slot carries a real reading rather than an invented one', () => {
-    // The engine has no time model, so "Match time 00:07" cannot be told honestly. The slot keeps
-    // its shape and carries the live game score instead (and the point count once it is over).
-    // ⚠ RE-AIMED 31.07: THE SLOT MOVED, THE READING DID NOT. It was the right-hand half of a serve
-    // row under the player rows; the owner had that row's other half deleted as a duplicate and this
-    // half moved into the court's bottom run-off band («move the score counter up so it sits directly
-    // under the court, positioned the way the weather element is, but at the bottom edge»). The
-    // protected fact is the honest one and is unchanged: no invented clock, and both readings the
-    // slot carried are still on the screen. Where they sit is pinned separately, below.
+  it('the elapsed clock measures the MATCH, and is derived rather than invented', () => {
+    // ⚠ R17 #24 – THE ITEM IS THIS PIN'S OWN PREMISE BEING OVERTURNED, so read the note below before
+    // the assertions. The rule was "the engine has no time model, so a clock would be a number we
+    // made up", and it was right for as long as nothing derived one. The owner asked for the elapsed
+    // time between the Live badge and the weather, and the brief set the terms a clock has to meet to
+    // be honest: correlate with a real match, and advance at different rates at ×1/×2/×4.
+    // `viz/matchClock.ts` is that derivation - rally shots, changeovers and set breaks, measured
+    // against 400 matches - and it is the same number the box score's duration prints.
+    // WHAT SURVIVES UNCHANGED is the thing the old pin actually protected: nothing on this screen may
+    // print a reading it cannot derive. So the assertions below say the clock comes from the module
+    // and the export's LABEL is still refused - "Match time" belongs to a wall clock over a fixture
+    // list, and this is not one.
+    expect(viewer).toContain("import { buildClockTrack, clockSecondsAt, formatMatchClock")
+    expect(templateOf(viewer)).toContain('class="mv-clock num"')
+    // The reading is a function of the PLAYBACK POSITION, which is the whole of the speed half: this
+    // file must not reach for `speed` to scale it, or the clock would be two implementations of one
+    // rate and they would disagree the first time either moved.
+    // ⚠ BOTH NEGATIVES READ `viewerFile`, THE .vue ALONE - `tests/pin-hygiene.test.ts` enforces it and
+    // it is right to: the claim is about what this FILE does not do, and the widened corpus would
+    // trip on a composable that legitimately mentions the speed.
+    const mirror = viewerFile.slice(viewerFile.indexOf('elapsedMatchSeconds.value ='))
+    expect(mirror.slice(0, 120), 'the clock was scaled by hand instead of read off the clock').not.toContain('speed')
+    // The engine still has no time model of its own - the derivation is presentation, and it lives in
+    // viz/. A clock built out of WALL-CLOCK seconds would be the invented number all over again.
+    expect(viewerFile).not.toMatch(/Date\.now\(\)|performance\.now\(\)[\s\S]{0,40}elapsed/)
+    // ⚠ AND THE BOTTOM BAND KEEPS THE SCORE, which is the half of the old pin that is untouched. The
+    // export gave the bottom slot to its wall clock; ours carries the live game score there and the
+    // point total once the match is over, and the elapsed time went to the TOP band where the owner
+    // asked for it. Two readings, two bands, neither displacing the other.
     expect(viewer).toContain('gameScore')
     expect(viewer).toContain('The export gives this slot to a wall clock')
     // Read off the MARKUP, for this file's own standing reason: `gameScore`'s doc comment QUOTES the
     // export's label to explain why we do not print it, and a pin a comment can satisfy is not a pin.
-    expect(markupOf(viewerFile), 'a wall clock came back').not.toContain('Match time')
+    expect(markupOf(viewerFile), 'the export\'s own label came back with it').not.toContain('Match time')
   })
 })
 
@@ -554,10 +580,15 @@ describe('one header slot per match screen, and it says where it takes you', () 
    * component, no needless duplication). The `.tf-sub` element and the `</header>` tag still exist,
    * once, in the shell; what a CALLER writes now is a `#sub` slot. So this reads the slot, and the
    * facts underneath are checked exactly as they were.
+   *
+   * ⚠ AND THE SLOT ITSELF CAN CARRY A CONDITION NOW (R17 #9). The tournament draws no sub line at all
+   * while a match is on screen, so its opening tag is `<template v-if="…" #sub>` - the landmark moved
+   * again, and again only the landmark. Matching the `#sub>` end of the tag rather than a fixed
+   * prefix is what makes this survive the next attribute somebody puts on it.
    */
   const subOf = (sfc: string): string => {
     const m = markupOf(sfc)
-    const at = m.indexOf('<template #sub>')
+    const at = m.search(/<template[^>]*\s#sub>/)
     expect(at, 'the header sub line is a #sub slot').toBeGreaterThan(-1)
     return m.slice(at, m.indexOf('</template>', at))
   }
@@ -577,19 +608,26 @@ describe('one header slot per match screen, and it says where it takes you', () 
     expect(markup).toContain('Skip this event – withdraw')
   })
 
-  it('the round badge rides the date line instead of renting a row', () => {
-    // Owner: «on tournament match screen move quarterfinal badge higher nearby date». Same capsule,
-    // now inside `.tf-sub`, which was already being drawn – and only while a match is on screen.
-    // ⚠ RE-AIMED 30.07: read off the `#sub` slot rather than the `.tf-sub` element, because the
-    // element belongs to the shell now. See `subOf` for the whole of what moved.
-    const sub = subOf(flow)
-    expect(sub).toMatch(/v-if="replayOpen" class="tf-replay-round"/)
-    // ⚠ RE-AIMED, same slice: this read `pending.roundLabel`, which is the round on DECK. Moving the
-    // badge onto the header line exposed a mislabel it had inherited from the old head row – on the
-    // "Watch again" path the reveal has already advanced that pointer, so the badge named the next
-    // round while the viewer replayed the last one. The protected fact is unchanged (the badge names
-    // the round, on the date line, only while a match is open); it now names the round IN THE VIEWER.
-    expect(sub).toContain('watchedRoundLabel')
+  it('the round rides the tournament\'s own line instead of renting a row', () => {
+    // Owner, 30.07: «on tournament match screen move quarterfinal badge higher nearby date». It went
+    // onto the date line, which was already being drawn, and cost no row.
+    // ⚠ RE-AIMED R17 #9, AND THE ROW IT DID NOT COST IS THE ROW THAT IS NOW GONE. The owner took the
+    // move one step further – the date becomes "W36 '35", and the date and the round go up onto the
+    // TOURNAMENT's line – so while a match is on screen there is no sub line at all and 25.75px of a
+    // 667px phone go to the commentary log (measured at 375x667; see tools/header-probe.mjs).
+    // The protected fact is what it always was: the round is named while a match is open, it is not
+    // named by a row of its own, and it is the round IN THE VIEWER rather than the one on deck.
+    expect(flow).toMatch(/:headline-meta="replayOpen \? \[weekShort, watchedRoundLabel\] : null"/)
+    // ⚠ SPELLED OUT, AND WHAT PAID FOR IT IS THE TITLE. The item's own risk was that the round would
+    // not fit: with the full tournament name `Regional Championship` (188.5px) + `W36 '35` (44.2) +
+    // `Quarterfinal` (68) is 320.3px against 283.8px of room at 375pt, and it wraps. Dropping the
+    // tournament's generic noun IN THIS HEADER ONLY bought the room - the worst line in the ladder is
+    // now 254.6px - so nothing is abbreviated. Both halves are the pin: the round is whole, and the
+    // title is the short form while a match is on screen and the full one everywhere else.
+    expect(flow).toMatch(/:title="phase === 'splash' \? null : replayOpen \? shortTierLabel\(pending\.tierLabel\) : pending\.tierLabel"/)
+    expect(flow).toContain('shortTierLabel')
+    // The date is the game's own short week label, from the one place that spells it.
+    expect(flow).toContain('const weekShort = computed(() => weekLabel(')
     expect(flow).toMatch(/if \(replayAdvances\.value\) return p\.roundLabel/)
     expect(flow).toContain('p.bracket[p.bracket.length - 1]?.roundLabel')
   })
@@ -605,7 +643,11 @@ describe('one header slot per match screen, and it says where it takes you', () 
     // three had `surf-clay` HARD-CODED beside the word "clay", so every other court showed an
     // orange ring labelled clay). What this test protects is not the markup: it is that the
     // surface STEPS ASIDE on this line while a match is on screen, and nowhere else.
-    expect(sub).toMatch(/<SurfaceMark v-if="!replayOpen"/)
+    // ⚠ RE-AIMED R17 #9: the gate moved from the mark to the WHOLE SLOT. The sub line is not drawn at
+    // all while a match is on screen now, so the surface steps aside by not being there – a stronger
+    // version of the same fact, and the only one available once the row it lived on is gone.
+    expect(flow).toMatch(/<template v-if="!replayOpen" #sub>/)
+    expect(sub).toMatch(/<SurfaceMark :surface="pending\.surface"/)
     // and the friendly's header keeps its own mark unconditionally – its surface is stated once.
     expect(markupOf(read('../src/components/PracticeFlow.vue'))).toMatch(/<SurfaceMark[^>]*:surface="match\.surface"/)
   })
@@ -1115,7 +1157,10 @@ describe('the match screen is the match, and nothing else', () => {
     //    already yields to, which is the fact worth protecting: one condition means "a match is on
     //    screen", so a future row cannot be added that only half-knows about it.
     expect(flow).toMatch(/const showBracket = computed\(\s*\(\) =>[\s\S]{0,160}!replayOpen\.value/)
-    expect(markup).toMatch(/<SurfaceMark v-if="!replayOpen"/)
+    // ⚠ RE-AIMED R17 #9: the surface mark no longer carries the flag itself because the whole sub line
+    // it lives on is gated on it now (the date and the round moved up onto the tournament's line).
+    // Same flag, one level up - which is what "one condition means a match is on screen" asks for.
+    expect(markup).toMatch(/<template v-if="!replayOpen" #sub>/)
     // 3. and the strip really is ABOVE the viewer in the markup, which is what made it the thing the
     //    player met first when the screen opened.
     const stripAt = markup.indexOf('class="tf-strip"')

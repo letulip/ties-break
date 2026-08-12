@@ -245,3 +245,64 @@ describe('preview – copy rules and the fiction', () => {
     expect(lines).not.toMatch(/\bTop\b(?! seed)/)
   })
 })
+
+// =================================================================================================
+// ROUND 17 #25 – THE WEATHER NOTE THAT OPENS THE LOG.
+//
+// Owner: "It's chilly here today", "it's hot, everybody is sweating". The preview IS the opening of
+// the commentary log (the log reads newest-first, so the intro is its last block), so the note is an
+// entry in this ladder rather than a beat inside viz/commentary.ts - which is a pure function of the
+// MATCH and does not carry the day's temperature at all.
+// =================================================================================================
+describe('preview – the conditions note', () => {
+  const at = (temperatureC: number | null): string[] => preview({ temperatureC })
+
+  it('⚠ says something DIFFERENT about a cold day and a hot one', () => {
+    // The whole ask, and the cheapest way to get it wrong is one sentence with a number swapped in.
+    const cold = at(12).join(' ')
+    const hot = at(29).join(' ')
+    expect(cold).toMatch(/cold/i)
+    expect(hot).toMatch(/hot/i)
+    expect(cold).not.toBe(hot)
+    // The lexicon's own conditions vocabulary (§5.5): cold is the ball not flying and numb hands,
+    // heat is the sweating. Neither is a second reading of the temperature.
+    expect(cold).toMatch(/will not fly|cold hands/)
+    expect(hot).toMatch(/sweating/)
+  })
+
+  it('...at every band the generator can actually produce (12-29 degrees), and always a sentence', () => {
+    const seen = new Set<string>()
+    for (let c = 12; c <= 29; c++) {
+      const line = at(c).find((l) => /cold|cool|comfortable|warm|hot/i.test(l))
+      expect(line, `nothing said about ${c} degrees`).toBeTruthy()
+      expect(line!.endsWith('.'), line).toBe(true)
+      expect(line, 'player copy uses the short dash only').not.toContain('—')
+      seen.add(line!)
+    }
+    // More than one band is reached across the generator's range - a single sentence for every
+    // temperature would pass every other assertion here and say nothing.
+    expect(seen.size, `only ${seen.size} distinct readings across 12-29 degrees`).toBeGreaterThanOrEqual(4)
+  })
+
+  it('⚠ says NOTHING when the day has no temperature, rather than inventing one', () => {
+    // Two callers genuinely have none (the friendly and the sandbox), and the honesty rule this file
+    // is held to is the same one the commentary lives by.
+    const lines = at(null).join(' ')
+    expect(lines).not.toMatch(/cold|chilly|hot|sweating|warm work/i)
+  })
+
+  it('...and it does not repeat the figure the occasion line already printed', () => {
+    // The generator tell the surface note is written to avoid: saying "22 degrees" and then "it is
+    // 22 degrees" is a slot read back at the reader.
+    const conditions = at(22).find((l) => /comfortable/i.test(l))
+    expect(conditions).toBeTruthy()
+    expect(conditions).not.toMatch(/\d/)
+  })
+
+  it('the note is on every rung of the ladder, so the monotone rule above still holds with it in', () => {
+    for (const tier of TIER_LADDER) {
+      const lines = preview({ event: { tier, roundLabel: 'Quarterfinal' }, temperatureC: 13 }).join(' ')
+      expect(lines, `${tier} lost the conditions note`).toMatch(/cold/i)
+    }
+  })
+})

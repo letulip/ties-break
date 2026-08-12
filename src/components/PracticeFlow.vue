@@ -197,7 +197,11 @@ function close(): void {
          still called 'live' - that is about where the player is in THIS flow, which is a different
          question - and nothing else on the screen moves: the badge goes, and with it the shout,
          because you cannot shout at a match that has already been played. The only genuinely live
-         surface in the app is SeasonScreen's sandbox exhibition, which is generated at click time. -->
+         surface in the app is SeasonScreen's sandbox exhibition, which is generated at click time.
+         ⚠ AND IT DOES NOT EJECT ANY MORE (R17 #10, `proceed-label`). The friendly is where a
+         retirement is cheapest to meet and where the eject was worst: `@finish` fired the instant the
+         last beat played, `toResult` swapped the phase in the same flush, and the viewer's own box
+         score never painted. Same handler, one press later. -->
     <MatchViewer
       v-else-if="phase === 'live'"
       :match="annotated"
@@ -207,6 +211,7 @@ function close(): void {
       :rank-a="viewerRankA"
       :rank-b="viewerRankB"
       mode="replay"
+      proceed-label="To the result"
       @finish="toResult"
     />
 
