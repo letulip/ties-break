@@ -63,8 +63,27 @@ const props = withDefaults(
      * every time they open. There is no wrong answer to inherit here, only a no-op.
      */
     screen?: string | number | null
+    /**
+     * SHORT FACTS THAT RIDE ON THE TITLE'S OWN LINE, quiet and to its right (owner, R17 #9: «дату
+     * сделать W36 '35, и дату с раундом поднять на строку турнира»).
+     *
+     * ⚠ IT IS NOT A SECOND SUB LINE, IT IS THE ABSENCE OF ONE. The whole item is vertical pixels on
+     * a short phone: the sub line is a row, and a row under a 480px-wide header is 25.75px measured
+     * at 375x667. What arrives here is what survives being put beside a title instead of under it -
+     * a week and a round, not a sentence - and the caller only fills it on the screen that needs the
+     * height. `#sub` is untouched and every other screen still uses it.
+     *
+     * ⚠ THE TITLE IS WHAT GIVES WHEN THE LINE IS TIGHT. These items never wrap and never shrink
+     * (`.tf-meta`); the title ellipsises. That is the same ranking `.tf-top > button` already states
+     * for the exit control, and for the same reason: a name reads fine cut short, a reading does not.
+     * The caller is responsible for handing over short strings, and for MEASURING that they fit -
+     * see TournamentFlow's own note and `tools/header-probe.mjs`.
+     *
+     * null / empty (default) draws nothing at all, so a header with nothing to say pays no markup.
+     */
+    headlineMeta?: readonly string[] | null
   }>(),
-  { screen: null },
+  { screen: null, headlineMeta: null },
 )
 
 // The scroller is the shell's, so putting it back at the top is the shell's job - a caller that had
@@ -76,8 +95,13 @@ useScrollReset(() => props.screen, bodyRef)
 <template>
   <div class="tournament-flow">
     <header v-if="title !== null" class="tf-top">
-      <div>
-        <div class="tf-title">{{ title }}</div>
+      <div class="tf-headline-col">
+        <!-- R17 #9: the title, and whatever short facts the caller put beside it, on ONE line. With
+             no `headlineMeta` this is the same single element it always was, in a flex row of one. -->
+        <div class="tf-headline">
+          <span class="tf-title">{{ title }}</span>
+          <span v-for="item in headlineMeta ?? []" :key="item" class="tf-meta">{{ item }}</span>
+        </div>
         <!-- The date / surface / round line under the title. Only drawn when a caller fills it, so a
              surface with nothing to say there does not pay 4px of margin for an empty box. -->
         <div v-if="$slots.sub" class="tf-sub"><slot name="sub" /></div>

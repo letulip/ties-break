@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/src/style.css" />
+    <style>
+      /* The real faces, re-pointed at the files as this probe serves them (the sheet asks for
+         /fonts/... which only Vite's public/ mapping provides). */
+      @font-face { font-family: 'Sora'; font-weight: 600; src: url('/public/fonts/sora-600.woff2') format('woff2'); }
+      @font-face { font-family: 'Manrope'; font-weight: 400; src: url('/public/fonts/manrope-400.woff2') format('woff2'); }
+      @font-face { font-family: 'Manrope'; font-weight: 500; src: url('/public/fonts/manrope-500.woff2') format('woff2'); }
+      body { margin: 0; }
+      .probe { width: 375px; }
+
+      /* ⚠ NO CANDIDATE RULES HERE ANY MORE. `.tf-headline` / `.tf-meta` and the takeover's gutter are
+         shipped rules in src/style.css now, so this file measures what the app actually draws. The
+         BEFORE block below restores the two things the item changed - the 24px gutter and the sub
+         line - because a before/after needs a before. */
+      .wide .tf-top { padding-left: 24px; padding-right: 24px; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- BEFORE: the header as it shipped while a match was on screen (title line + sub line). -->
+      <div class="probe wide">
+        <div class="tournament-flow" style="position: static">
+          <header class="tf-top" id="before">
+            <div>
+              <div class="tf-title">Regional Championship</div>
+              <div class="tf-sub">
+                <span class="hint tf-week-dates">Sep 1&ndash;7, 2035</span>
+                <span class="tf-replay-round">Quarterfinal</span>
+              </div>
+            </div>
+            <button class="link" id="exit-before">To result</button>
+          </header>
+        </div>
+      </div>
+
+      <!-- AFTER: one line - tournament, week label, short round - at the shipped 16px gutter. -->
+      <div class="probe">
+        <div class="tournament-flow" style="position: static">
+          <header class="tf-top" id="after">
+            <div class="tf-headline" id="headline">
+              <span class="tf-title" id="after-title">Junior Tour 300</span>
+              <span class="tf-meta">W36 '35</span>
+              <span class="tf-meta">Quarterfinal</span>
+            </div>
+            <button class="link" id="exit-after">To result</button>
+          </header>
+        </div>
+      </div>
+
+      <span id="ruler-title" class="tf-title" style="position: absolute; white-space: nowrap"></span>
+      <span id="ruler-meta" class="tf-meta" style="position: absolute; white-space: nowrap"></span>
+    </div>
+  </body>
+</html>

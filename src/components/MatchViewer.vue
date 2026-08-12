@@ -13,6 +13,7 @@ import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
 import { buildCommentary } from '../viz/commentary'
 import { buildPreview, type PreviewEvent } from '../viz/preview'
+import { buildClockTrack, clockSecondsAt, formatMatchClock, type ClockTrack } from '../viz/matchClock'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { initSfx, playSfx, primeSfx } from '../audio/sfx'
 import { duck, restore } from '../audio/music'
@@ -84,11 +85,33 @@ const props = withDefaults(
      *  совсем я бы всё-таки не стал»). Compare `mode`, which has no default because every caller
      *  has an answer and three of them were getting it wrong by silence. */
     previewEvent?: PreviewEvent | null
+    /**
+     * THE LABEL OF THE BUTTON THAT LEAVES THIS MATCH - and, by its presence, whether the match
+     * ejects the player at all (round 17 #10, the owner's own layout ruling: «мне кажется надо по
+     * завершению матча не автоматически выкидывать на результаты, а заменить панель скорости и shout
+     * на одну кнопку Proceed или вроде того»).
+     *
+     * ⚠ WHAT WAS WRONG: `finish` fired the instant playback reached the end, and both flows that
+     * listen to it change phase in the same flush - so this component unmounted before it could
+     * paint a single frame of its own box score. That is invisible on a routine win and it is a
+     * whole bug on a RETIREMENT: round 16 built the "she retired hurt" line into the box score below
+     * and the owner has never been able to read it, because the screen carrying it was replaced
+     * before it existed. The eject was also the answer to «не выбрасывать из матча».
+     *
+     * ⚠ null (default) IS A REAL ANSWER, like `previewEvent`'s. Two of the four callers have nowhere
+     * to proceed TO - MatchReplay is opened on top of a finished match and closes back to where it
+     * came from, and the Season sandbox's friendly ends on its own box score - so a Proceed button
+     * there would be a control that does nothing. Those two keep the old behaviour exactly: `finish`
+     * fires when playback ends and they ignore it. A caller that names a label gets the button, and
+     * `finish` waits for the press.
+     */
+    proceedLabel?: string | null
   }>(),
-  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null },
 )
-// `finish` fires once when playback reaches the end (used by TournamentFlow to auto-advance to
-// the post-match card; other callers can ignore it).
+// `finish` = "the player is done with this match". ⚠ R17 #10 MOVED WHEN IT FIRES, NOT WHAT IT MEANS:
+// with a `proceedLabel` it waits for the Proceed press, and without one it still fires the instant
+// playback ends (see the prop). Nothing about the emit's contract changed for a listener.
 // R10-6: `endApplause` fires the instant the match-END crowd cue actually plays (never in 'skip'
 // mode, which is silent by construction) so a parent that ALSO has an applause of its own –
 // TournamentFlow's finale screen – can stand down instead of double-clapping a beat later.
@@ -157,6 +180,22 @@ const liveServer = ref<Side | null>(null)
  * wrong player: both come off the same point, but only this one comes off the shot itself.
  */
 const liveServeSpeed = ref<StruckServe | null>(null)
+/**
+ * HOW LONG THE MATCH HAS BEEN GOING, IN WHOLE MATCH SECONDS (round 17 #24, owner: show the elapsed
+ * time between `live` and the weather, where there is room).
+ *
+ * ⚠ WHOLE SECONDS, NOT THE FORMATTED STRING, and that is what keeps a per-frame mirror cheap. Like
+ * `liveServer` and `endsSwappedRef` it is written on every paint; an integer that only changes when
+ * the reading changes means Vue re-renders the span ~8 times a second at x1 rather than sixty.
+ *
+ * ⚠ AND IT IS A FUNCTION OF THE PLAYBACK POSITION, WHICH IS THE WHOLE OF THE SPEED HALF OF THE ITEM.
+ * `clock` advances at `dtReal * speed`, so a reading taken off it advances at x1/x2/x4 without this
+ * file, or viz/matchClock.ts, ever reading the speed pills. The clock is DIEGETIC - it measures the
+ * match, not the watching - see viz/matchClock.ts for where the minutes come from.
+ */
+const elapsedMatchSeconds = ref(0)
+/** "0:41:07" - the reading the band prints. Fixed width so the row beside it never shifts. */
+const elapsedClock = computed(() => formatMatchClock(elapsedMatchSeconds.value))
 
 // --- playback clock + timeline walk (plain, non-reactive: read only inside the
 // rAF frame/render loop, never in the template) --------------------------------
@@ -170,6 +209,9 @@ interface MarkEntry {
 }
 
 let timeline: Timeline = buildTimeline(props.match, viewMode.value)
+/** Playback position -> match time, rebuilt with the timeline (see viz/matchClock.ts on why the
+ *  track is per TIMELINE: 'key' shows less of the match and none of it takes less time). */
+let clockTrack: ClockTrack = buildClockTrack(props.match, timeline)
 let clock = 0
 let cursor = 0
 /** Event-START cursor (crowd-reaction pass): index of the next event whose START hook
@@ -586,6 +628,7 @@ function render(): void {
   // hold. Nothing is on screen until something has started; the 04.08 rule that a fresh match opens
   // on 0-0 is exactly this.
   onScreenPointIndex.value = startedCursor > 0 && currentEvent ? currentEvent.pointIndex : -1
+  elapsedMatchSeconds.value = Math.floor(clockSecondsAt(clockTrack, clock))
 
   // 'hit' fires once per shot, exactly when its flight event becomes current (shot start,
   // not flight end).
@@ -754,6 +797,7 @@ function jumpToEnd(): void {
 function resetPlayback(startPlaying: boolean): void {
   pauseInternal()
   timeline = buildTimeline(props.match, viewMode.value)
+  clockTrack = buildClockTrack(props.match, timeline)
   endsState = computeEndsSwaps(props.match.points)
   clock = 0
   cursor = 0
@@ -772,6 +816,9 @@ function resetPlayback(startPlaying: boolean): void {
   // new match prop all start the watch over, and what was shouted at the last one is not part of
   // this one. (Nothing else has to be undone - a shout changed nothing to undo.)
   shouts.value = []
+  // Same rule for the retirement popup (R17 #10): it belongs to the run that reached the end, so a
+  // restart takes it down and the next ending raises it again.
+  retirementNotice.value = false
   outRng = rngFromSeed(props.match.result.seed + ':outcall')
   outCounter = 0
   outThreshold = pickInt(outRng, 3, 5)
@@ -825,6 +872,7 @@ function retimeForMode(previousMode: ViewMode): void {
   const wasPlaying = playing.value
   pauseInternal()
   timeline = buildTimeline(props.match, viewMode.value)
+  clockTrack = buildClockTrack(props.match, timeline)
   // ⚠ THE ANCHOR IS THE POINT ON COURT, NOT THE LAST ONE COMPLETED, and the difference shows on the
   // screen. In 'key' mode the point being played is several points ahead of the last one whose beat
   // finished, so anchoring to `displayedPointIndex` would resume 'full' mode BEFORE the point she is
@@ -903,16 +951,10 @@ watch(
   () => props.match,
   () => resetPlayback(true),
 )
-// Surface the end of playback to the parent (fires once per completed run).
-watch(finished, (isFinished) => {
-  if (isFinished) {
-    emit('finish')
-    if (musicDuckedForRun) {
-      musicDuckedForRun = false
-      restore()
-    }
-  }
-})
+// ⚠ THE `finished` WATCHER IS AT THE BOTTOM OF THIS BLOCK NOW, not here beside its two siblings
+// (R17 #10). It reads `kidSide`, which arrives with the readout composable below, and what it does
+// on the end of playback is the whole of that item - so it lives with the rest of it rather than
+// three hundred lines above the state it depends on.
 
 // THE READOUT moved to composables/matchReadout.ts (pure derivation, zero mutable state).
 const { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, setCells, courtScore, scoreReadout, serveSpeedEnd, MOM_W, MOM_H, momentum, momentumCaption, panelStats, pct } = useMatchReadout({ props, displayedPointIndex, onScreenPointIndex, finished, liveServeSpeed, endsSwappedRef })
@@ -1193,6 +1235,72 @@ function servePct(side: Side): number {
   const s = props.match.result.stats[side]
   return s.servePointsPlayed ? Math.round((s.servePointsWon / s.servePointsPlayed) * 100) : 0
 }
+
+// --- R17 #10: THE MATCH ENDS WHERE THE PLAYER IS, AND SHE IS TOLD WHY IT ENDED ------------------
+//
+// «Если травма случилась внутри матча надо сразу попап показать и не выбрасывать из матча. Вообще
+// мне кажется надо по завершению матча не автоматически выкидывать на результаты, а заменить панель
+// скорости и shout на одну кнопку Proceed или вроде того.»
+//
+// Two halves of one mechanism, because they were one mechanism when they were broken: playback
+// reaching its end used to emit `finish` at once, the caller changed phase in the same flush, and
+// the screen went away. That is the eject, and it is also why the popup could not be shown - there
+// was no screen left to show it on.
+
+/** SHE IS THE ONE WHO STOPPED. `kidSide` is null in a match she is not in (the spectate walk), and
+ *  the opponent retiring is not an injury to this family - so both halves have to be true. */
+const retiredIsHers = computed(
+  () => kidSide.value !== null && props.match.result.retired?.side === kidSide.value,
+)
+/** Is the in-match retirement popup up? Belongs to THE RUN, like the shouts: a restart or a
+ *  "Watch again" is a fresh watch and it is raised again there. Dismissing it leaves her on the
+ *  match, which is the whole point of the item. */
+const retirementNotice = ref(false)
+
+/**
+ * WHY, AS FAR AS THE MODEL KNOWS - and it knows exactly this much. `retireHazard` is
+ * `RETIRE_K * spentness(pointNumber, stamina)` and `spentness` is EXACTLY ZERO up to
+ * `FATIGUE_START` (120 points), so every retirement this engine can produce happened deep into a
+ * long match to a girl who was not fresh. The sentence is the same one round 16 put in the
+ * commentary beat (docs/specs/round16-commentary.md §2), deliberately: two surfaces saying one fact
+ * must say it the same way.
+ */
+const RETIREMENT_REASON = 'A long match on tired legs.'
+
+function dismissRetirementNotice(): void {
+  retirementNotice.value = false
+  playSfx('clickSoft')
+}
+
+/** Leave the match, at the player's own moment. `finish` is the same event the parent always
+ *  listened to - only the instant it fires has moved. */
+function proceed(): void {
+  playSfx('clickSoft')
+  emit('finish')
+}
+
+/**
+ * PLAYBACK HAS ENDED. Two things happen here and only one of them is new.
+ *
+ * ⚠ A CALLER THAT NAMED A `proceedLabel` IS NOT EJECTED - the emit waits for the press. A caller
+ * with nowhere to proceed to keeps the immediate emit it always had (see the prop).
+ *
+ * ⚠ AND IF SHE IS THE ONE WHO STOPPED, THE POPUP IS OWED HERE, on the beat the eject used to happen
+ * on. It is raised on a SKIP too (`jumpToEnd` sets `finished` like any other ending), which is
+ * round 16 #19's rule restated: the report is a consequence of what happened, not of a screen having
+ * been watched. The App-level `InjuryStopDialog` still lands afterwards and is not a duplicate of
+ * this one - it reports the LAYOFF, which does not exist until the tournament is closed.
+ */
+watch(finished, (isFinished) => {
+  if (isFinished) {
+    if (retiredIsHers.value) retirementNotice.value = true
+    if (props.proceedLabel === null) emit('finish')
+    if (musicDuckedForRun) {
+      musicDuckedForRun = false
+      restore()
+    }
+  }
+})
 </script>
 
 <template>
@@ -1221,6 +1329,15 @@ function servePct(side: Side): number {
           <span v-if="props.mode === 'live' && !finished" class="mv-live"
             ><i class="mv-live-dot" aria-hidden="true"></i>Live</span
           >
+          <!-- ⚠ THE ELAPSED MATCH TIME, BETWEEN THE BADGE AND THE WEATHER (owner, R17 #24) - the
+               third piece of furniture in a band that had room for exactly one more. It is a
+               DIEGETIC clock: it measures the match, so a two-setter reads about an hour and twenty
+               and a x4 watch runs it four times as fast as a x1 one. Neither this markup nor
+               viz/matchClock.ts reads the speed pills - both facts fall out of the reading being a
+               function of the playback position. See `elapsedMatchSeconds`.
+               It survives the end of the match on purpose: once the badge goes, the reading is how
+               long the thing the player just watched actually took. -->
+          <span class="mv-clock num" :aria-label="`Elapsed match time ${elapsedClock}`">{{ elapsedClock }}</span>
           <!-- The export puts this bottom-right ON the court as a two-line chip; the owner asked for
                one line and off the surface, so it is a single row up here. Same plate the Season
                card draws, so the same fact looks like the same fact. -->
@@ -1428,7 +1545,18 @@ function servePct(side: Side): number {
            PINNED, NOT FIXED (owner, 30.07). A fixed bar would cost its height off the top of every
            match screen for the whole watch; sticky costs NOTHING until the bar would otherwise be
            off the bottom, and then it is there. See `.mv-controls` for the measurement. -->
-      <div class="mv-controls">
+      <!-- ⚠ AND ONCE THE MATCH IS OVER THE WHOLE BAR IS ONE BUTTON - the owner's own R17 #10 ruling,
+           quoted in full on the script side (house convention: his words live where Cyrillic is
+           allowed) at the `proceedLabel` prop. The plates below are questions about a match in
+           progress - how much of it to watch, how fast - and a finished match has no answer to
+           either. What the player wants at that moment is either to read the box score under this bar
+           or to leave, and leaving is now HERS to time: nothing ejects her. The two callers with
+           nowhere to proceed to pass no label and keep the plates, because for them there is no third
+           thing this bar could say. -->
+      <div v-if="finished && props.proceedLabel" class="mv-controls mv-controls-done">
+        <PrimaryPill class="sfx-watch mv-proceed" @click="proceed">{{ props.proceedLabel }}</PrimaryPill>
+      </div>
+      <div v-else class="mv-controls">
         <SegmentedRow
           v-model="viewSeg"
           class="mv-seg"
@@ -1489,8 +1617,13 @@ function servePct(side: Side): number {
            their own box score the instant playback ends (`@finish` -> a phase change that unmounts
            this component in the same flush, before it can paint), so without this they would have
            grown a second "Watch again" inside the viewer, next to the one their box score already
-           has. MatchReplay is the caller that genuinely needs it: it has no screen after the match. -->
-      <div v-if="props.mode === 'replay' && finished" class="mv-actions">
+           has. MatchReplay is the caller that genuinely needs it: it has no screen after the match.
+           ⚠ AND `!props.proceedLabel` IS THE R17 #10 HALF OF THE SAME ARGUMENT. The unmount-in-the-
+           same-flush that used to hide this button is gone - a caller with a Proceed keeps the viewer
+           on screen after the last point - so on a re-watch it WOULD now sit beside Proceed, which is
+           the exact duplication the paragraph above is about. A caller that owns "what happens next"
+           owns the re-watch too, and both flows' own box scores already offer one. -->
+      <div v-if="props.mode === 'replay' && finished && !props.proceedLabel" class="mv-actions">
         <!-- U0's PrimaryPill: `solid` IS `.primary`, so the class stays and the sound layer's
              `.sfx-watch` hook keeps working - what arrives is the one door for the affirmative. -->
         <PrimaryPill class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
@@ -1553,6 +1686,30 @@ function servePct(side: Side): number {
           </tbody>
         </table>
       </Card>
+    </div>
+
+    <!-- ===== SHE COULD NOT CONTINUE (R17 #10) ==================================================
+         ⚠ IT IS A POPUP OVER THE MATCH, NOT A DOOR OUT OF IT. That is the item in one sentence, and
+         the owner's own is on the script side at the `proceedLabel` prop. Dismissing it puts her back
+         on the match screen with the box score under it, and she leaves when she presses Proceed.
+         ⚠ AND IT SAYS ONLY WHAT THE MODEL KNOWS. The layoff - how many weeks, what it withdrew,
+         what came back - does not exist yet: a tournament retirement opens it in `finalizeTournament`,
+         which runs when the reveal is CLOSED, long after this screen. That report is
+         `InjuryStopDialog`'s and still arrives. This one is the moment, and the moment is all it
+         claims: she stopped, at this score, and the model's own reason for it.
+         The app's shared dialog vocabulary (`.dialog-overlay` / `.dialog-card`), not a seventh
+         popup shape - see ConfirmDialog for the same three classes. -->
+    <div v-if="retirementNotice" class="dialog-overlay" @click.self="dismissRetirementNotice">
+      <div class="dialog-card mv-hurt" role="alertdialog" aria-labelledby="mv-hurt-title">
+        <p id="mv-hurt-title" class="mv-hurt-title">{{ retiredName }} could not continue.</p>
+        <p class="dialog-message">
+          She retired hurt at <span class="num">{{ finalScoreLine }}</span
+          >. {{ RETIREMENT_REASON }}
+        </p>
+        <div class="dialog-actions">
+          <button class="primary" @click="dismissRetirementNotice">Stay with her</button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -1666,6 +1823,27 @@ function servePct(side: Side): number {
   border-radius: 50%;
   background: var(--danger);
   animation: mv-live-pulse 1.1s ease-in-out infinite;
+}
+
+/* THE ELAPSED MATCH TIME (R17 #24), between the badge and the weather.
+   ⚠ `margin-right: auto` IS WHAT PUTS IT BETWEEN THEM, and it is the same lever `.mv-live` uses one
+   rule up rather than a new one. Two auto margins in a `justify-content: flex-end` row split the
+   free space evenly, so the badge holds the left end, the weather the right, and this lands in the
+   gap - which is where the owner asked for it («между live и погодой, там есть место»). It survives
+   the badge disappearing at the end of the match: with one auto margin left the reading simply moves
+   to the left end, still off the playing surface and still opposite the weather.
+   Bare rather than plated, like the weather and unlike the badge: it is a READING, not a status.
+   `--muted` because it is the quietest of the three - the badge is a state and the temperature is
+   the day, and neither of those should have to compete with a clock. Tabular figures (`.num`) so the
+   digits do not jitter as they tick, which is the whole reason a fixed-width format was chosen. */
+.mv-clock {
+  margin-right: auto;
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--muted);
 }
 
 /* The weather plate needs no rule of its own any more: it is the other end of `.mv-chrome`, which
@@ -2282,6 +2460,19 @@ function servePct(side: Side): number {
   background: var(--bg);
 }
 
+/* R17 #10: THE FINISHED BAR IS ONE BUTTON, and it keeps every geometric property of the bar it
+   replaces - same sticky floor, same negative margin against the log, same `--bg` skirt - because
+   the guarantee the wrapper above provides is about `.mv-controls`, and swapping the class would
+   have handed the pinned bar's proof to a second selector nobody had measured. What changes is the
+   template: one full-width cell instead of two tracks. */
+.mv-controls-done {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.mv-proceed {
+  width: 100%;
+}
+
 /* The plates were `flex: 1` when this was a row; the tracks size them now. `min-width: 0` stays -
    it is what lets a plate's own contents shrink rather than overflow. */
 .mv-seg {
@@ -2402,5 +2593,21 @@ function servePct(side: Side): number {
   font-size: 13px;
   font-weight: 500;
   color: var(--muted);
+}
+
+/* --- R17 #10: THE "SHE COULD NOT CONTINUE" POPUP ----------------------------------------------
+   The shared dialog box (`.dialog-card` in src/style.css) plus a title line, and nothing else is
+   redeclared here. The title takes the box score's own `.mv-final` weight and the accent it uses for
+   the headline of a finished match, because this popup and that line are the same fact arriving
+   twice - once as an interruption, once as the record. */
+.mv-hurt-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.mv-hurt .num {
+  color: var(--text);
 }
 </style>

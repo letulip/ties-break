@@ -30,6 +30,8 @@ import { annotateMatch } from '../../src/engine/match/rally'
 import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
 import { buildTimeline } from '../../src/viz/timeline'
 import { buildCommentary } from '../../src/viz/commentary'
+import { formatMatchClock, matchDurationSeconds } from '../../src/viz/matchClock'
+import { KID_ID } from '../../src/engine/world'
 import type { AnnotatedMatch } from '../../src/viz/types'
 import type { MatchOptions, MatchPlayer, Side } from '../../src/engine/match/types'
 import type { TierId } from '../../src/engine/season/types'
@@ -718,3 +720,288 @@ async function clickModeOn(w: ReturnType<typeof mountViewer>, label: string): Pr
   await button!.trigger('click')
   await nextTick()
 }
+
+// =================================================================================================
+// ROUND 17 #24 – THE ELAPSED MATCH TIME, AND THE TWO THINGS THAT MAKE IT HONEST.
+//
+// The owner's ⚠ was the whole item: the reading has to correlate with a real tennis match (a
+// two-setter is not twenty minutes), and ×1 / ×2 / ×4 have to advance it at different rates. Both
+// are properties of the RUNNING component and neither is visible in the source, so both are checked
+// by turning the rAF clock by hand - the same fixture the score-readout bug needed.
+// =================================================================================================
+describe('the match clock measures the match, not the watching', () => {
+  const clockText = (w: ReturnType<typeof mountViewer>): string => w.find('.mv-clock').text().trim()
+  const clockSeconds = (w: ReturnType<typeof mountViewer>): number => {
+    const [h, m, s] = clockText(w).split(':').map(Number)
+    return h * 3600 + m * 60 + s
+  }
+
+  it("opens at zero and lands on the match's own duration - the number the box score prints", async () => {
+    const { wrapper, match } = fixtureAndViewer()
+    expect(clockText(wrapper), 'a match opens with time already on the clock').toBe('0:00:00')
+    // Skip is the cheapest way to the end and it goes through the same `finished` path.
+    const skip = wrapper.findAll('button').find((b) => b.text() === SKIP_LABEL)
+    await skip!.trigger('click')
+    await nextTick()
+    expect(clockText(wrapper)).toBe(formatMatchClock(matchDurationSeconds(match)))
+    // ...and that duration is a REAL tennis duration rather than the playback's. The engine's own
+    // shortest matches are a little over three quarters of an hour and its longest run to under
+    // three; anything outside that band means the model has come loose from what it was measured
+    // against (tools/match-clock-probe.ts, 400 matches).
+    const minutes = matchDurationSeconds(match) / 60
+    expect(minutes, `a ${match.result.sets.length}-set match in ${minutes.toFixed(0)} minutes`).toBeGreaterThan(40)
+    expect(minutes).toBeLessThan(180)
+    // The playback it was watched at is nothing like that long, which is what "diegetic" means here.
+    expect(buildTimeline(match, 'full').duration / 60).toBeLessThan(minutes / 3)
+    wrapper.unmount()
+  })
+
+  it('⚠ ×1, ×2 and ×4 advance it at different rates, from the same number of frames', async () => {
+    // One frame is a fixed slice of REAL time (MAX_FRAME_DT), so the same frame count at a higher
+    // speed is more of the match - and the reading has to follow, because the player watching at ×4
+    // is watching the same match go by four times as fast.
+    //
+    // ⚠ MEASURED IN 'Full', AND THE MODE IS THE POINT OF THE NOTE RATHER THAN A CONVENIENCE. In
+    // 'key' the timeline skips most of the match, so a fixed number of playback seconds buys a wildly
+    // varying amount of tennis - the reading is still strictly faster at every speed (asserted at the
+    // bottom, in the default mode the owner actually watches in) but the RATIO over a short window is
+    // not the speed ratio and asserting that it is would be a flaky test making a false claim.
+    const readAfter = async (speedLabel: string, frames: number, mode = 'Full'): Promise<number> => {
+      const d = (liveDriver = driver())
+      const wrapper = mountViewer()
+      await clickModeOn(wrapper, mode)
+      const button = wrapper.findAll('button').find((b) => b.text() === speedLabel)
+      await button!.trigger('click')
+      await d.start()
+      await d.frames(frames)
+      const seconds = clockSeconds(wrapper)
+      wrapper.unmount()
+      d.restore()
+      liveDriver = null
+      return seconds
+    }
+    const one = await readAfter('1×', 60)
+    const two = await readAfter('2×', 60)
+    const four = await readAfter('4×', 60)
+    expect(one, 'the clock did not move at all at ×1').toBeGreaterThan(0)
+    expect(two, `×2 (${two}s) did not outrun ×1 (${one}s)`).toBeGreaterThan(one)
+    expect(four, `×4 (${four}s) did not outrun ×2 (${two}s)`).toBeGreaterThan(two)
+    // ...and roughly IN PROPORTION, which is the difference between "it moves faster" and "it is the
+    // same clock". The band is wide because match-time-per-playback-second is not uniform (a set
+    // break is two minutes of tennis in one beat of playback), not because the claim is soft.
+    expect(two / one, `×2/×1 = ${(two / one).toFixed(2)}`).toBeGreaterThan(1.6)
+    expect(two / one, `×2/×1 = ${(two / one).toFixed(2)}`).toBeLessThan(2.5)
+    expect(four / one, `×4/×1 = ${(four / one).toFixed(2)}`).toBeGreaterThan(3.2)
+    expect(four / one, `×4/×1 = ${(four / one).toFixed(2)}`).toBeLessThan(4.8)
+
+    // And in the shipped default view - 'key' at ×2 - the ordering still holds, which is the claim
+    // the owner will actually check.
+    const keyOne = await readAfter('1×', 60, 'Key')
+    const keyTwo = await readAfter('2×', 60, 'Key')
+    const keyFour = await readAfter('4×', 60, 'Key')
+    expect(keyTwo, `key ×2 (${keyTwo}s) did not outrun ×1 (${keyOne}s)`).toBeGreaterThan(keyOne)
+    expect(keyFour, `key ×4 (${keyFour}s) did not outrun ×2 (${keyTwo}s)`).toBeGreaterThan(keyTwo)
+  })
+
+  it('⚠ ...and it keeps counting the points the KEY cut does not show', async () => {
+    // The lie a per-timeline clock would tell: 'key' drops most of the points, so a reading that
+    // advanced with the PLAYBACK would report a key watch as a three-minute match and a full watch of
+    // the same tennis as a ten-minute one.
+    // ⚠ PLAYED OUT FRAME BY FRAME, NOT SKIPPED. Skip's timeline is one beat long in every mode, so a
+    // version of this test that reached the end through "Skip to the result" passed against a clock
+    // that was reading the raw playback position - found by mutation, which is why it says so here.
+    const readAtEnd = async (mode: string): Promise<string> => {
+      const d = (liveDriver = driver())
+      const wrapper = mountViewer()
+      await clickModeOn(wrapper, mode)
+      await d.start()
+      for (let i = 0; i < 4000; i++) if (!(await d.frame())) break
+      await nextTick()
+      const text = clockText(wrapper)
+      wrapper.unmount()
+      d.restore()
+      liveDriver = null
+      return text
+    }
+    const full = await readAtEnd('Full')
+    const key = await readAtEnd('Key')
+    expect(full, 'the match took no time at all').not.toBe('0:00:00')
+    expect(key, 'the same match took a different amount of time in the other mode').toBe(full)
+  })
+})
+
+// =================================================================================================
+// ROUND 17 #10 – THE MATCH DOES NOT EJECT HER, AND AN IN-MATCH INJURY SAYS SO WHERE SHE IS.
+//
+// The owner's ruling, in two halves that were one mechanism when they were broken: `finish` fired
+// the instant the last beat played, the caller changed phase in the same flush, and the match screen
+// was gone before it could paint its own box score - which is where round 16 put "she retired hurt".
+// =================================================================================================
+describe('a finished match waits for the player', () => {
+  /** Playback all the way to the end, however many frames that takes. */
+  async function runToEnd(d: ReturnType<typeof driver>): Promise<void> {
+    await d.start()
+    for (let i = 0; i < 4000; i++) if (!(await d.frame())) break
+    await nextTick()
+  }
+
+  function mountWithProceed(over: Record<string, unknown> = {}) {
+    const { a, b, match } = fixture()
+    return mount(MatchViewer, {
+      props: {
+        match,
+        playerA: a,
+        playerB: b,
+        surface: 'hard' as const,
+        mode: 'replay' as const,
+        proceedLabel: 'To the result',
+        ...over,
+      },
+    })
+  }
+
+  it('⚠ does NOT emit finish when playback ends - it offers Proceed instead', async () => {
+    const d = (liveDriver = driver())
+    const wrapper = mountWithProceed()
+    await runToEnd(d)
+    expect(wrapper.emitted('finish'), 'the match ejected the player again').toBeUndefined()
+    expect(wrapper.findAll('button').map((btn) => btn.text())).toContain('To the result')
+    // ...and the box score the eject used to outrun is on screen, which is the whole point of the
+    // change: it is the only place "she retired hurt" is ever written.
+    expect(wrapper.find('.mv-boxscore').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('...and the speed and shout panel is replaced by that one button', async () => {
+    const d = (liveDriver = driver())
+    const wrapper = mountWithProceed({ mode: 'live' as const })
+    const before = wrapper.findAll('button').map((btn) => btn.text())
+    expect(before, 'the speed pills were never there to be replaced').toEqual(expect.arrayContaining(['1×', '4×']))
+    expect(wrapper.find('.mv-shout').exists()).toBe(true)
+    await runToEnd(d)
+    const after = wrapper.findAll('button').map((btn) => btn.text())
+    expect(after, 'a speed pill survived the end of the match').not.toContain('4×')
+    expect(after, 'a resolution pill survived the end of the match').not.toContain('Full')
+    expect(wrapper.find('.mv-shout').exists(), 'the shout survived the end of the match').toBe(false)
+    expect(after).toContain('To the result')
+    wrapper.unmount()
+  })
+
+  it('pressing Proceed is what emits finish, exactly once', async () => {
+    const d = (liveDriver = driver())
+    const wrapper = mountWithProceed()
+    await runToEnd(d)
+    const button = wrapper.findAll('button').find((btn) => btn.text() === 'To the result')
+    await button!.trigger('click')
+    expect(wrapper.emitted('finish')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('⚠ a caller with nowhere to proceed to keeps the old behaviour exactly', async () => {
+    // MatchReplay and the Season sandbox pass no label: there is no screen after their match, so a
+    // Proceed would be a control that does nothing. They still get the emit at the end of playback,
+    // and they still get their own "Watch again".
+    const d = (liveDriver = driver())
+    const { a, b, match } = fixture()
+    const wrapper = mount(MatchViewer, {
+      props: { match, playerA: a, playerB: b, surface: 'hard' as const, mode: 'replay' as const },
+    })
+    await runToEnd(d)
+    expect(wrapper.emitted('finish')).toHaveLength(1)
+    const labels = wrapper.findAll('button').map((btn) => btn.text())
+    expect(labels).not.toContain('To the result')
+    expect(labels).toContain('Watch again ↻')
+    wrapper.unmount()
+  })
+
+  it('...and a caller WITH one is not offered a second "Watch again" beside it', async () => {
+    const d = (liveDriver = driver())
+    const wrapper = mountWithProceed()
+    await runToEnd(d)
+    expect(wrapper.findAll('button').map((btn) => btn.text())).not.toContain('Watch again ↻')
+    wrapper.unmount()
+  })
+})
+
+describe('an in-match injury raises its popup without ejecting her', () => {
+  /** The same fixture with HER in it and a retirement on the record. `result.retired` is the only
+   *  fact the viewer reads about it, and the engine writes exactly this shape (match/types.ts). */
+  function retiredFixture(side: Side) {
+    const { a, b, match } = fixture()
+    const her = { ...a, id: KID_ID, name: 'Olivia Grant' }
+    const hurt: AnnotatedMatch = {
+      ...match,
+      result: { ...match.result, retired: { side, pointNumber: match.points.length } },
+    }
+    return { her, opp: b, match: hurt }
+  }
+
+  function mountHurt(match: AnnotatedMatch, her: MatchPlayer, opp: MatchPlayer) {
+    return mount(MatchViewer, {
+      props: {
+        match,
+        playerA: her,
+        playerB: opp,
+        surface: 'hard' as const,
+        mode: 'replay' as const,
+        proceedLabel: 'To the result',
+      },
+    })
+  }
+
+  /** Straight to the end of the match, through the same `finished` path playback reaches. */
+  async function playOut(w: ReturnType<typeof mountViewer>): Promise<void> {
+    const skip = w.findAll('button').find((btn) => btn.text() === SKIP_LABEL)
+    await skip!.trigger('click')
+    await nextTick()
+  }
+
+  it('⚠ SHE stopped: the popup is up, and the match screen is still under it', async () => {
+    const { her, opp, match } = retiredFixture(0)
+    const wrapper = mountHurt(match, her, opp)
+    await playOut(wrapper)
+    const dialog = wrapper.find('.mv-hurt')
+    expect(dialog.exists(), 'no popup for an injury inside the match').toBe(true)
+    expect(dialog.text()).toContain('Olivia Grant could not continue')
+    // The reason is the one the model can support - see RETIREMENT_REASON and round16-commentary §2.
+    expect(dialog.text()).toContain('tired legs')
+    // NOT ejected: the court, the log and the box score are all still mounted behind it, and the
+    // parent has not been told to change screens.
+    expect(wrapper.find('canvas').exists()).toBe(true)
+    expect(wrapper.find('.mv-boxscore').exists()).toBe(true)
+    expect(wrapper.emitted('finish')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('...and dismissing it leaves her exactly where she was', async () => {
+    const { her, opp, match } = retiredFixture(0)
+    const wrapper = mountHurt(match, her, opp)
+    await playOut(wrapper)
+    const stay = wrapper.findAll('button').find((btn) => btn.text() === 'Stay with her')
+    await stay!.trigger('click')
+    await nextTick()
+    expect(wrapper.find('.mv-hurt').exists()).toBe(false)
+    expect(wrapper.find('.mv-boxscore').exists(), 'dismissing the popup took the match away too').toBe(true)
+    expect(wrapper.emitted('finish')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('⚠ the OPPONENT stopping is not an injury to this family, and raises nothing', async () => {
+    const { her, opp, match } = retiredFixture(1)
+    const wrapper = mountHurt(match, her, opp)
+    await playOut(wrapper)
+    expect(wrapper.find('.mv-hurt').exists(), 'the opponent retiring raised OUR injury popup').toBe(false)
+    // The box score still says what happened - that is round 16's line and it is untouched.
+    expect(wrapper.find('.mv-boxscore').text()).toContain('retired hurt')
+    wrapper.unmount()
+  })
+
+  it('a match with nobody hurt raises nothing, so the pin above is not vacuous', async () => {
+    const { her, opp } = retiredFixture(0)
+    const { match } = fixture()
+    const wrapper = mountHurt(match, her, opp)
+    await playOut(wrapper)
+    expect(wrapper.find('.mv-hurt').exists()).toBe(false)
+    wrapper.unmount()
+  })
+})

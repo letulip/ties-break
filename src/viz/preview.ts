@@ -123,6 +123,33 @@ const SURFACE_NOTE: Record<Surface, string> = {
   grass: 'It will stay low and skid through, so the points will be short.',
 }
 
+/**
+ * WHAT THE DAY IS LIKE TO PLAY IN (round 17 item 25, owner: "It's chilly here today", "it's hot,
+ * everybody is sweating").
+ *
+ * ⚠ IT IS A CONDITIONS NOTE, NOT A SECOND TEMPERATURE. The occasion line above already prints the
+ * figure, and a generator that says "21 degrees" and then "it is 21 degrees" is repeating its own
+ * slot back at the reader (the same rule `SURFACE_NOTE` is written under). What this adds is the
+ * only thing the number does not carry: what it DOES to the tennis. Every phrase comes from
+ * docs/research/commentary-lexicon.md §5.5 - `the ball is not flying` and `numb hands` for cold,
+ * `ice towels` and `sapping` for heat - and none of them asserts anything outside the reading.
+ *
+ * ⚠ THE BANDS ARE THE GENERATOR'S OWN RANGE, not a weather scale. `eventTemperature`
+ * (engine/season/preview.ts) draws 12-26 on hard, 16-28 on clay and 19-29 on grass, so the five
+ * bands below carve up exactly the temperatures this game can produce - `cold` really is its
+ * bottom end and `hot` really is its top, rather than two branches nothing ever reaches.
+ *
+ * ⚠ AND IT IS RNG-FREE, like every other line in this file. It is a lookup on a number the day
+ * already has.
+ */
+function conditionsNote(c: number): string {
+  if (c <= 14) return 'Cold enough that the ball will not fly, and cold hands on the racket all afternoon.'
+  if (c <= 18) return 'Cool, and it will take a while for either of them to feel the ball.'
+  if (c <= 24) return 'A comfortable day for it, and no excuses in the air.'
+  if (c <= 27) return 'Warm work out there, and the towel comes out between points.'
+  return 'Hot, and everybody is sweating before the end of the first game.'
+}
+
 /** The number said the way a person says it, never as a decimal. Rounded at the template boundary,
  *  which is the shipped bug the research found in a real product (live-text-adult-tour.md §2.3). */
 function pct(x: number): string {
@@ -225,6 +252,22 @@ const ENTRIES: readonly Entry[] = [
       if (input.temperatureC === null) return `${where} ${SURFACE_WORD[input.surface]}.`
       return `${where} ${SURFACE_WORD[input.surface]}, ${Math.round(input.temperatureC)} degrees.`
     },
+  },
+  {
+    // ⚠ ROUND 17 #25 SITS AT STOREY 1, WHICH IS WHERE A WEATHER NOTE HAS TO SIT. The owner asked for
+    // it "opening the commentary", and the preview IS the opening of the log (it is the block at the
+    // bottom, which the log reads last because the log reads newest-first). Putting it at storey 1
+    // means the local Sunday-morning draw gets it too - the rung where the weather is most of what
+    // there is to say - and the ladder stays monotone because a line every storey has cannot break
+    // a rule about storeys having MORE than the one below.
+    //
+    // ⚠ AND IT IS NOT A PER-POINT BEAT, DELIBERATELY. viz/commentary.ts is a pure function of the
+    // MATCH and the day's temperature is a fact about the DRAW, which the match does not carry - the
+    // same split that keeps the whole preview out of that module. A weather line inside
+    // `buildCommentary` would need an input the determinism pin exists to keep out.
+    key: 'conditions',
+    from: 1,
+    say: ({ input }) => (input.temperatureC === null ? null : conditionsNote(Math.round(input.temperatureC))),
   },
   {
     key: 'opponent',
