@@ -2396,6 +2396,39 @@ export function gearHitForWeek(
   return gearHitsUpTo(seed, category, background, week).find((h) => h.week === week) ?? null
 }
 
+/**
+ * ⭐ WHICH SHOP THE LINE IS WRITTEN FROM – round-17 #17.
+ *
+ * The owner, 12.08: «New racket – used, off the classifieds» on a career with a sponsor, a full kit
+ * deal and $323,491 in the bank. His ruling with it: *the line is right for the years it was written
+ * for; give it a precondition – need, or pre-sponsor – rather than deleting it.* So it is not
+ * deleted, and nothing else about it changes. It simply stops being the only thing the game can say.
+ *
+ * THE PRECONDITION IS THE BRAND CONTRACT, and it is a statement about the ITEM rather than about the
+ * balance. `flavor` is keyed on `FamilyBackground` – an answer to a questionnaire at week 0, fixed
+ * for the whole career – and the sentence it produces is a claim about where the racket came from.
+ * When a signed deal covers that line the brand is SENDING it, so "used, off the classifieds" is not
+ * a poor family's line any more, it is a false one. A `local` deal that covers only strings leaves
+ * the racket exactly where it was, which is right: a small sponsor does not stop a family shopping
+ * second-hand for frames.
+ *
+ * ⚠ IT STEPS UP ONE RUNG AND NEVER DOWN. `wealthy` under a deal keeps its own voice – a brand does
+ * not make a rich family's frames plainer – and nothing here can make a line poorer than the family
+ * is. One rung, because "current retail model" is what a kitted-out player actually plays; jumping
+ * to "custom pro stock" would be inventing a fact about the contract.
+ *
+ * ⚠ AND IT IS COPY ONLY. `gearHitForWeek` still takes `background` and nothing else, so the
+ * `seed:gear:<category>` sub-stream, the cadence and the cents are byte-identical to before this
+ * existed – CLAUDE.md invariant 2. The half the owner also named, NEED, is not built here: the need
+ * test the repo already settled on (`sponsorNeedMet`, 10.08 – a runway against the week's COURT
+ * bill, not a dollar figure) needs a number `resolveGear` does not have and cannot re-derive without
+ * re-running a MAIN draw. That is a real second precondition and it is written up in
+ * `docs/specs/round17-triage.md` §17 for the owner rather than guessed at here.
+ */
+export function gearVoice(background: FamilyBackground, lineCoveredByBrand: boolean): FamilyBackground {
+  return lineCoveredByBrand && background === 'working' ? 'middle' : background
+}
+
 /** The parents' weekly contribution for the season holding `week` - PURE, no stored state.
  *  Season 0 pays the base; each later season compounds one uniform growth roll from
  *  `incomeGrowthBand`, drawn off the private `seed:income:<season>` sub-stream (one draw per

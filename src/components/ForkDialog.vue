@@ -88,11 +88,19 @@ async function answer(a: ForkAnswer): Promise<void> {
           <strong>Turn professional</strong>
           <span>W15 and up. Real cheques, real bills, and the family keeps paying.</span>
         </button>
-        <!-- ⭐ ROUND-17 #6: THE SCHOLARSHIP IS NOT ALWAYS ON THE TABLE. A girl who has already scored
-             at W75 or above has taken professional prize money, and that spends her college
+        <!-- ⭐ ROUND-17 #6: THE COLLEGE PLACE IS NOT ALWAYS ON THE TABLE. A girl who has already
+             scored at W75 or above has taken professional prize money, and that spends her college
              eligibility – the reasoning is on `ENDINGS.collegeClosedFromTier`. Absent rather than
              disabled: a greyed button with a tooltip would still read as an answer she is refusing,
-             and this card «may not recommend». `answerFork` refuses it engine-side regardless. -->
+             and this card «may not recommend». `answerFork` refuses it engine-side regardless.
+
+             ⚠ AND IT SAYS "COLLEGE", NOT "THE SCHOLARSHIP" (round-17 B, 12.08). It used to read
+             "Take the scholarship", which is the SAME WORD the academy's travel grant uses in the
+             feed, on the Money screen and on the season card – and the academy is a thing she may
+             be holding right now. The owner read the two as one and asked whether a W75+ result
+             before nineteen would cost her the academy. It does not, and cannot: they are separate
+             mechanisms that shared a noun. `docs/specs/round17-triage.md` §B has the evidence; this
+             button's job is to make sure nobody has to go and read it. -->
         <button
           v-if="fork.collegeOpen"
           class="fork-answer"
@@ -100,8 +108,8 @@ async function answer(a: ForkAnswer): Promise<void> {
           :disabled="game.busy"
           @click="answer('college')"
         >
-          <strong>Take the scholarship</strong>
-          <span>Four years of student tennis. No ranking points, and the money goes the other way.</span>
+          <strong>Take the college place</strong>
+          <span>Four years of student tennis on a college scholarship. No ranking points, and the money goes the other way.</span>
         </button>
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
           <strong>Stop here</strong>

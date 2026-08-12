@@ -721,7 +721,14 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     // one answer, one builder: no branch on the week's facts anywhere in this file
     expect(card).toContain('const scene = computed(() => game.snapshot?.diary.scene ?? null)')
     expect(card).toContain('weekSceneArtUrl(scene.value)')
-    expect(card).toContain("import { weekArtUrl, weekSceneArtUrl } from '../art/weeks'")
+    // ⚠ RE-AIMED 12.08 (round-17 #26): the card gained `vacationArtUrl` in the same import, to ask
+    // whether a vacation frame is actually on screen before shifting its crop towards her. The claim
+    // this line makes – one builder, imported from the art module, no branch on the week's facts in
+    // this file – is unchanged and is stated more precisely by naming the two builders rather than
+    // the whole import statement, which was pinning punctuation.
+    expect(card).toContain("from '../art/weeks'")
+    expect(card).toContain('weekArtUrl')
+    expect(card).toContain('weekSceneArtUrl')
     // ...and the two things it must NOT do again: read the journey's fields, or find the booking itself
     expect(card).not.toContain('travelHomeScene.value')
     expect(card).not.toContain('snap.vacations.find')

@@ -167,7 +167,13 @@ describe('the fork at nineteen', () => {
     const answers = w.findAll('.fork-answer')
     expect(answers).toHaveLength(3)
     expect(w.text()).toContain('Turn professional')
-    expect(w.text()).toContain('Take the scholarship')
+    // ⚠ RE-AIMED 12.08 (round-17 B), NOT WEAKENED. The button read "Take the scholarship" and now
+    // reads "Take the college place": the academy's travel grant is also called a scholarship, in
+    // the feed and on two screens, and the owner read the two as one thing and asked whether a W75+
+    // result before nineteen would cost her the academy. It cannot – they are separate mechanisms –
+    // so the word had to stop being shared. The assertion follows the button; the claim is
+    // unchanged, and it is stricter for naming college explicitly.
+    expect(w.text()).toContain('Take the college place')
     expect(w.text()).toContain('Stop here')
     // ⚠ NO PRIMARY. «Stop» must be able to be the right answer, so the card may not style one of
     // them as the correct one - all three carry the same class and none is a PrimaryPill.
@@ -187,12 +193,17 @@ describe('the fork at nineteen', () => {
     w.unmount()
   })
 
-  // ⭐ ROUND-17 #6 – THE SCHOLARSHIP IS NOT DRAWN FOR A GIRL WHO CANNOT TAKE IT
-  it('⭐ drops the scholarship once she is earning on the tour, and keeps the other two equal', () => {
+  // ⭐ ROUND-17 #6 – THE COLLEGE PLACE IS NOT DRAWN FOR A GIRL WHO CANNOT TAKE IT
+  // ⚠ RE-AIMED 12.08 (round-17 B) with the block above – the button names college now, and the
+  // negative assertion had to follow it or it would have gone vacuously green on the new copy.
+  // That is the whole hazard of a text pin, and it is why the positive assertion below is kept
+  // beside it: "the college answer is gone" and "the other two are still here" are two claims.
+  it('⭐ drops the college place once she is earning on the tour, and keeps the other two equal', () => {
     patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, collegeOpen: false } })
     const w = mount(ForkDialog)
     expect(w.findAll('.fork-answer')).toHaveLength(2)
-    expect(w.text()).not.toContain('Take the scholarship')
+    expect(w.text()).not.toContain('Take the college place')
+    expect(w.text()).not.toContain('student tennis')
     expect(w.text()).toContain('Turn professional')
     expect(w.text()).toContain('Stop here')
     // ...and still no primary: removing an answer must not become a recommendation.

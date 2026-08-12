@@ -325,31 +325,60 @@ function discover(root) {
     }
   }
 
-  return { encode: dedupe(encode), evacuate }
+  const { jobs, ambiguous } = dedupe(encode)
+  return { encode: jobs, evacuate, ambiguous }
 }
 
 /**
- * Two masters can aim at the same webp (a jpeg re-export of an existing png). One wins; the
+ * Two masters can aim at the same webp. POSITION decides, and nothing else: a file just dropped
+ * into public/ is by definition the newer export and beats one already filed in art-src/. The
  * loser is still evacuated, so no raw file is left behind in public/.
- * Priority: a file just dropped into public/ beats one already filed in art-src/ (it is the
- * newer export), then jpeg beats png (the author's jpeg exports are the smaller source).
+ *
+ * Anything position cannot separate – two masters sitting in the SAME inbox – is returned as
+ * `ambiguous` and stops the build. It is not this function's job to guess.
+ *
+ * ⚠ FORMAT USED TO BE THE SECOND TIEBREAK, AND IT ATE A CORRECTION (12.08). The rule read
+ * "then jpeg beats png (the author's jpeg exports are the smaller source)", which is a statement
+ * about SIZE offered as a statement about RECENCY, and the two came apart the moment the owner
+ * redrew a trophy. `wta250-gold.jpg` (04.08) and `wta250-gold.png` (08.08) both sat in
+ * `art-src/images/trophies-jpeg/`; both are filed, so both scored 0 on position, and the format
+ * term handed the win to the four-day-old jpeg. Worse than stale: a jpeg CANNOT CARRY ALPHA, so
+ * sharp emitted a bare `VP8 ` chunk – the only trophy of thirty-two without a transparency
+ * channel – and the W250 champion's cup shipped on a baked-in white rectangle for four days while
+ * the corrected art with its alpha intact sat one directory away. The owner reported the white
+ * background twice and believed he had already fixed it. He had.
+ *
+ * ⚠ AND THE GUARD WRITTEN FOR EXACTLY THIS COULD NOT SEE IT. The 01.08 collision check ("a
+ * pipeline that cannot say which file is the master must stop and ask, loudly") ran on this
+ * function's OUTPUT, which has one job per target by construction – so it was unreachable for
+ * every clash dedupe resolved, which is every clash. A guard downstream of the thing that hides
+ * the fault from it is not a guard. The ambiguity is raised HERE now, where it is known.
  */
 function dedupe(jobs) {
-  const rank = (j) => (j.incoming ? 2 : 0) + (JPEG_RE.test(j.src) ? 1 : 0)
+  const rank = (j) => (j.incoming ? 1 : 0)
   const best = new Map()
   const losers = []
+  /** target -> every candidate tied at the best rank seen so far. */
+  const tied = new Map()
   for (const job of jobs) {
     const prev = best.get(job.target)
-    if (!prev) best.set(job.target, job)
-    else if (rank(job) > rank(prev)) {
+    if (!prev) {
       best.set(job.target, job)
+      tied.set(job.target, [job])
+    } else if (rank(job) > rank(prev)) {
+      best.set(job.target, job)
+      tied.set(job.target, [job])
       losers.push(prev)
-    } else losers.push(job)
+    } else {
+      if (rank(job) === rank(prev)) tied.get(job.target).push(job)
+      losers.push(job)
+    }
   }
   const winners = [...best.values()]
   // A loser still has to leave public/ if that is where it sits.
   for (const l of losers) if (l.moveTo) winners.push({ ...l, target: null })
-  return winners
+  const ambiguous = [...tied.entries()].filter(([, candidates]) => candidates.length > 1)
+  return { jobs: winners, ambiguous }
 }
 
 async function encodePortrait(src, maxSide = MAX_SIDE) {
@@ -392,7 +421,7 @@ export async function optimizeArt(options = {}) {
   const log = options.log ?? ((m) => console.log(m))
   const artSrcDir = join(root, 'art-src')
 
-  const { encode, evacuate } = discover(root)
+  const { encode, evacuate, ambiguous } = discover(root)
 
   // ⚠ TWO SOURCES FOR ONE TARGET IS AN ERROR, NOT A RACE (01.08). The first trophy import left every
   // master behind twice - `<stem>.png` beside `<stem>-fs8.png` - and once delivery dirs learned to
@@ -401,22 +430,28 @@ export async function optimizeArt(options = {}) {
   // the next with every run logging success. The owner's updated trophies vanished into exactly this.
   // A pipeline that cannot say which file is the master must stop and ask, loudly, at build time -
   // the alternative is a webp that lies with confidence.
-  {
-    const byTarget = new Map()
-    for (const job of encode) {
-      const list = byTarget.get(job.target) ?? []
-      list.push(job.src)
-      byTarget.set(job.target, list)
+  //
+  // ⚠ AND IT HAS TO READ `ambiguous`, NOT RECOMPUTE FROM `encode` (12.08). Recomputing here was
+  // dead code: dedupe leaves one job per target, so the group of size 2 this looked for could not
+  // exist. The one group it COULD build was the evacuating losers, which all carry `target: null` -
+  // so the only way the old check ever fired was to report a clash on a target literally named
+  // "null". Every real clash went through silently, which is how the W250 trophy shipped wrong.
+  if (ambiguous.length) {
+    // The message decides how fast this gets resolved, so it carries the two facts a human needs
+    // to pick: which file is NEWER, and which can carry transparency. The alpha note is not
+    // decoration - losing it is what made this bug invisible rather than merely stale.
+    const describe = (src) => {
+      const when = statSync(src).mtime.toISOString().slice(0, 10)
+      const flat = JPEG_RE.test(src) ? ', jpeg - CANNOT carry transparency' : ''
+      return `    <- ${relative(root, src)}  (${when}${flat})`
     }
-    const clashes = [...byTarget.entries()].filter(([, srcs]) => srcs.length > 1)
-    if (clashes.length) {
-      const lines = clashes
-        .map(([target, srcs]) => `  ${relative(root, target)}\n${srcs.map((s) => `    <- ${relative(root, s)}`).join('\n')}`)
-        .join('\n')
-      throw new Error(
-        `optimize-art: ${clashes.length} target(s) have more than one master - delete or rename the stale twin(s):\n${lines}`,
-      )
-    }
+    const lines = ambiguous
+      .map(([target, jobs]) => `  ${relative(root, target)}\n${jobs.map((j) => describe(j.src)).join('\n')}`)
+      .join('\n')
+    throw new Error(
+      `optimize-art: ${ambiguous.length} target(s) have more than one master in the same place, and ` +
+        `nothing here can tell which one you meant. Delete or rename the stale twin(s):\n${lines}`,
+    )
   }
 
   const result = { encoded: 0, skipped: 0, evacuated: 0 }

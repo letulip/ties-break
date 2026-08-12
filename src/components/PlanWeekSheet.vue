@@ -32,6 +32,7 @@ import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekLabel, weekRange } from '../shared/dates'
 import { vacationArtUrl } from '../art/weeks'
 import IconButton from './ui/IconButton.vue'
+import TakeoverShell from './ui/TakeoverShell.vue'
 
 const props = defineProps<{
   week: number
@@ -222,12 +223,31 @@ function askVacation(row: PackageRow): void {
 </script>
 
 <template>
-  <div class="dialog-overlay" @click.self="emit('close')">
-    <div class="plan-sheet">
-      <IconButton class="replay-close" icon="close" label="Close planner" title="Close" @click="emit('close')" />
-      <p class="guide-title">Plan {{ weekLabel(week) }}</p>
-      <p class="hint" style="margin-top: -6px">{{ dates }} · condition {{ condition }}/100</p>
+  <!-- ⭐ FULL SCREEN SINCE ROUND-17 #5 (the owner), the same move the Inbox made in round 16 and for
+       the same measured reason. This was a `.dialog-overlay` + `.plan-sheet` capped at 420px and
+       86vh, holding two tabs, a price table and SIX vacation packages each with a painting, a name,
+       a note and a Book button - a scroller inside a card inside a page, on a surface whose whole
+       job is comparing six things side by side. `TakeoverShell` is the app's one answer to "a screen
+       that covers the tabs" and five surfaces already render through it, so this is a re-home rather
+       than a new layout: same tabs, same rows, same controls, same confirms.
+       ⚠ AND THE BACKDROP TAP GOES WITH THE BACKDROP. `@click.self` was one of the two exits; there
+       is nothing behind a takeover to tap, so the header's close control is the way out - which is
+       what every other takeover in the app already does.
+       ⚠ `:screen` IS THE SCROLL RESET, and the tabs are exactly what it is for: Practice and
+       Vacation are two screens in one scroller, so switching to Vacation from the bottom of the
+       Practice tab used to arrive already scrolled past the first package. -->
+  <TakeoverShell :title="`Plan ${weekLabel(week)}`" :screen="tab">
+    <template #exit>
+      <IconButton icon="close" label="Close planner" title="Close" @click="emit('close')" />
+    </template>
+    <!-- The week's dates and where her condition stands - the two facts every tab is chosen
+         against, so they belong to the header rather than to either tab. -->
+    <template #sub>{{ dates }} · condition {{ condition }}/100</template>
 
+    <!-- ⚠ ONE WRAPPER, for the reason InboxSheet's has one: `.tf-body` is a flex column with a 16px
+         gap, and without a wrapper every paragraph, hint and tab strip becomes a gap-separated band
+         instead of a page. -->
+    <div class="plan-body">
       <!-- ---------------- Already booked ---------------- -->
       <!-- R14-1: THE UNDO, WHERE THE BOOKING LIVES. The painted vacation card carries no control by
            the owner's 29.07 ruling and opens this sheet instead; this is the half of that routing
@@ -368,5 +388,5 @@ function askVacation(row: PackageRow): void {
         </div>
       </template>
     </div>
-  </div>
+  </TakeoverShell>
 </template>

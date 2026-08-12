@@ -60,6 +60,7 @@ import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
   gearHitForWeek,
+  gearVoice,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort, COHORT_SIZE } from './season/cohort'
 import { renewCohort } from './season/conveyor'
@@ -1256,7 +1257,13 @@ function resolveGear(world: WorldState): void {
       week: world.week,
       type: 'expense',
       category: line.breakdown,
-      text: covered > 0 ? `${line.flavor[bg]} – on ${terms!.brand}` : line.flavor[bg],
+      // ⭐ ROUND-17 #17: the sentence is written from the shop she is actually in, not from the
+      // questionnaire she filled in at week 0 – see `gearVoice`. Copy only; `bg` above still keys
+      // every draw and every price.
+      text: (() => {
+        const flavor = line.flavor[gearVoice(bg, inDeal)]
+        return covered > 0 ? `${flavor} – on ${terms!.brand}` : flavor
+      })(),
       amountCents: -paid,
     })
   }

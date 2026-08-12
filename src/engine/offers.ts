@@ -79,6 +79,11 @@
 import { ECONOMY } from './economy'
 import { rngFromSeed } from './rng'
 import { isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from './season/calendar'
+// The ONE definition of "which season is this week in" – the same one the Money screen's "This
+// season" window and the end-of-season wrap-up read, so the inbox cannot mean a different span by
+// it. `world/ledger.ts` type-imports `WorldState` and runtime-imports only the calendar, so this
+// is not a cycle.
+import { seasonIndexOf } from './world/ledger'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
@@ -1171,19 +1176,55 @@ export function raiseSuspensionLetter(
   return offer
 }
 
+/** Is there anything about this tournament letter that has not happened yet? The two dates a desk
+ *  or tour letter can carry that reach FORWARD: the event it confirms, and the week a suspension
+ *  lifts. Either one in the future means the letter is still doing a job.
+ *
+ *  ⚠ THIS IS THE HALF THAT MAKES A SEASON PRUNE SAFE. Both of these routinely cross the boundary:
+ *  entries for the first weeks of a season are written in the off-season before it, and a
+ *  suspension imposed in November runs into the new year. Dropping "last season's letters" without
+ *  it would delete the confirmation for an event she is about to play and the only paper that says
+ *  why her entries are refused. */
+function letterReachesForward(o: Offer, week: number): boolean {
+  const t = o.terms as { eventWeek?: number; untilWeek?: number }
+  return (t.eventWeek ?? -1) >= week || (t.untilWeek ?? -1) >= week
+}
+
 /** THE INBOX STAYS BOUNDED (the `Snapshot.offers` note promises "never pruned" about CONTRACTS,
  *  and it can only keep that promise if the receipts do not pile up for ever): a professional
  *  career writes ~15-30 desk letters a season, so unlike the sponsor's handful they must age out.
- *  A year is the window - long enough that "what did I do about that?" still has its answer, and
- *  the same 52 weeks every other rolling record in the game keeps. Sponsor letters are NEVER
- *  touched here: a signed deal outlives every prune, which is the whole reason the inbox exists. */
+ *  Sponsor letters are NEVER touched here: a signed deal outlives every prune, which is the whole
+ *  reason the inbox exists.
+ *
+ *  ⭐ THE WINDOW IS THE SEASON NOW, NOT A ROLLING YEAR – round-17 #1, the owner: auto-delete last
+ *  season's tournament letters, and keep anything that is not one.
+ *
+ *  ⚠ AND "A YEAR" IS WHY HE HAD TO ASK, WHICH IS THE WHOLE FINDING. The rule already dropped exactly
+ *  the right KINDS - `entry` and `tour`, never `kit` - so this was never a missing feature. It was
+ *  the wrong clock: a rolling 52 weeks means a letter written in week 3 survives until week 3 of the
+ *  NEXT season, so a player who opens the inbox in a new season is looking at almost a full year of
+ *  the last one, and the newer the letter the longer it outstays. "Last season's" is a statement
+ *  about a BOUNDARY, and a rolling window never crosses one. `seasonIndexOf` is the same definition
+ *  of a season the money screens and the wrap-up use (world/ledger.ts), so the inbox now empties on
+ *  the week the season table does.
+ *
+ *  ⚠ ONE AUTHORITY OVER ONE LIFETIME. `composables/inboxMail.ts` records the ruling that the bin
+ *  icon is DISMISS-FROM-THE-LIST and not destroy, precisely so there are not two owners of when a
+ *  letter dies. This is still the only destructor, running where it always ran (`housekeep`, every
+ *  tick, idempotent) - it changed its mind about the date, not about who decides. */
 export function pruneEntryLetters(offers: Offer[], week: number): Offer[] {
-  // ⚠ THE TOUR'S OWN LETTERS AGE OUT ON THE SAME 52 WEEKS (W3-ACT2), and for the same reason the
-  // desk's do: a professional season writes a handful of due-notices and (rarely) a charge, and a
-  // record nobody can find is not a record. The PENALTY LEDGER itself is never pruned - the letter
-  // is the announcement, `world.penalties` is the account - so a charge stays readable on the Stats
-  // screen long after its paper has left the inbox, and the rolling window is what forgives it.
-  return offers.filter((o) => (o.kind !== 'entry' && o.kind !== 'tour') || week - o.week <= WEEKS_PER_YEAR)
+  // ⚠ THE TOUR'S OWN LETTERS AGE OUT WITH THE DESK'S (W3-ACT2), and for the same reason: a
+  // professional season writes a handful of due-notices and (rarely) a charge, and a record nobody
+  // can find is not a record. The PENALTY LEDGER itself is never pruned - the letter is the
+  // announcement, `world.penalties` is the account - so a charge stays readable on the Stats screen
+  // long after its paper has left the inbox, and the season boundary is what forgives it.
+  const season = seasonIndexOf(week)
+  return offers.filter(
+    (o) =>
+      (o.kind !== 'entry' && o.kind !== 'tour') ||
+      seasonIndexOf(o.week) >= season ||
+      letterReachesForward(o, week),
+  )
 }
 
 /** The deal that covered the season now finishing, if any - what the off-season review has to judge
