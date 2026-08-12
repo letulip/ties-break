@@ -402,14 +402,15 @@ describe('the pinned control bar can never reach the playing surface', () => {
     const belowAt = markup.indexOf('class="mv-below"')
     const logAt = markup.indexOf('class="mv-log"')
     const barAt = markup.indexOf('class="mv-controls"')
-    const boxAt = markup.indexOf('class="mv-boxscore"')
     expect(panelAt, 'the panel is still the first thing in the viewer').toBeGreaterThan(-1)
     expect(belowAt, 'the sticky bar still has its own containing block').toBeGreaterThan(panelAt)
     // The log opens the wrapper, so the wrapper's top edge IS the log's top edge – below the panel.
     expect(logAt, 'the log is the wrapper\'s first child').toBeGreaterThan(belowAt)
     expect(barAt, 'the bar is inside .mv-below, after the log').toBeGreaterThan(logAt)
-    // and the box score is inside it too, so the bar can still pin while the box score is on screen.
-    expect(boxAt, 'the box score is inside the wrapper as well').toBeGreaterThan(barAt)
+    // ⚠ RE-AIMED 12.08: the box score used to be pinned inside the wrapper here, after the bar; the
+    // owner had that panel deleted («не нужна всё»), and it may not grow back - the guarantee this
+    // test protects (the bar cannot reach the court) never rested on it.
+    expect(markup.indexOf('class="mv-boxscore"'), 'the deleted box score grew back').toBe(-1)
     expect(stylesOf(viewer)).toContain('.mv-below {')
   })
 
@@ -761,8 +762,8 @@ describe('live and replay open the same way – the popup, which is the one he l
   // screens open a match THE SAME WAY. What changed is what "the same way" is. It used to be "inside a
   // `.tf-card`", and the owner has taken that box off: «на экране матча у нас двойная рамка, она
   // съедает место, давай внешний контур уберем, он не нужен». It was a 16px-padded, hairline-bordered
-  // panel wrapped around a stack of panels the viewer already draws (`.mv-panel`, `.mv-log`,
-  // `.mv-boxscore` are each a `Card`), so it was a border around a border. Measured at 375pt before and
+  // panel wrapped around a stack of panels the viewer already draws (`.mv-panel`, `.mv-log` - and,
+  // until 12.08, `.mv-boxscore` - each a `Card`), so it was a border around a border. Measured at 375pt before and
   // after: the canvas went 291 -> 327px wide, the painted court 244.4 -> 274.9px, and each screen got
   // 32px of height back. So the test now pins the ABSENCE as hard as it used to pin the presence -
   // three screens agreeing on no frame is exactly as protective as three agreeing on one, and a
