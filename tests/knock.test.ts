@@ -358,7 +358,19 @@ describe('W4 — an unanswered knock BLOCKS time, it does not merely halt it', (
     const answered = toSnapshot(w)
     expect(answered.knockPrompt, 'nothing left to ask').toBeNull()
     expect(answered.knock!.choice, 'but the week still knows what it is under').toBe('push')
-    expect(read('../src/App.vue')).toContain('const showKnock = computed(() => !!game.snapshot?.knockPrompt)')
+    // ⚠ RE-AIMED 12.08 (round-17 A), NOT WEAKENED, AND IT FOLLOWED THE CODE RATHER THAN THE STRING.
+    // The gate used to be written out in App.vue; the five blocking overlays are now one ordered
+    // list in `composables/blockingOverlay.ts` (the birthday had to move ahead of the fork, and five
+    // computeds negating each other could not express that without a cycle). The CLAIM is unchanged
+    // and is what both halves below assert: the knock is gated on the SNAPSHOT FIELD, not on a stop
+    // reason. Asserting it in the file where the rule now lives is also the stronger of the two -
+    // the old pin would have gone green on `blockingOverlay` reading `stopReasons`.
+    expect(read('../src/App.vue'), 'App.vue reads the shared list').toContain(
+      "const showKnock = computed(() => overlay.value === 'knock')",
+    )
+    const order = read('../src/composables/blockingOverlay.ts')
+    expect(order, 'and the list reads the snapshot field').toContain("if (snapshot.knockPrompt) return 'knock'")
+    expect(order, 'never a stop reason').not.toContain('stopReasons')
   })
 })
 

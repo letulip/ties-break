@@ -167,6 +167,19 @@
   --cat-stringing: #5ec9ac;
   --cat-physio: #57b0e0;
   --cat-vacation: #e0748f;
+  /* ⚠ WHERE SHE IS IN A VACATION FRAME – ONE MEASURED NUMBER, FOR EVERY SURFACE THAT CROPS ONE.
+     Round-17 #26, and the third time this has been found: the owner ruled on it on 30.07 («square of
+     the right part of a not square (long) frame – there's a face there»), MoneyScreen's trip
+     polaroid was measured and fixed then, and the two surfaces that crop the SAME six paintings were
+     not. She sits on the RIGHT in all six: her face lands at 66% of the width in `vac-village`, the
+     leftmost, and 79% in `vac-elite`, the rightmost – so a centre crop throws her out of the picture
+     in every one of them, and `vac-elite` (the owner's own report) is the worst case by construction.
+     90% is the value that holds all six, chosen off the frames rather than off one of them.
+     A TOKEN AND NOT THREE LITERALS because this is a fact about the ART: when a seventh package is
+     painted, the number is re-measured in one place. Only surfaces that actually crop use it - the
+     Season feed's vacation card takes its aspect-ratio FROM the art (941/377) and crops nothing, so
+     adding it there would be a no-op pretending to be a fix. */
+  --crop-vacation-x: 90%;
   --cat-practice: #6f8fd8;
   --cat-other: #8b95a1;
   /* The grid-only three: hours with no line on the wallet. */
@@ -1517,12 +1530,8 @@ button.primary.risky {
 .replay-card,
 .tf-card,
 .guide-card,
-.plan-sheet {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-dialog);
-  padding: 16px;
-}
+/* `.plan-sheet`'s panel treatment lived here and was deleted with the card it painted – round-17
+   #5 made the planner a takeover, and a takeover IS the panel. See `.plan-body` below. */
 
 .dialog-card {
   width: 100%;
@@ -2578,12 +2587,14 @@ tr.kid-row td {
 
 /* The planner sheet: same overlay/card language as the tour guide, scrollable on a phone.
    Which is now literal – both are the panel shell up with .dialog-card, plus their own size. */
-.plan-sheet {
-  position: relative;
-  width: 100%;
-  max-width: 420px;
-  max-height: 86vh;
-  overflow-y: auto;
+/* ⭐ ROUND-17 #5: the planner is a TAKEOVER now, so its own box is gone. `.plan-sheet` used to set
+   `max-width: 420px; max-height: 86vh; overflow-y: auto` here and a panel background, border, radius
+   and padding in the dialog block further up - a card with its own scroller, holding six vacation
+   packages each with a painting. `TakeoverShell` owns all of that: `.tf-body` IS the scrollport, and
+   the panel is the screen. What is left is the one wrapper the shell's 16px flex gap needs, exactly
+   as `.inbox-body` is for the Inbox. */
+.plan-body {
+  min-width: 0;
 }
 
 .plan-tabs {
@@ -2650,6 +2661,10 @@ tr.kid-row td {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  /* ⭐ ROUND-17 #26. Every image this rule ever draws is one of the six vacation frames (the package
+     picker has no other art), and it draws them into a 62%-wide strip - so a 2.50:1 painting is
+     cropped hard, horizontally, and she was outside the window in all six. See the token. */
+  object-position: var(--crop-vacation-x) 50%;
 }
 
 /* A bright beach eats 12px type. Same four-stop scrim idea the event cards use. */

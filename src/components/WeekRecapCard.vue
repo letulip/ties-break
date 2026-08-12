@@ -40,7 +40,7 @@ import { nextGoalFor } from '../composables/nextGoal'
 // same week, seen from either end of it. See the note above `dayDots`.
 import { planWeek } from '../engine/plan'
 import { vacationPackage } from '../engine/economy'
-import { weekArtUrl, weekSceneArtUrl } from '../art/weeks'
+import { vacationArtUrl, weekArtUrl, weekSceneArtUrl } from '../art/weeks'
 import { weekLabel } from '../shared/dates'
 import { formatCentsSigned } from '../shared/money'
 import PracticeFlow from './PracticeFlow.vue'
@@ -83,6 +83,18 @@ const plan = computed(() => game.snapshot?.plan ?? { train: 75, rest: 25 })
 // Every arm here inherits that: the week's painting IS what the week was.
 const scene = computed(() => game.snapshot?.diary.scene ?? null)
 const artUrl = computed(() => (scene.value ? weekSceneArtUrl(scene.value) : weekArtUrl(week.value)))
+
+// ⭐ ROUND-17 #26 – WHICH WEEKS ARE CROPPED SIDEWAYS.
+//
+// ⚠ THE SCENE KIND IS NOT ENOUGH, and the reason is one line up in `weekSceneArtUrl`: a vacation
+// scene whose package has no painting yet falls back to `weekArtUrl(week)` – «a caller must handle
+// that rather than render a 404, because the package catalogue can grow before the art does». That
+// fallback is a 1.88:1 week painting, and shifting IT to 90% would push the crop off the picture in
+// the opposite direction. So the test is "is a vacation frame actually on screen", which is the
+// same question `vacationArtUrl` already answers by returning null.
+const isVacationScene = computed(
+  () => scene.value?.kind === 'vacation' && vacationArtUrl(scene.value.packageId) !== null,
+)
 
 // The generic week frames are decorative – the handwriting under them says what the week was – so they
 // get an empty alt and stay out of the reading order. THE OTHER THREE ARE NOT: each is the only place
@@ -394,8 +406,11 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 <template>
   <section class="recap-card" :aria-label="`Week story, ${practiceWeekLabel}`">
     <!-- The week's painting. `week-art img` is shared vocabulary (style.css) with the Season feed's
-         cards, so the two draw the same picture the same way. -->
-    <div class="week-art recap-art">
+         cards, so the two draw the same picture the same way.
+         ⭐ ROUND-17 #26: a vacation week is the one arm whose painting is cropped 45% horizontally
+         here, and she is on the right of every one of those six frames – so it says which arm it is
+         and the crop follows. Every other scene is square or close to the slot and stays centred. -->
+    <div class="week-art recap-art" :class="{ 'recap-art-vacation': isVacationScene }">
       <img :src="artUrl" :alt="artAlt" />
     </div>
 
@@ -566,17 +581,31 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    `object-fit: cover` (shared, `.week-art img`) crops into it: the wide painting loses a little
    width, the square one a little height, and the page keeps one silhouette. `max-height` is D's 286
    for the wide screens where the ratio would exceed it.
-   ⚠ THE VACATION FRAME PAYS THE MOST FOR THIS - a 2.50:1 picture in a 1.36:1 slot is a 45% centre
-   crop - so it was checked rather than assumed, all five, at this exact ratio: every subject stays in
-   frame and the five stay unmistakably different from each other (a fire pit and friends, hens by a
-   village wall, a lake at sunset, the pool, the physio). Following the art instead, the way the
-   Season feed does, is one line here and a 137px band at 375; it is in the report as the alternative
-   if the owner wants the breadth back rather than one silhouette. */
+   ⚠ THE VACATION FRAME PAYS THE MOST FOR THIS - a 2.50:1 picture in a 1.36:1 slot is a 45% crop -
+   so it was checked, all five, at this exact ratio: every subject stays in frame and the five stay
+   unmistakably different from each other (a fire pit and friends, hens by a village wall, a lake at
+   sunset, the pool, the physio). Following the art instead, the way the Season feed does, is one
+   line here and a 137px band at 375; it is in the report as the alternative if the owner wants the
+   breadth back rather than one silhouette.
+
+   ⚠ AND THAT CHECK WAS RUN ON THE WRONG AXIS (round-17 #26, 12.08). "Every subject stays in frame"
+   was true of the SCENE and false of the GIRL: she is on the right of all six frames, at 66% to 79%
+   of the width, and a 45% CENTRE crop cuts her out of every one of them. The owner had already ruled
+   on exactly this on 30.07 and MoneyScreen's polaroid was measured and fixed then; this surface and
+   the package picker draw the same six paintings and were missed. The crop is steered below, off
+   `--crop-vacation-x`, so all three now read one number. The paragraph above is kept because its
+   argument - one slot, one silhouette - is still the right call; only its verification was partial. */
 .recap-art {
   aspect-ratio: 390 / 286;
   max-height: 286px;
   border-radius: var(--radius-card);
   overflow: hidden;
+}
+
+/* ⭐ ROUND-17 #26 – the vacation weeks, and only those. Scoped, so it beats the shared
+   `.week-art img` rule in style.css without either of them having to know about the other. */
+.recap-art-vacation img {
+  object-position: var(--crop-vacation-x) 50%;
 }
 
 /* THE NOTE RIDES THE PAINTING. D's own numbers: up 34px over the art, and 2px wider than the

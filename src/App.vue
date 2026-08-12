@@ -36,6 +36,7 @@ import { useLetterWatermark, useNewsWatermark } from './composables/inboxCue'
 // "when does the dot show" is one testable sentence rather than a computed buried in a shell.
 import { trophyDotShows, trophyPieces, useTrophyFlight } from './composables/trophyArrival'
 import { useScrollReset } from './composables/scrollReset'
+import { blockingOverlay } from './composables/blockingOverlay'
 import { playSfx, primeSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -805,7 +806,17 @@ function dismissStopToast(): void {
 // built on. Dialog up exactly when the sim is waiting; no dismiss flag, because there is nothing to
 // dismiss. It outranks the other two overlays for the same reason: they can wait a click and this
 // cannot.
-const showKnock = computed(() => !!game.snapshot?.knockPrompt)
+//
+// ⭐ 12.08 – ALL FIVE BLOCKING GATES NOW READ ONE ORDERED LIST (`composables/blockingOverlay.ts`),
+// because the owner asked for the birthday to speak before the fork and the old shape could not
+// express that without a cycle: `showRetirement` read `!showFork`, so making `showFork` wait on the
+// birthday and the birthday wait on the retirement closed the loop. The list has no back-edges, the
+// order is stated once where it can be read, and the queue's termination is tested rather than
+// argued. What each gate used to say about WHY it outranks its neighbours has moved there; what each
+// says about reading the SNAPSHOT rather than a stop reason stays here, because that is a different
+// argument and it is still the load-bearing one.
+const overlay = computed(() => blockingOverlay(game.snapshot ?? null))
+const showKnock = computed(() => overlay.value === 'knock')
 
 // W2-ENDINGS. Three gates, and every one of them reads a SNAPSHOT FIELD rather than a stop reason -
 // the same argument the knock gate above makes, and here it matters more: an ending is permanent.
@@ -815,9 +826,9 @@ const showKnock = computed(() => !!game.snapshot?.knockPrompt)
 // `showEnding` is not a dialog at all. It REPLACES the tab shell, which is why it is branched in the
 // top-level chain beside OnboardingWizard rather than laid over the shell like the four overlays -
 // there is nothing behind an epilogue worth painting.
-const showEnding = computed(() => !!game.snapshot?.ending)
-const showFork = computed(() => !!game.snapshot?.fork)
-const showRetirement = computed(() => !!game.snapshot?.retirementOffer && !showFork.value)
+const showEnding = computed(() => overlay.value === 'ending')
+const showFork = computed(() => overlay.value === 'fork')
+const showRetirement = computed(() => overlay.value === 'retirement')
 
 // ⭐ v48 – HER BIRTHDAY. Reads `birthdayPrompt`, a SNAPSHOT FIELD, for exactly the argument the knock
 // gate above makes: the engine sets it from `pendingBirthday`, the identical predicate `advanceWeeks`
@@ -825,18 +836,12 @@ const showRetirement = computed(() => !!game.snapshot?.retirementOffer && !showF
 // that produces a fresh snapshot. No dismiss flag, because there is nothing to dismiss – the owner
 // asked for the popup to fire ALWAYS, which is what makes "nothing" a button rather than a close box.
 //
-// ⚠ BEHIND THE KNOCK, and that ordering is STOP_PRECEDENCE's own (see its 'birthday' member): a knock
-// is about her BODY and the week it governs starts now, while the birthday is a day on the family's
-// calendar that will still be there after the sore shoulder has been answered. Behind the epilogue and
-// the two endings questions for the reason every overlay is – an ending replaces the shell entirely.
-const showBirthday = computed(
-  () =>
-    !!game.snapshot?.birthdayPrompt &&
-    !showEnding.value &&
-    !showFork.value &&
-    !showRetirement.value &&
-    !showKnock.value,
-)
+// ⚠ BEHIND THE KNOCK AND AHEAD OF THE FORK – the order and the reasons live in `blockingOverlay`.
+// It moved ahead of the fork on 12.08 (the owner: she should be told it is her birthday before she is
+// asked to decide her career), and that is not a preference: two of the fork's three answers END the
+// career on the click, `pendingBirthday` returns null behind an ending, and her nineteenth simply
+// never happened.
+const showBirthday = computed(() => overlay.value === 'birthday')
 
 // R9-21a: the injury stop popup – blocking, until Continue. The dialog itself plays the alert sfx
 // on mount.
