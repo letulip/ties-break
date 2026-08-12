@@ -32,9 +32,22 @@ eject – and it is also why the popup had nowhere to go: there was no screen le
 |---|---|---|
 | 1 | `proceedLabel: string \| null` prop. Non-null ⇒ the button, and `finish` waits for the press | `MatchViewer.vue` |
 | 2 | the finished control bar is that one button – no speed plate, no resolution plate, no shout | `.mv-controls-done` |
-| 3 | the viewer's own box score now PAINTS, which is where round 16's "she retired hurt" lives | unchanged markup, newly reachable |
+| 3 | the viewer's own box score now PAINTS, which is where round 16's "she retired hurt" lives | unchanged markup, newly reachable – superseded 12.08, see below |
 | 4 | a dismissible popup when SHE is the one who stopped, over the match rather than instead of it | `.mv-hurt` |
 | 5 | `"To the result"` at TournamentFlow and PracticeFlow; the other two callers pass nothing | both flows |
+
+**⚠ #3 SUPERSEDED 12.08 – THE PANEL UNDER THE FINISHED BAR IS DELETED, by the owner's second ruling
+on it: «просто вот эта нижняя "борода" под кнопками на экране матча не нужна всё».** The first pass
+kept the card because it held the only sentence explaining an OPPONENT's retirement (`.mv-hurt` is
+hers-only) and `WorldMatch` carries no `retired` field for a flow's result card to inherit. That
+objection is closed without a protocol change: the commentary's own final beat carries the story –
+lead *"Retired."*, *"X cannot go on. Y advances. A long match on tired legs."* – at the top of the
+log the moment the match ends, on the same screen the ruling is about. The witness moved, it did not
+die: its visibility at end-of-match is pinned by `tests/component/injury-surfacing.test.ts` (a real
+engine retirement, driven through `seed:ret`) and `tests/component/match-viewer.test.ts`, both
+mutation-verified (hiding the final beat from the log turns five pins red). The finished bar itself
+is exactly the earlier ruling – `Watch again ↻ | Proceed`, same place, nothing grown around it – and
+the stats the panel duplicated stay one press away on the flow's own result card.
 
 **⚠ `null` IS A REAL ANSWER.** MatchReplay and SeasonScreen's sandbox have nowhere to proceed *to* –
 one is opened on top of a finished match, the other ends on its own box score – so a Proceed there

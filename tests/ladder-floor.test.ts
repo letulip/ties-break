@@ -372,6 +372,108 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
     expect(bookClosedTo(world, 'w15')).toBe(false)
   })
 
+  // ===============================================================================================
+  // ⚠ THE CLAIM IS LICENSED BY THE ARITHMETIC IT BORROWS (the owner, 12.08: «the National Series is
+  // the week - this one will not move anything. Enter World Tour 35?» ... «что вообще довольно
+  // странно по самой формулировке»). "Will not move anything" was clause 2's sentence said without
+  // clause 2's test: measured on tools/coach-ladder-claim-probe.ts, 87% of the cards it dismissed
+  // had ROOM in their own best-N book, and 84% of the alternatives it held up paid into a different
+  // table - usually a domestic rung against her professional card. The four tests below are the fix:
+  // each half-sentence fires exactly when it is true, and the alternative is never off her ladder.
+  // ===============================================================================================
+
+  it('⚠ a book with ROOM never hears "will not move anything" - he says what he knows instead', () => {
+    // Same fixture as THIS WEEK above: one counting w15 result, so her professional window has
+    // seventeen empty slots and a title here WOULD move her ranking. The old clause 1 dismissed
+    // exactly this card, which is the owner's complaint made of arithmetic.
+    const world = proWorld('coach-honest', 17, 140)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    injectEvent(world, world.week + 3, 'w75')
+    expect(bookClosedTo(world, 'w15')).toBe(false)
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      const said = coachLadderNote(world, w15, tier)
+      expect(said, tier).toContain('she has outgrown this one')
+      expect(said, tier).not.toContain('will not move anything')
+    }
+  })
+
+  it('⚠ ...and a SHUT book earns the strong claim - from the coaches who keep the book', () => {
+    // Eighteen counting rows, each worth more than a W15 title: the window really cannot take it,
+    // so "will not move anything" is true - and the same-week alternative is still named, which is
+    // what makes clause 1 more useful than clause 2 when both are available.
+    const world = proWorld('coach-strong', 19, 0)
+    for (let i = 0; i < BEST_N_BY_TRACK.wta; i++) {
+      world.results.push({ playerId: KID_ID, week: world.week - i, points: 100, tier: 'w75' })
+    }
+    recomputeKidRank(world)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    // The rung beside it must be one she has NOT walked past: at this book the sliding window has
+    // closed everything up to wta125, so the terminal rungs are where a genuine alternative lives.
+    injectEvent(world, world.week + 3, 'wta250')
+    expect(hasOutgrown(world, 'w15')).toBe(true)
+    expect(bookClosedTo(world, 'w15')).toBe(true)
+    expect(hasOutgrown(world, 'wta250')).toBe(false)
+    expect(tierOpenFor(world, 'wta250')).toBe(true)
+    for (const tier of ['middle', 'high', 'elite'] as const) {
+      const said = coachLadderNote(world, w15, tier)
+      expect(said, tier).toContain(TIERS.wta250.label)
+      expect(said, tier).toContain('will not move anything')
+    }
+    // A budget coach sees the same two draws in front of him but is not keeping her best-N book
+    // (`coachReadsTheBook`), so the book's sentence is not his to say - the outgrown one is.
+    const budget = coachLadderNote(world, w15, rungOf('budget'))
+    expect(budget).toContain(TIERS.wta250.label)
+    expect(budget).toContain('she has outgrown this one')
+    expect(budget).not.toContain('will not move anything')
+  })
+
+  it('⚠ THE OWNER\'S OWN CARD: a domestic rung is never held up against the table she is climbing', () => {
+    // His screenshot's exact shape: a professional card, a National-track event on the same week.
+    // The preconditions prove the old picker WOULD have named it (open, not outgrown, same week) -
+    // and the book has room, so the sentence it hung on the card was false twice over. The
+    // professional arm is a one-way door (`activeLadderOf`); the coach does not point back through
+    // it, and with nothing else to say he says nothing.
+    const world = proWorld('coach-owner-card', 17, 140)
+    world.results.push({ playerId: KID_ID, week: world.week, points: 160, tier: 'national' })
+    recomputeKidRank(world)
+    const w15 = injectEvent(world, world.week + 3, 'w15')
+    injectEvent(world, world.week + 3, 'national')
+    expect(hasOutgrown(world, 'w15')).toBe(true)
+    expect(hasOutgrown(world, 'national')).toBe(false)
+    expect(tierOpenFor(world, 'national')).toBe(true)
+    expect(bookClosedTo(world, 'w15')).toBe(false)
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      expect(coachLadderNote(world, w15, tier), tier).toBeNull()
+    }
+  })
+
+  it('⚠ a card that pays into a table she has LEFT is told the table, not a false "nothing"', () => {
+    // The other direction of the same defect: a domestic card in her international era. A Local
+    // title still moves her national standing (the book has room), so "will not move anything" is
+    // false - the true and useful sentence names the currency. Court-visible facts, so every hired
+    // rung may say it, budget included.
+    const world = createWorld('coach-cross')
+    world.condition = 100
+    world.fundsCents = 50_000_00
+    world.season = []
+    world.results.push({ playerId: KID_ID, week: world.week, points: 122, tier: 'national' })
+    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j30' })
+    world.onRampCleared = { itf: true, wta: false }
+    recomputeKidRank(world)
+    const local = injectEvent(world, world.week + 3, 'local')
+    injectEvent(world, world.week + 3, 'j30')
+    expect(hasOutgrown(world, 'local')).toBe(true)
+    expect(hasOutgrown(world, 'j30')).toBe(false)
+    expect(tierOpenFor(world, 'j30')).toBe(true)
+    expect(bookClosedTo(world, 'local')).toBe(false)
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      const said = coachLadderNote(world, local, tier)
+      expect(said, tier).toContain(TIERS.j30.label)
+      expect(said, tier).toContain('national points, not the table she is climbing')
+      expect(said, tier).not.toContain('will not move anything')
+    }
+  })
+
   it('⚠ IT IS ADVICE AND NEVER A BLOCK – at every rung, on every line he has', () => {
     // The standing rule of this game: the parent may push. `coachCaution` turns the button from
     // "Enter" into "Push through"; it must never turn it off.

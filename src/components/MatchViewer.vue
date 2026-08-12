@@ -100,10 +100,27 @@ const props = withDefaults(
      *
      * ⚠ null (default) IS A REAL ANSWER, like `previewEvent`'s. Two of the four callers have nowhere
      * to proceed TO - MatchReplay is opened on top of a finished match and closes back to where it
-     * came from, and the Season sandbox's friendly ends on its own box score - so a Proceed button
-     * there would be a control that does nothing. Those two keep the old behaviour exactly: `finish`
-     * fires when playback ends and they ignore it. A caller that names a label gets the button, and
-     * `finish` waits for the press.
+     * came from, and the Season sandbox's friendly ends where it stands, the log's final beat being
+     * the result - so a Proceed button there would be a control that does nothing. Those two keep
+     * the old behaviour exactly: `finish` fires when playback ends and they ignore it. A caller that
+     * names a label gets the button, and `finish` waits for the press.
+     *
+     * ⚠ AND THE OWNER CORRECTED HOW THIS LANDED, 12.08 - the words the template below cannot hold:
+     * «я просил чтобы просто кнопки управления менялись на proceed, сейчас так происходит, но
+     * почему-то весь этот блок поднимается, а под ним еще какой-то счет и статистика матча пишется -
+     * не надо этого. Можно сделать 2 кнопки рядом просто в этом нижнем блоке с контролами и все:
+     * Watch again | Proceed» - and, pressed on the panel that first stayed: «просто вот эта нижняя
+     * "борода" под кнопками на экране матча не нужна всё».
+     *
+     * The ROW is the finished bar: `Watch again ↻` beside the proceed label, on the same two tracks
+     * the speed and view plates stand on, so nothing shifts sideways when the match ends. THE PANEL
+     * UNDER IT IS GONE with the second ruling. It survived the first one because it carried the only
+     * sentence explaining an OPPONENT's retirement (`.mv-hurt` is raised for HER only, by ruling) -
+     * that witness now lives in the commentary log's own final beat ("Retired. X cannot go on. Y
+     * advances.", viz/commentary.ts), which is on this screen when the match ends and is pinned
+     * visible there by tests/component/injury-surfacing.test.ts and match-viewer.test.ts. The stats
+     * the panel duplicated are one press away on the flow's own result card, which is the owner's
+     * point.
      */
     proceedLabel?: string | null
   }>(),
@@ -1202,39 +1219,22 @@ function skipToResult(): void {
   viewMode.value = 'skip'
 }
 
-// Final full stats: aces/DFs computed from rallies (per spec); everything else
-// read straight from the authoritative MatchResult.stats.
-const finalAcesDfs = computed<{ aces: [number, number]; dfs: [number, number] }>(() => {
-  const aces: [number, number] = [0, 0]
-  const dfs: [number, number] = [0, 0]
-  for (const p of props.match.points) {
-    if (p.rally.ace) aces[p.entry.server]++
-    if (p.rally.doubleFault) dfs[p.entry.server]++
-  }
-  return { aces, dfs }
-})
-
+// ⚠ THE BOX SCORE'S OWN BINDINGS (finalAcesDfs, winnerName, servePct) WENT WITH ITS CARD - the
+// owner, 12.08: the panel under the finished controls duplicated the flow's result card. What
+// remains here is what the retirement POPUP still reads: the scoreline, and who stopped.
 const finalScoreLine = computed(() => props.match.result.sets.map((s) => `${s.a}-${s.b}`).join('  '))
-const winnerName = computed(() => playerName(props.match.result.winner))
 /**
- * R16 #18 – WHO STOPPED, IF ANYBODY DID. The box score's one headline was
- * `{{ winnerName }} wins {{ finalScoreLine }}`, and on a retirement that is the sentence the owner
- * reported: **"wins 4-5"** – a winner with fewer games than the loser, no marker, no explanation,
- * on the one screen that is supposed to say what happened. `result.retired` has been on the match
- * since the retirement slice and nothing in this component had ever read it.
- *
- * The marker is the sport's own – `ret.` after the scoreline – plus one plain line under it, because
- * three letters are a convention a parent watching her daughter's first season has no reason to know.
+ * R16 #18 – WHO STOPPED, IF ANYBODY DID. `result.retired` has been on the match since the
+ * retirement slice, and the owner's original report was a retirement going by as a bare scoreline
+ * ("wins 4-5" – a winner with fewer games than the loser, no explanation). The fact is told twice
+ * now: the commentary log's final beat says it to everyone ("Retired. X cannot go on...",
+ * viz/commentary.ts), and when the one who stopped is HERS this name headlines the `.mv-hurt`
+ * popup below.
  */
 const retiredName = computed(() => {
   const r = props.match.result.retired
   return r ? playerName(r.side) : null
 })
-
-function servePct(side: Side): number {
-  const s = props.match.result.stats[side]
-  return s.servePointsPlayed ? Math.round((s.servePointsWon / s.servePointsPlayed) * 100) : 0
-}
 
 // --- R17 #10: THE MATCH ENDS WHERE THE PLAYER IS, AND SHE IS TOLD WHY IT ENDED ------------------
 //
@@ -1341,7 +1341,7 @@ watch(finished, (isFinished) => {
           <!-- The export puts this bottom-right ON the court as a two-line chip; the owner asked for
                one line and off the surface, so it is a single row up here. Same plate the Season
                card draws, so the same fact looks like the same fact. -->
-          <WeatherPlate v-if="temperatureC != null" :temperature-c="temperatureC" :size="13" />
+          <WeatherPlate v-if="temperatureC != null" class="mv-weather" :temperature-c="temperatureC" :size="13" />
         </div>
 
         <!-- ===== THE BOTTOM RUN-OFF BAND: SPEED · SCORE · SPEED =============================
@@ -1424,9 +1424,9 @@ watch(finished, (isFinished) => {
                height at all.
            So the row itself had nothing left to hold, and a row is worth ~33px of a phone that is
            mostly court and log. Its `border-top` went with it; `.mv-stats` draws its own, so the
-           panel's hairline rhythm is unchanged. "Final" went too: the box score directly below says
-           "<winner> wins 6-4 6-3", which is that word plus everything it left out, and the Live badge
-           disappearing at the same instant says it a second time. -->
+           panel's hairline rhythm is unchanged. "Final" went too: the log's own last beat says it in
+           words ("Match. X takes it in straight sets."), and the Live badge disappearing plus the
+           control bar swapping to Watch again | Proceed say it again. -->
 
       <div class="mv-stats">
         <div class="mv-stat">
@@ -1545,16 +1545,19 @@ watch(finished, (isFinished) => {
            PINNED, NOT FIXED (owner, 30.07). A fixed bar would cost its height off the top of every
            match screen for the whole watch; sticky costs NOTHING until the bar would otherwise be
            off the bottom, and then it is there. See `.mv-controls` for the measurement. -->
-      <!-- ⚠ AND ONCE THE MATCH IS OVER THE WHOLE BAR IS ONE BUTTON - the owner's own R17 #10 ruling,
-           quoted in full on the script side (house convention: his words live where Cyrillic is
-           allowed) at the `proceedLabel` prop. The plates below are questions about a match in
-           progress - how much of it to watch, how fast - and a finished match has no answer to
-           either. What the player wants at that moment is either to read the box score under this bar
-           or to leave, and leaving is now HERS to time: nothing ejects her. The two callers with
-           nowhere to proceed to pass no label and keep the plates, because for them there is no third
-           thing this bar could say. -->
+      <!-- ⚠ AND ONCE THE MATCH IS OVER THE BAR SWAPS ITS CONTENTS AND STAYS WHERE IT IS - the owner's
+           R17 #10 ruling and his correction to how it landed, both quoted in full on the script side
+           (house convention: his words live where Cyrillic is allowed) at the `proceedLabel` prop.
+           The plates are questions about a match in PROGRESS - how much of it to watch, how fast -
+           and a finished match has no answer to either. What is left is the two things she can do
+           with a match she has just watched, side by side, in the row that was already there:
+           watch it again, or go on. The affirmative is last, which is the app's own order
+           (`.dialog-actions` is Cancel-then-Confirm; pinned in tests/ui-control-system.test.ts).
+           The two callers with nowhere to proceed to pass no label and keep the plates, because for
+           them there is no third thing this bar could say. -->
       <div v-if="finished && props.proceedLabel" class="mv-controls mv-controls-done">
-        <PrimaryPill class="sfx-watch mv-proceed" @click="proceed">{{ props.proceedLabel }}</PrimaryPill>
+        <PrimaryPill class="sfx-watch" variant="ghost" @click="restart">Watch again ↻</PrimaryPill>
+        <PrimaryPill class="sfx-watch" @click="proceed">{{ props.proceedLabel }}</PrimaryPill>
       </div>
       <div v-else class="mv-controls">
         <SegmentedRow
@@ -1629,69 +1632,23 @@ watch(finished, (isFinished) => {
         <PrimaryPill class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
       </div>
 
-      <!-- ===== THE BOX SCORE, once it is over ================================================ -->
-      <Card v-if="finished" variant="photo" class="mv-boxscore" pad="12px 14px 14px">
-        <p class="mv-final">
-          {{ winnerName }} wins <span class="num">{{ finalScoreLine }}</span>
-          <span v-if="retiredName" class="mv-final-ret">ret.</span>
-        </p>
-        <!-- R16 #18: three letters are the sport's marker, not an explanation. This is the
-             explanation, and it is the line whose absence the owner reported. -->
-        <p v-if="retiredName" class="mv-final-note">{{ retiredName }} retired hurt.</p>
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th>
-                <span class="ph-name">{{ playerA.name }}</span>
-                <span v-if="rankA != null" class="ph-rank">#{{ rankA }}</span>
-              </th>
-              <th>
-                <span class="ph-name">{{ playerB.name }}</span>
-                <span v-if="rankB != null" class="ph-rank">#{{ rankB }}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th>Aces</th>
-              <td class="num">{{ finalAcesDfs.aces[0] }}</td>
-              <td class="num">{{ finalAcesDfs.aces[1] }}</td>
-            </tr>
-            <tr>
-              <th>Double faults</th>
-              <td class="num">{{ finalAcesDfs.dfs[0] }}</td>
-              <td class="num">{{ finalAcesDfs.dfs[1] }}</td>
-            </tr>
-            <tr>
-              <th>Serve %</th>
-              <td class="num">{{ servePct(0) }}%</td>
-              <td class="num">{{ servePct(1) }}%</td>
-            </tr>
-            <tr>
-              <th>Break points</th>
-              <td class="num">{{ match.result.stats[0].breakPointsSaved }}/{{ match.result.stats[0].breakPointsFaced }}</td>
-              <td class="num">{{ match.result.stats[1].breakPointsSaved }}/{{ match.result.stats[1].breakPointsFaced }}</td>
-            </tr>
-            <tr>
-              <th>Breaks</th>
-              <td class="num">{{ match.result.stats[0].breaksWon }}</td>
-              <td class="num">{{ match.result.stats[1].breaksWon }}</td>
-            </tr>
-            <tr>
-              <th>Longest streak</th>
-              <td class="num">{{ match.result.stats[0].longestPointStreak }}</td>
-              <td class="num">{{ match.result.stats[1].longestPointStreak }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </Card>
+      <!-- ===== WHERE THE BOX SCORE WENT (owner, 12.08) ========================================
+           The card that stood here duplicated the flow's own result card and lifted the sticky bar
+           off the floor; the owner asked for it to go, twice - his words are with the `proceedLabel`
+           prop on the script side, because THIS IS A TEMPLATE and no Cyrillic may appear in one,
+           comments included (tests/template-copy-rules.test.ts). The one line of it that was not a
+           duplicate - the only sentence explaining an OPPONENT's retirement, since `.mv-hurt` is
+           raised for HER only - lives in the commentary log's final beat now ("Retired. X cannot
+           go on. Y advances.", viz/commentary.ts), on this same screen, at the top of the log the
+           moment the match ends. That beat is pinned VISIBLE at end-of-match by
+           tests/component/injury-surfacing.test.ts and tests/component/match-viewer.test.ts; do not
+           bring the card back to say it a second time. -->
     </div>
 
     <!-- ===== SHE COULD NOT CONTINUE (R17 #10) ==================================================
          ⚠ IT IS A POPUP OVER THE MATCH, NOT A DOOR OUT OF IT. That is the item in one sentence, and
          the owner's own is on the script side at the `proceedLabel` prop. Dismissing it puts her back
-         on the match screen with the box score under it, and she leaves when she presses Proceed.
+         on the match screen with the log under it, and she leaves when she presses Proceed.
          ⚠ AND IT SAYS ONLY WHAT THE MODEL KNOWS. The layoff - how many weeks, what it withdrew,
          what came back - does not exist yet: a tournament retirement opens it in `finalizeTournament`,
          which runs when the reveal is CLOSED, long after this screen. That report is
@@ -1733,7 +1690,7 @@ watch(finished, (isFinished) => {
    row in the whole stack. So the log is exactly the space between the court and the block, and the
    block lands on the bottom edge whatever the screen height is. `flex: 1` degrades to nothing in a
    container that is not a flex column, and everything below still overflows and scrolls the moment
-   the box score appears - which is the case the sticky bar is still there for, and it stays. */
+   the column outgrows the port - which is the case the sticky bar is still there for, and it stays. */
 .mv {
   display: flex;
   flex-direction: column;
@@ -1746,12 +1703,11 @@ watch(finished, (isFinished) => {
 }
 
 /* Everything except the log is fixed furniture. Stated rather than left to the defaults, because
-   `flex: 0 1 auto` lets a box SHRINK, and in a deficit the court and the box score would give up
+   `flex: 0 1 auto` lets a box SHRINK, and in a deficit the court and the controls would give up
    height alongside the log they are meant to be framing. */
 .mv-panel,
 .mv-controls,
-.mv-actions,
-.mv-boxscore {
+.mv-actions {
   flex: none;
 }
 
@@ -1783,14 +1739,31 @@ watch(finished, (isFinished) => {
    `pointer-events: none` because this row is now a full-width box over the court and none of it is a
    control - without it, the dead space between the two readings would swallow taps meant for the
    canvas. */
+/* ⚠ THREE GRID COLUMNS, NOT A FLEX ROW WITH AUTO MARGINS (owner, 12.08: «на match replay часы тоже
+   должны остаться посередине экрана, а они сейчас уезжают налево»).
+   THE CAUSE, and it was a property of the layout rather than of the replay. This was
+   `justify-content: flex-end` with `margin-right: auto` on BOTH the badge and the clock: two auto
+   margins split the free space evenly, so the clock landed in the middle only for as long as there
+   were two of them. `replay` mode drops the Live badge on purpose (ui-inventory §2), and so does the
+   end of a live match - and with one auto margin left the clock does not stay put, it takes the left
+   end. Measured at 375pt: centred at x=173.5 with the badge, x=25 without it.
+   ⚠ THE APP HAD ALREADY SOLVED THIS ONE BAND LOWER. `.mv-runoff` is `minmax(0,1fr) auto minmax(0,1fr)`
+   for exactly this reason, in its own words: the score has to be centred on the COURT and not on
+   whatever is left after the speed, and only one end is ever occupied. The top band has the same
+   shape - two ends that come and go, one reading in the middle - so it gets the same answer instead
+   of a second one. A column holds its position whether or not anything is in it.
+   ⚠ AND `left` BECOMES 10px, MATCHING `.mv-runoff`. It was 8 against a right of 10, which put the
+   row's centre 1px off the canvas centre - invisible while the clock was floated by margins, and a
+   1px lie the moment the middle column IS the centre. The two bands now inset by the same number, so
+   the clock, the score below it and the changeover plaque all stand on one axis. */
 .mv-chrome {
   position: absolute;
   top: 6px;
-  left: 8px;
+  left: 10px;
   right: 10px;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: flex-end;
   gap: 8px;
   pointer-events: none;
 }
@@ -1799,9 +1772,12 @@ watch(finished, (isFinished) => {
    29.07). At the shipped canvas that band is ~34px on a 375pt phone and this badge is ~19px tall
    at `top: 6px`, so it clears the surface by ~9px with room for a bigger phone to only add more.
    Kept smaller than the export's pill for exactly that reason: the constraint is the band.
-   `margin-right: auto` is what holds the left end of the row above - see `.mv-chrome`. */
+   ⚠ `margin-right: auto` USED TO BE WHAT HELD THE LEFT END and it is the grid's job now - see
+   `.mv-chrome`. The badge owns the first column and starts in it; when it is not drawn the column
+   stays, which is the whole point of the change. */
 .mv-live {
-  margin-right: auto;
+  grid-column: 1;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -1826,30 +1802,45 @@ watch(finished, (isFinished) => {
 }
 
 /* THE ELAPSED MATCH TIME (R17 #24), between the badge and the weather.
-   ⚠ `margin-right: auto` IS WHAT PUTS IT BETWEEN THEM, and it is the same lever `.mv-live` uses one
-   rule up rather than a new one. Two auto margins in a `justify-content: flex-end` row split the
-   free space evenly, so the badge holds the left end, the weather the right, and this lands in the
-   gap - which is where the owner asked for it («между live и погодой, там есть место»). It survives
-   the badge disappearing at the end of the match: with one auto margin left the reading simply moves
-   to the left end, still off the playing surface and still opposite the weather.
+   ⚠ THE MIDDLE COLUMN, WHICH IS WHY IT STAYS PUT (owner, 12.08). It used to hold its place with a
+   second `margin-right: auto` against `.mv-live`'s - and that only works while there ARE two of
+   them, so the reading slid to the left end on every replay and at the end of every live match. The
+   note that used to be here called that "surviving the badge disappearing"; the owner calls it
+   «уезжают налево», and he is looking at the same screen. See `.mv-chrome` for the grid.
    Bare rather than plated, like the weather and unlike the badge: it is a READING, not a status.
    `--muted` because it is the quietest of the three - the badge is a state and the temperature is
-   the day, and neither of those should have to compete with a clock. Tabular figures (`.num`) so the
-   digits do not jitter as they tick, which is the whole reason a fixed-width format was chosen. */
+   the day, and neither of those should have to compete with a clock.
+   ⚠ AND THE FIGURES ARE TABULAR HERE, BECAUSE `.num` DOES NOT DO IT (owner, 12.08: «цифры времени
+   над кортом можно моноширинными сделать, чтобы не скакала надпись»). This rule's own note used to
+   say "Tabular figures (`.num`)" and that was wrong: `num` is written on 77 readouts across the
+   components and the ONLY rule in the sheet keyed on it is `td.num` - inside a table it means
+   tabular figures, and everywhere else it is a marker with nothing behind it. Measured in Chromium on
+   the shipped build, `.mv-clock` computed `font-variant-numeric: normal`, so every proportional digit
+   that ticked past moved the whole reading. `h:mm:ss` is fixed-width BY DESIGN (see
+   docs/specs/round17-match-screen.md §2), which is what makes this the whole of the fix: with equal
+   advances the string cannot change width at all, and the clock stops walking under the court.
+   ⚠ NOT FIXED BY GIVING `.num` THE DECLARATION, deliberately: 77 readouts is not this wave's blast
+   radius, and several of them sit on lines already measured to the pixel (the tournament header's own
+   budget is 254.6px against 283.8). That is a sweep with its own before/after, not a bug fix. */
 .mv-clock {
-  margin-right: auto;
-  flex: none;
+  grid-column: 2;
   font-size: 11px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
 
-/* The weather plate needs no rule of its own any more: it is the other end of `.mv-chrome`, which
-   owns the band, the inset and the centre line for both pieces. It kept a `.mv-weather` class for
-   the two absolute offsets that are now the row's, and a class with no rule behind it is the next
-   thing somebody re-adds a rule to, so it went with them. */
+/* ⚠ AND `.mv-weather` IS BACK, WITH A RULE BEHIND IT THIS TIME. It was dropped on 30.07 because a
+   class with no rule is the next thing somebody re-adds a rule to - correct then, when the row was a
+   flex line and the plate simply ended it. The row is a three-column grid now (see `.mv-chrome`) and
+   a grid needs to be told which column each end holds, or the plate falls into column 1 the moment
+   the Live badge is not drawn - which is the same bug this change exists to fix, one seat over. */
+.mv-weather {
+  grid-column: 3;
+  justify-self: end;
+}
 
 @keyframes mv-live-pulse {
   0%,
@@ -2422,7 +2413,7 @@ watch(finished, (isFinished) => {
    fixed that by taking ~53px off the scroller permanently, for the whole watch, including the
    first point when nothing was wrong; sticky takes NOTHING until the row would otherwise be gone,
    and then puts it exactly where a fixed bar would have been. Same recovery, none of the rent.
-   The floor is opaque so the log and the box score pass UNDER the bar rather than through it, and it
+   The floor is opaque so the log passes UNDER the bar rather than through it, and it
    is the tone of whatever the viewer is standing on, so the plate is invisible until it pins.
    ⚠ THAT TONE CHANGED WITH THE OUTER FRAME, 30.07. It was `--panel`, because all three match screens
    used to put the viewer inside a `--panel`-toned `.tf-card`; the owner has now taken that frame off
@@ -2460,16 +2451,17 @@ watch(finished, (isFinished) => {
   background: var(--bg);
 }
 
-/* R17 #10: THE FINISHED BAR IS ONE BUTTON, and it keeps every geometric property of the bar it
+/* R17 #10: THE FINISHED BAR IS THE SAME BAR, and it keeps every geometric property of the one it
    replaces - same sticky floor, same negative margin against the log, same `--bg` skirt - because
    the guarantee the wrapper above provides is about `.mv-controls`, and swapping the class would
-   have handed the pinned bar's proof to a second selector nobody had measured. What changes is the
-   template: one full-width cell instead of two tracks. */
-.mv-controls-done {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.mv-proceed {
+   have handed the pinned bar's proof to a second selector nobody had measured.
+   ⚠ AND IT IS THE BASE'S OWN TWO TRACKS NOW (owner, 12.08: «2 кнопки рядом просто в этом нижнем
+   блоке с контролами и все: Watch again | Proceed»). This rule used to collapse them to a single
+   full-width cell for one Proceed; two buttons is exactly what `repeat(2, minmax(0, 1fr))` already
+   describes, so what the finished bar needs from this selector is nothing at all - it only has to
+   stop overriding. The two plates and these two buttons now stand on the same pair of tracks, which
+   is also why nothing shifts sideways when the match ends. */
+.mv-controls-done > * {
   width: 100%;
 }
 
@@ -2567,39 +2559,10 @@ watch(finished, (isFinished) => {
   gap: 8px;
 }
 
-/* --- THE BOX SCORE --------------------------------------------------------------------------- */
-.mv-final {
-  margin: 0 0 10px;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.mv-final .num {
-  margin-left: 6px;
-  color: var(--text);
-}
-
-/* R16 #18: the retirement marker rides WITH the scoreline, in the score's own colour, so
-   "wins 4-5" can never again be read as a completed result. */
-.mv-final-ret {
-  margin-left: 5px;
-  color: var(--text);
-  font-weight: 600;
-}
-
-.mv-final-note {
-  margin: -6px 0 10px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted);
-}
-
 /* --- R17 #10: THE "SHE COULD NOT CONTINUE" POPUP ----------------------------------------------
    The shared dialog box (`.dialog-card` in src/style.css) plus a title line, and nothing else is
-   redeclared here. The title takes the box score's own `.mv-final` weight and the accent it uses for
-   the headline of a finished match, because this popup and that line are the same fact arriving
-   twice - once as an interruption, once as the record. */
+   redeclared here. The title keeps the 15px/700 accent headline the finished box score used to set
+   (the card went with the owner's 12.08 ruling; this popup was its twin and keeps the voice). */
 .mv-hurt-title {
   margin: 0 0 8px;
   font-size: 15px;

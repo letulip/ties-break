@@ -192,6 +192,31 @@ const capacityNote = computed(() =>
     : 'One session a day while school is on – the dots are the room each day has left.',
 )
 
+/** ⚠ WHO WRITES THIS WEEK - the one thing a paying parent could not tell from this screen (owner,
+ *  12.08, on opening it with a coach hired and finding every box live).
+ *
+ *  IT IS NOT A MODE, AND THAT IS THE WHOLE ANSWER. There is no arm of this app where a hired coach
+ *  authors the plan: `setPlan` is the only writer of `WeekPlan.week`, this tab is its only caller,
+ *  and `docs/specs/training-dials.md` §7 - "he comes and changes something" - is DESIGNED AND NOT
+ *  BUILT (that page's own build block, and its seams table: "§7, the coach's intervention | nothing
+ *  built"). So the ticks are what runs at every rung, and the screen was right to draw them live; it
+ *  simply never said so, which is what left the owner reading an active screen as a contradiction.
+ *
+ *  ⚠ AND WHAT IT CLAIMS INSTEAD IS CHECKED, not a flourish. `growWeek`'s rate is
+ *  `ageFactor x trainFactor(plan) x loadFactor x coachFactor(tier, fit) x matchBonus`
+ *  (engine/development.ts) - the plan and the coach are SEPARATE multipliers, so "he changes what it
+ *  is worth, not what is in it" is that line read out loud rather than a way of putting it.
+ *
+ *  Silent when self-coached: the Coaches tab already says the family is coaching her, and a line
+ *  telling a parent who pays nobody that nobody writes his week is the same sentence twice. Same
+ *  rule §9b item 2 states for the coach's own line. */
+const coachName = computed(() => game.snapshot?.coachMarket.find((r) => r.current)?.name ?? null)
+const authorNote = computed(() =>
+  coachName.value === null
+    ? ''
+    : `You plan her week at every rung. ${coachName.value} changes what it is worth, not what is in it.`,
+)
+
 /** WHY A BOX IS DISABLED, once, under the grid – so a full week does not read as a broken screen. */
 const limitNote = computed(() => {
   if (sessions.value >= PLAN_MAX_SESSIONS) {
@@ -219,6 +244,11 @@ function boxLabel(kind: SessionKind, day: number): string {
 
 <template>
   <div v-if="game.snapshot" class="hw">
+    <!-- 0. WHO WRITES THE WEEK, and only when somebody is being paid - see `authorNote` for why the
+         claim under it is the growth rate read out loud rather than a reassurance. It opens the tab
+         because it is the question a paying parent arrives with. -->
+    <p v-if="authorNote" class="hint hw-author">{{ authorNote }}</p>
+
     <!-- 1. THE PRESETS. A fast path, and nothing more: the blocks below do everything they do. Short
          labels on purpose - the market tab's own `Light 4/wk · Balanced 5/wk · Grind 6/wk` computes
          past the 343px available at 375 (spec §9c), and the counts live in the read-out instead. -->
@@ -300,6 +330,11 @@ function boxLabel(kind: SessionKind, day: number): string {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
+}
+/* The same step `.hw-capacity` puts under the day heads, so the tab keeps one rhythm. `margin-top: 0`
+   because `.hint`'s own top margin would open a gap above the first line on the tab. */
+.hw-author {
+  margin: 0 0 10px;
 }
 .hw-presets {
   margin-bottom: 10px;

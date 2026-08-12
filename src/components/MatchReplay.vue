@@ -53,9 +53,10 @@ const annotated = computed(() => {
     </template>
     <!-- THE CROSS, and it is one of only two in the match flow: a replay has nowhere to go but out.
          It does exactly what it says - dismisses the overlay - and it cannot lose anything, because a
-         replay decides nothing and the box score is inside the viewer below, not on a screen after
-         it. The friendly's header used to carry the same control and no longer does; there it was
-         competing with "To result →" (see PracticeFlow).
+         replay decides nothing and the whole account is in the viewer's log below, not on a screen
+         after it (the stats card this replay was opened FROM still holds the numbers; the viewer's
+         own box score went with the owner's 12.08 ruling). The friendly's header used to carry the
+         same control and no longer does; there it was competing with "To result →" (see PracticeFlow).
          ⚠ ADOPTED AT THE INTEGRATION MERGE: the owner's own `close.svg` and the `IconButton`
          that carries it landed on the icon-system branch in the same round, and the note that
          stood here asked for exactly this. A glyph in a text run became a named control with a

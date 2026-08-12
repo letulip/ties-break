@@ -247,7 +247,35 @@ async function doHire(): Promise<void> {
   pending.value = null
   if (row) await game.hireCoach(row.id)
 }
-async function goSelfCoached(): Promise<void> {
+/** ⚠ LETTING HIM GO IS A DECISION AND IT NOW ASKS (owner, 12.08, on the self-coaching route out:
+ *  «мы можем в любой момент отказаться от тренера»). It always could - the route is not new and is
+ *  not being narrowed. What was missing is that it was the only irreversible-feeling money decision
+ *  on this screen with no confirm at all: HIRING opens a dialog naming the new weekly bill, and
+ *  RELEASING fired `hireCoach(null)` on the first tap and told the player afterwards, in the feed.
+ *  A screen that asks before it starts paying somebody and not before it stops is not neutral about
+ *  the two directions.
+ *
+ *  WHAT THE SENTENCE MAY CLAIM, and it is deliberately only what is certain. `hireCoach(null)` does
+ *  three things: it clears `coachId`, it clears `physioActive`, and it writes an `info` row whose
+ *  own words are "the weekly bill is court time only" - so the bill clause is the ENGINE's sentence
+ *  rather than a second telling of it. And the read goes with the coach: `COACH_EYE` / `COACH_ACCURACY`
+ *  drop to their `self` row and `coachSinceWeek` restarts, which is the thing the coach ladder is
+ *  actually selling (training-dials.md §7). It does NOT promise he can be re-hired - `coachById`
+ *  rebuilds the roster from the seed and HER AGE, so who is on it next season is not this dialog's
+ *  to guarantee. */
+const releasing = ref(false)
+const releaseMessage = computed(() => {
+  const name = rows.value.find((r) => r.current)?.name ?? 'your coach'
+  // ⚠ NO PRONOUN FOR THE COACH. The roster is mixed and carries no gender - a first draft read "his
+  // read of her goes with him" and the screen showed it under Sabine Kobayashi. "She" is safe
+  // because "she" is always the daughter, which is this whole app's one fixed referent.
+  return (
+    `Let ${name} go? She is self-coached from this week: the weekly bill becomes court time only, ` +
+    `and the trained eye you were paying for goes too.`
+  )
+})
+async function doRelease(): Promise<void> {
+  releasing.value = false
   await game.hireCoach(null)
 }
 
@@ -482,7 +510,7 @@ function scrollToTier(tier: CoachTier): void {
             : 'You are coaching her yourself. The weekly bill is court time only.'
         }}
       </p>
-      <button v-if="current" :disabled="game.busy" @click="goSelfCoached">Coach her yourself</button>
+      <button v-if="current" :disabled="game.busy" @click="releasing = true">Coach her yourself</button>
     </section>
     </template>
 
@@ -492,6 +520,17 @@ function scrollToTier(tier: CoachTier): void {
       confirm-label="Hire"
       @confirm="doHire"
       @cancel="pending = null"
+    />
+    <!-- The other direction of the same decision - see `releaseMessage` for what it may and may not
+         claim. Its own dialog rather than a second mode of the one above: the two messages are
+         computed from different things and merging them would need a discriminator to keep them
+         apart, which is more machinery than a second `v-if`. -->
+    <ConfirmDialog
+      v-if="releasing"
+      :message="releaseMessage"
+      confirm-label="Coach her yourself"
+      @confirm="doRelease"
+      @cancel="releasing = false"
     />
   </template>
 </template>

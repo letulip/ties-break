@@ -2088,7 +2088,13 @@ export const ECONOMY = {
         label: 'Staycation with friends',
         blurb: 'No travel, no drills – her own bed and her own people.',
         priceCents: [0, 0],
-        conditionGain: 18,
+        // ⚠ 10, WAS 18 (owner ruling 12.08: «шифт-8 на всех: у первого будет восстановление +10,
+        // у второго +18, у третьего и далее останется без изменений»). The bottom of the ladder
+        // used to run 18/22/26 – four points between a FREE week at home and a paid one at
+        // grandma's, so the free package was a near-perfect substitute for the paid rungs and the
+        // picker's own "cheapest sufficient" rule recommended it almost always. The bottom now
+        // steps by 8 (10 → 18 → 26): a paid vacation buys something a free one measurably does not.
+        conditionGain: 10,
         buffFactor: 1,
       },
       {
@@ -2122,7 +2128,10 @@ export const ECONOMY = {
         // saw $0-$40, and the ladder reads free -> $21-40 -> $105-240 with no rung able to
         // impersonate the one below it.
         priceCents: [30_00, 50_00],
-        conditionGain: 22,
+        // ⚠ 18, WAS 22 – the second half of the owner's 12.08 re-step (see staycation above). The
+        // paid rung keeps a real edge over the free one (+8, was +4), and camping keeps the same
+        // +8 edge over this. Third rung and up are untouched by the ruling.
+        conditionGain: 18,
         buffFactor: 1,
       },
       {

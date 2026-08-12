@@ -454,10 +454,17 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
   // under four rest weeks and the free one barely more than one, i.e. the ladder would have become a
   // rounding error rather than a decision. The buffs and buffWeeks are deliberately NOT re-tuned:
   // they are injury protection, which the same wave re-calibrates on its own axis.
+  //
+  // ⚠ RE-PINNED AGAIN 12.08, THE BOTTOM TWO ONLY (owner: «шифт-8 на всех: у первого будет
+  // восстановление +10, у второго +18, у третьего и далее останется без изменений»):
+  // 18/22 -> 10/18. The 03.08 lift left the free staycation four points behind a PAID week at
+  // grandma's, so the free rung impersonated the paid ones and the picker's own "cheapest
+  // sufficient" rule recommended it nearly always. The bottom now steps by 8 (10 -> 18 -> 26);
+  // rungs three and up are untouched, exactly as the ruling says.
   it('has the owner-approved six packages with the spec gains and buffs', () => {
     const ids = ECONOMY.vacation.packages.map((p) => p.id)
     expect(ids).toEqual(['staycation', 'grandma', 'camping', 'seaside', 'resort', 'elite'])
-    expect(ECONOMY.vacation.packages.map((p) => p.conditionGain)).toEqual([18, 22, 26, 32, 40, 48])
+    expect(ECONOMY.vacation.packages.map((p) => p.conditionGain)).toEqual([10, 18, 26, 32, 40, 48])
     expect(vacationPackage('resort')!.buffFactor).toBe(0.9)
     expect(vacationPackage('elite')!.buffFactor).toBe(0.85)
     expect(vacationPackage('staycation')!.buffFactor).toBe(1)
@@ -468,9 +475,11 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
     // arc in the game reads (diary.ts, weekGrid.ts): the sentences climb WITH the number.
     const gains = ECONOMY.vacation.packages.map((p) => p.conditionGain)
     for (let i = 1; i < gains.length; i++) expect(gains[i]).toBeGreaterThan(gains[i - 1])
-    // The unit the table is written in (spec §4): every rung is a whole number of rest weeks at the
-    // repriced base, which is why the two knobs may never be re-tuned apart.
-    expect(gains.map((g) => g / ECONOMY.condition.recoveryBase)).toEqual([2.25, 2.75, 3.25, 4, 5, 6])
+    // The unit the table is written in (spec §4): every rung is denominated in rest weeks at the
+    // repriced base, which is why the two knobs may never be re-tuned apart. ⚠ 12.08: the bottom
+    // two moved with the owner's re-step (18/22 -> 10/18), so the free week is now worth 1.25 rest
+    // weeks against grandma's 2.25 - a full rest-week between them where there was half of one.
+    expect(gains.map((g) => g / ECONOMY.condition.recoveryBase)).toEqual([1.25, 2.25, 3.25, 4, 5, 6])
   })
 
   // ⚠ MONEY BUYS RECOVERY SPEED, NEVER RECOVERY (spec §4, and the rule act2-pro-tour.md §3 sets for
@@ -1228,13 +1237,18 @@ describe('P10 — vacation offer band + cheapest-sufficient pre-highlight', () =
   // target" - so every boundary simply moved down the condition axis by the size of the lift. The
   // shape worth reading is that the ladder still SLIDES: each rung owns a band of deficits, none is
   // skipped, and the free week now covers a genuinely useful stretch (67-100 instead of 73-100).
+  // ⚠ RE-AIMED AGAIN 12.08 (the owner's bottom-two re-step, 18/22 -> 10/18). Same rule, same
+  // shape: each rung owns a band of deficits and none is skipped. What moved is WHERE the free
+  // week stops being the answer - it now covers 75-100 (was 67-100), and the first paid rung owns
+  // a real band of its own (67-74) instead of the 1-point sliver the old +4 gap left it.
   it('picks the CHEAPEST package sufficient for her CURRENT condition', () => {
-    // gains: staycation +18 · grandma +22 · camping +26 · seaside +32 · resort +40 · elite +48,
+    // gains: staycation +10 · grandma +18 · camping +26 · seaside +32 · resort +40 · elite +48,
     // target 85 -> the ladder slides down as the deficit shrinks.
-    expect(pickAt(80)).toBe('staycation') // 80+18 = 98
-    expect(pickAt(67)).toBe('staycation') // 67+18 = 85 (exactly sufficient)
-    expect(pickAt(66)).toBe('grandma') // 66+18 = 84 short; +22 = 88
-    expect(pickAt(62)).toBe('camping') // +22 = 84 short; +26 = 88
+    expect(pickAt(80)).toBe('staycation') // 80+10 = 90
+    expect(pickAt(75)).toBe('staycation') // 75+10 = 85 (exactly sufficient)
+    expect(pickAt(74)).toBe('grandma') // 74+10 = 84 short; +18 = 92
+    expect(pickAt(67)).toBe('grandma') // 67+18 = 85 (exactly sufficient)
+    expect(pickAt(66)).toBe('camping') // 66+18 = 84 short; +26 = 92
     expect(pickAt(58)).toBe('seaside') // +26 = 84 short; +32 = 90
     expect(pickAt(52)).toBe('resort')
     expect(pickAt(44)).toBe('elite')
@@ -1273,23 +1287,27 @@ describe('P10 — vacation offer band + cheapest-sufficient pre-highlight', () =
         seed: 'p10',
         week: 12,
         background: 'wealthy',
-        condition: 78,
+        // ⚠ 78 -> 82 (12.08 bottom-two re-step): the free week's gain is 10 now, so clearing an
+        // explicit target of 90 from below needs condition >= 80. Same boundary, same claim - the
+        // override overrides - only the arithmetic under it moved with the owner's ladder.
+        condition: 82,
         fundsCents: RICH,
         targetCondition: 90,
       }),
-    ).toBe('staycation') // 78+18 = 96
+    ).toBe('staycation') // 82+10 = 92
     expect(
       recommendVacationPackage({
         seed: 'p10',
         week: 12,
         background: 'wealthy',
-        // ⚠ 77 -> 71 (W2-FATIGUE §4): the same boundary, moved by the size of the table's lift -
-        // what is tested is that an explicit target really does override the knob, not the number.
-        condition: 71,
+        // ⚠ 77 -> 71 (W2-FATIGUE §4), 71 -> 75 (12.08 re-step): the same boundary, moved by the
+        // size of each ladder change - what is tested is that an explicit target really does
+        // override the knob, not the number.
+        condition: 75,
         fundsCents: RICH,
         targetCondition: 90,
       }),
-    ).toBe('grandma') // 71+18 = 89 short; +22 = 93
+    ).toBe('grandma') // 75+10 = 85 short of 90; +18 = 93
   })
 
   it('BOTH pre-highlight surfaces call the one shared helper (no third copy of the rule)', () => {

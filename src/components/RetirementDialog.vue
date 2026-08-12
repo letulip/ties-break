@@ -48,9 +48,13 @@ async function answer(retire: boolean): Promise<void> {
       </template>
       <template v-else-if="offer.reason === 'plateau'">
         <h2 class="retire-title">She said it in the car.</h2>
+        <!-- RE-WORDED 12.08. This used to end "- her words, not the game's", an aside meant to say
+             "this is HER wish, nothing is being forced" - but it names THE GAME, which is a wall no
+             line of copy here is allowed to break, and the owner read it as noise (round-17, his
+             report of 12.08). Same meaning, said in-fiction. -->
         <p class="retire-lede">
           Three seasons and the table has not moved. If she cannot reach the top, she would rather
-          go – her words, not the game's. She will keep playing if you want her to.
+          go now – that is how she put it. She will keep playing if you want her to.
         </p>
       </template>
       <template v-else>

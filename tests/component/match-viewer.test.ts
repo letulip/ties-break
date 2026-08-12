@@ -866,9 +866,11 @@ describe('a finished match waits for the player', () => {
     await runToEnd(d)
     expect(wrapper.emitted('finish'), 'the match ejected the player again').toBeUndefined()
     expect(wrapper.findAll('button').map((btn) => btn.text())).toContain('To the result')
-    // ...and the box score the eject used to outrun is on screen, which is the whole point of the
-    // change: it is the only place "she retired hurt" is ever written.
-    expect(wrapper.find('.mv-boxscore').exists()).toBe(true)
+    // ⚠ RE-AIMED 12.08: this used to pin the box score the eject once outran; the owner then had the
+    // panel deleted («не нужна всё»), so what the un-ejected screen must still hold is the story
+    // itself - the log, with the match's final beat already at its top.
+    expect(wrapper.find('.mv-log').exists()).toBe(true)
+    expect(wrapper.find('.mv-beat').text()).toContain('Match.')
     wrapper.unmount()
   })
 
@@ -914,11 +916,48 @@ describe('a finished match waits for the player', () => {
     wrapper.unmount()
   })
 
-  it('...and a caller WITH one is not offered a second "Watch again" beside it', async () => {
+  it('...and a caller WITH one is offered exactly ONE "Watch again", in the row beside Proceed', async () => {
+    // ⚠ RE-AIMED 12.08, AND THE OWNER REVERSED THE HALF THIS USED TO ASSERT. It read
+    // `not.toContain('Watch again ↻')`, on R17 #10's argument that a flow's own box score already
+    // offers a re-watch one press away. He looked at the shipped screen and asked for both here:
+    // «можно сделать 2 кнопки рядом просто в этом нижнем блоке с контролами и все: Watch again |
+    // Proceed». So the row holds the two things you can do with a match you have just watched.
+    // THE PROTECTED FACT IS THE ONE THAT MATTERED and it is asserted harder than before: there is
+    // still never a SECOND "Watch again" - the count is pinned, not just its absence - and the
+    // affirmative is still last, which is the app's own action-row order.
     const d = (liveDriver = driver())
     const wrapper = mountWithProceed()
     await runToEnd(d)
-    expect(wrapper.findAll('button').map((btn) => btn.text())).not.toContain('Watch again ↻')
+    const labels = wrapper.findAll('button').map((btn) => btn.text())
+    expect(labels.filter((t) => t === 'Watch again ↻')).toHaveLength(1)
+    expect(labels).toContain('To the result')
+    expect(labels.indexOf('To the result')).toBeGreaterThan(labels.indexOf('Watch again ↻'))
+    // ...and both of them are in the control row itself, which is the whole of the ask: the block
+    // swaps its contents where it stands rather than growing a second one.
+    const done = wrapper.find('.mv-controls-done')
+    expect(done.exists()).toBe(true)
+    expect(done.findAll('button')).toHaveLength(2)
+    wrapper.unmount()
+  })
+
+  it('⚠ the panel under the bar is GONE, and the control row it hid behind is untouched (12.08)', async () => {
+    // ⚠ RE-AIMED 12.08, AND THE RE-AIM IS THE OWNER'S SECOND RULING ON THE SAME PANEL: «просто вот
+    // эта нижняя "борода" под кнопками на экране матча не нужна всё». This test used to pin the
+    // card's PRESENCE, because it carried the only sentence explaining an OPPONENT's retirement
+    // (`.mv-hurt` is raised for HER only) and deleting it would have re-opened round 16's report.
+    // That objection is closed: the commentary's own final beat says it now - "Retired. X cannot go
+    // on. Y advances." (viz/commentary.ts) - on this same screen, and its VISIBILITY at end-of-match
+    // is the pinned claim that replaced this card (the retirement tests below, and
+    // tests/component/injury-surfacing.test.ts on a real engine retirement). So the protected facts
+    // are: no stats panel under the finished bar, and the bar itself exactly as ruled - two buttons,
+    // same place, nothing else grown around them.
+    const d = (liveDriver = driver())
+    const wrapper = mountWithProceed()
+    await runToEnd(d)
+    expect(wrapper.find('.mv-boxscore').exists(), 'the deleted panel grew back under the bar').toBe(false)
+    const done = wrapper.find('.mv-controls-done')
+    expect(done.exists()).toBe(true)
+    expect(done.findAll('button').map((btn) => btn.text())).toEqual(['Watch again ↻', 'To the result'])
     wrapper.unmount()
   })
 })
@@ -965,10 +1004,11 @@ describe('an in-match injury raises its popup without ejecting her', () => {
     expect(dialog.text()).toContain('Olivia Grant could not continue')
     // The reason is the one the model can support - see RETIREMENT_REASON and round16-commentary §2.
     expect(dialog.text()).toContain('tired legs')
-    // NOT ejected: the court, the log and the box score are all still mounted behind it, and the
-    // parent has not been told to change screens.
+    // NOT ejected: the court and the log are still mounted behind it, and the parent has not been
+    // told to change screens. (⚠ RE-AIMED 12.08: the box score used to be the third witness here;
+    // the owner had the panel deleted, and the log now carries the record it held.)
     expect(wrapper.find('canvas').exists()).toBe(true)
-    expect(wrapper.find('.mv-boxscore').exists()).toBe(true)
+    expect(wrapper.find('.mv-log').exists()).toBe(true)
     expect(wrapper.emitted('finish')).toBeUndefined()
     wrapper.unmount()
   })
@@ -981,7 +1021,9 @@ describe('an in-match injury raises its popup without ejecting her', () => {
     await stay!.trigger('click')
     await nextTick()
     expect(wrapper.find('.mv-hurt').exists()).toBe(false)
-    expect(wrapper.find('.mv-boxscore').exists(), 'dismissing the popup took the match away too').toBe(true)
+    // ⚠ RE-AIMED 12.08 with the panel's deletion: "where she was" is the match screen - the log and
+    // its final beat - not the deleted stats card.
+    expect(wrapper.find('.mv-log').exists(), 'dismissing the popup took the match away too').toBe(true)
     expect(wrapper.emitted('finish')).toBeUndefined()
     wrapper.unmount()
   })
@@ -991,8 +1033,14 @@ describe('an in-match injury raises its popup without ejecting her', () => {
     const wrapper = mountHurt(match, her, opp)
     await playOut(wrapper)
     expect(wrapper.find('.mv-hurt').exists(), 'the opponent retiring raised OUR injury popup').toBe(false)
-    // The box score still says what happened - that is round 16's line and it is untouched.
-    expect(wrapper.find('.mv-boxscore').text()).toContain('retired hurt')
+    // ⚠ RE-AIMED 12.08: the deleted box score's "X retired hurt." was the only sentence explaining
+    // an opponent's retirement when this pin was written. The witness that replaced it is the
+    // commentary's final beat, at the TOP of the log the moment the match ends - this assertion is
+    // the claim that licensed deleting the card, so it may move again only with its replacement
+    // named. (injury-surfacing.test.ts asserts the same on a real engine retirement.)
+    const latest = wrapper.find('.mv-beat')
+    expect(latest.text()).toContain('Retired.')
+    expect(latest.text()).toContain('cannot go on')
     wrapper.unmount()
   })
 

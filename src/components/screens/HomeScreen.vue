@@ -1909,14 +1909,17 @@ button.note-card:active:not(:disabled) {
 
 /* ⭐ ROUND-17 #14 – 54px WAS THE STRIP, NOT THE PICTURE, and that is why his words sat on him.
    `.coach-art` is `height: 100%; width: auto`, so the portrait is as wide as its own aspect ratio
-   makes it – 54 is where the container was reasoned about, not where the man ends. The mask holds
-   him fully opaque to 34% and only reaches transparent at 96%, so between those two the text was
-   running over a face that is still clearly there. The owner asked for 10-15px; 12 is the middle of
-   his range and it clears the opaque band on every card width the layout produces. It costs the
-   quote 12px of its column at 375pt, which `text-wrap: pretty` absorbs without a new line. */
+   makes it – 54 is where the container was reasoned about, not where the man ends.
+   ⚠ AND 66 WAS STILL ON HIM (owner, 12.08, second report of the same item: «текст на плашках
+   тренеров от картинки не сдвинули вправо как я просил»). The first fix aimed at the mask's OPAQUE
+   stop (34%) – but the fade only reaches transparent at 96%, so the visible man extends far past
+   66px and the text block still opened on his face. The target is the IMAGE, not the opaque band:
+   the owner asked for another 10-15px, and 80 (= +14) puts the whole text column past the portrait
+   at every card width the layout produces. It costs the quote 14px more at 375pt, which
+   `text-wrap: pretty` absorbs. */
 .coach-body {
   position: relative;
-  margin-left: 66px;
+  margin-left: 80px;
   padding: 13px 11px 11px;
   display: flex;
   flex-direction: column;
