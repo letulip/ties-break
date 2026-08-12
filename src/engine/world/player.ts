@@ -11,9 +11,9 @@ import { applySurfaceStyle } from '../match/style'
 import { applyKit, kitWearAt } from '../equipment'
 import { kitFreshCap } from '../offers'
 import { conditionMatchFactor } from '../condition'
-import { relativeAgeHeadStart, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
+import { relativeAgeHeadStart, rollPotential, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
 import type { MatchPlayer, Surface } from '../match/types'
-import type { KitState, Offer, PlayerProfile } from '../../shared/protocol'
+import type { CoachTier, KitState, Offer, PlayerProfile } from '../../shared/protocol'
 import { KID_ID } from './constants'
 import { kidAgeExact } from './age'
 
@@ -74,6 +74,51 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; sk
   }
 }
 
+// --- L1 measurement scaffolding (docs/specs/the-wall-2026-08.md §2 L1, §3) -----------------------
+//
+// ⚠ MEASUREMENT SCAFFOLDING, DEFAULT INERT. The wall spec's L1 lever – the owner's "the coach adds
+// a small per-match edge, for as long as he is paid" – has no existing knob: a Markov engine has no
+// "win chance" dial, so the honest translation is a small additive delta on her ON-COURT attributes
+// at the composition point, calibrated per tier so her mean match-win probability against her actual
+// field moves by the owner's percentage (tools/wall-l1-bench.ts is the calibration and the sweep).
+//
+// The defaults below are EXACTLY today's behaviour: every tier 0, decay off, and `kidMatchPlayerFor`
+// returns the identical object it always built (the zero-edge early return below). Proved inert two
+// ways per the spec – the frozen MAIN capture re-derives (tests/condition.test.ts) and a full
+// 208-week career reproduces byte-identically (tools/wall-freeze-probe.ts). SHIPPING a non-zero
+// value is a separate decision that waits on the measured numbers; nothing in the app writes these.
+//
+// ⚠ ZERO RNG. The edge is pure arithmetic over state (and, in decay mode, over `seed:kid` /
+// `seed:potential` sub-stream DERIVATIONS, which are re-derived pure functions – no stream advances).
+// MAIN cannot see this knob at any setting; only match OUTCOMES move, exactly like kit and condition.
+/** Per-coach-tier additive edge on every on-court attribute, in skill points. All zeros = shipped
+ *  behaviour. Read at composition from `profile.coachTier`, so firing the coach removes the edge the
+ *  same week – "the edge leaves with him", which is the owner's whole-career market for the rung. */
+export const COACH_MATCH_EDGE: Record<CoachTier, number> = { self: 0, budget: 0, middle: 0, high: 0, elite: 0 }
+/** The owner's decay variant (addendum, 12.08: the edge falls as she fills up, «но не у всех
+ *  0.0-0.1» – it must never reach zero). Curve: `edge × (floor + (1 − floor) × headroomShare)` with
+ *  headroomShare = remaining headroom / total headroom, summed over the five wings – 1 at birth,
+ *  falling toward `floor` as she approaches her ceiling, never below it. Off = flat, the default. */
+export const COACH_MATCH_EDGE_DECAY: { on: boolean; floor: number } = { on: false, floor: 0.5 }
+
+/** The edge she carries onto court today – 0 for every career under the shipped defaults. */
+export function coachMatchEdge(world: { seed: string; profile: PlayerProfile; skills?: KidSkills }): number {
+  const base = COACH_MATCH_EDGE[world.profile.coachTier] ?? 0
+  if (base === 0) return 0
+  if (!COACH_MATCH_EDGE_DECAY.on) return base
+  const start = startingSkills(world.seed, world.profile)
+  const potential = rollPotential(world.seed, start)
+  const s = world.skills ?? start
+  let left = 0
+  let total = 0
+  for (const k of SKILL_KEYS) {
+    left += Math.max(0, potential[k] - s[k])
+    total += potential[k] - start[k]
+  }
+  const share = total > 0 ? Math.max(0, Math.min(1, left / total)) : 0
+  return base * (COACH_MATCH_EDGE_DECAY.floor + (1 - COACH_MATCH_EDGE_DECAY.floor) * share)
+}
+
 /** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
  *  CONDITION factor (R9-19), then by the surface x play-style table (docs/specs/surface-style.md),
  *  then by the condition of her EQUIPMENT (docs/specs/equipment-and-serve-speed.md §2). All three
@@ -98,12 +143,15 @@ export function kidMatchPlayerFor(
     /** W3-KIT (v37): the rung she is on per line. Optional for the same reason `offers` is - a pure
      *  caller that builds a player without a full world gets the shipped rung, byte-identical. */
     kit?: KitState
+    /** L1 scaffolding: her CURRENT build, read only by the decay curve. Optional for the same reason
+     *  `offers` is – a pure caller without one gets the birth build, exactly as `kidMatchPlayer`. */
+    skills?: KidSkills
   },
   surface: Surface,
 ): MatchPlayer {
   const raw = kidMatchPlayer(world)
   const factor = conditionMatchFactor(world.condition)
-  return applyKit(
+  const composed = applyKit(
     applySurfaceStyle(
       {
         ...raw,
@@ -135,5 +183,19 @@ export function kidMatchPlayerFor(
       world.kit ?? null,
     ),
   )
+  // L1 scaffolding (see COACH_MATCH_EDGE above): a zero edge returns the composed player UNTOUCHED –
+  // the shipped object, byte for byte, not even an `x + 0`. A non-zero edge lands AFTER the whole
+  // composition, additively on all five wings, so "she steps on court with +δ per wing" is literally
+  // what the dial says – the coach in the corner, not a better racket and not a fresher body.
+  const edge = coachMatchEdge(world)
+  if (edge === 0) return composed
+  return {
+    ...composed,
+    serve: composed.serve + edge,
+    ret: composed.ret + edge,
+    composure: composed.composure + edge,
+    stamina: composed.stamina + edge,
+    groundstrokes: composed.groundstrokes + edge,
+  }
 }
 
