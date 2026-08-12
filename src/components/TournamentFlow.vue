@@ -181,6 +181,13 @@ const isFinalRound = computed(() => pending.value?.roundLabel === 'Final')
  * that scrolled away than on the header line the badge lives on now.
  *  - watching the upcoming round  -> `pending.roundLabel` IS that round.
  *  - re-watching the round played -> the last entry on her revealed path, which is that match.
+ *
+ * ⚠ AND IT WEARS THE ACCENT CAPSULE AGAIN (owner, 12.08: «Quarterfinal наверху раньше был выделен
+ * цветом овалом вокруг, надо вернуть»). R17 #9 carried this value up onto the tournament's own line
+ * through `headline-meta` - an array of strings, which cannot say that one of two facts is louder -
+ * and the oval it had worn since 30.07 went with the shape. It is handed over as `headline-badge`
+ * now; see the note on the `<TakeoverShell>` binding, which is where the owner's words would have
+ * gone if a template could hold them.
  */
 const watchedRoundLabel = computed(() => {
   const p = pending.value
@@ -632,10 +639,19 @@ const matchMeta = computed(() => {
        the brief, the pre-match card, the box score, the poster and every letter still say the whole
        name. See `shortTierLabel` in shared/format.ts for why it is a list of three and not a
        drop-the-last-word rule. -->
+  <!-- ⚠ THE ROUND GOES IN AS `headline-badge` AND NOT AS A SECOND `headline-meta` ITEM (owner,
+       12.08 - his words are with `watchedRoundLabel` in the script above, because THIS IS A TEMPLATE
+       and the app's rule, pinned in tests/round13-nav.test.ts, is that no Cyrillic appears inside
+       one, comments included). It rode up onto this line from the sub line in R17 #9 and lost the
+       accent oval it had worn since 30.07 on the way - both facts arrived through one array, and an
+       array of strings has no way to say that one of them is the loud one. The week is a date stamp;
+       the round is where she has got to. `watchedRoundLabel` still names the round IN THE VIEWER
+       rather than the round on deck - see its own note for the mislabel that distinction fixes. -->
   <TakeoverShell
     v-if="pending"
     :title="phase === 'splash' ? null : replayOpen ? shortTierLabel(pending.tierLabel) : pending.tierLabel"
-    :headline-meta="replayOpen ? [weekShort, watchedRoundLabel] : null"
+    :headline-meta="replayOpen ? [weekShort] : null"
+    :headline-badge="replayOpen ? watchedRoundLabel : null"
     :screen="watchedScreen"
     :class="{ 'tf-fit': phase === 'pre' && !replayOpen }"
   >

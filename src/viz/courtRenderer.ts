@@ -335,26 +335,71 @@ function roundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w:
 
 /** U4 (owner, 29.07: nothing overlaps the playing surface). This pill used to be drawn dead centre
  *  of the canvas - which is the net, i.e. the most-watched square inch of the court, covered for
- *  0.9s every change of ends. It now sits centred in the TOP RUN-OFF band, the strip between the
- *  canvas edge and the painted surface, where the Live badge also lives (the badge is left-aligned
- *  and this is centred, so they never meet). If a viewport is ever short enough that the band
- *  cannot hold the pill, it is clamped to the canvas edge rather than allowed back onto the court. */
-function drawChangingEndsOverlay(ctx: CanvasRenderingContext2D, vp: Viewport): void {
-  const text = 'Changing ends'
-  ctx.save()
-  ctx.font = '600 13px system-ui, -apple-system, sans-serif'
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
+ *  0.9s every change of ends. It now sits in the TOP RUN-OFF band, the strip between the canvas edge
+ *  and the painted surface. If a viewport is ever short enough that the band cannot hold the pill, it
+ *  is clamped to the canvas edge rather than allowed back onto the court.
+ *
+ *  ⚠ AT THE FOOT OF THAT BAND, NOT ITS MIDDLE (owner, 12.08: «Change sides на время наезжает, надо
+ *  чуть ниже рисовать эту плашку»). THE BAND HAS FOUR TENANTS AND ONLY ONE OF THEM IS DRAWN HERE.
+ *  The other three are HTML - `.mv-live` on the left, `.mv-clock` in the middle and the weather plate
+ *  on the right, all inside `.mv-chrome`, which is pinned 6px below the canvas top. A canvas and a
+ *  DOM row cannot see each other, so the collision was invisible from both sides: this pill was
+ *  centred on the band, the CLOCK arrived in the same band in R17 #24 - it did not exist when the
+ *  pill was placed - and the clock is centred too.
+ *
+ *  MEASURED IN CHROMIUM at 375pt, where the canvas paints 341px wide, so one vp unit is 0.5015
+ *  display px:
+ *      the band            0    .. 78.19   (0 .. surfaceTop, below)
+ *      the clock          13.96 .. 35.89   (11 display px, centred in a 19px row at top: 6px)
+ *      pill, centred      26.60 .. 51.60   -> 9.29 units of overlap: the clock sat INSIDE the plaque
+ *      pill, at the foot  51.19 .. 76.19   -> 15.30 units clear of the clock, 2 off the surface
+ *  Horizontally the clock is inside the pill as well (173.5..209.8 display against 157.8..217.2),
+ *  which is why moving either sideways was not available: both are centred on the same court, on
+ *  purpose. The badge and the weather never met this pill and still do not - they hold the two ends
+ *  of the row, and the pill is 60px of centre.
+ *
+ *  `vp` is the fixed 680x420 logical viewport every match screen draws through (MatchViewer's CSS_W /
+ *  CSS_H), so `surfaceTop` is 78.19 at every phone width and none of this drifts with the display.
+ *  What DOES vary is the HTML row: it is a constant 25 display px however wide the canvas paints, so
+ *  the narrower the phone the more of the band it eats. The foot of the band is the furthest from it
+ *  this pill can go while staying off the court, and `tests/component/match-viewer.test.ts` asserts
+ *  the two boxes are disjoint at 375 rather than trusting that it looked right once. */
+export const CHANGING_ENDS_TEXT = 'Changing ends'
+export const CHANGING_ENDS_FONT = '600 13px system-ui, -apple-system, sans-serif'
+
+/** WHERE THE PLAQUE LANDS, as a rectangle a test can hold - because under happy-dom the canvas has
+ *  no 2D context and the DOM has no layout, so "does it collide with the clock" is not a question a
+ *  mounted test can measure. Splitting the arithmetic out of the paint is what makes the placement
+ *  assertable at all: `tests/viz/court-runoff-band.test.ts` calls THIS, the same function the paint
+ *  calls, so the two cannot drift and a mutation of `cy` turns the test red.
+ *
+ *  `textWidth` is passed in rather than measured here for the same reason: `ctx.measureText` is the
+ *  one part of this that needs a real canvas. It only decides the box's WIDTH, and the collision
+ *  this exists to prevent is vertical (the clock is horizontally inside the pill at every width). */
+export function changingEndsPillBox(vp: Viewport, textWidth: number): { x: number; y: number; w: number; h: number } {
   const paddingX = 12
   const paddingY = 6
   const textHeight = 13
-  const w = ctx.measureText(text).width + paddingX * 2
+  const w = textWidth + paddingX * 2
   const h = textHeight + paddingY * 2
-  const cx = vp.width / 2
   // Top edge of the painted (doubles) surface: the run-off band is 0 .. surfaceTop.
   const surfaceTop = courtToCanvas({ x: -COURT.doublesHalfWidth, y: 0 }, vp).y
-  const cy = Math.min(surfaceTop / 2, Math.max(h / 2 + 2, surfaceTop - h / 2 - 2))
-  roundedRectPath(ctx, cx - w / 2, cy - h / 2, w, h, h / 2)
+  // As low in the band as it goes: 2 units off the surface, and never past the canvas edge upward.
+  // The `Math.min(surfaceTop / 2, ...)` that used to wrap this is what centred it on the clock.
+  const cy = Math.max(h / 2 + 2, surfaceTop - h / 2 - 2)
+  return { x: vp.width / 2 - w / 2, y: cy - h / 2, w, h }
+}
+
+function drawChangingEndsOverlay(ctx: CanvasRenderingContext2D, vp: Viewport): void {
+  const text = CHANGING_ENDS_TEXT
+  ctx.save()
+  ctx.font = CHANGING_ENDS_FONT
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const { x, y, w, h } = changingEndsPillBox(vp, ctx.measureText(text).width)
+  const cx = x + w / 2
+  const cy = y + h / 2
+  roundedRectPath(ctx, x, y, w, h, h / 2)
   ctx.fillStyle = 'rgba(15, 23, 42, 0.82)'
   ctx.fill()
   ctx.strokeStyle = ACCENT

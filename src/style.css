@@ -1514,24 +1514,47 @@ button.primary.risky {
 }
 
 /* THE PANEL SHELL. Everything that opens over the page - the confirm dialog, the match replay,
-   the tournament flow's cards, the tier guide, the planner sheet - is the same box: the --panel
-   tone, a hairline, 12px corners, 16px of padding. Five rules had written those four declarations
-   out independently, which is why a sixth surface would have had to guess them.
+   the tournament flow's cards, the tier guide - is the same box: the --panel tone, a hairline,
+   12px corners, 16px of padding. Five rules had written those four declarations out independently,
+   which is why a sixth surface would have had to guess them.
    What each surface DOESN'T share is its size and whether it scrolls, so that stays with each one
    below. `.injury-stop` (10px) and `.tf-finale.silver` (a gradient border) still override from
    further down the sheet, exactly as before - grouping changes no specificity.
-   ⚠ TWO OF THESE TENANTS HAVE MOVED OUT and the list has not caught up, so read it as CSS rather than
-   as an inventory of screens. `.replay-card` was the match replay when it was a centred card on a
+   ⚠ THREE OF THESE TENANTS HAVE MOVED OUT and the list has not caught up, so read it as CSS rather
+   than as an inventory of screens. `.replay-card` was the match replay when it was a centred card on a
    dimmed page; it became the same takeover the live match is (30.07) and no template renders the class
    any more. `.tf-card` is still four surfaces, but the match viewer is no longer one of them - the
    owner took the outer frame off all three match screens on 30.07 («давай внешний контур уберем, он
-   не нужен»), so the viewer's own panels are the only box around a court now. */
+   не нужен»), so the viewer's own panels are the only box around a court now. `.plan-sheet` was the
+   planner and left in round-17 #5 - see the note below for the damage its removal did. */
+/* ⚠ `.plan-sheet` WAS THE FIFTH SELECTOR IN THIS LIST AND ITS REMOVAL BROKE THE RULE (owner, 12.08:
+   «у попапа с подтверждением записи на матч пропала подложка, остался только текст», and «весь блок
+   draw и ниже стал сильно уже экрана»). Round-17 #5 made the planner a takeover and deleted
+   `.plan-sheet` – but what went with the selector was the whole DECLARATION BLOCK, leaving
+   `.guide-card,` holding a trailing comma. CSS does not stop at a comment or a blank line: the parser
+   read on and took the NEXT rule's selector as the list's last item, so the sheet actually shipped
+
+     .dialog-card, .replay-card, .tf-card, .guide-card, .dialog-card { width: 100%; max-width: 320px }
+
+   – confirmed by reading `document.styleSheets` in Chromium on the shipped build. Two owner-visible
+   regressions from that one comma, and they look nothing alike, which is why they were reported as
+   two bugs: the panel treatment was gone (the confirm dialog is a `div`, so it painted no background
+   at all – «остался только текст») and `max-width: 320px` had leaked onto `.tf-card`, which measured
+   320px inside a 343px column at 375pt (the draw card and every card under it). `.tf-card` LOOKED
+   fine only because those four surfaces are `<section>` elements and the bare `section` rule repaints
+   them; nothing repaints a `div`.
+   ⚠ SO KEEP A SELECTOR LIST AND ITS BRACE TOGETHER. `tests/stylesheet-integrity.test.ts` now parses
+   this file and fails on a list that repeats a selector, which is the fingerprint a swallowed rule
+   leaves. Deleting one tenant of a shared rule means deleting ONE SELECTOR LINE and nothing else. */
 .dialog-card,
 .replay-card,
 .tf-card,
-.guide-card,
-/* `.plan-sheet`'s panel treatment lived here and was deleted with the card it painted – round-17
-   #5 made the planner a takeover, and a takeover IS the panel. See `.plan-body` below. */
+.guide-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-dialog);
+  padding: 16px;
+}
 
 .dialog-card {
   width: 100%;
@@ -1994,6 +2017,19 @@ tr.kid-row td {
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--muted);
+}
+
+/* ⚠ THE ROUND KEEPS ITS OVAL ON THIS LINE (owner, 12.08: «Quarterfinal наверху раньше был выделен
+   цветом овалом вокруг, надо вернуть»). R17 #9 moved the round up from the sub line, where it had
+   worn the accent capsule since 30.07, and drew it as one more quiet `.tf-meta` - so the highlight
+   was lost to a restructure rather than to a decision. `.tf-replay-round` is unchanged and still
+   shared with the friendly's header: this rule is only what the capsule needs to ride in a flex row
+   rather than an inline one. `flex: none` is the same never-shrink ranking `.tf-meta` states two
+   rules up - a padded pill that shrank would clip its own text, and the title is what gives.
+   The 8px step and the `vertical-align` the OLD sub-line override needed are both gone: the gap is
+   `.tf-headline`'s, and a flex item is already a block box, so nothing has to reserve its height. */
+.tf-headline .tf-replay-round {
+  flex: none;
 }
 
 .tf-title {

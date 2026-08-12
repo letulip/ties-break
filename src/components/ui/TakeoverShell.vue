@@ -82,8 +82,25 @@ const props = withDefaults(
      * null / empty (default) draws nothing at all, so a header with nothing to say pays no markup.
      */
     headlineMeta?: readonly string[] | null
+    /**
+     * THE ONE FACT ON THIS LINE THAT WEARS THE CAPSULE - the round, today (owner, 12.08:
+     * «Quarterfinal наверху раньше был выделен цветом овалом вокруг, надо вернуть»).
+     *
+     * ⚠ IT IS A SEPARATE PROP AND NOT "THE LAST `headlineMeta` ITEM", which is what R17 #9 shipped
+     * and is exactly how the highlight was lost. That item moved the round off the sub line - where
+     * it had been an accent capsule since 30.07 - onto the title line, and the title line drew every
+     * fact it was handed in one quiet `.tf-meta` grey. Two facts of different WEIGHT arriving through
+     * one array is a shape that cannot express the difference, so the difference went. A week is a
+     * date stamp and the round is where she has got to; the second is the header's headline reading
+     * and the first is not.
+     *
+     * Same never-wrap, never-shrink ranking as `.tf-meta`: the title is what gives. `.tf-replay-round`
+     * is the app's existing capsule and the friendly's header draws the same one, so this is the same
+     * fact in the same clothes it wore before #9 - it just costs no row now.
+     */
+    headlineBadge?: string | null
   }>(),
-  { screen: null, headlineMeta: null },
+  { screen: null, headlineMeta: null, headlineBadge: null },
 )
 
 // The scroller is the shell's, so putting it back at the top is the shell's job - a caller that had
@@ -101,6 +118,9 @@ useScrollReset(() => props.screen, bodyRef)
         <div class="tf-headline">
           <span class="tf-title">{{ title }}</span>
           <span v-for="item in headlineMeta ?? []" :key="item" class="tf-meta">{{ item }}</span>
+          <!-- Last on the line, always: the capsule is the loudest thing on it and a reader who
+               scans left to right meets the name, then the date stamp, then where she has got to. -->
+          <span v-if="headlineBadge" class="tf-replay-round">{{ headlineBadge }}</span>
         </div>
         <!-- The date / surface / round line under the title. Only drawn when a caller fills it, so a
              surface with nothing to say there does not pay 4px of margin for an empty box. -->
