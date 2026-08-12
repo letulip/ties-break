@@ -65,8 +65,32 @@ import { guardNotEnded } from './endings'
  *  themselves first, because they are true for any body. */
 export function assertPlannable(world: WorldState, week: number, kind: 'vacation' | 'practice'): void {
   if (!Number.isInteger(week) || week <= world.week) throw new Error('Only a future week can be planned')
-  const layoff = layoffCovering(world, week) // the shared R10-17 window
-  if (layoff !== null) throw new Error(`Injured – back in ${layoff.weeksRemaining} weeks.`)
+  // ⭐ THE LAYOFF STOPS THE FRIENDLY AND NOT THE HOLIDAY (round-17 #11). The owner: «люди
+  // путешествуют с травмами вообще».
+  //
+  // ⚠ THIS GATE WAS INCIDENTAL, NOT A RULING, AND THE COMMENT ABOVE IS THE EVIDENCE. Two lines up,
+  // the doctor's veto is argued into applying to `practice` ONLY, in these words: "a VACATION is
+  // rest, and refusing that below the floor is how a week becomes a dead end (R10-3), the exact bug
+  // class this gate must not reintroduce". The layoff arm was written unconditionally beside it and
+  // was never given a reason of its own - the whole of its recorded justification is a PARITY
+  // argument living in a test (tests/round10.test.ts: "uses the SAME boundary the planner already
+  // uses - one rule, two surfaces"), which is about a boundary being spelled once, not about whether
+  // a hurt girl may be taken away for a week. Nothing in docs/specs/season-planner.md states the
+  // rule; §4d states the opposite one, that "vacations are never gated".
+  //
+  // AND IT PRODUCED THE VERY DEAD END THAT ARGUMENT WAS GUARDING AGAINST, one gate along: a
+  // twelve-week layoff is twelve weeks in which the parent may plan NOTHING AT ALL. The one thing a
+  // real family does with a season that has just been taken away from them is go somewhere, and it
+  // is also the one thing the game models that helps - a vacation's `conditionGain` is exactly what
+  // an injured week wants.
+  //
+  // THE FRIENDLY KEEPS THE GATE, for the same reason the medical floor reaches it: a practice match
+  // IS a match, and she cannot play one while she is laid up. So the two kinds part here, as they
+  // already part below.
+  if (kind === 'practice') {
+    const layoff = layoffCovering(world, week) // the shared R10-17 window
+    if (layoff !== null) throw new Error(`Injured – back in ${layoff.weeksRemaining} weeks.`)
+  }
   if (isExamWeek(week, schoolIsOver(week, world.profile.birthMonth))) {
     throw new Error('School exams that week – no matches, no trips')
   }

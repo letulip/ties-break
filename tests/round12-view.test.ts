@@ -135,10 +135,22 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
     expect(controls).toContain('Exams this week')
   })
 
+  // ⚠ RE-AIMED, round-17 #19, AND THE MEASUREMENT IS THE OWNER'S OWN CARD. This block used to pin
+  // `lockLabel` as containing the literal `'Exams this week'` for the unavailable lock. That literal
+  // WAS the bug: 'unavailable' is five refusals wearing one code (tour suspension, the tier's age
+  // door, a booked vacation, an exam week, the off-season), and the pill assumed the fourth for all
+  // of them – so a Junior Tour 30 offered to a twenty-year-old was refused on screen for exams she
+  // had stopped sitting at 18 (`schoolIsOver`). The pill now prints `ineligibleDetail`, which is the
+  // engine's own sentence for whichever arm actually fired.
+  //
+  // WHAT THIS TEST WAS FOR is the second assertion and it is untouched: the reason must not print
+  // twice on one card. That property is about `examReasonShows` standing down when the lock pill
+  // renders, and it never depended on the pill's wording.
   it('the reason never prints twice: the unavailable-lock card is the one that already says it', () => {
-    // lockLabel words the unavailable (non-vacation) lock as "Exams this week"...
     const lock = slice(seasonScreen, 'function lockLabel', 'function examReasonShows')
-    expect(lock).toContain("'Exams this week'")
+    // The pill says what the ENGINE said, and it no longer guesses a reason of its own.
+    expect(lock).toContain('e.ineligibleDetail')
+    expect(lock).not.toContain("'Exams this week'")
     expect(lock).not.toContain('School exams')
     // ...and examReasonShows stands down exactly when that pill renders.
     const gate = slice(seasonScreen, 'function examReasonShows', '// --- R11-5a')
@@ -193,16 +205,27 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
     expect(planSheet).toContain('`Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}.`')
   })
 
-  it('the Vacation tab renders the layoff refusal instead of throwing it', () => {
+  // ⚠ RE-AIMED, round-17 #11. This pinned the Vacation tab as REFUSING during a layoff – rendering
+  // the refusal rather than throwing it, which was the R12-8b doctrine and is still right about
+  // refusals in general. The refusal itself is gone: the owner ruled that a family may travel while
+  // she is hurt («люди путешествуют с травмами вообще»), and `assertPlannable` records why the block
+  // was incidental rather than a rule. So what this asserts now is the R10-16 half that survives -
+  // the tab still SAYS the layoff, and the control it draws is one the engine will accept.
+  it('the Vacation tab says the layoff and books through it anyway', () => {
     // the tab's own closing tag sits at 6-space indent; the pkg-effect's inner
     // </template> is inline, so this cut takes the WHOLE tab, pkg-actions included
     const vacation = slice(planSheet, '<!-- ---------------- Vacation', '\n      </template>')
+    // The fact is still on screen while the parent is choosing...
     expect(vacation).toContain('v-if="layoff"')
     expect(vacation).toContain('{{ layoffNote }}')
-    // Book disables WITH the reason on screen – the R10-16 doctrine, not a dead control
-    expect(vacation).toContain(':disabled="!!layoff || !row.affordable || game.busy"')
-    // ...and "Out of reach" stands down while the layoff is the real blocker
-    expect(vacation).toContain('v-if="!layoff && !row.affordable"')
+    // ...and it is no longer a blocker on the one control this tab has. A Book that could only throw
+    // would be the R10-16 dead control, which is why the ENGINE gate came off first.
+    expect(vacation).toContain(':disabled="!row.affordable || game.busy"')
+    expect(vacation).not.toContain('!!layoff')
+    // "Out of reach" no longer stands down for a layoff, because affordability is now the only
+    // thing that can stop a booking here.
+    expect(vacation).toContain('v-if="!row.affordable"')
+    expect(vacation).not.toContain('v-if="!layoff && !row.affordable"')
   })
 
   it('the practice tab IS wired now - the R12-5b seam landed (this pin used to assert the opposite)', () => {

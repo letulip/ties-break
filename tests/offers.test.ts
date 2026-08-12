@@ -1334,6 +1334,83 @@ describe('the sponsor window', () => {
     for (const o of offers) expect(isOfferLive(o, WINDOW_CLOSE_WEEK + 1)).toBe(false)
   })
 
+  // ===============================================================================================
+  // ⭐ ROUND-17 #27 – ONE LETTER PER RUNG PER WINDOW, EVEN WHEN THE LADDER MOVES UNDER IT
+  // ===============================================================================================
+  // THE REPORT: two identical Baseline Athletics letters, W48 and W49. REPRODUCED on the owner's own
+  // save before this was written - `w359 kit open tour Baseline Athletic` and `w360 kit open tour
+  // Baseline Athletic`, identical brand, allowance, covers, travel share and term; then `w361`
+  // correctly moved on to national. The ladder had gained a rung at the top between the two weeks.
+  //
+  // THE CAUSE: a letter's IDENTITY is its slot (`kit-<opened+slot>`) and its CONTENT is its tier
+  // (`ladder[slot]`), and `windowLadder` is recomputed from a LIVE standing every week of the window.
+  // A rung that starts clearing mid-window shifts every rung below it down one slot, so the same tier
+  // lands on a slot whose id has never been seen, rolls a fresh independent draw, and writes again.
+  it('⭐ the tour rung that slides down a slot mid-window does not write twice', () => {
+    // ⚠ THE STANDINGS ARE THE OWNER'S CASE, MEASURED. `pro(100)` puts `tour` at slot 0 and `pro(60)`
+    // slides it to slot 1 by adding `global` above it - which is precisely what his save shows
+    // between w359 and w360, and `tour`'s brand is Baseline Athletic.
+    const offers: Offer[] = []
+    const before = pro(100)
+    const after = pro(60)
+    expect(windowLadder(before), 'tour leads the ladder in week 47').toEqual(['tour', 'national', 'local'])
+    expect(windowLadder(after), 'and a rung appears above it in week 48').toEqual([
+      'global',
+      'tour',
+      'national',
+      'local',
+    ])
+
+    const first = raiseKitOffers({
+      offers,
+      seed: seedTheShopWritesTo('sliding-ladder', LETTER_WEEK, before),
+      week: LETTER_WEEK,
+      standing: before,
+    })
+    expect(first.map((o) => (o.terms as KitOfferTerms).tier)).toEqual(['tour'])
+    const brand = (first[0].terms as KitOfferTerms).brand
+
+    // WEEK 48: slot 0's id is already taken, so it is skipped - and slot 1, which has never been
+    // written, now carries `tour`. Its roll is a fresh, independent draw.
+    const second = raiseKitOffers({
+      offers,
+      seed: seedTheShopWritesTo('sliding-ladder', LETTER_WEEK + 1, after),
+      week: LETTER_WEEK + 1,
+      standing: after,
+    })
+    // THE CLAIM. Mutation-verified by deleting the `alreadyWritten.has(tier)` guard in
+    // `raiseKitOffers`: a second `tour` letter appears from the same brand and this fails.
+    expect(second.map((o) => (o.terms as KitOfferTerms).tier), 'the same rung must not write twice').not.toContain('tour')
+    expect(second.map((o) => (o.terms as KitOfferTerms).brand), `${brand} wrote twice`).not.toContain(brand)
+
+    // ...and across the whole window no rung and no brand is ever heard from twice.
+    const tiers = offers.map((o) => (o.terms as KitOfferTerms).tier)
+    expect(new Set(tiers).size, `one letter per rung, got ${tiers.join(', ')}`).toBe(tiers.length)
+    const brands = offers.map((o) => (o.terms as KitOfferTerms).brand)
+    expect(new Set(brands).size, `one letter per brand, got ${brands.join(', ')}`).toBe(brands.length)
+  })
+
+  it('⭐ ...and the whole window is duplicate-free however the standing wanders', () => {
+    // The general claim rather than one worked case: walk the window with a standing that climbs on
+    // every week, which is the shape that re-maps the slots the hardest.
+    const climb = [domestic(1), worldly(20), worldly(1), pro(1)]
+    for (let s = 0; s < 12; s++) {
+      const offers: Offer[] = []
+      for (let slot = 0; slot < SPONSOR_LETTER_WEEKS; slot++) {
+        const week = LETTER_WEEK + slot
+        const standing = climb[slot]
+        raiseKitOffers({
+          offers,
+          seed: seedTheShopWritesTo(`wander-${s}`, week, standing),
+          week,
+          standing,
+        })
+      }
+      const tiers = offers.map((o) => (o.terms as KitOfferTerms).tier)
+      expect(new Set(tiers).size, `seed ${s}: ${tiers.join(', ')}`).toBe(tiers.length)
+    }
+  })
+
   it('⚠ a contract ends WITH the season, on week 49, so week 50 is empty', () => {
     // The owner's own rule: «заканчивать контракты вместе с сезоном на 49 неделе (если они
     // однолетние), т.е. чтобы с 50 точно уже было пусто».

@@ -398,6 +398,16 @@ export default defineConfig({
           name: 'component',
           include: ['tests/component/**/*.test.ts'],
           environment: 'happy-dom',
+          // ⚠ `css: true` SO A COLOUR CAN BE A TESTABLE FACT. Vitest drops stylesheets by default,
+          // so until now a mounted test could see the DOM but never what it LOOKED like - and the
+          // round-17 #3 regression is precisely what that blind spot lets through: BirthdayDialog
+          // painted its buttons `var(--card, #fff)` and their labels `var(--ink, #1c1c1e)`, and
+          // because `--card` is declared NOWHERE while `--ink` is `#f2f6f8`, four buttons shipped as
+          // near-white text on white. Every structural assertion in birthday-dialog.test.ts passed.
+          // With this on, `tests/component/contrast.ts` reads the real cascade through
+          // `getComputedStyle` (happy-dom resolves `var()` and its fallbacks correctly - measured)
+          // and the contrast ratio becomes an assertion like any other.
+          css: true,
         },
       },
     ],

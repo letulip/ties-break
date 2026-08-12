@@ -29,6 +29,9 @@ import {
   portraitStage,
   type PortraitStage,
 } from '../shared/avatarEmotion'
+// ⭐ #16: the ONE place a table is named (`LADDER_LABEL`), so the diary cannot invent a word for a
+// ladder that every other screen already has a name for. Imported as a VALUE, unlike the types below.
+import { LADDER_LABEL } from '../shared/protocol'
 import type {
   DiaryFacts,
   DiarySnapshot,
@@ -417,8 +420,21 @@ export const MEMORY_LINES: readonly MemoryLine[] = [
   { type: 'prize', text: (m) => (m.tier ? `First prize money – a ${short(m.tier)} cheque.` : 'First prize money – a real cheque.') },
   { type: 'prize', text: () => 'The first week the tennis paid her.' },
   { type: 'injury', text: (m) => `${capitalize(m.kind ?? 'an injury')} – her first injury.` },
-  { type: 'season-rank', text: (m) => `Season ${seasonYear(m.seasonIndex ?? 0)} closed at #${m.rank ?? 0}.` },
-  { type: 'season-rank', text: (m) => `She ended ${seasonYear(m.seasonIndex ?? 0)} ranked #${m.rank ?? 0}.` },
+  // ⭐ ROUND-17 #16 – A RANK PRINTED WITHOUT ITS TABLE IS NOT A FACT. These two lines read "Season
+  // 2035 closed at #79." and named no table, on a career that has THREE of them. The number is
+  // `Milestone.rank`, and `captureMilestone` writes `world.kidRank` into it - which is the
+  // INTERNATIONAL (junior) table, always and by construction (see `recomputeKidRank`). So a
+  // twenty-year-old professional read her junior placing as if it were her standing, in the same
+  // sentence a season is summed up in.
+  //
+  // ⚠ THE TABLE IS A CONSTANT HERE, NOT A LOOKUP, AND THAT IS WHY THIS NEEDS NO SCHEMA MOVE.
+  // `Milestone` is PERSISTED (`world.milestones`) and carries no track; giving it one is a
+  // three-part move (CLAUDE.md invariant 3) and is NOT done here. It does not need one to stop
+  // lying: every `season-rank` milestone ever written holds the international number, so naming
+  // that table is simply saying what the field already means. What a track WOULD buy is printing
+  // the professional rank for an adult, which is a different and larger change - reported, not made.
+  { type: 'season-rank', text: (m) => `Season ${seasonYear(m.seasonIndex ?? 0)}: #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.` },
+  { type: 'season-rank', text: (m) => `She ended ${seasonYear(m.seasonIndex ?? 0)} #${m.rank ?? 0} ${LADDER_LABEL.itf.toLowerCase()}.` },
 ]
 
 /** How old a MILESTONE has to be before she remembers it rather than just having done it.

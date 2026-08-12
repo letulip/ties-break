@@ -114,7 +114,17 @@ describe('R10-17 — the injury gate is read against the EVENT week, not the cur
     }
   })
 
-  it('uses the SAME boundary the planner already uses (bookVacation) – one rule, two surfaces', () => {
+  // ⚠ RE-AIMED, round-17 #11, AND THE RE-AIM IS ONTO THE CLAIM THIS TEST'S OWN TITLE MAKES. It was
+  // written to prove that ONE window comparison serves every surface - "the SAME boundary, one rule,
+  // two surfaces" - and it used `bookVacation` as the second surface. `bookVacation` is no longer a
+  // surface of that rule at all: the owner ruled that a family may travel while she is hurt
+  // («люди путешествуют с травмами вообще»), so the layoff gate now applies to the FRIENDLY and not
+  // to the holiday (see `assertPlannable`, which records why the block was incidental).
+  //
+  // So the parity claim moves to `bookPractice`, which IS still gated, and the vacation's new
+  // behaviour is asserted positively rather than deleted. Nothing about the BOUNDARY changed: the
+  // return week is still the first allowed week, on both surfaces that still have one.
+  it('uses the SAME boundary the planner already uses (bookPractice) – one rule, two surfaces', () => {
     const w = createWorld('r10-17-planner-parity')
     w.season = []
     w.condition = 100
@@ -122,14 +132,37 @@ describe('R10-17 — the injury gate is read against the EVENT week, not the cur
     setInjury(w, 3)
     const backWeek = w.week + 3
 
-    // the planner's own rule: a vacation is refused inside the layoff, allowed from the return week
-    expect(() => bookVacation(w, backWeek - 1, 'staycation')).toThrow('Injured')
-    expect(() => bookVacation(w, backWeek, 'staycation')).not.toThrow()
-    // ...and availabilityStatus now answers identically for a tournament on those weeks
+    // the planner's own rule: a FRIENDLY is refused inside the layoff, allowed from the return week
+    expect(() => bookPractice(w, backWeek - 1, false)).toThrow('Injured')
+    expect(() => bookPractice(w, backWeek, false)).not.toThrow()
+    // ...and availabilityStatus answers identically for a tournament on those weeks
     const inside = injectEvent(w, { week: backWeek - 1, tier: 'local', id: 'p-in', deadlineWeek: w.week })
     const at = injectEvent(w, { week: backWeek + 1, tier: 'local', id: 'p-at', deadlineWeek: w.week })
     expect(availabilityStatus(w, inside).reason).toBe('injured')
     expect(availabilityStatus(w, at).reason).not.toBe('injured')
+  })
+
+  // ===============================================================================================
+  // ⭐ ROUND-17 #11 – A FAMILY MAY TRAVEL WHILE SHE IS HURT
+  // ===============================================================================================
+  it('⭐ a vacation books INSIDE the layoff – the trip is rest, not tennis', () => {
+    // The owner: «люди путешествуют с травмами вообще». The block was never a ruling - the comment
+    // beside it argues the opposite for the condition floor ("a VACATION is rest, and refusing that
+    // below the floor is how a week becomes a dead end") and the layoff arm carried no reason at all.
+    // It also produced that dead end at a longer range: a twelve-week layoff was twelve weeks in
+    // which nothing could be planned.
+    const w = createWorld('r17-11-travel-hurt')
+    w.season = []
+    w.condition = 100
+    w.fundsCents = 500_00
+    setInjury(w, 6)
+    // Every week of the layoff, including the one she is standing in the middle of.
+    for (const week of [w.week + 1, w.week + 3, w.week + 5]) {
+      expect(() => bookVacation(w, week, 'staycation'), `w${week} must be bookable`).not.toThrow()
+    }
+    expect(w.vacations).toHaveLength(3)
+    // ...and the friendly on those same weeks is still refused, which is the half that stays.
+    expect(() => bookPractice(w, w.week + 2, false)).toThrow('Injured')
   })
 
   it('the snapshot only locks the weeks she is actually out for', () => {

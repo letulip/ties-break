@@ -12,6 +12,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+// ⚠ THE APP'S OWN STYLESHEET, IMPORTED FOR ITS `:root` – see the legibility block at the bottom of
+// this file. Without it `var(--text)` resolves to nothing and every colour assertion is vacuous.
+import '../../src/style.css'
+import { assertLegible } from './contrast'
 import BirthdayDialog from '../../src/components/BirthdayDialog.vue'
 import KidScreen from '../../src/components/screens/KidScreen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -146,6 +150,48 @@ describe('BirthdayDialog – the four presents', () => {
     const w = mount(BirthdayDialog, { global: { stubs: { teleport: true } } })
     expect(w.find('[role="dialog"]').exists()).toBe(false)
     expect(w.findAll('button').length).toBe(0)
+    w.unmount()
+  })
+
+  // =============================================================================================
+  // ⭐ ROUND-17 #3 – THE LABELS ARE LEGIBLE AGAINST THE BUTTON THEY SIT ON
+  // =============================================================================================
+  // WHAT SHIPPED: `background: var(--card, #fff)` on the row and `color: var(--ink, #1c1c1e)` on the
+  // label. `--card` is declared nowhere in this app, so the fallback won and the button was WHITE;
+  // `--ink` is declared, at `#f2f6f8`, so the label was near-white. Measured on the real cascade:
+  // 1.09:1, both the label and the note. Four unreadable buttons, on the one dialog with no way out
+  // that is not an answer – the player could not read the options and could not leave.
+  //
+  // ⚠ AND NOTHING IN THIS FILE COULD SEE IT. Every block above asserts structure – four rows, one
+  // shape, no price, no exit – and all of them passed on the broken build, because a mounted test
+  // that never looks at a colour cannot fail on one. `tests/design-tokens.test.ts` rule A was blind
+  // to it for a different reason: it skips any `var()` carrying a fallback, and both broken
+  // references carried one. THIS is why the assertion is a measured ratio and not a token-name pin -
+  // a pin on `var(--text)` would pass the day somebody redefines `--text`.
+  //
+  // Mutation-verified, twice, and the numbers are recorded because they are the measurement:
+  //   * `background: var(--card, #fff)` restored -> label 1.09:1, FAILS
+  //   * `color: var(--muted)` -> `color: var(--ink-dim)` on the note -> 3.63:1, FAILS
+  // Green today: label 14.73:1, note 5.62:1, ask 16.60:1.
+  it('⭐ #3 – every label and note clears WCAG AA against its own background', () => {
+    const { snap } = birthdaySnapshot()
+    // attachTo: the cascade is only real for elements that are IN the document.
+    useGameStore().snapshot = snap
+    const w = mount(BirthdayDialog, { attachTo: document.body })
+
+    const rows = document.querySelectorAll('button.birthday-choice')
+    expect(rows.length, 'not vacuous – there are rows to measure').toBe(4)
+    for (const row of rows) {
+      const label = row.querySelector('.birthday-choice-label')!
+      const note = row.querySelector('.birthday-choice-note')!
+      expect(label.textContent!.trim().length, 'and the label has words in it').toBeGreaterThan(0)
+      // 15px/600 is not "large text" by WCAG (that starts at 18.66px bold), so it is the 4.5:1 bar.
+      assertLegible(label, 'birthday-choice-label')
+      assertLegible(note, 'birthday-choice-note')
+    }
+    // The ask is the line that tells her want – it is the reason the scene works, and it is on the
+    // card rather than on a row, so it is measured separately.
+    assertLegible(document.querySelector('.birthday-ask')!, 'birthday-ask')
     w.unmount()
   })
 

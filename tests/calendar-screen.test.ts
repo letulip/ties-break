@@ -771,7 +771,11 @@ describe('the marker opens ONE event, with enter-or-close', () => {
     expect(screen).not.toMatch(/^import .*ConfirmDialog/m)
     // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars → the shared formatCents (identical string
     // on screen, one formatter for the app); the card still prints all three facts.
-    for (const fact of ['entry {{ formatCents(marker.entryFeeCents) }}', 'Travel budget', 'closes {{ weekLabel(marker.deadlineWeek) }}']) {
+    // ⚠ RE-AIMED AGAIN, round-17 #28: `formatCents` → `entryFeeLabel`. A Grand Slam levies NO entry
+    // fee - the real rule, and the one genuinely-zero fee in the tier table - and `formatCents(0)`
+    // rendered it as "$0", which reads as a number nobody filled in rather than as a fact. The claim
+    // is unchanged: this card prints all three facts, so it can be its own confirmation.
+    for (const fact of ['{{ entryFeeLabel(marker.entryFeeCents) }}', 'Travel budget', 'closes {{ weekLabel(marker.deadlineWeek) }}']) {
       expect(template, `the card must print ${fact}`).toContain(fact)
     }
     // ...and both cautions are the ENGINE's own sentences, never re-worded here

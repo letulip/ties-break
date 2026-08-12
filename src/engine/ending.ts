@@ -16,6 +16,7 @@
 // a player's answer. So the frozen MAIN capture cannot notice this file exists, and a career that
 // goes bankrupt mid-replay keeps drawing identically to one that does not.
 import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from '../shared/protocol'
+import type { TierId } from './season/types'
 
 /** THE KNOBS. Every number here is either measured (`tools/endings-bench.ts`) or anchored in the
  *  contract; none of them is a difficulty setting. */
@@ -49,6 +50,25 @@ export const ENDINGS = {
   forkAgeYears: 19,
   /** §5.1 – four years of student tennis on a scholarship, and she comes back at twenty-two. */
   collegeYears: 4,
+  /** ⭐ THE RUNG AT WHICH THE SCHOLARSHIP STOPS BEING AN OPTION (round-17 #6).
+   *
+   *  The owner: the fork «offers the academy to a girl already earning on W75+». It did – the
+   *  college answer had no precondition of any kind, so a nineteen-year-old with a professional
+   *  ranking, a tour kit deal and prize money in the bank was offered "four years of student tennis.
+   *  No ranking points, and the money goes the other way" as an equal third of the card.
+   *
+   *  ⚠ AND IT IS THE REAL RULE, WHICH IS WHY IT IS A PRECONDITION AND NOT A WARNING. A player who has
+   *  taken professional prize money has spent her college eligibility; the scholarship is not a door
+   *  she can still walk through. The card «may not recommend» (ruling 4, 30.07) and this does not
+   *  recommend anything – it removes an answer that was never available, which is the opposite of
+   *  steering. The other two answers keep the same weight as each other.
+   *
+   *  ⚠ W75 IS THE OWNER'S OWN MARKER, quoted from the report, and it is a RUNG rather than a sum of
+   *  money on purpose. `w15` opens at sixteen and the game actively wants a junior to play a few, so
+   *  "has ever entered a professional event" would delete the college ending from almost every
+   *  career. A counting result at W75 or above is the line between a junior who has tried the tour
+   *  and a professional who is on it. */
+  collegeClosedFromTier: 'w75' as TierId,
 
   // --- #5/#6 THE NATURAL END -------------------------------------------------------------------
   /** her own decline starts here (`ECONOMY.development.ageCurve.declineStart`), so this is where

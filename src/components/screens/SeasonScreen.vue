@@ -57,7 +57,7 @@ import { enterActionName } from '../../composables/eventName'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
-import { formatCents } from '../../shared/money'
+import { formatCents, entryFeeLabel } from '../../shared/money'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
@@ -401,23 +401,35 @@ const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.cover
 // one number a parent needs in order to SPEND the allowance sensibly only ever arrived after it was
 // spent - which is the same shape as a fuel gauge that lights up when the tank is empty.
 //
-// The engine's own figure (`Snapshot.proEntryCap`, `proEntryCapUsage`), never re-derived: the season
-// the counter describes is the CURRENT one, which is what every card inside the eight-week horizon
-// is in except across the year boundary - and a capped card there still prints the engine's
-// per-EVENT verdict on the lock pill, which is the number that actually refuses her.
+// The engine's own figure, never re-derived.
+//
+// ⚠ AND IT IS THE CARD'S OWN FIGURE SINCE ROUND-17 #2, NOT THE SCREEN'S. This used to read
+// `Snapshot.proEntryCap` - a single number computed at `world.week` - and hang it on every W card in
+// the eight-week horizon. The comment here conceded the hole and waved it through: "the season the
+// counter describes is the CURRENT one, which is what every card inside the eight-week horizon is in
+// EXCEPT ACROSS THE YEAR BOUNDARY - and a capped card there still prints the engine's per-EVENT
+// verdict on the lock pill". That is true of a card the cap BLOCKS and false of every other one, and
+// the owner's report is exactly the other case: from about week 44 the horizon fills with next
+// season's cards, each announcing `pro entries 16 / 16` for a season it is not in, on cards she
+// could enter. `UpcomingEvent.proEntryCap` is the same engine function asked about the EVENT's week,
+// which is what `pointsToEnter` and `entryCap` have always done.
 //
 // SILENT FROM EIGHTEEN, because the rule is: `proPerYearByAge` is unlimited from 18 and the protocol
 // spells "unlimited" as MAX_SAFE_INTEGER, so a counter there would be a fraction with no denominator.
-const proEntries = computed(() => {
-  const cap = game.snapshot?.proEntryCap
+function proEntriesFor(e: UpcomingEvent): string | null {
+  const cap = e.proEntryCap
   if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
   return `pro entries ${cap.used} / ${cap.limit}`
-})
+}
 /** WHICH CARDS CARRY IT – the rungs the tour's age rule actually counts (`ECONOMY.entryCap
  *  .cappedProTiers`, read through the engine's own predicate). That is every W and WTA rung and no
- *  junior or domestic one, so "every W card" is a property of the tier rather than a list here. */
+ *  junior or domestic one, so "every W card" is a property of the tier rather than a list here.
+ *
+ *  ⚠ THE ENGINE NOW ANSWERS BOTH HALVES: the field is only present on a rung the rule counts, so
+ *  `isCappedProTier` and the presence of `proEntryCap` are the same question asked twice. Kept
+ *  explicit so a card whose payload predates the field cannot start showing a chip with no number. */
 function showsProEntries(e: UpcomingEvent): boolean {
-  return proEntries.value !== null && isCappedProTier(e.tier)
+  return isCappedProTier(e.tier) && proEntriesFor(e) !== null
 }
 
 // SEASON STRUCTURE BY SURFACE (owner approved 26.07). The calendar shows 8 weeks, so a 15-week clay
@@ -624,6 +636,14 @@ function fundsShort(e: UpcomingEvent): boolean {
 // spelling, which is the point of moving it out of `ineligibleReason` (see protocol.ts). The rung
 // she has passed is ENTERABLE and says so on its own pill below.
 // The injured detail names the return week (slice C) so the parent can plan around the layoff.
+/** ⭐ #28: the confirm's fee sentence. A slam levies nothing, and "Entry fee $0." is the sentence
+ *  that made the owner ask whether it was broken. It is not – the majors charge no entry fee, and
+ *  every other rung charges from $40 to $1,000 – so the card and the confirm both say so in words.
+ *  ⚠ NOT "free": the trip is $3,000-$6,000 and is charged separately. */
+function feeSentence(cents: number): string {
+  return cents === 0 ? 'No entry fee – the trip is still yours to pay for.' : `Entry fee ${formatCents(cents)}.`
+}
+
 function lockLabel(e: UpcomingEvent): string {
   switch (e.ineligibleReason) {
     case 'injured': {
@@ -649,9 +669,22 @@ function lockLabel(e: UpcomingEvent): string {
         : 'Year limit reached'
     // R12-1/14: worded to match the exam row's own label ("Exams") – ONE language for the block,
     // whether the parent reads the row or the card.
+    // ⚠ FIVE REFUSALS WEAR THIS ONE CODE, AND THIS PILL USED TO GUESS WHICH (round-17 #19). A tour
+    // suspension, the tier's age door, a booked vacation, an exam week and the off-season all arrive
+    // as 'unavailable'; the branch below asked about the vacation and then assumed EXAMS for
+    // everything else. On the owner's save that printed "Exams this week" on a Junior Tour 30 shown
+    // to a twenty-year-old – a girl whose school ended at 18 (`schoolIsOver`), refused for a reason
+    // that no longer exists in her life, on a card she had also aged out of two seasons earlier.
+    //
+    // The vacation branch stays FIRST and keeps its own copy: it is the only one of the five that
+    // names something the PLAYER booked, and the package name is worth more than the engine's
+    // generic sentence. Everything else now prints the engine's own words rather than a guess.
     case 'unavailable': {
       const vacation = vacations.value.find((v) => v.week === e.week)
-      return vacation ? `Family vacation – ${packageLabel(vacation.packageId)}` : 'Exams this week'
+      if (vacation) return `Family vacation – ${packageLabel(vacation.packageId)}`
+      // ⚠ AND THE FALLBACK IS NOT A SECOND GUESS. An old fixture with no detail on the wire gets the
+      // one word that is true of all five – it is unavailable – rather than a reason it invented.
+      return e.ineligibleDetail ?? 'Not available this week'
     }
     default:
       // R11-5a: the WORDS come from the shared rule, the NUMBER stays the engine's own verdict for
@@ -717,8 +750,8 @@ function askEnter(e: UpcomingEvent): void {
   pendingConfirm.value = {
     message: fatigued
       ? `${said}${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
-        `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? Entry fee ${formatCents(e.entryFeeCents)}.`
-      : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? Entry fee ${formatCents(e.entryFeeCents)}.`,
+        `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? ${feeSentence(e.entryFeeCents)}`
+      : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? ${feeSentence(e.entryFeeCents)}`,
     // ⚠ TWO VERBS FOR TWO KINDS OF ADVICE (08.08). "Push through" is a BODY word – it is what you do
     // to tiredness – and since the coach also has an opinion about the SCHEDULE now, it would have
     // been the wrong verb on half the cautions he raises: there is nothing to push through about a
@@ -1199,7 +1232,10 @@ function closeExhibition(): void {
             <div class="controls">
               <!-- The entry fee reads as a FIGURE, in white, on the same row as the deadline chips
                    (owner, 28.07) - it is money, like the travel budget above it, not a caption. -->
-              <span class="entry-fee">entry {{ formatCents(row.event.entryFeeCents) }}</span>
+              <!-- ⭐ #28: a slam levies no entry fee at all, and "no entry fee" is a fact where "$0" reads
+                   as a number nobody filled in. `entryFeeLabel` carries the word "entry" itself, so the
+                   chip prints the label bare rather than prefixing a second one. -->
+              <span class="entry-fee">{{ entryFeeLabel(row.event.entryFeeCents) }}</span>
               <!-- R12-8b: the layoff covers this WEEK, whatever the event's own lock says – a
                    points-locked card names the band first (lock precedence), so without the chip
                    the injury never appeared on it at all. -->
@@ -1330,7 +1366,7 @@ function closeExhibition(): void {
                 class="pill muted pro-entries"
                 :title="`The tour's age rule caps how many professional tournaments she may enter this season. This is where she stands against it.`"
               >
-                {{ proEntries }}
+                {{ proEntriesFor(row.event) }}
               </span>
             </div>
           </Card>
