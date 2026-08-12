@@ -481,6 +481,13 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // Left outside is exactly what fails that test: "Watch again" cannot be wanted before the match
     // has finished, and it only exists in replay mode at all. So the protected fact is the same one,
     // stated by the criterion that actually decided it, and the bar still is not a dumping ground.
+    // ⚠ THE SLICE IS THE PLAYING BAR, AND SINCE 12.08 THAT MATTERS. `class="mv-controls"` matches
+    // only the `v-else` row - the finished one is `class="mv-controls mv-controls-done"` - so this
+    // reads the bar as it stands DURING a match, which is what the criterion above is about. The
+    // finished row is a different question and its own answer: the owner asked for `Watch again |
+    // Proceed` there («2 кнопки рядом просто в этом нижнем блоке с контролами»), so "Watch again is
+    // not in the bar" is true of the bar you watch a match through and deliberately not of the bar
+    // you are left with. tests/component/match-viewer.test.ts pins the finished row's own contents.
     const markup = markupOf(viewer)
     const bar = markup.slice(markup.indexOf('class="mv-controls"'), markup.indexOf('class="mv-actions"'))
     expect(bar).toContain('viewSeg')
@@ -617,7 +624,18 @@ describe('one header slot per match screen, and it says where it takes you', () 
     // 667px phone go to the commentary log (measured at 375x667; see tools/header-probe.mjs).
     // The protected fact is what it always was: the round is named while a match is open, it is not
     // named by a row of its own, and it is the round IN THE VIEWER rather than the one on deck.
-    expect(flow).toMatch(/:headline-meta="replayOpen \? \[weekShort, watchedRoundLabel\] : null"/)
+    //
+    // ⚠⚠ RE-AIMED AGAIN, 12.08, AND THIS PIN HAD BEEN HOLDING THE DEFECT IN PLACE. It read
+    // `[weekShort, watchedRoundLabel]` and passed all day while the owner was looking at the bug:
+    // «Quarterfinal наверху раньше был выделен цветом овалом вокруг, надо вернуть». R17 #9 moved the
+    // round onto the title line through an ARRAY OF STRINGS, which has no way to say that one of two
+    // facts is louder, so the accent capsule it had worn since 30.07 was dropped - and this line
+    // pinned the exact shape that dropped it. A pin that spells out an implementation cannot notice
+    // that the implementation lost a property; `tests/component/round17-surfaces.test.ts` mounts the
+    // header and reads the capsule's own background, which is the assertion that would have caught
+    // it. What is pinned HERE is only which slot each fact goes in, which is this file's subject.
+    expect(flow).toMatch(/:headline-meta="replayOpen \? \[weekShort\] : null"/)
+    expect(flow).toMatch(/:headline-badge="replayOpen \? watchedRoundLabel : null"/)
     // ⚠ SPELLED OUT, AND WHAT PAID FOR IT IS THE TITLE. The item's own risk was that the round would
     // not fit: with the full tournament name `Regional Championship` (188.5px) + `W36 '35` (44.2) +
     // `Quarterfinal` (68) is 320.3px against 283.8px of room at 375pt, and it wraps. Dropping the
@@ -936,22 +954,43 @@ describe('who is serving is said twice, attached to something, and never in a sp
     expect(markup).toContain('v-else-if="scoreReadout"')
   })
 
-  it('the Live badge and the weather share ONE row, so they are aligned rather than nudged', () => {
+  it('the badge, the clock and the weather share ONE row, each in a seat that does not move', () => {
     // Owner: «align the weather element and move it down so it sits on the same line as live». They
     // were two absolutely-positioned boxes at the same `top: 6px`, which aligns top EDGES - and the
     // badge is a 19px pill while the plate is a bare 13px reading, so their centre lines sat 3px
-    // apart. A 3px nudge would have fixed today's two sizes and nothing else; one flex row with
+    // apart. A 3px nudge would have fixed today's two sizes and nothing else; ONE ROW with
     // `align-items: center` is true whatever either piece becomes.
+    //
+    // ⚠ RE-AIMED 12.08, AND THE OLD IMPLEMENTATION HALF OF IT WAS THE BUG. This pinned
+    // `justify-content: flex-end` plus `margin-right: auto` on `.mv-live`, and wrote the right
+    // principle beside it: "the badge is optional (no badge on a replay), so the plate must be held
+    // by the ROW and not by the badge being there to push it." Auto margins do not do that. They
+    // SPLIT the free space, so the arrangement was only correct while every piece was present - and
+    // when R17 #24 added a third tenant, the clock, it held its place with a second `margin-right:
+    // auto` and slid to the left end on every replay and at the end of every live match (owner,
+    // 12.08: «на match replay часы тоже должны остаться посередине экрана, а они сейчас уезжают
+    // налево»). Measured at 375pt: the clock's centre was 173.5 with the badge and 25 without it.
+    // The row is a three-column grid now, the same one `.mv-runoff` uses one band lower for the same
+    // reason, and a column holds its seat whether or not anything is in it: measured after, the
+    // clock's centre is 187.5 in BOTH modes, which is the canvas centre exactly.
+    // THE PROTECTED FACT IS UNCHANGED and is now asserted by the thing that actually delivers it:
+    // one row, centred on each other, and NO piece's position depending on another piece existing.
     const chrome = styles.slice(styles.indexOf('.mv-chrome {'), styles.indexOf('.mv-live {'))
-    expect(chrome).toMatch(/display: flex/)
+    expect(chrome).toMatch(/display: grid/)
+    expect(chrome).toMatch(/grid-template-columns: minmax\(0, 1fr\) auto minmax\(0, 1fr\)/)
     expect(chrome).toMatch(/align-items: center/)
-    // The badge is optional (no badge on a replay), so the plate must be held right by the ROW and
-    // not by the badge being there to push it.
-    expect(chrome).toMatch(/justify-content: flex-end/)
-    expect(styles).toMatch(/\.mv-live \{[^}]*margin-right: auto/)
+    // Each of the three names its own seat. This is the assertion that would have caught the clock:
+    // a piece with no `grid-column` falls into the first free one the moment a neighbour is absent.
+    expect(styles).toMatch(/\.mv-live \{[^}]*grid-column: 1/)
+    expect(styles).toMatch(/\.mv-clock \{[^}]*grid-column: 2/)
+    expect(styles).toMatch(/\.mv-weather \{[^}]*grid-column: 3/)
+    // ⚠ AND `.mv-weather` HAS A RULE AGAIN, WHERE THIS TEST USED TO FORBID ONE. That ban was right
+    // for a flex row - the plate simply ended it, and a class with no rule behind it is the next
+    // thing somebody re-adds a rule to. A grid has to be TOLD which column each end holds, so the
+    // rule is now load-bearing rather than vestigial, which is the condition the ban was protecting.
+    expect(styles).toContain('.mv-weather {')
     // Neither piece may keep a pin of its own, or the row is decoration over two absolute boxes.
     expect(styles).not.toMatch(/\.mv-live \{[^}]*position: absolute/)
-    expect(styles, 'the weather kept a rule after the row took its offsets').not.toContain('.mv-weather {')
     // A full-width box over the court that is not a control must not eat taps meant for the canvas.
     expect(chrome).toMatch(/pointer-events: none/)
   })

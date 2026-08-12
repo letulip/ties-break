@@ -914,11 +914,48 @@ describe('a finished match waits for the player', () => {
     wrapper.unmount()
   })
 
-  it('...and a caller WITH one is not offered a second "Watch again" beside it', async () => {
+  it('...and a caller WITH one is offered exactly ONE "Watch again", in the row beside Proceed', async () => {
+    // ⚠ RE-AIMED 12.08, AND THE OWNER REVERSED THE HALF THIS USED TO ASSERT. It read
+    // `not.toContain('Watch again ↻')`, on R17 #10's argument that a flow's own box score already
+    // offers a re-watch one press away. He looked at the shipped screen and asked for both here:
+    // «можно сделать 2 кнопки рядом просто в этом нижнем блоке с контролами и все: Watch again |
+    // Proceed». So the row holds the two things you can do with a match you have just watched.
+    // THE PROTECTED FACT IS THE ONE THAT MATTERED and it is asserted harder than before: there is
+    // still never a SECOND "Watch again" - the count is pinned, not just its absence - and the
+    // affirmative is still last, which is the app's own action-row order.
     const d = (liveDriver = driver())
     const wrapper = mountWithProceed()
     await runToEnd(d)
-    expect(wrapper.findAll('button').map((btn) => btn.text())).not.toContain('Watch again ↻')
+    const labels = wrapper.findAll('button').map((btn) => btn.text())
+    expect(labels.filter((t) => t === 'Watch again ↻')).toHaveLength(1)
+    expect(labels).toContain('To the result')
+    expect(labels.indexOf('To the result')).toBeGreaterThan(labels.indexOf('Watch again ↻'))
+    // ...and both of them are in the control row itself, which is the whole of the ask: the block
+    // swaps its contents where it stands rather than growing a second one.
+    const done = wrapper.find('.mv-controls-done')
+    expect(done.exists()).toBe(true)
+    expect(done.findAll('button')).toHaveLength(2)
+    wrapper.unmount()
+  })
+
+  it('⚠ the box score under the bar STAYS, and this pin is why (owner asked for it to go, 12.08)', async () => {
+    // «под ним еще какой-то счет и статистика матча пишется – не надо этого». He is right that under
+    // a caller with a `proceedLabel` the table is a duplicate of the flow's own result card, and
+    // right that it is what lifts the sticky bar off the floor. It is still drawn, and this test
+    // exists so that the next reader does not take the obvious `&& !props.proceedLabel` and quietly
+    // re-open a bug the owner has already reported twice.
+    //
+    // ⚠ THE ONE LINE THAT CANNOT MOVE YET. `.mv-hurt` is raised for HER only - a ruling pinned four
+    // tests below ("the OPPONENT stopping is not an injury to this family") - so when the OTHER girl
+    // retires, this card's "X retired hurt" is the only place it is said in words. TournamentFlow's
+    // and PracticeFlow's result cards cannot inherit it: `WorldMatch` carries no `retired` field, so
+    // the scoreline is all that reaches them, and a retirement arriving as a scoreline IS the round-16
+    // report #10 was raised to close. The honest order is: put the sentence on the result screen
+    // (a protocol change, the owner's call), THEN delete this card and re-aim this test.
+    const d = (liveDriver = driver())
+    const wrapper = mountWithProceed()
+    await runToEnd(d)
+    expect(wrapper.find('.mv-boxscore').exists()).toBe(true)
     wrapper.unmount()
   })
 })
