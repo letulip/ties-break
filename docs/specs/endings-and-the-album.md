@@ -359,3 +359,39 @@ never learns the answer existed.
 building for – 98.6% of grinder careers and 50% of managed ones still have it at nineteen, so it is
 not dead content. What is worth deciding separately is whether a seventeen-year-old's first W75 entry
 should say out loud what it costs.
+
+### The ruling, and the re-measure that falsified my prediction of it
+
+The owner read the above and ruled the same day: «чини дверь по набранному результату, а не по
+единице, что бы это ни значило». Shipped as the finish test rather than a points threshold – the
+door closes only on a rung where **she won a match** – because points thresholds differ per rung and
+would drift with any table edit, while the opening-round slot is structural.
+
+**I registered a prediction before re-running, and the sweep falsified it.** I expected the `player`
+arm to rise from 50% to roughly three quarters, on the grounds that 12 of 25 instrumented closures
+were first-round losses. Same sweep, same seeds, after the fix:
+
+| arm | before | after |
+| --- | --- | --- |
+| grinder · latched | 98.6% | **100.0%** |
+| grinder · no-latch | 98.9% | **100.0%** |
+| player · no-latch | **50.0%** | **50.0%** – unmoved |
+
+Careers that ever lost the door: 126 → **124** of 360. Lost it before the fork: 47 → **45**. Two
+careers gained the answer.
+
+**Why the mechanism is real and the effect is not.** The closures did not disappear, they MOVED: the
+`w75` share fell 95.2% → 90.3% (120 → 112 careers) while `w100` rose 4.0% → **8.9%** (5 → 11), and
+the median age of a `w75` closure slid 19 → **20**. A girl whose door used to shut on a first-round
+loss now keeps it for a season or two and then loses it to a result she actually earned. The wooden
+spoon was almost never the ONLY thing she did at that level – it was just the FIRST.
+
+**So the fix is right for its own reasons and buys nothing in outcomes**, and both halves of that
+belong in the record. The rule now means what its own comment always said, and the W75/W100
+asymmetry is gone – but the finding above stands untouched: a well-managed career still loses the
+third answer half the time, and it loses it to genuine professional results before nineteen.
+
+**Which names the real lever, for whenever the owner wants one.** If college is to be a live choice
+for a career that is going somewhere, the dial is `collegeClosedFromTier` (W75 is early – it opens
+at seventeen, which is why the closures cluster there) or the age the fork is asked at. It is not
+the wooden spoon, and it never was.
