@@ -46,18 +46,73 @@ build waits on one word from him about which ladder.
 - [~] **7. The brutal season** – Slams/1000/500 all losses, mandatory entry, big money, and the first
   `angry` he has caught. Read from the save in §7 below; no build, but it is the evidence for 8 and
   11.
-- [?] **8. «Перед началом сезона больших призов присылать уведомление/попап – что она реально должна
-  там участвовать, что есть такой регламент»** – the notice is easy; the REGULATION behind it does
-  not exist in our world yet. Question in §Q2.
-- [ ] **9. «Off season – rest, school, family в 21 год»** – the engine has `schoolEndsWeek` and
-  `SeasonSummaryDialog.vue:52` reads it correctly, so this is either his save's stored value or
-  another surface. Diagnosed from the save before anyone is briefed – see §9.
+- [>] **8. «Перед началом сезона больших призов присылать уведомление/попап – что она реально должна
+  там участвовать, что есть такой регламент»** – ⚠ §Q2 WITHDRAWN, I was wrong about it before I read
+  the code: the regulation EXISTS and is his own (W3-ACT2 §6). `mandatoryBindsRank` binds by rank, a
+  skipped mandatory writes a `mandatoryMiss` row that takes one of her sixteen counting slots with a
+  zero, and `raiseMandatoryDueLetter` invoices per event. The gap is that `mandatoryBindsRank` is
+  read only by engine internals – nothing announces the moment the regime starts binding, so the
+  first the player hears of it is a deadline letter. Briefing in flight.
+- [x] **9. «Off season – rest, school, family в 21 год»** – the engine was right all along
+  (`schoolEndWeek` = 242, W35 '35, age 18; his save is 171 weeks past it). `DiaryFacts` carried
+  `examsWeek` but NOT `schoolOver`, so a phrase could not gate on school even if its author wanted
+  to – exams simply stop, which silenced revision notes and nothing else. Fact now reaches the
+  licences (derived, no schema move). **Sweeping the catalogues by what the words SAY found three
+  more he had not reported**, in two pools – «Training, school, repeat.», «An ordinary week – school,
+  practice, pasta.», «Drills, school, dinner, bed.» – each keeps its schoolgirl version and gains a
+  twin. The pin is the sweep, mutation-verified on his exact sentence.
 - [>] **10. Birthday asks and answers do not match** – «чего бы она себе никогда не купила» answered
   in the same register; a «день вместе» ask answered with a week. Plus the repeat question again:
   a new car every year should either not repeat or be played out.
 - [~] **11. «Будем ли наказывать от федерации за срыв (гнев)? Есть ли такая практика?»** – answered
   from the real tour's code of conduct in §11, with a proposal that parks in the morale wave (#95)
   rather than shipping alone.
+
+## §7 – the season, measured (his save, W50 '38)
+
+Thirty results, and the shape of them says exactly what he felt:
+
+| tier | entries | scored | points |
+| --- | --- | --- | --- |
+| slam | 4 | 4 | **520** (130 each) |
+| wta1000 | 7 | 6 | 445 |
+| w50 | 4 | 4 | 183 |
+| **wta500** | **9** | **9** | **68** |
+| wta250 | 3 | 3 | 56 |
+
+**The 500s are the rung that hurts, and it is not her.** Eight of her nine wta500 entries paid
+**1 point**. A Slam first round pays **130**. So the same early exit is worth 130× more at a major
+than at a 500 – she travels, plays, loses, and the table does not move at all. That is his «все
+время проигрыш» with a number on it, and it is a real finding rather than a feeling: the 500s are
+compulsory, expensive in weeks, and pay nothing for the result she can actually get there.
+
+Two more facts from the save. **She skipped one mandatory** (a wta1000 at W32 '38) and it wrote a
+zero into a counting slot – the rule from §8 firing on his own career, silently, exactly as
+designed and with nothing on screen to say so. And the anger has already RESET: `lossStreak` is
+null now, so the crossing he watched is not recoverable from this file. If he wants the meltdown
+itself examined, the save to send is one taken in the week it happened.
+
+## §11 – does the federation punish a meltdown? (item 11)
+
+**Yes, and the real shape is worth copying exactly.** On the actual tour, conduct is a SEPARATE
+LEDGER from results: a code violation (racket abuse, audible obscenity, unsportsmanlike conduct)
+runs warning → point penalty → game penalty → default, and carries a fine deducted from prize
+money. Repeated or aggravated conduct escalates to a major-offence hearing, where suspension
+becomes possible. What it never does is touch ranking points – a player can be fined in the morning
+and bank the title in the afternoon. So his own observation («при этом и продвижение по таблице
+есть, и денег дают») is not a contradiction to design around; it is the actual arrangement.
+
+**My recommendation is that we do NOT fine her, and the reason is his own standing rule.** «Мы ни
+за что не наказываем» has always meant the game does not punish the PLAYER for his choices – and
+the anger is not his choice. It is the girl's reaction to a season he may have run well; on his
+save he ran it very well. A fine there would charge him money for the engine's emotional model,
+which is the wrong side of that rule.
+
+What fits instead, and is cheap: the violation gets REPORTED and costs nothing – a line in the
+match commentary as it happens and one in the season feed after, in the umpire's register, not the
+parent's. All the texture of the tour, zero balance risk. The real consequence belongs where he
+already put it: morale and the psychologist (#95). Anger that costs form, and a person who can help
+with it, is a mechanic; a fine is a tax.
 
 ## §Q1 – the self-coaching tick (item 4)
 
@@ -71,13 +126,17 @@ with a coach hired. Two honest ways to give him the tick:
   dials show his choice, and the tick takes the pen back. This is what makes «тренер продаёт знание»
   literally true – and it is a wave, not an item: engine, a season-boundary decision, and a spec.
 
-## §Q2 – the mandatory-participation notice (item 8)
+## §Q2 – WITHDRAWN (item 8)
 
-Real tours do bind their top players to the big events, and our world has no such rule – she can
-skip a Slam today and nothing happens. So the popup as asked would announce a regulation that is
-not enforced. Either we write the rule (a commitment count per season, with a consequence) and the
-popup tells the truth, or the popup becomes a season-opening BRIEFING – "this is the year the big
-draws start, here is what it costs and what it pays" – which is honest and cheap.
+⚠ This section originally asked him whether to invent a participation rule, on my assumption that
+our world had none. It has one, it is his, and it has been enforced since W3-ACT2: the regime binds
+by rank and a skipped mandatory takes a counting SLOT with a zero rather than levying a fine – which
+`ranking.ts` argues is the crueller and truer rule, since it costs nothing until she runs out of
+better results, i.e. exactly when a professional feels it. Nothing to decide; the item is a build.
+
+The lesson for the ledger, since this is the skill's first run: I classified an item as an `ask`
+from memory instead of from the code, and the question I nearly sent him would have been about
+building something he had already specified and shipped.
 
 ## §L1-CORRIDORS – the proposal (see the-wall spec §Measured for why)
 
