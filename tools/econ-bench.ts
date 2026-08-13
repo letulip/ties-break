@@ -58,13 +58,20 @@ import {
   financeWindow,
   availabilityStatus,
   travelCostFor,
+  activeLadderOf,
+  hasOutgrown,
+  proEntryCapUsage,
+  bookVacation,
+  hireCoach,
+  ageAtWeek,
   STARTING_FUNDS_CENTS,
   type WorldState,
 } from '../src/engine/world'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
-import { WEEK_PLAN_PRESETS } from '../src/shared/protocol'
+import { WEEK_PLAN_PRESETS, LADDER_TRACKS } from '../src/shared/protocol'
 import type { CoachTier, FamilyBackground, PlayerProfile, WorldEventCategory } from '../src/shared/protocol'
-import { COACH_TIER_LABEL, coachWeeklyBandCents } from '../src/engine/coach'
+import { COACH_TIER_LABEL, bestFitCoachAt, coachWeeklyBandCents } from '../src/engine/coach'
+import { ECONOMY, recommendVacationPackage } from '../src/engine/economy'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
@@ -230,9 +237,10 @@ export const PRESETS: Preset[] = [
 
 /** The per-category buckets we surface, in display order (expenses first, then income).
  *  'interest' (round-9 R9-1, weekly savings interest) is an INCOME category.
- *  'vacation' / 'practice' (season planner, v13) are expense buckets: the econ bench never books
- *  either (it has no planner policy – that is the fatigue bench's axis), so they read $0 here and
- *  exist only to keep the category fold exhaustive. */
+ *  'practice' (season planner, v13) is an expense bucket the econ bench never books – friendlies are
+ *  the fatigue bench's axis – so it reads $0 here and exists to keep the category fold exhaustive.
+ *  ⚠ 'vacation' STOPPED READING $0 IN THE PLAYER ARM (task #89, R5): the owner's «и отпуска брать
+ *  для восстановления». The grinder still never books one, so its column is unchanged. */
 /** ⚠ 'facility' SITS BESIDE 'coaching' BECAUSE THEY ARE ONE BILL (v44,
  *  docs/specs/split-the-bill-2026-08.md): the weekly training charge is now booked as the coach's
  *  labour and the court's hire on two rows, and `coaching + facility` here is exactly the single
@@ -379,24 +387,196 @@ export function zeroByTier(): Record<TierId, number> {
 export interface Policy {
   id: 'grinder' | 'player'
   label: string
-  /** cash the family refuses to go below when committing to a trip. 0 = spend to the floor. */
+  /** cash the family refuses to go below when committing to a trip. 0 = spend to the floor.
+   *
+   *  ⚠ AN ABSOLUTE FLOOR HERE IS THE POVERTY TRAP OF `the-wall-2026-08.md` §6a, AND IT IS WHY THE
+   *  PLAYER ARM'S IS NOW 0 (task #89). It was $5,000. Measured on the owner's own Naomi seed with
+   *  only `coachTier` moving: `self` #285, `budget` #211, `middle` **#1621**, `high` #1615 - a
+   *  cliff, not a slope, with the middle arm entering ZERO professional events in twelve years
+   *  while playing 613 matches and holding $19,185. A W75 trip is $2,200-3,900 and a `local` is
+   *  nearly free, so a family hovering near an absolute floor is permanently allowed the rungs
+   *  that pay nothing and permanently refused the ones that pay. The trajectory probe is
+   *  unambiguous: her balance sat between $5,003 and $6,326 for TWELVE YEARS - the floor is an
+   *  attractor, and everything she could afford above it was a club draw.
+   *
+   *  `reserveWeeks` replaces it. Kept as a field (not deleted) because the grinder's 0 is what
+   *  makes that arm byte-identical to every number in this file's history, and because a flat
+   *  reserve is still the right shape for a floor UNDER the scaled one. */
   reserveCents: number
+  /** ⭐ R1 (task #89) – THE RESERVE AS WEEKS OF BILLS RATHER THAN A NUMBER OF DOLLARS.
+   *
+   *  The parent's sentence: «I keep a couple of months of our bills in the bank – what that is in
+   *  money depends on what our week costs.»
+   *
+   *  The reserve is `max(reserveCents, reserveWeeks x the family's own weekly running cost)`,
+   *  where "running cost" is what arrives whether or not she plays: coaching, the court, gear,
+   *  strings, physio, the rest. Travel and entry fees are deliberately NOT in it - those are the
+   *  trips being decided about, and folding them in would make a busy calendar raise its own bar.
+   *  0 = the absolute floor alone (the historical arm). */
+  reserveWeeks: number
   /** condition she must be at to enter at all, ON TOP of the tier's own caution floor. The
    *  plateau work measured a grinder's mean condition at 24.4 against the field's 72.3, and a
-   *  floor near 70 was worth roughly #89 -> #40, so this is the lever that arm exists to pull. */
+   *  floor near 70 was worth roughly #89 -> #40, so this is the lever that arm exists to pull.
+   *
+   *  ⚠ SINCE task #89 IT IS THE FLOOR AT THE BOTTOM OF THE LADDER, not a flat gate – see
+   *  `restRelief` and `restFloorFor`. */
   restFloor: number
+  /** ⭐ R4 (task #89, the owner's «и против кондиции») – HOW MUCH OF THE REST FLOOR THE TOP OF THE
+   *  LADDER BUYS BACK.
+   *
+   *  The parent's sentence: «If she's tired I'll skip a small one – but for a big one I'll take
+   *  her tired and rest her afterwards.»
+   *
+   *  A flat gate is not what a parent does: it refuses a Slam and a club draw on the same tired
+   *  week. The floor therefore slides linearly down the ladder, from `restFloor` at `local` to
+   *  `restFloor - restRelief` at `slam`. 0 = the flat gate (the historical arm). */
+  restRelief: number
   /** does she buy the coach for competition weeks (R4)? */
   coachOnEventWeeks: boolean
+  /** ⭐ R2 (task #89, the owner's rule, and the same one task #84 is applying to the season FEED) –
+   *  NEVER PAY INTO A TABLE BELOW THE ONE SHE IS CLIMBING.
+   *
+   *  The parent's sentence: «Once she's playing internationals, a club tournament at home doesn't
+   *  move her ranking any more – we don't pay for those.»
+   *
+   *  `local`/`regional`/`national` pay `domestic`, the J rungs pay `itf`, W15 and up pay `wta`, and
+   *  nothing crosses (season/types.ts, LadderTrack). The table she is climbing is the engine's own
+   *  one answer, `activeLadderOf` – the same read `coachMarket`'s alternative-rung suggestion uses,
+   *  with the same rule: her table and UP, never down.
+   *
+   *  ⚠ ONE EXCEPTION, AND IT IS THE LADDER'S OWN – see `proAllowanceSpent` in stepCareerWeek. */
+  onlyHerTable: boolean
+  /** ⭐ R3 (task #89) – DO NOT PAY TO ENTER A RUNG SHE HAS ALREADY PASSED.
+   *
+   *  The parent's sentence: «I'm not paying to enter tournaments she's too good for.»
+   *
+   *  `hasOutgrown` is the ladder-floor ruling's own verdict. The engine stopped REFUSING those
+   *  entries on the owner's call (a first-round exit followed by six empty weeks is simply wrong)
+   *  and kept the verdict as a sorting key – «what she does with those weeks is the PLAYER's
+   *  decision». This is the policy making that decision. */
+  skipOutgrown: boolean
+  /** ⭐ R5 (task #89, the owner's «и отпуска брать для восстановления») – BOOK THE WEEK AWAY.
+   *
+   *  The parent's sentence: «When she's run down we take a week off – the cheapest one that will
+   *  actually fix her.»
+   *
+   *  Condition below this books next week off through the REAL `bookVacation` command, choosing the
+   *  package with the engine's own shipped pre-highlight rule (`recommendVacationPackage`, the same
+   *  one the rescue card and the planner sheet quote). null = never books one, which is what the
+   *  bench has always done - the vacation and practice categories have read $0 in every table this
+   *  tool has ever printed. */
+  rescueBelow: number | null
+  /** the condition the rescue aims to restore her to (the pick is the cheapest package that gets
+   *  her there). ⚠ THE LADDER WAS RE-TUNED THIS WEEK to 10/18/26/32/40/48 – any older note about
+   *  18/22/26 is stale. */
+  rescueTo: number
+  /** ⭐ R5b – the scheduled off-season family week, once a year.
+   *
+   *  The parent's sentence: «We take the off-season week away as a family, every year.» */
+  offSeasonWeekOff: boolean
+  /** prudence on both vacation arms: never spend more than this share of current funds on one
+   *  package. Without it a rescue happily buys the elite programme the week before the family goes
+   *  broke (the fatigue bench's own note, and its `maxSpendShare`). */
+  vacationSpendShare: number
+  /** ⭐ R6 (task #89, the owner's second named move: «drop the coach for a season») – THE REVIEW OF
+   *  THE COACHING BILL.
+   *
+   *  The parent's sentence: «If we're running the savings down and we've eaten into the cushion, the
+   *  coach goes and I take her myself until the money comes back.»
+   *
+   *  A family whose trailing half-year is net-negative AND whose funds have fallen through the
+   *  reserve releases the coach – checked every week, because that is when it hurts. Taking him back
+   *  waits for the season to end and for the books to carry half a season of his fees on top of the
+   *  cushion, because a hire is a decision and a release is not. false = the historical
+   *  behaviour, in which `coachTier` is fixed at BIRTH and the family pays that bill until it is
+   *  bankrupt - which `the-wall-2026-08.md` §6 named as the modelling choice that manufactures the
+   *  poverty every economy verdict then reported. */
+  coachSeasonReview: boolean
+}
+
+/** THE REST FLOOR FOR ONE RUNG – R4's slide. `local` pays the full `restFloor`; `slam` pays
+ *  `restFloor - restRelief`; everything between is linear in ladder position. A `restRelief` of 0
+ *  returns the flat gate unchanged, which is what keeps the grinder byte-identical. */
+export function restFloorFor(policy: Policy, tier: TierId): number {
+  if (policy.restRelief === 0) return policy.restFloor
+  const i = TIER_LADDER.indexOf(tier)
+  if (i < 0) return policy.restFloor
+  return policy.restFloor - (policy.restRelief * i) / Math.max(1, TIER_LADDER.length - 1)
+}
+
+/** How many weeks of ledger the running-cost read looks back over. 26 = half a season, comfortably
+ *  inside the engine's 60-week finance pruning, long enough that one expensive fortnight cannot
+ *  move the reserve on its own. */
+export const RUNNING_COST_WINDOW = 26
+
+/** The categories that arrive whether or not she plays – see `Policy.reserveWeeks`. `travel` and
+ *  `entry` are the trips being decided about and are deliberately absent; `vacation` and `practice`
+ *  are discretionary and would let one holiday raise the bar for the next trip. */
+const RUNNING_COST_CATS: WorldEventCategory[] = ['coaching', 'facility', 'gear', 'stringing', 'physio', 'other']
+
+/** THE FAMILY'S OWN WEEKLY RUNNING COST, in cents, read off the same ledger the Money screen reads.
+ *  Read-only; no RNG. Falls back to a zero week before there is any ledger to read. */
+export function weeklyRunningCostCents(world: WorldState): number {
+  const from = Math.max(0, world.week - RUNNING_COST_WINDOW)
+  const span = Math.max(1, world.week - from)
+  const win = financeWindow(world.financeWeeks, from)
+  let out = 0
+  for (const cat of RUNNING_COST_CATS) out += Math.max(0, -(win.byCategory[cat] ?? 0))
+  return out / span
+}
+
+/** THE CASH THE FAMILY REFUSES TO GO BELOW THIS WEEK – R1. */
+export function reserveFor(world: WorldState, policy: Policy): number {
+  if (policy.reserveWeeks <= 0) return policy.reserveCents
+  return Math.max(policy.reserveCents, policy.reserveWeeks * weeklyRunningCostCents(world))
 }
 
 export const POLICIES: Policy[] = [
   // The historical arm, unchanged in every respect, so every earlier number in this file's history
   // is still reproducible: no reserve, no rest floor, and the R4 default of leaving the coach at
-  // home on competition weeks.
-  { id: 'grinder', label: 'grinder', reserveCents: 0, restFloor: 0, coachOnEventWeeks: false },
-  // Someone actually managing it: keeps a season's worth of runway rather than spending to zero,
-  // refuses to race worn out, and - having paid for a coach - takes him to the tournaments.
-  { id: 'player', label: 'player', reserveCents: 5_000_00, restFloor: 70, coachOnEventWeeks: true },
+  // home on competition weeks. ⚠ EVERY FIELD ADDED BY TASK #89 IS OFF HERE, DELIBERATELY: this arm
+  // is the file's reproducibility anchor and the one `tests/endings-bench.test.ts` drives.
+  {
+    id: 'grinder',
+    label: 'grinder',
+    reserveCents: 0,
+    reserveWeeks: 0,
+    restFloor: 0,
+    restRelief: 0,
+    coachOnEventWeeks: false,
+    onlyHerTable: false,
+    skipOutgrown: false,
+    rescueBelow: null,
+    rescueTo: 0,
+    offSeasonWeekOff: false,
+    vacationSpendShare: 0,
+    coachSeasonReview: false,
+  },
+  // ⭐ THE MODEL OF A REASONABLE PARENT (task #89, rebuilt from «keeps a $5k reserve, refuses to
+  // enter below condition 70, takes the coach to tournaments»).
+  //
+  // ⚠⚠ IT IS A MODEL, NOT AN OPTIMISER, AND THAT IS THE HARDER HALF OF THE BRIEF. The target is the
+  // owner's own envelope on his own seeds - #51 self-coached, #106 with a middle coach - NOT
+  // victory. A policy that games entry lists to #10 would make the game look far easier than it is
+  // and every future verdict would be wrong in the opposite direction, which is exactly as bad as
+  // the wall was. So every rule below is one a parent could say out loud in a single sentence, and
+  // there is no rule here that reads the draw, the field, or anybody's form.
+  {
+    id: 'player',
+    label: 'player',
+    reserveCents: 0,
+    reserveWeeks: 8,
+    restFloor: 80,
+    restRelief: 30,
+    coachOnEventWeeks: true,
+    onlyHerTable: true,
+    skipOutgrown: true,
+    rescueBelow: ECONOMY.practice.rescueCondition,
+    rescueTo: ECONOMY.practice.rescueTargetCondition,
+    offSeasonWeekOff: true,
+    vacationSpendShare: 0.1,
+    coachSeasonReview: true,
+  },
 ]
 
 /** Advance ONE career week under a policy, then tick and resolve any spawned tournament. Returns
@@ -437,6 +617,26 @@ export function stepCareerWeek(
   const byRung = [...world.season].sort(
     (a, b) => a.week - b.week || TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier),
   )
+  // ⚠ HOISTED, AND IT IS A CORRECTNESS NOTE AS WELL AS A SPEED ONE. Three of the reads below are
+  // per-WEEK facts, not per-event ones: the reserve folds a 26-week ledger, `activeLadderOf` walks
+  // the never-pruned finish marks, and `hasOutgrown` re-derives an acceptance cut over the whole
+  // field. Nothing the entry loop does can move any of them - `enterEvent` spends money and books a
+  // week, it finalises no tournament - so computing them once per week is the same answer, and
+  // computing them inside a loop that runs ~187 times a week for 312 weeks x 30 seeds x 9 presets
+  // is the difference between a bench that finishes and one that does not.
+  const reserveCents = reserveFor(world, policy)
+  const herTable = LADDER_TRACKS.indexOf(activeLadderOf(world))
+  const outgrown = new Map<TierId, boolean>()
+  // ⭐ R2's ONE EXCEPTION, AND IT IS THE LADDER'S OWN, COPIED RATHER THAN INVENTED. The tour's age
+  // rule caps a sixteen-year-old at 12 professional entries a season and a seventeen-year-old at 16
+  // (`proEntryCapUsage`), and `tierOutgrown` already lifts its ceiling on every NON-professional rung
+  // the moment that allowance is spent - the owner's ruling 2, «игрок должен иметь возможность
+  // играть, если не w-серии то где-то еще, чтобы не скучал», measured at 144 weeks with nothing to
+  // enter before the clause existed. A parent obeys the same rule for the same reason, and it is his
+  // sentence too: «when she's used up her professional entries for the year, she plays the junior and
+  // home events rather than sit out the rest of the season.» Without this, R2 would re-create inside
+  // the policy exactly the dead season the engine was changed to remove.
+  const proAllowanceSpent = policy.onlyHerTable && proEntryCapUsage(world, world.week).remaining <= 0
   for (const e of byRung) {
     if (world.entries.includes(e.id)) continue
     if (world.week > e.deadlineWeek) continue // deadline passed – enterEvent would throw
@@ -451,27 +651,155 @@ export function stepCareerWeek(
     // AFTER the ranking gate and BEFORE affordability on purpose - an opinion is only worth asking
     // for about a trip she is actually allowed to take.
     if (veto && veto(world, e)) continue
+    // ⭐ R2 – HER OWN TABLE, AND UP. See Policy.onlyHerTable. Ranked here, beside the other
+    // "is this trip worth taking at all" questions and before anything is priced, because a rung
+    // that pays into a table she is not climbing is not made worth taking by being cheap - which
+    // is precisely how the old policy came to take 139 club draws in one career.
+    if (
+      policy.onlyHerTable &&
+      LADDER_TRACKS.indexOf(TIERS[e.tier].track) < herTable &&
+      !(proAllowanceSpent && TIERS[e.tier].track !== 'wta')
+    ) {
+      continue
+    }
+    // ⭐ R3 – a rung she has passed. See Policy.skipOutgrown.
+    if (policy.skipOutgrown) {
+      let past = outgrown.get(e.tier)
+      if (past === undefined) {
+        past = hasOutgrown(world, e.tier)
+        outgrown.set(e.tier, past)
+      }
+      if (past) continue
+    }
     // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
     // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
     if (availabilityStatus(world, e).level === 'blocked') continue
     // THE REST FLOOR (player arm): the grinder ignores the fatigue caution by design; a player
     // does not race worn out. `restFloor` 0 leaves the historical behaviour byte-identical.
-    if (world.condition < policy.restFloor) continue
+    // ⭐ R4 – and it is now a TRADE against what the event is worth, not a flat gate: see
+    // `restFloorFor`. `restRelief` 0 is the flat gate, byte for byte.
+    if (world.condition < restFloorFor(policy, e.tier)) continue
     // v21: the trip is priced AFTER the academy's share, because that is what the family is
     // actually asked for – a policy quoting the sticker price would refuse trips she can afford.
     const cost = TIERS[e.tier].entryFeeCents + travelCostFor(world, e)
-    // THE RESERVE (player arm): commit only what still leaves the family standing. A reserve of 0
-    // is the old `world.fundsCents < cost` test exactly.
-    if (world.fundsCents - cost < policy.reserveCents) continue
+    // THE RESERVE: commit only what still leaves the family standing. A reserve of 0 is the old
+    // `world.fundsCents < cost` test exactly. ⭐ R1 – and it is now weeks of the family's own bills
+    // rather than an absolute sum, which is the poverty trap of the-wall-2026-08.md §6a.
+    if (world.fundsCents - cost < reserveCents) continue
     enterEvent(world, e.id)
     entered[e.tier]++
   }
+  // ⭐ R5 – THE WEEK AWAY, booked with the real command, AFTER the entries are settled. The order is
+  // the parent's: a tournament she wants beats a rest week, and a week she is too tired to enter
+  // anything on is exactly the week to take off. `bookVacation` refuses a week that is not
+  // plannable (an entered tournament, an exam block, an existing booking, an ended career), which
+  // is the same set of weeks the UI would not offer - so a refusal means "it was not on the table".
+  planRecoveryWeek(world, policy)
+  // ⭐ R6 – the look at the coaching bill.
+  reviewCoach(world, policy, reserveCents)
   tickWeek(world, rng)
   if (world.pendingTournament) {
     skipTournament(world)
     closeTournament(world)
   }
   return entered
+}
+
+/** R5: the off-season family week and the mid-season rescue, both through `bookVacation` on NEXT
+ *  week - the only week the engine lets a player plan, which is what the UI offers too.
+ *
+ *  RNG DISCIPLINE: a booking is pure state. The price is quoted off the purpose-scoped sub-stream
+ *  `seed:vacation:week:packageId`, re-derived at the call site and persisting nothing, so the MAIN
+ *  stream's position is untouched and the bench stays byte-reproducible. That is the same property
+ *  tests/planner.test.ts P1 proves with a career that books something every single week. */
+function planRecoveryWeek(world: WorldState, policy: Policy): void {
+  if (policy.rescueBelow === null && !policy.offSeasonWeekOff) return
+  if (world.ending) return
+  const target = world.week + 1
+  const budgetCents = Math.floor(world.fundsCents * policy.vacationSpendShare)
+  const pick = (above: number): string | null =>
+    recommendVacationPackage({
+      seed: world.seed,
+      week: target,
+      background: world.profile.background,
+      condition: world.condition,
+      fundsCents: world.fundsCents,
+      budgetCents,
+      targetCondition: above,
+    })
+
+  // 1. THE OFF-SEASON FAMILY WEEK, once a year. "Have we already had it this year" is read off
+  //    `world.vacations` rather than carried in a counter, so the rule holds for a career resumed
+  //    from anywhere and adds no state to a function that has none.
+  const year = Math.floor(target / WEEKS_PER_YEAR)
+  const inOffSeason = (w: number): boolean => w % WEEKS_PER_YEAR >= SEASON_WRAP_OFFSET
+  if (
+    policy.offSeasonWeekOff &&
+    inOffSeason(target) &&
+    !world.vacations.some((v) => Math.floor(v.week / WEEKS_PER_YEAR) === year && inOffSeason(v.week))
+  ) {
+    const id = pick(policy.rescueTo)
+    if (id !== null) {
+      try {
+        bookVacation(world, target, id)
+        return
+      } catch {
+        /* the week was not plannable – the option was never on the table */
+      }
+    }
+  }
+
+  // 2. THE RESCUE: she is run down, so the family takes the week off.
+  if (policy.rescueBelow !== null && world.condition < policy.rescueBelow) {
+    const id = pick(policy.rescueTo)
+    if (id === null) return
+    try {
+      bookVacation(world, target, id)
+    } catch {
+      /* not plannable */
+    }
+  }
+}
+
+/** R6: the review of the coaching arrangement.
+ *
+ *  ⚠ THIS IS THE ONE PLACE THE BENCH STOPS TREATING `coachTier` AS A BIRTH FACT, which is what
+ *  the-wall-2026-08.md §6 named: «the bench fixes coachTier at BIRTH from its preset, and the real
+ *  decision is a TIMING decision. A working family paying a middle coach from fourteen has nothing
+ *  left for entry fees.» The preset still decides WHICH rung this family buys – nothing here ever
+ *  hires a rung they did not choose – it decides only whether they can hold it this season.
+ *
+ *  ⚠ THE TWO ARMS ARE DELIBERATELY ON DIFFERENT CLOCKS, and the asymmetry is the human one: LETTING
+ *  HIM GO IS FORCED and is checked every week, TAKING HIM BACK IS A DECISION and waits for the
+ *  season to end. Measured on the first cut, which reviewed both at the wrap: the working·elite arm
+ *  went bankrupt at week 40, i.e. NINE WEEKS BEFORE ITS FIRST REVIEW, so the family sat and watched
+ *  a bill it could not pay for the better part of a year. Nobody does that.
+ *
+ *  ZERO RNG: `hireCoach` draws nothing on any stream (the roster is a derivation of the seed and
+ *  the id is a string), and `bestFitCoachAt` is the same pure rule `openingCoachId` uses at birth. */
+function reviewCoach(world: WorldState, policy: Policy, reserveCents: number): void {
+  if (!policy.coachSeasonReview || world.ending) return
+  const born = world.profile.coachTier
+  if (born === 'self') return
+  if (world.coachId !== null) {
+    // ⚠ THE TRAILING WINDOW IS 26 WEEKS, NOT 52, and it has to be: the check runs on ordinary weeks
+    // now, and the engine prunes `financeWeeks` to a 60-week trailing window, so a 52-week fold read
+    // off-wrap is the same silent truncation the per-season fold in runCareer exists to dodge.
+    const halfYearNet = financeWindow(world.financeWeeks, Math.max(0, world.week - RUNNING_COST_WINDOW)).netCents
+    if (halfYearNet < 0 && world.fundsCents < reserveCents) hireCoach(world, null)
+    return
+  }
+  if (world.week % WEEKS_PER_YEAR !== SEASON_WRAP_OFFSET) return
+  // Take him back when the cushion is whole and there is half a season of his fees on top of it.
+  const [, weeklyHi] = coachWeeklyBandCents(born, ageAtWeek(world.week), WEEK_PLAN_PRESETS.balanced, world.profile.background)
+  if (world.fundsCents < reserveCents + weeklyHi * (WEEKS_PER_YEAR / 2)) return
+  const back = bestFitCoachAt(world.seed, ageAtWeek(world.week), born, world.profile.playStyle)
+  if (!back) return
+  try {
+    hireCoach(world, back.id)
+  } catch {
+    /* he would not take her – the same refusal the coach screen would print */
+  }
 }
 
 /** True ⇔ the horizon's reach target is currently met. 14→16: the domestic arm (DOMESTIC best-6 >=
@@ -824,7 +1152,16 @@ const policyHeader = (seeds: number): string => [
   `  spawned tournament. Funds red ⇒ entries stall; coaching still bleeds.`,
   `${seeds} seeds/cell · coach rung per preset · plan balanced (75/25) · TWO policy arms:`,
   `  grinder = enters everything affordable, no reserve, no rest floor, coach stays home on event weeks;`,
-  `  player  = keeps a $5k reserve, refuses to enter below condition ${POLICIES[1].restFloor}, takes the coach to tournaments.`,
+  `  player  = the MODEL OF A REASONABLE PARENT (task #89), six rules, each one a sentence he could say:`,
+  `      R1 keeps ${POLICIES[1].reserveWeeks} weeks of the family's own bills in the bank (NOT a flat $5k – that was the`,
+  `         poverty trap of the-wall-2026-08.md §6a, which held her at ~$5,500 for twelve years);`,
+  `      R2 never pays into a table below the one she is climbing (activeLadderOf and up);`,
+  `      R3 never pays to enter a rung she has outgrown;`,
+  `      R4 rests her below condition ${POLICIES[1].restFloor} at the bottom of the ladder, sliding to`,
+  `         ${POLICIES[1].restFloor - POLICIES[1].restRelief} at the top – a tired week is worth spending on a big event, not a small one;`,
+  `      R5 books the off-season family week and a rescue week below condition ${POLICIES[1].rescueBelow};`,
+  `      R6 lets the coach go while the books run down through the cushion, and takes the same rung`,
+  `         back when they recover. The preset still chooses WHICH rung; R6 decides only whether they hold it.`,
   `Money is whole-dollar rounded; ±sd is the population stddev across the ${seeds} seeds.`,
 ].join('\n')
 

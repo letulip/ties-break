@@ -405,3 +405,186 @@ recurring bill is a threshold, and thresholds do not degrade gracefully.
 
 **A human has three moves the policy does not have:** go anyway and accept a thin month, drop the
 coach for a season, or cut the calendar to fund one real trip. It has none of them.
+
+---
+
+## 7. The bench player, rebuilt (task #89, 13.08.2026)
+
+**What this section is:** the repair of §6a, measured on the same two saves. `tools/econ-bench.ts`'s
+`player` arm is now a MODEL OF A REASONABLE PARENT rather than four scalars on top of a grinder. The
+`grinder` arm is untouched, byte for byte, so every number this file's history reports is still
+reproducible – it is the file's reproducibility anchor and it is what
+`tests/endings-bench.test.ts` drives.
+
+### 7.1 The six rules, each in the sentence a parent would say
+
+| | rule | the sentence |
+| --- | --- | --- |
+| **R1** | the reserve is WEEKS OF BILLS, not $5,000 | «I keep a couple of months of our bills in the bank – what that is in money depends on what our week costs.» |
+| **R2** | never pay into a table below the one she is climbing | «Once she's playing internationals, a club tournament at home doesn't move her ranking any more – we don't pay for those.» |
+| **R3** | never pay to enter a rung she has outgrown | «I'm not paying to enter tournaments she's too good for.» |
+| **R4** | the rest floor is traded against what the event is worth | «If she's tired I'll skip a small one – but for a big one I'll take her tired and rest her afterwards.» |
+| **R5** | the off-season family week, and a rescue week when she is run down | «We take the off-season week away every year, and when she's run down we take another – the cheapest one that will actually fix her.» |
+| **R6** | let the coach go when the bill outruns the household | «If we're running the savings down and we've eaten into the cushion, the coach goes and I take her myself until the money comes back.» |
+
+**R2 carries ONE exception and it is the ladder's own, copied rather than invented.** When the tour's
+age rule has spent her professional allowance for the season (`proEntryCapUsage`), `tierOutgrown`
+already lifts its ceiling on every non-professional rung – the owner's ruling 2, «игрок должен иметь
+возможность играть, если не w-серии то где-то еще, чтобы не скучал». The policy obeys the same rule
+for the same reason: «when she's used up her professional entries for the year, she plays the junior
+and home events rather than sit out the rest of the season.» Without it R2 re-creates inside the
+policy exactly the dead season the engine was changed to remove – measured, it cost 50 entries and
+109 matches on Naomi's seed.
+
+**Nothing here reads the draw, the field or anybody's form.** Every rule is a fact about her family's
+bank balance, her body, or which table she is on. That is the line between a model and a solver.
+
+### 7.2 The repair, on his two saves
+
+⚠ Both saves are `working` families. Read only through `tools/policy-vs-owner.ts`; neither is
+committed and neither ever becomes a fixture.
+
+**Olivia (413 wk, self-coached at onboarding) – the owner ends #51.**
+
+| arm | before | | after | | | |
+| --- | --- | --- | --- | --- | --- | --- |
+| | end / best | funds | end / best | funds | entries | W-track |
+| player · self | #211 / #152 | $91,428 | **#282** / #138 | $163,902 | 149 | 86 |
+| player · budget | **#1623** / #1601 | $13,532 | **#170** / #135 | $166,414 | 150 | 88 |
+| player · middle | **#1623** / #1601 | $8,705 | **#170** / #126 | $162,648 | 150 | 91 |
+| player · high | **#1612** / #1601 | -$1,220 | **#170** / #126 | $142,002 | 151 | 89 |
+
+**Naomi (621 wk, middle coach from onboarding) – the owner ends #106.**
+
+| arm | before | | after | | | |
+| --- | --- | --- | --- | --- | --- | --- |
+| | end / best | funds | end / best | funds | entries | W-track |
+| player · self | #285 / #173 | $254,098 | **#111** / #111 | $428,710 | 219 | 156 |
+| player · budget | #211 / #148 | $266,565 | **#71** / #71 | $529,324 | 218 | 151 |
+| player · middle | **#1621** / #1601 | $19,185 | **#71** / #71 | $483,114 | 213 | 146 |
+| player · high | **#1615** / #1601 | -$1,289 | **#76** / #76 | $409,270 | 213 | 145 |
+
+**The cliff is gone.** Every arm is ranked; W-track entries go from 0 to 145-156 on the three coach
+rungs that used to enter no professional event in twelve years. Nothing bankrupts, on either seed, at
+any rung – including `working · elite`, which survives at #71 by spending 243 of its 621 weeks
+self-coached. That is R6, and it is the owner's own second move.
+
+**Where the arms land against his two numbers: #71-#282 against his #51 and #106.** Naomi straddles
+him (#71-#111 against #106). Olivia does not: every arm is #163-#282 against his #51, with a best
+rank of #108-#138. **The Olivia gap survives the fix and is reported rather than tuned away** – see
+7.5.
+
+### 7.3 The guard-rail – the policy is ONE rule away from being a solver, and it was measured
+
+The brief for this work says a policy that reaches #10 has not been fixed, it has been broken the
+other way. That is not hypothetical. Removing one rule at a time, on Naomi's seed, coach `middle`
+unless stated:
+
+| variant | end | funds | entries | mean condition |
+| --- | --- | --- | --- | --- |
+| **all six (baseline for the rows below)** | **#71** | $477,394 | 182 | 92.3 |
+| minus R2 (no table discipline) | #109 | $358,407 | 264 | 85.0 |
+| minus R5 (no holidays) | #76 | $455,306 | 179 | 84.6 |
+| minus R6 (coach fixed at birth) | #76 | $507,336 | 163 | 93.8 |
+| minus R6, coach `high` | **#1615, bankrupt @73** | -$1,359 | 19 | – |
+| **all six (baseline for the two rows below)** | **#76** | $507,336 | 163 | 93.8 |
+| minus R3 | #114 | $232,713 | 321 | 73.8 |
+| **minus R3 AND R4's slide (rest floor flat at 70)** | **#14** | **$9,593,018** | **364** | 70.4 |
+
+⚠ The sweep ran on two intermediate builds – the first before R6's release moved off the season
+wrap, the second before R2 gained its pro-allowance exception – so **each block carries its own
+baseline row** and only within-block differences are read. The shipped build measures #71 /
+$483,114 / 213 entries on this cell, i.e. between the two baselines; no conclusion here turns on it.
+
+**R3 is what holds the line.** Dropping it turns the parent back into a grinder – 321 entries, then
+364 once the rest floor stops sliding – and the volume converts to a top-fifteen player with nine and
+a half million dollars. That would make the game look far easier than it is and put every future
+verdict wrong in the opposite direction, which is exactly as bad as the wall was. **R6 holds the
+other line**: without it the dear coach rungs go bankrupt exactly as §6a described. **R5 buys
+freshness rather than rank** – eight points of mean condition for five places, which is the honest
+size of it.
+
+### 7.4 ⚠ 25k and 120k – UNVALIDATED BY ANY HUMAN CAREER
+
+`tools/policy-vs-owner.ts` now sweeps the background too. It is honest to sweep because the GIRL
+does not move with it – `startingSkills` takes the seed and ignores the profile (`world/player.ts`,
+the parameter is literally `_profile`) – so these are the same child in a richer family.
+
+**There is no person's number beside either block.** Both saves are `working`; the owner has barely
+played 25k and has no 120k career. These rows are a PREDICTION ON RECORD, to be wrong about the day
+somebody plays one, and they may not be used to argue the policy is or is not in his envelope.
+
+| background | self | budget | middle | high | elite |
+| --- | --- | --- | --- | --- | --- |
+| Naomi · working (his) | #111 | #71 | #71 | #76 | #71 |
+| Naomi · middle ⚠ | #75 | #78 | #106 | #109 | #109 |
+| Naomi · wealthy ⚠ | #67 | #78 | #81 | #86 | #116 |
+| Olivia · working (his) | #282 | #170 | #170 | #170 | #178 |
+| Olivia · middle ⚠ | #201 | #163 | #163 | #163 | #163 |
+| Olivia · wealthy ⚠ | #282 | #170 | #173 | #182 | #182 |
+
+**What happens there, stated plainly: nothing breaks, and the money stops mattering.** No arm
+bankrupts and no arm is unranked at any background. On thirty arms the spread within a background is
+smaller than the spread between the two seeds, and on Naomi the ORDER INVERTS as the family gets
+richer – `wealthy · self` (#67) beats `wealthy · elite` (#116), because on a single seed the coach's
+own edge is small (L1: one to two careers of thirty) while his bill is money that would otherwise
+have bought entries. **That is one seed and one policy and it is NOT a verdict on the coach ladder** –
+it is a reason to re-run §M's paired arms through the rebuilt policy before anybody quotes L1 again.
+
+### 7.5 What was NOT fixed, and is now on the record
+
+* **Olivia's gap.** The owner reaches #51 with $1,601,182; the best arm reaches #170 with $166,414 –
+  a tenth of the money. On Naomi the same policy has MORE money than he does ($483k against $281k)
+  and a better rank. Development is not the cause (269.9 against his 270.2, on a draw whose ceiling
+  is 279.0), and neither is the calendar, the freshness or the coach, all of which are now
+  human-shaped. Something specific happened in that career that the policy does not model.
+* **Three decision surfaces the bench still never touches**, any of which could be it: it never
+  answers a sponsor offer (`acceptOffer`/`declineOffer`), never sets an equipment grade
+  (`setKitGrade`), never chooses a birthday gift (`chooseGift`), and never moves the week plan off
+  `balanced`. The `practice` category still reads $0 in every cell – no friendly is ever booked.
+* **The 60-week ledger prune bounds R1 and R6.** Both read `financeWindow` over a 26-week trailing
+  window, which is exact, but it means the reserve reacts to the last half-season and not to the
+  career. A family whose bill jumps in one week keeps the old reserve for a fortnight.
+* **`vacation` now reads $11,654 over four seasons** on 25k·middle·budget where it read $0. That is
+  ~7% of gross expense and it is a real change to every money table this bench prints for the
+  player arm. It is not a bug; it is R5 arriving. Every earlier `player`-arm money figure in the
+  documents above is superseded.
+
+### 7.6 What moved in `tests/endings-bench.test.ts`
+
+The gate did NOT go red, because it drives `POLICIES[0]` and the grinder is untouched. It was
+re-aimed anyway, knowingly, in two places:
+
+* **The determinism test now runs BOTH arms** (3 tests to 4, 10.3 s). This is the property the change
+  actually endangers: the rebuilt arm calls two real engine commands from inside the career loop –
+  `bookVacation` (priced off the `seed:vacation:week:packageId` sub-stream) and `hireCoach`. Measured
+  SAME on 8k·budget, 25k·self and 120k·high before it was written.
+* **The fork test stays on the grinder, and the re-aim was TRIED rather than declined.** Under the
+  player arm the cell it uses (`25k · middle · self-coached`, seed 0) reaches the fork with the
+  scholarship already spent: the counting W75 finish that shuts the college door lands at age
+  **17 (week 178)** instead of **19 (week 292)**, and `answerFork(world, 'college')` throws. The
+  cell's own selection argument – «a self-coached middle-class family grinds the calendar without
+  ever putting a scoring W75 result on the board before nineteen» – was true of the GRINDER and only
+  the grinder. **A family that manages the career turns professional two years earlier**, which is a
+  fact about the game worth having rather than a test failure. Moving that test needs the bench's
+  college-door table re-run under the player arm (28 minutes) and a cell re-picked from it.
+* The grace sweep also stays on the grinder, and there the reason is that the other arm would make it
+  VACUOUS rather than red: the bankruptcy grace is a rule about families that go into the red, and
+  the rebuilt player arm does not. `8k · working · budget` bankrupts at week 198 under the grinder
+  and survives the horizon under the player.
+
+### 7.7 What this costs the documents above, again
+
+§6's «what no longer stands» list grows. Every `player`-arm figure printed by `tools/econ-bench.ts`
+before this section – survival, end funds, entries, reach, the A4 break-even week – was produced by
+the trapped policy and is superseded. Measured on 25k·middle·budget over 14→18, same seeds, the two
+arms now read:
+
+| | grinder | player (rebuilt) |
+| --- | --- | --- |
+| survived | 1/4 | **4/4** |
+| prize money | $1,703 | **$46,880** |
+| season-4 end rank | #74 | **#31** |
+| a week's prize beat that week's costs | 1/4 careers | **4/4** |
+
+**The grinder arm is unaffected and every number ever measured through it still stands.**

@@ -28,7 +28,7 @@ import { decodeExportFile } from '../src/engine/saveCodec'
 import { createWorld, type WorldState } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { POLICIES, stepCareerWeek } from './econ-bench'
-import type { CoachTier } from '../src/shared/protocol'
+import type { CoachTier, FamilyBackground } from '../src/shared/protocol'
 import { startingSkills } from '../src/engine/world/player'
 import { rollPotential, SKILL_KEYS, type KidSkills } from '../src/engine/development'
 import { kidAgeYears } from '../src/engine/world/age'
@@ -58,14 +58,39 @@ interface Run {
   byTier: Record<string, number>
   meanCondition: number
   weeksInjured: number
+  /** ⚠ COUNTED WEEK BY WEEK INTO A SET, NEVER READ OFF `world.vacations.length` AT THE END. The
+   *  planner prunes its bookings to a FOUR-week trailing window (PLANNER_TRAIL_WEEKS), so the field
+   *  holds the last fortnight and the future, not the career - a horizon-end read reports "1" for a
+   *  family that took a week away every year. Same failure family as reading `world.results` for a
+   *  career's matches, which this file already carries a note about. */
+  vacationWeeks: number
+  /** how many weeks of the replay she had no coach – R6's release, in weeks rather than events. */
+  weeksUncoached: number
 }
 
-function replay(w: WorldState, weeks: number, policyIndex: number, coachTier?: CoachTier): Run {
+function replay(
+  w: WorldState,
+  weeks: number,
+  policyIndex: number,
+  coachTier?: CoachTier,
+  background?: FamilyBackground,
+): Run {
   // ⚠ THE COACH OVERRIDE IS WHAT MAKES THIS AN EXPERIMENT RATHER THAN AN ANECDOTE. I first compared
   // Olivia (self-coached) against Naomi (middle coach) and blamed the coach - but those two differ
   // in SEED as well, so the comparison was confounded and the conclusion unearned. Holding the seed
   // and sweeping only the tier is the isolation that claim needed and did not have.
-  const world = createWorld(w.seed, coachTier ? { ...w.profile, coachTier } : w.profile)
+  //
+  // ⚠ AND THE BACKGROUND OVERRIDE IS THE SAME MOVE ONE AXIS ACROSS (task #89). It is honest to
+  // sweep because the GIRL does not move with it: `startingSkills` takes the seed and ignores the
+  // profile entirely (world/player.ts - the parameter is literally `_profile`), so 25k and 120k are
+  // the same child in a richer family, not a different draw. ⚠⚠ BUT THERE IS NO HUMAN CAREER AT
+  // EITHER - the owner has barely played them - so those rows are UNVALIDATED: they say what the
+  // policy does, and nothing about whether that is what a person would do.
+  const world = createWorld(w.seed, {
+    ...w.profile,
+    ...(coachTier ? { coachTier } : {}),
+    ...(background ? { background } : {}),
+  })
   const policy = POLICIES[policyIndex]
   world.coachOnEventWeeks = policy.coachOnEventWeeks
   const rng = rngFromSeed(world.seed)
@@ -75,6 +100,8 @@ function replay(w: WorldState, weeks: number, policyIndex: number, coachTier?: C
   let conditionSum = 0
   let injured = 0
   let lived = 0
+  let uncoached = 0
+  const vacationWeeks = new Set<number>()
   for (let i = 0; i < weeks; i++) {
     const entered = stepCareerWeek(world, rng, policy)
     for (const [t, n] of Object.entries(entered)) {
@@ -83,6 +110,8 @@ function replay(w: WorldState, weeks: number, policyIndex: number, coachTier?: C
         entries += n
       }
     }
+    for (const v of world.vacations) vacationWeeks.add(v.week)
+    if (world.coachId === null && world.profile.coachTier !== 'self') uncoached += 1
     conditionSum += world.condition
     if (world.injury !== null) injured += 1
     lived += 1
@@ -106,6 +135,8 @@ function replay(w: WorldState, weeks: number, policyIndex: number, coachTier?: C
     byTier,
     meanCondition: lived ? conditionSum / lived : 0,
     weeksInjured: injured,
+    vacationWeeks: vacationWeeks.size,
+    weeksUncoached: uncoached,
   }
 }
 
@@ -142,6 +173,8 @@ async function main(): Promise<void> {
       byTier: {},
       meanCondition: w.condition,
       weeksInjured: -1,
+      vacationWeeks: -1,
+      weeksUncoached: -1,
     },
   ]
   for (let pi = 0; pi < POLICIES.length; pi++) rows.push(replay(w, w.week, pi))
@@ -165,25 +198,56 @@ async function main(): Promise<void> {
   }
 
   console.log(`\n${'-'.repeat(92)}\nWHAT SHE ACTUALLY DID – the discriminators\n${'-'.repeat(92)}`)
-  console.log('who                             entries   matches   mean cond   wks injured')
+  console.log('who                             entries   matches   mean cond   wks injured   holidays   wks no coach')
+  const na = (n: number): string => (n < 0 ? 'n/a' : String(n))
   for (const r of rows) {
     console.log(
-      `${r.label.padEnd(30)}${(r.entries < 0 ? 'n/a' : String(r.entries)).padStart(9)}${String(r.matches).padStart(10)}${r.meanCondition.toFixed(1).padStart(12)}${(r.weeksInjured < 0 ? 'n/a' : String(r.weeksInjured)).padStart(14)}`,
+      `${r.label.padEnd(30)}${na(r.entries).padStart(9)}${String(r.matches).padStart(10)}${r.meanCondition.toFixed(1).padStart(12)}` +
+        `${na(r.weeksInjured).padStart(14)}${na(r.vacationWeeks).padStart(11)}${na(r.weeksUncoached).padStart(15)}`,
     )
   }
   for (const r of rows.slice(1)) {
     const tiers = Object.entries(r.byTier).sort((a, b) => b[1] - a[1])
     console.log(`\n  ${r.label} entered: ${tiers.map(([t, n]) => `${t} ${n}`).join(' · ') || 'nothing'}`)
   }
-  console.log(`\n${'-'.repeat(92)}\nTHE COACH SWEEP – one seed, one policy, only the tier moves\n${'-'.repeat(92)}`)
-  console.log('tier            end rank   best      funds     entries   matches   wta-track entries')
-  for (const r of sweep) {
-    const wta = Object.entries(r.byTier)
+  const wtaEntries = (r: Run): number =>
+    Object.entries(r.byTier)
       .filter(([t]) => t.startsWith('w') || t.startsWith('slam'))
       .reduce((n, [, v]) => n + v, 0)
-    console.log(
-      `${r.label.padEnd(16)}${(r.endWta ? `#${r.endWta}` : '–').padStart(8)}${(r.bestWta ? `#${r.bestWta}` : '–').padStart(8)}${money(r.fundsCents).padStart(12)}${String(r.entries).padStart(10)}${String(r.matches).padStart(10)}${String(wta).padStart(18)}`,
-    )
+  const sweepHead =
+    'arm              end rank   best      funds     entries   matches   mean cond   injured   W-track   holidays   wks no coach'
+  const sweepRow = (r: Run): string =>
+    `${r.label.padEnd(17)}${(r.endWta ? `#${r.endWta}` : '–').padStart(8)}${(r.bestWta ? `#${r.bestWta}` : '–').padStart(8)}` +
+    `${money(r.fundsCents).padStart(12)}${String(r.entries).padStart(10)}${String(r.matches).padStart(10)}` +
+    `${r.meanCondition.toFixed(1).padStart(12)}${String(r.weeksInjured).padStart(10)}${String(wtaEntries(r)).padStart(10)}` +
+    `${String(r.vacationWeeks).padStart(11)}${String(r.weeksUncoached).padStart(15)}` +
+    (r.ending ? `   ${r.ending} @${r.endedWeek}` : '')
+  const tierLine = (r: Run): string =>
+    `    ${Object.entries(r.byTier).sort((a, b) => b[1] - a[1]).map(([t, n]) => `${t} ${n}`).join(' · ') || 'nothing'}`
+
+  console.log(`\n${'-'.repeat(92)}\nTHE COACH SWEEP – one seed, one policy, only the tier moves\n${'-'.repeat(92)}`)
+  console.log(sweepHead)
+  for (const r of sweep) {
+    console.log(sweepRow(r))
+    console.log(tierLine(r))
+  }
+
+  // ⭐ THE BACKGROUND SWEEP (task #89). Same girl, same seed, same weeks – the family's means and
+  // the coach rung move together, which is the grid the econ bench's PRESETS are drawn on.
+  //
+  // ⚠⚠ NOTHING HERE IS VALIDATED BY A HUMAN CAREER. Both of the owner's saves are `working`
+  // families; he has barely played 25k and has no 120k career at all. The `working` block is the
+  // only one with a person's number beside it, and it is the only one that may be used to say the
+  // policy is or is not in his envelope. The other two are reported so that the day somebody plays
+  // one, there is a prediction on record to be wrong about.
+  console.log(`\n${'-'.repeat(92)}\nTHE BACKGROUND SWEEP – ⚠ 25k and 120k are UNVALIDATED: no human career exists at either\n${'-'.repeat(92)}`)
+  for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+    console.log(`\n  ${bg}${bg === w.profile.background ? '   (his own – the only row with a person beside it)' : '   ⚠ unvalidated'}`)
+    console.log('  ' + sweepHead)
+    for (const tier of ['self', 'budget', 'middle', 'high', 'elite'] as CoachTier[]) {
+      const r = replay(w, w.week, 1, tier, bg)
+      console.log('  ' + sweepRow({ ...r, label: `player · ${tier}` }))
+    }
   }
 
   console.log(
