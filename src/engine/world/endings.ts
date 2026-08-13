@@ -25,8 +25,9 @@ import {
   debtWeeks,
 } from '../ending'
 import type { CareerEnding, DebtView, EndingView, ForkAnswer } from '../../shared/protocol'
-import type { TierId } from '../season/types'
+import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
+import { activeLadderOf } from './ladder'
 import { kidAgeYears } from './age'
 import { buildAlbum, buildScroll } from './album'
 import type { WorldState } from '../world'
@@ -80,35 +81,115 @@ export function autoEndingViewOf(world: WorldState): AutoEndingView {
 }
 
 /** The season she last CLEARED A RUNG in – the earliest week at the highest tier she ever reached a
- *  final or a title at. Null when she has never reached a final anywhere.
+ *  final or a title at ON ONE TABLE. Null when she has never reached a final in that table.
  *
  *  ⚠ IT READS `trophiesByTier` AND NOT `bestFinishByTier`, and the difference is the whole point.
  *  The latter is a per-tier HIGH-WATER MARK with no year on it and it is overwritten the week a
  *  silver becomes a gold, so it cannot answer "when". The cabinet keeps every trophy as the WEEK it
- *  happened in, which is exactly what a drought has to be measured against. */
-export function lastRungSeasonIndexOf(world: WorldState): number | null {
-  const ladder = Object.keys(world.trophiesByTier) as TierId[]
-  let bestRung = -1
+ *  happened in, which is exactly what a drought has to be measured against.
+ *
+ *  ⭐ ROUND-19 #1 – IT TAKES A TABLE NOW, AND IT USED TO WALK ALL SIXTEEN RUNGS AT ONCE. This is the
+ *  half of the plateau that asks «has she cleared a rung lately», and it was answering about a
+ *  DIFFERENT table from the half that asks «has the rank moved». `TIER_LADDER` is one STRENGTH order
+ *  over three tables (its own note says so: domestic, then junior, then the paid rungs), so the
+ *  global maximum is a rung on whichever table she climbed highest on – ever. Two consequences, and
+ *  the second one is a false plateau rather than a missed one:
+ *
+ *    * a girl whose table is the national one, with a J300 final at sixteen behind her, has a
+ *      `bestRung` of j300 for the rest of her life – so the national final she reached THIS season
+ *      is invisible to condition 1, and the plateau is free to fire in the year she cleared the top
+ *      rung of the only table anybody is measuring her on;
+ *    * and the same girl's junior peak sits years outside the window, which is precisely the
+ *      "no rung cleared" that lets the rule continue.
+ *
+ *  Scoped to one table both halves of the rule speak about the same career. It is the same fix as
+ *  the rank window's, applied to the other condition – see `plateauViewOf`.
+ *
+ *  ⚠ AND IT WALKS `TIER_LADDER` RATHER THAN `Object.keys(world.trophiesByTier)`. The old walk took
+ *  the key order of a persisted object as a rung order, and that was true only by luck:
+ *  `emptyTrophyLedger` happens to seed every shelf in ladder order, and `finalizeTournament`'s `??=`
+ *  happens never to add one. A save whose cabinet predates a rung inserted into the MIDDLE of the
+ *  ladder would have appended it at the end – i.e. called it the top rung in the game. The ladder is
+ *  the ladder; the cabinet is a record of what is on the shelves.
+ *
+ *  The walk is ascending, so the last shelf that matches is the highest rung she has reached – no
+ *  index arithmetic to get wrong. */
+export function lastRungSeasonIndexOf(
+  world: WorldState,
+  track: LadderTrack = activeLadderOf(world),
+): number | null {
   let week: number | null = null
-  for (const tier of ladder) {
-    const t = world.trophiesByTier[tier]
-    const weeks = [...t.titles, ...t.finals]
+  for (const tier of TIER_LADDER) {
+    if (TIERS[tier].track !== track) continue
+    // `?.` on the ledger and not only on the shelf – the `copyTrophyLedger` idiom, and for its
+    // reason: a save whose cabinet predates a rung has no key for it, and the ladder has grown twice.
+    const shelf = world.trophiesByTier?.[tier]
+    if (!shelf) continue
+    const weeks = [...shelf.titles, ...shelf.finals]
     if (weeks.length === 0) continue
-    const rung = ladder.indexOf(tier)
-    if (rung > bestRung) {
-      bestRung = rung
-      week = Math.min(...weeks)
-    }
+    week = Math.min(...weeks)
   }
   return week === null ? null : seasonIndexOf(week)
 }
 
+/** ⭐ ROUND-19 #1 – THE PLATEAU ASKS ITS QUESTION OF THE TABLE SHE IS ON, AND OF NO OTHER.
+ *
+ *  The owner, twice in consecutive off-seasons: «Дешувка мне уже 2й сезон говорит "в машине", что она
+ *  уже сколько-то не двигается никуда, хотя движение по таблице есть и мощное, сейчас на 106 месте,
+ *  поднялась за сезон.» Measured on his save (docs/rounds/round-19.md §1, tools/plateau-probe.ts):
+ *
+ *    | season | `endRank` – what the rule read | `byTrack.wta` – the table she is on |
+ *    |     8  | #82  | #136 |
+ *    |     9  | #80  | #169 |
+ *    |    10  | #77  | #123 |
+ *    |    11  | #84  | #106 |
+ *
+ *  TWO DEFECTS, AND THE FIRST ONE ALONE IS NOT THE FIX.
+ *
+ *  1. `SeasonHistoryEntry.endRank` is the ITF alias and its own doc comment says so – «⚠ THE ITF ONE,
+ *     always». The window was three flat junior numbers (#80/#77/#84, spread 7, inside the band of
+ *     20) belonging to a table she stopped competing on years ago, and on which she holds no counting
+ *     result at all: #84 is the dense floor of the 0-point tie group, which is the very number
+ *     `LadderView.rank` exists to refuse to print. The professional column, over the same seasons,
+ *     climbs 169 -> 123 -> 106.
+ *
+ *  2. `bestBefore` was drawn from her WHOLE career, so it included her junior peak – #6, at sixteen,
+ *     on the junior ladder. No professional will ever beat that, so condition 2a was permanently
+ *     satisfied for every girl who turns pro and the plateau quietly became a rule about age. Reading
+ *     the right column is necessary; staying inside ONE ladder is what makes it sufficient.
+ *
+ *  ⚠ WHICH LADDER: `activeLadderOf`, THE ENGINE'S ONE ANSWER. It is the same rule the screens read
+ *  through `activeLadderOfSnapshot` (which is a reader of `snapshot.activeLadder`, and `toSnapshot`
+ *  fills that from this function) – so this is not a second definition of "her table", it is the
+ *  engine-side member of the one that already exists. Round-17 #6 used it to stop the fork quoting a
+ *  junior rank at a professional; this is the same lesson at the other end of the career.
+ *
+ *  ⚠ AND A SEASON WITH NO FIGURE IN THAT TABLE IS NOT COMPARABLE, SO IT IS NOT COMPARED. Two kinds of
+ *  row are dropped, and they mean the same thing here: rows banked before v46 carry no `byTrack` at
+ *  all (and none can be invented – `pruneResults` deleted the evidence years ago), and a row whose
+ *  table she held no counting result in has no `endRank` there by design. What is left is what the
+ *  window may be built from.
+ *
+ *  ⚠ SO THE RULE CAN NOW DECLINE TO FIRE, AND THAT IS THE POINT. `plateauReading` needs a COMPLETE
+ *  window (all `plateauSeasons` of it – there are only that many season indices in the range, so
+ *  `window.length < seasons` IS "a season in it is not comparable") plus at least one comparable
+ *  season before it: four comparable seasons on one table, minimum, or no plateau. A career that
+ *  cannot answer the question is not told it has answered it. Refusing costs one off-season question
+ *  nobody sees; asking wrongly is what he has now been shown twice. */
 export function plateauViewOf(world: WorldState): PlateauView {
+  const track = activeLadderOf(world)
+  const seasonEndRanks: { seasonIndex: number; endRank: number }[] = []
+  for (const season of world.seasonHistory) {
+    const endRank = season.byTrack?.[track]?.endRank
+    if (endRank !== undefined) seasonEndRanks.push({ seasonIndex: season.seasonIndex, endRank })
+  }
   return {
     ageYears: kidAgeYears(world.week, world.profile.birthMonth),
     seasonIndex: seasonIndexOf(world.week),
-    seasonEndRanks: world.seasonHistory.map((s) => ({ seasonIndex: s.seasonIndex, endRank: s.endRank })),
-    lastRungSeasonIndex: lastRungSeasonIndexOf(world),
+    seasonEndRanks,
+    // ...and the OTHER half of the rule is asked of the same table, by construction rather than by
+    // coincidence: the track is resolved once, here, and handed down.
+    lastRungSeasonIndex: lastRungSeasonIndexOf(world, track),
   }
 }
 

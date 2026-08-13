@@ -2829,6 +2829,20 @@ export interface Snapshot {
   trainingRead: TrainingRead | null
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
+  /** ⭐ ROUND-19 #2 – THE SEASON WHOSE WRAP-UP IS STILL OWED THIS WEEK (its INDEX), or null.
+   *
+   *  The recap popup used to be gated on the `'season-end'` STOP REASON, and a stop reason is a
+   *  property of the last ADVANCE: any later command builds a snapshot without one. The retirement
+   *  offer is raised on the wrap week by construction and outranks the recap, so answering it – a
+   *  real command – erased the reason behind it and the season's summary was never shown. The fork
+   *  did the same one rank up.
+   *
+   *  So the recap now reads STATE, like the ending, the fork, the offer and the injury report before
+   *  it: `seasonWrapDue` in engine/world/milestones.ts, derived from `lastSeasonSummary` and the
+   *  week, persisting nothing. The number is the season's IDENTITY and the UI keeps it as the
+   *  watermark of what it has already shown – a per-snapshot dismiss flag can only gate a per-advance
+   *  reason, which is round-16 #19's lesson about the injury popup. */
+  seasonWrapPrompt: number | null
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
    *  Stats. Empty until the first wrap-up. */
   seasonHistory: SeasonHistoryEntry[]

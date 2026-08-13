@@ -11,8 +11,20 @@
 // ⚠ AND THE PLATEAU IS THE SAME OFFER, ASKED EARLY. «Не могу выйти в топ – уйду» is not a sixth
 // mechanism (§5.2): it is a reading that puts this card in front of her before 29, and the reason
 // is printed on it so the epilogue's own line about which of the two it was is already true here.
+//
+// ⭐ ROUND-19 #1 – AND THE PLATEAU CARD NAMES THE TABLE IT IS TALKING ABOUT. It read «Three seasons
+// and the table has not moved», which was true of a table she had left: the rule was reading the
+// junior alias while the owner watched her climb to #106 in the world. The rule now asks its question
+// of the ladder she is currently on, so the sentence has to say which one, or it is the round-17 #16
+// defect again («Season 2035 closed at #79» over no table at all).
+//
+// `activeLadderOfSnapshot` is the same one answer the fork card was re-aimed at in round-17 #6, and
+// the week is safe to read it on: an open offer BLOCKS the world, so the table she is on when the
+// card is drawn is the table the offer was raised about. Lower-cased into her sentence – she says
+// "the professional table", not "Professional".
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
+import { activeLadderOfSnapshot } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -20,6 +32,7 @@ import { facePoint } from '../art/faceRects'
 const game = useGameStore()
 const offer = computed(() => game.snapshot?.retirementOffer ?? null)
 const age = computed(() => game.snapshot?.ageYears ?? 29)
+const tableName = computed(() => activeLadderOfSnapshot(game.snapshot).label.toLowerCase())
 
 const stage = computed(() => portraitStage(age.value))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -51,10 +64,12 @@ async function answer(retire: boolean): Promise<void> {
         <!-- RE-WORDED 12.08. This used to end "- her words, not the game's", an aside meant to say
              "this is HER wish, nothing is being forced" - but it names THE GAME, which is a wall no
              line of copy here is allowed to break, and the owner read it as noise (round-17, his
-             report of 12.08). Same meaning, said in-fiction. -->
+             report of 12.08). Same meaning, said in-fiction.
+             ROUND-19 #1: ...and it names the table now - see the note at the top of this file. -->
         <p class="retire-lede">
-          Three seasons and the table has not moved. If she cannot reach the top, she would rather
-          go now – that is how she put it. She will keep playing if you want her to.
+          Three seasons on the {{ tableName }} table and it has not moved. If she cannot reach the
+          top, she would rather go now – that is how she put it. She will keep playing if you want
+          her to.
         </p>
       </template>
       <template v-else>

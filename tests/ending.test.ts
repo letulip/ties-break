@@ -39,6 +39,9 @@ import {
   setKitGrade,
   inCollege,
   latchEnding,
+  lastRungSeasonIndexOf,
+  plateauViewOf,
+  resolveEndings,
   buildEndingView,
   buildAlbum,
   skipTournament,
@@ -47,7 +50,9 @@ import {
   toSnapshot,
 } from '../src/engine/world'
 import { rngFromSeed, resumeMain, initMainState } from '../src/engine/rng'
-import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, LADDER_TRACKS } from '../src/shared/protocol'
+import type { SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
+import type { LadderTrack } from '../src/engine/season/types'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
 function autoView(over: Partial<AutoEndingView> = {}): AutoEndingView {
@@ -361,6 +366,254 @@ describe('the latch, on a real world', () => {
     expect(world.retirementOffer).toBeNull()
     expect(world.oneMoreYearCount).toBe(1)
     expect(world.ending).toBeNull()
+  })
+})
+
+// =================================================================================================
+// ⭐ ROUND-19 #1 – THE PLATEAU ASKS THE TABLE SHE IS ON, AND COMPARES ONLY INSIDE IT
+// =================================================================================================
+//
+// The owner, told twice in consecutive off-seasons that she «не двигается никуда» while climbing to
+// #106 in the world. Reproduced on his own save with tools/plateau-probe.ts and written up in
+// docs/rounds/round-19.md §1; these are the numbers that probe printed.
+//
+// ⚠ EVERY CLAIM HERE IS MADE OF A REAL `WorldState` AND GOES THROUGH `resolveEndings`, which is the
+// only path that can raise the offer in a game. A hand-built `PlateauView` cannot fail the way this
+// bug failed: the defect was in which COLUMN of the world the view is built from, so a test that
+// builds the view itself would have passed on the broken code for ever.
+describe('⭐ round-19 #1 – the plateau, on a real world', () => {
+  /** Season 11's wrap-up week – `WEEKS_PER_YEAR - OFF_SEASON_WEEKS` into the season, the one week
+   *  `resolveEndings` may raise the offer on. It is also the week his save was taken on. */
+  const WRAP_WEEK_S11 = 11 * WEEKS_PER_YEAR + (WEEKS_PER_YEAR - 3)
+
+  /** One banked season. `alias` is the top-level `endRank`, which is and stays the ITF number (its
+   *  own doc comment: «⚠ THE ITF ONE, always») – the column the rule used to read. `per` is the v46
+   *  per-track record; a table she is missing from carries no `endRank` there, exactly as the wrap
+   *  banks it, because a place in a table she holds no counting result in is not a place. */
+  function bankedSeason(
+    seasonIndex: number,
+    alias: number,
+    per: Partial<Record<LadderTrack, number>> | null,
+  ): SeasonHistoryEntry {
+    const row: SeasonHistoryEntry = {
+      seasonIndex,
+      endRank: alias,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      fundsDeltaCents: 0,
+      endFundsCents: 0,
+    }
+    // null = a row banked BEFORE v46, which carries no per-track figures at all and none can be
+    // invented. Seasons 0-7 of his save are exactly these.
+    if (per === null) return row
+    const byTrack = {} as Record<LadderTrack, SeasonTrackRow>
+    for (const track of LADDER_TRACKS) {
+      const endRank = per[track]
+      byTrack[track] = { points: 0, wins: 0, losses: 0, ...(endRank === undefined ? {} : { endRank }) }
+    }
+    return { ...row, byTrack }
+  }
+
+  /** A world parked on season 11's wrap week, with the fork long answered and the offer still to be
+   *  raised – i.e. the exact state `resolveEndings` runs step 7d in. */
+  function atTheWrap(seed: string, history: SeasonHistoryEntry[]) {
+    const { world } = freshWorld(seed)
+    world.week = WRAP_WEEK_S11
+    world.fork = { askedWeek: 300, answer: 'continue' }
+    world.seasonHistory = history
+    return world
+  }
+
+  /** ...and a professional: one counting W result, ever, is what makes the paid table hers for good
+   *  (`wtaEverCounted` / `activeLadderOf`, the one-way door). */
+  function turnPro(world: ReturnType<typeof atTheWrap>): void {
+    world.bestFinishByTier = { w75: 2 }
+  }
+
+  // His save, season by season, as the probe read it. Seasons 0-7 predate v46; 8-11 carry the pair.
+  const HIS_CAREER = [
+    bankedSeason(0, 127, null),
+    bankedSeason(1, 13, null),
+    bankedSeason(2, 6, null),
+    bankedSeason(3, 6, null),
+    bankedSeason(4, 111, null),
+    bankedSeason(5, 102, null),
+    bankedSeason(6, 74, null),
+    bankedSeason(7, 74, null),
+    bankedSeason(8, 82, { wta: 136 }),
+    bankedSeason(9, 80, { wta: 169 }),
+    bankedSeason(10, 77, { wta: 123 }),
+    bankedSeason(11, 84, { wta: 106 }),
+  ]
+
+  it('⭐ a professional CLIMBING on her own table is not told she has gone as far as she is going', () => {
+    const world = atTheWrap('round19-his-career', HIS_CAREER)
+    turnPro(world)
+    const view = plateauViewOf(world)
+
+    // She is old enough to be asked and young enough that this can only be the plateau reading.
+    expect(view.ageYears).toBeGreaterThanOrEqual(ENDINGS.plateauFromAgeYears)
+    expect(view.ageYears).toBeLessThan(ENDINGS.askFromAgeYears)
+    // The window is the PROFESSIONAL column, and the junior seasons are simply not in it – which is
+    // what stops her #6 at sixteen from being the best-before no professional can ever beat.
+    expect(view.seasonEndRanks).toEqual([
+      { seasonIndex: 8, endRank: 136 },
+      { seasonIndex: 9, endRank: 169 },
+      { seasonIndex: 10, endRank: 123 },
+      { seasonIndex: 11, endRank: 106 },
+    ])
+
+    resolveEndings(world)
+    expect(world.retirementOffer, 'she climbed 169 -> 123 -> 106; nobody asks her to stop').toBeNull()
+
+    // ...and this is what he was shown instead, for two seasons running: the SAME function over the
+    // junior alias the rule used to read. Kept as an assertion so the regression stays legible.
+    expect(
+      plateauReading({ ...view, seasonEndRanks: HIS_CAREER.map((s) => ({ seasonIndex: s.seasonIndex, endRank: s.endRank })) }),
+      'the ITF column reads flat at #80/#77/#84 against a junior best of #6',
+    ).toBe(true)
+  })
+
+  it('⭐ ...and a professional who really has stopped moving still gets asked', () => {
+    // The rule must still be able to fire, or the fix is just a switch-off. Same shape, same ages,
+    // same code path - only the professional column is flat this time.
+    const world = atTheWrap('round19-stalled', [
+      bankedSeason(8, 82, { wta: 120 }),
+      bankedSeason(9, 80, { wta: 128 }),
+      bankedSeason(10, 77, { wta: 124 }),
+      bankedSeason(11, 84, { wta: 130 }),
+    ])
+    turnPro(world)
+    resolveEndings(world)
+    expect(world.retirementOffer?.reason).toBe('plateau')
+    expect(world.retirementOffer?.final).toBe(false)
+  })
+
+  it('⭐ a career banked before the per-track record existed DECLINES to fire', () => {
+    // Rows older than v46 carry no figure for any table, and none can be reconstructed - the results
+    // that made them were pruned years ago. Asking the question of the junior alias is what produced
+    // the false plateau, so the rule refuses to ask at all: one off-season question nobody sees.
+    const world = atTheWrap('round19-pre-v46', HIS_CAREER.map((s) => bankedSeason(s.seasonIndex, s.endRank, null)))
+    turnPro(world)
+    expect(plateauViewOf(world).seasonEndRanks).toEqual([])
+    resolveEndings(world)
+    expect(world.retirementOffer).toBeNull()
+  })
+
+  it('⭐ an incomplete window declines too – three comparable seasons, and one before them, or nothing', () => {
+    // Season 10 was played on another table entirely, so the window is two rows and there is no
+    // honest comparison to make. Same refusal, one row further in.
+    const world = atTheWrap('round19-gappy', [
+      bankedSeason(8, 82, { wta: 120 }),
+      bankedSeason(9, 80, { wta: 128 }),
+      bankedSeason(10, 77, { itf: 40 }),
+      bankedSeason(11, 84, { wta: 130 }),
+    ])
+    turnPro(world)
+    expect(plateauViewOf(world).seasonEndRanks).toHaveLength(3)
+    resolveEndings(world)
+    expect(world.retirementOffer).toBeNull()
+  })
+
+  // -----------------------------------------------------------------------------------------------
+  // ...AND THE OTHER HALF OF THE RULE HAD THE SAME CONFUSION.
+  // -----------------------------------------------------------------------------------------------
+  // `lastRungSeasonIndexOf` answers «has she cleared a rung inside the window», and it walked all
+  // sixteen rungs at once. TIER_LADDER is ONE strength order over three tables, so the global maximum
+  // is the highest rung of whichever table she ever climbed highest - and for a girl whose table is
+  // the national one, a junior final at sixteen outranks every domestic rung for the rest of her life.
+  it('⭐ a rung cleared on HER table blocks the plateau, even with a bigger one on a table she left', () => {
+    const world = atTheWrap('round19-rung-track', [
+      bankedSeason(8, 90, { domestic: 40 }),
+      bankedSeason(9, 90, { domestic: 44 }),
+      bankedSeason(10, 90, { domestic: 46 }),
+      bankedSeason(11, 90, { domestic: 42 }),
+    ])
+    // No W result ever and no live junior points, so the national table is hers (`activeLadderOf`).
+    world.trophiesByTier.j300 = { titles: [], finals: [200] } // a junior final at ~sixteen
+    world.trophiesByTier.national = { titles: [], finals: [600] } // ...and her first national final, this season
+    resolveEndings(world)
+    expect(world.retirementOffer, 'she cleared the top rung of her table this season').toBeNull()
+    expect(lastRungSeasonIndexOf(world), 'the rung is read on her own table').toBe(11)
+
+    // The junior shelf is still readable - it is simply another table's answer, and asking for it
+    // explicitly is what says the scoping is deliberate rather than a lost trophy.
+    expect(lastRungSeasonIndexOf(world, 'itf')).toBe(3)
+    expect(lastRungSeasonIndexOf(world, 'wta')).toBeNull()
+  })
+})
+
+// =================================================================================================
+// ⭐ ROUND-19 #2 – ANSWERING THE QUESTION MAY NOT DESTROY THE SEASON'S WRAP-UP
+// =================================================================================================
+//
+// The owner: «И по-моему за этим попапом скрылся или не показался попап с итогами сезона.» It was not
+// a race - the recap was gated on the `'season-end'` STOP REASON, and a stop reason is a property of
+// the advance that produced it. The offer is raised ON the wrap week by construction and outranks the
+// recap (correctly), so answering it built a fresh snapshot with no reasons on it and the summary was
+// gone for good. docs/rounds/round-19.md §2.
+//
+// The engine half of the fix is `seasonWrapDue`: the same beat, asked of STATE the world already
+// holds, so no command can erase it. These are the assertions that a real command cannot.
+describe('⭐ round-19 #2 – the wrap-up outlives the command that covered it', () => {
+  /** A real career ticked to its first wrap-up week – week 49, where `maybeFireSeasonWrapUp` fires
+   *  inside the tick's own deferred block. Nothing is hand-banked: the summary on this world is the
+   *  one the engine wrote. */
+  function atTheWrap(seed: string) {
+    const { world, rng } = freshWorld(seed)
+    while (world.week < WEEKS_PER_YEAR - 3) tickWeek(world, rng)
+    return world
+  }
+
+  it('the recap is owed on the wrap week, and the ADVANCE is not what says so', () => {
+    const world = atTheWrap('round19-wrap-week')
+    expect(world.lastSeasonSummary, 'the engine banked season 0 here').not.toBeNull()
+    // With the stop reasons, as the advance that stopped here delivers it...
+    expect(toSnapshot(world, ['season-end']).seasonWrapPrompt).toBe(0)
+    // ...and without them, which is every other snapshot this week can produce.
+    expect(toSnapshot(world).seasonWrapPrompt).toBe(0)
+    expect(toSnapshot(world).stopReasons).toBeUndefined()
+  })
+
+  it('⭐ ANSWERING THE RETIREMENT does not take the season summary with it', () => {
+    const world = atTheWrap('round19-wrap-retirement')
+    world.retirementOffer = { askedWeek: world.week, seasonIndex: 0, reason: 'age', final: false }
+    answerRetirement(world, false)
+    const after = toSnapshot(world)
+    // The mechanism of the bug, stated: the command really does produce a snapshot with no reasons.
+    expect(after.stopReasons, 'only an advance sets these').toBeUndefined()
+    // ...and the beat survives it anyway.
+    expect(after.seasonWrapPrompt).toBe(0)
+    expect(after.lastSeasonSummary).not.toBeNull()
+    expect(after.retirementOffer).toBeNull()
+  })
+
+  it('⭐ ...and neither does ANSWERING THE FORK, which sits one rank above it in the same list', () => {
+    // Reachable rather than theoretical: the fork is raised on her nineteenth BIRTHDAY week, and a
+    // girl born in the second half of December turns nineteen in the off-season - the wrap week is
+    // week 49 of the season, which is where December lands.
+    const world = atTheWrap('round19-wrap-fork')
+    world.fork = { askedWeek: world.week, answer: null }
+    answerFork(world, 'continue')
+    const after = toSnapshot(world)
+    expect(after.stopReasons).toBeUndefined()
+    expect(after.seasonWrapPrompt).toBe(0)
+    expect(after.lastSeasonSummary).not.toBeNull()
+  })
+
+  it('⚠ it is the SEASON that is compared, not merely "a summary exists on a wrap week"', () => {
+    // `lastSeasonSummary` holds one season and is overwritten every year, so a wrap week whose own
+    // fold has not run yet is still holding LAST year's recap - which is exactly the state a pending
+    // tournament reveal leaves behind, because `finalizeTournament` runs the deferred block when the
+    // reveal closes rather than when the advance returns. Showing that card would announce the wrong
+    // season.
+    const world = atTheWrap('round19-wrap-identity')
+    world.week = WEEKS_PER_YEAR + (WEEKS_PER_YEAR - 3)
+    expect(toSnapshot(world).seasonWrapPrompt, 'season 0 recap, season 1 wrap week').toBeNull()
+    // ...and no ordinary week raises it either.
+    world.week = WEEKS_PER_YEAR - 3 + 1
+    expect(toSnapshot(world).seasonWrapPrompt).toBeNull()
   })
 })
 

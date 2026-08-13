@@ -274,11 +274,44 @@ describe('the natural end', () => {
     w.unmount()
   })
 
-  it('the plateau is the same offer asked early, and the card says which reading it was', () => {
-    patchSnapshot({ ageYears: 26, retirementOffer: { askedWeek: 700, seasonIndex: 12, reason: 'plateau', final: false } })
+  // ⭐ ROUND-19 #1 – ...AND THE CARD NAMES THE TABLE IT IS TALKING ABOUT.
+  // It read «Three seasons and the table has not moved» over a girl who had climbed to #106 in the
+  // world, because the rule was reading the junior alias. The rule now asks its question of the
+  // ladder she is on, so the sentence has to say which one - the same lesson round-17 #16 shipped
+  // when «Season 2035 closed at #79» named no table at all.
+  it('the plateau is the same offer asked early, and the card names the table that has not moved', () => {
+    patchSnapshot({
+      ageYears: 26,
+      retirementOffer: { askedWeek: 700, seasonIndex: 12, reason: 'plateau', final: false },
+      activeLadder: 'wta',
+      ladders: {
+        domestic: { rank: 5, points: 300 },
+        itf: { rank: 84, points: 0 },
+        wta: { rank: 106, points: 420 },
+      },
+    })
     const w = mount(RetirementDialog)
-    expect(w.text()).toContain('the table has not moved')
+    expect(w.text(), 'the table is named').toContain('on the professional table and it has not moved')
     expect(w.findAll('.retire-answer')).toHaveLength(2)
+    w.unmount()
+  })
+
+  it('⭐ ...and it names HER table, not one the game happens to prefer', () => {
+    // A national-table girl gets the same sentence about the national table. `activeLadderOfSnapshot`
+    // is the one answer, so the card cannot drift from the rule that raised it.
+    patchSnapshot({
+      ageYears: 26,
+      retirementOffer: { askedWeek: 700, seasonIndex: 12, reason: 'plateau', final: false },
+      activeLadder: 'domestic',
+      ladders: {
+        domestic: { rank: 42, points: 300 },
+        itf: { rank: null, points: 0 },
+        wta: { rank: null, points: 0 },
+      },
+    })
+    const w = mount(RetirementDialog)
+    expect(w.text()).toContain('on the national table and it has not moved')
+    expect(w.text()).not.toContain('professional table')
     w.unmount()
   })
 })

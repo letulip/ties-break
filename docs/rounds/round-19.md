@@ -7,11 +7,11 @@ Status: `[x]` shipped · `[~]` answered, nothing to build · `[>]` in flight · 
 
 ## The two
 
-- [>] **1. «Дешувка мне уже 2й сезон говорит "в машине", что она уже сколько-то не двигается никуда,
+- [x] **1. «Дешувка мне уже 2й сезон говорит "в машине", что она уже сколько-то не двигается никуда,
   хотя движение по таблице есть и мощное, сейчас на 106 месте, поднялась за сезон.»** – reproduced,
-  and the cause is in the type's own documentation. Diagnosis in §1.
-- [>] **2. «И по-моему за этим попапом скрылся или не показался попап с итогами сезона»** – he is
-  right, and it is not a race: it is destroyed by construction. §2.
+  and the cause is in the type's own documentation. Diagnosis in §1, fix in §3.
+- [x] **2. «И по-моему за этим попапом скрылся или не показался попап с итогами сезона»** – he is
+  right, and it is not a race: it is destroyed by construction. §2, fix in §4.
 
 ## §1 – the plateau rule reads a table she left three seasons ago
 
@@ -75,3 +75,34 @@ problem by the same argument.
 ⚠ So the fix is not "show the wrap-up first". The order is right – a question time is stopped on
 outranks a summary. What is wrong is that a REASON THE ENGINE PRODUCED is stored somewhere a later
 command silently erases.
+
+## §3 – what shipped for #1
+
+`plateauViewOf` resolves her table ONCE, through `activeLadderOf` – the engine-side member of the one
+answer `activeLadderOfSnapshot` reads on the screens, not a second definition – and builds both halves
+of the rule against it:
+
+* the window is `seasonHistory[].byTrack[track].endRank`, and a season with no figure in that table
+  (banked before v46, or a table she held no counting result in) is not comparable and is not
+  compared. `plateauReading`'s two existing guards then ARE the refusal: a complete window of
+  `plateauSeasons` plus at least one comparable season before it, or no plateau;
+* `lastRungSeasonIndexOf` takes the same track. It had the identical confusion and in the dangerous
+  direction: `TIER_LADDER` is one strength order over three tables, so a J300 final at sixteen
+  outranked every domestic rung for ever – and the plateau was free to fire in the year a national-
+  table girl cleared the top rung of her own table. It also walked `Object.keys(trophiesByTier)` as if
+  key order were rung order, which held only by luck; it walks `TIER_LADDER` now.
+
+Measured on his save with the probe: `plateauReading` **true -> false**, `retirementDue` **plateau ->
+null**, and `lastRungSeasonIndex` 7 -> 9 (season 9 is her first W final, inside the window – so on his
+career either defect alone was enough to produce the false reading). The card names the table now:
+«Three seasons on the professional table and it has not moved.»
+
+## §4 – what shipped for #2
+
+`snapshot.seasonWrapPrompt` – the season INDEX whose wrap-up is owed this week, or null. Derived by
+`seasonWrapDue` (engine/world/milestones.ts) from `lastSeasonSummary` and the week, both of which the
+world already holds, so **no schema move**: no field, no migration, no fixture. The recap's gate reads
+it instead of the stop reason, exactly as the knock, the ending and the injury report already do, and
+the ORDER in `blockingOverlay` is untouched. The fork is fixed by the same field, by the same
+argument. The dismiss flag names the season and is stored per career (`tb:seasonWrapSeen:<careerId>`)
+– round-16 #19's lesson: a flag reset by every fresh snapshot can only gate a per-advance reason.

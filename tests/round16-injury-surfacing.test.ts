@@ -127,7 +127,22 @@ describe('#19 – the popup is gated on STATE, not on a screen having been open'
   // the behaviour it would prove is proved above at engine level (the state is there) and below at
   // component level (the dialog renders it). What no other test can see is that the gate was rewired,
   // which is the entire fix.
-  const gate = app.slice(app.indexOf('const showInjuryStop'), app.indexOf('const showSeasonSummary'))
+  //
+  // ⚠ THE SLICE ENDS AT THE NEXT GATE'S COMMENT, NOT AT ITS `const` (round-19 #2). It used to end at
+  // `const showSeasonSummary`, which swallowed the whole comment block belonging to THAT gate – and
+  // when round-19 moved the season recap off the stop reason for exactly the reason this file moved
+  // the injury report, the new block's prose said "stopReasons" and the negative assertion below went
+  // red on a paragraph about a different popup. A range that reaches into the next thing is the
+  // hazard CLAUDE.md records; the injury gate ends where its neighbour's explanation begins.
+  const gate = app.slice(
+    app.indexOf('const showInjuryStop'),
+    app.indexOf('// The end-of-season summary popup'),
+  )
+
+  it('the slice is the injury gate and nothing else – an empty or runaway range proves nothing', () => {
+    expect(gate.length).toBeGreaterThan(200)
+    expect(gate).not.toContain('showSeasonSummary')
+  })
 
   it('the gate reads the injury off the snapshot and compares it with the snapshot week', () => {
     expect(gate).toContain('game.snapshot?.injury')
