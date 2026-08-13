@@ -1,10 +1,27 @@
 ---
 type: spec
-status: building
+status: draft
 area: engine/coach
-canonical: true
+canonical: false
 last-reviewed: 2026-08-13
 ---
+
+<!-- ⚠ `status: building` / `canonical: true` when this file was created (4654f80) – neither is a
+     thing. `building` is not one of the six statuses `scripts/context-audit.mjs` accepts, and
+     `canonical: true` additionally demands `status: current` plus a `## Current truth` section. The
+     audit is the FIRST step of `npm run check`, so from that commit the whole gate stopped at step
+     one and nothing behind it ran.
+
+     DRAFT IS THE HONEST STATE, not a workaround: §7's reformulation is not built, §8's measurement
+     has not run, and §6's registered prediction is unresolved. A canonical document asserting
+     current truth while its own prediction is open would be a worse error than the one it replaced.
+
+     ⚠ IT FLIPS AT THE END OF THIS WAVE, and these are the conditions – whoever closes the wave owes
+     this: §6's re-measure recorded against its prediction, §7 shipped, §8 either shipped or ruled
+     out by its own numbers. Then `status: current`, `canonical: true`, and a `## Current truth`
+     section. This note exists because "flip the frontmatter later" is exactly the shape of the nine
+     items the 13.08 audit found silently dropped. -->
+
 
 # The coach's edge: what you are actually buying, per match
 
