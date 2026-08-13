@@ -18,7 +18,9 @@ import { readFileSync } from 'node:fs'
 import { decodeExportFile } from '../src/engine/saveCodec'
 import type { WorldState } from '../src/engine/world'
 import { coachById } from '../src/engine/coach'
-import { ageAtWeek } from '../src/engine/world/age'
+import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import type { TierId } from '../src/engine/season/types'
+import { ageAtWeek, kidAgeYears } from '../src/engine/world/age'
 import { KID_ID } from '../src/engine/world/constants'
 import { weekLabel } from '../src/shared/dates'
 
@@ -44,12 +46,19 @@ async function main(): Promise<void> {
   console.log(`coach now           : ${w.coachId ?? 'self'}${w.coachId ? ` – ${coachById(w.seed, ageAtWeek(w.week), w.coachId)?.name ?? '?'} (${coachById(w.seed, ageAtWeek(w.week), w.coachId)?.tier ?? '?'})` : ''}`)
   console.log(`rank (wta / itf)    : #${w.kidRankWta ?? '–'} / #${w.kidRank ?? '–'}`)
 
-  section('WHAT SHE HAS EARNED, PER SEASON – the column the bench calls prize p50')
-  let career = 0
-  console.log('season   points   wins-losses   note')
+  section('WHAT SHE HAS EARNED, PER SEASON – with the prize DERIVED from her own results')
+  // ⚠ NOT DERIVED FROM `world.results` – that list is PRUNED to the ranking's rolling window, so on
+  // a twelve-season save it holds only the last one and every earlier season would read $0. The
+  // money is banked on the season row itself (`spentCents` / `earnedCents`, v28), optional because
+  // rows written before v28 have no gross figure and none can be invented – so an older row prints
+  // silence rather than a zero, which is that field's own stated contract.
+  console.log('season   age    points   wins-losses        earned         spent          net')
   for (const s of w.seasonHistory) {
+    const row = s as unknown as { spentCents?: number; earnedCents?: number; fundsDeltaCents?: number }
+    const age = kidAgeYears(s.seasonIndex * WEEKS_PER_YEAR + 26, p.birthMonth)
+    const cell = (v: number | undefined): string => (v === undefined ? '–' : money(v))
     console.log(
-      `  ${String(s.seasonIndex).padStart(2)}     ${String(s.points).padStart(5)}     ${String(s.wins).padStart(3)}-${String(s.losses).padEnd(3)}`,
+      `  ${String(s.seasonIndex).padStart(2)}     ${String(age).padStart(2)}    ${String(s.points).padStart(5)}     ${String(s.wins).padStart(3)}-${String(s.losses).padEnd(3)}   ${cell(row.earnedCents).padStart(12)}  ${cell(row.spentCents).padStart(12)}  ${cell(row.fundsDeltaCents).padStart(12)}`,
     )
   }
 
