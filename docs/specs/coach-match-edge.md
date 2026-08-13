@@ -96,6 +96,36 @@ turns up. Since the value is a property of the man, that search would always suc
 employing him – that is what scouting is – and it arrives far too late to shop with. The reveal is
 the payoff of the budget lottery and the reason the corridor is worth reading at all.
 
+### 4a. What shipped, and where
+
+**The plaque is the hired coach's own card in the market list (`.cm-row.current`), not Home's coach
+note.** Both were real candidates. Home's note is a QUOTE – a portrait, one line of his read on her,
+a handwritten sign-off – it is 166px wide at 375px, and it is the surface already fought over twice
+for text sitting on the portrait (round-17 #14, round-18 #1); it has no room to spend. The market
+row is where the corridor is being read, so the rung's band and the realised number land two lines
+apart on the same card. A number shown anywhere else would be a fact with nothing to compare it to.
+
+The three states, verbatim:
+
+| state | copy |
+| --- | --- |
+| any card, hired or not | `+0.5-0.9% per match`, beside `+1.7-3.5% a season` on one wrapping line |
+| hers, before the reveal | `Too early to tell where in that band – 4 weeks of 52.` |
+| hers, after it | `A season together – the number is +0.62% per match.` |
+
+Corridors print to one decimal (a bracket is a design constant); the realised value prints to two (it
+is a measurement of one person). Neither sentence judges the man – a revealed 0.21 is reported in the
+same words and the same colour as a 0.68 – and neither mentions her skills, because the whole
+corridor is under half a skill point against a visibility floor of 3 (§3).
+
+**Measured** (headless Chromium, real webfonts, real 162x264 portraits, DPR 2 – the numbers and the
+mutation ledger are in `tests/component/coach-edge-card.test.ts`): first ink at 75.00px against a
+62px strip = **12.00px of clearance on every card at 320px and 375px**, unchanged from before the
+slice. Row height at 320px: ordinary card 109.3 -> 122.3 (+13.0, one wrapped line), the hired card
+123.5 -> 168.9, and identical before and after the reveal, so the card does not jump when the number
+lands. That the clearance held is a debt round-18 #2 paid: before the strip had a width, a taller row
+made the portrait WIDER, and two added lines would have eaten the gap.
+
 ## 5. Invariants this must not break
 
 1. **Zero MAIN draws.** The edge is post-draw arithmetic on a purpose-scoped sub-stream. The frozen

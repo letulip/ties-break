@@ -106,6 +106,23 @@ function formatUplift([lo, hi]: [number, number]): string {
   return `+${lo.toFixed(1)}-${hi.toFixed(1)}% a season`
 }
 
+/** WHAT THE PRICE BRACKET BUYS PER MATCH (docs/specs/coach-match-edge.md §4), in the owner's own
+ *  shape: «может по-проще "+0.3-0.6% per match" или вроде того, чтобы не менять ничего особо на
+ *  карточке, можно даже добавить к текущему рядом подписать возле сезона».
+ *
+ *  ⚠ IT IS THE RUNG'S CORRIDOR AND NEVER ONE MAN'S NUMBER, which is the whole of §4: a number on an
+ *  unhired card turns the market into a shop window with the prices written on the back - hire,
+ *  read, fire, repeat until the 0.7 budget coach turns up - and since the value is a property of the
+ *  PERSON that search would always succeed. `edgePct` arrives from the engine already cut to the
+ *  tier (`COACH_EDGE_CORRIDOR_PP`), so this screen cannot leak an individual value even by mistake.
+ *
+ *  ONE DECIMAL, because the corridors are stated in tenths and a second digit here would imply the
+ *  bracket is measured to a precision it does not have. The realised value below quotes two - it IS
+ *  a measurement of one person, and that is exactly the difference the two formats carry. */
+function formatEdge([lo, hi]: [number, number]): string {
+  return `+${lo.toFixed(1)}-${hi.toFixed(1)}% per match`
+}
+
 // --- the style lens (design decision 2) ---------------------------------------------------------
 // `null` means "her own style", which is what the engine already computed the pills against. Pick
 // any other style and every pill is re-read client-side from the SAME rule the engine used, so the
@@ -158,6 +175,55 @@ const billing = computed(() => game.snapshot?.coachBilling ?? null)
 // so it falls as she fills her ceiling and as the age curve eases - honestly, and until now
 // silently. Engine-computed (`coachRoomNote`); this screen only prints it.
 const roomNote = computed(() => game.snapshot?.coachRoomNote ?? '')
+
+// --- THE PLAQUE: WHAT THE COACH SHE ACTUALLY HAS TURNED OUT TO BE WORTH ------------------------
+//
+// ⚠ IT GOES ON HIS OWN CARD IN THIS LIST, not on Home's coach note, and the choice is between two
+// real candidates. Home's note is a QUOTE - a portrait, a line of his read on her, a handwritten
+// sign-off - and it is 166px wide at 375px; it is also the surface that has already been fought over
+// twice for text sitting on the portrait (round-17 #14, round-18 #1), so it is the one place on the
+// app with no room to spend. The market row, by contrast, is where the corridor is being read: the
+// rung's band and the realised number land two lines apart on the same card, which is the entire
+// payoff of the budget lottery («есть тихие никому не известные гении?»). A number that appeared
+// somewhere else would be a fact with nothing to compare it against.
+//
+// ⚠ THE ENGINE OWNS THE REVEAL. `coachEdgeView` decides `revealed` from `coachSinceWeek`, which is
+// the SAME "weeks together" the radar's fog reads - so a coach cannot be new to his plaque and old
+// to her confidence on the same Tuesday. This screen never asks "has it been a season"; it asks
+// whether there is a number, and prints one sentence either way.
+//
+// ⚠ AND NEITHER SENTENCE JUDGES THE MAN. A revealed 0.21 at the budget rung is a fact reported
+// plainly and a revealed 0.68 is not a fanfare - «мы ни за что не наказываем» read as a rule about
+// copy, and the same standing ruling `offers.ts` states for this family: a surface explains a price
+// and never leans on the player. Both states are drawn in the same colour for exactly that reason -
+// painting the revealed line in the accent would make a low draw read as bad news.
+//
+// ⚠ NOR MAY IT PROMISE THE RADAR. The whole corridor is under half a skill point and the radar's
+// visibility floor is 3 (spec §3, TRAINING_FOG_FLOOR), so "you will see it in her game" is a lie the
+// screen could not back. The copy stays where the mechanic is: per MATCH.
+const edge = computed(() => game.snapshot?.coachEdge ?? null)
+const plaqueLine = computed<string>(() => {
+  const e = edge.value
+  if (!e) return ''
+  // ⚠ TWO DECIMALS, AND IT IS THE POINT OF THE FORMAT. The corridor above is quoted in tenths
+  // because a bracket is a design constant; this is one uniform draw off one person's id, and the
+  // digit that separates a 0.62 from a 0.55 inside the same band is the thing a season bought.
+  if (e.revealed && e.realisedPct !== null) {
+    return `A season together – the number is +${e.realisedPct.toFixed(2)}% per match.`
+  }
+  // TOO EARLY TO TELL IS AN ANSWER, not a blank. The alternative - an empty line, or the corridor
+  // repeated - reads as broken on the one card the player is most invested in. "That band" points at
+  // the corridor printed two lines above, so the sentence says exactly what is unknown; the counter
+  // says when it stops being unknown, in the engine's own numbers.
+  //
+  // ⚠ AND ITS LENGTH IS MEASURED, NOT TASTE. Browser-measured at 320px against the real fonts: this
+  // wraps to two lines and so does the revealed sentence, so the card does not jump when the reveal
+  // lands. The fuller «4 weeks TOGETHER of the 52 it takes» is 62 characters, wraps to three, and
+  // added 14px to the hired card on the narrowest phone for one word. The numbers are in
+  // tests/component/coach-edge-card.test.ts.
+  const weeks = `${e.weeksTogether} week${e.weeksTogether === 1 ? '' : 's'}`
+  return `Too early to tell where in that band – ${weeks} of ${e.revealAfterWeeks}.`
+})
 
 type SortMode = 'fit' | 'price'
 const sort = ref<SortMode>('fit')
@@ -513,8 +579,23 @@ function scrollToTier(tier: CoachTier): void {
             <span class="cm-tags">{{ PLAY_STYLE_LABEL[r.style] }}</span>
           </span>
           <!-- WHAT THE RUNG IS WORTH TO HER, computed from her own headroom. Its own line, because
-               it is the number the owner asked for and it must never be the thing that truncates. -->
-          <span class="cm-uplift">{{ formatUplift(r.upliftPct) }}</span>
+               it is the number the owner asked for and it must never be the thing that truncates.
+
+               ⚠ AND THE PER-MATCH CORRIDOR SITS BESIDE IT, not under it in a block of its own - the
+               owner asked for the smallest possible change to this card and for the new figure to be
+               written next to the season one. So this is ONE wrapping row rather than two rules: at
+               the content column's full width the two read side by side, and on a phone the second
+               drops onto its own line, which is the only thing that fits there. It is the RUNG's
+               band, never this coach's own number (see `formatEdge`). -->
+          <span class="cm-uplift">
+            <span class="cm-uplift-season">{{ formatUplift(r.upliftPct) }}</span>
+            <span class="cm-edge">{{ formatEdge(r.edgePct) }}</span>
+          </span>
+          <!-- THE PLAQUE, and only the coach she actually has has one. Before a full season it says
+               so and says when; after it, it carries the realised number for this person. See the
+               `plaqueLine` block in the script for why it lives here rather than on Home, and for
+               the register both sentences are held to. -->
+          <span v-if="r.current" class="cm-plaque">{{ plaqueLine }}</span>
           <!-- WHAT HE DOES ABOUT HER BODY (load slice). The card used to make exactly one claim - the
                development uplift - so the two differences that wave introduced (how good his medical
                team is, and how much of the deciding he takes off you) were spent money with nothing on
