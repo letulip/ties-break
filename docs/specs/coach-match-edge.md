@@ -156,3 +156,78 @@ Prediction, registered now: the top rows stay at zero (the wall spec measured th
 to 2.1 pp), top-250 rises a few points, and `wealthy·high` becomes solvent net of its bill – the one
 cell the measurement already showed flipping. If the top rows move, something is wrong with the
 implementation, not right with the design.
+
+## 7. The reveal says a PLACE, not a number (owner, 13.08)
+
+Shipped copy said «A season together – the number is +0.74% per match.» He caught it: «как это
+вообще измеримо, если абстрагироваться от нашей механики?»
+
+**He is right, and the objection is stronger than the fourth wall.** The value is not observable in
+principle. At ~0.7 pp over a fifty-match season it is buried orders of magnitude under the variance
+of her own results; separating a 0.62 coach from a 0.74 one would take thousands of matches. A
+sentence that states it to two decimals claims a precision nothing in the world could produce.
+
+**The corridor on the card is NOT the same error, and the distinction is what saves it.**
+`+0.5-0.9% per match` is a CLAIM A MARKET MAKES ABOUT A PRICE BRACKET – like the range in a job
+advert. A claim need not be observable. «His number is 0.74» is offered as A MEASUREMENT OF ONE
+PERSON, and a measurement must be. So the bracket stays (it is his own phrasing) and the reveal
+changes.
+
+**The reveal names his PLACE IN HIS OWN BRACKET**, which is exactly the thing a family really does
+learn – by working with him for a year and by talking to the other parents. That is also why it
+honestly takes a season: you have to be inside the circle to hear it.
+
+| where he fell in his corridor | the sentence |
+| --- | --- |
+| upper third | *the other parents were right: he is better than his price* |
+| middle | *he is exactly what his price says* |
+| lower third | *he sits at the lower end of his bracket* |
+
+None of the three praises or blames – a low draw is reported in the same words and the same colour
+as a high one. The design survives intact: a lucky `budget` coach still reads as a find (the top of
+his bracket IS a typical `high`), and it still cannot be shopped for.
+
+## 8. Time together – approved for measurement, 13.08
+
+«Да, заводи второй вариант с замером.» Two different things grow with tenure and only one of them is
+a balance change:
+
+**8a. The CONFIDENCE of the sentence – free, and true.** One season is a small sample and the copy
+should hedge accordingly («it looks like…»); by the third the hedge goes. This is the radar's own
+fog applied to a person – confidence grows with observation – and it costs nothing, changes no
+number, and makes a long relationship worth something on screen by itself. Ships with §7.
+
+**8b. The EDGE ITSELF grows – the balance change, and what the measurement is for.** A coach who has
+had her for years knows her serve, her temper and her calendar. This is the only mechanic that
+argues against churning coaches, and churn is what the owner's whole «всю карьеру занимаются с
+тренерами» is aimed at.
+
+Shape, to be swept rather than assumed:
+
+* **A multiplier on HIS OWN drawn value**, `pp × (1 + g(seasons))`, not a drift toward the top of
+  the corridor. A drift would erase the lottery – every coach would end up at his ceiling and the
+  draw would stop meaning anything. A multiplier keeps the ordering exactly: a good coach stays
+  better than a poor one, and both are worth more for having stayed.
+* **`g` saturates.** The knowledge of a person is mostly acquired early; a curve that keeps paying
+  at season eight would make a coach an annuity.
+* **Sweep the dose**: `g(3) ∈ {0.2, 0.5, 1.0}` – +20%, +50%, +100% by the third season.
+
+**Two open questions, with recommendations:**
+
+1. *Does firing and re-hiring the same man reset the clock?* Recommend YES for tenure (the working
+   relationship restarts) while his DRAWN VALUE stays what it always was – the man is unchanged, the
+   partnership is not. It also keeps the fire-rehire path from being a way to bank tenure cheaply.
+2. *Does the reveal move when tenure moves it?* Recommend NO – the sentence is about who he IS, and
+   §7's placement is drawn from his base value, not from what tenure has added.
+
+⚠ **Registered prediction, before the sweep, and it is deliberately unflattering to the idea:** at
+`g(3) = 0.2` this will be **invisible in outcomes** – the whole edge is worth ~$40-50k over a career
+and does not touch the wall, so a fifth of it is nothing. I expect it to stay invisible at 0.5 and to
+become marginally visible only around 1.0, which is where a `budget` coach of six years would be
+worth a typical `elite` one and the ladder starts to blur. If that is how it measures, the honest
+conclusion is that 8b's product is NARRATIVE – a reason to keep a man, not a number that changes
+her career – and it should ship small and be described as what it is, or not ship at all. The
+measurement decides, not this paragraph.
+
+⚠ **And the framing is fixed regardless of the number.** «Мы ни за что не наказываем»: this is a
+reward for staying, never a penalty for leaving. No screen may say what she lost by changing coach.
