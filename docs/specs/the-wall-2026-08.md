@@ -1,0 +1,317 @@
+---
+type: spec
+status: draft
+area: engine/season
+canonical: false
+last-reviewed: 2026-08-12
+---
+
+# The wall: skill must buy ladder after eighteen
+
+**Design + measurement plan. Nothing ships from this document without its own numbers.** This is
+the "layer 2" that three measurements in a row have pointed at, and the coach conversation cannot
+move until it does.
+
+## 0. The wall, as measured
+
+* `ladder-vs-targets-2026-08.md`: **53.1%** of careers clear `wta250`'s door (#200), **0.6%** clear
+  `wta500`'s (#120), **0.0%** enter a Slam (#104) – best rank in 160 careers was #115. The July
+  targets say top-100 should be **3-6%**; measured **0.0%**. "A door 1.6× tighter costs 4× the
+  reach – the acceptance list is not the cause."
+* `growth-age-curve-2026-08.md`: 18→26 the median career gains **2.2 skill points** and never
+  reaches a new rung. Rank is made by table choice and health, not the racket.
+* `coach-as-the-eye.md` §Measured: aim redistributes a CONSERVED growth rate – a perfect oracle is
+  worth **+1.6 summed points**, so no development-side lever can reach the wall. Falsified by its
+  own pre-registered test; the honest survivor of the coach ladder is `budget`'s physio.
+* The owner's own careers show the wall from inside: Naomi at wta250 – eight entries, five early
+  exits, best a round or two – against a flat-field model giving her **85.2%** per match. The BAND
+  is not the DRAW: a wta250 draws the top of the top, she arrives unseeded and meets seeds early.
+* And the field's ceiling sits above hers by construction: the professional top storey's core is
+  **[67, 77]** (`fieldPros.ts`) while a typical career's wings cap in the low-to-mid 60s
+  (`potentialBand [4, 26]` over starts of 40-58). The best girls she can ever be are the WORST
+  girls the top storey is made of.
+
+## 1. The root, decomposed
+
+Three candidate roots, not one, and the measurement must separate them:
+
+* **R1 – the field outclasses her attainable build.** If the top storey is unreachable by any
+  realisation of her potential, no door change helps: she loses the quarter-final on the court.
+* **R2 – rank compounds and skill does not.** Points buy seeds, seeds buy easier draws, easier
+  draws buy points. A late arrival (the junior trap) or one bad season resets the compounding, and
+  2.2 points of post-18 growth cannot restart it.
+* **R3 – the doors are absolute.** `acceptsRank` reads one number. There is no route for "playing
+  better than her rank" to enter a draw – no form-based acceptance, no wild card.
+
+## 2. The levers, priced for measurement
+
+### L1 – ⭐ THE OWNER'S: the coach adds a small per-match edge, for as long as he is paid
+
+His proposal, 12.08, verbatim in the numbers: **budget 0.3-0.6% · middle 0.5-0.8% · high 0.7-1.0%
+· elite 0.9-1.2%** to the chance of winning, career-long while employed; later, a per-tournament
+top-up when the coach travels with her, at double the travel cost.
+
+**Why this shape can work where the eye could not.** The eye redistributed a conserved sum once a
+season; this edge applies to EVERY match and a career holds ~450-500 of them. It compounds exactly
+where the wall lives – converting the R2/QF exits at her top rung into deep runs, which is where
+the points are. It is undrainable knowledge: fire the coach and the edge leaves with him, which is
+the owner's whole-career market. And it makes "the coach must deliver when she plays and wins"
+LITERALLY true: the product is delivered per match played.
+
+**The translation, stated before anyone builds a dial that cannot exist.** A Markov engine has no
+"win chance" knob – matches are decided point by point. The honest implementation is a small edge
+on her ON-COURT attributes at the composition point (`kidMatchPlayerFor` – the same seam kit and
+condition already use), **calibrated per tier so her mean match-win probability against her actual
+field moves by the owner's percentage**. Zero extra draws, replays byte-identical, MAIN untouched –
+the same invariance argument kit shipped with.
+
+**The fiction that carries it** – named, because this deliberately crosses "money buys speed, never
+tennis": it is not the parent buying wins, it is the coach in the corner – scouting, tactics, the
+word between sets. That is coaching, and it is the owner's design call to make.
+
+**Flat first, decay later.** He floated lowering the edge near her ceiling. Measure FLAT – it is
+legible ("with me she wins N% more", one sentence on the card) and the eye's post-mortem says
+ceiling-coupled subtleties drown in the fog. A decay arm can be swept once flat numbers exist.
+
+### L2 – align her attainable build with the field's top storey
+
+The `[10, 26]` floor (task #101, measured, held for a difficulty layer) and/or re-deriving the top
+storey's core from her actual reachable distribution. Attacks R1 directly. Expensive: every
+calibration downstream of the field moves.
+
+### L3 – doors that read more than rank
+
+A form-based acceptance lane or wild cards: N slots per draw for players whose recent results
+outrun their rank. Attacks R3, models a real tour mechanism, and gives a hot streak somewhere to
+go. Needs care: the on-ramp measurement (W3-ONRAMP) showed held slots barely move outcomes.
+
+### L4 – the points table's shape
+
+Deep runs at her reachable rungs converting harder into rank. Attacks R2 without touching matches.
+
+## 3. The measurement, pre-registered
+
+One bench, arms on paired seeds, 30+ per cell, all four backgrounds; the ONLY difference between
+arms is the lever setting.
+
+⚠ **Scaffolding exception, stated openly:** unlike the pure-read sweeps, L1 cannot be driven
+through any existing public API – the knob does not exist. The measurement worktree may add the
+smallest possible hook (a per-tier factor at the composition point, default = exactly today), and
+MUST prove the default inert: the frozen MAIN capture re-derives AND one full career reproduces
+byte-identically with the hook in place at its default. Shipping the hook is a separate decision
+that waits on these numbers.
+
+Arms: baseline · L1 at the owner's four bands (midpoints first: 0.45 / 0.65 / 0.85 / 1.05%) · L1
+at 2× those numbers (to expose the dose-response curve, not to propose it).
+
+Report, per arm:
+
+1. **The July table, re-measured.** Top-250 / top-100 / wta500-cleared / Slam-entered rates beside
+   the targets. The middle is ALREADY 3× over – an arm that fixes the top by blowing the middle
+   further out is reported as exactly that.
+2. **Does the coach finally pay for himself?** Net prize minus bill, per tier per background, with
+   self-coaching as control – `what-money-buys` §2's table re-run. This is the owner's own test:
+   «тренер должен стоить, но и результат давать».
+3. **Where the edge lands.** Match-win delta at her top rung vs everywhere; R2/QF conversion at
+   wta250; seeds reached. If the edge shows up at local events and not at the wall, it is tuned
+   wrong, not working.
+4. **Solvency.** The bill still competes with the plane ticket; `working` cells must not collapse.
+5. **RNG.** Frozen capture (41550 / `e6b0c709`) re-derived; no draw-count change anywhere.
+
+## 4. What this is not
+
+* Not a rescue of the eye – that spec keeps its falsification and stays as the record.
+* Not inflation, not a price re-tune (task #103 stands separately).
+* Not the junior-trap fix (the `enterPointBand` ceiling and the fork's table-blindness are their
+  own items) – though L1 interacts with it and the report must say how.
+
+## 5. Open, and the owner's to answer after the numbers
+
+1. The exact per-tier numbers (his bands are the sweep's centre, not a commitment).
+2. Flat or decaying near the ceiling.
+3. The travelling-coach top-up: phase 2, needs UI and a per-event decision – spec after L1 lands.
+4. Whether L1 alone reaches the July table's top rows, or L2/L3 must join it – the dose-response
+   arm exists to answer exactly this.
+
+## Measured – L1 against the wall (12.08.2026)
+
+**`tools/wall-l1-bench.ts`, measured on the L1 measurement branch off `wave/flags-grant` head
+`5d40e0f`.** The scaffolding hook is `COACH_MATCH_EDGE` / `COACH_MATCH_EDGE_DECAY` in
+`src/engine/world/player.ts` – an additive delta on her five on-court attributes at the composition
+point, default inert. Reproduce:
+
+```bash
+npx vite-node tools/wall-freeze-probe.ts                                  # inertness, ~30s
+npx vite-node tools/wall-l1-bench.ts -- --calibrate                       # the dial, ~2 min
+npx vite-node tools/wall-l1-bench.ts -- --arms base,aflat,adec,bctl,bedge --out <dir>   # ~70 min, resumable
+npx vite-node tools/wall-l1-bench.ts -- --report <the same dir>
+```
+
+### M0 The scaffolding exception, discharged first
+
+§3 demanded two proofs before any arm ran, and both were run and passed BEFORE the hook was ever
+set non-zero:
+
+1. **The frozen MAIN capture re-derives**: `tests/condition.test.ts` green with the hook in place
+   at its default – 44/44, the pinned **41550 draws / `e6b0c709`** asserted inside.
+2. **A full 208-week career reproduces byte-identically**: `tools/wall-freeze-probe.ts` (written
+   before the hook existed, deliberately ignorant of it) run at the base commit and at the hooked
+   commit – sha256 of `JSON.stringify(world)` at weeks 52/104/156/208, two careers (working ·
+   self-coached and middle · middle coach, `player` policy), all ten hashes identical, `diff`
+   clean.
+
+And the arms cannot touch MAIN by construction: kid brackets run on `seed:kidtour:<event.id>` /
+`seed:<event.id>:r<n>` and AI brackets on `seed:aitour:<event.id>`, so the edge moves match
+OUTCOMES only – the same invariance argument kit and condition ship with.
+
+### M1 The dial – calibration, tier -> delta -> measured ΔP
+
+The winrate-read methodology, exactly as §2 L1 prescribes: 1512 sampled states over 16 self-coached
+careers (8 seeds x working/middle, 4x a season, at her CURRENT rung), her mean match-win
+probability against the field that rung actually draws (`universeForTier` + `isEntrantBand` +
+`rivalConditions`, hard court – the neutral surface). Career-long mean P(0) = **71.35%**, and the
+dose-response in delta is linear to the eye (+1.897 pp at delta 1.0, +3.726 at 2.0):
+
+| owner target (pp per match) | delta* (skill points, all five wings) | ΔP at delta* (check) |
+| --- | --- | --- |
+| budget mid **0.45** | **0.234** | 0.450 |
+| middle mid **0.65** | **0.339** | 0.650 |
+| high mid **0.85** | **0.444** | 0.850 |
+| elite mid **1.05** | **0.549** | 1.050 |
+| 2x budget 0.90 | 0.470 | 0.900 |
+| 2x middle 1.30 | 0.682 | 1.300 |
+| 2x high 1.70 | 0.895 | 1.700 |
+| 2x elite 2.10 | 1.110 | 2.100 |
+
+So the owner's whole ladder – 0.45 to 1.05 pp – costs **a quarter to half a skill point** on every
+wing, and even the 2x elite arm is 1.11 points. For scale: the visibility floor on one wing is 3
+points (`TRAINING_FOG_FLOOR`), so no setting in the sweep is ever visible on the radar. Statically,
+the same delta lands remarkably flat across the ladder (ΔP at delta 0.5: 0.89-1.20 pp at every rung
+she plays) except exactly at the W on-ramp she dominates (w15: P(0) 86.8%, ΔP 0.59) – the edge is
+worth slightly LESS per match at the rungs above wta125 (0.89-0.92) than at the domestic rungs
+(1.15-1.20), because the pp-per-point of an edge shrinks as the matchup leaves the coin-flip zone
+in either direction. No calibration sample ever reached wta500 – the wall, visible from inside the
+calibration.
+
+### M2 Predictions, registered after the dial and BEFORE any career arm ran
+
+Numbered against §3's report items. Written with the calibration table above on the desk and zero
+arm careers run; the measured sections below quote these verbatim in their verdicts.
+
+1. **July table.** Baseline re-derives the ladder-vs-targets shape at these cells (top-250 far
+   over 15-25%, top-100 a hard 0%, wta500-cleared ≲2%, Slam 0). At the owner's midpoints
+   (0.45-1.05 pp) the TOP does not leave zero: top-100 0-2%, wta500-cleared under ~5%, Slam ~0 –
+   and the middle row creeps FURTHER over target by 0-6 points, reported as exactly that. At 2x
+   (2.1 pp) the top moves visibly for the first time: wta500-cleared several %, top-100 1-5%, a
+   first Slam entry possible.
+2. **Net of the bill.** The edge adds prize wherever delivered, but above `budget` the bill still
+   swamps it: middle/high/elite stay net-negative against self-coaching at working and middle
+   backgrounds; the insolvent cells (working·high/elite, middle·elite, wealthy·elite) stay
+   insolvent – the bankruptcies land at 14-16, before professional rungs pay anything the edge
+   could compound. Budget remains the only rung anywhere near paying for itself.
+3. **Where the edge lands.** Statically: least at the on-ramp she dominates, most mid-ladder –
+   measured in M1 already. Lived: match-win % at wta125-wta500 up ~0.5-2 pp at midpoints; QF->SF
+   conversion at wta250 up a few points, clearly visible only at 2x.
+4. **Solvency.** Layer A moves no solvency row (no bill – prize can only rise). Layer B
+   reproduces what-money-buys §6's solvency shape; no cell is rescued by the edge.
+5. **RNG.** Already discharged in M0; re-checked after the arms (the capture cannot move, because
+   the edge is post-draw arithmetic).
+
+Dose-response and decay: monotone in dose on every ladder row; the July top row (3-6% top-100) is
+NOT reachable inside the owner's bands and becomes approachable only around 2x elite. Decay (floor
+0.5): by 18 the median remaining-headroom share should sit near ~0.3, so the delivered edge in the
+wall years is ~0.55-0.67x the flat dose – decay should land BETWEEN flat at the same tier and flat
+one tier lower. If flat and decayed produce the same careers anyway, that is a finding (pick by
+legibility); if they diverge, the divergence should be at the top rows, where the wall years are.
+
+### M3 The July table, measured – 51 cells, 1530 careers, 30 seeds per cell
+
+Column key: `clr250`/`clr500` = best rank cleared that tier's door (#200 / #120); `ent500` =
+actually ENTERED a wta500 event; `best`/`p50` = best WTA rank, cell minimum / median.
+
+Layer A – the edge in isolation, self-coached, no bill, pooled working+middle (n = 60 per dose):
+
+| dose (pp/match) | top-250 | top-100 | clr500 | ent500 | Slam | best | p50 book pts |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline 0 | 86.7% | **0.0%** | 0.0% | 0.0% | **0.0%** | #131 | 427 |
+| flat 0.45 (budget) | 91.7% | **0.0%** | 3.3% | 1.7% | **0.0%** | #114 | 439 |
+| flat 0.65 (middle) | 90.0% | **0.0%** | 1.7% | 1.7% | **0.0%** | #113 | 430 |
+| flat 0.85 (high) | 88.3% | **0.0%** | 1.7% | 0.0% | **0.0%** | #117 | 434 |
+| flat 1.05 (elite) | 86.7% | **0.0%** | 0.0% | 0.0% | **0.0%** | #122 | 434 |
+| flat 2.10 (2x elite) | 93.3% | **0.0%** | 0.0% | 0.0% | **0.0%** | #124 | 440 |
+
+**The top rows do not move at ANY dose – including 2x elite.** Top-100 is 0 of 1530 careers in
+every cell of the sweep; Slam is 0 everywhere; the clr500/ent500 flickers at low doses are single
+careers (1-2 of 60), indistinguishable from noise and absent at the HIGHER doses. What the edge
+does buy, honestly: top-250 +5 pp, the wta250 door (clr250) 63-73% → 80-93%, best rank ~10-17
+places, prize +$20-34k at the top doses. Real, marginal, and entirely below the wall.
+
+M2 prediction 1 is thereby HALF FALSIFIED and the record keeps it: the midpoint half was right
+(top stays zero), the 2x half was wrong – "wta500-cleared several %, top-100 1-5%, a first Slam
+entry possible" happened at 0.0/0.0/0.0.
+
+### M4 Net of the bill – the edge's own product, paired against the same hire without it
+
+`bctl` (real hire, edge OFF) vs `bedge` (same hire, edge ON) isolates what the edge itself adds to
+a paid coach; both are paired per-seed against the same girl self-coached.
+
+| cell | Δprize vs self, no edge | Δprize vs self, with edge | the edge's product | prize−bill flips? |
+| --- | --- | --- | --- | --- |
+| middle bg · budget | +$41k | +$93k | **+$52k** | already positive |
+| middle bg · middle | −$83k | −$39k | **+$44k** | still negative |
+| wealthy bg · high | +$164k | +$210k | **+$46k** | **−$39k → +$21k** |
+| wealthy bg · middle | +$155k | +$162k | +$7k | positive both |
+| working bg · budget | −$247k | −$206k | +$41k | negative both |
+| any bg · elite | −$414..−$535k | −$450..−$584k | – | insolvent 0-17% |
+
+The edge is worth **≈ $40-50k of prize per career** wherever the family survives the bill – against
+bills of $232k (budget) to $804k (high). One genuine flip: at a wealthy background the HIGH coach
+now covers his own bill (prize−bill −$39k → +$21k) – the first cell in any measurement where a
+coach above budget literally pays for himself. Everything what-money-buys said about the market's
+SHAPE still stands: at a working background even the budget coach wrecks the career (top-250 86.7%
+→ 46.7%, the retainer eats the plane tickets); elite bankrupts 83-100% of families by 18 at every
+background, wealthy included. The edge gives every rung a real product; it repairs the market only
+where the bill was already survivable. The prices are task #103's problem, not L1's.
+
+### M5 Where the edge lands, lived
+
+Match-win % by rung, baseline → flat 2.10 (the LARGEST dose): w15 82.8 → 83.8 · w75 63.1 → 64.8 ·
+wta125 41.8 → 43.4 · **wta250 26.8 → 26.8**. The edge delivers about half its calibrated size
+mid-ladder and NOTHING at wta250 – exactly M1's static curve (pp-per-point shrinks away from the
+coin-flip zone, and 27% is far under it). And she still almost never ENTERS wta500 – 0-2 entries
+per 60-career pool, rank at wta250 entry #186-189 (unseeded) in every arm – so there is nothing at
+the wall for the edge to compound on. Prediction 3 confirmed in shape.
+
+### M6 Solvency
+
+Layer A: zero bankruptcies in 27 cells (no bill – prize can only rise). Layer B reproduces
+what-money-buys §6 exactly; no cell is rescued by the edge. Prediction 4 confirmed. RNG
+(prediction 5): re-verified after the arms – capture 41550/`e6b0c709` green, freeze probe
+byte-identical with the hook in place vs stashed (both re-run by the coordinator, not taken on the
+agent's word).
+
+### M7 Flat vs decay – the registered branch fires
+
+Decay delivered 0.691x the flat dose at 18 and 0.616x at 22 (floor 0.5, measured multiplier), and
+produced careers statistically indistinguishable from flat at the same nominal dose in every column
+of every table – deltas within single-career noise, no divergence at the top rows because NOTHING
+diverges at the top rows. So the finding M2 pre-registered: **flat and decay are the same game;
+pick by legibility.** Flat is one honest sentence on the card («+0.3-0.6% per match»). Decay costs
+a harder sentence and buys the owner's fiction («скилл растёт – добавка падает, но всегда есть»)
+at zero balance cost. Either ships safely.
+
+### M8 Verdict – the four answers §5 was waiting for
+
+1. **The owner's numbers work as a coach product.** At his bands the coach delivers ~+1 pp per
+   match mid-ladder, +5 pp of top-250, ~10-17 best-rank places, +$40-50k prize – and makes
+   wealthy·high the first above-budget cell that pays for itself. «Тренер должен стоить, но и
+   результат давать» is now measurably true wherever the family can afford him at all.
+2. **L1 does not touch the wall.** Top-100 and Slam stay 0.0% at every dose including 2x elite.
+   The roots confirmed are R1+R2: she wins 26.8% at wta250 with or without the edge, and never
+   enters wta500 for it to compound. No per-match percentage inside (or at twice) the owner's
+   bands breaks a 5-15 point attribute gap against the top storey.
+3. **Flat vs decay: same careers – owner's pick on pure legibility/fiction grounds.**
+4. **§5.4 answered: L1 alone does NOT reach the July top rows.** If the July targets stand, L2
+   (align her attainable build with the field's top storey) and/or L3 (doors that read form, plus
+   somewhere for a hot streak to go) must join it. L1 is still worth shipping on its own merits –
+   it is the coach's product, not the wall's breach.

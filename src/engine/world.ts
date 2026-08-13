@@ -224,6 +224,7 @@ import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualP
 // W3-ACT2 §6 - the mandatory regime. Re-exported below under its own names so the worker, the
 // snapshot and the tools read one implementation, exactly as entryCaps is.
 import {
+  buildTourBriefing,
   chargeMandatoryPenalty,
   dueMandatoriesAt,
   isMandatoryTier,
@@ -236,9 +237,11 @@ import {
   settleMandatoryDeadlines,
   settleMandatoryMisses,
   settleMandatoryQuota,
+  settleTourSeasonNotice,
   suspensionWeeksLeft,
 } from './world/mandatory'
 export {
+  buildTourBriefing,
   chargeMandatoryPenalty,
   dueMandatoriesAt,
   isMandatoryTier,
@@ -257,8 +260,8 @@ import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, birthdayWeek, birthdayTurning }
 // ⭐ v48 – THE BIRTHDAY POPUP AND THE GIFT (docs/specs/birthday-and-gifts.md). Re-exported under the
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
-import { birthdayOffer, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_DAY_TOGETHER } from './world/birthday'
-export { birthdayOffer, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_DAY_TOGETHER }
+import { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
+export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -2650,6 +2653,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         `isSuspendedAt`, so a suspension handed down this week is in force for the rest of it.
   settleMandatoryDeadlines(world)
   settleMandatoryMisses(world)
+  // ⭐ round-18 #8 – ...AND THE REGIME ITSELF IS ANNOUNCED, not only its individual obligations. One
+  //         letter per season she is bound in, written on the first week of that season in which she
+  //         is (its opening week in every year but the first, the crossing week in the first). It is
+  //         ABOVE the two settlements on purpose, so the season a career crosses in cannot have a due
+  //         notice reach the inbox before the letter that explains what a due notice is. The blocking
+  //         half of the same item is `buildTourBriefing`, read at snapshot time. ZERO draws.
+  settleTourSeasonNotice(world)
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)

@@ -213,10 +213,18 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   // Licensed on the plain training week alone, so the long stretches at Balanced are not four
   // sentences deep. Nothing here mentions how hard the week was, because that is the one thing
   // these do not know.
+  // ROUND-18 #9: the school half of an ordinary week has to stop when school does – see the note on
+  // `DiaryFacts.schoolOver`. `plainTraining` already excludes exam weeks, which is what hid this:
+  // no exams past eighteen, but the drills-and-dinner week runs for the rest of her career.
   {
     text: 'Drills, school, dinner, bed. She did not complain once.',
     claims: { athome: true },
-    license: plainTraining,
+    license: (f) => plainTraining(f) && !f.schoolOver,
+  },
+  {
+    text: 'Drills, dinner, bed. She did not complain once.',
+    claims: { athome: true },
+    license: (f) => plainTraining(f) && f.schoolOver,
   },
   {
     text: 'Same courts, same hours. She is getting quietly better at this.',

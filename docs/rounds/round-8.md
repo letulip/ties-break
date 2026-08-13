@@ -63,10 +63,16 @@ Status legend: [ ] open · [x] done · (triage) = size/route.
   changes; the square avatar on Home could be slightly bigger and reflect CURRENT state
   (emotion by last result + condition). Ties into the portrait-by-age TODO
   (stage(ageYears) × emotion). (medium, one clean slice with R8-6)
-  → **UNDER CHECK IN CODE, wave `round15`.** Named as out of scope by
+  → ~~**UNDER CHECK IN CODE, wave `round15`.**~~ Named as out of scope by
   `docs/specs/round8-ui-fixes.md` when the round shipped, and no trace since. Another agent is
   reading the header/round-icon path against the current build this wave; this box stays open until
   that check reports, because "no tag in the source" is not the same as "not built" – see R12-17b.
+  → ⚠ **THE CHECK REPORTED, AND THIS BOX WAS NEVER CLOSED OFF** (found by the 13.08 audit,
+  round-18 item 6). The verdict is in `docs/specs/round15-triage.md:221`, written the same day:
+  "**R8-1 (in-tournament player card) and R8-3 (avatar `norm` variant) are genuinely untouched since
+  25.07**". So the answer has existed for four days in a different file while this one still says
+  "under check". **R8-3 is OPEN, not pending** – and it is the second-oldest open item in the ledger
+  after R8-1.
 
 - [x] **W-L in the Stats header (R6 debt).** `seasonWins`/`seasonLosses` surfaced on the
   Snapshot; "W–L" tile beside rank/points.

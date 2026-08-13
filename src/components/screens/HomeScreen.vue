@@ -1907,19 +1907,40 @@ button.note-card:active:not(:disabled) {
   width: auto;
 }
 
-/* ⭐ ROUND-17 #14 – 54px WAS THE STRIP, NOT THE PICTURE, and that is why his words sat on him.
-   `.coach-art` is `height: 100%; width: auto`, so the portrait is as wide as its own aspect ratio
-   makes it – 54 is where the container was reasoned about, not where the man ends.
-   ⚠ AND 66 WAS STILL ON HIM (owner, 12.08, second report of the same item: «текст на плашках
-   тренеров от картинки не сдвинули вправо как я просил»). The first fix aimed at the mask's OPAQUE
-   stop (34%) – but the fade only reaches transparent at 96%, so the visible man extends far past
-   66px and the text block still opened on his face. The target is the IMAGE, not the opaque band:
-   the owner asked for another 10-15px, and 80 (= +14) puts the whole text column past the portrait
-   at every card width the layout produces. It costs the quote 14px more at 375pt, which
-   `text-wrap: pretty` absorbs. */
+/* ⭐ ROUND-18 #1 – 54 IS THE EXPORT'S OWN GEOMETRY AND IT IS BACK (owner, 13.08: «на главном экране
+   верни выравнивание текста на плашке тренера как было раньше»). It is the number the A2 note above
+   describes: a 54px strip, the text column beside it.
+
+   ⚠ THE RECORD OF THE MISREAD, KEPT ON PURPOSE so this is not re-litigated a fourth time. Round-17
+   #14 was «отодвинуть текст от картинок тренеров внутри раздела с выбором тренеров» and it was read
+   as THIS card. It never was this card. He was in the coach PICKER – `.cm-row` in
+   CoachMarketScreen – and that is where the fix finally landed, as round-18 #2. So this rule went
+   54 -> 66 -> 80 across two rounds chasing a complaint that lived on another screen, and Home
+   collected two fixes it never needed.
+
+   ⚠ AND THE CHASE COULD NOT HAVE WORKED HERE ANYWAY, which is worth more than the revert is.
+   Measured in a browser at 375px, where the grid makes this card 166px wide: `.coach-art` is
+   height-driven (`height: 100%; width: auto`, the A2c/d ruling above), the CARD's height is set by
+   how many lines the quote wraps to, and widening this margin narrows the quote's column. So every
+   push right makes the card taller and the portrait wider with it –
+
+     margin-left 54 -> card 193px tall, portrait 117px wide
+     margin-left 66 -> card 231px tall, portrait 141px wide
+     margin-left 80 -> card 265px tall, portrait 162px wide (its full natural width)
+
+   The text moved 26px right and the picture grew 45px to meet it: the overlap was WORSE at 80 than
+   at 54, and the quote had been squeezed into a two-word ribbon to pay for it. A margin cannot
+   outrun a portrait that it is feeding.
+
+   The 66px attempt aimed at the mask's OPAQUE stop (34%) and that reasoning was sound as far as it
+   went – the fade only reaches transparent at 96%, so the visible man does extend far past the
+   opaque band, and you must measure against the IMAGE. It was aimed at the wrong screen, and on
+   this one the lever runs backwards. If Home is ever asked to clear its portrait for real, the fix
+   is the one #2 used next door: bound the STRIP's width so the picture stops tracking the height.
+   That is a change to the export's geometry and needs the owner, so it is not taken here. */
 .coach-body {
   position: relative;
-  margin-left: 80px;
+  margin-left: 54px;
   padding: 13px 11px 11px;
   display: flex;
   flex-direction: column;

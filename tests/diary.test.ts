@@ -41,7 +41,7 @@ import {
 import { ECONOMY } from '../src/engine/economy'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
-import { TIER_SHORT, tierFromLabel } from '../src/engine/season/calendar'
+import { isExamWeek, TIER_SHORT, tierFromLabel } from '../src/engine/season/calendar'
 import { TIER_SHORT as TIER_SHORT_VIA_UI } from '../src/composables/weekAhead'
 import { CROPS, facePoint } from '../src/art/faceRects'
 
@@ -237,6 +237,9 @@ function makeFacts(input: {
     playedTournament: s === 'tournament',
     playedPractice: s === 'practice',
     examsWeek: s === 'exams',
+    // ROUND-18 #9: the fixtures are about a schoolgirl, which is what every test here was written
+    // around – the sweep flips this deliberately where it means to ask about the years after.
+    schoolOver: false,
     offSeasonWeek: s === 'offSeason',
     vacationWeek: s === 'vacation',
     vacationPackageId: null,
@@ -355,6 +358,42 @@ describe('THE HONESTY PIN – no selectable phrase contradicts its facts', () =>
     }
     // the sweep must actually have exercised the pool, or the pin proves nothing
     expect(checked).toBeGreaterThan(5_000)
+  })
+
+  // ⚠ ROUND-18 #9. The owner found "Off-season – rest, school, family." in a twenty-one-year-old's
+  // diary, 171 weeks after her last September. The cause was structural rather than a typo: the
+  // facts handed to a licence carried `examsWeek` but not `schoolOver`, so a phrase COULD NOT gate
+  // on school even if its author wanted to. Pinning the one line would leave the next school phrase
+  // free to repeat it, so this sweeps the catalogue by what the words SAY: any phrase that talks
+  // about school must be unlicensed once school is behind her.
+  it('no phrase names school after her last school year', () => {
+    const saysSchool = (t: string): boolean => /\bschool\b|\bclass(es|room)?\b|\blesson/i.test(t)
+    // ⚠ EXAM WEEKS ARE NOT A SEPARATE CASE, they are impossible: `isExamWeek(week, schoolOver)`
+    // returns false once school is over, so an exam phrase naming school is already unreachable.
+    // The sweep has to honour that coupling or it invents a state the engine cannot produce and
+    // reports the exam lines as bugs – which it did, on the first run of this pin.
+    for (let w = 0; w < 52; w++) expect(isExamWeek(w, true), `week ${w}`).toBe(false)
+    let out = 0
+    for (const f of sweepFacts()) {
+      const past = { ...f, schoolOver: true, examsWeek: false }
+      for (const p of DIARY_POOL) {
+        if (!p.license(past)) continue
+        const label = typeof p.text === 'function' ? p.text(past) : (p.text ?? '')
+        if (!saysSchool(label)) continue
+        out++
+        expect.fail(`"${label}" is selectable ${past.week} weeks in, with school already over`)
+      }
+    }
+    expect(out).toBe(0)
+    // and the guard has to have something to guard: the phrase EXISTS while she is still at school
+    const schoolgirl = [...sweepFacts()].some((f) =>
+      DIARY_POOL.some((p) => {
+        if (!p.license({ ...f, schoolOver: false })) return false
+        const label = typeof p.text === 'function' ? p.text(f) : (p.text ?? '')
+        return saysSchool(label)
+      }),
+    )
+    expect(schoolgirl, 'the school phrasing vanished entirely – then this pin proves nothing').toBe(true)
   })
 
   it('the named negative cases from the spec, concretely', () => {

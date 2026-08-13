@@ -60,6 +60,15 @@ is the record of what was found, and it stays as written.
 - [x] **R11-15** the surface pill back in the card corner → done, and it says out loud that it
       REVERTS R10-11 (`src/components/screens/SeasonScreen.vue`, `src/style.css`). The fit line below
       never repeats the surface name.
+      → ⚠ **AND THE OWNER REVERSED IT AGAIN IN WAVE 2 (30.07). What ships today is R10-11's design,
+      not this one** – found by the 13.08 audit and left visible rather than quietly re-ticked.
+      There is no corner pill: `SurfaceMark` draws the concentric RING with the name beside it
+      (`src/components/ui/SurfaceMark.vue:46`), it sits in the left-aligned `.event-place` row under
+      the title (`SeasonScreen.vue:1210`), and `.surface-mark` has no capsule at all – no background,
+      no radius. It is documented as his call (`SurfaceMark.vue:2`, `docs/design/README.md:163`) and
+      the guard names it: `tests/round11-view.test.ts:71`, "R11-15, reversed by the owner in wave 2".
+      **What survives of this item is its actual complaint** – the surface name is printed exactly
+      once, next to its mark, and the line below never repeats it. That part still holds.
 
 **New work – waves D and E, all shipped**
 

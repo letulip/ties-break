@@ -311,6 +311,27 @@ const settled = computed(() => {
           <li>At {{ tourTerms.suspensionAt }} the tour suspends entries for four weeks.</li>
         </ul>
       </template>
+      <!-- THE SEASON NOTICE (round-18 #8) – the quiet reminder, one a season while her ranking
+           binds her. Every figure comes off the terms the desk wrote it with, so the sheet cannot
+           drift from ECONOMY.mandatory; the requirement list is the same one the briefing prints. -->
+      <template v-else-if="tourTerms.notice === 'season'">
+        <p class="offer-body">
+          Her ranking is inside the top {{ tourTerms.maxRank }}, so the season ahead is a required
+          one. These are the events the tour asks her for.
+        </p>
+        <ul class="offer-terms">
+          <li v-for="requirement in tourTerms.requirements ?? []" :key="requirement">{{ requirement }}</li>
+          <li>
+            Not entering one costs {{ tourTerms.points }} penalty points and a zero in one of her
+            {{ tourTerms.countingSlots }} counting results.
+          </li>
+          <li>
+            {{ tourTerms.suspensionAt }} points inside {{ tourTerms.windowWeeks }} weeks suspends
+            entries for {{ tourTerms.suspensionWeeks }} weeks. Nothing is owed for a week she could
+            not play.
+          </li>
+        </ul>
+      </template>
       <template v-else>
         <p class="offer-body">
           Entries are suspended through {{ weekLabel(tourTerms.untilWeek ?? 0) }} –

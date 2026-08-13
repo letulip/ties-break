@@ -170,9 +170,18 @@ already fixed there — verified and noted below. Player copy: short dash "–".
   profile per horizon (pairs with the deferred gate-aware policy work).
 - **R9-12 morale second bar** → deferred until the morale STAT exists (Phase 6); the interim is
   R9-11's win-immunity. Backlog.
+  → ⚠ **STILL OPEN, verified 13.08: the word `morale` does not appear anywhere in `src/`.** The stat
+  it waits on has not been built in nineteen days and eight rounds. It is now the blocker on
+  round-18 #11 as well (the federation-penalty-for-anger question, parked in the morale wave, task
+  #95), so two owner items are queued behind one unbuilt stat.
 - **R9-19b pre-match medical check at ultra-low condition** (owner idea, good): doctor's veto =
   HARD block below ~condition 15 — the parent can push through tiredness, but medicine can say
   no. Design note → next availability follow-up (fits the soft/hard gate philosophy).
+  → ✅ **SHIPPED, and this line is the only place it was ever recorded as an ask** (found by the
+  13.08 audit). `src/engine/economy.ts:1653` names it: "THE DOCTOR'S VETO (owner idea R9-19b, cashed
+  in by the Wave-2 fatigue bench 26.07)", with the arrival-time re-check added on his 26.07 word at
+  `:1662` («врач точно не пустит ниже 15»), the nagging band above the floor at `:1669`, and
+  `minConditionToEnter` per rung at `:1633`, read by `src/engine/season/tournament.ts:221` and `:388`.
 - **R9-20 nothing to do at 300 pts (wk 34)** → Season Planner is NEXT (practices + vacations fill
   the calendar); plus a tier-calendar density design pass (National 4/yr is too sparse for a
   post-Regional kid; candidates: more Nationals in H2, invitationals, earlier ITF unlock).

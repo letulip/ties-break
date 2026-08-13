@@ -358,32 +358,38 @@ function careerSnapshot(coachTier: 'self' | 'middle'): Snapshot {
   return toSnapshot(world)
 }
 
+// ⚠ THIS BLOCK WAS REWRITTEN BY ROUND-18 #4, AND NOT BECAUSE IT WAS WRONG. What it pinned on 12.08
+// was a SENTENCE: with a coach hired the tab printed "You plan her week at every rung. <name>
+// changes what it is worth, not what is in it", and the boxes stayed live, because the parent
+// really does author the plan at every rung (training-dials.md §7 is designed and NOT built). On
+// 13.08 the owner asked for the tick and the lock instead - «Пока галочка не стоит - вся панель
+// неактивна» - so the sentence is gone and the screen answers the same question with a control.
+// The ITEM survives unchanged: Her week still says who writes it. Only the form did.
+// The lock's own mechanism - what is disabled, and where each direction of the tick goes - is
+// tests/component/round18-self-coaching.test.ts; what stays here is round-17's own claim.
 describe('Her week says who writes it', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('names the coach and what he does change, when one is hired', () => {
-    // ⚠ THE OWNER'S QUESTION, 12.08: he opened this tab with a coach hired and found every box live.
-    // The screen was RIGHT - `setPlan` is the only writer of the plan and this tab is its only
-    // caller, and training-dials.md §7 (the coach moving a tick) is designed and NOT built - but it
-    // never said so, so an active screen read as a contradiction of what he was paying for.
+  it('names the coach when one is hired, and the panel is his', () => {
     const snap = careerSnapshot('middle')
     expect(snap.coachId).not.toBeNull()
     const store = useGameStore()
     store.snapshot = snap
     const wrapper = mount(HerWeekTab)
-    const note = wrapper.find('.hw-author')
-    expect(note.exists()).toBe(true)
+    const lock = wrapper.find('.hw-lock')
+    expect(lock.exists(), 'the panel carries the lock').toBe(true)
     const name = snap.coachMarket.find((r) => r.current)?.name
     expect(name).toBeTruthy()
-    expect(note.text()).toContain(name as string)
-    // The two halves of the claim: the parent plans it, and the money changes its worth.
-    expect(note.text()).toContain('You plan her week')
-    // ...and the boxes are still live, because they are still what runs.
-    expect(wrapper.findAll('input.hw-box').filter((b) => !b.attributes('disabled')).length).toBeGreaterThan(0)
+    expect(lock.text()).toContain(name as string)
+    // ⚠ AND IT STILL DOES NOT CLAIM THE ENGINE CHANGED. `growWeek` multiplies `trainFactor(plan)` by
+    // `coachFactor(tier, fit)` at every rung, so a lock on the pen may not become a line about the
+    // sum. The old sentence said that out loud; the new one is silent about it, which is the only
+    // other honest option.
+    expect(wrapper.text()).not.toContain('You plan her week')
     wrapper.unmount()
   })
 
-  it('says nothing at all when nobody is being paid to have a view', () => {
+  it('says nothing about a coach when nobody is being paid to have a view', () => {
     // The Coaches tab already tells a self-coached family that it is coaching her; saying it twice
     // is the thing §9b item 2 refuses.
     const snap = careerSnapshot('self')
@@ -391,6 +397,7 @@ describe('Her week says who writes it', () => {
     const store = useGameStore()
     store.snapshot = snap
     const wrapper = mount(HerWeekTab)
+    expect(wrapper.find('.hw-lock').exists()).toBe(false)
     expect(wrapper.find('.hw-author').exists()).toBe(false)
     wrapper.unmount()
   })

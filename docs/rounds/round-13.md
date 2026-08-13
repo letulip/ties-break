@@ -125,7 +125,25 @@ decisions, not questions; the short form:
 ### R13-12 — the navigation restructure (the owner's design, agreed)
 
 - [x] **New bottom nav: `Home · Season · This week · Stats · More`.** The owner's #12, his
-  design. What moved:
+  design.
+
+  > ⚠ **TWO OF THESE FOUR HALVES NO LONGER HOLD, both by later owner rulings** – found by the
+  > 13.08 audit (round-18 item 6, task #88) and recorded here rather than quietly re-ticked, because
+  > this nav is *his own design* and he may not remember overruling it.
+  > **(a) The bar is now `Season · Calendar · Home · Stats · Trophies`** (`src/App.vue:201`). Home
+  > moved to the CENTRE in his own 28.07 redesign, Calendar took a seat, and the 31.07 trophy slice
+  > swapped More out on his 29.07 word («More is becoming redundant»). **"This week" left the bar
+  > entirely** – it is a tabless content state now, reached from Home's Next-tournament card, and
+  > the fresh-recap dot moved onto that card with it (`App.vue:179`, `:1005`).
+  > **(b) The sticky advance bar is no longer global.** It is `v-if="tab === 'home' || pending"`
+  > (`App.vue:1069`): advancing is Home-only again, and only the RESUME arm is everywhere. The
+  > wave-2 reasoning is at `App.vue:1058` – a stray tap on another tab SPENDS A WEEK.
+  > **Still true:** Kid is reachable only through the header avatar (no `kid` entry in `TABS`, one
+  > emitter at `HomeScreen.vue:86`), the dot predicate is intact (`weekRecap.ts:58`), and the resume
+  > BANNER is still gone – which was the actual R13-8 complaint. All four halves are pinned in
+  > `tests/round13-nav.test.ts`, so the supersessions were deliberate, not drift.
+
+  What moved at the time:
   - **Kid left the bottom bar.** The Kid screen opens by tapping the HEADER AVATAR (previously
     static chrome — it stays the age-only `norm` crop, F45-1 untouched; only tappability was
     added). A one-time callout under the avatar ("Tap the photo – her page lives here") makes the

@@ -86,6 +86,7 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     playedTournament: false,
     playedPractice: false,
     examsWeek: false,
+    schoolOver: false,
     offSeasonWeek: false,
     vacationWeek: false,
     vacationPackageId: null,
@@ -537,5 +538,26 @@ describe('W2 — the wiring', () => {
     // subject is the PLAYER's choice, not the world's.
     // diary.ts AND every diary/*.ts part: the week-note pool moved to diary/weekNotes.ts.
     expect(diarySource()).toContain('f.trainPct >= WEEK_NOTE_GRIND')
+  })
+})
+
+// ⚠ ROUND-18 #9, THE SECOND CATALOGUE. The owner reported one off-season phrase naming school at
+// twenty-one; sweeping `DIARY_POOL` for the words found three more, and this pool is the fourth
+// place the same sentence lives. `plainTraining` already refuses exam weeks, which is exactly what
+// hid it – exams end with school, but the ordinary drills-and-dinner week runs for another decade.
+// The pin is by what the words SAY rather than by line, so the next school phrase cannot repeat it.
+describe('ROUND-18 #9 — no week note names school after her last school year', () => {
+  const saysSchool = (t: string): boolean => /\bschool\b|\bclass(es|room)?\b|\blesson/i.test(t)
+
+  it('every school phrase is unlicensed once school is over', () => {
+    const past = homeWeek({ schoolOver: true })
+    const named = WEEK_NOTES.filter((n) => n.license(past) && saysSchool(render(n, past)))
+    expect(named.map((n) => render(n, past))).toEqual([])
+  })
+
+  it('and it still speaks while she is at school – or the pin above proves nothing', () => {
+    const now = homeWeek({ schoolOver: false })
+    const named = WEEK_NOTES.filter((n) => n.license(now) && saysSchool(render(n, now)))
+    expect(named.length).toBeGreaterThan(0)
   })
 })

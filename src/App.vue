@@ -47,6 +47,7 @@ import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import KnockDialog from './components/KnockDialog.vue'
 import BirthdayDialog from './components/BirthdayDialog.vue'
+import TourBriefingDialog from './components/TourBriefingDialog.vue'
 import EndingScreen from './components/EndingScreen.vue'
 import ForkDialog from './components/ForkDialog.vue'
 import RetirementDialog from './components/RetirementDialog.vue'
@@ -918,6 +919,63 @@ const showSeasonSummary = computed(
 function dismissSeasonSummary(): void {
   seasonSummaryDismissed.value = true
 }
+
+// =================================================================================================
+// ⭐ ROUND-18 #8 – THE TOUR'S COMMITMENT RULES, EXPLAINED ONCE, THE FIRST TIME THEY BIND HER
+// =================================================================================================
+//
+// The owner: «надо перед началом сезона больших призов и чемпионатов присылать какое-то мне кажется
+// уведомление или попап вообще на экране жёстко показывать что она реально должна там участвовать
+// что есть такой регламент и всё такое».
+//
+// ⚠⚠ THE REGULATION IS HIS OWN AND HAS BEEN ENFORCED SINCE v38 (W3-ACT2 §6, engine/world/mandatory.
+// ts). What was missing is that `mandatoryBindsRank` was read by ENGINE INTERNALS ONLY – so a career
+// crossed the threshold, the tour became compulsory from that week, and the first thing the player
+// ever heard was a per-event invoice at an entry deadline. That gap is what made his season read as a
+// trap. `snapshot.tourBriefing` is that predicate, surfaced, with the rule spelled out from
+// ECONOMY.mandatory rather than typed into any template.
+//
+// ⚠ WHY IT IS NOT IN `blockingOverlay`'s ORDERED LIST, which is where a blocking popup belongs. Every
+// entry in that list is raised by a snapshot field that a COMMAND of its own clears, and its queue is
+// proven to empty. This one has no command: the engine is not waiting for anything, so the field
+// stays non-null for the rest of the career and adding it there would deadlock the walk. So it renders
+// BEHIND every one of them (`overlay === null`) – exactly the position the injury report and the
+// season wrap-up already occupy, and for the same reason: it can wait a click and they cannot.
+//
+// ⚠ AND WHY IT NEEDED NO SCHEMA BUMP. "Has he been shown it" is a question about a DEVICE, not about
+// a career: the engine's answer would have to be a persisted acknowledgement (v49, a migration and a
+// fixture) to say something a localStorage key already answers, and no simulation would ever read it.
+// So it is a per-career watermark – see composables/tourBriefing.ts for the whole argument.
+//
+// ⚠ THE WATERMARK IS THE DIALOG'S, NOT THIS FILE'S, WHICH IS WHERE THE INJURY REPORT KEEPS ITS ONE.
+// The reason is testability and it is the deciding one: App.vue is never mounted by any test here, so
+// a gate living in this file can only ever be source-pinned – and "appears exactly once, and does not
+// reappear" is the whole of this item. TourBriefingDialog owns the record, which makes that claim a
+// mounted one (tests/component/tour-briefing.test.ts). What stays here is pure ORDERING: WHICH popup
+// outranks which. `tourBriefingSeen` is a session flag only, so a career whose briefing is already
+// read stops mounting a component that would render nothing.
+const tourBriefingSeen = ref(false)
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    tourBriefingSeen.value = false
+  },
+)
+function dismissTourBriefing(): void {
+  tourBriefingSeen.value = true
+}
+const showTourBriefing = computed(
+  () =>
+    // Behind all five blocking questions – `overlay === null` IS "the shell is free", so this cannot
+    // drift out of step with that list the way five negated computeds would.
+    overlay.value === null &&
+    !showInjuryStop.value &&
+    !showSeasonSummary.value &&
+    // Behind the tournament takeover: a pending reveal is a screen mid-sentence.
+    !game.snapshot?.pending &&
+    !!game.snapshot?.tourBriefing &&
+    !tourBriefingSeen.value,
+)
 </script>
 
 <template>
@@ -1147,6 +1205,12 @@ function dismissSeasonSummary(): void {
       :kid-rank="activeRank"
       @close="practiceLive = null"
     />
+
+    <!-- ⭐ round-18 #8: the tour's commitment rules, explained the FIRST time her ranking binds her
+         to them – the rule has been enforced since v38 and nothing ever announced it. Once per
+         career (a per-career watermark, see the script side), behind every blocking question, and
+         quietly restated by one letter a season thereafter rather than by this popup again. -->
+    <TourBriefingDialog v-if="showTourBriefing" @continue="dismissTourBriefing" />
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />

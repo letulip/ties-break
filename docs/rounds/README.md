@@ -27,12 +27,38 @@ rather than quietly editing the earlier entry's checkbox.
 | [round-11.md](round-11.md) | 11 – owner playtest, two full careers (2026-07-27) | 15 | waves A, C, D and E shipped; wave B shipped 2 of 3. Only **R11-1b** (post-return injury fragility) is open. The old "nothing started (waits on the five open branches)" row was stale for a fortnight – this round has a status list at the top of its file now |
 | [round-12.md](round-12.md) | 12 – owner playtest, three careers on the week-numbering + age-caps build (2026-07-27) | 17 + 2 screenshot finds | all shipped. Waves A and B landed and were never ticked back; the two design items were ruled and built later under other names – R12-2/13/17 as the ladder floor (08.08), R12-17b as the living field + junior conveyor |
 | [round-13.md](round-13.md) | 13 – owner's first Diary-1 playtest, quick pass (2026-07-28) | 8 + 2 additions | all shipped on `fix/r13-quick`; the R13-7 economy half deferred to the economy wave by design; second visit same day folded in the economy DECISIONS (recorded, docs only → `specs/economy-wave.md`) and R13-12, the nav restructure (Kid behind the header avatar, the This week tab) |
-| [round-14.md](round-14.md) | 14 – owner playtest on the week-255 save (2026-08-06) | 18 | groups A, B, D and F shipped, 13 answered; groups **C** (cancel a vacation, the mail client, onboarding width) and **E** (opponent ages, per-track season history) not started; 17 (the difficulty wrapper) needs a ruling. Argument in `specs/round14-triage.md` |
-| [round-15.md](round-15.md) | 15 – owner playtest, two saves + a 200-career bench (2026-08-09) | 19 | the owner's five rulings are at the top of the file – they are what the round is worked against. In flight on `wave/round15`: `fix/one-clock` (group A), `fix/sponsor-floor` (ruling 2), `fix/surfaces-r15` (group D), `docs/training-dials` (rulings 3/4). Argument in `specs/round15-triage.md` |
+| [round-14.md](round-14.md) | 14 – owner playtest on the week-255 save (2026-08-06) | 18 | groups A, B, D and F shipped, 13 answered. Group **C** shipped 10.08 (`db6d6a1`); group **E** shipped 10.08 (`bea7cc2`) and its two boxes stayed open for three days until the 13.08 audit ticked them. Only **17** (the difficulty wrapper) is left, and it needs a ruling, not a build. Argument in `specs/round14-triage.md` |
+| [round-15.md](round-15.md) | 15 – owner playtest, two saves + a 200-career bench (2026-08-09) | 19 | the owner's five rulings are at the top of the file – they are what the round is worked against. ⚠ **This file was the worst in the folder until 13.08**: all four "in flight" branches landed on 09–10.08 and **thirteen boxes stayed open for four days**. Now: shipped 1, 19a, 5, 7, 8, 10, 11, 12, 15, 16, 17, 18 + the sponsor floor; open **3, 6, 9, 13**; answered 2, 4, 14. Argument in `specs/round15-triage.md` |
+| [round-16.md](round-16.md) | 16 – owner playtest, third Olivia season (2026-08-11) | 20 + the pre-match preview | ⚠ **This ledger did not exist until 13.08 and was reconstructed after the fact** – the round went straight to `specs/round16-triage.md` and the boxes were never written. 15 shipped (incl. the preview and the #100 birthday-age fix), 3 answered, **4 open: 6** (no repro), **8** (kit wear on holiday – asked three times, never built), **10** (`key` as a highlights reel, explicitly left alone), **20** (the wake lock, no code at all). Specs: `round16-triage.md`, `round16-injuries.md`, `round16-commentary.md` |
+| [round-17.md](round-17.md) | 17 – owner playtest, twenty-eight items + a live day of follow-ups (2026-08-12) | 28 + 13 | the first round to get its ledger the same day, and the reason the ledger discipline held. 24 shipped, 4 answered; **15** and **22** are `[>]` awaiting his word, **H** is task #84. ⚠ **14 was re-marked `[!]` by the 13.08 audit** – both its fixes landed on Home, and the coach PICKER he was talking about was never touched. Argument in `specs/round17-triage.md`, `specs/round17-match-screen.md` |
+| [round-18.md](round-18.md) | 18 – the first round run through `/fix-round` (2026-08-13) | 11 | items 1-3 are re-reports of round-17 #14's miss; 5 (the skill) shipped; **6 is this audit**, task #88. 4 and 8 are `[?]` waiting on him (§Q1, §Q2), 9 open, 10 in flight, 7 and 11 answered |
 
 Every item's checkbox and comment lives in its own file – this table is just navigation, not a
-duplicate ledger. Round 12 had no row here at all until 09.08, which is its own lesson about a
-navigation table nobody is required to update.
+duplicate ledger. Round 12 had no row here at all until 09.08, and rounds **16, 17 and 18** had no
+row until 13.08 – twice now, which is its own lesson about a navigation table nobody is required to
+update.
+
+## ⚠ Two traps for the next auditor, found on 13.08
+
+**1. "round N" in a commit message is ambiguous before 06.08.** Between 29.07 and 01.08 the repo
+used a SECOND, unrelated numbering for build waves: `integrate/round-15`, `round 16: fix/chrome`,
+`integrate/round-17`, `fix/round-18`, `fix/round-19` are all from 30–31.07 and have nothing to do
+with this folder's rounds 15–19. One of them (`fde515d`, 01.08) even says "round 15: nine owner
+items". Owner feedback DID flow into those waves and **never got a ledger file here** – the gap
+between round 13 (28.07) and round 14 (06.08) is unaccounted for in this folder. If those nine items
+matter, they need his own sentence, not an inference from a commit subject.
+
+**2. The `R15-*` source tags are two different rounds.** `R15-3`, `R15-5`, `R15-6`, `R15-8` and
+`R15-9` in `src/` belong to the 01.08 build wave. `R15-7`, `R15-10`, `R15-15`, `R15-17` and `R15-18`
+belong to this folder's round 15 (09.08). Grepping a tag is not enough; check the date in the comment
+beside it.
+
+## The 13.08 re-audit (round-18 item 6, task #88)
+
+Rounds 8–17 were re-read against the current build and a sample of sixteen `[x]` marks was verified
+independently for the first time. Findings, the reconstructed round-16 ledger and the list of what to
+put in front of the owner first are in **[AUDIT-2026-08.md](AUDIT-2026-08.md)**. Two marks came back
+false (`[!]`): round-10's R10-2/R10-8 and round-17's #14.
 
 ## Keeping this true
 

@@ -3524,7 +3524,16 @@ tr.kid-row td {
   align-items: center;
   gap: 10px;
   width: 100%;
-  min-height: 82px;
+  /* ⭐ ROUND-18 #2 – 104 IS A FLOOR THAT KEEPS THE STRIP HONEST, not a look. `.cm-art` is 62px wide
+     and clips the portrait; the clip is invisible only while the portrait is at least as wide as the
+     strip, because the mask reaches transparent exactly at the strip's right edge. The portrait is
+     height-driven at 162/264, so it is >= 62px wide only while the row's padding box is >= 101px.
+     At the old 82px floor a very short row rendered a 49px man inside a 62px strip, cutting him
+     where the mask was still ~43% opaque – a visible hard edge down his side. 104 (= 102px padding
+     box) makes "the fade always finishes before the clip" true unconditionally. Measured rows with
+     the engine's real load notes are 109-154px tall, so this binds on nothing that ships today; it
+     is the guarantee, not the layout. */
+  min-height: 104px;
   margin-bottom: 8px;
   padding: 9px 12px 9px 0;
   overflow: hidden;
@@ -3559,11 +3568,38 @@ tr.kid-row td {
 .cm-row.blocked .cm-name {
   color: var(--ink-dim);
 }
+/* ⭐ ROUND-18 #2 – THE STRIP HAS A WIDTH NOW, AND THAT IS THE WHOLE FIX (owner, twice: «я просил
+   отодвинуть текст от картинок тренеров внутри раздела с выбором тренеров», «10-15 пикселей, чтобы
+   весь текстовый блок на картинку не попадал»).
+
+   WHAT WAS WRONG. `.cm-art` had no width, so it shrink-wrapped the image; the image is height-driven
+   and the row's height is set by how many lines `.cm-load` wraps to. The portrait was therefore a
+   FUNCTION OF THE TEXT: measured at 375px, a one-line note gave a 57px man and a three-line note a
+   75px one, against a text column that started at a fixed 62px. So the tall rows – the elite ones,
+   with the longest load note – had 12.6px of the name and the fit pill sitting on his face.
+
+   ⚠ WHY THE OBVIOUS FIX IS THE TRAP. Pushing this margin right narrows `.cm-body`, which wraps the
+   note onto another line, which makes the row taller, which makes the portrait WIDER. Measured at a
+   320px viewport: margin 62 -> overlap 12.6px, margin 80 -> overlap 13.1px. The push bought nothing
+   because the picture was chasing it. That is exactly how Home's `.coach-body` went 54 -> 66 -> 80
+   and got worse each time (the ledger is in HomeScreen.vue at that rule).
+
+   THE FIX IS TO CUT THE FEEDBACK, not to out-run it. The strip is 62px wide, full stop, and clips
+   what does not fit. The image keeps `height: 100%; width: auto` – so it is still sized by HEIGHT
+   and there is still NO VERTICAL CROP, which is the A2c/d ruling this treatment inherits; what it
+   loses is a horizontal sliver, which the same ruling already sanctions («the card shows as much of
+   its width as it has room for»). The mask's stops are percentages of THIS box, so the fade reaches
+   transparent exactly at the clip line: nothing visible is cut, at any row height.
+
+   Measured after the change, at 320px and 375px, on the hired card, an available card, a blocked
+   card and a one-line card: strip 62px on all eight, text at 74px, 12px of air on every one. */
 .cm-art {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
+  width: 62px;
+  overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
   mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
 }
@@ -3576,7 +3612,12 @@ tr.kid-row td {
   position: relative;
   flex: 1;
   min-width: 0;
-  margin-left: 62px;
+  /* 62 (the strip) + 12 of air. The owner asked for «10-15 пикселей» past the picture and this is
+     now a real guarantee rather than a hope, because the strip above cannot grow into it.
+     ⚠ THE TWO NUMBERS ARE TIED BY A TEST, NOT BY A COMMENT: tests/component/round18-coach.test.ts
+     reads both off the mounted cascade and fails if the gap leaves the 10-15 band. Move one, move
+     the other. */
+  margin-left: 74px;
   display: flex;
   flex-direction: column;
   gap: 4px;

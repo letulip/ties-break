@@ -140,6 +140,7 @@ function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
     playedTournament: false,
     playedPractice: false,
     examsWeek: false,
+    schoolOver: false,
     offSeasonWeek: false,
     vacationWeek: false,
     vacationPackageId: null,

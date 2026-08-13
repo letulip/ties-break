@@ -139,6 +139,9 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // W4-SCHOOL: `schoolOver` comes off the view rather than being re-derived here – the diary is
     // a reporter and this module owns no calendar arithmetic of its own.
     examsWeek: isExamWeek(week, view.schoolOver),
+    // ROUND-18 #9: and the fact ITSELF travels, not only its effect on exam weeks – see the note on
+    // `DiaryFacts.schoolOver`. Same rule as the line above: taken off the view, never re-derived.
+    schoolOver: view.schoolOver,
     offSeasonWeek: isOffSeasonWeek(week),
     vacationWeek: view.vacationWeek,
     vacationPackageId: view.vacationPackageId ?? null,

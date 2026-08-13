@@ -60,14 +60,65 @@ import type { WorldState } from '../world'
 // to notice». `suitcase` and `watch` each appear in two bands and the late-career band re-offers the
 // peak band's three, so `birthdayHistory` can be asked "again?" and get a true answer.
 
+// =================================================================================================
+// ⭐ ROUND-18 #10 – THE ASK IS A CLUE, THE UNITS AGREE, AND A REPEAT SAYS SO
+// =================================================================================================
+//
+// The owner, 13.08, reading his own save: «странные сообщения в днях рождения с очень явными
+// странными же ответами. Что-то вроде "чего бы она себе никогда не купила" и ответ в таком же духе.»
+// Three defects, and the spec's own design (§2ab) is the yardstick for all three – she asks for ONE
+// thing, exactly one option answers it, and nothing marks which.
+//
+// 10a. THE ASK WAS THE ANSWER, REPHRASED. `neverbuy` shipped as "The thing she would never buy
+//      herself" with the ask "the one thing she has the money for and will not buy" – the same
+//      sentence turned round, so the ask carried no information and there was nothing to read. Two
+//      more rows led with the same placeholder head ("Something that is not tennis", "Something for
+//      a home that is not ours"), and `jewellery`'s ask ("something with nothing to do with tennis")
+//      was answered just as well by the week at home sitting beside it. THE FIX IS A RULE, not a
+//      rewrite: a row names a THING, and the ask names a detail of HER that matches that row and no
+//      other. `tests/birthday-ask.test.ts` holds all three rules on the whole catalogue.
+//
+// 10b. THE ASK AND THE ANSWER DISAGREED ON SCALE – see TIME_TOGETHER below.
+//
+// 10c. A REPEAT HAPPENED IN SILENCE – see `again` / `repeat` on each gift, and `birthdayOptions`.
+//
+// ⚠ NONE OF IT MOVES A DICE. Every band keeps exactly the gifts it had, every id is unchanged (they
+// are persisted in `BirthdayRecord`), and no `rng()` call was added or removed – so the sub-stream
+// `seed:birthday:<age>` is drawn the identical number of times and MAIN is not reached at all.
+
+/** ⭐ THE TIME-TOGETHER AXIS, AND THE UNIT EACH OPTION IS MEASURED IN – round-18 #10b.
+ *
+ *  The owner: «А еще был вариант запроса "день вместе", а в ответах была неделя вместе.» Three
+ *  options are the SAME WANT at three different sizes – the day, a week at home, a trip – and when
+ *  two of them are on screen together the only thing telling them apart is the unit. A unit buried
+ *  mid-sentence is not a discriminator anybody reads, so each of these asks now names its own unit
+ *  AND rules the others out in so many words ("not a week, not a trip"). Rule 3 of
+ *  tests/birthday-ask.test.ts keeps it that way, in both directions and for every band.
+ *
+ *  ⚠ AND THIS IS THE SEAM A MORALE SLICE WILL READ. The owner, in the same breath: «когда будем
+ *  мораль делать может быть надо будет учитывать оба» – a day and a week must NOT be worth the same.
+ *  They are three separate ids in `BirthdayRecord.given` precisely so a future weighting can price
+ *  them apart without a schema change, and that stays possible only because nobody ever collapsed
+ *  them into one "time together" option. Keeping them distinct now is preparation, not pedantry:
+ *  when docs/specs/form-and-slump.md and the psychologist arrive, THIS table is the ladder to read,
+ *  and the history to weigh it against is already on the record. */
+const TIME_TOGETHER: Record<string, string> = { day: 'day', familyweek: 'week', trip: 'trip' }
+
 /** ⭐ THE FOURTH OPTION, ALWAYS OFFERED AND NEVER MARKED. Not a "no thanks" – it is the one answer
  *  in the list that costs the parent something he actually has, which is why it has to read as one
- *  of the good choices rather than as the absence of one. */
+ *  of the good choices rather than as the absence of one.
+ *
+ *  ⚠ ITS ASK NAMES ALL THREE UNITS (round-18 #10b) because the day is offered in EVERY band, so it
+ *  sits beside the trip at eighteen and beside the week at home from twenty-two on. "One day, not a
+ *  week, not a trip" is the whole discrimination, and it has to be in the ask rather than left to
+ *  the row, because the row is what the player is choosing BETWEEN. */
 const DAY_TOGETHER: BirthdayGift = {
   id: 'day',
   label: 'Just the day together',
   note: 'No present at all. The whole day, and nothing else in the calendar.',
-  ask: 'She has not asked for anything. She asked whether we could have the day.',
+  again: 'The same as last time, and she asked for it again. The whole day, nothing in the calendar.',
+  repeat: 'repeatable',
+  ask: 'She has not asked for a thing. One day, she said – not a week, not a trip. One day, and nothing else in the calendar.',
   short: BIRTHDAY_DAY_NOUN,
 }
 
@@ -92,27 +143,41 @@ const BANDS: Band[] = [
         id: 'bicycle',
         label: 'A bicycle',
         note: 'For the road to school, and nothing to do with any of this.',
-        ask: 'She has been asking for a bicycle since the spring. Every single week.',
+        again: 'She has one from us already, and she has outgrown the frame of it.',
+        repeat: 'durable',
+        // ⚠ "Every single week" was the tail of this ask and it is gone: a scale word in an ask that
+        // has nothing to do with scale is a red herring in a band where the DAY is one of the four.
+        ask: 'She has been asking for a bicycle since the spring. She has not once let it drop.',
         short: 'the bicycle',
       },
       {
         id: 'phone',
         label: 'A phone of her own',
         note: 'Everyone in her year has one. She has mentioned that.',
-        ask: 'She has been asking for a phone of her own, and being very reasonable about it.',
+        again: 'She has a phone from us already. This would be the one that survives a season on the road.',
+        repeat: 'durable',
+        ask: 'She has been asking for a phone of her own. She has a list of reasons, and they are all quite good.',
         short: 'the phone',
       },
       {
+        // ⭐ ROUND-18 #10a. Shipped as "Something that is not tennis" answering an ask that said
+        // "something with no tennis in it" – the label restated, and a bicycle whose own note reads
+        // "nothing to do with any of this" answered it just as well. It is a THING now, and the trap
+        // above is untouched: this row is still always in the pool and still never marked.
         id: 'notennis',
-        label: 'Something that is not tennis',
-        note: 'Paints, a book, a game. Anything at all but a racquet.',
-        ask: 'She has been asking for something with no tennis in it. Paints, she said, or a book.',
-        short: 'the not-tennis present',
+        label: 'Paints, and a pad for them',
+        note: 'No racquet in it anywhere. Hers to be bad at, with nobody watching.',
+        again: 'She had paints from us before. She used every one of them up.',
+        repeat: 'repeatable',
+        ask: 'She has been asking for paints. Proper ones, she says, and a pad big enough for them.',
+        short: 'the paints',
       },
       {
         id: 'kitbag',
         label: 'A racquet bag that is hers',
         note: 'Her first one that was not handed down from somebody.',
+        again: 'There is a bag from us in the hall already. This one would be the bigger.',
+        repeat: 'durable',
         ask: 'She has been asking for a bag of her own – the one she carries was somebody else\'s first.',
         short: 'the bag',
       },
@@ -120,6 +185,8 @@ const BANDS: Band[] = [
         id: 'poster',
         label: 'A poster of a player she admires',
         note: 'She has known the name since she was nine.',
+        again: 'There is one on her wall from us already. This would be the next one along.',
+        repeat: 'durable',
         ask: 'She has been asking for a poster of the player she has followed since she was nine.',
         short: 'the poster',
       },
@@ -134,6 +201,8 @@ const BANDS: Band[] = [
         id: 'headphones',
         label: 'Headphones for the road',
         note: 'Airports, coaches, waiting rooms, other people\'s warm-ups.',
+        again: 'She has a pair from us already. She also left them in an airport in the spring.',
+        repeat: 'durable',
         ask: 'She has been asking for headphones. She says the airports are the worst part.',
         short: 'the headphones',
       },
@@ -141,6 +210,8 @@ const BANDS: Band[] = [
         id: 'camera',
         label: 'A camera',
         note: 'She has started taking pictures of everywhere she goes.',
+        again: 'She has a camera from us already. This would be the lens she keeps mentioning.',
+        repeat: 'durable',
         ask: 'She has been asking for a camera. She has started photographing every town we land in.',
         short: 'the camera',
       },
@@ -148,6 +219,8 @@ const BANDS: Band[] = [
         id: 'suitcase',
         label: 'A suitcase of her own',
         note: 'She has been borrowing ours all season.',
+        again: 'She has one from us already, and it has been round the world since.',
+        repeat: 'durable',
         ask: 'She has been asking for a suitcase of her own. She has borrowed ours all season.',
         short: 'the suitcase',
       },
@@ -155,6 +228,10 @@ const BANDS: Band[] = [
         id: 'tickets',
         label: 'Tickets to WATCH a tournament',
         note: 'Not to play in one. To sit in the stands and watch.',
+        // Repeatable and gladly: it is a different draw, a different city and a different pair of
+        // players every time, which is the whole of why she wants to go.
+        again: 'We did this before and she still talks about it. Somebody else this time.',
+        repeat: 'repeatable',
         ask: 'She has been asking to go and WATCH a tournament. Not play in one. Watch one.',
         short: 'the tickets',
       },
@@ -172,6 +249,8 @@ const BANDS: Band[] = [
         id: 'frame',
         label: 'A frame chosen with her',
         note: 'Her hand on it in the shop, not ours. She picks.',
+        again: 'There is one she chose with us already. This one she would choose alone.',
+        repeat: 'durable',
         ask: 'She has been asking to choose her own frame. With us, she says – but her choosing.',
         short: 'the frame she chose',
       },
@@ -179,6 +258,8 @@ const BANDS: Band[] = [
         id: 'driving',
         label: 'Driving lessons',
         note: 'The travelling is not going to get any shorter.',
+        again: 'She has had lessons from us already. These would be the ones after the test.',
+        repeat: 'durable',
         ask: 'She has been asking for driving lessons. She is counting the months.',
         short: 'the driving lessons',
       },
@@ -186,13 +267,17 @@ const BANDS: Band[] = [
         id: 'wallet',
         label: 'A document wallet',
         note: 'Passport, licences, entry forms. The travelling is her job now.',
-        ask: 'She has been asking for somewhere to keep the passport and the forms that is hers.',
+        again: 'She has one from us already. It is full, and the zip has gone.',
+        repeat: 'durable',
+        ask: 'She has been asking for somewhere to keep the passport and the entry forms that is hers.',
         short: 'the document wallet',
       },
       {
         id: 'coat',
         label: 'A proper winter coat',
         note: 'The indoor season starts in a car park at seven in the morning.',
+        again: 'She has a coat from us already, and she has grown out of the sleeves of it.',
+        repeat: 'durable',
         ask: 'She has been asking for a coat that actually works. The indoor season starts outdoors.',
         short: 'the winter coat',
       },
@@ -207,13 +292,21 @@ const BANDS: Band[] = [
         id: 'laptop',
         label: 'A laptop',
         note: 'School and tournament admin, on the same desk.',
+        again: 'She has one from us already and it is four years old and it sounds like it.',
+        repeat: 'durable',
         ask: 'She has been asking for a laptop. School and the entry forms are on the same desk now.',
         short: 'the laptop',
       },
       {
+        // ⚠ THE SAME `suitcase` ID AS AT FIFTEEN, WHICH IS WHY IT NEEDS ITS OWN `again`. A career
+        // given one at fifteen and offered one here is a repeat by the record's reckoning, and the
+        // honest words for it are not "she already has one" but "the one we gave her did not last" –
+        // which is what this row was always about.
         id: 'suitcase',
         label: 'A suitcase built to survive a season',
         note: 'The one from two years ago did not.',
+        again: 'She has one from us already, and it did not survive either. This would be the third.',
+        repeat: 'durable',
         ask: 'She has been asking for a suitcase that survives a season. The last one did not.',
         short: 'the suitcase',
       },
@@ -221,6 +314,8 @@ const BANDS: Band[] = [
         id: 'watch',
         label: 'A watch',
         note: 'Something she will still have at thirty.',
+        again: 'She has a watch from us already. This would be the one she wears off court.',
+        repeat: 'durable',
         ask: 'She has been asking for a watch. Something, she said, that lasts.',
         short: 'the watch',
       },
@@ -237,6 +332,8 @@ const BANDS: Band[] = [
         id: 'bankcard',
         label: 'Her own bank card and account',
         note: 'She is earning now. It should be in her name.',
+        again: 'The account is open already. This would be taking our name off it.',
+        repeat: 'durable',
         ask: 'She has been asking for an account in her own name. She is the one earning.',
         short: 'the bank account',
       },
@@ -244,14 +341,20 @@ const BANDS: Band[] = [
         id: 'watch',
         label: 'The eighteenth watch',
         note: 'The classic one. The one that gets engraved.',
+        again: 'She has a watch from us already. This one would carry the date on the back.',
+        repeat: 'durable',
         ask: 'She has been asking for the watch. The eighteenth one, engraved, the way it is done.',
         short: 'the watch',
       },
       {
+        // ⚠ ON THE TIME-TOGETHER AXIS beside the day (round-18 #10b): both are "take me somewhere
+        // out of this", and the unit is the only thing between them, so the ask names both.
         id: 'trip',
         label: 'A trip that is not a tournament',
-        note: 'Somewhere with no courts anywhere near it.',
-        ask: 'She has been asking to go somewhere that has no courts in it at all.',
+        note: 'Somewhere with no courts anywhere near it, and a flight to get there.',
+        again: 'We sent her somewhere before. She wants somewhere new, and further.',
+        repeat: 'repeatable',
+        ask: 'She has been asking to go somewhere with no courts anywhere near it. Not a day at home – a trip, with a flight in it.',
         short: 'the trip',
       },
     ],
@@ -262,53 +365,89 @@ const BANDS: Band[] = [
     to: 21,
     gifts: [
       {
+        // ⭐ ROUND-18 #10a. The old ask ("a place of her own. Not asking for it. Asking about it.")
+        // shared exactly one word with its own row – "place", straight off the label – and the row
+        // beside it was "Something for a home that is not ours", so both answered it. The ask is a
+        // SCENE now, and the word that ties it to this row is the one nothing else says.
         id: 'deposit',
         label: 'A deposit towards her own place',
-        note: 'Not a gift she can unwrap, and she knows what it is.',
-        ask: 'She has been asking about a place of her own. Not asking for it. Asking about it.',
+        note: 'Not a gift she can unwrap, and she knows exactly what it is.',
+        again: 'One deposit from us is already spent. This would be towards the next place.',
+        repeat: 'durable',
+        ask: 'She has been sending us listings and saying she is only looking. Nobody has said the word deposit out loud yet.',
         short: 'the deposit',
       },
       {
+        // ⭐ THE CAR IS THE OWNER'S OWN EXAMPLE of the repeat that must not happen in silence
+        // (round-18 #10c): «чтобы мы новую машину не раз в год покупали … хотя почему и нет, с
+        // другой стороны, но если так, то надо как-то обыграть». So it can still be chosen twice,
+        // and the second time the row says what it is.
         id: 'car',
         label: 'A car',
         note: 'So the driving stops being ours.',
+        again: 'There is a car outside from us already. This one would be the second.',
+        repeat: 'durable',
         ask: 'She has been asking for a car. She has been driving ours since February.',
         short: 'the car',
       },
       {
+        // ⭐ ROUND-18 #10a. "Something for a home that is not ours" is a category, not a present –
+        // spec §1's «something for a home that is no longer yours», rendered as the thing a parent
+        // actually turns up with.
         id: 'home',
-        label: 'Something for a home that is not ours',
-        note: 'She is furnishing a life we do not live in.',
-        ask: 'She has been asking for something for the flat. Ours is not the home she means.',
-        short: 'the thing for her flat',
+        label: 'A kitchen table for her flat',
+        note: 'She is furnishing a life we do not live in, and it starts with somewhere to eat.',
+        again: 'The table in that kitchen is already ours. This would be the chairs round it.',
+        repeat: 'durable',
+        ask: 'She has been asking about a kitchen table. What she eats off now is a box with a cloth over it.',
+        short: 'the kitchen table',
       },
     ],
   },
   // --- 22 to 28 – the peak, where things matter less ---------------------------------------------
+  //
+  // ⚠ EVERY ONE OF THIS BAND'S THREE FAILED ROUND-18 #10, which is why the owner met all three
+  // defects in one dialog: the band has exactly three material gifts, so all four rows are on screen
+  // every single year from twenty-two on and nothing hides a bad pairing.
   {
     from: 22,
     to: 28,
     gifts: [
       {
+        // ⚠ THE OTHER HALF OF THE DAY/WEEK PAIR (round-18 #10b). It is a WEEK and it says so three
+        // times over, because the row it has to be told apart from is a DAY.
         id: 'familyweek',
         label: 'A week with the family, between seasons',
-        note: 'No courts, no flights, nobody else in the house.',
-        ask: 'She has been asking for a week at home between the seasons. All of us, and nothing booked.',
+        note: 'Seven mornings in a row, no courts, no flights, nobody else in the house.',
+        again: 'We had one of these last time, and she has asked for the same again.',
+        repeat: 'repeatable',
+        ask: 'She has been asking for a week at home between the seasons. Not a day – a whole week, all of us, nothing booked.',
         short: 'the week at home',
       },
       {
+        // ⭐ ROUND-18 #10a. The old ask was "something with nothing to do with tennis. Anything." –
+        // which the week at home two rows down answers just as well, and which shares not one
+        // distinctive word with this row. The hook is hers now: the box, and what is in it.
         id: 'jewellery',
         label: 'Jewellery',
-        note: 'Nothing to do with any of it.',
-        ask: 'She has been asking for something with nothing to do with tennis. Anything.',
+        note: 'Small, and in a box. The only things she owns that shine, she had to win.',
+        again: 'We gave her one for that box before. This would go beside it.',
+        repeat: 'repeatable',
+        ask: 'She has been talking about the box on her shelf, and how everything in it that shines, she won.',
         short: 'the jewellery',
       },
       {
+        // ⭐ THE PAIR THE OWNER QUOTED, round-18 #10a: «Что-то вроде "чего бы она себе никогда не
+        // купила" и ответ в таком же духе.» The ask WAS the label, rearranged. The concept survives
+        // in the note – she has the money and will not spend it on herself – but the row now names
+        // the thing, and the ask is the scene that points at it.
         id: 'neverbuy',
-        label: 'The thing she would never buy herself',
-        note: 'She has the money now and still would not.',
-        ask: 'She has been talking about the one thing she has the money for and will not buy.',
-        short: 'the one thing she would not buy',
+        label: 'The painting from the gallery window',
+        note: 'She has the money for it, she has had it for years, and she will not.',
+        again: 'One of them is on her wall from us already. This would be the second.',
+        repeat: 'durable',
+        ask: 'She sent us a photograph of a gallery window at midnight, and then said it was ridiculous.',
+        short: 'the painting',
       },
     ],
   },
@@ -322,32 +461,43 @@ const BANDS: Band[] = [
     to: 99,
     gifts: [
       {
+        // ⭐ ROUND-18 #10a. "whether anybody kept any of it. The whole thing, from the start" named
+        // nothing at all – its only word in common with its own row was "whole", which the DAY row
+        // also carries ("The whole day"). It names the album, the photographs and the draw sheets now.
         id: 'album',
         label: 'An album of the whole career',
-        note: 'Every year of it, in order, from the very beginning.',
-        ask: 'She has been asking whether anybody kept any of it. The whole thing, from the start.',
+        note: 'Every year of it, in order, starting at the first draw she was ever in.',
+        again: 'There is an album from us already. This one would be the years since it.',
+        repeat: 'durable',
+        ask: 'She has been asking whether anybody kept an album of it – the photographs, the draw sheets, the first year. She thinks nobody did.',
         short: 'the album',
       },
       {
         id: 'familyweek',
         label: 'A week with the family, between seasons',
-        note: 'No courts, no flights, nobody else in the house.',
-        ask: 'She has been asking for a week at home between the seasons. All of us, and nothing booked.',
+        note: 'Seven mornings in a row, no courts, no flights, nobody else in the house.',
+        again: 'We had one of these last time, and she has asked for the same again.',
+        repeat: 'repeatable',
+        ask: 'She has been asking for a week at home between the seasons. Not a day – a whole week, all of us, nothing booked.',
         short: 'the week at home',
       },
       {
         id: 'jewellery',
         label: 'Jewellery',
-        note: 'Nothing to do with any of it.',
-        ask: 'She has been asking for something with nothing to do with tennis. Anything.',
+        note: 'Small, and in a box. The only things she owns that shine, she had to win.',
+        again: 'We gave her one for that box before. This would go beside it.',
+        repeat: 'repeatable',
+        ask: 'She has been talking about the box on her shelf, and how everything in it that shines, she won.',
         short: 'the jewellery',
       },
       {
         id: 'neverbuy',
-        label: 'The thing she would never buy herself',
-        note: 'She has the money now and still would not.',
-        ask: 'She has been talking about the one thing she has the money for and will not buy.',
-        short: 'the one thing she would not buy',
+        label: 'The painting from the gallery window',
+        note: 'She has the money for it, she has had it for years, and she will not.',
+        again: 'One of them is on her wall from us already. This would be the second.',
+        repeat: 'durable',
+        ask: 'She sent us a photograph of a gallery window at midnight, and then said it was ridiculous.',
+        short: 'the painting',
       },
     ],
   },
@@ -480,14 +630,52 @@ export function pendingBirthday(world: WorldState): number | null {
 export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
   const age = pendingBirthday(world)
   if (age === null) return null
-  const { options, askedId } = birthdayOffer(world.seed, age, giftsAlreadyGiven(world))
+  const alreadyGiven = giftsAlreadyGiven(world)
+  const { options, askedId } = birthdayOffer(world.seed, age, alreadyGiven)
   const asked = options.find((g) => g.id === askedId)!
   return {
     week: world.week,
     age,
     ask: asked.ask,
-    options: options.map(({ id, label, note }): BirthdayOption => ({ id, label, note })),
+    options: birthdayOptions(options, alreadyGiven),
   }
+}
+
+/** ⭐ THE FOUR ROWS AS THE DIALOG WILL PRINT THEM – and the one place a repeat stops being silent.
+ *
+ *  ROUND-18 #10c, and it is the owner asking a second time. Round-17 #18 taught the ASK to read the
+ *  record, but only to REMOVE a present she already has; the OFFER was left byte-identical on
+ *  purpose (§5.2's licensed repeat), so a parent could still buy her a car at nineteen, at twenty
+ *  and at twenty-one and the dialog would say the same four things every time. He raised it again:
+ *  «чтобы мы новую машину не раз в год покупали (хотя почему и нет, с другой стороны, но если так,
+ *  то надо как-то обыграть)» – so the repeat is allowed and the game PLAYS it.
+ *
+ *  ⚠ THE COPY CHANGES, THE OFFER DOES NOT. Every id, every position and every draw is exactly what
+ *  it was – swapping a note costs no `rng()` call and touches no stream – so a career with a long
+ *  record is offered the same four rows as a fresh one and only the words under two of them differ.
+ *  Filtering the OFFER instead was the other candidate and it is wrong twice over: four bands hold
+ *  exactly three material gifts, so removing one would ship a three-row dialog (spec §2a), and
+ *  filtering before the shuffle would change how many times the sub-stream is drawn.
+ *
+ *  ⚠ AND `durable` VS `repeatable` IS THE WHOLE DISTINCTION. A week at home, a day, a trip, tickets,
+ *  paints, another piece for the box – she can want those every year of her life, and the second
+ *  time reads as a tradition. A car, a phone, a laptop, a deposit cannot arrive twice without
+ *  somebody noticing, so their words say she has one. Neither version marks the ANSWER (spec §5.4):
+ *  the ask never names a present she already holds, so a row that says "she has one" is removing a
+ *  decoy the player himself created, not pointing at the one that is right.
+ *
+ *  ⚠ NOT APPENDED – REPLACED. A note plus an afterthought would grow the row and make a repeat
+ *  visually taller than the others, which is a mark by accident. One line either way. */
+export function birthdayOptions(
+  gifts: readonly BirthdayGift[],
+  alreadyGiven: readonly string[],
+): BirthdayOption[] {
+  const held = new Set(alreadyGiven)
+  return gifts.map(({ id, label, note, again }): BirthdayOption => ({
+    id,
+    label,
+    note: held.has(id) ? again : note,
+  }))
 }
 
 /** ⭐ THE PARENT ANSWERS. The ONE command that clears a pending birthday, and until it runs
@@ -554,3 +742,7 @@ export function giftNoun(giftId: string): string | null {
  *  `MATERIAL_OPTIONS` gifts; no band's ids collide with `day`). Not read by any surface. */
 export const BIRTHDAY_BANDS: readonly Band[] = BANDS
 export const BIRTHDAY_DAY_TOGETHER: BirthdayGift = DAY_TOGETHER
+/** The gift ids that are the same want at different sizes, and the unit each one is measured in –
+ *  round-18 #10b. Read by `tests/birthday-ask.test.ts` rule 3, and it is the table a morale slice
+ *  will want when it starts pricing a day against a week (see the note on the const above). */
+export const BIRTHDAY_TIME_TOGETHER: Readonly<Record<string, string>> = TIME_TOGETHER

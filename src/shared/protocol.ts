@@ -822,11 +822,31 @@ export interface Knock {
  *  WHAT THEY ARE, and the choice stays "what do I think she wants". */
 export interface BirthdayGift {
   id: string
-  /** the button's own words */
+  /** the button's own words.
+   *
+   *  ⚠ IT NAMES A THING, NOT A WANT – round-18 #10a. Three labels used to lead with a placeholder
+   *  noun ("The thing she would never buy herself", "Something that is not tennis", "Something for a
+   *  home that is not ours") and the ask for each was the same sentence turned round, so the reading
+   *  game the scene is built on had nothing to read. The owner: «странные сообщения … с очень явными
+   *  странными же ответами». `tests/birthday-ask.test.ts` rule 1 refuses a placeholder head. */
   label: string
   /** the line under it – what it is, in the parent's voice */
   note: string
-  /** the prose line at the top of the dialog when THIS is the thing she has been asking for */
+  /** ⭐ THE NOTE WHEN SHE ALREADY HAS ONE – round-18 #10c, and it replaces `note` on that row rather
+   *  than being appended to it. The owner asked twice about buying a new car every year, and the
+   *  second time he answered himself: «хотя почему и нет, с другой стороны, но если так, то надо
+   *  как-то обыграть». So a repeat is allowed and the game says it out loud – warmly for something
+   *  she can want again (`repeatable`), plainly for something already in the house (`durable`). */
+  again: string
+  /** ⭐ CAN SHE WANT THIS TWICE? A week at home is a tradition; a car is a possession. The two need
+   *  DIFFERENT words on a second offer, which is the whole of what `again` is for. */
+  repeat: 'durable' | 'repeatable'
+  /** the prose line at the top of the dialog when THIS is the thing she has been asking for.
+   *
+   *  ⚠ IT IS A CLUE AND NOT A RESTATEMENT (round-18 #10a). It must share a word with its own row that
+   *  no OTHER row of the same band shares – otherwise two options answer it – and it must not simply
+   *  say the label again, which is what made "she has the money for it and will not buy it" answered
+   *  by "The thing she would never buy herself" a scene with nothing in it. */
   ask: string
   /** the diary's noun for it – "the headphones" – so a callback three seasons later reads as English */
   short: string
@@ -889,7 +909,13 @@ export interface BirthdayRecord {
    *  real answers and the dialog has no other exit, so a parent who is asked always answers. It is
    *  carried because the outcome above is a real one the record must be able to state, and because
    *  ABSENT IS NOT ZERO: a birthday nobody was asked about (a migrated career, or the four years at
-   *  college) has NO ROW AT ALL rather than a row saying he gave nothing. Spec §5.5. */
+   *  college) has NO ROW AT ALL rather than a row saying he gave nothing. Spec §5.5.
+   *
+   *  ⚠ AND WHEN MORALE ARRIVES, THIS IS THE FIELD IT WILL READ – see the TIME_TOGETHER note in
+   *  engine/world/birthday.ts. A day together and a week at home are two different ids on purpose
+   *  (round-18 #10b, the owner: «когда будем мораль делать может быть надо будет учитывать оба»), so
+   *  a weighting can tell them apart without a schema change. Collapsing them into one id would make
+   *  that impossible after the fact. */
   given: string | null
 }
 
@@ -1519,8 +1545,8 @@ export interface PenaltyRow {
  *  «every obligation is announced in a letter BEFORE it can bite». A letter that only ever arrived
  *  after the fact would be a receipt for a punishment, which is the thing the ruling is against. */
 export interface TourLetterTerms {
-  /** which of the three this is */
-  notice: 'due' | 'penalty' | 'suspension'
+  /** which of the four this is */
+  notice: 'due' | 'penalty' | 'suspension' | 'season'
   /** the rung and its label as the letter was written */
   tier?: TierId
   label?: string
@@ -1536,6 +1562,69 @@ export interface TourLetterTerms {
   suspensionAt?: number
   /** the last week of a suspension, inclusive (a `suspension` letter) */
   untilWeek?: number
+  /** ⭐ THE SEASON NOTICE (round-18 #8). The quiet half of the briefing: one letter at the opening of
+   *  every season the regime binds her in, so a player who has already read the blocking briefing is
+   *  reminded without being stopped.
+   *
+   *  ⚠ NUMBERS, NEVER ASSEMBLED PROSE, AND THE REASON IS THAT THIS IS PERSISTED. `world.offers` goes
+   *  into the save, so a sentence written here would survive a retune of `ECONOMY.mandatory` and go
+   *  on stating a rule that no longer exists. Terms are what the rule WAS the week the desk wrote,
+   *  which is what a letter is; the sentence is rebuilt from them by `OfferLetter.vue` every time it
+   *  is read. `requirements` is the one list, and its entries are rung LABELS with a count - the same
+   *  kind of value `label` above already carries, not copy. */
+  maxRank?: number
+  requirements?: string[]
+  countingSlots?: number
+  suspensionWeeks?: number
+  windowWeeks?: number
+}
+
+/** ⭐ ONE LINE OF THE BRIEFING'S REQUIREMENT LIST – one rung, what the tour asks for at it, and how
+ *  that is counted. */
+export interface TourBriefingRow {
+  tier: TierId
+  /** the rung's own label, as the calendar names it */
+  label: string
+  /** what the tour asks for there, in one phrase ("All 4 Grand Slams") */
+  ask: string
+  /** how it is counted – per event, or once at the season's end */
+  detail: string
+}
+
+/** ⭐ THE BRIEFING – round-18 #8, the owner: «перед началом сезона больших призов и чемпионатов
+ *  присылать уведомление или попап … что она реально должна там участвовать, что есть такой
+ *  регламент».
+ *
+ *  ⚠ THE REGULATION ALREADY EXISTED; WHAT DID NOT WAS ANYBODY SAYING SO. `mandatoryBindsRank` was
+ *  read by engine internals only, so a career crossed into the top 50, the tour became compulsory,
+ *  and the first the player heard of it was a per-event invoice at an entry deadline. That is what
+ *  made a season read as a trap: forced entries, losses, and no one having told him the rule.
+ *
+ *  ⚠ EVERY NUMBER IN EVERY STRING HERE IS READ FROM `ECONOMY.mandatory` (and from the calendar's own
+ *  anchor weeks), never typed into the copy. A briefing that can drift from the rule it explains is
+ *  worse than no briefing – `tests/tour-briefing.test.ts` mutates the economy and watches each
+ *  sentence move.
+ *
+ *  DERIVED, never persisted: non-null on exactly the weeks `mandatoryBindsRank` is true. Whether the
+ *  player has already been shown it is a question about a DEVICE, not about a career, so it is a
+ *  per-career localStorage watermark in App.vue – the same shape the injury report, the news, the
+ *  trophy cabinet and the This-week dot all use, and the reason this shipped with no schema bump. */
+export interface TourBriefing {
+  /** the week the regime was first read as binding, for the kicker */
+  week: number
+  /** the standing that binds (ECONOMY.mandatory.maxRank), and hers */
+  maxRank: number
+  rank: number
+  /** the one sentence that says which rule has started applying and why */
+  lead: string
+  /** what the tour requires, rung by rung */
+  requirements: TourBriefingRow[]
+  /** what declining costs – the zero that takes a counting slot first, because that is the price
+   *  the design is actually about, then the ledger, then what is never owed at all */
+  costs: string[]
+  /** ⚠ THE CLOSING LINE IS THE RULING. «Мы ни за что не наказываем»: the tour has rules and the game
+   *  has none, so the last thing the briefing says is that none of this is advice. */
+  closing: string
 }
 
 /** Where an offer is in its life. `open` is the only state a decision is possible in; the others
@@ -1988,6 +2077,13 @@ export interface DiaryFacts {
   playedTournament: boolean
   playedPractice: boolean
   examsWeek: boolean
+  /** ROUND-18 #9: is she past her last school year? `DiaryWorldView` has carried this since W4-SCHOOL
+   *  and it stopped at the exam pool – `examsWeek` is simply never true past school, which silences
+   *  revision notes but says nothing to any OTHER line. So the off-season phrase went on naming
+   *  school to a twenty-one-year-old (the owner, on his own save at W50 '38, 171 weeks after her last
+   *  September). A licence can only read what the facts carry, so the fact comes down to them.
+   *  DERIVED at snapshot time like everything here, never persisted – no schema move. */
+  schoolOver: boolean
   offSeasonWeek: boolean
   vacationWeek: boolean
   /** WHICH family package that week was – the catalogue's own id, or null when she was not away (or
@@ -2486,6 +2582,10 @@ export interface Snapshot {
    *  DERIVED, not persisted: assembled per snapshot (buildBirthdayPrompt) off the birth date and the
    *  record. Once he answers, the row appears in `birthdays` and this goes null. */
   birthdayPrompt: BirthdayPrompt | null
+  /** ⭐ round-18 #8 – THE TOUR'S COMMITMENT RULES, EXPLAINED THE FIRST TIME THEY BIND HER. Non-null on
+   *  every week `mandatoryBindsRank` is true; the shell shows it ONCE per career and then never again
+   *  (a per-career localStorage watermark, exactly like the injury report's). See `TourBriefing`. */
+  tourBriefing: TourBriefing | null
   /** W4: the knock that is LIVE this week, decided or not – what the week is being spent under.
    *  Null on a week with nothing wrong. The UI reads `choice` off this to say "resting the ankle"
    *  rather than re-deriving anything. */
