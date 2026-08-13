@@ -31,10 +31,12 @@ build waits on one word from him about which ladder.
   `CoachMarketScreen.vue:58` is `const tab = ref<string>('week')` – the screen ALWAYS opens on Her
   Week, so his click on the coach note lands on the training dials and never on the coaches. With a
   coach hired it must open on the coaches tab.
-- [?] **4. «Флажок и неактивный раздел самокоучинга при выбранном тренере»** – needs his word first:
-  is the tick a UI lock over today's engine (the parent still authors, the dials are frozen and
-  labelled his), or does hiring hand AUTHORSHIP to the coach (`training-dials.md` §7, designed and
-  never built)? Question in §Q1.
+- [>] **4. «Флажок и неактивный раздел самокоучинга при выбранном тренере»** – ⚠ §Q1 ANSWERED 13.08,
+  and A was already the design: «она дублирующий элемент управления для отказа от коуча, мы это уже
+  обсуждали. Пока галочка не стоит – вся панель неактивна … можно и твой замок поверх нарисовать
+  оверлеем с коротким пояснением». So it is a SECOND DOOR to firing the coach, not a new mechanic:
+  the tick reflects `coachTier === 'self'`, ticking it while a coach is hired fires him through the
+  existing confirm, and the engine is untouched. In flight.
 - [x] **5. The skill: «приём и обработка правок»** – `~/.claude/skills/fix-round/SKILL.md`, and this
   file is its first output. Encodes the two failures it exists to prevent: silent drops (questions
   inside a round never become work) and false "done" (a fix reported shipped that his screen never
@@ -123,6 +125,15 @@ match commentary as it happens and one in the season feed after, in the umpire's
 parent's. All the texture of the tour, zero balance risk. The real consequence belongs where he
 already put it: morale and the psychologist (#95). Anger that costs form, and a person who can help
 with it, is a mechanic; a fine is a tax.
+
+**His extension, 13.08, accepted – task #105.** «Может быть тогда имеет смысл в новостях и/или
+недельных дайджестах тоже писать рандомные имена периодически кто вышел из себя? … Не знаю, стоит
+ли это реально считать. Но писать можно точно.» Right instinct, and it costs even less than he
+thinks – so **do not use random names.** The cohort's results are already in `world.results`, so
+pick a rival who ACTUALLY LOST that week, ideally mid-losing-streak, which is the same shape that
+produces the kid's own anger, and report her violation. No new state, no MAIN draw, and it can
+never contradict the standings the player reads on the next screen – a random name can, and the
+first time it names someone who won that week the whole feed stops being believable.
 
 ## §Q1 – the self-coaching tick (item 4)
 
