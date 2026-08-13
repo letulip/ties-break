@@ -383,7 +383,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'An ordinary week – school, practice, pasta.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && !f.schoolOver,
+  },
+  {
+    surface: 'photo',
+    text: 'An ordinary week – practice, pasta, an early night.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && f.schoolOver,
   },
   {
     surface: 'photo',
@@ -425,7 +431,7 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'A school project took the evenings – glue on everything.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && !f.schoolOver,
   },
   {
     surface: 'photo',
@@ -544,11 +550,22 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'positive', vacation: true },
     license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'elite',
   },
+  // ⚠ ROUND-18 #9: this line named SCHOOL at twenty-one. `facts.ts` has carried `schoolOver` since
+  // it was written - for exactly this - and every other surface that says the word already branches
+  // on it (`milestones.ts`, `SeasonSummaryDialog.vue`); the pool was simply never wired to the fact.
+  // Two entries rather than an interpolation, because the pool's whole design is one text per
+  // licence, and a girl three years out of school does not get a shorter sentence about it.
   {
     surface: 'condition',
     text: 'Off-season – rest, school, family.',
     claims: { affect: 'neutral', offSeason: true },
-    license: (f) => f.offSeasonWeek && f.injured === null && !f.vacationWeek,
+    license: (f) => f.offSeasonWeek && f.injured === null && !f.vacationWeek && !f.schoolOver,
+  },
+  {
+    surface: 'condition',
+    text: 'Off-season – rest, family, and the block where next year gets built.',
+    claims: { affect: 'neutral', offSeason: true },
+    license: (f) => f.offSeasonWeek && f.injured === null && !f.vacationWeek && f.schoolOver,
   },
   {
     surface: 'condition',
@@ -562,11 +579,20 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', quietWeek: true },
     license: quiet,
   },
+  // ROUND-18 #9, the one the owner did NOT report – found by the sweep that was written for the
+  // off-season line. Same defect, an ordinary training week instead of December, and it would have
+  // outlived the reported one. Its twin says what a quiet week is once the school half is gone.
   {
     surface: 'condition',
     text: 'Training, school, repeat.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: quiet,
+    license: (f) => quiet(f) && !f.schoolOver,
+  },
+  {
+    surface: 'condition',
+    text: 'Training, sleep, repeat.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.schoolOver,
   },
   {
     surface: 'condition',

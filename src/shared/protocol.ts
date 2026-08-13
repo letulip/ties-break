@@ -1988,6 +1988,13 @@ export interface DiaryFacts {
   playedTournament: boolean
   playedPractice: boolean
   examsWeek: boolean
+  /** ROUND-18 #9: is she past her last school year? `DiaryWorldView` has carried this since W4-SCHOOL
+   *  and it stopped at the exam pool – `examsWeek` is simply never true past school, which silences
+   *  revision notes but says nothing to any OTHER line. So the off-season phrase went on naming
+   *  school to a twenty-one-year-old (the owner, on his own save at W50 '38, 171 weeks after her last
+   *  September). A licence can only read what the facts carry, so the fact comes down to them.
+   *  DERIVED at snapshot time like everything here, never persisted – no schema move. */
+  schoolOver: boolean
   offSeasonWeek: boolean
   vacationWeek: boolean
   /** WHICH family package that week was – the catalogue's own id, or null when she was not away (or
