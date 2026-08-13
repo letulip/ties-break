@@ -183,6 +183,58 @@ to 2.1 pp), top-250 rises a few points, and `wealthy·high` becomes solvent net 
 cell the measurement already showed flipping. If the top rows move, something is wrong with the
 implementation, not right with the design.
 
+### 6a. Measured – the shipped ladder, 27 cells, 810 careers, 30 seeds (13.08.2026)
+
+`npx vite-node tools/wall-l1-bench.ts -- --arms base,bctl,bedge --seeds 30`. Three arms per cell:
+`base` self-coached, `bctl` the same hire with the edge off, `bedge` the same hire with it on – so
+`bedge − bctl` is the edge's own product and `bctl − base` is the rest of the coach.
+
+**⚠ BOTH HALVES OF MY PREDICTION FAILED, and one of them was the good news I had already reported.**
+
+**1. Top-100 is no longer a hard zero.** `bedge:middle:middle` and `bedge:wealthy:middle` each put
+**one career of thirty** inside #100 – best ranks **#94** and **#91**, against #123 and #106 for the
+same girls with the edge off. Slam stays 0.0% in all 27 cells and `clr500` peaks at 6.7%.
+
+⚠ My own pre-registration says a moving top row means the implementation is wrong, so it was checked
+rather than explained away. Two things that WOULD show a fault are sound: the realised draws sit
+inside their corridors (measured means 0.4521 / 0.6996 / 0.8517 / 0.9979 against 0.45 / 0.70 / 0.85 /
+1.00) and a self-coached career is byte-identical to before the slice. The likeliest honest reason
+is that the wall's Layer B used each tier's flat MIDPOINT, while the shipped mechanic draws – so a
+`middle` coach who rolls near 0.9 is stronger than anything Layer B tested, on top of the coach's
+own development multiplier which Layer A never had. **That is the design working, not breaking – but
+this paragraph is not proof, and the claim is only that the two obvious faults are absent.**
+
+And the magnitude keeps it honest: those careers' MEDIAN ranks are #147 and #158. The edge grazes
+the top hundred for a week; it does not move anybody in.
+
+**2. `wealthy·high` does NOT pay for itself, and my earlier report of that flip was wrong.** On the
+shipped ladder it is `prize − bill` **−$39,387 → −$22,782** – better with the edge, still negative.
+The +$21k flip I quoted came from the flat-midpoint wall run and does not reproduce here. Corrected
+in the record rather than quietly dropped.
+
+**What IS robust, and why it is the paired counts rather than the money.** The prize medians are
+noisy at 30 seeds – two cells (`wealthy:budget`, `wealthy:middle`) came back *worse* with the edge,
+which cannot be real. The paired better/worse/tie against the same girl self-coached is the stable
+read, and the edge adds one to two careers of thirty in every solvent cell:
+
+| cell | `bctl` (hire, no edge) | `bedge` (same hire, edge on) |
+| --- | --- | --- |
+| middle · budget | 20 / 9 / 1 | **21 / 6 / 3** |
+| wealthy · high | 26 / 3 / 1 | **28 / 1 / 1** |
+| wealthy · middle | 25 / 4 / 1 | **26 / 4 / 0** |
+| working · middle | 6 / 20 / 4 | 7 / 20 / 3 – the bill still ruins it |
+
+**Where it lands, lived** (match-win % by rung, `bctl` → `bedge`, per tier): `middle` w50 71.1 →
+**72.2**, w100 71.9 → **73.1**, wta250 28.5 → **28.9**; `high` w100 71.7 → **74.7**, wta250 27.3 →
+**30.6**. Small, everywhere, and biggest in the middle of the ladder – the same shape §M5 measured.
+⚠ The `elite` rows (wta125 33.8 → 51.6) are NOT evidence of anything: elite is 0% solvent at working
+and middle backgrounds, so that pool is a handful of matches from the few careers that survived.
+
+**Verdict.** The edge behaves as designed and buys a small, consistent improvement wherever the
+family can afford the coach at all. It does not breach the wall. It does not fix the coach market:
+above `budget` the bill still swamps the product at every background but `wealthy`, and `working`
+remains ruined by any paid coach. Prices are task #103's problem, exactly as §M4 said.
+
 ## 7. The reveal says a PLACE, not a number (owner, 13.08) – SHIPPED
 
 Shipped copy said «A season together – the number is +0.74% per match.» He caught it: «как это
