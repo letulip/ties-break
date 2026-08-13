@@ -272,7 +272,7 @@ describe('a tick is a command, and the engine is the only writer', () => {
 describe('the tab it lives on', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('is `Her week` / `Coaches` on the app\'s own segmented row, and it opens on the week', async () => {
+  it('is `Her week` / `Coaches` on the app\'s own segmented row, and either pill reaches its half', async () => {
     const store = useGameStore()
     store.snapshot = snapshotAfter()
     const wrapper = mount(CoachMarketScreen, { global: { stubs: { teleport: true } } })
@@ -282,7 +282,18 @@ describe('the tab it lives on', () => {
     // ⚠ NOT `Self-coaching` / `Coaches` (§9a): one ladder, self on the bottom rung, and two tabs on
     // that axis would hide the one comparison this screen exists to make.
     expect(wrapper.text()).not.toContain('Self-coaching')
-    // The plan is what it opens on, and the market is not drawn behind it.
+
+    // ⚠ THIS USED TO ASSERT "IT OPENS ON THE WEEK", AND ROUND-18 #3 DELIBERATELY CHANGED THAT: the
+    // landing tab now follows `coachId`, because Home's coach note is a door into this screen and
+    // sending a tap on his face to the training dials was the defect. `snapshotAfter()` is
+    // `createWorld` on DEFAULT_PROFILE, whose `coachTier` is `middle`, so this fixture HAS a coach
+    // and lands on the coaches. The landing rule itself is not this file's claim - it is pinned on
+    // both branches in tests/component/round18-coach.test.ts; what stays here is the SWITCHER: two
+    // correctly named pills, and each one reaching its own half.
+    expect(wrapper.findAll('.cm-row').length).toBeGreaterThan(3)
+    expect(wrapper.findAll('.hw-row').length).toBe(0)
+
+    await pills[0].trigger('click')
     expect(wrapper.findAll('.hw-row').length).toBe(5)
     expect(wrapper.findAll('.cm-row').length).toBe(0)
 
@@ -292,14 +303,29 @@ describe('the tab it lives on', () => {
     wrapper.unmount()
   })
 
-  it('⚠ IS A SWITCHER AND NOT AN ACCORDION – nothing expands in place', () => {
+  it('⚠ IS A SWITCHER AND NOT AN ACCORDION – nothing expands in place', async () => {
     const store = useGameStore()
     store.snapshot = snapshotAfter()
     const wrapper = mount(CoachMarketScreen, { global: { stubs: { teleport: true } } })
     // The two halves are never on the page together, which is what keeps the screen one viewport
     // tall - the longread he is avoiding. `<details>` is how an accordion would arrive.
     expect(wrapper.findAll('details').length).toBe(0)
-    expect(wrapper.findAll('.hw-row').length + wrapper.findAll('.cm-row').length).toBe(5)
+    // ⚠ WRITTEN AS "EXACTLY ONE HALF IS DRAWN", NOT AS A ROW COUNT. The old form added the two up
+    // and expected 5, which quietly assumed WHICH half had opened - so round-18 #3's landing rule
+    // reddened a test about accordions. The claim was never about the number 5; it is that opening
+    // one half closes the other, and it is now checked on both landings.
+    const onlyOneHalf = () => {
+      const week = wrapper.findAll('.hw-row').length
+      const coaches = wrapper.findAll('.cm-row').length
+      expect(Math.min(week, coaches), 'both halves are on the page at once').toBe(0)
+      expect(Math.max(week, coaches), 'neither half is on the page').toBeGreaterThan(0)
+    }
+    onlyOneHalf()
+    const pills = wrapper.findAll('.tb-seg .tab-pill')
+    await pills[0].trigger('click')
+    onlyOneHalf()
+    await pills[1].trigger('click')
+    onlyOneHalf()
     wrapper.unmount()
   })
 })

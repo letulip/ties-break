@@ -48,14 +48,45 @@ import { formatCents } from '../../shared/money'
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
 
-/** THE TWO HALVES OF ONE DECISION: what she does with her week, and who she does it with. `Her week`
- *  opens first because it is the half that is free, always available, and the one the owner has been
- *  waiting for; `Coaches` is where it was. */
+/** THE TWO HALVES OF ONE DECISION: what she does with her week, and who she does it with. */
 const TABS = [
   { value: 'week', label: 'Her week' },
   { value: 'coaches', label: 'Coaches' },
 ] as const
-const tab = ref<string>('week')
+
+/** ⭐ ROUND-18 #3 – THE SCREEN CHOOSES ITS LANDING TAB, AND A HIRED COACH LANDS ON THE COACHES
+ *  (owner, 13.08: «если тренер выбран, при клике на плашку переходить в список тренеров»).
+ *
+ *  WHAT WAS WRONG, and it was one line: `ref<string>('week')`. Home's coach note is a DOOR – it is a
+ *  `button.note-card` that navigates here – so pressing the card with his face and his words on it
+ *  opened the training dials, and the man the player had just tapped was one more tap away. The
+ *  screen was answering a question nobody had asked.
+ *
+ *  WHY IT IS NOT A CONSTANT ANY MORE, AND WHY SELF-COACHED KEEPS TODAY'S BEHAVIOUR. `Her week` is
+ *  still the right landing when there is nobody to look at: the coaches list is then a shop, not a
+ *  status, and the half that is free and always available is the one that should open. So the
+ *  landing follows `coachId` and nothing else – the same field `.cm-row.current` is drawn from, so
+ *  the tab and the highlighted row can never disagree about whether there is a coach.
+ *
+ *  ⚠ AND IT MUST NOT FIGHT THE PLAYER, which is why this is a null-able CHOICE plus a fallback and
+ *  not a `watch` writing into a plain ref. A watcher on the snapshot would re-land the screen every
+ *  time the worker pushed a new one – tick the week, or hire somebody, and the tab the player is
+ *  reading jumps out from under them. Here the fallback applies only while the player has chosen
+ *  nothing; the first press of either pill pins `chosen` and the screen never second-guesses it
+ *  again. The reset is the unmount: App.vue draws this screen with `v-else-if`, so leaving and
+ *  re-entering is a fresh instance, and re-entering is exactly when the landing should be re-decided.
+ *
+ *  It also survives a snapshot that arrives late (`landing` is a computed, not a value read once at
+ *  setup) – the screen renders nothing until `game.snapshot` exists, but the ordering is not this
+ *  rule's to depend on. */
+const chosen = ref<string | null>(null)
+const landing = computed<string>(() => (game.snapshot?.coachId ? 'coaches' : 'week'))
+const tab = computed<string>({
+  get: () => chosen.value ?? landing.value,
+  set: (value) => {
+    chosen.value = value
+  },
+})
 
 const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
   aggressive: 'Aggressive baseliner',
