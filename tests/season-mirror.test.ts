@@ -387,27 +387,37 @@ describe('the season mirror – the rule itself', () => {
 
 describe('the season mirror – the wrap judges against the table the card names', () => {
   it('⚠ NOT against `activeLadderOf`, and this career is the one that proved it', () => {
-    // THE CONTRADICTION FOUND IN THE BROWSER. `golden-v45` wraps season 1 with `rankTrack` = domestic
-    // (she played her matches on the national ladder and finished #3 on it) while `activeLadderOf` has
-    // already latched to `itf` (she holds junior points). Judged against the ACTIVE table, all thirteen
-    // of her domestic entries counted – so the card read «Final national rank #3» over «13 could not
-    // move her ranking», about the very events that had made her third.
-    const world = walkNear(101, 'golden-v45')
+    // THE CONTRADICTION FOUND IN THE BROWSER. `golden-v45` wraps a season with `rankTrack` = the table
+    // she played her matches on and finished ranked on, while `activeLadderOf` has already latched one
+    // storey higher. Judged against the ACTIVE table every one of those entries counted – so the card
+    // read «Final national rank #3» over «13 could not move her ranking», about the very events that
+    // had made her third.
+    //
+    // ⚠ RE-AIMED 13.08 (docs/specs/coach-match-edge.md): THE SEED IS UNCHANGED, THE WEEK MOVED, AND SO
+    // DID THE PAIR OF TABLES. The coach's edge changed how fast this career climbs, so the season-1
+    // wrap at week 101 no longer diverges (card and active are both `domestic` there now) – the same
+    // career shows the same contradiction at the week-205 wrap instead, one rung up: the card names
+    // `itf` because that is where her season and her ranking were, while the latch has already reached
+    // `wta`. Which pair of tables it is was never the subject; that the wrap judges against the CARD's
+    // table and not the latched one is, and it is asserted below on numbers that still differ (2 against
+    // the card, 8 against the active table). Re-aimed rather than re-recorded: nothing was loosened,
+    // and a wrap that went back to reading `activeLadderOf` still fails this.
+    const world = walkNear(205, 'golden-v45')
     const summary = world.lastSeasonSummary!
-    expect(summary.rankTrack).toBe('domestic')
-    expect(activeLadderOf(world)).toBe('itf')
+    expect(summary.rankTrack).toBe('itf')
+    expect(activeLadderOf(world)).toBe('wta')
 
     // The ledger the wrap just banked from is reset by the wrap itself, so the fold is re-run here off
     // the rows the season actually committed - reconstructed the only way that is honest, by walking
     // one week short of the wrap and reading the ledger before it clears.
-    const oneShort = walkNear(100, 'golden-v45')
+    const oneShort = walkNear(204, 'golden-v45')
     const rows = oneShort.seasonEntries!.rows
-    const againstCard = rows.filter((r) => entryCouldNotMove(r, 'domestic')).length
-    const againstActive = rows.filter((r) => entryCouldNotMove(r, 'itf')).length
+    const againstCard = rows.filter((r) => entryCouldNotMove(r, 'itf')).length
+    const againstActive = rows.filter((r) => entryCouldNotMove(r, 'wta')).length
     // The two really do differ on this career, or the test would prove nothing.
     expect(againstActive).toBeGreaterThan(againstCard)
-    // ...and the banked number is the CARD's one. (The wrap counts the week-100 entries too, so the
-    // banked figure is at least the week-99 fold and strictly below the active-table one.)
+    // ...and the banked number is the CARD's one. (The wrap counts the wrap-week entries too, so the
+    // banked figure is at least the one-week-short fold and strictly below the active-table one.)
     expect(summary.entryMirror!.couldNotMove).toBeLessThan(againstActive)
   })
 })

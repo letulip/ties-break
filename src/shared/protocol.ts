@@ -14,6 +14,10 @@ export type FamilyBackground = 'wealthy' | 'middle' | 'working'
  *  across three real tiers. `self` is the parent on the court – free as a coach, though the court
  *  is still rented. See src/engine/coach.ts for what each rung costs and what it is worth. */
 export type CoachTier = 'self' | 'budget' | 'middle' | 'high' | 'elite'
+/** WHERE A COACH FELL IN HIS OWN TIER'S CORRIDOR, in thirds (docs/specs/coach-match-edge.md §7).
+ *  The only thing about his personal edge a screen may ever say: the VALUE is not observable in
+ *  principle, the PLACE is what a family learns in a year. See `coachEdgePlacement`. */
+export type CoachEdgePlacement = 'lower' | 'middle' | 'upper'
 /** An inclination, not numbers: weights future skill growth (Phase 4), gives build identity now. */
 export type PlayStyle = 'aggressive' | 'counterpuncher' | 'serve-first' | 'all-court'
 
@@ -988,6 +992,11 @@ export interface CoachMarketRow {
   /** [lo, hi] percent of her CURRENT level this rung could add over a season, above what the
    *  parent alone would manage. Computed from her own headroom - see coachSeasonUplift. */
   upliftPct: [number, number]
+  /** [lo, hi] percentage points of match-win chance THIS RUNG's coaches carry, per match, for as
+   *  long as one is paid (docs/specs/coach-match-edge.md §1). The tier's corridor and never this
+   *  man's own number - see `coachMarket` for why a number on an unhired card would break the
+   *  market. His own lands on `Snapshot.coachEdge` after a season with her. */
+  edgePct: [number, number]
   /** WHAT HE DOES ABOUT HER BODY, in one sentence (docs/specs/coach-as-load-manager.md).
    *
    *  Added because a ladder nobody can see is not a product. The load wave gave the rungs two new
@@ -2670,6 +2679,36 @@ export interface Snapshot {
    *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
    *  fills her ceiling. Never quotes the ceiling itself; see `coachRoomNote`. */
   coachRoomNote: string
+  /** WHAT THE COACH'S EDGE IS WORTH HERE (docs/specs/coach-match-edge.md §4 and §7): the corridor of
+   *  the rung she is on, and WHERE IN IT the man she actually has turned out to sit, once she has
+   *  had him for a full season.
+   *
+   *  ⚠ THERE IS NO NUMBER FOR HIM ON THIS SNAPSHOT, and that is structural rather than a matter of
+   *  discipline (§7). `realisedPct` used to be here and the card printed it to two decimals; the
+   *  owner's objection – «как это вообще измеримо, если абстрагироваться от нашей механики?» – is
+   *  that nobody inside the world could ever produce that figure. A field the UI cannot read is a
+   *  rule that cannot be broken by the next screen that wants to be helpful. The engine still knows
+   *  the value (`coachEdgePp`) and composes her match player from it; the UI gets `placement`.
+   *
+   *  ⚠ `placement` IS null UNTIL `revealed`, and the ENGINE decides that – the reveal is a rule about
+   *  the career (a season with him), not a formatting choice, and it is the anti-shopping gate §4
+   *  exists for. Derived at snapshot time; nothing about the edge is persisted, because the value is
+   *  re-derived off his id like every other sub-stream in the engine. */
+  coachEdge: {
+    /** [lo, hi] pp per match for her rung – [0, 0] self-coached, which is not a corridor */
+    corridorPct: [number, number]
+    /** which third of that corridor he landed in, or null while there is nothing honest to show */
+    placement: CoachEdgePlacement | null
+    revealed: boolean
+    weeksTogether: number
+    revealAfterWeeks: number
+    /** ...and the same clock in seasons, which is what the plaque's CONFIDENCE is banded on (§8a) */
+    seasonsTogether: number
+    /** THE PLAQUE, WRITTEN (§7/§8a). One sentence, composed engine-side from the place and the
+     *  clock, because the two halves answer to different things and a screen holding both would be
+     *  the second copy of that rule. The card prints it and formats nothing. */
+    plaqueLine: string
+  }
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */
   vacations: VacationBooking[]
@@ -2808,6 +2847,20 @@ export interface Snapshot {
   trainingRead: TrainingRead | null
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
+  /** ⭐ ROUND-19 #2 – THE SEASON WHOSE WRAP-UP IS STILL OWED THIS WEEK (its INDEX), or null.
+   *
+   *  The recap popup used to be gated on the `'season-end'` STOP REASON, and a stop reason is a
+   *  property of the last ADVANCE: any later command builds a snapshot without one. The retirement
+   *  offer is raised on the wrap week by construction and outranks the recap, so answering it – a
+   *  real command – erased the reason behind it and the season's summary was never shown. The fork
+   *  did the same one rank up.
+   *
+   *  So the recap now reads STATE, like the ending, the fork, the offer and the injury report before
+   *  it: `seasonWrapDue` in engine/world/milestones.ts, derived from `lastSeasonSummary` and the
+   *  week, persisting nothing. The number is the season's IDENTITY and the UI keeps it as the
+   *  watermark of what it has already shown – a per-snapshot dismiss flag can only gate a per-advance
+   *  reason, which is round-16 #19's lesson about the injury popup. */
+  seasonWrapPrompt: number | null
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
    *  Stats. Empty until the first wrap-up. */
   seasonHistory: SeasonHistoryEntry[]

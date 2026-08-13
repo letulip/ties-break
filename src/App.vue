@@ -616,9 +616,24 @@ function dismissRecovered(): void {
 // dismiss flag is reset whenever a fresh snapshot arrives (any action) and set
 // when the user dismisses the toast by hand.
 const stopToastDismissed = ref(false)
-// Round-7 item 4: the season-end stop is owned by SeasonSummaryDialog, not the toast. A fresh
-// snapshot resets both dismiss flags (any action re-arms them).
-const seasonSummaryDismissed = ref(false)
+// Round-7 item 4: the season-end stop is owned by SeasonSummaryDialog, not the toast.
+//
+// ⭐ ROUND-19 #2 – ITS DISMISS FLAG NAMES THE SEASON NOW, and is stored per career, because the gate
+// below stopped reading a stop reason. See `showSeasonSummary` for the whole argument; the shape here
+// is the injury report's, one popup over (round-16 #19): a flag reset by every fresh snapshot can only
+// gate a reason that dies with the advance, and a STATE gate outlives the advance – so setting the
+// plan, hiring a coach or entering an event on the wrap week would raise a recap the player had
+// already continued past, over and over. The identity is the season INDEX, and persisting it is what
+// stops a reload on that same week from re-raising it.
+const seasonWrapSeenKey = () => `tb:seasonWrapSeen:${game.snapshot?.careerId ?? ''}`
+const seasonWrapSeen = ref<string | null>(localStorage.getItem(seasonWrapSeenKey()))
+const seasonWrapPrompt = computed(() => game.snapshot?.seasonWrapPrompt ?? null)
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    seasonWrapSeen.value = localStorage.getItem(seasonWrapSeenKey())
+  },
+)
 // R9-21a: the injury stop is owned by the blocking InjuryStopDialog (the quiet toast buried
 // it – the owner only noticed the withdrawal three weeks later).
 //
@@ -659,7 +674,6 @@ watch(
   () => game.snapshot,
   () => {
     stopToastDismissed.value = false
-    seasonSummaryDismissed.value = false
   },
 )
 
@@ -894,13 +908,28 @@ const showInjuryStop = computed(
     // report can wait a click and the question is what time is stopped on.
     !showKnock.value,
 )
-// The end-of-season summary popup: auto-shows when `advance` reports 'season-end' and a summary is
-// present, until the player hits Continue (client-side flag). Same tab-gate removal as above.
+// The end-of-season summary popup: auto-shows on the week the wrap-up was banked, until the player
+// hits Continue.
 //
 // ONE overlay at a time, in a defined order: when a week is both an injury and the season's end,
 // the injury is shown FIRST (it is the news that cost her entries) and the wrap-up waits for that
 // Continue – it cannot be lost, because dismissing the injury re-evaluates this gate. No week can
 // dead-end: every reason in the set owns either a dialog with a Continue or a dismissable toast.
+//
+// ⭐ ROUND-19 #2 – IT READS THE SNAPSHOT NOW, NOT THE STOP REASON, and this is the same argument the
+// knock, the ending and the injury report already make, arriving at the beat that most needed it.
+// The owner: «И по-моему за этим попапом скрылся или не показался попап с итогами сезона.»
+//
+// IT WAS NOT A RACE. `stopReasons.includes('season-end')` was the gate, and stop reasons are set by
+// the ADVANCE that produced them – every other command builds a snapshot without any. The retirement
+// offer is raised ON the wrap week by construction and outranks the recap in `blockingOverlay`, which
+// is correct: a question time is stopped on comes before a report. But answering it is a REAL
+// COMMAND, so the reason died with it and the summary could never be satisfied again. The injury
+// report survives the identical ordering only because dismissing it issues no command at all – so the
+// difference was never the order, it was where the reason lived. The fork, one rank above the offer,
+// erased the same beat by the same argument and is fixed by the same field.
+//
+// ⚠ THE ORDER IS UNCHANGED AND MUST STAY. Nothing here jumps the queue; the recap simply survives it.
 const showSeasonSummary = computed(
   () =>
     // W2-ENDINGS: the retirement offer is raised ON the wrap week by construction, so this is a real
@@ -908,16 +937,19 @@ const showSeasonSummary = computed(
     !showEnding.value &&
     !showFork.value &&
     !showRetirement.value &&
-    stopReasons.value.includes('season-end') &&
+    seasonWrapPrompt.value !== null &&
+    String(seasonWrapPrompt.value) !== seasonWrapSeen.value &&
     !!game.snapshot?.lastSeasonSummary &&
-    !seasonSummaryDismissed.value &&
     !showInjuryStop.value &&
     // W4: ...and behind the knock, for the same reason. A wrap-up week is off-season, so a knock can
     // never arrive on one; this keeps the chain total anyway.
     !showKnock.value,
 )
 function dismissSeasonSummary(): void {
-  seasonSummaryDismissed.value = true
+  const season = seasonWrapPrompt.value
+  if (season === null) return
+  seasonWrapSeen.value = String(season)
+  localStorage.setItem(seasonWrapSeenKey(), seasonWrapSeen.value)
 }
 
 // =================================================================================================

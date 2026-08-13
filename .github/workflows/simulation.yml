@@ -18,6 +18,39 @@
 # tab. Rot gets caught within a week rather than never. And the working rule, which is the real
 # guard: TOUCH THE MATCH MODEL OR A BENCH TOOL -> run `npm run test:sim` yourself and put the
 # numbers in the PR. That is how every balance change in this project has actually been reviewed.
+#
+# =================================================================================================
+# ⚠ WHAT THE LINE IS ACTUALLY DRAWN ON, WRITTEN DOWN 13.08 BECAUSE IT HAD DRIFTED.
+#
+# The exclusion above is about MONTE-CARLO SWEEPS - deterministic statistical calibration - and not
+# about "files that simulate careers". The sim project had quietly become the second thing: three
+# more files arrived by splitting the original three, and `tests/endings-bench.test.ts` arrived
+# because it drives careers, even though its own header says it is the opposite kind of file
+# ("the smallest slice that can still catch the three things a refactor could silently break... it
+# asserts BEHAVIOUR, not the printed numbers"). vite.config.ts recorded that it was placed there for
+# SERIALISATION, not for cost. Nobody priced what that placement cost, and here it is:
+#
+#     "Rot gets caught within a week rather than never" only holds if somebody READS the weekly run.
+#     Timing all eleven files on 13.08 turned up THREE pre-existing failures, none of them noticed:
+#       endings-bench          red - its fork test threw on round-17's college precondition
+#       fatigue-bench-planner  red - the doctor-veto direction check, 72 against 75
+#       fatigue-bench-policy   64.1 s, two tests GREEN, exit 1 - birpc's wall, on a quiet 10-core
+#                              Mac, alone in its own process, with nothing left to shard
+#
+# One is luck. Three is a feedback loop that nobody is in. So a regression test does NOT get to live
+# here just because it is slow: endings-bench moved to HEAVY_UNIT_FILES and now gates every pull
+# request in a process of its own (12.2 s solo; scripts/units.mjs carries the whole table).
+#
+# ⚠ AND THE THREE FILES NAMED ABOVE STAY OUT, INCLUDING THE CHEAP ONE. econ-bench is 39.0 s and
+# fatigue-bench 29.4 s, but match/calibration is only 14.9 s today - cheaper than several files that
+# are staying, and cheap enough that a cost-only rule would readmit it. It is still 10k simulated
+# matches judged against hold-rate bands, which is the definition of the thing this file exists to
+# keep out. Cost is the second test, never the first.
+#
+# ⚠ AND MEASURE BEFORE YOU MOVE ANYTHING. Every runtime quoted in vite.config.ts and in these files'
+# own headers was measured months ago and every single one is now an UNDER-estimate (econ-reach-pro
+# 21.8 -> 41.9, fatigue-bench-planner 7.4 -> 22.3). The suite gets dearer every wave; a stale number
+# is how a file ends up over the wall without anybody deciding it should be.
 name: Simulation calibration
 
 on:

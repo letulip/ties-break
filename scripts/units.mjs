@@ -46,6 +46,44 @@
 //                                        ---------
 //                                        61 tests, the same 61
 //
+// ⚠ THE FILE THAT CAME BACK (13.08), and it is this mechanism used in the opposite direction.
+//
+// The Monte-Carlo sweeps left the gate for good reasons that still hold (.github/workflows/
+// simulation.yml). But the sim project had also collected a file that is NOT a sweep:
+// `tests/endings-bench.test.ts` – "the smallest slice that can still catch the three things a
+// refactor could silently break", asserting BEHAVIOUR and explicitly not the printed numbers. It
+// was filed there for SERIALISATION rather than for cost (vite.config.ts said so in as many words),
+// and the price of that filing was that it stopped gating anything.
+//
+// THE BILL ARRIVED AND IT WAS PAID THREE TIMES. Measuring the whole project, one file per process,
+// found THREE pre-existing failures nobody was looking at:
+//
+//     endings-bench           red on clean `main` – the fork test threw on round-17's college
+//                             precondition, which had made one of its three answers illegal
+//     fatigue-bench-planner   red – the doctor-veto direction check, 72 against 75
+//     fatigue-bench-policy    64.1 s, TWO TESTS GREEN, exit 1 – birpc's wall, hit on a quiet
+//                             10-core Mac, in a process of its own, with nothing left to shard
+//
+// One is luck; three is a feedback loop nobody is in. "Rot gets caught within a week rather than
+// never" (simulation.yml) only holds if somebody reads the weekly run.
+//
+// MEASURED, ALL ELEVEN, solo, one vitest process each, quiet machine – so the cut below is a
+// reading rather than a preference. Wall clock; file test-time is ~1.1 s less in every row:
+//
+//     econ-reach-pro           41.9 s      fatigue-bench-planner    22.3 s   RED (assertion)
+//     econ-bench               39.0 s      fatigue-bench-policy-104w 19.7 s
+//     econ-reach               37.9 s      match/calibration        14.9 s
+//     econ-reach-agree         35.8 s      endings-bench            12.2 s   <- the only one moved
+//     fatigue-bench            29.4 s      fatigue-bench-policy     65.2 s   RED (birpc stall)
+//     econ-bench-survival      29.1 s
+//
+// ⚠ THE BAR IS TWO TESTS AND BOTH ARE LOAD-BEARING: a regression test BY ITS OWN HEADER, and real
+// headroom under the 60 s wall at CI's ~1.9x local. Cost alone would have let `match/calibration`
+// (14.9 s) back in, and it is calibration – 10k simulated matches against hold-rate bands – which is
+// precisely the file family simulation.yml was written about. endings-bench is the only file that
+// clears both: 12.2 s local is ~23 s on CI, a third of the window, and it can triple before it is
+// near the wall. It costs the gate ~12 s.
+//
 // `--reporter default`, one file at a time, against the ambient desktop load the 34.2 s baseline was
 // taken under (no competing suite; verified before each run). CI runs ~1.9x local – radar's own
 // 34.2 s -> 64.51 s IS that calibration rather than a guess – so the worst of the three now lands at
@@ -75,6 +113,8 @@ const HEAVY_UNIT_FILES = [
   'tests/radar-read.test.ts',
   'tests/radar-training.test.ts',
   'tests/kidLife.test.ts',
+  // ⚠ CAME BACK FROM THE SIM PROJECT (13.08) – see THE FILE THAT CAME BACK, above. 12.2 s solo.
+  'tests/endings-bench.test.ts',
 ]
 
 const reporter = process.argv.includes('--verbose') ? 'default' : 'dot'

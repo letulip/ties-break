@@ -283,10 +283,22 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
     // first, and it is green – the stop reason is still collected and still halts a multi-week
     // advance. It simply is not what raises the dialog any more.
     expect(injury).toContain('sinceWeek === game.snapshot.week')
-    // ...and the SEASON SUMMARY is deliberately still stop-reason gated, which is correct rather
-    // than an inconsistency: a wrap-up is produced by an advance and by nothing else, so its reason
-    // cannot be missed the way an injury's could.
-    expect(summary).toContain("stopReasons.value.includes('season-end')")
+    // ⭐ ROUND-19 #2 – ...AND SO DOES THE SEASON SUMMARY NOW. This assertion used to read
+    // `summary` for `stopReasons.value.includes('season-end')`, justified here by "a wrap-up is
+    // produced by an advance and by nothing else, so its reason cannot be missed the way an
+    // injury's could". THE SECOND HALF OF THAT SENTENCE IS FALSE, and the owner found it: the
+    // reason is not missed, it is DESTROYED. The retirement offer is raised on the wrap week by
+    // construction and outranks the recap, so answering it – a real command – produced a fresh
+    // snapshot with no stop reasons and the summary could never be satisfied again. The fork did
+    // the same one rank up. The injury report survived the identical ordering only because
+    // dismissing it issues no command at all.
+    //
+    // The gate is `snapshot.seasonWrapPrompt` (engine/world/milestones.ts `seasonWrapDue`) – the
+    // same shape and the same argument as the injury line above, and the ORDER below is unchanged.
+    // The behaviour is proven mounted in tests/component/round19-wrapup.test.ts; this stays a source
+    // pin because what it guards is which INPUT the gate reads.
+    expect(summary).toContain('seasonWrapPrompt.value !== null')
+    expect(summary).not.toContain("stopReasons.value.includes('season-end')")
     // The wrap-up waits behind the injury dialog – never both overlays at once, and never a dead
     // end: dismissing the injury re-evaluates this gate and the summary appears.
     expect(summary).toContain('!showInjuryStop.value')

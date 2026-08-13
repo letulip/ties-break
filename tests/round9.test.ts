@@ -24,6 +24,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
+import { coachMatchEdge } from '../src/engine/world/player'
 import { applyKit, FRESH_KIT, kitMultipliers, kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
@@ -463,12 +464,19 @@ describe('R9-19 — match-strength coupling', () => {
     // ⚠ RE-AIMED (equipment slice, docs/specs/equipment-and-serve-speed.md §2): the composition point
     // now carries a THIRD multiplicative term - the condition of her kit - so the expected value names
     // it instead of the assertion being loosened. It is still an exact identity to ten places, so a
-    // fourth term appearing in `kidMatchPlayerFor` still fails this test, which is the fact it guards.
+    // further term appearing in `kidMatchPlayerFor` still fails this test, which is the fact it guards.
+    //
+    // ⚠ RE-AIMED AGAIN 13.08 (docs/specs/coach-match-edge.md) – and the shape of the addition is the
+    // point. The coach's edge is ADDITIVE and lands after the multiplication, so naming it here leaves
+    // the multiplicative identity this test guards completely intact: the factor still has to be
+    // exactly right on every wing, because the coach adds the SAME number to all five.
     const kit = kitMultipliers(kitWearAt(world.seed, world.profile.background, world.week))
-    expect(stored.serve).toBeCloseTo(raw.serve * factor * kit.serve, 10)
-    expect(stored.ret).toBeCloseTo(raw.ret * factor * kit.ret, 10)
-    expect(stored.composure).toBeCloseTo(raw.composure * factor, 10) // no kit line touches composure
-    expect(stored.stamina).toBeCloseTo(raw.stamina * factor * kit.stamina, 10)
+    const edge = coachMatchEdge(world)
+    expect(edge).toBeGreaterThan(0) // r9-couple opens on DEFAULT_PROFILE's middle coach
+    expect(stored.serve).toBeCloseTo(raw.serve * factor * kit.serve + edge, 10)
+    expect(stored.ret).toBeCloseTo(raw.ret * factor * kit.ret + edge, 10)
+    expect(stored.composure).toBeCloseTo(raw.composure * factor + edge, 10) // no kit line touches composure
+    expect(stored.stamina).toBeCloseTo(raw.stamina * factor * kit.stamina + edge, 10)
     skipTournament(world)
     closeTournament(world)
   })
@@ -480,10 +488,14 @@ describe('R9-19 — match-strength coupling', () => {
     const raw = kidMatchPlayer({ ...world, skills: skillsAtEntry })
     const stored = world.pendingTournament!.players[KID_ID]
     // ⚠ RE-AIMED (equipment slice): "unscaled" is a claim about the CONDITION factor, and it still
-    // holds exactly - the only thing between `raw` and `stored` is her kit.
+    // holds exactly - the only things between `raw` and `stored` are her kit and (since 13.08, and
+    // this world has a middle coach) her coach's additive edge. Both are named rather than absorbed
+    // into a tolerance, so the exact `toBe` survives and the claim is unchanged.
     const kit = kitMultipliers(kitWearAt(world.seed, world.profile.background, world.week))
-    expect(stored.serve).toBe(raw.serve * kit.serve)
-    expect(stored.stamina).toBe(raw.stamina * kit.stamina)
+    const edge = coachMatchEdge(world)
+    expect(edge).toBeGreaterThan(0)
+    expect(stored.serve).toBe(raw.serve * kit.serve + edge)
+    expect(stored.stamina).toBe(raw.stamina * kit.stamina + edge)
     // ...and the neutral element is still byte-identical, which is what protects the frozen pins: a
     // girl in fresh kit at condition 100 plays her raw build to the last bit.
     expect(applyKit({ ...raw }, FRESH_KIT)).toEqual(raw)

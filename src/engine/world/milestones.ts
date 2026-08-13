@@ -542,6 +542,49 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   world.seasonEntries = emptySeasonEntries(wrapWeek)
 }
 
+/** ⭐ ROUND-19 #2 – IS THE SEASON'S WRAP-UP STILL OWED THIS WEEK? The season's index, or null.
+ *
+ *  The owner: «И по-моему за этим попапом скрылся или не показался попап с итогами сезона.» He is
+ *  right, and it was not a race – it was destroyed by construction, every time (docs/rounds/
+ *  round-19.md §2):
+ *
+ *    1. the advance stops on the wrap week with `'season-end'` among its `stopReasons`;
+ *    2. the retirement offer is raised ON that week by design, and it outranks the summary in
+ *       `blockingOverlay` – correctly: a question time is stopped on comes before a report;
+ *    3. the player answers, `answerRetirement` runs, and the worker builds a fresh snapshot – with no
+ *       `stopReasons`, because only an `advance` ever sets them;
+ *    4. `'season-end'` is gone for ever, so the gate that required it can never be satisfied again
+ *       and the season's summary is lost. The fork, one rank above it in the same list, erased the
+ *       same beat by the same argument.
+ *
+ *  ⚠ THE ORDER WAS NEVER THE BUG, AND IT DOES NOT CHANGE. What was wrong is that a REASON THE ENGINE
+ *  PRODUCED was kept somewhere a later command silently erases. The injury report survives the very
+ *  same ordering only because dismissing it issues no command at all (a client-side flag, so the gate
+ *  is merely re-evaluated) – which is the contrast that says where the fix belongs: anything cleared
+ *  by a real command needs its reason to be readable from STATE. This is round-16 #19's lesson,
+ *  arriving at the second popup that needed it.
+ *
+ *  ⚠ DERIVED, NEVER PERSISTED – so this is not a schema move (CLAUDE.md invariant 3): no field, no
+ *  migration, no fixture. Both halves of the question are already in the world. The week is the
+ *  wrap-up's own week test, the identical line `maybeFireSeasonWrapUp` opens with, and the summary is
+ *  `lastSeasonSummary`, which that function banks.
+ *
+ *  ⚠ AND IT COMPARES THE BANKED SEASON, WHICH IS NOT A FORMALITY. `lastSeasonSummary` holds ONE
+ *  season and is overwritten every year, so "a summary exists and it is a wrap week" would be true of
+ *  LAST year's recap on a wrap week whose own fold has not run yet – exactly the state a tournament
+ *  reveal leaves behind, because `finalizeTournament` runs the deferred block when the reveal closes
+ *  and not when the advance returns. The season index is the identity (never the calendar year: a
+ *  year repeated once already and ate a row out of the Stats table), and the UI reads it back as the
+ *  identity of what it has shown – a per-snapshot dismiss flag cannot gate a STATE that outlives the
+ *  advance. */
+export function seasonWrapDue(world: WorldState): number | null {
+  if (world.week % WEEKS_PER_YEAR !== WEEKS_PER_YEAR - OFF_SEASON_WEEKS) return null
+  const summary = world.lastSeasonSummary
+  if (summary === null) return null
+  const seasonIndex = seasonIndexOf(world.week)
+  return summary.seasonYear === seasonYear(seasonIndex) ? seasonIndex : null
+}
+
 /** A zeroed entry ledger, opened at a stated week. Three callers, exactly as `emptySeasonRecord` has:
  *  the season reset above, `createWorld`, and the v45 migration – which needs the same shape from the
  *  week the old save happens to be sitting on. */

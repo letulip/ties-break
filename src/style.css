@@ -3642,9 +3642,46 @@ tr.kid-row td {
   font-weight: 500;
   color: var(--muted);
 }
+/* ⚠ ONE ROW THAT WRAPS, NOT TWO RULES (docs/specs/coach-match-edge.md §4). The card carries two
+   figures now - what the rung adds over a SEASON and what it is worth PER MATCH - and the owner
+   asked for the second one beside the first rather than in a block of its own («можно даже добавить
+   к текущему рядом подписать возле сезона»). Measured at the content column's real widths: side by
+   side from ~250px of column, stacked below that, which is every phone. Wrapping is what lets one
+   rule answer both without a breakpoint.
+
+   ⚠ AND WRAPPING HERE IS FREE, WHICH IT WAS NOT BEFORE ROUND-18 #2. A second line makes the row
+   taller, and until the strip was given a width a taller row meant a WIDER portrait - the feedback
+   loop that made every attempt to push the text right fail. `.cm-art` is 62px full stop now, so the
+   text can grow downwards as much as it likes and the picture cannot follow it.
+
+   No separator glyph between the two: they wrap onto separate lines at every mobile width, where a
+   middot would be left dangling at the end of the first line. The units carry the distinction. */
 .cm-uplift {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+  row-gap: 1px;
   font-size: 10.5px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+/* THE PLAQUE - what the coach she actually has turned out to be worth, or that it is too early to
+   say. Only ever on `.cm-row.current`, and deliberately NOT accent-coloured in either state: a
+   revealed 0.21 is a fact reported plainly and a revealed 0.68 is not a fanfare (the owner's «мы ни
+   за что не наказываем», read as a rule about copy). Same size as the figures above it and quieter
+   than the name, because it is the card's argument rather than its identity. */
+.cm-plaque {
+  font-size: 10.5px;
+  /* ⚠ ONE STEP OF WEIGHT, AND NOTHING ELSE, measured rather than guessed: at 400/#8e9ba4/10.5px this
+     line computed BYTE-IDENTICAL to `.cm-load` below it, and the two read on screen as one block of
+     grey prose with the payoff buried in it. 500 is `.cm-tags`'s weight - the card's other line of
+     "what this coach IS" - and it separates a fact about THIS PERSON from a sentence about his rung.
+     The colour deliberately does not move: --ink-2 is a step off the NAME's white and would make the
+     plaque shout, and the accent would turn a low draw into bad news. */
+  font-weight: 500;
+  line-height: 1.35;
   font-variant-numeric: tabular-nums;
   color: var(--ink-soft);
 }

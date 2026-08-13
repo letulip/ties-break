@@ -260,15 +260,23 @@ export function endingForForkAnswer(
 
 // --- #5 and #6: the natural end, and the plateau reading ----------------------------------------
 
-/** What the plateau reading needs, and all it needs. */
+/** What the plateau reading needs, and all it needs.
+ *
+ *  ⭐ ROUND-19 #1 – EVERY FIGURE IN HERE IS ABOUT ONE TABLE, THE ONE SHE IS CURRENTLY ON. The view
+ *  is built by `plateauViewOf` (engine/world/endings.ts), which resolves that table once through
+ *  `activeLadderOf` and reads both fields below against it. This leaf never learns which table it
+ *  is, and does not need to – but it may not be handed two. */
 export interface PlateauView {
   ageYears: number
   /** the season index that just closed */
   seasonIndex: number
-  /** her season-end rank per finished season, oldest first */
+  /** her season-end rank per finished season ON THAT TABLE, oldest first – and ONLY the seasons that
+   *  carry one. A season she was not ranked in it, and a season banked before the per-track record
+   *  existed at all (v46), are not comparable and are simply absent, which is what makes the two
+   *  guards in `plateauReading` below into "decline to fire". */
   seasonEndRanks: readonly { seasonIndex: number; endRank: number }[]
   /** the season she last cleared a rung in – the first title or final at the highest tier she has
-   *  ever reached one at – or null if she has never reached a final anywhere */
+   *  ever reached one at ON THAT SAME TABLE – or null if she has never reached a final there */
   lastRungSeasonIndex: number | null
 }
 
@@ -286,6 +294,11 @@ export interface PlateauView {
  *  means: she is where she is going to be. */
 export function plateauReading(view: PlateauView, seasons: number = ENDINGS.plateauSeasons): boolean {
   if (view.ageYears < ENDINGS.plateauFromAgeYears) return false
+  // ⭐ ROUND-19 #1 – THESE TWO GUARDS ARE WHERE THE RULE DECLINES, and what they refuse changed with
+  // the view rather than with a line here. There are exactly `seasons` season indices in the range
+  // this filter keeps, so a short window means a season inside it carries no rank ON HER TABLE – and
+  // an empty `before` means there is nothing on that table to have improved on. Either way the
+  // question cannot be asked of one ladder, so it is not asked at all.
   const window = view.seasonEndRanks.filter((s) => s.seasonIndex > view.seasonIndex - seasons)
   if (window.length < seasons) return false
   const before = view.seasonEndRanks.filter((s) => s.seasonIndex <= view.seasonIndex - seasons)

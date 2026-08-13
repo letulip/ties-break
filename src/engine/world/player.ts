@@ -5,15 +5,17 @@
 // (`{ seed, profile, skills }`) rather than `WorldState` itself wherever it can, so the match
 // surfaces, the planner and the tests can all build a player without importing the integration core.
 //
-// ⚠ RNG: `startingSkills` derives from the seed, it does not draw on MAIN.
+// ⚠ RNG: `startingSkills` derives from the seed, it does not draw on MAIN – and neither does the
+// coach's edge, which is a re-derivation off `seed:coachedge:<id>` (engine/coach.ts).
 import { pickInt, rngFromSeed } from '../rng'
 import { applySurfaceStyle } from '../match/style'
 import { applyKit, kitWearAt } from '../equipment'
 import { kitFreshCap } from '../offers'
 import { conditionMatchFactor } from '../condition'
-import { relativeAgeHeadStart, rollPotential, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
+import { relativeAgeHeadStart, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
+import { coachEdgePp } from '../coach'
 import type { MatchPlayer, Surface } from '../match/types'
-import type { CoachTier, KitState, Offer, PlayerProfile } from '../../shared/protocol'
+import type { KitState, Offer, PlayerProfile } from '../../shared/protocol'
 import { KID_ID } from './constants'
 import { kidAgeExact } from './age'
 
@@ -74,49 +76,57 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; sk
   }
 }
 
-// --- L1 measurement scaffolding (docs/specs/the-wall-2026-08.md §2 L1, §3) -----------------------
+// --- THE COACH'S EDGE, TURNED INTO TENNIS (docs/specs/coach-match-edge.md §3) --------------------
 //
-// ⚠ MEASUREMENT SCAFFOLDING, DEFAULT INERT. The wall spec's L1 lever – the owner's "the coach adds
-// a small per-match edge, for as long as he is paid" – has no existing knob: a Markov engine has no
-// "win chance" dial, so the honest translation is a small additive delta on her ON-COURT attributes
-// at the composition point, calibrated per tier so her mean match-win probability against her actual
-// field moves by the owner's percentage (tools/wall-l1-bench.ts is the calibration and the sweep).
+// The corridors and HIS OWN NUMBER live in engine/coach.ts, where every other fact about a coach
+// lives - `coachEdgePp` is one uniform into his tier's corridor, drawn off his id, constant for as
+// long as he is hers. What lives HERE is the last step: turning that percentage into the only thing
+// the match engine can consume.
 //
-// The defaults below are EXACTLY today's behaviour: every tier 0, decay off, and `kidMatchPlayerFor`
-// returns the identical object it always built (the zero-edge early return below). Proved inert two
-// ways per the spec – the frozen MAIN capture re-derives (tests/condition.test.ts) and a full
-// 208-week career reproduces byte-identically (tools/wall-freeze-probe.ts). SHIPPING a non-zero
-// value is a separate decision that waits on the measured numbers; nothing in the app writes these.
+// ⚠ WHY IT IS A DELTA ON HER WINGS. A Markov engine has no "win chance" dial - matches are decided
+// point by point - so the honest translation is a small additive delta on her five ON-COURT
+// attributes at the composition point, the same seam kit and condition already use, calibrated so her
+// mean match-win probability against her ACTUAL field moves by the corridor's percentage.
 //
-// ⚠ ZERO RNG. The edge is pure arithmetic over state (and, in decay mode, over `seed:kid` /
-// `seed:potential` sub-stream DERIVATIONS, which are re-derived pure functions – no stream advances).
-// MAIN cannot see this knob at any setting; only match OUTCOMES move, exactly like kit and condition.
-/** Per-coach-tier additive edge on every on-court attribute, in skill points. All zeros = shipped
- *  behaviour. Read at composition from `profile.coachTier`, so firing the coach removes the edge the
- *  same week – "the edge leaves with him", which is the owner's whole-career market for the rung. */
-export const COACH_MATCH_EDGE: Record<CoachTier, number> = { self: 0, budget: 0, middle: 0, high: 0, elite: 0 }
-/** The owner's decay variant (addendum, 12.08: the edge falls as she fills up, «но не у всех
- *  0.0-0.1» – it must never reach zero). Curve: `edge × (floor + (1 − floor) × headroomShare)` with
- *  headroomShare = remaining headroom / total headroom, summed over the five wings – 1 at birth,
- *  falling toward `floor` as she approaches her ceiling, never below it. Off = flat, the default. */
-export const COACH_MATCH_EDGE_DECAY: { on: boolean; floor: number } = { on: false, floor: 0.5 }
+// ⚠ ZERO RNG ON MAIN. `coachEdgePp` draws on the purpose-scoped `seed:coachedge:<id>` sub-stream and
+// this file only multiplies. The frozen capture (41550 / e6b0c709) cannot move, and only match
+// OUTCOMES do - exactly like kit and condition.
 
-/** The edge she carries onto court today – 0 for every career under the shipped defaults. */
-export function coachMatchEdge(world: { seed: string; profile: PlayerProfile; skills?: KidSkills }): number {
-  const base = COACH_MATCH_EDGE[world.profile.coachTier] ?? 0
-  if (base === 0) return 0
-  if (!COACH_MATCH_EDGE_DECAY.on) return base
-  const start = startingSkills(world.seed, world.profile)
-  const potential = rollPotential(world.seed, start)
-  const s = world.skills ?? start
-  let left = 0
-  let total = 0
-  for (const k of SKILL_KEYS) {
-    left += Math.max(0, potential[k] - s[k])
-    total += potential[k] - start[k]
-  }
-  const share = total > 0 ? Math.max(0, Math.min(1, left / total)) : 0
-  return base * (COACH_MATCH_EDGE_DECAY.floor + (1 - COACH_MATCH_EDGE_DECAY.floor) * share)
+/** PERCENT -> SKILL POINTS, and the one number that carries the whole calibration.
+ *
+ *  ⚠ MEASURED, NOT ASSUMED, AND THE ANCHOR TABLE IS WRITTEN DOWN HERE so nobody ever re-derives it by
+ *  guess. `the-wall-2026-08.md` §M1: 1512 sampled states over 16 careers, her real field per rung -
+ *
+ *    target (pp per match)   measured delta (skill points, all five wings)
+ *      0.45                    0.234
+ *      0.65                    0.339
+ *      0.85                    0.444
+ *      1.05                    0.549
+ *      2.10                    1.110
+ *
+ *  Linear to the eye: the ratio is 0.520 at 0.45 and 0.523 at 1.05, so ONE constant is accurate to
+ *  under 1% everywhere inside the shipped corridors (0.2 - 1.1 pp). The 2.10 row is the 2x arm, at
+ *  double the elite ceiling and outside anything that ships; the fit drifts to 1.1% there, which is
+ *  why the claim is bounded to the corridors rather than stated flatly.
+ *
+ *  FOR SCALE: the visibility floor on one wing is 3 points (`TRAINING_FOG_FLOOR`), so no setting here
+ *  is ever visible on the radar. That is correct rather than a limitation - the coach is worth a point
+ *  of a MATCH, not a point of HER. */
+export const COACH_EDGE_POINTS_PER_PP = 0.5225
+
+/** The edge she carries onto court today, in skill points on every wing - exactly 0 whenever nobody
+ *  is hired, so the parent on the court is on the same code path she has always been on.
+ *
+ *  ⚠ IT READS `coachId`, NOT `profile.coachTier`. The profile's rung is the ONBOARDING record and
+ *  `hireCoach` never touches it - every engine surface that wants the rung she is actually on derives
+ *  it from the id (`tierOf(coachById(...))` in the snapshot and in knock.ts). Reading the profile here
+ *  would hand a fired coach's edge to a self-coaching parent for the rest of the career.
+ *
+ *  So firing him removes the edge the same week - "the edge leaves with him", which is the owner's
+ *  whole-career market for the rung - and re-hiring him hands back the same number, because the number
+ *  is a fact about the man. */
+export function coachMatchEdge(world: { seed: string; coachId?: string | null }): number {
+  return coachEdgePp(world.seed, world.coachId ?? null) * COACH_EDGE_POINTS_PER_PP
 }
 
 /** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
@@ -143,9 +153,14 @@ export function kidMatchPlayerFor(
     /** W3-KIT (v37): the rung she is on per line. Optional for the same reason `offers` is - a pure
      *  caller that builds a player without a full world gets the shipped rung, byte-identical. */
     kit?: KitState
-    /** L1 scaffolding: her CURRENT build, read only by the decay curve. Optional for the same reason
-     *  `offers` is – a pure caller without one gets the birth build, exactly as `kidMatchPlayer`. */
+    /** her CURRENT build. Optional for the same reason `offers` is – a pure caller without one gets
+     *  the birth build, exactly as `kidMatchPlayer`. */
     skills?: KidSkills
+    /** WHO IS IN HER CORNER, and the only input the coach's edge has. Optional for the same reason
+     *  `offers` is: a pure caller that builds a player without a full world gets no coach and so no
+     *  edge, which is byte-identical to what it got before this shipped. Every path that actually
+     *  puts her on court passes the whole `WorldState`, which carries it. */
+    coachId?: string | null
   },
   surface: Surface,
 ): MatchPlayer {
@@ -183,10 +198,16 @@ export function kidMatchPlayerFor(
       world.kit ?? null,
     ),
   )
-  // L1 scaffolding (see COACH_MATCH_EDGE above): a zero edge returns the composed player UNTOUCHED –
-  // the shipped object, byte for byte, not even an `x + 0`. A non-zero edge lands AFTER the whole
-  // composition, additively on all five wings, so "she steps on court with +δ per wing" is literally
-  // what the dial says – the coach in the corner, not a better racket and not a fresher body.
+  // ⚠ AND THE COACH IN HER CORNER, WHICH IS A SIXTH READING AND THE FIRST ADDITIVE ONE (see
+  // COACH_EDGE_POINTS_PER_PP above). A zero edge - nobody hired - returns the composed player
+  // UNTOUCHED, the same object byte for byte, not even an `x + 0`; that is what keeps a self-coached
+  // career identical to the one it was before this shipped, and it is invariant 4 of the spec.
+  //
+  // A hired coach's edge lands AFTER the whole composition, additively on all five wings, so "she
+  // steps on court with +δ per wing" is literally what the number says – the coach in the corner, not
+  // a better racket and not a fresher body. Additive rather than multiplicative on purpose: the
+  // calibration was measured as a flat delta on the five wings, and a multiplier would make the same
+  // coach worth more to a girl who is already good, which is the opposite of what coaching is.
   const edge = coachMatchEdge(world)
   if (edge === 0) return composed
   return {

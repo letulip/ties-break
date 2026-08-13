@@ -68,9 +68,9 @@ export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
-import { coachBilling, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote } from './coachMarket'
+import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote } from './coachMarket'
 import { kitDealView, kitLineViews } from './kit'
-import { copyByTrack, copyTrophyLedger, emptySeasonRecord } from './milestones'
+import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
 import { travelCostFor } from './sponsors'
@@ -891,6 +891,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),
     coachRoomNote: coachRoomNote(world),
+    coachEdge: coachEdgeView(world),
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
@@ -979,6 +980,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // discipline (`seed:train*`), same zero MAIN draws, and NOT ONE NUMBER on the way out.
     trainingRead: buildTrainingRead(radarView, radarReadings),
     lastSeasonSummary: world.lastSeasonSummary,
+    // ⭐ ROUND-19 #2 – ...AND WHETHER THAT RECAP IS STILL OWED THIS WEEK, as a snapshot field, for the
+    // reason the three W2-ENDINGS fields below are: the wrap-up used to be gated on the `'season-end'`
+    // STOP REASON, which dies with the advance that produced it – so answering the retirement offer
+    // raised on that same week destroyed the summary behind it. Derived from `lastSeasonSummary` and
+    // the week, both of which the world already holds; no persisted field and no migration.
+    seasonWrapPrompt: seasonWrapDue(world),
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
     // ⚠ ONE LEVEL DEEPER SINCE v46, exactly as `copyTrophyLedger` is and for the same reason: a row's
     // `byTrack` is an OBJECT, so a bare spread would hand the UI the very record the world is holding.
