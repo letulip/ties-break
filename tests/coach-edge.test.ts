@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   buildCoachRoster,
+  coachById,
   coachEdgePp,
   coachRateBandCents,
   coachTierById,
@@ -166,13 +167,25 @@ describe('the draw', () => {
 })
 
 describe('it is a fact about a PERSON, which is the whole design', () => {
-  it('is the same number at every age – her ageing moves his price, never his number', () => {
-    for (const seed of seeds(50, 'age')) {
+  it('is the same number at every age – her ageing moves his PRICE, never his number', () => {
+    // ⚠ THE EDGE'S OWN HALF OF THIS IS TRUE BY CONSTRUCTION - `coachEdgePp` takes no age, so it
+    // cannot vary with one - and a test that just called it twice would be asserting the signature.
+    // What is NOT true by construction, and is what the design actually leans on, is the step in
+    // front of it: a career resolves her coach through `coachById(seed, ageAtWeek(week), id)`, and
+    // THAT is age-dependent. So this walks the real resolution chain across every age band and
+    // checks the two halves separately - the same man comes back, and his price genuinely moved
+    // underneath him, so the test is not passing because nothing moved.
+    const ages = [14, 16, 17, 22, 23, 30]
+    for (const seed of seeds(20, 'age')) {
       for (const tier of HIREABLE_TIERS) {
         for (const id of IDS_BY_TIER[tier]) {
-          const at14 = coachEdgePp(seed, id)
-          // the draw takes no age at all, which is what makes this exact rather than approximate
-          expect(coachEdgePp(seed, id)).toBe(at14)
+          const resolved = ages.map((a) => coachById(seed, a, id))
+          for (const c of resolved) expect(c?.id, `${seed}/${id}`).toBe(id)
+          // his PRICE moves with her - that is the roster's whole job, and the reason this is a real
+          // question rather than a formality
+          expect(new Set(resolved.map((c) => c!.rateCents)).size, `${seed}/${id} price`).toBeGreaterThan(1)
+          // ...and his edge does not move with it
+          expect(new Set(resolved.map((c) => coachEdgePp(seed, c!.id))).size, `${seed}/${id} edge`).toBe(1)
         }
       }
     }
