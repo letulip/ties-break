@@ -18,8 +18,7 @@ import { readFileSync } from 'node:fs'
 import { decodeExportFile } from '../src/engine/saveCodec'
 import type { WorldState } from '../src/engine/world'
 import { coachById } from '../src/engine/coach'
-import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import type { TierId } from '../src/engine/season/types'
+import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { startingSkills } from '../src/engine/world/player'
 import { rollPotential, SKILL_KEYS, type KidSkills } from '../src/engine/development'
 import { ageAtWeek, kidAgeYears } from '../src/engine/world/age'
@@ -90,11 +89,12 @@ async function main(): Promise<void> {
   }
   const weeks = ledger.length ? Math.max(...ledger.map((r) => r.week)) - Math.min(...ledger.map((r) => r.week)) + 1 : 0
   console.log(`surviving ledger window: ${weeks} weeks (it is pruned – this is not the whole career)`)
+  let windowTotal = 0
   for (const [c, v] of Object.entries(byCat).sort((a, b) => a[1].cents - b[1].cents)) {
     console.log(`  ${c.padEnd(14)} ${String(v.n).padStart(4)} rows   ${money(v.cents).padStart(12)}   ${weeks ? money(Math.round(v.cents / weeks)) : '–'}/week`)
-    career += v.cents
+    windowTotal += v.cents
   }
-  console.log(`  ${'TOTAL'.padEnd(14)}              ${money(career).padStart(12)}`)
+  console.log(`  ${'TOTAL'.padEnd(14)}              ${money(windowTotal).padStart(12)}`)
 
   section('HER RESULTS, BY TIER – what the bench calls the ladder')
   const hers = (w.results ?? []).filter((r) => r.playerId === KID_ID)
