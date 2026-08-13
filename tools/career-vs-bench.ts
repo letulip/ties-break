@@ -20,6 +20,8 @@ import type { WorldState } from '../src/engine/world'
 import { coachById } from '../src/engine/coach'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
+import { startingSkills } from '../src/engine/world/player'
+import { rollPotential, SKILL_KEYS, type KidSkills } from '../src/engine/development'
 import { ageAtWeek, kidAgeYears } from '../src/engine/world/age'
 import { KID_ID } from '../src/engine/world/constants'
 import { weekLabel } from '../src/shared/dates'
@@ -45,6 +47,20 @@ async function main(): Promise<void> {
   console.log(`funds now           : ${money(w.fundsCents)}   (week ${w.week}, ${weekLabel(w.week)})`)
   console.log(`coach now           : ${w.coachId ?? 'self'}${w.coachId ? ` – ${coachById(w.seed, ageAtWeek(w.week), w.coachId)?.name ?? '?'} (${coachById(w.seed, ageAtWeek(w.week), w.coachId)?.tier ?? '?'})` : ''}`)
   console.log(`rank (wta / itf)    : #${w.kidRankWta ?? '–'} / #${w.kidRank ?? '–'}`)
+
+  // ⚠ THE OTHER HALF OF THE COMPARISON, and the owner named it as still open: two of his careers are
+  // not the same experiment. «Naomi почти prodigy, тогда как Olivia с нижней планкой скиллов.» The
+  // band she was drawn from is what decides whether an economic difference is about the money at all.
+  const start = startingSkills(w.seed, p)
+  const pot = rollPotential(w.seed, start)
+  const sum = (o: KidSkills): number => SKILL_KEYS.reduce((n, k) => n + o[k], 0)
+  const now = w.skills
+  console.log(
+    `start / now / ceiling: ${sum(start).toFixed(1)} -> ${sum(now).toFixed(1)} -> ${sum(pot).toFixed(1)}` +
+      `   (headroom left ${(sum(pot) - sum(now)).toFixed(1)} of ${(sum(pot) - sum(start)).toFixed(1)}, ` +
+      `${Math.round((100 * (sum(now) - sum(start))) / Math.max(1, sum(pot) - sum(start)))}% realised)`,
+  )
+  console.log(`per wing, start -> now : ${SKILL_KEYS.map((k) => `${k} ${start[k].toFixed(0)}->${now[k].toFixed(0)}`).join('  ')}`)
 
   section('WHAT SHE HAS EARNED, PER SEASON – with the prize DERIVED from her own results')
   // ⚠ NOT DERIVED FROM `world.results` – that list is PRUNED to the ranking's rolling window, so on
