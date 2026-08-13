@@ -988,6 +988,11 @@ export interface CoachMarketRow {
   /** [lo, hi] percent of her CURRENT level this rung could add over a season, above what the
    *  parent alone would manage. Computed from her own headroom - see coachSeasonUplift. */
   upliftPct: [number, number]
+  /** [lo, hi] percentage points of match-win chance THIS RUNG's coaches carry, per match, for as
+   *  long as one is paid (docs/specs/coach-match-edge.md §1). The tier's corridor and never this
+   *  man's own number - see `coachMarket` for why a number on an unhired card would break the
+   *  market. His own lands on `Snapshot.coachEdge` after a season with her. */
+  edgePct: [number, number]
   /** WHAT HE DOES ABOUT HER BODY, in one sentence (docs/specs/coach-as-load-manager.md).
    *
    *  Added because a ladder nobody can see is not a product. The load wave gave the rungs two new
@@ -2670,6 +2675,22 @@ export interface Snapshot {
    *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
    *  fills her ceiling. Never quotes the ceiling itself; see `coachRoomNote`. */
   coachRoomNote: string
+  /** WHAT THE COACH'S EDGE IS WORTH HERE (docs/specs/coach-match-edge.md §4): the corridor of the
+   *  rung she is on, and HIS OWN realised number once she has had him for a full season.
+   *
+   *  ⚠ `realisedPct` IS null UNTIL `revealed`, and the ENGINE decides that – the reveal is a rule
+   *  about the career (a season with him), not a formatting choice, and it is the anti-shopping gate
+   *  §4 exists for. Derived at snapshot time; nothing about the edge is persisted, because the value
+   *  is re-derived off his id like every other sub-stream in the engine. */
+  coachEdge: {
+    /** [lo, hi] pp per match for her rung – [0, 0] self-coached, which is not a corridor */
+    corridorPct: [number, number]
+    /** his realised pp per match, or null while there is nothing honest to show */
+    realisedPct: number | null
+    revealed: boolean
+    weeksTogether: number
+    revealAfterWeeks: number
+  }
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */
   vacations: VacationBooking[]

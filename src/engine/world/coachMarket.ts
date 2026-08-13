@@ -10,7 +10,7 @@
 // is the market card's own copy, and it had two callers in two different concerns.
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
-import { bestFitCoachAt, buildCoachRoster, coachById, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
+import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgePp, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_EDGE_CORRIDOR_PP, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
@@ -284,9 +284,62 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background) - weeklyIncome),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],
+      // ⚠ THE RUNG'S CORRIDOR, NEVER HIS OWN NUMBER (spec §4). A number on an unhired card turns the
+      // market into a shop window with the prices written on the back: hire, read, fire, repeat until
+      // the 0.7 budget coach turns up - and since the value is a property of the MAN, that search
+      // would always succeed. The corridor is genuinely all a market can tell you about a price
+      // bracket, and it is what the owner asked for («может по-проще "+0.3-0.6% per match"»).
+      edgePct: [...COACH_EDGE_CORRIDOR_PP[coach.tier]] as [number, number],
       loadNote: coachLoadNote(coach.tier),
     }
   })
+}
+
+/** HOW LONG BEFORE A COACH'S OWN NUMBER GOES ON HIS PLAQUE – a full season with her (spec §4).
+ *
+ *  You learn what a coach is worth by employing him: that is what scouting is, and it arrives far too
+ *  late to shop with. It is also the payoff of the budget lottery and the reason the corridor on the
+ *  card is worth reading at all. */
+export const COACH_EDGE_REVEAL_WEEKS = WEEKS_PER_YEAR
+
+/** WHAT THE COACH'S EDGE IS WORTH ON THIS CAREER, as the UI needs it (docs/specs/coach-match-edge.md
+ *  §4) - the rung's corridor always, and HIS OWN NUMBER once she has had him for a season.
+ *
+ *  ⚠ THE ENGINE OWNS "HAS HE BEEN HERS FOR A SEASON", not the component. It is a rule about the
+ *  career, it decides whether a number may be shown at all, and a screen that re-derived it from a
+ *  hire date would be the second copy of a rule this file already keeps - `coachSinceWeek` is the
+ *  SAME "weeks together" the radar's fog reads, so a coach cannot be new to his plaque and old to her
+ *  confidence on the same Tuesday.
+ *
+ *  ⚠ FIRE-THEN-REHIRE RESETS THE CLOCK, AND DOES NOT RESET THE NUMBER. `coachSinceWeek` is the week
+ *  the current arrangement began, so a man who is let go and taken back has to earn his plaque again -
+ *  which is what "a full season with her" literally says, and it is the conservative direction for the
+ *  anti-shopping rule §4 exists for. What he cannot do is come back a DIFFERENT coach: the value is
+ *  re-derived off his id, so it is the same number waiting behind the same season.
+ *
+ *  Derived at snapshot time; persists nothing, exactly like `coachMarket` and `coachBilling`. */
+export function coachEdgeView(world: WorldState): {
+  /** [lo, hi] pp per match for the rung she is on - [0, 0] self-coached, which is not a corridor */
+  corridorPct: [number, number]
+  /** HIS realised pp per match, or null while there is nothing honest to show */
+  realisedPct: number | null
+  /** is `realisedPct` a number - the plaque's own gate, so the screen never asks twice */
+  revealed: boolean
+  /** how long they have been together, in weeks */
+  weeksTogether: number
+  /** ...and how long that has to be before the number appears */
+  revealAfterWeeks: number
+} {
+  const tier = coachTierById(world.coachId)
+  const weeksTogether = Math.max(0, world.week - coachSinceWeek(world))
+  const revealed = world.coachId !== null && weeksTogether >= COACH_EDGE_REVEAL_WEEKS
+  return {
+    corridorPct: [...COACH_EDGE_CORRIDOR_PP[tier]] as [number, number],
+    realisedPct: revealed ? coachEdgePp(world.seed, world.coachId) : null,
+    revealed,
+    weeksTogether,
+    revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS,
+  }
 }
 
 /**

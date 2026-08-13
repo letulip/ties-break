@@ -3,47 +3,57 @@
  * (docs/specs/the-wall-2026-08.md §2 L1, §3 – the pre-registered measurement).
  *
  * The owner's proposal, 12.08: the coach adds a small edge to her chance of winning a match,
- * career-long while he is paid – budget 0.3-0.6% · middle 0.5-0.8% · high 0.7-1.0% · elite
- * 0.9-1.2%. A Markov engine has no "win chance" knob, so the translation is the L1 scaffolding
- * hook (src/engine/world/player.ts, COACH_MATCH_EDGE): an additive delta on her five on-court
- * attributes at the composition point, CALIBRATED here so her mean match-win probability against
- * her actual current field moves by the target percentage.
+ * career-long while he is paid. A Markov engine has no "win chance" knob, so the translation is an
+ * additive delta on her five on-court attributes at the composition point, calibrated here so her
+ * mean match-win probability against her actual current field moves by the target percentage.
  *
- * ⚠ SCAFFOLDING EXCEPTION, exercised as the spec states it: the hook defaults inert (proved by
- * tests/condition.test.ts re-deriving 41550/e6b0c709 and tools/wall-freeze-probe.ts reproducing a
- * 208-week career byte-identically). This bench mutates COACH_MATCH_EDGE / COACH_MATCH_EDGE_DECAY
- * in memory per arm, restores in a `finally`, and exits 1 if the restore did not take – the
- * what-money-buys §8 pattern. `git diff` under src/ is the hook and nothing else.
+ * ⚠⚠ THE LEVER SHIPPED, AND THIS BENCH NOW DRIVES THE SHIPPED MECHANIC (docs/specs/coach-match-edge.md).
+ * Two consequences, both deliberate:
  *
- * ⚠ RNG: the edge is pure arithmetic at composition. Kid brackets run on `seed:kidtour:<event.id>`
- * / `seed:<event.id>:r<n>` sub-streams and AI brackets on `seed:aitour:<event.id>`, so no arm can
- * move the MAIN stream – only match OUTCOMES move, exactly like kit and condition.
+ *   1. THE ARMS ARE CORRIDORS, NOT DOSES. `COACH_EDGE_CORRIDOR_PP` (src/engine/coach.ts) is the knob:
+ *      an arm zeroes the whole table and writes the one corridor it is measuring, restores in a
+ *      `finally`, and exits 1 if the restore did not take – the what-money-buys §8 pattern. A
+ *      degenerate corridor `[pp, pp]` is a flat dose, so every dose the old arms could express is
+ *      still expressible; what an arm can no longer do is set a dose and skip the coach.
+ *
+ *   2. LAYER A IS RETIRED. `aflat` / `adec` put a synthetic dose on a SELF-COACHED career, and the
+ *      shipped edge is drawn off a COACH's id – a career with no coach has nothing to draw off, so
+ *      those arms could only ever produce baseline careers now, silently. Their measurement is done
+ *      and recorded (the-wall-2026-08.md §M3 dose-response, §M7 flat-vs-decay: the same careers, so
+ *      the owner picked flat and the decay curve was deleted from the engine). The live question is
+ *      Layer B – the shipped ladder, real hires, net of the bill – which is coach-match-edge.md §6.
+ *
+ * ⚠ RNG: the edge is a re-derivation off `seed:coachedge:<id>` plus arithmetic at composition. Kid
+ * brackets run on `seed:kidtour:<event.id>` / `seed:<event.id>:r<n>` sub-streams and AI brackets on
+ * `seed:aitour:<event.id>`, so no arm can move the MAIN stream – only match OUTCOMES move, exactly
+ * like kit and condition.
  *
  * THE THREE MODES:
  *
- *   --calibrate            The dial. 16 self-coached careers (8 seeds x working/middle), sampled
- *                          4x a season; at every sampled state her mean match-win probability
- *                          against the field at her CURRENT rung (the winrate-read methodology:
- *                          universeForTier + isEntrantBand + rivalConditions, hard court, the
- *                          neutral surface) is computed for a grid of deltas. Pooled career-long
- *                          curve -> delta per owner target; per-rung curve -> where the edge lands,
- *                          statically. Prints the calibration table to embed in CALIBRATED below.
+ *   --calibrate            The dial behind COACH_EDGE_POINTS_PER_PP. 16 self-coached careers (8
+ *                          seeds x working/middle), sampled 4x a season; at every sampled state her
+ *                          mean match-win probability against the field at her CURRENT rung (the
+ *                          winrate-read methodology: universeForTier + isEntrantBand +
+ *                          rivalConditions, hard court, the neutral surface) is computed for a grid
+ *                          of deltas. Pooled career-long curve -> delta per target; per-rung curve
+ *                          -> where the edge lands, statically. Touches no hook at all: it adds the
+ *                          delta to the composed player itself, which is what the composition point
+ *                          does, so the dial can be re-measured without the mechanic in the way.
  *
  *   --arms <ids> --out <dir>
  *                          The careers. Runs the named arm-cells (30 paired seeds each, `player`
  *                          policy, full 14->38 careers, bankruptcy NOT defused, fork answered
  *                          'continue', retirement refused) and writes one JSON per arm-cell into
  *                          <dir> as it finishes – resumable, cells already on disk are skipped.
- *                          Groups: base, aflat, adec, bctl, bedge – or single ids like
- *                          aflat065:middle / bedge:wealthy:high.
+ *                          Groups: base, bctl, bedge – or single ids like bedge:wealthy:high.
  *
  *   --report <dir>         The fold. Reads every *.json under dir and prints the report tables:
  *                          the July table per arm, net-of-the-bill per Layer B cell, where the
- *                          edge lands (lived), solvency, dose-response.
+ *                          edge lands (lived), solvency.
  *
  * Reproduce:
  *   npx vite-node tools/wall-l1-bench.ts -- --calibrate
- *   npx vite-node tools/wall-l1-bench.ts -- --arms base,aflat --out /tmp/a.json --seeds 30
+ *   npx vite-node tools/wall-l1-bench.ts -- --arms base,bctl,bedge --out /tmp/wall-l1 --seeds 30
  *   npx vite-node tools/wall-l1-bench.ts -- --report /tmp/wall-l1
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -52,12 +62,8 @@ import { openCareer, stepCareerWeek, POLICIES, type Preset } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
 import { answerFork, answerRetirement, type WorldState } from '../src/engine/world'
 import { kidPoints, rankingFor } from '../src/engine/world/ladder'
-import {
-  COACH_MATCH_EDGE,
-  COACH_MATCH_EDGE_DECAY,
-  kidMatchPlayerFor,
-  startingSkills,
-} from '../src/engine/world/player'
+import { kidMatchPlayerFor, startingSkills } from '../src/engine/world/player'
+import { COACH_EDGE_CORRIDOR_PP } from '../src/engine/coach'
 import { rollPotential, SKILL_KEYS } from '../src/engine/development'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { rivalConditions, rivalMatchPlayer } from '../src/engine/season/rival'
@@ -80,50 +86,37 @@ const flag = (name: string): string | null => {
 const SEEDS = Number(flag('seeds') ?? 30)
 
 // -------------------------------------------------------------------------------------------------
-// THE CALIBRATION TABLE – measured by --calibrate, embedded here so every arm run is reproducible.
-// delta = skill points added to all five on-court attributes; target = the owner's percentage
-// points of mean match-win probability against her actual career-long field.
-// ⚠ FILLED FROM THE --calibrate RUN OF THIS BRANCH (see docs/specs/the-wall-2026-08.md ## Measured).
+// THE SHIPPED CORRIDORS, captured at import – the restore target, and the `bedge` arm's own setting.
+// A deep copy, because the arms mutate the tuples in place.
 // -------------------------------------------------------------------------------------------------
-// Measured 12.08.2026, --calibrate on this branch: 1512 sampled states over 16 self-coached
-// careers, pooled career-long curve P(delta) linear to the eye (1.897 pp at delta 1.0); every
-// target interpolates inside the grid and checks back to its own pp to three decimals.
-const CALIBRATED: { stamp: 'measured' | 'placeholder'; byTarget: Record<string, number> } = {
-  stamp: 'measured',
-  byTarget: {
-    // owner band midpoints (target pp -> delta in skill points)
-    '0.45': 0.234,
-    '0.65': 0.339,
-    '0.85': 0.444,
-    '1.05': 0.549,
-    // the 2x arm – exists to expose dose-response, not to propose it
-    '0.90': 0.47,
-    '1.30': 0.682,
-    '1.70': 0.895,
-    '2.10': 1.11,
-  },
-}
+const SHIPPED_CORRIDORS = Object.fromEntries(
+  Object.entries(COACH_EDGE_CORRIDOR_PP).map(([t, c]) => [t, [c[0], c[1]] as [number, number]]),
+) as Record<CoachTier, [number, number]>
 
 // -------------------------------------------------------------------------------------------------
-// hook mutation, scoped and asserted – the what-money-buys §8 pattern
+// knob mutation, scoped and asserted – the what-money-buys §8 pattern
 // -------------------------------------------------------------------------------------------------
-function withEdge<T>(tier: CoachTier, delta: number, decay: boolean, fn: () => T): T {
-  const beforeEdge = { ...COACH_MATCH_EDGE }
-  const beforeDecay = { ...COACH_MATCH_EDGE_DECAY }
-  COACH_MATCH_EDGE[tier] = delta
-  COACH_MATCH_EDGE_DECAY.on = decay
+/** Run `fn` with EVERY corridor zeroed except the ones named. Zeroing the rest is what makes a
+ *  control arm a control: the corridors ship non-zero now, so a `bctl` cell that only refrained from
+ *  setting its own tier would still be carrying the shipped edge and would measure nothing. */
+function withCorridors<T>(override: Partial<Record<CoachTier, [number, number]>>, fn: () => T): T {
+  const before = Object.fromEntries(
+    Object.entries(COACH_EDGE_CORRIDOR_PP).map(([t, c]) => [t, [c[0], c[1]]]),
+  ) as Record<CoachTier, [number, number]>
+  for (const t of Object.keys(COACH_EDGE_CORRIDOR_PP) as CoachTier[]) COACH_EDGE_CORRIDOR_PP[t] = [0, 0]
+  for (const [t, c] of Object.entries(override)) COACH_EDGE_CORRIDOR_PP[t as CoachTier] = [c[0], c[1]]
   try {
     return fn()
   } finally {
-    Object.assign(COACH_MATCH_EDGE, beforeEdge)
-    Object.assign(COACH_MATCH_EDGE_DECAY, beforeDecay)
+    Object.assign(COACH_EDGE_CORRIDOR_PP, before)
   }
 }
 function assertHookRestored(): void {
-  const dirty =
-    Object.values(COACH_MATCH_EDGE).some((v) => v !== 0) || COACH_MATCH_EDGE_DECAY.on || COACH_MATCH_EDGE_DECAY.floor !== 0.5
+  const dirty = (Object.keys(SHIPPED_CORRIDORS) as CoachTier[]).some(
+    (t) => COACH_EDGE_CORRIDOR_PP[t][0] !== SHIPPED_CORRIDORS[t][0] || COACH_EDGE_CORRIDOR_PP[t][1] !== SHIPPED_CORRIDORS[t][1],
+  )
   if (dirty) {
-    console.error('FATAL: COACH_MATCH_EDGE was not restored to its inert default')
+    console.error('FATAL: COACH_EDGE_CORRIDOR_PP was not restored to its shipped table')
     process.exit(1)
   }
 }
@@ -180,8 +173,24 @@ function currentTier(w: WorldState): TierId | null {
   return null
 }
 
+/** ⚠ THE DELTA IS ADDED HERE, NOT THROUGH THE MECHANIC. The calibration measures pp-per-skill-point
+ *  and must stay measurable whatever the shipped mechanic looks like – and the careers it samples are
+ *  SELF-COACHED, so there is no coach to hang a corridor on. This reproduces exactly what
+ *  `kidMatchPlayerFor` does with a non-zero edge: `+delta` on all five wings, after the whole
+ *  composition. */
 function meanWinProbAt(w: WorldState, field: MatchPlayer[], delta: number): number {
-  const kid = withEdge(w.profile.coachTier, delta, false, () => kidMatchPlayerFor(w, 'hard'))
+  const composed = kidMatchPlayerFor(w, 'hard')
+  const kid: MatchPlayer =
+    delta === 0
+      ? composed
+      : {
+          ...composed,
+          serve: composed.serve + delta,
+          ret: composed.ret + delta,
+          composure: composed.composure + delta,
+          stamina: composed.stamina + delta,
+          groundstrokes: composed.groundstrokes + delta,
+        }
   const opts = { surface: 'hard' as const, tour: TOUR, seed: '' }
   let s = 0
   for (const opp of field) s += fastMatchProbability(kid, opp, opts)
@@ -249,7 +258,7 @@ function calibrate(): void {
     }
     return NaN // outside the grid – extend GRID rather than extrapolate silently
   }
-  console.log(`\nTHE CALIBRATION TABLE (embed in CALIBRATED above; tier -> delta -> measured ΔP)`)
+  console.log(`\nTHE CALIBRATION TABLE (the anchor behind COACH_EDGE_POINTS_PER_PP; target -> delta -> measured ΔP)`)
   console.log(`  ${padEnd('target', 18)}${pad('delta*', 9)}${pad('ΔP at delta* (chk)', 20)}`)
   for (const t of TARGETS) {
     const d = solve(t.pp)
@@ -292,76 +301,38 @@ function calibrate(): void {
 // -------------------------------------------------------------------------------------------------
 interface Arm {
   id: string
-  layer: 'base' | 'aflat' | 'adec' | 'bctl' | 'bedge'
+  layer: 'base' | 'bctl' | 'bedge'
   background: FamilyBackground
   coachTier: CoachTier
-  /** owner target in pp; 0 = no edge */
-  targetPp: number
-  delta: number
-  decay: boolean
+  /** the corridor this arm's rung runs under, in pp per match. [0, 0] = no edge (the controls). */
+  corridor: [number, number]
 }
 
-const MIDPOINTS: Array<[CoachTier, number]> = [
-  ['budget', 0.45],
-  ['middle', 0.65],
-  ['high', 0.85],
-  ['elite', 1.05],
-]
-const DOUBLES: Array<[CoachTier, number]> = [
-  ['budget', 0.9],
-  ['middle', 1.3],
-  ['high', 1.7],
-  ['elite', 2.1],
-]
+const HIRED: readonly CoachTier[] = ['budget', 'middle', 'high', 'elite']
+const BACKGROUNDS: readonly FamilyBackground[] = ['working', 'middle', 'wealthy']
 
-function deltaFor(pp: number): number {
-  const d = CALIBRATED.byTarget[pp.toFixed(2)]
-  if (d === undefined || CALIBRATED.stamp !== 'measured') throw new Error(`no calibrated delta for ${pp}`)
-  return d
-}
-
+/** THE SHIPPED LADDER, MEASURED AGAINST ITSELF (coach-match-edge.md §6). Three arms per cell:
+ *
+ *   base   – self-coached, no coach, no bill. The paired control every Δ is taken against.
+ *   bctl   – the real hire with every corridor ZEROED: the coach she was buying before this shipped.
+ *   bedge  – the same hire under the SHIPPED corridors: the coach she is buying now.
+ *
+ *  `bedge` runs the real corridor rather than a flat midpoint, so the spread the design bought – a
+ *  budget coach who might be a find – is inside the measurement instead of averaged out of it. */
 function allArms(): Arm[] {
   const arms: Arm[] = []
-  for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
-    arms.push({ id: `base:${bg}`, layer: 'base', background: bg, coachTier: 'self', targetPp: 0, delta: 0, decay: false })
+  for (const bg of BACKGROUNDS) {
+    arms.push({ id: `base:${bg}`, layer: 'base', background: bg, coachTier: 'self', corridor: [0, 0] })
   }
-  for (const bg of ['working', 'middle'] as FamilyBackground[]) {
-    for (const [, pp] of [...MIDPOINTS, ...DOUBLES]) {
-      const key = pp.toFixed(2).replace('.', '')
-      arms.push({
-        id: `aflat${key}:${bg}`,
-        layer: 'aflat',
-        background: bg,
-        coachTier: 'self',
-        targetPp: pp,
-        delta: deltaFor(pp),
-        decay: false,
-      })
-    }
-    for (const [, pp] of MIDPOINTS) {
-      const key = pp.toFixed(2).replace('.', '')
-      arms.push({
-        id: `adec${key}:${bg}`,
-        layer: 'adec',
-        background: bg,
-        coachTier: 'self',
-        targetPp: pp,
-        delta: deltaFor(pp),
-        decay: true,
-      })
-    }
-  }
-  for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
-    for (const [tier, pp] of MIDPOINTS) {
-      arms.push({ id: `bctl:${bg}:${tier}`, layer: 'bctl', background: bg, coachTier: tier, targetPp: 0, delta: 0, decay: false })
+  for (const bg of BACKGROUNDS) {
+    for (const tier of HIRED) {
+      arms.push({ id: `bctl:${bg}:${tier}`, layer: 'bctl', background: bg, coachTier: tier, corridor: [0, 0] })
       arms.push({
         id: `bedge:${bg}:${tier}`,
         layer: 'bedge',
         background: bg,
         coachTier: tier,
-        targetPp: pp,
-        delta: deltaFor(pp),
-        decay: false,
+        corridor: [...SHIPPED_CORRIDORS[tier]] as [number, number],
       })
     }
   }
@@ -399,7 +370,7 @@ interface CareerSummary {
   travelEntryCents: number
   endFundsCents: number
   skillsAt: { a18: number | null; a22: number | null; end: number }
-  /** decay diagnostic: remaining-headroom share (the curve's input) at the checkpoints */
+  /** how much of her total headroom is still unrealised at the checkpoints – see reportHeadroom */
   shareAt: { a18: number | null; a22: number | null }
   perTier: Partial<Record<TierId, TierRecord>>
   rankAtEntry: Partial<Record<'wta125' | 'wta250' | 'wta500' | 'wta1000' | 'slam', number[]>>
@@ -578,14 +549,14 @@ function runArms(tokens: string[], outDir: string): void {
       continue
     }
     const t1 = Date.now()
-    const careers = withEdge(arm.coachTier, arm.delta, arm.decay, () =>
+    const careers = withCorridors({ [arm.coachTier]: arm.corridor }, () =>
       Array.from({ length: SEEDS }, (_, i) => runCareer(arm, i)),
     )
     assertHookRestored()
     writeFileSync(file, JSON.stringify([{ arm, careers }] satisfies ArmResult[]))
     ran++
     console.log(
-      `${padEnd(arm.id, 22)} delta ${arm.delta.toFixed(3).padStart(6)}${arm.decay ? ' decay' : '      '}  ` +
+      `${padEnd(arm.id, 22)} corridor ${arm.corridor[0].toFixed(2)}-${arm.corridor[1].toFixed(2)} pp  ` +
         `${SEEDS} careers in ${((Date.now() - t1) / 1000).toFixed(0)}s`,
     )
   }
@@ -629,39 +600,6 @@ function reportJuly(results: ArmResult[]): void {
       `${pad('clr250', 9)}${pad('clr500', 9)}${pad('ent500', 9)}${pad('slam', 8)}${pad('best', 7)}${pad('p50', 7)}${pad('prize50', 11)}`,
   )
   for (const r of results) console.log(`${padEnd(r.arm.id, 22)}${julyRow(r.careers)}`)
-}
-
-function pooledJuly(results: ArmResult[], layer: string, targetPp: number, decay: boolean): CareerSummary[] {
-  return results.filter((r) => r.arm.layer === layer && r.arm.targetPp === targetPp && r.arm.decay === decay).flatMap((r) => r.careers)
-}
-
-function reportDose(results: ArmResult[]): void {
-  console.log(`\n${'='.repeat(118)}`)
-  console.log(`DOSE-RESPONSE – Layer A pooled over working+middle (n = 60 per row), flat and decay`)
-  console.log(`${'='.repeat(118)}`)
-  console.log(
-    `${padEnd('dose (pp per match)', 26)}${pad('top250', 9)}${pad('top100', 9)}${pad('clr500', 9)}${pad('ent500', 9)}` +
-      `${pad('slam', 8)}${pad('best', 8)}${pad('p50 rank', 9)}${pad('p50 book', 9)}${pad('p90 book', 9)}`,
-  )
-  const row = (label: string, cs: CareerSummary[]): void => {
-    if (!cs.length) return
-    const n = cs.length
-    const wta = cs.map((c) => c.bestWta).filter((x): x is number => x !== null)
-    console.log(
-      `${padEnd(label, 26)}${pad(shareOf(cs.filter((c) => c.bestWta !== null && c.bestWta <= 250).length, n), 9)}` +
-        `${pad(shareOf(cs.filter((c) => c.bestWta !== null && c.bestWta <= 100).length, n), 9)}` +
-        `${pad(shareOf(cs.filter((c) => c.bestWta !== null && c.bestWta <= 120).length, n), 9)}` +
-        `${pad(shareOf(cs.filter((c) => (c.entriesByTier.wta500 ?? 0) > 0).length, n), 9)}` +
-        `${pad(shareOf(cs.filter((c) => c.slamEntries > 0).length, n), 8)}` +
-        `${pad(wta.length ? `#${Math.min(...wta)}` : '–', 8)}${pad(wta.length ? `#${pctl(wta, 0.5)}` : '–', 9)}` +
-        `${pad(pctl(cs.map((c) => c.peakWtaPoints), 0.5), 9)}${pad(pctl(cs.map((c) => c.peakWtaPoints), 0.9), 9)}`,
-    )
-  }
-  // pooled over the SAME two backgrounds the dose arms run, so the rows are comparable
-  const baseAB = results.filter((r) => r.arm.layer === 'base' && r.arm.background !== 'wealthy').flatMap((r) => r.careers)
-  row('baseline 0.00', baseAB)
-  for (const pp of [0.45, 0.65, 0.85, 1.05, 0.9, 1.3, 1.7, 2.1]) row(`flat  ${pp.toFixed(2)}`, pooledJuly(results, 'aflat', pp, false))
-  for (const pp of [0.45, 0.65, 0.85, 1.05]) row(`decay ${pp.toFixed(2)} (floor 0.5)`, pooledJuly(results, 'adec', pp, true))
 }
 
 function reportPaired(results: ArmResult[]): void {
@@ -757,13 +695,10 @@ function reportLanding(results: ArmResult[]): void {
   console.log(`\n${'='.repeat(118)}`)
   console.log(`WHERE THE EDGE LANDS, LIVED – kid match-win % by rung (pooled matches), and the deep-run conversions`)
   console.log(`${'='.repeat(118)}`)
-  const armsToShow = results.filter(
-    (r) =>
-      r.arm.layer === 'base' ||
-      (r.arm.layer === 'aflat' && [0.45, 1.05, 2.1].includes(r.arm.targetPp)) ||
-      (r.arm.layer === 'adec' && r.arm.targetPp === 1.05),
-  )
-  // pool the two backgrounds per (layer, targetPp, decay)
+  // ⚠ POOLED BY (layer, rung) ACROSS BACKGROUNDS, which is the grouping Layer B needs: the question
+  // is what the edge does to her TENNIS, and the background decides only whether she can pay for it.
+  const keyOf = (a: Arm): string => `${a.layer}:${a.coachTier}`
+  const armsToShow = results.filter((r) => r.arm.layer === 'base' || r.arm.layer === 'bctl' || r.arm.layer === 'bedge')
   const seen = new Set<string>()
   console.log(
     `${padEnd('arm (pooled bgs)', 26)}${TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
@@ -771,10 +706,10 @@ function reportLanding(results: ArmResult[]): void {
       .join('')}`,
   )
   for (const r of armsToShow) {
-    const key = `${r.arm.layer}:${r.arm.targetPp}:${r.arm.decay}`
+    const key = keyOf(r.arm)
     if (seen.has(key)) continue
     seen.add(key)
-    const cs = results.filter((x) => `${x.arm.layer}:${x.arm.targetPp}:${x.arm.decay}` === key && x.arm.coachTier === 'self').flatMap((x) => x.careers)
+    const cs = results.filter((x) => keyOf(x.arm) === key).flatMap((x) => x.careers)
     if (!cs.length) continue
     const cells = TIER_LADDER.filter((t) => TIERS[t].track === 'wta').map((t) => {
       let w = 0
@@ -790,10 +725,13 @@ function reportLanding(results: ArmResult[]): void {
     })
     console.log(`${padEnd(key, 26)}${cells.join('')}`)
   }
-  console.log(`\nDEEP RUNS at wta250 / wta500 (pooled over self-coached arms):  opener won · QF reached · QF->SF conversion`)
+  console.log(`\nDEEP RUNS at wta250 / wta500 (pooled over backgrounds):  opener won · QF reached · QF->SF conversion`)
+  const seenDeep = new Set<string>()
   for (const r of armsToShow) {
-    const key = `${r.arm.layer}:${r.arm.targetPp}:${r.arm.decay}`
-    const cs = results.filter((x) => `${x.arm.layer}:${x.arm.targetPp}:${x.arm.decay}` === key && x.arm.coachTier === 'self').flatMap((x) => x.careers)
+    const key = keyOf(r.arm)
+    if (seenDeep.has(key)) continue
+    seenDeep.add(key)
+    const cs = results.filter((x) => keyOf(x.arm) === key).flatMap((x) => x.careers)
     if (!cs.length) continue
     const conv = (tier: TierId): string => {
       let played = 0
@@ -814,9 +752,12 @@ function reportLanding(results: ArmResult[]): void {
     console.log(`  ${padEnd(key, 24)}${conv('wta250')}    ${conv('wta500')}`)
   }
   console.log(`\nRANK AT ENTRY (median), wta250 / wta500 / slam – does she stop arriving unseeded?`)
+  const seenRank = new Set<string>()
   for (const r of armsToShow) {
-    const key = `${r.arm.layer}:${r.arm.targetPp}:${r.arm.decay}`
-    const cs = results.filter((x) => `${x.arm.layer}:${x.arm.targetPp}:${x.arm.decay}` === key && x.arm.coachTier === 'self').flatMap((x) => x.careers)
+    const key = keyOf(r.arm)
+    if (seenRank.has(key)) continue
+    seenRank.add(key)
+    const cs = results.filter((x) => keyOf(x.arm) === key).flatMap((x) => x.careers)
     if (!cs.length) continue
     const med = (k: 'wta250' | 'wta500' | 'slam'): string => {
       const ranks = cs.flatMap((c) => c.rankAtEntry[k] ?? [])
@@ -841,16 +782,19 @@ function reportSolvency(results: ArmResult[]): void {
   }
 }
 
-function reportDecayDiag(results: ArmResult[]): void {
-  const dec = results.filter((r) => r.arm.layer === 'adec')
-  if (!dec.length) return
-  console.log(`\nDECAY DIAGNOSTIC – the multiplier the curve actually applied (floor 0.5 + 0.5 x share left)`)
-  const cs = dec.flatMap((r) => r.careers)
+function reportHeadroom(results: ArmResult[]): void {
+  // ⚠ WAS THE DECAY DIAGNOSTIC, and it outlived the curve it was built for. The decay arm measured
+  // the same careers as flat (the-wall §M7) so the owner shipped flat and the curve was deleted – but
+  // "how full is she by 18 and by 22" is the context every uplift on the coach card is relative to,
+  // and it is the cheapest sanity check that a cell's girls are not all at their ceiling already.
+  const cs = results.flatMap((r) => r.careers)
+  if (!cs.length) return
   const m = (xs: Array<number | null>): string => {
     const v = xs.filter((x): x is number => x !== null)
-    return v.length ? (0.5 + 0.5 * mean(v)).toFixed(3) : '–'
+    return v.length ? `${(100 * mean(v)).toFixed(1)}%` : '–'
   }
-  console.log(`  share left at 18 -> multiplier ${m(cs.map((c) => c.shareAt.a18))} · at 22 -> ${m(cs.map((c) => c.shareAt.a22))}`)
+  console.log(`\nHEADROOM LEFT (mean share of her total headroom still unrealised)`)
+  console.log(`  at 18 -> ${m(cs.map((c) => c.shareAt.a18))} · at 22 -> ${m(cs.map((c) => c.shareAt.a22))}`)
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -866,12 +810,11 @@ function main(): void {
     const results = loadResults(flag('report')!)
     console.log(`loaded ${results.length} arm-cells, ${results.reduce((s, r) => s + r.careers.length, 0)} careers`)
     reportJuly(results)
-    reportDose(results)
     reportPaired(results)
     reportBill(results)
     reportLanding(results)
     reportSolvency(results)
-    reportDecayDiag(results)
+    reportHeadroom(results)
   } else {
     throw new Error('one of --calibrate | --arms <ids> --out <file> | --report <dir>')
   }

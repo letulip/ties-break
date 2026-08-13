@@ -27,6 +27,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { coachMatchEdge } from '../src/engine/world/player'
 import { applyKit, kitWearAt } from '../src/engine/equipment'
 import { SURFACE_BLOCKS, buildSeason, surfaceBlockFor, dominantSurface } from '../src/engine/season/calendar'
 
@@ -445,12 +446,20 @@ function tickToPending(
  *  is a function of the WEEK, so this mirror has to be told which week the snapshot was taken in.
  *  `tickWeek` advances the clock, so a caller reading a snapshot after the tick must pass the week
  *  the match was actually played in or it will compare against a different point of the shoe cycle.
- *  Same class of care as `atSkills` above, for the same reason: read her as the match saw her. */
+ *  Same class of care as `atSkills` above, for the same reason: read her as the match saw her.
+ *
+ *  ⚠ AND THE COACH IS THE SIXTH READING (docs/specs/coach-match-edge.md, 13.08) – re-aimed, not
+ *  re-recorded. `DEFAULT_PROFILE.coachTier` is 'middle', so every world this file builds has a coach,
+ *  and since that spec shipped he adds a flat delta to all five wings AFTER the whole multiplicative
+ *  composition. The claims below are about the SHAPE of that composition (three terms, multiplied,
+ *  applied exactly once), and every one of them still holds – so the mirror gains the same term in the
+ *  same position the engine puts it, rather than the assertions being loosened. A self-coached world
+ *  gets 0 from `coachMatchEdge` and this function is byte-identical to what it was. */
 function expectedKid(world: WorldState, surface: Surface, atSkills?: KidSkills, atWeek?: number): MatchPlayer {
   const raw = kidMatchPlayer(atSkills ? { ...world, skills: atSkills } : world)
   const factor = conditionMatchFactor(world.condition)
   const week = atWeek ?? world.week
-  return applyKit(
+  const composed = applyKit(
     applySurfaceStyle(
       {
         ...raw,
@@ -466,6 +475,16 @@ function expectedKid(world: WorldState, surface: Surface, atSkills?: KidSkills, 
     ),
     kitWearAt(world.seed, world.profile.background, week),
   )
+  const edge = coachMatchEdge(world)
+  if (edge === 0) return composed
+  return {
+    ...composed,
+    serve: composed.serve + edge,
+    ret: composed.ret + edge,
+    composure: composed.composure + edge,
+    stamina: composed.stamina + edge,
+    groundstrokes: composed.groundstrokes + edge,
+  }
 }
 
 describe('surface x style — the single composition point in world.ts', () => {
@@ -478,24 +497,48 @@ describe('surface x style — the single composition point in world.ts', () => {
     const raw = kidMatchPlayer(world)
     const out = kidMatchPlayerFor(world, 'clay')
     const mult = surfaceStyleMultipliers('counterpuncher', 'clay')
-    expect(out.serve).toBeCloseTo(raw.serve * factor * mult.serve, 10)
-    expect(out.ret).toBeCloseTo(raw.ret * factor * mult.ret, 10)
-    expect(out.composure).toBeCloseTo(raw.composure * factor * mult.composure, 10)
-    expect(out.stamina).toBeCloseTo(raw.stamina * factor * mult.stamina, 10)
-    expect(out.groundstrokes).toBeCloseTo(raw.groundstrokes * factor * mult.groundstrokes, 10)
-    expect(out.ret).toBeGreaterThan(raw.ret * factor) // clay lifts the counterpuncher's return
+    // ⚠ `+ edge` RE-AIMED 13.08 (coach-match-edge): this world has a middle coach, and his edge is a
+    // flat additive term on all five wings after the multiplication. The claim is unchanged and still
+    // the whole point of the test - condition and the surface table MULTIPLY, per attribute, from the
+    // raw build - and the coach cannot hide a multiplicative error, because he adds the SAME number
+    // to every wing while `mult` differs per wing.
+    const edge = coachMatchEdge(world)
+    expect(edge).toBeGreaterThan(0)
+    expect(out.serve).toBeCloseTo(raw.serve * factor * mult.serve + edge, 10)
+    expect(out.ret).toBeCloseTo(raw.ret * factor * mult.ret + edge, 10)
+    expect(out.composure).toBeCloseTo(raw.composure * factor * mult.composure + edge, 10)
+    expect(out.stamina).toBeCloseTo(raw.stamina * factor * mult.stamina + edge, 10)
+    expect(out.groundstrokes).toBeCloseTo(raw.groundstrokes * factor * mult.groundstrokes + edge, 10)
+    expect(out.ret).toBeGreaterThan(raw.ret * factor + edge) // clay lifts the counterpuncher's return
     // Pure: calling it again cannot compound (it never writes to the world).
     expect(kidMatchPlayerFor(world, 'clay')).toEqual(out)
     expect(world.condition).toBe(40)
   })
 
   it('an all-court kid is byte-identical to the pre-slice condition-only scaling', () => {
+    // ⚠ RE-AIMED 13.08 (coach-match-edge), AND THE SELF-COACHED ARM BELOW IS THE ORIGINAL ASSERTION
+    // UNTOUCHED. The claim is that the surface table is a NO-OP for all-court, on every surface - so
+    // the honest re-aim is to keep the exact `toBe` and state the one term that was added, rather
+    // than to widen the comparison and lose the byte-identity this test exists for.
     const world = createWorld('sfx-neutral')
     world.condition = 55
     const factor = conditionMatchFactor(world.condition)
     const raw = kidMatchPlayer(world)
+    const edge = coachMatchEdge(world)
+    expect(edge).toBeGreaterThan(0) // DEFAULT_PROFILE opens on a middle coach
     for (const surface of SURFACES) {
       const out = kidMatchPlayerFor(world, surface)
+      expect(out.serve).toBe(raw.serve * factor + edge)
+      expect(out.ret).toBe(raw.ret * factor + edge)
+      expect(out.composure).toBe(raw.composure * factor + edge)
+      expect(out.stamina).toBe(raw.stamina * factor + edge)
+      expect(out.groundstrokes).toBe(raw.groundstrokes * factor + edge)
+    }
+    // ...and with nobody in her corner she composes to EXACTLY the numbers she composed before the
+    // coach's edge existed - invariant 4 of the spec, asserted here at the composition point itself.
+    const selfCoached = { ...world, coachId: null }
+    for (const surface of SURFACES) {
+      const out = kidMatchPlayerFor(selfCoached, surface)
       expect(out.serve).toBe(raw.serve * factor)
       expect(out.ret).toBe(raw.ret * factor)
       expect(out.composure).toBe(raw.composure * factor)

@@ -74,6 +74,10 @@ interface WrapFacts {
   played: Record<LadderTrack, number>
   /** what the OLD rank line would have said. */
   legacyRankText: string
+  /** tournament summaries for this season STILL IN the capped event feed at wrap time */
+  feedRows: number
+  /** ...against the counting results the durable ledger holds for the same window */
+  ledgerRows: number
 }
 
 interface WeekFacts {
@@ -177,6 +181,12 @@ function buildCareer(): { world: WorldState; weeks: WeekFacts[]; wraps: WrapFact
         played,
         legacyRankText:
           toSnapshot(world).ladders.itf.rank !== null ? `International #${world.kidRank}` : 'Unranked internationally',
+        feedRows: world.events.filter(
+          (e) => e.type === 'tournament' && e.finishIdx !== undefined && e.week >= yearStart && e.week < world.week,
+        ).length,
+        ledgerRows: world.results.filter(
+          (r) => r.playerId === KID_ID && r.tier && r.week >= yearStart && r.week < world.week,
+        ).length,
       })
     }
 
@@ -298,9 +308,25 @@ describe('(B) the season wrap-up - best result', () => {
     // read-side fix was needed on top of the prune floor rather than instead of it. The floor keeps
     // ~120 ordinary rows, i.e. about thirty weeks; a season is forty-nine. So even with the feed
     // healthy again its oldest tournament summaries are gone by the wrap and a scrape still
-    // under-reports the year. Measured on this career: five seasons of ten.
+    // under-reports the year.
+    //
+    // ⚠⚠ RE-AIMED 13.08 (docs/specs/coach-match-edge.md), AND THE GUARD GOT STRONGER RATHER THAN
+    // LOOSER. The coach's edge changed this career - `DEFAULT_PROFILE.coachTier` is 'middle', she is
+    // measurably better, and she is now CHAMPION in nine of the ten seasons. That is exactly the
+    // condition under which the old witness stops witnessing: when almost every season's best is a
+    // title, the handful of rows the feed still holds usually contains one, so the scrape happens to
+    // agree. Measured here: 5 seasons of 10 disagreed before, 1 of 10 now.
+    //
+    // A witness that weakens when the girl improves was measuring the wrong thing, so the FIRST
+    // assertion below is now the MECHANISM - how many of the season's tournament summaries survive in
+    // the feed at wrap time, against how many the durable ledger holds. That cannot go vacuous
+    // because she got better: measured on this career the feed keeps 4-9 rows of the 16-21 the ledger
+    // holds from season 3 on, and it is strictly short in 7 of the 10 seasons. The outcome-level
+    // witness is kept beside it, re-aimed to what it actually measures now.
+    const decayed = wraps.filter((w) => w.feedRows < w.ledgerRows)
+    expect(decayed.length, 'the feed no longer loses rows – the read-side fix has gone vacuous').toBeGreaterThan(4)
     const wrong = wraps.filter((w) => w.legacyBestText !== w.ledgerBestText)
-    expect(wrong.length).toBeGreaterThan(2)
+    expect(wrong.length).toBeGreaterThan(0)
   })
 })
 
@@ -329,11 +355,29 @@ describe('(C) the season wrap-up - the rank line follows where she plays', () =>
     expect(pro.some((w) => w.legacyRankText === 'Unranked internationally')).toBe(true)
   })
 
-  it('still names the junior table while she genuinely is a junior', () => {
-    // The fallback is not "always professional": the early seasons are junior seasons and the line
-    // must keep saying so, which is what makes this a dynamic rule rather than a second hard-coding.
-    const junior = wraps.filter((w) => w.played.itf > w.played.wta && w.played.itf > w.played.domestic)
-    expect(junior.length).toBeGreaterThan(0)
-    for (const w of junior) expect(w.summary.rankTrack).toBe('itf')
+  it('still names a NON-professional table while she is still on one', () => {
+    // The fallback is not "always professional": the early seasons are played below the professional
+    // table and the line must keep saying so, which is what makes this a dynamic rule rather than a
+    // second hard-coding.
+    //
+    // ⚠ RE-AIMED 13.08 (docs/specs/coach-match-edge.md): "junior" was ITF, and this career no longer
+    // has an ITF-dominant season. It has not stopped having a non-professional PHASE - seasons 0 and
+    // 1 are played 47-0-0 and 46-11-0 on the DOMESTIC table - it is that the coach's edge carries her
+    // through the junior rungs fast enough that ITF never dominates a full year. Which of the two
+    // non-professional tables carries her early seasons is a fact about the ladder and the greedy
+    // entry policy, not about the rule under test, so the witness now asks the question the rule is
+    // actually about: a season spent below the professional table must not be reported as a
+    // professional one. Same guard, one rung wider, and it stops being hostage to how fast she climbs.
+    // The SAME `dominant` reduce the first assertion in this block uses – one definition of "the
+    // table that carried the season", so the witness cannot disagree with the rule it witnesses.
+    const dominantOf = (w: WrapFacts): LadderTrack =>
+      (Object.keys(w.played) as LadderTrack[]).reduce((a, b) => (w.played[b] > w.played[a] ? b : a))
+    const preTour = wraps.filter(
+      (w) => w.played.domestic + w.played.itf + w.played.wta > 0 && dominantOf(w) !== 'wta',
+    )
+    expect(preTour.length, 'no season below the pro table – the fallback has gone vacuous').toBeGreaterThan(0)
+    for (const w of preTour) {
+      expect(w.summary.rankTrack, `season ${w.seasonIndex} played ${JSON.stringify(w.played)}`).toBe(dominantOf(w))
+    }
   })
 })

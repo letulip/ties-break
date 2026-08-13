@@ -478,6 +478,91 @@ export function tierOf(coach: Coach | null): CoachTier {
   return coach ? coach.tier : 'self'
 }
 
+/** THE RUNG AN ID SITS ON, without rebuilding a roster. `tierOf(coachById(seed, age, id))` spends a
+ *  full sixteen-slot derivation - three draws a slot on `seed:coaches` - to answer a question the
+ *  roster LITERAL already answers, and whose answer cannot depend on the seed or on her age: which
+ *  rung a portrait belongs to is written down in ECONOMY.coach.roster and nowhere else.
+ *
+ *  ⚠ AND THE ID'S PREFIX IS NOT THE TIER. `middle-4` is a BUDGET coach (R3 moved him down a rung and
+ *  the stem still names the master art file - see the roster's own note), so parsing the string would
+ *  be wrong for one of the sixteen. Look him up.
+ *
+ *  `self` for the parent, and for an id no roster knows - the safe direction for both, since `self`
+ *  is the rung that buys nothing. */
+export function coachTierById(id: string | null): CoachTier {
+  if (!id) return 'self'
+  return ECONOMY.coach.roster.find((slot) => slot.portrait === id)?.tier ?? 'self'
+}
+
+// =================================================================================================
+// THE COACH'S EDGE ON A MATCH – what you are actually buying (docs/specs/coach-match-edge.md)
+// =================================================================================================
+//
+// WHILE A COACH IS PAID, every match she plays carries a small edge, drawn once for THAT MAN and
+// constant for as long as he is hers. The owner's ask, 12.08: «что если мы за каждый тир тренера
+// будем добавлять шанс на победу в турнире? Крохотный, но шанс … т.е. мы в прямом смысле покупаем
+// что-то ощутимое.» It is lever L1 of docs/specs/the-wall-2026-08.md - the only one of the four he
+// chose to build - and that spec's §Measured is the whole measurement behind it. Nothing here
+// re-argues it.
+//
+// ⚠ ONE DRAW PER COACH, OFF HIS ID. Never per match: over the ~450 matches of a career a per-match
+// roll averages out and nobody could ever feel it. Never per hire: firing and re-hiring the same man
+// would re-roll him, and «этот оказался находкой» has to be a fact about a PERSON. The draw is a
+// purpose-scoped sub-stream, re-derived wherever it is needed and persisting nothing - so MAIN cannot
+// see it, no schema moves, and no player action can re-roll it (it is a pure function of seed and id).
+//
+// ⚠ AND IT IS EXACT RATHER THAN APPROXIMATE, BECAUSE THE ID IS A CONSTANT. `buildCoachRoster` sets
+// `id: slot.portrait` straight off the ECONOMY.coach.roster literal: what the seed draws is a coach's
+// NAME and his RATE, never his identity, and her age moves only which rate band that draw lands in.
+// So the same man keeps the same number across her whole career, across every ageing step, and across
+// fire-then-rehire - which is the same fact the roster's own note states one storey down («a coach
+// who is dear for his rung at 14 is dear for it at 22»).
+
+/** EACH TIER'S CORRIDOR, in percentage points of her match-win probability, per match.
+ *
+ *  THE RULE THAT CUT THEM (spec §1): **each tier's ceiling is the next tier's midpoint, and no tier
+ *  reaches two rungs up.** The owner asked whether a budget coach can come out ahead of a middle one
+ *  - «есть тихие никому не известные гении?» - and the answer is yes: that is a real thing about
+ *  coaching and it is the reason to hire anyone at the bottom of a market. Unbounded it would
+ *  dissolve the ladder, so the rule bounds it.
+ *
+ *  WIDTH FALLS AS PRICE RISES, which is the whole fiction: a cheap coach is a lottery you might win,
+ *  an expensive one is what you buy when you cannot afford a lottery. At a uniform draw the rule
+ *  costs exactly 10% / 17% / 8% of overlap between neighbours - budget beats middle, middle beats
+ *  high, high beats elite. One cheap coach in ten is a find.
+ *
+ *  `self` IS 0.0 AND IS NOT A CORRIDOR. Coaching her yourself buys no edge and never will: the parent
+ *  is buying the plan, and «если родитель талантлив и прочитает хорошо – пусть побеждает» stays true
+ *  because the plan is where his talent lives. A zero here also keeps a self-coached career on
+ *  literally the code path it is on today - see `kidMatchPlayerFor`'s early return.
+ *
+ *  ⚠ MUTABLE FOR THE BENCH AND NOTHING ELSE (tools/wall-l1-bench.ts, the what-money-buys §8 pattern:
+ *  mutate per arm, restore in a `finally`, exit non-zero if the restore did not take). Nothing in the
+ *  app writes it. */
+export const COACH_EDGE_CORRIDOR_PP: Record<CoachTier, [number, number]> = {
+  self: [0, 0],
+  budget: [0.2, 0.7],
+  middle: [0.5, 0.9],
+  high: [0.7, 1.0],
+  elite: [0.9, 1.1],
+}
+
+/** HIS OWN NUMBER, in percentage points per match: one uniform into his tier's corridor, off his id
+ *  and nothing else.
+ *
+ *  ⚠ NOBODY HIRED IS ZERO, FULL STOP - and it returns before the corridor is even read, so a bench
+ *  arm that puts a corridor on `self` still cannot give the parent an edge. That is invariant 4 of
+ *  the spec: a self-coached career must be byte-identical to what it was before this shipped.
+ *
+ *  A DEGENERATE CORRIDOR IS ITS OWN ANSWER and spends no draw. `self` is [0, 0] by design and a
+ *  bench arm zeroes the whole table to build its control, so this is the common path, not a corner. */
+export function coachEdgePp(seed: string, coachId: string | null): number {
+  if (coachId === null) return 0
+  const [lo, hi] = COACH_EDGE_CORRIDOR_PP[coachTierById(coachId)]
+  if (!(hi > lo)) return lo
+  return lo + rngFromSeed(`${seed}:coachedge:${coachId}`)() * (hi - lo)
+}
+
 /** THE ELITE GATE, and it is OFF by default (ECONOMY.coach.eliteGate.enabled). The owner asked for
  *  it as an option: an Elite coach does not take a fourteen-year-old with nothing to show, so the
  *  top rung becomes something earned rather than something rich families buy in week 1.
