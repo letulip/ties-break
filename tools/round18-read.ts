@@ -37,7 +37,7 @@ async function main(): Promise<void> {
 
   section('WHO AND WHEN')
   console.log(`week ${w.week} (${weekLabel(w.week)})  ·  schema v${(w as unknown as { version?: number }).version ?? '?'}`)
-  console.log(`born ${p.birthDay}.${p.birthMonth}  ·  age exact ${kidAgeExact(w.week, p.birthMonth, p.birthDay).toFixed(2)}  ·  age years ${kidAgeYears(w.week, p.birthMonth)}`)
+  console.log(`born ${p.birthDay}.${p.birthMonth}  ·  age exact ${kidAgeExact(w.week, p.birthMonth).toFixed(2)}  ·  age years ${kidAgeYears(w.week, p.birthMonth)}`)
   console.log(`funds ${money(w.fundsCents)}  ·  coachTier ${p.coachTier}  ·  coachId ${w.coachId ?? 'self'}`)
 
   section('#9 – THE SCHOOL CLOCK ON HIS SAVE')

@@ -237,6 +237,9 @@ function makeFacts(input: {
     playedTournament: s === 'tournament',
     playedPractice: s === 'practice',
     examsWeek: s === 'exams',
+    // ROUND-18 #9: the fixtures are about a schoolgirl, which is what every test here was written
+    // around – the sweep flips this deliberately where it means to ask about the years after.
+    schoolOver: false,
     offSeasonWeek: s === 'offSeason',
     vacationWeek: s === 'vacation',
     vacationPackageId: null,
