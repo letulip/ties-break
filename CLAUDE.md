@@ -146,5 +146,10 @@ docs/review/     2026-08 full review + P1–P9 proposals
   superseded run alive next to its replacement. After a wave, `git worktree remove` the agents'
   worktrees and check `pgrep -lf "vite-node|vitest"` is empty – a finished chip costs nothing, but an
   orphaned bench holds a core.
+- **A backgrounded command starts in the SESSION's cwd, not yours.** The shell's directory persists
+  between foreground calls, so `npm run check` works – and the same line sent with
+  `run_in_background` lands in the parent directory and dies with `ENOENT … Claude/package.json`,
+  exit 254. Hit three times on 13.08 alone, each costing a gate run. **Put `cd <repo> &&` inside
+  every backgrounded command**, however recently a foreground call cd'd there.
 - The sim project MUST run serialised: every script that touches it carries `--no-file-parallelism` (birpc has a hard-coded 60s RPC timeout that a minutes-long synchronous Monte-Carlo file will blow past, exiting 1 with every test green). If you add a script that runs the sim project, carry the flag.
 - The `▶▶ 52 (dev)` button in More ships in EVERY build – an owner ruling (the deployed build is the playtest device), not a regression. Its unsafe half is fixed: the worker's `tick` handler now enforces the same open-knock / unrevealed-tournament guards as `advanceWeeks`, refusing at entry and stopping mid-loop. `tests/dev-fast-forward.test.ts` pins both halves.
