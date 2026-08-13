@@ -12,15 +12,21 @@ last-reviewed: 2026-08-13
      audit is the FIRST step of `npm run check`, so from that commit the whole gate stopped at step
      one and nothing behind it ran.
 
-     DRAFT IS THE HONEST STATE, not a workaround: §7's reformulation is not built, §8's measurement
-     has not run, and §6's registered prediction is unresolved. A canonical document asserting
-     current truth while its own prediction is open would be a worse error than the one it replaced.
+     DRAFT IS THE HONEST STATE, not a workaround: §8b's measurement has not run and §6's registered
+     prediction is unresolved. A canonical document asserting current truth while its own prediction
+     is open would be a worse error than the one it replaced.
 
      ⚠ IT FLIPS AT THE END OF THIS WAVE, and these are the conditions – whoever closes the wave owes
      this: §6's re-measure recorded against its prediction, §7 shipped, §8 either shipped or ruled
      out by its own numbers. Then `status: current`, `canonical: true`, and a `## Current truth`
      section. This note exists because "flip the frontmatter later" is exactly the shape of the nine
-     items the 13.08 audit found silently dropped. -->
+     items the 13.08 audit found silently dropped.
+
+     ⚠ TWO OF THE THREE CONDITIONS ARE NOW MET, and this line is here so the next reader does not
+     have to re-derive which: §7 SHIPPED (the reveal names a place – see §7a for the cut and the
+     nine sentences) and §8a SHIPPED with it (three bands of confidence – see §8a-shipped). STILL
+     OPEN: §6's re-measure against its registered prediction, and §8b's sweep, whose own prediction
+     is deliberately unflattering. The frontmatter stays `draft` until both land. -->
 
 
 # The coach's edge: what you are actually buying, per match
@@ -128,12 +134,15 @@ The three states, verbatim:
 | --- | --- |
 | any card, hired or not | `+0.5-0.9% per match`, beside `+1.7-3.5% a season` on one wrapping line |
 | hers, before the reveal | `Too early to tell where in that band – 4 weeks of 52.` |
-| hers, after it | `A season together – the number is +0.62% per match.` |
+| hers, after it | ~~`A season together – the number is +0.62% per match.`~~ **replaced by §7** |
 
-Corridors print to one decimal (a bracket is a design constant); the realised value prints to two (it
-is a measurement of one person). Neither sentence judges the man – a revealed 0.21 is reported in the
-same words and the same colour as a 0.68 – and neither mentions her skills, because the whole
-corridor is under half a skill point against a visibility floor of 3 (§3).
+Corridors print to one decimal, because a bracket is a design constant. The revealed line originally
+printed two, on the argument that a measurement of one person deserves the digit that separates a
+0.62 from a 0.55 – **and that is the sentence §7 threw out**; the pre-reveal line is untouched and
+its "where in that band" turned out to be the exact question §7's replacement answers. Neither
+sentence judges the man – a low draw is reported in the same words and the same colour as a high one
+– and neither mentions her skills, because the whole corridor is under half a skill point against a
+visibility floor of 3 (§3).
 
 **Measured** (headless Chromium, real webfonts, real 162x264 portraits, DPR 2 – the numbers and the
 mutation ledger are in `tests/component/coach-edge-card.test.ts`): first ink at 75.00px against a
@@ -174,7 +183,7 @@ to 2.1 pp), top-250 rises a few points, and `wealthy·high` becomes solvent net 
 cell the measurement already showed flipping. If the top rows move, something is wrong with the
 implementation, not right with the design.
 
-## 7. The reveal says a PLACE, not a number (owner, 13.08)
+## 7. The reveal says a PLACE, not a number (owner, 13.08) – SHIPPED
 
 Shipped copy said «A season together – the number is +0.74% per match.» He caught it: «как это
 вообще измеримо, если абстрагироваться от нашей механики?»
@@ -194,15 +203,57 @@ changes.
 learn – by working with him for a year and by talking to the other parents. That is also why it
 honestly takes a season: you have to be inside the circle to hear it.
 
-| where he fell in his corridor | the sentence |
+The sense of the three bands, as approved:
+
+| where he fell in his corridor | the sense |
 | --- | --- |
-| upper third | *the other parents were right: he is better than his price* |
-| middle | *he is exactly what his price says* |
-| lower third | *he sits at the lower end of his bracket* |
+| upper third | *better than his price* |
+| middle | *exactly what his price says* |
+| lower third | *the lower end of his bracket* |
 
 None of the three praises or blames – a low draw is reported in the same words and the same colour
 as a high one. The design survives intact: a lucky `budget` coach still reads as a find (the top of
 his bracket IS a typical `high`), and it still cannot be shopped for.
+
+### 7a. What shipped: the cut, and the nine sentences
+
+**THE CUT IS EQUAL THIRDS OF HIS OWN CORRIDOR**, and the reason is that the draw is uniform inside it
+(§2): equal widths are therefore equal probabilities, **one verdict in three, each exactly as likely
+as the others**. That is the only cut under which no band is the default answer and none is rare.
+The alternative considered and rejected was a wider middle – "about what the price says" as the
+usual verdict, the two ends kept for the tails. It fails on §7's own constraint: scarcity is a tone
+of voice. A sentence you hear one year in ten reads as an event, and an event about a price is either
+good news or bad news, which is the praise/blame the three sentences are written to avoid.
+
+Thirds of HIS corridor, never of the ladder: a third of `budget` is 0.167 pp and a third of `elite`
+0.067, because the elite bracket is narrow precisely for the reason §1 gives – an expensive coach is
+what you buy when you cannot afford a lottery. The upper third of `budget` still outruns the lower
+third of `middle`, so the find is still a find.
+
+**THE PLACEMENT PHRASE POINTS AT THE CARD'S OWN WORDS.** «That band» is the pre-reveal sentence's own
+referent, so the two states now read as one question and its answer, two lines under the corridor
+they are both about:
+
+> `Too early to tell where in that band – 4 weeks of 52.` → `A season in – it looks like the upper end of that band.`
+
+It is also the phrasing that keeps R15-7 (owner, 09.08: **no pronoun names a coach on this screen** –
+`buildCoachRoster` puts a woman on every roster by construction, so «his bracket» prints under Sabine
+Kobayashi). The band belongs to the rung anyway, which makes the pronoun-free phrasing the accurate
+one as well.
+
+| where he fell | the phrase |
+| --- | --- |
+| upper third | `the upper end of that band` |
+| middle third | `the middle of that band` |
+| lower third | `the lower end of that band` |
+
+**Neutrality is mechanical, not a matter of taste**: strip the phrase and the three sentences are
+byte-identical, so there is nowhere for an adjective to hide. `tests/coach-edge.test.ts` asserts
+exactly that, plus the absence of any evaluative word, of any mention of her game, and of any
+pronoun. The line keeps `.cm-plaque`'s single colour in every state – the accent would turn a lower
+third into bad news.
+
+The full nine, with the confidence bands of §8a, are the table in **§8a below**.
 
 ## 8. Time together – approved for measurement, 13.08
 
@@ -213,6 +264,58 @@ a balance change:
 should hedge accordingly («it looks like…»); by the third the hedge goes. This is the radar's own
 fog applied to a person – confidence grows with observation – and it costs nothing, changes no
 number, and makes a long relationship worth something on screen by itself. Ships with §7.
+
+### 8a-shipped. Three bands, at one / two / three-and-on seasons
+
+**THREE BANDS, NOT TWO.** Two would satisfy the letter of the rule (hedge, then no hedge) and would
+make the second season show the player nothing – and §8a's whole product is that a long relationship
+is worth something on screen *by itself*. Three gives every year until it settles something to
+notice. It **saturates at the third**, for the same reason §8b gives for its own curve: the knowledge
+of a person is mostly acquired early, and a sentence that kept moving at season eight would be
+claiming the family is still learning who he is.
+
+`seasonsTogether = floor(weeksTogether / 52)`, derived in `coachEdgeView` beside the reveal gate –
+**the engine owns "how long has he been hers"**, as it already owns "has it been a season".
+
+⚠ **The two halves answer to different clocks, and that is §8's ruling 1 made structural.** The
+PLACE follows the MAN (a pure draw off his id, which a fire-and-rehire cannot move); the CONFIDENCE
+follows the CLOCK (`coachSinceWeek`, which a fire-and-rehire restarts). So a re-hired coach reads as
+*the same man in a new partnership* – same place, hedged again – and never as a different person.
+Because the two halves would be trivial to mix up in a component, **the sentence is composed
+engine-side** (`coachPlaqueLine`) and the card prints one string and formats nothing.
+
+The nine sentences, verbatim, as shipped:
+
+| | upper third | middle third | lower third |
+| --- | --- | --- | --- |
+| **1 season** | `A season in – it looks like the upper end of that band.` | `A season in – it looks like the middle of that band.` | `A season in – it looks like the lower end of that band.` |
+| **2 seasons** | `Two seasons in, and it holds – the upper end of that band.` | `Two seasons in, and it holds – the middle of that band.` | `Two seasons in, and it holds – the lower end of that band.` |
+| **3+ seasons** | `Season after season – the upper end of that band.` | `Season after season – the middle of that band.` | `Season after season – the lower end of that band.` |
+
+The ladder is *a look* → *the look held* → *stated*. The hedge is the only thing that moves: «it
+looks like» qualifies a single season's reading; «and it holds» is the same placement arrived at
+twice, which is exactly where the extra confidence comes from; by the third the qualifier is simply
+gone, and its absence is the certainty. `Season after season` carries no counter deliberately – it
+cannot go stale at ten seasons, and the tenure is not a value to be quoted.
+
+**Measured** (same method as §4a – headless Chromium, the app's own `style.css`, real Manrope/Sora
+webfonts, real 162x264 portrait, viewports 320 and 375, DPR 2, first ink read with a `Range` rather
+than off a box):
+
+* **clearance unchanged: `.cm-art` 62.00px, first ink 75.00px, 12.00px of clearance** on all nine
+  sentences at both widths – the same three numbers §4a recorded, so round-18 #2's hard-won gap is
+  not spent;
+* **every one of the nine wraps to exactly two lines** at both widths and leaves the row at
+  **168.86px** – identical to the pre-reveal state. The card does not jump when the reveal lands, and
+  does not jump again when the hedge lifts two seasons later;
+* that is a budget, not luck: at 320px the two-line ceiling is **60 characters** (61 wraps to three
+  and costs 14.17px) and the longest of the nine is 58; at 375px the one-line floor is ~42 and the
+  shortest is 45, which is why the third-season line is not shorter than it is.
+
+**And the snapshot no longer carries his number at all.** `Snapshot.coachEdge.realisedPct` is gone,
+replaced by `placement`. §7's rule is "no figure for him on any screen"; a field the UI can read is a
+rule the next helpful screen can break, so the field went. The engine still derives the value where
+it belongs – `coachEdgePp` composes her match player – and hands the surface a place.
 
 **8b. The EDGE ITSELF grows – the balance change, and what the measurement is for.** A coach who has
 had her for years knows her serve, her temper and her calendar. This is the only mechanic that

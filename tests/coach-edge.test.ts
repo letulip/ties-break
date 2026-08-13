@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   buildCoachRoster,
   coachById,
+  coachEdgePlacement,
   coachEdgePp,
   coachRateBandCents,
   coachTierById,
@@ -12,6 +13,7 @@ import { coachMatchEdge, kidMatchPlayerFor, COACH_EDGE_POINTS_PER_PP } from '../
 import {
   coachEdgeView,
   coachMarket,
+  coachPlaqueLine,
   createWorld,
   hireCoach,
   COACH_EDGE_REVEAL_WEEKS,
@@ -148,6 +150,43 @@ describe('the draw', () => {
     expect(overlap('middle', 'high')).toBeLessThan(0.22)
     expect(overlap('high', 'elite')).toBeGreaterThan(0.05)
     expect(overlap('high', 'elite')).toBeLessThan(0.12)
+  })
+
+  it('cuts into thirds that are equal in width and therefore equal in odds', () => {
+    // ⚠ THE CUT IS THE CLAIM (§7). The draw is uniform inside the corridor, so equal WIDTHS are also
+    // equal PROBABILITIES: each of the three verdicts comes up one time in three, none of them is
+    // the default answer, and no band is rare enough to read as a special event. That is the whole
+    // reason the middle band is not widened - scarcity alone would turn the two ends into praise and
+    // blame, which is exactly what §7 forbids.
+    for (const tier of HIREABLE_TIERS) {
+      const [lo, hi] = COACH_EDGE_CORRIDOR_PP[tier]
+      const counts: Record<string, number> = { lower: 0, middle: 0, upper: 0 }
+      let n = 0
+      for (const seed of seeds(1000, 'thirds')) {
+        for (const id of IDS_BY_TIER[tier]) {
+          const place = coachEdgePlacement(seed, id)!
+          // ...and it is a reading of HIS value against HIS corridor, checked here against the
+          // arithmetic rather than against the function under test.
+          const pp = coachEdgePp(seed, id)
+          const third = (hi - lo) / 3
+          expect(place, `${seed}/${id} at ${pp}`).toBe(
+            pp < lo + third ? 'lower' : pp < lo + 2 * third ? 'middle' : 'upper',
+          )
+          counts[place]++
+          n++
+        }
+      }
+      for (const band of ['lower', 'middle', 'upper']) {
+        expect(counts[band] / n, `${tier} ${band} share`).toBeGreaterThan(0.3)
+        expect(counts[band] / n, `${tier} ${band} share`).toBeLessThan(0.37)
+      }
+    }
+  })
+
+  it('names no place where there is no band – nobody hired, and a corridor of zero width', () => {
+    expect(coachEdgePlacement('x', null)).toBeNull()
+    // `self` is [0, 0] by design, and a bench arm zeroes the whole table to build its control.
+    expect(coachEdgePlacement('x', 'no-such-coach')).toBeNull()
   })
 
   it('tells one coach from another at the same rung – a rung is not a price tag', () => {
@@ -371,50 +410,144 @@ describe('what the UI slice reads', () => {
     expect(new Set(budget.map((r) => coachEdgePp(world.seed, r.id))).size).toBe(budget.length)
   })
 
-  it('withholds his own number until a full season with her, then shows it', () => {
+  it('withholds where he fell until a full season with her, then says it', () => {
     const world = createWorld('reveal-seed', DEFAULT_PROFILE)
     const him = world.coachId!
     expect(coachEdgeView(world)).toMatchObject({
       corridorPct: COACH_EDGE_CORRIDOR_PP.middle,
-      realisedPct: null,
+      placement: null,
       revealed: false,
       weeksTogether: 0,
+      seasonsTogether: 0,
       revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS,
     })
 
     world.week = COACH_EDGE_REVEAL_WEEKS - 1
     expect(coachEdgeView(world).revealed).toBe(false)
-    expect(coachEdgeView(world).realisedPct).toBeNull()
+    expect(coachEdgeView(world).placement).toBeNull()
 
     world.week = COACH_EDGE_REVEAL_WEEKS
     const shown = coachEdgeView(world)
     expect(shown.revealed).toBe(true)
-    expect(shown.realisedPct).toBe(coachEdgePp(world.seed, him))
+    expect(shown.placement).toBe(coachEdgePlacement(world.seed, him))
     expect(shown.weeksTogether).toBe(COACH_EDGE_REVEAL_WEEKS)
+    expect(shown.seasonsTogether).toBe(1)
   })
 
-  it('re-earns the plaque after a re-hire, and the number behind it does not move', () => {
+  /** ⚠ THE SNAPSHOT CARRIES NO NUMBER FOR HIM AT ALL (§7), and that is structural rather than a
+   *  matter of discipline. A field the UI can read is a rule the next helpful screen can break; the
+   *  engine keeps `coachEdgePp` for the match composition and hands the surface a PLACE. */
+  it('offers the UI no per-match figure of his to print', () => {
+    const world = createWorld('reveal-seed', DEFAULT_PROFILE)
+    world.week = 300
+    const view = coachEdgeView(world)
+    expect(view.revealed).toBe(true)
+    const pp = coachEdgePp(world.seed, world.coachId)
+    expect(pp).toBeGreaterThan(0)
+    for (const value of Object.values(view)) {
+      if (typeof value === 'number') expect(value).not.toBe(pp)
+      if (typeof value === 'string') {
+        expect(value).not.toContain(pp.toFixed(2))
+        expect(value).not.toContain(pp.toFixed(1))
+        expect(value, 'no per-match figure in the plaque').not.toMatch(/\+\d+\.\d+%/)
+      }
+    }
+    expect(Object.keys(view)).not.toContain('realisedPct')
+  })
+
+  it('re-earns the plaque after a re-hire, and the place behind it does not move', () => {
     const world = createWorld('reveal-seed', DEFAULT_PROFILE)
     const him = world.coachId!
     world.week = 200
-    const known = coachEdgeView(world).realisedPct
+    const known = coachEdgeView(world).placement
     expect(known).not.toBeNull()
+    // ⚠ FOUR SEASONS IN, THE HEDGE IS GONE - which is what makes the restart below visible.
+    expect(coachEdgeView(world).seasonsTogether).toBe(3)
+    expect(coachEdgeView(world).plaqueLine).toMatch(/^Season after season – /)
 
     hireCoach(world, null)
-    expect(coachEdgeView(world)).toMatchObject({ corridorPct: [0, 0], realisedPct: null, revealed: false })
+    expect(coachEdgeView(world)).toMatchObject({ corridorPct: [0, 0], placement: null, revealed: false })
 
     hireCoach(world, him)
     // the clock restarted - "a full season with her" is what the spec says, and it is the
     // conservative direction for the anti-shopping rule
     expect(coachEdgeView(world).revealed).toBe(false)
     world.week = 200 + COACH_EDGE_REVEAL_WEEKS
-    expect(coachEdgeView(world).realisedPct).toBe(known)
+    const back = coachEdgeView(world)
+    expect(back.placement, 'the same man, the same place').toBe(known)
+    // ...and the SENTENCE has started over, because the partnership has (§8, ruling 1).
+    expect(back.seasonsTogether).toBe(1)
+    expect(back.plaqueLine).toMatch(/^A season in – it looks like /)
   })
 
   it('says nothing at all about a parent on the court', () => {
     const world = createWorld('self-seed', { ...DEFAULT_PROFILE, coachTier: 'self' })
     world.week = 300
-    expect(coachEdgeView(world)).toMatchObject({ corridorPct: [0, 0], realisedPct: null, revealed: false })
+    expect(coachEdgeView(world)).toMatchObject({ corridorPct: [0, 0], placement: null, revealed: false })
+  })
+})
+
+// =================================================================================================
+// THE PLAQUE'S NINE SENTENCES (§7 x §8a) – the copy, and the two clocks it answers to
+// =================================================================================================
+describe('the sentence on the plaque', () => {
+  const line = (placement: 'lower' | 'middle' | 'upper' | null, seasonsTogether: number, weeksTogether = 4) =>
+    coachPlaqueLine({ placement, seasonsTogether, weeksTogether, revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS })
+
+  it('is the §7/§8a table, verbatim – three places by three bands of certainty', () => {
+    expect(line('upper', 1)).toBe('A season in – it looks like the upper end of that band.')
+    expect(line('middle', 1)).toBe('A season in – it looks like the middle of that band.')
+    expect(line('lower', 1)).toBe('A season in – it looks like the lower end of that band.')
+
+    expect(line('upper', 2)).toBe('Two seasons in, and it holds – the upper end of that band.')
+    expect(line('middle', 2)).toBe('Two seasons in, and it holds – the middle of that band.')
+    expect(line('lower', 2)).toBe('Two seasons in, and it holds – the lower end of that band.')
+
+    expect(line('upper', 3)).toBe('Season after season – the upper end of that band.')
+    expect(line('middle', 3)).toBe('Season after season – the middle of that band.')
+    expect(line('lower', 3)).toBe('Season after season – the lower end of that band.')
+  })
+
+  it('saturates at the third season and never goes stale', () => {
+    // §8a: «by the third the hedge goes» - and then nothing more happens, for the reason §8b gives
+    // for its own curve. A counter here would read as a different sentence every year for ever.
+    for (const n of [3, 4, 7, 12, 40]) expect(line('upper', n)).toBe(line('upper', 3))
+  })
+
+  it('keeps §4a\'s not-yet sentence exactly as it shipped, counter and all', () => {
+    expect(line(null, 0, 4)).toBe('Too early to tell where in that band – 4 weeks of 52.')
+    // One week is one week - a counter that says "1 weeks" is the tell that nobody read it.
+    expect(line(null, 0, 1)).toBe('Too early to tell where in that band – 1 week of 52.')
+  })
+
+  it('carries no figure, no praise and no promise about her game, in any of the ten states', () => {
+    const all = [
+      line(null, 0, 4),
+      ...([1, 2, 3] as const).flatMap((s) => (['lower', 'middle', 'upper'] as const).map((p) => line(p, s))),
+    ]
+    for (const text of all) {
+      // A per-match figure for him is the one thing §7 removed; the not-yet counter's bare weeks are
+      // a clock and are allowed, so this asks for the FORMAT a value would arrive in.
+      expect(text, text).not.toMatch(/[+-]?\d+\.\d+\s*%?/)
+      expect(text, text).not.toMatch(/\b(better|worse|best|worst|good|bad|great|poor|value|bargain|lucky)\b/i)
+      expect(text, text).not.toMatch(/\b(skills?|radar|her game)\b/i)
+      // R15-7: no pronoun names a coach on this screen - the roster puts women on every list by
+      // construction, and «his bracket» would print under Sabine Kobayashi.
+      expect(text, text).not.toMatch(/\b(he|him|his|she|her|hers)\b/i)
+      // Player copy: the short dash, never the long one.
+      expect(text).not.toContain('—')
+    }
+  })
+
+  it('is one frame per band, with the place as its only variable', () => {
+    // The owner's constraint, mechanically: a low draw is reported in the SAME WORDS as a high one,
+    // so stripping the coordinate must leave three identical sentences.
+    for (const seasons of [1, 2, 3]) {
+      const frames = (['lower', 'middle', 'upper'] as const).map((p) =>
+        line(p, seasons).replace(/the (upper end|middle|lower end) of that band/, 'X'),
+      )
+      expect(new Set(frames).size, `season ${seasons}`).toBe(1)
+    }
   })
 })
 

@@ -14,6 +14,10 @@ export type FamilyBackground = 'wealthy' | 'middle' | 'working'
  *  across three real tiers. `self` is the parent on the court – free as a coach, though the court
  *  is still rented. See src/engine/coach.ts for what each rung costs and what it is worth. */
 export type CoachTier = 'self' | 'budget' | 'middle' | 'high' | 'elite'
+/** WHERE A COACH FELL IN HIS OWN TIER'S CORRIDOR, in thirds (docs/specs/coach-match-edge.md §7).
+ *  The only thing about his personal edge a screen may ever say: the VALUE is not observable in
+ *  principle, the PLACE is what a family learns in a year. See `coachEdgePlacement`. */
+export type CoachEdgePlacement = 'lower' | 'middle' | 'upper'
 /** An inclination, not numbers: weights future skill growth (Phase 4), gives build identity now. */
 export type PlayStyle = 'aggressive' | 'counterpuncher' | 'serve-first' | 'all-court'
 
@@ -2675,21 +2679,35 @@ export interface Snapshot {
    *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
    *  fills her ceiling. Never quotes the ceiling itself; see `coachRoomNote`. */
   coachRoomNote: string
-  /** WHAT THE COACH'S EDGE IS WORTH HERE (docs/specs/coach-match-edge.md §4): the corridor of the
-   *  rung she is on, and HIS OWN realised number once she has had him for a full season.
+  /** WHAT THE COACH'S EDGE IS WORTH HERE (docs/specs/coach-match-edge.md §4 and §7): the corridor of
+   *  the rung she is on, and WHERE IN IT the man she actually has turned out to sit, once she has
+   *  had him for a full season.
    *
-   *  ⚠ `realisedPct` IS null UNTIL `revealed`, and the ENGINE decides that – the reveal is a rule
-   *  about the career (a season with him), not a formatting choice, and it is the anti-shopping gate
-   *  §4 exists for. Derived at snapshot time; nothing about the edge is persisted, because the value
-   *  is re-derived off his id like every other sub-stream in the engine. */
+   *  ⚠ THERE IS NO NUMBER FOR HIM ON THIS SNAPSHOT, and that is structural rather than a matter of
+   *  discipline (§7). `realisedPct` used to be here and the card printed it to two decimals; the
+   *  owner's objection – «как это вообще измеримо, если абстрагироваться от нашей механики?» – is
+   *  that nobody inside the world could ever produce that figure. A field the UI cannot read is a
+   *  rule that cannot be broken by the next screen that wants to be helpful. The engine still knows
+   *  the value (`coachEdgePp`) and composes her match player from it; the UI gets `placement`.
+   *
+   *  ⚠ `placement` IS null UNTIL `revealed`, and the ENGINE decides that – the reveal is a rule about
+   *  the career (a season with him), not a formatting choice, and it is the anti-shopping gate §4
+   *  exists for. Derived at snapshot time; nothing about the edge is persisted, because the value is
+   *  re-derived off his id like every other sub-stream in the engine. */
   coachEdge: {
     /** [lo, hi] pp per match for her rung – [0, 0] self-coached, which is not a corridor */
     corridorPct: [number, number]
-    /** his realised pp per match, or null while there is nothing honest to show */
-    realisedPct: number | null
+    /** which third of that corridor he landed in, or null while there is nothing honest to show */
+    placement: CoachEdgePlacement | null
     revealed: boolean
     weeksTogether: number
     revealAfterWeeks: number
+    /** ...and the same clock in seasons, which is what the plaque's CONFIDENCE is banded on (§8a) */
+    seasonsTogether: number
+    /** THE PLAQUE, WRITTEN (§7/§8a). One sentence, composed engine-side from the place and the
+     *  clock, because the two halves answer to different things and a screen holding both would be
+     *  the second copy of that rule. The card prints it and formats nothing. */
+    plaqueLine: string
   }
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */

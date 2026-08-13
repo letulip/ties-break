@@ -189,41 +189,33 @@ const roomNote = computed(() => game.snapshot?.coachRoomNote ?? '')
 //
 // ⚠ THE ENGINE OWNS THE REVEAL. `coachEdgeView` decides `revealed` from `coachSinceWeek`, which is
 // the SAME "weeks together" the radar's fog reads - so a coach cannot be new to his plaque and old
-// to her confidence on the same Tuesday. This screen never asks "has it been a season"; it asks
-// whether there is a number, and prints one sentence either way.
+// to her confidence on the same Tuesday. This screen never asks "has it been a season", and since
+// §7 it does not ask whether there is anything to show either: it prints the one sentence the engine
+// hands it, in both states.
 //
-// ⚠ AND NEITHER SENTENCE JUDGES THE MAN. A revealed 0.21 at the budget rung is a fact reported
-// plainly and a revealed 0.68 is not a fanfare - «мы ни за что не наказываем» read as a rule about
-// copy, and the same standing ruling `offers.ts` states for this family: a surface explains a price
-// and never leans on the player. Both states are drawn in the same colour for exactly that reason -
-// painting the revealed line in the accent would make a low draw read as bad news.
+// ⚠ AND NEITHER SENTENCE JUDGES THE MAN. A coach who came out in the lower third of his rung is a
+// fact reported plainly and one in the upper third is not a fanfare - «мы ни за что не наказываем»
+// read as a rule about copy, and the same standing ruling `offers.ts` states for this family: a
+// surface explains a price and never leans on the player. Both states are drawn in the same colour
+// for exactly that reason - painting the revealed line in the accent would make a low draw read as
+// bad news.
 //
 // ⚠ NOR MAY IT PROMISE THE RADAR. The whole corridor is under half a skill point and the radar's
 // visibility floor is 3 (spec §3, TRAINING_FOG_FLOOR), so "you will see it in her game" is a lie the
 // screen could not back. The copy stays where the mechanic is: per MATCH.
+//
+// ⚠ AND THE SENTENCE ITSELF IS THE ENGINE'S (spec §7/§8a). This screen used to compose it, back when
+// the reveal was a number: `A season together – the number is +0.74% per match`. The owner threw the
+// number out - «как это вообще измеримо, если абстрагироваться от нашей механики?» - and what
+// replaced it has two halves that answer to DIFFERENT clocks: the PLACE follows the man (a draw off
+// his id that fire-and-rehire cannot move), the CONFIDENCE follows the tenure (which fire-and-rehire
+// restarts). Holding both here would be a second copy of that rule, and its failure mode is silent -
+// a re-hired coach reading as a different person. So `coachPlaqueLine` composes it beside the reveal
+// gate, and this file prints one string and formats nothing. The snapshot no longer carries his
+// number at all, which is what makes "no figure for him on any screen" structural rather than a
+// habit.
 const edge = computed(() => game.snapshot?.coachEdge ?? null)
-const plaqueLine = computed<string>(() => {
-  const e = edge.value
-  if (!e) return ''
-  // ⚠ TWO DECIMALS, AND IT IS THE POINT OF THE FORMAT. The corridor above is quoted in tenths
-  // because a bracket is a design constant; this is one uniform draw off one person's id, and the
-  // digit that separates a 0.62 from a 0.55 inside the same band is the thing a season bought.
-  if (e.revealed && e.realisedPct !== null) {
-    return `A season together – the number is +${e.realisedPct.toFixed(2)}% per match.`
-  }
-  // TOO EARLY TO TELL IS AN ANSWER, not a blank. The alternative - an empty line, or the corridor
-  // repeated - reads as broken on the one card the player is most invested in. "That band" points at
-  // the corridor printed two lines above, so the sentence says exactly what is unknown; the counter
-  // says when it stops being unknown, in the engine's own numbers.
-  //
-  // ⚠ AND ITS LENGTH IS MEASURED, NOT TASTE. Browser-measured at 320px against the real fonts: this
-  // wraps to two lines and so does the revealed sentence, so the card does not jump when the reveal
-  // lands. The fuller «4 weeks TOGETHER of the 52 it takes» is 62 characters, wraps to three, and
-  // added 14px to the hired card on the narrowest phone for one word. The numbers are in
-  // tests/component/coach-edge-card.test.ts.
-  const weeks = `${e.weeksTogether} week${e.weeksTogether === 1 ? '' : 's'}`
-  return `Too early to tell where in that band – ${weeks} of ${e.revealAfterWeeks}.`
-})
+const plaqueLine = computed<string>(() => edge.value?.plaqueLine ?? '')
 
 type SortMode = 'fit' | 'price'
 const sort = ref<SortMode>('fit')

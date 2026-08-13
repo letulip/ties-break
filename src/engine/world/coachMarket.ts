@@ -10,13 +10,13 @@
 // is the market card's own copy, and it had two callers in two different concerns.
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
-import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgePp, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_EDGE_CORRIDOR_PP, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
+import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_EDGE_CORRIDOR_PP, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
-import type { CoachMarketRow, CoachTier, PlayerProfile } from '../../shared/protocol'
+import type { CoachEdgePlacement, CoachMarketRow, CoachTier, PlayerProfile } from '../../shared/protocol'
 import { parentIncomeForWeekCents } from '../economy'
 import { addEvent, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
@@ -302,43 +302,134 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
  *  card is worth reading at all. */
 export const COACH_EDGE_REVEAL_WEEKS = WEEKS_PER_YEAR
 
+/** WHERE HE FELL, SAID IN A FAMILY'S OWN WORDS – the three halves of the plaque's second clause
+ *  (docs/specs/coach-match-edge.md §7).
+ *
+ *  ⚠ «THAT BAND» IS THE PRE-REVEAL SENTENCE'S OWN REFERENT, and the pairing is the point. Before the
+ *  season is up the card says "Too early to tell WHERE IN THAT BAND"; after it, "the upper end of
+ *  that band". One question and its answer, in the same words, pointing at the corridor printed two
+ *  lines above - so §4a's shipped copy needed no change at all to carry §7's reformulation.
+ *
+ *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08). `buildCoachRoster` picks a first name off
+ *  COACH_FIRST_M *or* COACH_FIRST_F, so a woman sits on every roster by construction - "his bracket"
+ *  would print under Sabine Kobayashi. The band belongs to the RUNG anyway, which is why "that band"
+ *  is both the pronoun-free phrasing and the accurate one.
+ *
+ *  ⚠ AND NONE OF THE THREE PRAISES OR BLAMES. They are coordinates, not verdicts: no evaluative word
+ *  appears in any of them, the frame around them is byte-identical, and the card draws all three in
+ *  the same colour (`.cm-plaque` is deliberately not accent-coloured). A low draw is reported exactly
+ *  as a high one is - «мы ни за что не наказываем», read as a rule about copy. */
+const PLACEMENT_PHRASE: Record<CoachEdgePlacement, string> = {
+  upper: 'the upper end of that band',
+  middle: 'the middle of that band',
+  lower: 'the lower end of that band',
+}
+
+/** THE PLAQUE, IN ONE SENTENCE (docs/specs/coach-match-edge.md §7 + §8a) - what the coach she
+ *  actually has turned out to be, or that it is too early to say.
+ *
+ *  ⚠ IT IS COMPOSED HERE AND NOT ON THE SCREEN, because its two halves answer to DIFFERENT THINGS
+ *  and keeping them apart is the whole of §8's ruling 1. The PLACE follows the MAN (a pure draw off
+ *  his id, which fire-and-rehire cannot move); the CONFIDENCE follows the CLOCK (`coachSinceWeek`,
+ *  which fire-and-rehire restarts). A component holding both would be a second copy of that rule,
+ *  and the failure mode is silent: a re-hired coach reading as a different person.
+ *
+ *  ⚠ THREE BANDS OF CERTAINTY, AT ONE / TWO / THREE-AND-ON SEASONS, and the hedge is the only thing
+ *  that moves between them (§8a: «one season is a small sample … by the third the hedge goes»). This
+ *  is the radar's own fog applied to a person - confidence grows with observation - and it costs
+ *  nothing: no number changes, only how certain the words are. Three rather than two because the
+ *  product of §8a is that a long relationship is worth something ON SCREEN by itself, and with two
+ *  bands the second season shows the player nothing new. It saturates at three, for the reason §8b
+ *  gives for its own curve: the knowledge of a person is mostly acquired early.
+ *
+ *  ⚠ AND NO SENTENCE QUOTES HIS NUMBER, at any tenure. The only numerals any of these can print are
+ *  the weeks of the season she has not finished yet - a clock, never a value.
+ *
+ *  Player copy: short dash only, and no sentence may promise the radar - the whole corridor is under
+ *  half a skill point against a visibility floor of 3 (§3), so "you will see it in her game" is a lie
+ *  this screen could not back. */
+export function coachPlaqueLine(view: {
+  placement: CoachEdgePlacement | null
+  weeksTogether: number
+  revealAfterWeeks: number
+  seasonsTogether: number
+}): string {
+  // TOO EARLY TO TELL IS AN ANSWER, not a blank - §4a's shipped sentence, unchanged. "That band"
+  // points at the corridor printed two lines above, so it says exactly what is unknown; the counter
+  // says when it stops being unknown, in the engine's own numbers. Its LENGTH is measured, not taste:
+  // at 320px it wraps to two lines and so does every revealed sentence below, which is what keeps the
+  // card from jumping when the reveal lands (the browser numbers are in §4a and §7 of the spec).
+  if (view.placement === null) {
+    const weeks = `${view.weeksTogether} week${view.weeksTogether === 1 ? '' : 's'}`
+    return `Too early to tell where in that band – ${weeks} of ${view.revealAfterWeeks}.`
+  }
+  const place = PLACEMENT_PHRASE[view.placement]
+  // ONE SEASON IS ONE LOOK. The hedge is doing honest work here: a season is a small sample and the
+  // sentence says so in the register a parent would use, not in a confidence interval.
+  if (view.seasonsTogether <= 1) return `A season in – it looks like ${place}.`
+  // TWO SEASONS: THE FIRST READ SURVIVED A SECOND YEAR. "It holds" is the whole of the middle band -
+  // the same placement, arrived at twice.
+  if (view.seasonsTogether === 2) return `Two seasons in, and it holds – ${place}.`
+  // THREE AND ON: THE HEDGE IS GONE, and its absence is the confidence. No counter either - "season
+  // after season" saturates the way §8a says the knowledge does, and it cannot go stale at ten.
+  return `Season after season – ${place}.`
+}
+
 /** WHAT THE COACH'S EDGE IS WORTH ON THIS CAREER, as the UI needs it (docs/specs/coach-match-edge.md
- *  §4) - the rung's corridor always, and HIS OWN NUMBER once she has had him for a season.
+ *  §4 and §7) - the rung's corridor always, and WHERE IN IT HE FELL once she has had him for a season.
  *
  *  ⚠ THE ENGINE OWNS "HAS HE BEEN HERS FOR A SEASON", not the component. It is a rule about the
- *  career, it decides whether a number may be shown at all, and a screen that re-derived it from a
+ *  career, it decides whether the reveal may be shown at all, and a screen that re-derived it from a
  *  hire date would be the second copy of a rule this file already keeps - `coachSinceWeek` is the
  *  SAME "weeks together" the radar's fog reads, so a coach cannot be new to his plaque and old to her
  *  confidence on the same Tuesday.
  *
- *  ⚠ FIRE-THEN-REHIRE RESETS THE CLOCK, AND DOES NOT RESET THE NUMBER. `coachSinceWeek` is the week
- *  the current arrangement began, so a man who is let go and taken back has to earn his plaque again -
- *  which is what "a full season with her" literally says, and it is the conservative direction for the
- *  anti-shopping rule §4 exists for. What he cannot do is come back a DIFFERENT coach: the value is
- *  re-derived off his id, so it is the same number waiting behind the same season.
+ *  ⚠ FIRE-THEN-REHIRE RESETS THE CLOCK, AND DOES NOT RESET THE PLACE (§8, ruling 1). `coachSinceWeek`
+ *  is the week the current arrangement began, so a man who is let go and taken back has to earn his
+ *  plaque again - which is what "a full season with her" literally says, and it is the conservative
+ *  direction for the anti-shopping rule §4 exists for. What he cannot do is come back a DIFFERENT
+ *  coach: the placement is re-derived off his id, so it is the same verdict waiting behind the same
+ *  season, and only the hedging has started over.
  *
  *  Derived at snapshot time; persists nothing, exactly like `coachMarket` and `coachBilling`. */
 export function coachEdgeView(world: WorldState): {
   /** [lo, hi] pp per match for the rung she is on - [0, 0] self-coached, which is not a corridor */
   corridorPct: [number, number]
-  /** HIS realised pp per match, or null while there is nothing honest to show */
-  realisedPct: number | null
-  /** is `realisedPct` a number - the plaque's own gate, so the screen never asks twice */
+  /** WHICH THIRD of that corridor he landed in, or null while there is nothing honest to show. His
+   *  own pp figure is deliberately NOT on this view: it is not observable in principle (§7). */
+  placement: CoachEdgePlacement | null
+  /** is `placement` set - the plaque's own gate, so the screen never asks twice */
   revealed: boolean
   /** how long they have been together, in weeks */
   weeksTogether: number
-  /** ...and how long that has to be before the number appears */
+  /** ...and how long that has to be before the reveal appears */
   revealAfterWeeks: number
+  /** the same clock in whole seasons - what §8a bands the plaque's confidence on */
+  seasonsTogether: number
+  /** the plaque, written: place x confidence, one sentence */
+  plaqueLine: string
 } {
   const tier = coachTierById(world.coachId)
   const weeksTogether = Math.max(0, world.week - coachSinceWeek(world))
-  const revealed = world.coachId !== null && weeksTogether >= COACH_EDGE_REVEAL_WEEKS
+  // ⚠ SEASONS ARE DERIVED HERE AND NOT IN THE COMPONENT, for the same reason the reveal gate is:
+  // "how long has he been hers" is the engine's question, and the confidence bands are one more
+  // reading of the answer. Whole seasons only - a partial one has not been observed yet.
+  const seasonsTogether = Math.floor(weeksTogether / WEEKS_PER_YEAR)
+  const seasoned = world.coachId !== null && weeksTogether >= COACH_EDGE_REVEAL_WEEKS
+  const placement = seasoned ? coachEdgePlacement(world.seed, world.coachId) : null
+  // ⚠ `revealed` IS "THERE IS A PLACE TO NAME", not "the clock is up" - so a degenerate corridor
+  // (a zeroed bench table, an id no roster knows) leaves the card saying it is too early rather than
+  // announcing a reveal with nothing behind it. The two can only disagree in a state that cannot
+  // ship, and disagreeing quietly is exactly how a screen ends up printing an empty plaque.
+  const revealed = placement !== null
   return {
     corridorPct: [...COACH_EDGE_CORRIDOR_PP[tier]] as [number, number],
-    realisedPct: revealed ? coachEdgePp(world.seed, world.coachId) : null,
+    placement,
     revealed,
     weeksTogether,
     revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS,
+    seasonsTogether,
+    plaqueLine: coachPlaqueLine({ placement, weeksTogether, revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS, seasonsTogether }),
   }
 }
 

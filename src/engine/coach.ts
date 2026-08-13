@@ -37,7 +37,7 @@
 import { ECONOMY } from './economy'
 import { pickInt, rngFromSeed } from './rng'
 import { SURNAMES } from './season/cohort'
-import type { CoachTier, FamilyBackground, PlayStyle, WeekPlan } from '../shared/protocol'
+import type { CoachEdgePlacement, CoachTier, FamilyBackground, PlayStyle, WeekPlan } from '../shared/protocol'
 
 /** The ladder, cheapest first. Exported as an array so the UI, the bench and the tests iterate the
  *  rungs in ONE agreed order instead of each re-listing them. */
@@ -561,6 +561,42 @@ export function coachEdgePp(seed: string, coachId: string | null): number {
   const [lo, hi] = COACH_EDGE_CORRIDOR_PP[coachTierById(coachId)]
   if (!(hi > lo)) return lo
   return lo + rngFromSeed(`${seed}:coachedge:${coachId}`)() * (hi - lo)
+}
+
+/** WHERE HE FELL IN HIS OWN CORRIDOR, in thirds – and this, not the number, is what a screen may say
+ *  (docs/specs/coach-match-edge.md §7, owner 13.08: «как это вообще измеримо, если абстрагироваться
+ *  от нашей механики?»).
+ *
+ *  ⚠ THE VALUE IS NOT OBSERVABLE AND THE PLACE IS. At ~0.7 pp over a fifty-match season his edge is
+ *  buried orders of magnitude under the variance of her own results - separating a 0.62 coach from a
+ *  0.74 one would take thousands of matches - so a sentence quoting two decimals claims a precision
+ *  nothing inside the world could produce. Which THIRD of his bracket he landed in is exactly what a
+ *  family does learn: by working with a man for a year, and by talking to the other parents.
+ *
+ *  ⚠ EQUAL THIRDS, AND THAT IS A CHOICE ABOUT INFORMATION. The draw is uniform inside the corridor
+ *  (§2), so equal WIDTHS are also equal PROBABILITIES: each of the three verdicts comes up one time
+ *  in three, none of them is the default answer, and the sentence carries the most it can (log2(3)
+ *  bits) without any band being rare enough to read as a special event. A wider middle would make
+ *  "about what the price says" the thing you almost always hear, and the two ends would turn into
+ *  praise and blame by scarcity alone - which is exactly what §7 forbids.
+ *
+ *  ⚠ THIRDS OF HIS OWN CORRIDOR, never of the ladder. A third of `budget` is 0.167 pp and a third of
+ *  `elite` is 0.067 - the same sentence over different widths, because the sentence is about a place
+ *  inside a PRICE BRACKET and the elite bracket is narrow precisely because an elite coach is a known
+ *  quantity. The upper third of `budget` still outruns the lower third of `middle`, which is the
+ *  lottery §1 sells.
+ *
+ *  `null` for nobody hired and for a degenerate corridor (`self` is [0, 0], and a bench arm may zero
+ *  the whole table): there is no place to name inside a band of zero width. */
+export function coachEdgePlacement(seed: string, coachId: string | null): CoachEdgePlacement | null {
+  if (coachId === null) return null
+  const [lo, hi] = COACH_EDGE_CORRIDOR_PP[coachTierById(coachId)]
+  if (!(hi > lo)) return null
+  const third = (hi - lo) / 3
+  const pp = coachEdgePp(seed, coachId)
+  if (pp < lo + third) return 'lower'
+  if (pp < lo + 2 * third) return 'middle'
+  return 'upper'
 }
 
 /** THE ELITE GATE, and it is OFF by default (ECONOMY.coach.eliteGate.enabled). The owner asked for
