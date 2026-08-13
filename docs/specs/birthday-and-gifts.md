@@ -3,7 +3,7 @@ type: spec
 status: current
 area: content/birthday
 canonical: true
-last-reviewed: 2026-08-11
+last-reviewed: 2026-08-13
 ---
 
 # The birthday, and what you give her
@@ -64,9 +64,15 @@ the scene collapses into a menu with a correct order.
 
 Written as what is TRUE about her life at that age, not as a price ladder.
 
+⚠ **THREE OF THESE WERE WRITTEN AS CATEGORIES AND SHIPPED AS CATEGORIES, AND §8 IS WHY THAT WAS A
+BUG.** "Something not about tennis", "something for a home that is no longer yours" and "the thing she
+would never buy herself" are how a designer describes a slot; they are not how a parent describes a
+present. Each is now the concrete thing the slot was always standing in for, and the sentence that
+used to be the description is where it belongs – in the ask, or in the note.
+
 ### 14 – she is still a child, and the gift should know it
-A bicycle · a phone · **something not about tennis at all** – a book, paints, a game · her first
-racquet bag that is hers · a poster of a player she admires.
+A bicycle · a phone · **something not about tennis at all** – *paints and a pad*, since round-18 #10a
+· her first racquet bag that is hers · a poster of a player she admires.
 
 ⚠ **The trap here is deliberate and stays.** A parent who gives a fourteen-year-old nothing but
 equipment is a character, and the game should let somebody be that character without ever nudging
@@ -89,10 +95,14 @@ A laptop – school and tournament admin both · a suitcase built to survive a s
 account, because she is earning now · the classic eighteenth watch · a trip that is not a tournament.
 
 ### 19 to 21 – independence
-A deposit towards her own place · a car · something for a home that is no longer yours.
+A deposit towards her own place · a car · something for a home that is no longer yours – *a kitchen
+table for her flat*, since round-18 #10a.
 
 ### 22 to 28 – the peak, where things matter less
-A week with the family between seasons · jewellery · the thing she would never buy herself.
+A week with the family between seasons · jewellery · the thing she would never buy herself – *the
+painting from the gallery window*, since round-18 #10a. The concept survives in the note ("she has
+the money for it, she has had it for years, and she will not"); what changed is that the button now
+names an object, so a line about her can point at it.
 
 ### 29 and after – the late career
 **An album of the whole career** – and it is both the most moving option and the cheapest to build,
@@ -248,6 +258,11 @@ asked for and the version that never needs revisiting.
 2. **The catalogue repeats.** «вполне можно» – the same present at 15 and at 16 is real parent
    behaviour and a content saving, **and the diary is expected to notice**. A callback on a repeat
    is content the system gets for free.
+
+   ⚠ **AND SINCE ROUND-18 #10c THE POPUP NOTICES TOO.** The diary noticing after the fact was never
+   the whole job: the player was choosing a second car from a row that read exactly like the first
+   one. The OFFER is still byte-identical – see §8c for why that is load-bearing – but a row for
+   something already on the record prints different words. §8c has the durable/repeatable table.
 3. **She asks, and one option answers it.** Promoted out of "open" and into the design – §2ab.
 
 4. **The ask is stated in PROSE and nothing is marked.** Owner, 11.08: «не помечай, пусть игрок
@@ -281,3 +296,100 @@ Three questions the spec did not reach, each answered the way its own rulings po
 **Measured, not asserted:** the same seed through all four options ends the season on identical
 `fundsCents`, identical `careerTotals` and the identical count of Money lines; identical skills,
 condition and `kitState`; and a birthday week taps no MAIN draw a quiet week does not.
+
+## 8. Round-18 #10 – the reading game, repaired
+
+The owner, 13.08, playing his own save: «странные сообщения в днях рождения с очень явными странными
+же ответами. Что-то вроде "чего бы она себе никогда не купила" и ответ в таком же духе. А еще был
+вариант запроса "день вместе", а в ответах была неделя вместе. Т.е. когда будем мораль делать может
+быть надо будет учитывать оба. И в предыдущем раунде я уже спрашивал про обратную память ответов,
+чтобы мы новую машину не раз в год покупали (хотя почему и нет, с другой стороны, но если так, то
+надо как-то обыграть)».
+
+⚠ **THE YARDSTICK IS §2ab, NOT TASTE.** She asks for ONE thing, exactly one option answers it, the
+others do not, and nothing marks which. §7.1 already made "exactly one option answers it" true by
+construction – the ask is drawn from the four offered. What round 18 found is that being true in the
+ENGINE bought nothing if it was not also true in the ENGLISH: an ask nobody can attach to a row, or
+one that two rows answer, leaves the player with four buttons and a coin. `tests/birthday-ask.test.ts`
+is the whole of §8 asserted on the whole catalogue, one rule per block, every block
+mutation-verified.
+
+### 8a. The ask was the answer, rephrased – six pairs, and what each one now says
+
+Found by sweeping every ask against every option it can appear beside, not by reading the three he
+quoted. Two rules did all the work: **a row names a THING** (rule 1) and **an ask shares a word with
+its own row that no other row of that band shares** (rule 2).
+
+| band | id | shipped | now | which rule |
+| --- | --- | --- | --- | --- |
+| 22-28, 29+ | `neverbuy` | "The thing she would never buy herself" ← ask "the one thing she has the money for and will not buy" | "The painting from the gallery window" ← ask "She sent us a photograph of a gallery window at midnight, and then said it was ridiculous." | 1 (and 2) |
+| 22-28, 29+ | `jewellery` | ask "something with nothing to do with tennis. Anything." – which the week at home answers just as well | ask "the box on her shelf, and how everything in it that shines, she won" | 2 |
+| 29+ | `album` | ask "whether anybody kept any of it. The whole thing, from the start." – its only shared word was "whole", which the DAY row also carries | ask names the album, the photographs and the draw sheets | 2 |
+| 0-14 | `notennis` | "Something that is not tennis" ← ask "something with no tennis in it" – and the bicycle's own note reads "nothing to do with any of this" | "Paints, and a pad for them" ← ask about paints and a pad | 1 (and 2) |
+| 19-21 | `home` | "Something for a home that is not ours", beside "A deposit towards her own place" – both answer "a place of her own" | "A kitchen table for her flat" ← ask about the table she eats off | 1 (and 2) |
+| 19-21 | `deposit` | ask "a place of her own. Not asking for it. Asking about it." – one shared word, "place", straight off its own label | ask "sending us listings … nobody has said the word deposit out loud yet" | 2 |
+
+⚠ **THE TRAP AT FOURTEEN IS UNTOUCHED.** §1's non-tennis option is still always in the pool and still
+never marked – it is a pot of paints now instead of a category, which makes it easier to choose and
+no more correct.
+
+### 8b. The ask and the answer disagreed on scale
+
+«был вариант запроса "день вместе", а в ответах была неделя вместе». Three options are the same want
+at three sizes – **the day** (every band), **a week at home** (22-28, 29+), **a trip** (18) – and in
+three of the seven bands two of them are on screen together. When they are, the unit is the only
+thing between them, and a unit buried mid-sentence is not a discriminator anybody reads.
+
+Each of the three asks now names its own unit **and rules the others out in so many words** ("One
+day, she said – not a week, not a trip"), in both directions, and no other ask in the catalogue is
+allowed to drop `day` / `week` / `trip` in as a red herring – the bicycle's "Every single week" is
+gone for that reason. Rule 3.
+
+⚠ **AND THIS IS WHERE MORALE WILL READ.** «когда будем мораль делать может быть надо будет учитывать
+оба» – a day and a week must not be worth the same. They are three separate ids in
+`BirthdayRecord.given` precisely so a future weighting can price them apart with no schema change,
+and that is only still possible because nobody collapsed them into one "time together" option. The
+seam is the `TIME_TOGETHER` table in `engine/world/birthday.ts`, which carries that note; when
+`docs/specs/form-and-slump.md` and the psychologist arrive, that table is the ladder and the record
+is already the history to weigh against it. Keeping them distinct now is preparation, not pedantry.
+
+### 8c. A repeat is played, not silent
+
+Round-17 #18 taught the ASK to read the record – but **only to remove** a present she already has,
+and it left the OFFER byte-identical on purpose (§5.2). So a parent could still be shown "A car" at
+nineteen, twenty and twenty-one with the identical four rows, and buy three. He raised it a second
+time and answered himself: «хотя почему и нет, с другой стороны, но если так, то надо как-то
+обыграть». So a repeat is **allowed** and the game says it out loud.
+
+**Durable vs repeatable**, and the line is whether a second one can arrive without anybody noticing:
+
+* **`repeatable` – she may want it every year of her life.** `day`, `familyweek`, `trip`, `tickets`,
+  `notennis`, `jewellery`. A day, a week at home, a trip, a different tournament, another pot of
+  paints, another piece for the box: none of these is a possession, or the point of it is that it is
+  a new one. The second offer reads as a tradition – "We had one of these last time".
+* **`durable` – it is in the house and a second one is a decision.** `bicycle`, `phone`, `kitbag`,
+  `poster`, `headphones`, `camera`, `suitcase`, `frame`, `driving`, `wallet`, `coat`, `laptop`,
+  `watch`, `bankcard`, `deposit`, `car`, `home`, `album`, `neverbuy`. The second offer says she has
+  one – "There is a car outside from us already. This one would be the second."
+
+⚠ **THE COPY CHANGES; THE OFFER DOES NOT.** Filtering an already-given gift out of the four was the
+other candidate and it is wrong twice over: **four bands hold exactly three material gifts**, so
+removing one ships a three-row dialog against §2a, and filtering before the shuffle would change how
+many times the sub-stream is drawn. Swapping a note costs no `rng()` call, so the ids, the order and
+the draw count are exactly what they were and a long-record career sees the same four rows as a fresh
+one.
+
+⚠ **AND IT DOES NOT MARK THE ANSWER.** «не помечай, пусть игрок читает» is about the ANSWER, and the
+ask never names a present she already holds (round-17 #18) – so a row that says "she has one" is
+removing a decoy the player himself created, not pointing at the one that is right. The note is
+REPLACED rather than appended, so a repeated row is not taller than the others either: a row that
+grew would be a mark by accident.
+
+### 8d. Determinism, checked rather than assumed
+
+Every band keeps exactly the gifts it had and every id is unchanged (they are persisted in
+`BirthdayRecord`; a renamed id would orphan `giftNoun` for every save already written). No `rng()`
+call was added or removed. The sub-stream `seed:birthday:<age>` is drawn exactly `gifts.length + 3`
+times – `(n-1)` for the band shuffle, three for the four, one for the ask – and the test replays that
+count against an independent generator on the same key, so an extra draw anywhere diverges. MAIN is
+not reached at all: `tests/condition.test.ts` is green on 41550 draws / hash `e6b0c709`, unchanged.

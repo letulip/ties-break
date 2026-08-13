@@ -67,9 +67,13 @@ build waits on one word from him about which ladder.
   more he had not reported**, in two pools – «Training, school, repeat.», «An ordinary week – school,
   practice, pasta.», «Drills, school, dinner, bed.» – each keeps its schoolgirl version and gains a
   twin. The pin is the sweep, mutation-verified on his exact sentence.
-- [>] **10. Birthday asks and answers do not match** – «чего бы она себе никогда не купила» answered
+- [x] **10. Birthday asks and answers do not match** – «чего бы она себе никогда не купила» answered
   in the same register; a «день вместе» ask answered with a week. Plus the repeat question again:
-  a new car every year should either not repeat or be played out.
+  a new car every year should either not repeat or be played out. All three shipped, and the audit
+  found **six** bad pairs rather than his three – the whole ask catalogue was swept against the whole
+  gift catalogue rather than patching the ones he quoted. Verdicts and the before/after table in
+  `docs/specs/birthday-and-gifts.md` §8; `tests/birthday-ask.test.ts` is the net, seven mutations
+  verified. Zero change to the draw count: the copy is chosen after the shuffle, never inside it.
 - [~] **11. «Будем ли наказывать от федерации за срыв (гнев)? Есть ли такая практика?»** – answered
   from the real tour's code of conduct in §11, with a proposal that parks in the morale wave (#95)
   rather than shipping alone.

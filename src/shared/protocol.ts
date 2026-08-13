@@ -822,11 +822,31 @@ export interface Knock {
  *  WHAT THEY ARE, and the choice stays "what do I think she wants". */
 export interface BirthdayGift {
   id: string
-  /** the button's own words */
+  /** the button's own words.
+   *
+   *  ⚠ IT NAMES A THING, NOT A WANT – round-18 #10a. Three labels used to lead with a placeholder
+   *  noun ("The thing she would never buy herself", "Something that is not tennis", "Something for a
+   *  home that is not ours") and the ask for each was the same sentence turned round, so the reading
+   *  game the scene is built on had nothing to read. The owner: «странные сообщения … с очень явными
+   *  странными же ответами». `tests/birthday-ask.test.ts` rule 1 refuses a placeholder head. */
   label: string
   /** the line under it – what it is, in the parent's voice */
   note: string
-  /** the prose line at the top of the dialog when THIS is the thing she has been asking for */
+  /** ⭐ THE NOTE WHEN SHE ALREADY HAS ONE – round-18 #10c, and it replaces `note` on that row rather
+   *  than being appended to it. The owner asked twice about buying a new car every year, and the
+   *  second time he answered himself: «хотя почему и нет, с другой стороны, но если так, то надо
+   *  как-то обыграть». So a repeat is allowed and the game says it out loud – warmly for something
+   *  she can want again (`repeatable`), plainly for something already in the house (`durable`). */
+  again: string
+  /** ⭐ CAN SHE WANT THIS TWICE? A week at home is a tradition; a car is a possession. The two need
+   *  DIFFERENT words on a second offer, which is the whole of what `again` is for. */
+  repeat: 'durable' | 'repeatable'
+  /** the prose line at the top of the dialog when THIS is the thing she has been asking for.
+   *
+   *  ⚠ IT IS A CLUE AND NOT A RESTATEMENT (round-18 #10a). It must share a word with its own row that
+   *  no OTHER row of the same band shares – otherwise two options answer it – and it must not simply
+   *  say the label again, which is what made "she has the money for it and will not buy it" answered
+   *  by "The thing she would never buy herself" a scene with nothing in it. */
   ask: string
   /** the diary's noun for it – "the headphones" – so a callback three seasons later reads as English */
   short: string
@@ -889,7 +909,13 @@ export interface BirthdayRecord {
    *  real answers and the dialog has no other exit, so a parent who is asked always answers. It is
    *  carried because the outcome above is a real one the record must be able to state, and because
    *  ABSENT IS NOT ZERO: a birthday nobody was asked about (a migrated career, or the four years at
-   *  college) has NO ROW AT ALL rather than a row saying he gave nothing. Spec §5.5. */
+   *  college) has NO ROW AT ALL rather than a row saying he gave nothing. Spec §5.5.
+   *
+   *  ⚠ AND WHEN MORALE ARRIVES, THIS IS THE FIELD IT WILL READ – see the TIME_TOGETHER note in
+   *  engine/world/birthday.ts. A day together and a week at home are two different ids on purpose
+   *  (round-18 #10b, the owner: «когда будем мораль делать может быть надо будет учитывать оба»), so
+   *  a weighting can tell them apart without a schema change. Collapsing them into one id would make
+   *  that impossible after the fact. */
   given: string | null
 }
 
