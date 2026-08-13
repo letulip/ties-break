@@ -373,3 +373,35 @@ coach timing, sponsors, condition floors – is unmeasured, and that is the work
 * **L1 survives on its own terms.** Its paired arms ran the same policy on both sides, so «the edge
   adds one to two careers of thirty» stands. What no longer stands is «the edge does not breach the
   wall» – as a claim about the game, since the wall it failed to breach was the bench's.
+
+### 6a. The cause, isolated on ONE seed (13.08.2026)
+
+⚠ §6 blamed the coach by comparing Olivia (self-coached) with Naomi (middle coach) – **two careers
+that differ in SEED as well, so the comparison was confounded and the conclusion unearned.** The
+owner pushed back on the price claim, which is what forced the isolation. Same seed, same policy,
+only `coachTier` moves (`tools/policy-vs-owner.ts`):
+
+| tier | end rank | best | funds | entries | matches | **W-track entries** |
+| --- | --- | --- | --- | --- | --- | --- |
+| self | #285 | #173 | $254,098 | 253 | 631 | **172** |
+| budget | **#211** | #148 | $266,565 | 275 | 738 | **163** |
+| middle | **#1621** | #1601 | $19,185 | 241 | 613 | **0** |
+| high | #1615 | #1601 | -$1,289 | 11 | 25 | **0** |
+
+**A cliff, not a slope.** Budget reaches #211 with a quarter of a million banked; middle enters
+**not one professional event in twelve years** and finishes unranked.
+
+**And she is neither idle nor broke** – 613 matches, 241 entries, $19,185 in hand. The mechanism is
+`econ-bench.ts:465`, one line: `if (world.fundsCents - cost < policy.reserveCents) continue`, with
+`reserveCents: 5_000_00`. A W75 trip is ~$2,200-3,900 (fee plus travel); a `local` costs almost
+nothing. So a family hovering near the floor is **permanently allowed the events that pay nothing
+and permanently refused the ones that pay** – she spends twelve years on rungs that bank no
+professional points, never accumulates, and never crosses. A poverty trap inside the policy.
+
+⚠ **The owner's price correction was right and mine was too:** `middle` is 1.6-1.7x `budget` per
+hour ($40-60 against $24-36 young), so it is dearer than he remembered – but the failure is NOT a
+budget gradient. Budget works completely; middle fails completely. An absolute floor plus any
+recurring bill is a threshold, and thresholds do not degrade gracefully.
+
+**A human has three moves the policy does not have:** go anyway and accept a thin month, drop the
+coach for a season, or cut the calendar to fund one real trip. It has none of them.
