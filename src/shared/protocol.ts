@@ -1545,8 +1545,8 @@ export interface PenaltyRow {
  *  «every obligation is announced in a letter BEFORE it can bite». A letter that only ever arrived
  *  after the fact would be a receipt for a punishment, which is the thing the ruling is against. */
 export interface TourLetterTerms {
-  /** which of the three this is */
-  notice: 'due' | 'penalty' | 'suspension'
+  /** which of the four this is */
+  notice: 'due' | 'penalty' | 'suspension' | 'season'
   /** the rung and its label as the letter was written */
   tier?: TierId
   label?: string
@@ -1562,6 +1562,69 @@ export interface TourLetterTerms {
   suspensionAt?: number
   /** the last week of a suspension, inclusive (a `suspension` letter) */
   untilWeek?: number
+  /** ⭐ THE SEASON NOTICE (round-18 #8). The quiet half of the briefing: one letter at the opening of
+   *  every season the regime binds her in, so a player who has already read the blocking briefing is
+   *  reminded without being stopped.
+   *
+   *  ⚠ NUMBERS, NEVER ASSEMBLED PROSE, AND THE REASON IS THAT THIS IS PERSISTED. `world.offers` goes
+   *  into the save, so a sentence written here would survive a retune of `ECONOMY.mandatory` and go
+   *  on stating a rule that no longer exists. Terms are what the rule WAS the week the desk wrote,
+   *  which is what a letter is; the sentence is rebuilt from them by `OfferLetter.vue` every time it
+   *  is read. `requirements` is the one list, and its entries are rung LABELS with a count - the same
+   *  kind of value `label` above already carries, not copy. */
+  maxRank?: number
+  requirements?: string[]
+  countingSlots?: number
+  suspensionWeeks?: number
+  windowWeeks?: number
+}
+
+/** ⭐ ONE LINE OF THE BRIEFING'S REQUIREMENT LIST – one rung, what the tour asks for at it, and how
+ *  that is counted. */
+export interface TourBriefingRow {
+  tier: TierId
+  /** the rung's own label, as the calendar names it */
+  label: string
+  /** what the tour asks for there, in one phrase ("All 4 Grand Slams") */
+  ask: string
+  /** how it is counted – per event, or once at the season's end */
+  detail: string
+}
+
+/** ⭐ THE BRIEFING – round-18 #8, the owner: «перед началом сезона больших призов и чемпионатов
+ *  присылать уведомление или попап … что она реально должна там участвовать, что есть такой
+ *  регламент».
+ *
+ *  ⚠ THE REGULATION ALREADY EXISTED; WHAT DID NOT WAS ANYBODY SAYING SO. `mandatoryBindsRank` was
+ *  read by engine internals only, so a career crossed into the top 50, the tour became compulsory,
+ *  and the first the player heard of it was a per-event invoice at an entry deadline. That is what
+ *  made a season read as a trap: forced entries, losses, and no one having told him the rule.
+ *
+ *  ⚠ EVERY NUMBER IN EVERY STRING HERE IS READ FROM `ECONOMY.mandatory` (and from the calendar's own
+ *  anchor weeks), never typed into the copy. A briefing that can drift from the rule it explains is
+ *  worse than no briefing – `tests/tour-briefing.test.ts` mutates the economy and watches each
+ *  sentence move.
+ *
+ *  DERIVED, never persisted: non-null on exactly the weeks `mandatoryBindsRank` is true. Whether the
+ *  player has already been shown it is a question about a DEVICE, not about a career, so it is a
+ *  per-career localStorage watermark in App.vue – the same shape the injury report, the news, the
+ *  trophy cabinet and the This-week dot all use, and the reason this shipped with no schema bump. */
+export interface TourBriefing {
+  /** the week the regime was first read as binding, for the kicker */
+  week: number
+  /** the standing that binds (ECONOMY.mandatory.maxRank), and hers */
+  maxRank: number
+  rank: number
+  /** the one sentence that says which rule has started applying and why */
+  lead: string
+  /** what the tour requires, rung by rung */
+  requirements: TourBriefingRow[]
+  /** what declining costs – the zero that takes a counting slot first, because that is the price
+   *  the design is actually about, then the ledger, then what is never owed at all */
+  costs: string[]
+  /** ⚠ THE CLOSING LINE IS THE RULING. «Мы ни за что не наказываем»: the tour has rules and the game
+   *  has none, so the last thing the briefing says is that none of this is advice. */
+  closing: string
 }
 
 /** Where an offer is in its life. `open` is the only state a decision is possible in; the others
@@ -2519,6 +2582,10 @@ export interface Snapshot {
    *  DERIVED, not persisted: assembled per snapshot (buildBirthdayPrompt) off the birth date and the
    *  record. Once he answers, the row appears in `birthdays` and this goes null. */
   birthdayPrompt: BirthdayPrompt | null
+  /** ⭐ round-18 #8 – THE TOUR'S COMMITMENT RULES, EXPLAINED THE FIRST TIME THEY BIND HER. Non-null on
+   *  every week `mandatoryBindsRank` is true; the shell shows it ONCE per career and then never again
+   *  (a per-career localStorage watermark, exactly like the injury report's). See `TourBriefing`. */
+  tourBriefing: TourBriefing | null
   /** W4: the knock that is LIVE this week, decided or not – what the week is being spent under.
    *  Null on a week with nothing wrong. The UI reads `choice` off this to say "resting the ankle"
    *  rather than re-deriving anything. */

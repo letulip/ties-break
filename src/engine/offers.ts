@@ -88,6 +88,7 @@ import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
   EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier,
+  TourLetterTerms,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -1114,6 +1115,44 @@ export function raiseMandatoryDueLetter(
     state: 'info',
   }
   if (offers.some((o) => o.id === offer.id)) return offers.find((o) => o.id === offer.id)!
+  offers.push(offer)
+  return offer
+}
+
+/** ⭐ THE SEASON NOTICE (round-18 #8) – the quiet half of the briefing, and the FOURTH voice in this
+ *  family. The owner asked for something «перед началом сезона больших призов и чемпионатов» saying
+ *  that she really is required to be there and that there is a regulation behind it; the regulation
+ *  is his own §6 and has been enforced since v38, but nothing ever announced the REGIME - only the
+ *  individual obligations, one invoice at a time, at their deadlines.
+ *
+ *  So the first time it binds her the player gets a blocking briefing (`buildTourBriefing`), and
+ *  every season after that he gets this: one letter, at the season's opening, stating the same rule
+ *  without stopping the game. A popup a year would be nagging; a rule nobody restates is the trap
+ *  again.
+ *
+ *  ⚠ THE WORDING IS STILL THE RULING. It lists what the tour requires and what declining costs, and
+ *  it stops there - see the note on `raiseMandatoryDueLetter` for the sentence that decides this
+ *  whole family's voice. Nothing here says she should go.
+ *
+ *  ⚠ ONE PER SEASON, BY ID. `seasonIndex` is the idempotency key, so a replayed week, a reload or a
+ *  rank that flickers across the threshold twice in one year all write the same letter once. */
+export function raiseTourSeasonLetter(
+  offers: Offer[],
+  week: number,
+  seasonIndex: number,
+  terms: Omit<TourLetterTerms, 'notice'>,
+): Offer {
+  const id = `tour-season-${seasonIndex}`
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const offer: Offer = {
+    id,
+    kind: 'tour',
+    week,
+    deadlineWeek: week,
+    terms: { notice: 'season', ...terms },
+    state: 'info',
+  }
   offers.push(offer)
   return offer
 }

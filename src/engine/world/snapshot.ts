@@ -57,6 +57,8 @@ import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears, START_AGE_YEARS } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
+// ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
+import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
 import { buildDebtView, buildEndingView, collegeStillOpen } from './endings'
 import { finishLabel, stageLabel } from './labels'
@@ -791,6 +793,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // `advanceWeeks` blocks on, so the dialog cannot be missing on a week the engine has stopped.
     // `buildBirthdayPrompt` re-checks the predicate itself, so this is one call rather than two.
     birthdayPrompt: buildBirthdayPrompt(world),
+    // ⭐ round-18 #8 – THE TOUR'S COMMITMENT RULES, AS SENTENCES. Non-null on exactly the weeks
+    // `mandatoryBindsRank` is true, which is a READ of the regime that has been enforced since v38 –
+    // nothing new is decided here. Unlike the two prompts above this one does NOT stop the world: the
+    // engine has nothing to wait for, so the shell shows it once per career off its own watermark and
+    // the field stays non-null for the rest of the career (see App.vue's `showTourBriefing`, and the
+    // note on `buildTourBriefing` for why the trigger is the crossing rather than the season boundary).
+    tourBriefing: buildTourBriefing(world),
     events: world.events.slice(-SNAPSHOT_EVENTS),
     // ⚠ THE DURABLE LEDGER, WHOLE, and it is here because the 60-event window above is exactly the
     // wrong source for it. Milestone EVENTS carry `keep: true` so they survive `pruneEvents` in the

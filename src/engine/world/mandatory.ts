@@ -32,16 +32,18 @@
 
 import { ECONOMY } from '../economy'
 import { TIERS, WEEKS_PER_YEAR, isTierAgeOpen } from '../season/calendar'
+import { BEST_N_BY_TRACK } from '../season/ranking'
 import {
   raiseMandatoryDueLetter,
   raiseMandatoryPenaltyLetter,
   raiseSuspensionLetter,
+  raiseTourSeasonLetter,
 } from '../offers'
-import { addEvent, seasonStartWeek } from './ledger'
+import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { kidAgeAt } from './age'
 import { acceptanceRank } from './ladder'
 import { KID_ID } from './constants'
-import type { PenaltyReason, PenaltyRow } from '../../shared/protocol'
+import type { PenaltyReason, PenaltyRow, TourBriefing, TourBriefingRow } from '../../shared/protocol'
 import type { SeasonEvent, TierId } from '../season/types'
 import type { WorldState } from '../world'
 
@@ -104,6 +106,169 @@ export function mandatoryBinds(world: WorldState, event: SeasonEvent): boolean {
     (e) => e.week === event.week && e.id !== event.id && world.entries.includes(e.id),
   )
   return !committedElsewhere
+}
+
+// --- THE BRIEFING: the one thing §6 never had ----------------------------------------------------
+//
+// ⚠⚠ ROUND-18 #8, AND THE ITEM IS NOT A NEW RULE. The owner: «надо перед началом сезона больших
+// призов и чемпионатов присылать какое-то мне кажется уведомление или попап вообще на экране жёстко
+// показывать что она реально должна там участвовать что есть такой регламент и всё такое». The
+// regulation he is describing is his own (W3-ACT2 §6) and every line of it is enforced above. What
+// was missing is that `mandatoryBindsRank` was read by ENGINE INTERNALS ONLY. A career climbs past
+// the threshold, the tour becomes compulsory from that week on, and the first the player hears of it
+// is a per-event invoice at an entry deadline. That is the whole of why his season read as a trap.
+//
+// ⚠ SO THE BRIEFING IS A READ, NOT A NEW MECHANIC. Nothing here charges, blocks, records or draws;
+// it is `mandatoryBindsRank` plus the tier table, spelled into sentences. WHEN the player is shown
+// it is a UI question (once per career, App.vue's watermark), which is what lets this ship with no
+// save-schema change at all.
+//
+// ⚠⚠ AND EVERY NUMBER IS READ, NEVER TYPED. That is the load-bearing property of this block: a
+// briefing that says "the top 50" while `ECONOMY.mandatory.maxRank` says 40 is worse than no
+// briefing, because the player would then be planning against a rule the world does not run.
+// `tests/tour-briefing.test.ts` mutates the economy and the calendar and watches every sentence move.
+
+/** How many events of a rung the calendar actually carries. The anchored families (`slam`,
+ *  `wta1000`, `wta500`) all declare their weeks, which is what makes an obligation announceable a
+ *  year ahead – and what lets the briefing state a COUNT rather than a vague "the big ones". */
+function rungCount(tier: TierId): number {
+  return TIERS[tier].anchorWeeks?.length ?? 0
+}
+
+function plural(n: number, one: string, many: string): string {
+  return n === 1 ? one : many
+}
+
+/** THE REQUIREMENT LIST, built by walking `ECONOMY.mandatory` rather than by naming rungs here – so a
+ *  retune that adds a per-event family grows this list on its own instead of leaving the briefing
+ *  quietly describing last month's regime.
+ *
+ *  ⚠ THE TWO SHAPES ARE THE REAL RULE'S OWN, and the `detail` line is where the difference is said
+ *  out loud: the per-event tiers bind one tournament at a time, the quota tier asks for a NUMBER and
+ *  lets her pick which ones. That distinction is the reason `quotaShortfallAt` exists at all, and a
+ *  briefing that flattened it would be teaching the player the wrong game. */
+function briefingRequirements(): TourBriefingRow[] {
+  const rows: TourBriefingRow[] = []
+  for (const tier of ECONOMY.mandatory.perEventTiers) {
+    const count = rungCount(tier)
+    const label = TIERS[tier].label
+    rows.push({
+      tier,
+      label,
+      ask: `All ${count} ${label}${plural(count, '', 's')}`,
+      detail: 'Required one at a time – each is its own entry, and its own decision.',
+    })
+  }
+  const quotaTier = ECONOMY.mandatory.quotaTier
+  const offered = rungCount(quotaTier)
+  const quotaLabel = TIERS[quotaTier].label
+  rows.push({
+    tier: quotaTier,
+    label: quotaLabel,
+    ask: `${ECONOMY.mandatory.quota} of the ${offered} ${quotaLabel}s`,
+    detail: 'Her pick of them, counted once when the season closes.',
+  })
+  return rows
+}
+
+/** THE PRICE LIST, in the order the design actually ranks it.
+ *
+ *  ⚠⚠ THE ZERO COMES FIRST BECAUSE THE ZERO IS THE RULE. The owner's spec – «пропущенный обязательный
+ *  турнир ЗАНИМАЕТ один из зачётных слотов нулём» – and `season/ranking.ts` explains at length why it
+ *  is crueller than a fine and better: the tour does not take points away, it takes a SLOT, so a
+ *  skipped event costs nothing while she has better results and costs a whole result the moment she
+ *  does not. Leading on the penalty points would put the small half of the price first and teach the
+ *  player that this is a fine, which it is not.
+ *
+ *  ⚠ AND THE LAST LINE IS «AN OBLIGATION SHE COULD NOT MEET IS NOT AN OBLIGATION» – the same clause
+ *  `mandatoryBinds` enforces, said to the player. It belongs in a price list precisely because it is
+ *  the half nobody would assume. */
+function briefingCosts(): string[] {
+  const m = ECONOMY.mandatory
+  const slots = BEST_N_BY_TRACK.wta
+  const quotaLabel = TIERS[m.quotaTier].label
+  return [
+    `A required event she does not enter takes one of her ${slots} counting results and puts a zero ` +
+      `in it. That is the real price, and it is not a fine: it is a result she can no longer replace ` +
+      `with a better one.`,
+    `The tour also books ${m.skipPoints} penalty ${plural(m.skipPoints, 'point', 'points')} for not ` +
+      `entering, ${m.lateWithdrawalPoints} for withdrawing after the list has closed and ` +
+      `${m.noShowPoints} for not appearing on the day.`,
+    `${m.suspensionAt} penalty points inside ${m.windowWeeks} weeks suspends her entries for ` +
+      `${m.suspensionWeeks} weeks. Points leave that window on their own as the year moves – nothing ` +
+      `is carried forward.`,
+    `The ${quotaLabel}s are settled once, at the end of the season: ${m.quotaShortfallPoints} penalty ` +
+      `${plural(m.quotaShortfallPoints, 'point', 'points')} for each one she finished short of ${m.quota}.`,
+    `Nothing at all is owed for a week she could not play – injured, suspended, too young for the ` +
+      `rung, refused by the entry list, or already committed to another tournament that week.`,
+  ]
+}
+
+/** ⭐ THE BRIEFING, ASSEMBLED HERE AND NOT IN THE COMPONENT – the rule `buildKnockPrompt` and
+ *  `buildBirthdayPrompt` already keep, and it is what makes the numbers testable at all: copy inside
+ *  a `<template>` cannot be asserted against `ECONOMY.mandatory`.
+ *
+ *  ⚠ THE TRIGGER IS THE CROSSING, NOT THE SEASON BOUNDARY, and that is a decision worth stating.
+ *  `mandatoryBinds` reads her rank LIVE, so the regime starts biting the week she crosses – waiting
+ *  for the next season's opening could leave a whole season in which she is bound and nobody has
+ *  said so, which is exactly the failure this item is about. Reading it here, at snapshot time, also
+ *  puts it strictly EARLIER than anything it explains: `settleMandatoryDeadlines` runs near the top
+ *  of `tickWeek` off the rank computed at the END of the previous one, so the briefing is on screen
+ *  before the first due letter can be written, let alone before a penalty can be charged.
+ *
+ *  Null on every week the regime does not bind her, which is most of a career. */
+export function buildTourBriefing(world: WorldState): TourBriefing | null {
+  if (!mandatoryBindsRank(world)) return null
+  const maxRank = ECONOMY.mandatory.maxRank
+  const rank = world.kidRankWta ?? maxRank
+  return {
+    week: world.week,
+    maxRank,
+    rank,
+    lead:
+      `She is ranked ${rank} in the world. Inside the top ${maxRank} the tour's commitment rules ` +
+      `apply, and from here on part of her calendar is written by them rather than by us.`,
+    requirements: briefingRequirements(),
+    costs: briefingCosts(),
+    // ⚠ THE RULING, AS THE LAST THING SHE READS. «Мы ни за что не наказываем» – the tour has rules and
+    // the game has none, so the briefing ends by saying that none of it is advice. Nothing above
+    // leans on the player and nothing anywhere in this family ever says she should have gone.
+    closing:
+      'Every line above is a price, and none of it is an instruction. Which of them she pays is ' +
+      'still a decision, and it stays yours.',
+  }
+}
+
+/** ⭐ THE QUIET HALF: one letter at the opening of every season the regime binds her in.
+ *
+ *  ⚠ WHY A LETTER AND NOT THE POPUP AGAIN. The blocking briefing is owed ONCE – it is the moment a
+ *  career changes regime, and a full-screen stop every January would be the game nagging about a rule
+ *  the player already knows. A letter is the tour's own established voice (`kind: 'tour'`), it rides
+ *  the inbox dot and the mail chime the owner asked for on 05.08, and it can be re-read in the season
+ *  it is about instead of being a beat he has to remember.
+ *
+ *  ⚠ ONE RULE COVERS BOTH THE OPENING AND THE CROSSING: the id is the SEASON's, so the letter is
+ *  written on the first week of each season in which she is bound – the season's own opening week in
+ *  every year but the first, and the crossing week in the first. There is no second predicate to keep
+ *  in step with this one.
+ *
+ *  ⚠ AND IT AGES OUT WITH THE SEASON IT DESCRIBES. `pruneEntryLetters` drops `tour` letters from
+ *  finished seasons, so this one lives exactly as long as the season it is about and is replaced
+ *  rather than accumulated. Zero draws, zero feed rows (the feed's budget is stated in `tickWeek`'s
+ *  `expireOffers` note – the inbox cue is what announces post). */
+export function settleTourSeasonNotice(world: WorldState): void {
+  if (!mandatoryBindsRank(world)) return
+  const m = ECONOMY.mandatory
+  raiseTourSeasonLetter(world.offers, world.week, seasonIndexOf(world.week), {
+    maxRank: m.maxRank,
+    requirements: briefingRequirements().map((r) => r.ask),
+    label: TIERS[m.quotaTier].label,
+    points: m.skipPoints,
+    countingSlots: BEST_N_BY_TRACK.wta,
+    suspensionAt: m.suspensionAt,
+    suspensionWeeks: m.suspensionWeeks,
+    windowWeeks: m.windowWeeks,
+  })
 }
 
 // --- the ledger ---------------------------------------------------------------------------------

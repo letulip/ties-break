@@ -874,6 +874,60 @@ obligations a season are genuinely left empty. The derivation-faithful alternati
 than 6, being six-of-sixteen scaled to ten) is written down in `ECONOMY.mandatory.quota`'s note and
 was **not** taken — the measurement says the spec's own number holds.
 
+### 13.5a The briefing – round-18 #8, and the rule was never the problem
+
+The owner, 13.08: «надо перед началом сезона больших призов и чемпионатов присылать какое-то мне
+кажется уведомление или попап вообще на экране жёстко показывать что она реально должна там
+участвовать что есть такой регламент и всё такое».
+
+⚠⚠ **THE REGULATION HE IS ASKING FOR IS HIS OWN AND HAS BEEN LIVE SINCE v38** – §13.5 above is it.
+Round-18's ledger (§Q2) recorded the opposite («our world has no such rule … the popup as asked would
+announce a regulation that is not enforced») and that entry is simply wrong: `mandatoryBindsRank`
+binds by rank, `settleMandatoryMisses` writes the zero into a counting slot, `raiseMandatoryDueLetter`
+warns per event at the deadline. **The gap was that `mandatoryBindsRank` was read by engine internals
+and by nothing else.** A career climbs past the threshold, the tour is compulsory from that week on,
+and the first the player ever hears is a per-event invoice at a deadline. Forced entries, losses, and
+nobody having told him the rule – that is the whole of why the season read as a trap.
+
+So nothing was invented. What shipped is a READ of the regime, on two surfaces:
+
+* **`buildTourBriefing` – the blocking briefing, once per career.** What the tour now requires (walked
+  off `ECONOMY.mandatory.perEventTiers` and `quotaTier`, counted off the calendar's own
+  `anchorWeeks`), and what declining costs – **the zero that takes one of her `BEST_N_BY_TRACK.wta`
+  counting results first**, because that is the rule and the penalty points are the smaller half.
+  Every figure is read; `tests/tour-briefing.test.ts` patches each field of the economy and watches
+  each sentence move, and refuses any integer in the finished text that the rule does not hold.
+* **`settleTourSeasonNotice` – one `tour` letter at the opening of every season the regime binds in.**
+  A popup a year would be nagging; a rule nobody restates is the trap again. It ages out with the
+  season it describes (`pruneEntryLetters`), so it is replaced rather than accumulated.
+
+**THE TRIGGER IS THE RANK CROSSING, NOT THE SEASON BOUNDARY.** `mandatoryBinds` reads her rank live,
+so the regime starts biting the week she crosses – waiting for the next season's opening could leave
+a whole season in which she is bound and nobody has said so, which is the failure the item is about.
+Reading it at snapshot time also puts it strictly EARLIER than anything it explains:
+`settleMandatoryDeadlines` runs near the top of `tickWeek` off the rank computed at the end of the
+PREVIOUS one, so the briefing is on screen before the first due letter can be written.
+
+**NO SCHEMA BUMP, AND THE DERIVATION IS THE REASON.** "Does the regime bind her" is derived
+(`mandatoryBindsRank`); "has anybody been told" is a question about a DEVICE, not about a career, so
+it is a per-career `localStorage` watermark (`composables/tourBriefing.ts`) – the shape the news feed,
+the This-week dot, the trophy cabinet and the injury report all use. Persisting an acknowledgement
+would have been a three-part schema move (v49 + migration + fixture) to record something no
+simulation reads. **An absent watermark means UNBRIEFED**, which is what makes every save that
+already binds – the owner's own has been inside the top 50 for seasons – get the briefing once on its
+next launch.
+
+**NOT a milestone.** The ledger `world.milestones` feeds the album and the diary's memory lines, and
+every `MilestoneType` is wired into `MEMORY_EMOTION`. Those are moments that happened to HER – a first
+final, the last day of school. A regime binding is a fact about a ranking, and the climb that caused
+it is already remembered (`season-rank`); filing a regulation there would have the diary speaking
+about a rulebook in the voice it keeps for her first title.
+
+⚠ **§13.5's "one of her 16 counted slots" is stale prose** – the window went to **18** with
+`MANDATORY_SLOTS` (points-by-the-book, 05.08), of which eleven are reserved. The briefing reads
+`BEST_N_BY_TRACK.wta`, so it says 18 and cannot fall behind again; the sentence above is left as
+written because it is the record of what v38 shipped.
+
 ### 13.6 Sponsors above global (§7) — and §7's open question, answered
 
 `tour` / `premium` / `icon`, gated on the WTA table, adding three kinds of money the junior ladder
