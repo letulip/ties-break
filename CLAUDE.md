@@ -130,6 +130,14 @@ docs/review/     2026-08 full review + P1–P9 proposals
   (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
   `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
   pipeline.
+- **With concurrent agents in ONE checkout, `git commit` takes the whole INDEX, not your files.**
+  `git add a.ts b.ts && git commit -m …` looks like it commits two files; it commits everything
+  anybody has staged. Measured here on 13.08: a two-file ledger commit swallowed another agent's
+  finished UI slice – four files, 531 lines – under a message about something else. Nothing was
+  lost, but the commit lied about itself, which is worse than a conflict because it survives review.
+  **Use the pathspec form: `git commit -m … -- a.ts b.ts`.** It commits exactly those paths and
+  leaves everyone else's staging alone. Telling agents "stage only your own hunks" does not help –
+  the hazard runs the other way, from whoever commits next.
 - **Background runs leave chips, and the chips accumulate.** Every `run_in_background` command
   registers a task that stays listed in the owner's panel after it exits – he has raised the count
   twice ("почему их уже 20?", "их снова 18 штук"). Backgrounding is still mandatory for anything
