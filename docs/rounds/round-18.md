@@ -157,15 +157,36 @@ The realised value is drawn once per COACH (not per match, not per hire): a per-
 out over ~450 matches and no one could ever feel it, while a per-coach draw makes «этот оказался
 находкой» a fact about that man that survives firing and re-hiring him.
 
-Proposal, one decimal everywhere so the card copy is readable, and deliberately a small edit of HIS
-ladder rather than a new one:
+**⚠ REVISED 13.08 after his question, and the question is what produced the rule.** He asked
+whether a `budget` coach can come out ahead of a `middle` one – «есть тихие никому не известные
+гении?» – and said to re-cut the windows if the answer should be no. The answer is yes, that is the
+phenomenon worth having, but unbounded it dissolves the ladder. So the windows are cut to a stated
+rule instead of to taste:
 
-| tier | his example | proposed | width | the story |
-| --- | --- | --- | --- | --- |
-| budget | 0.3-0.6 | **0.2-0.7** | 0.5 | the lottery – a lucky one equals a typical `high` |
-| middle | 0.5-0.8 | **0.4-0.8** | 0.4 | mostly fine, occasionally a find |
-| high | 0.7-1.0 | **0.7-1.0** | 0.3 | unchanged |
-| elite | 0.9-1.2 | **0.9-1.1** | 0.2 | never disappoints – that is the product |
+> **Each tier's ceiling is the next tier's midpoint. No tier can reach two rungs up.**
+
+A lucky cheap coach is exactly a typical coach of the tier above – a real find, and the most a find
+is allowed to be. Nothing bought at the bottom ever reaches the middle of `high`.
+
+| tier | his example | proposed | width | midpoint | ceiling lands on |
+| --- | --- | --- | --- | --- | --- |
+| budget | 0.3-0.6 | **0.2-0.7** | 0.5 | 0.45 | `middle`'s midpoint |
+| middle | 0.5-0.8 | **0.5-0.9** | 0.4 | 0.70 | just past `high`'s midpoint |
+| high | 0.7-1.0 | **0.7-1.0** | 0.3 | 0.85 | `elite`'s midpoint |
+| elite | 0.9-1.2 | **0.9-1.1** | 0.2 | 1.00 | – |
+
+What the rule costs, in odds (uniform draw, one per coach): a `budget` coach beats the `middle` one
+you could have hired instead **10%** of the time; `middle` beats `high` **17%**; `high` beats
+`elite` **8%**. One cheap coach in ten is a find – rare enough to be a story, common enough to be a
+hope, and it never touches the tier two rungs up.
+
+**Where the number is drawn, and where it is shown.** Once per COACH, derived from his id
+(`rngFromSeed(seed:coachedge:<coachId>)`) – so the same man is the same man across firing and
+re-hiring, and nothing is persisted. On the card, before hiring, the TIER'S CORRIDOR: that is
+genuinely all a market can tell you about a price. His own number is not printed there, because a
+number on an unhired card turns the market into a shop window with the prices on the back – hire,
+read, fire, repeat. It appears on his plaque **after a full season with her**: you learn what he is
+worth by employing him, which is what scouting is, and it arrives far too late to shop with.
 
 ⚠ **The honest caveat, from the measurement:** tier-to-tier differences inside these bands were
 INSIDE NOISE at 30 seeds – even 2.1 pp behaved like 0.45 pp on every ladder row. So this ladder buys
