@@ -315,3 +315,61 @@ at zero balance cost. Either ships safely.
    (align her attainable build with the field's top storey) and/or L3 (doors that read form, plus
    somewhere for a hot streak to go) must join it. L1 is still worth shipping on its own merits –
    it is the coach's product, not the wall's breach.
+
+---
+
+## 6. ⚠ THE WALL IS THE BENCH PLAYER'S, NOT THE GAME'S (13.08.2026)
+
+**This section falsifies §0, on which everything above is built. It is kept at the bottom of its own
+spec because that is where a falsification belongs – not in a separate document nobody re-reads.**
+
+§0 rests on `ladder-vs-targets-2026-08.md`: top-100 reached by **0.0% of 1530 careers**, best rank
+**#115 in 160**. Every one of those careers was played by `tools/econ-bench.ts`'s policy. The owner's
+own Olivia is **#51 at twenty-one**, self-coached, from a SMALLER talent draw than his other save –
+so one of the two statements describes the game and the other describes our artificial player.
+
+### The experiment
+
+`tools/policy-vs-owner.ts` replays the bench's policies on HIS OWN seed and profile: the same girl,
+the same draw, the same field, the same number of weeks. Only the decisions differ.
+
+| career | who | end rank | best | funds | skills | ended |
+| --- | --- | --- | --- | --- | --- | --- |
+| Olivia (413 wk, self-coached) | **the owner** | **#51** | – | **$1,601,182** | 270.2 | playing |
+| | grinder | #1616 | #1601 | -$40 | 258.4 | **bankrupt @118** |
+| | player | #211 | #152 | $91,428 | 270.0 | playing |
+| Naomi (621 wk, middle coach) | **the owner** | **#106** | – | **$280,654** | 317.6 | playing |
+| | grinder | #1614 | #1601 | -$266 | 290.0 | **bankrupt @79** |
+| | player | **#1621** | #1601 | $19,185 | **322.0** | playing |
+
+⚠ **#1601 is one place below the whole professional field (`fieldPros.size: 1600`) – it means she
+never held a single counting result.**
+
+### What it settles, and what it does not
+
+**Settled: the wall is not a fact about the game.** Same girl, same world: the owner ends at #51
+where the better bench policy ends at #211, and at #106 where it ends UNRANKED.
+
+**Settled: it is not development.** Olivia's skills are 270.2 against the policy's 270.0. On Naomi
+the bench player finishes at **322.0 against his 317.6** – a BETTER athlete, fifteen hundred places
+lower and holding no ranking at all. The bench builds the tennis and never converts it.
+
+**The mechanism, named rather than guessed:** the bench fixes `coachTier` at BIRTH from its preset,
+and the real decision is a TIMING decision. A working family paying a `middle` coach from fourteen
+has nothing left for entry fees – which is exactly the `bctl:working:middle` cell that measured
+prize p50 $0 and which the owner challenged from his own save. He hired the coach once she was
+earning. One modelling choice, and it manufactures the poverty every economy verdict then reported.
+
+**Not settled, and not to be overclaimed:** two seeds. The gap's SIZE per cause – entry timing,
+coach timing, sponsors, condition floors – is unmeasured, and that is the work in task #89.
+
+### What this costs the documents above
+
+* §0's three roots (R1 field outclasses her, R2 rank compounds, R3 doors absolute) were measured on
+  a player who goes bankrupt at sixteen or never gets ranked. **All three are unproven, not
+  disproven** – they may still be true for a well-played career, and nobody has looked.
+* The July targets, the junior-trap verdicts, `what-money-buys`, `growth-age-curve`'s rank figures:
+  same provenance, same status.
+* **L1 survives on its own terms.** Its paired arms ran the same policy on both sides, so «the edge
+  adds one to two careers of thirty» stands. What no longer stands is «the edge does not breach the
+  wall» – as a claim about the game, since the wall it failed to breach was the bench's.
