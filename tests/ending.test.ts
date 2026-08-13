@@ -53,7 +53,7 @@ import { rngFromSeed, resumeMain, initMainState } from '../src/engine/rng'
 import { DEFAULT_PROFILE, LADDER_TRACKS } from '../src/shared/protocol'
 import type { SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
 import type { LadderTrack } from '../src/engine/season/types'
-import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
 function autoView(over: Partial<AutoEndingView> = {}): AutoEndingView {
   return {
@@ -325,6 +325,28 @@ describe('the latch, on a real world', () => {
     // ...as does anything above it.
     world.bestFinishByTier = { wta250: 3 }
     expect(collegeStillOpen(world)).toBe(false)
+
+    // ⭐ BUT TURNING UP AND LOSING IS NOT A RESULT (owner, 13.08). The bench measured 12 of 25
+    // closures as first-round losses: `w75.points` ends in a nominal 1 for the opening-round loser,
+    // and that single point was shutting the door on the exact case the constant's own comment calls
+    // safe. The rule now reads the FINISH, so it cannot drift with a points-table edit.
+    const openingRound = TIERS.w75.points.length - 1
+    world.bestFinishByTier = { w75: openingRound }
+    expect(
+      collegeStillOpen(world),
+      'she entered one W75 and lost her first match – that is a junior trying the tour',
+    ).toBe(true)
+    // ...and winning one match there IS the line.
+    world.bestFinishByTier = { w75: openingRound - 1 }
+    expect(collegeStillOpen(world), 'she won a match at W75 – she is on the tour').toBe(false)
+
+    // ⚠ THE INCONSISTENCY THIS ALSO SETTLES, pinned so a table edit cannot quietly restore it: W100
+    // pays its opening-round loser 0 and W75 pays 1, so before the fix the SAME first-round loss kept
+    // the door at one rung and took it at the other. Both are open now, for the same reason.
+    expect(TIERS.w75.points[openingRound], 'w75 pays the wooden spoon').toBeGreaterThan(0)
+    expect(TIERS.w100.points[TIERS.w100.points.length - 1], 'w100 does not').toBe(0)
+    world.bestFinishByTier = { w100: TIERS.w100.points.length - 1 }
+    expect(collegeStillOpen(world), 'the same loss, the other rung').toBe(true)
   })
 
   it('⭐ ...and the engine refuses the answer, not just the button', () => {

@@ -298,6 +298,24 @@ export function collegeStillOpen(world: WorldState): boolean {
     const finish = world.bestFinishByTier[tier]
     if (finish === undefined) return false
     if (TIER_LADDER.indexOf(tier) < from) return false
+    // ⭐ SHE HAS TO HAVE WON A MATCH THERE (owner, 13.08: «чини дверь по набранному результату, а не
+    //   по единице»). The test used to be `points[finish] > 0`, and that is not the line the constant
+    //   above says it is drawing.
+    //
+    //   THE MEASUREMENT THAT PRODUCED THE RULING (endings bench, 9 presets x 20 seeds): W75 shut the
+    //   door in 95.2% of closures, and **12 of 25 sampled closures were a FIRST-ROUND LOSS** – because
+    //   `w75.points` is [75, 49, 29, 16, 9, 1] and that trailing 1 is the wooden spoon, handed to
+    //   everyone who turns up and loses. So the door was being shut by exactly the case
+    //   `collegeClosedFromTier`'s own comment calls safe: «a junior who has tried the tour».
+    //
+    //   ⚠ AND THE LADDER WAS INCONSISTENT WITH ITSELF ABOUT IT. `w100.points` ends in 0, so the SAME
+    //   first-round loss kept the door at W100 and took it at W75 – while w75's own comment claims the
+    //   nominal 1 is paid "as at every rung from W50 up", which W100 disproves. Reading the FINISH
+    //   rather than the points settles it for every rung at once and cannot drift with a table edit.
+    //
+    //   The last index is the opening round: `bestFinishByTier` holds the smallest (best) index and
+    //   `points[0]` is the champion, so `length - 1` is the girl who lost her first match.
+    if (finish >= TIERS[tier].points.length - 1) return false
     return TIERS[tier].points[finish] > 0
   })
 }
