@@ -120,15 +120,24 @@ said `locked`.
 
 ## Group E – stats and ages *(3, 8)*
 
-**Never started.** Both re-raised by the owner three days later as round 15 items 12 and 11.
+**Never started at the time. BOTH SHIPPED ON 10.08 AND NEITHER BOX WAS TICKED BACK** – corrected by
+the 13.08 audit (round-18 item 6, task #88), four days after the work landed. Both were re-raised by
+the owner three days after this round as round 15 items 12 and 11, and shipped under those numbers.
 
-- [ ] **3. Opponent ages** in matches and in the stats tables.
-  → **OPEN.** Verified 09.08: no opponent-age concept in `src/`. Re-raised as round 15 item 12.
-- [ ] **8. Season-by-season shows the wrong currency** – per level it must show that level's own rank
+- [x] **3. Opponent ages** in matches and in the stats tables.
+  → **SHIPPED 10.08, `bea7cc2`** ("round 14 group E: three tables under three tabs, and the ages are
+  people's"). `Snapshot`'s opponent block carries `ageYears` (`src/shared/protocol.ts:707`, null on a
+  reveal saved before ages were composed) and the match surfaces print it –
+  `src/components/TournamentFlow.vue:105` (`oppAge`), `:853` and `:1006`, both gated on `showAges`
+  so a legacy reveal shows nothing rather than a wrong number. The 09.08 verdict ("no opponent-age
+  concept in `src/`") was true when written and was stale within twenty-four hours.
+- [x] **8. Season-by-season shows the wrong currency** – per level it must show that level's own rank
   and that level's own points; today every row shows the international number and a combined total.
-  → **OPEN, and it needs a SCHEMA change rather than a UI fix.** `SeasonHistoryEntry` carries **one**
-  rank and **one** points figure – the ITF fold – so the tabs cannot differ because the record has
-  nothing else in it. Re-raised as round 15 item 11, where that diagnosis is written down.
+  → **SHIPPED 10.08, `bea7cc2`, and it did take the schema change the diagnosis called for.**
+  `SeasonHistoryEntry` gained a per-track half at schema **v46** (`src/shared/protocol.ts:524`,
+  "ONE SEASON, ON ONE TABLE"), so the three tabs now read three different records instead of three
+  views of one. Round 16 #4 then finished the surface from the other side, deleting the asterisk and
+  the other tracks' rows.
 
 ## Group F – art *(5, 16)*
 

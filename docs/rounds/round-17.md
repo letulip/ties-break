@@ -38,9 +38,21 @@ cost of not keeping it: #14 was reported shipped and was not fixed on his screen
   injured) and the Bills screen now says so – round-16 #15's fix finished the legibility.
 - [x] **13. Season money table.** Redesigned per the owner's correction – the running balance left
   both surfaces; and the naive identity provably does not close (off-season moves the balance).
-- [x] **14. Coach-card text off the picture.** ⚠ REOPENED 12.08: the first fix (54→66px) aimed at
+- [!] **14. Coach-card text off the picture.** ⚠ REOPENED 12.08: the first fix (54→66px) aimed at
   the mask's opaque stop; the fade runs to 96% and the man was still under the words. Now 80px –
   the target is the image, not the opaque band.
+  → ⚠ **`[x]` → `[!]` BY THE 13.08 AUDIT (round-18 item 6, task #88). BOTH fixes landed on the wrong
+  screen.** He was talking about the coach PICKER – the cards in `CoachMarketScreen.vue` – all along,
+  and this item read it as the coach plaque on HOME. So the surface he complained about was never
+  touched, and the surface he did not complain about was edited twice: `.coach-body` in
+  `HomeScreen.vue` went 54 → 66 → 80px chasing it. What he asked for: text clear of the portrait on
+  the coach-selection cards. What the fix did: took 26px off the quote column on Home and left the
+  picker untouched. Re-reported as round-18 items 1, 2 and 3.
+  → ⚠ **AND ON HOME THE LEVER RAN BACKWARDS.** Round-18 #1's revert (`c07e2a1`, 13.08, landed while
+  this audit was being written) measured what the chase actually bought: `.coach-art` is
+  height-driven, so widening the margin narrows the quote, which makes the card taller, which makes
+  the portrait WIDER – 54px → card 193px / portrait 117px, 80px → card 265px / portrait 162px. **The
+  overlap was worse at 80 than at 54.** Home is back to 54px; the fix that was owed went next door.
 - [>] **15. Why pay a coach.** Measured (`what-money-buys-2026-08.md`): money is a ZERO on the
   ladder; above `budget` no rung beats self-coaching; the design answer is
   `docs/specs/coach-as-the-eye.md` and its aim-value measurement is running now.

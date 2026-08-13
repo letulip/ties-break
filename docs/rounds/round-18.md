@@ -40,9 +40,15 @@ build waits on one word from him about which ladder.
   inside a round never become work) and false "done" (a fix reported shipped that his screen never
   saw). Runs capture → classify → group by collision surface → brief with the evidence named up
   front → verify on his surface → gate once quiet → report per item in his numbering.
-- [>] **6. «Ревью всех предыдущих раундов – что пропущено, надо актуализировать»** – task #88.
-  Rounds 8-17; only 17 has a ledger, so the earlier ones get one reconstructed and a sample of their
-  `[x]` marks re-checked against the current build, because nobody ever checked them independently.
+- [x] **6. «Ревью всех предыдущих раундов – что пропущено, надо актуализировать»** – task #88.
+  **`docs/rounds/AUDIT-2026-08.md`**, and it is the file to read, not this line. 192 items over
+  rounds 8-17: **14 still open, 9 silently dropped, 3 shipped-then-undone**, and of 26 `[x]` marks
+  sampled against the current build **two came back false** – round-10's Stats tiles and round-17
+  #14, which is items 1-3 above. **Round 16 had no ledger at all** and is reconstructed as
+  `round-16.md` (marked as rebuilt after the fact, with its sources named); **round 15's had thirteen
+  boxes open on work that shipped on 09-10.08**. The index table stopped at round 15 and now carries
+  rounds 16-18. ⚠ The misses cluster: every one of the nine dropped items is either a question you
+  were asked and never answered, or something ruled and then not built – none was lost in the code.
 - [~] **7. The brutal season** – Slams/1000/500 all losses, mandatory entry, big money, and the first
   `angry` he has caught. Read from the save in §7 below; no build, but it is the evidence for 8 and
   11.

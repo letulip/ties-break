@@ -5,6 +5,13 @@
 > **R10-11's surface hint is reverted** by R11-15 (the ringed dot was worse than the pill it
 > replaced), and **R10-16's fix exposed R11-1** — removing `'injury'` from the toast's copy map means
 > a swallowed injury stop now shows nothing at all. See `round-11.md`.
+>
+> ⚠ **RE-AUDITED 13.08 (round-18 item 6, task #88), and two boxes came back.** `[!]` = was reported
+> done, is not true on the build today. **R10-2 and R10-8** were undone by a later relabel that
+> nothing recorded – see their entries. **R10-11's reversal was itself reversed**: the owner brought
+> the ringed mark BACK in wave 2 (30.07), so what ships today is R10-11's design, not R11-15's –
+> `src/components/ui/SurfaceMark.vue`, and `tests/round11-view.test.ts:71` says so in its own name.
+> R10-15, R10-7 and the rest of the presentation pass were spot-checked and hold.
 
 Split across three parallel branches by file ownership so they cannot collide:
 `r10/fix` (engine + eligibility + dialogs) · `r10/ui` (pure presentation) · `r10/view` (match viewing + history).
@@ -42,10 +49,26 @@ Player copy: short dash "–", no Cyrillic in player-facing strings.
 
 ## 🟡 Presentation — `r10/ui`
 
-- [x] **R10-2 Stats header tiles**: trim padding on all three so the label fits one line; rename
+- [!] **R10-2 Stats header tiles**: trim padding on all three so the label fits one line; rename
   "Season points" → "Season pts".
-- [x] **R10-8 narrow screens**: "Junior rank" and "Season points" each on ONE line — widen the label
+- [!] **R10-8 narrow screens**: "Junior rank" and "Season points" each on ONE line — widen the label
   column (there is unused space) and shorten "points" → "pts".
+      → ⚠ **BOTH `[x]` → `[!]` BY THE 13.08 AUDIT (round-18 item 6, task #88). The fix shipped and
+      was then silently undone, with nothing written down and nothing pinning it.** The string
+      "Season pts" does not exist anywhere in `src/` today, and neither does "Junior rank". The
+      W2-LADDER commit `79567f9` ("Make both ladders visible") relabelled the three tiles
+      ladder-qualified: `Points` (`StatsScreen.vue:223`), `{{ LADDER_LABEL[shown] }} rank` (`:219`)
+      and `{{ LADDER_LABEL[shown] }} W–L` (`:230`), where `LADDER_LABEL` is
+      `National` / `International` / `Professional` (`src/shared/protocol.ts:1240`). So the widest
+      label went from "Junior rank" (11 chars) to "Professional rank" (17) – **6 characters LONGER
+      than the string R10-2 measured at 375pt**, on tiles whose one-line mechanism is
+      `white-space: nowrap` (`src/style.css:2522`), which cannot wrap and therefore clips or
+      overflows instead. The trimmed padding survives; the fitting budget it bought does not.
+      ⚠ The R10-2 comment is still in the template at `StatsScreen.vue:214`, describing a string
+      that is no longer rendered. **No spec, decision or round ledger records the relabel, and no
+      test pins the tile labels** (`tests/` and `e2e/` have zero hits for `stats-tile`) – which is
+      why this reads as an undocumented silent replacement rather than a ruling. Not measured in a
+      browser; the fitting budget shrank and nobody re-measured it.
 - [x] **R10-4 vacation card**: week + date on the first line, the vacation itself on the second.
 - [x] **R10-11 surface hint placement**: move the surface pill text ("Hard/Clay/Grass" + "suits her
   game") UNDER the surface chip; when the court suits her build, ring the chip in an accent circle and
@@ -84,3 +107,10 @@ Player copy: short dash "–", no Cyrillic in player-facing strings.
 - **R10-1 world news and events** — the Phase-4 opener (two feeds: her events + the world; champions,
   rival storylines, tour news, inflation) plus the weekly random-event roll on `seed:life:week`. Too
   large for this round; its own slice, designed against the existing research docs.
+  → ⚠ **THE SLICE WAS NEVER SCHEDULED, and the item quietly shrank to one line of it** (13.08 audit).
+  What exists: `src/engine/world.ts:1822`, "World news: who actually took the title of the draw she
+  played in" – the champions half, and only for draws she was in. What does not exist: the second
+  feed, rival storylines, tour news, and the weekly life roll – **`seed:life` has zero hits anywhere
+  in `src/`**. Its descendants surfaced twice since and both stalled at a question: inflation is
+  round-17 #21 (answered, routed to task #103) and rivals-in-commentary is round-17 #22 (priced, and
+  **still awaiting the owner's word**). Nobody ever told him the parent slice was not coming.
