@@ -267,7 +267,47 @@ A player's answer at the fork therefore cannot move the MAIN sequence, which is 
 fairness property. `tests/ending.test.ts` pins a college twin against a do-nothing twin: same seed,
 same weeks, byte-identical `rngMain`.
 
----
+### 9.4 What is actually missing, brought up to date (13.08.2026)
+
+The owner, 12.08: «т.е. у нас там ничего нет дальше при выборе «колледж»? может быть нам надо
+какой-то шорт-кат сделать при этом выборе? типа экран "прошло 4 года"… И вилка «закончить» тоже
+должна наверное что-то показать, какие-то результаты, а потом предложить начать заново». Task #102
+was opened on that and never started. Re-reading the code first, because **half of it turns out to
+exist**:
+
+* **«Закончить» is BUILT.** `EndingScreen.vue` shows the album page by page, opens the scroll
+  underneath for the player who wants the record rather than the story, and closes with the three
+  background cards and a new daughter. That half of #102 needs nothing.
+* **College is the black box.** `resumeFromCollege` ticks 208 weeks inside one call and writes ONE
+  line: «Four years, a degree and no ranking at all. She is 23, and the only way back in is
+  qualifying.» Four years of her life, one sentence, no screen.
+
+**What those four years really contain, so the card can be honest rather than decorative.** She
+keeps training and keeps developing, but WITHOUT the coach multiplier – `world.ts:1015` returns
+false for the whole freeze, and the ledger line says why in her own world's voice: «At college – the
+programme coaches her, not us». Meanwhile no coach bill, no gear, no sponsor review, no academy, and
+parent income and interest keep running. So she comes back at twenty-three with a degree, a balance
+that has recovered for four years, a body that was never raced, and no ranking.
+
+⚠ **AND HERE IS THE DESIGN QUESTION THE SCREEN CANNOT DUCK.** `growth-age-curve-2026-08.md` measured
+18→26 at **2.2 skill points** for the median career, and `ladder-vs-targets-2026-08.md` put the
+wta250 door at #200 with 53.1% of careers clearing it over a WHOLE career. A twenty-three-year-old
+starting from qualifying has neither the points nor the years. Before any screen is drawn, somebody
+has to answer: **is the college return a playable second act, or a graceful way to end the career?**
+
+Both are legitimate designs and they want opposite screens:
+
+* **A second act** – then the return needs something to stand on (a protected entry for a season, a
+  college record that counts for something at the door, or the fork moved later) and the card should
+  read as a beginning.
+* **A graceful ending** – then the card is a coda: the degree, the four years, the life she has, and
+  the game says so plainly instead of handing her a qualifying draw she cannot survive. This is the
+  cheaper and, on the numbers above, the more honest of the two.
+
+Whichever it is, the shape of the screen is the same and is worth building either way: not four
+years played out week by week – that is a second game – but **a short readable passage**: what she
+did, what she gained, what it cost, and where she stands the morning after. The measurement in §10
+says who ever sees it: 100% of careers that never got going, 50% of well-managed ones.
 
 ## 10. The college door – how often is it still there at nineteen? (measured 13.08.2026)
 
