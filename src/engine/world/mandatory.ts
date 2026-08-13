@@ -245,7 +245,7 @@ export function buildTourBriefing(world: WorldState): TourBriefing | null {
  *  career changes regime, and a full-screen stop every January would be the game nagging about a rule
  *  the player already knows. A letter is the tour's own established voice (`kind: 'tour'`), it rides
  *  the inbox dot and the mail chime the owner asked for on 05.08, and it can be re-read in the season
- *  it is about instead of being a beat he has to remember.
+ *  it is about instead of being a beat the player has to remember.
  *
  *  ⚠ ONE RULE COVERS BOTH THE OPENING AND THE CROSSING: the id is the SEASON's, so the letter is
  *  written on the first week of each season in which she is bound – the season's own opening week in
