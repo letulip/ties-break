@@ -466,10 +466,16 @@ export function settleMandatoryDeadlines(world: WorldState): void {
 /** THE SKIP, at the event's own week: she was bound, she never entered, and the deadline has passed.
  *
  *  ⚠ AND THIS IS WHERE THE ZERO GOES IN. The owner's spec is explicit that a skipped mandatory ALSO
- *  occupies one of her sixteen counted slots - the real rule, and crueller than the fine because it
- *  is levied in the currency she is actually playing for. It is written as an ordinary result row
- *  carrying `mandatoryMiss`, so the best-16 window she reads every week IS the enforcement surface
- *  and no parallel bookkeeping exists to disagree with it. */
+ *  occupies one of her counted slots - the real rule, and crueller than the fine because it is
+ *  levied in the currency she is actually playing for. It is written as an ordinary result row
+ *  carrying `mandatoryMiss`, so the counting window she reads every week IS the enforcement surface
+ *  and no parallel bookkeeping exists to disagree with it.
+ *
+ *  ⚠ THE WINDOW IS `BEST_N_BY_TRACK.wta` AND IT IS EIGHTEEN, not the sixteen this note said until
+ *  13.08 (round-18 #8) - `ranking.ts` corrected the number on 05.08 and the prose here, in
+ *  `SeasonResult` and in the spec kept the old one. It cost a real mis-brief: I told the owner
+ *  "sixteen" from these comments while writing the briefing that explains the rule to players.
+ *  Never type the number; read the constant. */
 export function settleMandatoryMisses(world: WorldState): void {
   const week = world.week
   for (const event of world.season) {

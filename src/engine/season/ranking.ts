@@ -38,9 +38,11 @@ export interface SeasonResult {
    *  only thing in the game that makes a scoreless row count.
    *
    *  Why it is the real rule and crueller than the fine: the tour does not take points away, it
-   *  takes a SLOT. A zero sorts last in the best-N fold, so it costs her nothing while she has
-   *  sixteen better results and costs her a whole result the moment she does not - which is exactly
-   *  when a professional feels it. It also means the enforcement surface is the best-16 window she
+   *  takes a SLOT. A zero sorts last in the best-N fold, so it costs her nothing while she has a
+   *  full window of better results and costs her a whole result the moment she does not - which is
+   *  exactly when a professional feels it. (⚠ "sixteen" until 13.08: the window is
+   *  `BEST_N_BY_TRACK.wta` and has been EIGHTEEN since 05.08 - see the note below. The prose here
+   *  and in `world/mandatory.ts` kept the old number and mis-briefed the round-18 #8 briefing.) It also means the enforcement surface is the best-16 window she
    *  already reads every week rather than a second ledger nobody looks at.
    *
    *  ⚠ AND IT IS THE ONE EXCEPTION `isCountingResult` CARRIES. Everything else about a scoreless row

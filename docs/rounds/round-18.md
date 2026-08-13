@@ -31,12 +31,20 @@ build waits on one word from him about which ladder.
   `CoachMarketScreen.vue:58` is `const tab = ref<string>('week')` – the screen ALWAYS opens on Her
   Week, so his click on the coach note lands on the training dials and never on the coaches. With a
   coach hired it must open on the coaches tab.
-- [>] **4. «Флажок и неактивный раздел самокоучинга при выбранном тренере»** – ⚠ §Q1 ANSWERED 13.08,
+- [x] **4. «Флажок и неактивный раздел самокоучинга при выбранном тренере»** – ⚠ §Q1 ANSWERED 13.08,
   and A was already the design: «она дублирующий элемент управления для отказа от коуча, мы это уже
   обсуждали. Пока галочка не стоит – вся панель неактивна … можно и твой замок поверх нарисовать
   оверлеем с коротким пояснением». So it is a SECOND DOOR to firing the coach, not a new mechanic:
   the tick reflects `coachTier === 'self'`, ticking it while a coach is hired fires him through the
-  existing confirm, and the engine is untouched. In flight.
+  existing confirm, and the engine is untouched. **Shipped:** the lock overlay (the third treatment
+  he allowed), two lines over the dimmed dials – «{coach} sets her week.» – chosen because this very
+  screen already carries his ruling for the coach-travel toggle («locking it says WHEN it arrives,
+  which is also the honest answer to why can't I press this»), and because a panel of dead boxes with
+  no sentence is a failure `HerWeekTab` has already recorded once at one-fifth the size. Untick while
+  self-coached performs nothing – it opens the coaches list, because a coach is a person and the tick
+  names none. Evidence: `tests/component/round18-self-coaching.test.ts`, 10 mounted tests, 8
+  mutations each watched red. ⚠ Worth a glance on his phone: the overlay is pinned through the
+  cascade in happy-dom, not measured in a browser.
 - [x] **5. The skill: «приём и обработка правок»** – `~/.claude/skills/fix-round/SKILL.md`, and this
   file is its first output. Encodes the two failures it exists to prevent: silent drops (questions
   inside a round never become work) and false "done" (a fix reported shipped that his screen never
@@ -57,10 +65,16 @@ build waits on one word from him about which ladder.
 - [>] **8. «Перед началом сезона больших призов присылать уведомление/попап – что она реально должна
   там участвовать, что есть такой регламент»** – ⚠ §Q2 WITHDRAWN, I was wrong about it before I read
   the code: the regulation EXISTS and is his own (W3-ACT2 §6). `mandatoryBindsRank` binds by rank, a
-  skipped mandatory writes a `mandatoryMiss` row that takes one of her sixteen counting slots with a
-  zero, and `raiseMandatoryDueLetter` invoices per event. The gap is that `mandatoryBindsRank` is
-  read only by engine internals – nothing announces the moment the regime starts binding, so the
-  first the player hears of it is a deadline letter. Briefing in flight.
+  skipped mandatory writes a `mandatoryMiss` row that takes one of her **eighteen** counting slots
+  with a zero (⚠ I briefed "sixteen" off stale comments in `mandatory.ts` and `ranking.ts`; the
+  window has been `BEST_N_BY_TRACK.wta` = 18 since 05.08 and the prose never caught up – corrected in
+  both files, and the briefing reads the constant rather than a typed number), and
+  `raiseMandatoryDueLetter` invoices per event. The gap was that `mandatoryBindsRank` is read only by
+  engine internals – nothing announced the moment the regime starts binding, so the first the player
+  heard of it was a deadline letter. **Shipped:** a blocking briefing on the rank crossing, once per
+  career, plus a quieter season letter after it; every number read from `ECONOMY.mandatory`, no
+  schema move (the "has anybody been told" watermark is per-career `localStorage`, the same shape the
+  news feed and trophy cabinet already use).
 - [x] **9. «Off season – rest, school, family в 21 год»** – the engine was right all along
   (`schoolEndWeek` = 242, W35 '35, age 18; his save is 171 weeks past it). `DiaryFacts` carried
   `examsWeek` but NOT `schoolOver`, so a phrase could not gate on school even if its author wanted
