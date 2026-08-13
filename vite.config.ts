@@ -109,9 +109,13 @@ const HEAVY_SIM_FILES = [
   '**/tests/econ-reach.test.ts',
   '**/tests/econ-reach-agree.test.ts',
   '**/tests/econ-reach-pro.test.ts',
-  // W2-ENDINGS: the bench gate. Small by design (see its header) but it drives full careers, so it
-  // belongs on the serialised side of the split like every other Monte-Carlo file.
-  '**/tests/endings-bench.test.ts',
+  // ⚠ `endings-bench` USED TO SIT HERE AND HAS MOVED TO HEAVY_UNIT_FILES (13.08). Its entry said it
+  // was here "for SERIALISATION, not for cost" – and being out of the PR gate was the price of that
+  // placement, which nobody had priced. It is a REGRESSION test (its own header: "the smallest
+  // slice that can still catch the three things a refactor could silently break", and "it asserts
+  // BEHAVIOUR, not the printed numbers"), and it is 12.2 s wall / 10.9 s of test time solo. A
+  // process of its own gives it exactly the serialisation it was placed here for, and the gate gets
+  // it back. See the list below and .github/workflows/simulation.yml for where the line is drawn.
   '**/tests/fatigue-bench.test.ts',
   '**/tests/fatigue-bench-planner.test.ts',
   '**/tests/fatigue-bench-policy.test.ts',
@@ -131,13 +135,36 @@ const HEAVY_SIM_FILES = [
  *  process, so there was nothing left to shard. The FILE was the unit, so the file was split into
  *  the three listed below (same 61 tests, same seeds, same week counts; scripts/units.mjs's header
  *  carries the measurement). All three stay heavy: 9.3s / 15.0s / 10.3s solo, so the largest is
- *  about where the original stood when this list was first written. */
+ *  about where the original stood when this list was first written.
+ *
+ *  ⚠ 13.08: THE LIST NOW ALSO TAKES REGRESSION TESTS BACK OUT OF THE SIM PROJECT, and that is the
+ *  same rule read in the other direction rather than a new one. The sim project's exclusion from
+ *  the gate is about MONTE-CARLO SWEEPS – deterministic calibration that catches a changed model,
+ *  not a flake (simulation.yml's header argues it in full, and it is right). `endings-bench` is not
+ *  one: it is a behaviour regression test that happens to drive careers, and it had been filed with
+ *  the sweeps because it shares their SHAPE. Filed there, it left the gate, and it went red on
+ *  clean `main` and stayed red unnoticed – which is the cost of the misfiling, measured.
+ *
+ *  All eleven sim files were timed solo before anything moved (one vitest process each, quiet
+ *  machine, wall clock) – scripts/units.mjs carries the table and what it turned up:
+ *
+ *      econ-reach-pro 41.9 · econ-bench 39.0 · econ-reach 37.9 · econ-reach-agree 35.8
+ *      fatigue-bench 29.4 · econ-bench-survival 29.1 · fatigue-bench-planner 22.3 (RED)
+ *      fatigue-bench-policy-104w 19.7 · match/calibration 14.9 · endings-bench 12.2  <- moved
+ *      fatigue-bench-policy 65.2 (RED: two tests green, exit 1 – birpc's wall, on a quiet Mac)
+ *
+ *  ⚠ THE BAR IS TWO TESTS AND BOTH MATTER: a regression test by its own header, AND real headroom
+ *  under birpc's 60 s wall at CI's ~1.9x local (scripts/units.mjs's own calibration). On cost alone
+ *  `match/calibration` at 14.9 s would come back too – and it is calibration, which is exactly the
+ *  file family the exclusion was written about. endings-bench is the only file clearing both: 12.2 s
+ *  local is ~23 s on CI, about a third of the window, and it can triple before it is near it. */
 const HEAVY_UNIT_FILES = [
   '**/tests/economy.test.ts',
   '**/tests/radar.test.ts',
   '**/tests/radar-read.test.ts',
   '**/tests/radar-training.test.ts',
   '**/tests/kidLife.test.ts',
+  '**/tests/endings-bench.test.ts',
 ]
 
 export default defineConfig({

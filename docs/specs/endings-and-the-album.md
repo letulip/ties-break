@@ -54,6 +54,21 @@ late-career event by construction: it needs a body that has already lost months.
 the plateau offer at twenty-four has stopped before the exposure exists. The denominator that means
 anything is the careers that play long enough to have one.
 
+⚠ **THE TABLE ABOVE IS 04.08 AND IT HAS DRIFTED – RE-MEASURED 13.08** (9 presets × 20 seeds, on the
+run §10 below was taken from). Recorded, not corrected: re-arguing what the rates should be is a
+balance conversation and the shape of it has changed, so it wants the owner rather than an edit.
+
+| ending | her words 04.08 → 13.08 | plays on 04.08 → 13.08 |
+| --- | --- | --- |
+| bankruptcy | 51.1% → **59.4%** (median age 16) | 51.1% → **59.4%** |
+| plateau | 48.9% → **17.8%** | 0.0% → 0.0% |
+| natural | 0.0% → **10.0%** | 41.1% → **23.9%** |
+| injury | 0.0% → **12.8%** | 7.8% → **16.7%** |
+
+The one that overturns an argument rather than a number is `injury` on «her words»: the paragraph
+above explains a 0% that is now 12.8%, so the plateau offer is no longer stopping her before the
+exposure exists. `plateau` halving and `bankruptcy` rising are the same story from the other side.
+
 ---
 
 ## 3. Bankruptcy's N — swept and defended
@@ -251,3 +266,96 @@ only the payout is discarded — the same discipline the background clause it ri
 A player's answer at the fork therefore cannot move the MAIN sequence, which is invariant 2 and a
 fairness property. `tests/ending.test.ts` pins a college twin against a do-nothing twin: same seed,
 same weeks, byte-identical `rngMain`.
+
+---
+
+## 10. The college door – how often is it still there at nineteen? (measured 13.08.2026)
+
+⚠ **The owner asked this in his own words and it had never been given a rate:** «т.е. если она
+получает зачетный w75+ раньше 19 летия, то она не получит права идти в академию?» Yes, by design –
+round-17 #6 made `collegeStillOpen` a precondition and `answerFork` re-validates it engine-side. The
+full triage is `round17-triage.md` §B, which also settles that the ACADEMY is untouched by it: only
+this one answer and the `college` card in the album are at stake.
+
+What nobody had measured is how OFTEN the rule removes the answer, and that decides something real.
+If the door is nearly always shut for a career worth playing, then slot 2 is close to dead content
+and the fork's card is a two-way choice in a three-way layout.
+
+The bench reports it now (`tools/endings-bench.ts`, ⭐ THE COLLEGE DOOR), off the sweep it already
+runs – presets × seeds × policies, no extra careers simulated. Run below: 9 presets × 20 seeds,
+`npm run bench:endings`, 28 minutes.
+
+⚠ **The denominator is «reached the fork», not «started».** A family that went under at fifteen was
+never offered anything, so counting it as "door shut" would blame the scholarship rule for the
+economy. Both columns are printed so the gap is visible rather than taken on trust.
+
+| arm | careers | reached 19 | door OPEN | of those |
+| --- | --- | --- | --- | --- |
+| grinder · latched (the shipped game) | 180 | 73 | 72 | **98.6%** |
+| grinder · no-latch | 90 | 90 | 89 | 98.9% |
+| player · no-latch | 90 | 90 | 45 | **50.0%** |
+
+**⚠ THE ENTRY POLICY DECIDES IT, AND NOTHING ELSE COMES CLOSE.** The grinder – no reserve, no rest
+floor, coach left at home – almost never loses the door: 72 of the 73 careers that got to nineteen
+still had it. The `player` policy, which is someone actually managing the career (a season's runway
+kept back, refuses to race worn out, takes the paid coach to the tournaments), loses it in **exactly
+half** of careers. The reason is not subtle: the grinder is broke, so she never enters a W75 at all.
+
+**The college door is therefore open mainly to careers that did not get going.** That is the finding,
+and it is the opposite of what the fork's card implies by giving three answers equal weight.
+
+### What shuts it, and when
+
+| rung | careers | share of closures | median age | earliest |
+| --- | --- | --- | --- | --- |
+| `w75` | 120 | **95.2%** | 19 | **17** |
+| `w100` | 5 | 4.0% | 18 | 17 |
+| `wta125` | 1 | 0.8% | 22 | 22 |
+
+126 of 360 careers ever lost the door; **47 of those lost it before the fork**, which is the only
+half that costs her the answer. (The other 79 shut it at nineteen or later, after the card was
+already answered.)
+
+**⚠ AND IT IS NOT "SHE BECAME A PROFESSIONAL" – IT IS "SHE TURNED UP AT ONE W75".**
+`ENDINGS.collegeClosedFromTier`'s own note says the opposite: *«AND IT IS A COUNTING RESULT, not an
+entry. Playing a W75 and losing in the first round is a junior trying the tour.»* That is not what
+the code does. `collegeStillOpen` is `TIERS[tier].points[finish] > 0`, and `TIERS.w75.points` is
+`[75, 49, 29, 16, 9, 1]` – **the opening-round loser is paid a nominal 1**, so losing your first
+match in a W75 main draw already spends the eligibility. Instrumented over 90 careers, the finish
+index that actually shut the door:
+
+| what she did at W75 | careers |
+| --- | --- |
+| **lost her first match** (finish #5, pays 1) | **12** |
+| lost in the round of 16 (finish #4, pays 9) | 5 |
+| reached the semi-final (finish #2, pays 29) | 3 |
+| won it (finish #0, pays 75) | 2 |
+| lost in the quarter-final (finish #3, pays 16) | 2 |
+| won a W100 (finish #0, pays 100) | 1 |
+
+Nearly half of all closures are the exact case the comment says is safe. And the tables disagree
+with each other at the boundary: W15, W35 and **W100** pay the opening-round loser **0**, while W50,
+W75, WTA125, WTA250, WTA500, WTA1000 and the slams pay ≥ 1 – so the same first-round loss keeps the
+door at W100 and takes it at W75, for no reason anybody chose. The nominal 1 is a real 2026 chart
+row (`calendar.ts`: «nominal 1 for the opening-round loser, as at every rung from W50 up»); it was
+never meant to carry an eligibility rule.
+
+### When it happens, and why that is the awkward part
+
+`TIERS.w75.minAgeYears` is **17**, and 15 of those 25 instrumented closures land at exactly
+seventeen – the first season the rung exists at all. Round-17's triage saw this coming and left the
+question open:
+
+> the design actively invites the result that closes the door, and nothing at seventeen tells the
+> player that a good week there spends something. The precondition is correctly scoped; the SILENCE
+> around it is a design question, and it is the owner's call.
+
+This is that question with a number on it: **a well-managed career loses the third answer half the
+time, usually at seventeen, and about half of those lose it by losing.** `ForkDialog.vue` then simply
+does not draw the button – deliberately, so the card cannot be read as recommending – so the player
+never learns the answer existed.
+
+**For task #102 (the fork's exits need screens):** the college exit is genuinely reachable and worth
+building for – 98.6% of grinder careers and 50% of managed ones still have it at nineteen, so it is
+not dead content. What is worth deciding separately is whether a seventeen-year-old's first W75 entry
+should say out loud what it costs.

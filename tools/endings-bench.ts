@@ -32,13 +32,15 @@ import {
   answerFork,
   answerRetirement,
   resumeFromCollege,
+  collegeStillOpen,
   kidAgeYears,
   type WorldState,
 } from '../src/engine/world'
 import { ENDINGS, bankruptcyDue, debtWeeks, plateauReading, weeksLostSoFar } from '../src/engine/ending'
 import { plateauViewOf, autoEndingViewOf } from '../src/engine/world'
 import type { CareerEndingType } from '../src/shared/protocol'
-import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
+import type { TierId } from '../src/engine/season/types'
 import type { Rng } from '../src/engine/rng'
 
 /** A full playing life: fourteen to the week the game stops asking. 24 seasons. */
@@ -92,6 +94,21 @@ export interface CareerOutcome {
   maxWeeksOutAtSevere: number
   /** debt spells that STARTED inside the first `horizonWeeks` weeks - the 14→18 target row */
   debtSpellsInHorizon: number[]
+  /** ⭐ THE COLLEGE DOOR AT NINETEEN – the owner's own question, asked in his own words: «т.е. если
+   *  она получает зачетный w75+ раньше 19 летия, то она не получит права идти в академию?» Yes –
+   *  round-17 #6 made `collegeStillOpen` a precondition and `answerFork` re-validates it – and
+   *  nobody had ever measured how OFTEN that removes the answer. If it is almost always shut then
+   *  the fork at nineteen is a two-way fork wearing a three-way card, which is a design finding
+   *  (task #102) rather than a bench detail.
+   *
+   *  Null ⇔ the career never reached the fork at all (it ended, or the horizon stopped short), which
+   *  is the only honest denominator: a girl who went bankrupt at fifteen was never offered anything. */
+  collegeOpenAtFork: boolean | null
+  /** WHAT SHUTS IT, and when. The week `collegeStillOpen` first went false, her age that week, and
+   *  the tier whose SCORING finish did it. Null ⇔ the door never shut inside the horizon. */
+  collegeShutWeek: number | null
+  collegeShutAge: number | null
+  collegeShutTier: TierId | null
   /** ⚠ THE PLATEAU'S OWN N, SWEPT WITHOUT RE-RUNNING. At every season wrap the reading is evaluated
    *  at 2, 3 and 4 seasons and the first season each would have asked in is banked. The career only
    *  ACTS on the shipped value, so this is "when would it have asked" rather than "what would the
@@ -134,6 +151,10 @@ export function runToEnding(
     maxModeratePlusAtSevere: 0,
     maxWeeksOutAtSevere: 0,
     debtSpellsInHorizon: [],
+    collegeOpenAtFork: null,
+    collegeShutWeek: null,
+    collegeShutAge: null,
+    collegeShutTier: null,
     plateauAsksAt: { 2: null, 3: null, 4: null },
   }
   let spell = 0
@@ -148,6 +169,8 @@ export function runToEnding(
     // here instead, in full, which is the whole point of the arm.
     if (!latchBankruptcy) world.debtSinceWeek = null
     const before = { prize: world.careerTotals.prizeCents, spent: world.careerTotals.spentCents }
+    // ⭐ only while the door is still open – after that the copy buys nothing and it is per week
+    const bestBefore = out.collegeShutWeek === null ? { ...world.bestFinishByTier } : null
     stepCareerWeek(world, rng, policy)
 
     // the two crossings, measured the same week, off the counters the engine keeps for the album
@@ -191,6 +214,25 @@ export function runToEnding(
       if (world.injury.severity === 'major' || world.injury.severity === 'severe') out.majorPlusCount += 1
     }
 
+    // ⭐ THE COLLEGE DOOR, READ THROUGH THE ENGINE'S OWN PREDICATE – the same discipline
+    // `weeksLostSoFar` above is written in: the bench asks `collegeStillOpen`, so the bench and the
+    // rule `answerFork` re-validates cannot come to disagree about what "open" means.
+    //
+    // ⚠ THE TIER IS ATTRIBUTED BY DIFFING `bestFinishByTier` ACROSS THE WEEK, not by re-deriving
+    // the predicate. That is exact rather than clever: at most one event resolves in a week (the
+    // entry policy books one tournament per week and `enterEvent` enforces it), so at the
+    // transition week exactly one rung has moved. Re-implementing the scoring test here would be a
+    // second copy of the rule, which is what this file is trying not to own.
+    if (bestBefore !== null && out.collegeShutWeek === null && !collegeStillOpen(world)) {
+      out.collegeShutWeek = world.week
+      out.collegeShutAge = kidAgeYears(world.week, world.profile.birthMonth)
+      const from = TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier)
+      const moved = (Object.keys(world.bestFinishByTier) as TierId[]).filter(
+        (t) => world.bestFinishByTier[t] !== bestBefore[t] && TIER_LADDER.indexOf(t) >= from,
+      )
+      out.collegeShutTier = moved[0] ?? null
+    }
+
     // the plateau sweep, evaluated on the wrap week and nowhere else (the only week it can fire)
     if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - 3) {
       const view = plateauViewOf(world)
@@ -226,6 +268,10 @@ function answerWhateverIsOpen(
   retireArm: RetireArm,
 ): void {
   if (world.fork !== null && world.fork.answer === null) {
+    // ⭐ RECORDED BEFORE THE ANSWER, on every arm, because it is a fact about the CARD she was
+    // shown rather than about what she did with it – and because `answerFork` throws on 'college'
+    // when the door is shut, so a reading taken afterwards would only ever see the open half.
+    out.collegeOpenAtFork = collegeStillOpen(world)
     answerFork(world, arm)
     if (arm === 'college' && world.ending?.type === 'college') {
       out.wentToCollege = true
@@ -348,6 +394,7 @@ export function main(argv = process.argv.slice(2)): void {
   console.log(
     `            the other ${collegeArm.length - resumed.length} never reached nineteen – the money went first.`,
   )
+  console.log(`            (how often the door is open AT ALL is its own table, further down.)`)
   console.log('')
 
   // --- THE PLATEAU'S OWN N ---
@@ -403,6 +450,70 @@ export function main(argv = process.argv.slice(2)): void {
     })
     console.log('')
   }
+
+  // --- ⭐ THE COLLEGE DOOR AT NINETEEN: is the fork really a three-way fork? ---
+  //
+  // ⚠ THE OWNER ASKED THIS IN HIS OWN WORDS – «т.е. если она получает зачетный w75+ раньше 19
+  // летия, то она не получит права идти в академию?» – and the honest answer needs a rate, not a
+  // yes. Round-17 #6 made `collegeStillOpen` a precondition; nobody measured how often it removes
+  // the answer. If the door is nearly always shut for a career worth playing, then the fork's card
+  // is a two-way choice wearing a three-way layout, and task #102 (the fork's exits need screens)
+  // is designing screens for a path almost nobody can take.
+  //
+  // ⚠ THE DENOMINATOR IS "REACHED THE FORK", NOT "STARTED", and the two differ enormously here: a
+  // family that went under at fifteen was never offered anything, so counting it as "door shut"
+  // would blame the scholarship rule for the economy. Both columns are printed so the reader can
+  // see the gap rather than take the ratio on trust.
+  //
+  // ⚠ AND IT IS REPORTED PER ARM RATHER THAN POOLED. The latched grinder arm is the shipped game;
+  // the two no-latch arms keep bankrupt families playing, so they carry careers to nineteen that
+  // the shipped rules would have stopped – which is exactly why their "reached 19" column is
+  // bigger, and why pooling them into one rate would quietly answer a different question.
+  const doorArms: { label: string; rows: CareerOutcome[] }[] = [
+    { label: `${POLICIES[0].label} · latched`, rows: arms[0].rows },
+    ...sweepRows.map((r) => ({ label: `${r.policy.label} · no-latch`, rows: r.full })),
+  ]
+  console.log('  ── ⭐ THE COLLEGE DOOR: how often is the scholarship still open at nineteen? ──')
+  console.log('')
+  console.log(
+    `  ${padEnd('arm', 22)}${'careers'.padStart(9)}${'reached 19'.padStart(12)}${'door OPEN'.padStart(11)}${'of those'.padStart(10)}`,
+  )
+  for (const a of doorArms) {
+    const reached = a.rows.filter((o) => o.collegeOpenAtFork !== null)
+    const open = reached.filter((o) => o.collegeOpenAtFork === true)
+    console.log(
+      `  ${padEnd(a.label, 22)}${String(a.rows.length).padStart(9)}${String(reached.length).padStart(12)}${String(open.length).padStart(11)}${pct(open.length, reached.length).padStart(10)}`,
+    )
+  }
+  console.log('')
+  // WHAT SHUTS IT – the rung whose SCORING finish spent her eligibility, and how old she was. This
+  // is the more useful half: "the door is usually shut" is a fact about the economy, but "this rung
+  // shuts it, at this age" is a lever, because the rung the entry policy reaches first is a thing
+  // the ladder controls.
+  const doorRows = doorArms.flatMap((a) => a.rows)
+  const shut = doorRows.filter((o) => o.collegeShutWeek !== null)
+  console.log(
+    `  ${padEnd('what shut it', 22)}${'careers'.padStart(9)}${'share of shut'.padStart(15)}${'median age'.padStart(12)}${'earliest'.padStart(10)}`,
+  )
+  for (const tier of TIER_LADDER) {
+    const rows = shut.filter((o) => o.collegeShutTier === tier)
+    if (rows.length === 0) continue
+    const ages = rows.map((o) => o.collegeShutAge ?? 0).sort((x, y) => x - y)
+    console.log(
+      `  ${padEnd(tier, 22)}${String(rows.length).padStart(9)}${pct(rows.length, shut.length).padStart(15)}${median(ages).toFixed(0).padStart(12)}${String(ages[0]).padStart(10)}`,
+    )
+  }
+  const unattributed = shut.filter((o) => o.collegeShutTier === null).length
+  if (unattributed > 0) {
+    console.log(`  ${padEnd('(unattributed)', 22)}${String(unattributed).padStart(9)}   <- a week that moved no rung at or above ${ENDINGS.collegeClosedFromTier}`)
+  }
+  console.log('')
+  const shutBeforeFork = shut.filter((o) => (o.collegeShutAge ?? 99) < ENDINGS.forkAgeYears).length
+  console.log(
+    `  careers whose door ever shut : ${shut.length}/${doorRows.length} = ${pct(shut.length, doorRows.length).trim()}` +
+      ` · and ${shutBeforeFork} of those shut BEFORE the fork, which is the only half that costs her the answer`,
+  )
+  console.log('')
 
   // --- #4's REACHABILITY, instrumented rather than assumed ---
   //
