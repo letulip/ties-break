@@ -39,6 +39,10 @@ import { formatCents } from '../shared/money'
 
 const game = useGameStore()
 
+/** THE TWO THINGS THIS TAB CANNOT DO ITSELF, both of them decisions that already have a home on the
+ *  screen around it – see `toggleSelf` for why neither is performed here. */
+const emit = defineEmits<{ release: []; coaches: [] }>()
+
 /** ⚠ THE BLOCK NAMES ARE THE SPEC'S TABLE (§2), AND THE ORDER IS `SESSION_KINDS`' – which that array's
  *  own note calls display order and append-only. What each one works on is the engine's business
  *  (`development.ts` owns the kind -> SKILL table); the subtitle here is that table in the parent's
@@ -127,9 +131,13 @@ const weekAheadNote = computed(() => {
 /** MAY HE PRESS IT? Three limits, all of them the engine's, shown as a disabled box beside a filled
  *  dot rather than delivered as a refusal after the press (§4: "so the limit is visible before he
  *  bumps into it"). Ticking a day that is full, or a fifth session past six, or removing the fourth,
- *  are the only three things this tab cannot do. */
+ *  are the only three things this tab cannot do.
+ *
+ *  ⚠ AND A FOURTH THAT IS NOT A LIMIT BUT A LOCK: with a coach hired the whole panel is his (see
+ *  `panelLive`). It is first because it is not about this box - the other three are reasons THIS box
+ *  cannot move while the rest of the week can. */
 function locked(kind: SessionKind, day: number): boolean {
-  if (game.busy || !editable.value) return true
+  if (game.busy || !panelLive.value) return true
   if (isOn(kind, day)) return sessions.value <= PLAN_MIN_SESSIONS
   return (draft.value[day]?.length ?? 0) >= capacity.value || sessions.value >= PLAN_MAX_SESSIONS
 }
@@ -192,30 +200,75 @@ const capacityNote = computed(() =>
     : 'One session a day while school is on – the dots are the room each day has left.',
 )
 
-/** ⚠ WHO WRITES THIS WEEK - the one thing a paying parent could not tell from this screen (owner,
- *  12.08, on opening it with a coach hired and finding every box live).
+/** ⚠ WHO WRITES THIS WEEK - and since 13.08 the answer is a CONTROL rather than a sentence.
  *
- *  IT IS NOT A MODE, AND THAT IS THE WHOLE ANSWER. There is no arm of this app where a hired coach
- *  authors the plan: `setPlan` is the only writer of `WeekPlan.week`, this tab is its only caller,
- *  and `docs/specs/training-dials.md` §7 - "he comes and changes something" - is DESIGNED AND NOT
- *  BUILT (that page's own build block, and its seams table: "§7, the coach's intervention | nothing
- *  built"). So the ticks are what runs at every rung, and the screen was right to draw them live; it
- *  simply never said so, which is what left the owner reading an active screen as a contradiction.
+ *  THE HISTORY, because what stood here was not wrong, it was OVERRULED. On 12.08 the owner opened
+ *  this tab with a coach hired and found every box live; the fix then was a line saying why, because
+ *  there is no arm of this app where a hired coach authors the plan - `setPlan` is the only writer
+ *  of `WeekPlan.week`, this tab is its only caller, and `docs/specs/training-dials.md` §7 ("he comes
+ *  and changes something") is DESIGNED AND NOT BUILT, which that page's own seams table states:
+ *  "§7, the coach's intervention | nothing built". On 13.08 he asked for the tick instead: «Галочка
+ *  самокоучинга - она дублирующий элемент управления для отказа от коуча, мы это уже обсуждали. Пока
+ *  галочка не стоит - вся панель неактивна... можно и твой замок поверх нарисовать оверлеем с
+ *  коротким пояснением.»
  *
- *  ⚠ AND WHAT IT CLAIMS INSTEAD IS CHECKED, not a flourish. `growWeek`'s rate is
- *  `ageFactor x trainFactor(plan) x loadFactor x coachFactor(tier, fit) x matchBonus`
- *  (engine/development.ts) - the plan and the coach are SEPARATE multipliers, so "he changes what it
- *  is worth, not what is in it" is that line read out loud rather than a way of putting it.
+ *  ⚠ SO THIS IS A UI LOCK OVER AN UNCHANGED ENGINE, AND THE COPY MAY NOT SAY OTHERWISE. `growWeek`'s
+ *  rate is still `ageFactor x trainFactor(plan) x loadFactor x coachFactor(tier, fit) x matchBonus`
+ *  (engine/development.ts): the plan and the coach are SEPARATE multipliers, the matrix below is what
+ *  runs at every rung, and hiring changes what a week is WORTH rather than what is in it. The lock
+ *  may therefore say the coach is the one setting her week - that is the fiction the owner bought,
+ *  and it is what the tick is a door out of - and it may NOT say the numbers now come from him,
+ *  because they do not. The day §7 ships is the day that second sentence becomes writable.
  *
- *  Silent when self-coached: the Coaches tab already says the family is coaching her, and a line
- *  telling a parent who pays nobody that nobody writes his week is the same sentence twice. Same
- *  rule §9b item 2 states for the coach's own line. */
+ *  ⚠ AND THE TICK IS NOT A NEW STATE. It READS `coachId` and writes nothing of its own: `self` is the
+ *  bottom rung of the one coach ladder (`COACH_TIERS`, `tierOf(null) === 'self'`), so this is a
+ *  second door onto a decision the Coaches tab already offers - not a mode, not a save field, and not
+ *  a second way to be self-coached that could ever disagree with the first. `coachId` is the same
+ *  field CoachMarketScreen lands its tab from and `.cm-row.current` is drawn from. */
 const coachName = computed(() => game.snapshot?.coachMarket.find((r) => r.current)?.name ?? null)
-const authorNote = computed(() =>
-  coachName.value === null
-    ? ''
-    : `You plan her week at every rung. ${coachName.value} changes what it is worth, not what is in it.`,
-)
+const selfCoached = computed(() => (game.snapshot?.coachId ?? null) === null)
+/** The control's own words, used by the lock's sentence as well, so the instruction and the thing it
+ *  instructs cannot drift apart. */
+const SELF_LABEL = 'I coach her myself'
+
+/** ⚠ THE PANEL IS LIVE ONLY WHILE THE FAMILY IS COACHING HER. Every control below asks this - the
+ *  three preset pills through their own `:disabled`, the thirty-five boxes through `locked()` - so
+ *  "the whole panel is inactive" is a fact about the controls and not about the overlay drawn over
+ *  them. An overlay stops a mouse; it does not stop a keyboard. */
+const panelLive = computed(() => editable.value && selfCoached.value)
+
+/** WHY THE OVERLAY AND NOT THE OTHER TWO. The owner allowed any of three - dead defaults, no
+ *  controls at all, or a lock with a short explanation - and this screen already has his answer on
+ *  it: `CoachMarketScreen`'s coach-travel row is drawn, disabled, with a line saying when it
+ *  arrives, and its own note gives the reason ("Deleting the control would lose the place it
+ *  belongs; locking it says WHEN it arrives, which is also the honest answer to why can't I press
+ *  this"). Dead defaults with nothing said are the failure this file has already recorded once - see
+ *  `capacityNote`, where four disabled blocks "read as a broken screen" until a line said the rule.
+ *
+ *  It names the coach because the answer to "why can I not touch this" is a person, and it names the
+ *  way back because a lock with no key is a dead end. */
+const lockTitle = computed(() => `${coachName.value ?? 'Your coach'} sets her week.`)
+const lockNote = `Tick "${SELF_LABEL}" to plan it again – it lets the coach go.`
+
+/** THE SECOND DOOR, AND IT PERFORMS NOTHING ITSELF - which is the whole of its design.
+ *
+ *  TICKING IT WITH A COACH HIRED IS FIRING HIM, so it goes to the confirm that already asks exactly
+ *  that on the Coaches tab (`releaseMessage`), which states the price of taking over: the weekly bill
+ *  becomes court time only and the trained eye goes with him. A second dialog here would be a second
+ *  place for that price to drift, on a decision that has one.
+ *
+ *  UNTICKING IT CANNOT HIRE ANYBODY, because a coach is a PERSON and this control names none. So it
+ *  hands over to the list where the choosing happens - the same screen, one tab across - rather than
+ *  performing a hire it cannot have chosen. A control that cannot do the thing it appears to do must
+ *  send the player where it can be done, not guess. */
+function toggleSelf(): void {
+  if (game.busy) return
+  // Two named events rather than one with a payload, and written as a branch rather than as
+  // `emit(cond ? a : b)` – which does not narrow against `defineEmits`' overloads and is a type
+  // error. The parent binds each to the thing it already had.
+  if (selfCoached.value) emit('coaches')
+  else emit('release')
+}
 
 /** WHY A BOX IS DISABLED, once, under the grid – so a full week does not read as a broken screen. */
 const limitNote = computed(() => {
@@ -244,74 +297,115 @@ function boxLabel(kind: SessionKind, day: number): string {
 
 <template>
   <div v-if="game.snapshot" class="hw">
-    <!-- 0. WHO WRITES THE WEEK, and only when somebody is being paid - see `authorNote` for why the
-         claim under it is the growth rate read out loud rather than a reassurance. It opens the tab
-         because it is the question a paying parent arrives with. -->
-    <p v-if="authorNote" class="hint hw-author">{{ authorNote }}</p>
+    <!-- 0. WHO WRITES THE WEEK, as a control - the owner's own words are in the script above this
+         template (THIS IS A TEMPLATE, and no Cyrillic appears inside one, comments included). It is a
+         SECOND DOOR onto firing the coach, not a new mechanic: it reads whether anybody is hired and
+         it performs nothing itself - see `toggleSelf` for both directions.
 
-    <!-- 1. THE PRESETS. A fast path, and nothing more: the blocks below do everything they do. Short
-         labels on purpose - the market tab's own `Light 4/wk · Balanced 5/wk · Grind 6/wk` computes
-         past the 343px available at 375 (spec §9c), and the counts live in the read-out instead. -->
-    <div class="option-row hw-presets">
-      <button
-        v-for="key in PLAN_ORDER"
-        :key="key"
-        class="option-pill"
-        :class="{ selected: activePreset === key }"
-        :disabled="game.busy"
-        @click="applyPreset(key)"
-      >
-        {{ PRESET_LABEL[key] }}
-      </button>
-    </div>
+         A BUTTON WITH role="checkbox", NOT AN `<input>`, and that is load-bearing. This tick is fully
+         derived from `coachId`, and a real checkbox flips its own DOM state on the press - so a
+         player who opened the confirm and then cancelled would be left looking at a tick that says
+         she is self-coached while the panel under it stays locked. A button owns no state to be wrong
+         with, and `aria-checked` is what a screen reader reads either way. -->
+    <button
+      type="button"
+      class="hw-self"
+      role="checkbox"
+      :aria-checked="selfCoached"
+      :disabled="game.busy"
+      @click="toggleSelf"
+    >
+      <span class="hw-box" :class="{ on: selfCoached }" aria-hidden="true"></span>
+      <span class="hw-self-label">{{ SELF_LABEL }}</span>
+    </button>
 
-    <!-- 2. THE DAY HEADS, and the per-day limit shown as dots that fill. One dot on a school day,
-         two on a day with no school, drawn before he bumps into the limit rather than arriving as a
-         refusal. The owner asked for it by name and his words are in the script above this template:
-         THIS IS A TEMPLATE, and the app's rule (pinned in tests/round13-nav.test.ts) is that no
-         Cyrillic appears inside one, comments included. I put the quote here first and the guard
-         caught it, which is the guard working - the same note CoachMarketScreen.vue carries. -->
-    <div class="hw-heads" role="group" aria-label="The week, day by day">
-      <div v-for="d in days" :key="d" class="hw-head" role="img" :aria-label="dayHeadLabel(d)">
-        <span class="hw-head-name" aria-hidden="true">{{ DAY_SHORT[d] }}</span>
-        <span class="hw-dots" aria-hidden="true">
-          <i v-for="slot in dots" :key="slot" class="hw-dot" :class="{ full: slot < filledDots(d) }"></i>
-        </span>
+    <!-- 1. THE PANEL. Live while the family coaches her; with a coach hired every control in it is
+         disabled and the lock is drawn over it. The overlay is a sibling of the dials rather than a
+         child, so the sentence explaining the lock is not inside the thing being dimmed. -->
+    <div class="hw-panel" :class="{ 'is-locked': !panelLive }">
+      <div class="hw-dials">
+        <!-- 1a. THE PRESETS. A fast path, and nothing more: the blocks below do everything they do.
+             Short labels on purpose - the market tab's own `Light 4/wk · Balanced 5/wk · Grind 6/wk`
+             computes past the 343px available at 375 (spec §9c), and the counts live in the
+             read-out instead. -->
+        <div class="option-row hw-presets">
+          <button
+            v-for="key in PLAN_ORDER"
+            :key="key"
+            class="option-pill"
+            :class="{ selected: activePreset === key }"
+            :disabled="game.busy || !panelLive"
+            @click="applyPreset(key)"
+          >
+            {{ PRESET_LABEL[key] }}
+          </button>
+        </div>
+
+        <!-- 1b. THE DAY HEADS, and the per-day limit shown as dots that fill. One dot on a school
+             day, two on a day with no school, drawn before he bumps into the limit rather than
+             arriving as a refusal. The owner asked for it by name and his words are in the script
+             above this template: THIS IS A TEMPLATE, and the app's rule (pinned in
+             tests/round13-nav.test.ts) is that no Cyrillic appears inside one, comments included. I
+             put the quote here first and the guard caught it, which is the guard working - the same
+             note CoachMarketScreen.vue carries. -->
+        <div class="hw-heads" role="group" aria-label="The week, day by day">
+          <div v-for="d in days" :key="d" class="hw-head" role="img" :aria-label="dayHeadLabel(d)">
+            <span class="hw-head-name" aria-hidden="true">{{ DAY_SHORT[d] }}</span>
+            <span class="hw-dots" aria-hidden="true">
+              <i v-for="slot in dots" :key="slot" class="hw-dot" :class="{ full: slot < filledDots(d) }"></i>
+            </span>
+          </div>
+        </div>
+        <p class="hint hw-capacity">{{ capacityNote }}</p>
+
+        <!-- 1c. FIVE BLOCKS. A line with the name and what that row is spending in HER hours, then
+             seven boxes under it. Nothing in a column has to be legible – the kind is named on the
+             line above, where it competes with nothing – which is what dissolved the previous
+             draft's need for five distinguishable wordless marks (§9c, §9d: no new art). -->
+        <!-- ⚠ A `div`, NOT A `section`. The app's bare `section` rule is a padded panel, and at 375
+             its 17px of side padding took the seven columns from 45.6px to 40.7px – under the 44px
+             tap target, measured in a browser. The block is a title line and a row of boxes; it is
+             not a card. -->
+        <div v-for="kind in SESSION_KINDS" :key="kind" class="hw-block">
+          <p class="hw-block-head">
+            <span class="hw-block-name">{{ KIND_LABEL[kind] }}</span>
+            <span class="hw-block-hours">{{ perKind[kind] }} h</span>
+          </p>
+          <div class="hw-row">
+            <label v-for="d in days" :key="d" class="hw-cell" :class="{ locked: locked(kind, d) }">
+              <input
+                type="checkbox"
+                class="hw-box"
+                :checked="isOn(kind, d)"
+                :disabled="locked(kind, d)"
+                :aria-label="boxLabel(kind, d)"
+                @change="toggle(kind, d)"
+              />
+            </label>
+          </div>
+        </div>
+
+        <p v-if="limitNote" class="hint hw-limit">{{ limitNote }}</p>
+      </div>
+
+      <!-- 1d. THE LOCK. Two lines and no artwork - who has the week, and how to take it back. It
+           says nothing about what the week is WORTH, because hiring does not change what the plan
+           produces (see the note above `selfCoached`); it is a lock on the pen, not on the sum. -->
+      <div v-if="!panelLive" class="hw-lock">
+        <p class="hw-lock-title">{{ lockTitle }}</p>
+        <p class="hw-lock-note">{{ lockNote }}</p>
       </div>
     </div>
-    <p class="hint hw-capacity">{{ capacityNote }}</p>
 
-    <!-- 3. FIVE BLOCKS. A line with the name and what that row is spending in HER hours, then seven
-         boxes under it. Nothing in a column has to be legible – the kind is named on the line above,
-         where it competes with nothing – which is what dissolved the previous draft's need for five
-         distinguishable wordless marks (§9c, §9d: no new art). -->
-    <!-- ⚠ A `div`, NOT A `section`. The app's bare `section` rule is a padded panel, and at 375 its
-         17px of side padding took the seven columns from 45.6px to 40.7px – under the 44px tap target,
-         measured in a browser. The block is a title line and a row of boxes; it is not a card. -->
-    <div v-for="kind in SESSION_KINDS" :key="kind" class="hw-block">
-      <p class="hw-block-head">
-        <span class="hw-block-name">{{ KIND_LABEL[kind] }}</span>
-        <span class="hw-block-hours">{{ perKind[kind] }} h</span>
-      </p>
-      <div class="hw-row">
-        <label v-for="d in days" :key="d" class="hw-cell" :class="{ locked: locked(kind, d) }">
-          <input
-            type="checkbox"
-            class="hw-box"
-            :checked="isOn(kind, d)"
-            :disabled="locked(kind, d)"
-            :aria-label="boxLabel(kind, d)"
-            @change="toggle(kind, d)"
-          />
-        </label>
-      </div>
-    </div>
-
-    <p v-if="limitNote" class="hint hw-limit">{{ limitNote }}</p>
-
-    <!-- 4. THE READ-OUT. It IS the legend: rather than a row of glyphs and their names, the week says
+    <!-- 2. THE READ-OUT. It IS the legend: rather than a row of glyphs and their names, the week says
          what it is in the parent's language – the register every other surface in this app uses for a
-         week – and it absorbs what would otherwise be a separate price line. -->
+         week – and it absorbs what would otherwise be a separate price line.
+
+         ⚠ AND IT STAYS OUTSIDE THE LOCK, deliberately. The lock is over the CONTROLS; this sentence
+         is a fact about the week she is actually going to have and about the money the parent is
+         actually going to pay, and both stay true whoever is credited with setting it. Dimming the
+         one line that says what this week costs would be the lock taking something the owner never
+         asked to take. -->
     <p class="hw-readout">{{ readout }}</p>
     <!-- ...and what the coming week IS, when it is not an ordinary training week. The sentence is
          the calendar's, so the two screens cannot describe one week differently - and it claims
@@ -331,11 +425,79 @@ function boxLabel(kind: SessionKind, day: number): string {
   grid-template-columns: repeat(7, 1fr);
   gap: 4px;
 }
-/* The same step `.hw-capacity` puts under the day heads, so the tab keeps one rhythm. `margin-top: 0`
-   because `.hint`'s own top margin would open a gap above the first line on the tab. */
-.hw-author {
+/* THE TICK, and it is the tab's own checkbox vocabulary rather than a switch: the owner asked for a
+   галочка and there are thirty-five of them under it, so a second kind of control for the same
+   gesture would be the drift tests/ui-control-system.test.ts exists against. The button is bare -
+   the element reset's pill and hairline are for BUTTONS, and this one is a label beside a box. */
+.hw-self {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
   margin: 0 0 10px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
 }
+.hw-self:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+.hw-self .hw-box {
+  flex: none;
+}
+.hw-self-label {
+  min-width: 0;
+}
+
+/* THE PANEL AND ITS LOCK. The dials keep their own flow; the lock is laid over them, so nothing
+   moves when it appears and the tab does not change height between the two states. */
+.hw-panel {
+  position: relative;
+}
+.hw-panel.is-locked .hw-dials {
+  /* Visible, and plainly not for pressing. The controls are `disabled` as well - this is the look
+     of the lock, never the mechanism of it. */
+  opacity: 0.3;
+}
+.hw-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  border-radius: var(--radius-frame);
+  /* The panel tone at the alpha the app's own overlays use, so the dials read as being BEHIND
+     something rather than as having been repainted. */
+  background: rgba(15, 23, 32, 0.72);
+  text-align: center;
+}
+.hw-lock-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+.hw-lock-note {
+  margin: 0;
+  max-width: 30ch;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
 .hw-presets {
   margin-bottom: 10px;
 }
@@ -426,14 +588,20 @@ function boxLabel(kind: SessionKind, day: number): string {
   background: transparent;
   cursor: inherit;
 }
-.hw-box:checked {
+/* ⚠ TWO HOSTS, ONE GLYPH. `:checked` is the thirty-five real inputs; `.on` is the self-coaching tick,
+   which is a `<span>` inside a button because that control's state is DERIVED and an input's is not
+   (see the template). Selector lists rather than a second copy of the artwork: the tab has exactly
+   one tick mark, drawn once. */
+.hw-box:checked,
+.hw-box.on {
   background: var(--accent);
   border-color: var(--accent);
 }
 /* The tick itself, drawn rather than fetched - two rules, no asset (§9d). 1.7px because it is ICON
    ARTWORK on the design's own 24x24 / 1.5-1.9 grid, not an edge: the hairline rule is about what goes
    AROUND an object, and `.surface-ring` is the precedent the guard's own note names. */
-.hw-box:checked::after {
+.hw-box:checked::after,
+.hw-box.on::after {
   content: '';
   display: block;
   width: 6px;

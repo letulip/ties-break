@@ -341,7 +341,13 @@ function scrollToTier(tier: CoachTier): void {
       group-label="What this screen is about"
     />
 
-    <HerWeekTab v-if="tab === 'week'" />
+    <!-- ⭐ ROUND-18 #4 – THE SELF-COACHING TICK IS A SECOND DOOR ONTO THIS SCREEN'S OWN DECISIONS,
+         and neither of its two directions is a new one. TICKING it with a coach hired is letting him
+         go, so it opens the confirm that already asks that below (`releaseMessage`) rather than a
+         second dialog with a second copy of the price. UNTICKING it cannot hire anybody - a coach is
+         a person and the tick names none - so it moves the player to the list where the choosing
+         happens. Both handlers are one line here BECAUSE the decisions were already here. -->
+    <HerWeekTab v-if="tab === 'week'" @release="releasing = true" @coaches="tab = 'coaches'" />
 
     <template v-else>
     <!-- The budget meter: what she pays now, what a week brings in, and what is left. -->

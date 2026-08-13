@@ -39,22 +39,34 @@ import {
   planSessions,
   planTrainPct,
 } from '../../src/engine/plan'
-import { SESSION_KINDS, type SessionKind, type Snapshot, type WeekPlan } from '../../src/shared/protocol'
+import {
+  DEFAULT_PROFILE,
+  SESSION_KINDS,
+  type SessionKind,
+  type Snapshot,
+  type WeekPlan,
+} from '../../src/shared/protocol'
 
 /** A real career through the real protocol, so nothing here is a hand-written shape that can drift
  *  from `Snapshot`. Same fixture discipline as season-screen.test.ts. */
-function snapshotAfter(weeks = 12, seed = 'dials-screen'): Snapshot {
-  const world = createWorld(seed)
+function snapshotAfter(weeks = 12, seed = 'dials-screen', coachTier = DEFAULT_PROFILE.coachTier): Snapshot {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier })
   const rng = rngFromSeed(world.seed)
   for (let i = 0; i < weeks; i++) tickWeek(world, rng)
   return toSnapshot(world)
 }
 
 /** The tab, mounted over a snapshot poked into the shape a test is about. `setPlan` is stubbed: the
- *  worker is not running, and what these tests want to see is the COMMAND, not a round trip. */
+ *  worker is not running, and what these tests want to see is the COMMAND, not a round trip.
+ *
+ *  ⚠ AND THE CAREER IS SELF-COACHED, since round-18 #4. Every claim in this file is about the LIVE
+ *  panel - which box is disabled and why, what a press dispatches - and the live panel is now the
+ *  self-coached one: with a coach hired the whole grid is his and nothing in it can be pressed. The
+ *  fixture moved rather than the claims, because none of these limits changed; the lock is a
+ *  separate rule with its own file (tests/component/round18-self-coaching.test.ts). */
 function mountTab(over: Partial<Snapshot> = {}) {
   const store = useGameStore()
-  store.snapshot = { ...snapshotAfter(), ...over }
+  store.snapshot = { ...snapshotAfter(12, 'dials-screen', 'self'), ...over }
   // Typed with the argument it receives, so `mock.calls[0][0]` is a `WeekPlan` rather than `never` –
   // and so a command that stopped carrying a week would be a TYPE error here as well as a red test.
   const setPlan = vi.fn(async (_plan: WeekPlan) => {})
