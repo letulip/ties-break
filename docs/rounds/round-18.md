@@ -112,6 +112,13 @@ than at a 500 – she travels, plays, loses, and the table does not move at all.
 время проигрыш» with a number on it, and it is a real finding rather than a feeling: the 500s are
 compulsory, expensive in weeks, and pay nothing for the result she can actually get there.
 
+⚠ **AND THAT RATIO TURNED OUT TO BE THE BIGGER HALF OF THE STORY** – followed up 14.08 in
+`docs/specs/where-the-points-come-from-2026-08.md`. Read from the other end, the same number says a
+Slam opener pays 130 for no match won: eleven reserved openers are **975 points**, more than
+eighteen W50 titles, and 64% of this very season's counted points came from matches she LOST. The
+130 is the real column normalised onto a 32-draw – on the real tour it is what a player is paid for
+having already won two matches. Nothing in §7 was wrong; it stopped one question short.
+
 Two more facts from the save. **She skipped one mandatory** (a wta1000 at W32 '38) and it wrote a
 zero into a counting slot – the rule from §8 firing on his own career, silently, exactly as
 designed and with nothing on screen to say so. And the anger has already RESET: `lossStreak` is

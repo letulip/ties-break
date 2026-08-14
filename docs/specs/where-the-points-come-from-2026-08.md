@@ -17,9 +17,14 @@ first match lost.
 
 ## 0. ⚠ First, a mis-attribution of mine to correct
 
-I reported the nine-entry WTA 500 season as **Naomi's**. It is **Olivia's**. Round-18's ledger §7
-frames it as «his Naomi's brutal season» and that is wrong too. The 23.1% first-round rate quoted
-beside it is Olivia's own, so the arithmetic held; only the name did not.
+I reported the nine-entry WTA 500 season as **Naomi's**. It is **Olivia's**. The 23.1% first-round
+rate quoted beside it is Olivia's own, so the arithmetic held; only the name did not.
+
+⚠ And I then mis-stated the correction itself: I told the owner that round-18's ledger carried the
+same error and needed fixing. **It does not.** `docs/rounds/round-18.md:3` names
+`tennis-sim_olivia-o1p7_w413.tsave` in as many words. The error was mine, in what I said to him,
+and it never reached a document. §7 of that ledger is the direct ancestor of this spec – it is
+where the 130× ratio between a Slam opener and a 500 opener was first written down.
 
 ## 1. The two careers, at the week he asked
 
