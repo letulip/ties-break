@@ -32,7 +32,7 @@ import { ON_RAMP, fillOnRamp, resolveDoubleBookings, selectEntrants } from '../s
 import { generateCohort } from '../src/engine/season/cohort'
 import { generatePreHistory } from '../src/engine/season/prehistory'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
-import { matchDrain } from '../src/engine/condition'
+import { matchDrain, tournamentRunStrain } from '../src/engine/condition'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { fieldProsFor, isFieldProId, mergedWtaRanking, universeForTier } from '../src/engine/season/fieldPros'
@@ -333,7 +333,14 @@ describe('R2 — nobody is charged zero strain for a week she played', () => {
       expect(exit.points).toBe(
         firstRoundValue(tier),
       )
-      expect(rivalCondition([exit], 'ai-x', 10)).toBe(R.max - matchDrain(tier, undefined))
+      // ⚠ RE-AIMED 14.08 AND THE CLAIM GOT WIDER RATHER THAN LOOSER: the drain a rival is charged is
+      // the RUN's, `tournamentRunStrain`, not a bare `matchDrain` – the two were the same number
+      // while every first ladder rung was 0. Since the deep draws (slam 128, wta1000 64) run on the
+      // owner's ramp, a one-match run at those rungs costs matchDrain - 2, and writing the
+      // right-hand side as the run makes this line say what it has always meant: the cohort is
+      // charged through THE SHARED DRAIN FAMILY, whatever that family currently is. The per-rung
+      // arithmetic itself is pinned in tests/fatigueReference.test.ts, which owns it.
+      expect(rivalCondition([exit], 'ai-x', 10), tier).toBe(R.max - tournamentRunStrain(tier, [{ score: undefined }]))
       // ...and it is strictly worse than the same week spent at home.
       expect(rivalCondition([exit], 'ai-x', 10)).toBeLessThan(rivalCondition([], 'ai-x', 10))
     }

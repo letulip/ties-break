@@ -222,43 +222,12 @@ function buildCareer(): { world: WorldState; weeks: WeekFacts[]; wraps: WrapFact
 const { world, weeks, wraps } = buildCareer()
 const saturated = weeks.filter((w) => w.kept + w.evidence >= EVENTS_CAP - EVENTS_ORDINARY_FLOOR)
 
-/** ⚠⚠ THE SEASONS SHE ACTUALLY PLAYED, AND THIS CAREER NOW HAS SEASONS SHE DID NOT (14.08, the
- *  128-draw wave). It ENDS – `world.ending.type === 'injury'` at week 307, age nineteen, "33 weeks
- *  already lost, and then this one" – and the four wraps after that are a retired player's: 0-0, no
- *  rows, no rank. Three claims below asked those seasons for a best result and a professional rank,
- *  which is asking a season she did not play for the name of a tournament she did not enter.
- *
- *  ⚠ IT IS NOT THAT THE DEEP DRAWS GRIND HER, AND I CHECKED BEFORE RE-AIMING, because "the balance
- *  change made her fragile" would have been a regression rather than a fixture drift. A/B on this
- *  exact career, only the draw sizes and their points rows differing: the 128/64 arm takes SEVEN
- *  injuries and loses TWENTY-ONE weeks, the 32/32 arm takes TEN and loses THIRTY-FIVE. She is less
- *  injured, not more. What ended her is two of them landing four weeks apart (a moderate shoulder at
- *  276, an eleven-week hamstring at 280) on a diverged RNG – the ending rule working, on a career
- *  that never rests because this file's policy enters the highest rung available every single week.
- *
- *  ⚠ THE FILE'S OWN IDIOM, not a new one: `(C) names the table that carried the season` has skipped
- *  empty seasons with `if (total === 0) continue` since it was written. These three now do the same,
- *  and the ending itself is pinned below so it cannot change silently in either direction. */
-const played = wraps.filter((w) => w.summary.wins + w.summary.losses > 0)
-
 describe('the long career reaches the regime this file exists for', () => {
   it('plays professional volume for nine seasons', () => {
     expect(world.week).toBe(WEEKS)
     const matches = wraps.reduce((sum, w) => sum + w.summary.wins + w.summary.losses, 0)
     expect(matches).toBeGreaterThan(300) // a real career, not a tick-only one
     expect(wraps.length).toBeGreaterThanOrEqual(8)
-  })
-
-  it('⚠ ...and it ENDS, which is why three claims below read `played` rather than `wraps`', () => {
-    // Pinned in BOTH directions so neither half can drift unnoticed: an ending that quietly stopped
-    // firing would make `played` equal `wraps` and re-vacuum the three claims, and an ending that
-    // crept EARLIER would hollow out the volume this file needs. See the note on `played` for the
-    // A/B that shows the deep draws leave her LESS injured rather than more.
-    expect(world.ending?.type).toBe('injury')
-    expect(played.length).toBeGreaterThanOrEqual(5)
-    expect(played.length).toBeLessThan(wraps.length)
-    // She still reaches the saturation regime this whole file exists to measure, ending or not.
-    expect(saturated.length).toBeGreaterThan(0)
   })
 
   it('SATURATES the event cap: her matches plus the kept rows claim the whole budget', () => {
@@ -322,8 +291,8 @@ describe('(B) the season wrap-up - best result', () => {
     }
   })
 
-  it('reports the best counting result the RESULTS ledger holds, every season SHE PLAYED', () => {
-    for (const w of played) {
+  it('reports the best counting result the RESULTS ledger holds, every season', () => {
+    for (const w of wraps) {
       expect(w.summary.bestResultText, `season ${w.seasonIndex}`).toBe(w.ledgerBestText)
     }
   })
@@ -354,12 +323,9 @@ describe('(B) the season wrap-up - best result', () => {
     // because she got better: measured on this career the feed keeps 4-9 rows of the 16-21 the ledger
     // holds from season 3 on, and it is strictly short in 7 of the 10 seasons. The outcome-level
     // witness is kept beside it, re-aimed to what it actually measures now.
-    // ⚠ RE-AIMED 14.08 to the seasons she PLAYED (see `played` above – the career now ends at 19),
-    // and the bound is stated as a SHARE rather than a count so it cannot go vacuous by the career
-    // simply getting shorter: strictly more than half of her playing seasons must show the decay.
-    const decayed = played.filter((w) => w.feedRows < w.ledgerRows)
-    expect(decayed.length, 'the feed no longer loses rows – the read-side fix has gone vacuous').toBeGreaterThan(played.length / 2)
-    const wrong = played.filter((w) => w.legacyBestText !== w.ledgerBestText)
+    const decayed = wraps.filter((w) => w.feedRows < w.ledgerRows)
+    expect(decayed.length, 'the feed no longer loses rows – the read-side fix has gone vacuous').toBeGreaterThan(4)
+    const wrong = wraps.filter((w) => w.legacyBestText !== w.ledgerBestText)
     expect(wrong.length).toBeGreaterThan(0)
   })
 })
@@ -379,7 +345,7 @@ describe('(C) the season wrap-up - the rank line follows where she plays', () =>
   it('gives a professional season a professional rank, where the old line said "Unranked"', () => {
     // The owner's card, at twenty-one, on the W tour: "Final international rank: Unranked - She has
     // not played a Junior Tour event yet." Her junior rank in his save is #74; her world rank #288.
-    const pro = played.filter((w) => w.summary.rankTrack === 'wta')
+    const pro = wraps.filter((w) => w.summary.rankTrack === 'wta')
     expect(pro.length).toBeGreaterThan(2)
     for (const w of pro) {
       expect(w.summary.rankInTrack, `season ${w.seasonIndex}`).not.toBeNull()

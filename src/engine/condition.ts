@@ -63,10 +63,43 @@ export function matchDrain(tier: TierId, score: string | undefined): number {
  *  (rival.ts reconstructRun) both arrive through `tournamentRunStrain`, so the split reaches the
  *  two sides from one implementation by construction. */
 export function runFatigueExtra(matchIndex: number, tier: TierId): number {
-  const ladder =
-    TIERS[tier].track === 'wta' ? ECONOMY.condition.runFatigueLadderWta : ECONOMY.condition.runFatigueLadder
+  const ladder = ladderFor(tier)
   if (ladder.length === 0) return 0
   return ladder[Math.max(0, Math.min(matchIndex, ladder.length - 1))]
+}
+
+/** WHICH LADDER A RUNG RUNS ON – three of them now, and the third is keyed on the DRAW rather than
+ *  on the track, because it is about how many matches a week can hold.
+ *
+ *  ⚠⚠ THE THIRD IS THE OWNER'S OWN CURVE, GIVEN AS TWO ROWS OF NUMBERS ON 14.08 – the cheapest and
+ *  dearest a match may cost at a Slam and a 1000, round by round:
+ *
+ *      min  5 6 7 7 7 7 7          max  7 8 9 9 9 9 9
+ *
+ *  Read against `matchDrain`'s own parts (scoreline 2..4, plus the rung's surcharge of 5) that says
+ *  the surcharge RAMPS to its full value over three matches instead of landing flat on the first:
+ *  2+3, 2+4, 2+5, 2+5 … So the ladder for a deep rung is `[-2, -1, 0]`, and the ZEROES ARE THE
+ *  POINT – the plateau is the tier's own surcharge, untouched, so this cannot drift away from
+ *  `tierMatchFatigue` if that is ever retuned.
+ *
+ *  ⚠ A NEGATIVE "EXTRA" IS A DISCOUNT AND IT IS DELIBERATE. The flat surcharge prices *"international
+ *  travel, time zones and a fortnight from home"*, and it was calibrated when every draw in the game
+ *  was 32 – i.e. when the whole tax landed inside five matches. On a seven-match week the same tax
+ *  is spread over more tennis, so the opening rounds carry less of it. His own summary: «сама идея
+ *  накопленной усталости сохранится нормально как раз».
+ *
+ *  ⚠ AND IT REPLACES A WORSE ATTEMPT OF MINE, which is why he wrote the curve out. I had capped the
+ *  surcharge at five matches per run, which made the deep rounds cost 2 where the shallow ones cost
+ *  8 – a cliff, not a plateau («а сейчас немного некорректно получается»). His curve is monotone
+ *  non-decreasing and settles; mine collapsed. The cap and its constant are gone.
+ *
+ *  ⚠ BEHAVIOUR-NEUTRAL ON EVERY OTHER RUNG BY CONSTRUCTION: `drawSize > 32` is false for all twelve
+ *  of them, so they keep the exact ladder they had. The two it is true for are the two the owner
+ *  named. */
+function ladderFor(tier: TierId): number[] {
+  const c = ECONOMY.condition
+  if (TIERS[tier].drawSize > 32) return c.runFatigueLadderDeep
+  return TIERS[tier].track === 'wta' ? c.runFatigueLadderWta : c.runFatigueLadder
 }
 
 /** A committed run's total toll = the sum of (matchDrain + the run-fatigue ladder) over the match
@@ -74,29 +107,7 @@ export function runFatigueExtra(matchIndex: number, tier: TierId): number {
  *  National run of epics = 30 per-match + 6 ladder (variant C) = 36. A walkover or a skipped event
  *  never reaches finalize, so it has no records and costs nothing, ladder included. */
 export function tournamentRunStrain(tier: TierId, matches: { score?: string }[]): number {
-  return matches.reduce(
-    (sum, m, i) => sum + matchDrain(tier, m.score) - surchargeRebate(tier, i) + runFatigueExtra(i, tier),
-    0,
-  )
-}
-
-/** WHAT THE i-TH MATCH OF A RUN GETS BACK OF ITS TIER SURCHARGE – nothing for the first
- *  `surchargeMatchesPerRun` (5), the whole surcharge for every match after them.
- *
- *  ⚠⚠ IT IS A REBATE RATHER THAN A CONDITION INSIDE `matchDrain` ON PURPOSE. `matchDrain(tier,
- *  score)` is asked "what did ONE match cost" by callers that have no run and no index – the week
- *  recap, the rival reconstruction's per-match reads, the fatigue bench's per-match tables – and
- *  giving it an optional index would have made every one of those silently answer for match 0. The
- *  cap is a property of a RUN, so it lives in the one function that has the run.
- *
- *  ⚠ AND BOTH SIDES INHERIT IT, which the module's own note says is required: the kid arrives here
- *  through `finalizeTournament` and the cohort through `rival.ts reconstructRun`, so a deep run
- *  cannot cost the player more than it costs her rivals.
- *
- *  Zero for every run of five matches or fewer, i.e. for every rung except the two the 128-draw
- *  wave deepened – see ECONOMY.condition.surchargeMatchesPerRun for the measurement that forced it. */
-function surchargeRebate(tier: TierId, matchIndex: number): number {
-  return matchIndex < ECONOMY.condition.surchargeMatchesPerRun ? 0 : ECONOMY.condition.tierMatchFatigue[tier]
+  return matches.reduce((sum, m, i) => sum + matchDrain(tier, m.score) + runFatigueExtra(i, tier), 0)
 }
 
 /** R9-19 (coupling ON, owner curve): NO strength penalty while she is fresh enough

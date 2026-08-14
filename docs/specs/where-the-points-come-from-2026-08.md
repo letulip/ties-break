@@ -263,51 +263,78 @@ figures are flatter than every real major's ladder: each new round takes a real 
 that step and applies it to OUR neighbour. Slam R64 $124,000 and R128 $82,000 off Wimbledon 2025;
 WTA 1000 R64 $22,000 off Dubai 2025. Arithmetic in the research doc.
 
-### The owner's condition ruling, implemented as two things and not one
+### The owner's condition ruling, and then his own curve
 
-«я думаю мы справимся с нашей 1 неделей вполне, просто на поздних играх шлема не надо накидывать
-лишних расходов кондиции и всё, а после шлема заслуженный отпуск с моей точки зрения не
-противоречит.» A deep round could add exactly two "extras" on top of the match itself, and both are
-now off:
+«просто на поздних играх шлема не надо накидывать лишних расходов кондиции и всё, а после шлема
+заслуженный отпуск с моей точки зрения не противоречит.»
 
-* **The cumulative ladder.** `runFatigueExtra` REPEATS its last value past the ladder's end – by
-  design, "a future draw bigger than 32 must never silently cost 0" – which would have charged +1
-  for matches 6 and 7. Two explicit zeros stop it. A title run's cumulative extra stays **4**.
-* **The tier surcharge, and this one is a double-count the wave exposed.** Its own note says it
-  *"prices international travel, time zones and a fortnight from home"* – an EVENT cost, charged per
-  match only because until now every W event was exactly five matches. Seven rounds at one Slam are
-  not seven flights. Capped at five (`surchargeMatchesPerRun`), so the extra rounds pay their
-  scoreline and nothing more.
+My first attempt capped the tier surcharge at five matches per run, which made the sixth and seventh
+rounds cost **2** where the first five cost **8**. He rejected it – «а сейчас немного некорректно
+получается» – and wrote the curve out himself, as the bounds of a match at these rungs round by round:
 
-A straight-sets Slam title run: **39** at draw 32 · **53** uncapped at 128 · **43** as shipped.
+```
+  min  5 6 7 7 7 7 7        max  7 8 9 9 9 9 9
+```
 
-### ⚠ The reference career now ends at nineteen, and I checked before accepting it
+That is not a cap, it is a **ramp**: read against `matchDrain`'s parts (scoreline 2–4 plus a
+surcharge of 5) the surcharge reaches its full value over three matches instead of landing flat on
+the first. A cliff became a plateau, and «сама идея накопленной усталости сохранится нормально».
 
-`tests/long-career-ledgers.test.ts` walks a deliberately extreme career – highest available rung
-every single week, no rest, no vacation – and under the new draws it ends: `injury`, week 307, age
-19, *"33 weeks already lost, and then this one"*. On the 32-draws the same career plays all ten
-seasons.
+Shipped as a THIRD run-fatigue ladder, `[-2, -1, 0]`, keyed on `drawSize > 32` rather than on the
+track – the same per-family mechanism that already carries two, and the trailing zero is what makes
+the plateau follow `tierMatchFatigue` instead of duplicating it.
 
-**It is not that the deep draws grind her.** A/B on that exact career, only the draw sizes and their
-points rows differing:
-
-| | 32/32 | **128/64** |
+| | title, best–worst | at draw 32 |
 | --- | --- | --- |
-| injuries | 10 | **7** |
-| weeks lost | 35 | **21** |
-| seasons played | 10 | 6 |
+| Slam (7 rounds) | **46–60** | 39–49 |
+| WTA 1000 (6 rounds) | **39–51** | 39–49 |
 
-She is **less** injured, not more. What ended her is two of them landing four weeks apart – a
-moderate shoulder at 276, an eleven-week hamstring at 280 – on a diverged RNG. The ending rule
-working, on a career that never rests. The three claims that asked a retired season for a best
-result and a professional rank now read the seasons she PLAYED, which is the idiom the file's own
-`(C)` block has used since it was written; the ending itself is pinned in both directions so it
-cannot start or stop firing unnoticed.
+Exactly what he predicted when he wrote the rows: the Slam gets dearer, the 1000 barely moves.
 
-⚠ **The one thing I did NOT do is tune the injury model.** A clustered pair of injuries ending a
-career is the game working, and re-pricing exposure on the evidence of one seed would be exactly the
-scope creep the builder rulings forbid. If the owner wants deep draws to be gentler, that is his
-call with these numbers in front of him.
+### Do the big events collide? No – and the floor is a caution, not a gate
+
+His follow-up: «удостовериться, что в расписании 1000 и шлем не идут подряд никогда, иначе мы сами
+противоречим.»
+
+The twelve big weeks are `2* · 5 · 8 · 12 · 18 · 21* · 26* · 31 · 34* · 37 · 41 · 45`. **The closest
+pair is three weeks apart**, so there are always at least two free weeks between them. Never
+consecutive.
+
+After the worst case a Slam can produce – a title won in seven three-set triple-tiebreak epics – she
+ends the week on 40, against an entry floor of 60:
+
+| | arithmetic | verdict |
+| --- | --- | --- |
+| rest plan | 40 + 2 × 10 | **60 – clears** |
+| grind plan | 40 + 2 × 8 | 56 – four under |
+| ordinary straight-sets title | 54 + 2 × 8 | **70 – clear either way** |
+
+⚠ **And the 60 is a caution, not a gate.** `entryVerdict` returns `{ level: 'caution' }` below
+`minConditionToEnter`; the only thing that refuses an entry is `medicalBlock`, at 15. So the calendar
+**cannot** make a big event unenterable – the worst it can do is make one unwise, which is the design
+(«мы ни за что не наказываем»).
+
+What it CAN do is raise her injury risk, and `mandatoryBinds` deliberately does not ask her
+condition. So a top-50 player who wins a Slam in seven epics and finds a 1000 three weeks later is
+choosing between a tired entry and a penalty point. **That is the interaction worth watching – not
+the calendar, which is clean.**
+
+### ⚠ An ending that appeared, was investigated, and went away again
+
+Worth recording because it is the shape of a false alarm. Under the INTERMEDIATE version – the deep
+draws with my surcharge cap – `tests/long-career-ledgers.test.ts`' deliberately extreme career
+(highest available rung every week, no rest, no vacation) ended: `injury`, week 307, age 19.
+
+I checked before touching anything, and the A/B said the deep draws leave her **less** injured, not
+more: 7 injuries and 21 weeks lost against the 32-draws' 10 and 35. Two of them simply landed four
+weeks apart on a diverged RNG.
+
+**Under the owner's curve the career survives all ten seasons again**, because the ramp makes the
+opening rounds cheaper than my cap ever did. Every re-aim I had made to that test to accommodate the
+ending was reverted; the file is byte-identical to its pre-wave self.
+
+The lesson kept rather than the fix: a balance change moves a fixture career's RNG, and the first
+question is always whether the population got worse or this seed did.
 
 ## 9. Two side findings from the same run, both cheap
 

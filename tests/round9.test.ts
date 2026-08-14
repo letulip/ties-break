@@ -370,28 +370,12 @@ describe('cumulative run fatigue (the ladder)', () => {
     expect(runFatigueExtra(99, 'national')).toBe(last)
     // a 7-match run (draw of 128) = the ladder sum + 2 more repeats of its last rung
     const seven = new Array(7).fill({ score: '6-4 6-2' })
-    // ⚠⚠ RE-AIMED 14.08 BY THE 128-DRAW WAVE, AND THE CLAIM IN THE TITLE IS UNTOUCHED - only the
-    // arithmetic moved, because a SECOND rule now applies to the same deep matches.
-    //
-    // The ladder half is unchanged and is still asserted, above, on `runFatigueExtra` directly: it
-    // repeats its last value for ever. What is new is `ECONOMY.condition.surchargeMatchesPerRun`
-    // (5): the tier surcharge prices international travel and a fortnight from home, which is an
-    // EVENT cost that was charged per MATCH only because until this wave every draw in the game was
-    // 32 and so every run was five matches. Seven rounds at one tournament are not seven flights,
-    // so `tournamentRunStrain` rebates the surcharge past the fifth match.
-    //
-    // ⚠ AND THE TITLE'S CLAIM IS RE-ASSERTED RATHER THAN ASSUMED, one line down: a seventh match
-    // still costs its scoreline drain plus the ladder's repeat. Cheaper, never zero - which is the
-    // property this test is named after and the only one it was ever protecting.
-    //
-    // ⚠ NOTE THE TIER: 'national' is a 32-draw and always will be, so this seven-match run is a
-    // HYPOTHETICAL about the rule rather than a game state. The two rungs that really got deeper are
-    // slam (128) and wta1000 (64); their whole-run numbers live in tests/fatigueReference.test.ts.
-    const rebate = ECONOMY.condition.tierMatchFatigue.national
-    expect(tournamentRunStrain('national', seven)).toBe(7 * straightNat + 6 + 2 * last - 2 * rebate)
-    const sixth = tournamentRunStrain('national', new Array(6).fill({ score: '6-4 6-2' })) - tournamentRunStrain('national', new Array(5).fill({ score: '6-4 6-2' }))
-    expect(sixth).toBeGreaterThan(0)
-    expect(sixth).toBeLessThan(straightNat + last)
+    // ⚠ UNCHANGED THROUGH THE 128-DRAW WAVE, AND THAT IS THE POINT OF THE TIER IT USES. 'national'
+    // is a 32-draw and always will be, so it keeps the domestic ladder and its repeat-last rule
+    // exactly as written. The rungs that got deeper (slam 128, wta1000 64) run on a THIRD ladder
+    // keyed on `drawSize` – see condition.ts `ladderFor` and tests/fatigueReference.test.ts, which
+    // is where the deep curve's own numbers live.
+    expect(tournamentRunStrain('national', seven)).toBe(7 * straightNat + 6 + 2 * last)
   })
 
   it('a SKIPPED run still costs NOTHING: no match records, no drains, no ladder', () => {
