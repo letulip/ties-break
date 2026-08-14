@@ -452,18 +452,38 @@ function scrollToTier(tier: CoachTier): void {
          put the quote here first and that guard caught it, which is the guard working.
 
          WHY IT IS DISABLED AND NOT DELETED. Junior tennis has no prize money, so a family cannot decide to
-         spend on a coach's fare against what a week might pay back - there is nothing coming back. The
-         decision only becomes a decision on the adult tour, where a W15 writes a cheque (see
-         docs/specs/adult-tour-and-endings.md §3). Deleting the control would lose the place it belongs;
-         locking it says WHEN it arrives, which is also the honest answer to "why can't I press this".
+         spend on a coach's fare against what a week might pay back - there is nothing coming back.
+         Deleting the control would lose the place it belongs; the row keeps the seat and names the reason,
+         which is the honest answer to "why can't I press this".
          The engine field stays exactly as it shipped - no schema change, no behaviour change, and every
-         existing save keeps whatever it had. -->
+         existing save keeps whatever it had.
+
+         ⚠⚠ ROUND-20 #1 – THIS SUB-LINE USED TO SAY "It arrives with the professional years", AND THAT
+         WAS THE DEFECT. The owner reported it dead on a professional career on 13.08 (his words are in
+         tests/component/coach-travel-row.test.ts - THIS IS A TEMPLATE, and no Cyrillic may appear inside
+         one, comments included; tests/round13-nav.test.ts caught the first draft of this note doing it).
+         He is deep into one and it was still dead - so the question is whether the PRECONDITION was
+         wrong or the SENTENCE was.
+         It is the sentence, and the answer is not a near miss: THERE IS NO PRECONDITION ANYWHERE. The
+         `disabled` below is a literal, not a binding; there is no handler, no computed, no age gate, and
+         nothing in src/ calls `game.setCoachOnEventWeeks` - the command exists through the whole stack
+         (store -> protocol -> worker -> engine) with no caller. No week, no age and no ranking can turn
+         this on, because the mechanic behind it was cancelled and never replaced.
+         docs/decisions.md (08.08) had already written down what that means and nobody acted on it:
+         "travel never becomes possible (the row is hardcoded `disabled` and the mechanic is cancelled),
+         so a notice saying it is now available would be false. Needs the unlock ruled on first."
+         So the row may not promise an arrival. It states the two reasons instead - the junior one, which
+         is why it is off now, and the professional one, which is why it is still off later: all three
+         versions of the mechanic were built and measured on 30.07 and all three failed (the boolean,
+         +$21k for +0.6 skill; a fatigue discount, 2 condition points of ~36; a match-strength edge that
+         came out NEGATIVE on rank). Turning it on is a ruling to be taken, not a birthday to wait for.
+         `tests/component/coach-travel-row.test.ts` mounts a professional career and holds the row to it. -->
     <section v-if="billing" class="cm-travel is-locked">
       <div class="cm-travel-text">
         <p class="cm-travel-title">Coach travels to tournaments</p>
         <p class="cm-travel-sub">
-          Not on the junior tour – there is no prize money to weigh it against. It arrives with the
-          professional years.
+          Off at every age – no week turns this on. There is no prize money on the junior tour to weigh
+          a fare against, and the professional case was measured three ways and paid for none of them.
         </p>
       </div>
       <button
@@ -471,7 +491,7 @@ function scrollToTier(tier: CoachTier): void {
         role="switch"
         :aria-checked="false"
         disabled
-        aria-label="Coach travel – available in the professional years"
+        aria-label="Coach travel – off at every age, and nothing here turns it on"
       >
         <span class="cm-switch-knob"></span>
       </button>
