@@ -16,7 +16,7 @@
 import { describe, it, expect } from 'vitest'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { runTournament } from '../src/engine/season/tournament'
-import { BEST_N_BY_TRACK, computeRanking, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, MANDATORY_SLOTS, computeRanking, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
 import { rivalCondition } from '../src/engine/season/rival'
 import { generateCohort } from '../src/engine/season/cohort'
 import { generatePreHistory } from '../src/engine/season/prehistory'
@@ -205,6 +205,49 @@ describe('W-B3 — the participation floor is gone', () => {
     expect(windowedBestSum(oneSide, 52, 'kid', BEST_N_BY_TRACK.wta)).toBeLessThan(TIERS.w50.points[2])
     // The third bucket is exactly the two rungs named above - never a fourth by accident.
     expect([...new Set(realSide.map((r) => r.tier))].sort()).toEqual(['slam', 'wta1000'])
+  })
+
+  // ⚠⚠ AND THE THIRD BUCKET'S DEFENCE IS WRONG. MEASURED 14.08 against the owner's own two careers -
+  // docs/specs/where-the-points-come-from-2026-08.md, tools/counting-window.ts.
+  //
+  // The paragraph above argues the participation floor "cannot come back through" the Slam and the
+  // 1000 "for a reason that is ACCESS rather than arithmetic", and it names the count in the same
+  // breath: twelve of them a season. THE PRODUCT WAS NEVER TAKEN. Eleven of those twelve sit in
+  // RESERVED slots (MANDATORY_SLOTS: 4 Slams, 7 thousands), so a player admitted to both families
+  // banks their openers whatever else she has - and that book is 975 points with no match won.
+  //
+  // The assertion above never tested this. It folds `oneSide`, the nominal-1 rungs, where showing
+  // up was already free; `realSide` is only checked for WHICH tiers it contains. So the bound the
+  // claim protects was pinned exactly where it could not fail.
+  //
+  // ⚠ THIS PINS THE TRUE NUMBER RATHER THAN WEAKENING OR DELETING THE CLAIM (standing rule). It is
+  // a CHARACTERISATION of what IS, so the consequence cannot drift unnoticed while the owner
+  // decides between paying the rulebook's real opener (a 128-draw Slam pays 10, not 130 - our row
+  // is the real column normalised onto a 32-draw, see calendar.ts on `slam.drawSize`) and restoring
+  // the missing rounds. Whichever he picks, this number moves and the test says so.
+  it('⚠ a full RESERVED book of first-round losses out-pays a window of W50 TITLES, with no match won', () => {
+    const openers: SeasonResult[] = []
+    let week = 1
+    for (const fam of MANDATORY_SLOTS) {
+      const floor = TIERS[fam.tier].points[TIERS[fam.tier].points.length - 1]
+      for (let i = 0; i < fam.slots; i++) openers.push({ playerId: 'kid', week: week++, points: floor, tier: fam.tier })
+    }
+    // 4 x 130 + 7 x 65 = 975, and every row is a first match lost.
+    expect(openers).toHaveLength(11)
+    expect(windowedBestSum(openers, 52, 'kid', BEST_N_BY_TRACK.wta)).toBe(975)
+
+    // The comparison the claim above should have made, and did not. A full professional window of
+    // W50 TITLES - eighteen tournaments won outright, five matches each, ninety matches - is 900.
+    const titles: SeasonResult[] = Array.from({ length: BEST_N_BY_TRACK.wta }, (_, i) => ({
+      playerId: 'kid',
+      week: i + 1,
+      points: TIERS.w50.points[0],
+      tier: 'w50' as TierId,
+    }))
+    expect(windowedBestSum(titles, 52, 'kid', BEST_N_BY_TRACK.wta)).toBe(900)
+    expect(windowedBestSum(openers, 52, 'kid', BEST_N_BY_TRACK.wta)).toBeGreaterThan(
+      windowedBestSum(titles, 52, 'kid', BEST_N_BY_TRACK.wta),
+    )
   })
 })
 
