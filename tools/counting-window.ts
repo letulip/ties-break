@@ -31,7 +31,7 @@ import type { WorldState } from '../src/engine/world'
 import { BEST_N_BY_TRACK, MANDATORY_SLOTS, isCountingResult, windowSlots, type SeasonResult } from '../src/engine/season/ranking'
 import { TIERS } from '../src/engine/season/calendar'
 import { rankingFor } from '../src/engine/world/ladder'
-import { finishLabel } from '../src/engine/world/labels'
+import { finishLabel, prizeCentsFor } from '../src/engine/world/labels'
 import { KID_ID } from '../src/engine/world/constants'
 import { kidAgeYears } from '../src/engine/world/age'
 import { weekLabel } from '../src/shared/dates'
@@ -119,6 +119,25 @@ function readOne(w: WorldState, label: string): void {
   )
   if (missed) console.log(`  ⚠ and ${missed} slot(s) hold a ZERO for a mandatory she skipped – they pay nothing and cannot be dropped`)
 
+  // ⚠ THE OTHER HALF OF «СЛИШКОМ БЫСТРО»: the PRIZE MONEY, split the same way. A ranking is capped
+  // at eighteen slots; a bank account is not, so this folds EVERY row in the window, counted or not.
+  // `prizeCentsFor` is the engine's own table – nothing is modelled here.
+  let wonCash = 0
+  let showedUpCash = 0
+  for (const r of all) {
+    const f = finishOf(r)
+    if (f === null || !r.tier) continue
+    const cash = prizeCentsFor(r.tier, f)
+    if (winsOf(r) === 0) showedUpCash += cash
+    else wonCash += cash
+  }
+  const cash = wonCash + showedUpCash
+  if (cash > 0) {
+    console.log(`\n  prize money in the same 52 weeks : $${Math.round(cash / 100).toLocaleString('en-US')}`)
+    console.log(`    for WINNING matches            : $${Math.round(wonCash / 100).toLocaleString('en-US').padStart(11)}  (${Math.round((100 * wonCash) / cash)}%)`)
+    console.log(`    for SHOWING UP and losing      : $${Math.round(showedUpCash / 100).toLocaleString('en-US').padStart(11)}  (${Math.round((100 * showedUpCash) / cash)}%)`)
+  }
+
   section('THE RESERVED SLOTS – §VIII.A.4.a.i, and what converted')
   for (const fam of MANDATORY_SLOTS) {
     const have = all.filter((r) => r.tier === fam.tier).length
@@ -172,9 +191,28 @@ function readOne(w: WorldState, label: string): void {
     const row = rankingFor(world, 'wta').find((r) => r.playerId === KID_ID)
     return row ? `#${row.rank} on ${row.points} pts` : 'not on the list at all'
   }
+  // ⚠ THE OWNER'S OPTION (b), PRICED ON HER OWN CAREER: a first-round exit pays the rulebook's real
+  // number instead of ours. Real 2026 WTA: a 128-draw Slam pays 10 for an R128 loss (70 at R64, 130
+  // at R32 – the value we currently hand the FIRST loser); a 96-draw 1000 pays 10 likewise.
+  //
+  // ⚠ AND WHY THIS COUNTERFACTUAL IS CLOSE TO EXACT RATHER THAN INDICATIVE. The professional field
+  // is DERIVED (`fieldPros.ts`): its 1600 rows carry points from a points-to-rank curve, not from
+  // played results, so re-pricing an opener cannot move them. The ladder she is climbing is a fixed
+  // backdrop. What this prints is therefore very nearly what the change would do – to her and to
+  // every human career – rather than a first-order estimate.
+  const RULEBOOK_OPENER: Partial<Record<TierId, number>> = { slam: 10, wta1000: 10 }
+  const atRulebook = {
+    ...w,
+    results: (w.results ?? []).map((r) => {
+      if (r.playerId !== KID_ID || winsOf(r) !== 0 || !r.tier) return r
+      const real = RULEBOOK_OPENER[r.tier]
+      return real === undefined ? r : { ...r, points: real }
+    }),
+  }
   console.log(`  as she stands                       : #${w.kidRankWta} on ${total} pts`)
   console.log(`  if first-round exits paid NOTHING   : ${place(withoutShowUp as WorldState)}`)
   console.log(`  if only first-round exits counted   : ${place(withoutWins as WorldState)}`)
+  console.log(`  ⚠ AT THE RULEBOOK'S OPENER (10/10)  : ${place(atRulebook as WorldState)}`)
 
   section('THE ACCESS CLIFF – what a rung is worth BEFORE she wins anything on it')
   // ⚠ THE POINT OF THIS SECTION. Above WTA 250 a first-round exit pays real points, and entry to
