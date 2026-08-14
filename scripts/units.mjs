@@ -115,6 +115,11 @@ const HEAVY_UNIT_FILES = [
   'tests/kidLife.test.ts',
   // ⚠ CAME BACK FROM THE SIM PROJECT (13.08) – see THE FILE THAT CAME BACK, above. 12.2 s solo.
   'tests/endings-bench.test.ts',
+  // ⚠ 13.08: the two largest files still in the bulk when CI stalled with everything green – see the
+  // note on the twin list in vite.config.ts. The bench policy rebuilt the same day tripled the
+  // matches a driven career plays, and these two drive careers.
+  'tests/travel-home.test.ts',
+  'tests/ladder-floor.test.ts',
 ]
 
 const reporter = process.argv.includes('--verbose') ? 'default' : 'dot'
