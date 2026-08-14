@@ -127,6 +127,33 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   releaseEntry(world, eventId)
 }
 
+/** ⚠⚠ THE OPENING WORDS OF THE TWO FEED ROWS A RELEASE CAN WRITE, EXPORTED BECAUSE A SURFACE HAS TO
+ *  RECOGNISE ONE OF THEM – AND ROUND-20 #2 IS WHAT IT COSTS WHEN IT CANNOT.
+ *
+ *  The injury popup's "Cancelled" row lists what the layoff pulled her out of, and it finds those
+ *  rows by their opening words because a `WorldEvent` carries no release reason (adding one is a save
+ *  schema change for a presentation-only read – see the note at the top of InjuryStopDialog.vue).
+ *  It was matching `'Withdrew from '`, which was the ONE sentence this function wrote until 05.08.
+ *  `releasedBy` then split it in two so the desk's own action would stop being reported to the player
+ *  as a receipt for a choice he never made – a real fix – and the popup was never repointed. From that
+ *  day the report could not see an injury withdrawal at all: measured on a real career, a 9-week
+ *  layoff pulled her out of two Local Opens, refunded both fees, and the popup counted ZERO and said
+ *  "Nothing – every entry stands" (owner, 13.08).
+ *
+ *  So the words live here, once, and the surface imports them. That does not make the coupling
+ *  disappear – it makes it a symbol instead of a spelling, which is the difference between a rename
+ *  that breaks a build and a rename that breaks a player's report in silence.
+ *  `tests/component/injury-cancelled-row.test.ts` drives a REAL injury and reads the REAL rendered
+ *  row, so the two halves are checked together rather than against each other's literals. */
+export const RELEASE_LINE_PREFIX: Record<EntryReleaseReason, string> = {
+  parent: 'Withdrew from ',
+  injury: 'Taken out of ',
+}
+
+/** ...and the clause the injury row ends with, so a surface can quote the ENTRY without repeating the
+ *  reason it is already standing under. */
+export const INJURY_RELEASE_SUFFIX = ', she is not fit for that week.'
+
 /** The withdrawal itself, with no command guard on it – the engine's own path.
  *
  *  ⚠ `releasedBy` IS NOT DECORATION, IT IS THE BUG (fix/outgrown-entry, 05.08). Two callers reach
@@ -199,10 +226,10 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
   let line: string
   switch (releasedBy) {
     case 'parent':
-      line = `Withdrew from ${label} – ${weekLabel(event.week)}`
+      line = `${RELEASE_LINE_PREFIX.parent}${label} – ${weekLabel(event.week)}`
       break
     case 'injury':
-      line = `Taken out of ${label} – ${weekLabel(event.week)}, she is not fit for that week.`
+      line = `${RELEASE_LINE_PREFIX.injury}${label} – ${weekLabel(event.week)}${INJURY_RELEASE_SUFFIX}`
       break
   }
   addEvent(world, { week: world.week, type: 'entry', text: line })
