@@ -1556,9 +1556,34 @@ button.primary.risky {
   padding: 16px;
 }
 
+/* ⚠ ROUND-20 #3 – THE HEIGHT BOUND LIVES HERE, ON THE SHARED CARD, BECAUSE THE DEFECT IS THE BOX'S
+   AND NOT ONE DIALOG'S. `.dialog-overlay` above is `position: fixed; inset: 0; display: flex;
+   align-items: center` – so a card taller than the screen is CENTRED and overflows both ends at once,
+   with no scroller anywhere in the chain to reach either. Everything below the fold is simply gone,
+   and on a blocking popup what is below the fold is the way out.
+   ⚠ THIS IS THE SECOND SURFACE IT HAS EATEN, WHICH IS THE WHOLE ARGUMENT FOR PUTTING IT HERE.
+   MatchReplay.vue's header records the first, at 375x812: "the card grew to 1243px inside an 812px
+   viewport, sitting at y=-215.5, which put the COURT, the close button and the bottom of the box
+   score outside the window with no way to reach any of them." That was fixed by moving THAT screen
+   to a takeover – a fix the shape of one surface – so the box kept the bug and handed it to the next
+   long dialog, which was `TourBriefingDialog` eight days ago: 1078px of card inside 635px of room on
+   a 375x667 phone, Continue at y=821..855, and a career that stopped there (owner, 13.08: «сейчас
+   его даже не закрыть»). A rule written on the briefing alone would leave it loaded for the one
+   after that.
+   ⚠ AND IT COSTS THE SHORT DIALOGS NOTHING – measured in Chromium at 375x667 with and without these
+   two lines. The injury popup (the tallest of the others, and the only one with a full-bleed child)
+   is 525.8px both ways, its art still spans exactly the padding box (scrollWidth === clientWidth, so
+   `overflow-x` computing to `auto` alongside `overflow-y` clips nothing), and the confirm dialog is
+   124.6px both ways. A cap only engages past the screen; below it the declaration is inert.
+   The percentage is of the OVERLAY's content box – the scrim is the viewport minus its own 16px – and
+   `box-sizing: border-box` (top of this sheet) makes it the card's border box, so 100% is exactly the
+   room there is. `tests/component/fits.ts` measures it; the rule that asks for that measurement on
+   every new dialog is in CLAUDE.md's gotchas. */
 .dialog-card {
   width: 100%;
   max-width: 320px;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .dialog-message {
