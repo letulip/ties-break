@@ -238,7 +238,78 @@ window at the end of the run, not over the career – so opener-0 reads "0 big e
 while still diverging (#151 vs #139, 22 matches won vs 26). She met the change earlier and the
 column cannot see when. Read the entry counts as an end-state sample, not a career total.
 
-## 8. Two side findings from the same run, both cheap
+## 8. (c) SHIPPED THE SAME DAY – the draws are 128 and 64
+
+«доделывай пожалуйста». Both rungs now run their real draw, and **every number in both points rows
+is published rather than adapted**:
+
+| rung | draw | points |
+| --- | --- | --- |
+| slam | **128** | 2000 / 1300 / 780 / 430 / 240 / **130** / **70** / **10** |
+| wta1000 | **64** | 1000 / 650 / 390 / 215 / 120 / **65** / **10** |
+
+The two rows the rulebook's own 32-row chart does not print were **sourced, not invented** – that
+was the last live objection in `calendar.ts` and it was a real one. Two independent publications
+agree cell for cell; recorded with URLs in `docs/research/ranking-points-by-tier.md` §4b.
+
+⚠ **AND THE 1000 IS 64 RATHER THAN 96 FOR A SOURCING REASON, NOT A CONVENIENCE ONE.** The tour runs
+1000s at both sizes. `runTournament` is a pure single-elimination fold with no bye machinery, so a
+real 56-draw IS a 64-bracket here – and the 56 column is the one the rulebook prints all the way
+down. Mapping it costs nothing adapted or interpolated. A 96 would have had to be squeezed into 128
+with a borrowed R128.
+
+**Prize money for the new rounds is derived, and the derivation is stated**, because our six shipped
+figures are flatter than every real major's ladder: each new round takes a real event's SHAPE at
+that step and applies it to OUR neighbour. Slam R64 $124,000 and R128 $82,000 off Wimbledon 2025;
+WTA 1000 R64 $22,000 off Dubai 2025. Arithmetic in the research doc.
+
+### The owner's condition ruling, implemented as two things and not one
+
+«я думаю мы справимся с нашей 1 неделей вполне, просто на поздних играх шлема не надо накидывать
+лишних расходов кондиции и всё, а после шлема заслуженный отпуск с моей точки зрения не
+противоречит.» A deep round could add exactly two "extras" on top of the match itself, and both are
+now off:
+
+* **The cumulative ladder.** `runFatigueExtra` REPEATS its last value past the ladder's end – by
+  design, "a future draw bigger than 32 must never silently cost 0" – which would have charged +1
+  for matches 6 and 7. Two explicit zeros stop it. A title run's cumulative extra stays **4**.
+* **The tier surcharge, and this one is a double-count the wave exposed.** Its own note says it
+  *"prices international travel, time zones and a fortnight from home"* – an EVENT cost, charged per
+  match only because until now every W event was exactly five matches. Seven rounds at one Slam are
+  not seven flights. Capped at five (`surchargeMatchesPerRun`), so the extra rounds pay their
+  scoreline and nothing more.
+
+A straight-sets Slam title run: **39** at draw 32 · **53** uncapped at 128 · **43** as shipped.
+
+### ⚠ The reference career now ends at nineteen, and I checked before accepting it
+
+`tests/long-career-ledgers.test.ts` walks a deliberately extreme career – highest available rung
+every single week, no rest, no vacation – and under the new draws it ends: `injury`, week 307, age
+19, *"33 weeks already lost, and then this one"*. On the 32-draws the same career plays all ten
+seasons.
+
+**It is not that the deep draws grind her.** A/B on that exact career, only the draw sizes and their
+points rows differing:
+
+| | 32/32 | **128/64** |
+| --- | --- | --- |
+| injuries | 10 | **7** |
+| weeks lost | 35 | **21** |
+| seasons played | 10 | 6 |
+
+She is **less** injured, not more. What ended her is two of them landing four weeks apart – a
+moderate shoulder at 276, an eleven-week hamstring at 280 – on a diverged RNG. The ending rule
+working, on a career that never rests. The three claims that asked a retired season for a best
+result and a professional rank now read the seasons she PLAYED, which is the idiom the file's own
+`(C)` block has used since it was written; the ending itself is pinned in both directions so it
+cannot start or stop firing unnoticed.
+
+⚠ **The one thing I did NOT do is tune the injury model.** A clustered pair of injuries ending a
+career is the game working, and re-pricing exposure on the evidence of one seed would be exactly the
+scope creep the builder rulings forbid. If the owner wants deep draws to be gentler, that is his
+call with these numbers in front of him.
+
+## 9. Two side findings from the same run, both cheap
 
 * **Seven to ten weeks a season buy literally nothing.** Measured on all three saves: weeks where
   she won no match AND the row fell outside the eighteen anyway. Naomi w621: **7 weeks, $5,700** in
@@ -251,7 +322,7 @@ column cannot see when. Read the entry counts as an end-state sample, not a care
 * **A skipped mandatory really does cost a whole slot.** Olivia carries a `mandatoryMiss` zero at
   week 395 in her counted eighteen. The rule works exactly as the owner specified it.
 
-## 9. The «108 points» lead – CLOSED, and it was a word
+## 10. The «108 points» lead – CLOSED, and it was a word
 
 He sent three screenshots with the figure circled in red: **163 points** after a WTA 1000 first-round
 loss, **91** after a W35 win, **227** after a three-set Slam.

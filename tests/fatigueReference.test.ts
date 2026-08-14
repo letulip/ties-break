@@ -313,7 +313,23 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
   it('the shipped ladders are C = [0,1,1,2,2] for domestic+J and D = [0,1,1,1,1] for the W family (change deliberately, never to make a test pass)', () => {
     expect(ECONOMY.condition.runFatigueLadder).toEqual([0, 1, 1, 2, 2])
     // R15-6, the owner's second lever - his own measured variant D, flattest of the four he priced.
-    expect(ECONOMY.condition.runFatigueLadderWta).toEqual([0, 1, 1, 1, 1])
+    //
+    // ⚠⚠ RE-AIMED 14.08 BY THE 128-DRAW WAVE, AND THIS TEST'S OWN TITLE IS WHY IT IS RE-AIMED RATHER
+    // THAN RELAXED: the change IS deliberate and it is the owner's, «на поздних играх шлема не надо
+    // накидывать лишних расходов кондиции». Ladder D is UNCHANGED through its whole measured length
+    // - the first five entries are byte-identical, so every doc-grid cell below still holds. What is
+    // appended is two explicit ZEROS for the two rounds a 128 draw added, and they exist to stop
+    // `runFatigueExtra`'s repeat-last fallback silently charging +1 for matches 6 and 7. A Slam
+    // title run's cumulative extra therefore stays 4, exactly as it has since R15-6.
+    expect(ECONOMY.condition.runFatigueLadderWta).toEqual([0, 1, 1, 1, 1, 0, 0])
+    // ⚠ AND THE LENGTH IS ITS OWN CLAIM, because the fallback re-decides the ruling the moment the
+    // ladder is shorter than the deepest run: it must cover log2 of the biggest W draw.
+    const deepestWtaRun = Math.max(
+      ...Object.values(TIERS).filter((t) => t.track === 'wta').map((t) => Math.log2(t.drawSize)),
+    )
+    expect(ECONOMY.condition.runFatigueLadderWta.length).toBeGreaterThanOrEqual(deepestWtaRun)
+    // ...and the appended entries are zero, not a repeat - the ruling, stated as an assertion.
+    expect(ECONOMY.condition.runFatigueLadderWta.slice(5)).toEqual([0, 0])
   })
 
   it('matches the reference table at every tier and every depth', () => {
@@ -485,8 +501,12 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       knob.runFatigueLadder = shipped
       knob.runFatigueLadderWta = shippedWta
     }
-    expect(ECONOMY.condition.runFatigueLadder).toEqual([0, 1, 1, 2, 2])
-    expect(ECONOMY.condition.runFatigueLadderWta).toEqual([0, 1, 1, 1, 1])
+    // ⚠ THE RESTORE CLAIM, and it now reads the CAPTURED values rather than two literals. What this
+    // line is for is "the patch-and-restore put back whatever was shipped" - re-typing the shipped
+    // ladder made it a second, silent pin on the ladder's VALUE, which is why appending two zeros
+    // on 14.08 broke it here as well as in the suite that really owns that claim (above).
+    expect(ECONOMY.condition.runFatigueLadder).toEqual(shipped)
+    expect(ECONOMY.condition.runFatigueLadderWta).toEqual(shippedWta)
   })
 })
 

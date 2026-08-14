@@ -64,7 +64,8 @@ const SAMPLE_EVERY = 13
 const SIZES = [32, 64, 128] as const
 
 /** The rung the counterfactual is asked about: the biggest one, whose real draw is 128. */
-const TIER: TierId = 'slam'
+const tierArg = args.indexOf('--tier')
+const TIER: TierId = (tierArg >= 0 ? args[tierArg + 1] : 'slam') as TierId
 
 interface Cell {
   draws: number

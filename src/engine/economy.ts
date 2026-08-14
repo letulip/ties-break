@@ -1564,7 +1564,60 @@ export const ECONOMY = {
     // tests/fatigueReference.test.ts must not move a cell); the split is per FAMILY, applied inside
     // `runFatigueExtra` (engine/condition.ts) so the kid and the rival cohort inherit it from the
     // one implementation together. A straight-sets W15 title run: 5x(2+4) + 4 = 34, from 46.
-    runFatigueLadderWta: [0, 1, 1, 1, 1] as number[],
+    //
+    // ⚠⚠ TWO EXPLICIT ZEROS ON THE END SINCE 14.08, AND THEY ARE THE OWNER'S RULING ON THE 128-DRAW
+    // WAVE: «я думаю мы справимся с нашей 1 неделей вполне, просто на поздних играх шлема не надо
+    // накидывать лишних расходов кондиции и всё, а после шлема заслуженный отпуск (у нас есть
+    // большой) с моей точки зрения не противоречит.»
+    //
+    // WHY IT HAD TO BE SAID IN THE DATA RATHER THAN LEFT ALONE. `runFatigueExtra` REPEATS THE
+    // LADDER'S LAST VALUE past its end, deliberately - the note above says why, "a future draw
+    // bigger than 32 must never silently cost 0". That rule was written for exactly this day, and
+    // followed blindly it would have charged +1 for match 6 and +1 for match 7 of a Slam: the
+    // cumulative extra on a title run would have gone 4 -> 6, which is precisely the «лишние
+    // расходы на поздних играх» he ruled out. Two zeros make the decision explicit instead of
+    // letting a fallback make it.
+    //
+    // WHAT IT MEANS, EXACTLY: a Slam title run's CUMULATIVE extra stays 4, the same number it has
+    // been since R15-6. The extra matches are not free - each still pays its own `matchDrain` for
+    // being played - but the deep rounds no longer compound on top of that. And the price of a deep
+    // run is still real and still rises with the draw: seven matches at surcharge 5 cost 7x(2+5)+4
+    // = 53 where five cost 5x(2+5)+4 = 39.
+    //
+    // ⚠ THE LENGTH IS NOW SEVEN AND MUST STAY >= log2(the biggest W drawSize), or the repeat-last
+    // fallback silently re-decides this. tests/fatigueReference.test.ts pins the coupling.
+    runFatigueLadderWta: [0, 1, 1, 1, 1, 0, 0] as number[],
+    /** HOW MANY MATCHES OF ONE RUN CARRY THE TIER SURCHARGE. Five – log2(32), the depth every draw
+     *  in this game had when `tierMatchFatigue` was priced.
+     *
+     *  ⚠⚠ IT EXISTS BECAUSE THE 128-DRAW WAVE EXPOSED A DOUBLE-COUNT, and the surcharge's own note
+     *  above is what names it: it *"prices international travel, time zones and a fortnight from
+     *  home"*. That is an EVENT cost. It was charged per MATCH only because until 14.08 every W
+     *  event was exactly five matches, so per-match and per-event were the same arithmetic. Seven
+     *  rounds at one Slam are not seven flights.
+     *
+     *  WHAT IT IS WORTH: a straight-sets Slam title run costs 39 at draw 32. Uncapped at draw 128 it
+     *  is 53 (7 x 7 + a ladder of 4); capped it is 43 – the two extra matches cost their scoreline
+     *  and nothing else.
+     *
+     *  ⚠ AND IT IS **NOT** WHAT SAVED THE REFERENCE CAREER – I first wrote that it was, and the
+     *  measurement says otherwise. tests/long-career-ledgers.test.ts' greedy career on seed
+     *  'wallet-audit' ends in a career-ending injury at nineteen under the 128-draws, and it ends at
+     *  the same week 307 with this cap in place. The cap is here on the double-count argument and
+     *  the owner's ruling alone. What the A/B actually shows is that the deep draws make her LESS
+     *  injured, not more – 7 injuries and 21 weeks lost against the 32-draws' 10 and 35 – so that
+     *  ending is a different set of injuries firing on a diverged RNG, not a fatigue spiral. The
+     *  finding is recorded in docs/specs/where-the-points-come-from-2026-08.md rather than fixed
+     *  here, because a clustered pair of injuries is the game working.
+     *
+     *  ⚠ AND IT IS THE OWNER'S RULING IMPLEMENTED, not a balance choice of mine: «просто на поздних
+     *  играх шлема не надо накидывать лишних расходов кондиции и всё» (14.08). The two "extras" a
+     *  deep round could add are the cumulative ladder and this surcharge; the ladder was zeroed
+     *  above and this is the other one. What remains is `matchFatigue` – the match itself.
+     *
+     *  BEHAVIOUR-NEUTRAL EVERYWHERE ELSE BY CONSTRUCTION: every draw below the two big rungs is 32,
+     *  so no run has ever reached a sixth match and no existing number moves. */
+    surchargeMatchesPerRun: 5,
     // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
     // then linear down to `floor` at condition 0:
     //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.

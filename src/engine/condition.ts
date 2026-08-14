@@ -74,7 +74,29 @@ export function runFatigueExtra(matchIndex: number, tier: TierId): number {
  *  National run of epics = 30 per-match + 6 ladder (variant C) = 36. A walkover or a skipped event
  *  never reaches finalize, so it has no records and costs nothing, ladder included. */
 export function tournamentRunStrain(tier: TierId, matches: { score?: string }[]): number {
-  return matches.reduce((sum, m, i) => sum + matchDrain(tier, m.score) + runFatigueExtra(i, tier), 0)
+  return matches.reduce(
+    (sum, m, i) => sum + matchDrain(tier, m.score) - surchargeRebate(tier, i) + runFatigueExtra(i, tier),
+    0,
+  )
+}
+
+/** WHAT THE i-TH MATCH OF A RUN GETS BACK OF ITS TIER SURCHARGE – nothing for the first
+ *  `surchargeMatchesPerRun` (5), the whole surcharge for every match after them.
+ *
+ *  ⚠⚠ IT IS A REBATE RATHER THAN A CONDITION INSIDE `matchDrain` ON PURPOSE. `matchDrain(tier,
+ *  score)` is asked "what did ONE match cost" by callers that have no run and no index – the week
+ *  recap, the rival reconstruction's per-match reads, the fatigue bench's per-match tables – and
+ *  giving it an optional index would have made every one of those silently answer for match 0. The
+ *  cap is a property of a RUN, so it lives in the one function that has the run.
+ *
+ *  ⚠ AND BOTH SIDES INHERIT IT, which the module's own note says is required: the kid arrives here
+ *  through `finalizeTournament` and the cohort through `rival.ts reconstructRun`, so a deep run
+ *  cannot cost the player more than it costs her rivals.
+ *
+ *  Zero for every run of five matches or fewer, i.e. for every rung except the two the 128-draw
+ *  wave deepened – see ECONOMY.condition.surchargeMatchesPerRun for the measurement that forced it. */
+function surchargeRebate(tier: TierId, matchIndex: number): number {
+  return matchIndex < ECONOMY.condition.surchargeMatchesPerRun ? 0 : ECONOMY.condition.tierMatchFatigue[tier]
 }
 
 /** R9-19 (coupling ON, owner curve): NO strength penalty while she is fresh enough
