@@ -171,7 +171,7 @@ describe('screen T, round 3', () => {
 })
 
 describe('screen T, round 4', () => {
-  it('⚠ the tournament-travel row is LOCKED, and it says WHEN rather than just refusing', () => {
+  it('⚠ the tournament-travel row is LOCKED, and it names the reason rather than a date', () => {
     // ⚠ RE-AIMED, AND THE FEATURE BEHIND IT WAS CANCELLED RATHER THAN CHANGED (owner, 30.07): «давай-ка мы
     // вообще эту механику пока до нормальных чеков и 18+ вообще не будем делать. Никто никуда не ездит.»
     //
@@ -185,11 +185,27 @@ describe('screen T, round 4', () => {
     // Deleting the row would have lost the place the control belongs; a bare `disabled` would have earned
     // the "why can't I press this" the app has a standing rule against. The engine field is untouched - no
     // schema change, and every existing save keeps whatever it had.
+    //
+    // ⚠⚠ ROUND-20 #1 CORRECTED THIS TEST'S OWN CLAIM, AND THAT IS THE FINDING WORTH KEEPING. Its name was
+    // "it says WHEN rather than just refusing", and it stayed green for two weeks while the WHEN was never
+    // coming: the row read "It arrives with the professional years" and the owner reached them
+    // («Coach travels не активно на про карьере»). Nothing can deliver that arrival - the `disabled` is a
+    // literal and `game.setCoachOnEventWeeks` has no caller in src/ at all - so a row that names a date is
+    // the defect and a row that names the REASON is the fix.
+    //
+    // ⚠ AND THE "IT PROMISES NOTHING" GUARD DELIBERATELY DOES NOT LIVE HERE, which is a second small
+    // lesson from the same fix. Written as `expect(market).not.toMatch(/It arrives with/)` it went red
+    // immediately - on the COMMENT in the template that quotes the old sentence in order to explain why
+    // it went. A negative read off whole file TEXT cannot tell copy from a note about copy, and weakening
+    // the regex to dodge one's own comment is how a guard turns into a coin flip. The claim belongs where
+    // the words are rendered rather than merely present: tests/component/coach-travel-row.test.ts mounts
+    // this screen on a real 14-year-old and a real 18-year-old career and holds BOTH sub-lines to the
+    // same promise-free sentence. What stays here is structure, which is what a source pin is good for.
     expect(market).toContain('is-locked')
     expect(market).toContain('role="switch"')
     expect(market).toContain('disabled')
     // it explains itself, and in the app's own register
-    expect(market).toMatch(/no prize money|professional years/)
+    expect(market).toMatch(/no prize money/)
     // and the dead switch is really dead: no handler, no live checked state
     expect(market).not.toContain('setCoachOnEventWeeks(')
     expect(market).not.toContain('billing.onEventWeeks')

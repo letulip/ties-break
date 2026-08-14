@@ -130,6 +130,17 @@ docs/review/     2026-08 full review + P1–P9 proposals
   (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
   `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
   pipeline.
+- **A POPUP MUST BE MEASURED AGAINST A PHONE BEFORE IT SHIPS, and "it reads well" is not that
+  measurement.** Round-20 #3: `TourBriefingDialog` shipped with a lead, a requirements list, five
+  cost bullets and a closing line on the shared `dialog-card`, which declares no `max-height` and no
+  `overflow`. On a 375x667 viewport the dismiss control left the screen – and it is a BLOCKING
+  overlay, so the owner's career stopped there and could not be resumed. It HAD a mounted test, and
+  the test measured contrast through the real cascade, once-ness, and that the numbers came from
+  `ECONOMY` rather than the template: **every check was about what the card SAYS, none about what
+  the screen can HOLD.** The failure mode is slow – a dialog grows by one honest sentence at a time
+  and nothing objects until it is taller than a phone. **So any dialog you add or lengthen gets a
+  mounted assertion that its dismiss control's box is inside a 375x667 viewport**, and prove it by
+  mutating: a test that cannot fail on the too-tall version is not this test.
 - **With concurrent agents in ONE checkout, `git commit` takes the whole INDEX, not your files.**
   `git add a.ts b.ts && git commit -m …` looks like it commits two files; it commits everything
   anybody has staged. Measured here on 13.08: a two-file ledger commit swallowed another agent's

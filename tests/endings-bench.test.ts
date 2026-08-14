@@ -40,15 +40,41 @@ const wealthy = PRESETS[7]
 const steady = PRESETS[3]
 
 describe('the endings bench', () => {
-  it('is DETERMINISTIC – the same preset and seed produce the same career, twice', () => {
-    const a = runToEnding(working, 0, 'continue', POLICIES[0], true, TARGET_HORIZON_WEEKS)
-    const b = runToEnding(working, 0, 'continue', POLICIES[0], true, TARGET_HORIZON_WEEKS)
+  // ⚠ BOTH ARMS SINCE TASK #89, AND THE SECOND ONE IS THE POINT. This used to run POLICIES[0]
+  // alone, which was enough while the player arm was four scalars on top of the same loop. It is
+  // not enough now: the rebuilt player arm calls TWO REAL ENGINE COMMANDS from inside the career
+  // loop – `bookVacation` (whose price is quoted off the `seed:vacation:week:packageId` sub-stream)
+  // and `hireCoach` (which releases and re-hires the coach as the books move). Either one could
+  // have made the bench unrepeatable, and an unrepeatable bench is a bench whose every number is
+  // noise. Measured SAME on 8k·budget, 25k·self and 120k·high before this was written.
+  it.each(POLICIES)('is DETERMINISTIC under $label – the same preset and seed, twice', (policy) => {
+    const a = runToEnding(working, 0, 'continue', policy, true, TARGET_HORIZON_WEEKS)
+    const b = runToEnding(working, 0, 'continue', policy, true, TARGET_HORIZON_WEEKS)
     expect(a.ending).toBe(b.ending)
     expect(a.endedWeek).toBe(b.endedWeek)
     expect(a.spentCents).toBe(b.spentCents)
     expect(a.debtSpells).toEqual(b.debtSpells)
   })
 
+  // ⚠⚠ THIS ONE STAYS ON THE GRINDER, AND THE RE-AIM WAS TRIED AND MEASURED RATHER THAN DECLINED
+  // (task #89). The rebuilt player arm is the arm that models a person, so pointing the fork test at
+  // it was the obvious move. It cannot be done on THIS CELL, and the reason is the finding:
+  //
+  //     `25k · middle · self-coached`, seed 0, same horizon
+  //       grinder: collegeOpenAtFork = true,  the W75 finish that shuts the door lands at age 19 (wk 292)
+  //       player:  collegeOpenAtFork = FALSE, the same door shuts at age 17 (wk 178)
+  //
+  // and `answerFork(world, 'college')` then throws «She has taken professional prize money – the
+  // scholarship is not open to her», exactly as the note below predicts. The cell's own selection
+  // argument – «a self-coached middle-class family grinds the calendar without ever putting a
+  // scoring W75 result on the board before nineteen» – was TRUE OF THE GRINDER AND ONLY THE
+  // GRINDER. A family that manages the career turns professional two years earlier and spends its
+  // scholarship doing it, which is a fact about the game worth having rather than a test failure.
+  //
+  // So what this test is really asserting is «the fork has three LEGAL answers on a career that
+  // reaches it», and the grinder is the arm this bench has a measured college-door table for. Moving
+  // it needs that table re-run under the player arm (`npm run bench:endings`, 28 minutes) and a cell
+  // re-picked from it – which is the sweep's job, not the gate's.
   it('⚠ the fork REALLY forks – the same seed goes three different ways', () => {
     // ⚠ THE HORIZON HAS TO CLEAR HER BIRTHDAY, not the band boundary. The fork fires the week the
     // GIRL turns nineteen, and `DEFAULT_PROFILE` is a June girl - so she reaches it around week 282,
@@ -94,6 +120,13 @@ describe('the endings bench', () => {
     // 14→18 window sits inside career-outcome-targets.md's 60-80% band, and a much SHORTER window
     // would push it out. Two presets is a thin sample, so the assertion is the DIRECTION - a shorter
     // grace can only ever bankrupt more careers - which is what makes the sweep's shape meaningful.
+    //
+    // ⚠ GRINDER ON PURPOSE (task #89), and here the reason is that the other arm would make the test
+    // VACUOUS rather than red: the bankruptcy grace is a rule about families that go into the red,
+    // and the rebuilt player arm does not - measured, `8k · working · budget` bankrupts at week 198
+    // under the grinder and survives the horizon under the player. With no debt spells to sweep,
+    // every rate is 0 and `>=` holds for nothing. A test that passes because its subject no longer
+    // exists is worse than one that fails.
     const rows = [working, wealthy].flatMap((p) =>
       [0, 1, 2].map((i) => runToEnding(p, i, 'continue', POLICIES[0], false, TARGET_HORIZON_WEEKS)),
     )

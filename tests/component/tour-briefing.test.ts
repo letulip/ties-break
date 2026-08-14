@@ -31,6 +31,7 @@ import { createPinia, setActivePinia } from 'pinia'
 // nothing and every colour assertion below is vacuous. Same reason birthday-dialog.test.ts does it.
 import '../../src/style.css'
 import { assertLegible } from './contrast'
+import { assertDismissReachable, measureDialog, setViewport, PHONE, NARROW_PHONE, DESKTOP } from './fits'
 import TourBriefingDialog from '../../src/components/TourBriefingDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot, KID_ID } from '../../src/engine/world'
@@ -267,5 +268,92 @@ describe('⭐ round-17 #3 – every line on the card is legible against what it 
     expect(costs.length).toBeGreaterThan(3)
     for (const cost of costs) assertLegible(cost, 'tour-briefing-cost')
     w.unmount()
+  })
+})
+
+// ⭐⭐ ROUND-20 #3 – IT FITS THE SCREEN, AND THE WAY OUT IS ON IT.
+//
+// The item, and it is the one this file did not have. Everything above measures what the card SAYS –
+// the words are the engine's, the ratios clear AA, it shows once. Nothing measured what the screen
+// can HOLD, and the card is a lead, a requirements list, five long cost bullets and a closing line
+// on a shared box that declared no `max-height` and no `overflow`. Measured in a real headless
+// Chromium on the shipped stylesheet, at 375x667: the card rendered 1078px tall inside 635px of
+// room, sitting at y=-205.5, with `scrollHeight === clientHeight` (nothing to scroll) and Continue
+// at y=821..855 – 188px below the bottom of the phone, on a BLOCKING overlay. The owner's career
+// stopped there: «сейчас его даже не закрыть».
+//
+// ⚠ MUTATION-VERIFIED AGAINST THE SHIPPED DEFECT, not against a hand-made one: dropping
+// `max-height: 100%; overflow-y: auto` from `.dialog-card` puts the file back exactly as it shipped
+// eight days ago, and all three viewport tests go red with the measured numbers –
+//   375x667  "content wants at least 1015, cap NONE, NOT scrollable, 635px of room"
+//   320x568  "... at least 1135 ... 536px of room"
+//   1280x800 "... at least 670 ... 768px of room" (the desktop one is the WIDTH cap doing its job:
+//            without `.tour-briefing`'s own max-width the card is 360px wide and 998px tall there).
+// Dropping only `overflow-y` still fails, on the dismiss control's own box – which is why
+// `assertDismissReachable` names the two halves separately.
+describe('⭐⭐ ROUND-20 #3 – the briefing fits a phone, and Continue is reachable', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+  })
+
+  /** Mounted attached to the document, because a detached tree has no cascade to measure. */
+  function mountAt(vp: { width: number; height: number }) {
+    // ⚠ THE VIEWPORT FIRST. happy-dom resolves lengths at `getComputedStyle` time, so a viewport set
+    // after the mount would measure the previous screen.
+    setViewport(vp)
+    useGameStore().snapshot = boundSnapshot()
+    const w = mount(TourBriefingDialog, { attachTo: document.body })
+    const card = document.querySelector('.dialog-card')!
+    const dismiss = document.querySelector('.tour-briefing-actions')!
+    expect(card, 'the sheet is up – nothing below is vacuous').toBeTruthy()
+    expect(dismiss.querySelector('button'), 'and the actions row is the dismiss control').toBeTruthy()
+    return { w, card, dismiss }
+  }
+
+  it('⚠ at 375x667 – the shortest screen the app supports – Continue is inside the viewport', () => {
+    const { w, card, dismiss } = mountAt(PHONE)
+    const fit = assertDismissReachable(card, dismiss, PHONE, 'TourBriefingDialog')
+
+    // The card is bounded by the room the scrim leaves (667 - 2x16 = 635), and it scrolls, so the
+    // content past the fold is reachable rather than lost.
+    expect(fit.available.height).toBe(635)
+    expect(fit.cardHeight).toBe(635)
+    expect(fit.scrollable, 'a card capped below its content must be able to scroll').toBe(true)
+    // ...and there IS content past the fold, so the scroller is not decorative.
+    expect(fit.contentFloor).toBeGreaterThan(fit.available.height)
+    w.unmount()
+  })
+
+  it('⚠ at 320x568 – the narrowest – it still fits, and it is still reachable', () => {
+    const { w, card, dismiss } = mountAt(NARROW_PHONE)
+    const fit = assertDismissReachable(card, dismiss, NARROW_PHONE, 'TourBriefingDialog')
+    expect(fit.available.height).toBe(536)
+    expect(fit.cardHeight).toBe(536)
+    expect(fit.cardWidth, 'full width, less the scrim gutter').toBe(288)
+    w.unmount()
+  })
+
+  it('⭐ on a phone it is FULL WIDTH, and on desktop no wider than the content container', () => {
+    // The owner's other half: «на всю ширину экрана телефона и не шире контейнера контента на
+    // десктоп». `.season-summary`'s 360px cap is what he was looking at – on his own 576px phone
+    // that is a ribbon with 92px of dead scrim down each side.
+    const app = getComputedStyle(document.documentElement).getPropertyValue('--app-max-width').trim()
+    expect(app, 'the content container names its own cap').toBe('880px')
+
+    const phone = mountAt(PHONE)
+    const phoneFit = measureDialog(phone.card, phone.dismiss, PHONE)
+    expect(phoneFit.cardWidth, 'all the room the scrim leaves').toBe(phoneFit.available.width)
+    expect(phoneFit.cardWidth).toBe(343)
+    phone.w.unmount()
+
+    const desk = mountAt(DESKTOP)
+    const deskFit = assertDismissReachable(desk.card, desk.dismiss, DESKTOP, 'TourBriefingDialog')
+    expect(deskFit.cardWidth, 'capped at the content container, not at the room').toBe(880)
+    expect(deskFit.cardWidth).toBeLessThan(deskFit.available.width)
+    // Wider is also SHORTER, which is why the two halves of this item are one fix: the same copy
+    // that wanted 998px of height at 360px wide wants 670 at 880.
+    expect(deskFit.contentFloor).toBeLessThan(deskFit.available.height)
+    desk.w.unmount()
   })
 })

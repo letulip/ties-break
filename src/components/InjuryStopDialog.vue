@@ -30,7 +30,7 @@
 import { computed, onMounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import { playSfx } from '../audio/sfx'
-import { KID_ID } from '../engine/world'
+import { KID_ID, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from '../engine/world'
 import type { InjurySeverity } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
@@ -94,10 +94,40 @@ const artStyle = computed(() => {
 // close two weeks out, so a 1-2 week absence reaches nothing at all). The copy below has to say
 // that plainly: the row is about what was CANCELLED, and it must never read as "your season is
 // gone". Presentation-only reads off the snapshot events – no engine extension.
+//
+// ⚠⚠ ROUND-20 #2 – THIS FILTER MATCHED A SENTENCE THE ENGINE STOPPED WRITING, AND THE ROW HAS BEEN
+// BLIND SINCE 05.08. It read `startsWith('Withdrew from ')`, which was the only line `releaseEntry`
+// wrote until `releasedBy` split it in two: the parent's own withdrawal still says "Withdrew from",
+// and the DESK's – which is the only kind an injury produces – says "Taken out of ... she is not fit
+// for that week". So the one row on this popup whose whole job is to report the layoff's cost could
+// only ever see withdrawals the PLAYER made, and reported "Nothing" for every one the injury made.
+// Measured on a real career: a 9-week layoff released two Local Opens and refunded both fees, and
+// this list came back empty. The prefix is now imported from the engine that writes it: a symbol
+// rather than a spelling, so re-wording the row moves BOTH sides at once instead of moving one and
+// silencing the other. The coupling is not gone – it is checked, by a test that drives a real injury
+// and reads the real rendered cell (tests/component/injury-cancelled-row.test.ts).
 const withdrawnEntries = computed(() =>
   (game.snapshot?.events ?? [])
-    .filter((e) => e.week === week.value && e.type === 'entry' && e.text.startsWith('Withdrew from '))
-    .map((e) => e.text.slice('Withdrew from '.length)),
+    .filter(
+      (e) =>
+        e.week === week.value && e.type === 'entry' && e.text.startsWith(RELEASE_LINE_PREFIX.injury),
+    )
+    // The entry, without the reason clause – it is already standing under the word "Cancelled".
+    .map((e) => e.text.slice(RELEASE_LINE_PREFIX.injury.length).replace(INJURY_RELEASE_SUFFIX, '')),
+)
+
+// ⚠ AND THE OTHER HALF OF THE SAME ITEM: "nothing cancelled" IS NOT "nothing lost". An entry whose
+// list has already closed cannot be withdrawn at all – `releaseEntry` requires `world.week <=
+// deadlineWeek` – so a layoff that lands on or near the event week cancels NOTHING and she stays on
+// the list: the fee is committed, she does not appear, and the week resolves as a walkover (App.vue's
+// `walkover` stop reason). That is the shape the owner reported, two weeks running, and the old
+// fallback answered it with "Nothing – every entry stands", which is exactly backwards. These are the
+// entries the layoff swallows that are NOT coming back, read off `upcoming` (week+1 onwards, with the
+// engine's own `entered` flag) rather than re-derived here.
+const strandedEntries = computed(() =>
+  (game.snapshot?.upcoming ?? [])
+    .filter((u) => u.entered && u.week >= week.value && u.week < backWeek.value)
+    .map((u) => `${u.label} – ${weekLabel(u.week)}`),
 )
 const refundCents = computed(() =>
   (game.snapshot?.events ?? [])
@@ -143,7 +173,14 @@ onMounted(() => playSfx('ooh'))
                 <div v-for="(entry, i) in withdrawnEntries" :key="i">Withdrawn: {{ entry }}</div>
                 <div v-if="refundCents > 0" class="positive num">Fees refunded: +{{ formatCents(refundCents) }}</div>
               </template>
-              <template v-else>Nothing – every entry stands</template>
+              <!-- ROUND-20 #2: nothing was cancelled AND something was still lost. The lists had
+                   closed, so she keeps her place and does not appear - which is a walkover and a
+                   forfeited fee, not an entry that "stands". -->
+              <template v-else-if="strandedEntries.length">
+                <div>Nothing – those lists had closed.</div>
+                <div v-for="(entry, i) in strandedEntries" :key="i">Forfeited: {{ entry }}</div>
+              </template>
+              <template v-else>Nothing – the layoff reaches no entry she holds</template>
             </td>
           </tr>
         </tbody>

@@ -168,6 +168,26 @@ useDialogFocus(card)
    fallback won. A fallback is only honest when the token is optional; for text that must be read it
    is a second, unreviewed design nobody looks at. `tests/component/tour-briefing.test.ts` measures
    the real contrast ratio through the cascade. */
+/* ⚠ ROUND-20 #3 – THE WIDTH IS LOCAL WHILE THE HEIGHT BOUND IS SHARED, AND THE SPLIT IS THE WHOLE
+   JUDGEMENT. Owner, 13.08: «на всю ширину экрана телефона и не шире контейнера контента на десктоп».
+   HEIGHT is a defect of the shared box – any dialog can outgrow the screen and take its own exit with
+   it – so `max-height` / `overflow-y` went onto `.dialog-card` in src/style.css, where the note above
+   them records that this is the second surface the same box has eaten. WIDTH is not a defect at all:
+   the other nine popups are one to three short paragraphs, 320–360px is the right measure for them,
+   and widening all ten would be a redesign of nine surfaces nobody asked for. So the cap that moves
+   is this sheet's alone – and `.dialog-card`'s own rule already says as much ("What each surface
+   DOESN'T share is its size").
+   WHAT WAS WRONG: `.season-summary` caps at 360px, which on the owner's own 576px-wide phone left a
+   360px ribbon with 92px of dead scrim down each side, and made a letter that is already long
+   1034px tall. `--app-max-width` is his stated bound read literally – the SAME token `#app` uses for
+   the content container, named in src/style.css precisely so a second surface could reuse the number
+   instead of growing its own (OnboardingWizard.vue is the other one). Measured in Chromium: 343px at
+   375, 544px at 576, 880px at 1280 – and the card 1034 -> 724px tall on the desktop width, because
+   the two fixes are the same fix from two directions. */
+.tour-briefing {
+  max-width: var(--app-max-width);
+}
+
 .tour-briefing-lead {
   margin: 10px 0 14px;
   font-size: 15px;

@@ -165,6 +165,16 @@ const HEAVY_UNIT_FILES = [
   '**/tests/radar-training.test.ts',
   '**/tests/kidLife.test.ts',
   '**/tests/endings-bench.test.ts',
+  // ⚠ MOVED 13.08 AFTER CI STALLED WITH EVERY TEST GREEN – `Timeout calling "onTaskUpdate"`, 132
+  // files and 2762 tests passed, exit 1, «1 stalled twice (runner, not tests)». The unit bulk's
+  // summed test time was 733 s on a TWO-CORE runner, and these two were the largest files still in
+  // it: travel-home 39.8 s and ladder-floor 28.4 s locally (measured under load, so the ordering is
+  // the signal, not the absolute). Both drive real careers, and the bench policy was rebuilt the
+  // same day so that every career now plays a professional calendar instead of village events –
+  // three times the matches, which is where the time went. A file near 40 s locally is past birpc's
+  // unraisable 60 s window at CI's ~1.9x. Same remedy as every entry above: one process each.
+  '**/tests/travel-home.test.ts',
+  '**/tests/ladder-floor.test.ts',
 ]
 
 export default defineConfig({
