@@ -187,12 +187,35 @@ const elbow = computed(() => {
 })
 
 const scrollRef = ref<HTMLElement | null>(null)
+/** ⚠⚠ THE TAB STRIP, WHICH NEVER NEEDED SCROLLING INTO VIEW UNTIL 14.08. `.bt-tabs`' own note says
+ *  it: *"at 375 px the five segments (R32 · R16 · QF · SF · F) fit, but a longer row scrolls
+ *  sideways"*. Every draw in the game was 32, so the row was always five and the overflow rule was
+ *  insurance that never fired.
+ *
+ *  A Grand Slam draws 128 now – SEVEN tabs (R128 · R64 · R32 · R16 · QF · SF · F) – and a 1000
+ *  draws 64, six. The row really scrolls, and the tab that opens SELECTED is her latest played
+ *  round, which at a deep run is at the far right. Without this she opens the draw of a Slam she
+ *  reached the semifinal of and sees R128 with the active pill off the edge of the screen.
+ *
+ *  Exactly the class of defect round 20 earned its rule for – content grows one honest step at a
+ *  time and nothing objects until it is wider than a phone. `inline: 'nearest'` so a tab already
+ *  visible does not jog the row, and `block: 'nearest'` so bringing a tab into view can never
+ *  scroll the PAGE (the cell centring below deliberately does move its own container).
+ *
+ *  ⚠ THE REF IS THE COMPONENT, SO IT IS READ THROUGH `$el`: SegmentedRow is a single-root `<div>`
+ *  (the one `.bt-tabs` styles), and a wrapper element would have needed the overflow rule moved
+ *  onto it. Typed rather than cast, so a future multi-root SegmentedRow breaks the compile here
+ *  instead of silently never scrolling. */
+const tabsRef = ref<{ $el: HTMLElement } | null>(null)
 watch(
   [selected, cells],
   async () => {
     await nextTick()
     // Centre the kid's cell in the selected round if she's in it (owner: scrollIntoView center).
     scrollRef.value?.querySelector<HTMLElement>('.bt-cell.is-kid')?.scrollIntoView({ block: 'center' })
+    tabsRef.value?.$el
+      ?.querySelector<HTMLElement>('.tab-pill[aria-pressed="true"]')
+      ?.scrollIntoView({ inline: 'nearest', block: 'nearest' })
   },
   { immediate: true },
 )
@@ -205,6 +228,7 @@ watch(
          narrow phone. Real buttons with aria-pressed + the full stage name as the label (the short
          "QF" is visual) – all three of those are now the component's guarantee, not this file's. -->
     <SegmentedRow
+      ref="tabsRef"
       v-model="selectedSeg"
       class="bt-tabs"
       tone="on-panel"
