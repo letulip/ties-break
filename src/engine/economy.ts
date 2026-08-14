@@ -1564,7 +1564,30 @@ export const ECONOMY = {
     // tests/fatigueReference.test.ts must not move a cell); the split is per FAMILY, applied inside
     // `runFatigueExtra` (engine/condition.ts) so the kid and the rival cohort inherit it from the
     // one implementation together. A straight-sets W15 title run: 5x(2+4) + 4 = 34, from 46.
+    //
+    //
+    // ⚠ THE TWO BIG RUNGS DO NOT RUN ON THIS LADDER ANY MORE (14.08) – they have their own, keyed
+    // on the DRAW rather than the track, because the question stopped being "which family" and
+    // became "how many matches fit in a week". See `runFatigueLadderDeep` below and
+    // `condition.ts ladderFor`. This array is therefore back to the exact five entries R15-6
+    // measured, and every rung that reads it is a 32-draw, so its fifth entry is its last.
     runFatigueLadderWta: [0, 1, 1, 1, 1] as number[],
+    /** ⚠⚠ THE OWNER'S OWN CURVE FOR THE DEEP DRAWS, 14.08, given as the two bounds of a match at a
+     *  Slam and a WTA 1000 round by round: min 5 6 7 7 7 7 7, max 7 8 9 9 9 9 9.
+     *
+     *  Against `matchDrain`'s parts (scoreline 2..4 plus the rung's surcharge of 5) that is the
+     *  surcharge RAMPING to its full value over three matches instead of landing flat on the first,
+     *  so the ladder is the offset: -2, -1, then the tier's own number. The trailing 0 is what makes
+     *  the plateau follow `tierMatchFatigue` rather than duplicate it.
+     *
+     *  WHAT IT COSTS A TITLE. Slam (7 matches) 46 at best, 60 at worst; WTA 1000 (6 matches) 39 and
+     *  51. Under the flat surcharge those were 43/57 and 41/53 – so the Slam gets slightly dearer
+     *  and the 1000 slightly cheaper, which is exactly what he predicted when he wrote the rows.
+     *
+     *  ⚠ IT REPLACES A CAP OF MINE THAT MADE A CLIFF. I had stopped charging the surcharge after the
+     *  fifth match, which priced the deep rounds at 2 against the shallow ones' 8 – «а сейчас немного
+     *  некорректно получается». A plateau is the right shape; a collapse was not. */
+    runFatigueLadderDeep: [-2, -1, 0] as number[],
     // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
     // then linear down to `floor` at condition 0:
     //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.

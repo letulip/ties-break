@@ -254,6 +254,47 @@ transcribed.
 > **under-priced against the rung's own published row.** Fixing it is one array plus the `w100` entry
 > in `NOMINAL_ONE_TIERS`, and it needs a measured arm of its own.
 
+### 4b. ⚠ THE TWO ROWS THE RULEBOOK'S CHART DOES NOT PRINT (added 14.08, the 128-draw wave)
+
+§4's table is the rulebook's own layout and it stops at R32, because **the chart is drawn in 32
+main-draw rows** – every category shares the six columns W/F/SF/QF/R16/R32. For the rungs whose real
+draw IS 32 that is the whole ladder. For the Grand Slams (128) and the WTA 1000s (96 or 56) it is a
+truncation: the rounds BELOW R32 exist and are paid, the chart simply does not have columns for them.
+
+`act2-pro-tour.md` §9 made that truncation the reason a 128-draw Slam could not ship – *"A 128-draw
+Slam would have needed two rows the research does not print"* – and `calendar.ts` repeated it. It was
+a real blocker and it was a **sourcing** blocker, not a modelling one. Sourced 14.08:
+
+| category (draw) | W | F | SF | QF | R16 | R32 | **R64** | **R128** |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Grand Slam (128) | 2000 | 1300 | 780 | 430 | 240 | 130 | **70** | **10** |
+| WTA 1000, combined (96) | 1000 | 650 | 390 | 215 | 120 | 65 | **35** | **10** |
+| WTA 1000, non-combined (56) | 1000 | 650 | 390 | 215 | 120 | 65 | **10** | – |
+
+Sources, two independent publications agreeing cell for cell on the Slam row:
+[WTA, "Rankings Explained"](https://www.wtatennis.com/rankings-explained) ·
+[SUPER.TENNIS, "WTA Ranking Points Explained – 2026 Point Distribution"](https://super.tennis/rankings/wta-ranking-points-explained/).
+
+⚠ **AND THE 56-DRAW ROW IS WHY OUR 1000 SHIPS AT 64 RATHER THAN 96.** `runTournament` is a pure
+single-elimination fold with no bye machinery, so a real 56-draw IS a 64-bracket in this engine
+(`tools/big-draw-cost.ts` states the same equivalence). The 56 column therefore maps onto our seven
+rounds **exactly**, with nothing adapted or interpolated – where a 96 would have had to be squeezed
+into 128 and the R128 borrowed. Fully sourced beat closer-to-the-biggest-events.
+
+**Prize money for the same two rounds is DERIVED, and the derivation is stated.** Our shipped
+`prizeCents` ladders are not any single real event's – they are flatter than every one of them – so
+copying two absolute figures would have bent our own curve at the bottom. Each new round instead
+takes a real ladder's SHAPE at that step and applies it to OUR neighbouring round:
+
+| rung | real reference | ratio | ours |
+| --- | --- | --- | --- |
+| slam R64 | Wimbledon 2025: £99,000 of £152,000 at R32 | 0.651 | 190,000 × 0.651 = 123,747 → **$124,000** |
+| slam R128 | Wimbledon 2025: £66,000 of £152,000 | 0.434 | 190,000 × 0.434 = 82,500 → **$82,000** |
+| wta1000 R64 | Dubai 2025 (56 draw): $16,900 of $23,500 at R32 | 0.719 | 31,000 × 0.719 = 22,289 → **$22,000** |
+
+Sources: [Wimbledon 2025 prize money by round](https://www.si.com/tennis/wimbledon-prize-money-breakdown-2025-how-much-players-earn-in-each-round) ·
+[Dubai Duty Free 2025 prize money](https://tennisuptodate.com/wta/here-is-how-much-you-can-earn-in-prize-money-at-wta-dubai-duty-free-tennis-championships-2025).
+
 **Volume repeats too.** ITF states *"approximately 600 tournaments across 65 countries"* for the
 women's tour; counting the calendar API gives 618 (2024) and 641 (2025), of which **~48% are W15** and
 ~4% W100 — the same supply pyramid as the juniors, one tier shallower.

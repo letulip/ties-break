@@ -226,7 +226,16 @@ export function useMatchReadout(input: MatchReadoutInput) {
    * Empty before the first point lands (`gameScore` returns '' there), and the template drops the
    * element entirely rather than pinning an empty box over the court.
    */
-  const scoreReadout = computed(() => (finished.value ? `${pointsPlayed.value} points` : null))
+  /** ⚠ «POINTS» IS THE MOST OVERLOADED WORD IN THIS GAME AND THIS READING LOST THE FIGHT (owner,
+   *  14.08, with three screenshots of it circled in red: «что за "108 points" пишут мне после победы
+   *  на w1000 ... Если это выигранные очки - то это не соответствует реальности»).
+   *
+   *  The NUMBER was always right – 163 points in 1:35, 91 in 0:58, 227 in a three-set major, exactly
+   *  the rallies played. What was wrong is that RANKING points are also "points", they are also
+   *  written on this very flow one screen later («+130 pts» on the poster), and they are also
+   *  three-digit. So a match statistic read as a ranking award, and a WTA 1000 first round appeared
+   *  to pay 163. He filed it as an economy bug three times before it turned out to be a word. */
+  const scoreReadout = computed(() => (finished.value ? `${pointsPlayed.value} points played` : null))
 
   /**
    * WHICH END OF THE RUN-OFF BAND THE SPEED IS WRITTEN AT, or null when there is nothing to write.

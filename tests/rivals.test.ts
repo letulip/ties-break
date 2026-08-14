@@ -31,6 +31,7 @@ import {
 import { rngFromSeed } from '../src/engine/rng'
 import { fieldProsFor } from '../src/engine/season/fieldPros'
 import { seasonIndexOf } from '../src/engine/world/ledger'
+import { firstRoundValue } from './openerValue'
 
 // ---------------------------------------------------------------------------
 // Rivals become real — Part A: rival fatigue, DERIVED from the results ledger.
@@ -101,8 +102,7 @@ describe('A1 — reconstruction: (tier, points) round-trips to the right match c
       // chart is normalised to 32 main-draw rows. The round-trip below is unaffected either way -
       // the table stays strictly decreasing, so 65 inverts as unambiguously as 0 did.
       expect(def.points[def.points.length - 1]).toBe(
-        tier === 'slam' ? 130 : tier === 'wta1000' ? 65
-          : ['w50', 'w75', 'wta125', 'wta250', 'wta500'].includes(tier) ? 1 : 0,
+        firstRoundValue(tier),
       )
 
       expect(reconstructRun(row(tier, 0, 1))).toMatchObject({ tier, matches: rounds }) // champion

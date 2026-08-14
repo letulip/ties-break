@@ -789,14 +789,40 @@ export const TIERS: Record<TierId, TierDef> = {
     id: 'wta1000',
     track: 'wta',
     label: 'WTA 1000',
-    drawSize: 32,
+    // ⚠ 64 SINCE 14.08, AND IT IS THE REAL 56-DRAW ROUNDED UP TO THIS ENGINE'S BRACKET. See the
+    // points row below for why 56 rather than 96 is the honest target: the 56 column is the one the
+    // rulebook prints all the way down, so nothing had to be invented. Measured the same way the
+    // Slam was (tools/big-draw-cost.ts --tier wta1000, 3 worlds x 208 weeks): 343 in-band candidates
+    // against a draw of 64, 0% backfill, 0% under-age, youngest 17, none from the live cohort.
+    // 63 AI matches per bracket instead of 31, at 0.24 ms.
+    drawSize: 64,
     entryFeeCents: 1000_00,
     travelCostCents: [2700_00, 5400_00],
-    // Research §4 verbatim.
-    points: [1000, 650, 390, 215, 120, 65],
-    // $500,000 / $287,000 / $165,000 / $95,000 / $55,000 / $31,000. A first-round exit at a 1000
-    // pays more than a WTA 125 title - which is the real cliff between the tours, not a rounding.
-    prizeCents: [500000_00, 287000_00, 165000_00, 95000_00, 55000_00, 31000_00],
+    // ⚠⚠ THE REAL 56-DRAW COLUMN, COMPLETE – and choosing the 56 rather than the 96 is what makes
+    // this row fully sourced instead of half-derived. The tour runs 1000s at both sizes; the
+    // combined ones (Indian Wells, Miami, Madrid, Rome, Canada, Cincinnati, Beijing) draw 96 and
+    // pay 1000/650/390/215/120/65/35/10, the non-combined ones (Doha, Dubai, Wuhan) draw 56 and pay
+    // 1000/650/390/215/120/65/10. `runTournament` is a pure single-elimination fold with no bye
+    // machinery, so **a real 56-draw IS a 64-bracket** in this engine (tools/big-draw-cost.ts says
+    // so in as many words) - which means the 56 column maps onto our seven rounds EXACTLY, with no
+    // value adapted, interpolated or invented. Sources in docs/research/ranking-points-by-tier.md §4b.
+    //
+    // Two rulings on consecutive messages got it here: 14.08 (b) took the last value 65 -> 10 at
+    // draw 32, because 65 is the real R32 - what the tour pays a player who has already won two
+    // matches - and it was landing on ours for losing her opener. 14.08 (c) made the draw 64, so
+    // the 65 comes BACK as the round it always was.
+    points: [1000, 650, 390, 215, 120, 65, 10],
+    // $500,000 / $287,000 / $165,000 / $95,000 / $55,000 / $31,000 / $22,000. An EARLY exit at a
+    // 1000 pays more than a WTA 125 title - which is the real cliff between the tours, not a
+    // rounding.
+    //
+    // ⚠ THE LAST ONE IS DERIVED BY THE SAME STATED RULE AS `slam.prizeCents` (14.08): our six are
+    // flatter than any real 1000's ladder, so copying an absolute figure would bend our curve at
+    // the bottom. The new round takes a real 1000's SHAPE at that step and applies it to OUR R32 -
+    // Dubai 2025 (a 56-draw 1000) pays $23,500 at R32 and $16,900 at R64, so
+    // R64 = 31,000 x (16,900/23,500) = $22,289 -> $22,000 at this file's thousands granularity.
+    // Source and arithmetic in docs/research/ranking-points-by-tier.md §4b.
+    prizeCents: [500000_00, 287000_00, 165000_00, 95000_00, 55000_00, 31000_00, 22000_00],
     // EIGHT A SEASON on named weeks (real: 10, scaled to a grid that also has to hold four Slams
     // and ten 500s). Placed AROUND the Slams: two in the opening hard swing, two in the clay one,
     // four across the long autumn hard block, none inside the grass window - which is the real
@@ -863,18 +889,62 @@ export const TIERS: Record<TierId, TierDef> = {
     // IN-BAND, which is the first honestly fillable big draw this game has ever had. (c) The points
     // row above is still normalised to 32 rows, so any size change needs the research's R64/R128
     // values, which it does not print.
-    drawSize: 32,
+    //
+    // ⚠⚠ ALL THREE OBJECTIONS ARE ANSWERED AND THE DRAW IS 128 SINCE 14.08. The owner is the one who
+    // refused to accept the note above at face value: «а что значит "поля не хватает"? У нас же есть
+    // игроки вроде, мне казалось, что шлем на то и шлем, что там широкий список начинает играть и
+    // самоотсеивается, разве в реальности не так?» He was right, and I had repeated a stale comment
+    // instead of re-running the tool that exists for it.
+    //
+    //   (a)+(b) DEAD SINCE W3-FIELD3 (04.08) and re-measured 14.08 - tools/big-draw-cost.ts, 3
+    //     worlds x 208 weeks: the canonical bracket is LIVE COHORT ∪ 1600 derived professionals, so
+    //     a 128 draw takes 128 of 326 IN-BAND candidates. 0% backfill, 0% under-age, youngest 17,
+    //     NONE from the live cohort of children - the exact failure the old note feared cannot occur.
+    //   (c) DEAD SINCE 14.08: the two rows the rulebook's 32-row chart does not print were sourced
+    //     (R64 70, R128 10, two independent publications agreeing) and are in the points row above.
+    //
+    // COST: 127 AI matches per bracket instead of 31, measured at **0.51 ms**. And it is what
+    // answers the owner's «слишком быстро»: seven rounds to a title instead of five, and the 130
+    // becomes a thing she wins rather than a thing she is handed at the door.
+    drawSize: 128,
     entryFeeCents: 0,
     // ⚠ SHE IS NOT CHARGED TO ENTER A SLAM. Real rule, and it is the one entry fee in the game that
     // is genuinely zero: the four majors do not levy one. Travel is still hers.
     travelCostCents: [3000_00, 6000_00],
-    // Research §4 verbatim (2026 WTA Official Rulebook VIII.A.5).
-    points: [2000, 1300, 780, 430, 240, 130],
-    // $3,000,000 / $1,725,000 / $990,000 / $570,000 / $330,000 / $190,000. THE MONEY CLIFF, in one
-    // row: losing the first round of a major pays more than winning every other tournament in this
-    // game put together. That is not a balance failure - docs/research/02-tennis-economics.md is
-    // about a sport in which the same week's work is worth $130 at one rung and $190,000 at another.
-    prizeCents: [3000000_00, 1725000_00, 990000_00, 570000_00, 330000_00, 190000_00],
+    // ⚠⚠ THE WHOLE REAL COLUMN, AT LAST – all eight rounds of a 128 draw, nothing normalised and
+    // nothing invented. 2026 WTA Official Rulebook VIII.A.5 for the first six (research §4 prints
+    // exactly those, because the rulebook's chart is laid out in 32-main-draw rows); the last two
+    // are the two the chart does not print, sourced 14.08 from wtatennis.com's own "Rankings
+    // Explained" table and independently confirmed by super.tennis' 2026 distribution – both give
+    // R64 70 and R128 10. Recorded in docs/research/ranking-points-by-tier.md §4b with the URLs.
+    //
+    // THE TWO-STEP THIS ROW TOOK, and both halves are the owner's rulings on consecutive messages:
+    //
+    //   14.08 (b) – the last value went 130 → 10 at draw 32. The row was the real column TRUNCATED
+    //     to six, so the value the tour pays a player who has already won two matches was landing on
+    //     ours for losing her opener: eleven reserved openers came to 975 points with no match won,
+    //     more than eighteen W50 titles (docs/specs/where-the-points-come-from-2026-08.md).
+    //   14.08 (c) – «доделывай». The draw is 128, so the 130 and the 70 come BACK, as the rounds
+    //     they always were. Nothing here is a balance choice any more: it is the published ladder.
+    //
+    // ⚠ AND THIS IS WHAT REMOVES (b)'S ARTEFACT. For one commit the column stepped 240 → 10 and a
+    // single win multiplied her by 24. It now steps 240 → 130 → 70 → 10, because the rounds that
+    // earn those numbers exist.
+    points: [2000, 1300, 780, 430, 240, 130, 70, 10],
+    // $3,000,000 / $1,725,000 / $990,000 / $570,000 / $330,000 / $190,000 / $124,000 / $82,000.
+    // THE MONEY CLIFF, in one row: losing an EARLY round of a major pays more than winning every
+    // other tournament in this game put together. That is not a balance failure -
+    // docs/research/02-tennis-economics.md is about a sport in which the same week's work is worth
+    // $130 at one rung and $190,000 at another.
+    //
+    // ⚠ THE LAST TWO ARE DERIVED, AND THE DERIVATION IS STATED RATHER THAN SMUGGLED (14.08, the
+    // 128-draw wave). Our six shipped figures are NOT any one major's ladder - they are flatter than
+    // every real one - so copying two absolute numbers off Wimbledon would have bent our curve at
+    // the bottom. Instead the two new rounds take Wimbledon 2025's own SHAPE at those steps and
+    // apply it to OUR R32: R64 = 190,000 x (99,000/152,000) = $123,747 -> $124,000, and
+    // R128 = 190,000 x (66,000/152,000) = $82,500 -> $82,000, at the file's own thousands
+    // granularity. Source and arithmetic in docs/research/ranking-points-by-tier.md §4b.
+    prizeCents: [3000000_00, 1725000_00, 990000_00, 570000_00, 330000_00, 190000_00, 124000_00, 82000_00],
     // ⚠ THE FOUR NAMED WEEKS, and they are the whole reason `anchorWeeks` exists. Season-week
     // offsets against the round-5 date epoch (career week 0 = Mon Jan 6), mapped from the real
     // calendar onto our 52-week block, and each one lands in the surface block its real counterpart

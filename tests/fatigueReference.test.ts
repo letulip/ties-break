@@ -234,15 +234,27 @@ describe('per-match cost = scoreline + tier surcharge', () => {
 })
 
 describe('the cumulative ladder only starts on the SECOND match of a run', () => {
-  it('the first match of a run never pays extra, in EITHER family', () => {
-    // ⚠ RE-AIMED 01.08 (R15-6): the ladder is per family now, so the property is asserted on both -
-    // a first match is free whichever table the tournament is on.
-    for (const tier of TIER_LADDER) expect(runFatigueExtra(0, tier), tier).toBe(0)
+  it('the first match of a run never pays a PENALTY, in any of the three families', () => {
+    // ⚠ RE-AIMED 01.08 (R15-6): the ladder is per family, so the property is asserted on each.
+    // ⚠ RE-AIMED AGAIN 14.08 AND THE WORD CHANGED FROM "extra" TO "penalty", because the third
+    // family's first entry is -2. That is the owner's own curve for the deep draws: the travel
+    // surcharge was calibrated when a run was five matches, so on a seven-match week it is spread
+    // thinner and the opening rounds carry less of it. A first match still never costs MORE for
+    // being first, which is the property this test has always been about.
+    for (const tier of TIER_LADDER) expect(runFatigueExtra(0, tier), tier).toBeLessThanOrEqual(0)
+    for (const tier of TIER_LADDER) {
+      expect(runFatigueExtra(0, tier), tier).toBe(TIERS[tier].drawSize > 32 ? -2 : 0)
+    }
   })
 
-  it('a one-match run costs exactly its match, so a first-round exit is ladder-free', () => {
+  it('a one-match run is the match plus its ladder rung, and carries no CUMULATIVE penalty', () => {
+    // ⚠ RE-AIMED 14.08: the identity is unchanged and is now written as one, rather than as the
+    // special case "= matchDrain" that only held while every first rung was 0. At a deep rung the
+    // opening match costs matchDrain - 2 (the owner's curve), so a first-round exit at a Slam is
+    // CHEAPER than the flat surcharge implies - never dearer.
     for (const tier of TIER_LADDER) {
-      expect(tournamentRunStrain(tier, [{ score: SIMPLE }])).toBe(matchDrain(tier, SIMPLE))
+      expect(tournamentRunStrain(tier, [{ score: SIMPLE }]), tier).toBe(matchDrain(tier, SIMPLE) + runFatigueExtra(0, tier))
+      expect(tournamentRunStrain(tier, [{ score: SIMPLE }]), tier).toBeLessThanOrEqual(matchDrain(tier, SIMPLE))
     }
   })
 
@@ -306,14 +318,38 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     // assertion in the per-match block.
     wta250: [6, 13, 20, 27, 34],
     wta500: [6, 13, 20, 27, 34],
-    wta1000: [7, 15, 23, 31, 39],
-    slam: [7, 15, 23, 31, 39],
+    // ⚠⚠ THE TWO DEEP RUNGS RE-PINNED 14.08, and they are the only rows in this table that moved.
+    // They run on the THIRD ladder now ([-2, -1, 0] – the owner's own curve for a Slam at 128 and a
+    // 1000 at 64), so the ramp makes the first two matches cheaper and the plateau is the surcharge
+    // itself: 5, then +6, then +7 for ever. Was 7 / 15 / 23 / 31 / 39 on the flat W ladder.
+    //
+    // ⚠ AND THIS TABLE STOPS AT DEPTH 5, WHICH IS NO LONGER THEIR TITLE. A 1000 title is six matches
+    // (39 straight-sets) and a Slam title seven (46); the columns here are the shared depth grid,
+    // and the deep rungs' own whole-run numbers are in tools/deep-run-cost.ts, which prints every
+    // depth each rung can actually reach.
+    wta1000: [5, 11, 18, 25, 32],
+    slam: [5, 11, 18, 25, 32],
   }
 
   it('the shipped ladders are C = [0,1,1,2,2] for domestic+J and D = [0,1,1,1,1] for the W family (change deliberately, never to make a test pass)', () => {
     expect(ECONOMY.condition.runFatigueLadder).toEqual([0, 1, 1, 2, 2])
     // R15-6, the owner's second lever - his own measured variant D, flattest of the four he priced.
     expect(ECONOMY.condition.runFatigueLadderWta).toEqual([0, 1, 1, 1, 1])
+    // ⚠⚠ AND A THIRD LADDER SINCE 14.08, KEYED ON THE DRAW RATHER THAN THE TRACK. The owner wrote the
+    // curve out himself when the Slam went to 128 and the WTA 1000 to 64 – the bounds of a match at
+    // those rungs, round by round: «5-6-7-7-7-7-7 / 7-8-9-9-9-9-9». Against matchDrain's parts
+    // (scoreline 2..4 plus a surcharge of 5) that is the surcharge RAMPING to its full value over
+    // three matches instead of landing flat on the first, so the ladder is the offset [-2, -1, 0].
+    //
+    // ⚠ THE TRAILING ZERO IS LOAD-BEARING, not padding: it is what makes the plateau follow
+    // `tierMatchFatigue` instead of duplicating it, and `runFatigueExtra`'s repeat-last rule then
+    // holds it for every deeper round. Change the surcharge and the curve follows.
+    expect(ECONOMY.condition.runFatigueLadderDeep).toEqual([-2, -1, 0])
+    // ...and it is exactly the rungs whose draw outgrew 32 that read it – stated as a claim rather
+    // than left to `ladderFor`, so a new deep rung cannot arrive on the wrong curve unnoticed.
+    const deep = TIER_LADDER.filter((t) => TIERS[t].drawSize > 32)
+    expect(deep).toEqual(['wta1000', 'slam'])
+    for (const t of deep) expect(runFatigueExtra(0, t), t).toBe(-2)
   })
 
   it('matches the reference table at every tier and every depth', () => {
@@ -335,7 +371,17 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
         let extra = 0
         for (let i = 0; i < depth; i++) extra += runFatigueExtra(i, tier)
         expect(tournamentRunStrain(tier, run)).toBe(base + extra)
-        expect(tournamentRunStrain(tier, run)).toBeGreaterThanOrEqual(base) // never cheaper than the matches
+        // ⚠ THE SECOND HALF IS PER FAMILY SINCE 14.08. "Never cheaper than the matches" was true
+        // while every ladder was non-negative; the deep family's is a RAMP that starts below the
+        // flat surcharge on purpose (the owner's curve), so at those two rungs a short run really
+        // is cheaper than `depth x matchDrain` - and converges to it from below as the ramp
+        // plateaus. The identity above is what actually pins the composition; this half pins the
+        // SIGN, which is a different claim and now has two answers.
+        if (TIERS[tier].drawSize > 32) {
+          expect(tournamentRunStrain(tier, run)).toBeLessThanOrEqual(base)
+        } else {
+          expect(tournamentRunStrain(tier, run)).toBeGreaterThanOrEqual(base)
+        }
       }
     }
   })
@@ -467,13 +513,23 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
   }
 
   it('matches the doc grid for every variant, tier and depth – and restores the shipped knobs', () => {
-    const knob = ECONOMY.condition as unknown as { runFatigueLadder: number[]; runFatigueLadderWta: number[] }
+    // ⚠ ALL THREE KNOBS SINCE 14.08. The grid asks "what would ladder X charge this run" across the
+    // whole catalogue, so a family left un-patched answers with the SHIPPED curve instead of the
+    // variant and silently stops being part of the question - which is exactly what the deep rungs
+    // did the moment they got their own ladder.
+    const knob = ECONOMY.condition as unknown as {
+      runFatigueLadder: number[]
+      runFatigueLadderWta: number[]
+      runFatigueLadderDeep: number[]
+    }
     const shipped = knob.runFatigueLadder
     const shippedWta = knob.runFatigueLadderWta
+    const shippedDeep = knob.runFatigueLadderDeep
     try {
       for (const [id, ladder] of Object.entries(LADDERS)) {
         knob.runFatigueLadder = ladder
         knob.runFatigueLadderWta = ladder
+        knob.runFatigueLadderDeep = ladder
         for (const tier of TIER_LADDER) {
           for (let depth = 1; depth <= 5; depth++) {
             const run = Array.from({ length: depth }, () => ({ score: SIMPLE }))
@@ -484,9 +540,15 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
     } finally {
       knob.runFatigueLadder = shipped
       knob.runFatigueLadderWta = shippedWta
+      knob.runFatigueLadderDeep = shippedDeep
     }
-    expect(ECONOMY.condition.runFatigueLadder).toEqual([0, 1, 1, 2, 2])
-    expect(ECONOMY.condition.runFatigueLadderWta).toEqual([0, 1, 1, 1, 1])
+    // ⚠ THE RESTORE CLAIM, and it now reads the CAPTURED values rather than two literals. What this
+    // line is for is "the patch-and-restore put back whatever was shipped" - re-typing the shipped
+    // ladder made it a second, silent pin on the ladder's VALUE, which is why appending two zeros
+    // on 14.08 broke it here as well as in the suite that really owns that claim (above).
+    expect(ECONOMY.condition.runFatigueLadder).toEqual(shipped)
+    expect(ECONOMY.condition.runFatigueLadderWta).toEqual(shippedWta)
+    expect(ECONOMY.condition.runFatigueLadderDeep).toEqual(shippedDeep)
   })
 })
 

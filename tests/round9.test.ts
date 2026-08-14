@@ -370,6 +370,11 @@ describe('cumulative run fatigue (the ladder)', () => {
     expect(runFatigueExtra(99, 'national')).toBe(last)
     // a 7-match run (draw of 128) = the ladder sum + 2 more repeats of its last rung
     const seven = new Array(7).fill({ score: '6-4 6-2' })
+    // ⚠ UNCHANGED THROUGH THE 128-DRAW WAVE, AND THAT IS THE POINT OF THE TIER IT USES. 'national'
+    // is a 32-draw and always will be, so it keeps the domestic ladder and its repeat-last rule
+    // exactly as written. The rungs that got deeper (slam 128, wta1000 64) run on a THIRD ladder
+    // keyed on `drawSize` – see condition.ts `ladderFor` and tests/fatigueReference.test.ts, which
+    // is where the deep curve's own numbers live.
     expect(tournamentRunStrain('national', seven)).toBe(7 * straightNat + 6 + 2 * last)
   })
 
