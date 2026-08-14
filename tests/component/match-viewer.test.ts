@@ -314,7 +314,7 @@ function fixtureAndViewer(mode: 'live' | 'replay' = 'replay') {
   return { wrapper, match }
 }
 
-/** The counter under the court, whitespace stripped: "0-40", "40-A", "TB3-2", "138 points". */
+/** The counter under the court, whitespace stripped: "0-40", "40-A", "TB3-2", "138pointsplayed". */
 function scoreText(w: ReturnType<typeof mountViewer>): string {
   return w.find('.mv-score').text().replace(/\s+/g, '')
 }
@@ -528,7 +528,9 @@ describe('changing the view mode mid-match does not start the match over', () =>
     await d.start()
     await d.frames(80)
     await clickMode(wrapper, SKIP_LABEL)
-    expect(scoreText(wrapper)).toBe(`${match.points.length}points`)
+    // ⚠ «played» SINCE 14.08, and the word is load-bearing rather than decoration: "points" alone
+    // reads as RANKING points, which this same flow writes one screen later as «+130 pts».
+    expect(scoreText(wrapper)).toBe(`${match.points.length}pointsplayed`)
     wrapper.unmount()
   })
 

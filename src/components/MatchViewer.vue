@@ -1880,9 +1880,13 @@ watch(finished, (isFinished) => {
        jump back when the reading cleared - and only ONE end is ever occupied, so it would be off
        centre nearly all the time.
      * `minmax(0, 1fr)` (rather than a bare `1fr`, whose floor is min-content) is what makes a
-       collision impossible instead of merely unlikely. A three-digit speed reads ~52px at 12px and
-       the widest score the band can hold is "196 points" at ~85px, which is ~205px of a ~279px band
-       on a 375pt phone - fine, but the guarantee should not rest on that sum. With a zero floor the
+       collision impossible instead of merely unlikely. ⚠ RE-MEASURED 14.08, `tools/runoff-probe.mjs`,
+       because the finished reading gained a word that day ("196 points" -> "196 points played", so
+       that a match statistic stops reading as a ranking award): at the app's real content width the
+       band is 323px and at the narrow bound this note was originally taken at, 279px. The widest
+       reading the band can ever hold - a 400-point match, well past anything best-of-three can
+       produce - is 135px, centred, and clears a live serve-speed reading at either end at both
+       widths. Comfortable, but the guarantee should not rest on that sum. With a zero floor the
        EDGE column is the one that gives, and `.mv-speed`'s `nowrap` + `clip` means it loses its tail
        rather than pushing the score off centre or sliding under it.
    `pointer-events: none` for the same reason `.mv-chrome` has it: this is a full-width box over the

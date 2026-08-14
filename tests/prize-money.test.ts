@@ -18,6 +18,7 @@ import { ECONOMY } from '../src/engine/economy'
 import type { FamilyBackground } from '../src/shared/protocol'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+import { firstRoundValue } from './openerValue'
 
 // =================================================================================================
 // A2 — PRIZE MONEY (task #17, docs/specs/adult-tour-and-endings.md §3).
@@ -94,8 +95,7 @@ describe('A2/2 — the adult tour pays, and a first-round loss is a token rather
       // this block keeps is unchanged and is about MONEY: every adult rung pays a first-round loser
       // real cents, whatever its points row does.
       expect(TIERS[tier].points.at(-1), `${tier} points`).toBe(
-        tier === 'slam' ? 130 : tier === 'wta1000' ? 65
-          : ['w50', 'w75', 'wta125', 'wta250', 'wta500'].includes(tier) ? 1 : 0,
+        firstRoundValue(tier),
       )
       expect(TIERS[tier].prizeCents!.at(-1), `${tier} money`).toBeGreaterThan(0)
     }

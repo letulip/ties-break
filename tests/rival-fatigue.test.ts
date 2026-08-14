@@ -39,6 +39,7 @@ import { fieldProsFor, isFieldProId, mergedWtaRanking, universeForTier } from '.
 import { inTrack, proDoors } from '../src/engine/world/ladder'
 import { seasonIndexOf } from '../src/engine/world/ledger'
 import type { TierId } from '../src/engine/season/types'
+import { firstRoundValue } from './openerValue'
 
 const R = ECONOMY.condition
 
@@ -330,8 +331,7 @@ describe('R2 — nobody is charged zero strain for a week she played', () => {
       const exit = row(tier, rounds, 10)
       // ⚠ W3-ACT2's third case, same reason as above - see tests/wave-b-points.test.ts.
       expect(exit.points).toBe(
-        tier === 'slam' ? 130 : tier === 'wta1000' ? 65
-          : ['w50', 'w75', 'wta125', 'wta250', 'wta500'].includes(tier) ? 1 : 0,
+        firstRoundValue(tier),
       )
       expect(rivalCondition([exit], 'ai-x', 10)).toBe(R.max - matchDrain(tier, undefined))
       // ...and it is strictly worse than the same week spent at home.

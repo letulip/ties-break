@@ -42,6 +42,7 @@ import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { RADAR_AXIS_LABEL } from '../src/engine/radar'
 import type { CountingResult, LadderView, RadarAxis, UpcomingEvent } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+import { firstRoundValue } from './openerValue'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 /** Comments are not code – the house helper (tests/calendar-screen.test.ts, tests/knock.test.ts).
@@ -112,8 +113,7 @@ describe('a result reads back as the round she reached', () => {
       // their published tables are 32-main-draw rows in which even the first round is somebody who
       // cleared the hardest acceptance list in the sport.
       expect(table.at(-1), `${tier}`).toBe(
-        tier === 'slam' ? 130 : tier === 'wta1000' ? 65
-          : ['w50', 'w75', 'wta125', 'wta250', 'wta500'].includes(tier) ? 1 : 0,
+        firstRoundValue(tier),
       )
     }
   })

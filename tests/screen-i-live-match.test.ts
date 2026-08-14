@@ -950,7 +950,11 @@ describe('who is serving is said twice, attached to something, and never in a sp
     // unchanged and is asserted more directly below: BOTH readings still exist on this element, so
     // the move did not quietly drop one. The behaviour itself is covered by mounted tests in
     // tests/component/match-viewer.test.ts, which is the net a source pin cannot be.
-    expect(viewer).toMatch(/const scoreReadout = computed\([\s\S]{0,80}pointsPlayed\.value\} points/)
+    // ⚠ RE-AIMED 14.08 AND THE WORD IS NOW THE ASSERTION. `} points` matched both the old reading
+    // and the new one, so it could not have caught the defect it is here to guard: "points" alone
+    // reads as RANKING points, which this flow writes one screen later as «+130 pts», and the owner
+    // filed a WTA 1000 first round as paying 163 three times before it turned out to be a word.
+    expect(viewer).toMatch(/const scoreReadout = computed\([\s\S]{0,80}pointsPlayed\.value\} points played/)
     expect(viewer).toMatch(/const courtScore = computed\(/)
     expect(markup).toContain('v-else-if="scoreReadout"')
   })

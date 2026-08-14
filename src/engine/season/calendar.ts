@@ -792,8 +792,11 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 32,
     entryFeeCents: 1000_00,
     travelCostCents: [2700_00, 5400_00],
-    // Research §4 verbatim.
-    points: [1000, 650, 390, 215, 120, 65],
+    // Research §4 verbatim – EXCEPT THE LAST VALUE, WHICH IS THE OWNER'S 14.08 RULING. See the note
+    // on `slam.points` below: the research column is the real 96-draw's, our draw is 32, so its R32
+    // value (65) was landing on a player who has won NOTHING. The rulebook's own first-round loss at
+    // a 1000 is 10. Everything above it is untouched.
+    points: [1000, 650, 390, 215, 120, 10],
     // $500,000 / $287,000 / $165,000 / $95,000 / $55,000 / $31,000. A first-round exit at a 1000
     // pays more than a WTA 125 title - which is the real cliff between the tours, not a rounding.
     prizeCents: [500000_00, 287000_00, 165000_00, 95000_00, 55000_00, 31000_00],
@@ -868,8 +871,29 @@ export const TIERS: Record<TierId, TierDef> = {
     // ⚠ SHE IS NOT CHARGED TO ENTER A SLAM. Real rule, and it is the one entry fee in the game that
     // is genuinely zero: the four majors do not levy one. Travel is still hers.
     travelCostCents: [3000_00, 6000_00],
-    // Research §4 verbatim (2026 WTA Official Rulebook VIII.A.5).
-    points: [2000, 1300, 780, 430, 240, 130],
+    // Research §4 verbatim (2026 WTA Official Rulebook VIII.A.5) – EXCEPT THE LAST VALUE.
+    //
+    // ⚠⚠ THE OWNER'S RULING, 14.08: «Платить настоящую цифру за первый круг: 10 и 10 – вполне можно,
+    // не вижу причины делать иначе.» MEASURED FIRST, in docs/specs/where-the-points-come-from-2026-08.md.
+    //
+    // WHAT WAS WRONG AND IT WAS NEVER A TYPO. The research column is the real 128-draw's, round by
+    // round: 2000 / 1300 / 780 / 430 / 240 / **130** / 70 / 10. `drawSize` below says the row is
+    // "normalised to 32 rows", and normalising it meant KEEPING THE FIRST SIX and dropping R64 and
+    // R128 – so the value the real tour pays a player who has already won two matches was landing on
+    // ours for losing her opener. Same mapping at the 1000 (65 is the real R32 of a 96-draw).
+    //
+    // WHAT IT COST, measured on the owner's own careers: eleven reserved openers (4 Slams + 7
+    // thousands) were worth **975 points with no match won** – more than eighteen W50 titles. One of
+    // his girls stood at #106 having won 59 matches while the other was #51 with 26, 64% of her
+    // counted points banked for matches she LOST. Re-folded at 10/10 through the real merged table
+    // the four saves move #106→#106 (she had no participation points at all), #15→#55, #51→#143,
+    // #33→#82. Nobody who won is punished.
+    //
+    // ⚠ AND IT LEAVES A KNOWN ARTEFACT UNTIL THE DRAWS ARE RESTORED (task #112, owner-approved as
+    // the following wave): the column now steps 240 → 10, so ONE win multiplies her by 24, where
+    // reality has 240 → 130 → 70 → 10 because reality has the rounds in between. The 130 and the 70
+    // come back the day this draw is 128 – they are not deleted, they are unearned at draw 32.
+    points: [2000, 1300, 780, 430, 240, 10],
     // $3,000,000 / $1,725,000 / $990,000 / $570,000 / $330,000 / $190,000. THE MONEY CLIFF, in one
     // row: losing the first round of a major pays more than winning every other tournament in this
     // game put together. That is not a balance failure - docs/research/02-tennis-economics.md is

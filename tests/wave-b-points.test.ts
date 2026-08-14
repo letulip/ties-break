@@ -17,6 +17,7 @@ import { describe, it, expect } from 'vitest'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { runTournament } from '../src/engine/season/tournament'
 import { BEST_N_BY_TRACK, MANDATORY_SLOTS, computeRanking, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
+import { NOMINAL_ONE_TIERS, REAL_OPENER_TIERS, firstRoundValue } from './openerValue'
 import { rivalCondition } from '../src/engine/season/rival'
 import { generateCohort } from '../src/engine/season/cohort'
 import { generatePreHistory } from '../src/engine/season/prehistory'
@@ -100,18 +101,18 @@ describe('W-B1 — the index claim: the LAST points element IS the first-round e
 // but act2-pro-tour.md §2 rules the three shipped rows (w15/w35/w100) canon as-is - only the NEW
 // rungs took the in-wave verification. So the nominal-1 set is exactly the W2-LADDER trio, and a
 // future owner ruling that re-verifies w100's row should move it and this pin together.
-const NOMINAL_ONE_TIERS: readonly TierId[] = ['w50', 'w75', 'wta125', 'wta250', 'wta500']
-/** ⚠ AND THE TWO BIGGEST RUNGS PAY A REAL NUMBER FOR AN OPENING LOSS, WHICH IS A THIRD CASE
- *  (W3-ACT2). Wave B's rule was "she earns her first point by WINNING one"; W2-LADDER added the
- *  real chart's nominal 1 from W50 up; and the published rows for a WTA 1000 and a Grand Slam
- *  simply do not bottom out near zero - 65 and 130 - because the research table is normalised to
- *  32 MAIN-DRAW rows and at those two rungs the main draw is people who cleared the hardest
- *  acceptance lists in the sport. The participation floor wave B removed cannot come back through
- *  them: a top-50 player is admitted to at most 12 of these a season, they sit behind #65/#104
- *  cuts, and one W50 semi-final still out-pays a whole best-16 window of W15 openers. */
-const REAL_OPENER_TIERS: Record<string, number> = { wta1000: 65, slam: 130 }
-const firstRoundValue = (tier: TierId) =>
-  REAL_OPENER_TIERS[tier] ?? (NOMINAL_ONE_TIERS.includes(tier) ? 1 : 0)
+// ⚠⚠ THE THREE BUCKETS MOVED TO `tests/openerValue.ts` ON 14.08, AND THAT MOVE IS A SCAR WORTH
+// READING. This exact ternary was written out FIVE times - here, next-goal, prize-money,
+// rival-fatigue and rivals - and four of those copies carried a comment saying «see
+// tests/wave-b-points.test.ts for the whole ruling». They knew where the ruling lived and
+// re-implemented it anyway. So when the owner ruled that the two biggest rungs pay the rulebook's
+// real opener (10 and 10, 14.08), a ONE-CONSTANT engine change became five identical test edits,
+// and only the CI failure stopped one of them being missed.
+//
+// The values are still stated independently of `TIERS` - a test that asks the engine what the
+// answer is can only ever agree with it - and THIS file is still where the two are held against
+// each other, in W-B2 immediately below. What changed is that everybody else now imports the
+// statement instead of re-typing it. The history of each bucket is in `openerValue.ts`.
 
 describe('W-B2 — a first-round loss pays ZERO at every rung the grind was possible at', () => {
   it('the last element of every points array is the family split: 0 everywhere but the chart-1 trio', () => {
@@ -225,19 +226,20 @@ describe('W-B3 — the participation floor is gone', () => {
   // decides between paying the rulebook's real opener (a 128-draw Slam pays 10, not 130 - our row
   // is the real column normalised onto a 32-draw, see calendar.ts on `slam.drawSize`) and restoring
   // the missing rounds. Whichever he picks, this number moves and the test says so.
-  it('⚠ a full RESERVED book of first-round losses out-pays a window of W50 TITLES, with no match won', () => {
+  it('⚠ a full RESERVED book of first-round losses no longer out-pays a window of W50 TITLES', () => {
     const openers: SeasonResult[] = []
     let week = 1
     for (const fam of MANDATORY_SLOTS) {
       const floor = TIERS[fam.tier].points[TIERS[fam.tier].points.length - 1]
       for (let i = 0; i < fam.slots; i++) openers.push({ playerId: 'kid', week: week++, points: floor, tier: fam.tier })
     }
-    // 4 x 130 + 7 x 65 = 975, and every row is a first match lost.
+    // ⚠ 110 SINCE 14.08 – it was 975 (4 x 130 + 7 x 65) and that number is the whole reason this
+    // test exists. 11 x 10 now, and every row is still a first match lost.
     expect(openers).toHaveLength(11)
-    expect(windowedBestSum(openers, 52, 'kid', BEST_N_BY_TRACK.wta)).toBe(975)
+    expect(windowedBestSum(openers, 52, 'kid', BEST_N_BY_TRACK.wta)).toBe(110)
 
-    // The comparison the claim above should have made, and did not. A full professional window of
-    // W50 TITLES - eighteen tournaments won outright, five matches each, ninety matches - is 900.
+    // The comparison the old claim should have made and did not. A full professional window of W50
+    // TITLES - eighteen tournaments won outright, five matches each, ninety matches - is 900.
     const titles: SeasonResult[] = Array.from({ length: BEST_N_BY_TRACK.wta }, (_, i) => ({
       playerId: 'kid',
       week: i + 1,
@@ -245,9 +247,15 @@ describe('W-B3 — the participation floor is gone', () => {
       tier: 'w50' as TierId,
     }))
     expect(windowedBestSum(titles, 52, 'kid', BEST_N_BY_TRACK.wta)).toBe(900)
-    expect(windowedBestSum(openers, 52, 'kid', BEST_N_BY_TRACK.wta)).toBeGreaterThan(
+    // ⚠ THE INEQUALITY IS THE POINT AND IT HAS FLIPPED. This assertion read `toBeGreaterThan` for
+    // one commit – long enough to announce the defect and no longer – and the direction is what the
+    // ruling bought: turning up eleven times can no longer out-earn a season of winning.
+    expect(windowedBestSum(openers, 52, 'kid', BEST_N_BY_TRACK.wta)).toBeLessThan(
       windowedBestSum(titles, 52, 'kid', BEST_N_BY_TRACK.wta),
     )
+    // And the floor it can reach is now under a SINGLE W50 title, which is the bound the original
+    // W-B3 claim was reaching for one rung too low.
+    expect(windowedBestSum(openers, 52, 'kid', BEST_N_BY_TRACK.wta)).toBeLessThan(TIERS.w50.points[0] * 3)
   })
 })
 
