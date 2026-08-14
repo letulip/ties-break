@@ -2,12 +2,24 @@
 
 Status: `[x]` shipped · `[~]` answered · `[>]` in flight · `[ ]` open · `[!]` REOPENED.
 
-- [>] **1. «Coach travels не активно на про карьере»** – the travel toggle is drawn disabled with a
-  sub-line saying when it arrives. Either its precondition is wrong for a professional or the line
-  is lying about when.
-- [>] **2. «Cancelled по травме говорит "nothing cancelled", несмотря на 2 турнира подряд на обоих
-  неделях травмы»** – the injury report counts withdrawals and found none where two exist.
-- [>] **3. ⚠ «Экран про ранг 50+ … сейчас его даже не закрыть» – THIS BROKE HIS PLAYTEST, and it is
+- [x] **1. «Coach travels не активно на про карьере»** – ⚠ THERE IS NO PRECONDITION. `disabled` is a
+  literal, not a binding, and `setCoachOnEventWeeks` has NO CALLER anywhere in `src/`. The owner
+  CANCELLED the mechanic on 30.07 after all three versions were measured and failed, and
+  `docs/decisions.md` (08.08) already recorded the consequence – travel never becomes possible, so a
+  notice saying it is coming would be false. **Nobody acted on it for two weeks.** The sub-line was
+  lying, and so was the `aria-label`, which is what a screen reader got instead of the paragraph.
+  Both now name the two reasons instead of a date.
+- [x] **2. «Cancelled по травме говорит "nothing cancelled"»** – BOTH shapes were wrong, each
+  reproduced on a real career. (a) **The count was blind since 05.08**: the row matches withdrawals
+  by their opening words, and it still looked for `'Withdrew from '` after `releasedBy` split the
+  message so the desk's action would stop reading as a receipt for the player's choice – the injury
+  arm writes `'Taken out of …'`. Measured: a 9-week layoff released two Local Opens and refunded both
+  fees while the row rendered «Nothing». (b) **And in HIS shape the sentence was backwards**: for two
+  events on CONSECUTIVE weeks the lists close two weeks out, so nothing is cancelled at all – she
+  stays on both lists, the fees stay committed and the weeks resolve as walkovers. «Nothing – every
+  entry stands» was the opposite of the truth. It now says the lists had closed and names them
+  forfeited.
+- [x] **3. ⚠ «Экран про ранг 50+ … сейчас его даже не закрыть» – THIS BROKE HIS PLAYTEST, and it is
   mine.** `TourBriefingDialog.vue`, shipped in round-18 #8 eight days ago: it carries a lead, a
   requirements list, five cost bullets and a closing line, on the shared `dialog-card` with **no
   `max-height` and no `overflow` of its own**. On a phone the dismiss control leaves the viewport
