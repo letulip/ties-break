@@ -438,6 +438,26 @@ wins → 5.8). The record is in commit `77e08aa`.
 possible (the row is hardcoded `disabled` and the mechanic is cancelled), so a notice saying it is now
 available would be false. Needs the unlock ruled on first.
 
+> ⚠⚠ **CLOSED 14-15.08 – HE RULED THE UNLOCK, ON THE THIRD ASK.** «Тренер всё ещё не едет на
+> соревнования, как так? Уже 3й раз прошу сделать» (round-21 #2). Round 20 had answered this with an
+> explanation instead of a build, and asking a third time overruled the 30.07 cancellation. Three
+> things changed and this entry is stale in all three:
+>
+> * **Travel happens.** `setCoachOnEventWeeks` has a caller at last, the row is a live switch, and
+>   the fare is charged on the play week – gated to the rungs that PAY, which is this very entry's
+>   own argument («в юниорах нет призовых») kept as code. The junior tour opened as a SEPARATE opt-in
+>   on 15.08 («делаем тогда»), warned before the first fare with the measured bankruptcy figures.
+> * **The notification is built** – it is true now, so it could be.
+> * **⚠ "Do NOT build a 'he contributes differently at a tournament' mechanic" IS OVERTURNED, and by
+>   measurement rather than by preference.** He asked the right question – «это на старых измерениях?
+>   мы построили новый стенд, надо актуализировать данные» – and he was right: all three arms were
+>   measured on the bench `the-wall-2026-08.md` §6-§7 later proved never got anyone ranked. Re-run on
+>   the rebuilt policy the match-strength edge REVERSES: 47 better / 13 worse over 60 paired careers
+>   at +3.0pp, and the confound was PROMOTION (a better rank moves her to a rung banking fewer
+>   points, which on a broken bench was pure loss). Shipped tied to `COACH_EDGE_CORRIDOR_PP` at his
+>   own suggestion, measured at n=250: −4.1 rank places [−7.2, −1.0], p=0.010. The run-fatigue arm
+>   stayed dead. Full record: `docs/specs/coach-travel-2026-08.md`.
+
 **2. The coach's falling percentage was honest AND over-quoted 1.76x.** «У выбранного тренера
 поменялся % через некоторое время, сначала было 0,5–1,0, потом стало 0,4–0,9, сейчас уже 0,3–0,7.»
 The fall is real – growth is a share of remaining headroom and the age curve eases – and the model

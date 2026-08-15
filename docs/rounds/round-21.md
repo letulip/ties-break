@@ -96,9 +96,17 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
       `docs/specs/the-wall-2026-08.md` §L1: «a per-tournament top-up when the coach travels with her,
       **at double the travel cost**». So his seat is her seat again – **a trip he comes on costs
       twice the fare** – which is also where the brief's own fallback ("price it from
-      `travelCostFor`") lands. `coachTravelFareFor` is that doubling and it reads `travelCostFor` and
-      nothing else, so the academy scholarship and a brand's share reach his seat exactly as they
-      reach hers, and "twice the fare" stays true of the number the family actually pays.
+      `travelCostFor`") lands. `coachTravelFareFor` is that doubling.
+      - ⚠⚠ **SUPERSEDED THE NEXT DAY, AND THE SENTENCE THIS REPLACES WAS THE DEFECT.** It read: "it
+        reads `travelCostFor` and nothing else, so the academy scholarship and a brand's share reach
+        his seat exactly as they reach hers". They did – and that meant the mechanism built to keep a
+        struggling family in the game was **buying the coach a plane ticket**, with the better
+        scholarship funding the larger share of the luxury. The owner caught it as a principle
+        (15.08): «механизм точечной поддержки нуждающихся не должен поддерживать их чрезмерные
+        траты, только помочь дожить до призов». HER fare keeps every cover; HIS is
+        `event.travelCostCents`, gross (`f9104eb`). So "twice the fare" is true only for a family
+        paying full price, and the screen now says his seat is not covered instead of quoting a bare
+        multiple – which is exactly the family that most needed to be told.
     - **WHERE IT IS CHARGED, and why not in the weekly bill.** Beside `chargeTravel` in `tickWeek`'s
       `else if (enteredThisWeek)` arm – the arm where she actually boarded. That inherits the two
       no-travel arms for free (an injury walkover and a medical withdrawal never pay it, because she
@@ -120,9 +128,13 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
       a self-coached family, because for them it is not true. A feed milestone and **not** a popup:
       round-20 #3 was a blocking dialog whose dismiss control left a 375x667 screen and stopped his
       career, and a notice is exactly the class of thing that does not need to block anybody.
-    - **NO SCHEMA CHANGE.** `coachOnEventWeeks` already shipped; everything added is snapshot-derived
-      (`coachTravelled`, `coachNote`, `travelFareCents`/`travelTrips`) and the fare reuses the
-      existing `travel` event category. `SAVE_SCHEMA_VERSION` is untouched.
+    - **NO SCHEMA CHANGE** – true of the presence slice, and ⚠ **NO LONGER TRUE OF ITEM 2 AS A
+      WHOLE.** `coachOnEventWeeks` already shipped and everything the presence work added is
+      snapshot-derived (`coachTravelled`, `coachNote`, `travelFareCents`/`travelTrips`), reusing the
+      existing `travel` event category. The JUNIOR opt-in the owner asked for on 15.08 («делаем
+      тогда») could not be: it needed a second stance, so `SAVE_SCHEMA_VERSION` went **48 → 49** with
+      an append-only step and `tests/fixtures/saves/v49.json` – the deliberate three-part move,
+      plus the e2e fixtures this repo enforces as a fourth part.
     - **Evidence.** `tests/round21-coach-travel.test.ts` (17, engine) and
       `tests/component/round21-coach-travel.test.ts` (10, MOUNTED). The load-bearing ones:
       two identical careers differing only in the switch spend **exactly twice** on the trip and the
