@@ -86,8 +86,17 @@
  *    share at the four big rungs are printed per arm for exactly that reading, and the draw side of
  *    it is `tools/draw-vs-band.ts` on a real save (see the spec's §4).
  *
- * Run (long – background it):
- *   npx vite-node tools/coach-travel-bench.ts -- --out /tmp/coach-travel --seeds 24
+ * 4. ⭐ THE LADDER-TIED TRAVEL BONUS (added 15.08, the owner's own sizing of arm 3 – see the block
+ *    above ARMS for his sentence and for why the corridor patch IS this mechanic rather than a proxy).
+ *      a4-ladder -> the cell's corridor SCALED x2: a coach who travels is worth his own number
+ *                   twice, so the ladder is the scale and the top of the corridor is the bound.
+ *      a4-off    -> the cell's corridor scaled x0. The price of the OTHER reading of the ruling (the
+ *                   edge becoming conditional on his presence), and the noise floor for arm 3.
+ *
+ * Run (long – background it). `--arms` runs a subset across BOTH cells, so a run that is cut short
+ * still answers its question on both rather than one; a cell already on disk is skipped either way:
+ *   npx vite-node tools/coach-travel-bench.ts -- --out /tmp/coach-travel --seeds 30 --arms ctl,a4-ladder
+ *   npx vite-node tools/coach-travel-bench.ts -- --out /tmp/coach-travel --seeds 30
  *   npx vite-node tools/coach-travel-bench.ts -- --report /tmp/coach-travel
  *
  * Resumable by construction: one JSON per arm-cell, written the moment that cell finishes, and a
@@ -118,6 +127,19 @@ const flag = (name: string): string | null => {
 }
 const SEEDS = Number(flag('seeds') ?? 24)
 const WEEKS = Number(flag('weeks') ?? FULL_CAREER_WEEKS)
+/** WHICH ARMS THIS INVOCATION RUNS, comma-separated ids; every arm when absent.
+ *
+ *  ⚠ IT CHANGES NOTHING ABOUT A CELL THAT RUNS – the arm definitions, the seeds, the worlds and the
+ *  patch are untouched, and a cell already on disk is skipped exactly as before. What it buys is the
+ *  order the machine spends its hours in: the loop is `for cell { for arm }`, so a run that is cut
+ *  short would otherwise leave the FIRST cell complete and the second empty, and every verdict in
+ *  this file's history is «both cells or it is a fact about one corner of the corridor». Running the
+ *  arms that answer the question across both cells first, and the corroborating ones after, is the
+ *  only way to buy that ordering without reshaping the loop the finished runs were made under. */
+const ONLY = flag('arms')
+  ?.split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
 
 // -------------------------------------------------------------------------------------------------
 // THE ARM SIZES, each with the reason it is that number
@@ -131,6 +153,47 @@ const FARE_SHARE = 1.0
 /** ⚠ THE CEILING, NOT THE SIZE – see the header. +0.04 is one full rung of
  *  `ECONOMY.coach.developmentFactor` (the high -> elite step) applied to EVERY week of her career. */
 const DEV_UPLIFT = 0.04
+// =================================================================================================
+// ⭐ ARM 4 – THE LADDER-TIED TRAVEL BONUS (the owner, 14.08), AND WHY ITS PATCH IS THE MECHANIC
+//    RATHER THAN A PROXY FOR IT
+// =================================================================================================
+//
+// Told that §5's recommended +3.0 pp is about three times the entire coach ladder, he tied the bonus
+// to the ladder instead of to a constant:
+//
+//     «что если мы привяжем это как раз к тренерской лестнице? у нас там есть уже верхний процент,
+//      будет не так сильно влиять как будто.»
+//
+// So a coach who travels delivers A SECOND HELPING OF WHAT HIS OWN TIER IS WORTH - his own number
+// again - and `COACH_EDGE_CORRIDOR_PP` is the whole of the scale. Elite adds 0.9-1.1 pp, budget
+// 0.2-0.7, and the addition is bounded by the corridor's own top by construction rather than by a
+// clamp, because the helping IS his draw from it. At the two cells here that is +1.0 pp at
+// wealthy·elite and +0.7 pp at middle·middle on average: between `a3-small` (inconclusive) and
+// `a3-big` (decisive), and much nearer the small one.
+//
+// ⚠⚠ SCALING THE CORRIDOR IS EXACTLY THAT MECHANIC AND NOT AN APPROXIMATION OF IT, and the algebra is
+// one line: `coachEdgePp` is `lo + u(hi - lo)` for ONE uniform `u` drawn off the seed and his id, so
+// a corridor of `[2lo, 2hi]` returns `2lo + u(2hi - 2lo)` = twice the same man's number - same seed,
+// same coach, same `u`, same everything else in the career. Two properties of POLICIES[1] are what
+// make it the whole mechanic rather than most of it, and both are read off econ-bench.ts rather than
+// assumed:
+//   (a) `openCareer` sets `coachOnEventWeeks` from the policy AT BIRTH and nothing ever flips it, so
+//       the travel switch is on for every week of every career in this file; and
+//   (b) R6's `reviewCoach` may let the coach go and take him back, but «nothing here ever hires a
+//       rung they did not choose» - so she is on the cell's tier or on nobody, never on a third rung
+//       whose corridor this arm did not patch. On the weeks she has nobody the edge is 0 in both
+//       arms, which is the same thing the shipped gate would do.
+//
+// ⚠ AND THE OTHER READING OF THE SAME RULING IS A NERF, SO IT IS PRICED RATHER THAN ARGUED ABOUT.
+// «Tie it to the ladder» can also be read as the edge becoming CONDITIONAL on his presence - today's
+// edge when he comes, nothing when he does not - and under this policy every career travels, so that
+// arm would be indistinguishable from the control here and the whole of its effect would land on
+// families who never send him. What that costs is therefore the control against a ZEROED corridor,
+// which is `a4-off`. It is also the yardstick the question needs: if DELETING the edge outright is
+// inside the noise at this n, doubling it cannot be outside it.
+
+/** A second helping of his own tier: the corridor scaled, not shifted. */
+const LADDER_TIED = 2
 /** The rungs with a real trip in them. The three domestic rungs (local/regional/national, $60-900 a
  *  trip) are a drive across the county and he is already there; the J family upward is the fare the
  *  cancelled `coachTravelsFrom` threshold was about. */
@@ -147,18 +210,29 @@ interface Arm {
   dev: number
   /** added to BOTH ends of the cell's coach corridor, pp per match */
   edgePp: number
+  /** ...and MULTIPLIES both ends of it. 1 = untouched, which is what keeps arms 1-3 byte-identical
+   *  to the run recorded in docs/specs/coach-travel-2026-08.md §3. Scaling and shifting are two
+   *  different mechanics and no arm here does both: a shift moves every coach by the same pp, a
+   *  scale gives each coach a second helping of HIS OWN number (see the note above). */
+  edgeScale: number
   /** zero the two POSITIVE run-fatigue ladders (the deep one is already negative – left alone) */
   ladderOff: boolean
 }
 
 const ARMS: Arm[] = [
-  { id: 'ctl', label: 'control (shipped)', fare: 0, dev: 0, edgePp: 0, ladderOff: false },
-  { id: 'a1-cost', label: 'A1 fare only', fare: FARE_SHARE, dev: 0, edgePp: 0, ladderOff: false },
-  { id: 'a1-gain', label: 'A1 skill only (ceiling)', fare: 0, dev: DEV_UPLIFT, edgePp: 0, ladderOff: false },
-  { id: 'a1-both', label: 'A1 the boolean', fare: FARE_SHARE, dev: DEV_UPLIFT, edgePp: 0, ladderOff: false },
-  { id: 'a2-ceiling', label: 'A2 ladder ceiling', fare: 0, dev: 0, edgePp: 0, ladderOff: true },
-  { id: 'a3-small', label: 'A3 edge +0.5pp', fare: 0, dev: 0, edgePp: 0.5, ladderOff: false },
-  { id: 'a3-big', label: 'A3 edge +3.0pp', fare: 0, dev: 0, edgePp: 3.0, ladderOff: false },
+  { id: 'ctl', label: 'control (shipped)', fare: 0, dev: 0, edgePp: 0, edgeScale: 1, ladderOff: false },
+  { id: 'a1-cost', label: 'A1 fare only', fare: FARE_SHARE, dev: 0, edgePp: 0, edgeScale: 1, ladderOff: false },
+  { id: 'a1-gain', label: 'A1 skill only (ceiling)', fare: 0, dev: DEV_UPLIFT, edgePp: 0, edgeScale: 1, ladderOff: false },
+  { id: 'a1-both', label: 'A1 the boolean', fare: FARE_SHARE, dev: DEV_UPLIFT, edgePp: 0, edgeScale: 1, ladderOff: false },
+  { id: 'a2-ceiling', label: 'A2 ladder ceiling', fare: 0, dev: 0, edgePp: 0, edgeScale: 1, ladderOff: true },
+  { id: 'a3-small', label: 'A3 edge +0.5pp', fare: 0, dev: 0, edgePp: 0.5, edgeScale: 1, ladderOff: false },
+  { id: 'a3-big', label: 'A3 edge +3.0pp', fare: 0, dev: 0, edgePp: 3.0, edgeScale: 1, ladderOff: false },
+  // ⭐ 15.08 – the owner's own sizing, and the shape that is not a nerf: his edge, twice, when he
+  // travels. Runs FIRST after the control (see `--arms`), because it is the question.
+  { id: 'a4-ladder', label: 'A4 travel = his edge x2', fare: 0, dev: 0, edgePp: 0, edgeScale: LADDER_TIED, ladderOff: false },
+  // ...and what the CONDITIONAL reading of the same ruling would take away from a family that never
+  // sends him: the whole of today's edge. Also the noise floor for every number above.
+  { id: 'a4-off', label: 'A4 edge deleted (nerf)', fare: 0, dev: 0, edgePp: 0, edgeScale: 0, ladderOff: false },
 ]
 
 /** THE CELLS. `wealthy · elite` first and foremost, because THAT is the cell the cancelled record's
@@ -199,9 +273,9 @@ function withArm<T>(arm: Arm, tier: CoachTier, fn: () => T): T {
       }
     }
     if (arm.dev !== 0) DEV_FACTOR[tier] = SHIPPED.dev[tier] + arm.dev
-    if (arm.edgePp !== 0) {
+    if (arm.edgePp !== 0 || arm.edgeScale !== 1) {
       const [lo, hi] = SHIPPED.corridors[tier]
-      COACH_EDGE_CORRIDOR_PP[tier] = [lo + arm.edgePp, hi + arm.edgePp]
+      COACH_EDGE_CORRIDOR_PP[tier] = [lo * arm.edgeScale + arm.edgePp, hi * arm.edgeScale + arm.edgePp]
     }
     if (arm.ladderOff) {
       // ⚠ THE DEEP LADDER IS NOT TOUCHED. It is [-2, -1, 0] – already a DISCOUNT – so zeroing it
@@ -418,8 +492,14 @@ interface ArmResult {
 function runAll(outDir: string): void {
   mkdirSync(outDir, { recursive: true })
   const t0 = Date.now()
+  const armsToRun = ONLY ? ARMS.filter((a) => ONLY.includes(a.id)) : ARMS
+  const unknown = (ONLY ?? []).filter((id) => !ARMS.some((a) => a.id === id))
+  if (unknown.length) {
+    console.error(`FATAL: no such arm -> ${unknown.join(', ')}. Known: ${ARMS.map((a) => a.id).join(', ')}`)
+    process.exit(1)
+  }
   for (const cell of CELLS) {
-    for (const arm of ARMS) {
+    for (const arm of armsToRun) {
       const file = join(outDir, `${cell.id}__${arm.id}.json`)
       let onDisk = false
       try {
@@ -474,7 +554,8 @@ function report(dir: string): void {
   }
   console.log(
     `coach-travel-bench · rebuilt player policy (POLICIES[1]) · ${WEEKS} weeks (14 -> ${14 + Math.round(WEEKS / 52)}) · same seeds/worlds/talent per arm\n` +
-      `fare +${(100 * FARE_SHARE).toFixed(0)}% on ${TRAVELLED.length} travelled rungs · dev uplift +${DEV_UPLIFT} (CEILING) · edge shifts +0.5 / +3.0 pp\n`,
+      `fare +${(100 * FARE_SHARE).toFixed(0)}% on ${TRAVELLED.length} travelled rungs · dev uplift +${DEV_UPLIFT} (CEILING) · edge shifts +0.5 / +3.0 pp\n` +
+      `edge SCALES x${LADDER_TIED} (the ladder-tied travel bonus – his own edge again) and x0 (the conditional reading's nerf, priced)\n`,
   )
 
   for (const [cellId, arms] of byCell) {
