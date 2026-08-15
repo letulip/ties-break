@@ -53,8 +53,32 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     middle·middle careers, *every one in the junior years*; "ever ranked" 96.7% → 46.7%, the median
     middle career's prize money to **$0**. +$995,979 where the 30.07 record said +$21,000. Gated to
     the rungs that PAY – the owner's own 30.07 argument, tested on the rung's own `prizeCents`.
-  - **STILL OPEN AND IT IS HIS**: the DOSE. +3.0pp is ~3x the whole coach ladder; +0.5pp is inside
-    the noise. The effect grows with dose and turns over nowhere tested.
+  - ~~**STILL OPEN AND IT IS HIS**: the DOSE.~~ → ✅ **(3) THE DOSE IS ANSWERED AND THE BONUS IS
+    BUILT** (`ff72dc5`, measured in `coach-travel-2026-08.md` §7). He ruled on the size himself when
+    told +3.0pp is about three times the whole coach ladder: «что если мы привяжем это как раз к
+    тренерской лестнице? у нас там есть уже верхний процент, будет не так сильно влиять как будто.»
+    - **SO THE TRAVEL BONUS IS HIS OWN EDGE AGAIN** – a coach who comes with her delivers a second
+      helping of exactly what his tier is worth, and `COACH_EDGE_CORRIDOR_PP` is the whole of the
+      scale (elite +0.9–1.1pp, budget +0.2–0.7). No second constant; «верхний процент» is a bound
+      the table already carries. SCALED, never shifted: §1's overlap rule is about ratios, so
+      doubling keeps the budget lottery alive where a +3.0pp shift would make every rung the same
+      coach. Zero new randomness – the same uniform, multiplied – and a career that does not travel
+      is byte-identical (frozen career hashes, mutation-verified).
+    - **MEASURED AT 250 SEEDS A CELL, 500 PAIRED CAREERS**: **263/206/31, Δbest rank −4.1
+      [−7.2, −1.0], *p* = 0.010**, top-100 **51.2→54.4%** (wealthy·elite) and **43.6→48.8%**
+      (middle·middle), both cells agreeing in sign. **It pays for itself**: +$30,645/+$43,600 of
+      prize against +$17,664/+$14,911 of travel.
+    - ⚠ **AND AT 30 SEEDS IT LOOKED LIKE NOTHING, WHICH IS THE METHOD NOTE WORTH KEEPING.** The
+      first run read 31/23/6 at *p* = 0.34 with the two cells disagreeing in sign, and two
+      confident mechanisms were written on top of that null (a "dead zone" in the dose-response, a
+      "the bench sees one helping but not the second" yardstick). **Both were artefacts.** At n=250
+      the dose-response is a straight line – 3.8 / 4.8 / 4.8 rank places per pp across three doses
+      spanning a factor of four – and points per entry rises rather than falls. 30 paired careers
+      resolve a +3.0pp effect and do not resolve a 1pp one.
+    - ⚠ **STILL HIS, AND SMALL**: the screen does not yet say the bonus exists – `edgePct` prints
+      the rung's HOME corridor to a family that travels – and −4 rank places is a distribution
+      shift nobody will feel in one playthrough. Copy is his call; the two scoping warts
+      (§7.6(c): the junior-rung freebie and the home practice friendly) are the follow-up.
   - → ✅ **STEP (2) IS BUILT AND SHIPPED ON THIS BRANCH. HE TRAVELS, IT COSTS MONEY, AND FOUR
     SURFACES SAY SO.** Step (1) – re-measuring the three stat arms on the rebuilt bench – is a
     separate agent's arm of the same wave and **no stat is added here**, which is the point: a fourth
