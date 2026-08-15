@@ -216,7 +216,7 @@ export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, type ProDoors } from './world/ladder'
+import { cohortIds, inTrack, fieldProsOf, fullRanking, rankingFor, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, type ProDoors } from './world/ladder'
 export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
@@ -1498,7 +1498,31 @@ function computeShadowTournament(
   const field = rivalField(entrants, event, fatigue)
   // v21b: she goes into the draw AT HER STANDING, not at the bottom of it - the same place the
   // acceptance list would give her - and is seeded, or not, on the terms everybody else gets.
-  const result = runTournament(event, field, kid, world.seed, kidRng, kidSeedIndexIn(field, selRanking, KID_ID))
+  //
+  // ⚠⚠ AND FOR THREE WAVES IT DID THE EXACT OPPOSITE, ON EVERY TRACK. Round-21 #4, the owner: «только
+  // 1 раз за весь сезон смог пройти 1й раунд турнира из всех попыток». Measured on his own save with
+  // tools/draw-vs-band.ts, a world #15: **seeded in 0.0% of draws, median standing in the draw #64
+  // of 64**, and 89% of the field she met at a 1000 was stronger than her.
+  //
+  // THE CAUSE IS THE TABLE, NOT THE FUNCTION. `kidSeedIndexIn` counts how many entrants outrank her
+  // by looking her up in the ranking it is handed, and falls back to LAST for a player it cannot
+  // find. Both tables reaching this line are built to the INPUT-INDEPENDENCE rule and therefore fold
+  // her out on purpose - `aiRanking` ("excludes the kid so AI-field selection never depends on the
+  // kid's own results") and `selRanking` ("LIVE rows fold WITHOUT the kid"). So she was never found,
+  // and never found means bottom of the draw, every event, every rung, since v21b shipped the line
+  // above claiming she was not.
+  //
+  // ⚠ THE FIX IS A SECOND TABLE, NOT A RELAXED FIRST ONE. Who TURNS UP must not depend on her (that
+  // is the invariant, and `selectEntrants`/`weekFieldExclusion` above keep reading the kid-free
+  // fold). Where SHE STANDS among them must depend on her and on nothing else - it is the acceptance
+  // list's own question, and `rankingFor` is the table every other surface answers it with, so the
+  // draw now agrees with the Season card instead of contradicting it.
+  //
+  // RNG: `buildDraw` shuffles the unseeded TAIL, whose length is `field.length - seedsFor(...)` and
+  // does not move when her slot does, so this consumes the same number of draws on the same
+  // event-scoped sub-stream. Her bracket changes because her position changes - which is the fix.
+  const seedRanking = rankingFor(world, TIERS[event.tier].track)
+  const result = runTournament(event, field, kid, world.seed, kidRng, kidSeedIndexIn(field, seedRanking, KID_ID))
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
