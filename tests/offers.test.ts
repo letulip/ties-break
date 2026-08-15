@@ -2377,6 +2377,17 @@ describe('the tournament desk writes on W-rung registration, and only then', () 
     world.fundsCents = 9_999_999_00
     world.results.push({ playerId: KID_ID, week: 0, points: 1500, tier: 'national' })
     for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: 0, points: 300, tier: 'j300' })
+    // ⚠ RE-AIMED, NOT WEAKENED (P1, docs/specs/junior-access-2026-08.md). The junior book above is
+    // written at WEEK 0 and the W15 this fixture is about sits at week 110, so by the time the desk
+    // is asked her ITF rows are outside the 52-week window and `kidPoints(world,'itf')` reads zero –
+    // the on-ramp has always been carried across that gap by the LATCH, which `recomputeKidRank` set
+    // at week 0 off the 1,200-point book. P1 moved the door onto her junior RANKING, and 1,200 ITF
+    // points lands her around #21-#35 against the pre-history table (tests/age-caps.test.ts says so
+    // in as many words), i.e. either side of the reserved place's cut depending on the seed. This
+    // file seed-hunts across 3,000 worlds, so "depending on the seed" means the fixture throws. The
+    // latch is set explicitly instead – the same idiom `proWorld` and `worldAt` already use – which
+    // reproduces exactly what week 0 used to do and keeps this file about the tournament desk.
+    world.onRampCleared = { itf: true, wta: true }
     recomputeKidRank(world)
     const wEvent: SeasonEvent = {
       id: 'desk-w15', week: 110, tier: 'w15', surface: 'hard', travelCostCents: 100_00, deadlineWeek: 108,

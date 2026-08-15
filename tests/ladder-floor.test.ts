@@ -85,6 +85,30 @@ function proWorld(seed: string, age: number, book: number): WorldState {
   world.season = []
   if (book > 0) world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
   world.onRampCleared = { itf: true, wta: true }
+  // ⚠ RE-AIMED A SECOND TIME, AND FOR THE SAME KIND OF REASON (P1, docs/specs/
+  // junior-access-2026-08.md). A junior now meets the Junior Accelerator in front of the W rungs, and
+  // at seventeen this fixture's girl is a junior. With no banked year-end junior standing she holds
+  // no Accelerator places, W35 and up are shut whatever her professional book says, and the SLIDING
+  // WINDOW – the whole subject of this file – has nothing left to slide over. A banked year-end
+  // junior #1 puts her past that gate, exactly as `onRampCleared` above puts her past the on-ramp
+  // latch, so the ceiling is what these cases measure. The Accelerator's own suite is
+  // tests/junior-access.test.ts.
+  world.seasonHistory = [
+    {
+      seasonIndex: 0,
+      endRank: 1,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      byTrack: {
+        domestic: { points: 0, wins: 0, losses: 0 },
+        itf: { endRank: 1, points: 0, wins: 0, losses: 0 },
+        wta: { points: 0, wins: 0, losses: 0 },
+      },
+      fundsDeltaCents: 0,
+      endFundsCents: 0,
+    },
+  ]
   recomputeKidRank(world)
   return world
 }

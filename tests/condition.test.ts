@@ -445,7 +445,18 @@ const REF = {
   // reproduce byte-for-byte and are asserted BEFORE this constant is read. The three new storeys add
   // no draw to any stream the weekly tick walks - they are 1,080 more reads of
   // `seed:field:<n>:c<k>`, a fresh generator per player.
-  kidRank: 87,
+  // ⚠ AND RE-AIMED A SIXTH TIME BY P1 – JUNIOR ACCESS (15.08): 87 -> 89, TWO places, and for the
+  // sixth time running it is the same second-order mechanism and she did nothing different. W15's
+  // on-ramp stopped reading 120 ITF junior points and started reading an ITF junior RANKING, on BOTH
+  // sides of the tour (`onRampOpen` for her, `proDoors` for the cohort – one door, by design), so a
+  // slightly different two-of-thirty-two hold the on-ramp slots at a W15, so those juniors are booked
+  // on different weeks, so the J draws they were no longer free for changed. This constant folds the
+  // ITF table and that is where a re-shuffled J draw lands. docs/specs/junior-access-2026-08.md.
+  //
+  // THE CAPTURE IS UNTOUCHED FOR THE SIXTH TIME: count 41550, hash e6b0c709, head and tail all
+  // reproduce byte-for-byte and are asserted BEFORE this constant is read. P1 adds no draw to any
+  // stream – an access rule is a post-draw gate – which is why the hash could not move and did not.
+  kidRank: 89,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

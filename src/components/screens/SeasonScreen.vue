@@ -701,9 +701,18 @@ function lockLabel(e: UpcomingEvent): string {
       // and the engine's `pointsToEnter` for a W15 is INTERNATIONAL junior points - the chip then
       // read "58 / 120 national pts", her domestic total over an international threshold under a
       // domestic label. `entryBandTrack` is the one rule for which table a rung's threshold lives in.
+      // ⚠⚠ AND THE FALLBACK IS THE ENGINE'S OWN WORDS BEFORE THE LADDER'S (P1, docs/specs/
+      // junior-access-2026-08.md) – the round-17 #19 fix one branch up, arriving on the OTHER code.
+      // 'locked' stopped being one refusal the moment junior access shipped: a rung can now be shut
+      // because the Junior Accelerator holds no place for her there, at a rank the acceptance list
+      // would happily take. The ladder's note knows nothing about that and would print the CUT
+      // ("takes the top 700 – she is #291") on a card refused for a completely different reason,
+      // about a number she can see she is inside. `ineligibleDetail` is the sentence the gate itself
+      // wrote and is right for every arm of 'locked'; the ladder note stays as the last resort, for a
+      // snapshot old enough not to carry one.
       return e.pointsToEnter !== undefined
         ? pointsLockNote(e.tier, e.pointsToEnter, game.snapshot?.ladders[entryBandTrack(e.tier)].points)
-        : tierStateById.value[e.tier].note
+        : (e.ineligibleDetail ?? tierStateById.value[e.tier].note)
   }
 }
 

@@ -402,7 +402,14 @@ describe('the season mirror – the wrap judges against the table the card names
     // table and not the latched one is, and it is asserted below on numbers that still differ (2 against
     // the card, 8 against the active table). Re-aimed rather than re-recorded: nothing was loosened,
     // and a wrap that went back to reading `activeLadderOf` still fails this.
-    const world = walkNear(205, 'golden-v45')
+    // ⚠ RE-AIMED AGAIN AT P1 (15.08, docs/specs/junior-access-2026-08.md), AND FOR THE THIRD TIME THE
+    // SEED IS UNCHANGED AND ONLY THE WEEK MOVED: 205 -> 153, with the SAME pair of tables (`itf` on
+    // the card, `wta` latched) and not one assertion touched. Junior access changed WHEN this career
+    // reaches the professional tour – W15's door reads a junior ranking now – so the season whose card
+    // and latch disagree is one wrap earlier than it was. Which wrap it is was never the subject; that
+    // the wrap judges against the CARD's table and not the latched one is, and a wrap that went back to
+    // reading `activeLadderOf` still fails this. The mechanism note two paragraphs up is unchanged.
+    const world = walkNear(153, 'golden-v45')
     const summary = world.lastSeasonSummary!
     expect(summary.rankTrack).toBe('itf')
     expect(activeLadderOf(world)).toBe('wta')
@@ -410,7 +417,7 @@ describe('the season mirror – the wrap judges against the table the card names
     // The ledger the wrap just banked from is reset by the wrap itself, so the fold is re-run here off
     // the rows the season actually committed - reconstructed the only way that is honest, by walking
     // one week short of the wrap and reading the ledger before it clears.
-    const oneShort = walkNear(204, 'golden-v45')
+    const oneShort = walkNear(152, 'golden-v45')
     const rows = oneShort.seasonEntries!.rows
     const againstCard = rows.filter((r) => entryCouldNotMove(r, 'itf')).length
     const againstActive = rows.filter((r) => entryCouldNotMove(r, 'wta')).length

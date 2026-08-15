@@ -1123,6 +1123,29 @@ export function hasAcceptanceList(tier: TierId): boolean {
   return TIERS[tier].enterPct !== undefined || TIERS[tier].acceptsRank !== undefined
 }
 
+/** THE ITF WORLD TENNIS TOUR'S OWN FAMILY – the five "W" rungs, and NOT every rung on the W table.
+ *
+ *  ⚠ THE DISTINCTION IS THE SPORT'S, NOT A CONVENIENCE. `LadderTrack === 'wta'` is "which points
+ *  table does this pay into" and it holds ten rungs; this list is "is this an ITF World Tennis Tour
+ *  event", which is what the two rules added by P1 are written about:
+ *    * the Junior Accelerator's table tops out at W100 and says nothing about a WTA 125 or a major
+ *      (2026 WTT Regs App. D, docs/research/ranking-points-by-tier.md §4);
+ *    * the Play Down rule bars a WTA top-50 from "W" events, and a WTA 125 is a WTA event.
+ *  Reading either rule against the whole track would bar a seventeen-year-old from the majors, which
+ *  is the opposite of what juniors actually do (they get in on wildcards and qualifying – routes this
+ *  engine does not model, so the honest choice is to leave the WTA's own rungs alone).
+ *
+ *  Derived from `TIER_SHORT`? No – spelled out, because "starts with W" is a fact about a STRING and
+ *  `wta125` starts with W too. Five names, one list, one place to add a W25 the day it exists. */
+export const W_SERIES: readonly TierId[] = ['w15', 'w35', 'w50', 'w75', 'w100']
+
+/** IS THIS ONE OF THEM? A predicate rather than an `.includes` at four call sites, for the same
+ *  reason `isCappedTier` is one. */
+export function isWSeriesTier(tier: TierId): boolean {
+  return W_SERIES.includes(tier)
+}
+
+
 /** The catalogue in ladder order, weakest rung first. The single source of truth for "is tier A
  *  above tier B" – used for scheduling precedence, the tier guide, the Home season strip and
  *  every monotonicity check in the tests.
@@ -1200,6 +1223,24 @@ export const TIER_SHORT: Record<TierId, string> = {
  *  populations - which is precisely the property whose ABSENCE was the §1 bug. Had the two halves
  *  been written in two places, "juniors" would have been true of the kid and false of the field, or
  *  the reverse, and nobody would have noticed for a release. */
+/** THE AGE AT WHICH SHE STOPS BEING A JUNIOR – derived from the junior rungs' own ceiling rather
+ *  than written down again, so `maxAgeYears` stays the one place U18 is stated (TierDef.maxAgeYears:
+ *  *"18 IS THE REAL RULE, NOT A BALANCE KNOB"*). She is a junior for as long as any junior rung would
+ *  still take her; the day that stops being true she is an adult entrant and the Accelerator – which
+ *  is a junior's route – stops applying to her.
+ *
+ *  ⚠ IT SITS HERE, BELOW `TIER_LADDER`, BECAUSE IT IS DERIVED FROM IT – and beside `isTierAgeOpen`,
+ *  which is the other age rule the cohort and the kid both read. */
+export const JUNIOR_MAX_AGE_YEARS: number = Math.max(
+  ...TIER_LADDER.filter((t) => TIERS[t].track === 'itf').map((t) => TIERS[t].maxAgeYears ?? 0),
+)
+
+/** Is she still inside junior eligibility? See `JUNIOR_MAX_AGE_YEARS`. Pure, no world dependency,
+ *  so the cohort side can ask it too. */
+export function isJuniorAge(ageYears: number): boolean {
+  return ageYears <= JUNIOR_MAX_AGE_YEARS
+}
+
 export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
   const { minAgeYears: minAge, maxAgeYears: maxAge } = TIERS[tier]
   if (minAge !== undefined && ageYears < minAge) return false

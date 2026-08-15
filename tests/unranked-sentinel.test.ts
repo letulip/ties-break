@@ -119,6 +119,30 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
     if (book > 0) world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
     world.onRampCleared = { itf: true, wta: true }
+    // ⚠ RE-AIMED, NOT WEAKENED (P1, docs/specs/junior-access-2026-08.md). A SECOND, ORTHOGONAL gate
+    // now stands in front of the W rungs for a JUNIOR – the Junior Accelerator – and at seventeen
+    // this fixture's girl is one. Without a banked year-end junior standing she has no Accelerator
+    // places at all, W35 and up are shut whatever her professional book says, and every stage of the
+    // slide below would read `['w15']` for a reason that has nothing to do with the acceptance cuts
+    // this file is about. Banking a year-end junior #1 puts her past that gate so the CUTS are what
+    // the fixture measures, exactly as `onRampCleared` above puts her past the on-ramp latch. The new
+    // gate has its own suite (tests/junior-access.test.ts); this one is not it.
+    world.seasonHistory = [
+      {
+        seasonIndex: 0,
+        endRank: 1,
+        points: 0,
+        wins: 0,
+        losses: 0,
+        byTrack: {
+          domestic: { points: 0, wins: 0, losses: 0 },
+          itf: { endRank: 1, points: 0, wins: 0, losses: 0 },
+          wta: { points: 0, wins: 0, losses: 0 },
+        },
+        fundsDeltaCents: 0,
+        endFundsCents: 0,
+      },
+    ]
     recomputeKidRank(world)
     return world
   }

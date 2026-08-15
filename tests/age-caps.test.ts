@@ -527,6 +527,30 @@ function age16Weeks(count: number): number[] {
 function openProWorld(seed = 'procap'): WorldState {
   const world = openWorld(seed)
   world.results.push({ playerId: KID_ID, week: world.week, points: 400, tier: 'w100' })
+  // ⚠ RE-AIMED, NOT WEAKENED (P1, docs/specs/junior-access-2026-08.md). This fixture's girl is
+  // SIXTEEN, so she is a junior, and a junior now meets the Junior Accelerator in front of every W
+  // rung above W15. With no banked year-end junior standing she holds no places at all there – which
+  // is a LADDER fact and therefore precedes availability in `entryVerdict`, exactly as an acceptance
+  // cut does – so the PRO CAP's own refusal, which is what this block is about, would become
+  // unreachable at W35 and up and the copy case would be asserting the precedence instead of the
+  // promise. A banked year-end junior #1 puts her past that gate; her professional book already puts
+  // her past every acceptance cut. The Accelerator has its own suite (tests/junior-access.test.ts).
+  world.seasonHistory = [
+    {
+      seasonIndex: 0,
+      endRank: 1,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      byTrack: {
+        domestic: { points: 0, wins: 0, losses: 0 },
+        itf: { endRank: 1, points: 0, wins: 0, losses: 0 },
+        wta: { points: 0, wins: 0, losses: 0 },
+      },
+      fundsDeltaCents: 0,
+      endFundsCents: 0,
+    },
+  ]
   recomputeKidRank(world)
   return world
 }

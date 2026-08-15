@@ -266,7 +266,13 @@ const REF = { //
   // for changed. The largest of the five moves, for the largest of the five causes. Different track
   // from the one this number folds; this fixture's kid enters nothing at all. The capture is
   // untouched for the fifth time: count 41550, hash e6b0c709, checked BEFORE this constant is read.
-  kidRank: 87 }
+  // ⚠ RE-PINNED 87 -> 89 BY P1 – JUNIOR ACCESS (15.08). W15's on-ramp stopped reading 120 ITF junior
+  // points and started reading an ITF junior RANKING, on both sides of the tour (one door, by design),
+  // so a slightly different two-of-thirty-two hold the on-ramp slots at a W15 and the J draws those
+  // juniors were no longer free for changed. Post-draw arithmetic once more: the capture is asserted
+  // above this line and reproduces byte-for-byte (41550 / e6b0c709) – P1 draws on no stream at all.
+  // See the same note on tests/condition.test.ts B1's REF. docs/specs/junior-access-2026-08.md.
+  kidRank: 89 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

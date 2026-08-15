@@ -33,7 +33,7 @@ import { BEST_N_BY_TRACK, computeRanking, windowedBestSum } from '../../src/engi
 import { TIERS } from '../../src/engine/season/calendar'
 import { rivalConditions } from '../../src/engine/season/rival'
 import { rngFromSeed } from '../../src/engine/rng'
-import { createWorld, tickWeek, inTrack, seasonIndexOf, KID_ID, proDoors } from '../../src/engine/world'
+import { createWorld, tickWeek, inTrack, seasonIndexOf, juniorReservedRank, KID_ID, proDoors } from '../../src/engine/world'
 import type { WorldState } from '../../src/engine/world'
 import type { AiPlayer, RankingRow, SeasonEvent, TierId } from '../../src/engine/season/types'
 
@@ -125,7 +125,13 @@ describe('the cohort can reach the professional ladder', () => {
 // 2. THE DOOR IS THE KID'S DOOR – and it refuses
 // =================================================================================================
 describe('proDoors is tierFloorOpen asked of a cohort id', () => {
-  it('the entry rung reads JUNIOR points; a girl with neither junior points nor a pro week is refused', () => {
+  // ⚠ RE-AIMED, NOT WEAKENED (P1, docs/specs/junior-access-2026-08.md). The claim is unchanged –
+  // *the cohort walks through the kid's own door, line for line* – and so is every other line of this
+  // case. What moved is the door itself: W15's on-ramp stopped reading 120 ITF junior POINTS (our own
+  // invention) and started reading her ITF junior RANKING, which is what the sport's junior reserved
+  // place actually reads. So the expectation is re-derived from `juniorReservedRank` instead of from
+  // `enterPointBand[0]`, in the cohort's OWN kid-free table, and the bite assertion is untouched.
+  it('the entry rung reads a JUNIOR RANKING; a girl with neither that nor a pro week is refused', () => {
     const world = ticked('onramp-door-w15', 30)
     const admits = proDoors(world, mergedTable(world)).at('w15')
     const itf = computeRanking(
@@ -136,15 +142,18 @@ describe('proDoors is tierFloorOpen asked of a cohort id', () => {
       inTrack('itf'),
     )
     const itfPoints = new Map(itf.map((r) => [r.playerId, r.points]))
+    const itfRank = new Map(itf.map((r) => [r.playerId, r.rank]))
     const playedW = new Set(
       world.results
         .filter((r) => r.tier !== undefined && TIERS[r.tier].track === 'wta' && r.playerId !== KID_ID)
         .map((r) => r.playerId),
     )
-    const floor = TIERS.w15.enterPointBand[0]
+    const cut = juniorReservedRank(itf.length)
     let refused = 0
     for (const p of world.cohort) {
-      const expected = (itfPoints.get(p.id) ?? 0) >= floor || playedW.has(p.id)
+      const expected =
+        ((itfPoints.get(p.id) ?? 0) > 0 && (itfRank.get(p.id) ?? Number.MAX_SAFE_INTEGER) <= cut) ||
+        playedW.has(p.id)
       expect(admits(p.id), p.id).toBe(expected)
       if (!expected) refused += 1
     }
@@ -232,8 +241,17 @@ describe('the held slots take the last acceptances and nothing else', () => {
     }
   })
 
+  // ⚠ RE-AIMED, NOT WEAKENED (P1): the WEEK moved, 45 -> 105, and not one assertion did. The property
+  // is "whoever stepped aside is the tail of the direct-acceptance list", and it is only observable on
+  // a world where the rung has an on-ramp candidate to hold a slot for – `added.length > 0` is the
+  // case's own precondition, not part of its claim. A W35's door is a PROFESSIONAL result plus its own
+  // rank cut, so its candidates are cohort players who have already been out on the W tour, and at
+  // week 45 that population is one player on this seed (measured: 1 at weeks 45 and 60, 3 at 75, 7 at
+  // 105). P1 shifted which two of thirty-two are held at W15 – the door it changed – and one candidate
+  // is a coincidence either way; seven is a population. The two neighbouring cases in this block
+  // already run at their own weeks for the same reason.
   it('the acceptances that survive are exactly the pre-on-ramp field minus its LAST k', () => {
-    const world = ticked('onramp-displace', 45)
+    const world = ticked('onramp-displace', 105)
     const { withoutOnRamp, withOnRamp } = arms(world, 'w35', ON_RAMP.slots)
     const added = withOnRamp.filter((p: AiPlayer) => !withoutOnRamp.some((q: AiPlayer) => q.id === p.id))
     expect(added.length).toBeGreaterThan(0)

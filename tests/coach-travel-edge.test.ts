@@ -288,13 +288,39 @@ describe('the plaque is about the MAN, and the trip is not part of who he is', (
 // ⚠ AND THE STANCE IS `false` IN ALL THREE, asserted in `careerHash` below rather than assumed: these
 // careers do not send the coach to junior events, so nothing about the new mechanic can be hiding
 // inside the new numbers.
+// ⭐⭐ RE-FROZEN AGAIN AT P1 (15.08, docs/specs/junior-access-2026-08.md), AND THE PER-KEY DIFF WAS
+// TAKEN FIRST, EXACTLY AS THE PARAGRAPH ABOVE DEMANDS. This time the answer is the opposite shape and
+// that is the point of writing it down: the v49 re-freeze moved TWO keys and both were the schema
+// bump's own footprint; this one moves about THIRTY per career, and they are all downstream of the
+// ladder. Measured, all 63/64 top-level keys hashed on their own on both sides (worktree at `ea8b97f`
+// against this branch), the three careers agree on the moved set to within one or two keys:
+//
+//   MOVED   results · bestFinishByTier · trophiesByTier · entries · seasonEntries · seasonHistory ·
+//           seasonRecord / seasonWins / seasonStartRank · kidRank / kidRankWta / kidRankDomestic and
+//           their prev* companions · internationalEntryWeeks · fundsCents · financeWeeks ·
+//           careerTotals · events · offers · milestones · knockHistory · injuryHistory · condition ·
+//           skills · academy · nextEventId · walkoverWeek · lastSeasonSummary
+//   UNMOVED **coachId · coachOnEventWeeks · coachOnJuniorEvents · coachSince · profile · seed ·
+//           rngMain · cohort · schemaVersion**
+//
+// ⚠ READ THE SECOND LINE, NOT THE FIRST. What this file's frozen hashes are FOR is stated one
+// paragraph up – *"what they may never do is move because of a change to the coach's edge that was
+// supposed to be scoped to the trip"* – and every coach key, the profile and the schema are
+// byte-identical. What moved is a career: she enters different tournaments, so she banks different
+// results, holds different ranks and different money. A rule that changes which rungs a junior may
+// stand on and left `results` untouched would be the thing to worry about.
+//
+// ⚠ AND `rngMain` IS AMONG THE UNMOVED, which is the invariant-2 half of the same check: P1 draws on
+// no stream at all (an access rule is a post-draw gate), so the persisted MAIN position after 156
+// weeks is the same in both trees. The frozen MAIN capture in tests/condition.test.ts is likewise
+// untouched – count 41550, hash e6b0c709 – and is asserted before its own companion constant.
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: 'b0fb926cbab92ca94bfcaf0c72622a0961655e7a040e4b5122710b29f4ab384a',
+  middleGrinder: 'e6f1313e49d49629645c95ebb701b5014e683ae1ff33f72149b3f98fbf24b58d',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '5f1ec621f2810d5e55cdf8ff09615c2729bbca98f54d2177de76afc66f9fb52e',
+  eliteGrinder: '807c780ba1eeaa12685a52363f70e7ba8eeee63b82739cce4cdef1e179641ef7',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send) */
-  selfTravelling: '540b84cd11794fd40828d68f48ebde21bf61f9e242ac04e60c19f8711f313d25',
+  selfTravelling: '984f5e80d165b5c0c845c70a611ebbd9cbee7bee935c0c61a77201c621cad9f0',
 }
 const FREEZE_WEEKS = 156
 
