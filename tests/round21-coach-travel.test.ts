@@ -55,6 +55,10 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+// ⚠ STRAIGHT FROM ITS OWN MODULE: `world.ts` imports `chargeCoachTravel` but does not re-export it,
+// and widening that public surface for a test would be the tail wagging the dog.
+import { chargeCoachTravel } from '../src/engine/world/sponsors'
 import { DEFAULT_PROFILE, type Snapshot } from '../src/shared/protocol'
 import { simulateMatch } from '../src/engine/match/engine'
 import { annotateMatch } from '../src/engine/match/rally'
@@ -141,9 +145,19 @@ describe('§1 the second seat is priced off her own seat', () => {
     // what the fallback the brief named ("price it from travelCostFor") arrives at.
     const world = career('fare-a', { travels: true })
     toFirstTrip(world)
-    const event = world.season.find((e) => world.entries.includes(e.id)) ?? world.season[0]
+    // ⚠ ON A **PAYING** RUNG, SINCE THE FARE GATE (its own block at the bottom of this file). A
+    // career's first trip is a domestic or junior event and the fare there is deliberately zero -
+    // an ungated one bankrupted 15 of 30 middle careers in the junior years. `coachTravelFareFor` is
+    // a pure price function and does not need her to have entered, so the claim about the PRICE is
+    // read on a rung the price exists on rather than on the first one the calendar offers.
+    const paying = world.season.find((e) => TIERS[e.tier].prizeCents !== undefined && e.travelCostCents > 0)
+    expect(paying, 'the calendar reaches a rung that pays').toBeTruthy()
+    const event = paying!
     expect(coachTravelFareFor(world, event)).toBe(travelCostFor(world, event))
     expect(coachTravelFareFor(world, event), 'a fare is real money').toBeGreaterThan(0)
+    // ...and the first trip of a junior career is exactly the refusal the gate exists for.
+    const junior = world.season.find((e) => TIERS[e.tier].prizeCents === undefined)
+    if (junior) expect(coachTravelFareFor(world, junior), 'a rung that pays her nothing').toBe(0)
   })
 
   it('⚠ AND IT FOLLOWS THE COVERS, because the sentence on screen is about the fare the family PAYS', () => {
@@ -153,7 +167,12 @@ describe('§1 the second seat is priced off her own seat', () => {
     // they do the same to his, on every event on the calendar.
     const world = career('fare-b', { travels: true })
     toFirstTrip(world)
-    for (const e of world.season) {
+    // ⚠ RE-AIMED TO THE RUNGS THAT PAY (the fare gate, at the bottom of this file). The fare is 0 on
+    // a domestic or junior rung by design since the bench measured an ungated one bankrupting 15 of
+    // 30 middle careers, so a loop over the WHOLE calendar now compares a real fare with a refused
+    // one. The claim is unchanged and is about the rungs the fare exists on.
+    const pays = (e: { tier: TierId }): boolean => TIERS[e.tier].prizeCents !== undefined
+    for (const e of world.season.filter(pays)) {
       expect(coachTravelFareFor(world, e), `event ${e.id}`).toBe(travelCostFor(world, e))
     }
     // ⚠ AND A CAREER WITH A SCHOLARSHIP IS THE ARM THAT MAKES THAT SENTENCE MEAN SOMETHING. Without
@@ -161,7 +180,7 @@ describe('§1 the second seat is priced off her own seat', () => {
     // mistake as well as of the rule. Mutation-verified: return `event.travelCostCents` from
     // `coachTravelFareFor` and this block goes red while the loop above stays green.
     world.academy = { level: 2, sinceWeek: 0, seasonIndex: 0, coveredCents: 0 }
-    const withCover = world.season.filter((e) => e.travelCostCents > 0)
+    const withCover = world.season.filter((e) => e.travelCostCents > 0 && pays(e))
     expect(withCover.length, 'the calendar has trips worth paying for').toBeGreaterThan(0)
     for (const e of withCover) {
       expect(coachTravelFareFor(world, e), `event ${e.id}`).toBe(travelCostFor(world, e))
@@ -195,24 +214,33 @@ describe('§2 turning it on changes the world', () => {
     // differs is the switch. This is the assertion the item exists for: a test that only checked
     // `world.coachOnEventWeeks === true` would have been green for the whole two weeks the round-20
     // report was open.
+    // ⚠⚠ CHARGED ON A **PAYING** RUNG, and that is the fare gate rather than a convenience. A career's
+    // first trip is a junior one, where the fare is zero by design: the bench measured an ungated
+    // fare bankrupting 8 of 30 wealthy·elite and 15 of 30 middle·middle careers, every bankruptcy in
+    // the junior years (docs/specs/coach-travel-2026-08.md). So this drives `chargeCoachTravel`
+    // directly on the rung the fare exists on - the claim is about the LEDGER, not about which week
+    // the calendar happens to offer first.
     const off = career('money')
     const on = career('money', { travels: true })
-    const a = toFirstTrip(off)
-    const b = toFirstTrip(on)
-    expect(b.playedWeek, 'the two careers walk the same calendar').toBe(a.playedWeek)
+    const paying = on.season.find((e) => TIERS[e.tier].prizeCents !== undefined && e.travelCostCents > 0)!
+    expect(paying, 'the calendar reaches a rung that pays').toBeTruthy()
+    const before = { off: off.fundsCents, on: on.fundsCents }
+    chargeCoachTravel(off, paying)
+    chargeCoachTravel(on, paying)
 
-    const rows = (w: WorldState) =>
-      w.events.filter((e) => e.week === a.playedWeek && e.category === 'travel' && e.amountCents !== undefined)
-    const spent = (w: WorldState) => rows(w).reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
+    // NOTHING leaves the family that stayed home - the switch is the only difference.
+    expect(off.fundsCents, 'he did not travel, so there is no second seat').toBe(before.off)
+    // ...and exactly the fare leaves the one that sent him.
+    expect(before.on - on.fundsCents).toBe(coachTravelFareFor(on, paying))
+    expect(before.on - on.fundsCents, 'a fare is real money').toBeGreaterThan(0)
 
-    // one travel row without him, two with - and the second one is HIS.
-    expect(rows(off)).toHaveLength(1)
-    expect(rows(on)).toHaveLength(2)
-    const his = rows(on).find((e) => /coach/i.test(e.text))
-    expect(his, 'the coach\'s fare is its own line in the feed, never folded into the retainer').toBeTruthy()
-    expect(his!.amountCents).toBe(-Math.abs(rows(off)[0].amountCents!))
-    // ...so the trip cost exactly twice what it cost without him. The owner's own pricing.
-    expect(spent(on)).toBe(spent(off) * 2)
+    const his = on.events.filter((e) => e.category === 'travel' && /coach/i.test(e.text))
+    expect(his, 'the coach\'s fare is its own line in the feed, never folded into the retainer').toHaveLength(1)
+    expect(his[0].amountCents).toBe(-coachTravelFareFor(on, paying))
+    expect(off.events.filter((e) => /coach/i.test(e.text) && e.category === 'travel')).toHaveLength(0)
+    // ...so the trip costs exactly TWICE what it costs without him - the owner's own pricing, 12.08:
+    // «a per-tournament top-up when the coach travels with her, at double the travel cost».
+    expect(coachTravelFareFor(on, paying) + travelCostFor(on, paying)).toBe(travelCostFor(on, paying) * 2)
   })
 
   it('nothing is charged on a week she did not travel', () => {
@@ -451,5 +479,63 @@ describe('§5 the broadcast knows he is in the corner', () => {
       const { a, b, match } = fixtureMatch(`coach-null-${i}`)
       expect(buildCommentary(match, a.name, b.name, null, null)).toEqual(buildCommentary(match, a.name, b.name))
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// ⚠⚠ THE GATE THE BENCH FOUND, AND IT SHIPPED UNGATED FOR ONE COMMIT.
+//
+// docs/specs/coach-travel-2026-08.md, measured on the rebuilt policy, 30 seeds: at exactly this
+// price an UNGATED fare bankrupted 8 of 30 wealthy·elite careers and 15 of 30 middle·middle ones,
+// and every single bankruptcy was in the JUNIOR YEARS - ages 15-19, "ever ranked" falling
+// 96.7% -> 46.7%, the median middle career's whole prize money going to $0. The 30.07 record priced
+// the mechanic at +$21,000; on a career that actually plays it was +$995,979, because nothing
+// stopped it buying a second seat on a `local` at fourteen.
+//
+// The gate is the owner's own 30.07 argument as code - "JUNIOR TENNIS HAS NO PRIZE MONEY. A fare
+// can only be a decision if something might come back" - so he travels to the rungs that PAY, and
+// the test for that is the rung's own `prizeCents`. These assertions are the bankruptcy, pinned.
+// ---------------------------------------------------------------------------
+describe('round-21 #2 – he travels to the events that pay, and to no others', () => {
+  it('every rung that pays prize money charges the fare, and every rung that does not charges nothing', () => {
+    const world = createWorld('coach-fare-gate')
+    world.coachId = world.coachId ?? 'x'
+    world.coachOnEventWeeks = true
+    let paying = 0
+    let unpaid = 0
+    for (const tier of TIER_LADDER) {
+      const event = world.season.find((e) => e.tier === tier) ?? {
+        id: `probe-${tier}`,
+        week: world.week + 1,
+        tier,
+        surface: 'hard' as const,
+        travelCostCents: 1000_00,
+        deadlineWeek: world.week,
+      }
+      const fare = coachTravelFareFor(world, event)
+      if (TIERS[tier].prizeCents === undefined) {
+        expect(fare, `${tier} pays her nothing, so it must charge him nothing`).toBe(0)
+        unpaid++
+      } else {
+        expect(fare, `${tier} writes a cheque, so the fare is real`).toBeGreaterThan(0)
+        // ...and it is HER fare, so an academy or a brand reaches his seat exactly as it reaches hers.
+        expect(fare).toBe(travelCostFor(world, event))
+        paying++
+      }
+    }
+    // Both arms are populated - an assertion that only ever visits one side proves nothing.
+    expect(unpaid, 'the domestic and junior rungs').toBeGreaterThan(3)
+    expect(paying, 'the professional rungs').toBeGreaterThan(3)
+  })
+
+  it('the switch still reads ON at a junior rung - it is the FARE that is gated, not the stance', () => {
+    // The distinction matters on screen: she has not turned the setting off, there is simply nothing
+    // to pay for. A gate that silently flipped the toggle would lose the player's own choice.
+    const world = createWorld('coach-fare-stance')
+    world.coachId = world.coachId ?? 'x'
+    world.coachOnEventWeeks = true
+    expect(coachTravelsWithHer(world)).toBe(true)
+    const junior = world.season.find((e) => TIERS[e.tier].prizeCents === undefined)
+    if (junior) expect(coachTravelFareFor(world, junior)).toBe(0)
   })
 })

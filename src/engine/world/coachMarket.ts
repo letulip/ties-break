@@ -208,6 +208,7 @@ export function coachTravelsWithHer(world: WorldState): boolean {
   return world.coachOnEventWeeks && world.coachId !== null
 }
 
+
 /** WHAT THE COACH COSTS OVER A SEASON - one number, because since 08.08 there is only one.
  *
  *  ⚠ THE PAIR IS GONE AND SO IS THE 49-WEEK QUOTE, and the second half is a bug this wave found.

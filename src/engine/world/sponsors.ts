@@ -627,6 +627,26 @@ export function coachTravelFareFor(world: WorldState, event: SeasonEvent): numbe
   // "tax, not a decision" the 30.07 boolean was killed for.
   if (world.coachId === null) return 0
   if (!world.coachOnEventWeeks) return 0
+  // ⚠⚠ HE COMES TO THE EVENTS THAT PAY, AND THIS SHIPPED UNGATED FOR EXACTLY ONE COMMIT (round-21
+  // #2). The bench caught it before the branch was gated - `docs/specs/coach-travel-2026-08.md`: at
+  // this very price an ungated fare bankrupted **8 of 30** wealthy·elite careers and **15 of 30**
+  // middle·middle ones, and EVERY bankruptcy was in the junior years (ages 15-19). "Ever ranked"
+  // fell 96.7% -> 46.7% and the median middle career's whole prize money went to $0. The 30.07
+  // record priced this mechanic at +$21,000; on a career that actually plays it is +$995,979,
+  // because nothing stopped it buying a second seat on a `local` at fourteen.
+  //
+  // ⚠ THE GATE IS THE OWNER'S OWN ARGUMENT RATHER THAN A NEW RULE. Cancelling the mechanic on 30.07
+  // he said why - «Никто никуда не ездит… в про карьере - там другое дело» - and the commit spelled
+  // it out: *"JUNIOR TENNIS HAS NO PRIZE MONEY. A fare can only be a decision if something might
+  // come back, and on the junior tour nothing ever does."*
+  //
+  // ⚠ AND THE TEST IS THE RUNG'S OWN `prizeCents`, not an age and not a second ladder: present from
+  // W15 up, absent on every domestic and junior rung. A rung that starts paying starts being worth
+  // the fare, by construction, with nothing to keep in step. It lives HERE and nowhere else -
+  // `chargeCoachTravel` already returns on a zero fare, so "does he come" and "what does it cost"
+  // are one question with one answer, and `coachMarket.ts` cannot import this file back anyway
+  // (it is imported BY it - the cycle is why this is not a predicate over there).
+  if (TIERS[event.tier].prizeCents === undefined) return 0
   return travelCostFor(world, event)
 }
 
