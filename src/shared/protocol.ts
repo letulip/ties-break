@@ -1747,6 +1747,17 @@ export interface KitLineView {
   blurb: string
   /** her CONDITION on this line right now, 0 = as new, 1 = spent (`kitWearAt`'s units) */
   wear: number
+  /** ⚠ HOW MANY OF THE RUNG'S GOOD WEEKS ARE STILL IN FRONT OF HER (round 21 item 10, owner: «В
+   *  разделе bills возле выбранной позиции и "# good weeks" написать "(3 left)" - сколько осталось»).
+   *
+   *  `rungs[].goodWeeks` is what a rung BUYS from new and says nothing about the set she is actually
+   *  holding, so a fourteen-week-old string job read exactly like a fresh one. This is that same
+   *  number minus the line's real age, and it hits 0 on the week `wear` reaches the Worn edge - one
+   *  clock, so the count and the condition word cannot disagree. See `goodWeeksLeftFor`.
+   *
+   *  null when a signed deal is holding this line under that edge: the brand keeps it fresh, so
+   *  nothing is counting down and the screen prints no countdown. */
+  goodWeeksLeft: number | null
   /** what the family's recurring bill for this line costs at each rung, cents - the mid of the
    *  background's own band times the rung's price factor, so the corridor is visible at the till.
    *
