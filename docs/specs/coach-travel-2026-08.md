@@ -458,53 +458,34 @@ Pooled over both cells, 60 paired careers per arm:
 | `a4-ladder` | +0.7…1.0 pp | **31/23/6** | **+4.1 [−10.4, +18.6]** | **0.34** | **not resolvable** |
 | `a3-big` | +3.0 pp | **38/20/2** | **−16.0 [−23.1, −9.0]** | **0.026** | real |
 
-## 7.4 ⛔ THE VERDICT: THE LADDER-TIED DOSE IS INSIDE THE NOISE, AND THAT IS THE RESULT
+## 7.4 ⛔ WHAT 30 SEEDS SAID – AND IT WAS WRONG. KEPT AS THE RECORD OF WHY.
 
-**Do not ship it as a demonstrated improvement, because it has not been demonstrated.** The mechanic
-is built, correct and free of RNG cost, and the shape is the owner's own – but at his size the bench
-cannot tell it from nothing, and three unmeasured coach mechanics have already cost this project two
-weeks. The evidence, in the order it convinces:
+**Superseded by §7.7. Read this section only as evidence about the BENCH, never as evidence about the
+mechanic.** At n=30 the arm read `31/23/6`, Δbest rank **+4.1 [−10.4, +18.6]**, sign *p* = **0.34**,
+with the two cells disagreeing in sign on both the paired mean and the top-100 share (elite 56.7% →
+50.0%, middle 23.3% → 26.7%) and the mean and the count disagreeing *inside* the middle cell. The
+conclusion drawn from that was «inside the noise, do not ship it as demonstrated».
 
-1. **The two cells disagree in sign, on both readings.** Elite: 13 better / 16 worse, top-100
-   **56.7% → 50.0%**. Middle: 18 better / 7 worse, top-100 **23.3% → 26.7%**. This is the identical
-   failure pattern §3d recorded for `a3-small` and refused to call a result, and it is the reason
-   the honest statement is not "a small positive" but **the sign of the effect is not determined.**
-2. **Even the mean and the count disagree *inside* the middle cell.** 18/7/5 by paired count, yet
-   Δbest rank **+7.2** – worse on the mean – because a handful of careers move a long way. Two
-   statistics of the same 30 pairs pointing in opposite directions is what "inside the noise" looks
-   like from the inside.
-3. **⚠⚠ THE YARDSTICK IS THE PART THAT SETTLES IT, AND IT DOES NOT SAY "THE BENCH IS BLIND".** The
-   obvious defence of a null result is that 30 seeds cannot see anything this size – so the same
-   size was measured in the *other* direction. `a4-off` deletes the whole shipped edge, and it is
-   **resolvable at exactly this n: 18 better / 38 worse / 4 tied, Δ+6.4 rank places, *p* = 0.011.**
-   **So the bench CAN see one helping of the edge. It looked for the second helping and did not find
-   it.** That is a finding about the mechanic, not about the sample size: the first helping is worth
-   ~6 rank places and the second is worth something the same experiment cannot distinguish from
-   zero. Diminishing returns is exactly what point 4 predicts.
-4. **⚠ THE DOSE-RESPONSE IS NOT A STRAIGHT LINE, AND HIS NUMBER LANDS IN THE FLAT PART OF IT.**
-   Removing the edge costs 6.4 rank places (*p* = 0.011). Doubling it buys −4.1 (*p* = 0.34, wrong
-   sign). Sextupling it buys 16.0 (*p* = 0.026). **The curve is steep at zero, flat through the
-   ladder-tied dose, and steep again by +3.0 pp** – which is a real shape rather than an artefact,
-   because point 5 gives the mechanism for it.
-5. **The mechanism is §4's promotion loop, and it is why a SMALL bonus is the worst place to stand.**
-   `a4-ladder` moves her rank at entry to the big rungs from #136 to #133 and her **points per entry
-   DOWN, 37.8 → 36.1**. `a3-big` moves it from #136 to #110 and her points per entry **UP, 37.8 →
-   42.9**. A small bonus promotes her just far enough to be outclassed in the bigger draw; a large
-   one promotes her *and* makes her strong enough for it. **The dead zone is real and the ladder-tied
-   dose sits in it.**
+Two further readings were built on top of that null, and **both were artefacts of 30 seeds**:
 
-## 7.5 What n would settle it
+- «the bench can see one helping and not the second» – from `a4-off` reading 18/38/4 at *p* = 0.011.
+  At n=250 the same arm is *p* = 0.031 in the same direction, so the direction held, but the *elite
+  cell alone* fell to *p* = 0.299. It was never the clean yardstick it was written up as.
+- «the dose-response is steep, then flat, then steep, and his number is in the dead zone» – built on
+  `a4-ladder`'s points per entry apparently FALLING (37.8 → 36.1). At n=250 it **rises** (39.7 →
+  40.8 elite, 34.8 → 36.8 middle). **There is no dead zone. The curve is a straight line.**
 
-The observed flip rate is 31/54 = **57.4%**. Resolving that at 80% power, two-sided α = 0.05, needs
-**≈358 non-tied paired careers** – about **180 seeds per cell against today's 30, a 6× run.** On this
-machine the two `a4-ladder` cells took 145 s and 1,915 s for 30 careers, so 180 seeds is roughly
-**8–12 hours** of single-process bench time. That is the honest price of turning this row into a fact.
+⚠ **THE LESSON IS THE ONE `rank-plateau.md` ALREADY TEACHES AND IT COST A SECOND AFTERNOON HERE: 30
+paired careers is enough to resolve a +3.0 pp effect and is NOT enough to resolve a 1 pp one.** It
+does not merely fail to find the small effect – it manufactures a confident mechanism for its absence.
+Both of the bullets above read as findings, had numbers attached, and were wrong.
 
-⚠ **That prerequisite has already been paid, which is why the null above is worth reading.** The same
-calculation puts `a4-off` at ≈62 non-tied pairs, and it duly came back significant on the 60 this run
-already has. The bench is not blind at this size; the second helping is simply smaller than the first.
+## 7.5 What n it took
 
-**→ RUN AT n=250 PER CELL. See §7.7 for the settlement.**
+The n=30 flip rate of 31/54 = 57.4% put the requirement at **≈358 non-tied paired careers at 80%
+power, two-sided α = 0.05** – about 180 seeds a cell. **That was run, at 250 seeds a cell**, four arms
+in parallel worktree processes: 8 arm-cells, 2,000 careers, ~65 minutes wall on a 10-core box. The
+estimate was close: the settled flip rate needs ~532 non-tied pairs and the run produced 469.
 
 ## 7.6 ⚠ TWO THINGS THE OWNER SHOULD BE TOLD BEFORE ANYTHING IS MERGED
 
@@ -547,5 +528,65 @@ integration layer that imports it.
    means the call site telling `kidMatchPlayerFor` whether this is a trip, i.e. an argument threaded
    from `world.ts` and `planner.ts`.
 
-⚠ Neither is worth fixing *before* the dose question is answered: if the helping is not shipped at
-this size, both disappear with it.
+⚠ Neither was worth fixing before the dose question was answered. **It now is** – §7.7 says ship, so
+both become real defects rather than hypothetical ones. They are the first two items of follow-up.
+
+## 7.7 ⭐⭐ SETTLED AT n=250 A CELL: THE LADDER-TIED DOSE WORKS. SHIP IT.
+
+Same harness, same worktree commit, same paired design, **250 seeds a cell – 500 paired careers an
+arm.** The first 30 seeds of each cell are literally the §7.3 careers (`bench-<background>-<index>`),
+so this is a strict superset rather than a different experiment.
+
+| cell | arm | best rank p50 | top-100 | b / w / t | Δbest rank (95% CI) | sign *p* | Δprize | Δtravel |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **wealthy·elite** | control | #98 | 51.2% | – | – | – | – | – |
+| | **`a4-ladder` ×2** | **#95.5** | **54.4%** | 123/116/11 | **−3.3** [−6.7, +0.2] | 0.70 | **+$30,645** | +$17,664 |
+| | `a3-big` +3.0 | #75 | 61.6% | 165/73/12 | −13.6 [−18.6, −8.7] | <0.001 | +$254,930 | +$65,065 |
+| | `a4-off` ×0 | #99 | 50.4% | 110/127/13 | +1.9 [−1.6, +5.3] | 0.30 | −$20,490 | −$8,411 |
+| **middle·middle** | control | #105 | 43.6% | – | – | – | – | – |
+| | **`a4-ladder` ×2** | **#100** | **48.8%** | 140/90/20 | **−5.0** [−10.2, +0.1] | 0.001 | **+$43,600** | +$14,911 |
+| | `a3-big` +3.0 | #87 | 55.2% | 177/64/9 | −15.1 [−19.1, −11.0] | <0.001 | +$198,550 | +$65,694 |
+| | `a4-off` ×0 | #110.5 | 39.6% | 104/135/11 | +4.6 [+1.4, +7.8] | 0.05 | −$61,350 | −$34,085 |
+
+**Pooled, 500 paired careers an arm:**
+
+| arm | ≈ dose | b / w / t | Δbest rank (95% CI) | sign *p* | Δ top-100 |
+| --- | --- | --- | --- | --- | --- |
+| `a4-off` | **−1 helping** | 214/262/24 | **+3.2 [+0.8, +5.6]** | 0.031 | −0.8 / −4.0 pp |
+| **`a4-ladder`** | **+1 helping (0.7–1.0 pp)** | **263/206/31** | **−4.1 [−7.2, −1.0]** | **0.010** | **+3.2 / +5.2 pp** |
+| `a3-big` | +3.0 pp | 342/137/21 | −14.3 [−17.5, −11.1] | <0.001 | +10.4 / +11.6 pp |
+
+### The four things this says
+
+1. **THE EFFECT IS REAL AND IT IS SMALL, WHICH IS EXACTLY WHAT HE ASKED FOR.** −4.1 rank places,
+   *p* = 0.010, 95% CI excluding zero, **and both cells now agree in sign on both readings** – the
+   §7.3 disagreement was sampling noise and nothing else. Top-100 share rises 51.2% → 54.4% at
+   wealthy·elite and 43.6% → 48.8% at middle·middle. «Будет не так сильно влиять как будто» is
+   measured: it influences, and it influences about a quarter as much as +3.0 pp did.
+2. **⚠ THE DOSE-RESPONSE IS A STRAIGHT LINE THROUGH THE ORIGIN – there is no dead zone and no
+   turnover anywhere tested.** In rank places per pp of edge: `a4-off` **3.8**, `a4-ladder` **4.8**,
+   `a3-big` **4.8**. Three doses spanning a factor of four, one slope. §5's «the effect grows with
+   the dose and does not turn over anywhere inside the range tested» is now measured over a wider
+   range and at 8× the seeds, and it holds.
+3. **IT PAYS FOR ITSELF, WHICH IS THE WHOLE POINT OF A FARE.** +$30,645 (elite) and +$43,600
+   (middle) of prize money against +$17,664 and +$14,911 of extra travel. The family that sends him
+   is roughly **$13k–29k a career better off in cash** on top of the ranking – so the switch is a
+   decision with a return rather than the «tax, not a decision» the 30.07 boolean was killed for.
+4. **THE PROMOTION LOOP IS RUNNING AND IT PAYS AT THIS DOSE TOO.** `a4-ladder` moves her rank at
+   entry to the big rungs #122 → #118 (elite) and #140 → #133 (middle), her opener-loss share DOWN
+   (55.7% → 55.4%, 57.8% → 57.1%) and her **points per entry UP** (39.7 → 40.8, 34.8 → 36.8). §4's
+   loop is a gain at every dose measured, not only at the big one.
+
+### ⭐ Recommendation
+
+**Merge the mechanic at the owner's own sizing.** It is his shape, it is measured, the effect is
+positive on both cells and both currencies, it costs no RNG, and a career that does not travel is
+byte-identical. The two scoping warts in §7.6(c) become the follow-up, and §7.6(b) – the screen still
+prints the home corridor to a family that travels – is now the *last* thing standing between this and
+a bonus the player can actually perceive.
+
+⚠ **AND THE HONEST CAVEAT: −4 rank places is small.** It is one fifth of a top-100 place's worth of
+noise on any single career, so **no individual playthrough will ever feel it** – exactly as
+`coach-match-edge.md` §7 already says of the edge itself («the value is not observable and the place
+is»). What the owner is buying is a distribution shift over hundreds of careers, and the reason to
+ship it is that the fare should buy *something* and now demonstrably does.
