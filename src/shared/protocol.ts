@@ -674,6 +674,16 @@ export interface PendingView {
   temperatureC: number
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
+  /** ⭐ ROUND-21 #2 – DID THE COACH COME? The owner, third ask: «Присутствие в потоке и трансляции
+   *  точно надо (если едет).» This is the "в потоке" half.
+   *
+   *  It rides here rather than being re-derived in the component for the same reason `temperatureC`
+   *  and `ladder` do, and the reason is sharper for this one: the flow, the live commentary and the
+   *  week's story must all be describing the SAME trip, so `coachTravelsWithHer` is asked once, in
+   *  the engine, and the answer is carried. A screen that re-read `coachBilling.onEventWeeks` would
+   *  also be re-deriving the "and there IS a coach" clause, which is exactly the half a self-coached
+   *  career gets wrong. */
+  coachTravelled: boolean
   /** WHICH TABLE THIS TOURNAMENT IS PLAYED ON – `TIERS[tier].track`, carried rather than re-derived.
    *
    *  ⚠ THE BUG THIS CLOSES (31.07, fix/ladder-separation). The owner, after a National: «по итогам
@@ -2267,6 +2277,19 @@ export interface DiarySnapshot {
    *  «чтобы тренировочные недели не просто скипались ... что происходит на этих неделях». See
    *  engine/diary.ts WEEK_NOTES for the cadence and the licences. */
   weekNote: string | null
+  /** ⭐ ROUND-21 #2 – THE COACH WAS THERE, in the week's story. Non-null on exactly the weeks she
+   *  came home from a tournament AND the coach travelled with her; null on every other week,
+   *  including every trip he stayed home for.
+   *
+   *  ⚠ IT IS ITS OWN FIELD RATHER THAN ENTRIES IN `TRAVEL_NOTES`, and that is the difference between
+   *  presence and decoration. The travel pool is a LICENSED lottery – a line joins ~370 others and is
+   *  drawn some weeks – which is right for colour and wrong for a fact the player just paid a second
+   *  fare for: he would be in the story on maybe one trip in twenty. This says it on every trip he
+   *  came on and on none that he did not.
+   *
+   *  Parent's voice, like the scrap it sits under (diary/travelNotes.ts rule 1): the family noticing
+   *  him, never him assessing her. */
+  coachNote: string | null
   /** the Memory card to show this week, or null */
   memory: MemoryCard | null
   /** W5: WHICH PAINTING THIS WEEK SHOWS – the journey home, the layoff, the holiday, or the week's
@@ -2298,6 +2321,18 @@ export interface KidLife {
   /** her grade, on a 1-September school year, plus her place in the class by age. Moves once a
    *  year, and says "Exams this week" while the calendar is holding an exam blackout. */
   school: KidLifeTile
+  /** ⭐ ROUND-21 #6 – WHY SHE IS STILL AT SCHOOL WHEN HER TENNIS YEAR HAS LEFT, or '' when there is
+   *  nothing to explain.
+   *
+   *  ⚠ IT IS NOT A THIRD TILE LINE AND CANNOT BE. Both lines above are `white-space: nowrap` inside a
+   *  115px cell on a 17-character budget (`TILE_LINE_MAX`); this is a sentence, so it renders under
+   *  the grid, directly below the School tile it names. The owner's report is why it exists at all:
+   *  «Если день рождения в декабре, то вся школа уже закончилась и в сентябре вроде бы её быть не
+   *  должно» – measured last round and CORRECT, because the ITF band is one birth YEAR while the
+   *  school year turns on 1 September, so a December girl sits her final school year in a September
+   *  her own age group has already left. He ruled the cut-off STAYS; what was missing is that nothing
+   *  on screen said so, and unexplained correct behaviour reads exactly like a bug. */
+  schoolWhy: string
   /** who she is closest to this school year, and how that is going this week. Deterministic
    *  (purpose-scoped sub-streams, never Math.random), and it moves with both clocks. */
   friends: KidLifeTile
@@ -2677,7 +2712,9 @@ export interface Snapshot {
    *  coach is not stood down - which is no longer a question the tournament calendar answers - so
    *  there is nothing left to compare. See `coachWorksThisWeek`. */
   coachBilling: {
-    /** does he TRAVEL with her (a persisted stance; the mechanic itself is still deferred) */
+    /** ⭐ ROUND-21 #2: does he TRAVEL with her. A persisted stance, and since this wave a LIVE one –
+     *  the row on screen T sets it, the till charges a second fare for it, and the flow, the
+     *  commentary and the week's story all say when he came. */
     onEventWeeks: boolean
     weeklyCents: number
     /** weeks of the season she is entered for – the season she is in, or the one just finished */
@@ -2685,6 +2722,13 @@ export interface Snapshot {
     /** weeks of the coming year the retainer is actually charged for */
     billedWeeks: number
     seasonCents: number
+    /** ⭐ ROUND-21 #2: what the second seat would add over the trips she has BOOKED this season, in
+     *  cents. Priced whether the switch is on or off – it is the price of the decision, not a
+     *  receipt. 0 for a self-coached family (nobody to send) and 0 with nothing booked. */
+    travelFareCents: number
+    /** ...and how many trips that figure covers, so the screen never prints a total with nothing to
+     *  divide it by. */
+    travelTrips: number
     /** ⭐ ROUND-21 #12: WHAT ARRIVES EVERY WEEK, ALL OF IT – the parents' contribution plus the
      *  savings interest the balance earns plus a signed kit deal's retainer, pro-rated. It is the cap
      *  the coaching budget meter draws against and the denominator every `overBudgetCents` is cut

@@ -445,6 +445,20 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
         </Card>
       </div>
 
+      <!-- ⭐ ROUND-21 #6 – WHY THE SCHOOL TILE SAYS WHAT IT SAYS IN SEPTEMBER.
+           The owner reported a December-born girl still at school in a September when, on his
+           reading, her whole year had finished. Measured last round: he is RIGHT about the facts and
+           the behaviour is CORRECT - the ITF band is one birth year, the school year turns on 1
+           September, so the two halves of one band leave school 52 weeks apart. He ruled the cut-off
+           STAYS. What was missing is that nothing on screen accounted for it, and correct behaviour
+           with no account of itself reads exactly like a bug.
+           ⚠ UNDER THE GRID RATHER THAN IN THE CELL, and that is forced: both tile lines are
+           `white-space: nowrap` inside a 115px cell on a 17-character budget (`TILE_LINE_MAX`), and
+           this is a sentence. It sits directly below the School tile, which is the first cell of the
+           second row. Engine-composed (`kidLife.schoolCutOffNote`), empty for the eight birth months
+           it would be false of and once she is out of school. -->
+      <p v-if="life?.schoolWhy" class="hint kid-grid-note">School – {{ life.schoolWhy }}</p>
+
       <!-- ========================== 3. THE SKILLS RADAR ==========================
            decisions.md #11, finally built. No numbers anywhere on it, ever. -->
       <Card class="kid-panel">
@@ -747,6 +761,14 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   margin-top: 12px;
+}
+
+/* ⭐ ROUND-21 #6: the September footnote. A full-width remark under the grid, in the app's `hint`
+   register, so it reads as an explanation of the cell above it rather than as a fourth stat. It
+   appears for four birth months out of twelve and only while she is still at school. */
+.kid-grid-note {
+  margin: 8px 0 0;
+  text-wrap: pretty;
 }
 
 .kid-tile {

@@ -100,6 +100,8 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   milestones: [],
   vacationWeek: false,
   vacationPackageId: null,
+  // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
+  coachTravelled: false,
   trainPct: 75,
   knockChoice: null,
   birthdayAge: null,

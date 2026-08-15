@@ -68,7 +68,7 @@ export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
-import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote } from './coachMarket'
+import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
 import { kitDealView, kitLineViews } from './kit'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
@@ -585,6 +585,9 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
     temperatureC: eventTemperature(world.seed, event),
     roundLabel: stageLabel(current.round, tier.drawSize),
+    // ⭐ ROUND-21 #2: «Присутствие в потоке ... точно надо (если едет)». Asked ONCE, in the engine,
+    // and carried - the same answer the running commentary and the week's story are given.
+    coachTravelled: coachTravelsWithHer(world),
     ladder: track,
     kidRank: kidLadderRank(world, track),
     opponent: {
@@ -703,6 +706,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     vacationPackageId: vacationForWeek(world, world.week)?.packageId ?? null,
     // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
     // decision rather than the world's, and the subject of the ordinary week's note.
+    // ⭐ ROUND-21 #2: the ONE predicate, asked here and carried – see `coachTravelsWithHer`.
+    coachTravelled: coachTravelsWithHer(world),
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must

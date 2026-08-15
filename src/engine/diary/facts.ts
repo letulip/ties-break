@@ -170,6 +170,13 @@ export interface DiaryWorldView {
    *  still pass, and quietly sweep the generic sentence instead of the six new ones. Required.
    *  That world.ts really passes it is pinned in tests/week-scene.test.ts. */
   vacationPackageId: string | null
+  /** ⭐ ROUND-21 #2: did the coach travel with her? `coachTravelsWithHer(world)` – the ONE predicate
+   *  the tournament flow and the live commentary also read, so the three surfaces cannot disagree
+   *  about the same trip.
+   *
+   *  Required rather than optional, for the reason `vacationPackageId` above spells out at length: it
+   *  selects COPY, and a view that forgot it would build, pass, and quietly say he stayed home. */
+  coachTravelled: boolean
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training

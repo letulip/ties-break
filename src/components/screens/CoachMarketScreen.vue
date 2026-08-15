@@ -169,6 +169,48 @@ const sessionsNow = computed(() => (game.snapshot ? coachHoursForPlan(game.snaps
 // the screen never does this arithmetic itself.
 const billing = computed(() => game.snapshot?.coachBilling ?? null)
 
+// ⭐⭐ ROUND-21 #2 – THE SWITCH IS LIVE. Owner, 14.08, THIRD ask (his words verbatim in
+// tests/component/round21-coach-travel.test.ts; the app bans Cyrillic in a template, comments
+// included, and this is the script side of the same file so the rule is kept here too by habit).
+//
+// It was locked on 30.07 after three STAT versions of coach travel were measured and all three
+// failed, and round-20 #1 answered the SECOND ask by rewriting the sub-line instead of building
+// anything. Asking a third time overrules the cancellation. What he asked for is PRESENCE - he
+// goes, and it is visible - and that is exactly what flipping this now buys: a second fare per trip
+// (`coachTravelFareFor`), a line in the tournament flow, a beat in the running commentary, and a
+// line in the week's story. NO STAT MOVES on this branch.
+//
+// ⚠ SELF-COACHED IS THE ONE REFUSAL LEFT, and it is a fact rather than a gate: there is nobody to
+// send, the engine charges nothing and shows nothing (`coachTravelsWithHer`), so the control says so
+// rather than pretending the stance means something. The switch still WORKS in that state - the
+// stance persists and takes effect the moment she hires somebody - which is what keeps this off the
+// app's standing rule against a dead control nobody can explain.
+const hasCoach = computed(() => (game.snapshot?.coachId ?? null) !== null)
+const travelsOnEventWeeks = computed(() => billing.value?.onEventWeeks ?? false)
+
+/** WHAT SENDING HIM COSTS, in the engine's own words - `travelFareCents` is the sum of
+ *  `travelCostFor` over the trips she has BOOKED this season, which is the one fare definition in
+ *  the game. The rule ("twice the fare") is always said; the money is said only when there is a
+ *  booked season to price it over, because a $0.00 season total with nothing behind it is worse
+ *  than no figure at all. */
+const travelSubLine = computed(() => {
+  if (!hasCoach.value) return 'You are coaching her yourself – there is nobody to send. Turn it on and it takes effect when you hire somebody.'
+  const b = billing.value
+  // ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08) – `buildCoachRoster` puts a woman on every
+  // roster by construction, so "his seat" would print under Sabine Kobayashi. The first draft of
+  // this line said "a trip HE comes on ... HIS seat", and `round15-surfaces.test.ts` caught it
+  // MOUNTED on this exact screen, which is the guard doing precisely its job.
+  const rule = 'Twice the fare on every trip – a second seat beside hers.'
+  if (!b || b.travelTrips === 0) return rule
+  const trips = b.travelTrips === 1 ? '1 trip' : `${b.travelTrips} trips`
+  return `${rule} ${formatCents(b.travelFareCents)} over the ${trips} she has booked this season.`
+})
+
+async function toggleTravel() {
+  if (game.busy) return
+  await game.setCoachOnEventWeeks(!travelsOnEventWeeks.value)
+}
+
 // ⚠ THE CONTEXT THE UPLIFT NUMBERS ARE RELATIVE TO. The owner watched his coach's number fall from
 // 0.5-1.0 to 0.4-0.9 to 0.3-0.7 and asked what it was tied to (his words verbatim are in
 // tests/coachTiers.test.ts). The answer is that a rung's worth is a share of her REMAINING headroom,
@@ -448,7 +490,28 @@ function scrollToTier(tier: CoachTier): void {
       Every price below is {{ sessionsNow }} sessions a week – more sessions, more money.
     </p>
 
-    <!-- ⚠ THE TOURNAMENT-TRAVEL TOGGLE IS LOCKED. The owner cancelled the mechanic behind it on 30.07
+    <!-- ⭐⭐ ROUND-21 #2 – THE TOURNAMENT-TRAVEL TOGGLE IS LIVE, ON HIS THIRD ASK.
+         The owner, 14.08: he reported for the THIRD time that the coach still does not go to
+         tournaments. His words in full, and the whole history of the two refusals before this one,
+         are in tests/component/round21-coach-travel.test.ts - THIS IS A TEMPLATE, and the app's own
+         rule (pinned in tests/round13-nav.test.ts) is that no Cyrillic appears inside one, comments
+         included. The same guard caught the 30.07 draft of this very block.
+
+         WHAT CHANGED, AND WHAT DID NOT. The mechanic was cancelled on 30.07 because three versions
+         of a coach-travel STAT were built and measured and all three failed (the boolean: +$21k for
+         +0.6 skill; a fatigue discount: 2 condition points of ~36; a match-strength edge that made
+         elite results WORSE). None of that is reversed here, and no stat is added: what this switch
+         buys is PRESENCE, which is what he asked for when asked what to build - he goes, it costs a
+         second fare, and the tournament flow, the running commentary and the week's story all say
+         so. Re-measuring the three stat arms on the rebuilt bench is a separate arm of this wave.
+
+         ⚠ AND THE ROW NO LONGER REFUSES ANYBODY. It is a `:disabled` binding on nothing at all now -
+         the control is live at every age, on every rung, and self-coached families get an honest
+         sentence about having nobody to send rather than a dead switch. That is the same standing
+         rule the locked version was written to satisfy, finally satisfied by the switch working.
+         `tests/component/round21-coach-travel.test.ts` mounts real careers and holds it to that. -->
+    <!-- ⚠ HISTORY OF THE LOCKED VERSION, KEPT BECAUSE IT IS WHY THIS TOOK THREE ASKS. The owner
+         cancelled the mechanic behind it on 30.07
          after two measurement passes failed to make it worth a fare: nobody travels on the junior tour, the
          coach is a flat weekly cost that produces skill, and the decision belongs to the professional years.
          His words verbatim are in tests/coach-market.test.ts - THIS IS A TEMPLATE, and the app's own rule
@@ -482,20 +545,22 @@ function scrollToTier(tier: CoachTier): void {
          +$21k for +0.6 skill; a fatigue discount, 2 condition points of ~36; a match-strength edge that
          came out NEGATIVE on rank). Turning it on is a ruling to be taken, not a birthday to wait for.
          `tests/component/coach-travel-row.test.ts` mounts a professional career and holds the row to it. -->
-    <section v-if="billing" class="cm-travel is-locked">
+    <section v-if="billing" class="cm-travel">
       <div class="cm-travel-text">
         <p class="cm-travel-title">Coach travels to tournaments</p>
-        <p class="cm-travel-sub">
-          Off at every age – no week turns this on. There is no prize money on the junior tour to weigh
-          a fare against, and the professional case was measured three ways and paid for none of them.
-        </p>
+        <p class="cm-travel-sub">{{ travelSubLine }}</p>
       </div>
       <button
         class="cm-switch"
         role="switch"
-        :aria-checked="false"
-        disabled
-        aria-label="Coach travel – off at every age, and nothing here turns it on"
+        :aria-checked="travelsOnEventWeeks ? 'true' : 'false'"
+        :disabled="game.busy"
+        :aria-label="
+          travelsOnEventWeeks
+            ? 'Coach travels to tournaments with her – on. Press to send the coach home for competition weeks.'
+            : 'Coach travels to tournaments with her – off. Press to buy the second fare on every trip.'
+        "
+        @click="toggleTravel"
       >
         <span class="cm-switch-knob"></span>
       </button>

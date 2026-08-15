@@ -595,6 +595,65 @@ export function academyCoverOf(world: WorldState, event: SeasonEvent): number {
   return event.travelCostCents - netTravelCents(event.travelCostCents, world.academy)
 }
 
+/** ⭐ ROUND-21 #2 - WHAT THE SECOND SEAT COSTS, and it is her own fare over again.
+ *
+ *  ⚠ THE MULTIPLIER IS THE OWNER'S AND IT IS THE ONLY PRICED FARE THAT SURVIVES ANYWHERE. The 30.07
+ *  build DID price a per-trip fare and every line of it was reverted while still uncommitted (commit
+ *  `77e08aa`: "ALL THE ENGINE WORK IS REVERTED... the `coachTravelsFrom` threshold, the per-trip
+ *  fare... are gone"), so that number is not recoverable from git or from any doc - I looked. What IS
+ *  on the record is his own pricing of the same thing on 12.08, in `docs/specs/the-wall-2026-08.md`
+ *  §L1: «a per-tournament top-up when the coach travels with her, AT DOUBLE THE TRAVEL COST».
+ *
+ *  So: one more flight, one more room, and a trip he comes on costs exactly twice what it costs
+ *  without him. That reading is the one the screen can say in four words - "twice the fare" - and it
+ *  is the conservative one; the other reading of the same sentence (a top-up that is ITSELF double,
+ *  i.e. a trip at 3x) is not what "double the travel cost" describes.
+ *
+ *  ⚠ IT GOES THROUGH `travelCostFor` AND NOWHERE ELSE, which is the same rule the note above states
+ *  for the same reason. His seat is priced off HER seat, so an academy scholarship and a brand's
+ *  share reach it exactly as they reach hers - and the sentence "a trip with him costs twice the
+ *  fare" stays true of the figure the family actually sees, not of a gross number nobody is charged.
+ *
+ *  ⚠ AND IT IS NOT REFUNDABLE, BECAUSE IT IS NEVER COMMITTED IN ADVANCE. `chargeTravel`'s note warns
+ *  that a discount computed at the till and not at the refund is free money in four keystrokes. That
+ *  hazard cannot reach here: this is charged on the PLAY week, inside the arm where she actually
+ *  boarded (world.ts, `else if (enteredThisWeek)`), so the two arms that do not travel - the injury
+ *  walkover and the medical withdrawal - never pay it and have nothing to hand back.
+ *
+ *  Zero draws on any stream: two reads and a multiply. */
+export function coachTravelFareFor(world: WorldState, event: SeasonEvent): number {
+  // ⚠ SELF-COACHED FAMILIES SEND NOBODY. `coachId === null` is the parent on the court, and the
+  // parent is already in the car - charging a second seat for somebody who was going anyway is the
+  // "tax, not a decision" the 30.07 boolean was killed for.
+  if (world.coachId === null) return 0
+  if (!world.coachOnEventWeeks) return 0
+  return travelCostFor(world, event)
+}
+
+/** THE CHARGE, on the week she travelled and he came with her. One row, its own line in the feed:
+ *  the coach's fare is not the coach's retainer and must never be folded into it (owner, 08.08 -
+ *  «нам нужно отдельной строчкой списывать тренера, а отдельной рент залов», the same instinct one
+ *  bill over).
+ *
+ *  ⚠ CATEGORY `travel`, NOT `coaching`. It is a fare, it moves with the calendar rather than with
+ *  the week, and the Money breakdown should show it beside the trip it paid for. It also means no
+ *  `WorldEventCategory` is added, so nothing here touches the save schema.
+ *
+ *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08): `buildCoachRoster` puts a woman on every
+ *  roster by construction, so "his fare" would print under Sabine Kobayashi. */
+export function chargeCoachTravel(world: WorldState, event: SeasonEvent): void {
+  const fare = coachTravelFareFor(world, event)
+  if (fare <= 0) return
+  world.fundsCents -= fare
+  addEvent(world, {
+    week: world.week,
+    type: 'expense',
+    category: 'travel',
+    text: `Your coach travels to the ${TIERS[event.tier].label} – a second fare`,
+    amountCents: -fare,
+  })
+}
+
 export function chargeTravel(world: WorldState, event: SeasonEvent): void {
   const net = travelCostFor(world, event)
   const covered = event.travelCostCents - net

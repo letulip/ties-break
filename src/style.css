@@ -3462,16 +3462,16 @@ tr.kid-row td {
     transition: none;
   }
 }
-.cm-travel.is-locked .cm-travel-title,
-.cm-travel.is-locked .cm-travel-sub {
-  color: var(--muted);
-}
+/* ⭐ ROUND-21 #2: `.cm-travel.is-locked` IS GONE WITH THE LOCK. It muted the row's two lines to say
+   "this control is not for you"; the switch is live now on the owner's third ask, so a row drawn as
+   refused would be the copy lying about the control again - which is exactly what round-20 #1 was.
+   The sub-line's own `--muted` (above) is the one it always had as a sub-line. */
 
-/* ⚠ THE `strong.chosen` RULE WENT WITH THE COMPARISON IT MARKED (30.07). The coach-travel toggle is locked
-   until the professional years, so the season pair - "$X without him · $Y with" - had nothing left to
-   compare and neither side could be the "chosen" one. The LINE itself survives, carrying the one figure
-   that is true whatever she books: what her coach costs a week. `.cm-travel` and `.cm-switch` stay too -
-   the row is still drawn, disabled, because locking it is what says when it arrives. */
+/* ⚠ THE `strong.chosen` RULE WENT WITH THE COMPARISON IT MARKED (30.07). The season pair - "$X without
+   him · $Y with" - had nothing left to compare while travel was cancelled, and it stays gone: the price
+   of travel is now a PER-TRIP rule ("twice the fare") rather than a second season total to set beside
+   the first, so there is still no second side to mark as chosen. The LINE itself survives, carrying the
+   one figure that is true whatever she books: what her coach costs a week. */
 .cm-travel-cost {
   margin: 8px 0 0;
 }

@@ -277,6 +277,10 @@ const noteText = computed(
 const noteIsProse = computed(
   () => !!(game.snapshot?.diary.travelNote ?? game.snapshot?.diary.weekNote),
 )
+/** ⭐ ROUND-21 #2: the fourth hand on the same scrap, and the only one that is not a lottery. See
+ *  `DiarySnapshot.coachNote` – it is non-null on exactly the trips the family paid a second fare
+ *  for, so it says he came every time and never when he did not. */
+const coachNote = computed(() => game.snapshot?.diary.coachNote ?? null)
 
 
 // --- MOOD (D's third card) -----------------------------------------------------------------------
@@ -426,6 +430,15 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
       margin-rule
     >
       <p class="recap-note-text">{{ noteText }}</p>
+      <!-- ⭐ ROUND-21 #2 – AND HE WAS THERE, in the week's story. The owner's third ask names the
+           three surfaces presence has to reach, and this is the week's-story one. His words in full
+           are in tests/component/round21-coach-travel.test.ts - THIS IS A TEMPLATE and
+           tests/round13-nav.test.ts bans Cyrillic inside one, comments included.
+           ⚠ A SECOND LINE ON THE SAME SCRAP, NOT A REPLACEMENT. `noteText` above is the week's own
+           story and must not be displaced by a fact about who came - so this is added under it, on
+           exactly the weeks the engine says he travelled (`diary.coachNote`, null on every other
+           week including every trip he stayed home for). -->
+      <p v-if="coachNote" class="recap-note-text recap-note-coach">{{ coachNote }}</p>
       <svg class="recap-doodle" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
         <path d="M12 20.2s-7.4-4.6-7.4-9.5A4.1 4.1 0 0 1 12 8.4a4.1 4.1 0 0 1 7.4 2.3c0 4.9-7.4 9.5-7.4 9.5z" />
       </svg>
@@ -646,6 +659,15 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    so the hook is now `noteIsProse` and reads WHICH HAND wrote the scrap rather than which picture is
    above it. Same measurement, same two lines; the name `--travel` stays because the guards in
    tests/travel-home.test.ts and tests/radar-training.test.ts read this file for it. */
+/* ⭐ ROUND-21 #2: the coach line is the same hand and the same paper, one step quieter and a little
+   further down the scrap - it is a postscript to the week's story, not a second story. It only ever
+   appears on a come-home week, where `--travel` is already on the note, so it inherits that rule's
+   size and only needs the gap and the drop in weight. */
+.recap-note-coach {
+  margin-top: 6px;
+  opacity: 0.78;
+}
+
 .recap-note--travel .recap-note-text {
   font-size: 19px;
   line-height: 1.34;

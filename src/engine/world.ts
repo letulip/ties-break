@@ -141,8 +141,8 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS }
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS }
 // W3-KIT: the till and the shop window. `GEAR_CATEGORY_LINE` comes back from equipment.ts, where it
 // moved so that a rung could be PRICED below world.ts - see the note at `resolveGear`.
 import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
@@ -160,7 +160,7 @@ export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREF
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, seasonWrapDue } from './world/milestones'
+import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, markCoachTravelOpen, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, seasonWrapDue } from './world/milestones'
 export { emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, captureBreakEven, maybeFireSeasonWrapUp, seasonWrapDue }
 // W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
 // snapshot, the tests and the bench all read the one implementation - the same contract every other
@@ -198,11 +198,11 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, chargeCoachTravel, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
-export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, rolloverKitAllowance }
+export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, rolloverKitAllowance }
 import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
@@ -2900,6 +2900,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     )
   } else if (enteredThisWeek) {
     chargeTravel(world, enteredThisWeek)
+    // ⭐ ROUND-21 #2 - AND THE SECOND SEAT, IF HE CAME. Deliberately on this line and not in
+    // `resolveBaseCosts`: the retainer is unconditional (owner, 08.08 - see `coachWorksThisWeek`,
+    // which R4 got wrong by running travel and the retainer together and stood the coach down for
+    // 43% of a season). This is a FARE, so it belongs in the arm where she actually boarded, beside
+    // the fare it doubles - which is also what gives the two no-travel arms above their exemption
+    // for free: an injury walkover and a medical withdrawal never pay it, because she never went.
+    // Zero draws; see `coachTravelFareFor` for the price and whose figure it is.
+    chargeCoachTravel(world, enteredThisWeek)
     // ...and the WARNING BAND: cleared, but only just. She plays; the doctor goes on record. Emitted
     // after the travel charge so the week reads chronologically in the news feed (trip → the doctor
     // sees her → her matches). Type 'info' rather than 'injury': nothing has happened to her body,
@@ -3025,6 +3033,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     birthday, because the year she leaves she is already eighteen and the two lines read in that
   //     order.
   markSchoolEnd(world)
+
+  // 3f. ⭐ ROUND-21 #2 – ...AND THE ONE TIME THE GAME TELLS HER THE COACH CAN COME TOO. The owner
+  //     asked for this notice on 08.08 and `docs/decisions.md` recorded that it could not be built
+  //     while travel could never happen. It can now. Beside the two dates above for the same reasons
+  //     they are beside each other: at most once per career, a comparison and a scan, zero draws.
+  markCoachTravelOpen(world)
 
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer

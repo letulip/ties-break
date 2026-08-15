@@ -212,6 +212,9 @@ export type BeatKind =
   | 'games'
   | 'set'
   | 'match'
+  /** ⭐ ROUND-21 #2: the coach in her corner at a set break – emitted only on a match his family
+   *  actually paid to bring him to. See THE COACH IS IN THE CORNER below. */
+  | 'coach'
 
 export interface Beat {
   /** index into match.points - the point this beat is anchored to (drives progressive reveal) */
@@ -356,6 +359,10 @@ const PRIORITY: Record<BeatKind, number> = {
   games: 4,
   streak: 5,
   rally: 6,
+  // ⭐ ROUND-21 #2 – LAST, AND DELIBERATELY LAST. The coach's beat is anchored to the first point of a
+  // new set, which is where a `rally` or a `streak` beat can also land; when they collide the TENNIS
+  // wins, every time. Presence is a thing the log mentions, never a thing it interrupts a match for.
+  coach: 7,
 }
 
 const ORDINAL = ['first', 'second', 'third', 'fourth', 'fifth'] as const
@@ -525,6 +532,53 @@ const ROOM_SET_FROM_3: readonly string[] = ['Applause all round the court.', 'Th
 const ROOM_SET_FROM_4: readonly string[] = ['A roar off the far side of the stadium.']
 const ROOM_TIEBREAK_FROM_3: readonly string[] = ['The court goes quiet for it.', 'Nobody is leaving their seat now.']
 const ROOM_TIEBREAK_FROM_4: readonly string[] = ['The whole stadium is standing for it.']
+
+// =================================================================================================
+// ⭐ ROUND-21 #2 – THE COACH IS IN THE CORNER, AND THE LOG SAYS SO
+// =================================================================================================
+//
+// The owner, third ask, on being asked what «тренер едет» should actually BUILD:
+// «Присутствие в потоке и трансляции точно надо (если едет).» This is the трансляция half.
+//
+// ⚠ IT IS PRESENCE AND NOTHING ELSE - NO NUMBER MOVES. Three versions of a coach-travel STAT were
+// built and measured on 30.07 and all three failed (commit 77e08aa); this file could not carry one
+// anyway, because `buildCommentary` is a pure function of an ALREADY-PLAYED match. The beat reports
+// somebody who was there; it cannot and does not change what happened.
+//
+// ⚠ WHY A SET BREAK AND NOWHERE ELSE. On-court coaching has been permitted on the women's tour since
+// 2022 and it is permitted only when he is THERE - which is the whole argument for the fare
+// (docs/specs/training-dials.md §8: "this is not something technology has caught up with, it is
+// something the sport allows only in person"). The moment the rules give him is the changeover, so
+// the beat is anchored to the first point of a new set: at most twice in a match, never inside a
+// game, and never at the peak - `PRIORITY` puts it below every tennis beat, so a rally or a streak
+// on that same point takes the row instead.
+//
+// ⚠ WHAT IT MAY CLAIM. That he is there (his family paid a second fare for it), that it is a set
+// break (read off the point log), and WHICH WAY the set went (read off the same scan every other
+// beat reads). Nothing about what was said, nothing about how anyone feels, nothing about what it
+// changed - the honesty rule at the head of this file, applied to the one new speaker.
+//
+// ⚠ AND NO PRONOUN NAMES HIM (R15-7, owner 09.08): `buildCoachRoster` puts a woman on every roster by
+// construction, so "his corner" would print under Sabine Kobayashi. "Her coach" throughout.
+
+/** WHOSE COACH IT IS. `buildCommentary` names two players and knows nothing about which one the
+ *  family is watching, so the side is passed in with the fact - and passing them together is what
+ *  makes it impossible to put the family's coach in the opponent's chair. Null (the default) is a
+ *  match nobody travelled to, which is byte-identical to every log this file produced before. */
+export interface CommentaryCoach {
+  side: Side
+}
+
+/** The word in the corner after a set she LOST – the changeover the rules exist for. */
+const COACH_AFTER_LOSS: readonly ((who: string) => string)[] = [
+  (who) => `${who} takes the chair, and her coach is down there with her.`,
+  (who) => `Her coach is in beside ${who} before the next one starts.`,
+]
+/** ...and after a set she WON. Same fact, and the sentence does not pretend it is the same moment. */
+const COACH_AFTER_WIN: readonly ((who: string) => string)[] = [
+  (who) => `${who} sits with her coach, a set to the good.`,
+  (who) => `Her coach has a word with ${who} at the change of ends.`,
+]
 
 /** Deterministic phrase variety with no RNG: an integer hash of the point index, folded to `n`.
  *  Knuth's multiplicative constant, so consecutive indices do not land on consecutive variants
@@ -1080,6 +1134,10 @@ export function buildCommentary(
   playerA: string,
   playerB: string,
   event: CommentaryEvent | null = null,
+  /** ⭐ ROUND-21 #2: her coach was at this tournament, and which side of the net he sits behind. ⚠
+   *  OPTIONAL AND DEFAULTED TO null FOR THE SAME REASON `event` IS: every caller that passes nothing
+   *  gets exactly the log this function returned before he existed. See THE COACH IS IN THE CORNER. */
+  coach: CommentaryCoach | null = null,
 ): Beat[] {
   const points = match.points
   if (points.length === 0) return []
@@ -1484,6 +1542,32 @@ export function buildCommentary(
         `${Num(r.shots)} shots, and ${names[last.by]} puts it away ${rallyPhrase(String(last.direction))}.`,
         undefined,
         swing(r.index - 1, r.index) >= KEY_SWING,
+      )
+    }
+  }
+
+  // --- the coach, if his family paid to bring him -------------------------------------------
+  // See THE COACH IS IN THE CORNER above for what this may claim and why it lives at a set break.
+  // At most one beat per completed set after the first, so at most two in the longest match this
+  // engine plays - and `keyMoment: false`, because the 'key' cut is the tennis and he is not it.
+  if (coach) {
+    for (const g of s.games) {
+      if (!g.setEnd) continue
+      // The first point of the set that FOLLOWS this one. A set that ended the match has no next
+      // point, and the match beat is already sitting on it - so this walks off the end and stops.
+      const next = g.last + 1
+      if (next > lastIndex) continue
+      const heroTookIt = g.winner === coach.side
+      const lines = heroTookIt ? COACH_AFTER_WIN : COACH_AFTER_LOSS
+      push(
+        next,
+        'coach',
+        'Corner.',
+        // The bare hash rather than the rotor, for the reason `room` gives: these are pushed outside
+        // the chronological per-game loop, so "what was just said" would be the wrong neighbour.
+        lines[variant(next, lines.length)](names[coach.side]),
+        undefined,
+        false,
       )
     }
   }

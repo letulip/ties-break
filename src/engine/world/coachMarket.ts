@@ -19,6 +19,10 @@ import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { parentIncomeForWeekCents } from '../economy'
 import { activeKitDeal } from '../offers'
+// ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
+// which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
+// runs one way exactly as `../offers` above does.
+import { travelCostFor } from './sponsors'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
@@ -156,13 +160,22 @@ export function matchesEverPlayed(world: WorldState): number {
  *  the arithmetic downstream of an unchanged pickInt does with the number it drew, so the frozen
  *  MAIN capture cannot move. Takes effect from the NEXT tick; this week's bill is already written.
  *
- *  ⚠ IT NO LONGER MOVES THE RETAINER (owner, 08.08). Until this wave the flag decided whether the
+ *  ⚠ IT NO LONGER MOVES THE RETAINER (owner, 08.08). Until that wave the flag decided whether the
  *  weekly bill was charged on a competition week at all, which conflated travel with the retainer -
- *  see `coachWorksThisWeek` for the owner's own separation of the two. The retainer is now
- *  unconditional and this flag means travel, so it is a persisted stance with no arithmetic behind
- *  it yet: the travel mechanic itself is still deferred (locked row on screen T, 30.07). The field,
- *  the command and the copy are kept so the mechanic has somewhere to land - deleting them would
- *  cost a schema change now and a second one when travel ships. */
+ *  see `coachWorksThisWeek` for the owner's own separation of the two. The retainer is unconditional
+ *  and this flag means travel, and only travel.
+ *
+ *  ⚠⚠ ROUND-21 #2 - IT HAS A CALLER NOW, AND THAT IS THE WHOLE ITEM. Owner, 14.08, asking for the
+ *  THIRD time: «Тренер всё ещё не едет на соревнования, как так? Уже 3й раз прошу сделать.» The
+ *  mechanic was cancelled on 30.07 after three STAT versions of it were measured and all three failed
+ *  (commit `77e08aa`), and round-20 #1 answered the second ask with an explanation instead of a
+ *  build. Asking a third time overrules the cancellation - and what he asked for when asked what to
+ *  build is not a fourth invisible bonus: «Присутствие в потоке и трансляции точно надо (если едет).»
+ *
+ *  SO WHAT THIS SWITCH BUYS IS PRESENCE, AND PRESENCE IS THE WHOLE OF IT HERE. He goes; it costs a
+ *  second fare (`coachTravelFareFor`); and the tournament flow, the running commentary and the week's
+ *  story all say so. NO STAT MOVES on this branch - the three that were tried are in the commit
+ *  above, and re-measuring them on the rebuilt bench is a separate arm of the same wave. */
 export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
   // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
   // because the worker is not the gate - a tab left open behind the epilogue must not be able to
@@ -175,9 +188,24 @@ export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
     type: 'info',
     // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see the note on `coachLoadNote` below for the ruling.
     text: on
-      ? 'Your coach travels to tournaments with her now.'
+      ? 'Your coach travels to tournaments with her now – a second fare on every trip.'
       : 'Your coach no longer travels to tournaments – the work happens at home.',
   })
+}
+
+/** ⭐ ROUND-21 #2 - IS HE ON THE TRIP? The one predicate every presence surface reads, so the flow,
+ *  the commentary, the week's story and the till can never disagree about whether he was there.
+ *
+ *  Two clauses and both are the stance stating itself: the switch is on, AND there is somebody to
+ *  send. A self-coached family has no second seat to buy (`coachTravelFareFor` refuses the charge for
+ *  the same reason), and a parent who is already in the car is not "travelling with her".
+ *
+ *  ⚠ IT DOES NOT ASK WHETHER THIS WEEK IS A COMPETITION WEEK, deliberately: every caller already
+ *  knows it is - the flow is showing a tournament, the commentary is narrating a match, the week's
+ *  story is captioning the drive home - and folding that question in here would make the predicate
+ *  mean something different at each of them. Pure; zero draws. */
+export function coachTravelsWithHer(world: WorldState): boolean {
+  return world.coachOnEventWeeks && world.coachId !== null
 }
 
 /** WHAT THE COACH COSTS OVER A SEASON - one number, because since 08.08 there is only one.
@@ -204,6 +232,15 @@ export function coachBilling(world: WorldState): {
   /** the weeks of the coming year the retainer is actually charged for */
   billedWeeks: number
   seasonCents: number
+  /** ⭐ ROUND-21 #2: WHAT SENDING HIM WOULD ADD over the trips she has actually booked this season,
+   *  in cents. Zero when nothing is booked, and zero for a self-coached family - see
+   *  `coachTravelFareFor`, which is the one definition this sums and the reason the row on screen T
+   *  and the line on the till can never quote different money. Quoted whether the switch is ON or
+   *  OFF, because it is the price of the decision rather than a receipt for one. */
+  travelFareCents: number
+  /** ...and how many trips that is, so the screen can say "over the 9 she has booked" rather than
+   *  printing a season total with nothing to divide it by. */
+  travelTrips: number
   /** ⭐ ROUND-21 #12: THE CAP THE BUDGET METER DRAWS AGAINST, carried rather than reverse-engineered.
    *
    *  The screen used to RECOVER it from any row that was over budget
@@ -218,22 +255,30 @@ export function coachBilling(world: WorldState): {
   const rate = coach ? coach.rateCents : facilityRateCents(age, tierOf(coach))
   const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background)
   const seasonStart = seasonStartWeek(world.week)
-  const countEntered = (from: number) => {
+  const enteredIn = (from: number) => {
     const to = from + WEEKS_PER_YEAR
-    return new Set(
-      world.season.filter((e) => e.week >= from && e.week < to && world.entries.includes(e.id)).map((e) => e.week),
-    ).size
+    return world.season.filter((e) => e.week >= from && e.week < to && world.entries.includes(e.id))
   }
+  const countEntered = (from: number) => new Set(enteredIn(from).map((e) => e.week)).size
   // The season she is in; and if the calendar has just rolled and she has entered nothing yet, the
   // one she has just finished, which is the honest answer to "how much of her year is tournaments".
+  const thisSeason = enteredIn(seasonStart)
+  const booked = thisSeason.length > 0 ? thisSeason : enteredIn(seasonStart - WEEKS_PER_YEAR)
   const eventWeeks = countEntered(seasonStart) || countEntered(seasonStart - WEEKS_PER_YEAR)
   const billedWeeks = Math.max(0, WEEKS_PER_YEAR - coachedWeeksLostToRest(world))
+  // ⭐ ROUND-21 #2: the second seat, over the trips on her card. `travelCostFor` is the ONE fare
+  // definition (world/sponsors.ts) and `coachTravelFareFor` is its doubling, so this cannot drift
+  // from the number the till charges - but it is priced for a family that has NOT flipped the switch
+  // yet, which is the whole point of a price, so the stance is deliberately not consulted here.
+  const travelFareCents = world.coachId === null ? 0 : booked.reduce((sum, e) => sum + travelCostFor(world, e), 0)
   return {
     onEventWeeks: world.coachOnEventWeeks,
     weeklyCents,
     eventWeeks,
     billedWeeks,
     seasonCents: weeklyCents * billedWeeks,
+    travelFareCents,
+    travelTrips: world.coachId === null ? 0 : booked.length,
     weeklyIncomeCents: familyWeeklyIncomeCents(world),
   }
 }

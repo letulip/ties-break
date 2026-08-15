@@ -68,6 +68,44 @@ export function markSchoolEnd(world: WorldState): void {
   captureMilestone(world, { type: 'school', week: world.week })
 }
 
+/** ⭐ ROUND-21 #2 – THE TRAVEL NOTICE, AND IT IS TRUE NOW.
+ *
+ *  ⚠ THIS IS THE OWNER'S OWN ASK OF 08.08, AND IT HAS BEEN UNBUILDABLE UNTIL THIS BRANCH: «кстати
+ *  можно наверное какое-то уведомление игроку давать, что поездки теперь возможны». `docs/decisions.md`
+ *  wrote down exactly why nobody could build it – *"travel never becomes possible (the row is
+ *  hardcoded `disabled` and the mechanic is cancelled), so a notice saying it is now available would
+ *  be false. Needs the unlock ruled on first."* The unlock is this wave; the sentence is true; so
+ *  here it is.
+ *
+ *  ⚠ A FEED MILESTONE AND NOT A POPUP, and that is a decision rather than laziness. Round-20 #3 was a
+ *  BLOCKING dialog whose dismiss control left a 375x667 screen and stopped the owner's career; a
+ *  notice is exactly the class of thing that does not need to block anybody. `fireMilestone` is the
+ *  app's own "this happened once and the ledger keeps it" channel (`markSchoolEnd` above is the model)
+ *  – idempotent by key, `keep: true`, so the 400-row prune can never lose it.
+ *
+ *  ⚠ IT FIRES BEFORE THE TRIP, NOT ON IT. The condition is a coach on the books AND an entered event
+ *  still AHEAD of her, so the switch can still be reached in time to matter for the trip the notice is
+ *  about. A notice landing on the Monday she is already at the venue would be a receipt, not news.
+ *
+ *  ⚠ AND IT IS SILENT FOR A SELF-COACHED FAMILY, because for them it is not true: there is nobody to
+ *  send, which is the same clause `coachTravelsWithHer` and `coachTravelFareFor` both keep.
+ *
+ *  ZERO DRAWS: two array scans and one idempotent write. */
+export const COACH_TRAVEL_OPEN_KEY = 'coach-travel-open'
+
+export function markCoachTravelOpen(world: WorldState): void {
+  if (world.coachId === null) return
+  if (world.coachOnEventWeeks) return
+  const ahead = world.season.some((e) => e.week > world.week && world.entries.includes(e.id))
+  if (!ahead) return
+  fireMilestone(
+    world,
+    COACH_TRAVEL_OPEN_KEY,
+    // No pronoun names the coach (R15-7): a woman sits on every roster by construction.
+    'Your coach can travel to tournaments with her now – the switch is in the coach room, and a trip with the coach costs twice the fare.',
+  )
+}
+
 /** ⚠ THE TURN, CAPTURED THE WEEK IT HAPPENS AND NEVER RECONSTRUCTED (contract §9.4, and the wave
  *  brief put it in double capitals). The album's central page – slot 6 – is the week her cumulative
  *  prize money first passed her cumulative costs. The finance ledger keeps SIXTY WEEKS and the

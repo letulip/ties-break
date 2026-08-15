@@ -263,6 +263,8 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     vacationPackageId: null,
     // ⚠ W2 added `trainPct` to the view. This suite is about the JOURNEY HOME; the balanced
     // preset is the career default and nothing here reads it.
+    // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
+    coachTravelled: false,
     trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
@@ -669,6 +671,8 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
       injury: null, events: [], lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
       vacationPackageId: null,
+      // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
+      coachTravelled: false,
       trainPct: 75, knockChoice: null, knockPart: null, birthdayAge: null, birthdayGift: null, birthdayWanted: false, birthdayRepeatAge: null, ...over,   // ⚠ W2/W4: unread here
     })
     const away = assembleDiaryFacts(view({ events: trip(11, 'national') })) // ⚠ W4: the view's own week
@@ -1013,6 +1017,8 @@ describe('ui/travel-set — on a real career', () => {
       injury: null, events: trip(11, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
       vacationPackageId: null,
+      // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
+      coachTravelled: false,
       trainPct: 75,   // ⚠ W2: the plan, unread here
       knockChoice: null,
       birthdayAge: null,
