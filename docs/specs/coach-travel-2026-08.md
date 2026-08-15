@@ -527,9 +527,25 @@ a player who flips the switch is shown no reason to. Copy is the owner's call an
 in beside a balance change – but a bonus nobody can see is exactly the «четвёртый невидимый бонус»
 that got this item reported three times, so it should not merge silently either way.
 
-**(c) A SMALLER ASYMMETRY, RECORDED SO IT IS NOT DISCOVERED AS A BUG.** The fare is gated to rungs
-that pay prize money; the presence predicate `coachTravelsWithHer` is not, and the travel helping
-follows the predicate. So at a junior event the flow says he is there, no fare is charged, and she now
-gets the doubled edge – free. Aligning them means giving the *presence* predicate the fare's own rung
-test, which touches the snapshot rather than the coach's edge, and the fare gate itself is settled and
-was not to be touched.
+**(c) TWO SCOPING WARTS, RECORDED SO THEY ARE NOT DISCOVERED AS BUGS.** Both follow from the helping
+being read off the STANCE (`coachOnEventWeeks`) rather than off the event, which is what keeps
+`engine/world/player.ts` a leaf – it cannot import `coachTravelsWithHer` without pointing at the
+integration layer that imports it.
+
+1. **The fare is rung-gated and the helping is not.** `coachTravelFareFor` refuses on rungs with no
+   `prizeCents`; the presence predicate does not ask, and the helping follows the predicate. So at a
+   junior event the flow says he is there, no fare is charged, **and she now gets the doubled edge
+   free.** Aligning them means giving the *presence* predicate the fare's own rung test, which
+   touches the snapshot rather than the coach's edge – and the fare gate is settled and was not to
+   be touched.
+2. **The home practice friendly gets it too.** `world/planner.ts` builds her through the same
+   `kidMatchPlayerFor` on "the home club's courts", so a family with the switch on plays its
+   friendlies at the travelling rate, which is false on the fiction – nobody travelled anywhere.
+   Bounded rather than dismissed: a friendly is unranked (R11-2, «nothing was on the line»), it is
+   at most one match a week against ~450 competitive matches a career, and the *single* edge has
+   applied there since the mechanic shipped – what is new is only the doubling. Fixing it properly
+   means the call site telling `kidMatchPlayerFor` whether this is a trip, i.e. an argument threaded
+   from `world.ts` and `planner.ts`.
+
+⚠ Neither is worth fixing *before* the dose question is answered: if the helping is not shipped at
+this size, both disappear with it.
