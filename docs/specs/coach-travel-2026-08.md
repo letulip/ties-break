@@ -382,3 +382,148 @@ a bench patch makes the whole world recover on match weeks rather than her. Scop
 he came» needs an engine hook. **The brief's rule is to say so and stop, and this is that stop.** It
 is written down as the first thing to price if the owner wants a second bonus, not as a
 recommendation to build one unmeasured.
+
+---
+
+# 7. ⭐ THE DOSE, SETTLED BY THE OWNER AND MEASURED AT HIS SIZE (15.08)
+
+**A NEW SECTION, NOT A REWRITE.** §3c and §5 stand exactly as they were: at +3.0 pp the effect is
+real and grows with the dose. What §5 explicitly refused to decide – «that is a design decision for
+the owner rather than a number this document may set» – he then decided, and this section is the
+measurement of *his* number. The comparison between the two sizes is the point, so both are in the
+table below and neither record is overwritten.
+
+## 7.1 The ruling, and what was built
+
+Told that +3.0 pp is about three times the entire coach ladder:
+
+> «что если мы привяжем это как раз к тренерской лестнице? у нас там есть уже верхний процент, будет
+> не так сильно влиять как будто.»
+
+**So the travel bonus is HIS OWN EDGE AGAIN.** A coach who comes with her delivers a second helping
+of exactly what his tier is worth, and `COACH_EDGE_CORRIDOR_PP` is the whole of the scale – elite
+adds 0.9–1.1 pp, budget 0.2–0.7, and at most it doubles what a coach was already worth. No second
+constant was added: «верхний процент» is a bound the table already carries, structurally rather than
+as a clamp, because the helping *is* his draw from the bracket.
+
+**SCALE, NOT SHIFT, and that is the one real design decision inside his sentence.** §1's rule – each
+tier's ceiling is the next tier's midpoint, no tier reaches two rungs up – is a rule about *ratios*.
+Doubling preserves it exactly, so the budget lottery survives the trip. The +3.0 pp **shift** §5
+recommended does not: it turns 0.2 and 1.1 into 3.2 and 4.1, i.e. it makes every rung nearly the same
+coach, which is why that dose could not simply be attached to the switch.
+
+Shipped in `ff72dc5` (`engine/coach.ts`, `engine/world/player.ts`). Zero new randomness: the helping
+is the same uniform multiplied – no second draw, no second sub-stream, nothing on MAIN. A career that
+does not travel is byte-identical, held as a frozen capture of three 156-week career hashes taken at
+the commit before (`tests/coach-travel-edge.test.ts`), mutation-verified: making the doubling inert
+turns 7 of its 17 tests red.
+
+## 7.2 Pre-registered prediction
+
+Written into the bench before the run: the helping averages the corridor's own midpoint, so it is
+**+1.0 pp at wealthy·elite and +0.7 pp at middle·middle** – between `a3-small` (+0.5 pp, which §3d
+already found inconclusive) and `a3-big` (+3.0 pp, decisive), **and much nearer the small one.**
+Predicted outcome: a small positive effect, probably not resolvable at n=30.
+
+## 7.3 Measured – the same harness, the same seeds, both cells
+
+`tools/coach-travel-bench.ts` at `2d7d336`, 30 seeds, full 14→39 careers, `POLICIES[1]`, paired on
+identical seeds/worlds/talent, run in `git worktree --detach` so the engine cannot move under it. Two
+new arms:
+
+| arm | knob | what it is |
+| --- | --- | --- |
+| `a4-ladder` | the cell's corridor **×2** | the owner's sizing. ⚠ **Exact, not a proxy**: `coachEdgePp` is `lo + u(hi−lo)`, so a `[2lo, 2hi]` corridor returns twice the same man's number on the same `u`; and `POLICIES[1]` sets `coachOnEventWeeks` at birth and never re-hires a rung the preset did not choose, so the doubling applies at exactly the matches the shipped gate would apply it to |
+| `a4-off` | the cell's corridor **×0** | ⚠ the OTHER reading of the ruling, priced. «Tie it to the ladder» can also mean the edge becomes *conditional* on his presence – today's edge when he comes, **nothing** when he does not. Every career here travels, so that arm would be the control and its whole effect would land on families who never send him. What it would cost them is the control against a deleted edge, which is this. It is also the **noise floor** for every number above it |
+
+| cell | arm | best rank p50 | top-100 | b / w / t | Δbest rank (95% CI) | sign *p* | Δprize | Δtravel |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **wealthy·elite** | control | #91.5 | 56.7% | – | – | – | – | – |
+| | `a4-ladder` ×2 | #95.5 | **50.0%** | 13/16/1 | **+1.1** [−7.3, +9.6] | 0.71 | +$19,465 | +$15,808 |
+| | `a3-small` +0.5 | #85 | 56.7% | 14/13/3 | −2.3 [−9.5, +4.8] | 1.00 | −$130 | +$21,121 |
+| | `a3-big` +3.0 | #76 | **66.7%** | 14/15/1 | −11.4 [−22.4, −0.3] | 1.00 | +$115,235 | +$50,388 |
+| | `a4-off` ×0 | #108 | 46.7% | 10/18/2 | +7.9 [−3.7, +19.5] | 0.19 | −$48,770 | −$32,011 |
+| **middle·middle** | control | #118 | 23.3% | – | – | – | – | – |
+| | `a4-ladder` ×2 | #118.5 | **26.7%** | 18/7/5 | **+7.2** [−21.2, +35.5] | 0.05 | +$49,020 | +$41,360 |
+| | `a3-small` +0.5 | #124 | 26.7% | 13/13/4 | +11.6 [−16.6, +39.7] | 1.00 | +$2,635 | −$13,752 |
+| | `a3-big` +3.0 | #92 | **56.7%** | 24/5/1 | **−20.9** [−29.3, −12.5] | 0.001 | +$231,170 | +$96,097 |
+
+Pooled over both cells, 60 paired careers per arm:
+
+| arm | ≈ dose | b / w / t | Δbest rank (95% CI) | sign *p* | verdict |
+| --- | --- | --- | --- | --- | --- |
+| `a4-off` | ×0 | 10/18/2 *(elite only)* | +7.9 [−3.7, +19.5] | 0.19 | not resolvable |
+| `a3-small` | +0.5 pp | 27/26/7 | +4.6 [−9.9, +19.1] | 1.00 | **a coin** |
+| `a4-ladder` | +0.7…1.0 pp | **31/23/6** | **+4.1 [−10.4, +18.6]** | **0.34** | **not resolvable** |
+| `a3-big` | +3.0 pp | **38/20/2** | **−16.0 [−23.1, −9.0]** | **0.026** | real |
+
+## 7.4 ⛔ THE VERDICT: THE LADDER-TIED DOSE IS INSIDE THE NOISE, AND THAT IS THE RESULT
+
+**Do not ship it as a demonstrated improvement, because it has not been demonstrated.** The mechanic
+is built, correct and free of RNG cost, and the shape is the owner's own – but at his size the bench
+cannot tell it from nothing, and three unmeasured coach mechanics have already cost this project two
+weeks. The evidence, in the order it convinces:
+
+1. **The two cells disagree in sign, on both readings.** Elite: 13 better / 16 worse, top-100
+   **56.7% → 50.0%**. Middle: 18 better / 7 worse, top-100 **23.3% → 26.7%**. This is the identical
+   failure pattern §3d recorded for `a3-small` and refused to call a result, and it is the reason
+   the honest statement is not "a small positive" but **the sign of the effect is not determined.**
+2. **Even the mean and the count disagree *inside* the middle cell.** 18/7/5 by paired count, yet
+   Δbest rank **+7.2** – worse on the mean – because a handful of careers move a long way. Two
+   statistics of the same 30 pairs pointing in opposite directions is what "inside the noise" looks
+   like from the inside.
+3. **⚠⚠ THE YARDSTICK IS THE PART THAT SETTLES IT: at n=30 this bench cannot resolve DELETING THE
+   ENTIRE SHIPPED EDGE.** `a4-off` – the whole 0.9–1.1 pp elite corridor removed, not halved – reads
+   10/18/2 at *p* = 0.19. If the bench cannot see the edge's total removal, it cannot possibly see a
+   bonus of the same size added. **This is what makes "inside the noise" a proof rather than a
+   hedge**, and it is worth more than any of the arm rows above it.
+4. **The dose-response is monotone in resolvability, and his number lands on the wrong side of the
+   line.** ×0 → +0.5 → ×2 → +3.0 gives 10/18, 27/26, 31/23, 38/20. Nothing turns over anywhere – §5's
+   claim survives intact – but only the last is separable from a coin.
+
+**⚠ AND THE MECHANISM IS §4'S PROMOTION LOOP, WHICH IS WHY A SMALL DOSE IS THE WORST PLACE TO BE.**
+Read the confound table: `a4-ladder` moves her rank at entry to the big rungs from #136 to #133 and
+her **points per entry from 37.8 down to 36.1**. `a3-big` moves it from #136 to #110 and her points
+per entry **up** from 37.8 to 42.9. A small bonus promotes her just enough to be outclassed in the
+bigger draw; a large one promotes her and makes her strong enough for it. **The dead zone is real,
+and the ladder-tied dose is in it.**
+
+## 7.5 What n would settle it
+
+The observed flip rate is 31/54 = **57.4%**. Resolving that at 80% power, two-sided α = 0.05, needs
+**≈358 non-tied paired careers** – about **180 seeds per cell against today's 30, a 6× run.** On this
+machine the two `a4-ladder` cells took 145 s and 1,915 s for 30 careers, so 180 seeds is roughly
+**8–12 hours** of single-process bench time. That is the honest price of turning this row into a fact.
+
+⚠ **The cheaper question is worth asking first: `a4-off` needs only ≈97 non-tied pairs (~55 seeds a
+cell, under two hours).** Deciding whether the SHIPPED edge does anything at all is a smaller
+experiment than deciding whether doubling it does, it is a prerequisite for the second question
+having an answer, and nobody has ever run it.
+
+## 7.6 ⚠ TWO THINGS THE OWNER SHOULD BE TOLD BEFORE ANYTHING IS MERGED
+
+**(a) THE CONTROL MOVED BETWEEN THE TWO RUNS, AND THE FARE IS WHY.** §3's numbers were taken at
+`5c3a6cc`, *before* the presence fare shipped; these are taken with the gated fare live in the control
+of every arm. Tennis barely moved (elite control: prize p50 $1.80M → $1.79M, 635.7 → 633.1 matches
+won) but **end funds p50 collapsed – elite $1,661,047 → $382,789, middle $1,060,175 → $94,849.** The
+gated fare bankrupts nobody (0/30 in both cells, which is what the gate was for) and it costs the
+family roughly a million dollars of what it retires on. That is a real and previously unstated price
+of a mechanic that is already merged.
+
+⚠ It also means one §3c headline does not fully replicate: `a3-big` at wealthy·elite was **22/8/0**
+against the old control and is **14/15/1** against this one, though it holds at middle·middle (25/5/0
+→ 24/5/1) and is still the only arm with a defensible pooled *p*. The +3.0 pp recommendation survives;
+its elite-cell evidence does not.
+
+**(b) THE MECHANIC IS INVISIBLE ON SCREEN T, DELIBERATELY.** `coachMarket`'s `edgePct` and
+`coachEdgeView`'s `corridorPct` still print the rung's **home** corridor to a family that travels, so
+a player who flips the switch is shown no reason to. Copy is the owner's call and it was not smuggled
+in beside a balance change – but a bonus nobody can see is exactly the «четвёртый невидимый бонус»
+that got this item reported three times, so it should not merge silently either way.
+
+**(c) A SMALLER ASYMMETRY, RECORDED SO IT IS NOT DISCOVERED AS A BUG.** The fare is gated to rungs
+that pay prize money; the presence predicate `coachTravelsWithHer` is not, and the travel helping
+follows the predicate. So at a junior event the flow says he is there, no fare is charged, and she now
+gets the doubled edge – free. Aligning them means giving the *presence* predicate the fare's own rung
+test, which touches the snapshot rather than the coach's edge, and the fare gate itself is settled and
+was not to be touched.
