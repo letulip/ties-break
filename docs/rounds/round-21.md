@@ -11,12 +11,27 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   перетирает существующий.»** – BUILD. Importing a save is destructive and currently silent. Wanted:
   a confirm step before the import lands, and it must say plainly WHEN it is overwriting a career
   that already exists rather than warning identically in both cases.
-- [ ] **2. ⚠ REOPENED, THIRD ASK. «Тренер всё ещё не едет на соревнования, как так? Уже 3й раз прошу
+- [>] **2. ⚠ REOPENED, THIRD ASK. «Тренер всё ещё не едет на соревнования, как так? Уже 3й раз прошу
   сделать»** – BUILD. Round-20 #1 answered this with an explanation instead of a build: the mechanic
   was measured in three versions on 30.07, all three failed, he cancelled it, `docs/decisions.md`
   recorded the consequence, and I relabelled the toggle to say why it will never open.
   **Asking a third time overrules that cancellation.** `setCoachOnEventWeeks` still has no caller
   anywhere in `src/`. This time it gets wired, and the toggle has to do something on his screen.
+  → ⚠ **NOT BUILT THIS ROUND, AND HE RULED ON IT MID-ROUND – IT IS ITS OWN WAVE.** I put the three
+  measured failures to him as a choice; his answer moved the ground: «прибавка к силе матча сделала
+  элитные результаты ХУЖЕ – это на старых измерениях? мы построили новый стенд, надо актуализировать
+  данные. Присутствие в потоке и трансляции точно надо (если едет), но бонус какой-то тоже нужен, я
+  считаю. А может и не один даже.»
+  - He is RIGHT that the verdict is stale. The three arms were measured 30.07 (commit `77e08aa`) on
+    the OLD bench – the one `the-wall-2026-08.md` §6-§7 later showed never got anyone ranked. Every
+    absolute economy verdict from that bench is suspect (task #89), and this is one of them.
+  - So the wave is three steps in order: **(1) re-measure all three arms on the rebuilt bench and
+    today's draws** – a boolean bonus, a run-fatigue discount, a match-strength edge; **(2) build
+    PRESENCE unconditionally** – he goes, it costs, and it is visible in the tournament flow, the
+    running commentary and the week's story; **(3) attach whatever survives (1), possibly more than
+    one**, because that is what he asked for.
+  - Presence is also where the still-open «travel notification» from 08.08 finally becomes true:
+    `docs/decisions.md` records it as unbuildable while travel could never happen. It can now.
 - [x] **3. ⚠ REOPENED. «И ещё раз: проверь пожалуйста что с комментариями текстовой трансляции на
   1000 и шлемах, кажется ничего не изменилось»** – MEASURE, then build. Task #109 was created for
   exactly this and never built, so "ничего не изменилось" is the correct observation. Read what a
@@ -77,11 +92,37 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     builder tests red; dropping the fourth argument at MatchViewer's call site turns the mounted test
     red while the builder suite stays green – which is the exact failure this item was.
   - Commit `8e38c0d`.
-- [ ] **4. «...только 1 раз за весь сезон смог пройти 1й раунд турнира из всех попыток, в 250 чуть
+- [x] **4. «...только 1 раз за весь сезон смог пройти 1й раунд турнира из всех попыток, в 250 чуть
   лучше. Это как-то не очень метчится с нашим процентом побед»** – MEASURE FIRST, and it may be MY
-  regression: the Slam draw went 32 -> 128 and the 1000 32 -> 64 this morning. More rounds means more
-  first rounds, and a 128 draw from the same entrant band may SEED her differently. Answer with the
-  per-round rate on the new draws against the old, off his own save.
+  regression: the Slam draw went 32 -> 128 and the 1000 32 -> 64 this morning.
+  → ✅ **HE IS RIGHT, IT IS A REAL BUG, AND IT IS NOT THIS MORNING'S DRAW CHANGE.** She entered EVERY
+  draw as the lowest-ranked player, on every rung, since v21b – which shipped a comment saying the
+  opposite («she goes into the draw AT HER STANDING, not at the bottom of it»).
+  - **THE CAUSE IS THE TABLE, NOT THE FUNCTION.** `kidSeedIndexIn` counts how many entrants outrank
+    her by looking her up in the ranking it is handed, and falls back to LAST for a player it cannot
+    find. Both tables reaching that call are built to the INPUT-INDEPENDENCE rule and fold her out on
+    purpose – `aiRanking` («excludes the kid so AI-field selection never depends on the kid's own
+    results») and `selRanking` («LIVE rows fold WITHOUT the kid»). Never found means bottom.
+  - **MEASURED on his own save, a world #15** (`tools/draw-vs-band.ts`, 40 season-chunks):
+    | | seeded | R1 win | R1 opponent (median) | titles |
+    |---|---|---|---|---|
+    | before | **0.0%** | 42.8% | #34.5 | 1.6% |
+    | after | **100%** | **57.2%** | #49 | **5.9%** |
+    At a 1000 **89% of the field she met was stronger than her**, because the back of the draw is
+    what the top seeds are paired against. That is «прошёл первый круг один раз за сезон».
+  - **THE FIX IS A SECOND TABLE, NOT A RELAXED FIRST ONE.** Who turns up must not depend on her –
+    `selectEntrants` and `weekFieldExclusion` keep the kid-free fold. Where she stands among them
+    must depend on nothing else, so the seeding call reads `rankingFor`, the table the Season card
+    and the acceptance lists already use. The draw now agrees with the card instead of contradicting
+    it. Same RNG draw count: `buildDraw` shuffles a tail whose length does not move with her slot.
+  - ⚠ **AND THE TOOL THAT CAUGHT IT WAS BROKEN BY MY OWN DRAW CHANGE.** `draw-vs-band` crashed on the
+    Slam (seven rounds indexing a five-long label array) and printed `undefined 41.3%` for the two
+    finishes a 128-draw added. Both label tables now come from `stageLabel`/`finishLabel`.
+  - **Two guards fell out of it and neither was a product regression** (`d8ee134`): `travel-home`'s
+    mood re-derivation was missing `retired` and had been passing only because this career had never
+    retired hurt – now completed, so that arm is covered for the first time; `long-career-ledgers`
+    asked seasons she did not play for a best result. ⚠ Its ENDING is deliberately not pinned: this
+    career flipped across the threshold three times in one day on three balance states.
 - [x] **5. ⚠ REOPENED. «И мне всё ещё показывают local чемпионаты в ленте у обоих»** – BUILD. This is
   task #84, pending since it was filed and never built. The feed offers rungs that pay into a table
   she has left.
