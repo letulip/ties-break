@@ -32,6 +32,68 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     one**, because that is what he asked for.
   - Presence is also where the still-open «travel notification» from 08.08 finally becomes true:
     `docs/decisions.md` records it as unbuildable while travel could never happen. It can now.
+  - → ✅ **STEP (2) IS BUILT AND SHIPPED ON THIS BRANCH. HE TRAVELS, IT COSTS MONEY, AND FOUR
+    SURFACES SAY SO.** Step (1) – re-measuring the three stat arms on the rebuilt bench – is a
+    separate agent's arm of the same wave and **no stat is added here**, which is the point: a fourth
+    invisible bonus is the exact thing that got this reported three times.
+    - **THE SWITCH IS UNLOCKED, AND `setCoachOnEventWeeks` HAS A CALLER AT LAST.** The row on screen
+      T was `disabled` by a LITERAL with no binding behind it; it is now a live switch bound to the
+      engine's own stance, pressable at every age and on every rung. The one refusal left is a fact
+      rather than a gate: a self-coached family is told there is nobody to send, and the control
+      still works (the stance takes effect the moment she hires somebody).
+    - **⚠ THE FARE IS THE OWNER'S OWN FIGURE, AND THE 30.07 ONE IS NOT RECOVERABLE.** The brief asked
+      for the 30.07 price to be reused rather than invented. It cannot be: commit `77e08aa` says in
+      capitals that *"ALL THE ENGINE WORK IS REVERTED ... the `coachTravelsFrom` threshold, the
+      per-trip fare ... are gone"*, and it was never committed, so neither git nor any doc holds the
+      number. What **is** on the record is him pricing the same thing on 12.08 in
+      `docs/specs/the-wall-2026-08.md` §L1: «a per-tournament top-up when the coach travels with her,
+      **at double the travel cost**». So his seat is her seat again – **a trip he comes on costs
+      twice the fare** – which is also where the brief's own fallback ("price it from
+      `travelCostFor`") lands. `coachTravelFareFor` is that doubling and it reads `travelCostFor` and
+      nothing else, so the academy scholarship and a brand's share reach his seat exactly as they
+      reach hers, and "twice the fare" stays true of the number the family actually pays.
+    - **WHERE IT IS CHARGED, and why not in the weekly bill.** Beside `chargeTravel` in `tickWeek`'s
+      `else if (enteredThisWeek)` arm – the arm where she actually boarded. That inherits the two
+      no-travel arms for free (an injury walkover and a medical withdrawal never pay it, because she
+      never went) and keeps it out of `resolveBaseCosts`, where R4's mistake was: the retainer is
+      unconditional (owner, 08.08) and this is a FARE. Its own `travel` row in the feed, never folded
+      into the coaching line. Zero new draws on any stream.
+    - **PRESENCE, on the three surfaces he named.** (a) THE FLOW: `PendingView.coachTravelled` off
+      one engine predicate (`coachTravelsWithHer`), drawn as one line on the splash's brief card –
+      the card that is already the coach's own, under his signature. (b) THE COMMENTARY: a new
+      `coach` beat at a SET BREAK, which is the only moment the rules give an on-court coach
+      (`training-dials.md` §8) – at most twice in a match, `PRIORITY.coach` last so any tennis beat
+      on the same point wins, never in the `key` cut, and byte-identical to today when nobody
+      travelled. (c) THE WEEK'S STORY: `DiarySnapshot.coachNote`, its own field rather than entries
+      in `TRAVEL_NOTES` – a licensed pool entry would surface on maybe one trip in twenty, and this
+      has to be there on every trip the family paid a second fare for.
+    - **⭐ AND THE 08.08 TRAVEL NOTIFICATION IS BUILT.** `markCoachTravelOpen` fires once per career,
+      `keep: true` so the 400-row prune cannot lose it, on the first week she has a coach AND a trip
+      still ahead of her – so it arrives in time to be acted on rather than as a receipt. Silent for
+      a self-coached family, because for them it is not true. A feed milestone and **not** a popup:
+      round-20 #3 was a blocking dialog whose dismiss control left a 375x667 screen and stopped his
+      career, and a notice is exactly the class of thing that does not need to block anybody.
+    - **NO SCHEMA CHANGE.** `coachOnEventWeeks` already shipped; everything added is snapshot-derived
+      (`coachTravelled`, `coachNote`, `travelFareCents`/`travelTrips`) and the fare reuses the
+      existing `travel` event category. `SAVE_SCHEMA_VERSION` is untouched.
+    - **Evidence.** `tests/round21-coach-travel.test.ts` (17, engine) and
+      `tests/component/round21-coach-travel.test.ts` (10, MOUNTED). The load-bearing ones:
+      two identical careers differing only in the switch spend **exactly twice** on the trip and the
+      second row is his; the MAIN stream is byte-identical across 40 weeks of both arms
+      (invariant 2); the same match narrates differently with him there and he is **under 20% of
+      rows**, one word per set break at most; the coach room's row calls the command and prices
+      itself from `coachBilling`; the week's scrap carries two hands and the week's own note is not
+      displaced. **⚠ AND THE PHONE MEASUREMENT CLAUDE.md ASKS FOR:** the brief card is measured
+      against 375x667 with the presence line on it – the takeover's scrollport is bounded and
+      `overflow-y: auto`, the card fits the screen so a scroll position exists that shows it and
+      `Begin` together, and the line itself is held to a 3-line budget at the card's width.
+      **Mutation-verified, eight ways** (each named in the test headers): deleting the charge, the
+      gross-fare fare, dropping the self-coached clause, dropping the notice's "trip ahead" clause,
+      firing the beat on every point, dropping the `:coach-travelled` binding, and a four-sentence
+      presence line – each turns a different, named block red.
+    - ⚠ `tests/component/coach-travel-row.test.ts` (round-20 #1) is **deleted**, and its source pin in
+      `tests/coach-market.test.ts` re-aimed. Both existed to assert the row could never open; that is
+      the claim his third ask overrules. The reasoning they recorded is preserved in the new files.
 - [x] **3. ⚠ REOPENED. «И ещё раз: проверь пожалуйста что с комментариями текстовой трансляции на
   1000 и шлемах, кажется ничего не изменилось»** – MEASURE, then build. Task #109 was created for
   exactly this and never built, so "ничего не изменилось" is the correct observation. Read what a
@@ -225,6 +287,30 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     needs a bench run and a spec, which is its own wave. **The question for him: should the whole
     ITF band leave school together at week 242 (his premise – but that puts the December girls out
     at 17.67, before eighteen), or does the real September cut-off stand as it is today?**
+  - → ✅ **HE RULED: THE CUT-OFF STAYS. So the line I promised and did not ship is now built, and it
+    is the only thing that changed – NO CLOCK MOVES.**
+    - **WHERE.** The School tile on the Kid screen, which is where he saw it. Under the grid rather
+      than inside the cell, and that is forced rather than a preference: both `KidLifeTile` lines are
+      `white-space: nowrap` in a 115px cell on a 17-character budget (`TILE_LINE_MAX`), so a sentence
+      cannot go in one. It renders directly below the School tile – the first cell of the second row
+      – prefixed `School –` so it names what it is about.
+    - **WHAT IT SAYS**, engine-composed in `kidLife.schoolCutOffNote` and only drawn by the screen:
+      *"School runs on a 1 September cut-off and her birthday falls after it – so her last school
+      year ends the summer after she turns 18, a year later than girls born earlier in the same
+      tennis year."*
+    - **AND ONLY WHERE IT IS TRUE.** Four birth months out of twelve (September–December, which is
+      `schoolCohortYear`'s own comparison), and only while she is still at school – `gradeOf`
+      returning null is "School's done", which accounts for itself. For a June girl the sentence
+      would be false, so she is told nothing.
+    - **Evidence.** `tests/component/round21-school-cutoff.test.ts` – 5 MOUNTED tests on real careers
+      through the real engine. The December arm ticks to career week **246**, the exact September the
+      measurement above names, and reads the rendered line off the screen; a June career at the same
+      week gets nothing; both are checked again at 14, where the split is already true and already
+      says so; and the line stops at `schoolEndWeek(12) + 1`. The fixture asserts the two leaving
+      weeks (242 / 294) up front, so a clock change goes red **first**, with its reason, instead of
+      the copy failing mysteriously. Mutation-verified three ways: firing for every birth month,
+      surviving past the last grade, and deleting the paragraph from `KidScreen.vue` each redden a
+      different named block.
 - [x] **7. «У тренера на карточке "Too early to tell 49 weeks of 52" – звучит довольно смешно, сезон
   уже сыгран.»** – BUILD, and it is three asks in one sentence:
   - 7a: the copy at the top of the window should be «обсудим в межсезонье», not "too early to tell".
