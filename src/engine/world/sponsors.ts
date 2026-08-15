@@ -609,10 +609,21 @@ export function academyCoverOf(world: WorldState, event: SeasonEvent): number {
  *  is the conservative one; the other reading of the same sentence (a top-up that is ITSELF double,
  *  i.e. a trip at 3x) is not what "double the travel cost" describes.
  *
- *  ⚠ IT GOES THROUGH `travelCostFor` AND NOWHERE ELSE, which is the same rule the note above states
- *  for the same reason. His seat is priced off HER seat, so an academy scholarship and a brand's
- *  share reach it exactly as they reach hers - and the sentence "a trip with him costs twice the
- *  fare" stays true of the figure the family actually sees, not of a gross number nobody is charged.
+ *  ⚠⚠ AND HIS SEAT IS **GROSS** – THE SUPPORT DOES NOT PAY FOR HIM. This shipped through
+ *  `travelCostFor`, which subtracts the academy scholarship and the brand's travel share, so for one
+ *  wave the mechanism built to keep a struggling family in the game was **buying the coach a plane
+ *  ticket**. The owner caught it as a principle rather than as a bug (15.08): «Мы делали механизм
+ *  точечной поддержки нуждающихся, этот механизм не должен поддерживать их чрезмерные траты, только
+ *  помочь дожить до призов. Вот что надо проконтролировать.»
+ *
+ *  So HER fare keeps every cover it has ever had and HIS is `event.travelCostCents`, the full price.
+ *  That is also how a scholarship works in the world: it covers the player, not her entourage.
+ *
+ *  ⚠ IT CHANGES WHAT "DOUBLE" MEANS FOR A COVERED FAMILY, AND DELIBERATELY. Uncovered, the trip
+ *  still costs exactly twice - the sentence on screen is unchanged for everybody paying full price.
+ *  Covered, it costs her discounted seat plus his whole one, so the discount stops scaling with the
+ *  luxury: the better her scholarship, the LARGER the share of the trip he represents, which is the
+ *  right direction. The screen must say his seat is not covered rather than quoting a bare multiple.
  *
  *  ⚠ AND IT IS NOT REFUNDABLE, BECAUSE IT IS NEVER COMMITTED IN ADVANCE. `chargeTravel`'s note warns
  *  that a discount computed at the till and not at the refund is free money in four keystrokes. That
@@ -647,7 +658,9 @@ export function coachTravelFareFor(world: WorldState, event: SeasonEvent): numbe
   // are one question with one answer, and `coachMarket.ts` cannot import this file back anyway
   // (it is imported BY it - the cycle is why this is not a predicate over there).
   if (TIERS[event.tier].prizeCents === undefined) return 0
-  return travelCostFor(world, event)
+  // ⭐ GROSS, NOT `travelCostFor` – see the note above. The academy scholarship and the brand's share
+  // stay on HER seat and never reach his.
+  return event.travelCostCents
 }
 
 /** THE CHARGE, on the week she travelled and he came with her. One row, its own line in the feed:

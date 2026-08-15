@@ -161,31 +161,37 @@ describe('§1 the second seat is priced off her own seat', () => {
     if (junior) expect(coachTravelFareFor(world, junior), 'a rung that pays her nothing').toBe(0)
   })
 
-  it('⚠ AND IT FOLLOWS THE COVERS, because the sentence on screen is about the fare the family PAYS', () => {
-    // `travelCostFor` applies the academy scholarship and the brand's share; his seat is priced off
-    // the RESULT, so "twice the fare" stays true of the number the family actually sees rather than
-    // of a gross figure nobody is charged. Read as a property: whatever the covers do to her fare,
-    // they do the same to his, on every event on the calendar.
+  it('⚠⚠ AND IT DOES **NOT** FOLLOW THE COVERS – the support does not buy the coach a ticket', () => {
+    // ⚠ THIS ASSERTION USED TO SAY THE OPPOSITE, and the owner overturned it as a principle rather
+    // than as a bug (15.08): «Мы делали механизм точечной поддержки нуждающихся, этот механизм не
+    // должен поддерживать их чрезмерные траты, только помочь дожить до призов.»
+    //
+    // `travelCostFor` subtracts the academy scholarship and the brand's travel share. Routing his
+    // seat through it meant the mechanism built to keep a struggling family alive was paying for the
+    // coach's flight – the scholarship scaling with the luxury it was never meant to fund. HER fare
+    // keeps every cover; HIS is the full price, which is also how a scholarship works in the world:
+    // it covers the player, not her entourage.
     const world = career('fare-b', { travels: true })
     toFirstTrip(world)
-    // ⚠ RE-AIMED TO THE RUNGS THAT PAY (the fare gate, at the bottom of this file). The fare is 0 on
-    // a domestic or junior rung by design since the bench measured an ungated one bankrupting 15 of
-    // 30 middle careers, so a loop over the WHOLE calendar now compares a real fare with a refused
-    // one. The claim is unchanged and is about the rungs the fare exists on.
     const pays = (e: { tier: TierId }): boolean => TIERS[e.tier].prizeCents !== undefined
+
+    // Without a scholarship the two are the same integer, so this arm alone cannot tell the rule
+    // from the bug – it is here to pin that nothing moved for a family paying full price.
     for (const e of world.season.filter(pays)) {
-      expect(coachTravelFareFor(world, e), `event ${e.id}`).toBe(travelCostFor(world, e))
+      expect(coachTravelFareFor(world, e), `event ${e.id}`).toBe(e.travelCostCents)
     }
-    // ⚠ AND A CAREER WITH A SCHOLARSHIP IS THE ARM THAT MAKES THAT SENTENCE MEAN SOMETHING. Without
-    // one the net and the gross fare are the same integer, so the assertion above is true of a
-    // mistake as well as of the rule. Mutation-verified: return `event.travelCostCents` from
-    // `coachTravelFareFor` and this block goes red while the loop above stays green.
+
+    // ⭐ THE ARM THAT MAKES IT MEAN SOMETHING. With a scholarship her seat is discounted and his is
+    // not, so the two figures come apart – and they must come apart in this direction.
     world.academy = { level: 2, sinceWeek: 0, seasonIndex: 0, coveredCents: 0 }
     const withCover = world.season.filter((e) => e.travelCostCents > 0 && pays(e))
     expect(withCover.length, 'the calendar has trips worth paying for').toBeGreaterThan(0)
     for (const e of withCover) {
-      expect(coachTravelFareFor(world, e), `event ${e.id}`).toBe(travelCostFor(world, e))
-      expect(coachTravelFareFor(world, e), `event ${e.id}: his seat is discounted with hers`).toBeLessThan(e.travelCostCents)
+      expect(travelCostFor(world, e), `event ${e.id}: HER seat is covered`).toBeLessThan(e.travelCostCents)
+      expect(coachTravelFareFor(world, e), `event ${e.id}: HIS is not`).toBe(e.travelCostCents)
+      expect(coachTravelFareFor(world, e), `event ${e.id}: so his seat now costs more than hers`).toBeGreaterThan(
+        travelCostFor(world, e),
+      )
     }
   })
 
