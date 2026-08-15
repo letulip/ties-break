@@ -188,27 +188,92 @@ const billing = computed(() => game.snapshot?.coachBilling ?? null)
 const hasCoach = computed(() => (game.snapshot?.coachId ?? null) !== null)
 const travelsOnEventWeeks = computed(() => billing.value?.onEventWeeks ?? false)
 
-/** WHAT SENDING HIM COSTS, in the engine's own words - `travelFareCents` is the sum of
- *  `travelCostFor` over the trips she has BOOKED this season, which is the one fare definition in
- *  the game. The rule ("twice the fare") is always said; the money is said only when there is a
- *  booked season to price it over, because a $0.00 season total with nothing behind it is worse
- *  than no figure at all. */
+/** WHAT SENDING HIM COSTS, in the engine's own words - `travelFareCents` is `coachTravelFareFor`
+ *  summed over the trips he would be ON this season, which is the one fare definition in the game.
+ *  The rule is always said; the money is said only when there are trips to price it over, because a
+ *  $0.00 season total with nothing behind it is worse than no figure at all.
+ *
+ *  ⭐⭐ 15.08 – AND FOR A FAMILY WITH A SCHOLARSHIP THE RULE IS NO LONGER "TWICE THE FARE" (owner, on
+ *  the principle behind it: «очень согласен»). The support pays for HER seat and never for his, so a
+ *  covered trip is her discounted seat plus his whole one - the better the scholarship, the LARGER
+ *  the share of the trip he is. Quoting a bare multiple to those families would be wrong for exactly
+ *  the people who most need to understand the number, so the line says his seat is not covered and
+ *  prints BOTH figures. `travelCovered` is the engine's answer to "is anything reducing her travel",
+ *  asked of the one fare definition rather than of a list of covers, so this branch cannot go stale
+ *  when a third support stream ships.
+ *
+ *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08) - `buildCoachRoster` puts a woman on every
+ *  roster by construction, so "his seat" would print under Sabine Kobayashi. The first draft of this
+ *  line said "a trip HE comes on ... HIS seat", and `round15-surfaces.test.ts` caught it MOUNTED on
+ *  this exact screen, which is the guard doing precisely its job. "The coach's seat" is the phrase
+ *  that survives it, and the daughter is the app's one fixed "she". */
 const travelSubLine = computed(() => {
   if (!hasCoach.value) return 'You are coaching her yourself – there is nobody to send. Turn it on and it takes effect when you hire somebody.'
   const b = billing.value
-  // ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08) – `buildCoachRoster` puts a woman on every
-  // roster by construction, so "his seat" would print under Sabine Kobayashi. The first draft of
-  // this line said "a trip HE comes on ... HIS seat", and `round15-surfaces.test.ts` caught it
-  // MOUNTED on this exact screen, which is the guard doing precisely its job.
-  const rule = 'Twice the fare on every trip – a second seat beside hers.'
+  const covered = b?.travelCovered ?? false
+  const rule = covered
+    ? 'The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.'
+    : 'Twice the fare on every trip – a second seat beside hers.'
   if (!b || b.travelTrips === 0) return rule
   const trips = b.travelTrips === 1 ? '1 trip' : `${b.travelTrips} trips`
-  return `${rule} ${formatCents(b.travelFareCents)} over the ${trips} she has booked this season.`
+  return covered
+    ? `${rule} Her seats cost ${formatCents(b.travelHerFareCents)} over the ${trips} ahead; the second seat adds ${formatCents(b.travelFareCents)}.`
+    : `${rule} ${formatCents(b.travelFareCents)} over the ${trips} she has booked this season.`
 })
 
 async function toggleTravel() {
   if (game.busy) return
   await game.setCoachOnEventWeeks(!travelsOnEventWeeks.value)
+}
+
+// ⭐⭐ v49 – AND THE SECOND, MORE EXPENSIVE DECISION: THE TRIPS THAT PAY HER NOTHING.
+// Owner, 15.08: «делаем тогда», with his own model of whose decision it is (his words verbatim are
+// in tests/component/round21-coach-travel.test.ts - THIS IS THE SCRIPT SIDE OF A FILE WHOSE TEMPLATE
+// may carry no Cyrillic, comments included, and the rule is kept here by habit).
+//
+// ⚠ IT IS NESTED AND NOT A SIBLING, because it is meaningless on its own: the fare reads both
+// stances, so this alone sends nobody anywhere. Shown only while the first switch is on, which is
+// also the honest shape of the decision - a second choice on top of a choice.
+//
+// ⚠ AND IT WARNS BEFORE THE FIRST FARE, WITHOUT REFUSING ANYTHING. The bench measured what an
+// ungated junior fare does (8/30 wealthy·elite and 15/30 middle·middle careers bankrupt, every one in
+// the junior years - docs/specs/coach-travel-2026-08.md), and the owner has ruled that outcome is the
+// player's own. So the confirm is an INFORMED CHOICE and not a gate: it names the risk in the
+// player's own money terms, and then does exactly what it is told. Turning it OFF asks nothing -
+// stopping a bill needs no ceremony.
+const travelsToJuniors = computed(() => billing.value?.onJuniorEvents ?? false)
+
+const juniorSubLine = computed(() => {
+  const b = billing.value
+  const rule = 'Junior and domestic events pay no prize money – the fare buys presence, and nothing comes back.'
+  if (!b || b.travelJuniorTrips === 0) return rule
+  const trips = b.travelJuniorTrips === 1 ? '1 more trip' : `${b.travelJuniorTrips} more trips`
+  return `${rule} ${formatCents(b.travelJuniorCents)} over the ${trips} on her card this season.`
+})
+
+const askingJuniors = ref(false)
+/** The warning, in the two facts a parent can act on: what the bill is FOR, and what it did to the
+ *  careers that ran it. Measured over 30 seeds a cell, both cells named, and the ages named too –
+ *  every one of those bankruptcies happened before she turned twenty. It ends by handing the
+ *  decision back, because it IS his: «есть деньги - едет тренер, нет - не едет, или едет, но быстрее
+ *  банкротится». */
+const juniorConfirmMessage =
+  'Send the coach to junior and domestic tournaments too? Those rungs pay no prize money, so the ' +
+  'second fare is a bill against an income she does not have yet. Measured over 30 careers a cell, ' +
+  'an unlimited junior fare bankrupted 8 of 30 wealthy families and 15 of 30 middle ones – every one ' +
+  'of them before she turned twenty. Your money, your call.'
+
+async function toggleJuniors() {
+  if (game.busy) return
+  if (travelsToJuniors.value) {
+    await game.setCoachOnJuniorEvents(false)
+    return
+  }
+  askingJuniors.value = true
+}
+async function doSendToJuniors() {
+  askingJuniors.value = false
+  await game.setCoachOnJuniorEvents(true)
 }
 
 // ⚠ THE CONTEXT THE UPLIFT NUMBERS ARE RELATIVE TO. The owner watched his coach's number fall from
@@ -565,6 +630,49 @@ function scrollToTier(tier: CoachTier): void {
         <span class="cm-switch-knob"></span>
       </button>
     </section>
+
+    <!-- ⭐⭐ v49 – THE NESTED OPTION: THE TRIPS THAT PAY HER NOTHING.
+         The owner ruled on 15.08 that this is the player's decision and not the engine's, and that
+         the outcome of it is his own too (his words are in the .ts comments and in
+         tests/component/round21-coach-travel.test.ts - no Cyrillic may appear in a template, comments
+         included, tests/round13-nav.test.ts).
+
+         ⚠ IT APPEARS ONLY WHILE THE FIRST SWITCH IS ON, and that is not decoration: the fare reads
+         BOTH stances, so with the first one off this option sends nobody anywhere and a row that
+         looked live would be the control lying about itself - the exact defect round-20 #1 was.
+
+         ⚠ AND THE PRESS OPENS A WARNING, NOT A GATE. What a player who ticks this is choosing was
+         measured (docs/specs/coach-travel-2026-08.md): an unlimited junior fare bankrupted 8 of 30
+         wealthy families and 15 of 30 middle ones, every one of them in the junior years. The dialog
+         says so plainly before the first fare is charged and then does as it is told. -->
+    <section v-if="billing && travelsOnEventWeeks" class="cm-travel cm-travel-nested">
+      <div class="cm-travel-text">
+        <p class="cm-travel-title">...and to junior events too</p>
+        <p class="cm-travel-sub">{{ juniorSubLine }}</p>
+      </div>
+      <button
+        class="cm-switch"
+        role="switch"
+        :aria-checked="travelsToJuniors ? 'true' : 'false'"
+        :disabled="game.busy"
+        :aria-label="
+          travelsToJuniors
+            ? 'Coach travels to junior and domestic tournaments – on. Press to stop paying the second fare on the trips that pay no prize money.'
+            : 'Coach travels to junior and domestic tournaments – off. Press to buy the second fare on those trips too.'
+        "
+        @click="toggleJuniors"
+      >
+        <span class="cm-switch-knob"></span>
+      </button>
+    </section>
+    <ConfirmDialog
+      v-if="askingJuniors"
+      :message="juniorConfirmMessage"
+      confirm-label="Send the coach"
+      cancel-label="Not yet"
+      @cancel="askingJuniors = false"
+      @confirm="doSendToJuniors"
+    />
     <!-- ⚠ WHAT HE COSTS A WEEK, AND IT IS NOT THE PRICE OF THE TOGGLE. Deleting the toggle's season pair
          took this figure with it, which was too much: "$X without him · $Y with" is meaningless once there
          is no "with", but "he costs $X a week" is true whatever she books and is the one number the

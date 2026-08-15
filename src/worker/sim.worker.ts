@@ -16,6 +16,7 @@ import {
   bookPractice,
   hireCoach,
   setCoachOnEventWeeks,
+  setCoachOnJuniorEvents,
   setKitGrade,
   cancelPractice,
   decideKnock,
@@ -319,6 +320,9 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'setCoachOnEventWeeks': {
       return mutate(msg.id, msg.baseRevision, (world) => setCoachOnEventWeeks(world, msg.on))
     }
+    case 'setCoachOnJuniorEvents': {
+      return mutate(msg.id, msg.baseRevision, (world) => setCoachOnJuniorEvents(world, msg.on))
+    }
     case 'cancelPractice': {
       return mutate(msg.id, msg.baseRevision, (world) => cancelPractice(world, msg.week))
     }
@@ -598,6 +602,7 @@ function errorMsg(id: number, err: unknown): ToUI {
 //   bookPractice       mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   hireCoach          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnEventWeeks mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setCoachOnJuniorEvents mutation mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   cancelPractice     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPlan            mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   decideKnock        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision

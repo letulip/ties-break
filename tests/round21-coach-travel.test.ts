@@ -29,8 +29,15 @@
 //
 // ⚠ MUTATION-VERIFIED, each block naming what was broken to watch it fail:
 //   * delete the `chargeCoachTravel` call in world.ts   -> §2 goes red (the money never leaves).
-//   * make `coachTravelFareFor` return `event.travelCostCents` instead of `travelCostFor(world, e)`
-//                                                       -> §1's academy arm goes red.
+//   * make `coachTravelFareFor` return `travelCostFor(world, e)` - i.e. put the academy scholarship
+//     and the brand's share back on the coach's seat     -> §1's scholarship arm goes red (and, since
+//                                                          15.08, the whole of
+//                                                          tests/support-never-pays-the-coach.test.ts).
+//   * make the v49 rung gate absolute again (drop `&& !(world.coachOnJuniorEvents ?? false)`)
+//                                                       -> the four opt-in arms of the last block go
+//                                                          red and every default-side arm stays green.
+//   * hand `kidMatchPlayerFor` a stance instead of the fare at either call site
+//                                                       -> the last block's source pin goes red.
 //   * drop the `world.coachId === null` clause          -> §1's self-coached arm and §4's notice arm.
 //   * drop the fifth argument at MatchViewer's call site or make `coach` unread in buildCommentary
 //                                                       -> §5 goes red on both halves.
@@ -39,12 +46,15 @@
 //   * remove the `week > world.week` clause in markCoachTravelOpen
 //                                                       -> §4's "before the trip" goes red.
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import {
   createWorld,
   tickWeek,
   toSnapshot,
   enterEvent,
   setCoachOnEventWeeks,
+  setCoachOnJuniorEvents,
   coachTravelFareFor,
   travelCostFor,
   coachTravelsWithHer,
@@ -52,8 +62,17 @@ import {
   pendingKnock,
   closeTournament,
   skipTournament,
+  SAVE_SCHEMA_VERSION,
   type WorldState,
 } from '../src/engine/world'
+import { migrateSave } from '../src/engine/migrations'
+// ⚠ THE HELPING'S OWN CALL SITE, read from the leaf it lives in: `kidMatchPlayerFor`'s third argument
+// is `coachTravelFareFor(world, event) > 0` in world.ts and in the snapshot, and the v49 block below
+// is the assertion that it stays the FARE rather than becoming a second read of the stance.
+import { kidMatchPlayerFor, COACH_EDGE_POINTS_PER_PP } from '../src/engine/world/player'
+import { coachEdgePp } from '../src/engine/coach'
+import type { SeasonEvent } from '../src/engine/season/types'
+import { worldSource } from './worldSource'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 // ⚠ STRAIGHT FROM ITS OWN MODULE: `world.ts` imports `chargeCoachTravel` but does not re-export it,
@@ -502,6 +521,10 @@ describe('§5 the broadcast knows he is in the corner', () => {
 // The gate is the owner's own 30.07 argument as code - "JUNIOR TENNIS HAS NO PRIZE MONEY. A fare
 // can only be a decision if something might come back" - so he travels to the rungs that PAY, and
 // the test for that is the rung's own `prizeCents`. These assertions are the bankruptcy, pinned.
+//
+// ⭐⭐ AND SINCE v49 THE GATE IS THE PLAYER'S DEFAULT RATHER THAN THE ENGINE'S LAW (owner, 15.08:
+// «делаем тогда»). Everything below is the DEFAULT side of it and is unchanged; the opt-in side is
+// the §v49 block underneath, and the two together are the whole rule.
 // ---------------------------------------------------------------------------
 describe('round-21 #2 – he travels to the events that pay, and to no others', () => {
   it('every rung that pays prize money charges the fare, and every rung that does not charges nothing', () => {
@@ -525,8 +548,13 @@ describe('round-21 #2 – he travels to the events that pay, and to no others', 
         unpaid++
       } else {
         expect(fare, `${tier} writes a cheque, so the fare is real`).toBeGreaterThan(0)
-        // ...and it is HER fare, so an academy or a brand reaches his seat exactly as it reaches hers.
-        expect(fare).toBe(travelCostFor(world, event))
+        // ⚠ RE-AIMED 15.08, AND IT USED TO SAY THE OPPOSITE: "it is HER fare, so an academy or a
+        // brand reaches his seat exactly as it reaches hers". The owner overturned that as a
+        // principle - the support does not buy the coach a ticket - so his seat is the calendar's
+        // GROSS price. (This world holds no cover, so the two integers coincide here; the arm that
+        // can tell the rule from the bug is §1's scholarship block, and the principle itself is
+        // tests/support-never-pays-the-coach.test.ts.)
+        expect(fare).toBe(event.travelCostCents)
         paying++
       }
     }
@@ -544,5 +572,175 @@ describe('round-21 #2 – he travels to the events that pay, and to no others', 
     expect(coachTravelsWithHer(world)).toBe(true)
     const junior = world.season.find((e) => TIERS[e.tier].prizeCents === undefined)
     if (junior) expect(coachTravelFareFor(world, junior)).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// ⭐⭐ v49 – ...AND THE JUNIOR RUNGS ARE THE PLAYER'S TO BUY (owner, 15.08).
+//
+// «делаем тогда», and his model of whose decision it is: «По мне игрок сам решает: есть деньги -
+// едет тренер, нет - не едет, или едет, но быстрее банкротится.»
+//
+// So the gate above stops being absolute and becomes the DEFAULT. What this block holds is that the
+// second stance moves exactly one thing - which rungs the fare exists on - and that everything
+// downstream follows it rather than being decided a second time:
+//
+//   * the FARE opens at a junior rung and only there (the W-series figure does not move);
+//   * the HELPING follows the fare in both directions, because its argument IS the fare
+//     (`kidMatchPlayerFor(world, surface, coachTravelFareFor(world, event) > 0)` - world.ts and
+//     snapshot.ts). Nothing in this wave passes the stance to it, and this is the assertion that
+//     would go red if anybody ever did;
+//   * the TILL follows the fare, because `chargeCoachTravel` returns on a zero one;
+//   * and the stance ALONE sends nobody: with the main switch off, opening juniors buys nothing.
+//
+// ⚠ MUTATION-VERIFIED: make the gate absolute again (drop the `&& !(world.coachOnJuniorEvents ??
+// false)` clause) and the four opt-in arms go red while every default-side arm above stays green.
+// ---------------------------------------------------------------------------
+describe('v49 – the junior fare is opt-in, and the helping follows it', () => {
+  /** The five wings the coach's edge lands on – `kidMatchPlayerFor`'s own set. */
+  const WINGS = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes'] as const
+
+  /** A real career with somebody to send and the main switch on, plus the junior stance as given. */
+  function stance(seed: string, juniors: boolean): WorldState {
+    const world = career(seed, { travels: true })
+    expect(world.coachId, 'the fixture must actually employ somebody').not.toBeNull()
+    if (juniors) setCoachOnJuniorEvents(world, true)
+    return world
+  }
+
+  it('⭐ THE FARE IS 0 AT A JUNIOR RUNG WITH THE OPTION OFF, AND REAL MONEY WITH IT ON', () => {
+    const off = stance('v49-fare', false)
+    const on = stance('v49-fare', true)
+    const junior = off.season.find((e) => TIERS[e.tier].prizeCents === undefined && e.travelCostCents > 0)
+    expect(junior, 'the calendar has a junior trip worth paying for').toBeTruthy()
+
+    expect(off.coachOnJuniorEvents, 'the default is the shipped behaviour').toBe(false)
+    expect(coachTravelFareFor(off, junior!), 'nothing comes back from this rung, so nobody is sent').toBe(0)
+    expect(on.coachOnJuniorEvents).toBe(true)
+    expect(coachTravelFareFor(on, junior!), 'and with the option on it is the full fare, gross').toBe(
+      junior!.travelCostCents,
+    )
+    expect(coachTravelFareFor(on, junior!), 'a fare is real money').toBeGreaterThan(0)
+  })
+
+  it('...and it moves NOTHING on the rungs that pay - the option only adds', () => {
+    const off = stance('v49-adds', false)
+    const on = stance('v49-adds', true)
+    const paying = off.season.filter((e) => TIERS[e.tier].prizeCents !== undefined)
+    expect(paying.length, 'the calendar reaches rungs that pay').toBeGreaterThan(0)
+    for (const e of paying) expect(coachTravelFareFor(on, e), `event ${e.id}`).toBe(coachTravelFareFor(off, e))
+  })
+
+  it('⭐⭐ THE HELPING FOLLOWS THE FARE IN BOTH DIRECTIONS, because it reads the fare and not the stance', () => {
+    // ⚠ THIS IS THE ASSERTION THE ITEM TURNS ON. The match-strength helping is handed
+    // `coachTravelFareFor(world, event) > 0`, so opening junior travel opens the helping at those
+    // events for free - and closing it closes both. If anybody ever re-wires the helping to read a
+    // stance directly, the junior arm below goes red on the very next run.
+    const off = stance('v49-helping', false)
+    const on = stance('v49-helping', true)
+    const junior = off.season.find((e) => TIERS[e.tier].prizeCents === undefined && e.travelCostCents > 0)!
+    const paying = off.season.find((e) => TIERS[e.tier].prizeCents !== undefined && e.travelCostCents > 0)!
+    expect(junior && paying, 'both kinds of rung are on this calendar').toBeTruthy()
+
+    const at = (world: WorldState, e: SeasonEvent) =>
+      kidMatchPlayerFor(world, 'hard', coachTravelFareFor(world, e) > 0)
+    const alone = kidMatchPlayerFor({ ...off, coachId: null }, 'hard', true)
+    const one = coachEdgePp(off.seed, off.coachId) * COACH_EDGE_POINTS_PER_PP
+    expect(one, 'the coach has an edge at all').toBeGreaterThan(0)
+
+    for (const k of WINGS) {
+      // A W-series trip doubles him whatever the junior option says.
+      expect(at(off, paying)[k] - alone[k], `${k}: W series, option off`).toBeCloseTo(2 * one, 10)
+      expect(at(on, paying)[k] - alone[k], `${k}: W series, option on`).toBeCloseTo(2 * one, 10)
+      // A junior trip does not - until it is bought, and then it does.
+      expect(at(off, junior)[k] - alone[k], `${k}: junior, option off`).toBeCloseTo(one, 10)
+      expect(at(on, junior)[k] - alone[k], `${k}: junior, option ON`).toBeCloseTo(2 * one, 10)
+    }
+  })
+
+  it('⚠ ...AND NO CALL SITE DECIDES IT SEPARATELY – the helping is handed the FARE, in source', () => {
+    // ⚠ THE ONE STRUCTURAL PIN IN THIS BLOCK, and it is here because the behavioural test above
+    // computes the argument itself and therefore cannot see a call site that stopped passing it. The
+    // hazard is specific and has already happened once (15.08, the two leaks `coach-travel-edge.ts`
+    // records): the helping read `world.coachOnEventWeeks` - the standing STANCE - and so applied at
+    // junior events and at home friendlies, where nobody had been sent. The fix was to make the FARE
+    // the single answer to "is he at this court", and v49 is exactly why that must not drift back:
+    // the fare now carries a second stance, so a call site reading either boolean directly would open
+    // the helping at rungs the family is not paying for.
+    const calls = worldSource()
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.includes('kidMatchPlayerFor(') && !l.startsWith('export function') && !l.startsWith('//') && !l.startsWith('*'))
+    expect(calls.length, 'the helping is called in the engine at all - a vacuous pin is not a pin').toBeGreaterThanOrEqual(3)
+
+    // (a) NO call site reads a stance. Two shapes are legitimate: the fare's own expression, and no
+    // third argument at all (the planner's home preview, which is not a trip).
+    for (const call of calls) {
+      expect(call, 'this call site decides the trip for itself instead of reading the fare').not.toMatch(
+        /coachOnEventWeeks|coachOnJuniorEvents|coachTravelsWithHer/,
+      )
+    }
+    // (b) ...and the real trip call sites DO pass it - the tournament week and the season preview.
+    expect(
+      calls.filter((c) => c.includes('coachTravelFareFor(')).length,
+      'the fare reaches the helping from the places a trip is actually played or previewed',
+    ).toBeGreaterThanOrEqual(2)
+  })
+
+  it('the till follows the fare too - the money leaves at a junior rung only once it is bought', () => {
+    const off = stance('v49-till', false)
+    const on = stance('v49-till', true)
+    const junior = on.season.find((e) => TIERS[e.tier].prizeCents === undefined && e.travelCostCents > 0)!
+    const before = { off: off.fundsCents, on: on.fundsCents }
+    chargeCoachTravel(off, junior)
+    chargeCoachTravel(on, junior)
+    expect(off.fundsCents, 'no fare, no charge - `chargeCoachTravel` returns on a zero').toBe(before.off)
+    expect(before.on - on.fundsCents, 'and exactly the fare with the option on').toBe(junior.travelCostCents)
+    const his = on.events.filter((e) => e.category === 'travel' && /coach/i.test(e.text))
+    expect(his, 'still its own line in the feed, never folded into the retainer').toHaveLength(1)
+  })
+
+  it('⚠ AND THE JUNIOR STANCE ALONE SENDS NOBODY - it is nested under the first switch, not beside it', () => {
+    // Why the row on screen T is nested: with the main switch off this buys nothing anywhere, so a
+    // control that looked live on its own would be lying about itself.
+    const world = career('v49-nested')
+    setCoachOnJuniorEvents(world, true)
+    expect(world.coachOnEventWeeks, 'the first switch is untouched by the second').toBe(false)
+    expect(coachTravelsWithHer(world)).toBe(false)
+    for (const e of world.season) expect(coachTravelFareFor(world, e), `event ${e.id}`).toBe(0)
+  })
+
+  it('a self-coached family still sends nobody, whatever both switches say', () => {
+    const world = career('v49-self', { travels: true, coach: 'self' })
+    setCoachOnJuniorEvents(world, true)
+    expect(world.coachId).toBeNull()
+    for (const e of world.season) expect(coachTravelFareFor(world, e)).toBe(0)
+  })
+
+  it('⭐ A GOLDEN v48 SAVE LOADS WITH THE STANCE FALSE AND BEHAVES AS IT ALWAYS DID', () => {
+    // ⚠ THE MIGRATION'S OWN CLAIM, ASSERTED RATHER THAN ASSUMED (CLAUDE.md invariant 3). The default
+    // is a PRESERVATION: a career written before v49 was played under an engine where the junior fare
+    // did not exist, so `false` is exactly what it has been doing since the week it was saved.
+    const v48 = JSON.parse(
+      readFileSync(fileURLToPath(new URL('./fixtures/saves/v48.json', import.meta.url)), 'utf8'),
+    )
+    const loaded = migrateSave(v48)
+    expect(loaded.schemaVersion, 'it really did come forward').toBe(SAVE_SCHEMA_VERSION)
+    expect(loaded.coachOnJuniorEvents, 'and it wakes up having chosen nothing').toBe(false)
+
+    // ...and the fares it computes are the ones the PRE-v49 shape computes - the same world with the
+    // field absent entirely, which is the object a v48 build was handing to `coachTravelFareFor`.
+    // This is also the `?? false` read proving itself undefined-safe.
+    const { coachOnJuniorEvents: _absent, ...preV49 } = loaded
+    expect('coachOnJuniorEvents' in preV49, 'the probe really is the older shape').toBe(false)
+    let juniorRungs = 0
+    for (const e of loaded.season) {
+      expect(coachTravelFareFor(loaded, e), `event ${e.id}`).toBe(coachTravelFareFor(preV49 as WorldState, e))
+      if (TIERS[e.tier].prizeCents === undefined) {
+        expect(coachTravelFareFor(loaded, e), `event ${e.id}: a migrated career sends nobody here`).toBe(0)
+        juniorRungs++
+      }
+    }
+    expect(juniorRungs, 'the fixture actually has junior rungs to be silent about').toBeGreaterThan(0)
   })
 })

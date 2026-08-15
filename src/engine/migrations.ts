@@ -1417,6 +1417,38 @@ export function migrateSave(raw: unknown): WorldState {
     v = 48
   }
 
+  // ⭐ v49 – THE COACH MAY BE SENT TO THE RUNGS THAT PAY HER NOTHING, AND IT IS THE PLAYER WHO SENDS
+  // HIM (docs/specs/coach-travel-2026-08.md §5, the ⛔ finding).
+  //
+  // `coachOnJuniorEvents: boolean` – the nested half of the v24 travel stance. Until now the fare
+  // simply REFUSED every rung with no prize money, which was the engine deciding on the family's
+  // behalf. The owner overturned that on 15.08 – «делаем тогда» – with his own model of whose
+  // decision it is: «По мне игрок сам решает: есть деньги - едет тренер, нет - не едет, или едет, но
+  // быстрее банкротится.»
+  //
+  // ⚠⚠ THE DEFAULT IS `false` AND IT IS A PRESERVATION, NOT A CHOICE MADE FOR ANYBODY. Every career
+  // written before this version was played under an engine where the junior fare did not exist, so
+  // `false` is exactly what it has been doing since the day it was saved: the same fares on the same
+  // rungs, the same ledger, the same match-strength helping (which follows the fare, so it cannot
+  // drift from it). A migrated career is byte-identical in behaviour and the new option is simply an
+  // unticked box the next time screen T is opened – which is also why nothing here reads the career's
+  // wealth, age or results to guess an answer. It was never asked.
+  //
+  // ⚠ AND IT IS ADDED BESIDE `coachOnEventWeeks` RATHER THAN RETYPING IT. The tidier shape - one
+  // scope field with three values - would have rewritten a boolean persisted since v24 and every
+  // reader of it, for a decision that is genuinely a second, more expensive choice on top of the
+  // first. Absent is not zero here either: it means "he has never been sent", which is what `?? false`
+  // reads it as at the one place it is consulted (`coachTravelFareFor`).
+  //
+  // Idempotent in v30's sense (the field is only written when absent), and zero draws on any stream -
+  // it is a stance, not an event - so the frozen MAIN capture (41550 / e6b0c709) is untouched by
+  // construction.
+  if (v === 48) {
+    const w = save as { coachOnJuniorEvents?: unknown }
+    if (typeof w.coachOnJuniorEvents !== 'boolean') w.coachOnJuniorEvents = false
+    v = 49
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

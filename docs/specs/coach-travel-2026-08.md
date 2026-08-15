@@ -591,3 +591,73 @@ noise on any single career, so **no individual playthrough will ever feel it** �
 `coach-match-edge.md` §7 already says of the edge itself («the value is not observable and the place
 is»). What the owner is buying is a distribution shift over hundreds of careers, and the reason to
 ship it is that the fare should buy *something* and now demonstrably does.
+
+---
+
+# 8. ⭐⭐ THE JUNIOR RUNGS BECOME THE PLAYER'S DECISION (owner, 15.08) – schema v49
+
+## 8.1 The ruling, and what it overturns
+
+§5's ⛔ finding said **DO NOT SHIP THE FARE UNGATED**, and the branch gated it: the fare exists only
+on the rungs whose `prizeCents` is defined, which is the owner's own 30.07 argument as code («JUNIOR
+TENNIS HAS NO PRIZE MONEY. A fare can only be a decision if something might come back»).
+
+Shown the gate, he took the other half of the decision back:
+
+> «делаем тогда»
+>
+> «По мне игрок сам решает: есть деньги - едет тренер, нет - не едет, или едет, но быстрее
+> банкротится.»
+
+**Nothing in §5 is retracted.** The measurement stands and it is exactly what the screen now quotes:
+at this price an unlimited junior fare bankrupted **8/30** wealthy·elite and **15/30** middle·middle
+careers, every one of them in the junior years, "ever ranked" 96.7% → 46.7%. What changes is who
+decides. The engine's answer becomes the DEFAULT rather than the law, and the player may overrule it
+for his own family after being told what it costs.
+
+⚠ **There is no protective gate on the outcome, deliberately.** Bankruptcy is the player's own
+responsibility – his standing ruling – so the build refuses nothing, hides nothing and softens
+nothing. What IS controlled is that the *support* mechanisms never subsidise the choice (§8.3).
+
+## 8.2 What was built
+
+* `coachOnJuniorEvents?: boolean` on the world – a SECOND optional stance, default `false`, added
+  beside `coachOnEventWeeks` rather than retyping it into a scope union. Schema **v49**, append-only
+  migration, golden fixture `tests/fixtures/saves/v49.json` (CLAUDE.md invariant 3, all three parts).
+  A migrated career reads `false`, which is byte-identical to what it has been doing since it was
+  saved – asserted, not assumed.
+* **One place decides.** `coachTravelFareFor`'s rung gate becomes conditional on the new stance and
+  nothing else moves: the match-strength helping already follows the fare (`kidMatchPlayerFor`'s
+  third argument is `coachTravelFareFor(world, event) > 0`), so opening junior travel opens the
+  helping at those events for free, and `chargeCoachTravel` already returns on a zero fare. The two
+  are never decided separately – there is a source pin holding every call site to the fare.
+* **Screen T draws it as a nested option** under the travel switch, live only while that switch is
+  on, because the fare reads both stances and this one alone sends nobody anywhere.
+* **The warning fires before the first fare**, as a confirm dialog quoting the numbers above –
+  informed choice, not a block. Turning it back off asks nothing.
+
+## 8.3 The principle the same wave had to protect
+
+The owner raised the second half as a standing property rather than a bug:
+
+> «Мы делали механизм точечной поддержки нуждающихся, этот механизм не должен поддерживать их
+> чрезмерные траты, только помочь дожить до призов. Вот что надо проконтролировать.»
+
+`f9104eb` made the coach's seat GROSS (the academy scholarship and the brand's travel share stay on
+her seat). `tests/support-never-pays-the-coach.test.ts` holds it as a property rather than as a list
+of covers: **his seat is the calendar's own printed fare or he is not on the trip**, over every
+support state the game can be in, plus the ledger arm (exactly the gross fare leaves, and no cover's
+tally moves when it does). A support stream added tomorrow cannot leak into the coach's fare without
+turning that file red, which is the control he asked for.
+
+⚠ **And it is the junior rungs where that matters most**, which is why §2 of that file exists: those
+are the trips a struggling family's scholarship is most likely to be covering, and they are the ones
+with nothing at the end of them.
+
+## 8.4 Not re-measured, and why
+
+No bench arm was run for this slice. The measurement it would produce **already exists in §5** – an
+ungated junior fare is precisely the arm that bankrupted 8/30 and 15/30 – and it is now quoted to the
+player rather than acted on by the engine. A career that leaves the option off is byte-identical
+(the three frozen career hashes in `tests/coach-travel-edge.test.ts` moved only by `schemaVersion`
+and the new key, checked key by key before they were re-frozen).

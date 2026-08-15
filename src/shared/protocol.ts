@@ -2716,19 +2716,40 @@ export interface Snapshot {
      *  the row on screen T sets it, the till charges a second fare for it, and the flow, the
      *  commentary and the week's story all say when he came. */
     onEventWeeks: boolean
+    /** ⭐ v49: ...and to the rungs that pay her nothing too – the NESTED half of the stance, and the
+     *  one the bench says can end a career in the junior years. Only meaningful while `onEventWeeks`
+     *  is on, which is how screen T draws it: a second and more expensive choice, not a second row. */
+    onJuniorEvents: boolean
     weeklyCents: number
     /** weeks of the season she is entered for – the season she is in, or the one just finished */
     eventWeeks: number
     /** weeks of the coming year the retainer is actually charged for */
     billedWeeks: number
     seasonCents: number
-    /** ⭐ ROUND-21 #2: what the second seat would add over the trips she has BOOKED this season, in
+    /** ⭐ ROUND-21 #2: what the second seat would add over the trips he WOULD BE ON this season, in
      *  cents. Priced whether the switch is on or off – it is the price of the decision, not a
-     *  receipt. 0 for a self-coached family (nobody to send) and 0 with nothing booked. */
+     *  receipt. 0 for a self-coached family (nobody to send) and 0 with nothing booked.
+     *  ⚠ GROSS since 15.08: the support pays for HER seat and never for his, so this is the full
+     *  fare. It is read out of `coachTravelFareFor` itself, which is what stops the row on screen T
+     *  and the line on the till quoting different money. */
     travelFareCents: number
     /** ...and how many trips that figure covers, so the screen never prints a total with nothing to
-     *  divide it by. */
+     *  divide it by. Trips he would be ON – which is fewer than she has booked whenever the rungs on
+     *  her card are ones he is not sent to. */
     travelTrips: number
+    /** ⭐ 15.08: what HER seats cost over those same trips, net of every cover. Equal to
+     *  `travelFareCents` for a family paying full price, and SMALLER for one holding a scholarship or
+     *  a brand's travel share – which is precisely the case where "twice the fare" stopped being
+     *  true and the screen has to print both figures instead. */
+    travelHerFareCents: number
+    /** ⭐ v49: what opening junior travel would add on top, and over how many further trips. Disjoint
+     *  from `travelFareCents` by construction – a rung either pays prize money or it does not. */
+    travelJuniorCents: number
+    travelJuniorTrips: number
+    /** ⭐ 15.08: is any support reducing HER travel this week? Asked of the one fare definition rather
+     *  than of a list of covers, so a support stream added later is inside the answer. It is what
+     *  lets screen T say "his seat is not covered" only to the families that hold a cover. */
+    travelCovered: boolean
     /** ⭐ ROUND-21 #12: WHAT ARRIVES EVERY WEEK, ALL OF IT – the parents' contribution plus the
      *  savings interest the balance earns plus a signed kit deal's retainer, pro-rated. It is the cap
      *  the coaching budget meter draws against and the denominator every `overBudgetCents` is cut
@@ -3051,6 +3072,10 @@ export type ToWorker =
   | { id: number; type: 'bookPractice'; week: number; withCoach: boolean; baseRevision: number }
   | { id: number; type: 'hireCoach'; coachId: string | null; baseRevision: number }
   | { id: number; type: 'setCoachOnEventWeeks'; on: boolean; baseRevision: number }
+  // ⭐ v49: ...and the nested half – does he go to the rungs that pay her nothing. Its own command
+  // rather than a second argument on the one above, so that neither switch can silently move the
+  // other: the screen sends exactly the decision the player took, and the engine records exactly it.
+  | { id: number; type: 'setCoachOnJuniorEvents'; on: boolean; baseRevision: number }
   | { id: number; type: 'cancelPractice'; week: number; baseRevision: number }
   | { id: number; type: 'setPlan'; plan: WeekPlan; baseRevision: number }
   // W4: answer the knock. The ONLY way an undecided knock clears, and the only way time moves again.

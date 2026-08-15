@@ -3410,6 +3410,16 @@ tr.kid-row td {
   border-radius: var(--radius-frame);
   margin-bottom: 6px;
 }
+/* ⭐ v49 – THE NESTED TRAVEL OPTION (junior and domestic trips), drawn as what it is: a second
+   decision INSIDE the first one, not a second row beside it. The indent and the hairline are the
+   whole treatment - it is the same row otherwise, so the two switches read as one control with a
+   sub-clause rather than as two unrelated toggles. It renders only while the parent switch is on
+   (v-if in CoachMarketScreen.vue), so there is no muted/disabled state to draw. */
+.cm-travel-nested {
+  margin-left: 14px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
 .cm-travel-text {
   flex: 1;
   min-width: 0;

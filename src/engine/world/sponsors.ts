@@ -623,7 +623,12 @@ export function academyCoverOf(world: WorldState, event: SeasonEvent): number {
  *  still costs exactly twice - the sentence on screen is unchanged for everybody paying full price.
  *  Covered, it costs her discounted seat plus his whole one, so the discount stops scaling with the
  *  luxury: the better her scholarship, the LARGER the share of the trip he represents, which is the
- *  right direction. The screen must say his seat is not covered rather than quoting a bare multiple.
+ *  right direction. Screen T says his seat is not covered instead of quoting a bare multiple, and
+ *  prints both figures for a family that holds a cover - see `coachBilling` and CoachMarketScreen.
+ *
+ *  ⭐ v49 – AND WHICH RUNGS HE GOES TO IS TWO DECISIONS NOW, not one. `coachOnEventWeeks` buys the
+ *  rungs that pay; `coachOnJuniorEvents` buys the ones that do not. See the gate below for the
+ *  owner's ruling and for what the bench measured about the second one.
  *
  *  ⚠ AND IT IS NOT REFUNDABLE, BECAUSE IT IS NEVER COMMITTED IN ADVANCE. `chargeTravel`'s note warns
  *  that a discount computed at the till and not at the refund is free money in four keystrokes. That
@@ -638,26 +643,37 @@ export function coachTravelFareFor(world: WorldState, event: SeasonEvent): numbe
   // "tax, not a decision" the 30.07 boolean was killed for.
   if (world.coachId === null) return 0
   if (!world.coachOnEventWeeks) return 0
-  // ⚠⚠ HE COMES TO THE EVENTS THAT PAY, AND THIS SHIPPED UNGATED FOR EXACTLY ONE COMMIT (round-21
-  // #2). The bench caught it before the branch was gated - `docs/specs/coach-travel-2026-08.md`: at
-  // this very price an ungated fare bankrupted **8 of 30** wealthy·elite careers and **15 of 30**
-  // middle·middle ones, and EVERY bankruptcy was in the junior years (ages 15-19). "Ever ranked"
-  // fell 96.7% -> 46.7% and the median middle career's whole prize money went to $0. The 30.07
-  // record priced this mechanic at +$21,000; on a career that actually plays it is +$995,979,
-  // because nothing stopped it buying a second seat on a `local` at fourteen.
+  // ⚠⚠ HE COMES TO THE EVENTS THAT PAY - UNLESS THE PLAYER HAS DECIDED OTHERWISE (v49). This gate
+  // shipped ABSOLUTE and it is now CONDITIONAL, on the owner's ruling of 15.08: «делаем тогда», and
+  // his model of whose decision it is - «По мне игрок сам решает: есть деньги - едет тренер, нет - не
+  // едет, или едет, но быстрее банкротится.»
   //
-  // ⚠ THE GATE IS THE OWNER'S OWN ARGUMENT RATHER THAN A NEW RULE. Cancelling the mechanic on 30.07
-  // he said why - «Никто никуда не ездит… в про карьере - там другое дело» - and the commit spelled
-  // it out: *"JUNIOR TENNIS HAS NO PRIZE MONEY. A fare can only be a decision if something might
-  // come back, and on the junior tour nothing ever does."*
+  // ⚠ WHAT THE PLAYER IS CHOOSING, MEASURED. `docs/specs/coach-travel-2026-08.md`, 30 seeds: at this
+  // very price an UNGATED fare bankrupted **8 of 30** wealthy·elite careers and **15 of 30**
+  // middle·middle ones, and EVERY bankruptcy was in the junior years (ages 15-19). "Ever ranked" fell
+  // 96.7% -> 46.7% and the median middle career's whole prize money went to $0. The 30.07 record
+  // priced this mechanic at +$21,000; on a career that actually plays it is +$995,979, because
+  // nothing stopped it buying a second seat on a `local` at fourteen. That is why screen T warns
+  // before the first junior fare is charged - and why it WARNS rather than refuses: «едет, но быстрее
+  // банкротится» is an outcome the owner has ruled is the player's own, and this engine does not
+  // protect a player from a price he was quoted.
+  //
+  // ⚠ THE DEFAULT SIDE OF THE GATE IS STILL THE OWNER'S OWN ARGUMENT. Cancelling the mechanic on
+  // 30.07 he said why - «Никто никуда не ездит… в про карьере - там другое дело» - and the commit
+  // spelled it out: *"JUNIOR TENNIS HAS NO PRIZE MONEY. A fare can only be a decision if something
+  // might come back, and on the junior tour nothing ever does."* So it stays the automatic answer;
+  // what v49 adds is the player's right to overrule it for his own family.
   //
   // ⚠ AND THE TEST IS THE RUNG'S OWN `prizeCents`, not an age and not a second ladder: present from
   // W15 up, absent on every domestic and junior rung. A rung that starts paying starts being worth
   // the fare, by construction, with nothing to keep in step. It lives HERE and nowhere else -
-  // `chargeCoachTravel` already returns on a zero fare, so "does he come" and "what does it cost"
-  // are one question with one answer, and `coachMarket.ts` cannot import this file back anyway
-  // (it is imported BY it - the cycle is why this is not a predicate over there).
-  if (TIERS[event.tier].prizeCents === undefined) return 0
+  // `chargeCoachTravel` already returns on a zero fare, and the match-strength helping is handed
+  // `coachTravelFareFor(world, event) > 0` rather than the stance (world.ts, snapshot.ts), so opening
+  // junior travel opens the helping at those events too, in one move and for free. "Does he come",
+  // "what does it cost" and "is he at this court" are ONE question with one answer. (`coachMarket.ts`
+  // cannot import this file back anyway - it is imported BY it, which is why this is not a predicate
+  // over there.)
+  if (TIERS[event.tier].prizeCents === undefined && !(world.coachOnJuniorEvents ?? false)) return 0
   // ⭐ GROSS, NOT `travelCostFor` – see the note above. The academy scholarship and the brand's share
   // stay on HER seat and never reach his.
   return event.travelCostCents

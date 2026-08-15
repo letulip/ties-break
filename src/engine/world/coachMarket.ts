@@ -22,7 +22,7 @@ import { activeKitDeal } from '../offers'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
 // which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
 // runs one way exactly as `../offers` above does.
-import { travelCostFor } from './sponsors'
+import { coachTravelFareFor, travelCostFor } from './sponsors'
 import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
@@ -193,6 +193,36 @@ export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
   })
 }
 
+/** ⭐ v49 – ...AND TO THE RUNGS THAT PAY HER NOTHING TOO. The nested half of the stance above, and a
+ *  separate decision because it is a separate, more expensive one.
+ *
+ *  ⚠ IT IS THE PLAYER'S CALL AND THE ENGINE REFUSES NOTHING (owner, 15.08): «делаем тогда», and the
+ *  model - «По мне игрок сам решает: есть деньги - едет тренер, нет - не едет, или едет, но быстрее
+ *  банкротится.» The bench says what that costs (8/30 wealthy·elite and 15/30 middle·middle careers
+ *  bankrupt, every one in the junior years - docs/specs/coach-travel-2026-08.md), so screen T warns
+ *  before the first fare is charged and then does as it is told. A gate on the OUTCOME would be this
+ *  engine overruling him on his own money.
+ *
+ *  ⚠ IT DOES NOT IMPLY THE FIRST SWITCH and does not turn it on. The fare reads both stances (the one
+ *  gate, `coachTravelFareFor`), so this alone sends nobody anywhere - which is why the row on screen T
+ *  is nested under the other one rather than standing beside it. Setting it with the first switch off
+ *  is a stance recorded for the day it is turned on, exactly as the v24 stance is for a self-coached
+ *  family. Pure state, zero draws on any stream. */
+export function setCoachOnJuniorEvents(world: WorldState, on: boolean): void {
+  // ⚠ W2-ENDINGS: the engine re-validates every command, because the worker is not the gate.
+  guardNotEnded(world)
+  if ((world.coachOnJuniorEvents ?? false) === on) return
+  world.coachOnJuniorEvents = on
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    // ⚠ NO PRONOUN FOR THE COACH (R15-7) – the roster puts a woman on every list by construction.
+    text: on
+      ? 'Your coach travels to junior and domestic tournaments too – a second fare on trips that pay no prize money.'
+      : 'Your coach stays home for junior and domestic tournaments – the second fare is for the events that pay.',
+  })
+}
+
 /** ⭐ ROUND-21 #2 - IS HE ON THE TRIP? The one predicate every presence surface reads, so the flow,
  *  the commentary, the week's story and the till can never disagree about whether he was there.
  *
@@ -233,15 +263,46 @@ export function coachBilling(world: WorldState): {
   /** the weeks of the coming year the retainer is actually charged for */
   billedWeeks: number
   seasonCents: number
+  /** ⭐ v49: does he go to the rungs that pay her nothing too - the nested half of the stance. */
+  onJuniorEvents: boolean
   /** ⭐ ROUND-21 #2: WHAT SENDING HIM WOULD ADD over the trips she has actually booked this season,
    *  in cents. Zero when nothing is booked, and zero for a self-coached family - see
    *  `coachTravelFareFor`, which is the one definition this sums and the reason the row on screen T
    *  and the line on the till can never quote different money. Quoted whether the switch is ON or
-   *  OFF, because it is the price of the decision rather than a receipt for one. */
+   *  OFF, because it is the price of the decision rather than a receipt for one.
+   *
+   *  ⚠ GROSS SINCE 15.08, AND THAT IS THE FIX THIS FIGURE OWED THE SCREEN. It summed `travelCostFor` -
+   *  HER fare, net of the academy scholarship and the brand's share - while the till charges his seat
+   *  at the full price (`coachTravelFareFor`, and the owner's principle behind it). So the one family
+   *  the number mattered most to was quoted less than it would pay. It reads the fare function itself
+   *  now, which is the only way the two can never disagree again. */
   travelFareCents: number
-  /** ...and how many trips that is, so the screen can say "over the 9 she has booked" rather than
-   *  printing a season total with nothing to divide it by. */
+  /** ...and how many trips that is, so the screen can say "over the 9 he would be on" rather than
+   *  printing a season total with nothing to divide it by.
+   *
+   *  ⚠ TRIPS HE WOULD BE ON, NOT TRIPS SHE HAS BOOKED, since the fare gate. They are different
+   *  numbers the moment a junior rung is on her card and he is not going to it, and a count that
+   *  includes the trips the figure does NOT cover is the same lie in a different unit. */
   travelTrips: number
+  /** ⭐ 15.08 – WHAT **HER** SEATS COST OVER THOSE SAME TRIPS, net of every cover she holds.
+   *
+   *  It exists because "twice the fare" stopped being true for the families it mattered to. His seat
+   *  is gross and hers is not, so for a girl on a scholarship the trip is her discounted seat plus his
+   *  whole one - and the screen has to be able to print both figures rather than a multiple that is
+   *  right only for a family paying full price. Equal to `travelFareCents` exactly when no support
+   *  reaches her travel, which is how the screen knows which sentence to say. */
+  travelHerFareCents: number
+  /** ⭐ v49 – WHAT THE NESTED OPTION WOULD ADD on top, over the same booked season, and over how many
+   *  more trips. The two sets are disjoint by construction (a rung either pays prize money or does
+   *  not), so this is the price of the second decision on its own, priced the same way: through
+   *  `coachTravelFareFor`, with the stance not consulted. */
+  travelJuniorCents: number
+  travelJuniorTrips: number
+  /** ⭐ 15.08 – IS ANY SUPPORT REDUCING HER TRAVEL AT ALL this week (a scholarship, a brand's share,
+   *  or anything added to `travelCostFor` after today)? Asked of the ONE fare definition rather than
+   *  of a list of covers, so a cover invented tomorrow is inside the answer by construction - and
+   *  answerable with nothing booked, which is when a junior family most needs the sentence. */
+  travelCovered: boolean
   /** ⭐ ROUND-21 #12: THE CAP THE BUDGET METER DRAWS AGAINST, carried rather than reverse-engineered.
    *
    *  The screen used to RECOVER it from any row that was over budget
@@ -267,21 +328,87 @@ export function coachBilling(world: WorldState): {
   const booked = thisSeason.length > 0 ? thisSeason : enteredIn(seasonStart - WEEKS_PER_YEAR)
   const eventWeeks = countEntered(seasonStart) || countEntered(seasonStart - WEEKS_PER_YEAR)
   const billedWeeks = Math.max(0, WEEKS_PER_YEAR - coachedWeeksLostToRest(world))
-  // ⭐ ROUND-21 #2: the second seat, over the trips on her card. `travelCostFor` is the ONE fare
-  // definition (world/sponsors.ts) and `coachTravelFareFor` is its doubling, so this cannot drift
-  // from the number the till charges - but it is priced for a family that has NOT flipped the switch
-  // yet, which is the whole point of a price, so the stance is deliberately not consulted here.
-  const travelFareCents = world.coachId === null ? 0 : booked.reduce((sum, e) => sum + travelCostFor(world, e), 0)
+  // ⭐ ROUND-21 #2 / 15.08 / v49 – THE SECOND SEAT, over the trips on her card, ASKED OF THE FARE
+  // FUNCTION ITSELF.
+  //
+  // ⚠ IT USED TO SUM `travelCostFor` AND THAT WAS THE DEFECT. Her fare is net of the academy
+  // scholarship and the brand's travel share; HIS is gross (the owner's principle, 15.08: «механизм
+  // точечной поддержки нуждающихся... не должен поддерживать их чрезмерные траты»), so the screen was
+  // under-quoting exactly the families the support exists for - and it did not apply the rung gate at
+  // all, so a fourteen-year-old's junior season was priced as if he were coming to every trip of it.
+  // Two wrong numbers on the one line the decision is made from.
+  //
+  // ⚠ SO THE FARE FUNCTION IS ASKED ON PROBE WORLDS, AND NO GATE IS COPIED HERE. `coachTravelFareFor`
+  // is the ONE place that decides both "does he come to this rung" and "what does the seat cost"; a
+  // second copy of either test in this file is exactly how the row and the till come to disagree. The
+  // probes flip stances and nothing else.
+  //
+  // ⚠ AND THE TWO FIGURES ANSWER TWO DIFFERENT QUESTIONS, deliberately. `travelFareCents` is WHAT
+  // SENDING HIM COSTS under the junior stance the family actually holds - so a fourteen-year-old who
+  // has opened junior travel sees her real season and not a professional one she has not reached.
+  // `travelJuniorCents` is WHAT THE NESTED OPTION WOULD ADD, priced with the stance forced both ways,
+  // because a price the row quotes for its own switch must not change the moment the switch is
+  // flipped. Only the first switch is assumed on in both: it is the price of a decision, not a
+  // receipt for one.
+  const asIfTravelling: WorldState = { ...world, coachOnEventWeeks: true }
+  const asIfJuniorToo: WorldState = { ...world, coachOnEventWeeks: true, coachOnJuniorEvents: true }
+  const asIfWSeriesOnly: WorldState = { ...world, coachOnEventWeeks: true, coachOnJuniorEvents: false }
+  let travelFareCents = 0
+  let travelTrips = 0
+  let travelHerFareCents = 0
+  let travelJuniorCents = 0
+  let travelJuniorTrips = 0
+  for (const e of booked) {
+    const his = coachTravelFareFor(asIfTravelling, e)
+    if (his > 0) {
+      travelFareCents += his
+      travelTrips++
+      // HER seat on the same trip, net of every cover - the second half of the sentence on screen.
+      travelHerFareCents += travelCostFor(world, e)
+    }
+    // The trips only the nested option buys. Disjoint from the W-series ones by construction (a rung
+    // either pays prize money or it does not), so this is a difference and never a double count.
+    const extra = coachTravelFareFor(asIfJuniorToo, e) - coachTravelFareFor(asIfWSeriesOnly, e)
+    if (extra > 0) {
+      travelJuniorCents += extra
+      travelJuniorTrips++
+    }
+  }
   return {
     onEventWeeks: world.coachOnEventWeeks,
+    onJuniorEvents: world.coachOnJuniorEvents ?? false,
     weeklyCents,
     eventWeeks,
     billedWeeks,
     seasonCents: weeklyCents * billedWeeks,
     travelFareCents,
-    travelTrips: world.coachId === null ? 0 : booked.length,
+    travelTrips,
+    travelHerFareCents,
+    travelJuniorCents,
+    travelJuniorTrips,
+    travelCovered: travelCoverReachesHer(world),
     weeklyIncomeCents: familyWeeklyIncomeCents(world),
   }
+}
+
+/** ⭐ 15.08 – IS ANY SUPPORT TAKING ANYTHING OFF HER TRAVEL RIGHT NOW?
+ *
+ *  ⚠ ASKED OF `travelCostFor` AND NOT OF A LIST OF COVERS, which is the whole reason it is a function
+ *  rather than `world.academy !== null`. That function is THE definition every cover has to arrive
+ *  through - the charge, the refund and the planner's quote all read it, and `kitTravelShare`'s own
+ *  note says a fare may only ever be reduced there - so a support stream added tomorrow is inside
+ *  this answer without anybody remembering to come back here. A named-cover version of this line
+ *  would be stale the day the third one ships.
+ *
+ *  ⚠ AND IT IS A PROBE RATHER THAN A REAL EVENT, because the screen needs the sentence when nothing
+ *  is booked at all - a junior family with a scholarship is exactly who has no W-series trip on her
+ *  card yet and most needs to be told whose seat the scholarship pays for. The amount is large enough
+ *  that no percentage cover rounds away to nothing. Pure; zero draws. */
+function travelCoverReachesHer(world: WorldState): boolean {
+  // `travelCostFor` reads the world and `event.travelCostCents`, and nothing else on the event, so
+  // the cast names what this object is FOR rather than pretending it is a fixture of a real trip.
+  const probe = { travelCostCents: 10_000_00 } as SeasonEvent
+  return travelCostFor(world, probe) < probe.travelCostCents
 }
 
 /** How many of the NEXT `WEEKS_PER_YEAR` weeks the coach is stood down for, which since 08.08 is

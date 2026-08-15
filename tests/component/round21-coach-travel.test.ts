@@ -26,6 +26,17 @@
 // (round-20 #3): anything added or lengthened on a card gets a MOUNTED measurement against a 375x667
 // phone. The presence line lands on `.tf-brief`, the tournament splash's own card, so §3 measures
 // that card and the control that leaves it. Mutation-verified below.
+//
+// ⭐⭐ 15.08 – AND TWO MORE THINGS THE OWNER RULED ON THE SAME DAY, BOTH OF THEM ABOUT COPY:
+//
+//   * «очень согласен» – the screen must say the SECOND SEAT IS NOT COVERED, and show the real
+//     figure. His seat is gross since `f9104eb` (the support pays for hers and never for his), so
+//     "twice the fare" is now FALSE for exactly the families the support exists for. §1 holds the two
+//     arms - a career with a scholarship and the same career without - to different sentences.
+//   * «делаем тогда» / «По мне игрок сам решает: есть деньги - едет тренер, нет - не едет, или едет,
+//     но быстрее банкротится.» - the junior rungs become an opt-in (schema v49), with a WARNING
+//     rather than a gate before the first fare. §1 holds the nested row, the warning's numbers and
+//     both answers to it; §3 measures that dialog against the phone, mutation-verified.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -41,6 +52,7 @@ import {
   toSnapshot,
   enterEvent,
   setCoachOnEventWeeks,
+  setCoachOnJuniorEvents,
   closeTournament,
   skipTournament,
   decideKnock,
@@ -49,7 +61,8 @@ import {
 } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
-import { boxOf, setViewport, PHONE } from './fits'
+import { formatCents } from '../../src/shared/money'
+import { assertDismissReachable, boxOf, setViewport, PHONE } from './fits'
 
 function assertSheetPresent(): void {
   if (!document.head.querySelector('style')) {
@@ -112,9 +125,46 @@ function atJourneyHome(seed: string, travels: boolean): Snapshot {
   throw new Error('no journey home reached – the fixture is broken, not the assertion')
 }
 
-async function mountMarket(snapshot: Snapshot) {
+/** ⭐ 15.08 / v49 – A REAL BOOKED SEASON, priced. Ten weeks of a real career entering everything the
+ *  engine allows, with the coach travelling and the junior rungs opened, so `coachBilling` has trips
+ *  to quote money over. The scholarship is SET rather than earned - the season review that grants one
+ *  is years away and this is a copy test, not a test of the academy - but it is the engine's own
+ *  shape, the one `reviewAcademy` writes and `travelCostFor` reads, so the discount on screen is
+ *  computed by the engine exactly as it would be for a girl who earned it. */
+function bookedSeason(seed: string, opts: { scholarship: boolean; juniors?: boolean; travels?: boolean }): Snapshot {
+  const world = career(seed, opts.travels ?? true)
+  if (opts.juniors ?? true) setCoachOnJuniorEvents(world, true)
+  if (opts.scholarship) world.academy = { level: 0.5, sinceWeek: 0, seasonIndex: 0, coveredCents: 0 }
+  const rng = rngFromSeed(world.seed)
+  for (let i = 0; i < 10; i++) {
+    world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    for (const e of world.season) {
+      if (e.week > world.week && !world.entries.includes(e.id)) {
+        try {
+          enterEvent(world, e.id)
+        } catch {
+          /* eligibility and caps are the engine's business */
+        }
+      }
+    }
+    tickWeek(world, rng)
+    if (world.pendingTournament) {
+      skipTournament(world)
+      closeTournament(world)
+    }
+  }
+  return toSnapshot(world)
+}
+
+async function mountMarket(snapshot: Snapshot, opts: { attach?: boolean } = {}) {
   useGameStore().snapshot = snapshot
-  const w = mount(CoachMarketScreen, { global: { stubs: { teleport: true } } })
+  const w = mount(CoachMarketScreen, {
+    // ⚠ ATTACHED ONLY WHERE THE CASCADE IS BEING MEASURED (the fit assertion): `getComputedStyle`
+    // reads the real sheet, and the real sheet only applies to a document the node is in.
+    ...(opts.attach ? { attachTo: document.body } : {}),
+    global: { stubs: { teleport: true } },
+  })
   const pill = w.findAll('.tb-seg .tab-pill').find((b) => b.text() === 'Coaches')
   await pill!.trigger('click')
   await nextTick()
@@ -169,7 +219,7 @@ describe('§1 the row on screen T', () => {
   })
 
   it('⭐ AND IT PRICES ITSELF, in the engine\'s own money', async () => {
-    const snap = atTournament('row-price', false)
+    const snap = bookedSeason('row-price', { scholarship: false })
     const w = await mountMarket(snap)
     const text = travelRow(w).sub.text()
     // The RULE is always said - it is what makes the decision legible without a booked season.
@@ -177,7 +227,166 @@ describe('§1 the row on screen T', () => {
     // ...and the MONEY comes off `coachBilling`, never out of the template's own arithmetic.
     expect(snap.coachBilling.travelTrips, 'the fixture has trips booked').toBeGreaterThan(0)
     expect(text).toMatch(new RegExp(`${snap.coachBilling.travelTrips} trips`))
+    expect(text, 'the figure is the engine\'s').toContain(formatCents(snap.coachBilling.travelFareCents))
     expect(text, 'and it is short-dash English, like every other line in the app').not.toMatch(/—/)
+    w.unmount()
+  })
+
+  // ===============================================================================================
+  // ⭐⭐ 15.08 – THE LINE A FAMILY ON A SCHOLARSHIP READS IS A DIFFERENT LINE (owner: «очень согласен»)
+  //
+  // The support pays for HER seat and never for the coach's (`coachTravelFareFor` is gross since
+  // f9104eb, and the principle is held by tests/support-never-pays-the-coach.test.ts). So for a
+  // covered family a trip is NOT "twice the fare" - it is her discounted seat plus his whole one, and
+  // the better the scholarship the wider those two numbers are apart. Quoting the bare multiple to
+  // them would be wrong for precisely the families the mechanism exists for, which is why the two
+  // arms below must not read the same.
+  // ===============================================================================================
+  it('⭐⭐ SAYS THE SECOND SEAT IS NOT COVERED, AND PRINTS BOTH REAL FIGURES', async () => {
+    const covered = bookedSeason('row-covered', { scholarship: true })
+    const b = covered.coachBilling
+    // The fixture is REAL: a booked junior season, a hired coach, and a scholarship that is actually
+    // taking money off her fares - so the two figures on screen come apart for the engine's reason.
+    expect(b.travelCovered, 'the fixture family really is supported').toBe(true)
+    expect(b.travelTrips, 'and it really has trips to price').toBeGreaterThan(0)
+    expect(b.travelHerFareCents, 'her seat is discounted').toBeLessThan(b.travelFareCents)
+
+    const w = await mountMarket(covered)
+    const text = travelRow(w).sub.text()
+    // (a) IT SAYS HIS SEAT IS NOT COVERED. No pronoun names the coach (R15-7) - "the coach" and "she"
+    // are the two words this screen is allowed.
+    expect(text, 'the sentence the wave exists for').toMatch(/support does not pay|not covered/i)
+    expect(text, 'and it says what he does pay').toMatch(/full fare/i)
+    // (b) IT NO LONGER QUOTES THE MULTIPLE, which is the half that was WRONG rather than missing.
+    expect(text, 'a bare multiple is false for a covered family').not.toMatch(/twice the fare/i)
+    // (c) AND BOTH FIGURES ARE THE ENGINE'S, interpolated - hers and his, over the trips he is on.
+    expect(text).toContain(formatCents(b.travelHerFareCents))
+    expect(text).toContain(formatCents(b.travelFareCents))
+    expect(text).toMatch(new RegExp(`${b.travelTrips} trips`))
+    expect(text, 'short-dash English').not.toMatch(/—/)
+    w.unmount()
+  })
+
+  it('...and the family with no scholarship reads the OLD sentence, so the two really differ', async () => {
+    // ⚠ THE ARM THAT MAKES THE ONE ABOVE MEAN SOMETHING. Same seed, same season, same coach - the
+    // scholarship is the only difference, and it has to be the only difference, or "the copy branches
+    // on the cover" would be a claim about two unrelated careers.
+    setActivePinia(createPinia())
+    const plain = bookedSeason('row-covered', { scholarship: false })
+    expect(plain.coachBilling.travelCovered, 'the control holds no cover').toBe(false)
+    expect(plain.coachBilling.travelHerFareCents, 'so her seat costs what his does').toBe(
+      plain.coachBilling.travelFareCents,
+    )
+    const plainText = travelRow(await mountMarket(plain)).sub.text()
+
+    setActivePinia(createPinia())
+    const covered = bookedSeason('row-covered', { scholarship: true })
+    const coveredText = travelRow(await mountMarket(covered)).sub.text()
+
+    expect(plainText, 'nothing moved for a family paying full price').toMatch(/twice the fare/i)
+    expect(coveredText, 'and everything moved for the one that is supported').not.toBe(plainText)
+  })
+
+  // ===============================================================================================
+  // ⭐⭐ v49 – THE NESTED OPTION, AND THE WARNING IN FRONT OF IT
+  //
+  // Owner, 15.08: «делаем тогда», and «По мне игрок сам решает: есть деньги - едет тренер, нет - не
+  // едет, или едет, но быстрее банкротится.» So: no gate on the outcome, a warning before the first
+  // fare, and a control that is honest about being a second decision inside the first one.
+  // ===============================================================================================
+  it('⭐ IS NOT THERE UNTIL THE FIRST SWITCH IS ON - it buys nothing on its own', async () => {
+    // The fare reads BOTH stances, so with travel off this option sends nobody anywhere. A row that
+    // looked live in that state would be the control lying about itself, which is round-20 #1 exactly.
+    const off = await mountMarket(bookedSeason('junior-hidden', { scholarship: false, juniors: false, travels: false }))
+    expect(off.find('.cm-travel-nested').exists(), 'nothing to nest under').toBe(false)
+    off.unmount()
+
+    setActivePinia(createPinia())
+    const on = await mountMarket(bookedSeason('junior-hidden', { scholarship: false }))
+    const nested = on.find('.cm-travel-nested')
+    expect(nested.exists(), 'and it appears with the switch above it on').toBe(true)
+    expect(nested.find('.cm-switch').attributes('aria-checked'), 'it reports the ENGINE stance').toBe('true')
+    on.unmount()
+  })
+
+  it('⭐ PRICES ITSELF over the trips it would actually buy', async () => {
+    const snap = bookedSeason('junior-price', { scholarship: false })
+    const b = snap.coachBilling
+    expect(b.travelJuniorTrips, 'the fixture has junior trips on the card').toBeGreaterThan(0)
+    const w = await mountMarket(snap)
+    const text = w.find('.cm-travel-nested .cm-travel-sub').text()
+    expect(text, 'it says WHY the rung is the expensive one').toMatch(/no prize money/i)
+    expect(text).toContain(formatCents(b.travelJuniorCents))
+    expect(text).toMatch(new RegExp(`${b.travelJuniorTrips} more trips`))
+    expect(text, 'short-dash English').not.toMatch(/—/)
+    w.unmount()
+  })
+
+  it('⭐⭐ WARNS BEFORE THE FIRST FARE, WITH THE MEASURED NUMBERS, AND THEN DOES AS IT IS TOLD', async () => {
+    // ⚠ THE SHAPE OF THIS IS THE RULING. The bench measured what an unlimited junior fare does
+    // (docs/specs/coach-travel-2026-08.md, 30 seeds a cell: 8/30 wealthy·elite and 15/30
+    // middle·middle careers bankrupt, EVERY one of them in the junior years, "ever ranked" 96.7% ->
+    // 46.7%). The owner has ruled that outcome is the player's own - so this is a WARNING and not a
+    // gate: the press opens a question, the question names the risk, and confirming sends the coach.
+    const store = useGameStore()
+    const spy = vi.spyOn(store, 'setCoachOnJuniorEvents').mockResolvedValue(undefined)
+    // ⚠ THE SNAPSHOT IS THE STATE THE DECISION IS TAKEN FROM: travel ON, juniors OFF. It is set in the
+    // ENGINE rather than by pressing the row above, because that press is a command to a worker this
+    // runner does not have - and a mocked press would leave the screen reading its old snapshot.
+    const w = await mountMarket(bookedSeason('junior-warn', { scholarship: false, juniors: false }))
+    const nestedSwitch = w.find('.cm-travel-nested .cm-switch')
+    expect(nestedSwitch.exists()).toBe(true)
+    await nestedSwitch.trigger('click')
+    await nextTick()
+
+    // (a) NOTHING IS SENT YET. The press asks; it does not spend.
+    expect(spy, 'the press alone must not open the fare').not.toHaveBeenCalled()
+    const card = w.find('.dialog-overlay .dialog-card')
+    expect(card.exists(), 'the question is up').toBe(true)
+    const message = card.find('.dialog-message').text()
+    // (b) IT NAMES THE RISK IN THE PLAYER'S OWN TERMS - what the bill is for, and what it did.
+    expect(message, 'the rungs pay nothing').toMatch(/no prize money/i)
+    expect(message, 'the measured bankruptcies').toMatch(/8 of 30/)
+    expect(message, '...both cells of them').toMatch(/15 of 30/)
+    expect(message, 'and when it happened').toMatch(/before she turned twenty/i)
+    expect(message, 'no Cyrillic leaks out of the comments into the copy').not.toMatch(/[Ѐ-ӿ]/)
+    expect(message, 'short-dash English').not.toMatch(/—/)
+    // (c) AND IT IS A CHOICE, NOT A BLOCK: the way out is a real button, and so is the way through.
+    const buttons = card.findAll('.dialog-actions button').map((b) => b.text())
+    expect(buttons.length, 'two answers').toBe(2)
+    expect(buttons.join(' '), 'and neither of them refuses on the engine\'s behalf').toMatch(/Not yet/i)
+
+    // (d) CONFIRMING SENDS HIM.
+    const confirm = card.findAll('.dialog-actions button').find((b) => /send/i.test(b.text()))!
+    await confirm.trigger('click')
+    await nextTick()
+    expect(spy, 'the owner\'s own ruling: his money, his call').toHaveBeenCalledWith(true)
+    expect(w.find('.dialog-overlay').exists(), 'and the question closes behind it').toBe(false)
+    w.unmount()
+  })
+
+  it('...and turning it back OFF asks nothing - stopping a bill needs no ceremony', async () => {
+    const store = useGameStore()
+    const spy = vi.spyOn(store, 'setCoachOnJuniorEvents').mockResolvedValue(undefined)
+    const w = await mountMarket(bookedSeason('junior-stop', { scholarship: false }))
+    await w.find('.cm-travel-nested .cm-switch').trigger('click')
+    await nextTick()
+    expect(w.find('.dialog-overlay').exists(), 'no warning is owed for spending less').toBe(false)
+    expect(spy).toHaveBeenCalledWith(false)
+    w.unmount()
+  })
+
+  it('cancelling leaves the stance exactly where it was', async () => {
+    const store = useGameStore()
+    const spy = vi.spyOn(store, 'setCoachOnJuniorEvents').mockResolvedValue(undefined)
+    const w = await mountMarket(bookedSeason('junior-cancel', { scholarship: false, juniors: false }))
+    await w.find('.cm-travel-nested .cm-switch').trigger('click')
+    await nextTick()
+    const cancel = w.findAll('.dialog-actions button').find((b) => /not yet/i.test(b.text()))!
+    await cancel.trigger('click')
+    await nextTick()
+    expect(spy, 'a question answered "no" is not a command').not.toHaveBeenCalled()
+    expect(w.find('.dialog-overlay').exists()).toBe(false)
     w.unmount()
   })
 
@@ -323,6 +532,46 @@ describe('§3 the card I lengthened, measured against a 375x667 phone', () => {
       `the presence line wraps to ${hereLines.toFixed(1)} lines at ${contentWidth.toFixed(0)}px – ` +
         'it is one line under a signature, not a paragraph, and the card it sits on is the splash of a phone screen',
     ).toBeLessThanOrEqual(3)
+    w.unmount()
+  })
+
+  // -----------------------------------------------------------------------------------------------
+  // ⭐⭐ v49 – AND THE NEW WARNING IS A BLOCKING DIALOG, SO IT OWES THE SAME MEASUREMENT
+  //
+  // CLAUDE.md's rule, earned by round-20 #3: "any dialog you add or lengthen gets a mounted assertion
+  // that its dismiss control's box is inside a 375x667 viewport". This one is FOUR SENTENCES of
+  // measured bankruptcy on the shared `dialog-card` - exactly the shape that grew until Continue left
+  // the screen and the owner's career stopped there.
+  // -----------------------------------------------------------------------------------------------
+  it('⭐⭐ THE JUNIOR-TRAVEL WARNING KEEPS ITS ANSWERS ON A 375x667 PHONE', async () => {
+    assertSheetPresent()
+    setViewport(PHONE)
+    const w = await mountMarket(bookedSeason('junior-fits', { scholarship: false, juniors: false }), { attach: true })
+    await w.find('.cm-travel-nested .cm-switch').trigger('click')
+    await nextTick()
+
+    const card = document.querySelector('.dialog-overlay .dialog-card')!
+    const dismiss = document.querySelector('.dialog-overlay .dialog-actions')!
+    expect(card, 'the warning is up – nothing below is vacuous').toBeTruthy()
+    expect(dismiss.querySelectorAll('button').length, 'the answers ARE the way out').toBe(2)
+
+    const fit = assertDismissReachable(card, dismiss, PHONE, 'ConfirmDialog (junior travel)')
+    expect(fit.available.height, 'the room the scrim leaves on a 667px phone').toBe(635)
+    expect(fit.cap, 'the card is BOUNDED, which is the content-independent half').toBe(635)
+    expect(fit.scrollable, 'and what is past the fold can be reached').toBe(true)
+
+    // ⚠⚠ MUTATION PROOF, in the same shape round21-dialogs.test.ts uses. Today's copy is comfortably
+    // inside the screen, so a green run above proves only that the cascade exists. Put round-20 #3
+    // back on THIS card - the cap stripped, the way `TourBriefingDialog` shipped - and grow the
+    // message the way a dialog really grows, one honest sentence at a time, and the same helper has
+    // to report it.
+    const message = document.querySelector('.dialog-message') as HTMLElement
+    message.textContent = `${message.textContent} `.repeat(8)
+    ;(card as HTMLElement).style.maxHeight = 'none'
+    ;(card as HTMLElement).style.overflowY = 'visible'
+    expect(() => assertDismissReachable(card, dismiss, PHONE, 'ConfirmDialog (cap removed)')).toThrow(
+      /taller than the screen|outside the viewport/,
+    )
     w.unmount()
   })
 })

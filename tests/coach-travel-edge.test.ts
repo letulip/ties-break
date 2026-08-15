@@ -271,13 +271,30 @@ describe('the plaque is about the MAN, and the trip is not part of who he is', (
 // invariant 2 gives the frozen MAIN capture: a wave that legitimately moves a career updates them.
 // What they may never do is move because of a change to the coach's edge that was supposed to be
 // scoped to the trip.
+// ⭐⭐ RE-FROZEN AT v49 (15.08), AND WHAT MOVED THEM WAS MEASURED KEY BY KEY BEFORE THEY WERE TOUCHED.
+// The junior-travel stance is a persisted field (`coachOnJuniorEvents`, schema v49), so `createWorld`
+// writes it and `SAVE_SCHEMA_VERSION` moved with it - and both of those are IN the serialisation
+// these hashes are taken of. All three went red at once, which is exactly the alarm a wave touching
+// coach travel should have to answer.
+//
+// ⚠ THE ANSWER IS A DIFF, NOT AN ASSERTION. Each of the 63/64 top-level keys of the week-156 career
+// was hashed on its own, before and after: **`schemaVersion` (48 -> 49) and the new `coachOnJuniorEvents`
+// key, and NOTHING ELSE.** Same funds, same results, same events, same rngMain, same everything the
+// career actually is - the two differences are the schema bump's own footprint and could not have
+// been avoided by any implementation of it. That is the "wave that legitimately moves a career"
+// CLAUDE.md's invariant-2 note allows, and re-freezing without the per-key check would have been the
+// thing it forbids.
+//
+// ⚠ AND THE STANCE IS `false` IN ALL THREE, asserted in `careerHash` below rather than assumed: these
+// careers do not send the coach to junior events, so nothing about the new mechanic can be hiding
+// inside the new numbers.
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: '48003a8a0ddd8b2f269923097618b2cae4719ccba8f6c28756a0dc8e0624f43f',
+  middleGrinder: 'b0fb926cbab92ca94bfcaf0c72622a0961655e7a040e4b5122710b29f4ab384a',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '4addc20212f16e24cf441c4b97e84cf69f9953706b66c495db01994e9efd6d5e',
+  eliteGrinder: '5f1ec621f2810d5e55cdf8ff09615c2729bbca98f54d2177de76afc66f9fb52e',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send) */
-  selfTravelling: '71d75d524bb97b74414a61a85e46401c8c9466c1b376c54083ab5b8ff77a3b40',
+  selfTravelling: '540b84cd11794fd40828d68f48ebde21bf61f9e242ac04e60c19f8711f313d25',
 }
 const FREEZE_WEEKS = 156
 
@@ -285,6 +302,10 @@ function careerHash(presetIndex: number, policyIndex: number, force?: Partial<{ 
   const { world, rng } = openCareer(PRESETS[presetIndex], 0, POLICIES[policyIndex])
   if (force?.coachOnEventWeeks !== undefined) world.coachOnEventWeeks = force.coachOnEventWeeks
   for (let w = 0; w < FREEZE_WEEKS; w++) stepCareerWeek(world, rng, POLICIES[policyIndex])
+  // ⚠ v49: none of these three careers sends the coach to a junior event, so the hashes above are
+  // about the mechanic being INERT here. Checked rather than assumed - a bench policy that started
+  // ticking this would move the numbers for a reason the comment above says is impossible.
+  expect(world.coachOnJuniorEvents, 'the v49 stance is present and OFF in the frozen careers').toBe(false)
   return createHash('sha256').update(JSON.stringify(world)).digest('hex')
 }
 

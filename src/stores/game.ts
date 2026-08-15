@@ -367,6 +367,17 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    /** ⭐ v49: ...and send him to the junior and domestic trips too, or stop. The screen warns what
+     *  that costs before it calls this; the engine records the decision and refuses nothing. */
+    async setCoachOnJuniorEvents(on: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setCoachOnJuniorEvents', on, baseRevision: this.revision }),
+        )
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
     /** Cancel a booked practice match before its week starts – full refund. */
     async cancelPractice(week: number) {
       await this.run(async () => {

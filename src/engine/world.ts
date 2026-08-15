@@ -141,8 +141,8 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS }
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS }
 // W3-KIT: the till and the shop window. `GEAR_CATEGORY_LINE` comes back from equipment.ts, where it
 // moved so that a rung could be PRICED below world.ts - see the note at `resolveGear`.
 import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
@@ -332,7 +332,22 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // ⚠ AND THE NUMBER IS 48, NOT THE 49 THE SPEC SAYS. The spec was written assuming the flags/grant wave
 // would take 48, but that wave is still documents and nothing has claimed 48 in code – so this takes
 // 48 and docs/plans/wave-flags-grant.md now reserves 49. Two waves must not both take one number.
-export const SAVE_SCHEMA_VERSION = 48
+// ⭐ v49 = ONE FIELD, `coachOnJuniorEvents` – DOES HE TRAVEL TO THE RUNGS THAT PAY HER NOTHING TOO.
+// The owner, 15.08, asked for the fare gate to become the player's decision rather than the engine's:
+// «делаем тогда», and the model is his own – «По мне игрок сам решает: есть деньги - едет тренер, нет
+// - не едет, или едет, но быстрее банкротится.» So the junior/domestic rungs stop being refused and
+// start being OPT-IN, with no protective gate on the outcome: bankruptcy is the player's own
+// responsibility (his standing ruling), and what is controlled instead is that no support mechanism
+// pays for it (the gross fare, `coachTravelFareFor`, and tests/support-never-pays-the-coach.test.ts).
+// ⚠ IT IS A SECOND FIELD AND NOT A RETYPING OF `coachOnEventWeeks`, deliberately. A scope union
+// («none | w-series | all») reads cleaner on paper and would have retyped a field persisted since
+// v24 and touched every reader of it; a second optional boolean defaulting FALSE leaves every existing
+// save byte-identical in behaviour and every existing reader untouched. On screen it is a NESTED
+// option, meaningful only while the first is on, which is also what it is: a second, more expensive
+// choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
+// ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
+// number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
+export const SAVE_SCHEMA_VERSION = 49
 
 
 
@@ -665,6 +680,23 @@ export interface WorldState {
    *  It moves BOTH the bill and the development rate (coachWorksThisWeek), because a coach who is
    *  not paid for a week is not at that week. That is what keeps it a decision. */
   coachOnEventWeeks: boolean
+  /** ...AND DOES HE GO TO THE RUNGS THAT PAY HER NOTHING TOO (v49)? The nested half of the stance
+   *  above: junior and domestic events, where `TIERS[tier].prizeCents` is undefined.
+   *
+   *  ⚠ IT IS THE PLAYER'S DECISION AND NOT THE ENGINE'S, on the owner's own model (15.08): «По мне
+   *  игрок сам решает: есть деньги - едет тренер, нет - не едет, или едет, но быстрее банкротится.»
+   *  The fare there is a bill against an income that does not exist yet - the bench measured an
+   *  ungated one bankrupting 8/30 wealthy·elite and 15/30 middle·middle careers, every one of them in
+   *  the junior years (docs/specs/coach-travel-2026-08.md) - so screen T warns before the first fare
+   *  is charged. It does NOT refuse: «бонус... нет - не едет, или едет, но быстрее банкротится» is a
+   *  choice with a price, and this engine never protects a player from a price he was quoted.
+   *
+   *  ⚠ OPTIONAL ON THE TYPE, exactly as `kit` is and for the same reason: every hand-built test world
+   *  and every pure probe keeps compiling, and `undefined` IS the shipped behaviour (he does not go),
+   *  so absence is not a hole - it is the identity element. A real career always has one: createWorld
+   *  writes `false` and the v48 -> v49 migration back-fills it. Read it as `?? false` and nowhere
+   *  else: `coachTravelFareFor` is the single place it is consulted. */
+  coachOnJuniorEvents?: boolean
   /** HER KIT, AS A DECISION (v37, W3-KIT). The rung on each of the three lines the match reads, and
    *  the week she was last handed a new one of them over the counter. See `KitState`.
    *
@@ -2390,6 +2422,9 @@ export function createWorld(
     coachId: openingCoachId(seed, profile),
     // Default OFF - the automatic rule is that competition weeks are not coach weeks.
     coachOnEventWeeks: false,
+    // ...and the junior half is OFF under the same rule, which is also what every career shipped
+    // before v49 wakes up as. Turning it on is a decision the player takes on screen T, warned.
+    coachOnJuniorEvents: false,
     vacations: [],
     practices: [],
     recoveryBuff: null,

@@ -114,14 +114,14 @@ the national table.
 
 ### 2.2 Schema
 One field: the live grant `{ seasonIndex, amountCents }` or null. **Bump `SAVE_SCHEMA_VERSION`
-(48 → 49), append-only migration, golden fixture** – CLAUDE.md invariant 3, all three parts.
+(49 → 50), append-only migration, golden fixture** – CLAUDE.md invariant 3, all three parts.
 Migration is a pure default: `null`, i.e. a career that has never been reviewed holds no grant.
 
-> ⚠ **THIS WAVE NOW TAKES 49, NOT 48.** It reserved 48 while it was still documents, and the birthday
-> slice shipped first and took it – `SAVE_SCHEMA_VERSION` is **48** in code today (`birthdays`,
-> `docs/specs/birthday-and-gifts.md`). The rule that decided it is "whoever lands in code first owns
-> the number"; the spec that had assumed the other order has been corrected the same way. Nothing here
-> depends on which integer it is, and migrations are append-only either way.
+> ⚠ **THIS WAVE NOW TAKES 50.** It reserved 48 while it was still documents; the birthday slice
+> shipped first and took 48 (`birthdays`, `docs/specs/birthday-and-gifts.md`), and round-21 #2's
+> junior-travel stance took 49 (`coachOnJuniorEvents`, 15.08) for the same reason. The rule that
+> decided both is "whoever lands in code first owns the number", and this wave is still documents.
+> Nothing here depends on which integer it is, and migrations are append-only either way.
 
 ### 2.3 RNG
 The award is a consequence of results, not a player choice. If any draw is needed (tie-breaking),
