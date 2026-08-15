@@ -11,7 +11,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   перетирает существующий.»** – BUILD. Importing a save is destructive and currently silent. Wanted:
   a confirm step before the import lands, and it must say plainly WHEN it is overwriting a career
   that already exists rather than warning identically in both cases.
-- [>] **2. ⚠ REOPENED, THIRD ASK. «Тренер всё ещё не едет на соревнования, как так? Уже 3й раз прошу
+- [x] **2. ⚠ REOPENED, THIRD ASK. «Тренер всё ещё не едет на соревнования, как так? Уже 3й раз прошу
   сделать»** – BUILD. Round-20 #1 answered this with an explanation instead of a build: the mechanic
   was measured in three versions on 30.07, all three failed, he cancelled it, `docs/decisions.md`
   recorded the consequence, and I relabelled the toggle to say why it will never open.
@@ -32,6 +32,29 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     one**, because that is what he asked for.
   - Presence is also where the still-open «travel notification» from 08.08 finally becomes true:
     `docs/decisions.md` records it as unbuildable while travel could never happen. It can now.
+  → ✅ **STEPS (1) AND (2) SHIPPED. THE BONUS ITSELF IS THE OWNER'S DOSE CALL.**
+  - **(1) THE 30.07 VERDICT IS REVERSED** – `docs/specs/coach-travel-2026-08.md`, rebuilt policy, 30
+    seeds, paired. The MATCH-STRENGTH edge at +3.0pp – the middle of the very band recorded as making
+    elite results worse – is **47 better / 13 worse / 0 tied over 60 paired careers**: top-100 53.3%
+    → 63.3% (wealthy·elite) and 26.7% → 46.7% (middle·middle). ⚠ **The confound is PROMOTION**: the
+    band's mean strength rises gently up the ladder but the DRAW's rises twice as fast, so points per
+    entry FALL as she is promoted (61.1 at w100 → 43.0 at wta250). On the old bench – the one that
+    never got anyone ranked – that loop was pure loss. On a funded career it pays.
+  - The RUN-FATIGUE arm is dead and was refused by arithmetic before it was run: the whole ladder is
+    +4 on a W 32-draw and **−3** at the deep rungs, and it is indexed by match-within-run, so a
+    first-round loser is charged nothing. Two coins when run at its ceiling.
+  - The BOOLEAN's skill half is real and small (+0.47/+0.30 peak, 34/17/9).
+  - **(2) PRESENCE SHIPPED** (`ceac405`): the toggle has a caller at last, the fare is its own feed
+    row, and he appears in the tournament flow, in the commentary at a SET BREAK only (the one moment
+    the rules allow an on-court coach, under 20% of rows, never a highlight) and in the week's story.
+    The 08.08 notification is built. No schema change.
+  - ⚠ **AND THE FARE SHIPPED UNGATED FOR ONE COMMIT – MY BRIEF'S OMISSION, CAUGHT BY THE BENCH**
+    (`edff2dc`). At the owner's own price it bankrupted **8/30** wealthy·elite and **15/30**
+    middle·middle careers, *every one in the junior years*; "ever ranked" 96.7% → 46.7%, the median
+    middle career's prize money to **$0**. +$995,979 where the 30.07 record said +$21,000. Gated to
+    the rungs that PAY – the owner's own 30.07 argument, tested on the rung's own `prizeCents`.
+  - **STILL OPEN AND IT IS HIS**: the DOSE. +3.0pp is ~3x the whole coach ladder; +0.5pp is inside
+    the noise. The effect grows with dose and turns over nowhere tested.
   - → ✅ **STEP (2) IS BUILT AND SHIPPED ON THIS BRANCH. HE TRAVELS, IT COSTS MONEY, AND FOUR
     SURFACES SAY SO.** Step (1) – re-measuring the three stat arms on the rebuilt bench – is a
     separate agent's arm of the same wave and **no stat is added here**, which is the point: a fourth
