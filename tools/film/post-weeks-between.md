@@ -30,18 +30,18 @@ better and feel yourself getting tired.
 **Exams.** For two weeks of the season the school blocks break apart into scattered papers – Monday
 morning, Tuesday afternoon, Friday before lunch. No tournaments that week. Her five sessions still
 stand, because you were the one who scheduled them, and the game will not quietly cancel them on
-your behalf. The note on the fridge reads: *"Deep breath. Read the question twice."*
+your behalf. The note on the fridge reads: *"Left you a snack for after the exam."*
 
-**Summer block.** Nine weeks with no school at all, and the work doubles up. An early hit at nine, a
-second session in the afternoon, five days on. This is where the biggest jumps come from. It is also
-how you break a fourteen-year-old, and the game keeps that door open on purpose.
-*"Sandwiches are in the blue box."*
+**Summer block.** Nine weeks with no school at all – an early hit at nine and the afternoon still
+free, so, as the screen puts it, "there is room to double up". This is where the biggest jumps come
+from. It is also how you break a fourteen-year-old, and the game keeps that door open on purpose.
+*"Recycling goes out in the morning."*
 
-**Family week.** You book this one, and you pay for it. A seaside family hotel runs a bit over nine
-hundred; a staycation with friends is free. The whole timetable turns over – travel out, a lie-in,
+**Family week.** You book this one, and you pay for it. A seaside family hotel runs several hundred
+– the quote moves with the week – and a staycation with friends is free. The whole timetable turns over – travel out, a lie-in,
 the sea, the pool, the last day, the flight home. No sessions. No tournaments. She comes back
 measurably stronger, which is the joke and also the entire point.
-*"Do not touch the cake. It is for Sunday."*
+*"Sandwiches are in the blue box."*
 
 There are more shapes than fit in half a minute: an off-season, a tournament week, and the one
 nobody wants – the week she is on the bench, where the grid is empty and there is nothing for you to
@@ -61,8 +61,8 @@ in it.
 Four weeks from the same season, and not one of them looks alike.
 
 School week. Exam week – no tournaments, but her five sessions still stand. Summer block – no
-school, so the work doubles up. And a seaside week that costs you nine hundred and gives it back in
-condition.
+school, so there is room to double up. And a seaside week you pay several hundred for, which gives
+it back in condition.
 
 In Ties Break: Ace Parent you play the parent. The tournaments are the headlines. The weeks in
 between are the game.
@@ -86,8 +86,12 @@ The calendar crosses itself out one day at a time, and no two weeks have the sam
 - The clip is 828x1792 (9:19.5 vertical), h264/aac, audio starts on frame one.
 - Order on screen: training week, seaside family week, exams, summer block, then a second pass
   through each, closing on the Ties Break / Ace Parent card.
-- Every quoted line above appears verbatim in the footage – the three fridge notes and the exam and
-  summer captions were read off the frames, not written for the post.
+- Every quoted line above appears verbatim in THIS cut of the footage, read off the frames. ⚠ The
+  fridge notes and some captions are GENERATED and change between takes: an earlier take said
+  "Deep breath. Read the question twice." on the exam week and "the work doubles up" on the summer
+  one. If the clip is ever re-shot, re-read the frames before trusting these quotes.
+- The holiday PRICE is a per-week sub-stream quote, not a fixed tariff: the seaside package came out
+  at $900, $991, $836 and $670 across four takes. Do not print a specific figure.
 - Tournament names in shot are fictional ("Local Open"). Keep it that way in any copy: the real
   tour acronyms are trademarks.
 - The on-the-bench week is NAMED but not SHOWN in the clip. If every claim must be visible in the

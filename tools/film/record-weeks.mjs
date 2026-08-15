@@ -112,6 +112,18 @@ async function advanceWeek() {
 async function clearOverlays() {
   for (let i = 0; i < 5; i++) {
     if (!(await overlayCount())) return true
+
+    // ⚠ THE BIRTHDAY DIALOG CANNOT BE DISMISSED, BY DESIGN — its own comment: "there are four
+    // buttons, all four are answers, `@click.self` is deliberately NOT wired". It fires on every
+    // birthday (W23 of the first season is her 14th) and it stopped a walk dead there: nothing in
+    // the cleanup regex below is an answer to it, so the walk broke out with only two shapes filmed.
+    // Take the first option — "just the day together", which costs nothing and changes no budget.
+    const gift = page.locator('.birthday-choice').first()
+    if (await gift.count()) {
+      await gift.click({ timeout: 800 }).catch(() => {})
+      await page.waitForTimeout(350)
+      continue
+    }
     if (await click(/^(Book it|Proceed to Home|Continue|Close|Done|Got it|Cancel)$/, 500)) {
       await page.waitForTimeout(250)
       continue
