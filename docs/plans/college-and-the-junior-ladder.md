@@ -136,9 +136,21 @@ to say four rather than "a lot".
 list; the Accelerator keys on YEAR-END junior rank, so the read is "her standing at the end of last
 season", which is persisted history rather than a live fold. Check what exists before inventing it.
 
-⚠ **DO NOT gate the strong OUT in this phase.** Reality also bars WTA top-50 from W events and
-top-150 from W15/W35 – true, sourced, and a different change with its own consequences. It belongs
-in P3 where the cuts are being handled, or in its own phase. One rule per measurement.
+⚠ **AND THE STRONG-OUT RULES COME WITH IT, AS A SECOND MEASURED STEP – owner, 15.08: «да, делаем
+тоже».** Reality bars WTA top-50 from every W event and top-150 from W15/W35. They live in the same
+files as the junior access (`ladder.ts`'s `tierOpenFor` / `tierOutgrown`), so they cannot be a
+parallel branch without a collision – **same agent, but a separate commit and a separate measurement
+against P0.** Bundling the numbers would destroy the attribution this whole plan exists for.
+
+⚠⚠ **AND THE OWNER NAMED THE PROPERTY THAT MAKES THEM SAFE:** «когда она вывалится из топ-50 и
+топ-150 оно само откроется обратно». Exactly – this is a rank read, not a latch, so it self-reverses
+the week she drops back. That is what distinguishes it from `tierOutgrown`, which is a one-way door,
+and it is the assertion the guard should carry: **cross the line, lose the rung; fall back, get it
+back**, both directions in one test. Nothing persists.
+
+⚠ It is also the ONLY change in this plan that pushes her UP rather than down – it closes the rungs
+she has outgrown and forces her onto the ones that pay. Measured separately, it may offset part of
+P1's slowdown, which is another reason not to fold the two numbers together.
 
 **Measure against P0:** age and rank at first W75 (today 17.2 / #279), share of careers ever entering
 one (today 93%), and what she plays instead at 15-17. **Expected: a real slowdown. That is the point,
@@ -201,20 +213,30 @@ comment rather than to add machinery.
 
 **The combo, as the owner approved it (14.08 «комбо хорошо»):**
 
-**(a) A MONEY threshold instead of a rung, in reality's own shape.** ⚠ Not cumulative: my first
-measurement tested a flat career total, concluded the money arm was dead, and was refuting a shape I
-had invented. Reality's rule is **annual and net of the cost of competing**. Measured that way it
-fires in **65 of 90 careers at median age 19.0**, against our rung's **86 of 90 at 17.1**. Same money,
-opposite verdict. The number to size it against is the NCAA's own historical cap – $10,000/year plus
-actual and necessary expenses – **and note that the real cap was removed in April 2026**, so the
-owner has to choose whether we model the rule as it was or as it now is.
+**(a) ⚠⚠ THE MONEY ARM IS CANCELLED – OWNER'S RULING, 15.08: «как стало, по идее нам вообще ничего не
+надо делать здесь».** He chose to model the rule as it stands rather than as it was, and as it stands
+there is no cap at all: the NCAA's $10,000-a-year limit was struck out by the Brantmeier/Joint
+settlement on 15 April 2026, and "amateurism" appears zero times in the current Division I Manual.
 
-**(b) A RESULT arm.** Below a rank line at 19 the door is open whatever she has earned – the owner's
-original intent, «развилка для показывающих не очень хорошие результаты». **Measured: #200 separates
-the populations by 47 points**, and it is already in the engine as `TIERS.wta250.acceptsRank`.
-⚠ The money line does NOT separate them: the weak third banks $114,260 by 19 against the top third's
-$155,865, and the weak band's p75 sits above the top band's p25. Money is realism; rank is the
-discriminator. Both, for different jobs.
+**So money does not close the door. Nothing does.** That is not a simplification, it is what the
+sport now says, and it collapses most of this phase: `collegeClosedFromTier` and `collegeStillOpen`
+stop having a job. The measured shapes are recorded for the record – the real annual, net-of-costs
+rule would have fired in 65 of 90 careers at median 19.0 against our rung's 86 of 90 at 17.1 – but
+neither ships.
+
+⚠ **WHICH TURNS THE FORK FROM A GATE INTO A CHOICE, and that is a design question the owner should
+see stated:** if college can never be closed, the third door is always open, and what varies is
+whether it is a good idea. The result arm below stops being an exception that reopens a shut door and
+becomes the game's own advice.
+
+**(b) A RESULT arm – now the only arm.** The owner's original intent, «развилка для показывающих не
+очень хорошие результаты». **Measured: #200 separates the populations by 47 points**, and it is
+already in the engine as `TIERS.wta250.acceptsRank`. With (a) cancelled this is no longer an
+exception that reopens a shut door – it is what the card SAYS about her chances, and the door itself
+stays open regardless.
+⚠ For the record, money never was the discriminator even when it was going to ship: the weak third
+banks $114,260 by 19 against the top third's $155,865, and the weak band's p75 sits above the top
+band's p25. The populations interleave.
 
 **(c) A WARNING BEFORE the entry that costs it**, not an explanation at the fork afterwards. Today
 `ending.ts` states the silence as intent – "it is a PRECONDITION and not a WARNING" – and that is
