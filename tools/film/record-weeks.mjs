@@ -68,6 +68,15 @@ const click = async (re, timeout = 1000) => {
 }
 const weekNo = async () => Number(((await page.locator('body').innerText()).match(/W(\d+)\s+20\d\d/) || [])[1] || 0)
 
+/** ⚠ TWO KINDS OF SURFACE COVER THE SCREEN, and missing the second cost a 38-minute dead take.
+ *  `.dialog-overlay` is the small centred dialog. Since ROUND-17 #5 the week planner is NOT one:
+ *  it renders through `TakeoverShell` (`.tournament-flow`) as a full-screen takeover, and its
+ *  backdrop tap was deliberately removed - the header close control is the only way out. A recorder
+ *  that only knew the first selector saw "no overlay", left the planner open over everything, and
+ *  then clicked its "Practice" tab 170 times while reporting 170 sweeps and exit 0. */
+const OVERLAY = '.dialog-overlay, .tournament-flow'
+const overlayCount = () => page.locator(OVERLAY).count()
+
 async function shapeOnScreen() {
   const eyebrows = await page.locator('.tb-eyebrow').allTextContents()
   for (const raw of eyebrows) {
@@ -93,6 +102,7 @@ async function advanceWeek() {
     if (!t) continue
     if (/^(Season|Calendar|Home|Stats|Trophies|\?)$/.test(t)) continue
     if (/W\d+\s*'\d\d/.test(t)) continue
+    if (/^(Practice|Vacation|Booked)$/.test(t)) continue // planner TAB PILLS, not the week CTA
     if (!(await b.isEnabled().catch(() => false))) continue
     if (await b.click({ timeout: 900 }).then(() => true).catch(() => false)) return t
   }
@@ -100,8 +110,8 @@ async function advanceWeek() {
 }
 
 async function clearOverlays() {
-  for (let i = 0; i < 4; i++) {
-    if (!(await page.locator('.dialog-overlay').count())) return true
+  for (let i = 0; i < 5; i++) {
+    if (!(await overlayCount())) return true
     if (await click(/^(Book it|Proceed to Home|Continue|Close|Done|Got it|Cancel)$/, 500)) {
       await page.waitForTimeout(250)
       continue
@@ -115,7 +125,7 @@ async function clearOverlays() {
     await page.keyboard.press('Escape')
     await page.waitForTimeout(250)
   }
-  return !(await page.locator('.dialog-overlay').count())
+  return !(await overlayCount())
 }
 
 // --- open ------------------------------------------------------------------------------------------
@@ -145,7 +155,7 @@ const plannerCount = await planners.count()
 for (let i = 1; i < Math.min(plannerCount, 4) && !booked; i++) {
   await planners.nth(i).click({ timeout: 1500 }).catch(() => {})
   await page.waitForTimeout(800)
-  if (!(await page.locator('.dialog-overlay').count())) continue
+  if (!(await overlayCount())) continue
 
   await page.locator('.option-pill', { hasText: /Vacation/ }).first().click({ timeout: 1500 }).catch(() => {})
   await page.waitForTimeout(700)
@@ -168,7 +178,7 @@ for (let i = 1; i < Math.min(plannerCount, 4) && !booked; i++) {
     continue
   }
   await page.waitForTimeout(700)
-  booked = (await page.locator('.dialog-overlay').innerText().catch(() => '')).split('\n')[0] || ''
+  booked = (await page.locator('.dialog-overlay').innerText().catch(() => '')).split('\n')[0] || 'booked'
   if (!(await click(/Book it/, 2500))) booked = ''
   await page.waitForTimeout(900)
   await clearOverlays()
@@ -180,12 +190,18 @@ await page.waitForTimeout(800)
 await clearOverlays()
 log.push({ t: stamp(), what: 'ready' })
 
+// ⚠ FAIL FAST, AND THE REASON IS A 38-MINUTE DEAD TAKE. The previous run exited 0 announcing "170
+// sweeps" having filmed nothing: it was parked behind an open planner at week 0, and every guard in
+// the walk stayed happy because each iteration DID click a button and DID wait out a sweep. A run
+// that cannot read a week number is not on the calendar, and no further clicking will fix that.
+if (!(await weekNo())) throw new Error('no week number after opening the calendar — the walk is not where it thinks it is')
+
 // --- the walk ----------------------------------------------------------------------------------------
 const seen = new Set()
 let guard = 0
 let last = await weekNo()
 while (last < TARGET && guard++ < 170) {
-  if ((await page.locator('.dialog-overlay').count()) && !(await clearOverlays())) break
+  if ((await overlayCount()) && !(await clearOverlays())) break
   const kind = await shapeOnScreen()
 
   const started = stamp()
@@ -206,7 +222,8 @@ while (last < TARGET && guard++ < 170) {
   await click(/^Calendar$/, 700)
   await page.waitForTimeout(500)
   const wk = await weekNo()
-  if (wk && wk !== last) last = wk
+  if (!wk) throw new Error(`lost the calendar after ${log.filter((e) => e.what === 'sweep').length} sweeps`)
+  if (wk !== last) last = wk
 }
 
 log.push({ t: stamp(), what: 'end' })
