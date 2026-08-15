@@ -222,6 +222,28 @@ function buildCareer(): { world: WorldState; weeks: WeekFacts[]; wraps: WrapFact
 const { world, weeks, wraps } = buildCareer()
 const saturated = weeks.filter((w) => w.kept + w.evidence >= EVENTS_CAP - EVENTS_ORDINARY_FLOOR)
 
+/** ⚠⚠ THE SEASONS SHE ACTUALLY PLAYED – because this career sits ON the ending threshold, and
+ *  three claims below were asking a season she did not play for the name of a tournament she did
+ *  not enter.
+ *
+ *  ⚠ AND IT FLIPPED TWICE IN ONE DAY, WHICH IS WHY THE ENDING ITSELF IS NOT PINNED. On 14.08 this
+ *  career ended (`injury`, week 307, age 19) under the 128-draw wave's first cut, SURVIVED all ten
+ *  seasons once the owner's run-fatigue curve replaced it, and ENDED AGAIN at the same week 307
+ *  once round-21 #4 seeded her at her real standing – she wins more, plays deeper, and spends more
+ *  weeks on court. Same seed, same week, three different balance states. Pinning "it ends" or "it
+ *  does not" would make this file a coin toss on somebody else's tuning.
+ *
+ *  ⚠ IT IS NOT THAT SHE BECAME FRAGILE, and that was checked rather than assumed: the A/B on the
+ *  draw change alone left her LESS injured (7 injuries / 21 weeks lost against 10 / 35), and the
+ *  seeding fix makes her BETTER. Week 307 is where a cumulative weeks-lost threshold sits for this
+ *  seed, and a career that never rests – this file's policy enters the highest rung available every
+ *  single week – walks into it from either side.
+ *
+ *  What the file is FOR is unchanged and is asserted below on real volume: the wallet, the feed and
+ *  the ledger, once the caps have engaged. `(C) names the table that carried the season` has skipped
+ *  empty seasons with `if (total === 0) continue` since it was written; these three now do the same. */
+const played = wraps.filter((w) => w.summary.wins + w.summary.losses > 0)
+
 describe('the long career reaches the regime this file exists for', () => {
   it('plays professional volume for nine seasons', () => {
     expect(world.week).toBe(WEEKS)
@@ -291,8 +313,8 @@ describe('(B) the season wrap-up - best result', () => {
     }
   })
 
-  it('reports the best counting result the RESULTS ledger holds, every season', () => {
-    for (const w of wraps) {
+  it('reports the best counting result the RESULTS ledger holds, every season SHE PLAYED', () => {
+    for (const w of played) {
       expect(w.summary.bestResultText, `season ${w.seasonIndex}`).toBe(w.ledgerBestText)
     }
   })
@@ -323,9 +345,12 @@ describe('(B) the season wrap-up - best result', () => {
     // because she got better: measured on this career the feed keeps 4-9 rows of the 16-21 the ledger
     // holds from season 3 on, and it is strictly short in 7 of the 10 seasons. The outcome-level
     // witness is kept beside it, re-aimed to what it actually measures now.
-    const decayed = wraps.filter((w) => w.feedRows < w.ledgerRows)
-    expect(decayed.length, 'the feed no longer loses rows – the read-side fix has gone vacuous').toBeGreaterThan(4)
-    const wrong = wraps.filter((w) => w.legacyBestText !== w.ledgerBestText)
+    // ⚠ RE-AIMED 14.08 to the seasons she PLAYED, and the bound is a SHARE rather than a count so it
+    // cannot go vacuous by the career simply getting shorter: strictly more than half of her playing
+    // seasons must show the decay.
+    const decayed = played.filter((w) => w.feedRows < w.ledgerRows)
+    expect(decayed.length, 'the feed no longer loses rows – the read-side fix has gone vacuous').toBeGreaterThan(played.length / 2)
+    const wrong = played.filter((w) => w.legacyBestText !== w.ledgerBestText)
     expect(wrong.length).toBeGreaterThan(0)
   })
 })
@@ -345,7 +370,7 @@ describe('(C) the season wrap-up - the rank line follows where she plays', () =>
   it('gives a professional season a professional rank, where the old line said "Unranked"', () => {
     // The owner's card, at twenty-one, on the W tour: "Final international rank: Unranked - She has
     // not played a Junior Tour event yet." Her junior rank in his save is #74; her world rank #288.
-    const pro = wraps.filter((w) => w.summary.rankTrack === 'wta')
+    const pro = played.filter((w) => w.summary.rankTrack === 'wta')
     expect(pro.length).toBeGreaterThan(2)
     for (const w of pro) {
       expect(w.summary.rankInTrack, `season ${w.seasonIndex}`).not.toBeNull()

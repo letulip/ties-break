@@ -925,13 +925,23 @@ describe('ui/travel-set — on a real career', () => {
       expect(snap.diary.facts.travelHomeMood).toBe(travel?.mood ?? null)
       expect(snap.diary.travelNote).toBe(travel ? travelNoteFor(travel, world.seed) : null)
       if (travel) {
-        // the mood the picture shows is the rule, re-derived from the two facts it is allowed to see
+        // the mood the picture shows is the rule, re-derived from the facts it is allowed to see
+        //
+        // ⚠⚠ `retired` WAS MISSING HERE AND THE RE-DERIVATION WAS QUIETLY INCOMPLETE. The comment
+        // said "the two facts" because there were two when it was written; `retired` (she came off
+        // the court mid-match) joined `travelHomeMoodFor`'s arguments later and this line was never
+        // updated. It passed for one reason only: in these 80 weeks this career had never retired
+        // hurt. Round-21 #4 seeded her at her real standing, she started winning and playing deeper
+        // runs, one of them ended with her retiring – and the two readings disagreed at once
+        // ('sleepy' against 'happy'). A guard that only holds while an arm is unreachable is not
+        // holding; this is STRONGER than it was, not relaxed.
         expect(travel.mood).toBe(
           travelHomeMoodFor({
             reachedFinal: travel.reachedFinal,
             condition: world.condition,
             seed: world.seed,
             week: world.week,
+            retired: travel.retired,
           }),
         )
       }
