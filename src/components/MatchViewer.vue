@@ -998,7 +998,19 @@ const { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, setCells, cou
 //
 // 'skip' takes the FULL list deliberately: it hands over the whole story at once, and somebody who
 // skipped the match wants the account of it, not the trailer.
-const commentary = computed(() => buildCommentary(props.match, props.playerA.name, props.playerB.name))
+// ⚠ ROUND 21 ITEM 3 - THE FOURTH ARGUMENT IS THE OCCASION, and it is the prop this component was
+// already holding for the intro. Owner, 14.08, second ask: «И ещё раз: проверь пожалуйста что с
+// комментариями текстовой трансляции на 1000 и шлемах, кажется ничего не изменилось» - measured, and
+// nothing had: the builder took three arguments and none of them was the tournament, so a Grand Slam
+// final and a J30 first round were the same call and produced the same rows byte for byte.
+//
+// `previewEvent` carries the tier and the round already (it is what decides the intro's storey), so
+// the two builders now read ONE occasion object and cannot disagree about what is being played.
+// null - the friendly and the sandbox hit-out - is the bottom storey, which is exactly the log this
+// file has always rendered.
+const commentary = computed(() =>
+  buildCommentary(props.match, props.playerA.name, props.playerB.name, props.previewEvent),
+)
 const modeCommentary = computed(() =>
   viewMode.value === 'key' ? commentary.value.filter((b) => b.keyMoment) : commentary.value,
 )
