@@ -56,8 +56,19 @@ college door shut in 96% of careers (mean age 17.3), because `collegeClosedFromT
 Plus up to 4 "Merited Increases" a year, earned by Grand Slam / WTA 1000 direct acceptance **or** by
 year-end ITF junior top 5 – the same top-5 gate the Accelerator uses.
 
-**We model none of this.** It is the most direct answer to «слишком быстро» in the whole research,
-and it is a rule rather than a tuning knob.
+⚠⚠ **"WE MODEL NONE OF THIS" WAS WRONG – P0 CHECKED BEFORE BUILDING AND FOUND THE RULE ALREADY
+THERE.** `ECONOMY.entryCap` carries the AER with the rulebook's own rows (14→8, 15→10, 16→12, 17→16),
+its own ledger (`proEntryWeeks`, schema v36) and a refusal in `medical.ts` that names the rule. I
+wrote the plan without looking, which is the exact failure this repo keeps recording.
+
+**What is actually broken is the WINDOW, and it is measured.** The allowance window is the SEASON
+BLOCK while the limit is her AGE, so her sixteenth year straddles two allowances – and at sixteen she
+plays **18.8 professional events against a limit of 12**. The cap demonstrably fires (J30 goes 2.9 →
+5.2 at seventeen as the spent allowance reopens the junior rungs); it is the straddle that leaks.
+
+**So P2's scope is the WINDOW, the Merited Increases and the COHORT – not the table.** That is a
+smaller and much better-defined phase than the one this plan first described, and the leak it closes
+is one of the biggest single contributors to «слишком быстро» anywhere in the research.
 
 **(c) The college rule we encode does not exist.** "Amateurism" appears zero times in the current
 NCAA Division I Manual. Pre-enrolment prize money was capped at $10,000/year plus expenses, and
@@ -164,9 +175,14 @@ and the size of it is the finding.**
 this may be the same shape), `src/engine/economy.ts` for the table, the entry gate, and the UI line
 that has to explain a refusal.
 
-**Build:** the tournament count cap per birth year, exactly as the table in §0(b), including the
-"at most 3 at W75+" clause at 14 and the Merited Increases (max 4/year, earned by Slam/WTA 1000
-direct acceptance or year-end junior top 5).
+**Build – REVISED after P0, and the table is NOT part of it (see §0(b)):** `ECONOMY.entryCap` already
+holds the rows and the ledger. What is missing is
+1. **the WINDOW** – the allowance runs on the season block, the limit runs on her age, and her
+   sixteenth year straddles two allowances, so she plays 18.8 events against a limit of 12;
+2. **the Merited Increases** – max 4/year, earned by Slam/WTA 1000 direct acceptance or year-end
+   junior top 5;
+3. **the "at most 3 at W75+" clause at 14**;
+4. **the COHORT** – see below; this is probably the larger half.
 
 ⚠ **IT MUST REFUSE VISIBLY, AND EARLY.** A cap that silently drops events off the feed is the "why
 can't I press this" the app has a standing rule against. She should see how many entries she has left
