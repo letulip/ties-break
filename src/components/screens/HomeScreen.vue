@@ -675,6 +675,10 @@ const windowRungs = computed<readonly TierId[]>(
       ageYears: game.snapshot?.ageYears ?? 0,
       tierOpen: game.snapshot?.tierOpen,
       tierOutgrown: game.snapshot?.tierOutgrown,
+      // round-21 #5: and the table she has LEFT drops out of the strip too. The hole this row's own
+      // note describes ("at nineteen ... the domestic three never close again") is closed at the
+      // source now instead of only being hidden behind the ellipsis - `paysIntoHerTables`.
+      activeLadder: game.snapshot?.activeLadder,
       upcoming: game.snapshot?.upcoming ?? [],
     }).working,
 )

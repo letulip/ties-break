@@ -243,10 +243,18 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
   if (grade === null) return { lead: "School's done", note: 'Tennis full-time' }
   return {
     lead: `${ordinal(grade)} grade`,
-    // `false`, and it is not a shortcut: a grade exists, so she is at school, so an exam week is an
-    // exam week. `schoolIsOver` and `gradeOf` are the SAME arithmetic (see `schoolEndWeek`), which
-    // is what makes this branch unreachable-when-over rather than merely usually right.
-    note: isExamWeek(view.week, false)
+    // ⚠ HER BIRTH MONTH, NOT A CONSTANT (round-21 #6). This argument was the literal `false`, on the
+    // reasoning that a grade exists, so she is at school, so an exam week is an exam week -
+    // `schoolIsOver` and `gradeOf` being the SAME arithmetic (see `schoolEndWeek`) made the branch
+    // unreachable-when-over rather than merely usually right. That reasoning is still true and the
+    // constant is still gone, because the owner's ask was about the SHIFT rather than about this one
+    // line: «Надо везде по коду проверить этот сдвиг.» A school fact decided from a literal is a
+    // school fact that stops reading her birthday the day somebody re-shapes the arithmetic above it,
+    // and it is exactly the shape `isExamWeek`'s own note calls "restores the bug silently". The two
+    // expressions agree on every (week, birthMonth) the game can produce - measured over all twelve
+    // months and eight seasons in tests/school-ends.test.ts - so this costs nothing today and cannot
+    // drift tomorrow.
+    note: isExamWeek(view.week, schoolIsOver(view.week, view.birthMonth))
       ? 'Exams this week'
       : isSummerWeek(view.week)
         ? 'Summer break'

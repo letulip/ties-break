@@ -26,13 +26,108 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   regression: the Slam draw went 32 -> 128 and the 1000 32 -> 64 this morning. More rounds means more
   first rounds, and a 128 draw from the same entrant band may SEED her differently. Answer with the
   per-round rate on the new draws against the old, off his own save.
-- [ ] **5. ⚠ REOPENED. «И мне всё ещё показывают local чемпионаты в ленте у обоих»** – BUILD. This is
+- [x] **5. ⚠ REOPENED. «И мне всё ещё показывают local чемпионаты в ленте у обоих»** – BUILD. This is
   task #84, pending since it was filed and never built. The feed offers rungs that pay into a table
   she has left.
-- [ ] **6. «Если день рождения в декабре, то вся школа уже закончилась и в сентябре вроде бы её быть
+  → ✅ **BUILT. The feed now asks which table is hers, and the domestic rungs are gone from a
+  professional's.** `feedContext` (`src/composables/tierState.ts`) takes `activeLadder` –
+  `Snapshot.activeLadder`, i.e. the engine's own `activeLadderOf` – and drops every rung that pays
+  into a table more than ONE below hers. Wired at all three consumers (`SeasonScreen.vue`'s feed,
+  `HomeScreen.vue`'s season strip, `weekDays.ts`'s look-ahead markers), so they cannot disagree.
+  - **MEASURED ON A BUILT WORLD, before and after** (`tests/tier-window.test.ts`, "round-21 #5"). A
+    22-year-old with a 600-point W book and the domestic book she climbed up on:
+    | | rungs the feed offered | working window (Home strip) |
+    |---|---|---|
+    | before | **local, regional, national**, w15, w35, w50, w75, w100, wta125, wta250 | **national**, w100, wta125, wta250 |
+    | after | w15, w35, w50, w75, w100, wta125, wta250 | w100, wta125, wta250 |
+    Same at 19 and 20. `national` was inside the WORKING set as well – i.e. the Home strip was
+    naming a club rung as the level her career is about.
+  - **ROOT, and both halves are the ladder working as written.** `tierOpenFor` has been the FLOOR
+    alone since 06.08 and **Local's floor is ZERO domestic points**, so no book is ever empty enough
+    to close it. The ceiling that was supposed to collapse the domestic family upward
+    (`tierOutgrown`: a rung closes when the rung THREE ABOVE opens) carries an age clause – «a door
+    she cannot open yet cannot close the one behind her» – and past eighteen J30/J60/J300 are
+    age-shut for ever, so Local/Regional/National have no reachable ceiling left. `HomeScreen.vue`
+    already documents this exact hole and works around it with the ellipsis collapse; the feed had
+    no such collapse and printed the cards.
+  - **THE SEAM IS WHY IT IS ONE TABLE OF SLACK AND NOT A HARD CUT**, and it is asserted rather than
+    argued: a girl on her FIRST counting W15 point at 16 keeps her whole ITF window (j30, j60, j300,
+    w15) and loses only the domestic three – measured. A hard "only her own table" would also have
+    hidden J30 from a domestic girl, which is her only way ONTO the ITF table (`entryBandTrack`: a
+    table's bottom rung is opened by the table below it). Domestic and junior careers are
+    byte-identical to what they were, at four ages, asserted.
+  - **VISIBILITY, NEVER ACCESS – the 06.08 ruling is intact.** `entryStatus` is untouched, every
+    domestic rung is still `tierOpenFor`-open, an ENTERED domestic event still renders, and her
+    finishes stay on the Home ladder's chips. Only what the feed OFFERS unasked changed.
+  - Mutation-verified: neutering the filter turns 3 of the new assertions red.
+- [x] **6. «Если день рождения в декабре, то вся школа уже закончилась и в сентябре вроде бы её быть
   не должно, мы это обсуждали. Надо везде по коду проверить этот сдвиг»** – BUILD + AUDIT. The school
   clock has to read her BIRTH MONTH, not a calendar constant, and he is asking for the whole code
   swept rather than one site fixed. Related to task #87.
+  → ✅ **SWEPT (35 sites), 2 FIXED – and the September he is looking at is the CUT-OFF, not a bug.
+  One decision is his and it is at the bottom of this entry.**
+  - **THE INVENTORY.** Every site that decides a school / exam / term fact, and what it reads:
+
+    | site | decides | reads her birth month? |
+    |---|---|---|
+    | `kidLife.schoolEndWeek(birthMonth)` | the leaving week – **the clock itself** | ✅ source of truth |
+    | `kidLife.schoolIsOver(week, birthMonth)` | is she out, in ANY week | ✅ |
+    | `kidLife.gradeOf(...)` | her grade / "School's done" | ✅ |
+    | `kidLife.schoolTile()` – grade line | the Kid screen's School tile | ✅ |
+    | `kidLife.schoolTile()` – exam line | "Exams this week" | ❌ **literal `false`** → **FIXED** |
+    | `kidLife.friendsTile()` | two lines that name a classroom | ✅ |
+    | `kidLife.schoolIsOverForBand(week)` | the RIVALS' blackout recovery | ⚪ constant `6` **by design** – a cohort player has no birth date |
+    | `calendar.isExamWeek(week, schoolOver)` | the exam fortnight | ✅ required param, caller brings it |
+    | `calendar.isBlackoutWeek(week, schoolOver)` | blackout recovery + availability | ✅ |
+    | `calendar.isSummerWeek(week)` | the holidays | ⚪ calendar-only **by design** – the holidays are the same for every girl |
+    | `ECONOMY.availability.examWeeks` / `school.lastGrade` | the fortnight's offsets, 12 grades | ⚪ constants **by design** – gated by `schoolOver` at every read |
+    | `world/summer.pastSchool()` and its four consumers | the school-free training block, its cost, day capacity | ✅ |
+    | `world/planner.ts:94` | the planner's refusal | ✅ |
+    | `world/medical.ts:69,354` | blackout recovery, both arms | ✅ |
+    | `world/knock.ts:66` | knock arrival | ✅ |
+    | `world/milestones.ts:66,452` | the leaving MOMENT + the wrap-up line | ✅ |
+    | `world.ts:1073,1148` | the rest-event pool, the court-cost draw | ✅ |
+    | `world/snapshot.ts:652,750,946` | diary view, `schoolEndsWeek`, kidLife view | ✅ |
+    | `diary.ts:141` + `diary/facts,pool,weekNotes` | every schoolgirl phrase | ✅ off the view |
+    | `season/rival.ts:185` | the cohort's recovery | ⚪ band clock **by design** |
+    | `migrations.ts:1231` (v43) | the back-filled milestone week | ✅ |
+    | `weekDays.calendarWeekFor:327` | `CalendarWeek.schoolOver`, per DRAWN week | ✅ via `schoolEndsWeek` |
+    | `weekDays.ts:412,478,615` | exam week, "Summer block", look-ahead | ✅ |
+    | `weekAhead.ts:110` | the next-week button | ✅ |
+    | `weekGrid.bandFor(ageYears, schoolOver = false)` | school vs full-time day shapes | ✅ read – ⚠ but **defaults to a schoolgirl** (left: same argument the optional `schoolEndsWeek` makes for two dozen pre-W4 fixtures) |
+    | `weekGrid.examDay` / `dropSchoolFurniture` | the paper, the 08–13 block, the study hour | ✅ |
+    | `SeasonScreen.vue:534`, `SeasonSummaryDialog.vue:52` | exam rows, the off-season line | ✅ |
+    | `CalendarScreen.vue` NOTE_MOOD, `KidScreen.vue`, `WeekRecapCard.vue` | fridge note, tile, recap art | ✅ derive nothing |
+    | `HerWeekTab.vue:197` capacity note | «One session a day **while school is on**» | ❌ **read plan CAPACITY** → **FIXED** |
+    | `tools/` (school-bench, round16/18-read, season-anchor-read, week-story-trace, boredom-guard) | all probes | ✅ |
+
+  - **THE TWO FIXES.** (a) `schoolTile`'s exam line took a literal `false`; it now takes
+    `schoolIsOver(view.week, view.birthMonth)`. The two agree on every (week, birthMonth) the game
+    can produce – so it costs nothing today and cannot drift tomorrow, which is the ask. (b)
+    `HerWeekTab`'s note printed «while school is on» whenever the day capacity was 1 – and capacity
+    is 1 for **five** reasons (`summerBlockWeek` also refuses on an injury, a booked family week, a
+    tournament and a rested knock), so a 22-year-old professional resting a knock was told her
+    school timetable was the limit. It now asks `schoolEndsWeek` about the week the plan is about.
+  - **⚠ THE SEPTEMBER, MEASURED – and it is the 1-September cut-off, not a defect.** The ITF band is
+    one birth YEAR (everyone in the 14s was born 2017) but the school year turns over on 1 September,
+    so the band splits and the halves leave school **52 weeks apart**: January–August at career week
+    **242**, September–December at **294**. A December-born girl therefore sits a whole extra school
+    year, and **career weeks 243–246 (September 2035) are 12th-grade weeks for her while the other
+    half of her own age group has already left**. That is the September he is reporting.
+    Both halves leave at a real age of **18.00–19.00**, so nothing here violates «школа уже после 18
+    вроде не должна быть» (task #87) – what he is objecting to is the SPLIT itself.
+  - **THE ASYMMETRY IS PINNED, NOT REMOVED** (`tests/school-ends.test.ts`, "round-21 #6"): the same
+    September is a school month for a December girl and a post-school month for a June one, asserted
+    on the predicate AND on the drawn calendar's lesson block; plus the per-girl half of his sentence
+    (no September school week from her leaving week on, for all twelve months). Mutation-verified: a
+    birth-month-blind cohort turns 5 assertions red.
+  - **⚠ HIS RULING NEEDED, and it is why the split was not simply deleted.** Collapsing the two
+    halves onto one leaving week is a BALANCE change, not a copy change: it moves 52 weeks of a
+    Sept–Dec career onto `ECONOMY.school.loadFactor` (1.4x development, and the whole `pastSchool`
+    branch of `summerBlockWeek`). CLAUDE.md invariant 4 – tuning is measured, not guessed – so it
+    needs a bench run and a spec, which is its own wave. **The question for him: should the whole
+    ITF band leave school together at week 242 (his premise – but that puts the December girls out
+    at 17.67, before eighteen), or does the real September cut-off stand as it is today?**
 - [ ] **7. «У тренера на карточке "Too early to tell 49 weeks of 52" – звучит довольно смешно, сезон
   уже сыгран.»** – BUILD, and it is three asks in one sentence:
   - 7a: the copy at the top of the window should be «обсудим в межсезонье», not "too early to tell".

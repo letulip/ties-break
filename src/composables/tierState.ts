@@ -34,7 +34,7 @@ import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER, hasAcceptanceList } from '../engine/season/calendar'
 import { isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
 import { weekRange } from '../shared/dates'
-import { LADDER_POINTS_LABEL, type EntryCapUsage } from '../shared/protocol'
+import { LADDER_POINTS_LABEL, LADDER_TRACKS, type EntryCapUsage } from '../shared/protocol'
 import type { LadderTrack, TierId } from '../engine/season/types'
 
 export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 'scheduled' | 'unscheduled'
@@ -138,6 +138,71 @@ export interface FeedContext {
   working: readonly TierId[]
 }
 
+// =================================================================================================
+// ⚠⚠ AND THE TABLE SHE HAS LEFT (round-21 #5, backlog #84's last open half). The owner, for the
+// SECOND time: «И мне всё ещё показывают local чемпионаты в ленте у обоих» - "у обоих" being both of
+// his careers, so it is not one save's quirk.
+// =================================================================================================
+//
+// HE IS RIGHT AND THE WINDOW CANNOT REACH IT, which is why this is a rule of its own rather than a
+// bug in one above. MEASURED on a built world (tests/tier-window.test.ts, "the table she has left"):
+// a twenty-two-year-old with a six-hundred-point professional book is offered
+// `local, regional, national` beside `w100, wta125, wta250`, and `national` is inside her WORKING
+// window as well - i.e. on the Home strip, as a rung her career is supposedly about.
+//
+// THE MECHANISM, and both halves are the ladder working exactly as written:
+//   * `tierOpenFor` is `tierFloorOpen` alone since 06.08, and Local's floor is ZERO domestic points.
+//     There is no book so empty that Local closes. It is open on week 0 and open for ever.
+//   * the CEILING that used to collapse the domestic family upward - «Local closes when the
+//     international door does» - is `tierOutgrown`, which asks whether the rung THREE ABOVE is open
+//     TO HER TODAY, age included. Past eighteen J30/J60/J300 are age-shut for good, so the three
+//     rungs above Local, Regional and National are permanently unopenable and the domestic three
+//     never close again. HomeScreen's strip already documents this exact hole and works around it
+//     with an ellipsis; the feed had no such collapse and printed the cards.
+//
+// SO THE FEED ASKS THE ONE QUESTION THE WINDOW CANNOT: WHICH TABLE IS HERS. `Snapshot.activeLadder`
+// is the engine's own answer (`activeLadderOf` in engine/world/ladder.ts - professional from the
+// first counting W result and permanently so), and a rung pays into ONE table (`TIERS[t].track`). A
+// Local Open pays domestic points; a professional cannot spend them.
+//
+// ⚠ ONE TABLE OF SLACK, AND THE SEAM IS THE WHOLE REASON FOR IT. A hard "only her own table" would
+// be wrong twice over: it would hide J30 from a domestic girl - the rung that is her only way ONTO
+// the ITF table (`entryBandTrack`: a table's bottom rung is opened by the table below it) - and it
+// would strip a girl on her first counting W15 of the J300s she is still visibly playing, which is
+// the boredom failure the owner has ruled against twice. So the rule is "not more than one table
+// below hers", and one table below is always still offered. Walked out, that is the whole of it:
+//     active domestic -> everything (a fresh career must see its own ladder AND the door above it)
+//     active itf      -> everything (she still holds a domestic book and the J rungs read her ITF
+//                        rank; nothing is behind her yet)
+//     active wta      -> ITF and professional; the DOMESTIC three go, and only they.
+//
+// ⚠ VISIBILITY, NEVER ACCESS - the module's own rule, and this obeys it rather than bending it. The
+// 06.08 ruling was that the lower bound must not REFUSE («не надо нижнего предела вообще, пусть
+// играет»), and it still does not: `entryStatus` is untouched, a Local remains enterable, an ENTERED
+// Local still renders (`feedShows`'s first arm), and every finish she earned on the domestic rungs
+// stays on the Home ladder's own chips. What changes is what the feed OFFERS her unasked.
+//
+// ⚠ AND IT CAN NEVER EMPTY THE FEED. If the filter takes everything - which needs a career whose
+// only open rungs are two tables beneath her, i.e. nothing this engine produces - the unfiltered set
+// comes back. Same discipline `working` already keeps one line down, and for the same reason: "the
+// table below is behind her" and "nothing is hers" are not the same sentence.
+
+/** How many tables BELOW her active one a rung may still be offered from. One – the seam. */
+const FEED_TABLE_SLACK = 1
+
+/** Drop the rungs that pay into a table she is more than `FEED_TABLE_SLACK` tables past. Total: an
+ *  absent verdict, a bottom-table career and an empty result all return the input untouched. */
+function paysIntoHerTables(
+  rungs: readonly TierId[],
+  active: LadderTrack | null | undefined,
+): readonly TierId[] {
+  if (!active) return rungs
+  const floor = LADDER_TRACKS.indexOf(active) - FEED_TABLE_SLACK
+  if (floor <= 0) return rungs
+  const kept = rungs.filter((t) => LADDER_TRACKS.indexOf(TIERS[t].track) >= floor)
+  return kept.length ? kept : rungs
+}
+
 export function feedContext(input: {
   ageYears: number
   /** the engine's per-rung verdict (`Snapshot.tierOpen`); absent (old fixtures, no snapshot yet)
@@ -146,6 +211,10 @@ export function feedContext(input: {
   /** ...and the engine's CEILING verdict (`Snapshot.tierOutgrown`); absent means "nothing is behind
    *  her", so `working` degenerates to `rungs` and every pre-06.08 caller reads exactly as it did. */
   tierOutgrown?: Partial<Record<TierId, boolean>> | null
+  /** WHICH TABLE IS HERS (`Snapshot.activeLadder`, the engine's `activeLadderOf`). Absent means
+   *  "do not judge the table" - the same safe direction an absent `tierOpen` already takes, so every
+   *  hand-built fixture written before round-21 #5 reads exactly as it did. */
+  activeLadder?: LadderTrack | null
   upcoming: readonly FeedEventFacts[]
 }): FeedContext {
   const open = input.tierOpen
@@ -173,7 +242,14 @@ export function feedContext(input: {
   // needs no per-event age. Age is monotone in the week, so a rung she has already aged out of today
   // is aged out for every week in the horizon: this can hide a card that is dead later, and never a
   // card that is live.
-  const rungs = TIER_LADDER.filter((t) => open[t] && tierAgeBlock(t, input.ageYears) !== 'old')
+  //
+  // ⚠ AND THE TABLE FILTER RIDES HERE, ON THE OPEN SET, so BOTH answers inherit it: a rung she can
+  // no longer be paid for is neither offered by the feed nor named on the Home strip. See the block
+  // above for why it is one table of slack and not a hard cut.
+  const rungs = paysIntoHerTables(
+    TIER_LADDER.filter((t) => open[t] && tierAgeBlock(t, input.ageYears) !== 'old'),
+    input.activeLadder,
+  )
   const past = input.tierOutgrown
   // ⚠ AND THE WORKING WINDOW IS THE SAME ORACLE MINUS ITS CEILING, never a second derivation. An
   // ALL-outgrown answer would be a row with nothing in it, so it falls back to the whole open set:

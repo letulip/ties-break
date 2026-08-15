@@ -29,7 +29,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { planFromWeek } from '../src/engine/plan'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { SCHOOL_YEAR_TURNS_AT } from '../src/engine/kidLife'
-import { seasonYear } from '../src/shared/dates'
+import { seasonYear, weekMonth } from '../src/shared/dates'
 import { calendarWeekFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { weekGridFor, bandFor } from '../src/composables/weekGrid'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type SessionKind } from '../src/shared/protocol'
@@ -395,5 +395,123 @@ describe('W4-SCHOOL – a career already past eighteen leaves school on load', (
     const once = migrateSave(v42(schoolEndWeek(6) + 100))
     const twice = migrateSave({ ...JSON.parse(JSON.stringify(once)), schemaVersion: 42 })
     expect(twice.milestones.filter((m) => m.type === 'school')).toHaveLength(1)
+  })
+})
+
+// =================================================================================================
+// ROUND-21 #6 – THE SHIFT, AS AN ASYMMETRY. «Если день рождения в декабре, то вся школа уже
+// закончилась и в сентябре вроде бы её быть не должно, мы это обсуждали. Надо везде по коду
+// проверить этот сдвиг.»
+// =================================================================================================
+//
+// ⚠ WHAT THE SWEEP FOUND, because the answer is not "one site was patched". Every place in the game
+// that decides a school, exam or term fact already asks HER birth month – the engine through
+// `schoolIsOver(week, world.profile.birthMonth)`, the screens through `snap.schoolEndsWeek` (which
+// IS `schoolEndWeek(profile.birthMonth)`), the cohort deliberately through `schoolIsOverForBand`.
+// Two sites decided a school fact from something else and both are fixed on this branch: the School
+// tile's exam line took a literal `false`, and HerWeekTab's capacity line blamed school for a
+// one-session week whatever the real reason was.
+//
+// ⚠⚠ AND THE SEPTEMBER HE IS LOOKING AT IS NOT A DEFECT – IT IS THE CUT-OFF, AND IT IS A DESIGN
+// QUESTION RATHER THAN A BUG. Measured here: the ITF band is one birth YEAR (everyone in the 14s was
+// born 2017) but the school year turns over on 1 September, so the band splits in two and the halves
+// leave school FIFTY-TWO WEEKS APART – January-August at career week 242, September-December at 294.
+// A December-born girl therefore sits a whole extra school year, and the September he is reporting
+// (career weeks 243-246, September 2035) is a 12th-grade month for her and a post-school month for
+// the other half of her own age group. Both are 18.00-19.00 at their leaving week, so neither
+// violates «школа уже после 18 вроде не должна быть»; what he is objecting to is the SPLIT.
+//
+// This block PINS the split rather than removing it, because removing it moves 52 weeks of a
+// December career onto `ECONOMY.school.loadFactor` – a balance change, and balance is measured, not
+// guessed (CLAUDE.md invariant 4). The day the owner rules, THIS is the test that changes, and the
+// number it changes by is written down here.
+describe('round-21 #6 – the school clock reads her birth month, and the shift is 52 weeks', () => {
+  const SEPTEMBER = 9
+  /** Every career week whose Monday falls in September, over eight seasons. */
+  const septembers = Array.from({ length: 8 * WEEKS_PER_YEAR }, (_, w) => w).filter(
+    (w) => weekMonth(w) === SEPTEMBER,
+  )
+  const schoolSeptembers = (bm: number) => septembers.filter((w) => !schoolIsOver(w, bm))
+
+  it('every birth month: no September school week from her leaving week on – and one before it', () => {
+    // His sentence, read per girl, and it already holds for all twelve months. The second half is
+    // what keeps the first from passing vacuously.
+    for (const bm of BIRTH_MONTHS) {
+      const end = schoolEndWeek(bm)
+      const after = schoolSeptembers(bm).filter((w) => w >= end)
+      expect(after, `birth month ${bm} still has September school after week ${end}`).toEqual([])
+      const before = schoolSeptembers(bm).filter((w) => w < end)
+      expect(before.length, `birth month ${bm} never had a September at school`).toBeGreaterThan(0)
+    }
+  })
+
+  it('⚠ THE SHIFT: September 2035 is school for a December girl and not for a June one', () => {
+    // The asymmetry, and it is the whole point – an assertion that answered the same for both birth
+    // months would not be testing the shift at all. Career weeks 243-246 are the September that
+    // opens a December-born girl's LAST school year and the first September a June-born girl has
+    // already left school in.
+    const sept2035 = septembers.filter((w) => w >= 243 && w <= 246)
+    expect(sept2035, 'the epoch moved – re-measure before touching the rule').toEqual([243, 244, 245, 246])
+    for (const w of sept2035) {
+      expect(schoolIsOver(w, 6), `June-born, week ${w}`).toBe(true)
+      expect(schoolIsOver(w, 12), `December-born, week ${w}`).toBe(false)
+    }
+    // ...and it reaches the SCREEN, not only the predicate: the drawn calendar keeps the lesson
+    // block for one of them and drops it for the other, on the very same week.
+    for (const [bm, wantsSchool] of [[6, false], [12, true]] as const) {
+      const week = 244
+      const cal = calendarWeekFor(
+        facts({ week: week - 1, profile: { ...DEFAULT_PROFILE, birthMonth: bm }, schoolEndsWeek: schoolEndWeek(bm) }),
+        week,
+      )
+      expect(cal.schoolOver, `birth month ${bm}`).toBe(!wantsSchool)
+      const blocks = weekGridFor(cal, 17, [1, 2, 3, 4, 5, 6, 7]).flatMap((d) => d.blocks)
+      expect(blocks.some((b) => b.kind === 'school'), `birth month ${bm} lesson block`).toBe(wantsSchool)
+    }
+  })
+
+  it('...and the split is exactly one season wide, on both ends of the cut-off', () => {
+    // The number the owner's ruling would move, written down so a silent drift is a red test.
+    expect(schoolEndWeek(8)).toBe(242)
+    expect(schoolEndWeek(9)).toBe(242 + WEEKS_PER_YEAR)
+    for (const bm of BIRTH_MONTHS) {
+      expect(schoolEndWeek(bm), `birth month ${bm}`).toBe(bm >= 9 ? 294 : 242)
+    }
+    // The last September each half is at school in, likewise 52 weeks apart.
+    const lastSchoolSeptember = (bm: number) => Math.max(...schoolSeptembers(bm))
+    expect(lastSchoolSeptember(12) - lastSchoolSeptember(6)).toBe(WEEKS_PER_YEAR)
+  })
+
+  it('the School tile decides its exam line from her birth month, not from a literal', () => {
+    // The one engine site the sweep found deciding a school fact from a constant. The two agree on
+    // every week the game can produce, which is why the fix is free – and the constant is gone, which
+    // is why it cannot stop agreeing.
+    const [lo, hi] = ECONOMY.availability.examWeeks[0]
+    for (const bm of BIRTH_MONTHS) {
+      for (let season = 0; season < 8; season++) {
+        for (let offset = lo; offset <= hi; offset++) {
+          const week = season * WEEKS_PER_YEAR + offset
+          const tile = schoolTile({
+            seed: 'exam-line',
+            week,
+            ageYears: Math.floor(kidAgeExact(week, bm)),
+            seasonYear: seasonYear(Math.floor(week / WEEKS_PER_YEAR)),
+            playStyle: 'all-court',
+            birthMonth: bm,
+            injured: false,
+            weeksAway: 0,
+            lossStreak: 0,
+            weeksSinceTitle: null,
+          })
+          // Past her leaving week the tile is "School's done" and no exam line may survive on it.
+          if (schoolIsOver(week, bm)) {
+            expect(tile.lead, `bm ${bm} week ${week}`).toBe("School's done")
+            expect(tile.note, `bm ${bm} week ${week}`).not.toBe('Exams this week')
+          } else {
+            expect(tile.note, `bm ${bm} week ${week}`).toBe('Exams this week')
+          }
+        }
+      }
+    }
   })
 })

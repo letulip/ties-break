@@ -459,10 +459,14 @@ const upcoming = computed(() => game.snapshot?.upcoming ?? [])
 // three through the climb, four at the top - because a rung she has passed is CLOSED by the ladder
 // now rather than filtered out here. Entered events always survive: she is IN them (R10-3), and a
 // committed week must stay actionable.
+// ⚠ AND round-21 #5 ADDS THE TABLE SHE IS ON: a professional is no longer offered the domestic
+// rungs, whose points she cannot spend. `activeLadder` is the ENGINE's verdict, asked here and never
+// re-derived - see `paysIntoHerTables` in composables/tierState.ts for the whole rule and its seam.
 const feed = computed(() =>
   feedContext({
     ageYears: game.snapshot?.ageYears ?? 0,
     tierOpen: game.snapshot?.tierOpen,
+    activeLadder: game.snapshot?.activeLadder,
     upcoming: upcoming.value,
   }),
 )
