@@ -442,17 +442,18 @@ new arms:
 | | `a4-ladder` ×2 | #95.5 | **50.0%** | 13/16/1 | **+1.1** [−7.3, +9.6] | 0.71 | +$19,465 | +$15,808 |
 | | `a3-small` +0.5 | #85 | 56.7% | 14/13/3 | −2.3 [−9.5, +4.8] | 1.00 | −$130 | +$21,121 |
 | | `a3-big` +3.0 | #76 | **66.7%** | 14/15/1 | −11.4 [−22.4, −0.3] | 1.00 | +$115,235 | +$50,388 |
-| | `a4-off` ×0 | #108 | 46.7% | 10/18/2 | +7.9 [−3.7, +19.5] | 0.19 | −$48,770 | −$32,011 |
+| | `a4-off` ×0 | #108 | **46.7%** | 10/18/2 | +7.9 [−3.7, +19.5] | 0.19 | −$48,770 | −$32,011 |
 | **middle·middle** | control | #118 | 23.3% | – | – | – | – | – |
 | | `a4-ladder` ×2 | #118.5 | **26.7%** | 18/7/5 | **+7.2** [−21.2, +35.5] | 0.05 | +$49,020 | +$41,360 |
 | | `a3-small` +0.5 | #124 | 26.7% | 13/13/4 | +11.6 [−16.6, +39.7] | 1.00 | +$2,635 | −$13,752 |
 | | `a3-big` +3.0 | #92 | **56.7%** | 24/5/1 | **−20.9** [−29.3, −12.5] | 0.001 | +$231,170 | +$96,097 |
+| | `a4-off` ×0 | #118 | 23.3% | 8/20/2 | +4.9 [−0.0, +9.8] | 0.04 | – | – |
 
 Pooled over both cells, 60 paired careers per arm:
 
 | arm | ≈ dose | b / w / t | Δbest rank (95% CI) | sign *p* | verdict |
 | --- | --- | --- | --- | --- | --- |
-| `a4-off` | ×0 | 10/18/2 *(elite only)* | +7.9 [−3.7, +19.5] | 0.19 | not resolvable |
+| `a4-off` | **×0 (delete)** | **18/38/4** | **+6.4 [0.0, +12.8]** | **0.011** | **real – and it is the yardstick** |
 | `a3-small` | +0.5 pp | 27/26/7 | +4.6 [−9.9, +19.1] | 1.00 | **a coin** |
 | `a4-ladder` | +0.7…1.0 pp | **31/23/6** | **+4.1 [−10.4, +18.6]** | **0.34** | **not resolvable** |
 | `a3-big` | +3.0 pp | **38/20/2** | **−16.0 [−23.1, −9.0]** | **0.026** | real |
@@ -472,21 +473,25 @@ weeks. The evidence, in the order it convinces:
    Δbest rank **+7.2** – worse on the mean – because a handful of careers move a long way. Two
    statistics of the same 30 pairs pointing in opposite directions is what "inside the noise" looks
    like from the inside.
-3. **⚠⚠ THE YARDSTICK IS THE PART THAT SETTLES IT: at n=30 this bench cannot resolve DELETING THE
-   ENTIRE SHIPPED EDGE.** `a4-off` – the whole 0.9–1.1 pp elite corridor removed, not halved – reads
-   10/18/2 at *p* = 0.19. If the bench cannot see the edge's total removal, it cannot possibly see a
-   bonus of the same size added. **This is what makes "inside the noise" a proof rather than a
-   hedge**, and it is worth more than any of the arm rows above it.
-4. **The dose-response is monotone in resolvability, and his number lands on the wrong side of the
-   line.** ×0 → +0.5 → ×2 → +3.0 gives 10/18, 27/26, 31/23, 38/20. Nothing turns over anywhere – §5's
-   claim survives intact – but only the last is separable from a coin.
-
-**⚠ AND THE MECHANISM IS §4'S PROMOTION LOOP, WHICH IS WHY A SMALL DOSE IS THE WORST PLACE TO BE.**
-Read the confound table: `a4-ladder` moves her rank at entry to the big rungs from #136 to #133 and
-her **points per entry from 37.8 down to 36.1**. `a3-big` moves it from #136 to #110 and her points
-per entry **up** from 37.8 to 42.9. A small bonus promotes her just enough to be outclassed in the
-bigger draw; a large one promotes her and makes her strong enough for it. **The dead zone is real,
-and the ladder-tied dose is in it.**
+3. **⚠⚠ THE YARDSTICK IS THE PART THAT SETTLES IT, AND IT DOES NOT SAY "THE BENCH IS BLIND".** The
+   obvious defence of a null result is that 30 seeds cannot see anything this size – so the same
+   size was measured in the *other* direction. `a4-off` deletes the whole shipped edge, and it is
+   **resolvable at exactly this n: 18 better / 38 worse / 4 tied, Δ+6.4 rank places, *p* = 0.011.**
+   **So the bench CAN see one helping of the edge. It looked for the second helping and did not find
+   it.** That is a finding about the mechanic, not about the sample size: the first helping is worth
+   ~6 rank places and the second is worth something the same experiment cannot distinguish from
+   zero. Diminishing returns is exactly what point 4 predicts.
+4. **⚠ THE DOSE-RESPONSE IS NOT A STRAIGHT LINE, AND HIS NUMBER LANDS IN THE FLAT PART OF IT.**
+   Removing the edge costs 6.4 rank places (*p* = 0.011). Doubling it buys −4.1 (*p* = 0.34, wrong
+   sign). Sextupling it buys 16.0 (*p* = 0.026). **The curve is steep at zero, flat through the
+   ladder-tied dose, and steep again by +3.0 pp** – which is a real shape rather than an artefact,
+   because point 5 gives the mechanism for it.
+5. **The mechanism is §4's promotion loop, and it is why a SMALL bonus is the worst place to stand.**
+   `a4-ladder` moves her rank at entry to the big rungs from #136 to #133 and her **points per entry
+   DOWN, 37.8 → 36.1**. `a3-big` moves it from #136 to #110 and her points per entry **UP, 37.8 →
+   42.9**. A small bonus promotes her just far enough to be outclassed in the bigger draw; a large
+   one promotes her *and* makes her strong enough for it. **The dead zone is real and the ladder-tied
+   dose sits in it.**
 
 ## 7.5 What n would settle it
 
@@ -495,10 +500,11 @@ The observed flip rate is 31/54 = **57.4%**. Resolving that at 80% power, two-si
 machine the two `a4-ladder` cells took 145 s and 1,915 s for 30 careers, so 180 seeds is roughly
 **8–12 hours** of single-process bench time. That is the honest price of turning this row into a fact.
 
-⚠ **The cheaper question is worth asking first: `a4-off` needs only ≈97 non-tied pairs (~55 seeds a
-cell, under two hours).** Deciding whether the SHIPPED edge does anything at all is a smaller
-experiment than deciding whether doubling it does, it is a prerequisite for the second question
-having an answer, and nobody has ever run it.
+⚠ **That prerequisite has already been paid, which is why the null above is worth reading.** The same
+calculation puts `a4-off` at ≈62 non-tied pairs, and it duly came back significant on the 60 this run
+already has. The bench is not blind at this size; the second helping is simply smaller than the first.
+
+**→ RUN AT n=250 PER CELL. See §7.7 for the settlement.**
 
 ## 7.6 ⚠ TWO THINGS THE OWNER SHOULD BE TOLD BEFORE ANYTHING IS MERGED
 
