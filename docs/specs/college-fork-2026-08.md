@@ -29,11 +29,11 @@ and the rows stay valid whichever numbers he picks.
 
 ## 0. THE FINDING, IN ONE BOX
 
-> ### THE COMBO CANNOT BE SIZED, BECAUSE AT NINETEEN THERE ARE NO TWO POPULATIONS TO SEPARATE.
+> ### THE COMBO AS SPECIFIED CANNOT BE SIZED, BECAUSE AT NINETEEN THERE ARE NO TWO POPULATIONS TO SEPARATE.
 >
-> A money line and a rank line were swept across eight values each and crossed into seven combos.
-> **Every single one leaves the college door open in 6–8 careers of 90. The shipped rule leaves it
-> open in 7.** Not one candidate beats the constant it was meant to replace.
+> A **flat cumulative** money line and a rank line were swept across eight values each and crossed into
+> seven combos. **Every single one leaves the college door open in 6–8 careers of 90. The shipped rule
+> leaves it open in 7.** Not one candidate beats the constant it was meant to replace.
 >
 > The reason is not the threshold, it is the cohort. By nineteen our median career is **WTA #183 with
 > $129,190 of prize money banked**, and the middle half of *every* career – strongest third and
@@ -46,6 +46,22 @@ and the rows stay valid whichever numbers he picks.
 > result a J300. **The other three keep it by one week of arithmetic**: they lose the door at 19.08,
 > 19.17 and 19.33, i.e. *after* the fork is raised at week 281. So the genuine "college is a real
 > option" story exists in **4 careers of 90**, and the reported 8% is 4% plus a race condition.
+>
+> ### ⭐ BUT ONE MONEY RULE DOES WORK, AND IT IS THE SPORT'S OWN – BECAUSE IT IS ANNUAL AND NET.
+> The finding above kills a **flat cumulative dollar line**, which is the shape the combo assumed and
+> the shape I swept first. It does **not** kill the shape the NCAA actually used: **$10,000 per
+> calendar year, plus actual and necessary expenses above that** (sourced in
+> `docs/research/college-and-the-junior-exit.md` §1b). Applied as written to the same 90 careers (§4f):
+>
+> | rule | fires in | at median age |
+> | --- | --- | --- |
+> | **ours** – a won match at W75+ | **86 / 90** | **17.1** |
+> | $10,000 in a season, bare | 83 / 90 | 17.0 |
+> | **$10,000 + that season's travel & entry – the cap AS WRITTEN** | **65 / 90** | **19.0** |
+>
+> **The sport's own rule leaves the door open in 25 careers of 90 instead of 4, and where it does shut
+> it, it shuts it at the fork rather than two years before it.** Both differences come from the two
+> features a flat line throws away: it is per **year**, and it forgives the **cost of competing**.
 
 ---
 
@@ -278,7 +294,48 @@ Open at the fork iff `prize < M` **OR** `rank at 19 worse than R`:
 | **SHIPPED (W75+)** | | **7 (8%)** | **1 (3%)** | **5 (17%)** |
 
 **Seven candidate combos, a spread of two careers, and the shipped rung sits in the middle of them.**
-The combo as specified is not a fix; it is the same answer written three different ways.
+The combo **as specified – a flat cumulative dollar line** – is not a fix; it is the same answer
+written three different ways. ⚠ **§4f is the same question asked with the sport's own rule shape and it
+does not come out the same way**, which is why the sweep above is a refutation of one *shape* and not
+of the money arm as an idea.
+
+### 4f. ⭐ THE RULE THE SPORT ITSELF USED – annual, and net of the cost of competing
+
+NCAA Bylaw 12.1.2.4.2, before its repeal, let a prospective college tennis player keep prize money up
+to **$10,000 per calendar year** before full-time enrolment, and above that line, per-event amounts not
+exceeding her **actual and necessary expenses** (`docs/research/college-and-the-junior-exit.md` §1b).
+Our analogue of "actual and necessary expenses" is the travel + entry line.
+
+⚠ **SEASONS, NOT CALENDAR YEARS.** The engine has no calendar-year fold, so these are 52-week blocks
+from week 0. Named honestly rather than relabelled.
+
+| season | age | median prize | p75 | max | clears **$10k** | clears **$10k + that season's costs** |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0 | 14→15 | $0 | $0 | $0 | 0/90 | 0/90 |
+| 1 | 15→16 | $0 | $0 | $0 | 0/90 | 0/90 |
+| 2 | 16→17 | $13,270 | $17,993 | $38,150 | **56/90** | **3/90** |
+| 3 | 17→18 | $30,975 | $39,923 | $80,180 | **79/90** | **18/90** |
+| 4 | 18→19 | $58,150 | $75,313 | $118,700 | **83/90** | **64/90** |
+
+**When each rule would have fired:**
+
+| rule | fires in | mean age | median age |
+| --- | --- | --- | --- |
+| $10,000 in a season (bare cap) | 83 / 90 | 17.4 | **17.0** |
+| **$10,000 + that season's travel & entry (the cap AS WRITTEN)** | **65 / 90** | **18.7** | **19.0** |
+| **OURS – a won match at W75 or above** | 86 / 90 | 17.3 | **17.1** |
+
+> ⭐ **THE EXPENSES ALLOWANCE IS THE WHOLE DIFFERENCE, AND IT IS NOT A ROUNDING DETAIL.** In her
+> 16→17 season **56 of 90** careers clear a bare $10,000 but only **3** clear $10,000 net of what the
+> travelling cost. The rule only starts biting in the **18→19** season (64/90) – the season immediately
+> before the decision. **That is the correct shape for a threshold attached to a question asked at
+> nineteen**, and our rung has the opposite shape: it fires at 17.1, in the first season the rung is
+> even open to her.
+
+⚠ **AND THE RULE IN FORCE TODAY IS MORE PERMISSIVE STILL.** The Brantmeier/Joint settlement filed
+28.04.2026 removes pre-enrolment prize-money limits entirely. Under that rule **90 of 90** careers keep
+the door and the only remaining gate is whether a roster place is offered – **which this engine does
+not model at all**. Research §1b and §5a.
 
 **⚠ PREDICTED vs MEASURED**, registered before the sweep was run:
 
@@ -288,6 +345,7 @@ The combo as specified is not a fix; it is the same answer written three differe
 | the rank arm reopens the door for the weak band | ❌ **wrong at any R he would plausibly pick** – #300 reopens 5 of 30; only #200 reaches 15 of 30, and it opens it for 36% of *everybody* |
 | the combo beats the rung | ❌ **wrong** – 6–8 open against the rung's 7 |
 | the two thresholds separate the populations | ❌ **wrong, and it is the finding** – the populations are not separated at nineteen by *anything* measured here |
+| **a flat money line is the right shape for the money arm** | ❌ **wrong, and I only found out by measuring the sport's own shape instead** (§4f). Annual-and-net leaves 25 of 90 open at median age 19.0; flat-and-cumulative leaves 4 and fires at 17.0. **Same arm, same money, opposite verdict** – the shape was carrying the result, not the number. |
 
 ---
 
@@ -301,12 +359,20 @@ The combo as specified is not a fix; it is the same answer written three differe
 3. **The college door is not measuring talent.** It fires on a birthday (92% of closures in the 17–17.9
    band, none before 17.0) and it is entirely determined by the parent's spending policy (8% open under
    `player`, 99% under `grinder`).
-4. **Therefore no threshold read at nineteen can work**, because the thing a threshold needs – two
-   populations with a gap between them – does not exist in this cohort. **Whatever the owner decides
-   about `collegeClosedFromTier`, it will not be what makes college a real second act. The compression
+4. **No threshold read at nineteen can SORT this cohort**, because the thing a sorting threshold needs –
+   two populations with a gap between them – does not exist here. **Whatever the owner decides about
+   `collegeClosedFromTier`, it will not be what makes college a discriminating choice. The compression
    of the outcome distribution is the prior defect**, and it is the same defect
    `acceptance-cuts-2026-08.md` §4b ran into from the other side when correcting the ladder made the
    player *better off on every metric*.
+5. ⚠ **But "cannot sort" is not "cannot help", and §4f is the distinction.** A rule shaped like the
+   sport's own – annual, net of the cost of competing – does not sort the strong from the weak either,
+   and it still **quadruples** the number of careers that keep the answer (25 of 90 against 4) and moves
+   the closure from 17.1 to **19.0**, i.e. from "a birthday two years before the question" to "the
+   season the question is about". **If the goal is that the third answer exists often enough to be a
+   real choice, that is achievable. If the goal is that it exists for the girls it should exist for,
+   nothing measured here achieves it.** Those are different goals and the owner has not yet had to
+   separate them.
 
 ⚠ **AND THE ONE NUMBER THAT SHOULD BE CHECKED AGAINST REALITY IS $129,190.** That is what our median
 career has banked in prize money by her nineteenth birthday, ranked #183. Whether a real WTA #183
@@ -338,15 +404,20 @@ would have shipped the error silently.
 
 ## 7. FOR THE OWNER – what this measurement puts in front of him
 
-1. **The combo he approved does not beat the constant it replaces** (§4e). Before picking numbers for
-   it, decide whether the target is *"college should be rarer and better justified"* (the rung already
-   does that) or *"college should be a live choice for a normal career"* (nothing measured here
-   achieves that, at any threshold).
-2. **If a live choice is the target, the two levers that actually move it** are the fork **age** (three
-   of the seven survivors are within a month of the fork week) and `w75.minAgeYears` **17**, which is
-   what makes 92% of closures land in one eleven-month window.
-3. **The "prize above the cost of competing" rule** (§4b) is the only measured rule that opens the door
-   for a majority – 66% – and it is the shape reality uses. But it sorts by *how much she travelled*,
-   not by *how good she is*. Worth knowing before it looks attractive.
-4. **#200 is the one rank line worth naming** (§4c), and it is already in the engine as
+1. **The combo as a flat dollar line does not beat the constant it replaces** (§4e) – seven candidate
+   pairs, 6–8 careers open of 90, against the rung's 7.
+2. ⭐ **But the sport's own rule shape does** (§4f): **$10,000 a year net of the cost of competing**
+   leaves the door open in **25 of 90** and shuts it at median age **19.0** instead of 17.1. If a money
+   arm is wanted, **this is its shape**, and the shape matters more than the number.
+3. **First decide which goal is the goal.** *"College should be rare and earned"* – the rung already
+   does that. *"College should still be there for a normal career at nineteen"* – §4f does that.
+   *"College should be there for the girls the tour is failing"* – **nothing measured here does that**,
+   because at nineteen our cohort does not separate.
+4. **If it is goal three, the levers are not thresholds at all**: the fork **age** (three of the seven
+   survivors are inside a month of the fork week) and `w75.minAgeYears` **17**, which is what puts 92%
+   of closures in one eleven-month window.
+5. **#200 is the one rank line worth naming** (§4c), and it is already in the engine as
    `TIERS.wta250.acceptsRank`.
+6. ⚠ **And the rule actually in force in the sport today has no money limit at all** – under it 90 of
+   90 keep the door, and the real gate becomes *"was she offered a roster place"*, which this engine
+   does not model. Research §1b.

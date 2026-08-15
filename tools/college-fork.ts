@@ -188,6 +188,9 @@ interface Row {
    *  R. A rank line only means "the tour is not working out" if she is BELOW it at 19 having been
    *  above it earlier, or never above it at all. */
   rankCrossAge: Record<number, number | null>
+  /** prize and travel+entry folded into 52-week seasons from week 0 (index 0 = age 14). */
+  prizeBySeason: number[]
+  competeBySeason: number[]
 
   // --- the outcome, at the horizon (age 20) – the future the fork is trying to predict ---
   endRankWta: number
@@ -224,6 +227,11 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
   let forkBestTier: TierId | null = null
   const prizeCrossAge: Record<number, number | null> = Object.fromEntries(MONEY_LINES.map((m) => [m, null]))
   const rankCrossAge: Record<number, number | null> = Object.fromEntries(RANK_LINES.map((r) => [r, null]))
+  /** ⭐ THE SPORT'S OWN RULE, AS THE SPORT WROTE IT: per YEAR, not per life. Prize and competing costs
+   *  folded into 52-week blocks from week 0, so `[i]` is her season from age 14+i. They are seasons
+   *  and not calendar years, and the tables below say so rather than pretending otherwise. */
+  const prizeBySeason: number[] = []
+  const competeBySeason: number[] = []
 
   // The ledger is pruned to a 60-week trailing window, so the cumulative line has to be folded week
   // by week as it goes – `runCareer`'s own `seenWeeks` idiom, and the reason this loop keeps a set.
@@ -250,10 +258,19 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
       const prize = Math.max(0, fw.byCategory.prize ?? 0)
       prizeCents += prize
       if (prize > 0) prizeByWeek.set(fw.week, (prizeByWeek.get(fw.week) ?? 0) + prize)
+      const season = Math.floor(fw.week / WEEKS_PER_YEAR)
+      while (prizeBySeason.length <= season) {
+        prizeBySeason.push(0)
+        competeBySeason.push(0)
+      }
+      prizeBySeason[season] += prize
       for (const [cat, v] of Object.entries(fw.byCategory)) {
         if (v === undefined || v >= 0) continue
         spendCents += -v
-        if (cat === 'travel' || cat === 'entry') competeCents += -v
+        if (cat === 'travel' || cat === 'entry') {
+          competeCents += -v
+          competeBySeason[season] += -v
+        }
       }
     }
     const ageNow = kidAgeExact(world.week, world.profile.birthMonth)
@@ -339,6 +356,8 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
     forkBestTier,
     prizeCrossAge,
     rankCrossAge,
+    prizeBySeason,
+    competeBySeason,
     endRankWta: world.kidRankWta ?? tableSize(world, 'wta'),
     endPointsWta: kidPoints(world, 'wta'),
     endPrizeCents: prizeCents,
@@ -626,6 +645,62 @@ if (wants('4')) {
     const ages = shut.filter((r) => r.collegeShutTier === t).map((r) => r.collegeShutAge!)
     console.log(`    ${padE(TIER_SHORT[t], 8)}${pad(k, 4)} closures  ${pad(pct(k, shut.length), 5)}   at mean age ${meanOf(ages)}`)
   }
+}
+
+// =================================================================================================
+// 5. THE RULE THE SPORT ITSELF USED – and it is a PER-YEAR rule, which changes the answer
+// =================================================================================================
+
+if (wants('5')) {
+  section(`5. SCORED AGAINST REALITY'S OWN HISTORICAL RULE (n ${N})`)
+  console.log(`  NCAA Bylaw 12.1.2.4.2, before it was repealed, let a prospective college TENNIS player keep prize`)
+  console.log(`  money up to $10,000 PER CALENDAR YEAR before full-time enrolment, plus, above that line, per-event`)
+  console.log(`  amounts not exceeding her actual and necessary expenses. Sourced in`)
+  console.log(`  docs/research/college-and-the-junior-exit.md §1b. Two things follow that a cumulative line cannot see:`)
+  console.log(`  the rule is ANNUAL, and it forgives the cost of competing. Both are measured here.`)
+  console.log(`\n  ⚠ SEASONS, NOT CALENDAR YEARS. The engine has no calendar-year fold, so these are 52-week blocks`)
+  console.log(`     from week 0 – season i is her year from age 14+i. Named honestly rather than relabelled.`)
+
+  const seasonsToFork = Math.ceil((ENDINGS.forkAgeYears - 14) * 1) // 5 seasons: ages 14→19
+  console.log(`\n  5a. PRIZE PER SEASON, and what share of each season clears the $10,000 line`)
+  console.log(`  ${padE('season', 10)}${padE('age', 8)}${pad('median prize', 14)}${pad('p75', 12)}${pad('max', 13)}${pad('over $10k', 12)}${pad('over $10k + costs', 19)}`)
+  for (let s = 0; s < seasonsToFork; s++) {
+    const vals = rows.map((r) => r.prizeBySeason[s] ?? 0)
+    const over = rows.filter((r) => (r.prizeBySeason[s] ?? 0) > 10_000_00).length
+    const overFull = rows.filter((r) => (r.prizeBySeason[s] ?? 0) > 10_000_00 + (r.competeBySeason[s] ?? 0)).length
+    const d = dist(vals)
+    console.log(
+      `  ${padE(s, 10)}${padE(`${14 + s}→${15 + s}`, 8)}${pad(usd(d.p50), 14)}${pad(usd(d.p75), 12)}${pad(usd(d.max), 13)}` +
+        `${pad(`${over}/${N}`, 12)}${pad(`${overFull}/${N}`, 19)}`,
+    )
+  }
+
+  console.log(`\n  5b. ⭐ WHEN WOULD THE SPORT'S OWN RULE HAVE FIRED?`)
+  // ⚠ CAPPED AT THE FORK, and the cap is the point. The rule is about money taken BEFORE enrolment, so
+  // a season that ends after nineteen cannot be what shut a door that is asked about at nineteen.
+  // Without the cap this loop reaches season 5 (age 19→20) and reports a rule "firing" at twenty.
+  const firstOverAge = (r: Row, withCosts: boolean): number | null => {
+    for (let s = 0; s < Math.min(r.prizeBySeason.length, seasonsToFork); s++) {
+      const line = 10_000_00 + (withCosts ? (r.competeBySeason[s] ?? 0) : 0)
+      if ((r.prizeBySeason[s] ?? 0) > line) return 14 + s + 1 // she crosses it during the season, credited at its end
+    }
+    return null
+  }
+  for (const [label, withCosts] of [
+    ['$10,000 in a season (the bare cap)', false],
+    ['$10,000 + that season\'s travel & entry (the cap AS WRITTEN)', true],
+  ] as [string, boolean][]) {
+    const ages = rows.map((r) => firstOverAge(r, withCosts)).filter((x): x is number => x !== null)
+    console.log(`    ${padE(label, 60)}  fires in ${pad(`${ages.length}/${N}`, 8)}  by age ${meanOf(ages)} (median ${ages.length ? median(ages).toFixed(1) : '–'})`)
+  }
+  const shutAges = rows.filter((r) => r.collegeShutAge !== null).map((r) => r.collegeShutAge!)
+  console.log(`    ${padE('OUR RULE – a won match at W75 or above', 60)}  fires in ${pad(`${shutAges.length}/${N}`, 8)}  by age ${meanOf(shutAges)} (median ${median(shutAges).toFixed(1)})`)
+
+  console.log(`\n  5c. AND THE POST-APRIL-2026 RULE, WHICH IS THE ONE IN FORCE`)
+  console.log(`     "Athletes of all sports will be permitted to accept prize money without restrictions ahead of`)
+  console.log(`      college enrollment" (Brantmeier/Joint settlement, filed 28.04.2026). Under that rule the door`)
+  console.log(`      never closes on money at all: ${N}/${N} careers keep it, and the only remaining gate is whether`)
+  console.log(`      a roster place is offered – which this engine does not model.`)
 }
 
 if (CSV) {
