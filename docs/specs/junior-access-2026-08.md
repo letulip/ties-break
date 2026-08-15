@@ -316,7 +316,19 @@ game than a permanent tax and is the number P6 (the re-measure phase) should car
 * **The cohort is uncapped** (§2d.4), so the fields she meets at W35+ are unchanged. Every figure
   above is "the kid under the new rule in the old world". P2 owns the cohort.
 * **`tools/ladder-baseline.ts` (P0) is the baseline OF RECORD.** This wave's baseline arm is a second
-  reading of the same careers, taken in a worktree while P0 was still being built, and it reproduces
-  the plan's published figures to within a point. Where the two disagree, P0 wins.
+  reading of the same careers, taken in a worktree while P0 was still being built. **P0 landed while
+  this step was being measured (`a5972a7`, `cc0ab32`, `8375fa9`) and the two agree:**
+
+  | | P0 (n = 90, 14 → 26) | this arm (n = 54, 14 → 22) |
+  | --- | --- | --- |
+  | age at first W75 | **17.2** | **17.2** |
+  | her W rank there | #283 | #291 |
+  | ever entered a W75 | 83 / 90 (92%) | 51 / 54 (94%) |
+  | college door shut | 83 / 90 (92%), mean **17.2** | 51 / 54 (94%), mean **17.3** |
+
+  Two tools, two n's, two horizons, one answer – which is what makes the +1.8 years above a
+  measurement rather than an artefact of how this file counts. **Where the two disagree, P0 wins**,
+  and P0's own §8 explains why its figures differ by a point or two from the ones the plan published
+  (`college-fork-2026-08.md` was measured on an older tree).
 * **The W35 collapse (94% → 56%) is a prediction about P3.** The corrected acceptance chain lands on
   a rung almost nobody now visits; whether that survives is the question P3 was ordered to ask.
