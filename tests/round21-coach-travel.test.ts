@@ -59,6 +59,7 @@ import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 // ⚠ STRAIGHT FROM ITS OWN MODULE: `world.ts` imports `chargeCoachTravel` but does not re-export it,
 // and widening that public surface for a test would be the tail wagging the dog.
 import { chargeCoachTravel } from '../src/engine/world/sponsors'
+import type { TierId } from '../src/engine/season/types'
 import { DEFAULT_PROFILE, type Snapshot } from '../src/shared/protocol'
 import { simulateMatch } from '../src/engine/match/engine'
 import { annotateMatch } from '../src/engine/match/rally'
