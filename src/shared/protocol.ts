@@ -2685,6 +2685,12 @@ export interface Snapshot {
     /** weeks of the coming year the retainer is actually charged for */
     billedWeeks: number
     seasonCents: number
+    /** ⭐ ROUND-21 #12: WHAT ARRIVES EVERY WEEK, ALL OF IT – the parents' contribution plus the
+     *  savings interest the balance earns plus a signed kit deal's retainer, pro-rated. It is the cap
+     *  the coaching budget meter draws against and the denominator every `overBudgetCents` is cut
+     *  from, and it is carried here rather than reverse-engineered on the screen (which only worked
+     *  while some row happened to be over budget). See `familyWeeklyIncomeCents`. */
+    weeklyIncomeCents: number
   }
   /** ONE SENTENCE ABOUT HOW MUCH ROOM IS LEFT IN HER (08.08) – the context every uplift on screen T
    *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
@@ -2712,7 +2718,11 @@ export interface Snapshot {
     placement: CoachEdgePlacement | null
     revealed: boolean
     weeksTogether: number
-    revealAfterWeeks: number
+    /** ⭐ ROUND-21 #7c: THE WEEK THE VERDICT LANDS IN, and it is an OFF-SEASON week rather than a
+     *  duration. It was `revealAfterWeeks: 52` – a rolling bar off the hire date that never looked
+     *  at the calendar, which is how the card came to print "49 weeks of 52" in an off-season with
+     *  the season already played. See `coachRevealWeek`. */
+    revealWeek: number
     /** ...and the same clock in seasons, which is what the plaque's CONFIDENCE is banded on (§8a) */
     seasonsTogether: number
     /** THE PLAQUE, WRITTEN (§7/§8a). One sentence, composed engine-side from the place and the
@@ -2949,6 +2959,25 @@ export interface CareerMeta {
   birthMonth?: number
 }
 
+/** ⭐ ROUND-21 #1 – WHOSE CAREER IS IN THIS FILE, read WITHOUT importing it.
+ *
+ *  The owner: «Загрузка сейва, нужен диалог, подтверждающий намерение, особенно актуально, если сейв
+ *  перетирает существующий.» A confirm that cannot tell the two cases apart is the confirm that
+ *  teaches him to dismiss it, and the difference is not knowable from a filename: `careerId` lives
+ *  inside the gzipped payload. So the shell asks the worker what the bytes hold, matches the answer
+ *  against the careers list it already has, and only then says which of the two things is about to
+ *  happen. Three fields, deliberately – enough to name the career and date it, nothing that would
+ *  make this a second way to read a world into the UI.
+ *
+ *  ⚠ IT IS THE "LOADING-FOR-INSPECTION" QUERY `ToWorker.restoreSlot` SAYS TO ADD WHEN A SURFACE
+ *  NEEDS ONE, and it stays inside its own sentence: it reads bytes, commits nothing, adopts nothing
+ *  and leaves `world` untouched. `WorldState` never crosses to the UI – CLAUDE.md invariant 1. */
+export interface SavePeek {
+  careerId: string
+  kidName: string
+  week: number
+}
+
 /** W1-INTEGRITY-A: machine-readable error kinds the UI can dispatch on. Everything else stays a
  *  plain human-readable `error` string, exactly as before – `code` is additive.
  *   STALE_REVISION  the mutation's `baseRevision` is not the worker's committed revision; the
@@ -3022,6 +3051,9 @@ export type ToWorker =
   | { id: number; type: 'deleteCareer'; careerId: string }
   | { id: number; type: 'exportSave' }
   | { id: number; type: 'importSave'; bytes: ArrayBuffer }
+  // ⭐ ROUND-21 #1: read a save FILE without importing it, so the confirm can say whether it is
+  // about to overwrite a career that exists. A query in the strict sense – see `SavePeek`.
+  | { id: number; type: 'peekSave'; bytes: ArrayBuffer }
 
 // Every success carries `revision` – the worker's committed revision AFTER the command (unchanged
 // by queries). Mutating requests send it back as `baseRevision`; the worker rejects a stale one
@@ -3040,6 +3072,7 @@ export type ToUI =
   | { id: number; ok: true; type: 'slots'; slots: SlotMeta[]; revision: number }
   | { id: number; ok: true; type: 'careers'; careers: CareerMeta[]; revision: number }
   | { id: number; ok: true; type: 'exported'; bytes: ArrayBuffer; filename: string; revision: number }
+  | { id: number; ok: true; type: 'peek'; peek: SavePeek; revision: number }
   | {
       id: number
       ok: false

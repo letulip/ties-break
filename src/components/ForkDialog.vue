@@ -10,8 +10,30 @@
 // without shame». A game about honest economics whose fork quietly styles one button as the correct
 // one lies exactly where it promised not to. So the three answers get the same weight, the card
 // puts the numbers on the table and says nothing about what they mean, and there is no default.
+//
+// ⭐ ROUND-21 #8 – AND THE MISSING DOOR NOW SAYS WHY IT IS MISSING. The owner, after a full career:
+// «В 19 не было варианта выбрать колледж, только про или завязать».
+//
+// ⚠ MEASURED BEFORE ANYTHING WAS BUILT, because "the dialog does not draw it" and "the engine says
+// it is shut" are different bugs with different fixes. `tools/econ-bench.ts`'s own `player` policy –
+// the model of a reasonable parent, fitted to the owner's own envelope – over 9 presets x 3 seeds:
+// **26 of 26 careers that reached the fork had `collegeStillOpen === false`**, and `snapshot.fork.
+// collegeOpen` carried that faithfully to this card every time. Under the `grinder` policy (enters
+// nothing on the paid rungs) it was open 13 of 13. So the engine is the one closing it, the flag and
+// the arm below are correct, and what he met was a card that had silently dropped a third of itself.
+// The rung that shuts it is W75 with a best finish of 0-3 of 5 – she reached the quarters or won it,
+// not the wooden spoon the 13.08 ruling was about.
+//
+// ⚠ SO THE FIX IS A SENTENCE, NOT A BUTTON. The round-17 note below chose ABSENT over disabled, and
+// that is still right – a greyed answer reads as one she is refusing. What was wrong is that absent
+// and never-existed looked identical. Saying which rung took it is not a recommendation: it is the
+// same fact the other two answers put on the table, and it is what stops a player counting doors and
+// concluding the game forgot one. Whether W75 is the right rung at all is task #102's question, and
+// the 26-of-26 measurement is the material for it – it is not decided here.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
+import { ENDINGS } from '../engine/ending'
+import { TIER_SHORT } from '../engine/season/calendar'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -40,6 +62,12 @@ const snap = computed(() => game.snapshot ?? null)
 const ladder = computed(() => activeLadderOfSnapshot(snap.value))
 const rankHead = computed(() => `Her ${ladder.value.label.toLowerCase()} rank`)
 const rankValue = computed(() => (ladder.value.rank === null ? 'unranked' : `#${ladder.value.rank}`))
+
+// ⭐ #8: the rung comes off `ENDINGS`, never out of the template. The same rule the tour briefing
+// keeps ("this component owns no words with a number in them") – if the door ever moves to W100 this
+// sentence moves with it, and `tests/component/endings-ui.test.ts` pins that no rung name is typed
+// into the file at all.
+const closedFromTier = computed(() => TIER_SHORT[ENDINGS.collegeClosedFromTier])
 
 const stage = computed(() => portraitStage(snap.value?.ageYears ?? 19))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -82,6 +110,17 @@ async function answer(a: ForkAnswer): Promise<void> {
           <dd>{{ formatCents(snap?.careerTotals.prizeCents ?? 0) }}</dd>
         </div>
       </dl>
+
+      <!-- ⭐ ROUND-21 #8: WHY THERE ARE TWO ANSWERS AND NOT THREE. Above the answers, not below
+           them, so the last thing in the card's flow stays a control the player can reach - the
+           height check in tests/component/fits.ts measures the dismiss box off the card's own
+           bottom edge. Not an answer, not a button, and it carries no opinion about the two that
+           are left. -->
+      <p v-if="!fork.collegeOpen" class="fork-shut">
+        There are two answers here and not three: the college place closed the first time she took a
+        real result at {{ closedFromTier }} or above. Prize money at that level spends her college
+        eligibility, and nothing gives it back.
+      </p>
 
       <div class="fork-answers">
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('continue')">
@@ -183,6 +222,15 @@ async function answer(a: ForkAnswer): Promise<void> {
   font-size: 15px;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* ⭐ ROUND-21 #8 – the closed-door note. Typed as the lede is, one shade quieter: it is context for
+   the answers below it, not a fourth thing to weigh. */
+.fork-shut {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-dim);
 }
 
 /* THREE ANSWERS, ONE WEIGHT. No primary, no accent, no ordering cue beyond the order they are

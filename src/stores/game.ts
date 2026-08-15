@@ -8,6 +8,7 @@ import {
   type KitLine,
   type KnockChoice,
   type PlayerProfile,
+  type SavePeek,
   type Snapshot,
   type SlotMeta,
   type ToUI,
@@ -507,6 +508,31 @@ export const useGameStore = defineStore('game', {
         a.click()
         URL.revokeObjectURL(url)
       })
+    },
+    /** ⭐ ROUND-21 #1 – WHAT IS IN THIS FILE, before anything is done with it.
+     *
+     *  ⚠ ADVISORY, AND `null` MEANS "CANNOT SAY" RATHER THAN "SAFE". A peek that fails – a hostile
+     *  file, a rotted one, a dead database, a wedged worker – must not be reported as a verdict, so
+     *  the caller shows the cautious wording and lets the REAL import produce the real typed error
+     *  through `saveOp`. Nothing here decides whether the import is allowed; the worker is still the
+     *  only gate (CLAUDE.md invariant 1) and this asks it a read-only question.
+     *
+     *  ⚠ IT DOES NOT GO THROUGH `runOp`, which would be the obvious shape and is the wrong one: this
+     *  is not an operation the player asked for and its failure is not a failure to report. Writing
+     *  a red "Import – failed" row here would announce an error for a file they have not yet agreed
+     *  to import, and then announce it a second time when they do. */
+    async peekSave(file: File): Promise<SavePeek | null> {
+      try {
+        // Its own copy of the bytes: `request` TRANSFERS the buffer, so a peek that shared one with
+        // the import would hand the worker a detached ArrayBuffer. A File can be read twice.
+        const bytes = await file.arrayBuffer()
+        const res = await request({ type: 'peekSave', bytes }, [bytes])
+        if (!res.ok || res.type !== 'peek') return null
+        this.revision = res.revision
+        return res.peek
+      } catch {
+        return null
+      }
     },
     async importSave(file: File) {
       await this.runOp('import', async () => {

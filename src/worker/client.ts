@@ -76,6 +76,9 @@ const HEAVY_COMMANDS: ReadonlySet<ToWorker['type']> = new Set([
   'loadCareer',
   'restoreSlot',
   'importSave',
+  // ⭐ ROUND-21 #1: a peek decodes and MIGRATES the same file the import would, so it is the same
+  // one-time ~1.6s a 20-season save costs there. Budgeted with its twin, not with the reads.
+  'peekSave',
 ])
 
 function timeoutFor(type: ToWorker['type']): number {

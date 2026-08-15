@@ -7,7 +7,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
-import type { CareerMeta, SlotMeta } from '../../shared/protocol'
+import type { CareerMeta, SavePeek, SlotMeta } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
 import { ageAtWeek, kidAgeYears } from '../../engine/world'
 import ConfirmDialog from '../ConfirmDialog.vue'
@@ -233,12 +233,61 @@ async function doSaveAs(name: string): Promise<void> {
   saveName.value = ''
 }
 
-function onImportPicked(e: Event) {
+// =================================================================================================
+// ⭐ ROUND-21 #1 – IMPORTING A SAVE IS A DECISION NOW, AND THE WARNING KNOWS WHICH DECISION IT IS
+// =================================================================================================
+//
+// The owner: «Загрузка сейва, нужен диалог, подтверждающий намерение, особенно актуально, если сейв
+// перетирает существующий.»
+//
+// It was the one action on this screen that could destroy a career with a single tap and no
+// question asked – the file picker WAS the confirmation. Every other destructive action here has
+// gone through `ConfirmDialog` since TB-19; this was missed because it does not look like a delete.
+//
+// ⚠⚠ AND THE HALF THAT MATTERS IS THAT THE TWO CASES DO NOT READ ALIKE. A dialog that says the same
+// frightening thing whether or not there is anything to lose is a dialog the player learns to tap
+// through, and then it is not protecting the one case it was built for. So the copy is chosen from
+// what is actually in the file: `game.peekSave` decodes it in the WORKER without importing it, the
+// `careerId` it returns is matched against the careers list, and the message names her, both weeks
+// and which way the replacement goes – or, when there is no such career here, says plainly that
+// nothing is being replaced. The third branch is an unreadable file, which is neither claim.
+//
+// ⚠ THE PEEK IS ADVISORY AND ITS FAILURE IS NOT AN ERROR THE PLAYER IS SHOWN. `peekSave` returns
+// null for a hostile, truncated or unreadable file; that is "cannot say", it takes the cautious
+// wording, and the REAL import then fails through `saveOp` with the actual typed reason – one error
+// row, at the moment the player asked for the operation, not two.
+function importConfirmMessage(peek: SavePeek | null, existing: CareerMeta | undefined): string {
+  if (!peek) {
+    return 'This file could not be read here. Import it anyway? If it holds a career you already have, importing replaces it – there is no undo.'
+  }
+  if (existing) {
+    return (
+      `Overwrite ${existing.kidName}'s career? You have her at ${weekLabel(existing.week)} and this file is ` +
+      `${weekLabel(peek.week)}. The file becomes the career you play from now on – there is no undo.`
+    )
+  }
+  return `Import ${peek.kidName}'s career at ${weekLabel(peek.week)}? It is not on this device, so nothing here is replaced – it is added alongside your careers and becomes the one you play. Your current career stays saved.`
+}
+
+async function onImportPicked(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
-  // The File object outlives the picker, so Retry can re-read the same file after a transient
-  // failure (worker hiccup, storage pressure) without asking the player to find it again.
-  if (file) tracked(() => game.importSave(file))
+  // Cleared BEFORE the await: the confirm can outlive several turns of the event loop, and picking
+  // the same file twice in a row must fire `change` the second time too.
   if (fileInput.value) fileInput.value.value = ''
+  if (!file) return
+  const peek = await game.peekSave(file)
+  const existing = peek ? game.careers.find((c) => c.careerId === peek.careerId) : undefined
+  pendingConfirm.value = {
+    message: importConfirmMessage(peek, existing),
+    // Destructive ONLY when it really is: an import that replaces nothing is not a red button, and
+    // colouring it red anyway is the same mistake as warning identically in both cases.
+    danger: existing !== undefined,
+    confirmLabel: existing ? 'Overwrite' : 'Import',
+    // The File object outlives the picker, so this closure – and Retry after it – can re-read the
+    // same file after a transient failure (worker hiccup, storage pressure) without asking the
+    // player to find it again.
+    onConfirm: () => tracked(() => game.importSave(file)),
+  }
 }
 
 async function copySeed(): Promise<void> {
