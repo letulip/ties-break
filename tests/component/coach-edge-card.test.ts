@@ -161,6 +161,17 @@ const SEED_IN_THIRD: Record<CoachEdgePlacement, string> = {
   upper: `${SEED}-middle-1`,
 }
 
+/** ⭐ ROUND-21 #7a/#7b/#7c – THE TWO PRE-REVEAL SENTENCES, written out longhand for the same reason
+ *  the nine below are: the WORDS are pinned, so a change to either has to be a deliberate one.
+ *  `near` is the coach whose verdict lands at the off-season of the season she is in; `far` is the
+ *  one hired in the second half of a season, whose bar has moved a year down. Neither counts weeks.
+ *  The whole state is covered by tests/component/round21-coach.test.ts; these two names are here so
+ *  the two long-standing assertions in this file read as the same claim they always made. */
+const NOT_YET = {
+  near: 'Where in that band – we will know in the off-season.',
+  far: 'Where in that band – too soon, ask next off-season.',
+} as const
+
 /** What the plaque says, per place and per confidence band (docs/specs/coach-match-edge.md §7/§8a).
  *  Written out longhand rather than imported from the engine, so the WORDS are pinned too: a change
  *  to any of the nine has to be a deliberate one, and the owner's three constraints - no praise, no
@@ -284,8 +295,9 @@ describe('the plaque before the reveal', () => {
 
     // The corridor is still the rung's, on the hired card as on every other.
     expect(row.find('.cm-edge').text()).toBe(corridorText('middle'))
-    // ...and the plaque is a sentence, not a blank.
-    expect(row.find('.cm-plaque').text()).toBe('Too early to tell where in that band – 4 weeks of 52.')
+    // ...and the plaque is a sentence, not a blank. ⭐ ROUND-21 #7a/#7b: it names the OFF-SEASON and
+    // counts nothing. It used to read 'Too early to tell where in that band – 4 weeks of 52.'
+    expect(row.find('.cm-plaque').text()).toBe(NOT_YET.near)
     // THE NUMBER IS NOWHERE, including the one the engine would hand over if asked.
     expect(row.text(), 'no individual figure anywhere on the card').not.toMatch(INDIVIDUAL)
     expect(row.text()).not.toContain(coachEdgePp(world.seed, world.coachId).toFixed(2))
@@ -498,7 +510,7 @@ describe('the figures follow the snapshot, not the template', () => {
     const store = useGameStore()
     const plaque = () => wrapper.find('.cm-row.current .cm-plaque').text()
 
-    expect(plaque()).toBe('Too early to tell where in that band – 4 weeks of 52.')
+    expect(plaque()).toBe(NOT_YET.near)
 
     store.snapshot!.coachEdge.plaqueLine = 'Nine seasons in, and the goat approves.'
     await nextTick()
@@ -508,7 +520,7 @@ describe('the figures follow the snapshot, not the template', () => {
     // engine's own clock changes nothing until the engine re-writes the line, which is exactly what
     // "the sentence comes from the snapshot" means.
     store.snapshot!.coachEdge.weeksTogether = 7
-    store.snapshot!.coachEdge.revealAfterWeeks = 40
+    store.snapshot!.coachEdge.revealWeek = 40
     store.snapshot!.coachEdge.seasonsTogether = 3
     store.snapshot!.coachEdge.placement = 'lower'
     await nextTick()

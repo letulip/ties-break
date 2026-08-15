@@ -133,7 +133,7 @@ The three states, verbatim:
 | state | copy |
 | --- | --- |
 | any card, hired or not | `+0.5-0.9% per match`, beside `+1.7-3.5% a season` on one wrapping line |
-| hers, before the reveal | `Too early to tell where in that band – 4 weeks of 52.` |
+| hers, before the reveal | ~~`Too early to tell where in that band – 4 weeks of 52.`~~ **replaced by §9** |
 | hers, after it | ~~`A season together – the number is +0.62% per match.`~~ **replaced by §7** |
 
 Corridors print to one decimal, because a bracket is a design constant. The revealed line originally
@@ -403,3 +403,57 @@ measurement decides, not this paragraph.
 
 ⚠ **And the framing is fixed regardless of the number.** «Мы ни за что не наказываем»: this is a
 reward for staying, never a penalty for leaving. No screen may say what she lost by changing coach.
+
+## 9. The verdict lands in the OFF-SEASON (owner, round-21 #7, 14.08) – SHIPPED
+
+His report, verbatim:
+
+> «У тренера на карточке "Too early to tell 49 weeks of 52" – звучит довольно смешно, сезон уже
+> сыгран. Мне кажется надо во-первых заменить на "обсудим в межсезонье", а во-вторых убрать привязку
+> к 52 неделям. Если Тренера меняли в первой половине сезона, тогда это актуально, если во второй –
+> уже можно готовить "мало времени прошло" или вроде того и сдвигать эту планку дальше по году, может
+> у нас сейчас так – надо проверить.»
+
+### 9a. What it did before (checked before anything was built – he asked)
+
+**It did not already work that way.** The gate was `weeksTogether >= COACH_EDGE_REVEAL_WEEKS`, a
+rolling 52-week bar off `coachSinceWeek` and nothing else: no season, no calendar and no hire month
+appeared anywhere in `coachEdgeView` or `coachPlaqueLine`. A coach taken on in week 2 of a season and
+one taken on in week 40 were treated identically, and the pre-reveal sentence printed the bar's
+progress – which is how his card came to read «49 weeks of 52» in an off-season with that season
+already played, counting down to a Tuesday three weeks into the NEXT year.
+
+### 9b. What ships
+
+`coachRevealWeek(sinceWeek)` returns the **first off-season week** of the season the coach was
+present for, and "present for" is his own split: hired in the first half of a season, that season
+counts; hired in the second half, it does not and the bar moves a year down the calendar. §4's
+"a full season with her" is unchanged in spirit – what changed is that a season is now the tennis
+year, judged when it ends, rather than fifty-two weeks off a stopwatch.
+
+The pre-reveal state is **two sentences**, chosen by whether the reveal falls in the season she is in
+now. Reading it off the CURRENT season rather than off the hire month is what makes the card move
+itself: a coach hired in week 40 shows the far arm all that autumn and switches to the near one when
+the new season opens, which is «сдвигать эту планку дальше по году» without a second rule.
+
+| state | copy |
+| --- | --- |
+| hers, verdict at this season's off-season | `Where in that band – we will know in the off-season.` |
+| hers, verdict a season further out | `Where in that band – too soon, ask next off-season.` |
+
+Neither counts anything – **no numeral survives on either arm**, which is §7b – and both keep §7's
+referent pairing: the question points at the corridor printed two lines above and the revealed
+sentence answers it in the same words. They are 52 and 51 characters, inside the 49-58 the nine
+revealed sentences occupy, so both wrap to exactly two lines at 320px and 375px and the card still
+does not jump when the reveal lands (§4a's browser measurement).
+
+### 9c. The anti-shopping rule, re-priced
+
+§4 exists so the market cannot be read by hire-look-fire. One read used to cost a flat 52 weeks; it
+now costs **24 at the cheapest** (hired at season-week 25, revealed at 49) and **75 at the dearest**
+(hired at season-week 26). The trade is accepted because the price stops being something the player
+can pay at will: the reveal is pinned to a week of the CALENDAR, so a hire timed one week late costs
+a whole extra year, and what it buys is still a third of a corridor and never a number.
+
+`Snapshot.coachEdge.revealAfterWeeks` is therefore replaced by `revealWeek` – an absolute week, and
+an off-season one. `tests/component/round21-coach.test.ts` holds all of it, mutation-verified.

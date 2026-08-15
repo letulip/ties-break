@@ -292,15 +292,19 @@ function rowLabel(r: Row): string {
 
 // --- the budget meter ---------------------------------------------------------------------------
 // The design's three numbers, all real: what she pays now, what a week brings in, and the gap. The
-// cap is the parent contribution because that is the money the decision is actually made against -
-// a reserve pays for one week of anything, a weekly bill has to fit the week.
+// cap is the week's INCOME because that is the money the decision is actually made against - a
+// reserve pays for one week of anything, a weekly bill has to fit the week.
+//
+// ⭐ ROUND-21 #12 – THE CAP COMES OFF THE SNAPSHOT NOW, and it had to. It used to be RECOVERED from
+// whichever row happened to be over budget (`weeklyCents - overBudgetCents === the cap`), which is
+// exact while some row is over and returns 0 when none is. The owner's own case - «на счету 1млн» -
+// is precisely the case where, once the income is read in full, NOTHING is over budget any more:
+// the meter would have gone from a wrong number to "$0.00 /week free, $0.00 weekly cap" with a full
+// bar beside it. `coachBilling.weeklyIncomeCents` is the same figure the engine cuts every
+// `overBudgetCents` from, so the meter and the rows cannot disagree.
 const current = computed<Row | null>(() => rows.value.find((r) => r.current) ?? null)
 const committedCents = computed(() => current.value?.weeklyCents ?? 0)
-const capCents = computed(() => {
-  // Recovered from any row: weeklyCents - overBudgetCents === the cap whenever a row is over it.
-  const over = rows.value.find((r) => r.overBudgetCents > 0)
-  return over ? over.weeklyCents - over.overBudgetCents : 0
-})
+const capCents = computed(() => billing.value?.weeklyIncomeCents ?? 0)
 const freeCents = computed(() => Math.max(0, capCents.value - committedCents.value))
 const meterPct = computed(() =>
   capCents.value > 0 ? Math.min(100, Math.round((committedCents.value / capCents.value) * 100)) : 0,
@@ -571,12 +575,24 @@ function scrollToTier(tier: CoachTier): void {
 
       <!-- The portrait is FULL-BLEED down the left edge, sized by height, masked into the card -
            the same treatment `.coach-card` uses on Home and for the same reason (A2c/d): a strip
-           reads as a person standing there, a square reads as an avatar. -->
+           reads as a person standing there, a square reads as an avatar.
+
+           ROUND-21 #11 - THE COACH SHE HAS IS NEVER "BLOCKED", and that one word is the whole of the
+           owner's report. `blocked` paints a refusal: a dashed grey border in place of the accent
+           frame, a darker card, a greyed name and price, and the portrait at 0.45 opacity. It was
+           being applied on the affordability test alone, so the coach the family ALREADY EMPLOYS
+           went grey the moment his rung stopped fitting the week's income - which is a true thing to
+           say about a coach you might hire and a false one about the coach you are paying. It is
+           also information the row cannot lose: the action word on a current row is "Current" and
+           has never been the over-budget figure, so nothing was being said by the dimming that is
+           not said in words elsewhere. His quotes are in the .ts comments (no Cyrillic in a
+           template, tests/round13-nav.test.ts) - see `familyWeeklyIncomeCents` in
+           engine/world/coachMarket.ts and the `.cm-row.current` block in style.css. -->
       <button
         v-for="r in g.rows"
         :key="r.id"
         class="cm-row"
-        :class="{ current: r.current, blocked: r.overBudgetCents > 0 || r.lockedPoints !== null }"
+        :class="{ current: r.current, blocked: !r.current && (r.overBudgetCents > 0 || r.lockedPoints !== null) }"
         :disabled="r.current || r.lockedPoints !== null"
         :aria-label="rowLabel(r)"
         @click="askHire(r)"

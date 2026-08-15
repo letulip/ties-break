@@ -11,14 +11,15 @@
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
 import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_EDGE_CORRIDOR_PP, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
-import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
+import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
-import type { CoachEdgePlacement, CoachMarketRow, CoachTier, PlayerProfile } from '../../shared/protocol'
+import type { CoachEdgePlacement, CoachMarketRow, CoachTier, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { parentIncomeForWeekCents } from '../economy'
-import { addEvent, seasonStartWeek } from './ledger'
+import { activeKitDeal } from '../offers'
+import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
@@ -203,6 +204,14 @@ export function coachBilling(world: WorldState): {
   /** the weeks of the coming year the retainer is actually charged for */
   billedWeeks: number
   seasonCents: number
+  /** ⭐ ROUND-21 #12: THE CAP THE BUDGET METER DRAWS AGAINST, carried rather than reverse-engineered.
+   *
+   *  The screen used to RECOVER it from any row that was over budget
+   *  (`weeklyCents - overBudgetCents === the cap`), which worked only while some row was over. Fixing
+   *  the income made the owner's own case - a million banked - the case where NO row is over, and the
+   *  meter would then have printed a $0.00 weekly cap with a full bar beside it. A number the screen
+   *  needs is a number the engine should hand over. */
+  weeklyIncomeCents: number
 } {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
@@ -225,6 +234,7 @@ export function coachBilling(world: WorldState): {
     eventWeeks,
     billedWeeks,
     seasonCents: weeklyCents * billedWeeks,
+    weeklyIncomeCents: familyWeeklyIncomeCents(world),
   }
 }
 
@@ -245,6 +255,49 @@ function coachedWeeksLostToRest(world: WorldState): number {
   return Math.min(WEEKS_PER_YEAR, weeks.size)
 }
 
+/** ⭐ ROUND-21 #12 – WHAT ARRIVES EVERY WEEK, ALL OF IT (owner, 14.08).
+ *
+ *  His report, verbatim: «у нас есть ещё %, надо их тоже учитывать и суммировать, а то на счету
+ *  1млн, а элитного тренера какого-то нельзя брать.»
+ *
+ *  ⚠ MEASURED BEFORE ANYTHING WAS CHANGED, on a real career at week 120 with his million banked:
+ *  the parents' contribution was $482.94/wk, the savings interest $600.00/wk, and the market's
+ *  affordability test read the FIRST NUMBER ALONE - so all four Elite coaches printed "$33-176
+ *  over" while more than half of the family's weekly money was invisible to the test that was
+ *  refusing them. The «%» he names is `ECONOMY.savings.apyWeekly`: `accrueSavingsInterest` credits
+ *  round(fundsCents x apyWeekly) at the top of EVERY tick, deterministically and with zero RNG -
+ *  it is a wage the balance pays, not a windfall, and at a million it is larger than the parents'
+ *  own. So this is a defect in the DENOMINATOR, not a wording problem.
+ *
+ *  ⚠ WHAT COUNTS IS "ARRIVES EVERY WEEK WHATEVER SHE DOES", and the two exclusions are the rule
+ *  stating itself. PRIZE MONEY, appearance fees and result bonuses are not here: they are paid for
+ *  a RESULT, a season of them is lumpy, and a weekly retainer underwritten by them is a family one
+ *  bad draw away from not being able to pay. THE RESERVE is not here either - that is the original
+ *  ruling on `overBudgetCents` below ("a reserve pays for one week of anything") and it survives
+ *  untouched: this changes what the week's income IS, not what income means.
+ *
+ *  ⚠ AND A KIT RETAINER IS PRO-RATED RATHER THAN COUNTED ON ITS OWN WEEK. `payRetainer` pays it
+ *  four times a year (`isRetainerWeek`, at season offsets 0/13/26/39), so counting it whole would
+ *  make an Elite coach affordable on four weeks of the year and refused on the other forty-eight -
+ *  a market that flickers. It is a contracted wage, and a wage divided by the weeks it covers is
+ *  what a family can actually spend of it each week.
+ *
+ *  Pure: zero draws on any stream, derived at snapshot time like everything else on this screen. */
+export function familyWeeklyIncomeCents(world: WorldState): number {
+  const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
+  // The owner's «%», in the SAME expression `accrueSavingsInterest` charges - so the market and the
+  // ledger can never disagree about what the balance earns. Floored at zero: an overdrawn family
+  // earns nothing, it is not billed negative interest (the accrual returns early below 1 cent).
+  const interest = Math.max(0, Math.round(world.fundsCents * ECONOMY.savings.apyWeekly))
+  const deal = activeKitDeal(world.offers, world.week)
+  const retainerCents = deal ? ((deal.terms as KitOfferTerms).retainerCents ?? 0) : 0
+  return parents + interest + Math.round((retainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR)
+}
+
+/** How many times a signed kit deal pays its retainer in a year - `isRetainerWeek` is
+ *  `week % (WEEKS_PER_YEAR / 4) === 0`, so it is four, and the two must not drift apart. */
+const RETAINERS_A_YEAR = 4
+
 /** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and
  *  HER plan, read against HER game, with what each rung would add for her.
  *
@@ -254,7 +307,9 @@ function coachedWeeksLostToRest(world: WorldState): number {
 export function coachMarket(world: WorldState): CoachMarketRow[] {
   const age = ageAtWeek(world.week)
   const points = kidPoints(world, 'domestic') // ⚠ the Elite gate's currency – see hireCoach above
-  const weeklyIncome = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
+  // ⭐ ROUND-21 #12: every stream that arrives every week, not the parents' line alone. See
+  // `familyWeeklyIncomeCents` for the measurement that made this a bug rather than a wording fix.
+  const weeklyIncome = familyWeeklyIncomeCents(world)
   // ⚠ THE QUOTE IS OVER THE WEEKS SHE WILL ACTUALLY HAVE HIM (08.08). Same arithmetic the season
   // price uses, from the same helper, so the card and the bill can never describe different years.
   const coachedWeeks = ECONOMY.coach.upliftHorizonWeeks - coachedWeeksLostToRest(world)
@@ -281,6 +336,9 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // AFFORDABLE MEANS "against the week's income", not "against the reserve". A reserve pays for
       // one week of anything; what the family is actually deciding is whether this bill fits the
       // money that arrives every week, which is the number the budget meter draws.
+      // ⭐ ROUND-21 #12: that income is now ALL of it (`familyWeeklyIncomeCents`) and not the
+      // parents' line alone. The ruling above is unchanged - the reserve is still not counted - it
+      // is the week's income that was being under-read, by more than half on his own save.
       overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background) - weeklyIncome),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],
@@ -299,8 +357,51 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
  *
  *  You learn what a coach is worth by employing him: that is what scouting is, and it arrives far too
  *  late to shop with. It is also the payoff of the budget lottery and the reason the corridor on the
- *  card is worth reading at all. */
+ *  card is worth reading at all.
+ *
+ *  ⚠ SINCE ROUND-21 #7c IT IS THE LENGTH OF A SEASON AND NO LONGER THE GATE ITSELF – see
+ *  `coachRevealWeek`, which anchors the reveal to a WEEK OF THE CALENDAR instead of counting off a
+ *  stopwatch. It stays exported under this name (world.ts re-exports it, and 111 files import from
+ *  there) and it stays load-bearing: half of it is the owner's first-half / second-half split. */
 export const COACH_EDGE_REVEAL_WEEKS = WEEKS_PER_YEAR
+
+/** ⭐ ROUND-21 #7c – WHEN THE VERDICT LANDS, AND IT IS A DATE IN HER YEAR RATHER THAN A STOPWATCH.
+ *
+ *  The owner, 14.08: «У тренера на карточке "Too early to tell 49 weeks of 52" - звучит довольно
+ *  смешно, сезон уже сыгран. Мне кажется надо во-первых заменить на "обсудим в межсезонье", а
+ *  во-вторых убрать привязку к 52 неделям. Если Тренера меняли в первой половине сезона, тогда это
+ *  актуально, если во второй - уже можно готовить "мало времени прошло" или вроде того и сдвигать
+ *  эту планку дальше по году, может у нас сейчас так - надо проверить.»
+ *
+ *  ⚠ IT DID NOT ALREADY WORK THAT WAY, and he asked to be told before anything was built. The old
+ *  gate was `weeksTogether >= COACH_EDGE_REVEAL_WEEKS`: a ROLLING 52-week bar off `coachSinceWeek`
+ *  and nothing else - no season, no calendar, no hire month anywhere in the function. A coach taken
+ *  on in week 2 of a season and one taken on in week 40 were treated identically, and the card he
+ *  photographed printed "49 weeks of 52" in an off-season with that season already played, counting
+ *  down to a Tuesday three weeks into the NEXT year.
+ *
+ *  THE BAR IS THE OFF-SEASON NOW, because the off-season is when the question is answerable at all:
+ *  a season of results is in, and nothing further is learned until the next one starts. This returns
+ *  the FIRST off-season week (`isOffSeasonWeek` – the last `OFF_SEASON_WEEKS` of a season year) of
+ *  the season he has been present for, and "present for" is the owner's own split: hired in the
+ *  first half of a season, that season counts; hired in the second, it does not, and the bar moves a
+ *  year down the calendar.
+ *
+ *  ⚠ THE ANTI-SHOPPING RULE SURVIVES THE MOVE, AND IN THE SECOND HALF IT GETS STRICTER. §4 exists so
+ *  the market cannot be read by hire-look-fire, and the price of one read used to be a flat 52
+ *  weeks; it is now 24 at the cheapest (hired at season-week 25, revealed at 49) and 75 at the
+ *  dearest (hired at season-week 26). What keeps that honest is that the price is no longer
+ *  something the player can pay whenever they like: the reveal is pinned to a week of the CALENDAR,
+ *  so a hire timed one week late costs a whole extra year – and what it buys is still a THIRD of a
+ *  corridor and never a number (§7).
+ *
+ *  Pure integer arithmetic on the absolute week. Zero draws, nothing persisted. */
+export function coachRevealWeek(sinceWeek: number): number {
+  const start = seasonStartWeek(Math.max(0, sinceWeek))
+  // His split, in one expression: the first half of a season is a season he was there for.
+  const inSecondHalf = Math.max(0, sinceWeek) - start >= COACH_EDGE_REVEAL_WEEKS / 2
+  return start + (inSecondHalf ? WEEKS_PER_YEAR : 0) + (WEEKS_PER_YEAR - OFF_SEASON_WEEKS)
+}
 
 /** WHERE HE FELL, SAID IN A FAMILY'S OWN WORDS – the three halves of the plaque's second clause
  *  (docs/specs/coach-match-edge.md §7).
@@ -350,18 +451,40 @@ const PLACEMENT_PHRASE: Record<CoachEdgePlacement, string> = {
  *  this screen could not back. */
 export function coachPlaqueLine(view: {
   placement: CoachEdgePlacement | null
-  weeksTogether: number
-  revealAfterWeeks: number
+  /** the week she is in now */
+  week: number
+  /** the off-season week the verdict lands in – `coachRevealWeek(coachSinceWeek(world))` */
+  revealWeek: number
   seasonsTogether: number
 }): string {
-  // TOO EARLY TO TELL IS AN ANSWER, not a blank - §4a's shipped sentence, unchanged. "That band"
-  // points at the corridor printed two lines above, so it says exactly what is unknown; the counter
-  // says when it stops being unknown, in the engine's own numbers. Its LENGTH is measured, not taste:
-  // at 320px it wraps to two lines and so does every revealed sentence below, which is what keeps the
-  // card from jumping when the reveal lands (the browser numbers are in §4a and §7 of the spec).
+  // ⭐ ROUND-21 #7a/#7b – THE PRE-REVEAL SENTENCE NAMES THE OFF-SEASON AND COUNTS NOTHING.
+  //
+  // #7a: «надо во-первых заменить на "обсудим в межсезонье"». The verdict is a conversation the
+  // off-season has, so that is what both arms say; "too early to tell" said only that it was not
+  // now, which is why it read as absurd printed in an off-season with the season already played.
+  //
+  // #7b: «во-вторых убрать привязку к 52 неделям». No numeral survives on either arm. A rolling
+  // 52-week bar was the wrong clock for a question the SEASON answers, and printing its progress
+  // made the card argue with the calendar beside it.
+  //
+  // ⚠ WHICH ARM IS THE WHOLE OF #7c, AND IT IS READ OFF THE SEASON SHE IS IN rather than off the
+  // hire month directly. Same season as the reveal -> the coming off-season is the one, which is
+  // his «в первой половине сезона - тогда это актуально». A season short -> «мало времени прошло»
+  // and the bar is named a year out. Reading it this way means the sentence FOLLOWS the calendar:
+  // a coach hired in week 40 says "ask next off-season" all through that autumn and switches to the
+  // near arm by himself when the new season opens, which is the «сдвигать эту планку дальше по году»
+  // half. Deriving it from the hire month would have needed a second rule to do that.
+  //
+  // ⚠ AND «THAT BAND» IS STILL THE REFERENT ON BOTH (§7's pairing): the plaque asks where in the
+  // corridor printed two lines above, and the revealed sentence answers in the same words. The
+  // LENGTHS are measured, not taste - 52 and 51 characters, inside the 49-58 the nine revealed
+  // sentences occupy and under the 60-character two-line ceiling §4a/§7 measured in a real browser
+  // at 320px. So both wrap to exactly two lines at 320px and at 375px, and the card does not jump
+  // when the reveal lands.
   if (view.placement === null) {
-    const weeks = `${view.weeksTogether} week${view.weeksTogether === 1 ? '' : 's'}`
-    return `Too early to tell where in that band – ${weeks} of ${view.revealAfterWeeks}.`
+    return seasonIndexOf(view.week) === seasonIndexOf(view.revealWeek)
+      ? 'Where in that band – we will know in the off-season.'
+      : 'Where in that band – too soon, ask next off-season.'
   }
   const place = PLACEMENT_PHRASE[view.placement]
   // ONE SEASON IS ONE LOOK. The hedge is doing honest work here: a season is a small sample and the
@@ -402,20 +525,26 @@ export function coachEdgeView(world: WorldState): {
   revealed: boolean
   /** how long they have been together, in weeks */
   weeksTogether: number
-  /** ...and how long that has to be before the reveal appears */
-  revealAfterWeeks: number
+  /** ⭐ ROUND-21 #7c: ...and THE WEEK THE VERDICT LANDS IN – an off-season, absolute, not a duration.
+   *  Was `revealAfterWeeks: 52`, a rolling bar that ignored the calendar; see `coachRevealWeek`. */
+  revealWeek: number
   /** the same clock in whole seasons - what §8a bands the plaque's confidence on */
   seasonsTogether: number
   /** the plaque, written: place x confidence, one sentence */
   plaqueLine: string
 } {
   const tier = coachTierById(world.coachId)
-  const weeksTogether = Math.max(0, world.week - coachSinceWeek(world))
+  const since = coachSinceWeek(world)
+  const weeksTogether = Math.max(0, world.week - since)
   // ⚠ SEASONS ARE DERIVED HERE AND NOT IN THE COMPONENT, for the same reason the reveal gate is:
   // "how long has he been hers" is the engine's question, and the confidence bands are one more
   // reading of the answer. Whole seasons only - a partial one has not been observed yet.
   const seasonsTogether = Math.floor(weeksTogether / WEEKS_PER_YEAR)
-  const seasoned = world.coachId !== null && weeksTogether >= COACH_EDGE_REVEAL_WEEKS
+  // ⭐ ROUND-21 #7c – THE GATE IS A DATE NOW. It was `weeksTogether >= COACH_EDGE_REVEAL_WEEKS`, and
+  // the copy above may only promise an off-season if the reveal really arrives in one: a sentence
+  // this screen could not back is the failure mode the whole plaque family is written against.
+  const revealWeek = coachRevealWeek(since)
+  const seasoned = world.coachId !== null && world.week >= revealWeek
   const placement = seasoned ? coachEdgePlacement(world.seed, world.coachId) : null
   // ⚠ `revealed` IS "THERE IS A PLACE TO NAME", not "the clock is up" - so a degenerate corridor
   // (a zeroed bench table, an id no roster knows) leaves the card saying it is too early rather than
@@ -427,9 +556,9 @@ export function coachEdgeView(world: WorldState): {
     placement,
     revealed,
     weeksTogether,
-    revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS,
+    revealWeek,
     seasonsTogether,
-    plaqueLine: coachPlaqueLine({ placement, weeksTogether, revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS, seasonsTogether }),
+    plaqueLine: coachPlaqueLine({ placement, week: world.week, revealWeek, seasonsTogether }),
   }
 }
 
