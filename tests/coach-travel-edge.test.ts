@@ -9,6 +9,8 @@ import {
 } from '../src/engine/coach'
 import { coachMatchEdge, kidMatchPlayerFor, COACH_EDGE_POINTS_PER_PP } from '../src/engine/world/player'
 import { coachEdgeView, coachTravelsWithHer, createWorld, hireCoach } from '../src/engine/world'
+import { coachTravelFareFor } from '../src/engine/world/sponsors'
+import { TIERS } from '../src/engine/season/calendar'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 
@@ -194,9 +196,14 @@ describe('percent becomes tennis – twice, at the same seam', () => {
     const self = createWorld('compose-travel', DEFAULT_PROFILE)
     self.coachId = null
 
-    const a = kidMatchPlayerFor(travels, 'hard')
-    const b = kidMatchPlayerFor(stays, 'hard')
-    const c = kidMatchPlayerFor(self, 'hard')
+    // ⚠ RE-AIMED 15.08: the third argument is «is he at THIS court», not the standing stance. The
+    // owner's ruling – «поездки С тренером открываются на w серии с призами» – means the helping
+    // follows the FARE, so `world.coachOnEventWeeks` alone no longer buys it. Reading it off the
+    // stance is exactly what gave a junior event and a home practice friendly the doubled edge for
+    // free; `travels` still carries the stance, and the flag is what says he came.
+    const a = kidMatchPlayerFor(travels, 'hard', true)
+    const b = kidMatchPlayerFor(stays, 'hard', false)
+    const c = kidMatchPlayerFor(self, 'hard', true)
     const one = coachEdgePp(travels.seed, travels.coachId) * COACH_EDGE_POINTS_PER_PP
     expect(one).toBeGreaterThan(0)
     for (const k of WINGS) {
@@ -298,5 +305,58 @@ describe('the byte-identity of a career that does not travel', () => {
     // nothing. (The fare moves with the switch too, which is the point of the switch - what is
     // isolated to the edge alone is asserted arithmetically further up this file.)
     expect(careerHash(5, 0, { coachOnEventWeeks: true })).not.toBe(FROZEN.middleGrinder)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// ⚠⚠ THE HELPING FOLLOWS THE FARE – the owner's ruling, 15.08, and the two places it was leaking.
+//
+// «Надбавка — везде, включая юниорские турниры» was my reading of the shipped code, and he refused
+// it: «я такого не говорил. Еще раз: поездки С тренером открываются на w серии с призами.» The
+// helping had been reading `world.coachOnEventWeeks` – the standing STANCE – so it applied at two
+// weeks nobody ever sent him to:
+//
+//   * a JUNIOR event, where `coachTravelFareFor` charges nothing because the rung pays nothing, so
+//     the family got the doubled edge for free at exactly the rungs his own 30.07 argument excluded;
+//   * a HOME PRACTICE FRIENDLY, which is not a trip at all.
+//
+// The fix is that the caller answers "is he at THIS court", and the one source of truth is the fare
+// – it already carries the stance, the "somebody to send" clause and the W-series gate together.
+// ---------------------------------------------------------------------------
+describe('round-21 – the travel helping is charged where the fare is, and nowhere else', () => {
+  it('a W-series trip doubles him; a junior trip does not, on the SAME career with the switch ON', () => {
+    const world = createWorld('helping-follows-fare', DEFAULT_PROFILE)
+    world.coachOnEventWeeks = true
+    expect(world.coachId, 'the fixture must actually employ somebody').not.toBeNull()
+
+    const paying = world.season.find((e) => TIERS[e.tier].prizeCents !== undefined && e.travelCostCents > 0)
+    const junior = world.season.find((e) => TIERS[e.tier].prizeCents === undefined)
+    expect(paying, 'the calendar reaches a rung that pays').toBeTruthy()
+    expect(junior, 'the calendar has a junior rung').toBeTruthy()
+
+    // The engine's own answer at each event – the same expression world.ts and the preview use.
+    const atPaying = kidMatchPlayerFor(world, 'hard', coachTravelFareFor(world, paying!) > 0)
+    const atJunior = kidMatchPlayerFor(world, 'hard', coachTravelFareFor(world, junior!) > 0)
+    const alone = kidMatchPlayerFor({ ...world, coachId: null }, 'hard', true)
+
+    const one = coachEdgePp(world.seed, world.coachId) * COACH_EDGE_POINTS_PER_PP
+    expect(one).toBeGreaterThan(0)
+    for (const k of WINGS) {
+      expect(atPaying[k] - alone[k], `${k}: he came, so he counts twice`).toBeCloseTo(2 * one, 10)
+      expect(atJunior[k] - alone[k], `${k}: nobody paid a fare, so he counts once`).toBeCloseTo(one, 10)
+    }
+  })
+
+  it('and a caller with no event – the home practice friendly – gets no helping at all', () => {
+    // `planner.ts` builds her for a practice match and passes no trip, which is the whole point: a
+    // friendly at her own club cannot be a journey he came on. Omitted means false by construction.
+    const world = createWorld('helping-friendly', DEFAULT_PROFILE)
+    world.coachOnEventWeeks = true
+    const atHome = kidMatchPlayerFor(world, 'hard')
+    const onTour = kidMatchPlayerFor(world, 'hard', true)
+    const one = coachEdgePp(world.seed, world.coachId) * COACH_EDGE_POINTS_PER_PP
+    for (const k of WINGS) {
+      expect(onTour[k] - atHome[k], `${k}: the trip is worth exactly one more helping`).toBeCloseTo(one, 10)
+    }
   })
 })

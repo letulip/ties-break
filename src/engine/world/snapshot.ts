@@ -73,7 +73,7 @@ import { kitDealView, kitLineViews } from './kit'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
-import { travelCostFor } from './sponsors'
+import { coachTravelFareFor, travelCostFor } from './sponsors'
 import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
@@ -250,10 +250,13 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
                 wtaWorldFor(e),
                 e,
                 wtaCtx!.ranking,
-                kidMatchPlayerFor(world, e.surface),
+                // ⭐ THE PREVIEW MUST PROMISE WHAT THE WEEK WILL DELIVER (owner, 15.08). The card is
+                // read BEFORE she enters, and the helping now follows the fare, so a preview built
+                // on the standing stance would show a junior card an edge the week never applies.
+                kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0),
                 wtaExclusionFor(e),
               )
-            : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
+            : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0)),
         // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
         // entering will actually cost, and it is the same number chargeTravel will take.
         travelCostCents: travelCostFor(world, e),

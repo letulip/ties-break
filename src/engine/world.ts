@@ -1453,7 +1453,11 @@ function computeShadowTournament(
   // The SCALED player is both what runs the bracket and what is snapshotted into `players`, so
   // revealed records and replays stay byte-identical no matter how her condition moves afterwards –
   // and the run's every round shares this ONE build. Fractional skills are fine for the match engine.
-  const kid = kidMatchPlayerFor(world, event.surface)
+  // ⭐ ...AND WHETHER HIS COACH IS AT THIS ONE, which is the FARE's own question and therefore the
+  // fare's own answer: `coachTravelFareFor` carries the stance, the "somebody to send" clause and
+  // the W-series gate together, so the helping cannot drift away from the money (owner, 15.08:
+  // «поездки С тренером открываются на w серии с призами»).
+  const kid = kidMatchPlayerFor(world, event.surface, coachTravelFareFor(world, event) > 0)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
   // ⚠ HER W-TIER DRAWS ARE MADE OF THE MERGED FIELD (living-field phase W, 01.08). For a W-track
   // event the candidate universe becomes LIVE cohort ∪ field pros and the positions come from the

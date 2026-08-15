@@ -190,6 +190,22 @@ export function kidMatchPlayerFor(
     coachOnEventWeeks?: boolean
   },
   surface: Surface,
+  /** ⭐⭐ IS HE ON **THIS** TRIP – the owner's ruling, 15.08: «поездки С тренером открываются на w
+   *  серии с призами», and «я такого не говорил» to the reading that the helping applies everywhere.
+   *
+   *  ⚠ WHY IT IS AN ARGUMENT AND NOT `world.coachOnEventWeeks`. That field is the STANDING STANCE –
+   *  "send him when there is somewhere worth sending him" – and reading it here gave the doubled
+   *  edge to two weeks it was never meant for: a JUNIOR event, where `coachTravelFareFor` charges
+   *  nothing because the rung pays nothing, and a HOME PRACTICE FRIENDLY, which is not a trip at
+   *  all. Free help in both. The stance is a policy; whether he is standing at this particular
+   *  court is a fact about the week, and only the caller knows it.
+   *
+   *  ⚠ AND THE ONE SOURCE OF TRUTH IS THE FARE. `coachTravelFareFor(world, event) > 0` already
+   *  answers "did he come to this one" – it carries the stance, the "somebody to send" clause and
+   *  the W-series gate together – so the helping follows the money by construction and the two can
+   *  never disagree. Omitted ⇒ false, which is the safe direction and keeps every pure caller
+   *  byte-identical. */
+  onThisTrip?: boolean,
 ): MatchPlayer {
   const raw = kidMatchPlayer(world)
   const factor = conditionMatchFactor(world.condition)
@@ -240,7 +256,9 @@ export function kidMatchPlayerFor(
   // still the same zero for a girl with nobody. The doubling happens inside `coachEdgePp`, on the man
   // rather than on the composition, so nothing about the seam above changes and the early return
   // below is still the whole of the self-coached path.
-  const edge = coachMatchEdge(world)
+  // ⭐ THE STANCE IS NOT THE WEEK – see `onThisTrip` on the signature. `world.coachOnEventWeeks` is
+  // the policy; whether he is standing at THIS court is a fact only the caller has.
+  const edge = coachMatchEdge({ ...world, coachOnEventWeeks: onThisTrip ?? false })
   if (edge === 0) return composed
   return {
     ...composed,
