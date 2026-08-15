@@ -500,6 +500,69 @@ export function tierOutgrown(world: WorldState, tier: TierId): boolean {
   return tierFloorOpen(world, above)
 }
 
+/** THE PLAY DOWN RULES (P1 step 2, docs/specs/play-down-2026-08.md; the owner, 15.08: «да, делаем
+ *  тоже»). The 2026 WTT Regulations' own ceiling on the bottom of the ladder, quoted verbatim in
+ *  docs/research/ranking-points-by-tier.md §4c C:
+ *
+ *    > *"Players with a WTA ranking of 1-50 in Singles … cannot Enter, accept a Wild Card and/or
+ *    >  compete"* – in the ITF World Tennis Tour's events;
+ *
+ *  and its second limb, docs/research/real-ladder-pace.md §4: **a player ranked WTA #1-150 may not
+ *  enter W15 or W35 at all**, which that document names *"the real `tierOutgrown` … a hard rank cut
+ *  at #150, not a sliding window"*.
+ *
+ *  ⚠ A PLAIN MUTABLE OBJECT for the A/B idiom, like every other table in this wave. `0` on either
+ *  cut is a meaningful OFF: nobody is barred.
+ *
+ *  ⚠ SCOPE IS THE W SERIES, NOT THE W TABLE – `isWSeriesTier`. A WTA 125 is a WTA event, and the
+ *  rule is about the ITF's. Barring a top-50 from the rungs she is top-50 BECAUSE of would be the
+ *  opposite of the rule. */
+export const PLAY_DOWN = {
+  /** a WTA ranking at or inside this is barred from EVERY W-series event */
+  fromAllW: 50,
+  /** ...and at or inside this, from the two bottom rungs (`lowW`) */
+  fromLowW: 150,
+  /** which rungs "the bottom" means. The two the regulation names. */
+  lowW: ['w15', 'w35'] as readonly TierId[],
+}
+
+/** IS SHE TOO STRONG FOR THIS RUNG? A rank READ, and the difference between a read and a latch is
+ *  the whole of what makes it safe.
+ *
+ *  ⚠⚠ THE OWNER NAMED THE PROPERTY HIMSELF (15.08): «когда она вывалится из топ-50 и топ-150 оно
+ *  само откроется обратно». It re-reads `kidRankWta` every time it is asked and persists NOTHING, so
+ *  the week she drops back the rung is hers again. `tests/play-down.test.ts` asserts both directions
+ *  in one case – cross the line and lose the rung, fall back and get it back – and that the world's
+ *  serialisation is byte-identical across the round trip, which is "nothing persists" made mechanical
+ *  rather than promised.
+ *
+ *  ⚠ IT IS THE SAME SHAPE AS `tierOutgrown` ON THE W RUNGS AND THE OPPOSITE OF IT ON THE JUNIOR ONES,
+ *  and the distinction is worth stating because it is easy to get backwards. `tierOutgrown`'s own
+ *  note calls it "a ROLLING TEST, NOT A LATCH", and on a W rung it is: it asks `tierFloorOpen` of the
+ *  rung three above, whose W arm is a live rank read. On a JUNIOR rung it is not, because there the
+ *  rung three above is W15 and W15's door is `onRampOpen` – a latch, set once and never cleared. So
+ *  "the window slides back down with her" is true of the professional ladder and false of the junior
+ *  one, by construction. This rule is a live read everywhere, on every rung it touches.
+ *
+ *  ⚠ AND "UNRANKED IS NOT A RANK" ONE LAST TIME. A girl with no W points holds no W ranking, so she
+ *  cannot be barred by one – the sentinel would otherwise read a missing cache as a number. */
+export function playDownBars(world: WorldState, tier: TierId): boolean {
+  if (!isWSeriesTier(tier)) return false
+  if (kidPoints(world, 'wta') <= 0) return false
+  const rank = world.kidRankWta ?? tableSize(world, 'wta')
+  if (PLAY_DOWN.fromAllW > 0 && rank <= PLAY_DOWN.fromAllW) return true
+  return PLAY_DOWN.fromLowW > 0 && PLAY_DOWN.lowW.includes(tier) && rank <= PLAY_DOWN.fromLowW
+}
+
+/** The refusal's own words, shared by the calendar's verdict and the turnstile so they cannot drift.
+ *  It says what she may play INSTEAD, which is the promise every refusal in this engine carries
+ *  («игрок должен иметь возможность играть… чтобы не скучал»), and it says the rule is about being
+ *  too good – there is nothing here to apologise for. */
+export function playDownRefusalDetail(tier: TierId, rank: number): string {
+  const cut = PLAY_DOWN.lowW.includes(tier) && rank > PLAY_DOWN.fromAllW ? PLAY_DOWN.fromLowW : PLAY_DOWN.fromAllW
+  return `${TIERS[tier].label} is closed to the world's top ${cut} – she is #${rank}. The bigger draws are hers now.`
+}
+
 /** MAY A JUNIOR STAND ON THIS RUNG AT ALL – the Junior Accelerator, asked of the kid (P1,
  *  docs/specs/junior-access-2026-08.md; the rulebook and the modelling choice are documented at
  *  length in world/entryCaps.ts, which owns the table).
@@ -540,6 +603,11 @@ export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
     return kidPoints(world, 'itf') > 0 && world.kidRank <= accepts
   }
   if (def.track === 'wta') {
+    // ⚠⚠ THE PLAY DOWN RULES COME FIRST, AND ABOVE THE ON-RAMP BRANCH DELIBERATELY (P1 step 2). W15
+    // returns out of the `accepts === undefined` arm below, so a check placed after it would never be
+    // asked about the one rung the #150 limb is most about. It is the only refusal on this ladder
+    // that fires because she is too GOOD, and it self-reverses – see `playDownBars`.
+    if (playDownBars(world, tier)) return false
     // Same shape one table up, and the latch matters MORE here: the J rungs shut at eighteen on age,
     // so from her birthday she can never earn another junior point - a W15 on-ramp read against a
     // rolling junior window would close on its own a year later with nothing she could do about it.
@@ -705,7 +773,19 @@ export function outgrewTier(tier: TierId, points: number): boolean {
  *  and a key the feed's per-week pick sorts on. */
 export function hasOutgrown(world: WorldState, tier: TierId): boolean {
   const bandTrack: LadderTrack = TIERS[tier].track === 'wta' ? 'itf' : 'domestic'
-  return outgrewTier(tier, kidPoints(world, bandTrack)) || tierOutgrown(world, tier)
+  // ⚠⚠ THREE CEILINGS SINCE P1 STEP 2, AND THE THIRD ONE IS THE SPORT SAYING IT OUT LOUD. The Play
+  // Down rule bars her from a rung FOR BEING TOO GOOD FOR IT – that is the whole content of "a WTA
+  // top-50 may not enter a W event" – so a rung it closes is a rung she has outgrown by the plainest
+  // possible definition, and this function is where "she is past this rung" is allowed to have one
+  // answer (see the note above, and world.ts's own rule that the ceilings must have one consequence).
+  //
+  // ⚠ IT IS NOT A CONVENIENCE, IT IS A CORRECTION, and tests/ladder-floor.test.ts is what found it.
+  // Without this line the sliding-window ceiling reads a top-50 player as NOT having outgrown W15:
+  // `tierOutgrown('w15')` asks whether W75 is open to her, the Play Down rule has just shut W75 as
+  // well, and the honest-looking answer comes out backwards – the world number forty is told she has
+  // not passed the bottom rung of the ladder. The coach's arithmetic argument went quiet on exactly
+  // that career. docs/specs/play-down-2026-08.md §2b.
+  return outgrewTier(tier, kidPoints(world, bandTrack)) || tierOutgrown(world, tier) || playDownBars(world, tier)
 }
 
 /** CAN THIS RUNG STILL MOVE HER BOOK – or is even winning it worth nothing to her ranking?

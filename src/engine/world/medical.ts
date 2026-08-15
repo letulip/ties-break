@@ -35,6 +35,8 @@ import {
   juniorAccessOpen,
   kidPoints,
   onRampOpen,
+  playDownBars,
+  playDownRefusalDetail,
   rankIn,
   tableSize,
   yearEndJuniorRank,
@@ -472,6 +474,18 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
     // cannot own a ranking in a table she has never played in and a rank gate there would be a
     // closed loop; so J30 reads her DOMESTIC points and W15 reads her ITF JUNIOR points. Above the
     // on-ramp the acceptance list takes over, in the rung's own table's currency.
+    // ⚠⚠ THE PLAY DOWN RULES, ASKED FIRST AND AT BOTH SURFACES (P1 step 2, docs/specs/
+    // play-down-2026-08.md). It is the SAME predicate `tierFloorOpen` reads, in the same position –
+    // above the on-ramp branch, because W15 returns out of that branch and the #150 limb is mostly
+    // about W15. Placing it here rather than in `availabilityStatus` is the acceptance cut's own
+    // precedence: this is a LADDER fact about her standing, not a fact about her week.
+    if (playDownBars(world, event.tier)) {
+      return {
+        level: 'blocked',
+        reason: 'locked',
+        detail: playDownRefusalDetail(event.tier, rankIn(world, 'wta')),
+      }
+    }
     const onRamp: LadderTrack = tier.track === 'itf' ? 'domestic' : 'itf'
     // ⚠ THE CEILING USED TO REFUSE HERE, AND SINCE 06.08 IT DOES NOT (docs/specs/
     // ladder-floor-2026-08.md). W2-WINDOW gave every rung both bounds and this branch was the ITF/W

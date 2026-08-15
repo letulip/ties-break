@@ -10,7 +10,9 @@
 //
 // MEASUREMENT ONLY. Nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, mean, median } from './econ-bench'
-import { kidPoints, kidAgeExact, rankingFor, tableSize } from '../src/engine/world'
+import { kidPoints, kidAgeExact, tableSize } from '../src/engine/world'
+// `rankingFor` is not on world.ts's re-export list, so it is imported from the module that owns it.
+import { rankingFor } from '../src/engine/world/ladder'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { KID_ID } from '../src/engine/world/constants'
 
