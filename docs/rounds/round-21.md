@@ -184,7 +184,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     needs a bench run and a spec, which is its own wave. **The question for him: should the whole
     ITF band leave school together at week 242 (his premise – but that puts the December girls out
     at 17.67, before eighteen), or does the real September cut-off stand as it is today?**
-- [ ] **7. «У тренера на карточке "Too early to tell 49 weeks of 52" – звучит довольно смешно, сезон
+- [x] **7. «У тренера на карточке "Too early to tell 49 weeks of 52" – звучит довольно смешно, сезон
   уже сыгран.»** – BUILD, and it is three asks in one sentence:
   - 7a: the copy at the top of the window should be «обсудим в межсезонье», not "too early to tell".
   - 7b: drop the "of 52" framing – a rolling 52-week bar is the wrong clock for a question the
@@ -192,14 +192,106 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   - 7c: make it depend on WHEN the coach was hired. First half of the season -> "too early" is fair;
     second half -> it should already be saying "not long enough yet" and moving its own bar down the
     year. **He asks whether it already works that way – check before building.**
-- [ ] **8. «В 19 не было варианта выбрать колледж, только про или завязать»** – BUILD. Task #102 has
+  - **7c ANSWERED FIRST, AND THE ANSWER IS NO.** Checked before anything was touched. The gate was
+    `weeksTogether >= COACH_EDGE_REVEAL_WEEKS` in `coachEdgeView` – a rolling 52-week bar off
+    `coachSinceWeek` and nothing else. No season, no calendar and no hire month appeared anywhere in
+    `coachEdgeView` or `coachPlaqueLine`; a coach taken on in week 2 and one taken on in week 40 were
+    treated identically, and the sentence printed the bar's progress, which is how his card read
+    "49 weeks of 52" in an off-season with that season already played.
+  - **7c SHIPPED.** `coachRevealWeek(sinceWeek)` returns the FIRST OFF-SEASON WEEK of the season he
+    was present for, on his own split: hired in a season's first half, that season counts; hired in
+    the second, it does not and the bar moves a year down. The card picks its arm off the season she
+    is in NOW, so a week-40 hire shows the far arm all autumn and switches to the near one by itself
+    when the new season opens – «сдвигать эту планку дальше по году» with no second rule. One read of
+    the market now costs 24 weeks at the cheapest and 75 at the dearest, against a flat 52; §4's
+    anti-shopping rule survives because the price is a CALENDAR week the player cannot choose.
+  - **7a/7b SHIPPED.** Two sentences replace one, and neither counts anything:
+    `Where in that band – we will know in the off-season.` /
+    `Where in that band – too soon, ask next off-season.` Both keep §7's «that band» referent, both
+    are 51-52 characters (inside the 49-58 the nine revealed sentences occupy), so the card still
+    wraps to two lines at 320px and does not jump when the reveal lands.
+  - Evidence: `tests/component/round21-coach.test.ts` §7a/#7b and §7c – MOUNTED, real careers through
+    the real commands, asserting the rendered `.cm-plaque` text and that the reveal really arrives in
+    an `isOffSeasonWeek`. Mutation-verified: the old sentence restored, the two arms swapped, and
+    `coachRevealWeek` returned to `sinceWeek + 52` each redden a different, named subset (ledger in
+    the test's header). Also `tests/coach-edge.test.ts` unit pins. Spec: `docs/specs/coach-match-edge.md` §9.
+  - ⚠ `Snapshot.coachEdge.revealAfterWeeks` is now `revealWeek` (an absolute off-season week).
+- [x] **8. «В 19 не было варианта выбрать колледж, только про или завязать»** – BUILD. Task #102 has
   the design (college as a second act, not a coda) and nothing was built. At the fork she is offered
   two doors where the spec says three.
+  → ✅ **BUILT – and the finding decided the fix. IT IS THE ENGINE, NOT THE DIALOG.**
+  - **THE MEASUREMENT, taken before anything was written.** `tools/econ-bench.ts`'s own **`player`**
+    policy – the model of a reasonable parent, fitted to his own envelope – over 9 presets × 3 seeds:
+    **26 of 26 careers that reached the fork had `collegeStillOpen === false`**, and `toSnapshot` put
+    that on `snapshot.fork.collegeOpen` faithfully every single time. Under the **`grinder`** policy,
+    which never plays the paid rungs, it was **open 13 of 13**. `ForkDialog` draws the third arm
+    exactly when the flag is true (its own mounted test has pinned that since round-17 #6). So the
+    door was genuinely shut, the card was right to show two answers, and the bug is that **nothing on
+    it explained why**.
+  - **WHICH RUNG SHUT IT.** W75, essentially always, with a best finish of **0–3 of 5** – she reached
+    the quarter-finals or won the thing. This is not the wooden-spoon false positive the 13.08 ruling
+    («чини дверь по набранному результату, а не по единице») was about; that fix is working. She
+    really has taken professional prize money at W75+ before nineteen.
+  - **THE FIX IS A SENTENCE, NOT A BUTTON.** Round-17 chose *absent* over *disabled* and that stays
+    right – a greyed answer reads as one she is refusing. What was wrong is that *absent* and
+    *never existed* looked identical. The card now carries one line above the answers when the door
+    is shut: «There are two answers here and not three: the college place closed the first time she
+    took a real result at W75 or above. Prize money at that level spends her college eligibility, and
+    nothing gives it back.» The rung is read from `ENDINGS.collegeClosedFromTier` through
+    `TIER_SHORT`, never typed into the markup.
+  - **⚠ A DECISION FOR HIM, NOT TAKEN HERE.** 26 of 26 means the third door is not *sometimes*
+    missing – on any career that plays the tour at all it is **never** offered. If college is meant to
+    be a real second act (task #102) rather than a theoretical one, `collegeClosedFromTier` has to
+    move up the ladder or stop being a hard precondition. That is a balance change with a measured
+    argument behind the current value, so it is material for #102 and not something this item
+    decided. Task #102's second act itself remains unbuilt, as scoped.
+  - **Evidence** – `tests/component/round21-dialogs.test.ts`: the third arm IS rendered when the
+    engine says open (and no explanation is drawn then); the explanation IS rendered when it says
+    shut, with the rung from `ENDINGS`; still two `.fork-answer`s, still no primary, and the note is a
+    `<p>` rather than a fourth button; a negative pin that no rung name is typed into the template.
+    Mutation-verified. Plus the 375×667 fit assertion below, since the card was lengthened.
+  - **Files** – `src/components/ForkDialog.vue` only. The engine was not touched.
 - [ ] **9. «Попап с развилкой появился сразу после финального матча чемпионата перекрыв интерфейс
   таблицы и завершения. Нам надо как-то всё-таки разобраться с порядком появления попапов, чтобы они
   не конфликтовали с происходящим на экране... кроме травмы, которая как раз должна появляться в
   моменте.»** – BUILD, and the general rule is the deliverable rather than the one collision: a
   blocking popup must wait for the screen to be idle, with the injury popup the stated exception.
+  → ✅ **BUILT. One rule, one place, and every popup inherits it – the injury is the one exception.**
+  - **WHY THE FORK LANDED ON THE FINALE, exactly.** `finalizeTournament` calls `resolveEndings`
+    **while `pendingTournament` is still set** – `p.finished = true` is the very next line, and only
+    `closeTournament` clears the reveal. So the fork is raised, correctly, with the finale card, the
+    draw and the points still on screen, and it painted straight over them. Not a race: a documented
+    ordering that had never been written down.
+  - **WHAT WAS MISSING.** `composables/blockingOverlay.ts` answered *which question is next*. Nothing
+    anywhere answered *may anything land at all*. Each popup had worked that out privately – the
+    injury report and the tour briefing had each grown their own `!snapshot.pending`; the fork, the
+    knock, the birthday and the retirement offer never had; and nothing recorded that as a decision.
+  - **THE RULE.** `screenBusy(snapshot, liveMatch)` – a tournament reveal or a live practice match is
+    the screen mid-sentence. `popupMayShow(id, …)` – every popup waits for idle unless it is in
+    `INTERRUPTS`, which holds exactly two: **`injury`** (his own exception: «кроме травмы, которая как
+    раз должна появляться в моменте») and **`ending`**, which is not a dialog at all but the thing
+    that REPLACES the shell, reveal included. `visibleOverlay` is precedence and the wait together;
+    `blockingOverlay` still answers "what is pending", and the two are deliberately not the same –
+    the reports below the queue must wait for a question that is merely HELD as well.
+  - **⚠ IT REVERSES ONE ROUND-16 LINE, ON HIS INSTRUCTION.** The injury gate used to carry
+    `!game.snapshot.pending`, whose note read «the report waits for the reveal to be resolved». That
+    held the report behind the very beat 61% of this game's injuries arrive on. The data is ready
+    when it fires either way: `retirementInjury` opens the layoff **inside** `finalizeTournament`,
+    ahead of `resolveEndings`.
+  - **⚠ A WAIT IS NOT A DEADLOCK, and that is checked rather than argued.** A held question is held
+    behind a reveal, and a reveal is the one state in the game with a free exit: `closeTournament` is
+    deliberately not `guardNotEnded`-guarded, and the sticky bar renders its resume button on every
+    tab while `pending` is set. The test walks it: close the tournament and the fork is the next
+    thing on screen.
+  - **Evidence** – `tests/component/round21-popup-order.test.ts` mounts the **real shell** on a
+    **real finished reveal** (real entry, real bracket, `skipTournament`, then the fork the engine
+    would have raised there): the fork is **not** in the DOM while `TournamentFlow` is; it appears the
+    moment the tournament closes; the knock waits by the same rule; and the **injury DOES** mount over
+    the same reveal. `tests/blocking-overlay.test.ts` adds six pure-function cases, including a total
+    over every popup id so a new one cannot be added without answering this question. All four shell
+    assertions mutation-verified by editing `INTERRUPTS`.
+  - **Files** – `src/composables/blockingOverlay.ts` (the rule), `src/App.vue` (five gates rewired to
+    it; nothing about WHEN a popup may land is decided in that file any more).
 - [x] **10. «В разделе bills возле выбранной позиции и "# good weeks" написать "(3 left)" – сколько
   осталось»** – BUILD. A commitment shows how many good weeks it bought and not how many are left.
   → ✅ **BUILT. The rung she is ON now carries "(N left)" beside the "N good weeks" it buys.**
@@ -225,10 +317,59 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     that keeps the new words and puts the old bug back – turns 3 red, and deleting the span turns the
     same 3 red.
   - Commit `bef882c`.
-- [ ] **11. «Выбранного тренера давай в жёлтую рамку возьмём и чтобы портрет его подсвечивался
+- [x] **11. «Выбранного тренера давай в жёлтую рамку возьмём и чтобы портрет его подсвечивался
   всегда, независимо от дохода семьи.»** – BUILD. Two things: an accent frame on the CHOSEN coach,
   and his portrait lit whether or not the family can currently afford his tier.
-- [ ] **12. «у нас есть ещё %, надо их тоже учитывать и суммировать, а то на счету 1млн, а элитного
+  - **IT WAS THE CASCADE, NOT THE COLOUR.** `.cm-row.current` has carried `border-color: var(--accent)`
+    since screen T shipped – and `.cm-row.blocked` is declared directly under it at the SAME
+    specificity, so a row that was both (the coach she employs, on a rung that no longer fits the
+    week's income) lost the frame to source order: dashed `rgba(255,255,255,.09)` over a darker card,
+    with `.cm-row.blocked .cm-art { opacity: 0.45 }` greying the portrait and the name and price
+    beside it. His own save is exactly that state – an Elite coach at $485.95/wk against a read of
+    $439.73 – so the frame he is asking for was being drawn and then painted over.
+  - **SHIPPED, two locks.** (a) the template no longer puts `blocked` on a current row at all:
+    `blocked: !r.current && (…)`. "Blocked" paints a refusal, which is true of a coach she MIGHT hire
+    and false of the one she is paying – and no information is lost, because a current row's action
+    word has always been "Current" and never the over-budget figure. (b) `.cm-row.current.blocked`
+    (four classes against three, so it wins in either source order) restores the solid accent border,
+    the portrait at full opacity and the name/price colours, so re-introducing the class somewhere
+    else can never un-frame her coach again. The frame also gained a 1px accent RING
+    (`box-shadow`, not a second pixel of border – a border would move the row's padding box and with
+    it the 12.00px portrait clearance measured in `coach-edge-card.test.ts` §4).
+  - Evidence: `tests/component/round21-coach.test.ts` §11 – MOUNTED on an Elite career whose own coach
+    is over budget, reading `border-color`, `box-shadow` and `.cm-art` opacity through the REAL
+    cascade (`css: true`), with unaffordable strangers on the same list as the control that proves
+    the dimming rule is live. Mutation-verified: the template revert reddens the class + portrait
+    tests alone, deleting the CSS lock reddens the cascade test alone, and both together – the
+    shipped defect exactly – redden all four.
+- [x] **12. «у нас есть ещё %, надо их тоже учитывать и суммировать, а то на счету 1млн, а элитного
   тренера какого-то нельзя брать.»** – BUILD or ANSWER, decide after reading the gate: the
   affordability check ignores income that is not the bank balance, so a millionaire is refused an
   elite coach. Find what the gate actually reads.
+  - **WHAT THE GATE READS, MEASURED FIRST.** `coachMarket()` cut `overBudgetCents` from
+    `parentIncomeForWeekCents(seed, background, week)` and NOTHING ELSE. Probed on a real career at
+    week 120 with his million banked: parents $482.94/wk, savings interest **$600.00/wk**, and the
+    test saw only the first – so all four Elite coaches printed "$33-176 over" while more than half
+    the family's weekly money was invisible to the thing refusing them. His «%» is
+    `ECONOMY.savings.apyWeekly`: `accrueSavingsInterest` credits `round(fundsCents × apyWeekly)` at
+    the top of EVERY tick, deterministically, zero RNG. **VERDICT: a bug in the denominator, not a
+    wording problem** – it is a wage the balance pays, and at a million it is larger than the
+    parents' own. (The Elite RANKING gate is not involved: `ECONOMY.coach.eliteGate.enabled` is
+    `false`, so `lockedPoints` is always null. And the row was never actually un-pressable – only
+    `current` and `lockedPoints` disable it – so the refusal he read was the dimming and the "$X
+    over" label, which is item 11's half of the same screen.)
+  - **SHIPPED.** `familyWeeklyIncomeCents(world)` = the parents' contribution + the savings interest
+    + a signed kit deal's retainer PRO-RATED over the year (`payRetainer` fires four times a year, so
+    counting it whole would make an Elite coach affordable on four weeks and refused on forty-eight).
+    Prize money, appearance fees and result bonuses are deliberately OUT: they are paid for a result,
+    and a weekly retainer underwritten by them is a family one bad draw from not paying. The RESERVE
+    stays out too – that ruling («a reserve pays for one week of anything») is untouched; what was
+    wrong was the week's income. At his million the cap is $1,074.23 and no Elite coach is over.
+  - **AND A LATENT BUG THE FIX WOULD HAVE EXPOSED:** the budget meter RECOVERED its cap from whichever
+    row was over budget, which returns 0 when none is – i.e. exactly his case, once the income is read
+    in full. `coachBilling` now carries `weeklyIncomeCents` and the screen draws that.
+  - Evidence: `tests/component/round21-coach.test.ts` §12 – a real world built and ticked, funds set
+    to $1M, the value read out of REAL state (recomputed from `ECONOMY` at the test, never restated
+    as a constant), plus the other direction on the same career: empty the account and the same
+    coaches go back over budget by exactly the parents' shortfall, which is what makes it a
+    measurement of the interest rather than of a widened threshold. Mutation-verified.
