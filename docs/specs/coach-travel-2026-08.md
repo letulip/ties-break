@@ -493,7 +493,8 @@ estimate was close: the settled flip rate needs ~532 non-tied pairs and the run 
 `5c3a6cc`, *before* the presence fare shipped; these are taken with the gated fare live in the control
 of every arm. Tennis barely moved (elite control: prize p50 $1.80M → $1.79M, 635.7 → 633.1 matches
 won) but **end funds p50 collapsed – elite $1,661,047 → $382,789, middle $1,060,175 → $94,849.** The
-gated fare bankrupts nobody (0/30 in both cells, which is what the gate was for) and it costs the
+gated fare bankrupts essentially nobody (0/30 in both cells here, and at the n=250 run of §7.7 still
+only **2/250** at middle·middle and **0/250** at wealthy·elite – which is what the gate was for) and it costs the
 family roughly a million dollars of what it retires on. That is a real and previously unstated price
 of a mechanic that is already merged.
 
