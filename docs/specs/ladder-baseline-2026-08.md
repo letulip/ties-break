@@ -362,7 +362,14 @@ They rewrote `src/engine/world/sponsors.ts` (+69 lines) and with it **what a tri
 The entry policy commits only when `fundsCents − (entryFee + travel) ≥ reserve`, so a changed fare
 moves marginal careers off the top rungs – which is precisely the shape of the difference: one fewer
 W75 entrant, three fewer W75 *winners*, three fewer closures, and the closure age falling 17.3 → 17.2.
-Nothing else moved: the seven that reach the fork with the door open are **the same seven**.
+
+⚠ **AND THE COUNT SURVIVED THE DRIFT WHILE THE CAREERS DID NOT, which is the more useful half of the
+audit.** *Seven* careers reach the fork with the door open on both trees. But the re-run and this
+baseline name the **same seven rows key for key** – `1:3 · 1:4 · 3:2 · 4:9 · 5:9 · 6:9 · 8:5` – and
+that set is **not** the preset mix the published §3a table lists (it names two *working · middle* and a
+*wealthy · high*, none of which keep it here). **A matching headline count is not evidence that the
+same thing was measured**, and only a per-career key can tell them apart – which is why the CSV dump
+carries `key` as its first column.
 
 ⚠ **AND THE LESSON IS THE ONE THIS PHASE EXISTS TO TEACH.** Two specs measured the same quantity four
 days apart and disagree by three careers because the tree moved underneath them. **The baseline was
