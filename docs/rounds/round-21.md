@@ -17,10 +17,66 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   recorded the consequence, and I relabelled the toggle to say why it will never open.
   **Asking a third time overrules that cancellation.** `setCoachOnEventWeeks` still has no caller
   anywhere in `src/`. This time it gets wired, and the toggle has to do something on his screen.
-- [ ] **3. ⚠ REOPENED. «И ещё раз: проверь пожалуйста что с комментариями текстовой трансляции на
+- [x] **3. ⚠ REOPENED. «И ещё раз: проверь пожалуйста что с комментариями текстовой трансляции на
   1000 и шлемах, кажется ничего не изменилось»** – MEASURE, then build. Task #109 was created for
   exactly this and never built, so "ничего не изменилось" is the correct observation. Read what a
   1000/Slam match actually emits against what a J30 emits, on the real commentary builder.
+  → ✅ **HE IS RIGHT, AND NOT "ALMOST" RIGHT: the two were IDENTICAL, byte for byte. Now built.**
+  - **THE MEASUREMENT FIRST** (`tools/commentary-rung-probe.ts`, 200 seeded matches over three
+    surfaces, every arm on the SAME corpus). BEFORE, and there is nothing to interpret in it:
+
+    | arm | beats/match | distinct phrasings | rows differing from a J30 first round |
+    |---|---|---|---|
+    | J30 first round | 16.07 | 483 | – |
+    | WTA 1000 first round | 16.07 | 483 | **0.0%** |
+    | WTA 1000 final | 16.07 | 483 | **0.0%** |
+    | Slam first round | 16.07 | 483 | **0.0%** |
+    | Slam final | 16.07 | 483 | **0.0%** |
+
+    Not "similar" – the same rows in the same order with the same words, because `buildCommentary`
+    took three arguments (`match, playerA, playerB`) and none of them was the tournament. A Grand
+    Slam final and a J30 first round were literally the same function call. **So the correct answer
+    to «кажется ничего не изменилось» is that nothing had changed, and nothing had been built.**
+  - **AFTER**, same corpus, same tool:
+
+    | arm | distinct phrasings | rows differing from J30 R1 |
+    |---|---|---|
+    | National final (storey 1) | 483 | 0.0% |
+    | J30 first round (storey 2) | 482 | – |
+    | W75 first round (storey 3) | 655 | 55.3% |
+    | WTA 1000 R64 (storey 4) | 759 | 60.5% |
+    | Slam final (storey 4) | **768** | **60.5%** |
+
+    Per beat family, J30 first round → Slam final: break 189 → 311, hold 117 → 170, set 92 → 150,
+    match 39 → 65, streak 8 → 22, games 6 → 13, tiebreak 2 → 8. ⚠ The one number that goes DOWN is
+    storey 2's aggregate (483 → 482): the stake clause lengthens the match beat, so one colour clause
+    now falls off the 120-character row budget. That is the trade `clausesUpTo` exists to make and it
+    is the escalation ladder's own rule (the top of a match gets SHORTER), recorded rather than hidden.
+  - **WHAT CHANGES BY RUNG, and all three are the research's ladder rather than a new opinion**
+    (`live-text-adult-tour.md` §2.7: escalation is entry length and vocabulary, never louder
+    adjectives; `commentary-lexicon.md` §5.3: «the lever is not adjectives, it is what gets mentioned
+    at all»). (a) **The phrase pools grow** – break 3 → 5 → 7, break-back 2 → 3 → 4, hold-under-
+    pressure 1 → 2 → 3, streak and game-run 1 → 2 → 3, and the added entries are Ferguson's other
+    sentence moulds (copula-drop, result expression) rather than the same mould with adjectives.
+    (b) **The stakes are named** from storey 2 up: "takes it in three, **and the title with it**" /
+    "**and a place in the round of 64**". (c) **The room appears** from storey 3 up and never below –
+    a J30 side court has two families on a bank, and saying otherwise would be an invention.
+  - **THE 14.08 DRAWS ARE CLEAN – no five-round or 32-draw assumption anywhere, and I looked.** Every
+    round count in `src/` is `Math.log2(drawSize)`; the stake clause parses `stageLabel`'s own label
+    through `viz/preview.ts`'s `remainingIn` (now exported so there is ONE reader of that vocabulary),
+    so a Slam opener really does read "Round of 128" → "a place in the round of 64", a 1000 opener
+    "Round of 64" → "round of 32", and a J30 "Round of 32" → "round of 16". All seven Slam rounds are
+    asserted individually. **No live bug found here.**
+  - **The storeys are `viz/preview.ts`'s own four-storey ladder, imported not restated** – the owner's
+    ruling from round 16. No event = storey 1 = byte-identical to the old output, so the friendly, the
+    sandbox hit-out and the whole existing suite are untouched. **Nothing names a tournament**: the
+    preview block one row below already prints «Final at the Grand Slam», and the beats read only the
+    event's size and round, so this file imports no tier catalogue at all.
+  - **EVIDENCE.** 11 new assertions in `tests/viz/commentary.test.ts` + 1 mounted wiring test in
+    `tests/component/match-viewer.test.ts`. Mutation-verified both ways: `storeyFor → 1` turns **5**
+    builder tests red; dropping the fourth argument at MatchViewer's call site turns the mounted test
+    red while the builder suite stays green – which is the exact failure this item was.
+  - Commit `8e38c0d`.
 - [ ] **4. «...только 1 раз за весь сезон смог пройти 1й раунд турнира из всех попыток, в 250 чуть
   лучше. Это как-то не очень метчится с нашим процентом побед»** – MEASURE FIRST, and it may be MY
   regression: the Slam draw went 32 -> 128 and the 1000 32 -> 64 this morning. More rounds means more
@@ -144,8 +200,31 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   не конфликтовали с происходящим на экране... кроме травмы, которая как раз должна появляться в
   моменте.»** – BUILD, and the general rule is the deliverable rather than the one collision: a
   blocking popup must wait for the screen to be idle, with the injury popup the stated exception.
-- [ ] **10. «В разделе bills возле выбранной позиции и "# good weeks" написать "(3 left)" – сколько
+- [x] **10. «В разделе bills возле выбранной позиции и "# good weeks" написать "(3 left)" – сколько
   осталось»** – BUILD. A commitment shows how many good weeks it bought and not how many are left.
+  → ✅ **BUILT. The rung she is ON now carries "(N left)" beside the "N good weeks" it buys.**
+  - **WHAT IT WAS.** `rungs[].goodWeeks` is a catalogue constant – what a rung buys FROM NEW – so a
+    fourteen-week-old string job on a "24 good weeks" rung read exactly like a fresh one, and the
+    number never moved between the week it was bought and the week it wore out.
+  - **READ FROM REAL STATE, NOT RECOMPUTED FROM A START DATE.** `kitAgeWeeks` was a closure inside
+    `kitWearAt`; it is lifted out and exported, `kitWearAt` now calls it, and `goodWeeksLeftFor` is
+    `goodWeeksFor(line, grade)` minus that same age. **ONE clock**, so the countdown reaching 0 and
+    `wearWord` starting to say "Worn" are the same week by construction rather than by agreement –
+    that is asserted as its own claim over 86 weeks, both directions.
+  - **The screen derives nothing**: it prints the engine's `KitLineView.goodWeeksLeft`. A surface
+    that subtracted a week number itself would be a second authority on the one number the wear model
+    owns, which is the standing rule `world/kit.ts` is written under.
+  - **A SPONSORED LINE PRINTS NO COUNTDOWN**, and that is the right answer rather than a missing one:
+    `kitFreshCap` holds a covered line at 0.3 or 0.5, both under the 0.55 Worn edge, so it never runs
+    down while the deal runs – and "(0 left)" beside a line the same page calls Fresh would be exactly
+    the disagreement the one-clock rule exists to prevent. Read off the ceiling, not off the flag, so
+    a future cap above the edge starts counting down by itself.
+  - **EVIDENCE.** `tests/component/round21-bills.test.ts` – 6 mounted assertions on the real Bills
+    tab with the engine's figures interpolated, including an unsponsored career and a signed national
+    deal. Mutation-verified twice: rendering `rung.goodWeeks` inside the span instead – the revert
+    that keeps the new words and puts the old bug back – turns 3 red, and deleting the span turns the
+    same 3 red.
+  - Commit `bef882c`.
 - [ ] **11. «Выбранного тренера давай в жёлтую рамку возьмём и чтобы портрет его подсвечивался
   всегда, независимо от дохода семьи.»** – BUILD. Two things: an accent frame on the CHOSEN coach,
   and his portrait lit whether or not the family can currently afford his tier.
