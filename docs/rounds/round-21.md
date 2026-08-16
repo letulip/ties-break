@@ -75,10 +75,38 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
       the dose-response is a straight line – 3.8 / 4.8 / 4.8 rank places per pp across three doses
       spanning a factor of four – and points per entry rises rather than falls. 30 paired careers
       resolve a +3.0pp effect and do not resolve a 1pp one.
-    - ⚠ **STILL HIS, AND SMALL**: the screen does not yet say the bonus exists – `edgePct` prints
-      the rung's HOME corridor to a family that travels – and −4 rank places is a distribution
-      shift nobody will feel in one playthrough. Copy is his call; the two scoping warts
-      (§7.6(c): the junior-rung freebie and the home practice friendly) are the follow-up.
+    - ~~⚠ **STILL HIS, AND SMALL**: the screen does not yet say the bonus exists – `edgePct` prints
+      the rung's HOME corridor to a family that travels.~~ → ✅ **THE SCREEN SAYS IT NOW**
+      (`coach-travel-2026-08.md` §9). Every market card carries a third chip – the middle rung reads
+      `+1.0-1.8% travelling with her` – and the hired coach's card carries one line under it,
+      `Twice that on the trips the coach travels to.`
+      - ⚠ **«THE CORRIDOR IS DOUBLED» WOULD HAVE BEEN A LIE, and the copy is written from that.**
+        The helping follows `coachTravelFareFor`, which stays home for the rungs that pay no prize
+        money unless the junior stance is open – so a J-series week doubles nothing even for a
+        family that always sends him. Both surfaces name the CONDITION instead of claiming a flat
+        doubling, and a junior-only family therefore reads a figure that is true of the trips it
+        does not yet take rather than a promise about the season it is playing.
+      - **Gated on `coachTravelsWithHer`** – somebody to send AND the switch on, the same pair the
+        fare is charged on. Null otherwise, so a family that leaves him at home reads the card it
+        read before, to the character; a self-coached family with the stance on is shown nothing.
+      - ⚠ **§4 AND §7 BOTH SURVIVE IT.** Twice a price bracket is a price bracket, and
+        `coachEdgeCorridorPp` reads the tier table and no coach id – so the market still quotes a
+        rung and never a man. The plaque needed no hedge beside the second figure either: the
+        helping SCALES the corridor rather than shifting it, so the upper third of 0.5-0.9 IS the
+        upper third of 1.0-1.8 and «the upper end of that band» is true of both bands at once.
+      - **No schema change, zero new randomness, and one `* 2` in the engine** (`withTravelHelping`,
+        shared by the draw and the bracket – two copies of a dose is exactly the defect being
+        closed). `coachEdgePp` is byte-identical.
+      - **Evidence.** `tests/component/round21-coach-travel.test.ts` §5 (9 MOUNTED, mutation-verified
+        eight ways, four of them failing alone) and `tests/coach-travel-edge.test.ts` (6 engine).
+        The plaque guard there is **re-aimed rather than deleted**: its whole-view `toEqual` used to
+        record this very gap as deliberate, so it now names field by field what the trip may not
+        touch and asserts that the one field it owns really does differ.
+      - ⚠ **STILL HIS: THE WORDS.** The ledger said copy is his call and it still is – the mechanic
+        is settled, the two sentences are a proposal written to the card's measured character
+        budget. Also still open and unchanged: −4 rank places is a distribution shift nobody will
+        feel in one playthrough, and the two scoping warts (§7.6(c): the junior-rung freebie and the
+        home practice friendly) are the follow-up.
   - → ✅ **STEP (2) IS BUILT AND SHIPPED ON THIS BRANCH. HE TRAVELS, IT COSTS MONEY, AND FOUR
     SURFACES SAY SO.** Step (1) – re-measuring the three stat arms on the rebuilt bench – is a
     separate agent's arm of the same wave and **no stat is added here**, which is the point: a fourth

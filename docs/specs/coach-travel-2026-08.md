@@ -661,3 +661,67 @@ ungated junior fare is precisely the arm that bankrupted 8/30 and 15/30 – and 
 player rather than acted on by the engine. A career that leaves the option off is byte-identical
 (the three frozen career hashes in `tests/coach-travel-edge.test.ts` moved only by `schemaVersion`
 and the new key, checked key by key before they were re-frozen).
+
+# 9. ⭐⭐ AND THE SCREEN SAYS IT – round-21 #2's last open item (16.08)
+
+## 9.1 The defect, in the ledger's own words
+
+> ⚠ **STILL HIS, AND SMALL**: the screen does not yet say the bonus exists – `edgePct` prints the
+> rung's HOME corridor to a family that travels.
+
+`coachEdgePp` has returned twice a coach's own edge on the weeks he is with her since `ff72dc5`
+(§7.1), and **both** readouts a player sees quoted `COACH_EDGE_CORRIDOR_PP[tier]` unchanged:
+`coachMarket`'s per-row `edgePct` and `coachEdgeView`'s `corridorPct`. So a family paying a second
+fare to every event that pays read exactly the number a family that leaves him at home reads – the
+mechanic the owner asked for three times was invisible on the screen that sells it.
+
+## 9.2 What ships, and the sentence it is written from
+
+**⚠ «THE CORRIDOR IS DOUBLED» WOULD BE A LIE, AND THAT IS THE whole design constraint here.** The
+helping follows the FARE (`coachTravelFareFor`), which sends him only to rungs that pay prize money
+unless the junior stance is open too – so a J-series week doubles nothing even for a family that
+always sends him. The true form is the conditional, and both surfaces are written from it:
+
+| where | copy |
+| --- | --- |
+| every market card, third chip on the uplift row | `+1.0-1.8% travelling with her` (the middle rung; each rung quotes its own band doubled) |
+| the hired coach's card, one line under the chips | `Twice that on the trips the coach travels to.` |
+
+**Gated on `coachTravelsWithHer`** – somebody to send, AND the switch on – which is the same pair the
+fare is charged on, so the card cannot promise a helping the till would refuse to buy. Both fields
+are `null` / `''` otherwise, so a career that leaves him at home reads the card it read before, to
+the character. A self-coached family with the stance on is shown nothing.
+
+## 9.3 The three rules it had to keep, and why each survives
+
+1. **§4, THE ANTI-SHOPPING RULE: the market may never quote a MAN.** Twice a price bracket is a price
+   bracket. `coachEdgeCorridorPp` is cut from the tier table and reads no coach id, so every card in a
+   rung carries the identical pair and no draw can leak through it – asserted against the engine
+   (every coach's own travelling value is strictly inside the printed bracket, and absent from the
+   screen).
+2. **§7, THE PLAQUE NAMES A THIRD AND NEVER A FIGURE – and it needed no hedge beside the second
+   bracket.** The helping SCALES the corridor rather than shifting it (§1's own argument for
+   scaling), so equal thirds map onto equal thirds: **the upper third of 0.5-0.9 IS the upper third
+   of 1.0-1.8**, and «the upper end of that band» is true of the band he trains in and of the band he
+   travels in at once. `coachEdgePlacement` therefore still reads the man and not the trip, and the
+   travel figure cannot become a precision claim about him – it is the bracket that moved, not his
+   place in it. The sentence under the chips quotes no number for exactly the same reason.
+3. **INVARIANT 2 AND NO SCHEMA MOVE.** Both readouts are derived at snapshot time, zero draws on any
+   stream, and the gate is `coachOnEventWeeks` – a field the save already had. Nothing was added to
+   the world.
+
+**⚠ ONE `* 2` IN THE WHOLE ENGINE.** `withTravelHelping` is the operator, shared by the draw and by
+the bracket, because the item being closed here is precisely what happens when a dose and a screen
+agree until one of them moves. And it is applied to the RESULT rather than to the corridor the draw
+reads: drawing inside a pre-doubled band is the same number in exact arithmetic and not in floating
+point, and a last bit here is a different match.
+
+## 9.4 Not measured, and why
+
+No bench arm. This slice moves no number in the engine – `coachEdgePp` is byte-identical, asserted by
+the exact-proportionality test that was already in `tests/coach-travel-edge.test.ts` – and what it
+changes is what two derived views hand the UI. The measurement that matters is §7.7's, unchanged.
+
+⚠ **THE COPY IS STILL THE OWNER'S CALL**, and the ledger said so («Copy is his call»). These two
+sentences were written to the constraint above and to the card's measured character budget; the
+mechanic they describe is settled, the wording is not.
