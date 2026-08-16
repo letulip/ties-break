@@ -758,8 +758,39 @@ export const ECONOMY = {
        *  above flagged a LOOSER gate; this is a materially TIGHTER one - a national sponsor now wants
        *  a top-240 professional where it wanted top-350. Nobody retuning the ladder opened this file,
        *  which is precisely the coupling `TIERS.w100`'s own comment has warned about twice. It is the
-       *  first item on the P3 spec's escalation list. */
-      maxWtaRank: 240,
+       *  first item on the P3 spec's escalation list.
+       *
+       *  ================================================================================================
+       *  ⭐⭐ 240 -> 350, AND THE DERIVATION IS RETIRED: THIS NUMBER IS ITS OWN DECISION NOW (16.08).
+       *  ================================================================================================
+       *  Everything above this line is the RECORD of how the number got here, kept verbatim because it
+       *  is the evidence. What changed is not the value, it is the WIRING.
+       *
+       *  THE DEFECT IS THE ONE P4 FIXED FOR THE COLLEGE DOOR: one constant doing two unrelated jobs.
+       *  `TIERS.w100.acceptsRank` decided BOTH who the tour lets into a W100 AND how famous a rank has
+       *  to be before a national distributor writes to her - so P3's acceptance-cut work, which was
+       *  about the first, silently moved the second. Nobody decided that; it was a SIDE EFFECT, and the
+       *  three paragraphs above are the sound of the repo noticing and shipping it anyway.
+       *
+       *  AN ACCEPTANCE CUT AND A SPONSOR'S INTEREST HAVE NO REASON TO SHARE A NUMBER. The cut is a rule
+       *  of the tour - who may enter, decided by the ITF and the WTA. The sponsor gate is a fact about
+       *  visibility - how famous a rank makes you, decided by a marketing department. They coincided
+       *  once, in 02.08's derivation, and a coincidence is not a dependency. So the rule that read
+       *  "whatever that list currently is" is withdrawn: it was a good way to PICK the number and a bad
+       *  way to HOLD it.
+       *
+       *  350 IS THE VALUE IT HELD BEFORE THE COUPLING DRAGGED IT, restored rather than re-picked -
+       *  because the coupling is what moved it and nothing else did. Reverting the side effect is not a
+       *  new balance decision and must not be dressed as one; the P3 chain keeps its four links, and
+       *  W100's door stays at 240 where the ladder work put it.
+       *
+       *  ⚠ WHAT IS NOT DECIDED HERE. Whether 350 is still the RIGHT number, now that the rest of the
+       *  ladder has moved under it, is a live question and it is the owner's - see
+       *  `global.maxWtaRank` below, where it bites hardest, and the spec. Restoring a number the
+       *  coupling took is a different act from choosing it. `tests/offers.test.ts` now guards the
+       *  DECOUPLING (move `TIERS.w100.acceptsRank`; these two must not follow) instead of pinning the
+       *  equality that made the drag possible. */
+      maxWtaRank: 350,
       /** ⚠ ...AND THE DOMESTIC STANDING SHE HAS TO KEEP TO HOLD IT = `maxRank` above, the same top
        *  30 that opens the local shop. This is National's job on the way OUT and the whole reason
        *  this rung is gated on two tables at once: her domestic points are a rolling 52-week best-6,
@@ -830,8 +861,30 @@ export const ECONOMY = {
        *  between `premium` (50) and itself, so its band was ranks **51-87 (37 places wide)** and is
        *  now **51-60 (ten)**. Nothing decided that; it fell out of a ladder correction four files
        *  away. Whether a sponsorship rung ten ranks wide is still a rung is a balance question, and
-       *  it is on the P3 spec's escalation list rather than absorbed here. */
-      maxWtaRank: 60,
+       *  it is on the P3 spec's escalation list rather than absorbed here.
+       *
+       *  ================================================================================================
+       *  ⭐⭐ 60 -> 87, AND THIS NUMBER IS ITS OWN DECISION NOW (16.08). See `national.maxWtaRank` above
+       *  for the whole argument - one constant was doing two unrelated jobs, and an acceptance cut and
+       *  a brand's interest have no reason to share one.
+       *  ================================================================================================
+       *  87 IS THE VALUE IT HELD BEFORE THE COUPLING DRAGGED IT, restored and not re-picked. The band
+       *  goes back to ranks **51-87 (37 places)** from the ten it had been squeezed to.
+       *
+       *  ⚠⚠ AND A BAND TEN RANKS WIDE IS NOT A BAND - which is the reason this rung is where the defect
+       *  actually hurt. `premium` sits at 50 and `global` at 87, so the whole of this rung's professional
+       *  territory is #51-#87: every career that ever holds a rank in that window, for the weeks it holds
+       *  it. At 60 that window was #51-#60, and a rung a career crosses in a season or two of climbing is
+       *  a letter that arrives, if at all, by luck.
+       *
+       *  ⚠ WHETHER 87 IS STILL RIGHT IS THE OWNER'S CALL AND IS DELIBERATELY NOT TAKEN HERE. The
+       *  argument that made it 87 was arithmetic - a quarter of national's 350 - and that arithmetic is
+       *  exactly the derivation this decoupling retires, so the number now stands on nothing but its own
+       *  history. It also has to sit ABOVE `premium`'s 50 and BELOW `tour`'s 200 to keep the sponsor
+       *  chain monotone (national 350 > tour 200 > global 87 > premium 50 > icon 10), and 87 is barely
+       *  a third of the way up that gap. Reported in the spec, not moved: restoring what the coupling
+       *  took is a revert; choosing a new figure is a balance decision and it is his. */
+      maxWtaRank: 87,
       /** THREE SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", scaled the same way
        *  `national.seasons` is. Signing it is the biggest commitment in the game: everything is
        *  covered, and nothing else can be signed until it runs out. */

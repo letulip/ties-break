@@ -847,10 +847,14 @@ export const TIERS: Record<TierId, TierDef> = {
     // The range table's FLOOR (~#120-350) - see the note on w35 for why an absolute rank replaced
     // the share, and ⚠ why the ranges themselves are NOT SOURCED.
     //
-    // ⚠⚠ AND IT IS READ BY THE SPONSORS. `s.national.maxWtaRank` IS this number (economy.ts, pinned
-    // as an equality by tests/offers.test.ts), so moving W100's door moves what a national sponsor
-    // costs, in a file nobody retuning the ladder would think to open. Flagged when `acceptsRank` was
-    // introduced and re-flagged by the 15.08 audit. acceptance-cuts-2026-08.md §7.
+    // ⚠⚠ IT USED TO BE READ BY THE SPONSORS, AND SINCE 16.08 IT IS NOT. `s.national.maxWtaRank` WAS
+    // this number (economy.ts, pinned as an equality by tests/offers.test.ts), so moving W100's door
+    // moved what a national sponsor costs, in a file nobody retuning the ladder would think to open.
+    // Flagged when `acceptsRank` was introduced, re-flagged by the 15.08 audit
+    // (acceptance-cuts-2026-08.md §7) - and then it fired: P3's correction below dragged the two
+    // sponsor gates 350 -> 240 and 87 -> 60 as a side effect nobody decided. The two rungs now carry
+    // their own constants and the equality pin is replaced by a DECOUPLING guard, so this number is
+    // free to move on the ladder's own argument alone. See `ECONOMY.sponsorship.national.maxWtaRank`.
     //
     // ⭐ 350 -> 240 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), as the fourth link
     // of the sourced chain (w35 700 · w50 330 · w75 300 · w100 240 · wta125 180).
@@ -862,12 +866,16 @@ export const TIERS: Record<TierId, TierDef> = {
     // for the evidence behind this number will not find any: that is the honest state of it, and it
     // is on the spec's list for the owner.
     //
-    // ⚠⚠ THE SPONSOR GATE MOVED WITH IT - `ECONOMY.sponsors.national.maxWtaRank` 350 -> 240 in the
-    // same commit, because that constant's own comment says it IS this one ("read straight … whatever
-    // that list currently is") and the equality is pinned. So a national sponsor is now MATERIALLY
-    // HARDER to earn: the rule did not change a word, its input did. That is a real balance change to
-    // an economy constant riding on a ladder correction, and it is the first item on the spec's
+    // ⚠⚠ THE SPONSOR GATE MOVED WITH IT - `ECONOMY.sponsorship.national.maxWtaRank` 350 -> 240 in the
+    // same commit, because that constant's own comment said it IS this one ("read straight … whatever
+    // that list currently is") and the equality was pinned. So a national sponsor became MATERIALLY
+    // HARDER to earn: the rule did not change a word, its input did. That was a real balance change to
+    // an economy constant riding on a ladder correction, and it was the first item on the spec's
     // escalation list rather than something to absorb quietly.
+    //
+    // ⭐⭐ AND IT WAS UNDONE ON THE SAME DAY, BY DECOUPLING RATHER THAN BY RETUNING (16.08). The two
+    // sponsor gates went back to 350 / 87 and became their OWN constants; W100's door stays at 240,
+    // where the ladder argument put it, and can never drag them again.
     acceptsRank: 240,
     // ⚠ [0, 0.30], RE-MEASURED BY W2-LADDER'S BAND PROBE - the third measurement this band has
     // carried, each against the world of its day. The original 0.55 was measured against the

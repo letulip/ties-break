@@ -1040,18 +1040,98 @@ describe('the three rungs, and the tables they read', () => {
     expect(standingClears({ ...deep, itfRank: s.localMaxItfRank }, 'local')).toBe(true)
   })
 
-  it('⚠ ...and the professional pair is the SAME reading of the professional draw', () => {
-    // 02.08: National signs the girl who would be IN the prestige draw, Global the one still in it
-    // on the last day - one sentence, read twice, once per table. On the professional side the
-    // prestige draw is W100 and "in it" is its acceptance list.
-    //
-    // ⚠ THE UNIT OF THAT LIST CHANGED (W2-FIELD2) AND THE SENTENCE DID NOT. It used to be
-    // `enterPct` x the merged table's size; the W rungs now carry the real tour's own ABSOLUTE cut,
-    // because a share of a table that models real ranks drifts - it made the W ladder unwalkable
-    // (see TierDef.acceptsRank). So the derivation reads the one figure it always meant.
-    expect(s.national.maxWtaRank).toBe(TIERS.w100.acceptsRank)
-    expect(s.global.maxWtaRank).toBe(Math.floor(s.national.maxWtaRank / 4))
-    expect(s.global.maxWtaRank).toBeLessThan(s.national.maxWtaRank)
+  // ===============================================================================================
+  // ⭐⭐ THE SPONSOR GATES READ THEIR OWN CONSTANTS, AND NOTHING ELSE (16.08)
+  // ===============================================================================================
+  // WHAT WAS HERE: `expect(s.national.maxWtaRank).toBe(TIERS.w100.acceptsRank)` – an equality PIN,
+  // whose whole job was to stop the two drifting apart. It did that, and the drift it prevented was
+  // the one worth having: P3's acceptance-cut work moved `TIERS.w100.acceptsRank` 350 -> 240, the pin
+  // held, and BOTH sponsor rungs moved with it – national 350 -> 240, global 87 -> 60, narrowing
+  // global's professional band from 37 ranks wide to ten. Nobody decided that. A pin on a coupling
+  // does not remove the coupling; it guarantees it.
+  //
+  // ⚠ IT IS THE SAME DEFECT P4 FIXED FOR THE COLLEGE DOOR – one constant doing two unrelated jobs –
+  // and the fix is the same shape. An acceptance cut is a rule of the TOUR (who may enter); a
+  // sponsor's interest is a fact about VISIBILITY (how famous a rank makes you). They coincided once,
+  // in 02.08's derivation, and a coincidence is not a dependency.
+  //
+  // These two cases are what makes the decoupling a PROPERTY rather than a claim, and they are P4's
+  // own pattern: the first MOVES the constant that used to drag and asserts nothing follows; the
+  // second moves the sponsor rung's OWN knob, so the first cannot pass vacuously (a `standingClears`
+  // that ignored the gates entirely would satisfy it). ⚠ Both mutate the shipped module objects and
+  // restore them in `finally` – `TIERS` is a plain `Record` and `ECONOMY` is `as const` but the same
+  // live object at runtime, so a throw between the two would leak into every later file in this worker.
+  //
+  /** ⚠ THE ONE WIDENING, AND IT IS AS NARROW AS IT CAN BE. `ECONOMY` is declared `as const`, so a
+   *  decoupling proof that moves a sponsor gate has to widen the field it moves; naming the two rungs
+   *  and the one field keeps the cast from becoming a licence to edit the block. */
+  const sponsorKnob = (rung: 'national' | 'global'): { maxWtaRank: number } =>
+    ECONOMY.sponsorship[rung] as unknown as { maxWtaRank: number }
+  it('⭐⭐ moving the W100 ACCEPTANCE CUT does not move either sponsor gate', () => {
+    const shippedNational = s.national.maxWtaRank
+    const shippedGlobal = s.global.maxWtaRank
+    const shippedCut = TIERS.w100.acceptsRank
+    // The restored values, stated here so the case fails loudly if a later wave edits them without
+    // reading the reasoning on the constants themselves.
+    expect(shippedNational, 'national holds the value the coupling dragged it off').toBe(350)
+    expect(shippedGlobal, 'and so does global').toBe(87)
+    // ...and the two are no longer the same number as the cut, which is the visible half of it.
+    expect(shippedNational).not.toBe(TIERS.w100.acceptsRank)
+
+    // #300 is the probe: on the W100 list at 350, off it at 240 – so under the old wiring this rank's
+    // answer flipped when P3 moved the ladder. It must not flip now, at ANY cut.
+    const probe = pro(300)
+    try {
+      // P3's own move, the value before it, and two nothing would ever ship.
+      for (const cut of [350, 240, 1, 5000]) {
+        TIERS.w100.acceptsRank = cut
+        expect(s.national.maxWtaRank, `who may ENTER a W100 is not who a distributor writes to (cut ${cut})`).toBe(350)
+        expect(s.global.maxWtaRank, `nor who a global brand writes to (cut ${cut})`).toBe(87)
+        expect(standingClears(probe, 'national'), `#300 keeps her distributor at every cut (cut ${cut})`).toBe(true)
+        expect(rungFor(probe), `and the rung she is offered is unchanged (cut ${cut})`).toBe('national')
+      }
+    } finally {
+      TIERS.w100.acceptsRank = shippedCut
+    }
+    expect(TIERS.w100.acceptsRank, 'the shipped cut is back – later files read this object').toBe(shippedCut)
+  })
+
+  it('⭐⭐ ...and what DOES move them is their own knob, and only that', () => {
+    // The mirror, and the reason the case above is not vacuous: the SAME rank, two different sponsor
+    // gates, two answers. Nothing here touches the calendar at all.
+    const shippedNational = s.national.maxWtaRank
+    const shippedGlobal = s.global.maxWtaRank
+    const probe = pro(300)
+    try {
+      sponsorKnob('national').maxWtaRank = 240
+      expect(standingClears(probe, 'national'), '#300 is off a top-240 distributor list').toBe(false)
+      sponsorKnob('national').maxWtaRank = 350
+      expect(standingClears(probe, 'national'), '...and on a top-350 one').toBe(true)
+      // The same for global, on the rank its own band is about.
+      const inner = pro(70)
+      sponsorKnob('global').maxWtaRank = 60
+      expect(standingClears(inner, 'global'), '#70 is outside a ten-wide band').toBe(false)
+      sponsorKnob('global').maxWtaRank = 87
+      expect(standingClears(inner, 'global'), '...and inside a 37-wide one').toBe(true)
+    } finally {
+      sponsorKnob('national').maxWtaRank = shippedNational
+      sponsorKnob('global').maxWtaRank = shippedGlobal
+    }
+    expect([s.national.maxWtaRank, s.global.maxWtaRank], 'the shipped pair is back').toEqual([350, 87])
+  })
+
+  it('⚠ ...and the sponsor chain is still monotone, which is the one property the pair must keep', () => {
+    // The rungs are read strongest-first by `rungFor`, so a chain that inverts would make a rung
+    // unreachable in silence. national 350 > tour 200 > global 87 > premium 50 > icon 10.
+    const chain = [s.national.maxWtaRank, s.tour.maxWtaRank, s.global.maxWtaRank, s.premium.maxWtaRank, s.icon.maxWtaRank]
+    expect(chain).toEqual([350, 200, 87, 50, 10])
+    for (let i = 1; i < chain.length; i++) {
+      expect(chain[i], `rung ${i} is tighter than the one below it`).toBeLessThan(chain[i - 1])
+    }
+    // ⚠ AND THE JUNIOR PAIR IS UNTOUCHED BY ANY OF THIS. Its derivation reads `TIERS.j300.drawSize`,
+    // which is a DRAW SIZE – a structural fact about the event, not a tuning cut somebody retunes –
+    // so it is the one coupling here that is not the defect above. Pinned two cases up.
+    expect(s.national.maxItfRank).toBe(TIERS.j300.drawSize)
   })
 
   it('a professional keeps her sponsor - the tables she leaves cannot un-sign her', () => {
@@ -1075,13 +1155,19 @@ describe('the three rungs, and the tables they read', () => {
     expect(rungFor(pro(20))).toBe('premium') // inside the top 50
     // ⚠ RE-POINTED A THIRD TIME BY P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), AND
     // FOR THE THIRD TIME THE CLAIM IS UNCHANGED. The sourced acceptance chain took
-    // `TIERS.w100.acceptsRank` 350 -> 240, and BOTH professional gates are derived from it, so the
+    // `TIERS.w100.acceptsRank` 350 -> 240, and BOTH professional gates were derived from it, so the
     // chain re-resolved to national 240 > tour 200 > global 60 > premium 50 > icon 10. Two probes
-    // had to move because the rungs beneath them did: #300 is no longer on the W100 list at all
-    // (240), and global's band narrowed from ranks 51-87 to 51-60, so "deep inside" is #55 rather
-    // than #60. Every line still says the one thing this case is about - a professional standing
-    // ALONE signs her.
-    expect(rungFor(pro(55))).toBe('global') // deep inside the last quarter of the W100 list
+    // had to move because the rungs beneath them did: #300 was no longer on the W100 list at all
+    // (240), and global's band narrowed from ranks 51-87 to 51-60, so "deep inside" was #55 rather
+    // than #60.
+    //
+    // ⭐⭐ AND THAT RE-POINTING IS RETIRED, BECAUSE THE DERIVATION IT FOLLOWED IS (16.08). The two
+    // gates carry their own constants now - see the decoupling pair below - so the chain is back to
+    // national 350 > tour 200 > global 87 > premium 50 > icon 10 and stays there whatever the ladder
+    // does. #55 is kept as the global probe: it read correctly under both wirings, which is exactly
+    // the property this case is about. Every line still says the one thing it has always said - a
+    // professional standing ALONE signs her.
+    expect(rungFor(pro(55))).toBe('global') // deep inside global's own band (#51-87)
     expect(rungFor(pro(150))).toBe('tour') // a working professional with a ranking that reads
     expect(rungFor(pro(200))).toBe('tour') // the tour rung's own gate, exactly
     expect(rungFor(pro(230))).toBe('national') // on the W100 list, not near the top of it

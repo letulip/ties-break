@@ -304,11 +304,19 @@ export interface SponsorStanding {
  *  band») was true of a junior going abroad - a lateral move inside the same visibility economy -
  *  and is simply false of a professional.
  *
- *  THE PROFESSIONAL NUMBERS ARE BUILT THE SAME WAY THE JUNIOR PAIR IS, off one figure in the tier
+ *  THE PROFESSIONAL NUMBERS WERE BUILT THE SAME WAY THE JUNIOR PAIR IS, off one figure in the tier
  *  table rather than picked: National signs the girl who would be IN the prestige draw (junior:
  *  the J300 main draw, 32; professional: accepted into a W100, `enterPct` 0.25 of the ~500-row
  *  merged table = 125), and Global signs the one who would still be in it on the last day (the
  *  same quarter: 8 of 32, 31 of 125). See `ECONOMY.sponsorship.*.maxWtaRank`.
+ *
+ *  ⚠⚠ AND THE PROFESSIONAL HALF OF THAT DERIVATION IS RETIRED (16.08). It was a live READ of
+ *  `TIERS.w100.acceptsRank`, so P3's acceptance-cut work moved both sponsor gates as a side effect
+ *  nobody decided - the same "one constant, two unrelated jobs" defect P4 fixed for the college door.
+ *  The two rungs carry their own constants now (national 350, global 87) and `tests/offers.test.ts`
+ *  guards that a moving acceptance cut does not drag them. ⚠ THE JUNIOR PAIR KEEPS ITS DERIVATION and
+ *  that is deliberate: `TIERS.j300.drawSize` is a DRAW SIZE - a structural fact about the event - not
+ *  a tuning cut somebody retunes on a Tuesday, so reading it is a definition rather than a coupling.
  *
  *  A professional also always clears the LOCAL shop: the whole rung is "a shop that has heard of
  *  her", and a girl on the world tour has cleared that bar by definition.

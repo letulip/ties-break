@@ -104,7 +104,9 @@ let careersEnded = 0
 let vacationWeeks = 0
 let vacationWeeksBlank = 0
 
-const bump = (m: Map<string, number>, k: string): void => m.set(k, (m.get(k) ?? 0) + 1)
+const bump = (m: Map<string, number>, k: string): void => {
+  m.set(k, (m.get(k) ?? 0) + 1)
+}
 
 let careers = 0
 for (let s = 0; s < SEEDS; s++) {
