@@ -36,16 +36,18 @@ const WEEKS = argOf('weeks', 260)
 let dateCalls = 0
 const RealDate = Date
 class CountingDate extends RealDate {
-  constructor(...args: ConstructorParameters<typeof Date>) {
+  constructor(...args: [] | [number] | [string] | [number, number, number?, number?, number?, number?, number?]) {
     dateCalls++
-    // @ts-expect-error – the spread is the whole point: this is a transparent proxy of every arity.
-    super(...args)
+    // A transparent proxy of every arity `dates.ts` uses – it only ever calls `new Date(utc)`.
+    super(...(args as [number]))
   }
 }
 ;(globalThis as { Date: DateConstructor }).Date = CountingDate as unknown as DateConstructor
 
 const world = createWorld('age-clock-cost', DEFAULT_PROFILE, 'middle')
-const rng = resumeMain(world)
+// `resumeMain(world.rngMain)`, not `rngFromSeed(world.seed)` – the world's OWN persisted MAIN
+// position, which is the rule every tool that drives a real career here obeys.
+const rng = resumeMain(world.rngMain)
 const startedAt = process.hrtime.bigint()
 for (let i = 0; i < WEEKS; i++) tickWeek(world, rng)
 const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1e6
