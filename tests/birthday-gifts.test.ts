@@ -505,14 +505,18 @@ describe('the birthday popup', () => {
   // THE COLLEGE FREEZE – the one place the popup deliberately does not fire
   // ===============================================================================================
   it('⚠ no birthday is raised inside the college freeze, and none is recorded as "gave nothing"', () => {
-    // `resumeFromCollege` spends four years in ONE call with nobody able to answer, so a blocking
-    // birthday there would strand the jump – the identical reason `rollKnock` is skipped. Those
-    // birthdays are ABSENT rather than refused: nobody was asked, so there is no act to record.
+    // `resumeFromCollege` spends a college YEAR in one call with nobody able to answer, so a
+    // blocking birthday there would strand the jump – the identical reason `rollKnock` is skipped.
+    // Those birthdays are ABSENT rather than refused: nobody was asked, so there is no act to record.
+    // ⚠ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08): the freeze is spent one year at a time now
+    // (docs/specs/college-as-a-second-act-2026-08.md) so the jump is 52 weeks rather than 208, and a
+    // blocking birthday inside ANY of them strands it exactly as before. The span is unchanged here
+    // on purpose – the assertion is about a week inside the freeze, whatever the freeze is spent in.
     const world = career('college')
     const rng = rngFromSeed(world.seed)
     const week = runToBirthday(world, rng)
     expect(pendingBirthday(world)).not.toBeNull()
-    world.college = { fromWeek: week, untilWeek: week + 208, doneWeek: null }
+    world.college = { fromWeek: week, untilWeek: week + 208, doneWeek: null, years: [], pendingCallUp: null }
     expect(pendingBirthday(world), 'silent at college').toBeNull()
     expect(advanceWeeks(world, rng, 2).includes('birthday'), 'and it does not block the jump').toBe(false)
     expect(world.birthdays, 'and writes nothing').toEqual([])

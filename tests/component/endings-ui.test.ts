@@ -43,6 +43,9 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
     bestRank: 88,
     titles: 2,
     oneMoreYearCount: 0,
+    // ⭐ P5: null unless the fixture is a career sitting between two college years. The screen's
+    // "another year?" question is drawn from this and from nothing else.
+    college: null,
     ...over,
   }
 }

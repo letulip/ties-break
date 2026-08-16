@@ -2489,12 +2489,64 @@ export interface RetirementOffer {
   final: boolean
 }
 
-/** THE FOUR-YEAR FREEZE (§5.1). Written the week she chooses college; `doneWeek` is null while the
- *  jump has not been spent yet, so a save taken mid-decision resumes into the same button. */
+/** THE COLLEGE YEARS (§5.1). Written the week she chooses college; `doneWeek` is null while she is
+ *  still there, so a save taken mid-decision resumes into the same button.
+ *
+ *  ⭐⭐ P5 – IT USED TO BE A FOUR-YEAR FREEZE SPENT IN ONE TAP AND IT IS FOUR YEARS SPENT ONE AT A
+ *  TIME NOW (docs/specs/college-as-a-second-act-2026-08.md). The reason is the sport's: Diana
+ *  Shnaider left after about a year and is inside the WTA top 15, so a four-year block is the wrong
+ *  SHAPE and not merely an empty one. `untilWeek` is therefore no longer a constant – it is moved
+ *  BACK to the current week the moment she leaves, which is what makes `inCollege` false without a
+ *  second flag to keep in step. */
 export interface CollegeState {
   fromWeek: number
+  /** the week the freeze ends. Moved back to `world.week` on an early return – see above. */
   untilWeek: number
   doneWeek: number | null
+  /** ⭐ P5: one row per year LIVED, appended as each finishes. Empty until the first year is spent,
+   *  and never longer than `ENDINGS.collegeYears`. This is the whole of what is behind the door. */
+  years: CollegeYear[]
+  /** ⭐ P5: the national-team week of the year IN PROGRESS, held from the week it happens until the
+   *  year closes around it. Null the rest of the time.
+   *
+   *  ⚠ IT LIVES INSIDE `CollegeState` AND NOT ON THE WORLD, because it is meaningless outside the
+   *  freeze and a top-level field would have to be nulled by every other code path that ends a
+   *  career. Here it dies with the object that gives it meaning. */
+  pendingCallUp: CollegeCallUp | null
+}
+
+/** ⭐ P5 – ONE COLLEGE YEAR, banked the week it finishes.
+ *
+ *  ⚠ IT STORES WHAT WAS MEASURED AT THE TWO ENDS AND NEVER A DERIVED VERDICT. `pruneResults` deletes
+ *  a result 52 weeks after it happened and `financeWeeks` keeps a 60-week window, so by the time the
+ *  epilogue is drawn NONE of this is recoverable from anything else the save holds – which is the
+ *  same argument `CareerTotals` makes, and the reason this is a new fact rather than a view. */
+export interface CollegeYear {
+  /** 1-based: the first year she spent there is 1 */
+  index: number
+  fromWeek: number
+  untilWeek: number
+  /** her skill mean at each end, 0-100 – what the year did to her game */
+  startSkill: number
+  endSkill: number
+  /** her professional rank at each end, or null when she is not on the list at all (the same
+   *  contract `LadderView.rank` keeps: null IS NOT #1) */
+  startRank: number | null
+  endRank: number | null
+  /** what the family's balance did over the year. Positive is the scholarship's whole economic
+   *  point – it is the one stretch of the game where the money goes the other way. */
+  fundsDeltaCents: number
+  /** the national-team week, or null in a year nobody wrote to her – see `engine/nationalTeam.ts` */
+  callUp: CollegeCallUp | null
+}
+
+/** One national-team week inside a college year. Zero money and zero ranking points, by the
+ *  rulebook – `engine/nationalTeam.ts` carries the sources. */
+export interface CollegeCallUp {
+  week: number
+  rubbersPlayed: number
+  rubbersWon: number
+  nationFinish: number
 }
 
 /** CAREER-TOTAL MONEY, and it is a NEW FACT rather than a view of an old one – the same argument
@@ -2607,6 +2659,26 @@ export interface EndingView {
   titles: number
   /** how many times she answered "one more year" (§5.3's decade of decisions) */
   oneMoreYearCount: number
+  /** ⭐ P5: the college years, while she is living them. Null on every other ending and on college
+   *  itself once she has left – it is the state of an OPEN question, and there is exactly one screen
+   *  allowed to ask it. */
+  college: CollegeProgressView | null
+}
+
+/** ⭐ P5 – WHAT THE EPILOGUE SCREEN NEEDS TO ASK "ANOTHER YEAR?" AND NOTHING ELSE.
+ *
+ *  ⚠ `final` IS THE FIELD THAT DECIDES WHETHER THERE IS A QUESTION AT ALL, and it is built exactly
+ *  like `RetirementOffer.final`: the last year is not a choice she declines, it is the year after
+ *  which nobody is asking. Two answers or none – the screen may not invent a third. */
+export interface CollegeProgressView {
+  /** how many years she has finished – 0 before the first one is spent */
+  yearsDone: number
+  /** `ENDINGS.collegeYears`, read out of the engine so the copy never says "four" from a template */
+  totalYears: number
+  /** the year that just finished, or null before the first one */
+  last: CollegeYear | null
+  /** true when `yearsDone === totalYears`: she is out, and there is nothing left to ask */
+  final: boolean
 }
 
 export interface Snapshot {

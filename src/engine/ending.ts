@@ -334,12 +334,23 @@ export function endingForForkAnswer(
 ): CareerEnding | null {
   if (answer === 'continue') return null
   if (answer === 'college') {
+    // ⭐⭐ P5 – `resumesWeek` IS ONE YEAR NOW, NOT `collegeYears` OF THEM, and that single expression
+    // is what turns a four-year skip into four years she lives through
+    // (docs/specs/college-as-a-second-act-2026-08.md). Reality's own case is one year and not four:
+    // Diana Shnaider left after about a season and is inside the WTA top 15, so the block was the
+    // wrong SHAPE as well as an empty one. `world/college.ts` re-latches this ending with the next
+    // year's week each time one is spent, and `leaveCollege` is the answer that stops it.
+    //
+    // ⚠ `collegeYears` STAYS IN THE SIGNATURE AND STAYS IN THE COPY. It is the length of the course
+    // she has enrolled on – four years is what the scholarship is FOR – and the early return is her
+    // leaving it, not the course being shorter. A caller that passed a different length still gets
+    // a consistent ending.
     return {
       type: 'college',
       week,
       ageYears,
       detail: `${collegeYears} years on a scholarship – no ranking points, and the family stops paying`,
-      resumesWeek: week + collegeYears * weeksPerYear,
+      resumesWeek: week + weeksPerYear,
     }
   }
   return {
@@ -475,8 +486,13 @@ export const ENDING_TITLE: Record<CareerEndingType, string> = {
 export const ENDING_BLURB: Record<CareerEndingType, string> = {
   stopped:
     'The junior ladder ran out and the next one wanted more than the family had. She put the racket down at nineteen, and that is an ending, not a loss.',
+  // ⚠ P5 – IT NO LONGER PROMISES FOUR YEARS OR A DEGREE, because she may leave after one and the
+  // sport's own case is that she does. It also no longer asserts "no ranking at all": measured over
+  // the freeze (spec §4) her professional rank is IDENTICAL at both ends in the median career,
+  // because she was already off the list the week she walked in. The line that replaced it says the
+  // thing that IS true of every college career and of nothing else in this game.
   college:
-    'A scholarship, a closed league that pays no ranking points, and four years in which the money finally goes the other way. She comes back at twenty-two with a degree, an unbroken body and no ranking at all.',
+    'A scholarship, a closed league that pays no ranking points, and a stretch of years in which the money finally goes the other way. The tour does not wait, and it does not remember.',
   bankruptcy:
     'Week after week below zero, and then a week with no entry fee in it. Nobody chose this one – the arithmetic did.',
   injury:

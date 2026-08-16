@@ -1,0 +1,198 @@
+// ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026,
+// docs/specs/college-as-a-second-act-2026-08.md).
+//
+// BEFORE THIS FILE the college answer latched an ending, drew one button reading "Four years later
+// –", and spent 208 weeks in a single call. Nothing happened in them, nothing could be decided in
+// them, and the epilogue then asserted "no ranking at all" – a sentence nobody had measured.
+//
+// TWO THINGS CHANGE, AND THE SECOND IS THE FEATURE:
+//   1. THE FREEZE IS SPENT ONE YEAR AT A TIME. Reality's own case is one year, not four – Diana
+//      Shnaider left after about a season and is inside the WTA top 15 – so a four-year block is the
+//      wrong SHAPE as well as an empty one. Each year ends with a question, and three of the four
+//      are real questions.
+//   2. ONE WEEK OF EACH YEAR IS NOT HERS. The national-team call-up (`engine/nationalTeam.ts`) is
+//      the only tennis in this game that pays neither money nor ranking points, which is exactly why
+//      it is the tennis an amateur may play – and it is why the roadmap's #102 and #108 are one
+//      mechanic. It fires ONLY inside the freeze, and §3 of the spec is why.
+//
+// ⚠ RNG: ONE SUB-STREAM, `seed:callup:<week>`, derived at the call site and persisting nothing
+// (CLAUDE.md invariant 2). Everything else here is pure state – a counter, two measurements and an
+// append. The frozen MAIN capture cannot see any of it.
+import { rngFromSeed } from '../rng'
+import { SKILL_KEYS, type KidSkills } from '../development'
+import { ENDINGS } from '../ending'
+import { WEEKS_PER_YEAR } from '../season/calendar'
+import { NATIONAL_TEAM, callUpLine, rollCallUp } from '../nationalTeam'
+import type { CollegeProgressView } from '../../shared/protocol'
+import { addEvent } from './ledger'
+import { kidAgeYears } from './age'
+import { kidLadderRank } from './snapshot'
+import type { WorldState } from '../world'
+
+/** IS SHE AT COLLEGE THIS WEEK? Derived from the span, never a second flag – so it can never drift
+ *  out of step with `world.week` and a save taken mid-freeze answers the same question on reload.
+ *
+ *  ⚠ IT MOVED HERE FROM `endings.ts` (P5) FOR A DEPENDENCY REASON AND NOT A TIDINESS ONE. This file
+ *  needs it (the call-up fires only inside the freeze) and `endings.ts` needs this file (the ending
+ *  view carries the college progress), so leaving it there would have made a runtime cycle between
+ *  two modules that both run at import time. The edge now points one way: endings -> college. Every
+ *  historical import still resolves – `world.ts` re-exports it under the same name. */
+export function inCollege(world: WorldState): boolean {
+  return world.college !== null && world.week < world.college.untilWeek
+}
+
+/** Her build as one number, 0-100. The same fold `academy.ts`'s `ceilingOf` runs over the potentials
+ *  – one function per question, and this one asks about what she IS rather than what she could be. */
+export function skillMeanOf(skills: KidSkills): number {
+  let sum = 0
+  for (const k of SKILL_KEYS) sum += skills[k]
+  return sum / SKILL_KEYS.length
+}
+
+/** IS THIS THE WEEK HER COUNTRY PLAYS? A season-week comparison and nothing else.
+ *
+ *  ⚠ IT IS GUARDED ON `inCollege` AND THAT IS A SCOPE DECISION, NOT AN OVERSIGHT. The competition's
+ *  real minimum age is fourteen (`NATIONAL_TEAM.minAgeYears`), so a girl on the tour is eligible for
+ *  it every year of her career – but a call-up week ON THE TOUR displaces a week she would have
+ *  played for points and money, and that is a BALANCE change which P6's re-measure owns. Inside the
+ *  freeze it displaces a week that is empty by construction, so it costs nothing measurable and this
+ *  phase can ship it as content. The spec's §6 states the cut and what it would take to lift it. */
+export function callUpWeek(world: WorldState): boolean {
+  return inCollege(world) && world.week % WEEKS_PER_YEAR === NATIONAL_TEAM.seasonWeek
+}
+
+/** THE COLLEGE MIRROR OF `rollKnock`, and it sits exactly where that does in the tick.
+ *
+ *  On an ordinary week the thing that happens TO her is a sore shoulder. In these four years it is a
+ *  letter – and it is the only thing in them that arrives from outside. She does not enter it, she
+ *  is not asked, and she may not decline: research §0.7 (the National Association nominates) and
+ *  §0.8 (availability is a Good Standing criterion her own federation judges unappealably).
+ *
+ *  ⚠ IT WRITES A NEWS ROW AND NOTHING ELSE. No ranking points and no money, because the sport awards
+ *  neither – so `world.results` is untouched, no rank is recomputed, and the `prizeCentsFor`
+ *  invariant ("a result cannot award one without the other") is not being bent: there is no result.
+ *  The row is `keep: true` so the album's own record still has it four years later, when
+ *  `pruneResults` has deleted everything else about these weeks. */
+export function resolveCallUp(world: WorldState): void {
+  if (!callUpWeek(world)) return
+  const call = rollCallUp(
+    {
+      ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+      skillMean: skillMeanOf(world.skills),
+    },
+    rngFromSeed(`${world.seed}:callup:${world.week}`),
+  )
+  if (!call) return
+  world.college!.pendingCallUp = { week: world.week, ...call }
+  addEvent(world, {
+    week: world.week,
+    type: 'milestone',
+    keep: true,
+    text: callUpLine(call),
+  })
+}
+
+/** THE YEAR, BANKED. Called once per college year, on the week it ends.
+ *
+ *  ⚠ THE TWO ENDS ARE MEASURED RATHER THAN DERIVED LATER, and that is invariant 3's own argument in
+ *  miniature: `pruneResults` deletes a result 52 weeks after it happened, so by the time the fourth
+ *  year's card is drawn there is no way to recover what her rank was at the start of the first. A
+ *  measurement taken at the moment is a new fact and it has to be persisted. */
+export function bankCollegeYear(world: WorldState, start: CollegeYearStart): void {
+  const college = world.college
+  if (!college) return
+  college.years.push({
+    index: college.years.length + 1,
+    fromWeek: start.week,
+    untilWeek: world.week,
+    startSkill: start.skill,
+    endSkill: skillMeanOf(world.skills),
+    startRank: start.rank,
+    endRank: kidLadderRank(world, 'wta'),
+    fundsDeltaCents: world.fundsCents - start.fundsCents,
+    callUp: college.pendingCallUp,
+  })
+  college.pendingCallUp = null
+}
+
+/** The measurements a year has to be opened with, taken before the first of its weeks ticks. */
+export interface CollegeYearStart {
+  week: number
+  skill: number
+  rank: number | null
+  fundsCents: number
+}
+
+export function openCollegeYear(world: WorldState): CollegeYearStart {
+  return {
+    week: world.week,
+    skill: skillMeanOf(world.skills),
+    rank: kidLadderRank(world, 'wta'),
+    fundsCents: world.fundsCents,
+  }
+}
+
+/** ⭐ THE EARLY RETURN – the sport's own case, and the reason the freeze stopped being one call.
+ *
+ *  ⚠ IT MOVES `untilWeek` BACK RATHER THAN SETTING A SECOND FLAG. `inCollege` is derived from the
+ *  span and its own comment says why – "so it can never drift out of step with `world.week`". A
+ *  `leftEarly: true` beside an `untilWeek` still four years out would be exactly that drift, and
+ *  every one of the six `inCollege` guards in the tick would have had to learn about it. */
+export function leaveCollege(world: WorldState): void {
+  const college = world.college
+  if (!college || college.doneWeek !== null) throw new Error('She is not at college')
+  college.untilWeek = world.week
+  college.doneWeek = world.week
+}
+
+/** WHAT THE EPILOGUE SCREEN IS ALLOWED TO KNOW – and `null` the moment she is out, because this view
+ *  is the state of an OPEN question. */
+export function collegeProgressOf(world: WorldState): CollegeProgressView | null {
+  const college = world.college
+  if (!college || college.doneWeek !== null) return null
+  return {
+    yearsDone: college.years.length,
+    totalYears: ENDINGS.collegeYears,
+    last: college.years[college.years.length - 1] ?? null,
+    final: college.years.length >= ENDINGS.collegeYears,
+  }
+}
+
+/** ⭐⭐ WHAT SHE COMES BACK WITH, AND IT IS MEASURED RATHER THAN ASSERTED.
+ *
+ *  ⚠⚠ THE LINE THIS REPLACES WAS WRONG IN TWO WAYS AND ONE OF THEM WAS A NUMBER. It read: *"Four
+ *  years, a degree and no ranking at all. She is 23, and the only way back in is qualifying."*
+ *    (a) "Four years" was unconditional, so an early return would have printed it after one;
+ *    (b) "no ranking at all" was never measured. It is now, and the measurement is in the spec's §4:
+ *        her professional rank is IDENTICAL at both ends of the freeze in the median career,
+ *        because she was already off the list when she walked in. The four years did not cost her a
+ *        ranking – the ranking was the reason the door looked open.
+ *
+ *  ⚠ AND IT STATES THE MONEY, because that is the one thing the years demonstrably did. The
+ *  scholarship is the only stretch of this game where the balance goes the other way, and the
+ *  measured median over four years is larger than any family's starting capital. The line says the
+ *  number; it does not say whether that was worth it. (`career-contract-v1.md` §6: the game does not
+ *  grade her.) */
+export function collegeEpilogueLine(world: WorldState): string {
+  const college = world.college
+  if (!college) return ''
+  const years = college.years.length
+  const banked = college.years.reduce((sum, y) => sum + y.fundsDeltaCents, 0)
+  const calls = college.years.filter((y) => y.callUp !== null).length
+  const rank = kidLadderRank(world, 'wta')
+  const age = kidAgeYears(world.week, world.profile.birthMonth)
+  const played =
+    calls === 0
+      ? 'Her country never called'
+      : `Her country called ${calls === 1 ? 'once' : `${calls} times`}, for nothing either time it counted`
+  const standing =
+    rank === null
+      ? 'She is on no professional list at all, and the only way back in is qualifying'
+      : `She is #${rank} and falling, and the only way up is qualifying`
+  return `${years} ${years === 1 ? 'year' : 'years'} of student tennis. ${played}. The family is ${formatBanked(banked)} better off than the week she went in. She is ${age}. ${standing}.`
+}
+
+function formatBanked(cents: number): string {
+  const dollars = Math.round(cents / 100)
+  return dollars < 0 ? `$${Math.abs(dollars).toLocaleString('en-US')} worse` : `$${dollars.toLocaleString('en-US')}`
+}

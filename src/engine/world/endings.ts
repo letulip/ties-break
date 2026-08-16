@@ -29,15 +29,10 @@ import type { CareerEnding, DebtView, EndingView, ForkAnswer } from '../../share
 import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
 import { activeLadderOf } from './ladder'
+import { collegeProgressOf, inCollege } from './college'
 import { kidAgeYears } from './age'
 import { buildAlbum, buildScroll } from './album'
 import type { WorldState } from '../world'
-
-/** IS SHE AT COLLEGE THIS WEEK? Derived from the span, never a second flag – so it can never drift
- *  out of step with `world.week` and a save taken mid-freeze answers the same question on reload. */
-export function inCollege(world: WorldState): boolean {
-  return world.college !== null && world.week < world.college.untilWeek
-}
 
 /** ⚠ THE GUARD, RE-AIMED RATHER THAN ADDED TO EVERY CALLER'S BODY. Every mutating engine command
  *  calls this first: the engine re-validates every command and the worker is not the gate, so a
@@ -353,10 +348,15 @@ export function answerFork(world: WorldState, answer: ForkAnswer): void {
   }
   world.fork = { ...world.fork, answer }
   if (answer === 'college') {
+    // ⚠ `untilWeek` IS THE WHOLE COURSE EVEN THOUGH SHE MAY LEAVE AFTER ONE YEAR (P5). It is the
+    // contract she signed, and `leaveCollege` (world/college.ts) is what breaks it – by moving this
+    // week BACK to the week she leaves, which is what makes `inCollege` false with no second flag.
     world.college = {
       fromWeek: world.week,
       untilWeek: world.week + ENDINGS.collegeYears * WEEKS_PER_YEAR,
       doneWeek: null,
+      years: [],
+      pendingCallUp: null,
     }
   }
   const ending = endingForForkAnswer(
@@ -437,6 +437,9 @@ export function buildEndingView(world: WorldState): EndingView | null {
     bestRank,
     titles,
     oneMoreYearCount: world.oneMoreYearCount,
+    // ⭐ P5: null on every ending but the college one, and null on that one the moment she leaves.
+    // It is the state of an OPEN question – see `collegeProgressOf`.
+    college: collegeProgressOf(world),
   }
 }
 

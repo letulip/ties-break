@@ -1449,6 +1449,37 @@ export function migrateSave(raw: unknown): WorldState {
     v = 49
   }
 
+  // v50 – THE COLLEGE YEARS GET A LEDGER, AND A CAREER ALREADY INSIDE THE FREEZE KEEPS ITS SPAN
+  // (P5, docs/specs/college-as-a-second-act-2026-08.md).
+  //
+  // `CollegeState` gains `years: CollegeYear[]` and `pendingCallUp`, because the four-year skip is
+  // spent one year at a time now and each year is a row nothing else can reconstruct: `pruneResults`
+  // deletes a result 52 weeks after it happened and `financeWeeks` keeps a 60-week window, so by the
+  // fourth year's card there is no way back to what her rank or her balance was in the first.
+  //
+  // ⚠ IT BACK-FILLS AN EMPTY LEDGER AND DELIBERATELY INVENTS NO ROWS. A v49 career mid-freeze has
+  // lived some of those weeks and there is no honest way to say what they contained – the
+  // measurements were never taken, and `pruneResults` has already deleted the evidence. So her ledger
+  // opens empty and the next year she spends is her first ROW, not her first year. The alternative
+  // (fabricating rows from the span) would have put invented numbers on the one screen this phase
+  // exists to make honest.
+  //
+  // ⚠ AND HER SPAN IS UNTOUCHED, WHICH IS WHAT KEEPS THE MIGRATION SAFE. `untilWeek` still says when
+  // the scholarship ends and `inCollege` still reads it, so every one of the freeze's guards answers
+  // exactly as it did. What she loses is the record of the years already behind her; what she keeps
+  // is the career.
+  //
+  // Idempotent in v30's sense (each field is written only when absent or the wrong shape), and zero
+  // draws on any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 49) {
+    const w = save as { college?: { years?: unknown; pendingCallUp?: unknown } | null }
+    if (w.college !== null && typeof w.college === 'object' && w.college !== undefined) {
+      if (!Array.isArray(w.college.years)) w.college.years = []
+      if (w.college.pendingCallUp === undefined) w.college.pendingCallUp = null
+    }
+    v = 50
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

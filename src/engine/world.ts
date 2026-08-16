@@ -174,7 +174,6 @@ import {
   collegeStillOpen,
   entryCostsCollege,
   guardNotEnded,
-  inCollege,
   latchEnding,
   lastRungSeasonIndexOf,
   plateauViewOf,
@@ -182,6 +181,29 @@ import {
   resolveEndings,
   wasThereAChild,
 } from './world/endings'
+// ⭐ P5 – WHAT IS BEHIND THE DOOR (docs/specs/college-as-a-second-act-2026-08.md). `inCollege` moved
+// out of `world/endings.ts` into this module and is re-exported below under its historical name, so
+// every existing `from '...engine/world'` call site and test import is untouched. The move was
+// forced by a dependency, not by tidiness: the ending VIEW now carries the college progress, so
+// endings.ts imports college.ts, and college.ts needed the predicate.
+import { ENDINGS } from './ending'
+import {
+  bankCollegeYear,
+  collegeEpilogueLine,
+  inCollege,
+  leaveCollege as leaveCollegeState,
+  openCollegeYear,
+  resolveCallUp,
+} from './world/college'
+export {
+  bankCollegeYear,
+  collegeEpilogueLine,
+  collegeProgressOf,
+  inCollege,
+  openCollegeYear,
+  resolveCallUp,
+  skillMeanOf,
+} from './world/college'
 export {
   answerFork,
   answerRetirement,
@@ -191,7 +213,6 @@ export {
   collegeStillOpen,
   entryCostsCollege,
   guardNotEnded,
-  inCollege,
   latchEnding,
   lastRungSeasonIndexOf,
   plateauViewOf,
@@ -354,7 +375,7 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
 // ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
 // number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
-export const SAVE_SCHEMA_VERSION = 49
+export const SAVE_SCHEMA_VERSION = 50
 
 
 
@@ -3061,7 +3082,15 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //   advance until the parent answers it, and there is no parent in the loop for those four years -
   //   an unanswered knock raised inside the freeze would strand the jump. `seed:knock:<week>` is a
   //   sub-stream, so the skipped draw is invisible to the MAIN capture.
+  // ⭐ P5 – AND AT COLLEGE THE THING THAT HAPPENS TO HER IS A LETTER INSTEAD. Deliberately the same
+  //   slot as the knock, because it is the same KIND of step: something arriving from outside that
+  //   she did not ask for and cannot refuse. `resolveCallUp` fires at most once a year, only inside
+  //   the freeze, and draws on `seed:callup:<week>` – its own sub-stream, exactly as `rollKnock`
+  //   reads `seed:knock:<week>` – so the frozen MAIN capture cannot see it either.
+  //   It pays NO money and NO ranking points, because the sport awards neither: it never touches
+  //   `world.results` and no rank is recomputed for it. See engine/nationalTeam.ts for the sources.
   if (!inCollege(world)) rollKnock(world)
+  else resolveCallUp(world)
 
   // 3d. AND SHE HAS A BIRTHDAY. The owner, 30.07: the birth month should show up in the notes.
   //
@@ -3343,22 +3372,33 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
-/** «FOUR YEARS LATER» – the one command that CLEARS an ending (contract §5.1).
+/** «ANOTHER YEAR» – the one command that CLEARS an ending (contract §5.1).
  *
- *  College is the only ending that resumes, and this is where it does. The latch comes off, four
- *  years of weeks are spent in one call, and she comes out the other side at twenty-two.
+ *  College is the only ending that resumes, and this is where it does. The latch comes off, ONE year
+ *  of weeks is spent, the year is banked, and the latch goes back on with the next year's date under
+ *  it – until she has spent all four or answers `endCollegeEarly`.
  *
- *  ⚠ THE WEEKS ARE REALLY TICKED, not skipped over. The world has to LIVE those four years: the
- *  cohort ages, the conveyor turns it over twice, the field she will come back to is not the field
- *  she left, and she keeps developing on the age curve because she is playing student tennis the
- *  whole time. A `world.week += 208` would have handed back a world whose ranking table, calendar
- *  and rivals were all four years stale.
+ *  ⭐⭐ P5 – IT USED TO SPEND FOUR YEARS IN ONE CALL AND THE BUTTON SAID «Four years later –».
+ *  Reality's own case is one year and not four (Diana Shnaider left NC State after about a season
+ *  and is inside the WTA top 15), so the four-year block was the wrong SHAPE as well as an empty
+ *  one. Four years, one at a time, is three real questions and a fourth year that is not one –
+ *  `CollegeProgressView.final` is what carries that difference to the screen.
  *
- *  ⚠ AND HER RANKING GOES ON ITS OWN, WITH NO RULE WRITTEN FOR IT. She enters nothing for 208
- *  weeks, so every result she owned ages out of the rolling 52-week window and she arrives at
- *  twenty-two on zero points, below the whole field – «no ranking at all», exactly as §5.1 says,
- *  bought with no mechanism whatsoever. Back in through qualifying is what the ladder's own floor
- *  already gives her.
+ *  ⚠ THE WEEKS ARE REALLY TICKED, not skipped over. The world has to LIVE those years: the cohort
+ *  ages, the conveyor turns it over, the field she will come back to is not the field she left, and
+ *  she keeps developing on the age curve. A `world.week += 52` would have handed back a world whose
+ *  ranking table, calendar and rivals were all a year stale.
+ *
+ *  ⚠⚠ AND HER RANKING GOES ON ITS OWN, WITH NO RULE WRITTEN FOR IT – WHICH IS NOW MEASURED RATHER
+ *  THAN ASSERTED. The old note here said she "arrives at twenty-two on zero points, below the whole
+ *  field – «no ranking at all»". Half of that is false and the half that is true is not news:
+ *  measured over 52 careers at the fork (docs/specs/college-as-a-second-act-2026-08.md §4) her
+ *  professional rank is **#290 before the freeze and #290 after it**, IDENTICAL, because she was
+ *  already off the list the week she walked in. What the four years actually cost is the ladder
+ *  moving without her: the same seeds spent on tour finish at **#169**. The cost is 121 places she
+ *  did not lose but never gained, and the price of them is **$106,699** – college banks $152,243
+ *  against the tour's $45,544. That is the trade the year card now states, and it is why the
+ *  question at each boundary is a real one.
  *
  *  ⚠ THE LOOP BREAKS ON A FRESH ENDING. A career-ending injury can land at college – she is playing
  *  a lot of tennis – and when it does she never comes back, which is a true story rather than an
@@ -3367,17 +3407,67 @@ export function resumeFromCollege(world: WorldState, rng: Rng): void {
   const college = world.college
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
   if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
+  const start = openCollegeYear(world)
+  const yearEnds = Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR)
   world.ending = null
-  while (world.week < college.untilWeek && world.ending === null) tickWeek(world, rng)
-  college.doneWeek = world.week
-  if (world.ending === null) {
-    addEvent(world, {
-      week: world.week,
-      type: 'milestone',
-      keep: true,
-      text: `Four years, a degree and no ranking at all. She is ${kidAgeYears(world.week, world.profile.birthMonth)}, and the only way back in is qualifying.`,
-    })
+  while (world.week < yearEnds && world.ending === null) tickWeek(world, rng)
+  // ⚠ A YEAR CUT SHORT BY AN ENDING IS STILL BANKED. The album's last page is allowed to say what
+  // she was doing when it happened, and a row that stops mid-year is the honest record of that.
+  bankCollegeYear(world, start)
+  if (world.ending !== null) {
+    college.doneWeek = world.week
+    return
   }
+  if (world.week >= college.untilWeek) {
+    finishCollege(world)
+    return
+  }
+  // ⭐ THE LATCH GOES BACK ON, and this is the whole of "one year at a time". The screen that asks
+  // «another year?» is the epilogue screen, so the epilogue has to still be there to ask it – and
+  // `buildEndingView` fills `college` from `collegeProgressOf`, which is null the moment she leaves.
+  latchEnding(world, {
+    type: 'college',
+    week: world.week,
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+    detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
+    resumesWeek: Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR),
+  })
+}
+
+/** ⭐ THE EARLY RETURN – «I am going back on tour now», answered at a year boundary.
+ *
+ *  ⚠ IT IS A SEPARATE COMMAND AND NOT A FLAG ON `resumeFromCollege`, because the two answers do
+ *  opposite things to the latch: one puts it back on, this one takes it off for good. Folding them
+ *  into one call with a boolean would have made the most expensive click in this part of the game
+ *  depend on an argument nobody reads.
+ *
+ *  ⚠ AND IT REFUSES ON A CAREER THAT IS NOT AT A BOUNDARY, engine-side, because the worker is not
+ *  the gate (CLAUDE.md invariant 1). The screen stops drawing the button; this is what makes that a
+ *  rule rather than a decoration. */
+export function endCollegeEarly(world: WorldState): void {
+  const college = world.college
+  if (!college || college.doneWeek !== null) throw new Error('She is not at college')
+  if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
+  if (college.years.length === 0) throw new Error('She has not spent a year there yet')
+  leaveCollegeState(world)
+  world.ending = null
+  addEvent(world, {
+    week: world.week,
+    type: 'milestone',
+    keep: true,
+    text: collegeEpilogueLine(world),
+  })
+}
+
+/** The four years, spent. One place, so the early return and the full course write the same row. */
+function finishCollege(world: WorldState): void {
+  leaveCollegeState(world)
+  addEvent(world, {
+    week: world.week,
+    type: 'milestone',
+    keep: true,
+    text: collegeEpilogueLine(world),
+  })
 }
 
 
