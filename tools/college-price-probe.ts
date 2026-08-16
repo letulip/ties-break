@@ -238,7 +238,13 @@ console.log(`  mean funds delta: college ${usd(mean(college.map((r) => r.fundsDe
 // selects on her PROFESSIONAL record while the bill is priced off her JUNIOR one.
 console.log(`\n⭐⭐ THE COLLEGE BILL (v51) – n=${college.length}${ALL ? '  [--all: every career reaching the fork, the SHIPPED population]' : '  [default: only careers the RETIRED pre-16.08 rule would have left open]'}`)
 console.log(`  ${'quoted at the fork'.padEnd(26)}${usd(med(college.map((r) => r.offerFamilyPerYearCents))).padStart(14)} a year   ·  x${YEARS} = ${usd(med(college.map((r) => r.offerFamilyPerYearCents)) * YEARS)}`)
-console.log(`  ${'actually charged'.padEnd(26)}${usd(med(college.map((r) => r.tuitionPaid))).padStart(14)} over ${YEARS} years   ← off the LEDGER, not the offer`)
+// ⚠⚠ THE LEDGER READ IS TRUNCATED BY THE FINANCE WINDOW AND CANNOT TOTAL FOUR YEARS. `financeWeeks`
+// keeps a rolling ~60-week window, so this sees roughly the last season of tuition and not all 208
+// weeks of it – measured, it comes back at about 38% of the quoted bill, which is 60/208. It is
+// printed anyway, and negated to a positive spend, because it is the only INDEPENDENT check that the
+// weekly debit fires at all: a zero here beside a non-zero quote would mean the bill was quoted and
+// never charged. Do not read it as the four-year total; that is the row above.
+console.log(`  ${'charged in the last ~60wk'.padEnd(26)}${usd(-med(college.map((r) => r.tuitionPaid))).padStart(14)}   ← off the LEDGER; a rolling window, NOT the 4-year total`)
 const freeRides = college.filter((r) => r.offerFamilyPerYearCents === 0).length
 console.log(`  ${'free rides'.padEnd(26)}${String(freeRides).padStart(14)} / ${college.length}`)
 console.log(`\n  WHICH PROGRAMME OFFERED (n=${college.length})`)

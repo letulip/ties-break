@@ -72,12 +72,13 @@ re-create it from the other side**, and the guard is structural rather than beha
 ```ts
 export interface CollegeRecruitView {
   juniorBests: Partial<Record<'j300' | 'j60' | 'j30', number>>
+  juniorTitles: number           // junior rungs only, off `trophiesByTier`
   background: FamilyBackground   // ⚠ read ONLY by the need layer
   country: string                // ⚠ read ONLY by the need layer and the sticker
 }
 ```
 
-Three fields, and none of them is a professional result. `tests/college-offer.test.ts` block A pins the
+Four fields, and none of them is a professional result. `tests/college-offer.test.ts` block A pins the
 key set, so an agent who adds `rank` or `prizeCents` to re-create the rule trips a test before they
 trip a review.
 
@@ -86,27 +87,32 @@ never goes backwards and the junior rungs close at eighteen, so the offer measur
 birthday is the offer any later week would compute. It is also what a coach is actually looking at:
 §1c of the research has the commitment made at **sixteen or seventeen**, on a body of junior results.
 
-**The score, and it is ours.** §4 item 3 of the research is explicit that the ranking distribution of
-incoming D-I freshmen could not be sourced, so there is no real curve to copy:
+**The score, and it is ours – §4 item 3 of the research is explicit that the ranking distribution of
+incoming D-I freshmen could not be sourced, so there is no real curve to copy.** ⚠ **It is also the
+one thing in this phase that had to be measured twice**; §3b has the first version and why it failed.
 
-| | j300 | j60 | j30 |
-| --- | --- | --- | --- |
-| rung weight | 3 | 2 | 1 |
-| won it (finish 1) | | 4 | |
-| final (2) | | 3 | |
-| semi (≤4) | | 2 | |
-| quarter (≤8) | | 1 | |
+```
+score = 5 × roundScore(best j300)        // 0..20 – the prestige rung, where the spread is
+      + min(6, floor(juniorTitles / 2))  // 0..6  – how much junior tennis she actually won
+```
 
-`score = Σ weight × round`, max 24. **strong ≥ 12 · solid ≥ 5 · small ≥ 1 · walk-on = 0.**
+⚠ **Finishing position is ZERO-BASED** (`world.ts`: `if (kidFinish === 0) cabinet.titles.push(...)`),
+so `roundScore` is **won it 0 → 4 · final 1 → 3 · semi ≤3 → 2 · quarter ≤7 → 1**, and anything worse
+scores nothing.
+
+**The bands are the measured quartiles** of that score over 44 careers walked to the fork
+(min 4 · p25 6 · median 11 · p75 18 · p90 23 · max 25): **strong ≥ 18 · solid ≥ 7 · small ≥ 1 ·
+walk-on = 0.**
 
 ### 1c. ⚠ A MODEST OFFER IS NOT A REFUSAL, AND A REFUSAL IS NOT A CLOSED DOOR
 
 Two separate things, and the phase turns on keeping them separate:
 
-* **A weak record buys a small share at a small programme.** One junior quarter-final anywhere is
-  enough for a place. She is never turned away for having played badly.
-* **An EMPTY record – never a quarter-final at any junior rung in a whole junior career – buys no
-  athletics money.** ⚠ **And she still enrols.** A roster limit is a ROSTER limit and not a
+* **A weak record buys a small share at a small programme.** One J300 quarter-final, or two junior
+  titles anywhere, is enough for a place. She is never turned away for having played badly, and
+  **measured, 87 of 90 careers are offered a funded place** (§3f).
+* **An EMPTY record – no J300 result worth the name and fewer than two junior titles in a whole
+  junior career – buys no athletics money.** Measured: **3 of 90.** ⚠ **And she still enrols.** A roster limit is a ROSTER limit and not a
   scholarship count (Bylaw 17.2 + 16.13.1.5 `[S]`), so an unfunded walk-on is a real thing. **The
   third answer is still on the card, still pressable, and `answerFork` still refuses nothing.** What
   she does not have is anybody paying for it.
@@ -371,6 +377,137 @@ The battery still prints the pre-16.08 counterfactual, and it is worth putting b
 
 ⭐ **That is the phase in one line.** The old rule answered "may she?" with *no* in 84% of careers. The
 new one answers "may she?" with *yes, always* and "at what price?" with a number.
+
+### 3f. ⭐⭐ RUN 2 – PREDICTED vs MEASURED, n = 90, DENOMINATOR 90/90
+
+`npx vite-node tools/ladder-baseline.ts --seeds 10`. **Every career reaches the fork, in both runs and
+in the pre arm, so nothing below is a composition effect** – the standing warning of
+`the-ladder-is-monotone-2026-08.md` §3c does not bite here, and it is checked rather than assumed.
+
+| §6a | predicted | **measured** | verdict |
+| --- | --- | --- | --- |
+| offered a funded place | 88 / 88 | **87 / 90 (97%)** | ✅ |
+| walk-on | 0 | **3 / 90 (3%)** | ✅ – the refusal is real but rare |
+| strong / solid / small | 23% / 43% / 32% | **24% / 43% / 29%** | ✅✅ **exact on all three** |
+| mean athletic share | 56% | **57.9%** | ✅ |
+| **median 4-year bill** | **$28,000** | **$28,316** | ✅✅ |
+| free rides | ~20 / 90 | **21 / 90** | ✅ |
+| 4-year bill: working | $8,000 | **$8,701** | ✅ |
+| 4-year bill: middle | $30,000 | **$38,164** | ⚠ 27% high |
+| 4-year bill: wealthy | $45,000 | **$42,304** | ✅ |
+| athletic % gradient by background | "a few points" | **12.3 points** | ⚠ **much bigger** |
+
+**The award, by programme:**
+
+| programme | careers | athletic % | need % | family $/yr |
+| --- | --- | --- | --- | --- |
+| strong | 22 (24%) | **87.7** | 8.6 | **$1,149** |
+| solid | 39 (43%) | **59.5** | 17.8 | **$7,016** |
+| small | 26 (29%) | **36.9** | 21.9 | **$12,755** |
+| walk-on | 3 (3%) | 0.0 | 3.3 | $9,297 |
+
+**What four years cost the family, over all 90:** min **$0** · p25 **$3,246** · median **$28,316** ·
+p75 **$48,655** · max **$111,564**. **21 of 90 free rides.**
+
+### 3g. ⭐⭐⭐ THE OWNER'S QUESTION, MEASURED – AND THE ANSWER HAS TWO HALVES THAT POINT OPPOSITE WAYS
+
+| background | careers | athletic % | need % | bill / year | **over 4 years** |
+| --- | --- | --- | --- | --- | --- |
+| working | 30 | **53.6** | **36.0** | $2,175 | **$8,701** |
+| middle | 40 | **57.1** | 9.6 | $9,541 | **$38,164** |
+| wealthy | 20 | **65.9** | 0.0 | $10,576 | **$42,304** |
+
+**HALF ONE – THE BILL TIPS COLLEGE TOWARDS THE POOR FAMILY, BY A FACTOR OF 4.9.** A working family
+pays **$8,701** over four years where a wealthy one pays **$42,304**, and every dollar of that
+difference comes through the need layer (36.0% against 0.0%). ⭐ **That is the right way round** – it
+is the direction reality runs, and it is the direction a flat bill would have inverted.
+
+⚠⚠ **HALF TWO, AND IT IS THE FINDING I DID NOT SIZE CORRECTLY: THE AWARD ITSELF SHOWS A 12.3-POINT
+WEALTH GRADIENT, 53.6% → 65.9%.** The FUNCTION is merit-only and `tests/college-offer.test.ts` block A
+proves it by sweep and by mutation. **The POPULATION is not, and there is no contradiction between
+those two sentences.** A wealthy family buys a better coach, a better coach produces a better junior
+record, and the award reads the junior record. **The award does not read wealth; wealth buys the record
+the award reads.**
+
+> ⭐ **So the honest answer to «едины для всех или тоже от достатка?» is: the RULE is the same for
+> everyone, the OUTCOME is not, and the two channels pull in opposite directions.** The need layer
+> hands the working family $33,603 more help over four years; the merit channel hands the wealthy
+> family a 12.3-point bigger award. Measured, **the need layer wins comfortably** – the net bill still
+> favours the poor family nearly five to one. §4.1 is the owner's decision about whether that is the
+> balance he wants.
+
+### 3h. THE LIVED FOUR YEARS – `tools/college-price-probe.ts -- --seeds 6 --all`, n = 53
+
+⚠ **P5's $152,243 / $45,544 is NOT the before-column and is not used as one.** It was measured on the
+DEFAULT filter – only the ~9 careers of 90 the retired pre-16.08 rule would have left open – and on a
+ladder two waves old. `--all` is the shipped population: every career that reaches the fork.
+
+| median over 4 years | before this phase (`--all`, run 1) | **with the bill** | predicted |
+| --- | --- | --- | --- |
+| college funds delta | $148,502 | **$106,995** | $115,000 ✅ |
+| tour funds delta | $31,959 | **$31,959** | $40,000 ✅ |
+| **college ahead by** | $116,543 | **$75,036** | ~$75,000 ✅✅ |
+| ...of which college SPENT | $9,138 | **$30,579** | – |
+| professional rank after | unranked (0/53) | **unranked (0/53)** vs tour **#167** (52/53) | – |
+
+⭐ **THE BILL COSTS THE COLLEGE ARM $41,507 OF ITS ADVANTAGE, AND COLLEGE STILL WINS BY $75,036.** The
+third answer is no longer free, and it is still the cheapest answer at the fork. ⚠ **That is a finding
+for the owner and not a defect** – §4.2.
+
+**And the same three families on what the four years actually produced:**
+
+| background | n | college | tour | college ahead by |
+| --- | --- | --- | --- | --- |
+| working | 18 | $85,936 | $73,115 | **$12,821** |
+| middle | 23 | $121,039 | $36,035 | **$85,004** |
+| wealthy | 12 | $224,651 | $12,998 | **$211,653** |
+
+⚠⚠ **AND THAT TABLE INVERTS THE ONE ABOVE IT, WHICH IS THE MOST IMPORTANT THING IN THIS SPEC.** The
+BILL favours the working family 4.9 to 1. The ADVANTAGE OF GOING favours the wealthy family 16.5 to 1 –
+because a wealthy family on tour BURNS $12,998-worth of a much larger outgoing, so the money college
+saves them is enormous, while a working family was never spending much to begin with. **College is the
+biggest financial win for the family that needed it least.** §4.1.
+
+---
+
+## 4. ⚠ FOR THE OWNER – three decisions and one thing I could not do
+
+### 4.1 ⭐⭐ THE PAYMENTS QUESTION IS ANSWERED, AND IT NEEDS ONE RULING FROM YOU
+
+**Built:** the athletics award is **merit-only** and cannot read the family – it is not handed one, and
+the test that proves it is mutation-verified. The **net bill** differs by background **only** through a
+need-based layer the research supports (NCAA's own page names it; 34 CFR §668.33 and the Pell formula
+means-test it). **Nothing scales the athletic award by wealth, and nothing should.**
+
+**Measured, the design tips college towards the POOR family on the bill** – $8,701 against $42,304 over
+four years – **and towards the WEALTHY family on the benefit** – college is $211,653 better than the
+tour for them and $12,821 better for a working family.
+
+⚠ **THE DECISION: which of those two is the one you want college to be about?** Both are honest
+consequences of a merit-only award plus a means-tested layer, and neither is a bug. If college should
+be the route for a family that cannot fund an apprenticeship, the lever is not the award – it is the
+**tour's** cost, because that is what the $211,653 is actually measuring.
+
+### 4.2 THE THIRD ANSWER IS STILL THE CHEAPEST ANSWER AT THE FORK
+
+The bill takes **$41,507** off the college arm's advantage and it is still **$75,036** ahead of the
+tour over four years. ⚠ Reported, not acted on: I have no sourced ground to raise the price further,
+and §2b's `middle: 0.10` is the one number here most worth arguing with.
+
+### 4.3 A NON-AMERICAN PAYS ROUGHLY DOUBLE, AND THE BENCH CANNOT SEE IT
+
+Every preset is `country: 'US'`, so §3's whole table is the cheapest case. A non-American faces
+**$50,920** a year instead of $30,990 **and no need-based layer at all** – both primary-sourced, §2d.
+On the same junior record as the median career here, that is roughly **$100,000 over four years
+against $28,316**. ⚠ **For a non-American working family college is effectively unavailable** – not by
+a rule, but by a bill, and our game is nation-agnostic with a player-chosen country at onboarding.
+**Flagged, not tuned.**
+
+### 4.4 ⚠ THE ONE COMMAND THIS PHASE DID NOT RUN
+
+`SAVE_SCHEMA_VERSION` moved 50 → 51, so **`tests/e2e-fixtures.test.ts` is RED until the corpus is
+regenerated with `npm run e2e:fixtures`**. That alarm is doing exactly what its own comment says it is
+for. The e2e corpus and the browser suite are yours, so it is handed over rather than run here.
 
 ---
 
