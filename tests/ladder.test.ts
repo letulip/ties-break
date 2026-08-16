@@ -692,9 +692,12 @@ describe('⭐⭐ L6b — the acceptance chain is monotone in ladder order', () =
    *  and `tools/big-draw-cost.ts` is its receipt), which is what turns a sourced number into an
    *  inverted one HERE.
    *
-   *  ⚠ IT IS ESCALATED, NOT ABSORBED. Closing it means moving either a sourced figure or an unsourced
-   *  one at the very top of the ladder, on a pair only ~1 career in 90 ever reaches – an owner's call,
-   *  and it is in the spec. What this file does is refuse to let it hide: the pair is named, the
+   *  ⚠ IT IS ESCALATED, NOT ABSORBED, AND IT IS NOT ACADEMIC. Closing it means moving either a sourced
+   *  figure or an unsourced one at the very top of the ladder – an owner's call, and it is in the spec.
+   *  Measured on the shipped tree (tools/ladder-baseline.ts, n=90): **34 careers reach a Slam and 16
+   *  reach a WTA 1000**, so the window the inversion bites in – a girl ranked #66-#104, who may enter a
+   *  major and not the rung below it – is one real careers pass through. What this file does is refuse
+   *  to let it hide: the pair is named, the
    *  exemption is asserted to be the ONLY one, and it is asserted to be REAL, so the day the Slam draw
    *  or either cut moves, this list goes stale loudly instead of quietly excusing a new inversion. */
   const EXEMPT: readonly (readonly [TierId, TierId])[] = [['wta1000', 'slam']]
