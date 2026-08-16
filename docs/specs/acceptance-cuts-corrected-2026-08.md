@@ -139,6 +139,17 @@ fastest way to build. Delete the prestige rung and the whole professional on-ram
 > **This is the clearest single example of why the plan ordered P3 after P1.** The same edit, measured
 > four days apart, is worth 1 rank place on one ladder and ~110 on the other.
 
+⚠ **AND THE WORD "CLIFF" IS OVERSTATED BY THE n = 27 TABLE – SAID HERE RATHER THAN LEFT TO FLATTER
+THE CHOICE.** A **0.175** probe at n = 54 lands *part-way down*: end rank **283** against shipped 250,
+prize **−$11.9k**, J300 entries 1.3 with reach 32/54. So the edge is a steep **slope**, not a wall, and
+0.20 is the last value before it rather than the last value above a precipice. What the probe does not
+change is the direction – every value below 0.20 is further downhill and buys nothing the target asks
+for.
+
+⚠ **NOR IS 0.20 FREE, AND §4c PRICES IT**: about **−$9k of prize money and ~40 mean rank places** on
+the audit's horizon. It ships because the rung was measurably outside its own target in the loose
+direction (§3b) and because the sport says 2% – **not because the correction pays. It does not.**
+
 ### 3b. AND HALVING IT MOVES THE RUNG BACK TOWARDS ITS OWN TARGET, NOT AWAY FROM IT
 
 `docs/specs/two-ladders.md` §0 wrote the target down **before** tuning: *"0 for most careers, 1–2 for
