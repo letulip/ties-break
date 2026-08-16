@@ -196,6 +196,9 @@ produced a *defect list* instead of a workaround list.
 | `storage-recovery.spec.ts` | a damaged newest autosave falls back to the previous generation, and the shell says so | 2, 1 |
 | `save-file.spec.ts` | a career round-trips through a real file: out of the app, and back in | 6 |
 | `save-file.spec.ts` | an untrusted file is refused at the door and the career on disk is untouched | 6 |
+| `onboarding-tour.spec.ts` | a new player is shown the interface tour, walks it, and dismisses it | 2, 5 |
+| `onboarding-tour.spec.ts` | it does not come back on the next boot – and an *unanswered* one still does | 2 |
+| `onboarding-tour.spec.ts` | More can ask for the tour again, and asking moves the player to Home | 2, 5 |
 | `responsive.spec.ts` | at 375 px nothing scrolls sideways and the season strip stays short | 4 |
 | `offline.spec.ts` | after one visit the app boots with the network cut | 3 |
 | `coverage-map.spec.ts` | this document has not rotted (§11) | – |

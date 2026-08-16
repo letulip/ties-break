@@ -54,10 +54,14 @@ export const useGameStore = defineStore('game', {
     careers: [] as CareerMeta[],
     /** set when the active autosave was damaged and the previous generation was restored */
     recovered: false,
-    /** Round 5 item 10: one-shot signal – this `newCareer` was the very first one ever
-     *  on this device (the careers list was empty before it). App.vue consumes it once
-     *  (to decide whether to launch the coach-mark tour) then patches it back to false. */
-    firstEverCareer: false,
+    // ⚠ `firstEverCareer` WAS HERE AND IS GONE (16.08). Round 5 item 10 used it as a one-shot signal
+    // that this `newCareer` was the very first ever on the device, and App.vue consumed it on the
+    // first snapshot transition to decide whether to launch the coach-mark tour. It is not
+    // persisted, so a player whose first session ended before they answered the tour lost the
+    // onboarding for good: the flag was spent and the localStorage mark it guarded is written only
+    // when the tour is actually dismissed. The gate is a function of that durable mark now (App.vue,
+    // `tourWanted`) and needs no signal from the store at all – so the field is removed rather than
+    // left as an unread one-shot for the next wave to reintroduce the race with.
     persisted: null as boolean | null,
     /** the worker's committed revision as of the last response seen – the `baseRevision`
      *  every mutation carries (W1-INTEGRITY-A) */
@@ -211,14 +215,10 @@ export const useGameStore = defineStore('game', {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
       const finalSeed =
         seed.trim() || `${profile.kidName.toLowerCase()}-${(Math.random().toString(36).slice(2) + '0000').slice(0, 4)}`
-      // Snapshot BEFORE creation: "the careers list was empty" is what makes this the
-      // very first career ever, not whatever it becomes after refreshCareers() below.
-      const wasEmpty = this.careers.length === 0
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'new', seed: finalSeed, profile }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         this.recovered = false
-        if (wasEmpty) this.firstEverCareer = true
         await this.refreshCareers()
         await this.refreshSlots()
       })

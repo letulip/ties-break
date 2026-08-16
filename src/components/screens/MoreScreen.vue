@@ -366,6 +366,18 @@ function toggleWeekStory(): void {
   weekStoryOff.value = !weekStoryOff.value
 }
 
+// --- 16.08: THE WAY BACK TO THE COACH-MARK TOUR -----------------------------------------------------
+//
+// The tour is answered once and then never offered again – which is right, and which used to mean a
+// player who skipped it by accident, or who came back to the game a month later, had no way to be
+// told what any of the interface was for. So the way back lives on the screen the owner calls "our
+// settings, essentially", beside the other beats a player can turn on and off.
+//
+// ⚠ IT ASKS RATHER THAN DOES, which is the same seam Home's cards use. Whether the marks are on
+// screen is the SHELL's state: they point at the bottom bar and at things on Home, so opening them
+// has to move the player to Home first, and this screen does not own the tab.
+const emit = defineEmits<{ (e: 'show-tour'): void }>()
+
 // --- THE CALENDAR'S CROSSING-OUT SWEEP (the calendar slice) -----------------------------------------
 //
 // THE FIFTH SWITCH ON THIS SCREEN, and the fourth one in a row that is the same object: a plain
@@ -709,6 +721,22 @@ const TAB_OPTIONS = [
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
         <span class="sound-switch-label">{{ weekStoryOff ? 'OFF' : 'ON' }}</span>
       </button>
+    </div>
+  </section>
+
+  <!-- 16.08: the coach-mark tour, on demand. A button and not a switch, because it is an ACTION -
+       there is no state here to be on or off, and the three switches above would start meaning less
+       if a fourth row that runs something wore their shape. -->
+  <section v-if="screenTab === 'play'">
+    <h2>Interface tour</h2>
+    <div class="career-row">
+      <div>
+        <span>The coach marks for new players</span>
+        <span class="hint" style="display: block; margin: 2px 0 0">
+          Walks the header, the cards and every tab, one tap at a time
+        </span>
+      </div>
+      <button :disabled="!game.snapshot" @click="emit('show-tour')">Show the tour</button>
     </div>
   </section>
 

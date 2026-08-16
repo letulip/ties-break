@@ -21,7 +21,7 @@
 // SELECTORS: role and accessible name (plan §4). Not one `data-testid` was needed - see the note on
 // the Family budget card below, which is the one place it nearly was.
 
-import { test, expect } from './careerAt'
+import { test, expect, TOUR_ANSWERED } from './careerAt'
 import { weekDateLine } from '../src/shared/dates'
 import { formatCents } from '../src/shared/money'
 
@@ -47,7 +47,9 @@ test.describe('a seeded career boots into the state the manifest describes', () 
     const crashes: string[] = []
     page.on('pageerror', (error) => crashes.push(error.message))
 
-    const { facts } = await careerAt('fresh')
+    // TOUR_ANSWERED: week 0 is when the first-run coach marks are offered, and this spec is about
+    // what the manifest says the career IS – see careerAt.ts.
+    const { facts } = await careerAt('fresh', { localStorage: TOUR_ANSWERED })
 
     await expect(page.getByText(onScreenWeek(facts.week))).toBeVisible()
     await expect(page.getByRole('button', BUDGET_CARD)).toContainText(

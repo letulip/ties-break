@@ -83,9 +83,15 @@ export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | nu
 // every tab while `pending` is set. Close the tournament and the held question is the next thing on
 // screen. Nothing here can hold a dialog behind a state with no way out of it.
 
-/** Every popup the shell can raise – the five blocking questions plus the three reports that are
- *  gated the same way. Named here so the rule below is total over all of them. */
-export type Popup = BlockingOverlay | 'injury' | 'season-summary' | 'tour-briefing'
+/** Every popup the shell can raise – the five blocking questions plus the reports that are gated the
+ *  same way. Named here so the rule below is total over all of them.
+ *
+ *  ⚠ `onboarding-tour` IS IN THE SET, and it is the case this file's header predicted ("one set means
+ *  the next dialog somebody adds inherits the wait"). The coach marks are not a dialog and do not
+ *  block – `.coach-tour` is `pointer-events: none` everywhere but the card – but they black the
+ *  screen out behind a 4000px shadow and hang a card off a measured rect, so landing them on a
+ *  tournament reveal is exactly the collision round-21 #9 was raised about. */
+export type Popup = BlockingOverlay | 'injury' | 'season-summary' | 'tour-briefing' | 'onboarding-tour'
 
 /** ⭐ THE POPUPS THAT MAY LAND ON A BUSY SCREEN, and there are exactly two.
  *

@@ -82,8 +82,10 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
   // lost its BUTTON, not its screen. Every row in it (careers, saves, sound, haptics, the danger
   // zone, About) is still reachable, through doors that already existed.
   it('More keeps its screen and both its gears – it is a tabless content state now, like Money', () => {
-    // Still mounted, still on the same id.
-    expect(app).toContain(`<MoreScreen v-else-if="tab === 'more'" />`)
+    // Still mounted, still on the same id. Matched WITHOUT its attribute list: the screen grew an
+    // `@show-tour` handler on 16.08 (the way back to the coach marks), and a pin that spells out
+    // every attribute goes red for a reason that has nothing to do with the claim it is making.
+    expect(app).toContain(`<MoreScreen v-else-if="tab === 'more'"`)
     expect(app).toContain("import MoreScreen from './components/screens/MoreScreen.vue'")
     expect(app).toContain("'more'") // still in the TabId union
     // ...and its two doors are the gears that always reached it, on Home and on the Kid screen.

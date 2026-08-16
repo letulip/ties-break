@@ -228,18 +228,16 @@ const showOnboarding = computed(() => game.ready && !game.snapshot)
 
 // A career appearing after onboarding must land on Home, not whatever tab was
 // active before the reset (e.g. More, where "New career" lives).
+//
+// ⚠ THE COACH-MARK TOUR IS NO LONGER LAUNCHED FROM HERE, and that is the 16.08 defect – see
+// `tourWanted` further down for the gate that replaced it. It used to read a one-shot store flag
+// (`firstEverCareer`) inside this callback and patch it back to false whether or not the tour was
+// actually shown, which meant the whole of "this player has never been onboarded" lived in a
+// non-persisted boolean that was spent on the first snapshot transition of the session.
 watch(
   () => game.snapshot,
   (now, before) => {
-    if (now && !before) {
-      tab.value = 'home'
-      // Consume the one-shot "first ever career" signal exactly once, regardless of
-      // whether the tour actually launches (already seen on this device -> skip it).
-      if (game.firstEverCareer) {
-        game.$patch({ firstEverCareer: false })
-        if (!localStorage.getItem(TOUR_SEEN_KEY)) showTour.value = true
-      }
-    }
+    if (now && !before) tab.value = 'home'
   },
 )
 
@@ -603,13 +601,6 @@ watch(tab, (t) => {
 watch(trophyPieceCount, () => {
   if (tab.value === 'trophies') markTrophiesSeen()
 })
-
-// --- coach-mark onboarding tour (item 10) ------------------------------------
-const showTour = ref(false)
-function dismissTour(): void {
-  showTour.value = false
-  localStorage.setItem(TOUR_SEEN_KEY, '1')
-}
 
 // Package K2: a corrupted-generation recovery is rare and stays a one-time hint –
 // dismissing it just patches the flag back to false (same pattern MoreScreen uses
@@ -1027,6 +1018,72 @@ const showTourBriefing = computed(
     !!game.snapshot?.tourBriefing &&
     !tourBriefingSeen.value,
 )
+
+// =================================================================================================
+// ⭐ 16.08 – THE COACH-MARK TOUR REACHES A PLAYER WHO HAS NEVER ANSWERED IT (item 10, re-gated)
+// =================================================================================================
+//
+// The owner, after a playtester met the app cold: the onboarding that explains the functions and the
+// interface is gone, and the interface is not the simplest. It was not gone from the build – it was
+// gone from that player, and the reason is a one-shot race.
+//
+// ⚠ WHAT IT WAS. `game.firstEverCareer` is an IN-MEMORY store flag set by `newCareer` when the
+// careers list was empty, and the watcher above consumed it – `$patch({ firstEverCareer: false })` –
+// on the first snapshot transition of the session, BEFORE checking whether the tour would open. So
+// the only durable record of "this player has been onboarded" was `tb:onboardingTourSeen`, and that
+// key is written by `dismissTour` alone. A first session that ended without the player pressing Skip
+// or Got it therefore left BOTH gates shut for ever: the flag does not survive a reload and the key
+// was never written. Reproduced in real Chromium at 375x667 – create a career, see the tour, reload
+// without answering it, and the tour is gone with localStorage still empty of the key.
+// e2e/onboarding-tour.spec.ts is that reproduction, kept as the regression.
+//
+// ⚠ SO THE GATE IS A FUNCTION OF DURABLE STATE, NOT AN EVENT. "Has this device answered the tour"
+// is one localStorage key, mirrored into a ref for reactivity (the same idiom as the season dot
+// above, and for the same reason: a bare getItem inside a computed is not a tracked dependency).
+// Nothing is consumed, nothing races, and the ORDER in which the career arrives - a fresh wizard, an
+// autosave adopted at boot, a worker restart reloading the last committed week - cannot change the
+// answer. That is the half that makes this robust rather than lucky: the previous gate was correct
+// on exactly one ordering out of several the app really produces.
+//
+// ⚠ AND IT DOES NOT LAND ON A CAREER THAT IS ALREADY UNDER WAY. The automatic offer is bounded by
+// `week === 0` – she has not played a single week yet – and the bound is a SENTENCE rather than a
+// tuned number: a player who has advanced a week has already found the button the tour ends on, so
+// from that point the marks stop being onboarding and start being an interruption. And they really
+// do interrupt, which is the half worth stating: `.coach-tour` is `pointer-events: none`, but the
+// CARD is not, so a coach mark hanging over a mature career swallows taps on whatever is behind it.
+// Measured, not assumed – e2e/tournament-entry.spec.ts went red on the unbounded version with
+// Playwright naming `.coach-tooltip` as the element intercepting the click on Enter.
+//
+// ⚠ SO THE WAY BACK IS NOT OPTIONAL, and that is `reopenTour` below. A bound that can pass a player
+// by needs a door they can open themselves; without one this would just be a narrower version of the
+// same bug.
+const tourSeen = ref(localStorage.getItem(TOUR_SEEN_KEY) === '1')
+/** More's "Show the tour again" – it outranks BOTH the seen mark and the week bound. */
+const tourReopened = ref(false)
+const tourWanted = computed(
+  () => tourReopened.value || (!tourSeen.value && game.snapshot?.week === 0),
+)
+const showTour = computed(
+  () =>
+    !!game.snapshot &&
+    tourWanted.value &&
+    // ⭐ ROUND-21 #9's rule, inherited rather than re-derived: the marks black out the screen behind
+    // a 4000px shadow, so they must not land on a tournament reveal or a live friendly, and they
+    // must wait behind a blocking question the way every report below the queue does.
+    queued.value === null &&
+    popupMayShow('onboarding-tour', game.snapshot ?? null, liveSequence.value),
+)
+function dismissTour(): void {
+  tourSeen.value = true
+  tourReopened.value = false
+  localStorage.setItem(TOUR_SEEN_KEY, '1')
+}
+/** More asks for it again. It moves to Home first: every anchor the tour points at is either the
+ *  bottom bar or something on HomeScreen, so a tour opened over Stats would highlight nothing. */
+function reopenTour(): void {
+  tourReopened.value = true
+  tab.value = 'home'
+}
 </script>
 
 <template>
@@ -1148,7 +1205,10 @@ const showTourBriefing = computed(
       <!-- U1 (screen G): the Family Budget grew the export's back arrow, and Money is a tabless
            content state - so it asks the shell to move exactly the way Home and Kid already do. -->
       <MoneyScreen v-else-if="tab === 'money'" @navigate="tab = $event" />
-      <MoreScreen v-else-if="tab === 'more'" />
+      <!-- 16.08: More is where the tour can be asked for again. It is the shell that owns whether
+           the marks are up (they point at the bottom bar and at Home), so the screen only ASKS -
+           the same one-event idiom Home's cards use. -->
+      <MoreScreen v-else-if="tab === 'more'" @show-tour="reopenTour" />
       <TrophiesScreen v-else-if="tab === 'trophies'" />
     </main>
 
@@ -1287,7 +1347,9 @@ const showTourBriefing = computed(
     <ForkDialog v-if="showFork" />
     <RetirementDialog v-if="showRetirement" />
 
-    <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
+    <!-- Round 5 item 10, re-gated 16.08: the coach-mark tour of the interface. Shown to any player
+         on a device that has never ANSWERED it (Skip or Got it), and re-openable from More – see
+         `tourWanted` in the script for why the old one-shot signal lost it for whole players. -->
     <OnboardingTour v-if="showTour" @done="dismissTour" />
   </template>
 </template>
