@@ -255,6 +255,14 @@ real body's name is constructible from the label.
 | input-independence survives all four | `tests/ending.test.ts`'s existing case, re-aimed to four calls | ✅ |
 | the save schema move is complete | `SAVE_SCHEMA_VERSION` 49 → **50**, an append-only v49→v50 step, `tests/fixtures/saves/v50.json`, `tests/goldenSaves.test.ts` green on all 51 fixtures | ✅ |
 
+⚠ **ONE TEST IS RED ON PURPOSE AND IT IS NOT THIS PHASE'S TO CLOSE.**
+`tests/e2e-fixtures.test.ts` – *"is written at the current schema (v50) – REGENERATE with
+`npm run e2e:fixtures` after a bump"* – is **the alarm that goes off on a schema bump, and it is
+meant to.** The e2e corpus (`e2e/fixtures/*.tsave`) is regenerated once at the end of the wave by the
+wave owner, so this phase deliberately did not run that command. It is the only failing test in the
+unit project: **2861 passed, 1 failed**, and the one is this. Everything else in the run, including
+`tests/condition.test.ts`'s frozen MAIN capture, is green.
+
 ### 5a. The battery, re-run
 
 `npx vite-node tools/ladder-baseline.ts` on this branch, n = 90 (9 presets x 10 seeds), 676 weeks,
