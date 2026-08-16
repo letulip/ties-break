@@ -13,10 +13,11 @@
 // an injury the `seed:injury:<week>` stream has already rolled, an age comparison, or an answer.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
 import { formatCents } from '../../shared/money'
-import type { AutoEndingView, PlateauView } from '../ending'
+import type { AutoEndingView, CollegeResultView, PlateauView } from '../ending'
 import {
   ENDINGS,
   ENDING_TITLE,
+  collegeDoorOpen,
   detectEnding,
   endingForForkAnswer,
   endingForRetirement,
@@ -293,31 +294,51 @@ export function resolveEndings(world: WorldState): void {
  *  junior trying the tour; a result that scored is a professional on it. `wtaEverCounted` uses the
  *  identical test one table down, so the two cannot mean different things by "it counted". */
 export function collegeStillOpen(world: WorldState): boolean {
-  const from = TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier)
-  return !(Object.keys(world.bestFinishByTier) as TierId[]).some((tier) => {
+  return collegeDoorOpen(collegeResultViewOf(world), TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier))
+}
+
+/** THE VIEW THE COLLEGE RULE READS – built here, because this is the seam that is allowed to know
+ *  what a rung is. `ending.ts` gets three numbers per result and no calendar constant at all.
+ *
+ *  ⚠ `rounds` IS THE DRAW'S DEPTH AND NOT ITS PRIZE COLUMN. `points.length` is how many finishing
+ *  positions the rung has, which is a structural fact; the VALUES in that array are the ladder's
+ *  tuning and are deliberately not passed on. That is the whole of the decoupling – see
+ *  `collegeDoorOpen`, and `docs/specs/college-gate-decoupled-2026-08.md` for why it was needed. */
+function collegeResultViewOf(world: WorldState): CollegeResultView[] {
+  const views: CollegeResultView[] = []
+  for (const tier of Object.keys(world.bestFinishByTier) as TierId[]) {
     const finish = world.bestFinishByTier[tier]
-    if (finish === undefined) return false
-    if (TIER_LADDER.indexOf(tier) < from) return false
-    // ⭐ SHE HAS TO HAVE WON A MATCH THERE (owner, 13.08: «чини дверь по набранному результату, а не
-    //   по единице»). The test used to be `points[finish] > 0`, and that is not the line the constant
-    //   above says it is drawing.
-    //
-    //   THE MEASUREMENT THAT PRODUCED THE RULING (endings bench, 9 presets x 20 seeds): W75 shut the
-    //   door in 95.2% of closures, and **12 of 25 sampled closures were a FIRST-ROUND LOSS** – because
-    //   `w75.points` is [75, 49, 29, 16, 9, 1] and that trailing 1 is the wooden spoon, handed to
-    //   everyone who turns up and loses. So the door was being shut by exactly the case
-    //   `collegeClosedFromTier`'s own comment calls safe: «a junior who has tried the tour».
-    //
-    //   ⚠ AND THE LADDER WAS INCONSISTENT WITH ITSELF ABOUT IT. `w100.points` ends in 0, so the SAME
-    //   first-round loss kept the door at W100 and took it at W75 – while w75's own comment claims the
-    //   nominal 1 is paid "as at every rung from W50 up", which W100 disproves. Reading the FINISH
-    //   rather than the points settles it for every rung at once and cannot drift with a table edit.
-    //
-    //   The last index is the opening round: `bestFinishByTier` holds the smallest (best) index and
-    //   `points[0]` is the champion, so `length - 1` is the girl who lost her first match.
-    if (finish >= TIERS[tier].points.length - 1) return false
-    return TIERS[tier].points[finish] > 0
-  })
+    if (finish === undefined) continue
+    views.push({ rungIndex: TIER_LADDER.indexOf(tier), finish, rounds: TIERS[tier].points.length })
+  }
+  return views
+}
+
+/** ⭐⭐ WOULD ENTERING THIS RUNG COST HER THE COLLEGE ENDING? P4's warning, as an engine predicate.
+ *
+ *  ⚠ IT IS A WARNING AND NO LONGER A SILENCE, WHICH IS THE POINT. `ENDINGS.collegeClosedFromTier`
+ *  used to state the silence as intent – *"it is a PRECONDITION and not a WARNING"* – on the strength
+ *  of an NCAA eligibility rule that **does not exist** (research §1b: no pre-enrolment cap at all
+ *  since 15 April 2026). A rule the sport does not have may not be sprung on the player after the
+ *  fact, so the tournament card says this entry can cost the scholarship BEFORE she loses it.
+ *
+ *  ⚠ IT MAY NOT RECOMMEND (ruling 4, 30.07). It states a consequence and stops: no verdict on
+ *  whether entering is a good idea, no styling that makes it a refusal, and `eligible` is untouched.
+ *  The parent may always push – the doctor's veto is this game's one exception and this is not it.
+ *
+ *  ⚠ AND IT IS "CAN COST", NOT "WILL": a first-round loss there keeps the door (that is the 13.08
+ *  ruling), so the honest sentence is about what a RESULT would spend, not the entry fee.
+ *
+ *  Three conditions, and all three are about whether the sentence would be TRUE, never about whether
+ *  it would be useful:
+ *    1. the door is still open – there is something left to spend;
+ *    2. this rung is at or above the college rung – a W15 costs nothing;
+ *    3. the fork has not been answered yet – after it there is no college ending left to lose, and a
+ *       card that warns about a spent decision is noise. */
+export function entryCostsCollege(world: WorldState, tier: TierId): boolean {
+  if (world.fork !== null && world.fork.answer !== null) return false
+  if (TIER_LADDER.indexOf(tier) < TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier)) return false
+  return collegeStillOpen(world)
 }
 
 /** THE MOST EXPENSIVE CLICK IN THE GAME (adult spec's own risk note). Three answers, two of which

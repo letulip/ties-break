@@ -1144,6 +1144,22 @@ export interface UpcomingEvent {
    *  NEVER A BLOCK. "The parent may push" is a standing rule of this game and the doctor's veto
    *  (`ineligibleReason: 'medical'`) is its single exception. `eligible` stays true. */
   coachCaution?: string
+  /** ⭐⭐ A RESULT HERE CAN COST HER THE COLLEGE ENDING – P4's warning, and the reason it is a wire
+   *  field rather than a screen's own arithmetic.
+   *
+   *  Present only when all three are true: the door is still open, this rung is at or above
+   *  `ENDINGS.collegeClosedFromTier`, and the fork is unanswered. The engine's own predicate is
+   *  `entryCostsCollege` – so the card cannot disagree with the rule that will actually fire, the
+   *  same construction `eligible`/`ineligibleReason` have had since R10-5.
+   *
+   *  ⚠ IT IS NOT A REFUSAL AND NOT A CAUTION. `eligible` is untouched, `cautionReason` is the BODY's
+   *  word and this is not about her body, and nothing here recommends: the card states what a result
+   *  would spend and stops (ruling 4, 30.07 – «may not recommend»). The parent may always push.
+   *
+   *  ⚠ AND IT IS "CAN", NOT "WILL". A first-round loss keeps the door (owner, 13.08); only a result
+   *  that got past the opening round spends it, so the copy may never promise the entry itself costs
+   *  anything. See `docs/specs/college-gate-decoupled-2026-08.md`. */
+  costsCollege?: boolean
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
   /** the ITF rank an international rung accepts down to, on a card locked by an ACCEPTANCE LIST
