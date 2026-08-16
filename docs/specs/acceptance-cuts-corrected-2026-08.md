@@ -340,8 +340,8 @@ because the audit's horizon stops at twenty and this one does not. P9 was wrong 
 
 ## 5. GUARDS – what moved and why
 
-**16 assertions across 4 files went red. Every one is RE-AIMED with a ⚠ note at the site, none is
-weakened or deleted**, and two are strictly stronger than the line they replace. They are three
+**23 assertions across 10 files went red. Every one is RE-AIMED with a ⚠ note at the site, none is
+weakened or deleted**, and two are strictly stronger than the line they replace. They are four
 families, plus one thing that is not a re-aim at all.
 
 **(a) A PIN ON A NUMBER THIS FILE HAS NO OPINION ABOUT.** `tests/unranked-sentinel.test.ts` asserted
@@ -372,7 +372,37 @@ probes re-point (#300 → #230 for national, #60 → #55 for global) and the cla
 standing alone signs her* – is unchanged. **See §6.1: this is a balance change to the economy that
 rode in on a ladder correction, and it is the owner's to accept or reject.**
 
+Also in this family: `tests/play-down.test.ts`' reversal probe **#300 → #200** (that rank exists to
+clear *every* W acceptance cut, so anything shut below is demonstrably the play-down rule and not the
+list – the chain took the tightest W-series cut to 240, so #300 stopped doing its job);
+`tests/outgrownWithdraw.test.ts`' seed book **30 → 40 a side** (`tierOutgrown('w50')` asks whether the
+WTA 125 is open, and its price went from a book of ~249 to ~384); and `tests/ladder-separation.test.ts`'
+two sweeps **140 → 210 weeks** (both assert they reached *both halves of the ladder or they guard
+nothing*, and the tighter j300 door moved this seed's international debut past week 140).
+
+**(c2) TWO FROZEN ARTEFACTS, RE-FROZEN UNDER THEIR OWN PROTOCOL.**
+* `tests/coach-travel-edge.test.ts`' three career hashes. ⚠ **The per-key diff was taken FIRST, as
+  that file demands** – a worktree at `c04253f`, all 64 top-level keys hashed on both sides.
+  **27–32 keys move per career** (`results`, the rank caches, the season counters, the wallet – and
+  on the middle grinder `ending`, `debtSinceWeek` and `medicalWithdrawalWeek`, i.e. **that career now
+  ends differently**), while **`coachId`, `coachOnEventWeeks`, `coachOnJuniorEvents`, `profile`,
+  `seed`, `rngMain`, `cohort` and `schemaVersion` are byte-identical on all three**. What the hashes
+  exist to catch is a coach change leaking past the trip; a ladder change that left `results` alone
+  would be the alarm.
+* `tests/endings-bench.test.ts`' fork cell. Its `steady` career (PRESETS[3]) **stopped reaching the
+  fork at all** – on the corrected ladder it takes a career-ending injury at week 262 – so the case
+  exploded on its own precondition, which is what it is built to do. The board was re-swept over ten
+  seeds and the cell moved to **PRESETS[0]**, which ties for the widest margin (fork reached 10/10,
+  door open 10/10, never shut 10/10 over six years), keeps the "self-coached family grinds the
+  calendar" property the cell was chosen for, and is **stronger than the cell it replaces**.
+
+⚠ **`rngMain` UNMOVED IS THE INVARIANT-2 RESULT, AND IT IS WHY NOTHING IN `tests/condition.test.ts`
+NEEDED A PARAGRAPH.** An acceptance cut is a **post-draw gate** and taps no stream, so the persisted
+MAIN position after 156 weeks is identical in both trees. The frozen capture (count 41550, hash
+`e6b0c709`) is untouched – and unlike P1 and P2, **its companion `REF.kidRank` did not move either**.
+
 **(d) ⚠⚠ AND ONE GUARD WAS ADDED, BECAUSE THE CHAIN BROKE SOMETHING NOBODY WAS WATCHING.** See §5a.
+**Plus one direction pin that INVERTED, in `tests/ladder.test.ts` – see §5b.**
 
 ### 5a. ⚠⚠ THE CHAIN INVERTS THE LADDER ONE RUNG ABOVE WHERE THE GUARD STOPS LOOKING
 
@@ -400,8 +430,27 @@ agent's to re-pick. What ships beside it is an explicit pin on the inversion wit
 the fact instead of rediscovering it. **§6.2 is the decision.**
 
 ⚠ **What was CHECKED and is fine:** the chain does **not** collide with the play-down ceilings (§2 –
-every rung keeps a non-empty window), and every rung's `entrantPctBand` still reaches past its own cut,
-so the two encodings of the range still agree.
+every rung keeps a non-empty window), and every **W** rung's `entrantPctBand` still reaches past its
+own cut, so the two encodings of the range still agree there.
+
+### 5b. ⚠⚠ AND THE SECOND INVERSION: j300's CUT IS NOW STRICTER THAN ITS OWN FIELD
+
+`tests/ladder.test.ts` pinned, as a **direction** rather than a number, that j300's acceptance cut sits
+**above** the top of the band its field is drawn from – *"the prestige rung is the one that admits
+players from outside its own regular field"*. With `enterPct` 0.20 against an `entrantPctBand` reaching
+0.25, **that has inverted**: the kid now needs a better junior standing to ENTER a J300 than the
+weakest AI player the draw is MADE of.
+
+**The pin's own stated reason has expired, and that is why it could move.** It was measured, on 30.07:
+a cut at the field's top *"would be a wall no career in any preset ever cleared"* – 0.0–0.3 entries per
+four-year career across all eighteen cells. **P1 and P2 rebuilt the junior game around this table and
+the wall is not a wall:** at 0.20, **42 of 54 careers still enter a J300** (2.2 each), and 71 of 90
+over the full baseline horizon. The property the line protected – *the prestige rung is reachable* –
+survives; the proxy it used does not.
+
+⚠ **Pinned as a characterisation with the evidence beside it**, and with instructions to restore the
+strict form if j300 is ever re-picked at 0.25 or above. **It is the second thing this chain inverted
+(§5a is the first), and both are on the owner's list rather than an agent's.**
 
 ---
 
@@ -439,6 +488,13 @@ than the ~1 the audit measured. ⚠ **And note what halving the SHARE did to the
 standing on the cut went from **92 junior points to 880**, because our junior table's points curve is
 very steep in its top 40. A share is a gentle-looking instrument on a steep table.
 
+⚠⚠ **AND 0.20 INVERTS A SECOND DIRECTION (§5b): the cut is now stricter than the band the J300 field
+is drawn from (0.20 against 0.25)**, so the kid needs a better junior standing to enter than the
+weakest AI player in the draw. The reason that direction was pinned – a cut at the field's top was a
+wall nobody cleared – was measured false on this population (42 of 54 careers still enter one). It is
+flagged rather than fixed, and **0.25 is the value that would restore it** if he wants the property
+back at the cost of most of the correction.
+
 **The question is the one the audit asked and it is unchanged**: is a J300 a prestige rung a good career
 plays once or twice a season (our pre-registered target, which 0.20 restores), or the top-2% event the
 sport says it is (which our 200-row table cannot carry)?
@@ -465,6 +521,12 @@ sport says it is (which our 200-row table cannot carry)?
 | `tests/ladder-floor.test.ts` | the climbed-professional book 140 → 250, bisected against the real fixture | none |
 | `tests/offers.test.ts` | two sponsor probes re-pointed | none |
 | `tests/season/fieldPros.test.ts` | **added:** a characterisation pin on the WTA 125 / WTA 250 inversion, with instructions to delete it when resolved | none |
+| `tests/ladder.test.ts` | the j300 pin 0.4 → 0.2, and its direction pin inverted as a characterisation (§5b) | none |
+| `tests/play-down.test.ts` | the reversal probe #300 → #200 – the rank that clears every W cut | none |
+| `tests/outgrownWithdraw.test.ts` | the seed book 30 → 40 a side | none |
+| `tests/ladder-separation.test.ts` | both sweeps 140 → 210 weeks | none |
+| `tests/coach-travel-edge.test.ts` | three career hashes re-frozen, **per-key diff taken first** | none |
+| `tests/endings-bench.test.ts` | the fork cell PRESETS[3] → PRESETS[0], re-swept over ten seeds | none |
 | `docs/specs/acceptance-cuts-corrected-2026-08.md` | this file | none |
 
 **No new tool.** The measurements are `tools/acceptance-cuts.ts` (the audit's own, unchanged) and
