@@ -305,7 +305,16 @@ async function leaveCollege(): Promise<void> {
           </div>
         </section>
 
-        <template v-else-if="resumes === null">
+        <!-- ⚠ THE THIRD BRANCH EXISTS SO THERE IS NO FOURTH. `college` and `resumes` are both
+             non-null on every college ending the engine can produce today, and both null on every
+             other one – but a footer whose branches are not exhaustive is a DEAD END on a blocking
+             takeover, which is the round-20 failure with a different cause. If a resume week ever
+             arrives without a progress view, the way back is still one tap. -->
+        <PrimaryPill v-else-if="resumes !== null" variant="cta" @click="resumeCollege">
+          Another year –
+        </PrimaryPill>
+
+        <template v-else>
           <p class="ending-offer">
             Nothing carries over. A new daughter, and one question: what the family starts with.
           </p>
