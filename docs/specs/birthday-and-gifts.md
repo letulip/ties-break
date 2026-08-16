@@ -78,13 +78,23 @@ A bicycle · a phone · **something not about tennis at all** – *paints and a 
 equipment is a character, and the game should let somebody be that character without ever nudging
 them into it. The non-tennis option is always present and is never marked as the correct one.
 
+⭐ **And since 16.08 this is the birthday the professional tour opens on** – W15's floor is 14, the
+sport's own – which sharpens the trap rather than moving it: the year the game first lets her be a
+professional is the year the copy insists she is still a child. Nothing in the catalogue changes.
+
 ### 15 – she has started travelling
 Headphones for the road · a camera · her own suitcase · **tickets to WATCH a professional
 tournament** – not to play in one. A very real thing in tennis families.
 
 ### 16 – the year it turns serious
-Our own W series opens at 16 (`TIERS.w15.minAgeYears`), so this birthday is already a threshold in
-the model. A frame chosen **with** her rather than for her · driving lessons · a document wallet,
+~~Our own W series opens at 16 (`TIERS.w15.minAgeYears`), so this birthday is already a threshold in
+the model.~~ ⚠ **CORRECTED 16.08 – the W series opens at 14, not 16**, since the owner's ruling that
+the tour's age floors are the sport's own. The sentence is kept because it is why this age was
+written as *"the year it turns serious"*, and the framing survives on a different number: sixteen is
+where the entry allowance goes from ten professional events to **twelve**, so it is the first
+birthday that buys her more tour rather than a door. **Grid, stated once and not restated here:**
+[`docs/specs/college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+A frame chosen **with** her rather than for her · driving lessons · a document wallet,
 because the travelling is now her job · a proper winter coat for the indoor season.
 
 ### 17 – the last full school year
