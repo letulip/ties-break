@@ -567,8 +567,27 @@ const FROZEN = {
   middleGrinder: '38a86dd8f0bfdb29b1d57e3ff708a4edfb99c3a081265e8f2add5f583394c184',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
   eliteGrinder: 'ddd8a264900fedf4df2ff7e4ee8b56acb8faf4e6414e5171bad2508d37300dce',
-  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send) */
-  selfTravelling: '920611735951ce7c7277420bbecef8f90f7db1de85743b9df116d97dc55c159f',
+  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+   *
+   *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
+   *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
+   *  enters a W rung on its own acceptance cut. The two GRINDER careers above did not move a bit; only
+   *  the player arm did.
+   *
+   *  ⚠ AND THE PER-KEY DIFF SAYS SHE DID NOT ENTER ONE DIFFERENT EVENT (`tools/frozen-key-diff.ts`,
+   *  the protocol this file demands, run against 3fc17ab). UNMOVED: `entries`, `seasonEntries`,
+   *  `internationalEntryWeeks`, `proEntryWeeks`, `season`, `skills`, `potential`, `plan` – and
+   *  `rngMain`, for the fifth wave running. MOVED: `results`, `kidRankWta`, `bestFinishByTier`,
+   *  `events`, `fundsCents`, `careerTotals`, `trophiesByTier`, `academy`, `milestones`, `offers`.
+   *
+   *  So the change reached her through the COHORT and not through her own calendar: `proDoors` is
+   *  "the kid's rule, line for line" by design, so the AI on-ramp reads the same corrected door, the
+   *  fields she met are different fields, and her results moved with them. A career that never
+   *  reached W35 in the first place could not have been freed by the correction, and was not.
+   *
+   *  ⚠ `rngMain` UNMOVED IS THE LOAD-BEARING HALF: an access rule is a post-draw gate, so the frozen
+   *  MAIN capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709). */
+  selfTravelling: '24b4212d4acd7c86d3637efc92f72047ddca4055436f4683ddc2ebfb1426fa58',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -576,7 +595,13 @@ const FROZEN = {
 const PRE_V50 = {
   middleGrinder: 'b31309b2c3fc1dc2011868b6f3e7690cbb317021d26c70635a0614dabf26fdb4',
   eliteGrinder: '80fcd7910eca5cdae7cd4c71e1f68b56099c49912d71d6905cb67953819bef0b',
-  selfTravelling: 'a513ebc013a735c8e3ceea1e591a98c65b9111f4fce12c36ac6d19b33243522c',
+  /** ⚠ MOVED WITH ITS TWIN ABOVE, AND THE PARAGRAPH ON `FROZEN` PREDICTED EXACTLY THIS: *"if a later
+   *  wave moves one of these careers for a real reason, the rollback case goes red beside the freeze
+   *  and says which kind of change it was."* It did, on 16.08, and it said so – both hashes red, and
+   *  the per-key diff showing a career that really is different rather than a schema field that is.
+   *  The identity below still does its own job: rolling `schemaVersion` back to 49 on the NEW world
+   *  reproduces this, so nothing about P5's claim has been quietly lost in the re-freeze. */
+  selfTravelling: '1fb396e691859d0e7e89c91e7b86b4ce52d8390576e1265a30d3c7b34a008a17',
 }
 const FREEZE_WEEKS = 156
 

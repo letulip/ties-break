@@ -106,24 +106,32 @@ function proWorld(seed: string, age: number, book: number): WorldState {
   world.season = []
   if (book > 0) world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
   world.onRampCleared = { itf: true, wta: true }
-  // ⚠ RE-AIMED A SECOND TIME, AND FOR THE SAME KIND OF REASON (P1, docs/specs/
-  // junior-access-2026-08.md). A junior now meets the Junior Accelerator in front of the W rungs, and
-  // at seventeen this fixture's girl is a junior. With no banked year-end junior standing she holds
+  // ⚠⚠ RE-AIMED A THIRD TIME, AND THIS TIME BY UNDOING THE SECOND (16.08). P1's note, kept below the
+  // line because it is exactly the reasoning that had to be reversed, read: *"A junior now meets the
+  // Junior Accelerator in front of the W rungs ... with no banked year-end junior standing she holds
   // no Accelerator places, W35 and up are shut whatever her professional book says, and the SLIDING
   // WINDOW – the whole subject of this file – has nothing left to slide over. A banked year-end
-  // junior #1 puts her past that gate, exactly as `onRampCleared` above puts her past the on-ramp
-  // latch, so the ceiling is what these cases measure. The Accelerator's own suite is
+  // junior #1 puts her past that gate."* True while the Accelerator was a ceiling; the owner's
+  // correction of 16.08 made it a reserved place, so a junior enters on her own cut and needs no
+  // banked standing at all – and a banked **#1** now buys her three real W100 places, which turned
+  // "an acceptance cut she is outside still refuses" green-to-red for the right reason: she was
+  // inside a different door. Diagnosed the honest way, by reading the fixture rather than the rule.
+  //
+  // ⚠ 21 IS THE ROW THAT HOLDS NOTHING – the Accelerator's own table ends at "21+ : nothing above
+  // W15" – so the workaround is neutralised rather than deleted. The row stays because other cases
+  // here read a banked season; only the standing it carries changes, and the SLIDING WINDOW is once
+  // again the only thing these cases measure. The Accelerator's own suite is
   // tests/junior-access.test.ts.
   world.seasonHistory = [
     {
       seasonIndex: 0,
-      endRank: 1,
+      endRank: 21,
       points: 0,
       wins: 0,
       losses: 0,
       byTrack: {
         domestic: { points: 0, wins: 0, losses: 0 },
-        itf: { endRank: 1, points: 0, wins: 0, losses: 0 },
+        itf: { endRank: 21, points: 0, wins: 0, losses: 0 },
         wta: { points: 0, wins: 0, losses: 0 },
       },
       fundsDeltaCents: 0,

@@ -125,24 +125,29 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
     if (book > 0) world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
     world.onRampCleared = { itf: true, wta: true }
-    // ⚠ RE-AIMED, NOT WEAKENED (P1, docs/specs/junior-access-2026-08.md). A SECOND, ORTHOGONAL gate
-    // now stands in front of the W rungs for a JUNIOR – the Junior Accelerator – and at seventeen
-    // this fixture's girl is one. Without a banked year-end junior standing she has no Accelerator
-    // places at all, W35 and up are shut whatever her professional book says, and every stage of the
-    // slide below would read `['w15']` for a reason that has nothing to do with the acceptance cuts
-    // this file is about. Banking a year-end junior #1 puts her past that gate so the CUTS are what
-    // the fixture measures, exactly as `onRampCleared` above puts her past the on-ramp latch. The new
-    // gate has its own suite (tests/junior-access.test.ts); this one is not it.
+    // ⚠⚠ RE-AIMED TWICE, AND THE SECOND UNDOES THE FIRST (16.08). P1's note is kept verbatim below
+    // because it is the reasoning that had to be reversed: *"A SECOND, ORTHOGONAL gate now stands in
+    // front of the W rungs for a JUNIOR – the Junior Accelerator ... Without a banked year-end junior
+    // standing she has no Accelerator places at all, W35 and up are shut whatever her professional
+    // book says ... Banking a year-end junior #1 puts her past that gate so the CUTS are what the
+    // fixture measures."* True while the Accelerator was a ceiling. The owner's correction of 16.08
+    // made it a RESERVED PLACE, so a junior enters on the rung's own cut and needs no banked standing
+    // – and a banked #1 now buys her real places above W15, which is precisely a reason that has
+    // nothing to do with the acceptance cuts this file is about. The workaround became the confound.
+    //
+    // ⚠ 21 IS THE ROW THAT HOLDS NOTHING – the Accelerator's table ends at "21+ : nothing above W15"
+    // – so the standing is neutralised rather than the row deleted, and the CUTS are once again the
+    // only thing the slide below measures. That gate's own suite is tests/junior-access.test.ts.
     world.seasonHistory = [
       {
         seasonIndex: 0,
-        endRank: 1,
+        endRank: 21,
         points: 0,
         wins: 0,
         losses: 0,
         byTrack: {
           domestic: { points: 0, wins: 0, losses: 0 },
-          itf: { endRank: 1, points: 0, wins: 0, losses: 0 },
+          itf: { endRank: 21, points: 0, wins: 0, losses: 0 },
           wta: { points: 0, wins: 0, losses: 0 },
         },
         fundsDeltaCents: 0,

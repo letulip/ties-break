@@ -79,12 +79,31 @@ function bankedSeason(seasonIndex: number, itfRank: number | null, flatEndRank =
   }
 }
 
-/** A junior with a professional book big enough that every W acceptance cut takes her – so the ONLY
- *  thing that can refuse her above W15 is the Accelerator. `juniorRank` is what last season banked.
+/** ⚠⚠ THE DEFAULT BOOK MEANS SOMETHING DIFFERENT SINCE 16.08, AND SO DOES ITS OPPOSITE. It used to
+ *  be sized so every W acceptance cut took her, on the reasoning that the ONLY thing which could then
+ *  refuse her above W15 was the Accelerator – true while the Accelerator was a CEILING, and the
+ *  owner's question that day was why it was one. `ranking-points-by-tier.md` §4-C2 says in a
+ *  primary-source quote that these rungs have no age floor above 14: a junior enters on her own rank
+ *  like anyone else, and the reserved place is an EXTRA route for the girl the acceptance list would
+ *  not reach.
+ *
+ *  So `wBook = 300` (rank ~#229) is now the girl who needs no programme at all, and `OFF_THE_LIST`
+ *  below is the one the programme exists for. Every test whose subject is the Accelerator's own
+ *  answer uses the latter – otherwise it asserts a refusal the rung never makes and passes for the
+ *  wrong reason.
+ *
+ *  `juniorRank` is what last season banked.
  *
  *  ⚠ TICKED TO HER OWN AGE, not the calendar band's (the one-clock ruling, 09.08): `juniorAccessOpen`
  *  gates on `kidAgeAt`, so a fixture that stopped at a week would arrive a year out for a girl born
  *  late in the year and the age arm would silently stop being exercised. */
+/** ONE professional point – a real ranking, and a hopeless one. Measured on this build: it puts her
+ *  at world #1613 of an 1800-row table, outside every W cut on the ladder (W35's 700 is the loosest).
+ *  ⚠ NOT ZERO, deliberately: `meetsAcceptanceCut` refuses an empty book before it ever compares a
+ *  rank, so a zero would exercise the points guard and leave the rank arm – the arm these tests are
+ *  about – untested. */
+const OFF_THE_LIST = 1
+
 function juniorWorld(seed: string, age: number, juniorRank: number | null, wBook = 300): WorldState {
   const world = createWorld(seed)
   const rng = resumeMain(world.rngMain)
@@ -209,11 +228,34 @@ describe('the Accelerator table is pools with ceilings, not a per-rung counter',
 
 describe('the Accelerator is a junior\'s route and nothing else', () => {
   it('⚠ AN ADULT ENTRANT IS UNTOUCHED – she enters on her professional ranking', () => {
-    const junior = juniorWorld('acc-adult-j', 17, null)
-    expect(juniorAccessOpen(junior, junior.week, 'w75'), 'a junior off the list is refused').toBe(false)
+    // OFF_THE_LIST: the junior arm only means something for a girl the rung's own cut does not take
+    // – since 16.08 one who clears it walks in on her rank and the programme is never consulted.
+    const junior = juniorWorld('acc-adult-j', 17, null, OFF_THE_LIST)
+    expect(juniorAccessOpen(junior, junior.week, 'w75'), 'a junior off both lists is refused').toBe(false)
     const adult = juniorWorld('acc-adult-a', JUNIOR_MAX_AGE_YEARS + 1, null)
     expect(kidAgeYears(adult.week, adult.profile.birthMonth)).toBeGreaterThan(JUNIOR_MAX_AGE_YEARS)
     expect(juniorAccessOpen(adult, adult.week, 'w75'), 'the same girl a year later is not').toBe(true)
+  })
+
+  it('⭐⭐ A JUNIOR WHO CLEARS THE RUNG\'S OWN CUT NEEDS NO PROGRAMME – the owner\'s 16.08 correction', () => {
+    // THE CLAIM THIS FILE EXISTED WITHOUT FOR A DAY, and the reason the ceiling above was wrong.
+    // `ranking-points-by-tier.md` §4-C2, quoting the 2026 ITF WTT Regulations: W75 has no age floor
+    // of its own, the only thresholds anywhere are 14 and 18, and a 15-, 16- or 17-year-old is
+    // limited only by her per-year COUNT. §4-A: the four rungs share one System of Merit section and
+    // there is no threshold in it at all. So a seventeen-year-old inside the acceptance list enters
+    // on it, exactly as a twenty-five-year-old does.
+    //
+    // ⚠ THE BANKED JUNIOR RANK IS `null` HERE, which is the whole point: she is on no junior list,
+    // the Accelerator holds nothing for her, and the rung is open anyway.
+    const world = juniorWorld('acc-own-cut', 17, null)
+    expect(kidAgeYears(world.week, world.profile.birthMonth)).toBeLessThanOrEqual(JUNIOR_MAX_AGE_YEARS)
+    expect(acceleratorAdmits(world, world.week, 'w75', null), 'the programme holds nothing for her').toBe(false)
+    expect(juniorAccessOpen(world, world.week, 'w75'), 'and the rung is hers regardless').toBe(true)
+    expect(tierFloorOpen(world, 'w75'), 'the calendar agrees').toBe(true)
+    // ⚠ AND IT IS THE RANK DOING IT, not a hole in the gate: the same girl one point into the table
+    // is refused, so this cannot pass by the rung having stopped refusing anybody.
+    const hopeless = juniorWorld('acc-own-cut-b', 17, null, OFF_THE_LIST)
+    expect(tierFloorOpen(hopeless, 'w75'), 'a junior outside the cut is still shut out').toBe(false)
   })
 
   it('W15 has its own door, so a junior is never left with nothing', () => {
@@ -289,7 +331,9 @@ describe('W15 is the junior reserved place, and it reads a junior RANKING', () =
 
 describe('R10-5: one rule, two surfaces', () => {
   it('⚠ a rung the Accelerator shuts is shut at the door too, and the refusal names the rule', () => {
-    const world = juniorWorld('acc-r105', 17, null)
+    // OFF_THE_LIST: a rung shuts on a junior only when BOTH doors are shut – her own rank and the
+    // reserved place. With the default book she clears W75's cut and the calendar is right to open.
+    const world = juniorWorld('acc-r105', 17, null, OFF_THE_LIST)
     const ev = injectEvent(world, world.week + 3, 'w75')
     expect(tierFloorOpen(world, 'w75'), 'the calendar says shut').toBe(false)
     const gate = entryStatus(world, ev)
@@ -327,8 +371,10 @@ describe('the table is load-bearing', () => {
   it('⚠ emptying the Accelerator shuts every rung above W15 for a junior, and restoring it reopens them', () => {
     // Mutate the thing the file claims to cover and watch the verdict move – a rule that cannot be
     // switched off is a rule this suite is not actually testing.
-    const world = juniorWorld('acc-mutate', 17, 1)
-    expect(tierFloorOpen(world, 'w75'), '#1 holds W75 places').toBe(true)
+    // OFF_THE_LIST: with the default book her own rank opens W75 and emptying the table would move
+    // nothing – the mutation has to bite on the arm it is aimed at, which is the reserved place.
+    const world = juniorWorld('acc-mutate', 17, 1, OFF_THE_LIST)
+    expect(tierFloorOpen(world, 'w75'), '#1 holds W75 places her rank does not').toBe(true)
     const rows = ACCELERATOR.rows
     try {
       ACCELERATOR.rows = [{ throughRank: Number.MAX_SAFE_INTEGER, pools: [] }]

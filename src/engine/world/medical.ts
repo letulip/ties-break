@@ -15,7 +15,7 @@
 // the frozen MAIN capture cannot notice this file.
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { TIERS, isBlackoutWeek, isOffSeasonWeek, tierAgeBlock } from '../season/calendar'
+import { TIERS, isBlackoutWeek, isJuniorAge, isOffSeasonWeek, tierAgeBlock } from '../season/calendar'
 import { schoolIsOver } from '../kidLife'
 import type { LadderTrack, SeasonEvent } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
@@ -35,6 +35,7 @@ import {
   acceptanceRank,
   hasOutgrown,
   juniorAccessOpen,
+  juniorReservedPlace,
   kidPoints,
   onRampOpen,
   playDownBars,
@@ -570,13 +571,30 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
     // professional table, which opens EMPTY for the whole world - see topBandForPercentile.
     const ranked = kidPoints(world, tier.track) > 0
     const rank = rankIn(world, tier.track)
-    if (!ranked || rank > accepts) {
+    // ⚠⚠ THE RESERVED PLACE IS CHECKED BEFORE THE CUT REFUSES, AND THE ORDER IS A BUG THIS CAUGHT
+    // (16.08). Once the Accelerator became an extra door rather than a ceiling, a junior it holds a
+    // place for is admitted by `tierFloorOpen` WITHOUT clearing the list – and this branch, sitting
+    // above the programme's own, would have refused her anyway. That is the R10-5 disagreement
+    // arriving from the far side: the calendar open, the turnstile shut, on the one girl the reserved
+    // place exists for. `tests/rankingGate.test.ts`'s sweep could not see it, because its implication
+    // runs one way (a rung the calendar SHUTS must never be enterable).
+    const reserved = juniorReservedPlace(world, event.week, event.tier)
+    if ((!ranked || rank > accepts) && !reserved) {
+      const cut = ranked
+        ? `${tier.label} takes the top ${accepts} – she is #${rank}`
+        : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`
+      // ⚠ AND A JUNIOR IS TOLD ABOUT BOTH DOORS, because she has both. An adult has only the list, so
+      // naming a programme she is not eligible for would be noise; a seventeen-year-old who misses
+      // the cut is refused by the list AND by the junior programme, and a refusal that names one of
+      // the two invites her to solve the wrong one.
+      const junior = isJuniorAge(kidAgeAt(world, event.week))
+      const yearEnd = junior ? yearEndJuniorRank(world) : null
       return {
         level: 'blocked',
         reason: 'locked',
-        detail: ranked
-          ? `${tier.label} takes the top ${accepts} – she is #${rank}`
-          : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`,
+        detail: junior
+          ? `${cut}. ${acceleratorRefusalDetail(event.tier, yearEnd, acceleratorUsage(world, event.week, event.tier, yearEnd))}`
+          : cut,
         rankToEnter: accepts,
       }
     }
