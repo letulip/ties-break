@@ -46,8 +46,8 @@ import { seasonYear, weekLabel } from '../shared/dates'
 // W6c: the anatomy, so a line about her body can know which body it is about. A leaf module – see the
 // note at the top of body.ts for why the twelve parts do not live in world.ts any more.
 import { lastKidResultOf, lastKidTitleOf, milestoneKey, MEMORY_EMOTION, conditionBandOf, fundsPressureOf } from './diary/facts'
-import { TRAVEL_NOTES, travelNoteFor } from './diary/travelNotes'
-export { TRAVEL_NOTES, travelNoteFor }
+import { TRAVEL_NOTES, travelNoteFor, coachTripNoteFor } from './diary/travelNotes'
+export { TRAVEL_NOTES, travelNoteFor, coachTripNoteFor }
 export type { TravelClaims, TravelNote } from './diary/travelNotes'
 import { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, weekNoteFor } from './diary/weekNotes'
 export { WEEK_NOTE_GRIND, WEEK_NOTE_LIGHT, WEEK_NOTE_CHANCE, WEEK_NOTES, weekNoteFor }
@@ -580,6 +580,11 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
       vacationPackageId: view.vacationPackageId ?? null,
     }),
     travelNote: travelHome ? travelNoteFor(travelHome, view.seed) : null,
+    // ⭐ ROUND-21 #2: ...and whether the coach was on the trip. Gated on `travelHome` for the same
+    // reason `travelNote` is – this is the caption of the journey painting, so it only exists on the
+    // weeks that painting does – and on the engine's own `coachTravelsWithHer`, carried on the view
+    // rather than re-derived, so the flow, the commentary and this scrap describe the same trip.
+    coachNote: travelHome && view.coachTravelled ? coachTripNoteFor(view.week, view.seed) : null,
     // W2: the other author of the same scrap. The two can never both speak – `weekNoteFor`'s own
     // `athome` licence reads `facts.travelHomeScene`, which is non-null on exactly the weeks
     // `travelHome` is – so this is one object with two writers rather than two notes.

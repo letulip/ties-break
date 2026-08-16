@@ -11,14 +11,14 @@
 // imports these values with no runtime cycle. Nothing here draws on any RNG stream: ranks are folded
 // from the ledger, so the frozen MAIN capture cannot notice this file.
 
-import { TIERS, TIER_LADDER, hasAcceptanceList, isTierAgeOpen } from '../season/calendar'
+import { TIERS, TIER_LADDER, hasAcceptanceList, isJuniorAge, isTierAgeOpen, isWSeriesTier } from '../season/calendar'
 import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
 import type { LadderTrack, RankingRow, TierId } from '../season/types'
 import type { SeasonEntryRow } from '../../shared/protocol'
 import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPros'
 import { seasonIndexOf } from './ledger'
 import { kidAgeAt } from './age'
-import { proEntryCapUsage } from './entryCaps'
+import { acceleratorAdmits, juniorReservedRank, proEntryCapUsage, yearEndJuniorRank } from './entryCaps'
 import { KID_ID, RESULTS_WINDOW } from './constants'
 import type { WorldState } from '../world'
 
@@ -202,6 +202,24 @@ export function onRampOpen(world: WorldState, track: 'itf' | 'wta'): boolean {
   if (!rung) return false
   // The band is denominated in the table below: the ITF on-ramp reads domestic, the WTA one reads ITF.
   const below: LadderTrack = track === 'itf' ? 'domestic' : 'itf'
+  // ⚠⚠ THE PROFESSIONAL ON-RAMP READS A RANKING NOW, NOT A POINT TOTAL (P1, docs/specs/
+  // junior-access-2026-08.md). W15's door is the sport's own JUNIOR RESERVED PLACE – "up to three
+  // main-draw places for a player with an ITF combined junior ranking of 1-100" (2026 WTT Regs
+  // §VII.A Method E) – and a ranking is what it reads. `enterPointBand`'s 120 ITF junior points was
+  // ours: a sensible number for what it bought, in a unit the rule does not use, and one that cannot
+  // follow a table whose depth changes. The cut is a SHARE of the ITF table for `TierDef.enterPct`'s
+  // reason (that table is a population artefact, so a count copied off the regulation would mean
+  // something different the day the field grows) – see `JUNIOR_RESERVED`.
+  //
+  // ⚠ AND "UNRANKED IS NOT RANK ONE" HAS TO BE SAID HERE TOO. With nobody holding an ITF point the
+  // whole cohort ties at zero and competition ranking hands every one of them the same number, so a
+  // fresh fourteen-year-old would read as #1 and walk onto the professional tour in week one. The
+  // same guard `entryVerdict`'s rank arm carries, for the same reason.
+  //
+  // The junior arm is untouched: J30's door is domestic POINTS and stays domestic points.
+  if (track === 'wta') {
+    return kidPoints(world, below) > 0 && rankIn(world, below) <= juniorReservedRank(tableSize(world, below))
+  }
   return isTierEligible(rung, kidPoints(world, below))
 }
 
@@ -236,6 +254,14 @@ export function kidPoints(world: WorldState, track: LadderTrack): number {
 export function kidDomesticPoints(world: WorldState): number {
   return kidPoints(world, 'domestic')
 }
+
+/** ⚠ MOVED TO world/entryCaps.ts AT P2 AND RE-EXPORTED HERE UNDER ITS HISTORICAL NAME – the repo's
+ *  own convention for a leaf that grew a second reader. `yearEndJuniorRank` is a five-line read of
+ *  `world.seasonHistory` with no ladder dependency at all, and P2's merited increases need it from
+ *  entryCaps.ts, which this file already imports FROM. Reading it up here would have been a runtime
+ *  cycle; copying it would have been the second read the whole design forbids. Nothing about the
+ *  function changed in the move except an optional `week` (see its own note there). */
+export { yearEndJuniorRank } from './entryCaps'
 
 // =================================================================================================
 // WHICH TABLE IS HERS – moved here from world/snapshot.ts (fix/wallet-and-wrapup, 05.08) and
@@ -443,7 +469,155 @@ export function tierOutgrown(world: WorldState, tier: TierId): boolean {
   // on HER birthday: a December girl keeps her junior rungs eleven months longer than a January one
   // because W15 is eleven months further away from her. Reading the band shut them a year early.
   if (!isTierAgeOpen(above, kidAgeAt(world, world.week))) return false
+  // ⚠ AND THE ACCELERATOR RIDES THE SAME SENTENCE FOR FREE (P1) – no clause was added here, which is
+  // the point worth recording. «A door she cannot open yet cannot close the one behind her» is
+  // exactly what a junior's Accelerator ceiling is, and because that ceiling lives INSIDE
+  // `tierFloorOpen` (unlike the age gate, which `tierFloorOpen` does not ask), the line below already
+  // says it. What it produces is the right shape and was checked rather than assumed: a junior
+  // outside the year-end top twenty never outgrows J300 (W35 is shut to her), and W15 never closes
+  // behind her while she is a junior (W75 is shut to her) - so the rungs she is allowed to play stay
+  // open, which is the boredom failure the owner has ruled against twice, prevented rather than
+  // caused. docs/specs/junior-access-2026-08.md §2d.
   return tierFloorOpen(world, above)
+}
+
+/** THE PLAY DOWN RULES (P1 step 2, docs/specs/play-down-2026-08.md; the owner, 15.08: «да, делаем
+ *  тоже»). The 2026 WTT Regulations' own ceiling on the bottom of the ladder, quoted verbatim in
+ *  docs/research/ranking-points-by-tier.md §4c C:
+ *
+ *    > *"Players with a WTA ranking of 1-50 in Singles … cannot Enter, accept a Wild Card and/or
+ *    >  compete"* – in the ITF World Tennis Tour's events;
+ *
+ *  and its second limb, docs/research/real-ladder-pace.md §4: **a player ranked WTA #1-150 may not
+ *  enter W15 or W35 at all**, which that document names *"the real `tierOutgrown` … a hard rank cut
+ *  at #150, not a sliding window"*.
+ *
+ *  ⚠ A PLAIN MUTABLE OBJECT for the A/B idiom, like every other table in this wave. `0` on either
+ *  cut is a meaningful OFF: nobody is barred.
+ *
+ *  ⚠ SCOPE IS THE W SERIES, NOT THE W TABLE – `isWSeriesTier`. A WTA 125 is a WTA event, and the
+ *  rule is about the ITF's. Barring a top-50 from the rungs she is top-50 BECAUSE of would be the
+ *  opposite of the rule. */
+export const PLAY_DOWN = {
+  /** a WTA ranking at or inside this is barred from EVERY W-series event */
+  fromAllW: 50,
+  /** ...and at or inside this, from the two bottom rungs (`lowW`) */
+  fromLowW: 150,
+  /** which rungs "the bottom" means. The two the regulation names. */
+  lowW: ['w15', 'w35'] as readonly TierId[],
+}
+
+/** IS SHE TOO STRONG FOR THIS RUNG? A rank READ, and the difference between a read and a latch is
+ *  the whole of what makes it safe.
+ *
+ *  ⚠⚠ THE OWNER NAMED THE PROPERTY HIMSELF (15.08): «когда она вывалится из топ-50 и топ-150 оно
+ *  само откроется обратно». It re-reads `kidRankWta` every time it is asked and persists NOTHING, so
+ *  the week she drops back the rung is hers again. `tests/play-down.test.ts` asserts both directions
+ *  in one case – cross the line and lose the rung, fall back and get it back – and that the world's
+ *  serialisation is byte-identical across the round trip, which is "nothing persists" made mechanical
+ *  rather than promised.
+ *
+ *  ⚠ IT IS THE SAME SHAPE AS `tierOutgrown` ON THE W RUNGS AND THE OPPOSITE OF IT ON THE JUNIOR ONES,
+ *  and the distinction is worth stating because it is easy to get backwards. `tierOutgrown`'s own
+ *  note calls it "a ROLLING TEST, NOT A LATCH", and on a W rung it is: it asks `tierFloorOpen` of the
+ *  rung three above, whose W arm is a live rank read. On a JUNIOR rung it is not, because there the
+ *  rung three above is W15 and W15's door is `onRampOpen` – a latch, set once and never cleared. So
+ *  "the window slides back down with her" is true of the professional ladder and false of the junior
+ *  one, by construction. This rule is a live read everywhere, on every rung it touches.
+ *
+ *  ⚠ AND "UNRANKED IS NOT A RANK" ONE LAST TIME. A girl with no W points holds no W ranking, so she
+ *  cannot be barred by one – the sentinel would otherwise read a missing cache as a number. */
+export function playDownBars(world: WorldState, tier: TierId): boolean {
+  if (!isWSeriesTier(tier)) return false
+  if (kidPoints(world, 'wta') <= 0) return false
+  const rank = world.kidRankWta ?? tableSize(world, 'wta')
+  if (PLAY_DOWN.fromAllW > 0 && rank <= PLAY_DOWN.fromAllW) return true
+  return PLAY_DOWN.fromLowW > 0 && PLAY_DOWN.lowW.includes(tier) && rank <= PLAY_DOWN.fromLowW
+}
+
+/** The refusal's own words, shared by the calendar's verdict and the turnstile so they cannot drift.
+ *  It says what she may play INSTEAD, which is the promise every refusal in this engine carries
+ *  («игрок должен иметь возможность играть… чтобы не скучал»), and it says the rule is about being
+ *  too good – there is nothing here to apologise for. */
+export function playDownRefusalDetail(tier: TierId, rank: number): string {
+  const cut = PLAY_DOWN.lowW.includes(tier) && rank > PLAY_DOWN.fromAllW ? PLAY_DOWN.fromLowW : PLAY_DOWN.fromAllW
+  return `${TIERS[tier].label} is closed to the world's top ${cut} – she is #${rank}. The bigger draws are hers now.`
+}
+
+/** MAY A JUNIOR STAND ON THIS RUNG AT ALL – the Junior Accelerator, asked of the kid (P1,
+ *  docs/specs/junior-access-2026-08.md; the rulebook and the modelling choice are documented at
+ *  length in world/entryCaps.ts, which owns the table).
+ *
+ *  ⚠ THREE THINGS IT IS DELIBERATELY NOT, each of which is a way this could have gone wrong:
+ *
+ *  1. **It is not asked of an adult.** Past junior eligibility (`isJuniorAge`, derived from the J
+ *     rungs' own U18 ceiling) this returns true and she enters on her professional ranking exactly
+ *     as she does today. The Accelerator is a junior's route, not a professional's ceiling – and the
+ *     day it started capping professionals it would be modelling a rule that does not exist.
+ *  2. **It is not asked about W15.** The bottom rung has its own door, the junior-reserved place,
+ *     and it is the one rung of the professional ladder the sport genuinely holds open for juniors.
+ *     So this can never leave a junior with nothing: her whole junior calendar and W15 remain.
+ *  3. **It is not asked about a WTA rung.** `isWSeriesTier` is the ITF World Tennis Tour's five, and
+ *     the Accelerator's table stops at W100 – see `W_SERIES` for why reading it against the whole
+ *     `track === 'wta'` family would have barred a seventeen-year-old from the majors.
+ *
+ *  A rank READ, not a latch: it re-reads the banked year-end standing every time, so a season that
+ *  ends inside the junior top twenty opens the rungs for the season that follows and a season that
+ *  does not closes them again. Nothing persists. */
+export function juniorAccessOpen(world: WorldState, week: number, tier: TierId): boolean {
+  if (!isWSeriesTier(tier) || tier === 'w15') return true
+  if (!isJuniorAge(kidAgeAt(world, week))) return true
+  // ⭐⭐ THE ORDINARY DOOR FIRST – OWNER, 16.08, AND THE CLAUSE UNDER THIS ONE WAS A REAL DEFECT.
+  //
+  // He asked why we refuse a fifteen-year-old at W35/W50/W75 when the regulations admit her and cap
+  // only how MANY she may play. He is right, and the research says it in a primary-source quote
+  // (`docs/research/ranking-points-by-tier.md` §4-C2): *"W75 HAS NO AGE FLOOR OF ITS OWN. The only
+  // age thresholds anywhere in the 2026 ITF WTT Regulations are 14 ... and 18, the AER cut-off. A
+  // 15-, 16- or 17-year-old is limited only by her per-year COUNT."* The four rungs share one
+  // section, "System of Merit", and §4-A is equally blunt about it: there is no threshold anywhere
+  // in it – an unranked player is not refused a W75, she is placed at the bottom of the list.
+  //
+  // ⚠ SO THE ACCELERATOR IS A RESERVED PLACE, NOT A TURNSTILE. It sets main-draw places ASIDE for
+  // juniors near the top of the junior list – an extra way in for a girl who would not make the
+  // acceptance list at all. P1 made it the only way in, which turns a privilege into a ceiling and
+  // models a rule that does not exist. Its own note argued the OR "would change nothing, because our
+  // acceptance cut already admits 93% of careers to a W75" – true when written, and P3 then tightened
+  // every cut on the ladder while P1 and P2 slowed her down. Measured after all of it: **62 careers
+  // of 90 clear W35's own #700 cut at seventeen and are refused by their birthday.**
+  //
+  // ⚠ AND THE BRAKE IS NOT REMOVED WITH THE CEILING, which is why this is a correction rather than a
+  // loosening: the per-year count he names is the AER, it ships, and P2 put it on a birthday-to-
+  // birthday window (14 -> 8 of which at most 3 at W75+, 15 -> 10, 16 -> 12, 17 -> 16). What comes
+  // back is the GRADIENT – a seventeen-year-old who has earned the rank may enter the rung she has
+  // earned, and the Accelerator still lets a top-twenty junior in above it.
+  return meetsAcceptanceCut(world, tier) || juniorReservedPlace(world, week, tier)
+}
+
+/** THE RESERVED PLACE ALONE – the Accelerator's own answer, and FALSE for everyone it does not apply
+ *  to: an adult, W15 (which has its own junior-reserved method), and every rung outside the ITF
+ *  five, because the programme's table stops at W100.
+ *
+ *  ⚠ IT EXISTS BECAUSE `juniorAccessOpen` CANNOT BE THE SECOND ARM OF AN OR, and the guard caught me
+ *  trying (16.08). That function answers "do the junior rules stand in her way", so it says TRUE for
+ *  everything it has no opinion about – an adult, a WTA 125 – and an OR against it therefore admits a
+ *  twenty-five-year-old who misses the cut by four hundred places. `tests/rankingGate.test.ts` went
+ *  red on exactly that, on six worlds, with the message it was written for: the calendar says open
+ *  and the turnstile says locked. This is the same question narrowed to what it actually grants. */
+export function juniorReservedPlace(world: WorldState, week: number, tier: TierId): boolean {
+  if (!isWSeriesTier(tier) || tier === 'w15') return false
+  if (!isJuniorAge(kidAgeAt(world, week))) return false
+  return acceleratorAdmits(world, week, tier, yearEndJuniorRank(world))
+}
+
+/** HER OWN WAY IN: the rung's published acceptance cut, read against the W table. Extracted so the
+ *  ordinary door and the reserved place are the SAME sentence in both places that ask – `tierFloorOpen`
+ *  returns it and `juniorAccessOpen` offers it first, and one expression cannot disagree with itself. */
+function meetsAcceptanceCut(world: WorldState, tier: TierId): boolean {
+  const accepts = acceptanceRank(world, tier)
+  if (accepts === undefined) return false
+  // ⚠ THE SENTINEL IS THE W TABLE'S OWN SIZE, NOT THE COHORT'S – see `tableSize`. With
+  // `cohort.length + 1` a missing cache read as world #200 and cleared this cut and five above it.
+  return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? tableSize(world, 'wta')) <= accepts
 }
 
 /** THE FLOOR half – "has she reached this rung", which is the whole of what `tierOpenFor` used to
@@ -460,14 +634,28 @@ export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
     return kidPoints(world, 'itf') > 0 && world.kidRank <= accepts
   }
   if (def.track === 'wta') {
+    // ⚠⚠ THE PLAY DOWN RULES COME FIRST, AND ABOVE THE ON-RAMP BRANCH DELIBERATELY (P1 step 2). W15
+    // returns out of the `accepts === undefined` arm below, so a check placed after it would never be
+    // asked about the one rung the #150 limb is most about. It is the only refusal on this ladder
+    // that fires because she is too GOOD, and it self-reverses – see `playDownBars`.
+    if (playDownBars(world, tier)) return false
     // Same shape one table up, and the latch matters MORE here: the J rungs shut at eighteen on age,
     // so from her birthday she can never earn another junior point - a W15 on-ramp read against a
     // rolling junior window would close on its own a year later with nothing she could do about it.
     const accepts = acceptanceRank(world, tier)
     if (accepts === undefined) return onRampOpen(world, 'wta')
-    // ⚠ THE SENTINEL IS THE W TABLE'S OWN SIZE, NOT THE COHORT'S – see `tableSize`. With
-    // `cohort.length + 1` a missing cache read as world #200 and cleared this cut and five above it.
-    return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? tableSize(world, 'wta')) <= accepts
+    // ⚠⚠ A JUNIOR HAS TWO WAYS IN AND EITHER WILL DO – see `juniorAccessOpen`, which offers the
+    // rung's own cut first and the Accelerator's reserved place second. It was an AND until 16.08 on
+    // an argument that had gone stale ("read as an extra door it would change nothing, because our
+    // acceptance cut already admits 93% of careers to a W75") – P3 then tightened every cut on this
+    // ladder.
+    //
+    // ⚠ THE AGE CLAUSE IS LOAD-BEARING AND IT IS EASY TO DROP. `juniorAccessOpen` answers TRUE for an
+    // adult – the junior rules simply do not apply to her – so an unguarded OR against it would admit
+    // a twenty-five-year-old who misses the cut by four hundred places. For a junior this reads
+    // "her own cut OR the Accelerator"; for an adult it reads "her own cut", and that is the whole of
+    // the difference.
+    return meetsAcceptanceCut(world, tier) || juniorReservedPlace(world, world.week, tier)
   }
   // ⚠⚠ THE FLOOR HALF ONLY, AND THIS LINE IS WHERE THE 06.08 RULING NEARLY LEAKED PAST. It read
   // `isTierEligible(tier, ...)`, which is the WHOLE band - both bounds - so the domestic ceiling was
@@ -539,10 +727,14 @@ export function proDoors(world: WorldState, merged: readonly RankingRow[]): ProD
    *  professional tournament inside the window. An APPEARANCE, not a counting result: a first-round
    *  exit is still a week she spent on the tour, which is exactly the split `SeasonResult` was
    *  widened to carry (wave-b-first-round-zero). */
-  let onRampRead: { itfPointsOf: Map<string, number>; played: Set<string> } | null = null
+  let onRampRead: { itfPointsOf: Map<string, number>; itfRankOf: Map<string, number>; played: Set<string> } | null = null
   const onRampFacts = () => {
     if (onRampRead) return onRampRead
     const itfPointsOf = new Map<string, number>()
+    // ⚠ THE RANK RIDES ALONG SINCE P1, because the door it feeds is a RANK now – see `onRampOpen`.
+    // The fold already produces it; taking it costs one `set` and keeps the cohort reading the kid's
+    // rule rather than a second one that would drift the first time either moved.
+    const itfRankOf = new Map<string, number>()
     for (const r of computeRanking(
       world.results.filter((x) => x.playerId !== KID_ID),
       world.week,
@@ -551,6 +743,7 @@ export function proDoors(world: WorldState, merged: readonly RankingRow[]): ProD
       inTrack('itf'),
     )) {
       itfPointsOf.set(r.playerId, r.points)
+      itfRankOf.set(r.playerId, r.rank)
     }
     const played = new Set<string>()
     for (const r of world.results) {
@@ -558,18 +751,29 @@ export function proDoors(world: WorldState, merged: readonly RankingRow[]): ProD
       if (r.week > world.week || world.week - r.week > RESULTS_WINDOW) continue
       if (r.tier && TIERS[r.tier].track === 'wta') played.add(r.playerId)
     }
-    onRampRead = { itfPointsOf, played }
+    onRampRead = { itfPointsOf, itfRankOf, played }
     return onRampRead
   }
   return {
     at(tier: TierId) {
       const accepts = TIERS[tier].track === 'wta' ? acceptanceRank(world, tier) : undefined
       if (accepts === undefined) {
-        const { itfPointsOf, played } = onRampFacts()
-        // ⚠ THROUGH `isTierEligible`, NEVER BY RE-SPELLING THE BAND. It is the same helper
-        // `onRampOpen` reads for the kid – one place derives the point band, which is the fact
-        // tests/round10.test.ts R10-5 exists to keep true.
-        return (id: string) => isTierEligible(tier, itfPointsOf.get(id) ?? 0) || played.has(id)
+        const { itfPointsOf, itfRankOf, played } = onRampFacts()
+        // ⚠ THE SAME DOOR THE KID WALKS THROUGH, RE-AIMED WITH IT (P1). It was `isTierEligible` on
+        // the point band, spelled through the helper rather than by hand precisely so the two could
+        // not drift; the band stopped being the rule, so this reads the junior RESERVED RANK instead
+        // – one place derives the cut (`juniorReservedRank`), which is the fact tests/round10.test.ts
+        // R10-5 exists to keep true. The kid's LATCH has no cohort equivalent by design (persisted
+        // state for 199 rivals is a schema bump), so the second proof stays exactly as it was: a
+        // W-track appearance inside the ranking window.
+        //
+        // ⚠ IT IS THE COHORT'S TABLE SIZE, NOT THE KID'S. The AI-side fold is built WITHOUT her (the
+        // independence rule every AI-side fold obeys), so its table is one row shorter and the cut is
+        // resolved against that – reading `tableSize(world, 'itf')` here would be the kid leaking
+        // into a fold that exists to exclude her.
+        const cut = juniorReservedRank(itfRankOf.size)
+        return (id: string) =>
+          ((itfPointsOf.get(id) ?? 0) > 0 && (itfRankOf.get(id) ?? Number.MAX_SAFE_INTEGER) <= cut) || played.has(id)
       }
       return (id: string) =>
         (wtaPointsOf.get(id) ?? 0) > 0 && (rankOf.get(id) ?? Number.MAX_SAFE_INTEGER) <= accepts
@@ -605,7 +809,19 @@ export function outgrewTier(tier: TierId, points: number): boolean {
  *  and a key the feed's per-week pick sorts on. */
 export function hasOutgrown(world: WorldState, tier: TierId): boolean {
   const bandTrack: LadderTrack = TIERS[tier].track === 'wta' ? 'itf' : 'domestic'
-  return outgrewTier(tier, kidPoints(world, bandTrack)) || tierOutgrown(world, tier)
+  // ⚠⚠ THREE CEILINGS SINCE P1 STEP 2, AND THE THIRD ONE IS THE SPORT SAYING IT OUT LOUD. The Play
+  // Down rule bars her from a rung FOR BEING TOO GOOD FOR IT – that is the whole content of "a WTA
+  // top-50 may not enter a W event" – so a rung it closes is a rung she has outgrown by the plainest
+  // possible definition, and this function is where "she is past this rung" is allowed to have one
+  // answer (see the note above, and world.ts's own rule that the ceilings must have one consequence).
+  //
+  // ⚠ IT IS NOT A CONVENIENCE, IT IS A CORRECTION, and tests/ladder-floor.test.ts is what found it.
+  // Without this line the sliding-window ceiling reads a top-50 player as NOT having outgrown W15:
+  // `tierOutgrown('w15')` asks whether W75 is open to her, the Play Down rule has just shut W75 as
+  // well, and the honest-looking answer comes out backwards – the world number forty is told she has
+  // not passed the bottom rung of the ladder. The coach's arithmetic argument went quiet on exactly
+  // that career. docs/specs/play-down-2026-08.md §2b.
+  return outgrewTier(tier, kidPoints(world, bandTrack)) || tierOutgrown(world, tier) || playDownBars(world, tier)
 }
 
 /** CAN THIS RUNG STILL MOVE HER BOOK – or is even winning it worth nothing to her ranking?

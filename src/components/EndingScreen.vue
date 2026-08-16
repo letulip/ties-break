@@ -113,6 +113,76 @@ const resumes = computed(() => view.value?.handoff.resumesWeek ?? null)
 async function resumeCollege(): Promise<void> {
   await game.resumeFromCollege()
 }
+
+// --- ⭐⭐ P5: THE COLLEGE YEARS, ONE AT A TIME ---------------------------------------------------
+//
+// College used to be one button reading «Four years later –» and 208 weeks spent behind it. Reality
+// says the return is normal and often EARLY – Diana Shnaider left NC State after about a season and
+// is inside the WTA top 15 – so the four-year block was the wrong SHAPE as well as an empty one.
+// This block is the question at each year boundary, and the year just lived is what it is asked
+// against. See docs/specs/college-as-a-second-act-2026-08.md.
+//
+// ⚠ IT MAY NOT RECOMMEND (ruling 4, 30.07 – the same rule the fork at nineteen keeps). The two
+// answers are drawn as two options of ONE weight, not a CTA and a link, because the styling is an
+// opinion in a different font. The card states the year's numbers and stops: no verdict on whether
+// another one is a good idea, and no adjective anywhere near her rubbers.
+//
+// ⚠ AND EVERY NUMBER ON IT COMES FROM THE ENGINE. `CollegeYear` is measured at the two ends of the
+// year and persisted, because nothing else in the save can reconstruct it – `pruneResults` deletes a
+// result 52 weeks after it happened and `financeWeeks` keeps a 60-week window.
+const college = computed(() => view.value?.college ?? null)
+const lastYear = computed(() => college.value?.last ?? null)
+
+/** «Year 1 of 4» – off the engine's own count, never a template's idea of four. */
+const collegeHeading = computed(() => {
+  const c = college.value
+  if (!c) return ''
+  return `Year ${Math.min(c.yearsDone + 1, c.totalYears)} of ${c.totalYears}`
+})
+
+/** The one-line answer to "what was that year". Empty before the first one is spent. */
+const collegeLead = computed(() => {
+  const c = college.value
+  if (!c) return ''
+  if (c.yearsDone === 0) {
+    return 'A scholarship, a closed league that pays no ranking points, and the family stops paying. She can leave at the end of any year.'
+  }
+  if (c.final) return 'One year of the scholarship left. After it she is out either way.'
+  return `${c.yearsDone} ${c.yearsDone === 1 ? 'year' : 'years'} spent, ${c.totalYears - c.yearsDone} left on the scholarship.`
+})
+
+/** #A -> #B across the year, or a dash at either end where she is on no list at all. `null` is not
+ *  #1 – the same contract `LadderView.rank` keeps, and the reason this is not a number. */
+function rankMark(rank: number | null): string {
+  return rank === null ? '–' : `#${rank}`
+}
+
+const collegeRankSpan = computed(() => {
+  const y = lastYear.value
+  return y === null ? '' : `${rankMark(y.startRank)} to ${rankMark(y.endRank)}`
+})
+
+/** THE ONE WEEK OF THE YEAR THAT WAS NOT HERS. Her country picks the squad and there is no declining
+ *  it; it pays no prize money and no ranking points, because the sport awards neither. */
+const collegeCallNote = computed(() => {
+  const y = lastYear.value
+  if (y === null) return ''
+  if (y.callUp === null) return 'Nobody wrote to her this year.'
+  const c = y.callUp
+  const court =
+    c.rubbersPlayed === 0
+      ? 'named in the squad, never on court'
+      : `${c.rubbersWon} of ${c.rubbersPlayed} rubbers won`
+  return `Her country called – ${court}, and the nation finished ${c.nationFinish}th. No prize money and no ranking points; there are none to award.`
+})
+
+/** She may only leave a year she has actually spent. The engine refuses it too – this is the screen
+ *  agreeing with the rule rather than being the rule (CLAUDE.md invariant 1). */
+const canLeaveCollege = computed(() => (college.value?.yearsDone ?? 0) > 0)
+
+async function leaveCollege(): Promise<void> {
+  await game.endCollegeEarly()
+}
 </script>
 
 <template>
@@ -193,10 +263,57 @@ async function resumeCollege(): Promise<void> {
 
         <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
 
-        <!-- COLLEGE is the only ending that resumes: one tap spends four years. -->
-        <PrimaryPill v-if="resumes !== null" variant="cta" @click="resumeCollege">
-          Four years later –
+        <!-- ⭐⭐ P5 – COLLEGE IS THE ONLY ENDING THAT RESUMES, AND IT RESUMES ONE YEAR AT A TIME.
+             The year just lived, then the two answers. Two options of one weight and no CTA: the
+             card is not allowed an opinion about which of them is right (ruling 4, 30.07). -->
+        <section v-if="college" class="college-year">
+          <Eyebrow as="h3">{{ collegeHeading }}</Eyebrow>
+          <p class="college-lead">{{ collegeLead }}</p>
+
+          <dl v-if="lastYear" class="college-facts">
+            <div>
+              <dt>Banked</dt>
+              <dd>{{ formatCents(lastYear.fundsDeltaCents) }}</dd>
+            </div>
+            <div>
+              <dt>Rank</dt>
+              <dd>{{ collegeRankSpan }}</dd>
+            </div>
+          </dl>
+          <p v-if="lastYear" class="college-call">{{ collegeCallNote }}</p>
+
+          <div class="ending-fork">
+            <button
+              class="ending-fork-option"
+              type="button"
+              :disabled="game.busy"
+              @click="resumeCollege"
+            >
+              <strong>{{ college.yearsDone === 0 ? 'Play the first year' : 'Another year' }}</strong>
+              <span>Student tennis, no ranking points, and the family still pays nothing.</span>
+            </button>
+            <button
+              v-if="canLeaveCollege"
+              class="ending-fork-option"
+              type="button"
+              :disabled="game.busy"
+              @click="leaveCollege"
+            >
+              <strong>Back on tour now</strong>
+              <span>She leaves the scholarship and starts again from qualifying.</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- ⚠ THE THIRD BRANCH EXISTS SO THERE IS NO FOURTH. `college` and `resumes` are both
+             non-null on every college ending the engine can produce today, and both null on every
+             other one – but a footer whose branches are not exhaustive is a DEAD END on a blocking
+             takeover, which is the round-20 failure with a different cause. If a resume week ever
+             arrives without a progress view, the way back is still one tap. -->
+        <PrimaryPill v-else-if="resumes !== null" variant="cta" @click="resumeCollege">
+          Another year –
         </PrimaryPill>
+
         <template v-else>
           <p class="ending-offer">
             Nothing carries over. A new daughter, and one question: what the family starts with.
@@ -442,6 +559,59 @@ async function resumeCollege(): Promise<void> {
   font-size: 13px;
   line-height: 1.4;
   color: var(--ink-soft);
+}
+
+/* ⭐ P5 – THE COLLEGE YEAR BLOCK. It lives INSIDE the ending's own scroller (`.ending` is
+   `position: fixed; inset: 0; overflow-y: auto`), which is what makes both answers reachable however
+   long the copy gets – the property `tests/component/college-second-act.test.ts` asserts and proves
+   by mutation. The round-20 rule is about a CENTRED card with no height bound; this is the other
+   shape, and it is measured as that shape rather than waved through. */
+.college-year {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.college-lead,
+.college-call {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+/* The year's two numbers, in the totals' own idiom so the page has one voice. */
+.college-facts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 0;
+  width: 100%;
+}
+
+.college-facts div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.college-facts dt {
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.college-facts dd {
+  margin: 0;
+  font-size: 16px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- the record underneath --- */

@@ -1073,10 +1073,18 @@ describe('the three rungs, and the tables they read', () => {
     // professional standing ALONE signs her, and every line below still says exactly that.
     expect(rungFor(pro(5))).toBe('icon') // the very top of the world
     expect(rungFor(pro(20))).toBe('premium') // inside the top 50
-    expect(rungFor(pro(60))).toBe('global') // deep inside the last quarter of the W100 list
+    // ⚠ RE-POINTED A THIRD TIME BY P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), AND
+    // FOR THE THIRD TIME THE CLAIM IS UNCHANGED. The sourced acceptance chain took
+    // `TIERS.w100.acceptsRank` 350 -> 240, and BOTH professional gates are derived from it, so the
+    // chain re-resolved to national 240 > tour 200 > global 60 > premium 50 > icon 10. Two probes
+    // had to move because the rungs beneath them did: #300 is no longer on the W100 list at all
+    // (240), and global's band narrowed from ranks 51-87 to 51-60, so "deep inside" is #55 rather
+    // than #60. Every line still says the one thing this case is about - a professional standing
+    // ALONE signs her.
+    expect(rungFor(pro(55))).toBe('global') // deep inside the last quarter of the W100 list
     expect(rungFor(pro(150))).toBe('tour') // a working professional with a ranking that reads
     expect(rungFor(pro(200))).toBe('tour') // the tour rung's own gate, exactly
-    expect(rungFor(pro(300))).toBe('national') // on the W100 list, not near the top of it
+    expect(rungFor(pro(230))).toBe('national') // on the W100 list, not near the top of it
     // ...and the shop always would: the local rung is "somebody has heard of her".
     expect(rungFor(pro(400))).toBe('local')
     // The guard the junior table keeps, kept here too: an EMPTY professional table is not a world
@@ -2377,6 +2385,17 @@ describe('the tournament desk writes on W-rung registration, and only then', () 
     world.fundsCents = 9_999_999_00
     world.results.push({ playerId: KID_ID, week: 0, points: 1500, tier: 'national' })
     for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: 0, points: 300, tier: 'j300' })
+    // ⚠ RE-AIMED, NOT WEAKENED (P1, docs/specs/junior-access-2026-08.md). The junior book above is
+    // written at WEEK 0 and the W15 this fixture is about sits at week 110, so by the time the desk
+    // is asked her ITF rows are outside the 52-week window and `kidPoints(world,'itf')` reads zero –
+    // the on-ramp has always been carried across that gap by the LATCH, which `recomputeKidRank` set
+    // at week 0 off the 1,200-point book. P1 moved the door onto her junior RANKING, and 1,200 ITF
+    // points lands her around #21-#35 against the pre-history table (tests/age-caps.test.ts says so
+    // in as many words), i.e. either side of the reserved place's cut depending on the seed. This
+    // file seed-hunts across 3,000 worlds, so "depending on the seed" means the fixture throws. The
+    // latch is set explicitly instead – the same idiom `proWorld` and `worldAt` already use – which
+    // reproduces exactly what week 0 used to do and keeps this file about the tournament desk.
+    world.onRampCleared = { itf: true, wta: true }
     recomputeKidRank(world)
     const wEvent: SeasonEvent = {
       id: 'desk-w15', week: 110, tier: 'w15', surface: 'hard', travelCostCents: 100_00, deadlineWeek: 108,

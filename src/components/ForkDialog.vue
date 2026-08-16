@@ -10,8 +10,26 @@
 // without shame». A game about honest economics whose fork quietly styles one button as the correct
 // one lies exactly where it promised not to. So the three answers get the same weight, the card
 // puts the numbers on the table and says nothing about what they mean, and there is no default.
+//
+// ⭐⭐ ROUND-21 #8 IS RETIRED BY A LATER RULING OF THE OWNER'S OWN, AND THAT IS RECORDED RATHER
+// THAN DROPPED. After a full career he asked why the card had only two answers, and #8 built a
+// sentence explaining which rung had taken the third. On 16.08 he removed the rule that could take
+// it: college is an independent branch of the career, alternative to the tour, and no result closes
+// it. **There is no shut door left to explain**, so the sentence is gone and the third answer is
+// unconditional. docs/specs/college-is-its-own-branch-2026-08.md §4 states the retirement.
+//
+// ⚠ THE MEASUREMENT THAT #8 RESTED ON IS KEPT, because it is the evidence the complaint was real
+// rather than a misread screen: `tools/econ-bench.ts`'s `player` policy over 9 presets x 3 seeds had
+// **26 of 26 careers reach the fork with the college answer already spent**, and the flag carried
+// that faithfully to this card every time - the engine was closing it, not the dialog. Under the
+// `grinder` policy (which enters nothing on the paid rungs) it was open 13 of 13. That is why the
+// third answer now needs no flag at all: the state it guarded against was the normal one.
+//
+// ⚠ AND ABSENT-OVER-DISABLED, the round-17 note's own choice, is now moot rather than overruled.
+// There is no case in which this card draws two answers.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
+import { TIERS, TIER_SHORT } from '../engine/season/calendar'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -40,6 +58,39 @@ const snap = computed(() => game.snapshot ?? null)
 const ladder = computed(() => activeLadderOfSnapshot(snap.value))
 const rankHead = computed(() => `Her ${ladder.value.label.toLowerCase()} rank`)
 const rankValue = computed(() => (ladder.value.rank === null ? 'unranked' : `#${ladder.value.rank}`))
+
+// ⚠ #8's RUNG LOOKUP WENT WITH #8's SENTENCE (16.08). It read `TIER_SHORT[ENDINGS.collegeClosedFromTier]`
+// and existed so no rung name was ever typed into this file – a rule this component still keeps, and
+// `tests/component/endings-ui.test.ts` still pins. The figure below is the only rung name left here
+// and it comes off `TIERS` the same way.
+//
+// ⭐⭐ P4 – THE RESULT ARM, AND IT IS A FACT ON THE TABLE RATHER THAN A GATE.
+//
+// The owner's original intent for the fork was a fork FOR THE GIRLS WHOSE RESULTS ARE NOT VERY GOOD
+// (14.08 – his own words are quoted in `docs/specs/college-gate-decoupled-2026-08.md`, which is the
+// place for them; this file is English-only). The research found exactly one line that separates the
+// populations: #200, the rank at which our own ladder says the main tour starts admitting her.
+// Measured over 90 careers
+// (research §5c): it excludes the strongest third almost perfectly (1 of 30), keeps the door for
+// half of the weakest third, and is the only candidate in the whole sweep that beats a coin flip -
+// 47 points of separation.
+//
+// ⚠ AND IT IS NOT A NEW CONSTANT. `TIERS[TOUR_RUNG].acceptsRank` is already 200 and already means
+// this; a fitted number would have been a number this card invented about her chances.
+//
+// ⚠⚠ IT DOES NOT GATE ANYTHING, AND THAT IS THE 15.08 RULING, NOW DOUBLY TRUE. The owner cancelled
+// the money arm outright - there is nothing for us to do here, in his words - and on 16.08 he removed
+// the result arm as well, so the third answer is drawn unconditionally and this number gates nothing
+// whatever. What it does is let the player see where she stands against the tour she would be turning
+// professional into - which is the same job the four figures beside it already do.
+//
+// ⚠ SO IT MAY NOT BE A SENTENCE. Ruling 4 (30.07): the card «may not recommend». A line reading
+// "the tour would not take her" is one comparison away from advice about which answer to pick, and
+// this card is not allowed to have that opinion. It is a NUMBER IN THE SAME LIST as her funds and
+// her rank, said in the card's own idiom, and the player does the comparing.
+const TOUR_RUNG = 'wta250' as const
+const tourAdmits = computed(() => TIERS[TOUR_RUNG].acceptsRank ?? null)
+const tourHead = computed(() => `${TIER_SHORT[TOUR_RUNG]} admits down to`)
 
 const stage = computed(() => portraitStage(snap.value?.ageYears ?? 19))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -81,6 +132,13 @@ async function answer(a: ForkAnswer): Promise<void> {
           <dt>The tennis has paid</dt>
           <dd>{{ formatCents(snap?.careerTotals.prizeCents ?? 0) }}</dd>
         </div>
+        <!-- ⭐⭐ P4's result arm – a fifth figure, not a fifth opinion. It sits beside her rank on
+             purpose: the two numbers next to each other are the whole of what this card is allowed
+             to say about her chances, and the comparison is the player's to make. -->
+        <div v-if="tourAdmits !== null">
+          <dt>{{ tourHead }}</dt>
+          <dd>#{{ tourAdmits }}</dd>
+        </div>
       </dl>
 
       <div class="fork-answers">
@@ -88,11 +146,12 @@ async function answer(a: ForkAnswer): Promise<void> {
           <strong>Turn professional</strong>
           <span>W15 and up. Real cheques, real bills, and the family keeps paying.</span>
         </button>
-        <!-- ⭐ ROUND-17 #6: THE COLLEGE PLACE IS NOT ALWAYS ON THE TABLE. A girl who has already
-             scored at W75 or above has taken professional prize money, and that spends her college
-             eligibility – the reasoning is on `ENDINGS.collegeClosedFromTier`. Absent rather than
-             disabled: a greyed button with a tooltip would still read as an answer she is refusing,
-             and this card «may not recommend». `answerFork` refuses it engine-side regardless.
+        <!-- ⭐⭐ THE THIRD ANSWER IS UNCONDITIONAL (owner, 16.08). Round-17 #6 had made it depend on
+             `fork.collegeOpen`, on the reasoning that a girl who had scored at W75 or above had spent
+             her college eligibility. That reasoning was an NCAA rule which no longer exists, and the
+             ruling that replaced it is simpler: college is a separate branch of the career, not a
+             consolation the tour can take away. So the card draws three answers, always, and
+             `answerFork` no longer refuses this one.
 
              ⚠ AND IT SAYS "COLLEGE", NOT "THE SCHOLARSHIP" (round-17 B, 12.08). It used to read
              "Take the scholarship", which is the SAME WORD the academy's travel grant uses in the
@@ -102,7 +161,6 @@ async function answer(a: ForkAnswer): Promise<void> {
              mechanisms that shared a noun. `docs/specs/round17-triage.md` §B has the evidence; this
              button's job is to make sure nobody has to go and read it. -->
         <button
-          v-if="fork.collegeOpen"
           class="fork-answer"
           type="button"
           :disabled="game.busy"

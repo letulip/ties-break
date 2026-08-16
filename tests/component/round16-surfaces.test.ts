@@ -43,7 +43,7 @@ import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import InboxSheet from '../../src/components/InboxSheet.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, toSnapshot, KID_ID, isCappedProTier, seasonStartWeek, type WorldState } from '../../src/engine/world'
+import { createWorld, toSnapshot, KID_ID, isCappedProTier, isCappedTier, proEntryCapUsage, entryCapUsage, seasonStartWeek, type WorldState } from '../../src/engine/world'
 import { migrateSave } from '../../src/engine/migrations'
 import { RANKABLE_MIN } from '../../src/engine/season/ranking'
 import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
@@ -196,11 +196,13 @@ describe('R16-7 - the pro-entry allowance rides on the W cards, not only the spe
    *  junior rungs side by side, which is exactly the mix the claim is about. A synthetic `upcoming`
    *  would have gone straight past the feed's own two-type rule and proved nothing about the cards a
    *  player actually sees. */
-  function feedSnapshot(): Snapshot {
-    const world = migrateSave(
+  function feedWorld(): WorldState {
+    return migrateSave(
       JSON.parse(readFileSync(resolve(process.cwd(), 'tests/fixtures/saves/v46.json'), 'utf8')),
     ) as WorldState
-    return toSnapshot(world)
+  }
+  function feedSnapshot(): Snapshot {
+    return toSnapshot(feedWorld())
   }
 
   /** Every drawn card, paired with the tier its heading names. `TIERS[t].label` is what the card
@@ -246,29 +248,46 @@ describe('R16-7 - the pro-entry allowance rides on the W cards, not only the spe
     }
   })
 
-  // ⭐ ROUND-17 #2 – THE ALLOWANCE DOES NOT CARRY OVER, and this is the whole of the claim.
-  it('⭐ a card in the NEXT season prints the next season\'s allowance, not this season\'s', () => {
-    const snap = feedSnapshot()
-    // The fixture's own shape, asserted so the test cannot go vacuous if a future fixture moves:
-    // she is in the last week of a season and everything ahead of her is in the following one.
+  // ⭐ ROUND-17 #2 – EVERY CARD CARRIES ITS OWN ALLOWANCE, and this is the whole of the claim.
+  //
+  // ⚠⚠ RE-AIMED AT P2, AND THE RE-AIM IS ITSELF THE FINDING. This test used to read "a card in the
+  // NEXT SEASON prints the next season's allowance": it took the cards whose `seasonStartWeek`
+  // differs from today's and asserted their `used` was LOWER, because the ledger reset at New Year.
+  // After P2 the allowance's window is her BIRTHDAY YEAR – `DEFAULT_PROFILE` is a June girl, this
+  // save sits in December, and the eight-week horizon crosses the season boundary WITHOUT crossing
+  // her birthday. So the correct answer for w156 is now the SAME allowance, and the old assertion was
+  // asserting the very rule P2 removed.
+  //
+  // What round-17 #2 actually exists to prevent is a card printing a figure computed for a DIFFERENT
+  // WEEK than its own – and that property is stated here directly against the engine, which is
+  // stronger than the season-boundary proxy ever was and survives the next change of window too.
+  it('⭐ every card prints the allowance computed for ITS OWN week, not the screen\'s', () => {
+    const world = feedWorld()
+    const snap = toSnapshot(world)
     const proCards = snap.upcoming.filter((e) => e.proEntryCap !== undefined)
     expect(proCards.length, 'the fixture must hold professional cards').toBeGreaterThan(0)
+    // The fixture's own shape, asserted so the test cannot go vacuous: she is in the last week of a
+    // season and the horizon runs into the next one, which is the case round-17 #2 was reported on.
     const crossing = proCards.filter((e) => seasonStartWeek(e.week) !== seasonStartWeek(snap.week))
-    expect(crossing.length, 'the fixture must cross the year boundary – that is the case').toBeGreaterThan(0)
+    expect(crossing.length, 'the horizon must cross the season boundary – that is the case').toBeGreaterThan(0)
+    expect(snap.proEntryCap.used, 'and the allowance must be well spent, or nothing is being compared').toBe(6)
 
-    // THE BUG: the old chip showed this on every one of them.
-    expect(snap.proEntryCap.used, 'this season is well spent').toBe(5)
-    // THE FIX: each card is judged against the season the EVENT is in, where almost nothing is spent.
-    for (const e of crossing) {
-      expect(e.proEntryCap!.used, `w${e.week} must read the next season's ledger`).toBeLessThan(
-        snap.proEntryCap.used,
+    // THE PROPERTY: the card's number is the engine's answer about the card's week. Mutate the
+    // snapshot back to hanging `Snapshot.proEntryCap` on every card and this goes red on the cards
+    // whose week sits in a different allowance year from today's.
+    for (const e of proCards) {
+      expect(e.proEntryCap, `w${e.week} must carry its own week's allowance`).toEqual(
+        proEntryCapUsage(world, e.week),
       )
+    }
+    // ⚠ AND THE SEASON BOUNDARY IS NO LONGER WHERE IT TURNS OVER (P2). Recorded as an assertion
+    // rather than as prose: crossing New Year does not reset a June girl's ledger, and the next
+    // person to read this file should meet that fact rather than the old intuition.
+    for (const e of crossing) {
+      expect(e.proEntryCap!.used, `w${e.week} is still inside the same birthday year`).toBe(snap.proEntryCap.used)
     }
     // ...and it is on screen, not merely on the wire.
     const wrapper = mountWith(SeasonScreen, snap)
-    expect(wrapper.text(), 'the stale count must be gone from the feed').not.toContain(
-      `pro entries ${snap.proEntryCap.used} / ${snap.proEntryCap.limit}`,
-    )
     expect(wrapper.findAll('.pro-entries').length).toBeGreaterThan(0)
   })
 
@@ -283,6 +302,54 @@ describe('R16-7 - the pro-entry allowance rides on the W cards, not only the spe
     const wrapper = mountWith(SeasonScreen, snap)
     expect(wrapper.findAll('.pro-entries').length).toBe(0)
     expect(wrapper.text()).not.toContain('pro entries')
+  })
+
+  // =================================================================================================
+  // P2 – THE OTHER BUDGET. «The player sees the budget» (act2-pro-tour.md §5) was half-shipped: the
+  // professional counter rode every W card from round-17 #2, and the ITF one appeared only on a card
+  // the cap had already refused.
+  // =================================================================================================
+
+  it('⭐ P2: every JUNIOR card carries its own allowance too, and no card carries both', () => {
+    const world = feedWorld()
+    const snap = toSnapshot(world)
+    const byLabel = new Map(TIER_LADDER.map((t) => [TIERS[t].label, t]))
+    const wrapper = mountWith(SeasonScreen, snap)
+    const cards = wrapper.findAll('.event-card').map((c) => ({
+      tier: byLabel.get(c.find('.event-tier').text().trim()),
+      pro: c.find('.pro-entries').exists(),
+      junior: c.find('.junior-entries').exists(),
+      text: c.text(),
+    }))
+    const juniorCards = cards.filter((c) => isCappedTier(c.tier!))
+    expect(juniorCards.length, 'the fixture must draw at least one ITF card').toBeGreaterThan(0)
+    for (const c of juniorCards) expect(c.junior, `${c.tier} card has no junior allowance chip`).toBe(true)
+    for (const c of cards.filter((c) => !isCappedTier(c.tier!))) {
+      expect(c.junior, `${c.tier} is not an ITF rung and must not claim the ITF budget`).toBe(false)
+    }
+    // ⚠ EXACTLY ONE CHIP PER CARD, EVER – which is also the phone-width property. `.controls` wraps,
+    // and the owner has already accepted ONE extra line on the crowded combination; a second pill in
+    // the same row would be a second one nobody signed off. The two families are disjoint
+    // (`isCappedTier` / `isCappedProTier`), so this is a property rather than a hope.
+    for (const c of cards) expect(c.pro && c.junior, `${c.tier} shows two budget chips`).toBe(false)
+    // ...and the number is the card's OWN engine figure, exactly as the professional one is.
+    for (const e of snap.upcoming.filter((e) => e.entryCap !== undefined)) {
+      expect(e.entryCap, `w${e.week} must carry its own week's allowance`).toEqual(entryCapUsage(world, e.week))
+    }
+    for (const c of juniorCards) {
+      const e = snap.upcoming.find((x) => x.tier === c.tier && x.entryCap !== undefined)!
+      expect(c.text).toContain(`junior entries ${e.entryCap!.used} / ${e.entryCap!.limit}`)
+    }
+  })
+
+  it('⚠ P2: the junior chip goes silent where the appendix stops counting', () => {
+    const snap = feedSnapshot()
+    const unlimited = { used: 30, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER }
+    snap.entryCap = { ...unlimited }
+    for (const e of snap.upcoming) if (e.entryCap) e.entryCap = { ...unlimited }
+    const wrapper = mountWith(SeasonScreen, snap)
+    expect(wrapper.findAll('.junior-entries').length).toBe(0)
+    expect(wrapper.text()).not.toContain('junior entries')
   })
 
   it('the rungs the chip claims are exactly the ones the tour caps', () => {

@@ -36,7 +36,7 @@ import { useLetterWatermark, useNewsWatermark } from './composables/inboxCue'
 // "when does the dot show" is one testable sentence rather than a computed buried in a shell.
 import { trophyDotShows, trophyPieces, useTrophyFlight } from './composables/trophyArrival'
 import { useScrollReset } from './composables/scrollReset'
-import { blockingOverlay } from './composables/blockingOverlay'
+import { blockingOverlay, popupMayShow, visibleOverlay } from './composables/blockingOverlay'
 import { playSfx, primeSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -93,6 +93,13 @@ const splashDone = ref(false)
 //     store flips itself to ready; if not, the failure is rendered right here instead of vanishing;
 //   * Start new career walks into the ordinary onboarding wizard after an explicit tap – nothing
 //     is deleted, and the wizard's own error line reports any save failures that follow.
+//
+// ⭐ ROUND-21 #1: ...AND THIS ONE STAYS UNCONFIRMED, WHICH IS A DECISION RATHER THAN AN OVERSIGHT.
+// The confirm added to More exists to say what an import is about to overwrite; here nothing can be
+// overwritten, because the database could not be READ – there is no careers list to match the file
+// against, no active career on screen, and this button is the way out rather than a thing that can
+// cost the player something. A dialog asking "are you sure" in front of the only working door is
+// the noise the item is against, not the protection it asks for.
 const recoveryFileInput = ref<HTMLInputElement | null>(null)
 function onRecoveryImportPicked(e: Event): void {
   const file = (e.target as HTMLInputElement).files?.[0]
@@ -221,18 +228,16 @@ const showOnboarding = computed(() => game.ready && !game.snapshot)
 
 // A career appearing after onboarding must land on Home, not whatever tab was
 // active before the reset (e.g. More, where "New career" lives).
+//
+// ⚠ THE COACH-MARK TOUR IS NO LONGER LAUNCHED FROM HERE, and that is the 16.08 defect – see
+// `tourWanted` further down for the gate that replaced it. It used to read a one-shot store flag
+// (`firstEverCareer`) inside this callback and patch it back to false whether or not the tour was
+// actually shown, which meant the whole of "this player has never been onboarded" lived in a
+// non-persisted boolean that was spent on the first snapshot transition of the session.
 watch(
   () => game.snapshot,
   (now, before) => {
-    if (now && !before) {
-      tab.value = 'home'
-      // Consume the one-shot "first ever career" signal exactly once, regardless of
-      // whether the tour actually launches (already seen on this device -> skip it).
-      if (game.firstEverCareer) {
-        game.$patch({ firstEverCareer: false })
-        if (!localStorage.getItem(TOUR_SEEN_KEY)) showTour.value = true
-      }
-    }
+    if (now && !before) tab.value = 'home'
   },
 )
 
@@ -597,13 +602,6 @@ watch(trophyPieceCount, () => {
   if (tab.value === 'trophies') markTrophiesSeen()
 })
 
-// --- coach-mark onboarding tour (item 10) ------------------------------------
-const showTour = ref(false)
-function dismissTour(): void {
-  showTour.value = false
-  localStorage.setItem(TOUR_SEEN_KEY, '1')
-}
-
 // Package K2: a corrupted-generation recovery is rare and stays a one-time hint –
 // dismissing it just patches the flag back to false (same pattern MoreScreen uses
 // for the client-side "New career" reset, no store change needed).
@@ -830,7 +828,16 @@ function dismissStopToast(): void {
 // argued. What each gate used to say about WHY it outranks its neighbours has moved there; what each
 // says about reading the SNAPSHOT rather than a stop reason stays here, because that is a different
 // argument and it is still the load-bearing one.
-const overlay = computed(() => blockingOverlay(game.snapshot ?? null))
+//
+// ⭐ ROUND-21 #9 – AND THE LIST NOW ANSWERS TWO QUESTIONS, WHICH IS WHY THERE ARE TWO COMPUTEDS.
+// `queued` is WHICH question is pending; `overlay` is which one the player may be shown right now,
+// which is the same thing except while a sequence is playing on screen (a tournament reveal, a live
+// friendly). The rule and its one exception live in `composables/blockingOverlay.ts`; nothing about
+// WHEN a popup may land is decided in this file any more, which is the whole point of the item –
+// the fork landed on the finale because that decision had never been written down anywhere.
+const queued = computed(() => blockingOverlay(game.snapshot ?? null))
+const liveSequence = computed(() => practiceLive.value !== null)
+const overlay = computed(() => visibleOverlay(game.snapshot ?? null, liveSequence.value))
 const showKnock = computed(() => overlay.value === 'knock')
 
 // W2-ENDINGS. Three gates, and every one of them reads a SNAPSHOT FIELD rather than a stop reason -
@@ -887,26 +894,25 @@ const showBirthday = computed(() => overlay.value === 'birthday')
 // asked where the answer survives the command that produced it. `!pending` is what keeps the promise
 // the old note was really making: the report waits for the reveal to be resolved and then lands, so
 // it is one popup after one beat rather than one popup over it.
+//
+// ⭐ ROUND-21 #9 – AND IT IS THE ONE POPUP THAT DOES NOT WAIT FOR AN IDLE SCREEN. The owner:
+// «кроме травмы, которая как раз должна появляться в моменте». That is stated in
+// `composables/blockingOverlay.ts` as membership of one set rather than here as the absence of a
+// clause, so a future report inherits the WAIT by default and only an explicit exception escapes it.
+// This gate used to carry a bare `!game.snapshot.pending`, which held the report behind the very
+// beat 61% of this game's injuries arrive on; the data is ready when it fires either way, because
+// `retirementInjury` opens the layoff inside `finalizeTournament`, ahead of `resolveEndings`.
 const showInjuryStop = computed(
   () =>
-    // W2-ENDINGS: ...and behind the epilogue and the two blocking questions, for the reason the
-    // knock clause below states. An ending replaces the shell entirely; the fork and the offer are
-    // decisions time is stopped on, and an injury report can wait a click.
-    !showEnding.value &&
-    !showFork.value &&
-    !showRetirement.value &&
+    // BEHIND EVERY BLOCKING QUESTION, as one test instead of four negations – and `queued` rather
+    // than `overlay`, which is the stricter of the two: a question merely HELD behind a reveal still
+    // outranks a report, or closing the tournament would raise both in the same frame. It is also
+    // total, where the hand-written list quietly was not: the birthday was never in it.
+    queued.value === null &&
     !!game.snapshot?.injury &&
     game.snapshot.injury.sinceWeek === game.snapshot.week &&
-    // Behind the tournament takeover: a pending reveal is the screen that is mid-sentence, and the
-    // retirement's own layoff does not even exist until it closes.
-    !game.snapshot.pending &&
-    injuryReported.value !== injuryIdentity.value &&
-    // W4: one overlay at a time. A knock and a fresh injury cannot land on the same week (a knock only
-    // arrives on a week with no injury, and `rollInjury` retires the live one at onset), so this is
-    // belt-and-braces rather than a real collision – but the ordering rule is worth stating once and
-    // it matches STOP_PRECEDENCE nowhere else: the blocking question comes first, because the injury
-    // report can wait a click and the question is what time is stopped on.
-    !showKnock.value,
+    popupMayShow('injury', game.snapshot, liveSequence.value) &&
+    injuryReported.value !== injuryIdentity.value,
 )
 // The end-of-season summary popup: auto-shows on the week the wrap-up was banked, until the player
 // hits Continue.
@@ -930,20 +936,20 @@ const showInjuryStop = computed(
 // erased the same beat by the same argument and is fixed by the same field.
 //
 // ⚠ THE ORDER IS UNCHANGED AND MUST STAY. Nothing here jumps the queue; the recap simply survives it.
+//
+// ⭐ ROUND-21 #9: ...and it waits for an idle screen like everything else that is not the injury.
+// A wrap-up week can be a tournament week – the calendar's last event and the season's last week are
+// one and the same in a full schedule – so this is a real collision and not a defensive clause.
 const showSeasonSummary = computed(
   () =>
     // W2-ENDINGS: the retirement offer is raised ON the wrap week by construction, so this is a real
     // collision rather than a defensive one - the summary waits behind the question.
-    !showEnding.value &&
-    !showFork.value &&
-    !showRetirement.value &&
+    queued.value === null &&
+    popupMayShow('season-summary', game.snapshot ?? null, liveSequence.value) &&
     seasonWrapPrompt.value !== null &&
     String(seasonWrapPrompt.value) !== seasonWrapSeen.value &&
     !!game.snapshot?.lastSeasonSummary &&
-    !showInjuryStop.value &&
-    // W4: ...and behind the knock, for the same reason. A wrap-up week is off-season, so a knock can
-    // never arrive on one; this keeps the chain total anyway.
-    !showKnock.value,
+    !showInjuryStop.value,
 )
 function dismissSeasonSummary(): void {
   const season = seasonWrapPrompt.value
@@ -998,16 +1004,86 @@ function dismissTourBriefing(): void {
 }
 const showTourBriefing = computed(
   () =>
-    // Behind all five blocking questions – `overlay === null` IS "the shell is free", so this cannot
-    // drift out of step with that list the way five negated computeds would.
-    overlay.value === null &&
+    // Behind all five blocking questions – `queued === null` IS "no question is pending", so this
+    // cannot drift out of step with that list the way five negated computeds would. ⭐ ROUND-21 #9:
+    // `queued`, not `overlay` – a question held behind a reveal is still a question, and this popup
+    // must not slip in front of it when the reveal closes.
+    queued.value === null &&
     !showInjuryStop.value &&
     !showSeasonSummary.value &&
-    // Behind the tournament takeover: a pending reveal is a screen mid-sentence.
-    !game.snapshot?.pending &&
+    // ⭐ ROUND-21 #9: behind the tournament takeover and the live friendly, through the shared rule.
+    // It had worked this out privately, one `!pending` at a time, which is exactly how the fork came
+    // to be the only blocking dialog that never had.
+    popupMayShow('tour-briefing', game.snapshot ?? null, liveSequence.value) &&
     !!game.snapshot?.tourBriefing &&
     !tourBriefingSeen.value,
 )
+
+// =================================================================================================
+// ⭐ 16.08 – THE COACH-MARK TOUR REACHES A PLAYER WHO HAS NEVER ANSWERED IT (item 10, re-gated)
+// =================================================================================================
+//
+// The owner, after a playtester met the app cold: the onboarding that explains the functions and the
+// interface is gone, and the interface is not the simplest. It was not gone from the build – it was
+// gone from that player, and the reason is a one-shot race.
+//
+// ⚠ WHAT IT WAS. `game.firstEverCareer` is an IN-MEMORY store flag set by `newCareer` when the
+// careers list was empty, and the watcher above consumed it – `$patch({ firstEverCareer: false })` –
+// on the first snapshot transition of the session, BEFORE checking whether the tour would open. So
+// the only durable record of "this player has been onboarded" was `tb:onboardingTourSeen`, and that
+// key is written by `dismissTour` alone. A first session that ended without the player pressing Skip
+// or Got it therefore left BOTH gates shut for ever: the flag does not survive a reload and the key
+// was never written. Reproduced in real Chromium at 375x667 – create a career, see the tour, reload
+// without answering it, and the tour is gone with localStorage still empty of the key.
+// e2e/onboarding-tour.spec.ts is that reproduction, kept as the regression.
+//
+// ⚠ SO THE GATE IS A FUNCTION OF DURABLE STATE, NOT AN EVENT. "Has this device answered the tour"
+// is one localStorage key, mirrored into a ref for reactivity (the same idiom as the season dot
+// above, and for the same reason: a bare getItem inside a computed is not a tracked dependency).
+// Nothing is consumed, nothing races, and the ORDER in which the career arrives - a fresh wizard, an
+// autosave adopted at boot, a worker restart reloading the last committed week - cannot change the
+// answer. That is the half that makes this robust rather than lucky: the previous gate was correct
+// on exactly one ordering out of several the app really produces.
+//
+// ⚠ AND IT DOES NOT LAND ON A CAREER THAT IS ALREADY UNDER WAY. The automatic offer is bounded by
+// `week === 0` – she has not played a single week yet – and the bound is a SENTENCE rather than a
+// tuned number: a player who has advanced a week has already found the button the tour ends on, so
+// from that point the marks stop being onboarding and start being an interruption. And they really
+// do interrupt, which is the half worth stating: `.coach-tour` is `pointer-events: none`, but the
+// CARD is not, so a coach mark hanging over a mature career swallows taps on whatever is behind it.
+// Measured, not assumed – e2e/tournament-entry.spec.ts went red on the unbounded version with
+// Playwright naming `.coach-tooltip` as the element intercepting the click on Enter.
+//
+// ⚠ SO THE WAY BACK IS NOT OPTIONAL, and that is `reopenTour` below. A bound that can pass a player
+// by needs a door they can open themselves; without one this would just be a narrower version of the
+// same bug.
+const tourSeen = ref(localStorage.getItem(TOUR_SEEN_KEY) === '1')
+/** More's "Show the tour again" – it outranks BOTH the seen mark and the week bound. */
+const tourReopened = ref(false)
+const tourWanted = computed(
+  () => tourReopened.value || (!tourSeen.value && game.snapshot?.week === 0),
+)
+const showTour = computed(
+  () =>
+    !!game.snapshot &&
+    tourWanted.value &&
+    // ⭐ ROUND-21 #9's rule, inherited rather than re-derived: the marks black out the screen behind
+    // a 4000px shadow, so they must not land on a tournament reveal or a live friendly, and they
+    // must wait behind a blocking question the way every report below the queue does.
+    queued.value === null &&
+    popupMayShow('onboarding-tour', game.snapshot ?? null, liveSequence.value),
+)
+function dismissTour(): void {
+  tourSeen.value = true
+  tourReopened.value = false
+  localStorage.setItem(TOUR_SEEN_KEY, '1')
+}
+/** More asks for it again. It moves to Home first: every anchor the tour points at is either the
+ *  bottom bar or something on HomeScreen, so a tour opened over Stats would highlight nothing. */
+function reopenTour(): void {
+  tourReopened.value = true
+  tab.value = 'home'
+}
 </script>
 
 <template>
@@ -1129,7 +1205,10 @@ const showTourBriefing = computed(
       <!-- U1 (screen G): the Family Budget grew the export's back arrow, and Money is a tabless
            content state - so it asks the shell to move exactly the way Home and Kid already do. -->
       <MoneyScreen v-else-if="tab === 'money'" @navigate="tab = $event" />
-      <MoreScreen v-else-if="tab === 'more'" />
+      <!-- 16.08: More is where the tour can be asked for again. It is the shell that owns whether
+           the marks are up (they point at the bottom bar and at Home), so the screen only ASKS -
+           the same one-event idiom Home's cards use. -->
+      <MoreScreen v-else-if="tab === 'more'" @show-tour="reopenTour" />
       <TrophiesScreen v-else-if="tab === 'trophies'" />
     </main>
 
@@ -1268,7 +1347,9 @@ const showTourBriefing = computed(
     <ForkDialog v-if="showFork" />
     <RetirementDialog v-if="showRetirement" />
 
-    <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
+    <!-- Round 5 item 10, re-gated 16.08: the coach-mark tour of the interface. Shown to any player
+         on a device that has never ANSWERED it (Skip or Got it), and re-openable from More – see
+         `tourWanted` in the script for why the old one-shot signal lost it for whole players. -->
     <OnboardingTour v-if="showTour" @done="dismissTour" />
   </template>
 </template>

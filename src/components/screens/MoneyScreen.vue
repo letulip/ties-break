@@ -976,7 +976,16 @@ const TAB_OPTIONS = [
           <p class="kit-line-blurb">{{ view.blurb }}</p>
           <!-- Each rung now carries what it BUYS (weeks of good kit) beside what it costs, and the
                price is the engine's `payableCents` - what the family really hands over once a deal's
-               allowance is applied - never a discount this screen worked out for itself. -->
+               allowance is applied - never a discount this screen worked out for itself.
+
+               ROUND 21 #10: the rung she is ON also carries what is LEFT of those weeks. "24 good
+               weeks" is what the rung buys from new and says nothing about the set in her bag, so a
+               fourteen-week-old string job read exactly like a fresh one. `goodWeeksLeft` is the
+               engine's own figure (world/kit.ts) off the same clock the wear curve walks - this
+               screen does not subtract a start date from a week number, because a second reading of
+               "how old is it" is how a countdown ends up disagreeing with the condition word two
+               lines above it. null means a sponsor is keeping the line fresh: nothing is counting
+               down, so nothing is printed. -->
           <div class="kit-rungs">
             <button
               v-for="rung in view.rungs"
@@ -988,7 +997,12 @@ const TAB_OPTIONS = [
               @click="chooseRung(view, rung)"
             >
               <span class="kit-rung-name">{{ rung.label }}</span>
-              <span class="kit-rung-good">{{ rung.goodWeeks }} good weeks</span>
+              <span class="kit-rung-good">
+                {{ rung.goodWeeks }} good weeks
+                <span v-if="rung.owned && view.goodWeeksLeft !== null" class="kit-rung-left">
+                  ({{ view.goodWeeksLeft }} left)
+                </span>
+              </span>
               <span v-if="rung.payableCents < rung.priceCents" class="kit-rung-price is-covered">
                 <s>{{ formatCents(rung.priceCents) }}</s>
                 {{ rung.payableCents === 0 ? 'free' : formatCents(rung.payableCents) }}
@@ -1577,6 +1591,16 @@ const TAB_OPTIONS = [
   font-size: 10.5px;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
+}
+
+/* ...and what is LEFT of them on the rung she owns (round 21 #10). Louder than the "good weeks" it
+   qualifies, because it is the live number: the other one is a catalogue fact that never moves, and
+   this one is the week-by-week countdown the parent is actually deciding on. It wraps onto its own
+   line inside the button rather than widening it - the four rungs are a two-column grid at 375px. */
+.kit-rung-left {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--ink);
 }
 
 /* A line the brand is paying for: the sticker is struck through and what the family actually hands

@@ -548,6 +548,11 @@ interface TierChip {
   label: string
   state: TierChipState
   title: string
+  /** ⚠ THE SPOKEN NAME WHEN IT MUST NOT BE THE VISIBLE ONE (16.08). Set only by the capped arm
+   *  below, where the strip's label is abbreviated for width and the full sentence – the one that
+   *  NAMES THE RULE, per the owner's transparency ruling – has to survive into the accessible name.
+   *  Same trick `locked` already plays by reading `title`, and for the same reason. */
+  spoken?: string
 }
 const tierStates = useTierStates()
 const seasonChips = computed<TierChip[]>(() =>
@@ -582,6 +587,9 @@ const seasonChips = computed<TierChip[]>(() =>
               avail.kind === 'unscheduled' || avail.kind === 'capped'
               ? 'waiting'
               : 'unlocked'
+    // Narrowed HERE rather than inside the label chain: `state` is computed above, so a check on it
+    // cannot narrow `avail`, and only the discriminant can. Undefined on every other kind.
+    const cappedSpend = avail.kind === 'capped' ? avail.entryCap : undefined
     const label =
       state === 'locked'
         ? `🔒 ${avail.note}`
@@ -589,16 +597,64 @@ const seasonChips = computed<TierChip[]>(() =>
           ? shortFinish(best!)
           : state === 'outgrown'
             ? (best !== undefined ? shortFinish(best) : avail.note)
-            : state === 'waiting'
-              ? avail.note
-              : 'Unlocked – enter your first!'
+            : // ⚠⚠ THE CAPPED CHIP IS ABBREVIATED HERE AND NOWHERE ELSE, AND IT IS A PHONE
+              // MEASUREMENT (16.08). `tierState.ts` writes the cap's note as the sentence the Season
+              // CARD needs – "Tour age rule – 10 of 10", "Year limit – 12 of 14" – and P2 made that
+              // arm fire on W15 at fifteen, where it never could before (the rung opened at 16 and
+              // the pro allowance started at 16 too). On the strip that sentence wraps: measured at
+              // 375px, the Home season strip went 170px -> 178.28px and e2e/responsive.spec.ts went
+              // red with its own warning that this row "wrapped to four rows once before and was
+              // fixed to two".
+              //
+              // ⚠ AND NOTHING IS LOST, WHICH IS THE ONLY REASON THIS IS AN ABBREVIATION AND NOT A
+              // DELETION. The rule's name survives in two places a player actually reads it: the
+              // tooltip (`title`, unchanged) and the ACCESSIBLE NAME (`spoken`, below), so a screen
+              // reader hears the whole sentence rather than a bare count. The Season card, which has
+              // the width, still prints it in full. What the strip loses is a repetition of the
+              // rule's name in a five-chip row that already colours the state.
+              state === 'waiting' && cappedSpend !== undefined
+              ? `Used ${cappedSpend.used} of ${cappedSpend.limit}`
+              : state === 'waiting'
+                ? avail.note
+                : // ⚠⚠ THE OWNER'S OWN STRING, ABBREVIATED ON THE STRIP ONLY, AND HE SHOULD BE TOLD
+                  // (16.08). R8-8 §6 names it verbatim for this row - «renders in accent as "Unlocked
+                  // – enter your first!"» (owner, 25.07) - so this is not a copy edit taken lightly.
+                  //
+                  // WHAT FORCED IT IS NOT THIS STRING, IT IS THAT THE ROW GAINED A CHIP. The strip
+                  // shows «the current available window plus one upper unavailable level» (owner,
+                  // 04.08); the junior-ladder wave opened W15 at fourteen, so the window now reaches
+                  // W35 and the row carries FIVE rungs where it carried four. Measured at 375px:
+                  // 148.9px -> 178.28px, one wrapped row, and e2e/responsive.spec.ts red on a ceiling
+                  // whose own note says it "leaves ~21px of headroom ... less than one wrapped row of
+                  // chips costs". At 28 characters this label is the widest thing in the row by a
+                  // long way, and it is the only one with slack in it: the accent COLOUR already says
+                  // unlocked, so the word was saying it twice.
+                  //
+                  // ⚠ NOTHING IS LOST ANYWHERE ELSE. The full sentence is still the tooltip and still
+                  // the accessible name, and the Season card - which has the width - is untouched.
+                  // The other two arms of this chain already do exactly this: `locked` shows
+                  // "🔒 Opens at 16" and speaks its whole sentence, and `capped` was abbreviated the
+                  // same way an hour ago. If he wants the full words back on the strip, the honest
+                  // lever is the WINDOW rule rather than the copy - four chips fitted, five do not.
+                  'Enter your first!'
     const title =
       state === 'reached'
         ? `Best ${short} finish · ${avail.title}`
         : state === 'outgrown'
           ? `Outgrown – her best ${short} result stays on the books`
           : avail.title
-    return { id, short, label, state, title }
+    return {
+      id,
+      short,
+      label,
+      state,
+      title,
+      // Only the abbreviated arm carries one; every other chip's visible label IS its name.
+      // The two arms whose visible label was abbreviated for the row's width keep the whole sentence
+      // here; every other chip's visible label IS its name.
+      ...(state === 'waiting' && cappedSpend !== undefined ? { spoken: avail.note } : {}),
+      ...(state === 'unlocked' ? { spoken: 'Unlocked – enter your first!' } : {}),
+    }
   }),
 )
 
@@ -630,9 +686,11 @@ function chipName(chip: TierChip): string {
     case 'locked':
       return `${chip.short}: locked – ${chip.title}`
     case 'waiting':
-      return `${chip.short}: open – ${chip.label}`
+      // `spoken` when the visible label was abbreviated for the strip's width - see the capped arm
+      // in `seasonChips`. Everywhere else the label is the name, unchanged.
+      return `${chip.short}: open – ${chip.spoken ?? chip.label}`
     default:
-      return `${chip.short}: ${chip.label}`
+      return `${chip.short}: ${chip.spoken ?? chip.label}`
   }
 }
 
@@ -675,6 +733,10 @@ const windowRungs = computed<readonly TierId[]>(
       ageYears: game.snapshot?.ageYears ?? 0,
       tierOpen: game.snapshot?.tierOpen,
       tierOutgrown: game.snapshot?.tierOutgrown,
+      // round-21 #5: and the table she has LEFT drops out of the strip too. The hole this row's own
+      // note describes ("at nineteen ... the domestic three never close again") is closed at the
+      // source now instead of only being hidden behind the ellipsis - `paysIntoHerTables`.
+      activeLadder: game.snapshot?.activeLadder,
       upcoming: game.snapshot?.upcoming ?? [],
     }).working,
 )
@@ -701,9 +763,61 @@ const windowRungs = computed<readonly TierId[]>(
  * So the row is built from the set, and the hole is where the ellipsis goes. Nothing is re-derived:
  * `windowRungs` is still the engine's verdict, verbatim, and this only stops widening it.
  */
+/** ⭐⭐ FOUR, AND IT IS MEASURED IN A REAL BROWSER RATHER THAN CHOSEN (16.08). `tools/strip-wrap-probe.mjs`
+ *  serves this worktree, renders the strip's own markup against the app's real stylesheet and real
+ *  self-hosted faces in Chromium, and reads the boxes off it. The container is **315px** at a 375px
+ *  viewport (375 - 2x16 `--app-pad-x` on `#app` - 2x14 the Card's own padding; `.app-content` adds
+ *  none), and the row it has to hold is the e2e `junior` fixture's: age 15, week 120, window
+ *  {j30, j60, j300, w15, w35} with W50 as the aspiration.
+ *
+ *      cap 5   4 rows at 315px      J60 · J300 · W15 · W35 · W50
+ *      cap 4   3 rows at 315px            J300 · W15 · W35 · W50      <- shipped
+ *      cap 3   3 rows                            W15 · W35 · W50
+ *
+ *  ⚠ FIVE WAS THE FIRST ANSWER AND IT WAS NOT ENOUGH, which is the record worth keeping. Its note
+ *  read *"FIVE, and it is the width the phone actually has ... five rungs plus their arrows and both
+ *  ellipses sit inside the two rows e2e/responsive.spec.ts pins (148.9px of a 170 ceiling); six wrap
+ *  to three and cost 178.28."* The row stayed at 178.28 with the cap on. One chip row is **29.4px**
+ *  (= 178.28 - 148.9, the spec's own two numbers), the overshoot is 8.28px, so exactly one row has to
+ *  go – and cap 4 is the smallest change that removes exactly one at every width the card can be.
+ *
+ *  ⚠⚠ AND THE AGE-GRID RULING DID NOT DO IT, WHICH WAS THE HYPOTHESIS AND IS NOW MEASURED. Two of the
+ *  five chips read "🔒 Opens at 16" and the owner's ruling of 16.08 opened those rungs at 14, so the
+ *  expectation was that the row would shrink. It does not: W35 goes from a 14-character lock to
+ *  "Used 10 of 10" (13) and W50 goes from the same lock to "🔒 Opens in the top 330" (23), a net +8
+ *  characters. Swept 240-375px, the new labels give the SAME row count at 114 of 136 widths, one
+ *  fewer at 301-307 and one MORE at 240-254 – and at the 315px this card actually has, identical.
+ *  The lock labels were never the cause; the fifth chip is.
+ *
+ *  ⚠ THE CEILING IS NOT THE LEVER. 170 leaves ~21px of headroom by its own note, less than one
+ *  wrapped row costs, and raising it would retire the only thing that has ever caught this row. */
+const STRIP_MAX_RUNGS = 4
+
 const stripVisible = computed<readonly number[]>(() => {
   const last = SEASON_STRIP_TIERS.length - 1
   if (stripExpanded.value) return SEASON_STRIP_TIERS.map((_, i) => i)
+  // ⚠⚠ AND THE WINDOW IS THE ENGINE'S, WHOLE – AN AGE FILTER WAS TRIED HERE AND WITHDRAWN (16.08).
+  // For a few hours this line also dropped any rung whose chip read `locked`, on the argument that
+  // the owner's window rule says AVAILABLE and a rung that refuses her on age is not available.
+  // Two things retired it, and both are worth keeping.
+  //
+  //   1. IT WAS A SECOND OPINION ABOUT THE LADDER, held in one component. The window's own verdict
+  //      is a FLOOR asked of her RANK; the age gate is a separate refusal, decided engine-side and
+  //      arriving here already folded into the chip's state. A component that drops rungs on the
+  //      second verdict is answering "which rungs are open" for itself, which is the bug this row's
+  //      own header records twice. The Season feed and the Calendar would have kept reading the
+  //      other answer.
+  //   2. AND THE STATE IT WAS BUILT FOR NO LONGER EXISTS. It was aimed at a fifteen-year-old whose
+  //      rank cleared W35's list a year before the rung's floor would admit her – and the owner's
+  //      age-grid ruling of 16.08 put the professional floors on the regulation's own two numbers,
+  //      so the two verdicts stopped disagreeing on this row at all. The filter would now be dead
+  //      code that still looked like a rule.
+  //
+  // ⚠ THE PREDICATE IS DELIBERATELY NOT NAMED IN THIS PARAGRAPH: `tests/round11-view.test.ts` greps
+  // this whole file for the band-deriving symbols and has no parser, so quoting one in prose turns a
+  // comment into a violation. It went red on the very paragraph this replaces, and it was right to.
+  //
+  // What holds the row to a phone instead is `STRIP_MAX_RUNGS`, above, which is measured.
   const open = SEASON_STRIP_TIERS.map((t, i) => (windowRungs.value.includes(t.id) ? i : -1)).filter((i) => i >= 0)
   // Nothing open at all is not a state the engine produces, and if it ever did, a row with one
   // ellipsis and no rungs would be worse than the old sixteen. Show everything.
@@ -712,7 +826,36 @@ const stripVisible = computed<readonly number[]>(() => {
   // the rung whose unlock condition is the goal text ("Opens in the top 250"), which is the one
   // sentence that makes the ladder legible; the rungs above THAT are years away and cost a line each.
   const aspiration = Math.min(open[open.length - 1] + 1, last)
-  return open.includes(aspiration) ? open : [...open, aspiration]
+  const row = open.includes(aspiration) ? open : [...open, aspiration]
+  // ⚠⚠ AND THE ROW HAS A HARD WIDTH, WHICH IS A MEASUREMENT AND NOT A TASTE (16.08). The window is
+  // the ENGINE's and this does not second-guess it: `tierOpen` is a FLOOR – "has she reached this
+  // rung", asked of her rank alone – so a rung can enter the window a year before its own age gate
+  // will admit her, and the Accelerator correction made that ordinary rather than rare. On a fifteen-
+  // year-old the row reached SIX rungs (two of them locked, one of them only the aspiration), and
+  // e2e/responsive.spec.ts went red at 375px: 178.28 against a 170 ceiling whose own note says it
+  // leaves ~21px of headroom, "less than one wrapped row of chips costs".
+  //
+  // ⚠ TRIMMED FROM THE BOTTOM, and the leading ellipsis already covers what goes: the rungs nearest
+  // her level are the ones she is choosing between this week, and the ones below are the climb she
+  // has already made. Nothing is deleted – tapping any ellipsis still expands the whole ladder in
+  // place, which is the property the mounted suite pins.
+  //
+  // ⚠ WHY A CAP AND NOT AN AGE FILTER is the paragraph above `const open`, which is where the filter
+  // was tried and withdrawn.
+  //
+  // ⚠ AND IT DOES NOT APPLY TO THE NO-VERDICT FALLBACK, which is the same exception the branch above
+  // makes and for the same reason. `tierOpen` absent means an old save or a hand-built fixture, and
+  // `feedContext` answers by returning the WHOLE ladder – the safe direction, pinned by two mounted
+  // tests. Trimming that to four would turn "we do not know, so show everything" into "we know it is
+  // these four", which is the one reading the fallback exists to avoid.
+  //
+  // ⚠⚠ BUT THE HATCH IS KEYED ON THE COUNT RATHER THAN ON THE ABSENT VERDICT, so a career that
+  // genuinely opened every rung would skip the cap too. `tierOutgrown` closes the rungs beneath her,
+  // so that state is not reachable today; it is flagged for the owner in
+  // docs/specs/college-is-its-own-branch-2026-08.md §7b and named by a mounted test rather than
+  // half-fixed here, because tightening it means deciding what "no verdict" is allowed to mean.
+  const everyRung = open.length === SEASON_STRIP_TIERS.length
+  return !everyRung && row.length > STRIP_MAX_RUNGS ? row.slice(row.length - STRIP_MAX_RUNGS) : row
 })
 
 /** One cell of the rendered row: either a rung, or the ellipsis standing in for a stretch of them.
@@ -890,6 +1033,7 @@ function openRankHelp(): void {
                  is the half of D7 that mattered and is free here. -->
             <button
               class="diary-tool"
+              data-tour="home-news"
               aria-label="Go to the news feed"
               title="News"
               :aria-describedby="newsUnseen ? 'diary-dot-news' : undefined"
@@ -934,7 +1078,7 @@ function openRankHelp(): void {
                 aria-label="A letter waiting on an answer"
               ></span>
             </button>
-            <button class="diary-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
+            <button class="diary-tool" data-tour="home-settings" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3.2"></circle>
                 <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"></path>
@@ -1048,7 +1192,7 @@ function openRankHelp(): void {
 
         <!-- FAMILY BUDGET -> the wallet. OWNER'S RULING over the export, which shows this week's
              income/spent rows: the current TOTAL, plus income and spending over the last 12 weeks. -->
-        <Card as="button" class="note-card" @click="emit('navigate', 'money')">
+        <Card as="button" class="note-card" data-tour="family-budget" @click="emit('navigate', 'money')">
           <Eyebrow>Family budget</Eyebrow>
           <p class="budget-total" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
           <div class="budget-rule"></div>

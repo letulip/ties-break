@@ -194,10 +194,25 @@ const readout = computed(() => {
  *  full, so four of the five blocks render almost entirely disabled – which reads as a broken screen
  *  until something says one session a day is the rule. The dots carry it for a player who looks; this
  *  carries it for one who does not. */
+/** ⚠ IS SHE ACTUALLY AT SCHOOL IN THE WEEK THE PLAN IS ABOUT (round-21 #6)? `schoolEndsWeek` is the
+ *  engine's own week (`schoolEndWeek(profile.birthMonth)`) and this asks it about `week + 1`, which is
+ *  the week `planDayCapacity` is already about – the same off-by-one the snapshot field documents. */
+const schoolRunsNextWeek = computed(() => {
+  const snap = game.snapshot
+  return snap !== null && snap.week + 1 < snap.schoolEndsWeek
+})
+/** ⚠ AND THE ONE-SESSION LINE STOPPED BLAMING SCHOOL FOR IT (round-21 #6, «Надо везде по коду
+ *  проверить этот сдвиг»). It read the CAPACITY and printed «while school is on», but capacity is 1
+ *  for five different reasons - `summerBlockWeek` refuses a doubled day on an injury, a booked family
+ *  week, a tournament and a rested knock as well as on the calendar - so a twenty-two-year-old
+ *  professional resting a knock was told her school timetable was the limit. The school half is now
+ *  the only half that names school, and it names it off her BIRTH MONTH like every other surface. */
 const capacityNote = computed(() =>
   capacity.value > 1
     ? 'No school this week – a day can take two sessions, if you want them.'
-    : 'One session a day while school is on – the dots are the room each day has left.',
+    : schoolRunsNextWeek.value
+      ? 'One session a day while school is on – the dots are the room each day has left.'
+      : 'One session a day this week – the dots are the room each day has left.',
 )
 
 /** ⚠ WHO WRITES THIS WEEK - and since 13.08 the answer is a CONTROL rather than a sentence.

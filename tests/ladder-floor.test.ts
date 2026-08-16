@@ -75,7 +75,28 @@ function domesticWorld(seed: string, points: number): WorldState {
  *  that is the coach market's restocking clock now, not hers. `tierOutgrown` gates on HER age, so a
  *  June default profile arrived at week 156 aged SIXTEEN, W75 (17+) refused her, and the window
  *  ceiling this file is about stopped existing. Ticking to her real age restores the fixture's own
- *  contract and costs not one assertion. */
+ *  contract and costs not one assertion.
+ *
+ *  ⚠⚠ AND RE-AIMED AGAIN BY P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md) – THE BOOK
+ *  MOVED, THE CONTRACT DID NOT. Every case here that wants "a climbed professional" passed a book of
+ *  **140**, chosen because it cleared W75's #450 cut and not W100's #350. The sourced chain took
+ *  w75 450 → 300 and w100 350 → 240, and the BOOK standing on each door moved with the cut: W75's
+ *  price went 90 → **189** and W100's 147 → **272**. A 140-point book therefore stopped opening W75
+ *  at all, so `tierOutgrown('w15')` went false and twelve cases lost the precondition they exist to
+ *  measure – they were failing on scaffolding, not on the sliding window.
+ *
+ *  **The book is now 250**, which is the same POSITION on the new ladder: past W75, short of W100.
+ *  Not one assertion, threshold or claim in this file is touched, and none is relaxed. The sweep's
+ *  ladder likewise re-spaces 10 / 50 / 75 / 140 / 400 → 10 / 50 / **170** / **200** / 400 so its
+ *  five rungs still straddle the doors rather than bunching below them.
+ *
+ *  ⚠ 250 IS THE MIDDLE OF THE WINDOW, NOT THE FIRST VALUE THAT PASSED, and that is deliberate –
+ *  the whole failure above was a fixture parked next to a threshold. The window was bisected against
+ *  the real fixture rather than computed from a fresh table, because this world is TICKED to
+ *  seventeen and its cohort has earned points meanwhile, so the merged table here is deeper than the
+ *  one `tools/acceptance-cuts.ts --only 1` prints: **200 does not open W75 yet and 300 already opens
+ *  W100** (the case below asserts W100 stays shut). 250 sits between the two with room on both
+ *  sides, so the next small ladder move does not silently land on it again. */
 function proWorld(seed: string, age: number, book: number): WorldState {
   const world = createWorld(seed)
   const rng = resumeMain(world.rngMain)
@@ -85,6 +106,38 @@ function proWorld(seed: string, age: number, book: number): WorldState {
   world.season = []
   if (book > 0) world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
   world.onRampCleared = { itf: true, wta: true }
+  // ⚠⚠ RE-AIMED A THIRD TIME, AND THIS TIME BY UNDOING THE SECOND (16.08). P1's note, kept below the
+  // line because it is exactly the reasoning that had to be reversed, read: *"A junior now meets the
+  // Junior Accelerator in front of the W rungs ... with no banked year-end junior standing she holds
+  // no Accelerator places, W35 and up are shut whatever her professional book says, and the SLIDING
+  // WINDOW – the whole subject of this file – has nothing left to slide over. A banked year-end
+  // junior #1 puts her past that gate."* True while the Accelerator was a ceiling; the owner's
+  // correction of 16.08 made it a reserved place, so a junior enters on her own cut and needs no
+  // banked standing at all – and a banked **#1** now buys her three real W100 places, which turned
+  // "an acceptance cut she is outside still refuses" green-to-red for the right reason: she was
+  // inside a different door. Diagnosed the honest way, by reading the fixture rather than the rule.
+  //
+  // ⚠ 21 IS THE ROW THAT HOLDS NOTHING – the Accelerator's own table ends at "21+ : nothing above
+  // W15" – so the workaround is neutralised rather than deleted. The row stays because other cases
+  // here read a banked season; only the standing it carries changes, and the SLIDING WINDOW is once
+  // again the only thing these cases measure. The Accelerator's own suite is
+  // tests/junior-access.test.ts.
+  world.seasonHistory = [
+    {
+      seasonIndex: 0,
+      endRank: 21,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      byTrack: {
+        domestic: { points: 0, wins: 0, losses: 0 },
+        itf: { endRank: 21, points: 0, wins: 0, losses: 0 },
+        wta: { points: 0, wins: 0, losses: 0 },
+      },
+      fundsDeltaCents: 0,
+      endFundsCents: 0,
+    },
+  ]
   recomputeKidRank(world)
   return world
 }
@@ -107,7 +160,7 @@ describe('the two ceilings are the same event for the player', () => {
 
   it('the SLIDING WINDOW ceiling admits her too, and says the same thing', () => {
     // A book that opens W75 closes W15 behind it - the rung three above, `tierOutgrown`'s own rule.
-    const world = proWorld('floor-window', 17, 140)
+    const world = proWorld('floor-window', 17, 250)
     expect(tierOutgrown(world, 'w15'), 'the window ceiling is crossed').toBe(true)
     const ev = injectEvent(world, world.week + 3, 'w15')
     const gate = entryStatus(world, ev)
@@ -124,7 +177,7 @@ describe('the two ceilings are the same event for the player', () => {
       ['band', domesticWorld('floor-eq-band', 122)],
       ['fresh', domesticWorld('floor-eq-fresh', 0)],
       ['deep', domesticWorld('floor-eq-deep', 600)],
-      ['pro', proWorld('floor-eq-pro', 17, 140)],
+      ['pro', proWorld('floor-eq-pro', 17, 250)],
       ['pro-early', proWorld('floor-eq-early', 17, 10)],
     ] as const) {
       for (const tier of TIER_LADDER) {
@@ -153,7 +206,7 @@ describe('the upper bound stays a wall', () => {
   })
 
   it('an acceptance cut she is outside still refuses', () => {
-    const world = proWorld('floor-cut', 17, 10) // a ten-point book stands nowhere near #350
+    const world = proWorld('floor-cut', 17, 10) // a ten-point book stands nowhere near W100's cut
     const ev = injectEvent(world, world.week + 3, 'w100')
     const gate = entryStatus(world, ev)
     expect(gate.level).toBe('blocked')
@@ -165,7 +218,7 @@ describe('the upper bound stays a wall', () => {
   it('...and outgrowing a rung never opens one above it', () => {
     // The failure this forbids is the mirror of the one the wave fixes: a ceiling that stopped
     // refusing must not become a reason to ADMIT. `hasOutgrown` is a label; it enters nothing.
-    const world = proWorld('floor-no-lift', 17, 140)
+    const world = proWorld('floor-no-lift', 17, 250)
     expect(hasOutgrown(world, 'w15')).toBe(true)
     expect(tierOpenFor(world, 'wta125')).toBe(false)
     expect(tierOpenFor(world, 'w100')).toBe(false)
@@ -185,7 +238,7 @@ describe('tierOpenFor and entryStatus cannot disagree about a rung', () => {
   it('a rung the calendar holds open is never refused for a POINT reason at the door', () => {
     const worlds: WorldState[] = [
       ...[0, 40, 86, 122, 200, 260, 400, 600].map((p) => domesticWorld(`sweep-dom-${p}`, p)),
-      ...[10, 50, 75, 140, 400].map((b) => proWorld(`sweep-pro-${b}`, 17, b)),
+      ...[10, 50, 170, 200, 400].map((b) => proWorld(`sweep-pro-${b}`, 17, b)),
     ]
     let openSeen = 0
     let shutSeen = 0
@@ -218,7 +271,7 @@ describe('tierOpenFor and entryStatus cannot disagree about a rung', () => {
 
 describe('the ceiling is carried to the UI as a label, never as a lock', () => {
   it('the snapshot carries a per-rung ceiling beside the per-rung floor', () => {
-    const world = proWorld('floor-snap', 17, 140)
+    const world = proWorld('floor-snap', 17, 250)
     const snap = toSnapshot(world)
     for (const tier of TIER_LADDER) {
       expect(typeof snap.tierOutgrown[tier], tier).toBe('boolean')
@@ -242,7 +295,7 @@ describe('the ceiling is carried to the UI as a label, never as a lock', () => {
     // Two questions, two answers, and the split is the whole reason `working` exists: a week whose
     // only event is beneath her has to render (that is the defect being fixed), while the Home
     // strip's collapse is about the rungs her career is currently ABOUT.
-    const world = proWorld('floor-feed', 17, 140)
+    const world = proWorld('floor-feed', 17, 250)
     const snap = toSnapshot(world)
     const ctx = feedContext({
       ageYears: snap.ageYears ?? 0,
@@ -297,7 +350,7 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
   const rungOf = (t: CoachTier) => t
 
   it('he says nothing about the rung she is on', () => {
-    const world = proWorld('coach-working', 17, 140)
+    const world = proWorld('coach-working', 17, 250)
     const w75 = injectEvent(world, world.week + 3, 'w75')
     expect(hasOutgrown(world, 'w75')).toBe(false)
     expect(coachLadderNote(world, w75, rungOf('elite'))).toBeNull()
@@ -306,14 +359,14 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
   it('he says nothing when there is nothing better – she should play', () => {
     // A rung she has passed, an empty calendar around it, and a book with room: no argument, so no
     // sentence. This is the case the owner's ruling is ABOUT and the one a nagging coach would ruin.
-    const world = proWorld('coach-silent', 17, 140)
+    const world = proWorld('coach-silent', 17, 250)
     const w15 = injectEvent(world, world.week + 3, 'w15')
     expect(hasOutgrown(world, 'w15')).toBe(true)
     expect(coachLadderNote(world, w15, rungOf('elite'))).toBeNull()
   })
 
   it('nobody is being paid to have a view on a self-coached career', () => {
-    const world = proWorld('coach-self', 17, 140)
+    const world = proWorld('coach-self', 17, 250)
     const w15 = injectEvent(world, world.week + 3, 'w15')
     injectEvent(world, world.week + 3, 'w75')
     expect(coachLadderNote(world, w15, rungOf('elite'))).not.toBeNull()
@@ -321,7 +374,7 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
   })
 
   it('THIS WEEK: he names the better event on the same week, at every hired rung', () => {
-    const world = proWorld('coach-thisweek', 17, 140)
+    const world = proWorld('coach-thisweek', 17, 250)
     const w15 = injectEvent(world, world.week + 3, 'w15')
     injectEvent(world, world.week + 3, 'w75')
     for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
@@ -332,7 +385,7 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
   })
 
   it('THE BLOCK AHEAD: how far he sees is his own rung, which is what paying for him buys', () => {
-    const world = proWorld('coach-ahead', 17, 140)
+    const world = proWorld('coach-ahead', 17, 250)
     const w15 = injectEvent(world, world.week + 3, 'w15')
     injectEvent(world, world.week + 6, 'w75') // three weeks after the trip in question
     // A budget coach is on the court with her and does not volunteer a plan three weeks out.
@@ -386,7 +439,7 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
     // Same fixture as THIS WEEK above: one counting w15 result, so her professional window has
     // seventeen empty slots and a title here WOULD move her ranking. The old clause 1 dismissed
     // exactly this card, which is the owner's complaint made of arithmetic.
-    const world = proWorld('coach-honest', 17, 140)
+    const world = proWorld('coach-honest', 17, 250)
     const w15 = injectEvent(world, world.week + 3, 'w15')
     injectEvent(world, world.week + 3, 'w75')
     expect(bookClosedTo(world, 'w15')).toBe(false)
@@ -433,7 +486,7 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
     // and the book has room, so the sentence it hung on the card was false twice over. The
     // professional arm is a one-way door (`activeLadderOf`); the coach does not point back through
     // it, and with nothing else to say he says nothing.
-    const world = proWorld('coach-owner-card', 17, 140)
+    const world = proWorld('coach-owner-card', 17, 250)
     world.results.push({ playerId: KID_ID, week: world.week, points: 160, tier: 'national' })
     recomputeKidRank(world)
     const w15 = injectEvent(world, world.week + 3, 'w15')
@@ -477,7 +530,7 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
   it('⚠ IT IS ADVICE AND NEVER A BLOCK – at every rung, on every line he has', () => {
     // The standing rule of this game: the parent may push. `coachCaution` turns the button from
     // "Enter" into "Push through"; it must never turn it off.
-    const world = proWorld('coach-never-blocks', 17, 140)
+    const world = proWorld('coach-never-blocks', 17, 250)
     const w15 = injectEvent(world, world.week + 3, 'w15')
     injectEvent(world, world.week + 3, 'w75')
     for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
@@ -488,7 +541,7 @@ describe('the coach has an opinion about WHICH event, and it is only ever advice
   })
 
   it('the card carries what he says, and only about a trip she can take', () => {
-    const world = proWorld('coach-card', 17, 140)
+    const world = proWorld('coach-card', 17, 250)
     world.coachId = openingCoachId(world.seed, { ...world.profile, coachTier: 'elite' })
     injectEvent(world, world.week + 3, 'w15')
     injectEvent(world, world.week + 3, 'w75')

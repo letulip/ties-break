@@ -112,29 +112,38 @@ describe('Home season strip – the row is the engine window, not the span acros
     for (const dead of ['J30', 'J60', 'J300', 'W15', 'National']) {
       expect(chips, `${dead} is not open and is not the aspiration – it must not cost a line`).not.toContain(dead)
     }
-    // ...and what IS open is all there, in ladder order, with the one rung above the top of the
-    // window beside it («плюс один верхний недоступный уровень»).
-    expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['Regional', 'W35', 'W50', 'W75', 'W100'])
+    // ...and what IS open is there, in ladder order, with the one rung above the top of the window
+    // beside it («плюс один верхний недоступный уровень»).
+    //
+    // ⚠ RE-AIMED BY `STRIP_MAX_RUNGS` 5 -> 4 (16.08), AND THE CLAIM IS UNCHANGED. This read
+    // `['Regional', 'W35', 'W50', 'W75', 'W100']`; the row is capped at four rungs now, measured in a
+    // real browser (`tools/strip-wrap-probe.mjs` – five wrap to four rows at the card's 315px, four
+    // to three, and `e2e/responsive.spec.ts` is over its ceiling by less than one row). The cap trims
+    // from the BOTTOM, so `Regional` moves behind the leading ellipsis with the rungs she has already
+    // climbed – and this test's own subject, that a DEAD rung between two open ones is never printed,
+    // is asserted above and is untouched by the width.
+    expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['W35', 'W50', 'W75', 'W100'])
     wrapper.unmount()
   })
 
   it('the hole gets its own ellipsis, and every hidden run gets one', () => {
-    // Three runs are hidden: {local}, {national..w15}, {wta125..slam}. An affordance per elision,
-    // where the elision is - a paginator's shape - rather than one control at each end of the row.
+    // ⚠ TWO RUNS NOW, NOT THREE, AND THE CAP IS WHY (`STRIP_MAX_RUNGS` 5 -> 4, 16.08). With Regional
+    // trimmed off the bottom the run below the row is {local..w15} – one contiguous stretch instead
+    // of {local} and {national..w15} either side of it – so the hole and the ellipsis standing in for
+    // it MERGE rather than one disappearing. The property under test is unchanged and is the second
+    // assertion: every hidden run gets its own affordance, and each one says how many rungs it hides.
     const wrapper = mountHome(withWindow(snapshotAfter(6), ['regional', 'w35', 'w50', 'w75']))
     const gaps = gapChips(wrapper)
-    expect(gaps).toHaveLength(3)
+    expect(gaps).toHaveLength(2)
     // Each one says how many rungs it is standing in for; "…" that hides one and "…" that hides five
     // are different promises. Counted from the ladder, so the arithmetic is the code's: below is
     // {local}, the hole is {national, j30, j60, j300, w15}, above is {wta125, wta250, wta500,
     // wta1000, slam} - and the singular is a real case, not a rounding of it.
     expect(gaps.map((g) => g.attributes('aria-label'))).toEqual([
-      'Show 1 more level',
-      'Show 5 more levels',
+      'Show 7 more levels',
       'Show 5 more levels',
     ])
-    expect(gaps[0].attributes('title')).toContain('1 level hidden (Local)')
-    expect(gaps[1].attributes('title')).toContain('(National to W15)')
+    expect(gaps[0].attributes('title')).toContain('(Local to W15)')
     wrapper.unmount()
   })
 
@@ -150,7 +159,8 @@ describe('Home season strip – the row is the engine window, not the span acros
 
   it('tapping an ellipsis expands the WHOLE ladder in place – nothing is deleted', async () => {
     const wrapper = mountHome(withWindow(snapshotAfter(6), ['regional', 'w35', 'w50', 'w75']))
-    expect(rungChips(wrapper).length).toBe(5)
+    // FOUR since `STRIP_MAX_RUNGS` 5 -> 4 (16.08) – the collapsed row's width, measured.
+    expect(rungChips(wrapper).length).toBe(4)
     await gapChips(wrapper)[0].trigger('click')
     expect(rungChips(wrapper).length).toBe(LADDER.length)
     // ...including the outgrown rungs, with their finishes intact - the objection the collapse had
@@ -159,7 +169,7 @@ describe('Home season strip – the row is the engine window, not the span acros
     // ...and the way back is offered.
     expect(gapChips(wrapper)).toHaveLength(1)
     await gapChips(wrapper)[0].trigger('click')
-    expect(rungChips(wrapper).length).toBe(5)
+    expect(rungChips(wrapper).length).toBe(4)
     wrapper.unmount()
   })
 
@@ -176,6 +186,55 @@ describe('Home season strip – the row is the engine window, not the span acros
     // that predates it – an old golden fixture, or a payload from a stale worker. The cast is the
     // point of the test rather than a way round the types: `feedContext` treats a missing verdict as
     // "hide nothing", and this asserts the strip inherits that instead of collapsing to an empty row.
+    const snap = snapshotAfter(6)
+    const wrapper = mountHome({ ...snap, tierOpen: undefined as unknown as TierOpenMap })
+    expect(rungChips(wrapper).length).toBe(LADDER.length)
+    wrapper.unmount()
+  })
+
+  // ===============================================================================================
+  // ⭐⭐ THE ROW HAS A MEASURED WIDTH, AND THIS IS WHAT KEEPS IT
+  // ===============================================================================================
+  it('⭐⭐ the row never renders more than four rungs, however wide the engine opens the window', () => {
+    // ⚠ WHY A CAP EXISTS AT ALL. `e2e/responsive.spec.ts` is the only thing that can catch this row
+    // wrapping – happy-dom has no layout engine – and it is a browser suite that runs on somebody
+    // else's machine. So the count is pinned HERE, where it is cheap, and the pixel behind the count
+    // is measured by `tools/strip-wrap-probe.mjs` in a real Chromium against the real stylesheet:
+    // five rungs wrap to four rows at the Home card's 315px, four to three, and one row is 29.4px
+    // against an 8.28px overshoot.
+    //
+    // ⚠ THE WINDOW BELOW IS DELIBERATELY ABSURD – every rung but the last open at once. The cap must
+    // be a property of the ROW rather than of any particular career, or it holds only until the
+    // ladder moves again.
+    //
+    // ⚠⚠ AND IT IS "EVERY RUNG BUT THE LAST" FOR A REASON WORTH KNOWING: the cap has an escape hatch
+    // for the case where the ENTIRE ladder is open, which is how `feedContext` reports "no verdict at
+    // all" (the case below). The hatch is keyed on the COUNT rather than on the absent verdict, so a
+    // career that genuinely opened all sixteen rungs would skip the cap too. `tierOutgrown` closes
+    // the rungs beneath her, so that state is not reachable today – it is flagged in
+    // docs/specs/college-is-its-own-branch-2026-08.md §7b rather than fixed here, and this test names
+    // the boundary so nobody has to rediscover it from a wrapped row.
+    const wrapper = mountHome(withWindow(snapshotAfter(6), LADDER.slice(0, -1)))
+    expect(rungChips(wrapper).length, 'the collapsed row is capped').toBeLessThanOrEqual(4)
+    wrapper.unmount()
+  })
+
+  it('⚠ ...and it trims from the BOTTOM, so the aspiration rung is never the one that goes', () => {
+    // The direction matters more than the number: the rungs nearest her level are the ones she is
+    // choosing between this week, and the rung ABOVE the window is the one whose unlock condition is
+    // the goal text. A cap that trimmed the top would delete exactly the chip the row exists for.
+    const wrapper = mountHome(withWindow(snapshotAfter(6), ['local', 'regional', 'national', 'j30', 'j60', 'j300']))
+    const shown = rungChips(wrapper).map((t) => t.split(' ·')[0])
+    expect(shown[shown.length - 1], 'the aspiration rung survives the trim').toBe('W15')
+    expect(shown, 'and the bottom of the climb is what went').not.toContain('Local')
+    wrapper.unmount()
+  })
+
+  it('⚠ the cap does NOT apply to the no-verdict fallback, which must stay "show everything"', () => {
+    // The same exception the whole-ladder branch makes, and for the same reason: `tierOpen` absent
+    // means an old fixture or a stale worker, `feedContext` answers by returning the WHOLE ladder,
+    // and trimming that to four would turn "we do not know, so show everything" into "we know it is
+    // these four". Pinned beside the cap so the two rules cannot drift apart.
     const snap = snapshotAfter(6)
     const wrapper = mountHome({ ...snap, tierOpen: undefined as unknown as TierOpenMap })
     expect(rungChips(wrapper).length).toBe(LADDER.length)

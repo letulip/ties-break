@@ -19,7 +19,14 @@
 // the whole queue with nothing but each overlay's OWN command and asserts it reaches empty, which is
 // the only form of that claim a machine can check.
 import { describe, it, expect } from 'vitest'
-import { blockingOverlay } from '../src/composables/blockingOverlay'
+import {
+  blockingOverlay,
+  popupInterrupts,
+  popupMayShow,
+  screenBusy,
+  visibleOverlay,
+  type Popup,
+} from '../src/composables/blockingOverlay'
 import {
   answerFork,
   chooseGift,
@@ -179,6 +186,59 @@ describe('⚠ the two clocks – what this fix does NOT cover', () => {
 
 /** A snapshot is a big object; these cases only need the five fields the rule reads. */
 const only = (fields: Partial<Snapshot>) => ({ ...fields }) as Snapshot
+
+// =================================================================================================
+// ⭐ ROUND-21 #9 – THE OTHER QUESTION: NOT "WHICH ONE", BUT "MAY ANYTHING LAND AT ALL"
+// =================================================================================================
+//
+// The owner: «Попап с развилкой появился сразу после финального матча чемпионата перекрыв интерфейс
+// таблицы и завершения... кроме травмы, которая как раз должна появляться в моменте.» The rule and
+// its exception are asserted here as a pure function over every popup id; the shell-level proof that
+// the fork really is absent from the DOM over a real finale is in
+// `tests/component/round21-popup-order.test.ts`, which is the half a source pin cannot make.
+describe('⭐ round-21 #9 – the idle rule, and its one exception', () => {
+  const busy = only({ pending: {} as never })
+
+  it('a tournament reveal is a busy screen, and so is a live friendly', () => {
+    expect(screenBusy(busy), 'the reveal – the draw, the matches, the result table, the finale').toBe(true)
+    expect(screenBusy(only({}), true), 'a practice match playing in PracticeFlow').toBe(true)
+    expect(screenBusy(only({}))).toBe(false)
+    expect(screenBusy(null)).toBe(false)
+  })
+
+  it('⭐ EXACTLY TWO popups may interrupt, and they are the ending and the injury', () => {
+    // Stated as a total over the union rather than as two spot checks: a popup added to `Popup`
+    // without a decision about this rule shows up here as a wrong answer, which is the point.
+    const all: Popup[] = ['ending', 'knock', 'birthday', 'fork', 'retirement', 'injury', 'season-summary', 'tour-briefing', 'onboarding-tour']
+    expect(all.filter(popupInterrupts)).toEqual(['ending', 'injury'])
+  })
+
+  it('⭐ on a busy screen every other popup is held – and on an idle one all of them may show', () => {
+    const held: Popup[] = ['knock', 'birthday', 'fork', 'retirement', 'season-summary', 'tour-briefing', 'onboarding-tour']
+    for (const id of held) {
+      expect(popupMayShow(id, busy), `${id} waits for the screen`).toBe(false)
+      expect(popupMayShow(id, only({})), `${id} on a free screen`).toBe(true)
+    }
+    expect(popupMayShow('injury', busy), 'the injury lands in the moment').toBe(true)
+    expect(popupMayShow('ending', busy), 'an epilogue replaces the shell, reveal and all').toBe(true)
+  })
+
+  it('⚠ HELD IS NOT ANSWERED – `blockingOverlay` still names the question `visibleOverlay` hides', () => {
+    // The distinction the shell depends on. If these two ever collapse into one, the reports below
+    // the queue (the season wrap-up, the tour briefing) would jump in front of a question that is
+    // merely waiting for a tournament to close.
+    const forkOverFinale = only({ pending: {} as never, fork: {} as never })
+    expect(blockingOverlay(forkOverFinale), 'the fork IS the pending question').toBe('fork')
+    expect(visibleOverlay(forkOverFinale), 'and it is not on screen yet').toBeNull()
+    expect(visibleOverlay(only({ fork: {} as never })), 'the screen is free, so it is').toBe('fork')
+  })
+
+  it('⚠ an ending is never held, which is what stops the wait becoming a deadlock', () => {
+    // It removes the very shell it would be waiting for. `closeTournament` is also deliberately
+    // unguarded on an ended world (engine/world.ts), so neither direction can trap a career.
+    expect(visibleOverlay(only({ pending: {} as never, ending: {} as never }))).toBe('ending')
+  })
+})
 
 describe('the order itself', () => {
   it('an ending outranks everything – there is no shell to lay a dialog over', () => {

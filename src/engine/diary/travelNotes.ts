@@ -572,3 +572,35 @@ export function travelNoteFor(travel: TravelHomeFacts, seed: string): string {
   const rng = rngFromSeed(`${seed}:travelnote:${travel.week}`)
   return pool[Math.floor(rng() * pool.length)].text
 }
+
+/** ⭐ ROUND-21 #2 – THE COACH WENT TOO, in the parent's hand and on every trip he came on.
+ *
+ * ⚠ ITS OWN LINE, NOT ENTRIES IN `TRAVEL_NOTES`, and the distinction is presence versus decoration.
+ * A line in that pool competes with ~370 others under a licence filter, so on a career it would
+ * surface once in a great while; the player has just paid a SECOND FARE for this trip and the week's
+ * story has to say so every time. So the pool above answers "what was this week like" and this
+ * answers "and he was there", and the two sit on the same scrap.
+ *
+ * ⚠ AND IT KEEPS THIS FILE'S FOUR RULES, which the header states and which are the reason the scrap
+ * works at all. Third person, about her, by somebody who loves her; small and observed rather than
+ * assessed; and NOT THE COACH'S VOICE – the parent notices him standing there, he never speaks. A
+ * line here that read like a coaching note would be in the wrong hand even though it is true.
+ *
+ * ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08): `buildCoachRoster` puts a woman on every roster
+ * by construction, so "he was there" would print under Sabine Kobayashi. Every line below refers to
+ * the coach only as "her coach", "the coach", or by what the family saw.
+ *
+ * Drawn off `seed:coachtrip:<week>` – its own purpose-scoped sub-stream, stable for the whole week,
+ * ZERO MAIN draws, exactly like the pool above. */
+const COACH_TRIP_NOTES: readonly string[] = [
+  'Her coach came with us, and she looked over at the chair after every game.',
+  'Her coach was there all week, and she came off court to somebody waiting.',
+  'We paid for the second seat and she used it – a word at every change of ends.',
+  'Her coach travelled down with the bags and stayed to the last match.',
+  'The coach was in the row behind us all week, and she knew it without looking.',
+]
+
+export function coachTripNoteFor(week: number, seed: string): string {
+  const rng = rngFromSeed(`${seed}:coachtrip:${week}`)
+  return COACH_TRIP_NOTES[Math.floor(rng() * COACH_TRIP_NOTES.length)]
+}

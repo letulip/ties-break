@@ -50,6 +50,7 @@ import {
   kidPoints,
   pendingKnock,
   seasonIndexOf,
+  tickWeek,
   SAVE_SCHEMA_VERSION,
   STARTING_FUNDS_CENTS,
   type WorldState,
@@ -260,7 +261,26 @@ const RECIPES: Recipe[] = [
     drive: (world, rng, recipe) => {
       playTo(world, rng, recipe, JUNIOR_WEEK)
       if (world.ending !== null) return `career ended (${world.ending.type}) before week ${JUNIOR_WEEK}`
-      if (kidPoints(world, 'domestic') <= 0) return 'never earned a domestic ranking'
+      // ⚠ A RANKING, ON WHATEVER TABLE SHE EARNED ONE – AND THE CHANGE OF WORD IS A MEASUREMENT
+      // (16.08). This clause read `kidPoints(world, 'domestic') <= 0` and after this wave no seed in
+      // 120 could satisfy it together with the other two: at week 120 only **46 of 120** careers hold
+      // domestic points, while **114 of 120** hold ITF ones.
+      //
+      // ⚠⚠ AND THE FIRST READING OF THAT WAS WRONG, WHICH IS WHY IT IS WRITTEN OUT RATHER THAN
+      // QUIETLY FIXED. It said "her first ranking is now the ITF one". P6 measured it properly on the
+      // frozen battery and the opposite is true: **90 careers of 90 earn a domestic ranking, all of
+      // them at 13.6, and in 90 of 90 it is her FIRST** – the ITF one is never first. What the 46 of
+      // 120 actually shows is DECAY, not absence: domestic points live in a rolling 52-week window,
+      // 100% of careers hold one at 14.6 and half still do at 15.8, and by week 120 many have simply
+      // aged out. A fixture recipe is exactly the wrong place for a claim about the ladder, and this
+      // is what that costs – see docs/specs/the-remeasure-2026-08.md.
+      //
+      // The SPEC'S claim is unchanged, and that is why this is a re-aim rather than a weakening:
+      // e2e/seeded-careers.spec.ts says in its own comment that the point is "a fact that no week-0
+      // career could hold and that lives deep inside the payload" – she is ranked, and the ladder says
+      // so. Which of the three tables carries it was the vehicle, never the claim.
+      if (kidPoints(world, 'domestic') <= 0 && kidPoints(world, 'itf') <= 0 && kidPoints(world, 'wta') <= 0)
+        return 'never earned a ranking on any table'
       if (world.seasonHistory.length < 2) return 'fewer than two seasons behind her'
       // ⚠ AND SHE MUST BOOT HOLDING AN OPEN KNOCK, which is a REQUIREMENT of this fixture rather
       // than a lucky property of it (11.08). `e2e/week-advance.spec.ts` uses this career to prove
@@ -278,6 +298,19 @@ const RECIPES: Recipe[] = [
       // The search is free - the loop already tries `budget` seeds and prints why each was rejected,
       // so this is one more clause in a predicate that was always there, not a new mechanism.
       if (!pendingKnock(world)) return 'boots without an open knock (week-advance.spec needs one)'
+      // ⚠ AND SHE MUST BE ENTERED FOR THE WEEK AHEAD, for exactly the same reason and by exactly the
+      // same history (16.08). `e2e/tournament.spec.ts` and `persistence.spec.ts`'s mid-reveal case
+      // both tick this career once and then wait for `Begin` – a tournament reveal – and neither can
+      // get one unless the tick lands on an event she has entered. persistence.spec even states the
+      // assumption in prose ("She is entered for the week ahead, so this tick computes the whole
+      // draw"), which is how a property nobody enforced survived three waves: it was TRUE of the
+      // seed the search happened to stop on, and P1's junior-access change moved the search.
+      //
+      // Same remedy the owner chose for the knock, for the same stated reason – a seed filter
+      // survives the NEXT regeneration, a relocated assertion only survives until the next one.
+      const weekAhead = world.season.filter((e) => e.week === world.week + 1)
+      if (!weekAhead.some((e) => world.entries.includes(e.id)))
+        return 'not entered for the week ahead (tournament.spec + persistence.spec need a reveal)'
       return null
     },
   },
@@ -322,7 +355,23 @@ const RECIPES: Recipe[] = [
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
         stepCareerWeek(world, rng, recipe.policy)
         answerOpenQuestions(world, recipe.fork)
-        if (debtWeeks(autoEndingViewOf(world)) === SINKING_DEBT_WEEKS) return null
+        if (debtWeeks(autoEndingViewOf(world)) === SINKING_DEBT_WEEKS) {
+          // ⚠ AND THE WEEK AFTER THIS ONE MUST NOT RAISE A KNOCK (16.08). e2e/week-advance.spec.ts's
+          // stop-notice journey ticks this career once and then asserts that the banner SURVIVES a
+          // change of screen – and a knock raised by that tick breaks the claim in a way the spec has
+          // no business working around. It is a real modal, so it blocks `Proceed to Home`; and
+          // answering it is a COMMAND, which produces a fresh snapshot, and `stopReasons` die with
+          // the advance that produced them by design (App.vue, Package N). So the banner is correctly
+          // gone, the assertion is correctly red, and neither is a defect.
+          //
+          // ⚠ THE LOOK-AHEAD IS EXACT, NOT AN ESTIMATE. The clone carries `rngMain`, so resuming MAIN
+          // from it walks the same sequence the browser will walk; `tickWeek` is what the worker runs
+          // behind the week button. Nothing about the fixture's own world is touched.
+          const probe = structuredClone(world)
+          tickWeek(probe, resumeMain(probe.rngMain))
+          if (pendingKnock(probe)) return 'a knock lands on the very next week (the stop-notice journey needs a clean tick)'
+          return null
+        }
       }
       return world.ending !== null
         ? `career ended (${world.ending.type}) without a ${SINKING_DEBT_WEEKS}-week spell`
@@ -373,7 +422,20 @@ const RECIPES: Recipe[] = [
 
 // --- the search -----------------------------------------------------------------------------------
 
-const DEFAULT_BUDGET = 24
+/** ⚠ 24 -> 200 AFTER THE JUNIOR-LADDER WAVE (16.08), AND THE NUMBER IS MEASURED RATHER THAN ROUND.
+ *
+ *  `junior` now carries three requirements at once – a ranking, an open knock and an entry for the
+ *  week ahead – and the wave made the conjunction rare: the seed that satisfied all three was the
+ *  **62nd** tried, against the 20th before P1 and the 19th before that. At the old budget of 24 this
+ *  regeneration failed outright, which is the tool working correctly and reporting an honest state
+ *  ("never hand-edit a world to make the state exist") rather than a bug.
+ *
+ *  THE COST OF THE HIGHER CEILING IS ZERO WHEN IT IS NOT NEEDED – the loop stops at the first seed
+ *  that qualifies, so every other fixture still finishes on its first – and the cost of the LOWER one
+ *  was a red gate nobody could act on without re-deriving this paragraph. If a future wave pushes the
+ *  search past this, the message says so by name and the fix is a recipe decision, not a bigger
+ *  number: three requirements on one fixture is already the most any of them carries. */
+const DEFAULT_BUDGET = 200
 
 interface Generated {
   entry: FixtureEntry

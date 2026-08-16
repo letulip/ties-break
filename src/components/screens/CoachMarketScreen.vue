@@ -123,6 +123,31 @@ function formatEdge([lo, hi]: [number, number]): string {
   return `+${lo.toFixed(1)}-${hi.toFixed(1)}% per match`
 }
 
+/** ⭐⭐ ROUND-21 #2, THE LAST OPEN ITEM – WHAT THE RUNG IS WORTH WITH THE COACH ON THE TRIP.
+ *
+ *  The travel helping shipped in the engine, was measured at 500 paired careers and said NOTHING on
+ *  the screen that sells the decision: a family paying a second fare to every W event read exactly the
+ *  figure a family that leaves the coach at home reads. This is that figure, doubled - and it is on
+ *  the card only when the stance would actually send him, which is the engine's call
+ *  (`edgeTravelPct` is null otherwise) and never this screen's.
+ *
+ *  ⚠ THE COMPONENT DOES NO ARITHMETIC. The doubling is `coachEdgeCorridorPp`, one function beside the
+ *  draw it has to stay in step with; this formats a pair the engine already cut. A `* 2` in a template
+ *  is how a screen comes to quote a dose the engine has moved on from.
+ *
+ *  ⚠ IT NAMES THE CONDITION AND NEVER CLAIMS A FLAT DOUBLING. The helping follows the FARE
+ *  (`coachTravelFareFor`), which sends him only to rungs that pay prize money unless the junior stance
+ *  is open too - so a J-series week doubles nothing even for a family that always sends him.
+ *  "travelling with her" is exactly the weeks it applies to, and «doubled» would not be.
+ *
+ *  ⚠ AND NO PRONOUN NAMES THE COACH (R15-7, owner 09.08): a woman sits on every roster by
+ *  construction, so "travelling with him" is not available and "with her" is the daughter, who is the
+ *  app's one fixed "she". Same one decimal as the corridor beside it, for the same reason - these are
+ *  brackets, and a second digit would imply a precision a bracket does not have. */
+function formatEdgeTravel([lo, hi]: [number, number]): string {
+  return `+${lo.toFixed(1)}-${hi.toFixed(1)}% travelling with her`
+}
+
 // --- the style lens (design decision 2) ---------------------------------------------------------
 // `null` means "her own style", which is what the engine already computed the pills against. Pick
 // any other style and every pill is re-read client-side from the SAME rule the engine used, so the
@@ -168,6 +193,113 @@ const sessionsNow = computed(() => (game.snapshot ? coachHoursForPlan(game.snaps
 // COUNT moves; a weekly figure could not tell the two apart. Engine-computed (`coachBilling`), so
 // the screen never does this arithmetic itself.
 const billing = computed(() => game.snapshot?.coachBilling ?? null)
+
+// ⭐⭐ ROUND-21 #2 – THE SWITCH IS LIVE. Owner, 14.08, THIRD ask (his words verbatim in
+// tests/component/round21-coach-travel.test.ts; the app bans Cyrillic in a template, comments
+// included, and this is the script side of the same file so the rule is kept here too by habit).
+//
+// It was locked on 30.07 after three STAT versions of coach travel were measured and all three
+// failed, and round-20 #1 answered the SECOND ask by rewriting the sub-line instead of building
+// anything. Asking a third time overrules the cancellation. What he asked for is PRESENCE - he
+// goes, and it is visible - and that is exactly what flipping this now buys: a second fare per trip
+// (`coachTravelFareFor`), a line in the tournament flow, a beat in the running commentary, and a
+// line in the week's story. NO STAT MOVES on this branch.
+//
+// ⚠ SELF-COACHED IS THE ONE REFUSAL LEFT, and it is a fact rather than a gate: there is nobody to
+// send, the engine charges nothing and shows nothing (`coachTravelsWithHer`), so the control says so
+// rather than pretending the stance means something. The switch still WORKS in that state - the
+// stance persists and takes effect the moment she hires somebody - which is what keeps this off the
+// app's standing rule against a dead control nobody can explain.
+const hasCoach = computed(() => (game.snapshot?.coachId ?? null) !== null)
+const travelsOnEventWeeks = computed(() => billing.value?.onEventWeeks ?? false)
+
+/** WHAT SENDING HIM COSTS, in the engine's own words - `travelFareCents` is `coachTravelFareFor`
+ *  summed over the trips he would be ON this season, which is the one fare definition in the game.
+ *  The rule is always said; the money is said only when there are trips to price it over, because a
+ *  $0.00 season total with nothing behind it is worse than no figure at all.
+ *
+ *  ⭐⭐ 15.08 – AND FOR A FAMILY WITH A SCHOLARSHIP THE RULE IS NO LONGER "TWICE THE FARE" (owner, on
+ *  the principle behind it: «очень согласен»). The support pays for HER seat and never for his, so a
+ *  covered trip is her discounted seat plus his whole one - the better the scholarship, the LARGER
+ *  the share of the trip he is. Quoting a bare multiple to those families would be wrong for exactly
+ *  the people who most need to understand the number, so the line says his seat is not covered and
+ *  prints BOTH figures. `travelCovered` is the engine's answer to "is anything reducing her travel",
+ *  asked of the one fare definition rather than of a list of covers, so this branch cannot go stale
+ *  when a third support stream ships.
+ *
+ *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08) - `buildCoachRoster` puts a woman on every
+ *  roster by construction, so "his seat" would print under Sabine Kobayashi. The first draft of this
+ *  line said "a trip HE comes on ... HIS seat", and `round15-surfaces.test.ts` caught it MOUNTED on
+ *  this exact screen, which is the guard doing precisely its job. "The coach's seat" is the phrase
+ *  that survives it, and the daughter is the app's one fixed "she". */
+const travelSubLine = computed(() => {
+  if (!hasCoach.value) return 'You are coaching her yourself – there is nobody to send. Turn it on and it takes effect when you hire somebody.'
+  const b = billing.value
+  const covered = b?.travelCovered ?? false
+  const rule = covered
+    ? 'The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.'
+    : 'Twice the fare on every trip – a second seat beside hers.'
+  if (!b || b.travelTrips === 0) return rule
+  const trips = b.travelTrips === 1 ? '1 trip' : `${b.travelTrips} trips`
+  return covered
+    ? `${rule} Her seats cost ${formatCents(b.travelHerFareCents)} over the ${trips} ahead; the second seat adds ${formatCents(b.travelFareCents)}.`
+    : `${rule} ${formatCents(b.travelFareCents)} over the ${trips} she has booked this season.`
+})
+
+async function toggleTravel() {
+  if (game.busy) return
+  await game.setCoachOnEventWeeks(!travelsOnEventWeeks.value)
+}
+
+// ⭐⭐ v49 – AND THE SECOND, MORE EXPENSIVE DECISION: THE TRIPS THAT PAY HER NOTHING.
+// Owner, 15.08: «делаем тогда», with his own model of whose decision it is (his words verbatim are
+// in tests/component/round21-coach-travel.test.ts - THIS IS THE SCRIPT SIDE OF A FILE WHOSE TEMPLATE
+// may carry no Cyrillic, comments included, and the rule is kept here by habit).
+//
+// ⚠ IT IS NESTED AND NOT A SIBLING, because it is meaningless on its own: the fare reads both
+// stances, so this alone sends nobody anywhere. Shown only while the first switch is on, which is
+// also the honest shape of the decision - a second choice on top of a choice.
+//
+// ⚠ AND IT WARNS BEFORE THE FIRST FARE, WITHOUT REFUSING ANYTHING. The bench measured what an
+// ungated junior fare does (8/30 wealthy·elite and 15/30 middle·middle careers bankrupt, every one in
+// the junior years - docs/specs/coach-travel-2026-08.md), and the owner has ruled that outcome is the
+// player's own. So the confirm is an INFORMED CHOICE and not a gate: it names the risk in the
+// player's own money terms, and then does exactly what it is told. Turning it OFF asks nothing -
+// stopping a bill needs no ceremony.
+const travelsToJuniors = computed(() => billing.value?.onJuniorEvents ?? false)
+
+const juniorSubLine = computed(() => {
+  const b = billing.value
+  const rule = 'Junior and domestic events pay no prize money – the fare buys presence, and nothing comes back.'
+  if (!b || b.travelJuniorTrips === 0) return rule
+  const trips = b.travelJuniorTrips === 1 ? '1 more trip' : `${b.travelJuniorTrips} more trips`
+  return `${rule} ${formatCents(b.travelJuniorCents)} over the ${trips} on her card this season.`
+})
+
+const askingJuniors = ref(false)
+/** The warning, in the two facts a parent can act on: what the bill is FOR, and what it did to the
+ *  careers that ran it. Measured over 30 seeds a cell, both cells named, and the ages named too –
+ *  every one of those bankruptcies happened before she turned twenty. It ends by handing the
+ *  decision back, because it IS his: «есть деньги - едет тренер, нет - не едет, или едет, но быстрее
+ *  банкротится». */
+const juniorConfirmMessage =
+  'Send the coach to junior and domestic tournaments too? Those rungs pay no prize money, so the ' +
+  'second fare is a bill against an income she does not have yet. Measured over 30 careers a cell, ' +
+  'an unlimited junior fare bankrupted 8 of 30 wealthy families and 15 of 30 middle ones – every one ' +
+  'of them before she turned twenty. Your money, your call.'
+
+async function toggleJuniors() {
+  if (game.busy) return
+  if (travelsToJuniors.value) {
+    await game.setCoachOnJuniorEvents(false)
+    return
+  }
+  askingJuniors.value = true
+}
+async function doSendToJuniors() {
+  askingJuniors.value = false
+  await game.setCoachOnJuniorEvents(true)
+}
 
 // ⚠ THE CONTEXT THE UPLIFT NUMBERS ARE RELATIVE TO. The owner watched his coach's number fall from
 // 0.5-1.0 to 0.4-0.9 to 0.3-0.7 and asked what it was tied to (his words verbatim are in
@@ -216,6 +348,20 @@ const roomNote = computed(() => game.snapshot?.coachRoomNote ?? '')
 // habit.
 const edge = computed(() => game.snapshot?.coachEdge ?? null)
 const plaqueLine = computed<string>(() => edge.value?.plaqueLine ?? '')
+
+// ⭐⭐ ROUND-21 #2, THE LAST OPEN ITEM – AND ONE SENTENCE THAT KEEPS THE SECOND FIGURE HONEST.
+//
+// The chip on every card says what the rung is worth with the coach on the trip; this says WHEN,
+// once, on the card of the coach she actually has. It is the engine's string (`travelLine`, '' when
+// this family is not sending him) for the same reason the plaque is: what the doubling is gated on is
+// `coachTravelFareFor`, and a screen that phrased the condition itself would be a second copy of a
+// rule that lives in the till.
+//
+// ⚠ IT DOES NOT QUALIFY THE PLAQUE, and it must not be read as doing so. The helping SCALES the
+// corridor rather than shifting it, so the upper third of 0.5-0.9 is the upper third of 1.0-1.8 and
+// "the upper end of that band" is true of both bands at once. The placement stays a fact about the
+// man, which is what §7 protects; this is a fact about the trip.
+const travelLine = computed<string>(() => edge.value?.travelLine ?? '')
 
 type SortMode = 'fit' | 'price'
 const sort = ref<SortMode>('fit')
@@ -292,15 +438,19 @@ function rowLabel(r: Row): string {
 
 // --- the budget meter ---------------------------------------------------------------------------
 // The design's three numbers, all real: what she pays now, what a week brings in, and the gap. The
-// cap is the parent contribution because that is the money the decision is actually made against -
-// a reserve pays for one week of anything, a weekly bill has to fit the week.
+// cap is the week's INCOME because that is the money the decision is actually made against - a
+// reserve pays for one week of anything, a weekly bill has to fit the week.
+//
+// ⭐ ROUND-21 #12 – THE CAP COMES OFF THE SNAPSHOT NOW, and it had to. It used to be RECOVERED from
+// whichever row happened to be over budget (`weeklyCents - overBudgetCents === the cap`), which is
+// exact while some row is over and returns 0 when none is. The owner's own case - «на счету 1млн» -
+// is precisely the case where, once the income is read in full, NOTHING is over budget any more:
+// the meter would have gone from a wrong number to "$0.00 /week free, $0.00 weekly cap" with a full
+// bar beside it. `coachBilling.weeklyIncomeCents` is the same figure the engine cuts every
+// `overBudgetCents` from, so the meter and the rows cannot disagree.
 const current = computed<Row | null>(() => rows.value.find((r) => r.current) ?? null)
 const committedCents = computed(() => current.value?.weeklyCents ?? 0)
-const capCents = computed(() => {
-  // Recovered from any row: weeklyCents - overBudgetCents === the cap whenever a row is over it.
-  const over = rows.value.find((r) => r.overBudgetCents > 0)
-  return over ? over.weeklyCents - over.overBudgetCents : 0
-})
+const capCents = computed(() => billing.value?.weeklyIncomeCents ?? 0)
 const freeCents = computed(() => Math.max(0, capCents.value - committedCents.value))
 const meterPct = computed(() =>
   capCents.value > 0 ? Math.min(100, Math.round((committedCents.value / capCents.value) * 100)) : 0,
@@ -444,7 +594,28 @@ function scrollToTier(tier: CoachTier): void {
       Every price below is {{ sessionsNow }} sessions a week – more sessions, more money.
     </p>
 
-    <!-- ⚠ THE TOURNAMENT-TRAVEL TOGGLE IS LOCKED. The owner cancelled the mechanic behind it on 30.07
+    <!-- ⭐⭐ ROUND-21 #2 – THE TOURNAMENT-TRAVEL TOGGLE IS LIVE, ON HIS THIRD ASK.
+         The owner, 14.08: he reported for the THIRD time that the coach still does not go to
+         tournaments. His words in full, and the whole history of the two refusals before this one,
+         are in tests/component/round21-coach-travel.test.ts - THIS IS A TEMPLATE, and the app's own
+         rule (pinned in tests/round13-nav.test.ts) is that no Cyrillic appears inside one, comments
+         included. The same guard caught the 30.07 draft of this very block.
+
+         WHAT CHANGED, AND WHAT DID NOT. The mechanic was cancelled on 30.07 because three versions
+         of a coach-travel STAT were built and measured and all three failed (the boolean: +$21k for
+         +0.6 skill; a fatigue discount: 2 condition points of ~36; a match-strength edge that made
+         elite results WORSE). None of that is reversed here, and no stat is added: what this switch
+         buys is PRESENCE, which is what he asked for when asked what to build - he goes, it costs a
+         second fare, and the tournament flow, the running commentary and the week's story all say
+         so. Re-measuring the three stat arms on the rebuilt bench is a separate arm of this wave.
+
+         ⚠ AND THE ROW NO LONGER REFUSES ANYBODY. It is a `:disabled` binding on nothing at all now -
+         the control is live at every age, on every rung, and self-coached families get an honest
+         sentence about having nobody to send rather than a dead switch. That is the same standing
+         rule the locked version was written to satisfy, finally satisfied by the switch working.
+         `tests/component/round21-coach-travel.test.ts` mounts real careers and holds it to that. -->
+    <!-- ⚠ HISTORY OF THE LOCKED VERSION, KEPT BECAUSE IT IS WHY THIS TOOK THREE ASKS. The owner
+         cancelled the mechanic behind it on 30.07
          after two measurement passes failed to make it worth a fare: nobody travels on the junior tour, the
          coach is a flat weekly cost that produces skill, and the decision belongs to the professional years.
          His words verbatim are in tests/coach-market.test.ts - THIS IS A TEMPLATE, and the app's own rule
@@ -478,24 +649,69 @@ function scrollToTier(tier: CoachTier): void {
          +$21k for +0.6 skill; a fatigue discount, 2 condition points of ~36; a match-strength edge that
          came out NEGATIVE on rank). Turning it on is a ruling to be taken, not a birthday to wait for.
          `tests/component/coach-travel-row.test.ts` mounts a professional career and holds the row to it. -->
-    <section v-if="billing" class="cm-travel is-locked">
+    <section v-if="billing" class="cm-travel">
       <div class="cm-travel-text">
         <p class="cm-travel-title">Coach travels to tournaments</p>
-        <p class="cm-travel-sub">
-          Off at every age – no week turns this on. There is no prize money on the junior tour to weigh
-          a fare against, and the professional case was measured three ways and paid for none of them.
-        </p>
+        <p class="cm-travel-sub">{{ travelSubLine }}</p>
       </div>
       <button
         class="cm-switch"
         role="switch"
-        :aria-checked="false"
-        disabled
-        aria-label="Coach travel – off at every age, and nothing here turns it on"
+        :aria-checked="travelsOnEventWeeks ? 'true' : 'false'"
+        :disabled="game.busy"
+        :aria-label="
+          travelsOnEventWeeks
+            ? 'Coach travels to tournaments with her – on. Press to send the coach home for competition weeks.'
+            : 'Coach travels to tournaments with her – off. Press to buy the second fare on every trip.'
+        "
+        @click="toggleTravel"
       >
         <span class="cm-switch-knob"></span>
       </button>
     </section>
+
+    <!-- ⭐⭐ v49 – THE NESTED OPTION: THE TRIPS THAT PAY HER NOTHING.
+         The owner ruled on 15.08 that this is the player's decision and not the engine's, and that
+         the outcome of it is his own too (his words are in the .ts comments and in
+         tests/component/round21-coach-travel.test.ts - no Cyrillic may appear in a template, comments
+         included, tests/round13-nav.test.ts).
+
+         ⚠ IT APPEARS ONLY WHILE THE FIRST SWITCH IS ON, and that is not decoration: the fare reads
+         BOTH stances, so with the first one off this option sends nobody anywhere and a row that
+         looked live would be the control lying about itself - the exact defect round-20 #1 was.
+
+         ⚠ AND THE PRESS OPENS A WARNING, NOT A GATE. What a player who ticks this is choosing was
+         measured (docs/specs/coach-travel-2026-08.md): an unlimited junior fare bankrupted 8 of 30
+         wealthy families and 15 of 30 middle ones, every one of them in the junior years. The dialog
+         says so plainly before the first fare is charged and then does as it is told. -->
+    <section v-if="billing && travelsOnEventWeeks" class="cm-travel cm-travel-nested">
+      <div class="cm-travel-text">
+        <p class="cm-travel-title">...and to junior events too</p>
+        <p class="cm-travel-sub">{{ juniorSubLine }}</p>
+      </div>
+      <button
+        class="cm-switch"
+        role="switch"
+        :aria-checked="travelsToJuniors ? 'true' : 'false'"
+        :disabled="game.busy"
+        :aria-label="
+          travelsToJuniors
+            ? 'Coach travels to junior and domestic tournaments – on. Press to stop paying the second fare on the trips that pay no prize money.'
+            : 'Coach travels to junior and domestic tournaments – off. Press to buy the second fare on those trips too.'
+        "
+        @click="toggleJuniors"
+      >
+        <span class="cm-switch-knob"></span>
+      </button>
+    </section>
+    <ConfirmDialog
+      v-if="askingJuniors"
+      :message="juniorConfirmMessage"
+      confirm-label="Send the coach"
+      cancel-label="Not yet"
+      @cancel="askingJuniors = false"
+      @confirm="doSendToJuniors"
+    />
     <!-- ⚠ WHAT HE COSTS A WEEK, AND IT IS NOT THE PRICE OF THE TOGGLE. Deleting the toggle's season pair
          took this figure with it, which was too much: "$X without him · $Y with" is meaningless once there
          is no "with", but "he costs $X a week" is true whatever she books and is the one number the
@@ -571,12 +787,24 @@ function scrollToTier(tier: CoachTier): void {
 
       <!-- The portrait is FULL-BLEED down the left edge, sized by height, masked into the card -
            the same treatment `.coach-card` uses on Home and for the same reason (A2c/d): a strip
-           reads as a person standing there, a square reads as an avatar. -->
+           reads as a person standing there, a square reads as an avatar.
+
+           ROUND-21 #11 - THE COACH SHE HAS IS NEVER "BLOCKED", and that one word is the whole of the
+           owner's report. `blocked` paints a refusal: a dashed grey border in place of the accent
+           frame, a darker card, a greyed name and price, and the portrait at 0.45 opacity. It was
+           being applied on the affordability test alone, so the coach the family ALREADY EMPLOYS
+           went grey the moment his rung stopped fitting the week's income - which is a true thing to
+           say about a coach you might hire and a false one about the coach you are paying. It is
+           also information the row cannot lose: the action word on a current row is "Current" and
+           has never been the over-budget figure, so nothing was being said by the dimming that is
+           not said in words elsewhere. His quotes are in the .ts comments (no Cyrillic in a
+           template, tests/round13-nav.test.ts) - see `familyWeeklyIncomeCents` in
+           engine/world/coachMarket.ts and the `.cm-row.current` block in style.css. -->
       <button
         v-for="r in g.rows"
         :key="r.id"
         class="cm-row"
-        :class="{ current: r.current, blocked: r.overBudgetCents > 0 || r.lockedPoints !== null }"
+        :class="{ current: r.current, blocked: !r.current && (r.overBudgetCents > 0 || r.lockedPoints !== null) }"
         :disabled="r.current || r.lockedPoints !== null"
         :aria-label="rowLabel(r)"
         @click="askHire(r)"
@@ -602,7 +830,25 @@ function scrollToTier(tier: CoachTier): void {
           <span class="cm-uplift">
             <span class="cm-uplift-season">{{ formatUplift(r.upliftPct) }}</span>
             <span class="cm-edge">{{ formatEdge(r.edgePct) }}</span>
+            <!-- ⭐⭐ ROUND-21 #2, THE LAST OPEN ITEM - AND WHAT IT IS WORTH WITH THE COACH ON THE
+                 TRIP. The doubling shipped in the engine and this card kept quoting the HOME
+                 corridor to a family paying a second fare to every event that pays.
+
+                 ⚠ ONLY WHEN THE FAMILY WOULD ACTUALLY SEND HIM. The engine hands `null` when there
+                 is nobody to send or the stance is off (`coachTravelsWithHer`, the same pair the
+                 fare is charged on), so a career that leaves the coach at home reads exactly the
+                 card it read before - one figure, unchanged.
+
+                 ⚠ STILL THE RUNG AND NEVER THE MAN: twice a price bracket is a price bracket, and
+                 the engine cuts both from the tier table without reading a coach id. §4 holds. -->
+            <span v-if="r.edgeTravelPct" class="cm-edge-travel">{{ formatEdgeTravel(r.edgeTravelPct) }}</span>
           </span>
+          <!-- WHEN THAT SECOND FIGURE APPLIES, said once and on her own coach's card only. The
+               helping follows the FARE, which stays home for the rungs that pay no prize money unless
+               the family has opened that stance too - so "the corridor is doubled" would be a claim
+               about a season she may not be playing, and "twice that on the trips the coach travels
+               to" is the true one. The engine writes it; this prints it. -->
+          <span v-if="r.current && travelLine" class="cm-travel-edge">{{ travelLine }}</span>
           <!-- THE PLAQUE, and only the coach she actually has has one. Before a full season it says
                so and says when; after it, it carries the realised number for this person. See the
                `plaqueLine` block in the script for why it lives here rather than on Home, and for

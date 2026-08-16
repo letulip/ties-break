@@ -134,6 +134,22 @@ export interface CareerAtOptions {
   localStorage?: Record<string, string>
 }
 
+/**
+ * ⚠ A WEEK-0 FIXTURE MEETS THE FIRST-RUN TOUR, AND A SPEC THAT IS NOT ABOUT ONBOARDING MUST SAY SO.
+ *
+ * The coach marks are offered to any device that has never ANSWERED them while the career is still
+ * at week 0 (App.vue, `tourWanted`), and this fixture clears localStorage by design – so a spec
+ * seeded with `fresh` boots straight into them. They are not blocking, but `.coach-tooltip` is a real
+ * element with `pointer-events: auto`, so it can and does intercept a click on whatever it is over.
+ *
+ * Passing this retires the tour for that context, exactly as a player who has answered it once:
+ *
+ *     await careerAt('fresh', { localStorage: TOUR_ANSWERED })
+ *
+ * `e2e/onboarding-tour.spec.ts` is the spec that deliberately does NOT pass it.
+ */
+export const TOUR_ANSWERED: Record<string, string> = { 'tb:onboardingTourSeen': '1' }
+
 export type CareerAt = (name: FixtureName, options?: CareerAtOptions) => Promise<FixtureEntry>
 
 /**

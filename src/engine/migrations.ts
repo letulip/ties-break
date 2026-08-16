@@ -1417,6 +1417,69 @@ export function migrateSave(raw: unknown): WorldState {
     v = 48
   }
 
+  // ⭐ v49 – THE COACH MAY BE SENT TO THE RUNGS THAT PAY HER NOTHING, AND IT IS THE PLAYER WHO SENDS
+  // HIM (docs/specs/coach-travel-2026-08.md §5, the ⛔ finding).
+  //
+  // `coachOnJuniorEvents: boolean` – the nested half of the v24 travel stance. Until now the fare
+  // simply REFUSED every rung with no prize money, which was the engine deciding on the family's
+  // behalf. The owner overturned that on 15.08 – «делаем тогда» – with his own model of whose
+  // decision it is: «По мне игрок сам решает: есть деньги - едет тренер, нет - не едет, или едет, но
+  // быстрее банкротится.»
+  //
+  // ⚠⚠ THE DEFAULT IS `false` AND IT IS A PRESERVATION, NOT A CHOICE MADE FOR ANYBODY. Every career
+  // written before this version was played under an engine where the junior fare did not exist, so
+  // `false` is exactly what it has been doing since the day it was saved: the same fares on the same
+  // rungs, the same ledger, the same match-strength helping (which follows the fare, so it cannot
+  // drift from it). A migrated career is byte-identical in behaviour and the new option is simply an
+  // unticked box the next time screen T is opened – which is also why nothing here reads the career's
+  // wealth, age or results to guess an answer. It was never asked.
+  //
+  // ⚠ AND IT IS ADDED BESIDE `coachOnEventWeeks` RATHER THAN RETYPING IT. The tidier shape - one
+  // scope field with three values - would have rewritten a boolean persisted since v24 and every
+  // reader of it, for a decision that is genuinely a second, more expensive choice on top of the
+  // first. Absent is not zero here either: it means "he has never been sent", which is what `?? false`
+  // reads it as at the one place it is consulted (`coachTravelFareFor`).
+  //
+  // Idempotent in v30's sense (the field is only written when absent), and zero draws on any stream -
+  // it is a stance, not an event - so the frozen MAIN capture (41550 / e6b0c709) is untouched by
+  // construction.
+  if (v === 48) {
+    const w = save as { coachOnJuniorEvents?: unknown }
+    if (typeof w.coachOnJuniorEvents !== 'boolean') w.coachOnJuniorEvents = false
+    v = 49
+  }
+
+  // v50 – THE COLLEGE YEARS GET A LEDGER, AND A CAREER ALREADY INSIDE THE FREEZE KEEPS ITS SPAN
+  // (P5, docs/specs/college-as-a-second-act-2026-08.md).
+  //
+  // `CollegeState` gains `years: CollegeYear[]` and `pendingCallUp`, because the four-year skip is
+  // spent one year at a time now and each year is a row nothing else can reconstruct: `pruneResults`
+  // deletes a result 52 weeks after it happened and `financeWeeks` keeps a 60-week window, so by the
+  // fourth year's card there is no way back to what her rank or her balance was in the first.
+  //
+  // ⚠ IT BACK-FILLS AN EMPTY LEDGER AND DELIBERATELY INVENTS NO ROWS. A v49 career mid-freeze has
+  // lived some of those weeks and there is no honest way to say what they contained – the
+  // measurements were never taken, and `pruneResults` has already deleted the evidence. So her ledger
+  // opens empty and the next year she spends is her first ROW, not her first year. The alternative
+  // (fabricating rows from the span) would have put invented numbers on the one screen this phase
+  // exists to make honest.
+  //
+  // ⚠ AND HER SPAN IS UNTOUCHED, WHICH IS WHAT KEEPS THE MIGRATION SAFE. `untilWeek` still says when
+  // the scholarship ends and `inCollege` still reads it, so every one of the freeze's guards answers
+  // exactly as it did. What she loses is the record of the years already behind her; what she keeps
+  // is the career.
+  //
+  // Idempotent in v30's sense (each field is written only when absent or the wrong shape), and zero
+  // draws on any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 49) {
+    const w = save as { college?: { years?: unknown; pendingCallUp?: unknown } | null }
+    if (w.college !== null && typeof w.college === 'object' && w.college !== undefined) {
+      if (!Array.isArray(w.college.years)) w.college.years = []
+      if (w.college.pendingCallUp === undefined) w.college.pendingCallUp = null
+    }
+    v = 50
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

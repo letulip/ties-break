@@ -5,8 +5,10 @@ import {
   enterEvent,
   entryStatus,
   isTierEligible,
+  juniorReservedRank,
   kidPoints,
   recomputeKidRank,
+  tableSize,
   tierOpenFor,
   toSnapshot,
   KID_ID,
@@ -163,6 +165,26 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
   })
 })
 
+/** ⚠ THE TWO ON-RAMPS STOPPED SHARING A CURRENCY (P1, docs/specs/junior-access-2026-08.md), and this
+ *  helper is the re-aim rather than a relaxation – it asserts MORE than the line it replaces, because
+ *  it now has to say which of two rules a rung obeys instead of assuming one.
+ *
+ *  A rung with no acceptance list is an ON-RAMP, and there are two of them. J30's door is still her
+ *  DOMESTIC point band and still says "Reach N pts" – for a girl who has not crossed yet the band is
+ *  exactly what she needs, because that is how the latch gets set. W15's door is the sport's own
+ *  junior reserved place and reads an ITF junior RANKING, so it quotes a POSITION: a points number she
+ *  could not find on her own table would be no help at all, which is this case's own argument one
+ *  table further on. Both halves are derived from the engine's own functions, never from a literal, so
+ *  a re-tuned cut re-tunes the expectation with it. */
+function expectOnRampLock(world: WorldState, e: { tier: TierId; pointsToEnter?: number; rankToEnter?: number }): void {
+  if (TIERS[e.tier].track === 'wta') {
+    expect(e.rankToEnter, e.tier).toBe(juniorReservedRank(tableSize(world, 'itf')))
+    expect(e.pointsToEnter, e.tier).toBeUndefined()
+  } else {
+    expect(e.pointsToEnter, e.tier).toBe(TIERS[e.tier].enterPointBand[0])
+  }
+}
+
 describe('upcomingEvents — surfaces eligibility both directions', () => {
   it('a fresh (0-point) kid: local open, regional/national locked (not enough points yet)', () => {
     // ⚠ RE-AIMED by the two ladders (29.07). The claim survives whole - at zero she has Local and
@@ -182,7 +204,7 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
       expect(e.eligible).toBe(false)
       expect(e.ineligibleReason).toBe('locked')
       if (!hasAcceptanceList(e.tier)) {
-        expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0])
+        expectOnRampLock(world, e)
       } else {
         expect(e.rankToEnter).toBe(acceptanceRank(world, e.tier))
       }
@@ -244,10 +266,15 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
         // ⚠ THE THIRD TABLE JOINS THE CASE, AND IT IS A THIRD KIND OF NOT-YET (task #17). Neither of
         // the two arms above fits it: she has not OUTGROWN a W15 (nobody outgrows the professional
         // tour, its ceiling is the MAX sentinel), and it is not the acceptance-list lock J300 wears
-        // either - W15 is an ON-RAMP, so it reads her ITF JUNIOR total against a points threshold,
-        // exactly as J30 reads her domestic one. Her 78-point junior book is a long way short of the
-        // 120 it wants, so the verdict is 'locked' WITH a points number. W35/W100 above it are the
-        // acceptance-list kind, quoted in professional rank she does not have yet.
+        // either - W15 is an ON-RAMP, so it reads the table BELOW it, exactly as J30 reads the one
+        // below that. W35/W100 above it are the acceptance-list kind, quoted in professional rank she
+        // does not have yet.
+        //
+        // ⚠ RE-AIMED BY P1, AND THE THIRD KIND IS NOW A THIRD KIND OF UNIT AS WELL. W15's on-ramp
+        // read her ITF junior POINT TOTAL against 120 – ours, not the sport's – and now reads her
+        // ITF junior RANKING, because the door it models is the junior reserved place. Her 78-point
+        // book is short either way; what changed is that the card quotes a POSITION rather than a
+        // points number, and `expectOnRampLock` is where that split is asserted.
         //
         // This is the shape the whole case is about, one table further on: something outgrown below,
         // something open in the middle, and something still to climb above - and the ladder now has
@@ -255,7 +282,7 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
         expect(e.eligible).toBe(false)
         expect(e.ineligibleReason).toBe('locked')
         if (!hasAcceptanceList(e.tier)) {
-          expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0]) // W15: the ITF on-ramp
+          expectOnRampLock(world, e) // W15: the junior reserved place, quoted as a RANK since P1
         } else {
           expect(e.rankToEnter).toBe(acceptanceRank(world, e.tier)) // W35 / W100: the list
         }
@@ -354,9 +381,19 @@ describe('an on-ramp she has crossed stays crossed', () => {
     // is a wall across the handover at 19 (task #47), built out of two rules that are each fine
     // alone. Measured before the fix: 188/216 careers had at least one week at 18+ with NOTHING open
     // on either the ITF or the WTA table, median 47 weeks of it.
+    // ⚠ RE-AIMED, NOT WEAKENED (P1). The book was `TIERS.w15.enterPointBand[0]` – exactly the 120
+    // ITF points the door used to ask for. The door now asks for a junior RANKING inside the reserved
+    // place's cut, so the fixture gives her the RESULTS that buy one (three J300 titles) instead of
+    // the one number that used to be the whole rule. The claim is untouched and is still the harder
+    // half: a door she crossed as a junior is hers after the junior tour has aged her out.
     const world = createWorld('onramp-eighteen')
-    world.results.push({ playerId: KID_ID, week: world.week, points: TIERS.w15.enterPointBand[0], tier: 'j300' })
+    for (let i = 0; i < 6; i++) {
+      world.results.push({ playerId: KID_ID, week: world.week, points: TIERS.j300.points[0], tier: 'j300' })
+    }
     recomputeKidRank(world)
+    expect(world.kidRank, 'inside the junior reserved place').toBeLessThanOrEqual(
+      juniorReservedRank(tableSize(world, 'itf')),
+    )
     expect(tierOpenFor(world, 'w15')).toBe(true)
     expect(world.onRampCleared.wta).toBe(true)
 

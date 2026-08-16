@@ -694,6 +694,39 @@ describe('MatchViewer – the pre-match preview', () => {
     wrapperlessCheck(local, junior, pro, top)
   })
 
+  // ⚠ ROUND 21 ITEM 3, AND IT IS THE WIRING GUARD RATHER THAN A SECOND COPY TEST. The rung ladder
+  // inside the commentary builder is pinned in tests/viz/commentary.test.ts; what THIS asserts is the
+  // one thing a unit test cannot - that the component actually hands the occasion over. The owner's
+  // complaint («на 1000 и шлемах ... кажется ничего не изменилось») was true for two years' worth of
+  // waves precisely because nobody was passing it, so a green builder beside a silent viewer is the
+  // exact failure mode to guard. Drop the fourth argument from the `buildCommentary` call in
+  // MatchViewer.vue and this goes red; the builder's own suite stays green.
+  it('⚠ the BEAT rows change with the rung too, not only the intro – the occasion reaches the log', async () => {
+    const { a, b, match } = fixture()
+    const beatsAt = async (previewEvent: { tier: TierId; roundLabel: string } | null): Promise<string[]> => {
+      const w = mount(MatchViewer, {
+        props: { match, playerA: a, playerB: b, surface: 'hard' as const, mode: 'replay' as const, previewEvent },
+      })
+      await clickModeOn(w, SKIP_LABEL) // reveals the whole match, so every beat is on screen
+      const rows = w.findAll('.mv-beat:not(.intro)').map((r) => r.text().replace(/\s+/g, ' ').trim())
+      w.unmount()
+      return rows
+    }
+    const junior = await beatsAt({ tier: 'j30', roundLabel: 'Round of 32' })
+    const slam = await beatsAt({ tier: 'slam', roundLabel: 'Final' })
+    expect(junior.length, 'no beats rendered at all').toBeGreaterThan(4)
+    // Same match, same rows, DIFFERENT WORDS - the escalation is vocabulary, never row count.
+    expect(slam.length).toBe(junior.length)
+    const differing = junior.filter((row, i) => row !== slam[i]).length
+    expect(differing, 'a Grand Slam final and a J30 first round rendered identically').toBeGreaterThan(1)
+    // The two most specific things the occasion adds, seen through the DOM: the title on the line,
+    // and a room that only exists at the top of the tour.
+    expect(slam.join(' ')).toContain('the title with it')
+    expect(junior.join(' ')).not.toContain('the title')
+    expect(junior.join(' ')).toContain('a place in the round of 16')
+    expect(junior.join(' '), 'a junior side court grew a crowd').not.toMatch(/crowd|stadium|applause/i)
+  })
+
   it('an intro row is not a beat: no set label, no score, and it never takes the "latest" glow', () => {
     const wrapper = mountViewer()
     for (const row of wrapper.findAll('.mv-beat.intro')) {

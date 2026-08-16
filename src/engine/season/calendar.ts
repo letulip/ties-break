@@ -182,6 +182,13 @@ export const TIERS: Record<TierId, TierDef> = {
     // because everyone without a counting international result ties at the floor, so every share from
     // 0.65 to 0.90 accepts every ranked player - the weeks-on-list count is identical across all of
     // them, and whole careers re-run at 0.65 and 0.70 are byte-identical. Usable range: 0.40-0.65.)
+    //
+    // ✅ AND IT IS NOW SOURCED, AND IT IS RIGHT (15.08, research §4c-E). The 0.50 was picked on our
+    // own bench with no real anchor to check it against; one exists. Real J60 acceptance lists,
+    // girls, read off the ITF's own pages: last direct acceptance at ITF Combined Junior **2,140 /
+    // 2,553 / 2,967 / 3,147** against a girls' list of **4,890** - i.e. **the top 44-64%**. Ours is
+    // 0.50. A rung whose invented number lands inside the sport's own spread is worth recording as
+    // such, because the next reader will otherwise assume it shares W75's provenance problem.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     enterPct: 0.5,
     entrantPctBand: [0.05, 0.4],
@@ -229,8 +236,66 @@ export const TIERS: Record<TierId, TierDef> = {
     // Measured per four-year career: 0.30 gives 0.0-0.9 (still nearly absent), 0.35 gives 0.2-1.4,
     // 0.40 gives 0.3 for the weak presets and 1.8-2.2 for the strong - about one every other season
     // for a career that earns it, and ~14% of the sixteen on the calendar. That is the target.
+    //
+    // ⚠⚠ AND AGAINST THE SPORT IT IS THE BIGGEST SINGLE ERROR IN THE WHOLE ACCEPTANCE LADDER - TWENTY
+    // TIMES TOO LOOSE (15.08, research §4c-E). Real J300 acceptance lists, girls, off the ITF's own
+    // pages: last direct acceptance at ITF Combined Junior **81** (Repentigny, 48MD), **101** (College
+    // Park, 48MD), **182** (Pancevo, 32MD), against a girls' ranking list of **4,890**. That is the
+    // **top ~2%**. Ours admits the top 40%. Note the unit is the one thing that is NOT in doubt here:
+    // `enterPct` is a share of the junior table precisely so it can be compared across populations,
+    // and both sides of this comparison are shares of a junior ranking list.
+    //
+    // ⭐ 0.40 -> 0.20 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). HALVED, not
+    // corrected to the sport's figure, and the reason is that BOTH endpoints were measured to be
+    // wrong for this population rather than one of them.
+    //
+    // WHY NOT 0.02 (the sport's own top-2%). 0.02 of our 200-row table is #4. Measured on this
+    // branch it does exactly what the audit said it does: J300 entries 4.4 -> 0.0, reach 27/27 ->
+    // 0/27. That is not a tighter rung, it is a deleted one, and the staged plan forbids it in as
+    // many words.
+    //
+    // ⚠⚠ AND SINCE P1 IT IS FAR MORE EXPENSIVE THAN THE AUDIT COULD SEE, WHICH IS THE FINDING. The
+    // audit measured the 0.02 arm as roughly NEUTRAL on the professional ladder (end rank 280 ->
+    // 281). It is not neutral any more, because P1 made the JUNIOR ranking load-bearing for
+    // PROFESSIONAL ACCESS: W15's door is now the junior-reserved place (`JUNIOR_RESERVED`, a share of
+    // the junior table) and the rungs above it are the Accelerator, both keyed on a junior standing
+    // that a J300's 300 points is the fastest way to build. Kill the rung and the whole professional
+    // on-ramp is late. Measured, n=27, identical seeds, 14->20:
+    //
+    //     j300      J300 entries   reach    first W15   end WTA rank   prize
+    //     0.40 (was)     4.4        27/27      15.6          258       $105,511
+    //     0.25           3.0        25/27      15.9          204       $108,997
+    //     0.20 (ships)   1.7        17/27      16.2          259        $99,562
+    //     0.15           0.4         5/27      16.3          368        $89,049
+    //     0.10           0.3         4/27      16.3          371        $89,686
+    //     0.05           0.0         1/27      16.3          373        $87,437
+    //     0.02           0.0         0/27      16.3          372        $87,410
+    //
+    // THERE IS A STEEP DROP BETWEEN 0.20 AND 0.15: four arms sit at ~#370 and three at ~#204-259.
+    // ⚠ A 0.175 PROBE AT n=54 LANDS PART-WAY DOWN IT (end rank 283 against shipped 250, prize
+    // -$11.9k), so the edge is a SLOPE rather than a wall and the n=27 table above overstates how
+    // sharp it is. What the probe does not change is the direction: every value below 0.20 is
+    // further downhill and buys nothing the target asks for. 0.20 is the last value before the slope.
+    //
+    // ⚠ AND 0.20 IS NOT FREE - THE HONEST FIGURE IS HERE RATHER THAN IN A FOOTNOTE. At n=54 it costs
+    // about **$6-9k of prize money and ~40 mean rank places** on its own. It ships because the rung
+    // was measurably outside its own target in the loose direction (below) and because the sport says
+    // 2%, not because the correction pays. It does not pay.
+    //
+    // ⚠ AND HALVING IT MOVES THE RUNG BACK TOWARDS ITS OWN PRE-REGISTERED TARGET, NOT AWAY. The
+    // target three paragraphs up («0 for most careers, 1-2 for a good one, 2-3 for the best») was
+    // hit when it was written on 30.07; on today's population the shipped 0.40 measured **4.4
+    // entries a career with 27 of 27 careers reaching it**, i.e. it had drifted OUTSIDE the target
+    // in the loose direction. 0.20 reads 1.7 and 17 of 27. So the collision the audit escalated is
+    // smaller than it looked: for this half of the move the sport and our own target point the SAME
+    // way, and only the last stretch to 2% is genuinely contested.
+    //
+    // ⚠ WHAT IS STILL THE OWNER'S. 0.20 is #40 of 200 - the top 20%, against a sport that cuts at
+    // the top ~2%. It is a tenfold gap closed to fivefold, chosen by measurement because the sport's
+    // own figure deletes the rung. Whether the game should keep a reachable prestige rung at all, or
+    // accept a J300 nearly nobody plays, is his call and is stated in the spec rather than taken here.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.4,
+    enterPct: 0.2,
     entrantPctBand: [0.0, 0.25],
   },
   // --- the adult tour: the ITF World Tennis Tour, and the first money she is ever paid ------------
@@ -352,7 +417,26 @@ export const TIERS: Record<TierId, TierDef> = {
     prizeCents: [2200_00, 1300_00, 750_00, 450_00, 250_00, 130_00],
     // The dense entry rung of the adult game, exactly as j30 is of the junior one.
     everyNWeeks: 2,
-    minAgeYears: 16,
+    // ⭐⭐ 16 -> 14, AND IT IS AN OWNER RULING OF 16.08, NOT A TUNING PASS. Verbatim: «мы же вроде
+    // наресерчили четкую возрастную сетку с количеством доступных турниров каждого тира на каждом
+    // возрасте, мне кажется надо использовать.» He is answering P1's own note, which recorded 16 as a
+    // DELIBERATE deviation from the sport's 14+ («⚠ `minAgeYears: 16` IS UNCHANGED AND THE DEVIATION
+    // IS DELIBERATE», docs/specs/junior-access-2026-08.md §2a). His ruling is to use the researched
+    // grid instead, and the grid is real, sourced and already in `ECONOMY.entryCap`: the ITF junior
+    // reserved place at W15 is age 14+, and the WTA's own AER rows start at 14 (8 events, at most 3
+    // at W75+) precisely because a fourteen-year-old CAN play a professional event.
+    //
+    // ⚠⚠ AND IT COLLIDES WITH A STATED DESIGN PILLAR, WHICH IS NOT SILENTLY DISCARDED.
+    // `docs/specs/adult-tour-and-endings.md` §4.1 makes the 16-18 two-tour overlap load-bearing – *"a
+    // sixteen-to-eighteen-year-old holds both tours at once and arrives at nineteen having seen what
+    // each one costs and pays"*. Opening W15 at 14 widens that overlap to 14-18: she now meets the
+    // second tour five years before the fork rather than three. The consequence is MEASURED rather
+    // than argued (docs/specs/age-eligibility-window-2026-08.md §6) and put in front of the owner,
+    // who has the final word and has already given it once. What makes it survivable is that the AER
+    // is now real: at 14 the professional year is EIGHT events against an unrestricted junior
+    // fourteen, so the wider overlap is a door she may step through occasionally rather than a tour
+    // she can move onto.
+    minAgeYears: 14,
     // ⚠ THE JUNIOR TABLE IS THE ON-RAMP, and this is the same rule j30 keeps one track down: the
     // bottom rung of a table is opened by the table BELOW it, because a player cannot hold a ranking
     // in a table she has never played in, and a rank gate on the first rung would be a closed loop.
@@ -440,7 +524,38 @@ export const TIERS: Record<TierId, TierDef> = {
     // $5,000 / $2,900 / $1,700 / $1,000 / $550 / $290.
     prizeCents: [5000_00, 2900_00, 1700_00, 1000_00, 550_00, 290_00],
     everyNWeeks: 3,
-    minAgeYears: 16,
+    // ⭐⭐ 16 -> 14, AN OWNER RULING OF 16.08, AND IT IS THE WHOLE OF THE REAL GRID. Read this note
+    // once; W50, W75 and W100 refer back to it, and the four WTA rungs plus the Slam say where they
+    // differ. Verbatim: «у W35 стоит minAgeYears: 16, у W50 – 16, у W75 и W100 – 17. По той же
+    // цитате из регламента, которой вы были правы, настоящих порогов только два – 14 и 18. – вот как
+    // есть в регламенте, так и у нас. Возрастное есть только по количеству сыгранных в год, так и
+    // делаем.»
+    //
+    // THE SOURCE IS research/ranking-points-by-tier.md §4-C2, quoted rather than paraphrased: *"The
+    // only age thresholds anywhere in the 2026 ITF WTT Regulations are 14 – Women's Section III.A.1,
+    // 'Minors under the age of fourteen (14) shall not be eligible for Entry' – and 18, the AER
+    // cut-off. A 15-, 16- or 17-year-old is limited only by her per-year COUNT."*
+    //
+    // ⚠ WHAT REPLACES THE FLOOR IS ALREADY SHIPPED AND IS NOT TOUCHED BY THIS. The count is the AER
+    // (`ECONOMY.entryCap.proPerYearByAge`, on a birthday-to-birthday window since P2): 14 -> 8
+    // professional events of which at most 3 at W75 or above, 15 -> 10, 16 -> 12, 17 -> 16, 18+
+    // unrestricted. So the brake is a BUDGET, which is what the regulation actually is, rather than a
+    // door that is shut for two more birthdays.
+    //
+    // ⚠ AND THE OLD NUMBER'S OWN REASON IS KEPT HERE RATHER THAN DELETED, because it is the record of
+    // what 16 was for. W2-LADDER wrote the chain as "16 for the entry trio's first two plus w50, 17
+    // from w75 up" and `docs/specs/adult-tour-and-endings.md` §4.1 made the 16-18 two-tour overlap a
+    // design pillar – *"a sixteen-to-eighteen-year-old holds both tours at once"*. Neither was ever
+    // sourced to a regulation; both were ours. The overlap survives in the only form the sport
+    // supports: she may hold both tours from 14, and the AER decides how much of the second one she
+    // can afford to hold.
+    //
+    // ⚠ THE GRID IS NOT "NO FLOOR ANYWHERE", WHICH IS THE READING THIS COMMENT EXISTS TO PREVENT.
+    // Three different numbers survive and each has a source: **14** on the ITF W rungs and the Grand
+    // Slam, and **15** on the four WTA rungs, where under-15s may not enter by direct acceptance at
+    // all (WTA Rulebook II.D – a wild card is the only route, and this engine models direct
+    // acceptance only). The J rungs keep their own 13/18 window, which is a different regulation.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // ⚠⚠ THE ACCEPTANCE LIST IS AN ABSOLUTE RANK NOW, NOT A SHARE (W2-FIELD2). Read this note once;
     // the four rungs above it refer back here.
@@ -455,24 +570,76 @@ export const TIERS: Record<TierId, TierDef> = {
     // ⚠ 160 IS HISTORY; THE LIVE CEILING IS 270 (points-by-the-book, 05.08) - eighteen counted slots
     // at the rung's own 15 a title. The argument above is about the UNIT and stands unchanged.
     //
-    // WHAT REPLACES IT: the real tour's own acceptance ranges. An entry list is a rank cut, and it
-    // is the same cut whether 500 or 5,000 players exist - it was never a share of anything.
+    // WHAT REPLACES IT: an absolute rank cut, which is the same cut whether 500 or 5,000 players
+    // exist - it was never a share of anything. That part of the argument is sound and survives.
     //
-    //     rung        real acceptance range (women's ITF/WTA)     our cut = the range's FLOOR
+    //     rung        acceptance range this table was built on    the cut it produced (HISTORY – see
+    //                                                             the shipped column further down)
     //     W15         ~#400-1000+, unranked players get in        none - it is the on-ramp
-    //     W35         ~#250-700                                   700
-    //     W50         ~#200-550                                   550
-    //     W75         ~#150-450                                   450
-    //     W100        ~#120-350                                   350
-    //     WTA 125     ~#80-250, plus wildcards                    250
+    //     W35         ~#250-700                                   700   (still shipped)
+    //     W50         ~#200-550                                   550   (superseded, P3)
+    //     W75         ~#150-450                                   450   (superseded, P3)
+    //     W100        ~#120-350                                   350   (superseded, P3)
+    //     WTA 125     ~#80-250, plus wildcards                    250   (superseded, P3)
+    //
+    // ⚠⚠ THE RANGES ABOVE ARE **NOT SOURCED**, AND THIS COMMENT USED TO CALL THEM "the real tour's
+    // own acceptance ranges" (audited 15.08, docs/specs/acceptance-cuts-2026-08.md). They entered the
+    // repo already printed as fact (commit 62ad7ab, 02.08) and propagated into three specs, each
+    // citing the one before it; they have never been in docs/research/ranking-points-by-tier.md,
+    // which is this repo's sourced document for this ladder. Taken to the governing regulation, the
+    // shape is wrong in a way no re-tuning fixes:
+    //
+    //   * The 2026 ITF WTT Regulations govern **W35, W50, W75 and W100 with ONE shared "System of
+    //     Merit"** and it contains NO RANK THRESHOLD. It is an ORDERING - WTA rank, then ITF rank,
+    //     then World Tennis Number, then national ranking, then "randomly drawn electronically".
+    //     An unranked player is not refused a W75; she goes to the bottom of the list.
+    //   * The one published per-rung rank rule runs the OTHER WAY ("WTA Play Down Rules"): the WTA
+    //     top 50 may not enter ANY W event and the top 150 may not enter W15 or W35. Reality gates
+    //     the strong OUT; this table gates the weak IN.
+    //   * Only 16-20 of a real W75's 32 chairs are direct acceptances at all; the rest are qualifiers,
+    //     wild cards and reserved places. `selectEntrants` fills all 32 from one pool.
+    //
+    // ⚠⚠ AND SINCE NO CUT IS PUBLISHED, THE HONEST FIGURE IS AN **OBSERVED** ONE. Read off the ITF's
+    // own per-tournament acceptance lists on 15.08.2026, counting only lists with zero vacated slots
+    // (a vacated slot is a post-deadline withdrawal, so it gives a lower bound, not a cut). WTA rank
+    // of the LAST DIRECT ACCEPTANCE, 32 main draws - research §4c-A2 has the events and the URLs:
+    //
+    //     rung   observed clean cuts                          was    ships   verdict
+    //     W15    512 · 585 · 590                               n/a     n/a   (on-ramp; reality has a
+    //                                                                        de-facto cut near #550)
+    //     W35    551 · 662 · 716 · 724 · 730 · 835 · 871       700     700   ✅ SOURCED-CORRECT,
+    //                                                                        mid-range – NOT TOUCHED
+    //     W50    204 · 234 · 390 · 424 · 441                   550   → 330   ⭐ corrected, P3
+    //     W75    262 · 305 · 334 · 359                         450   → 300   ⭐ corrected, P3
+    //     W100   no clean list exists (lower bound >285)       350   → 240   ⚠ NOT SOURCED - placed
+    //                                                                        to keep the chain monotone
+    //     WTA125 none published (the real rule is a ceiling)   250   → 180   ⚠ NOT SOURCED - placed
+    //
+    // ⚠ THE ERROR IS NOT UNIFORM, WHICH IS WHY THE FAMILY CANNOT BE RESCALED BY ONE FACTOR. W35 is
+    // right where it is. The real ladder is far FLATTER than ours at the top - a real W50 and a real
+    // W75 cut within ~50 places of each other - which is what one shared System of Merit produces.
+    // The shipped chain reproduces that flatness: 330 and 300 sit thirty places apart.
+    //
+    // ⭐ THE CHAIN SHIPPED IN P3 (16.08), AND TWO OF ITS FOUR LINKS CARRY NO EVIDENCE. W50 and W75
+    // land on the middle of an observed spread. W100 and WTA 125 have no published list to land on
+    // and exist only to keep the ladder monotone - so a reader must not read them as "the real
+    // tour's figures" the way this comment's predecessor invited. That mislabelling is finding 2 of
+    // docs/specs/acceptance-cuts-2026-08.md and the reason the provenance column above exists.
+    // Full audit: research/ranking-points-by-tier.md §4c.
     //
     // ⚠ THE LOWER CUTS ARE NO-OPS BY CONSTRUCTION, AND THAT IS THE FINDING RATHER THAN A SHORTCUT.
-    // The merged table is 564 rows deep; a real W35's list reaches #700, i.e. BELOW our whole
-    // table. So W35 and W50 admit anybody the table holds - which is exactly what the real rungs
-    // do, and it is why «she must always have tennis» survives an honest curve. The cuts that
-    // actually bite are W100 and WTA 125; W75's 450 sits just above the point-less tie block, so it
-    // opens on her first professional result. See TierDef.acceptsRank for why an absolute number is
-    // the SAFE unit against this table and a share is the bomb.
+    // A real W35's list reaches #700, i.e. near the bottom of the pointed table. So W35 admits
+    // essentially anybody the table holds - which is exactly what the real rung does, and it is why
+    // «she must always have tennis» survives an honest curve. See TierDef.acceptsRank for why an
+    // absolute number is the SAFE unit against this table and a share is the bomb.
+    //
+    // ⚠ AND THE CUTS DO NOT COLLIDE WITH THE PLAY DOWN RULES, WHICH WAS CHECKED RATHER THAN ASSUMED
+    // (P3). `playDownBars` bars the WTA top 50 from every W-series rung and the top 150 from W15/W35,
+    // so each rung is open on a WINDOW rather than a half-line: w35 #151-700 · w50 #51-330 ·
+    // w75 #51-300 · w100 #51-240, and wta125 (#1-180) is not a W-series event so it is never barred.
+    // No window is empty and no rank between #1 and the bottom of the table is left with nothing
+    // open to it. Had a corrected cut fallen at or under its own rung's bar, that rung would have
+    // become unreachable in silence - which is the failure this paragraph exists to rule out.
     //
     // ⚠ AND THE `enterPct === entrantPctBand[1]` IDENTITY IS FULLY RETIRED, not merely bent: the
     // window has a floor now (it would refuse a player for being too STRONG) and the cut is in a
@@ -502,16 +669,38 @@ export const TIERS: Record<TierId, TierDef> = {
     // 13 a season - denser than a National, sparser than a W35: the first rung she plans MONTHS
     // around rather than weeks.
     everyNWeeks: 4,
-    // Same doorway age as W15/W35: the AER's 16-year-old allowance (12 pro entries) is what
-    // actually meters her first season here, not the doorway itself.
-    minAgeYears: 16,
+    // ⭐ 16 -> 14 (owner, 16.08) – the family note on w35 above is the ruling and the source. The
+    // sentence this replaces was already most of the way there and is kept as the record: *"Same
+    // doorway age as W15/W35: the AER's 16-year-old allowance (12 pro entries) is what actually
+    // meters her first season here, not the doorway itself."* It named the right mechanism and then
+    // shut the door anyway; now the allowance is the whole of it.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // The acceptance chain tightens one step per rung: w35 0.5 -> w50 0.4 -> w75 0.3 -> w100 0.25
     // -> wta125 0.2. 0.4 is deliberately J300's cut one table down - the same "prestige rung has to
     // be enterable from below" argument, one family up.
-    // The real acceptance range's FLOOR (~#200-550) - see the note on w35 for why an
-    // absolute rank replaced the share, and what the share had made unreachable.
-    acceptsRank: 550,
+    // The range table's FLOOR (~#200-550) - see the note on w35 for why an absolute rank replaced
+    // the share, and why the ranges themselves are not sourced.
+    //
+    // ⚠ OBSERVED, 15.08: a real W50's clean cut is WTA **204 / 234 / 390 / 424 / 441** (five events,
+    // research §4c-A2). The old 550 sat BELOW every one of them - looser than reality by roughly
+    // 110-350 places, the same defect as W75's one rung down and less severe.
+    //
+    // ⭐ 550 -> 330 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). The middle of the
+    // observed spread, and the second link of the SOURCED CHAIN the 15.08 audit recommended and the
+    // staged plan ordered built: w35 700 (unchanged - it is already right) · w50 330 · w75 300 ·
+    // w100 240 · wta125 180. It could never move alone - below w75's cut the ladder inverts and
+    // tests/season/fieldPros.test.ts pins that it must not.
+    //
+    // ⚠ WHAT MOVING IT ACTUALLY DID, AND IT IS NOT WHAT THE AUDIT PREDICTED. The audit measured this
+    // chain as Pareto-positive for the player IN ISOLATION (end rank 280 -> 204, prize +$28k). That
+    // was against the pre-P1 ladder, where she entered a W75 at 17.2 and lost early. P1 and P2 have
+    // since moved her first W75 to 19.0 and her rank at seventeen to #426, so the substitution the
+    // audit was measuring had already been banked before this chain arrived. Re-measured on the
+    // population that now exists, the Pareto verdict does NOT survive - though on the full 676-week
+    // horizon the chain reads as a DELAY she is repaid for rather than a tax. Both halves are in the
+    // spec; neither is quotable alone. The number ships because it is the SOURCED one.
+    acceptsRank: 330,
     // ⚠ RE-MEASURED BY W2-FIELD2 — [0.02, 0.40] -> [0.145, 0.52]. W2-LADDER's own reading (the
     // deepest window in the family, floor 0.02 so "the merged table's head must be REACHABLE here
     // without being resident") was the right instinct against a table whose head was one thirty-
@@ -538,11 +727,96 @@ export const TIERS: Record<TierId, TierDef> = {
     // 17, one year past W50's door (spec §2: minAge 16/17/17): the rung pairs with W100 as the
     // half of the family a sixteen-year-old can SEE but not enter, which is what makes her first
     // seventeen-year-old season a widening rather than a repeat.
-    minAgeYears: 17,
+    //
+    // ⚠ AND IT IS OURS, NOT THE SPORT'S (audited 15.08). **A real W75 has no age floor of its own.**
+    // The only age thresholds in the 2026 ITF WTT Regulations are 14 (Women's III.A.1: "Minors under
+    // the age of fourteen (14) shall not be eligible for Entry") and 18 (the AER cut-off); a 15-, 16-
+    // or 17-year-old is limited only by her per-year COUNT, which we already model exactly in
+    // `ECONOMY.entryCap.proPerYearByAge`. The one rung-specific real rule is the WTA's sub-cap of
+    // THREE W75-and-above events inside a fourteen-year-old's eight - a quota, not a door.
+    //
+    // ⚠⚠ AND ON THIS RUNG THE AGE GATE IS DOING THE ACCEPTANCE LIST'S JOB. Measured (n=54): the cut
+    // above is already cleared at mean age 16.7, so in 40 of 52 careers `minAgeYears` is the ONLY
+    // thing refusing her. Left as it is - opening it to fourteen-year-olds is a far larger change
+    // than correcting the cut, and it is the owner's. acceptance-cuts-2026-08.md §3a/§6.
+    //
+    // ⭐⭐ HE TOOK IT: 17 -> 14 (16.08). The two paragraphs above are the whole case and they were
+    // written a day before the ruling that acts on them – the second one even names the change and
+    // hands it to him. The family note on w35 has the verbatim quote and the source; what is specific
+    // to THIS rung is that the sub-cap the paragraph above calls "a quota, not a door" stops being
+    // hypothetical: `ECONOMY.entryCap.proSubCapByAge` grants a fourteen-year-old THREE W75-or-above
+    // entries inside her eight, and `entryCaps.ts` records that it has never been able to bind
+    // because this constant was 17. It can now, and that is the rule doing its own job.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    // The real acceptance range's FLOOR (~#150-450) - see the note on w35 for why an
-    // absolute rank replaced the share, and what the share had made unreachable.
-    acceptsRank: 450,
+    // ⚠⚠ THE OWNER'S OWN RUNG (15.08): «У нас W75 пускает всех из топ-450 профессиональной таблицы,
+    // с 17 лет, без порога по очкам. Реальный W75 отбирает заметно у́же.» ALL THREE CLAUSES ARE TRUE
+    // AND HE IS RIGHT ABOUT THE FOURTH: a real W75's clean cut is **WTA 262 / 305 / 334 / 359**, read
+    // off the ITF's own acceptance lists on 15.08 (Tianjin, Bytom, Kursumlijska Banja x2 - research
+    // §4c-A2 has the URLs and the zero-vacated-slot rule that makes them cuts rather than bounds).
+    // **Ours is 100-190 places too deep.** ⚠ Regional spread is real and large: US-based W75s run much
+    // weaker (Lexington KY >=494) than European ones, so a single global cut is already a flattening.
+    //
+    // AND THE MEASUREMENT IS WORSE THAN HIS READING - docs/specs/acceptance-cuts-2026-08.md §3a,
+    // n=54 careers on POLICIES[1]:
+    //
+    //   this cut is CLEARED at mean age 16.7 and the doorway opens at 17, so in 40 of 52 careers the
+    //   acceptance list refuses nobody who simply waits for her birthday. `minAgeYears` is the whole
+    //   gate. She first enters a W75 at 17.2 - and #450 costs a book of 88 W points, which IS the
+    //   «порог по очкам» the `[0, MAX]` band above says does not exist.
+    //
+    // ⚠ AND IT IS NOT ONE DECISION - SEE `ENDINGS.collegeClosedFromTier`, WHICH IS THIS RUNG. A
+    // counting finish at W75 or above deletes the college ending, so this constant sets the age at
+    // which that ending stops existing: measured, the door shuts at mean age 17.3 and W75 itself
+    // causes 73% of the closures.
+    //
+    // ⭐ THE GUARD IS RE-AIMED, NOT WEAKENED (P4, 16.08, docs/specs/college-gate-decoupled-2026-08.md).
+    // This note used to end "Nothing in ending.ts says so", and that is no longer true: the college
+    // constant now carries the other half of this warning, and the gate itself no longer reads a
+    // single tuning number off `TIERS` - `collegeDoorOpen` is a leaf that takes a view and imports no
+    // calendar constant at all. **Four cases in tests/ending.test.ts move `w75.acceptsRank` over
+    // 450/300/1/5000 and `w75.points` to and from zero, and assert the college door does not
+    // follow**, which is the assertion nobody had written when P3 moved this cut and moved the door
+    // with it.
+    //
+    // ⚠⚠ THE RUNGS ARE STILL THE SAME RUNG, THOUGH, AND THAT IS NOT A CODE PROBLEM. Decoupling the
+    // constants does not decouple the WORLD: whatever moves her first counting W75 still moves the
+    // college door, because the door is defined at this rung. Re-measured after P1-P3 the door now
+    // shuts at median 19.1 against a fork at 19.0 - it survives the decision by about six weeks, by
+    // accident - so **a future tuning that speeds her up by a month closes it again in most
+    // careers.** That is the owner's call, stated in that spec's §6 and deliberately not taken here.
+    //
+    // ⭐ 450 -> 300 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). The middle of the
+    // observed 262-359, and the load-bearing link of the SOURCED CHAIN (w35 700 unchanged · w50 330 ·
+    // w75 300 · w100 240 · wta125 180). It could never move alone: below #351 it inverts the chain
+    // w35 > w50 > w75 > w100 > wta125 that tests/season/fieldPros.test.ts pins, which is why all four
+    // move together or none does.
+    //
+    // ⚠ THE 15.08 AUDIT LEFT THIS AS «the owner's call, not a builder's» AND THAT DEFERRAL IS NOW
+    // SPENT, not overruled. He answered it by ordering the staged plan
+    // (docs/plans/college-and-the-junior-ladder.md, «давай внедрять всё, поэтапно»), whose §P3 names
+    // this chain as the phase's build. What was NOT delegated is the retune that may follow it - see
+    // §P6, and the spec's own escalation list.
+    //
+    // ⚠⚠ AND THE AUDIT'S OWN VERDICT ON THIS CHAIN IS STALE - READ THE SPEC BEFORE QUOTING IT. It
+    // measured the chain Pareto-positive (end rank 280 -> 204, book 365 -> 441, prize +$28k) IN
+    // ISOLATION, against a ladder that no longer exists: P1 moved her first W75 from 17.2 to 19.0 and
+    // P2 took her rank at seventeen to #426. The mechanism the audit named - "with the shipped cuts
+    // she spends her season in W75+ draws she loses early; with the corrected chain she spends it at
+    // W15/W35/W50, where she wins" - is a substitution P1 ALREADY BANKED. Re-measured after P1+P2 on
+    // the audit's own horizon the Pareto verdict does not survive: the money gain shrinks fifteenfold,
+    // end funds flip sign and the college column flips direction.
+    //
+    // ⚠ AND ON THE FULL HORIZON IT IS A DELAY RATHER THAN A TAX, WHICH THE AUDIT'S 312 WEEKS COULD
+    // NOT SEE. Run to 26.6: she is worse at seventeen to nineteen (-$9.4k banked by 19, fourteen
+    // fewer careers holding a ranking at 17) and BETTER from twenty-one (#199 -> #174 at 21,
+    // #176 -> #158 at 25, career prize +$57k). Same shape P1 and P2 each measured. Both halves
+    // travel together or the number is misrepresented.
+    //
+    // ⚠ AND ON THIS RUNG THE CUT IS STILL NOT THE GATE. §3a's finding survived the correction once
+    // already; after P1 it is the junior/adult boundary rather than `minAgeYears` that pins her first
+    // W75 to 19.0, and #300 admits the #273 she holds when she gets there. Measured in the spec.
+    acceptsRank: 300,
     // ⚠ RE-MEASURED BY W2-FIELD2 — [0, 0.35] -> [0.105, 0.42]. This is one of the three rungs whose
     // fields were IDENTICAL before the fourth storey (w75/w100/wta125 all measured field core 59.7,
     // median entrant 33/499): a shared floor of 0 plus position-biased entry meant all three drew
@@ -565,11 +839,36 @@ export const TIERS: Record<TierId, TierDef> = {
     // Rare and planned around, the way j300 is: four a year.
     everyNWeeks: 13,
     minGapWeeks: 2,
-    minAgeYears: 17,
+    // ⭐ 17 -> 14 (owner, 16.08) – the ruling and its source are the family note on w35. This rung
+    // carried no reason of its own: it was 17 because W75 was, and W75's own note says in as many
+    // words that a real W75 has no age floor. Its gate is #240 and always was.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    // The real acceptance range's FLOOR (~#120-350) - see the note on w35 for why an
-    // absolute rank replaced the share, and what the share had made unreachable.
-    acceptsRank: 350,
+    // The range table's FLOOR (~#120-350) - see the note on w35 for why an absolute rank replaced
+    // the share, and ⚠ why the ranges themselves are NOT SOURCED.
+    //
+    // ⚠⚠ AND IT IS READ BY THE SPONSORS. `s.national.maxWtaRank` IS this number (economy.ts, pinned
+    // as an equality by tests/offers.test.ts), so moving W100's door moves what a national sponsor
+    // costs, in a file nobody retuning the ladder would think to open. Flagged when `acceptsRank` was
+    // introduced and re-flagged by the 15.08 audit. acceptance-cuts-2026-08.md §7.
+    //
+    // ⭐ 350 -> 240 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), as the fourth link
+    // of the sourced chain (w35 700 · w50 330 · w75 300 · w100 240 · wta125 180).
+    //
+    // ⚠⚠ AND THIS ONE IS **NOT SOURCED** - IT IS PLACED, AND THE DIFFERENCE MATTERS. Seven of the
+    // nine W100s in the 2026 calendar publish no acceptance list at all and the one available is a
+    // lower bound rather than a cut, so there is no observed figure to land on. 240 exists only to
+    // keep the chain monotone between w75's sourced 300 and wta125's placed 180. A reader looking
+    // for the evidence behind this number will not find any: that is the honest state of it, and it
+    // is on the spec's list for the owner.
+    //
+    // ⚠⚠ THE SPONSOR GATE MOVED WITH IT - `ECONOMY.sponsors.national.maxWtaRank` 350 -> 240 in the
+    // same commit, because that constant's own comment says it IS this one ("read straight … whatever
+    // that list currently is") and the equality is pinned. So a national sponsor is now MATERIALLY
+    // HARDER to earn: the rule did not change a word, its input did. That is a real balance change to
+    // an economy constant riding on a ladder correction, and it is the first item on the spec's
+    // escalation list rather than something to absorb quietly.
+    acceptsRank: 240,
     // ⚠ [0, 0.30], RE-MEASURED BY W2-LADDER'S BAND PROBE - the third measurement this band has
     // carried, each against the world of its day. The original 0.55 was measured against the
     // PRE-FIELD world (199 juniors, ~80 of them 17+): its table read 14 candidates at [0, 0.25]
@@ -619,14 +918,39 @@ export const TIERS: Record<TierId, TierDef> = {
     // Rare like W100 (spec §2: "125 rare like W100"): four a year, planned around, never adjacent.
     everyNWeeks: 13,
     minGapWeeks: 2,
-    minAgeYears: 17,
+    // ⭐⭐ 17 -> 15, AND THE 15 IS WHY THE WTA RUNGS ARE NOT 14 (owner, 16.08 – the ruling is the
+    // family note on w35). Read this note once; wta250, wta500 and wta1000 refer back to it.
+    //
+    // A 125 is a WTA tournament, not an ITF one, so the regulation that governs its entry is the WTA
+    // Rulebook rather than the ITF WTT Regulations – and its floor is real and published: **under-15s
+    // may not enter a WTA tournament by direct acceptance at all** (II.D; a wild card is the only
+    // route in). `selectEntrants` models direct acceptance and nothing else, so 15 is the honest
+    // floor here and 14 would be modelling a door the sport keeps shut.
+    //
+    // ⚠ WHAT WENT WITH THE 17 was never a rule, it was a chain: W2-LADDER's "the family's top half
+    // opens at 17" and W3-ACT2's continuation of it. Both are ours. The gate on this rung is #180 and
+    // stays #180 – research §4-C2 has the sourcing.
+    minAgeYears: 15,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // The top of the acceptance chain: 0.2, tighter than W100's 0.25 (spec §2 "tune 125 tighter").
     // On a fresh ~500-row merged table that is "takes the top 100" - the hardest cut in the game,
     // as the top rung's should be.
-    // The real acceptance range's FLOOR (~#80-250, plus wildcards) - see the note on w35 for why an
-    // absolute rank replaced the share, and what the share had made unreachable.
-    acceptsRank: 250,
+    // The range table's FLOOR (~#80-250, plus wildcards) - see the note on w35 for why an absolute
+    // rank replaced the share, and ⚠ why the ranges are NOT SOURCED. ⚠ The real 125 does carry a
+    // published rank rule and it is a CEILING, not a floor: a maximum of four players ranked 21-50
+    // may play one, by wild card only, and only in a week without a bigger event (2026 WTA Rulebook
+    // III.C.2.b). We model the opposite direction. acceptance-cuts-2026-08.md §2a.
+    //
+    // ⭐ 250 -> 180 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), the top link of the
+    // sourced chain (w35 700 · w50 330 · w75 300 · w100 240 · wta125 180).
+    //
+    // ⚠⚠ **NOT SOURCED**, LIKE W100 - PLACED TO KEEP THE CHAIN MONOTONE ABOVE w100's 240 AND BELOW
+    // wta250's 200. No published depth exists for a 125's direct-acceptance list; the only real
+    // per-rung rank rule on this rung runs the other way (the ceiling above). ⚠ AND THIS IS THE RUNG
+    // THE CORRECTION BITES HARDEST ON, because it is the one an ADULT reaches on her professional
+    // ranking just as P1's junior brake lets go: measured in the spec, and it is why the phase's
+    // headline is a cost rather than the audit's Pareto gain.
+    acceptsRank: 180,
     // MEASURED, the W100 way - the probe is tools/band-probe.ts (one run, all four upper rungs),
     // candidates left inside the window at its NARROWEST week over 5 careers x 6 seasons sampled
     // every 13th week, age gate applied, against the merged ~500-row universe and a draw of 32:
@@ -733,12 +1057,18 @@ export const TIERS: Record<TierId, TierDef> = {
     // wherever the big ones are not). Cadence 6 = 8 a season, twice the 125's four, which is the
     // real 250:125 supply ratio (~30:15) read at our scale.
     everyNWeeks: 6,
-    // The family's top half opens at 17, as W75/W100/125 do. The doorway is not the gate here - the
-    // acceptance list is (#200), and the AER's own allowance is unlimited from 18.
-    minAgeYears: 17,
+    // ⭐ 17 -> 15 (owner, 16.08) – the WTA floor, and the note on wta125 is why it is 15 rather than
+    // 14. The sentence it replaces is kept as the record and it was already true of the mechanism:
+    // *"The family's top half opens at 17, as W75/W100/125 do. The doorway is not the gate here – the
+    // acceptance list is (#200), and the AER's own allowance is unlimited from 18."* The doorway was
+    // never the gate up here; it is simply the sport's own number now.
+    minAgeYears: 15,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    // The real tour's acceptance range's FLOOR, the same unit and the same reading W2-FIELD2 gave
-    // the six rungs below (see the note on w35): a WTA 250's entry list reaches to about #200.
+    // The same unit and the same reading W2-FIELD2 gave the six rungs below (see the note on w35):
+    // taken as "a WTA 250's entry list reaches to about #200". ⚠ NOT SOURCED - the WTA rulebook
+    // publishes the draw's composition (a 32 main draw takes 4 qualifiers plus wild cards) but no
+    // acceptance DEPTH, so #200 is ours. Left as it is: it binds 41 of 52 measured careers and sits
+    // above where a 14→20 career reaches. acceptance-cuts-2026-08.md §2a.
     acceptsRank: 200,
     // ⚠ THE BAND IS MEASURED AGAINST TWO UNIVERSES OF VERY DIFFERENT SIZE, AND W3-ACT2 IS WHERE
     // THAT STOPPED BEING FREE. Read this note once; the three rungs above refer back to it.
@@ -778,9 +1108,12 @@ export const TIERS: Record<TierId, TierDef> = {
     // rather than a timetable - six of ten is a decision about which, six of six would not be.
     everyNWeeks: 0,
     anchorWeeks: [4, 10, 15, 19, 24, 28, 33, 39, 43, 47],
-    minAgeYears: 17,
+    // ⭐ 17 -> 15 (owner, 16.08) – the WTA floor; see the note on wta125. #120 is the gate here and
+    // only 6 of 54 measured careers ever clear it, so the doorway has never decided anything.
+    minAgeYears: 15,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    // Real acceptance range's floor (~#40-120).
+    // The range table's floor (~#40-120). ⚠ NOT SOURCED - see the note on w35. Left as it is: only
+    // 6 of 54 measured careers ever clear it, which is the top of the ladder behaving as act 3 wants.
     acceptsRank: 120,
     // 42 candidates in the canonical universe, 117 in the merged one - see the note on wta250.
     entrantPctBand: [0.012, 0.22],
@@ -829,9 +1162,14 @@ export const TIERS: Record<TierId, TierDef> = {
     // year's own shape, where the grass weeks belong to Wimbledon and its warm-ups alone.
     everyNWeeks: 0,
     anchorWeeks: [5, 8, 12, 18, 31, 37, 41, 45],
-    minAgeYears: 17,
+    // ⭐ 17 -> 15 (owner, 16.08) – the WTA floor; see the note on wta125. #65 is the gate, cleared by
+    // 1 of 54 measured careers.
+    minAgeYears: 15,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    // Real direct acceptance for a 1000 runs to roughly #65 (a 56-draw takes ~#50, a 96-draw ~#90).
+    // Taken as "direct acceptance for a 1000 runs to roughly #65" (a 56-draw ~#50, a 96-draw ~#90).
+    // ⚠ NOT SOURCED - see the note on w35; the WTA rulebook publishes qualifier counts by draw size,
+    // not acceptance depth. Left as it is: 1 of 54 measured careers clears it. Contrast `slam` below,
+    // whose 104 IS the Grand Slam rulebook's own published direct-acceptance count.
     acceptsRank: 65,
     // 39 candidates in the canonical universe, 109 in the merged one - see the note on wta250.
     entrantPctBand: [0.006, 0.2],
@@ -961,8 +1299,25 @@ export const TIERS: Record<TierId, TierDef> = {
     // has missed the season opener, and at fourteen she was never going to be in it.
     everyNWeeks: 0,
     anchorWeeks: [2, 21, 26, 34],
-    minAgeYears: 17,
+    // ⭐⭐ 17 -> 14, AND THE SLAM IS THE ONE RUNG WHERE 14 IS THE SPORT'S OWN NUMBER RATHER THAN AN
+    // ITF ONE (owner, 16.08 – the family note on w35). research §4-C2: *"the Grand Slam floor is also
+    // 14."* Not 15: a major is not a WTA tournament, so the WTA's direct-acceptance floor on the four
+    // rungs below does not reach it. The gate here is #104, the Grand Slam Rule Book's own published
+    // direct-acceptance count, and the paragraph above already notes that at fourteen she was never
+    // going to be in the season opener anyway.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    // ✅ THE ONE CUT IN THIS FILE CONFIRMED BOTH BY RULE AND BY OBSERVATION, AND IT IS EXACT (audited
+    // 15.08). 2026 Official Grand Slam Rule Book, singles main-draw composition: **128 = 104/108/112
+    // DIRECT ACCEPTANCES + 16/12/8 qualifiers + 8 wild cards** - though prefaced "Unless otherwise
+    // agreed", so 104/16/8 is one permitted configuration of three rather than a mandate, and that
+    // all four majors in fact use it is OBSERVED. The observed cuts agree: Australian Open 2026 = No.
+    // 103, US Open 2026 = No. 102 (and US Open 2025 = No. 99 at the deadline, No. 102 three weeks
+    // later, which is the clearest demonstration anywhere that a cut DRIFTS).
+    // ⚠ It is a COUNT OF ENTRANTS ACCEPTED, not a world-rank cut-off - because higher-ranked players
+    // withdraw, the 104th direct acceptance is in practice ranked worse than #104. Reading it as a
+    // rank cut errs conservatively (admits fewer, never more). research/ranking-points-by-tier.md §4c.
+    //
     // ⚠ LOOSER THAN A 1000's, AND THAT IS REAL RATHER THAN A SLIP. A major's main draw is 128 and
     // its direct acceptance reaches about #104; a 1000 draws 56 or 96 and cuts at ~#50-90. The
     // biggest event on earth is the EASIEST of the top three to get into, because it has the most
@@ -988,6 +1343,29 @@ export const TIERS: Record<TierId, TierDef> = {
 export function hasAcceptanceList(tier: TierId): boolean {
   return TIERS[tier].enterPct !== undefined || TIERS[tier].acceptsRank !== undefined
 }
+
+/** THE ITF WORLD TENNIS TOUR'S OWN FAMILY – the five "W" rungs, and NOT every rung on the W table.
+ *
+ *  ⚠ THE DISTINCTION IS THE SPORT'S, NOT A CONVENIENCE. `LadderTrack === 'wta'` is "which points
+ *  table does this pay into" and it holds ten rungs; this list is "is this an ITF World Tennis Tour
+ *  event", which is what the two rules added by P1 are written about:
+ *    * the Junior Accelerator's table tops out at W100 and says nothing about a WTA 125 or a major
+ *      (2026 WTT Regs App. D, docs/research/ranking-points-by-tier.md §4);
+ *    * the Play Down rule bars a WTA top-50 from "W" events, and a WTA 125 is a WTA event.
+ *  Reading either rule against the whole track would bar a seventeen-year-old from the majors, which
+ *  is the opposite of what juniors actually do (they get in on wildcards and qualifying – routes this
+ *  engine does not model, so the honest choice is to leave the WTA's own rungs alone).
+ *
+ *  Derived from `TIER_SHORT`? No – spelled out, because "starts with W" is a fact about a STRING and
+ *  `wta125` starts with W too. Five names, one list, one place to add a W25 the day it exists. */
+export const W_SERIES: readonly TierId[] = ['w15', 'w35', 'w50', 'w75', 'w100']
+
+/** IS THIS ONE OF THEM? A predicate rather than an `.includes` at four call sites, for the same
+ *  reason `isCappedTier` is one. */
+export function isWSeriesTier(tier: TierId): boolean {
+  return W_SERIES.includes(tier)
+}
+
 
 /** The catalogue in ladder order, weakest rung first. The single source of truth for "is tier A
  *  above tier B" – used for scheduling precedence, the tier guide, the Home season strip and
@@ -1066,6 +1444,24 @@ export const TIER_SHORT: Record<TierId, string> = {
  *  populations - which is precisely the property whose ABSENCE was the §1 bug. Had the two halves
  *  been written in two places, "juniors" would have been true of the kid and false of the field, or
  *  the reverse, and nobody would have noticed for a release. */
+/** THE AGE AT WHICH SHE STOPS BEING A JUNIOR – derived from the junior rungs' own ceiling rather
+ *  than written down again, so `maxAgeYears` stays the one place U18 is stated (TierDef.maxAgeYears:
+ *  *"18 IS THE REAL RULE, NOT A BALANCE KNOB"*). She is a junior for as long as any junior rung would
+ *  still take her; the day that stops being true she is an adult entrant and the Accelerator – which
+ *  is a junior's route – stops applying to her.
+ *
+ *  ⚠ IT SITS HERE, BELOW `TIER_LADDER`, BECAUSE IT IS DERIVED FROM IT – and beside `isTierAgeOpen`,
+ *  which is the other age rule the cohort and the kid both read. */
+export const JUNIOR_MAX_AGE_YEARS: number = Math.max(
+  ...TIER_LADDER.filter((t) => TIERS[t].track === 'itf').map((t) => TIERS[t].maxAgeYears ?? 0),
+)
+
+/** Is she still inside junior eligibility? See `JUNIOR_MAX_AGE_YEARS`. Pure, no world dependency,
+ *  so the cohort side can ask it too. */
+export function isJuniorAge(ageYears: number): boolean {
+  return ageYears <= JUNIOR_MAX_AGE_YEARS
+}
+
 export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
   const { minAgeYears: minAge, maxAgeYears: maxAge } = TIERS[tier]
   if (minAge !== undefined && ageYears < minAge) return false

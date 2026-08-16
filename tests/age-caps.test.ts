@@ -5,7 +5,9 @@ import {
   KID_ID,
   SAVE_SCHEMA_VERSION,
   ageAtWeek,
+  ageWindowStartWeek,
   annualEntryLimit,
+  annualProEntryLimit,
   availabilityStatus,
   cancelEntry,
   createWorld,
@@ -13,7 +15,11 @@ import {
   entryCapUsage,
   entryStatus,
   isCappedTier,
+  isTierAgeOpen,
+  proEntryCapUsage,
+  proSubCapUsage,
   recomputeKidRank,
+  yearEndJuniorRank,
   seasonStartWeek,
   tickWeek,
   toSnapshot,
@@ -22,10 +28,10 @@ import {
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
-import { TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { tierState, type TierStateInput } from '../src/composables/tierState'
 import { rngFromSeed } from '../src/engine/rng'
-import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type SeasonHistoryEntry } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // ---------------------------------------------------------------------------
@@ -244,9 +250,15 @@ describe('A2 — the gate lives in availabilityStatus / entryStatus', () => {
 })
 
 // ---------------------------------------------------------------------------
-// A3 – THE YEAR BOUNDARY. Reuses seasonStartWeek (the round-11 accounting definition).
+// A3 – THE YEAR BOUNDARY.
+//
+// ⚠ RE-AIMED BY P2, NOT WEAKENED: the boundary is HER BIRTHDAY, not `seasonStartWeek`. Every
+// assertion below is unchanged and still passes, because this file pins a JANUARY girl (see
+// `openWorld`) and for her the season block and the birthday year are the same interval – which is
+// exactly why the leak was invisible here for two waves. The claim ABOUT the birth month lives in
+// tests/relative-age.test.ts, which now walks a June girl's whole sixteenth year through the gate.
 // ---------------------------------------------------------------------------
-describe('A3 — the allowance resets on the season boundary', () => {
+describe('A3 — the allowance resets on the year boundary', () => {
   it('an event in NEXT season is enterable while THIS season is full', () => {
     const world = openWorld()
     fillCap(world, 14)
@@ -265,8 +277,24 @@ describe('A3 — the allowance resets on the season boundary', () => {
     expect(entryCapUsage(world, 2 * WEEKS_PER_YEAR + 4).limit).toBe(25)
   })
 
-  it('uses seasonStartWeek rather than a second definition of "this season"', () => {
-    expect(worldFunction('entryCapUsage')).toContain('seasonStartWeek(')
+  it('⚠ the WINDOW is the age year, and the prune knows the same boundary (P2)', () => {
+    // ⚠ RE-AIMED FROM "uses seasonStartWeek rather than a second definition of this season". That pin
+    // was right about the danger (two spellings of one boundary drift apart) and wrong about which
+    // boundary: the allowance is counted birthday-to-birthday, so a window on the season block leaked
+    // a whole second allowance into every non-January girl's birth year. It now pins the SAME
+    // anti-drift property against the right rule, and it is strictly more than the line it replaced –
+    // three functions instead of one, both ledgers, and the prune that has to agree with them.
+    for (const fn of ['entryCapUsage', 'proEntryCapUsage']) {
+      const src = worldFunction(fn)
+      expect(src, `${fn}: the window is an age comparison on the ledger row`).toContain('kidAgeAt(world, w) === age')
+      expect(src, `${fn}: and no longer a season block`).not.toContain('seasonStartWeek(')
+    }
+    // The prune is the one caller that genuinely needs a first week, and it must not eat a row either
+    // rule can still read – so it takes the EARLIER of the age window and the season block.
+    const prune = worldFunction('pruneInternationalEntries')
+    expect(prune).toContain('ageWindowStartWeek(')
+    expect(prune).toContain('seasonStartWeek(')
+    expect(prune).toContain('Math.min(')
   })
 
   it('a full allowance really does clear once the world ticks into the next season', () => {
@@ -282,7 +310,187 @@ describe('A3 — the allowance resets on the season boundary', () => {
       }
     }
     expect(seasonStartWeek(world.week)).toBe(WEEKS_PER_YEAR)
-    expect(entryCapUsage(world, world.week)).toEqual({ used: 0, limit: 18, remaining: 18 })
+    // ⚠ THE LIMIT IS 22 AND NOT 18 SINCE P2, AND THE FOUR ARE EARNED RATHER THAN LEAKED. This career
+    // really does finish its first season inside the junior top twenty (`openWorld` hands her four
+    // J300 titles), and Appendix F grants a top-20 fifteen-year-old four extra international events.
+    // The claim this test is named for is `used`: the ledger turned over, and it is asserted against
+    // the engine's own arithmetic rather than a copied number, so a knob change moves it honestly.
+    const fresh = entryCapUsage(world, world.week)
+    expect(fresh.used, 'the allowance really did clear').toBe(0)
+    expect(fresh.remaining).toBe(fresh.limit)
+    expect(yearEndJuniorRank(world), 'and she banked a top-20 season to earn the four').toBeLessThanOrEqual(20)
+    expect(fresh.limit).toBe(annualEntryLimit(15) + ECONOMY.entryCap.meritIncrease.juniorByAge[15].extra)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// A3b – THE MERITED INCREASES (P2). ITF Appendix F's +4 and the WTA Pro Path's +4, and the one
+// property that makes an addition to a limit safe: it may never fall inside a window.
+// ---------------------------------------------------------------------------
+function banked(seasonIndex: number, itf: number | null, wta: number | null = null): SeasonHistoryEntry {
+  return {
+    seasonIndex,
+    endRank: 199,
+    points: 0,
+    wins: 0,
+    losses: 0,
+    byTrack: {
+      domestic: { points: 0, wins: 0, losses: 0 },
+      itf: { points: 0, wins: 0, losses: 0, ...(itf === null ? {} : { endRank: itf }) },
+      wta: { points: 0, wins: 0, losses: 0, ...(wta === null ? {} : { endRank: wta }) },
+    },
+    fundsDeltaCents: 0,
+    endFundsCents: 0,
+  }
+}
+
+describe('A3b — the merited increases', () => {
+  it('pins the published rows – Appendix F and the WTA Pro Path, not our invention', () => {
+    const m = ECONOMY.entryCap.meritIncrease
+    expect(m.juniorByAge[13]).toEqual({ throughRank: 50, extra: 4 })
+    expect(m.juniorByAge[14]).toEqual({ throughRank: 20, extra: 4 })
+    expect(m.juniorByAge[15]).toEqual({ throughRank: 20, extra: 4 })
+    expect(m.juniorByAge[16], 'the appendix grants none at 16').toBeUndefined()
+    expect(m.proExtra).toBe(4)
+    expect(m.proJuniorThroughRank, 'the same top-5 gate the Accelerator uses').toBe(5)
+    expect(m.proDirectTiers).toEqual(['slam', 'wta1000'])
+  })
+
+  it('the ITF +4 is earned by the year-end list and by nothing else', () => {
+    const world = openWorld('merit-itf')
+    // ⚠ A JANUARY GIRL IS 14 AT WEEK 0 (see `openWorld`), so season N is the year she is 14 + N.
+    const at15 = WEEKS_PER_YEAR + 4
+    expect(annualEntryLimit(15)).toBe(18)
+    world.seasonHistory = [banked(0, 40)]
+    expect(entryCapUsage(world, at15).limit, 'outside the top 20 – no bonus').toBe(18)
+    world.seasonHistory = [banked(0, 12)]
+    expect(entryCapUsage(world, at15).limit, 'inside it – the appendix grants four').toBe(22)
+    // ...and the bonus belongs to the age, not to the standing: 16 has no row in the appendix.
+    world.seasonHistory = [banked(0, 12), banked(1, 1)]
+    expect(entryCapUsage(world, 2 * WEEKS_PER_YEAR + 4).limit, 'no merit row at 16').toBe(25)
+  })
+
+  it('the PRO +4 is an OR – junior top 5 or direct acceptance – and never a sum', () => {
+    const world = openWorld('merit-pro')
+    const at16 = 2 * WEEKS_PER_YEAR + 4
+    expect(annualProEntryLimit(16)).toBe(12)
+    world.seasonHistory = [banked(1, 30)]
+    expect(proEntryCapUsage(world, at16).limit, 'on neither list').toBe(12)
+    world.seasonHistory = [banked(1, 3)]
+    expect(proEntryCapUsage(world, at16).limit, 'year-end junior top 5').toBe(16)
+    // Direct acceptance is the rung's OWN cut, read off the banked professional row.
+    const cut = Math.max(TIERS.slam.acceptsRank!, TIERS.wta1000.acceptsRank!)
+    world.seasonHistory = [banked(1, 200, cut)]
+    expect(proEntryCapUsage(world, at16).limit, 'direct acceptance to a major').toBe(16)
+    world.seasonHistory = [banked(1, 200, cut + 1)]
+    expect(proEntryCapUsage(world, at16).limit, 'one place outside it').toBe(12)
+    world.seasonHistory = [banked(1, 3, cut)]
+    expect(proEntryCapUsage(world, at16).limit, 'both routes still buy four').toBe(16)
+  })
+
+  it('⚠ an unlimited row STAYS unlimited – the sentinel cannot be added to', () => {
+    const world = openWorld('merit-sentinel')
+    world.seasonHistory = [banked(3, 1, 1)]
+    const at18 = 4 * WEEKS_PER_YEAR + 4
+    expect(proEntryCapUsage(world, at18).limit).toBe(Number.MAX_SAFE_INTEGER)
+    expect(entryCapUsage(world, at18).limit).toBe(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('⚠⚠ THE BONUS CAN ONLY RISE INSIDE A WINDOW, so no entry is ever retro-invalidated', () => {
+    // The property the whole design turns on. A season that closes INSIDE her birth year may switch
+    // the bonus on; nothing may ever switch it off, because the limit is what refuses an entry and
+    // `tierOutgrown` reads `remaining <= 0` to re-open the rungs below her.
+    //
+    // ⚠ MUTATION-PROVABLE: read a LIVE rank instead of the banked window and this goes red on the
+    // very week the good season is superseded by a bad one.
+    const world = openWorld('merit-monotone')
+    world.seasonHistory = [banked(0, 2), banked(1, 180)] // a great season, then a poor one
+    let last = 0
+    for (let w = 0; w < 5 * WEEKS_PER_YEAR; w++) {
+      const limit = proEntryCapUsage(world, w).limit
+      const boundary = ageWindowStartWeek(world, w) === w
+      if (!boundary) expect(limit, `w${w}`).toBeGreaterThanOrEqual(last)
+      last = limit
+    }
+    // ...and the good season really is superseded, or the walk above proves nothing.
+    expect(yearEndJuniorRank(world), 'the newest row is the poor one').toBe(180)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// A3c – THE SUB-CAP INSIDE THE FOURTEEN-YEAR-OLD'S EIGHT (WTA §X.A.2).
+// ---------------------------------------------------------------------------
+describe('A3c — at most three of a fourteen-year-old\'s eight may be at W75 or above', () => {
+  /** Spend `count` professional entries at `tier` on the season ledger, exactly as `enterEvent`
+   *  records them – one row whose id carries the rung (the shape `seasonWEntriesByTier` folds). */
+  function spendAt(world: WorldState, tier: TierId, count: number): void {
+    world.seasonEntries ??= { fromWeek: 0, rows: [] }
+    for (let i = 0; i < count; i++) {
+      world.seasonEntries.rows.push({ id: `2031-w${i}-${tier}`, track: 'wta', outgrown: false, bookShut: false })
+    }
+  }
+
+  it('pins the rule as the source states it – three, from W75 up, at 14 and at no other age', () => {
+    const row = ECONOMY.entryCap.proSubCapByAge[14]
+    expect(row).toEqual({ fromTier: 'w75', max: 3 })
+    expect(ECONOMY.entryCap.proSubCapByAge[15], 'the sub-cap is the 14 row only').toBeUndefined()
+    expect(ECONOMY.entryCap.proSubCapByAge[16]).toBeUndefined()
+    // ...and three really is a fraction of the eight it sits inside.
+    expect(row.max).toBeLessThan(annualProEntryLimit(14))
+  })
+
+  it('counts every rung AT OR ABOVE the floor, and is silent below it', () => {
+    const world = openWorld('subcap')
+    const at14 = 4 // she is 14 at week 0 on this file's January birthday
+    expect(proSubCapUsage(world, at14, 'w50'), 'below the floor – not this rule\'s business').toBeNull()
+    expect(proSubCapUsage(world, at14, 'w15')).toBeNull()
+    expect(proSubCapUsage(world, at14, 'w75')).toEqual({ used: 0, limit: 3, remaining: 3 })
+    // A W100 entry is an entry "at W75 or above", so it spends the same quota.
+    spendAt(world, 'w100', 2)
+    expect(proSubCapUsage(world, at14, 'w75'), 'the walk is up the ladder, not one rung').toEqual({
+      used: 2,
+      limit: 3,
+      remaining: 1,
+    })
+    spendAt(world, 'w50', 5)
+    expect(proSubCapUsage(world, at14, 'w75')!.used, 'and the rungs below it never count').toBe(2)
+    spendAt(world, 'w75', 1)
+    expect(proSubCapUsage(world, at14, 'w75'), 'the third fills it').toEqual({ used: 3, limit: 3, remaining: 0 })
+  })
+
+  it('is silent at every other age, so an adult never meets a rule about children', () => {
+    const world = openWorld('subcap-age')
+    spendAt(world, 'w100', 9)
+    for (const week of [WEEKS_PER_YEAR + 4, 2 * WEEKS_PER_YEAR + 4, 5 * WEEKS_PER_YEAR + 4]) {
+      expect(proSubCapUsage(world, week, 'w75'), `week ${week}`).toBeNull()
+    }
+  })
+
+  it('⭐⭐ AND IT IS LIVE MACHINERY NOW – the tripwire this test was fired, and it fired correctly', () => {
+    // ⚠ RE-AIMED, AND THE ASSERTION IS INVERTED BY THE EVENT IT WAS BUILT TO CATCH. It used to read:
+    // *"W75 opens at 17 and no W rung above W15 opens below 16, so a fourteen-year-old can never
+    // reach the rungs this quota counts. The rule ships anyway – see the knob's own note – and this
+    // assertion is what makes 'it cannot bind' a checked claim rather than a belief: the day a phase
+    // opens one of these rungs lower, this goes red and the sub-cap becomes live machinery."*
+    //
+    // ⭐ THE OWNER'S AGE-GRID RULING OF 16.08 IS THAT DAY: «настоящих порогов только два – 14 и 18 …
+    // Возрастное есть только по количеству сыгранных в год». `w75.minAgeYears` is 14, so a
+    // fourteen-year-old reaches the rungs this quota counts and the quota is the thing refusing her
+    // fourth one. Nothing about the RULE moved; what moved is whether it can ever be reached.
+    //
+    // WHAT IS ASSERTED NOW IS THE SAME PROPERTY IN THE LIVE DIRECTION: the quota's own floor is
+    // reachable at fourteen (so it binds), and the ages the grid genuinely still shuts – the four WTA
+    // rungs at 15 – are still shut, so this cannot pass by the ladder having been opened wholesale.
+    const floor = ECONOMY.entryCap.proSubCapByAge[14].fromTier
+    expect(isTierAgeOpen(floor, 14), `${floor} is the quota's floor and a fourteen-year-old reaches it`).toBe(true)
+    const from = TIER_LADDER.indexOf(floor)
+    const above = TIER_LADDER.slice(from)
+    // Not vacuous in the other direction either: some rung above the floor is still shut at 14, and
+    // it is shut for the WTA's own published reason rather than for a chain of ours.
+    expect(above.filter((t) => !isTierAgeOpen(t, 14)).length, 'the 15 floor still refuses somebody').toBeGreaterThan(0)
+    for (const tier of above) {
+      expect(isTierAgeOpen(tier, 14), `${tier} at 14`).toBe((TIERS[tier].minAgeYears ?? 0) <= 14)
+    }
   })
 })
 
@@ -353,7 +561,10 @@ describe('A5 — the UI says WHY, in the wording the other lock states use', () 
     const s = tierState('j30', baseInput)
     expect(s.note).toContain('14 of 14')
     expect(s.note.toLowerCase()).toMatch(/year|season/)
-    expect(s.title.toLowerCase()).toContain('next season')
+    // ⚠ "NEXT BIRTHDAY" SINCE P2, and the change of word is the change of rule: the allowance's
+    // window is her birthday year now, so "next season" named the wrong date. A refusal that names
+    // the wrong date is worse than one that names none.
+    expect(s.title.toLowerCase()).toContain('next birthday')
   })
 
   it('leaves the domestic tiers alone even at a full allowance', () => {
@@ -488,12 +699,9 @@ describe('A7 — schema v15', () => {
 // so no fixture has to tick a hundred weeks to be sixteen.
 // ---------------------------------------------------------------------------
 
-import {
-  annualProEntryLimit,
-  isCappedProTier,
-  isTierAgeOpen,
-  proEntryCapUsage,
-} from '../src/engine/world'
+// ⚠ P2: `annualProEntryLimit` and `proEntryCapUsage` moved to the file's top import – the merit
+// suite (A3b) needs them above this point, and one name may only be imported once.
+import { isCappedProTier } from '../src/engine/world'
 
 /** Her age-16 season: weeks 104-155 (START_AGE 14 at week 0, and `openWorld`'s January birthday, so
  *  the season block and the year she is sixteen are the same 52 weeks – see `openWorld`'s note). */
@@ -527,6 +735,39 @@ function age16Weeks(count: number): number[] {
 function openProWorld(seed = 'procap'): WorldState {
   const world = openWorld(seed)
   world.results.push({ playerId: KID_ID, week: world.week, points: 400, tier: 'w100' })
+  // ⚠ RE-AIMED, NOT WEAKENED (P1, docs/specs/junior-access-2026-08.md). This fixture's girl is
+  // SIXTEEN, so she is a junior, and a junior now meets the Junior Accelerator in front of every W
+  // rung above W15. With no banked year-end junior standing she holds no places at all there – which
+  // is a LADDER fact and therefore precedes availability in `entryVerdict`, exactly as an acceptance
+  // cut does – so the PRO CAP's own refusal, which is what this block is about, would become
+  // unreachable at W35 and up and the copy case would be asserting the precedence instead of the
+  // promise. A banked year-end junior #1 puts her past that gate; her professional book already puts
+  // her past every acceptance cut. The Accelerator has its own suite (tests/junior-access.test.ts).
+  //
+  // ⚠ RE-AIMED AGAIN AT P2, AND THE NUMBER MOVED FROM #1 TO #6 FOR A REASON THAT IS THE POINT OF THE
+  // WHOLE BLOCK. P2 ships the WTA Pro Path's merited increase: a year-end junior top FIVE earns four
+  // extra professional entries. A fixture banking #1 therefore stopped measuring the twelve this
+  // block is named for and started measuring sixteen – the bonus, not the cap. #6 is the first place
+  // outside that gate and is still inside the Accelerator's 6-10 row (two W50 places and three W35),
+  // which covers every rung these tests actually touch (w15, and one w35). Nothing is weakened: the
+  // cap is the binding refusal again, which is the property the fixture exists to create. The merit
+  // increase has its own suite in A3b above, on its own fixtures.
+  world.seasonHistory = [
+    {
+      seasonIndex: 0,
+      endRank: 6,
+      points: 0,
+      wins: 0,
+      losses: 0,
+      byTrack: {
+        domestic: { points: 0, wins: 0, losses: 0 },
+        itf: { endRank: 6, points: 0, wins: 0, losses: 0 },
+        wta: { points: 0, wins: 0, losses: 0 },
+      },
+      fundsDeltaCents: 0,
+      endFundsCents: 0,
+    },
+  ]
   recomputeKidRank(world)
   return world
 }
@@ -567,17 +808,65 @@ describe('P1 — the pro table (spec §5 design values over the real rulebook sh
     expect(annualProEntryLimit(13)).toBe(Number.MAX_SAFE_INTEGER)
   })
 
-  it('14 and 15 never reach the table: every W rung refuses them on AGE first', () => {
-    // ⚠ RE-AIMED, EVERY ASSERTION KEPT (one-clock, 09.08). This used to read "the rulebook's
-    // 14 -> 8 / 15 -> 10 rows are ABSENT because the doorway is closed at those ages". The rows are
-    // present now – but the claim the assertions actually make is about the DOORWAY, and it is the
-    // claim that was false under the band and is true again: `availabilityStatus` asks `tierAgeBlock`
-    // before it asks any cap, and it asks it of her real age. The rows exist as the honest table
-    // rather than as a live gate, which is why both facts are pinned and neither is dropped.
-    for (const t of ECONOMY.entryCap.cappedProTiers) {
-      expect(isTierAgeOpen(t, 14), t).toBe(false)
-      expect(isTierAgeOpen(t, 15), t).toBe(false)
+  it('⭐ the 14 and 15 rows are LIVE GATES NOW – W15 opens at 14 on the owner\'s ruling', () => {
+    // ⚠ RE-AIMED, EVERY ASSERTION KEPT AND ONE INVERTED, AND THE INVERSION IS AN OWNER RULING.
+    // This test has been re-aimed twice and both notes are worth keeping. It first read "the
+    // rulebook's 14 -> 8 / 15 -> 10 rows are ABSENT because the doorway is closed at those ages"; the
+    // one-clock ruling (09.08) put the rows in and the claim became "the DOORWAY is shut, and
+    // `availabilityStatus` asks `tierAgeBlock` before it asks any cap, of her real age".
+    //
+    // ⭐⭐ THE OWNER, 16.08: «мы же вроде наресерчили четкую возрастную сетку с количеством доступных
+    // турниров каждого тира на каждом возрасте, мне кажется надо использовать.» So `w15.minAgeYears`
+    // is 14, as the sport's own junior-reserved place is, and the doorway at W15 is OPEN at fourteen.
+    // The 14 -> 8 and 15 -> 10 rows stop being an honest table nobody reads and become the live gate
+    // they are in the rulebook – which is exactly what the previous note said would have to happen
+    // the day a rung opened at 14 («A rung that ever opens at 14 (the real W15 does, via
+    // junior-reserved places) must bring those rows with it»).
+    //
+    // ⭐⭐ AND RE-AIMED A THIRD TIME, BY THE SAME OWNER, LATER THE SAME DAY. The paragraph this
+    // replaces ran: *"NOTHING IS WEAKENED: every rung ABOVE W15 is still shut at 14 and 15, asserted
+    // rung by rung, so a future change that quietly opened W75 to a fourteen-year-old still goes red
+    // here."* It did go red, and the change was not quiet – it is his second ruling of 16.08: «у W35
+    // стоит minAgeYears: 16, у W50 – 16, у W75 и W100 – 17 … настоящих порогов только два – 14 и 18.
+    // – вот как есть в регламенте, так и у нас.»
+    //
+    // ⚠ SO THE CLAIM MOVES FROM "the rungs above W15 are shut" TO "the grid is the regulation's, and
+    // the allowance is what meters her". The rung-by-rung sweep is kept – it is the half that stops
+    // this passing vacuously – but it now asserts each rung against ITS OWN sourced floor rather than
+    // against a blanket shut: 14 on the ITF W rungs and the Slam (ITF WTT Women's III.A.1), 15 on the
+    // four WTA rungs (WTA Rulebook II.D: under-15s have no direct acceptance at all). A future change
+    // that opened a WTA 250 to a fourteen-year-old still goes red here, which is the property the old
+    // sweep had and this one keeps.
+    expect(TIERS.w15.minAgeYears, "the owner's ruling of 16.08").toBe(14)
+    expect(isTierAgeOpen('w15', 14), 'the doorway her allowance describes is open').toBe(true)
+    // The grid, stated once as data so the sweep below cannot drift into re-deriving the source.
+    const SOURCED_FLOOR: Partial<Record<TierId, number>> = {
+      w15: 14,
+      w35: 14,
+      w50: 14,
+      w75: 14,
+      w100: 14,
+      slam: 14,
+      wta125: 15,
+      wta250: 15,
+      wta500: 15,
+      wta1000: 15,
     }
+    for (const t of ECONOMY.entryCap.cappedProTiers) {
+      const floor = SOURCED_FLOOR[t]
+      expect(floor, `${t} has a sourced floor`).toBeDefined()
+      expect(TIERS[t].minAgeYears, `${t} sits on its sourced floor`).toBe(floor)
+      expect(isTierAgeOpen(t, 14), `${t} at 14`).toBe(floor === 14)
+      expect(isTierAgeOpen(t, 15), `${t} at 15`).toBe(true)
+    }
+    // Not vacuous: the 15 floor really does refuse somebody at fourteen.
+    expect(
+      ECONOMY.entryCap.cappedProTiers.filter((t) => !isTierAgeOpen(t, 14)).length,
+      'the WTA rungs are shut at 14',
+    ).toBe(4)
+    // ...and the allowance she meets there is the rulebook's own, not `default`.
+    expect(annualProEntryLimit(14)).toBe(8)
+    expect(annualProEntryLimit(15)).toBe(10)
   })
 
   it('the two families are disjoint and exhaustive over the international rungs', () => {

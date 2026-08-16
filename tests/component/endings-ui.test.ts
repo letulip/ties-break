@@ -43,6 +43,9 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
     bestRank: 88,
     titles: 2,
     oneMoreYearCount: 0,
+    // ⭐ P5: null unless the fixture is a career sitting between two college years. The screen's
+    // "another year?" question is drawn from this and from nothing else.
+    college: null,
     ...over,
   }
 }
@@ -126,16 +129,23 @@ describe('the album', () => {
     w.unmount()
   })
 
-  it('⚠ COLLEGE offers four years instead of a new career – the only ending that resumes', async () => {
+  it('⚠ COLLEGE offers another year instead of a new career – the only ending that resumes', async () => {
+    // ⭐ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08, docs/specs/college-as-a-second-act-2026-08.md).
+    // The claim is unchanged and it is the load-bearing one: on a college ending the epilogue offers
+    // a WAY BACK and never the hand-off. What moved is the offer – one pill reading «Four years
+    // later –» became the year just lived plus two answers, because the sport's own case is an early
+    // return (Diana Shnaider left NC State after about a season). The college block's own content is
+    // covered in tests/component/college-second-act.test.ts; this asserts the branch.
     patchSnapshot({
       ending: endingView('college', {
-        ending: { type: 'college', week: 265, ageYears: 19, detail: 'x', resumesWeek: 473 },
-        handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: 473, resumesAgeYears: 23 },
+        ending: { type: 'college', week: 265, ageYears: 19, detail: 'x', resumesWeek: 317 },
+        handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: 317, resumesAgeYears: 20 },
+        college: { yearsDone: 0, totalYears: 4, last: null, final: false },
       }),
     })
     const w = mount(EndingScreen)
     for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
-    expect(w.text()).toContain('Four years later')
+    expect(w.text()).toContain('Play the first year')
     expect(w.text()).not.toContain('Raise another')
     w.unmount()
   })
@@ -160,9 +170,9 @@ describe('the fork at nineteen', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('offers three answers and has no way out that is not one of them', () => {
-    // ⭐ #6: `collegeOpen` is now part of the fork's payload – true here, which is the case this
-    // block is about (three answers). The closed case has its own block below.
-    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, collegeOpen: true } })
+    // ⚠ `collegeOpen` WAS PART OF THIS PAYLOAD UNTIL 16.08 and it is off the wire now: the owner
+    // removed the rule that could shut the college answer, so three answers is the ONLY case.
+    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19 } })
     const w = mount(ForkDialog)
     const answers = w.findAll('.fork-answer')
     expect(answers).toHaveLength(3)
@@ -182,9 +192,9 @@ describe('the fork at nineteen', () => {
   })
 
   it('an answer is a command, and it is the only exit', async () => {
-    // ⭐ #6: `collegeOpen` is now part of the fork's payload – true here, which is the case this
-    // block is about (three answers). The closed case has its own block below.
-    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, collegeOpen: true } })
+    // ⚠ `collegeOpen` WAS PART OF THIS PAYLOAD UNTIL 16.08 and it is off the wire now: the owner
+    // removed the rule that could shut the college answer, so three answers is the ONLY case.
+    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19 } })
     const game = useGameStore()
     const spy = vi.spyOn(game, 'answerFork').mockResolvedValue(undefined)
     const w = mount(ForkDialog)
@@ -193,22 +203,29 @@ describe('the fork at nineteen', () => {
     w.unmount()
   })
 
-  // ⭐ ROUND-17 #6 – THE COLLEGE PLACE IS NOT DRAWN FOR A GIRL WHO CANNOT TAKE IT
-  // ⚠ RE-AIMED 12.08 (round-17 B) with the block above – the button names college now, and the
-  // negative assertion had to follow it or it would have gone vacuously green on the new copy.
-  // That is the whole hazard of a text pin, and it is why the positive assertion below is kept
-  // beside it: "the college answer is gone" and "the other two are still here" are two claims.
-  it('⭐ drops the college place once she is earning on the tour, and keeps the other two equal', () => {
-    patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, collegeOpen: false } })
-    const w = mount(ForkDialog)
-    expect(w.findAll('.fork-answer')).toHaveLength(2)
-    expect(w.text()).not.toContain('Take the college place')
-    expect(w.text()).not.toContain('student tennis')
-    expect(w.text()).toContain('Turn professional')
-    expect(w.text()).toContain('Stop here')
-    // ...and still no primary: removing an answer must not become a recommendation.
-    expect(w.findAll('.tb-pill')).toHaveLength(0)
-    w.unmount()
+  // ⭐⭐ ROUND-17 #6's CASE IS RETIRED BY AN OWNER RULING OF 16.08, AND THE RECORD MATTERS BECAUSE
+  // THE CASE ITSELF WAS RIGHT TWICE OVER. It read *"drops the college place once she is earning on
+  // the tour, and keeps the other two equal"*, and it had already been re-aimed on 12.08 when the
+  // button stopped saying "Take the scholarship" – the note it carried is worth keeping: *"that is
+  // the whole hazard of a text pin, and it is why the positive assertion below is kept beside it:
+  // 'the college answer is gone' and 'the other two are still here' are two claims."*
+  //
+  // ⚠ WHAT REMOVED IT IS THE RULE, NOT THE TEST: «Колледж – это независимая ветка карьеры … 
+  // альтернативная.» There is no state in which the card draws two answers, so the case has no
+  // subject. Its surviving half – that removing nothing becomes a recommendation either – is the
+  // no-primary assertion, which is already in the three-answer case above and in
+  // tests/component/round21-dialogs.test.ts. Nothing about the fork's copy is now unpinned.
+  it('⚠ ...and there is no fork state that draws fewer than three, whatever the wire carries', () => {
+    // The mutation-proof shape of the retirement: hand the card the OLD flag, in both positions, and
+    // watch it change nothing. A `v-if` restored on `fork.collegeOpen` goes red here.
+    for (const stale of [{ collegeOpen: false }, { collegeOpen: true }]) {
+      patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, ...stale } as never })
+      const w = mount(ForkDialog)
+      expect(w.findAll('.fork-answer'), `stale ${JSON.stringify(stale)}`).toHaveLength(3)
+      expect(w.text()).toContain('Take the college place')
+      expect(w.findAll('.tb-pill'), 'and still no primary').toHaveLength(0)
+      w.unmount()
+    }
   })
 
   // ⭐ ROUND-17 #6/#16 – THE RANK ON THIS CARD NAMES ITS TABLE
@@ -216,7 +233,7 @@ describe('the fork at nineteen', () => {
     // It printed `#${snap.kidRank}` under a bare "Her rank" – the INTERNATIONAL (junior) alias, on
     // the one card whose own headline is "The junior ladder is behind her."
     patchSnapshot({
-      fork: { askedWeek: 265, ageYears: 19, collegeOpen: true },
+      fork: { askedWeek: 265, ageYears: 19 },
       kidRank: 88,
       activeLadder: 'wta',
       ladders: {
@@ -237,7 +254,7 @@ describe('the fork at nineteen', () => {
     // `kidRank` is never null (it falls back to `tableSize`), so the old ternary's `unranked` branch
     // was dead. `LadderView.rank` is nullable and means it.
     patchSnapshot({
-      fork: { askedWeek: 265, ageYears: 19, collegeOpen: true },
+      fork: { askedWeek: 265, ageYears: 19 },
       kidRank: 512,
       activeLadder: 'wta',
       ladders: {

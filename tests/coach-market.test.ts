@@ -171,53 +171,44 @@ describe('screen T, round 3', () => {
 })
 
 describe('screen T, round 4', () => {
-  it('⚠ the tournament-travel row is LOCKED, and it names the reason rather than a date', () => {
-    // ⚠ RE-AIMED, AND THE FEATURE BEHIND IT WAS CANCELLED RATHER THAN CHANGED (owner, 30.07): «давай-ка мы
-    // вообще эту механику пока до нормальных чеков и 18+ вообще не будем делать. Никто никуда не ездит.»
+  it('⭐⭐ ROUND-21 #2 – the tournament-travel row is LIVE, and it calls the command', () => {
+    // ⚠ THIS TEST HAS NOW BEEN RE-AIMED THREE TIMES, AND THE SEQUENCE IS THE ITEM.
+    //   R4  – it pinned a working switch and a season price pair beside it.
+    //   30.07 – the owner cancelled the mechanic after three STAT versions were measured and all
+    //           three failed («Никто никуда не ездит»), and this became "it is a LOCKED row that
+    //           names the reason". Its whole previous body is preserved below, because the reasons
+    //           it recorded are still true of the thing that was cancelled.
+    //   14.08 – he reported it dead for the THIRD time («Тренер всё ещё не едет на соревнования, как
+    //           так? Уже 3й раз прошу сделать»), and asking a third time overrules the cancellation.
     //
-    // It used to pin a live switch calling `setCoachOnEventWeeks` and a season price pair beside it. Two
-    // measurement passes killed what the switch was for: the boolean cost +$21k at elite for +0.6 skill
-    // points, a run-fatigue discount moved 2 condition points out of ~36, and a match-strength edge came
-    // out NEGATIVE on rank at 30 seeds. Junior tennis has no prize money, so there is nothing for a fare to
-    // be weighed against - the decision only exists on the adult tour.
+    // ⚠ WHAT WAS BUILT IS NOT WHAT WAS CANCELLED, which is why the 30.07 verdict is not being
+    // reversed by this line. All three cancelled versions were STAT bonuses; what he asked for when
+    // asked what to build is «Присутствие в потоке и трансляции точно надо (если едет)» - so the
+    // switch buys a second fare and PRESENCE (the flow, the running commentary, the week's story),
+    // and no number in the match model moves on this branch.
     //
-    // SO THE GUARDED FACT MOVED FROM "it is a working switch" TO "it is a locked row that names the reason".
-    // Deleting the row would have lost the place the control belongs; a bare `disabled` would have earned
-    // the "why can't I press this" the app has a standing rule against. The engine field is untouched - no
-    // schema change, and every existing save keeps whatever it had.
-    //
-    // ⚠⚠ ROUND-20 #1 CORRECTED THIS TEST'S OWN CLAIM, AND THAT IS THE FINDING WORTH KEEPING. Its name was
-    // "it says WHEN rather than just refusing", and it stayed green for two weeks while the WHEN was never
-    // coming: the row read "It arrives with the professional years" and the owner reached them
-    // («Coach travels не активно на про карьере»). Nothing can deliver that arrival - the `disabled` is a
-    // literal and `game.setCoachOnEventWeeks` has no caller in src/ at all - so a row that names a date is
-    // the defect and a row that names the REASON is the fix.
-    //
-    // ⚠ AND THE "IT PROMISES NOTHING" GUARD DELIBERATELY DOES NOT LIVE HERE, which is a second small
-    // lesson from the same fix. Written as `expect(market).not.toMatch(/It arrives with/)` it went red
-    // immediately - on the COMMENT in the template that quotes the old sentence in order to explain why
-    // it went. A negative read off whole file TEXT cannot tell copy from a note about copy, and weakening
-    // the regex to dodge one's own comment is how a guard turns into a coin flip. The claim belongs where
-    // the words are rendered rather than merely present: tests/component/coach-travel-row.test.ts mounts
-    // this screen on a real 14-year-old and a real 18-year-old career and holds BOTH sub-lines to the
-    // same promise-free sentence. What stays here is structure, which is what a source pin is good for.
-    expect(market).toContain('is-locked')
+    // The three structural claims a source pin is good for: the command has a caller at last, the
+    // switch's checked state is bound to the engine's stance instead of a literal `false`, and the
+    // `disabled` is no longer a literal that nothing can lift. The WORDS are held where they are
+    // rendered, in tests/component/round21-coach-travel.test.ts, on real careers - the lesson
+    // round-20 #1 taught this very test when it stayed green for two weeks describing copy it could
+    // not tell apart from a comment about copy.
+    expect(market).toContain('game.setCoachOnEventWeeks(')
+    expect(market).toContain('billing.value?.onEventWeeks')
+    // the switch reports the engine's stance rather than a hardcoded false
     expect(market).toContain('role="switch"')
-    expect(market).toContain('disabled')
-    // it explains itself, and in the app's own register
-    expect(market).toMatch(/no prize money/)
-    // and the dead switch is really dead: no handler, no live checked state
-    expect(market).not.toContain('setCoachOnEventWeeks(')
-    expect(market).not.toContain('billing.onEventWeeks')
-    // the control itself still exists as a control - it is disabled, not deleted
+    expect(market).toContain(':aria-checked="travelsOnEventWeeks')
+    // ⚠ AND NOTHING ON THE ROW IS DISABLED BY A LITERAL ANY MORE. `game.busy` is the app's
+    // everywhere-else in-flight guard, not a gate on the feature - which is the exact distinction
+    // round-20 #1 found missing when `disabled` turned out to be a constant nobody could lift.
+    expect(market).toContain(':disabled="game.busy"')
+    expect(market).not.toMatch(/class="cm-travel is-locked"/)
+    // the control itself is still a control, and still respects reduced motion
     expect(css).toContain('.cm-switch')
     expect(css).toMatch(/prefers-reduced-motion[\s\S]{0,200}\.cm-switch/)
-    // ⚠ AND THE PRICE PAIR WENT WITH IT, deliberately: "$X without him · $Y with" has nothing to compare
-    // once there is no "with". Its three CSS rules were swept too (style.css, `.cm-travel-cost`).
+    // ⚠ AND THE PRICE PAIR IS STILL GONE. It compared two SEASON totals; travel is priced per trip
+    // now ("twice the fare"), so there is still no second side for a `chosen` marker to mark.
     expect(market).not.toContain('seasonOffCents')
-    // ⚠ THE LINE SURVIVES, THE COMPARISON DOES NOT. Deleting the season pair first took the weekly figure
-    // with it, which was too much - "he costs $X a week" is true whatever she books, and is what the
-    // regulator above is spending. What had to go is the `chosen` marker, which needs two sides.
     expect(market).toContain('a week at her current plan')
     expect(css).not.toMatch(/\.cm-travel-cost strong\.chosen/)
   })

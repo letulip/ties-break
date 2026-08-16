@@ -460,6 +460,23 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     // ...and they still TIGHTEN up the ladder, which is the one thing a ladder must do.
     const cuts = (['w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]).map((t) => TIERS[t].acceptsRank!)
     for (let i = 1; i < cuts.length; i++) expect(cuts[i]).toBeLessThan(cuts[i - 1])
+
+    // ⚠⚠ AND HERE IS WHAT THE FIVE-RUNG LOOP ABOVE DOES **NOT** COVER, PINNED SO IT CANNOT BE LOST
+    // AGAIN (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md §5a). The sourced chain took
+    // `wta125` 250 -> 180 to keep the five monotone – and 180 is LOOSER than `wta250`'s 200, so the
+    // ladder now inverts one rung ABOVE where this guard stops looking: **a WTA 250 admits a deeper
+    // ranking than the WTA 125 beneath it.** Measured in the wave (n=54): she plays 2.1 WTA 250s a
+    // career against 0.5 WTA 125s, i.e. the inversion is visible in behaviour and not only in the
+    // table.
+    //
+    // ⚠ THIS IS A CHARACTERISATION, NOT AN INVARIANT – it pins the state the ladder is IN, on
+    // purpose, because the chain was the owner's ordered build and the inversion is an escalation
+    // rather than an agent's to fix. **If a later wave re-tunes `wta125` or `wta250`, this goes red,
+    // and the reader should DELETE it and extend the loop above to the whole ladder** – which is the
+    // guard this repo actually wants and cannot have while the two disagree.
+    expect(TIERS.wta125.acceptsRank!, 'the known inversion – see the note above').toBeLessThan(
+      TIERS.wta250.acceptsRank!,
+    )
     // W15 is the on-ramp: no list at all, because a rank gate on the first rung of a table is a
     // closed loop. It reads her ITF junior points instead.
     expect(acceptanceRank(world, 'w15')).toBeUndefined()

@@ -2,7 +2,17 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { feedContext, feedShows, preferredWeekEvent, type FeedEventFacts } from '../src/composables/tierState'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
-import { createWorld, toSnapshot } from '../src/engine/world'
+import {
+  KID_ID,
+  activeLadderOf,
+  createWorld,
+  kidAgeYears,
+  recomputeKidRank,
+  tickWeek,
+  tierOpenFor,
+  toSnapshot,
+} from '../src/engine/world'
+import { resumeMain } from '../src/engine/rng'
 import type { TierId } from '../src/engine/season/types'
 
 // =================================================================================================
@@ -362,5 +372,138 @@ describe('the oracle reaches the UI on the snapshot, as a copy', () => {
     // A fresh kid's pair: local working, regional adjacent - derived here as the screens derive it.
     const ctx = feedContext({ ageYears: snap.ageYears, tierOpen: snap.tierOpen, upcoming: snap.upcoming })
     expect(ctx.rungs[0]).toBe('local')
+  })
+})
+
+// =================================================================================================
+// ROUND-21 #5 – THE TABLE SHE HAS LEFT. «И мне всё ещё показывают local чемпионаты в ленте у обоих»
+// =================================================================================================
+//
+// Backlog #84's last open half, and his SECOND report of it. The window above cannot reach this on
+// its own, which is why it needed a rule and why this block is written against a BUILT WORLD rather
+// than against a hand-made `tierOpen` map: the whole finding is that the engine's two verdicts are
+// both correct and together still offer a professional a club draw.
+//
+//   * `tierOpenFor` is the FLOOR alone since 06.08 and Local's floor is ZERO domestic points, so
+//     Local is open on week 0 and open for ever – no book is empty enough to close it;
+//   * `tierOutgrown` (the ceiling that used to collapse the domestic family upward) asks whether the
+//     rung THREE ABOVE is open TO HER TODAY, age included – and past eighteen J30/J60/J300 are
+//     age-shut for good, so Local/Regional/National have no reachable ceiling left.
+//
+// So the feed asks the one question neither of them asks: WHICH TABLE IS HERS (`activeLadder`, the
+// engine's `activeLadderOf`). Each `it` below fails for one reason, and the seam has as many
+// assertions as the fix does, because the seam is where a hard cut would have broken a career.
+describe('round-21 #5 – the feed offers the rungs that pay into her table', () => {
+  /** A career ticked to `age` with a professional book AND the domestic book she climbed up on –
+   *  which is the state the owner is in, and the state that makes all three domestic rungs open. */
+  function proWorld(seed: string, age: number, book: number) {
+    const world = createWorld(seed)
+    const rng = resumeMain(world.rngMain)
+    while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
+    world.season = []
+    world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
+    world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'national' })
+    world.onRampCleared = { itf: true, wta: true }
+    recomputeKidRank(world)
+    return world
+  }
+
+  const foldFeed = (world: ReturnType<typeof createWorld>, judgeTable: boolean) => {
+    const snap = toSnapshot(world)
+    return feedContext({
+      ageYears: snap.ageYears,
+      tierOpen: snap.tierOpen,
+      tierOutgrown: snap.tierOutgrown,
+      ...(judgeTable ? { activeLadder: snap.activeLadder } : {}),
+      upcoming: snap.upcoming,
+    })
+  }
+
+  it('⚠ THE REPORT: a professional is offered NO domestic rung, at any age past the seam', () => {
+    // A value read out of real state, not a constant: the world is built, ticked, and folded through
+    // the same `feedContext` the Season screen calls.
+    for (const [age, book] of [[19, 140], [20, 300], [22, 600]] as const) {
+      const world = proWorld(`r21-5-${age}`, age, book)
+      expect(activeLadderOf(world), `age ${age} is on the professional table`).toBe('wta')
+      const feed = foldFeed(world, true)
+      const domestic = feed.rungs.filter((t) => TIERS[t].track === 'domestic')
+      expect(domestic, `age ${age}: ${feed.rungs.join(', ')}`).toEqual([])
+      // ...and the Home strip inherits it, because both answers are folded from the same set.
+      expect(feed.working.filter((t) => TIERS[t].track === 'domestic'), `strip at ${age}`).toEqual([])
+      // The feed is not empty – she has her own table to play on.
+      expect(feed.rungs.length, `age ${age} still has tennis`).toBeGreaterThan(0)
+    }
+  })
+
+  it('...and WITHOUT the table verdict the same world still offers all three – the bug, pinned', () => {
+    // The half that makes the assertion above mean something: fold the identical snapshot with
+    // `activeLadder` withheld and the club draws come straight back. Measured at 22 with a
+    // six-hundred-point book: local, regional and national beside w100/wta125/wta250.
+    const world = proWorld('r21-5-witness', 22, 600)
+    const before = foldFeed(world, false)
+    expect(before.rungs.filter((t) => TIERS[t].track === 'domestic')).toEqual([
+      'local', 'regional', 'national',
+    ])
+    // ...and one of them was inside her WORKING window, i.e. on the Home strip as a rung her career
+    // is supposedly about. That is the sharpest form of the complaint.
+    expect(before.working).toContain('national')
+  })
+
+  it('⚠ THE SEAM: her first counting W point costs her the domestic three and NOT the junior tour', () => {
+    // The failure a hard "only her own table" filter would have caused, and the reason the rule
+    // carries one table of slack. She is sixteen, one W15 result old, and still visibly playing J
+    // events – ruling 2's boredom guard depends on those staying in front of her when the pro
+    // allowance runs out.
+    const world = createWorld('r21-5-seam')
+    const rng = resumeMain(world.rngMain)
+    while (kidAgeYears(world.week, world.profile.birthMonth) < 16) tickWeek(world, rng)
+    world.season = []
+    world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'national' })
+    world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'j300' })
+    world.results.push({ playerId: KID_ID, week: world.week, points: 10, tier: 'w15' })
+    recomputeKidRank(world)
+    expect(activeLadderOf(world)).toBe('wta')
+    const feed = foldFeed(world, true)
+    expect(feed.rungs.filter((t) => TIERS[t].track === 'domestic')).toEqual([])
+    // Every ITF rung the engine held open is still held open here – nothing of the table one below
+    // hers is taken away.
+    const itfOpen = TIER_LADDER.filter((t) => TIERS[t].track === 'itf' && toSnapshot(world).tierOpen[t])
+    expect(feed.rungs.filter((t) => TIERS[t].track === 'itf')).toEqual(itfOpen)
+  })
+
+  it('...and a domestic career and a junior career are byte-identical to what they were', () => {
+    // Nothing below the professional seam moves: one table of slack means the filter's floor is at
+    // or under the bottom of the ladder for both of them, so the answer is the input.
+    const cases: [string, number, [TierId, number][]][] = [
+      ['fresh', 14, []],
+      ['domestic climber', 15, [['national', 300]]],
+      ['junior', 15, [['national', 300], ['j30', 60]]],
+      ['junior deep', 17, [['national', 300], ['j300', 300]]],
+    ]
+    for (const [name, age, results] of cases) {
+      const world = createWorld(`r21-5-below-${name}`)
+      const rng = resumeMain(world.rngMain)
+      while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
+      world.season = []
+      for (const [tier, points] of results) {
+        world.results.push({ playerId: KID_ID, week: world.week, points, tier })
+      }
+      recomputeKidRank(world)
+      expect(activeLadderOf(world), name).not.toBe('wta')
+      expect(foldFeed(world, true).rungs, name).toEqual(foldFeed(world, false).rungs)
+    }
+  })
+
+  it('VISIBILITY, NEVER ACCESS – the engine still opens every rung it opened, and entry is untouched', () => {
+    // The 06.08 ruling was that the lower bound must not REFUSE. It still does not: this wave
+    // changed what the feed OFFERS unasked, and nothing about what she may walk into.
+    const world = proWorld('r21-5-access', 22, 600)
+    for (const tier of ['local', 'regional', 'national'] as const) {
+      expect(tierOpenFor(world, tier), `${tier} is still open to her`).toBe(true)
+    }
+    // ...and an ENTERED domestic event still renders, on `feedShows`'s own first arm.
+    const feed = foldFeed(world, true)
+    expect(feedShows({ id: 'x', tier: 'local', entered: true }, feed)).toBe(true)
+    expect(feedShows({ id: 'x', tier: 'local', entered: false }, feed)).toBe(false)
   })
 })

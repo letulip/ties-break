@@ -14,10 +14,15 @@ import {
   coachEdgeView,
   coachMarket,
   coachPlaqueLine,
+  coachSinceWeek,
   createWorld,
   hireCoach,
   COACH_EDGE_REVEAL_WEEKS,
 } from '../src/engine/world'
+// ⭐ ROUND-21 #7c: the reveal is a WEEK of the calendar now, so the test needs the calendar too.
+// `coachRevealWeek` is not re-exported through world.ts - it is read from the module that owns it.
+import { coachRevealWeek } from '../src/engine/world/coachMarket'
+import { isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 
@@ -410,28 +415,68 @@ describe('what the UI slice reads', () => {
     expect(new Set(budget.map((r) => coachEdgePp(world.seed, r.id))).size).toBe(budget.length)
   })
 
-  it('withholds where he fell until a full season with her, then says it', () => {
+  it('withholds where he fell until the season he was there for is played out, then says it', () => {
+    // ⭐ ROUND-21 #7c: the gate is the OFF-SEASON of the season he was present for, not a rolling
+    // 52-week bar off the hire date. A career opens with its coach in week 0, so the season she is
+    // in is his, and the verdict lands at its first off-season week - 49, not 52.
     const world = createWorld('reveal-seed', DEFAULT_PROFILE)
     const him = world.coachId!
+    const off = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
     expect(coachEdgeView(world)).toMatchObject({
       corridorPct: COACH_EDGE_CORRIDOR_PP.middle,
       placement: null,
       revealed: false,
       weeksTogether: 0,
       seasonsTogether: 0,
-      revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS,
+      revealWeek: off,
     })
+    expect(isOffSeasonWeek(off), 'and that week really is an off-season week').toBe(true)
 
-    world.week = COACH_EDGE_REVEAL_WEEKS - 1
-    expect(coachEdgeView(world).revealed).toBe(false)
+    world.week = off - 1
+    expect(coachEdgeView(world).revealed, 'the last week of the season is still too early').toBe(false)
     expect(coachEdgeView(world).placement).toBeNull()
 
-    world.week = COACH_EDGE_REVEAL_WEEKS
+    world.week = off
     const shown = coachEdgeView(world)
     expect(shown.revealed).toBe(true)
     expect(shown.placement).toBe(coachEdgePlacement(world.seed, him))
-    expect(shown.weeksTogether).toBe(COACH_EDGE_REVEAL_WEEKS)
-    expect(shown.seasonsTogether).toBe(1)
+    expect(shown.weeksTogether).toBe(off)
+    // Nought whole years together and the verdict is in, which is the point of the move: the clock
+    // the plaque answers to is the SEASON's, not the stopwatch's.
+    expect(shown.seasonsTogether).toBe(0)
+  })
+
+  /** ⭐ ROUND-21 #7c – THE OWNER'S OWN SPLIT, MEASURED (his words are quoted verbatim over
+   *  `coachRevealWeek`). A coach taken on in the first half of a season is judged at THAT season's
+   *  off-season; one taken on in the second half is not, and the bar moves a year down the year. */
+  it('moves the bar down the year for a coach hired in the second half of a season', () => {
+    const off = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+    // Season 3 runs weeks 156-207; its off-season opens at 205.
+    expect(coachRevealWeek(156), 'week 1 of a season: judged at its own off-season').toBe(156 + off)
+    expect(coachRevealWeek(156 + 25), 'the last week of the first half still counts').toBe(156 + off)
+    expect(coachRevealWeek(156 + 26), 'one week later, and it is next year').toBe(156 + WEEKS_PER_YEAR + off)
+    expect(coachRevealWeek(156 + 51), 'the last week of the season, likewise').toBe(156 + WEEKS_PER_YEAR + off)
+    for (const w of [0, 7, 25, 26, 51, 156, 181, 182, 207]) {
+      expect(isOffSeasonWeek(coachRevealWeek(w)), `the bar for week ${w} is an off-season week`).toBe(true)
+      expect(coachRevealWeek(w), `the bar for week ${w} is in the future`).toBeGreaterThan(w)
+    }
+
+    // ...and on a real career, through the real command. Week 182 is season 3, offset 26 - the first
+    // week of the second half - so his verdict waits for season 4's off-season at 257.
+    const world = createWorld('reveal-seed', DEFAULT_PROFILE)
+    const him = world.coachId!
+    world.week = 182
+    hireCoach(world, null)
+    hireCoach(world, him)
+    expect(coachSinceWeek(world)).toBe(182)
+    expect(coachEdgeView(world).revealWeek).toBe(257)
+    world.week = 205 // season 3's own off-season comes and goes with nothing to say
+    expect(coachEdgeView(world).revealed).toBe(false)
+    expect(coachEdgeView(world).plaqueLine).toBe('Where in that band – too soon, ask next off-season.')
+    world.week = 208 // ...and a new season opens, so the near arm takes over by itself
+    expect(coachEdgeView(world).plaqueLine).toBe('Where in that band – we will know in the off-season.')
+    world.week = 257
+    expect(coachEdgeView(world).revealed).toBe(true)
   })
 
   /** ⚠ THE SNAPSHOT CARRIES NO NUMBER FOR HIM AT ALL (§7), and that is structural rather than a
@@ -472,7 +517,13 @@ describe('what the UI slice reads', () => {
     // the clock restarted - "a full season with her" is what the spec says, and it is the
     // conservative direction for the anti-shopping rule
     expect(coachEdgeView(world).revealed).toBe(false)
+    // ⭐ ROUND-21 #7c: week 200 is season 3 offset 44 - the second half - so the re-hire's verdict
+    // is not 52 weeks later but season 4's off-season, which is 57 weeks away. The bar moving with
+    // WHEN he was taken back is the point; a flat +52 would land mid-season.
+    expect(coachEdgeView(world).revealWeek).toBe(4 * WEEKS_PER_YEAR + (WEEKS_PER_YEAR - OFF_SEASON_WEEKS))
     world.week = 200 + COACH_EDGE_REVEAL_WEEKS
+    expect(coachEdgeView(world).revealed, 'a flat 52 weeks lands mid-season and says nothing').toBe(false)
+    world.week = coachRevealWeek(coachSinceWeek(world))
     const back = coachEdgeView(world)
     expect(back.placement, 'the same man, the same place').toBe(known)
     // ...and the SENTENCE has started over, because the partnership has (§8, ruling 1).
@@ -491,8 +542,20 @@ describe('what the UI slice reads', () => {
 // THE PLAQUE'S NINE SENTENCES (§7 x §8a) – the copy, and the two clocks it answers to
 // =================================================================================================
 describe('the sentence on the plaque', () => {
-  const line = (placement: 'lower' | 'middle' | 'upper' | null, seasonsTogether: number, weeksTogether = 4) =>
-    coachPlaqueLine({ placement, seasonsTogether, weeksTogether, revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS })
+  // ⭐ ROUND-21 #7b: no week counter reaches the sentence any more, so the clock the pre-reveal arms
+  // read is a pair of WEEKS - where she is, and where the verdict lands. `far` puts the reveal a
+  // season out, which is the second-half-hire arm.
+  const line = (
+    placement: 'lower' | 'middle' | 'upper' | null,
+    seasonsTogether: number,
+    when: 'near' | 'far' = 'near',
+  ) =>
+    coachPlaqueLine({
+      placement,
+      seasonsTogether,
+      week: 4,
+      revealWeek: when === 'near' ? WEEKS_PER_YEAR - OFF_SEASON_WEEKS : 2 * WEEKS_PER_YEAR - OFF_SEASON_WEEKS,
+    })
 
   it('is the §7/§8a table, verbatim – three places by three bands of certainty', () => {
     expect(line('upper', 1)).toBe('A season in – it looks like the upper end of that band.')
@@ -514,21 +577,48 @@ describe('the sentence on the plaque', () => {
     for (const n of [3, 4, 7, 12, 40]) expect(line('upper', n)).toBe(line('upper', 3))
   })
 
-  it('keeps §4a\'s not-yet sentence exactly as it shipped, counter and all', () => {
-    expect(line(null, 0, 4)).toBe('Too early to tell where in that band – 4 weeks of 52.')
-    // One week is one week - a counter that says "1 weeks" is the tell that nobody read it.
-    expect(line(null, 0, 1)).toBe('Too early to tell where in that band – 1 week of 52.')
+  /** ⭐ ROUND-21 #7a/#7b/#7c – THE NOT-YET SENTENCE IS TWO SENTENCES NOW, AND NEITHER COUNTS.
+   *
+   *  The owner, 14.08: «"Too early to tell 49 weeks of 52" - звучит довольно смешно, сезон уже
+   *  сыгран … заменить на "обсудим в межсезонье" … убрать привязку к 52 неделям … если во второй
+   *  [половине сезона] - уже можно готовить "мало времени прошло" … и сдвигать эту планку дальше по
+   *  году». All three asks are readable straight off these two strings. */
+  it('says when the verdict comes, names the off-season, and counts nothing', () => {
+    expect(line(null, 0)).toBe('Where in that band – we will know in the off-season.')
+    expect(line(null, 0, 'far')).toBe('Where in that band – too soon, ask next off-season.')
+
+    for (const text of [line(null, 0), line(null, 0, 'far')]) {
+      // #7b, mechanically: no numeral of any kind survives - the "of 52" framing cannot creep back
+      // in as "of 49" or as a week count.
+      expect(text, text).not.toMatch(/\d/)
+      // #7a: the sentence says WHERE the answer comes from, and it is the off-season.
+      expect(text, text).toContain('off-season')
+      // §7's pairing survives the rewrite: the question still points at the corridor printed two
+      // lines above it, in the same words the revealed sentence answers in.
+      expect(text, text).toContain('that band')
+      // ⚠ AND THE LENGTH IS A MEASURED CONSTRAINT, not taste. The nine revealed sentences run 49-58
+      // characters and every one wraps to exactly two lines at 320px and 375px, which is what keeps
+      // the card from jumping when the reveal lands. A pre-reveal arm outside that window would
+      // undo the browser measurement recorded in tests/component/coach-edge-card.test.ts §4.
+      expect(text.length, text).toBeGreaterThanOrEqual(49)
+      expect(text.length, text).toBeLessThanOrEqual(58)
+    }
+    // The two are the SAME QUESTION with the bar in a different place - that is #7c, and it is what
+    // makes the pair readable as one card in two states rather than two different cards.
+    expect(line(null, 0).split('–')[0]).toBe(line(null, 0, 'far').split('–')[0])
   })
 
-  it('carries no figure, no praise and no promise about her game, in any of the ten states', () => {
+  it('carries no figure, no praise and no promise about her game, in any of the eleven states', () => {
     const all = [
-      line(null, 0, 4),
+      line(null, 0),
+      line(null, 0, 'far'),
       ...([1, 2, 3] as const).flatMap((s) => (['lower', 'middle', 'upper'] as const).map((p) => line(p, s))),
     ]
     for (const text of all) {
-      // A per-match figure for him is the one thing §7 removed; the not-yet counter's bare weeks are
-      // a clock and are allowed, so this asks for the FORMAT a value would arrive in.
-      expect(text, text).not.toMatch(/[+-]?\d+\.\d+\s*%?/)
+      // A per-match figure for him is the one thing §7 removed. Since round-21 #7b there is no
+      // numeral of ANY kind on any of the eleven - the pre-reveal counter was the last one - so this
+      // is now the stronger claim rather than a check on the format a value would arrive in.
+      expect(text, text).not.toMatch(/\d/)
       expect(text, text).not.toMatch(/\b(better|worse|best|worst|good|bad|great|poor|value|bargain|lucky)\b/i)
       expect(text, text).not.toMatch(/\b(skills?|radar|her game)\b/i)
       // R15-7: no pronoun names a coach on this screen - the roster puts women on every list by

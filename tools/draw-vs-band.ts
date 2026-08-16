@@ -59,6 +59,7 @@ import { acceptanceRank, cohortIds, fieldProsOf, inTrack, rankingFor } from '../
 import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { buildSeason, TIERS, isTierAgeOpen } from '../src/engine/season/calendar'
 import { power } from '../src/engine/season/cohort'
+import { finishLabel, stageLabel } from '../src/engine/world/labels'
 import { rivalConditions, rivalMatchPlayer } from '../src/engine/season/rival'
 import { mergedWtaRanking, universeForTier } from '../src/engine/season/fieldPros'
 import {
@@ -90,9 +91,24 @@ const CONDITION = numArg('condition', 95)
 const RUNGS: readonly TierId[] = ['w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam']
 
 /** Round names for a 32-draw, by round index. `runTournament` counts round 0 = first round. */
-const ROUND_NAMES = ['R1', 'R2', 'QF', 'SF', 'F']
+/** ⚠ NAMED FROM THE DRAW, NOT FROM A FIXED LIST. This was `['R1','R2','QF','SF','F']` and it crashed
+ *  the moment a Slam became a 128-draw on 14.08 – seven rounds indexing a five-long array, a
+ *  `padStart` of undefined, and the whole Slam section lost. `stageLabel` is the engine's own namer
+ *  and it takes the draw size, so a deeper rung names itself. */
+const roundName = (round: number, drawSize: number): string => {
+  const s = stageLabel(round, drawSize)
+  return s === 'Final' ? 'F' : s === 'Semifinal' ? 'SF' : s === 'Quarterfinal' ? 'QF' : s.replace('Round of ', 'R')
+}
 /** Finish index → what she reached. `finishes[id] = rounds - round`, 0 = champion. */
-const FINISH_NAMES = ['WON', 'final', 'semi', 'quarter', 'R2 exit', 'R1 exit']
+/** ⚠ THE SAME 32-DRAW ASSUMPTION AS `roundName`, and it printed `undefined 41.3%` for the two rounds
+ *  a 128-draw added rather than crashing – the quieter half of the same bug. A finish index is
+ *  "rounds - matches won", so index 0 is the champion and the last index is losing your opener;
+ *  `finishLabel` is the engine's own namer for exactly that. */
+const finishName = (finish: number): string => {
+  if (finish === 0) return 'WON'
+  const s = finishLabel(finish)
+  return s === 'Runner-up' ? 'final' : s === 'Semifinalist' ? 'semi' : s === 'Quarterfinalist' ? 'quarter' : `${s.replace('Round of ', 'R')} exit`
+}
 
 function mean(xs: readonly number[]): number {
   return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN
@@ -156,8 +172,12 @@ interface TierCtx {
   universe: AiPlayer[]
   ranking: RankingRow[]
   /** THE OTHER TABLE, and it is not a hypothetical: `upcomingEvents` (world/snapshot.ts) previews a
-   *  W card with `rankingFor(world, 'wta')`, which HAS a row for her, while the bracket is seeded by
-   *  the kid-free fold above. Carried so the seeded/unseeded split can be read both ways. */
+   *  W card with `rankingFor(world, 'wta')`, which HAS a row for her, while the bracket USED to be
+   *  seeded by the kid-free fold above. Carried so the seeded/unseeded split can be read both ways.
+   *
+   *  ⚠ AND SINCE ROUND-21 #4 IT IS ALSO WHAT SEEDS THE BRACKET, here and in the engine. This tool
+   *  found the defect precisely because it carried both tables and printed which one the draw used;
+   *  the line it printed - "the bracket's fold has a row for her? NO" - was the whole bug. */
   card: RankingRow[]
   fatigue: Map<string, number>
   /** everyone eligible to enter: the age gate and the percentile band, kid excluded */
@@ -211,7 +231,11 @@ function runEvent(world: WorldState, event: SeasonEvent, season: SeasonEvent[], 
   const field = entrants.map((p) =>
     rivalMatchPlayer(p, event.surface, ctx.fatigue.get(p.id) ?? ECONOMY.condition.max),
   )
-  const seedIndex = kidSeedIndexIn(field, ctx.ranking, KID_ID)
+  // ⚠ MIRRORS THE ENGINE'S OWN TWO-TABLE SPLIT (world.ts computeShadowTournament, round-21 #4).
+  // `ctx.ranking` is the kid-FREE selection fold – right for who turns up, and the reason this tool
+  // was able to catch the bug: handed to `kidSeedIndexIn` it cannot find her and returns LAST. Her
+  // POSITION comes from the table that has her in it, which is what the engine now passes.
+  const seedIndex = kidSeedIndexIn(field, ctx.card, KID_ID)
   const result = runTournament(event, field, kid, world.seed, rng, seedIndex)
 
   // WHO IS A SEED, read off the standings order `buildDraw` seeds from rather than off the bracket.
@@ -313,7 +337,8 @@ function reportTier(world: WorldState, tier: TierId, samples: EventSample[], ctx
       `  ·  R1 opponent: median rank #${median(r1.map((r) => r.oppRank))}, ${pct(r1.filter((r) => r.oppSeeded).length, r1.length)}% are seeds (33.3% is the structural rate)`,
   )
   console.log(
-    `    seeding table: the bracket's fold has a row for her? ${ctx.ranking.some((r) => r.playerId === KID_ID) ? 'YES' : 'NO'}` +
+    `    seeding table: the SEEDING fold has a row for her? ${ctx.card.some((r) => r.playerId === KID_ID) ? 'YES' : 'NO'}` +
+      ` (the SELECTION fold deliberately does not: ${ctx.ranking.some((r) => r.playerId === KID_ID) ? 'YES' : 'NO'})` +
       `  ·  under the Season card's table (rankingFor 'wta', which does) she would be #${median(samples.map((s) => s.seedIndexCard))} and seeded in ${pct(seededCardN, n)}% of draws`,
   )
 
@@ -325,14 +350,14 @@ function reportTier(world: WorldState, tier: TierId, samples: EventSample[], ctx
   for (let r = 0; r < rounds; r++) {
     const rs = samples.map((s) => s.rounds.find((x) => x.round === r)).filter((x): x is RoundSample => !!x)
     if (!rs.length) {
-      console.log(`    ${ROUND_NAMES[r].padStart(5)} │       0    –      –   │     –         –    │       –        │      –     │      –`)
+      console.log(`    ${roundName(r, drawSize).padStart(5)} │       0    –      –   │     –         –    │       –        │      –     │      –`)
       continue
     }
     const won = rs.filter((x) => x.won).length
     const core = mean(rs.map((x) => x.oppCore))
     const thin = rs.length < 30 ? '  ⚠ thin' : ''
     console.log(
-      `    ${ROUND_NAMES[r].padStart(5)} │ ${pad(rs.length, 7)} ${pad(won, 4)}  ${pct(won, rs.length)}% │` +
+      `    ${roundName(r, drawSize).padStart(5)} │ ${pad(rs.length, 7)} ${pad(won, 4)}  ${pct(won, rs.length)}% │` +
         `  ${core.toFixed(1).padStart(5)}   ${(core - bandCore >= 0 ? '+' : '')}${(core - bandCore).toFixed(1).padStart(5)}  │` +
         `   ${pad(median(rs.map((x) => x.oppRank)), 6)}       │  ${pct(rs.filter((x) => x.oppSeeded).length, rs.length)}%  │` +
         `   ${(100 * mean(rs.map((x) => x.p))).toFixed(1).padStart(5)}%${thin}`,
@@ -346,7 +371,7 @@ function reportTier(world: WorldState, tier: TierId, samples: EventSample[], ctx
   console.log(
     `    finishes: ` +
       finishCounts
-        .map((c, i) => `${FINISH_NAMES[i]} ${pct(c, n)}%`)
+        .map((c, i) => `${finishName(i)} ${pct(c, n)}%`)
         .reverse()
         .join(' · '),
   )
@@ -391,7 +416,7 @@ function ledger(world: WorldState): void {
       const won = finishes.reduce((s, f) => s + (roundsN - f), 0)
       console.log(
         `    ${tier.padEnd(8)} entries ${pad(mine.length, 3)}  matches won ${pad(won, 3)}  ` +
-          counts.map((c, i) => `${FINISH_NAMES[i]} ${c}`).reverse().join(' · '),
+          counts.map((c, i) => `${finishName(i)} ${c}`).reverse().join(' · '),
       )
     }
   }

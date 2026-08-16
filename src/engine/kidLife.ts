@@ -243,15 +243,59 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
   if (grade === null) return { lead: "School's done", note: 'Tennis full-time' }
   return {
     lead: `${ordinal(grade)} grade`,
-    // `false`, and it is not a shortcut: a grade exists, so she is at school, so an exam week is an
-    // exam week. `schoolIsOver` and `gradeOf` are the SAME arithmetic (see `schoolEndWeek`), which
-    // is what makes this branch unreachable-when-over rather than merely usually right.
-    note: isExamWeek(view.week, false)
+    // ⚠ HER BIRTH MONTH, NOT A CONSTANT (round-21 #6). This argument was the literal `false`, on the
+    // reasoning that a grade exists, so she is at school, so an exam week is an exam week -
+    // `schoolIsOver` and `gradeOf` being the SAME arithmetic (see `schoolEndWeek`) made the branch
+    // unreachable-when-over rather than merely usually right. That reasoning is still true and the
+    // constant is still gone, because the owner's ask was about the SHIFT rather than about this one
+    // line: «Надо везде по коду проверить этот сдвиг.» A school fact decided from a literal is a
+    // school fact that stops reading her birthday the day somebody re-shapes the arithmetic above it,
+    // and it is exactly the shape `isExamWeek`'s own note calls "restores the bug silently". The two
+    // expressions agree on every (week, birthMonth) the game can produce - measured over all twelve
+    // months and eight seasons in tests/school-ends.test.ts - so this costs nothing today and cannot
+    // drift tomorrow.
+    note: isExamWeek(view.week, schoolIsOver(view.week, view.birthMonth))
       ? 'Exams this week'
       : isSummerWeek(view.week)
         ? 'Summer break'
         : classStanding(view.birthMonth),
   }
+}
+
+/**
+ * ⭐ ROUND-21 #6 – THE ONE LINE THAT EXPLAINS THE SEPTEMBER, on the tile he found it on.
+ *
+ * ⚠ THE BEHAVIOUR IS CORRECT AND STAYS – that is the owner's ruling, and this is the whole of what
+ * changes. His report: «Если день рождения в декабре, то вся школа уже закончилась и в сентябре вроде
+ * бы её быть не должно, мы это обсуждали.» Round-21 #6 swept 35 sites and measured the answer: the
+ * ITF band is one birth YEAR (every girl in the 14s shares a year) but the school year turns over on
+ * 1 September, so the band splits and the two halves leave school 52 weeks apart – `schoolEndWeek`
+ * returns career week 242 for January-August and 294 for September-December. In the September in
+ * between, a December girl is in her final school year while her own age group has already left.
+ *
+ * ⚠ WHICH IS TRUE, AND READS ON SCREEN EXACTLY LIKE A BUG. Nothing anywhere said why, so the tile
+ * printed "12th grade" in a month the rest of her year was done with school and offered no account of
+ * itself. That is the defect this closes: not the clock, the silence around it.
+ *
+ * ⚠ AND IT IS SAID ONLY WHERE IT IS TRUE. `schoolCohortYear` is the whole cut-off in one line – born
+ * in September or later she starts (and therefore finishes) a year behind the girls born earlier in
+ * her own birth year – so this speaks for exactly those four months and is silent for the other
+ * eight, where "she finishes later than the others" would be false. It is also silent once she is
+ * out: `gradeOf` returning null is "School's done", which needs no explanation at all.
+ *
+ * ⚠ NOT A TILE LINE. Both `KidLifeTile` lines are `nowrap` on a 17-character budget; this is a
+ * sentence and it renders under the grid (see `KidLife.schoolWhy`). Player copy: short dash only.
+ *
+ * Pure: `schoolCohortYear`'s own comparison and a grade lookup. Zero draws, nothing persisted.
+ */
+export function schoolCutOffNote(view: KidLifeWorldView): string {
+  if (view.birthMonth < SCHOOL_CUTOFF_MONTH) return ''
+  const schoolYearStart = view.seasonYear - (pastSeptember(view.week) ? 0 : 1)
+  if (gradeOf(kidBirthYear(), view.birthMonth, schoolYearStart) === null) return ''
+  return (
+    'School runs on a 1 September cut-off and her birthday falls after it – so her last school year ' +
+    'ends the summer after she turns 18, a year later than girls born earlier in the same tennis year.'
+  )
 }
 
 // =================================================================================================
@@ -494,6 +538,7 @@ export function buildKidLife(view: KidLifeWorldView): KidLife {
   return {
     personality: PERSONALITY[view.playStyle] ?? PERSONALITY['all-court'],
     school: schoolTile(view),
+    schoolWhy: schoolCutOffNote(view),
     friends: friendsTile(view),
   }
 }

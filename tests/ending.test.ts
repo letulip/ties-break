@@ -31,7 +31,6 @@ import {
   tickWeek,
   answerFork,
   answerRetirement,
-  collegeStillOpen,
   resumeFromCollege,
   enterEvent,
   hireCoach,
@@ -53,7 +52,7 @@ import { rngFromSeed, resumeMain, initMainState } from '../src/engine/rng'
 import { DEFAULT_PROFILE, LADDER_TRACKS } from '../src/shared/protocol'
 import type { SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
 import type { LadderTrack } from '../src/engine/season/types'
-import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
 function autoView(over: Partial<AutoEndingView> = {}): AutoEndingView {
   return {
@@ -188,7 +187,13 @@ describe('#1/#2 the fork at nineteen', () => {
     const college = endingForForkAnswer('college', 260, 19)
     expect(college?.type).toBe('college')
     // ⚠ THE ONLY ENDING THAT RESUMES, and its resume week is on the row.
-    expect(college?.resumesWeek).toBe(260 + ENDINGS.collegeYears * 52)
+    // ⭐ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08): the row now points ONE year out and not four,
+    // because the freeze is spent a year at a time and the early return is the sport's own case
+    // (docs/specs/college-as-a-second-act-2026-08.md). `collegeYears` is still the length of the
+    // COURSE – it is on the detail line and it is what `CollegeProgressView.totalYears` counts – so
+    // the constant is asserted here too rather than dropped from the file.
+    expect(college?.resumesWeek).toBe(260 + 52)
+    expect(college?.detail).toContain(String(ENDINGS.collegeYears))
   })
 })
 
@@ -306,71 +311,60 @@ describe('the latch, on a real world', () => {
   })
 
   // ===============================================================================================
-  // ⭐ ROUND-17 #6 – THE SCHOLARSHIP IS NOT OFFERED TO A GIRL ALREADY ON THE TOUR
+  // ⭐⭐ THE COLLEGE ANSWER IS UNCONDITIONAL – AN OWNER RULING OF 16.08, AND IT RETIRES A WHOLE BLOCK
   // ===============================================================================================
-  // The owner: the fork «offers the academy to a girl already earning on W75+». It did – the college
-  // branch had no precondition of any kind. A player who has taken professional prize money has
-  // spent her college eligibility, so it is not an answer she can choose; the card was offering a
-  // door that is not there. `ENDINGS.collegeClosedFromTier` carries the reasoning and the marker is
-  // the owner's own W75.
-  it('⭐ the college answer closes once a professional result has counted', () => {
-    const { world } = freshWorld('fork-college-gate')
-    // A junior who has TRIED the tour keeps it: w15 opens at 16 and the game wants her to play some.
-    world.bestFinishByTier = { w15: 1, j300: 0 }
-    expect(collegeStillOpen(world), 'a W15 result is a junior trying the tour').toBe(true)
-
-    // ...and a counting result at the owner's own marker closes it.
-    world.bestFinishByTier = { w15: 1, w75: 2 }
-    expect(collegeStillOpen(world), 'a W75 result is a professional on it').toBe(false)
-    // ...as does anything above it.
-    world.bestFinishByTier = { wta250: 3 }
-    expect(collegeStillOpen(world)).toBe(false)
-
-    // ⭐ BUT TURNING UP AND LOSING IS NOT A RESULT (owner, 13.08). The bench measured 12 of 25
-    // closures as first-round losses: `w75.points` ends in a nominal 1 for the opening-round loser,
-    // and that single point was shutting the door on the exact case the constant's own comment calls
-    // safe. The rule now reads the FINISH, so it cannot drift with a points-table edit.
-    const openingRound = TIERS.w75.points.length - 1
-    world.bestFinishByTier = { w75: openingRound }
-    expect(
-      collegeStillOpen(world),
-      'she entered one W75 and lost her first match – that is a junior trying the tour',
-    ).toBe(true)
-    // ...and winning one match there IS the line.
-    world.bestFinishByTier = { w75: openingRound - 1 }
-    expect(collegeStillOpen(world), 'she won a match at W75 – she is on the tour').toBe(false)
-
-    // ⚠ THE INCONSISTENCY THIS ALSO SETTLES, pinned so a table edit cannot quietly restore it: W100
-    // pays its opening-round loser 0 and W75 pays 1, so before the fix the SAME first-round loss kept
-    // the door at one rung and took it at the other. Both are open now, for the same reason.
-    expect(TIERS.w75.points[openingRound], 'w75 pays the wooden spoon').toBeGreaterThan(0)
-    expect(TIERS.w100.points[TIERS.w100.points.length - 1], 'w100 does not').toBe(0)
-    world.bestFinishByTier = { w100: TIERS.w100.points.length - 1 }
-    expect(collegeStillOpen(world), 'the same loss, the other rung').toBe(true)
-  })
-
-  it('⭐ ...and the engine refuses the answer, not just the button', () => {
-    // CLAUDE.md invariant 1: the worker is not the gate. Hiding the button is the courtesy; this is
-    // the rule. Mutation-verified by deleting the `collegeStillOpen` guard in `answerFork` – the
-    // throw stops happening and this fails.
-    const { world } = freshWorld('fork-college-refuse')
-    world.bestFinishByTier = { w75: 1 }
+  // WHAT WAS HERE, AND WHY IT IS NOT: eleven cases across three sections – round-17 #6's gate ("the
+  // college answer closes once a professional result has counted"), P4's four decoupling proofs, and
+  // P4's four warning cases. Every one of them tested `ENDINGS.collegeClosedFromTier` or something
+  // that read it, and the owner removed the rule: «collegeClosedFromTier – так ведь нет же там
+  // никакой связи с w75, мы же всё узнали. Колледж – это независимая ветка карьеры с отдельным
+  // функционалом и турнирами, альтернативная.»
+  //
+  // ⚠ THE REASONING IS NOT LOST – it is on the retired constant in `src/engine/ending.ts`, which is
+  // where a reader looking for "why did the college door used to shut" will go. What matters here is
+  // that this file's coverage did not simply shrink: the three cases below are the SAME properties
+  // asserted in the direction the ruling puts them, and each is mutation-verified against the obvious
+  // way to reintroduce the rule.
+  //
+  // ⚠⚠ AND P4's DECOUPLING PROOFS ARE RETIRED RATHER THAN DELETED-AS-REDUNDANT. They moved
+  // `w75.acceptsRank` over 450/300/1/5000 and `w75.points` to and from zero and asserted the college
+  // answer did not follow. With no college rule at all there is nothing left for a calendar constant
+  // to couple to, so the property they defended is now structural rather than tested – which is a
+  // stronger state than a passing test, and is the only reason it is acceptable to lose them.
+  it('⭐⭐ the college answer survives ANY result – there is no rung that spends it', () => {
+    const { world } = freshWorld('fork-college-unconditional')
     world.fork = { askedWeek: world.week, answer: null }
-    expect(() => answerFork(world, 'college')).toThrow(/scholarship/)
-    // ...and the fork is still open afterwards, so the career is not stranded by the refusal.
-    expect(world.fork?.answer).toBeNull()
-    // The other two answers are untouched – this removes an option, it does not steer.
-    answerFork(world, 'continue')
-    expect(world.ending).toBeNull()
+    // The exact career round-17 #6 was about: a professional ranking and a real result at the rung
+    // that used to take the answer away. She won the thing.
+    world.bestFinishByTier = { w75: 0, wta250: 1, w15: 0 }
+    answerFork(world, 'college')
+    expect(world.fork?.answer, 'the answer is taken').toBe('college')
+    expect(world.college, 'and she is in the four years, which P5 built and this ruling leaves alone').not.toBeNull()
+    expect(world.college?.untilWeek).toBe(world.week + ENDINGS.collegeYears * 52)
   })
 
-  it('⭐ ...and the card is told, so it never draws a button the engine would refuse', () => {
+  it('⭐ ...and the card is told nothing, because there is nothing to tell it', () => {
+    // The inverse of the pin this replaces, which read `expect(toSnapshot(world).fork?.collegeOpen)`.
+    // `collegeOpen` was on the wire so the dialog could stop drawing an answer `answerFork` would
+    // refuse; with no refusal the flag is gone, and the card draws three answers always.
     const { world } = freshWorld('fork-college-wire')
     world.bestFinishByTier = { w75: 1 }
     world.fork = { askedWeek: world.week, answer: null }
-    expect(toSnapshot(world).fork?.collegeOpen).toBe(false)
-    world.bestFinishByTier = { j300: 0 }
-    expect(toSnapshot(world).fork?.collegeOpen).toBe(true)
+    const fork = toSnapshot(world).fork
+    expect(fork, 'the fork is still on the wire').not.toBeNull()
+    expect(Object.keys(fork!).sort(), 'and it carries exactly two facts now').toEqual(['ageYears', 'askedWeek'])
+  })
+
+  it('⚠ ...and no entry card warns about a college place any more, because none can cost it', () => {
+    // P4 put `costsCollege` on every card at or above the college rung. The rule is gone, so the
+    // FIELD is gone: a warning that states a consequence which cannot happen is worse on an entry
+    // card than no warning at all. Asserted structurally, so restoring the field trips this.
+    const { world } = freshWorld('college-warning-retired')
+    const snap = toSnapshot(world)
+    expect(snap.upcoming.length, 'not a vacuous pass – there are cards to check').toBeGreaterThan(0)
+    for (const e of snap.upcoming) {
+      expect(Object.prototype.hasOwnProperty.call(e, 'costsCollege'), `${e.tier} carries no college flag`).toBe(false)
+    }
   })
 
   it('⚠ the last offer cannot be refused, because the question has run out', () => {
@@ -640,7 +634,13 @@ describe('⭐ round-19 #2 – the wrap-up outlives the command that covered it',
 })
 
 describe('#2 college – the only ending that resumes', () => {
-  it('latches, freezes four years, and gives them back in one command', () => {
+  // ⭐ GUARDS RE-AIMED, NOT WEAKENED (P5, 16.08, docs/specs/college-as-a-second-act-2026-08.md).
+  // `resumeFromCollege` used to spend all four years in ONE call; it spends ONE year now and
+  // re-latches the ending with the next year's date, because reality's own case is an early return
+  // (Diana Shnaider left NC State after about a season and is inside the WTA top 15). Every
+  // assertion below still asks its original question – the freeze holds, the family stops paying,
+  // she comes back with nothing on the table – it is just asked across four calls instead of one.
+  it('latches, freezes four years, and gives them back one year at a time', () => {
     const { world, rng } = freshWorld('college-test')
     world.fork = { askedWeek: world.week, answer: null }
     answerFork(world, 'college')
@@ -648,12 +648,18 @@ describe('#2 college – the only ending that resumes', () => {
     expect(world.college).not.toBeNull()
     expect(inCollege(world)).toBe(true)
     const from = world.week
-    resumeFromCollege(world, rng)
+    for (let year = 1; year <= ENDINGS.collegeYears; year++) {
+      resumeFromCollege(world, rng)
+      expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
+      expect(world.college!.years, `one row per year lived`).toHaveLength(year)
+      // The latch goes back on for every year but the last – that is what makes the question exist.
+      if (year < ENDINGS.collegeYears) expect(world.ending?.type, `year ${year}`).toBe('college')
+    }
     expect(world.ending).toBeNull()
     expect(world.week).toBe(from + ENDINGS.collegeYears * WEEKS_PER_YEAR)
     expect(inCollege(world)).toBe(false)
     expect(world.college?.doneWeek).toBe(world.week)
-  }, 60_000)
+  }, 90_000)
 
   it('⚠ she comes back with no ranking at all, and no rule was written for it', () => {
     // She entered nothing for 208 weeks, so every result she owned has aged out of the rolling
@@ -663,10 +669,10 @@ describe('#2 college – the only ending that resumes', () => {
     for (let i = 0; i < 40; i++) tickWeek(world, rng)
     world.fork = { askedWeek: world.week, answer: null }
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
-  }, 60_000)
+  }, 90_000)
 
   it('the family stops paying: no coaching is billed across the freeze', () => {
     const { world, rng } = freshWorld('college-money')
@@ -674,7 +680,7 @@ describe('#2 college – the only ending that resumes', () => {
     answerFork(world, 'college')
     const spentBefore = world.careerTotals.spentCents
     const from = world.week
-    resumeFromCollege(world, rng)
+    for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
     // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last
     // fourteen months of the freeze - which is exactly the stretch a bug would have to survive.
@@ -686,7 +692,7 @@ describe('#2 college – the only ending that resumes', () => {
     // ...and the balance is HIGHER than it was, because the parent kept working.
     expect(world.careerTotals.earnedCents).toBeGreaterThan(0)
     expect(world.careerTotals.spentCents).toBeGreaterThanOrEqual(spentBefore)
-  }, 60_000)
+  }, 90_000)
 })
 
 describe('the break-even milestone – captured, never reconstructed', () => {
@@ -780,6 +786,10 @@ describe('⚠ tickWeek stays TOTAL', () => {
 })
 
 describe('⚠ input-independence survives college', () => {
+  // ⭐ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08). The suppressions are unchanged and so is the
+  // property; what moved is that four years now take four commands instead of one, and the whole
+  // point of the assertion is that the NUMBER OF COMMANDS cannot be visible on the MAIN stream.
+  // `tests/college-second-act.test.ts` asks the same question of a single year.
   it('four years of suppressed bills cost the MAIN stream not one draw', () => {
     const seed = 'college-invariance'
     const a = createWorld(seed, { ...DEFAULT_PROFILE })
@@ -791,12 +801,12 @@ describe('⚠ input-independence survives college', () => {
     // A goes to college; B does nothing at all. Same seed, same weeks, same MAIN sequence.
     a.fork = { askedWeek: a.week, answer: null }
     answerFork(a, 'college')
-    resumeFromCollege(a, rngA)
+    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(a, rngA)
     for (let i = 0; i < ENDINGS.collegeYears * WEEKS_PER_YEAR; i++) tickWeek(b, rngB)
     expect(a.week).toBe(b.week)
     expect(a.rngMain.n).toBe(b.rngMain.n)
     expect(a.rngMain.s).toBe(b.rngMain.s)
-  }, 60_000)
+  }, 90_000)
 })
 
 // --- acceptance: a PRE-WAVE save opens, plays, and can reach an ending ----------------------------

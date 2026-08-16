@@ -36,8 +36,30 @@ const wealthy = PRESETS[7]
  *  This cell is the widest margin on the board, from the college-door sweep the bench now prints:
  *  over ten seeds at this horizon it reaches the fork 10/10 and finds the door still open 10/10,
  *  and in 8 of the 10 the door has not shut by TWENTY either. A self-coached middle-class family
- *  grinds the calendar without ever putting a scoring W75 result on the board before nineteen. */
-const steady = PRESETS[3]
+ *  grinds the calendar without ever putting a scoring W75 result on the board before nineteen.
+ *
+ *  ⚠⚠ RE-PICKED PRESETS[3] -> PRESETS[0] BY P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md),
+ *  BY RE-RUNNING THE SWEEP THE ERROR MESSAGE BELOW TELLS YOU TO RE-RUN. The old cell stopped
+ *  reaching the fork at all – on the corrected ladder the 25k middle self-coached family takes a
+ *  career-ending INJURY at week 262, before nineteen – so `runToEnding` returned a career with no
+ *  fork in it and the case exploded on its own precondition, exactly as it is built to. That is the
+ *  cell selection being a measurement rather than a taste: the ladder moved and the measurement was
+ *  taken again.
+ *
+ *  The whole board, POLICIES[0], ten seeds, six-year horizon:
+ *
+ *      preset                            reached fork   open at fork   door never shut
+ *      0  8k   · working · self-coached      10/10          10/10           10/10   <- shipped
+ *      4  25k  · middle  · budget coach      10/10          10/10           10/10
+ *      7  120k · wealthy · high coach         8/10           8/10           10/10
+ *      5  25k  · middle  · middle coach       3/10           3/10           10/10
+ *
+ *  PRESETS[0] and PRESETS[4] tie at the top and **PRESETS[0] keeps the sentence above true** – it is
+ *  still a SELF-COACHED family grinding the calendar without a scoring W75 before nineteen, which is
+ *  the property the cell was chosen for rather than the wealth band. It is also strictly better than
+ *  the cell it replaces: the door has not shut in 10 of 10 by the end of a SIX-year horizon, against
+ *  the old cell's 8 of 10 by twenty. */
+const steady = PRESETS[0]
 
 describe('the endings bench', () => {
   // ⚠ BOTH ARMS SINCE TASK #89, AND THE SECOND ONE IS THE POINT. This used to run POLICIES[0]

@@ -36,7 +36,7 @@
  */
 import { rngFromSeed } from '../src/engine/rng'
 import { acceptOffer, ageAtWeek, coachWorksThisWeek, createWorld, type WorldState } from '../src/engine/world'
-import { inCollege } from '../src/engine/world/endings'
+import { inCollege } from '../src/engine/world/college'
 import { coachById, coachCorridorFactor, facilityRateCents, tierOf, weeklyBillSplit } from '../src/engine/coach'
 import { stepCareerWeek, POLICIES } from './econ-bench'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'

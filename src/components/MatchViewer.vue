@@ -123,8 +123,18 @@ const props = withDefaults(
      * point.
      */
     proceedLabel?: string | null
+    /** ⭐ ROUND-21 #2: her coach travelled to this tournament, so he is in the corner at a set break
+     *  and the running commentary may say so. The engine's own answer (`PendingView.coachTravelled`,
+     *  off `coachTravelsWithHer`) rather than a second derivation - the tournament flow, this log and
+     *  the week's story all read the one predicate.
+     *
+     *  ⚠ false (default) IS A REAL ANSWER, like `previewEvent`'s null. Three of the four callers are
+     *  matches nobody was flown to (the friendly, the sandbox hit-out, a replay of a rival's match),
+     *  and for them "he was not there" is the truth. It also keeps every existing caller's log
+     *  byte-identical, which is what makes this additive. */
+    coachTravelled?: boolean
   }>(),
-  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false },
 )
 // `finish` = "the player is done with this match". ⚠ R17 #10 MOVED WHEN IT FIRES, NOT WHAT IT MEANS:
 // with a `proceedLabel` it waits for the Proceed press, and without one it still fires the instant
@@ -998,7 +1008,29 @@ const { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, setCells, cou
 //
 // 'skip' takes the FULL list deliberately: it hands over the whole story at once, and somebody who
 // skipped the match wants the account of it, not the trailer.
-const commentary = computed(() => buildCommentary(props.match, props.playerA.name, props.playerB.name))
+// ⚠ ROUND 21 ITEM 3 - THE FOURTH ARGUMENT IS THE OCCASION, and it is the prop this component was
+// already holding for the intro. Owner, 14.08, second ask: «И ещё раз: проверь пожалуйста что с
+// комментариями текстовой трансляции на 1000 и шлемах, кажется ничего не изменилось» - measured, and
+// nothing had: the builder took three arguments and none of them was the tournament, so a Grand Slam
+// final and a J30 first round were the same call and produced the same rows byte for byte.
+//
+// `previewEvent` carries the tier and the round already (it is what decides the intro's storey), so
+// the two builders now read ONE occasion object and cannot disagree about what is being played.
+// null - the friendly and the sandbox hit-out - is the bottom storey, which is exactly the log this
+// file has always rendered.
+// ⚠ ROUND-21 #2 - AND THE FIFTH IS THE COACH, on the same principle. Owner, third ask:
+// «Присутствие в потоке и трансляции точно надо (если едет).» The engine has already answered
+// whether he came (`PendingView.coachTravelled` off `coachTravelsWithHer`), so this passes the
+// answer rather than re-deriving it; `kidSide` is which chair is HERS, and null there means she is
+// not in this match at all - a rival replay - where nobody's coach is the family's.
+// ⚠ ONE LINE ON PURPOSE. tests/screen-i-live-match.test.ts pins the head of this call as a literal
+// string, and that pin is the guard keeping the player's own picker out of the deterministic
+// narrator. Breaking the arguments across lines would defeat a real check for a formatting taste.
+// (And this note may not spell the pinned literal out: the guard's negative arm reads the whole file
+// and would find its own name quoted here. It caught exactly that on the first draft.)
+const commentary = computed(() =>
+  buildCommentary(props.match, props.playerA.name, props.playerB.name, props.previewEvent, props.coachTravelled && kidSide.value !== null ? { side: kidSide.value } : null),
+)
 const modeCommentary = computed(() =>
   viewMode.value === 'key' ? commentary.value.filter((b) => b.keyMoment) : commentary.value,
 )

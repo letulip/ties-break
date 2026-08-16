@@ -104,6 +104,40 @@ export function kidAgeAt(world: WorldState, week: number): number {
   return kidAgeYears(week, world.profile.birthMonth)
 }
 
+/** THE FIRST WEEK OF THE AGE-YEAR CONTAINING `week` – the opening of her birthday-to-birthday window
+ *  (P2, docs/specs/age-eligibility-window-2026-08.md).
+ *
+ *  ⚠ IT EXISTS FOR THE PRUNE, NOT FOR THE COUNT. The two entry allowances answer "is this ledger row
+ *  inside the same age-year as this event?" by comparing `kidAgeAt` on the two weeks, which needs no
+ *  boundary at all and cannot disagree with the age clock by construction. What DOES need a boundary
+ *  is `pruneInternationalEntries`, because a prune has to know the earliest week anything can still
+ *  read – and after P2 that is her birthday rather than the season's first Monday.
+ *
+ *  A BACKWARD SCAN, and it is exact rather than arithmetic on purpose: `kidAgeExact` is built on
+ *  `weekYear`/`weekMonth`, which are the game's own calendar and are monotone in the week, so walking
+ *  back while the age is unchanged lands on the first week of the band whatever the calendar does
+ *  around New Year. Bounded by one year of weeks (the table is one row per year of her life), and by
+ *  week 0 for the first, part-year band a career opens in.
+ *
+ *  ⚠ AND MEMOISED, FOR THE MEASURED REASON `weekStart` IS (16.08). The scan is exact and cheap per
+ *  step, but it is up to 52 steps and it sits under both merit arms, which sit under both entry
+ *  allowances, which are asked for every event on every card of every week. Pure function of
+ *  (`birthMonth`, `week`) – `kidAgeAt` reads nothing else off the world – so the key is both, and a
+ *  second career with a different birth month gets its own answers rather than the first one's. */
+const WINDOW_START_MEMO = new Map<string, number>()
+
+export function ageWindowStartWeek(world: WorldState, week: number): number {
+  const birthMonth = world.profile.birthMonth
+  const key = `${birthMonth}:${Math.floor(week)}`
+  const hit = WINDOW_START_MEMO.get(key)
+  if (hit !== undefined) return hit
+  const age = kidAgeAt(world, week)
+  let from = Math.floor(week)
+  while (from > 0 && kidAgeAt(world, from - 1) === age) from--
+  WINDOW_START_MEMO.set(key, from)
+  return from
+}
+
 /** Her birth date, clamped to a date a calendar can hold. Both entry points below clamp through this
  *  one helper, so a nonsense profile cannot make them disagree about which date they are discussing. */
 function birthDate(birthMonth: number, birthDay: number): { month: number; day: number } {

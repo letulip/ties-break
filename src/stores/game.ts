@@ -8,6 +8,7 @@ import {
   type KitLine,
   type KnockChoice,
   type PlayerProfile,
+  type SavePeek,
   type Snapshot,
   type SlotMeta,
   type ToUI,
@@ -53,10 +54,14 @@ export const useGameStore = defineStore('game', {
     careers: [] as CareerMeta[],
     /** set when the active autosave was damaged and the previous generation was restored */
     recovered: false,
-    /** Round 5 item 10: one-shot signal – this `newCareer` was the very first one ever
-     *  on this device (the careers list was empty before it). App.vue consumes it once
-     *  (to decide whether to launch the coach-mark tour) then patches it back to false. */
-    firstEverCareer: false,
+    // ⚠ `firstEverCareer` WAS HERE AND IS GONE (16.08). Round 5 item 10 used it as a one-shot signal
+    // that this `newCareer` was the very first ever on the device, and App.vue consumed it on the
+    // first snapshot transition to decide whether to launch the coach-mark tour. It is not
+    // persisted, so a player whose first session ended before they answered the tour lost the
+    // onboarding for good: the flag was spent and the localStorage mark it guarded is written only
+    // when the tour is actually dismissed. The gate is a function of that durable mark now (App.vue,
+    // `tourWanted`) and needs no signal from the store at all – so the field is removed rather than
+    // left as an unread one-shot for the next wave to reintroduce the race with.
     persisted: null as boolean | null,
     /** the worker's committed revision as of the last response seen – the `baseRevision`
      *  every mutation carries (W1-INTEGRITY-A) */
@@ -210,14 +215,10 @@ export const useGameStore = defineStore('game', {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
       const finalSeed =
         seed.trim() || `${profile.kidName.toLowerCase()}-${(Math.random().toString(36).slice(2) + '0000').slice(0, 4)}`
-      // Snapshot BEFORE creation: "the careers list was empty" is what makes this the
-      // very first career ever, not whatever it becomes after refreshCareers() below.
-      const wasEmpty = this.careers.length === 0
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'new', seed: finalSeed, profile }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         this.recovered = false
-        if (wasEmpty) this.firstEverCareer = true
         await this.refreshCareers()
         await this.refreshSlots()
       })
@@ -263,12 +264,25 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
-    /** «Four years later» – the one command that CLEARS an ending. It ticks 208 weeks inside a
-     *  single worker call, so it is the slowest command in the game by an order of magnitude; the
-     *  store's own `busy` flag is what keeps the button from being pressed twice. */
+    /** «Another year» – the one command that CLEARS an ending. It ticks a college year inside a
+     *  single worker call, so it is one of the slowest commands in the game; the store's own `busy`
+     *  flag is what keeps the button from being pressed twice.
+     *
+     *  ⭐ P5: it used to tick 208 weeks and hand back a twenty-two-year-old. One year at a time is
+     *  what makes the early return possible at all – see `endCollegeEarly`. */
     async resumeFromCollege() {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'resumeFromCollege', baseRevision: this.revision }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** ⭐ P5 – «back on tour now». The other answer at a college year boundary: it takes the latch
+     *  off for good instead of putting it back on. Engine-side it refuses on a career that is not at
+     *  a boundary, so this is a request and not a guarantee. */
+    async endCollegeEarly() {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'endCollegeEarly', baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -361,6 +375,17 @@ export const useGameStore = defineStore('game', {
       await this.run(async () => {
         const res = this.takeOk(
           await request({ type: 'setCoachOnEventWeeks', on, baseRevision: this.revision }),
+        )
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** ⭐ v49: ...and send him to the junior and domestic trips too, or stop. The screen warns what
+     *  that costs before it calls this; the engine records the decision and refuses nothing. */
+    async setCoachOnJuniorEvents(on: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setCoachOnJuniorEvents', on, baseRevision: this.revision }),
         )
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
@@ -507,6 +532,31 @@ export const useGameStore = defineStore('game', {
         a.click()
         URL.revokeObjectURL(url)
       })
+    },
+    /** ⭐ ROUND-21 #1 – WHAT IS IN THIS FILE, before anything is done with it.
+     *
+     *  ⚠ ADVISORY, AND `null` MEANS "CANNOT SAY" RATHER THAN "SAFE". A peek that fails – a hostile
+     *  file, a rotted one, a dead database, a wedged worker – must not be reported as a verdict, so
+     *  the caller shows the cautious wording and lets the REAL import produce the real typed error
+     *  through `saveOp`. Nothing here decides whether the import is allowed; the worker is still the
+     *  only gate (CLAUDE.md invariant 1) and this asks it a read-only question.
+     *
+     *  ⚠ IT DOES NOT GO THROUGH `runOp`, which would be the obvious shape and is the wrong one: this
+     *  is not an operation the player asked for and its failure is not a failure to report. Writing
+     *  a red "Import – failed" row here would announce an error for a file they have not yet agreed
+     *  to import, and then announce it a second time when they do. */
+    async peekSave(file: File): Promise<SavePeek | null> {
+      try {
+        // Its own copy of the bytes: `request` TRANSFERS the buffer, so a peek that shared one with
+        // the import would hand the worker a detached ArrayBuffer. A File can be read twice.
+        const bytes = await file.arrayBuffer()
+        const res = await request({ type: 'peekSave', bytes }, [bytes])
+        if (!res.ok || res.type !== 'peek') return null
+        this.revision = res.revision
+        return res.peek
+      } catch {
+        return null
+      }
     },
     async importSave(file: File) {
       await this.runOp('import', async () => {

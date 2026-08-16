@@ -66,7 +66,16 @@ describe('S1 — the tournament overlay reads the table the tournament is played
     let divergedOnDomestic = false
 
     enterWhatSheCan(world)
-    for (let i = 0; i < 140; i++) {
+    // ⚠ THE HORIZON IS RE-AIMED 140 -> 210 WEEKS (P3, 16.08, docs/specs/
+    // acceptance-cuts-corrected-2026-08.md), AND NOT ONE ASSERTION BELOW IS TOUCHED. This sweep needs
+    // a career that reaches BOTH halves of the ladder – it says so itself, two screens down: "the
+    // sweep has to have actually reached both halves of the ladder, or it guards nothing". `j300`'s
+    // acceptance cut went 0.40 -> 0.20 and `enterWhatSheCan` takes the HIGHEST rung it can, so this
+    // seed's international debut moved later and 140 weeks stopped containing one – the case was
+    // failing on its own precondition, not on the separation it measures. 210 weeks restores it.
+    // ⚠ It is deliberately not "the first horizon that passed": both the `itfSeen` and `domesticSeen`
+    // floors clear with room at 210, so a small further ladder move does not land on it again.
+    for (let i = 0; i < 210; i++) {
       tickWeek(world, rng)
       if (world.pendingTournament) {
         const snap = toSnapshot(world)
@@ -143,11 +152,14 @@ describe('S2 — the season W-L decomposes, and it decomposes into the right buc
     let sawItfMatch = false
 
     // The per-week invariant is read off the WORLD, not off a snapshot: it is a property of the
-    // counters themselves, and building 140 full snapshots to check two additions is the kind of cost
-    // that pushes a shared 5s test timeout over on a loaded machine. One snapshot at the end proves
-    // the surfacing.
+    // counters themselves, and building a full snapshot every week to check two additions is the kind
+    // of cost that pushes a shared 5s test timeout over on a loaded machine. One snapshot at the end
+    // proves the surfacing.
+    // ⚠ HORIZON RE-AIMED 140 -> 210 BY P3, for the same reason and with the same evidence as S1
+    // above: `sawItfMatch` is this case's own precondition and the tighter j300 door moved her
+    // international debut past week 140. No assertion is touched.
     enterWhatSheCan(world)
-    for (let i = 0; i < 140; i++) {
+    for (let i = 0; i < 210; i++) {
       tickWeek(world, rng)
       if (world.pendingTournament) {
         skipTournament(world)

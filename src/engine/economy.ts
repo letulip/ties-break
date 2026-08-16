@@ -745,8 +745,21 @@ export const ECONOMY = {
        *  So this is `TIERS.w100.acceptsRank`, read straight. It IS a looser gate than before, and
        *  that follows from the table being honest rather than compressed: #350 of a 564-row
        *  professional field is a different player from #141 of a table whose #300 held nine points.
-       *  Flagged for the owner in the wave report rather than smoothed over. */
-      maxWtaRank: 350,
+       *  Flagged for the owner in the wave report rather than smoothed over.
+       *
+       *  ⚠⚠ 350 -> 240 (P3, 16.08), AND IT IS THE DERIVATION MOVING FOR THE THIRD TIME RATHER THAN A
+       *  NEW DECISION - exactly as the two steps above were. `TIERS.w100.acceptsRank` went 350 -> 240
+       *  as the fourth link of the sourced acceptance chain
+       *  (docs/specs/acceptance-cuts-corrected-2026-08.md), and the rule here has still not changed a
+       *  word: National signs the girl who would be IN the W100 draw, whatever that list currently is.
+       *  The equality is pinned by tests/offers.test.ts, so the two cannot drift apart silently.
+       *
+       *  ⚠ BUT THE DIRECTION IS THE OPPOSITE OF LAST TIME AND THE OWNER SHOULD SEE IT. The paragraph
+       *  above flagged a LOOSER gate; this is a materially TIGHTER one - a national sponsor now wants
+       *  a top-240 professional where it wanted top-350. Nobody retuning the ladder opened this file,
+       *  which is precisely the coupling `TIERS.w100`'s own comment has warned about twice. It is the
+       *  first item on the P3 spec's escalation list. */
+      maxWtaRank: 240,
       /** ⚠ ...AND THE DOMESTIC STANDING SHE HAS TO KEEP TO HOLD IT = `maxRank` above, the same top
        *  30 that opens the local shop. This is National's job on the way OUT and the whole reason
        *  this rung is gated on two tables at once: her domestic points are a rolling 52-week best-6,
@@ -808,8 +821,17 @@ export const ECONOMY = {
        *  divides exactly). Pinned beside its neighbour in tests/offers.test.ts.
        *
        *  ⚠ 31 -> 87 BY W2-FIELD2, for exactly the reason its neighbour carries: this is a quarter of
-       *  W100's acceptance list, and that list was re-derived from the real tour's own cut. */
-      maxWtaRank: 87,
+       *  W100's acceptance list, and that list was re-derived from the real tour's own cut.
+       *
+       *  ⚠⚠ 87 -> 60 BY P3 (16.08), THE SAME DERIVATION FOLLOWING THE SAME SOURCE - `national` went
+       *  350 -> 240 with `TIERS.w100.acceptsRank`, and a quarter of 240 is 60.
+       *
+       *  ⚠ AND IT SQUEEZES THIS RUNG'S BAND HARD ENOUGH THAT THE OWNER SHOULD SEE IT. Global sits
+       *  between `premium` (50) and itself, so its band was ranks **51-87 (37 places wide)** and is
+       *  now **51-60 (ten)**. Nothing decided that; it fell out of a ladder correction four files
+       *  away. Whether a sponsorship rung ten ranks wide is still a rung is a balance question, and
+       *  it is on the P3 spec's escalation list rather than absorbed here. */
+      maxWtaRank: 60,
       /** THREE SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", scaled the same way
        *  `national.seasons` is. Signing it is the biggest commitment in the game: everything is
        *  covered, and nothing else can be signed until it runs out. */
@@ -1914,12 +1936,67 @@ export const ECONOMY = {
     // quietly also answered for a twenty-five-year-old. The table's domain and the tiers' age
     // window are now the same interval, which is what makes the `default` key honest.
     //
-    // NOT MODELLED, DELIBERATELY – the merit increases. The same appendix grants +4 events to a
-    // top-20 ITF junior at 14/15 (+4 to a top-50 at 13), and the WTA rulebook grants a year-end
+    // ⚠⚠ THE MERIT INCREASES SHIP AT P2 (16.08), AND THE ARGUMENT THAT KEPT THEM OUT IS RECORDED
+    // RATHER THAN DELETED, BECAUSE THE BLOCKER IT NAMED WAS REAL AND WAS REMOVED BY SOMETHING ELSE.
+    // It ran: "NOT MODELLED, DELIBERATELY – the merit increases. The same appendix grants +4 events
+    // to a top-20 ITF junior at 14/15 (+4 to a top-50 at 13), and the WTA rulebook grants a year-end
     // top-5 junior up to 4 extra PRO events. Both are keyed to a world ranking; our field is 199
-    // cohort players plus the kid, so "top 20 of the ITF" has no defensible mapping onto "top 20 of
-    // 200" without an owner decision about what our standings represent. Left out rather than
-    // guessed, and left out in the direction that keeps the cap honest (a bonus only weakens it).
+    // cohort players plus the kid, so 'top 20 of the ITF' has no defensible mapping onto 'top 20 of
+    // 200' without an owner decision about what our standings represent. Left out rather than
+    // guessed, and left out in the direction that keeps the cap honest (a bonus only weakens it)."
+    //
+    // WHAT CHANGED IS THAT P1 ANSWERED THE QUESTION, AND ANSWERED IT SOMEWHERE ELSE.
+    // `docs/specs/junior-access-2026-08.md` built `yearEndJuniorRank` – a read of PERSISTED history,
+    // not a live fold – and keyed the Junior Accelerator on the regulation's own ABSOLUTE rows
+    // (1 / 2 / 3 / 4-5 / 6-10 / 11-20) rather than on a share of our table. So the decision the old
+    // comment was waiting for has been taken and shipped: in this game a year-end junior rank IS read
+    // as the list position the rulebooks name. The merit rows below read the SAME function on the
+    // SAME convention; inventing a second mapping here is exactly what that would have been.
+    //
+    // ⚠ AND THE ONE PLACE THE CONVENTIONS DIFFER IS STATED, NOT SMOOTHED OVER. `JUNIOR_RESERVED`
+    // (world/entryCaps.ts) resolves W15's door as a FRACTION of the table, because that door had a
+    // shipped difficulty to hold and a rank-vs-points change of unit to survive. A merit bonus has
+    // neither: it is additive, it can only ever be generous, and it is the same list the Accelerator
+    // reads two lines up. Absolute is the honest reading for it.
+    meritIncrease: {
+      /** ITF Appendix F: +4 international events to a top-50 junior at 13, to a top-20 at 14 and 15.
+       *
+       *  ⚠ THE 13 ROW CANNOT FIRE IN THIS GAME AND IS HERE ANYWAY, exactly as the 14/15 PRO rows are
+       *  (see `proPerYearByAge`'s own note). Her thirteenth year runs from week 0 to her birthday, so
+       *  no season has wrapped yet and there is no year-end list to be on. The game does not invent a
+       *  number where the calendar makes it unreachable, and the day a career opens earlier the row is
+       *  already right. */
+      juniorByAge: { 13: { throughRank: 50, extra: 4 }, 14: { throughRank: 20, extra: 4 }, 15: { throughRank: 20, extra: 4 } } as {
+        [age: number]: { throughRank: number; extra: number }
+      },
+      /** WTA Pro Path: up to 4 extra professional events a year, earned by Grand Slam / WTA 1000
+       *  DIRECT ACCEPTANCE or by year-end ITF junior top 5 – the same top-5 gate the Accelerator uses.
+       *  It is an OR, and both arms are read off the year-end row for the reason `proMerit` explains:
+       *  a limit that can fall mid-window would retro-invalidate an entry she was allowed to make. */
+      proExtra: 4,
+      proJuniorThroughRank: 5,
+      /** ...and the professional arm, as the rungs whose acceptance list IS "direct acceptance to a
+       *  major or a 1000". Read as tier ids, never as a copied number, so a phase that re-tunes those
+       *  cuts moves this rule with them – the same discipline `mandatory.perEventTiers` is under. */
+      proDirectTiers: ['slam', 'wta1000'] as readonly TierId[],
+    },
+
+    /** ⭐ THE SUB-CAP INSIDE THE FOURTEEN-YEAR-OLD'S EIGHT (WTA §X.A.2, quoted in
+     *  docs/specs/acceptance-cuts-2026-08.md line 145: *"the WTA's sub-cap of three W75+ events
+     *  inside a 14-year-old's eight – a quota, not a door"*).
+     *
+     *  ⚠ IT CANNOT BIND AT THE SHIPPED CONSTANTS, AND IT SHIPS ANYWAY – the same choice, for the same
+     *  reason, that put 14 and 15 in `proPerYearByAge` and 13 in `meritIncrease.juniorByAge`. W75
+     *  opens at 17 and no W rung above W15 opens below 16, so a fourteen-year-old can reach exactly
+     *  one professional rung and it is far below the ceiling this counts. The rule is here so that a
+     *  phase which opens a rung lower does not have to remember it, and so that the game states the
+     *  regulation it models rather than a subset of it. §5 of the spec measures the zero.
+     *
+     *  `fromTier` is a rung, not a list: "at or above W75" is a walk of TIER_LADDER, so a re-ordered
+     *  or inserted rung moves with it. */
+    proSubCapByAge: { 14: { fromTier: 'w75' as TierId, max: 3 } } as {
+      [age: number]: { fromTier: TierId; max: number }
+    },
     perYearByAge: { 13: 10, 14: 14, 15: 18, 16: 25, default: Number.MAX_SAFE_INTEGER } as {
       [age: number]: number
       default: number
@@ -1939,10 +2016,13 @@ export const ECONOMY = {
     // domestic ladder stays uncapped here for the same reason it is uncapped above - it is ours.
     // ⚠ AND THE ACT-3 RUNGS JOIN IT (W3-ACT2). "Professional events, whatever their size" is the
     // rule's own wording, and a Grand Slam is the most professional event there is - the real AER
-    // counts a major against a sixteen-year-old's twelve exactly as it counts a W15. It bites for
-    // one season only in practice (`proPerYearByAge` is unlimited from 18 and every act-3 rung
-    // opens at 17), which is the honest amount: the allowance is a rule about children, and by the
-    // time her ranking clears a 1000's acceptance list she is not one.
+    // counts a major against a sixteen-year-old's twelve exactly as it counts a W15. ⚠ THE PARENTHESIS
+    // HERE USED TO READ "every act-3 rung opens at 17" AND IT NO LONGER DOES: the owner's age-grid
+    // ruling of 16.08 put the four WTA rungs at 15 and the Slam at 14, so the family is capped from
+    // fourteen upward and `proPerYearByAge` is the only thing metering it. In practice it still bites
+    // for about one season, because the allowance is unlimited from 18 and an acceptance list at
+    // #200 or tighter is what a child actually meets up here – the honest amount: the rule is about
+    // children, and by the time her ranking clears a 1000's list she is not one.
     cappedProTiers: ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as readonly TierId[],
     // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited.
     //

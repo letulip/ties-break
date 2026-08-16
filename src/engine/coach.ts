@@ -547,20 +547,113 @@ export const COACH_EDGE_CORRIDOR_PP: Record<CoachTier, [number, number]> = {
   elite: [0.9, 1.1],
 }
 
+// =================================================================================================
+// ⭐ AND A SECOND HELPING OF IT WHEN HE COMES WITH HER (owner, 14.08) – the travel bonus, tied to
+//    the ladder because the ladder is the only scale in the room
+// =================================================================================================
+//
+// ROUND-21 #2 shipped PRESENCE and nothing else: he travels, the family pays a second fare
+// (`coachTravelFareFor`), the flow and the commentary and the week's story all say he is there - and
+// she gains nothing by it. `docs/specs/coach-travel-2026-08.md` measured what a gain would be worth
+// and recommended a match-strength edge «big», at +3.0 pp. Told that +3.0 pp is about three times the
+// entire coach ladder, the owner refused the free-floating constant and named the scale himself:
+//
+//     «что если мы привяжем это как раз к тренерской лестнице? у нас там есть уже верхний процент,
+//      будет не так сильно влиять как будто.»
+//
+// ⚠ SO THE TRAVEL EDGE IS HIS OWN EDGE AGAIN, and `COACH_EDGE_CORRIDOR_PP` above is the whole of the
+// definition. A coach who travels delivers a second helping of exactly what HIS tier is worth: elite
+// adds 0.9-1.1 pp, budget adds 0.2-0.7, and at most it DOUBLES what a coach was already worth. That
+// is the decision he wants to exist - an expensive coach's fare is worth paying and a cheap one's is
+// marginal - and it is a decision the ladder makes rather than a second table somebody has to keep in
+// step with it.
+//
+// ⚠ THE BOUND IS THE CORRIDOR'S OWN TOP, BY CONSTRUCTION AND NOT BY A CLAMP. The helping IS his draw
+// from the bracket, so it cannot exceed the bracket's ceiling and there is nothing to clamp; «у нас
+// там есть уже верхний процент» is satisfied by reading the table rather than by guarding it.
+//
+// ⚠ AND THE LADDER SURVIVES THE DOUBLING UNCHANGED, which is why scaling is the safe operation here
+// and shifting would not have been. Every corridor is multiplied by the same 2, so the overlap rule
+// §1 was cut to («each tier's ceiling is the next tier's midpoint, and no tier reaches two rungs up»)
+// holds among travelling coaches exactly as it holds among staying ones - the budget lottery is still
+// one cheap coach in ten, at either setting. What a shift would have done is squash the ladder: +3.0
+// pp makes 0.2 and 1.1 into 3.2 and 4.1, i.e. it makes every rung nearly the same coach.
+//
+// ⚠⚠ ZERO NEW RANDOMNESS, AND THAT IS LOAD-BEARING RATHER THAN CONVENIENT (invariant 2). The travel
+// helping is the SAME uniform, multiplied - no second draw, no second sub-stream, not one extra tap
+// on `seed:coachedge:<id>` and nothing whatsoever on MAIN. A career that does not travel therefore
+// runs byte-identically to the one it ran before this shipped: same stream, same draw, same
+// arithmetic, same bits (asserted in tests/coach-travel-edge.test.ts). It also keeps the property the
+// whole design rests on - the number is a fact about a PERSON - because a coach who is a find is a
+// find twice over on the road, rather than being re-rolled into somebody else at the airport.
+
 /** HIS OWN NUMBER, in percentage points per match: one uniform into his tier's corridor, off his id
- *  and nothing else.
+ *  and nothing else - and TWICE that when he is on the trip with her.
  *
  *  ⚠ NOBODY HIRED IS ZERO, FULL STOP - and it returns before the corridor is even read, so a bench
  *  arm that puts a corridor on `self` still cannot give the parent an edge. That is invariant 4 of
- *  the spec: a self-coached career must be byte-identical to what it was before this shipped.
+ *  the spec: a self-coached career must be byte-identical to what it was before this shipped. It is
+ *  also the second half of `coachTravelsWithHer` («the switch is on, AND there is somebody to send»)
+ *  living where it always lived: a parent who is already in the car cannot travel with her, so
+ *  `travelling` has nothing to double.
+ *
+ *  ⚠ `travelling` DEFAULTS TO FALSE, so every pure caller that had no world to ask - and
+ *  `coachEdgePlacement` below, which reads the MAN and not the trip - gets the same number it got
+ *  before, to the bit. The plaque is a fact about who he is; where she happened to be playing on the
+ *  Tuesday is not part of it.
  *
  *  A DEGENERATE CORRIDOR IS ITS OWN ANSWER and spends no draw. `self` is [0, 0] by design and a
- *  bench arm zeroes the whole table to build its control, so this is the common path, not a corner. */
-export function coachEdgePp(seed: string, coachId: string | null): number {
+ *  bench arm zeroes the whole table to build its control, so this is the common path, not a corner -
+ *  and twice nothing is still nothing, which is why the travel arm needs no `self` case of its own. */
+export function coachEdgePp(seed: string, coachId: string | null, travelling = false): number {
   if (coachId === null) return 0
   const [lo, hi] = COACH_EDGE_CORRIDOR_PP[coachTierById(coachId)]
-  if (!(hi > lo)) return lo
-  return lo + rngFromSeed(`${seed}:coachedge:${coachId}`)() * (hi - lo)
+  const own = hi > lo ? lo + rngFromSeed(`${seed}:coachedge:${coachId}`)() * (hi - lo) : lo
+  return withTravelHelping(own, travelling)
+}
+
+/** A SECOND HELPING OF THE SAME MAN - the multiply is the whole mechanic, and it is deliberately not
+ *  a named dose: a constant here would be a second scale beside the corridor, and the corridor is the
+ *  scale the owner named («что если мы привяжем это как раз к тренерской лестнице?»).
+ *
+ *  ⚠ IT IS A FUNCTION RATHER THAN A LITERAL IN TWO PLACES, and that is the whole reason it exists.
+ *  Round-21 #2's last open item was that the SCREEN still quoted the home corridor to a family that
+ *  travels; fixing it means the doubling has to be applied to a BRACKET as well as to a draw, and two
+ *  `* 2`s in two files is precisely how a screen comes to quote a dose the engine no longer uses.
+ *
+ *  ⚠ AND IT IS APPLIED TO THE RESULT, NOT TO THE CORRIDOR `coachEdgePp` DRAWS FROM. Drawing inside a
+ *  pre-doubled band is the same number in exact arithmetic and NOT the same number in floating point
+ *  (`2*lo + u*(2*hi - 2*lo)` can differ in the last bit from `2*(lo + u*(hi - lo))`), and a last bit
+ *  here is a different match. The draw is untouched: same stream, same uniform, same multiply. */
+function withTravelHelping(pp: number, travelling: boolean): number {
+  return travelling ? pp * 2 : pp
+}
+
+/** ⭐ WHAT A SCREEN MAY QUOTE FOR A RUNG - the tier's corridor, and TWICE IT for a family whose coach
+ *  is on the trip with her (round-21 #2, the last open item: «edgePct prints the rung's HOME corridor
+ *  to a family that travels»).
+ *
+ *  ⚠ TWICE A BRACKET IS STILL A BRACKET, which is what keeps this inside §4's anti-shopping rule. The
+ *  market may say what a PRICE BRACKET buys and may never say what THIS MAN is worth: a number on an
+ *  unhired card turns the market into a shop window with the prices written on the back. Both figures
+ *  here are cut from `COACH_EDGE_CORRIDOR_PP` and neither reads a coach id, so no draw can leak
+ *  through this function even by mistake.
+ *
+ *  ⚠⚠ AND THE PLACEMENT SURVIVES THE DOUBLING UNTOUCHED, which is why the plaque needs no disclaimer
+ *  beside these numbers. The helping SCALES the corridor rather than shifting it (§1's own argument
+ *  for scaling), so equal thirds map onto equal thirds: the upper third of 0.5-0.9 is the upper third
+ *  of 1.0-1.8, and «the upper end of that band» is true of the band he trains in AND of the band he
+ *  travels in. `coachEdgePlacement` therefore still reads the MAN and not the trip, and the travel
+ *  figure cannot turn into a precision claim about him - it is the bracket that moved, not his place
+ *  in it.
+ *
+ *  ⚠ IT ANSWERS FOR A TIER AND ASKS NO WORLD. Whether this family's stance would actually send him is
+ *  `coachTravelsWithHer`'s question, and the caller that has a world asks it there - see
+ *  `coachMarket` / `coachEdgeView`. A pure tier lookup keeps this usable from the bench, which mutates
+ *  the table per arm. */
+export function coachEdgeCorridorPp(tier: CoachTier, travelling = false): [number, number] {
+  const [lo, hi] = COACH_EDGE_CORRIDOR_PP[tier]
+  return [withTravelHelping(lo, travelling), withTravelHelping(hi, travelling)]
 }
 
 /** WHERE HE FELL IN HIS OWN CORRIDOR, in thirds – and this, not the number, is what a screen may say

@@ -92,9 +92,36 @@ function ymdAt(utc: number): Ymd {
   return { month: d.getUTCMonth(), day: d.getUTCDate(), year: d.getUTCFullYear() }
 }
 
+/** ⚠⚠ MEMOISED, AND THE REASON IS A MEASURED 25x, NOT A MICRO-OPTIMISATION (16.08).
+ *
+ *  P2's birthday-to-birthday window made the age clock a HOT path. `ageWindowStartWeek` walks back a
+ *  year of weeks asking `kidAgeAt` at each step, `kidAgeExact` asks `weekMonth` AND `weekYear`, and
+ *  both land here - so one window question cost ~104 `new Date` allocations, and the two entry
+ *  allowances ask it for every event on every card of every week. Nothing was wrong with the answers;
+ *  the garbage was the problem.
+ *
+ *  IT IS INVISIBLE ON ONE FILE AND FATAL ON EIGHT. `tests/plan.test.ts` + three of its neighbours run
+ *  in 9s alone either way - a single worker has all the heap it needs. The bulk shard runs 136 files
+ *  across eight workers, and there the churn tipped the whole run into GC: **74s -> 1877s, with 16
+ *  files timing out and zero assertion failures.** That is the same shape as the contention hazard
+ *  CLAUDE.md records, which is exactly why it took a before-and-after on the same machine to tell the
+ *  two apart rather than a guess about which one it looked like.
+ *
+ *  PURE FUNCTION OF AN INTEGER, so the memo cannot be wrong: `weekStartUtc` floors its argument and
+ *  reads nothing but constants. FROZEN because the value is now SHARED - every caller in this file
+ *  reads fields off it and none mutates, and freezing is what makes that a guarantee rather than a
+ *  habit for the next reader. The map is bounded by the weeks a session actually asks about
+ *  (a career is ~700; a bench sweep re-asks the same ones), so it does not grow with time. */
+const WEEK_START_MEMO = new Map<number, Ymd>()
+
 /** First day (Monday) of the given career week, as {month, day, year}. */
 function weekStart(week: number): Ymd {
-  return ymdAt(weekStartUtc(week))
+  const key = Math.floor(week)
+  const hit = WEEK_START_MEMO.get(key)
+  if (hit !== undefined) return hit
+  const value = Object.freeze(ymdAt(weekStartUtc(key)))
+  WEEK_START_MEMO.set(key, value)
+  return value
 }
 
 /** Last day (Sunday) of the given career week, as {month, day, year}. */

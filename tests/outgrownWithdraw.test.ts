@@ -184,8 +184,15 @@ describe('R8-7a re-aimed — an entry already taken is HONOURED', () => {
     w.season = []
     w.fundsCents = 9_999_999_00
     w.week = 8 * 52 + 10 // her age-22 season
+    // ⚠ THE SEED BOOK IS RE-AIMED, NOT THE CLAIM (P3, 16.08, docs/specs/
+    // acceptance-cuts-corrected-2026-08.md). `tierOutgrown('w50')` asks whether the rung THREE above
+    // it is open, and three above W50 is the WTA 125 – whose cut the sourced chain took 250 -> 180,
+    // i.e. from a book of ~249 to a book of ~384. At 30 a side this fixture's ten results reached
+    // 340, which used to clear that door and now does not, so the case lost the precondition it
+    // exists to measure. 40 a side puts her at 320 BEFORE the two titles and 420 after – the same
+    // story the next two lines tell, against the door as it now stands.
     for (let i = 0; i < 8; i++) {
-      w.results.push({ playerId: KID_ID, week: w.week - 6 - i, points: 30, tier: 'w50' })
+      w.results.push({ playerId: KID_ID, week: w.week - 6 - i, points: 40, tier: 'w50' })
     }
     recomputeKidRank(w)
     const ev = injectEvent(w, { week: w.week + 6, tier: 'w50', deadlineWeek: w.week + 4 })

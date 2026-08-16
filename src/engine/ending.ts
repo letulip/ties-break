@@ -16,7 +16,6 @@
 // a player's answer. So the frozen MAIN capture cannot notice this file exists, and a career that
 // goes bankrupt mid-replay keeps drawing identically to one that does not.
 import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from '../shared/protocol'
-import type { TierId } from './season/types'
 
 /** THE KNOBS. Every number here is either measured (`tools/endings-bench.ts`) or anchored in the
  *  contract; none of them is a difficulty setting. */
@@ -50,25 +49,42 @@ export const ENDINGS = {
   forkAgeYears: 19,
   /** §5.1 – four years of student tennis on a scholarship, and she comes back at twenty-two. */
   collegeYears: 4,
-  /** ⭐ THE RUNG AT WHICH THE SCHOLARSHIP STOPS BEING AN OPTION (round-17 #6).
+  /* ⭐⭐ `collegeClosedFromTier` WAS HERE, AND IT IS RETIRED BY AN OWNER RULING OF 16.08 – NOT BY a
+   *  balance pass, and not because the rule was hard to tune. Verbatim: «collegeClosedFromTier – так
+   *  ведь нет же там никакой связи с w75, мы же всё узнали. Колледж – это независимая ветка карьеры с
+   *  отдельным функционалом и турнирами, альтернативная.»
    *
-   *  The owner: the fork «offers the academy to a girl already earning on W75+». It did – the
-   *  college answer had no precondition of any kind, so a nineteen-year-old with a professional
-   *  ranking, a tour kit deal and prize money in the bank was offered "four years of student tennis.
-   *  No ranking points, and the money goes the other way" as an equal third of the card.
+   *  ⚠ THE RECORD OF WHAT IT WAS AND WHY IT WENT, because deleting the reasoning would delete the
+   *  record of a rule that survived four phases on a premise nobody had checked:
    *
-   *  ⚠ AND IT IS THE REAL RULE, WHICH IS WHY IT IS A PRECONDITION AND NOT A WARNING. A player who has
-   *  taken professional prize money has spent her college eligibility; the scholarship is not a door
-   *  she can still walk through. The card «may not recommend» (ruling 4, 30.07) and this does not
-   *  recommend anything – it removes an answer that was never available, which is the opposite of
-   *  steering. The other two answers keep the same weight as each other.
+   *    * IT WAS `'w75'`, and it removed the college answer from the fork card the first time she
+   *      posted a counting result at W75 or above. Round-17 #6 put it there: the owner's complaint
+   *      that the fork «offers the academy to a girl already earning on W75+».
+   *    * ITS ORIGINAL JUSTIFICATION WAS AN NCAA ELIGIBILITY RULE THAT DOES NOT EXIST – *"A player who
+   *      has taken professional prize money has spent her college eligibility"*. The old bylaw let a
+   *      prospective player keep $10,000 a year plus expenses before enrolment; since the
+   *      Brantmeier/Joint settlement of **15 April 2026** there is **no pre-enrolment cap at all**,
+   *      and "amateurism" appears **zero times** in the current Division I Manual
+   *      (`docs/research/college-and-the-junior-exit.md` §1b). P4 corrected the comment and left the
+   *      constant standing on the owner's own argument instead – *a girl who is already a
+   *      professional does not go to college*.
+   *    * ⚠ AND THAT ARGUMENT IS THE ONE HE HAS NOW WITHDRAWN. College here is an INDEPENDENT BRANCH
+   *      of the career with its own four years, its own tournaments and its own national-team call-up
+   *      (P5, `docs/specs/college-as-a-second-act-2026-08.md`) – an alternative, not a consolation.
+   *      Nothing in the sport and nothing in this game's own design closes that branch on a RESULT.
+   *    * ⚠ IT WAS ALSO ALREADY MEASURED AS BOOKKEEPING. P4 re-measured it firing at median age 19.1
+   *      against a fork at 19.0 – *"a gate that fires after the decision is not a gate"* – and stated
+   *      the three options in its §6.1. This is option (B), taken by the owner rather than by an
+   *      agent, and it is why §6.1 is now closed.
    *
-   *  ⚠ W75 IS THE OWNER'S OWN MARKER, quoted from the report, and it is a RUNG rather than a sum of
-   *  money on purpose. `w15` opens at sixteen and the game actively wants a junior to play a few, so
-   *  "has ever entered a professional event" would delete the college ending from almost every
-   *  career. A counting result at W75 or above is the line between a junior who has tried the tour
-   *  and a professional who is on it. */
-  collegeClosedFromTier: 'w75' as TierId,
+   *  ⚠⚠ WHAT DID **NOT** GO: everything behind the door. The third answer, `endingForForkAnswer`'s
+   *  college branch, `world.college`, the four years lived one at a time, `leaveCollege` and the
+   *  call-up are all untouched. What went is only the rule that could REMOVE the choice.
+   *
+   *  ⚠ AND ROUND-21 #8 IS RETIRED BY THIS RULING RATHER THAN DROPPED. He asked then for the fork card
+   *  to say WHY the college answer was missing; there is no case in which it is missing now, so the
+   *  sentence has nothing left to explain. `docs/specs/college-is-its-own-branch-2026-08.md` §4 says
+   *  so out loud rather than letting an answered request disappear quietly. */
 
   // --- #5/#6 THE NATURAL END -------------------------------------------------------------------
   /** her own decline starts here (`ECONOMY.development.ageCurve.declineStart`), so this is where
@@ -232,6 +248,22 @@ export function forkDue(ageYears: number, alreadyAsked: boolean): boolean {
   return !alreadyAsked && ageYears >= ENDINGS.forkAgeYears
 }
 
+/* ⭐⭐ `CollegeResultView` AND `collegeDoorOpen` WERE HERE, AND THEY GO WITH THE CONSTANT THEY READ
+ *  (owner, 16.08 – the ruling is on the retired `collegeClosedFromTier` above).
+ *
+ *  ⚠ THE RECORD, because this leaf was the whole of P4's decoupling and its reasoning outlives it.
+ *  `collegeStillOpen` used to reach into `TIERS[tier].points` – the LADDER'S PRIZE COLUMN – to decide
+ *  what "a result that counted" meant, so a wave re-sizing a rung's points moved the college ending
+ *  without saying so, exactly as P3's `w75.acceptsRank` 450 -> 300 had already done. P4 replaced the
+ *  read with a three-number view (the rung's index, her best finish, the draw's DEPTH) so that no
+ *  acceptance cut and no points edit could reach the door except through the college rule's own knob.
+ *
+ *  ⚠ THE DECOUPLING WORKED AND THAT IS WHY THIS DELETION IS SMALL. Because the rule was already a
+ *  leaf, removing it touches no calendar constant, no acceptance cut and no points table – the
+ *  coupling P4 broke is the reason its removal cannot move the ladder. The `finish < rounds - 1`
+ *  reading it carried – *she has to have WON A MATCH there* (owner, 13.08) – has no other consumer:
+ *  `wtaEverCounted` in `world/endings.ts` states the same test for the WTA table and is untouched. */
+
 export function endingForForkAnswer(
   answer: ForkAnswer,
   week: number,
@@ -241,12 +273,23 @@ export function endingForForkAnswer(
 ): CareerEnding | null {
   if (answer === 'continue') return null
   if (answer === 'college') {
+    // ⭐⭐ P5 – `resumesWeek` IS ONE YEAR NOW, NOT `collegeYears` OF THEM, and that single expression
+    // is what turns a four-year skip into four years she lives through
+    // (docs/specs/college-as-a-second-act-2026-08.md). Reality's own case is one year and not four:
+    // Diana Shnaider left after about a season and is inside the WTA top 15, so the block was the
+    // wrong SHAPE as well as an empty one. `world/college.ts` re-latches this ending with the next
+    // year's week each time one is spent, and `leaveCollege` is the answer that stops it.
+    //
+    // ⚠ `collegeYears` STAYS IN THE SIGNATURE AND STAYS IN THE COPY. It is the length of the course
+    // she has enrolled on – four years is what the scholarship is FOR – and the early return is her
+    // leaving it, not the course being shorter. A caller that passed a different length still gets
+    // a consistent ending.
     return {
       type: 'college',
       week,
       ageYears,
       detail: `${collegeYears} years on a scholarship – no ranking points, and the family stops paying`,
-      resumesWeek: week + collegeYears * weeksPerYear,
+      resumesWeek: week + weeksPerYear,
     }
   }
   return {
@@ -382,8 +425,13 @@ export const ENDING_TITLE: Record<CareerEndingType, string> = {
 export const ENDING_BLURB: Record<CareerEndingType, string> = {
   stopped:
     'The junior ladder ran out and the next one wanted more than the family had. She put the racket down at nineteen, and that is an ending, not a loss.',
+  // ⚠ P5 – IT NO LONGER PROMISES FOUR YEARS OR A DEGREE, because she may leave after one and the
+  // sport's own case is that she does. It also no longer asserts "no ranking at all": measured over
+  // the freeze (spec §4) her professional rank is IDENTICAL at both ends in the median career,
+  // because she was already off the list the week she walked in. The line that replaced it says the
+  // thing that IS true of every college career and of nothing else in this game.
   college:
-    'A scholarship, a closed league that pays no ranking points, and four years in which the money finally goes the other way. She comes back at twenty-two with a degree, an unbroken body and no ranking at all.',
+    'A scholarship, a closed league that pays no ranking points, and a stretch of years in which the money finally goes the other way. The tour does not wait, and it does not remember.',
   bankruptcy:
     'Week after week below zero, and then a week with no entry fee in it. Nobody chose this one – the arithmetic did.',
   injury:

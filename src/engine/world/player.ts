@@ -124,9 +124,32 @@ export const COACH_EDGE_POINTS_PER_PP = 0.5225
  *
  *  So firing him removes the edge the same week - "the edge leaves with him", which is the owner's
  *  whole-career market for the rung - and re-hiring him hands back the same number, because the number
- *  is a fact about the man. */
-export function coachMatchEdge(world: { seed: string; coachId?: string | null }): number {
-  return coachEdgePp(world.seed, world.coachId ?? null) * COACH_EDGE_POINTS_PER_PP
+ *  is a fact about the man.
+ *
+ *  ⭐ AND IT DOUBLES WHEN HE IS ON THE TRIP (owner, 14.08 - the sentence is quoted over `coachEdgePp`,
+ *  which owns the arithmetic). What arrives here is the two clauses of `coachTravelsWithHer` and
+ *  nothing else: `coachOnEventWeeks` is THE STANCE, and «there is somebody to send» is the `coachId`
+ *  clause this function already had and `coachEdgePp` already refuses on. So this is not a second copy
+ *  of that predicate - it is the same two facts, one of them the edge has always owned - and
+ *  tests/coach-travel-edge.test.ts pins the two to the same answer on real worlds so they cannot
+ *  drift apart.
+ *
+ *  ⚠ THE PREDICATE IS READ STRUCTURALLY RATHER THAN IMPORTED, and the reason is the file header's
+ *  first line: this module is a LEAF. `coachTravelsWithHer` lives in world/coachMarket.ts, which
+ *  imports the ledger, the ladder and world/sponsors at RUNTIME - importing it here would point a leaf
+ *  back at the integration layer that imports it. The test is the anti-drift device instead.
+ *
+ *  ⚠ `coachOnEventWeeks` IS OPTIONAL FOR THE SAME REASON `coachId` IS: a pure caller that builds a
+ *  player without a full world gets `false`, which is byte-identical to what it got before this
+ *  shipped. Undefined means "she is not on a trip with anybody", which is the safe direction. */
+export function coachMatchEdge(world: {
+  seed: string
+  coachId?: string | null
+  /** THE STANCE, not the week: `world.coachOnEventWeeks`. See above for why the two-clause predicate
+   *  is not imported, and for what the missing clause is. */
+  coachOnEventWeeks?: boolean
+}): number {
+  return coachEdgePp(world.seed, world.coachId ?? null, world.coachOnEventWeeks ?? false) * COACH_EDGE_POINTS_PER_PP
 }
 
 /** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
@@ -161,8 +184,28 @@ export function kidMatchPlayerFor(
      *  edge, which is byte-identical to what it got before this shipped. Every path that actually
      *  puts her on court passes the whole `WorldState`, which carries it. */
     coachId?: string | null
+    /** ⭐ ...AND WHETHER HE COMES WITH HER, which is the only other input it has (see
+     *  `coachMatchEdge`). Optional and false-by-default, exactly like `coachId`: a pure caller
+     *  without one composes byte-identically to what it did before the travel helping shipped. */
+    coachOnEventWeeks?: boolean
   },
   surface: Surface,
+  /** ⭐⭐ IS HE ON **THIS** TRIP – the owner's ruling, 15.08: «поездки С тренером открываются на w
+   *  серии с призами», and «я такого не говорил» to the reading that the helping applies everywhere.
+   *
+   *  ⚠ WHY IT IS AN ARGUMENT AND NOT `world.coachOnEventWeeks`. That field is the STANDING STANCE –
+   *  "send him when there is somewhere worth sending him" – and reading it here gave the doubled
+   *  edge to two weeks it was never meant for: a JUNIOR event, where `coachTravelFareFor` charges
+   *  nothing because the rung pays nothing, and a HOME PRACTICE FRIENDLY, which is not a trip at
+   *  all. Free help in both. The stance is a policy; whether he is standing at this particular
+   *  court is a fact about the week, and only the caller knows it.
+   *
+   *  ⚠ AND THE ONE SOURCE OF TRUTH IS THE FARE. `coachTravelFareFor(world, event) > 0` already
+   *  answers "did he come to this one" – it carries the stance, the "somebody to send" clause and
+   *  the W-series gate together – so the helping follows the money by construction and the two can
+   *  never disagree. Omitted ⇒ false, which is the safe direction and keeps every pure caller
+   *  byte-identical. */
+  onThisTrip?: boolean,
 ): MatchPlayer {
   const raw = kidMatchPlayer(world)
   const factor = conditionMatchFactor(world.condition)
@@ -208,7 +251,14 @@ export function kidMatchPlayerFor(
   // a better racket and not a fresher body. Additive rather than multiplicative on purpose: the
   // calibration was measured as a flat delta on the five wings, and a multiplier would make the same
   // coach worth more to a girl who is already good, which is the opposite of what coaching is.
-  const edge = coachMatchEdge(world)
+  //
+  // ⭐ AND A COACH WHO TRAVELS WITH HER IS THAT SAME DELTA TWICE - still one reading, still one term,
+  // still the same zero for a girl with nobody. The doubling happens inside `coachEdgePp`, on the man
+  // rather than on the composition, so nothing about the seam above changes and the early return
+  // below is still the whole of the self-coached path.
+  // ⭐ THE STANCE IS NOT THE WEEK – see `onThisTrip` on the signature. `world.coachOnEventWeeks` is
+  // the policy; whether he is standing at THIS court is a fact only the caller has.
+  const edge = coachMatchEdge({ ...world, coachOnEventWeeks: onThisTrip ?? false })
   if (edge === 0) return composed
   return {
     ...composed,

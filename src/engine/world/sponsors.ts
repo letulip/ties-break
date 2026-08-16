@@ -595,6 +595,114 @@ export function academyCoverOf(world: WorldState, event: SeasonEvent): number {
   return event.travelCostCents - netTravelCents(event.travelCostCents, world.academy)
 }
 
+/** ⭐ ROUND-21 #2 - WHAT THE SECOND SEAT COSTS, and it is her own fare over again.
+ *
+ *  ⚠ THE MULTIPLIER IS THE OWNER'S AND IT IS THE ONLY PRICED FARE THAT SURVIVES ANYWHERE. The 30.07
+ *  build DID price a per-trip fare and every line of it was reverted while still uncommitted (commit
+ *  `77e08aa`: "ALL THE ENGINE WORK IS REVERTED... the `coachTravelsFrom` threshold, the per-trip
+ *  fare... are gone"), so that number is not recoverable from git or from any doc - I looked. What IS
+ *  on the record is his own pricing of the same thing on 12.08, in `docs/specs/the-wall-2026-08.md`
+ *  §L1: «a per-tournament top-up when the coach travels with her, AT DOUBLE THE TRAVEL COST».
+ *
+ *  So: one more flight, one more room, and a trip he comes on costs exactly twice what it costs
+ *  without him. That reading is the one the screen can say in four words - "twice the fare" - and it
+ *  is the conservative one; the other reading of the same sentence (a top-up that is ITSELF double,
+ *  i.e. a trip at 3x) is not what "double the travel cost" describes.
+ *
+ *  ⚠⚠ AND HIS SEAT IS **GROSS** – THE SUPPORT DOES NOT PAY FOR HIM. This shipped through
+ *  `travelCostFor`, which subtracts the academy scholarship and the brand's travel share, so for one
+ *  wave the mechanism built to keep a struggling family in the game was **buying the coach a plane
+ *  ticket**. The owner caught it as a principle rather than as a bug (15.08): «Мы делали механизм
+ *  точечной поддержки нуждающихся, этот механизм не должен поддерживать их чрезмерные траты, только
+ *  помочь дожить до призов. Вот что надо проконтролировать.»
+ *
+ *  So HER fare keeps every cover it has ever had and HIS is `event.travelCostCents`, the full price.
+ *  That is also how a scholarship works in the world: it covers the player, not her entourage.
+ *
+ *  ⚠ IT CHANGES WHAT "DOUBLE" MEANS FOR A COVERED FAMILY, AND DELIBERATELY. Uncovered, the trip
+ *  still costs exactly twice - the sentence on screen is unchanged for everybody paying full price.
+ *  Covered, it costs her discounted seat plus his whole one, so the discount stops scaling with the
+ *  luxury: the better her scholarship, the LARGER the share of the trip he represents, which is the
+ *  right direction. Screen T says his seat is not covered instead of quoting a bare multiple, and
+ *  prints both figures for a family that holds a cover - see `coachBilling` and CoachMarketScreen.
+ *
+ *  ⭐ v49 – AND WHICH RUNGS HE GOES TO IS TWO DECISIONS NOW, not one. `coachOnEventWeeks` buys the
+ *  rungs that pay; `coachOnJuniorEvents` buys the ones that do not. See the gate below for the
+ *  owner's ruling and for what the bench measured about the second one.
+ *
+ *  ⚠ AND IT IS NOT REFUNDABLE, BECAUSE IT IS NEVER COMMITTED IN ADVANCE. `chargeTravel`'s note warns
+ *  that a discount computed at the till and not at the refund is free money in four keystrokes. That
+ *  hazard cannot reach here: this is charged on the PLAY week, inside the arm where she actually
+ *  boarded (world.ts, `else if (enteredThisWeek)`), so the two arms that do not travel - the injury
+ *  walkover and the medical withdrawal - never pay it and have nothing to hand back.
+ *
+ *  Zero draws on any stream: two reads and a multiply. */
+export function coachTravelFareFor(world: WorldState, event: SeasonEvent): number {
+  // ⚠ SELF-COACHED FAMILIES SEND NOBODY. `coachId === null` is the parent on the court, and the
+  // parent is already in the car - charging a second seat for somebody who was going anyway is the
+  // "tax, not a decision" the 30.07 boolean was killed for.
+  if (world.coachId === null) return 0
+  if (!world.coachOnEventWeeks) return 0
+  // ⚠⚠ HE COMES TO THE EVENTS THAT PAY - UNLESS THE PLAYER HAS DECIDED OTHERWISE (v49). This gate
+  // shipped ABSOLUTE and it is now CONDITIONAL, on the owner's ruling of 15.08: «делаем тогда», and
+  // his model of whose decision it is - «По мне игрок сам решает: есть деньги - едет тренер, нет - не
+  // едет, или едет, но быстрее банкротится.»
+  //
+  // ⚠ WHAT THE PLAYER IS CHOOSING, MEASURED. `docs/specs/coach-travel-2026-08.md`, 30 seeds: at this
+  // very price an UNGATED fare bankrupted **8 of 30** wealthy·elite careers and **15 of 30**
+  // middle·middle ones, and EVERY bankruptcy was in the junior years (ages 15-19). "Ever ranked" fell
+  // 96.7% -> 46.7% and the median middle career's whole prize money went to $0. The 30.07 record
+  // priced this mechanic at +$21,000; on a career that actually plays it is +$995,979, because
+  // nothing stopped it buying a second seat on a `local` at fourteen. That is why screen T warns
+  // before the first junior fare is charged - and why it WARNS rather than refuses: «едет, но быстрее
+  // банкротится» is an outcome the owner has ruled is the player's own, and this engine does not
+  // protect a player from a price he was quoted.
+  //
+  // ⚠ THE DEFAULT SIDE OF THE GATE IS STILL THE OWNER'S OWN ARGUMENT. Cancelling the mechanic on
+  // 30.07 he said why - «Никто никуда не ездит… в про карьере - там другое дело» - and the commit
+  // spelled it out: *"JUNIOR TENNIS HAS NO PRIZE MONEY. A fare can only be a decision if something
+  // might come back, and on the junior tour nothing ever does."* So it stays the automatic answer;
+  // what v49 adds is the player's right to overrule it for his own family.
+  //
+  // ⚠ AND THE TEST IS THE RUNG'S OWN `prizeCents`, not an age and not a second ladder: present from
+  // W15 up, absent on every domestic and junior rung. A rung that starts paying starts being worth
+  // the fare, by construction, with nothing to keep in step. It lives HERE and nowhere else -
+  // `chargeCoachTravel` already returns on a zero fare, and the match-strength helping is handed
+  // `coachTravelFareFor(world, event) > 0` rather than the stance (world.ts, snapshot.ts), so opening
+  // junior travel opens the helping at those events too, in one move and for free. "Does he come",
+  // "what does it cost" and "is he at this court" are ONE question with one answer. (`coachMarket.ts`
+  // cannot import this file back anyway - it is imported BY it, which is why this is not a predicate
+  // over there.)
+  if (TIERS[event.tier].prizeCents === undefined && !(world.coachOnJuniorEvents ?? false)) return 0
+  // ⭐ GROSS, NOT `travelCostFor` – see the note above. The academy scholarship and the brand's share
+  // stay on HER seat and never reach his.
+  return event.travelCostCents
+}
+
+/** THE CHARGE, on the week she travelled and he came with her. One row, its own line in the feed:
+ *  the coach's fare is not the coach's retainer and must never be folded into it (owner, 08.08 -
+ *  «нам нужно отдельной строчкой списывать тренера, а отдельной рент залов», the same instinct one
+ *  bill over).
+ *
+ *  ⚠ CATEGORY `travel`, NOT `coaching`. It is a fare, it moves with the calendar rather than with
+ *  the week, and the Money breakdown should show it beside the trip it paid for. It also means no
+ *  `WorldEventCategory` is added, so nothing here touches the save schema.
+ *
+ *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08): `buildCoachRoster` puts a woman on every
+ *  roster by construction, so "his fare" would print under Sabine Kobayashi. */
+export function chargeCoachTravel(world: WorldState, event: SeasonEvent): void {
+  const fare = coachTravelFareFor(world, event)
+  if (fare <= 0) return
+  world.fundsCents -= fare
+  addEvent(world, {
+    week: world.week,
+    type: 'expense',
+    category: 'travel',
+    text: `Your coach travels to the ${TIERS[event.tier].label} – a second fare`,
+    amountCents: -fare,
+  })
+}
+
 export function chargeTravel(world: WorldState, event: SeasonEvent): void {
   const net = travelCostFor(world, event)
   const covered = event.travelCostCents - net

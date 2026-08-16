@@ -641,6 +641,12 @@ const showGo = computed(() => !game.snapshot?.pending)
         </p>
         <p v-if="marker.coachCaution" class="coach-note">{{ marker.coachCaution }}</p>
 
+        <!-- ⚠ P4's COLLEGE NOTE WAS HERE AND IS REMOVED (owner, 16.08). This card is its own
+             confirmation, so it carried the same sentence the Season confirm did - a result here can
+             cost the college place. Nothing closes the college branch on a result any more, so the
+             sentence would be warning about a consequence that cannot happen, next to an active
+             Enter. The record of the rule is on the retired `ENDINGS.collegeClosedFromTier`. -->
+
         <div class="controls cal-card-actions">
           <template v-if="marker.entered">
             <p class="hint cal-card-done">She is in. Withdrawing lives on the Season tab.</p>

@@ -862,6 +862,19 @@ const matchMeta = computed(() => {
           <p class="tf-brief-label">Coach prediction</p>
           <p class="tf-brief-line">{{ coachLine }}</p>
           <p v-if="coachSignature" class="tf-brief-sign">{{ coachSignature }}</p>
+          <!-- ⭐ ROUND-21 #2 – HE IS HERE, AND THE SCREEN SAYS SO. The owner reported for the THIRD
+               time that the coach still does not go to tournaments, and then named what to build:
+               presence in the flow and in the broadcast, if he travels. His words in full are in
+               tests/component/round21-coach-travel.test.ts - THIS IS A TEMPLATE and
+               tests/round13-nav.test.ts bans Cyrillic inside one, comments included, which is
+               exactly the guard that caught the first draft of this note.
+               ONE LINE, on the card that is already his: the brief is the coach's own read, signed
+               by him, so "and he came" belongs under the signature and not in the four-cell facts
+               grid above (whose count the design handoff defends). The engine decides
+               (`PendingView.coachTravelled` off `coachTravelsWithHer`); this screen only draws it,
+               which is why the flow, the live commentary and the week's story cannot disagree about
+               one trip. -->
+          <p v-if="pending?.coachTravelled" class="tf-brief-here">At the tournament with her this week – a second fare on this trip.</p>
         </div>
         <div class="tf-brief-go">
           <p class="tf-brief-ring-label">Her condition</p>
@@ -959,7 +972,10 @@ const matchMeta = computed(() => {
            frame and the owner watched a retirement go by as a scoreline for a second round running.
            The handler is unchanged; naming a label is what turns the eject into a button the player
            presses when she is ready. "To the result" is the header exit's own words, because it goes
-           to the same place. -->
+           to the same place.
+         ⭐ ROUND-21 #2: `coach-travelled` is the broadcast half of the owner's third ask - the same
+         engine answer the splash's presence line draws, handed to the running commentary so the two
+         surfaces cannot describe one trip differently. -->
     <MatchViewer
       v-if="replayOpen && annotated && currentMatch"
       :match="annotated"
@@ -971,6 +987,7 @@ const matchMeta = computed(() => {
       :final-match="isFinalRound"
       :temperature-c="pending?.temperatureC ?? null"
       :preview-event="viewerPreviewEvent"
+      :coach-travelled="pending?.coachTravelled ?? false"
       :mode="replayAdvances ? 'live' : 'replay'"
       proceed-label="To the result"
       @finish="endReplay"
@@ -1509,6 +1526,19 @@ const matchMeta = computed(() => {
   font-size: 17px;
   line-height: 1;
   color: var(--accent-soft);
+}
+
+/* ⭐ ROUND-21 #2: he came. Deliberately the quietest thing on the card - one muted line under the
+   signature, in the brief's own type rather than the hand, so it reads as a fact about the week and
+   not as a second sentence from the coach. Nothing here changes the card's height budget beyond one
+   line: the splash is the screen this app measures at 375x667, and the presence line is the only
+   thing added to it. */
+.tf-brief-here {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--muted);
 }
 
 .tf-brief-go {

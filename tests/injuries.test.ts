@@ -266,7 +266,27 @@ const REF = { //
   // for changed. The largest of the five moves, for the largest of the five causes. Different track
   // from the one this number folds; this fixture's kid enters nothing at all. The capture is
   // untouched for the fifth time: count 41550, hash e6b0c709, checked BEFORE this constant is read.
-  kidRank: 87 }
+  // ⚠ RE-PINNED 87 -> 89 BY P1 – JUNIOR ACCESS (15.08). W15's on-ramp stopped reading 120 ITF junior
+  // points and started reading an ITF junior RANKING, on both sides of the tour (one door, by design),
+  // so a slightly different two-of-thirty-two hold the on-ramp slots at a W15 and the J draws those
+  // juniors were no longer free for changed. Post-draw arithmetic once more: the capture is asserted
+  // above this line and reproduces byte-for-byte (41550 / e6b0c709) – P1 draws on no stream at all.
+  // See the same note on tests/condition.test.ts B1's REF. docs/specs/junior-access-2026-08.md.
+  // ⚠ AND RE-AIMED A SEVENTH TIME BY P2 – THE AGE-ELIGIBILITY WINDOW (16.08): 89 -> 93, four places,
+  // and for the seventh time running it is the same second-order mechanism and she did nothing
+  // different. Two of P2's changes reach the ITF table she is folded against. (a) The allowance is
+  // counted birthday-to-birthday now, so a girl who used to spend two overlapping season-block
+  // allowances inside one birth year spends one - she enters fewer professional events at sixteen and
+  // more junior ones, which re-deals which J draws she is in. (b) `w15.minAgeYears` went 16 -> 14 on
+  // the owner's ruling, so the on-ramp's two-of-thirty-two at a W15 are drawn from a wider pool of
+  // juniors and the ones not taken are free for different J weeks - the same mechanism P1's note
+  // above describes, one age lower.
+  //
+  // THE CAPTURE IS UNTOUCHED FOR THE SEVENTH TIME: count 41550, hash e6b0c709, head and tail all
+  // reproduce byte-for-byte and are asserted BEFORE this constant is read. P2 adds no draw to any
+  // stream - an entry allowance is a post-draw gate - which is why the hash could not move and did
+  // not, and why the input-independence A/B halves in tests/planner.test.ts still pass unchanged.
+  kidRank: 93 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

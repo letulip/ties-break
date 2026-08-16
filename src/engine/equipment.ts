@@ -172,6 +172,39 @@ function clamp01(x: number): number {
  * has never bought by hand, and `week - 0 = week` is exactly what `weeksSinceGear` returns before the
  * first scheduled hit - so the min is a no-op there too.
  */
+/**
+ * HOW OLD EACH LINE OF HER KIT IS, IN WEEKS - the one clock `kitWearAt` walks its curve along.
+ *
+ * ⚠ IT WAS A CLOSURE INSIDE `kitWearAt` UNTIL ROUND 21 ITEM 10, and lifting it out is the whole
+ * reason the Money screen can now count DOWN. The owner: «В разделе bills возле выбранной позиции и
+ * "# good weeks" написать "(3 left)" - сколько осталось». "How many are left" is
+ * `goodWeeksFor(line, grade) - age`, so the countdown needs exactly this number and it needs it to be
+ * the SAME number the wear curve used - a second reading of "how old is it" is how a screen ends up
+ * saying "3 left" beside a line the model already calls Worn. `kitWearAt` now calls this, so there is
+ * one definition and it is checked by every wear test that already exists.
+ *
+ * The MIN is the rule: the family's recurring purchase and the player's over-the-counter one are two
+ * clocks, and she is holding whichever arrived more recently. Pure, no draws of its own beyond
+ * `weeksSinceGear`'s own deterministic `seed:gear:<category>` schedule.
+ */
+export function kitAgeWeeks(
+  seed: string,
+  background: FamilyBackground,
+  week: number,
+  kit: KitState | null = null,
+): Record<KitLine, number> {
+  const since = (line: KitLine, category: GearCategory): number => {
+    const scheduled = weeksSinceGear(seed, category, background, week)
+    const bought = kit ? week - kit.sinceWeek[line] : scheduled
+    return Math.min(scheduled, Math.max(0, bought))
+  }
+  return {
+    strings: since('strings', 'stringing'),
+    frame: since('frame', 'rackets'),
+    shoes: since('shoes', 'shoes'),
+  }
+}
+
 export function kitWearAt(
   seed: string,
   background: FamilyBackground,
@@ -181,14 +214,10 @@ export function kitWearAt(
 ): KitWear {
   const e = ECONOMY.equipment
   const grade = kit?.grade ?? DEFAULT_KIT_GRADES
-  const since = (line: KitLine, category: GearCategory) => {
-    const scheduled = weeksSinceGear(seed, category, background, week)
-    const bought = kit ? week - kit.sinceWeek[line] : scheduled
-    return Math.min(scheduled, Math.max(0, bought))
-  }
-  const sinceStrings = since('strings', 'stringing')
-  const sinceFrame = since('frame', 'rackets')
-  const sinceShoes = since('shoes', 'shoes')
+  const age = kitAgeWeeks(seed, background, week, kit)
+  const sinceStrings = age.strings
+  const sinceFrame = age.frame
+  const sinceShoes = age.shoes
   const cap = (line: KitLine, w: number) => {
     const ceiling = freshCap?.[line]
     return ceiling === undefined ? w : Math.min(w, ceiling)

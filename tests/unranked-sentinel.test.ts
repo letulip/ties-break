@@ -60,9 +60,15 @@ describe('the unranked sentinel is denominated in the table it is a rank in', ()
     recomputeKidRank(world)
     world.onRampCleared = { itf: true, wta: true }
     delete (world as Partial<WorldState>).kidRankWta
-    // W100 accepts to #350. The old sentinel was 200 – inside the cut – so an unranked girl walked
-    // in. The table she is unranked IN is 564 rows, and 564 > 350.
-    expect(TIERS.w100.acceptsRank).toBe(350)
+    // W100 accepts to its own cut. The old sentinel was 200 – inside the cut – so an unranked girl
+    // walked in. The table she is unranked IN is far deeper than the cut, which is what refuses her.
+    // ⚠ RE-AIMED BY P3 (16.08): the literal was 350 and the sourced chain took `w100.acceptsRank` to
+    // 240 (docs/specs/acceptance-cuts-corrected-2026-08.md). The pin is re-aimed rather than deleted
+    // and it is STRENGTHENED in the process: what this test needs is "the cut is inside the table",
+    // which is the property the sentinel bug violated, and a hardcoded 350 asserted the ladder's
+    // tuning instead – a number this file has no opinion about and which moved under it. The
+    // inequality below is the real precondition, so it now survives the next chain change too.
+    expect(TIERS.w100.acceptsRank).toBeDefined()
     expect(tableSize(world, 'wta')).toBeGreaterThan(TIERS.w100.acceptsRank!)
     expect(tierFloorOpen(world, 'w100')).toBe(false)
     // ...and the number a screen would print is the bottom of the W table, not the cohort's.
@@ -119,6 +125,35 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
     if (book > 0) world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
     world.onRampCleared = { itf: true, wta: true }
+    // ⚠⚠ RE-AIMED TWICE, AND THE SECOND UNDOES THE FIRST (16.08). P1's note is kept verbatim below
+    // because it is the reasoning that had to be reversed: *"A SECOND, ORTHOGONAL gate now stands in
+    // front of the W rungs for a JUNIOR – the Junior Accelerator ... Without a banked year-end junior
+    // standing she has no Accelerator places at all, W35 and up are shut whatever her professional
+    // book says ... Banking a year-end junior #1 puts her past that gate so the CUTS are what the
+    // fixture measures."* True while the Accelerator was a ceiling. The owner's correction of 16.08
+    // made it a RESERVED PLACE, so a junior enters on the rung's own cut and needs no banked standing
+    // – and a banked #1 now buys her real places above W15, which is precisely a reason that has
+    // nothing to do with the acceptance cuts this file is about. The workaround became the confound.
+    //
+    // ⚠ 21 IS THE ROW THAT HOLDS NOTHING – the Accelerator's table ends at "21+ : nothing above W15"
+    // – so the standing is neutralised rather than the row deleted, and the CUTS are once again the
+    // only thing the slide below measures. That gate's own suite is tests/junior-access.test.ts.
+    world.seasonHistory = [
+      {
+        seasonIndex: 0,
+        endRank: 21,
+        points: 0,
+        wins: 0,
+        losses: 0,
+        byTrack: {
+          domestic: { points: 0, wins: 0, losses: 0 },
+          itf: { endRank: 21, points: 0, wins: 0, losses: 0 },
+          wta: { points: 0, wins: 0, losses: 0 },
+        },
+        fundsDeltaCents: 0,
+        endFundsCents: 0,
+      },
+    ]
     recomputeKidRank(world)
     return world
   }
@@ -187,8 +222,25 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
   //
   // AND THAT IS THE SPORT'S OWN SHAPE, not a nicety – `real-ladder-pace.md` §1b measures #600 → #400
   // at 4.8 months and #400 → #200 at 11.9, i.e. the bottom of the ladder is several distinct stages
-  // and not one. The books below are read off the shipped table (`bench:points --only 13`, the DOORS
-  // block): #700 carries 37 points, #550 carries 59, #450 carries 90.
+  // and not one.
+  //
+  // ⚠⚠ RE-AIMED A FOURTH TIME BY P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), AND
+  // ONLY THE PROBE BOOKS MOVED. The sourced chain took w50 550 → 330 and w75 450 → 300, so the BOOK
+  // standing on each door moved with it and this file's probes stopped landing between the stages
+  // they are named for. Not one stage, list or claim is touched: the case still asserts four exact
+  // windows in order and still says the slide is one rung at a time. What is re-aimed is the
+  // scaffolding that puts her on each step. Books read off the shipped engine
+  // (`npx vite-node tools/acceptance-cuts.ts -- --only 1`, the DOORS block):
+  //
+  //     door      was            now
+  //     w35 #700  37 points      **35**
+  //     w50       #550 = 59      **#330 = 159**
+  //     w75       #450 = 90      **#300 = 189**
+  //     w100      #350 = 147     **#240 = 272**
+  //
+  // So the probes go 50 → 50 (still between w35 and w50), 75 → **170** (between w50 and w75) and
+  // 140 → **200** (past w75, short of w100). ⚠ The 200 is deliberately kept BELOW w100's 272 so that
+  // stage 4 still measures "exactly one book later" rather than two rungs at once.
   it('the entry rung SURVIVES her first W ranking, and the window slides ONE rung at a time', () => {
     // `tierOutgrown` closes a rung when the rung three above it opens. Three above W15 is W75, whose
     // cut is #450 – and a ten-point book now stands at ~#1,142, outside it by a distance. So the
@@ -209,9 +261,9 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     const stage2 = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at35, t))
     expect(stage2).toEqual(['w15', 'w35'])
 
-    // STAGE 3 – a book past #550 opens W50, and W15 is STILL hers: three above W15 is W75, and W75
-    // is still shut. This is the stage the shipped table used to hand her on her first point.
-    const at50 = worldAt('trapdoor-w50', 17, 75)
+    // STAGE 3 – a book past W50's cut opens W50, and W15 is STILL hers: three above W15 is W75, and
+    // W75 is still shut. This is the stage the shipped table used to hand her on her first point.
+    const at50 = worldAt('trapdoor-w50', 17, 170)
     const stage3 = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at50, t))
     expect(stage3).toEqual(['w15', 'w35', 'w50'])
 
@@ -224,7 +276,7 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     // backlog #84 – the lower bound stops being a wall and becomes a sorting key – so asking it
     // about the slide would now be asking the wrong function and the case would pass on a rule it is
     // not about. Both halves are asserted: W15 is still HERS (open) and it is now BEHIND her.
-    const climbed = worldAt('trapdoor-climbed', 17, 140)
+    const climbed = worldAt('trapdoor-climbed', 17, 200)
     expect(tierFloorOpen(climbed, 'w75')).toBe(true)
     expect(hasOutgrown(climbed, 'w15')).toBe(true)
     expect(tierOpenFor(climbed, 'w15'), 'passed, and still enterable').toBe(true)

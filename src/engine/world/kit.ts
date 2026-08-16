@@ -28,6 +28,7 @@ import {
   KIT_GRADES,
   LINE_GEAR_CATEGORY,
   defaultKitState,
+  kitAgeWeeks,
   kitLinePriceCents,
   kitWearAt,
 } from '../equipment'
@@ -86,6 +87,28 @@ export function goodWeeksFor(line: KitLine, grade: KitGrade): number {
   }
   const life = line === 'strings' ? e.stringLifeWeeks : e.shoeLifeWeeks
   return Math.round(room * life * rung.lifeFactor)
+}
+
+/**
+ * ...AND HOW MANY OF THOSE WEEKS ARE STILL IN FRONT OF HER (round 21 item 10).
+ *
+ * The owner: «В разделе bills возле выбранной позиции и "# good weeks" написать "(3 left)" - сколько
+ * осталось». The button said what the rung BUYS and never what the line she owns has left, so a
+ * fourteen-week-old set of strings on a "24 good weeks" rung read exactly like a new one.
+ *
+ * ⚠ IT IS `goodWeeksFor` MINUS THE LINE'S REAL AGE, and both halves come from the model rather than
+ * from this file. `kitAgeWeeks` is the same clock `kitWearAt` walks (it was lifted out of that
+ * function for this), so the count and the condition word beside it cannot disagree: the week the
+ * count reaches 0 is the week the curve reaches `WORN_AT` and `wearWord` starts saying "Worn".
+ *
+ * ⚠ AND IT IS null FOR A LINE THE BRAND IS KEEPING FRESH, which is not a missing answer but the
+ * right one. `kitFreshCap` holds a covered line's wear at a ceiling (0.3 or 0.5 today, both under
+ * `WORN_AT`), so that line NEVER reaches Worn while the deal runs and there is no countdown to print
+ * - it is read off the ceiling rather than off the flag, so a future cap above the Worn edge would
+ * start counting down again by itself.
+ */
+export function goodWeeksLeftFor(line: KitLine, grade: KitGrade, ageWeeks: number): number {
+  return Math.max(0, goodWeeksFor(line, grade) - ageWeeks)
 }
 
 /**
@@ -243,14 +266,21 @@ export function kitLineViews(world: WorldState): KitLineView[] {
   const bg = world.profile.background
   const cap = kitFreshCap(world.offers ?? [], world.week)
   const wear = kitWearAt(world.seed, bg, world.week, cap, kit)
+  // ⚠ ROUND 21 ITEM 10 - the same clock the wear curve above walks, so the countdown and the
+  // condition word can never disagree. See `goodWeeksLeftFor`.
+  const age = kitAgeWeeks(world.seed, bg, world.week, kit)
   return KIT_LINES.map((line) => {
     const grade = kit.grade[line] ?? DEFAULT_KIT_GRADES[line]
+    const ceiling = cap?.[line]
     return {
       line,
       grade,
       label: ECONOMY.equipment.gradeCopy[grade][line].label,
       blurb: ECONOMY.equipment.gradeCopy[grade][line].blurb,
       wear: wear[line],
+      // null = the brand is holding this line under the Worn edge, so there is nothing counting down.
+      goodWeeksLeft:
+        ceiling !== undefined && ceiling < WORN_AT ? null : goodWeeksLeftFor(line, grade, age[line]),
       rungs: KIT_GRADES.map((g) => {
         const priceCents = kitLinePriceCents(bg, line, g)
         return {

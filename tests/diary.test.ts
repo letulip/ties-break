@@ -151,6 +151,8 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       vacationPackageId: null,
       // ⚠ W2 added `trainPct` to the view (how hard the PLAYER worked her). This test is about
       // `rankClimbed` and nothing else; the balanced preset is what a career starts on.
+      // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
+      coachTravelled: false,
       trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,

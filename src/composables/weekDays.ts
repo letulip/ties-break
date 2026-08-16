@@ -234,6 +234,10 @@ export type CalendarWeekFacts = Pick<
   'week' | 'plan' | 'profile' | 'injury' | 'knock' | 'vacations' | 'practices' | 'upcoming' | 'arrival' | 'pending'
 > &
   Partial<Pick<Snapshot, 'tierOpen' | 'ageYears'>> &
+  // round-21 #5: WHICH TABLE IS HERS, so the look-ahead can drop the rungs that pay into one she has
+  // left. Optional for the same reason as its two neighbours above - absence means "do not judge the
+  // table", which is how every fixture written before it already read.
+  Partial<Pick<Snapshot, 'activeLadder'>> &
   // W4-SCHOOL: the week her school years end, so this file can answer the question for ANY week it
   // is asked about rather than only for `snap.week`. Optional for the same reason `ageYears` is –
   // hand-built fixtures pre-date it – and a fixture that omits it gets a schoolgirl, which is what
@@ -599,7 +603,14 @@ export function isSuitable(e: UpcomingEvent, currentWeek: number): boolean {
  *  booking or a tournament on it, and cancelling the layoff's weeks is not a thing anyone can do). */
 export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
   const rows: LookAheadRow[] = []
-  const feed = feedContext({ ageYears: snap.ageYears ?? 0, tierOpen: snap.tierOpen, upcoming: snap.upcoming })
+  // round-21 #5: `activeLadder` rides along so the look-ahead markers and the Season rows show the
+  // same set - a marker for a rung the feed refuses to offer would be the two surfaces disagreeing.
+  const feed = feedContext({
+    ageYears: snap.ageYears ?? 0,
+    tierOpen: snap.tierOpen,
+    activeLadder: snap.activeLadder,
+    upcoming: snap.upcoming,
+  })
   const first = snap.week + 2
   for (let w = first; w < first + LOOK_AHEAD_WEEKS; w++) {
     const vacation = snap.vacations.find((v) => v.week === w)

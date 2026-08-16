@@ -3410,6 +3410,16 @@ tr.kid-row td {
   border-radius: var(--radius-frame);
   margin-bottom: 6px;
 }
+/* ⭐ v49 – THE NESTED TRAVEL OPTION (junior and domestic trips), drawn as what it is: a second
+   decision INSIDE the first one, not a second row beside it. The indent and the hairline are the
+   whole treatment - it is the same row otherwise, so the two switches read as one control with a
+   sub-clause rather than as two unrelated toggles. It renders only while the parent switch is on
+   (v-if in CoachMarketScreen.vue), so there is no muted/disabled state to draw. */
+.cm-travel-nested {
+  margin-left: 14px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
 .cm-travel-text {
   flex: 1;
   min-width: 0;
@@ -3462,16 +3472,16 @@ tr.kid-row td {
     transition: none;
   }
 }
-.cm-travel.is-locked .cm-travel-title,
-.cm-travel.is-locked .cm-travel-sub {
-  color: var(--muted);
-}
+/* ⭐ ROUND-21 #2: `.cm-travel.is-locked` IS GONE WITH THE LOCK. It muted the row's two lines to say
+   "this control is not for you"; the switch is live now on the owner's third ask, so a row drawn as
+   refused would be the copy lying about the control again - which is exactly what round-20 #1 was.
+   The sub-line's own `--muted` (above) is the one it always had as a sub-line. */
 
-/* ⚠ THE `strong.chosen` RULE WENT WITH THE COMPARISON IT MARKED (30.07). The coach-travel toggle is locked
-   until the professional years, so the season pair - "$X without him · $Y with" - had nothing left to
-   compare and neither side could be the "chosen" one. The LINE itself survives, carrying the one figure
-   that is true whatever she books: what her coach costs a week. `.cm-travel` and `.cm-switch` stay too -
-   the row is still drawn, disabled, because locking it is what says when it arrives. */
+/* ⚠ THE `strong.chosen` RULE WENT WITH THE COMPARISON IT MARKED (30.07). The season pair - "$X without
+   him · $Y with" - had nothing left to compare while travel was cancelled, and it stays gone: the price
+   of travel is now a PER-TRIP rule ("twice the fare") rather than a second season total to set beside
+   the first, so there is still no second side to mark as chosen. The LINE itself survives, carrying the
+   one figure that is true whatever she books: what her coach costs a week. */
 .cm-travel-cost {
   margin: 8px 0 0;
 }
@@ -3577,9 +3587,28 @@ tr.kid-row td {
   cursor: default;
   opacity: 1;
 }
+/* ⭐ ROUND-21 #11 – THE COACH SHE HAS IS IN A FRAME, AND THE FRAME IS THE ACCENT (owner, 14.08: a
+   yellow frame on the chosen coach, and his portrait lit whatever the family earns).
+
+   WHAT WAS WRONG, and it was the cascade rather than the colour. `.cm-row.current` has carried this
+   accent border since the screen shipped - and `.cm-row.blocked` is declared right under it at the
+   SAME specificity, so on a row that was both (the coach she employs, on a rung that no longer fits
+   the week's income) source order handed the border to `blocked`: dashed, `rgba(255,255,255,.09)`,
+   over a darker card. The owner's own save is exactly that state - an Elite coach at $658/wk against
+   a read of $482 - so the frame he is asking for is one the screen was drawing and then painting
+   over. The template no longer puts `blocked` on a current row at all (see CoachMarketScreen.vue);
+   these three rules are the second lock, so that re-introducing the class somewhere else can never
+   un-frame her coach again. Four classes beat three, in either source order.
+
+   THE RING IS WHAT MAKES IT READ AS A FRAME rather than as a hairline, and it is a `box-shadow`
+   rather than a second pixel of border ON PURPOSE: a 2px border would move this row's padding box
+   in by 1px against every other row in the list, and the 12.00px portrait clearance measured in
+   tests/component/coach-edge-card.test.ts §4 is a property of that box. An outer shadow paints
+   outside the border box and moves no layout at all. */
 .cm-row.current {
   background: rgba(var(--accent-rgb), 0.07);
   border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
 }
 /* Over budget or gated: dashed, dimmed, and the shortfall stated in money (never "expensive"). */
 .cm-row.blocked {
@@ -3592,6 +3621,18 @@ tr.kid-row td {
 }
 .cm-row.blocked .cm-name {
   color: var(--ink-dim);
+}
+/* ...and none of the three above may reach the coach she actually has - see the block above. */
+.cm-row.current.blocked {
+  background: rgba(var(--accent-rgb), 0.07);
+  border-style: solid;
+  border-color: var(--accent);
+}
+.cm-row.current.blocked .cm-art {
+  opacity: 1;
+}
+.cm-row.current.blocked .cm-name {
+  color: var(--text);
 }
 /* ⭐ ROUND-18 #2 – THE STRIP HAS A WIDTH NOW, AND THAT IS THE WHOLE FIX (owner, twice: «я просил
    отодвинуть текст от картинок тренеров внутри раздела с выбором тренеров», «10-15 пикселей, чтобы
@@ -3710,6 +3751,22 @@ tr.kid-row td {
   font-variant-numeric: tabular-nums;
   color: var(--ink-soft);
 }
+/* ⭐ ROUND-21 #2 - WHEN THE SECOND PER-MATCH FIGURE APPLIES. One sentence, on the current card only,
+   under the chips it is about.
+
+   ⚠ IT IS DELIBERATELY QUIETER THAN THE PLAQUE ABOVE IT and takes `.cm-load`'s treatment rather than
+   `.cm-plaque`'s: the plaque is a fact about THIS PERSON and this is a rule about the arrangement, so
+   the weight step `.cm-plaque` earned (500, and the ledger for it is in that rule) must stay the
+   thing that separates the two. `--muted` also keeps it off the accent, which on the current card
+   would make a condition read as good news.
+
+   No `margin-top`: it belongs to the figures directly above it, and the load note below opens its own
+   gap. Wraps freely - it is a sentence, and 375px is where it has to survive. */
+.cm-travel-edge {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--muted);
+}
 /* WHAT HE DOES ABOUT HER BODY (load slice). Below the uplift and quieter than it: the uplift is the
    card's headline claim and this is the second thing the money buys, so it must not compete. Wraps
    freely - these are sentences, and a 375px card is where they have to survive. */
@@ -3764,6 +3821,10 @@ tr.kid-row td {
 }
 .cm-row.blocked .cm-price {
   color: var(--ink-dim);
+}
+/* ⭐ ROUND-21 #11: never on the coach she has – see the `.cm-row.current` block above. */
+.cm-row.current.blocked .cm-price {
+  color: var(--text);
 }
 .cm-action {
   font-size: 12px;

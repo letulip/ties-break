@@ -23,6 +23,7 @@ import {
   financeWindow,
   KID_ID,
   START_AGE_YEARS,
+  kidAgeAt,
   type WorldState,
 } from '../src/engine/world'
 import type { RankingRow, SeasonEvent, TierId } from '../src/engine/season/types'
@@ -269,7 +270,11 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
     // identical for every share from 0.65 to 0.90, and careers re-run at 0.65 and 0.70 come out
     // byte-identical. That is exactly the kind of dead knob a guard should refuse to allow.
     expect(TIERS.j60.enterPct).toBe(0.5)
-    expect(TIERS.j300.enterPct).toBe(0.4)
+    // ⚠ 0.4 -> 0.2 BY P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). Real J300
+    // acceptance lists cut at the top ~2% of the girls' junior list against our 40%; 0.2 is as far as
+    // the correction could travel, because everything tighter deletes the rung and – since P1 made
+    // the junior ranking load-bearing for professional access – costs ~110 rank places with it.
+    expect(TIERS.j300.enterPct).toBe(0.2)
     // ...the acceptance lists tighten as you climb, which is the ladder.
     expect(TIERS.j300.enterPct!).toBeLessThan(TIERS.j60.enterPct!)
     // ...and neither has drifted into the range where the share stops gating anything.
@@ -278,11 +283,29 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
       // ...nor below its own field's floor, which would be a cut stricter than the draw it fills.
       expect(TIERS[tier].enterPct!).toBeGreaterThan(TIERS[tier].entrantPctBand[0])
     }
-    // The cut sits AT or BELOW the top of the band the field is drawn from for j60 and ABOVE it for
-    // j300 - i.e. the prestige rung is the one that admits players from outside its own regular
-    // field. Pinned as a DIRECTION rather than a number so the reason stays visible: without it,
-    // j300's field (top 25%) would be a wall no career in any preset ever cleared.
-    expect(TIERS.j300.enterPct!).toBeGreaterThan(TIERS.j300.entrantPctBand[1])
+    // The cut sits AT or BELOW the top of the band the field is drawn from for j60 - i.e. the
+    // acceptance list reaches deeper than the regulars, which is what qualifying and wildcards are
+    // for in the real game.
+    expect(TIERS.j60.enterPct!).toBeGreaterThan(TIERS.j60.entrantPctBand[1])
+    //
+    // ⚠⚠ AND ON j300 THAT DIRECTION HAS **INVERTED** (P3, 16.08), WHICH IS A REAL CONSEQUENCE AND IS
+    // PINNED AS ONE RATHER THAN QUIETLY DROPPED. The cut is now 0.20 against a field band that
+    // reaches 0.25, so the kid needs a better junior standing to ENTER a J300 than the weakest AI
+    // player the draw is MADE of. The line this replaces asserted the opposite direction, and its
+    // stated reason was measured: at a cut of 0.25 "j300's field would be a wall no career in any
+    // preset ever cleared" - 0.0-0.3 entries per four-year career across all eighteen cells, 30.07.
+    //
+    // **THAT REASON NO LONGER HOLDS, AND THAT IS WHY THE PIN COULD MOVE.** P1 and P2 rebuilt the
+    // junior game around this table, and the wall is not a wall any more: measured on the shipped
+    // tree, **42 of 54 careers still enter a J300** at 0.20 (2.2 entries each) and 71 of 90 over the
+    // full baseline horizon. The property the old line protected - the prestige rung is REACHABLE -
+    // survives; the proxy it used to protect it with does not.
+    //
+    // ⚠ IT IS A CHARACTERISATION AND THE OWNER HAS IT (spec §6.3). If he re-picks j300 at or above
+    // 0.25 this goes red, and the reader should restore the strict `toBeGreaterThan` above.
+    expect(TIERS.j300.enterPct!, 'the known inversion - see the note above').toBeLessThan(
+      TIERS.j300.entrantPctBand[1],
+    )
   })
 
   it('every point total 0..5000 keeps at least one tier open – no gap, ever', () => {
@@ -654,21 +677,29 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
       expect(TIERS[t].maxAgeYears).toBeUndefined()
       expect(isTierAgeOpen(t, 30)).toBe(true)
     }
-    // The adult rungs open at 16/16/16/17/17/17 and never close – the fork at 19 is a decision,
-    // not a wall, precisely because these are still here on the far side of it (W2-LADDER: the
-    // spec's minAge chain is 16 for the entry trio's first two plus w50, 17 from w75 up).
-    // ⚠ W3-ACT2 continues the chain at 17 for all four act-3 rungs, and DELIBERATELY does not push
-    // it higher: the doorway is not the gate up here, the acceptance list is (#200 / #120 / #65 /
-    // #104). A later doorway would have gated the top of the ladder twice and told the player the
-    // wrong reason once.
+    // The adult rungs never close – the fork at 19 is a decision, not a wall, precisely because
+    // these are still here on the far side of it.
     for (const t of ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as TierId[]) {
       expect(TIERS[t].maxAgeYears).toBeUndefined()
       expect(isTierAgeOpen(t, 30)).toBe(true)
     }
-    expect(TIERS.w50.minAgeYears).toBe(16)
-    expect(TIERS.w75.minAgeYears).toBe(17)
-    expect(TIERS.wta125.minAgeYears).toBe(17)
-    expect(TIERS.slam.minAgeYears).toBe(17)
+    // ⚠⚠ RE-AIMED, AND WHAT MOVED IS THE GRID ITSELF (owner, 16.08). These four lines used to pin
+    // 16 / 17 / 17 / 17, and the note above them read: *"The adult rungs open at 16/16/16/17/17/17 …
+    // (W2-LADDER: the spec's minAge chain is 16 for the entry trio's first two plus w50, 17 from w75
+    // up). ⚠ W3-ACT2 continues the chain at 17 for all four act-3 rungs, and DELIBERATELY does not
+    // push it higher: the doorway is not the gate up here, the acceptance list is (#200 / #120 / #65
+    // / #104)."* Every word of that describes a chain of OURS – the owner's ruling replaces it with
+    // the regulation's own two-number grid: «настоящих порогов только два – 14 и 18 … Возрастное есть
+    // только по количеству сыгранных в год, так и делаем.»
+    //
+    // NOTHING IS WEAKENED. The pins stay pins; they name the sourced floor instead of the invented
+    // one, and they are the four rungs that MOVED so a silent drift back is caught. 14 is ITF WTT
+    // Women's III.A.1 and the Grand Slam Rule Book; 15 is WTA Rulebook II.D, where an under-15 has no
+    // direct acceptance to a WTA event at all. research/ranking-points-by-tier.md §4-C2.
+    expect(TIERS.w50.minAgeYears, 'ITF W rung – the regulation says 14').toBe(14)
+    expect(TIERS.w75.minAgeYears, 'ITF W rung – the regulation says 14').toBe(14)
+    expect(TIERS.wta125.minAgeYears, 'a WTA event – no direct acceptance under 15').toBe(15)
+    expect(TIERS.slam.minAgeYears, 'a major is not a WTA event – its own floor is 14').toBe(14)
   })
 
   // THE OVERLAP IS THE POINT, and it is what makes 19 a fork rather than a cliff: for three whole
@@ -696,16 +727,28 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
   // tier table rather than against a list, so a re-priced age gate cannot slip past this.
   it('availabilityStatus blocks a 14-year-old on age for exactly the rungs above her age', () => {
     const world = createWorld('age-gate')
+    // ⚠ HER AGE, NOT THE BAND, AND P2 IS WHAT EXPOSED THE DIFFERENCE. This read `START_AGE_YEARS` –
+    // the 14 of the age GROUP – while `availabilityStatus` has asked `kidAgeAt` since the one-clock
+    // ruling of 09.08, and `DEFAULT_PROFILE` is a June girl who is genuinely THIRTEEN at week 0. The
+    // two agreed only because no rung's `minAgeYears` sat at exactly 14; the owner's ruling of 16.08
+    // put W15 there, and the test started asserting that a thirteen-year-old is not too young for a
+    // rung that opens at fourteen. Reading the clock the gate reads is strictly stronger, and it is
+    // the same correction world/age.ts records for nine engine call sites.
+    // ...and it is asked of the EVENT's week, which is the second half of the same correction:
+    // `availabilityStatus` reads `kidAgeAt(world, event.week)` (R10-17), so a rung that opens on a
+    // birthday inside the season is open on the cards after it and shut on the cards before it. One
+    // age for the whole season was a good enough model only while no rung opened mid-career.
+    const ageAt = (e: SeasonEvent) => kidAgeAt(world, e.week)
     let refused = 0
     for (const e of world.season) {
       const status = availabilityStatus(world, e)
       const tooYoung = /too young/i.test(status.detail ?? '')
-      expect(tooYoung, `${e.tier} at 14`).toBe(!isTierAgeOpen(e.tier, START_AGE_YEARS))
+      expect(tooYoung, `${e.tier} at ${ageAt(e)} (w${e.week})`).toBe(!isTierAgeOpen(e.tier, ageAt(e)))
       if (tooYoung) refused++
     }
     // Not a vacuous pass: her first season really does carry rungs she cannot reach yet.
     expect(refused).toBeGreaterThan(0)
-    for (const e of world.season.filter((x) => isTierAgeOpen(x.tier, START_AGE_YEARS))) {
+    for (const e of world.season.filter((x) => isTierAgeOpen(x.tier, kidAgeAt(world, x.week)))) {
       expect(availabilityStatus(world, e).detail ?? '').not.toMatch(/too young/i)
     }
   })
@@ -734,7 +777,11 @@ describe('L8 — she can only play ONE tournament a week', () => {
       // assertion below reads would be the wrong throw entirely: the test would pass while proving
       // nothing. No third pile of points can fix that, because age is not a pile of points. Filtering
       // to what a fourteen-year-old may enter is the same move the two piles above already make.
-      if (!isTierAgeOpen(e.tier, START_AGE_YEARS)) continue
+      // ⚠ HER AGE, NOT THE BAND (P2). Same correction as L7 above and for the same reason: she is
+      // genuinely thirteen at week 0 on the shipped birthday, and since the owner's ruling of 16.08
+      // W15 opens at fourteen – so filtering on the BAND let a W15 through that the gate then refuses
+      // on AGE, which is once more the wrong throw for a test about one body in one week.
+      if (!isTierAgeOpen(e.tier, kidAgeAt(world, world.week))) continue
       // ⚠ AND THE RUNGS THE BOOK ABOVE HAS OUTGROWN GO TOO (W2-WINDOW), which is the same move
       // again rather than a third exception. The two piles are what clear the ITF/domestic gates,
       // and 1,500 domestic points clear them by walking straight past Local (ceiling 85) and

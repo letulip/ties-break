@@ -402,18 +402,45 @@ describe('the season mirror – the wrap judges against the table the card names
     // table and not the latched one is, and it is asserted below on numbers that still differ (2 against
     // the card, 8 against the active table). Re-aimed rather than re-recorded: nothing was loosened,
     // and a wrap that went back to reading `activeLadderOf` still fails this.
-    const world = walkNear(205, 'golden-v45')
+    // ⚠ RE-AIMED AGAIN AT P1 (15.08, docs/specs/junior-access-2026-08.md), AND FOR THE THIRD TIME THE
+    // SEED IS UNCHANGED AND ONLY THE WEEK MOVED: 205 -> 153, with the SAME pair of tables (`itf` on
+    // the card, `wta` latched) and not one assertion touched. Junior access changed WHEN this career
+    // reaches the professional tour – W15's door reads a junior ranking now – so the season whose card
+    // and latch disagree is one wrap earlier than it was. Which wrap it is was never the subject; that
+    // the wrap judges against the CARD's table and not the latched one is, and a wrap that went back to
+    // reading `activeLadderOf` still fails this. The mechanism note two paragraphs up is unchanged.
+    // ⚠ RE-AIMED A FOURTH TIME AT P2 (16.08, docs/specs/age-eligibility-window-2026-08.md), AND THE
+    // WEEK WENT BACK WHERE IT WAS: 153 -> 205, again the SAME pair of tables and again not one
+    // assertion touched. The age-eligibility WINDOW is her birthday year now, so a fifteen-year-old
+    // spends one allowance across her birth year instead of two across two season blocks – she reaches
+    // the professional table a season later again, and the wrap whose card and latch disagree is the
+    // one P1 moved it off. Measured, not guessed (tools/mirror-probe.ts, all eight wraps of this
+    // career): 49 and 153 are `domestic`/`itf`, 101 agrees with itself, 205 is `itf`/`wta` with 11
+    // against the card and 14 against the latch, and 257 onward agree. Which wrap it is was never the
+    // subject.
+    // ⚠ RE-AIMED A FIFTH TIME AT P2 ITEM 6 (`w15.minAgeYears` 16 -> 14, the owner's ruling of 16.08):
+    // 205 -> 49, and THIS time the pair of tables moved as well, so it is read off the wrap instead
+    // of being written down. Measured across all eight wraps of this career (tools/mirror-probe.ts):
+    // 49 and 153 disagree as `domestic` on the card against `itf` latched, 101 / 205 / 257+ agree
+    // with themselves, and the `itf`/`wta` pair this file used to name no longer occurs on this seed
+    // at all – a rung that opens at fourteen changes when the latch reaches each storey. The file has
+    // said from the first re-aim that WHICH pair it is was never the subject; asserting only that
+    // they DIFFER makes that literally true and stops the next phase re-picking a week.
+    const world = walkNear(49, 'golden-v45')
     const summary = world.lastSeasonSummary!
-    expect(summary.rankTrack).toBe('itf')
-    expect(activeLadderOf(world)).toBe('wta')
+    const card = summary.rankTrack!
+    const active = activeLadderOf(world)
+    expect(card, 'the card names the table the season was played on').not.toBe(active)
+    // ...and for the record, the pair this seed shows today.
+    expect([card, active]).toEqual(['domestic', 'itf'])
 
     // The ledger the wrap just banked from is reset by the wrap itself, so the fold is re-run here off
     // the rows the season actually committed - reconstructed the only way that is honest, by walking
     // one week short of the wrap and reading the ledger before it clears.
-    const oneShort = walkNear(204, 'golden-v45')
+    const oneShort = walkNear(48, 'golden-v45')
     const rows = oneShort.seasonEntries!.rows
-    const againstCard = rows.filter((r) => entryCouldNotMove(r, 'itf')).length
-    const againstActive = rows.filter((r) => entryCouldNotMove(r, 'wta')).length
+    const againstCard = rows.filter((r) => entryCouldNotMove(r, card)).length
+    const againstActive = rows.filter((r) => entryCouldNotMove(r, active)).length
     // The two really do differ on this career, or the test would prove nothing.
     expect(againstActive).toBeGreaterThan(againstCard)
     // ...and the banked number is the CARD's one. (The wrap counts the wrap-week entries too, so the

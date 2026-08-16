@@ -665,3 +665,232 @@ describe('commentary – item 18: a retirement is explained, not just recorded',
     expect(last.text.length).toBeLessThanOrEqual(120)
   })
 })
+
+// =================================================================================================
+// ROUND 21 ITEM 3 (owner, 14.08, SECOND ASK): «И ещё раз: проверь пожалуйста что с комментариями
+// текстовой трансляции на 1000 и шлемах, кажется ничего не изменилось».
+//
+// He was right, and the measurement is the whole point of this block. BEFORE
+// (tools/commentary-rung-probe.ts, 200 seeded matches): every rung produced 16.07 beats a match out
+// of 483 distinct phrasings and **0.0% of rows differed** between a J30 first round and a Grand Slam
+// final - not "similar", identical, because `buildCommentary` took three arguments and none of them
+// was the tournament. AFTER: 650/653 phrasings at storey 3 and 749/758 at storey 4, with 59.7% of
+// rows differing from the J30 arm.
+//
+// ⚠ EVERY TEST BELOW HAS TO FAIL IF THE RUNG IS IGNORED. Mutating `storeyFor` to `return 1` (or
+// dropping the fourth argument at the call site) turns this whole describe red; a test that only
+// checked "commentary exists" would not have.
+// =================================================================================================
+describe('commentary – item 3: the log knows which rung she is playing on', () => {
+  /** The draws as they stand after the 14.08 wave: a Slam is 128 (seven rounds) and a 1000 is 64
+   *  (six). Named here so a copy rule that assumed five rounds or a 32 draw shows up as a failure. */
+  const SLAM_DRAW = 128
+  const THOUSAND_DRAW = 64
+  const J30_DRAW = 32
+
+  const stage = (round: number, drawSize: number): string => {
+    const remaining = drawSize / 2 ** round
+    if (remaining === 2) return 'Final'
+    if (remaining === 4) return 'Semifinal'
+    if (remaining === 8) return 'Quarterfinal'
+    return `Round of ${remaining}`
+  }
+
+  const J30_R1 = { tier: 'j30' as const, roundLabel: stage(0, J30_DRAW) }
+  const J30_FINAL = { tier: 'j30' as const, roundLabel: 'Final' }
+  const NATIONAL_FINAL = { tier: 'national' as const, roundLabel: 'Final' }
+  const W75_R1 = { tier: 'w75' as const, roundLabel: stage(0, J30_DRAW) }
+  const THOUSAND_R1 = { tier: 'wta1000' as const, roundLabel: stage(0, THOUSAND_DRAW) }
+  const SLAM_R1 = { tier: 'slam' as const, roundLabel: stage(0, SLAM_DRAW) }
+  const SLAM_FINAL = { tier: 'slam' as const, roundLabel: 'Final' }
+
+  const rows = (m: AnnotatedMatch, event: Parameters<typeof buildCommentary>[3]): string[] =>
+    buildCommentary(m, A.name, B.name, event).map((b) => `${b.lead ?? '-'}|${b.text}`)
+
+  /** The row with names and numbers masked out, so what is left is the PHRASING - the "sameness"
+   *  measure the owner is actually reporting. */
+  const shape = (line: string): string =>
+    line.split(A.name).join('{P}').split(B.name).join('{P}').split('Bianca').join('{P}').split('Dana').join('{P}')
+      .replace(/\b\d+\b/g, '#')
+
+  /** The same, with the COUNTED WORDS masked too ("six break points" -> "# break points"). ⚠ THE
+   *  SUBSET CLAIM BELOW NEEDS THIS AND `shape` ALONE IS NOT ENOUGH: a pool is additive, but an
+   *  observed sample is not - a rare count like "six break points" can be phrased one way at storey 2
+   *  and the other way at storey 3 in a 120-match corpus, and the base mould then never appears
+   *  beside that number at all. That is a fact about the sample, not a lost phrasing, and masking the
+   *  count is what tells the two apart. Found by this test failing on exactly that row. */
+  const NUM_WORD =
+    /\b(a|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\b/gi
+  const mould = (line: string): string => shape(line).replace(NUM_WORD, '#')
+
+  const phrasings = (event: Parameters<typeof buildCommentary>[3], n = 120): Set<string> => {
+    const out = new Set<string>()
+    for (const m of corpus(n)) for (const line of rows(m, event)) out.add(shape(line))
+    return out
+  }
+
+  it('⚠ THE OWNER\'S OWN QUESTION: a Grand Slam final and a J30 first round do not read the same', () => {
+    let differing = 0
+    let total = 0
+    let identicalMatches = 0
+    for (const m of corpus(80)) {
+      const junior = rows(m, J30_R1)
+      const slam = rows(m, SLAM_FINAL)
+      expect(slam.length, 'the cut is text-only: the same match keeps the same rows').toBe(junior.length)
+      let same = true
+      for (let i = 0; i < junior.length; i++) {
+        total++
+        if (junior[i] !== slam[i]) {
+          differing++
+          same = false
+        }
+      }
+      if (same) identicalMatches++
+    }
+    // BEFORE this landed both numbers were 0 and 80 respectively, which is the report he filed.
+    expect(identicalMatches, 'a whole match narrated identically at both ends of the ladder').toBe(0)
+    expect(differing / total, `only ${((100 * differing) / total).toFixed(1)}% of rows differ by rung`).toBeGreaterThan(
+      0.4,
+    )
+  })
+
+  it('⚠ says MORE KINDS OF THING higher up: distinct phrasings grow with the storey', () => {
+    const junior = phrasings(J30_R1).size
+    const pro = phrasings(W75_R1).size
+    const top = phrasings(SLAM_R1).size
+    expect(pro, `storey 3 (${pro}) must out-phrase storey 2 (${junior})`).toBeGreaterThan(junior)
+    expect(top, `storey 4 (${top}) must out-phrase storey 3 (${pro})`).toBeGreaterThan(pro)
+    // ...and by a real margin rather than by one new sentence.
+    expect(top / junior).toBeGreaterThan(1.3)
+  })
+
+  it('⚠ ...and the growth is ADDITIVE, so a rung never loses a phrasing its junior has', () => {
+    // Read on the CLAIM (the beat's first sentence), which is the part the pools decide. The manner
+    // clause after it is chosen by the rotor and cut by the budget, so a whole row is not the right
+    // unit for a subset claim - see `pool` in the source for the monotonicity rule itself.
+    const claims = (event: Parameters<typeof buildCommentary>[3], kind: Beat['kind']): Set<string> => {
+      const out = new Set<string>()
+      for (const m of corpus(120)) {
+        for (const b of buildCommentary(m, A.name, B.name, event)) {
+          if (b.kind === kind) out.add(mould(`${b.text.split('. ')[0]}.`))
+        }
+      }
+      return out
+    }
+    for (const kind of ['break', 'hold', 'streak', 'games'] as const) {
+      const junior = claims(J30_R1, kind)
+      const pro = claims(W75_R1, kind)
+      const top = claims(SLAM_R1, kind)
+      for (const c of junior) {
+        expect(pro.has(c), `storey 3 lost a "${kind}" phrasing storey 2 has: ${c}`).toBe(true)
+        expect(top.has(c), `storey 4 lost a "${kind}" phrasing storey 2 has: ${c}`).toBe(true)
+      }
+      expect(pro.size, `"${kind}" gained nothing at storey 3`).toBeGreaterThan(junior.size)
+      expect(top.size, `"${kind}" gained nothing at storey 4`).toBeGreaterThan(pro.size)
+    }
+  })
+
+  it('⚠ names the STAKES off the draw sheet, and a 128 draw is read as 128', () => {
+    // The 14.08 wave took a Slam to seven rounds and a 1000 to six. Nothing here counts rounds: the
+    // stake is parsed out of `stageLabel`'s own label, so every round of the biggest draw resolves.
+    const m = play('stakes-1')
+    const matchBeat = (event: Parameters<typeof buildCommentary>[3]): string => {
+      const beats = buildCommentary(m, A.name, B.name, event)
+      return beats[beats.length - 1].text
+    }
+    const expected: [number, string][] = [
+      [0, 'a place in the round of 64'],
+      [1, 'a place in the round of 32'],
+      [2, 'a place in the round of 16'],
+      [3, 'a place in the quarterfinals'],
+      [4, 'a place in the semifinals'],
+      [5, 'a place in the final'],
+      [6, 'the title with it'],
+    ]
+    expect(expected.length, 'a 128 draw is seven rounds').toBe(Math.log2(SLAM_DRAW))
+    for (const [round, said] of expected) {
+      const label = stage(round, SLAM_DRAW)
+      const text = matchBeat({ tier: 'slam', roundLabel: label })
+      expect(text, `${label} of a ${SLAM_DRAW} draw`).toContain(said)
+    }
+    // The 1000 is a different size and says so: its opener wins into a round of 32, not a round of 64.
+    expect(matchBeat(THOUSAND_R1)).toContain('a place in the round of 32')
+    expect(stage(0, THOUSAND_DRAW)).toBe('Round of 64')
+    // And a J30 opener off a 32 draw is a third answer again.
+    expect(matchBeat(J30_R1)).toContain('a place in the round of 16')
+    expect(matchBeat(J30_FINAL)).toContain('the title with it')
+    // A match with no tournament behind it claims no stake at all.
+    expect(matchBeat(null)).not.toContain('a place in')
+    expect(matchBeat(null)).not.toContain('the title')
+  })
+
+  it('⚠ the CROWD exists from storey 3 up and never below it', () => {
+    const ROOM = /crowd|stadium|applause|stands|seat|quiet for it|at the net/i
+    for (const m of corpus(40)) {
+      for (const event of [null, NATIONAL_FINAL, J30_R1, J30_FINAL]) {
+        for (const line of rows(m, event)) {
+          expect(ROOM.test(line), `a junior court grew a crowd: ${line}`).toBe(false)
+        }
+      }
+    }
+    const heard = corpus(40).flatMap((m) => rows(m, SLAM_FINAL)).filter((l) => ROOM.test(l))
+    expect(heard.length, 'nothing in a Grand Slam final mentions the room at all').toBeGreaterThan(20)
+  })
+
+  it('⚠ the ladder only ADDS: no occasion, and a storey-1 occasion, narrate byte for byte as before', () => {
+    // The regression guard for every existing caller. `buildCommentary(m, a, b)` is what the friendly,
+    // the sandbox hit-out, MatchReplay and this whole test file use, and it must be untouched.
+    for (const m of corpus(60)) {
+      const bare = buildCommentary(m, A.name, B.name)
+      expect(buildCommentary(m, A.name, B.name, null)).toEqual(bare)
+      expect(buildCommentary(m, A.name, B.name, NATIONAL_FINAL), 'storey 1 is where the file already was')
+        .toEqual(bare)
+    }
+  })
+
+  it('⚠ the occasion does not change the CUT: same rows, same key moments, same volume', () => {
+    // The escalation is entry LENGTH and vocabulary, never row count (live-text-adult-tour.md §2.7).
+    // If a rung ever started emitting more rows, the key cut and the volume pins would be deciding
+    // different things at different rungs, which is not a ladder - it is two products.
+    for (const m of corpus(60)) {
+      const junior = buildCommentary(m, A.name, B.name, J30_R1)
+      const slam = buildCommentary(m, A.name, B.name, SLAM_FINAL)
+      expect(slam.map((b) => [b.pointIndex, b.kind, b.keyMoment, b.score, b.set])).toEqual(
+        junior.map((b) => [b.pointIndex, b.kind, b.keyMoment, b.score, b.set]),
+      )
+    }
+  })
+
+  it('⚠ is still deterministic with an occasion, and still draws nothing', () => {
+    for (const seed of ['occ-a', 'occ-b', 'occ-c']) {
+      expect(rows(play(seed), SLAM_FINAL)).toEqual(rows(play(seed), SLAM_FINAL))
+    }
+    const m = play('occ-rng')
+    const real = Math.random
+    Math.random = () => {
+      throw new Error('commentary must not draw randomness')
+    }
+    try {
+      expect(buildCommentary(m, A.name, B.name, SLAM_FINAL).length).toBeGreaterThan(0)
+    } finally {
+      Math.random = real
+    }
+  })
+
+  it('every storey obeys the copy rules – the row budget, the short dash, a real sentence', () => {
+    for (const m of corpus(60)) {
+      for (const event of [NATIONAL_FINAL, J30_FINAL, W75_R1, THOUSAND_R1, SLAM_R1, SLAM_FINAL]) {
+        for (const b of buildCommentary(m, A.name, B.name, event)) {
+          expect(b.text, 'the row budget is the same at every rung').toHaveLength(
+            Math.min(b.text.length, 120),
+          )
+          expect(b.text.length, b.text).toBeLessThanOrEqual(120)
+          expect(b.text.endsWith('.'), b.text).toBe(true)
+          expect(b.text[0], b.text).toBe(b.text[0].toUpperCase())
+          expect(`${b.lead ?? ''} ${b.text}`).not.toContain('—')
+          expect(`${b.lead ?? ''} ${b.text}`).not.toMatch(/[Ѐ-ӿ]/)
+        }
+      }
+    }
+  })
+})

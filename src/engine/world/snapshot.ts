@@ -60,20 +60,20 @@ import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
-import { buildDebtView, buildEndingView, collegeStillOpen } from './endings'
+import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
-import { entryCapUsage, proEntryCapUsage, isCappedProTier } from './entryCaps'
+import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
-import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote } from './coachMarket'
+import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
 import { kitDealView, kitLineViews } from './kit'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
-import { travelCostFor } from './sponsors'
+import { coachTravelFareFor, travelCostFor } from './sponsors'
 import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
@@ -250,10 +250,13 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
                 wtaWorldFor(e),
                 e,
                 wtaCtx!.ranking,
-                kidMatchPlayerFor(world, e.surface),
+                // ⭐ THE PREVIEW MUST PROMISE WHAT THE WEEK WILL DELIVER (owner, 15.08). The card is
+                // read BEFORE she enters, and the helping now follows the fare, so a preview built
+                // on the standing stance would show a junior card an edge the week never applies.
+                kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0),
                 wtaExclusionFor(e),
               )
-            : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
+            : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface, coachTravelFareFor(world, e) > 0)),
         // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
         // entering will actually cost, and it is the same number chargeTravel will take.
         travelCostCents: travelCostFor(world, e),
@@ -272,6 +275,16 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // Only on the rungs the tour's rule counts, so the chip's own "which cards carry it" question
         // is answered by the engine's predicate rather than by a list in the screen.
         ...(isCappedProTier(e.tier) ? { proEntryCap: proEntryCapUsage(world, e.week) } : {}),
+        // ⭐ AND THE JUNIOR ALLOWANCE, ON THE SAME TERMS (P2, act2-pro-tour.md §5's «the player sees
+        // the budget»). The pro counter has ridden every W card since round-17 #2; the ITF one was
+        // only ever visible on a card the cap had ALREADY refused, which is the fuel gauge that
+        // lights up when the tank is empty - the exact shape round-16 #7 fixed one table up.
+        //
+        // ⚠ THE TWO FAMILIES ARE DISJOINT (`isCappedTier` / `isCappedProTier`), so no card can carry
+        // both and neither predicate has to know about the other. Read at the EVENT's week for the
+        // identical reason the pro one is: an eight-week horizon crosses her birthday, and after P2
+        // her birthday is exactly where the allowance turns over.
+        ...(isCappedTier(e.tier) ? { entryCap: entryCapUsage(world, e.week) } : {}),
         entered: isEntered,
         // A fatigued event is a CAUTION, not a block: she stays eligible. Only a HARD block
         // (point band, injured, unavailable, medical) removes eligibility.
@@ -284,6 +297,9 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // than inside `ineligibleReason`, which is where it used to live: the two are orthogonal now,
         // and the card has to be able to say "still yours, and beneath you" in one breath.
         ...(gate.outgrown ? { outgrown: true } : {}),
+        // ⚠ `costsCollege` WAS SET HERE AND GOES WITH THE RULE IT REPORTED (owner, 16.08 – the record
+        // is on the retired `ENDINGS.collegeClosedFromTier`). It was derived from `entryCostsCollege`
+        // and never stored, so nothing about the save schema moves with it.
         ...reason,
         ...coachSay,
       }
@@ -585,6 +601,9 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
     temperatureC: eventTemperature(world.seed, event),
     roundLabel: stageLabel(current.round, tier.drawSize),
+    // ⭐ ROUND-21 #2: «Присутствие в потоке ... точно надо (если едет)». Asked ONCE, in the engine,
+    // and carried - the same answer the running commentary and the week's story are given.
+    coachTravelled: coachTravelsWithHer(world),
     ladder: track,
     kidRank: kidLadderRank(world, track),
     opponent: {
@@ -703,6 +722,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     vacationPackageId: vacationForWeek(world, world.week)?.packageId ?? null,
     // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
     // decision rather than the world's, and the subject of the ordinary week's note.
+    // ⭐ ROUND-21 #2: the ONE predicate, asked here and carried – see `coachTravelsWithHer`.
+    coachTravelled: coachTravelsWithHer(world),
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must
@@ -1003,8 +1024,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       ? {
           askedWeek: world.fork.askedWeek,
           ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth),
-          // ⭐ #6: DERIVED, never stored – so no save field and no migration (see `collegeStillOpen`).
-          collegeOpen: collegeStillOpen(world),
+          // ⚠ `collegeOpen` WAS HERE. Round-17 #6 put it on the wire so the card could stop drawing an
+          // answer the engine would refuse; the owner removed the refusal on 16.08, so there is no
+          // longer a state the card needs telling about. It was derived, never stored – no migration.
         }
       : null,
     retirementOffer: world.retirementOffer,

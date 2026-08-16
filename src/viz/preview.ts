@@ -157,8 +157,15 @@ function pct(x: number): string {
 }
 
 /** How many players are left when a round of this size is played. 'Final' is two, and the rest come
- *  off `stageLabel`'s own vocabulary. Null when the label is not one this game produces. */
-function remainingIn(roundLabel: string): number | null {
+ *  off `stageLabel`'s own vocabulary. Null when the label is not one this game produces.
+ *
+ *  ⚠ IT PARSES THE LABEL RATHER THAN COUNTING ROUNDS, WHICH IS WHY THE 14.08 DRAW CHANGE COST IT
+ *  NOTHING. A Slam went 32 -> 128 and a WTA 1000 32 -> 64 that morning, so "Round of 128" and
+ *  "Round of 64" are now labels this game really produces; the regex below already read them and
+ *  every consumer's arithmetic is `log2`, not a five-round constant. Exported since round 21 item 3
+ *  so viz/commentary.ts names the stakes off the SAME parse - two readers of `stageLabel`'s
+ *  vocabulary is exactly how a draw-size assumption gets in. */
+export function remainingIn(roundLabel: string): number | null {
   if (roundLabel === 'Final') return 2
   if (roundLabel === 'Semifinal') return 4
   if (roundLabel === 'Quarterfinal') return 8

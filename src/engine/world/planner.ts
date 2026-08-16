@@ -27,6 +27,7 @@ import { rivalGroundstrokes } from '../season/rival'
 import { JUNIOR_TOUR } from '../season/tournament'
 import { formatShortName } from '../../shared/format'
 import { addEvent, seasonStartWeek } from './ledger'
+import { ageWindowStartWeek } from './age'
 import { KID_ID } from './constants'
 import { practiceForWeek, refundPractice, vacationForWeek } from './bookings'
 import { layoffCovering, medicalBlock, medicalClearance, restRecoveryBonus } from './medical'
@@ -430,13 +431,22 @@ export function prunePlannerBookings(world: WorldState): void {
   world.practices = world.practices.filter((p) => p.week >= from)
 }
 
-/** Drop international entries from seasons that are over: nothing can ever read them again (the
- *  cap is asked per season, and the only seasons reachable are the current one and the next). The
- *  list is therefore bounded by the cap itself – tens of numbers over a whole career, not one per
- *  event played. Same `seasonStartWeek` boundary the cap counts on, so the prune can never eat a
- *  slot the gate still needs. */
+/** Drop international entries nothing can ever read again. The list stays bounded by the caps
+ *  themselves – tens of numbers over a whole career, not one per event played.
+ *
+ *  ⚠⚠ THE BOUNDARY IS THE EARLIER OF TWO WINDOWS SINCE P2, AND IT HAS TO BE, because two different
+ *  rules now read these ledgers over two different years:
+ *    * the entry allowances count her BIRTHDAY YEAR (`entryCapUsage` / `proEntryCapUsage`, P2), and
+ *      for a girl born after the first week of January that year REACHES BACK INTO THE PREVIOUS
+ *      SEASON BLOCK for every week between New Year and her birthday;
+ *    * `quotaPlayedIn` (world/mandatory.ts) counts the SEASON BLOCK, because the tour's six-500
+ *      commitment is a season's obligation and not an age rule.
+ *  Pruning on either boundary alone would silently eat rows the other rule still needs – the age
+ *  window's tail in January, or the season's tail after her birthday – so the prune takes the min and
+ *  the two rules stay independent. Same discipline as before: the prune can never eat a slot a gate
+ *  still reads. */
 export function pruneInternationalEntries(world: WorldState): void {
-  const from = seasonStartWeek(world.week)
+  const from = Math.min(seasonStartWeek(world.week), ageWindowStartWeek(world, world.week))
   world.internationalEntryWeeks = world.internationalEntryWeeks.filter((w) => w >= from)
   // The pro ledger prunes on the same boundary for the same reason - bounded by its own cap.
   world.proEntryWeeks = world.proEntryWeeks.filter((w) => w >= from)

@@ -40,7 +40,7 @@ import ProgressRing from '../ui/ProgressRing.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
-import { KID_ID, kidMatchPlayer, isCappedProTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
+import { KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
@@ -432,6 +432,26 @@ function showsProEntries(e: UpcomingEvent): boolean {
   return isCappedProTier(e.tier) && proEntriesFor(e) !== null
 }
 
+// ⭐ AND THE JUNIOR BUDGET, ON THE SAME TERMS (P2, act2-pro-tour.md §5: «The player sees the budget
+// ... and the refusal names the rule»). Half of that sentence shipped at round-17 #2 and half did
+// not: the professional counter has ridden every W card since, while the junior one appeared only on a
+// card the cap had ALREADY refused. Both allowances are hers to see, and a junior season is where
+// the budget is tightest - fourteen international events at fourteen, against a calendar that offers
+// far more than fourteen.
+//
+// SAME SHAPE, SAME SILENCE RULE: the engine's own per-event figure, and nothing at all once the row
+// is unlimited (17+), because a fraction with no denominator is not a budget.
+function juniorEntriesFor(e: UpcomingEvent): string | null {
+  const cap = e.entryCap
+  if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
+  return `junior entries ${cap.used} / ${cap.limit}`
+}
+/** WHICH CARDS CARRY IT – the junior rungs the allowance counts (`ECONOMY.entryCap.cappedTiers`,
+ *  through the engine's own predicate). The two families are disjoint, so no card shows both. */
+function showsJuniorEntries(e: UpcomingEvent): boolean {
+  return isCappedTier(e.tier) && juniorEntriesFor(e) !== null
+}
+
 // SEASON STRUCTURE BY SURFACE (owner approved 26.07). The calendar shows 8 weeks, so a 15-week clay
 // swing would otherwise only become visible once she is standing in it – and the whole point of the
 // block schedule is that the calendar tells her when her surface ARRIVES. One strip above the
@@ -459,10 +479,14 @@ const upcoming = computed(() => game.snapshot?.upcoming ?? [])
 // three through the climb, four at the top - because a rung she has passed is CLOSED by the ladder
 // now rather than filtered out here. Entered events always survive: she is IN them (R10-3), and a
 // committed week must stay actionable.
+// ⚠ AND round-21 #5 ADDS THE TABLE SHE IS ON: a professional is no longer offered the domestic
+// rungs, whose points she cannot spend. `activeLadder` is the ENGINE's verdict, asked here and never
+// re-derived - see `paysIntoHerTables` in composables/tierState.ts for the whole rule and its seam.
 const feed = computed(() =>
   feedContext({
     ageYears: game.snapshot?.ageYears ?? 0,
     tierOpen: game.snapshot?.tierOpen,
+    activeLadder: game.snapshot?.activeLadder,
     upcoming: upcoming.value,
   }),
 )
@@ -697,9 +721,18 @@ function lockLabel(e: UpcomingEvent): string {
       // and the engine's `pointsToEnter` for a W15 is INTERNATIONAL junior points - the chip then
       // read "58 / 120 national pts", her domestic total over an international threshold under a
       // domestic label. `entryBandTrack` is the one rule for which table a rung's threshold lives in.
+      // ⚠⚠ AND THE FALLBACK IS THE ENGINE'S OWN WORDS BEFORE THE LADDER'S (P1, docs/specs/
+      // junior-access-2026-08.md) – the round-17 #19 fix one branch up, arriving on the OTHER code.
+      // 'locked' stopped being one refusal the moment junior access shipped: a rung can now be shut
+      // because the Junior Accelerator holds no place for her there, at a rank the acceptance list
+      // would happily take. The ladder's note knows nothing about that and would print the CUT
+      // ("takes the top 700 – she is #291") on a card refused for a completely different reason,
+      // about a number she can see she is inside. `ineligibleDetail` is the sentence the gate itself
+      // wrote and is right for every arm of 'locked'; the ladder note stays as the last resort, for a
+      // snapshot old enough not to carry one.
       return e.pointsToEnter !== undefined
         ? pointsLockNote(e.tier, e.pointsToEnter, game.snapshot?.ladders[entryBandTrack(e.tier)].points)
-        : tierStateById.value[e.tier].note
+        : (e.ineligibleDetail ?? tierStateById.value[e.tier].note)
   }
 }
 
@@ -739,6 +772,19 @@ interface PendingConfirm {
   onConfirm: () => void | Promise<void>
 }
 const pendingConfirm = ref<PendingConfirm | null>(null)
+
+/* ⚠⚠ `COLLEGE_COST_NOTE` WAS HERE AND IT IS REMOVED BECAUSE IT BECAME FALSE (owner, 16.08). P4 put
+ *  it on both entry paths – *"A result here can cost the college place at nineteen – a win at this
+ *  level makes her a professional."* – and it was an honest sentence about the rule as it then stood:
+ *  "can", never "will", because a first-round loss kept the door (owner, 13.08), and it stated a
+ *  consequence without recommending anything.
+ *
+ *  ⚠ THE RULE UNDER IT IS GONE: college is an independent branch of the career, and no result closes
+ *  it. So the sentence would now warn about something that cannot happen, on the card where the
+ *  player is deciding whether to spend an entry fee. **A false warning on an entry card is worse than
+ *  no warning** – it prices a cost into a decision that does not carry it, which is the opposite of
+ *  what a confirm dialog is for. The record of the whole rule is on the retired
+ *  `ENDINGS.collegeClosedFromTier`. */
 
 function askEnter(e: UpcomingEvent): void {
   // Fatigue is a warned CHOICE: spell out the risk in the confirm, but keep the action available.
@@ -1364,9 +1410,18 @@ function closeExhibition(): void {
               <span
                 v-if="showsProEntries(row.event)"
                 class="pill muted pro-entries"
-                :title="`The tour's age rule caps how many professional tournaments she may enter this season. This is where she stands against it.`"
+                :title="`The tour's age rule caps how many professional tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.`"
               >
                 {{ proEntriesFor(row.event) }}
+              </span>
+              <!-- ...and the junior budget, in the same slot on the junior cards (P2). Disjoint
+                   families, so exactly one of the two can ever be on a card. -->
+              <span
+                v-else-if="showsJuniorEntries(row.event)"
+                class="pill muted junior-entries"
+                :title="`The junior tour caps how many international tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.`"
+              >
+                {{ juniorEntriesFor(row.event) }}
               </span>
             </div>
           </Card>
@@ -1718,7 +1773,11 @@ section.bare .event-cards {
    owner accepted in advance ("Entries closed" + "Exams this week" + this).
    ⚠ `margin-left: auto` AND NOT `justify-content`: the row's other children are laid out from the
    left and must stay there. A justification would move all of them to say one thing about this one. */
-.pro-entries {
+/* Both budget chips share one rule – they are the same chip on two families, and giving them two
+   rules is how they would drift apart. `margin-left: auto` puts whichever one is present last in the
+   controls row, so it is the last thing read and never competes with the button beside it. */
+.pro-entries,
+.junior-entries {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
 }

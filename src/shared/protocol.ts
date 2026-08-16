@@ -674,6 +674,16 @@ export interface PendingView {
   temperatureC: number
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
+  /** ⭐ ROUND-21 #2 – DID THE COACH COME? The owner, third ask: «Присутствие в потоке и трансляции
+   *  точно надо (если едет).» This is the "в потоке" half.
+   *
+   *  It rides here rather than being re-derived in the component for the same reason `temperatureC`
+   *  and `ladder` do, and the reason is sharper for this one: the flow, the live commentary and the
+   *  week's story must all be describing the SAME trip, so `coachTravelsWithHer` is asked once, in
+   *  the engine, and the answer is carried. A screen that re-read `coachBilling.onEventWeeks` would
+   *  also be re-deriving the "and there IS a coach" clause, which is exactly the half a self-coached
+   *  career gets wrong. */
+  coachTravelled: boolean
   /** WHICH TABLE THIS TOURNAMENT IS PLAYED ON – `TIERS[tier].track`, carried rather than re-derived.
    *
    *  ⚠ THE BUG THIS CLOSES (31.07, fix/ladder-separation). The owner, after a National: «по итогам
@@ -997,6 +1007,15 @@ export interface CoachMarketRow {
    *  man's own number - see `coachMarket` for why a number on an unhired card would break the
    *  market. His own lands on `Snapshot.coachEdge` after a season with her. */
   edgePct: [number, number]
+  /** ⭐ ROUND-21 #2 – THE SAME BAND DOUBLED, for a family whose coach is on the trip with her, and
+   *  `null` for one that is not sending him (nobody hired, or the stance off).
+   *
+   *  The travel helping shipped in the engine and said nothing on the screen that sells it: `edgePct`
+   *  above quoted the HOME corridor to a family paying a second fare to every W event. It is still a
+   *  bracket and never a man - twice a price bracket is a price bracket, so §4's anti-shopping rule is
+   *  untouched - and the card names the CONDITION rather than claiming a flat doubling, because a
+   *  J-series week doubles nothing unless the junior stance is open too. See `coachEdgeCorridorPp`. */
+  edgeTravelPct: [number, number] | null
   /** WHAT HE DOES ABOUT HER BODY, in one sentence (docs/specs/coach-as-load-manager.md).
    *
    *  Added because a ladder nobody can see is not a product. The load wave gave the rungs two new
@@ -1096,7 +1115,12 @@ export interface UpcomingEvent {
    *  and the allowance looked as though it never reset. It always reset: `proEntryCapUsage` filters
    *  `proEntryWeeks` to `seasonStartWeek(week)`, so the counter is a filter and a missed reset is
    *  unexpressible. What was wrong was the WEEK it was asked about – the same lesson `pointsToEnter`
-   *  and `entryCap` already carry. */
+   *  and `entryCap` already carry.
+   *
+   *  ⚠ AND SINCE P2 THAT WEEK MATTERS MORE, not less: the allowance's window is her BIRTHDAY YEAR
+   *  now, so an eight-week horizon can cross the turnover in the middle of a season block. The
+   *  function is unchanged in shape – ask it about the event's week and it answers about the
+   *  allowance the event is in. */
   proEntryCap?: EntryCapUsage
   /** SHE HAS PASSED THIS RUNG – and it is not a lock (the owner's ruling on backlog #84, 06.08,
    *  quoted verbatim in docs/specs/ladder-floor-2026-08.md: no lower bound at all, let her play, and
@@ -1129,6 +1153,12 @@ export interface UpcomingEvent {
    *  NEVER A BLOCK. "The parent may push" is a standing rule of this game and the doctor's veto
    *  (`ineligibleReason: 'medical'`) is its single exception. `eligible` stays true. */
   coachCaution?: string
+  /* ⚠ `costsCollege?: boolean` WAS HERE (P4) AND IS REMOVED ON THE OWNER'S RULING OF 16.08. It carried
+   *  P4's warning – *"a result here can cost the college place at nineteen"* – to both entry paths,
+   *  and it was true of the rule as it then stood. College is an independent branch now and no result
+   *  closes it, so the field would be reporting a consequence that cannot happen. It was optional and
+   *  derived at snapshot time, never persisted, so nothing in the save schema moves with it: the
+   *  record of the whole rule is on the retired `ENDINGS.collegeClosedFromTier`. */
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
   /** the ITF rank an international rung accepts down to, on a card locked by an ACCEPTANCE LIST
@@ -1138,9 +1168,15 @@ export interface UpcomingEvent {
    *  with the population - do not quote a literal here, as the "top 50" this comment used to name
    *  was stale by two re-pins when it was found on 30.07. */
   rankToEnter?: number
-  /** present only when 'capped': the allowance the gate judged THIS event against, so the card can
-   *  print "N of M" without re-deriving it. Per-event for the same reason `pointsToEnter` is – an
-   *  event in the next season is measured against a different year's allowance than today's. */
+  /** the ITF annual allowance THIS event is judged against, so the card can print "N of M" without
+   *  re-deriving it. Per-event for the same reason `pointsToEnter` is – an event in the next
+   *  allowance year is measured against a different year's ledger than today's.
+   *
+   *  ⚠ PRESENT ON EVERY JUNIOR CARD SINCE P2, NOT ONLY ON A REFUSED ONE. It used to be written only
+   *  when the verdict was 'capped', which meant the one number a parent needs in order to SPEND the
+   *  allowance sensibly arrived after it was spent – the fuel gauge that lights up when the tank is
+   *  empty. `proEntryCap` one table up has ridden every professional card since round-17 #2; this is
+   *  the same fix on the same terms, and the two families are disjoint so no card carries both. */
   entryCap?: EntryCapUsage
 }
 
@@ -1747,6 +1783,17 @@ export interface KitLineView {
   blurb: string
   /** her CONDITION on this line right now, 0 = as new, 1 = spent (`kitWearAt`'s units) */
   wear: number
+  /** ⚠ HOW MANY OF THE RUNG'S GOOD WEEKS ARE STILL IN FRONT OF HER (round 21 item 10, owner: «В
+   *  разделе bills возле выбранной позиции и "# good weeks" написать "(3 left)" - сколько осталось»).
+   *
+   *  `rungs[].goodWeeks` is what a rung BUYS from new and says nothing about the set she is actually
+   *  holding, so a fourteen-week-old string job read exactly like a fresh one. This is that same
+   *  number minus the line's real age, and it hits 0 on the week `wear` reaches the Worn edge - one
+   *  clock, so the count and the condition word cannot disagree. See `goodWeeksLeftFor`.
+   *
+   *  null when a signed deal is holding this line under that edge: the brand keeps it fresh, so
+   *  nothing is counting down and the screen prints no countdown. */
+  goodWeeksLeft: number | null
   /** what the family's recurring bill for this line costs at each rung, cents - the mid of the
    *  background's own band times the rung's price factor, so the corridor is visible at the till.
    *
@@ -2256,6 +2303,19 @@ export interface DiarySnapshot {
    *  «чтобы тренировочные недели не просто скипались ... что происходит на этих неделях». See
    *  engine/diary.ts WEEK_NOTES for the cadence and the licences. */
   weekNote: string | null
+  /** ⭐ ROUND-21 #2 – THE COACH WAS THERE, in the week's story. Non-null on exactly the weeks she
+   *  came home from a tournament AND the coach travelled with her; null on every other week,
+   *  including every trip he stayed home for.
+   *
+   *  ⚠ IT IS ITS OWN FIELD RATHER THAN ENTRIES IN `TRAVEL_NOTES`, and that is the difference between
+   *  presence and decoration. The travel pool is a LICENSED lottery – a line joins ~370 others and is
+   *  drawn some weeks – which is right for colour and wrong for a fact the player just paid a second
+   *  fare for: he would be in the story on maybe one trip in twenty. This says it on every trip he
+   *  came on and on none that he did not.
+   *
+   *  Parent's voice, like the scrap it sits under (diary/travelNotes.ts rule 1): the family noticing
+   *  him, never him assessing her. */
+  coachNote: string | null
   /** the Memory card to show this week, or null */
   memory: MemoryCard | null
   /** W5: WHICH PAINTING THIS WEEK SHOWS – the journey home, the layoff, the holiday, or the week's
@@ -2287,6 +2347,18 @@ export interface KidLife {
   /** her grade, on a 1-September school year, plus her place in the class by age. Moves once a
    *  year, and says "Exams this week" while the calendar is holding an exam blackout. */
   school: KidLifeTile
+  /** ⭐ ROUND-21 #6 – WHY SHE IS STILL AT SCHOOL WHEN HER TENNIS YEAR HAS LEFT, or '' when there is
+   *  nothing to explain.
+   *
+   *  ⚠ IT IS NOT A THIRD TILE LINE AND CANNOT BE. Both lines above are `white-space: nowrap` inside a
+   *  115px cell on a 17-character budget (`TILE_LINE_MAX`); this is a sentence, so it renders under
+   *  the grid, directly below the School tile it names. The owner's report is why it exists at all:
+   *  «Если день рождения в декабре, то вся школа уже закончилась и в сентябре вроде бы её быть не
+   *  должно» – measured last round and CORRECT, because the ITF band is one birth YEAR while the
+   *  school year turns on 1 September, so a December girl sits her final school year in a September
+   *  her own age group has already left. He ruled the cut-off STAYS; what was missing is that nothing
+   *  on screen said so, and unexplained correct behaviour reads exactly like a bug. */
+  schoolWhy: string
   /** who she is closest to this school year, and how that is going this week. Deterministic
    *  (purpose-scoped sub-streams, never Math.random), and it moves with both clocks. */
   friends: KidLifeTile
@@ -2365,10 +2437,21 @@ export interface TrainingRead {
  *  closing line is "the epilogue says which of the two it was".
  *
  *  ⚠ `'college'` IS THE ONLY ONE THAT RESUMES (§5.1). It latches like the rest – the album is shown,
- *  every mutating command refuses – and then the hand-off page's single button spends four years in
- *  one tap and clears the latch. Four years amateur on a scholarship, no ranking points, and she is
- *  back at twenty-two with no ranking at all, which is what a career that entered nothing for 208
- *  weeks has by construction: every result she owned has aged out of the 52-week window. */
+ *  every mutating command refuses – and then the epilogue asks a question and takes an answer.
+ *
+ *  ⭐⭐ P5 (16.08, docs/specs/college-as-a-second-act-2026-08.md): it used to be ONE button spending
+ *  four years in one tap. It is one year at a time now, because the sport's own case is the early
+ *  return – Diana Shnaider left NC State after about a season and is inside the WTA top 15 – so the
+ *  block was the wrong SHAPE as well as an empty one. `resumesWeek` therefore points ONE year out and
+ *  the ending is re-latched with the next one until she has spent all four or answers
+ *  `endCollegeEarly`.
+ *
+ *  ⚠ AND THE OLD CLAIM THAT SHE COMES BACK "with no ranking at all" IS WITHDRAWN AS A CAUSAL ONE.
+ *  Measured over 52 careers at the fork (spec §2c) her professional rank is **#290 before the freeze
+ *  and #290 after it** – she was already off the list the week she walked in, because at nineteen her
+ *  professional results are too few for `RANKABLE_MIN`. The four years took nothing from her; what
+ *  they cost is the ladder moving without her, and that is 121 places against the same seeds spent on
+ *  tour. */
 export type CareerEndingType =
   | 'stopped'
   | 'college'
@@ -2416,12 +2499,64 @@ export interface RetirementOffer {
   final: boolean
 }
 
-/** THE FOUR-YEAR FREEZE (§5.1). Written the week she chooses college; `doneWeek` is null while the
- *  jump has not been spent yet, so a save taken mid-decision resumes into the same button. */
+/** THE COLLEGE YEARS (§5.1). Written the week she chooses college; `doneWeek` is null while she is
+ *  still there, so a save taken mid-decision resumes into the same button.
+ *
+ *  ⭐⭐ P5 – IT USED TO BE A FOUR-YEAR FREEZE SPENT IN ONE TAP AND IT IS FOUR YEARS SPENT ONE AT A
+ *  TIME NOW (docs/specs/college-as-a-second-act-2026-08.md). The reason is the sport's: Diana
+ *  Shnaider left after about a year and is inside the WTA top 15, so a four-year block is the wrong
+ *  SHAPE and not merely an empty one. `untilWeek` is therefore no longer a constant – it is moved
+ *  BACK to the current week the moment she leaves, which is what makes `inCollege` false without a
+ *  second flag to keep in step. */
 export interface CollegeState {
   fromWeek: number
+  /** the week the freeze ends. Moved back to `world.week` on an early return – see above. */
   untilWeek: number
   doneWeek: number | null
+  /** ⭐ P5: one row per year LIVED, appended as each finishes. Empty until the first year is spent,
+   *  and never longer than `ENDINGS.collegeYears`. This is the whole of what is behind the door. */
+  years: CollegeYear[]
+  /** ⭐ P5: the national-team week of the year IN PROGRESS, held from the week it happens until the
+   *  year closes around it. Null the rest of the time.
+   *
+   *  ⚠ IT LIVES INSIDE `CollegeState` AND NOT ON THE WORLD, because it is meaningless outside the
+   *  freeze and a top-level field would have to be nulled by every other code path that ends a
+   *  career. Here it dies with the object that gives it meaning. */
+  pendingCallUp: CollegeCallUp | null
+}
+
+/** ⭐ P5 – ONE COLLEGE YEAR, banked the week it finishes.
+ *
+ *  ⚠ IT STORES WHAT WAS MEASURED AT THE TWO ENDS AND NEVER A DERIVED VERDICT. `pruneResults` deletes
+ *  a result 52 weeks after it happened and `financeWeeks` keeps a 60-week window, so by the time the
+ *  epilogue is drawn NONE of this is recoverable from anything else the save holds – which is the
+ *  same argument `CareerTotals` makes, and the reason this is a new fact rather than a view. */
+export interface CollegeYear {
+  /** 1-based: the first year she spent there is 1 */
+  index: number
+  fromWeek: number
+  untilWeek: number
+  /** her skill mean at each end, 0-100 – what the year did to her game */
+  startSkill: number
+  endSkill: number
+  /** her professional rank at each end, or null when she is not on the list at all (the same
+   *  contract `LadderView.rank` keeps: null IS NOT #1) */
+  startRank: number | null
+  endRank: number | null
+  /** what the family's balance did over the year. Positive is the scholarship's whole economic
+   *  point – it is the one stretch of the game where the money goes the other way. */
+  fundsDeltaCents: number
+  /** the national-team week, or null in a year nobody wrote to her – see `engine/nationalTeam.ts` */
+  callUp: CollegeCallUp | null
+}
+
+/** One national-team week inside a college year. Zero money and zero ranking points, by the
+ *  rulebook – `engine/nationalTeam.ts` carries the sources. */
+export interface CollegeCallUp {
+  week: number
+  rubbersPlayed: number
+  rubbersWon: number
+  nationFinish: number
 }
 
 /** CAREER-TOTAL MONEY, and it is a NEW FACT rather than a view of an old one – the same argument
@@ -2534,6 +2669,29 @@ export interface EndingView {
   titles: number
   /** how many times she answered "one more year" (§5.3's decade of decisions) */
   oneMoreYearCount: number
+  /** ⭐ P5: the college years, while she is living them. Null on every other ending and on college
+   *  itself once she has left – it is the state of an OPEN question, and there is exactly one screen
+   *  allowed to ask it. */
+  college: CollegeProgressView | null
+}
+
+/** ⭐ P5 – WHAT THE EPILOGUE SCREEN NEEDS TO ASK "ANOTHER YEAR?" AND NOTHING ELSE.
+ *
+ *  ⚠ `final` IS THE FIELD THAT DECIDES WHETHER THERE IS A QUESTION AT ALL, and it is built exactly
+ *  like `RetirementOffer.final`: the last year is not a choice she declines, it is the year after
+ *  which nobody is asking. Two answers or none – the screen may not invent a third. */
+export interface CollegeProgressView {
+  /** how many years she has finished – 0 before the first one is spent */
+  yearsDone: number
+  /** `ENDINGS.collegeYears`, read out of the engine so the copy never says "four" from a template */
+  totalYears: number
+  /** the year that just finished, or null before the first one */
+  last: CollegeYear | null
+  /** ⚠ "THE NEXT YEAR IS THE LAST ONE", not "she is out". A career that is out has no ending latched
+   *  and is never rendered here, so a flag for that state would be dead on arrival. This is the
+   *  difference between a question with years behind it and the LAST question there will be – the
+   *  same job `RetirementOffer.final` does one door along, and the copy has to carry it. */
+  final: boolean
 }
 
 export interface Snapshot {
@@ -2666,14 +2824,50 @@ export interface Snapshot {
    *  coach is not stood down - which is no longer a question the tournament calendar answers - so
    *  there is nothing left to compare. See `coachWorksThisWeek`. */
   coachBilling: {
-    /** does he TRAVEL with her (a persisted stance; the mechanic itself is still deferred) */
+    /** ⭐ ROUND-21 #2: does he TRAVEL with her. A persisted stance, and since this wave a LIVE one –
+     *  the row on screen T sets it, the till charges a second fare for it, and the flow, the
+     *  commentary and the week's story all say when he came. */
     onEventWeeks: boolean
+    /** ⭐ v49: ...and to the rungs that pay her nothing too – the NESTED half of the stance, and the
+     *  one the bench says can end a career in the junior years. Only meaningful while `onEventWeeks`
+     *  is on, which is how screen T draws it: a second and more expensive choice, not a second row. */
+    onJuniorEvents: boolean
     weeklyCents: number
     /** weeks of the season she is entered for – the season she is in, or the one just finished */
     eventWeeks: number
     /** weeks of the coming year the retainer is actually charged for */
     billedWeeks: number
     seasonCents: number
+    /** ⭐ ROUND-21 #2: what the second seat would add over the trips he WOULD BE ON this season, in
+     *  cents. Priced whether the switch is on or off – it is the price of the decision, not a
+     *  receipt. 0 for a self-coached family (nobody to send) and 0 with nothing booked.
+     *  ⚠ GROSS since 15.08: the support pays for HER seat and never for his, so this is the full
+     *  fare. It is read out of `coachTravelFareFor` itself, which is what stops the row on screen T
+     *  and the line on the till quoting different money. */
+    travelFareCents: number
+    /** ...and how many trips that figure covers, so the screen never prints a total with nothing to
+     *  divide it by. Trips he would be ON – which is fewer than she has booked whenever the rungs on
+     *  her card are ones he is not sent to. */
+    travelTrips: number
+    /** ⭐ 15.08: what HER seats cost over those same trips, net of every cover. Equal to
+     *  `travelFareCents` for a family paying full price, and SMALLER for one holding a scholarship or
+     *  a brand's travel share – which is precisely the case where "twice the fare" stopped being
+     *  true and the screen has to print both figures instead. */
+    travelHerFareCents: number
+    /** ⭐ v49: what opening junior travel would add on top, and over how many further trips. Disjoint
+     *  from `travelFareCents` by construction – a rung either pays prize money or it does not. */
+    travelJuniorCents: number
+    travelJuniorTrips: number
+    /** ⭐ 15.08: is any support reducing HER travel this week? Asked of the one fare definition rather
+     *  than of a list of covers, so a support stream added later is inside the answer. It is what
+     *  lets screen T say "his seat is not covered" only to the families that hold a cover. */
+    travelCovered: boolean
+    /** ⭐ ROUND-21 #12: WHAT ARRIVES EVERY WEEK, ALL OF IT – the parents' contribution plus the
+     *  savings interest the balance earns plus a signed kit deal's retainer, pro-rated. It is the cap
+     *  the coaching budget meter draws against and the denominator every `overBudgetCents` is cut
+     *  from, and it is carried here rather than reverse-engineered on the screen (which only worked
+     *  while some row happened to be over budget). See `familyWeeklyIncomeCents`. */
+    weeklyIncomeCents: number
   }
   /** ONE SENTENCE ABOUT HOW MUCH ROOM IS LEFT IN HER (08.08) – the context every uplift on screen T
    *  is relative to, since a rung's worth is a share of remaining headroom and collapses as she
@@ -2697,17 +2891,30 @@ export interface Snapshot {
   coachEdge: {
     /** [lo, hi] pp per match for her rung – [0, 0] self-coached, which is not a corridor */
     corridorPct: [number, number]
+    /** ⭐ ROUND-21 #2: ...and the same band DOUBLED on the trips the coach is on, or `null` when this
+     *  family would not send him. A bracket, like the one above it – no coach id is read anywhere in
+     *  its derivation, so §7's "no figure for him on any screen" survives it. */
+    travelCorridorPct: [number, number] | null
     /** which third of that corridor he landed in, or null while there is nothing honest to show */
     placement: CoachEdgePlacement | null
     revealed: boolean
     weeksTogether: number
-    revealAfterWeeks: number
+    /** ⭐ ROUND-21 #7c: THE WEEK THE VERDICT LANDS IN, and it is an OFF-SEASON week rather than a
+     *  duration. It was `revealAfterWeeks: 52` – a rolling bar off the hire date that never looked
+     *  at the calendar, which is how the card came to print "49 weeks of 52" in an off-season with
+     *  the season already played. See `coachRevealWeek`. */
+    revealWeek: number
     /** ...and the same clock in seasons, which is what the plaque's CONFIDENCE is banded on (§8a) */
     seasonsTogether: number
     /** THE PLAQUE, WRITTEN (§7/§8a). One sentence, composed engine-side from the place and the
      *  clock, because the two halves answer to different things and a screen holding both would be
      *  the second copy of that rule. The card prints it and formats nothing. */
     plaqueLine: string
+    /** ⭐ ROUND-21 #2: THE CONDITION UNDER THE SECOND FIGURE, or '' when there is no second figure.
+     *  It says «twice that on the trips the coach travels to» rather than «doubled», because the
+     *  helping follows `coachTravelFareFor` and a junior week doubles nothing unless that stance is
+     *  open too. Composed engine-side and quoting no number – see `TRAVEL_EDGE_LINE`. */
+    travelLine: string
   }
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */
@@ -2885,15 +3092,16 @@ export interface Snapshot {
   fork: {
     askedWeek: number
     ageYears: number
-    /** ⭐ IS THE SCHOLARSHIP STILL AN ANSWER? Round-17 #6: the college branch had NO precondition, so a
-     *  nineteen-year-old already earning on the professional tour was offered four years of student
-     *  tennis as an equal third of the card. DERIVED from `bestFinishByTier` (`collegeStillOpen`),
-     *  never persisted, so no save field and no migration. `answerFork` enforces the same rule. */
-    collegeOpen: boolean
+    /* ⚠ `collegeOpen: boolean` WAS HERE (round-17 #6) AND IS REMOVED ON THE OWNER'S RULING OF 16.08:
+     *  «Колледж – это независимая ветка карьеры … альтернативная.» The flag existed so the card could
+     *  stop drawing an answer `answerFork` would refuse; there is no such refusal any more, so the
+     *  third answer is unconditional and the card has nothing to be told. It was derived from
+     *  `bestFinishByTier`, never persisted – no save field moved and none moves back. */
   } | null
   /** the natural end's offer while it is OPEN and unanswered, else null */
   retirementOffer: RetirementOffer | null
-  /** her four years at college, once she has chosen them – null for every career that did not */
+  /** her college years, once she has chosen them – null for every career that did not. ⭐ P5: she may
+   *  leave after any of them, so this is a span she is LIVING rather than a four-year block. */
   college: CollegeState | null
   /** career-total money (v39). On the snapshot always, not only at the end: the Money screen's
    *  "since week one" row reads it, and it is what makes the reckoning cheap. */
@@ -2938,6 +3146,25 @@ export interface CareerMeta {
   birthMonth?: number
 }
 
+/** ⭐ ROUND-21 #1 – WHOSE CAREER IS IN THIS FILE, read WITHOUT importing it.
+ *
+ *  The owner: «Загрузка сейва, нужен диалог, подтверждающий намерение, особенно актуально, если сейв
+ *  перетирает существующий.» A confirm that cannot tell the two cases apart is the confirm that
+ *  teaches him to dismiss it, and the difference is not knowable from a filename: `careerId` lives
+ *  inside the gzipped payload. So the shell asks the worker what the bytes hold, matches the answer
+ *  against the careers list it already has, and only then says which of the two things is about to
+ *  happen. Three fields, deliberately – enough to name the career and date it, nothing that would
+ *  make this a second way to read a world into the UI.
+ *
+ *  ⚠ IT IS THE "LOADING-FOR-INSPECTION" QUERY `ToWorker.restoreSlot` SAYS TO ADD WHEN A SURFACE
+ *  NEEDS ONE, and it stays inside its own sentence: it reads bytes, commits nothing, adopts nothing
+ *  and leaves `world` untouched. `WorldState` never crosses to the UI – CLAUDE.md invariant 1. */
+export interface SavePeek {
+  careerId: string
+  kidName: string
+  week: number
+}
+
 /** W1-INTEGRITY-A: machine-readable error kinds the UI can dispatch on. Everything else stays a
  *  plain human-readable `error` string, exactly as before – `code` is additive.
  *   STALE_REVISION  the mutation's `baseRevision` is not the worker's committed revision; the
@@ -2967,6 +3194,10 @@ export type ToWorker =
   | { id: number; type: 'bookPractice'; week: number; withCoach: boolean; baseRevision: number }
   | { id: number; type: 'hireCoach'; coachId: string | null; baseRevision: number }
   | { id: number; type: 'setCoachOnEventWeeks'; on: boolean; baseRevision: number }
+  // ⭐ v49: ...and the nested half – does he go to the rungs that pay her nothing. Its own command
+  // rather than a second argument on the one above, so that neither switch can silently move the
+  // other: the screen sends exactly the decision the player took, and the engine records exactly it.
+  | { id: number; type: 'setCoachOnJuniorEvents'; on: boolean; baseRevision: number }
   | { id: number; type: 'cancelPractice'; week: number; baseRevision: number }
   | { id: number; type: 'setPlan'; plan: WeekPlan; baseRevision: number }
   // W4: answer the knock. The ONLY way an undecided knock clears, and the only way time moves again.
@@ -2991,8 +3222,13 @@ export type ToWorker =
   // is what stops a stale screen ending a career that never asked.
   | { id: number; type: 'answerFork'; answer: ForkAnswer; baseRevision: number }
   | { id: number; type: 'answerRetirement'; retire: boolean; baseRevision: number }
-  // «Four years later» – spends the college freeze in one tap and clears the latch (§5.1).
+  // «Another year» – spends ONE college year and re-latches, or clears the latch on the last of
+  // them (§5.1, and P5's docs/specs/college-as-a-second-act-2026-08.md for why it is not four).
   | { id: number; type: 'resumeFromCollege'; baseRevision: number }
+  // ⭐ P5 – «I am going back on tour now». The early return, the sport's own case, and the one
+  // answer that ends the freeze before the scholarship does. Refused engine-side at any moment
+  // that is not a year boundary.
+  | { id: number; type: 'endCollegeEarly'; baseRevision: number }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }
   // W1-INTEGRITY-A (TB-01): restore a slot AS THE ACTIVE CAREER – the restored state is committed
@@ -3011,6 +3247,9 @@ export type ToWorker =
   | { id: number; type: 'deleteCareer'; careerId: string }
   | { id: number; type: 'exportSave' }
   | { id: number; type: 'importSave'; bytes: ArrayBuffer }
+  // ⭐ ROUND-21 #1: read a save FILE without importing it, so the confirm can say whether it is
+  // about to overwrite a career that exists. A query in the strict sense – see `SavePeek`.
+  | { id: number; type: 'peekSave'; bytes: ArrayBuffer }
 
 // Every success carries `revision` – the worker's committed revision AFTER the command (unchanged
 // by queries). Mutating requests send it back as `baseRevision`; the worker rejects a stale one
@@ -3029,6 +3268,7 @@ export type ToUI =
   | { id: number; ok: true; type: 'slots'; slots: SlotMeta[]; revision: number }
   | { id: number; ok: true; type: 'careers'; careers: CareerMeta[]; revision: number }
   | { id: number; ok: true; type: 'exported'; bytes: ArrayBuffer; filename: string; revision: number }
+  | { id: number; ok: true; type: 'peek'; peek: SavePeek; revision: number }
   | {
       id: number
       ok: false

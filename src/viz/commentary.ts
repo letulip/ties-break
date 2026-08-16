@@ -119,6 +119,55 @@
 // is that element and no template below interpolates it.
 //
 // ---------------------------------------------------------------------------------------------
+// ROUND 21 ITEM 3 - THE LOG NOW KNOWS WHICH RUNG SHE IS PLAYING ON (owner, 14.08, SECOND ASK)
+// ---------------------------------------------------------------------------------------------
+// «И ещё раз: проверь пожалуйста что с комментариями текстовой трансляции на 1000 и шлемах, кажется
+// ничего не изменилось» - and he was exactly right, because nothing had been. Task #109 was filed
+// for this and never built. MEASURED before a line was written (tools/commentary-rung-probe.ts,
+// 200 seeded matches, every arm on the same corpus):
+//
+//   arm                     beats/match   distinct phrasings   rows differing from a J30 first round
+//   J30 first round            16.07             483                          -
+//   WTA 1000 final             16.07             483                        0.0%
+//   Slam final                 16.07             483                        0.0%
+//
+// Not "similar": IDENTICAL, byte for byte, and by construction - `buildCommentary(match, a, b)` took
+// three arguments and none of them was the tournament. A Grand Slam final and a J30 first round read
+// the same because they WERE the same call.
+//
+// WHAT THE OCCASION NOW CHANGES, and it is the research's own ladder rather than a new opinion. Two
+// findings govern it, and both say the same thing: docs/research/live-text-adult-tour.md §2.7 - "the
+// human layer's escalation is expressed as ENTRY FREQUENCY and ENTRY LENGTH, not as louder
+// adjectives" - and docs/research/commentary-lexicon.md §5.3, whose whole point is that "the lever is
+// not adjectives, it is WHAT GETS MENTIONED AT ALL". So:
+//
+//   1. THE PHRASE POOLS GROW. Every repeated beat (break, break-back, hold-under-pressure, streak,
+//      game run) draws from a pool that gains entries at storey 3 and again at storey 4, and the new
+//      entries are the OTHER SENTENCE MOULDS Ferguson's register description gives
+//      (commentary-lexicon.md §5: full clause / NP-drop / copula-drop / result expression) rather
+//      than the same mould with adjectives bolted on. Measured effect below.
+//   2. THE STAKES ARE NAMED, from storey 2 up. The match beat says what the win was FOR, in the draw
+//      sheet's own vocabulary - the title, a place in the final, a place in the round of 64.
+//   3. THE ROOM APPEARS, from storey 3 up. See the honesty note below: this is the one new class of
+//      claim, and the rung is what licenses it.
+//
+// ⚠ THE STOREYS ARE `viz/preview.ts`'s, NOT A SECOND LADDER. `storeyOf(tier)` already answers "how
+// big is this occasion" for the pre-match intro, it is the owner's own four-storey ruling
+// (docs/specs/round16-triage.md §3), and a commentary module that invented its own answer would be
+// the second authority on one question. Import it, do not restate it.
+//
+// ⚠ NO EVENT MEANS STOREY 1, WHICH MEANS TODAY'S OUTPUT EXACTLY. The friendly, the sandbox hit-out
+// and every existing caller that passes nothing get a byte-identical log - the ladder only ever ADDS,
+// and its bottom step is where the file already was. `tests/viz/commentary.test.ts` still runs
+// unchanged against the three-argument call for that reason.
+//
+// ⚠ AND NOTHING NAMES A TOURNAMENT. The occasion's NAME is the preview block's job one row below
+// (`${roundLabel} at the ${TIERS[tier].label}`), and a generator that says it twice is repeating its
+// own slot back at the reader - the rule viz/preview.ts's SURFACE_NOTE is written under. What the
+// beats read off the event is its SIZE and its ROUND, never its label, so this file imports no tier
+// catalogue and cannot print a tournament name even by accident.
+//
+// ---------------------------------------------------------------------------------------------
 // THE DETERMINISM RULE
 // ---------------------------------------------------------------------------------------------
 // The same match must narrate identically, every replay, forever. This module therefore draws
@@ -130,9 +179,18 @@
 //
 // VOICE - matched to the coach's read on Home (HomeScreen COACH_QUOTES) and the family diary
 // (engine/diary.ts): short, plain, present tense, concrete. And the diary's honesty pin applies
-// here too - a beat may assert NOTHING the point log does not carry. There is no crowd in the
-// data, no nerves, no momentum-as-feeling; there is who won, who served, how the ball ended and
-// what the score became. Everything below is derived from exactly those.
+// here too - a beat may assert NOTHING the point log AND THE OCCASION do not carry. There are no
+// nerves and no momentum-as-feeling; there is who won, who served, how the ball ended, what the
+// score became, and - since round 21 item 3 - what rung and what round it was.
+//
+// ⚠ THE CROWD IS THE ONE ADDITION, AND THE RUNG IS WHAT LICENSES IT. This comment used to read "there
+// is no crowd in the data", and that was true while the tournament was not an input. It is one now,
+// and a room is a fact about a RUNG rather than about a point: a WTA 1000 quarter-final is played in
+// front of people by construction of the rung, exactly as "a long match on tired legs" is true of
+// every retirement by construction of `retireHazard`. That is the standard this file already holds
+// itself to. So the crowd may be mentioned from storey 3 (the professional venues) and NEVER below
+// it - a J30 first round is a side court with two families on a bank, and saying otherwise would be
+// the invention the rule exists to forbid. No line asserts what the crowd is FEELING.
 // Player copy: English, short dash only (project rule) - and this file needs no dash at all.
 
 import type { AnnotatedMatch, AnnotatedPoint } from './types'
@@ -140,6 +198,9 @@ import { COURT } from './types'
 import type { MatchScore, SetGames, Side } from '../engine/match/types'
 import { awardPoint } from '../engine/match/scoring'
 import { matchWinProbability } from '../engine/match/liveProb'
+// ⚠ THE OCCASION LADDER, IMPORTED RATHER THAN RESTATED - see ROUND 21 ITEM 3 above. Both are viz
+// modules and `preview.ts` imports nothing from here, so there is no cycle to create.
+import { storeyOf, remainingIn, type PreviewEvent, type Storey } from './preview'
 
 export type BeatKind =
   | 'open'
@@ -151,6 +212,9 @@ export type BeatKind =
   | 'games'
   | 'set'
   | 'match'
+  /** ⭐ ROUND-21 #2: the coach in her corner at a set break – emitted only on a match his family
+   *  actually paid to bring him to. See THE COACH IS IN THE CORNER below. */
+  | 'coach'
 
 export interface Beat {
   /** index into match.points - the point this beat is anchored to (drives progressive reveal) */
@@ -295,6 +359,10 @@ const PRIORITY: Record<BeatKind, number> = {
   games: 4,
   streak: 5,
   rally: 6,
+  // ⭐ ROUND-21 #2 – LAST, AND DELIBERATELY LAST. The coach's beat is anchored to the first point of a
+  // new set, which is where a `rally` or a `streak` beat can also land; when they collide the TENNIS
+  // wins, every time. Presence is a thing the log mentions, never a thing it interrupts a match for.
+  coach: 7,
 }
 
 const ORDINAL = ['first', 'second', 'third', 'fourth', 'fifth'] as const
@@ -321,6 +389,12 @@ function Num(n: number): string {
   return w.charAt(0).toUpperCase() + w.slice(1)
 }
 
+/** Any phrase, opening a sentence. Used by the occasion's extra moulds, which put a counted thing
+ *  ("two break points") in the subject slot where the base mould puts a name. */
+function Cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
 /** "a set point" / "two set points" - a counted thing said the way a person says it. */
 function nPoints(n: number, kind: string): string {
   return n === 1 ? `a ${kind}` : `${numberWord(n)} ${kind}s`
@@ -339,6 +413,171 @@ const BREAK_LINES: readonly ((who: string) => string)[] = [
 const LEVEL_LINES: readonly ((who: string) => string)[] = [
   (who) => `${who} breaks back. Level again.`,
   (who) => `${who} breaks back, and the set is level.`,
+]
+
+// --- the occasion: which rung, which round (round 21 item 3) -------------------------------------
+
+/** THE TOURNAMENT BEHIND THIS MATCH, or null for a friendly. Deliberately the SAME shape the
+ *  pre-match intro already takes (`viz/preview.ts`), because it is the same fact: MatchViewer holds
+ *  one `previewEvent` and hands it to both builders, so the intro and the log can never disagree
+ *  about what is being played. */
+export type CommentaryEvent = PreviewEvent
+
+/** Which storey this match stands on - `viz/preview.ts`'s ladder, not a second one. A friendly has
+ *  no occasion at all and reads as the bottom step, which is where this file already was. */
+function storeyFor(event: CommentaryEvent | null): Storey {
+  return event ? storeyOf(event.tier) : 1
+}
+
+/**
+ * ⚠ A PHRASE POOL THAT GROWS WITH THE OCCASION - the mechanism behind "a bigger stage gets more
+ * varied language", and it is ADDITIVE by construction: storey 3 is storey 2 plus entries, storey 4
+ * is storey 3 plus entries. So a rung can never lose a phrasing its junior has, the same
+ * monotonicity `viz/preview.ts` enforces on the intro, and for the same reason - a ladder a player is
+ * climbing must not thin out above her.
+ *
+ * ⚠ AND THE EXTRA ENTRIES ARE OTHER SENTENCE MOULDS, NOT LOUDER ONES. commentary-lexicon.md §5 lists
+ * four structurally different shapes for one event (full clause, NP-drop, copula-drop/verbless,
+ * result expression) and §5.3 is explicit that the top of the ladder has FEWER modifiers rather than
+ * more. The base pools below are full clauses; what the upper storeys add is the other three moulds.
+ */
+function pool<T>(storey: Storey, base: readonly T[], from3: readonly T[], from4: readonly T[]): readonly T[] {
+  if (storey >= 4) return [...base, ...from3, ...from4]
+  if (storey >= 3) return [...base, ...from3]
+  return base
+}
+
+/** Break framings the professional rungs add: a copula-drop and a result expression. */
+const BREAK_LINES_FROM_3: readonly ((who: string) => string)[] = [
+  (who) => `The break, and it belongs to ${who}.`,
+  (who) => `That game is gone, and ${who} has it.`,
+]
+/** ...and two more at the top of the tour, still plain and still concrete. */
+const BREAK_LINES_FROM_4: readonly ((who: string) => string)[] = [
+  (who) => `${who} finds a way through the serve.`,
+  // ⚠ NOT "and it was coming", WHICH IS WHAT THIS SLOT SAID FOR ONE DRAFT. Read back off real output:
+  // it asserts that pressure had been building, and the point log carries no such fact. Every line in
+  // this file has to be true of the game it just described and of nothing else.
+  (who) => `Serve broken, and ${who} has it.`,
+]
+
+const LEVEL_LINES_FROM_3: readonly ((who: string) => string)[] = [(who) => `${who} answers. Level again.`]
+const LEVEL_LINES_FROM_4: readonly ((who: string) => string)[] = [(who) => `Straight back from ${who}, and it is level.`]
+
+/** The "saved N break points and held" claim, in three moulds. The count is the fact; the shape is
+ *  what the occasion picks. `n` arrives already worded (`nPoints`), so the number is spelled the way
+ *  a person says it at every storey. */
+const HOLD_SAVE_LINES: readonly ((who: string, n: string) => string)[] = [
+  (who, n) => `${who} saves ${n} and holds.`,
+]
+const HOLD_SAVE_FROM_3: readonly ((who: string, n: string) => string)[] = [
+  // ⚠ `Cap`, BECAUSE THE COUNT IS IN THE SUBJECT SLOT HERE. Found by the copy-rule test rather than
+  // by reading: `nPoints` returns "two break points" for use mid-sentence, and this mould opens on
+  // it, so without the capital the row started lower case.
+  (who, n) => `${Cap(n)} saved, and ${who} holds on.`,
+]
+const HOLD_SAVE_FROM_4: readonly ((who: string, n: string) => string)[] = [
+  (who, n) => `${who} holds, ${n} down.`,
+]
+
+/** ⚠ EVERY RUN LINE OPENS ON ITS NUMBER, AT EVERY STOREY. The honesty tests read the first word of a
+ *  `streak` and a `games` beat back as the count they claim, and that check is worth more than a
+ *  sentence that starts somewhere else. */
+const STREAK_LINES: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points in a row for ${who}.`]
+const STREAK_FROM_3: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points without reply for ${who}.`]
+const STREAK_FROM_4: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points in a row, all of them ${who}'s.`]
+
+const GAMES_LINES: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} games in a row for ${who}.`]
+const GAMES_FROM_3: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} games without reply for ${who}.`]
+const GAMES_FROM_4: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} games on the trot for ${who}.`]
+
+/**
+ * WHAT THE WIN WAS FOR, in the draw sheet's own words - the "stakes named" half of the ladder
+ * (commentary-lexicon.md §5.3: "the stakes noun changes at each tier and is the cheapest signal").
+ *
+ * ⚠ IT PARSES `stageLabel`'s OUTPUT THROUGH `remainingIn`, WHICH IS THE ONLY REASON THE 14.08 DRAW
+ * CHANGE CANNOT REACH IT. Nothing here counts rounds or assumes a size: a 128 draw's opener is
+ * "Round of 128" and this returns "a place in the round of 64" off the label alone, exactly as a 32
+ * draw's opener returns "a place in the round of 16". A five-round constant anywhere in this chain
+ * would have been a live bug the morning the Slam went to 128.
+ *
+ * Null when the label is not one this game produces (a friendly, the sandbox hit-out).
+ */
+function stakeWon(roundLabel: string): string | null {
+  const remaining = remainingIn(roundLabel)
+  if (remaining === null || remaining < 2) return null
+  if (remaining === 2) return 'and the title with it'
+  if (remaining === 4) return 'and a place in the final'
+  if (remaining === 8) return 'and a place in the semifinals'
+  if (remaining === 16) return 'and a place in the quarterfinals'
+  return `and a place in the round of ${remaining / 2}`
+}
+
+/**
+ * THE ROOM, AND IT ONLY EXISTS FROM STOREY 3 UP.
+ *
+ * commentary-lexicon.md §5.3: "crowd and silence only appear at tier 3 and above". Our storeys carry
+ * the same split for a better reason than symmetry - storey 1 is a local draw and storey 2 is the
+ * junior tour, where the honest picture is a side court and two families on a bank, and storey 3 is
+ * the first rung with a ticketed venue behind it. So this returns '' below 3, always.
+ *
+ * ⚠ NOTHING HERE SAYS WHAT ANYONE FEELS, which is the honesty line the head of this file draws. A
+ * crowd is present or it is not; whether it is "electric" is not a fact the game holds. And every
+ * one of these is the LAST clause of its row, so `clausesUpTo` drops it before it drops the claim -
+ * at the peak of a match the room is exactly what a human editor cuts.
+ */
+const ROOM_MATCH_FROM_3: readonly string[] = ['The crowd is on its feet.', 'A hand for both of them at the net.']
+const ROOM_MATCH_FROM_4: readonly string[] = ['The stadium is up, and it takes a while to settle.']
+const ROOM_SET_FROM_3: readonly string[] = ['Applause all round the court.', 'The applause goes on a while.']
+const ROOM_SET_FROM_4: readonly string[] = ['A roar off the far side of the stadium.']
+const ROOM_TIEBREAK_FROM_3: readonly string[] = ['The court goes quiet for it.', 'Nobody is leaving their seat now.']
+const ROOM_TIEBREAK_FROM_4: readonly string[] = ['The whole stadium is standing for it.']
+
+// =================================================================================================
+// ⭐ ROUND-21 #2 – THE COACH IS IN THE CORNER, AND THE LOG SAYS SO
+// =================================================================================================
+//
+// The owner, third ask, on being asked what «тренер едет» should actually BUILD:
+// «Присутствие в потоке и трансляции точно надо (если едет).» This is the трансляция half.
+//
+// ⚠ IT IS PRESENCE AND NOTHING ELSE - NO NUMBER MOVES. Three versions of a coach-travel STAT were
+// built and measured on 30.07 and all three failed (commit 77e08aa); this file could not carry one
+// anyway, because `buildCommentary` is a pure function of an ALREADY-PLAYED match. The beat reports
+// somebody who was there; it cannot and does not change what happened.
+//
+// ⚠ WHY A SET BREAK AND NOWHERE ELSE. On-court coaching has been permitted on the women's tour since
+// 2022 and it is permitted only when he is THERE - which is the whole argument for the fare
+// (docs/specs/training-dials.md §8: "this is not something technology has caught up with, it is
+// something the sport allows only in person"). The moment the rules give him is the changeover, so
+// the beat is anchored to the first point of a new set: at most twice in a match, never inside a
+// game, and never at the peak - `PRIORITY` puts it below every tennis beat, so a rally or a streak
+// on that same point takes the row instead.
+//
+// ⚠ WHAT IT MAY CLAIM. That he is there (his family paid a second fare for it), that it is a set
+// break (read off the point log), and WHICH WAY the set went (read off the same scan every other
+// beat reads). Nothing about what was said, nothing about how anyone feels, nothing about what it
+// changed - the honesty rule at the head of this file, applied to the one new speaker.
+//
+// ⚠ AND NO PRONOUN NAMES HIM (R15-7, owner 09.08): `buildCoachRoster` puts a woman on every roster by
+// construction, so "his corner" would print under Sabine Kobayashi. "Her coach" throughout.
+
+/** WHOSE COACH IT IS. `buildCommentary` names two players and knows nothing about which one the
+ *  family is watching, so the side is passed in with the fact - and passing them together is what
+ *  makes it impossible to put the family's coach in the opponent's chair. Null (the default) is a
+ *  match nobody travelled to, which is byte-identical to every log this file produced before. */
+export interface CommentaryCoach {
+  side: Side
+}
+
+/** The word in the corner after a set she LOST – the changeover the rules exist for. */
+const COACH_AFTER_LOSS: readonly ((who: string) => string)[] = [
+  (who) => `${who} takes the chair, and her coach is down there with her.`,
+  (who) => `Her coach is in beside ${who} before the next one starts.`,
+]
+/** ...and after a set she WON. Same fact, and the sentence does not pretend it is the same moment. */
+const COACH_AFTER_WIN: readonly ((who: string) => string)[] = [
+  (who) => `${who} sits with her coach, a set to the good.`,
+  (who) => `Her coach has a word with ${who} at the change of ends.`,
 ]
 
 /** Deterministic phrase variety with no RNG: an integer hash of the point index, folded to `n`.
@@ -884,13 +1123,52 @@ interface Candidate extends Beat {
   priority: number
 }
 
-export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB: string): Beat[] {
+/**
+ * @param event the tournament and round behind this match, or null for a friendly. ⚠ OPTIONAL AND
+ *   DEFAULTED TO null ON PURPOSE (round 21 item 3): every caller that passes nothing gets the storey-1
+ *   log, which is byte-identical to what this function returned before the occasion existed. The
+ *   ladder only ever adds.
+ */
+export function buildCommentary(
+  match: AnnotatedMatch,
+  playerA: string,
+  playerB: string,
+  event: CommentaryEvent | null = null,
+  /** ⭐ ROUND-21 #2: her coach was at this tournament, and which side of the net he sits behind. ⚠
+   *  OPTIONAL AND DEFAULTED TO null FOR THE SAME REASON `event` IS: every caller that passes nothing
+   *  gets exactly the log this function returned before he existed. See THE COACH IS IN THE CORNER. */
+  coach: CommentaryCoach | null = null,
+): Beat[] {
   const points = match.points
   if (points.length === 0) return []
   const names = speakingNames(playerA, playerB)
   const s = scan(points)
   const lastIndex = points.length - 1
   const cands: Candidate[] = []
+  // WHICH RUNG SHE IS PLAYING ON - see ROUND 21 ITEM 3 at the head of this file. One number, read
+  // once, and every phrase pool and occasion clause below is filtered by it.
+  const storey = storeyFor(event)
+
+  /** The room's line for a beat, or '' below storey 3 where there is no room to speak of.
+   *
+   *  ⚠ IT USES THE BARE HASH, NOT THE ROTOR. `rotor` is only correct when it is fed in the order the
+   *  reader will read (see its own note), and two of the three callers here sit outside the
+   *  chronological per-game loop. The pools are two or three deep and a match has at most a handful
+   *  of these rows, so the hash alone spreads them. */
+  const room = (kind: 'match' | 'set' | 'tiebreak', at: number): string => {
+    if (storey < 3) return ''
+    const lines =
+      kind === 'match'
+        ? pool(storey, [], ROOM_MATCH_FROM_3, ROOM_MATCH_FROM_4)
+        : kind === 'set'
+          ? pool(storey, [], ROOM_SET_FROM_3, ROOM_SET_FROM_4)
+          : pool(storey, [], ROOM_TIEBREAK_FROM_3, ROOM_TIEBREAK_FROM_4)
+    return lines.length === 0 ? '' : lines[variant(at, lines.length)]
+  }
+
+  /** What winning this match was worth, glued to the claim it qualifies. Storey 2 and up: below that
+   *  there is no table anybody is looking at, which is `viz/preview.ts`'s own cut for the same fact. */
+  const stake = storey >= 2 && event ? stakeWon(event.roundLabel) : null
 
   /**
    * How far the match TRAVELLED across (from, to], read off the engine's own live win probability:
@@ -1008,14 +1286,26 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
   // struggle - and the engine gives no such signal: the hazard is a per-point coin the log does not
   // record, so a "she is labouring" row would be the narrator inventing a fact. The retirement is
   // knowable at exactly one point, and this is it.
+  //
+  // ⚠ ROUND 21 ITEM 3 - THIS ROW IS WHERE THE STAKES GET NAMED, and it is the highest-value place to
+  // name them: the log is read newest-first, so the match beat is the first thing on the screen when
+  // it ends. "Takes it in three" is the same sentence at every rung; "takes it in three, and the
+  // title with it" is what a Grand Slam final actually was. See `stakeWon` - the clause is glued to
+  // the claim rather than passed as its own, because it is part of what happened rather than colour,
+  // and `clauses` may never drop it.
+  //
+  // ⚠ AND THE ROOM DOES NOT SPEAK OVER A RETIREMENT. A crowd getting to its feet is the wrong
+  // picture for a match that stopped because somebody's body did, so the retirement branch takes the
+  // stake (she really does advance into that round) and no occasion clause at all.
   const retired = match.result.retired
+  const stakeTail = stake ? `, ${stake}` : ''
   push(
     lastIndex,
     'match',
     retired ? 'Retired.' : 'Match.',
     retired
       ? clauses(
-          `${names[retired.side]} cannot go on. ${names[winner]} advances.`,
+          `${names[retired.side]} cannot go on. ${names[winner]} advances${stakeTail}.`,
           'A long match on tired legs.',
           // ⚠ THE CLAUSES ARE SPLIT RATHER THAN JOINED, and it is `clauses()`'s degradation order
           // doing real work: two players who share a first name both fall back to full names (see
@@ -1026,14 +1316,20 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
         )
       : clauses(
           match.result.sets.length === 3
-            ? `${names[winner]} takes it in three.`
-            : `${names[winner]} takes it in straight sets.`,
+            ? `${names[winner]} takes it in three${stakeTail}.`
+            : `${names[winner]} takes it in straight sets${stakeTail}.`,
           mannerLine(mannerOf(points[lastIndex]), names, winner, true),
+          room('match', lastIndex),
         ),
     scoreline,
   )
 
   // --- per game: break / hold / tiebreak / set ----------------------------------------------
+  // The three pools the per-game loop rotates, resolved once against this match's storey (round 21
+  // item 3). Below storey 3 each of them IS the base array, which is why a junior log is unchanged.
+  const pooledBreak = pool(storey, BREAK_LINES, BREAK_LINES_FROM_3, BREAK_LINES_FROM_4)
+  const pooledLevel = pool(storey, LEVEL_LINES, LEVEL_LINES_FROM_3, LEVEL_LINES_FROM_4)
+  const pooledHoldSave = pool(storey, HOLD_SAVE_LINES, HOLD_SAVE_FROM_3, HOLD_SAVE_FROM_4)
   // `prevGameLast` is the last point of the PREVIOUS game, i.e. the point immediately before this
   // game began - the `from` end of a game's swing (see `swing`). 0 for the first game of the match.
   let prevGameLast = 0
@@ -1074,7 +1370,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
         g.last,
         'set',
         'Set.',
-        clausesUpTo(budget, `${how}${standing}`, manner()),
+        clausesUpTo(budget, `${how}${standing}`, manner(), room('set', g.last)),
         `${g.gamesAfter[0]}-${g.gamesAfter[1]}`,
       )
       continue
@@ -1088,7 +1384,13 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
         w !== g.server
           ? `${names[w]} breaks back for six games all.`
           : `${names[w]} holds for six games all.`
-      push(g.last, 'tiebreak', 'Tiebreak.', `${got} A breaker decides the set.`, '6-6')
+      push(
+        g.last,
+        'tiebreak',
+        'Tiebreak.',
+        clausesUpTo(budget, `${got} A breaker decides the set.`, room('tiebreak', g.last)),
+        '6-6',
+      )
       continue
     }
 
@@ -1107,8 +1409,13 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
               ? // ⚠ THE ROTOR, NOT THE BARE HASH (round 16 item 11). Same pools, same starting
                 // position - what changed is that the pool now knows what it just said, so a
                 // break-heavy set cycles instead of repeating. See `rotor`.
-                LEVEL_LINES[pick('level', g.last, LEVEL_LINES.length)](names[w])
-              : BREAK_LINES[pick('break', g.last, BREAK_LINES.length)](names[w])
+                //
+                // ⚠ AND THE POOL ITSELF IS NOW A FUNCTION OF THE OCCASION (round 21 item 3). The
+                // rotor is unchanged: it still walks whatever pool it is handed, and a longer pool
+                // simply means it takes longer to come back round to a phrasing. That is the whole
+                // mechanism behind "a Slam does not read like a J30" - see `pool`.
+                pooledLevel[pick('level', g.last, pooledLevel.length)](names[w])
+              : pooledBreak[pick('break', g.last, pooledBreak.length)](names[w])
       // "She" is safe here and only here: the sentence it follows names her and names nobody
       // else, and the tour is women's (JUNIOR_TOUR = 'wta'; the cohort's given-name pool is
       // female). Naming her twice in two short sentences reads like a machine.
@@ -1137,7 +1444,12 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
           g.loveForty[w] && g.bpFaced === 3
           ? `${names[w]} holds from love-forty down.`
           : g.bpFaced >= SAVES_MIN
-            ? `${names[w]} saves ${nPoints(g.bpFaced, 'break point')} and holds.`
+            ? // The one repeated hold framing, so it is the one that gets the occasion's extra
+              // moulds. The other three are earned by a specific score and say the specific thing.
+              pooledHoldSave[pick('hold', g.last, pooledHoldSave.length)](
+                names[w],
+                nPoints(g.bpFaced, 'break point'),
+              )
             : ''
     if (!base) continue
     push(g.last, 'hold', 'Held.', clausesUpTo(budget, base, manner()), undefined, gameMoved)
@@ -1169,12 +1481,16 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
       const cur = best.get(g.set)
       if (!cur || len > cur.len) best.set(g.set, { side, len, from: firstPoint, last: g.last })
     }
+    // ⚠ THE BARE HASH, NOT THE ROTOR, for the same reason the rotor's own note gives: these are
+    // pushed outside the chronological per-game loop, so "what was just said" would be the wrong
+    // neighbour. The pool still grows with the occasion.
+    const pooledGames = pool(storey, GAMES_LINES, GAMES_FROM_3, GAMES_FROM_4)
     for (const r of best.values()) {
       push(
         r.last,
         'games',
         'Run.',
-        `${Num(r.len)} games in a row for ${names[r.side]}.`,
+        pooledGames[variant(r.last, pooledGames.length)](Num(r.len), names[r.side]),
         undefined,
         swing(r.from, r.last) >= KEY_SWING,
       )
@@ -1190,6 +1506,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
       const cur = best.get(setIdx)
       if (!cur || r.len > cur.len) best.set(setIdx, r)
     }
+    const pooledStreak = pool(storey, STREAK_LINES, STREAK_FROM_3, STREAK_FROM_4)
     for (const r of best.values()) {
       // THE RUN's own span, not the point it ended on - see THE KEY CUT for the measurement that
       // sent this back: six points in a row move the match a long way and no one of them much.
@@ -1197,7 +1514,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
         r.end,
         'streak',
         'Streak.',
-        `${Num(r.len)} points in a row for ${names[r.side]}.`,
+        pooledStreak[variant(r.end, pooledStreak.length)](Num(r.len), names[r.side]),
         undefined,
         swing(r.end - r.len, r.end) >= KEY_SWING,
       )
@@ -1225,6 +1542,32 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
         `${Num(r.shots)} shots, and ${names[last.by]} puts it away ${rallyPhrase(String(last.direction))}.`,
         undefined,
         swing(r.index - 1, r.index) >= KEY_SWING,
+      )
+    }
+  }
+
+  // --- the coach, if his family paid to bring him -------------------------------------------
+  // See THE COACH IS IN THE CORNER above for what this may claim and why it lives at a set break.
+  // At most one beat per completed set after the first, so at most two in the longest match this
+  // engine plays - and `keyMoment: false`, because the 'key' cut is the tennis and he is not it.
+  if (coach) {
+    for (const g of s.games) {
+      if (!g.setEnd) continue
+      // The first point of the set that FOLLOWS this one. A set that ended the match has no next
+      // point, and the match beat is already sitting on it - so this walks off the end and stops.
+      const next = g.last + 1
+      if (next > lastIndex) continue
+      const heroTookIt = g.winner === coach.side
+      const lines = heroTookIt ? COACH_AFTER_WIN : COACH_AFTER_LOSS
+      push(
+        next,
+        'coach',
+        'Corner.',
+        // The bare hash rather than the rotor, for the reason `room` gives: these are pushed outside
+        // the chronological per-game loop, so "what was just said" would be the wrong neighbour.
+        lines[variant(next, lines.length)](names[coach.side]),
+        undefined,
+        false,
       )
     }
   }

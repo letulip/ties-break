@@ -321,6 +321,187 @@ the bottom rung a genuine bottom rung.
 Number, or on a junior-reserved place — which is why a top-100 junior *ranking* is the asset, not any
 point total she could carry across.
 
+### 4c. ⚠⚠ THE ACCEPTANCE LISTS — AND THE REAL RULE IS THE OPPOSITE SHAPE FROM OURS (added 15.08)
+
+**Why this section exists.** `season/calendar.ts` carries a per-rung acceptance table —
+*"the real acceptance range (women's ITF/WTA)"*, `W35 ~#250–700 · W50 ~#200–550 · W75 ~#150–450 ·
+W100 ~#120–350 · WTA 125 ~#80–250"* — with `TierDef.acceptsRank` set to each range's floor. **That
+table has never been in this document, and it has never carried a source.** It entered the repo on
+2 Aug 2026 (commit `62ad7ab`, *"the acceptance cuts stop being shares"*) already printed as fact, and
+propagated from there into `living-field.md` §8.2d, `population-1600-2026-08.md` §2 and
+`ladder-pace-2026-08.md` §3d, each citing the one before it. The owner's 15.08 question — *«реальный
+W75 отбирает заметно у́же»* — is the first time anybody asked the source for it. Taken to the
+governing regulations, below.
+
+**A. THE ITF W RUNGS (W15/W35/W50/W75/W100) HAVE NO RANK CUT AT ALL. THE LIST IS AN ORDERING.**
+
+[2026 ITF World Tennis Tour Regulations](https://www.itftennis.com/media/15546/2026-wtt-regulations.pdf)
+(men's and women's in one file, cover version **12/12/2025**), *Women's WTT* Section VII, "Singles
+System of Merit at W35, W50, W75 and W100 Tournaments" — **one section governing all four rungs**,
+verbatim in structure:
+
+| Method | who it selects | ordered by |
+| --- | --- | --- |
+| A | players with an approved WTA singles ranking | WTA ranking |
+| B | players with an approved ITF World Tennis singles ranking | ITF points list |
+| C | players with **neither ranking** but a verified World Tennis Number | WTN |
+| D | players with **no ranking and no WTN** but a top-500 *national* ranking | electronic draw, one chip per nation |
+| D.c | *"All remaining entered players who are **unranked and have no National Ranking** shall be randomly drawn electronically at the ITF Office for a position on the Acceptance List."* | random |
+
+→ **There is no threshold anywhere in it.** An unranked player is not refused a W75; she is placed at
+the bottom of the list. The "cut" at a real W75 is an emergent weekly artefact of *who entered*, not a
+published number — and W35, W50, W75 and W100 are governed by the **identical** rule, so the
+regulations draw no acceptance distinction between them whatsoever. W15's own section (Method A–D) is
+the same list plus **Method E, Junior Reserved**: *"Entered players with an approved ITF Combined
+Junior Ranking of 1-100 shall be selected for a maximum of three (3) Main Draw places."*
+
+⚠ **AND IN PRACTICE METHODS B, C AND D ARE DEAD LETTERS.** Read off real acceptance lists (see A2):
+at W15 Brasov **all 15 direct acceptances and all 56 qualifying entries held WTA rankings**;
+ITF-ranked, WTN-only and unranked players appear only among the 257 alternates. Same at W75 Tianjin
+(20 of 20 and 27 of 27). Method A exhausts every place, so a W15 is a **WTA-ranking door in practice**
+even though the rule opens it to the unranked. The rule and the reality differ, and both matter: the
+rule is why there is no *threshold*, the practice is why there is still a *cut*.
+
+### 4c-A2. ⭐ THE OBSERVED CUTS — read off the ITF's own published acceptance lists
+
+Because no cut is published as a rule, the only honest figure is an **observed** one. Source: the
+ITF's per-tournament Acceptance List pages, e.g.
+[W75 Hechingen](https://www.itftennis.com/en/tournament/w75-hechingen/ger/2026/w-itf-ger-2026-010/acceptance-list/),
+served by `itftennis.com/tennis/api/TournamentApi/GetAcceptanceList`. **All read 15 August 2026.**
+A cut is quoted **only from lists with zero vacated slots** — a vacated slot means a post-deadline
+withdrawal, which makes the reading a lower bound rather than a cut. WTA rank of the **last direct
+acceptance**, 32 main draws:
+
+| rung | events read | **observed cut (WTA rank)** | ours (`acceptsRank`) |
+| --- | --- | --- | --- |
+| **W15** | Fiano Romano · Hurghada · Brasov | **512 · 585 · 590** | *no cut* (on-ramp) |
+| **W35** | 8 events (Kursumlijska · Trieste · Krakow · Verbier ×2 · Bistrita · Erwitte · Barueri) | **298\* · 551 · 662 · 716 · 724 · 730 · 835 · 871** | **700** ✅ mid-range |
+| **W50** | Leiria · St-Palais · Oldenzaal · Kursumlijska · Prague | **204 · 234 · 390 · 424 · 441** | **550** ⚠ too deep |
+| **W75** | Tianjin · Bytom · Kursumlijska ×2 | **262 · 305 · 334 · 359** | **450** ⚠⚠ **too deep** |
+| **W100** | *no clean list exists* | **not sourced** — best available is Gran Canaria 27 Jul, deeper than 285 with 2 slots vacated, a lower bound only | 350 |
+
+\* the 298 is an outlier in an otherwise 551–871 spread.
+
+> **THE HEADLINE. A REAL W75'S CLEAN CUT IS WTA ≈ 262–359. OURS IS #450.** The owner's *«реальный
+> W75 отбирает заметно у́же»* is correct and the gap is roughly 100–190 places. **W35's 700 is
+> right** — squarely inside the observed 551–871. **W50's 550 is too deep** against an observed
+> 204–441. So the error is not uniform across the family: two rungs are wrong and one is right.
+
+⚠ **REGIONAL EFFECT, WORTH CARRYING.** Depleted (lower-bound) W75 lists: Hechingen ≥307, Leipzig
+≥312, Ourense ≥343, Koksijde ≥351, and **Lexington KY ≥494** — US-based W75s draw a markedly weaker
+field than European ones. A single global cut is a simplification of a real geographic spread.
+
+⚠ **AND THE CUT IS A MOVING TARGET BY CONSTRUCTION.** It is set at the entry deadline (the ranking
+list *"dated twenty-one (21) days prior to the Monday of the Tournament Week"*) and drifts deeper as
+players withdraw. `[I]` The ITF list's rank field is almost certainly that deadline snapshot — every
+one of ~20 lists read was perfectly monotonic, which a live field would not be — but this could not be
+proved outright. Treat as high-confidence inference. **⚠ One unresolved anomaly:** Danka Kovinic
+appears at WTA 95 atop a W35 list (`w-itf-srb-2026-018`), which appears to contradict the Play Down
+Rule in C below. Flagged, unexplained; it affects no cut figure (she is position 1, never the cut).
+
+**B. WHAT REALLY DIFFERS BETWEEN THE RUNGS IS THE DRAW'S COMPOSITION, AND IT IS PUBLISHED.**
+Same document, "Main Draw" composition for a 32 draw:
+
+| | W15 | W35–W100 |
+| --- | --- | --- |
+| **Direct acceptances** | **13–17** | **16–20** |
+| Qualifiers | 8 | 8 |
+| Junior Reserved | 3 | **–** |
+| Wild cards | 4 | 4 |
+| Special Exempt · Junior Accelerator | 0/1/2 each | 0/1/2 each |
+
+→ **A real W75 admits only 16–20 of its 32 players off the acceptance list.** The other twelve to
+sixteen chairs are won (qualifying), given (wild cards) or reserved. Our `selectEntrants` fills all
+32 from one eligible pool, so we model the half of a real draw that reality decides by ranking and
+none of the half it decides by other routes.
+
+**C. THE REAL HARD RULE IS A CEILING, NOT A FLOOR — "WTA Play Down Rules", verbatim:**
+
+> *"Players with a WTA ranking of 1-50 in Singles … cannot Enter, accept a Wild Card and/or compete
+> in Singles or Doubles in any Women's WTT Tournament."*
+> *"Players with a WTA ranking of 1-150 in Singles … cannot Enter, accept a Wild Card and/or compete
+> in Singles in any Women's WTT W15 or W35 Tournament."*
+
+→ So the sport's only published per-rung rank rule on this family runs **the other way from ours**:
+the world top 50 is barred from every W event and the top 150 from W15/W35 singles (doubles still
+allowed). The WTA does the same one family up — its
+[2026 Official Rulebook](https://photoresources.wtatennis.com/wta/document/2025/12/24/b300b2a4-8d71-4346-969f-1f6b9399661f/2026-WTA-Rulebook-12-22-2025-.pdf)
+prints a "WTA 125 Tournament Acceptance Summary" in which **players ranked 1–20 may not play a 125**
+in most weeks and *"up to 4 players ranked 21-50 may only play via Wild Card"* (Section III.C.2.b).
+**Reality gates the strong OUT; we gate the weak IN.** (The rulebook is re-issued through the year;
+the URL above is the 12/12/2025 edition, verified byte-for-byte. The index that survives revisions is
+[wtatennis.com/wta-rules](https://www.wtatennis.com/wta-rules).)
+
+**C2. AGE — AND W75 HAS NO AGE FLOOR OF ITS OWN.** The only age thresholds anywhere in the 2026 ITF
+WTT Regulations are **14** — Women's Section III.A.1, *"Minors under the age of fourteen (14) shall
+not be eligible for Entry"* — and **18**, the AER cut-off. A 15-, 16- or 17-year-old is limited only
+by her per-year **count** (§4's table, counted birth-year to birth-year), and the one rung-specific
+rule in the sport is the WTA's sub-cap of **three W75-and-above events** inside a 14-year-old's eight.
+Under-15s may not enter WTA tournaments by direct acceptance (wild card only, WTA Rulebook II.D); the
+Grand Slam floor is also 14.
+
+**D. THE GRAND SLAM — OURS IS RIGHT, AND BOTH THE RULE AND THE OBSERVATION AGREE.**
+[2026 Official Grand Slam Rule Book](https://www.itftennis.com/media/5986/grand-slam-rulebook-2026-f2.pdf),
+singles main-draw composition:
+
+| Total accepted | Direct acceptances | Qualifiers | Wild cards |
+| --- | --- | --- | --- |
+| **128** | **104, 108, 112** | 16, 12, 8 | 8 |
+
+⚠ **It is prefaced *"Unless otherwise agreed"*, so 104/16/8 is one of three permitted configurations
+rather than a mandate** — only WC = 8 is fixed. That all four majors in fact run 104/16/8 is
+*observed*, not *rule*. The observed cut-offs agree closely: **Australian Open 2026 = No. 103**
+(Leolia Jeanjean, [ausopen.com](https://ausopen.com/articles/news/australian-open-2026-entry-lists-released),
+9 Dec 2025) and **US Open 2026 = No. 102** (Anastasia Zakharova,
+[official entry list](https://www.usopen.org/pdf/womens-2026-us-open-main-draw-entry-list.pdf.pdf),
+generated 3 Aug 2026); US Open 2025 was **No. 99 at the deadline and No. 102 three weeks later**
+([list](https://www.usopen.org/pdf/womens-2025-us-open-main-draw-entry-list.pdf)) — the clearest
+demonstration on this page that a cut drifts. → **`slam.acceptsRank: 104` is exact.** It is a count of
+*entrants accepted* rather than a world-rank cut-off, which errs conservatively (admits fewer).
+
+**E. THE JUNIOR RUNGS — sourced at last, and one of ours is out by a factor of twenty.**
+[2026 ITF WTT Juniors Regulations](https://www.itftennis.com/media/15745/2026-itf-world-tennis-tour-juniors-regulations.pdf)
+(published 5 Dec 2025, updated 24 Mar 2026). ⚠ The ordering is **Regulation 43**, not 47 — §2 above
+says "Regs 43, 47" and 47 is Composition of Draws; the regulations themselves misreference it.
+Order: ITF junior ranking → ATP/WTA ranking → WTN → 16&U regional WTN → unranked residual. **WTN
+direct acceptances exist only at J30/J60** (4 in a 32 main draw); a J300 has no WTN path. The
+"50% home country" rule is **Reg 43 e) i)** and applies **only to the unranked residual pool**, not as
+a main-draw quota — at a J300 that residual is normally zero.
+
+Observed cuts, girls, ITF Combined Junior Ranking, read 15 Aug 2026 from the same acceptance-list
+pages, against a girls' list of **4,890 players** (ITF rankings API `totalItems`, ranking date
+10 Aug 2026, backing [itftennis.com rankings](https://www.itftennis.com/en/rankings/world-tennis-tour-rankings/)):
+
+| rung | observed cuts | **as a share of 4,890** | ours (`enterPct`) | gap |
+| --- | --- | --- | --- | --- |
+| **J300** | Repentigny 48MD **81** · College Park 48MD **101** · Pancevo 32MD **182** | **top ~2%** | **0.40** | ⚠⚠ **20× too loose** |
+| **J60** | Domzale **2,140** · Cholpon-Ata **2,553** · Chennai **2,967** · Kreuzlingen **3,147** | **top ~44–64%** | **0.50** | ✅ **inside the range** |
+
+J60 qualifying runs ~95% deep and still does not fill. **So `j60`'s 0.50 is right and `j300`'s 0.40
+is the largest single error in the whole acceptance ladder** — a real J300 is a top-2% event and ours
+admits the top 40%.
+
+**F. POPULATION DENOMINATORS.** ITF World Tennis Ranking, women's singles: **2,335 players**, rank
+date 10 Aug 2026 (ITF rankings API). ITF junior girls: **4,890**. **⚠ The total size of the WTA
+singles ranking list is `not sourced`** — wtatennis.com renders only the top 100, its paging
+parameters are ignored and `api.wtatennis.com/tennis/players/ranked` returns HTTP 400; the deepest
+WTA rank actually seen in ITF data was 1,521, which is a floor and not a total.
+`docs/research/real-ladder-pace.md` §5 carries **~1,550–1,600 (list ends #1531 on 3 points, Aug 2026)**
+from its own paged pull, and that remains the best figure this repo has.
+
+**G. WHAT IS STILL `not sourced`.**
+
+* **Observed cuts for WTA 125, WTA 250, WTA 500 and WTA 1000.** The WTA publishes qualifier counts by
+  draw size (Section V) and wild-card counts by level (Section III.C.2.a) but no acceptance depth, and
+  no entry list was located. Arithmetic on the two published tables gives **≈76 DA** for a 96-draw
+  1000, **≈44** for a 56-draw, **≈23–24** for a 32-draw 500 or 250 — *derivation, not a published
+  figure*, and a DA **count** is not a rank cut. So `wta125 250 · wta250 200 · wta500 120 ·
+  wta1000 65` all remain unsourced.
+* **A clean W100 cut** — only a lower bound (deeper than #285). Nine W100s exist in the whole 2026
+  calendar and seven publish no list.
+* **The W35–W100 lists as they stood at the entry deadline.** The ITF publishes only the live list and
+  purges it weeks after the event, so every observed cut above is a snapshot with the drift caveat.
+
 ## 5. The ratio that matters
 
 **Title ÷ points for winning exactly one main-draw match** (32-draw reading, so directly comparable

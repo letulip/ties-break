@@ -15,13 +15,35 @@
 // the frozen MAIN capture cannot notice this file.
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { TIERS, isBlackoutWeek, isOffSeasonWeek, tierAgeBlock } from '../season/calendar'
+import { TIERS, isBlackoutWeek, isJuniorAge, isOffSeasonWeek, tierAgeBlock } from '../season/calendar'
 import { schoolIsOver } from '../kidLife'
 import type { LadderTrack, SeasonEvent } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
 import { kidAgeAt } from './age'
-import { entryCapUsage, proEntryCapUsage, isCappedTier, isCappedProTier } from './entryCaps'
-import { acceptanceRank, hasOutgrown, kidPoints, onRampOpen, rankIn } from './ladder'
+import {
+  entryCapUsage,
+  proEntryCapUsage,
+  proSubCapRefusalDetail,
+  proSubCapUsage,
+  isCappedTier,
+  isCappedProTier,
+  acceleratorRefusalDetail,
+  acceleratorUsage,
+  juniorReservedRank,
+} from './entryCaps'
+import {
+  acceptanceRank,
+  hasOutgrown,
+  juniorAccessOpen,
+  juniorReservedPlace,
+  kidPoints,
+  onRampOpen,
+  playDownBars,
+  playDownRefusalDetail,
+  rankIn,
+  tableSize,
+  yearEndJuniorRank,
+} from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
 import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
@@ -314,10 +336,13 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
         level: 'blocked',
         reason: 'capped',
         // Short dash only, and it must read as THIS YEAR rather than "never" – a parent who has
-        // spent all fourteen has to understand she is capped for the season, not shut out.
+        // spent all fourteen has to understand she is capped for the year, not shut out.
+        // ⚠ "ON HER NEXT BIRTHDAY" AND NO LONGER "NEXT SEASON" (P2). The allowance's window is her
+        // birthday year now, not the season block, so the old sentence named the wrong date – and a
+        // refusal that names the wrong date is worse than one that names none.
         detail:
           `Year limit reached – ${cap.used} of ${cap.limit} international events at ` +
-          `${ageYears}. A fresh allowance next season.`,
+          `${ageYears}. A fresh allowance on her next birthday.`,
         entryCap: cap,
       }
     }
@@ -336,8 +361,21 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
         reason: 'capped',
         detail:
           `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. ` +
-          `A fresh allowance next season; the junior and national events stay open.`,
+          `A fresh allowance on her next birthday; the junior and national events stay open.`,
         entryCap: cap,
+      }
+    }
+    // ...AND THE SUB-CAP INSIDE IT (P2): at most three of a fourteen-year-old's eight may be at W75
+    // or above (WTA §X.A.2). It sits immediately after its parent allowance because it is the same
+    // rule's second sentence, and it is a QUOTA rather than a door - it refuses this entry at this
+    // rung while the smaller ones stay open, which is what the copy says.
+    const subCap = proSubCapUsage(world, event.week, event.tier)
+    if (subCap && subCap.remaining <= 0) {
+      return {
+        level: 'blocked',
+        reason: 'capped',
+        detail: proSubCapRefusalDetail(ageYears, subCap, ECONOMY.entryCap.proSubCapByAge[ageYears].fromTier),
+        entryCap: subCap,
       }
     }
   }
@@ -455,6 +493,18 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
     // cannot own a ranking in a table she has never played in and a rank gate there would be a
     // closed loop; so J30 reads her DOMESTIC points and W15 reads her ITF JUNIOR points. Above the
     // on-ramp the acceptance list takes over, in the rung's own table's currency.
+    // ⚠⚠ THE PLAY DOWN RULES, ASKED FIRST AND AT BOTH SURFACES (P1 step 2, docs/specs/
+    // play-down-2026-08.md). It is the SAME predicate `tierFloorOpen` reads, in the same position –
+    // above the on-ramp branch, because W15 returns out of that branch and the #150 limb is mostly
+    // about W15. Placing it here rather than in `availabilityStatus` is the acceptance cut's own
+    // precedence: this is a LADDER fact about her standing, not a fact about her week.
+    if (playDownBars(world, event.tier)) {
+      return {
+        level: 'blocked',
+        reason: 'locked',
+        detail: playDownRefusalDetail(event.tier, rankIn(world, 'wta')),
+      }
+    }
     const onRamp: LadderTrack = tier.track === 'itf' ? 'domestic' : 'itf'
     // ⚠ THE CEILING USED TO REFUSE HERE, AND SINCE 06.08 IT DOES NOT (docs/specs/
     // ladder-floor-2026-08.md). W2-WINDOW gave every rung both bounds and this branch was the ITF/W
@@ -483,6 +533,26 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
       // The MESSAGE is unchanged and still names the band, because for a girl who has not crossed yet
       // the band is exactly what she needs: that is how the latch gets set.
       if (!onRampOpen(world, tier.track)) {
+        // ⚠ TWO ON-RAMPS, TWO CURRENCIES, AND SINCE P1 THEY DIFFER (docs/specs/
+        // junior-access-2026-08.md). J30's door is still domestic POINTS and still says so – for a
+        // girl who has not crossed yet the band is exactly what she needs, because that is how the
+        // latch gets set. W15's door is now the sport's own junior RESERVED PLACE, read as an ITF
+        // junior RANKING, so the sentence has to name a position instead of a point total: a number
+        // she could not find on her own table is not an explanation. Both halves read the SAME
+        // functions the calendar's verdict reads (`onRampOpen`, `juniorReservedRank`), which is the
+        // whole of what keeps R10-5 true.
+        if (tier.track === 'wta') {
+          const cut = juniorReservedRank(tableSize(world, onRamp))
+          const ranked = kidPoints(world, onRamp) > 0
+          return {
+            level: 'blocked',
+            reason: 'locked',
+            detail: ranked
+              ? `${tier.label} holds junior places for the top ${cut} – she is #${rankIn(world, onRamp)}`
+              : `${tier.label} holds junior places for the top ${cut} – she has no ${LADDER_LABEL[onRamp].toLowerCase()} ranking yet`,
+            rankToEnter: cut,
+          }
+        }
         return {
           level: 'blocked',
           reason: 'locked',
@@ -501,14 +571,51 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
     // professional table, which opens EMPTY for the whole world - see topBandForPercentile.
     const ranked = kidPoints(world, tier.track) > 0
     const rank = rankIn(world, tier.track)
-    if (!ranked || rank > accepts) {
+    // ⚠⚠ THE RESERVED PLACE IS CHECKED BEFORE THE CUT REFUSES, AND THE ORDER IS A BUG THIS CAUGHT
+    // (16.08). Once the Accelerator became an extra door rather than a ceiling, a junior it holds a
+    // place for is admitted by `tierFloorOpen` WITHOUT clearing the list – and this branch, sitting
+    // above the programme's own, would have refused her anyway. That is the R10-5 disagreement
+    // arriving from the far side: the calendar open, the turnstile shut, on the one girl the reserved
+    // place exists for. `tests/rankingGate.test.ts`'s sweep could not see it, because its implication
+    // runs one way (a rung the calendar SHUTS must never be enterable).
+    const reserved = juniorReservedPlace(world, event.week, event.tier)
+    if ((!ranked || rank > accepts) && !reserved) {
+      const cut = ranked
+        ? `${tier.label} takes the top ${accepts} – she is #${rank}`
+        : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`
+      // ⚠ AND A JUNIOR IS TOLD ABOUT BOTH DOORS, because she has both. An adult has only the list, so
+      // naming a programme she is not eligible for would be noise; a seventeen-year-old who misses
+      // the cut is refused by the list AND by the junior programme, and a refusal that names one of
+      // the two invites her to solve the wrong one.
+      const junior = isJuniorAge(kidAgeAt(world, event.week))
+      const yearEnd = junior ? yearEndJuniorRank(world) : null
       return {
         level: 'blocked',
         reason: 'locked',
-        detail: ranked
-          ? `${tier.label} takes the top ${accepts} – she is #${rank}`
-          : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`,
+        detail: junior
+          ? `${cut}. ${acceleratorRefusalDetail(event.tier, yearEnd, acceleratorUsage(world, event.week, event.tier, yearEnd))}`
+          : cut,
         rankToEnter: accepts,
+      }
+    }
+    // ⚠⚠ AND THE JUNIOR ACCELERATOR, ASKED OF THE EVENT'S WEEK (P1). It sits BELOW the acceptance cut
+    // and ABOVE availability for the same reason the two entry caps sit where they do: it is an
+    // eligibility rule out of the tour's own book, and "the junior programme has no place for her
+    // here" is the fact that should reshape a season rather than a week. The EVENT's week, never
+    // today's, on `entryCapUsage`'s own R10-17 rule – a rule about a future event has to be asked
+    // about that event's future, or a December horizon reports next season's fixture against this
+    // season's allowance.
+    //
+    // ⚠ AND IT IS THE SAME FUNCTION THE CALENDAR'S VERDICT READS (`juniorAccessOpen`, called from
+    // `tierFloorOpen`), which is the whole of what stops R10-5 from re-opening: the calendar saying
+    // shut while the turnstile lets her through is the disagreement `tests/rankingGate.test.ts`
+    // exists for, and one function cannot disagree with itself.
+    if (!juniorAccessOpen(world, event.week, event.tier)) {
+      const yearEnd = yearEndJuniorRank(world)
+      return {
+        level: 'blocked',
+        reason: 'locked',
+        detail: acceleratorRefusalDetail(event.tier, yearEnd, acceleratorUsage(world, event.week, event.tier, yearEnd)),
       }
     }
     return availabilityStatus(world, event)

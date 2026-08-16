@@ -141,8 +141,8 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS }
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS }
 // W3-KIT: the till and the shop window. `GEAR_CATEGORY_LINE` comes back from equipment.ts, where it
 // moved so that a rung could be PRICED below world.ts - see the note at `resolveGear`.
 import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
@@ -160,7 +160,7 @@ export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREF
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, seasonWrapDue } from './world/milestones'
+import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, markCoachTravelOpen, maybeFireSeasonWrapUp, emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, seasonWrapDue } from './world/milestones'
 export { emptySeasonRecord, emptySeasonEntries, emptyTrophyLedger, captureBreakEven, maybeFireSeasonWrapUp, seasonWrapDue }
 // W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
 // snapshot, the tests and the bench all read the one implementation - the same contract every other
@@ -171,9 +171,7 @@ import {
   buildDebtView,
   buildEndingView,
   cheapestEntryFeeCents,
-  collegeStillOpen,
   guardNotEnded,
-  inCollege,
   latchEnding,
   lastRungSeasonIndexOf,
   plateauViewOf,
@@ -181,15 +179,36 @@ import {
   resolveEndings,
   wasThereAChild,
 } from './world/endings'
+// ⭐ P5 – WHAT IS BEHIND THE DOOR (docs/specs/college-as-a-second-act-2026-08.md). `inCollege` moved
+// out of `world/endings.ts` into this module and is re-exported below under its historical name, so
+// every existing `from '...engine/world'` call site and test import is untouched. The move was
+// forced by a dependency, not by tidiness: the ending VIEW now carries the college progress, so
+// endings.ts imports college.ts, and college.ts needed the predicate.
+import { ENDINGS } from './ending'
+import {
+  bankCollegeYear,
+  collegeEpilogueLine,
+  inCollege,
+  leaveCollege as leaveCollegeState,
+  openCollegeYear,
+  resolveCallUp,
+} from './world/college'
+export {
+  bankCollegeYear,
+  collegeEpilogueLine,
+  collegeProgressOf,
+  inCollege,
+  openCollegeYear,
+  resolveCallUp,
+  skillMeanOf,
+} from './world/college'
 export {
   answerFork,
   answerRetirement,
   buildDebtView,
   buildEndingView,
   cheapestEntryFeeCents,
-  collegeStillOpen,
   guardNotEnded,
-  inCollege,
   latchEnding,
   lastRungSeasonIndexOf,
   plateauViewOf,
@@ -198,11 +217,11 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, chargeCoachTravel, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
-export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, rolloverKitAllowance }
+export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, rolloverKitAllowance }
 import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
@@ -216,11 +235,16 @@ export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, type ProDoors } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors }
+import { cohortIds, inTrack, fieldProsOf, fullRanking, rankingFor, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, PLAY_DOWN, playDownBars, type ProDoors } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, PLAY_DOWN, playDownBars }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
-import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
+import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow } from './world/entryCaps'
+// P1 – the junior access rulebook (the Accelerator table and the W15 reserved-place door). Re-exported
+// under its own names for the same reason the caps are: the worker, the snapshot and the tools must
+// read ONE implementation. `docs/specs/junior-access-2026-08.md`.
+import { ACCELERATOR, JUNIOR_RESERVED, acceleratorAdmits, acceleratorUsage, juniorReservedRank } from './world/entryCaps'
+export { ACCELERATOR, JUNIOR_RESERVED, acceleratorAdmits, acceleratorUsage, juniorReservedRank }
 // W3-ACT2 §6 - the mandatory regime. Re-exported below under its own names so the worker, the
 // snapshot and the tools read one implementation, exactly as entryCaps is.
 import {
@@ -253,11 +277,11 @@ export {
   quotaShortfallAt,
   suspensionWeeksLeft,
 }
-export { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage }
+export { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow }
 import { finishLabel, prizeCentsFor } from './world/labels'
 export { finishLabel, prizeCentsFor }
-import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, birthdayWeek, birthdayTurning, markBirthday } from './world/age'
-export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, birthdayWeek, birthdayTurning }
+import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, ageWindowStartWeek, birthdayWeek, birthdayTurning, markBirthday } from './world/age'
+export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, ageWindowStartWeek, birthdayWeek, birthdayTurning }
 // ⭐ v48 – THE BIRTHDAY POPUP AND THE GIFT (docs/specs/birthday-and-gifts.md). Re-exported under the
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
 import { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
@@ -332,7 +356,22 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // ⚠ AND THE NUMBER IS 48, NOT THE 49 THE SPEC SAYS. The spec was written assuming the flags/grant wave
 // would take 48, but that wave is still documents and nothing has claimed 48 in code – so this takes
 // 48 and docs/plans/wave-flags-grant.md now reserves 49. Two waves must not both take one number.
-export const SAVE_SCHEMA_VERSION = 48
+// ⭐ v49 = ONE FIELD, `coachOnJuniorEvents` – DOES HE TRAVEL TO THE RUNGS THAT PAY HER NOTHING TOO.
+// The owner, 15.08, asked for the fare gate to become the player's decision rather than the engine's:
+// «делаем тогда», and the model is his own – «По мне игрок сам решает: есть деньги - едет тренер, нет
+// - не едет, или едет, но быстрее банкротится.» So the junior/domestic rungs stop being refused and
+// start being OPT-IN, with no protective gate on the outcome: bankruptcy is the player's own
+// responsibility (his standing ruling), and what is controlled instead is that no support mechanism
+// pays for it (the gross fare, `coachTravelFareFor`, and tests/support-never-pays-the-coach.test.ts).
+// ⚠ IT IS A SECOND FIELD AND NOT A RETYPING OF `coachOnEventWeeks`, deliberately. A scope union
+// («none | w-series | all») reads cleaner on paper and would have retyped a field persisted since
+// v24 and touched every reader of it; a second optional boolean defaulting FALSE leaves every existing
+// save byte-identical in behaviour and every existing reader untouched. On screen it is a NESTED
+// option, meaningful only while the first is on, which is also what it is: a second, more expensive
+// choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
+// ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
+// number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
+export const SAVE_SCHEMA_VERSION = 50
 
 
 
@@ -665,6 +704,23 @@ export interface WorldState {
    *  It moves BOTH the bill and the development rate (coachWorksThisWeek), because a coach who is
    *  not paid for a week is not at that week. That is what keeps it a decision. */
   coachOnEventWeeks: boolean
+  /** ...AND DOES HE GO TO THE RUNGS THAT PAY HER NOTHING TOO (v49)? The nested half of the stance
+   *  above: junior and domestic events, where `TIERS[tier].prizeCents` is undefined.
+   *
+   *  ⚠ IT IS THE PLAYER'S DECISION AND NOT THE ENGINE'S, on the owner's own model (15.08): «По мне
+   *  игрок сам решает: есть деньги - едет тренер, нет - не едет, или едет, но быстрее банкротится.»
+   *  The fare there is a bill against an income that does not exist yet - the bench measured an
+   *  ungated one bankrupting 8/30 wealthy·elite and 15/30 middle·middle careers, every one of them in
+   *  the junior years (docs/specs/coach-travel-2026-08.md) - so screen T warns before the first fare
+   *  is charged. It does NOT refuse: «бонус... нет - не едет, или едет, но быстрее банкротится» is a
+   *  choice with a price, and this engine never protects a player from a price he was quoted.
+   *
+   *  ⚠ OPTIONAL ON THE TYPE, exactly as `kit` is and for the same reason: every hand-built test world
+   *  and every pure probe keeps compiling, and `undefined` IS the shipped behaviour (he does not go),
+   *  so absence is not a hole - it is the identity element. A real career always has one: createWorld
+   *  writes `false` and the v48 -> v49 migration back-fills it. Read it as `?? false` and nowhere
+   *  else: `coachTravelFareFor` is the single place it is consulted. */
+  coachOnJuniorEvents?: boolean
   /** HER KIT, AS A DECISION (v37, W3-KIT). The rung on each of the three lines the match reads, and
    *  the week she was last handed a new one of them over the counter. See `KitState`.
    *
@@ -1453,7 +1509,11 @@ function computeShadowTournament(
   // The SCALED player is both what runs the bracket and what is snapshotted into `players`, so
   // revealed records and replays stay byte-identical no matter how her condition moves afterwards –
   // and the run's every round shares this ONE build. Fractional skills are fine for the match engine.
-  const kid = kidMatchPlayerFor(world, event.surface)
+  // ⭐ ...AND WHETHER HIS COACH IS AT THIS ONE, which is the FARE's own question and therefore the
+  // fare's own answer: `coachTravelFareFor` carries the stance, the "somebody to send" clause and
+  // the W-series gate together, so the helping cannot drift away from the money (owner, 15.08:
+  // «поездки С тренером открываются на w серии с призами»).
+  const kid = kidMatchPlayerFor(world, event.surface, coachTravelFareFor(world, event) > 0)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
   // ⚠ HER W-TIER DRAWS ARE MADE OF THE MERGED FIELD (living-field phase W, 01.08). For a W-track
   // event the candidate universe becomes LIVE cohort ∪ field pros and the positions come from the
@@ -1498,7 +1558,31 @@ function computeShadowTournament(
   const field = rivalField(entrants, event, fatigue)
   // v21b: she goes into the draw AT HER STANDING, not at the bottom of it - the same place the
   // acceptance list would give her - and is seeded, or not, on the terms everybody else gets.
-  const result = runTournament(event, field, kid, world.seed, kidRng, kidSeedIndexIn(field, selRanking, KID_ID))
+  //
+  // ⚠⚠ AND FOR THREE WAVES IT DID THE EXACT OPPOSITE, ON EVERY TRACK. Round-21 #4, the owner: «только
+  // 1 раз за весь сезон смог пройти 1й раунд турнира из всех попыток». Measured on his own save with
+  // tools/draw-vs-band.ts, a world #15: **seeded in 0.0% of draws, median standing in the draw #64
+  // of 64**, and 89% of the field she met at a 1000 was stronger than her.
+  //
+  // THE CAUSE IS THE TABLE, NOT THE FUNCTION. `kidSeedIndexIn` counts how many entrants outrank her
+  // by looking her up in the ranking it is handed, and falls back to LAST for a player it cannot
+  // find. Both tables reaching this line are built to the INPUT-INDEPENDENCE rule and therefore fold
+  // her out on purpose - `aiRanking` ("excludes the kid so AI-field selection never depends on the
+  // kid's own results") and `selRanking` ("LIVE rows fold WITHOUT the kid"). So she was never found,
+  // and never found means bottom of the draw, every event, every rung, since v21b shipped the line
+  // above claiming she was not.
+  //
+  // ⚠ THE FIX IS A SECOND TABLE, NOT A RELAXED FIRST ONE. Who TURNS UP must not depend on her (that
+  // is the invariant, and `selectEntrants`/`weekFieldExclusion` above keep reading the kid-free
+  // fold). Where SHE STANDS among them must depend on her and on nothing else - it is the acceptance
+  // list's own question, and `rankingFor` is the table every other surface answers it with, so the
+  // draw now agrees with the Season card instead of contradicting it.
+  //
+  // RNG: `buildDraw` shuffles the unseeded TAIL, whose length is `field.length - seedsFor(...)` and
+  // does not move when her slot does, so this consumes the same number of draws on the same
+  // event-scoped sub-stream. Her bracket changes because her position changes - which is the fix.
+  const seedRanking = rankingFor(world, TIERS[event.tier].track)
+  const result = runTournament(event, field, kid, world.seed, kidRng, kidSeedIndexIn(field, seedRanking, KID_ID))
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
@@ -2362,6 +2446,9 @@ export function createWorld(
     coachId: openingCoachId(seed, profile),
     // Default OFF - the automatic rule is that competition weeks are not coach weeks.
     coachOnEventWeeks: false,
+    // ...and the junior half is OFF under the same rule, which is also what every career shipped
+    // before v49 wakes up as. Turning it on is a decision the player takes on screen T, warned.
+    coachOnJuniorEvents: false,
     vacations: [],
     practices: [],
     recoveryBuff: null,
@@ -2876,6 +2963,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     )
   } else if (enteredThisWeek) {
     chargeTravel(world, enteredThisWeek)
+    // ⭐ ROUND-21 #2 - AND THE SECOND SEAT, IF HE CAME. Deliberately on this line and not in
+    // `resolveBaseCosts`: the retainer is unconditional (owner, 08.08 - see `coachWorksThisWeek`,
+    // which R4 got wrong by running travel and the retainer together and stood the coach down for
+    // 43% of a season). This is a FARE, so it belongs in the arm where she actually boarded, beside
+    // the fare it doubles - which is also what gives the two no-travel arms above their exemption
+    // for free: an injury walkover and a medical withdrawal never pay it, because she never went.
+    // Zero draws; see `coachTravelFareFor` for the price and whose figure it is.
+    chargeCoachTravel(world, enteredThisWeek)
     // ...and the WARNING BAND: cleared, but only just. She plays; the doctor goes on record. Emitted
     // after the travel charge so the week reads chronologically in the news feed (trip → the doctor
     // sees her → her matches). Type 'info' rather than 'injury': nothing has happened to her body,
@@ -2983,7 +3078,15 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //   advance until the parent answers it, and there is no parent in the loop for those four years -
   //   an unanswered knock raised inside the freeze would strand the jump. `seed:knock:<week>` is a
   //   sub-stream, so the skipped draw is invisible to the MAIN capture.
+  // ⭐ P5 – AND AT COLLEGE THE THING THAT HAPPENS TO HER IS A LETTER INSTEAD. Deliberately the same
+  //   slot as the knock, because it is the same KIND of step: something arriving from outside that
+  //   she did not ask for and cannot refuse. `resolveCallUp` fires at most once a year, only inside
+  //   the freeze, and draws on `seed:callup:<week>` – its own sub-stream, exactly as `rollKnock`
+  //   reads `seed:knock:<week>` – so the frozen MAIN capture cannot see it either.
+  //   It pays NO money and NO ranking points, because the sport awards neither: it never touches
+  //   `world.results` and no rank is recomputed for it. See engine/nationalTeam.ts for the sources.
   if (!inCollege(world)) rollKnock(world)
+  else resolveCallUp(world)
 
   // 3d. AND SHE HAS A BIRTHDAY. The owner, 30.07: the birth month should show up in the notes.
   //
@@ -3001,6 +3104,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     birthday, because the year she leaves she is already eighteen and the two lines read in that
   //     order.
   markSchoolEnd(world)
+
+  // 3f. ⭐ ROUND-21 #2 – ...AND THE ONE TIME THE GAME TELLS HER THE COACH CAN COME TOO. The owner
+  //     asked for this notice on 08.08 and `docs/decisions.md` recorded that it could not be built
+  //     while travel could never happen. It can now. Beside the two dates above for the same reasons
+  //     they are beside each other: at most once per career, a comparison and a scan, zero draws.
+  markCoachTravelOpen(world)
 
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
@@ -3259,22 +3368,33 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
-/** «FOUR YEARS LATER» – the one command that CLEARS an ending (contract §5.1).
+/** «ANOTHER YEAR» – the one command that CLEARS an ending (contract §5.1).
  *
- *  College is the only ending that resumes, and this is where it does. The latch comes off, four
- *  years of weeks are spent in one call, and she comes out the other side at twenty-two.
+ *  College is the only ending that resumes, and this is where it does. The latch comes off, ONE year
+ *  of weeks is spent, the year is banked, and the latch goes back on with the next year's date under
+ *  it – until she has spent all four or answers `endCollegeEarly`.
  *
- *  ⚠ THE WEEKS ARE REALLY TICKED, not skipped over. The world has to LIVE those four years: the
- *  cohort ages, the conveyor turns it over twice, the field she will come back to is not the field
- *  she left, and she keeps developing on the age curve because she is playing student tennis the
- *  whole time. A `world.week += 208` would have handed back a world whose ranking table, calendar
- *  and rivals were all four years stale.
+ *  ⭐⭐ P5 – IT USED TO SPEND FOUR YEARS IN ONE CALL AND THE BUTTON SAID «Four years later –».
+ *  Reality's own case is one year and not four (Diana Shnaider left NC State after about a season
+ *  and is inside the WTA top 15), so the four-year block was the wrong SHAPE as well as an empty
+ *  one. Four years, one at a time, is three real questions and a fourth year that is not one –
+ *  `CollegeProgressView.final` is what carries that difference to the screen.
  *
- *  ⚠ AND HER RANKING GOES ON ITS OWN, WITH NO RULE WRITTEN FOR IT. She enters nothing for 208
- *  weeks, so every result she owned ages out of the rolling 52-week window and she arrives at
- *  twenty-two on zero points, below the whole field – «no ranking at all», exactly as §5.1 says,
- *  bought with no mechanism whatsoever. Back in through qualifying is what the ladder's own floor
- *  already gives her.
+ *  ⚠ THE WEEKS ARE REALLY TICKED, not skipped over. The world has to LIVE those years: the cohort
+ *  ages, the conveyor turns it over, the field she will come back to is not the field she left, and
+ *  she keeps developing on the age curve. A `world.week += 52` would have handed back a world whose
+ *  ranking table, calendar and rivals were all a year stale.
+ *
+ *  ⚠⚠ AND HER RANKING GOES ON ITS OWN, WITH NO RULE WRITTEN FOR IT – WHICH IS NOW MEASURED RATHER
+ *  THAN ASSERTED. The old note here said she "arrives at twenty-two on zero points, below the whole
+ *  field – «no ranking at all»". Half of that is false and the half that is true is not news:
+ *  measured over 52 careers at the fork (docs/specs/college-as-a-second-act-2026-08.md §4) her
+ *  professional rank is **#290 before the freeze and #290 after it**, IDENTICAL, because she was
+ *  already off the list the week she walked in. What the four years actually cost is the ladder
+ *  moving without her: the same seeds spent on tour finish at **#169**. The cost is 121 places she
+ *  did not lose but never gained, and the price of them is **$106,699** – college banks $152,243
+ *  against the tour's $45,544. That is the trade the year card now states, and it is why the
+ *  question at each boundary is a real one.
  *
  *  ⚠ THE LOOP BREAKS ON A FRESH ENDING. A career-ending injury can land at college – she is playing
  *  a lot of tennis – and when it does she never comes back, which is a true story rather than an
@@ -3283,17 +3403,67 @@ export function resumeFromCollege(world: WorldState, rng: Rng): void {
   const college = world.college
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
   if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
+  const start = openCollegeYear(world)
+  const yearEnds = Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR)
   world.ending = null
-  while (world.week < college.untilWeek && world.ending === null) tickWeek(world, rng)
-  college.doneWeek = world.week
-  if (world.ending === null) {
-    addEvent(world, {
-      week: world.week,
-      type: 'milestone',
-      keep: true,
-      text: `Four years, a degree and no ranking at all. She is ${kidAgeYears(world.week, world.profile.birthMonth)}, and the only way back in is qualifying.`,
-    })
+  while (world.week < yearEnds && world.ending === null) tickWeek(world, rng)
+  // ⚠ A YEAR CUT SHORT BY AN ENDING IS STILL BANKED. The album's last page is allowed to say what
+  // she was doing when it happened, and a row that stops mid-year is the honest record of that.
+  bankCollegeYear(world, start)
+  if (world.ending !== null) {
+    college.doneWeek = world.week
+    return
   }
+  if (world.week >= college.untilWeek) {
+    finishCollege(world)
+    return
+  }
+  // ⭐ THE LATCH GOES BACK ON, and this is the whole of "one year at a time". The screen that asks
+  // «another year?» is the epilogue screen, so the epilogue has to still be there to ask it – and
+  // `buildEndingView` fills `college` from `collegeProgressOf`, which is null the moment she leaves.
+  latchEnding(world, {
+    type: 'college',
+    week: world.week,
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+    detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
+    resumesWeek: Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR),
+  })
+}
+
+/** ⭐ THE EARLY RETURN – «I am going back on tour now», answered at a year boundary.
+ *
+ *  ⚠ IT IS A SEPARATE COMMAND AND NOT A FLAG ON `resumeFromCollege`, because the two answers do
+ *  opposite things to the latch: one puts it back on, this one takes it off for good. Folding them
+ *  into one call with a boolean would have made the most expensive click in this part of the game
+ *  depend on an argument nobody reads.
+ *
+ *  ⚠ AND IT REFUSES ON A CAREER THAT IS NOT AT A BOUNDARY, engine-side, because the worker is not
+ *  the gate (CLAUDE.md invariant 1). The screen stops drawing the button; this is what makes that a
+ *  rule rather than a decoration. */
+export function endCollegeEarly(world: WorldState): void {
+  const college = world.college
+  if (!college || college.doneWeek !== null) throw new Error('She is not at college')
+  if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
+  if (college.years.length === 0) throw new Error('She has not spent a year there yet')
+  leaveCollegeState(world)
+  world.ending = null
+  addEvent(world, {
+    week: world.week,
+    type: 'milestone',
+    keep: true,
+    text: collegeEpilogueLine(world),
+  })
+}
+
+/** The four years, spent. One place, so the early return and the full course write the same row. */
+function finishCollege(world: WorldState): void {
+  leaveCollegeState(world)
+  addEvent(world, {
+    week: world.week,
+    type: 'milestone',
+    keep: true,
+    text: collegeEpilogueLine(world),
+  })
 }
 
 

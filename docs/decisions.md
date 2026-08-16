@@ -438,6 +438,26 @@ wins → 5.8). The record is in commit `77e08aa`.
 possible (the row is hardcoded `disabled` and the mechanic is cancelled), so a notice saying it is now
 available would be false. Needs the unlock ruled on first.
 
+> ⚠⚠ **CLOSED 14-15.08 – HE RULED THE UNLOCK, ON THE THIRD ASK.** «Тренер всё ещё не едет на
+> соревнования, как так? Уже 3й раз прошу сделать» (round-21 #2). Round 20 had answered this with an
+> explanation instead of a build, and asking a third time overruled the 30.07 cancellation. Three
+> things changed and this entry is stale in all three:
+>
+> * **Travel happens.** `setCoachOnEventWeeks` has a caller at last, the row is a live switch, and
+>   the fare is charged on the play week – gated to the rungs that PAY, which is this very entry's
+>   own argument («в юниорах нет призовых») kept as code. The junior tour opened as a SEPARATE opt-in
+>   on 15.08 («делаем тогда»), warned before the first fare with the measured bankruptcy figures.
+> * **The notification is built** – it is true now, so it could be.
+> * **⚠ "Do NOT build a 'he contributes differently at a tournament' mechanic" IS OVERTURNED, and by
+>   measurement rather than by preference.** He asked the right question – «это на старых измерениях?
+>   мы построили новый стенд, надо актуализировать данные» – and he was right: all three arms were
+>   measured on the bench `the-wall-2026-08.md` §6-§7 later proved never got anyone ranked. Re-run on
+>   the rebuilt policy the match-strength edge REVERSES: 47 better / 13 worse over 60 paired careers
+>   at +3.0pp, and the confound was PROMOTION (a better rank moves her to a rung banking fewer
+>   points, which on a broken bench was pure loss). Shipped tied to `COACH_EDGE_CORRIDOR_PP` at his
+>   own suggestion, measured at n=250: −4.1 rank places [−7.2, −1.0], p=0.010. The run-fatigue arm
+>   stayed dead. Full record: `docs/specs/coach-travel-2026-08.md`.
+
 **2. The coach's falling percentage was honest AND over-quoted 1.76x.** «У выбранного тренера
 поменялся % через некоторое время, сначала было 0,5–1,0, потом стало 0,4–0,9, сейчас уже 0,3–0,7.»
 The fall is real – growth is a share of remaining headroom and the age curve eases – and the model
@@ -616,3 +636,383 @@ her.
 Training card was charging up to 1.1 points of "being eleven months older than your band" to the
 coach's work. It is now the week-one build both readers share. Full argument and measurements:
 `docs/specs/skills-radar.md` §6.
+
+## 2026-08-16 – The age grid is the sport's, not ours (`wave/round21`, P2)
+
+**The owner, on `docs/specs/junior-access-2026-08.md`'s note that `w15.minAgeYears: 16` was kept
+against the sport's 14+ as a deliberate deviation:** «мы же вроде наресерчили четкую возрастную сетку
+с количеством доступных турниров каждого тира на каждом возрасте, мне кажется надо использовать.»
+
+**Shipped: `w15.minAgeYears` 16 → 14**, and with it the rest of the researched grid finally reads as a
+live rule rather than an honest table nobody consults – the ITF junior reserved place at W15 is 14+,
+and the WTA AER rows start at 14 (8 events, at most 3 at W75+) precisely because a fourteen-year-old
+can play one.
+
+⚠ **IT COLLIDES WITH A STATED PILLAR AND THE COLLISION IS HIS TO SETTLE.**
+`docs/specs/adult-tour-and-endings.md` §4.1 makes the 16-18 two-tour overlap load-bearing and calls a
+W15 field an adult one. Measured (`tools/two-tour-overlap.ts`, 27 careers, identical seeds): the
+overlap widens to **14-18**, but only in weight at fifteen – at 14, 26% of careers now hold both tours
+on a mean of 1.7 professional events beside 7.3 junior ones; at 15 it is 67% on 6.1. 16-18 is
+unchanged. The two documents now disagree about what a W15 field is; amending one of them is his call.
+
+**Also in P2, and the reason the ruling is survivable:** the entry allowances are counted
+**birthday-to-birthday** now, as both rulebooks say. Before, the window was the season block while the
+limit was her age, so her sixteenth year straddled two allowances and she played **19.0** professional
+events against a rulebook **12**. After: **10.6**. `docs/specs/age-eligibility-window-2026-08.md`.
+
+⚠ **AND ONE THING NEEDS HIM.** The boredom guard – «мы ни за что не наказываем», she must always have
+tennis – **fails, and failed before P2 too**: 29 measured weeks (of 354 where the cap refuses a W
+entry) carry a W event and no junior or domestic one at all. It is a CALENDAR-coverage hole, not a cap
+number: no value of `proPerYearByAge` can fix a week with nothing else on it. The remedies both move
+every field in the world (co-phase the W rungs with their J mirrors, or densify the domestic/J
+calendar), so they need their own phase and their own measurement. §7a of the spec has the numbers.
+
+---
+
+## 2026-08-16 – The acceptance cuts are the sport's, and the audit's verdict expired (`wave/round21`, P3)
+
+**Shipped, from `docs/specs/acceptance-cuts-2026-08.md`'s own recommendation and §P3 of the staged
+plan:** the sourced chain **w50 550 → 330 · w75 450 → 300 · w100 350 → 240 · wta125 250 → 180**, and
+**`j300.enterPct` 0.40 → 0.20**. ⚠ **`w35` 700 and `slam` 104 were NOT touched – the audit verified
+both correct**, and every `minAgeYears` is where it was.
+
+⚠⚠ **THE AUDIT'S HEADLINE VERDICT DID NOT SURVIVE, WHICH IS WHAT THIS PHASE WAS ORDERED TO FIND OUT.**
+It measured this chain **Pareto-positive** in isolation (end rank 280 → 204, prize **+$28k**). Re-run
+on the population P1 and P2 built, on the audit's own tool, n and horizon: the money gain shrinks
+**fifteenfold to +$1.9k**, **end funds flip sign** (−$1.0k), and the college column **flips direction**
+– the audit's most-quoted secondary finding was that a realistic ladder makes the college ending
+*rarer* (9% → 4%); here it makes it **commoner, 76% → 93%**. The mechanism it named – she stops wasting
+entries at W75+ she loses early – was a substitution **P1 had already banked** by moving her first W75
+from 17.2 to 19.0.
+
+⭐ **BUT IT IS NOT A PURE COST EITHER, AND THE AUDIT'S 312-WEEK HORIZON IS WHY NOBODY COULD SEE IT.**
+Run to 26.6 on P0's frozen battery (n = 90) the chain reads as a **delay she is repaid for**: worse at
+seventeen to nineteen (−$9.4k banked by 19, fourteen fewer careers holding a ranking at 17), better
+from twenty-one (#199 → **#174** at 21, #176 → **#158** at 25, career prize **+$57k**, and 42 careers
+of 90 hold a full eighteen counting slots at 21 against 9). **The same delay-not-tax shape P1 and P2
+each measured, arriving a third time.** ⭐ It also **repairs P1's W35 collapse** – reach 63/90 → 82/90.
+
+### ⚠ FOUR THINGS NEED HIM
+
+1. **The sponsor economy moved and nobody decided that.** Both professional sponsor gates are *defined*
+   as `TIERS.w100.acceptsRank`, so `national.maxWtaRank` went **350 → 240** and `global.maxWtaRank`
+   **87 → 60** – and global's band narrowed from ranks **51–87 to 51–60, ten places wide**. The rule
+   did not change a word; its input did. Accept it, or give the sponsor gates their own numbers.
+2. **The WTA 125 now sits below the WTA 250.** The chain's top link is **180** against `wta250`'s
+   **200**, so the smaller event is harder to enter than the bigger one – visible in behaviour, not
+   only in the table (2.1 WTA 250s a career against 0.5 WTA 125s). Placing `wta125` at **210** would
+   restore monotonicity across the whole ladder.
+3. **J300: a tenfold gap closed to fivefold, and the rest is genuinely contested.** The sport cuts at
+   the top ~2%; 0.20 is the top 20%. Everything closer deletes the rung – and since P1 made the junior
+   ranking load-bearing for professional access, deleting it costs **~110 rank places** rather than the
+   ~1 the audit measured. ⚠ 0.20 also inverts a second direction: the cut is now stricter than the band
+   its own field is drawn from. **0.25 is the value that would restore it.**
+4. **Two of the four links carry no evidence.** W100's 240 and WTA 125's 180 are **placed to keep the
+   ladder monotone**, not sourced – no acceptance list exists for either rung. The provenance now sits
+   in `calendar.ts` beside the numbers so nobody repeats the 02.08 mistake of reading them as real.
+
+Full measurement, predictions scored, and the guard work:
+`docs/specs/acceptance-cuts-corrected-2026-08.md`.
+
+---
+
+## 2026-08-16 – The college gate reads its own rule, and the entry that costs it says so first (`wave/round21`, P4)
+
+**Re-measured first, and the number cancelled most of the phase.** `docs/plans/college-and-the-junior-ladder.md`
+§P4 asked for exactly this: *"if a normal junior can no longer reach W75, `collegeClosedFromTier` may
+already be doing approximately the right thing for the wrong reason – and the honest fix is then to
+say so in the comment rather than to add machinery."*
+
+⭐ **THE DOOR IS OPEN AT THE DECISION IN 86 OF 90 CAREERS NOW – IT WAS 7 OF 90 BEFORE P1.** So the
+owner's round-21 complaint (no college option at nineteen, only pro or stop) **is already fixed**, by
+P1-P3 and not by anything built here.
+
+⚠⚠ **BUT THE DOOR DID NOT STOP SHUTTING – IT MOVED TO THE OTHER SIDE OF THE QUESTION.** 83 of 90
+careers still lose it, at **median 19.1** against P0's 17.3, and the fork is at **19.0**. The rule
+that used to fire two years BEFORE the decision now fires a few weeks AFTER it, where it changes
+nothing. **It removes an answer from the card in 4 careers of 90; it used to remove it in 83.**
+The gate did not become correct, it became **late**.
+
+⚠ **AND MY OWN PREDICTION WAS WRONG IN AN INSTRUCTIVE WAY.** I predicted the plan's hypothesis – that
+she can no longer reach W75. She reaches it in **82 of 90** careers. P1 changed not *whether* but
+*when*: first entry moved to a median of **19.0**, first counting result to **19.2**. The whole
+professional ladder now opens on her nineteenth birthday.
+
+**SHIPPED:** the comment corrected in both places it was wrong; the warning before the entry, on both
+entry paths; the result arm as a figure; the coupling broken. **NOT BUILT:** the money arm (cancelled
+15.08), and any mechanism to re-close a door the world no longer closes. **No constant moved.**
+
+### ⚠ THE FALSE FACT WAS ON SCREEN, NOT ONLY IN A COMMENT
+
+`ENDINGS.collegeClosedFromTier` justified itself with *"a player who has taken professional prize
+money has spent her college eligibility"*, and **`ForkDialog` printed the same claim to the player**:
+*"Prize money at that level spends her college eligibility, and nothing gives it back."* Both are
+false and have been for the whole life of the project – the NCAA allowed $10,000 a year plus expenses
+before enrolment, and since **15 April 2026** allows prize money before enrolment **without any cap**.
+The rung is unchanged; it rests on the owner's own argument now, which needs no rulebook: *a girl who
+is already a professional does not go to college.*
+
+### ⭐ THE COUPLING WAS WORSE THAN THE BRIEF SAID
+
+The known half: `w75.acceptsRank` and `collegeClosedFromTier` name one rung, so P3's 450 → 300 moved
+the college door and nothing objected. **The half nobody had named: `collegeStillOpen` was reading
+`TIERS[tier].points` – the ladder's prize column – to decide what "a result that counted" meant.** The
+rule is a leaf now that imports no calendar constant at all, and four tests move `acceptsRank` over
+450/300/1/5000 and `points` to and from zero and assert the door does not follow. ⚠ It shipped as a
+decoupling and not a balance change because the clause removed was **dead**: it can only bite on an
+interior zero and no rung at or above W75 has one, which is itself pinned against the live table.
+
+### ⚠⚠ ONE THING NEEDS HIM, AND IT IS A DESIGN QUESTION RATHER THAN A NUMBER
+
+**If college can never be closed, the third door is always open and what varies is only whether it is
+a good idea.** The money arm is cancelled because the sport has no money rule; the result rung fires
+six weeks after the question it was meant to gate. A gate that fires after the decision is not a gate.
+Three coherent answers – **(A)** leave it (what ships today, the do-nothing option), **(B)** delete
+the gate outright and match the sport exactly (⚠ this also deletes round-21 #8's shut-door sentence,
+which he asked for), **(C)** move it earlier so it bites again (⚠ our invention, and it re-creates the
+round-21 complaint). **No agent should pick between these.**
+
+⚠ **And the six weeks are an accident.** Nothing arranged that the door survives the fork and nothing
+holds it there: **any future tuning that speeds her up by a month closes it again in most careers**,
+silently, because the two rules still name the same rung even though they no longer share a constant.
+
+Full measurement, predictions scored, and the guard work:
+`docs/specs/college-gate-decoupled-2026-08.md`.
+
+## 2026-08-16 – Four years become four decisions, and the third answer finally has a price (`wave/round21`, P5)
+
+**The phase that was sent to put the national-team competitions on the college calendar, found that
+the two the research recommends are five years too young for it, and measured that the door they sit
+behind was the cheapest option in the game.**
+
+### ⚠⚠ THE AGE FACT THAT MOVED THE SCOPE BEFORE A LINE WAS WRITTEN
+
+The research's own recommendation is to build the 14-and-under world team championship *"or its 16U
+twin"*, and on its own terms that is right. **But those bands are 11-14 and 13-16, and the fork is at
+nineteen.** The only national-team competition whose real age band covers a college player is the
+SENIOR one – the one the research puts last, and whose objection is to its *shape* (four levels,
+promotion, relegation, a Nations Ranking), not its existence. None of that shape is built. What
+shipped is the research's own recommended object – *"the letter"*, one week a year, arriving rather
+than chosen – aimed at the age band college actually occupies.
+
+### WHAT IS BEHIND THE DOOR NOW
+
+College is four years she LIVES THROUGH, one at a time. Each year ends with two answers of equal
+weight – another year, or back on tour – because the sport's own case is the early return: Diana
+Shnaider left NC State after about a season and is inside the WTA top 15. The card states the year in
+the engine's own numbers (what the family banked, where her rank went, whether her country called)
+and states no opinion about it. One week of each year is a national-team call-up she did not choose
+and cannot decline, which pays **no prize money and no ranking points** – because the sport awards
+neither.
+
+### ⭐⭐ AND THE MEASUREMENT THAT MATTERS MOST IS NOT ABOUT THE CONTENT
+
+Four years at college against four years on tour, same 52 seeds:
+
+| | COLLEGE | ON TOUR |
+| --- | --- | --- |
+| the family's balance | **+$152,243** | +$45,544 |
+| professional rank after | **#290** | **#169** |
+
+**The third answer costs 121 ranking places and pays $106,699** – more than the wealthiest starting
+capital in the game, nineteen times the working-class one. Nobody had ever put those two numbers
+beside each other, because until this phase the answer was a skip. **Nothing was tuned**: P6 owns the
+balance, and if this wants an answer the honest lever is the points table, not a quiet cost added to
+a scholarship.
+
+### ⚠ TWO PREDICTIONS WERE WRONG AND BOTH ERRORS ARE MORE USEFUL THAN THE FEATURE
+
+* **«Four years at college cost her half her development.»** They cost **10%** – 0.12 of one skill
+  point on a base of 58.6 – because at nineteen she is nearly done growing. The card does not claim
+  otherwise, which is the sentence a guess would have shipped.
+* **«She comes back with no ranking at all.»** Her professional rank is **#290 before the freeze and
+  #290 after it, identical** – she was already off the list the week she walked in. The four years
+  took nothing from her because there was nothing there to take. The epilogue line that asserted the
+  loss (and promised four years and a degree, unconditionally) is gone.
+
+Full measurement, predictions scored, and the seven things deliberately not built:
+`docs/specs/college-as-a-second-act-2026-08.md`.
+
+## 2026-08-16 – The chain is added up, and it costs two years and pays them back with interest (`wave/round21`, P6)
+
+**The re-measure the owner asked for before the plan was written: «после этой правки у нас нужны
+будут отдельные перемеры карьер… скорость и продвижение точно упадут». He was right for six years of
+her life and wrong for the rest. NO BALANCE CONSTANT MOVED IN THIS PHASE.**
+
+### ⭐ THE ANSWER, IN FOUR NUMBERS
+
+P0's frozen battery re-run unchanged on the finished build, n = 90, same seeds, 13.6 → 26.6:
+
+| her rank at | before the chain | after it | |
+| --- | --- | --- | --- |
+| 17 | #246 | **#423** | **+177 – the cost** |
+| 19 | #177 | **#270** | +93 – still behind at the fork |
+| **21** | #185 | **#174** | **−11 – the curves cross** |
+| **25** | #172 | **#158** | **−14** |
+
+**The career prize finishes level to one per cent** ($654,430 → $646,795), the ceiling is unchanged,
+and **every survival column improved**: bankruptcies 1 → 0, the earliest career-ending event 15.3 →
+24.9, the worst career high in ninety **#870 → #176**. The chain did not lower the ceiling, it raised
+the floor.
+
+### ⚠⚠ AND THE FIRST THING IT FOUND IS THAT NOBODY HAD BEEN MEASURING AGAINST THE BASELINE
+
+Each of P1–P5 compared itself with the phase before it. **P2 reported the cost at seventeen as
+"#300 → #426"; against P0 it is #246 → #423 – +177, not +126.** P2 also reported the cost "unwound by
+nineteen": against P0 she is still **93 places and 45% of her money** behind at the fork, and it
+unwinds between 19 and 21. Neither phase was wrong; they were measuring a different subtraction. That
+is the entire reason the plan demanded a frozen ruler.
+
+### ⭐⭐ SHE DOES NOT PLAY LESS. SHE PLAYS MORE, ON ONE RUNG.
+
+**265 entries a career against 239** – up in every year from fifteen. The rank falls because from
+fifteen to eighteen the only professional rung open to her is the bottom one, and **at eighteen 20.6
+of her 23.9 entries are W15s: 86% of a season on the lowest rung in the game.** Then W35, W50 and
+W75 all admit her for the first time at a median of **exactly 19.0** – three doors on one birthday.
+
+**And the counting book did not thin, which was the plan's prediction.** It FILLED: 74 careers of 90
+hold all eighteen slots at nineteen against P0's 20 – each worth **13.4 points against ~26**. By
+twenty-one the slot is worth 27.2 again. *Fullness stopped being a proxy for strength, and no frozen
+column was watching the price of a result.*
+
+### ⚠⚠ THE ONE THING THAT NEEDS HIM – AND IT IS THE LEVER THE PLAN WARNED AGAINST
+
+The plan named two honest levers and **both are wrong for what was measured**: density is already up,
+and restoring the book at nineteen needs +73% on the points that fill it, which would spend exactly
+the gains P3 bought at twenty-one and twenty-five.
+
+**What is actually causing it is one clause.** `juniorAccessOpen` refuses a junior every W rung above
+W15 unless the Accelerator's junior table admits her – *whatever professional ranking she holds* – and
+`isJuniorAge` is `age <= 18`, so it governs her whole eighteenth year. **62 careers of 90 hold a rank
+at seventeen inside W35's own #700 cut and are refused by their birthday rather than by merit.**
+P1's own comment says the opposite is intended (*"a junior's route, not a ceiling on a professional"*)
+and the regulation it quotes describes reserved access, not a bar.
+
+**The proposal, not pulled:** make the Accelerator additive – she enters if the Accelerator admits her
+**OR** her ranking clears that rung's own cut. One clause. **The size is bounded between #246 and
+#423 at seventeen and has not been measured; measuring it is a phase, not a paragraph.** ⚠ This is
+in effect "loosening a rule we just added", which the plan calls the dishonest lever – the argument
+for it is correctness, and the ruling is his.
+
+⚠⚠ **AND P1 ALREADY CONSIDERED THIS AND REJECTED IT ON A NUMBER THAT P3 HAS SINCE MOVED.** The clause
+carries its own reason: *"It is an AND rather than an OR, and the reason is measured rather than
+chosen: read as an extra door it would change nothing, **because our acceptance cut already admits 93%
+of careers to a W75**."* The argument was that the cuts were loose enough that a junior would clear
+them anyway, so an extra door opens nothing. **Two things have moved since and they compound: P3
+tightened the cuts (W75 #450 → #300, W50 #550 → #330) and P1+P2 slowed her (median rank at seventeen
+#246 → #423).** A median seventeen-year-old used to clear W75 by 204 places; she now misses it by 123.
+**What admits her at seventeen is no longer the cut – it is her birthday.** With the tightened cuts an
+OR reading would open W35 to **69%** of seventeen-year-olds and W50/W75 to only **8%** and **3%** –
+not the flood the comment guarded against, but **a gradient, which is precisely what the ladder lost
+when three doors started opening on one birthday.** Nobody erred: P1 measured its own tree, and P3 was
+tuning cuts rather than reading a comment in `ladder.ts` that depended on them. It is only visible
+from a phase that reads the whole chain at once, which is what P6 is.
+
+### ⭐ THE THIRD ANSWER'S PRICE IS NOT A FINDING ABOUT COLLEGE
+
+P5's numbers replicate to within $716 – college +$151,527 over four years against the tour's +$44,974.
+**But the scholarship pays $0, and both arms earn the same family income. 100% of college's advantage
+is avoided spend.** Netting the tennis out: **the tour takes in $265,320 of prize and spends $380,436
+to get it – it loses this family $115,116 between nineteen and twenty-three.** College loses $4,830.
+
+**So there is no college knob.** Closing the gap needs a college year to cost $26,638 (a cost the
+sport does not have), or **prize +40%**, or **cost −28%** – all global. **My recommendation is to pull
+nothing: a #165 player losing money on tour is the sport, not a bug.** The one cheap thing is a
+sentence – nothing anywhere tells the player the tour is loss-making at her rank.
+
+### AND THREE SMALLER THINGS
+
+* **The domestic ladder is not being bypassed.** 90 careers of 90 earn a domestic ranking, all at
+  **13.6**, and it is her **first** ranking in 90 of 90. `tools/e2e-fixtures.ts`'s comment that *"her
+  first ranking is now the ITF one"* is wrong – what it measured is a **decay** of a 52-week window
+  (100% hold it at 14.6, 50% at 15.8), not a bypass.
+* **The strong-out rules finally bite.** On P1's 416-week horizon the top-50 limb fired in **0 careers
+  of 27**; at 676 weeks it fires in **14 of 90**, and the rule refuses something in **84%** of careers
+  for a median of 90 weeks. **Zero empty weeks across all ninety** – the boredom risk still does not
+  materialise.
+* **The 14.8 bankruptcy is at zero – by side effect, not by fix.** `w15.minAgeYears: 14` still ships
+  and a fourteen-year-old still enters W15s. P3's cuts changed what she could reach; the failure mode
+  is intact and this is the row to re-read after any change to the junior economy.
+
+Full battery, all six questions with numbers, and the retune sized:
+`docs/specs/the-remeasure-2026-08.md`.
+
+## 2026-08-16 – Two rulings on one evening: the real age grid, and college as its own branch (`wave/round21`, P8)
+
+**The owner read the code an hour after P7 reported and removed two things we had invented.** Neither
+ruling adds a mechanism; both delete one.
+
+> **1.** «у W35 стоит minAgeYears: 16, у W50 – 16, у W75 и W100 – 17. По той же цитате из регламента,
+> которой вы были правы, настоящих порогов только два – 14 и 18. – вот как есть в регламенте, так и у
+> нас. Возрастное есть только по количеству сыгранных в год, так и делаем.»
+>
+> **2.** «collegeClosedFromTier – так ведь нет же там никакой связи с w75, мы же всё узнали. Колледж –
+> это независимая ветка карьеры с отдельным функционалом и турнирами, альтернативная.»
+
+### ⭐⭐ THE AGE FLOORS WERE DOING ALMOST NOTHING, AND THAT IS THE MEASUREMENT
+
+Five rungs' floors came off at once – W35/W50 16 → 14, W75/W100/Slam 17 → 14, the four WTA rungs
+17 → **15** (WTA Rulebook II.D: an under-15 has no direct acceptance to a WTA event at all, so the
+grid has three numbers and not one). P0's frozen battery, n = 90, 676 weeks, identical seeds:
+
+| first entry, median | P0 | P6 | correction | **now** | predicted |
+| --- | --- | --- | --- | --- | --- |
+| W35 | 16.3 | 19.0 | 16.3 | **16.1** | 15.0 ⚠ |
+| W50 | 16.5 | 19.0 | 17.3 | **17.2** | 17.0 ✅ |
+| W75 | 17.0 | 19.0 | 18.0 | **17.9** | 17.5 ⚠ |
+| W100 | – | 19.0 | 18.6 | **18.3** | 18.3 ✅ |
+
+Rank at 19 **#154 → #160**, at 21 **#174 → #160**, at 25 **#160 → #156**; career prize $709,030 →
+**$685,960**; entries 265 → **267**. **The predictions were written first and were too large, in the
+same direction every time** – because the acceptance cut was already the gate and the age floor was
+sitting behind it. Every W35 entry in all 90 careers is by a RANKED girl: unranked is #1601 of that
+table and #700 refuses her, so no floor could have admitted a fourteen-year-old. What the ruling
+actually moves is the bottom of the distribution – W35's p25 16.0 → 15.6, and 1.0 W35 a year at
+fifteen where there were none – i.e. the early developers, who are who the rule is about.
+
+⚠ **Two bankruptcies at 15.8, where there were none** (P0 had one at 15.3). Same mechanism: a
+fifteen-year-old can now afford a W35 trip she could not previously enter. Within one career of noise,
+reported rather than acted on.
+
+⚠ **And the frozen careers say it more sharply than the battery does.** The per-key diff moved 27 keys
+on all three – **and `entries` is not one of them. She did not enter one different event.** What moved
+is `results`, because `selectEntrants` filters a draw's CANDIDATES on the same age gate: different
+cohort players fill the fields she meets. `rngMain` unmoved for the fifth wave running, so the frozen
+MAIN capture is untouched (41550 / `e6b0c709`).
+
+### THE COLLEGE ANSWER IS NOW ALWAYS ON THE CARD, AND NOT BY A MEASUREMENT
+
+`ENDINGS.collegeClosedFromTier`, `collegeDoorOpen`, `collegeStillOpen`, `entryCostsCollege`, the
+`answerFork` guard, both protocol fields and P4's warning on both entry paths are gone. The three
+previous columns read 8% / 96% / 18% open at the fork; it is **100% by construction** now.
+
+⚠ **What did NOT go: everything behind the door.** P5's four years lived one at a time, the call-up,
+`leaveCollege`, the third answer itself – all untouched. What went is only the rule that could REMOVE
+the choice.
+
+⚠ **P4's §6.1 is closed by this.** It stated three options and refused to pick; he picked **(B)**.
+Its own note that (B) *"deletes round-21 #8's shut-door sentence"* is exactly what happened – **#8 is
+retired by his own later ruling, and the spec says so rather than letting an answered request
+disappear.** He asked why the college answer was missing at nineteen; it is never missing now.
+
+⚠ **P4's warning went because it became FALSE, which is a stronger reason than "unused".** A sentence
+saying a result here can cost the college place, on the card where the player is spending an entry
+fee, prices a cost into a decision that does not carry it.
+
+### AND THE HARD ACCEPTANCE CUTS ARE NOW A DATED RULING
+
+Asked the same day whether the regulation's soft tail should replace our hard cuts:
+**«пусть остануться жесткие отсечки, доделывайте всё остальное».** No `acceptsRank` or `enterPct`
+moved. ⚠ Worth recording because the age ruling makes the cuts MORE load-bearing – below eighteen they
+are now the only gate – so the next reader of research §4-A finds the decision instead of the question.
+
+### THE 375px STRIP – THE HYPOTHESIS WAS WRONG AND THE CAP IS THE LEVER
+
+Ruling 1 did **not** shrink the row: `🔒 Opens at 16` became `Used 10 of 10` on one chip and
+`🔒 Opens in the top 330` on the other, a net **+8 characters**. Measured in a real Chromium
+(`tools/strip-wrap-probe.mjs`, new) at the card's real 315px: five rungs wrap to four rows, four to
+three, one row is 29.4px against an 8.28px overshoot. **`STRIP_MAX_RUNGS` 5 → 4.** The ceiling is
+untouched. ⚠ `e2e/responsive.spec.ts` itself is the owner's to run.
+
+Predicted vs measured in full, every guard that moved, and the per-key diff:
+`docs/specs/college-is-its-own-branch-2026-08.md`.

@@ -10,15 +10,20 @@
 // is the market card's own copy, and it had two callers in two different concerns.
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
-import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_EDGE_CORRIDOR_PP, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
-import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
+import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
+import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
-import type { CoachEdgePlacement, CoachMarketRow, CoachTier, PlayerProfile } from '../../shared/protocol'
+import type { CoachEdgePlacement, CoachMarketRow, CoachTier, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { parentIncomeForWeekCents } from '../economy'
-import { addEvent, seasonStartWeek } from './ledger'
+import { activeKitDeal } from '../offers'
+// ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
+// which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
+// runs one way exactly as `../offers` above does.
+import { coachTravelFareFor, travelCostFor } from './sponsors'
+import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
@@ -155,13 +160,22 @@ export function matchesEverPlayed(world: WorldState): number {
  *  the arithmetic downstream of an unchanged pickInt does with the number it drew, so the frozen
  *  MAIN capture cannot move. Takes effect from the NEXT tick; this week's bill is already written.
  *
- *  ⚠ IT NO LONGER MOVES THE RETAINER (owner, 08.08). Until this wave the flag decided whether the
+ *  ⚠ IT NO LONGER MOVES THE RETAINER (owner, 08.08). Until that wave the flag decided whether the
  *  weekly bill was charged on a competition week at all, which conflated travel with the retainer -
- *  see `coachWorksThisWeek` for the owner's own separation of the two. The retainer is now
- *  unconditional and this flag means travel, so it is a persisted stance with no arithmetic behind
- *  it yet: the travel mechanic itself is still deferred (locked row on screen T, 30.07). The field,
- *  the command and the copy are kept so the mechanic has somewhere to land - deleting them would
- *  cost a schema change now and a second one when travel ships. */
+ *  see `coachWorksThisWeek` for the owner's own separation of the two. The retainer is unconditional
+ *  and this flag means travel, and only travel.
+ *
+ *  ⚠⚠ ROUND-21 #2 - IT HAS A CALLER NOW, AND THAT IS THE WHOLE ITEM. Owner, 14.08, asking for the
+ *  THIRD time: «Тренер всё ещё не едет на соревнования, как так? Уже 3й раз прошу сделать.» The
+ *  mechanic was cancelled on 30.07 after three STAT versions of it were measured and all three failed
+ *  (commit `77e08aa`), and round-20 #1 answered the second ask with an explanation instead of a
+ *  build. Asking a third time overrules the cancellation - and what he asked for when asked what to
+ *  build is not a fourth invisible bonus: «Присутствие в потоке и трансляции точно надо (если едет).»
+ *
+ *  SO WHAT THIS SWITCH BUYS IS PRESENCE, AND PRESENCE IS THE WHOLE OF IT HERE. He goes; it costs a
+ *  second fare (`coachTravelFareFor`); and the tournament flow, the running commentary and the week's
+ *  story all say so. NO STAT MOVES on this branch - the three that were tried are in the commit
+ *  above, and re-measuring them on the rebuilt bench is a separate arm of the same wave. */
 export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
   // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
   // because the worker is not the gate - a tab left open behind the epilogue must not be able to
@@ -174,10 +188,56 @@ export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
     type: 'info',
     // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see the note on `coachLoadNote` below for the ruling.
     text: on
-      ? 'Your coach travels to tournaments with her now.'
+      ? 'Your coach travels to tournaments with her now – a second fare on every trip.'
       : 'Your coach no longer travels to tournaments – the work happens at home.',
   })
 }
+
+/** ⭐ v49 – ...AND TO THE RUNGS THAT PAY HER NOTHING TOO. The nested half of the stance above, and a
+ *  separate decision because it is a separate, more expensive one.
+ *
+ *  ⚠ IT IS THE PLAYER'S CALL AND THE ENGINE REFUSES NOTHING (owner, 15.08): «делаем тогда», and the
+ *  model - «По мне игрок сам решает: есть деньги - едет тренер, нет - не едет, или едет, но быстрее
+ *  банкротится.» The bench says what that costs (8/30 wealthy·elite and 15/30 middle·middle careers
+ *  bankrupt, every one in the junior years - docs/specs/coach-travel-2026-08.md), so screen T warns
+ *  before the first fare is charged and then does as it is told. A gate on the OUTCOME would be this
+ *  engine overruling him on his own money.
+ *
+ *  ⚠ IT DOES NOT IMPLY THE FIRST SWITCH and does not turn it on. The fare reads both stances (the one
+ *  gate, `coachTravelFareFor`), so this alone sends nobody anywhere - which is why the row on screen T
+ *  is nested under the other one rather than standing beside it. Setting it with the first switch off
+ *  is a stance recorded for the day it is turned on, exactly as the v24 stance is for a self-coached
+ *  family. Pure state, zero draws on any stream. */
+export function setCoachOnJuniorEvents(world: WorldState, on: boolean): void {
+  // ⚠ W2-ENDINGS: the engine re-validates every command, because the worker is not the gate.
+  guardNotEnded(world)
+  if ((world.coachOnJuniorEvents ?? false) === on) return
+  world.coachOnJuniorEvents = on
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    // ⚠ NO PRONOUN FOR THE COACH (R15-7) – the roster puts a woman on every list by construction.
+    text: on
+      ? 'Your coach travels to junior and domestic tournaments too – a second fare on trips that pay no prize money.'
+      : 'Your coach stays home for junior and domestic tournaments – the second fare is for the events that pay.',
+  })
+}
+
+/** ⭐ ROUND-21 #2 - IS HE ON THE TRIP? The one predicate every presence surface reads, so the flow,
+ *  the commentary, the week's story and the till can never disagree about whether he was there.
+ *
+ *  Two clauses and both are the stance stating itself: the switch is on, AND there is somebody to
+ *  send. A self-coached family has no second seat to buy (`coachTravelFareFor` refuses the charge for
+ *  the same reason), and a parent who is already in the car is not "travelling with her".
+ *
+ *  ⚠ IT DOES NOT ASK WHETHER THIS WEEK IS A COMPETITION WEEK, deliberately: every caller already
+ *  knows it is - the flow is showing a tournament, the commentary is narrating a match, the week's
+ *  story is captioning the drive home - and folding that question in here would make the predicate
+ *  mean something different at each of them. Pure; zero draws. */
+export function coachTravelsWithHer(world: WorldState): boolean {
+  return world.coachOnEventWeeks && world.coachId !== null
+}
+
 
 /** WHAT THE COACH COSTS OVER A SEASON - one number, because since 08.08 there is only one.
  *
@@ -203,29 +263,152 @@ export function coachBilling(world: WorldState): {
   /** the weeks of the coming year the retainer is actually charged for */
   billedWeeks: number
   seasonCents: number
+  /** ⭐ v49: does he go to the rungs that pay her nothing too - the nested half of the stance. */
+  onJuniorEvents: boolean
+  /** ⭐ ROUND-21 #2: WHAT SENDING HIM WOULD ADD over the trips she has actually booked this season,
+   *  in cents. Zero when nothing is booked, and zero for a self-coached family - see
+   *  `coachTravelFareFor`, which is the one definition this sums and the reason the row on screen T
+   *  and the line on the till can never quote different money. Quoted whether the switch is ON or
+   *  OFF, because it is the price of the decision rather than a receipt for one.
+   *
+   *  ⚠ GROSS SINCE 15.08, AND THAT IS THE FIX THIS FIGURE OWED THE SCREEN. It summed `travelCostFor` -
+   *  HER fare, net of the academy scholarship and the brand's share - while the till charges his seat
+   *  at the full price (`coachTravelFareFor`, and the owner's principle behind it). So the one family
+   *  the number mattered most to was quoted less than it would pay. It reads the fare function itself
+   *  now, which is the only way the two can never disagree again. */
+  travelFareCents: number
+  /** ...and how many trips that is, so the screen can say "over the 9 he would be on" rather than
+   *  printing a season total with nothing to divide it by.
+   *
+   *  ⚠ TRIPS HE WOULD BE ON, NOT TRIPS SHE HAS BOOKED, since the fare gate. They are different
+   *  numbers the moment a junior rung is on her card and he is not going to it, and a count that
+   *  includes the trips the figure does NOT cover is the same lie in a different unit. */
+  travelTrips: number
+  /** ⭐ 15.08 – WHAT **HER** SEATS COST OVER THOSE SAME TRIPS, net of every cover she holds.
+   *
+   *  It exists because "twice the fare" stopped being true for the families it mattered to. His seat
+   *  is gross and hers is not, so for a girl on a scholarship the trip is her discounted seat plus his
+   *  whole one - and the screen has to be able to print both figures rather than a multiple that is
+   *  right only for a family paying full price. Equal to `travelFareCents` exactly when no support
+   *  reaches her travel, which is how the screen knows which sentence to say. */
+  travelHerFareCents: number
+  /** ⭐ v49 – WHAT THE NESTED OPTION WOULD ADD on top, over the same booked season, and over how many
+   *  more trips. The two sets are disjoint by construction (a rung either pays prize money or does
+   *  not), so this is the price of the second decision on its own, priced the same way: through
+   *  `coachTravelFareFor`, with the stance not consulted. */
+  travelJuniorCents: number
+  travelJuniorTrips: number
+  /** ⭐ 15.08 – IS ANY SUPPORT REDUCING HER TRAVEL AT ALL this week (a scholarship, a brand's share,
+   *  or anything added to `travelCostFor` after today)? Asked of the ONE fare definition rather than
+   *  of a list of covers, so a cover invented tomorrow is inside the answer by construction - and
+   *  answerable with nothing booked, which is when a junior family most needs the sentence. */
+  travelCovered: boolean
+  /** ⭐ ROUND-21 #12: THE CAP THE BUDGET METER DRAWS AGAINST, carried rather than reverse-engineered.
+   *
+   *  The screen used to RECOVER it from any row that was over budget
+   *  (`weeklyCents - overBudgetCents === the cap`), which worked only while some row was over. Fixing
+   *  the income made the owner's own case - a million banked - the case where NO row is over, and the
+   *  meter would then have printed a $0.00 weekly cap with a full bar beside it. A number the screen
+   *  needs is a number the engine should hand over. */
+  weeklyIncomeCents: number
 } {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
   const rate = coach ? coach.rateCents : facilityRateCents(age, tierOf(coach))
   const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background)
   const seasonStart = seasonStartWeek(world.week)
-  const countEntered = (from: number) => {
+  const enteredIn = (from: number) => {
     const to = from + WEEKS_PER_YEAR
-    return new Set(
-      world.season.filter((e) => e.week >= from && e.week < to && world.entries.includes(e.id)).map((e) => e.week),
-    ).size
+    return world.season.filter((e) => e.week >= from && e.week < to && world.entries.includes(e.id))
   }
+  const countEntered = (from: number) => new Set(enteredIn(from).map((e) => e.week)).size
   // The season she is in; and if the calendar has just rolled and she has entered nothing yet, the
   // one she has just finished, which is the honest answer to "how much of her year is tournaments".
+  const thisSeason = enteredIn(seasonStart)
+  const booked = thisSeason.length > 0 ? thisSeason : enteredIn(seasonStart - WEEKS_PER_YEAR)
   const eventWeeks = countEntered(seasonStart) || countEntered(seasonStart - WEEKS_PER_YEAR)
   const billedWeeks = Math.max(0, WEEKS_PER_YEAR - coachedWeeksLostToRest(world))
+  // ⭐ ROUND-21 #2 / 15.08 / v49 – THE SECOND SEAT, over the trips on her card, ASKED OF THE FARE
+  // FUNCTION ITSELF.
+  //
+  // ⚠ IT USED TO SUM `travelCostFor` AND THAT WAS THE DEFECT. Her fare is net of the academy
+  // scholarship and the brand's travel share; HIS is gross (the owner's principle, 15.08: «механизм
+  // точечной поддержки нуждающихся... не должен поддерживать их чрезмерные траты»), so the screen was
+  // under-quoting exactly the families the support exists for - and it did not apply the rung gate at
+  // all, so a fourteen-year-old's junior season was priced as if he were coming to every trip of it.
+  // Two wrong numbers on the one line the decision is made from.
+  //
+  // ⚠ SO THE FARE FUNCTION IS ASKED ON PROBE WORLDS, AND NO GATE IS COPIED HERE. `coachTravelFareFor`
+  // is the ONE place that decides both "does he come to this rung" and "what does the seat cost"; a
+  // second copy of either test in this file is exactly how the row and the till come to disagree. The
+  // probes flip stances and nothing else.
+  //
+  // ⚠ AND THE TWO FIGURES ANSWER TWO DIFFERENT QUESTIONS, deliberately. `travelFareCents` is WHAT
+  // SENDING HIM COSTS under the junior stance the family actually holds - so a fourteen-year-old who
+  // has opened junior travel sees her real season and not a professional one she has not reached.
+  // `travelJuniorCents` is WHAT THE NESTED OPTION WOULD ADD, priced with the stance forced both ways,
+  // because a price the row quotes for its own switch must not change the moment the switch is
+  // flipped. Only the first switch is assumed on in both: it is the price of a decision, not a
+  // receipt for one.
+  const asIfTravelling: WorldState = { ...world, coachOnEventWeeks: true }
+  const asIfJuniorToo: WorldState = { ...world, coachOnEventWeeks: true, coachOnJuniorEvents: true }
+  const asIfWSeriesOnly: WorldState = { ...world, coachOnEventWeeks: true, coachOnJuniorEvents: false }
+  let travelFareCents = 0
+  let travelTrips = 0
+  let travelHerFareCents = 0
+  let travelJuniorCents = 0
+  let travelJuniorTrips = 0
+  for (const e of booked) {
+    const his = coachTravelFareFor(asIfTravelling, e)
+    if (his > 0) {
+      travelFareCents += his
+      travelTrips++
+      // HER seat on the same trip, net of every cover - the second half of the sentence on screen.
+      travelHerFareCents += travelCostFor(world, e)
+    }
+    // The trips only the nested option buys. Disjoint from the W-series ones by construction (a rung
+    // either pays prize money or it does not), so this is a difference and never a double count.
+    const extra = coachTravelFareFor(asIfJuniorToo, e) - coachTravelFareFor(asIfWSeriesOnly, e)
+    if (extra > 0) {
+      travelJuniorCents += extra
+      travelJuniorTrips++
+    }
+  }
   return {
     onEventWeeks: world.coachOnEventWeeks,
+    onJuniorEvents: world.coachOnJuniorEvents ?? false,
     weeklyCents,
     eventWeeks,
     billedWeeks,
     seasonCents: weeklyCents * billedWeeks,
+    travelFareCents,
+    travelTrips,
+    travelHerFareCents,
+    travelJuniorCents,
+    travelJuniorTrips,
+    travelCovered: travelCoverReachesHer(world),
+    weeklyIncomeCents: familyWeeklyIncomeCents(world),
   }
+}
+
+/** ⭐ 15.08 – IS ANY SUPPORT TAKING ANYTHING OFF HER TRAVEL RIGHT NOW?
+ *
+ *  ⚠ ASKED OF `travelCostFor` AND NOT OF A LIST OF COVERS, which is the whole reason it is a function
+ *  rather than `world.academy !== null`. That function is THE definition every cover has to arrive
+ *  through - the charge, the refund and the planner's quote all read it, and `kitTravelShare`'s own
+ *  note says a fare may only ever be reduced there - so a support stream added tomorrow is inside
+ *  this answer without anybody remembering to come back here. A named-cover version of this line
+ *  would be stale the day the third one ships.
+ *
+ *  ⚠ AND IT IS A PROBE RATHER THAN A REAL EVENT, because the screen needs the sentence when nothing
+ *  is booked at all - a junior family with a scholarship is exactly who has no W-series trip on her
+ *  card yet and most needs to be told whose seat the scholarship pays for. The amount is large enough
+ *  that no percentage cover rounds away to nothing. Pure; zero draws. */
+function travelCoverReachesHer(world: WorldState): boolean {
+  // `travelCostFor` reads the world and `event.travelCostCents`, and nothing else on the event, so
+  // the cast names what this object is FOR rather than pretending it is a fixture of a real trip.
+  const probe = { travelCostCents: 10_000_00 } as SeasonEvent
+  return travelCostFor(world, probe) < probe.travelCostCents
 }
 
 /** How many of the NEXT `WEEKS_PER_YEAR` weeks the coach is stood down for, which since 08.08 is
@@ -245,6 +428,49 @@ function coachedWeeksLostToRest(world: WorldState): number {
   return Math.min(WEEKS_PER_YEAR, weeks.size)
 }
 
+/** ⭐ ROUND-21 #12 – WHAT ARRIVES EVERY WEEK, ALL OF IT (owner, 14.08).
+ *
+ *  His report, verbatim: «у нас есть ещё %, надо их тоже учитывать и суммировать, а то на счету
+ *  1млн, а элитного тренера какого-то нельзя брать.»
+ *
+ *  ⚠ MEASURED BEFORE ANYTHING WAS CHANGED, on a real career at week 120 with his million banked:
+ *  the parents' contribution was $482.94/wk, the savings interest $600.00/wk, and the market's
+ *  affordability test read the FIRST NUMBER ALONE - so all four Elite coaches printed "$33-176
+ *  over" while more than half of the family's weekly money was invisible to the test that was
+ *  refusing them. The «%» he names is `ECONOMY.savings.apyWeekly`: `accrueSavingsInterest` credits
+ *  round(fundsCents x apyWeekly) at the top of EVERY tick, deterministically and with zero RNG -
+ *  it is a wage the balance pays, not a windfall, and at a million it is larger than the parents'
+ *  own. So this is a defect in the DENOMINATOR, not a wording problem.
+ *
+ *  ⚠ WHAT COUNTS IS "ARRIVES EVERY WEEK WHATEVER SHE DOES", and the two exclusions are the rule
+ *  stating itself. PRIZE MONEY, appearance fees and result bonuses are not here: they are paid for
+ *  a RESULT, a season of them is lumpy, and a weekly retainer underwritten by them is a family one
+ *  bad draw away from not being able to pay. THE RESERVE is not here either - that is the original
+ *  ruling on `overBudgetCents` below ("a reserve pays for one week of anything") and it survives
+ *  untouched: this changes what the week's income IS, not what income means.
+ *
+ *  ⚠ AND A KIT RETAINER IS PRO-RATED RATHER THAN COUNTED ON ITS OWN WEEK. `payRetainer` pays it
+ *  four times a year (`isRetainerWeek`, at season offsets 0/13/26/39), so counting it whole would
+ *  make an Elite coach affordable on four weeks of the year and refused on the other forty-eight -
+ *  a market that flickers. It is a contracted wage, and a wage divided by the weeks it covers is
+ *  what a family can actually spend of it each week.
+ *
+ *  Pure: zero draws on any stream, derived at snapshot time like everything else on this screen. */
+export function familyWeeklyIncomeCents(world: WorldState): number {
+  const parents = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
+  // The owner's «%», in the SAME expression `accrueSavingsInterest` charges - so the market and the
+  // ledger can never disagree about what the balance earns. Floored at zero: an overdrawn family
+  // earns nothing, it is not billed negative interest (the accrual returns early below 1 cent).
+  const interest = Math.max(0, Math.round(world.fundsCents * ECONOMY.savings.apyWeekly))
+  const deal = activeKitDeal(world.offers, world.week)
+  const retainerCents = deal ? ((deal.terms as KitOfferTerms).retainerCents ?? 0) : 0
+  return parents + interest + Math.round((retainerCents * RETAINERS_A_YEAR) / WEEKS_PER_YEAR)
+}
+
+/** How many times a signed kit deal pays its retainer in a year - `isRetainerWeek` is
+ *  `week % (WEEKS_PER_YEAR / 4) === 0`, so it is four, and the two must not drift apart. */
+const RETAINERS_A_YEAR = 4
+
 /** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and
  *  HER plan, read against HER game, with what each rung would add for her.
  *
@@ -254,10 +480,17 @@ function coachedWeeksLostToRest(world: WorldState): number {
 export function coachMarket(world: WorldState): CoachMarketRow[] {
   const age = ageAtWeek(world.week)
   const points = kidPoints(world, 'domestic') // ⚠ the Elite gate's currency – see hireCoach above
-  const weeklyIncome = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
+  // ⭐ ROUND-21 #12: every stream that arrives every week, not the parents' line alone. See
+  // `familyWeeklyIncomeCents` for the measurement that made this a bug rather than a wording fix.
+  const weeklyIncome = familyWeeklyIncomeCents(world)
   // ⚠ THE QUOTE IS OVER THE WEEKS SHE WILL ACTUALLY HAVE HIM (08.08). Same arithmetic the season
   // price uses, from the same helper, so the card and the bill can never describe different years.
   const coachedWeeks = ECONOMY.coach.upliftHorizonWeeks - coachedWeeksLostToRest(world)
+  // ⭐ ROUND-21 #2, THE LAST OPEN ITEM – DOES THIS FAMILY SEND HIM? Asked ONCE, of the one predicate
+  // every presence surface reads, and never per row: it is a fact about the FAMILY's stance and not
+  // about the man on the card, so a row-by-row answer would be the same question asked sixteen times
+  // with sixteen chances to disagree. See `edgeTravelPct` below for what it gates.
+  const travels = coachTravelsWithHer(world)
   return buildCoachRoster(world.seed, age).map((coach) => {
     const fit = coachFitFor(coach, world.profile.playStyle)
     const [upliftLo, upliftHi] = coachSeasonUplift({
@@ -281,6 +514,9 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // AFFORDABLE MEANS "against the week's income", not "against the reserve". A reserve pays for
       // one week of anything; what the family is actually deciding is whether this bill fits the
       // money that arrives every week, which is the number the budget meter draws.
+      // ⭐ ROUND-21 #12: that income is now ALL of it (`familyWeeklyIncomeCents`) and not the
+      // parents' line alone. The ruling above is unchanged - the reserve is still not counted - it
+      // is the week's income that was being under-read, by more than half on his own save.
       overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background) - weeklyIncome),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],
@@ -289,7 +525,26 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // the 0.7 budget coach turns up - and since the value is a property of the MAN, that search
       // would always succeed. The corridor is genuinely all a market can tell you about a price
       // bracket, and it is what the owner asked for («может по-проще "+0.3-0.6% per match"»).
-      edgePct: [...COACH_EDGE_CORRIDOR_PP[coach.tier]] as [number, number],
+      edgePct: coachEdgeCorridorPp(coach.tier),
+      // ⭐ ...AND TWICE THAT ON THE TRIPS HE IS ON (round-21 #2, the last open item). Until this the
+      // card quoted the HOME corridor to a family paying a second fare to every W event: the doubling
+      // shipped in the engine, was measured at 500 paired careers, and said nothing on the one screen
+      // that sells the decision.
+      //
+      // ⚠ NULL RATHER THAN THE HOME BAND REPEATED, so a family that leaves him at home reads exactly
+      // what it read before and the screen has one thing to test rather than two identical figures to
+      // tell apart. The gate is the STANCE (`coachTravelsWithHer`: somebody to send, and the switch
+      // on), which is the same pair the fare itself is charged on.
+      //
+      // ⚠ AND IT IS STILL THE RUNG AND NEVER THE MAN – §4's anti-shopping rule, which twice a bracket
+      // does not touch: `coachEdgeCorridorPp` reads the tier table and no coach id, so this column
+      // cannot leak an individual draw any more than `edgePct` above can.
+      //
+      // ⚠ WHAT IT DOES NOT PROMISE IS A FLAT DOUBLING, and the copy carries that rather than this
+      // field. `coachTravelFareFor` sends him only to rungs that pay prize money unless the family has
+      // opened the junior stance too, so a J-series week doubles nothing even here - which is why the
+      // card says «travelling with her» and not «doubled».
+      edgeTravelPct: travels ? coachEdgeCorridorPp(coach.tier, true) : null,
       loadNote: coachLoadNote(coach.tier),
     }
   })
@@ -299,8 +554,51 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
  *
  *  You learn what a coach is worth by employing him: that is what scouting is, and it arrives far too
  *  late to shop with. It is also the payoff of the budget lottery and the reason the corridor on the
- *  card is worth reading at all. */
+ *  card is worth reading at all.
+ *
+ *  ⚠ SINCE ROUND-21 #7c IT IS THE LENGTH OF A SEASON AND NO LONGER THE GATE ITSELF – see
+ *  `coachRevealWeek`, which anchors the reveal to a WEEK OF THE CALENDAR instead of counting off a
+ *  stopwatch. It stays exported under this name (world.ts re-exports it, and 111 files import from
+ *  there) and it stays load-bearing: half of it is the owner's first-half / second-half split. */
 export const COACH_EDGE_REVEAL_WEEKS = WEEKS_PER_YEAR
+
+/** ⭐ ROUND-21 #7c – WHEN THE VERDICT LANDS, AND IT IS A DATE IN HER YEAR RATHER THAN A STOPWATCH.
+ *
+ *  The owner, 14.08: «У тренера на карточке "Too early to tell 49 weeks of 52" - звучит довольно
+ *  смешно, сезон уже сыгран. Мне кажется надо во-первых заменить на "обсудим в межсезонье", а
+ *  во-вторых убрать привязку к 52 неделям. Если Тренера меняли в первой половине сезона, тогда это
+ *  актуально, если во второй - уже можно готовить "мало времени прошло" или вроде того и сдвигать
+ *  эту планку дальше по году, может у нас сейчас так - надо проверить.»
+ *
+ *  ⚠ IT DID NOT ALREADY WORK THAT WAY, and he asked to be told before anything was built. The old
+ *  gate was `weeksTogether >= COACH_EDGE_REVEAL_WEEKS`: a ROLLING 52-week bar off `coachSinceWeek`
+ *  and nothing else - no season, no calendar, no hire month anywhere in the function. A coach taken
+ *  on in week 2 of a season and one taken on in week 40 were treated identically, and the card he
+ *  photographed printed "49 weeks of 52" in an off-season with that season already played, counting
+ *  down to a Tuesday three weeks into the NEXT year.
+ *
+ *  THE BAR IS THE OFF-SEASON NOW, because the off-season is when the question is answerable at all:
+ *  a season of results is in, and nothing further is learned until the next one starts. This returns
+ *  the FIRST off-season week (`isOffSeasonWeek` – the last `OFF_SEASON_WEEKS` of a season year) of
+ *  the season he has been present for, and "present for" is the owner's own split: hired in the
+ *  first half of a season, that season counts; hired in the second, it does not, and the bar moves a
+ *  year down the calendar.
+ *
+ *  ⚠ THE ANTI-SHOPPING RULE SURVIVES THE MOVE, AND IN THE SECOND HALF IT GETS STRICTER. §4 exists so
+ *  the market cannot be read by hire-look-fire, and the price of one read used to be a flat 52
+ *  weeks; it is now 24 at the cheapest (hired at season-week 25, revealed at 49) and 75 at the
+ *  dearest (hired at season-week 26). What keeps that honest is that the price is no longer
+ *  something the player can pay whenever they like: the reveal is pinned to a week of the CALENDAR,
+ *  so a hire timed one week late costs a whole extra year – and what it buys is still a THIRD of a
+ *  corridor and never a number (§7).
+ *
+ *  Pure integer arithmetic on the absolute week. Zero draws, nothing persisted. */
+export function coachRevealWeek(sinceWeek: number): number {
+  const start = seasonStartWeek(Math.max(0, sinceWeek))
+  // His split, in one expression: the first half of a season is a season he was there for.
+  const inSecondHalf = Math.max(0, sinceWeek) - start >= COACH_EDGE_REVEAL_WEEKS / 2
+  return start + (inSecondHalf ? WEEKS_PER_YEAR : 0) + (WEEKS_PER_YEAR - OFF_SEASON_WEEKS)
+}
 
 /** WHERE HE FELL, SAID IN A FAMILY'S OWN WORDS – the three halves of the plaque's second clause
  *  (docs/specs/coach-match-edge.md §7).
@@ -350,18 +648,40 @@ const PLACEMENT_PHRASE: Record<CoachEdgePlacement, string> = {
  *  this screen could not back. */
 export function coachPlaqueLine(view: {
   placement: CoachEdgePlacement | null
-  weeksTogether: number
-  revealAfterWeeks: number
+  /** the week she is in now */
+  week: number
+  /** the off-season week the verdict lands in – `coachRevealWeek(coachSinceWeek(world))` */
+  revealWeek: number
   seasonsTogether: number
 }): string {
-  // TOO EARLY TO TELL IS AN ANSWER, not a blank - §4a's shipped sentence, unchanged. "That band"
-  // points at the corridor printed two lines above, so it says exactly what is unknown; the counter
-  // says when it stops being unknown, in the engine's own numbers. Its LENGTH is measured, not taste:
-  // at 320px it wraps to two lines and so does every revealed sentence below, which is what keeps the
-  // card from jumping when the reveal lands (the browser numbers are in §4a and §7 of the spec).
+  // ⭐ ROUND-21 #7a/#7b – THE PRE-REVEAL SENTENCE NAMES THE OFF-SEASON AND COUNTS NOTHING.
+  //
+  // #7a: «надо во-первых заменить на "обсудим в межсезонье"». The verdict is a conversation the
+  // off-season has, so that is what both arms say; "too early to tell" said only that it was not
+  // now, which is why it read as absurd printed in an off-season with the season already played.
+  //
+  // #7b: «во-вторых убрать привязку к 52 неделям». No numeral survives on either arm. A rolling
+  // 52-week bar was the wrong clock for a question the SEASON answers, and printing its progress
+  // made the card argue with the calendar beside it.
+  //
+  // ⚠ WHICH ARM IS THE WHOLE OF #7c, AND IT IS READ OFF THE SEASON SHE IS IN rather than off the
+  // hire month directly. Same season as the reveal -> the coming off-season is the one, which is
+  // his «в первой половине сезона - тогда это актуально». A season short -> «мало времени прошло»
+  // and the bar is named a year out. Reading it this way means the sentence FOLLOWS the calendar:
+  // a coach hired in week 40 says "ask next off-season" all through that autumn and switches to the
+  // near arm by himself when the new season opens, which is the «сдвигать эту планку дальше по году»
+  // half. Deriving it from the hire month would have needed a second rule to do that.
+  //
+  // ⚠ AND «THAT BAND» IS STILL THE REFERENT ON BOTH (§7's pairing): the plaque asks where in the
+  // corridor printed two lines above, and the revealed sentence answers in the same words. The
+  // LENGTHS are measured, not taste - 52 and 51 characters, inside the 49-58 the nine revealed
+  // sentences occupy and under the 60-character two-line ceiling §4a/§7 measured in a real browser
+  // at 320px. So both wrap to exactly two lines at 320px and at 375px, and the card does not jump
+  // when the reveal lands.
   if (view.placement === null) {
-    const weeks = `${view.weeksTogether} week${view.weeksTogether === 1 ? '' : 's'}`
-    return `Too early to tell where in that band – ${weeks} of ${view.revealAfterWeeks}.`
+    return seasonIndexOf(view.week) === seasonIndexOf(view.revealWeek)
+      ? 'Where in that band – we will know in the off-season.'
+      : 'Where in that band – too soon, ask next off-season.'
   }
   const place = PLACEMENT_PHRASE[view.placement]
   // ONE SEASON IS ONE LOOK. The hedge is doing honest work here: a season is a small sample and the
@@ -395,6 +715,14 @@ export function coachPlaqueLine(view: {
 export function coachEdgeView(world: WorldState): {
   /** [lo, hi] pp per match for the rung she is on - [0, 0] self-coached, which is not a corridor */
   corridorPct: [number, number]
+  /** ⭐ ROUND-21 #2, THE LAST OPEN ITEM – ...AND THE SAME BAND DOUBLED, for a family whose coach is on
+   *  the trip with her. `null` when this family would not send him (no coach, or the stance off), so
+   *  a career that leaves him at home reads exactly what it read before.
+   *
+   *  ⚠ IT IS A BRACKET AND NOT HIS FIGURE, exactly like `corridorPct` beside it - see
+   *  `coachEdgeCorridorPp`, which is cut from the tier table and reads no coach id. §7's rule that no
+   *  screen may quote his own value is untouched, and so is §4's that the market may not quote a man. */
+  travelCorridorPct: [number, number] | null
   /** WHICH THIRD of that corridor he landed in, or null while there is nothing honest to show. His
    *  own pp figure is deliberately NOT on this view: it is not observable in principle (§7). */
   placement: CoachEdgePlacement | null
@@ -402,36 +730,76 @@ export function coachEdgeView(world: WorldState): {
   revealed: boolean
   /** how long they have been together, in weeks */
   weeksTogether: number
-  /** ...and how long that has to be before the reveal appears */
-  revealAfterWeeks: number
+  /** ⭐ ROUND-21 #7c: ...and THE WEEK THE VERDICT LANDS IN – an off-season, absolute, not a duration.
+   *  Was `revealAfterWeeks: 52`, a rolling bar that ignored the calendar; see `coachRevealWeek`. */
+  revealWeek: number
   /** the same clock in whole seasons - what §8a bands the plaque's confidence on */
   seasonsTogether: number
   /** the plaque, written: place x confidence, one sentence */
   plaqueLine: string
+  /** ⭐ ROUND-21 #2 – THE ONE SENTENCE THAT KEEPS THE SECOND FIGURE HONEST, or '' when there is no
+   *  second figure. See `TRAVEL_EDGE_LINE` for why it names a condition instead of claiming a
+   *  doubling, and why it is composed here rather than on the card. */
+  travelLine: string
 } {
   const tier = coachTierById(world.coachId)
-  const weeksTogether = Math.max(0, world.week - coachSinceWeek(world))
+  const since = coachSinceWeek(world)
+  const weeksTogether = Math.max(0, world.week - since)
   // ⚠ SEASONS ARE DERIVED HERE AND NOT IN THE COMPONENT, for the same reason the reveal gate is:
   // "how long has he been hers" is the engine's question, and the confidence bands are one more
   // reading of the answer. Whole seasons only - a partial one has not been observed yet.
   const seasonsTogether = Math.floor(weeksTogether / WEEKS_PER_YEAR)
-  const seasoned = world.coachId !== null && weeksTogether >= COACH_EDGE_REVEAL_WEEKS
+  // ⭐ ROUND-21 #7c – THE GATE IS A DATE NOW. It was `weeksTogether >= COACH_EDGE_REVEAL_WEEKS`, and
+  // the copy above may only promise an off-season if the reveal really arrives in one: a sentence
+  // this screen could not back is the failure mode the whole plaque family is written against.
+  const revealWeek = coachRevealWeek(since)
+  const seasoned = world.coachId !== null && world.week >= revealWeek
   const placement = seasoned ? coachEdgePlacement(world.seed, world.coachId) : null
   // ⚠ `revealed` IS "THERE IS A PLACE TO NAME", not "the clock is up" - so a degenerate corridor
   // (a zeroed bench table, an id no roster knows) leaves the card saying it is too early rather than
   // announcing a reveal with nothing behind it. The two can only disagree in a state that cannot
   // ship, and disagreeing quietly is exactly how a screen ends up printing an empty plaque.
   const revealed = placement !== null
+  // ⭐ ROUND-21 #2, THE LAST OPEN ITEM – the same stance the fare is charged on, asked of the same
+  // predicate the flow, the commentary and the week's story ask. The corridor is a fact about the
+  // rung; whether it is doubled this season is a fact about the FAMILY, and only one function in this
+  // engine is allowed to answer that.
+  const travels = coachTravelsWithHer(world)
   return {
-    corridorPct: [...COACH_EDGE_CORRIDOR_PP[tier]] as [number, number],
+    corridorPct: coachEdgeCorridorPp(tier),
+    travelCorridorPct: travels ? coachEdgeCorridorPp(tier, true) : null,
     placement,
     revealed,
     weeksTogether,
-    revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS,
+    revealWeek,
     seasonsTogether,
-    plaqueLine: coachPlaqueLine({ placement, weeksTogether, revealAfterWeeks: COACH_EDGE_REVEAL_WEEKS, seasonsTogether }),
+    plaqueLine: coachPlaqueLine({ placement, week: world.week, revealWeek, seasonsTogether }),
+    travelLine: travels ? TRAVEL_EDGE_LINE : '',
   }
 }
+
+/** ⭐ ROUND-21 #2, THE LAST OPEN ITEM – WHAT THE SECOND FIGURE IS FOR, in one sentence under it.
+ *
+ *  ⚠ «TWICE THAT ON THE TRIPS», NEVER «DOUBLED». The travel helping is gated on `coachTravelFareFor`,
+ *  which sends him only to rungs that pay prize money unless the family has opened the junior stance
+ *  as well - so a J-series week doubles nothing even for a family that always sends him, and a card
+ *  that said "the corridor is doubled" would be quoting a season this girl may not be playing yet.
+ *  What IS unconditionally true is the conditional: on the trips the coach travels to, twice that.
+ *
+ *  ⚠ IT QUOTES NO NUMBER AT ALL, deliberately, and it sits under a plaque that quotes none either.
+ *  The figure is on the line above it (`edgeTravelPct`), which is a price bracket; this sentence's job
+ *  is the CONDITION, and a second copy of the numbers here would be one more place for them to drift.
+ *
+ *  ⚠ AND IT DOES NOT TOUCH THE PLACEMENT, which needs no qualifier beside it: the helping scales the
+ *  corridor rather than shifting it, so the upper third of 0.5-0.9 IS the upper third of 1.0-1.8 and
+ *  «the upper end of that band» stays true of both bands at once (`coachEdgeCorridorPp`). The plaque
+ *  is a fact about the man; this is a fact about the trip; neither has to hedge the other.
+ *
+ *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08) - `buildCoachRoster` puts a woman on every roster
+ *  by construction, so "the trips he travels to" would print under Sabine Kobayashi. Short dash, and
+ *  45 characters: inside the 60 a real browser measured as the two-line ceiling for this column at
+ *  320px (§4a), so it costs the card the same two lines the plaque costs. */
+const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
 
 /**
  * HOW MUCH ROOM IS LEFT IN HER, in one sentence - the context every number on screen T is relative to.

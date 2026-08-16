@@ -16,6 +16,7 @@ import {
   bookPractice,
   hireCoach,
   setCoachOnEventWeeks,
+  setCoachOnJuniorEvents,
   setKitGrade,
   cancelPractice,
   decideKnock,
@@ -27,6 +28,7 @@ import {
   answerFork,
   answerRetirement,
   resumeFromCollege,
+  endCollegeEarly,
   toSnapshot,
   refreshDerivedRankCaches,
   guardNotEnded,
@@ -319,14 +321,18 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'setCoachOnEventWeeks': {
       return mutate(msg.id, msg.baseRevision, (world) => setCoachOnEventWeeks(world, msg.on))
     }
+    case 'setCoachOnJuniorEvents': {
+      return mutate(msg.id, msg.baseRevision, (world) => setCoachOnJuniorEvents(world, msg.on))
+    }
     case 'cancelPractice': {
       return mutate(msg.id, msg.baseRevision, (world) => cancelPractice(world, msg.week))
     }
     // W2-ENDINGS. Three answers, and none of them can be issued unprompted: the engine refuses when
     // its own question is not open, which is what stops a stale screen ending a career that was
     // never asked. `resumeFromCollege` is the one command in the game that CLEARS an ending – it
-    // spends four years of weeks inside a single mutate, so the autosave that commits it commits a
-    // twenty-two-year-old.
+    // spends a college YEAR of weeks inside a single mutate, so the autosave that commits it commits
+    // a girl a year older. ⭐ P5: it used to spend all four in one call; `endCollegeEarly` is the
+    // other answer at each boundary, and both are re-validated engine-side.
     case 'answerFork': {
       return mutate(msg.id, msg.baseRevision, (world) => answerFork(world, msg.answer))
     }
@@ -335,6 +341,9 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     }
     case 'resumeFromCollege': {
       return mutate(msg.id, msg.baseRevision, (world, rng) => resumeFromCollege(world, rng))
+    }
+    case 'endCollegeEarly': {
+      return mutate(msg.id, msg.baseRevision, (world) => endCollegeEarly(world))
     }
     // ⚠ v47 – THE ONE WRITER OF `train`/`rest`, AND SINCE THE WEEK BECAME THE PLAN IT DERIVES THEM
     // (docs/specs/training-dials.md §10). Keeping the legacy pair as a PROJECTION is what makes every
@@ -487,6 +496,23 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       committedRevision = revision
       return snapshotMsg(msg.id, candidate, { recovered: rngRecovered })
     }
+    // ⭐ ROUND-21 #1 – THE IMPORT'S CONFIRM NEEDS TO KNOW WHOSE CAREER IS IN THE FILE, and the only
+    // place that can answer is here: `careerId` is inside the gzipped payload, so no filename and no
+    // careers-list lookup can tell an overwrite from a first import. This runs the SAME strict gate
+    // `importSave` does one line up and then throws the world away – nothing is adopted, nothing is
+    // committed, `world` and `committedRevision` are not touched, and a hostile file fails here with
+    // the identical typed error it would have failed with at the import. The caller is free to treat
+    // a failure as "cannot say" and let the real import report it.
+    case 'peekSave': {
+      const candidate = await decodeExportFile(new Uint8Array(msg.bytes))
+      return {
+        id: msg.id,
+        ok: true,
+        type: 'peek',
+        peek: { careerId: candidate.careerId, kidName: candidate.profile.kidName, week: candidate.week },
+        revision: committedRevision,
+      }
+    }
     case 'deleteSlot': {
       await deleteSlot(msg.slot)
       const careerId = world?.careerId
@@ -581,6 +607,7 @@ function errorMsg(id: number, err: unknown): ToUI {
 //   bookPractice       mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   hireCoach          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnEventWeeks mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setCoachOnJuniorEvents mutation mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   cancelPractice     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPlan            mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   decideKnock        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
@@ -594,6 +621,7 @@ function errorMsg(id: number, err: unknown): ToUI {
 //   restoreSlot        lifecycle    replaces  autosave+meta (CAS/adopt)  +1 of the restored lineage
 //   loadCareer         lifecycle    replaces  touch lastPlayedAt only    adopts disk max
 //   importSave         lifecycle    replaces  autosave+meta (adopt)      allocates disk+1
+//   peekSave           query        none      none                       unchanged
 //   getSnapshot        query        reads     none                       unchanged
 //   listSlots          query        none      reads                      unchanged
 //   listCareers        query        none      reads                      unchanged
