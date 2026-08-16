@@ -768,7 +768,11 @@ const stripVisible = computed<readonly number[]>(() => {
   if (stripExpanded.value) return SEASON_STRIP_TIERS.map((_, i) => i)
   // ⚠⚠ AND A RUNG SHE IS TOO YOUNG FOR IS NOT PART OF HER WINDOW (16.08). `tierOpen` is the FLOOR –
   // "has she reached this rung" – and it asks about her RANK alone; the age gate is a separate
-  // refusal (`isTierAgeOpen`, surfaced on the chip as `locked`). The two never disagreed on this row
+  // refusal, and it arrives here already decided, as the chip's `locked` state. ⚠ The predicate
+  // behind it is deliberately NOT named in this sentence: `tests/round11-view.test.ts` greps this
+  // whole file for the band-deriving symbols and has no parser, so quoting one in prose turns a
+  // comment into a violation. It went red on this very paragraph, and it was right to – the same
+  // family as the lock-label note further down. The two verdicts never disagreed on this row
   // until the Accelerator correction let a fifteen-year-old's rank clear W35's #700 a year before
   // `minAgeYears: 16` will let her enter it – and the window then carried W35 as OPEN and W50 as its
   // aspiration, six chips where four had fitted. Measured at 375px: 178.28 against a 170 ceiling,
