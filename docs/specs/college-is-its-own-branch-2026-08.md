@@ -46,6 +46,44 @@ rulings delete something we invented; neither adds a mechanism.
 
 ---
 
+## 0a. ⚠⚠ THE AGE GRID – WRITTEN OUT ONCE, HERE, ON PURPOSE
+
+**This table is the corpus's only prose copy of the grid, and that is a rule, not an accident.** It
+was restated in its own words in a dozen specs, each honestly describing the constants on the day it
+was written, and the copies drifted apart until two documents disagreed in front of the owner about
+what a W15 field is – twice. He closed it: «у нас есть регламент, точка». One copy cannot disagree
+with itself.
+
+| rung | floor | ceiling | source |
+| --- | --- | --- | --- |
+| J30 / J60 / J300 | **13** | **18** | ITF juniors is U18 |
+| W15 / W35 / W50 / W75 / W100 | **14** | – | 2026 ITF WTT Regulations, Women's III.A.1 – *"Minors under the age of fourteen (14) shall not be eligible for Entry"*. There is no other floor on these rungs |
+| WTA 125 / 250 / 500 / 1000 | **15** | – | WTA Rulebook II.D – no direct acceptance below fifteen. Wild card only |
+| Grand Slam | **14** | – | 2026 Grand Slam Rule Book. ⚠ **Not 15**: a major is not a WTA event |
+| Local / Regional / National | none | none | ours, not the sport's – §4.1 of `adult-tour-and-endings.md` |
+
+**The ONLY age-based limit on VOLUME is the per-year count** – the AER, on a birthday-to-birthday
+window: **14 → 8** professional events of which at most **3 at W75+**, **15 → 10**, **16 → 12**,
+**17 → 16**, unrestricted from **18**.
+
+**Where it actually lives, in authority order:**
+
+1. **The constants are the truth** – `TIERS[*].minAgeYears` / `maxAgeYears` in
+   `src/engine/season/calendar.ts`, and `ECONOMY.entryCap.proPerYearByAge` in `src/engine/economy.ts`
+   for the AER. Code and tests define shipped behaviour; this table describes them.
+2. **This section is their prose statement.** If they move, this moves on the same commit.
+3. **The regulation behind them** is `docs/research/ranking-points-by-tier.md` §4-C2 and §4-A, which
+   quotes the three rulebooks. Research calibrates; it does not ship.
+
+⚠ **THE RULE FOR EVERY OTHER DOCUMENT.** Do not restate the grid. Link to this section. A spec that
+needs one number may name it in passing **with the pointer attached** (*"W15 opens at 14 – grid:
+`docs/specs/college-is-its-own-branch-2026-08.md` §0a"*), so a future edit has exactly one place to
+land and a stale copy is visibly a copy. **A number written in a dated measurement or a round note is
+a RECORD of what the constants were that day and is never edited** – it is annotated, above the line
+that reverses it, in the same idiom as `docs/specs/college-gate-decoupled-2026-08.md`.
+
+---
+
 ## 0. THE THREE ANSWERS, IN ONE BOX
 
 > ### 1. ⭐⭐ THE AGE FLOORS WERE DOING ALMOST NOTHING, AND THAT IS THE MEASUREMENT.

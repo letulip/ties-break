@@ -20,6 +20,11 @@ last-reviewed: 2026-08-03
   review; verify whether later work landed.
 - Documents without governance metadata are unclassified. Treat them as candidate context until a
   current source or test confirms them.
+- **The tour age grid is stated ONCE in prose**, at
+  [college is its own branch §0a](specs/college-is-its-own-branch-2026-08.md); the constants it
+  describes are `TIERS[*].minAgeYears` / `maxAgeYears` and `ECONOMY.entryCap.proPerYearByAge`. It was
+  restated in a dozen specs and the copies drifted until two documents disagreed in front of the
+  owner, twice. Link to it; do not copy it.
 
 ## Authority order
 
