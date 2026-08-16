@@ -154,7 +154,11 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     yearsDone: college.years.length,
     totalYears: ENDINGS.collegeYears,
     last: college.years[college.years.length - 1] ?? null,
-    final: college.years.length >= ENDINGS.collegeYears,
+    // ⚠ IT MEANS "THE NEXT YEAR IS THE LAST ONE", not "she is done" – a career that is done has no
+    // ending latched at all, so the done state is never rendered and a flag for it would be dead.
+    // What the screen needs is the difference between a question with years behind it and the last
+    // question there will be, which is exactly `RetirementOffer.final`'s job one door along.
+    final: college.years.length + 1 >= ENDINGS.collegeYears,
   }
 }
 

@@ -264,12 +264,25 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
-    /** «Four years later» – the one command that CLEARS an ending. It ticks 208 weeks inside a
-     *  single worker call, so it is the slowest command in the game by an order of magnitude; the
-     *  store's own `busy` flag is what keeps the button from being pressed twice. */
+    /** «Another year» – the one command that CLEARS an ending. It ticks a college year inside a
+     *  single worker call, so it is one of the slowest commands in the game; the store's own `busy`
+     *  flag is what keeps the button from being pressed twice.
+     *
+     *  ⭐ P5: it used to tick 208 weeks and hand back a twenty-two-year-old. One year at a time is
+     *  what makes the early return possible at all – see `endCollegeEarly`. */
     async resumeFromCollege() {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'resumeFromCollege', baseRevision: this.revision }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** ⭐ P5 – «back on tour now». The other answer at a college year boundary: it takes the latch
+     *  off for good instead of putting it back on. Engine-side it refuses on a career that is not at
+     *  a boundary, so this is a request and not a guarantee. */
+    async endCollegeEarly() {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'endCollegeEarly', baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })

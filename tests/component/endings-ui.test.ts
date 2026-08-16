@@ -129,16 +129,23 @@ describe('the album', () => {
     w.unmount()
   })
 
-  it('⚠ COLLEGE offers four years instead of a new career – the only ending that resumes', async () => {
+  it('⚠ COLLEGE offers another year instead of a new career – the only ending that resumes', async () => {
+    // ⭐ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08, docs/specs/college-as-a-second-act-2026-08.md).
+    // The claim is unchanged and it is the load-bearing one: on a college ending the epilogue offers
+    // a WAY BACK and never the hand-off. What moved is the offer – one pill reading «Four years
+    // later –» became the year just lived plus two answers, because the sport's own case is an early
+    // return (Diana Shnaider left NC State after about a season). The college block's own content is
+    // covered in tests/component/college-second-act.test.ts; this asserts the branch.
     patchSnapshot({
       ending: endingView('college', {
-        ending: { type: 'college', week: 265, ageYears: 19, detail: 'x', resumesWeek: 473 },
-        handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: 473, resumesAgeYears: 23 },
+        ending: { type: 'college', week: 265, ageYears: 19, detail: 'x', resumesWeek: 317 },
+        handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: 317, resumesAgeYears: 20 },
+        college: { yearsDone: 0, totalYears: 4, last: null, final: false },
       }),
     })
     const w = mount(EndingScreen)
     for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
-    expect(w.text()).toContain('Four years later')
+    expect(w.text()).toContain('Play the first year')
     expect(w.text()).not.toContain('Raise another')
     w.unmount()
   })

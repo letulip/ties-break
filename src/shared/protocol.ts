@@ -2677,7 +2677,10 @@ export interface CollegeProgressView {
   totalYears: number
   /** the year that just finished, or null before the first one */
   last: CollegeYear | null
-  /** true when `yearsDone === totalYears`: she is out, and there is nothing left to ask */
+  /** ⚠ "THE NEXT YEAR IS THE LAST ONE", not "she is out". A career that is out has no ending latched
+   *  and is never rendered here, so a flag for that state would be dead on arrival. This is the
+   *  difference between a question with years behind it and the LAST question there will be – the
+   *  same job `RetirementOffer.final` does one door along, and the copy has to carry it. */
   final: boolean
 }
 
@@ -3199,8 +3202,13 @@ export type ToWorker =
   // is what stops a stale screen ending a career that never asked.
   | { id: number; type: 'answerFork'; answer: ForkAnswer; baseRevision: number }
   | { id: number; type: 'answerRetirement'; retire: boolean; baseRevision: number }
-  // «Four years later» – spends the college freeze in one tap and clears the latch (§5.1).
+  // «Another year» – spends ONE college year and re-latches, or clears the latch on the last of
+  // them (§5.1, and P5's docs/specs/college-as-a-second-act-2026-08.md for why it is not four).
   | { id: number; type: 'resumeFromCollege'; baseRevision: number }
+  // ⭐ P5 – «I am going back on tour now». The early return, the sport's own case, and the one
+  // answer that ends the freeze before the scholarship does. Refused engine-side at any moment
+  // that is not a year boundary.
+  | { id: number; type: 'endCollegeEarly'; baseRevision: number }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }
   // W1-INTEGRITY-A (TB-01): restore a slot AS THE ACTIVE CAREER – the restored state is committed

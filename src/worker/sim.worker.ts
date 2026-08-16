@@ -28,6 +28,7 @@ import {
   answerFork,
   answerRetirement,
   resumeFromCollege,
+  endCollegeEarly,
   toSnapshot,
   refreshDerivedRankCaches,
   guardNotEnded,
@@ -329,8 +330,9 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     // W2-ENDINGS. Three answers, and none of them can be issued unprompted: the engine refuses when
     // its own question is not open, which is what stops a stale screen ending a career that was
     // never asked. `resumeFromCollege` is the one command in the game that CLEARS an ending – it
-    // spends four years of weeks inside a single mutate, so the autosave that commits it commits a
-    // twenty-two-year-old.
+    // spends a college YEAR of weeks inside a single mutate, so the autosave that commits it commits
+    // a girl a year older. ⭐ P5: it used to spend all four in one call; `endCollegeEarly` is the
+    // other answer at each boundary, and both are re-validated engine-side.
     case 'answerFork': {
       return mutate(msg.id, msg.baseRevision, (world) => answerFork(world, msg.answer))
     }
@@ -339,6 +341,9 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     }
     case 'resumeFromCollege': {
       return mutate(msg.id, msg.baseRevision, (world, rng) => resumeFromCollege(world, rng))
+    }
+    case 'endCollegeEarly': {
+      return mutate(msg.id, msg.baseRevision, (world) => endCollegeEarly(world))
     }
     // ⚠ v47 – THE ONE WRITER OF `train`/`rest`, AND SINCE THE WEEK BECAME THE PLAN IT DERIVES THEM
     // (docs/specs/training-dials.md §10). Keeping the legacy pair as a PROJECTION is what makes every

@@ -190,7 +190,13 @@ describe('#1/#2 the fork at nineteen', () => {
     const college = endingForForkAnswer('college', 260, 19)
     expect(college?.type).toBe('college')
     // ⚠ THE ONLY ENDING THAT RESUMES, and its resume week is on the row.
-    expect(college?.resumesWeek).toBe(260 + ENDINGS.collegeYears * 52)
+    // ⭐ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08): the row now points ONE year out and not four,
+    // because the freeze is spent a year at a time and the early return is the sport's own case
+    // (docs/specs/college-as-a-second-act-2026-08.md). `collegeYears` is still the length of the
+    // COURSE – it is on the detail line and it is what `CollegeProgressView.totalYears` counts – so
+    // the constant is asserted here too rather than dropped from the file.
+    expect(college?.resumesWeek).toBe(260 + 52)
+    expect(college?.detail).toContain(String(ENDINGS.collegeYears))
   })
 })
 
@@ -780,7 +786,13 @@ describe('⭐ round-19 #2 – the wrap-up outlives the command that covered it',
 })
 
 describe('#2 college – the only ending that resumes', () => {
-  it('latches, freezes four years, and gives them back in one command', () => {
+  // ⭐ GUARDS RE-AIMED, NOT WEAKENED (P5, 16.08, docs/specs/college-as-a-second-act-2026-08.md).
+  // `resumeFromCollege` used to spend all four years in ONE call; it spends ONE year now and
+  // re-latches the ending with the next year's date, because reality's own case is an early return
+  // (Diana Shnaider left NC State after about a season and is inside the WTA top 15). Every
+  // assertion below still asks its original question – the freeze holds, the family stops paying,
+  // she comes back with nothing on the table – it is just asked across four calls instead of one.
+  it('latches, freezes four years, and gives them back one year at a time', () => {
     const { world, rng } = freshWorld('college-test')
     world.fork = { askedWeek: world.week, answer: null }
     answerFork(world, 'college')
@@ -788,12 +800,18 @@ describe('#2 college – the only ending that resumes', () => {
     expect(world.college).not.toBeNull()
     expect(inCollege(world)).toBe(true)
     const from = world.week
-    resumeFromCollege(world, rng)
+    for (let year = 1; year <= ENDINGS.collegeYears; year++) {
+      resumeFromCollege(world, rng)
+      expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
+      expect(world.college!.years, `one row per year lived`).toHaveLength(year)
+      // The latch goes back on for every year but the last – that is what makes the question exist.
+      if (year < ENDINGS.collegeYears) expect(world.ending?.type, `year ${year}`).toBe('college')
+    }
     expect(world.ending).toBeNull()
     expect(world.week).toBe(from + ENDINGS.collegeYears * WEEKS_PER_YEAR)
     expect(inCollege(world)).toBe(false)
     expect(world.college?.doneWeek).toBe(world.week)
-  }, 60_000)
+  }, 90_000)
 
   it('⚠ she comes back with no ranking at all, and no rule was written for it', () => {
     // She entered nothing for 208 weeks, so every result she owned has aged out of the rolling
@@ -803,10 +821,10 @@ describe('#2 college – the only ending that resumes', () => {
     for (let i = 0; i < 40; i++) tickWeek(world, rng)
     world.fork = { askedWeek: world.week, answer: null }
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
-  }, 60_000)
+  }, 90_000)
 
   it('the family stops paying: no coaching is billed across the freeze', () => {
     const { world, rng } = freshWorld('college-money')
@@ -814,7 +832,7 @@ describe('#2 college – the only ending that resumes', () => {
     answerFork(world, 'college')
     const spentBefore = world.careerTotals.spentCents
     const from = world.week
-    resumeFromCollege(world, rng)
+    for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
     // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last
     // fourteen months of the freeze - which is exactly the stretch a bug would have to survive.
@@ -826,7 +844,7 @@ describe('#2 college – the only ending that resumes', () => {
     // ...and the balance is HIGHER than it was, because the parent kept working.
     expect(world.careerTotals.earnedCents).toBeGreaterThan(0)
     expect(world.careerTotals.spentCents).toBeGreaterThanOrEqual(spentBefore)
-  }, 60_000)
+  }, 90_000)
 })
 
 describe('the break-even milestone – captured, never reconstructed', () => {
@@ -920,6 +938,10 @@ describe('⚠ tickWeek stays TOTAL', () => {
 })
 
 describe('⚠ input-independence survives college', () => {
+  // ⭐ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08). The suppressions are unchanged and so is the
+  // property; what moved is that four years now take four commands instead of one, and the whole
+  // point of the assertion is that the NUMBER OF COMMANDS cannot be visible on the MAIN stream.
+  // `tests/college-second-act.test.ts` asks the same question of a single year.
   it('four years of suppressed bills cost the MAIN stream not one draw', () => {
     const seed = 'college-invariance'
     const a = createWorld(seed, { ...DEFAULT_PROFILE })
@@ -931,12 +953,12 @@ describe('⚠ input-independence survives college', () => {
     // A goes to college; B does nothing at all. Same seed, same weeks, same MAIN sequence.
     a.fork = { askedWeek: a.week, answer: null }
     answerFork(a, 'college')
-    resumeFromCollege(a, rngA)
+    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(a, rngA)
     for (let i = 0; i < ENDINGS.collegeYears * WEEKS_PER_YEAR; i++) tickWeek(b, rngB)
     expect(a.week).toBe(b.week)
     expect(a.rngMain.n).toBe(b.rngMain.n)
     expect(a.rngMain.s).toBe(b.rngMain.s)
-  }, 60_000)
+  }, 90_000)
 })
 
 // --- acceptance: a PRE-WAVE save opens, plays, and can reach an ending ----------------------------
