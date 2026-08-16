@@ -24,6 +24,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import ForkDialog from '../../src/components/ForkDialog.vue'
 import ConfirmDialog from '../../src/components/ConfirmDialog.vue'
 import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
+import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
 // ⚠ THE REAL STYLESHEET, or the fit measurements read an empty cascade and pass vacuously -
 // `measureDialog` refuses a document with no `<style>` in it for exactly that reason.
 import '../../src/style.css'
@@ -312,6 +313,60 @@ describe('P4 (c) – SeasonScreen puts the warning in the confirm it builds', ()
     const pill = firstEnter(w)
     expect(pill.attributes('disabled'), 'the parent may always push').toBeUndefined()
     expect(pill.text()).toBe('Enter')
+    w.unmount()
+  })
+})
+
+// =================================================================================================
+// ...AND THE CALENDAR CARRIES IT TOO, BECAUSE IT IS ITS OWN CONFIRMATION
+// =================================================================================================
+// `CalendarScreen`'s marker card has no ConfirmDialog behind its Enter - the card IS the confirmation
+// (its own header says so). A warning that lived only on Season would therefore be invisible to a
+// player who enters from the calendar, which is half the entry paths.
+describe('P4 (c) – the calendar marker card carries the same warning', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+
+  async function openMarker(costsCollege: boolean) {
+    const world = createWorld('component-college-calendar')
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 12; i++) tickWeek(world, rng)
+    const snapshot = toSnapshot(world)
+    if (costsCollege) for (const e of snapshot.upcoming) (e as { costsCollege?: boolean }).costsCollege = true
+    useGameStore().snapshot = snapshot
+    const w = mount(CalendarScreen, { global: { stubs: { teleport: true } } })
+    const markers = w.findAll('.cal-marker')
+    expect(markers.length, 'the calendar drew a marker to open, or this test is vacuous').toBeGreaterThan(0)
+    await markers[0].trigger('click')
+    return w
+  }
+
+  it('⭐⭐ the sentence is on the marker card', async () => {
+    const w = await openMarker(true)
+    const note = w.find('.college-note')
+    expect(note.exists(), 'the card says what a result here would spend').toBe(true)
+    expect(note.text()).toContain('can cost the college place at nineteen')
+    expect(note.text()).toContain('makes her a professional')
+    w.unmount()
+  })
+
+  it('⭐⭐ ...and absent when the engine says there is nothing to spend', async () => {
+    // The mutation that makes the case above non-vacuous.
+    const w = await openMarker(false)
+    expect(w.find('.college-note').exists()).toBe(false)
+    w.unmount()
+  })
+
+  it('⚠ it is not the BODY\'s caution and it does not arm the Enter', async () => {
+    // `.caution-note` is `--warning`-coloured and is about getting hurt; `risky` on the pill tracks
+    // fatigue alone. Nothing here is about her health and nothing here refuses anything.
+    const w = await openMarker(true)
+    const enter = w.findAll('button').find((b) => b.text() === 'Enter')
+    expect(enter, 'the marker card has an Enter').toBeTruthy()
+    expect(enter!.attributes('disabled'), 'the parent may always push').toBeUndefined()
+    expect(w.find('.college-note').classes(), 'its own register').not.toContain('caution-note')
     w.unmount()
   })
 })
