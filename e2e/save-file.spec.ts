@@ -59,6 +59,14 @@ async function importFile(page: Page, name: string, bytes: Buffer): Promise<void
   const chooser = page.waitForEvent('filechooser')
   await page.getByRole('button', { name: 'Import from file' }).click()
   await (await chooser).setFiles({ name, mimeType: 'application/octet-stream', buffer: bytes })
+  // ⚠ AND THE FILE IS NOT ADOPTED UNTIL THE PLAYER SAYS SO (round-21 #1). Picking a file now opens a
+  // ConfirmDialog whose copy is chosen from what `peekSave` found INSIDE it – so the affirmative
+  // button is 'Overwrite' when this device already holds that career and 'Import' when it does not,
+  // and an unreadable file takes the cautious wording with 'Import'. Matching both, anchored, is the
+  // honest way to say "confirm whichever this is": `^Import$` cannot collide with the 'Import from
+  // file' button that opened the picker, and asserting one specific word here would make this helper
+  // a hostage to which fixture each test hands it.
+  await page.getByRole('button', { name: /^(Import|Overwrite)$/ }).click()
 }
 
 async function goHome(page: Page): Promise<void> {

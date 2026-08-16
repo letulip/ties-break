@@ -278,6 +278,19 @@ const RECIPES: Recipe[] = [
       // The search is free - the loop already tries `budget` seeds and prints why each was rejected,
       // so this is one more clause in a predicate that was always there, not a new mechanism.
       if (!pendingKnock(world)) return 'boots without an open knock (week-advance.spec needs one)'
+      // ⚠ AND SHE MUST BE ENTERED FOR THE WEEK AHEAD, for exactly the same reason and by exactly the
+      // same history (16.08). `e2e/tournament.spec.ts` and `persistence.spec.ts`'s mid-reveal case
+      // both tick this career once and then wait for `Begin` – a tournament reveal – and neither can
+      // get one unless the tick lands on an event she has entered. persistence.spec even states the
+      // assumption in prose ("She is entered for the week ahead, so this tick computes the whole
+      // draw"), which is how a property nobody enforced survived three waves: it was TRUE of the
+      // seed the search happened to stop on, and P1's junior-access change moved the search.
+      //
+      // Same remedy the owner chose for the knock, for the same stated reason – a seed filter
+      // survives the NEXT regeneration, a relocated assertion only survives until the next one.
+      const weekAhead = world.season.filter((e) => e.week === world.week + 1)
+      if (!weekAhead.some((e) => world.entries.includes(e.id)))
+        return 'not entered for the week ahead (tournament.spec + persistence.spec need a reveal)'
       return null
     },
   },
