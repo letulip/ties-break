@@ -333,10 +333,13 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
         level: 'blocked',
         reason: 'capped',
         // Short dash only, and it must read as THIS YEAR rather than "never" – a parent who has
-        // spent all fourteen has to understand she is capped for the season, not shut out.
+        // spent all fourteen has to understand she is capped for the year, not shut out.
+        // ⚠ "ON HER NEXT BIRTHDAY" AND NO LONGER "NEXT SEASON" (P2). The allowance's window is her
+        // birthday year now, not the season block, so the old sentence named the wrong date – and a
+        // refusal that names the wrong date is worse than one that names none.
         detail:
           `Year limit reached – ${cap.used} of ${cap.limit} international events at ` +
-          `${ageYears}. A fresh allowance next season.`,
+          `${ageYears}. A fresh allowance on her next birthday.`,
         entryCap: cap,
       }
     }
@@ -355,7 +358,7 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
         reason: 'capped',
         detail:
           `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. ` +
-          `A fresh allowance next season; the junior and national events stay open.`,
+          `A fresh allowance on her next birthday; the junior and national events stay open.`,
         entryCap: cap,
       }
     }

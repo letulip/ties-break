@@ -747,7 +747,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       note: `Year limit – ${used} of ${limit}`,
       title:
         `${tier.label} – she has used all ${limit} of her international events for this year ` +
-        `(age ${input.ageYears}). Not locked: a fresh allowance arrives next season.`,
+        `(age ${input.ageYears}). Not locked: a fresh allowance arrives on her next birthday.`,
     }
   }
   // The PRO cap's arm (W2-LADDER §5), in the same slot for the same reason - and its copy NAMES
@@ -762,8 +762,8 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       note: `Tour age rule – ${used} of ${limit}`,
       title:
         `${tier.label} – the tour's age rule allows ${limit} pro entries at ${input.ageYears} and ` +
-        `she has used all ${used}. Not locked: a fresh allowance arrives next season, and the ` +
-        `junior and national events stay open.`,
+        `she has used all ${used}. Not locked: a fresh allowance arrives on her next birthday, and ` +
+        `the junior and national events stay open.`,
     }
   }
   // She can enter it. The only question left is whether the calendar has one.

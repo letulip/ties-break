@@ -30,31 +30,44 @@ export function annualEntryLimit(ageYears: number): number {
   return table[ageYears] ?? table.default
 }
 
-/** Her allowance for the season CONTAINING `week`, and how much of it is already spent.
+/** Her allowance for the AGE-YEAR CONTAINING `week`, and how much of it is already spent.
  *
- *  Scoped to the EVENT's season, never to today's, for the same reason `layoffCovering` is scoped
+ *  Scoped to the EVENT's window, never to today's, for the same reason `layoffCovering` is scoped
  *  to the event's week (R10-17): a rule about a future event has to be asked about that event's
  *  future, or the December horizon reports next season's fixture against this season's ledger.
- *  "This season" is `seasonStartWeek` – THE definition the round-11 money accounting introduced
- *  and the wrap-up shares (R11-12a) – rather than a second spelling of the same arithmetic.
  *
- *  ⚠ THE AGE AND THE SEASON ARE NO LONGER THE SAME BOUNDARY, and the ruling of 09.08 is what parted
- *  them. This used to read `ageAtWeek(week)` and argue that "our season block IS the real rule's
- *  birthday year", which was only ever true of a girl born in the first week of January: the band
- *  ticked over at week 52 and so did her birthday. It now reads HER age (`kidAgeAt`), so the WINDOW is
- *  still the season block – one allowance, reset at the season boundary, exactly as the copy promises –
- *  while the LIMIT is the one for the age she actually is in the week of that event, which is how the
- *  ITF's own rule reads (Appendix F caps the year you are 14, not the year the tour calls you 14).
+ *  ⚠⚠ THE WINDOW IS HER BIRTHDAY YEAR SINCE P2, AND THE ARGUMENT THAT KEPT IT ON THE SEASON BLOCK IS
+ *  WORTH KEEPING RATHER THAN DELETING. It ran: "the WINDOW is still the season block – one allowance,
+ *  reset at the season boundary, exactly as the copy promises – while the LIMIT is the one for the age
+ *  she actually is in the week of that event", and it argued the two were close enough because both
+ *  are one year long.
  *
- *  ⚠ SO THE LIMIT CAN RISE MID-SEASON, ON HER BIRTHDAY, AND NEVER FALL. Age is monotone in the week
- *  and the table is monotone in the age, so inside one season block the limit is non-decreasing: an
- *  entry she was allowed to make can never be retro-invalidated by asking about a later event. A June
- *  girl is capped at 13's ten events until week 22 and at 14's fourteen after it, on the same ledger.
- *  That is the generous direction and it is the real rule's own shape. */
+ *  THEY ARE NOT, AND THE LEAK WAS MEASURED BEFORE IT WAS FIXED. A window on the season block with a
+ *  limit on her age means every girl not born in the first week of January gets her sixteenth year
+ *  STRADDLING TWO ALLOWANCES – the tail of one at twelve and the head of the next at twelve again –
+ *  so a birth-year count of up to 28 is reachable. `docs/specs/ladder-baseline-2026-08.md` §3c-bis
+ *  measured 18.8 professional events in her sixteenth year against a rulebook 12, and this branch's
+ *  own pre-change arm measured 19.0. THE SOURCE IS EXPLICIT AND DISAGREES WITH THE OLD READING:
+ *  `docs/research/retirement-and-withdrawal.md` §6 quotes ITF Juniors Appendix F as counted
+ *  "birthday-to-birthday, not by calendar year", and the WTA's §X.A.2 rows are the same shape.
+ *
+ *  ⚠ THE WINDOW IS EXPRESSED AS AN AGE COMPARISON, NOT AS A PAIR OF BOUNDARIES, and that is what
+ *  makes it exact. "The rows inside this event's age-year" is `kidAgeAt(row) === kidAgeAt(event)`,
+ *  read off the ONE clock (world/age.ts, the ruling of 09.08) that also chooses the limit – so the
+ *  window and the limit cannot drift apart the way a second spelling of the boundary would let them.
+ *  `ageWindowStartWeek` exists for the prune, which genuinely needs a first week.
+ *
+ *  ⚠ AND THE TWO PROPERTIES THE OLD COMMENT PROTECTED BOTH SURVIVE, ONE OF THEM STRENGTHENED:
+ *    * INSIDE a window the limit is now CONSTANT rather than merely non-decreasing – the age is the
+ *      same in every week of it – so an entry she was allowed to make can never be retro-invalidated
+ *      by asking about a later event in the same window;
+ *    * ACROSS windows the limit is still non-decreasing, because the table is monotone in the age.
+ *  What used to be "the limit rises on her birthday, on the same ledger" is now "the limit rises on
+ *  her birthday AND the ledger turns over with it", which is the rule the sport actually writes. */
 export function entryCapUsage(world: WorldState, week: number): EntryCapUsage {
-  const from = seasonStartWeek(week)
-  const used = world.internationalEntryWeeks.filter((w) => w >= from && w < from + WEEKS_PER_YEAR).length
-  const limit = annualEntryLimit(kidAgeAt(world, week))
+  const age = kidAgeAt(world, week)
+  const used = world.internationalEntryWeeks.filter((w) => kidAgeAt(world, w) === age).length
+  const limit = annualEntryLimit(age)
   return { used, limit, remaining: Math.max(0, limit - used) }
 }
 
@@ -77,14 +90,18 @@ export function annualProEntryLimit(ageYears: number): number {
   return table[ageYears] ?? table.default
 }
 
-/** Her PRO allowance for the season CONTAINING `week`, and how much is spent - `entryCapUsage`'s
- *  season-block arithmetic verbatim, over the pro ledger. Scoped to the EVENT's season for the
- *  same December-horizon reason, and read off HER age for the same 09.08 reason (see entryCapUsage:
- *  the window is the season, the limit is the age she is in the week of the event). */
+/** Her PRO allowance for the AGE-YEAR CONTAINING `week`, and how much is spent - `entryCapUsage`'s
+ *  birthday window verbatim, over the pro ledger. Scoped to the EVENT's window for the same
+ *  December-horizon reason, and read off HER age for the same 09.08 reason.
+ *
+ *  ⚠ THIS IS THE LEDGER THE LEAK WAS MEASURED ON. The WTA's §X.A.2 rows are a BIRTH-YEAR count, so
+ *  the straddle described at length on `entryCapUsage` was worth 19.0 professional events in her
+ *  sixteenth year against a rulebook 12 – the single biggest measured contributor to «слишком
+ *  быстро» anywhere in `docs/plans/college-and-the-junior-ladder.md`. */
 export function proEntryCapUsage(world: WorldState, week: number): EntryCapUsage {
-  const from = seasonStartWeek(week)
-  const used = world.proEntryWeeks.filter((w) => w >= from && w < from + WEEKS_PER_YEAR).length
-  const limit = annualProEntryLimit(kidAgeAt(world, week))
+  const age = kidAgeAt(world, week)
+  const used = world.proEntryWeeks.filter((w) => kidAgeAt(world, w) === age).length
+  const limit = annualProEntryLimit(age)
   return { used, limit, remaining: Math.max(0, limit - used) }
 }
 

@@ -314,13 +314,43 @@ describe('the plaque is about the MAN, and the trip is not part of who he is', (
 // no stream at all (an access rule is a post-draw gate), so the persisted MAIN position after 156
 // weeks is the same in both trees. The frozen MAIN capture in tests/condition.test.ts is likewise
 // untouched – count 41550, hash e6b0c709 – and is asserted before its own companion constant.
+// ⭐⭐ RE-FROZEN AGAIN AT P2 (16.08, docs/specs/age-eligibility-window-2026-08.md), AND THE PER-KEY
+// DIFF WAS TAKEN FIRST, AGAIN. All 63/64 top-level keys hashed on their own on both sides (a worktree
+// at `4d49fc3` against this branch), and this time the three careers DISAGREE with each other in a way
+// that is itself the evidence:
+//
+//   5:0  middle coach · grinder   MOVED **internationalEntryWeeks AND NOTHING ELSE** – 63 of 64 keys
+//                                 byte-identical, `results` included. She never reaches a cap, so P2
+//                                 changed no decision she made; what moved is how long the LEDGER is
+//                                 kept, because `pruneInternationalEntries` now retains back to her
+//                                 birthday instead of to New Year. A retention change, visible in the
+//                                 whole-world hash and in nothing else.
+//   8:0  elite coach · grinder    the junior allowance now bites on ONE window instead of two, so
+//                                 results / ranks / money / milestones move. `proEntryWeeks` UNMOVED:
+//                                 the grinder never enters a W event, so the pro half cannot show.
+//   0:1  self-coached · player    both ledgers move, and with them `seasonEntries`, `results`, the
+//                                 ranks and the wallet – this is the arm that actually plays the tour.
+//
+//   UNMOVED IN ALL THREE  **coachId · coachOnEventWeeks · coachOnJuniorEvents · profile · seed ·
+//                         rngMain · cohort · schemaVersion · season**
+//
+// ⚠ READ THE LAST LINE, AS ALWAYS. What these hashes are FOR is one paragraph up – they may never
+// move because of a change to the coach's edge that was supposed to be scoped to the trip – and every
+// coach key, the profile, the schema and the calendar are byte-identical on all three careers. What
+// moved is a career: an age rule that changed how many events a fifteen-year-old may enter and left
+// `results` untouched would be the alarm.
+//
+// ⚠ AND `rngMain` IS AMONG THE UNMOVED on all three, which is the invariant-2 half: P2 draws on no
+// stream at all (an entry allowance is a post-draw gate), so the persisted MAIN position after 156
+// weeks is identical in both trees. The frozen MAIN capture in tests/condition.test.ts is likewise
+// untouched – count 41550, hash e6b0c709.
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: 'e6f1313e49d49629645c95ebb701b5014e683ae1ff33f72149b3f98fbf24b58d',
+  middleGrinder: '7e02458455f856c5b8843d2117b897f2c7dcd378f96c9557ca5b0b96326cec19',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '807c780ba1eeaa12685a52363f70e7ba8eeee63b82739cce4cdef1e179641ef7',
+  eliteGrinder: '35267cea396a88f938017c1d5760386bdba044c0a3a85f614f3d63c8ccabc0cf',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send) */
-  selfTravelling: '984f5e80d165b5c0c845c70a611ebbd9cbee7bee935c0c61a77201c621cad9f0',
+  selfTravelling: 'd117bdb55e12dd0fea1d268cdc2de6297683410847f4cc9346d3a1132f705873',
 }
 const FREEZE_WEEKS = 156
 

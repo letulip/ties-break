@@ -409,7 +409,16 @@ describe('the season mirror – the wrap judges against the table the card names
     // and latch disagree is one wrap earlier than it was. Which wrap it is was never the subject; that
     // the wrap judges against the CARD's table and not the latched one is, and a wrap that went back to
     // reading `activeLadderOf` still fails this. The mechanism note two paragraphs up is unchanged.
-    const world = walkNear(153, 'golden-v45')
+    // ⚠ RE-AIMED A FOURTH TIME AT P2 (16.08, docs/specs/age-eligibility-window-2026-08.md), AND THE
+    // WEEK WENT BACK WHERE IT WAS: 153 -> 205, again the SAME pair of tables and again not one
+    // assertion touched. The age-eligibility WINDOW is her birthday year now, so a fifteen-year-old
+    // spends one allowance across her birth year instead of two across two season blocks – she reaches
+    // the professional table a season later again, and the wrap whose card and latch disagree is the
+    // one P1 moved it off. Measured, not guessed (tools/mirror-probe.ts, all eight wraps of this
+    // career): 49 and 153 are `domestic`/`itf`, 101 agrees with itself, 205 is `itf`/`wta` with 11
+    // against the card and 14 against the latch, and 257 onward agree. Which wrap it is was never the
+    // subject.
+    const world = walkNear(205, 'golden-v45')
     const summary = world.lastSeasonSummary!
     expect(summary.rankTrack).toBe('itf')
     expect(activeLadderOf(world)).toBe('wta')
@@ -417,7 +426,7 @@ describe('the season mirror – the wrap judges against the table the card names
     // The ledger the wrap just banked from is reset by the wrap itself, so the fold is re-run here off
     // the rows the season actually committed - reconstructed the only way that is honest, by walking
     // one week short of the wrap and reading the ledger before it clears.
-    const oneShort = walkNear(152, 'golden-v45')
+    const oneShort = walkNear(204, 'golden-v45')
     const rows = oneShort.seasonEntries!.rows
     const againstCard = rows.filter((r) => entryCouldNotMove(r, 'itf')).length
     const againstActive = rows.filter((r) => entryCouldNotMove(r, 'wta')).length

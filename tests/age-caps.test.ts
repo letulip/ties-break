@@ -244,9 +244,15 @@ describe('A2 — the gate lives in availabilityStatus / entryStatus', () => {
 })
 
 // ---------------------------------------------------------------------------
-// A3 – THE YEAR BOUNDARY. Reuses seasonStartWeek (the round-11 accounting definition).
+// A3 – THE YEAR BOUNDARY.
+//
+// ⚠ RE-AIMED BY P2, NOT WEAKENED: the boundary is HER BIRTHDAY, not `seasonStartWeek`. Every
+// assertion below is unchanged and still passes, because this file pins a JANUARY girl (see
+// `openWorld`) and for her the season block and the birthday year are the same interval – which is
+// exactly why the leak was invisible here for two waves. The claim ABOUT the birth month lives in
+// tests/relative-age.test.ts, which now walks a June girl's whole sixteenth year through the gate.
 // ---------------------------------------------------------------------------
-describe('A3 — the allowance resets on the season boundary', () => {
+describe('A3 — the allowance resets on the year boundary', () => {
   it('an event in NEXT season is enterable while THIS season is full', () => {
     const world = openWorld()
     fillCap(world, 14)
@@ -265,8 +271,24 @@ describe('A3 — the allowance resets on the season boundary', () => {
     expect(entryCapUsage(world, 2 * WEEKS_PER_YEAR + 4).limit).toBe(25)
   })
 
-  it('uses seasonStartWeek rather than a second definition of "this season"', () => {
-    expect(worldFunction('entryCapUsage')).toContain('seasonStartWeek(')
+  it('⚠ the WINDOW is the age year, and the prune knows the same boundary (P2)', () => {
+    // ⚠ RE-AIMED FROM "uses seasonStartWeek rather than a second definition of this season". That pin
+    // was right about the danger (two spellings of one boundary drift apart) and wrong about which
+    // boundary: the allowance is counted birthday-to-birthday, so a window on the season block leaked
+    // a whole second allowance into every non-January girl's birth year. It now pins the SAME
+    // anti-drift property against the right rule, and it is strictly more than the line it replaced –
+    // three functions instead of one, both ledgers, and the prune that has to agree with them.
+    for (const fn of ['entryCapUsage', 'proEntryCapUsage']) {
+      const src = worldFunction(fn)
+      expect(src, `${fn}: the window is an age comparison on the ledger row`).toContain('kidAgeAt(world, w) === age')
+      expect(src, `${fn}: and no longer a season block`).not.toContain('seasonStartWeek(')
+    }
+    // The prune is the one caller that genuinely needs a first week, and it must not eat a row either
+    // rule can still read – so it takes the EARLIER of the age window and the season block.
+    const prune = worldFunction('pruneInternationalEntries')
+    expect(prune).toContain('ageWindowStartWeek(')
+    expect(prune).toContain('seasonStartWeek(')
+    expect(prune).toContain('Math.min(')
   })
 
   it('a full allowance really does clear once the world ticks into the next season', () => {
@@ -353,7 +375,10 @@ describe('A5 — the UI says WHY, in the wording the other lock states use', () 
     const s = tierState('j30', baseInput)
     expect(s.note).toContain('14 of 14')
     expect(s.note.toLowerCase()).toMatch(/year|season/)
-    expect(s.title.toLowerCase()).toContain('next season')
+    // ⚠ "NEXT BIRTHDAY" SINCE P2, and the change of word is the change of rule: the allowance's
+    // window is her birthday year now, so "next season" named the wrong date. A refusal that names
+    // the wrong date is worse than one that names none.
+    expect(s.title.toLowerCase()).toContain('next birthday')
   })
 
   it('leaves the domestic tiers alone even at a full allowance', () => {
