@@ -1131,3 +1131,70 @@ them.
 **674 → 354**, and **weeks with no playable junior or domestic alternative 88 → 29**. A prestige junior
 rung that accepts to 0.25 instead of 0.20 is one more answer on one more week. ⚠ The guard still exits
 1 and is no longer a hard gate; its exit code is deliberately unchanged, and softening it is his call.
+
+## 16.08.2026 – WHAT THE COLLEGE PLACE COSTS, AND WHO PAYS FOR IT (v51)
+
+`docs/specs/what-the-college-place-costs-2026-08.md`. His question, verbatim: «Что у нас будет с
+оплатами? едины для всех или тоже от достатка на момент прихода будем мерять?»
+
+### THE COST SIDE IS SOURCED FOR THE FIRST TIME, AND THE ENGINE WAS CHARGING ZERO
+
+`docs/research/college-and-the-junior-exit.md` §1d, new: a year costs **$30,990** in-state, **$50,920**
+out-of-state, **$65,470** private nonprofit `[S]` (College Board, Trends 2025, Figure CP-1) – a 2.1×
+spread, and residence moves it more than the programme does. The NCAA's own page: *"Most scholarships
+are partial, but student-athletes can combine them with academic awards, NCAA-funded aid programs, and
+need-based assistance like Federal Pell Grants."* ⚠ **And a correction to §1a from the primary source:**
+the word *"equivalency"* appears **zero times** in Article 15 of the live 2026-27 Division I Manual –
+the team limits are gone, replaced by a **roster limit of 10** (Bylaw 17.2, the manual itself) plus a
+money cap (16.13.1.5). Partial awards happen because a programme's budget is finite, not because a
+bylaw divides eight scholarships.
+
+### THE ANSWER: TWO LAYERS, AND THEY POINT OPPOSITE WAYS
+
+The **athletics award is merit-only** – there is no means test anywhere in Bylaw 15 on athletics aid,
+and `athleticShareOf` is not handed a family, which is the proof rather than the promise. The
+**need-based layer beside it is means-tested** and is the only thing in the engine that reads
+`profile.background`. Bylaw 15.1 caps the two together at the bill, and 15.1.3's own remedy is why the
+trim falls on the need layer and never on the award.
+
+**Measured, n = 90, denominator 90/90 reaching the fork:**
+
+| background | athletic % | need % | **4-year bill** |
+| --- | --- | --- | --- |
+| working | 53.6 | 36.0 | **$8,701** |
+| middle | 57.1 | 9.6 | **$38,164** |
+| wealthy | 65.9 | 0.0 | **$42,304** |
+
+⭐ **The bill tips college towards the POOR family, 4.9 to 1** – the right way round. ⚠⚠ **But the
+award itself shows a 12.3-point wealth gradient**, because a wealthy family buys the coach that buys
+the junior record the award reads. **The award does not read wealth; wealth buys the record it reads.**
+
+⚠⚠ **AND THE BENEFIT INVERTS THE BILL.** Over four years college beats the tour by **$12,821** for a
+working family and **$211,653** for a wealthy one – because the tour's outgoing is what college avoids,
+and a wealthy family was spending far more of it. **College is the biggest financial win for the family
+that needed it least.** FOR HIM: if college should be the poor family's route, the lever is the TOUR's
+cost, not the award.
+
+### THE OFFER IS A PRICE, NEVER A GATE
+
+87 of 90 careers are offered a funded place; 3 are walk-ons who still enrol and still pay. **The third
+answer is on the card in 100% of careers** – his ruling of the same morning is untouched – and the
+measure is her JUNIOR record, carried on a view with no professional rank, finish or prize money on it
+at all, so the deleted rule cannot be re-created from either side. For contrast, the retired rule would
+have left a college answer in **14 of 90**.
+
+### ⭐ THE ERROR WAS THE FINDING, TWICE
+
+Run 1 put **88 of 90 careers in one band** and measured a median family bill of **$0**. Two causes: the
+finish scale is **zero-based** (`kidFinish === 0` is a title) and my table was one-based, so every row
+was a round too generous; and even corrected, a high-water mark on J30/J60 **saturates** – she wins
+those rungs routinely, and `best j60`/`best j30` are 0 at the median AND at p75. Re-shaped onto the
+prestige rung plus title volume, banded on the score's own measured quartiles, run 2 hit **9 of 11
+predictions**, including the median four-year bill at **$28,316 against $28,000 predicted**.
+
+⚠ **The battery's other columns are byte-identical to `the-ladder-is-monotone` §3b** – the tool never
+answers the fork – and the three frozen career hashes moved by exactly `schemaVersion` and nothing
+else. v51 does not reach the world outside college.
+
+⚠ **FOR HIM: `npm run e2e:fixtures` needs running.** The schema bumped, so `tests/e2e-fixtures.test.ts`
+is red until the corpus is regenerated. The e2e corpus and the browser suite are his.
