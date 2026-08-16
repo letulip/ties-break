@@ -603,7 +603,7 @@ export function juniorAccessOpen(world: WorldState, week: number, tier: TierId):
  *  twenty-five-year-old who misses the cut by four hundred places. `tests/rankingGate.test.ts` went
  *  red on exactly that, on six worlds, with the message it was written for: the calendar says open
  *  and the turnstile says locked. This is the same question narrowed to what it actually grants. */
-function juniorReservedPlace(world: WorldState, week: number, tier: TierId): boolean {
+export function juniorReservedPlace(world: WorldState, week: number, tier: TierId): boolean {
   if (!isWSeriesTier(tier) || tier === 'w15') return false
   if (!isJuniorAge(kidAgeAt(world, week))) return false
   return acceleratorAdmits(world, week, tier, yearEndJuniorRank(world))
