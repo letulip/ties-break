@@ -371,3 +371,41 @@ The battery still prints the pre-16.08 counterfactual, and it is worth putting b
 
 ⭐ **That is the phase in one line.** The old rule answered "may she?" with *no* in 84% of careers. The
 new one answers "may she?" with *yes, always* and "at what price?" with a number.
+
+---
+
+## 5. FILES
+
+| file | what changed |
+| --- | --- |
+| `docs/research/college-and-the-junior-exit.md` | **§1d, new** – the cost side, every figure tagged and sourced; §4 items 15-20; §6 items 6-8; a `[?]` tag added to the legend for a primary source that contradicts itself |
+| `src/engine/collegeOffer.ts` | **new.** The model: two stickers, three programme bands, the merit-only award, the means-tested layer, the Bylaw 15.1 ceiling |
+| `src/shared/protocol.ts` | `CollegeOffer`, `CollegeProgrammeTier`, `ForkState.offer`, `Snapshot.fork.offer`, the `tuition` ledger category |
+| `src/engine/world/college.ts` | `collegeRecruitViewOf`, `measureCollegeOffer`, `resolveCollegeBill` |
+| `src/engine/world/endings.ts` | the fork is raised WITH an offer |
+| `src/engine/world/snapshot.ts` | the offer goes on the wire, off persisted state |
+| `src/engine/world.ts` | `SAVE_SCHEMA_VERSION` 50 → 51; `resolveCollegeBill` in the tick at 1a |
+| `src/engine/migrations.ts` | v50 → v51, back-filling `null` and inventing nothing |
+| `src/components/ForkDialog.vue` | the offer under the third answer, three rows, no sentence |
+| `tests/fixtures/saves/v51.json` + README | the golden fixture, carrying the offer the engine really computes for that career |
+| `tests/college-offer.test.ts` | **new.** Blocks A (merit-only, mutation-verified), B (nothing removes the answer), C (one ceiling, and the trim falls on the need layer) |
+| `tests/component/college-offer-card.test.ts` | **new.** The card's four properties + the 375x667 fit, mutation-proved twice |
+| `tests/component/round21-dialogs.test.ts` | the fork fixture re-aimed to carry an offer, so the shipped fit case measures the card the player sees |
+| `tests/ending.test.ts` | the fork-wire case re-aimed: three facts, none of them a gate, and a W75 CHAMPION still offered a place |
+| `tests/coach-travel-edge.test.ts` | three hashes re-frozen; `PRE_V51` added so the re-freeze proves ONE key moved |
+| `tools/ladder-baseline.ts` | §6a, the offer – the shipped game beside the retired counterfactual |
+| `tools/college-price-probe.ts` | `--all` (the shipped population), the bill off the LEDGER, and a background split |
+| `tools/econ-bench.ts` | `tuition` in `zeroCats` |
+
+**Reproduce:**
+
+```bash
+npx vite-node tools/ladder-baseline.ts --seeds 10          # §3, n 90
+npx vite-node tools/college-price-probe.ts -- --seeds 6 --all   # §3f, the lived four years
+npm run test:quiet && npm run test:component
+```
+
+⚠ **AND ONE THING I DID NOT RUN, ON PURPOSE.** `SAVE_SCHEMA_VERSION` moved, so
+`tests/e2e-fixtures.test.ts` is RED until the corpus is regenerated with `npm run e2e:fixtures` – the
+alarm doing exactly what its own comment says it is for. **The e2e corpus and the browser suite are
+the owner's**, so the regeneration is handed over rather than done here.
