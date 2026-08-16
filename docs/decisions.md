@@ -713,3 +713,68 @@ each measured, arriving a third time.** ⭐ It also **repairs P1's W35 collapse*
 
 Full measurement, predictions scored, and the guard work:
 `docs/specs/acceptance-cuts-corrected-2026-08.md`.
+
+---
+
+## 2026-08-16 – The college gate reads its own rule, and the entry that costs it says so first (`wave/round21`, P4)
+
+**Re-measured first, and the number cancelled most of the phase.** `docs/plans/college-and-the-junior-ladder.md`
+§P4 asked for exactly this: *"if a normal junior can no longer reach W75, `collegeClosedFromTier` may
+already be doing approximately the right thing for the wrong reason – and the honest fix is then to
+say so in the comment rather than to add machinery."*
+
+⭐ **THE DOOR IS OPEN AT THE DECISION IN 86 OF 90 CAREERS NOW – IT WAS 7 OF 90 BEFORE P1.** So the
+owner's round-21 complaint (no college option at nineteen, only pro or stop) **is already fixed**, by
+P1-P3 and not by anything built here.
+
+⚠⚠ **BUT THE DOOR DID NOT STOP SHUTTING – IT MOVED TO THE OTHER SIDE OF THE QUESTION.** 83 of 90
+careers still lose it, at **median 19.1** against P0's 17.3, and the fork is at **19.0**. The rule
+that used to fire two years BEFORE the decision now fires a few weeks AFTER it, where it changes
+nothing. **It removes an answer from the card in 4 careers of 90; it used to remove it in 83.**
+The gate did not become correct, it became **late**.
+
+⚠ **AND MY OWN PREDICTION WAS WRONG IN AN INSTRUCTIVE WAY.** I predicted the plan's hypothesis – that
+she can no longer reach W75. She reaches it in **82 of 90** careers. P1 changed not *whether* but
+*when*: first entry moved to a median of **19.0**, first counting result to **19.2**. The whole
+professional ladder now opens on her nineteenth birthday.
+
+**SHIPPED:** the comment corrected in both places it was wrong; the warning before the entry, on both
+entry paths; the result arm as a figure; the coupling broken. **NOT BUILT:** the money arm (cancelled
+15.08), and any mechanism to re-close a door the world no longer closes. **No constant moved.**
+
+### ⚠ THE FALSE FACT WAS ON SCREEN, NOT ONLY IN A COMMENT
+
+`ENDINGS.collegeClosedFromTier` justified itself with *"a player who has taken professional prize
+money has spent her college eligibility"*, and **`ForkDialog` printed the same claim to the player**:
+*"Prize money at that level spends her college eligibility, and nothing gives it back."* Both are
+false and have been for the whole life of the project – the NCAA allowed $10,000 a year plus expenses
+before enrolment, and since **15 April 2026** allows prize money before enrolment **without any cap**.
+The rung is unchanged; it rests on the owner's own argument now, which needs no rulebook: *a girl who
+is already a professional does not go to college.*
+
+### ⭐ THE COUPLING WAS WORSE THAN THE BRIEF SAID
+
+The known half: `w75.acceptsRank` and `collegeClosedFromTier` name one rung, so P3's 450 → 300 moved
+the college door and nothing objected. **The half nobody had named: `collegeStillOpen` was reading
+`TIERS[tier].points` – the ladder's prize column – to decide what "a result that counted" meant.** The
+rule is a leaf now that imports no calendar constant at all, and four tests move `acceptsRank` over
+450/300/1/5000 and `points` to and from zero and assert the door does not follow. ⚠ It shipped as a
+decoupling and not a balance change because the clause removed was **dead**: it can only bite on an
+interior zero and no rung at or above W75 has one, which is itself pinned against the live table.
+
+### ⚠⚠ ONE THING NEEDS HIM, AND IT IS A DESIGN QUESTION RATHER THAN A NUMBER
+
+**If college can never be closed, the third door is always open and what varies is only whether it is
+a good idea.** The money arm is cancelled because the sport has no money rule; the result rung fires
+six weeks after the question it was meant to gate. A gate that fires after the decision is not a gate.
+Three coherent answers – **(A)** leave it (what ships today, the do-nothing option), **(B)** delete
+the gate outright and match the sport exactly (⚠ this also deletes round-21 #8's shut-door sentence,
+which he asked for), **(C)** move it earlier so it bites again (⚠ our invention, and it re-creates the
+round-21 complaint). **No agent should pick between these.**
+
+⚠ **And the six weeks are an accident.** Nothing arranged that the door survives the fork and nothing
+holds it there: **any future tuning that speeds her up by a month closes it again in most careers**,
+silently, because the two rules still name the same rung even though they no longer share a constant.
+
+Full measurement, predictions scored, and the guard work:
+`docs/specs/college-gate-decoupled-2026-08.md`.

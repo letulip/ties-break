@@ -726,7 +726,23 @@ export const TIERS: Record<TierId, TierDef> = {
     // ⚠ AND IT IS NOT ONE DECISION - SEE `ENDINGS.collegeClosedFromTier`, WHICH IS THIS RUNG. A
     // counting finish at W75 or above deletes the college ending, so this constant sets the age at
     // which that ending stops existing: measured, the door shuts at mean age 17.3 and W75 itself
-    // causes 73% of the closures. Nothing in ending.ts says so.
+    // causes 73% of the closures.
+    //
+    // ⭐ THE GUARD IS RE-AIMED, NOT WEAKENED (P4, 16.08, docs/specs/college-gate-decoupled-2026-08.md).
+    // This note used to end "Nothing in ending.ts says so", and that is no longer true: the college
+    // constant now carries the other half of this warning, and the gate itself no longer reads a
+    // single tuning number off `TIERS` - `collegeDoorOpen` is a leaf that takes a view and imports no
+    // calendar constant at all. **Four cases in tests/ending.test.ts move `w75.acceptsRank` over
+    // 450/300/1/5000 and `w75.points` to and from zero, and assert the college door does not
+    // follow**, which is the assertion nobody had written when P3 moved this cut and moved the door
+    // with it.
+    //
+    // ⚠⚠ THE RUNGS ARE STILL THE SAME RUNG, THOUGH, AND THAT IS NOT A CODE PROBLEM. Decoupling the
+    // constants does not decouple the WORLD: whatever moves her first counting W75 still moves the
+    // college door, because the door is defined at this rung. Re-measured after P1-P3 the door now
+    // shuts at median 19.1 against a fork at 19.0 - it survives the decision by about six weeks, by
+    // accident - so **a future tuning that speeds her up by a month closes it again in most
+    // careers.** That is the owner's call, stated in that spec's §6 and deliberately not taken here.
     //
     // ⭐ 450 -> 300 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). The middle of the
     // observed 262-359, and the load-bearing link of the SOURCED CHAIN (w35 700 unchanged · w50 330 ·
