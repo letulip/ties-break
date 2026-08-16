@@ -15,7 +15,9 @@ import {
   entryCapUsage,
   entryStatus,
   isCappedTier,
+  isTierAgeOpen,
   proEntryCapUsage,
+  proSubCapUsage,
   recomputeKidRank,
   yearEndJuniorRank,
   seasonStartWeek,
@@ -416,6 +418,68 @@ describe('A3b — the merited increases', () => {
 })
 
 // ---------------------------------------------------------------------------
+// A3c – THE SUB-CAP INSIDE THE FOURTEEN-YEAR-OLD'S EIGHT (WTA §X.A.2).
+// ---------------------------------------------------------------------------
+describe('A3c — at most three of a fourteen-year-old\'s eight may be at W75 or above', () => {
+  /** Spend `count` professional entries at `tier` on the season ledger, exactly as `enterEvent`
+   *  records them – one row whose id carries the rung (the shape `seasonWEntriesByTier` folds). */
+  function spendAt(world: WorldState, tier: TierId, count: number): void {
+    world.seasonEntries ??= { fromWeek: 0, rows: [] }
+    for (let i = 0; i < count; i++) {
+      world.seasonEntries.rows.push({ id: `2031-w${i}-${tier}`, track: 'wta', outgrown: false, bookShut: false })
+    }
+  }
+
+  it('pins the rule as the source states it – three, from W75 up, at 14 and at no other age', () => {
+    const row = ECONOMY.entryCap.proSubCapByAge[14]
+    expect(row).toEqual({ fromTier: 'w75', max: 3 })
+    expect(ECONOMY.entryCap.proSubCapByAge[15], 'the sub-cap is the 14 row only').toBeUndefined()
+    expect(ECONOMY.entryCap.proSubCapByAge[16]).toBeUndefined()
+    // ...and three really is a fraction of the eight it sits inside.
+    expect(row.max).toBeLessThan(annualProEntryLimit(14))
+  })
+
+  it('counts every rung AT OR ABOVE the floor, and is silent below it', () => {
+    const world = openWorld('subcap')
+    const at14 = 4 // she is 14 at week 0 on this file's January birthday
+    expect(proSubCapUsage(world, at14, 'w50'), 'below the floor – not this rule\'s business').toBeNull()
+    expect(proSubCapUsage(world, at14, 'w15')).toBeNull()
+    expect(proSubCapUsage(world, at14, 'w75')).toEqual({ used: 0, limit: 3, remaining: 3 })
+    // A W100 entry is an entry "at W75 or above", so it spends the same quota.
+    spendAt(world, 'w100', 2)
+    expect(proSubCapUsage(world, at14, 'w75'), 'the walk is up the ladder, not one rung').toEqual({
+      used: 2,
+      limit: 3,
+      remaining: 1,
+    })
+    spendAt(world, 'w50', 5)
+    expect(proSubCapUsage(world, at14, 'w75')!.used, 'and the rungs below it never count').toBe(2)
+    spendAt(world, 'w75', 1)
+    expect(proSubCapUsage(world, at14, 'w75'), 'the third fills it').toEqual({ used: 3, limit: 3, remaining: 0 })
+  })
+
+  it('is silent at every other age, so an adult never meets a rule about children', () => {
+    const world = openWorld('subcap-age')
+    spendAt(world, 'w100', 9)
+    for (const week of [WEEKS_PER_YEAR + 4, 2 * WEEKS_PER_YEAR + 4, 5 * WEEKS_PER_YEAR + 4]) {
+      expect(proSubCapUsage(world, week, 'w75'), `week ${week}`).toBeNull()
+    }
+  })
+
+  it('⚠ AND IT MEASURES ZERO AT THE SHIPPED CONSTANTS, which is the finding, not the test failing', () => {
+    // W75 opens at 17 and no W rung above W15 opens below 16, so a fourteen-year-old can never reach
+    // the rungs this quota counts. The rule ships anyway – see the knob's own note – and this
+    // assertion is what makes "it cannot bind" a checked claim rather than a belief: the day a phase
+    // opens one of these rungs lower, this goes red and the sub-cap becomes live machinery.
+    const floor = ECONOMY.entryCap.proSubCapByAge[14].fromTier
+    const from = TIER_LADDER.indexOf(floor)
+    for (const tier of TIER_LADDER.slice(from)) {
+      expect(isTierAgeOpen(tier, 14), `${tier} is shut to a fourteen-year-old`).toBe(false)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
 // A4 – THE SLOT FOLLOWS THE FEE. Mirrors the existing withdraw/cancel money rule exactly.
 // ---------------------------------------------------------------------------
 describe('A4 — a refunded withdrawal frees the slot, a forfeited one does not', () => {
@@ -620,12 +684,9 @@ describe('A7 — schema v15', () => {
 // so no fixture has to tick a hundred weeks to be sixteen.
 // ---------------------------------------------------------------------------
 
-import {
-  annualProEntryLimit,
-  isCappedProTier,
-  isTierAgeOpen,
-  proEntryCapUsage,
-} from '../src/engine/world'
+// ⚠ P2: `annualProEntryLimit` and `proEntryCapUsage` moved to the file's top import – the merit
+// suite (A3b) needs them above this point, and one name may only be imported once.
+import { isCappedProTier } from '../src/engine/world'
 
 /** Her age-16 season: weeks 104-155 (START_AGE 14 at week 0, and `openWorld`'s January birthday, so
  *  the season block and the year she is sixteen are the same 52 weeks – see `openWorld`'s note). */

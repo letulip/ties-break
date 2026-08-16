@@ -1958,6 +1958,23 @@ export const ECONOMY = {
        *  cuts moves this rule with them – the same discipline `mandatory.perEventTiers` is under. */
       proDirectTiers: ['slam', 'wta1000'] as readonly TierId[],
     },
+
+    /** ⭐ THE SUB-CAP INSIDE THE FOURTEEN-YEAR-OLD'S EIGHT (WTA §X.A.2, quoted in
+     *  docs/specs/acceptance-cuts-2026-08.md line 145: *"the WTA's sub-cap of three W75+ events
+     *  inside a 14-year-old's eight – a quota, not a door"*).
+     *
+     *  ⚠ IT CANNOT BIND AT THE SHIPPED CONSTANTS, AND IT SHIPS ANYWAY – the same choice, for the same
+     *  reason, that put 14 and 15 in `proPerYearByAge` and 13 in `meritIncrease.juniorByAge`. W75
+     *  opens at 17 and no W rung above W15 opens below 16, so a fourteen-year-old can reach exactly
+     *  one professional rung and it is far below the ceiling this counts. The rule is here so that a
+     *  phase which opens a rung lower does not have to remember it, and so that the game states the
+     *  regulation it models rather than a subset of it. §5 of the spec measures the zero.
+     *
+     *  `fromTier` is a rung, not a list: "at or above W75" is a walk of TIER_LADDER, so a re-ordered
+     *  or inserted rung moves with it. */
+    proSubCapByAge: { 14: { fromTier: 'w75' as TierId, max: 3 } } as {
+      [age: number]: { fromTier: TierId; max: number }
+    },
     perYearByAge: { 13: 10, 14: 14, 15: 18, 16: 25, default: Number.MAX_SAFE_INTEGER } as {
       [age: number]: number
       default: number

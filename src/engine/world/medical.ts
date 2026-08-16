@@ -23,6 +23,8 @@ import { kidAgeAt } from './age'
 import {
   entryCapUsage,
   proEntryCapUsage,
+  proSubCapRefusalDetail,
+  proSubCapUsage,
   isCappedTier,
   isCappedProTier,
   acceleratorRefusalDetail,
@@ -360,6 +362,19 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
           `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageYears}. ` +
           `A fresh allowance on her next birthday; the junior and national events stay open.`,
         entryCap: cap,
+      }
+    }
+    // ...AND THE SUB-CAP INSIDE IT (P2): at most three of a fourteen-year-old's eight may be at W75
+    // or above (WTA §X.A.2). It sits immediately after its parent allowance because it is the same
+    // rule's second sentence, and it is a QUOTA rather than a door - it refuses this entry at this
+    // rung while the smaller ones stay open, which is what the copy says.
+    const subCap = proSubCapUsage(world, event.week, event.tier)
+    if (subCap && subCap.remaining <= 0) {
+      return {
+        level: 'blocked',
+        reason: 'capped',
+        detail: proSubCapRefusalDetail(ageYears, subCap, ECONOMY.entryCap.proSubCapByAge[ageYears].fromTier),
+        entryCap: subCap,
       }
     }
   }

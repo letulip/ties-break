@@ -248,6 +248,50 @@ function yearEndWtaRankOf(row: SeasonHistoryEntry | undefined): number | null {
   return row?.byTrack?.wta?.endRank ?? null
 }
 
+/** THE SUB-CAP INSIDE THE FOURTEEN-YEAR-OLD'S EIGHT: at most three of them at W75 or above (WTA
+ *  §X.A.2). `null` when the age has no sub-cap row or the rung is below its floor – i.e. almost
+ *  always, which is the honest answer for a quota that governs one age and the top of the ladder.
+ *
+ *  ⚠⚠ IT IS COUNTED OFF `seasonEntries`, WHICH IS A SEASON LEDGER, AND THAT IS A STATED LIMITATION
+ *  RATHER THAN AN OVERSIGHT. Everything else in P2 windows on her birthday year; this one cannot,
+ *  and the reason is that `proEntryWeeks` records a WEEK and no rung, so the only ledger in the world
+ *  that can answer "how many of them were at W75 or above" is `world.seasonEntries` – the same one
+ *  P1's Accelerator folds, with the same argument (see `seasonWEntriesByTier` for why the three
+ *  obvious alternatives cannot answer). It is reset by the wrap, so a birth year that straddles a
+ *  season boundary sees only the part of itself after the wrap.
+ *
+ *  THE THREE THINGS THAT MAKE THAT PROPORTIONATE, IN ORDER:
+ *    1. THE UNDER-COUNT IS THE GENEROUS DIRECTION, exactly as `seasonWEntriesByTier`'s own note says
+ *       of a ledger that started mid-season. A sub-cap that forgets is never a sub-cap that invents.
+ *    2. IT CANNOT BIND AT THE SHIPPED CONSTANTS AT ALL. W75 opens at 17 (`minAgeYears`), so a
+ *       fourteen-year-old's count of W75-or-above entries is structurally zero – measured, and
+ *       reported as a zero rather than hidden (docs/specs/age-eligibility-window-2026-08.md §5).
+ *    3. THE FIX IS NAMED, so the day it CAN bind nobody has to rediscover it: give the pro ledger a
+ *       tier. That is a save-schema change – the three-part move – and buying one for a rule that
+ *       cannot fire would have been machinery bought on speculation.
+ *
+ *  ⚠ AND IT IS A QUOTA, NOT A DOOR (the acceptance-cuts audit's own wording). It refuses the ninth
+ *  W75 entry of a year, never the rung – which is why it is a separate verdict from `minAgeYears`. */
+export function proSubCapUsage(world: WorldState, week: number, tier: TierId): EntryCapUsage | null {
+  const row = ECONOMY.entryCap.proSubCapByAge[kidAgeAt(world, week)]
+  if (!row) return null
+  const floor = TIER_LADDER.indexOf(row.fromTier)
+  if (floor < 0 || TIER_LADDER.indexOf(tier) < floor) return null
+  const spent = seasonWEntriesByTier(world, week)
+  let used = 0
+  for (const t of TIER_LADDER) if (TIER_LADDER.indexOf(t) >= floor) used += spent[t] ?? 0
+  return { used, limit: row.max, remaining: Math.max(0, row.max - used) }
+}
+
+/** The sub-cap's refusal, in the same register as every other allowance here: it names the rule, the
+ *  count and what is still open, because a quota is a budget and not a verdict. */
+export function proSubCapRefusalDetail(ageYears: number, usage: EntryCapUsage, fromTier: TierId): string {
+  return (
+    `Tour age rule – at ${ageYears} only ${usage.limit} of her professional entries may be at ` +
+    `${TIERS[fromTier].label} or above, and she has used ${usage.used}. The smaller rungs stay open.`
+  )
+}
+
 // =================================================================================================
 // JUNIOR ACCESS (P1, docs/specs/junior-access-2026-08.md) – how a JUNIOR gets onto the professional
 // ladder at all, which in the real sport is a completely different question from how an adult does.
