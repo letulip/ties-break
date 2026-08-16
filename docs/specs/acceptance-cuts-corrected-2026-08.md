@@ -429,6 +429,16 @@ MAIN position after 156 weeks is identical in both trees. The frozen capture (co
 
 ### 5a. ⚠⚠ THE CHAIN INVERTS THE LADDER ONE RUNG ABOVE WHERE THE GUARD STOPS LOOKING
 
+> ⭐⭐ **RESOLVED THE SAME DAY, AND THIS SECTION IS THE REASON IT COULD BE.** `wta125.acceptsRank` is
+> **210** now – looser than the WTA 250 above it – and the five-rung pin this section asked to be
+> replaced has been, by a guard that walks the whole of `TIER_LADDER` in both acceptance units
+> (`tests/ladder.test.ts` L6b, mutation-verified). ⚠ The escalation below is kept verbatim because it
+> is the measurement that made the fix decidable, and because §5b's twin was resolved with it.
+> Current spec: [`the-ladder-is-monotone-2026-08.md`](the-ladder-is-monotone-2026-08.md) §2.
+> ⚠⚠ **AND IT FOUND A THIRD INVERSION THIS SECTION COULD NOT SEE**: `slam` 104 against `wta1000` 65.
+> That one is NOT fixed – 104 is the family's only sourced number – and is the new guard's single
+> declared exemption, escalated to the owner.
+
 `tests/season/fieldPros.test.ts` pins that the cuts **strictly tighten** – and it pins it over
 **five** rungs, `w35 → w50 → w75 → w100 → wta125`. The sourced chain keeps that (700 > 330 > 300 >
 240 > 180). **But the ladder does not stop at WTA 125:**
@@ -457,6 +467,15 @@ every rung keeps a non-empty window), and every **W** rung's `entrantPctBand` st
 own cut, so the two encodings of the range still agree there.
 
 ### 5b. ⚠⚠ AND THE SECOND INVERSION: j300's CUT IS NOW STRICTER THAN ITS OWN FIELD
+
+> ⭐⭐ **ALSO RESOLVED THE SAME DAY.** `j300.enterPct` is **0.25**, restoring
+> `enterPct === entrantPctBand[1]`, on the structural criterion this section states rather than on the
+> sourcing one it argues about. ⚠ **The sourcing argument below is NOT withdrawn – 0.25 is inside it**,
+> and it is a row this spec's own table measured (3.0 entries a career, 25 of 27 careers). What the
+> re-measurement then found is the half neither of us predicted: **careers ever reaching a J300 went
+> 72/90 → 87/90 and careers ever holding a professional ranking 81/90 → 87/90**, while every median
+> got worse because six previously-unranked careers joined the population.
+> [`the-ladder-is-monotone-2026-08.md`](the-ladder-is-monotone-2026-08.md) §2, §3c.
 
 `tests/ladder.test.ts` pinned, as a **direction** rather than a number, that j300's acceptance cut sits
 **above** the top of the band its field is drawn from – *"the prestige rung is the one that admits

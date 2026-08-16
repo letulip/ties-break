@@ -461,22 +461,26 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     const cuts = (['w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]).map((t) => TIERS[t].acceptsRank!)
     for (let i = 1; i < cuts.length; i++) expect(cuts[i]).toBeLessThan(cuts[i - 1])
 
-    // ⚠⚠ AND HERE IS WHAT THE FIVE-RUNG LOOP ABOVE DOES **NOT** COVER, PINNED SO IT CANNOT BE LOST
-    // AGAIN (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md §5a). The sourced chain took
-    // `wta125` 250 -> 180 to keep the five monotone – and 180 is LOOSER than `wta250`'s 200, so the
-    // ladder now inverts one rung ABOVE where this guard stops looking: **a WTA 250 admits a deeper
-    // ranking than the WTA 125 beneath it.** Measured in the wave (n=54): she plays 2.1 WTA 250s a
-    // career against 0.5 WTA 125s, i.e. the inversion is visible in behaviour and not only in the
-    // table.
+    // ⚠⚠ WHAT THE FIVE-RUNG LOOP ABOVE DOES **NOT** COVER WAS PINNED HERE, AND IS NOW FIXED AND
+    // GUARDED PROPERLY (P3 escalated it, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md §5a;
+    // resolved the same day, docs/specs/the-ladder-is-monotone-2026-08.md §2). The sourced chain took
+    // `wta125` 250 -> 180 to keep the five monotone – and 180 is TIGHTER than `wta250`'s 200, so the
+    // ladder inverted one rung ABOVE where this guard stops looking: **a WTA 250 admitted a deeper
+    // ranking than the WTA 125 beneath it.** Measured in that wave (n=54): 2.1 WTA 250s a career
+    // against 0.5 WTA 125s, i.e. the inversion was visible in behaviour and not only in the table.
     //
-    // ⚠ THIS IS A CHARACTERISATION, NOT AN INVARIANT – it pins the state the ladder is IN, on
-    // purpose, because the chain was the owner's ordered build and the inversion is an escalation
-    // rather than an agent's to fix. **If a later wave re-tunes `wta125` or `wta250`, this goes red,
-    // and the reader should DELETE it and extend the loop above to the whole ladder** – which is the
-    // guard this repo actually wants and cannot have while the two disagree.
-    expect(TIERS.wta125.acceptsRank!, 'the known inversion – see the note above').toBeLessThan(
-      TIERS.wta250.acceptsRank!,
+    // ⭐⭐ AND THE CHARACTERISATION IS CASHED IN EXACTLY AS ITS OWN NOTE INSTRUCTED. It read: *"If a
+    // later wave re-tunes `wta125` or `wta250`, this goes red, and the reader should DELETE it and
+    // extend the loop above to the whole ladder – which is the guard this repo actually wants."*
+    // `wta125` is **210** now, and the whole-ladder guard is `tests/ladder.test.ts` **L6b**, which
+    // walks every rung of `TIER_LADDER` in both acceptance units and is mutation-verified. The
+    // assertion that stood here is gone because the loop that replaces it is strictly stronger; what
+    // is kept below is this file's own subject – the UNITS – asserted at the seam the five-rung loop
+    // ends at, so the two files do not restate one property in two places.
+    expect(TIERS.wta250.acceptsRank!, 'the seam the five-rung loop stops at, in this file\'s own unit').toBeLessThan(
+      TIERS.wta125.acceptsRank!,
     )
+    expect(TIERS.wta250.enterPct, 'and the rung above the seam carries one unit too').toBeUndefined()
     // W15 is the on-ramp: no list at all, because a rank gate on the first rung of a table is a
     // closed loop. It reads her ITF junior points instead.
     expect(acceptanceRank(world, 'w15')).toBeUndefined()
