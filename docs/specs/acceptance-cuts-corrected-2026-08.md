@@ -395,9 +395,9 @@ probes re-point (#300 → #230 for national, #60 → #55 for global) and the cla
 standing alone signs her* – is unchanged. **See §6.1: this is a balance change to the economy that
 rode in on a ladder correction, and it is the owner's to accept or reject.**
 
-Also in this family: `tests/play-down.test.ts`' reversal probe **#300 → #200** (that rank exists to
-clear *every* W acceptance cut, so anything shut below is demonstrably the play-down rule and not the
-list – the chain took the tightest W-series cut to 240, so #300 stopped doing its job);
+**Also in family (b), not (c):** `tests/play-down.test.ts`' reversal probe **#300 → #200** (that rank
+exists to clear *every* W acceptance cut, so anything shut below is demonstrably the play-down rule and
+not the list – the chain took the tightest W-series cut to 240, so #300 stopped doing its job);
 `tests/outgrownWithdraw.test.ts`' seed book **30 → 40 a side** (`tierOutgrown('w50')` asks whether the
 WTA 125 is open, and its price went from a book of ~249 to ~384); and `tests/ladder-separation.test.ts`'
 two sweeps **140 → 210 weeks** (both assert they reached *both halves of the ladder or they guard
