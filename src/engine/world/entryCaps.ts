@@ -273,9 +273,17 @@ function yearEndWtaRankOf(row: SeasonHistoryEntry | undefined): number | null {
  *  THE THREE THINGS THAT MAKE THAT PROPORTIONATE, IN ORDER:
  *    1. THE UNDER-COUNT IS THE GENEROUS DIRECTION, exactly as `seasonWEntriesByTier`'s own note says
  *       of a ledger that started mid-season. A sub-cap that forgets is never a sub-cap that invents.
- *    2. IT CANNOT BIND AT THE SHIPPED CONSTANTS AT ALL. W75 opens at 17 (`minAgeYears`), so a
- *       fourteen-year-old's count of W75-or-above entries is structurally zero – measured, and
- *       reported as a zero rather than hidden (docs/specs/age-eligibility-window-2026-08.md §5).
+ *    2. ⚠⚠ IT COULD NOT BIND AT ALL UNTIL 16.08, AND NOW IT CAN – WHICH PROMOTES THE LIMITATION
+ *       ABOVE FROM ACADEMIC TO LIVE. This item used to read: *"IT CANNOT BIND AT THE SHIPPED
+ *       CONSTANTS AT ALL. W75 opens at 17 (`minAgeYears`), so a fourteen-year-old's count of
+ *       W75-or-above entries is structurally zero – measured, and reported as a zero rather than
+ *       hidden (docs/specs/age-eligibility-window-2026-08.md §5)."* The owner's age-grid ruling of
+ *       16.08 put `w75.minAgeYears` at 14, so the count is no longer structurally zero and this
+ *       sub-cap is now the rule the WTA wrote it as. **The season-ledger window is therefore a real
+ *       under-count now rather than a dormant one**: a fourteen-year-old whose birthday falls after
+ *       the wrap sees only the part of her year that follows it, and item 1 is why that is the safe
+ *       direction. Item 3 is the fix and it is unchanged – the pro ledger needs a tier, which is a
+ *       save-schema move.
  *    3. THE FIX IS NAMED, so the day it CAN bind nobody has to rediscover it: give the pro ledger a
  *       tier. That is a save-schema change – the three-part move – and buying one for a rule that
  *       cannot fire would have been machinery bought on speculation.

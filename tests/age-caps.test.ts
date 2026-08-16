@@ -466,15 +466,30 @@ describe('A3c — at most three of a fourteen-year-old\'s eight may be at W75 or
     }
   })
 
-  it('⚠ AND IT MEASURES ZERO AT THE SHIPPED CONSTANTS, which is the finding, not the test failing', () => {
-    // W75 opens at 17 and no W rung above W15 opens below 16, so a fourteen-year-old can never reach
-    // the rungs this quota counts. The rule ships anyway – see the knob's own note – and this
-    // assertion is what makes "it cannot bind" a checked claim rather than a belief: the day a phase
-    // opens one of these rungs lower, this goes red and the sub-cap becomes live machinery.
+  it('⭐⭐ AND IT IS LIVE MACHINERY NOW – the tripwire this test was fired, and it fired correctly', () => {
+    // ⚠ RE-AIMED, AND THE ASSERTION IS INVERTED BY THE EVENT IT WAS BUILT TO CATCH. It used to read:
+    // *"W75 opens at 17 and no W rung above W15 opens below 16, so a fourteen-year-old can never
+    // reach the rungs this quota counts. The rule ships anyway – see the knob's own note – and this
+    // assertion is what makes 'it cannot bind' a checked claim rather than a belief: the day a phase
+    // opens one of these rungs lower, this goes red and the sub-cap becomes live machinery."*
+    //
+    // ⭐ THE OWNER'S AGE-GRID RULING OF 16.08 IS THAT DAY: «настоящих порогов только два – 14 и 18 …
+    // Возрастное есть только по количеству сыгранных в год». `w75.minAgeYears` is 14, so a
+    // fourteen-year-old reaches the rungs this quota counts and the quota is the thing refusing her
+    // fourth one. Nothing about the RULE moved; what moved is whether it can ever be reached.
+    //
+    // WHAT IS ASSERTED NOW IS THE SAME PROPERTY IN THE LIVE DIRECTION: the quota's own floor is
+    // reachable at fourteen (so it binds), and the ages the grid genuinely still shuts – the four WTA
+    // rungs at 15 – are still shut, so this cannot pass by the ladder having been opened wholesale.
     const floor = ECONOMY.entryCap.proSubCapByAge[14].fromTier
+    expect(isTierAgeOpen(floor, 14), `${floor} is the quota's floor and a fourteen-year-old reaches it`).toBe(true)
     const from = TIER_LADDER.indexOf(floor)
-    for (const tier of TIER_LADDER.slice(from)) {
-      expect(isTierAgeOpen(tier, 14), `${tier} is shut to a fourteen-year-old`).toBe(false)
+    const above = TIER_LADDER.slice(from)
+    // Not vacuous in the other direction either: some rung above the floor is still shut at 14, and
+    // it is shut for the WTA's own published reason rather than for a chain of ours.
+    expect(above.filter((t) => !isTierAgeOpen(t, 14)).length, 'the 15 floor still refuses somebody').toBeGreaterThan(0)
+    for (const tier of above) {
+      expect(isTierAgeOpen(tier, 14), `${tier} at 14`).toBe((TIERS[tier].minAgeYears ?? 0) <= 14)
     }
   })
 })
@@ -808,15 +823,47 @@ describe('P1 — the pro table (spec §5 design values over the real rulebook sh
     // the day a rung opened at 14 («A rung that ever opens at 14 (the real W15 does, via
     // junior-reserved places) must bring those rows with it»).
     //
-    // NOTHING IS WEAKENED: every rung ABOVE W15 is still shut at 14 and 15, asserted rung by rung, so
-    // a future change that quietly opened W75 to a fourteen-year-old still goes red here.
+    // ⭐⭐ AND RE-AIMED A THIRD TIME, BY THE SAME OWNER, LATER THE SAME DAY. The paragraph this
+    // replaces ran: *"NOTHING IS WEAKENED: every rung ABOVE W15 is still shut at 14 and 15, asserted
+    // rung by rung, so a future change that quietly opened W75 to a fourteen-year-old still goes red
+    // here."* It did go red, and the change was not quiet – it is his second ruling of 16.08: «у W35
+    // стоит minAgeYears: 16, у W50 – 16, у W75 и W100 – 17 … настоящих порогов только два – 14 и 18.
+    // – вот как есть в регламенте, так и у нас.»
+    //
+    // ⚠ SO THE CLAIM MOVES FROM "the rungs above W15 are shut" TO "the grid is the regulation's, and
+    // the allowance is what meters her". The rung-by-rung sweep is kept – it is the half that stops
+    // this passing vacuously – but it now asserts each rung against ITS OWN sourced floor rather than
+    // against a blanket shut: 14 on the ITF W rungs and the Slam (ITF WTT Women's III.A.1), 15 on the
+    // four WTA rungs (WTA Rulebook II.D: under-15s have no direct acceptance at all). A future change
+    // that opened a WTA 250 to a fourteen-year-old still goes red here, which is the property the old
+    // sweep had and this one keeps.
     expect(TIERS.w15.minAgeYears, "the owner's ruling of 16.08").toBe(14)
     expect(isTierAgeOpen('w15', 14), 'the doorway her allowance describes is open').toBe(true)
-    for (const t of ECONOMY.entryCap.cappedProTiers) {
-      if (t === 'w15') continue
-      expect(isTierAgeOpen(t, 14), t).toBe(false)
-      expect(isTierAgeOpen(t, 15), t).toBe(false)
+    // The grid, stated once as data so the sweep below cannot drift into re-deriving the source.
+    const SOURCED_FLOOR: Partial<Record<TierId, number>> = {
+      w15: 14,
+      w35: 14,
+      w50: 14,
+      w75: 14,
+      w100: 14,
+      slam: 14,
+      wta125: 15,
+      wta250: 15,
+      wta500: 15,
+      wta1000: 15,
     }
+    for (const t of ECONOMY.entryCap.cappedProTiers) {
+      const floor = SOURCED_FLOOR[t]
+      expect(floor, `${t} has a sourced floor`).toBeDefined()
+      expect(TIERS[t].minAgeYears, `${t} sits on its sourced floor`).toBe(floor)
+      expect(isTierAgeOpen(t, 14), `${t} at 14`).toBe(floor === 14)
+      expect(isTierAgeOpen(t, 15), `${t} at 15`).toBe(true)
+    }
+    // Not vacuous: the 15 floor really does refuse somebody at fourteen.
+    expect(
+      ECONOMY.entryCap.cappedProTiers.filter((t) => !isTierAgeOpen(t, 14)).length,
+      'the WTA rungs are shut at 14',
+    ).toBe(4)
     // ...and the allowance she meets there is the rulebook's own, not `default`.
     expect(annualProEntryLimit(14)).toBe(8)
     expect(annualProEntryLimit(15)).toBe(10)

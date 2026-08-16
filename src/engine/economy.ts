@@ -2016,10 +2016,13 @@ export const ECONOMY = {
     // domestic ladder stays uncapped here for the same reason it is uncapped above - it is ours.
     // ⚠ AND THE ACT-3 RUNGS JOIN IT (W3-ACT2). "Professional events, whatever their size" is the
     // rule's own wording, and a Grand Slam is the most professional event there is - the real AER
-    // counts a major against a sixteen-year-old's twelve exactly as it counts a W15. It bites for
-    // one season only in practice (`proPerYearByAge` is unlimited from 18 and every act-3 rung
-    // opens at 17), which is the honest amount: the allowance is a rule about children, and by the
-    // time her ranking clears a 1000's acceptance list she is not one.
+    // counts a major against a sixteen-year-old's twelve exactly as it counts a W15. ⚠ THE PARENTHESIS
+    // HERE USED TO READ "every act-3 rung opens at 17" AND IT NO LONGER DOES: the owner's age-grid
+    // ruling of 16.08 put the four WTA rungs at 15 and the Slam at 14, so the family is capped from
+    // fourteen upward and `proPerYearByAge` is the only thing metering it. In practice it still bites
+    // for about one season, because the allowance is unlimited from 18 and an acceptance list at
+    // #200 or tighter is what a child actually meets up here – the honest amount: the rule is about
+    // children, and by the time her ranking clears a 1000's list she is not one.
     cappedProTiers: ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as readonly TierId[],
     // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited.
     //

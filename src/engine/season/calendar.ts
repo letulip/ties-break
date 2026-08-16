@@ -524,7 +524,38 @@ export const TIERS: Record<TierId, TierDef> = {
     // $5,000 / $2,900 / $1,700 / $1,000 / $550 / $290.
     prizeCents: [5000_00, 2900_00, 1700_00, 1000_00, 550_00, 290_00],
     everyNWeeks: 3,
-    minAgeYears: 16,
+    // ⭐⭐ 16 -> 14, AN OWNER RULING OF 16.08, AND IT IS THE WHOLE OF THE REAL GRID. Read this note
+    // once; W50, W75 and W100 refer back to it, and the four WTA rungs plus the Slam say where they
+    // differ. Verbatim: «у W35 стоит minAgeYears: 16, у W50 – 16, у W75 и W100 – 17. По той же
+    // цитате из регламента, которой вы были правы, настоящих порогов только два – 14 и 18. – вот как
+    // есть в регламенте, так и у нас. Возрастное есть только по количеству сыгранных в год, так и
+    // делаем.»
+    //
+    // THE SOURCE IS research/ranking-points-by-tier.md §4-C2, quoted rather than paraphrased: *"The
+    // only age thresholds anywhere in the 2026 ITF WTT Regulations are 14 – Women's Section III.A.1,
+    // 'Minors under the age of fourteen (14) shall not be eligible for Entry' – and 18, the AER
+    // cut-off. A 15-, 16- or 17-year-old is limited only by her per-year COUNT."*
+    //
+    // ⚠ WHAT REPLACES THE FLOOR IS ALREADY SHIPPED AND IS NOT TOUCHED BY THIS. The count is the AER
+    // (`ECONOMY.entryCap.proPerYearByAge`, on a birthday-to-birthday window since P2): 14 -> 8
+    // professional events of which at most 3 at W75 or above, 15 -> 10, 16 -> 12, 17 -> 16, 18+
+    // unrestricted. So the brake is a BUDGET, which is what the regulation actually is, rather than a
+    // door that is shut for two more birthdays.
+    //
+    // ⚠ AND THE OLD NUMBER'S OWN REASON IS KEPT HERE RATHER THAN DELETED, because it is the record of
+    // what 16 was for. W2-LADDER wrote the chain as "16 for the entry trio's first two plus w50, 17
+    // from w75 up" and `docs/specs/adult-tour-and-endings.md` §4.1 made the 16-18 two-tour overlap a
+    // design pillar – *"a sixteen-to-eighteen-year-old holds both tours at once"*. Neither was ever
+    // sourced to a regulation; both were ours. The overlap survives in the only form the sport
+    // supports: she may hold both tours from 14, and the AER decides how much of the second one she
+    // can afford to hold.
+    //
+    // ⚠ THE GRID IS NOT "NO FLOOR ANYWHERE", WHICH IS THE READING THIS COMMENT EXISTS TO PREVENT.
+    // Three different numbers survive and each has a source: **14** on the ITF W rungs and the Grand
+    // Slam, and **15** on the four WTA rungs, where under-15s may not enter by direct acceptance at
+    // all (WTA Rulebook II.D – a wild card is the only route, and this engine models direct
+    // acceptance only). The J rungs keep their own 13/18 window, which is a different regulation.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // ⚠⚠ THE ACCEPTANCE LIST IS AN ABSOLUTE RANK NOW, NOT A SHARE (W2-FIELD2). Read this note once;
     // the four rungs above it refer back here.
@@ -638,9 +669,12 @@ export const TIERS: Record<TierId, TierDef> = {
     // 13 a season - denser than a National, sparser than a W35: the first rung she plans MONTHS
     // around rather than weeks.
     everyNWeeks: 4,
-    // Same doorway age as W15/W35: the AER's 16-year-old allowance (12 pro entries) is what
-    // actually meters her first season here, not the doorway itself.
-    minAgeYears: 16,
+    // ⭐ 16 -> 14 (owner, 16.08) – the family note on w35 above is the ruling and the source. The
+    // sentence this replaces was already most of the way there and is kept as the record: *"Same
+    // doorway age as W15/W35: the AER's 16-year-old allowance (12 pro entries) is what actually
+    // meters her first season here, not the doorway itself."* It named the right mechanism and then
+    // shut the door anyway; now the allowance is the whole of it.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // The acceptance chain tightens one step per rung: w35 0.5 -> w50 0.4 -> w75 0.3 -> w100 0.25
     // -> wta125 0.2. 0.4 is deliberately J300's cut one table down - the same "prestige rung has to
@@ -705,7 +739,15 @@ export const TIERS: Record<TierId, TierDef> = {
     // above is already cleared at mean age 16.7, so in 40 of 52 careers `minAgeYears` is the ONLY
     // thing refusing her. Left as it is - opening it to fourteen-year-olds is a far larger change
     // than correcting the cut, and it is the owner's. acceptance-cuts-2026-08.md §3a/§6.
-    minAgeYears: 17,
+    //
+    // ⭐⭐ HE TOOK IT: 17 -> 14 (16.08). The two paragraphs above are the whole case and they were
+    // written a day before the ruling that acts on them – the second one even names the change and
+    // hands it to him. The family note on w35 has the verbatim quote and the source; what is specific
+    // to THIS rung is that the sub-cap the paragraph above calls "a quota, not a door" stops being
+    // hypothetical: `ECONOMY.entryCap.proSubCapByAge` grants a fourteen-year-old THREE W75-or-above
+    // entries inside her eight, and `entryCaps.ts` records that it has never been able to bind
+    // because this constant was 17. It can now, and that is the rule doing its own job.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // ⚠⚠ THE OWNER'S OWN RUNG (15.08): «У нас W75 пускает всех из топ-450 профессиональной таблицы,
     // с 17 лет, без порога по очкам. Реальный W75 отбирает заметно у́же.» ALL THREE CLAUSES ARE TRUE
@@ -797,7 +839,10 @@ export const TIERS: Record<TierId, TierDef> = {
     // Rare and planned around, the way j300 is: four a year.
     everyNWeeks: 13,
     minGapWeeks: 2,
-    minAgeYears: 17,
+    // ⭐ 17 -> 14 (owner, 16.08) – the ruling and its source are the family note on w35. This rung
+    // carried no reason of its own: it was 17 because W75 was, and W75's own note says in as many
+    // words that a real W75 has no age floor. Its gate is #240 and always was.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // The range table's FLOOR (~#120-350) - see the note on w35 for why an absolute rank replaced
     // the share, and ⚠ why the ranges themselves are NOT SOURCED.
@@ -873,7 +918,19 @@ export const TIERS: Record<TierId, TierDef> = {
     // Rare like W100 (spec §2: "125 rare like W100"): four a year, planned around, never adjacent.
     everyNWeeks: 13,
     minGapWeeks: 2,
-    minAgeYears: 17,
+    // ⭐⭐ 17 -> 15, AND THE 15 IS WHY THE WTA RUNGS ARE NOT 14 (owner, 16.08 – the ruling is the
+    // family note on w35). Read this note once; wta250, wta500 and wta1000 refer back to it.
+    //
+    // A 125 is a WTA tournament, not an ITF one, so the regulation that governs its entry is the WTA
+    // Rulebook rather than the ITF WTT Regulations – and its floor is real and published: **under-15s
+    // may not enter a WTA tournament by direct acceptance at all** (II.D; a wild card is the only
+    // route in). `selectEntrants` models direct acceptance and nothing else, so 15 is the honest
+    // floor here and 14 would be modelling a door the sport keeps shut.
+    //
+    // ⚠ WHAT WENT WITH THE 17 was never a rule, it was a chain: W2-LADDER's "the family's top half
+    // opens at 17" and W3-ACT2's continuation of it. Both are ours. The gate on this rung is #180 and
+    // stays #180 – research §4-C2 has the sourcing.
+    minAgeYears: 15,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // The top of the acceptance chain: 0.2, tighter than W100's 0.25 (spec §2 "tune 125 tighter").
     // On a fresh ~500-row merged table that is "takes the top 100" - the hardest cut in the game,
@@ -1000,9 +1057,12 @@ export const TIERS: Record<TierId, TierDef> = {
     // wherever the big ones are not). Cadence 6 = 8 a season, twice the 125's four, which is the
     // real 250:125 supply ratio (~30:15) read at our scale.
     everyNWeeks: 6,
-    // The family's top half opens at 17, as W75/W100/125 do. The doorway is not the gate here - the
-    // acceptance list is (#200), and the AER's own allowance is unlimited from 18.
-    minAgeYears: 17,
+    // ⭐ 17 -> 15 (owner, 16.08) – the WTA floor, and the note on wta125 is why it is 15 rather than
+    // 14. The sentence it replaces is kept as the record and it was already true of the mechanism:
+    // *"The family's top half opens at 17, as W75/W100/125 do. The doorway is not the gate here – the
+    // acceptance list is (#200), and the AER's own allowance is unlimited from 18."* The doorway was
+    // never the gate up here; it is simply the sport's own number now.
+    minAgeYears: 15,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // The same unit and the same reading W2-FIELD2 gave the six rungs below (see the note on w35):
     // taken as "a WTA 250's entry list reaches to about #200". ⚠ NOT SOURCED - the WTA rulebook
@@ -1048,7 +1108,9 @@ export const TIERS: Record<TierId, TierDef> = {
     // rather than a timetable - six of ten is a decision about which, six of six would not be.
     everyNWeeks: 0,
     anchorWeeks: [4, 10, 15, 19, 24, 28, 33, 39, 43, 47],
-    minAgeYears: 17,
+    // ⭐ 17 -> 15 (owner, 16.08) – the WTA floor; see the note on wta125. #120 is the gate here and
+    // only 6 of 54 measured careers ever clear it, so the doorway has never decided anything.
+    minAgeYears: 15,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // The range table's floor (~#40-120). ⚠ NOT SOURCED - see the note on w35. Left as it is: only
     // 6 of 54 measured careers ever clear it, which is the top of the ladder behaving as act 3 wants.
@@ -1100,7 +1162,9 @@ export const TIERS: Record<TierId, TierDef> = {
     // year's own shape, where the grass weeks belong to Wimbledon and its warm-ups alone.
     everyNWeeks: 0,
     anchorWeeks: [5, 8, 12, 18, 31, 37, 41, 45],
-    minAgeYears: 17,
+    // ⭐ 17 -> 15 (owner, 16.08) – the WTA floor; see the note on wta125. #65 is the gate, cleared by
+    // 1 of 54 measured careers.
+    minAgeYears: 15,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // Taken as "direct acceptance for a 1000 runs to roughly #65" (a 56-draw ~#50, a 96-draw ~#90).
     // ⚠ NOT SOURCED - see the note on w35; the WTA rulebook publishes qualifier counts by draw size,
@@ -1235,7 +1299,13 @@ export const TIERS: Record<TierId, TierDef> = {
     // has missed the season opener, and at fourteen she was never going to be in it.
     everyNWeeks: 0,
     anchorWeeks: [2, 21, 26, 34],
-    minAgeYears: 17,
+    // ⭐⭐ 17 -> 14, AND THE SLAM IS THE ONE RUNG WHERE 14 IS THE SPORT'S OWN NUMBER RATHER THAN AN
+    // ITF ONE (owner, 16.08 – the family note on w35). research §4-C2: *"the Grand Slam floor is also
+    // 14."* Not 15: a major is not a WTA tournament, so the WTA's direct-acceptance floor on the four
+    // rungs below does not reach it. The gate here is #104, the Grand Slam Rule Book's own published
+    // direct-acceptance count, and the paragraph above already notes that at fourteen she was never
+    // going to be in the season opener anyway.
+    minAgeYears: 14,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     // ✅ THE ONE CUT IN THIS FILE CONFIRMED BOTH BY RULE AND BY OBSERVATION, AND IT IS EXACT (audited
     // 15.08). 2026 Official Grand Slam Rule Book, singles main-draw composition: **128 = 104/108/112

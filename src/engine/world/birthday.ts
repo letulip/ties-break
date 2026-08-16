@@ -240,8 +240,13 @@ const BANDS: Band[] = [
   },
   // --- 16 – the year it turns serious ------------------------------------------------------------
   //
-  // Our own W series opens at 16 (`TIERS.w15.minAgeYears`), so this birthday is already a threshold
-  // in the model before a gift is chosen.
+  // ⚠ THE REASON THIS ROW GIVES IS SPENT, AND THE ROW IS NOT. It read: *"Our own W series opens at 16
+  // (`TIERS.w15.minAgeYears`), so this birthday is already a threshold in the model before a gift is
+  // chosen."* Two owner rulings have since moved that constant – 16 -> 14 at W15 (P2) and the whole
+  // grid to 14/15 (16.08) – so sixteen is no longer a doorway anywhere on the ladder. What sixteen
+  // still is, and what these gifts are actually written about, is the AER's own step: 12 professional
+  // events a year against fifteen's 10, i.e. the first year the second tour is affordable rather than
+  // merely open. The table is unchanged; only its stated reason moves.
   {
     from: 16,
     to: 16,

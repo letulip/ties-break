@@ -677,21 +677,29 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
       expect(TIERS[t].maxAgeYears).toBeUndefined()
       expect(isTierAgeOpen(t, 30)).toBe(true)
     }
-    // The adult rungs open at 16/16/16/17/17/17 and never close – the fork at 19 is a decision,
-    // not a wall, precisely because these are still here on the far side of it (W2-LADDER: the
-    // spec's minAge chain is 16 for the entry trio's first two plus w50, 17 from w75 up).
-    // ⚠ W3-ACT2 continues the chain at 17 for all four act-3 rungs, and DELIBERATELY does not push
-    // it higher: the doorway is not the gate up here, the acceptance list is (#200 / #120 / #65 /
-    // #104). A later doorway would have gated the top of the ladder twice and told the player the
-    // wrong reason once.
+    // The adult rungs never close – the fork at 19 is a decision, not a wall, precisely because
+    // these are still here on the far side of it.
     for (const t of ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as TierId[]) {
       expect(TIERS[t].maxAgeYears).toBeUndefined()
       expect(isTierAgeOpen(t, 30)).toBe(true)
     }
-    expect(TIERS.w50.minAgeYears).toBe(16)
-    expect(TIERS.w75.minAgeYears).toBe(17)
-    expect(TIERS.wta125.minAgeYears).toBe(17)
-    expect(TIERS.slam.minAgeYears).toBe(17)
+    // ⚠⚠ RE-AIMED, AND WHAT MOVED IS THE GRID ITSELF (owner, 16.08). These four lines used to pin
+    // 16 / 17 / 17 / 17, and the note above them read: *"The adult rungs open at 16/16/16/17/17/17 …
+    // (W2-LADDER: the spec's minAge chain is 16 for the entry trio's first two plus w50, 17 from w75
+    // up). ⚠ W3-ACT2 continues the chain at 17 for all four act-3 rungs, and DELIBERATELY does not
+    // push it higher: the doorway is not the gate up here, the acceptance list is (#200 / #120 / #65
+    // / #104)."* Every word of that describes a chain of OURS – the owner's ruling replaces it with
+    // the regulation's own two-number grid: «настоящих порогов только два – 14 и 18 … Возрастное есть
+    // только по количеству сыгранных в год, так и делаем.»
+    //
+    // NOTHING IS WEAKENED. The pins stay pins; they name the sourced floor instead of the invented
+    // one, and they are the four rungs that MOVED so a silent drift back is caught. 14 is ITF WTT
+    // Women's III.A.1 and the Grand Slam Rule Book; 15 is WTA Rulebook II.D, where an under-15 has no
+    // direct acceptance to a WTA event at all. research/ranking-points-by-tier.md §4-C2.
+    expect(TIERS.w50.minAgeYears, 'ITF W rung – the regulation says 14').toBe(14)
+    expect(TIERS.w75.minAgeYears, 'ITF W rung – the regulation says 14').toBe(14)
+    expect(TIERS.wta125.minAgeYears, 'a WTA event – no direct acceptance under 15').toBe(15)
+    expect(TIERS.slam.minAgeYears, 'a major is not a WTA event – its own floor is 14').toBe(14)
   })
 
   // THE OVERLAP IS THE POINT, and it is what makes 19 a fork rather than a cliff: for three whole
