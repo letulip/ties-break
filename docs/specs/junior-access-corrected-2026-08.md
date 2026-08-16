@@ -184,6 +184,15 @@ can be named rather than because `w75.acceptsRank` was edited.
 
 ## 4. ⚠⚠ FOR THE OWNER – ONE TRADE, AND IT IS HIS
 
+> ### ⭐ ANSWERED THE SAME EVENING, AND THE TRADE IS DISSOLVED RATHER THAN RESOLVED.
+> He took neither (A), (B) nor (C): he removed `ENDINGS.collegeClosedFromTier` altogether – «Колледж –
+> это независимая ветка карьеры с отдельным функционалом и турнирами, альтернативная.» There is no
+> constant left to move up a rung, so **§3c's column is retired: the college answer is on the card in
+> 100% of careers.** The recommendation below was for (B) and its reasoning – *"the number is a fossil
+> of a ladder that no longer exists"* – is what he acted on, further than it went. He also removed the
+> age floors §3a is measured against, so §3a and §3b are the third column of
+> `docs/specs/college-is-its-own-branch-2026-08.md` §3 rather than the current numbers.
+
 **The correction and the college door pull against each other, and no third option removes the
 tension.** She reaches W75 at eighteen because the rules admit her at eighteen; `collegeClosedFromTier`
 is `w75`; the fork is at nineteen. Any ladder honest about the sport puts her past W75 before her

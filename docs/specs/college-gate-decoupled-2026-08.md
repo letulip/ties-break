@@ -2,7 +2,7 @@
 type: spec
 status: current
 area: engine/balance
-canonical: true
+canonical: false
 last-reviewed: 2026-08-16
 ---
 
@@ -18,6 +18,34 @@ last-reviewed: 2026-08-16
 
 **That is what happened, though not for the reason the plan expected.** The re-measurement is §2, and
 it moved the scope before a line was written.
+
+---
+
+## ⚠⚠ SUPERSEDED ON ITS SUBJECT, THE SAME EVENING – READ THIS BEFORE THE REST
+
+**The rule this spec is about no longer exists.** Later on 16.08 the owner removed it outright:
+«collegeClosedFromTier – так ведь нет же там никакой связи с w75, мы же всё узнали. Колледж – это
+независимая ветка карьеры с отдельным функционалом и турнирами, альтернативная.»
+
+So three of the five bullets under **Current truth** below are now FALSE as descriptions of the
+shipped game, and they are kept because they are the record of what the rule was:
+
+* *"A RESULT still closes it"* – **nothing closes it.** The college answer is on the fork card in 100%
+  of careers, by construction rather than by measurement.
+* *"the player is warned before the entry that costs it"* – **the warning is gone from both entry
+  paths**, because it became false and a false warning on an entry card is worse than none.
+* *"the gate is now LATE rather than correct … §6.1 is the owner's decision and it is open"* – **§6.1
+  is CLOSED. He took option (B), delete the gate outright**, including its own stated cost: *"it also
+  deletes round-21 #8's shut-door sentence, which you asked for."*
+
+⭐ **WHAT SURVIVES, AND IT IS THE PART THAT EARNED ITS COST.** §4's decoupling is why the removal was
+small: because `collegeDoorOpen` had already become a leaf importing no calendar constant, taking it
+out touched no acceptance cut, no points table and no field size. Had the deletion landed on the
+pre-P4 code it would have been a balance change wearing a deletion's clothes. §5's finding – the
+repealed NCAA rule, asserted twice in prose because the second copy was written from the first – also
+stands, and is the reason the constant was reviewable at all.
+
+**The current spec is `docs/specs/college-is-its-own-branch-2026-08.md`.**
 
 ---
 
