@@ -766,7 +766,21 @@ const windowRungs = computed<readonly TierId[]>(
 const stripVisible = computed<readonly number[]>(() => {
   const last = SEASON_STRIP_TIERS.length - 1
   if (stripExpanded.value) return SEASON_STRIP_TIERS.map((_, i) => i)
-  const open = SEASON_STRIP_TIERS.map((t, i) => (windowRungs.value.includes(t.id) ? i : -1)).filter((i) => i >= 0)
+  // ⚠⚠ AND A RUNG SHE IS TOO YOUNG FOR IS NOT PART OF HER WINDOW (16.08). `tierOpen` is the FLOOR –
+  // "has she reached this rung" – and it asks about her RANK alone; the age gate is a separate
+  // refusal (`isTierAgeOpen`, surfaced on the chip as `locked`). The two never disagreed on this row
+  // until the Accelerator correction let a fifteen-year-old's rank clear W35's #700 a year before
+  // `minAgeYears: 16` will let her enter it – and the window then carried W35 as OPEN and W50 as its
+  // aspiration, six chips where four had fitted. Measured at 375px: 178.28 against a 170 ceiling,
+  // one wrapped row, on a spec whose own message says this row wrapped to four once before.
+  //
+  // ⚠ THIS RESTORES THE OWNER'S RULE RATHER THAN AMENDING IT. «Текущее доступное окно плюс один
+  // верхний недоступный уровень» – *available* window, and a rung that refuses her on age is not
+  // available. With the filter the aspiration rung is W35 itself, which is the one whose unlock
+  // condition is worth reading ("Opens at 16"). Nothing is hidden that she could enter.
+  const open = SEASON_STRIP_TIERS.map((t, i) =>
+    windowRungs.value.includes(t.id) && seasonChips.value[i]?.state !== 'locked' ? i : -1,
+  ).filter((i) => i >= 0)
   // Nothing open at all is not a state the engine produces, and if it ever did, a row with one
   // ellipsis and no rungs would be worse than the old sixteen. Show everything.
   if (!open.length) return SEASON_STRIP_TIERS.map((_, i) => i)
