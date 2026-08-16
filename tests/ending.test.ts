@@ -13,6 +13,7 @@ import { migrateSave } from '../src/engine/migrations'
 import {
   ENDINGS,
   bankruptcyDue,
+  collegeDoorOpen,
   careerEndingInjuryDue,
   debtWeeks,
   detectEnding,
@@ -32,6 +33,7 @@ import {
   answerFork,
   answerRetirement,
   collegeStillOpen,
+  entryCostsCollege,
   resumeFromCollege,
   enterEvent,
   hireCoach,
@@ -53,7 +55,7 @@ import { rngFromSeed, resumeMain, initMainState } from '../src/engine/rng'
 import { DEFAULT_PROFILE, LADDER_TRACKS } from '../src/shared/protocol'
 import type { SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
 import type { LadderTrack } from '../src/engine/season/types'
-import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
 function autoView(over: Partial<AutoEndingView> = {}): AutoEndingView {
   return {
@@ -347,6 +349,144 @@ describe('the latch, on a real world', () => {
     expect(TIERS.w100.points[TIERS.w100.points.length - 1], 'w100 does not').toBe(0)
     world.bestFinishByTier = { w100: TIERS.w100.points.length - 1 }
     expect(collegeStillOpen(world), 'the same loss, the other rung').toBe(true)
+  })
+
+  // ===============================================================================================
+  // ⭐⭐ P4 – THE COLLEGE GATE READS ITS OWN RULE, AND NOTHING ELSE
+  // ===============================================================================================
+  // THE DEFECT, and it fired in front of us rather than being predicted: `TIERS.w75.acceptsRank`
+  // decided BOTH who may enter a W75 AND the age at which the college ending stops existing, because
+  // `ENDINGS.collegeClosedFromTier` names that same rung. Two unrelated decisions on one constant.
+  // **P3 moved `w75.acceptsRank` from 450 to 300 and moved the college door with it**, and nothing in
+  // the repo objected - `calendar.ts` had a note about the coupling, `ending.ts` had none, and no test
+  // asserted anything either way.
+  //
+  // The gate no longer reads a single tuning number off `TIERS`. These three cases are what makes
+  // that a property rather than a claim, and each one MOVES A CONSTANT and asserts the other does not
+  // follow. ⚠ They mutate the shipped `TIERS` object and restore it in `finally`: the module is a
+  // plain `Record`, so a throw between the two would leak into every later file in this worker.
+  it('⭐⭐ P4 – moving the ENTRY rule does not move the college door', () => {
+    const { world } = freshWorld('college-decoupled-entry')
+    // She won a match at W75, so the door is shut. Nothing below changes that FACT - the only
+    // question is whether an acceptance-list edit can change the ANSWER.
+    world.bestFinishByTier = { w75: 2 }
+    expect(collegeStillOpen(world)).toBe(false)
+
+    const shipped = TIERS.w75.acceptsRank
+    try {
+      // P3's own move, and then the reverse of it, and then a value nothing would ever ship.
+      for (const cut of [450, 300, 1, 5000]) {
+        TIERS.w75.acceptsRank = cut
+        expect(collegeStillOpen(world), `who may ENTER a W75 is not who has spent college (cut ${cut})`).toBe(false)
+      }
+      // ...and the same in the other direction, on a career that KEEPS the door.
+      world.bestFinishByTier = { w75: TIERS.w75.points.length - 1 }
+      for (const cut of [450, 300, 1, 5000]) {
+        TIERS.w75.acceptsRank = cut
+        expect(collegeStillOpen(world), `a first-round loss keeps it at every cut (cut ${cut})`).toBe(true)
+      }
+    } finally {
+      TIERS.w75.acceptsRank = shipped
+    }
+    expect(TIERS.w75.acceptsRank, 'the shipped cut is back – later files read this object').toBe(shipped)
+  })
+
+  it('⭐⭐ P4 – and neither does re-sizing the rung\'s POINTS, which the gate used to read', () => {
+    // The gate's old body was `finish >= points.length - 1 ? open : points[finish] > 0`, so the
+    // LADDER'S PRIZE COLUMN was deciding where the college ending stops. A wave re-tuning w75's
+    // points would have moved the door without mentioning it.
+    const { world } = freshWorld('college-decoupled-points')
+    const shipped = [...TIERS.w75.points]
+    try {
+      // Zero the whole table except the champion. Under the old rule every finish but 0 would have
+      // "not counted" and the door would have sprung back open; the rule reads the FINISH now.
+      TIERS.w75.points = [75, 0, 0, 0, 0, 0]
+      world.bestFinishByTier = { w75: 2 }
+      expect(collegeStillOpen(world), 'she still won two matches there, whatever they paid').toBe(false)
+      // ...and pay the opening-round loser a fortune: still a first-round loss, still open.
+      TIERS.w75.points = [75, 49, 29, 16, 9, 999]
+      world.bestFinishByTier = { w75: 5 }
+      expect(collegeStillOpen(world), 'the wooden spoon is not a result, at any price').toBe(true)
+    } finally {
+      TIERS.w75.points = shipped
+    }
+    expect(TIERS.w75.points, 'the shipped table is back').toEqual(shipped)
+  })
+
+  it('⭐⭐ P4 – what DOES move it is the college rule\'s own knob, and only that', () => {
+    // The mirror of the two above: the same results, two different college rungs, two answers. This
+    // is what stops the pair above passing vacuously - a `collegeStillOpen` that always said `false`
+    // would satisfy them both.
+    const results = [{ rungIndex: TIER_LADDER.indexOf('w75'), finish: 2, rounds: TIERS.w75.points.length }]
+    expect(collegeDoorOpen(results, TIER_LADDER.indexOf('w75')), 'shut when the door is AT that rung').toBe(false)
+    expect(collegeDoorOpen(results, TIER_LADDER.indexOf('w50')), 'shut when the door is BELOW it').toBe(false)
+    expect(collegeDoorOpen(results, TIER_LADDER.indexOf('w100')), 'OPEN when the door is above it').toBe(true)
+    // ...and the leaf takes no calendar constant to say so: `rounds` is the draw's depth, which is
+    // structural, and the rule is "she got past the opening round".
+    expect(collegeDoorOpen([{ rungIndex: 9, finish: 4, rounds: 5 }], 9), 'opening round of a 5-deep draw').toBe(true)
+    expect(collegeDoorOpen([{ rungIndex: 9, finish: 3, rounds: 5 }], 9), 'one match won').toBe(false)
+  })
+
+  it('⚠ P4 – dropping the points read changed NO behaviour, and this is the pin that says so', () => {
+    // The decoupling could ship as a decoupling rather than as a balance change for exactly one
+    // reason: the clause it removed was dead. `points[finish] > 0` can only bite on an INTERIOR ZERO
+    // - a finishing position that is not the opening round and still pays nothing - and no rung the
+    // college rule can see has one. Asserted against the LIVE table, so the day a rung ships one this
+    // says so instead of the door silently moving.
+    const from = TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier)
+    const closers = TIER_LADDER.slice(from)
+    expect(closers.length, 'the college rule can see some rungs, or this pin is vacuous').toBeGreaterThan(0)
+    for (const tier of closers) {
+      const interior = TIERS[tier].points.slice(0, -1)
+      expect(
+        interior.filter((p) => p === 0),
+        `${tier} pays every finishing position above the opening round – so "won a match" and "scored" agree there`,
+      ).toEqual([])
+    }
+  })
+
+  // ===============================================================================================
+  // ⭐⭐ P4 (c) – THE WARNING BEFORE THE ENTRY THAT COSTS IT
+  // ===============================================================================================
+  // `collegeClosedFromTier` used to call the silence intentional - "it is a PRECONDITION and not a
+  // WARNING" - on the strength of an NCAA rule that has been repealed twice and, since 15 April 2026,
+  // carries no pre-enrolment cap at all. `endings-and-the-album.md` named the gap and left it to the
+  // owner: "nothing at seventeen tells the player that a good week there spends something."
+  it('⭐⭐ P4 – the engine says which entries can cost the college ending, before they do', () => {
+    const { world } = freshWorld('college-warning')
+    // A rung below the door costs nothing, however open the door is.
+    expect(entryCostsCollege(world, 'w15'), 'a W15 is a junior trying the tour').toBe(false)
+    expect(entryCostsCollege(world, 'w50')).toBe(false)
+    // ...and one at or above it does, while there is something left to spend.
+    expect(entryCostsCollege(world, ENDINGS.collegeClosedFromTier), 'the door rung itself').toBe(true)
+    expect(entryCostsCollege(world, 'wta250'), 'and everything above it').toBe(true)
+
+    // ⚠ ONCE IT IS SPENT THE CARD STOPS SAYING IT. A warning about a decision that has already been
+    // taken is noise, and this game has a standing rule against surfaces that shout at nothing.
+    world.bestFinishByTier = { w75: 1 }
+    expect(collegeStillOpen(world), 'the door is shut now').toBe(false)
+    expect(entryCostsCollege(world, 'wta250'), 'there is nothing left to spend').toBe(false)
+  })
+
+  it('⚠ P4 – and it stops the week the fork is answered, because there is no ending left to lose', () => {
+    const { world } = freshWorld('college-warning-fork')
+    expect(entryCostsCollege(world, 'w75'), 'before the fork').toBe(true)
+    world.fork = { askedWeek: world.week, answer: null }
+    expect(entryCostsCollege(world, 'w75'), 'the fork is OPEN – the answer is still to come').toBe(true)
+    answerFork(world, 'continue')
+    expect(entryCostsCollege(world, 'w75'), 'she answered – the college ending is gone either way').toBe(false)
+  })
+
+  it('⚠ P4 – the warning is a READ and changes no verdict: entry is still allowed', () => {
+    // Ruling: the parent may always push, and the doctor's veto is this game's one exception. The
+    // flag rides beside `eligible`, never inside `ineligibleReason`, so it cannot become a refusal.
+    const { world } = freshWorld('college-warning-not-a-gate')
+    const snap = toSnapshot(world)
+    for (const e of snap.upcoming) {
+      if (e.costsCollege) expect(e.eligible || e.ineligibleReason !== undefined, 'no new refusal code').toBe(true)
+      // ...and it is never confused with the BODY's caution, which is a different sentence entirely.
+      if (e.costsCollege) expect(e.cautionReason).not.toBe('costsCollege' as unknown as 'fatigued')
+    }
   })
 
   it('⭐ ...and the engine refuses the answer, not just the button', () => {

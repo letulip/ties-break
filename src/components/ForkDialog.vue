@@ -33,7 +33,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { ENDINGS } from '../engine/ending'
-import { TIER_SHORT } from '../engine/season/calendar'
+import { TIERS, TIER_SHORT } from '../engine/season/calendar'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -68,6 +68,34 @@ const rankValue = computed(() => (ladder.value.rank === null ? 'unranked' : `#${
 // sentence moves with it, and `tests/component/endings-ui.test.ts` pins that no rung name is typed
 // into the file at all.
 const closedFromTier = computed(() => TIER_SHORT[ENDINGS.collegeClosedFromTier])
+
+// ⭐⭐ P4 – THE RESULT ARM, AND IT IS A FACT ON THE TABLE RATHER THAN A GATE.
+//
+// The owner's original intent for the fork was a fork FOR THE GIRLS WHOSE RESULTS ARE NOT VERY GOOD
+// (14.08 – his own words are quoted in `docs/specs/college-gate-decoupled-2026-08.md`, which is the
+// place for them; this file is English-only). The research found exactly one line that separates the
+// populations: #200, the rank at which our own ladder says the main tour starts admitting her.
+// Measured over 90 careers
+// (research §5c): it excludes the strongest third almost perfectly (1 of 30), keeps the door for
+// half of the weakest third, and is the only candidate in the whole sweep that beats a coin flip -
+// 47 points of separation.
+//
+// ⚠ AND IT IS NOT A NEW CONSTANT. `TIERS[TOUR_RUNG].acceptsRank` is already 200 and already means
+// this; a fitted number would have been a number this card invented about her chances.
+//
+// ⚠⚠ IT DOES NOT GATE ANYTHING, AND THAT IS THE 15.08 RULING. The owner cancelled the money arm
+// outright - there is nothing for us to do here, in his words - so there is no shut door for a rank
+// line to reopen: the third answer is drawn or not drawn by `fork.collegeOpen` alone and this number
+// changes nothing about it. What it does is let the player see where she stands against the tour she
+// would be turning professional into - which is the same job the four figures beside it already do.
+//
+// ⚠ SO IT MAY NOT BE A SENTENCE. Ruling 4 (30.07): the card «may not recommend». A line reading
+// "the tour would not take her" is one comparison away from advice about which answer to pick, and
+// this card is not allowed to have that opinion. It is a NUMBER IN THE SAME LIST as her funds and
+// her rank, said in the card's own idiom, and the player does the comparing.
+const TOUR_RUNG = 'wta250' as const
+const tourAdmits = computed(() => TIERS[TOUR_RUNG].acceptsRank ?? null)
+const tourHead = computed(() => `${TIER_SHORT[TOUR_RUNG]} admits down to`)
 
 const stage = computed(() => portraitStage(snap.value?.ageYears ?? 19))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -109,6 +137,13 @@ async function answer(a: ForkAnswer): Promise<void> {
           <dt>The tennis has paid</dt>
           <dd>{{ formatCents(snap?.careerTotals.prizeCents ?? 0) }}</dd>
         </div>
+        <!-- ⭐⭐ P4's result arm – a fifth figure, not a fifth opinion. It sits beside her rank on
+             purpose: the two numbers next to each other are the whole of what this card is allowed
+             to say about her chances, and the comparison is the player's to make. -->
+        <div v-if="tourAdmits !== null">
+          <dt>{{ tourHead }}</dt>
+          <dd>#{{ tourAdmits }}</dd>
+        </div>
       </dl>
 
       <!-- ⭐ ROUND-21 #8: WHY THERE ARE TWO ANSWERS AND NOT THREE. Above the answers, not below
@@ -116,10 +151,18 @@ async function answer(a: ForkAnswer): Promise<void> {
            height check in tests/component/fits.ts measures the dismiss box off the card's own
            bottom edge. Not an answer, not a button, and it carries no opinion about the two that
            are left. -->
+      <!-- ⚠⚠ P4 – THE SECOND SENTENCE USED TO BE FACTUALLY WRONG ABOUT THE SPORT, AND IT WAS THE
+           REASON THE CARD GAVE. It read: "Prize money at that level spends her college eligibility,
+           and nothing gives it back." The NCAA let a prospective college player keep $10,000 a year
+           plus expenses before enrolment, and since the Brantmeier/Joint settlement of 15 April 2026
+           there is no pre-enrolment cap at all - "amateurism" appears zero times in the current
+           Division I Manual (research §1b). The rule it cited does not exist.
+           The RUNG is unchanged, because the owner's own argument for it never needed a rulebook:
+           a girl who is already a professional does not go to college. That is what it says now. -->
       <p v-if="!fork.collegeOpen" class="fork-shut">
         There are two answers here and not three: the college place closed the first time she took a
-        real result at {{ closedFromTier }} or above. Prize money at that level spends her college
-        eligibility, and nothing gives it back.
+        real result at {{ closedFromTier }} or above. The college answer is for a girl who is not a
+        professional yet, and she has been one since.
       </p>
 
       <div class="fork-answers">
