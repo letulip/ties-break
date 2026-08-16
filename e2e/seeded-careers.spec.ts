@@ -75,11 +75,12 @@ test.describe('a seeded career boots into the state the manifest describes', () 
     // record's denormalised header: she is ranked, and the ladder says so.
     // ⚠ RANKED ON SOME TABLE, NOT ON THE DOMESTIC ONE SPECIFICALLY (16.08). This asserted
     // `rankedDomestic` until the junior-ladder wave, and the wave made that unsatisfiable alongside
-    // the fixture's other two requirements: at week 120 only 46 careers in 120 hold domestic points
-    // now, against 114 holding ITF ones, because P1 made the junior table the one that opens the
-    // professional ladder. The claim above is what this line is for and it is untouched – she is
-    // ranked, and the ladder says so. Which table carries it was never the point, and pinning one
-    // made this spec a hostage to a balance decision it has no opinion about.
+    // the fixture's other two requirements: at week 120 only 46 careers in 120 hold domestic points,
+    // against 114 holding ITF ones. ⚠ NOT because she skipped the domestic ladder – P6 measured that
+    // properly and 90 of 90 earn a domestic ranking at 13.6, first of the three, every time. It is a
+    // rolling 52-week window aging out. The claim above is what this line is for and it is untouched
+    // – she is ranked, and the ladder says so. Which table carries it at week 120 was never the
+    // point, and pinning one made this spec a hostage to a decay it has no opinion about.
     expect(
       facts.rankedDomestic || facts.rankedItf || facts.rankedWta,
       'the junior fixture is meant to arrive holding a ranking on some table',

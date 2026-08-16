@@ -208,8 +208,9 @@ describe('e2e fixtures: each is the state its name promises', () => {
     // ⚠ A RANKING, WHICHEVER TABLE CARRIES IT (16.08) – the third and last place the corpus pinned
     // the DOMESTIC one, and this test's own name was always the wider claim. The junior-ladder wave
     // made the narrow version unsatisfiable: at week 120 only 46 careers in 120 hold domestic points
-    // now against 114 holding ITF ones, because P1 made the junior table the one that opens the
-    // professional ladder. tools/e2e-fixtures.ts's recipe carries the measurement and the argument.
+    // against 114 holding ITF ones. ⚠ That is a rolling 52-week window aging out, NOT a ladder she
+    // skipped – P6 measured 90 of 90 earning a domestic ranking at 13.6, first of the three, every
+    // time. tools/e2e-fixtures.ts's recipe carries the measurement and the correction it needed.
     expect(f.rankedDomestic || f.rankedItf || f.rankedWta).toBe(true)
     expect(f.domesticPoints + f.itfPoints + f.wtaPoints).toBeGreaterThan(0)
     expect(f.seasonsPlayed).toBeGreaterThanOrEqual(2)

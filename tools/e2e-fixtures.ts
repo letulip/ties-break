@@ -264,12 +264,16 @@ const RECIPES: Recipe[] = [
       // ⚠ A RANKING, ON WHATEVER TABLE SHE EARNED ONE – AND THE CHANGE OF WORD IS A MEASUREMENT
       // (16.08). This clause read `kidPoints(world, 'domestic') <= 0` and after this wave no seed in
       // 120 could satisfy it together with the other two: at week 120 only **46 of 120** careers hold
-      // domestic points, while **114 of 120** hold ITF ones. Her first ranking is now the ITF one.
+      // domestic points, while **114 of 120** hold ITF ones.
       //
-      // That is P1's doing and it is not obviously wrong – junior access made the junior table the one
-      // that opens the professional ladder, so she plays there – but it is a real change in what a
-      // fifteen-year-old looks like and P6 should measure it rather than let a fixture recipe be the
-      // only place it is written down.
+      // ⚠⚠ AND THE FIRST READING OF THAT WAS WRONG, WHICH IS WHY IT IS WRITTEN OUT RATHER THAN
+      // QUIETLY FIXED. It said "her first ranking is now the ITF one". P6 measured it properly on the
+      // frozen battery and the opposite is true: **90 careers of 90 earn a domestic ranking, all of
+      // them at 13.6, and in 90 of 90 it is her FIRST** – the ITF one is never first. What the 46 of
+      // 120 actually shows is DECAY, not absence: domestic points live in a rolling 52-week window,
+      // 100% of careers hold one at 14.6 and half still do at 15.8, and by week 120 many have simply
+      // aged out. A fixture recipe is exactly the wrong place for a claim about the ladder, and this
+      // is what that costs – see docs/specs/the-remeasure-2026-08.md.
       //
       // The SPEC'S claim is unchanged, and that is why this is a re-aim rather than a weakening:
       // e2e/seeded-careers.spec.ts says in its own comment that the point is "a fact that no week-0
