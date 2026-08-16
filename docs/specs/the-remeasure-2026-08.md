@@ -188,12 +188,12 @@ J30's 27 and W75's 9.
 
 | by | p25 | **median** | p75 | |
 | --- | --- | --- | --- | --- |
-| **age 19** | $103,840 → **$49,010** | **$125,855 → $69,780** | $152,288 → **$92,330** | ⚠ **−45%** |
-| age 21 | $203,868 → **$173,290** | **$251,215 → $211,715** | $314,728 → **$251,680** | −16% |
-| **career** | $513,530 → **$504,170** | **$654,430 → $646,795** | $1,151,755 → **$1,345,530** | **−1%** |
+| **age 19** | $103,840 → **$49,565** | **$125,855 → $69,780** | $152,288 → **$91,945** | ⚠ **−45%** |
+| age 21 | $203,868 → **$174,638** | **$251,215 → $211,715** | $314,728 → **$250,628** | −16% |
+| **career** | $513,530 → **$504,998** | **$654,430 → $646,795** | $1,151,755 → **$1,341,465** | **−1%** |
 
 ⭐ **THE MONEY REPAYS ITSELF ALMOST EXACTLY.** −45% by nineteen, −16% by twenty-one, **−1% over the
-career** – and the p75 career figure is *up* $194k. The chain moved when she earns, not how much.
+career** – and the p75 career figure is *up* $189,710. The chain moved when she earns, not how much.
 
 ### 2e. The counting book, of 18 slots
 
@@ -330,7 +330,7 @@ of a result can change**, and this build is the case that separates them.
 | at the fork (19) | P0 | now |
 | --- | --- | --- |
 | prize banked, median | **$125,855** | **$69,780** (−45%) |
-| ...p25 | $103,840 | **$49,010** (−53%) |
+| ...p25 | $103,840 | **$49,565** (−52%) |
 | rank, median | #177 | **#270** |
 | holding any professional ranking | 84/90 | 82/90 |
 | counting book, median points | 391 | **226** (−42%) |

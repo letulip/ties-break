@@ -832,3 +832,93 @@ a scholarship.
 
 Full measurement, predictions scored, and the seven things deliberately not built:
 `docs/specs/college-as-a-second-act-2026-08.md`.
+
+## 2026-08-16 – The chain is added up, and it costs two years and pays them back with interest (`wave/round21`, P6)
+
+**The re-measure the owner asked for before the plan was written: «после этой правки у нас нужны
+будут отдельные перемеры карьер… скорость и продвижение точно упадут». He was right for six years of
+her life and wrong for the rest. NO BALANCE CONSTANT MOVED IN THIS PHASE.**
+
+### ⭐ THE ANSWER, IN FOUR NUMBERS
+
+P0's frozen battery re-run unchanged on the finished build, n = 90, same seeds, 13.6 → 26.6:
+
+| her rank at | before the chain | after it | |
+| --- | --- | --- | --- |
+| 17 | #246 | **#423** | **+177 – the cost** |
+| 19 | #177 | **#270** | +93 – still behind at the fork |
+| **21** | #185 | **#174** | **−11 – the curves cross** |
+| **25** | #172 | **#158** | **−14** |
+
+**The career prize finishes level to one per cent** ($654,430 → $646,795), the ceiling is unchanged,
+and **every survival column improved**: bankruptcies 1 → 0, the earliest career-ending event 15.3 →
+24.9, the worst career high in ninety **#870 → #176**. The chain did not lower the ceiling, it raised
+the floor.
+
+### ⚠⚠ AND THE FIRST THING IT FOUND IS THAT NOBODY HAD BEEN MEASURING AGAINST THE BASELINE
+
+Each of P1–P5 compared itself with the phase before it. **P2 reported the cost at seventeen as
+"#300 → #426"; against P0 it is #246 → #423 – +177, not +126.** P2 also reported the cost "unwound by
+nineteen": against P0 she is still **93 places and 45% of her money** behind at the fork, and it
+unwinds between 19 and 21. Neither phase was wrong; they were measuring a different subtraction. That
+is the entire reason the plan demanded a frozen ruler.
+
+### ⭐⭐ SHE DOES NOT PLAY LESS. SHE PLAYS MORE, ON ONE RUNG.
+
+**265 entries a career against 239** – up in every year from fifteen. The rank falls because from
+fifteen to eighteen the only professional rung open to her is the bottom one, and **at eighteen 20.6
+of her 23.9 entries are W15s: 86% of a season on the lowest rung in the game.** Then W35, W50 and
+W75 all admit her for the first time at a median of **exactly 19.0** – three doors on one birthday.
+
+**And the counting book did not thin, which was the plan's prediction.** It FILLED: 74 careers of 90
+hold all eighteen slots at nineteen against P0's 20 – each worth **13.4 points against ~26**. By
+twenty-one the slot is worth 27.2 again. *Fullness stopped being a proxy for strength, and no frozen
+column was watching the price of a result.*
+
+### ⚠⚠ THE ONE THING THAT NEEDS HIM – AND IT IS THE LEVER THE PLAN WARNED AGAINST
+
+The plan named two honest levers and **both are wrong for what was measured**: density is already up,
+and restoring the book at nineteen needs +73% on the points that fill it, which would spend exactly
+the gains P3 bought at twenty-one and twenty-five.
+
+**What is actually causing it is one clause.** `juniorAccessOpen` refuses a junior every W rung above
+W15 unless the Accelerator's junior table admits her – *whatever professional ranking she holds* – and
+`isJuniorAge` is `age <= 18`, so it governs her whole eighteenth year. **62 careers of 90 hold a rank
+at seventeen inside W35's own #700 cut and are refused by their birthday rather than by merit.**
+P1's own comment says the opposite is intended (*"a junior's route, not a ceiling on a professional"*)
+and the regulation it quotes describes reserved access, not a bar.
+
+**The proposal, not pulled:** make the Accelerator additive – she enters if the Accelerator admits her
+**OR** her ranking clears that rung's own cut. One clause. **The size is bounded between #246 and
+#423 at seventeen and has not been measured; measuring it is a phase, not a paragraph.** ⚠ This is
+in effect "loosening a rule we just added", which the plan calls the dishonest lever – the argument
+for it is correctness, and the ruling is his.
+
+### ⭐ THE THIRD ANSWER'S PRICE IS NOT A FINDING ABOUT COLLEGE
+
+P5's numbers replicate to within $716 – college +$151,527 over four years against the tour's +$44,974.
+**But the scholarship pays $0, and both arms earn the same family income. 100% of college's advantage
+is avoided spend.** Netting the tennis out: **the tour takes in $265,320 of prize and spends $380,436
+to get it – it loses this family $115,116 between nineteen and twenty-three.** College loses $4,830.
+
+**So there is no college knob.** Closing the gap needs a college year to cost $26,638 (a cost the
+sport does not have), or **prize +40%**, or **cost −28%** – all global. **My recommendation is to pull
+nothing: a #165 player losing money on tour is the sport, not a bug.** The one cheap thing is a
+sentence – nothing anywhere tells the player the tour is loss-making at her rank.
+
+### AND THREE SMALLER THINGS
+
+* **The domestic ladder is not being bypassed.** 90 careers of 90 earn a domestic ranking, all at
+  **13.6**, and it is her **first** ranking in 90 of 90. `tools/e2e-fixtures.ts`'s comment that *"her
+  first ranking is now the ITF one"* is wrong – what it measured is a **decay** of a 52-week window
+  (100% hold it at 14.6, 50% at 15.8), not a bypass.
+* **The strong-out rules finally bite.** On P1's 416-week horizon the top-50 limb fired in **0 careers
+  of 27**; at 676 weeks it fires in **14 of 90**, and the rule refuses something in **84%** of careers
+  for a median of 90 weeks. **Zero empty weeks across all ninety** – the boredom risk still does not
+  materialise.
+* **The 14.8 bankruptcy is at zero – by side effect, not by fix.** `w15.minAgeYears: 14` still ships
+  and a fourteen-year-old still enters W15s. P3's cuts changed what she could reach; the failure mode
+  is intact and this is the row to re-read after any change to the junior economy.
+
+Full battery, all six questions with numbers, and the retune sized:
+`docs/specs/the-remeasure-2026-08.md`.
