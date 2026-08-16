@@ -192,14 +192,18 @@ import {
   leaveCollege as leaveCollegeState,
   openCollegeYear,
   resolveCallUp,
+  resolveCollegeBill,
 } from './world/college'
 export {
   bankCollegeYear,
   collegeEpilogueLine,
   collegeProgressOf,
+  collegeRecruitViewOf,
   inCollege,
+  measureCollegeOffer,
   openCollegeYear,
   resolveCallUp,
+  resolveCollegeBill,
   skillMeanOf,
 } from './world/college'
 export {
@@ -371,7 +375,7 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
 // ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
 // number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
-export const SAVE_SCHEMA_VERSION = 50
+export const SAVE_SCHEMA_VERSION = 51
 
 
 
@@ -2761,6 +2765,18 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   // 1. base costs (main stream, plan-independent draw count)
   resolveBaseCosts(world, rng)
+
+  // 1a. ⭐⭐ THE COLLEGE BILL (v51, docs/specs/what-the-college-place-costs-2026-08.md). The four years
+  //     used to be free by construction – `coachWorksThisWeek` returns false at college, gear is
+  //     skipped, and the family's whole outgoing stopped. It never had a tuition line to stop.
+  //     Now it does: the award pays a share of the year and this is the rest of it, weekly.
+  //
+  //     ⚠ ZERO DRAWS ON ANY STREAM, which is why it can sit here at all. It is arithmetic on the
+  //     offer persisted at the fork, so the MAIN sequence is byte-identical for every career that
+  //     did not go to college and for every week before the fork – the frozen capture (41550 /
+  //     e6b0c709) is untouched by construction, and the input-independence law is not engaged
+  //     because nothing here is a die.
+  resolveCollegeBill(world)
 
   // 1b. recurring gear line-items (round-7 a). Zero main-stream draws – purpose-scoped
   //     sub-streams only – so this never perturbs the weekly draw count.

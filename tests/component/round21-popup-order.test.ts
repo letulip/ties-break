@@ -113,7 +113,7 @@ describe('⭐ round-21 #9 – a blocking popup waits for the screen to be idle',
   it('⭐⭐ THE FORK DOES NOT LAND ON THE FINALE – the collision the owner reported', async () => {
     const world = atTheFinale('r21-order-fork')
     // Exactly what `resolveEndings` does at the end of `finalizeTournament`, with the reveal still up.
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     const { w, game } = await openShell(world)
 
     expect(game.snapshot?.pending, 'the reveal really is on the snapshot').toBeTruthy()
@@ -129,7 +129,7 @@ describe('⭐ round-21 #9 – a blocking popup waits for the screen to be idle',
     // The other half, and the reason a wait is not a deadlock: the reveal has an exit that costs
     // nothing, `closeTournament` is deliberately unguarded, and the held question is right behind it.
     const world = atTheFinale('r21-order-fork-then')
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     const { w, game } = await openShell(world)
     expect(w.findComponent(ForkDialog).exists()).toBe(false)
 
@@ -178,7 +178,7 @@ describe('⭐ round-21 #9 – a blocking popup waits for the screen to be idle',
     // The rule must not have turned into "never show anything". Nothing pending on screen, fork open.
     const world = atTheFinale('r21-order-idle')
     closeTournament(world)
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     const { w } = await openShell(world)
     expect(w.findComponent(TournamentFlow).exists()).toBe(false)
     expect(w.findComponent(ForkDialog).exists()).toBe(true)

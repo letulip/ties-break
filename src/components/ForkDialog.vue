@@ -92,6 +92,54 @@ const TOUR_RUNG = 'wta250' as const
 const tourAdmits = computed(() => TIERS[TOUR_RUNG].acceptsRank ?? null)
 const tourHead = computed(() => `${TIER_SHORT[TOUR_RUNG]} admits down to`)
 
+// ⭐⭐ WHAT THE THIRD ANSWER COSTS – v51, docs/specs/what-the-college-place-costs-2026-08.md.
+//
+// The button used to promise "four years on a college scholarship" and the engine then charged
+// nothing, so the card was making a claim about money that the simulation did not honour. It says
+// what is on the table now: which programme, how much of the bill the award covers, and what is left
+// for the family.
+//
+// ⚠⚠ IT STILL MAY NOT RECOMMEND (ruling 4, 30.07). These are FIGURES IN THE SAME REGISTER as the
+// four already on the card – her funds, her rank, what she has spent, what the tennis has paid – and
+// the comparison is the player's. No sentence here says college is affordable, unaffordable, better
+// or worse than the tour.
+//
+// ⚠ AND THE THIRD ANSWER IS STILL UNCONDITIONAL. There is no value of `offer` that removes a button:
+// `programme === null` means nobody offered her a funded place, and the copy says she can enrol and
+// pay rather than that the answer is gone. The owner's ruling of 16.08 is what this card is drawn
+// against and nothing here bends it.
+//
+// ⚠ `offer === null` IS A MIGRATED CAREER (v50 and earlier, fork already open) and it falls back to
+// the pre-v51 line. Never "refused" – see the v51 migration.
+const offer = computed(() => fork.value?.offer ?? null)
+const PROGRAMME_LABEL: Record<string, string> = {
+  strong: 'A strong programme',
+  solid: 'A solid programme',
+  small: 'A small programme',
+}
+const programmeLine = computed(() => {
+  const o = offer.value
+  if (!o) return null
+  return o.programme === null ? 'No programme has offered a place' : PROGRAMME_LABEL[o.programme]
+})
+const pct = (share: number): string => `${Math.round(share * 100)}%`
+// The two layers, as one line each, and they are two lines because they are two different things.
+const awardLine = computed(() => {
+  const o = offer.value
+  if (!o) return null
+  return o.programme === null ? 'Walk-on, no athletics award' : `${pct(o.athleticShare)} of the bill`
+})
+const aidLine = computed(() => {
+  const o = offer.value
+  if (!o || o.needShare <= 0) return null
+  return `${pct(o.needShare)} need-based`
+})
+const billLine = computed(() => {
+  const o = offer.value
+  if (!o) return null
+  return o.familyPerYearCents <= 0 ? 'Nothing' : `${formatCents(o.familyPerYearCents)} a year`
+})
+
 const stage = computed(() => portraitStage(snap.value?.ageYears ?? 19))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
 const artStyle = computed(() => {
@@ -167,8 +215,32 @@ async function answer(a: ForkAnswer): Promise<void> {
           @click="answer('college')"
         >
           <strong>Take the college place</strong>
-          <span>Four years of student tennis on a college scholarship. No ranking points, and the money goes the other way.</span>
+          <!-- ⚠ THE OLD LINE SAID "the money goes the other way" AND IT WAS A CLAIM THE ENGINE DID
+               NOT HONOUR. It was true of the balance – she stops travelling, the coach stops billing
+               – and false about the scholarship, which paid $0 and covered a bill that did not
+               exist. The line below states the same trade without asserting the direction, and the
+               figures under it are what the direction actually is this career. -->
+          <span v-if="offer">Four years of student tennis. No ranking points, and the tour moves on without her.</span>
+          <span v-else>Four years of student tennis on a college scholarship. No ranking points, and the money goes the other way.</span>
         </button>
+        <!-- ⭐⭐ THE OFFER, UNDER THE BUTTON IT BELONGS TO – three short rows, no sentence, no advice.
+             It sits BELOW the answer rather than inside it so the three answers keep the equal weight
+             ruling 4 requires: a button carrying three extra rows of detail is a recommendation drawn
+             in whitespace. -->
+        <dl v-if="offer" class="fork-offer">
+          <div>
+            <dt>The place</dt>
+            <dd>{{ programmeLine }}</dd>
+          </div>
+          <div>
+            <dt>The award covers</dt>
+            <dd>{{ awardLine }}<template v-if="aidLine"> + {{ aidLine }}</template></dd>
+          </div>
+          <div>
+            <dt>The family pays</dt>
+            <dd>{{ billLine }}</dd>
+          </div>
+        </dl>
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
           <strong>Stop here</strong>
           <span>She had a childhood in the sport. That is a whole thing to have had.</span>
@@ -279,5 +351,45 @@ async function answer(a: ForkAnswer): Promise<void> {
   font-size: 13px;
   line-height: 1.4;
   color: var(--ink-soft);
+}
+
+/* ⭐⭐ THE OFFER (v51). Three rows, deliberately in the FACTS idiom and not the ANSWERS idiom: no
+   border, no press target, nothing that could read as a fourth thing to choose. It is quieter than
+   the buttons it sits under, which is the only styling opinion ruling 4 permits – the card may not
+   emphasise an answer, and it may not make an answer's detail look like an answer either.
+
+   ⚠ IT MUST NOT GROW A max-height OF ITS OWN. The card's bound is on the shared `.dialog-card`
+   (`max-height: 100%; overflow-y: auto`, round-20 #3) and the whole point of putting it there was
+   that one box owns the scroll. A cap here would nest a second scroller inside the first and hide
+   the family's bill behind it – exactly the class of defect the round-20 gotcha is about. */
+.fork-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 2px 0 2px;
+  padding: 10px 14px;
+  border-radius: var(--radius-control);
+  background: var(--panel-sunk, transparent);
+}
+
+.fork-offer div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fork-offer dt {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.fork-offer dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 </style>

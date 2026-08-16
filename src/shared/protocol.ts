@@ -181,6 +181,19 @@ export type WorldEventCategory =
    *  shows a working family and a wealthy one exactly the same figure for exactly the same week. See
    *  TierDef.prizeCents. */
   | 'prize'
+  /** 'tuition' (v51, docs/specs/what-the-college-place-costs-2026-08.md) is the family's share of a
+   *  college year, charged one fifty-second at a time for as long as she is enrolled.
+   *
+   *  ⚠ IT IS THE FIRST COST IN THE GAME THAT IS NOT TENNIS, and that is why it gets its own bucket
+   *  rather than joining 'other'. The four years used to be free by construction – P6 measured the
+   *  college arm banking $152,243 against the tour's $45,544 and decomposed it as 100% avoided spend
+   *  with the scholarship paying $0 – and `docs/research/college-and-the-junior-exit.md` §1d prices a
+   *  real year at $30,990 in-state. The award pays a share of that; this line is the rest.
+   *
+   *  ⚠ AN OLD SAVE HAS NO ROWS OF IT AND A CAREER MIGRATED MID-FORK NEVER WILL, by construction: the
+   *  v51 migration back-fills a `null` offer rather than inventing one, and a null offer is charged
+   *  nothing. Same discipline as v44's 'facility' split and v50's empty college ledger. */
+  | 'tuition'
   | 'income'
   | 'interest'
   | 'physio'
@@ -2482,6 +2495,59 @@ export type ForkAnswer = 'continue' | 'college' | 'stop'
 export interface ForkState {
   askedWeek: number
   answer: ForkAnswer | null
+  /** ⭐⭐ WHAT THE COLLEGE ANSWER ACTUALLY OFFERS, measured the week the fork was raised (v51,
+   *  `docs/specs/what-the-college-place-costs-2026-08.md`; the model is `engine/collegeOffer.ts`).
+   *
+   *  ⚠ IT IS PERSISTED BECAUSE IT IS MONEY LEAVING THE ACCOUNT FOR FOUR YEARS, and that is
+   *  `bankCollegeYear`'s own argument: a measurement taken at a moment is a new fact. The inputs
+   *  happen to be stable (`bestFinishByTier` is a high-water mark and the junior rungs close at
+   *  eighteen), so it COULD be re-derived – but then a future wave that re-tunes a constant would
+   *  silently re-price every career already mid-course, halfway through a bill it had agreed to.
+   *
+   *  ⚠⚠ `null` MEANS "NEVER MEASURED", NOT "REFUSED", and a refusal has its own shape inside the
+   *  offer (`offer.programme === null` = no programme, and even then she may enrol and pay). A career
+   *  migrated from v50 with the fork already open carries `null` here, because the v51 migration
+   *  invents nothing – exactly the discipline v50 applied to the college ledger it could not
+   *  reconstruct. Such a career is charged nothing and the card falls back to the pre-v51 copy. */
+  offer: CollegeOffer | null
+}
+
+/** WHICH KIND OF PROGRAMME OFFERED HER A PLACE. Three, because the research supports a spread and not
+ *  a curve – §4 items 15 and 16 of `docs/research/college-and-the-junior-exit.md` are explicit that
+ *  no per-sport award distribution could be sourced. */
+export type CollegeProgrammeTier = 'strong' | 'solid' | 'small'
+
+/** ⭐⭐ THE COLLEGE OFFER – a place, a share of the bill, and the rest of the bill.
+ *
+ *  All three shares are fractions of ONE YEAR'S PUBLISHED COST OF ATTENDANCE, which is what "a full
+ *  ride" means in the sport's own rulebook: Bylaw 15.02.5 defines a full grant-in-aid as tuition,
+ *  fees, living expenses, books and other expenses **up to the cost of attendance** `[S]`. There is no
+ *  separate athletics price list.
+ *
+ *  ⚠⚠ THE OWNER'S QUESTION OF 16.08 – «едины для всех или тоже от достатка?» – IS ANSWERED BY THE FACT
+ *  THAT THESE ARE TWO FIELDS AND NOT ONE. `athleticShare` is merit-only and reads nothing about the
+ *  family; `needShare` is means-tested and reads nothing about her tennis. The engine keeps them apart
+ *  because the sport does: there is no means test anywhere in Bylaw 15 on athletics aid, and the only
+ *  means test in the system is on the other layer. `engine/collegeOffer.ts` carries the sources. */
+export interface CollegeOffer {
+  /** `null` = no programme offered her a place. ⚠ SHE MAY STILL ENROL AND PAY – nothing removes the
+   *  third answer (owner, 16.08), and a roster limit is not a scholarship count, so an unfunded
+   *  walk-on is a real thing. The refusal is measured on an EMPTY JUNIOR RECORD and never on a
+   *  professional result. */
+  programme: CollegeProgrammeTier | null
+  /** ⚠⚠ MERIT ONLY, 0-1 of the year's bill. Reads her junior record and the programme's own funding
+   *  and nothing else – `athleticShareOf`'s signature takes no family and no country, which is the
+   *  proof rather than the promise. */
+  athleticShare: number
+  /** the need-based layer beside it, 0-1. Means-tested by family background, and effectively shut to a
+   *  non-American: 34 CFR §668.33 bars federal student aid to anyone in the US "for a temporary
+   *  purpose" `[S]`, and NAFSA calls institutional aid to undergraduate internationals "uncommon". */
+  needShare: number
+  /** one year's published cost of attendance, cents */
+  costPerYearCents: number
+  /** what the family pays for a year, cents – the bill after both layers, and the number the ledger
+   *  actually charges, one fifty-second at a time */
+  familyPerYearCents: number
 }
 
 /** THE NATURAL END'S OFFER (§5.3). Raised in the off-season, answered before time can move again.
@@ -3092,6 +3158,16 @@ export interface Snapshot {
   fork: {
     askedWeek: number
     ageYears: number
+    /** ⭐⭐ WHAT THE THIRD ANSWER COSTS, so the card can say it (v51). ⚠ THIS IS NOT `collegeOpen`
+     *  COMING BACK. That flag decided whether the button was DRAWN; this one decides what the button
+     *  SAYS, and there is no value of it that removes an answer – `offer.programme === null` still
+     *  draws three answers and still lets her enrol, at the full price. The owner's ruling of 16.08 is
+     *  about the answer's existence and it is untouched.
+     *
+     *  ⚠ AND UNLIKE `collegeOpen` IT IS PERSISTED STATE RATHER THAN A SNAPSHOT DERIVATION – it is
+     *  copied off `world.fork.offer`, which is why v51 is a schema move and the removal of
+     *  `collegeOpen` was not. `null` on a career migrated from v50. */
+    offer: CollegeOffer | null
     /* ⚠ `collegeOpen: boolean` WAS HERE (round-17 #6) AND IS REMOVED ON THE OWNER'S RULING OF 16.08:
      *  «Колледж – это независимая ветка карьеры … альтернативная.» The flag existed so the card could
      *  stop drawing an answer `answerFork` would refuse; there is no such refusal any more, so the

@@ -28,7 +28,7 @@ import type { CareerEnding, DebtView, EndingView, ForkAnswer } from '../../share
 import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
 import { activeLadderOf } from './ladder'
-import { collegeProgressOf, inCollege } from './college'
+import { collegeProgressOf, inCollege, measureCollegeOffer } from './college'
 import { kidAgeYears } from './age'
 import { buildAlbum, buildScroll } from './album'
 import type { WorldState } from '../world'
@@ -236,7 +236,17 @@ export function resolveEndings(world: WorldState): void {
 
   // 7c. THE FORK AT NINETEEN. Raised once, on the birthday week, and it BLOCKS until answered.
   if (world.fork === null && forkDue(kidAgeYears(world.week, world.profile.birthMonth), false)) {
-    world.fork = { askedWeek: world.week, answer: null }
+    // ⭐⭐ THE OFFER IS MEASURED HERE, ONCE, AND PERSISTED (v51,
+    // docs/specs/what-the-college-place-costs-2026-08.md). Before this line the third answer was
+    // offered unconditionally AND FREE in 100% of careers; now it is offered with a price on it.
+    //
+    // ⚠⚠ IT IS NOT A GATE AND CANNOT BECOME ONE. `answerFork` still refuses nothing, the card still
+    // draws three answers, and the worst offer this can produce is `programme: null` – no programme
+    // saw her, she enrols as a walk-on and pays. The rule the owner deleted on 16.08 (a RESULT taking
+    // the college answer away) is not re-created from the other side either: `collegeRecruitViewOf`
+    // carries no professional rank, finish or prize money at all, so there is no field a tour result
+    // could move. The measure is her JUNIOR record, and a better one only ever buys her more.
+    world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
     addEvent(world, {
       week: world.week,
       type: 'milestone',

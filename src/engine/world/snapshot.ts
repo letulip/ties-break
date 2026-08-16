@@ -1024,9 +1024,16 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       ? {
           askedWeek: world.fork.askedWeek,
           ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth),
-          // ⚠ `collegeOpen` WAS HERE. Round-17 #6 put it on the wire so the card could stop drawing an
-          // answer the engine would refuse; the owner removed the refusal on 16.08, so there is no
-          // longer a state the card needs telling about. It was derived, never stored – no migration.
+          // ⭐⭐ THE OFFER, STRAIGHT OFF PERSISTED STATE (v51). It is measured once, the week the fork
+          // is raised, and it is not recomputed here – a snapshot that re-derived it would answer a
+          // different question on the week a constant moved, and this one is money.
+          //
+          // ⚠ AND IT IS NOT `collegeOpen` COMING BACK, which is worth saying on this exact line
+          // because this is where that flag used to sit. `collegeOpen` decided whether the card DREW
+          // the third answer; the offer decides what the third answer SAYS. There is no value of it
+          // that removes an answer: `offer.programme === null` still draws three, and still enrols
+          // her – at the full price, as a walk-on. The owner's ruling of 16.08 is untouched.
+          offer: world.fork.offer ?? null,
         }
       : null,
     retirementOffer: world.retirementOffer,

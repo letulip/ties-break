@@ -64,6 +64,8 @@ import { kidAgeExact, kidAgeAt, kidPoints, tableSize } from '../src/engine/world
 // this population, kept so the frozen battery's arms stay comparable on the dimension the
 // junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
 import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
+import { COLLEGE_OFFER, type CollegeOffer, type CollegeProgrammeTier } from '../src/engine/collegeOffer'
+import type { FamilyBackground } from '../src/shared/protocol'
 import { computeCountingResults } from '../src/engine/world/snapshot'
 import { BEST_N_BY_TRACK } from '../src/engine/season/ranking'
 import { ENDINGS } from '../src/engine/ending'
@@ -277,6 +279,23 @@ export interface Row {
   forkWeek: number | null
   forkAge: number | null
 
+  // --- ⭐⭐ THE OFFER (v51, docs/specs/what-the-college-place-costs-2026-08.md) -----------------------
+  /** ⚠ THIS BLOCK IS THE SHIPPED GAME AND THE FOUR COLUMNS ABOVE ARE THE COUNTERFACTUAL. They measure
+   *  two different things and are deliberately kept side by side: the pre-16.08 rule (retired, kept so
+   *  the frozen battery's arms stay comparable) versus what the third answer actually offers now.
+   *
+   *  `docs/specs/college-is-its-own-branch-2026-08.md` §3e turned "still open at the fork" into 100%
+   *  by construction. These columns turn it back into a measurement of something real: not whether
+   *  the ANSWER is there – it always is – but whether anybody offered to PAY for it, and how much. */
+  /** the family this career was run on, so §6a can split the bill by background */
+  background: FamilyBackground
+  /** which programme offered, `null` = nobody did (walk-on), `undefined` = never reached the fork */
+  offerProgramme: CollegeProgrammeTier | null | undefined
+  offerAthleticShare: number | null
+  offerNeedShare: number | null
+  offerCostPerYearCents: number | null
+  offerFamilyPerYearCents: number | null
+
   // --- survival ------------------------------------------------------------------------------------
   /** null ⇔ the career was still running at the horizon (RIGHT-CENSORED, and §7 says so). */
   endingType: CareerEndingType | null
@@ -353,6 +372,7 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
   let collegeShutTier: TierId | null = null
   let collegeOpenAtFork = true
   let collegeOpenAfterFork = true
+  let offer: CollegeOffer | null = null
   let forkWeek: number | null = null
   let forkAge: number | null = null
   let forkSeen = false
@@ -473,6 +493,9 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
       forkWeek = world.week
       forkAge = ageNow
       collegeOpenAtFork = retiredCollegeDoorOpen(world)
+      // ⭐⭐ THE OFFER AS THE PLAYER IS SHOWN IT. Read off persisted state, never recomputed – the
+      // engine measures it the week the fork is raised and this is the same object the card renders.
+      offer = world.fork?.offer ?? null
     }
     // ⭐ A FULL SEASON PAST THE FORK – the "genuinely open" correction. See `collegeOpenAfterFork`.
     if (forkSeen && !afterForkRead && forkWeek !== null && world.week >= forkWeek + WEEKS_PER_YEAR) {
@@ -530,6 +553,12 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
     collegeShutTier,
     collegeOpenAtFork,
     collegeOpenAfterFork,
+    background: preset.background,
+    offerProgramme: forkSeen ? offer?.programme ?? null : undefined,
+    offerAthleticShare: offer?.athleticShare ?? null,
+    offerNeedShare: offer?.needShare ?? null,
+    offerCostPerYearCents: offer?.costPerYearCents ?? null,
+    offerFamilyPerYearCents: offer?.familyPerYearCents ?? null,
     forkWeek,
     forkAge,
     endingType,
@@ -776,6 +805,62 @@ if (wants('6')) {
   console.log(`\n  ⚠ THE FORK-OPEN NUMBER ALONE OVERSTATES THE DOOR. A career can hold it on the fork week and lose it`)
   console.log(`    a fortnight later, which is why the season-later column is here: it is the same correction`)
   console.log(`    college-fork-2026-08.md §3a made by hand, made objective.`)
+
+  // ================================================================================================
+  // 6a. ⭐⭐ THE OFFER – WHAT THE THIRD ANSWER ACTUALLY COSTS (v51)
+  // ================================================================================================
+  //
+  // ⚠ EVERYTHING ABOVE THIS LINE IS THE RETIRED RULE, AND EVERYTHING BELOW IT IS THE SHIPPED GAME.
+  // The four columns above ask "would the pre-16.08 rule have shut the door" and are kept only so the
+  // frozen battery's arms stay comparable. These ask the question the owner is actually deciding on:
+  // the ANSWER is on the card in 100% of careers by his ruling – but is anybody offering to PAY for
+  // it, and what is left for the family?
+  const atFork = rows.filter((r) => r.offerProgramme !== undefined)
+  if (atFork.length > 0) {
+    console.log(`\n  ${rule(84)}`)
+    console.log(`  6a. THE OFFER (v51) – the shipped game, not the counterfactual. n ${atFork.length} careers reaching the fork`)
+    console.log(`  ${rule(84)}`)
+    const funded = atFork.filter((r) => r.offerProgramme !== null)
+    console.log(`\n  ${padE('OFFERED A FUNDED PLACE', 34)}${pad(funded.length, 4)} / ${atFork.length}   ${pct(funded.length, atFork.length)}`)
+    console.log(`  ${padE('walk-on (no programme funded her)', 34)}${pad(atFork.length - funded.length, 4)} / ${atFork.length}   ${pct(atFork.length - funded.length, atFork.length)}`)
+    console.log(`\n  WHICH PROGRAMME, AND WHAT THE AWARD COVERS`)
+    console.log(`  ${padE('programme', 12)}${pad('careers', 9)}${pad('share', 8)}${pad('athletic %', 12)}${pad('need %', 9)}${pad('family $/yr', 13)}`)
+    console.log(`  ${rule(64)}`)
+    for (const p of ['strong', 'solid', 'small', null] as (CollegeProgrammeTier | null)[]) {
+      const g = atFork.filter((r) => r.offerProgramme === p)
+      if (g.length === 0) continue
+      console.log(
+        `  ${padE(p ?? 'walk-on', 12)}${pad(g.length, 9)}${pad(pct(g.length, atFork.length), 8)}` +
+          `${pad(one(100 * mean(g.map((r) => r.offerAthleticShare ?? 0))), 12)}` +
+          `${pad(one(100 * mean(g.map((r) => r.offerNeedShare ?? 0))), 9)}` +
+          `${pad(usd(mean(g.map((r) => r.offerFamilyPerYearCents ?? 0))), 13)}`,
+      )
+    }
+    // ⭐⭐ THE OWNER'S QUESTION, AS A TABLE. «едины для всех или тоже от достатка?» The athletic column
+    // must be FLAT across the three rows or the merit-only property is broken in the shipped build;
+    // the family column is where a background may legitimately show, and only through the need layer.
+    console.log(`\n  ⭐⭐ BY FAMILY BACKGROUND – the athletic column must be FLAT, the bill may not be`)
+    console.log(`  ${padE('background', 12)}${pad('careers', 9)}${pad('athletic %', 12)}${pad('need %', 9)}${pad('family $/yr', 13)}${pad('4 years', 13)}`)
+    console.log(`  ${rule(70)}`)
+    for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+      const g = atFork.filter((r) => r.background === b)
+      if (g.length === 0) continue
+      const perYear = mean(g.map((r) => r.offerFamilyPerYearCents ?? 0))
+      console.log(
+        `  ${padE(b, 12)}${pad(g.length, 9)}` +
+          `${pad(one(100 * mean(g.map((r) => r.offerAthleticShare ?? 0))), 12)}` +
+          `${pad(one(100 * mean(g.map((r) => r.offerNeedShare ?? 0))), 9)}` +
+          `${pad(usd(perYear), 13)}${pad(usd(perYear * ENDINGS.collegeYears), 13)}`,
+      )
+    }
+    const bill = dist(atFork.map((r) => (r.offerFamilyPerYearCents ?? 0) * ENDINGS.collegeYears))
+    console.log(`\n  WHAT ${ENDINGS.collegeYears} YEARS COST THE FAMILY, over all ${atFork.length}`)
+    console.log(`    min ${usd(bill.min)} · p25 ${usd(bill.p25)} · median ${usd(bill.p50)} · p75 ${usd(bill.p75)} · max ${usd(bill.max)}`)
+    console.log(`    free rides: ${atFork.filter((r) => (r.offerFamilyPerYearCents ?? 0) === 0).length} of ${atFork.length}`)
+    console.log(`\n  ⚠ EVERY CAREER HERE IS \`country: '${COLLEGE_OFFER.usCountryCode}'\` – the bench's own profile. A non-American faces the`)
+    console.log(`    out-of-state sticker (${usd(COLLEGE_OFFER.costPerYearOutOfStateCents)}/yr vs ${usd(COLLEGE_OFFER.costPerYearInStateCents)}) AND no need-based layer at all (34 CFR 668.33),`)
+    console.log(`    so this table is the CHEAPEST the college branch can be. See the spec's §4.`)
+  }
 }
 
 // ================================================================================================

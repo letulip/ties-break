@@ -44,7 +44,7 @@ function freshWorld(seed = 'p5-college'): { world: WorldState; rng: Rng } {
 /** A career standing at the fork with the college answer available. */
 function atTheFork(seed: string): { world: WorldState; rng: Rng } {
   const { world, rng } = freshWorld(seed)
-  world.fork = { askedWeek: world.week, answer: null }
+  world.fork = { askedWeek: world.week, answer: null, offer: null }
   return { world, rng }
 }
 
@@ -368,7 +368,7 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
     const rngA = rngFromSeed(college.seed)
     const rngB = rngFromSeed(control.seed)
 
-    college.fork = { askedWeek: college.week, answer: null }
+    college.fork = { askedWeek: college.week, answer: null, offer: null }
     answerFork(college, 'college')
     resumeFromCollege(college, rngA)
     for (let i = 0; i < WEEKS_PER_YEAR; i++) tickWeek(control, rngB)

@@ -339,6 +339,7 @@ function zeroCats(): Record<WorldEventCategory, number> {
     income: 0,
     interest: 0,
     prize: 0,
+    tuition: 0,
     other: 0,
   }
 }

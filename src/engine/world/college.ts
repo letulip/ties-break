@@ -23,11 +23,69 @@ import { SKILL_KEYS, type KidSkills } from '../development'
 import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { NATIONAL_TEAM, callUpLine, rollCallUp } from '../nationalTeam'
-import type { CollegeProgressView } from '../../shared/protocol'
+import { JUNIOR_RUNGS, collegeOfferFor, type CollegeRecruitView, type JuniorRung } from '../collegeOffer'
+import type { CollegeOffer, CollegeProgressView } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidAgeYears } from './age'
 import { kidLadderRank } from './snapshot'
 import type { WorldState } from '../world'
+
+/** ⭐⭐ WHAT A COLLEGE PROGRAMME IS SHOWN WHEN IT LOOKS HER UP – the world side of P4's decoupled-leaf
+ *  pattern, and here the decoupling is the fairness property rather than a tidiness one.
+ *
+ *  ⚠⚠ THREE FIELDS, AND NONE OF THEM IS A PROFESSIONAL RESULT. `CollegeRecruitView` has no rank, no
+ *  W-rung finish and no prize money, so there is nothing a tour result can move. The rule the owner
+ *  deleted on 16.08 – a result taking the college answer away – cannot be re-created here from the
+ *  other side either ("she is too good for college now"), because the fact it would need is not on
+ *  the view. That is stronger than a rule that merely does not fire.
+ *
+ *  ⚠ AND IT IS A CAREER RECORD, NOT A RANK. `bestFinishByTier` is a high-water mark that never goes
+ *  backwards, and the junior rungs close at eighteen, so the offer measured on her nineteenth birthday
+ *  is the offer any later week would compute. That is what makes the v51 migration exact in principle
+ *  and the persisted copy a safety belt rather than a necessity – see `ForkState.offer`. */
+export function collegeRecruitViewOf(world: WorldState): CollegeRecruitView {
+  const juniorBests: Partial<Record<JuniorRung, number>> = {}
+  for (const rung of JUNIOR_RUNGS) {
+    const best = world.bestFinishByTier[rung]
+    if (best !== undefined) juniorBests[rung] = best
+  }
+  return { juniorBests, background: world.profile.background, country: world.profile.country }
+}
+
+/** THE OFFER, MEASURED ONCE. ⚠ ONE SUB-STREAM, `seed:collegeoffer:<week>`, derived at the call site
+ *  and persisting nothing (CLAUDE.md invariant 2). The MAIN stream is not touched, so the frozen
+ *  capture (41550 / e6b0c709) is untouched by construction. */
+export function measureCollegeOffer(world: WorldState): CollegeOffer {
+  return collegeOfferFor(collegeRecruitViewOf(world), rngFromSeed(`${world.seed}:collegeoffer:${world.week}`))
+}
+
+/** ⭐⭐ THE WEEKLY BILL – the first cost in this game that is not tennis.
+ *
+ *  ⚠ WHY A WEEKLY DEBIT AND NOT A LUMP AT ENROLMENT. The family's balance is read every week by the
+ *  debt spell and by bankruptcy, and a $30,990 hole punched once a year would have made the college
+ *  branch a series of four cliffs rather than a cost of living. `financeWeeks` keeps a 60-week window
+ *  and the Money screen draws twelve, so a weekly line is also the only shape either of them can show.
+ *
+ *  ⚠ ZERO DRAWS ON ANY STREAM. It is arithmetic on a persisted offer, so no ordering hazard and no
+ *  re-pin of the frozen capture.
+ *
+ *  ⚠ AND A NULL OFFER IS CHARGED NOTHING, which is the v51 migration's promise kept: a career that
+ *  entered college before this phase existed was never quoted a price and is not billed one now. */
+export function resolveCollegeBill(world: WorldState): void {
+  if (!inCollege(world)) return
+  const offer = world.fork?.offer
+  if (!offer || offer.familyPerYearCents <= 0) return
+  const weekly = Math.round(offer.familyPerYearCents / WEEKS_PER_YEAR)
+  if (weekly <= 0) return
+  world.fundsCents -= weekly
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'tuition',
+    text: "The family's share of the college year",
+    amountCents: -weekly,
+  })
+}
 
 /** IS SHE AT COLLEGE THIS WEEK? Derived from the span, never a second flag – so it can never drift
  *  out of step with `world.week` and a save taken mid-freeze answers the same question on reload.

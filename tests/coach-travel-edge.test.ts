@@ -650,9 +650,9 @@ describe('the two readouts say the bonus exists, without overstating it', () => 
 // capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709).
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: '3519d92f603e5093128e81412e24a0e8ce00c744c9a86c6eddc6e457cea877f5',
+  middleGrinder: '7bedfc410cc600841204a169b2523c03dcf7132207317a52f88ed10324a01076',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '6aa8ff66c6b544d8da703cc779f73861ba97803cc083854b98e712f14e41c9dc',
+  eliteGrinder: 'b0cd00eaf8f98ae78000c3ea61fb5fcc8d2319e7ef760dd34bea6543f8f1c6ce',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -678,6 +678,30 @@ const FROZEN = {
    *  grinder careers above are byte-identical across the acceptance-inversion fix; only this one
    *  moved, and the per-key block above has the receipt: ONE J60 became ONE J300 on the same week,
    *  and her ITF rank at 16.6 went #46 -> #21 on it. */
+  selfTravelling: 'df984751582919d962c900077a4066d4e4cc2adcc871066c0d5c9f31101bfeff',
+}
+
+/** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
+ *  ALL THREE MOVED, WHICH IS THE OPPOSITE OF ALARMING – it is the signature of a change that reached
+ *  no career at all.
+ *
+ *  Every previous re-freeze moved ONE career of three and the per-key diff said which and why. This
+ *  one moved all three by exactly one key, and `PRE_V51` below is the proof: rolling `schemaVersion`
+ *  back to 50 on the NEW world reproduces the OLD hashes byte for byte, for all three. Nothing else
+ *  in these worlds is different.
+ *
+ *  ⚠ AND THAT IS BY CONSTRUCTION RATHER THAN BY LUCK. v51 adds `ForkState.offer` and a weekly tuition
+ *  debit. Week 156 is 32 weeks short of the fork, so `world.fork` is still null here and there is no
+ *  offer to measure; `resolveCollegeBill` returns at its first line because `inCollege` is false. Both
+ *  facts are asserted in `walkFrozenCareer` so a future wave that made either reachable goes red with
+ *  a reason instead of just a different hash. `rngMain` is untouched for the sixth wave running: the
+ *  offer draws on a `seed:collegeoffer:<week>` sub-stream and the bill draws nothing at all, so the
+ *  frozen MAIN capture (41550 / e6b0c709) is not re-pinned. */
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
+ *  moved ONE key and nothing else. */
+const PRE_V51 = {
+  middleGrinder: '3519d92f603e5093128e81412e24a0e8ce00c744c9a86c6eddc6e457cea877f5',
+  eliteGrinder: '6aa8ff66c6b544d8da703cc779f73861ba97803cc083854b98e712f14e41c9dc',
   selfTravelling: '26b0e77c2f7e9eced6671f2fe9e3f895db191bfcf58cb6e0ab4f303f4c5a042c',
 }
 
@@ -712,6 +736,12 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
   // ⚠ v50: and none of them goes to COLLEGE either – week 156 is 32 weeks short of the fork – so
   // everything P5 added is unreachable here by construction, not by luck.
   expect(world.college, 'the v50 freeze is not entered by any frozen career').toBeNull()
+  // ⚠ v51: and the fork is never RAISED here either – week 156 is 32 weeks short of it – so there is
+  // no college offer to measure and no tuition line to charge. That is why all three hashes moved by
+  // exactly `schemaVersion` and nothing else (see `PRE_V51`), and it is checked rather than assumed:
+  // a wave that moved the fork earlier would go red HERE, with a sentence, instead of three hashes
+  // drifting for a reason nobody could name.
+  expect(world.fork, 'the v51 offer is unreachable in a frozen career: the fork is never raised').toBeNull()
   return world
 }
 
@@ -735,6 +765,17 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v51: rolling ONLY the schema back to 50 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT THIS WAVE DID TO THESE THREE CAREERS, as an identity. All three freeze
+    // hashes moved, which on any previous wave would have meant three different careers; here it
+    // means one different number. If v51's offer or its tuition line had reached any of these worlds,
+    // this case would be red beside the freeze – which is the one signal a whole-world hash cannot
+    // otherwise give.
+    expect(careerHashAtSchema(5, 0, 50), '25k · middle coach · grinder').toBe(PRE_V51.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 50), '120k · elite coach · grinder').toBe(PRE_V51.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 50), '8k · self-coached · player').toBe(PRE_V51.selfTravelling)
   })
 
   it('⭐⭐ P5: rolling ONLY the schema back to 49 reproduces the old hashes byte for byte', () => {
