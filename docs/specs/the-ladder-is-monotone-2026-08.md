@@ -237,8 +237,10 @@ Grand Slam Rule Book's own published direct-acceptance count – and **in the re
 inversion at all**, because a real major draws 128 and a real 1000 draws 56. Acceptance depth scales
 with draw size. Our Slam draws **32** (the deviation is stated at length on the constant,
 `tools/big-draw-cost.ts` is its receipt), which is what turns a sourced number into an inverted one
-here. Closing it means moving either a sourced figure or an unsourced one at the very top of a ladder
-**1 career in 90 reaches**. That is his call.
+here. Closing it means moving either a sourced figure or an unsourced one at the very top of the
+ladder. ⚠ **And it is not academic**: measured on the post arm, **34 of 90 careers reach a Slam and
+16 of 90 reach a WTA 1000** – so the window where the inversion actually bites, a girl ranked between
+**#66 and #104**, is one real careers pass through. That is his call, not an agent's.
 
 The exemption cannot rot: its count is pinned at one, and the inversion itself is asserted, so the day
 the Slam draw or either cut moves it goes red rather than quietly excusing a new inversion.
@@ -381,8 +383,10 @@ ranks of door are being reached at almost exactly the same week she was reaching
    it is thin on the build he played too.
 2. **Is 87 still right for the global sponsor?** §1a. Its argument was retired with the coupling; the
    band is 37 ranks wide in a table of 1,800 and the median career high is #104.
-3. **The Slam accepts deeper than the WTA 1000** (104 against 65). §2b. Sourced number, our 32-draw,
-   one career in 90 reaches it.
+3. **The Slam accepts deeper than the WTA 1000** (104 against 65), so a major is easier to enter than
+   the rung below it. §2b. Left alone because 104 is the family's one sourced number and it only
+   inverts because our Slam draws 32 – but **34 of 90 careers reach a Slam and 16 reach a 1000**, so
+   the window it bites in (#66-#104) is one real careers pass through.
 4. **Whether a J300 should be reachable at all** is unchanged and still open – §2's fix moves the cut
    from #40 of 200 to #50 of 200 against a sport that cuts at ~2%. P3's escalation stands. ⚠ What is
    new is the price of the other direction: at 0.20 it was **72 of 90 careers** that ever reached the
