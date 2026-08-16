@@ -2438,10 +2438,21 @@ export interface TrainingRead {
  *  closing line is "the epilogue says which of the two it was".
  *
  *  ⚠ `'college'` IS THE ONLY ONE THAT RESUMES (§5.1). It latches like the rest – the album is shown,
- *  every mutating command refuses – and then the hand-off page's single button spends four years in
- *  one tap and clears the latch. Four years amateur on a scholarship, no ranking points, and she is
- *  back at twenty-two with no ranking at all, which is what a career that entered nothing for 208
- *  weeks has by construction: every result she owned has aged out of the 52-week window. */
+ *  every mutating command refuses – and then the epilogue asks a question and takes an answer.
+ *
+ *  ⭐⭐ P5 (16.08, docs/specs/college-as-a-second-act-2026-08.md): it used to be ONE button spending
+ *  four years in one tap. It is one year at a time now, because the sport's own case is the early
+ *  return – Diana Shnaider left NC State after about a season and is inside the WTA top 15 – so the
+ *  block was the wrong SHAPE as well as an empty one. `resumesWeek` therefore points ONE year out and
+ *  the ending is re-latched with the next one until she has spent all four or answers
+ *  `endCollegeEarly`.
+ *
+ *  ⚠ AND THE OLD CLAIM THAT SHE COMES BACK "with no ranking at all" IS WITHDRAWN AS A CAUSAL ONE.
+ *  Measured over 52 careers at the fork (spec §2c) her professional rank is **#290 before the freeze
+ *  and #290 after it** – she was already off the list the week she walked in, because at nineteen her
+ *  professional results are too few for `RANKABLE_MIN`. The four years took nothing from her; what
+ *  they cost is the ladder moving without her, and that is 121 places against the same seeds spent on
+ *  tour. */
 export type CareerEndingType =
   | 'stopped'
   | 'college'
@@ -3081,7 +3092,8 @@ export interface Snapshot {
   } | null
   /** the natural end's offer while it is OPEN and unanswered, else null */
   retirementOffer: RetirementOffer | null
-  /** her four years at college, once she has chosen them – null for every career that did not */
+  /** her college years, once she has chosen them – null for every career that did not. ⭐ P5: she may
+   *  leave after any of them, so this is a span she is LIVING rather than a four-year block. */
   college: CollegeState | null
   /** career-total money (v39). On the snapshot always, not only at the end: the Money screen's
    *  "since week one" row reads it, and it is what makes the reckoning cheap. */
