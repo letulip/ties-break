@@ -68,6 +68,13 @@ there. W3-ACT2 then opened ten professional rungs above it, and the probe's own 
 strongest rung the engine will accept her into – so from seventeen on she is playing WTA 500s,
 1000s and Slams (12.7 of her 18.6 events) and losing in the first round of most of them.
 
+> ⚠ **"FROM SEVENTEEN" WAS THE AGE GATE AND THE AGE GATE MOVED (16.08): the WTA rungs open at 15 and
+> the Slam at 14.** The mechanism this section names is unchanged – a strongest-rung policy meeting a
+> ladder ten rungs taller than the arithmetic was built for – but it can now start two years earlier,
+> so a re-run must not be compared row-for-row against the table above. What still stops her in
+> practice is the acceptance cut, not the birthday. Grid, stated once:
+> [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
 A first-round exit at a WTA 500 costs surcharge 4 + scoreline 2–3 ≈ 6.5, and the rest week beside it
 returns 10. **The pair is net POSITIVE.** The season only declines when she WINS matches, which is
 why season 0 (46 matches at the W rungs she can beat) arrives at 54 and season 2 (30 matches at the

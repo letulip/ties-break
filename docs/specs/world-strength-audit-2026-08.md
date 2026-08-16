@@ -240,6 +240,14 @@ At **16** the W75 age gate (17) short-circuits the closure and W15 stays open at
 one W ranking point – a single won match at a W15 – shuts the entry rung, and it stays shut until her
 professional book decays back to zero.
 
+> ⚠⚠ **THE SHORT-CIRCUIT IS GONE SINCE 16.08, AND THAT MAKES THIS FINDING WORSE RATHER THAN STALE.**
+> W75's floor is **14** now, so nothing masks the closure at sixteen: the one-point slide this section
+> reports as starting at 17 starts as soon as she wins a professional match at any age. The sentence
+> is kept because it is what the audit measured; the finding it belongs to – three documented stages
+> of `tierOutgrown`'s ladder that do not exist – is unchanged and now reaches further down the ages.
+> Grid, stated once:
+> [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
 **The design this contradicts is `tierOutgrown`'s own worked example**, which names the stages
 `{j60, j300, w15}` → `{j300, w15, w35}` → `{w15, w35, w50}` → `{w35, w50, w75}`, one rung at a time.
 The engine's real floors skip from `{w15}` to `{w35, w50, w75}` in a single point. Three documented

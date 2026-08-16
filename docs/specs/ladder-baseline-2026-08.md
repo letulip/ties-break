@@ -297,6 +297,12 @@ min 17.0 · p25 17.1 · **median 17.1** · p75 17.3 · p90 17.8 · max 19.8.
 > her seventeenth birthday. That is `w75.minAgeYears` and nothing else – the cut is cleared long
 > before the birthday is.
 >
+> ⚠⚠ **AND BOTH CONSTANTS IN THAT SENTENCE WERE REMOVED ON 16.08.** `w75.minAgeYears` is **14**, and
+> `collegeClosedFromTier` is gone entirely – so there is no door to lose and no eleven-month window
+> to lose it in. This baseline is kept as the measurement that made the removal decidable, not as a
+> description of the shipped game. Grid, stated once:
+> [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+>
 > ⭐ **AND THE "OPEN AT THE FORK" NUMBER IS INFLATED BY A RACE.** Of the seven that hold the door on the
 > fork week, **three lose it inside the following season** (weeks 315 / 321 / 326, ages 19.58 / 19.75 /
 > 19.83). `college-fork-2026-08.md` §3a found this by hand and could not see past its own 312-week
