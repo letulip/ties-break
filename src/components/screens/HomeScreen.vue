@@ -840,17 +840,20 @@ const stripVisible = computed<readonly number[]>(() => {
   // has already made. Nothing is deleted – tapping any ellipsis still expands the whole ladder in
   // place, which is the property the mounted suite pins.
   //
-  // ⚠ WHY A CAP AND NOT AN AGE FILTER, since the honest description of the six-chip row is "a rung
-  // she cannot enter for another year counted as open": because `tierOpen` reporting a rung the age
-  // gate refuses is an ENGINE inconsistency, and papering over it in one component would leave the
-  // Season feed and the Calendar reading the other answer. It is written up for the owner in
-  // docs/specs/junior-access-corrected-2026-08.md §5 instead of being half-fixed here.
+  // ⚠ WHY A CAP AND NOT AN AGE FILTER is the paragraph above `const open`, which is where the filter
+  // was tried and withdrawn.
   //
   // ⚠ AND IT DOES NOT APPLY TO THE NO-VERDICT FALLBACK, which is the same exception the branch above
   // makes and for the same reason. `tierOpen` absent means an old save or a hand-built fixture, and
   // `feedContext` answers by returning the WHOLE ladder – the safe direction, pinned by two mounted
-  // tests. Trimming that to five would turn "we do not know, so show everything" into "we know it is
-  // these five", which is the one reading the fallback exists to avoid.
+  // tests. Trimming that to four would turn "we do not know, so show everything" into "we know it is
+  // these four", which is the one reading the fallback exists to avoid.
+  //
+  // ⚠⚠ BUT THE HATCH IS KEYED ON THE COUNT RATHER THAN ON THE ABSENT VERDICT, so a career that
+  // genuinely opened every rung would skip the cap too. `tierOutgrown` closes the rungs beneath her,
+  // so that state is not reachable today; it is flagged for the owner in
+  // docs/specs/college-is-its-own-branch-2026-08.md §7b and named by a mounted test rather than
+  // half-fixed here, because tightening it means deciding what "no verdict" is allowed to mean.
   const everyRung = open.length === SEASON_STRIP_TIERS.length
   return !everyRung && row.length > STRIP_MAX_RUNGS ? row.slice(row.length - STRIP_MAX_RUNGS) : row
 })

@@ -212,7 +212,7 @@ describe('Home season strip – the row is the engine window, not the span acros
     // all" (the case below). The hatch is keyed on the COUNT rather than on the absent verdict, so a
     // career that genuinely opened all sixteen rungs would skip the cap too. `tierOutgrown` closes
     // the rungs beneath her, so that state is not reachable today – it is flagged in
-    // docs/specs/college-is-its-own-branch-2026-08.md §6 rather than fixed here, and this test names
+    // docs/specs/college-is-its-own-branch-2026-08.md §7b rather than fixed here, and this test names
     // the boundary so nobody has to rediscover it from a wrapped row.
     const wrapper = mountHome(withWindow(snapshotAfter(6), LADDER.slice(0, -1)))
     expect(rungChips(wrapper).length, 'the collapsed row is capped').toBeLessThanOrEqual(4)
