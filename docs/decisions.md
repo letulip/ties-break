@@ -894,6 +894,17 @@ and the regulation it quotes describes reserved access, not a bar.
 in effect "loosening a rule we just added", which the plan calls the dishonest lever – the argument
 for it is correctness, and the ruling is his.
 
+⚠⚠ **AND P1 ALREADY CONSIDERED THIS AND REJECTED IT ON A NUMBER THAT P3 HAS SINCE MOVED.** The clause
+carries its own reason: *"It is an AND rather than an OR, and the reason is measured rather than
+chosen: read as an extra door it would change nothing, **because our acceptance cut already admits 93%
+of careers to a W75**."* That was true then. P3 then tightened W50 #550 → #330, W75 #450 → #300, W100
+#350 → #240, WTA 125 #250 → #180 – and today **3 careers of 90 clear W75's cut at seventeen, not
+93%.** The objection was that an extra door would blow the ladder open; with the tightened cuts it
+would open W35 to 69%, W50 to 8% and W75 to 3% – **a gradient, which is precisely what §2a of the spec
+says the ladder lost when three doors started opening on one birthday.** Nobody erred: P1 measured its
+own tree and P3 was not looking at a comment in `ladder.ts`. It is only visible from a phase that
+reads the whole chain at once, which is what P6 is.
+
 ### ⭐ THE THIRD ANSWER'S PRICE IS NOT A FINDING ABOUT COLLEGE
 
 P5's numbers replicate to within $716 – college +$151,527 over four years against the tour's +$44,974.

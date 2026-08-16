@@ -478,6 +478,39 @@ ranking she actually holds.** `isJuniorAge` is `age <= 18`, so this governs her 
 And the regulation P1 quotes describes both mechanisms as **reserved access**, i.e. an *additional*
 route for a junior who could not get in any other way – not a bar on one who could.
 
+### ⚠⚠ 5.1-bis. P1 CONSIDERED EXACTLY THIS AND REJECTED IT FOR A MEASURED REASON – AND P3 HAS SINCE INVALIDATED THE MEASUREMENT
+
+This is the part that needs him rather than an agent, and it is not an argument – it is a stale
+number. `src/engine/world/ladder.ts`, in the clause itself:
+
+> ⚠⚠ *"AND SINCE P1 A JUNIOR HAS TO CLEAR THE ACCELERATOR AS WELL – see `juniorAccessOpen`. **It is an
+> AND rather than an OR, and the reason is measured rather than chosen: read as an extra door it would
+> change nothing, because our acceptance cut already admits 93% of careers to a W75.**"*
+
+**So the OR reading was already considered, and rejected because it was thought to be inert.** That
+was true when it was written. **It is not true now, because P3 moved the very cuts it depends on:**
+
+| | when the comment was written (pre-P3) | **now** |
+| --- | --- | --- |
+| W50's cut | #550 | **#330** |
+| W75's cut | #450 | **#300** |
+| W100 / WTA 125 | #350 / #250 | **#240 / #180** |
+| careers clearing W75's cut at 17 | *"93%"* | **3 / 90 · 3%** |
+| careers clearing W50's cut at 17 | – | **7 / 90 · 8%** |
+| careers clearing **W35's** cut (#700, untouched) at 17 | – | **62 / 90 · 69%** |
+
+> ⭐ **THE COMMENT'S OWN LOGIC NOW ARGUES FOR THE OTHER ANSWER.** Its objection to the OR reading was
+> *"it would change nothing"* – i.e. it would blow the ladder open, because the cuts were loose. After
+> P3 the cuts are tight, and an OR reading would open **W35 to 69% of seventeen-year-olds and W50/W75
+> to 8% and 3%.** That is not "nothing", and it is also not the flood the comment was guarding
+> against: **it is a gradient**, which is exactly what §2a says the ladder lost.
+>
+> ⚠ **NOBODY DID ANYTHING WRONG HERE.** P1's measurement was correct on P1's tree, and P3 was
+> measuring acceptance cuts, not a comment in `ladder.ts` that depended on them. This is the same
+> failure family P0 §4 exists to record – *"a number measured against a moving tree has a shelf life
+> of days"* – arriving one more time, and it is only visible from a phase that reads the whole chain
+> at once.
+
 **How big it is – measured, not guessed:**
 
 | | n = 90 |
