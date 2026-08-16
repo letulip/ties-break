@@ -314,6 +314,7 @@ what kind of coverage each row has rather than only whether it has any.
 | Skills, radar and development | [skills-radar.md](skills-radar.md) | no | **unit** – pure engine arithmetic with a read-only surface |
 | The junior conveyor and the living field | [junior-conveyor.md](junior-conveyor.md) | no | **unit + sim** – a population model; there is nothing to click |
 | Academy and equipment | [academy-support.md](academy-support.md) | no | **unit** – priced by the engine, surfaced as read-only rows |
+| The first-run tour of the interface | [onboarding-tour.md](onboarding-tour.md) | yes – `onboarding-tour` | **e2e** – the whole defect was about what survives a reload, so a mounted test cannot hold it; the marks' copy, the walk and the card's box on a phone stay in `tests/component/onboarding-tour.test.ts` |
 <!-- /COVERAGE-MAP:MECHANICS -->
 
 ## 8. Residual product risk, accepted (CTFL §5.2)
