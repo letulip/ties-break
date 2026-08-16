@@ -3,7 +3,7 @@ type: research
 status: current
 area: simulation-and-balance
 canonical: false
-last-reviewed: 2026-08-15
+last-reviewed: 2026-08-16
 ---
 
 # College and the junior exit – what the route really is, and what it costs to walk through it
@@ -37,6 +37,9 @@ turned out to be wrong. That is the failure this document is written against.
   §4 is long on purpose.
 * `[WEAK]` – found, but the source is commercial, secondary, or has an interest in the answer. Usable
   for shape, never for a decimal.
+* `[?]` – **found in a primary source and internally inconsistent.** Added 16.08 for §1d's dangling
+  bylaw cross-reference: the manual points at three bylaws it does not contain. Reported as read, not
+  reconciled, and never used to size anything.
 
 **No figure from this repo's own documents appears below as external evidence.**
 
@@ -248,6 +251,171 @@ nineteenth birthday (`ENDINGS.forkAgeYears`). **In reality the decision is two t
 `college-fork-2026-08.md` §3). Our timing of the *closure* is closer to reality than our timing of the
 *question*.
 
+### 1d. ⚠⚠ WHAT THE PLACE COSTS, AND WHO PAYS THE REST OF IT
+
+**Written 16.08.2026, on the owner's own question:** «Что у нас будет с оплатами? едины для всех или
+тоже от достатка на момент прихода будем мерять?» Before this section the corpus had **no sourced
+figure for the price of a college place at all** – a `git grep` for tuition, need-based, financial aid,
+in-state or cost of attendance over this file returned one line, and it was about the offer document.
+Our engine's college arm is a **full ride by construction**: the family simply stops spending, and P6
+decomposed the $152,243-vs-$45,544 gap as **100% avoided spend, scholarship $0**.
+
+#### The sticker, and the spread is a factor of two
+
+| a year at a four-year institution, 2025-26, on campus | published total | tag |
+| --- | --- | --- |
+| **public, in-state** | **$30,990** | `[S]` |
+| **public, out-of-state** | **$50,920** | `[S]` |
+| **private nonprofit** | **$65,470** | `[S]` |
+| (public two-year, in-district, commuter – not our route) | $21,320 | `[S]` |
+
+`[S]` – [College Board, *Trends in College Pricing and Student Aid 2025*, Figure CP-1](https://research.collegeboard.org/media/pdf/Trends-in-College-Pricing-and-Student-Aid-2025-final_1.pdf),
+enrolment-weighted, published (sticker) prices, not adjusted for inflation. The in-state total is
+$11,950 tuition and fees + $13,900 housing and food + $5,140 books, transport and other; out-of-state
+is the same but $31,880 of tuition; private nonprofit is $45,000 + $15,920 + $4,550 (Table CP-1 and
+Figures CP-1/CP-9/CP-10).
+
+⚠ **The spread inside "a D-I place" is 2.1×** `[I]` – $30,990 to $65,470 – **and it is not a quality
+gradient.** A state school out-of-state costs more than the same school in-state by $19,930 `[I]` for
+an identical education. **Nationality and residence move this number more than the programme does.**
+
+**Cross-check on a different source and a different method** `[S]`:
+[NCES, Condition of Education, *Price of Attending an Undergraduate Institution*](https://nces.ed.gov/programs/coe/indicator/cua/price-of-attending-an-undergraduate-institution)
+gives **2022-23** average total cost of attendance for first-time full-time undergraduates living on
+campus as **$27,100** public 4-year and **$58,600** private nonprofit 4-year, in constant 2022-23
+dollars. Three years earlier and enrolment-weighted differently; same shape.
+
+#### ⭐⭐ AND THE SPORT'S OWN RULEBOOK MEASURES ITS AWARDS IN EXACTLY THAT NUMBER
+
+Both quotes are from the live **2026-27 Division I Manual**, footer date 8/14/26, at
+[web3.ncaa.org/lsdbi/reports/getReport/90008](https://web3.ncaa.org/lsdbi/reports/getReport/90008) `[S]`:
+
+* **15.02.2 Cost of Attendance** – *"an amount calculated by an institutional financial aid office,
+  using federal regulations, that includes the total cost of tuition and fees, living expenses, books
+  and supplies, transportation, and other expenses related to attendance at the institution."*
+* **15.02.5 Full Grant-in-Aid** – *"financial aid that consists of tuition and fees, living expenses,
+  books and other expenses related to attendance at the institution up to the cost of attendance."*
+
+So **"a full ride" is literally the table above** `[I]`, and a partial award is a fraction of it. There
+is no separate athletics price list.
+
+#### ⚠⚠ AND §1a's "EQUIVALENCY SPORT" IS THE RIGHT SHAPE WITH THE WRONG MECHANISM – CORRECTED HERE
+
+§1a records, at `[WEAK]`, that women's tennis *"becomes an **equivalency** sport – scholarships
+divisible into partial awards rather than ten full rides"*, and flags it as the single most
+decision-relevant fact it could only source commercially. **The primary source is now read, and it
+half-confirms and half-corrects that** `[S]`:
+
+* **The word *"equivalency"* appears ZERO times in Article 15 of the 2026-27 Manual** in any financial
+  sense – its only occurrences in the whole manual are *"high school equivalency test/diploma"* at
+  14.3.4.2.1. So does *"counter status"*. So does *"need-based"*. **Article 15 now runs 15.01, 15.02,
+  15.1, 15.2, 15.3 and stops: there is no per-sport team limit left in it at all.**
+* The limit moved to **Bylaw 17.2 Roster Limitations**, whose table reads **Women's Tennis | 10**
+  *(Adopted: 6/6/25 effective 7/1/25)* `[S]`. ⭐ **This upgrades §1a's 10 from a commercial table to the
+  manual itself.**
+* **16.13.1.5 Incremental Athletics Scholarships** `[S]`: *"The full cost of attendance value of up to
+  $2.5 million in incremental athletics scholarships provided by the institution … in excess of the
+  2024-25 academic year team scholarship limit for a particular sport must be counted against the
+  benefits cap; however, **there is no limit on the number of new athletics scholarships that may be
+  awarded consistent with the roster limit for a particular sport**."*
+
+> ⭐ **SO THE CONSTRAINT ON FUNDING THE TENTH PLACE IS MONEY, NOT A RULE.** Awards are partial because a
+> programme's budget is finite and every place above the old team limit is charged against the school's
+> House benefits cap – **not** because a bylaw divides eight scholarships into fractions. The
+> *observable* consequence §1a describes is right; the *mechanism* it names has been repealed. A sim
+> that models "the programme could only afford this much" is modelling the live rule; one that models
+> "eight scholarships split ten ways" is modelling the 2024-25 one.
+
+#### Partial is the norm, and the NCAA says so in its own voice
+
+> *"Most scholarships are partial, but student-athletes can combine them with **academic awards,
+> NCAA-funded aid programs, and need-based assistance like Federal Pell Grants**."* `[S]`
+> – [NCAA, Scholarships & Grants](https://www.ncaa.org/what-we-do/scholarships-grants/), which on the
+> same page gives *"only about 2% of high school athletes earn a college athletics scholarship"* `[S]`.
+
+⚠ **`[GAP]` WHAT A PARTIAL AWARD COVERS IN WOMEN'S TENNIS SPECIFICALLY IS NOT SOURCED.** No NCAA, ITA
+or federal per-sport table was found; the federal EADA disclosure reports athletically related aid by
+gender, not by sport. **Two arithmetics are available and both rest on an unsourced assumption:**
+
+| | value | tag | arithmetic |
+| --- | --- | --- | --- |
+| mean award at a **fully funded** programme, 2024-25 rules | **≈ 85%** of a full ride | `[I]` | 8 scholarships ÷ 9.4 average roster, both `[S]` in §1a |
+| mean award if a programme funds to the **old baseline** against the **new roster of 10** | **80%** | `[I]` | 8 ÷ 10, both `[S]` |
+
+⚠ **Both assume the programme is fully funded, and what share of D-I women's tennis programmes fund to
+their limit is `[GAP]` – searched, not found.** A number for "the typical women's tennis award" must not
+be written into a spec off these two rows; they bound a fully funded programme and say nothing about
+the rest.
+
+#### ⭐⭐ THE NEED-BASED LAYER IS REAL, IT IS MEANS-TESTED, AND IT SITS BESIDE THE ATHLETIC ONE
+
+**It exists** – the NCAA's own sentence above names it. **It is a separate layer, not a bigger athletic
+award**, and the manual meters the two together at exactly one ceiling `[S]`:
+
+* **15.1 Maximum Limit on Financial Aid – Individual**: a student-athlete is ineligible if she
+  *"receives financial aid that exceeds the value of the cost of attendance"*. **15.1.2** counts *"all
+  institutional financial aid"* toward that limit. So **athletics aid + institutional need-based aid
+  ≤ the bill, and no further.**
+* **15.1.1 Exception for Pell Grant**: she *"may receive financial aid equivalent to the limitation set
+  forth in Bylaw 15.1 or the value of a full grant-in-aid plus the Pell Grant, whichever is greater"* –
+  the one layer that stacks **on top of** a full ride.
+* ⚠ **A dangling cross-reference, reported as found and not reconciled** `[?]`: 15.1.2 says *"see Bylaws
+  15.02.5.4, 15.02.5.5 and 15.02.5.6 for types of financial aid that are exempt"* – and **those bylaws
+  do not exist in the 2026-27 manual.** 15.02.5 is *Full Grant-in-Aid* and has no subsections. The
+  exempted-need-based-aid rule those numbers used to carry went out with the team limits it modified.
+
+**The size of the layer, and it is means-tested by construction** `[S]`, all from *Trends 2025*:
+
+| figure | value | tag |
+| --- | --- | --- |
+| Maximum Pell Grant, 2025-26 | **$7,395** | `[S]` Figure SA-18 |
+| … as a share of published in-state tuition and fees | **62%** | `[S]` same |
+| … as a share of in-state tuition, fees, housing and food | **29%** | `[S]` same |
+| Share of Pell recipients receiving the **maximum** award, 2022-23 | **28%** | `[S]` same, citing Pell Grant Program End-of-Year Report Table 20 |
+| Average grant aid, first-time full-time **in-state, public four-year** | **≈ $9,650** against a $25,850 tuition-fees-housing-food bill | `[I]` $25,850 − the $16,200 CP-9 says she must cover |
+| What that family still covers | **$16,200** + $5,140 allowances = **$21,340** | `[S]` / `[I]` Figure CP-9 |
+| Average grant aid, first-time full-time **private nonprofit** | **$28,090** | `[S]` Figure CP-10 |
+| What that family still covers | **$32,830** + $4,550 = **$37,380** | `[S]` / `[I]` same |
+
+> ⚠ **Trends' own words on why the Pell award varies**: most recipients get less than the maximum
+> because they are part-time *"or their family incomes and assets reduce their aid eligibility"* `[S]`.
+> **That is the means test, stated by the source.** And note the direction the aggregate runs: at a
+> public four-year the average family already has about **a third** of the sticker written off before
+> any athletics award, and at a private nonprofit **nearly half** `[I]`.
+
+#### ⚠⚠ AND THE INTERNATIONAL ANSWER IS *NO* ON THE LAYER THAT IS MEANS-TESTED – WHICH IS PRIMARY LAW
+
+Our character has `world.profile.country` (ISO alpha-2, the player's at onboarding; the default profile
+is `'US'`). **The two layers split on nationality and they split hard.**
+
+| | reaches a non-American on a student visa? | tag | source |
+| --- | --- | --- | --- |
+| **Athletics aid** | **YES – no citizenship test anywhere in Bylaw 15** | `[S]` | the manual; its only nationality clause, 15.2.6.3, expressly contemplates her: *"for international student-athletes, expenses awarded by the equivalent organization of a foreign country"* |
+| **Federal need-based aid (Pell, Title IV)** | **NO** | `[S]` | [34 CFR §668.33](https://www.law.cornell.edu/cfr/text/34/668.33) – she must *"(1) Be a citizen or national of the United States; or (2) … (i) Is a permanent resident …; or (ii) Is in the United States for other than a temporary purpose with the intention of becoming a citizen or permanent resident"* |
+| an F-1 student visa is a temporary, non-immigrant status | → therefore not eligible | `[I]` | the CFR text above + the visa's own definition |
+| stated plainly | *"students in a nonimmigrant category are not eligible for such aid"*; federal aid is for *"U.S. citizens and nationals, lawful permanent residents, and refugees and asylees"* | `[S]` | [NAFSA, Financial Aid for Undergraduate International Students](https://www.nafsa.org/about/about-international-education/financial-aid-undergraduate-international-students) |
+| **Institutional need-based aid** | **rarely** – *"Minimal scholarship aid is available to international students, and most of it is reserved for graduate study"*; *"it is uncommon for U.S. institutions to offer aid to undergraduate international students"* | `[S]` | same |
+| Share of US undergraduate tuition-and-fee payments by international students coming from **personal and family sources** | **nearly 60%** | `[S]`, quoted | IIE Open Doors 2023, **as quoted by NAFSA**. ⚠ The Open Doors data page itself serves this only as a spreadsheet download and was not read directly, so this is a quote of a quote |
+
+> ⭐⭐ **SO THE SHARPEST SOURCED FACT IN THIS SECTION IS AN ASYMMETRY, AND IT IS NOT ABOUT MERIT.** The
+> athletic share is nationality-blind – §1a's `[WEAK]` 62–66% international share of D-I women's tennis
+> rosters is the practical proof that the athletic money plainly reaches non-Americans. **The layer that
+> reads a family's means is the one she cannot open.** An international girl with an identical athletic
+> award pays a larger net bill than an American with the same award, not because anyone judged her
+> family but because the mechanism that would have judged it is shut to her.
+
+#### What all of that means for a sim, said as a finding and not as a proposal
+
+1. **A college place has a price, it is between $30,990 and $65,470 a year, and our engine charges
+   $0.** Whatever we ship, "the family stops paying" is the one thing the sources do not support.
+2. **The athletic award is merit-priced and nationality-blind, and nothing in the rulebook lets it read
+   family wealth.** There is no means test anywhere in Bylaw 15 on athletics aid – the only means test
+   in the system is on the *other* layer.
+3. **The net bill legitimately differs by background – through the need-based layer, means-tested by
+   federal formula, capped so the two layers together never exceed the bill.**
+4. **And it differs by nationality more sharply than by wealth**, because for a non-American the
+   means-tested layer is largely absent.
+
 ---
 
 ## 2. WHAT SHARE OF A JUNIOR COHORT GOES TO COLLEGE RATHER THAN THE TOUR
@@ -394,6 +562,31 @@ here, and must not be guessed.**
 14. **What the new age-based eligibility clock (Bylaw 12.6) would cost our character**, who is asked the
     fork question on precisely the birthday the clock starts. **Nobody in this project has costed it**
     and it is not measured in `college-fork-2026-08.md` either.
+
+**Added 16.08 with §1d – the cost side's own gaps:**
+
+15. ⚠ **What a partial athletics award covers IN D-I WOMEN'S TENNIS.** §1d. No NCAA, ITA or federal
+    per-sport figure exists that I could find; the federal EADA disclosure reports athletically related
+    aid by **gender**, not by sport. The two `[I]` rows in §1d (85%, 80%) are arithmetic on a **fully
+    funded** programme and must not be quoted as "the typical award".
+16. **What share of D-I women's tennis programmes fund to their limit.** The premise both §1d
+    arithmetics rest on, and it is unsourced. ⚠ This matters more since the House settlement than
+    before it: with the limit now a **roster** of 10 and the funding charged against a school's
+    benefits cap (16.13.1.5), the difference between a rich and a poor programme is no longer capped by
+    a bylaw at all.
+17. **Whether institutional need-based aid reaches undergraduate international student-athletes in any
+    measurable share.** NAFSA says *"uncommon"* and gives no number `[S]`; no count, no distribution.
+    ⚠ This is the one number that would tell us how large §1d's nationality asymmetry actually is.
+18. **The dangling cross-reference in Bylaw 15.1.2** `[?]`, §1d. The live manual points at 15.02.5.4 /
+    .5 / .6 *"for types of financial aid that are exempt from a student-athlete's individual limit"* and
+    contains none of them. Whether an exemption list survives elsewhere, or whether the reference is
+    simply stale after the House renumbering, needs the LSDBi proposal record rather than the manual.
+19. **The IIE Open Doors funding table at first hand.** §1d's *"nearly 60% from personal and family
+    sources"* is quoted **through NAFSA**; the Open Doors page serves the figures only as a spreadsheet
+    download and was not opened. A quote of a quote, tagged as one.
+20. **What a place costs anywhere but the United States.** Unchanged from item 11 – everything in §1d is
+    NCAA and US federal, and our game is nation-agnostic. **No non-US cost figure exists in this
+    document and none should be inferred from these.**
 
 ---
 
@@ -555,3 +748,25 @@ This is the part I would build, and it needs no constant to move.
    **$129,190** in prize money by nineteen at rank **#183**. Whether a real nineteen-year-old at #183 has
    banked anything like that is unsourced (§4 item 12) – and if she has not, our prize tables are the
    defect that makes every threshold in this document unsizable.
+
+**Added 16.08 – your question about payments, answered from the sources (§1d).**
+
+6. ⭐⭐ **«едины для всех или тоже от достатка?» – BOTH, in two different layers, and the sport keeps them
+   apart on purpose.** The **athletics award is merit-priced and reads nothing about the family**: there
+   is no means test anywhere in Bylaw 15 on athletics aid, and no citizenship test either. The
+   **need-based layer beside it is means-tested by federal formula** – Trends' own explanation of why
+   most Pell recipients get less than the maximum is *"their family incomes and assets reduce their aid
+   eligibility"* `[S]`. The two are metered together at one ceiling: 15.1 says the total may not exceed
+   the cost of attendance, and only the Pell Grant stacks above a full ride. **So a wealthy and a poor
+   family can hold the same athletic award and pay different bills, and the difference comes from the
+   other layer.**
+7. ⚠ **AND A COLLEGE PLACE COSTS BETWEEN $30,990 AND $65,470 A YEAR, WHERE OUR ENGINE CHARGES $0.**
+   §1d. P6 measured the college arm banking **$152,243** against the tour's **$45,544** and decomposed
+   it as **100% avoided spend, scholarship $0** – which is a full ride at a free institution, and no
+   source supports either half.
+8. ⚠⚠ **THE BIGGEST SPLIT IS NOT WEALTH, IT IS NATIONALITY, AND IT IS PRIMARY LAW.** 34 CFR §668.33 shuts
+   federal need-based aid to anyone in the US *"for a temporary purpose"*, which is what a student visa
+   is; NAFSA adds that institutional aid to undergraduate internationals is *"uncommon"* `[S]`. The
+   athletic award reaches her – 62–66% of D-I women's tennis rosters are international `[WEAK]` – but
+   **the layer that would read her family's means is shut.** Our profile already carries
+   `country`, defaulting to `'US'`.
