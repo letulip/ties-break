@@ -897,13 +897,16 @@ for it is correctness, and the ruling is his.
 ⚠⚠ **AND P1 ALREADY CONSIDERED THIS AND REJECTED IT ON A NUMBER THAT P3 HAS SINCE MOVED.** The clause
 carries its own reason: *"It is an AND rather than an OR, and the reason is measured rather than
 chosen: read as an extra door it would change nothing, **because our acceptance cut already admits 93%
-of careers to a W75**."* That was true then. P3 then tightened W50 #550 → #330, W75 #450 → #300, W100
-#350 → #240, WTA 125 #250 → #180 – and today **3 careers of 90 clear W75's cut at seventeen, not
-93%.** The objection was that an extra door would blow the ladder open; with the tightened cuts it
-would open W35 to 69%, W50 to 8% and W75 to 3% – **a gradient, which is precisely what §2a of the spec
-says the ladder lost when three doors started opening on one birthday.** Nobody erred: P1 measured its
-own tree and P3 was not looking at a comment in `ladder.ts`. It is only visible from a phase that
-reads the whole chain at once, which is what P6 is.
+of careers to a W75**."* The argument was that the cuts were loose enough that a junior would clear
+them anyway, so an extra door opens nothing. **Two things have moved since and they compound: P3
+tightened the cuts (W75 #450 → #300, W50 #550 → #330) and P1+P2 slowed her (median rank at seventeen
+#246 → #423).** A median seventeen-year-old used to clear W75 by 204 places; she now misses it by 123.
+**What admits her at seventeen is no longer the cut – it is her birthday.** With the tightened cuts an
+OR reading would open W35 to **69%** of seventeen-year-olds and W50/W75 to only **8%** and **3%** –
+not the flood the comment guarded against, but **a gradient, which is precisely what the ladder lost
+when three doors started opening on one birthday.** Nobody erred: P1 measured its own tree, and P3 was
+tuning cuts rather than reading a comment in `ladder.ts` that depended on them. It is only visible
+from a phase that reads the whole chain at once, which is what P6 is.
 
 ### ⭐ THE THIRD ANSWER'S PRICE IS NOT A FINDING ABOUT COLLEGE
 

@@ -487,23 +487,31 @@ number. `src/engine/world/ladder.ts`, in the clause itself:
 > AND rather than an OR, and the reason is measured rather than chosen: read as an extra door it would
 > change nothing, because our acceptance cut already admits 93% of careers to a W75.**"*
 
-**So the OR reading was already considered, and rejected because it was thought to be inert.** That
-was true when it was written. **It is not true now, because P3 moved the very cuts it depends on:**
+**So the OR reading was already considered, and rejected because it was thought to be INERT** – on a
+ladder whose cuts were loose enough that a junior would clear them anyway, an extra door opens nothing
+that was shut. **That was true when it was written. Two things have moved since, and they compound:**
 
-| | when the comment was written (pre-P3) | **now** |
-| --- | --- | --- |
-| W50's cut | #550 | **#330** |
-| W75's cut | #450 | **#300** |
-| W100 / WTA 125 | #350 / #250 | **#240 / #180** |
-| careers clearing W75's cut at 17 | *"93%"* | **3 / 90 · 3%** |
-| careers clearing W50's cut at 17 | – | **7 / 90 · 8%** |
-| careers clearing **W35's** cut (#700, untouched) at 17 | – | **62 / 90 · 69%** |
+| | when the comment was written | **now** | |
+| --- | --- | --- | --- |
+| W75's cut | #450 | **#300** | P3 tightened it |
+| her median rank at 17 | **#246** (P0) | **#423** | P1+P2 slowed her |
+| → does a median 17-year-old clear W75? | **yes, by 204 places** | **no, by 123** | the premise inverted |
+| W50's cut | #550 | **#330** | P3 |
+| → careers clearing it at 17 | – | **7 / 90 · 8%** | |
+| **W35's cut** | **#700** | **#700 – untouched** | P3 verified it correct |
+| → **careers clearing it at 17** | – | **62 / 90 · 69%** | ⭐ |
+
+⚠ **THE "93%" IS A CAREER-REACH FIGURE, NOT A RANK-AT-17 ONE**, and it is quoted here as the comment's
+own reasoning rather than as a column: it meant *"she gets into a W75 sooner or later anyway"*. Today
+82 of 90 still do – **at 19.0**, which is after the age the Accelerator bars her at. The premise was
+never about whether she arrives; it was about whether the cut, not the age, is what admits her. **At
+seventeen it is now the age.**
 
 > ⭐ **THE COMMENT'S OWN LOGIC NOW ARGUES FOR THE OTHER ANSWER.** Its objection to the OR reading was
-> *"it would change nothing"* – i.e. it would blow the ladder open, because the cuts were loose. After
-> P3 the cuts are tight, and an OR reading would open **W35 to 69% of seventeen-year-olds and W50/W75
-> to 8% and 3%.** That is not "nothing", and it is also not the flood the comment was guarding
-> against: **it is a gradient**, which is exactly what §2a says the ladder lost.
+> that it *"would change nothing"*, because the cuts were loose. After P3 the cuts are tight, and an
+> OR reading would open **W35 to 69% of seventeen-year-olds and W50/W75 to only 8% and 3%.** That is
+> not "nothing" – and it is also not a flood. **It is a gradient**, which is exactly what §2a says the
+> ladder lost when three doors started opening on the same birthday.
 >
 > ⚠ **NOBODY DID ANYTHING WRONG HERE.** P1's measurement was correct on P1's tree, and P3 was
 > measuring acceptance cuts, not a comment in `ladder.ts` that depended on them. This is the same
