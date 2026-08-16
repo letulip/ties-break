@@ -16,9 +16,10 @@
 //
 //     npx vite-node tools/age-clock-cost.ts [--weeks N]
 
-import { createWorld, tickWeek } from '../src/engine/world'
+import { createWorld } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { POLICIES, stepCareerWeek } from './econ-bench'
 
 const argOf = (name: string, fallback: number): number => {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`))
@@ -48,8 +49,12 @@ const world = createWorld('age-clock-cost', DEFAULT_PROFILE, 'middle')
 // `resumeMain(world.rngMain)`, not `rngFromSeed(world.seed)` – the world's OWN persisted MAIN
 // position, which is the rule every tool that drives a real career here obeys.
 const rng = resumeMain(world.rngMain)
+// ⚠ `stepCareerWeek`, NOT a bare `tickWeek`, AND THE DIFFERENCE IS THE WHOLE POINT (16.08). A bare
+// tick makes no ENTRIES, so it never asks an allowance anything - the first version of this probe
+// drove one and reported the two trees as identical, which was true and useless. The bench's own
+// driver is what a real career does: it plans, it enters, and every entry runs the doors.
 const startedAt = process.hrtime.bigint()
-for (let i = 0; i < WEEKS; i++) tickWeek(world, rng)
+for (let i = 0; i < WEEKS && world.ending === null; i++) stepCareerWeek(world, rng, POLICIES[1])
 const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1e6
 ;(globalThis as { Date: DateConstructor }).Date = RealDate
 
@@ -60,4 +65,12 @@ console.log(`  Date allocations   ${dateCalls.toLocaleString('en-GB')}`)
 console.log(`  ...per week        ${Math.round(dateCalls / WEEKS).toLocaleString('en-GB')}`)
 console.log(`  wall              ${(elapsedMs / 1000).toFixed(1)}s   <- CONTENDED, read the count instead`)
 console.log(`  reached week      ${world.week}${world.ending ? ` (ended: ${world.ending.type})` : ''}`)
+// ⚠ THE SECOND QUANTITY, AND IT IS THE ONE THAT EXPLAINS A SHARD RATHER THAN A CAREER. Eight vitest
+// workers share 16 GB; a career that holds more state does not slow ITSELF down measurably, it slows
+// down the seven careers running beside it. So the probe reports how much world there is, not just
+// how fast one week is.
+console.log(`  world.results     ${world.results.length.toLocaleString('en-GB')} rows`)
+console.log(`  cohort            ${world.cohort.length} players`)
+console.log(`  season events     ${world.season.length}`)
+console.log(`  heap used         ${(process.memoryUsage().heapUsed / 1e6).toFixed(0)} MB`)
 console.log('')
