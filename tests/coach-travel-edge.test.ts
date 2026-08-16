@@ -395,17 +395,45 @@ describe('the plaque is about the MAN, and the trip is not part of who he is', (
 // untouched (count 41550, hash e6b0c709) and needed no paragraph this time – ⚠ nor did its companion
 // `REF.kidRank`, which is the one difference from P1 and P2: that constant reads a career whose
 // doors P3 did not move.
+// ⭐⭐ RE-FROZEN AGAIN AT P5 (16.08, docs/specs/college-as-a-second-act-2026-08.md), AND THE PER-KEY
+// DIFF WAS TAKEN FIRST FOR THE FOURTH TIME – BUT NOT WITH A WORKTREE, BECAUSE A STRONGER ANSWER WAS
+// AVAILABLE AND IT IS ASSERTED BELOW RATHER THAN REPORTED HERE.
+//
+// P5 spends the college freeze one year at a time and adds a national-team week inside it, and BOTH
+// live behind `inCollege`. None of these three careers goes to college – `world.college` is `null` in
+// all three at week 156, which is 32 weeks before the fork is even asked – so the only thing P5 can
+// reach on them is `SAVE_SCHEMA_VERSION`, bumped 49 -> 50 for `CollegeState`'s new ledger.
+//
+// ⚠ SO THE CHECK IS AN IDENTITY, NOT A COMPARISON. Instead of hashing 64 keys on both sides of a
+// worktree and reading which ones moved, `PRE_V50` below holds the OLD hashes and a case hashes the
+// SAME live world with `schemaVersion` rolled back to 49 – and gets them back **byte for byte, all
+// three**. That is not "the other keys look unmoved"; it is "there is no other difference at all".
+// It is also self-evidencing forever: if a later wave moves one of these careers for a real reason,
+// the rollback case goes red beside the freeze and says which kind of change it was.
+//
+// ⚠ AND `rngMain` IS AMONG THE UNMOVED FOR THE FOURTH WAVE RUNNING, by the same identity: the
+// call-up draws on `seed:callup:<week>`, its own sub-stream, and is unreachable outside the freeze in
+// any case. The frozen MAIN capture in tests/condition.test.ts is untouched (count 41550, hash
+// e6b0c709).
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: 'b31309b2c3fc1dc2011868b6f3e7690cbb317021d26c70635a0614dabf26fdb4',
+  middleGrinder: '38a86dd8f0bfdb29b1d57e3ff708a4edfb99c3a081265e8f2add5f583394c184',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '80fcd7910eca5cdae7cd4c71e1f68b56099c49912d71d6905cb67953819bef0b',
+  eliteGrinder: 'ddd8a264900fedf4df2ff7e4ee8b56acb8faf4e6414e5171bad2508d37300dce',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send) */
+  selfTravelling: '920611735951ce7c7277420bbecef8f90f7db1de85743b9df116d97dc55c159f',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
+ *  claim rather than assert it. See the paragraph on `FROZEN`. */
+const PRE_V50 = {
+  middleGrinder: 'b31309b2c3fc1dc2011868b6f3e7690cbb317021d26c70635a0614dabf26fdb4',
+  eliteGrinder: '80fcd7910eca5cdae7cd4c71e1f68b56099c49912d71d6905cb67953819bef0b',
   selfTravelling: 'a513ebc013a735c8e3ceea1e591a98c65b9111f4fce12c36ac6d19b33243522c',
 }
 const FREEZE_WEEKS = 156
 
-function careerHash(presetIndex: number, policyIndex: number, force?: Partial<{ coachOnEventWeeks: boolean }>): string {
+function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Partial<{ coachOnEventWeeks: boolean }>) {
   const { world, rng } = openCareer(PRESETS[presetIndex], 0, POLICIES[policyIndex])
   if (force?.coachOnEventWeeks !== undefined) world.coachOnEventWeeks = force.coachOnEventWeeks
   for (let w = 0; w < FREEZE_WEEKS; w++) stepCareerWeek(world, rng, POLICIES[policyIndex])
@@ -413,7 +441,22 @@ function careerHash(presetIndex: number, policyIndex: number, force?: Partial<{ 
   // about the mechanic being INERT here. Checked rather than assumed - a bench policy that started
   // ticking this would move the numbers for a reason the comment above says is impossible.
   expect(world.coachOnJuniorEvents, 'the v49 stance is present and OFF in the frozen careers').toBe(false)
-  return createHash('sha256').update(JSON.stringify(world)).digest('hex')
+  // ⚠ v50: and none of them goes to COLLEGE either – week 156 is 32 weeks short of the fork – so
+  // everything P5 added is unreachable here by construction, not by luck.
+  expect(world.college, 'the v50 freeze is not entered by any frozen career').toBeNull()
+  return world
+}
+
+function careerHash(presetIndex: number, policyIndex: number, force?: Partial<{ coachOnEventWeeks: boolean }>): string {
+  return createHash('sha256').update(JSON.stringify(walkFrozenCareer(presetIndex, policyIndex, force))).digest('hex')
+}
+
+/** The same walk, hashed with `schemaVersion` rolled back – the identity that proves the v50 re-freeze
+ *  moved ONE key. Overwriting the value in place preserves `JSON.stringify`'s key order, so this is
+ *  the same serialisation with one number changed and nothing else. */
+function careerHashAtSchema(presetIndex: number, policyIndex: number, schemaVersion: number): string {
+  const world = walkFrozenCareer(presetIndex, policyIndex)
+  return createHash('sha256').update(JSON.stringify({ ...world, schemaVersion })).digest('hex')
 }
 
 describe('the byte-identity of a career that does not travel', () => {
@@ -424,6 +467,15 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ P5: rolling ONLY the schema back to 49 reproduces the old hashes byte for byte', () => {
+    // The per-key diff, as an identity rather than a comparison. If P5 had reached any of these
+    // careers through anything but `SAVE_SCHEMA_VERSION`, this would be red – and it would be red
+    // beside a green freeze, which is precisely the signal a whole-world hash cannot otherwise give.
+    expect(careerHashAtSchema(5, 0, 49), '25k · middle coach · grinder').toBe(PRE_V50.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 49), '120k · elite coach · grinder').toBe(PRE_V50.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 49), '8k · self-coached · player').toBe(PRE_V50.selfTravelling)
   })
 
   it('MOVES when the same career sends him – so the three pins above are not vacuous', () => {
