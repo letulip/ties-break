@@ -335,3 +335,39 @@ them: one thing at a time.
 
 ⚠ **AND THE BATTERY'S OTHER COLUMNS ARE STILL PREDICTED IDENTICAL** to `the-ladder-is-monotone` §3b.
 Run 1 is the check: it must reproduce that column exactly, because the tool never answers the fork.
+
+### 3d. ✅ THE ONE PREDICTION THAT WAS EXACTLY RIGHT: v51 DOES NOT REACH THE WORLD OUTSIDE COLLEGE
+
+Run 1, every column against `the-ladder-is-monotone-2026-08.md` §3b's post arm:
+
+| | that spec | **run 1** | |
+| --- | --- | --- | --- |
+| rank at 17 / 19 / 21 / 25 | #374 / #178 / #178 / #174 | **#374 / #178 / #178 / #174** | ✅ |
+| career high, median (p25 / p75 / worst) | #112 (#75 / #142 / #180) | **#112 (#75 / #142 / #180)** | ✅ |
+| entries per career | 262 | **262** | ✅ |
+| prize by 19 / 21 / career | $112,290 / $246,240 / $623,820 | **$112,290 / $246,240 / $623,820** | ✅ |
+| counting book full at 19 | 55/90 | **55/90** | ✅ |
+| bankruptcies | 2 | **2** | ✅ |
+| ever held a professional ranking | 87/90 | **87/90** | ✅ |
+
+**Identical on every figure.** The battery never answers the fork, so `world.college` stays null and
+`resolveCollegeBill` returns at its first line – and the tuition bill is arithmetic on a persisted
+offer rather than a die, so no stream moves either. ⭐ **`tests/coach-travel-edge.test.ts` says the
+same thing a second way**: all three frozen career hashes moved, and rolling ONLY `schemaVersion` back
+to 50 reproduces the previous three byte for byte. **One key changed in those worlds and nothing else.**
+
+⚠ **AND THE DENOMINATOR, because `the-ladder-is-monotone` §3c is a standing warning about exactly this:**
+**90 of 90 careers reach the fork.** It is the full population, it did not grow or shrink between arms,
+and every §6a figure below is over that same 90. Nothing in this phase is a composition effect.
+
+### 3e. ⚠ FOR CONTRAST, THE RETIRED RULE ON THE SAME 90 CAREERS
+
+The battery still prints the pre-16.08 counterfactual, and it is worth putting beside the offer:
+
+| | retired rule (counterfactual) | **the shipped offer** |
+| --- | --- | --- |
+| careers with a college answer at the fork | **14 / 90** (4/90 a full season later) | **90 / 90** – it is never removed |
+| the mechanism | a W75 result **took it away**, in 86 of 87 closures, at median age 18.1 | a junior record **prices it** |
+
+⭐ **That is the phase in one line.** The old rule answered "may she?" with *no* in 84% of careers. The
+new one answers "may she?" with *yes, always* and "at what price?" with a number.
