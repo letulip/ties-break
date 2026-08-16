@@ -21,6 +21,35 @@ it moved the scope before a line was written.
 
 ---
 
+## Current truth
+
+- **The college gate reads its own rule and no calendar constant.** `collegeDoorOpen` is a leaf: it
+  imports nothing from `season/calendar.ts`, so moving an acceptance list or a points column can no
+  longer move the age at which the third answer stops existing. Before this phase `w75.acceptsRank`
+  decided both, and `collegeStillOpen` additionally read `TIERS[tier].points` to decide what "a
+  result that counted" meant. `tests/ending.test.ts` proves the decoupling by moving each constant
+  and asserting the college answer does not follow – and proves the tests are not vacuous by moving
+  the college rule's own knob and watching it does.
+- **Nothing closes the door for money, because the sport no longer does.** The NCAA's $10,000-a-year
+  pre-enrolment cap was struck out by the Brantmeier/Joint settlement on 15 April 2026 and
+  "amateurism" appears zero times in the current Division I Manual – so the money arm was cancelled
+  by the owner on 15.08 and no money gate exists. `ForkDialog` had been telling the player the
+  opposite in as many words; that sentence is gone.
+- **A RESULT still closes it, and the player is warned before the entry that costs it, not after.**
+  Both entry paths – the Season confirm and the calendar marker card – say that a result here can
+  cost the college place. It says *can*, never *will*: a first-round loss keeps the door. Nothing is
+  disabled, and the line goes quiet once the door is shut or the fork is answered.
+- **The fork card states her chances as a figure and never as advice.** One row – the rung's own
+  acceptance cut beside her rank – off `TIERS.wta250.acceptsRank`. A test asserts no verdict word
+  appears on the card.
+- ⚠ **The gate is now LATE rather than correct, and the six weeks it survives by are an accident.**
+  It fires at median 19.1 against a fork at 19.0. Nothing arranges that ordering, so any later tuning
+  that speeds her up by a month closes the door again in most careers, silently. The two rules still
+  name the same rung even though they no longer share a constant. **§6.1 is the owner's decision and
+  it is open.**
+
+---
+
 ## 0. THE THREE ANSWERS, IN ONE BOX
 
 > ### 1. THE DOOR IS OPEN AT THE DECISION IN 96% OF CAREERS NOW – IT WAS 8% BEFORE P1.
