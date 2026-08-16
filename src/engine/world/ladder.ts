@@ -567,7 +567,57 @@ export function playDownRefusalDetail(tier: TierId, rank: number): string {
 export function juniorAccessOpen(world: WorldState, week: number, tier: TierId): boolean {
   if (!isWSeriesTier(tier) || tier === 'w15') return true
   if (!isJuniorAge(kidAgeAt(world, week))) return true
+  // ⭐⭐ THE ORDINARY DOOR FIRST – OWNER, 16.08, AND THE CLAUSE UNDER THIS ONE WAS A REAL DEFECT.
+  //
+  // He asked why we refuse a fifteen-year-old at W35/W50/W75 when the regulations admit her and cap
+  // only how MANY she may play. He is right, and the research says it in a primary-source quote
+  // (`docs/research/ranking-points-by-tier.md` §4-C2): *"W75 HAS NO AGE FLOOR OF ITS OWN. The only
+  // age thresholds anywhere in the 2026 ITF WTT Regulations are 14 ... and 18, the AER cut-off. A
+  // 15-, 16- or 17-year-old is limited only by her per-year COUNT."* The four rungs share one
+  // section, "System of Merit", and §4-A is equally blunt about it: there is no threshold anywhere
+  // in it – an unranked player is not refused a W75, she is placed at the bottom of the list.
+  //
+  // ⚠ SO THE ACCELERATOR IS A RESERVED PLACE, NOT A TURNSTILE. It sets main-draw places ASIDE for
+  // juniors near the top of the junior list – an extra way in for a girl who would not make the
+  // acceptance list at all. P1 made it the only way in, which turns a privilege into a ceiling and
+  // models a rule that does not exist. Its own note argued the OR "would change nothing, because our
+  // acceptance cut already admits 93% of careers to a W75" – true when written, and P3 then tightened
+  // every cut on the ladder while P1 and P2 slowed her down. Measured after all of it: **62 careers
+  // of 90 clear W35's own #700 cut at seventeen and are refused by their birthday.**
+  //
+  // ⚠ AND THE BRAKE IS NOT REMOVED WITH THE CEILING, which is why this is a correction rather than a
+  // loosening: the per-year count he names is the AER, it ships, and P2 put it on a birthday-to-
+  // birthday window (14 -> 8 of which at most 3 at W75+, 15 -> 10, 16 -> 12, 17 -> 16). What comes
+  // back is the GRADIENT – a seventeen-year-old who has earned the rank may enter the rung she has
+  // earned, and the Accelerator still lets a top-twenty junior in above it.
+  return meetsAcceptanceCut(world, tier) || juniorReservedPlace(world, week, tier)
+}
+
+/** THE RESERVED PLACE ALONE – the Accelerator's own answer, and FALSE for everyone it does not apply
+ *  to: an adult, W15 (which has its own junior-reserved method), and every rung outside the ITF
+ *  five, because the programme's table stops at W100.
+ *
+ *  ⚠ IT EXISTS BECAUSE `juniorAccessOpen` CANNOT BE THE SECOND ARM OF AN OR, and the guard caught me
+ *  trying (16.08). That function answers "do the junior rules stand in her way", so it says TRUE for
+ *  everything it has no opinion about – an adult, a WTA 125 – and an OR against it therefore admits a
+ *  twenty-five-year-old who misses the cut by four hundred places. `tests/rankingGate.test.ts` went
+ *  red on exactly that, on six worlds, with the message it was written for: the calendar says open
+ *  and the turnstile says locked. This is the same question narrowed to what it actually grants. */
+function juniorReservedPlace(world: WorldState, week: number, tier: TierId): boolean {
+  if (!isWSeriesTier(tier) || tier === 'w15') return false
+  if (!isJuniorAge(kidAgeAt(world, week))) return false
   return acceleratorAdmits(world, week, tier, yearEndJuniorRank(world))
+}
+
+/** HER OWN WAY IN: the rung's published acceptance cut, read against the W table. Extracted so the
+ *  ordinary door and the reserved place are the SAME sentence in both places that ask – `tierFloorOpen`
+ *  returns it and `juniorAccessOpen` offers it first, and one expression cannot disagree with itself. */
+function meetsAcceptanceCut(world: WorldState, tier: TierId): boolean {
+  const accepts = acceptanceRank(world, tier)
+  if (accepts === undefined) return false
+  // ⚠ THE SENTINEL IS THE W TABLE'S OWN SIZE, NOT THE COHORT'S – see `tableSize`. With
+  // `cohort.length + 1` a missing cache read as world #200 and cleared this cut and five above it.
+  return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? tableSize(world, 'wta')) <= accepts
 }
 
 /** THE FLOOR half – "has she reached this rung", which is the whole of what `tierOpenFor` used to
@@ -594,13 +644,18 @@ export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
     // rolling junior window would close on its own a year later with nothing she could do about it.
     const accepts = acceptanceRank(world, tier)
     if (accepts === undefined) return onRampOpen(world, 'wta')
-    // ⚠⚠ AND SINCE P1 A JUNIOR HAS TO CLEAR THE ACCELERATOR AS WELL – see `juniorAccessOpen`. It is
-    // an AND rather than an OR, and the reason is measured rather than chosen: read as an extra door
-    // it would change nothing, because our acceptance cut already admits 93% of careers to a W75.
-    if (!juniorAccessOpen(world, world.week, tier)) return false
-    // ⚠ THE SENTINEL IS THE W TABLE'S OWN SIZE, NOT THE COHORT'S – see `tableSize`. With
-    // `cohort.length + 1` a missing cache read as world #200 and cleared this cut and five above it.
-    return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? tableSize(world, 'wta')) <= accepts
+    // ⚠⚠ A JUNIOR HAS TWO WAYS IN AND EITHER WILL DO – see `juniorAccessOpen`, which offers the
+    // rung's own cut first and the Accelerator's reserved place second. It was an AND until 16.08 on
+    // an argument that had gone stale ("read as an extra door it would change nothing, because our
+    // acceptance cut already admits 93% of careers to a W75") – P3 then tightened every cut on this
+    // ladder.
+    //
+    // ⚠ THE AGE CLAUSE IS LOAD-BEARING AND IT IS EASY TO DROP. `juniorAccessOpen` answers TRUE for an
+    // adult – the junior rules simply do not apply to her – so an unguarded OR against it would admit
+    // a twenty-five-year-old who misses the cut by four hundred places. For a junior this reads
+    // "her own cut OR the Accelerator"; for an adult it reads "her own cut", and that is the whole of
+    // the difference.
+    return meetsAcceptanceCut(world, tier) || juniorReservedPlace(world, world.week, tier)
   }
   // ⚠⚠ THE FLOOR HALF ONLY, AND THIS LINE IS WHERE THE 06.08 RULING NEARLY LEAKED PAST. It read
   // `isTierEligible(tier, ...)`, which is the WHOLE band - both bounds - so the domestic ceiling was
