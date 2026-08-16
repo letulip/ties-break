@@ -456,7 +456,21 @@ const REF = {
   // THE CAPTURE IS UNTOUCHED FOR THE SIXTH TIME: count 41550, hash e6b0c709, head and tail all
   // reproduce byte-for-byte and are asserted BEFORE this constant is read. P1 adds no draw to any
   // stream – an access rule is a post-draw gate – which is why the hash could not move and did not.
-  kidRank: 89,
+  // ⚠ AND RE-AIMED A SEVENTH TIME BY P2 – THE AGE-ELIGIBILITY WINDOW (16.08): 89 -> 93, four places,
+  // and for the seventh time running it is the same second-order mechanism and she did nothing
+  // different. Two of P2's changes reach the ITF table she is folded against. (a) The allowance is
+  // counted birthday-to-birthday now, so a girl who used to spend two overlapping season-block
+  // allowances inside one birth year spends one - she enters fewer professional events at sixteen and
+  // more junior ones, which re-deals which J draws she is in. (b) `w15.minAgeYears` went 16 -> 14 on
+  // the owner's ruling, so the on-ramp's two-of-thirty-two at a W15 are drawn from a wider pool of
+  // juniors and the ones not taken are free for different J weeks - the same mechanism P1's note
+  // above describes, one age lower.
+  //
+  // THE CAPTURE IS UNTOUCHED FOR THE SEVENTH TIME: count 41550, hash e6b0c709, head and tail all
+  // reproduce byte-for-byte and are asserted BEFORE this constant is read. P2 adds no draw to any
+  // stream - an entry allowance is a post-draw gate - which is why the hash could not move and did
+  // not, and why the input-independence A/B halves in tests/planner.test.ts still pass unchanged.
+  kidRank: 93,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

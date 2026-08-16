@@ -418,18 +418,29 @@ describe('the season mirror – the wrap judges against the table the card names
     // career): 49 and 153 are `domestic`/`itf`, 101 agrees with itself, 205 is `itf`/`wta` with 11
     // against the card and 14 against the latch, and 257 onward agree. Which wrap it is was never the
     // subject.
-    const world = walkNear(205, 'golden-v45')
+    // ⚠ RE-AIMED A FIFTH TIME AT P2 ITEM 6 (`w15.minAgeYears` 16 -> 14, the owner's ruling of 16.08):
+    // 205 -> 49, and THIS time the pair of tables moved as well, so it is read off the wrap instead
+    // of being written down. Measured across all eight wraps of this career (tools/mirror-probe.ts):
+    // 49 and 153 disagree as `domestic` on the card against `itf` latched, 101 / 205 / 257+ agree
+    // with themselves, and the `itf`/`wta` pair this file used to name no longer occurs on this seed
+    // at all – a rung that opens at fourteen changes when the latch reaches each storey. The file has
+    // said from the first re-aim that WHICH pair it is was never the subject; asserting only that
+    // they DIFFER makes that literally true and stops the next phase re-picking a week.
+    const world = walkNear(49, 'golden-v45')
     const summary = world.lastSeasonSummary!
-    expect(summary.rankTrack).toBe('itf')
-    expect(activeLadderOf(world)).toBe('wta')
+    const card = summary.rankTrack
+    const active = activeLadderOf(world)
+    expect(card, 'the card names the table the season was played on').not.toBe(active)
+    // ...and for the record, the pair this seed shows today.
+    expect([card, active]).toEqual(['domestic', 'itf'])
 
     // The ledger the wrap just banked from is reset by the wrap itself, so the fold is re-run here off
     // the rows the season actually committed - reconstructed the only way that is honest, by walking
     // one week short of the wrap and reading the ledger before it clears.
-    const oneShort = walkNear(204, 'golden-v45')
+    const oneShort = walkNear(48, 'golden-v45')
     const rows = oneShort.seasonEntries!.rows
-    const againstCard = rows.filter((r) => entryCouldNotMove(r, 'itf')).length
-    const againstActive = rows.filter((r) => entryCouldNotMove(r, 'wta')).length
+    const againstCard = rows.filter((r) => entryCouldNotMove(r, card)).length
+    const againstActive = rows.filter((r) => entryCouldNotMove(r, active)).length
     // The two really do differ on this career, or the test would prove nothing.
     expect(againstActive).toBeGreaterThan(againstCard)
     // ...and the banked number is the CARD's one. (The wrap counts the wrap-week entries too, so the

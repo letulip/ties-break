@@ -793,17 +793,33 @@ describe('P1 — the pro table (spec §5 design values over the real rulebook sh
     expect(annualProEntryLimit(13)).toBe(Number.MAX_SAFE_INTEGER)
   })
 
-  it('14 and 15 never reach the table: every W rung refuses them on AGE first', () => {
-    // ⚠ RE-AIMED, EVERY ASSERTION KEPT (one-clock, 09.08). This used to read "the rulebook's
-    // 14 -> 8 / 15 -> 10 rows are ABSENT because the doorway is closed at those ages". The rows are
-    // present now – but the claim the assertions actually make is about the DOORWAY, and it is the
-    // claim that was false under the band and is true again: `availabilityStatus` asks `tierAgeBlock`
-    // before it asks any cap, and it asks it of her real age. The rows exist as the honest table
-    // rather than as a live gate, which is why both facts are pinned and neither is dropped.
+  it('⭐ the 14 and 15 rows are LIVE GATES NOW – W15 opens at 14 on the owner\'s ruling', () => {
+    // ⚠ RE-AIMED, EVERY ASSERTION KEPT AND ONE INVERTED, AND THE INVERSION IS AN OWNER RULING.
+    // This test has been re-aimed twice and both notes are worth keeping. It first read "the
+    // rulebook's 14 -> 8 / 15 -> 10 rows are ABSENT because the doorway is closed at those ages"; the
+    // one-clock ruling (09.08) put the rows in and the claim became "the DOORWAY is shut, and
+    // `availabilityStatus` asks `tierAgeBlock` before it asks any cap, of her real age".
+    //
+    // ⭐⭐ THE OWNER, 16.08: «мы же вроде наресерчили четкую возрастную сетку с количеством доступных
+    // турниров каждого тира на каждом возрасте, мне кажется надо использовать.» So `w15.minAgeYears`
+    // is 14, as the sport's own junior-reserved place is, and the doorway at W15 is OPEN at fourteen.
+    // The 14 -> 8 and 15 -> 10 rows stop being an honest table nobody reads and become the live gate
+    // they are in the rulebook – which is exactly what the previous note said would have to happen
+    // the day a rung opened at 14 («A rung that ever opens at 14 (the real W15 does, via
+    // junior-reserved places) must bring those rows with it»).
+    //
+    // NOTHING IS WEAKENED: every rung ABOVE W15 is still shut at 14 and 15, asserted rung by rung, so
+    // a future change that quietly opened W75 to a fourteen-year-old still goes red here.
+    expect(TIERS.w15.minAgeYears, "the owner's ruling of 16.08").toBe(14)
+    expect(isTierAgeOpen('w15', 14), 'the doorway her allowance describes is open').toBe(true)
     for (const t of ECONOMY.entryCap.cappedProTiers) {
+      if (t === 'w15') continue
       expect(isTierAgeOpen(t, 14), t).toBe(false)
       expect(isTierAgeOpen(t, 15), t).toBe(false)
     }
+    // ...and the allowance she meets there is the rulebook's own, not `default`.
+    expect(annualProEntryLimit(14)).toBe(8)
+    expect(annualProEntryLimit(15)).toBe(10)
   })
 
   it('the two families are disjoint and exhaustive over the international rungs', () => {

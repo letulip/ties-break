@@ -7,12 +7,12 @@ import {
   skipTournament,
   closeTournament,
   KID_ID,
-  START_AGE_YEARS,
+  kidAgeAt,
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed, resumeMain, mainStateConsistent } from '../src/engine/rng'
-import { TIERS, TIER_LADDER, isTierAgeOpen, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, isTierAgeOpen } from '../src/engine/season/calendar'
 import type { SeasonResult } from '../src/engine/season/ranking'
 
 const EVENTS_CAP = 400 // mirrors world.ts
@@ -96,8 +96,21 @@ describe('world (phase-3 living season)', () => {
     // DISCIPLINE - that entering an event cannot move the main weekly stream - so WHICH event she
     // enters is scaffolding, and the filter keeps the scaffolding standing. It has to be `find`
     // rather than a hardcoded tier for the same reason it always was: the calendar decides.
-    const age = START_AGE_YEARS + Math.floor(entered.week / WEEKS_PER_YEAR)
-    const target = entered.season.find((e) => e.deadlineWeek >= entered.week && isTierAgeOpen(e.tier, age))
+    // ⚠ RE-AIMED AT P2, AND IT RESTORES THIS FIXTURE'S PRE-RULING BEHAVIOUR RATHER THAN CHANGING IT.
+    // Two things moved under it. (a) The age read was the BAND; `availabilityStatus` has asked her
+    // real age since the one-clock ruling, and she is genuinely thirteen at week 0 on the shipped
+    // birthday. (b) `w15.minAgeYears` went 16 -> 14 on the owner's ruling of 16.08, so a W15 became
+    // the earliest age-open event on this seed – and a W rung's door is a junior RANKING since P1
+    // (the junior-reserved place), which the points scaffolding below cannot open: it grants
+    // `enterPointBand[0]` DOMESTIC points, and W15's band is denominated in a currency that door no
+    // longer reads. Before the ruling no W rung was ever age-open here, so restricting the search to
+    // the junior and domestic tracks is this fixture choosing the same kind of event it always chose.
+    // WHICH event she enters is scaffolding – the guard is about RNG DISCIPLINE, that entering
+    // anything cannot move the main weekly stream.
+    const age = kidAgeAt(entered, entered.week)
+    const target = entered.season.find(
+      (e) => e.deadlineWeek >= entered.week && TIERS[e.tier].track !== 'wta' && isTierAgeOpen(e.tier, age),
+    )
     expect(target).toBeTruthy()
     // r-gate (season-life-01b): points-based eligibility. This guard is about RNG discipline, not the
     // ladder, so grant throwaway results worth what the rung asks ONLY for the enterEvent gate

@@ -374,7 +374,26 @@ export const TIERS: Record<TierId, TierDef> = {
     prizeCents: [2200_00, 1300_00, 750_00, 450_00, 250_00, 130_00],
     // The dense entry rung of the adult game, exactly as j30 is of the junior one.
     everyNWeeks: 2,
-    minAgeYears: 16,
+    // ⭐⭐ 16 -> 14, AND IT IS AN OWNER RULING OF 16.08, NOT A TUNING PASS. Verbatim: «мы же вроде
+    // наресерчили четкую возрастную сетку с количеством доступных турниров каждого тира на каждом
+    // возрасте, мне кажется надо использовать.» He is answering P1's own note, which recorded 16 as a
+    // DELIBERATE deviation from the sport's 14+ («⚠ `minAgeYears: 16` IS UNCHANGED AND THE DEVIATION
+    // IS DELIBERATE», docs/specs/junior-access-2026-08.md §2a). His ruling is to use the researched
+    // grid instead, and the grid is real, sourced and already in `ECONOMY.entryCap`: the ITF junior
+    // reserved place at W15 is age 14+, and the WTA's own AER rows start at 14 (8 events, at most 3
+    // at W75+) precisely because a fourteen-year-old CAN play a professional event.
+    //
+    // ⚠⚠ AND IT COLLIDES WITH A STATED DESIGN PILLAR, WHICH IS NOT SILENTLY DISCARDED.
+    // `docs/specs/adult-tour-and-endings.md` §4.1 makes the 16-18 two-tour overlap load-bearing – *"a
+    // sixteen-to-eighteen-year-old holds both tours at once and arrives at nineteen having seen what
+    // each one costs and pays"*. Opening W15 at 14 widens that overlap to 14-18: she now meets the
+    // second tour five years before the fork rather than three. The consequence is MEASURED rather
+    // than argued (docs/specs/age-eligibility-window-2026-08.md §6) and put in front of the owner,
+    // who has the final word and has already given it once. What makes it survivable is that the AER
+    // is now real: at 14 the professional year is EIGHT events against an unrestricted junior
+    // fourteen, so the wider overlap is a door she may step through occasionally rather than a tour
+    // she can move onto.
+    minAgeYears: 14,
     // ⚠ THE JUNIOR TABLE IS THE ON-RAMP, and this is the same rule j30 keeps one track down: the
     // bottom rung of a table is opened by the table BELOW it, because a player cannot hold a ranking
     // in a table she has never played in, and a rank gate on the first rung would be a closed loop.

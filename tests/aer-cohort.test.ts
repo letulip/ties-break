@@ -41,12 +41,15 @@ interface Season {
 /** Every (cohort player, season) pair of one career, with the professional draws she entered in the
  *  trailing 52 weeks. `world.results` holds one row per ENTRANT per draw for every live player since
  *  the rival-life slice, and is pruned to 52 weeks – so a fold at a season's end IS her year. */
-function cohortSeasons(seed: number, weeks: number): { rows: Season[]; kid: Season[] } {
+function cohortSeasons(seed: number, weeks: number): { rows: Season[]; kid: Season[]; kidLedger: number } {
   const { world, rng } = openCareer(PRESETS[seed % PRESETS.length], 0, POLICIES[1])
   const rows: Season[] = []
   const kid: Season[] = []
+  const kidWeeks = new Set<number>()
   for (let w = 0; w < weeks; w++) {
     stepCareerWeek(world, rng, POLICIES[1])
+    // Her professional entries come off her OWN ledger, harvested weekly because it prunes.
+    for (const week of world.proEntryWeeks) kidWeeks.add(week)
     if ((world.week + 1) % WEEKS_PER_YEAR !== 0 || world.week < WEEKS_PER_YEAR) continue
     const ageOf = new Map<string, number>()
     for (const p of world.cohort as AiPlayer[]) ageOf.set(p.id, p.ageYears)
@@ -64,16 +67,20 @@ function cohortSeasons(seed: number, weeks: number): { rows: Season[]; kid: Seas
       if (ageYears !== undefined) rows.push({ playerId, ageYears, entries })
     }
   }
-  return { rows, kid }
+  return { rows, kid, kidLedger: kidWeeks.size }
 }
 
 describe('P2 item 4 — the cohort is already inside the age-eligibility rule', () => {
-  const { rows, kid } = cohortSeasons(0, 3 * WEEKS_PER_YEAR)
+  const { rows, kid, kidLedger } = cohortSeasons(0, 3 * WEEKS_PER_YEAR)
 
   it('is not vacuous: cohort players really do play professional tennis', () => {
     expect(rows.length, 'player-seasons measured').toBeGreaterThan(20)
     expect(rows.some((r) => r.entries > 0), 'somebody entered a W draw').toBe(true)
-    expect(kid.length, 'and the kid played some too, for scale').toBeGreaterThan(0)
+    // ⚠ THE KID IS COUNTED OFF HER OWN LEDGER AND NOT OFF `results`, and the reason is P1's own:
+    // `world.results` is AWARD-ONLY for her (`finalizeTournament` writes it `if (points > 0)`), so a
+    // first-round exit leaves no row. The fold above is honest for a RIVAL – `runAiTournament` writes
+    // a row for every entrant – and silent for her, which is exactly why both entry ledgers exist.
+    expect(kid.length + kidLedger, 'and the kid played some too, for scale').toBeGreaterThan(0)
   })
 
   it('⭐ NO cohort player exceeds the AER row for her own age – the asymmetry is already harmless', () => {

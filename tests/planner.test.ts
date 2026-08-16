@@ -285,7 +285,10 @@ function hashOf(draws: number[]): string {
 // juniors were no longer free for changed. Post-draw arithmetic once more: the capture is asserted
 // above this line and reproduces byte-for-byte (41550 / e6b0c709) – P1 draws on no stream at all.
 // See the same note on tests/condition.test.ts B1's REF. docs/specs/junior-access-2026-08.md.
-const REF = { kidRank: 89 }
+// ⚠ 89 -> 93 AT P2 – see the same constant's note in tests/condition.test.ts for the mechanism
+// and for why the frozen MAIN capture is untouched. The A/B draw equality above is unchanged: it is
+// asserted before this line and it still passes, which is the input-independence law holding.
+const REF = { kidRank: 93 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

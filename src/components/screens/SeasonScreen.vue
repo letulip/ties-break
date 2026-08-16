@@ -434,7 +434,7 @@ function showsProEntries(e: UpcomingEvent): boolean {
 
 // ⭐ AND THE JUNIOR BUDGET, ON THE SAME TERMS (P2, act2-pro-tour.md §5: «The player sees the budget
 // ... and the refusal names the rule»). Half of that sentence shipped at round-17 #2 and half did
-// not: the professional counter has ridden every W card since, while the ITF one appeared only on a
+// not: the professional counter has ridden every W card since, while the junior one appeared only on a
 // card the cap had ALREADY refused. Both allowances are hers to see, and a junior season is where
 // the budget is tightest - fourteen international events at fourteen, against a calendar that offers
 // far more than fourteen.
@@ -446,8 +446,8 @@ function juniorEntriesFor(e: UpcomingEvent): string | null {
   if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
   return `junior entries ${cap.used} / ${cap.limit}`
 }
-/** WHICH CARDS CARRY IT – the rungs the ITF counts (`ECONOMY.entryCap.cappedTiers`, through the
- *  engine's own predicate). The two families are disjoint, so no card can ever show both chips. */
+/** WHICH CARDS CARRY IT – the junior rungs the allowance counts (`ECONOMY.entryCap.cappedTiers`,
+ *  through the engine's own predicate). The two families are disjoint, so no card shows both. */
 function showsJuniorEntries(e: UpcomingEvent): boolean {
   return isCappedTier(e.tier) && juniorEntriesFor(e) !== null
 }

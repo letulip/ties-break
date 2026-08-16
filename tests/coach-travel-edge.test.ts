@@ -344,13 +344,35 @@ describe('the plaque is about the MAN, and the trip is not part of who he is', (
 // stream at all (an entry allowance is a post-draw gate), so the persisted MAIN position after 156
 // weeks is identical in both trees. The frozen MAIN capture in tests/condition.test.ts is likewise
 // untouched – count 41550, hash e6b0c709.
+// ⭐ AND RE-FROZEN ONCE MORE INSIDE THE SAME WAVE, FOR P2's OWN ITEM 6 (`w15.minAgeYears` 16 -> 14,
+// the owner's ruling of 16.08) – PER-KEY DIFF TAKEN AGAIN, this time against the previous commit
+// (`53223b3`) rather than against the start of the wave, so the number names ITS OWN change:
+//
+//   all three careers   32 of 64 keys moved, and they are the same 32 each time: `results`,
+//                       `bestFinishByTier`, `entries`, `seasonEntries`, `seasonHistory`, the four
+//                       rank caches and their prev* companions, `fundsCents`, `financeWeeks`,
+//                       `careerTotals`, `skills`, `condition`, `events`, `milestones`, `offers`,
+//                       `academy`, `trophiesByTier`, `knockHistory`, `injuryHistory`,
+//                       `internationalEntryWeeks` – and on the player-policy arm `proEntryWeeks`.
+//   UNMOVED IN ALL THREE  **coachId · coachOnEventWeeks · coachOnJuniorEvents · profile · seed ·
+//                         rngMain · cohort · schemaVersion · season**
+//
+// A rung that opens two years earlier changes which tournaments a girl enters from the age of
+// fourteen, so a career diverges early and stays diverged – that is the whole of the 32. What these
+// hashes exist to catch is a coach change leaking past the trip, and every coach key, the profile,
+// the calendar and the schema are byte-identical on all three careers.
+//
+// ⚠ `rngMain` IS AGAIN AMONG THE UNMOVED, on all three. An age gate is a post-draw filter, so the
+// persisted MAIN position after 156 weeks is identical – and the frozen capture in
+// tests/condition.test.ts is likewise untouched (count 41550, hash e6b0c709), asserted before its own
+// companion constant, which did move (89 -> 93; the mechanism is written out there).
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: '7e02458455f856c5b8843d2117b897f2c7dcd378f96c9557ca5b0b96326cec19',
+  middleGrinder: '9afd25c381579dccd3cc35c90ae5b23e25f3fc242070bcf2eda7e1790e59adc1',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '35267cea396a88f938017c1d5760386bdba044c0a3a85f614f3d63c8ccabc0cf',
+  eliteGrinder: '0798782f2a6921f911fabecf70c9f1b9ff2baf2235b279bf1e81796cb2522b89',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send) */
-  selfTravelling: 'd117bdb55e12dd0fea1d268cdc2de6297683410847f4cc9346d3a1132f705873',
+  selfTravelling: '92666725d969df18a8958ef8ce54fc040d906aecca3e4e44af2ccd44d650fbac',
 }
 const FREEZE_WEEKS = 156
 

@@ -54,6 +54,8 @@ import {
   toSnapshot,
 } from '../src/engine/world'
 import { engineModuleSource } from './worldSource'
+import { TIERS } from '../src/engine/season/calendar'
+import { START_AGE_YEARS } from '../src/engine/world'
 import type { SeasonEvent } from '../src/engine/season/types'
 import { DIARY_POOL, WEEK_NOTES } from '../src/engine/diary'
 import { weekMonth } from '../src/shared/dates'
@@ -189,7 +191,7 @@ describe('the band and the girl are two different numbers', () => {
     }
   })
 
-  it('⚠ W15 OPENS ON HER SIXTEENTH BIRTHDAY – eleven months apart across the band (item 19a)', () => {
+  it('⚠ W15 OPENS ON HER OWN BIRTHDAY – eleven months apart across the band (item 19a)', () => {
     // The defect, verbatim: a girl born 15 March was offered and ENTERED a W15 at week 104, at a real
     // age of 15.83, because `TIERS.w15.minAgeYears = 16` was being asked of the band. Asked of the
     // girl, the door opens on her birthday - so a December career waits eleven months longer than a
@@ -201,7 +203,12 @@ describe('the band and the girl are two different numbers', () => {
       world.results.push({ playerId: KID_ID, week: 0, points: 400, tier: 'w100' })
       world.onRampCleared = { itf: true, wta: true }
       recomputeKidRank(world)
-      for (let w = 90; w < 4 * 52; w++) {
+      // ⚠ THE SCAN STARTS AT 0 SINCE P2. It began at week 90 because the door was at sixteen and
+      // nothing before then could open it; the owner's ruling of 16.08 put `w15.minAgeYears` at 14,
+      // and a January girl's fourteenth birthday is week 0 – so a scan starting at 90 found her
+      // FIFTEENTH year and quietly measured the wrong door. Starting at 0 asks the question the test
+      // is named for whatever the constant is.
+      for (let w = 0; w < 4 * 52; w++) {
         const e: SeasonEvent = {
           id: `w15-probe-${w}`, week: w, tier: 'w15', surface: 'hard', travelCostCents: 100_00, deadlineWeek: w - 2,
         }
@@ -212,12 +219,19 @@ describe('the band and the girl are two different numbers', () => {
     const jan = opensFor(1)
     const mar = opensFor(3)
     const dec = opensFor(12)
-    // she is sixteen in the week it opens, on every birthday - that is the claim, not a week number
-    expect(kidAgeYears(jan, 1), 'January').toBe(16)
-    expect(kidAgeYears(mar, 3), 'March').toBe(16)
-    expect(kidAgeYears(dec, 12), 'December').toBe(16)
-    // ...and week 104 is NOT it for the March girl, which is exactly item 19a
-    expect(mar, 'the March girl is not admitted at week 104').toBeGreaterThan(104)
+    // ⚠ THE AGE IS THE RUNG'S OWN, NOT A LITERAL, AND P2 IS WHY. `w15.minAgeYears` went 16 -> 14 on
+    // the owner's ruling of 16.08 (calendar.ts carries it verbatim), so this test's headline used to
+    // name a number the catalogue no longer holds. The CLAIM was never about sixteen: it is that the
+    // door opens on HER birthday and therefore eleven months apart across the band. Read off the
+    // catalogue it survives the ruling and would survive the next one.
+    const opensAt = TIERS.w15.minAgeYears!
+    expect(kidAgeYears(jan, 1), 'January').toBe(opensAt)
+    expect(kidAgeYears(mar, 3), 'March').toBe(opensAt)
+    expect(kidAgeYears(dec, 12), 'December').toBe(opensAt)
+    // ...and the season boundary of the year the BAND turns that age is NOT it for the March girl,
+    // which is exactly item 19a. Derived from the rung so the ruling cannot make it vacuous.
+    const bandWeek = (opensAt - START_AGE_YEARS) * 52
+    expect(mar, `the March girl is not admitted at week ${bandWeek}`).toBeGreaterThan(bandWeek)
     expect(dec - jan, 'eleven months of it, in weeks').toBeGreaterThanOrEqual(44)
   })
 

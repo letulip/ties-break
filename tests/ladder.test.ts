@@ -23,6 +23,7 @@ import {
   financeWindow,
   KID_ID,
   START_AGE_YEARS,
+  kidAgeAt,
   type WorldState,
 } from '../src/engine/world'
 import type { RankingRow, SeasonEvent, TierId } from '../src/engine/season/types'
@@ -696,16 +697,28 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
   // tier table rather than against a list, so a re-priced age gate cannot slip past this.
   it('availabilityStatus blocks a 14-year-old on age for exactly the rungs above her age', () => {
     const world = createWorld('age-gate')
+    // ⚠ HER AGE, NOT THE BAND, AND P2 IS WHAT EXPOSED THE DIFFERENCE. This read `START_AGE_YEARS` –
+    // the 14 of the age GROUP – while `availabilityStatus` has asked `kidAgeAt` since the one-clock
+    // ruling of 09.08, and `DEFAULT_PROFILE` is a June girl who is genuinely THIRTEEN at week 0. The
+    // two agreed only because no rung's `minAgeYears` sat at exactly 14; the owner's ruling of 16.08
+    // put W15 there, and the test started asserting that a thirteen-year-old is not too young for a
+    // rung that opens at fourteen. Reading the clock the gate reads is strictly stronger, and it is
+    // the same correction world/age.ts records for nine engine call sites.
+    // ...and it is asked of the EVENT's week, which is the second half of the same correction:
+    // `availabilityStatus` reads `kidAgeAt(world, event.week)` (R10-17), so a rung that opens on a
+    // birthday inside the season is open on the cards after it and shut on the cards before it. One
+    // age for the whole season was a good enough model only while no rung opened mid-career.
+    const ageAt = (e: SeasonEvent) => kidAgeAt(world, e.week)
     let refused = 0
     for (const e of world.season) {
       const status = availabilityStatus(world, e)
       const tooYoung = /too young/i.test(status.detail ?? '')
-      expect(tooYoung, `${e.tier} at 14`).toBe(!isTierAgeOpen(e.tier, START_AGE_YEARS))
+      expect(tooYoung, `${e.tier} at ${ageAt(e)} (w${e.week})`).toBe(!isTierAgeOpen(e.tier, ageAt(e)))
       if (tooYoung) refused++
     }
     // Not a vacuous pass: her first season really does carry rungs she cannot reach yet.
     expect(refused).toBeGreaterThan(0)
-    for (const e of world.season.filter((x) => isTierAgeOpen(x.tier, START_AGE_YEARS))) {
+    for (const e of world.season.filter((x) => isTierAgeOpen(x.tier, kidAgeAt(world, x.week)))) {
       expect(availabilityStatus(world, e).detail ?? '').not.toMatch(/too young/i)
     }
   })
@@ -734,7 +747,11 @@ describe('L8 — she can only play ONE tournament a week', () => {
       // assertion below reads would be the wrong throw entirely: the test would pass while proving
       // nothing. No third pile of points can fix that, because age is not a pile of points. Filtering
       // to what a fourteen-year-old may enter is the same move the two piles above already make.
-      if (!isTierAgeOpen(e.tier, START_AGE_YEARS)) continue
+      // ⚠ HER AGE, NOT THE BAND (P2). Same correction as L7 above and for the same reason: she is
+      // genuinely thirteen at week 0 on the shipped birthday, and since the owner's ruling of 16.08
+      // W15 opens at fourteen – so filtering on the BAND let a W15 through that the gate then refuses
+      // on AGE, which is once more the wrong throw for a test about one body in one week.
+      if (!isTierAgeOpen(e.tier, kidAgeAt(world, world.week))) continue
       // ⚠ AND THE RUNGS THE BOOK ABOVE HAS OUTGROWN GO TOO (W2-WINDOW), which is the same move
       // again rather than a third exception. The two piles are what clear the ITF/domestic gates,
       // and 1,500 domestic points clear them by walking straight past Local (ceiling 85) and
