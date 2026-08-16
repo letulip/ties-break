@@ -123,6 +123,31 @@ function formatEdge([lo, hi]: [number, number]): string {
   return `+${lo.toFixed(1)}-${hi.toFixed(1)}% per match`
 }
 
+/** ⭐⭐ ROUND-21 #2, THE LAST OPEN ITEM – WHAT THE RUNG IS WORTH WITH THE COACH ON THE TRIP.
+ *
+ *  The travel helping shipped in the engine, was measured at 500 paired careers and said NOTHING on
+ *  the screen that sells the decision: a family paying a second fare to every W event read exactly the
+ *  figure a family that leaves the coach at home reads. This is that figure, doubled - and it is on
+ *  the card only when the stance would actually send him, which is the engine's call
+ *  (`edgeTravelPct` is null otherwise) and never this screen's.
+ *
+ *  ⚠ THE COMPONENT DOES NO ARITHMETIC. The doubling is `coachEdgeCorridorPp`, one function beside the
+ *  draw it has to stay in step with; this formats a pair the engine already cut. A `* 2` in a template
+ *  is how a screen comes to quote a dose the engine has moved on from.
+ *
+ *  ⚠ IT NAMES THE CONDITION AND NEVER CLAIMS A FLAT DOUBLING. The helping follows the FARE
+ *  (`coachTravelFareFor`), which sends him only to rungs that pay prize money unless the junior stance
+ *  is open too - so a J-series week doubles nothing even for a family that always sends him.
+ *  "travelling with her" is exactly the weeks it applies to, and «doubled» would not be.
+ *
+ *  ⚠ AND NO PRONOUN NAMES THE COACH (R15-7, owner 09.08): a woman sits on every roster by
+ *  construction, so "travelling with him" is not available and "with her" is the daughter, who is the
+ *  app's one fixed "she". Same one decimal as the corridor beside it, for the same reason - these are
+ *  brackets, and a second digit would imply a precision a bracket does not have. */
+function formatEdgeTravel([lo, hi]: [number, number]): string {
+  return `+${lo.toFixed(1)}-${hi.toFixed(1)}% travelling with her`
+}
+
 // --- the style lens (design decision 2) ---------------------------------------------------------
 // `null` means "her own style", which is what the engine already computed the pills against. Pick
 // any other style and every pill is re-read client-side from the SAME rule the engine used, so the
@@ -323,6 +348,20 @@ const roomNote = computed(() => game.snapshot?.coachRoomNote ?? '')
 // habit.
 const edge = computed(() => game.snapshot?.coachEdge ?? null)
 const plaqueLine = computed<string>(() => edge.value?.plaqueLine ?? '')
+
+// ⭐⭐ ROUND-21 #2, THE LAST OPEN ITEM – AND ONE SENTENCE THAT KEEPS THE SECOND FIGURE HONEST.
+//
+// The chip on every card says what the rung is worth with the coach on the trip; this says WHEN,
+// once, on the card of the coach she actually has. It is the engine's string (`travelLine`, '' when
+// this family is not sending him) for the same reason the plaque is: what the doubling is gated on is
+// `coachTravelFareFor`, and a screen that phrased the condition itself would be a second copy of a
+// rule that lives in the till.
+//
+// ⚠ IT DOES NOT QUALIFY THE PLAQUE, and it must not be read as doing so. The helping SCALES the
+// corridor rather than shifting it, so the upper third of 0.5-0.9 is the upper third of 1.0-1.8 and
+// "the upper end of that band" is true of both bands at once. The placement stays a fact about the
+// man, which is what §7 protects; this is a fact about the trip.
+const travelLine = computed<string>(() => edge.value?.travelLine ?? '')
 
 type SortMode = 'fit' | 'price'
 const sort = ref<SortMode>('fit')
@@ -791,7 +830,25 @@ function scrollToTier(tier: CoachTier): void {
           <span class="cm-uplift">
             <span class="cm-uplift-season">{{ formatUplift(r.upliftPct) }}</span>
             <span class="cm-edge">{{ formatEdge(r.edgePct) }}</span>
+            <!-- ⭐⭐ ROUND-21 #2, THE LAST OPEN ITEM - AND WHAT IT IS WORTH WITH THE COACH ON THE
+                 TRIP. The doubling shipped in the engine and this card kept quoting the HOME
+                 corridor to a family paying a second fare to every event that pays.
+
+                 ⚠ ONLY WHEN THE FAMILY WOULD ACTUALLY SEND HIM. The engine hands `null` when there
+                 is nobody to send or the stance is off (`coachTravelsWithHer`, the same pair the
+                 fare is charged on), so a career that leaves the coach at home reads exactly the
+                 card it read before - one figure, unchanged.
+
+                 ⚠ STILL THE RUNG AND NEVER THE MAN: twice a price bracket is a price bracket, and
+                 the engine cuts both from the tier table without reading a coach id. §4 holds. -->
+            <span v-if="r.edgeTravelPct" class="cm-edge-travel">{{ formatEdgeTravel(r.edgeTravelPct) }}</span>
           </span>
+          <!-- WHEN THAT SECOND FIGURE APPLIES, said once and on her own coach's card only. The
+               helping follows the FARE, which stays home for the rungs that pay no prize money unless
+               the family has opened that stance too - so "the corridor is doubled" would be a claim
+               about a season she may not be playing, and "twice that on the trips the coach travels
+               to" is the true one. The engine writes it; this prints it. -->
+          <span v-if="r.current && travelLine" class="cm-travel-edge">{{ travelLine }}</span>
           <!-- THE PLAQUE, and only the coach she actually has has one. Before a full season it says
                so and says when; after it, it carries the realised number for this person. See the
                `plaqueLine` block in the script for why it lives here rather than on Home, and for

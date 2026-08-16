@@ -3751,6 +3751,22 @@ tr.kid-row td {
   font-variant-numeric: tabular-nums;
   color: var(--ink-soft);
 }
+/* ⭐ ROUND-21 #2 - WHEN THE SECOND PER-MATCH FIGURE APPLIES. One sentence, on the current card only,
+   under the chips it is about.
+
+   ⚠ IT IS DELIBERATELY QUIETER THAN THE PLAQUE ABOVE IT and takes `.cm-load`'s treatment rather than
+   `.cm-plaque`'s: the plaque is a fact about THIS PERSON and this is a rule about the arrangement, so
+   the weight step `.cm-plaque` earned (500, and the ledger for it is in that rule) must stay the
+   thing that separates the two. `--muted` also keeps it off the accent, which on the current card
+   would make a condition read as good news.
+
+   No `margin-top`: it belongs to the figures directly above it, and the load note below opens its own
+   gap. Wraps freely - it is a sentence, and 375px is where it has to survive. */
+.cm-travel-edge {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--muted);
+}
 /* WHAT HE DOES ABOUT HER BODY (load slice). Below the uplift and quieter than it: the uplift is the
    card's headline claim and this is the second thing the money buys, so it must not compete. Wraps
    freely - these are sentences, and a 375px card is where they have to survive. */

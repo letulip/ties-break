@@ -609,10 +609,51 @@ export function coachEdgePp(seed: string, coachId: string | null, travelling = f
   if (coachId === null) return 0
   const [lo, hi] = COACH_EDGE_CORRIDOR_PP[coachTierById(coachId)]
   const own = hi > lo ? lo + rngFromSeed(`${seed}:coachedge:${coachId}`)() * (hi - lo) : lo
-  // A SECOND HELPING OF THE SAME MAN - the multiply is the whole mechanic, and it is deliberately
-  // not a named dose: a constant here would be a second scale beside the corridor, and the corridor
-  // is the scale the owner named.
-  return travelling ? own * 2 : own
+  return withTravelHelping(own, travelling)
+}
+
+/** A SECOND HELPING OF THE SAME MAN - the multiply is the whole mechanic, and it is deliberately not
+ *  a named dose: a constant here would be a second scale beside the corridor, and the corridor is the
+ *  scale the owner named («что если мы привяжем это как раз к тренерской лестнице?»).
+ *
+ *  ⚠ IT IS A FUNCTION RATHER THAN A LITERAL IN TWO PLACES, and that is the whole reason it exists.
+ *  Round-21 #2's last open item was that the SCREEN still quoted the home corridor to a family that
+ *  travels; fixing it means the doubling has to be applied to a BRACKET as well as to a draw, and two
+ *  `* 2`s in two files is precisely how a screen comes to quote a dose the engine no longer uses.
+ *
+ *  ⚠ AND IT IS APPLIED TO THE RESULT, NOT TO THE CORRIDOR `coachEdgePp` DRAWS FROM. Drawing inside a
+ *  pre-doubled band is the same number in exact arithmetic and NOT the same number in floating point
+ *  (`2*lo + u*(2*hi - 2*lo)` can differ in the last bit from `2*(lo + u*(hi - lo))`), and a last bit
+ *  here is a different match. The draw is untouched: same stream, same uniform, same multiply. */
+function withTravelHelping(pp: number, travelling: boolean): number {
+  return travelling ? pp * 2 : pp
+}
+
+/** ⭐ WHAT A SCREEN MAY QUOTE FOR A RUNG - the tier's corridor, and TWICE IT for a family whose coach
+ *  is on the trip with her (round-21 #2, the last open item: «edgePct prints the rung's HOME corridor
+ *  to a family that travels»).
+ *
+ *  ⚠ TWICE A BRACKET IS STILL A BRACKET, which is what keeps this inside §4's anti-shopping rule. The
+ *  market may say what a PRICE BRACKET buys and may never say what THIS MAN is worth: a number on an
+ *  unhired card turns the market into a shop window with the prices written on the back. Both figures
+ *  here are cut from `COACH_EDGE_CORRIDOR_PP` and neither reads a coach id, so no draw can leak
+ *  through this function even by mistake.
+ *
+ *  ⚠⚠ AND THE PLACEMENT SURVIVES THE DOUBLING UNTOUCHED, which is why the plaque needs no disclaimer
+ *  beside these numbers. The helping SCALES the corridor rather than shifting it (§1's own argument
+ *  for scaling), so equal thirds map onto equal thirds: the upper third of 0.5-0.9 is the upper third
+ *  of 1.0-1.8, and «the upper end of that band» is true of the band he trains in AND of the band he
+ *  travels in. `coachEdgePlacement` therefore still reads the MAN and not the trip, and the travel
+ *  figure cannot turn into a precision claim about him - it is the bracket that moved, not his place
+ *  in it.
+ *
+ *  ⚠ IT ANSWERS FOR A TIER AND ASKS NO WORLD. Whether this family's stance would actually send him is
+ *  `coachTravelsWithHer`'s question, and the caller that has a world asks it there - see
+ *  `coachMarket` / `coachEdgeView`. A pure tier lookup keeps this usable from the bench, which mutates
+ *  the table per arm. */
+export function coachEdgeCorridorPp(tier: CoachTier, travelling = false): [number, number] {
+  const [lo, hi] = COACH_EDGE_CORRIDOR_PP[tier]
+  return [withTravelHelping(lo, travelling), withTravelHelping(hi, travelling)]
 }
 
 /** WHERE HE FELL IN HIS OWN CORRIDOR, in thirds – and this, not the number, is what a screen may say

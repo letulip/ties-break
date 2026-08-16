@@ -1007,6 +1007,15 @@ export interface CoachMarketRow {
    *  man's own number - see `coachMarket` for why a number on an unhired card would break the
    *  market. His own lands on `Snapshot.coachEdge` after a season with her. */
   edgePct: [number, number]
+  /** ⭐ ROUND-21 #2 – THE SAME BAND DOUBLED, for a family whose coach is on the trip with her, and
+   *  `null` for one that is not sending him (nobody hired, or the stance off).
+   *
+   *  The travel helping shipped in the engine and said nothing on the screen that sells it: `edgePct`
+   *  above quoted the HOME corridor to a family paying a second fare to every W event. It is still a
+   *  bracket and never a man - twice a price bracket is a price bracket, so §4's anti-shopping rule is
+   *  untouched - and the card names the CONDITION rather than claiming a flat doubling, because a
+   *  J-series week doubles nothing unless the junior stance is open too. See `coachEdgeCorridorPp`. */
+  edgeTravelPct: [number, number] | null
   /** WHAT HE DOES ABOUT HER BODY, in one sentence (docs/specs/coach-as-load-manager.md).
    *
    *  Added because a ladder nobody can see is not a product. The load wave gave the rungs two new
@@ -2892,6 +2901,10 @@ export interface Snapshot {
   coachEdge: {
     /** [lo, hi] pp per match for her rung – [0, 0] self-coached, which is not a corridor */
     corridorPct: [number, number]
+    /** ⭐ ROUND-21 #2: ...and the same band DOUBLED on the trips the coach is on, or `null` when this
+     *  family would not send him. A bracket, like the one above it – no coach id is read anywhere in
+     *  its derivation, so §7's "no figure for him on any screen" survives it. */
+    travelCorridorPct: [number, number] | null
     /** which third of that corridor he landed in, or null while there is nothing honest to show */
     placement: CoachEdgePlacement | null
     revealed: boolean
@@ -2907,6 +2920,11 @@ export interface Snapshot {
      *  clock, because the two halves answer to different things and a screen holding both would be
      *  the second copy of that rule. The card prints it and formats nothing. */
     plaqueLine: string
+    /** ⭐ ROUND-21 #2: THE CONDITION UNDER THE SECOND FIGURE, or '' when there is no second figure.
+     *  It says «twice that on the trips the coach travels to» rather than «doubled», because the
+     *  helping follows `coachTravelFareFor` and a junior week doubles nothing unless that stance is
+     *  open too. Composed engine-side and quoting no number – see `TRAVEL_EDGE_LINE`. */
+    travelLine: string
   }
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */

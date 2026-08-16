@@ -10,7 +10,7 @@
 // is the market card's own copy, and it had two callers in two different concerns.
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
-import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_EDGE_CORRIDOR_PP, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
+import { bestFitCoachAt, buildCoachRoster, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf } from '../coach'
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
@@ -486,6 +486,11 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
   // ⚠ THE QUOTE IS OVER THE WEEKS SHE WILL ACTUALLY HAVE HIM (08.08). Same arithmetic the season
   // price uses, from the same helper, so the card and the bill can never describe different years.
   const coachedWeeks = ECONOMY.coach.upliftHorizonWeeks - coachedWeeksLostToRest(world)
+  // ⭐ ROUND-21 #2, THE LAST OPEN ITEM – DOES THIS FAMILY SEND HIM? Asked ONCE, of the one predicate
+  // every presence surface reads, and never per row: it is a fact about the FAMILY's stance and not
+  // about the man on the card, so a row-by-row answer would be the same question asked sixteen times
+  // with sixteen chances to disagree. See `edgeTravelPct` below for what it gates.
+  const travels = coachTravelsWithHer(world)
   return buildCoachRoster(world.seed, age).map((coach) => {
     const fit = coachFitFor(coach, world.profile.playStyle)
     const [upliftLo, upliftHi] = coachSeasonUplift({
@@ -520,7 +525,26 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // the 0.7 budget coach turns up - and since the value is a property of the MAN, that search
       // would always succeed. The corridor is genuinely all a market can tell you about a price
       // bracket, and it is what the owner asked for («может по-проще "+0.3-0.6% per match"»).
-      edgePct: [...COACH_EDGE_CORRIDOR_PP[coach.tier]] as [number, number],
+      edgePct: coachEdgeCorridorPp(coach.tier),
+      // ⭐ ...AND TWICE THAT ON THE TRIPS HE IS ON (round-21 #2, the last open item). Until this the
+      // card quoted the HOME corridor to a family paying a second fare to every W event: the doubling
+      // shipped in the engine, was measured at 500 paired careers, and said nothing on the one screen
+      // that sells the decision.
+      //
+      // ⚠ NULL RATHER THAN THE HOME BAND REPEATED, so a family that leaves him at home reads exactly
+      // what it read before and the screen has one thing to test rather than two identical figures to
+      // tell apart. The gate is the STANCE (`coachTravelsWithHer`: somebody to send, and the switch
+      // on), which is the same pair the fare itself is charged on.
+      //
+      // ⚠ AND IT IS STILL THE RUNG AND NEVER THE MAN – §4's anti-shopping rule, which twice a bracket
+      // does not touch: `coachEdgeCorridorPp` reads the tier table and no coach id, so this column
+      // cannot leak an individual draw any more than `edgePct` above can.
+      //
+      // ⚠ WHAT IT DOES NOT PROMISE IS A FLAT DOUBLING, and the copy carries that rather than this
+      // field. `coachTravelFareFor` sends him only to rungs that pay prize money unless the family has
+      // opened the junior stance too, so a J-series week doubles nothing even here - which is why the
+      // card says «travelling with her» and not «doubled».
+      edgeTravelPct: travels ? coachEdgeCorridorPp(coach.tier, true) : null,
       loadNote: coachLoadNote(coach.tier),
     }
   })
@@ -691,6 +715,14 @@ export function coachPlaqueLine(view: {
 export function coachEdgeView(world: WorldState): {
   /** [lo, hi] pp per match for the rung she is on - [0, 0] self-coached, which is not a corridor */
   corridorPct: [number, number]
+  /** ⭐ ROUND-21 #2, THE LAST OPEN ITEM – ...AND THE SAME BAND DOUBLED, for a family whose coach is on
+   *  the trip with her. `null` when this family would not send him (no coach, or the stance off), so
+   *  a career that leaves him at home reads exactly what it read before.
+   *
+   *  ⚠ IT IS A BRACKET AND NOT HIS FIGURE, exactly like `corridorPct` beside it - see
+   *  `coachEdgeCorridorPp`, which is cut from the tier table and reads no coach id. §7's rule that no
+   *  screen may quote his own value is untouched, and so is §4's that the market may not quote a man. */
+  travelCorridorPct: [number, number] | null
   /** WHICH THIRD of that corridor he landed in, or null while there is nothing honest to show. His
    *  own pp figure is deliberately NOT on this view: it is not observable in principle (§7). */
   placement: CoachEdgePlacement | null
@@ -705,6 +737,10 @@ export function coachEdgeView(world: WorldState): {
   seasonsTogether: number
   /** the plaque, written: place x confidence, one sentence */
   plaqueLine: string
+  /** ⭐ ROUND-21 #2 – THE ONE SENTENCE THAT KEEPS THE SECOND FIGURE HONEST, or '' when there is no
+   *  second figure. See `TRAVEL_EDGE_LINE` for why it names a condition instead of claiming a
+   *  doubling, and why it is composed here rather than on the card. */
+  travelLine: string
 } {
   const tier = coachTierById(world.coachId)
   const since = coachSinceWeek(world)
@@ -724,16 +760,46 @@ export function coachEdgeView(world: WorldState): {
   // announcing a reveal with nothing behind it. The two can only disagree in a state that cannot
   // ship, and disagreeing quietly is exactly how a screen ends up printing an empty plaque.
   const revealed = placement !== null
+  // ⭐ ROUND-21 #2, THE LAST OPEN ITEM – the same stance the fare is charged on, asked of the same
+  // predicate the flow, the commentary and the week's story ask. The corridor is a fact about the
+  // rung; whether it is doubled this season is a fact about the FAMILY, and only one function in this
+  // engine is allowed to answer that.
+  const travels = coachTravelsWithHer(world)
   return {
-    corridorPct: [...COACH_EDGE_CORRIDOR_PP[tier]] as [number, number],
+    corridorPct: coachEdgeCorridorPp(tier),
+    travelCorridorPct: travels ? coachEdgeCorridorPp(tier, true) : null,
     placement,
     revealed,
     weeksTogether,
     revealWeek,
     seasonsTogether,
     plaqueLine: coachPlaqueLine({ placement, week: world.week, revealWeek, seasonsTogether }),
+    travelLine: travels ? TRAVEL_EDGE_LINE : '',
   }
 }
+
+/** ⭐ ROUND-21 #2, THE LAST OPEN ITEM – WHAT THE SECOND FIGURE IS FOR, in one sentence under it.
+ *
+ *  ⚠ «TWICE THAT ON THE TRIPS», NEVER «DOUBLED». The travel helping is gated on `coachTravelFareFor`,
+ *  which sends him only to rungs that pay prize money unless the family has opened the junior stance
+ *  as well - so a J-series week doubles nothing even for a family that always sends him, and a card
+ *  that said "the corridor is doubled" would be quoting a season this girl may not be playing yet.
+ *  What IS unconditionally true is the conditional: on the trips the coach travels to, twice that.
+ *
+ *  ⚠ IT QUOTES NO NUMBER AT ALL, deliberately, and it sits under a plaque that quotes none either.
+ *  The figure is on the line above it (`edgeTravelPct`), which is a price bracket; this sentence's job
+ *  is the CONDITION, and a second copy of the numbers here would be one more place for them to drift.
+ *
+ *  ⚠ AND IT DOES NOT TOUCH THE PLACEMENT, which needs no qualifier beside it: the helping scales the
+ *  corridor rather than shifting it, so the upper third of 0.5-0.9 IS the upper third of 1.0-1.8 and
+ *  «the upper end of that band» stays true of both bands at once (`coachEdgeCorridorPp`). The plaque
+ *  is a fact about the man; this is a fact about the trip; neither has to hedge the other.
+ *
+ *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08) - `buildCoachRoster` puts a woman on every roster
+ *  by construction, so "the trips he travels to" would print under Sabine Kobayashi. Short dash, and
+ *  45 characters: inside the 60 a real browser measured as the two-line ceiling for this column at
+ *  320px (§4a), so it costs the card the same two lines the plaque costs. */
+const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
 
 /**
  * HOW MUCH ROOM IS LEFT IN HER, in one sentence - the context every number on screen T is relative to.
