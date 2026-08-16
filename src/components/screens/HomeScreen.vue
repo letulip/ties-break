@@ -798,7 +798,7 @@ const stripVisible = computed<readonly number[]>(() => {
   if (stripExpanded.value) return SEASON_STRIP_TIERS.map((_, i) => i)
   // ⚠⚠ AND THE WINDOW IS THE ENGINE'S, WHOLE – AN AGE FILTER WAS TRIED HERE AND WITHDRAWN (16.08).
   // For a few hours this line also dropped any rung whose chip read `locked`, on the argument that
-  // «текущее доступное окно» means AVAILABLE and a rung that refuses her on age is not available.
+  // the owner's window rule says AVAILABLE and a rung that refuses her on age is not available.
   // Two things retired it, and both are worth keeping.
   //
   //   1. IT WAS A SECOND OPINION ABOUT THE LADDER, held in one component. The window's own verdict
