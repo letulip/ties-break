@@ -653,7 +653,10 @@ can play one.
 W15 field an adult one. Measured (`tools/two-tour-overlap.ts`, 27 careers, identical seeds): the
 overlap widens to **14-18**, but only in weight at fifteen – at 14, 26% of careers now hold both tours
 on a mean of 1.7 professional events beside 7.3 junior ones; at 15 it is 67% on 6.1. 16-18 is
-unchanged. The two documents now disagree about what a W15 field is; amending one of them is his call.
+unchanged. ~~The two documents now disagree about what a W15 field is; amending one of them is his
+call.~~ ✅ **SETTLED 16.08 – he made the call twice more and then closed the whole class of problem.
+`adult-tour-and-endings.md` §4.1 is amended and the grid is now written out in exactly one place.**
+See the entry below.
 
 **Also in P2, and the reason the ruling is survivable:** the entry allowances are counted
 **birthday-to-birthday** now, as both rulebooks say. Before, the window was the season block while the
@@ -1016,3 +1019,42 @@ untouched. ⚠ `e2e/responsive.spec.ts` itself is the owner's to run.
 
 Predicted vs measured in full, every guard that moved, and the per-key diff:
 `docs/specs/college-is-its-own-branch-2026-08.md`.
+
+## 2026-08-16 – One source of truth for the age grid (`wave/round21`, documentation)
+
+**Verbatim, and he had been handed this same contradiction twice:** «Два документа спорят о поле W15 –
+уже дважды обсуждали: у нас есть регламент, точка. Разрули противоречия и оставь один источник истины,
+хватит мне это возвращать.»
+
+**The fix is not the sentence, it is the copying.** The grid was RESTATED IN PROSE, in its own words,
+in roughly a dozen specs – each one honest on the day it was written, none of them wrong on purpose,
+and every ruling since has had to find and move all of them. That is why the same disagreement reached
+him twice.
+
+⭐ **THE GRID IS NOW WRITTEN OUT ONCE**, at `docs/specs/college-is-its-own-branch-2026-08.md` §0a:
+the table, the AER counts, the constants it describes (`TIERS[*].minAgeYears` / `maxAgeYears`,
+`ECONOMY.entryCap.proPerYearByAge`) and the regulation behind them. `docs/context-index.md` and the
+simulation context pack route to it. **Every other document either does not state the grid, or names
+one number with the pointer attached** – so a future ruling has exactly one place to land.
+
+**What was false and is corrected, each keeping its old text above the line that reverses it:**
+`adult-tour-and-endings.md` §4.1 (*"a W15 field is adults"* – it is not; the overlap runs **14-18**),
+`junior-access-2026-08.md` §2a (the deliberate-deviation note he was answering),
+`birthday-and-gifts.md` (the W series does not open at 16), `points-by-the-book`, `ranking-ceiling`,
+`college-fork`, `endings-and-the-album`, `ladder-baseline`, `world-strength-audit`,
+`fatigue-injury-audit`, `human-arm-forward`, `what-money-buys`, and both acceptance-cut audits, whose
+`w75.minAgeYears` rows read **ANSWERED** instead of *needs the owner*.
+
+⚠ **AND THE PILLAR THAT STARTED IT HAD NO ORIGINAL.** *"A sixteen-to-eighteen-year-old holds both
+tours at once and arrives at nineteen having seen what each one costs and pays"* was quoted in three
+documents and one engine comment as `adult-tour-and-endings.md` §4.1's own words. **§4.1 never
+contained that sentence.** It was written as a paraphrase in `junior-access-2026-08.md` §2a and
+re-quoted from there – the same failure as the repealed NCAA rule in `college-gate-decoupled` §5, and
+the reason a design pillar could be defended for two weeks without anybody being able to read it.
+
+⚠ **STILL OUTSTANDING, IN CODE, AND REPORTED RATHER THAN TOUCHED** (this was a documentation wave):
+`src/engine/season/types.ts`'s `maxAgeYears` note still asserts the 16-18 overlap as current fact;
+`src/engine/economy.ts`'s `proSubCapByAge` note still says the sub-cap *"cannot bind"* while
+`world/entryCaps.ts` says the opposite about the same rule; `tests/tier-window.test.ts` has an
+assertion whose subject is a rung a fourteen-year-old is no longer too young for; and three tools
+carry stale doorway ages in their headers.
