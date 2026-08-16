@@ -2,7 +2,7 @@
 type: spec
 status: current
 area: engine/balance
-canonical: true
+canonical: false
 last-reviewed: 2026-08-16
 ---
 
