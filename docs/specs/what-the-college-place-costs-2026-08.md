@@ -418,9 +418,14 @@ p75 **$48,655** · max **$111,564**. **21 of 90 free rides.**
 | wealthy | 20 | **65.9** | 0.0 | $10,576 | **$42,304** |
 
 **HALF ONE – THE BILL TIPS COLLEGE TOWARDS THE POOR FAMILY, BY A FACTOR OF 4.9.** A working family
-pays **$8,701** over four years where a wealthy one pays **$42,304**, and every dollar of that
-difference comes through the need layer (36.0% against 0.0%). ⭐ **That is the right way round** – it
-is the direction reality runs, and it is the direction a flat bill would have inverted.
+pays **$8,701** over four years where a wealthy one pays **$42,304**. ⚠ **And the need layer is doing
+MORE work than that ratio shows, because the athletic column runs the other way**: the working family
+starts **12.3 points behind on the award** and still ends up paying a fifth as much. 36.0% of
+need-based cover against 0.0% overturns a merit deficit and then some.
+
+⭐ **That is the right way round** – it is the direction reality runs, and it is the direction a flat
+bill would have inverted. **The arithmetic checks out against the sticker**: wealthy covered 65.9% of
+$30,990 leaves $10,568 a year, measured $10,576.
 
 ⚠⚠ **HALF TWO, AND IT IS THE FINDING I DID NOT SIZE CORRECTLY: THE AWARD ITSELF SHOWS A 12.3-POINT
 WEALTH GRADIENT, 53.6% → 65.9%.** The FUNCTION is merit-only and `tests/college-offer.test.ts` block A
