@@ -74,7 +74,21 @@ export const ENDINGS = {
    *  on. What went with the old reason is the word PRECONDITION: the owner ruled on 15.08 that we
    *  model the rule as it stands («как стало, по идее нам вообще ничего не надо делать здесь»), and a
    *  rule the sport does not have may not be sprung on the player in silence. So the entry that
-   *  spends this now WARNS FIRST – see `collegeCostView` and `UpcomingEvent.costsCollege`.
+   *  spends this now WARNS FIRST – see `entryCostsCollege` and `UpcomingEvent.costsCollege`.
+   *
+   *  ⚠⚠ AND THE HONEST THING TO SAY ABOUT THIS CONSTANT TODAY IS THAT IT HAS ALMOST STOPPED FIRING
+   *  BEFORE THE DECISION IT GATES. Re-measured on the P1-P3 ladder (P0's frozen battery, n = 90,
+   *  `college-gate-decoupled-2026-08.md` §2): the door is still lost in **83 of 90** careers, but at
+   *  **median age 19.1** against P0's 17.3 – and the fork is at **19.0**. So it removes an answer
+   *  from the card in **4 careers of 90**; it used to remove it in 83. **The rule did not become
+   *  correct, it became LATE**, because P1 moved her first counting W75 from 17.2 to 19.2 rather
+   *  than putting it out of reach (she still reaches W75 in 82 of 90 careers).
+   *
+   *  ⚠ THE SIX WEEKS BETWEEN 19.0 AND 19.2 ARE AN ACCIDENT AND NOTHING HOLDS THEM. Any tuning that
+   *  speeds her up by a month shuts this door again in most careers, silently – the two rules no
+   *  longer share a constant but they still name the same rung. Whether the gate should stay at all
+   *  is a DESIGN question and it is the owner's: that spec's §6.1 states it and deliberately does not
+   *  answer it. Leaving it here is the do-nothing option, chosen as such.
    *
    *  ⚠ W75 IS THE OWNER'S OWN MARKER, quoted from the report, and it is a RUNG rather than a sum of
    *  money on purpose. `w15` opens at sixteen and the game actively wants a junior to play a few, so
