@@ -268,6 +268,14 @@ strong tail – the careers that were using the prestige rung to build a junior 
 `tools/ladder-baseline.ts --seeds 10`, n = 90, **676 weeks (13.6 → 26.6)**, `POLICIES[1]`, identical
 seeds. **Before** = `c04253f`; P0's frozen column carried alongside.
 
+⚠ **THE AFTER ARM WAS RUN TWICE, AND THE SECOND RUN IS WHY IT CAN BE TRUSTED.** The first was taken
+before `global.maxWtaRank` moved 87 → 60, so it measured a tree that is not the one shipping. It was
+re-run on the exact shipped tree and **the two outputs are byte-identical apart from the wall-clock
+line** – so the global sponsor gate's narrowing is **inert on this battery**: no career of the ninety
+was in the rank band 61–87 at a week the offer was evaluated. That makes the table below valid for the
+shipped tree, and it makes §6.1's narrowing a **latent** change rather than a measured one – which is
+an argument for showing it to him, not for ignoring it.
+
 ⚠⚠ **THE AUDIT'S HORIZON WAS 312 WEEKS AND IT STOPPED AT TWENTY.** §4a is measured on that horizon
 because it has to be, to be comparable. **This table runs to 26.6 and the sign flips halfway.**
 
@@ -486,6 +494,12 @@ that list currently is"* – and the equality is pinned, so leaving them behind 
 sponsorship rung **ten ranks wide** may no longer be a rung, and this is a balance change to the money
 economy that arrived as a side effect of a realism fix. **Accept it, or decouple the sponsor gates from
 the ladder and give them their own numbers.**
+
+⚠ **AND IT IS LATENT RATHER THAN MEASURED, WHICH CUTS BOTH WAYS.** Re-running the whole battery with
+and without the global gate's move produced **byte-identical output** (§4d), so nothing in the ninety
+careers noticed. That is not evidence the narrowing is harmless – it is evidence that **this sample
+never tested it**, because no career sat in the band 61–87 when an offer was evaluated. A career that
+does will meet a rung a third of its former width.
 
 ### 6.2 ⚠⚠ THE WTA 125 NOW SITS BELOW THE WTA 250 (§5a)
 
