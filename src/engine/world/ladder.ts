@@ -18,7 +18,7 @@ import type { SeasonEntryRow } from '../../shared/protocol'
 import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPros'
 import { seasonIndexOf } from './ledger'
 import { kidAgeAt } from './age'
-import { acceleratorAdmits, juniorReservedRank, proEntryCapUsage } from './entryCaps'
+import { acceleratorAdmits, juniorReservedRank, proEntryCapUsage, yearEndJuniorRank } from './entryCaps'
 import { KID_ID, RESULTS_WINDOW } from './constants'
 import type { WorldState } from '../world'
 
@@ -255,32 +255,13 @@ export function kidDomesticPoints(world: WorldState): number {
   return kidPoints(world, 'domestic')
 }
 
-/** HER YEAR-END ITF JUNIOR RANKING – the standing the Accelerator keys on, and the reason it is a
- *  read of PERSISTED HISTORY rather than a live fold.
- *
- *  ⚠ THE RULE SAYS "YEAR-END", AND THAT IS NOT A DETAIL. `world.kidRank` is her position TODAY; the
- *  Accelerator grants a season's allowance off where she finished LAST season, which is a fact that
- *  stops moving on the day the season closes. Reading the live rank instead would hand her a W75
- *  place in the same week she climbed into the junior top five and take it away again the week she
- *  slipped out – an allowance that flickers is not an allowance, and a player could not plan a season
- *  around one.
- *
- *  ⚠ NOTHING NEW IS PERSISTED FOR IT. The wrap-up has banked exactly this number since v14
- *  (`SeasonHistoryEntry.endRank` – *"⚠ THE ITF ONE, always"*) and since v46 it also banks the
- *  per-table row, whose `endRank` is ABSENT when she held no counting ITF result at all. Prefer the
- *  v46 row where it exists, because "absent" is the honest reading of unranked and the flat field's
- *  fallback (`tableSize`) is a number that would print as a place; fall back to the flat field for
- *  the rows banked before v46, where it is the only figure there is.
- *
- *  `null` = SHE HAS NO YEAR-END JUNIOR RANKING – either because no season has closed yet (every
- *  fourteen-year-old, for her first year) or because she held no counting ITF result in the one that
- *  did. Both are the same answer to the rule's own question: she is not on the list it reads. */
-export function yearEndJuniorRank(world: WorldState): number | null {
-  const last = world.seasonHistory[world.seasonHistory.length - 1]
-  if (!last) return null
-  if (last.byTrack) return last.byTrack.itf?.endRank ?? null
-  return last.endRank
-}
+/** ⚠ MOVED TO world/entryCaps.ts AT P2 AND RE-EXPORTED HERE UNDER ITS HISTORICAL NAME – the repo's
+ *  own convention for a leaf that grew a second reader. `yearEndJuniorRank` is a five-line read of
+ *  `world.seasonHistory` with no ladder dependency at all, and P2's merited increases need it from
+ *  entryCaps.ts, which this file already imports FROM. Reading it up here would have been a runtime
+ *  cycle; copying it would have been the second read the whole design forbids. Nothing about the
+ *  function changed in the move except an optional `week` (see its own note there). */
+export { yearEndJuniorRank } from './entryCaps'
 
 // =================================================================================================
 // WHICH TABLE IS HERS – moved here from world/snapshot.ts (fix/wallet-and-wrapup, 05.08) and

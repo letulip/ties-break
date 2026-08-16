@@ -5,7 +5,9 @@ import {
   KID_ID,
   SAVE_SCHEMA_VERSION,
   ageAtWeek,
+  ageWindowStartWeek,
   annualEntryLimit,
+  annualProEntryLimit,
   availabilityStatus,
   cancelEntry,
   createWorld,
@@ -13,7 +15,9 @@ import {
   entryCapUsage,
   entryStatus,
   isCappedTier,
+  proEntryCapUsage,
   recomputeKidRank,
+  yearEndJuniorRank,
   seasonStartWeek,
   tickWeek,
   toSnapshot,
@@ -22,10 +26,10 @@ import {
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
-import { TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { tierState, type TierStateInput } from '../src/composables/tierState'
 import { rngFromSeed } from '../src/engine/rng'
-import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type SeasonHistoryEntry } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // ---------------------------------------------------------------------------
@@ -304,7 +308,110 @@ describe('A3 — the allowance resets on the year boundary', () => {
       }
     }
     expect(seasonStartWeek(world.week)).toBe(WEEKS_PER_YEAR)
-    expect(entryCapUsage(world, world.week)).toEqual({ used: 0, limit: 18, remaining: 18 })
+    // ⚠ THE LIMIT IS 22 AND NOT 18 SINCE P2, AND THE FOUR ARE EARNED RATHER THAN LEAKED. This career
+    // really does finish its first season inside the junior top twenty (`openWorld` hands her four
+    // J300 titles), and Appendix F grants a top-20 fifteen-year-old four extra international events.
+    // The claim this test is named for is `used`: the ledger turned over, and it is asserted against
+    // the engine's own arithmetic rather than a copied number, so a knob change moves it honestly.
+    const fresh = entryCapUsage(world, world.week)
+    expect(fresh.used, 'the allowance really did clear').toBe(0)
+    expect(fresh.remaining).toBe(fresh.limit)
+    expect(yearEndJuniorRank(world), 'and she banked a top-20 season to earn the four').toBeLessThanOrEqual(20)
+    expect(fresh.limit).toBe(annualEntryLimit(15) + ECONOMY.entryCap.meritIncrease.juniorByAge[15].extra)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// A3b – THE MERITED INCREASES (P2). ITF Appendix F's +4 and the WTA Pro Path's +4, and the one
+// property that makes an addition to a limit safe: it may never fall inside a window.
+// ---------------------------------------------------------------------------
+function banked(seasonIndex: number, itf: number | null, wta: number | null = null): SeasonHistoryEntry {
+  return {
+    seasonIndex,
+    endRank: 199,
+    points: 0,
+    wins: 0,
+    losses: 0,
+    byTrack: {
+      domestic: { points: 0, wins: 0, losses: 0 },
+      itf: { points: 0, wins: 0, losses: 0, ...(itf === null ? {} : { endRank: itf }) },
+      wta: { points: 0, wins: 0, losses: 0, ...(wta === null ? {} : { endRank: wta }) },
+    },
+    fundsDeltaCents: 0,
+    endFundsCents: 0,
+  }
+}
+
+describe('A3b — the merited increases', () => {
+  it('pins the published rows – Appendix F and the WTA Pro Path, not our invention', () => {
+    const m = ECONOMY.entryCap.meritIncrease
+    expect(m.juniorByAge[13]).toEqual({ throughRank: 50, extra: 4 })
+    expect(m.juniorByAge[14]).toEqual({ throughRank: 20, extra: 4 })
+    expect(m.juniorByAge[15]).toEqual({ throughRank: 20, extra: 4 })
+    expect(m.juniorByAge[16], 'the appendix grants none at 16').toBeUndefined()
+    expect(m.proExtra).toBe(4)
+    expect(m.proJuniorThroughRank, 'the same top-5 gate the Accelerator uses').toBe(5)
+    expect(m.proDirectTiers).toEqual(['slam', 'wta1000'])
+  })
+
+  it('the ITF +4 is earned by the year-end list and by nothing else', () => {
+    const world = openWorld('merit-itf')
+    // ⚠ A JANUARY GIRL IS 14 AT WEEK 0 (see `openWorld`), so season N is the year she is 14 + N.
+    const at15 = WEEKS_PER_YEAR + 4
+    expect(annualEntryLimit(15)).toBe(18)
+    world.seasonHistory = [banked(0, 40)]
+    expect(entryCapUsage(world, at15).limit, 'outside the top 20 – no bonus').toBe(18)
+    world.seasonHistory = [banked(0, 12)]
+    expect(entryCapUsage(world, at15).limit, 'inside it – the appendix grants four').toBe(22)
+    // ...and the bonus belongs to the age, not to the standing: 16 has no row in the appendix.
+    world.seasonHistory = [banked(0, 12), banked(1, 1)]
+    expect(entryCapUsage(world, 2 * WEEKS_PER_YEAR + 4).limit, 'no merit row at 16').toBe(25)
+  })
+
+  it('the PRO +4 is an OR – junior top 5 or direct acceptance – and never a sum', () => {
+    const world = openWorld('merit-pro')
+    const at16 = 2 * WEEKS_PER_YEAR + 4
+    expect(annualProEntryLimit(16)).toBe(12)
+    world.seasonHistory = [banked(1, 30)]
+    expect(proEntryCapUsage(world, at16).limit, 'on neither list').toBe(12)
+    world.seasonHistory = [banked(1, 3)]
+    expect(proEntryCapUsage(world, at16).limit, 'year-end junior top 5').toBe(16)
+    // Direct acceptance is the rung's OWN cut, read off the banked professional row.
+    const cut = Math.max(TIERS.slam.acceptsRank!, TIERS.wta1000.acceptsRank!)
+    world.seasonHistory = [banked(1, 200, cut)]
+    expect(proEntryCapUsage(world, at16).limit, 'direct acceptance to a major').toBe(16)
+    world.seasonHistory = [banked(1, 200, cut + 1)]
+    expect(proEntryCapUsage(world, at16).limit, 'one place outside it').toBe(12)
+    world.seasonHistory = [banked(1, 3, cut)]
+    expect(proEntryCapUsage(world, at16).limit, 'both routes still buy four').toBe(16)
+  })
+
+  it('⚠ an unlimited row STAYS unlimited – the sentinel cannot be added to', () => {
+    const world = openWorld('merit-sentinel')
+    world.seasonHistory = [banked(3, 1, 1)]
+    const at18 = 4 * WEEKS_PER_YEAR + 4
+    expect(proEntryCapUsage(world, at18).limit).toBe(Number.MAX_SAFE_INTEGER)
+    expect(entryCapUsage(world, at18).limit).toBe(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('⚠⚠ THE BONUS CAN ONLY RISE INSIDE A WINDOW, so no entry is ever retro-invalidated', () => {
+    // The property the whole design turns on. A season that closes INSIDE her birth year may switch
+    // the bonus on; nothing may ever switch it off, because the limit is what refuses an entry and
+    // `tierOutgrown` reads `remaining <= 0` to re-open the rungs below her.
+    //
+    // ⚠ MUTATION-PROVABLE: read a LIVE rank instead of the banked window and this goes red on the
+    // very week the good season is superseded by a bad one.
+    const world = openWorld('merit-monotone')
+    world.seasonHistory = [banked(0, 2), banked(1, 180)] // a great season, then a poor one
+    let last = 0
+    for (let w = 0; w < 5 * WEEKS_PER_YEAR; w++) {
+      const limit = proEntryCapUsage(world, w).limit
+      const boundary = ageWindowStartWeek(world, w) === w
+      if (!boundary) expect(limit, `w${w}`).toBeGreaterThanOrEqual(last)
+      last = limit
+    }
+    // ...and the good season really is superseded, or the walk above proves nothing.
+    expect(yearEndJuniorRank(world), 'the newest row is the poor one').toBe(180)
   })
 })
 
@@ -560,16 +667,25 @@ function openProWorld(seed = 'procap'): WorldState {
   // unreachable at W35 and up and the copy case would be asserting the precedence instead of the
   // promise. A banked year-end junior #1 puts her past that gate; her professional book already puts
   // her past every acceptance cut. The Accelerator has its own suite (tests/junior-access.test.ts).
+  //
+  // ⚠ RE-AIMED AGAIN AT P2, AND THE NUMBER MOVED FROM #1 TO #6 FOR A REASON THAT IS THE POINT OF THE
+  // WHOLE BLOCK. P2 ships the WTA Pro Path's merited increase: a year-end junior top FIVE earns four
+  // extra professional entries. A fixture banking #1 therefore stopped measuring the twelve this
+  // block is named for and started measuring sixteen – the bonus, not the cap. #6 is the first place
+  // outside that gate and is still inside the Accelerator's 6-10 row (two W50 places and three W35),
+  // which covers every rung these tests actually touch (w15, and one w35). Nothing is weakened: the
+  // cap is the binding refusal again, which is the property the fixture exists to create. The merit
+  // increase has its own suite in A3b above, on its own fixtures.
   world.seasonHistory = [
     {
       seasonIndex: 0,
-      endRank: 1,
+      endRank: 6,
       points: 0,
       wins: 0,
       losses: 0,
       byTrack: {
         domestic: { points: 0, wins: 0, losses: 0 },
-        itf: { endRank: 1, points: 0, wins: 0, losses: 0 },
+        itf: { endRank: 6, points: 0, wins: 0, losses: 0 },
         wta: { points: 0, wins: 0, losses: 0 },
       },
       fundsDeltaCents: 0,

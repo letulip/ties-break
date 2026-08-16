@@ -1914,12 +1914,50 @@ export const ECONOMY = {
     // quietly also answered for a twenty-five-year-old. The table's domain and the tiers' age
     // window are now the same interval, which is what makes the `default` key honest.
     //
-    // NOT MODELLED, DELIBERATELY – the merit increases. The same appendix grants +4 events to a
-    // top-20 ITF junior at 14/15 (+4 to a top-50 at 13), and the WTA rulebook grants a year-end
+    // ⚠⚠ THE MERIT INCREASES SHIP AT P2 (16.08), AND THE ARGUMENT THAT KEPT THEM OUT IS RECORDED
+    // RATHER THAN DELETED, BECAUSE THE BLOCKER IT NAMED WAS REAL AND WAS REMOVED BY SOMETHING ELSE.
+    // It ran: "NOT MODELLED, DELIBERATELY – the merit increases. The same appendix grants +4 events
+    // to a top-20 ITF junior at 14/15 (+4 to a top-50 at 13), and the WTA rulebook grants a year-end
     // top-5 junior up to 4 extra PRO events. Both are keyed to a world ranking; our field is 199
-    // cohort players plus the kid, so "top 20 of the ITF" has no defensible mapping onto "top 20 of
-    // 200" without an owner decision about what our standings represent. Left out rather than
-    // guessed, and left out in the direction that keeps the cap honest (a bonus only weakens it).
+    // cohort players plus the kid, so 'top 20 of the ITF' has no defensible mapping onto 'top 20 of
+    // 200' without an owner decision about what our standings represent. Left out rather than
+    // guessed, and left out in the direction that keeps the cap honest (a bonus only weakens it)."
+    //
+    // WHAT CHANGED IS THAT P1 ANSWERED THE QUESTION, AND ANSWERED IT SOMEWHERE ELSE.
+    // `docs/specs/junior-access-2026-08.md` built `yearEndJuniorRank` – a read of PERSISTED history,
+    // not a live fold – and keyed the Junior Accelerator on the regulation's own ABSOLUTE rows
+    // (1 / 2 / 3 / 4-5 / 6-10 / 11-20) rather than on a share of our table. So the decision the old
+    // comment was waiting for has been taken and shipped: in this game a year-end junior rank IS read
+    // as the list position the rulebooks name. The merit rows below read the SAME function on the
+    // SAME convention; inventing a second mapping here is exactly what that would have been.
+    //
+    // ⚠ AND THE ONE PLACE THE CONVENTIONS DIFFER IS STATED, NOT SMOOTHED OVER. `JUNIOR_RESERVED`
+    // (world/entryCaps.ts) resolves W15's door as a FRACTION of the table, because that door had a
+    // shipped difficulty to hold and a rank-vs-points change of unit to survive. A merit bonus has
+    // neither: it is additive, it can only ever be generous, and it is the same list the Accelerator
+    // reads two lines up. Absolute is the honest reading for it.
+    meritIncrease: {
+      /** ITF Appendix F: +4 international events to a top-50 junior at 13, to a top-20 at 14 and 15.
+       *
+       *  ⚠ THE 13 ROW CANNOT FIRE IN THIS GAME AND IS HERE ANYWAY, exactly as the 14/15 PRO rows are
+       *  (see `proPerYearByAge`'s own note). Her thirteenth year runs from week 0 to her birthday, so
+       *  no season has wrapped yet and there is no year-end list to be on. The game does not invent a
+       *  number where the calendar makes it unreachable, and the day a career opens earlier the row is
+       *  already right. */
+      juniorByAge: { 13: { throughRank: 50, extra: 4 }, 14: { throughRank: 20, extra: 4 }, 15: { throughRank: 20, extra: 4 } } as {
+        [age: number]: { throughRank: number; extra: number }
+      },
+      /** WTA Pro Path: up to 4 extra professional events a year, earned by Grand Slam / WTA 1000
+       *  DIRECT ACCEPTANCE or by year-end ITF junior top 5 – the same top-5 gate the Accelerator uses.
+       *  It is an OR, and both arms are read off the year-end row for the reason `proMerit` explains:
+       *  a limit that can fall mid-window would retro-invalidate an entry she was allowed to make. */
+      proExtra: 4,
+      proJuniorThroughRank: 5,
+      /** ...and the professional arm, as the rungs whose acceptance list IS "direct acceptance to a
+       *  major or a 1000". Read as tier ids, never as a copied number, so a phase that re-tunes those
+       *  cuts moves this rule with them – the same discipline `mandatory.perEventTiers` is under. */
+      proDirectTiers: ['slam', 'wta1000'] as readonly TierId[],
+    },
     perYearByAge: { 13: 10, 14: 14, 15: 18, 16: 25, default: Number.MAX_SAFE_INTEGER } as {
       [age: number]: number
       default: number

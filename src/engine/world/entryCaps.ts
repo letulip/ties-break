@@ -6,10 +6,10 @@
 // with the rest of the tuning; these functions only read them and count the ledger.
 import { ECONOMY } from '../economy'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, isWSeriesTier } from '../season/calendar'
-import type { EntryCapUsage } from '../../shared/protocol'
+import type { EntryCapUsage, SeasonHistoryEntry } from '../../shared/protocol'
 import type { TierId } from '../season/types'
-import { seasonStartWeek } from './ledger'
-import { kidAgeAt } from './age'
+import { seasonIndexOf, seasonStartWeek } from './ledger'
+import { ageWindowStartWeek, kidAgeAt } from './age'
 import type { WorldState } from '../world'
 
 // --- the ITF annual entry cap (docs/research/ranking-points-by-tier.md §2) --------------------
@@ -67,8 +67,88 @@ export function annualEntryLimit(ageYears: number): number {
 export function entryCapUsage(world: WorldState, week: number): EntryCapUsage {
   const age = kidAgeAt(world, week)
   const used = world.internationalEntryWeeks.filter((w) => kidAgeAt(world, w) === age).length
-  const limit = annualEntryLimit(age)
+  // The same MAX_SAFE_INTEGER guard the pro arm carries and for the same reason – see there. It
+  // cannot fire at the shipped knob (no merit row exists above 15, and 15's limit is 18), and it is
+  // here so that adding one later is a tuning change rather than a broken sentinel.
+  const base = annualEntryLimit(age)
+  const limit = base >= Number.MAX_SAFE_INTEGER ? base : base + juniorMerit(world, week, age)
   return { used, limit, remaining: Math.max(0, limit - used) }
+}
+
+// --- THE MERITED INCREASES (P2, docs/specs/age-eligibility-window-2026-08.md) -------------------
+//
+// ⚠⚠ THE ONE PROPERTY THAT SHAPES BOTH ARMS: A BONUS MAY NEVER FALL INSIDE A WINDOW. The limit is
+// what refuses an entry, so a bonus that could evaporate mid-year would retro-invalidate an entry
+// she was ALLOWED to make – and worse, `tierOutgrown` (world/ladder.ts) reads `remaining <= 0` to
+// re-open the rungs below her, so an oscillating limit would flicker the whole ladder on and off.
+// The old comment on `entryCapUsage` made non-decrease the headline property of the age table; this
+// is the same property, defended for an addition rather than for a lookup.
+//
+// SO BOTH ARMS READ A YEAR-END ROW AND NEVER A LIVE RANK, and they take THE BEST OF THE ROWS CURRENT
+// AT ANY POINT IN THE WINDOW. An age year straddles at most one season boundary, so that is at most
+// two rows; taking the best of them is monotone in the week by construction (a row can only be
+// added, never withdrawn), it resets with the window, and it lands on the same generous side the age
+// table already sits on – the limit rises on her birthday and rises again when a season she finished
+// well closes inside her birth year. A live `world.kidRank` would have been none of those things.
+//
+// ⚠ AND IT IS THE SAME READ P1 BUILT, DELIBERATELY. `yearEndJuniorRank` and the absolute rows the
+// Accelerator keys on are the decision this game has already taken about what a year-end standing
+// means (ECONOMY.entryCap.meritIncrease carries the argument). A second mapping here – a share of
+// the table, say – would be two answers to one question in two files.
+
+/** The year-end rows current at some week of the age year containing `week`: the one current when the
+ *  window opened, plus any season that closed inside it. At most two, in banked order. */
+function rowsAcrossWindow(world: WorldState, week: number): (SeasonHistoryEntry | undefined)[] {
+  const from = ageWindowStartWeek(world, week)
+  const out: (SeasonHistoryEntry | undefined)[] = [rowCurrentAt(world, from)]
+  for (const row of world.seasonHistory) {
+    if (row.seasonIndex >= seasonIndexOf(from) && row.seasonIndex < seasonIndexOf(week)) out.push(row)
+  }
+  return out
+}
+
+/** Her BEST year-end junior place anywhere in this window, or null if she was on no list in it. */
+export function bestJuniorRankInWindow(world: WorldState, week: number): number | null {
+  let best: number | null = null
+  for (const row of rowsAcrossWindow(world, week)) {
+    const rank = juniorRankOf(row)
+    if (rank !== null && (best === null || rank < best)) best = rank
+  }
+  return best
+}
+
+/** THE ITF MERIT INCREASE: +4 international events to a top-50 junior at 13, to a top-20 at 14 and
+ *  15 (Appendix F). Zero at every other age, and zero for a girl on no year-end list. */
+export function juniorMerit(world: WorldState, week: number, ageYears: number): number {
+  const row = ECONOMY.entryCap.meritIncrease.juniorByAge[ageYears]
+  if (!row) return 0
+  const rank = bestJuniorRankInWindow(world, week)
+  return rank !== null && rank <= row.throughRank ? row.extra : 0
+}
+
+/** THE PRO MERIT INCREASE: up to 4 extra professional events a year, earned by Grand Slam / WTA 1000
+ *  DIRECT ACCEPTANCE **or** by year-end ITF junior top 5.
+ *
+ *  ⚠ "DIRECT ACCEPTANCE" IS THE RUNG'S OWN ACCEPTANCE CUT, READ OFF THE YEAR-END TABLE, and both
+ *  halves of that sentence are decisions. The cut is `TIERS[t].acceptsRank` for the tiers the knob
+ *  names, never a copied number, so a phase that re-tunes those lists moves this rule with them. The
+ *  TABLE is the banked year-end one for the same non-decrease reason as the junior arm: a girl who
+ *  slipped out of the majors' list in March would otherwise lose four entries she had already been
+ *  granted, in the middle of the year they belong to.
+ *
+ *  ⚠ IT IS AN OR AND NOT A SUM. The rulebook grants "up to 4 Merited Increases", not four per route. */
+export function proMerit(world: WorldState, week: number): number {
+  const knob = ECONOMY.entryCap.meritIncrease
+  const junior = bestJuniorRankInWindow(world, week)
+  if (junior !== null && junior <= knob.proJuniorThroughRank) return knob.proExtra
+  let cut = 0
+  for (const tier of knob.proDirectTiers) cut = Math.max(cut, TIERS[tier].acceptsRank ?? 0)
+  if (cut <= 0) return 0
+  for (const row of rowsAcrossWindow(world, week)) {
+    const wta = yearEndWtaRankOf(row)
+    if (wta !== null && wta <= cut) return knob.proExtra
+  }
+  return 0
 }
 
 // --- the WTA age-eligibility rule, the PRO cap (W2-LADDER §5) ---------------------------------
@@ -101,8 +181,71 @@ export function annualProEntryLimit(ageYears: number): number {
 export function proEntryCapUsage(world: WorldState, week: number): EntryCapUsage {
   const age = kidAgeAt(world, week)
   const used = world.proEntryWeeks.filter((w) => kidAgeAt(world, w) === age).length
-  const limit = annualProEntryLimit(age)
+  const base = annualProEntryLimit(age)
+  // ⚠ A MERIT INCREASE ON AN UNLIMITED ROW IS STILL UNLIMITED, and the guard is arithmetic rather
+  // than taste: `default` is MAX_SAFE_INTEGER and the protocol spells "no ceiling" as exactly that,
+  // so adding four to it would overflow the sentinel and every surface that tests `limit >= MAX`
+  // would start printing a denominator for an eighteen-year-old.
+  const limit = base >= Number.MAX_SAFE_INTEGER ? base : base + proMerit(world, week)
   return { used, limit, remaining: Math.max(0, limit - used) }
+}
+
+/** HER YEAR-END ITF JUNIOR RANKING – the standing the Accelerator keys on, and the reason it is a
+ *  read of PERSISTED HISTORY rather than a live fold.
+ *
+ *  ⚠ THE RULE SAYS "YEAR-END", AND THAT IS NOT A DETAIL. `world.kidRank` is her position TODAY; the
+ *  Accelerator grants a season's allowance off where she finished LAST season, which is a fact that
+ *  stops moving on the day the season closes. Reading the live rank instead would hand her a W75
+ *  place in the same week she climbed into the junior top five and take it away again the week she
+ *  slipped out – an allowance that flickers is not an allowance, and a player could not plan a season
+ *  around one.
+ *
+ *  ⚠ NOTHING NEW IS PERSISTED FOR IT. The wrap-up has banked exactly this number since v14
+ *  (`SeasonHistoryEntry.endRank` – *"⚠ THE ITF ONE, always"*) and since v46 it also banks the
+ *  per-table row, whose `endRank` is ABSENT when she held no counting ITF result at all. Prefer the
+ *  v46 row where it exists, because "absent" is the honest reading of unranked and the flat field's
+ *  fallback (`tableSize`) is a number that would print as a place; fall back to the flat field for
+ *  the rows banked before v46, where it is the only figure there is.
+ *
+ *  `null` = SHE HAS NO YEAR-END JUNIOR RANKING – either because no season has closed yet (every
+ *  fourteen-year-old, for her first year) or because she held no counting ITF result in the one that
+ *  did. Both are the same answer to the rule's own question: she is not on the list it reads.
+ *
+ *  ⚠ `week` IS OPTIONAL AND ADDITIVE (P2). Omitted, this is the function P1 shipped, to the letter:
+ *  the newest banked row. Given, it is the row current in THAT week – which a rule about a future
+ *  event has to ask for, on `entryCapUsage`'s own R10-17 rule. No existing caller passes it. */
+export function yearEndJuniorRank(world: WorldState, week?: number): number | null {
+  return juniorRankOf(rowCurrentAt(world, week))
+}
+
+/** The season-history row that is CURRENT at `week` – the last season to have closed before it. With
+ *  no week (every pre-P2 caller) it is simply the newest row, which is what "current" means today.
+ *
+ *  ⚠ IT EXISTS FOR THE MERIT INCREASES AND FOR NOTHING ELSE YET. An allowance is a rule about a
+ *  YEAR, so a bonus attached to it has to be answerable about a week inside that year rather than
+ *  about the week the question happens to be asked in – the same R10-17 rule the caps themselves
+ *  obey. Seasons close in order, so "the last row banked before this week" is `seasonIndex` arithmetic
+ *  and not a search. */
+function rowCurrentAt(world: WorldState, week?: number): SeasonHistoryEntry | undefined {
+  if (week === undefined) return world.seasonHistory[world.seasonHistory.length - 1]
+  const before = seasonIndexOf(week)
+  let out: SeasonHistoryEntry | undefined
+  for (const row of world.seasonHistory) if (row.seasonIndex < before) out = row
+  return out
+}
+
+/** Her ITF place on one banked row, on the v46 convention `yearEndJuniorRank` documents above. */
+function juniorRankOf(row: SeasonHistoryEntry | undefined): number | null {
+  if (!row) return null
+  if (row.byTrack) return row.byTrack.itf?.endRank ?? null
+  return row.endRank
+}
+
+/** ...and her PROFESSIONAL place on the same row. Absent before v46 and absent when she held no
+ *  counting W result, which are the same answer to the question the merit rule asks: she was not on
+ *  the list. The flat `endRank` is deliberately NOT a fallback here – it is the ITF one, always. */
+function yearEndWtaRankOf(row: SeasonHistoryEntry | undefined): number | null {
+  return row?.byTrack?.wta?.endRank ?? null
 }
 
 // =================================================================================================
