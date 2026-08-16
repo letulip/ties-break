@@ -130,6 +130,21 @@ docs/review/     2026-08 full review + P1–P9 proposals
   (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
   `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
   pipeline.
+- **⚠⚠ BEFORE YOU HUNT A SLOWDOWN, REPRODUCE IT ON A COMMIT THAT CANNOT HAVE IT.** Same command,
+  older code, in a worktree. It is one run and it ends the argument; skipping it cost most of 16.08.
+  Twice that day a red `npm run check` — sixteen files timing out, **zero assertion failures** — was
+  diagnosed as a regression in the wave, and twice it was the machine (`mobileassetd` at 143 % for
+  three hours, load 113; later `signpost_reporter` at 96 %, 7.8 M pageouts). The tell that should
+  have stopped it sooner: **the failing set CHANGED between runs** — 18 files, then 9, then 12
+  different ones — and a real defect fails the same test twice. When the control finally ran, the
+  pre-wave commit wedged identically at 1871 s against its own green 76 s an hour earlier, and its
+  `collect` alone burned 3636 s of CPU **before any test logic**. Two cheap confirmations to run
+  first, in this order: `--no-file-parallelism` (if the whole shard then passes in ~250 s the WORK is
+  fine and the pool is the problem), and the same shard on the last known-green commit.
+- **`git checkout <sha> -- <path>` is the concurrent-agent hazard pointing the other way.** The note
+  above about `git commit` taking the whole index has a mirror: an agent bisecting a hash divergence
+  reverted `src` under another agent's live edits on 16.08. Nothing was lost — the pathspec habit
+  saved it — but in a shared checkout a checkout-with-pathspec is as destructive as a commit-without.
 - **A POPUP MUST BE MEASURED AGAINST A PHONE BEFORE IT SHIPS, and "it reads well" is not that
   measurement.** Round-20 #3: `TourBriefingDialog` shipped with a lead, a requirements list, five
   cost bullets and a closing line on the shared `dialog-card`, which declares no `max-height` and no
