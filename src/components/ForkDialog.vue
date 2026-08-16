@@ -367,9 +367,13 @@ async function answer(a: ForkAnswer): Promise<void> {
   flex-direction: column;
   gap: 4px;
   margin: 2px 0 2px;
-  padding: 10px 14px;
-  border-radius: var(--radius-control);
-  background: var(--panel-sunk, transparent);
+  padding: 10px 14px 12px;
+  /* ⚠ A HAIRLINE, NOT A FILL, AND THE TOKEN IS ONE THAT EXISTS. The first draft reached for
+     `var(--panel-sunk, transparent)` – and `--panel-sunk` is not declared anywhere in `style.css`, so
+     it silently resolved to `transparent` and the block had no container at all. `--line` is the
+     app's real hairline token. Two rules borrowed from the same palette beat one invented name. */
+  border-top: var(--stroke-hair) solid var(--line);
+  border-bottom: var(--stroke-hair) solid var(--line);
 }
 
 .fork-offer div {
