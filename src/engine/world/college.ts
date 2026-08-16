@@ -45,11 +45,15 @@ import type { WorldState } from '../world'
  *  and the persisted copy a safety belt rather than a necessity – see `ForkState.offer`. */
 export function collegeRecruitViewOf(world: WorldState): CollegeRecruitView {
   const juniorBests: Partial<Record<JuniorRung, number>> = {}
+  let juniorTitles = 0
   for (const rung of JUNIOR_RUNGS) {
     const best = world.bestFinishByTier[rung]
     if (best !== undefined) juniorBests[rung] = best
+    // ⚠ JUNIOR RUNGS ONLY, and the loop is why: it walks `JUNIOR_RUNGS` and has no name for a
+    // professional one, so a title at W75 cannot reach this number by accident.
+    juniorTitles += world.trophiesByTier[rung]?.titles.length ?? 0
   }
-  return { juniorBests, background: world.profile.background, country: world.profile.country }
+  return { juniorBests, juniorTitles, background: world.profile.background, country: world.profile.country }
 }
 
 /** THE OFFER, MEASURED ONCE. ⚠ ONE SUB-STREAM, `seed:collegeoffer:<week>`, derived at the call site

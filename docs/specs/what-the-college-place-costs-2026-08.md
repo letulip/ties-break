@@ -193,6 +193,20 @@ judgement about her family – it is that the mechanism which would have judged 
 ⚠ **THE BENCH CANNOT SEE THIS.** Every preset in `tools/econ-bench.ts` is `country: 'US'`, so §3's
 whole table is the CHEAPEST the college branch can be. §4.2 puts the size of it to the owner.
 
+### 2e. ⚠ A NEW STATE BECOMES REACHABLE: SHE CAN GO BANKRUPT AT COLLEGE
+
+Not a bug and not a new mechanism – a consequence, named here so nobody has to rediscover it from a
+strange album page. The four years used to be the one stretch of the game where the balance could only
+go up: no coach, no gear, no travel, no entry fees, and no bill. **With a bill, `fundsCents` can fall
+during the freeze**, `debtSinceWeek` can be set inside it, and the twelve-week grace can run out there.
+
+The path already exists and needs no new code: `resumeFromCollege`'s loop is
+`while (world.week < yearEnds && world.ending === null) tickWeek(...)`, and its own comment already
+says *"THE LOOP BREAKS ON A FRESH ENDING. A career-ending injury can land at college."* Bankruptcy now
+arrives through the same door. ⚠ The measurement in §3 is where to look for whether it actually
+happens; a walk-on from a wealthy family faces **$30,990 a year** against a starting capital of
+$120,000, which is the case most likely to produce it.
+
 ---
 
 ## 3. MEASURED
@@ -261,3 +275,63 @@ for the shipped population and is not used as one.
 | tuition charged (ledger) vs quoted × 4 | **equal within rounding** |
 
 <!-- MEASURED-BELOW -->
+
+### 3b. ⭐⭐ RUN 1 REFUTED THE CALIBRATION, AND IT FOUND A BUG UNDER IT
+
+**`npx vite-node tools/ladder-baseline.ts --seeds 10`, n = 90, `POLICIES[1]`.**
+
+| §6a, run 1 | predicted | **measured** |
+| --- | --- | --- |
+| careers reaching the fork | 88 / 90 | **90 / 90** ⚠ |
+| offered a funded place | 88 / 88 | **88 / 90 (98%)** ✅ close |
+| strong / solid / small | 50% / 45% / 5% | **98% / 0% / 0%** ⚠⚠ **badly wrong** |
+| mean athletic share | 75% | **90.7%** ⚠ |
+| median 4-year bill | $24,000 | **$0** ⚠⚠ |
+| free rides | ~30 / 90 | **54 / 90** ⚠ |
+
+> ⚠⚠ **A PHASE WHOSE WHOLE POINT IS THAT COLLEGE IS NOT FREE, MEASURING COLLEGE AS FREE.** 88 of 90
+> careers in one band and a median family bill of **$0**. The offer was doing almost nothing that
+> "free, always" was not already doing.
+
+**TWO CAUSES, AND THE FIRST IS A REAL BUG I WROTE.**
+
+1. ⚠ **THE FINISH SCALE IS ZERO-BASED AND MY TABLE WAS ONE-BASED.** `world.ts`'s trophy cabinet is the
+   definition – `if (kidFinish === 0) cabinet.titles.push(...)`, `else if (kidFinish === 1)
+   cabinet.finals.push(...)` – so **0 = won it, 1 = lost the final, 2-3 = semi, 4-7 = quarter**. Every
+   row of `roundScore` was a full round too generous. The v50 golden fixture reads correctly under the
+   corrected scale (`j60: 0` is a J60 **title**), which is the check I should have run first.
+2. ⭐ **AND CORRECTING IT WAS NOT ENOUGH, BECAUSE THE SHAPE WAS ALSO WRONG.** Re-measured on the fixed
+   scale over 35 careers walked to the fork: **every career still scored 11+ of 24, median 15.** The
+   reason is in the same dump – **`best j60` and `best j30` are 0 at the median AND at p75.** She WINS
+   those rungs routinely; they are the on-ramp and she plays dozens over five seasons. **A high-water
+   mark on an easy rung saturates, and a term that is identical for three quarters of the population
+   carries no information about any of them.**
+
+**WHAT THE DATA SAID TO DO INSTEAD.** `best j300` has real spread – **p25 = 1 (a final), median = 3 (a
+semi), p75 = 4 (a quarter)** – and junior TITLES have more – **0 / 4 / 15** at min / median / max. So
+the score is re-shaped onto the prestige rung plus volume:
+
+```
+score = 5 × roundScore(best j300)      // 0..20 – where the spread is
+      + min(6, floor(juniorTitles / 2)) // 0..6  – how much junior tennis she actually won
+```
+
+Re-measured, n = 44: **min 4 · p25 6 · median 11 · p75 18 · p90 23 · max 25.** The three bands are set
+on that distribution's own quarters – **strong ≥ 18 · solid ≥ 7 · small ≥ 1** – and not on numbers I
+liked. ⚠ **The award bases (0.85 / 0.55 / 0.30) are NOT changed**, because nothing measured refuted
+them: one thing at a time.
+
+### 3c. ⚠⚠ THE SECOND PREDICTION, WRITTEN BEFORE THE SECOND RUN
+
+| §6a, run 2 | predicted |
+| --- | --- |
+| strong / solid / small / walk-on | **23% / 43% / 32% / 0%** |
+| mean athletic share | **56%** |
+| median 4-year bill | **$28,000** |
+| free rides | **~20 / 90** |
+| 4-year bill: working / middle / wealthy | **$8,000 / $30,000 / $45,000** |
+| athletic % by background | **still a wealth gradient of a few points** – the FUNCTION is flat, the POPULATION need not be |
+| probe, college vs tour funds delta | **+$115,000 vs +$40,000** |
+
+⚠ **AND THE BATTERY'S OTHER COLUMNS ARE STILL PREDICTED IDENTICAL** to `the-ladder-is-monotone` §3b.
+Run 1 is the check: it must reproduce that column exactly, because the tool never answers the fork.

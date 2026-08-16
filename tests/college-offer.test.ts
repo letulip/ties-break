@@ -30,22 +30,25 @@ import { rngFromSeed } from '../src/engine/rng'
 import type { FamilyBackground } from '../src/shared/protocol'
 
 const BACKGROUNDS: FamilyBackground[] = ['working', 'middle', 'wealthy']
-const RECORDS: Array<[string, Partial<Record<JuniorRung, number>>]> = [
-  ['empty', {}],
-  ['one j30 quarter', { j30: 8 }],
-  ['a j60 semi', { j60: 4 }],
-  ['a j300 semi', { j300: 4 }],
-  ['a j300 final', { j300: 2 }],
-  ['a j300 title and a j60 title', { j300: 1, j60: 1 }],
-  ['everything', { j300: 1, j60: 1, j30: 1 }],
+// ⚠ ZERO-BASED FINISHES: 0 = won it, 1 = lost the final, 2-3 = semi, 4-7 = quarter. `world.ts`'s
+// trophy cabinet is the definition (`kidFinish === 0` pushes a title).
+const RECORDS: Array<[string, Partial<Record<JuniorRung, number>>, number]> = [
+  ['empty', {}, 0],
+  ['j30 titles only', { j30: 0, j60: 0 }, 2],
+  ['a j300 quarter', { j300: 7 }, 0],
+  ['a j300 semi', { j300: 3 }, 2],
+  ['a j300 final', { j300: 1 }, 4],
+  ['a j300 title', { j300: 0 }, 6],
+  ['everything', { j300: 0, j60: 0, j30: 0 }, 15],
 ]
 
 function view(
   juniorBests: Partial<Record<JuniorRung, number>>,
   background: FamilyBackground,
   country: string,
+  juniorTitles = 0,
 ): CollegeRecruitView {
-  return { juniorBests, background, country }
+  return { juniorBests, juniorTitles, background, country }
 }
 
 describe('A. the athletics award is merit-only', () => {
@@ -54,14 +57,14 @@ describe('A. the athletics award is merit-only', () => {
   // get better programmes"), not a typo. Every junior record x every background x both
   // nationalities, one die, one number expected.
   it('does not move with family background or nationality, on any junior record', () => {
-    for (const [label, bests] of RECORDS) {
-      const score = juniorRecordScore(bests)
+    for (const [label, bests, titles] of RECORDS) {
+      const score = juniorRecordScore({ juniorBests: bests, juniorTitles: titles })
       const programme = programmeFor(score)
       if (programme === null) continue
       const shares = new Set<number>()
       for (const background of BACKGROUNDS) {
         for (const country of ['US', 'RU', 'AU']) {
-          const offer = collegeOfferFor(view(bests, background, country), rngFromSeed('fixed:offer'))
+          const offer = collegeOfferFor(view(bests, background, country, titles), rngFromSeed('fixed:offer'))
           shares.add(offer.athleticShare)
         }
       }
@@ -74,10 +77,10 @@ describe('A. the athletics award is merit-only', () => {
   // tested one: it calls the function directly, which a version that had grown a `background`
   // parameter could not satisfy without a compile error here.
   it('is computable with no family and no country in scope at all', () => {
-    const direct = athleticShareOf('solid', 6, rngFromSeed('fixed:offer'))
-    const throughView = collegeOfferFor(view({ j300: 4 }, 'wealthy', 'US'), rngFromSeed('fixed:offer'))
-    expect(juniorRecordScore({ j300: 4 })).toBe(6)
-    expect(programmeFor(6)).toBe('solid')
+    const direct = athleticShareOf('solid', 10, rngFromSeed('fixed:offer'))
+    const throughView = collegeOfferFor(view({ j300: 3 }, 'wealthy', 'US'), rngFromSeed('fixed:offer'))
+    expect(juniorRecordScore({ juniorBests: { j300: 3 }, juniorTitles: 0 })).toBe(10)
+    expect(programmeFor(10)).toBe('solid')
     expect(throughView.athleticShare).toBeCloseTo(direct, 12)
   })
 
@@ -86,14 +89,15 @@ describe('A. the athletics award is merit-only', () => {
   // re-create "she is too good for college now" from the other side, this goes red first.
   it('reads a junior record and nothing professional', () => {
     const keys = Object.keys(view({}, 'middle', 'US')).sort()
-    expect(keys).toEqual(['background', 'country', 'juniorBests'])
+    expect(keys).toEqual(['background', 'country', 'juniorBests', 'juniorTitles'])
     for (const rung of JUNIOR_RUNGS) expect(rung.startsWith('j')).toBe(true)
   })
 })
 
 describe('B. nothing removes the third answer', () => {
   it('offers a place on the weakest record that has anything in it at all', () => {
-    const offer = collegeOfferFor(view({ j30: 8 }, 'working', 'US'), rngFromSeed('weak'))
+    // A single J300 quarter-final and nothing else in five junior seasons.
+    const offer = collegeOfferFor(view({ j300: 7 }, 'working', 'US'), rngFromSeed('weak'))
     expect(offer.programme).toBe('small')
     expect(offer.athleticShare).toBeGreaterThan(0)
   })
@@ -120,7 +124,7 @@ describe('B. nothing removes the third answer', () => {
   // A better junior record only ever buys MORE. Monotone, which is the direction that makes this
   // impossible to read as a punishment for playing.
   it('never pays a stronger junior record less than a weaker one', () => {
-    const scores = RECORDS.map(([, b]) => juniorRecordScore(b)).sort((a, b) => a - b)
+    const scores = RECORDS.map(([, b, t]) => juniorRecordScore({ juniorBests: b, juniorTitles: t })).sort((a, b) => a - b)
     let last = -1
     for (const score of scores) {
       const programme = programmeFor(score)
@@ -134,10 +138,10 @@ describe('B. nothing removes the third answer', () => {
 describe('C. the two layers, one ceiling', () => {
   // NCAA Bylaw 15.1 – total aid may not exceed the cost of attendance.
   it('never covers more than the bill', () => {
-    for (const [label, bests] of RECORDS) {
+    for (const [label, bests, titles] of RECORDS) {
       for (const background of BACKGROUNDS) {
         for (const country of ['US', 'FR']) {
-          const o = collegeOfferFor(view(bests, background, country), rngFromSeed(`${label}:${country}`))
+          const o = collegeOfferFor(view(bests, background, country, titles), rngFromSeed(`${label}:${country}`))
           expect(o.athleticShare + o.needShare, `${label}/${background}/${country}`).toBeLessThanOrEqual(1.000001)
           expect(o.familyPerYearCents).toBeGreaterThanOrEqual(0)
         }
@@ -149,8 +153,8 @@ describe('C. the two layers, one ceiling', () => {
   // trimming the athletics award instead would make a merit number move with family wealth, which is
   // block A's property. So this case is A's second half rather than a duplicate of it.
   it('trims the need layer, not the award, when the two would overflow', () => {
-    const bare = athleticShareOf('strong', 24, rngFromSeed('rich-kid'))
-    const poor = collegeOfferFor(view({ j300: 1, j60: 1, j30: 1 }, 'working', 'US'), rngFromSeed('rich-kid'))
+    const bare = athleticShareOf('strong', 26, rngFromSeed('rich-kid'))
+    const poor = collegeOfferFor(view({ j300: 0, j60: 0, j30: 0 }, 'working', 'US', 15), rngFromSeed('rich-kid'))
     expect(poor.athleticShare).toBeCloseTo(bare, 12)
     expect(poor.athleticShare + poor.needShare).toBeCloseTo(1, 6)
     expect(poor.needShare).toBeLessThan(COLLEGE_OFFER.needShareByBackground.working)
@@ -163,7 +167,7 @@ describe('C. the two layers, one ceiling', () => {
   // untouched – nothing in Bylaw 15 conditions it on nationality, and 62-66% of D-I women's tennis
   // rosters are international.
   it('shuts the need layer to a non-American and leaves her award alone', () => {
-    const bests = { j60: 4 }
+    const bests = { j300: 3 }
     const home = collegeOfferFor(view(bests, 'working', 'US'), rngFromSeed('same'))
     const away = collegeOfferFor(view(bests, 'working', 'RU'), rngFromSeed('same'))
     expect(away.athleticShare).toBeCloseTo(home.athleticShare, 12)

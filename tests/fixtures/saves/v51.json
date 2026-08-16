@@ -26676,11 +26676,11 @@
     "askedWeek": 281,
     "answer": "college",
     "offer": {
-      "programme": "strong",
-      "athleticShare": 0.7877596994706739,
+      "programme": "small",
+      "athleticShare": 0.2710930328040073,
       "needShare": 0.1,
       "costPerYearCents": 3099000,
-      "familyPerYearCents": 347833
+      "familyPerYearCents": 1948983
     }
   },
   "retirementOffer": null,

@@ -50,10 +50,16 @@ export type JuniorRung = (typeof JUNIOR_RUNGS)[number]
  *  acceptance cut or a points column can reach the offer, and no agent can re-create the
  *  result-closes-the-door rule the owner deleted without first adding a field and explaining why. */
 export interface CollegeRecruitView {
-  /** her best finishing position on each junior rung, 1 = won it. Absent = never played it.
+  /** her best finishing position on each junior rung. ⚠ ZERO-BASED: **0 = she won it**, 1 = lost the
+   *  final, 2-3 = semi, 4-7 = quarter (`world.ts`'s trophy cabinet is the definition). Absent = never
+   *  played it.
    *  ⚠ A CAREER HIGH-WATER MARK (`world.bestFinishByTier`), so it is stable after eighteen and the
    *  offer measured at the fork is the offer any later week would compute. */
   juniorBests: Partial<Record<JuniorRung, number>>
+  /** ⭐ how many JUNIOR titles she won, across j30/j60/j300 – `trophiesByTier`, which is never pruned
+   *  and never goes backwards. ⚠ Junior rungs only: a professional title is not a field here and must
+   *  not become one, for the reason in this file's header. */
+  juniorTitles: number
   /** ⚠ READ ONLY BY THE NEED-BASED LAYER. `athleticShareOf` does not take this argument at all. */
   background: FamilyBackground
   /** ISO 3166-1 alpha-2. ⚠ READ ONLY BY THE NEED-BASED LAYER AND THE STICKER, for the reason in
@@ -101,9 +107,16 @@ export const COLLEGE_OFFER = {
    *  ceiling and the two below it are ours**, spaced so the card shows a real difference. Anyone
    *  re-tuning these is tuning our numbers, not the sport's, and §4 item 15 is the check that would
    *  replace them. */
+  /** ⚠⚠ AND THE THRESHOLDS ARE THE MEASURED QUARTILES OF THE SCORE, NOT ROUND NUMBERS I LIKED.
+   *
+   *  The first set (12 / 5 / 1) put **88 of 90 careers in `strong`** and produced a median family
+   *  bill of **$0** – a phase about college not being free, measuring it as free. Re-shaping the score
+   *  (see `prestigeWeight`) gave it real spread over 44 careers walked to the fork: **min 4 · p25 6 ·
+   *  median 11 · p75 18 · p90 23 · max 25**. These three sit on that distribution's own quarters.
+   *  Spec §3b has both runs. */
   programmes: {
-    strong: { base: 0.85, minJuniorScore: 12 },
-    solid: { base: 0.55, minJuniorScore: 5 },
+    strong: { base: 0.85, minJuniorScore: 18 },
+    solid: { base: 0.55, minJuniorScore: 7 },
     small: { base: 0.3, minJuniorScore: 1 },
   } as Record<CollegeProgrammeTier, { base: number; minJuniorScore: number }>,
 
@@ -115,6 +128,11 @@ export const COLLEGE_OFFER = {
   programmeFundingSpread: 0.1,
   /** nobody is offered a place and nothing at all */
   minAthleticShare: 0.05,
+  /** the ceiling on the volume term – see `titleVolume` */
+  maxTitleVolume: 6,
+  /** the score a perfect junior career reaches: `prestigeWeight` x 4 + `maxTitleVolume`. Used only to
+   *  scale the within-band half-step, so the top band's edge is not a cliff. */
+  maxJuniorScore: 26,
 
   /** ⚠⚠ THE NEED-BASED LAYER, AND IT IS THE ONLY THING IN THIS FILE THAT READS THE FAMILY.
    *
@@ -144,16 +162,37 @@ export const COLLEGE_OFFER = {
    *  only the need-based part. `docs/specs/what-the-college-place-costs-2026-08.md` §2c. */
   needShareByBackground: { working: 0.45, middle: 0.1, wealthy: 0 } as Record<FamilyBackground, number>,
 
-  /** the junior-record score each rung's rounds are worth. ⚠ OURS – §4 item 3 of the research is
-   *  explicit that the ranking distribution of incoming D-I freshmen could not be sourced, so there
-   *  is no real curve to copy and this is a deliberately coarse one. */
-  rungWeight: { j300: 3, j60: 2, j30: 1 } as Record<JuniorRung, number>,
-  /** finishing position -> what a coach saw. 1 = she won it. */
+  /** ⚠⚠ THE PRESTIGE RUNG CARRIES THE SCORE, AND THAT IS A MEASUREMENT AND NOT A TASTE.
+   *
+   *  The first version weighted all three rungs (j300 3 · j60 2 · j30 1) against each rung's own best
+   *  finish, and the score it produced had almost no spread: over 35 careers walked to the fork,
+   *  **every one scored 11 or more of a possible 24** and the median was 15. The reason is in the
+   *  measurement (spec §3b): `best j60` and `best j30` are **0 at the median and at p75** – she WINS
+   *  those rungs, routinely, because they are the on-ramp and she plays dozens of them over five
+   *  seasons. A high-water mark on an easy rung saturates, and a term that is the same for three
+   *  quarters of the population carries no information about any of them.
+   *
+   *  `best j300` is where the spread actually is: **p25 = 1 (a final), median = 3 (a semi), p75 = 4
+   *  (a quarter)**. So the prestige rung is the score, and the two below it are represented by
+   *  VOLUME instead of by a high-water mark – see `titleVolume`. */
+  prestigeRung: 'j300' as JuniorRung,
+  prestigeWeight: 5,
+  /** ⚠⚠ FINISHING POSITION IS ZERO-BASED IN THIS ENGINE, AND THE FIRST VERSION OF THIS TABLE WAS NOT.
+   *
+   *  `world.ts`'s trophy cabinet is the definition and it is unambiguous:
+   *  `if (kidFinish === 0) cabinet.titles.push(...)` / `else if (kidFinish === 1) cabinet.finals.push(...)`.
+   *  So **0 = won it, 1 = lost the final, 2-3 = semi, 4-7 = quarter**, and the v50 golden fixture reads
+   *  correctly under that scale (`j60: 0` is a J60 TITLE, `j300: 4` a quarter-final).
+   *
+   *  ⚠ I FIRST WROTE THIS ONE-BASED, and the first 90-career run is what caught it: 88 of 90 careers
+   *  landed in the `strong` band and the median family bill came out at $0 – a phase whose whole point
+   *  is that college is not free, measuring college as free. Every row was a full round too generous.
+   *  The measurement is kept in the spec's §3b because the error is the finding. */
   roundScore: [
-    { finish: 1, score: 4 },
-    { finish: 2, score: 3 },
-    { finish: 4, score: 2 },
-    { finish: 8, score: 1 },
+    { finish: 0, score: 4 },
+    { finish: 1, score: 3 },
+    { finish: 3, score: 2 },
+    { finish: 7, score: 1 },
   ],
 } as const
 
@@ -163,19 +202,26 @@ export const COLLEGE_OFFER = {
  *  rank is a snapshot that decays; `bestFinishByTier` is what she DID, it never goes backwards, and
  *  it is what a coach writing an offer in her junior year is actually looking at (§1c: the commitment
  *  is made at sixteen or seventeen, on a body of junior results). */
-export function juniorRecordScore(bests: Partial<Record<JuniorRung, number>>): number {
-  let score = 0
-  for (const rung of JUNIOR_RUNGS) {
-    const finish = bests[rung]
-    if (finish === undefined) continue
+export function juniorRecordScore(view: Pick<CollegeRecruitView, 'juniorBests' | 'juniorTitles'>): number {
+  const best = view.juniorBests[COLLEGE_OFFER.prestigeRung]
+  let prestige = 0
+  if (best !== undefined) {
     for (const band of COLLEGE_OFFER.roundScore) {
-      if (finish <= band.finish) {
-        score += COLLEGE_OFFER.rungWeight[rung] * band.score
+      if (best <= band.finish) {
+        prestige = COLLEGE_OFFER.prestigeWeight * band.score
         break
       }
     }
   }
-  return score
+  return prestige + titleVolume(view.juniorTitles)
+}
+
+/** ⭐ HOW MUCH JUNIOR TENNIS SHE ACTUALLY WON, capped. Junior titles measured 0 / 4 / 15 at
+ *  min / median / max over 35 careers (spec §3b) – real spread, where the easy rungs' best-finish
+ *  had none. Halved and capped so a career that wins fifteen J30s does not out-score a J300 finalist
+ *  on volume alone: the prestige rung is worth up to 20 and this is worth up to 6. */
+export function titleVolume(juniorTitles: number): number {
+  return Math.min(COLLEGE_OFFER.maxTitleVolume, Math.floor(juniorTitles / 2))
 }
 
 /** WHICH PROGRAMME, or `null` for an empty record. */
@@ -204,7 +250,7 @@ export function athleticShareOf(programme: CollegeProgrammeTier, juniorScore: nu
   // ⚠ AND A HALF-STEP FOR THE RECORD INSIDE THE BAND, so the band edges are not cliffs: the top of a
   // band is worth a little more than its floor at the same programme. Scaled by the band's own width
   // so it can never carry her into the next band's money.
-  const nextFloor = programme === 'strong' ? COLLEGE_OFFER.programmes.strong.minJuniorScore * 2 : nextBandFloor(programme)
+  const nextFloor = programme === 'strong' ? COLLEGE_OFFER.maxJuniorScore : nextBandFloor(programme)
   const span = Math.max(1, nextFloor - band.minJuniorScore)
   const within = Math.min(1, Math.max(0, (juniorScore - band.minJuniorScore) / span))
   const shaped = band.base + within * COLLEGE_OFFER.programmeFundingSpread
@@ -251,7 +297,7 @@ export function collegeOfferFor(view: CollegeRecruitView, rng: Rng): CollegeOffe
       ? COLLEGE_OFFER.costPerYearInStateCents
       : COLLEGE_OFFER.costPerYearOutOfStateCents
 
-  const score = juniorRecordScore(view.juniorBests)
+  const score = juniorRecordScore(view)
   const programme = programmeFor(score)
 
   // ⭐⭐ NO PROGRAMME IS NOT NO ANSWER, AND THIS IS WHERE THE OWNER'S RULING AND THE RESEARCH STOP
