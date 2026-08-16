@@ -125,7 +125,7 @@ identical seeds across every arm:
 | 0.05 | #10 | 0.0 | 1/27 | 16.3 | 373 | $87,437 |
 | 0.02 | #4 | **0.0** | **0/27** | 16.3 | 372 | $87,410 |
 
-### 3a. ⚠⚠ THERE IS A CLIFF BETWEEN 0.20 AND 0.15, AND P1 IS WHAT PUT IT THERE
+### 3a. ⚠⚠ IT FALLS OFF A STEEP EDGE BELOW 0.20, AND P1 IS WHAT PUT THE EDGE THERE
 
 Four arms sit at end rank ~#370 and three at ~#204–259. That is not a gradient, it is a step – and
 the mechanism is in the **first W15** column, which moves 15.6 → 16.3 and loses two careers entirely.
