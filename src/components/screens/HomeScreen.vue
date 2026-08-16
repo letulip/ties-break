@@ -894,6 +894,7 @@ function openRankHelp(): void {
                  is the half of D7 that mattered and is free here. -->
             <button
               class="diary-tool"
+              data-tour="home-news"
               aria-label="Go to the news feed"
               title="News"
               :aria-describedby="newsUnseen ? 'diary-dot-news' : undefined"
@@ -938,7 +939,7 @@ function openRankHelp(): void {
                 aria-label="A letter waiting on an answer"
               ></span>
             </button>
-            <button class="diary-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
+            <button class="diary-tool" data-tour="home-settings" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3.2"></circle>
                 <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"></path>
@@ -1052,7 +1053,7 @@ function openRankHelp(): void {
 
         <!-- FAMILY BUDGET -> the wallet. OWNER'S RULING over the export, which shows this week's
              income/spent rows: the current TOTAL, plus income and spending over the last 12 weeks. -->
-        <Card as="button" class="note-card" @click="emit('navigate', 'money')">
+        <Card as="button" class="note-card" data-tour="family-budget" @click="emit('navigate', 'money')">
           <Eyebrow>Family budget</Eyebrow>
           <p class="budget-total" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
           <div class="budget-rule"></div>

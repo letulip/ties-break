@@ -16,7 +16,7 @@
 // bumps `SAVE_SCHEMA_VERSION` and the fixtures are regenerated, this spec keeps asking the right
 // question with no edit. That was a design requirement, not a convenience.
 
-import { test, expect } from './careerAt'
+import { test, expect, TOUR_ANSWERED } from './careerAt'
 import type { Page } from '@playwright/test'
 import { loadManifest, readFixtureBytes } from '../tools/e2e-fixtures-read'
 import { onScreenWeek, openMore } from './journey'
@@ -80,7 +80,9 @@ test('a career round-trips through a real file: out of the app, and back in', as
   const crashes: string[] = []
   page.on('pageerror', (error) => crashes.push(error.message))
 
-  const fresh = await careerAt('fresh')
+  // TOUR_ANSWERED: this spec is about a file round trip, not about onboarding, and a week-0
+  // fixture otherwise boots into the first-run coach marks – see careerAt.ts.
+  const fresh = await careerAt('fresh', { localStorage: TOUR_ANSWERED })
   await openSaves(page)
 
   // --- out -------------------------------------------------------------------------------------
@@ -139,7 +141,9 @@ test('an untrusted file is refused at the door, and the career on disk is untouc
   const crashes: string[] = []
   page.on('pageerror', (error) => crashes.push(error.message))
 
-  const fresh = await careerAt('fresh')
+  // TOUR_ANSWERED: this spec is about a file round trip, not about onboarding, and a week-0
+  // fixture otherwise boots into the first-run coach marks – see careerAt.ts.
+  const fresh = await careerAt('fresh', { localStorage: TOUR_ANSWERED })
   const junior = fixture('junior')
   await openSaves(page)
 
