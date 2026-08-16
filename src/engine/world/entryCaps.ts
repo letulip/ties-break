@@ -278,12 +278,16 @@ function yearEndWtaRankOf(row: SeasonHistoryEntry | undefined): number | null {
  *       CONSTANTS AT ALL. W75 opens at 17 (`minAgeYears`), so a fourteen-year-old's count of
  *       W75-or-above entries is structurally zero – measured, and reported as a zero rather than
  *       hidden (docs/specs/age-eligibility-window-2026-08.md §5)."* The owner's age-grid ruling of
- *       16.08 put `w75.minAgeYears` at 14, so the count is no longer structurally zero and this
- *       sub-cap is now the rule the WTA wrote it as. **The season-ledger window is therefore a real
- *       under-count now rather than a dormant one**: a fourteen-year-old whose birthday falls after
- *       the wrap sees only the part of her year that follows it, and item 1 is why that is the safe
- *       direction. Item 3 is the fix and it is unchanged – the pro ledger needs a tier, which is a
- *       save-schema move.
+ *       16.08 put `w75.minAgeYears` at 14, so the count is no longer STRUCTURALLY zero.
+ *
+ *       ⚠⚠ AND IT STILL MEASURES ZERO, FOR A DIFFERENT REASON, WHICH IS THE HONEST STATE OF IT.
+ *       Re-measured on P0's frozen battery the evening the floors moved (n = 90, 676 weeks,
+ *       `docs/specs/college-is-its-own-branch-2026-08.md` §3): a fourteen-year-old's mean W75-or-above
+ *       entries is **0.0**, because `w75.acceptsRank` is #300 and she holds no professional ranking at
+ *       fourteen at all. The gate moved from the DOORWAY to the ACCEPTANCE LIST; the sub-cap sits
+ *       behind both. So the ledger window below is a limitation that can now be reached in principle
+ *       and is not reached in practice – and item 1 is why the under-count is the safe direction when
+ *       it is. Item 3 is the fix and it is unchanged: the pro ledger needs a tier, a save-schema move.
  *    3. THE FIX IS NAMED, so the day it CAN bind nobody has to rediscover it: give the pro ledger a
  *       tier. That is a save-schema change – the three-part move – and buying one for a rule that
  *       cannot fire would have been machinery bought on speculation.

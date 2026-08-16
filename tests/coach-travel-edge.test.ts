@@ -562,11 +562,46 @@ describe('the two readouts say the bonus exists, without overstating it', () => 
 // call-up draws on `seed:callup:<week>`, its own sub-stream, and is unreachable outside the freeze in
 // any case. The frozen MAIN capture in tests/condition.test.ts is untouched (count 41550, hash
 // e6b0c709).
+//
+// ⭐⭐ RE-FROZEN FOR THE FIFTH TIME (16.08), FOR THE OWNER'S AGE-GRID RULING – «настоящих порогов
+// только два – 14 и 18 … Возрастное есть только по количеству сыгранных в год». `w35`/`w50`/`w75`/
+// `w100` and the Slam moved to 14, the four WTA rungs to 15. PER-KEY DIFF TAKEN FIRST, as this file
+// demands, from a worktree at `d595f5d` (the commit the wave starts from) against this branch, all
+// 64 top-level keys hashed on their own:
+//
+//   ⚠⚠ THE SAME 27 KEYS ON ALL THREE CAREERS, AND `entries` IS NOT ONE OF THEM. Moved: `results`,
+//   `bestFinishByTier`, `kidRank`, `kidRankWta`, the three `prev*` rank caches, `seasonStartRank`,
+//   `seasonWins`, `seasonLosses`, `seasonRecord`, `seasonHistory`, `lastSeasonSummary`, `fundsCents`,
+//   `financeWeeks`, `careerTotals`, `skills`, `condition`, `events`, `milestones`, `offers`,
+//   `academy`, `trophiesByTier`, `knockHistory`, `injuryHistory`, `internationalEntryWeeks`,
+//   `proEntryWeeks`, `nextEventId`.
+//
+//   UNMOVED IN ALL THREE  **entries · seasonEntries · coachId · coachOnEventWeeks ·
+//                         coachOnJuniorEvents · profile · seed · rngMain · cohort · schemaVersion ·
+//                         season · college · fork · ending · debtSinceWeek · knock · injury · kit ·
+//                         potential · plan · vacations · practices · penalties · birthdays**
+//
+// ⭐ AND `entries` UNMOVED IS THE FINDING, NOT A FOOTNOTE. **She did not enter one different event.**
+// Every previous re-freeze of this file moved `entries` – a rung that opens earlier is a rung she
+// enters earlier. Not here: the three frozen careers are 156 weeks long (she is 16.6 at the end) and
+// on the two grinder arms she plays nothing paid at all, while the acceptance cuts refuse her at the
+// rungs whose floors moved. What moved is `results`, and the mechanism is worth naming because it is
+// the one this file could otherwise be read as an alarm about: `selectEntrants` filters a draw's
+// CANDIDATES on the same age gate, so opening W35+ to fourteen-year-olds changes which COHORT players
+// fill the fields she meets. Different opponents, same calendar, different results.
+//
+// ⚠ AND `rngMain` IS AMONG THE UNMOVED FOR THE FIFTH WAVE RUNNING – an age gate is a POST-DRAW
+// filter and taps no stream, so the persisted MAIN position after 156 weeks is identical and the
+// frozen MAIN capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709).
+//
+// ⚠ `ending`, `college` AND `fork` ARE ALSO UNMOVED, which is the other ruling's half: the college
+// rule was removed the same day, and none of these careers reaches the fork (week 156 is 32 weeks
+// short of it), so nothing in that removal can reach a hash here by construction.
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: '38a86dd8f0bfdb29b1d57e3ff708a4edfb99c3a081265e8f2add5f583394c184',
+  middleGrinder: '3519d92f603e5093128e81412e24a0e8ce00c744c9a86c6eddc6e457cea877f5',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: 'ddd8a264900fedf4df2ff7e4ee8b56acb8faf4e6414e5171bad2508d37300dce',
+  eliteGrinder: '6aa8ff66c6b544d8da703cc779f73861ba97803cc083854b98e712f14e41c9dc',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -587,21 +622,21 @@ const FROZEN = {
    *
    *  ⚠ `rngMain` UNMOVED IS THE LOAD-BEARING HALF: an access rule is a post-draw gate, so the frozen
    *  MAIN capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709). */
-  selfTravelling: '24b4212d4acd7c86d3637efc92f72047ddca4055436f4683ddc2ebfb1426fa58',
+  selfTravelling: 'bdedded723c9769794997cb948f9c9fa546b03d47b5cab5abf4fc008ddcb2afa',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
  *  claim rather than assert it. See the paragraph on `FROZEN`. */
 const PRE_V50 = {
-  middleGrinder: 'b31309b2c3fc1dc2011868b6f3e7690cbb317021d26c70635a0614dabf26fdb4',
-  eliteGrinder: '80fcd7910eca5cdae7cd4c71e1f68b56099c49912d71d6905cb67953819bef0b',
+  middleGrinder: '3b7f1d650daaf78f77e5e14ee91312d4a303dcd3f898ba3b85874a6acefd7cce',
+  eliteGrinder: '373d3c56466813bb3c366f7842951fd68dbbbfef261cc55269eb620f69bc8ef2',
   /** ⚠ MOVED WITH ITS TWIN ABOVE, AND THE PARAGRAPH ON `FROZEN` PREDICTED EXACTLY THIS: *"if a later
    *  wave moves one of these careers for a real reason, the rollback case goes red beside the freeze
    *  and says which kind of change it was."* It did, on 16.08, and it said so – both hashes red, and
    *  the per-key diff showing a career that really is different rather than a schema field that is.
    *  The identity below still does its own job: rolling `schemaVersion` back to 49 on the NEW world
    *  reproduces this, so nothing about P5's claim has been quietly lost in the re-freeze. */
-  selfTravelling: '1fb396e691859d0e7e89c91e7b86b4ce52d8390576e1265a30d3c7b34a008a17',
+  selfTravelling: '5cce6375d7a640e3f98fc581d64edd9d2e52b6269b9a59f385eb0e4d3083dc28',
 }
 const FREEZE_WEEKS = 156
 
