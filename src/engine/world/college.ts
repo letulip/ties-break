@@ -188,15 +188,21 @@ export function collegeEpilogueLine(world: WorldState): string {
   const played =
     calls === 0
       ? 'Her country never called'
-      : `Her country called ${calls === 1 ? 'once' : `${calls} times`}, for nothing either time it counted`
+      : `Her country called ${calls === 1 ? 'once' : `${calls} times`}, and paid her nothing, which is what it pays everybody`
   const standing =
     rank === null
       ? 'She is on no professional list at all, and the only way back in is qualifying'
-      : `She is #${rank} and falling, and the only way up is qualifying`
-  return `${years} ${years === 1 ? 'year' : 'years'} of student tennis. ${played}. The family is ${formatBanked(banked)} better off than the week she went in. She is ${age}. ${standing}.`
+      : `She is #${rank}, and the only way up is qualifying`
+  return `${years} ${years === 1 ? 'year' : 'years'} of student tennis. ${played}. ${moneyClause(banked)} She is ${age}. ${standing}.`
 }
 
-function formatBanked(cents: number): string {
+/** ⚠ THE SIGN IS A DIFFERENT SENTENCE, NOT A DIFFERENT NUMBER IN THE SAME ONE. The scholarship
+ *  normally leaves the family better off – that is its whole economic point – but a career carrying
+ *  debt into it can come out further under water, and "$4,000 worse better off" is what a formatter
+ *  that only flipped the figure would have printed. */
+function moneyClause(cents: number): string {
   const dollars = Math.round(cents / 100)
-  return dollars < 0 ? `$${Math.abs(dollars).toLocaleString('en-US')} worse` : `$${dollars.toLocaleString('en-US')}`
+  const money = `$${Math.abs(dollars).toLocaleString('en-US')}`
+  if (dollars < 0) return `The family is ${money} further under than the week she went in.`
+  return `The family is ${money} better off than the week she went in.`
 }

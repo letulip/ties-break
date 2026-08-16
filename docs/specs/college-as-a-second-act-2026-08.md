@@ -257,7 +257,32 @@ real body's name is constructible from the label.
 
 ### 5a. The battery, re-run
 
-<!-- MEASURED -->
+`npx vite-node tools/ladder-baseline.ts` on this branch, n = 90 (9 presets x 10 seeds), 676 weeks,
+`POLICIES[1]`, shipped constants throughout. **Every column P4 published comes back identical.**
+
+| column | `college-gate-decoupled-2026-08.md` (P4) | this run | delta |
+| --- | --- | --- | --- |
+| door shut | 83 / 90, mean 19.1 | **83 / 90, mean 19.2, median 19.1** | **0** |
+| still open at the fork | 86 / 90 (96%) | **86 / 90 (96%)** | **0** |
+| still open a full season later | 7 / 90 (8%) | **7 / 90 (8%)** | **0** |
+| which rung shut it | W75 76, W100 5, WTA 250 2 | **W75 76, W100 5, WTA 250 2** | **0** |
+| closure distribution | 17-17.9 **1**, 18-18.9 **2**, 19+ **80** | **1 / 2 / 80** | **0** |
+| in-window closures | 78 / 90, 1 of 78 in the 17.0-17.9 band | **78 / 90, 1 of 78** | **0** |
+| W75 first entry, p25/p50/p75 | 19.0 / **19.0** / 19.1 | **19.0 / 19.0 / 19.1** | **0** |
+| W75 first counting result, p50 | **19.2** | **19.2** | **0** |
+
+✅ **PREDICTION P1 HELD, exactly as stated.** The battery never answers the fork, so no career in it
+can reach a college year; every new step in the tick is the `else` branch of `if (!inCollege(world))`.
+The run is the receipt rather than the argument.
+
+⚠ **AND THE ONE PLACE A NON-COLLEGE CAREER DID MOVE IS THE SCHEMA NUMBER, WHICH IS NOT A CAREER.**
+`tests/coach-travel-edge.test.ts` hashes `JSON.stringify(world)` for three frozen careers at week
+156, so the 49 -> 50 bump moved all three. Its own rule is that the per-key diff comes first, and this
+time a stronger answer was available and is **asserted in the file** rather than reported in a spec:
+hashing the SAME live world with `schemaVersion` rolled back to 49 reproduces the old hashes **byte
+for byte, all three**. Not "the other keys look unmoved" – there is no other difference. The three
+careers also assert `world.college === null` at week 156, so everything this phase added is
+unreachable there by construction.
 
 ---
 

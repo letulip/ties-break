@@ -332,6 +332,17 @@ describe('P5 – the epilogue line', () => {
     expect(line).toMatch(/qualifying/)
   }, 60_000)
 
+  it('⚠ THE SIGN IS A DIFFERENT SENTENCE: a family further under water is not "worse better off"', () => {
+    const { world, rng } = atTheFork('p5-epilogue-debt')
+    answerFork(world, 'college')
+    resumeFromCollege(world, rng)
+    world.college!.years = world.college!.years.map((y) => ({ ...y, fundsDeltaCents: -412_300 }))
+    const line = collegeEpilogueLine(world)
+    expect(line).toContain('$4,123 further under')
+    expect(line).not.toContain('better off')
+    expect(line).not.toContain('worse better')
+  }, 60_000)
+
   it('⚠ and it reports the CALL-UPS honestly, including none at all', () => {
     const { world, rng } = atTheFork('p5-epilogue-calls')
     answerFork(world, 'college')
