@@ -270,7 +270,11 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
     // identical for every share from 0.65 to 0.90, and careers re-run at 0.65 and 0.70 come out
     // byte-identical. That is exactly the kind of dead knob a guard should refuse to allow.
     expect(TIERS.j60.enterPct).toBe(0.5)
-    expect(TIERS.j300.enterPct).toBe(0.4)
+    // ⚠ 0.4 -> 0.2 BY P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). Real J300
+    // acceptance lists cut at the top ~2% of the girls' junior list against our 40%; 0.2 is as far as
+    // the correction could travel, because everything tighter deletes the rung and – since P1 made
+    // the junior ranking load-bearing for professional access – costs ~110 rank places with it.
+    expect(TIERS.j300.enterPct).toBe(0.2)
     // ...the acceptance lists tighten as you climb, which is the ladder.
     expect(TIERS.j300.enterPct!).toBeLessThan(TIERS.j60.enterPct!)
     // ...and neither has drifted into the range where the share stops gating anything.
@@ -279,11 +283,29 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
       // ...nor below its own field's floor, which would be a cut stricter than the draw it fills.
       expect(TIERS[tier].enterPct!).toBeGreaterThan(TIERS[tier].entrantPctBand[0])
     }
-    // The cut sits AT or BELOW the top of the band the field is drawn from for j60 and ABOVE it for
-    // j300 - i.e. the prestige rung is the one that admits players from outside its own regular
-    // field. Pinned as a DIRECTION rather than a number so the reason stays visible: without it,
-    // j300's field (top 25%) would be a wall no career in any preset ever cleared.
-    expect(TIERS.j300.enterPct!).toBeGreaterThan(TIERS.j300.entrantPctBand[1])
+    // The cut sits AT or BELOW the top of the band the field is drawn from for j60 - i.e. the
+    // acceptance list reaches deeper than the regulars, which is what qualifying and wildcards are
+    // for in the real game.
+    expect(TIERS.j60.enterPct!).toBeGreaterThan(TIERS.j60.entrantPctBand[1])
+    //
+    // ⚠⚠ AND ON j300 THAT DIRECTION HAS **INVERTED** (P3, 16.08), WHICH IS A REAL CONSEQUENCE AND IS
+    // PINNED AS ONE RATHER THAN QUIETLY DROPPED. The cut is now 0.20 against a field band that
+    // reaches 0.25, so the kid needs a better junior standing to ENTER a J300 than the weakest AI
+    // player the draw is MADE of. The line this replaces asserted the opposite direction, and its
+    // stated reason was measured: at a cut of 0.25 "j300's field would be a wall no career in any
+    // preset ever cleared" - 0.0-0.3 entries per four-year career across all eighteen cells, 30.07.
+    //
+    // **THAT REASON NO LONGER HOLDS, AND THAT IS WHY THE PIN COULD MOVE.** P1 and P2 rebuilt the
+    // junior game around this table, and the wall is not a wall any more: measured on the shipped
+    // tree, **42 of 54 careers still enter a J300** at 0.20 (2.2 entries each) and 71 of 90 over the
+    // full baseline horizon. The property the old line protected - the prestige rung is REACHABLE -
+    // survives; the proxy it used to protect it with does not.
+    //
+    // ⚠ IT IS A CHARACTERISATION AND THE OWNER HAS IT (spec §6.3). If he re-picks j300 at or above
+    // 0.25 this goes red, and the reader should restore the strict `toBeGreaterThan` above.
+    expect(TIERS.j300.enterPct!, 'the known inversion - see the note above').toBeLessThan(
+      TIERS.j300.entrantPctBand[1],
+    )
   })
 
   it('every point total 0..5000 keeps at least one tier open – no gap, ever', () => {

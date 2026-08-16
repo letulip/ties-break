@@ -366,13 +366,42 @@ describe('the plaque is about the MAN, and the trip is not part of who he is', (
 // persisted MAIN position after 156 weeks is identical – and the frozen capture in
 // tests/condition.test.ts is likewise untouched (count 41550, hash e6b0c709), asserted before its own
 // companion constant, which did move (89 -> 93; the mechanism is written out there).
+// ⭐⭐ RE-FROZEN AGAIN AT P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), AND THE PER-KEY
+// DIFF WAS TAKEN FIRST FOR THE FOURTH TIME – a worktree at `c04253f` (the commit this phase starts
+// from) against this branch, all 64 top-level keys hashed on their own, on all three careers:
+//
+//   5:0  middle coach · grinder   28 keys, and ⚠ `ending`, `debtSinceWeek` and
+//                                 `medicalWithdrawalWeek` are among them – THIS CAREER ENDS
+//                                 DIFFERENTLY. A ladder that changes which tournaments she can
+//                                 afford to enter changes what the money does, and this is the arm
+//                                 where that shows as an ending rather than as a rank.
+//   8:0  elite coach · grinder    27 keys – `results`, the rank caches, the season counters and the
+//                                 wallet. No `ending`: the wealthy arm absorbs it.
+//   0:1  self-coached · player    32 keys, the widest set – it is the arm that actually plays the
+//                                 tour, so `entries`, `seasonEntries`, `proEntryWeeks` and even
+//                                 `vacations` move with the rest.
+//
+//   UNMOVED IN ALL THREE  **coachId · coachOnEventWeeks · coachOnJuniorEvents · profile · seed ·
+//                         rngMain · cohort · schemaVersion**
+//
+// ⚠ READ THE LAST LINE, AS ALWAYS. An acceptance cut decides which rungs she may enter, so a career
+// diverges at the first door that moved and stays diverged – that is the whole of the 27-32. What
+// these hashes exist to catch is a coach change leaking past the trip, and every coach key, the
+// profile and the schema are byte-identical on all three.
+//
+// ⚠ AND `rngMain` IS AMONG THE UNMOVED FOR THE THIRD WAVE RUNNING, which is the invariant-2 half:
+// an acceptance cut is a POST-DRAW GATE and taps no stream, so the persisted MAIN position after 156
+// weeks is identical in both trees. The frozen MAIN capture in tests/condition.test.ts is therefore
+// untouched (count 41550, hash e6b0c709) and needed no paragraph this time – ⚠ nor did its companion
+// `REF.kidRank`, which is the one difference from P1 and P2: that constant reads a career whose
+// doors P3 did not move.
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: '9afd25c381579dccd3cc35c90ae5b23e25f3fc242070bcf2eda7e1790e59adc1',
+  middleGrinder: 'b31309b2c3fc1dc2011868b6f3e7690cbb317021d26c70635a0614dabf26fdb4',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '0798782f2a6921f911fabecf70c9f1b9ff2baf2235b279bf1e81796cb2522b89',
+  eliteGrinder: '80fcd7910eca5cdae7cd4c71e1f68b56099c49912d71d6905cb67953819bef0b',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send) */
-  selfTravelling: '92666725d969df18a8958ef8ce54fc040d906aecca3e4e44af2ccd44d650fbac',
+  selfTravelling: 'a513ebc013a735c8e3ceea1e591a98c65b9111f4fce12c36ac6d19b33243522c',
 }
 const FREEZE_WEEKS = 156
 

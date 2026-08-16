@@ -82,10 +82,18 @@ describe('it is a rank READ, so it reverses itself', () => {
   it('⚠⚠ CROSS THE LINE AND LOSE THE RUNG; FALL BACK AND GET IT BACK', () => {
     const world = proWorld('pd-both-ways')
 
-    // (a) OUTSIDE both cuts: the whole W series is hers. #300 clears every W acceptance cut too
-    //     (the tightest is W100's 350), so anything that shuts below is this rule and not the list.
-    atRank(world, 300)
-    expect(W_SERIES.filter((t) => tierFloorOpen(world, t)), 'nothing is barred at #300').toEqual([...W_SERIES])
+    // (a) OUTSIDE both cuts: the whole W series is hers.
+    //
+    // ⚠ RE-AIMED #300 -> #200 BY P3 (16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), AND
+    // THE PROBE MOVED FOR EXACTLY THE REASON THE COMMENT BESIDE IT ALWAYS GAVE. This rank has to
+    // clear every W ACCEPTANCE CUT, so that anything shut below is demonstrably THIS rule and not
+    // the list – otherwise the case would pass on the wrong mechanism, which is worse than failing.
+    // The sourced chain took the tightest W-series cut from W100's 350 to **240**, so #300 stopped
+    // clearing it and the case correctly went red. #200 clears all five (w35 700 · w50 330 · w75 300
+    // · w100 240) and is still outside both play-down bars (#50 and #150), so the probe means what
+    // it did. Nothing about the rule, the reversal or the byte-identity claim is touched.
+    atRank(world, 200)
+    expect(W_SERIES.filter((t) => tierFloorOpen(world, t)), 'nothing is barred at #200').toEqual([...W_SERIES])
     const before = JSON.stringify(world)
 
     // (b) INSIDE #150: the bottom two go, and only those two.
@@ -97,7 +105,7 @@ describe('it is a rank READ, so it reverses itself', () => {
     expect(W_SERIES.filter((t) => tierFloorOpen(world, t)), 'the top 50 play no W events').toEqual([])
 
     // (d) ...AND BACK OUT. This is the half a latch would fail.
-    atRank(world, 300)
+    atRank(world, 200)
     expect(W_SERIES.filter((t) => tierFloorOpen(world, t)), 'it opened back up on its own').toEqual([...W_SERIES])
 
     // (e) NOTHING PERSISTED, asserted rather than promised: the whole world serialises identically
