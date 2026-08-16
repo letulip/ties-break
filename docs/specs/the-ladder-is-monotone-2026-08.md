@@ -282,6 +282,96 @@ separately instead of blaming one for the other. **post** is both.
 
 <!-- MEASURED-BELOW -->
 
+### 3a. ⚠ FIRST, THE PRE ARM: §1 MOVED NOTHING THIS BATTERY CAN SEE
+
+**`pre` reproduces the spec's *now* column on every figure it reports** – first entry ages, all four
+rank milestones, career high #104, 267 entries, $115,205 / $259,570 / $685,960, 59/90, 2 bankruptcies
+at 15.8. So the sponsor decoupling of §1 is **measurement-neutral on this battery**, which is the
+right result for a correctness fix and is also a limitation worth naming: **these columns price PRIZE
+money and not sponsor money.** What §1 moved was who gets a letter and how big the cheque is, and the
+battery does not have a column for it. The one place it could have shown through – affordability, and
+so bankruptcies – is unchanged at 2 of 90.
+
+### 3b. AND THE POST ARM – predicted vs measured
+
+| | pre / spec | **post (measured)** | predicted | verdict |
+| --- | --- | --- | --- | --- |
+| first W35, median | 16.1 | **16.3** | 16.0 | ⚠ **wrong direction** |
+| first W50 | 17.2 | **17.1** | 17.0 | ✅ |
+| first W75 | 17.9 | **17.5** | 17.8 | ✅ (better than predicted) |
+| first W100 | 18.3 | **18.6** | 18.2 | ⚠ wrong direction |
+| first WTA 125 | 18.8 | **18.8** | 18.4 | ⚠ **wrong – it did not move at all** |
+| first Slam | 21.9 | **22.3** | 21.9 | ⚠ slightly later |
+| rank at 17 | #375 | **#374** | #340 | ⚠ flat |
+| rank at 19 | #160 | **#178** | #150 | ⚠⚠ **badly wrong – it got WORSE** |
+| rank at 21 | #160 | **#178** | #150 | ⚠⚠ worse |
+| rank at 25 | #156 | **#174** | #150 | ⚠⚠ worse |
+| career high, median | #104 | **#112** | #100 | ⚠⚠ worse |
+| entries per career | 267 | **262** | 275 | ⚠ wrong direction |
+| prize by 19 | $115,205 | **$112,290** | $125,000 | ⚠ |
+| prize by 21 | $259,570 | **$246,240** | $275,000 | ⚠ |
+| career prize | $685,960 | **$623,820** | $720,000 | ⚠⚠ **badly wrong – −$62k** |
+| counting book full at 19 | 59/90 | **55/90** | 62/90 | ⚠ |
+| bankruptcies | 2 at 15.8 | **2 at 15.8** | 0-1 | ⚠ unchanged |
+| J300 entries per career | 2.2 | **3.1** | +60-75% | ⚠ close – **+41%** |
+| WTA 125 entries per career | 15.3 | **19.0** | ~double | ⚠ **+24%** |
+
+**Fifteen of eighteen predictions are wrong, and eight of them in the opposite direction.** I predicted
+a broad improvement because two rungs opened wider. Every median got worse.
+
+### 3c. ⭐⭐ THE ERROR IS THE FINDING, AND IT IS A COMPOSITION EFFECT – THE POPULATION CHANGED
+
+**The column I did not predict is the one that explains all the others:**
+
+| careers that ever reach the rung | pre | **post** |
+| --- | --- | --- |
+| **J300** | 72/90 | **87/90** (+15) |
+| W15 · W35 · W50 · W75 · W100 · WTA 125 · WTA 250 | 81/90 | **87/90** (+6, every rung) |
+| ever held a professional ranking | 81/90 | **87/90** |
+| ranked at 19 | 80/90 | **86/90** |
+
+**Fifteen more careers of ninety reach the prestige junior rung, and six more get onto the
+professional ladder at all.** That is the j300 fix doing precisely what the structural argument said
+it would: a rung that refused the population its own draw was made of was refusing the girls at the
+bottom of that population, and they are exactly the careers that were never getting a professional
+ranking.
+
+**And those six careers join the median at the bottom of it.** The distribution says so directly –
+the career-high **p25 is #75 in both arms** and unchanged, while **p75 moves #131 → #142 and the worst
+#160 → #180**. Nothing at the top of the population got worse. The median moved because six careers
+that used to be *unranked* – and therefore not in the median at all – are now ranked, and ranked
+poorly. ⚠ **A median over a population that grew by 7% is not a comparison**, and reading −$62k of
+career prize as "the fix cost money" would be the same error `college-is-its-own-branch` §3c names.
+
+⚠ **What is genuinely paid for, and is not composition:** entries per career 267 → 262 and WTA 250
+entries 44.7 → 41.3. See §3d.
+
+### 3d. ⚠ THE THIRD COUPLING, FOUND BY THE MEASUREMENT – `acceptsRank` ALSO MOVES THE OUTGROWN LINE
+
+The WTA 125 change has a blast radius the fix did not intend, and the mechanism is in the ladder's own
+design rather than in a mistake: **`tierOutgrown(tier)` is `tierFloorOpen(TIER_LADDER[i + 3])`** – a
+rung closes when the rung THREE above it opens. `wta125` is three above `w50`. So loosening the 125's
+door from #180 to #210 **also moves the rank at which a W50 stops counting as worth entering**, and
+the player policy's `skipOutgrown` acts on it:
+
+| entries per career | pre | **post** |
+| --- | --- | --- |
+| W50 | 30.3 | **22.1** |
+| W35 | 15.5 | **22.2** |
+| W75 | 11.9 | **17.9** |
+| WTA 125 | 15.3 | **19.0** |
+| WTA 250 | 44.7 | **41.3** |
+
+⚠ **This is reported, not resolved.** It is a real property of the sliding window – deliberate, and
+documented on `TIER_LADDER` – but it means *"an acceptance cut is one decision"* is not quite true:
+it is also a decision about a rung three storeys down. ⚠ **And the two fixes landed together, so this
+pair of arms cannot attribute any single rung's shift to one of them.** Splitting them would need two
+more 207-second runs and is worth doing before anyone tunes on these numbers.
+
+⚠ **The WTA 125's own first-entry age did not move at all** (18.8 both arms), which is the flattest
+possible refutation of my prediction: at 18.8 the median career is around #190-#210, so the 30 extra
+ranks of door are being reached at almost exactly the same week she was reaching #180 anyway.
+
 ---
 
 ## 4. FOR THE OWNER
@@ -294,4 +384,32 @@ separately instead of blaming one for the other. **post** is both.
 3. **The Slam accepts deeper than the WTA 1000** (104 against 65). §2b. Sourced number, our 32-draw,
    one career in 90 reaches it.
 4. **Whether a J300 should be reachable at all** is unchanged and still open – §2's fix moves the cut
-   from #40 of 200 to #50 of 200 against a sport that cuts at ~2%. P3's escalation stands.
+   from #40 of 200 to #50 of 200 against a sport that cuts at ~2%. P3's escalation stands. ⚠ What is
+   new is the price of the other direction: at 0.20 it was **72 of 90 careers** that ever reached the
+   rung, at 0.25 it is **87 of 90**, and six of those careers get a professional ranking they were not
+   getting at all. §3c.
+5. **An acceptance cut is also a decision about a rung three storeys down** (§3d), because
+   `tierOutgrown` reads the rung three above. Nothing is broken and nothing was changed for it – but
+   it is the third instance this wave of one number answering two questions, and unlike the other two
+   this one is deliberate.
+
+---
+
+## 5. THE FROZEN CAREERS
+
+`tests/coach-travel-edge.test.ts` re-frozen for the **sixth** time, per-key diff first as that file
+demands (`tools/frozen-key-diff.ts` against a worktree at `3198a11`, all 62 keys on all three
+careers).
+
+**Two of the three careers did not move one byte.** Only the player arm did, 17 keys of 62, and the
+mechanism is measured rather than inferred: `entries`, `season`, `internationalEntryWeeks` and
+`proEntryWeeks` are all unmoved – she played the same WEEKS – and a per-tier count says **one J60
+became one J300**, j60 12 → 11 and j300 0 → 1, total entries 59 both sides. Her ITF rank at week 156
+went **#46 → #21** on that single event and the family is $425 lighter for the bigger fee and trip.
+
+⚠ `rngMain` is unmoved for the sixth wave running – an acceptance cut is a gate on an entry, not a
+draw – so **the frozen MAIN capture in `tests/condition.test.ts` is untouched** (count 41550, hash
+`e6b0c709`) and needed no re-pin.
+
+⚠ The WTA 125 half cannot reach those hashes at all: she is 16.6 at week 156 and the median rank at 17
+is #374, so a door at 210 refuses her exactly as one at 180 did.

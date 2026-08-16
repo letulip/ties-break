@@ -597,6 +597,57 @@ describe('the two readouts say the bonus exists, without overstating it', () => 
 // ⚠ `ending`, `college` AND `fork` ARE ALSO UNMOVED, which is the other ruling's half: the college
 // rule was removed the same day, and none of these careers reaches the fork (week 156 is 32 weeks
 // short of it), so nothing in that removal can reach a hash here by construction.
+//
+// ⭐⭐ RE-FROZEN FOR THE SIXTH TIME (16.08), FOR THE TWO ACCEPTANCE INVERSIONS –
+// `docs/specs/the-ladder-is-monotone-2026-08.md` §2. `wta125.acceptsRank` 180 -> 210 (it was TIGHTER
+// than the WTA 250 above it) and `j300.enterPct` 0.20 -> 0.25 (it was tighter than the rung's own
+// field band, so the rung refused the population its draw is made of). PER-KEY DIFF TAKEN FIRST, as
+// this file demands, from a worktree at `3198a11` against this branch, all 62 top-level keys hashed
+// on their own on all three careers:
+//
+//   ⚠⚠ TWO OF THE THREE CAREERS DID NOT MOVE ONE BYTE. `middleGrinder` and `eliteGrinder` are
+//   IDENTICAL – zero keys of sixty-two – and only the PLAYER arm moved, exactly as the P5 re-freeze
+//   went. The grinder policy enters everything it can afford in ladder order and its two careers
+//   never clear a J300's cut at either value.
+//
+//   MOVED, on `selfTravelling` alone (17 of 62): `results`, `bestFinishByTier`, `kidRank`,
+//   `prevKidRank`, `seasonStartRank`, `seasonHistory`, `lastSeasonSummary`, `fundsCents`,
+//   `financeWeeks`, `careerTotals`, `skills`, `events`, `nextEventId`, `milestones`, `offers`,
+//   `academy`, `trophiesByTier`.
+//
+//   UNMOVED IN ALL THREE  **entries · seasonEntries · season · internationalEntryWeeks ·
+//                         proEntryWeeks · rngMain · cohort · schemaVersion · profile · seed ·
+//                         potential · plan · condition · kit · injury · injuryHistory · knock ·
+//                         knockHistory · kidRankWta · kidRankDomestic · prevKidRankWta ·
+//                         prevKidRankDomestic · seasonWins · seasonLosses · seasonRecord · college ·
+//                         fork · ending · debtSinceWeek · vacations · practices · penalties ·
+//                         birthdays · coachId · coachOnEventWeeks · coachOnJuniorEvents ·
+//                         onRampCleared · physioActive · recoveryBuff · suspendedUntilWeek ·
+//                         retirementOffer · pendingTournament · oneMoreYearCount · careerId · week**
+//
+// ⭐⭐ AND THE MECHANISM IS MEASURED RATHER THAN INFERRED, WHICH IS THE POINT OF DOING THE DIFF. The
+// three unmoved ledgers above (`entries`, `internationalEntryWeeks`, `proEntryWeeks`) say she played
+// the same WEEKS, and a per-tier count of her 156 weeks of entries says why:
+//
+//     tier      before                                          after
+//     j60       12                                              **11**
+//     j300      0                                               **1**
+//     everything else (j30 13 · local 10 · regional 12 · national 2 · w15 7 · w35 3)   unchanged
+//     TOTAL     59                                              **59**
+//
+// **ONE J60 BECAME ONE J300, ON THE SAME WEEK.** The entry policy takes at most one event a week and
+// walks the calendar strongest-first, so the moment the prestige rung's cut reached her the swap was
+// free – same week, same allowance, one rung up. Her ITF rank at week 156 moved **#46 -> #21** on
+// that single event (a J300 pays 300/210/140/100/60 against a J60's table) and the family is $425
+// lighter for the bigger fee and trip. That is the fix working, on exactly one week of one career.
+//
+// ⚠ THE WTA 125 HALF CANNOT REACH THESE HASHES AT ALL, and that is arithmetic rather than luck: she
+// is 16.6 at week 156 and the baseline's median rank at 17 is #375, so a door at 210 refuses her
+// exactly as a door at 180 did. Everything above is `j300` alone.
+//
+// ⚠ AND `rngMain` IS AMONG THE UNMOVED FOR THE SIXTH WAVE RUNNING – an acceptance cut is a gate on an
+// entry, not a draw, so the persisted MAIN position after 156 weeks is identical and the frozen MAIN
+// capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709).
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
   middleGrinder: '3519d92f603e5093128e81412e24a0e8ce00c744c9a86c6eddc6e457cea877f5',
@@ -621,8 +672,13 @@ const FROZEN = {
    *  reached W35 in the first place could not have been freed by the correction, and was not.
    *
    *  ⚠ `rngMain` UNMOVED IS THE LOAD-BEARING HALF: an access rule is a post-draw gate, so the frozen
-   *  MAIN capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709). */
-  selfTravelling: 'bdedded723c9769794997cb948f9c9fa546b03d47b5cab5abf4fc008ddcb2afa',
+   *  MAIN capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709).
+   *
+   *  ⭐⭐ RE-FROZEN A SIXTH TIME (16.08) – AND ALONE AGAIN, WHICH IS THE SAME FINDING TWICE. The two
+   *  grinder careers above are byte-identical across the acceptance-inversion fix; only this one
+   *  moved, and the per-key block above has the receipt: ONE J60 became ONE J300 on the same week,
+   *  and her ITF rank at 16.6 went #46 -> #21 on it. */
+  selfTravelling: '26b0e77c2f7e9eced6671f2fe9e3f895db191bfcf58cb6e0ab4f303f4c5a042c',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -635,8 +691,13 @@ const PRE_V50 = {
    *  and says which kind of change it was."* It did, on 16.08, and it said so – both hashes red, and
    *  the per-key diff showing a career that really is different rather than a schema field that is.
    *  The identity below still does its own job: rolling `schemaVersion` back to 49 on the NEW world
-   *  reproduces this, so nothing about P5's claim has been quietly lost in the re-freeze. */
-  selfTravelling: '5cce6375d7a640e3f98fc581d64edd9d2e52b6269b9a59f385eb0e4d3083dc28',
+   *  reproduces this, so nothing about P5's claim has been quietly lost in the re-freeze.
+   *
+   *  ⚠ MOVED WITH ITS TWIN A SECOND TIME (16.08, the acceptance inversions), for the same reason and
+   *  with the same proof beside it. The two grinder rollback hashes above did NOT move, which is the
+   *  identity doing its job: a change that reaches one career of three shows up in one pair of hashes
+   *  of three, not in all six. */
+  selfTravelling: '4f7eb5f734df09dbc27bd92063417a248bdaa577d960d34f9593629a7da71576',
 }
 const FREEZE_WEEKS = 156
 

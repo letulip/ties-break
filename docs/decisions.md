@@ -1058,3 +1058,70 @@ the reason a design pillar could be defended for two weeks without anybody being
 `world/entryCaps.ts` says the opposite about the same rule; `tests/tier-window.test.ts` has an
 assertion whose subject is a rung a fourteen-year-old is no longer too young for; and three tools
 carry stale doorway ages in their headers.
+
+## 2026-08-16 – Empty weeks are a number, not a gate; and two constants stop deciding for two others (`wave/round21`)
+
+> **The owner, on the empty weeks, verbatim:** «вообще не страшно, если иногда в сетке есть пустые
+> недели, не вижу ничего плохого. Так что просто надо понять сколько пустых недель у нас есть вообще
+> и оттуда отталкиваясь делать логику. До этого я играл – всё было нормально с календарем, меня более
+> чем устраивало. Если сейчас так же – то это ок.»
+
+Spec: `docs/specs/the-ladder-is-monotone-2026-08.md`.
+
+### ⭐⭐ THE "SHE MUST ALWAYS HAVE TENNIS" ACCEPTANCE TEST IS NO LONGER A HARD GATE
+
+Empty weeks are acceptable. What is wanted is the COUNT and a comparison against the build he played.
+`tools/empty-week-census.ts` is that census and exits 0 always. ⚠ `tools/boredom-guard.ts` could not
+answer it: it only inspects weeks where the AER cap REFUSED a W entry, so a week that is simply blank
+is invisible to it.
+
+**MEASURED, 18 careers x 676 weeks, ages 14-26, `POLICIES[1]`, `6c7507b` (what he played) against
+this branch: 11.9% → 12.6% of her non-blackout weeks, 4.9 → 5.0 empty weeks a season.** It is the same
+calendar. Off-season, exams, a booked family week and an injury layoff are counted separately as
+blackouts – they are the calendar working, not empty weeks.
+
+Three things for him: **age fourteen is the thin one (~11 empty weeks) and is identical on both
+builds**; ages 15-18 improved and 20-23 gave back 2-3 points; and **the dominant cause is the
+acceptance cuts, not the entry caps** – 56% of empty weeks had events on them she was not ranked high
+enough for, 21% had nothing scheduled at all, and everything involving the AER allowance is 6%.
+
+### THE SPONSOR GATES GET THEIR OWN CONSTANTS – national 350, global 87
+
+`ECONOMY.sponsorship.national.maxWtaRank` was *defined as* `TIERS.w100.acceptsRank`, so P3's
+acceptance-cut work dragged both sponsor rungs with it (350 → 240, 87 → 60, narrowing global's band
+from 37 ranks to ten). **Nobody decided that.** Same defect P4 fixed for the college door: one
+constant, two unrelated jobs. An acceptance cut is a rule of the tour; a sponsor's interest is a fact
+about visibility. Both restored to the values the coupling took, the equality pin replaced by a
+mutation-verified decoupling guard, `TIERS.w100.acceptsRank` left at 240.
+
+⚠ **FOR THE OWNER: is 87 still right?** Its argument – a quarter of national's 350 – is exactly the
+derivation this retires, and the band is #51-87 in a table of 1,800 while the median career high is
+#104. Not moved; restoring what a side effect took is a revert, choosing a new figure is his.
+
+### TWO LADDER INVERSIONS FIXED ON A STRUCTURAL CRITERION, AND A GUARD
+
+`wta125.acceptsRank` **180 → 210** (it was tighter than the WTA 250 above it) and `j300.enterPct`
+**0.20 → 0.25** (it was tighter than the rung's own field band, so the rung refused the population its
+draw is made of). ⚠ **Neither 180 nor 210 is sourced, and nor is `wta250`'s 200 or `w100`'s 240** – so
+the criterion is that a ladder which inverts is not a ladder, not an appeal to evidence. The durable
+half is `tests/ladder.test.ts` L6b, which walks the whole chain and is mutation-verified three ways.
+
+⚠ **A THIRD INVERSION, FOR HIM:** `slam.acceptsRank` **104** is looser than `wta1000`'s **65**. Left
+alone – 104 is the one sourced number in the family (the Grand Slam Rule Book's own count) and it is
+only an inversion because our Slam draws 32 where a real one draws 128. Held as the guard's single
+declared exemption, asserted to be the only one and asserted to be live.
+
+### ⭐⭐ AND THE MEASUREMENT SAYS THE MEDIAN GOT WORSE WHILE THE GAME GOT BETTER
+
+n = 90 on `tools/ladder-baseline.ts`. Every median moved the wrong way (rank at 19 #160 → #178, career
+prize $685,960 → $623,820) and **fifteen of eighteen predictions were wrong**. The column that
+explains it: **careers ever reaching a J300 went 72/90 → 87/90 and careers ever holding a professional
+ranking 81/90 → 87/90.** The career-high p25 is #75 in BOTH arms; p75 moved #131 → #142 and the worst
+#160 → #180. Six careers that were never ranked now are, and they join the median at the bottom of it.
+A median over a population that grew by 7% is not a comparison.
+
+⚠ **AND A THIRD COUPLING, FOUND BY THE MEASUREMENT RATHER THAN PREDICTED:** `tierOutgrown` reads the
+rung THREE above, so moving `wta125.acceptsRank` also moved when a W50 stops being worth entering
+(W50 entries 30.3 → 22.1 a career). Deliberate, documented on `TIER_LADDER`, reported not changed –
+and the two fixes landed together, so this pair of arms cannot attribute any single rung to one of
+them.
