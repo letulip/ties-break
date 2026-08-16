@@ -260,7 +260,22 @@ const RECIPES: Recipe[] = [
     drive: (world, rng, recipe) => {
       playTo(world, rng, recipe, JUNIOR_WEEK)
       if (world.ending !== null) return `career ended (${world.ending.type}) before week ${JUNIOR_WEEK}`
-      if (kidPoints(world, 'domestic') <= 0) return 'never earned a domestic ranking'
+      // ⚠ A RANKING, ON WHATEVER TABLE SHE EARNED ONE – AND THE CHANGE OF WORD IS A MEASUREMENT
+      // (16.08). This clause read `kidPoints(world, 'domestic') <= 0` and after this wave no seed in
+      // 120 could satisfy it together with the other two: at week 120 only **46 of 120** careers hold
+      // domestic points, while **114 of 120** hold ITF ones. Her first ranking is now the ITF one.
+      //
+      // That is P1's doing and it is not obviously wrong – junior access made the junior table the one
+      // that opens the professional ladder, so she plays there – but it is a real change in what a
+      // fifteen-year-old looks like and P6 should measure it rather than let a fixture recipe be the
+      // only place it is written down.
+      //
+      // The SPEC'S claim is unchanged, and that is why this is a re-aim rather than a weakening:
+      // e2e/seeded-careers.spec.ts says in its own comment that the point is "a fact that no week-0
+      // career could hold and that lives deep inside the payload" – she is ranked, and the ladder says
+      // so. Which of the three tables carries it was the vehicle, never the claim.
+      if (kidPoints(world, 'domestic') <= 0 && kidPoints(world, 'itf') <= 0 && kidPoints(world, 'wta') <= 0)
+        return 'never earned a ranking on any table'
       if (world.seasonHistory.length < 2) return 'fewer than two seasons behind her'
       // ⚠ AND SHE MUST BOOT HOLDING AN OPEN KNOCK, which is a REQUIREMENT of this fixture rather
       // than a lucky property of it (11.08). `e2e/week-advance.spec.ts` uses this career to prove
@@ -386,7 +401,20 @@ const RECIPES: Recipe[] = [
 
 // --- the search -----------------------------------------------------------------------------------
 
-const DEFAULT_BUDGET = 24
+/** ⚠ 24 -> 200 AFTER THE JUNIOR-LADDER WAVE (16.08), AND THE NUMBER IS MEASURED RATHER THAN ROUND.
+ *
+ *  `junior` now carries three requirements at once – a ranking, an open knock and an entry for the
+ *  week ahead – and the wave made the conjunction rare: the seed that satisfied all three was the
+ *  **62nd** tried, against the 20th before P1 and the 19th before that. At the old budget of 24 this
+ *  regeneration failed outright, which is the tool working correctly and reporting an honest state
+ *  ("never hand-edit a world to make the state exist") rather than a bug.
+ *
+ *  THE COST OF THE HIGHER CEILING IS ZERO WHEN IT IS NOT NEEDED – the loop stops at the first seed
+ *  that qualifies, so every other fixture still finishes on its first – and the cost of the LOWER one
+ *  was a red gate nobody could act on without re-deriving this paragraph. If a future wave pushes the
+ *  search past this, the message says so by name and the fix is a recipe decision, not a bigger
+ *  number: three requirements on one fixture is already the most any of them carries. */
+const DEFAULT_BUDGET = 200
 
 interface Generated {
   entry: FixtureEntry

@@ -73,7 +73,17 @@ test.describe('a seeded career boots into the state the manifest describes', () 
     // Seeding a career is only worth anything if what arrives is the WHOLE world, so this asserts a
     // fact that no week-0 career could hold and that lives deep inside the payload rather than in the
     // record's denormalised header: she is ranked, and the ladder says so.
-    expect(facts.rankedDomestic, 'the junior fixture is meant to be ranked domestically').toBe(true)
+    // ⚠ RANKED ON SOME TABLE, NOT ON THE DOMESTIC ONE SPECIFICALLY (16.08). This asserted
+    // `rankedDomestic` until the junior-ladder wave, and the wave made that unsatisfiable alongside
+    // the fixture's other two requirements: at week 120 only 46 careers in 120 hold domestic points
+    // now, against 114 holding ITF ones, because P1 made the junior table the one that opens the
+    // professional ladder. The claim above is what this line is for and it is untouched – she is
+    // ranked, and the ladder says so. Which table carries it was never the point, and pinning one
+    // made this spec a hostage to a balance decision it has no opinion about.
+    expect(
+      facts.rankedDomestic || facts.rankedItf || facts.rankedWta,
+      'the junior fixture is meant to arrive holding a ranking on some table',
+    ).toBe(true)
     await expect(page.getByRole('navigation').getByRole('button', { name: 'Home' })).toBeVisible()
   })
 
