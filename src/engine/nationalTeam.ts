@@ -121,11 +121,14 @@ export function rollCallUp(view: CallUpView, rng: Rng): CallUp | null {
     NATIONAL_TEAM.tiesInTheWeek,
     Math.round(rng() * NATIONAL_TEAM.tiesInTheWeek),
   )
-  const p = rubberWinChance(view.skillMean)
-  // One draw for the whole rubber set rather than one per rubber, so the draw count is fixed.
-  const roll = rng()
-  let won = 0
-  for (let i = 0; i < played; i++) if (roll < p ** (i === 0 ? 1 : 1 / (i + 1))) won++
+  // ⚠ ONE DRAW FOR THE WHOLE RUBBER SET, AND IT IS AN INVERSE CDF RATHER THAN A LOOP OF COMPARISONS.
+  // The draw count has to be fixed (see above), so the number of rubbers she wins is drawn as a
+  // BINOMIAL(played, p) through its own cumulative distribution – which is exact: every rubber has
+  // marginal probability `p` and the count is monotone in the uniform, so a better player is never
+  // worse off. The obvious shortcut – reusing one uniform against `played` different thresholds –
+  // is NOT this, and it is wrong in a way that flatters her: the thresholds have to grow to stay
+  // monotone, so the second and third rubbers end up easier than the first.
+  const won = binomial(played, rubberWinChance(view.skillMean), rng())
   // ⚠ AND HER NATION'S FINISH IS DRAWN FLAT AND IS NOT ABOUT HER. This is the property the research
   // calls the reason to build the thing at all (§11.1.2): "Nothing else we model pays her on
   // somebody else's result." Here the payment is zero either way, which is the sharper version of
@@ -135,6 +138,26 @@ export function rollCallUp(view: CallUpView, rng: Rng): CallUp | null {
   if (!called) return null
   if (view.ageYears < NATIONAL_TEAM.minAgeYears) return null
   return { rubbersPlayed: played, rubbersWon: won, nationFinish }
+}
+
+/** How many of `n` rubbers she wins at probability `p`, drawn from one uniform `u` in [0,1).
+ *
+ *  The binomial's inverse CDF, walked term by term. `n` is at most `tiesInTheWeek`, so the factorials
+ *  are three at the outside and there is nothing to optimise. Returns `n` if the accumulated mass
+ *  falls a floating-point hair short of 1. */
+export function binomial(n: number, p: number, u: number): number {
+  let cumulative = 0
+  for (let k = 0; k < n; k++) {
+    cumulative += choose(n, k) * p ** k * (1 - p) ** (n - k)
+    if (u < cumulative) return k
+  }
+  return n
+}
+
+function choose(n: number, k: number): number {
+  let out = 1
+  for (let i = 0; i < k; i++) out = (out * (n - i)) / (i + 1)
+  return out
 }
 
 /** What one rubber is worth to her, as a probability. Ours – see `NATIONAL_TEAM.rubber`. */

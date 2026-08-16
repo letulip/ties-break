@@ -28,7 +28,7 @@ import {
   buildEndingView,
   toSnapshot,
 } from '../src/engine/world'
-import { NATIONAL_TEAM, callUpLine, rollCallUp, rubberWinChance } from '../src/engine/nationalTeam'
+import { NATIONAL_TEAM, binomial, callUpLine, rollCallUp, rubberWinChance } from '../src/engine/nationalTeam'
 import { rngFromSeed, initMainState } from '../src/engine/rng'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -256,6 +256,29 @@ describe('P5 – the national-team call-up', () => {
     }
     expect(strong.length).toBeGreaterThan(50)
     expect(strong, 'identical draws, identical placings').toEqual(weak)
+  })
+
+  it('⚠ the rubbers are a REAL binomial – every one of them has the same chance', () => {
+    // The shortcut this replaced – one uniform against `played` growing thresholds – flattered her:
+    // the second and third rubbers came out easier than the first. Measured over the whole [0,1)
+    // interval, each rubber's marginal must be `p` and the count must be monotone in the uniform.
+    const p = 0.4
+    const n = 3
+    const steps = 20_000
+    let total = 0
+    let previous = -1
+    for (let i = 0; i < steps; i++) {
+      const k = binomial(n, p, i / steps)
+      expect(k, 'monotone in the uniform, so a luckier draw is never worse').toBeGreaterThanOrEqual(previous)
+      previous = k
+      total += k
+    }
+    // E[wins] = n*p, to within the discretisation of the sweep.
+    expect(total / steps).toBeCloseTo(n * p, 2)
+    // And the degenerate ends are exact rather than nearly right.
+    expect(binomial(0, p, 0.9)).toBe(0)
+    expect(binomial(3, 1, 0)).toBe(3)
+    expect(binomial(3, 0, 0.999999)).toBe(0)
   })
 
   it('the rubber chance moves with her and is bounded at both ends', () => {
