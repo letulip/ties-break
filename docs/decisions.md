@@ -666,3 +666,50 @@ entry) carry a W event and no junior or domestic one at all. It is a CALENDAR-co
 number: no value of `proPerYearByAge` can fix a week with nothing else on it. The remedies both move
 every field in the world (co-phase the W rungs with their J mirrors, or densify the domestic/J
 calendar), so they need their own phase and their own measurement. §7a of the spec has the numbers.
+
+---
+
+## 2026-08-16 – The acceptance cuts are the sport's, and the audit's verdict expired (`wave/round21`, P3)
+
+**Shipped, from `docs/specs/acceptance-cuts-2026-08.md`'s own recommendation and §P3 of the staged
+plan:** the sourced chain **w50 550 → 330 · w75 450 → 300 · w100 350 → 240 · wta125 250 → 180**, and
+**`j300.enterPct` 0.40 → 0.20**. ⚠ **`w35` 700 and `slam` 104 were NOT touched – the audit verified
+both correct**, and every `minAgeYears` is where it was.
+
+⚠⚠ **THE AUDIT'S HEADLINE VERDICT DID NOT SURVIVE, WHICH IS WHAT THIS PHASE WAS ORDERED TO FIND OUT.**
+It measured this chain **Pareto-positive** in isolation (end rank 280 → 204, prize **+$28k**). Re-run
+on the population P1 and P2 built, on the audit's own tool, n and horizon: the money gain shrinks
+**fifteenfold to +$1.9k**, **end funds flip sign** (−$1.0k), and the college column **flips direction**
+– the audit's most-quoted secondary finding was that a realistic ladder makes the college ending
+*rarer* (9% → 4%); here it makes it **commoner, 76% → 93%**. The mechanism it named – she stops wasting
+entries at W75+ she loses early – was a substitution **P1 had already banked** by moving her first W75
+from 17.2 to 19.0.
+
+⭐ **BUT IT IS NOT A PURE COST EITHER, AND THE AUDIT'S 312-WEEK HORIZON IS WHY NOBODY COULD SEE IT.**
+Run to 26.6 on P0's frozen battery (n = 90) the chain reads as a **delay she is repaid for**: worse at
+seventeen to nineteen (−$9.4k banked by 19, fourteen fewer careers holding a ranking at 17), better
+from twenty-one (#199 → **#174** at 21, #176 → **#158** at 25, career prize **+$57k**, and 42 careers
+of 90 hold a full eighteen counting slots at 21 against 9). **The same delay-not-tax shape P1 and P2
+each measured, arriving a third time.** ⭐ It also **repairs P1's W35 collapse** – reach 63/90 → 82/90.
+
+### ⚠ FOUR THINGS NEED HIM
+
+1. **The sponsor economy moved and nobody decided that.** Both professional sponsor gates are *defined*
+   as `TIERS.w100.acceptsRank`, so `national.maxWtaRank` went **350 → 240** and `global.maxWtaRank`
+   **87 → 60** – and global's band narrowed from ranks **51–87 to 51–60, ten places wide**. The rule
+   did not change a word; its input did. Accept it, or give the sponsor gates their own numbers.
+2. **The WTA 125 now sits below the WTA 250.** The chain's top link is **180** against `wta250`'s
+   **200**, so the smaller event is harder to enter than the bigger one – visible in behaviour, not
+   only in the table (2.1 WTA 250s a career against 0.5 WTA 125s). Placing `wta125` at **210** would
+   restore monotonicity across the whole ladder.
+3. **J300: a tenfold gap closed to fivefold, and the rest is genuinely contested.** The sport cuts at
+   the top ~2%; 0.20 is the top 20%. Everything closer deletes the rung – and since P1 made the junior
+   ranking load-bearing for professional access, deleting it costs **~110 rank places** rather than the
+   ~1 the audit measured. ⚠ 0.20 also inverts a second direction: the cut is now stricter than the band
+   its own field is drawn from. **0.25 is the value that would restore it.**
+4. **Two of the four links carry no evidence.** W100's 240 and WTA 125's 180 are **placed to keep the
+   ladder monotone**, not sourced – no acceptance list exists for either rung. The provenance now sits
+   in `calendar.ts` beside the numbers so nobody repeats the 02.08 mistake of reading them as real.
+
+Full measurement, predictions scored, and the guard work:
+`docs/specs/acceptance-cuts-corrected-2026-08.md`.

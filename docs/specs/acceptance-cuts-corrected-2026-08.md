@@ -549,7 +549,13 @@ sport says it is (which our 200-row table cannot carry)?
 
 **Schema is unmoved: v49, no migration, no fixture. Nothing here persists, and no MAIN draw moves** –
 an acceptance cut is a post-draw gate, so the frozen capture (41550 / `e6b0c709`) is untouched and no
-pin in `tests/condition.test.ts` needed a paragraph this time.
+pin in `tests/condition.test.ts` needed a paragraph this time. ⚠ **That is a measured claim, not an
+assumption**: `rngMain` is byte-identical on all three frozen careers after 156 weeks (§5 c2).
+
+**The gate this agent ran:** `npm run test:quiet` **green in 227s** (2,827 tests in the bulk group plus
+nine further groups), `npm run test:component` **green, 426 tests / 37 files**, and `vue-tsc -b --force`
+**clean**. ⚠ `npm run e2e:fixtures` and `npm run test:e2e` were deliberately NOT run – the wave
+regenerates the e2e corpus once at the end.
 
 ---
 
