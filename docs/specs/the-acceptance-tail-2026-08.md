@@ -1,6 +1,6 @@
 ---
 type: spec
-status: deferred
+status: draft
 area: engine/balance
 canonical: false
 last-reviewed: 2026-08-16
