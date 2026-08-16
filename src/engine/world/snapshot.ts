@@ -62,7 +62,7 @@ import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
 import { buildDebtView, buildEndingView, collegeStillOpen } from './endings'
 import { finishLabel, stageLabel } from './labels'
-import { entryCapUsage, proEntryCapUsage, isCappedProTier } from './entryCaps'
+import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
@@ -275,6 +275,16 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // Only on the rungs the tour's rule counts, so the chip's own "which cards carry it" question
         // is answered by the engine's predicate rather than by a list in the screen.
         ...(isCappedProTier(e.tier) ? { proEntryCap: proEntryCapUsage(world, e.week) } : {}),
+        // ⭐ AND THE JUNIOR ALLOWANCE, ON THE SAME TERMS (P2, act2-pro-tour.md §5's «the player sees
+        // the budget»). The pro counter has ridden every W card since round-17 #2; the ITF one was
+        // only ever visible on a card the cap had ALREADY refused, which is the fuel gauge that
+        // lights up when the tank is empty - the exact shape round-16 #7 fixed one table up.
+        //
+        // ⚠ THE TWO FAMILIES ARE DISJOINT (`isCappedTier` / `isCappedProTier`), so no card can carry
+        // both and neither predicate has to know about the other. Read at the EVENT's week for the
+        // identical reason the pro one is: an eight-week horizon crosses her birthday, and after P2
+        // her birthday is exactly where the allowance turns over.
+        ...(isCappedTier(e.tier) ? { entryCap: entryCapUsage(world, e.week) } : {}),
         entered: isEntered,
         // A fatigued event is a CAUTION, not a block: she stays eligible. Only a HARD block
         // (point band, injured, unavailable, medical) removes eligibility.

@@ -40,7 +40,7 @@ import ProgressRing from '../ui/ProgressRing.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
-import { KID_ID, kidMatchPlayer, isCappedProTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
+import { KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
@@ -430,6 +430,26 @@ function proEntriesFor(e: UpcomingEvent): string | null {
  *  explicit so a card whose payload predates the field cannot start showing a chip with no number. */
 function showsProEntries(e: UpcomingEvent): boolean {
   return isCappedProTier(e.tier) && proEntriesFor(e) !== null
+}
+
+// ⭐ AND THE JUNIOR BUDGET, ON THE SAME TERMS (P2, act2-pro-tour.md §5: «The player sees the budget
+// ... and the refusal names the rule»). Half of that sentence shipped at round-17 #2 and half did
+// not: the professional counter has ridden every W card since, while the ITF one appeared only on a
+// card the cap had ALREADY refused. Both allowances are hers to see, and a junior season is where
+// the budget is tightest - fourteen international events at fourteen, against a calendar that offers
+// far more than fourteen.
+//
+// SAME SHAPE, SAME SILENCE RULE: the engine's own per-event figure, and nothing at all once the row
+// is unlimited (17+), because a fraction with no denominator is not a budget.
+function juniorEntriesFor(e: UpcomingEvent): string | null {
+  const cap = e.entryCap
+  if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
+  return `junior entries ${cap.used} / ${cap.limit}`
+}
+/** WHICH CARDS CARRY IT – the rungs the ITF counts (`ECONOMY.entryCap.cappedTiers`, through the
+ *  engine's own predicate). The two families are disjoint, so no card can ever show both chips. */
+function showsJuniorEntries(e: UpcomingEvent): boolean {
+  return isCappedTier(e.tier) && juniorEntriesFor(e) !== null
 }
 
 // SEASON STRUCTURE BY SURFACE (owner approved 26.07). The calendar shows 8 weeks, so a 15-week clay
@@ -1377,9 +1397,18 @@ function closeExhibition(): void {
               <span
                 v-if="showsProEntries(row.event)"
                 class="pill muted pro-entries"
-                :title="`The tour's age rule caps how many professional tournaments she may enter this season. This is where she stands against it.`"
+                :title="`The tour's age rule caps how many professional tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.`"
               >
                 {{ proEntriesFor(row.event) }}
+              </span>
+              <!-- ...and the junior budget, in the same slot on the junior cards (P2). Disjoint
+                   families, so exactly one of the two can ever be on a card. -->
+              <span
+                v-else-if="showsJuniorEntries(row.event)"
+                class="pill muted junior-entries"
+                :title="`The junior tour caps how many international tournaments she may enter in the year she is this age – counted from birthday to birthday. This is where she stands against it.`"
+              >
+                {{ juniorEntriesFor(row.event) }}
               </span>
             </div>
           </Card>
@@ -1731,7 +1760,11 @@ section.bare .event-cards {
    owner accepted in advance ("Entries closed" + "Exams this week" + this).
    ⚠ `margin-left: auto` AND NOT `justify-content`: the row's other children are laid out from the
    left and must stay there. A justification would move all of them to say one thing about this one. */
-.pro-entries {
+/* Both budget chips share one rule – they are the same chip on two families, and giving them two
+   rules is how they would drift apart. `margin-left: auto` puts whichever one is present last in the
+   controls row, so it is the last thing read and never competes with the button beside it. */
+.pro-entries,
+.junior-entries {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
 }

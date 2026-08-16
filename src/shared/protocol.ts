@@ -1106,7 +1106,12 @@ export interface UpcomingEvent {
    *  and the allowance looked as though it never reset. It always reset: `proEntryCapUsage` filters
    *  `proEntryWeeks` to `seasonStartWeek(week)`, so the counter is a filter and a missed reset is
    *  unexpressible. What was wrong was the WEEK it was asked about – the same lesson `pointsToEnter`
-   *  and `entryCap` already carry. */
+   *  and `entryCap` already carry.
+   *
+   *  ⚠ AND SINCE P2 THAT WEEK MATTERS MORE, not less: the allowance's window is her BIRTHDAY YEAR
+   *  now, so an eight-week horizon can cross the turnover in the middle of a season block. The
+   *  function is unchanged in shape – ask it about the event's week and it answers about the
+   *  allowance the event is in. */
   proEntryCap?: EntryCapUsage
   /** SHE HAS PASSED THIS RUNG – and it is not a lock (the owner's ruling on backlog #84, 06.08,
    *  quoted verbatim in docs/specs/ladder-floor-2026-08.md: no lower bound at all, let her play, and
@@ -1148,9 +1153,15 @@ export interface UpcomingEvent {
    *  with the population - do not quote a literal here, as the "top 50" this comment used to name
    *  was stale by two re-pins when it was found on 30.07. */
   rankToEnter?: number
-  /** present only when 'capped': the allowance the gate judged THIS event against, so the card can
-   *  print "N of M" without re-deriving it. Per-event for the same reason `pointsToEnter` is – an
-   *  event in the next season is measured against a different year's allowance than today's. */
+  /** the ITF annual allowance THIS event is judged against, so the card can print "N of M" without
+   *  re-deriving it. Per-event for the same reason `pointsToEnter` is – an event in the next
+   *  allowance year is measured against a different year's ledger than today's.
+   *
+   *  ⚠ PRESENT ON EVERY JUNIOR CARD SINCE P2, NOT ONLY ON A REFUSED ONE. It used to be written only
+   *  when the verdict was 'capped', which meant the one number a parent needs in order to SPEND the
+   *  allowance sensibly arrived after it was spent – the fuel gauge that lights up when the tank is
+   *  empty. `proEntryCap` one table up has ridden every professional card since round-17 #2; this is
+   *  the same fix on the same terms, and the two families are disjoint so no card carries both. */
   entryCap?: EntryCapUsage
 }
 
