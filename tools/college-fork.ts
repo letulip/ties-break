@@ -37,7 +37,14 @@
 // this file does touches the world's dice, so every cut of the same 90 rows is the same 90 careers.
 import { writeFileSync } from 'node:fs'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, zeroByTier, mean, median, type Preset } from './econ-bench'
-import { collegeStillOpen, kidAgeExact, kidPoints, tableSize, tierFloorOpen } from '../src/engine/world'
+import { kidAgeExact, kidPoints, tableSize, tierFloorOpen } from '../src/engine/world'
+// ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
+// GAME. The owner removed the rule that closed the college door on a result («Колледж – это
+// независимая ветка карьеры … альтернативная»); in the game as it ships the third answer is on the
+// fork card in 100% of careers. What this file prints is what the PRE-16.08 rule WOULD have done on
+// this population, kept so the frozen battery's arms stay comparable on the dimension the
+// junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
+import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
 import { ENDINGS } from '../src/engine/ending'
 import { TIERS, TIER_LADDER, TIER_SHORT, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
@@ -121,7 +128,7 @@ function dist(xs: number[]): Dist {
 }
 
 /** The rungs at or above the one that shuts the college ending today. */
-const COLLEGE_CLOSERS: readonly TierId[] = TIER_LADDER.slice(TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier))
+const COLLEGE_CLOSERS: readonly TierId[] = TIER_LADDER.slice(TIER_LADDER.indexOf(RETIRED_COLLEGE_RUNG))
 /** The rungs that carry an acceptance door at all – the two units of `acceptanceRank`. */
 const GATED: readonly TierId[] = TIER_LADDER.filter(
   (t) => TIERS[t].acceptsRank !== undefined || TIERS[t].enterPct !== undefined,
@@ -292,7 +299,7 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
       if (finish >= TIERS[t].points.length - 1) continue
       if (TIERS[t].points[finish] > 0) firstCountingAge[t] = kidAgeExact(world.week, world.profile.birthMonth)
     }
-    if (collegeShutWeek === null && !collegeStillOpen(world)) {
+    if (collegeShutWeek === null && !retiredCollegeDoorOpen(world)) {
       collegeShutWeek = world.week
       collegeShutAge = kidAgeExact(world.week, world.profile.birthMonth)
       for (const t of COLLEGE_CLOSERS) {
@@ -308,7 +315,7 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
     if (!forkSeen && kidAgeExact(world.week, world.profile.birthMonth) >= ENDINGS.forkAgeYears) {
       forkSeen = true
       forkWeek = world.week
-      collegeOpenAtFork = collegeStillOpen(world)
+      collegeOpenAtFork = retiredCollegeDoorOpen(world)
       forkRankWta = world.kidRankWta ?? tableSize(world, 'wta')
       forkPointsWta = kidPoints(world, 'wta')
       forkRankItf = world.kidRank
@@ -373,7 +380,7 @@ section(
   `THE COLLEGE FORK – ${PRESETS.length} presets x ${SEEDS} seeds = n ${N} careers, ${WEEKS} weeks ` +
     `(14→${14 + Math.round(WEEKS / WEEKS_PER_YEAR)}), policy "${POLICY.label}"`,
 )
-console.log(`  shipped constants throughout – nothing is patched. collegeClosedFromTier = ${ENDINGS.collegeClosedFromTier}, forkAgeYears = ${ENDINGS.forkAgeYears}`)
+console.log(`  shipped constants throughout – nothing is patched. collegeClosedFromTier = ${RETIRED_COLLEGE_RUNG}, forkAgeYears = ${ENDINGS.forkAgeYears}`)
 const t0 = Date.now()
 const rows: Row[] = []
 for (let p = 0; p < PRESETS.length; p++) for (let i = 0; i < SEEDS; i++) rows.push(runOne(PRESETS[p], i, POLICY, `${p}:${i}`))
@@ -631,7 +638,7 @@ if (wants('4')) {
   }
   const shippedOpen = rows.filter((r) => r.collegeOpenAtFork)
   console.log(
-    `  ${padE('SHIPPED', 12)}${padE(`${TIER_SHORT[ENDINGS.collegeClosedFromTier]}+`, 8)}${pad(`${shippedOpen.length} (${pct(shippedOpen.length, N)})`, 12)}` +
+    `  ${padE('SHIPPED', 12)}${padE(`${TIER_SHORT[RETIRED_COLLEGE_RUNG]}+`, 8)}${pad(`${shippedOpen.length} (${pct(shippedOpen.length, N)})`, 12)}` +
       `${pad(`${shippedOpen.filter((r) => band(r) === 'top').length} (${pct(shippedOpen.filter((r) => band(r) === 'top').length, of('top').length)})`, 12)}` +
       `${pad(`${shippedOpen.filter((r) => band(r) === 'mid').length}`, 12)}` +
       `${pad(`${shippedOpen.filter((r) => band(r) === 'weak').length} (${pct(shippedOpen.filter((r) => band(r) === 'weak').length, of('weak').length)})`, 12)}`,

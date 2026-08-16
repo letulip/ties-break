@@ -32,10 +32,15 @@ import {
   answerFork,
   answerRetirement,
   resumeFromCollege,
-  collegeStillOpen,
   kidAgeYears,
   type WorldState,
 } from '../src/engine/world'
+// ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
+// GAME. The owner removed the rule that closed the college door on a result («Колледж – это
+// независимая ветка карьеры … альтернативная»); in the game as it ships the third answer is on the
+// fork card in 100% of careers. What this file prints is what the PRE-16.08 rule WOULD have done on
+// this population. `tools/retired-college-rule.ts` is the one definition of it.
+import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
 import { ENDINGS, bankruptcyDue, debtWeeks, plateauReading, weeksLostSoFar } from '../src/engine/ending'
 import { plateauViewOf, autoEndingViewOf } from '../src/engine/world'
 import type { CareerEndingType } from '../src/shared/protocol'
@@ -223,10 +228,10 @@ export function runToEnding(
     // entry policy books one tournament per week and `enterEvent` enforces it), so at the
     // transition week exactly one rung has moved. Re-implementing the scoring test here would be a
     // second copy of the rule, which is what this file is trying not to own.
-    if (bestBefore !== null && out.collegeShutWeek === null && !collegeStillOpen(world)) {
+    if (bestBefore !== null && out.collegeShutWeek === null && !retiredCollegeDoorOpen(world)) {
       out.collegeShutWeek = world.week
       out.collegeShutAge = kidAgeYears(world.week, world.profile.birthMonth)
-      const from = TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier)
+      const from = TIER_LADDER.indexOf(RETIRED_COLLEGE_RUNG)
       const moved = (Object.keys(world.bestFinishByTier) as TierId[]).filter(
         (t) => world.bestFinishByTier[t] !== bestBefore[t] && TIER_LADDER.indexOf(t) >= from,
       )
@@ -271,7 +276,7 @@ function answerWhateverIsOpen(
     // ⭐ RECORDED BEFORE THE ANSWER, on every arm, because it is a fact about the CARD she was
     // shown rather than about what she did with it – and because `answerFork` throws on 'college'
     // when the door is shut, so a reading taken afterwards would only ever see the open half.
-    out.collegeOpenAtFork = collegeStillOpen(world)
+    out.collegeOpenAtFork = retiredCollegeDoorOpen(world)
     answerFork(world, arm)
     if (arm === 'college' && world.ending?.type === 'college') {
       out.wentToCollege = true
@@ -505,7 +510,7 @@ export function main(argv = process.argv.slice(2)): void {
   }
   const unattributed = shut.filter((o) => o.collegeShutTier === null).length
   if (unattributed > 0) {
-    console.log(`  ${padEnd('(unattributed)', 22)}${String(unattributed).padStart(9)}   <- a week that moved no rung at or above ${ENDINGS.collegeClosedFromTier}`)
+    console.log(`  ${padEnd('(unattributed)', 22)}${String(unattributed).padStart(9)}   <- a week that moved no rung at or above ${RETIRED_COLLEGE_RUNG}`)
   }
   console.log('')
   const shutBeforeFork = shut.filter((o) => (o.collegeShutAge ?? 99) < ENDINGS.forkAgeYears).length

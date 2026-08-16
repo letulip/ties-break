@@ -1153,22 +1153,12 @@ export interface UpcomingEvent {
    *  NEVER A BLOCK. "The parent may push" is a standing rule of this game and the doctor's veto
    *  (`ineligibleReason: 'medical'`) is its single exception. `eligible` stays true. */
   coachCaution?: string
-  /** ⭐⭐ A RESULT HERE CAN COST HER THE COLLEGE ENDING – P4's warning, and the reason it is a wire
-   *  field rather than a screen's own arithmetic.
-   *
-   *  Present only when all three are true: the door is still open, this rung is at or above
-   *  `ENDINGS.collegeClosedFromTier`, and the fork is unanswered. The engine's own predicate is
-   *  `entryCostsCollege` – so the card cannot disagree with the rule that will actually fire, the
-   *  same construction `eligible`/`ineligibleReason` have had since R10-5.
-   *
-   *  ⚠ IT IS NOT A REFUSAL AND NOT A CAUTION. `eligible` is untouched, `cautionReason` is the BODY's
-   *  word and this is not about her body, and nothing here recommends: the card states what a result
-   *  would spend and stops (ruling 4, 30.07 – «may not recommend»). The parent may always push.
-   *
-   *  ⚠ AND IT IS "CAN", NOT "WILL". A first-round loss keeps the door (owner, 13.08); only a result
-   *  that got past the opening round spends it, so the copy may never promise the entry itself costs
-   *  anything. See `docs/specs/college-gate-decoupled-2026-08.md`. */
-  costsCollege?: boolean
+  /* ⚠ `costsCollege?: boolean` WAS HERE (P4) AND IS REMOVED ON THE OWNER'S RULING OF 16.08. It carried
+   *  P4's warning – *"a result here can cost the college place at nineteen"* – to both entry paths,
+   *  and it was true of the rule as it then stood. College is an independent branch now and no result
+   *  closes it, so the field would be reporting a consequence that cannot happen. It was optional and
+   *  derived at snapshot time, never persisted, so nothing in the save schema moves with it: the
+   *  record of the whole rule is on the retired `ENDINGS.collegeClosedFromTier`. */
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
   /** the ITF rank an international rung accepts down to, on a card locked by an ACCEPTANCE LIST
@@ -3102,11 +3092,11 @@ export interface Snapshot {
   fork: {
     askedWeek: number
     ageYears: number
-    /** ⭐ IS THE SCHOLARSHIP STILL AN ANSWER? Round-17 #6: the college branch had NO precondition, so a
-     *  nineteen-year-old already earning on the professional tour was offered four years of student
-     *  tennis as an equal third of the card. DERIVED from `bestFinishByTier` (`collegeStillOpen`),
-     *  never persisted, so no save field and no migration. `answerFork` enforces the same rule. */
-    collegeOpen: boolean
+    /* ⚠ `collegeOpen: boolean` WAS HERE (round-17 #6) AND IS REMOVED ON THE OWNER'S RULING OF 16.08:
+     *  «Колледж – это независимая ветка карьеры … альтернативная.» The flag existed so the card could
+     *  stop drawing an answer `answerFork` would refuse; there is no such refusal any more, so the
+     *  third answer is unconditional and the card has nothing to be told. It was derived from
+     *  `bestFinishByTier`, never persisted – no save field moved and none moves back. */
   } | null
   /** the natural end's offer while it is OPEN and unanswered, else null */
   retirementOffer: RetirementOffer | null

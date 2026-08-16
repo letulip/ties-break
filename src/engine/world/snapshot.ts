@@ -60,7 +60,7 @@ import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
 // W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
-import { buildDebtView, buildEndingView, collegeStillOpen, entryCostsCollege } from './endings'
+import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
@@ -297,16 +297,9 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // than inside `ineligibleReason`, which is where it used to live: the two are orthogonal now,
         // and the card has to be able to say "still yours, and beneath you" in one breath.
         ...(gate.outgrown ? { outgrown: true } : {}),
-        // ⭐⭐ P4: A RESULT HERE CAN SPEND THE COLLEGE ENDING, AND THE CARD SAYS SO BEFORE SHE LOSES
-        // IT. `ending.ts` used to state the silence as intent – "it is a PRECONDITION and not a
-        // WARNING" – on the strength of an NCAA rule that does not exist (research §1b). The engine's
-        // own predicate answers it, never the screen's arithmetic, for the same reason `eligible`
-        // comes from `entryStatus`: two implementations of one rule eventually disagree.
-        //
-        // ⚠ ON EVERY CARD, BLOCKED OR NOT. It rides outside `reason` deliberately – a rung she cannot
-        // enter this week is still a rung whose entry would cost this, and the Season feed prints the
-        // sentence beside the lock. It changes no verdict: `eligible` is untouched.
-        ...(entryCostsCollege(world, e.tier) ? { costsCollege: true } : {}),
+        // ⚠ `costsCollege` WAS SET HERE AND GOES WITH THE RULE IT REPORTED (owner, 16.08 – the record
+        // is on the retired `ENDINGS.collegeClosedFromTier`). It was derived from `entryCostsCollege`
+        // and never stored, so nothing about the save schema moves with it.
         ...reason,
         ...coachSay,
       }
@@ -1031,8 +1024,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       ? {
           askedWeek: world.fork.askedWeek,
           ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth),
-          // ⭐ #6: DERIVED, never stored – so no save field and no migration (see `collegeStillOpen`).
-          collegeOpen: collegeStillOpen(world),
+          // ⚠ `collegeOpen` WAS HERE. Round-17 #6 put it on the wire so the card could stop drawing an
+          // answer the engine would refuse; the owner removed the refusal on 16.08, so there is no
+          // longer a state the card needs telling about. It was derived, never stored – no migration.
         }
       : null,
     retirementOffer: world.retirementOffer,

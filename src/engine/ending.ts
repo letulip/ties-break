@@ -16,7 +16,6 @@
 // a player's answer. So the frozen MAIN capture cannot notice this file exists, and a career that
 // goes bankrupt mid-replay keeps drawing identically to one that does not.
 import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from '../shared/protocol'
-import type { TierId } from './season/types'
 
 /** THE KNOBS. Every number here is either measured (`tools/endings-bench.ts`) or anchored in the
  *  contract; none of them is a difficulty setting. */
@@ -50,66 +49,42 @@ export const ENDINGS = {
   forkAgeYears: 19,
   /** §5.1 – four years of student tennis on a scholarship, and she comes back at twenty-two. */
   collegeYears: 4,
-  /** ⭐ THE RUNG AT WHICH THE SCHOLARSHIP STOPS BEING AN OPTION (round-17 #6).
+  /* ⭐⭐ `collegeClosedFromTier` WAS HERE, AND IT IS RETIRED BY AN OWNER RULING OF 16.08 – NOT BY a
+   *  balance pass, and not because the rule was hard to tune. Verbatim: «collegeClosedFromTier – так
+   *  ведь нет же там никакой связи с w75, мы же всё узнали. Колледж – это независимая ветка карьеры с
+   *  отдельным функционалом и турнирами, альтернативная.»
    *
-   *  The owner: the fork «offers the academy to a girl already earning on W75+». It did – the
-   *  college answer had no precondition of any kind, so a nineteen-year-old with a professional
-   *  ranking, a tour kit deal and prize money in the bank was offered "four years of student tennis.
-   *  No ranking points, and the money goes the other way" as an equal third of the card.
+   *  ⚠ THE RECORD OF WHAT IT WAS AND WHY IT WENT, because deleting the reasoning would delete the
+   *  record of a rule that survived four phases on a premise nobody had checked:
    *
-   *  ⚠⚠ THE JUSTIFICATION THIS COMMENT USED TO CARRY IS FACTUALLY WRONG, AND IT IS CORRECTED HERE
-   *  RATHER THAN QUIETLY DROPPED (P4, 16.08). It read: *"it is a PRECONDITION and not a WARNING. A
-   *  player who has taken professional prize money has spent her college eligibility."* **That has
-   *  been false for the whole life of this project.** The NCAA let a prospective college player keep
-   *  $10,000 of prize money a year plus actual and necessary expenses before enrolment, and since the
-   *  Brantmeier/Joint settlement of **15 April 2026** there is **no pre-enrolment cap at all**;
-   *  "amateurism" appears **zero times** in the current Division I Manual. The one real edge is at
-   *  ENROLMENT – after it, prize money may not exceed expenses – so the sport's cliff is a day she
-   *  walks through, never a result she posts. `docs/research/college-and-the-junior-exit.md` §1b has
-   *  the sources.
+   *    * IT WAS `'w75'`, and it removed the college answer from the fork card the first time she
+   *      posted a counting result at W75 or above. Round-17 #6 put it there: the owner's complaint
+   *      that the fork «offers the academy to a girl already earning on W75+».
+   *    * ITS ORIGINAL JUSTIFICATION WAS AN NCAA ELIGIBILITY RULE THAT DOES NOT EXIST – *"A player who
+   *      has taken professional prize money has spent her college eligibility"*. The old bylaw let a
+   *      prospective player keep $10,000 a year plus expenses before enrolment; since the
+   *      Brantmeier/Joint settlement of **15 April 2026** there is **no pre-enrolment cap at all**,
+   *      and "amateurism" appears **zero times** in the current Division I Manual
+   *      (`docs/research/college-and-the-junior-exit.md` §1b). P4 corrected the comment and left the
+   *      constant standing on the owner's own argument instead – *a girl who is already a
+   *      professional does not go to college*.
+   *    * ⚠ AND THAT ARGUMENT IS THE ONE HE HAS NOW WITHDRAWN. College here is an INDEPENDENT BRANCH
+   *      of the career with its own four years, its own tournaments and its own national-team call-up
+   *      (P5, `docs/specs/college-as-a-second-act-2026-08.md`) – an alternative, not a consolation.
+   *      Nothing in the sport and nothing in this game's own design closes that branch on a RESULT.
+   *    * ⚠ IT WAS ALSO ALREADY MEASURED AS BOOKKEEPING. P4 re-measured it firing at median age 19.1
+   *      against a fork at 19.0 – *"a gate that fires after the decision is not a gate"* – and stated
+   *      the three options in its §6.1. This is option (B), taken by the owner rather than by an
+   *      agent, and it is why §6.1 is now closed.
    *
-   *  ⚠ THE CONSTANT IS NOT WRONG – ITS OLD REASON WAS. There is a perfectly good argument for a rung
-   *  threshold and it is the owner's own: **a girl who is already a professional does not go to
-   *  college.** That needs no rulebook to stand up, and it is the argument this constant now rests
-   *  on. What went with the old reason is the word PRECONDITION: the owner ruled on 15.08 that we
-   *  model the rule as it stands («как стало, по идее нам вообще ничего не надо делать здесь»), and a
-   *  rule the sport does not have may not be sprung on the player in silence. So the entry that
-   *  spends this now WARNS FIRST – see `entryCostsCollege` and `UpcomingEvent.costsCollege`.
+   *  ⚠⚠ WHAT DID **NOT** GO: everything behind the door. The third answer, `endingForForkAnswer`'s
+   *  college branch, `world.college`, the four years lived one at a time, `leaveCollege` and the
+   *  call-up are all untouched. What went is only the rule that could REMOVE the choice.
    *
-   *  ⚠⚠ AND THE HONEST THING TO SAY ABOUT THIS CONSTANT TODAY IS THAT IT HAS ALMOST STOPPED FIRING
-   *  BEFORE THE DECISION IT GATES. Re-measured on the P1-P3 ladder (P0's frozen battery, n = 90,
-   *  `college-gate-decoupled-2026-08.md` §2): the door is still lost in **83 of 90** careers, but at
-   *  **median age 19.1** against P0's 17.3 – and the fork is at **19.0**. So it removes an answer
-   *  from the card in **4 careers of 90**; it used to remove it in 83. **The rule did not become
-   *  correct, it became LATE**, because P1 moved her first counting W75 from 17.2 to 19.2 rather
-   *  than putting it out of reach (she still reaches W75 in 82 of 90 careers).
-   *
-   *  ⚠ THE SIX WEEKS BETWEEN 19.0 AND 19.2 ARE AN ACCIDENT AND NOTHING HOLDS THEM. Any tuning that
-   *  speeds her up by a month shuts this door again in most careers, silently – the two rules no
-   *  longer share a constant but they still name the same rung. Whether the gate should stay at all
-   *  is a DESIGN question and it is the owner's: that spec's §6.1 states it and deliberately does not
-   *  answer it. Leaving it here is the do-nothing option, chosen as such.
-   *
-   *  ⚠ W75 IS THE OWNER'S OWN MARKER, quoted from the report, and it is a RUNG rather than a sum of
-   *  money on purpose. `w15` opens at sixteen and the game actively wants a junior to play a few, so
-   *  "has ever entered a professional event" would delete the college ending from almost every
-   *  career. A counting result at W75 or above is the line between a junior who has tried the tour
-   *  and a professional who is on it.
-   *
-   *  ⚠ AND MONEY WAS NEVER THE DISCRIMINATOR, EVEN WHEN A MONEY ARM WAS GOING TO SHIP. Measured over
-   *  90 careers (`college-fork-2026-08.md` §4c/§5): the weakest third banks **$114,260** by nineteen
-   *  against the strongest third's **$155,865**, and the weak band's p75 sits ABOVE the top band's
-   *  p25. The populations interleave, so no dollar line through them sorts anybody. That is the
-   *  record of why the money arm is not here, and it is not an invitation to try again.
-   *
-   *  ⚠⚠ AND THIS IS NOT `TIERS.w75.acceptsRank`, WHICH IS THE DEFECT P4 WAS SENT TO FIX. That
-   *  constant decides WHO MAY ENTER a W75; this one decides WHERE THE COLLEGE ENDING STOPS EXISTING.
-   *  Two unrelated decisions that happened to name the same rung, and for a long time only
-   *  `calendar.ts` said so – this file mentioned neither the coupling nor the other constant. **P3
-   *  moved `w75.acceptsRank` from 450 to 300 and moved the college door with it, and nothing in the
-   *  repo objected.** The gate below no longer reads a single tuning constant off `TIERS`: see
-   *  `collegeDoorOpen`, which takes a view and owns its own rule. */
-  collegeClosedFromTier: 'w75' as TierId,
+   *  ⚠ AND ROUND-21 #8 IS RETIRED BY THIS RULING RATHER THAN DROPPED. He asked then for the fork card
+   *  to say WHY the college answer was missing; there is no case in which it is missing now, so the
+   *  sentence has nothing left to explain. `docs/specs/college-is-its-own-branch-2026-08.md` §4 says
+   *  so out loud rather than letting an answered request disappear quietly. */
 
   // --- #5/#6 THE NATURAL END -------------------------------------------------------------------
   /** her own decline starts here (`ECONOMY.development.ageCurve.declineStart`), so this is where
@@ -273,57 +248,21 @@ export function forkDue(ageYears: number, alreadyAsked: boolean): boolean {
   return !alreadyAsked && ageYears >= ENDINGS.forkAgeYears
 }
 
-/** ⭐⭐ WHAT THE COLLEGE RULE READS, AND IT IS THE WHOLE OF WHAT IT READS (P4, 16.08).
+/* ⭐⭐ `CollegeResultView` AND `collegeDoorOpen` WERE HERE, AND THEY GO WITH THE CONSTANT THEY READ
+ *  (owner, 16.08 – the ruling is on the retired `collegeClosedFromTier` above).
  *
- *  ⚠ THIS INTERFACE IS THE COUPLING BREAK. `collegeStillOpen` used to reach into `TIERS[tier].points`
- *  to decide what "a result that counted" meant – so the college door was reading a LADDER TUNING
- *  TABLE, and a wave that re-sized a rung's points moved the college ending without saying so. The
- *  same shape as the defect P3 fired: `w75.acceptsRank` 450 -> 300 moved WHO MAY ENTER a W75 and
- *  therefore WHEN THE COLLEGE ENDING STOPS EXISTING, two unrelated decisions on one constant.
+ *  ⚠ THE RECORD, because this leaf was the whole of P4's decoupling and its reasoning outlives it.
+ *  `collegeStillOpen` used to reach into `TIERS[tier].points` – the LADDER'S PRIZE COLUMN – to decide
+ *  what "a result that counted" meant, so a wave re-sizing a rung's points moved the college ending
+ *  without saying so, exactly as P3's `w75.acceptsRank` 450 -> 300 had already done. P4 replaced the
+ *  read with a three-number view (the rung's index, her best finish, the draw's DEPTH) so that no
+ *  acceptance cut and no points edit could reach the door except through the college rule's own knob.
  *
- *  The world layer now resolves the ladder's facts and hands over the three that this rule is about.
- *  Nothing below imports `TIERS`, `TIER_LADDER` or any calendar constant, so no acceptance cut, no
- *  points edit and no re-pinned field size can reach the college door except through
- *  `ENDINGS.collegeClosedFromTier` – which is this rule's own knob and says so. */
-export interface CollegeResultView {
-  /** the rung's position on the ladder, and the college rung's position on the SAME ladder – so the
-   *  comparison is "at or above", exactly as before, without this leaf knowing any rung's name */
-  rungIndex: number
-  /** her BEST finish there: 0 is the champion, and the largest index is the girl who lost her first
-   *  match. `bestFinishByTier`'s own convention, carried across unchanged. */
-  finish: number
-  /** how many finishing positions that rung's draw has. A STRUCTURAL fact about the draw – how deep
-   *  it goes – and deliberately NOT the points paid at each one, which is the tuning table this rule
-   *  used to read and no longer does. */
-  rounds: number
-}
-
-/** ⭐ IS THE SCHOLARSHIP STILL A DOOR SHE CAN WALK THROUGH? The rule itself, as a pure predicate.
- *
- *  ⚠ SHE HAS TO HAVE WON A MATCH THERE (owner, 13.08: «чини дверь по набранному результату, а не по
- *  единице»). The test used to be `points[finish] > 0`, and that is not the line the constant says it
- *  is drawing. THE MEASUREMENT THAT PRODUCED THE RULING (endings bench, 9 presets x 20 seeds): W75
- *  shut the door in 95.2% of closures, and **12 of 25 sampled closures were a FIRST-ROUND LOSS** –
- *  because `w75.points` ends in a trailing 1, the wooden spoon handed to everyone who turns up and
- *  loses. So the door was being shut by exactly the case `collegeClosedFromTier`'s own comment calls
- *  safe: «a junior who has tried the tour».
- *
- *  ⚠⚠ AND DROPPING THE POINTS READ CHANGES NOTHING, WHICH IS WHY IT COULD SHIP AS A DECOUPLING
- *  RATHER THAN AS A BALANCE CHANGE. The old rule was `finish < rounds - 1 && points[finish] > 0`;
- *  the second clause can only bite on an INTERIOR zero – a finishing position that is not the
- *  opening round and still pays nothing – and no rung at or above W75 has one (W75 [75,49,29,16,9,1],
- *  W100 [...,12,0], WTA 125/250/500 all trail 1, WTA 1000 and Slam trail 10). So the clause was dead
- *  on every rung this rule can see. `tests/ending.test.ts` asserts that emptiness against the live
- *  table rather than trusting this paragraph, so the day a rung ships an interior zero the pin says
- *  so instead of the door silently moving. */
-export function collegeDoorOpen(results: readonly CollegeResultView[], closedFromIndex: number): boolean {
-  return !results.some((r) => {
-    if (r.rungIndex < closedFromIndex) return false
-    // The last index is the opening round: `bestFinishByTier` holds the smallest (best) index, so
-    // `rounds - 1` is the girl who lost her first match and everything below it won at least one.
-    return r.finish < r.rounds - 1
-  })
-}
+ *  ⚠ THE DECOUPLING WORKED AND THAT IS WHY THIS DELETION IS SMALL. Because the rule was already a
+ *  leaf, removing it touches no calendar constant, no acceptance cut and no points table – the
+ *  coupling P4 broke is the reason its removal cannot move the ladder. The `finish < rounds - 1`
+ *  reading it carried – *she has to have WON A MATCH there* (owner, 13.08) – has no other consumer:
+ *  `wtaEverCounted` in `world/endings.ts` states the same test for the WTA table and is untouched. */
 
 export function endingForForkAnswer(
   answer: ForkAnswer,

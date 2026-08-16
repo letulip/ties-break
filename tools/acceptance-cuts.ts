@@ -8,7 +8,7 @@
 // актуализировать.» An acceptance cut is not a cosmetic constant – it decides WHO SHE MEETS and WHEN
 // SHE MAY ENTER – so "ours is looser than reality" has to be priced before it is fixed.
 //
-// ⚠ AND IT IS NOT ONE DECISION. `ENDINGS.collegeClosedFromTier` is `w75`, and `collegeStillOpen`
+// ⚠ AND IT IS NOT ONE DECISION. `RETIRED_COLLEGE_RUNG` is `w75`, and `collegeStillOpen`
 // shuts the college ending the moment a career records a counting finish at W75 or above. So
 // `TIERS.w75.acceptsRank` silently sets THE AGE AT WHICH THE COLLEGE ENDING STOPS EXISTING. Two
 // unrelated decisions ride one constant, and section 2 measures the second one explicitly – the
@@ -38,7 +38,6 @@
 
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, zeroByTier, mean, median, type Preset } from './econ-bench'
 import {
-  collegeStillOpen,
   kidAgeExact,
   kidPoints,
   acceptanceRank,
@@ -47,6 +46,7 @@ import {
 } from '../src/engine/world'
 // `rankingFor` is not on world.ts's re-export list – the same import `tools/draw-vs-band.ts` makes.
 import { rankingFor } from '../src/engine/world/ladder'
+import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
 import { ENDINGS } from '../src/engine/ending'
 import { createWorld } from '../src/engine/world'
 import { TIERS, TIER_LADDER, TIER_SHORT, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -151,7 +151,12 @@ const GATED: readonly TierId[] = TIER_LADDER.filter(
   (t) => TIERS[t].acceptsRank !== undefined || TIERS[t].enterPct !== undefined,
 )
 /** The rungs at or above the one that shuts the college ending. */
-const COLLEGE_CLOSERS: readonly TierId[] = TIER_LADDER.slice(TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier))
+// ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
+// GAME. The owner removed the rule that closed the college door on a result («Колледж – это
+// независимая ветка карьеры … альтернативная»); in the game as it ships the third answer is on the
+// fork card in 100% of careers. What this file prints is what the PRE-16.08 rule WOULD have done on
+// this population. `tools/retired-college-rule.ts` is the one definition of it.
+const COLLEGE_CLOSERS: readonly TierId[] = TIER_LADDER.slice(TIER_LADDER.indexOf(RETIRED_COLLEGE_RUNG))
 
 // =================================================================================================
 // 1. THE DOORS, as the engine resolves them
@@ -292,7 +297,7 @@ function runOne(preset: Preset, index: number, policy = POLICIES[1]): Row {
       if (cutClearedAge[t] !== undefined) continue
       if (tierFloorOpen(world, t)) cutClearedAge[t] = kidAgeExact(world.week, world.profile.birthMonth)
     }
-    if (collegeShutWeek === null && !collegeStillOpen(world)) {
+    if (collegeShutWeek === null && !retiredCollegeDoorOpen(world)) {
       collegeShutWeek = world.week
       collegeShutAge = kidAgeExact(world.week, world.profile.birthMonth)
       // WHICH RUNG SHUT IT – the same read `collegeStillOpen` makes, reported rather than folded.
@@ -308,7 +313,7 @@ function runOne(preset: Preset, index: number, policy = POLICIES[1]): Row {
     }
     if (!forkSeen && kidAgeExact(world.week, world.profile.birthMonth) >= ENDINGS.forkAgeYears) {
       forkSeen = true
-      collegeOpenAtFork = collegeStillOpen(world)
+      collegeOpenAtFork = retiredCollegeDoorOpen(world)
     }
   }
 
@@ -426,7 +431,7 @@ if (wants('2')) {
 
   // --- 2d. THE COLLEGE COUPLING --------------------------------------------------------------------
   console.log(
-    `\n  2d. THE COLLEGE COUPLING – \`ENDINGS.collegeClosedFromTier\` is "${ENDINGS.collegeClosedFromTier}",` +
+    `\n  2d. THE COLLEGE COUPLING – \`RETIRED_COLLEGE_RUNG\` is "${RETIRED_COLLEGE_RUNG}",` +
       ` so ${COLLEGE_CLOSERS.join('/')} shut the ending`,
   )
   console.log(

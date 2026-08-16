@@ -13,11 +13,10 @@
 // an injury the `seed:injury:<week>` stream has already rolled, an age comparison, or an answer.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
 import { formatCents } from '../../shared/money'
-import type { AutoEndingView, CollegeResultView, PlateauView } from '../ending'
+import type { AutoEndingView, PlateauView } from '../ending'
 import {
   ENDINGS,
   ENDING_TITLE,
-  collegeDoorOpen,
   detectEnding,
   endingForForkAnswer,
   endingForRetirement,
@@ -275,77 +274,33 @@ export function resolveEndings(world: WorldState): void {
 
 // --- the two answers ----------------------------------------------------------------------------
 
-/** ⭐ IS THE SCHOLARSHIP STILL A DOOR SHE CAN WALK THROUGH? Round-17 #6.
+/* ⭐⭐ `collegeStillOpen`, `collegeResultViewOf` AND `entryCostsCollege` WERE HERE, AND ALL THREE GO
+ *  ON THE OWNER'S RULING OF 16.08 – see the retired `ENDINGS.collegeClosedFromTier` in `ending.ts`
+ *  for the quote and the record. College is an independent branch of the career; nothing closes it
+ *  on a result.
  *
- *  The owner: the fork «offers the academy to a girl already earning on W75+». It had no
- *  precondition at all, so a nineteen-year-old with a professional ranking and prize money in the
- *  bank was offered four years of student tennis as an equal third of the card.
+ *  ⚠ THE ONE THING WORTH CARRYING FORWARD is what `collegeStillOpen` was NOT: it was never persisted.
+ *  It was a pure read of `bestFinishByTier`, derived at snapshot time, so removing it adds no
+ *  migration and no fixture – the same property that let it ship without one. `entryCostsCollege`
+ *  and `UpcomingEvent.costsCollege` were derived the same way and go the same way.
  *
- *  ⚠ DERIVED, NEVER PERSISTED, which is what keeps this out of CLAUDE.md invariant 3. It is a pure
- *  read of `bestFinishByTier` - state that already exists - so no save field is added and no
- *  migration is needed; a career loaded from any version answers the question the same way.
- *
- *  ⚠ AND IT IS A COUNTING RESULT, not an entry. Playing a W75 and losing in the first round is a
- *  junior trying the tour; a result that scored is a professional on it. `wtaEverCounted` uses the
- *  identical test one table down, so the two cannot mean different things by "it counted". */
-export function collegeStillOpen(world: WorldState): boolean {
-  return collegeDoorOpen(collegeResultViewOf(world), TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier))
-}
-
-/** THE VIEW THE COLLEGE RULE READS – built here, because this is the seam that is allowed to know
- *  what a rung is. `ending.ts` gets three numbers per result and no calendar constant at all.
- *
- *  ⚠ `rounds` IS THE DRAW'S DEPTH AND NOT ITS PRIZE COLUMN. `points.length` is how many finishing
- *  positions the rung has, which is a structural fact; the VALUES in that array are the ladder's
- *  tuning and are deliberately not passed on. That is the whole of the decoupling – see
- *  `collegeDoorOpen`, and `docs/specs/college-gate-decoupled-2026-08.md` for why it was needed. */
-function collegeResultViewOf(world: WorldState): CollegeResultView[] {
-  const views: CollegeResultView[] = []
-  for (const tier of Object.keys(world.bestFinishByTier) as TierId[]) {
-    const finish = world.bestFinishByTier[tier]
-    if (finish === undefined) continue
-    views.push({ rungIndex: TIER_LADDER.indexOf(tier), finish, rounds: TIERS[tier].points.length })
-  }
-  return views
-}
-
-/** ⭐⭐ WOULD ENTERING THIS RUNG COST HER THE COLLEGE ENDING? P4's warning, as an engine predicate.
- *
- *  ⚠ IT IS A WARNING AND NO LONGER A SILENCE, WHICH IS THE POINT. `ENDINGS.collegeClosedFromTier`
- *  used to state the silence as intent – *"it is a PRECONDITION and not a WARNING"* – on the strength
- *  of an NCAA eligibility rule that **does not exist** (research §1b: no pre-enrolment cap at all
- *  since 15 April 2026). A rule the sport does not have may not be sprung on the player after the
- *  fact, so the tournament card says this entry can cost the scholarship BEFORE she loses it.
- *
- *  ⚠ IT MAY NOT RECOMMEND (ruling 4, 30.07). It states a consequence and stops: no verdict on
- *  whether entering is a good idea, no styling that makes it a refusal, and `eligible` is untouched.
- *  The parent may always push – the doctor's veto is this game's one exception and this is not it.
- *
- *  ⚠ AND IT IS "CAN COST", NOT "WILL": a first-round loss there keeps the door (that is the 13.08
- *  ruling), so the honest sentence is about what a RESULT would spend, not the entry fee.
- *
- *  Three conditions, and all three are about whether the sentence would be TRUE, never about whether
- *  it would be useful:
- *    1. the door is still open – there is something left to spend;
- *    2. this rung is at or above the college rung – a W15 costs nothing;
- *    3. the fork has not been answered yet – after it there is no college ending left to lose, and a
- *       card that warns about a spent decision is noise. */
-export function entryCostsCollege(world: WorldState, tier: TierId): boolean {
-  if (world.fork !== null && world.fork.answer !== null) return false
-  if (TIER_LADDER.indexOf(tier) < TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier)) return false
-  return collegeStillOpen(world)
-}
+ *  ⚠ AND THE WARNING GOES BECAUSE IT IS NOW FALSE, WHICH IS A STRONGER REASON THAN "unused". P4 put
+ *  *"A result here can cost the college place at nineteen"* on both entry paths – the Season confirm
+ *  and the calendar's marker card – and it was true of the rule as it then stood. With the rule gone
+ *  the sentence states a consequence that cannot happen, on the one surface where the player is about
+ *  to spend money. A false warning on an entry card is worse than no warning. */
 
 /** THE MOST EXPENSIVE CLICK IN THE GAME (adult spec's own risk note). Three answers, two of which
  *  end the career, and «стоп» must be able to be the right one. */
 export function answerFork(world: WorldState, answer: ForkAnswer): void {
   guardNotEnded(world)
   if (world.fork === null || world.fork.answer !== null) throw new Error('The fork is not open')
-  // ⭐ #6: re-validated ENGINE-SIDE, because the worker is not the gate (CLAUDE.md invariant 1). The
-  // dialog stops drawing the button, and this is what makes that a rule rather than a decoration.
-  if (answer === 'college' && !collegeStillOpen(world)) {
-    throw new Error('She has taken professional prize money – the scholarship is not open to her')
-  }
+  // ⚠ #6's ENGINE-SIDE RE-VALIDATION IS GONE WITH THE RULE IT ENFORCED (owner, 16.08). It read:
+  // `if (answer === 'college' && !collegeStillOpen(world)) throw` – the courtesy being that the
+  // dialog stops drawing the button and this made it a rule rather than a decoration (CLAUDE.md
+  // invariant 1). There is no longer a state in which the college answer is refused, so there is
+  // nothing for the engine to re-validate: the guard above ("the fork is not open") is still the
+  // whole of what this command can refuse, and it is still engine-side.
   world.fork = { ...world.fork, answer }
   if (answer === 'college') {
     // ⚠ `untilWeek` IS THE WHOLE COURSE EVEN THOUGH SHE MAY LEAVE AFTER ONE YEAR (P5). It is the

@@ -11,8 +11,6 @@
 // dialog added or lengthened gets that assertion, and the last block proves the assertion is live by
 // putting the shipped defect back on this card and watching it go red.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import MoreScreen from '../../src/components/screens/MoreScreen.vue'
@@ -24,8 +22,6 @@ import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
-import { ENDINGS } from '../../src/engine/ending'
-import { TIER_SHORT } from '../../src/engine/season/calendar'
 import { weekLabel } from '../../src/shared/dates'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
 import type { CareerMeta, SavePeek, Snapshot } from '../../src/shared/protocol'
@@ -213,76 +209,54 @@ describe('⭐ round-21 #1 – importing a save asks first', () => {
 // ⭐ ITEM 8 – «В 19 не было варианта выбрать колледж, только про или завязать»
 // =================================================================================================
 //
-// ⚠ THE FINDING FIRST, BECAUSE IT DECIDES THE FIX. Measured with `tools/econ-bench.ts`'s own `player`
-// policy (the model of a reasonable parent, fitted to the owner's envelope) over 9 presets x 3 seeds:
-// 26 of 26 careers that reached the fork had `collegeStillOpen === false`, and `toSnapshot` carried
-// that to `fork.collegeOpen` every time. Under the `grinder` policy – which never plays the paid
-// rungs – it was open 13 of 13. So the ENGINE is what shuts the door, the flag is honest, and the
-// card was right to draw two answers. What was wrong is that it drew them in silence, and a missing
-// third of a card is indistinguishable from a game that forgot to offer it.
-function forkSnapshot(collegeOpen: boolean): Snapshot {
+// ⚠ THE FINDING FIRST, BECAUSE IT IS WHY THE COMPLAINT WAS REAL. Measured with `tools/econ-bench.ts`'s
+// own `player` policy (the model of a reasonable parent, fitted to the owner's envelope) over 9
+// presets x 3 seeds: 26 of 26 careers that reached the fork had the college answer already spent, and
+// the snapshot carried that to the card every time. Under the `grinder` policy – which never plays the
+// paid rungs – it was open 13 of 13. So the ENGINE was what shut the door, and #8 built a sentence
+// explaining which rung had taken the answer away.
+//
+// ⭐⭐ AND #8 IS RETIRED BY THE OWNER'S OWN LATER RULING, WHICH IS RECORDED HERE RATHER THAN LEAVING
+// AN ANSWERED REQUEST TO DISAPPEAR. On 16.08: «collegeClosedFromTier – так ведь нет же там никакой
+// связи с w75, мы же всё узнали. Колледж – это независимая ветка карьеры с отдельным функционалом и
+// турнирами, альтернативная.» Nothing closes the college branch on a result, so **there is no shut
+// door left to explain** and the third answer is unconditional. The complaint that opened #8 is fixed
+// more completely than the sentence fixed it: he asked why the answer was missing, and it is not.
+// docs/specs/college-is-its-own-branch-2026-08.md §4.
+//
+// WHAT THE THREE CASES BELOW BECOME: one. The two shut-door cases are gone with the state they
+// described, and the pin that the rung name is never typed into the template is gone with the rung.
+function forkSnapshot(): Snapshot {
   return {
     ageYears: 19,
     week: 265,
     kidRank: 88,
     fundsCents: 1234_00,
     careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
-    fork: { askedWeek: 265, ageYears: 19, collegeOpen },
+    fork: { askedWeek: 265, ageYears: 19 },
   } as unknown as Snapshot
 }
 
-describe('⭐ round-21 #8 – the fork says why there are two doors and not three', () => {
+describe('⭐ round-21 #8 – the fork offers all three doors, and no longer explains a missing one', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     document.body.innerHTML = ''
   })
 
-  it('⭐ the third arm IS rendered when the engine says college is open – the dialog was never the bug', () => {
-    useGameStore().snapshot = forkSnapshot(true)
+  it('⭐⭐ three answers, one weight, and no shut-door note on any fork the wire can carry', () => {
+    useGameStore().snapshot = forkSnapshot()
     const w = mount(ForkDialog)
     expect(w.findAll('.fork-answer'), 'three answers, one weight').toHaveLength(3)
     expect(w.text()).toContain('Take the college place')
-    // ...and with the door open there is nothing to explain.
-    expect(w.find('.fork-shut').exists()).toBe(false)
-    w.unmount()
-  })
-
-  it('⭐⭐ ...and when the engine says it is shut, the card SAYS SO instead of quietly dropping it', () => {
-    useGameStore().snapshot = forkSnapshot(false)
-    const w = mount(ForkDialog)
-    const shut = w.find('.fork-shut')
-    expect(shut.exists(), 'the absence is explained').toBe(true)
-    expect(shut.text()).toContain('two answers here and not three')
-    // The rung is the ENGINE's, so the sentence moves if the rule does.
-    expect(shut.text()).toContain(TIER_SHORT[ENDINGS.collegeClosedFromTier])
-
-    // ⚠ AND IT IS NOT A FOURTH ANSWER. Round-17 chose absent over disabled, and this must not undo
-    // that: no button, no way to click the door that is shut, and still no primary anywhere.
-    expect(w.findAll('.fork-answer')).toHaveLength(2)
-    expect(w.text()).not.toContain('Take the college place')
+    // ⚠ THE NEGATIVE IS THE HALF THAT MOVED. `.fork-shut` was the class and "two answers here and not
+    // three" was the sentence; both are gone, and nothing replaced them with a softer version.
+    expect(w.find('.fork-shut').exists(), 'the class is gone').toBe(false)
+    expect(w.text(), 'and so is the count').not.toContain('two answers')
+    // ...and round-17's absent-over-disabled rule is not undone by the other route either: no answer
+    // is greyed into a recommendation, and there is still no primary on the card.
+    for (const a of w.findAll('.fork-answer')) expect(a.attributes('disabled')).toBeUndefined()
     expect(w.findAll('.tb-pill')).toHaveLength(0)
-    expect(shut.element.tagName).toBe('P')
     w.unmount()
-  })
-
-  it('⚠ the rung name is not typed into the template – it is read off ENDINGS', () => {
-    // A NEGATIVE claim about this .vue alone, so it is read off the file rather than through
-    // `componentLogic` (CLAUDE.md's pin-hygiene rule). `collegeClosedFromTier` is a constant with a
-    // measured argument behind it; a sentence that hard-codes "W75" goes stale the day it moves.
-    // ⚠ READ OFF `process.cwd()` AND NOT `import.meta.url`: under the component project the module
-    // URL is not a `file:` scheme, which is also why `tests/worldSource.ts`'s helpers cannot be used
-    // from here. vitest runs from the repo root.
-    const file = readFileSync(resolve(process.cwd(), 'src/components/ForkDialog.vue'), 'utf8')
-    expect(file.length, 'the file was actually read – an empty pin proves nothing').toBeGreaterThan(1000)
-    // ⚠ COMMENTS STRIPPED FIRST. The template carries round-17's own explanation of this rule and it
-    // names W75 in prose – which is documentation, not copy, and pinning against it would force the
-    // reasoning out of the file to satisfy a test about rendering. The claim is about MARKUP.
-    const template = file.slice(file.indexOf('<template>'), file.indexOf('</template>')).replace(/<!--[\s\S]*?-->/g, '')
-    expect(template.length, 'the slice really is the template').toBeGreaterThan(500)
-    expect(template, 'the markup names no rung of its own').not.toContain(
-      TIER_SHORT[ENDINGS.collegeClosedFromTier],
-    )
-    expect(file).toContain('ENDINGS.collegeClosedFromTier')
   })
 })
 
@@ -304,7 +278,7 @@ describe('⭐⭐ the cards this wave touched fit a 375x667 phone', () => {
   function mountFork(vp = PHONE) {
     // ⚠ THE VIEWPORT FIRST – happy-dom resolves lengths at `getComputedStyle` time.
     setViewport(vp)
-    useGameStore().snapshot = forkSnapshot(false)
+    useGameStore().snapshot = forkSnapshot()
     const w = mount(ForkDialog, { attachTo: document.body })
     const card = document.querySelector('.fork-card')!
     const dismiss = document.querySelector('.fork-answers')!

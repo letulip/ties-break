@@ -27,7 +27,14 @@
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, mean, median } from './econ-bench'
 import { resumeFromCollege } from '../src/engine/world'
-import { answerFork, collegeStillOpen } from '../src/engine/world/endings'
+import { answerFork } from '../src/engine/world/endings'
+// ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
+// GAME. The owner removed the rule that closed the college door on a result («Колледж – это
+// независимая ветка карьеры … альтернативная»); in the game as it ships the third answer is on the
+// fork card in 100% of careers. What this file prints is what the PRE-16.08 rule WOULD have done on
+// this population, kept so the frozen battery's arms stay comparable on the dimension the
+// junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
+import { retiredCollegeDoorOpen } from './retired-college-rule'
 import { kidLadderRank } from '../src/engine/world/snapshot'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'
@@ -63,7 +70,7 @@ function toTheFork(preset: (typeof PRESETS)[number], i: number): { world: WorldS
     stepCareerWeek(world, rng, POLICY)
     if (world.ending && world.ending.type !== 'college') return null
     if (world.fork !== null && world.fork.answer === null) {
-      return collegeStillOpen(world) ? { world, rng } : null
+      return retiredCollegeDoorOpen(world) ? { world, rng } : null
     }
   }
   return null

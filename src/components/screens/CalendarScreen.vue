@@ -641,19 +641,11 @@ const showGo = computed(() => !game.snapshot?.pending)
         </p>
         <p v-if="marker.coachCaution" class="coach-note">{{ marker.coachCaution }}</p>
 
-        <!-- ⭐⭐ P4 – A RESULT HERE CAN SPEND THE COLLEGE ENDING, SAID BEFORE SHE SPENDS IT.
-             This card carries it because THIS CARD IS ITS OWN CONFIRMATION (see `enterMarker`) - a
-             player who enters from the calendar never sees Season's ConfirmDialog, so a warning
-             that lived only there would be invisible on half the entry paths. `ending.ts` used to
-             call the silence intentional on the strength of an NCAA rule that no longer exists
-             (research §1b); the door is the owner's own argument now, and it warns.
-             ⚠ ITS OWN CLASS, NOT `.caution-note`: that one is the BODY's word, red-shouldered and
-             about getting hurt. Nothing here is a caution about her health, nothing recommends, and
-             the Enter pill is untouched - `risky` still tracks fatigue alone. -->
-        <p v-if="marker.costsCollege" class="college-note">
-          A result here can cost the college place at nineteen – a win at this level makes her a
-          professional.
-        </p>
+        <!-- ⚠ P4's COLLEGE NOTE WAS HERE AND IS REMOVED (owner, 16.08). This card is its own
+             confirmation, so it carried the same sentence the Season confirm did - a result here can
+             cost the college place. Nothing closes the college branch on a result any more, so the
+             sentence would be warning about a consequence that cannot happen, next to an active
+             Enter. The record of the rule is on the retired `ENDINGS.collegeClosedFromTier`. -->
 
         <div class="controls cal-card-actions">
           <template v-if="marker.entered">
@@ -693,19 +685,6 @@ const showGo = computed(() => !game.snapshot?.pending)
    `.caution-note` / `.coach-note` (the app's own vocabulary), the card and its photograph
    (ui/Card.vue), the surface mark, the CTA pill and the ring.
    ================================================================================================= */
-
-/* ⭐⭐ P4 – WHAT A RESULT HERE WOULD SPEND. A third register beside `.caution-note` (the engine's
-   rule about her body, `--warning`) and `.coach-note` (a person's advice, italic): this is neither a
-   warning about harm nor somebody's opinion, it is a CONSEQUENCE of a rule the player is entitled to
-   know before it fires. So it borrows the coach note's muted weight - it must not shout, because a
-   card «may not recommend» and amber beside an active Enter reads as a lock - and drops the italic,
-   which belongs to the man who is speaking. Roman, muted, one size down: a fact. */
-.college-note {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
-  margin: 6px 0 0;
-}
 
 /* --- the header: Season's own shape, so two calendar-ish screens open the same way --------------- */
 .cal-topbar {

@@ -24,7 +24,7 @@
 //   * NO RUNG IS NAMED IN A LOOP. Everything iterates `TIER_LADDER`, so a phase that adds, removes
 //     or re-orders a rung gets a table with that rung in it rather than a KeyError or a silent hole.
 //   * NO AGE OR COUNT IS HARDCODED THAT THE ENGINE ALSO KNOWS. The fork age is `ENDINGS.forkAgeYears`,
-//     the college rung is `ENDINGS.collegeClosedFromTier`, the counting book's width is
+//     the college rung is `RETIRED_COLLEGE_RUNG`, the counting book's width is
 //     `BEST_N_BY_TRACK.wta` (eighteen today – the tool says "of N", never "of 18").
 //   * THE MILESTONE AGES ARE THE ONE DELIBERATE EXCEPTION. 17 / 19 / 21 / 25 are this MEASUREMENT's
 //     own axis, declared once in `RANK_AGES`, and they must NOT move between P0 and P6 or the diff
@@ -56,7 +56,14 @@
 // Both are stable properties of the tool, so P6 inherits them and the diff stays honest.
 import { writeFileSync } from 'node:fs'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, zeroByTier, mean, median, type Preset } from './econ-bench'
-import { collegeStillOpen, kidAgeExact, kidAgeAt, kidPoints, tableSize } from '../src/engine/world'
+import { kidAgeExact, kidAgeAt, kidPoints, tableSize } from '../src/engine/world'
+// ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
+// GAME. The owner removed the rule that closed the college door on a result («Колледж – это
+// независимая ветка карьеры … альтернативная»); in the game as it ships the third answer is on the
+// fork card in 100% of careers. What this file prints is what the PRE-16.08 rule WOULD have done on
+// this population, kept so the frozen battery's arms stay comparable on the dimension the
+// junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
+import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
 import { computeCountingResults } from '../src/engine/world/snapshot'
 import { BEST_N_BY_TRACK } from '../src/engine/season/ranking'
 import { ENDINGS } from '../src/engine/ending'
@@ -285,7 +292,7 @@ export interface Row {
 
 const TRACK: 'wta' = 'wta'
 /** The rungs at or above the one that shuts the college ending – read out of ENDINGS, never listed. */
-const COLLEGE_CLOSERS: readonly TierId[] = TIER_LADDER.slice(TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier))
+const COLLEGE_CLOSERS: readonly TierId[] = TIER_LADDER.slice(TIER_LADDER.indexOf(RETIRED_COLLEGE_RUNG))
 
 /** Is the finish she holds at this rung a COUNTING one – a result that scored, not a first-round
  *  exit? The identical test `collegeStillOpen` makes, spelled once so the two cannot disagree. */
@@ -451,7 +458,7 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
     }
 
     // 6. THE COLLEGE DOOR.
-    if (collegeShutWeek === null && !collegeStillOpen(world)) {
+    if (collegeShutWeek === null && !retiredCollegeDoorOpen(world)) {
       collegeShutWeek = world.week
       collegeShutAge = ageNow
       for (const t of COLLEGE_CLOSERS) {
@@ -465,12 +472,12 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
       forkSeen = true
       forkWeek = world.week
       forkAge = ageNow
-      collegeOpenAtFork = collegeStillOpen(world)
+      collegeOpenAtFork = retiredCollegeDoorOpen(world)
     }
     // ⭐ A FULL SEASON PAST THE FORK – the "genuinely open" correction. See `collegeOpenAfterFork`.
     if (forkSeen && !afterForkRead && forkWeek !== null && world.week >= forkWeek + WEEKS_PER_YEAR) {
       afterForkRead = true
-      collegeOpenAfterFork = collegeOpenAtFork && collegeStillOpen(world)
+      collegeOpenAfterFork = collegeOpenAtFork && retiredCollegeDoorOpen(world)
     }
 
     // 7. SURVIVAL. The ending latches once; the debt spell is the warning phase before bankruptcy.
@@ -548,7 +555,7 @@ console.log(`  seeds        bench-<background>-<0..${SEEDS - 1}> x 9 presets; ro
 console.log(`               Entropy = createWorld(seed, profile) + rngFromSeed(world.seed) and nothing else.`)
 console.log(`  engine       SHIPPED CONSTANTS THROUGHOUT – nothing is patched, in memory or otherwise.`)
 console.log(
-  `               forkAgeYears ${ENDINGS.forkAgeYears} · collegeClosedFromTier ${ENDINGS.collegeClosedFromTier} · ` +
+  `               forkAgeYears ${ENDINGS.forkAgeYears} · collegeClosedFromTier ${RETIRED_COLLEGE_RUNG} · ` +
     `counting window ${BOOK_SLOTS} slots · ${TIER_LADDER.length} rungs`,
 )
 const t0 = Date.now()
@@ -929,7 +936,7 @@ if (JSON_OUT) {
     weeks: WEEKS,
     engine: {
       forkAgeYears: ENDINGS.forkAgeYears,
-      collegeClosedFromTier: ENDINGS.collegeClosedFromTier,
+      collegeClosedFromTier: RETIRED_COLLEGE_RUNG,
       countingSlotsWta: BOOK_SLOTS,
       tierLadder: TIER_LADDER,
     },

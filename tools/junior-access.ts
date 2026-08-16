@@ -34,7 +34,14 @@
 // ways – nothing this file does touches the world's dice.
 import { writeFileSync } from 'node:fs'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, zeroByTier, mean, median, type Preset } from './econ-bench'
-import { collegeStillOpen, kidAgeExact, kidPoints, tierFloorOpen } from '../src/engine/world'
+import { kidAgeExact, kidPoints, tierFloorOpen } from '../src/engine/world'
+// ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
+// GAME. The owner removed the rule that closed the college door on a result («Колледж – это
+// независимая ветка карьеры … альтернативная»); in the game as it ships the third answer is on the
+// fork card in 100% of careers. What this file prints is what the PRE-16.08 rule WOULD have done on
+// this population, kept so the frozen battery's arms stay comparable on the dimension the
+// junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
+import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
 import { ENDINGS } from '../src/engine/ending'
 import { TIERS, TIER_LADDER, TIER_SHORT, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
@@ -80,7 +87,7 @@ const RUNGS: readonly TierId[] = TIER_LADDER
 const W_RUNGS: readonly TierId[] = ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125']
 /** The rungs at or above the one that shuts the college ending today – `tools/college-fork.ts`' own
  *  definition, kept identical so the two files' closure figures are the same measurement. */
-const COLLEGE_CLOSERS: readonly TierId[] = TIER_LADDER.slice(TIER_LADDER.indexOf(ENDINGS.collegeClosedFromTier))
+const COLLEGE_CLOSERS: readonly TierId[] = TIER_LADDER.slice(TIER_LADDER.indexOf(RETIRED_COLLEGE_RUNG))
 /** The ages the per-age tables break on: 14 through 21, i.e. the whole junior window plus two years
  *  past it, which is where a rule that only bites juniors has to stop showing up. */
 const AGES = [14, 15, 16, 17, 18, 19, 20, 21] as const
@@ -210,7 +217,7 @@ function runOne(preset: Preset, index: number): Row {
       prizeCents += prize
       if (kidAgeExact(fw.week, world.profile.birthMonth) < ENDINGS.forkAgeYears) prizeBy19Cents += prize
     }
-    if (collegeShutAge === null && !collegeStillOpen(world)) {
+    if (collegeShutAge === null && !retiredCollegeDoorOpen(world)) {
       collegeShutAge = ageNow
       for (const t of COLLEGE_CLOSERS) {
         const finish = world.bestFinishByTier[t]
@@ -223,7 +230,7 @@ function runOne(preset: Preset, index: number): Row {
     }
     if (!forkSeen && ageNow >= ENDINGS.forkAgeYears) {
       forkSeen = true
-      collegeOpenAtFork = collegeStillOpen(world)
+      collegeOpenAtFork = retiredCollegeDoorOpen(world)
     }
     if (world.ending) break
   }

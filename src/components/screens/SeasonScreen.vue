@@ -773,25 +773,18 @@ interface PendingConfirm {
 }
 const pendingConfirm = ref<PendingConfirm | null>(null)
 
-/** ⭐⭐ P4 – THE WARNING BEFORE THE ENTRY THAT COSTS IT, and it goes on BOTH entry paths.
+/* ⚠⚠ `COLLEGE_COST_NOTE` WAS HERE AND IT IS REMOVED BECAUSE IT BECAME FALSE (owner, 16.08). P4 put
+ *  it on both entry paths – *"A result here can cost the college place at nineteen – a win at this
+ *  level makes her a professional."* – and it was an honest sentence about the rule as it then stood:
+ *  "can", never "will", because a first-round loss kept the door (owner, 13.08), and it stated a
+ *  consequence without recommending anything.
  *
- *  `ending.ts` used to state the silence as intent: *"it is a PRECONDITION and not a WARNING"*, on
- *  the strength of an NCAA eligibility rule that has been repealed twice and, since 15 April 2026,
- *  carries no pre-enrolment cap at all. `endings-and-the-album.md` named the gap and left it to the
- *  owner: *"nothing at seventeen tells the player that a good week there spends something."*
- *
- *  ⚠ "CAN COST", NEVER "WILL". A first-round loss keeps the door (owner, 13.08) – only a result that
- *  got past the opening round spends it – so the sentence is about what a RESULT would cost and the
- *  entry itself promises nothing.
- *
- *  ⚠ AND IT MAY NOT RECOMMEND (ruling 4, 30.07). It states the consequence and stops: no verdict on
- *  whether to enter, no "consider", and the button keeps saying Enter. The parent may always push.
- *
- *  ⚠ THE RUNG IS NOT NAMED, deliberately – the card IS the rung, so "this level" is both shorter and
- *  immune to the door moving. `ENDINGS.collegeClosedFromTier` decides which cards carry it, engine
- *  side (`entryCostsCollege`), and this screen never re-derives that. */
-const COLLEGE_COST_NOTE =
-  'A result here can cost the college place at nineteen – a win at this level makes her a professional.'
+ *  ⚠ THE RULE UNDER IT IS GONE: college is an independent branch of the career, and no result closes
+ *  it. So the sentence would now warn about something that cannot happen, on the card where the
+ *  player is deciding whether to spend an entry fee. **A false warning on an entry card is worse than
+ *  no warning** – it prices a cost into a decision that does not carry it, which is the opposite of
+ *  what a confirm dialog is for. The record of the whole rule is on the retired
+ *  `ENDINGS.collegeClosedFromTier`. */
 
 function askEnter(e: UpcomingEvent): void {
   // Fatigue is a warned CHOICE: spell out the risk in the confirm, but keep the action available.
@@ -800,15 +793,11 @@ function askEnter(e: UpcomingEvent): void {
   // words. Load slice: it is the one moment the advice can still change the decision, and a warning that
   // appears only on the card is a warning the player has already scrolled past by the time he taps.
   const said = e.coachCaution ? `${e.coachCaution} ` : ''
-  // ⚠ LAST, AFTER THE FEE. The confirm's job is to say the numbers out loud one final time; this is
-  // the one cost on the card that is not money, so it closes the sentence rather than opening it and
-  // pushing the fee down. Absent entirely when the engine says there is nothing to spend.
-  const college = e.costsCollege ? ` ${COLLEGE_COST_NOTE}` : ''
   pendingConfirm.value = {
     message: fatigued
       ? `${said}${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
-        `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? ${feeSentence(e.entryFeeCents)}${college}`
-      : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? ${feeSentence(e.entryFeeCents)}${college}`,
+        `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? ${feeSentence(e.entryFeeCents)}`
+      : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? ${feeSentence(e.entryFeeCents)}`,
     // ⚠ TWO VERBS FOR TWO KINDS OF ADVICE (08.08). "Push through" is a BODY word – it is what you do
     // to tiredness – and since the coach also has an opinion about the SCHEDULE now, it would have
     // been the wrong verb on half the cautions he raises: there is nothing to push through about a
