@@ -1125,3 +1125,9 @@ rung THREE above, so moving `wta125.acceptsRank` also moved when a W50 stops bei
 (W50 entries 30.3 → 22.1 a career). Deliberate, documented on `TIER_LADDER`, reported not changed –
 and the two fixes landed together, so this pair of arms cannot attribute any single rung to one of
 them.
+
+⭐ **AND THE ACCEPTANCE FIX PAID SOMEWHERE NOBODY WAS AIMING.** `tools/boredom-guard.ts`, 12 careers x
+260 weeks, before and after: cap refusals **1,145 → 448**, the non-blackout weeks they cover
+**674 → 354**, and **weeks with no playable junior or domestic alternative 88 → 29**. A prestige junior
+rung that accepts to 0.25 instead of 0.20 is one more answer on one more week. ⚠ The guard still exits
+1 and is no longer a hard gate; its exit code is deliberately unchanged, and softening it is his call.

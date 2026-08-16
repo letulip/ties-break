@@ -32,11 +32,13 @@ exits 0 always.
 ### 0a. ⚠ Why `tools/boredom-guard.ts` could not answer it
 
 The boredom guard starts from a REFUSAL: it collects weeks where a W entry was refused by the AER cap
-(`entryStatus(...).reason === 'capped'` on the pro arm) and asks what else that week offered. On the
-current build that is **674 such weeks of 3,120 lived, 88 of them with no alternative**. A week that
-is simply blank – nothing refused because nothing was scheduled, or everything on it locked on rank –
-never lands on its list at all. It answers *"does the cap strand her?"*; the census answers *"how much
-of the calendar is empty?"*, and those turn out to be different questions with different answers.
+(`entryStatus(...).reason === 'capped'` on the pro arm) and asks what else that week offered.
+Measured, 12 careers x 260 weeks = 3,120 lived: **674 such weeks and 88 with no alternative** before
+§2's fix, **354 and 29** after (§2c). **A week that is simply blank – nothing refused because nothing
+was scheduled, or everything on it locked on rank – never lands on its list at either figure.** It
+answers *"does the cap strand her?"*; the census answers *"how much of the calendar is empty?"*, and
+those turn out to be different questions with different answers – 29 weeks over 12 careers against
+~5 a season over 18.
 
 ### 0b. The three classes, and the third is what makes the number mean anything
 
@@ -244,6 +246,24 @@ ladder. ⚠ **And it is not academic**: measured on the post arm, **34 of 90 car
 
 The exemption cannot rot: its count is pinned at one, and the inversion itself is asserted, so the day
 the Slam draw or either cut moves it goes red rather than quietly excusing a new inversion.
+### 2c. ⭐ AND THE FIX PAYS SOMEWHERE NOBODY WAS LOOKING – THE BOREDOM GUARD FELL BY TWO THIRDS
+
+`npx vite-node tools/boredom-guard.ts`, 12 careers x 260 weeks, the maximal-grinder driver it ships
+with, before and after §2:
+
+| | before | **after** |
+| --- | --- | --- |
+| W entries refused by the AER cap | 1,145 | **448** |
+| distinct non-blackout weeks those refusals covered | 674 | **354** |
+| **weeks with NO playable J/domestic alternative** | **88** | **29** |
+
+**Nobody predicted this and it was not aimed at.** The mechanism is the j300 half: the guard's whole
+question is *"when the cap refuses a W, is there junior or domestic tennis on that week?"*, and a
+prestige junior rung that accepts to 0.25 of the table instead of 0.20 is one more answer to it on
+one more week. ⚠ The guard still exits 1 (29 > 0), and it is **no longer a hard gate** – the owner's
+16.08 ruling in §0 is about exactly this claim. Its exit code is deliberately unchanged; softening it
+is his call and is not taken here.
+
 
 ---
 

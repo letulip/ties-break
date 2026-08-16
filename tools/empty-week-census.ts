@@ -13,10 +13,12 @@
 // ⚠⚠ WHY `tools/boredom-guard.ts` CANNOT ANSWER IT, stated here because the two look like the same
 // tool and are not. The boredom guard inspects ONLY weeks where a W entry was REFUSED BY THE AER CAP
 // – it starts from `entryStatus(...).reason === 'capped'` on the pro arm and asks what else that week
-// offered. On the current build that is 674 weeks of 3,120 lived, of which 88 had no alternative. A
+// offered. Measured on the tree of 16.08, 12 careers x 260 weeks = 3,120 lived: **674 such weeks, 88
+// of them with no alternative** before the acceptance inversions were fixed, **354 and 29** after. A
 // week that is simply EMPTY – nothing refused because nothing was scheduled, or everything on it
-// locked on rank – is INVISIBLE to it, because no refusal ever put the week on its list. The guard
-// answers "does the cap strand her?"; this answers "how much of the calendar is blank?".
+// locked on rank – is INVISIBLE to it at either figure, because no refusal ever put the week on its
+// list. The guard answers "does the cap strand her?"; this answers "how much of the calendar is
+// blank?", and this census puts the second number at ~5 weeks a season on the same tree.
 //
 // THE THREE CLASSES, and the third is the whole reason the number means anything:
 //
