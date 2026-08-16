@@ -245,14 +245,49 @@ export const TIERS: Record<TierId, TierDef> = {
     // `enterPct` is a share of the junior table precisely so it can be compared across populations,
     // and both sides of this comparison are shares of a junior ranking list.
     //
-    // ⚠ NOT MOVED, AND THE CONFLICT IS THE POINT. 0.02 of our 200-row table is #4 - it would make the
-    // prestige rung unreachable and contradict the target three paragraphs up, which was written down
-    // BEFORE tuning and which the owner's ladder is aimed at («0 for most careers, 1-2 for a good one,
-    // 2-3 for the best»). So the sport says top-2% and our own design target says "a good career plays
-    // one or two a season", and they cannot both hold. That is exactly the kind of collision that is
-    // his to resolve rather than a builder's. Measured both ways in acceptance-cuts-2026-08.md §4c.
+    // ⭐ 0.40 -> 0.20 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). HALVED, not
+    // corrected to the sport's figure, and the reason is that BOTH endpoints were measured to be
+    // wrong for this population rather than one of them.
+    //
+    // WHY NOT 0.02 (the sport's own top-2%). 0.02 of our 200-row table is #4. Measured on this
+    // branch it does exactly what the audit said it does: J300 entries 4.4 -> 0.0, reach 27/27 ->
+    // 0/27. That is not a tighter rung, it is a deleted one, and the staged plan forbids it in as
+    // many words.
+    //
+    // ⚠⚠ AND SINCE P1 IT IS FAR MORE EXPENSIVE THAN THE AUDIT COULD SEE, WHICH IS THE FINDING. The
+    // audit measured the 0.02 arm as roughly NEUTRAL on the professional ladder (end rank 280 ->
+    // 281). It is not neutral any more, because P1 made the JUNIOR ranking load-bearing for
+    // PROFESSIONAL ACCESS: W15's door is now the junior-reserved place (`JUNIOR_RESERVED`, a share of
+    // the junior table) and the rungs above it are the Accelerator, both keyed on a junior standing
+    // that a J300's 300 points is the fastest way to build. Kill the rung and the whole professional
+    // on-ramp is late. Measured, n=27, identical seeds, 14->20:
+    //
+    //     j300      J300 entries   reach    first W15   end WTA rank   prize
+    //     0.40 (was)     4.4        27/27      15.6          258       $105,511
+    //     0.25           3.0        25/27      15.9          204       $108,997
+    //     0.20 (ships)   1.7        17/27      16.2          259        $99,562
+    //     0.15           0.4         5/27      16.3          368        $89,049
+    //     0.10           0.3         4/27      16.3          371        $89,686
+    //     0.05           0.0         1/27      16.3          373        $87,437
+    //     0.02           0.0         0/27      16.3          372        $87,410
+    //
+    // THERE IS A CLIFF BETWEEN 0.20 AND 0.15 and it is not gradual: four arms sit at ~#370 and three
+    // at ~#204-259. 0.20 is the tightest value on the safe side of it.
+    //
+    // ⚠ AND HALVING IT MOVES THE RUNG BACK TOWARDS ITS OWN PRE-REGISTERED TARGET, NOT AWAY. The
+    // target three paragraphs up («0 for most careers, 1-2 for a good one, 2-3 for the best») was
+    // hit when it was written on 30.07; on today's population the shipped 0.40 measured **4.4
+    // entries a career with 27 of 27 careers reaching it**, i.e. it had drifted OUTSIDE the target
+    // in the loose direction. 0.20 reads 1.7 and 17 of 27. So the collision the audit escalated is
+    // smaller than it looked: for this half of the move the sport and our own target point the SAME
+    // way, and only the last stretch to 2% is genuinely contested.
+    //
+    // ⚠ WHAT IS STILL THE OWNER'S. 0.20 is #40 of 200 - the top 20%, against a sport that cuts at
+    // the top ~2%. It is a tenfold gap closed to fivefold, chosen by measurement because the sport's
+    // own figure deletes the rung. Whether the game should keep a reachable prestige rung at all, or
+    // accept a J300 nearly nobody plays, is his call and is stated in the spec rather than taken here.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.4,
+    enterPct: 0.2,
     entrantPctBand: [0.0, 0.25],
   },
   // --- the adult tour: the ITF World Tennis Tour, and the first money she is ever paid ------------
@@ -499,13 +534,14 @@ export const TIERS: Record<TierId, TierDef> = {
     // WHAT REPLACES IT: an absolute rank cut, which is the same cut whether 500 or 5,000 players
     // exist - it was never a share of anything. That part of the argument is sound and survives.
     //
-    //     rung        acceptance range this table was built on    our cut = the range's FLOOR
+    //     rung        acceptance range this table was built on    the cut it produced (HISTORY – see
+    //                                                             the shipped column further down)
     //     W15         ~#400-1000+, unranked players get in        none - it is the on-ramp
-    //     W35         ~#250-700                                   700
-    //     W50         ~#200-550                                   550
-    //     W75         ~#150-450                                   450
-    //     W100        ~#120-350                                   350
-    //     WTA 125     ~#80-250, plus wildcards                    250
+    //     W35         ~#250-700                                   700   (still shipped)
+    //     W50         ~#200-550                                   550   (superseded, P3)
+    //     W75         ~#150-450                                   450   (superseded, P3)
+    //     W100        ~#120-350                                   350   (superseded, P3)
+    //     WTA 125     ~#80-250, plus wildcards                    250   (superseded, P3)
     //
     // ⚠⚠ THE RANGES ABOVE ARE **NOT SOURCED**, AND THIS COMMENT USED TO CALL THEM "the real tour's
     // own acceptance ranges" (audited 15.08, docs/specs/acceptance-cuts-2026-08.md). They entered the
@@ -529,31 +565,42 @@ export const TIERS: Record<TierId, TierDef> = {
     // (a vacated slot is a post-deadline withdrawal, so it gives a lower bound, not a cut). WTA rank
     // of the LAST DIRECT ACCEPTANCE, 32 main draws - research §4c-A2 has the events and the URLs:
     //
-    //     rung   observed clean cuts                          ours   verdict
-    //     W15    512 · 585 · 590                               n/a   (on-ramp; reality has a de-facto
-    //                                                                 cut near #550 all the same)
-    //     W35    551 · 662 · 716 · 724 · 730 · 835 · 871       700   ✅ SOURCED-CORRECT, mid-range
-    //     W50    204 · 234 · 390 · 424 · 441                   550   ⚠ too deep
-    //     W75    262 · 305 · 334 · 359                         450   ⚠⚠ TOO DEEP - the owner's rung
-    //     W100   no clean list exists (lower bound >285)       350   not sourced
+    //     rung   observed clean cuts                          was    ships   verdict
+    //     W15    512 · 585 · 590                               n/a     n/a   (on-ramp; reality has a
+    //                                                                        de-facto cut near #550)
+    //     W35    551 · 662 · 716 · 724 · 730 · 835 · 871       700     700   ✅ SOURCED-CORRECT,
+    //                                                                        mid-range – NOT TOUCHED
+    //     W50    204 · 234 · 390 · 424 · 441                   550   → 330   ⭐ corrected, P3
+    //     W75    262 · 305 · 334 · 359                         450   → 300   ⭐ corrected, P3
+    //     W100   no clean list exists (lower bound >285)       350   → 240   ⚠ NOT SOURCED - placed
+    //                                                                        to keep the chain monotone
+    //     WTA125 none published (the real rule is a ceiling)   250   → 180   ⚠ NOT SOURCED - placed
     //
     // ⚠ THE ERROR IS NOT UNIFORM, WHICH IS WHY THE FAMILY CANNOT BE RESCALED BY ONE FACTOR. W35 is
     // right where it is. The real ladder is far FLATTER than ours at the top - a real W50 and a real
     // W75 cut within ~50 places of each other - which is what one shared System of Merit produces.
+    // The shipped chain reproduces that flatness: 330 and 300 sit thirty places apart.
     //
-    // ⚠ SO THE NUMBERS STAY AND THE CLAIM DOES NOT, pending the owner. They measurably work (w35's cut
-    // binds 53 of 53 measured careers, w50's 52 of 52), and W75's correction cannot be made alone
-    // without inverting the ladder - see the note on w75 and docs/specs/acceptance-cuts-2026-08.md §6.
-    // What is corrected here is the PROVENANCE, because a figure repeated from a comment is exactly
-    // what this repo has been burned by before. Full audit: research/ranking-points-by-tier.md §4c.
+    // ⭐ THE CHAIN SHIPPED IN P3 (16.08), AND TWO OF ITS FOUR LINKS CARRY NO EVIDENCE. W50 and W75
+    // land on the middle of an observed spread. W100 and WTA 125 have no published list to land on
+    // and exist only to keep the ladder monotone - so a reader must not read them as "the real
+    // tour's figures" the way this comment's predecessor invited. That mislabelling is finding 2 of
+    // docs/specs/acceptance-cuts-2026-08.md and the reason the provenance column above exists.
+    // Full audit: research/ranking-points-by-tier.md §4c.
     //
     // ⚠ THE LOWER CUTS ARE NO-OPS BY CONSTRUCTION, AND THAT IS THE FINDING RATHER THAN A SHORTCUT.
-    // The merged table is 564 rows deep; a real W35's list reaches #700, i.e. BELOW our whole
-    // table. So W35 and W50 admit anybody the table holds - which is exactly what the real rungs
-    // do, and it is why «she must always have tennis» survives an honest curve. The cuts that
-    // actually bite are W100 and WTA 125; W75's 450 sits just above the point-less tie block, so it
-    // opens on her first professional result. See TierDef.acceptsRank for why an absolute number is
-    // the SAFE unit against this table and a share is the bomb.
+    // A real W35's list reaches #700, i.e. near the bottom of the pointed table. So W35 admits
+    // essentially anybody the table holds - which is exactly what the real rung does, and it is why
+    // «she must always have tennis» survives an honest curve. See TierDef.acceptsRank for why an
+    // absolute number is the SAFE unit against this table and a share is the bomb.
+    //
+    // ⚠ AND THE CUTS DO NOT COLLIDE WITH THE PLAY DOWN RULES, WHICH WAS CHECKED RATHER THAN ASSUMED
+    // (P3). `playDownBars` bars the WTA top 50 from every W-series rung and the top 150 from W15/W35,
+    // so each rung is open on a WINDOW rather than a half-line: w35 #151-700 · w50 #51-330 ·
+    // w75 #51-300 · w100 #51-240, and wta125 (#1-180) is not a W-series event so it is never barred.
+    // No window is empty and no rank between #1 and the bottom of the table is left with nothing
+    // open to it. Had a corrected cut fallen at or under its own rung's bar, that rung would have
+    // become unreachable in silence - which is the failure this paragraph exists to rule out.
     //
     // ⚠ AND THE `enterPct === entrantPctBand[1]` IDENTITY IS FULLY RETIRED, not merely bent: the
     // window has a floor now (it would refuse a player for being too STRONG) and the cut is in a
@@ -594,11 +641,23 @@ export const TIERS: Record<TierId, TierDef> = {
     // the share, and why the ranges themselves are not sourced.
     //
     // ⚠ OBSERVED, 15.08: a real W50's clean cut is WTA **204 / 234 / 390 / 424 / 441** (five events,
-    // research §4c-A2). 550 sits BELOW every one of them, so this rung is looser than reality by
-    // roughly 110-350 places - the same defect as W75's, one rung down and less severe. It is left
-    // where it is for the same reason: the family has to move as a chain or the ladder inverts.
-    // It does at least do work - the cut binds 52 of 52 measured careers.
-    acceptsRank: 550,
+    // research §4c-A2). The old 550 sat BELOW every one of them - looser than reality by roughly
+    // 110-350 places, the same defect as W75's one rung down and less severe.
+    //
+    // ⭐ 550 -> 330 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). The middle of the
+    // observed spread, and the second link of the SOURCED CHAIN the 15.08 audit recommended and the
+    // staged plan ordered built: w35 700 (unchanged - it is already right) · w50 330 · w75 300 ·
+    // w100 240 · wta125 180. It could never move alone - below w75's cut the ladder inverts and
+    // tests/season/fieldPros.test.ts pins that it must not.
+    //
+    // ⚠ WHAT MOVING IT ACTUALLY DID, AND IT IS NOT WHAT THE AUDIT PREDICTED. The audit measured this
+    // chain as Pareto-positive for the player IN ISOLATION (end rank 280 -> 204, prize +$28k). That
+    // was against the pre-P1 ladder, where she entered a W75 at 17.2 and lost early. P1 and P2 have
+    // since moved her first W75 to 19.0 and her rank at seventeen to #426, so the substitution the
+    // audit was measuring had already been banked before this chain arrived. Re-measured on the
+    // population that now exists, the verdict does NOT survive - see the spec. The number ships
+    // because it is the SOURCED one, not because it pays.
+    acceptsRank: 330,
     // ⚠ RE-MEASURED BY W2-FIELD2 — [0.02, 0.40] -> [0.145, 0.52]. W2-LADDER's own reading (the
     // deepest window in the family, floor 0.02 so "the merged table's head must be REACHABLE here
     // without being resident") was the right instinct against a table whose head was one thirty-
@@ -660,15 +719,30 @@ export const TIERS: Record<TierId, TierDef> = {
     // which that ending stops existing: measured, the door shuts at mean age 17.3 and W75 itself
     // causes 73% of the closures. Nothing in ending.ts says so.
     //
-    // ⚠ NOT MOVED HERE, DELIBERATELY, AND THE REASON IS THE LADDER RATHER THAN THE NUMBER. It cannot
-    // move alone: below #351 it inverts the chain w35 > w50 > w75 > w100 > wta125 that
-    // tests/season/fieldPros.test.ts pins, and the college closure then simply passes to W100, whose
-    // own cut is cleared at 16.9. The measured candidate is therefore a COHERENT CHAIN anchored on
-    // the observed cuts (w35 700 unchanged - it is already right - w50 330, w75 300, w100 240,
-    // wta125 180). Measured: her first W75 moves 17.2 -> 18.0, the college closure 17.3 -> 18.3, and
-    // she ends BETTER off rather than worse (end rank 225 -> 185, book 395 -> 526, prize +$18k).
-    // Five constants and an ending: the owner's call, not a builder's.
-    acceptsRank: 450,
+    // ⭐ 450 -> 300 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md). The middle of the
+    // observed 262-359, and the load-bearing link of the SOURCED CHAIN (w35 700 unchanged · w50 330 ·
+    // w75 300 · w100 240 · wta125 180). It could never move alone: below #351 it inverts the chain
+    // w35 > w50 > w75 > w100 > wta125 that tests/season/fieldPros.test.ts pins, which is why all four
+    // move together or none does.
+    //
+    // ⚠ THE 15.08 AUDIT LEFT THIS AS «the owner's call, not a builder's» AND THAT DEFERRAL IS NOW
+    // SPENT, not overruled. He answered it by ordering the staged plan
+    // (docs/plans/college-and-the-junior-ladder.md, «давай внедрять всё, поэтапно»), whose §P3 names
+    // this chain as the phase's build. What was NOT delegated is the retune that may follow it - see
+    // §P6, and the spec's own escalation list.
+    //
+    // ⚠⚠ AND THE AUDIT'S OWN VERDICT ON THIS CHAIN IS STALE - READ THE SPEC BEFORE QUOTING IT. It
+    // measured the chain Pareto-positive (end rank 280 -> 204, book 365 -> 441, prize +$28k) IN
+    // ISOLATION, against a ladder that no longer exists: P1 moved her first W75 from 17.2 to 19.0 and
+    // P2 took her rank at seventeen to #426. The mechanism the audit named - "with the shipped cuts
+    // she spends her season in W75+ draws she loses early; with the corrected chain she spends it at
+    // W15/W35/W50, where she wins" - is a substitution P1 ALREADY BANKED. Re-measured after P1+P2 the
+    // Pareto verdict does not survive. This constant ships because it is SOURCED, not because it pays.
+    //
+    // ⚠ AND ON THIS RUNG THE CUT IS STILL NOT THE GATE. §3a's finding survived the correction once
+    // already; after P1 it is the junior/adult boundary rather than `minAgeYears` that pins her first
+    // W75 to 19.0, and #300 admits the #273 she holds when she gets there. Measured in the spec.
+    acceptsRank: 300,
     // ⚠ RE-MEASURED BY W2-FIELD2 — [0, 0.35] -> [0.105, 0.42]. This is one of the three rungs whose
     // fields were IDENTICAL before the fourth storey (w75/w100/wta125 all measured field core 59.7,
     // median entrant 33/499): a shared floor of 0 plus position-biased entry meant all three drew
@@ -696,12 +770,28 @@ export const TIERS: Record<TierId, TierDef> = {
     // The range table's FLOOR (~#120-350) - see the note on w35 for why an absolute rank replaced
     // the share, and ⚠ why the ranges themselves are NOT SOURCED.
     //
-    // ⚠⚠ AND IT IS READ BY THE SPONSORS. `s.national.maxWtaRank` IS this number (offers.ts, pinned by
-    // tests/offers.test.ts), so moving W100's door moves what a national sponsor costs, in a file
-    // nobody retuning the ladder would think to open. Flagged when `acceptsRank` was introduced and
-    // re-flagged by the 15.08 audit, which also measured this cut binding only 17 of 52 careers on
-    // its own - the chain above it does most of the work. acceptance-cuts-2026-08.md §7.
-    acceptsRank: 350,
+    // ⚠⚠ AND IT IS READ BY THE SPONSORS. `s.national.maxWtaRank` IS this number (economy.ts, pinned
+    // as an equality by tests/offers.test.ts), so moving W100's door moves what a national sponsor
+    // costs, in a file nobody retuning the ladder would think to open. Flagged when `acceptsRank` was
+    // introduced and re-flagged by the 15.08 audit. acceptance-cuts-2026-08.md §7.
+    //
+    // ⭐ 350 -> 240 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), as the fourth link
+    // of the sourced chain (w35 700 · w50 330 · w75 300 · w100 240 · wta125 180).
+    //
+    // ⚠⚠ AND THIS ONE IS **NOT SOURCED** - IT IS PLACED, AND THE DIFFERENCE MATTERS. Seven of the
+    // nine W100s in the 2026 calendar publish no acceptance list at all and the one available is a
+    // lower bound rather than a cut, so there is no observed figure to land on. 240 exists only to
+    // keep the chain monotone between w75's sourced 300 and wta125's placed 180. A reader looking
+    // for the evidence behind this number will not find any: that is the honest state of it, and it
+    // is on the spec's list for the owner.
+    //
+    // ⚠⚠ THE SPONSOR GATE MOVED WITH IT - `ECONOMY.sponsors.national.maxWtaRank` 350 -> 240 in the
+    // same commit, because that constant's own comment says it IS this one ("read straight … whatever
+    // that list currently is") and the equality is pinned. So a national sponsor is now MATERIALLY
+    // HARDER to earn: the rule did not change a word, its input did. That is a real balance change to
+    // an economy constant riding on a ladder correction, and it is the first item on the spec's
+    // escalation list rather than something to absorb quietly.
+    acceptsRank: 240,
     // ⚠ [0, 0.30], RE-MEASURED BY W2-LADDER'S BAND PROBE - the third measurement this band has
     // carried, each against the world of its day. The original 0.55 was measured against the
     // PRE-FIELD world (199 juniors, ~80 of them 17+): its table read 14 candidates at [0, 0.25]
@@ -761,7 +851,17 @@ export const TIERS: Record<TierId, TierDef> = {
     // published rank rule and it is a CEILING, not a floor: a maximum of four players ranked 21-50
     // may play one, by wild card only, and only in a week without a bigger event (2026 WTA Rulebook
     // III.C.2.b). We model the opposite direction. acceptance-cuts-2026-08.md §2a.
-    acceptsRank: 250,
+    //
+    // ⭐ 250 -> 180 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), the top link of the
+    // sourced chain (w35 700 · w50 330 · w75 300 · w100 240 · wta125 180).
+    //
+    // ⚠⚠ **NOT SOURCED**, LIKE W100 - PLACED TO KEEP THE CHAIN MONOTONE ABOVE w100's 240 AND BELOW
+    // wta250's 200. No published depth exists for a 125's direct-acceptance list; the only real
+    // per-rung rank rule on this rung runs the other way (the ceiling above). ⚠ AND THIS IS THE RUNG
+    // THE CORRECTION BITES HARDEST ON, because it is the one an ADULT reaches on her professional
+    // ranking just as P1's junior brake lets go: measured in the spec, and it is why the phase's
+    // headline is a cost rather than the audit's Pareto gain.
+    acceptsRank: 180,
     // MEASURED, the W100 way - the probe is tools/band-probe.ts (one run, all four upper rungs),
     // candidates left inside the window at its NARROWEST week over 5 careers x 6 seasons sampled
     // every 13th week, age gate applied, against the merged ~500-row universe and a draw of 32:

@@ -745,8 +745,21 @@ export const ECONOMY = {
        *  So this is `TIERS.w100.acceptsRank`, read straight. It IS a looser gate than before, and
        *  that follows from the table being honest rather than compressed: #350 of a 564-row
        *  professional field is a different player from #141 of a table whose #300 held nine points.
-       *  Flagged for the owner in the wave report rather than smoothed over. */
-      maxWtaRank: 350,
+       *  Flagged for the owner in the wave report rather than smoothed over.
+       *
+       *  ⚠⚠ 350 -> 240 (P3, 16.08), AND IT IS THE DERIVATION MOVING FOR THE THIRD TIME RATHER THAN A
+       *  NEW DECISION - exactly as the two steps above were. `TIERS.w100.acceptsRank` went 350 -> 240
+       *  as the fourth link of the sourced acceptance chain
+       *  (docs/specs/acceptance-cuts-corrected-2026-08.md), and the rule here has still not changed a
+       *  word: National signs the girl who would be IN the W100 draw, whatever that list currently is.
+       *  The equality is pinned by tests/offers.test.ts, so the two cannot drift apart silently.
+       *
+       *  ⚠ BUT THE DIRECTION IS THE OPPOSITE OF LAST TIME AND THE OWNER SHOULD SEE IT. The paragraph
+       *  above flagged a LOOSER gate; this is a materially TIGHTER one - a national sponsor now wants
+       *  a top-240 professional where it wanted top-350. Nobody retuning the ladder opened this file,
+       *  which is precisely the coupling `TIERS.w100`'s own comment has warned about twice. It is the
+       *  first item on the P3 spec's escalation list. */
+      maxWtaRank: 240,
       /** ⚠ ...AND THE DOMESTIC STANDING SHE HAS TO KEEP TO HOLD IT = `maxRank` above, the same top
        *  30 that opens the local shop. This is National's job on the way OUT and the whole reason
        *  this rung is gated on two tables at once: her domestic points are a rolling 52-week best-6,

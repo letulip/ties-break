@@ -60,9 +60,15 @@ describe('the unranked sentinel is denominated in the table it is a rank in', ()
     recomputeKidRank(world)
     world.onRampCleared = { itf: true, wta: true }
     delete (world as Partial<WorldState>).kidRankWta
-    // W100 accepts to #350. The old sentinel was 200 – inside the cut – so an unranked girl walked
-    // in. The table she is unranked IN is 564 rows, and 564 > 350.
-    expect(TIERS.w100.acceptsRank).toBe(350)
+    // W100 accepts to its own cut. The old sentinel was 200 – inside the cut – so an unranked girl
+    // walked in. The table she is unranked IN is far deeper than the cut, which is what refuses her.
+    // ⚠ RE-AIMED BY P3 (16.08): the literal was 350 and the sourced chain took `w100.acceptsRank` to
+    // 240 (docs/specs/acceptance-cuts-corrected-2026-08.md). The pin is re-aimed rather than deleted
+    // and it is STRENGTHENED in the process: what this test needs is "the cut is inside the table",
+    // which is the property the sentinel bug violated, and a hardcoded 350 asserted the ladder's
+    // tuning instead – a number this file has no opinion about and which moved under it. The
+    // inequality below is the real precondition, so it now survives the next chain change too.
+    expect(TIERS.w100.acceptsRank).toBeDefined()
     expect(tableSize(world, 'wta')).toBeGreaterThan(TIERS.w100.acceptsRank!)
     expect(tierFloorOpen(world, 'w100')).toBe(false)
     // ...and the number a screen would print is the bottom of the W table, not the cohort's.
