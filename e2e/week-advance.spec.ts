@@ -223,6 +223,23 @@ test.describe('advancing a week', () => {
         'under water: raise its debt spell in tools/e2e-fixtures.ts rather than deleting this.',
     ).toBeVisible()
 
+    // ⚠ AND THE TICK MAY HAVE BROUGHT A KNOCK WITH IT (16.08). `answerOpeningKnock` above clears the
+    // one the fixture BOOTS holding; this is the one the week that just ran raised. It lands on top
+    // of the story as a real modal, so `Proceed to Home` is behind it and the click is intercepted -
+    // which is the dialog doing its job, not a defect. Whether this fixture's tick raises one is a
+    // property of where the search stopped, so it is stepped through rather than asserted, exactly
+    // as every other journey in this suite steps through the opening one.
+    //
+    // ⚠ NOT `answerOpeningKnock`, AND THE DIFFERENCE IS THE SCREEN. That helper waits for the week
+    // button to come back as its proof the worker replied - correct at boot, wrong here: the week
+    // story has no week button, so the helper waited ten seconds for a control that is not on this
+    // screen and failed on the wait rather than on the click. The proof here is the dialog leaving.
+    const knock = page.getByRole('button', { name: /^Rest it/ })
+    if (await knock.isVisible().catch(() => false)) {
+      await knock.click()
+      await expect(page.getByRole('dialog')).toHaveCount(0)
+    }
+
     // ...and the career is still hers to play. This is what `broke` could not give: the shell is
     // still here rather than replaced by an epilogue, so the stop is a WARNING and not an ending.
     // The bar is only an advance control once the week's story has been left, which is why this

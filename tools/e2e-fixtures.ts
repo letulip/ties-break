@@ -50,6 +50,7 @@ import {
   kidPoints,
   pendingKnock,
   seasonIndexOf,
+  tickWeek,
   SAVE_SCHEMA_VERSION,
   STARTING_FUNDS_CENTS,
   type WorldState,
@@ -350,7 +351,23 @@ const RECIPES: Recipe[] = [
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
         stepCareerWeek(world, rng, recipe.policy)
         answerOpenQuestions(world, recipe.fork)
-        if (debtWeeks(autoEndingViewOf(world)) === SINKING_DEBT_WEEKS) return null
+        if (debtWeeks(autoEndingViewOf(world)) === SINKING_DEBT_WEEKS) {
+          // ⚠ AND THE WEEK AFTER THIS ONE MUST NOT RAISE A KNOCK (16.08). e2e/week-advance.spec.ts's
+          // stop-notice journey ticks this career once and then asserts that the banner SURVIVES a
+          // change of screen – and a knock raised by that tick breaks the claim in a way the spec has
+          // no business working around. It is a real modal, so it blocks `Proceed to Home`; and
+          // answering it is a COMMAND, which produces a fresh snapshot, and `stopReasons` die with
+          // the advance that produced them by design (App.vue, Package N). So the banner is correctly
+          // gone, the assertion is correctly red, and neither is a defect.
+          //
+          // ⚠ THE LOOK-AHEAD IS EXACT, NOT AN ESTIMATE. The clone carries `rngMain`, so resuming MAIN
+          // from it walks the same sequence the browser will walk; `tickWeek` is what the worker runs
+          // behind the week button. Nothing about the fixture's own world is touched.
+          const probe = structuredClone(world)
+          tickWeek(probe, resumeMain(probe.rngMain))
+          if (pendingKnock(probe)) return 'a knock lands on the very next week (the stop-notice journey needs a clean tick)'
+          return null
+        }
       }
       return world.ending !== null
         ? `career ended (${world.ending.type}) without a ${SINKING_DEBT_WEEKS}-week spell`

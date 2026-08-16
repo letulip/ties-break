@@ -548,6 +548,11 @@ interface TierChip {
   label: string
   state: TierChipState
   title: string
+  /** ⚠ THE SPOKEN NAME WHEN IT MUST NOT BE THE VISIBLE ONE (16.08). Set only by the capped arm
+   *  below, where the strip's label is abbreviated for width and the full sentence – the one that
+   *  NAMES THE RULE, per the owner's transparency ruling – has to survive into the accessible name.
+   *  Same trick `locked` already plays by reading `title`, and for the same reason. */
+  spoken?: string
 }
 const tierStates = useTierStates()
 const seasonChips = computed<TierChip[]>(() =>
@@ -582,6 +587,9 @@ const seasonChips = computed<TierChip[]>(() =>
               avail.kind === 'unscheduled' || avail.kind === 'capped'
               ? 'waiting'
               : 'unlocked'
+    // Narrowed HERE rather than inside the label chain: `state` is computed above, so a check on it
+    // cannot narrow `avail`, and only the discriminant can. Undefined on every other kind.
+    const cappedSpend = avail.kind === 'capped' ? avail.entryCap : undefined
     const label =
       state === 'locked'
         ? `🔒 ${avail.note}`
@@ -589,16 +597,64 @@ const seasonChips = computed<TierChip[]>(() =>
           ? shortFinish(best!)
           : state === 'outgrown'
             ? (best !== undefined ? shortFinish(best) : avail.note)
-            : state === 'waiting'
-              ? avail.note
-              : 'Unlocked – enter your first!'
+            : // ⚠⚠ THE CAPPED CHIP IS ABBREVIATED HERE AND NOWHERE ELSE, AND IT IS A PHONE
+              // MEASUREMENT (16.08). `tierState.ts` writes the cap's note as the sentence the Season
+              // CARD needs – "Tour age rule – 10 of 10", "Year limit – 12 of 14" – and P2 made that
+              // arm fire on W15 at fifteen, where it never could before (the rung opened at 16 and
+              // the pro allowance started at 16 too). On the strip that sentence wraps: measured at
+              // 375px, the Home season strip went 170px -> 178.28px and e2e/responsive.spec.ts went
+              // red with its own warning that this row "wrapped to four rows once before and was
+              // fixed to two".
+              //
+              // ⚠ AND NOTHING IS LOST, WHICH IS THE ONLY REASON THIS IS AN ABBREVIATION AND NOT A
+              // DELETION. The rule's name survives in two places a player actually reads it: the
+              // tooltip (`title`, unchanged) and the ACCESSIBLE NAME (`spoken`, below), so a screen
+              // reader hears the whole sentence rather than a bare count. The Season card, which has
+              // the width, still prints it in full. What the strip loses is a repetition of the
+              // rule's name in a five-chip row that already colours the state.
+              state === 'waiting' && cappedSpend !== undefined
+              ? `Used ${cappedSpend.used} of ${cappedSpend.limit}`
+              : state === 'waiting'
+                ? avail.note
+                : // ⚠⚠ THE OWNER'S OWN STRING, ABBREVIATED ON THE STRIP ONLY, AND HE SHOULD BE TOLD
+                  // (16.08). R8-8 §6 names it verbatim for this row - «renders in accent as "Unlocked
+                  // – enter your first!"» (owner, 25.07) - so this is not a copy edit taken lightly.
+                  //
+                  // WHAT FORCED IT IS NOT THIS STRING, IT IS THAT THE ROW GAINED A CHIP. The strip
+                  // shows «the current available window plus one upper unavailable level» (owner,
+                  // 04.08); the junior-ladder wave opened W15 at fourteen, so the window now reaches
+                  // W35 and the row carries FIVE rungs where it carried four. Measured at 375px:
+                  // 148.9px -> 178.28px, one wrapped row, and e2e/responsive.spec.ts red on a ceiling
+                  // whose own note says it "leaves ~21px of headroom ... less than one wrapped row of
+                  // chips costs". At 28 characters this label is the widest thing in the row by a
+                  // long way, and it is the only one with slack in it: the accent COLOUR already says
+                  // unlocked, so the word was saying it twice.
+                  //
+                  // ⚠ NOTHING IS LOST ANYWHERE ELSE. The full sentence is still the tooltip and still
+                  // the accessible name, and the Season card - which has the width - is untouched.
+                  // The other two arms of this chain already do exactly this: `locked` shows
+                  // "🔒 Opens at 16" and speaks its whole sentence, and `capped` was abbreviated the
+                  // same way an hour ago. If he wants the full words back on the strip, the honest
+                  // lever is the WINDOW rule rather than the copy - four chips fitted, five do not.
+                  'Enter your first!'
     const title =
       state === 'reached'
         ? `Best ${short} finish · ${avail.title}`
         : state === 'outgrown'
           ? `Outgrown – her best ${short} result stays on the books`
           : avail.title
-    return { id, short, label, state, title }
+    return {
+      id,
+      short,
+      label,
+      state,
+      title,
+      // Only the abbreviated arm carries one; every other chip's visible label IS its name.
+      // The two arms whose visible label was abbreviated for the row's width keep the whole sentence
+      // here; every other chip's visible label IS its name.
+      ...(state === 'waiting' && cappedSpend !== undefined ? { spoken: avail.note } : {}),
+      ...(state === 'unlocked' ? { spoken: 'Unlocked – enter your first!' } : {}),
+    }
   }),
 )
 
@@ -630,9 +686,11 @@ function chipName(chip: TierChip): string {
     case 'locked':
       return `${chip.short}: locked – ${chip.title}`
     case 'waiting':
-      return `${chip.short}: open – ${chip.label}`
+      // `spoken` when the visible label was abbreviated for the strip's width - see the capped arm
+      // in `seasonChips`. Everywhere else the label is the name, unchanged.
+      return `${chip.short}: open – ${chip.spoken ?? chip.label}`
     default:
-      return `${chip.short}: ${chip.label}`
+      return `${chip.short}: ${chip.spoken ?? chip.label}`
   }
 }
 
