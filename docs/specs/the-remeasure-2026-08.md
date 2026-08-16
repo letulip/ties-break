@@ -202,6 +202,13 @@ career** – and the p75 career figure is *up* $189,710. The chain moved when sh
 | **19** | 323/**391**/516 → 172/**226**/270 | 15 → **18** | **20/90 → 74/90** ⭐ | ~26 → **13.4** ⚠ |
 | **21** | 262/**381**/478 → 339/**421**/549 | 15 → **17** | **17/90 → 42/90** ⭐ | ~25 → **27.2** |
 
+⚠ **THE TWO PER-SLOT COLUMNS ARE NOT READ THE SAME WAY, AND THE WEAKER ONE IS P0's.** This run's
+figure is a **per-career** median of points ÷ slots (n 82 / 83). P0's is *derived from its published
+medians* (391 ÷ 15, 381 ÷ 15), because that spec has no per-slot column and its CSV is not carried
+here – a median of ratios is not the ratio of medians. It is marked `~` for that reason. **The
+direction is not in doubt** (the numerator halves while the denominator rises), but a phase that wants
+the exact P0 figure must re-run P0's tree, not quote this cell.
+
 > ### ⭐⭐ THE EARLY-WARNING COLUMN FIRED IN THE OPPOSITE DIRECTION, AND IT IS THE MOST USEFUL THING
 > ### IN THIS PAGE.
 > P0 called the book *"the thinning test… this moves BEFORE rank does"*, and the plan predicted it
@@ -379,9 +386,17 @@ question. Same construction, same n: **52 careers reach the fork with the answer
 | professional rank after | unranked (0/52) | **#165** (48/52) | |
 | careers that ended | 0/52 | 0/52 | neither arm kills anybody |
 
-**P5 replicates to within $716 on a four-year figure**, which is the receipt that no engine constant
-has moved since (the only engine commit after that measurement, `cfbdd76`, changed the epilogue's
-wording and nothing else). §5.2 is the lever.
+**P5 replicates to within $716 on a four-year figure** (and $570 on the tour arm), which is the receipt
+that no engine constant has moved since: the only engine commit after that measurement, `cfbdd76`,
+changed the epilogue's wording and nothing else. §5.2 is the lever.
+
+⚠ **THE ONE CELL THAT LOOKS LIKE A DISAGREEMENT IS TWO READINGS OF THE SAME FACT.** P5 reports the
+college arm finishing **#290**; this probe reports it **unranked**. P5's own §2c settles it – *"at
+nineteen her professional results are too few and too recent to put her on the list at all
+(`RANKABLE_MIN`), so `kidLadderRank(world, 'wta')` is already null the week she walks in and is still
+null the week she walks out."* **#290 is `kidRankWta`, the table's no-points floor; `unranked` is
+`kidLadderRank`, which refuses to invent one.** Same world, and P0's own rule (*"unranked is a real
+state and is never averaged in"*) is why this probe reads it the second way.
 
 > ### ⭐⭐ AND THE DECOMPOSITION SAYS THIS IS NOT A FINDING ABOUT COLLEGE.
 > **The scholarship pays her nothing** – college's prize over four years is **$0**, and its $155,066
