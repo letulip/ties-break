@@ -936,3 +936,83 @@ sentence – nothing anywhere tells the player the tour is loss-making at her ra
 
 Full battery, all six questions with numbers, and the retune sized:
 `docs/specs/the-remeasure-2026-08.md`.
+
+## 2026-08-16 – Two rulings on one evening: the real age grid, and college as its own branch (`wave/round21`, P8)
+
+**The owner read the code an hour after P7 reported and removed two things we had invented.** Neither
+ruling adds a mechanism; both delete one.
+
+> **1.** «у W35 стоит minAgeYears: 16, у W50 – 16, у W75 и W100 – 17. По той же цитате из регламента,
+> которой вы были правы, настоящих порогов только два – 14 и 18. – вот как есть в регламенте, так и у
+> нас. Возрастное есть только по количеству сыгранных в год, так и делаем.»
+>
+> **2.** «collegeClosedFromTier – так ведь нет же там никакой связи с w75, мы же всё узнали. Колледж –
+> это независимая ветка карьеры с отдельным функционалом и турнирами, альтернативная.»
+
+### ⭐⭐ THE AGE FLOORS WERE DOING ALMOST NOTHING, AND THAT IS THE MEASUREMENT
+
+Five rungs' floors came off at once – W35/W50 16 → 14, W75/W100/Slam 17 → 14, the four WTA rungs
+17 → **15** (WTA Rulebook II.D: an under-15 has no direct acceptance to a WTA event at all, so the
+grid has three numbers and not one). P0's frozen battery, n = 90, 676 weeks, identical seeds:
+
+| first entry, median | P0 | P6 | correction | **now** | predicted |
+| --- | --- | --- | --- | --- | --- |
+| W35 | 16.3 | 19.0 | 16.3 | **16.1** | 15.0 ⚠ |
+| W50 | 16.5 | 19.0 | 17.3 | **17.2** | 17.0 ✅ |
+| W75 | 17.0 | 19.0 | 18.0 | **17.9** | 17.5 ⚠ |
+| W100 | – | 19.0 | 18.6 | **18.3** | 18.3 ✅ |
+
+Rank at 19 **#154 → #160**, at 21 **#174 → #160**, at 25 **#160 → #156**; career prize $709,030 →
+**$685,960**; entries 265 → **267**. **The predictions were written first and were too large, in the
+same direction every time** – because the acceptance cut was already the gate and the age floor was
+sitting behind it. Every W35 entry in all 90 careers is by a RANKED girl: unranked is #1601 of that
+table and #700 refuses her, so no floor could have admitted a fourteen-year-old. What the ruling
+actually moves is the bottom of the distribution – W35's p25 16.0 → 15.6, and 1.0 W35 a year at
+fifteen where there were none – i.e. the early developers, who are who the rule is about.
+
+⚠ **Two bankruptcies at 15.8, where there were none** (P0 had one at 15.3). Same mechanism: a
+fifteen-year-old can now afford a W35 trip she could not previously enter. Within one career of noise,
+reported rather than acted on.
+
+⚠ **And the frozen careers say it more sharply than the battery does.** The per-key diff moved 27 keys
+on all three – **and `entries` is not one of them. She did not enter one different event.** What moved
+is `results`, because `selectEntrants` filters a draw's CANDIDATES on the same age gate: different
+cohort players fill the fields she meets. `rngMain` unmoved for the fifth wave running, so the frozen
+MAIN capture is untouched (41550 / `e6b0c709`).
+
+### THE COLLEGE ANSWER IS NOW ALWAYS ON THE CARD, AND NOT BY A MEASUREMENT
+
+`ENDINGS.collegeClosedFromTier`, `collegeDoorOpen`, `collegeStillOpen`, `entryCostsCollege`, the
+`answerFork` guard, both protocol fields and P4's warning on both entry paths are gone. The three
+previous columns read 8% / 96% / 18% open at the fork; it is **100% by construction** now.
+
+⚠ **What did NOT go: everything behind the door.** P5's four years lived one at a time, the call-up,
+`leaveCollege`, the third answer itself – all untouched. What went is only the rule that could REMOVE
+the choice.
+
+⚠ **P4's §6.1 is closed by this.** It stated three options and refused to pick; he picked **(B)**.
+Its own note that (B) *"deletes round-21 #8's shut-door sentence"* is exactly what happened – **#8 is
+retired by his own later ruling, and the spec says so rather than letting an answered request
+disappear.** He asked why the college answer was missing at nineteen; it is never missing now.
+
+⚠ **P4's warning went because it became FALSE, which is a stronger reason than "unused".** A sentence
+saying a result here can cost the college place, on the card where the player is spending an entry
+fee, prices a cost into a decision that does not carry it.
+
+### AND THE HARD ACCEPTANCE CUTS ARE NOW A DATED RULING
+
+Asked the same day whether the regulation's soft tail should replace our hard cuts:
+**«пусть остануться жесткие отсечки, доделывайте всё остальное».** No `acceptsRank` or `enterPct`
+moved. ⚠ Worth recording because the age ruling makes the cuts MORE load-bearing – below eighteen they
+are now the only gate – so the next reader of research §4-A finds the decision instead of the question.
+
+### THE 375px STRIP – THE HYPOTHESIS WAS WRONG AND THE CAP IS THE LEVER
+
+Ruling 1 did **not** shrink the row: `🔒 Opens at 16` became `Used 10 of 10` on one chip and
+`🔒 Opens in the top 330` on the other, a net **+8 characters**. Measured in a real Chromium
+(`tools/strip-wrap-probe.mjs`, new) at the card's real 315px: five rungs wrap to four rows, four to
+three, one row is 29.4px against an 8.28px overshoot. **`STRIP_MAX_RUNGS` 5 → 4.** The ceiling is
+untouched. ⚠ `e2e/responsive.spec.ts` itself is the owner's to run.
+
+Predicted vs measured in full, every guard that moved, and the per-key diff:
+`docs/specs/college-is-its-own-branch-2026-08.md`.
