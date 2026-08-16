@@ -21,6 +21,31 @@ rulings delete something we invented; neither adds a mechanism.
 
 ---
 
+## Current truth
+
+- **The professional rungs carry the sport's own age floors and no others.** W15/W35/W50/W75/W100 open
+  at **14** (2026 ITF WTT Regulations, Women's III.A.1 – *"Minors under the age of fourteen (14) shall
+  not be eligible for Entry"*); the WTA rungs at **15** (Rulebook II.D – no direct acceptance below
+  fifteen); the Grand Slam at **14**, because a major is not a WTA event. The junior rungs are
+  untouched at 13-18.
+- **The only age-based limit on how much she plays is the per-year COUNT.** That is the AER, it ships,
+  and P2 put it on a birthday-to-birthday window: 14 → 8 events of which at most 3 at W75+, 15 → 10,
+  16 → 12, 17 → 16, unlimited from 18. ⚠ **The acceptance cut is therefore the only gate below
+  eighteen**, and the owner ruled on 16.08 that those cuts stay HARD – see
+  `docs/specs/the-acceptance-tail-2026-08.md` for the argument he deferred rather than rejected.
+- **Nothing can remove the college answer.** College is an independent branch, not a prize a result
+  takes away: `ENDINGS.collegeClosedFromTier`, `collegeDoorOpen`, `collegeStillOpen` and
+  `entryCostsCollege` are gone, with the entry warning that depended on them. The third answer is on
+  the fork card in 100% of careers by construction rather than by measurement.
+- **Everything BEHIND the door is untouched.** P5's four years lived one at a time, the national-team
+  call-up inside each, the early return and `leaveCollege` all stand. What was removed is only the
+  rule that could take the choice away before it was offered.
+- ⚠ **Round-21 #8 is retired by the owner's own later ruling.** He asked the fork card to explain why
+  the college answer was missing; it is never missing. The 26-of-26 measurement that made the original
+  complaint real is kept as evidence, not as a live requirement.
+
+---
+
 ## 0. THE THREE ANSWERS, IN ONE BOX
 
 > ### 1. ⭐⭐ THE AGE FLOORS WERE DOING ALMOST NOTHING, AND THAT IS THE MEASUREMENT.
