@@ -99,6 +99,9 @@ These came back the same day and they are the frame for every item below. Full t
   refuses first". It does not, for a girl born after June.
   → **in flight, `fix/one-clock`** – the same defect as item 1, which is why it is one branch.
   → ✅ **SHIPPED 09.08 with item 1**, same pair of commits.
+  → ⚠ **Constants are 09.08's:** `w15.minAgeYears` is **14** now and `proPerYearByAge` has a row for
+  15. The clock fix stands; the numbers are the record. Grid, stated once:
+  [`docs/specs/college-is-its-own-branch-2026-08.md` §0a](../specs/college-is-its-own-branch-2026-08.md).
 
 ## Group B – the money model *(2, 16, 5, 8, 4)*
 
