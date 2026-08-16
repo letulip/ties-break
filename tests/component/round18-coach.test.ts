@@ -182,8 +182,18 @@ describe('round-18 #2 – the coach picker moves its text clear of the portrait'
       // no width here at all, the strip shrink-wrapped a height-driven image, and the picture's
       // width was therefore whatever the load note's line count made the row. A margin cannot clear
       // a portrait that grows when you push it.
+      //
+      // ⚠ RE-AIMED, ROUND-21 #1 – TWO WIDTHS NOW, AND THE CLAIM IS UNCHANGED. The owner asked for a
+      // wider window on the coach she HAS («фото пропорционально шире … относительно высоты»), so
+      // `.cm-row.current .cm-art` is 78px and every other row is still 62. What #2 was defending is
+      // not the number 62: it is that the strip HAS a width of its own, a fixed one that the text's
+      // line count cannot move. Both numbers are fixed, so both keep it. The expectation is written
+      // as a per-kind lookup rather than widened to `toBeGreaterThan(0)` – a bound that loose would
+      // pass on the shrink-wrapped defect this test exists to catch. The 78 and the current row's
+      // 132px floor that pays for it are held together in round21-coach-photo.test.ts.
+      const expectedStrip = row.classes().includes('current') ? 78 : 62
       const strip = px(getComputedStyle(art.element).width, '.cm-art width')
-      expect(strip, 'the strip has a width of its own').toBe(62)
+      expect(strip, 'the strip has a width of its own').toBe(expectedStrip)
       // ...and what does not fit inside it is CLIPPED, which is what makes that width the picture's
       // real right edge instead of an aspiration. The mask's stops are percentages of this same box,
       // so the fade reaches transparent exactly at the clip line and nothing visible is cut.
@@ -223,21 +233,32 @@ describe('round-18 #2 – the coach picker moves its text clear of the portrait'
     // picture is at least as wide as the strip, because the mask goes transparent at the strip's
     // right edge. Height-driven at 162/264, the picture is >= 62px wide only while the row's padding
     // box is >= 101px. The floor states that, in the one place the geometry can be checked.
+    //
+    // ⚠ RE-AIMED, ROUND-21 #1 – THE ARITHMETIC IS NOW RUN PER ROW KIND rather than on `rows[0]`.
+    // Two strips means two floors, and a single sample could not see the second one: the wider
+    // 78px window on the current row buys its guarantee with a 132px floor of its own, and reading
+    // one row would have checked whichever pair happened to be first. Same inequality, both pairs.
     assertSheetPresent()
     const wrapper = mountPicker()
     const rows = await openCoaches(wrapper)
-    const row = rows[0]
-    const floor = px(getComputedStyle(row.element).minHeight, '.cm-row min-height')
-    const strip = px(getComputedStyle(row.find('.cm-art').element).width, '.cm-art width')
-    const vpad = px(getComputedStyle(row.element).paddingTop, '.cm-row padding-top') +
-      px(getComputedStyle(row.element).paddingBottom, '.cm-row padding-bottom')
-    // `.cm-art` is `top: 0; bottom: 0` of the row's PADDING box, so the shortest picture the layout
-    // can produce is (floor - borders) tall. 162/264 is the portraits' own aspect ratio, and every
-    // one of the sixteen files is 162 wide (budget-2 is the only one taller, at 280, which makes it
-    // NARROWER for a given height – so the aspect used here is the worst case).
-    const shortestPortraitWidth = ((floor - 2) * 162) / 264
-    expect(shortestPortraitWidth, `a ${floor}px row still fills the ${strip}px strip`).toBeGreaterThanOrEqual(strip)
-    expect(vpad, 'the row still pads its text columns').toBeGreaterThan(0)
+    const current = rows.filter((r) => r.classes().includes('current'))
+    const ordinary = rows.filter((r) => !r.classes().includes('current'))
+    expect(current.length, 'the fixture has the hired row').toBe(1)
+    expect(ordinary.length, 'and rows at the ordinary width').toBeGreaterThan(0)
+
+    for (const row of [current[0], ordinary[0]]) {
+      const floor = px(getComputedStyle(row.element).minHeight, '.cm-row min-height')
+      const strip = px(getComputedStyle(row.find('.cm-art').element).width, '.cm-art width')
+      const vpad = px(getComputedStyle(row.element).paddingTop, '.cm-row padding-top') +
+        px(getComputedStyle(row.element).paddingBottom, '.cm-row padding-bottom')
+      // `.cm-art` is `top: 0; bottom: 0` of the row's PADDING box, so the shortest picture the layout
+      // can produce is (floor - borders) tall. 162/264 is the portraits' own aspect ratio, and every
+      // one of the sixteen files is 162 wide (budget-2 is the only one taller, at 280, which makes it
+      // NARROWER for a given height – so the aspect used here is the worst case).
+      const shortestPortraitWidth = ((floor - 2) * 162) / 264
+      expect(shortestPortraitWidth, `a ${floor}px row still fills the ${strip}px strip`).toBeGreaterThanOrEqual(strip)
+      expect(vpad, 'the row still pads its text columns').toBeGreaterThan(0)
+    }
     wrapper.unmount()
   })
 })

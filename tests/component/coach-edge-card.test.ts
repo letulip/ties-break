@@ -435,9 +435,18 @@ describe('the added lines clear the portrait', () => {
       // THE PICTURE'S REAL RIGHT EDGE. The image is height-driven and overflows – measured in the
       // browser at 62-111px wide depending on the row – so the STRIP is the edge that matters, and
       // it is an edge only because it clips. Both halves are read.
+      //
+      // ⚠ RE-AIMED, ROUND-21 #1 – THE HIRED CARD'S WINDOW IS 78px NOW, and this test's claim never
+      // was the number. §4 asks whether the ADDED lines walked back onto the picture, so what it
+      // needs is the picture's real right edge on the row it is measuring; the owner widened that
+      // edge on the hired card («фото пропорционально шире … относительно высоты») and `.cm-body`
+      // moved with it, so the 12px corridor below is unchanged and is still the thing under test.
+      // The literal is kept – not softened to "whatever the strip says" – because a strip that
+      // silently went back to shrink-wrapping the image would then drag the corridor along with it
+      // and this test would notice nothing.
       const art = current[0].find('.cm-art').element as HTMLElement
       const strip = px(getComputedStyle(art).width, '.cm-art width')
-      expect(strip, 'the strip has a width of its own').toBe(62)
+      expect(strip, 'the hired row\'s strip has a width of its own').toBe(78)
       expect(getComputedStyle(art).overflow, 'and clips the picture at it').toContain('hidden')
       expect(px(getComputedStyle(art).left, '.cm-art left'), 'starting at the column edge').toBe(0)
 
@@ -455,8 +464,14 @@ describe('the added lines clear the portrait', () => {
       }
 
       // The ordinary cards carry the corridor too, and their clearance is the same number.
+      // ⚠ AGAINST THEIR OWN STRIP, ROUND-21 #1. This line used to reuse `strip` – the HIRED row's
+      // width – to judge an ORDINARY row's ink, which was harmless only while every row was 62px.
+      // The corridor is a per-row property and is now read as one; that the two rows arrive at the
+      // same 12 from different pairs (62/74 and 78/90) is the point of the assertion.
       const ordinary = rows.filter((r) => !r.classes().includes('current'))[0]
-      expect(inkLeft(ordinary, '.cm-edge') - strip).toBe(12)
+      const ordinaryStrip = px(getComputedStyle(ordinary.find('.cm-art').element).width, '.cm-art width')
+      expect(ordinaryStrip, 'an unhired row keeps the narrow window').toBe(62)
+      expect(inkLeft(ordinary, '.cm-edge') - ordinaryStrip).toBe(12)
 
       // ⚠ AND THE REVEALED CARD IS MEASURED TOO, which is what §7 added to this test. The plaque is
       // the only element on the card whose text this wave changed, and the LONGEST of the nine
