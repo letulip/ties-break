@@ -821,8 +821,17 @@ export const ECONOMY = {
        *  divides exactly). Pinned beside its neighbour in tests/offers.test.ts.
        *
        *  ⚠ 31 -> 87 BY W2-FIELD2, for exactly the reason its neighbour carries: this is a quarter of
-       *  W100's acceptance list, and that list was re-derived from the real tour's own cut. */
-      maxWtaRank: 87,
+       *  W100's acceptance list, and that list was re-derived from the real tour's own cut.
+       *
+       *  ⚠⚠ 87 -> 60 BY P3 (16.08), THE SAME DERIVATION FOLLOWING THE SAME SOURCE - `national` went
+       *  350 -> 240 with `TIERS.w100.acceptsRank`, and a quarter of 240 is 60.
+       *
+       *  ⚠ AND IT SQUEEZES THIS RUNG'S BAND HARD ENOUGH THAT THE OWNER SHOULD SEE IT. Global sits
+       *  between `premium` (50) and itself, so its band was ranks **51-87 (37 places wide)** and is
+       *  now **51-60 (ten)**. Nothing decided that; it fell out of a ladder correction four files
+       *  away. Whether a sponsorship rung ten ranks wide is still a rung is a balance question, and
+       *  it is on the P3 spec's escalation list rather than absorbed here. */
+      maxWtaRank: 60,
       /** THREE SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", scaled the same way
        *  `national.seasons` is. Signing it is the biggest commitment in the game: everything is
        *  covered, and nothing else can be signed until it runs out. */
