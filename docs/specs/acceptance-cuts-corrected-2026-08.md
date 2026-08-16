@@ -388,6 +388,17 @@ W75's 90 → **189**, W100's 147 → **272**.
   bug with a new number.
 
 **(c) A BEHAVIOURAL CONSEQUENCE, NOT A FIXTURE PROBLEM – AND IT IS AN ECONOMY CHANGE.**
+
+> ⭐⭐ **ANSWERED THE SAME DAY, AND NOT BY ACCEPTING OR REJECTING THE NUMBER.** This section is right
+> that it is an economy change riding on a ladder correction, and right to escalate it – and the
+> answer turned out to be that **the derivation itself was the defect**, exactly as P4 found for the
+> college door. Both gates now carry their OWN constants, restored to **national 350 / global 87**;
+> `TIERS.w100.acceptsRank` stays at **240**; and the equality pin that guaranteed the coupling is
+> replaced by a mutation-verified decoupling guard.
+> [`the-ladder-is-monotone-2026-08.md`](the-ladder-is-monotone-2026-08.md) §1. ⚠ Whether **87** is
+> still the right figure for a rung whose band is #51-87 is a separate question and is still the
+> owner's – §1a there.
+
 `tests/offers.test.ts` broke because **both professional sponsor gates are derived from
 `TIERS.w100.acceptsRank`** and it moved. `ECONOMY.sponsors.national.maxWtaRank` **350 → 240** and
 `global.maxWtaRank` **87 → 60** (a quarter of its neighbour, as its own comment defines it). The
