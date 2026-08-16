@@ -763,28 +763,62 @@ const windowRungs = computed<readonly TierId[]>(
  * So the row is built from the set, and the hole is where the ellipsis goes. Nothing is re-derived:
  * `windowRungs` is still the engine's verdict, verbatim, and this only stops widening it.
  */
+/** ⭐⭐ FOUR, AND IT IS MEASURED IN A REAL BROWSER RATHER THAN CHOSEN (16.08). `tools/strip-wrap-probe.mjs`
+ *  serves this worktree, renders the strip's own markup against the app's real stylesheet and real
+ *  self-hosted faces in Chromium, and reads the boxes off it. The container is **315px** at a 375px
+ *  viewport (375 - 2x16 `--app-pad-x` on `#app` - 2x14 the Card's own padding; `.app-content` adds
+ *  none), and the row it has to hold is the e2e `junior` fixture's: age 15, week 120, window
+ *  {j30, j60, j300, w15, w35} with W50 as the aspiration.
+ *
+ *      cap 5   4 rows at 315px      J60 · J300 · W15 · W35 · W50
+ *      cap 4   3 rows at 315px            J300 · W15 · W35 · W50      <- shipped
+ *      cap 3   3 rows                            W15 · W35 · W50
+ *
+ *  ⚠ FIVE WAS THE FIRST ANSWER AND IT WAS NOT ENOUGH, which is the record worth keeping. Its note
+ *  read *"FIVE, and it is the width the phone actually has ... five rungs plus their arrows and both
+ *  ellipses sit inside the two rows e2e/responsive.spec.ts pins (148.9px of a 170 ceiling); six wrap
+ *  to three and cost 178.28."* The row stayed at 178.28 with the cap on. One chip row is **29.4px**
+ *  (= 178.28 - 148.9, the spec's own two numbers), the overshoot is 8.28px, so exactly one row has to
+ *  go – and cap 4 is the smallest change that removes exactly one at every width the card can be.
+ *
+ *  ⚠⚠ AND THE AGE-GRID RULING DID NOT DO IT, WHICH WAS THE HYPOTHESIS AND IS NOW MEASURED. Two of the
+ *  five chips read "🔒 Opens at 16" and the owner's ruling of 16.08 opened those rungs at 14, so the
+ *  expectation was that the row would shrink. It does not: W35 goes from a 14-character lock to
+ *  "Used 10 of 10" (13) and W50 goes from the same lock to "🔒 Opens in the top 330" (23), a net +8
+ *  characters. Swept 240-375px, the new labels give the SAME row count at 114 of 136 widths, one
+ *  fewer at 301-307 and one MORE at 240-254 – and at the 315px this card actually has, identical.
+ *  The lock labels were never the cause; the fifth chip is.
+ *
+ *  ⚠ THE CEILING IS NOT THE LEVER. 170 leaves ~21px of headroom by its own note, less than one
+ *  wrapped row costs, and raising it would retire the only thing that has ever caught this row. */
+const STRIP_MAX_RUNGS = 4
+
 const stripVisible = computed<readonly number[]>(() => {
   const last = SEASON_STRIP_TIERS.length - 1
   if (stripExpanded.value) return SEASON_STRIP_TIERS.map((_, i) => i)
-  // ⚠⚠ AND A RUNG SHE IS TOO YOUNG FOR IS NOT PART OF HER WINDOW (16.08). `tierOpen` is the FLOOR –
-  // "has she reached this rung" – and it asks about her RANK alone; the age gate is a separate
-  // refusal, and it arrives here already decided, as the chip's `locked` state. ⚠ The predicate
-  // behind it is deliberately NOT named in this sentence: `tests/round11-view.test.ts` greps this
-  // whole file for the band-deriving symbols and has no parser, so quoting one in prose turns a
-  // comment into a violation. It went red on this very paragraph, and it was right to – the same
-  // family as the lock-label note further down. The two verdicts never disagreed on this row
-  // until the Accelerator correction let a fifteen-year-old's rank clear W35's #700 a year before
-  // `minAgeYears: 16` will let her enter it – and the window then carried W35 as OPEN and W50 as its
-  // aspiration, six chips where four had fitted. Measured at 375px: 178.28 against a 170 ceiling,
-  // one wrapped row, on a spec whose own message says this row wrapped to four once before.
+  // ⚠⚠ AND THE WINDOW IS THE ENGINE'S, WHOLE – AN AGE FILTER WAS TRIED HERE AND WITHDRAWN (16.08).
+  // For a few hours this line also dropped any rung whose chip read `locked`, on the argument that
+  // «текущее доступное окно» means AVAILABLE and a rung that refuses her on age is not available.
+  // Two things retired it, and both are worth keeping.
   //
-  // ⚠ THIS RESTORES THE OWNER'S RULE RATHER THAN AMENDING IT. «Текущее доступное окно плюс один
-  // верхний недоступный уровень» – *available* window, and a rung that refuses her on age is not
-  // available. With the filter the aspiration rung is W35 itself, which is the one whose unlock
-  // condition is worth reading ("Opens at 16"). Nothing is hidden that she could enter.
-  const open = SEASON_STRIP_TIERS.map((t, i) =>
-    windowRungs.value.includes(t.id) && seasonChips.value[i]?.state !== 'locked' ? i : -1,
-  ).filter((i) => i >= 0)
+  //   1. IT WAS A SECOND OPINION ABOUT THE LADDER, held in one component. The window's own verdict
+  //      is a FLOOR asked of her RANK; the age gate is a separate refusal, decided engine-side and
+  //      arriving here already folded into the chip's state. A component that drops rungs on the
+  //      second verdict is answering "which rungs are open" for itself, which is the bug this row's
+  //      own header records twice. The Season feed and the Calendar would have kept reading the
+  //      other answer.
+  //   2. AND THE STATE IT WAS BUILT FOR NO LONGER EXISTS. It was aimed at a fifteen-year-old whose
+  //      rank cleared W35's list a year before the rung's floor would admit her – and the owner's
+  //      age-grid ruling of 16.08 put the professional floors on the regulation's own two numbers,
+  //      so the two verdicts stopped disagreeing on this row at all. The filter would now be dead
+  //      code that still looked like a rule.
+  //
+  // ⚠ THE PREDICATE IS DELIBERATELY NOT NAMED IN THIS PARAGRAPH: `tests/round11-view.test.ts` greps
+  // this whole file for the band-deriving symbols and has no parser, so quoting one in prose turns a
+  // comment into a violation. It went red on the very paragraph this replaces, and it was right to.
+  //
+  // What holds the row to a phone instead is `STRIP_MAX_RUNGS`, above, which is measured.
+  const open = SEASON_STRIP_TIERS.map((t, i) => (windowRungs.value.includes(t.id) ? i : -1)).filter((i) => i >= 0)
   // Nothing open at all is not a state the engine produces, and if it ever did, a row with one
   // ellipsis and no rungs would be worse than the old sixteen. Show everything.
   if (!open.length) return SEASON_STRIP_TIERS.map((_, i) => i)
@@ -792,7 +826,33 @@ const stripVisible = computed<readonly number[]>(() => {
   // the rung whose unlock condition is the goal text ("Opens in the top 250"), which is the one
   // sentence that makes the ladder legible; the rungs above THAT are years away and cost a line each.
   const aspiration = Math.min(open[open.length - 1] + 1, last)
-  return open.includes(aspiration) ? open : [...open, aspiration]
+  const row = open.includes(aspiration) ? open : [...open, aspiration]
+  // ⚠⚠ AND THE ROW HAS A HARD WIDTH, WHICH IS A MEASUREMENT AND NOT A TASTE (16.08). The window is
+  // the ENGINE's and this does not second-guess it: `tierOpen` is a FLOOR – "has she reached this
+  // rung", asked of her rank alone – so a rung can enter the window a year before its own age gate
+  // will admit her, and the Accelerator correction made that ordinary rather than rare. On a fifteen-
+  // year-old the row reached SIX rungs (two of them locked, one of them only the aspiration), and
+  // e2e/responsive.spec.ts went red at 375px: 178.28 against a 170 ceiling whose own note says it
+  // leaves ~21px of headroom, "less than one wrapped row of chips costs".
+  //
+  // ⚠ TRIMMED FROM THE BOTTOM, and the leading ellipsis already covers what goes: the rungs nearest
+  // her level are the ones she is choosing between this week, and the ones below are the climb she
+  // has already made. Nothing is deleted – tapping any ellipsis still expands the whole ladder in
+  // place, which is the property the mounted suite pins.
+  //
+  // ⚠ WHY A CAP AND NOT AN AGE FILTER, since the honest description of the six-chip row is "a rung
+  // she cannot enter for another year counted as open": because `tierOpen` reporting a rung the age
+  // gate refuses is an ENGINE inconsistency, and papering over it in one component would leave the
+  // Season feed and the Calendar reading the other answer. It is written up for the owner in
+  // docs/specs/junior-access-corrected-2026-08.md §5 instead of being half-fixed here.
+  //
+  // ⚠ AND IT DOES NOT APPLY TO THE NO-VERDICT FALLBACK, which is the same exception the branch above
+  // makes and for the same reason. `tierOpen` absent means an old save or a hand-built fixture, and
+  // `feedContext` answers by returning the WHOLE ladder – the safe direction, pinned by two mounted
+  // tests. Trimming that to five would turn "we do not know, so show everything" into "we know it is
+  // these five", which is the one reading the fallback exists to avoid.
+  const everyRung = open.length === SEASON_STRIP_TIERS.length
+  return !everyRung && row.length > STRIP_MAX_RUNGS ? row.slice(row.length - STRIP_MAX_RUNGS) : row
 })
 
 /** One cell of the rendered row: either a rung, or the ellipsis standing in for a stretch of them.
