@@ -274,7 +274,13 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
     // acceptance lists cut at the top ~2% of the girls' junior list against our 40%; 0.2 is as far as
     // the correction could travel, because everything tighter deletes the rung and – since P1 made
     // the junior ranking load-bearing for professional access – costs ~110 rank places with it.
-    expect(TIERS.j300.enterPct).toBe(0.2)
+    // ⭐⭐ ...AND 0.2 -> 0.25 ON THE SAME DAY, on the structural criterion rather than the sourcing one:
+    // 0.20 was tighter than this rung's OWN field band (0.25), so the rung refused entry to the
+    // population its draw is made of. The block at the bottom of this case is the one that called it
+    // and said what to do about it, and this is that instruction carried out. The direction of the
+    // sourcing argument is untouched – 0.25 is still a fivefold-and-then-some gap to the sport's ~2%,
+    // it is still the owner's call, and 0.25 is a row P3 measured (3.0 entries, 25 of 27 careers).
+    expect(TIERS.j300.enterPct).toBe(0.25)
     // ...the acceptance lists tighten as you climb, which is the ladder.
     expect(TIERS.j300.enterPct!).toBeLessThan(TIERS.j60.enterPct!)
     // ...and neither has drifted into the range where the share stops gating anything.
@@ -288,22 +294,20 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
     // for in the real game.
     expect(TIERS.j60.enterPct!).toBeGreaterThan(TIERS.j60.entrantPctBand[1])
     //
-    // ⚠⚠ AND ON j300 THAT DIRECTION HAS **INVERTED** (P3, 16.08), WHICH IS A REAL CONSEQUENCE AND IS
-    // PINNED AS ONE RATHER THAN QUIETLY DROPPED. The cut is now 0.20 against a field band that
-    // reaches 0.25, so the kid needs a better junior standing to ENTER a J300 than the weakest AI
-    // player the draw is MADE of. The line this replaces asserted the opposite direction, and its
-    // stated reason was measured: at a cut of 0.25 "j300's field would be a wall no career in any
-    // preset ever cleared" - 0.0-0.3 entries per four-year career across all eighteen cells, 30.07.
+    // ⚠⚠ AND ON j300 THAT DIRECTION HAD **INVERTED** (P3, 16.08), WHICH WAS A REAL CONSEQUENCE AND WAS
+    // PINNED AS ONE RATHER THAN QUIETLY DROPPED. The cut was 0.20 against a field band that reaches
+    // 0.25, so the kid needed a better junior standing to ENTER a J300 than the weakest AI player the
+    // draw is MADE of. The line THAT replaced asserted the opposite direction, and its stated reason
+    // was measured: at a cut of 0.25 "j300's field would be a wall no career in any preset ever
+    // cleared" - 0.0-0.3 entries per four-year career across all eighteen cells, 30.07. That reason
+    // stopped holding when P1 and P2 rebuilt the junior game around this table.
     //
-    // **THAT REASON NO LONGER HOLDS, AND THAT IS WHY THE PIN COULD MOVE.** P1 and P2 rebuilt the
-    // junior game around this table, and the wall is not a wall any more: measured on the shipped
-    // tree, **42 of 54 careers still enter a J300** at 0.20 (2.2 entries each) and 71 of 90 over the
-    // full baseline horizon. The property the old line protected - the prestige rung is REACHABLE -
-    // survives; the proxy it used to protect it with does not.
-    //
-    // ⚠ IT IS A CHARACTERISATION AND THE OWNER HAS IT (spec §6.3). If he re-picks j300 at or above
-    // 0.25 this goes red, and the reader should restore the strict `toBeGreaterThan` above.
-    expect(TIERS.j300.enterPct!, 'the known inversion - see the note above').toBeLessThan(
+    // ⭐⭐ AND THE CHARACTERISATION HAS BEEN CASHED IN, EXACTLY AS IT SAID IT WOULD BE (16.08). Its own
+    // last paragraph read: *"If he re-picks j300 at or above 0.25 this goes red, and the reader should
+    // restore the strict `toBeGreaterThan` above."* 0.25 is the value, this is the restored assertion,
+    // and the general form of it - no rung refuses the population its own draw is made of - is now
+    // asserted over the WHOLE family in L6b rather than by hand on one rung.
+    expect(TIERS.j300.enterPct!, 'the cut reaches at least as deep as the field it fills').toBeGreaterThanOrEqual(
       TIERS.j300.entrantPctBand[1],
     )
   })
@@ -643,6 +647,117 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
       const candidates = Math.round((hi - lo) * universeOf(tier).length)
       expect(candidates, tier).toBeGreaterThan(TIERS[tier].drawSize)
     }
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ L6b — THE ACCEPTANCE CHAIN NEVER INVERTS (16.08)
+// =================================================================================================
+//
+// **A bigger event must be no easier to enter than a smaller one.** That is what a ladder IS, and it
+// is structural rather than a balance preference: `TIER_LADDER` is documented as "the single source of
+// truth for 'is tier A above tier B'", and `hasOutgrown`, `tierOutgrown`, the strongest-first entry
+// policy, the Home season strip and the tier guide all reason about that order. A chain that inverts
+// makes every one of them wrong about something, silently.
+//
+// ⚠⚠ AND THE CRITERION HAS TO BE STRUCTURAL, BECAUSE THE NUMBERS ARE NOT SOURCED. `w100` 240,
+// `wta125` 210 and `wta250` 200 each say **NOT SOURCED** in their own comments in `calendar.ts` – no
+// published acceptance depth exists for any of them. So this file cannot appeal to evidence about
+// which value is right, and must not pretend to: what it asserts is a relationship that holds
+// whatever the three numbers become.
+//
+// TWO LIVE INVERSIONS ARE WHY IT EXISTS, both found by reading the chain rather than by a failure:
+//   1. `wta125.acceptsRank` was **180**, TIGHTER than `wta250`'s 200 – the smaller event refusing a
+//      girl the bigger one would take. P3 measured the behaviour it produced: **2.1 WTA 250s a career
+//      against 0.5 WTA 125s**, the rung one storey up played four times as often as this one.
+//   2. `j300.enterPct` was **0.20**, tighter than its own `entrantPctBand` ceiling of 0.25 – the rung
+//      refusing entry to the very population its draw is made of.
+// Both are fixed on the constants; this block is what stops them coming back.
+describe('⭐⭐ L6b — the acceptance chain is monotone in ladder order', () => {
+  /** ⚠ TWO UNITS, AND THEY ARE NEVER COMPARED. `acceptsRank` is an ABSOLUTE rank (the W family) and
+   *  `enterPct` a SHARE of the rung's own table (ITF) – `TierDef.acceptsRank` is explicit that the
+   *  unit is per-table and that mixing them is the bug the split exists to prevent. Both are "tighter
+   *  = smaller", so each family is checked in ladder order against its own previous value. */
+  const chainOf = (field: 'acceptsRank' | 'enterPct'): { tier: TierId; value: number }[] =>
+    TIER_LADDER.filter((t) => TIERS[t][field] !== undefined).map((t) => ({ tier: t, value: TIERS[t][field]! }))
+
+  /** ⚠⚠ THE ONE DECLARED EXEMPTION, AS DATA RATHER THAN AS A LOOSER ASSERTION – so it is visible,
+   *  countable, and cannot be widened by accident.
+   *
+   *  `slam.acceptsRank` is **104** and `wta1000`'s is **65**, so by the letter of the rule a Grand Slam
+   *  is easier to enter than the rung below it. The 104 is the ONE fully sourced number in the whole
+   *  family – the Grand Slam Rule Book's own published direct-acceptance count – and in the real sport
+   *  it is not an inversion at all, because a real major draws 128 and a real 1000 draws 56: acceptance
+   *  depth scales with draw size. Our Slam draws 32 (the deviation is stated at length on the constant,
+   *  and `tools/big-draw-cost.ts` is its receipt), which is what turns a sourced number into an
+   *  inverted one HERE.
+   *
+   *  ⚠ IT IS ESCALATED, NOT ABSORBED. Closing it means moving either a sourced figure or an unsourced
+   *  one at the very top of the ladder, on a pair only ~1 career in 90 ever reaches – an owner's call,
+   *  and it is in the spec. What this file does is refuse to let it hide: the pair is named, the
+   *  exemption is asserted to be the ONLY one, and it is asserted to be REAL, so the day the Slam draw
+   *  or either cut moves, this list goes stale loudly instead of quietly excusing a new inversion. */
+  const EXEMPT: readonly (readonly [TierId, TierId])[] = [['wta1000', 'slam']]
+
+  it('⭐⭐ no rung accepts DEEPER than the rung below it – the absolute-rank family', () => {
+    const chain = chainOf('acceptsRank')
+    expect(chain.length, 'not a vacuous pass – the W family carries absolute cuts').toBeGreaterThan(5)
+    const exempt = new Set(EXEMPT.map(([lo, hi]) => `${lo}>${hi}`))
+    for (let i = 1; i < chain.length; i++) {
+      const below = chain[i - 1]
+      const above = chain[i]
+      if (exempt.has(`${below.tier}>${above.tier}`)) continue
+      expect(
+        above.value,
+        `${above.tier} (#${above.value}) must be no easier to enter than ${below.tier} (#${below.value})`,
+      ).toBeLessThanOrEqual(below.value)
+    }
+  })
+
+  it('⭐⭐ ...and no rung accepts a LOOSER share than the rung below it – the ITF family', () => {
+    const chain = chainOf('enterPct')
+    expect(chain.length, 'not a vacuous pass – the J family carries shares').toBeGreaterThan(1)
+    for (let i = 1; i < chain.length; i++) {
+      expect(
+        chain[i].value,
+        `${chain[i].tier} (${chain[i].value}) must be no easier to enter than ${chain[i - 1].tier} (${chain[i - 1].value})`,
+      ).toBeLessThanOrEqual(chain[i - 1].value)
+    }
+  })
+
+  it('⭐ ...and no rung refuses the population its own draw is made of', () => {
+    // The second inversion's own property, and it is per-rung rather than between rungs: a share cut
+    // TIGHTER than the ceiling of the rung's own `entrantPctBand` means a girl inside the band its
+    // opponents are drawn from is refused entry to the event. `j300` was 0.20 against a ceiling of
+    // 0.25 and could be DRAWN into a J300 it could not ENTER.
+    for (const { tier, value } of chainOf('enterPct')) {
+      const ceiling = TIERS[tier].entrantPctBand[1]
+      expect(value, `${tier} accepts to ${value} but draws its field to ${ceiling}`).toBeGreaterThanOrEqual(ceiling)
+    }
+  })
+
+  it('⚠ the exemption list is exactly one pair, and that pair really does invert', () => {
+    // Two ways this guard could rot into a rubber stamp, both closed here. (1) A later wave hits the
+    // monotonicity assertion and "fixes" it by adding its pair to EXEMPT: the count pins that. (2) The
+    // Slam or the 1000 moves and the exemption stops describing anything, leaving a permanent licence
+    // over a pair that no longer needs one: the inversion itself is asserted, so it goes red instead.
+    expect(EXEMPT.length, 'one exemption, and it is escalated in the spec rather than settled').toBe(1)
+    const [below, above] = EXEMPT[0]
+    expect(TIERS[above].acceptsRank!, `${above} really is looser than ${below} – the exemption is live`).toBeGreaterThan(
+      TIERS[below].acceptsRank!,
+    )
+    // ...and it is the ONE sourced number in the family, which is the whole reason it is not simply
+    // corrected here. A 32-draw Slam is the deviation; 104 is the rulebook's.
+    expect(TIERS.slam.acceptsRank).toBe(104)
+  })
+
+  it('⚠ the two rungs this block was written for hold their fixed values', () => {
+    // Stated so a wave that moves either one reads the reasoning on the constant before it does, and
+    // so the pair above cannot pass because both numbers drifted together.
+    expect(TIERS.wta125.acceptsRank, 'the 125 is looser than the 250 above it, not tighter').toBe(210)
+    expect(TIERS.wta125.acceptsRank!).toBeGreaterThan(TIERS.wta250.acceptsRank!)
+    expect(TIERS.j300.enterPct, 'and the prestige J rung accepts everyone its draw contains').toBe(0.25)
+    expect(TIERS.j300.enterPct).toBe(TIERS.j300.entrantPctBand[1])
   })
 })
 

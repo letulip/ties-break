@@ -294,8 +294,33 @@ export const TIERS: Record<TierId, TierDef> = {
     // the top ~2%. It is a tenfold gap closed to fivefold, chosen by measurement because the sport's
     // own figure deletes the rung. Whether the game should keep a reachable prestige rung at all, or
     // accept a J300 nearly nobody plays, is his call and is stated in the spec rather than taken here.
+    //
+    // ================================================================================================
+    // ⭐⭐ 0.20 -> 0.25 (16.08). THE RUNG WAS REFUSING GIRLS ITS OWN DRAW WAS MADE OF.
+    // ================================================================================================
+    // `entrantPctBand` below is [0, 0.25]: the FIELD of a J300 is drawn from the top quarter of the
+    // junior table. `enterPct` 0.20 accepted only the top fifth. So a girl at 22% was inside the band
+    // this rung's own opponents come from and outside the list that lets her enter it – she could be
+    // DRAWN into a J300 as a rival and could not enter one as the player.
+    //
+    // ⚠ IT IS THE SAME STRUCTURAL CRITERION AS wta125's, ONE TABLE DOWN, and not a re-argument of the
+    // number. A rung's acceptance cut must be no tighter than the ceiling of its own field band, or the
+    // rung refuses the very population it is made of. j60 already satisfies it (cut 0.50 against a band
+    // ceiling of 0.40) and this rung did until P3.
+    //
+    // ⚠ THE 0.40 -> 0.20 REASONING ABOVE IS NOT WITHDRAWN – 0.25 IS INSIDE IT. That block's whole
+    // argument is that 0.40 had drifted loose of its own pre-registered target and that the sport's 2%
+    // deletes the rung; its own measured table has **0.25 at 3.0 entries a career, 25 of 27 careers
+    // reaching it, end rank #204 and the best prize column of the seven arms** – the row directly above
+    // the one that shipped. So this restores the identity `enterPct === entrantPctBand[1]` that the
+    // 30.07 note deliberately broke in the LOOSE direction and P3 broke in the tight one, and it lands
+    // on a value P3 measured rather than on one nobody has.
+    //
+    // ⚠ WHAT IS STILL THE OWNER'S IS UNCHANGED by this: 0.25 is #50 of 200 against a sport that cuts
+    // at ~2%, so the fivefold gap the block above escalates is now sixfold. That question is his and is
+    // in the spec; this move is about the rung not contradicting itself.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.2,
+    enterPct: 0.25,
     entrantPctBand: [0.0, 0.25],
   },
   // --- the adult tour: the ITF World Tennis Tour, and the first money she is ever paid ------------
@@ -958,7 +983,36 @@ export const TIERS: Record<TierId, TierDef> = {
     // THE CORRECTION BITES HARDEST ON, because it is the one an ADULT reaches on her professional
     // ranking just as P1's junior brake lets go: measured in the spec, and it is why the phase's
     // headline is a cost rather than the audit's Pareto gain.
-    acceptsRank: 180,
+    //
+    // ================================================================================================
+    // ⭐⭐ 180 -> 210 (16.08). THE PARAGRAPH ABOVE IS WRONG IN ITS OWN TERMS: 180 DID NOT KEEP THE
+    // CHAIN MONOTONE, IT BROKE IT.
+    // ================================================================================================
+    // `wta250.acceptsRank` is **200**, and this rung sits BELOW the 250 on `TIER_LADDER`. So a WTA 125
+    // – the smaller event – was refusing a girl at #190 that a WTA 250 would have accepted. The chain
+    // read 240 > 180 < 200 and it was written down in this file as "monotone".
+    //
+    // ⚠⚠ THE CRITERION IS STRUCTURAL, AND IT HAS TO BE, BECAUSE **NEITHER 180 NOR 210 IS SOURCED AND
+    // NEITHER IS wta250's 200 OR w100's 240** – all four say so in their own comments, three lines up
+    // and in the two rungs either side. There is no evidence here to appeal to and it would be
+    // dishonest to pretend 210 is more real than 180. What there is instead is a property that holds
+    // whatever the numbers are: A LADDER THAT INVERTS IS NOT A LADDER. A bigger event must be no
+    // easier to enter than a smaller one, or "climbing" stops meaning anything and `hasOutgrown`,
+    // `tierOutgrown` and the whole strongest-first entry policy are reasoning about an order that does
+    // not exist. Reality agrees – a WTA 125 draws below a WTA 250 – but the argument does not need it.
+    //
+    // WHAT THE INVERSION COST, MEASURED (P3, docs/specs/acceptance-cuts-corrected-2026-08.md): 2.1
+    // WTA 250s a career against 0.5 WTA 125s. The rung one storey UP was played four times as often as
+    // this one, which is the behaviour a broken ladder produces and is how the defect was found.
+    //
+    // 210 RATHER THAN 200: strictly looser than the 250 above it, so the pair is ordered rather than
+    // tied, and still strictly tighter than w100's 240. It is a placement inside a 40-rank gap that
+    // two unsourced neighbours define; it is not a claim about the sport.
+    //
+    // ⚠ THE GUARD IS THE DURABLE HALF, NOT THIS NUMBER. `tests/ladder.test.ts` walks the whole
+    // acceptance chain in `TIER_LADDER` order and fails on any inversion, so the next wave to retune a
+    // cut cannot re-open this hole in silence – which is exactly how it opened.
+    acceptsRank: 210,
     // MEASURED, the W100 way - the probe is tools/band-probe.ts (one run, all four upper rungs),
     // candidates left inside the window at its NARROWEST week over 5 careers x 6 seasons sampled
     // every 13th week, age gate applied, against the merged ~500-row universe and a draw of 32:
