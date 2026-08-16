@@ -636,3 +636,33 @@ her.
 Training card was charging up to 1.1 points of "being eleven months older than your band" to the
 coach's work. It is now the week-one build both readers share. Full argument and measurements:
 `docs/specs/skills-radar.md` §6.
+
+## 2026-08-16 – The age grid is the sport's, not ours (`wave/round21`, P2)
+
+**The owner, on `docs/specs/junior-access-2026-08.md`'s note that `w15.minAgeYears: 16` was kept
+against the sport's 14+ as a deliberate deviation:** «мы же вроде наресерчили четкую возрастную сетку
+с количеством доступных турниров каждого тира на каждом возрасте, мне кажется надо использовать.»
+
+**Shipped: `w15.minAgeYears` 16 → 14**, and with it the rest of the researched grid finally reads as a
+live rule rather than an honest table nobody consults – the ITF junior reserved place at W15 is 14+,
+and the WTA AER rows start at 14 (8 events, at most 3 at W75+) precisely because a fourteen-year-old
+can play one.
+
+⚠ **IT COLLIDES WITH A STATED PILLAR AND THE COLLISION IS HIS TO SETTLE.**
+`docs/specs/adult-tour-and-endings.md` §4.1 makes the 16-18 two-tour overlap load-bearing and calls a
+W15 field an adult one. Measured (`tools/two-tour-overlap.ts`, 27 careers, identical seeds): the
+overlap widens to **14-18**, but only in weight at fifteen – at 14, 26% of careers now hold both tours
+on a mean of 1.7 professional events beside 7.3 junior ones; at 15 it is 67% on 6.1. 16-18 is
+unchanged. The two documents now disagree about what a W15 field is; amending one of them is his call.
+
+**Also in P2, and the reason the ruling is survivable:** the entry allowances are counted
+**birthday-to-birthday** now, as both rulebooks say. Before, the window was the season block while the
+limit was her age, so her sixteenth year straddled two allowances and she played **19.0** professional
+events against a rulebook **12**. After: **10.6**. `docs/specs/age-eligibility-window-2026-08.md`.
+
+⚠ **AND ONE THING NEEDS HIM.** The boredom guard – «мы ни за что не наказываем», she must always have
+tennis – **fails, and failed before P2 too**: 29 measured weeks (of 354 where the cap refuses a W
+entry) carry a W event and no junior or domestic one at all. It is a CALENDAR-coverage hole, not a cap
+number: no value of `proPerYearByAge` can fix a week with nothing else on it. The remedies both move
+every field in the world (co-phase the W rungs with their J mirrors, or densify the domestic/J
+calendar), so they need their own phase and their own measurement. §7a of the spec has the numbers.

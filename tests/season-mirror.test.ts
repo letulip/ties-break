@@ -428,7 +428,7 @@ describe('the season mirror – the wrap judges against the table the card names
     // they DIFFER makes that literally true and stops the next phase re-picking a week.
     const world = walkNear(49, 'golden-v45')
     const summary = world.lastSeasonSummary!
-    const card = summary.rankTrack
+    const card = summary.rankTrack!
     const active = activeLadderOf(world)
     expect(card, 'the card names the table the season was played on').not.toBe(active)
     // ...and for the record, the pair this seed shows today.

@@ -24,7 +24,7 @@
 //
 // ⚠ AND THE ASYMMETRY RUNS THE OTHER WAY FROM THE PLAN'S FEAR. Before P2 the kid played 19.0
 // professional events in her sixteenth year against the cohort's mean 3.0 – she was not handicapped
-// by the cap, she was six times outside it. After P2 she plays 10.6 against their 3.0. The rule
+// by the cap, she was six times outside it. After P2 she plays 10.8 against their 3.0. The rule
 // brings her TOWARDS the field, not away from it.
 import { describe, expect, it } from 'vitest'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from '../tools/econ-bench'
