@@ -107,14 +107,20 @@ function rowsAcrossWindow(world: WorldState, week: number): (SeasonHistoryEntry 
   return out
 }
 
-/** Her BEST year-end junior place anywhere in this window, or null if she was on no list in it. */
-export function bestJuniorRankInWindow(world: WorldState, week: number): number | null {
+/** Her BEST year-end junior place anywhere in an ALREADY-GATHERED window, or null if she was on no
+ *  list in it. Split from `bestJuniorRankInWindow` so a caller that needs the rows for something else
+ *  does not gather them twice – see `proMerit`, which needed both halves and was paying two walks. */
+function bestJuniorRankOf(rows: (SeasonHistoryEntry | undefined)[]): number | null {
   let best: number | null = null
-  for (const row of rowsAcrossWindow(world, week)) {
+  for (const row of rows) {
     const rank = juniorRankOf(row)
     if (rank !== null && (best === null || rank < best)) best = rank
   }
   return best
+}
+
+export function bestJuniorRankInWindow(world: WorldState, week: number): number | null {
+  return bestJuniorRankOf(rowsAcrossWindow(world, week))
 }
 
 /** THE ITF MERIT INCREASE: +4 international events to a top-50 junior at 13, to a top-20 at 14 and
@@ -139,12 +145,16 @@ export function juniorMerit(world: WorldState, week: number, ageYears: number): 
  *  ⚠ IT IS AN OR AND NOT A SUM. The rulebook grants "up to 4 Merited Increases", not four per route. */
 export function proMerit(world: WorldState, week: number): number {
   const knob = ECONOMY.entryCap.meritIncrease
-  const junior = bestJuniorRankInWindow(world, week)
+  // ⚠ ONE WALK, NOT TWO (16.08). Both arms read the same at-most-two rows, and gathering them costs a
+  // backward scan of a year of weeks through the age clock – so asking twice doubled the hot path for
+  // an answer that cannot differ between the two calls.
+  const rows = rowsAcrossWindow(world, week)
+  const junior = bestJuniorRankOf(rows)
   if (junior !== null && junior <= knob.proJuniorThroughRank) return knob.proExtra
   let cut = 0
   for (const tier of knob.proDirectTiers) cut = Math.max(cut, TIERS[tier].acceptsRank ?? 0)
   if (cut <= 0) return 0
-  for (const row of rowsAcrossWindow(world, week)) {
+  for (const row of rows) {
     const wta = yearEndWtaRankOf(row)
     if (wta !== null && wta <= cut) return knob.proExtra
   }
