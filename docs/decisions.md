@@ -778,3 +778,57 @@ silently, because the two rules still name the same rung even though they no lon
 
 Full measurement, predictions scored, and the guard work:
 `docs/specs/college-gate-decoupled-2026-08.md`.
+
+## 2026-08-16 – Four years become four decisions, and the third answer finally has a price (`wave/round21`, P5)
+
+**The phase that was sent to put the national-team competitions on the college calendar, found that
+the two the research recommends are five years too young for it, and measured that the door they sit
+behind was the cheapest option in the game.**
+
+### ⚠⚠ THE AGE FACT THAT MOVED THE SCOPE BEFORE A LINE WAS WRITTEN
+
+The research's own recommendation is to build the 14-and-under world team championship *"or its 16U
+twin"*, and on its own terms that is right. **But those bands are 11-14 and 13-16, and the fork is at
+nineteen.** The only national-team competition whose real age band covers a college player is the
+SENIOR one – the one the research puts last, and whose objection is to its *shape* (four levels,
+promotion, relegation, a Nations Ranking), not its existence. None of that shape is built. What
+shipped is the research's own recommended object – *"the letter"*, one week a year, arriving rather
+than chosen – aimed at the age band college actually occupies.
+
+### WHAT IS BEHIND THE DOOR NOW
+
+College is four years she LIVES THROUGH, one at a time. Each year ends with two answers of equal
+weight – another year, or back on tour – because the sport's own case is the early return: Diana
+Shnaider left NC State after about a season and is inside the WTA top 15. The card states the year in
+the engine's own numbers (what the family banked, where her rank went, whether her country called)
+and states no opinion about it. One week of each year is a national-team call-up she did not choose
+and cannot decline, which pays **no prize money and no ranking points** – because the sport awards
+neither.
+
+### ⭐⭐ AND THE MEASUREMENT THAT MATTERS MOST IS NOT ABOUT THE CONTENT
+
+Four years at college against four years on tour, same 52 seeds:
+
+| | COLLEGE | ON TOUR |
+| --- | --- | --- |
+| the family's balance | **+$152,243** | +$45,544 |
+| professional rank after | **#290** | **#169** |
+
+**The third answer costs 121 ranking places and pays $106,699** – more than the wealthiest starting
+capital in the game, nineteen times the working-class one. Nobody had ever put those two numbers
+beside each other, because until this phase the answer was a skip. **Nothing was tuned**: P6 owns the
+balance, and if this wants an answer the honest lever is the points table, not a quiet cost added to
+a scholarship.
+
+### ⚠ TWO PREDICTIONS WERE WRONG AND BOTH ERRORS ARE MORE USEFUL THAN THE FEATURE
+
+* **«Four years at college cost her half her development.»** They cost **10%** – 0.12 of one skill
+  point on a base of 58.6 – because at nineteen she is nearly done growing. The card does not claim
+  otherwise, which is the sentence a guess would have shipped.
+* **«She comes back with no ranking at all.»** Her professional rank is **#290 before the freeze and
+  #290 after it, identical** – she was already off the list the week she walked in. The four years
+  took nothing from her because there was nothing there to take. The epilogue line that asserted the
+  loss (and promised four years and a degree, unconditionally) is gone.
+
+Full measurement, predictions scored, and the seven things deliberately not built:
+`docs/specs/college-as-a-second-act-2026-08.md`.
