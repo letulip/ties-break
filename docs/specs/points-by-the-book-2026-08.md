@@ -89,6 +89,12 @@ alone is reverted**, exactly as `FIELD.earnCurve` and `FIELD.strengthCurve` were
    more than **10 percentage points** on either arm. The real target is **15.9–16.2**
    (`real-ladder-pace.md` §6) and ours cannot beat 16.0 by construction – every W rung is
    `minAgeYears` 16 – so the band is one-sided on purpose.
+   ⚠ **THE CONSTRUCTION ARGUMENT EXPIRED ON 16.08 AND THE CRITERION DID NOT.** Every W rung opens at
+   **14** now, on the owner's ruling that the floors are the sport's own, so nothing constructionally
+   stops a career beating 16.0 – but measured on that same ruling W35's median first entry moved only
+   16.3 → 16.1, because the acceptance cut was always the binding gate and the floor sat behind it.
+   **The band stays one-sided, by measurement instead of by construction.** Grid, stated once:
+   [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 6. **COST.** `fieldProsFor` stays under **2.5 ms** per season boundary, the career bench's wall time
    rises by no more than **25%** (264 s / 394 s → 330 s / 493 s), and the persisted ledger does not
    grow at all.

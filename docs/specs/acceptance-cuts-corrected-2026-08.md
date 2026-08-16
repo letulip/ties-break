@@ -535,7 +535,7 @@ sport says it is (which our 200-row table cannot carry)?
 | `w35` 700 · `slam` 104 | **leave** | the audit verified both correct – 700 is mid-range against seven observed cuts, 104 is exact by rule and by observation |
 | `j30`'s `[250, MAX]` | **needs the owner** | 250 carries his ruling verbatim (29.07) and its comment says 250 and National's 150 *"are one decision and must move together"* |
 | `w15`'s on-ramp | **needs the owner** | rule and practice disagree and both are sourced; choosing between them is design, not correction |
-| `w75.minAgeYears` 17 | **needs the owner** | reality's floor is 14 and the one rung-specific rule is a quota, not a door. It would put a fourteen-year-old on the professional tour |
+| `w75.minAgeYears` 17 | ✅ **ANSWERED 16.08 – now 14** | reality's floor is 14 and the one rung-specific rule is a quota, not a door. It would put a fourteen-year-old on the professional tour. ⭐ He ruled exactly that, for the whole grid: [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md) |
 | the **ceiling** family | **unmodelled, and now half-modelled** | P1 step 2 shipped the play-down rules, so the audit's §8 question 4 is partly answered; the WTA 125's own ceiling (#1–20 barred, four ranked 21–50 by wild card) is still not modelled |
 
 ---

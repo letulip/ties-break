@@ -216,6 +216,14 @@ defect** – it is the real WTA age-eligibility rule and the ladder's own age ga
 were written to do – and it is reported here so nobody looks for it as a bug later. It cannot explain
 #237: the measured careers peak in their twenties.
 
+> ⚠ **HALF THE ARITHMETIC ABOVE WAS REPEALED ON 16.08 AND THE CEILING SURVIVED IT.** The doorway is
+> no longer what caps her window: W75/W100 open at **14** and the WTA rungs at **15**, on the owner's
+> ruling that the tour's floors are the sport's own. **The two things that still produce the ceiling
+> are the AER allowance of 12 and the acceptance cut** – W75's is #300, and a sixteen-year-old does
+> not hold that rank – so the number stands and its cause moved one gate along. The paragraph is kept
+> because it is the reading the measurement was made under. Grid, stated once:
+> [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
 ## 7. The last simplification, priced
 
 The books above are built against a merged table whose LIVE cohort holds nothing. Ticked worlds, no
