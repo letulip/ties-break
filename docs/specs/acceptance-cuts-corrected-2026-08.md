@@ -12,13 +12,15 @@ last-reviewed: 2026-08-16
 (`docs/specs/junior-access-2026-08.md`) and P2 (`docs/specs/age-eligibility-window-2026-08.md`).
 It implements the audit `docs/specs/acceptance-cuts-2026-08.md`, which moved no constant.**
 
-> **THE PHASE IN SIX LINES.** The sourced acceptance chain ships – **w50 330 · w75 300 · w100 240 ·
+> **THE PHASE IN SEVEN LINES.** The sourced acceptance chain ships – **w50 330 · w75 300 · w100 240 ·
 > wta125 180**, with **w35 700 and slam 104 untouched because the audit verified both correct**. `j300`
 > goes **0.40 → 0.20**, halved rather than corrected to the sport's 2%, because 2% was measured to
-> delete the rung and – since P1 – to cost far more than the audit could see. **And the audit's
-> headline verdict does NOT survive.** It measured this chain Pareto-positive in isolation; on the
-> population P1 and P2 built it is a cost on every column that moved. That is the finding.
-> **Zero schema: v49 unmoved, no migration, no fixture.**
+> delete the rung and – since P1 – to cost far more than the audit could see.
+> **And the audit's headline verdict does NOT survive.** On its own horizon the money gain shrinks
+> fifteenfold, end funds flip sign and the college column flips direction, so *Pareto-positive* no
+> longer holds. **But the phase is not a pure cost either**: run to 26.6 rather than to 20 it is a
+> **delay** – she pays it at seventeen to nineteen and is repaid from twenty-one – the same shape P1
+> and P2 each measured. **Zero schema: v49 unmoved, no migration, no fixture.**
 
 ---
 
@@ -340,9 +342,11 @@ because the audit's horizon stops at twenty and this one does not. P9 was wrong 
 
 ## 5. GUARDS – what moved and why
 
-**23 assertions across 10 files went red. Every one is RE-AIMED with a ⚠ note at the site, none is
-weakened or deleted**, and two are strictly stronger than the line they replace. They are four
-families, plus one thing that is not a re-aim at all.
+**24 assertions across 9 files went red** (ladder-floor 12 · offers 2 · unranked-sentinel 2 ·
+coach-travel-edge 2 · ladder-separation 2 · ladder 1 · outgrownWithdraw 1 · play-down 1 ·
+endings-bench 1). **Every one is RE-AIMED with a ⚠ note at the site, none is weakened or deleted**,
+and two are strictly stronger than the line they replace. They are four families, plus one thing that
+is not a re-aim at all.
 
 **(a) A PIN ON A NUMBER THIS FILE HAS NO OPINION ABOUT.** `tests/unranked-sentinel.test.ts` asserted
 `expect(TIERS.w100.acceptsRank).toBe(350)` – a literal, inside a case about the *sentinel*, whose real

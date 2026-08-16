@@ -271,8 +271,16 @@ export const TIERS: Record<TierId, TierDef> = {
     //     0.05           0.0         1/27      16.3          373        $87,437
     //     0.02           0.0         0/27      16.3          372        $87,410
     //
-    // THERE IS A CLIFF BETWEEN 0.20 AND 0.15 and it is not gradual: four arms sit at ~#370 and three
-    // at ~#204-259. 0.20 is the tightest value on the safe side of it.
+    // THERE IS A STEEP DROP BETWEEN 0.20 AND 0.15: four arms sit at ~#370 and three at ~#204-259.
+    // ⚠ A 0.175 PROBE AT n=54 LANDS PART-WAY DOWN IT (end rank 283 against shipped 250, prize
+    // -$11.9k), so the edge is a SLOPE rather than a wall and the n=27 table above overstates how
+    // sharp it is. What the probe does not change is the direction: every value below 0.20 is
+    // further downhill and buys nothing the target asks for. 0.20 is the last value before the slope.
+    //
+    // ⚠ AND 0.20 IS NOT FREE - THE HONEST FIGURE IS HERE RATHER THAN IN A FOOTNOTE. At n=54 it costs
+    // about **$6-9k of prize money and ~40 mean rank places** on its own. It ships because the rung
+    // was measurably outside its own target in the loose direction (below) and because the sport says
+    // 2%, not because the correction pays. It does not pay.
     //
     // ⚠ AND HALVING IT MOVES THE RUNG BACK TOWARDS ITS OWN PRE-REGISTERED TARGET, NOT AWAY. The
     // target three paragraphs up («0 for most careers, 1-2 for a good one, 2-3 for the best») was
@@ -655,8 +663,9 @@ export const TIERS: Record<TierId, TierDef> = {
     // was against the pre-P1 ladder, where she entered a W75 at 17.2 and lost early. P1 and P2 have
     // since moved her first W75 to 19.0 and her rank at seventeen to #426, so the substitution the
     // audit was measuring had already been banked before this chain arrived. Re-measured on the
-    // population that now exists, the verdict does NOT survive - see the spec. The number ships
-    // because it is the SOURCED one, not because it pays.
+    // population that now exists, the Pareto verdict does NOT survive - though on the full 676-week
+    // horizon the chain reads as a DELAY she is repaid for rather than a tax. Both halves are in the
+    // spec; neither is quotable alone. The number ships because it is the SOURCED one.
     acceptsRank: 330,
     // ⚠ RE-MEASURED BY W2-FIELD2 — [0.02, 0.40] -> [0.145, 0.52]. W2-LADDER's own reading (the
     // deepest window in the family, floor 0.02 so "the merged table's head must be REACHABLE here
@@ -736,8 +745,15 @@ export const TIERS: Record<TierId, TierDef> = {
     // ISOLATION, against a ladder that no longer exists: P1 moved her first W75 from 17.2 to 19.0 and
     // P2 took her rank at seventeen to #426. The mechanism the audit named - "with the shipped cuts
     // she spends her season in W75+ draws she loses early; with the corrected chain she spends it at
-    // W15/W35/W50, where she wins" - is a substitution P1 ALREADY BANKED. Re-measured after P1+P2 the
-    // Pareto verdict does not survive. This constant ships because it is SOURCED, not because it pays.
+    // W15/W35/W50, where she wins" - is a substitution P1 ALREADY BANKED. Re-measured after P1+P2 on
+    // the audit's own horizon the Pareto verdict does not survive: the money gain shrinks fifteenfold,
+    // end funds flip sign and the college column flips direction.
+    //
+    // ⚠ AND ON THE FULL HORIZON IT IS A DELAY RATHER THAN A TAX, WHICH THE AUDIT'S 312 WEEKS COULD
+    // NOT SEE. Run to 26.6: she is worse at seventeen to nineteen (-$9.4k banked by 19, fourteen
+    // fewer careers holding a ranking at 17) and BETTER from twenty-one (#199 -> #174 at 21,
+    // #176 -> #158 at 25, career prize +$57k). Same shape P1 and P2 each measured. Both halves
+    // travel together or the number is misrepresented.
     //
     // ⚠ AND ON THIS RUNG THE CUT IS STILL NOT THE GATE. §3a's finding survived the correction once
     // already; after P1 it is the junior/adult boundary rather than `minAgeYears` that pins her first
