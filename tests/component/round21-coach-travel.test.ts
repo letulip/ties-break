@@ -60,6 +60,10 @@ import {
   type WorldState,
 } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
+// ⭐ ROUND-21 #2, THE LAST OPEN ITEM – §5 reads the corridor table and the draw straight from the
+// engine, so the card's figures are checked against what the engine actually cut rather than against
+// a table copied into a test that would agree with a broken build.
+import { buildCoachRoster, coachEdgeCorridorPp, coachEdgePp, COACH_EDGE_CORRIDOR_PP } from '../../src/engine/coach'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { formatCents } from '../../src/shared/money'
 import { assertDismissReachable, boxOf, setViewport, PHONE } from './fits'
@@ -607,4 +611,290 @@ describe('§4 the week\'s story keeps the second fare', () => {
     expect(w.find('.recap-note-coach').exists()).toBe(false)
     w.unmount()
   })
+})
+
+// =================================================================================================
+// 5. ⭐⭐ ...AND THE SCREEN SAYS WHAT THE SECOND FARE BUYS – round-21 #2's LAST OPEN ITEM
+// =================================================================================================
+//
+// The ledger's own words, after the dose was ruled on and measured at 500 paired careers:
+//
+//   «STILL HIS, AND SMALL: the screen does not yet say the bonus exists - `edgePct` prints the rung's
+//    HOME corridor to a family that travels»
+//
+// `coachEdgePp` has returned TWICE a coach's own edge on the weeks he is with her since `ff72dc5`,
+// and both readouts a player sees quoted `COACH_EDGE_CORRIDOR_PP[tier]` unchanged. A family paying a
+// second fare to every event that pays read exactly the card a family that leaves him at home reads.
+//
+// WHAT THIS SECTION HOLDS, and every one of the five is a rule some other wave paid for:
+//   * THE SECOND FIGURE IS THERE, doubled, and only for a family whose stance would actually send him
+//     (`coachTravelsWithHer` - somebody to send AND the switch on, the same pair the fare is charged
+//     on). A career that leaves him at home reads the card it read before, to the character.
+//   * IT IS STILL A PRICE BRACKET AND NEVER A MAN (spec §4). Twice a bracket is a bracket - but only
+//     while it is cut from the TIER TABLE, so the test is that every card in a rung carries the
+//     identical pair and that no coach's own travelling value can be read off his row.
+//   * THE PLAQUE DOES NOT MOVE (spec §7). It names a THIRD and never a figure, and `coachEdgePlacement`
+//     reads the man and not the trip. It also needs no hedge beside the second bracket, because the
+//     helping SCALES the corridor rather than shifting it: the upper third of 0.5-0.9 IS the upper
+//     third of 1.0-1.8, so one placement is true of both bands.
+//   * IT DOES NOT OVERSTATE. «The corridor is doubled» would be false - `coachTravelFareFor` keeps him
+//     home for the rungs that pay no prize money unless the junior stance is open too, so a J-series
+//     week doubles nothing even for a family that always sends him. The card says «twice that on the
+//     trips the coach travels to», which is true of every family that holds the stance.
+//   * NO ARITHMETIC ON THE SCREEN. The doubling is `coachEdgeCorridorPp`, one function beside the draw
+//     it has to stay in step with; the component formats a pair the engine already cut.
+//
+// ⚠ MUTATION-VERIFIED, EIGHT WAYS, each run against this file as it stands and each named at the
+// tests it actually reddened. Nothing below passed against a broken build, and the separations are
+// the point: the CUT, the GATE, the WORDS, the SOURCE OF THE NUMBER and the GEOMETRY each have a
+// test that fails alone.
+//
+//   * `coachEdgeCorridorPp` returning the base corridor when `travelling` (the doubling deleted) ->
+//     the first test and the price-bracket test. TWO, because the second one re-derives the bracket
+//     from the engine and would otherwise agree with a broken build;
+//   * `edgeTravelPct` handed over ungated (the doubled pair on every world) -> the "leaves him at
+//     home" test and the self-coached one, and NOTHING else - the gate stated as a mutation;
+//   * the chip dropped from the template -> the first test, the price-bracket test and BOTH geometry
+//     tests (they measure an element that has to exist);
+//   * `travelLine` rendered on every row rather than on `r.current` -> the sentence test ALONE;
+//   * the component doubling `r.edgePct` itself instead of printing `r.edgeTravelPct` -> the "no
+//     arithmetic on the screen" test ALONE, which is precisely what that test is for;
+//   * `TRAVEL_EDGE_LINE` rewritten to "The corridor is doubled - up to 1.8% per match." -> the
+//     sentence test here, and the engine's own copy test in tests/coach-travel-edge.ts. This is the
+//     overstatement the item's brief names, and it reddens on all three counts: the flat claim, the
+//     figure, and the missing condition;
+//   * `.cm-travel-edge` given `margin-left: -20px` -> both geometry tests and nothing else, which is
+//     what proves they measure the ADDED elements rather than re-stating round-18's rule about their
+//     parent column;
+//   * the placement made to read the TRIP (`coachTravelsWithHer(world) ? 'upper' : ...` in
+//     `coachEdgeView`) -> the plaque test ALONE. §7's rule that the verdict is a fact about the man
+//     is the one this whole item could most easily have broken, and it has its own red.
+
+/** A coach room, on a career whose stance is what the test is about. No tournament needed: the market
+ *  card is drawn from the roster and the family's stance, not from her calendar. */
+function coachRoom(seed: string, travels: boolean, tier: 'self' | 'middle' = 'middle'): Snapshot {
+  return toSnapshot(career(seed, travels, tier))
+}
+
+/** ...and the same thing ticked past the engine's own reveal gate, so the plaque under test is a
+ *  REVEALED one. Nothing here fakes the gate - `coachEdgeView` decides it from `coachSinceWeek` and
+ *  the calendar (round-21 #7c), which is why this ticks rather than assigning `placement`.
+ *
+ *  ⚠ 60 WEEKS AND ONE SNAPSHOT AT THE END, not a snapshot a week. A coach taken on in week 0 is a
+ *  first-half hire, so his verdict lands at that season's own off-season (week 49) - and `toSnapshot`
+ *  builds the whole market, every event preview and every derived view, so asking it 60 times costs
+ *  far more than the ticks do. The first draft did exactly that and timed out at 5s under load: a
+ *  fixture expensive enough to be a false red is a fixture that will produce one. The reveal is
+ *  ASSERTED by the caller rather than waited for, which is the same claim with none of the cost. */
+function seasonedRoom(seed: string, travels: boolean): Snapshot {
+  const world = career(seed, travels)
+  const rng = rngFromSeed(world.seed)
+  for (let i = 0; i < 60; i++) {
+    world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    tickWeek(world, rng)
+  }
+  return toSnapshot(world)
+}
+
+/** The card's own words for a travelling rung, written out longhand rather than imported from the
+ *  component, so the FORMAT is pinned too: a change to either half has to be a deliberate one. */
+const travelChipText = (tier: 'budget' | 'middle' | 'high' | 'elite'): string => {
+  const [lo, hi] = coachEdgeCorridorPp(tier, true)
+  return `+${lo.toFixed(1)}-${hi.toFixed(1)}% travelling with her`
+}
+
+/** An individual value's shape: a per-match figure quoted to TWO decimals. The corridors are tenths,
+ *  prices are dollars and the season uplift is tenths, so nothing else on a card can produce this. */
+const INDIVIDUAL = /\+\d+\.\d\d%/
+
+describe('§5 the card says what the second fare buys', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('⭐⭐ EVERY CARD CARRIES THE RUNG DOUBLED, and the middle rung says it in these words', async () => {
+    const w = await mountMarket(coachRoom('chip-on', true))
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      const section = w.find(`#coach-tier-${tier}`)
+      expect(section.exists(), `the ${tier} rung is on the screen`).toBe(true)
+      const rows = section.findAll('.cm-row')
+      expect(rows.length, `the ${tier} rung has cards`).toBeGreaterThan(0)
+      for (const row of rows) {
+        const chip = row.find('.cm-edge-travel')
+        expect(chip.exists(), `a ${tier} card says what the trip is worth`).toBe(true)
+        expect(chip.text(), `${tier} card quotes its rung, doubled`).toBe(travelChipText(tier))
+        // ...and the HOME figure is untouched beside it, which is what makes this an addition rather
+        // than a relabelling: the family still reads what the rung is worth on the weeks he stays.
+        expect(row.find('.cm-edge').text(), `${tier} home corridor`).toBe(
+          `+${COACH_EDGE_CORRIDOR_PP[tier][0].toFixed(1)}-${COACH_EDGE_CORRIDOR_PP[tier][1].toFixed(1)}% per match`,
+        )
+      }
+    }
+    // THE FORMAT, PINNED ONCE IN FULL. Everything above is computed from the table, so one literal is
+    // what stops the whole set from agreeing with a broken formatter.
+    expect(w.find('#coach-tier-middle .cm-row .cm-edge-travel').text()).toBe('+1.0-1.8% travelling with her')
+    // Short dash and English only, like every other line in the app.
+    expect(w.find('#coach-tier-middle .cm-row .cm-edge-travel').text()).not.toMatch(/—/)
+    w.unmount()
+  })
+
+  it('...and the family that leaves him at home reads the card it read before', async () => {
+    const w = await mountMarket(coachRoom('chip-off', false))
+    expect(w.findAll('.cm-row').length, 'the list drew cards to check').toBeGreaterThan(8)
+    expect(w.findAll('.cm-edge-travel'), 'nothing doubles for a family that sends nobody').toHaveLength(0)
+    expect(w.findAll('.cm-travel-edge')).toHaveLength(0)
+    // The corridor that was always there is still there, so "unchanged" is a claim and not an absence.
+    expect(w.find('#coach-tier-middle .cm-row .cm-edge').text()).toBe('+0.5-0.9% per match')
+    w.unmount()
+  })
+
+  it('⚠ AND A SELF-COACHED FAMILY WITH THE STANCE ON IS SHOWN NOTHING – there is nobody to send', async () => {
+    // A real state, not a corner: the switch works for a self-coached family and the stance waits for
+    // the day she hires somebody (that is the row's own promise on screen T). Until then the fare
+    // charges nothing, so the card may not quote a helping the till would refuse to buy.
+    const snap = coachRoom('chip-self', true, 'self')
+    expect(snap.coachBilling.onEventWeeks, 'the stance really is on').toBe(true)
+    const w = await mountMarket(snap)
+    expect(w.findAll('.cm-edge-travel')).toHaveLength(0)
+    expect(w.findAll('.cm-travel-edge')).toHaveLength(0)
+    w.unmount()
+  })
+
+  it('⚠ THE MARKET STILL SELLS A PRICE BRACKET – no card carries the number of the man on it', async () => {
+    // Spec §4, stated against the ENGINE rather than against a regex alone: for every coach in the
+    // list, ask what he is actually worth on the road and confirm that figure is nowhere on his card.
+    // This is the assertion that fails if somebody ever "improves" the market by showing the value.
+    const world = career('chip-shop', true)
+    const w = await mountMarket(toSnapshot(world))
+    const rows = w.findAll('.cm-row')
+    expect(rows.length).toBeGreaterThan(8)
+    for (const row of rows) {
+      const name = row.find('.cm-name').text()
+      expect(name.length, 'the card names somebody').toBeGreaterThan(0)
+      expect(row.text(), `${name}'s card keeps no individual figure`).not.toMatch(INDIVIDUAL)
+    }
+    // ...and the bracket really is a function of the RUNG: identical on every man in it, which is
+    // what makes a hire-look-fire search impossible rather than merely inconvenient.
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      const texts = new Set(w.findAll(`#coach-tier-${tier} .cm-edge-travel`).map((c) => c.text()))
+      expect(texts.size, `${tier} says one thing about its rung`).toBe(1)
+    }
+    for (const coach of buildCoachRoster(world.seed, 14)) {
+      const his = coachEdgePp(world.seed, coach.id, true)
+      // his own value is strictly inside the printed bracket - so the bracket cannot be him
+      const [lo, hi] = coachEdgeCorridorPp(coach.tier, true)
+      expect(his, coach.id).toBeGreaterThan(lo)
+      expect(his, coach.id).toBeLessThan(hi)
+      expect(w.text(), `${coach.id}'s own number is not on this screen`).not.toContain(his.toFixed(2))
+    }
+    w.unmount()
+  })
+
+  it('⚠ THE CONDITION IS SAID ONCE, ON HER OWN COACH\'S CARD, AND QUOTES NO FIGURE', async () => {
+    const snap = coachRoom('chip-line', true)
+    const w = await mountMarket(snap)
+    const lines = w.findAll('.cm-travel-edge')
+    expect(lines.length, 'one card explains the second figure, not sixteen').toBe(1)
+    const row = w.findAll('.cm-row').filter((r) => r.classes().includes('current'))
+    expect(row.length, 'the fixture has a coach hired').toBe(1)
+    expect(row[0].find('.cm-travel-edge').exists(), 'and it is HER coach\'s card').toBe(true)
+    // THE WORDS, and they are the engine's - the card prints one string and composes nothing.
+    expect(lines[0].text()).toBe('Twice that on the trips the coach travels to.')
+    expect(lines[0].text()).toBe(snap.coachEdge.travelLine)
+    // ⚠ WHAT IT MAY NOT SAY. A flat "doubled" would be a claim about a season a fourteen-year-old is
+    // not playing: the helping follows the FARE, which stays home for the rungs that pay no prize
+    // money unless that stance is open too.
+    expect(lines[0].text(), 'it names the trips it applies to').toMatch(/on the trips/)
+    expect(lines[0].text(), 'and never claims the corridor itself is doubled').not.toMatch(/doubled/i)
+    expect(lines[0].text(), 'and quotes no number, like the plaque under it').not.toMatch(/\d/)
+    // R15-7 (owner, 09.08): no pronoun names the coach on this screen.
+    expect(lines[0].text(), 'no pronoun for the coach').not.toMatch(/\b(he|him|his)\b/i)
+    w.unmount()
+  })
+
+  it('⚠ THE PLAQUE IS ABOUT THE MAN AND DOES NOT MOVE WHEN SHE TRAVELS', async () => {
+    // Spec §7 and §8's ruling 2: the PLACE follows the man, and where she happened to be playing on
+    // the Tuesday is not part of who he is. It also needs no hedge beside the doubled bracket - the
+    // helping scales the corridor, so the upper third of one band is the upper third of the other and
+    // one sentence is true of both.
+    const travels = seasonedRoom('plaque-ui', true)
+    const stays = seasonedRoom('plaque-ui', false)
+    expect(travels.coachEdge.placement, 'the fixture really did reveal').not.toBeNull()
+    expect(travels.coachEdge.placement).toBe(stays.coachEdge.placement)
+    expect(travels.coachEdge.plaqueLine).toBe(stays.coachEdge.plaqueLine)
+
+    const w = await mountMarket(travels)
+    const plaque = w.find('.cm-row.current .cm-plaque')
+    expect(plaque.exists()).toBe(true)
+    expect(plaque.text()).toBe(stays.coachEdge.plaqueLine)
+    // §7's referent pairing survives the addition: the plaque still points at a band printed above it.
+    expect(plaque.text()).toMatch(/that band/)
+    // ...and no state of this card prints a per-match figure for him.
+    expect(w.find('.cm-row.current').text()).not.toMatch(INDIVIDUAL)
+    w.unmount()
+
+    setActivePinia(createPinia())
+    const off = await mountMarket(stays)
+    expect(off.find('.cm-row.current .cm-plaque').text()).toBe(plaque.text())
+    off.unmount()
+  })
+
+  it('⚠ NO ARITHMETIC ON THE SCREEN – the card prints the engine\'s pair and derives nothing', async () => {
+    // The mutation this test exists for is a component that doubles `edgePct` itself. It would pass
+    // every assertion above and would be a lie the first time the engine re-cut the dose - which is
+    // exactly the failure this whole item is: two numbers that agreed until one of them moved.
+    const snap = coachRoom('chip-derive', true)
+    const w = await mountMarket(snap)
+    const store = useGameStore()
+    const middle = store.snapshot!.coachMarket.filter((r) => r.tier === 'middle')
+    expect(middle.length).toBeGreaterThan(0)
+    for (const r of middle) r.edgeTravelPct = [7.7, 9.9]
+    await nextTick()
+    for (const chip of w.findAll('#coach-tier-middle .cm-edge-travel')) {
+      expect(chip.text(), 'the figure came from the snapshot, not from a multiply in the card').toBe(
+        '+7.7-9.9% travelling with her',
+      )
+    }
+    // ...and the home corridor beside it did not follow, so the two are genuinely separate columns.
+    expect(w.find('#coach-tier-middle .cm-row .cm-edge').text()).toBe('+0.5-0.9% per match')
+    w.unmount()
+  })
+
+  for (const width of [320, 375]) {
+    it(`⚠ at ${width}px the two additions start clear of the portrait`, async () => {
+      // ⚠ ROUND-18 #2's HARD-WON 12px, RE-MEASURED ON THE LINES THIS ITEM ADDED. The strip is 62px
+      // and clips, so growth DOWNWARDS costs nothing sideways - which is the only reason two more
+      // lines on this card are free. What a new element can still do is walk left on its own (a
+      // negative margin, a padding on an ancestor, an escape into `position: absolute`), so each of
+      // those is read rather than assumed.
+      assertSheetPresent()
+      setViewport({ width, height: 800 })
+      Object.defineProperty(window, 'innerWidth', { value: width, configurable: true })
+      const w = await mountMarket(coachRoom(`fit-${width}`, true), { attach: true })
+      const current = w.findAll('.cm-row').filter((r) => r.classes().includes('current'))
+      expect(current.length, 'the fixture has a coach hired').toBe(1)
+
+      const art = current[0].find('.cm-art').element as HTMLElement
+      const strip = parseFloat(getComputedStyle(art).width)
+      expect(strip, 'the strip has a width of its own').toBe(62)
+      expect(getComputedStyle(art).overflow, 'and clips the picture at it').toContain('hidden')
+
+      const inkLeft = (sel: string): number => {
+        const el = current[0].find(sel).element as HTMLElement
+        const body = current[0].find('.cm-body').element as HTMLElement
+        const bs = getComputedStyle(body)
+        const own = getComputedStyle(el)
+        expect(own.position === '' || own.position === 'static', `${sel} is in the text flow`).toBe(true)
+        const num = (v: string) => (v === '' ? 0 : parseFloat(v) || 0)
+        return num(bs.marginLeft) + num(bs.paddingLeft) + num(own.marginLeft) + num(own.paddingLeft) + num(own.textIndent)
+      }
+      const base = inkLeft('.cm-name')
+      for (const sel of ['.cm-edge-travel', '.cm-travel-edge']) {
+        const air = inkLeft(sel) - strip
+        expect(air, `${sel} clears the portrait by ${air}px at ${width}px`).toBeGreaterThanOrEqual(10)
+        expect(air, `${sel} has not walked off into the middle of the card`).toBeLessThanOrEqual(15)
+        expect(inkLeft(sel), `${sel} shares the text column with the name`).toBe(base)
+      }
+      w.unmount()
+    })
+  }
 })
