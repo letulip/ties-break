@@ -1925,9 +1925,20 @@ export interface KitOfferTerms {
    *  travel, which today is local and national - `junior-economics.md`: "travel sponsorship only
    *  after national/international wins", so it is the top rung's and nobody else's.
    *
-   *  ⚠ IT GOES THROUGH `travelCostFor` AND NOWHERE ELSE. That function is THE definition the charge,
-   *  the refund and the planner's quoted price all read; a second computation of the same discount
-   *  is arbitrageable (enter at the covered price, withdraw at the full refund, repeat). */
+   *  ⚠ FOR **HER** SEAT IT GOES THROUGH `travelCostFor` AND NOWHERE ELSE. That function is THE
+   *  definition the charge, the refund and the planner's quoted price all read; a second computation
+   *  of the same discount is arbitrageable (enter at the covered price, withdraw at the full refund,
+   *  repeat).
+   *
+   *  ⚠⚠ AND SINCE 17.08 THE SAME NUMBER COVERS **THE COACH'S** SEAT TOO, at the rungs that pay prize
+   *  money - `coachTravelFareFor`, round-21 #2. It is deliberately the same field and not a sibling:
+   *  the owner rejected a separate flat term as «лишняя логика», and measurement agreed with him -
+   *  the separate term produced identical fares for every family without a scholarship. So ONE
+   *  sponsor share is read for two seats and there is nothing to keep in step.
+   *
+   *  ⚠ THE SCHOLARSHIP IS THE ASYMMETRY, and it is the 15.08 ruling: `travelCostFor` also composes
+   *  the academy's needs-based cover, and THAT one reaches her seat alone. A rescue does not fly the
+   *  entourage; a contract may. `tests/support-never-pays-the-coach.test.ts` holds both halves. */
   travelShare: number
   /** HOW MANY SEASONS IT RUNS. One for the local shop, more for the rungs above it -
    *  `02-tennis-economics.md` puts junior equipment deals at "3-4 year terms", and a term longer
@@ -3014,6 +3025,15 @@ export interface Snapshot {
      *  than of a list of covers, so a support stream added later is inside the answer. It is what
      *  lets screen T say "his seat is not covered" only to the families that hold a cover. */
     travelCovered: boolean
+    /** ⭐⭐ ROUND-21 #2, 17.08: and is a sponsor's contract reducing **HIS** seat, as a whole
+     *  percentage – 0 for every family holding no deal that pays towards travel.
+     *
+     *  ⚠ IT IS THE SAME SHARE HER OWN FARE READS (`KitOfferTerms.travelShare`), because that is the
+     *  whole rule: one sponsor number, two seats. What differs between the seats is the SCHOLARSHIP -
+     *  `travelCovered` above answers "is anything covering HERS", and a needs-based rescue is in that
+     *  answer and may never be in this one. Two fields because they answer two questions, not because
+     *  there are two sponsor terms. */
+    coachFareCoverPct: number
     /** ⭐ ROUND-21 #12: WHAT ARRIVES EVERY WEEK, ALL OF IT – the parents' contribution plus the
      *  savings interest the balance earns plus a signed kit deal's retainer, pro-rated. It is the cap
      *  the coaching budget meter draws against and the denominator every `overBudgetCents` is cut

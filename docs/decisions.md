@@ -1958,6 +1958,57 @@ career was walked, and the bench was run first. New rule: type-check a new bench
 
 ---
 
+## 17.08.2026 – ⭐⭐ THE SECOND SEAT: he refused the machinery, and the measurement agreed with him (`docs/specs/the-second-seat-2026-08.md`)
+
+Round-21 #2's last item. He had scoped it twice – «про спонсоров и оплату доли поездки тренера я
+говорю только для профессиональной лиги и контракте с большими спонсорами», «спонсоры в про лиге и
+25% покрытия – это самое простое и понятное» – and the first build took it literally: a flat
+`ECONOMY.sponsorship.coachTravelShare = 0.25`, a `coachFareShareFor` deciding which rungs counted as
+"big", a persisted `KitOfferTerms` field, a second line on the letter.
+
+Seeing it, he stopped it:
+
+> «может быть нам не надо лишней логики делать, а стоит просто стоимость поездки на 2 умножать, если
+> галочка включена в тренерской? тогда у нас не будет этого слоя противоречивой логики нигде»
+
+**Measured before rewriting anything, he was right twice over.** The flat term and «×2» produce
+**byte-identical fares for every family without a scholarship** – `global`'s own travel share is 25%
+and the flat term was 25%, so the second concept was arriving at the first one's number. Whole
+calendar, prize-money trips:
+
+| family | flat 25% | «×2» on her net | delta |
+|---|---|---|---|
+| no support, no deal | $515,075 | $515,075 | **0%** |
+| no scholarship, `global` deal | $386,306 | $386,306 | **0%** |
+| full scholarship, no deal | $321,922 | $128,769 | −60% |
+| full scholarship + `icon` deal | $209,249 | $32,192 | −85% |
+
+⚠ **But his literal proposal – double HER net price – would have undone his own ruling of 15.08**, the
+−60% row: the needs-based scholarship buying the coach a plane ticket again, ~$193k of it over that
+calendar. So what shipped is the rule that keeps his simplification *and* the principle:
+
+> **A sponsor's travel share comes off both seats. A scholarship comes off hers alone.**
+
+For a family whose only cover is a contract the two readings coincide exactly and his sentence is
+literally true – **the trip costs double** – which is now the headline assertion of the guard. Deleted
+in the rework: the constant, the mapping function, the persisted field **and its migration question**.
+His seat reads `kitTravelShare`, the same number hers does, gated to the rungs that pay prize money
+(«только для профессиональной лиги»).
+
+⚠ **The guard was re-aimed, not relaxed** (14 arms, was 11). §1 keeps its wording over the
+needs-based streams; §2 was made *stricter* – at junior rungs nothing reaches his seat, now asserted
+over the contract states too; §4 is new and pins **exact** figures, because once one cover legitimately
+exists "cheaper than list" is satisfied by a leak. Mutation-verified: restoring the cover on his seat
+turns 9 of 14 red across all four sections.
+
+⚠ **And the research is blunter than the mechanic** (`docs/research/sponsor-travel-terms.md`): no
+published endorsement contract pays competition travel, and the one primary document that mentions the
+coach's – the ITF's own W50/W75/W100 hospitality guidelines – bills the **player** for his room. This
+is an abstraction of a cash flow, not a model of a contract clause, and the evidence supports his
+simpler instinct more than it supported the flat term.
+
+---
+
 ## 17.08.2026 – ⚠⚠ EIGHTEEN OWNER RULINGS LIVED ONLY IN TWO `.vue` COMMENTS, AND THE COPY RULE WAS ABOUT TO ERASE THEM (`wave/round21`)
 
 Two rules in `CLAUDE.md` collide on `src/components/screens/CalendarScreen.vue` and

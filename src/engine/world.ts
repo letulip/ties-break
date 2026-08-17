@@ -377,7 +377,11 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // - не едет, или едет, но быстрее банкротится.» So the junior/domestic rungs stop being refused and
 // start being OPT-IN, with no protective gate on the outcome: bankruptcy is the player's own
 // responsibility (his standing ruling), and what is controlled instead is that no support mechanism
-// pays for it (the gross fare, `coachTravelFareFor`, and tests/support-never-pays-the-coach.test.ts).
+// pays for it (`coachTravelFareFor`, and tests/support-never-pays-the-coach.test.ts).
+// ⚠ 17.08: and at the JUNIOR rungs this field opens, that is still absolute - nothing reaches his
+// seat there, contract included. A sponsor's travel share does now reduce it, but only at the rungs
+// that pay prize money («только для профессиональной лиги»), which is the one place these two fields
+// stay cleanly apart. §2 of that test file is the guard.
 // ⚠ IT IS A SECOND FIELD AND NOT A RETYPING OF `coachOnEventWeeks`, deliberately. A scope union
 // («none | w-series | all») reads cleaner on paper and would have retyped a field persisted since
 // v24 and touched every reader of it; a second optional boolean defaulting FALSE leaves every existing
