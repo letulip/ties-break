@@ -446,6 +446,66 @@ lever was pulled. §8 restates the three that exist if he still wants it softer.
 
 ---
 
+## 10. ⭐⭐⭐ THE OWNER PUT THE DEVELOPMENT DIMENSION BACK, AND NOT THROUGH THE MATCHES (17.08, later)
+
+> «"развитие как отличие тиров обнулилось совсем (+0.06 → +0.00). Возвращается одной константой, если
+> захотите." – да, **она училась и работала**, мы точно знаем на сколько за каждый год в колледже надо
+> прибавить, мне кажется это вполне нормально.»
+
+**He ruled on §8 item 1 and the answer is: restore it.** ⚠ **But not by putting the matches back.** He
+killed the thirteen-week season on a lore argument he was right about, and rebuilding the gain out of
+match count would smuggle it back through the side door and make its size hostage to a trip count he
+has already ruled on. **The gain comes from the PROGRAMME'S COACHING instead** – a university squad has
+coaches, a training week and a strength programme, that happens whether anybody is in the stands, it is
+what «училась и работала» actually describes, and it makes the dimension **independent of the
+calendar**, so a future change to the trips cannot silently zero it again.
+
+### 10a. ⚠⚠ THE SHAPE, AND WHY IT INVENTS NO MAGNITUDES
+
+`growWeek`'s rate already carries `coachFactor(tierOf(coach), fit)`, and at college `coach` is `null`,
+so for 208 weeks she developed at **`self` = 0.82** – the parent-on-the-court rate, for a girl who is
+not with her parent and is at a university. **That is the actual defect**, and it is older than the
+season this phase shrank.
+
+So each place now names **a rung of the coach ladder the game already has**:
+
+| place | coaches her at | the factor that rung is worth | ours or the game's |
+| --- | --- | --- | --- |
+| the university at home | **`budget`** | 0.95 | the ASSIGNMENT is ours; **the number is `ECONOMY.coach.developmentFactor`'s own** |
+| a university out of state | **`middle`** | 1.04 | same |
+| a private university | **`high`** | 1.11 | same |
+| *(what she had before)* | *`self`* | *0.82* | – |
+
+* **⚠ No new magnitude is invented.** The three are existing, tuned rungs, referenced by NAME rather
+  than copied as numbers – so a future re-tune of the coach ladder moves the college places with it and
+  the two can never drift.
+* **⚠ THE TOP RUNG IS DELIBERATELY NOT REACHED.** `elite` (1.15) stays something only money on tour
+  buys; a university programme is not better than the best coach in the world.
+* **⚠ AND THE FAMILY IS STILL NOT BILLED FOR ANY OF IT.** `coachWorksThisWeek` is unchanged and still
+  false at college – its own comment says one clause moves the bill and the rate together, so the rate
+  is moved by a SEPARATE, explicitly-optional argument that no billing code reads.
+
+⚠⚠ **«МЫ ТОЧНО ЗНАЕМ НА СКОЛЬКО» – WE DO NOT, AND THIS SPEC WILL NOT PRETEND WE DO.** What exists is
+P5's measurement that four college years cost ~90% of what a coached year develops, and this phase's
+own −0.03 / −0.07 / −0.10 from shrinking the season. **The SHAPE is defensible** – a programme coaches
+her, a dearer programme coaches her better, and the ladder it is expressed on is the game's own.
+**The ASSIGNMENT of budget / middle / high to the three places is OURS**, labelled ours in
+`COLLEGE_TIERS` in exactly the words the recruiting bars carry, and §10d says what would replace it.
+
+### 10b. ⭐⭐ PREDICTIONS – WRITTEN BEFORE EITHER ARM WAS BUILT
+
+| # | prediction | verdict |
+| --- | --- | --- |
+| **D1** | **The dimension comes back and is bigger than the season ever made it.** The four-year skill gain climbs monotonically with the place and the cheapest→dearest spread is **at least 0.15 of one skill point** – against +0.00 today and +0.06 under the thirteen-week season. | |
+| **D2** | **Even the cheap place develops her more than today**, because 0.95 > 0.82: its four-year gain beats the current +1.08. | |
+| **D3** | **The dear place stops being a loss against a coached year.** Measured against the `middle` rung (1.04) as "a coached year", the three land at roughly **91% / 100% / 107%** of it. | |
+| **D4** | ⚠⚠ **THE STALENESS FINGERPRINT DOES NOT TRIP, AND THAT IS A DEFECT I EXPECT TO FIND.** It lists three named fields; a NEW field is invisible to it. **If it stays green when a place's coaching moves, the test is not doing its job** and the fix is to fingerprint the whole tier object rather than three of its properties. | |
+| **D5** | **Nothing else moves.** The award, the bill, affordability, take-up and the six bankruptcies do not read development, so every one of those columns is unchanged between the arms. | |
+| **D6** | **The frozen MAIN capture does not move.** The override is a multiplier on a rate; it draws nothing. | |
+| **D7** | **The odds on the card move by more than the underlying change justifies.** §5c measured the top-100 column shifting up to six points on a 0.03–0.10 skill-point change, so a change several times larger will move it – and the direction may still not be monotone at n = 53. | |
+
+---
+
 ## 9. THE GATE
 
 Run **serialised** – this machine wedges the vitest pool, and a parallel run times out with zero
