@@ -201,10 +201,162 @@ engine-side so a stale screen cannot enrol her somewhere she cannot be.
 
 ## 3. MEASURED
 
-*(filled in after the arms run)*
+### 3a. ⚠⚠ THE ARMS, AND THE COMMIT EACH WAS BUILT AT
+
+| arm | commit | instrument |
+| --- | --- | --- |
+| **A** – the model this replaces | `9dca805` **with `9dca805` reverted** (`git revert --no-commit`), in a dedicated worktree `../tb-college-A` | `tools/college-price-probe.ts --seeds 6 --all` (the instrument that shipped at that commit) |
+| **B** – the rebuild | `9dca805` | `tools/college-choice-probe.ts --seeds 6` |
+
+⚠ **The obvious A would have been wrong.** Another agent is committing wild-card work on this same
+branch, so "the branch head before I started" measures both waves. Reverting MY OWN commit leaves the
+wild cards present in both arms – CLAUDE.md's shared-checkout rule, and the reason it exists.
+
+⚠ **Provenance checked before the numbers were believed**: `git grep COLLEGE_TIERS -- src/` returns
+**nothing on A** and **three files on B** – the constant, its reader in `world/college.ts`, and the
+card. Neither arm is a tree where the change sits without its reader.
+
+⚠ **The two arms use different instruments and that is unavoidable, not sloppy**: arm A's model has no
+tiers, so the new probe cannot compile against it and the old probe cannot express a choice. **Only
+the columns both can express are compared** – the family's bill, the covered share, free rides, and
+whether anybody ran out. Population, policy and seeds are identical: `POLICIES[1]` (`player`), 6 seeds
+x 9 presets, **n = 53** careers reaching the fork in both.
+
+### 3b. THE PREDICTIONS, JUDGED
+
+| # | prediction | verdict |
+| --- | --- | --- |
+| **P1** | state takes ≥ 70% under a dearest-affordable player | ⚠⚠ **WRONG, AND BACKWARDS.** Under that rule **72% take the PRIVATE place**, 26% national, 2% state. I predicted a poor population; by the fork the median family has **$41,635 a year** of income-plus-cushion against a $23,128 private bill. §3d |
+| **P2** | median family bill $0 · ~$20,000 · ~$34,000 | **half held.** $0 · **$14,144** · **$23,128**. The state figure is exact by construction; the two above it are ~30% cheaper than predicted, because the ±10% funding spread and the need layer both lift the covered share off the bare recruiting-board arithmetic |
+| **P3** | >0 and <20% run out under the dearest-affordable rule | ⚠⚠ **WRONG ON THE CEILING, AND IT FOUND SOMETHING THE PREDICTION DID NOT NAME.** At the private place **11 of 53 (21%) finish under water and 6 of 53 (11%) go BANKRUPT – the career ENDS.** Arm A: 0 of 53 on both. §3e |
+| **P4** | the development gap between cheapest and dearest is under 0.5 of one skill point | ✅ **HELD, BY A FACTOR OF EIGHT.** +1.11 / +1.14 / **+1.17** – the dear place buys **0.06 of one skill point** over four years. **The tier is not legible through her game and I am saying so rather than tuning until it is.** §3f |
+| **P5** | the merit-only property survives | ✅ **held**, and the sweep is wider than before: every background x both nationalities x four incomes x four savings **x every tier**, mutation-verified |
+| **P6** | the walk-on share does not move | ✅ **held at 0 of 53 on this population, in both arms.** ⚠ The "3 of 90" figure quoted in §0b is `ladder-baseline`'s 90-career battery, a different instrument; this one's 53 careers all reached at least one junior quarter-final |
+| **P7** | the frozen MAIN capture does not move | ✅ **held – no re-pin.** And the three frozen careers moved by **exactly `schemaVersion`**: rolling v52 back to 51 on the new worlds reproduces all three old hashes byte for byte (`PRE_V52` in `tests/coach-travel-edge.test.ts`) |
+
+### 3c. ⭐⭐ THE THREE PLACES, PRICED (n = 53, medians)
+
+| place | price a year `[S]` | athletic | need | covered | **the family pays** | a week | full rides |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **state** | $30,990 | **100.0%** | 0.0% | **100.0%** | **$0** | $0 | **29 / 53** |
+| **national** | $50,920 | 58.5% | 0.0% | 72.2% | **$14,144** | $272 | 14 / 53 |
+| **private** | $65,470 | 40.5% | 0.0% | 64.7% | **$23,128** | $445 | 7 / 53 |
+
+**Against arm A**, whose single offer had one price and no choice:
+
+| | **A** (the model replaced) | B state | B national | B private |
+| --- | --- | --- | --- | --- |
+| the family pays a year | **$8,539** | $0 | $14,144 | $23,128 |
+| covered, median | 72.4% | 100% | 72.2% | 64.7% |
+| free rides | 3 / 53 | 29 / 53 | 14 / 53 | 7 / 53 |
+
+⭐ **Arm A's single offer sits almost exactly on the new NATIONAL place** (72.4% vs 72.2% covered).
+The rebuild did not make college dearer or cheaper – **it put a $23,128 spread around the price that
+used to be the only one**, and handed the player the dial.
+
+⚠ **The need column reads 0.0% at the median at every tier, and that is round 21's own earlier change
+showing up rather than a defect.** The means test reads the family's REAL position at enrolment
+(income + savings over the shield), and by nineteen the median family's position is **$41,635 a
+year** – above `noNeedAboveCents` ($35,000), so the layer pays nothing. It still reaches the families
+below the knot; it no longer reaches the median one.
+
+### 3d. ⭐⭐ WHICH PLACE THE POPULATION CAN TAKE – ⚠ OUR MODELS OF A PLAYER, NOT A MEASUREMENT OF PLAYERS
+
+Nobody has played this build. What the table measures is what the population ALLOWS under a rule
+stated out loud.
+
+| model of a player | state | national | private | median $/week |
+| --- | --- | --- | --- | --- |
+| cheapest always | 53 (100%) | 0 | 0 | $0 |
+| **dearest affordable** | 1 (2%) | 14 (26%) | **38 (72%)** | $392 |
+| dearest always | 0 | 0 | 53 (100%) | $445 |
+
+**The dear place is within reach of nearly three quarters of the population**, which is the finding
+P1 got backwards. `affordable` is `familyPerYearCents <= income + savings/4`, and by the fork the
+family's cushion is large: **min $18,774 · p25 $32,815 · median $41,635 · p75 $59,994 · max
+$120,370** a year.
+
+### 3e. ⚠⚠ THE ONE THING THE OWNER HAS TO RULE ON: THE DEAR PLACE CAN END THE CAREER
+
+| place | affordable | ran out of money | **career ENDED inside the four years** | funds after, median |
+| --- | --- | --- | --- | --- |
+| state | 53/53 (100%) | 0/53 | **none** | $164,736 |
+| national | 52/53 (98%) | 1/53 (2%) | **bankruptcy 1** | $116,844 |
+| private | 38/53 (72%) | **11/53 (21%)** | **bankruptcy 6** | $64,903 |
+
+**Arm A: 0 of 53 under water and 0 of 53 ended.** Before this phase the college branch could not end
+a career; it can now, through the bankruptcy mechanic that was already there.
+
+⚠ **This does not touch the owner's ruling of 16.08.** Nothing removes the college ANSWER – all three
+places are on the card, at their price, and a family that cannot pay goes into debt. What is new is
+that the debt can run to bankruptcy over four years, which is what «может пойти в долг» means when
+the debt spell is a real mechanic. **It is reported rather than tuned away**, and §5 states the three
+levers if he wants it softer.
+
+⚠ **And the card charges what it quotes.** Over the first year, quoted against the ledger:
+national **$14,144 quoted / $14,144 charged**, exactly; private $23,128 / $21,030, the gap being the
+six careers that ended mid-year. (One year and not four, because `financeWeeks` is a rolling 60-week
+window – a four-year sum off it reads a quarter of the truth and looks like an engine that under-bills.)
+
+### 3f. ⚠⚠ THE DIMENSION I PROPOSED, AND THE HONEST ANSWER IS THAT IT IS TINY
+
+| place | skill mean before | after | gain over 4 years | **vs the cheap place** | has a professional rank after |
+| --- | --- | --- | --- | --- | --- |
+| state | 58.59 | 59.88 | **+1.11** | – | 0 / 53 |
+| national | 58.59 | 59.37 | **+1.14** | +0.03 | 0 / 53 |
+| private | 58.59 | 59.39 | **+1.17** | **+0.06** | 1 / 53 (#998) |
+
+**Paying $92,510 more over four years buys six hundredths of one skill point.** The mechanism works –
+the gain really does climb with the squad, monotonically, and it is the engine's own tuned match
+bonus doing it – but the AMOUNT is invisible, and P4 said so before the build for the right reason:
+**at nineteen she is nearly out of headroom**. P5 measured the entire coached/un-coached gap over the
+same four years at 0.12 points; this is half of that, which is exactly what a term of that size can
+buy.
+
+⭐⭐ **So "the chance of returning to the tour" is measured and it is FLAT: 0 / 53, 0 / 53, 1 / 53.**
+She comes back off the professional list at every place, because she was off it walking in (P5 §2c) –
+and no tier changes that. **The tier's real currency is money, not her game.** That is the answer to
+the third dimension, and it is a measurement rather than a die.
 
 ---
 
-## 4. WHAT WOULD REPLACE OUR NUMBERS
+## 5. WHAT IS THE OWNER'S TO DECIDE
 
-*(filled in)*
+1. **Should four years at the dear place be able to bankrupt the family?** 6 of 53 careers end there
+   today and 0 did before. Three levers, none pulled: raise `fullAwardScore` at `private` (a bigger
+   award), lower the `private` price (it is sourced – so no), or make the debt spell warn louder
+   during the freeze.
+2. **Is a 0.06-skill-point difference worth keeping as a dimension at all?** It is honest, it is
+   monotone, and it is invisible. The alternative is college MATCH RESULTS (§4b item 1), which is a
+   real build and would make the squad calibratable.
+3. **The need layer now pays the median family nothing** (§3c), because it reads the family's real
+   position and that position is large by nineteen. That was round 21's earlier change working as
+   designed; whether the knots are in the right place on a population this wealthy is a separate
+   question and this phase did not move them.
+
+---
+
+## 4. WHAT WOULD REPLACE OUR NUMBERS, AND WHAT IS DELIBERATELY NOT HERE
+
+### 4a. The invented numbers, and the evidence that would retire each
+
+| ours | what would replace it |
+| --- | --- |
+| **squad 55 / 65 / 75** | nothing published rates a college squad on our skill scale, and nothing will. The honest replacement is not a source but a CALIBRATION: play the three tiers against our own cohort and set the squad where a programme's median player actually sits. That needs college MATCH PLAY as results, which this phase deliberately did not build (§4b) |
+| **recruiting bar 11 / 18 / 23** | a per-sport award distribution. §4 items 15 and 16 of `docs/research/college-and-the-junior-exit.md` are explicit that none could be sourced: no per-sport award figure exists and the share of programmes funding to their limit is unknown. Until one does, these are the measured quantiles of our own score and nothing better |
+| **the dual-match season, 13 weeks at season weeks 4-17** | the real NCAA calendar. It is public and could be used; it was not, because the game's season week 0 is not January and mapping one onto the other is a calendar decision the repo has not taken |
+| **1 / 2 / 3 matches a week** | the same calendar, plus a real dual-match count per division. ⚠ Note the cap: 3 saturates `ECONOMY.development.matchBonusCap`, so a truer number above 3 would change nothing without moving a constant this phase had no licence to move |
+| **the affordability rule** (income + savings/4) | nothing external. It is the arithmetic a parent does, said out loud, and it is used for a FACT on the card and for a stated model of a player in the probe – never as a gate |
+
+### 4b. Three things this phase could have built and did not, each for a reason
+
+1. **College match RESULTS.** `matchesThisWeek` is a count fed to `growWeek` and nothing else: no
+   `world.results` row, no rank, no prize. The sport awards neither ranking points nor money for
+   college tennis, so a result row would break the `prizeCentsFor` invariant ("a result cannot award
+   one without the other") to no purpose. It is also what would be needed to calibrate `squad`, which
+   is the honest cost of the decision.
+2. **A per-tier return-to-tour die.** §2c. It would override the career the player had.
+3. **A coaching multiplier per tier.** The programme does coach her, and `coachWorksThisWeek` already
+   returns false at college so the family is not billed. A second rate multiplier beside the match
+   term would be **double-counting one fiction** – and P5 measured the entire coached/un-coached gap
+   over these four years at 0.12 skill points, so it would have bought a third of nothing.
