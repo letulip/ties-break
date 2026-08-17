@@ -40,6 +40,13 @@ turned out to be wrong. That is the failure this document is written against.
 * `[?]` – **found in a primary source and internally inconsistent.** Added 16.08 for §1d's dangling
   bylaw cross-reference: the manual points at three bylaws it does not contain. Reported as read, not
   reconciled, and never used to size anything.
+* `[S-proxy]` – **added 17.08 with §3a, and it is not a synonym for `[S]`.** The words were read on
+  the cited page, but through the public text proxy `r.jina.ai/<url>` rather than at the origin,
+  because **`wearecollegetennis.com` (the ITA) and `atptour.com` return nginx 403 to a fetcher AND to
+  a real headless Chrome**, and **archive.org was itself offline that day** so there was no archival
+  fallback. A proxy render is one more link in the chain than `[S]` claims, so it gets its own tag
+  rather than being quietly promoted. **One `[S-proxy]` figure below is corroborated independently by
+  a search snippet of the same page and says so; the rest are not.**
 
 **No figure from this repo's own documents appears below as external evidence.**
 
@@ -513,7 +520,138 @@ co-plaintiff, is now a touring professional. **`[GAP]`** No published rank-or-re
 tennis freshmen. A resource exists – *collegetennisranks.com*'s "WTA Singles Rankings for College
 Players" – but the table is script-rendered and could not be retrieved, and the ITA's own preseason
 rankings page returned HTTP 403. **So "what rank does a college-bound girl typically hold" is unsourced
-here, and must not be guessed.**
+here, and must not be guessed.** ⚠ §3a below **partly closes this**, and only partly – see §3a.4.
+
+---
+
+## 3a. ⭐⭐ THE ROAD BACK – WHERE A COLLEGE PLAYER RETURNS TO, HOW FAST, AND HOW MANY
+
+**The owner, 17.08:** «(и есть ли примеры из жизни куда они возвращаются, кстати?)»
+
+⚠ **WHAT §2 AND §3 ALREADY ANSWERED, PLAINLY, BECAUSE THE ANSWER IS "LESS THAN YOU THINK".** §3 is
+about how far up a college-BOUND junior gets **before** enrolling – Brantmeier's US Open, Joint's
+$140,000 – and §2 is about how many juniors go at all. **Neither says anything about the return.**
+⚠ And two figures that were expected to be in §2/§3 **are not there and never were**: there is **no ITA
+count of top-100 players with college ties** anywhere above this line, and **no "~#900 typical ranked
+freshman"** – §4 item 3 records the freshman rank distribution as an explicit `[GAP]`, and §3's own
+last paragraph says it "must not be guessed". This section is what closes the first of those and
+half of the second.
+
+### 3a.1 HOW MANY MAKE IT – the counts exist, the RATE does not
+
+| claim | value | denominator – **read this column first** | tag | source |
+| --- | --- | --- | --- | --- |
+| Players with college ties in the **WTA top 100 singles** | **5** | the top 100 of the WTA singles list, Mar 2024. ⚠ ITA does not state its definition of "college ties" | `[S-proxy]` **+ corroborated by an independent search snippet of the same page** | [ITA, 18 Mar 2024](https://wearecollegetennis.com/2024/03/18/former-collegians-crowd-the-wta-and-atp-rankings-heading-to-miami/) |
+| ...the same for the **ATP top 100 singles** | **15** | ATP top 100. **Men's** | `[S-proxy]` | same |
+| ...**WTA top 100 doubles** | **15** | WTA doubles top 100 | `[S-proxy]` | same |
+| ...**ATP top 100 doubles** | **39** | ATP doubles top 100. **Men's** | `[S-proxy]` | same |
+| "Thirteen former collegians are currently among the Top 100 in the … ATP Rankings"; "19 of the Top 50" in doubles | **13 / 19** | ATP top 100, ATP doubles top 50, 2023. **Men's** | `[S-proxy]` | [ATP Tour official, 2023](https://www.atptour.com/en/news/inside-the-game-college-tennis-to-the-pros-2023) |
+| Players with college ties in the **2025 Australian Open singles main draws** | **29** (19 men, **10 women**), "up from 27 in 2024, 22 in 2023, 21 in 2022" | the 128-player main draws – **a draw, not a ranking census** | `[S-proxy]` | [ITA, 9 Jan 2025](https://wearecollegetennis.com/2025/01/09/collegians-featured-prominently-in-australian-open-singles-draws/) |
+| ...at **Wimbledon 2025** | **35** – 26 men (highest since 2000), **9 women** | same shape | `[S-proxy]` | [ITA, 27 Jun 2025](https://wearecollegetennis.com/2025/06/27/new-records-set-with-collegians-flooding-wimbledon-singles-main-draws/) |
+
+⭐⭐ **THE ASYMMETRY IS THE FINDING, AND IT IS LARGE.** The ITA's own number for **women is five** in
+the WTA top 100 against **fifteen** men – a factor of three, from the same body, in the same article,
+on the same date. Every ATP/men's row above is included **only** to make that contrast visible; this
+game is WTA-first and **the men's figures must never be used to size anything in it.**
+
+**`[GAP]` THERE IS NO SOURCED COLLEGE→WTA CONVERSION RATE, AND IT DOES NOT APPEAR TO EXIST PUBLICLY.**
+
+* **The NCAA does not publish one for tennis at all.** Its probability-of-competing publication covers
+  **seven sports** – baseball, men's and women's basketball, football, men's and women's ice hockey,
+  men's lacrosse – and **tennis is not among them** `[S]`
+  ([NCAA](https://www.ncaa.org/student-athletes/probability-of-competing-beyond-high-school/)).
+* **The ITA publishes stock counts, never rates.** Every row above is "how many are in the top 100
+  today", which has no denominator of players who tried.
+* ⚠ **The obvious division was available and is deliberately NOT offered**: 299 ranked ex-collegians
+  (§3a.2) ÷ 8,137 NCAA participants in one season = 3.7%. It compares a **multi-cohort, multi-national,
+  all-divisions STOCK** against **one season's roster count**. It is not a conversion rate, and
+  printing it would be exactly the §0 failure.
+* ⚠ **A trap, named so nobody re-finds it and believes it:**
+  [tennismajors.com](https://www.tennismajors.com/others-news/what-percentage-of-tennis-players-reach-professional-level-research-833125.html)
+  is headlined *"Research"* and is a **guest opinion column citing no study, no method and no links**
+  `[WEAK]`. Its "less than 1 percent", "1 in 10,000 crack the top 500" and "5% of college players
+  attempt professional" are unsourced. **Do not use.**
+
+### 3a.2 WHAT RANKS THEY REACH – the one real distribution, and its source is weak
+
+**Source:** [collegetennisranks.com – WTA singles](https://collegetennisranks.com/rankings/playersontour/wtasingles),
+fetched 17 Aug 2026. `[WEAK]` **and the weakness is specific**: it is an independent fan site with no
+ITA or WTA affiliation, and **its FAQ does not define what counts as a "college player"**, state an
+update cadence, or name an owner. It is used here because it is the only distribution that could be
+retrieved at all, and because its Stearns row (53) agrees with the WTA's own page for the same week.
+
+| claim | value | denominator | tag |
+| --- | --- | --- | --- |
+| Players with college affiliations **currently holding a WTA singles ranking** | **299** | the whole WTA singles list. ⚠ **all divisions** (D-II appears) and **includes players still enrolled** | `[S]` at that URL |
+| ...of them inside the **top 100** | **8** | the 299 | `[S]` |
+| ...**top 200** | **16** | the 299 | `[S]` |
+| ...**top 300** | **30** | the 299 | `[S]` |
+| ...**top 500** | **75** | the 299 | `[S]` |
+| ...**top 1000** | **199** | the 299 | `[S]` |
+| deepest ranked / highest ranked | **#1533** / **#14** | – | `[S]` |
+| **Share of ranked ex-collegians inside each band** | **2.7% top 100 · 5.4% top 200 · 25.1% top 500** | ⚠⚠ **the 299 who ALREADY HAVE A RANKING** – NOT all college players. This is not "how many make it" | `[I]`, numerator and denominator both from the URL above |
+
+⚠ **SOURCE CONFLICT, REPORTED AND NOT RECONCILED.** [Slamstox](https://www.slamstox.com/en/american-college-tennis-a-top-producer-of-professional-tennis-players/)
+– a **recruiting and management agency**, i.e. an interested party, citing no source, page dated
+10.07.2026 – states **"18 ex-college players … among the best 300"** in WTA singles `[WEAK]`. The table
+above says **30**. Neither states a ranking week. Both are recorded; neither is preferred.
+
+### 3a.3 ⭐ THE NAMED CASES – who came back, from where, to what, and in how long
+
+**These are the answer to «есть ли примеры из жизни».** Career highs are from the WTA's own player
+pages where one could be fetched; the **dates** of those highs mostly could not be, and are marked.
+
+| player | college | left | career high | date of it | time college → high |
+| --- | --- | --- | --- | --- | --- |
+| **Emma Navarro** | Virginia 2020-22, **NCAA singles title May 2021** | 2022 | **No. 8** `[S]` [WTA](https://www.wtatennis.com/players/325410/emma-navarro) | 9 Sep 2024 `[WEAK]` [Wikipedia](https://en.wikipedia.org/wiki/Emma_Navarro) | **~2 years** `[I]` |
+| **Peyton Stearns** | Texas 2020-22, **NCAA singles champion 2022** | **turn-pro announced 3 Jun 2022** `[S-proxy]` [Texas](https://texaslonghorns.com/news/2022/6/3/womens-tennis-peyton-stearns-elects-to-turn-professional) | **No. 28** `[S]` [WTA](https://www.wtatennis.com/players/327573/peyton-stearns) | **19 May 2025** `[S]`, same WTA page | **~2 yr 11 mo** `[I]` |
+| **Danielle Collins** | Florida 2012-13, **Virginia 2013-16**, NCAA titles **2014 and 2016** | 2016 | **No. 7** `[S]` [WTA](https://www.wtatennis.com/players/316925/danielle-collins) | 11 Jul 2022 `[WEAK]` [Wikipedia](https://en.wikipedia.org/wiki/Danielle_Collins) | **~2 yr to top 100, ~6 yr to the high** `[I]` |
+| **Jennifer Brady** | UCLA, left after her sophomore year | 2014 | **No. 13** `[S]` [WTA](https://www.wtatennis.com/players/318358/jennifer-brady) | Feb 2021 `[WEAK]` [Wikipedia](https://en.wikipedia.org/wiki/Jennifer_Brady) | **~3 yr to top 100, ~7 yr to the high** `[I]` |
+| **Janice Tjen** | Oregon 2020-21, **Pepperdine 2021-24** | 2024 | **No. 37** (current) `[S]` [collegetennisranks](https://collegetennisranks.com/rankings/playersontour/wtasingles) | – | **~2 years to the top 40** `[I]` – the fastest recent case |
+| **Darja Vidmanova** | **Georgia 2021-25** | 2025 | **No. 88** (current) `[S]`, same URL | – | **top 100 within ~1 year** `[I]` |
+| **Diana Shnaider** | NC State 2023 | 2023 | **No. 14** (current) `[S]`, same URL | – | – |
+| **Reese Brantmeier** | North Carolina | still enrolled | **No. 411** | 1 Aug 2022 | ⚠ **search snippet only, no page fetched** `[WEAK]` |
+| **Nicole Gibbs** | Stanford, NCAA singles 2012 & 2013 | 2013 | **No. 68** | 25 Jul 2016 | ⚠ **search snippet only, no page fetched** `[WEAK]` |
+
+⭐ **THE YEAR-BY-YEAR CURVES ARE THE SHAPE THAT MATTERS**, and all of them are `[WEAK]` (Wikipedia
+year-end tables, chased for a primary source and not found):
+
+* **Navarro** – 2019: #486 · 2020: #463 · 2021: #233 · 2022: #143 · **2023: #38 · 2024: #8** · 2025: #15
+* **Stearns** – 2021: #392 · **2022: #209 · 2023: #53 · 2024: #48** · 2025: #63
+* **Brady** – 2014: #267 · 2015: #229 · **2016: #111 · 2017: #64**
+
+⚠ **THE CONFLICTS, UNRECONCILED.** Navarro's Wikipedia infobox says *"turned pro 2015"* while the same
+page gives college years 2020-22 – an infobox artefact, reported rather than resolved. And a search
+snippet calls Brady a **freshman** on the 2014 UCLA title team while Wikipedia says she left after her
+**sophomore** year in 2014.
+
+⚠ **MAYA JOINT IS A NON-EXAMPLE AND IS LISTED ONLY AS THE CONTRAST.** She **enrolled at Texas and
+turned professional on 26 Dec 2024 without playing a college match**; career high **WTA 53, 26 May
+2025** – ⚠ **search snippet only, `[WEAK]`.** She is the player who skipped the route, not one who
+returned from it.
+
+⚠⚠ **AND THE REGIME THESE CASES WERE SET IN NO LONGER EXISTS.** §1b already records the April 2026
+repeal. §3a adds the litigation half: **Brantmeier's federal class action against the NCAA over prize
+money settled for $2.02M with the restrictions being lifted** ⚠ **search snippet only, `[WEAK]`, and
+it should be sourced properly before it is used for anything.** So **every rate and every curve above
+is measuring a world with the old prize-money penalty in it.**
+
+### 3a.4 THE FRESHMAN RANK – §4 item 3, now HALF closed
+
+| claim | value | denominator | tag | source |
+| --- | --- | --- | --- | --- |
+| The **No. 1 ranked incoming newcomer in D-I**, Mayu Crossley (UCLA), preseason 2025-26: career-high **ITF juniors No. 5**, and *"currently ranks as the No. 361 ranked WTA player"* | **#361** | ⚠⚠ **the single best incoming freshman in the country – a CEILING, not a typical value** | `[S-proxy]` | [ITA D-I Women's Preseason Rankings, 26 Aug 2025](https://wearecollegetennis.com/2025/08/26/division-i-womens-preseason-rankings/) |
+
+**`[GAP]` THE TYPICAL FRESHMAN IS STILL UNSOURCED.** The newcomer-rankings **table** on that page did
+not render through the proxy – only the prose about the top newcomer did – and the origin is 403 to a
+fetcher and to a real browser alike, with archive.org offline. ⚠ **A search-result summary offered
+"top incoming freshmen typically have … WTA rankings in the 300-400 range". That sentence is the
+search engine's own generalisation and not a statement by any source. It is not evidence and is not
+used.**
+
+⚠ **So the ONE sourced anchor is a ceiling (#361 for the best freshman in the country), and there is
+still no median.** Anyone reaching for "the typical ranked freshman is about #900" should know that
+**no source in this document says it.**
 
 ---
 
@@ -526,7 +664,11 @@ here, and must not be guessed.**
    8,413 *player-years over 21 seasons*; it does not give the annual list size, and I did not find an
    ITF publication that does.
 3. **The WTA-ranking distribution of incoming D-I freshmen.** §3. Two candidate sources, one
-   script-rendered, one 403.
+   script-rendered, one 403. ⚠ **HALF CLOSED 17.08, §3a.4**: the script-rendered one now loads and
+   gives the whole ranked-ex-collegian distribution (§3a.2), and the ITA gives **one** freshman
+   anchor – **#361 for the single best newcomer in the country**, which is a ceiling. **The MEDIAN
+   incoming freshman remains unsourced**: the ITA table itself still does not render, the origin is
+   403 to a fetcher and to a real browser, and archive.org was offline. **Still must not be guessed.**
 4. **The international share of D-I women's tennis rosters, from a primary source.** The 62–66% figures
    come from an X post and a commercial recruiting page. **No ITA or NCAA demographic table was found.**
    ⚠ This matters more than it looks: it decides whether ~715 places a year are open to the world or
@@ -562,6 +704,28 @@ here, and must not be guessed.**
 14. **What the new age-based eligibility clock (Bylaw 12.6) would cost our character**, who is asked the
     fork question on precisely the birthday the clock starts. **Nobody in this project has costed it**
     and it is not measured in `college-fork-2026-08.md` either.
+
+**Added 17.08 with §3a – the return side's own gaps:**
+
+21. ⚠⚠ **A COLLEGE -> WTA CONVERSION RATE.** §3a.1. **The NCAA excludes tennis from its
+    probability-of-competing publication entirely** (seven sports, tennis not among them) and **the
+    ITA publishes stock counts and never rates.** No peer-reviewed study was found. This is the
+    single largest hole in the whole document and it is not obviously fillable.
+22. **The DATES of most career highs.** §3a.3. The WTA player pages state the career high itself but
+    were not observed to print its date; the dates below Stearns's come from Wikipedia `[WEAK]`.
+23. **A primary source for the year-end ranking curves.** §3a.3. All three are Wikipedia year-end
+    tables; the underlying WTA archive was not reached.
+24. **The Brantmeier settlement figure and the lifting of the prize-money restrictions.** §3a.3.
+    ⚠ Search snippet only, no page fetched, and it is load-bearing for "the regime has changed".
+25. **The ATP-side equivalent of §3a.2.** `collegetennisranks.com`'s ATP table returns *"No data
+    available in table"*. Noted only for completeness – this game is WTA-first.
+26. **What `collegetennisranks.com` means by "a college player".** §3a.2. Its FAQ does not say, and
+    the number 299 is only as good as that definition.
+27. ⚠ **THE D-I-ONLY PARTICIPANT COUNT.** The NCAA page's division split reads D-I 1.4% / D-II 1.7% /
+    D-III 1.7% of high-school participants, which **sums to 4.8% against its own stated 4.0% overall**
+    `[?]`. The authoritative Sports Sponsorship PDF **exceeded the 10 MB fetch limit** and the
+    methodology PDF returned unreadable binary. **No D-I headcount should be quoted from this
+    document.**
 
 **Added 16.08 with §1d – the cost side's own gaps:**
 
