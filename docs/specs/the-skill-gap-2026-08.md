@@ -536,8 +536,20 @@ The staircase is gone: the flat top (×0.06) and the cliff (×2.16) are both wit
 | p25 career high | #58 | **#7** |
 
 **S6 predicted "at least 40 places". It is 85, and that is not a rounding – it is a different game at
-the top.** `tools/big-rung-finishes.ts --seeds 6` on the B arm: WTA 250 **title 15.4%, QF+ 46.6%**;
-WTA 500 title 9.4%; WTA 1000 title 5.1%.
+the top.**
+
+`tools/big-rung-finishes.ts --seeds 6`, both arms – and this is the round-21 complaint he opened with
+(«она за 2 последних сезона даже до QF нигде на больших турнирах ни разу не дошла») answered directly:
+
+| rung | entries A → B | past R1 | QF+ | title |
+|------|---------------|---------|-----|-------|
+| WTA 250 | 286 → **208** | 52.1% → **65.9%** | 26.2% → **46.6%** | 6.3% → **15.4%** |
+| WTA 500 | 193 → **438** | 34.2% → **68.0%** | 16.6% → **41.6%** | 1.0% → **9.4%** |
+| WTA 1000 | 53 → **332** | 47.2% → **56.0%** | 9.4% → **23.8%** | 0.0% → **5.1%** |
+
+⚠ **Read the ENTRIES column as well as the finishes** – WTA 500 entries more than double and WTA 1000
+entries sextuple, because a higher-ranked girl is accepted into far more big events. That is the
+acceleration in §7c seen from the other side, not a second effect.
 
 **⚠ IT IS NOT AN ODDS ERROR, AND THE ARITHMETIC PROVES IT RATHER THAN EXCUSING IT.** This file's own
 population note records `rollPotential`'s measured output: the mean-of-four a career can reach is

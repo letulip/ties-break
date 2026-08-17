@@ -1406,6 +1406,14 @@ function closeExhibition(): void {
                 <b>{{ Math.round(row.event.preview.firstMatchChance * 100) }}</b><i>%</i>
               </ProgressRing>
             </div>
+            <!-- ⚠ THE TWO NUMBERS THE RING IS MADE OF – the same pair the calendar card carries, and
+                 the same reason (round 21, the owner's D&D ruling). The ring alone is a percentage a
+                 player cannot check; these are its inputs, and
+                 `1 / (1 + 10^((hers - mine) / 400))` reproduces it to inside a point
+                 (tests/rating.test.ts). Silent when there is no opponent to be rated against. -->
+            <p v-if="row.event.preview.opponentRating !== null" class="odds-ratings">
+              Rating <b>{{ row.event.preview.kidRating }}</b> vs <b>{{ row.event.preview.opponentRating }}</b>
+            </p>
 
             <div class="controls" style="margin-top: 12px">
               <!-- Entered, list still OPEN: an ordinary withdrawal, fee refunded. -->
@@ -2367,4 +2375,16 @@ section.bare .event-cards {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+.odds-ratings {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-align: right;
+}
+
+.odds-ratings b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
 </style>
