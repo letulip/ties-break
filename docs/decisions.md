@@ -1534,3 +1534,30 @@ asset term, which is the half the label could never see. Reported with the two k
 the contract it agreed to at nineteen. ⚠ `tests/coach-travel-edge.test.ts` is red on three frozen
 hashes – **verified already red at the wild-card commit, in a clean worktree, before any commit here
 existed**, so it belongs to that wave.
+
+**MEASURED, and both instruments named their commit.** A = `5737c40` with the engine commit
+`fd66d52` reverted; B = `5737c40`. ⚠ The obvious A – the branch head before I started – would have
+been WRONG: another agent committed college work in between, so "before and after" would have
+credited the wild cards with their change. Written up in `the-wild-cards-2026-08.md` §4a.
+
+* **`ladder-baseline.ts --seeds 10`**: Slam entry RATE flat, career-high median **#94 → #95**,
+  survival and college unchanged in shape. Careers *reaching* a Slam 44 → 51 of 90 – but the rank at
+  first entry stayed inside the cut (#105 → #106 median), so that is the population reshuffling, not
+  the wild card letting anybody in.
+* **`big-rung-finishes.ts --seeds 6`**: per ENTRY the Slam got harder (lost her first match 41.8% →
+  **44.3%**); per CAREER more got there (16/54 → 20/54). **The two moved in opposite directions, as
+  predicted.** No Slam title and no Slam final in either arm.
+* **`wild-card-reach.ts --seeds 6`** – ⭐ the number he asked for: **49 of 54 careers are offered at
+  least one, median 2 per career over thirteen seasons, about one every five seasons**, and every
+  offer landed between **#113 and #323, median #174**. A story, not a remedy.
+
+⚠⚠ **AND THE FINDING THAT OUTLIVES THIS ITEM: both shipped instruments are BLIND to her half.**
+`tools/econ-bench.ts`'s entry loop pre-filters the week with `tierOpenFor(world, e.tier)` – the
+per-rung gate, no event id – so a Slam a wild card opens is skipped before `enterEvent`, which would
+have accepted it, is asked. The fix is one argument and is **deliberately not made here**: that file
+is shared measurement infrastructure and another agent was mid-run against it. It needs its own
+re-measure. ⚠ **The game is unaffected** – `snapshot.ts` and `enterEvent` both gate per event.
+
+⚠ **Frozen careers: ONE of three moved** (`selfTravelling`), per-key diff taken first, and the A arm
+reproduces all three shipped constants at all three schema versions – so none of it is the other
+agent's. `rngMain` unmoved; the frozen MAIN capture 41550 / `e6b0c709` still verifies.

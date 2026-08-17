@@ -162,7 +162,138 @@ be comparing two different questions and calling the difference a bug.
 
 ## 4. MEASURED
 
-*(filled in below – predictions were written before either arm ran, and each arm's commit is named.)*
+### 4a. ⚠⚠ THE ARMS, AND THE FIRST PAIR WAS WRONG – the lesson of 17.08 repeating within a day
+
+CLAUDE.md's newest gotcha says a null result needs the same provenance check as a positive one: name
+the commit each arm was built at, and confirm the reader is present. **The first pair here failed a
+check that box does not yet name, and it produced a false POSITIVE rather than a false null.**
+
+The obvious construction – A = the branch head before I started (`1bc270b`), B = my commit – is
+wrong when **another agent is committing into the same branch while you work**. Between those two
+commits sat two college commits, +183 lines of `collegeOffer.ts` and a new probe tool, so "A vs B"
+would have credited the wild cards with somebody else's change. The shared checkout was also **dirty
+with nine more of their files** while the first B arm was running.
+
+**The construction that is right:**
+
+| arm | built as | reader present? |
+| --- | --- | --- |
+| **A** | **`5737c40` with the engine commit `fd66d52` reverted** – wild card removed, everything else including their college work held identical | `git grep WILD_CARD -- src/` → **empty**, checked and logged |
+| **B** | **`5737c40`**, clean | the constant **and every reader**: both gates, the AI fill, the snapshot, the badge |
+
+Both arms ran **sequentially in one dedicated worktree**, so neither could see the other agent's
+working tree. ⚠ And one more trap inside that: `git checkout -- src` restores from the **index**, and
+`git revert --no-commit` had staged the revert – so a "restore B" that used it ran the A tree twice
+and produced the byte-identical output that is exactly what comparing a thing with itself produces.
+`git reset --hard <sha>` is the one that actually moves the tree.
+
+### 4b. Instrument 1 – `tools/ladder-baseline.ts --seeds 10` (n 90)
+
+| column | predicted | measured | verdict |
+| --- | --- | --- | --- |
+| `reach.slam` | +0 to +2 of 90 | **44 → 51 of 90** | ⚠ **bigger than predicted** |
+| `entriesMean.slam` (per age band) | < +0.5 | **flat** – 0.7/1.0/0.9 → 0.8/0.9/1.1 at 21/22/25 | ✅ |
+| `careerHigh.rank` median | within 2 places | **#94 → #95** | ✅ |
+| every rung below the Slam | small non-monotone drift | **W500 reach 50 → 57**, W1000 26 → 26, J300 86 → 85, everything else flat | ⚠ see below |
+| prize, career median | not predicted | $774,855 → **$919,715** | ⚠ noise-shaped, n 90, heavy tail |
+| `survival.byEnding`, `college.*` | unchanged in shape | **unchanged in shape** | ✅ |
+
+⭐ **THE ONE THAT LOOKS LIKE A FINDING AND IS NOT WHAT IT LOOKS LIKE.** `reach.slam` +7 and
+`reach.wta500` +7 sound like the wild card letting seven careers in. It is not: the two cuts are #112
+and #120, **eight places apart**, so "reached the Slam" and "reached the WTA 500" are nearly the same
+event, and the Slam's *rank at first entry* barely moved – **#96/#105/#109 → #97/#106/#111, all
+inside the 112 cut.** Nobody in this table entered a Slam on a wild card. What moved is the
+population: a different Slam draw makes a different champion, which moves the merged table, which
+moves who crosses a cut. **The entry RATE is flat, which is the number that would have risen if the
+mechanic were letting her in.**
+
+### 4c. Instrument 2 – `tools/big-rung-finishes.ts --seeds 6` (n 54)
+
+**PER ENTRY** (the Slam row):
+
+| | predicted | A | B |
+| --- | --- | --- | --- |
+| entries | up | 55 | **61** |
+| lost her first match (R128) | **share rises** | 41.8% | **44.3%** ✅ |
+| past R1 | – | 58.2% | 55.7% |
+| QF+ | flat | 1.8% | 4.9% |
+| title | flat | 0.0% | **0.0%** ✅ |
+
+**PER CAREER**:
+
+| rung | A entered | B entered |
+| --- | --- | --- |
+| WTA 125 | 41/54 | 45/54 |
+| WTA 250 | 50/54 | 50/54 |
+| WTA 500 | 19/54 | 23/54 |
+| WTA 1000 | 10/54 | 12/54 |
+| **Grand Slam** | **16/54** | **20/54** |
+
+⭐ **THE PREDICTION THAT HELD, and it is the one the brief asked for in both directions: more entries,
+each of them worse.** Per entry the Slam got harder (R128 41.8% → 44.3%); per career more careers got
+there. Those are the two statistics moving in opposite directions, exactly as the last change did.
+
+⚠ **No Slam title, no Slam final, in either arm.** The wild card buys a draw, not a run.
+
+### 4d. ⚠⚠ AND THE HALF NEITHER INSTRUMENT CAN SEE – the finding that matters most
+
+**Both tools walk careers through `tools/econ-bench.ts`, whose entry loop pre-filters the week with**
+
+```
+if (!tierOpenFor(world, e.tier)) continue      // econ-bench.ts, the ranking gate
+```
+
+**– the PER-RUNG gate, with no event id.** Every other rung answers identically either way. A Slam
+opened by a home wild card does not: the bench skips the card before `enterEvent`, which would have
+accepted it, is ever asked. **So everything in §4b and §4c measures the AI half only, and her own
+card is not in either table.** A null there would have been a null *arm*, not a null result – the same
+shape as the lesson in §4a, one layer further out.
+
+⭐ **The fix is one argument, `tierOpenFor(world, e.tier, e.id)`, and it is deliberately NOT made in
+this wave.** `econ-bench.ts` is shared measurement infrastructure and another agent was mid-run
+against it; changing it under a running arm is the contamination this wave was already bitten by. It
+is a follow-up with its own re-measure. **`tools/wild-card-reach.ts` reports the offer instead**,
+without touching the shared tool or the entry policy.
+
+⚠ **The game itself is not affected by this** – `snapshot.ts` gates every card on `entryStatus`, which
+is per-event and does see the wild card, and `enterEvent` re-validates the same way. It is the
+BENCH's pre-filter that is too strict, not the engine's.
+
+### 4e. ⭐ How often a wild card is actually offered – `tools/wild-card-reach.ts --seeds 6`
+
+n 54 careers × 676 weeks (13 seasons), policy `player`, measured at **`5737c40`**.
+
+| | |
+| --- | --- |
+| careers offered at least one | **49 / 54 – 91%** |
+| wild cards offered, total | **132** |
+| ...per career that got any | **median 2**, max 6 |
+| ...per career per season | **0.188** – one about every five seasons |
+| home Slams on the calendar | 259 of 2,808 = **9.2%** (the weighted pool puts a US player's home Slam at ~7.9% per event) |
+| weeks spent inside the window | median 429 of 676 |
+| ⭐ **the ranks an offer came at** | **min #113 · median #174 · max #323** |
+
+⭐⭐ **THE RANK COLUMN IS THE WHOLE DESIGN, MEASURED.** Every offer landed between #113 and #323 –
+inside the window by construction, and exactly where a real home wild card goes. Not one went to a
+player the list would have taken anyway (the first clause forbids it), and not one went to a #900.
+
+⭐ **And the rate is a story rather than a remedy: about one every five seasons.** Nearly every career
+sees one eventually, almost none sees several, and each one is a single draw at a rung where the
+measured outcome is a first-round exit 44% of the time.
+
+### 4f. The frozen careers
+
+**ONE OF THREE MOVED** – `selfTravelling` (preset 0, policy player). The two grinder careers are
+byte-identical. Per-key diff taken first; the A arm reproduces all three shipped constants at all
+three schema versions, so none of the movement is the other agent's. ⚠ `rngMain` unmoved and the
+frozen MAIN capture (41550 / `e6b0c709`) still verifies – the wild cards draw only on
+`seed:wildcard:` and `seed:host:`. Full reasoning at `FROZEN.selfTravelling` in
+`tests/coach-travel-edge.test.ts`.
+
+⭐ **Why one and not three**, and it is the shape of the mechanic: a Slam draw is almost entirely
+derived professionals, and `runAiTournament` writes no ledger row for a field pro – so a changed Slam
+usually changes nothing any table can read. It bites only when a LIVE cohort player is in the draw.
+**That is also the honest explanation of why the population effect above is as small as it is.**
 
 ---
 
@@ -177,6 +308,19 @@ tests each one reddened:
 | `hostNationOf` returns a constant | *differs by event and by seed – a career is not one long home tie* |
 | `HOST_NATIONS` drops the playable-gap half | *contains every code in OnboardingWizard COUNTRIES* · *never widens itself by reading her country* |
 | `homeWildCardPlace` drops the nation clause | *opens the door when the Slam is at home and she is inside the window* |
+| the badge's `v-if` is dropped (it renders unconditionally) | *says nothing at all when the engine did not flag it* |
+| the tooltip's count stops reading `WILD_CARD.slots` | *explains itself in the engine own count, never a literal eight* |
+
+The last two are **mounted** (`tests/component/season-screen.test.ts`), on the CLAUDE.md rule that a
+source pin proves nothing about behaviour. The negative half is what makes the positive half mean
+anything: a badge that rendered unconditionally would pass "it says wild card" and be a lie on every
+card in the game.
+
+⚠ **And the badge test's own first draft was wrong in a way worth recording.** It flagged
+`snapshot.upcoming[0]` and rendered nothing – `calendarRows` is a WEEK-keyed list and does not
+necessarily lead with the first row of `upcoming`, so "the first card" is a fact about the array and
+not about the screen. Flagging the set and asserting *at least one* is the claim that is actually
+about rendering.
 
 ⚠ **And one assertion was found vacuous by its own failure before it was fixed** – the injury case
 asserted "blocked for a reason other than the list" against a career the **list** was refusing anyway,
