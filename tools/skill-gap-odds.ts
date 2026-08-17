@@ -357,9 +357,6 @@ function sectionR(ours: Map<string, number>): void {
   // sport's own unit. A flat segment is a segment where rank carries no information.
   console.log('\n   OUR CORE CURVE, SEGMENT BY SEGMENT (the thing a rank gap is actually made of):')
   console.log('   from    to     doublings   core drop   core/doubling   Elo/doubling   vs the sport')
-  const pros = fieldProsFor('skillgap-world-0', 0)
-  const table = mergedWtaRanking([], pros)
-  const byId = new Map(pros.map((p) => [p.id, p]))
   const meanCoreAt = (rank: number): number => {
     let sum = 0
     for (let w = 0; w < WORLDS; w++) {
@@ -370,8 +367,6 @@ function sectionR(ours: Map<string, number>): void {
     }
     return sum / WORLDS
   }
-  void table
-  void byId
   const segments: [number, number][] = [
     [1, 10],
     [10, 50],
