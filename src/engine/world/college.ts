@@ -22,6 +22,7 @@ import { rngFromSeed } from '../rng'
 import { SKILL_KEYS, type KidSkills } from '../development'
 import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
+import { parentIncomeForWeekCents } from '../economy'
 import { NATIONAL_TEAM, callUpLine, rollCallUp } from '../nationalTeam'
 import { JUNIOR_RUNGS, collegeOfferFor, type CollegeRecruitView, type JuniorRung } from '../collegeOffer'
 import type { CollegeOffer, CollegeProgressView } from '../../shared/protocol'
@@ -53,7 +54,26 @@ export function collegeRecruitViewOf(world: WorldState): CollegeRecruitView {
     // professional one, so a title at W75 cannot reach this number by accident.
     juniorTitles += world.trophiesByTier[rung]?.titles.length ?? 0
   }
-  return { juniorBests, juniorTitles, background: world.profile.background, country: world.profile.country }
+  return {
+    juniorBests,
+    juniorTitles,
+    background: world.profile.background,
+    country: world.profile.country,
+    // ⭐⭐ ROUND 21 – THE FAMILY'S REAL POSITION, READ AT THE WEEK SHE ENROLS. The owner, 17.08:
+    // «с учетом доходов семьи на момент поступления и прочего».
+    //
+    // ⚠ BOTH ARE MEASURED AT `world.week`, WHICH IS THE FORK, and that is the whole point of the
+    // sentence: the offer is priced against what this family actually has when the question is
+    // asked, not against a label chosen at onboarding five seasons earlier. `parentIncomeForWeekCents`
+    // has compounded through every season boundary since; `fundsCents` has lived a whole junior
+    // career. Neither is knowable from `profile.background` alone.
+    //
+    // ⚠ ZERO DRAWS ON ANY STREAM. `parentIncomeForWeekCents` derives its own `seed:income:<season>`
+    // sub-stream at the call site and persists nothing, and `fundsCents` is a read. The frozen MAIN
+    // capture cannot see this (CLAUDE.md invariant 2).
+    familyIncomeCents: parentIncomeForWeekCents(world.seed, world.profile.background, world.week) * WEEKS_PER_YEAR,
+    familyAssetsCents: world.fundsCents,
+  }
 }
 
 /** THE OFFER, MEASURED ONCE. ⚠ ONE SUB-STREAM, `seed:collegeoffer:<week>`, derived at the call site
