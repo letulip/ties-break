@@ -1466,3 +1466,71 @@ sides. Asked without one, every existing caller reads exactly the acceptance cut
 ⚠ **It is not a fix for a stall, because there is no stall** (0 of 14, §5b of the round-21 spec). The
 measurement was aimed at the opposite question – *did it move anything it should not have* – and the
 answer is in the spec's §4.
+
+---
+
+## 17.08.2026 – The college tariff: legible rungs, an annual drawdown, and a bill priced on what the family actually has
+
+Spec: [`docs/specs/the-college-tariff-2026-08.md`](specs/the-college-tariff-2026-08.md). The owner:
+«По колледжу надо собрать понятные ступени с прозрачной оплатой и годовым списанием с учетом доходов
+семьи на момент поступления и прочего. Копят деньги и оплачивают. Какая дельта? Может она
+околонулевая будет или всё-таки расходы перевесят.»
+
+⭐⭐ **THE ANNUAL DRAWDOWN ALREADY EXISTED AND THE GAME DENIED IT.** `resolveCollegeBill` has debited
+the family's share weekly since v51 and written a `tuition` ledger row every time. Nothing about the
+flow was built. What was missing was every surface: `tuition` was absent from the Money screen's
+category table, so the largest single outgoing of four years fell into **Other** – and **three shipped
+lines said "the family stops paying" / "the family still pays nothing"**, including the button that
+commits her to another year of the bill. When v51 priced college it fixed the one copy of that claim
+on the card it was editing and left the other three.
+
+⭐⭐ **THE NEED LAYER STOPPED READING A LABEL.** `needShareByBackground` was three constants keyed on a
+value chosen at onboarding, five seasons before she enrols. It is now a phase-out over her family's
+real position that week: annualised parent income plus savings above a shield, spread over the four
+years. **The label was measurably wrong** – at the fork a *working* family has saved **$57,555 at p75**
+against a *wealthy* one's **$21,297**, because the wealthy career burned its capital on the tennis.
+⚠ The SHAPE is sourced (federal aid has a floor band, a taper and a cut; *Trends 2025* names incomes
+**and assets** in one clause); **the two knots are ours** and the spec says why at length – our income
+axis is a contribution to the tennis, not a household income, so a real federal threshold laid over it
+would hand every family the full layer and delete the question.
+
+⚠⚠ **THE MERIT-ONLY AWARD SURVIVED AND IS NOW MEASURED, NOT ONLY TESTED.** Athletic share by
+background, control vs change: **53.2 / 59.0 / 67.4** against **53.2 / 59.0 / 67.4** – identical to the
+decimal, programme split identical. The sweep that guards it **gained** two axes (income, savings) and
+is mutation-proved.
+
+⭐⭐⭐ **THE DELTA, AND IT IS REPORTED AS A DISTRIBUTION BECAUSE A MEDIAN CANNOT ANSWER IT.** Paired
+college-minus-tour over four years, n = 53: median **+$4,114** – near zero – over a spread of
+**−$1.09M at p10 to +$172,950 at p90**, with **25 of 53 (47%) better off on tour**. By background,
+median / share better on tour: **working −$94,537 / 61%**, **middle +$15,304 / 48%**, **wealthy
++$29,108 / 25%**. ⚠ **«Расходы перевесят» is true for most working careers – but the thing outweighing
+college is what the tour would have paid her, not what the degree cost:** the whole four-year bill is
+$15k–$48k inside a delta that spreads over a million.
+
+⚠⚠ **A NON-AMERICAN IS NEGATIVE IN EVERY BACKGROUND AND 70% DO BETTER ON TOUR** – and a non-American
+**working** family is negative at every quantile from p10 to p90, **17 of 18 careers better off on
+tour**. Both halves are primary law (the out-of-state sticker; 34 CFR §668.33), so it is flagged and
+not tuned. The card states the figures and does not advise – ruling 4 of 30.07 stands.
+
+⚠⚠ **AND THE TARIFF IS NOT WHAT MOVED THE DELTA – THE WILD CARDS WERE.** Three arms, each named by
+commit: pre-wild-card median **+$26,152** (43% better on tour) → wild cards, same tariff **+$4,114**
+(47%) → wild cards, new tariff **+$4,114** (47%). **Somebody else's wave cost the college arm $22,038
+of median advantage; this one moved it by $0.** Measured in passing and handed over, not a complaint.
+
+⚠⚠ **THE PROVENANCE LESSON, AND IT IS A NEW WAY TO GET A BROKEN ARM.** The first pair of arms was
+built at "the commit before mine" and "my commit" – and another agent had landed the wild cards in
+between, so the pair measured my change **plus theirs**. It announced itself as a merit-only award
+appearing to move with family wealth. **In a shared checkout the control is not the previous commit,
+it is MY COMMIT WITH MY CHANGE REVERTED**, and the arms were rebuilt that way (reader checks both
+directions: `needTest` absent on the control, present on the change; wild cards present on both).
+
+⚠ **The bill takes more than the table it replaces** – four years cost a working family **$15,431**
+against **$4,751**, a middle one **$47,558** against **$36,201**, wealthy unchanged. The cause is the
+asset term, which is the half the label could never see. Reported with the two knobs named
+(`assetShieldCents`, `noNeedAboveCents`); nothing measured refutes the values, so they ship.
+
+**No schema change.** The funding band is derived from two fields the offer already carries and
+`billPerYearCents` is a wire field read off the persisted `fork.offer`, so a career mid-course keeps
+the contract it agreed to at nineteen. ⚠ `tests/coach-travel-edge.test.ts` is red on three frozen
+hashes – **verified already red at the wild-card commit, in a clean worktree, before any commit here
+existed**, so it belongs to that wave.
