@@ -1305,3 +1305,104 @@ two arms forked from one world – says it **LOSES by $8,070**, and **27 of 53 c
 on tour**. **"College beats the tour" is an American sentence.** Reachable in ordinary play: onboarding
 lets the player pick a country and his own career is IT. Flagged, not tuned – both stickers and the
 absence of the layer are primary-sourced.
+
+## 2026-08-17 – Round 21, items 4 and 2: the WTA 250, and the Slam door
+
+### ⭐⭐ ITEM 4 – THE ENTRY LIST GETS A HEAD, AND THE WORST RUNG IN THE GAME STOPS BEING THE WORST
+
+**Verbatim:** «с этим точно надо что-то делать, еще раз обращаю внимание, что Инес за 2 года не смогла
+вообще никуда сдвинуться в 250+, да еще и на нижних вылетала периодически, а мы говорим о 86 ракетке с
+хорошими статами.»
+
+**BUILT.** `TierDef.acceptsFromRank` – the HEAD of a rung's entry list, the other end of `acceptsRank`,
+and `wta250` is the only rung that carries one. A player ranked inside it is not refused a WTA 250, she
+is at a 1000 or a major that week. **`wta250.acceptsFromRank = 64` – exactly `FIELD.tiers[0].count`,
+the `tourElite` storey: the top storey does not play a WTA 250.**
+
+Research runs this way and we already shipped half of it: the ITF bars WTA #1-50 from every W-series
+event and we ship that as `PLAY_DOWN.fromAllW` **for her**; the field had no equivalent anywhere, which
+is why one sixty-four-chair storey filled all three rungs above the 125.
+
+| | before | **after** |
+| --- | --- | --- |
+| a WTA 250's field, mean core | 68.4 – **a WTA 1000's field** | **60.6** |
+| % of it stronger than a #121 player | 97% | **69%** |
+| her P(QF+) at a WTA 250 | 12.8% | **27.5%** |
+| **expected points, a WTA 250** | **17.1 – below a W50's 30.8** | **33.3** |
+| every other rung | – | **identical to the digit** |
+
+**The number was swept, not chosen**: OFF 17.1 · #40 18.4 · #50 26.2 · **#64 37.0** · #80 65.6, with
+the criteria written and committed before the run. #50 leaves the 250 still below a W50; #80 makes it
+the best event in the game for a #121 player, which is a worse defect than the one being fixed.
+
+⚠ **IT COSTS THE WHOLE LADDER, WHICH IS THE POINT AND IS REPORTED AS SUCH.** The WTA 250 is the
+most-entered professional rung in the game from 19 (5.0-5.5 entries a year, twice any other), so
+n=90: **career high median #112 → #94**, p25 **#75 → #48**, rank at 25 **#174 → #157**.
+⚠ **AND ONE ROW WENT THE WRONG WAY: 87/90 → 84/90 careers ever hold a professional ranking** – three
+marginal careers lost the only points they had, because each 250's two on-ramp slots now fall on a
+different pair of cohort players. Flagged, not tuned away. **FOR HIM.**
+
+⚠ **The frozen careers moved on ONE key of sixty-three – `events` – in all three**, and the per-key
+diff is the receipt: no frozen career played a different match (the freeze ends at 16.6 and the
+baseline measures 0.0 WTA 250 entries before 17). What changed is the tour NEWS. `rngMain` unmoved for
+the seventh wave running; the MAIN capture needed no re-pin.
+
+⚠ **THE SYMMETRIC HALF IS NOT TAKEN AND IS HIS TO RULE ON**: nothing stops HER entering a WTA 250 once
+she is inside #64. The machinery exists (`playDownBars`), the sport does gate her out one rung below,
+and it would REMOVE content from a player rather than add it – so it is flagged rather than shipped.
+
+### HIS SECOND CLAUSE – «на нижних вылетала периодически» – measured, and it is not a second defect
+
+The field-strength shape does **not** reach below the WTA 125: field core rises smoothly 44.6 · 46.5 ·
+50.1 · 55.0 and only then jumps to 68.4. Her own record, off the counting window: **9 events below the
+125, exactly 2 exits before the quarter-final, both at W75, and both R16 – she won her opening match
+and lost the second.** The model predicts **1.92**. ⭐ **There is not one first-round exit below the
+WTA 500 anywhere in her book.** A 32-draw is five rounds; a 78%-QF player goes out early one event in
+five. "Periodically" is the right word and the right rate.
+
+### ITEM 2 – THE SLAM DOOR: 104 → 112
+
+**Verbatim:** «112 и надо подумать про wild card 8». **BUILT.** Still the rulebook's own number – it
+publishes **three** permitted compositions, 104/16/8 · 108/12/8 · **112/8/8** – and it creates no
+collision, which is why he took it over his own earlier "+16 = 120" (`wta500.acceptsRank` is already
+120, and a Slam must not share a door with the rung two storeys below).
+
+| cut | careers refused | median weeks refused |
+| --- | --- | --- |
+| #104 (old) | 13/14 | **29** |
+| **#112 (shipped)** | 13/14 | **14** |
+| #120 (his earlier idea) | 11/14 | 6 |
+
+**0 of 14 stall at either setting** – the door was a speed bump and is now a smaller one.
+⚠ **Measured separately, it moves the n=90 battery by NOTHING** – three medians identical to the
+place, career high identical, denominator identical. Only 34 of 90 careers ever enter a major.
+
+⚠⚠ **THE "+16" ARGUMENT DOES NOT TRANSFER TO THE W RUNGS AND THIS IS THE RECORD OF WHY.** There is
+nothing to add sixteen to: the 2026 ITF WTT Regulations are ONE "System of Merit" ordering with no
+published cut anywhere in it – an unranked player is not refused a W75, she is placed at the bottom of
+the list. The Slam is the one rung whose regulation states a count. At the W rungs the honest version
+is the **soft tail**, ruled against on 16.08, and **the acceptance cuts stay hard.**
+
+### THE WILD CARDS – SHAPED AND COSTED, DELIBERATELY NOT BUILT. **FOR HIM.**
+
+⚠ **The frame first: a wild card is not a fix for a stall, because there is no stall** (0 of 14). It
+buys a story, not progress. Three rulings he owes:
+
+1. **WHO.** Reality uses three grounds and we can express two. **A home player** needs a host nation on
+   the event – there is no venue machinery anywhere in `src/` – but that is derivable from
+   `(seed, event.id)` at zero persisted bytes, and `AiPlayer.nation` already exists. **A young
+   prospect** is free (`juniorReservedPlace` is the same idea one ladder down). **A returning name is
+   NOT expressible and should be dropped explicitly**: field pros persist zero bytes, so "she used to
+   be #12 and has been away" has nowhere to live.
+2. **CAN SHE GET ONE.** ⭐ **Recommended: the home-nation card only** – it reads as a reward rather
+   than a gift, and it is the only shape with a cap inside its own definition (at most one major a
+   season can be her home major). A form threshold is a second acceptance rule with its own tuning; a
+   random card will be read as the engine deciding her career for her.
+3. **THE MARKER.** A badge on the event row in `SeasonScreen.vue` plus one line in
+   `TourBriefingDialog.vue`. ⚠ Another agent is in `SeasonScreen.vue` this week, and CLAUDE.md's
+   round-20 rule makes the 375x667 mounted assertion on that dialog a hard cost line.
+
+**Cost:** the eight held places are **`fillOnRamp`'s exact shape** – that mechanism already holds and
+fills slots in a W draw – so the AI half is S/M. **Her own card is M-L**: it is a new acceptance rule
+and owes its own bench. ⚠ **And it does not close the refused band** – only #128 does, and #128 is
+"everybody in the draw gets in", which is not a door.
