@@ -51,7 +51,6 @@ const pctOf = (n: number, d: number) => (d === 0 ? '  – ' : `${((100 * n) / d)
 const pad = (s: string | number, n: number) => String(s).padStart(n)
 const padE = (s: string | number, n: number) => String(s).padEnd(n)
 const rule = (n: number) => '-'.repeat(n)
-const rk = (r: number | null) => (r === null ? '–' : `#${r}`)
 
 interface Row {
   tier: CollegeTier
