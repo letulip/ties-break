@@ -294,13 +294,27 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
 // money, so a result row for it would break the `prizeCentsFor` invariant ("a result cannot award one
 // without the other") to no purpose. The frozen MAIN capture cannot see arithmetic.
 
-/** ⚠ OURS. The block of the season the squad plays its dual matches in, as season weeks `[from, to)`.
- *  Thirteen weeks – a spring season – placed so it contains the national-team week (14) rather than
- *  dodging it, because she is playing tennis in that week either way and a gap carved around it would
- *  be a coincidence the fiction cannot explain. */
-export const COLLEGE_MATCH_SEASON = { fromSeasonWeek: 4, toSeasonWeek: 17 } as const
+/** ⭐⭐ THE TWO TRIPS – and they REPLACE a thirteen-week dual-match season (round 21 #5, 17.08,
+ *  docs/specs/the-college-answers-2026-08.md §5).
+ *
+ *  ⚠⚠ THE OWNER'S OBJECTION WAS LORE AND IT IS DECISIVE. College was designed as the SHORTCUT –
+ *  «1-2 национальных выезда в год и перелистывание 1 года за клик» – and «родители не будут посещать
+ *  все игры в колледже». A thirteen-week season at one to three matches a week is a PLAYABLE SEASON:
+ *  thirty-nine simulated matches a year that the parent, who is the player of this game, is not at and
+ *  cannot act on. The shortcut is the feature; a second season inside it is the thing the fork exists
+ *  to skip.
+ *
+ *  ⚠ SO IT IS TWO WEEKS A YEAR, HIS OWN NUMBER, and the tier still differs on them
+ *  (`matchesPerWeek` 1 / 2 / 3). What the shrink costs is measured rather than assumed – §5 of the
+ *  spec – and it is one constant to put back if he wants the season instead.
+ *
+ *  ⚠ NEITHER IS THE NATIONAL-TEAM WEEK (`NATIONAL_TEAM.seasonWeek` = 14). The thirteen-week block
+ *  deliberately CONTAINED it, on the argument that she is playing tennis that week either way; with
+ *  two trips the argument reverses – three separate weeks of tennis in a year read as three beats,
+ *  and a trip landing on the call-up week would silently be one. */
+export const COLLEGE_TRIP_WEEKS = [8, 20] as const
 
-/** How many matches the programme plays her in THIS week – 0 outside college and outside the season.
+/** How many matches the programme plays her in THIS week – 0 outside college and outside a trip week.
  *  ⚠ THE DEAR TIER SATURATES THE ENGINE'S OWN CAP (`matchBonusCap` = 3) and that is deliberate: the
  *  ceiling on what competition is worth was tuned long before college had a price, and this phase is
  *  not entitled to raise it to make its own dimension look bigger. */
@@ -309,7 +323,7 @@ export function collegeMatchesThisWeek(world: WorldState): number {
   const tier = chosenQuoteOf(world.fork?.offer)?.tier
   if (!tier) return 0
   const seasonWeek = world.week % WEEKS_PER_YEAR
-  if (seasonWeek < COLLEGE_MATCH_SEASON.fromSeasonWeek || seasonWeek >= COLLEGE_MATCH_SEASON.toSeasonWeek) return 0
+  if (!(COLLEGE_TRIP_WEEKS as readonly number[]).includes(seasonWeek)) return 0
   return COLLEGE_TIERS[tier].matchesPerWeek
 }
 

@@ -199,7 +199,10 @@ import {
   resolveCollegeBill,
 } from './world/college'
 export {
-  COLLEGE_MATCH_SEASON,
+  // ⚠ RENAMED, NOT DROPPED (round 21 #5): `COLLEGE_MATCH_SEASON` was a thirteen-week block and the
+  // college years are the SHORTCUT, so it is two trips a year now. Nothing outside `world/college.ts`
+  // ever read it – it shipped on 17.08 and this is the same day – so the rename breaks no call site.
+  COLLEGE_TRIP_WEEKS,
   bankCollegeYear,
   collegeEpilogueLine,
   collegeMatchesThisWeek,
