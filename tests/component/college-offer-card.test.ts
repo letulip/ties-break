@@ -143,9 +143,9 @@ describe('⭐⭐ the card says what each college place costs', () => {
   it('⭐⭐ states each place\'s measured odds, and the window it was measured over', () => {
     const w = mountFork(FUNDED)
     const rows = rowsOf(w)
-    expect(rows[0]).toContain('Top 100 for 38 in 100')
-    expect(rows[1]).toContain('Top 100 for 40 in 100')
-    expect(rows[2]).toContain('Top 100 for 34 in 100')
+    expect(rows[0]).toContain('Top 100 for 85 in 100')
+    expect(rows[1]).toContain('Top 100 for 93 in 100')
+    expect(rows[2]).toContain('Top 100 for 74 in 100')
     // ⚠ AND A SHARE WITH NO SPAN UNDER IT IS NOT A MEASUREMENT. The window is named once, under the
     // list – a card that printed a bare percentage would be quoting a run it never identified.
     expect(w.find('.fork-places-note').text()).toContain('Four years after she leaves')

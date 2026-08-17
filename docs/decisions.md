@@ -1823,3 +1823,57 @@ no setting that fixes both ends: `×2.0` restores the old pace (#118) and lifts 
 **49.6**, burying the W15 on-ramp. Three options, his call, in `docs/specs/the-skill-gap-2026-08.md`
 §7d: re-tune `rollPotential` (a separate wave), take `×2.0` and re-derive every `entrantPctBand`, or
 accept that careers reach the top ten.
+
+---
+
+## 17.08.2026 – round 21, the owner puts the college development dimension back (`docs/specs/the-college-answers-2026-08.md` §10)
+
+> «да, **она училась и работала**, мы точно знаем на сколько за каждый год в колледже надо прибавить.»
+
+**⭐⭐⭐ THE GAIN COMES FROM THE PROGRAMME'S COACHING, NOT FROM PUTTING THE MATCHES BACK.** He killed the
+thirteen-week season on a lore argument he was right about, so rebuilding development out of match
+count would have smuggled it back and made its size hostage to a trip count he had already ruled on.
+Each place now names **a rung of the coach ladder the game already has** – budget / middle / high –
+so **no magnitude is invented** and a re-tune of the coach ladder moves the college places with it.
+`elite` is deliberately unreachable: a university programme is not better than the best coach alive.
+
+**⚠⚠ WHAT THIS ACTUALLY FIXED IS OLDER THAN THE SEASON IT REPLACES.** `growWeek` read `coach: null` for
+all 208 college weeks, i.e. **`self` = 0.82, the parent-on-the-court rate**, for a girl at a university
+with a squad and a training week. Nobody was coaching her. **And the family is still not billed**:
+`coachWorksThisWeek` is untouched and still false at college, because its own comment says one clause
+moves the bill and the rate together – right for a hire, wrong for a scholarship. The rate moves
+through a separate optional argument no billing code reads.
+
+**MEASURED, A = `3b6d92e` with `3b6d92e` reverted in `../tb-dev-A`, B = `3b6d92e` in `../tb-dev-B`.**
+Both arms in worktrees at MY commit, because another wave is re-dealing the whole field's skill.
+Four-year skill gain **+1.21 / +1.30 / +1.37** against A's +1.07 / +1.06 / +1.07 – **the cheapest→
+dearest spread goes +0.00 → +0.16**, nearly three times what the thirteen-week season ever produced.
+In his frame: **93% / 100% / 105% of a coached year.** ⚠ **The two arms' full outputs differ by THREE
+LINES** – every money column is byte-identical, because none of them reads development.
+
+**⚠ «МЫ ТОЧНО ЗНАЕМ НА СКОЛЬКО» IS NOT A SOURCE AND THE SPEC SAYS SO.** The SHAPE is defensible; the
+budget/middle/high **assignment is OURS**, labelled ours in `COLLEGE_TIERS` in the same words the
+recruiting bars carry. What would replace it is a calibration against our own cohort, which needs
+college match RESULTS – the same build already named and not done.
+
+**⭐⭐ THE STALENESS PIN WAS BLIND, WHICH IS WHY IT WAS TESTED RATHER THAN TRUSTED.** Asked to check
+whether moving a tier's development trips it: **it did not.** It folded three NAMED fields, so
+`coachesAt` was invisible to it – moving `private` from `high` to `elite` left it green. **Fixed**: it
+folds the whole tier object, keys sorted, and the mutation case now asserts every property of every
+place is inside the fold. It went red on this change and named the probe to re-run.
+
+**⚠⚠⚠ AND THE RE-RUN SURFACED SOMETHING THAT IS NOT COLLEGE'S.** The card's top-100 row went **38 / 40
+/ 34 → 85 / 93 / 74** in three hours. **The paired arm proves it is not the coaching**: with the
+coaching reverted in the same tree the row still reads **85 / 85 / 72**, and the coaching is worth
+**+0 / +8 / +2**. The jump is `a412162`, the skill wave's re-deal of the field's rank-to-core law. **On
+this tree the median college career peaks at world #16** against #114 three hours ago, 78–81% reach the
+top 50, and she is ranked again one week after graduating instead of three. **That is the owner's to
+rule on and is not this phase's to tune.** The measured figures were shipped on the card because
+leaving the old ones would be a false statement about this build; **a re-measure is owed when the
+skill wave settles**, and the college fingerprint cannot enforce it – it folds the college tier table,
+while the field's strength lives in another agent's file.
+
+**⭐⭐ The dear place now says something true and uncomfortable**: best development (+1.37), worst odds
+(74%). Eleven careers there never finish, and the survivors come out with $64,903 against $116,844 to
+fund a comeback with. **You pay more, you train better, and you can still price yourself out of the
+return.**

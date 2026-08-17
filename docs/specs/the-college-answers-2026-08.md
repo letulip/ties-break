@@ -562,7 +562,7 @@ read back. §10a says so and §10g says what would replace it.
 | **D4** | ⚠⚠ the staleness fingerprint does NOT trip, and that is a defect | ✅ **HELD, AND IT WAS EXACTLY THAT.** Moving `private` from `high` to `elite` – a large change to what four years there develop – left block F **green**. It listed three named fields, so a field that did not exist when it was written was invisible to it. **Fixed**: it folds the whole tier object now, keys sorted, and the mutation case asserts every property of every place is inside the fold. It went red on this very change, naming the probe to re-run |
 | **D5** | nothing else moves | ✅ **held, provably** – the arms' full outputs differ by three lines |
 | **D6** | the frozen MAIN capture does not move | ✅ **held – no re-pin.** The override is a multiplier; it draws nothing |
-| **D7** | the odds move by more than the change justifies, and may not be monotone | *§10h* |
+| **D7** | the odds move by more than the change justifies, and may not be monotone | ✅ **held** – **+0 / +8 / +2**, not monotone. §10h, which also found something much larger that is not this phase's |
 
 ### 10g. What would replace the assignment
 
@@ -576,6 +576,51 @@ the decision. ⚠ **Until then budget / middle / high is a judgement**, and the 
 ⚠ **The card says none of this, and that is a phone constraint rather than a choice.** `.fork-answers`
 measures **530.5px against the 536px** a 320x568 screen holds, so there is no room for a fourth line on
 a row. The dimension reaches the player through the odds figure it moves, and §10h is that figure.
+
+### 10h. ⚠⚠⚠ THE ODDS ROW, RE-MEASURED – AND THE LEVEL IS SOMEBODY ELSE'S WAVE
+
+The staleness pin went red on this change and demanded a re-run. It got one, and it surfaced something
+much larger than the coaching term.
+
+| top 100 | at `82eb452`, 3 hours earlier | **A** – no coaching, `3b6d92e` | **B** – shipped, `3b6d92e` | **what the coaching adds** |
+| --- | --- | --- | --- | --- |
+| the university at home | 38 | **85** | **85** | **+0** |
+| a university out of state | 40 | **85** | **93** | **+8** |
+| a private university | 34 | **72** | **74** | **+2** |
+
+**⚠⚠ READ THE A COLUMN.** With this phase's coaching term reverted **in the same tree**, the row still
+reads 85 / 85 / 72. **The jump from 38 to 85 is not this phase's** – it is `a412162`, another wave's
+re-deal of the field's rank-to-core law (`src/engine/season/fieldPros.ts`), which landed in my
+ancestry between the two runs. Two further commits of that wave landed while these arms were running.
+
+**⚠⚠⚠ AND IT IS A FINDING FOR THE OWNER, NOT A COLLEGE NUMBER.** On this tree the median college
+career now peaks at **world #16** (against #114 three hours ago), **78–81% reach the top 50**, and she
+is back on a ranking list **one week** after graduating instead of three. That is not something the
+college branch did. **It is reported here because this instrument is what surfaced it**, and §8 gains
+an item.
+
+**What was shipped on the card, and why:** the measured figures of the tree it ships from – 85 / 93 /
+74. Leaving 38 / 40 / 34 would have been a knowingly false statement about this build, and the card's
+whole contract is that it is measured. ⚠ **A re-measure is owed the moment the skill wave settles**,
+and `COLLEGE_ODDS_MEASURED_AT` **cannot enforce it**: it folds the college tier table, which is the
+input this file owns, while the field's strength, the ladder and the acceptance cuts are equally real
+inputs living in other people's files. **The gap is named rather than papered over** – reaching into
+`fieldPros.ts` to pin another agent's constant while they are editing it would break their wave.
+
+**D7 judged:** ✅ **held.** The coaching moved the row by **+0 / +8 / +2** on a change worth +0.14 /
++0.24 / +0.30 of a skill point – more than the underlying change justifies, and **not monotone**,
+exactly as §5c's resolution-floor argument said it would be.
+
+### 10i. ⭐⭐ AND THE DEAR PLACE NOW SAYS SOMETHING TRUE AND UNCOMFORTABLE
+
+It develops her the most (**+1.37**) and it is **last on every odds band** (74% top 100 against 85%
+and 93%). Among careers the bill did not end it is 85 / 94 / 82, so the deficit is not a weaker
+programme – it is that eleven careers never finish, and the survivors come out with **$64,903** against
+the middle place's **$116,844** to fund a comeback with.
+
+**So the third axis is back and it does not rescue the dear place:** you pay more, you train better,
+and you can still price yourself out of the return. That is a better card than one where the dearest
+option was simply the best, and it is measured rather than designed.
 
 ---
 

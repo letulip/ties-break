@@ -293,18 +293,29 @@ export const COLLEGE_TIER_NAME: Record<CollegeTier, string> = {
  *  measurement of THIS BUILD and a player can hold it against her own ambition.
  *
  *  ⚠⚠ IT IS MEASURED AND THE RUN IS NAMED. `tools/college-return-probe.ts --seeds 6`, at commit
- *  `82eb452`, n = 53 careers walked to the fork under `POLICIES[1]` and then re-walked once per
- *  place: four years enrolled, then **four years back on tour**, counting the careers that touch the
- *  band at any week of the return. §2 of the spec has the full table and the two bands either side
- *  (top 200: 96 / 96 / 83 · top 50: 26 / 26 / 23).
+ *  `3b6d92e` **in a dedicated worktree**, n = 54 careers walked to the fork under `POLICIES[1]` and
+ *  then re-walked once per place: four years enrolled, then **four years back on tour**, counting the
+ *  careers that touch the band at any week of the return. §10h of the spec has the full table and the
+ *  two bands either side (top 200: 98 / 98 / 81 · top 50: 78 / 81 / 67).
  *
- *  ⚠⚠ AND THE HONEST HALF: THE PLACE BARELY MOVES IT, AND THE CARD IS NOT ALLOWED TO PRETEND
- *  OTHERWISE. 38 / 40 / 34 is FLAT, and the middle place being nominally the best of the three is
- *  noise at n = 53 rather than a finding. Among the careers the BILL did not end it is flatter still
- *  (38 / 40 / 38, n = 53 / 52 / 47). The dear place's lower figures are not a weaker programme; they
- *  are six families going bankrupt paying for it. What would make these three numbers genuinely
- *  differ is college MATCH RESULTS feeding the ladder, which `the-college-choice-2026-08.md` §4b
- *  names and deliberately did not build.
+ *  ⚠⚠⚠ AND THE LEVEL IS NOT THIS PHASE'S, WHICH THE SPEC SAYS LOUDLY AND THIS COMMENT WILL NOT BURY.
+ *  The same instrument read **38 / 40 / 34** at `82eb452` three hours earlier. The jump is almost
+ *  entirely `a412162` – another wave's re-deal of the field's rank-to-core law (`season/fieldPros.ts`)
+ *  – and the paired arm proves it: with this file's coaching term REVERTED in the same tree the row
+ *  still reads **85 / 85 / 72**. What the coaching adds is **+0 / +8 / +2**. **A re-measure is owed the
+ *  moment that wave settles**, and the median career now peaking at world #16 is a finding for the
+ *  owner rather than a college number.
+ *
+ *  ⚠ THE FINGERPRINT BELOW CANNOT SEE THAT. It folds the college tier table, which is the input this
+ *  file owns; the field's strength, the ladder and the acceptance cuts are equally real inputs to the
+ *  odds and live in other people's files. Naming the gap is the honest half of the guard.
+ *
+ *  ⚠⚠ AND THE HONEST HALF: THE DEAREST PLACE HAS THE BEST GAME AND THE WORST ODDS, WHICH IS THE
+ *  WHOLE TRADE STATED IN ONE ROW. It develops her most (§10d: +1.37 against +1.21) and it is last
+ *  here, because it leaves her poorest for the comeback – median funds after four years **$64,903
+ *  against $116,844** at the middle place – and eleven careers there never finish at all. Among the
+ *  careers the bill did NOT end it is 85 / 94 / 82, so the deficit is money and not a weaker
+ *  programme. **You pay more, you train better, and you can still price yourself out of the return.**
  *
  *  ⚠⚠ AND THE PROVENANCE WAS NEARLY WRONG, WHICH IS RECORDED RATHER THAN TIDIED AWAY. An earlier run
  *  of this probe survived the kill that was meant to stop it, finished against the THIRTEEN-WEEK
@@ -318,9 +329,9 @@ export const COLLEGE_TIER_NAME: Record<CollegeTier, string> = {
  *  from `COLLEGE_TIERS` and `COLLEGE_TRIP_WEEKS`, so moving a price, a recruiting bar, a match count
  *  or a trip week turns a test red with the probe to re-run named in the failure. */
 export const COLLEGE_TIER_ODDS: Record<CollegeTier, { top100In100: number }> = {
-  state: { top100In100: 38 },
-  national: { top100In100: 40 },
-  private: { top100In100: 34 },
+  state: { top100In100: 85 },
+  national: { top100In100: 93 },
+  private: { top100In100: 74 },
 }
 
 /** ⚠⚠ THE TIER TABLE THE ODDS ABOVE WERE MEASURED AGAINST. Any edit to it invalidates them, and the
