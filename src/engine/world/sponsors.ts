@@ -619,6 +619,42 @@ export function academyCoverOf(world: WorldState, event: SeasonEvent): number {
  *  So HER fare keeps every cover it has ever had and HIS is `event.travelCostCents`, the full price.
  *  That is also how a scholarship works in the world: it covers the player, not her entourage.
  *
+ *  ⚠⚠ AMENDED 17.08, AND THE AMENDMENT IS ONE RULE RATHER THAN A SECOND MECHANISM
+ *  (`docs/specs/the-second-seat-2026-08.md`):
+ *
+ *      **A SPONSOR'S TRAVEL SHARE COMES OFF BOTH SEATS. A SCHOLARSHIP COMES OFF HERS ALONE.**
+ *
+ *  The 15.08 ruling above is untouched, and the split is the whole reason it can be: a SCHOLARSHIP is
+ *  gated on NEED and may not buy the entourage a plane ticket, while a CONTRACT is gated on STANDING,
+ *  is the brand's own money, and a brand already flying her is one that can be asked about the second
+ *  seat. `tests/support-never-pays-the-coach.test.ts` §1 still holds the first half strictly and §4
+ *  is the two-way guard on the second.
+ *
+ *  ⚠ IT WAS BUILT ONCE AS A SEPARATE FLAT TERM AND THE OWNER REJECTED THAT, correctly: «может быть
+ *  нам не надо лишней логики делать… тогда у нас не будет этого слоя противоречивой логики нигде».
+ *  Measured before the rework, the separate term produced **byte-identical fares** to this rule for
+ *  every family without a scholarship - the `global` rung's own share is 25% and the flat term was
+ *  25%, so it was a second concept arriving at the same number. What it cost was a constant, a
+ *  mapping function, a persisted `KitOfferTerms` field and its migration question. All four are gone.
+ *
+ *  ⚠ SO HIS COVER IS `kitTravelShare` - THE SAME NUMBER HER OWN FARE READS, and it steps with the rung
+ *  (25 / 25 / 50 / 75) for the same reason hers does. There is nothing here to keep in step with
+ *  anything: one share, read once, applied to two seats.
+ *
+ *  ⚠ THE ONE SCOPE ON IT IS THE OWNER'S OWN, and it is the gate three lines down rather than a second
+ *  rule: «только для профессиональной лиги». His seat takes the cover at the rungs that pay prize
+ *  money; at the junior rungs a player bought with `coachOnJuniorEvents` the family pays in full,
+ *  which is right - nothing comes back from them and no brand sponsors a trip to one. HER fare keeps
+ *  the cover everywhere, as it always has. §2 is the guard.
+ *
+ *  ⚠ AND WHAT IT IS A MODEL OF, STATED HONESTLY BECAUSE THE RESEARCH IS BLUNTER THAN THE MECHANIC.
+ *  `docs/research/sponsor-travel-terms.md`: no published endorsement contract pays competition
+ *  travel, and the one primary document that mentions the coach's - the ITF's own W50/W75/W100
+ *  hospitality guidelines - names him a cost the PLAYER carries, in a room she is billed for. So this
+ *  is an abstraction of a CASH FLOW (a retainer she spends on the road), not a model of a contract
+ *  clause. The instrument that really does pay whole fares is a federation grant, and it is specced
+ *  separately in `docs/specs/federation-grant.md`.
+ *
  *  ⚠ IT CHANGES WHAT "DOUBLE" MEANS FOR A COVERED FAMILY, AND DELIBERATELY. Uncovered, the trip
  *  still costs exactly twice - the sentence on screen is unchanged for everybody paying full price.
  *  Covered, it costs her discounted seat plus his whole one, so the discount stops scaling with the
@@ -673,10 +709,36 @@ export function coachTravelFareFor(world: WorldState, event: SeasonEvent): numbe
   // "what does it cost" and "is he at this court" are ONE question with one answer. (`coachMarket.ts`
   // cannot import this file back anyway - it is imported BY it, which is why this is not a predicate
   // over there.)
-  if (TIERS[event.tier].prizeCents === undefined && !(world.coachOnJuniorEvents ?? false)) return 0
-  // ⭐ GROSS, NOT `travelCostFor` – see the note above. The academy scholarship and the brand's share
-  // stay on HER seat and never reach his.
-  return event.travelCostCents
+  const paysPrizeMoney = TIERS[event.tier].prizeCents !== undefined
+  if (!paysPrizeMoney && !(world.coachOnJuniorEvents ?? false)) return 0
+  // ⭐ NOT `travelCostFor`, AND THAT IS THE 15.08 RULING IN ONE LINE. That helper composes BOTH covers
+  // - the academy scholarship and the brand's share - and the scholarship is a needs-based rescue that
+  // may not buy the entourage a plane ticket. So his seat is built from the calendar's own printed
+  // price, and the one cover that reaches it is named here explicitly rather than inherited.
+  //
+  // ⭐⭐ AND THAT ONE COVER IS THE BRAND'S, AT THE RUNGS THAT PAY (17.08, round-21 #2). The owner
+  // scoped it himself - «про спонсоров и оплату доли поездки тренера я говорю только для
+  // профессиональной лиги и контракте с большими спонсорами» - and then, seeing the machinery a
+  // separate flat term cost, replaced it with the simpler rule this now implements: «может быть нам не
+  // надо лишней логики делать… тогда у нас не будет этого слоя противоречивой логики нигде».
+  //
+  // ⚠ `kitTravelShare` AND NOT A TERM OF ITS OWN. It is the same number her own fare reads, so there
+  // are not two definitions of what a sponsor pays towards a trip and nothing can drift out of step.
+  // It steps with the rung exactly as hers does; a rung that pays nothing towards travel pays nothing
+  // here either, which is what keeps `local` and `national` out without naming them.
+  //
+  // ⚠ THE PRIZE-MONEY GATE IS THE OWNER'S «только для профессиональной лиги», and it is the same test
+  // three lines up that decided whether he comes at all - not a second rule. A junior rung the player
+  // bought with `coachOnJuniorEvents` is paid for by the family in full: nothing comes back from it,
+  // and no brand sponsors a trip to a tournament with no prize money. HER fare keeps the cover there,
+  // as it always has, which is the asymmetry §2 of the guard exists to hold.
+  //
+  // ⚠ ONE MULTIPLY AGAINST THE PRINTED PRICE, NEVER AGAINST AN ALREADY-REDUCED NUMBER. `travelCostFor`
+  // composes two covers on her seat; his has exactly one payer besides the family.
+  if (!paysPrizeMoney) return event.travelCostCents
+  const share = kitTravelShare(world.offers, world.week)
+  if (share <= 0) return event.travelCostCents
+  return event.travelCostCents - Math.round(event.travelCostCents * share)
 }
 
 /** THE CHARGE, on the week she travelled and he came with her. One row, its own line in the feed:
@@ -694,11 +756,18 @@ export function chargeCoachTravel(world: WorldState, event: SeasonEvent): void {
   const fare = coachTravelFareFor(world, event)
   if (fare <= 0) return
   world.fundsCents -= fare
+  // ⭐ ROUND-21 #2 (17.08) – WHO PAID FOR IT, ON THE LINE ITSELF, exactly as `chargeTravel` says it
+  // for her seat and for the same stated reason: a cost that quietly shrinks is the dishonesty that
+  // text exists to prevent. The share is re-read rather than reverse-engineered off `fare`, so a
+  // rounded cent can never turn 25% into "24%" on the paper.
+  const share = fare < event.travelCostCents ? kitTravelShare(world.offers, world.week) : 0
+  const deal = share > 0 ? activeKitDeal(world.offers, world.week) : null
+  const payer = deal ? ` (${(deal.terms as KitOfferTerms).brand} covers ${Math.round(share * 100)}%)` : ''
   addEvent(world, {
     week: world.week,
     type: 'expense',
     category: 'travel',
-    text: `Your coach travels to the ${TIERS[event.tier].label} – a second fare`,
+    text: `Your coach travels to the ${TIERS[event.tier].label} – a second fare${payer}`,
     amountCents: -fare,
   })
 }

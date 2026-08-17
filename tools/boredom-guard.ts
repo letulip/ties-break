@@ -1,6 +1,24 @@
 // THE BOREDOM GUARD - the pro entry cap's ACCEPTANCE TEST (W2-LADDER §5, owner ruling 2: «игрок
 // должен иметь возможность играть, если не w-серии то где-то еще, чтобы не скучал»).
 //
+// ⚠⚠ THE OWNER OVERRULED THIS AS A HARD GATE ON 16.08, AND THE BANNER IS HERE RATHER THAN IN A SPEC
+// BECAUSE THIS FILE'S OWN TEXT BELOW STILL SAYS "MUST be 0 to ship": «вообще не страшно, если иногда
+// в сетке есть пустые недели, не вижу ничего плохого. Так что просто надо понять сколько пустых
+// недель у нас есть вообще и оттуда отталкиваясь делать логику.» Empty weeks are ACCEPTABLE; what he
+// asked for is the NUMBER.
+//
+// ⚠ AND THIS TOOL CANNOT GIVE HIM THAT NUMBER, WHICH IS THE OTHER HALF. It starts from a REFUSAL -
+// it only ever looks at weeks where the AER cap refused a W entry - so a week that is simply blank,
+// with nothing refused because nothing was scheduled or everything on it locked on rank, is
+// invisible to it. `tools/empty-week-census.ts` is the census that answers the question he asked;
+// this one answers the narrower "does the cap strand her?", which is still worth asking.
+// docs/specs/the-ladder-is-monotone-2026-08.md §0.
+//
+// ⚠ ITS `process.exitCode = 1` IS DELIBERATELY LEFT ALONE. The ruling is about what BLOCKS A SHIP,
+// not about what a diagnostic prints, and turning a loud red into a silent zero on the strength of a
+// sentence about a different question would lose the signal this tool does carry. Whether the exit
+// code should soften is the owner's call and is stated in the spec rather than taken here.
+//
 //   npx vite-node tools/boredom-guard.ts [--seeds N] [--weeks N]
 //
 // THE CLAIM UNDER TEST, mechanized: across career sweeps, every non-rest, non-blackout week where

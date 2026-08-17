@@ -59,7 +59,22 @@ const facts: FeedEventFacts[] = snap.upcoming.map((e) => ({
   eligible: e.eligible,
   ineligibleReason: e.ineligibleReason,
 }))
-const ctx = feedContext({ ageYears: age, tierOpen: open, upcoming: facts })
+// ⚠⚠ THE THREE INPUTS THIS AUDIT USED TO WITHHOLD, and withholding them biased it in the one
+// direction an audit of a HIDING rule must never be biased: towards the feed looking innocent.
+// `feedContext` treats every absent input as "do not judge" – `paysIntoHerTables` returns its rungs
+// untouched when `activeLadder` is falsy, and `working` degenerates to `rungs` without
+// `tierOutgrown` – which is the correct default for a hand-built fixture written before those rules
+// existed and the wrong one for a tool whose whole job is to reproduce the live screen. Round-21 #5
+// added the table filter to `SeasonScreen.vue`; this file kept calling the pre-#5 shape, so it
+// reported cards as SHOWN that the owner's screen hides, understating exactly the gap it exists to
+// measure. Found while diagnosing round-21 #2 (the header counting events the feed will not draw).
+const ctx = feedContext({
+  ageYears: age,
+  tierOpen: open,
+  tierOutgrown: snap.tierOutgrown,
+  activeLadder: snap.activeLadder,
+  upcoming: facts,
+})
 console.log(`\n2. the window: ${ctx.rungs.map((t: TierId) => TIER_SHORT[t]).join(' + ')}  (${ctx.rungs.length} rungs)`)
 const closed = TIER_LADDER.filter((t) => !open[t])
 console.log(`   closed to her: ${closed.map((t) => TIER_SHORT[t]).join(', ') || '(none)'}`)

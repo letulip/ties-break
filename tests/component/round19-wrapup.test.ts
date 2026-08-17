@@ -126,7 +126,7 @@ describe('⭐ round-19 #2 – answering the question no longer destroys the wrap
 
   it('⭐ ...and the fork, one rank above it in the same ordered list, cannot destroy it either', async () => {
     const world = atTheWrap('round19-ui-fork')
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     const { w, game } = await openShell(world)
     expect(w.findComponent(ForkDialog).exists()).toBe(true)
     expect(w.findComponent(SeasonSummaryDialog).exists()).toBe(false)

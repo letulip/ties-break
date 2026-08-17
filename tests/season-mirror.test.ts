@@ -426,7 +426,21 @@ describe('the season mirror – the wrap judges against the table the card names
     // at all – a rung that opens at fourteen changes when the latch reaches each storey. The file has
     // said from the first re-aim that WHICH pair it is was never the subject; asserting only that
     // they DIFFER makes that literally true and stops the next phase re-picking a week.
-    const world = walkNear(49, 'golden-v45')
+    // ⚠ RE-AIMED A SIXTH TIME (17.08, THE SKILL LAW – docs/specs/the-skill-gap-2026-08.md): 49 -> 153,
+    // SAME SEED, SAME PAIR OF TABLES, and not one assertion touched or loosened. `fieldPros.ts` now
+    // reads a professional's strength off the live 2026 WTA Elo curve instead of a uniform draw inside
+    // her storey, so she meets different fields, wins different matches and her latch reaches each
+    // storey on a different wrap.
+    //
+    // ⚠⚠ AND THIS WAS PROVED BEFORE IT WAS RE-AIMED, because the two possibilities are not the same
+    // finding. If the card/latch distinction had stopped OCCURRING in the new world, that would be a
+    // result about the wave and not a stale fixture, and it would belong in the spec rather than in a
+    // week number. Measured across every wrap of this career (`tools/_mirrorprobe.ts`, the walk this
+    // file's own `walkNear` performs): weeks 49, 101 and 205 now agree with themselves, and **153 and
+    // 309 disagree, both as `domestic` on the card against `itf` latched**. The distinction is alive
+    // and occurs TWICE; only the week moved. The file has said from the first re-aim that WHICH wrap
+    // it is was never the subject.
+    const world = walkNear(153, 'golden-v45')
     const summary = world.lastSeasonSummary!
     const card = summary.rankTrack!
     const active = activeLadderOf(world)
@@ -437,7 +451,7 @@ describe('the season mirror – the wrap judges against the table the card names
     // The ledger the wrap just banked from is reset by the wrap itself, so the fold is re-run here off
     // the rows the season actually committed - reconstructed the only way that is honest, by walking
     // one week short of the wrap and reading the ledger before it clears.
-    const oneShort = walkNear(48, 'golden-v45')
+    const oneShort = walkNear(152, 'golden-v45')
     const rows = oneShort.seasonEntries!.rows
     const againstCard = rows.filter((r) => entryCouldNotMove(r, card)).length
     const againstActive = rows.filter((r) => entryCouldNotMove(r, active)).length

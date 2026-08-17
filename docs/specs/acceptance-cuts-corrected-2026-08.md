@@ -388,6 +388,17 @@ W75's 90 → **189**, W100's 147 → **272**.
   bug with a new number.
 
 **(c) A BEHAVIOURAL CONSEQUENCE, NOT A FIXTURE PROBLEM – AND IT IS AN ECONOMY CHANGE.**
+
+> ⭐⭐ **ANSWERED THE SAME DAY, AND NOT BY ACCEPTING OR REJECTING THE NUMBER.** This section is right
+> that it is an economy change riding on a ladder correction, and right to escalate it – and the
+> answer turned out to be that **the derivation itself was the defect**, exactly as P4 found for the
+> college door. Both gates now carry their OWN constants, restored to **national 350 / global 87**;
+> `TIERS.w100.acceptsRank` stays at **240**; and the equality pin that guaranteed the coupling is
+> replaced by a mutation-verified decoupling guard.
+> [`the-ladder-is-monotone-2026-08.md`](the-ladder-is-monotone-2026-08.md) §1. ⚠ Whether **87** is
+> still the right figure for a rung whose band is #51-87 is a separate question and is still the
+> owner's – §1a there.
+
 `tests/offers.test.ts` broke because **both professional sponsor gates are derived from
 `TIERS.w100.acceptsRank`** and it moved. `ECONOMY.sponsors.national.maxWtaRank` **350 → 240** and
 `global.maxWtaRank` **87 → 60** (a quarter of its neighbour, as its own comment defines it). The
@@ -429,6 +440,16 @@ MAIN position after 156 weeks is identical in both trees. The frozen capture (co
 
 ### 5a. ⚠⚠ THE CHAIN INVERTS THE LADDER ONE RUNG ABOVE WHERE THE GUARD STOPS LOOKING
 
+> ⭐⭐ **RESOLVED THE SAME DAY, AND THIS SECTION IS THE REASON IT COULD BE.** `wta125.acceptsRank` is
+> **210** now – looser than the WTA 250 above it – and the five-rung pin this section asked to be
+> replaced has been, by a guard that walks the whole of `TIER_LADDER` in both acceptance units
+> (`tests/ladder.test.ts` L6b, mutation-verified). ⚠ The escalation below is kept verbatim because it
+> is the measurement that made the fix decidable, and because §5b's twin was resolved with it.
+> Current spec: [`the-ladder-is-monotone-2026-08.md`](the-ladder-is-monotone-2026-08.md) §2.
+> ⚠⚠ **AND IT FOUND A THIRD INVERSION THIS SECTION COULD NOT SEE**: `slam` 104 against `wta1000` 65.
+> That one is NOT fixed – 104 is the family's only sourced number – and is the new guard's single
+> declared exemption, escalated to the owner.
+
 `tests/season/fieldPros.test.ts` pins that the cuts **strictly tighten** – and it pins it over
 **five** rungs, `w35 → w50 → w75 → w100 → wta125`. The sourced chain keeps that (700 > 330 > 300 >
 240 > 180). **But the ladder does not stop at WTA 125:**
@@ -457,6 +478,15 @@ every rung keeps a non-empty window), and every **W** rung's `entrantPctBand` st
 own cut, so the two encodings of the range still agree there.
 
 ### 5b. ⚠⚠ AND THE SECOND INVERSION: j300's CUT IS NOW STRICTER THAN ITS OWN FIELD
+
+> ⭐⭐ **ALSO RESOLVED THE SAME DAY.** `j300.enterPct` is **0.25**, restoring
+> `enterPct === entrantPctBand[1]`, on the structural criterion this section states rather than on the
+> sourcing one it argues about. ⚠ **The sourcing argument below is NOT withdrawn – 0.25 is inside it**,
+> and it is a row this spec's own table measured (3.0 entries a career, 25 of 27 careers). What the
+> re-measurement then found is the half neither of us predicted: **careers ever reaching a J300 went
+> 72/90 → 87/90 and careers ever holding a professional ranking 81/90 → 87/90**, while every median
+> got worse because six previously-unranked careers joined the population.
+> [`the-ladder-is-monotone-2026-08.md`](the-ladder-is-monotone-2026-08.md) §2, §3c.
 
 `tests/ladder.test.ts` pinned, as a **direction** rather than a number, that j300's acceptance cut sits
 **above** the top of the band its field is drawn from – *"the prestige rung is the one that admits
@@ -535,7 +565,7 @@ sport says it is (which our 200-row table cannot carry)?
 | `w35` 700 · `slam` 104 | **leave** | the audit verified both correct – 700 is mid-range against seven observed cuts, 104 is exact by rule and by observation |
 | `j30`'s `[250, MAX]` | **needs the owner** | 250 carries his ruling verbatim (29.07) and its comment says 250 and National's 150 *"are one decision and must move together"* |
 | `w15`'s on-ramp | **needs the owner** | rule and practice disagree and both are sourced; choosing between them is design, not correction |
-| `w75.minAgeYears` 17 | **needs the owner** | reality's floor is 14 and the one rung-specific rule is a quota, not a door. It would put a fourteen-year-old on the professional tour |
+| `w75.minAgeYears` 17 | ✅ **ANSWERED 16.08 – now 14** | reality's floor is 14 and the one rung-specific rule is a quota, not a door. It would put a fourteen-year-old on the professional tour. ⭐ He ruled exactly that, for the whole grid: [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md) |
 | the **ceiling** family | **unmodelled, and now half-modelled** | P1 step 2 shipped the play-down rules, so the audit's §8 question 4 is partly answered; the WTA 125's own ceiling (#1–20 barred, four ranked 21–50 by wild card) is still not modelled |
 
 ---

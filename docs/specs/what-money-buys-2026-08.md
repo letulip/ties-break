@@ -275,6 +275,12 @@ Two surfaces do fire unprompted and neither says what is at stake: Home's ladder
 `w15` chip (*"opens at age 16 and 120 international pts"*), and the Season header prints *"Pro entries
 this season: 0 of 8"* from age 14. Both are gates. Neither says the junior points stop counting.
 
+> ⚠ **THE CHIP NO LONGER SAYS THAT, AND THE FINDING SURVIVES THE CHANGE.** W15 opens at **14** since
+> 16.08, so the chip's age clause is gone and the lock it still shows is the acceptance list's. The
+> quotation is kept as the 12.08 screen. What is unchanged is the point of the paragraph: both
+> surfaces state a gate and neither states that the junior points stop counting. Grid, stated once:
+> [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
 **So the honest answer is no.** The information exists in the engine, is correct, and is
 unreachable in practice.
 

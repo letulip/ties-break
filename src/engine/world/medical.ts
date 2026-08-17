@@ -36,6 +36,7 @@ import {
   hasOutgrown,
   juniorAccessOpen,
   juniorReservedPlace,
+  homeWildCardPlace,
   kidPoints,
   onRampOpen,
   playDownBars,
@@ -579,7 +580,14 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
     // place exists for. `tests/rankingGate.test.ts`'s sweep could not see it, because its implication
     // runs one way (a rung the calendar SHUTS must never be enterable).
     const reserved = juniorReservedPlace(world, event.week, event.tier)
-    if ((!ranked || rank > accepts) && !reserved) {
+    // ⭐⭐ AND THE HOME WILD CARD, CHECKED IN THE SAME BREATH AND FOR THE SAME REASON (round 21 #2b,
+    // 17.08). It is the third door `tierFloorOpen` now offers, so it has to be offered here too or
+    // R10-5 re-opens from the far side – the calendar showing an enterable card and the turnstile
+    // refusing it, on the one event the wild card exists for. `homeWildCardPlace` is the whole rule
+    // and `wildCardWindow` inside it is the same function the AI draw's eight held places are
+    // filled by; see season/tournament.ts.
+    const wildCard = homeWildCardPlace(world, event.tier, event.id)
+    if ((!ranked || rank > accepts) && !reserved && !wildCard) {
       const cut = ranked
         ? `${tier.label} takes the top ${accepts} – she is #${rank}`
         : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`

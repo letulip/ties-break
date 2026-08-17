@@ -1,0 +1,123 @@
+
+⭐⭐ THE TALENT BREAKDOWN [arm tag A = 7c0d1f1 with a412162 REVERTED (skill wave OUT)] – 105 careers x 2 arms, fourteen to 32
+   POLICY player · 9 presets x 12 seeds · 3 never reached the fork · 828s
+
+----------------------------------------------------------------------------------------------------------------------
+0. ⚠ THE BANDS ARE MINE. THE GAME HAS NONE – and this section is the proof, not a preamble
+----------------------------------------------------------------------------------------------------------------------
+  the game's ONLY talent constant is ECONOMY.academy.ceilingBand = [56, 70]
+  ECONOMY.development.potentialBand = [4, 26] – a CONTINUOUS per-attribute headroom, no slices, never displayed
+
+  ⚠ the CUT is taken at week 0 over all 108 seeds, before a career is walked – see the note at CUT_POPULATION
+    cut edges p25/p50/p75 = 60.331 / 62.722 / 64.877 over 108
+
+  the talent scalar = ceilingOf(potential), engine/academy.ts – over the 105 that reached the fork:
+    p10 58.5 · p25 60.3 · p50 62.7 · p75 64.8 · p90 67.6 · min 57.0 · max 70.1
+    ⚠ ceilingBand's own comment claims the population is «p10 56, p50 62, p90 69» – compare the row above
+
+  band (MINE)   ceiling               n   scoutScore 0..1
+  ----------------------------------------------------------
+  untalented    < 60.3               25              0.18
+  average       60.3 .. 62.7         28              0.35
+  talented      62.7 .. 64.9         26              0.51
+  gifted        >= 64.9              26              0.79
+
+----------------------------------------------------------------------------------------------------------------------
+1. ⭐⭐ IN AND OUT – where she stood at nineteen and at twenty-three, per band, per arm
+----------------------------------------------------------------------------------------------------------------------
+  every cell is p10/p25/MEDIAN/p75/p90 over the careers that HELD a rank, with (held/n) beside it
+
+  band        arm         n  rank at 19 (the fork)             rank at 23 (exit)                 
+  ------------------------------------------------------------------------------------------------
+  untalented  college    25  #151/#168/#176/#220/#280 (24/25)  – (0/25)                          
+              tour       25  #151/#168/#176/#220/#280 (24/25)  #132/#168/#187/#223/#238 (24/25)  
+  average     college    28  #143/#165/#188/#253/#302 (28/28)  – (0/28)                          
+              tour       28  #143/#165/#188/#253/#302 (28/28)  #115/#128/#156/#182/#209 (28/28)  
+  talented    college    26  #140/#148/#174/#232/#252 (23/26)  – (0/26)                          
+              tour       26  #140/#148/#174/#232/#252 (23/26)  #104/#110/#142/#183/#201 (23/26)  
+  gifted      college    26  #123/#135/#149/#173/#183 (26/26)  – (0/26)                          
+              tour       26  #123/#135/#149/#173/#183 (26/26)  #15/#30/#92/#148/#172 (26/26)     
+
+  ⚠⚠ THE COLLEGE "rank at 23" COLUMN IS AN ARTEFACT AND IS PRINTED SO IT CANNOT BE MISREAD. The
+     graduation week is the ONE week of a career when the 52-week window is empty by construction:
+     she entered nothing for four years, so it can only ever print "–". §3 is the honest column.
+     The tour column at the same age is her real rank one year past the equivalent week, not an artefact.
+
+----------------------------------------------------------------------------------------------------------------------
+2. ⭐⭐ THE CAREER HIGH AND THE AGE SHE REACHED IT – the owner's «за какой срок каких результатов»
+----------------------------------------------------------------------------------------------------------------------
+  band        arm         n  career high                   age at it                 ever ranked   
+  ----------------------------------------------------------------------------------------------------
+  untalented  college    25  #107/#116/#121/#132/#154      24.4/25.3/27.1/30.0/30.7   (24/25)      
+              tour       25  #98/#110/#127/#138/#151       21.7/22.7/24.9/29.4/30.8   (24/25)      
+  average     college    28  #29/#85/#104/#119/#132        25.2/25.6/26.3/28.0/28.9   (28/28)      
+              tour       28  #28/#83/#106/#118/#132        21.4/24.0/25.9/27.0/28.5   (28/28)      
+  talented    college    26  #28/#39/#89/#119/#150         25.4/25.8/27.3/28.1/29.4   (23/26)      
+              tour       26  #31/#40/#78/#120/#135         22.1/23.2/26.2/28.7/29.6   (23/26)      
+  gifted      college    26  #12/#15/#33/#68/#95           25.7/26.2/27.3/29.1/29.7   (26/26)      
+              tour       26  #8/#12/#27/#45/#92            21.8/22.5/24.0/26.6/28.8   (26/26)      
+
+  ⭐ THE SAME, RESTRICTED TO WEEKS AFTER THE FORK – the only half the two arms can differ on
+  band        arm         n  best after 19                 age at it                 
+  --------------------------------------------------------------------------------------
+  untalented  college    25  #107/#116/#121/#132/#154 (24/25)24.4/25.3/27.1/30.0/30.7  
+              tour       25  #98/#110/#127/#138/#151 (24/25)21.7/22.7/24.9/29.4/30.8  
+  average     college    28  #29/#85/#104/#119/#132 (28/28)25.2/25.6/26.3/28.0/28.9  
+              tour       28  #28/#83/#106/#118/#132 (28/28)21.4/24.0/25.9/27.0/28.5  
+  talented    college    26  #28/#39/#89/#119/#150 (23/26) 25.4/25.8/27.3/28.1/29.4  
+              tour       26  #31/#40/#78/#120/#135 (23/26) 22.1/23.2/26.2/28.7/29.6  
+  gifted      college    26  #12/#15/#33/#68/#95 (26/26)   25.7/26.2/27.3/29.1/29.7  
+              tour       26  #8/#12/#27/#45/#92 (26/26)    21.8/22.5/24.0/26.6/28.8  
+
+----------------------------------------------------------------------------------------------------------------------
+3. ⭐⭐ THE ROAD BACK – how long from the exit to a rank, and to the career high
+----------------------------------------------------------------------------------------------------------------------
+  ⚠ THE TOUR ARM IS MEASURED ON THE SAME CLOCK: "exit" is the graduation week on the college arm
+     and the SAME AGE on the tour arm, so the two columns answer one question.
+
+  band        arm         n  weeks exit -> ranked          weeks exit -> career high       rank +4y from exit        
+  ------------------------------------------------------------------------------------------------------------------
+  untalented  college    25  1/3/3/5/5 (24/25)             73/122/218/364/403              #144/#153/#178/#191/#208 (24/25)
+              tour       25  1/1/1/1/1 (24/25)             -63/-12/101/335/404             #146/#161/#193/#226/#261 (24/25)
+  average     college    28  1/1/5/5/7 (28/28)             116/136/176/263/310             #91/#118/#143/#161/#170 (28/28)
+              tour       28  1/1/1/1/1 (28/28)             -79/51/150/210/286              #76/#98/#129/#157/#181 (28/28)
+  talented    college    26  1/1/5/6/7 (23/26)             126/146/227/268/335             #88/#104/#151/#160/#192 (23/26)
+              tour       26  1/1/1/1/1 (23/26)             -46/12/165/298/345              #89/#129/#149/#167/#188 (23/26)
+  gifted      college    26  1/2/3/5/6 (26/26)             139/170/225/320/349             #19/#25/#97/#163/#185 (26/26)
+              tour       26  1/1/1/1/1 (26/26)             -59/-25/54/189/303              #23/#55/#84/#127/#187 (26/26)
+
+----------------------------------------------------------------------------------------------------------------------
+4. ⭐⭐ THE ODDS OF A BAND, per talent band, per arm – every cell has its denominator
+----------------------------------------------------------------------------------------------------------------------
+  band        arm         n  top 500        top 200        top 100        top 50         top 10         
+  ----------------------------------------------------------------------------------------------------
+  untalented  college    25  24/25 96%      24/25 96%      1/25 4%        0/25 0%        0/25 0%        
+              tour       25  24/25 96%      24/25 96%      3/25 12%       0/25 0%        0/25 0%        
+  average     college    28  28/28 100%     28/28 100%     14/28 50%      4/28 14%       0/28 0%        
+              tour       28  28/28 100%     28/28 100%     13/28 46%      4/28 14%       0/28 0%        
+  talented    college    26  23/26 88%      23/26 88%      14/26 54%      9/26 35%       0/26 0%        
+              tour       26  23/26 88%      23/26 88%      16/26 62%      7/26 27%       0/26 0%        
+  gifted      college    26  26/26 100%     26/26 100%     23/26 88%      19/26 73%      2/26 8%        
+              tour       26  26/26 100%     26/26 100%     25/26 96%      20/26 77%      5/26 19%       
+
+  ⭐ THE WHOLE POPULATION, both arms, for the row the card quotes
+  college      105  101/105 96%    101/105 96%    52/105 50%     32/105 30%     2/105 2%       
+  tour         105  101/105 96%    101/105 96%    57/105 54%     31/105 30%     5/105 5%       
+
+----------------------------------------------------------------------------------------------------------------------
+5. ⚠ WHAT COULD INVALIDATE THE TABLE ABOVE – run these before quoting it
+----------------------------------------------------------------------------------------------------------------------
+  SATURATION: 6/210 3% of careers set their high in the LAST season before 32.
+     A large share means the horizon, not the age curve, is what stopped the climb.
+  NEVER RANKED AT ALL: 8/210 4%
+  ENDED INSIDE THE FOUR YEARS: 0/105 0% – these carry no return columns
+
+  ENDINGS, per arm (the denominators of every "of n" above)
+  college   still going 104 · injury 1
+            age at the end: 27.2/27.2/27.2/27.2/27.2 (1/105)
+  tour      still going 99 · injury 6
+            age at the end: 27.2/27.3/29.1/31.4/31.7 (6/105)
+
+  ⚠ THE BAND IS ARM-INDEPENDENT BY CONSTRUCTION and this asserts it rather than claiming it:
+     0 of 105 careers have a different ceiling on the two arms – as expected
+

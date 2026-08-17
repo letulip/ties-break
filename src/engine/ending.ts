@@ -288,7 +288,14 @@ export function endingForForkAnswer(
       type: 'college',
       week,
       ageYears,
-      detail: `${collegeYears} years on a scholarship – no ranking points, and the family stops paying`,
+      // ⚠⚠ "the family stops paying" WAS FALSE FROM v51 AND SHIPPED ANYWAY (fixed round 21,
+      // docs/specs/the-college-tariff-2026-08.md). `resolveCollegeBill` has debited the family's
+      // share of the year every week she is enrolled since v51, so this line asserted the opposite of
+      // what the tick does – the same failure the fork card's «the money goes the other way» had, and
+      // the fork card was the only one of the three fixed at the time. The line now says what the
+      // four years actually are and makes no claim about the direction of the money, because the
+      // direction depends on an offer this function is not handed.
+      detail: `${collegeYears} years of student tennis – no ranking points, and the family pays its share of each year`,
       resumesWeek: week + weeksPerYear,
     }
   }

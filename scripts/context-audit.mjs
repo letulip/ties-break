@@ -160,6 +160,82 @@ async function resolveLocalTarget(source, rawTarget) {
   return candidate
 }
 
+// --- THE AGE GRID, CHECKED AGAINST THE CONSTANTS RATHER THAN AGAINST CARE ------------------------
+//
+// ⚠⚠ WHY THIS EXISTS, AND IT IS A MEASURED FAILURE RATHER THAN A TIDINESS RULE (16.08). The age grid
+// was RESTATED IN PROSE, in its own words, in every spec that happened to mention it - each one
+// honestly describing the constants on the day it was written. The copies drifted, and the owner was
+// handed the same contradiction about what a W15 field is TWICE before he closed it: «у нас есть
+// регламент, точка. Разрули противоречия и оставь один источник истины, хватит мне это возвращать.»
+//
+// One sweep found 33 offending lines across the corpus. It found something worse as well: the design
+// pillar those documents were defending - "a sixteen-to-eighteen-year-old holds both tours at once" -
+// was quoted as `adult-tour-and-endings.md` §4.1's own words in FOUR places and §4.1 never contained
+// it. A paraphrase was re-quoted until it became a citation. Care had already failed; the answer had
+// to be mechanical.
+//
+// THE RULE: a documentation line that names a tier AND an age which disagrees with that tier's
+// `minAgeYears` is an error - UNLESS the file links the grid's one prose copy, in which case a stale
+// number is legal because the correction is next to it. That is exactly what §0a declares in words.
+//
+// ⚠ DELIBERATELY NARROW. It reads only `minAgeYears`, only when tier and age sit on ONE line, and it
+// says nothing about ceilings, allowances or the AER. A looser "any grid-shaped line needs the
+// pointer" variant was measured on this corpus at 95 lines in 31 files, 12 of them failing and about
+// 7 of those legitimately - too noisy to ship, and a noisy gate is one people learn to ignore.
+const GRID_POINTER = 'college-is-its-own-branch-2026-08.md'
+
+/** Tier id -> minAgeYears, parsed out of the engine. THE CONSTANTS ARE THE TRUTH and this reads them
+ *  rather than carrying a second copy, which would be the very defect it exists to catch. */
+async function tierFloors() {
+  const source = await fs.readFile(path.join(root, 'src/engine/season/calendar.ts'), 'utf8')
+  const floors = new Map()
+  // Each tier opens `  <id>: {` at one indent and the field sits inside it; the first floor after a
+  // header belongs to that header. Tolerant by design: a tier with no floor simply never lands.
+  const pattern = /^ {2}(\w+): \{$|^ {4}minAgeYears: (\d+),/gm
+  let current = null
+  for (const match of source.matchAll(pattern)) {
+    if (match[1]) current = match[1]
+    else if (current && !floors.has(current)) floors.set(current, Number(match[2]))
+  }
+  return floors
+}
+
+/** How each tier is written in prose. The docs say "W15" and "WTA 250", never `w15` or `wta250`. */
+function tierPhrases(id) {
+  if (id.startsWith('wta')) return [`WTA ${id.slice(3)}`]
+  if (id === 'slam') return ['Grand Slam', 'Slam']
+  return [id.toUpperCase()]
+}
+
+/** Lines that name a tier and an age contradicting its floor. */
+function gridContradictions(rel, body, floors, lineOffset) {
+  if (body.includes(GRID_POINTER)) return []
+  const hits = []
+  const lines = body.split(/\r?\n/)
+  for (const [id, floor] of floors) {
+    for (const phrase of tierPhrases(id)) {
+      // The age has to sit within a short reach of the tier's own name, or every long paragraph that
+      // happens to contain both a rung and a number becomes a finding.
+      // ⚠ THE VERB LIST IS THE WHOLE PRECISION, AND THE FIRST DRAFT'S WAS NOT. It included a bare
+      // "from", which turned "careers entering a WTA 125 from 27 to 64" (a COUNT) and "the ratio goes
+      // from 16.6%" (a PERCENTAGE) into age findings - two false positives out of three hits on the
+      // first run. Only phrasings that can mean an age survive, the number must be inside the grid's
+      // own range, and a decimal point or a percent sign after it disqualifies it.
+      const near = new RegExp(
+        `${phrase}\\b[^.\\n]{0,60}?\\b(?:opens? (?:at|in)|open(?:s|ed)? to|floor (?:is|of)|minAgeYears:?|from age|at age) (?:age )?(1[3-8])\\b(?![.%])`,
+        'i',
+      )
+      lines.forEach((line, i) => {
+        const found = near.exec(line)
+        if (found && Number(found[1]) !== floor) {
+          hits.push(`${rel}:${i + 1 + lineOffset} says ${phrase} at ${found[1]}, the constant is ${floor}`)
+        }
+      })
+    }
+  }
+  return hits
+}
+
 async function main() {
   const errors = []
   const warnings = []
@@ -187,6 +263,10 @@ async function main() {
       estimatedTokens: estimateTokens(text),
       metadata: frontmatter?.metadata ?? null,
       body: frontmatter?.body ?? text,
+      // ⚠ HOW MANY LINES THE FRONTMATTER ATE. Without it a body-relative line number is reported as a
+      // file line number, and the reader opens the file at the wrong row - which is worse than no
+      // number at all, because it looks authoritative. Caught the first time the grid rule fired.
+      bodyLineOffset: text.split(/\r?\n/).length - (frontmatter?.body ?? text).split(/\r?\n/).length,
     })
 
     for (const { target, line } of markdownTargets(text)) {
@@ -248,6 +328,13 @@ async function main() {
     budgets.push(result)
     if (!result.ok) errors.push(`${file}: ${record.characters} characters exceeds ${maximum} context budget`)
   }
+
+  // ⚠ THE ONE CHECK THAT READS THE ENGINE. Everything else in this file is about the corpus's own
+  // shape; this asks whether the corpus still agrees with the code, which is the question that kept
+  // reaching the owner. See the note on `GRID_POINTER`.
+  const floors = await tierFloors()
+  const gridDrift = docsRecords.flatMap((record) => gridContradictions(record.file, record.body, floors, record.bodyLineOffset))
+  for (const drift of gridDrift) errors.push(`age grid: ${drift}`)
 
   const totals = records.reduce(
     (sum, record) => ({

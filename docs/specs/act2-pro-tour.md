@@ -215,6 +215,12 @@ story) gets the PARALLEL structure, never a merge:
   enter-time, spliced on cancel, exactly like the junior array) — **this is v36's schema field**;
 - its own age table (design values, verified in-wave): 14 → 0 pro entries (the rungs open at 16
   anyway), 15 → 0, 16 → 12, 17 → 16, 18+ → unlimited;
+  > ⚠ **THE FIRST TWO ROWS SHIPPED DIFFERENTLY AND THE PARENTHESIS IS DEAD.** The rungs open at
+  > **14**, so the two zeros – which existed only because *"the rungs open at 16 anyway"* – would now
+  > be a real ban rather than a formality. Shipped: **14 → 8** professional events (at most 3 at
+  > W75+), **15 → 10**, on a birthday-to-birthday window. The 16/17/18+ rows are unchanged. The design
+  > values are kept because they are what the wave was built against. Grid, stated once:
+  > [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 - **merited increases, phase 2 of the wave or act 3**: strong results unlock extra slots (the real
   rule's shape; Gauff's route). v1 ships the flat table if the bench says it already paces well.
 

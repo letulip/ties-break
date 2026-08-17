@@ -90,6 +90,9 @@ import {
   weekFieldExclusion,
   ON_RAMP,
   fillOnRamp,
+  WILD_CARD,
+  hostNationOf,
+  wildCardWindow,
 } from './season/tournament'
 // THE FIELD TIER (living-field phase W, 01.08). Field pros are DERIVED, NEVER PERSISTED – see
 // season/fieldPros.ts for the whole argument. world.ts only ever asks three questions of them:
@@ -187,19 +190,31 @@ import {
 import { ENDINGS } from './ending'
 import {
   bankCollegeYear,
+  collegeCoachFactor,
   collegeEpilogueLine,
+  collegeMatchesThisWeek,
   inCollege,
   leaveCollege as leaveCollegeState,
   openCollegeYear,
   resolveCallUp,
+  resolveCollegeBill,
 } from './world/college'
 export {
+  // ⚠ RENAMED, NOT DROPPED (round 21 #5): `COLLEGE_MATCH_SEASON` was a thirteen-week block and the
+  // college years are the SHORTCUT, so it is two trips a year now. Nothing outside `world/college.ts`
+  // ever read it – it shipped on 17.08 and this is the same day – so the rename breaks no call site.
+  COLLEGE_TRIP_WEEKS,
   bankCollegeYear,
+  collegeCoachFactor,
   collegeEpilogueLine,
+  collegeMatchesThisWeek,
   collegeProgressOf,
+  collegeRecruitViewOf,
   inCollege,
+  measureCollegeOffer,
   openCollegeYear,
   resolveCallUp,
+  resolveCollegeBill,
   skillMeanOf,
 } from './world/college'
 export {
@@ -235,8 +250,8 @@ export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, rankingFor, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, PLAY_DOWN, playDownBars, type ProDoors } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, PLAY_DOWN, playDownBars }
+import { cohortIds, inTrack, fieldProsOf, fullRanking, rankingFor, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars, type ProDoors } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow } from './world/entryCaps'
@@ -362,7 +377,11 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // - не едет, или едет, но быстрее банкротится.» So the junior/domestic rungs stop being refused and
 // start being OPT-IN, with no protective gate on the outcome: bankruptcy is the player's own
 // responsibility (his standing ruling), and what is controlled instead is that no support mechanism
-// pays for it (the gross fare, `coachTravelFareFor`, and tests/support-never-pays-the-coach.test.ts).
+// pays for it (`coachTravelFareFor`, and tests/support-never-pays-the-coach.test.ts).
+// ⚠ 17.08: and at the JUNIOR rungs this field opens, that is still absolute - nothing reaches his
+// seat there, contract included. A sponsor's travel share does now reduce it, but only at the rungs
+// that pay prize money («только для профессиональной лиги»), which is the one place these two fields
+// stay cleanly apart. §2 of that test file is the guard.
 // ⚠ IT IS A SECOND FIELD AND NOT A RETYPING OF `coachOnEventWeeks`, deliberately. A scope union
 // («none | w-series | all») reads cleaner on paper and would have retyped a field persisted since
 // v24 and touched every reader of it; a second optional boolean defaulting FALSE leaves every existing
@@ -371,7 +390,7 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
 // ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
 // number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
-export const SAVE_SCHEMA_VERSION = 50
+export const SAVE_SCHEMA_VERSION = 52
 
 
 
@@ -2171,9 +2190,75 @@ function fillWeekOnRamps(
       fatigue,
       booked,
     )
-    fields.set(d.event.id, after)
-    for (const p of after) booked.add(p.id)
+    const withCards = fillWildCards(world, d.event, after, tour, fatigue, booked)
+    fields.set(d.event.id, withCards)
+    for (const p of withCards) booked.add(p.id)
   }
+}
+
+/** ⭐⭐ THE EIGHT WILD CARDS OF A SLAM DRAW (round 21 #2b) – `fillOnRamp` in its second
+ *  configuration, and NOT a second held-slot mechanism. See `WILD_CARD` in season/tournament.ts for
+ *  what a wild card is here, why the ground is the home nation, and why a returning name is not
+ *  expressible.
+ *
+ *  THE FOUR THINGS THIS CALL SITE DECIDES, all of which `fillOnRamp` then obeys unchanged:
+ *
+ *  1. **THE POOL IS THE HOST NATION'S PLAYERS** – `fillOnRamp` has no idea what a nation is and is
+ *     not being taught one. The whole home-nation ground is a filter on the pool it is handed, which
+ *     is the same seam `universeForTier` uses to keep a population question out of bracket code.
+ *     ⚠ It is the event's WHOLE universe (cohort ∪ derived professionals), not `world.cohort`: at
+ *     #113-#333 of a 1,799-row table almost everybody is a professional, and a wild card drawn from
+ *     the live juniors alone would be `ON_RAMP` again under a different name.
+ *
+ *  2. **THE DOOR IS INVERTED** – `OnRamp.admits` is normally "the rung accepts her"; here it is
+ *     `wildCardWindow`, i.e. "the rung REFUSED her and she is still of the level". A direct
+ *     acceptance who was also handed a wild card would make the marker on the card a lie.
+ *
+ *  3. **ITS OWN SUB-STREAM, so the event's `seed:aitour:` draws do not move** – one draw per
+ *     host-nation candidate off `seed:wildcard:<eventId>`. Nothing is added to MAIN (invariant 2),
+ *     and the field the week already selected is bit-for-bit the field it selected.
+ *
+ *  4. **AFTER THE ON-RAMP, not before.** Both passes drop the last direct acceptances, so whichever
+ *     runs second can displace what the first put in. The order is the entry list's own – places
+ *     close, then the tournament announces its wild cards – and it is very nearly moot in practice:
+ *     the on-ramp's candidates must clear `doors.at('slam')`, i.e. sit inside #112 of a table with
+ *     1,600 professionals in it, which a live junior essentially never does.
+ *
+ *  ⚠ HER OWN DRAW IS NOT TOUCHED, and that is the seam `fillOnRamp`'s ⚠ SCOPE box already names:
+ *  the shadow bracket she plays in (`seed:kidtour:`) fills from professionals alone, so widening it
+ *  moves her measured difficulty at every W rung and is a second change wanting its own measurement.
+ *  What decides whether SHE holds a wild card is the entry gate, not this function – see
+ *  `homeWildCardPlace` in world/ladder.ts, which reads the same `wildCardWindow`. */
+function fillWildCards(
+  world: WorldState,
+  event: SeasonEvent,
+  field: AiPlayer[],
+  tour: TourWeek,
+  fatigue: Map<string, number>,
+  booked: ReadonlySet<string>,
+): AiPlayer[] {
+  if (event.tier !== WILD_CARD.tier || WILD_CARD.slots <= 0) return field
+  const host = hostNationOf(world.seed, event.id)
+  const pool = tour.universe.filter((p) => p.nation === host)
+  if (!pool.length) return field
+  const accepts = acceptanceRank(world, event.tier)
+  const total = tour.ranking.length
+  const rankOf = new Map<string, number>()
+  for (const r of tour.ranking) rankOf.set(r.playerId, r.rank)
+  return fillOnRamp(
+    event,
+    field,
+    tour.ranking,
+    rngFromSeed(`${world.seed}:wildcard:${event.id}`),
+    {
+      pool,
+      ranking: tour.ranking,
+      admits: (id) => wildCardWindow(event.tier, rankOf.get(id) ?? total, total, accepts),
+      slots: WILD_CARD.slots,
+    },
+    fatigue,
+    booked,
+  )
 }
 
 function runAiTournament(
@@ -2762,6 +2847,18 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 1. base costs (main stream, plan-independent draw count)
   resolveBaseCosts(world, rng)
 
+  // 1a. ⭐⭐ THE COLLEGE BILL (v51, docs/specs/what-the-college-place-costs-2026-08.md). The four years
+  //     used to be free by construction – `coachWorksThisWeek` returns false at college, gear is
+  //     skipped, and the family's whole outgoing stopped. It never had a tuition line to stop.
+  //     Now it does: the award pays a share of the year and this is the rest of it, weekly.
+  //
+  //     ⚠ ZERO DRAWS ON ANY STREAM, which is why it can sit here at all. It is arithmetic on the
+  //     offer persisted at the fork, so the MAIN sequence is byte-identical for every career that
+  //     did not go to college and for every week before the fork – the frozen capture (41550 /
+  //     e6b0c709) is untouched by construction, and the input-independence law is not engaged
+  //     because nothing here is a die.
+  resolveCollegeBill(world)
+
   // 1b. recurring gear line-items (round-7 a). Zero main-stream draws – purpose-scoped
   //     sub-streams only – so this never perturbs the weekly draw count.
   // ⚠ AND NOT WHILE SHE IS AT COLLEGE (W2-ENDINGS). Her kit is the university's for four years, so
@@ -3043,7 +3140,27 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     //     about whether he came - which is what made the R4 reversal a one-line change here.
     coach: coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null,
     playStyle: world.profile.playStyle,
-    matchesThisWeek,
+    // ⭐⭐ AND AT COLLEGE THE MATCHES ARE THE SQUAD'S (17.08, docs/specs/the-college-choice-2026-08.md).
+    //
+    // `world.events` has no match rows inside the freeze – she enters nothing – so this term was 0 for
+    // 208 weeks and a college programme was, developmentally, a girl practising alone. It is the one
+    // thing a dearer place buys her tennis: a stronger squad plays a longer, harder dual-match season.
+    //
+    // ⚠ THE ADDITION IS SAFE BECAUSE EXACTLY ONE OF THE TWO IS EVER NON-ZERO. `collegeMatchesThisWeek`
+    // returns 0 outside the freeze, and inside it the filter above finds nothing. ⚠ AND IT SPENDS THE
+    // ENGINE'S OWN TUNED TERM RATHER THAN A NEW ONE – `matchBonus` / `matchBonusCap` are unchanged, so
+    // this phase cannot inflate its own dimension by raising the ceiling on what a match is worth.
+    // ⚠ ZERO DRAWS: a count, not a roll.
+    matchesThisWeek: matchesThisWeek + collegeMatchesThisWeek(world),
+    // ⭐⭐⭐ AND AT COLLEGE THE PROGRAMME COACHES HER (round 21, the owner's ruling of 17.08:
+    // «она училась и работала»). `undefined` on every other week of every career, so this line is
+    // provably inert outside the freeze – see `collegeCoachFactor`, which returns undefined the
+    // moment `inCollege` is false or the career was never quoted a place.
+    //
+    // ⚠ THE `coach:` LINE ABOVE STAYS AS IT IS AND IS STILL `null` HERE, because `coachWorksThisWeek`
+    // is what the BILL reads: the family is not paying for the programme's coaching and must not be.
+    // The override replaces the rate; it does not hire anybody.
+    coachFactorOverride: collegeCoachFactor(world),
     seed: world.seed,
     week: world.week,
     // ⚠ W4 – THE PRICE OF RESTING A KNOCK, and the whole reason `growWeek` gained this knob. She is

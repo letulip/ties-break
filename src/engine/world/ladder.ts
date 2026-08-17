@@ -12,6 +12,7 @@
 // from the ledger, so the frozen MAIN capture cannot notice this file.
 
 import { TIERS, TIER_LADDER, hasAcceptanceList, isJuniorAge, isTierAgeOpen, isWSeriesTier } from '../season/calendar'
+import { WILD_CARD, hostNationOf, wildCardWindow } from '../season/tournament'
 import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
 import type { LadderTrack, RankingRow, TierId } from '../season/types'
 import type { SeasonEntryRow } from '../../shared/protocol'
@@ -388,8 +389,8 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
  *  per-week pick prefers the rung she has NOT passed (`preferredWeekEvent`'s ladder tiebreak, and
  *  an outgrown rung is below her working one by construction), and the card says so. See
  *  docs/specs/ladder-floor-2026-08.md. */
-export function tierOpenFor(world: WorldState, tier: TierId): boolean {
-  return tierFloorOpen(world, tier)
+export function tierOpenFor(world: WorldState, tier: TierId, eventId?: string): boolean {
+  return tierFloorOpen(world, tier, eventId)
 }
 
 /** HOW MANY RUNGS OF THE LADDER ARE LIVE AT ONCE – the sliding window's width (act2-pro-tour.md §11,
@@ -609,6 +610,39 @@ export function juniorReservedPlace(world: WorldState, week: number, tier: TierI
   return acceleratorAdmits(world, week, tier, yearEndJuniorRank(world))
 }
 
+/** ⭐⭐ HER OWN WILD CARD (round 21 #2b) – the SAME rule the eight held places in the AI draw are
+ *  filled by, asked about her instead of about a cohort id. `wildCardWindow` is one function and
+ *  both sides call it, which is the whole of what "on the same rule as everybody else" means here:
+ *  it is not a promise, it is the absence of a second implementation to drift from the first.
+ *
+ *  ⚠ IT TAKES AN EVENT ID, WHICH IS WHY IT IS NARROW AND SEPARATE – the same shape and the same
+ *  argument as `juniorReservedPlace` above. A wild card is a fact about ONE tournament (this Slam is
+ *  played in her country; the other three are not), while every other clause on this ladder is a
+ *  fact about a RUNG. So this is the question narrowed to exactly what it grants, and it answers
+ *  FALSE for everything it has no opinion about – every rung but the Slam, an unranked girl, a girl
+ *  the acceptance list already admits, and a Slam played anywhere else.
+ *
+ *  ⚠ AND `eventId` IS OPTIONAL BECAUSE THE CALENDAR'S VERDICT IS PER-RUNG AND THE TURNSTILE'S IS
+ *  PER-EVENT. `tierFloorOpen(world, tier)` with no event is the honest per-rung summary – "the Slam
+ *  takes the top 112" – which is what `Snapshot.tierOpen` and the tier guide should keep saying. The
+ *  two gates only have to agree when they are asked about the SAME event, and since 17.08
+ *  `tests/rankingGate.test.ts` asks them that way. See the ⚠ note there.
+ *
+ *  ⚠ A GIFT SHE MAY STILL DECLINE: it opens a door, it never enters her. Every availability rule
+ *  below it – exams, injury, the doctor's veto, the entry cap, a booked family week – is asked
+ *  afterwards and unchanged. */
+export function homeWildCardPlace(world: WorldState, tier: TierId, eventId?: string): boolean {
+  if (eventId === undefined || tier !== WILD_CARD.tier) return false
+  if (hostNationOf(world.seed, eventId) !== world.profile.country) return false
+  // UNRANKED IS NOT RANK ONE, the same guard `meetsAcceptanceCut` carries and for the same reason:
+  // with nobody holding a point the whole field ties at zero and a fresh fourteen-year-old reads as
+  // world #1. A wild card is for a player of roughly the level, and "no professional result at all"
+  // is not that.
+  if (kidPoints(world, 'wta') <= 0) return false
+  const total = tableSize(world, 'wta')
+  return wildCardWindow(tier, world.kidRankWta ?? total, total, acceptanceRank(world, tier))
+}
+
 /** HER OWN WAY IN: the rung's published acceptance cut, read against the W table. Extracted so the
  *  ordinary door and the reserved place are the SAME sentence in both places that ask – `tierFloorOpen`
  *  returns it and `juniorAccessOpen` offers it first, and one expression cannot disagree with itself. */
@@ -623,7 +657,7 @@ function meetsAcceptanceCut(world: WorldState, tier: TierId): boolean {
 /** THE FLOOR half – "has she reached this rung", which is the whole of what `tierOpenFor` used to
  *  ask. Kept as its own exported name because the ceiling above has to ask it about a DIFFERENT rung
  *  than the one being judged, and because "reached" and "still hers" are two questions. */
-export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
+export function tierFloorOpen(world: WorldState, tier: TierId, eventId?: string): boolean {
   const def = TIERS[tier]
   if (def.track === 'itf') {
     // The on-ramp rung is a threshold she crossed once (see WorldState.onRampCleared and
@@ -655,7 +689,16 @@ export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
     // a twenty-five-year-old who misses the cut by four hundred places. For a junior this reads
     // "her own cut OR the Accelerator"; for an adult it reads "her own cut", and that is the whole of
     // the difference.
-    return meetsAcceptanceCut(world, tier) || juniorReservedPlace(world, world.week, tier)
+    // ⭐ AND SINCE 17.08 A THIRD DOOR, ASKED LAST AND ONLY WHEN AN EVENT IS NAMED (round 21 #2b).
+    // `eventId` is absent for every per-rung caller – `Snapshot.tierOpen`, the coach market's week
+    // scan, `tierOutgrown` – so all of them read exactly the acceptance cut they read before and
+    // this line is provably inert for them. It is the TURNSTILE that names an event, and
+    // `entryVerdict` asks the same three doors in the same order.
+    return (
+      meetsAcceptanceCut(world, tier) ||
+      juniorReservedPlace(world, world.week, tier) ||
+      homeWildCardPlace(world, tier, eventId)
+    )
   }
   // ⚠⚠ THE FLOOR HALF ONLY, AND THIS LINE IS WHERE THE 06.08 RULING NEARLY LEAKED PAST. It read
   // `isTierEligible(tier, ...)`, which is the WHOLE band - both bounds - so the domestic ceiling was

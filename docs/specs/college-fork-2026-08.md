@@ -27,6 +27,31 @@ and the rows stay valid whichever numbers he picks.
 
 ---
 
+## ⚠⚠ SUPERSEDED ON BOTH OF ITS SUBJECTS, ON 16.08 – READ THIS BEFORE THE REST
+
+**Two constants this file measures no longer exist, and the measurements are kept because they are
+what made both removals decidable.**
+
+1. **`ENDINGS.collegeClosedFromTier` is GONE.** «Колледж – это независимая ветка карьеры с отдельным
+   функционалом и турнирами, альтернативная.» Nothing closes the college answer; it is on the fork
+   card in 100% of careers by construction. Everything below about *where to put the threshold* is a
+   question that was answered by deleting the threshold – which is what §0's finding argued for.
+   Current spec: [`college-is-its-own-branch-2026-08.md`](college-is-its-own-branch-2026-08.md).
+2. **`w75.minAgeYears` is 14, not 17.** So these three claims below are FALSE as statements about the
+   shipped game, and true as the record of the build they were measured on:
+   * *"W75's cut is cleared at 16.6 against a doorway of 17 … `minAgeYears` is the whole gate at that
+     rung"* (§3) – the doorway is gone; the cut is the whole gate now, which is what §3 predicted
+     would remain.
+   * *"not one career loses the door before 17.0. That is `w75.minAgeYears` and nothing else"* (§4) –
+     the eleven-month window it describes cannot exist any more, and neither can the door.
+   * *"the levers are … `w75.minAgeYears` **17**, which is what puts 92% of closures in one
+     eleven-month window"* (§6) – **both halves of that lever were removed within 24 hours.**
+
+**The grid is stated once and not here:**
+[`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
+---
+
 ## 0. THE FINDING, IN ONE BOX
 
 > ### THE COMBO AS SPECIFIED CANNOT BE SIZED, BECAUSE AT NINETEEN THERE ARE NO TWO POPULATIONS TO SEPARATE.

@@ -102,6 +102,30 @@ export async function answerOpeningKnock(page: Page): Promise<void> {
   }
 }
 
+/**
+ * DISMISS THE TOUR-COMMITMENT BRIEFING IF THIS CAREER HAS JUST CROSSED INTO THE TOP FIFTY.
+ *
+ * ⚠ WHY THIS EXISTS, AND IT ARRIVED AS THREE RED SPECS AT ONCE (17.08). `TourBriefingDialog` is a
+ * BLOCKING overlay – the tour's commitment rules are the one thing the game stops the world to
+ * explain – and it fires on the boot of any career already inside the top 50. The `pro` fixture was
+ * outside it until the skill wave re-dealt every professional's strength off the live rank curve;
+ * she is now world #15, so three journeys that had never met this dialog began timing out on a click
+ * the overlay was intercepting.
+ *
+ * ⚠ IT IS STEPPED THROUGH, NOT ASSERTED, and that is the difference from `answerOpeningKnock`'s
+ * canary. Whether a given fixture's career is inside the top 50 is a property of where the search
+ * stopped and of the whole balance of the game; a spec about a kit letter or a tournament entry has
+ * no business pinning it. The dialog's own suite is tests/component/, and week-advance.spec.ts still
+ * owns the claim that a blocking decision stops the week.
+ */
+export async function dismissTourBriefing(page: Page): Promise<void> {
+  const briefing = page.getByRole('heading', { name: 'The commitment rules now apply.' })
+  if (await briefing.isVisible().catch(() => false)) {
+    await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    await expect(briefing).toHaveCount(0)
+  }
+}
+
 /** Home -> Money, through the door a player actually uses.
  *
  *  MoneyScreen is TABLESS: the only ways in are Home's Family budget card and nothing else. That is

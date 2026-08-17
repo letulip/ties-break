@@ -32,7 +32,13 @@ import { NATIONAL_TEAM, binomial, callUpLine, rollCallUp, rubberWinChance } from
 import { rngFromSeed, initMainState } from '../src/engine/rng'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { COLLEGE_TIERS, collegeOfferFor } from '../src/engine/collegeOffer'
+import { coachFactor } from '../src/engine/coach'
+import { ECONOMY } from '../src/engine/economy'
+import { growWeek, type KidSkills } from '../src/engine/development'
+import { coachWorksThisWeek } from '../src/engine/world'
+import { COLLEGE_TRIP_WEEKS, collegeCoachFactor, collegeMatchesThisWeek } from '../src/engine/world/college'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CollegeTier } from '../src/shared/protocol'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 
@@ -44,7 +50,7 @@ function freshWorld(seed = 'p5-college'): { world: WorldState; rng: Rng } {
 /** A career standing at the fork with the college answer available. */
 function atTheFork(seed: string): { world: WorldState; rng: Rng } {
   const { world, rng } = freshWorld(seed)
-  world.fork = { askedWeek: world.week, answer: null }
+  world.fork = { askedWeek: world.week, answer: null, offer: null }
   return { world, rng }
 }
 
@@ -368,7 +374,7 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
     const rngA = rngFromSeed(college.seed)
     const rngB = rngFromSeed(control.seed)
 
-    college.fork = { askedWeek: college.week, answer: null }
+    college.fork = { askedWeek: college.week, answer: null, offer: null }
     answerFork(college, 'college')
     resumeFromCollege(college, rngA)
     for (let i = 0; i < WEEKS_PER_YEAR; i++) tickWeek(control, rngB)
@@ -377,4 +383,195 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
     // The two streams have been pulled the same number of times: the next value off each is equal.
     expect(rngA()).toBe(rngB())
   }, 60_000)
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 21 #5 – THE COLLEGE SEASON IS TWO TRIPS, NOT THIRTEEN WEEKS
+// =================================================================================================
+//
+// ⚠⚠ THE SHRINK NEEDS A GUARD BECAUSE THE THING IT PROTECTS IS A DESIGN RULING AND NOT A NUMBER.
+// College is the SHORTCUT – «1-2 национальных выезда в год и перелистывание 1 года за клик» – and a
+// thirteen-week dual-match season at one to three matches a week is a playable season inside the one
+// branch that exists to be a page-turn, in weeks the parent is not at and cannot act on. Nothing
+// tested `COLLEGE_MATCH_SEASON` at all when it shipped, so it could have grown back silently.
+//
+// ⚠ AND IT IS A COUNT AND NOTHING ELSE. `collegeMatchesThisWeek` feeds `growWeek`; it writes no
+// result row, awards no ranking points and no money, because the sport awards neither – so a result
+// for it would break the `prizeCentsFor` invariant to no purpose.
+
+/** A career enrolled at a named place, with the offer the ledger and the season both read. */
+function enrolledAt(tier: CollegeTier, seed = 'r21-trips'): WorldState {
+  const { world, rng } = freshWorld(seed)
+  const offer = collegeOfferFor(
+    {
+      juniorBests: { j300: 3 },
+      juniorTitles: 4,
+      background: 'middle',
+      country: 'US',
+      familyIncomeCents: 31_000_00,
+      familyAssetsCents: 40_000_00,
+    },
+    rngFromSeed(`${seed}:offer`),
+  )
+  world.fork = { askedWeek: world.week, answer: null, offer }
+  answerFork(world, 'college', tier)
+  void rng
+  return world
+}
+
+/** the first season boundary at or after enrolment, so a season week can be addressed directly */
+const yearStart = (world: WorldState) => world.college!.fromWeek - (world.college!.fromWeek % WEEKS_PER_YEAR) + WEEKS_PER_YEAR
+
+describe('⭐⭐ the college season is two national trips a year', () => {
+  it('plays her only on the trip weeks, and at the place\'s own rate', () => {
+    const world = enrolledAt('private')
+    const base = yearStart(world)
+    const played: number[] = []
+    for (let s = 0; s < WEEKS_PER_YEAR; s++) {
+      world.week = base + s
+      played[s] = collegeMatchesThisWeek(world)
+    }
+    for (const w of COLLEGE_TRIP_WEEKS) {
+      expect(played[w], `trip week ${w} at the private place`).toBe(COLLEGE_TIERS.private.matchesPerWeek)
+    }
+    const busy = played.map((n, i) => (n > 0 ? i : -1)).filter((i) => i >= 0)
+    expect(busy, 'and no other week of the season is a match week').toEqual([...COLLEGE_TRIP_WEEKS])
+  })
+
+  it('⚠ the cheap place plays fewer on the same weeks – the tier still differs', () => {
+    const cheap = enrolledAt('state')
+    const dear = enrolledAt('private')
+    const w = COLLEGE_TRIP_WEEKS[0]
+    cheap.week = yearStart(cheap) + w
+    dear.week = yearStart(dear) + w
+    expect(collegeMatchesThisWeek(cheap)).toBe(COLLEGE_TIERS.state.matchesPerWeek)
+    expect(collegeMatchesThisWeek(cheap)).toBeLessThan(collegeMatchesThisWeek(dear))
+  })
+
+  // ⚠⚠ MUTATION PROOF OF THE SHRINK ITSELF, AND THE FIRST VERSION OF IT WAS VACUOUS – recorded
+  // because it is the exact failure CLAUDE.md names. It skipped any week that is IN
+  // `COLLEGE_TRIP_WEEKS`, so restoring the thirteen-week block `[4, 17)` skipped every candidate and
+  // the case passed green on the very configuration it exists to forbid. **A guard derived from the
+  // constant it guards cannot fail.** So the count is pinned against HIS OWN NUMBER – «1-2
+  // национальных выезда в год» – and the old block's weeks are written out as literals.
+  it('⚠⚠ is at most his two trips, and the thirteen-week block cannot come back', () => {
+    expect(COLLEGE_TRIP_WEEKS.length, 'one or two national trips a year, and no more').toBeLessThanOrEqual(2)
+    const world = enrolledAt('private')
+    const base = yearStart(world)
+    // the old block was `{ fromSeasonWeek: 4, toSeasonWeek: 17 }` – thirteen consecutive weeks
+    let matchWeeks = 0
+    for (let w = 4; w < 17; w++) {
+      world.week = base + w
+      if (collegeMatchesThisWeek(world) > 0) matchWeeks += 1
+    }
+    expect(matchWeeks, 'the old thirteen-week block is not a season any more').toBeLessThanOrEqual(2)
+  })
+
+  it('⚠ neither trip is the national-team week, so three weeks of tennis read as three beats', () => {
+    expect(COLLEGE_TRIP_WEEKS as readonly number[]).not.toContain(NATIONAL_TEAM.seasonWeek)
+  })
+
+  it('⚠ and a girl who is not at college plays none of them', () => {
+    const world = enrolledAt('private')
+    const base = yearStart(world)
+    world.college = null
+    world.week = base + COLLEGE_TRIP_WEEKS[0]
+    expect(collegeMatchesThisWeek(world)).toBe(0)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 21 – THE PROGRAMME COACHES HER, AND THE FAMILY IS STILL NOT PAYING FOR IT
+// =================================================================================================
+//
+// The owner's ruling of 17.08: «да, она училась и работала, мы точно знаем на сколько за каждый год в
+// колледже надо прибавить». What this block guards is not the SIZE of that – the three rungs are ours
+// and §10 of `the-college-answers-2026-08.md` says so – but the two properties that make the size
+// safe to tune:
+//
+//   1. THE DIMENSION IS INDEPENDENT OF THE CALENDAR. It rides on `coachesAt`, not on the trip count,
+//      so a future change to `COLLEGE_TRIP_WEEKS` cannot zero it again the way the season shrink did.
+//   2. ⚠⚠ THE BILL DOES NOT MOVE WITH THE RATE. Everywhere else in this game those two are one
+//      predicate (`coachWorksThisWeek`, and its own comment says why). Here they must come apart,
+//      because the scholarship's whole economic point is that the family stops paying – so a coach
+//      fee appearing during the freeze is the regression this block exists to catch.
+describe('⭐⭐⭐ the college programme coaches her, and the family is not billed for it', () => {
+  it('⭐ coaches her at the place\'s own rung, and a dearer place coaches her better', () => {
+    const cheap = enrolledAt('state')
+    const middle = enrolledAt('national')
+    const dear = enrolledAt('private')
+    const f = (w: WorldState) => collegeCoachFactor(w)!
+    expect(f(cheap)).toBe(coachFactor('budget', 'good'))
+    expect(f(middle)).toBe(coachFactor('middle', 'good'))
+    expect(f(dear)).toBe(coachFactor('high', 'good'))
+    expect(f(cheap)).toBeLessThan(f(middle))
+    expect(f(middle)).toBeLessThan(f(dear))
+  })
+
+  // ⚠⚠ AND IT BEATS THE RATE SHE USED TO GET, WHICH IS THE DEFECT THIS FIXES. Before round 21 the
+  // college weeks passed `coach: null`, so `growWeek` developed her at `self` – the parent on the
+  // court – for a girl at a university with a squad. Even the cheapest place is above that now.
+  it('⭐⭐ every place develops her faster than the parent-on-the-court rate she used to get', () => {
+    const self = coachFactor('self', ECONOMY.coach.selfFit)
+    for (const tier of ['state', 'national', 'private'] as const) {
+      expect(collegeCoachFactor(enrolledAt(tier))!, `${tier} against self`).toBeGreaterThan(self)
+    }
+  })
+
+  // ⚠ THE TOP RUNG IS DELIBERATELY NOT REACHED – a university programme is not better than the best
+  // coach in the world, and `elite` stays something only money on tour buys.
+  it('⚠ and none of them reaches the elite rung', () => {
+    const elite = coachFactor('elite', 'good')
+    for (const tier of ['state', 'national', 'private'] as const) {
+      expect(collegeCoachFactor(enrolledAt(tier))!, `${tier} against elite`).toBeLessThan(elite)
+    }
+  })
+
+  // ⚠⚠ THE OWNER'S RULING, GUARDED. «the family stops paying» – so the rate moves and the bill does
+  // not. `coachWorksThisWeek` is what the retainer reads and it must stay false for every week of the
+  // freeze, however good the coaching is.
+  it('⚠⚠ charges the family no coach fee for any of it', () => {
+    const world = enrolledAt('private')
+    const base = yearStart(world)
+    for (const w of [0, 8, 20, 40]) {
+      world.week = base + w
+      expect(coachWorksThisWeek(world), `season week ${w}`).toBe(false)
+    }
+    expect(collegeCoachFactor(world), 'and she is still being coached in that same week').toBeDefined()
+  })
+
+  it('⚠ is silent outside college, and on a career that was never quoted a place', () => {
+    const world = enrolledAt('private')
+    const base = yearStart(world)
+    world.week = base + 8
+    expect(collegeCoachFactor(world)).toBeDefined()
+    const migrated = enrolledAt('private')
+    migrated.week = base + 8
+    migrated.fork = { ...migrated.fork!, offer: null }
+    expect(collegeCoachFactor(migrated), 'a v51 career was never quoted a place').toBeUndefined()
+    world.college = null
+    expect(collegeCoachFactor(world), 'and a girl on tour is coached by whoever she hired').toBeUndefined()
+  })
+
+  // ⚠⚠ AND THE OVERRIDE IS INERT WHERE IT IS NOT SUPPLIED, which is what keeps every shipped career's
+  // growth byte-identical. Mutation-proved in the same case: hand it a different factor and the same
+  // week produces different skills, so the `undefined` branch is not passing vacuously.
+  it('⚠⚠ leaves every non-college week byte-identical, and really does bite when supplied', () => {
+    const args = {
+      skills: { serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 } as KidSkills,
+      potential: { serve: 90, ret: 90, composure: 90, stamina: 90, groundstrokes: 90 } as KidSkills,
+      ageYears: 20,
+      plan: WEEK_PLAN_PRESETS.balanced,
+      coach: null,
+      playStyle: 'all-court' as const,
+      matchesThisWeek: 0,
+      seed: 'override-inert',
+      week: 300,
+    }
+    expect(growWeek(args), 'undefined is the historical path').toEqual(growWeek({ ...args, coachFactorOverride: undefined }))
+    const coached = growWeek({ ...args, coachFactorOverride: coachFactor('high', 'good') })
+    expect(coached.serve, 'a high-rung programme develops her faster than the parent does').toBeGreaterThan(
+      growWeek(args).serve,
+    )
+  })
 })

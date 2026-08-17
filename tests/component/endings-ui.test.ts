@@ -140,7 +140,7 @@ describe('the album', () => {
       ending: endingView('college', {
         ending: { type: 'college', week: 265, ageYears: 19, detail: 'x', resumesWeek: 317 },
         handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: 317, resumesAgeYears: 20 },
-        college: { yearsDone: 0, totalYears: 4, last: null, final: false },
+        college: { yearsDone: 0, totalYears: 4, last: null, final: false, billPerYearCents: 8_673_00, tier: 'state' },
       }),
     })
     const w = mount(EndingScreen)
@@ -199,7 +199,11 @@ describe('the fork at nineteen', () => {
     const spy = vi.spyOn(game, 'answerFork').mockResolvedValue(undefined)
     const w = mount(ForkDialog)
     await w.findAll('.fork-answer')[2].trigger('click')
-    expect(spy).toHaveBeenCalledWith('stop')
+    // ⚠ RE-AIMED 17.08, NOT LOOSENED: `answerFork` gained a second argument (the college place the
+    // player picked) and «stop» carries none, which this now states explicitly rather than by
+    // omission. A tier riding on the stop answer would be a shape the engine has to re-validate for
+    // no reason – see the command's own note in `protocol.ts`.
+    expect(spy).toHaveBeenCalledWith('stop', undefined)
     w.unmount()
   })
 

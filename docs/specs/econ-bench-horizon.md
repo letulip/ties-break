@@ -85,6 +85,12 @@ a prior reading and may have drifted — anchor on the **symbol names**.
    > unaskable inside 14→16, and an **A4 block per preset**: how many careers are ever paid at all,
    > and how many ever have a week whose cheque beats that week's costs. The reach targets in item 5
    > are deliberately unchanged, so every historical number in this file is still comparable.
+   >
+   > ⚠ **ITS STATED REASON EXPIRED ON 16.08 AND THE HORIZON DID NOT.** The rungs open at **14/14/15**
+   > now, so prize money IS askable inside 14→16 – but measured on that ruling, W35's median first
+   > entry moved only 16.3 → 16.1, so 14→16 still answers it as a near-zero. Keep the long horizon;
+   > it is now justified by the acceptance cut rather than by a doorway. Grid, stated once:
+   > [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 
 7. **Plumbing.** Extend `SeedResult` with: `survived: boolean`, `reachedWeek: number | null`,
    `endRank: number`, `endPoints: number`, and `perSeason: { seasonYear: number; endRank: number;

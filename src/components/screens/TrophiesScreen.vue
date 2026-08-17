@@ -104,17 +104,28 @@ function yearChip(year: number, count: number): string {
   return `${count}x'${String(((year % 100) + 100) % 100).padStart(2, '0')}`
 }
 
-/** Weeks -> the owner's chips, oldest first.
+/** Weeks -> the owner's chips, NEWEST YEAR FIRST.
  *
- *  The ledger is ascending by construction (`finalizeTournament` pushes as weeks happen), so this
- *  neither sorts nor needs to: first seen is oldest, and a Map keeps insertion order. */
+ *  ⚠ ROUND 21 #6 – the owner asked for the dates in reverse, most recent first and the earliest
+ *  last. His words are quoted in tests/component/round21-coach-photo.test.ts, which is where they
+ *  can be: no Cyrillic belongs in a .vue file at all.
+ *
+ *  THE FOLD IS WHY IT MATTERS rather than a preference about reading order. A folded cell shows
+ *  `YEARS_SHOWN` chips and buries the rest behind `+N`, so ascending order meant a long career's
+ *  cabinet showed her FIRST three seasons and hid this year's title – the one fact the parent came
+ *  to the screen for. Descending puts the live season in the resting layout and pushes the archive
+ *  behind the tap, which is what the fold is for.
+ *
+ *  The ledger is ascending by construction (`finalizeTournament` pushes as weeks happen) so a
+ *  `.reverse()` would do – but this sorts on the YEAR itself instead, because the chip's order is
+ *  now a stated contract and must not depend on the ledger's push order staying monotone. */
 function chipsOf(weeks: number[]): string[] {
   const byYear = new Map<number, number>()
   for (const week of weeks) {
     const year = yearOf(week)
     byYear.set(year, (byYear.get(year) ?? 0) + 1)
   }
-  return [...byYear].map(([year, count]) => yearChip(year, count))
+  return [...byYear].sort((a, b) => b[0] - a[0]).map(([year, count]) => yearChip(year, count))
 }
 
 interface Cell {

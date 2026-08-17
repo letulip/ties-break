@@ -334,7 +334,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     // a girl a year older. ⭐ P5: it used to spend all four in one call; `endCollegeEarly` is the
     // other answer at each boundary, and both are re-validated engine-side.
     case 'answerFork': {
-      return mutate(msg.id, msg.baseRevision, (world) => answerFork(world, msg.answer))
+      return mutate(msg.id, msg.baseRevision, (world) => answerFork(world, msg.answer, msg.tier))
     }
     case 'answerRetirement': {
       return mutate(msg.id, msg.baseRevision, (world) => answerRetirement(world, msg.retire))

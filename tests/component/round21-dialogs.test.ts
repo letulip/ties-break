@@ -226,6 +226,13 @@ describe('⭐ round-21 #1 – importing a save asks first', () => {
 //
 // WHAT THE THREE CASES BELOW BECOME: one. The two shut-door cases are gone with the state they
 // described, and the pin that the rung name is never typed into the template is gone with the rung.
+// ⚠ RE-AIMED FOR v51, NOT WIDENED (docs/specs/what-the-college-place-costs-2026-08.md). This card
+// grew three rows under its third answer – the offer – and the fit cases below are the repo's guard
+// that a dialog which grew still fits a phone. A fixture WITHOUT an offer would have gone on
+// measuring the short card and quietly stopped covering the one the player actually sees, which is
+// the slow failure round-20 #3 is about ("a dialog grows by one honest sentence at a time and nothing
+// objects"). So the fixture carries the LONGEST form of the offer: a named programme, both funding
+// layers on one line, and a bill that is a formatted figure rather than the shorter "Nothing".
 function forkSnapshot(): Snapshot {
   return {
     ageYears: 19,
@@ -233,7 +240,17 @@ function forkSnapshot(): Snapshot {
     kidRank: 88,
     fundsCents: 1234_00,
     careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
-    fork: { askedWeek: 265, ageYears: 19 },
+    fork: {
+      askedWeek: 265,
+      ageYears: 19,
+      offer: {
+        programme: 'strong',
+        athleticShare: 0.62,
+        needShare: 0.1,
+        costPerYearCents: 30_990_00,
+        familyPerYearCents: 8_673_00,
+      },
+    },
   } as unknown as Snapshot
 }
 

@@ -653,7 +653,10 @@ can play one.
 W15 field an adult one. Measured (`tools/two-tour-overlap.ts`, 27 careers, identical seeds): the
 overlap widens to **14-18**, but only in weight at fifteen – at 14, 26% of careers now hold both tours
 on a mean of 1.7 professional events beside 7.3 junior ones; at 15 it is 67% on 6.1. 16-18 is
-unchanged. The two documents now disagree about what a W15 field is; amending one of them is his call.
+unchanged. ~~The two documents now disagree about what a W15 field is; amending one of them is his
+call.~~ ✅ **SETTLED 16.08 – he made the call twice more and then closed the whole class of problem.
+`adult-tour-and-endings.md` §4.1 is amended and the grid is now written out in exactly one place.**
+See the entry below.
 
 **Also in P2, and the reason the ruling is survivable:** the entry allowances are counted
 **birthday-to-birthday** now, as both rulebooks say. Before, the window was the season block while the
@@ -1016,3 +1019,1132 @@ untouched. ⚠ `e2e/responsive.spec.ts` itself is the owner's to run.
 
 Predicted vs measured in full, every guard that moved, and the per-key diff:
 `docs/specs/college-is-its-own-branch-2026-08.md`.
+
+## 2026-08-16 – One source of truth for the age grid (`wave/round21`, documentation)
+
+**Verbatim, and he had been handed this same contradiction twice:** «Два документа спорят о поле W15 –
+уже дважды обсуждали: у нас есть регламент, точка. Разрули противоречия и оставь один источник истины,
+хватит мне это возвращать.»
+
+**The fix is not the sentence, it is the copying.** The grid was RESTATED IN PROSE, in its own words,
+in roughly a dozen specs – each one honest on the day it was written, none of them wrong on purpose,
+and every ruling since has had to find and move all of them. That is why the same disagreement reached
+him twice.
+
+⭐ **THE GRID IS NOW WRITTEN OUT ONCE**, at `docs/specs/college-is-its-own-branch-2026-08.md` §0a:
+the table, the AER counts, the constants it describes (`TIERS[*].minAgeYears` / `maxAgeYears`,
+`ECONOMY.entryCap.proPerYearByAge`) and the regulation behind them. `docs/context-index.md` and the
+simulation context pack route to it. **Every other document either does not state the grid, or names
+one number with the pointer attached** – so a future ruling has exactly one place to land.
+
+**What was false and is corrected, each keeping its old text above the line that reverses it:**
+`adult-tour-and-endings.md` §4.1 (*"a W15 field is adults"* – it is not; the overlap runs **14-18**),
+`junior-access-2026-08.md` §2a (the deliberate-deviation note he was answering),
+`birthday-and-gifts.md` (the W series does not open at 16), `points-by-the-book`, `ranking-ceiling`,
+`college-fork`, `endings-and-the-album`, `ladder-baseline`, `world-strength-audit`,
+`fatigue-injury-audit`, `human-arm-forward`, `what-money-buys`, and both acceptance-cut audits, whose
+`w75.minAgeYears` rows read **ANSWERED** instead of *needs the owner*.
+
+⚠ **AND THE PILLAR THAT STARTED IT HAD NO ORIGINAL.** *"A sixteen-to-eighteen-year-old holds both
+tours at once and arrives at nineteen having seen what each one costs and pays"* was quoted in three
+documents and one engine comment as `adult-tour-and-endings.md` §4.1's own words. **§4.1 never
+contained that sentence.** It was written as a paraphrase in `junior-access-2026-08.md` §2a and
+re-quoted from there – the same failure as the repealed NCAA rule in `college-gate-decoupled` §5, and
+the reason a design pillar could be defended for two weeks without anybody being able to read it.
+
+⚠ **STILL OUTSTANDING, IN CODE, AND REPORTED RATHER THAN TOUCHED** (this was a documentation wave):
+`src/engine/season/types.ts`'s `maxAgeYears` note still asserts the 16-18 overlap as current fact;
+`src/engine/economy.ts`'s `proSubCapByAge` note still says the sub-cap *"cannot bind"* while
+`world/entryCaps.ts` says the opposite about the same rule; `tests/tier-window.test.ts` has an
+assertion whose subject is a rung a fourteen-year-old is no longer too young for; and three tools
+carry stale doorway ages in their headers.
+
+## 2026-08-16 – Empty weeks are a number, not a gate; and two constants stop deciding for two others (`wave/round21`)
+
+> **The owner, on the empty weeks, verbatim:** «вообще не страшно, если иногда в сетке есть пустые
+> недели, не вижу ничего плохого. Так что просто надо понять сколько пустых недель у нас есть вообще
+> и оттуда отталкиваясь делать логику. До этого я играл – всё было нормально с календарем, меня более
+> чем устраивало. Если сейчас так же – то это ок.»
+
+Spec: `docs/specs/the-ladder-is-monotone-2026-08.md`.
+
+### ⭐⭐ THE "SHE MUST ALWAYS HAVE TENNIS" ACCEPTANCE TEST IS NO LONGER A HARD GATE
+
+Empty weeks are acceptable. What is wanted is the COUNT and a comparison against the build he played.
+`tools/empty-week-census.ts` is that census and exits 0 always. ⚠ `tools/boredom-guard.ts` could not
+answer it: it only inspects weeks where the AER cap REFUSED a W entry, so a week that is simply blank
+is invisible to it.
+
+**MEASURED, 18 careers x 676 weeks, ages 14-26, `POLICIES[1]`, `6c7507b` (what he played) against
+this branch: 11.9% → 12.6% of her non-blackout weeks, 4.9 → 5.0 empty weeks a season.** It is the same
+calendar. Off-season, exams, a booked family week and an injury layoff are counted separately as
+blackouts – they are the calendar working, not empty weeks.
+
+Three things for him: **age fourteen is the thin one (~11 empty weeks) and is identical on both
+builds**; ages 15-18 improved and 20-23 gave back 2-3 points; and **the dominant cause is the
+acceptance cuts, not the entry caps** – 56% of empty weeks had events on them she was not ranked high
+enough for, 21% had nothing scheduled at all, and everything involving the AER allowance is 6%.
+
+### THE SPONSOR GATES GET THEIR OWN CONSTANTS – national 350, global 87
+
+`ECONOMY.sponsorship.national.maxWtaRank` was *defined as* `TIERS.w100.acceptsRank`, so P3's
+acceptance-cut work dragged both sponsor rungs with it (350 → 240, 87 → 60, narrowing global's band
+from 37 ranks to ten). **Nobody decided that.** Same defect P4 fixed for the college door: one
+constant, two unrelated jobs. An acceptance cut is a rule of the tour; a sponsor's interest is a fact
+about visibility. Both restored to the values the coupling took, the equality pin replaced by a
+mutation-verified decoupling guard, `TIERS.w100.acceptsRank` left at 240.
+
+⚠ **FOR THE OWNER: is 87 still right?** Its argument – a quarter of national's 350 – is exactly the
+derivation this retires, and the band is #51-87 in a table of 1,800 while the median career high is
+#104. Not moved; restoring what a side effect took is a revert, choosing a new figure is his.
+
+### TWO LADDER INVERSIONS FIXED ON A STRUCTURAL CRITERION, AND A GUARD
+
+`wta125.acceptsRank` **180 → 210** (it was tighter than the WTA 250 above it) and `j300.enterPct`
+**0.20 → 0.25** (it was tighter than the rung's own field band, so the rung refused the population its
+draw is made of). ⚠ **Neither 180 nor 210 is sourced, and nor is `wta250`'s 200 or `w100`'s 240** – so
+the criterion is that a ladder which inverts is not a ladder, not an appeal to evidence. The durable
+half is `tests/ladder.test.ts` L6b, which walks the whole chain and is mutation-verified three ways.
+
+⚠ **A THIRD INVERSION, FOR HIM:** `slam.acceptsRank` **104** is looser than `wta1000`'s **65**. Left
+alone – 104 is the one sourced number in the family (the Grand Slam Rule Book's own count) and it is
+only an inversion because our Slam draws 32 where a real one draws 128. Held as the guard's single
+declared exemption, asserted to be the only one and asserted to be live.
+
+### ⭐⭐ AND THE MEASUREMENT SAYS THE MEDIAN GOT WORSE WHILE THE GAME GOT BETTER
+
+n = 90 on `tools/ladder-baseline.ts`. Every median moved the wrong way (rank at 19 #160 → #178, career
+prize $685,960 → $623,820) and **fifteen of eighteen predictions were wrong**. The column that
+explains it: **careers ever reaching a J300 went 72/90 → 87/90 and careers ever holding a professional
+ranking 81/90 → 87/90.** The career-high p25 is #75 in BOTH arms; p75 moved #131 → #142 and the worst
+#160 → #180. Six careers that were never ranked now are, and they join the median at the bottom of it.
+A median over a population that grew by 7% is not a comparison.
+
+⚠ **AND A THIRD COUPLING, FOUND BY THE MEASUREMENT RATHER THAN PREDICTED:** `tierOutgrown` reads the
+rung THREE above, so moving `wta125.acceptsRank` also moved when a W50 stops being worth entering
+(W50 entries 30.3 → 22.1 a career). Deliberate, documented on `TIER_LADDER`, reported not changed –
+and the two fixes landed together, so this pair of arms cannot attribute any single rung to one of
+them.
+
+⭐ **AND THE ACCEPTANCE FIX PAID SOMEWHERE NOBODY WAS AIMING.** `tools/boredom-guard.ts`, 12 careers x
+260 weeks, before and after: cap refusals **1,145 → 448**, the non-blackout weeks they cover
+**674 → 354**, and **weeks with no playable junior or domestic alternative 88 → 29**. A prestige junior
+rung that accepts to 0.25 instead of 0.20 is one more answer on one more week. ⚠ The guard still exits
+1 and is no longer a hard gate; its exit code is deliberately unchanged, and softening it is his call.
+
+## 16.08.2026 – WHAT THE COLLEGE PLACE COSTS, AND WHO PAYS FOR IT (v51)
+
+`docs/specs/what-the-college-place-costs-2026-08.md`. His question, verbatim: «Что у нас будет с
+оплатами? едины для всех или тоже от достатка на момент прихода будем мерять?»
+
+### THE COST SIDE IS SOURCED FOR THE FIRST TIME, AND THE ENGINE WAS CHARGING ZERO
+
+`docs/research/college-and-the-junior-exit.md` §1d, new: a year costs **$30,990** in-state, **$50,920**
+out-of-state, **$65,470** private nonprofit `[S]` (College Board, Trends 2025, Figure CP-1) – a 2.1×
+spread, and residence moves it more than the programme does. The NCAA's own page: *"Most scholarships
+are partial, but student-athletes can combine them with academic awards, NCAA-funded aid programs, and
+need-based assistance like Federal Pell Grants."* ⚠ **And a correction to §1a from the primary source:**
+the word *"equivalency"* appears **zero times** in Article 15 of the live 2026-27 Division I Manual –
+the team limits are gone, replaced by a **roster limit of 10** (Bylaw 17.2, the manual itself) plus a
+money cap (16.13.1.5). Partial awards happen because a programme's budget is finite, not because a
+bylaw divides eight scholarships.
+
+### THE ANSWER: TWO LAYERS, AND THEY POINT OPPOSITE WAYS
+
+The **athletics award is merit-only** – there is no means test anywhere in Bylaw 15 on athletics aid,
+and `athleticShareOf` is not handed a family, which is the proof rather than the promise. The
+**need-based layer beside it is means-tested** and is the only thing in the engine that reads
+`profile.background`. Bylaw 15.1 caps the two together at the bill, and 15.1.3's own remedy is why the
+trim falls on the need layer and never on the award.
+
+**Measured, n = 90, denominator 90/90 reaching the fork:**
+
+| background | athletic % | need % | **4-year bill** |
+| --- | --- | --- | --- |
+| working | 53.6 | 36.0 | **$8,701** |
+| middle | 57.1 | 9.6 | **$38,164** |
+| wealthy | 65.9 | 0.0 | **$42,304** |
+
+⭐ **The bill tips college towards the POOR family, 4.9 to 1** – the right way round. ⚠⚠ **But the
+award itself shows a 12.3-point wealth gradient**, because a wealthy family buys the coach that buys
+the junior record the award reads. **The award does not read wealth; wealth buys the record it reads.**
+
+⚠⚠ **AND THE BENEFIT INVERTS THE BILL.** Over four years college beats the tour by **$12,821** for a
+working family and **$211,653** for a wealthy one – because the tour's outgoing is what college avoids,
+and a wealthy family was spending far more of it. **College is the biggest financial win for the family
+that needed it least.** FOR HIM: if college should be the poor family's route, the lever is the TOUR's
+cost, not the award.
+
+### THE OFFER IS A PRICE, NEVER A GATE
+
+87 of 90 careers are offered a funded place; 3 are walk-ons who still enrol and still pay. **The third
+answer is on the card in 100% of careers** – his ruling of the same morning is untouched – and the
+measure is her JUNIOR record, carried on a view with no professional rank, finish or prize money on it
+at all, so the deleted rule cannot be re-created from either side. For contrast, the retired rule would
+have left a college answer in **14 of 90**.
+
+### ⭐ THE ERROR WAS THE FINDING, TWICE
+
+Run 1 put **88 of 90 careers in one band** and measured a median family bill of **$0**. Two causes: the
+finish scale is **zero-based** (`kidFinish === 0` is a title) and my table was one-based, so every row
+was a round too generous; and even corrected, a high-water mark on J30/J60 **saturates** – she wins
+those rungs routinely, and `best j60`/`best j30` are 0 at the median AND at p75. Re-shaped onto the
+prestige rung plus title volume, banded on the score's own measured quartiles, run 2 hit **9 of 11
+predictions**, including the median four-year bill at **$28,316 against $28,000 predicted**.
+
+⚠ **The battery's other columns are byte-identical to `the-ladder-is-monotone` §3b** – the tool never
+answers the fork – and the three frozen career hashes moved by exactly `schemaVersion` and nothing
+else. v51 does not reach the world outside college.
+
+⚠ **FOR HIM: `npm run e2e:fixtures` needs running.** The schema bumped, so `tests/e2e-fixtures.test.ts`
+is red until the corpus is regenerated. The e2e corpus and the browser suite are his.
+
+## 17.08.2026 – ROUND 21, THE MEASURED HALF: seven questions, six "not a defect", and one he did not ask about (`wave/round21`, audit)
+
+**AUDIT ONLY. No balance constant moved, no engine file changed.** Five measurement tools ship, one is
+extended, and the whole of the evidence is `docs/specs/round21-measured-2026-08.md`.
+
+### THE VERDICTS, SHORTEST FIRST
+
+| his question | verdict | the number that settles it |
+| --- | --- | --- |
+| Ines' two seasons – right for her level? | **not a defect – she is UNDER-ranked** | core **57.1** against **50.4** mean for the band #101-#150 she stands in |
+| no QF at a big event in two seasons? | **not a defect – the unlucky fifth** | model gives **15.0%** per WTA 250, **13.0%** per WTA 500; over her 14 big events **P(no QF) = 20.5%** |
+| an 18-year-old at #2? | **not a defect – the head is OLDER than the field** | teens are **11.4%** of the field, **5.4%** of the top 50, **1.25%** of #1s |
+| barred from the Slam at #116? | **arithmetic exact; the cost is 19 weeks** | 12/14 careers pass the band, **12/12 cross it, 0/14 stall** |
+| "college beats the tour"? | ⭐ **HE IS RIGHT AND THE FAILING WAS MINE** | the tour passes college at the **74th percentile**; **30%** of careers do better on tour |
+| is 1,600 enough? | **the table is right; the CHAIRS are not** | **2.12** W chairs per professional per season against a real ~20 events a year |
+
+### ⭐⭐ THE ONE DEFECT, AND HE HAS BEEN READING IT ALL ALONG
+
+He quoted his seasons as **"endRank 87 → 79 → 81"**. **Those are not her ranking.**
+`SeasonHistoryEntry.endRank` is written from `world.kidRank` – the **ITF** fold – and she has held
+**zero ITF points since season 5**. A dense rank over a table whose tail all ties on zero hands every
+member of that tie the head of the tie's place, which is exactly the failure `kidLadderRank` guards
+against (*"UNRANKED IS NOT A NUMBER"*) and the raw `kidRank*` fields do not. Her real professional
+trajectory over those seasons is **#86 → #86 → #121**. It reaches `StatsScreen.vue` too, whose
+career-best fold reports **#5** – a junior ranking from season 1.
+
+⭐⭐ **AND THE GOOD NEWS: THE RIGHT NUMBER IS ALREADY IN THE SAVE.** `byTrack` has carried a per-track
+rank since v46 and already obeys "absent means NOT RECORDED" – her ITF cell for those seasons is
+correctly empty, and `byTrack.wta.endRank` reads **#91 → #151 → #86 → #86 → #121**. **So this is a
+READER bug, not a schema one: no bump, no migration, no fixture.** `StatsScreen.vue`'s career-best
+fold should prefer `byTrack[track].endRank` and fall back to the legacy field only for pre-v46 rows –
+the shape `SeasonHistoryTable.vue` already uses. ⚠ Retiring the legacy field itself would be
+schema-visible and is NOT needed to fix what he is seeing. **FOR HIM to schedule.**
+
+### ⭐ AND THE ANSWER TO "WHY DID SHE FALL" IS HER CALENDAR, NOT A BUG
+
+Thirteen of her twenty-five events in season 8 – **52% of the calendar** – were WTA 500s and Slams,
+where she went **4-13**. Expected points per event say the schedule is upside down: **W100 pays her
+57.7 and she played two; the WTA 500 pays 37.8 and she played ten; the WTA 250 pays 20.1, the worst
+thing she can enter, below even a W50.** Nothing is mispriced – but no screen tells her this.
+
+⚠ **The round-21 #4 seeding fix (`b790ea0`, 15.08) is on this branch and NOT on `main`**, so unless he
+is on a build cut from this branch his two seasons carry the bug. Measured, it cost her seeding at
+**W50, W75 and W100 only** – at WTA 125 and above she is unseeded either way. **So the record he is
+asking about is clean evidence.**
+
+### ⚠⚠ AND THE ASYMMETRY I WAS TOLD TO LOOK FOR IS THERE – but it is the FIELD, not the seeding
+
+**The WTA 250, 500 and 1000 draw fields of the same strength** – mean core **68.4 / 68.9 / 68.4**, and
+94-97% of each stronger than she is. The Grand Slam draws a *weaker* one (63.2). Their bands open at
+**#32 · #22 · #11** of a 1,799-row table – three windows onto one head. **That is the same defect
+shape `fieldPros.ts` records for the old top three rungs**, fixed then by adding a storey and never by
+re-spacing the bands.
+
+⚠ **And the sport runs the other way**: research §4c-C is explicit – *"Reality gates the strong OUT; we
+gate the weak IN."* We ship half of it (`playDownBars` gates HER out of outgrown rungs; nothing keeps
+the field's top 40 out of a WTA 250). **Consequence: a WTA 250 is worth 20.1 expected points an event
+to her, the worst rung in the game, below a W50's 29.7 – a 1000-strength field for 250-level points.**
+
+**KNOB, NAMED AND NOT PULLED**, two options: re-space `wta250.entrantPctBand[0]` (0.018 against 0.012
+and 0.006 above it), or extend the play-down ceiling to the entrant pool, which is what reality runs.
+**Both are balance changes with their own bench. FOR HIM.**
+
+### HIS SLAM PROPOSAL – defensible, and it drags one number with it
+
+«раз у нас нет квалы, может быть просто тогда брать "+16 из таблицы"?» → `slam.acceptsRank` 104 → 120.
+**Measured, it works**: the median career's refusal falls from **23.5 weeks to 9** and two of fourteen
+careers stop meeting the door at all. ⚠ **But `TIERS.wta500.acceptsRank` is already 120**, so at 120
+the hardest draw in the game shares a door with the rung two storeys below it. ⚠ **And the rulebook
+offers a cheaper version**: §4-D permits **104/108/112** direct acceptances – **112 is inside the
+regulation** (refusal 23.5 → 15.5 weeks) and 120 is a modelling choice outside it.
+⚠⚠ **The same argument does NOT transfer to the W rungs** – they have no threshold to add to (one
+"System of Merit" ordering, no cut anywhere in it), so there the honest version of his idea is the
+**soft tail he already deferred on 16.08**. The wild-card half is a real mechanic needing three
+rulings and is flagged, not sketched.
+
+### THE POPULATION: DO NOT WIDEN
+
+1,600 pointed rows against a real list of ~1,550, and the points curve is within a few per cent of the
+real anchors to #500. But the deepest band floor in the game is **#1295 of 1,799**, so **504
+professionals (28%) are in nobody's draw, ever** – and there are only **2.12 W main-draw chairs per
+professional per season.** **Widening makes that ratio worse.** If he wants a fuller bottom of the
+ladder the lever is **more W15/W35 weeks**, not more people.
+
+### COLLEGE VERSUS THE TOUR – the distribution I owed him
+
+| funds delta over 4y | p10 | p25 | median | p75 | p90 | **max** |
+| --- | --- | --- | --- | --- | --- | --- |
+| COLLEGE | $74,898 | $87,823 | $106,995 | $141,234 | $225,811 | **$260,410** |
+| ON TOUR | -$3,819 | $4,184 | $31,959 | $169,294 | $494,677 | **$5,573,608** |
+
+**3 of 53 careers clear a million in four years and the best banks $5.57M; the college arm has no tail
+at all.** ⚠ And the old row was a **difference of medians**, which is not the median of the difference –
+both are printed now, and the arms are paired.
+
+⭐⭐ **THE NON-AMERICAN NUMBER, OUT OF THE FOOTNOTE**: **$80,090** over four years against **$25,592**,
+and **0 free rides of 53**. Worse, a non-American **working** family pays **$95,240** – MORE than a
+non-American **wealthy** one at **$65,405** – because the need layer is US-only law (34 CFR §668.33)
+and the merit channel then runs unopposed.
+
+⭐⭐⭐ **AND THE TWO STATISTICS DISAGREE IN SIGN, WHICH IS THE WHOLE LESSON.** For a non-American the
+difference-of-medians still says college wins by **$35,119**; the PAIRED median – the honest one for
+two arms forked from one world – says it **LOSES by $8,070**, and **27 of 53 careers (51%) do better
+on tour**. **"College beats the tour" is an American sentence.** Reachable in ordinary play: onboarding
+lets the player pick a country and his own career is IT. Flagged, not tuned – both stickers and the
+absence of the layer are primary-sourced.
+
+## 2026-08-17 – Round 21, items 4 and 2: the WTA 250, and the Slam door
+
+### ⭐⭐ ITEM 4 – THE ENTRY LIST GETS A HEAD, AND THE WORST RUNG IN THE GAME STOPS BEING THE WORST
+
+**Verbatim:** «с этим точно надо что-то делать, еще раз обращаю внимание, что Инес за 2 года не смогла
+вообще никуда сдвинуться в 250+, да еще и на нижних вылетала периодически, а мы говорим о 86 ракетке с
+хорошими статами.»
+
+**BUILT.** `TierDef.acceptsFromRank` – the HEAD of a rung's entry list, the other end of `acceptsRank`,
+and `wta250` is the only rung that carries one. A player ranked inside it is not refused a WTA 250, she
+is at a 1000 or a major that week. **`wta250.acceptsFromRank = 64` – exactly `FIELD.tiers[0].count`,
+the `tourElite` storey: the top storey does not play a WTA 250.**
+
+Research runs this way and we already shipped half of it: the ITF bars WTA #1-50 from every W-series
+event and we ship that as `PLAY_DOWN.fromAllW` **for her**; the field had no equivalent anywhere, which
+is why one sixty-four-chair storey filled all three rungs above the 125.
+
+| | before | **after** |
+| --- | --- | --- |
+| a WTA 250's field, mean core | 68.4 – **a WTA 1000's field** | **60.6** |
+| % of it stronger than a #121 player | 97% | **69%** |
+| her P(QF+) at a WTA 250 | 12.8% | **27.5%** |
+| **expected points, a WTA 250** | **17.1 – below a W50's 30.8** | **33.3** |
+| every other rung | – | **identical to the digit** |
+
+**The number was swept, not chosen**: OFF 17.1 · #40 18.4 · #50 26.2 · **#64 37.0** · #80 65.6, with
+the criteria written and committed before the run. #50 leaves the 250 still below a W50; #80 makes it
+the best event in the game for a #121 player, which is a worse defect than the one being fixed.
+
+⚠⚠ **AND THE POPULATION EFFECT IS SMALLER AND MIXED – CORRECTED AFTER A COORDINATOR'S ARM
+CONTRADICTED MINE.** The table above is a **fixed-rank replay**: her build, her #121, only the field
+moved. That is his actual save and his actual complaint, and there it is large and clean. Over 54
+DRIVEN careers, where her rank moves too, the observed ledger says:
+
+| | before | after |
+| --- | --- | --- |
+| careers ever past round one at a 250 | 81.6% | **88.0%** |
+| careers ever reaching a QF there | 67.3% | **72.0%** |
+| ⚠ careers ever reaching a final there | 30.6% | **24.0%** |
+| ⚠ **per ENTRY, past round one** | 51.6% | **45.1%** |
+
+⚠ **Per entry she gets past round one LESS often** – because she now plays **9% more** WTA 250s and
+the extra entries are made at worse ranks. Per career the direction is the one he asked for; per entry
+it is not, and deep runs got rarer. **Both are reported.**
+
+⚠⚠ **AND THE HEADLINE I FIRST GAVE WAS THE WRONG STATISTIC.** Career high median moved **#112 → #94
+at n=90 but only #115 → #110 at n=54** – the same careers plus four per preset. The stable number is
+the **p25: #75 → #48 and #72 → #50** at the two sizes, and rank at 21 **#178 → #162 / #181 → #156**.
+**The change helps the careers that actually reach a 250 often and barely moves the median career.**
+I quoted a median without checking it against a second n – the same error as the college report.
+⚠ **AND ONE ROW WENT THE WRONG WAY: 87/90 → 84/90 careers ever hold a professional ranking** – three
+marginal careers lost the only points they had. ⚠ **The mechanism is a hypothesis, not a measurement**:
+it cannot be the 250's value (that only adds points to her), so it is most likely her CALENDAR – every
+W acceptance cut reads her position in the MERGED table, and the cohort's own 250 results moved it.
+**3 of 90, at the bottom of the distribution, against a median career high eighteen places better.**
+Flagged, not tuned away. **FOR HIM.**
+
+⚠ **The frozen careers moved on ONE key of sixty-three – `events` – in all three**, and the per-key
+diff is the receipt: no frozen career played a different match (the freeze ends at 16.6 and the
+baseline measures 0.0 WTA 250 entries before 17). What changed is the tour NEWS. `rngMain` unmoved for
+the seventh wave running; the MAIN capture needed no re-pin.
+
+⚠ **THE SYMMETRIC HALF IS NOT TAKEN AND IS HIS TO RULE ON**: nothing stops HER entering a WTA 250 once
+she is inside #64. The machinery exists (`playDownBars`), the sport does gate her out one rung below,
+and it would REMOVE content from a player rather than add it – so it is flagged rather than shipped.
+
+### HIS SECOND CLAUSE – «на нижних вылетала периодически» – measured, and it is not a second defect
+
+The field-strength shape does **not** reach below the WTA 125: field core rises smoothly 44.6 · 46.5 ·
+50.1 · 55.0 and only then jumps to 68.4. Her own record, reconstructed exactly from the per-rung W-L
+and named by the counting window: **9 events below the 125, exactly 2 exits before the quarter-final,
+both at W75, and both R16 – she won her opening match and lost the second.** The model predicts
+**1.92**. ⭐ **Below the WTA 125 she did not lose a single opening match all season.** The one first
+round she did lose was her one WTA 250, for 1 point – which is item 4 from the other side. A 32-draw
+is five rounds; a 78%-QF player goes out early one event in five. "Periodically" is the right word and
+the right rate, and there is no second defect underneath item 4.
+
+### ITEM 2 – THE SLAM DOOR: 104 → 112
+
+**Verbatim:** «112 и надо подумать про wild card 8». **BUILT.** Still the rulebook's own number – it
+publishes **three** permitted compositions, 104/16/8 · 108/12/8 · **112/8/8** – and it creates no
+collision, which is why he took it over his own earlier "+16 = 120" (`wta500.acceptsRank` is already
+120, and a Slam must not share a door with the rung two storeys below).
+
+| cut | careers refused | median weeks refused |
+| --- | --- | --- |
+| #104 (old) | 13/14 | **29** |
+| **#112 (shipped)** | 13/14 | **14** |
+| #120 (his earlier idea) | 11/14 | 6 |
+
+**0 of 14 stall at either setting** – the door was a speed bump and is now a smaller one.
+⚠ **Measured separately, it moves the n=90 battery by NOTHING** – three medians identical to the
+place, career high identical, denominator identical. Only 34 of 90 careers ever enter a major.
+
+⚠⚠ **THE "+16" ARGUMENT DOES NOT TRANSFER TO THE W RUNGS AND THIS IS THE RECORD OF WHY.** There is
+nothing to add sixteen to: the 2026 ITF WTT Regulations are ONE "System of Merit" ordering with no
+published cut anywhere in it – an unranked player is not refused a W75, she is placed at the bottom of
+the list. The Slam is the one rung whose regulation states a count. At the W rungs the honest version
+is the **soft tail**, ruled against on 16.08, and **the acceptance cuts stay hard.**
+
+### THE WILD CARDS – SHAPED AND COSTED, DELIBERATELY NOT BUILT. **FOR HIM.**
+
+⚠ **The frame first: a wild card is not a fix for a stall, because there is no stall** (0 of 14). It
+buys a story, not progress. Three rulings he owes:
+
+1. **WHO.** Reality uses three grounds and we can express two. **A home player** needs a host nation on
+   the event – there is no venue machinery anywhere in `src/` – but that is derivable from
+   `(seed, event.id)` at zero persisted bytes, and `AiPlayer.nation` already exists. **A young
+   prospect** is free (`juniorReservedPlace` is the same idea one ladder down). **A returning name is
+   NOT expressible and should be dropped explicitly**: field pros persist zero bytes, so "she used to
+   be #12 and has been away" has nowhere to live.
+2. **CAN SHE GET ONE.** ⭐ **Recommended: the home-nation card only** – it reads as a reward rather
+   than a gift, and it is the only shape with a cap inside its own definition (at most one major a
+   season can be her home major). A form threshold is a second acceptance rule with its own tuning; a
+   random card will be read as the engine deciding her career for her.
+3. **THE MARKER.** A badge on the event row in `SeasonScreen.vue` plus one line in
+   `TourBriefingDialog.vue`. ⚠ Another agent is in `SeasonScreen.vue` this week, and CLAUDE.md's
+   round-20 rule makes the 375x667 mounted assertion on that dialog a hard cost line.
+
+**Cost:** the eight held places are **`fillOnRamp`'s exact shape** – that mechanism already holds and
+fills slots in a W draw – so the AI half is S/M. **Her own card is M-L**: it is a new acceptance rule
+and owes its own bench. ⚠ **And it does not close the refused band** – only #128 does, and #128 is
+"everybody in the draw gets in", which is not a door.
+
+### ITEM 2b – THE WILD CARDS: **BUILT** (17.08)
+
+**Verbatim:** «2b. Wild card ×8». The shape is the one costed the day before and recorded in the
+section above – **home-nation cards only**, she can receive one on the same rule as everybody else, a
+marker on the tournament card. `docs/specs/the-wild-cards-2026-08.md` is the spec.
+
+**What a wild card is now.** Eight of a Slam's 128 are held and given to players of the event's HOST
+NATION whom the acceptance list refused – outside `slam.acceptsRank` (112) and inside the rung's own
+entrant band ceiling, roughly **#113–#333**. The host nation is derived from `(seed, event.id)` on its
+own sub-stream at **zero persisted bytes**; no schema moves, no migration, no golden fixture.
+Qualifying is still unmodelled and stays that way: a qualifier earns a place in a draw we do not run.
+
+⚠ **One mechanism, two configurations.** The eight held places are `fillOnRamp` called a second time,
+not a second held-slot mechanism – the pool filtered to the host nation, the door inverted to
+"the rung refused her", and its own `seed:wildcard:` stream so the field the week already selected is
+bit-for-bit unchanged. **Nothing is added to MAIN.**
+
+⚠ **A RETURNING NAME IS DROPPED EXPLICITLY, and it is written into the code so the next reader does
+not try.** Field pros are re-derived per season and persist zero bytes, so a former ranking has
+nowhere to live. Unrepresentable, not unbuilt.
+
+⚠ **THE GAP THE BUILD FOUND, and it would have been a silent dead branch.** The onboarding wizard
+offers twenty-four countries; the population's `NATION_WEIGHTS` has thirty-six and **`BY` is in the
+first and not the second** – so a player from there would have had a mechanic that never fires and no
+way to learn why. `HOST_NATIONS` is the population's pool plus the playable codes it lacks, and a
+source pin now holds the two lists together across a boundary the engine may not import across.
+
+⚠ **The one guard re-aimed, and it was strengthened rather than loosened.** The wild card is the first
+door on this ladder that is a fact about ONE TOURNAMENT rather than about a rung, so
+`tierOpenFor` gained an optional event id and `tests/rankingGate.test.ts` now names the event on BOTH
+sides. Asked without one, every existing caller reads exactly the acceptance cut it read before –
+`Snapshot.tierOpen` still says "the Slam takes the top 112", which is the honest per-rung summary.
+
+⚠ **It is not a fix for a stall, because there is no stall** (0 of 14, §5b of the round-21 spec). The
+measurement was aimed at the opposite question – *did it move anything it should not have* – and the
+answer is in the spec's §4.
+
+---
+
+## 17.08.2026 – The college tariff: legible rungs, an annual drawdown, and a bill priced on what the family actually has
+
+Spec: [`docs/specs/the-college-tariff-2026-08.md`](specs/the-college-tariff-2026-08.md). The owner:
+«По колледжу надо собрать понятные ступени с прозрачной оплатой и годовым списанием с учетом доходов
+семьи на момент поступления и прочего. Копят деньги и оплачивают. Какая дельта? Может она
+околонулевая будет или всё-таки расходы перевесят.»
+
+⭐⭐ **THE ANNUAL DRAWDOWN ALREADY EXISTED AND THE GAME DENIED IT.** `resolveCollegeBill` has debited
+the family's share weekly since v51 and written a `tuition` ledger row every time. Nothing about the
+flow was built. What was missing was every surface: `tuition` was absent from the Money screen's
+category table, so the largest single outgoing of four years fell into **Other** – and **three shipped
+lines said "the family stops paying" / "the family still pays nothing"**, including the button that
+commits her to another year of the bill. When v51 priced college it fixed the one copy of that claim
+on the card it was editing and left the other three.
+
+⭐⭐ **THE NEED LAYER STOPPED READING A LABEL.** `needShareByBackground` was three constants keyed on a
+value chosen at onboarding, five seasons before she enrols. It is now a phase-out over her family's
+real position that week: annualised parent income plus savings above a shield, spread over the four
+years. **The label was measurably wrong** – at the fork a *working* family has saved **$57,555 at p75**
+against a *wealthy* one's **$21,297**, because the wealthy career burned its capital on the tennis.
+⚠ The SHAPE is sourced (federal aid has a floor band, a taper and a cut; *Trends 2025* names incomes
+**and assets** in one clause); **the two knots are ours** and the spec says why at length – our income
+axis is a contribution to the tennis, not a household income, so a real federal threshold laid over it
+would hand every family the full layer and delete the question.
+
+⚠⚠ **THE MERIT-ONLY AWARD SURVIVED AND IS NOW MEASURED, NOT ONLY TESTED.** Athletic share by
+background, control vs change: **53.2 / 59.0 / 67.4** against **53.2 / 59.0 / 67.4** – identical to the
+decimal, programme split identical. The sweep that guards it **gained** two axes (income, savings) and
+is mutation-proved.
+
+⭐⭐⭐ **THE DELTA, AND IT IS REPORTED AS A DISTRIBUTION BECAUSE A MEDIAN CANNOT ANSWER IT.** Paired
+college-minus-tour over four years, n = 53: median **+$4,114** – near zero – over a spread of
+**−$1.09M at p10 to +$172,950 at p90**, with **25 of 53 (47%) better off on tour**. By background,
+median / share better on tour: **working −$94,537 / 61%**, **middle +$15,304 / 48%**, **wealthy
++$29,108 / 25%**. ⚠ **«Расходы перевесят» is true for most working careers – but the thing outweighing
+college is what the tour would have paid her, not what the degree cost:** the whole four-year bill is
+$15k–$48k inside a delta that spreads over a million.
+
+⚠⚠ **A NON-AMERICAN IS NEGATIVE IN EVERY BACKGROUND AND 70% DO BETTER ON TOUR** – and a non-American
+**working** family is negative at every quantile from p10 to p90, **17 of 18 careers better off on
+tour**. Both halves are primary law (the out-of-state sticker; 34 CFR §668.33), so it is flagged and
+not tuned. The card states the figures and does not advise – ruling 4 of 30.07 stands.
+
+⚠⚠ **AND THE TARIFF IS NOT WHAT MOVED THE DELTA – THE WILD CARDS WERE.** Three arms, each named by
+commit: pre-wild-card median **+$26,152** (43% better on tour) → wild cards, same tariff **+$4,114**
+(47%) → wild cards, new tariff **+$4,114** (47%). **Somebody else's wave cost the college arm $22,038
+of median advantage; this one moved it by $0.** Measured in passing and handed over, not a complaint.
+
+⚠⚠ **THE PROVENANCE LESSON, AND IT IS A NEW WAY TO GET A BROKEN ARM.** The first pair of arms was
+built at "the commit before mine" and "my commit" – and another agent had landed the wild cards in
+between, so the pair measured my change **plus theirs**. It announced itself as a merit-only award
+appearing to move with family wealth. **In a shared checkout the control is not the previous commit,
+it is MY COMMIT WITH MY CHANGE REVERTED**, and the arms were rebuilt that way (reader checks both
+directions: `needTest` absent on the control, present on the change; wild cards present on both).
+
+⚠ **The bill takes more than the table it replaces** – four years cost a working family **$15,431**
+against **$4,751**, a middle one **$47,558** against **$36,201**, wealthy unchanged. The cause is the
+asset term, which is the half the label could never see. Reported with the two knobs named
+(`assetShieldCents`, `noNeedAboveCents`); nothing measured refutes the values, so they ship.
+
+**No schema change.** The funding band is derived from two fields the offer already carries and
+`billPerYearCents` is a wire field read off the persisted `fork.offer`, so a career mid-course keeps
+the contract it agreed to at nineteen. ⚠ `tests/coach-travel-edge.test.ts` is red on three frozen
+hashes – **verified already red at the wild-card commit, in a clean worktree, before any commit here
+existed**, so it belongs to that wave.
+
+**MEASURED, and both instruments named their commit.** A = `5737c40` with the engine commit
+`fd66d52` reverted; B = `5737c40`. ⚠ The obvious A – the branch head before I started – would have
+been WRONG: another agent committed college work in between, so "before and after" would have
+credited the wild cards with their change. Written up in `the-wild-cards-2026-08.md` §4a.
+
+* **`ladder-baseline.ts --seeds 10`**: Slam entry RATE flat, career-high median **#94 → #95**,
+  survival and college unchanged in shape. Careers *reaching* a Slam 44 → 51 of 90 – but the rank at
+  first entry stayed inside the cut (#105 → #106 median), so that is the population reshuffling, not
+  the wild card letting anybody in.
+* **`big-rung-finishes.ts --seeds 6`**: per ENTRY the Slam got harder (lost her first match 41.8% →
+  **44.3%**); per CAREER more got there (16/54 → 20/54). **The two moved in opposite directions, as
+  predicted.** No Slam title and no Slam final in either arm.
+* **`wild-card-reach.ts --seeds 6`** – ⭐ the number he asked for: **49 of 54 careers are offered at
+  least one, median 2 per career over thirteen seasons, about one every five seasons**, and every
+  offer landed between **#113 and #323, median #174**. A story, not a remedy.
+
+⚠⚠ **AND THE FINDING THAT OUTLIVES THIS ITEM: both shipped instruments are BLIND to her half.**
+`tools/econ-bench.ts`'s entry loop pre-filters the week with `tierOpenFor(world, e.tier)` – the
+per-rung gate, no event id – so a Slam a wild card opens is skipped before `enterEvent`, which would
+have accepted it, is asked. The fix is one argument and is **deliberately not made here**: that file
+is shared measurement infrastructure and another agent was mid-run against it. It needs its own
+re-measure. ⚠ **The game is unaffected** – `snapshot.ts` and `enterEvent` both gate per event.
+
+⚠ **Frozen careers: ONE of three moved** (`selfTravelling`), per-key diff taken first, and the A arm
+reproduces all three shipped constants at all three schema versions – so none of it is the other
+agent's. `rngMain` unmoved; the frozen MAIN capture 41550 / `e6b0c709` still verifies.
+
+---
+
+## 17.08.2026 – ⭐⭐ COLLEGE, REBUILT TO HIS OWN SCHEME: a tier is a PLACE with a PRICE, and the player picks it
+
+**He read yesterday's college report and did not understand it, and he was right not to.** What it
+reported was a DELTA AGAINST THE TOUR – inherited from the old plan where college was "the third
+answer at the fork". He does not want a comparison:
+
+> «Есть стоимость в год, она складывается из 52 недельных платежей семьи простым суммированием, плюс
+> может быть ситуация, что есть деньги на счете и семья хочет выбрать колледж дороже… И всё. мы больше
+> ничего ни с чем не сравниваем.»
+
+And he could not find where **$8,673 a year** came from under a sourced **$30,990** sticker – because
+it is the family's RESIDUAL after the award and nothing on screen said so.
+
+**THE SCHEME, BUILT AS HE APPROVED IT** (`docs/specs/the-college-choice-2026-08.md`). Three places on
+the three sourced College Board stickers – **$30,990 · $50,920 · $65,470** `[S]` – a merit-only award
+that is a share of the price of **the place she chose**, the family paying the rest in 52 weekly
+payments, and **the choice is the player's**. The old `strong`/`solid`/`small` were funding SHARES
+(0.85/0.55/0.30) derived from her results over one price; the player chose nothing and the tiers were
+not places. **Schema v52**, append-only migration, golden fixture.
+
+⚠ **He guessed the ceiling rule exactly and should be told so.** A scholarship cannot exceed the
+price – that is **NCAA Bylaw 15.1**, and the trim falls on the NEED layer (15.1.3), never on the
+award, because trimming the award would make a merit number move with family wealth.
+
+⚠⚠ **WHAT IS SOURCED AND WHAT IS OURS.** The three PRICES and the residence split are sourced.
+**The squad (55/65/75), the recruiting bar (11/18/23) and the dual-match season are OURS**, labelled
+as ours in the code and in the spec's §0a. The recruiting bar at least sits on a MEASUREMENT – the
+median/p75/p90 of our own junior score – rather than on taste.
+
+**MEASURED, and both arms named their commit.** A = `9dca805` with `9dca805` reverted in a dedicated
+worktree; B = `9dca805`. ⚠ The obvious A would have been wrong: another agent is committing wild-card
+work on this branch, so "the head before mine" measures both waves. `git grep COLLEGE_TIERS -- src/`
+returns nothing on A and three files on B, so neither arm is a tree where the change sits without its
+reader. n = 53 both sides, same policy and seeds.
+
+* **The choice is real and it spans $23,128 a year.** Median family bill: **state $0 · national
+  $14,144 · private $23,128**. Arm A's single offer sits almost exactly on the new NATIONAL place
+  (72.4% covered against 72.2%) – so the rebuild did not make college dearer, it **put a spread around
+  the one price there used to be**.
+* **⚠⚠ AND THE DEAR PLACE CAN NOW END A CAREER. 6 of 53 go bankrupt inside the four years at
+  `private`, 1 at `national`, none at `state`. Arm A: 0 of 53.** Nothing removes the college ANSWER –
+  all three places are on the card and a family that cannot pay goes into debt – but the debt can now
+  run to bankruptcy. **Reported, not tuned away: §5 of the spec has the three levers and it is his
+  call.**
+* **⚠ THE THIRD DIMENSION I PROPOSED IS TINY, AND THAT IS THE HONEST ANSWER.** Four years of the dear
+  squad's match play against the cheap squad's is **+0.06 of one skill point** (+1.11 / +1.14 / +1.17).
+  The mechanism works and is monotone; the amount is invisible, because at nineteen she is nearly out
+  of headroom – P5 measured the whole coached/un-coached gap at 0.12. **Predicted before the build
+  (P4) and it held by a factor of eight.** So **"the chance of returning to the tour" is FLAT too**:
+  0/53, 0/53, 1/53 come back with a professional rank. **The tier's currency is money, not her game.**
+* **⚠ The return-to-tour dimension was deliberately NOT built as a die.** A per-tier probability that
+  she "makes it back" would override the career the player had. Its natural home is the wild-card
+  mechanism another agent is landing on this branch; named in the spec, not touched.
+
+**The three frozen careers moved by exactly `schemaVersion`** – rolling v52 back to 51 reproduces all
+three old hashes byte for byte (`PRE_V52`). `rngMain` untouched; the frozen MAIN capture 41550 /
+`e6b0c709` is not re-pinned (the offer draws three times instead of one, still on
+`seed:collegeoffer:<week>`).
+
+⚠ **`tests/e2e-fixtures.test.ts` is RED and deliberately left so**: the e2e manifest is at v51 and
+needs `npm run e2e:fixtures`, which this agent was instructed not to run.
+
+## 17.08.2026 – ⭐⭐ DOES SKILL DECIDE A MATCH? Both his sentences are true, of different halves of the table (MEASURED, NOTHING SHIPPED)
+
+**His oldest complaint, made more than once:**
+
+> «есть впечатление, что скилл особо ни на что не влияет… когда играют топ-50 против топ-200 или
+> топ-300 – это совсем другое дело… Я бы хотел, чтобы у нас тоже появились четкие формулы, по которым
+> более менее точно можно предсказывать.» And: «Я допускаю, что 300 вполне может обыграть 50… но
+> вероятность такого довольно мала, как мне кажется. Можно поискать статистику.»
+
+**⚠ NO CONSTANT MOVED. Not a line of `src/` changed.** The wave is a research document, a bench and a
+spec: `docs/research/the-upset-rate.md`, `tools/skill-gap-odds.ts`,
+`docs/specs/the-skill-gap-2026-08.md`. Everything below is measured at commit `82b16b8`, 40 worlds ×
+25 sims per rank pair = 17,000 played matches and 2.4 M logged points, and the run reproduces
+byte-identically.
+
+**THE STATISTIC HE ASKED FOR EXISTS, WITH A CAVEAT THAT IS PART OF THE ANSWER.** Nobody has published
+an empirical WTA table of "the lower-ranked player wins X% at gap N" – we looked hard and it is not
+there. What exists is two sourced models that **agree on one constant: 124 Elo per doubling of rank**
+(Klaassen & Magnus's women's λ = 0.715, fitted on Wimbledon 1992–95, N=504; and a straight-line fit to
+the live Tennis Abstract WTA Elo list, 2026-08-03). Every probability is therefore tagged `[I]`, never
+`[S]`. **A #300 beats a #50 about one time in eight – 11–14%.** His instinct was right.
+
+**⚠⚠ AND AT THAT GAP OUR GAME IS ALREADY MORE DECISIVE THAN THE SPORT, BY A FACTOR OF THREE.**
+Ours: **4.3%**. #50 vs #200: sport ~19–20%, ours **7.3%**. #50 vs #100: sport ~33–39%, ours **21.1%**.
+**We are not flat in the band he named. We are too steep.**
+
+**⚠⚠ HE IS RIGHT ANYWAY, AT THE PLACE HE ACTUALLY PLAYS. #1 against #10 is a 47.4% upset in our world
+– the world number one is a coin flip against the world number ten.** That is the flatness he can
+feel, and it is exactly where a career that has arrived spends the rest of its life.
+
+**THE MECHANISM IS NAMED AND IT IS NOT IN THE MATCH ENGINE.** Both suspects were checked and both are
+innocent: the point→match compounding reproduces the literature 4 times out of 4 (±0.3 points), and
+**no clamp binds anywhere – 0 of 40 worlds on `BASE_CLAMP`, 0 of 2,404,297 logged points on
+`FINAL_CLAMP`** (probed for reachability, not assumed: core 100 vs core 0 does hit it). The match
+model prices a core gap almost perfectly logistically at **1 core point = 20.2 Elo**. What a *rank*
+gap is worth is decided by **`FIELD.tiers` in `src/engine/season/fieldPros.ts`**, where core is drawn
+**uniformly inside a storey** – so rank carries no skill information *inside* a storey and all of it
+sits at the seams. Per doubling, against the sport's 124 Elo: **#1→#10 = 7 Elo (×0.06)**, #10→#50 = 67
+(×0.54), **#50→#100 = 269 (×2.16)**, #500→#1000 = 135 (×1.09). **Over the whole table our span is only
+23% short – it is laid on the rank axis as a staircase instead of a line.** `fieldPros.ts` says so
+itself: *"Step 2 re-deals every core in this table off the real Elo curve"* – step 1 shipped, step 2
+never did.
+
+**AND WHY MOVING THE FIELD MOVED THE WIN RATES WHILE MOVING HER DID NOT.** The engine's response to
+skill is steep – **+2.84 points of match probability per core point**, and Ines's measured +6.7 over
+her band is worth **+18.3**. What is flat is her ACCESS to it: four years of the dear college squad is
+**+0.06 core = +0.17 points**, the whole coached/un-coached gap is **+0.12 core = +0.34 points**,
+against a world axis of 59 core points. **The complaint "my choices do not matter" is a different
+defect in a different file (`development.ts`), and no change to the match model touches it.**
+
+**THE PROPOSAL, UNSHIPPED, AND THE THING HE HAS TO RULE ON.** The legible formula he asked for already
+exists – `P = 1/(1+10^(−ΔElo/400))`, `ΔElo = 20.2 × core gap` – and could be shown on screen tomorrow.
+What is missing is `core(rank) = C0 − s·log2(rank)` with a **constant** `s`, in `fieldPros.ts`, leaving
+`match/` untouched. ⚠ **The gain and the slope are the same move seen twice** (their product is pinned
+by the sport), so the pair has **one free parameter and it is not the odds** – it is where the core
+scale sits. `gain ×1.5` is the minimum-disruption setting by summed core movement (54.7 against 99.8
+and 71.9), and leaves #300 where it stands.
+
+⚠⚠ **THE PRICE, AND IT IS HIS CALL: the upset he wants "rare but real" becomes THREE TIMES MORE COMMON
+than today – #300 over #50 goes 4.3% → 12.9% – and it cuts both ways.** The #300 who beats his
+daughter also triples. **The rate being aimed at is 12.9%, one match in eight, and it is the sport's
+own number rather than a taste** – he can keep 4.3%, take 12.9%, or pick anything between by scaling
+λ, which is defensible because the sourced constant carries a top-heavy era in it (its own base rate
+is 7–13 points above the modern game's). **What he buys is that the top of the table stops being a
+lottery** (#1 vs #10: 47.4% → 7.3%). **Blast radius: the whole game** – every acceptance cut, the W15
+on-ramp in both directions, ladder pace, sponsors, the wall, the endings, and every existing career's
+world re-deals (no schema bump – field pros are derived and take no MAIN draw; 41550 / `e6b0c709`
+untouched). Nothing is done until he rules.
+
+---
+
+## 17.08.2026 – round 21, the owner's six answers on college (`docs/specs/the-college-answers-2026-08.md`)
+
+He read the college rebuild and pushed back on six things. **One was a bug in an instrument, one was
+scope creep, one was a question with a plain answer, and three were right.**
+
+**⭐⭐⭐ 1. THE ROAD BACK WAS NEVER GONE – THE PROBE STOPPED WALKING.** «обратной дороги в тур по сути
+нет… Откуда взялась эта статистика вообще?» It came from `college-choice-probe`, which sampled her
+rank **on the graduation week** – the one week of the whole career when the 52-week ranking window is
+empty by construction. That column could only ever print zero. **Walked past graduation, 96–98% of
+careers hold a WTA rank again within one season, at a median of THREE WEEKS, median #157 a year out.**
+Every candidate was checked rather than assumed: the career does not end at the fork, `leaveCollege`
+fires on both routes, the ladder does not refuse her (W15's floor is a LATCH, not a rolling window),
+and the horizon runs to 38. **No engine change was needed and none was made.** New instrument:
+`tools/college-return-probe.ts`, and the old artefact column is now printed beside the real one.
+
+**⭐⭐ 2. `Squad 55` IS OFF THE CARD, REPLACED BY A MEASURED ODDS – he was right.** A squad number was
+ours, on a scale the card never printed her own number on, so there was nothing to compare it to. The
+row now reads **«Top 100 for 38 in 100»** – 38 / 40 / 34 careers in a hundred reach the world top 100
+within four years of leaving, measured at `82eb452`, n = 53 per place, with the window named under the
+list. **⚠ AND THE HONEST HALF: THE PLACE BARELY MOVES IT.** Among careers the bill did not end it is
+38 / 40 / 38. The dear place's lower figures are **six families going bankrupt**, not a weaker
+programme. What would make the three differ is college MATCH RESULTS feeding the ladder – named, not
+built. Staleness is caught mechanically: `COLLEGE_ODDS_MEASURED_AT` fingerprints every tier input and
+`tests/college-offer.test.ts` block F goes red naming the probe to re-run.
+
+**3. WHERE 72% COMES FROM.** The `0.85 / 0.55 / 0.30` he is quoting no longer exist – they were the
+old funding bands the rebuild replaced. 72% is `her junior score / the place's recruiting bar ± 0.10`.
+**Sourced:** the three prices, the Bylaw 15.1 ceiling and its trim falling on the need layer, «most
+awards are partial», the equivalency fact, the residence split, the federal need shape and its
+nationality bar. **OURS:** the recruiting bar 11 / 18 / 23 (measured quantiles of our own junior
+score), the spread's size, the need knots, and the junior score itself. ⚠ **And the ladder straddles
+the only sourced bound there is** – 8 scholarships ÷ 9.4 roster ≈ 85% at a fully funded programme –
+with the cheap place ABOVE it at 100%. **That is the rung most worth arguing with.**
+
+**4. THE NAMES.** «Штатное / национальное / частное» were the College Board's own column headings and
+«national» read as a rank. Now **the university at home · a university out of state · a private
+university**, in ONE copy (`COLLEGE_TIER_NAME`) instead of two. The persisted ids are untouched.
+
+**⭐⭐ 5. THE COLLEGE SEASON IS SHRUNK TO HIS OWN SHORTCUT, AND I COULD NOT ARGUE OTHERWISE.** Thirteen
+weeks at 1–3 matches is **39 unattended matches a year** inside the branch designed as «перелистывание
+1 года за клик», and «родители не будут посещать все игры в колледже» is decisive. It is **two
+national trips a year** now. **Measured cost, A = `82eb452` with `79ef9ce` reverted in a worktree, B =
+`82eb452`:** the four-year skill gain falls by 0.03 / 0.07 / 0.10, and **the tier's development
+dimension goes from +0.06 to +0.00 – it is gone.** ⚠ Arm A reproduces the previous phase's published
+figures exactly, which is what proves the arm. **One constant returns the season if he disagrees.**
+
+**⭐⭐ 6. THE BANKRUPTCIES ARE REAL AND THEY ARE ALSO AN ARTEFACT OF A MODEL OF A PLAYER.** Income
+arrives every week of the freeze ($370–$371, no `inCollege` guard on `resolveParentIncome`), savings
+are the balance the bill is drawn against, and banked prize money is in it. The traced career enrolled
+with **$3,161**, paid **$630 a week** against **$370 a week** coming in, with **everything else at
+$0** – no coach, no travel, no entry fees – and was under water in **eighteen weeks**. **Nothing is
+wrong with the arithmetic.** But the 6 / 53 was measured under «dearest always», which forces the
+private place on the **15 careers the card already marks «Beyond what the family has»**. **Under
+dearest-AFFORDABLE it is 0 of 53.** Reported, nothing tuned.
+
+⚠⚠ **A PROVENANCE NEAR-MISS, RECORDED BECAUSE IT ALMOST SHIPPED.** An earlier run of the return probe
+survived the kill meant to stop it, finished against the thirteen-week tree, and wrote over the same
+output path. A complete and plausible table (42 / 38 / 38) described a tree that no longer existed and
+**was already written into `COLLEGE_TIER_ODDS`** before the elapsed-seconds line changing between two
+reads of a write-once file gave it away. **A measurement is not identified by its filename.**
+
+## 17.08.2026 – ⭐⭐ THE SKILL LAW SHIPPED: strength is the live 2026 Elo curve, and the top of the table stops being a lottery
+
+**He ruled twice, and the second ruling reversed the first plan.**
+
+> «я хочу, чтобы "верх таблицы перестаёт быть лотереей" произошло… шансы выиграть должны быть у всех,
+> но не у всех одинаковые.»
+
+and then, on which statistic we aim at:
+
+> «"расчёт по живому рейтингу Elo на август этого года" – вот это же супер-ценная и актуальная
+> информация, **нам не нужно доминирования, как в 90х**.»
+
+**⚠ THE FIRST PLAN WAS WRONG AND WAS NOT SHIPPED.** It fitted ONE slope (124.2 Elo per doubling, from
+Klaassen & Magnus's women's λ, **Wimbledon 1992–95**) and paired it with a ×1.5 lift of `SKILL_K`.
+Against the live 2026 list that would have fixed #1 v #10 and made **every other row worse** – the
+1990s dominance he had just refused. **And our own live-Elo column was wrong too**: it had been read
+by hand as "the median within ±12 ranks", a window that averages the world #1 with #2–#13 and printed
+**#1 = 2058** where the real figure is **2194.6**. The headline row halved on correction: #1 v #10
+went **41.6% → 23.9%**. The whole report is now parsed – 547 (rank, Elo) pairs, **no player names** –
+into `docs/research/raw/2026-08-17-wta-elo-by-rank.json`, and the bench re-derives the reference from
+that file rather than from our own constant.
+
+**⚠⚠ FITTING THE LIVE CURVE MADE THE CHANGE SMALLER AND KILLED THE GAIN LIFT.** At the shipped gain
+our Elo profile already tracked the live list from #100 down (−633 vs −665 at #200, −958 vs −995 at
+#1000). **The entire defect was #1–#100.** So `SKILL_K`, `RALLY_K` and `PACE_K` are **untouched** and
+`src/engine/match/` does not change at all. What shipped is `SKILL_LAW` in `season/fieldPros.ts`: the
+live list's binned-median curve, `core(rank) = 76.4 + (Elo(rank) − 2195) / 20.2`.
+
+**MEASURED, both arms in clean worktrees** (B = `a412162` at `b02537c`; A = the same commit with that
+one reverted – reader check `grep -c coreForStanding` returns 0 on A, and the shared checkout was
+NOT used because the other agent's tree went dirty in `development.ts` and `world.ts` mid-wave):
+
+* **Mean absolute miss against the live sport: 12.44 → 2.79 points on his five rows** (7.36 → 2.44
+  over all seventeen). #50 v #100 **21.1% → 39.3%** (live 38.0); #50 v #300 **4.3% → 10.1%** (live
+  12.5); **#1 v #10 47.4% → 31.3%** (live 24.7) – the top is no longer a coin flip.
+* **Seven of eight rank segments are now inside 6% of the live curve's own local slope.** The flat top
+  (×0.06) and the #50/#100 cliff (×2.16) are both gone.
+* **⚠ THE POINTS TABLE DID NOT MOVE AT ALL** – measured, not argued: the merged 1,600-row ranking
+  hashes **identically** on both arms across five worlds. Every acceptance cut admits exactly the same
+  population, the points economy is untouched, no schema, no migration.
+* **The frozen capture held for the eighth time**: 41550 / `e6b0c709`, head and tail byte-identical.
+  Only the derived `kidRank` moved, **93 → 88**, re-pinned with its reason (guard re-aimed, not
+  deleted); the control passes 44/44.
+* **⚠ Her own edge did NOT shrink**, which was the risk flagged before the build: +6.7 core is worth
+  **+18.34 match points on BOTH arms**, byte-identical, because the gain never moved.
+
+**THE D&D HALF IS BUILT.** `src/engine/match/rating.ts` gives every player a rating whose *difference*
+reproduces the engine's own match probability to **1.03 percentage points**, measured over every build
+pair on all three surfaces and mutation-verified. The calendar card now prints
+**"Rating 1642 vs 1801"** under the odds ring it already had, so the percentage stops being magic.
+⚠ The first version of that rating was wrong by up to **7.98 points** – converting a win probability
+against a distant reference does not compose – and the test is what caught it; the epitaph is in the
+file.
+
+**⚠⚠ AND THE THING HE MUST RULE ON, NOT TUNED AWAY: THE CAREER ACCELERATED HARD.** Median career high
+**#97 → #12**; median rank at 25 **#152 → #18**; WTA 250 title 15.4%, QF+ 46.6%. **It is not an odds
+error and the arithmetic proves it**: `rollPotential`'s own measured output is p50 core 63.2, and
+under the shipped law core 63.2 **is** world #15 – against a measured median of #12. **The old table
+hid this by making all 64 of its top storey superhuman. Honest strengths did not break the ladder;
+they exposed that the ladder was calibrated against an inflated top.** The dial is
+`(SKILL_K…, SKILL_LAW.eloPerCore)` scaled together – **the odds are invariant to it** – and there is
+no setting that fixes both ends: `×2.0` restores the old pace (#118) and lifts #1600 from core 17.2 to
+**49.6**, burying the W15 on-ramp. Three options, his call, in `docs/specs/the-skill-gap-2026-08.md`
+§7d: re-tune `rollPotential` (a separate wave), take `×2.0` and re-derive every `entrantPctBand`, or
+accept that careers reach the top ten.
+
+---
+
+## 17.08.2026 – round 21, the owner puts the college development dimension back (`docs/specs/the-college-answers-2026-08.md` §10)
+
+> «да, **она училась и работала**, мы точно знаем на сколько за каждый год в колледже надо прибавить.»
+
+**⭐⭐⭐ THE GAIN COMES FROM THE PROGRAMME'S COACHING, NOT FROM PUTTING THE MATCHES BACK.** He killed the
+thirteen-week season on a lore argument he was right about, so rebuilding development out of match
+count would have smuggled it back and made its size hostage to a trip count he had already ruled on.
+Each place now names **a rung of the coach ladder the game already has** – budget / middle / high –
+so **no magnitude is invented** and a re-tune of the coach ladder moves the college places with it.
+`elite` is deliberately unreachable: a university programme is not better than the best coach alive.
+
+**⚠⚠ WHAT THIS ACTUALLY FIXED IS OLDER THAN THE SEASON IT REPLACES.** `growWeek` read `coach: null` for
+all 208 college weeks, i.e. **`self` = 0.82, the parent-on-the-court rate**, for a girl at a university
+with a squad and a training week. Nobody was coaching her. **And the family is still not billed**:
+`coachWorksThisWeek` is untouched and still false at college, because its own comment says one clause
+moves the bill and the rate together – right for a hire, wrong for a scholarship. The rate moves
+through a separate optional argument no billing code reads.
+
+**MEASURED, A = `3b6d92e` with `3b6d92e` reverted in `../tb-dev-A`, B = `3b6d92e` in `../tb-dev-B`.**
+Both arms in worktrees at MY commit, because another wave is re-dealing the whole field's skill.
+Four-year skill gain **+1.21 / +1.30 / +1.37** against A's +1.07 / +1.06 / +1.07 – **the cheapest→
+dearest spread goes +0.00 → +0.16**, nearly three times what the thirteen-week season ever produced.
+In his frame: **93% / 100% / 105% of a coached year.** ⚠ **The two arms' full outputs differ by THREE
+LINES** – every money column is byte-identical, because none of them reads development.
+
+**⚠ «МЫ ТОЧНО ЗНАЕМ НА СКОЛЬКО» IS NOT A SOURCE AND THE SPEC SAYS SO.** The SHAPE is defensible; the
+budget/middle/high **assignment is OURS**, labelled ours in `COLLEGE_TIERS` in the same words the
+recruiting bars carry. What would replace it is a calibration against our own cohort, which needs
+college match RESULTS – the same build already named and not done.
+
+**⭐⭐ THE STALENESS PIN WAS BLIND, WHICH IS WHY IT WAS TESTED RATHER THAN TRUSTED.** Asked to check
+whether moving a tier's development trips it: **it did not.** It folded three NAMED fields, so
+`coachesAt` was invisible to it – moving `private` from `high` to `elite` left it green. **Fixed**: it
+folds the whole tier object, keys sorted, and the mutation case now asserts every property of every
+place is inside the fold. It went red on this change and named the probe to re-run.
+
+**⚠⚠⚠ AND THE RE-RUN SURFACED SOMETHING THAT IS NOT COLLEGE'S.** The card's top-100 row went **38 / 40
+/ 34 → 85 / 93 / 74** in three hours. **The paired arm proves it is not the coaching**: with the
+coaching reverted in the same tree the row still reads **85 / 85 / 72**, and the coaching is worth
+**+0 / +8 / +2**. The jump is `a412162`, the skill wave's re-deal of the field's rank-to-core law. **On
+this tree the median college career peaks at world #16** against #114 three hours ago, 78–81% reach the
+top 50, and she is ranked again one week after graduating instead of three. **That is the owner's to
+rule on and is not this phase's to tune.** The measured figures were shipped on the card because
+leaving the old ones would be a false statement about this build; **a re-measure is owed when the
+skill wave settles**, and the college fingerprint cannot enforce it – it folds the college tier table,
+while the field's strength lives in another agent's file.
+
+**⭐⭐ The dear place now says something true and uncomfortable**: best development (+1.37), worst odds
+(74%). Eleven careers there never finish, and the survivors come out with $64,903 against $116,844 to
+fund a comeback with. **You pay more, you train better, and you can still price yourself out of the
+return.**
+
+---
+
+## 17.08.2026 – round 21, the talent breakdown: college is not the lever, and the re-deal may have broken more than the pace (`docs/specs/college-by-talent-2026-08.md`)
+
+> «вот это мощный темп, конечно, но мне кажется малореалистичный. А еще мне интересно посмотреть на
+> разбивку по бесталанная, средняя, талантливая и одаренная … 22 года - это у нас вроде где-то на
+> финальной части пути до максимума, верно? Может быть тогда мы проанализируем и примем решение,
+> нужно ли притормозить развитие в колледже и если да, то на сколько.»
+
+**⚠ NOTHING IS SHIPPED. The recommendation is DO NOT SLOW COLLEGE, and the options are priced in §7b.**
+
+**HIS PREMISE ABOUT 22 IS RIGHT AND IT IS SHARPER THAN "somewhere near".** `ageCurve` grows 13→18 and
+`plateauStart` is **23**. College is 19-23, so **the scholarship occupies the last four years she can
+grow at all** – it ends the week the plateau begins. That is why "is the pace realistic" and "should
+college be slowed" arrive as one question.
+
+**⚠⚠ THE GAME HAS NO TALENT BANDS AND HIS FOUR WORDS HAVE NO CODE TO ATTACH TO.** `rollPotential`
+draws a **continuous** per-attribute headroom out of `potentialBand` [4, 26]; nothing slices it,
+nothing names it, and #11 records that the ceiling is deliberately never shown. The one constant that
+bands a ceiling is `ECONOMY.academy.ceilingBand` [56, 70] – the scout's ruler, not a set of bands. **So
+the four bands are quartiles of `ceilingOf(potential)`, they are OURS, and his words are in the report
+and in no source file.**
+
+**⭐⭐ COLLEGE IS NOT THE LEVER, AND TWO INDEPENDENT ROUTES AGREE.** (a) Off the shipped constants: the
+whole dimension spans **0.30 skill points** (`self` 0.82 → `high` 1.11), and on the shipped rank-to-core
+law that is **1 place at #10, 3 at #20, 5 at #50, 3 at #100**. (b) Measured, paired, same girl same
+rung: the college↔tour **career-high difference is +1 / −2 / 0 / −1 places** on HEAD and **+6 / +2 /
+−11 / −6** on the control. **The acceleration he objects to is eighty-five places (#97 → #12).
+College is about 5% of it.** Even option 4 – reverting all three places to `self`, the largest change
+anyone could ask for – buys back ~5 places, and it is **not a balance setting**: it reinstates the
+older bug where 208 college weeks read the parent-on-the-court rate for a girl at a university.
+
+**⭐⭐ WHAT THE PACE ACTUALLY IS, IN ONE PAIR OF NUMBERS.** Whole population reaching the **top 10**:
+**2% / 5% with `a412162` reverted, 46% / 50% with it in** (college / tour, n=105 and 107). The
+career-high spread across the whole talent range **collapses from about 100 places to about 6**: on the
+control a career high runs #121 for the untalented girl to #33 for the gifted one; on HEAD every band
+lands between #6 and #15.
+
+**⭐⭐ AND THE PRICE OF COLLEGE IS NOT RANK, IT IS FOUR YEARS OF HER PEAK – which is the honest answer
+to «за какой срок».** Age at career high, college vs tour, **gifted band: 26.9 vs 22.7 on HEAD (+4.2
+years), 27.3 vs 24.0 on the control (+3.3).** Later in **8 of 8** band-arm pairs. On the tour arm the
+`exit → career high` column goes **negative** for the gifted band (−171 weeks) – she had already peaked
+before twenty-three. She is ranked again **1-5 weeks** after graduating in every band, and by
+twenty-seven the two answers have converged (#12 vs #12). **So the trade is real and it is a clock, not
+a ceiling** – which means making college SLOWER does not make it more of a trade; making the return
+harder or later would, and that is a different build.
+
+**⚠⚠ THE FLAG THAT IS NOT HIS QUESTION AND MAY MATTER MORE.** On the control the top-100 rate rises
+**4% → 50% → 54% → 88%** with talent – monotone. On HEAD it reads **77% → 93% → 89% → 100%**, and the
+top-10 row is **non-monotone**: the untalented band reaches the top ten **50%** of the time against the
+average band's **18%**. ⚠ **Nine girls a cell (see below), so it is a flag, not a finding** – but if it
+survives, the re-deal did not only make the game faster, it **decoupled the outcome from the talent she
+was born with**. Settling it costs one re-run at `--seeds 48`, about an hour a side, no new code.
+
+**⚠⚠ THE LIMITATION THAT GOVERNS EVERY PER-BAND NUMBER, MEASURED RATHER THAN ASSUMED.** `econ-bench`'s
+seed is `bench-${background}-${index}` – **the coach rung is not in it** – so 108 career rows are
+**36 distinct girls, 9 per band**, each walked at 2-4 rungs, and the backgrounds are uneven (working
+3×, middle 4×, wealthy 2×). Same trap `tools/college-fork.ts`'s header already records. **What
+survives: the college↔tour comparison (PAIRED – same girl, same rung, same world to the fork) and the
+A-vs-B level over the whole population. What does not: the ordering BETWEEN bands.**
+
+**ARMS: B = `7c0d1f1` (HEAD), A = `7c0d1f1` with `a412162` reverted in `../tb-talent-A`.** Checks that
+had to pass before either table was read: the two arms differ in **112 lines** (not a self-comparison);
+the band cut is **identical to six decimals** on both, because it is taken at week 0 before any career
+is walked; **0 of 105 / 0 of 107** careers have a different ceiling across arms; **saturation 2-3%**, so
+the age curve and not the horizon stopped the climb; **0%** of college careers ended inside the four
+years, so the return columns carry no survivorship gap. ⚠ **The reader was checked too**: `git grep`
+for `SKILL_LAW` / `coreForStanding` on the A tree returns one hit outside `fieldPros.ts`, and it is a
+**comment** – no live import survives the revert.
+
+**⚠ AND THE INSTRUMENT FOUND A BUG IN ITSELF THAT LOOKED EXACTLY LIKE A NULL RESULT.** The first smoke
+run reported *"never ranked 18/18, every career still going"*. `kidAgeExact` takes `(week, birthMonth)`,
+not a world; the world argument made it `NaN`, `NaN < TO_AGE` is false, and **the whole post-fork walk
+was skipped in silence**. The tell was the clock – 21 seconds for eighteen careers that should have
+walked 830 weeks each. ⚠⚠ **`tools/**/*.ts` IS in `tsconfig.app.json`'s include and `tsc` gives
+`TS2554: Expected 2 arguments, but got 1` – `vue-tsc -b --force` would have caught it before a single
+career was walked, and the bench was run first. New rule: type-check a new bench before running it.**
+
+---
+
+## 17.08.2026 – ⭐⭐ «ДАВАЙ 50»: the WTA 500 gets a head, and the ladder is finally in order (`docs/specs/the-head-of-the-list-is-a-ladder-2026-08.md`)
+
+He asked what the shorthand meant – «какое сейчас значение и что значат 64 40 и 64 50?» – and then
+picked. **`wta500.acceptsFromRank = 50`**, beside the 250's 64.
+
+The defect it closes is his own sentence, «на 500, соответственно, должно быть тоже возможно выжить»:
+at the shipped setting a #86 survived her opening match at a WTA 500 **43.2%** of the time – *less
+often than at the WTA 1000 above it* (44.9%) – because `selectEntrants` filled the rung from a band
+opening at #22 and drew a field whose core was 69.4 with **67% of the draw stronger than she is**. At
+head 50: **55.1%**, core 64.4, 42% stronger. The ladder now runs 125 easiest → 250 → 500 → Slam →
+1000 hardest.
+
+**The cost, stated before he chose:** the WTA 1000 drops 44.9% → 40.9%.
+
+⚠ **A consequence the sweep did not show, and a guard did.** The 500's window is now #50–120 and the
+250's is #64–200, so the two overlap across #64–120 and share **18 of 32** entrants – redding the arm
+that said they share fewer than half. That arm was a PROXY: the original defect was fields of the same
+*strength* (core 68.4 / 68.9 / 68.4 across 250/500/1000), and these are 60.5 against 64.4, correctly
+ordered. So it was replaced by the two things it had been standing in for – the higher rung draws the
+higher-ranked field, and each rung keeps a band the other cannot reach – both of which would have gone
+red on the original defect, which a personnel count only did by accident of where the bands opened.
+
+⚠ **And the pair is a LADDER now, with an invariant nothing held before:** the higher rung must open at
+the SMALLER number (500 at 50, 250 at 64), or the smaller tournament draws the stronger field for half
+the points. Two stale cross-references were fixed on the way – both `calendar.ts` and `types.ts` named
+`tests/ladder.test.ts` as the guard, and the guard is in `tests/season/tournament.test.ts` – as was a
+comment on the 250 claiming "the number is 50" when the value is 64.
+
+---
+
+## 17.08.2026 – ⭐⭐ THE SECOND SEAT: he refused the machinery, and the measurement agreed with him (`docs/specs/the-second-seat-2026-08.md`)
+
+Round-21 #2's last item. He had scoped it twice – «про спонсоров и оплату доли поездки тренера я
+говорю только для профессиональной лиги и контракте с большими спонсорами», «спонсоры в про лиге и
+25% покрытия – это самое простое и понятное» – and the first build took it literally: a flat
+`ECONOMY.sponsorship.coachTravelShare = 0.25`, a `coachFareShareFor` deciding which rungs counted as
+"big", a persisted `KitOfferTerms` field, a second line on the letter.
+
+Seeing it, he stopped it:
+
+> «может быть нам не надо лишней логики делать, а стоит просто стоимость поездки на 2 умножать, если
+> галочка включена в тренерской? тогда у нас не будет этого слоя противоречивой логики нигде»
+
+**Measured before rewriting anything, he was right twice over.** The flat term and «×2» produce
+**byte-identical fares for every family without a scholarship** – `global`'s own travel share is 25%
+and the flat term was 25%, so the second concept was arriving at the first one's number. Whole
+calendar, prize-money trips:
+
+| family | flat 25% | «×2» on her net | delta |
+|---|---|---|---|
+| no support, no deal | $515,075 | $515,075 | **0%** |
+| no scholarship, `global` deal | $386,306 | $386,306 | **0%** |
+| full scholarship, no deal | $321,922 | $128,769 | −60% |
+| full scholarship + `icon` deal | $209,249 | $32,192 | −85% |
+
+⚠ **But his literal proposal – double HER net price – would have undone his own ruling of 15.08**, the
+−60% row: the needs-based scholarship buying the coach a plane ticket again, ~$193k of it over that
+calendar. So what shipped is the rule that keeps his simplification *and* the principle:
+
+> **A sponsor's travel share comes off both seats. A scholarship comes off hers alone.**
+
+For a family whose only cover is a contract the two readings coincide exactly and his sentence is
+literally true – **the trip costs double** – which is now the headline assertion of the guard. Deleted
+in the rework: the constant, the mapping function, the persisted field **and its migration question**.
+His seat reads `kitTravelShare`, the same number hers does, gated to the rungs that pay prize money
+(«только для профессиональной лиги»).
+
+⚠ **The guard was re-aimed, not relaxed** (14 arms, was 11). §1 keeps its wording over the
+needs-based streams; §2 was made *stricter* – at junior rungs nothing reaches his seat, now asserted
+over the contract states too; §4 is new and pins **exact** figures, because once one cover legitimately
+exists "cheaper than list" is satisfied by a leak. Mutation-verified: restoring the cover on his seat
+turns 9 of 14 red across all four sections.
+
+⚠ **And the research is blunter than the mechanic** (`docs/research/sponsor-travel-terms.md`): no
+published endorsement contract pays competition travel, and the one primary document that mentions the
+coach's – the ITF's own W50/W75/W100 hospitality guidelines – bills the **player** for his room. This
+is an abstraction of a cash flow, not a model of a contract clause, and the evidence supports his
+simpler instinct more than it supported the flat term.
+
+---
+
+## 17.08.2026 – ⚠⚠ EIGHTEEN OWNER RULINGS LIVED ONLY IN TWO `.vue` COMMENTS, AND THE COPY RULE WAS ABOUT TO ERASE THEM (`wave/round21`)
+
+Two rules in `CLAUDE.md` collide on `src/components/screens/CalendarScreen.vue` and
+`src/components/screens/SeasonScreen.vue`: the Style section says comments *"deliberately record
+owner rulings and the reasoning behind non-obvious choices"* and must be preserved, and round 21's
+standing rule is **English only in a `.vue`, including comments**. Between them the two files carried
+**eighteen rulings quoted in his own words** – 12 Cyrillic lines in the calendar, 18 in the season
+feed – and **a check against this log found not one of them recorded here**. Translating in place
+would have been the only edit in the wave capable of destroying a decision.
+
+**So they are recorded first, verbatim, and the translation lands in the commit after this one.** Three
+of the eighteen exist nowhere else in the repository at all – «сначала концепт», «больше декора, но
+осмысленного» and «а там есть какое-то разнообразие в словах тренера?»; the rest are echoed in a test,
+a composable or a spec that quotes the same ruling, and none of those is this log.
+
+⚠ **This is a RECORD, not a re-decision.** Every one of these is already shipped, and the reasoning
+behind each stays in the file it governs – in English now, with a pointer back here.
+
+### 29.07 – the calendar screen waits for a concept
+
+* **«сначала концепт»** – `CalendarScreen.vue`. Screen H was parked from 29.07 until the concept was
+  agreed; what shipped is that agreed concept rather than the design handoff's sketch.
+
+### 30.07 – one overlay convention for every screen that covers the tabs
+
+* **«надо все одинаково сделать оверлеем поверх всего экрана»** – `SeasonScreen.vue`. The takeover is
+  the other half of `ScreenShell`: a screen that covers the tab bar uses one shared stack
+  (`ui/TakeoverShell.vue`), not a per-screen improvisation.
+
+### 31.07 – six rulings in one sitting
+
+* **«Жмем training week – видим календарь и короткую анимацию как неделя проходит»** –
+  `CalendarScreen.vue`. The week button on Home stops spending the week where it is pressed: it takes
+  the player to the calendar, and the calendar plays the week with a sweep, because the sweep is what
+  stands in for a trip on a week with no tournament in it.
+* **«сейчас в календаре пишут про покрытие текущего идущего чемпионата, на который она даже не поехала
+  – это лишнее, надо убрать»** – `CalendarScreen.vue`. The header's surface chip is gone. On a training
+  week `calendar.surface` is the dominant surface of the season BLOCK, so the calendar was reporting
+  somebody else's tournament on a page about her own week; only a week she is actually playing names a
+  court now.
+* **«очень даже должна [рисоваться], никакой разницы. Просто содержание сетки будет другим.»** –
+  `CalendarScreen.vue`, overruling a null grid on four kinds of week. A trip, a family week, the exam
+  fortnight and a layoff all draw the seven-day grid, each with its own content; the second, plainer
+  drawing for them is gone.
+* **«удачи на экзамене»**, **«держим за тебя кулачки»** – `CalendarScreen.vue`. The fridge note gets two
+  WEEK pools beside the domestic default, because on a week that already contains a big fact a note
+  about that fact is simply true. (A family week and a layoff stay domestic on purpose: those are
+  claims about how the week goes, which the fridge cannot know in advance.)
+* **«иногда попадается "On paper this is hers to lose" при 92% =) и в обратную сторону тоже бывает»** –
+  `SeasonScreen.vue`. Two faults, not one: the coach's line reads the whole FIELD while the ring reads
+  ONE opponent (they contradict each other on 22.5% of cards, measured over 150,336 by
+  `tools/coach-line-drift.ts`), and hedged wordings are a joke on a ring the card already calls a
+  near-certainty. Neither fact was made to lie – the coach says the second one out loud, and the hedges
+  are withheld above `RING_CERTAIN`.
+* **«грустно-унылые»** (of the calendar's colours) – `CalendarScreen.vue`. The day blocks moved off the
+  mid-dark `--event-*` family onto the `--cat-*` brights, which is why their ink is `--paper-ink`.
+
+### 01.08 – where the practice week lands
+
+* **«он должен вести на пре-матч экран»** – `SeasonScreen.vue`. Playing the booked friendly claims the
+  post-advance navigation BEFORE the advance, so the shell's watcher cannot switch tabs out from under
+  the flow and destroy the pre-match card the press was for.
+
+### 02.08 – the planning counter
+
+* **«сколько доступных турниров и какого уровня у нас до конца года вообще осталось, это даст человеку
+  возможность планировать»** – `SeasonScreen.vue`. The season feed carries a supply line off the
+  engine's read of the WHOLE remaining season, deliberately not the screen's eight-week window and not
+  filtered by the two-type rule, so the rare rungs are counted where the feed can only mention them.
+
+### 09.08 – nobody is hired, so nobody professional is speaking
+
+* **«на 8к без тренера на карточках в season написано coach says и очень профессионально… непонятно чем
+  этот вариант отличается от тренера»** (R15-18) – `SeasonScreen.vue`. `coachSays` never asked whether a
+  coach existed, so a family paying nothing got professional draw analysis under a plaque reading
+  *Coach says*. The fix is a REGISTER, not a deletion: a parent at the kitchen table reading the draw
+  sheet, same verdicts, same seam, same sub-stream, different mouth.
+* ⚠ And the second half of that ruling – **«чем этот вариант отличается»** – is deliberately NOT answered
+  by the copy. What a coach actually buys is the per-day training controls he ruled on in the same
+  session; `preview` is untouched so this line cannot pre-empt them by inventing a difference.
+
+### Undated in the source, and shipped
+
+* **«больше декора, но осмысленного»** – `CalendarScreen.vue`. The reason the calendar tab exists: a
+  training week was "skip, or match + skip", which feels thin next to a tournament trip. Decoration
+  that carries information – the training plan across the days, matches marked, injury weeks legible,
+  entry markers, and a real main action button like Home's.
+* **«простую анимацию вычеркивания дней»** – `CalendarScreen.vue`. The days cross themselves out, pausing
+  on a match / an injury / a knock, and it ends on the end-of-week screen. It is the SCREEN's
+  decoration and not the button's, which is why Home's press still advances instantly.
+* **«раньше в углу карточки в календаре была пилюля с типом покрытия и цветом – было сильно лучше, чем
+  кружок сейчас. Надо вернуть пилюлю, а вот под ней оставить просто подходит или нет, а название
+  поверхности убрать.»** – `SeasonScreen.vue` (R11-15, reverting R10-11). The coloured pill is back with
+  the court's name inside it, the line beneath carries the verdict only, and the surface name now
+  appears exactly once on the card.
+* **«а там есть какое-то разнообразие в словах тренера?»** – `SeasonScreen.vue`. There was not. Four
+  wordings per verdict, picked off `seed:coachsay:<eventId>` – keyed on the EVENT, so two cards on
+  screen together do not echo each other and the MAIN stream pays nothing.
+* **«очковое окно возможностей»** – `SeasonScreen.vue` (W2-LADDER §3). The defending badge prints the
+  counted professional result exactly 52 weeks behind the card's week – the slot this event replaces in
+  her rolling window. W-track cards only, or it would invite the cross-currency reading
+  `two-ladders.md` forbids.
+* **«Она уже вымотана – ещё матч?»** – `SeasonScreen.vue`. The guardrail is a WARNING inside the practice
+  confirmation, not a block: it lands where the parent can still say yes, and the confirm button reads
+  *Push through* when it does.
+* **«She played her practice match - Watch it live на кнопке. Ну точно не live, а replay, да?»** –
+  `SeasonScreen.vue`. He caught the two words on the Weekly Story's copy of the control and they were
+  no truer on the season feed's: the handler ADVANCES THE WEEK and the flow re-simulates a stored
+  record, so nothing is ever watched as it happens. Renamed *"Play it and watch →"* in both places.

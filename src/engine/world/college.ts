@@ -19,15 +19,108 @@
 // (CLAUDE.md invariant 2). Everything else here is pure state – a counter, two measurements and an
 // append. The frozen MAIN capture cannot see any of it.
 import { rngFromSeed } from '../rng'
+import { coachFactor } from '../coach'
 import { SKILL_KEYS, type KidSkills } from '../development'
 import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
+import { parentIncomeForWeekCents } from '../economy'
 import { NATIONAL_TEAM, callUpLine, rollCallUp } from '../nationalTeam'
-import type { CollegeProgressView } from '../../shared/protocol'
+import {
+  COLLEGE_TIERS,
+  JUNIOR_RUNGS,
+  chosenQuoteOf,
+  collegeOfferFor,
+  type CollegeRecruitView,
+  type JuniorRung,
+} from '../collegeOffer'
+import type { CollegeOffer, CollegeProgressView } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidAgeYears } from './age'
 import { kidLadderRank } from './snapshot'
 import type { WorldState } from '../world'
+
+/** ⭐⭐ WHAT A COLLEGE PROGRAMME IS SHOWN WHEN IT LOOKS HER UP – the world side of P4's decoupled-leaf
+ *  pattern, and here the decoupling is the fairness property rather than a tidiness one.
+ *
+ *  ⚠⚠ THREE FIELDS, AND NONE OF THEM IS A PROFESSIONAL RESULT. `CollegeRecruitView` has no rank, no
+ *  W-rung finish and no prize money, so there is nothing a tour result can move. The rule the owner
+ *  deleted on 16.08 – a result taking the college answer away – cannot be re-created here from the
+ *  other side either ("she is too good for college now"), because the fact it would need is not on
+ *  the view. That is stronger than a rule that merely does not fire.
+ *
+ *  ⚠ AND IT IS A CAREER RECORD, NOT A RANK. `bestFinishByTier` is a high-water mark that never goes
+ *  backwards, and the junior rungs close at eighteen, so the offer measured on her nineteenth birthday
+ *  is the offer any later week would compute. That is what makes the v51 migration exact in principle
+ *  and the persisted copy a safety belt rather than a necessity – see `ForkState.offer`. */
+export function collegeRecruitViewOf(world: WorldState): CollegeRecruitView {
+  const juniorBests: Partial<Record<JuniorRung, number>> = {}
+  let juniorTitles = 0
+  for (const rung of JUNIOR_RUNGS) {
+    const best = world.bestFinishByTier[rung]
+    if (best !== undefined) juniorBests[rung] = best
+    // ⚠ JUNIOR RUNGS ONLY, and the loop is why: it walks `JUNIOR_RUNGS` and has no name for a
+    // professional one, so a title at W75 cannot reach this number by accident.
+    juniorTitles += world.trophiesByTier[rung]?.titles.length ?? 0
+  }
+  return {
+    juniorBests,
+    juniorTitles,
+    background: world.profile.background,
+    country: world.profile.country,
+    // ⭐⭐ ROUND 21 – THE FAMILY'S REAL POSITION, READ AT THE WEEK SHE ENROLS. The owner, 17.08:
+    // «с учетом доходов семьи на момент поступления и прочего».
+    //
+    // ⚠ BOTH ARE MEASURED AT `world.week`, WHICH IS THE FORK, and that is the whole point of the
+    // sentence: the offer is priced against what this family actually has when the question is
+    // asked, not against a label chosen at onboarding five seasons earlier. `parentIncomeForWeekCents`
+    // has compounded through every season boundary since; `fundsCents` has lived a whole junior
+    // career. Neither is knowable from `profile.background` alone.
+    //
+    // ⚠ ZERO DRAWS ON ANY STREAM. `parentIncomeForWeekCents` derives its own `seed:income:<season>`
+    // sub-stream at the call site and persists nothing, and `fundsCents` is a read. The frozen MAIN
+    // capture cannot see this (CLAUDE.md invariant 2).
+    familyIncomeCents: parentIncomeForWeekCents(world.seed, world.profile.background, world.week) * WEEKS_PER_YEAR,
+    familyAssetsCents: world.fundsCents,
+  }
+}
+
+/** THE OFFER, MEASURED ONCE. ⚠ ONE SUB-STREAM, `seed:collegeoffer:<week>`, derived at the call site
+ *  and persisting nothing (CLAUDE.md invariant 2). The MAIN stream is not touched, so the frozen
+ *  capture (41550 / e6b0c709) is untouched by construction. */
+export function measureCollegeOffer(world: WorldState): CollegeOffer {
+  return collegeOfferFor(collegeRecruitViewOf(world), rngFromSeed(`${world.seed}:collegeoffer:${world.week}`))
+}
+
+/** ⭐⭐ THE WEEKLY BILL – the first cost in this game that is not tennis.
+ *
+ *  ⚠ WHY A WEEKLY DEBIT AND NOT A LUMP AT ENROLMENT. The family's balance is read every week by the
+ *  debt spell and by bankruptcy, and a $30,990 hole punched once a year would have made the college
+ *  branch a series of four cliffs rather than a cost of living. `financeWeeks` keeps a 60-week window
+ *  and the Money screen draws twelve, so a weekly line is also the only shape either of them can show.
+ *
+ *  ⚠ ZERO DRAWS ON ANY STREAM. It is arithmetic on a persisted offer, so no ordering hazard and no
+ *  re-pin of the frozen capture.
+ *
+ *  ⚠ AND A NULL OFFER IS CHARGED NOTHING, which is the v51 migration's promise kept: a career that
+ *  entered college before this phase existed was never quoted a price and is not billed one now. */
+export function resolveCollegeBill(world: WorldState): void {
+  if (!inCollege(world)) return
+  // ⭐ THE PLACE SHE PICKED, AND ONLY THAT ONE (17.08). The offer carries a quote for every tier so
+  // the card can show a choice; the ledger charges the one she took. `chosenQuoteOf` is the single
+  // reader, shared with the screens, so the number printed and the number charged cannot disagree.
+  const quote = chosenQuoteOf(world.fork?.offer)
+  if (!quote || quote.familyPerYearCents <= 0) return
+  const weekly = Math.round(quote.familyPerYearCents / WEEKS_PER_YEAR)
+  if (weekly <= 0) return
+  world.fundsCents -= weekly
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'tuition',
+    text: "The family's share of the college year",
+    amountCents: -weekly,
+  })
+}
 
 /** IS SHE AT COLLEGE THIS WEEK? Derived from the span, never a second flag – so it can never drift
  *  out of step with `world.week` and a save taken mid-freeze answers the same question on reload.
@@ -159,7 +252,111 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // What the screen needs is the difference between a question with years behind it and the last
     // question there will be, which is exactly `RetirementOffer.final`'s job one door along.
     final: college.years.length + 1 >= ENDINGS.collegeYears,
+    // ⭐⭐ ROUND 21 – THE YEAR'S BILL, OFF THE OFFER SHE AGREED TO AT NINETEEN.
+    //
+    // ⚠ IT READS `world.fork.offer` RATHER THAN RE-DERIVING THE PRICE, and that is `ForkState.offer`'s
+    // own argument kept: the offer is persisted precisely so a later re-tune cannot silently re-price
+    // a career halfway through a bill it had already accepted. The number the card prints is the
+    // number the tick is charging.
+    //
+    // ⚠ AND A MIGRATED CAREER READS 0, WHICH IS TRUE FOR IT. A v50 career that entered college before
+    // the bill existed carries a null offer, `resolveCollegeBill` returns at its second line, and this
+    // says so rather than inventing a price it was never quoted.
+    billPerYearCents: chosenQuoteOf(world.fork?.offer)?.familyPerYearCents ?? 0,
+    tier: chosenQuoteOf(world.fork?.offer)?.tier ?? null,
   }
+}
+
+// =================================================================================================
+// ⭐⭐ WHAT THE SQUAD IS FOR – the dual-match season, and the ONE thing a dearer place actually does
+// to her tennis (17.08, docs/specs/the-college-choice-2026-08.md §2)
+// =================================================================================================
+//
+// The owner approved two dimensions beyond price – TEAM STRENGTH and THE CHANCE OF RETURNING TO THE
+// TOUR – and this phase proposed a third, HOW MUCH HER GAME DEVELOPS IN THE FOUR YEARS. They collapse
+// into one mechanism on purpose, and the collapsing is a claim rather than a shortcut:
+//
+//   * TEAM STRENGTH is what a college programme HAS. On its own it is a number on a card.
+//   * WHAT IT DOES is put her on court against it. A stronger squad plays a longer, harder dual-match
+//     season, and `growWeek`'s `matchesThisWeek` term is the engine's own already-tuned price of
+//     competition (`ECONOMY.development.matchBonus`, 0.18 a match, capped at 3).
+//   * THE RETURN TO THE TOUR IS NOT A SECOND KNOB AND MUST NOT BECOME ONE. A per-tier probability
+//     that she "makes it back" would be a die that overrides the career the player actually had, and
+//     this repo does not grant outcomes – it measures them. What she comes back with is her game and
+//     her family's balance, and BOTH already move with the tier. §3 of the spec measures the return
+//     per tier instead of assigning it.
+//
+// ⚠ TWO INVENTED NUMBERS AND THEY SAY SO: the season's length and position (ours), and how many
+// matches a week each tier plays (ours – `COLLEGE_TIERS[*].matchesPerWeek`). The NCAA dual-match
+// season is real; these numbers are not it.
+//
+// ⚠ ZERO DRAWS, ZERO EVENTS. It returns a count, at the one call site that feeds `growWeek`. It does
+// NOT write to `world.events` or `world.results`: a college match awards no ranking points and no
+// money, so a result row for it would break the `prizeCentsFor` invariant ("a result cannot award one
+// without the other") to no purpose. The frozen MAIN capture cannot see arithmetic.
+
+/** ⭐⭐ THE TWO TRIPS – and they REPLACE a thirteen-week dual-match season (round 21 #5, 17.08,
+ *  docs/specs/the-college-answers-2026-08.md §5).
+ *
+ *  ⚠⚠ THE OWNER'S OBJECTION WAS LORE AND IT IS DECISIVE. College was designed as the SHORTCUT –
+ *  «1-2 национальных выезда в год и перелистывание 1 года за клик» – and «родители не будут посещать
+ *  все игры в колледже». A thirteen-week season at one to three matches a week is a PLAYABLE SEASON:
+ *  thirty-nine simulated matches a year that the parent, who is the player of this game, is not at and
+ *  cannot act on. The shortcut is the feature; a second season inside it is the thing the fork exists
+ *  to skip.
+ *
+ *  ⚠ SO IT IS TWO WEEKS A YEAR, HIS OWN NUMBER, and the tier still differs on them
+ *  (`matchesPerWeek` 1 / 2 / 3). What the shrink costs is measured rather than assumed – §5 of the
+ *  spec – and it is one constant to put back if he wants the season instead.
+ *
+ *  ⚠ NEITHER IS THE NATIONAL-TEAM WEEK (`NATIONAL_TEAM.seasonWeek` = 14). The thirteen-week block
+ *  deliberately CONTAINED it, on the argument that she is playing tennis that week either way; with
+ *  two trips the argument reverses – three separate weeks of tennis in a year read as three beats,
+ *  and a trip landing on the call-up week would silently be one. */
+export const COLLEGE_TRIP_WEEKS = [8, 20] as const
+
+/** How many matches the programme plays her in THIS week – 0 outside college and outside a trip week.
+ *  ⚠ THE DEAR TIER SATURATES THE ENGINE'S OWN CAP (`matchBonusCap` = 3) and that is deliberate: the
+ *  ceiling on what competition is worth was tuned long before college had a price, and this phase is
+ *  not entitled to raise it to make its own dimension look bigger. */
+export function collegeMatchesThisWeek(world: WorldState): number {
+  if (!inCollege(world)) return 0
+  const tier = chosenQuoteOf(world.fork?.offer)?.tier
+  if (!tier) return 0
+  const seasonWeek = world.week % WEEKS_PER_YEAR
+  if (!(COLLEGE_TRIP_WEEKS as readonly number[]).includes(seasonWeek)) return 0
+  return COLLEGE_TIERS[tier].matchesPerWeek
+}
+
+/** ⭐⭐⭐ WHO COACHES HER FOR FOUR YEARS – the owner's ruling of 17.08, «она училась и работала»
+ *  (docs/specs/the-college-answers-2026-08.md §10). `undefined` outside college, so every other week
+ *  of every career is byte-identical.
+ *
+ *  ⚠⚠ WHAT THIS FIXES IS OLDER THAN THE SEASON IT REPLACES. `growWeek` reads
+ *  `coachFactor(tierOf(coach), …)` and at college `coach` is `null`, so for 208 weeks she developed at
+ *  **`self` = 0.82** – the parent-on-the-court rate, for a girl who is not with her parent and is at a
+ *  university with a squad, a training week and a strength programme. The dimension the owner asked
+ *  for was never really a missing feature; it was that nobody was coaching her.
+ *
+ *  ⚠ IT IS A SEPARATE INPUT AND NOT A CHANGE TO `coachWorksThisWeek`, AND THAT IS THE WHOLE CARE
+ *  TAKEN HERE. That predicate's own comment says one clause moves the BILL and the RATE together –
+ *  which is exactly right for a hired coach and exactly wrong here, because the scholarship's whole
+ *  economic point is that the family stops paying (owner, W2-ENDINGS §5.1). So the rate moves and the
+ *  bill does not, through an argument no billing code reads.
+ *
+ *  ⚠ A MIGRATED CAREER KEEPS WHAT IT HAD. A v50/v51 career at college was never quoted a place, has no
+ *  chosen tier, and gets `undefined` – the same discipline `resolveCollegeBill` keeps when it declines
+ *  to charge a career that was never quoted a price.
+ *
+ *  ⚠ ZERO DRAWS. It returns a constant off a persisted offer; the frozen MAIN capture cannot see it. */
+export function collegeCoachFactor(world: WorldState): number | undefined {
+  if (!inCollege(world)) return undefined
+  const tier = chosenQuoteOf(world.fork?.offer)?.tier
+  if (!tier) return undefined
+  // ⚠ THE FIT TERM IS NEUTRAL AND THAT IS A STATEMENT, NOT A DEFAULT. `coachFitFor` asks whether ONE
+  // man's game transfers to hers; a programme is several coaches, so the question does not apply and
+  // inventing an answer to it would be a fourth invented number. `good` is the 1.0 rung.
+  return coachFactor(COLLEGE_TIERS[tier].coachesAt, 'good')
 }
 
 /** ⭐⭐ WHAT SHE COMES BACK WITH, AND IT IS MEASURED RATHER THAN ASSERTED.

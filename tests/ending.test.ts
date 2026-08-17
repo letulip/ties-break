@@ -38,6 +38,7 @@ import {
   setKitGrade,
   inCollege,
   latchEnding,
+  measureCollegeOffer,
   lastRungSeasonIndexOf,
   plateauViewOf,
   resolveEndings,
@@ -297,9 +298,9 @@ describe('the latch, on a real world', () => {
   it('the fork and the offer BLOCK the advance exactly as a knock does', () => {
     const { world, rng } = freshWorld()
     tickWeek(world, rng)
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     expect(advanceWeeks(world, rng, 1)).toEqual(['fork'])
-    world.fork = { askedWeek: world.week, answer: 'continue' }
+    world.fork = { askedWeek: world.week, answer: 'continue', offer: null }
     world.retirementOffer = { askedWeek: world.week, seasonIndex: 0, reason: 'age', final: false }
     expect(advanceWeeks(world, rng, 1)).toEqual(['retirement'])
   })
@@ -333,7 +334,7 @@ describe('the latch, on a real world', () => {
   // stronger state than a passing test, and is the only reason it is acceptable to lose them.
   it('⭐⭐ the college answer survives ANY result – there is no rung that spends it', () => {
     const { world } = freshWorld('fork-college-unconditional')
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     // The exact career round-17 #6 was about: a professional ranking and a real result at the rung
     // that used to take the answer away. She won the thing.
     world.bestFinishByTier = { w75: 0, wta250: 1, w15: 0 }
@@ -343,16 +344,38 @@ describe('the latch, on a real world', () => {
     expect(world.college?.untilWeek).toBe(world.week + ENDINGS.collegeYears * 52)
   })
 
-  it('⭐ ...and the card is told nothing, because there is nothing to tell it', () => {
+  it('⭐ ...and the card is told nothing that could remove an answer', () => {
     // The inverse of the pin this replaces, which read `expect(toSnapshot(world).fork?.collegeOpen)`.
     // `collegeOpen` was on the wire so the dialog could stop drawing an answer `answerFork` would
     // refuse; with no refusal the flag is gone, and the card draws three answers always.
+    //
+    // ⚠ RE-AIMED FOR v51, NOT WEAKENED (docs/specs/what-the-college-place-costs-2026-08.md). The
+    // fork now carries a THIRD fact – `offer`, what the college answer costs – so "exactly two facts"
+    // is no longer the claim. The claim that mattered is the one kept: **no flag on this wire decides
+    // whether an answer is drawn.** `offer` is not `collegeOpen` under a new name and the two cases
+    // below are what make that a tested statement rather than an assurance:
+    //   * the whole key set is pinned, so a `collegeOpen` (or any other new gate) trips this; and
+    //   * the strongest possible college-closing career – a W75 TITLE, exactly round-17 #6's case –
+    //     still produces an offer with a place in it, so nothing on the wire went back to reading a
+    //     professional result.
     const { world } = freshWorld('fork-college-wire')
-    world.bestFinishByTier = { w75: 1 }
-    world.fork = { askedWeek: world.week, answer: null }
+    world.bestFinishByTier = { w75: 1, j300: 2, j60: 4 }
+    world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
     const fork = toSnapshot(world).fork
     expect(fork, 'the fork is still on the wire').not.toBeNull()
-    expect(Object.keys(fork!).sort(), 'and it carries exactly two facts now').toEqual(['ageYears', 'askedWeek'])
+    expect(Object.keys(fork!).sort(), 'three facts, and none of them is a gate').toEqual([
+      'ageYears',
+      'askedWeek',
+      'offer',
+    ])
+    expect('collegeOpen' in fork!, 'the flag has not come back under its own name either').toBe(false)
+    // ⚠⚠ AND THE W75 TITLE BOUGHT HER NOTHING AND COST HER NOTHING. The offer reads her JUNIOR
+    // record; the professional title is not an input, so a programme still offered her a place.
+    // ⚠ RE-AIMED FOR THE 17.08 REBUILD, NOT LOOSENED. A tier is a PLACE now and the offer carries a
+    // quote for each, so "was she offered a place" is "does the cheapest open quote fund her".
+    const cheapest = fork!.offer?.quotes.find((q) => q.open) ?? null
+    expect(cheapest, 'a W75 champion is still quoted a college place').not.toBeNull()
+    expect(cheapest!.athleticShare).toBeGreaterThan(0)
   })
 
   it('⚠ ...and no entry card warns about a college place any more, because none can cost it', () => {
@@ -436,7 +459,7 @@ describe('⭐ round-19 #1 – the plateau, on a real world', () => {
   function atTheWrap(seed: string, history: SeasonHistoryEntry[]) {
     const { world } = freshWorld(seed)
     world.week = WRAP_WEEK_S11
-    world.fork = { askedWeek: 300, answer: 'continue' }
+    world.fork = { askedWeek: 300, answer: 'continue', offer: null }
     world.seasonHistory = history
     return world
   }
@@ -610,7 +633,7 @@ describe('⭐ round-19 #2 – the wrap-up outlives the command that covered it',
     // girl born in the second half of December turns nineteen in the off-season - the wrap week is
     // week 49 of the season, which is where December lands.
     const world = atTheWrap('round19-wrap-fork')
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     answerFork(world, 'continue')
     const after = toSnapshot(world)
     expect(after.stopReasons).toBeUndefined()
@@ -642,7 +665,7 @@ describe('#2 college – the only ending that resumes', () => {
   // she comes back with nothing on the table – it is just asked across four calls instead of one.
   it('latches, freezes four years, and gives them back one year at a time', () => {
     const { world, rng } = freshWorld('college-test')
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     answerFork(world, 'college')
     expect(world.ending?.type).toBe('college')
     expect(world.college).not.toBeNull()
@@ -667,7 +690,7 @@ describe('#2 college – the only ending that resumes', () => {
     // play - §5.1 bought for free.
     const { world, rng } = freshWorld('college-rank')
     for (let i = 0; i < 40; i++) tickWeek(world, rng)
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     answerFork(world, 'college')
     for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
@@ -676,7 +699,7 @@ describe('#2 college – the only ending that resumes', () => {
 
   it('the family stops paying: no coaching is billed across the freeze', () => {
     const { world, rng } = freshWorld('college-money')
-    world.fork = { askedWeek: world.week, answer: null }
+    world.fork = { askedWeek: world.week, answer: null, offer: null }
     answerFork(world, 'college')
     const spentBefore = world.careerTotals.spentCents
     const from = world.week
@@ -799,7 +822,7 @@ describe('⚠ input-independence survives college', () => {
     const rngA = resumeMain(a.rngMain)
     const rngB = resumeMain(b.rngMain)
     // A goes to college; B does nothing at all. Same seed, same weeks, same MAIN sequence.
-    a.fork = { askedWeek: a.week, answer: null }
+    a.fork = { askedWeek: a.week, answer: null, offer: null }
     answerFork(a, 'college')
     for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(a, rngA)
     for (let i = 0; i < ENDINGS.collegeYears * WEEKS_PER_YEAR; i++) tickWeek(b, rngB)

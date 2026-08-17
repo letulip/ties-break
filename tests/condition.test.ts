@@ -470,7 +470,23 @@ const REF = {
   // reproduce byte-for-byte and are asserted BEFORE this constant is read. P2 adds no draw to any
   // stream - an entry allowance is a post-draw gate - which is why the hash could not move and did
   // not, and why the input-independence A/B halves in tests/planner.test.ts still pass unchanged.
-  kidRank: 93,
+  //
+  // ⚠⚠ RE-PINNED 93 -> 88 (17.08, THE SKILL LAW – docs/specs/the-skill-gap-2026-08.md). The eight
+  // uniform core bands in `season/fieldPros.ts` became one curve fitted to the live 2026 WTA Elo
+  // list, so a professional's STRENGTH is now a function of her standing instead of a uniform draw
+  // inside her storey. The top of the table lost the most: world #10 went from core 75.2 to 65.5 and
+  // #50 from 67.5 to 56.4. She is five places better because the players above her got weaker, which
+  // is the change landing and not a regression.
+  //
+  // THE CAPTURE IS UNTOUCHED FOR THE EIGHTH TIME: count 41550, hash e6b0c709, head and tail all
+  // reproduce byte-for-byte and are asserted BEFORE this constant is read – verified on BOTH arms
+  // (the control is this agent's commit reverted in a worktree; it passes 44/44, this arm fails only
+  // on the line below). The law adds no draw and moves none: `makeFieldPro` still takes exactly one
+  // uniform where it always did, in the same position on the same key, and the new core is pure
+  // arithmetic on it. ⚠ AND THE POINTS DID NOT MOVE EITHER, which is the stronger statement and is
+  // measured rather than argued: the merged 1,600-row table hashes identically across five worlds on
+  // both arms, so every acceptance cut still admits exactly the same population.
+  kidRank: 88,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

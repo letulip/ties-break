@@ -181,6 +181,14 @@
      adding it there would be a no-op pretending to be a fix. */
   --crop-vacation-x: 90%;
   --cat-practice: #6f8fd8;
+  /* ⭐ THE COLLEGE BILL (round 21). ⚠ IT IS THE ONE SPENDING HUE DELIBERATELY OUTSIDE THE SPORT'S
+     PALETTE – a deep academic red against a table of limes, blues and teals – because it is the one
+     row that is not tennis (`WorldEventCategory`'s own note: "the first cost in the game that is not
+     tennis"). It also has to survive being the LARGEST slice on the ring for four years running
+     without reading as an alarm, so it is a saturated red rather than the warning red. Checked
+     against its neighbours: nearest hue in the table is `gear` #d97f52 at 20deg, this sits at 6deg
+     with far more chroma, so the donut cannot confuse them. */
+  --cat-tuition: #c0453f;
   --cat-other: #8b95a1;
   /* The grid-only three: hours with no line on the wallet. */
   --cat-school: #7f8fa6;
@@ -3609,6 +3617,43 @@ tr.kid-row td {
   background: rgba(var(--accent-rgb), 0.07);
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+}
+/* ⭐ ROUND-21 #1 – HER OWN COACH'S PORTRAIT IS A WIDER WINDOW, AND THE TEXT PAYS FOR IT (owner:
+   «у выбранного тренера в списке тренеров фото пропорционально шире сделай пожалуйста относительно
+   высоты. Текст при этом чуть уже станет» – the quote lives here rather than in the SFC because a
+   .vue file carries no Cyrillic, tests/round13-nav.test.ts).
+
+   ⚠ THIS IS A WINDOW, NOT A SCALE. The image keeps `height: 100%; width: auto` – the A2c/d ruling
+   (whole frame on screen, no vertical crop) is untouched, and nothing here stretches a photograph of
+   a person. What widens is the CLIP: `.cm-art` is a 62px porthole onto a portrait that is
+   height-driven at 162/264, so at this row's real height (168.86px measured in
+   tests/component/coach-edge-card.test.ts) the picture is ~102px wide and 40 of those px were being
+   thrown away. Opening the strip to 78px hands 16 of them back. The visible aspect goes 62:H -> 78:H,
+   which is 26% wider relative to the same height, and it is the owner's word read literally.
+
+   ⚠ AND THE FLOOR MOVES WITH IT, because it is the same guarantee round-18 #2 wrote down and not
+   tidy-up. The mask reaches transparent exactly at the strip's right edge, so the clip is invisible
+   only while the picture is at least as wide as the strip; height-driven at 162/264 a 78px strip
+   needs a padding box of 78 x 264/162 = 127.1px, hence a 130px border box. 132 is that with a
+   pixel of slack ((132-2) x 162/264 = 79.8 >= 78). It binds on nothing that ships – the current row
+   measures 168.86px – exactly as the 104px floor binds on nothing; it is the guarantee, not the
+   layout. Move the strip, move this. tests/component/round21-coach-photo.test.ts holds all three
+   numbers together and fails on any one of them alone.
+
+   ⚠ WHY ONLY THE CURRENT ROW. Every other row is a shop window, and the anti-shopping rule of
+   docs/specs/coach-match-edge.md §4 is that an unhired card must not be made more attractive than
+   the one she has. A wider portrait on all sixteen would also cost 16px of text column on fifteen
+   rows nobody asked to narrow. */
+.cm-row.current {
+  min-height: 132px;
+}
+.cm-row.current .cm-art {
+  width: 78px;
+}
+.cm-row.current .cm-body {
+  /* 78 (the strip) + the same 12 of air the ordinary row keeps. The pair is tied by a test, not by
+     this comment – see `.cm-body` below. */
+  margin-left: 90px;
 }
 /* Over budget or gated: dashed, dimmed, and the shortfall stated in money (never "expensive"). */
 .cm-row.blocked {

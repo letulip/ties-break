@@ -294,8 +294,33 @@ export const TIERS: Record<TierId, TierDef> = {
     // the top ~2%. It is a tenfold gap closed to fivefold, chosen by measurement because the sport's
     // own figure deletes the rung. Whether the game should keep a reachable prestige rung at all, or
     // accept a J300 nearly nobody plays, is his call and is stated in the spec rather than taken here.
+    //
+    // ================================================================================================
+    // ⭐⭐ 0.20 -> 0.25 (16.08). THE RUNG WAS REFUSING GIRLS ITS OWN DRAW WAS MADE OF.
+    // ================================================================================================
+    // `entrantPctBand` below is [0, 0.25]: the FIELD of a J300 is drawn from the top quarter of the
+    // junior table. `enterPct` 0.20 accepted only the top fifth. So a girl at 22% was inside the band
+    // this rung's own opponents come from and outside the list that lets her enter it – she could be
+    // DRAWN into a J300 as a rival and could not enter one as the player.
+    //
+    // ⚠ IT IS THE SAME STRUCTURAL CRITERION AS wta125's, ONE TABLE DOWN, and not a re-argument of the
+    // number. A rung's acceptance cut must be no tighter than the ceiling of its own field band, or the
+    // rung refuses the very population it is made of. j60 already satisfies it (cut 0.50 against a band
+    // ceiling of 0.40) and this rung did until P3.
+    //
+    // ⚠ THE 0.40 -> 0.20 REASONING ABOVE IS NOT WITHDRAWN – 0.25 IS INSIDE IT. That block's whole
+    // argument is that 0.40 had drifted loose of its own pre-registered target and that the sport's 2%
+    // deletes the rung; its own measured table has **0.25 at 3.0 entries a career, 25 of 27 careers
+    // reaching it, end rank #204 and the best prize column of the seven arms** – the row directly above
+    // the one that shipped. So this restores the identity `enterPct === entrantPctBand[1]` that the
+    // 30.07 note deliberately broke in the LOOSE direction and P3 broke in the tight one, and it lands
+    // on a value P3 measured rather than on one nobody has.
+    //
+    // ⚠ WHAT IS STILL THE OWNER'S IS UNCHANGED by this: 0.25 is #50 of 200 against a sport that cuts
+    // at ~2%, so the fivefold gap the block above escalates is now sixfold. That question is his and is
+    // in the spec; this move is about the rung not contradicting itself.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.2,
+    enterPct: 0.25,
     entrantPctBand: [0.0, 0.25],
   },
   // --- the adult tour: the ITF World Tennis Tour, and the first money she is ever paid ------------
@@ -847,10 +872,14 @@ export const TIERS: Record<TierId, TierDef> = {
     // The range table's FLOOR (~#120-350) - see the note on w35 for why an absolute rank replaced
     // the share, and ⚠ why the ranges themselves are NOT SOURCED.
     //
-    // ⚠⚠ AND IT IS READ BY THE SPONSORS. `s.national.maxWtaRank` IS this number (economy.ts, pinned
-    // as an equality by tests/offers.test.ts), so moving W100's door moves what a national sponsor
-    // costs, in a file nobody retuning the ladder would think to open. Flagged when `acceptsRank` was
-    // introduced and re-flagged by the 15.08 audit. acceptance-cuts-2026-08.md §7.
+    // ⚠⚠ IT USED TO BE READ BY THE SPONSORS, AND SINCE 16.08 IT IS NOT. `s.national.maxWtaRank` WAS
+    // this number (economy.ts, pinned as an equality by tests/offers.test.ts), so moving W100's door
+    // moved what a national sponsor costs, in a file nobody retuning the ladder would think to open.
+    // Flagged when `acceptsRank` was introduced, re-flagged by the 15.08 audit
+    // (acceptance-cuts-2026-08.md §7) - and then it fired: P3's correction below dragged the two
+    // sponsor gates 350 -> 240 and 87 -> 60 as a side effect nobody decided. The two rungs now carry
+    // their own constants and the equality pin is replaced by a DECOUPLING guard, so this number is
+    // free to move on the ladder's own argument alone. See `ECONOMY.sponsorship.national.maxWtaRank`.
     //
     // ⭐ 350 -> 240 (P3, 16.08, docs/specs/acceptance-cuts-corrected-2026-08.md), as the fourth link
     // of the sourced chain (w35 700 · w50 330 · w75 300 · w100 240 · wta125 180).
@@ -862,12 +891,16 @@ export const TIERS: Record<TierId, TierDef> = {
     // for the evidence behind this number will not find any: that is the honest state of it, and it
     // is on the spec's list for the owner.
     //
-    // ⚠⚠ THE SPONSOR GATE MOVED WITH IT - `ECONOMY.sponsors.national.maxWtaRank` 350 -> 240 in the
-    // same commit, because that constant's own comment says it IS this one ("read straight … whatever
-    // that list currently is") and the equality is pinned. So a national sponsor is now MATERIALLY
-    // HARDER to earn: the rule did not change a word, its input did. That is a real balance change to
-    // an economy constant riding on a ladder correction, and it is the first item on the spec's
+    // ⚠⚠ THE SPONSOR GATE MOVED WITH IT - `ECONOMY.sponsorship.national.maxWtaRank` 350 -> 240 in the
+    // same commit, because that constant's own comment said it IS this one ("read straight … whatever
+    // that list currently is") and the equality was pinned. So a national sponsor became MATERIALLY
+    // HARDER to earn: the rule did not change a word, its input did. That was a real balance change to
+    // an economy constant riding on a ladder correction, and it was the first item on the spec's
     // escalation list rather than something to absorb quietly.
+    //
+    // ⭐⭐ AND IT WAS UNDONE ON THE SAME DAY, BY DECOUPLING RATHER THAN BY RETUNING (16.08). The two
+    // sponsor gates went back to 350 / 87 and became their OWN constants; W100's door stays at 240,
+    // where the ladder argument put it, and can never drag them again.
     acceptsRank: 240,
     // ⚠ [0, 0.30], RE-MEASURED BY W2-LADDER'S BAND PROBE - the third measurement this band has
     // carried, each against the world of its day. The original 0.55 was measured against the
@@ -950,7 +983,36 @@ export const TIERS: Record<TierId, TierDef> = {
     // THE CORRECTION BITES HARDEST ON, because it is the one an ADULT reaches on her professional
     // ranking just as P1's junior brake lets go: measured in the spec, and it is why the phase's
     // headline is a cost rather than the audit's Pareto gain.
-    acceptsRank: 180,
+    //
+    // ================================================================================================
+    // ⭐⭐ 180 -> 210 (16.08). THE PARAGRAPH ABOVE IS WRONG IN ITS OWN TERMS: 180 DID NOT KEEP THE
+    // CHAIN MONOTONE, IT BROKE IT.
+    // ================================================================================================
+    // `wta250.acceptsRank` is **200**, and this rung sits BELOW the 250 on `TIER_LADDER`. So a WTA 125
+    // – the smaller event – was refusing a girl at #190 that a WTA 250 would have accepted. The chain
+    // read 240 > 180 < 200 and it was written down in this file as "monotone".
+    //
+    // ⚠⚠ THE CRITERION IS STRUCTURAL, AND IT HAS TO BE, BECAUSE **NEITHER 180 NOR 210 IS SOURCED AND
+    // NEITHER IS wta250's 200 OR w100's 240** – all four say so in their own comments, three lines up
+    // and in the two rungs either side. There is no evidence here to appeal to and it would be
+    // dishonest to pretend 210 is more real than 180. What there is instead is a property that holds
+    // whatever the numbers are: A LADDER THAT INVERTS IS NOT A LADDER. A bigger event must be no
+    // easier to enter than a smaller one, or "climbing" stops meaning anything and `hasOutgrown`,
+    // `tierOutgrown` and the whole strongest-first entry policy are reasoning about an order that does
+    // not exist. Reality agrees – a WTA 125 draws below a WTA 250 – but the argument does not need it.
+    //
+    // WHAT THE INVERSION COST, MEASURED (P3, docs/specs/acceptance-cuts-corrected-2026-08.md): 2.1
+    // WTA 250s a career against 0.5 WTA 125s. The rung one storey UP was played four times as often as
+    // this one, which is the behaviour a broken ladder produces and is how the defect was found.
+    //
+    // 210 RATHER THAN 200: strictly looser than the 250 above it, so the pair is ordered rather than
+    // tied, and still strictly tighter than w100's 240. It is a placement inside a 40-rank gap that
+    // two unsourced neighbours define; it is not a claim about the sport.
+    //
+    // ⚠ THE GUARD IS THE DURABLE HALF, NOT THIS NUMBER. `tests/ladder.test.ts` walks the whole
+    // acceptance chain in `TIER_LADDER` order and fails on any inversion, so the next wave to retune a
+    // cut cannot re-open this hole in silence – which is exactly how it opened.
+    acceptsRank: 210,
     // MEASURED, the W100 way - the probe is tools/band-probe.ts (one run, all four upper rungs),
     // candidates left inside the window at its NARROWEST week over 5 careers x 6 seasons sampled
     // every 13th week, age gate applied, against the merged ~500-row universe and a draw of 32:
@@ -1070,6 +1132,55 @@ export const TIERS: Record<TierId, TierDef> = {
     // acceptance DEPTH, so #200 is ours. Left as it is: it binds 41 of 52 measured careers and sits
     // above where a 14→20 career reaches. acceptance-cuts-2026-08.md §2a.
     acceptsRank: 200,
+    // ⭐⭐ AND THE HEAD OF THAT LIST, WHICH FOR THREE WAVES DID NOT EXIST (round 21 #4, 17.08 – the
+    // owner: «с этим точно надо что-то делать … Инес за 2 года не смогла вообще никуда сдвинуться в
+    // 250+ … а мы говорим о 86 ракетке с хорошими статами»). Read `TierDef.acceptsFromRank` for the
+    // mechanism; this note is why the number is 64.
+    //
+    // ⚠ AND IT IS NO LONGER THE ONLY RUNG THAT CARRIES ONE. The WTA 500 took a head of its own on
+    // 17.08 (owner: «давай 50»), for the defect this rung's fix left standing – see that note.
+    //
+    // ⚠⚠ THE TWO ARE A LADDER NOW AND THE ORDER IS LOAD-BEARING: **the higher rung opens HIGHER up
+    // the table.** The 500 starts at #50 and this rung at #64, so the 500 admits #50-63 and the 250
+    // does not – the excluded storey here (#1-63) is a SUPERSET of the 500's (#1-49), which is the
+    // arithmetic form of "a bigger tournament draws a stronger field". Any future edit that pushed
+    // this number BELOW the 500's would invert the ladder and hand the 250 the stronger draw.
+    // `tests/season/tournament.test.ts` holds the ordering.
+    //
+    // THE DEFECT, MEASURED (round21-measured-2026-08.md §3f): this band opens at #32 and the WTA
+    // 500's at #22, so the two rungs drew the SAME PEOPLE – mean field core 68.4 against 68.9 – for
+    // half the points. A WTA 250 was worth **20.1 expected points** to a #121 player against a W50's
+    // 29.7: the worst rung in the game sat two storeys above the rung it was worth less than.
+    //
+    // WHY THE HEAD AND NOT THE BAND FLOOR, given the two are arithmetically interchangeable here:
+    // the floor is a SHARE of a table whose size has moved three times (300 → 364 → 520 → 1,600) and
+    // would move again; the head is the sport's own unit and does not. And it says the true sentence
+    // out loud – the top fifty are not refused a 250, they are ELSEWHERE that week.
+    //
+    // ⭐ 64 IS THE PYRAMID'S OWN BOUNDARY, NOT A ROUND NUMBER: it is exactly `FIELD.tiers[0].count` –
+    // the `tourElite` storey, core 67-77, points 1,400-11,500. So the rule reads as one sentence about
+    // the world rather than as a tuning constant: **the top storey does not play a WTA 250.** Against
+    // the sport it lands where the sourced rule one rung below does – the ITF bars WTA #1-50 from
+    // every W-series event (research §4c-C) and we already ship that as `PLAY_DOWN.fromAllW` – and
+    // against the real points curve #64 is about the real #55-60.
+    //
+    // ⚠ A LITERAL AND NOT A READ OF `FIELD.tiers[0].count`, deliberately. Coupling the calendar to the
+    // field's storey table would make this number move silently the day a storey is re-counted, and
+    // this one was chosen by measurement (below) rather than derived. The derivation is the REASON,
+    // recorded here; the value is fixed.
+    //
+    // ⚠⚠ AND IT WAS SWEPT, NOT TAKEN. `--head-sweep 0,40,50,64,80` on her own save, 300 replays a
+    // setting (the-250-is-not-a-1000-2026-08.md §3), expected points to a #121 player:
+    //     OFF 17.7 · #40 20.3 · #50 25.9 · **#64 32.9** · #80 64.2
+    // The criteria were written before the run and only #64 meets both: it clears the W50's 29.7 –
+    // the owner's own statement of the defect, «worst rung in the game» – without passing the W100's
+    // 57.7, which #80 does by a mile and which would simply move the farm one storey up.
+    //
+    // ⚠ A HARD CUT, BECAUSE THE SOFT ONE IS ALREADY RULED OUT. Real top-20s do play the odd 250; the
+    // faithful model is probabilistic participation, and «пусть остануться жесткие отсечки» (owner,
+    // 16.08, docs/specs/the-acceptance-tail-2026-08.md) settles which way this engine spells a cut.
+    // ⚠ NOT SOURCED, like `acceptsRank` beside it, and flagged the same way.
+    acceptsFromRank: 64,
     // ⚠ THE BAND IS MEASURED AGAINST TWO UNIVERSES OF VERY DIFFERENT SIZE, AND W3-ACT2 IS WHERE
     // THAT STOPPED BEING FREE. Read this note once; the three rungs above refer back to it.
     //
@@ -1115,6 +1226,38 @@ export const TIERS: Record<TierId, TierDef> = {
     // The range table's floor (~#40-120). ⚠ NOT SOURCED - see the note on w35. Left as it is: only
     // 6 of 54 measured careers ever clear it, which is the top of the ladder behaving as act 3 wants.
     acceptsRank: 120,
+    // ⭐⭐ AND THE HEAD OF THAT LIST (17.08, owner: «давай 50»). Read `TierDef.acceptsFromRank` for the
+    // mechanism and the note on `wta250` for the ladder the two now form.
+    //
+    // ⚠⚠ WHY THIS RUNG NEEDED ITS OWN, given the 250 had just been fixed: because fixing the 250
+    // alone left the 500 as the WORST-SHAPED RUNG ON THE LADDER. Measured
+    // (`the-head-of-the-list-is-a-ladder-2026-08.md` §2, 4 worlds x 470 weeks, 300 bracket replays a
+    // rung, the professional actually standing at #86 held fixed as the reference), P(past R1):
+    //
+    //     500 head    250     **500**    1000    Slam
+    //     open        60.9%   **43.2%**  44.9%   51.8%     <- shipped before this line
+    //     40          60.0%   **49.8%**  40.8%   52.5%
+    //     50 (this)   60.7%   **55.1%**  40.9%   54.3%
+    //
+    // At `open` a #86 survived a 500 LESS OFTEN than the WTA 1000 above it - 43.2% against 44.9% -
+    // because `selectEntrants` filled this rung from the top of a band opening at #22 and drew a
+    // field whose core was 69.4 with **67% of the draw stronger than she is**. That is the owner's
+    // «на 500, соответственно, должно быть тоже возможно выжить» going unmet. At 50 the field's core
+    // is 64.4 and the share stronger than her is 42%.
+    //
+    // ⚠ WHY 50 AND NOT 40, since both clear the defect: 40 leaves the 500 at 49.8% - still a coin
+    // flip - while 50 puts it at 55.1% and, with it, puts the whole ladder in the right ORDER for the
+    // first time: 125 easiest, then 250, then 500, then Slam, with the 1000 hardest. 64 was swept too
+    // (58.9%) and rejected for making the 500 easier than the 250 beneath it.
+    //
+    // ⚠ THE COST, STATED RATHER THAN BURIED: the WTA 1000 drops 44.9% -> 40.9%. It becomes the hardest
+    // rung in the game, which is correct for what it is, but it IS a change and it was not asked for.
+    // Flagged for the owner in the spec's §5 rather than presented as free.
+    //
+    // ⚠ READ THE SWEEP AS A SHAPE, NOT AS ODDS. The reference #86 is not equally strong in every world
+    // (core 70.8 / 60.3 / 71.0 / ...), so every cell is pooled across four of them.
+    // ⚠ NOT SOURCED, like `acceptsRank` above it, and flagged the same way.
+    acceptsFromRank: 50,
     // 42 candidates in the canonical universe, 117 in the merged one - see the note on wta250.
     entrantPctBand: [0.012, 0.22],
   },
@@ -1323,7 +1466,29 @@ export const TIERS: Record<TierId, TierDef> = {
     // biggest event on earth is the EASIEST of the top three to get into, because it has the most
     // chairs. Nothing reads this as a ceiling (the top four rungs never close - see TERMINAL_RUNGS),
     // so the non-monotone step cannot leak into the window.
-    acceptsRank: 104,
+    //
+    // ⭐⭐ 104 → 112 (owner, 17.08: «112 и надо подумать про wild card 8»), AND IT IS STILL THE
+    // RULEBOOK'S OWN NUMBER – which is the whole reason he chose it over his own earlier proposal.
+    // The composition line above prints THREE permitted configurations, not one: **104/16/8 ·
+    // 108/12/8 · 112/8/8**. 112 is the third of them, so the cut stays inside the primary source and
+    // the 8 wild cards stay unmodelled by construction rather than by omission – which is honest,
+    // because we do not model them (docs/specs/the-250-is-not-a-1000-2026-08.md §7 costs that).
+    //
+    // ⚠ WHAT IT COSTS AND WHAT IT REFUSED TO COST. His earlier idea was "+16 = 120", folding the
+    // qualifiers in. Measured (round21-measured-2026-08.md §5c): 120 more than halves the refusal in
+    // the #105-#128 band, **23.5 → 9 weeks** – but `wta500.acceptsRank` is ALREADY 120, so at 120 the
+    // hardest draw in the game would share a door with the rung two storeys below it. **112 buys
+    // 23.5 → 15.5 weeks and creates no collision.** He took the smaller number to avoid the tie.
+    //
+    // ⚠⚠ AND THE "+16" ARGUMENT DOES NOT TRANSFER DOWN THE LADDER. Somebody will want to apply it to
+    // the W rungs; it cannot be applied there, because there is nothing to add sixteen TO. Research
+    // §4-A reads the 2026 ITF WTT Regulations as ONE "System of Merit" ordering with no published cut
+    // anywhere in it – an unranked player is not refused a W75, she is placed at the BOTTOM of the
+    // acceptance list. The Slam is the one rung on this ladder whose regulation states a count, which
+    // is the one and only reason the arithmetic is even expressible here. At the W rungs the honest
+    // version of the same idea is the soft tail, and the owner ruled against it on 16.08
+    // (docs/specs/the-acceptance-tail-2026-08.md: «пусть остануться жесткие отсечки»).
+    acceptsRank: 112,
     // The head of the merged table, at last. THE FLOOR IS 0 AND ONLY HERE: `wta125`'s own note says
     // why it kept 0.025 ("the two or three names on 9,000+ points play a tour this game does not
     // simulate yet") - this is that tour. The world #1 is resident in exactly one rung, and it is

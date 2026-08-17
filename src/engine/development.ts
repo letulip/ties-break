@@ -383,6 +383,27 @@ export function growWeek(args: {
    *
    *  ZERO RNG IMPLICATIONS: the luck draw below is unchanged in count, key and position. */
   loadFactor?: number
+  /** ⭐⭐⭐ SOMEBODY ELSE IS COACHING HER THIS WEEK, and the family is not paying for it – the college
+   *  programme (round 21, `docs/specs/the-college-answers-2026-08.md` §10). Replaces the
+   *  `coachFactor(...)` term outright for the weeks it is supplied.
+   *
+   *  ⚠⚠ IT IS AN OVERRIDE AND NOT AN ADDITION, deliberately. She trains with the programme INSTEAD of
+   *  with whoever the family hired, not as well as – and until round 21 the college weeks read
+   *  `coach: null`, i.e. `self` = 0.82, the parent-on-the-court rate, for a girl at a university with
+   *  a squad and a training week. That was the defect the owner's «она училась и работала» names.
+   *
+   *  ⚠ WHY NOT A `Coach` OBJECT. `tierOf`, the market, the portraits and the retainer all key off a
+   *  real coach, and a synthetic one would leak into every one of them. A programme is not hireable
+   *  and has no portrait; what it has is a RATE, so a rate is what it hands in.
+   *
+   *  ⚠ AND WHY NOT `coachWorksThisWeek`. That predicate's own comment says one clause moves the BILL
+   *  and the RATE together – right for a hire, wrong here, because the scholarship's whole economic
+   *  point is that the family stops paying. This argument moves the rate and nothing else; no billing
+   *  code reads it.
+   *
+   *  ⚠ UNDEFINED EVERYWHERE ELSE, so every existing call site is byte-identical and no shipped
+   *  career's growth moves. ZERO RNG IMPLICATIONS: a multiplier, drawn from nothing. */
+  coachFactorOverride?: number
 }): KidSkills {
   const d = ECONOMY.development
   const { skills, potential, ageYears, plan, coach, playStyle, matchesThisWeek } = args
@@ -391,7 +412,7 @@ export function growWeek(args: {
     ageFactor(ageYears) *
     trainFactor(plan) *
     (args.loadFactor ?? 1) *
-    coachFactor(tierOf(coach), coachFitFor(coach, playStyle)) *
+    (args.coachFactorOverride ?? coachFactor(tierOf(coach), coachFitFor(coach, playStyle))) *
     (1 + Math.min(matchesThisWeek, d.matchBonusCap) * d.matchBonus)
 
   // One draw for the whole week, shared across the attributes: a good week is a good week, and four

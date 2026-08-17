@@ -63,7 +63,7 @@ import { buildTourBriefing } from './mandatory'
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
-import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
@@ -297,6 +297,21 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // than inside `ineligibleReason`, which is where it used to live: the two are orthogonal now,
         // and the card has to be able to say "still yours, and beneath you" in one breath.
         ...(gate.outgrown ? { outgrown: true } : {}),
+        // ⭐⭐ THE PLACE WAS A WILD CARD (round 21 #2b, and the marker is the half of it he asked for
+        // by name: «а 8 wild card как раз можно как-то отмечать тоже и на карточку турнира тогда
+        // пометку ставить "wild card"»).
+        //
+        // ⚠ IT SAYS SOMETHING TRUE ABOUT **THIS** CARD, WHICH IS WHY IT IS DERIVED HERE AND NOT
+        // STORED. `homeWildCardPlace` is false the moment the acceptance list would have taken her
+        // anyway, so the badge can never appear on a place she earned – the one way this marker
+        // could become a lie. And it moves with her: a card that reads "wild card" in March reads
+        // as an ordinary acceptance once she has climbed inside the cut, which is the honest
+        // present tense of a list that is refolded every week.
+        //
+        // ⚠ ZERO PERSISTED BYTES AND NO SCHEMA BUMP. The host nation is a pure function of
+        // `(seed, event.id)` and her rank is folded from the ledger, so this is derived at snapshot
+        // time like `eligible` and `outgrown` beside it. Nothing to migrate, no golden fixture owed.
+        ...(homeWildCardPlace(world, e.tier, e.id) ? { wildCard: true } : {}),
         // ⚠ `costsCollege` WAS SET HERE AND GOES WITH THE RULE IT REPORTED (owner, 16.08 – the record
         // is on the retired `ENDINGS.collegeClosedFromTier`). It was derived from `entryCostsCollege`
         // and never stored, so nothing about the save schema moves with it.
@@ -1024,9 +1039,16 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       ? {
           askedWeek: world.fork.askedWeek,
           ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth),
-          // ⚠ `collegeOpen` WAS HERE. Round-17 #6 put it on the wire so the card could stop drawing an
-          // answer the engine would refuse; the owner removed the refusal on 16.08, so there is no
-          // longer a state the card needs telling about. It was derived, never stored – no migration.
+          // ⭐⭐ THE OFFER, STRAIGHT OFF PERSISTED STATE (v51). It is measured once, the week the fork
+          // is raised, and it is not recomputed here – a snapshot that re-derived it would answer a
+          // different question on the week a constant moved, and this one is money.
+          //
+          // ⚠ AND IT IS NOT `collegeOpen` COMING BACK, which is worth saying on this exact line
+          // because this is where that flag used to sit. `collegeOpen` decided whether the card DREW
+          // the third answer; the offer decides what the third answer SAYS. There is no value of it
+          // that removes an answer: `offer.programme === null` still draws three, and still enrols
+          // her – at the full price, as a walk-on. The owner's ruling of 16.08 is untouched.
+          offer: world.fork.offer ?? null,
         }
       : null,
     retirementOffer: world.retirementOffer,

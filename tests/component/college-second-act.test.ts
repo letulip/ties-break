@@ -60,7 +60,21 @@ function collegeYear(over: Partial<CollegeYear> = {}): CollegeYear {
 }
 
 function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressView {
-  return { yearsDone: 1, totalYears: ENDINGS.collegeYears, last: collegeYear(), final: false, ...over }
+  // ⚠ ROUND 21: `billPerYearCents` is a real bill by default, not 0. A fixture that defaulted to zero
+  // would go on measuring the free-ride card and quietly stop covering the one the player sees – the
+  // same slow failure `round21-dialogs.test.ts` records about the fork's own fixture. $8,673 is the
+  // shipped example bill from `what-the-college-place-costs-2026-08.md` §1a.
+    // ⚠ 17.08: `tier` is the place she picked, and the default is a real one for the same reason the
+  // bill's default is – a fixture that defaulted to `null` would go on measuring the migrated card.
+  return {
+    yearsDone: 1,
+    totalYears: ENDINGS.collegeYears,
+    last: collegeYear(),
+    final: false,
+    billPerYearCents: 8_673_00,
+    tier: 'state',
+    ...over,
+  }
 }
 
 function endingView(college: CollegeProgressView | null): EndingView {
@@ -161,6 +175,26 @@ describe('P5 – the college year block', () => {
     const wrapper = await openEpilogue(collegeView({ yearsDone: 3, final: true }))
     expect(wrapper.text()).toContain('One year of the scholarship left')
     wrapper.unmount()
+  })
+
+  // ⭐⭐ 17.08 – THE EPILOGUE NAMES THE PLACE SHE PICKED. Four years are lived here and the tier is a
+  // price and a place she chose at the fork; a screen that never said which one would be hiding the
+  // decision the player actually made. ⚠ AND IT SAYS NOTHING WHERE IT WAS NEVER TOLD – a career that
+  // entered college before the choice existed carries `tier: null` and gets no invented place.
+  //
+  // ⚠ RE-AIMED, NOT DELETED (round 21 #4): the name is «A private university» and no longer «A private
+  // programme» – the owner's «надо переформулировать точно» – and the negative below moved with it to
+  // the word the caption actually uses now. Asserting the OLD noun's absence would have passed
+  // vacuously on every future rename, which is the failure `pin-hygiene` describes one file along.
+  it('⭐⭐ names the place she picked on the first year, and invents none where there is none', async () => {
+    const picked = await openEpilogue(collegeView({ yearsDone: 0, tier: 'private' }))
+    expect(picked.find('.college-lead').text()).toContain('A private university')
+    picked.unmount()
+    const migrated = await openEpilogue(collegeView({ yearsDone: 0, tier: null }))
+    const lead = migrated.find('.college-lead').text()
+    expect(lead).not.toMatch(/university|programme/)
+    expect(lead, 'and the rest of the sentence survives').toContain('the family pays whatever the award does not')
+    migrated.unmount()
   })
 
   it('⚠ NO CYRILLIC AND NO LONG DASH reaches the screen', async () => {

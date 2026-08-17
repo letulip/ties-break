@@ -10,6 +10,11 @@
 // "+ Plan week" -> PlanWeekSheet (Practice / Vacation). A booked week renders with its package
 // name and a Cancel. When she is worn out the screen OFFERS a rescue vacation – an offer, never
 // an auto-book.
+//
+// ⚠ THE OWNER'S RULINGS BELOW ARE TRANSLATED, NOT SUMMARISED. This is a `.vue`, so its comments are
+// English – and every ruling in this file is quoted in his own words, under its own date, in
+// docs/decisions.md (17.08.2026, "eighteen owner rulings"). Translate one, never shorten it: the
+// reasoning IS the record, and the record now lives in two places rather than one.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
@@ -27,8 +32,9 @@ import TierGuide from '../TierGuide.vue'
 // the component - the photograph card here and the notecard on Home were already two shared rules
 // in the sheet, so the variant records a split that existed rather than inventing one.
 import ScreenShell from '../ui/ScreenShell.vue'
-// THE TAKEOVER, AND IT IS THE OTHER HALF OF `ScreenShell` (owner, 30.07: «надо все одинаково сделать
-// оверлеем поверх всего экрана»). `ScreenShell` is the stack a TABBED screen gets; this is the stack a
+// THE TAKEOVER, AND IT IS THE OTHER HALF OF `ScreenShell` (owner, 30.07: it must all be done the
+// same way, as an overlay over the whole screen – his words verbatim in docs/decisions.md).
+// `ScreenShell` is the stack a TABBED screen gets; this is the stack a
 // screen that COVERS the tabs gets, and the sandbox exhibition below is the fourth and last place
 // MatchViewer is mounted. It was the one that did not have it - see the note at its call site.
 import TakeoverShell from '../ui/TakeoverShell.vue'
@@ -42,6 +48,9 @@ import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
+// The wild-card badge quotes the engine's own count, never a literal – see the badge in the
+// template and `WILD_CARD` in engine/season/tournament.ts for why the number lives there.
+import { WILD_CARD } from '../../engine/season/tournament'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
@@ -91,9 +100,10 @@ function surfaceNote(surface: Surface): string | null {
 // R11-15 – the event card's surface PILL, back in the card corner. THIS REVERTS R10-11.
 //
 // R10-11 replaced the coloured pill with a ringed colour DOT and moved the surface name underneath
-// it. The owner's verdict on that swap: «раньше в углу карточки в календаре была пилюля с типом
-// покрытия и цветом – было сильно лучше, чем кружок сейчас. Надо вернуть пилюлю, а вот под ней
-// оставить просто подходит или нет, а название поверхности убрать.» So the pill is back, with the
+// it. The owner's verdict on that swap: the card corner used to carry a PILL with the surface type
+// and its colour, and that was far better than the circle it has now - bring the pill back, and
+// underneath it leave just "suits her or not", with the surface name taken off that line (his words
+// verbatim in docs/decisions.md). So the pill is back, with the
 // court's colour and its NAME inside it, and the line beneath carries the verdict ONLY.
 //
 // The surface name now appears EXACTLY ONCE, inside the pill – which is the whole reason the fit line
@@ -223,8 +233,9 @@ function venueUrl(e: UpcomingEvent): string {
 /** WHAT THE COACH SAYS about an event. Two clauses at most: how the field reads, and - only when
  *  the court actually has an opinion about her build - whether it suits her.
  *
- *  THE FIELD CLAUSE HAS FOUR WORDINGS PER VERDICT, picked off `seed:coachsay:<eventId>` (owner:
- *  «а там есть какое-то разнообразие в словах тренера?» - there was not). The event's own
+ *  THE FIELD CLAUSE HAS FOUR WORDINGS PER VERDICT, picked off `seed:coachsay:<eventId>` (owner,
+ *  asking whether there is any variety at all in what the coach says - his words verbatim in
+ *  docs/decisions.md; there was not). The event's own
  *  sub-stream, so a tournament's line never changes between renders and costs the MAIN stream
  *  nothing; and because it is keyed on the EVENT rather than the week, two cards on screen together
  *  do not echo each other.
@@ -254,8 +265,9 @@ const COACH_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
 
 // ⚠ THE COACH AND THE RING WERE ANSWERING DIFFERENT QUESTIONS, AND THE CARD PRINTED THEM AS ONE.
 //
-// Owner, 31.07: «иногда попадается "On paper this is hers to lose" при 92% =) и в обратную сторону
-// тоже бывает». Both halves of that are real, and they are two different faults:
+// Owner, 31.07: sometimes "On paper this is hers to lose" turns up at 92% =) and it happens the
+// other way round too (his words verbatim in docs/decisions.md). Both halves of that are real, and
+// they are two different faults:
 //
 //   * THE SEAM. The ring is `firstMatchChance` – her odds against ONE named opponent in the first
 //     round. The coach's line comes off `fieldStrength` – the share of the WHOLE field ranked above
@@ -282,9 +294,10 @@ const RING_CERTAIN = 0.85
  *  because a parent squinting at a draw sheet really is unsure of the reading at 92 percent too. */
 const HEDGED_LINES = new Set(['On paper this is hers to lose.', 'A field she should be beating.'])
 
-// ⚠ AND WHEN NOBODY IS HIRED, NOBODY PROFESSIONAL IS SPEAKING (R15-18, owner 09.08: «на 8к без
-// тренера на карточках в season написано coach says и очень профессионально… непонятно чем этот
-// вариант отличается от тренера»).
+// ⚠ AND WHEN NOBODY IS HIRED, NOBODY PROFESSIONAL IS SPEAKING (R15-18, owner 09.08: on the 8k
+// background with no coach, the season cards still say "coach says" and say it very professionally…
+// it is unclear how this option differs from having a coach. His words verbatim in
+// docs/decisions.md).
 //
 // `coachSays` read `e.preview` alone and never asked whether a coach was hired, so a family paying
 // nothing was handed professional draw analysis under a plaque that said Coach says. Two separate
@@ -297,7 +310,8 @@ const HEDGED_LINES = new Set(['On paper this is hers to lose.', 'A field she sho
 // some of them, rather than a professional reading a field. Same verdicts, same seam, same
 // sub-stream, different mouth.
 //
-// ⚠ THE MECHANICAL ANSWER TO «чем этот вариант отличается» IS NOT HERE. What a coach actually buys
+// ⚠ THE MECHANICAL ANSWER TO "how this option differs" - the second half of that same 09.08 ruling,
+// in his own words in docs/decisions.md - IS NOT HERE. What a coach actually buys
 // is the per-day training controls the owner ruled on in the same session, and this line must not
 // pre-empt them by inventing a difference in what the preview contains. `preview` is untouched.
 const SELF_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
@@ -395,6 +409,11 @@ const condition = computed(() => game.snapshot?.condition ?? 0)
 // v21: the share of every trip the academy is paying. One number for the whole calendar – the
 // scholarship is a rate, not a per-event deal – so each card can print it without re-deriving it.
 const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.coverShare ?? 0) * 100))
+
+/** How many places a wild-card tournament holds, read out of the engine so the badge's tooltip
+ *  cannot go on saying eight after a bench has swept the constant. Not a computed – it is a
+ *  module constant and never changes inside a session. */
+const wildCardSlots = WILD_CARD.slots
 
 // ⚠ HER PROFESSIONAL ALLOWANCE, ON EVERY W CARD (round-16 #7). It used to appear in exactly one
 // place: the lock pill, on the card that had already run out ("Tour age rule – 12 of 12"). So the
@@ -597,7 +616,8 @@ function packageLabel(packageId: string): string {
   return vacationPackage(packageId)?.label ?? packageId
 }
 
-// THE DEFENDING BADGE's number (W2-LADDER §3, the owner's «очковое окно возможностей»): the
+// THE DEFENDING BADGE's number (W2-LADDER §3, the owner's "window of points opportunity" - his
+// phrase, verbatim in docs/decisions.md): the
 // counted PROFESSIONAL result exactly 52 weeks
 // behind this card's week - the slot this event replaces in her rolling window. W-track cards
 // only: the badge is about the professional window, and a junior card wearing a WTA number would
@@ -619,8 +639,9 @@ const proBudgetLine = computed<string | null>(() => {
   return `Pro entries this season: ${cap.used} of ${cap.limit}`
 })
 
-// THE PLANNING COUNTER (owner, 02.08: «сколько доступных турниров и какого уровня у нас до конца
-// года вообще осталось, это даст человеку возможность планировать»). The engine's own read of the
+// THE PLANNING COUNTER (owner, 02.08: how many tournaments are available to us and at what level,
+// with how much of the year left at all - that gives a person the chance to plan. His words verbatim
+// in docs/decisions.md). The engine's own read of the
 // WHOLE remaining season - not this screen's eight-week feed, and deliberately NOT filtered by the
 // two-type rule, so the rare rungs she may enter are counted where the feed can only mention them.
 // Null before the first snapshot and in a season with nothing left, where a row of zeroes would be
@@ -642,6 +663,41 @@ const supplyLine = computed<{ total: number; weeks: number; parts: string[] } | 
   const tail = strongestFirst.slice(SUPPLY_RUNGS_SHOWN).reduce((n, r) => n + r.open, 0)
   if (tail > 0) parts.push(`+${tail} lower`)
   return { total, weeks: supply.weeksLeft, parts }
+})
+
+/** ⭐⭐ ROUND-21 #2b – HOW MANY OF THAT COUNT THE FEED BELOW ACTUALLY DRAWS.
+ *
+ *  THE OWNER'S REPORT, and it is two sentences about one screen: there are lots of them on the
+ *  season page at the top, and he does not see them in the feed. His screenshot reads
+ *  `9 left to enter over 10 weeks`. Both numbers were right. The header counts every rung the
+ *  engine opens, across the rest of the season; the feed draws eight weeks, of the rungs that pay
+ *  into her tables, one row a week, and a week she has booked renders as the booking. Six
+ *  independent reasons the two can differ, and not one of them was on screen.
+ *
+ *  ⚠⚠ AND THE GAME ALREADY KNEW. The `title` on this line has said so since it shipped -
+ *  "including the rare ones the eight-week feed cannot show" - and a `title` is a HOVER tooltip.
+ *  This is a phone game. The explanation existed the whole time, in the one place the device it is
+ *  played on cannot reach, which is the same failure family as round-20 #3: a surface measured by
+ *  what it SAYS rather than by what the screen can deliver.
+ *
+ *  So the reconciliation goes on screen as a number, next to the number it reconciles. Measured
+ *  over 18 careers x 676 weeks (tools/empty-week-census.ts): 78.3% of the events this header counts
+ *  never reach the feed, and 5.2% of her non-blackout weeks had tennis she could have entered that
+ *  the feed never drew a card for at all. Saying "9" and showing four is not a defect in either
+ *  number; saying "9" and never saying "four of them are below" is.
+ *
+ *  ⚠ IT COUNTS THROUGH `calendarRows`, NOT THROUGH `visibleUpcoming`. Those are different sets: a
+ *  stacked week collapses to one row and a booked week draws its booking instead, so the rows are
+ *  what the parent can actually see and the upcoming list is what survived the rung filter. The
+ *  whole point of this line is to name the second number, so it must be read off the first surface.
+ *  The enterability test is `seasonSupply`'s own, so the two numbers count the same KIND of thing. */
+const supplyOnScreen = computed<number>(() => {
+  let n = 0
+  for (const r of calendarRows.value) {
+    if (r.kind !== 'event' || !r.event) continue
+    if (r.event.entered || (r.event.eligible && week.value <= r.event.deadlineWeek)) n++
+  }
+  return n
 })
 
 // A passed deadline swaps the Enter button for a muted "Entries closed" pill (round-5
@@ -849,7 +905,8 @@ function openPlanner(row: CalendarRow): void {
 }
 
 /** The sheet emitted a practice choice: confirm it (with the guardrail warning in the copy –
- *  the owner's «Она уже вымотана – ещё матч?» lands HERE, where the parent can still say yes). */
+ *  the owner's "She is already worn out – another match?" lands HERE, where the parent can still say
+ *  yes; his words verbatim in docs/decisions.md). */
 function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number; caution: PracticeCaution }): void {
   const what = p.withCoach ? 'Practice match with the coach' : 'Practice match'
   pendingConfirm.value = {
@@ -1032,14 +1089,16 @@ function openPracticeLive(match: WorldMatch, atWeek: number): void {
  *  lands and nothing opens – the news event explains it, as before.
  *
  *  ⚠ W4 RENAMED THE BUTTON THIS SITS BEHIND, from "Watch it live →" to "Play it and watch →". The
- *  owner caught the same two words on the Weekly Story's copy of this control – «She played her
- *  practice match - Watch it live на кнопке. Ну точно не live, а replay, да?» – and they were no
+ *  owner caught the same two words on the Weekly Story's copy of this control – "She played her
+ *  practice match - Watch it live, it says on the button. That is definitely not live, it is a
+ *  replay, no?" (his words verbatim in docs/decisions.md) – and they were no
  *  truer here, one tick removed: this handler ADVANCES THE WEEK, the engine resolves the friendly
  *  inside that tick exactly as it always did, and PracticeFlow then re-simulates the stored record
  *  under its stored seed. There is no moment at which anything is being watched as it happens. The
  *  new label is what the press actually costs and buys, in that order. */
 async function playPracticeWeek(): Promise<void> {
-  // ⚠ CLAIM THE POST-ADVANCE NAVIGATION FIRST (owner, 01.08: «он должен вести на пре-матч экран»).
+  // ⚠ CLAIM THE POST-ADVANCE NAVIGATION FIRST (owner, 01.08: it must lead to the pre-match screen –
+  // his words verbatim in docs/decisions.md).
   // App.vue's watcher fires INSIDE the awaited advance - the snapshot lands before the next line
   // here runs - so the claim has to be made before the call, not after it. Without it the watcher
   // switched tabs (story, or Home), this screen unmounted, and the flow this function opens two
@@ -1124,6 +1183,15 @@ function closeExhibition(): void {
         <p v-if="supplyLine" class="season-supply" :title="'Tournaments you can still enter this season, counted across every level open to her - including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.'">
           {{ supplyLine.total }} left to enter over {{ supplyLine.weeks }} weeks
           <span class="season-supply-tiers">{{ supplyLine.parts.join(' · ') }}</span>
+          <!-- ⭐⭐ ROUND-21 #2b: the sentence that reconciles this count with the cards under it.
+               The `title` above has always said the feed cannot show them all, and a title is a
+               hover tooltip on a phone game - see `supplyOnScreen` in the script for the owner's
+               report and the measurement. Drawn only when the two numbers actually differ: on a
+               week where every counted event is on screen this line would be noise, and the point
+               of it is to explain a gap rather than to narrate agreement. -->
+          <span v-if="supplyOnScreen < supplyLine.total" class="season-supply-here">
+            {{ supplyOnScreen }} of them on the cards below
+          </span>
         </p>
       </div>
       <IconButton class="tier-guide-btn" label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</IconButton>
@@ -1291,6 +1359,20 @@ function closeExhibition(): void {
                 {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
               </span>
               <span v-if="row.event.entered" class="pill ok">Entered</span>
+              <!-- ⭐⭐ THE WILD CARD (round 21 #2b) – the half of the item the owner asked for by
+                   name: the event row says the place was a wild card. The flag is the ENGINE's
+                   (`UpcomingEvent.wildCard`), set only when the acceptance list would have refused
+                   her, so this badge can never appear on a place she earned. The rule itself lives
+                   in engine/season/tournament.ts and is never restated here; the tooltip quotes
+                   `WILD_CARD.slots` rather than a literal eight so a swept constant cannot leave a
+                   sentence behind saying the old number. -->
+              <span
+                v-if="row.event.wildCard"
+                class="pill wildcard-chip"
+                :title="`One of the ${wildCardSlots} places this tournament holds for players of the host nation – she is outside the acceptance list.`"
+              >
+                wild card
+              </span>
               <!-- THE DEFENDING BADGE (W2-LADDER §3: the points window made visible - the
                    owner's phrase is quoted at `defendingPts` in the script). Last year's counted
                    result at this exact week is about to age out of her rolling professional
@@ -1340,6 +1422,11 @@ function closeExhibition(): void {
                 <b>{{ Math.round(row.event.preview.firstMatchChance * 100) }}</b><i>%</i>
               </ProgressRing>
             </div>
+            <!-- ⚠⚠ THE "Rating 1642 vs 1801" LINE WAS HERE AND IS REMOVED BY OWNER RULING (round 21):
+                 "I did not ask for this, it is surplus information, please take it out." It was the
+                 calendar card's twin and it goes for the same reason - see the fuller note at the
+                 same place in CalendarScreen.vue. `src/engine/match/rating.ts` stays exported and
+                 tested; it has no surface, and giving it one again is his decision. -->
 
             <div class="controls" style="margin-top: 12px">
               <!-- Entered, list still OPEN: an ordinary withdrawal, fee refunded. -->
@@ -1758,10 +1845,25 @@ section.bare .event-cards {
 .season-supply-tiers::before {
   content: '· ';
 }
+/* ⭐⭐ ROUND-21 #2b – ITS OWN LINE, and that is the whole of the styling decision. The rung list
+   above it is a `· `-joined tail because it is DETAIL about the total; this sentence is not detail,
+   it is the reconciliation between this line and the cards under it, and appended to the same run
+   of text it would read as one more rung. `display: block` also means it cannot push the tiers into
+   a second line at 320px, which is where the strip is tightest. Same quiet register as the tail -
+   it explains a number, it is not a warning. */
+.season-supply-here {
+  display: block;
+  opacity: 0.7;
+}
 
 /* The defending badge (W2-LADDER §3): the accent register the Entered pill already uses - points
    at stake is good news to act on, not a warning - with the number kept tabular. */
-.defend-chip {
+/* ⚠ ONE RULE, TWO CHIPS, AND NO NEW COLOUR IS INVENTED HERE. Both say something about the PLACE
+   she holds rather than about the week, so they share the accent token the palette already
+   defines – the wild-card badge adds a selector to an existing declaration instead of a second
+   palette entry that would then have to be kept in step with this one. */
+.defend-chip,
+.wildcard-chip {
   color: var(--accent);
   border-color: var(--accent);
   font-variant-numeric: tabular-nums;
@@ -2286,4 +2388,5 @@ section.bare .event-cards {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
+
 </style>

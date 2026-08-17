@@ -2,6 +2,7 @@ import {
   DEFAULT_PROFILE,
   WEEK_PLAN_PRESETS,
   type CareerTotals,
+  type ForkState,
   type FinanceWeek,
   type KitGrades,
   type KitLine,
@@ -1107,7 +1108,13 @@ export function migrateSave(raw: unknown): WorldState {
       const profile = save.profile as PlayerProfile | undefined
       const birthMonth = profile?.birthMonth ?? DEFAULT_PROFILE.birthMonth
       const nineteenth = nineteenthBirthdayWeek(birthMonth, week)
-      save.fork = kidAgeYears(week, birthMonth) >= 19 ? { askedWeek: nineteenth, answer: 'continue' } : null
+      // ⚠ THE CAST IS TYPE-ONLY AND THIS MIGRATION IS UNCHANGED – the same idiom, and the same
+      // reason, as `careerTotals` eight lines up (v51 added `ForkState.offer`). v39 froze a fork with
+      // two fields and that is what it must keep writing; the v51 block at the end of this file is
+      // what back-fills `offer: null` onto it. Widening this line would make a v38 save skip straight
+      // to a v51 shape, which is the edit the append-only rule forbids.
+      save.fork =
+        kidAgeYears(week, birthMonth) >= 19 ? ({ askedWeek: nineteenth, answer: 'continue' } as ForkState) : null
     }
     if (save.retirementOffer === undefined || typeof save.retirementOffer !== 'object') {
       save.retirementOffer = null
@@ -1478,6 +1485,93 @@ export function migrateSave(raw: unknown): WorldState {
       if (w.college.pendingCallUp === undefined) w.college.pendingCallUp = null
     }
     v = 50
+  }
+
+  // v51 – THE COLLEGE ANSWER GETS A PRICE, AND A CAREER ALREADY STANDING AT THE FORK IS NOT QUOTED
+  // ONE AFTER THE FACT (docs/specs/what-the-college-place-costs-2026-08.md).
+  //
+  // `ForkState` gains `offer: CollegeOffer | null` – a place, an athletics share, a need-based share
+  // and the family's bill, measured the week the fork is raised. Before v51 the third answer was
+  // offered unconditionally AND FREE in 100% of careers: `docs/research/college-and-the-junior-exit.md`
+  // §1d prices a real year at $30,990 in-state and the NCAA's own page says *"Most scholarships are
+  // partial"*, so neither half of "free, always" was a model of the thing.
+  //
+  // ⚠⚠ IT BACK-FILLS `null` AND DELIBERATELY INVENTS NO OFFER, which is v50's discipline applied to
+  // the next field along. The offer is in principle re-derivable – it reads `bestFinishByTier`, a
+  // high-water mark, and a `seed:collegeoffer:<week>` sub-stream – but a migration that re-derived it
+  // would have to import the engine's own constants and would then quote a v50 career a bill it never
+  // agreed to, halfway through a decision it had already been shown. `null` reads as "never
+  // measured", NOT as "refused": the card still draws three answers, `answerFork` still refuses
+  // nothing, and `resolveCollegeBill` charges a null offer nothing at all. She keeps the career and
+  // the free ride she was promised; only careers that reach the fork from here get a price.
+  //
+  // ⚠ AND THE REFUSAL HAS ITS OWN SHAPE INSIDE THE OFFER, so `null` never has to carry two meanings:
+  // `offer.programme === null` is "no programme saw her", and even that enrols her as a walk-on.
+  //
+  // Idempotent in v30's sense (the field is written only when absent), and zero draws on any stream –
+  // it writes a literal – so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 50) {
+    const w = save as { fork?: { offer?: unknown } | null }
+    if (w.fork !== null && typeof w.fork === 'object' && w.fork !== undefined) {
+      if (w.fork.offer === undefined) w.fork.offer = null
+    }
+    v = 51
+  }
+
+  // v52 – A COLLEGE TIER STOPS BEING A FUNDING SHARE AND BECOMES A PLACE WITH A PRICE, AND A CAREER
+  // ALREADY PAYING FOR ONE KEEPS PAYING EXACTLY WHAT IT AGREED TO
+  // (docs/specs/the-college-choice-2026-08.md).
+  //
+  // v51 froze `ForkState.offer` as ONE quote – `{ programme: 'strong'|'solid'|'small'|null,
+  // athleticShare, needShare, costPerYearCents, familyPerYearCents }` – where `programme` was a
+  // FUNDING BAND her junior record had bought and the price was the same at every band. The owner's
+  // scheme of 17.08 is the other way round: three PLACES with three sourced prices, and the PLAYER
+  // picks one. So the offer is now a list of quotes plus the one she chose.
+  //
+  // ⚠⚠ IT REBUILDS ONE QUOTE, NOT THREE, AND THAT IS THE `null`-INVENTS-NOTHING DISCIPLINE AGAIN.
+  // A v51 career was quoted exactly one price and may be four weeks into paying it. The two places it
+  // was never shown are not facts about it, and writing them would mean re-deriving an award against
+  // tiers that did not exist when the career agreed to its bill – the same silent re-pricing the v51
+  // block refused. So the migration carries across what was actually measured:
+  //
+  //   * the TIER is read off the PRICE, which is the one field that identifies a place: $30,990 is
+  //     the public in-state sticker ('state') and $50,920 the out-of-state one ('national'). Those
+  //     were the only two v51 could produce. Anything else falls back to 'state' rather than throwing –
+  //     a save that will not load is worse than a save that loads with the cheap label.
+  //   * `chosen` is that tier IF she took the college answer, and `null` otherwise, so a career still
+  //     standing at the fork is still standing at it and `resolveCollegeBill` charges it nothing.
+  //   * `open: true`, because it was quoted to her – residence had already been applied upstream.
+  //   * `canPayPerYearCents: null` = NEVER MEASURED. v51 never asked whether the family could afford
+  //     the place, and a migration that answered would be inventing. The card prints nothing for it.
+  //
+  // ⚠ THE BILL IS BYTE-IDENTICAL ACROSS THE MOVE. `familyPerYearCents` is copied, `chosenQuoteOf`
+  // returns this quote, and the weekly debit is the same arithmetic on the same number.
+  //
+  // Idempotent in v30's sense (it converts only the frozen shape, recognised by `programme` being
+  // present), and zero draws on any stream – it writes literals – so the frozen MAIN capture
+  // (41550 / e6b0c709) is untouched by construction.
+  if (v === 51) {
+    const w = save as { fork?: { answer?: unknown; offer?: Record<string, unknown> | null } | null }
+    const offer = w.fork && typeof w.fork === 'object' ? w.fork.offer : null
+    if (offer && typeof offer === 'object' && 'programme' in offer) {
+      const cost = typeof offer.costPerYearCents === 'number' ? offer.costPerYearCents : 30_990_00
+      const tier = cost === 50_920_00 ? 'national' : 'state'
+      w.fork!.offer = {
+        quotes: [
+          {
+            tier,
+            costPerYearCents: cost,
+            athleticShare: typeof offer.athleticShare === 'number' ? offer.athleticShare : 0,
+            needShare: typeof offer.needShare === 'number' ? offer.needShare : 0,
+            familyPerYearCents: typeof offer.familyPerYearCents === 'number' ? offer.familyPerYearCents : cost,
+            open: true,
+          },
+        ],
+        chosen: w.fork!.answer === 'college' ? tier : null,
+        canPayPerYearCents: null,
+      }
+    }
+    v = 52
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

@@ -252,7 +252,15 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
       // The ENGINE'S OWN gate, not a re-derived one. `isTierEligible` is the DOMESTIC half only –
       // a points band – and j60/j300 no longer have a meaningful one ([0, MAX]), so it would read
       // both as open to anybody with any points at all.
-      expect(e.eligible).toBe(tierOpenFor(world, e.tier))
+      // ⚠ RE-AIMED 17.08 (round 21 #2b), AND THE ARGUMENT IS THE WHOLE RE-AIM: `e.id` is now passed.
+      // The wild card is the first door on this ladder that is a fact about ONE TOURNAMENT rather
+      // than about a rung – this Slam is played in her country, the other three are not – so
+      // `tierOpenFor(world, tier)` with no event is deliberately blind to it and answers the honest
+      // per-rung summary ("the Slam takes the top 112"), which is what `Snapshot.tierOpen` keeps
+      // saying. Comparing THAT against a per-event `eligible` would be comparing two different
+      // questions and calling the difference a bug. Naming the event makes both sides ask one
+      // question, which is strictly stronger than what this line asserted before.
+      expect(e.eligible).toBe(tierOpenFor(world, e.tier, e.id))
       if (e.tier === 'national' || e.tier === 'j30' || e.tier === 'j60') {
         expect(e.eligible).toBe(true)
         expect(e.ineligibleReason).toBeUndefined()
@@ -478,7 +486,13 @@ describe('the calendar and the turnstile never disagree', () => {
           deadlineWeek: world.week + 4,
         }
         const blocked = entryStatus(world, event).level === 'blocked'
-        const open = tierOpenFor(world, tier)
+        // ⚠ RE-AIMED 17.08 (round 21 #2b) – `event.id` is passed, and the reason is the one written
+        // at the `e.eligible` assertion above: since the wild card, one door on this ladder is a
+        // fact about a TOURNAMENT and not about a rung. `entryStatus` has always been asked about an
+        // event; `tierOpenFor` was being asked about a rung, and on the Slam those are now two
+        // different questions. Both sides name the same event, so "one function cannot disagree with
+        // itself" survives a door that only an event can answer.
+        const open = tierOpenFor(world, tier, event.id)
         // An event can be blocked for reasons that are not the ranking gate (age caps, exams). What
         // must never happen is the other direction: the calendar saying OPEN on a rung the turnstile
         // refuses on RANKING, which is the state that crashed the bench.

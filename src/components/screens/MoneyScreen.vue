@@ -220,6 +220,20 @@ const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   // money sink the owner wants to see, and the practice court fee is the small recurring one.
   { key: 'vacation', label: 'Vacations' },
   { key: 'practice', label: 'Practice matches' },
+  // ⭐⭐ THE COLLEGE BILL (round 21, docs/specs/the-college-tariff-2026-08.md; owner 17.08 asked for
+  // legible rungs, transparent payment and an annual drawdown – his words are in the spec).
+  //
+  // ⚠⚠ THE ENGINE HAS CHARGED THIS SINCE v51 AND THIS SCREEN HAS NEVER SHOWN IT. `resolveCollegeBill`
+  // debits `familyPerYearCents / 52` every week she is enrolled and writes a `tuition` ledger row,
+  // and because `tuition` was missing from this table the money fell into 'Other' – the one bucket
+  // whose whole job is to be too small to ask about. So the family's largest single outgoing during
+  // four years of the game was drawn as a rounding error, in the screen built to answer where the
+  // money went. The drawdown was real; only the reporting of it was missing.
+  //
+  // ⚠ IT SITS LAST BEFORE 'Other' RATHER THAN NEXT TO 'Coaching' because it is not a tennis cost –
+  // `WorldEventCategory`'s own note calls it "the first cost in the game that is not tennis" – and
+  // because it is the only row here that can be the whole bill for a year at a time.
+  { key: 'tuition', label: 'College tuition' },
   { key: 'other', label: 'Other' },
 ]
 const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
@@ -241,6 +255,10 @@ const ICON_PATHS: Record<string, string[]> = {
   travel: ['M3 15.5l18-5.6-2-3.2-4.6 1.5-5.2-4.4-2.2.7 3 4.9-4 1.3-2.6-1.9-1.6.5z', 'M4.5 19.5h15'],
   practice: ['M12 3.6a8.4 8.4 0 1 1 0 16.8 8.4 8.4 0 0 1 0-16.8z', 'M5.2 6.6c3.6 2.2 3.6 8.6 0 10.8M18.8 6.6c-3.6 2.2-3.6 8.6 0 10.8'],
   other: ['M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15z', 'M12 8.2V12l2.4 1.6'],
+  // A graduation cap: the board, the crown under it, the tassel. Drawn on the same 24x24 / 1.5-stroke
+  // grid, and deliberately not a building or a dollar – the row is the DEGREE she is paying for, and
+  // every other glyph in this table is the thing bought rather than the money.
+  tuition: ['M3 9l9-4 9 4-9 4-9-4z', 'M7 11v4.2c0 1.2 2.2 2.3 5 2.3s5-1.1 5-2.3V11', 'M20.2 9.5v4.5'],
 }
 
 // ONE COLOUR PER CATEGORY, AND IT IS THE SAME COLOUR IN BOTH PLACES (round-19). The owner:
@@ -264,6 +282,7 @@ const CAT_COLOR: Record<string, string> = {
   physio: 'var(--cat-physio)',
   vacation: 'var(--cat-vacation)',
   practice: 'var(--cat-practice)',
+  tuition: 'var(--cat-tuition)',
   other: 'var(--cat-other)',
 }
 function catColor(key: string): string {

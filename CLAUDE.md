@@ -130,6 +130,40 @@ docs/review/     2026-08 full review + P1–P9 proposals
   (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
   `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
   pipeline.
+- **⚠⚠ BEFORE YOU HUNT A SLOWDOWN, REPRODUCE IT ON A COMMIT THAT CANNOT HAVE IT.** Same command,
+  older code, in a worktree. It is one run and it ends the argument; skipping it cost most of 16.08.
+  Twice that day a red `npm run check` — sixteen files timing out, **zero assertion failures** — was
+  diagnosed as a regression in the wave, and twice it was the machine (`mobileassetd` at 143 % for
+  three hours, load 113; later `signpost_reporter` at 96 %, 7.8 M pageouts). The tell that should
+  have stopped it sooner: **the failing set CHANGED between runs** — 18 files, then 9, then 12
+  different ones — and a real defect fails the same test twice. When the control finally ran, the
+  pre-wave commit wedged identically at 1871 s against its own green 76 s an hour earlier, and its
+  `collect` alone burned 3636 s of CPU **before any test logic**. Two cheap confirmations to run
+  first, in this order: `--no-file-parallelism` (if the whole shard then passes in ~250 s the WORK is
+  fine and the pool is the problem), and the same shard on the last known-green commit.
+- **⚠⚠ BEFORE YOU BELIEVE A NULL RESULT, PROVE THE ARM CONTAINS BOTH THE CHANGE AND ITS READER.**
+  On 17.08 two people measured the same fix and both got a convincing "it does nothing", by opposite
+  mistakes made within an hour of each other. One built the A arm in a worktree at the commit BEFORE
+  the engine change, so the new constant sat in a tree where no code read it — a constant without its
+  reader is a null arm that looks like a null result. The other ran both arms against the SAME tree,
+  because the agent under measurement had been committing as it went, and got a byte-identical diff
+  which is exactly what comparing a thing with itself produces. **A null result is a claim and needs
+  the same provenance check as a positive one**: name the commit each arm was built at, and confirm
+  the reader is present — `git grep <theConstant> -- src/` on the A tree costs one command. The
+  cheapest sanity check is to set the constant to an absurd value and watch the output move; if it
+  does not, the arm is wrong before the hypothesis is.
+- **⚠ IN A SHARED CHECKOUT THE CONTROL IS YOUR COMMIT WITH YOUR CHANGE REVERTED, NEVER THE PREVIOUS
+  COMMIT.** Somebody else's work lands between yours, so "branch head before mine vs mine" measures
+  both. On 17.08 this produced a false NEGATIVE for one agent (a merit-only award appearing to move
+  with family wealth) and a false POSITIVE for another (wild cards credited with a college change) in
+  the same hour. Build the A arm as `git revert --no-commit <your engine commit>` in a dedicated
+  worktree. ⚠ And restoring B is `git reset --hard`, not `git checkout -- src`: checkout restores
+  from the INDEX, which a staged revert has already overwritten, so "back to B" silently runs A
+  twice and yields a byte-identical diff that looks like a null result.
+- **`git checkout <sha> -- <path>` is the concurrent-agent hazard pointing the other way.** The note
+  above about `git commit` taking the whole index has a mirror: an agent bisecting a hash divergence
+  reverted `src` under another agent's live edits on 16.08. Nothing was lost — the pathspec habit
+  saved it — but in a shared checkout a checkout-with-pathspec is as destructive as a commit-without.
 - **A POPUP MUST BE MEASURED AGAINST A PHONE BEFORE IT SHIPS, and "it reads well" is not that
   measurement.** Round-20 #3: `TourBriefingDialog` shipped with a lead, a requirements list, five
   cost bullets and a closing line on the shared `dialog-card`, which declares no `max-height` and no

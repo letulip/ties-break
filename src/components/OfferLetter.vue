@@ -142,6 +142,15 @@ const uncoveredList = computed(() => {
   if (missing.length === 1) return missing[0]
   return `${missing.slice(0, -1).join(', ')} and ${missing[missing.length - 1]}`
 })
+/** ⭐⭐ ROUND-21 #2, 17.08 – AND THIS ONE NUMBER NOW BUYS TWO SEATS. The same share comes off the
+ *  COACH's fare at the tournaments that pay prize money (`coachTravelFareFor`), so the letter says it
+ *  as ONE promise in one sentence rather than printing the same percentage twice. Every field of
+ *  `KitOfferTerms` is printed on this letter by the standing rule at the top of engine/offers.ts: the
+ *  letter's words and the letter's terms may not disagree, and a second line quoting an identical
+ *  figure is the kind of thing a reader checks twice and then distrusts.
+ *
+ *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08) – `buildCoachRoster` puts a woman on every
+ *  roster by construction, so "his seat" would print under Sabine Kobayashi. */
 const travelPct = computed(() => Math.round((terms.value.travelShare ?? 0) * 100))
 /** A brand writing to a family says "three seasons", not "3 seasons" - the letter is handwritten and
  *  a numeral in the middle of a sentence reads as a form. Falls back to the numeral past the terms
@@ -395,7 +404,13 @@ const settled = computed(() => {
           We keep {{ coveredWords.length === 1 ? 'them' : 'it all' }} fresh. She will not play a
           match on dead {{ coveredWords[0] }}.
         </li>
-        <li v-if="travelPct > 0">And we will take {{ travelPct }}% of what a trip costs her.</li>
+        <!-- ⭐ ONE PROMISE, TWO SEATS (17.08). The same share comes off the coach's fare at the rungs
+             that pay prize money, so it is a clause on this line rather than a second line repeating
+             the figure. The coach is named without a pronoun - the roster carries women. -->
+        <li v-if="travelPct > 0">
+          And we will take {{ travelPct }}% of what a trip costs her – and the same off the coach's
+          fare, at the tournaments that pay prize money.
+        </li>
         <li>In return she enters at least {{ terms.minEventsPerSeason }} tournaments a season – we are paying to be seen.</li>
         <!-- ⚠ EXCLUSIVITY IS A TERM AND BELONGS ON THE PAPER. It is the counterweight to the
              coverage – one brand at a time is what stops a career collecting all three rungs – and

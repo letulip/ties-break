@@ -3,7 +3,7 @@ type: research
 status: current
 area: simulation-and-balance
 canonical: false
-last-reviewed: 2026-08-15
+last-reviewed: 2026-08-16
 ---
 
 # College and the junior exit – what the route really is, and what it costs to walk through it
@@ -37,6 +37,16 @@ turned out to be wrong. That is the failure this document is written against.
   §4 is long on purpose.
 * `[WEAK]` – found, but the source is commercial, secondary, or has an interest in the answer. Usable
   for shape, never for a decimal.
+* `[?]` – **found in a primary source and internally inconsistent.** Added 16.08 for §1d's dangling
+  bylaw cross-reference: the manual points at three bylaws it does not contain. Reported as read, not
+  reconciled, and never used to size anything.
+* `[S-proxy]` – **added 17.08 with §3a, and it is not a synonym for `[S]`.** The words were read on
+  the cited page, but through the public text proxy `r.jina.ai/<url>` rather than at the origin,
+  because **`wearecollegetennis.com` (the ITA) and `atptour.com` return nginx 403 to a fetcher AND to
+  a real headless Chrome**, and **archive.org was itself offline that day** so there was no archival
+  fallback. A proxy render is one more link in the chain than `[S]` claims, so it gets its own tag
+  rather than being quietly promoted. **One `[S-proxy]` figure below is corroborated independently by
+  a search snippet of the same page and says so; the rest are not.**
 
 **No figure from this repo's own documents appears below as external evidence.**
 
@@ -248,6 +258,171 @@ nineteenth birthday (`ENDINGS.forkAgeYears`). **In reality the decision is two t
 `college-fork-2026-08.md` §3). Our timing of the *closure* is closer to reality than our timing of the
 *question*.
 
+### 1d. ⚠⚠ WHAT THE PLACE COSTS, AND WHO PAYS THE REST OF IT
+
+**Written 16.08.2026, on the owner's own question:** «Что у нас будет с оплатами? едины для всех или
+тоже от достатка на момент прихода будем мерять?» Before this section the corpus had **no sourced
+figure for the price of a college place at all** – a `git grep` for tuition, need-based, financial aid,
+in-state or cost of attendance over this file returned one line, and it was about the offer document.
+Our engine's college arm is a **full ride by construction**: the family simply stops spending, and P6
+decomposed the $152,243-vs-$45,544 gap as **100% avoided spend, scholarship $0**.
+
+#### The sticker, and the spread is a factor of two
+
+| a year at a four-year institution, 2025-26, on campus | published total | tag |
+| --- | --- | --- |
+| **public, in-state** | **$30,990** | `[S]` |
+| **public, out-of-state** | **$50,920** | `[S]` |
+| **private nonprofit** | **$65,470** | `[S]` |
+| (public two-year, in-district, commuter – not our route) | $21,320 | `[S]` |
+
+`[S]` – [College Board, *Trends in College Pricing and Student Aid 2025*, Figure CP-1](https://research.collegeboard.org/media/pdf/Trends-in-College-Pricing-and-Student-Aid-2025-final_1.pdf),
+enrolment-weighted, published (sticker) prices, not adjusted for inflation. The in-state total is
+$11,950 tuition and fees + $13,900 housing and food + $5,140 books, transport and other; out-of-state
+is the same but $31,880 of tuition; private nonprofit is $45,000 + $15,920 + $4,550 (Table CP-1 and
+Figures CP-1/CP-9/CP-10).
+
+⚠ **The spread inside "a D-I place" is 2.1×** `[I]` – $30,990 to $65,470 – **and it is not a quality
+gradient.** A state school out-of-state costs more than the same school in-state by $19,930 `[I]` for
+an identical education. **Nationality and residence move this number more than the programme does.**
+
+**Cross-check on a different source and a different method** `[S]`:
+[NCES, Condition of Education, *Price of Attending an Undergraduate Institution*](https://nces.ed.gov/programs/coe/indicator/cua/price-of-attending-an-undergraduate-institution)
+gives **2022-23** average total cost of attendance for first-time full-time undergraduates living on
+campus as **$27,100** public 4-year and **$58,600** private nonprofit 4-year, in constant 2022-23
+dollars. Three years earlier and enrolment-weighted differently; same shape.
+
+#### ⭐⭐ AND THE SPORT'S OWN RULEBOOK MEASURES ITS AWARDS IN EXACTLY THAT NUMBER
+
+Both quotes are from the live **2026-27 Division I Manual**, footer date 8/14/26, at
+[web3.ncaa.org/lsdbi/reports/getReport/90008](https://web3.ncaa.org/lsdbi/reports/getReport/90008) `[S]`:
+
+* **15.02.2 Cost of Attendance** – *"an amount calculated by an institutional financial aid office,
+  using federal regulations, that includes the total cost of tuition and fees, living expenses, books
+  and supplies, transportation, and other expenses related to attendance at the institution."*
+* **15.02.5 Full Grant-in-Aid** – *"financial aid that consists of tuition and fees, living expenses,
+  books and other expenses related to attendance at the institution up to the cost of attendance."*
+
+So **"a full ride" is literally the table above** `[I]`, and a partial award is a fraction of it. There
+is no separate athletics price list.
+
+#### ⚠⚠ AND §1a's "EQUIVALENCY SPORT" IS THE RIGHT SHAPE WITH THE WRONG MECHANISM – CORRECTED HERE
+
+§1a records, at `[WEAK]`, that women's tennis *"becomes an **equivalency** sport – scholarships
+divisible into partial awards rather than ten full rides"*, and flags it as the single most
+decision-relevant fact it could only source commercially. **The primary source is now read, and it
+half-confirms and half-corrects that** `[S]`:
+
+* **The word *"equivalency"* appears ZERO times in Article 15 of the 2026-27 Manual** in any financial
+  sense – its only occurrences in the whole manual are *"high school equivalency test/diploma"* at
+  14.3.4.2.1. So does *"counter status"*. So does *"need-based"*. **Article 15 now runs 15.01, 15.02,
+  15.1, 15.2, 15.3 and stops: there is no per-sport team limit left in it at all.**
+* The limit moved to **Bylaw 17.2 Roster Limitations**, whose table reads **Women's Tennis | 10**
+  *(Adopted: 6/6/25 effective 7/1/25)* `[S]`. ⭐ **This upgrades §1a's 10 from a commercial table to the
+  manual itself.**
+* **16.13.1.5 Incremental Athletics Scholarships** `[S]`: *"The full cost of attendance value of up to
+  $2.5 million in incremental athletics scholarships provided by the institution … in excess of the
+  2024-25 academic year team scholarship limit for a particular sport must be counted against the
+  benefits cap; however, **there is no limit on the number of new athletics scholarships that may be
+  awarded consistent with the roster limit for a particular sport**."*
+
+> ⭐ **SO THE CONSTRAINT ON FUNDING THE TENTH PLACE IS MONEY, NOT A RULE.** Awards are partial because a
+> programme's budget is finite and every place above the old team limit is charged against the school's
+> House benefits cap – **not** because a bylaw divides eight scholarships into fractions. The
+> *observable* consequence §1a describes is right; the *mechanism* it names has been repealed. A sim
+> that models "the programme could only afford this much" is modelling the live rule; one that models
+> "eight scholarships split ten ways" is modelling the 2024-25 one.
+
+#### Partial is the norm, and the NCAA says so in its own voice
+
+> *"Most scholarships are partial, but student-athletes can combine them with **academic awards,
+> NCAA-funded aid programs, and need-based assistance like Federal Pell Grants**."* `[S]`
+> – [NCAA, Scholarships & Grants](https://www.ncaa.org/what-we-do/scholarships-grants/), which on the
+> same page gives *"only about 2% of high school athletes earn a college athletics scholarship"* `[S]`.
+
+⚠ **`[GAP]` WHAT A PARTIAL AWARD COVERS IN WOMEN'S TENNIS SPECIFICALLY IS NOT SOURCED.** No NCAA, ITA
+or federal per-sport table was found; the federal EADA disclosure reports athletically related aid by
+gender, not by sport. **Two arithmetics are available and both rest on an unsourced assumption:**
+
+| | value | tag | arithmetic |
+| --- | --- | --- | --- |
+| mean award at a **fully funded** programme, 2024-25 rules | **≈ 85%** of a full ride | `[I]` | 8 scholarships ÷ 9.4 average roster, both `[S]` in §1a |
+| mean award if a programme funds to the **old baseline** against the **new roster of 10** | **80%** | `[I]` | 8 ÷ 10, both `[S]` |
+
+⚠ **Both assume the programme is fully funded, and what share of D-I women's tennis programmes fund to
+their limit is `[GAP]` – searched, not found.** A number for "the typical women's tennis award" must not
+be written into a spec off these two rows; they bound a fully funded programme and say nothing about
+the rest.
+
+#### ⭐⭐ THE NEED-BASED LAYER IS REAL, IT IS MEANS-TESTED, AND IT SITS BESIDE THE ATHLETIC ONE
+
+**It exists** – the NCAA's own sentence above names it. **It is a separate layer, not a bigger athletic
+award**, and the manual meters the two together at exactly one ceiling `[S]`:
+
+* **15.1 Maximum Limit on Financial Aid – Individual**: a student-athlete is ineligible if she
+  *"receives financial aid that exceeds the value of the cost of attendance"*. **15.1.2** counts *"all
+  institutional financial aid"* toward that limit. So **athletics aid + institutional need-based aid
+  ≤ the bill, and no further.**
+* **15.1.1 Exception for Pell Grant**: she *"may receive financial aid equivalent to the limitation set
+  forth in Bylaw 15.1 or the value of a full grant-in-aid plus the Pell Grant, whichever is greater"* –
+  the one layer that stacks **on top of** a full ride.
+* ⚠ **A dangling cross-reference, reported as found and not reconciled** `[?]`: 15.1.2 says *"see Bylaws
+  15.02.5.4, 15.02.5.5 and 15.02.5.6 for types of financial aid that are exempt"* – and **those bylaws
+  do not exist in the 2026-27 manual.** 15.02.5 is *Full Grant-in-Aid* and has no subsections. The
+  exempted-need-based-aid rule those numbers used to carry went out with the team limits it modified.
+
+**The size of the layer, and it is means-tested by construction** `[S]`, all from *Trends 2025*:
+
+| figure | value | tag |
+| --- | --- | --- |
+| Maximum Pell Grant, 2025-26 | **$7,395** | `[S]` Figure SA-18 |
+| … as a share of published in-state tuition and fees | **62%** | `[S]` same |
+| … as a share of in-state tuition, fees, housing and food | **29%** | `[S]` same |
+| Share of Pell recipients receiving the **maximum** award, 2022-23 | **28%** | `[S]` same, citing Pell Grant Program End-of-Year Report Table 20 |
+| Average grant aid, first-time full-time **in-state, public four-year** | **≈ $9,650** against a $25,850 tuition-fees-housing-food bill | `[I]` $25,850 − the $16,200 CP-9 says she must cover |
+| What that family still covers | **$16,200** + $5,140 allowances = **$21,340** | `[S]` / `[I]` Figure CP-9 |
+| Average grant aid, first-time full-time **private nonprofit** | **$28,090** | `[S]` Figure CP-10 |
+| What that family still covers | **$32,830** + $4,550 = **$37,380** | `[S]` / `[I]` same |
+
+> ⚠ **Trends' own words on why the Pell award varies**: most recipients get less than the maximum
+> because they are part-time *"or their family incomes and assets reduce their aid eligibility"* `[S]`.
+> **That is the means test, stated by the source.** And note the direction the aggregate runs: at a
+> public four-year the average family already has about **a third** of the sticker written off before
+> any athletics award, and at a private nonprofit **nearly half** `[I]`.
+
+#### ⚠⚠ AND THE INTERNATIONAL ANSWER IS *NO* ON THE LAYER THAT IS MEANS-TESTED – WHICH IS PRIMARY LAW
+
+Our character has `world.profile.country` (ISO alpha-2, the player's at onboarding; the default profile
+is `'US'`). **The two layers split on nationality and they split hard.**
+
+| | reaches a non-American on a student visa? | tag | source |
+| --- | --- | --- | --- |
+| **Athletics aid** | **YES – no citizenship test anywhere in Bylaw 15** | `[S]` | the manual; its only nationality clause, 15.2.6.3, expressly contemplates her: *"for international student-athletes, expenses awarded by the equivalent organization of a foreign country"* |
+| **Federal need-based aid (Pell, Title IV)** | **NO** | `[S]` | [34 CFR §668.33](https://www.law.cornell.edu/cfr/text/34/668.33) – she must *"(1) Be a citizen or national of the United States; or (2) … (i) Is a permanent resident …; or (ii) Is in the United States for other than a temporary purpose with the intention of becoming a citizen or permanent resident"* |
+| an F-1 student visa is a temporary, non-immigrant status | → therefore not eligible | `[I]` | the CFR text above + the visa's own definition |
+| stated plainly | *"students in a nonimmigrant category are not eligible for such aid"*; federal aid is for *"U.S. citizens and nationals, lawful permanent residents, and refugees and asylees"* | `[S]` | [NAFSA, Financial Aid for Undergraduate International Students](https://www.nafsa.org/about/about-international-education/financial-aid-undergraduate-international-students) |
+| **Institutional need-based aid** | **rarely** – *"Minimal scholarship aid is available to international students, and most of it is reserved for graduate study"*; *"it is uncommon for U.S. institutions to offer aid to undergraduate international students"* | `[S]` | same |
+| Share of US undergraduate tuition-and-fee payments by international students coming from **personal and family sources** | **nearly 60%** | `[S]`, quoted | IIE Open Doors 2023, **as quoted by NAFSA**. ⚠ The Open Doors data page itself serves this only as a spreadsheet download and was not read directly, so this is a quote of a quote |
+
+> ⭐⭐ **SO THE SHARPEST SOURCED FACT IN THIS SECTION IS AN ASYMMETRY, AND IT IS NOT ABOUT MERIT.** The
+> athletic share is nationality-blind – §1a's `[WEAK]` 62–66% international share of D-I women's tennis
+> rosters is the practical proof that the athletic money plainly reaches non-Americans. **The layer that
+> reads a family's means is the one she cannot open.** An international girl with an identical athletic
+> award pays a larger net bill than an American with the same award, not because anyone judged her
+> family but because the mechanism that would have judged it is shut to her.
+
+#### What all of that means for a sim, said as a finding and not as a proposal
+
+1. **A college place has a price, it is between $30,990 and $65,470 a year, and our engine charges
+   $0.** Whatever we ship, "the family stops paying" is the one thing the sources do not support.
+2. **The athletic award is merit-priced and nationality-blind, and nothing in the rulebook lets it read
+   family wealth.** There is no means test anywhere in Bylaw 15 on athletics aid – the only means test
+   in the system is on the *other* layer.
+3. **The net bill legitimately differs by background – through the need-based layer, means-tested by
+   federal formula, capped so the two layers together never exceed the bill.**
+4. **And it differs by nationality more sharply than by wealth**, because for a non-American the
+   means-tested layer is largely absent.
+
 ---
 
 ## 2. WHAT SHARE OF A JUNIOR COHORT GOES TO COLLEGE RATHER THAN THE TOUR
@@ -345,7 +520,138 @@ co-plaintiff, is now a touring professional. **`[GAP]`** No published rank-or-re
 tennis freshmen. A resource exists – *collegetennisranks.com*'s "WTA Singles Rankings for College
 Players" – but the table is script-rendered and could not be retrieved, and the ITA's own preseason
 rankings page returned HTTP 403. **So "what rank does a college-bound girl typically hold" is unsourced
-here, and must not be guessed.**
+here, and must not be guessed.** ⚠ §3a below **partly closes this**, and only partly – see §3a.4.
+
+---
+
+## 3a. ⭐⭐ THE ROAD BACK – WHERE A COLLEGE PLAYER RETURNS TO, HOW FAST, AND HOW MANY
+
+**The owner, 17.08:** «(и есть ли примеры из жизни куда они возвращаются, кстати?)»
+
+⚠ **WHAT §2 AND §3 ALREADY ANSWERED, PLAINLY, BECAUSE THE ANSWER IS "LESS THAN YOU THINK".** §3 is
+about how far up a college-BOUND junior gets **before** enrolling – Brantmeier's US Open, Joint's
+$140,000 – and §2 is about how many juniors go at all. **Neither says anything about the return.**
+⚠ And two figures that were expected to be in §2/§3 **are not there and never were**: there is **no ITA
+count of top-100 players with college ties** anywhere above this line, and **no "~#900 typical ranked
+freshman"** – §4 item 3 records the freshman rank distribution as an explicit `[GAP]`, and §3's own
+last paragraph says it "must not be guessed". This section is what closes the first of those and
+half of the second.
+
+### 3a.1 HOW MANY MAKE IT – the counts exist, the RATE does not
+
+| claim | value | denominator – **read this column first** | tag | source |
+| --- | --- | --- | --- | --- |
+| Players with college ties in the **WTA top 100 singles** | **5** | the top 100 of the WTA singles list, Mar 2024. ⚠ ITA does not state its definition of "college ties" | `[S-proxy]` **+ corroborated by an independent search snippet of the same page** | [ITA, 18 Mar 2024](https://wearecollegetennis.com/2024/03/18/former-collegians-crowd-the-wta-and-atp-rankings-heading-to-miami/) |
+| ...the same for the **ATP top 100 singles** | **15** | ATP top 100. **Men's** | `[S-proxy]` | same |
+| ...**WTA top 100 doubles** | **15** | WTA doubles top 100 | `[S-proxy]` | same |
+| ...**ATP top 100 doubles** | **39** | ATP doubles top 100. **Men's** | `[S-proxy]` | same |
+| "Thirteen former collegians are currently among the Top 100 in the … ATP Rankings"; "19 of the Top 50" in doubles | **13 / 19** | ATP top 100, ATP doubles top 50, 2023. **Men's** | `[S-proxy]` | [ATP Tour official, 2023](https://www.atptour.com/en/news/inside-the-game-college-tennis-to-the-pros-2023) |
+| Players with college ties in the **2025 Australian Open singles main draws** | **29** (19 men, **10 women**), "up from 27 in 2024, 22 in 2023, 21 in 2022" | the 128-player main draws – **a draw, not a ranking census** | `[S-proxy]` | [ITA, 9 Jan 2025](https://wearecollegetennis.com/2025/01/09/collegians-featured-prominently-in-australian-open-singles-draws/) |
+| ...at **Wimbledon 2025** | **35** – 26 men (highest since 2000), **9 women** | same shape | `[S-proxy]` | [ITA, 27 Jun 2025](https://wearecollegetennis.com/2025/06/27/new-records-set-with-collegians-flooding-wimbledon-singles-main-draws/) |
+
+⭐⭐ **THE ASYMMETRY IS THE FINDING, AND IT IS LARGE.** The ITA's own number for **women is five** in
+the WTA top 100 against **fifteen** men – a factor of three, from the same body, in the same article,
+on the same date. Every ATP/men's row above is included **only** to make that contrast visible; this
+game is WTA-first and **the men's figures must never be used to size anything in it.**
+
+**`[GAP]` THERE IS NO SOURCED COLLEGE→WTA CONVERSION RATE, AND IT DOES NOT APPEAR TO EXIST PUBLICLY.**
+
+* **The NCAA does not publish one for tennis at all.** Its probability-of-competing publication covers
+  **seven sports** – baseball, men's and women's basketball, football, men's and women's ice hockey,
+  men's lacrosse – and **tennis is not among them** `[S]`
+  ([NCAA](https://www.ncaa.org/student-athletes/probability-of-competing-beyond-high-school/)).
+* **The ITA publishes stock counts, never rates.** Every row above is "how many are in the top 100
+  today", which has no denominator of players who tried.
+* ⚠ **The obvious division was available and is deliberately NOT offered**: 299 ranked ex-collegians
+  (§3a.2) ÷ 8,137 NCAA participants in one season = 3.7%. It compares a **multi-cohort, multi-national,
+  all-divisions STOCK** against **one season's roster count**. It is not a conversion rate, and
+  printing it would be exactly the §0 failure.
+* ⚠ **A trap, named so nobody re-finds it and believes it:**
+  [tennismajors.com](https://www.tennismajors.com/others-news/what-percentage-of-tennis-players-reach-professional-level-research-833125.html)
+  is headlined *"Research"* and is a **guest opinion column citing no study, no method and no links**
+  `[WEAK]`. Its "less than 1 percent", "1 in 10,000 crack the top 500" and "5% of college players
+  attempt professional" are unsourced. **Do not use.**
+
+### 3a.2 WHAT RANKS THEY REACH – the one real distribution, and its source is weak
+
+**Source:** [collegetennisranks.com – WTA singles](https://collegetennisranks.com/rankings/playersontour/wtasingles),
+fetched 17 Aug 2026. `[WEAK]` **and the weakness is specific**: it is an independent fan site with no
+ITA or WTA affiliation, and **its FAQ does not define what counts as a "college player"**, state an
+update cadence, or name an owner. It is used here because it is the only distribution that could be
+retrieved at all, and because its Stearns row (53) agrees with the WTA's own page for the same week.
+
+| claim | value | denominator | tag |
+| --- | --- | --- | --- |
+| Players with college affiliations **currently holding a WTA singles ranking** | **299** | the whole WTA singles list. ⚠ **all divisions** (D-II appears) and **includes players still enrolled** | `[S]` at that URL |
+| ...of them inside the **top 100** | **8** | the 299 | `[S]` |
+| ...**top 200** | **16** | the 299 | `[S]` |
+| ...**top 300** | **30** | the 299 | `[S]` |
+| ...**top 500** | **75** | the 299 | `[S]` |
+| ...**top 1000** | **199** | the 299 | `[S]` |
+| deepest ranked / highest ranked | **#1533** / **#14** | – | `[S]` |
+| **Share of ranked ex-collegians inside each band** | **2.7% top 100 · 5.4% top 200 · 25.1% top 500** | ⚠⚠ **the 299 who ALREADY HAVE A RANKING** – NOT all college players. This is not "how many make it" | `[I]`, numerator and denominator both from the URL above |
+
+⚠ **SOURCE CONFLICT, REPORTED AND NOT RECONCILED.** [Slamstox](https://www.slamstox.com/en/american-college-tennis-a-top-producer-of-professional-tennis-players/)
+– a **recruiting and management agency**, i.e. an interested party, citing no source, page dated
+10.07.2026 – states **"18 ex-college players … among the best 300"** in WTA singles `[WEAK]`. The table
+above says **30**. Neither states a ranking week. Both are recorded; neither is preferred.
+
+### 3a.3 ⭐ THE NAMED CASES – who came back, from where, to what, and in how long
+
+**These are the answer to «есть ли примеры из жизни».** Career highs are from the WTA's own player
+pages where one could be fetched; the **dates** of those highs mostly could not be, and are marked.
+
+| player | college | left | career high | date of it | time college → high |
+| --- | --- | --- | --- | --- | --- |
+| **Emma Navarro** | Virginia 2020-22, **NCAA singles title May 2021** | 2022 | **No. 8** `[S]` [WTA](https://www.wtatennis.com/players/325410/emma-navarro) | 9 Sep 2024 `[WEAK]` [Wikipedia](https://en.wikipedia.org/wiki/Emma_Navarro) | **~2 years** `[I]` |
+| **Peyton Stearns** | Texas 2020-22, **NCAA singles champion 2022** | **turn-pro announced 3 Jun 2022** `[S-proxy]` [Texas](https://texaslonghorns.com/news/2022/6/3/womens-tennis-peyton-stearns-elects-to-turn-professional) | **No. 28** `[S]` [WTA](https://www.wtatennis.com/players/327573/peyton-stearns) | **19 May 2025** `[S]`, same WTA page | **~2 yr 11 mo** `[I]` |
+| **Danielle Collins** | Florida 2012-13, **Virginia 2013-16**, NCAA titles **2014 and 2016** | 2016 | **No. 7** `[S]` [WTA](https://www.wtatennis.com/players/316925/danielle-collins) | 11 Jul 2022 `[WEAK]` [Wikipedia](https://en.wikipedia.org/wiki/Danielle_Collins) | **~2 yr to top 100, ~6 yr to the high** `[I]` |
+| **Jennifer Brady** | UCLA, left after her sophomore year | 2014 | **No. 13** `[S]` [WTA](https://www.wtatennis.com/players/318358/jennifer-brady) | Feb 2021 `[WEAK]` [Wikipedia](https://en.wikipedia.org/wiki/Jennifer_Brady) | **~3 yr to top 100, ~7 yr to the high** `[I]` |
+| **Janice Tjen** | Oregon 2020-21, **Pepperdine 2021-24** | 2024 | **No. 37** (current) `[S]` [collegetennisranks](https://collegetennisranks.com/rankings/playersontour/wtasingles) | – | **~2 years to the top 40** `[I]` – the fastest recent case |
+| **Darja Vidmanova** | **Georgia 2021-25** | 2025 | **No. 88** (current) `[S]`, same URL | – | **top 100 within ~1 year** `[I]` |
+| **Diana Shnaider** | NC State 2023 | 2023 | **No. 14** (current) `[S]`, same URL | – | – |
+| **Reese Brantmeier** | North Carolina | still enrolled | **No. 411** | 1 Aug 2022 | ⚠ **search snippet only, no page fetched** `[WEAK]` |
+| **Nicole Gibbs** | Stanford, NCAA singles 2012 & 2013 | 2013 | **No. 68** | 25 Jul 2016 | ⚠ **search snippet only, no page fetched** `[WEAK]` |
+
+⭐ **THE YEAR-BY-YEAR CURVES ARE THE SHAPE THAT MATTERS**, and all of them are `[WEAK]` (Wikipedia
+year-end tables, chased for a primary source and not found):
+
+* **Navarro** – 2019: #486 · 2020: #463 · 2021: #233 · 2022: #143 · **2023: #38 · 2024: #8** · 2025: #15
+* **Stearns** – 2021: #392 · **2022: #209 · 2023: #53 · 2024: #48** · 2025: #63
+* **Brady** – 2014: #267 · 2015: #229 · **2016: #111 · 2017: #64**
+
+⚠ **THE CONFLICTS, UNRECONCILED.** Navarro's Wikipedia infobox says *"turned pro 2015"* while the same
+page gives college years 2020-22 – an infobox artefact, reported rather than resolved. And a search
+snippet calls Brady a **freshman** on the 2014 UCLA title team while Wikipedia says she left after her
+**sophomore** year in 2014.
+
+⚠ **MAYA JOINT IS A NON-EXAMPLE AND IS LISTED ONLY AS THE CONTRAST.** She **enrolled at Texas and
+turned professional on 26 Dec 2024 without playing a college match**; career high **WTA 53, 26 May
+2025** – ⚠ **search snippet only, `[WEAK]`.** She is the player who skipped the route, not one who
+returned from it.
+
+⚠⚠ **AND THE REGIME THESE CASES WERE SET IN NO LONGER EXISTS.** §1b already records the April 2026
+repeal. §3a adds the litigation half: **Brantmeier's federal class action against the NCAA over prize
+money settled for $2.02M with the restrictions being lifted** ⚠ **search snippet only, `[WEAK]`, and
+it should be sourced properly before it is used for anything.** So **every rate and every curve above
+is measuring a world with the old prize-money penalty in it.**
+
+### 3a.4 THE FRESHMAN RANK – §4 item 3, now HALF closed
+
+| claim | value | denominator | tag | source |
+| --- | --- | --- | --- | --- |
+| The **No. 1 ranked incoming newcomer in D-I**, Mayu Crossley (UCLA), preseason 2025-26: career-high **ITF juniors No. 5**, and *"currently ranks as the No. 361 ranked WTA player"* | **#361** | ⚠⚠ **the single best incoming freshman in the country – a CEILING, not a typical value** | `[S-proxy]` | [ITA D-I Women's Preseason Rankings, 26 Aug 2025](https://wearecollegetennis.com/2025/08/26/division-i-womens-preseason-rankings/) |
+
+**`[GAP]` THE TYPICAL FRESHMAN IS STILL UNSOURCED.** The newcomer-rankings **table** on that page did
+not render through the proxy – only the prose about the top newcomer did – and the origin is 403 to a
+fetcher and to a real browser alike, with archive.org offline. ⚠ **A search-result summary offered
+"top incoming freshmen typically have … WTA rankings in the 300-400 range". That sentence is the
+search engine's own generalisation and not a statement by any source. It is not evidence and is not
+used.**
+
+⚠ **So the ONE sourced anchor is a ceiling (#361 for the best freshman in the country), and there is
+still no median.** Anyone reaching for "the typical ranked freshman is about #900" should know that
+**no source in this document says it.**
 
 ---
 
@@ -358,7 +664,11 @@ here, and must not be guessed.**
    8,413 *player-years over 21 seasons*; it does not give the annual list size, and I did not find an
    ITF publication that does.
 3. **The WTA-ranking distribution of incoming D-I freshmen.** §3. Two candidate sources, one
-   script-rendered, one 403.
+   script-rendered, one 403. ⚠ **HALF CLOSED 17.08, §3a.4**: the script-rendered one now loads and
+   gives the whole ranked-ex-collegian distribution (§3a.2), and the ITA gives **one** freshman
+   anchor – **#361 for the single best newcomer in the country**, which is a ceiling. **The MEDIAN
+   incoming freshman remains unsourced**: the ITA table itself still does not render, the origin is
+   403 to a fetcher and to a real browser, and archive.org was offline. **Still must not be guessed.**
 4. **The international share of D-I women's tennis rosters, from a primary source.** The 62–66% figures
    come from an X post and a commercial recruiting page. **No ITA or NCAA demographic table was found.**
    ⚠ This matters more than it looks: it decides whether ~715 places a year are open to the world or
@@ -394,6 +704,53 @@ here, and must not be guessed.**
 14. **What the new age-based eligibility clock (Bylaw 12.6) would cost our character**, who is asked the
     fork question on precisely the birthday the clock starts. **Nobody in this project has costed it**
     and it is not measured in `college-fork-2026-08.md` either.
+
+**Added 17.08 with §3a – the return side's own gaps:**
+
+21. ⚠⚠ **A COLLEGE -> WTA CONVERSION RATE.** §3a.1. **The NCAA excludes tennis from its
+    probability-of-competing publication entirely** (seven sports, tennis not among them) and **the
+    ITA publishes stock counts and never rates.** No peer-reviewed study was found. This is the
+    single largest hole in the whole document and it is not obviously fillable.
+22. **The DATES of most career highs.** §3a.3. The WTA player pages state the career high itself but
+    were not observed to print its date; the dates below Stearns's come from Wikipedia `[WEAK]`.
+23. **A primary source for the year-end ranking curves.** §3a.3. All three are Wikipedia year-end
+    tables; the underlying WTA archive was not reached.
+24. **The Brantmeier settlement figure and the lifting of the prize-money restrictions.** §3a.3.
+    ⚠ Search snippet only, no page fetched, and it is load-bearing for "the regime has changed".
+25. **The ATP-side equivalent of §3a.2.** `collegetennisranks.com`'s ATP table returns *"No data
+    available in table"*. Noted only for completeness – this game is WTA-first.
+26. **What `collegetennisranks.com` means by "a college player".** §3a.2. Its FAQ does not say, and
+    the number 299 is only as good as that definition.
+27. ⚠ **THE D-I-ONLY PARTICIPANT COUNT.** The NCAA page's division split reads D-I 1.4% / D-II 1.7% /
+    D-III 1.7% of high-school participants, which **sums to 4.8% against its own stated 4.0% overall**
+    `[?]`. The authoritative Sports Sponsorship PDF **exceeded the 10 MB fetch limit** and the
+    methodology PDF returned unreadable binary. **No D-I headcount should be quoted from this
+    document.**
+
+**Added 16.08 with §1d – the cost side's own gaps:**
+
+15. ⚠ **What a partial athletics award covers IN D-I WOMEN'S TENNIS.** §1d. No NCAA, ITA or federal
+    per-sport figure exists that I could find; the federal EADA disclosure reports athletically related
+    aid by **gender**, not by sport. The two `[I]` rows in §1d (85%, 80%) are arithmetic on a **fully
+    funded** programme and must not be quoted as "the typical award".
+16. **What share of D-I women's tennis programmes fund to their limit.** The premise both §1d
+    arithmetics rest on, and it is unsourced. ⚠ This matters more since the House settlement than
+    before it: with the limit now a **roster** of 10 and the funding charged against a school's
+    benefits cap (16.13.1.5), the difference between a rich and a poor programme is no longer capped by
+    a bylaw at all.
+17. **Whether institutional need-based aid reaches undergraduate international student-athletes in any
+    measurable share.** NAFSA says *"uncommon"* and gives no number `[S]`; no count, no distribution.
+    ⚠ This is the one number that would tell us how large §1d's nationality asymmetry actually is.
+18. **The dangling cross-reference in Bylaw 15.1.2** `[?]`, §1d. The live manual points at 15.02.5.4 /
+    .5 / .6 *"for types of financial aid that are exempt from a student-athlete's individual limit"* and
+    contains none of them. Whether an exemption list survives elsewhere, or whether the reference is
+    simply stale after the House renumbering, needs the LSDBi proposal record rather than the manual.
+19. **The IIE Open Doors funding table at first hand.** §1d's *"nearly 60% from personal and family
+    sources"* is quoted **through NAFSA**; the Open Doors page serves the figures only as a spreadsheet
+    download and was not opened. A quote of a quote, tagged as one.
+20. **What a place costs anywhere but the United States.** Unchanged from item 11 – everything in §1d is
+    NCAA and US federal, and our game is nation-agnostic. **No non-US cost figure exists in this
+    document and none should be inferred from these.**
 
 ---
 
@@ -555,3 +912,25 @@ This is the part I would build, and it needs no constant to move.
    **$129,190** in prize money by nineteen at rank **#183**. Whether a real nineteen-year-old at #183 has
    banked anything like that is unsourced (§4 item 12) – and if she has not, our prize tables are the
    defect that makes every threshold in this document unsizable.
+
+**Added 16.08 – your question about payments, answered from the sources (§1d).**
+
+6. ⭐⭐ **«едины для всех или тоже от достатка?» – BOTH, in two different layers, and the sport keeps them
+   apart on purpose.** The **athletics award is merit-priced and reads nothing about the family**: there
+   is no means test anywhere in Bylaw 15 on athletics aid, and no citizenship test either. The
+   **need-based layer beside it is means-tested by federal formula** – Trends' own explanation of why
+   most Pell recipients get less than the maximum is *"their family incomes and assets reduce their aid
+   eligibility"* `[S]`. The two are metered together at one ceiling: 15.1 says the total may not exceed
+   the cost of attendance, and only the Pell Grant stacks above a full ride. **So a wealthy and a poor
+   family can hold the same athletic award and pay different bills, and the difference comes from the
+   other layer.**
+7. ⚠ **AND A COLLEGE PLACE COSTS BETWEEN $30,990 AND $65,470 A YEAR, WHERE OUR ENGINE CHARGES $0.**
+   §1d. P6 measured the college arm banking **$152,243** against the tour's **$45,544** and decomposed
+   it as **100% avoided spend, scholarship $0** – which is a full ride at a free institution, and no
+   source supports either half.
+8. ⚠⚠ **THE BIGGEST SPLIT IS NOT WEALTH, IT IS NATIONALITY, AND IT IS PRIMARY LAW.** 34 CFR §668.33 shuts
+   federal need-based aid to anyone in the US *"for a temporary purpose"*, which is what a student visa
+   is; NAFSA adds that institutional aid to undergraduate internationals is *"uncommon"* `[S]`. The
+   athletic award reaches her – 62–66% of D-I women's tennis rosters are international `[WEAK]` – but
+   **the layer that would read her family's means is shut.** Our profile already carries
+   `country`, defaulting to `'US'`.

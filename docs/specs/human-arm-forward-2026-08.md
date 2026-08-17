@@ -175,6 +175,11 @@ move, and they are the two the game is about.
 professional ladder opens (w15 has `minAgeYears: 16` = week 104), so it is the first season on which
 the two trees can differ at all – and they differ immediately.
 
+> ⚠ **THE PARENTHESIS IS THE 08.08 BUILD'S AND IS NO LONGER TRUE: w15 opens at 14, i.e. week 0 of
+> this probe.** Kept because every row below was measured under it, and a probe re-read against the
+> current grid would place the divergence differently. Grid, stated once:
+> [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
 | season | pre-wave top rung / prize / W rank | this build |
 | --- | --- | --- |
 | s0 | national · 0.0% · #1610 | national · 0.0% · #1610 |

@@ -129,6 +129,10 @@ Three consequences, all of them his sightings:
    allowance has the same shape: `annualProEntryLimit(ageAtWeek(week))`, and `proPerYearByAge` has
    **no row for 15** precisely because economy.ts's own comment argues "the age gate refuses first".
    It does not, for a girl born after June.
+   > ⚠ **THE CONSTANTS IN THIS ITEM ARE 09.08's.** `w15.minAgeYears` is **14** and `proPerYearByAge`
+   > has rows for 14 and 15 (8 and 10, birthday-to-birthday). The clock defect this item is about was
+   > fixed on its own terms; the numbers are kept as the record of the build it was found on. Grid,
+   > stated once: [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 
 ## Everything else, by group
 

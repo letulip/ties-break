@@ -141,6 +141,21 @@ structurally zero. The last test of `A3c` walks every rung at or above the quota
 the age gate shuts it to a fourteen-year-old – so *"it cannot bind"* is a **checked claim**, and the
 day a phase opens one of those rungs lower it goes red and the quota becomes live machinery.
 
+> ### ⚠⚠ THAT DAY WAS THE SAME DAY, AND THE TRIPWIRE FIRED AS DESIGNED
+>
+> The owner's age-grid ruling of 16.08 put `w75.minAgeYears` at **14**, so the paragraph above is now
+> false in its premise – *"W75 opens at 17"* – and true in the thing it was written to guarantee. It
+> is kept because it is the reason `A3c` existed to catch this. **The quota is live machinery**: the
+> test's last case was re-aimed rather than deleted, and the code says so at
+> `proSubCapUsage` (`src/engine/world/entryCaps.ts`) with the old text above the line reversing it.
+>
+> ⚠ **And it still measures zero, for a different reason** – `w75.acceptsRank` is #300 and she holds
+> no professional ranking at fourteen, so the gate moved from the doorway to the acceptance list. The
+> season-ledger limitation named below is therefore reachable in principle and unreached in practice.
+>
+> Grid, stated once:
+> [`docs/specs/college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
 ⚠ **ONE STATED LIMITATION, WITH ITS FIX NAMED.** The count is folded off `world.seasonEntries`, which
 is a **season** ledger, because `proEntryWeeks` records a week and no rung – so a birth year that
 straddles a wrap sees only its post-wrap half. Three things make that proportionate: the under-count
@@ -262,6 +277,25 @@ worse than both.**
 section exists to do is make the consequence visible, not to re-litigate it: if the 16-18 framing in
 `adult-tour-and-endings.md` §4.1 is still the intent, the two documents now disagree and one of them
 should be amended – that is his call, not the agent's.
+
+> ### ✅ CLOSED 16.08 – HE GAVE IT A SECOND AND A THIRD TIME, AND §4.1 IS AMENDED
+>
+> «настоящих порогов только два – 14 и 18. – вот как есть в регламенте, так и у нас», and then, when
+> the same disagreement reached him again: **«у нас есть регламент, точка. Разрули противоречия и
+> оставь один источник истины, хватит мне это возвращать.»** The 16-18 framing is **not** the intent.
+>
+> `adult-tour-and-endings.md` §4.1 now carries a banner: the cap and the age view are right, *"a W15
+> field is adults"* is false, and the overlap runs **14-18**. The measurement above is what it always
+> was – evidence – and needs no change.
+>
+> ⚠ **One thing this section got wrong about itself, and it is the reason the argument kept
+> restarting.** The sentence quoted above as §4.1's – *"a sixteen-to-eighteen-year-old holds both
+> tours at once and arrives at nineteen having seen what each one costs and pays"* – **is not in
+> §4.1 and never was.** It was written as a paraphrase in `junior-access-2026-08.md` §2a and quoted
+> from there. A pillar defended in three documents turned out to have no original.
+>
+> **The grid is now stated once and this document does not restate it:**
+> [`docs/specs/college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 
 ---
 
@@ -417,12 +451,17 @@ before.
 * **P3 (the acceptance cuts) inherits a different population again.** Her rank at seventeen went
   #300 → #426; the cuts are read against the merged table, so the audit's "Pareto-positive in
   isolation" verdict is now two phases stale.
-* **`w15.minAgeYears: 14` is an owner ruling and `adult-tour-and-endings.md` §4.1 has not been
+* ~~**`w15.minAgeYears: 14` is an owner ruling and `adult-tour-and-endings.md` §4.1 has not been
   amended.** Two shipped documents disagree about what a W15 field is. §6a states the disagreement; it
-  is not an agent's to settle.
-* **The sub-cap is dormant machinery with a named wake-up condition.** The day a rung at W75 or above
+  is not an agent's to settle.~~ ✅ **SETTLED 16.08 and §4.1 is amended** – «у нас есть регламент,
+  точка». The grid is now written out in exactly one place,
+  [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md), and every other
+  document links to it. See §6a.
+* ~~**The sub-cap is dormant machinery with a named wake-up condition.** The day a rung at W75 or above
   opens below 16, `tests/age-caps.test.ts`'s A3c goes red and the season-ledger limitation in §3 stops
-  being proportionate.
+  being proportionate.~~ ⭐ **IT WOKE THE SAME EVENING.** `w75.minAgeYears` is 14, A3c was re-aimed
+  rather than deleted, and the sub-cap is live machinery that measures zero for a new reason – the
+  acceptance list, not the doorway. §3's banner.
 * **The merit increases are inert on this population and live in the tests.** Both gates are year-end
   junior top-5 / top-20 lists that 1-4 careers of 90 reach. If a later phase makes the junior top 20
   reachable, they start paying – which is the rulebook's own intent and would need re-measuring.

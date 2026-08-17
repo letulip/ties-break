@@ -1,12 +1,18 @@
 <script setup lang="ts">
 // SCREEN H – THE CALENDAR (design handoff §H "Calendar (Week View)", parked since 29.07 with the
-// owner's own ruling: «сначала концепт». This is the concept, agreed, built.)
+// owner's own ruling: THE CONCEPT COMES FIRST. This is the concept, agreed, built.)
+//
+// ⚠ THE OWNER'S RULINGS BELOW ARE TRANSLATED, NOT SUMMARISED. This is a `.vue`, so its comments are
+// English – and every ruling in this file is quoted in his own words, under its own date, in
+// docs/decisions.md (17.08.2026, "eighteen owner rulings"). Translate one, never shorten it: the
+// reasoning IS the record, and the record now lives in two places rather than one.
 //
 // -------------------------------------------------------------------------------------------------
 // WHY IT EXISTS, in his words
 // -------------------------------------------------------------------------------------------------
 // A training week today is "skip, or match + skip" - one or two clicks and the end-of-week screen -
-// which feels thin next to a tournament trip. He asked for «больше декора, но осмысленного»: a
+// which feels thin next to a tournament trip. He asked for MORE DECORATION, BUT DECORATION THAT
+// MEANS SOMETHING (his words verbatim in docs/decisions.md): a
 // calendar tab that is ACTIVE on the weeks that currently have nothing to them, the day layout from
 // her training plan across the days, matches marked, injury weeks legible, markers for the
 // tournaments she could actually enter, and a real main action button like Home's.
@@ -97,8 +103,9 @@ import type { UpcomingEvent } from '../../shared/protocol'
 // tab screen to.
 const emit = defineEmits<{ advance: []; autoPlayed: [] }>()
 
-/** ⚠ THE PRESS ARRIVED FROM SOMEWHERE ELSE. «Жмем training week – видим календарь и короткую
- *  анимацию как неделя проходит» (owner, 31.07): the week button on Home no longer spends the week
+/** ⚠ THE PRESS ARRIVED FROM SOMEWHERE ELSE. "We press training week – we see the calendar and a
+ *  short animation of the week going by" (owner, 31.07; his words verbatim in docs/decisions.md):
+ *  the week button on Home no longer spends the week
  *  where it is pressed - it brings the player HERE and this screen plays it, because the sweep is
  *  what stands in for a trip on a week with no tournament in it.
  *
@@ -125,8 +132,9 @@ const injuredNow = computed(() => calendar.value?.days[0]?.kind === 'rehab')
  *  therefore the one week that may name it (see the verdict line under the grid).
  *
  *  ⚠ THE HEADER'S SURFACE CHIP IS GONE BECAUSE OF THIS, and the owner's reason is the whole of it
- *  (31.07): «сейчас в календаре пишут про покрытие текущего идущего чемпионата, на который она даже
- *  не поехала – это лишнее, надо убрать». On a training week `calendar.surface` is the dominant
+ *  (31.07): the calendar was naming the surface of the championship currently being played – the one
+ *  she did not even travel to – and that is surplus, so it had to go (his words verbatim in
+ *  docs/decisions.md). On a training week `calendar.surface` is the dominant
  *  surface of the season BLOCK - the court of an event that is running that week and that she is not
  *  at - so the calendar was reporting somebody else's tournament on a page about her own week.
  *  `calendarWeekFor` overrides both the surface and its verdict with the EVENT's on a week she is
@@ -159,8 +167,9 @@ function dayName(d: Pick<CalendarDay, 'index' | 'kind'>): string {
 
 /** THE WEEK IN HOURS. Null only when there is no snapshot to draw one from.
  *
- *  ⚠ IT USED TO BE NULL ON FOUR KINDS OF WEEK, AND THE OWNER OVERRULED THAT (31.07): «очень даже
- *  должна [рисоваться], никакой разницы. Просто содержание сетки будет другим.» A trip, a family
+ *  ⚠ IT USED TO BE NULL ON FOUR KINDS OF WEEK, AND THE OWNER OVERRULED THAT (31.07): it most
+ *  certainly SHOULD be drawn, no difference at all – only the contents of the grid will be different
+ *  (his words verbatim in docs/decisions.md). A trip, a family
  *  week, the exam fortnight and a layoff all draw the grid now, each with its own content, and this
  *  screen no longer keeps a second, plainer drawing for them. What each week is made of and the
  *  convention behind it live in composables/weekGrid.ts, where the ordinary week's conventions
@@ -177,8 +186,8 @@ const grid = computed(() => {
 
 /** WHICH POOL THE SCRAP COMES FROM. The domestic pool is the default and stays unlicensed (the
  *  owner's 30.07 ruling, in full, in composables/fridgeNote.ts); the two week pools exist because on
- *  a week that HAS a big fact in it a note about that fact is simply true - «удачи на экзамене»,
- *  «держим за тебя кулачки» (31.07).
+ *  a week that HAS a big fact in it a note about that fact is simply true - "good luck in the exam",
+ *  "we have got our fingers crossed for you" (31.07; both in his own words in docs/decisions.md).
  *
  *  ⚠ A FAMILY WEEK AND A LAYOFF STAY DOMESTIC, deliberately: "enjoy the holiday" and "hope it heals"
  *  are claims about how the week GOES, and the fridge does not know that in advance. Exams and a
@@ -253,7 +262,8 @@ function chanceColor(chance: number): string {
 
 // --- (b) THE DAYS CROSS THEMSELVES OUT ----------------------------------------------------------
 //
-// «простую анимацию вычеркивания дней» – it runs through, or pauses on a match / an injury / a knock
+// A SIMPLE ANIMATION OF THE DAYS BEING CROSSED OUT – the owner's own words, verbatim in
+// docs/decisions.md. It runs through, or pauses on a match / an injury / a knock
 // and then continues, and it ends on the end-of-week screen. The last clause is already true and costs
 // nothing: the sweep finishes, the advance fires, and App.vue's own door takes the player to the
 // week's story exactly as it does from Home.
@@ -631,6 +641,20 @@ const showGo = computed(() => !game.snapshot?.pending)
             <b>{{ Math.round(marker.preview.firstMatchChance * 100) }}</b><i>%</i>
           </ProgressRing>
           <p class="cal-card-odds-note">First round vs {{ marker.preview.opponentName }}</p>
+          <!-- ⚠⚠ THE "Rating 1642 vs 1801" LINE WAS HERE AND IS REMOVED BY OWNER RULING (round 21).
+               His words, in translation because this file carries no Cyrillic: "I did not ask for
+               this, it is surplus information, please take it out." The line shipped one commit
+               earlier on a reading of his D&D request that he had not made - he asked for odds that
+               are not all the same and that a player is not made to bang her head against, and a
+               second number on the card is not that. The ruling itself is quoted in its own words in
+               docs/decisions.md, which is where the Russian belongs.
+
+               ⚠ THE MODULE BEHIND IT IS NOT REMOVED and this is deliberate, not an oversight:
+               `src/engine/match/rating.ts` reproduces this engine's own match probability to 1.03
+               points across every reachable build and all three surfaces, and it is mutation-verified
+               in `tests/rating.test.ts`. It simply has no surface. Putting one back is HIS decision
+               and not a refactor - `tests/rating.test.ts`'s last block is the guard that says so and
+               will go red if this line returns. -->
         </div>
 
         <!-- Both cautions are the ENGINE's own sentences, and they are independent: one is the rule
@@ -851,7 +875,8 @@ const showGo = computed(() => !game.snapshot?.pending)
   word-break: break-word;
   /* ⚠ DARK INK, and it changed with the palette. The blocks used to be the `--event-*` family - mid-
      dark fills that wanted light text - and they are the `--cat-*` brights now (owner, 31.07: the
-     calendar's colours were «грустно-унылые»). Lime, mint and amber under `--ink` would be light on
+     calendar's colours were "sad and dreary" – his words, verbatim in docs/decisions.md). Lime, mint
+     and amber under `--ink` would be light on
      light. This is the paper layer's ink, which is the darkest one the app declares. */
   color: var(--paper-ink);
 }

@@ -382,6 +382,14 @@ never meant to carry an eligibility rule.
 
 ### When it happens, and why that is the awkward part
 
+> ⚠⚠ **BOTH HALVES OF THIS PARAGRAPH WERE REMOVED BY THE OWNER ON 16.08, AND IT IS KEPT AS THE
+> RECORD.** `TIERS.w75.minAgeYears` is **14** now (the age grid is the sport's:
+> [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md)), so W75 is not
+> a rung that "first exists" at seventeen. And `collegeClosedFromTier` is gone outright, so there are
+> no closures left to instrument: the college answer is on the fork card in 100% of careers.
+> **The design question below – the SILENCE around a rule that spends something – was answered by
+> deleting the rule**, and P4's warning went with it because it had become false.
+
 `TIERS.w75.minAgeYears` is **17**, and 15 of those 25 instrumented closures land at exactly
 seventeen – the first season the rung exists at all. Round-17's triage saw this coming and left the
 question open:

@@ -18,7 +18,7 @@ import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { parentIncomeForWeekCents } from '../economy'
-import { activeKitDeal } from '../offers'
+import { activeKitDeal, kitTravelShare } from '../offers'
 // ⭐ ROUND-21 #2: the ONE fare definition, read rather than re-derived - see `coachTravelFareFor`,
 // which lives beside it in world/sponsors.ts. sponsors.ts imports nothing from this module, so this
 // runs one way exactly as `../offers` above does.
@@ -272,10 +272,16 @@ export function coachBilling(world: WorldState): {
    *  OFF, because it is the price of the decision rather than a receipt for one.
    *
    *  ⚠ GROSS SINCE 15.08, AND THAT IS THE FIX THIS FIGURE OWED THE SCREEN. It summed `travelCostFor` -
-   *  HER fare, net of the academy scholarship and the brand's share - while the till charges his seat
+   *  HER fare, net of the academy scholarship and the brand's share - while the till charged his seat
    *  at the full price (`coachTravelFareFor`, and the owner's principle behind it). So the one family
    *  the number mattered most to was quoted less than it would pay. It reads the fare function itself
-   *  now, which is the only way the two can never disagree again. */
+   *  now, which is the only way the two can never disagree again.
+   *
+   *  ⚠ 17.08 – AND "GROSS" IS NOW "WHATEVER THE FARE FUNCTION SAYS", WHICH IS WHY THIS FIGURE NEEDED
+   *  NO CHANGE. A sponsor's travel share reduces his seat at the rungs that pay prize money, so the
+   *  word above is no longer literally true - but the SUM was rewritten to read `coachTravelFareFor`
+   *  rather than to re-derive a price, and that is exactly the property that made an amendment to the
+   *  rule cost nothing here. The academy scholarship still never reaches it. */
   travelFareCents: number
   /** ...and how many trips that is, so the screen can say "over the 9 he would be on" rather than
    *  printing a season total with nothing to divide it by.
@@ -287,10 +293,15 @@ export function coachBilling(world: WorldState): {
   /** ⭐ 15.08 – WHAT **HER** SEATS COST OVER THOSE SAME TRIPS, net of every cover she holds.
    *
    *  It exists because "twice the fare" stopped being true for the families it mattered to. His seat
-   *  is gross and hers is not, so for a girl on a scholarship the trip is her discounted seat plus his
-   *  whole one - and the screen has to be able to print both figures rather than a multiple that is
-   *  right only for a family paying full price. Equal to `travelFareCents` exactly when no support
-   *  reaches her travel, which is how the screen knows which sentence to say. */
+   *  did not follow her covers, so for a girl on a scholarship the trip is her discounted seat plus
+   *  his whole one - and the screen has to be able to print both figures rather than a multiple that
+   *  is right only for a family paying full price.
+   *
+   *  ⚠ 17.08 – AND "TWICE THE FARE" IS TRUE AGAIN FOR ONE FAMILY IN PARTICULAR: the one whose only
+   *  cover is a sponsor contract. That share now comes off both seats, so the two figures are EQUAL
+   *  for her and the trip really does cost double - which is the owner's own model of the rule and
+   *  the headline assertion of §4 in tests/support-never-pays-the-coach.test.ts. The scholarship is
+   *  what still splits them, and it is the only thing that does. */
   travelHerFareCents: number
   /** ⭐ v49 – WHAT THE NESTED OPTION WOULD ADD on top, over the same booked season, and over how many
    *  more trips. The two sets are disjoint by construction (a rung either pays prize money or does
@@ -303,6 +314,20 @@ export function coachBilling(world: WorldState): {
    *  of a list of covers, so a cover invented tomorrow is inside the answer by construction - and
    *  answerable with nothing booked, which is when a junior family most needs the sentence. */
   travelCovered: boolean
+  /** ⭐⭐ ROUND-21 #2, 17.08 – AND IS A CONTRACT REDUCING **HIS** SEAT, as a whole percentage, 0 when
+   *  nothing is. The one number that makes the sentence beside the switch true again: it has said
+   *  since 15.08 that "the coach travels at the full fare", and for a family under a big deal at the
+   *  professional rungs that is no longer so.
+   *
+   *  ⚠ A PERCENTAGE AND NOT A BOOLEAN, because the sentence has to name the figure - a cover the
+   *  player cannot size is indistinguishable from a price that quietly moved, which is the exact
+   *  dishonesty `chargeTravel`'s payer text exists to prevent.
+   *
+   *  ⚠ AND IT IS THE TERM ITSELF, NOT `1 - travelFareCents / gross`. Those trips are the ones he is
+   *  ON, and every one of them is a prize-money rung, so the ratio would agree today - but it would
+   *  start lying the day a rung is exempted, and a figure that is right by coincidence is the kind
+   *  that survives review. */
+  coachFareCoverPct: number
   /** ⭐ ROUND-21 #12: THE CAP THE BUDGET METER DRAWS AGAINST, carried rather than reverse-engineered.
    *
    *  The screen used to RECOVER it from any row that was over budget
@@ -387,6 +412,10 @@ export function coachBilling(world: WorldState): {
     travelJuniorCents,
     travelJuniorTrips,
     travelCovered: travelCoverReachesHer(world),
+    // ⭐⭐ ROUND-21 #2 (17.08) – the brand's own hand on the SECOND seat, read straight off the deal.
+    // The SAME share her fare reads: one sponsor number applied to two seats, not two terms. Zero for
+    // every family holding no deal that pays towards travel, which is most of them.
+    coachFareCoverPct: Math.round(kitTravelShare(world.offers, world.week) * 100),
     weeklyIncomeCents: familyWeeklyIncomeCents(world),
   }
 }

@@ -36,6 +36,10 @@ last-reviewed: 2026-08-03
 - Keep exact scoring rules in scoring modules rather than reimplementing them in UI code.
 - A visualization consumes a match record; it cannot feed information back into the outcome.
 - Changes affecting stored state follow the save-schema discipline in the saves context pack.
+- The tour age grid (tier floors, the U18 junior ceiling, the AER's per-year counts) is written out in
+  prose in exactly one place: [college is its own branch §0a](../specs/college-is-its-own-branch-2026-08.md).
+  Link to it rather than restating it – restating is how the corpus grew two documents that disagreed
+  about what a W15 field is.
 
 ## Focused verification
 

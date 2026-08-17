@@ -104,6 +104,27 @@ a design pillar – *"a sixteen-to-eighteen-year-old holds both tours at once an
 having seen what each one costs and pays"* – and moving it is a separate decision with its own
 measurement, not a side effect of changing a currency.
 
+> ### ⚠⚠ THE PARAGRAPH ABOVE IS P1's AND WAS OVERRULED THE NEXT DAY. IT IS KEPT BECAUSE HE OVERRULED IT.
+>
+> **The owner read this exact note and answered it:** «мы же вроде наресерчили четкую возрастную
+> сетку с количеством доступных турниров каждого тира на каждом возрасте, мне кажется надо
+> использовать» (16.08), and then, on the rest of the grid, «настоящих порогов только два – 14 и 18.
+> – вот как есть в регламенте, так и у нас». **`w15.minAgeYears` is 14** and so are W35/W50/W75/W100;
+> the WTA rungs are 15. So:
+>
+> * *"IS UNCHANGED"* – it changed. P2 shipped 16 → 14
+>   (`docs/specs/age-eligibility-window-2026-08.md` §6), P8 took the other four rungs down with it.
+> * *"THE DEVIATION IS DELIBERATE"* – **the deviation is deleted.** This paragraph is the note he was
+>   answering, which is why it stays: it records that we knew the sport said 14 and chose 16 anyway.
+> * ⚠ *"a sixteen-to-eighteen-year-old holds both tours at once…"* – **that sentence is not a quote.
+>   It was written HERE, as a paraphrase of §4.1, and was afterwards re-quoted as if §4.1 had said
+>   it.** §4.1 never contained those words. Same failure as the repealed NCAA rule in
+>   `docs/specs/college-gate-decoupled-2026-08.md` §5: the second copy was written from the first.
+>   The overlap it describes runs **14-18**, and §4.1 now says so in its own banner.
+>
+> **The grid is stated once and not here:**
+> [`docs/specs/college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
 ### 2b. Above W15, a junior's access is the Accelerator
 
 `ACCELERATOR` (world/entryCaps.ts) is the table above, keyed on `yearEndJuniorRank` – a read of

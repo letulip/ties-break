@@ -486,6 +486,113 @@ function clamp01to100(x: number): number {
   return x < 0 ? 0 : x > 100 ? 100 : x
 }
 
+// =================================================================================================
+// ⚠⚠ THE SKILL LAW – A PROFESSIONAL'S STRENGTH IS A STRAIGHT LINE IN log2(HER STANDING)
+// (round 21, 17.08, the owner's ruling. docs/specs/the-skill-gap-2026-08.md, and the sport's own
+// number in docs/research/the-upset-rate.md.)
+// =================================================================================================
+//
+// THE OWNER, ruling on the measurement: «я хочу, чтобы "верх таблицы перестаёт быть лотереей"
+// произошло… И в данный момент складывается ощущение, что рейтинг в статистике и таблице ничего не
+// значит, а хотелось бы, чтобы значил. Шансы выиграть должны быть у всех, но не у всех одинаковые.»
+//
+// WHAT WAS WRONG, MEASURED (spec §4c, 40 worlds x 25 sims a pair): core was drawn UNIFORMLY inside a
+// storey, so inside a storey a rank carried no skill information at all and every scrap of it sat at
+// the seams. Priced in the sport's own unit – 124.2 Elo per doubling of rank – our curve read:
+//
+//     #1->#10      7 Elo per doubling   x0.06     <- the world #1 was a coin flip against #10
+//     #10->#50    67                    x0.54
+//     #50->#100  269                    x2.16     <- and a cliff at the tourElite/contender seam
+//     #500->#1000 135                   x1.09
+//     #1->#1000    96                   x0.77     <- the TOTAL span was only 23% short
+//
+// A staircase where the sport is a straight line. This file predicted its own fix twice and never
+// got to it – "Step 2 re-deals every core in this table off the real Elo curve and is where the
+// spread is fixed". This is step 2.
+//
+// ⚠⚠ THE CURVE IS THE LIVE 2026 LIST'S OWN SHAPE, AND A CONSTANT SLOPE WAS THE FIRST ANSWER AND THE
+// WRONG ONE. That is worth keeping, because the mistake is the one this repo keeps recording.
+//
+// The first cut fitted ONE slope – 124.2 Elo per doubling, from Klaassen & Magnus's women's lambda
+// (0.7150, EJOR 148 (2003) 257-267, N=504) – and paired it with a x1.5 lift of `SKILL_K`. The owner
+// stopped it: «"расчёт по живому рейтингу Elo на август этого года" – вот это же супер-ценная и
+// актуальная информация, нам не нужно доминирования, как в 90х.» He is right, and the live list says
+// why in numbers. K&M was fitted on Wimbledon 1992-95, the most top-heavy window the women's game has
+// had, and the two instruments AGREE through the middle and the tail and diverge only at the HEAD:
+//
+//     pair          K&M 1992-95     LIVE Aug 2026     the shipped staircase
+//     #1 v #10          8.5%            21.9%              47.4%
+//     #50 v #100       32.8%            37.2%              21.1%
+//     #50 v #300       13.6%            10.9%               4.3%
+//     #200 v #300      39.7%            35.4%              38.9%
+//
+// So "no 1990s dominance" is a precise instruction and not a mood: it means DO NOT USE K&M AT THE
+// TOP. A single slope cannot express a curve that is shallow over the top fifty, steepest through
+// #100-#400 and shallow again in the tail, which is exactly what the live list is.
+//
+// ⚠⚠ AND FITTING THE LIVE CURVE MADE THE CHANGE SMALLER, NOT BIGGER – IT ALSO KILLED THE GAIN LIFT.
+// Priced at the SHIPPED gain (20.2 Elo per core point, measured), our table's Elo profile relative to
+// #1 already tracks the live list from #100 down: -633 against -665 at #200, -701/-755 at #300,
+// -823/-875 at #500, -958/-995 at #1000. **From #100 to the bottom we were already right**, and the
+// x1.5 lift would have broken the only part that was. The whole defect is #1-#100: too FLAT from #1
+// to #50 (180 Elo where the live list has 403) and then a CLIFF from #50 to #100 (269 where the live
+// list has 91). `SKILL_K` and `RALLY_K` are therefore UNTOUCHED, and this file changes alone.
+//
+// PROVENANCE. `docs/research/raw/2026-08-17-wta-elo-by-rank.json` – 547 (WTA rank, Elo) pairs parsed
+// from the Tennis Abstract WTA Elo report of 2026-08-03. Player names are deliberately NOT stored
+// (CLAUDE.md: real surnames must not be constructible). The anchors below are the MEDIAN Elo of
+// log2-rank bins of that file, forced monotone; the top rows are individual because there is only one
+// world #1. `docs/research/the-upset-rate.md` §2c carries the two limits that still apply: the
+// report's population is selected (>=10 matches at tour level or ITF 50K+ in 52 weeks) and it thins
+// out past ~#650, so everything below that is this curve CONTINUED rather than observed.
+
+export const SKILL_LAW = {
+  /** the world #1's core – deliberately the strength the shipped staircase already gave her (76.4,
+   *  measured over 40 worlds), so the head does not move and the anchor stays under `rollPotential`'s
+   *  own maximum. A world #1 above what a career can become is a backdrop nobody can climb. */
+  top: 76.4,
+  /** Elo per core point, MEASURED off this engine's own closed form rather than read off the
+   *  constants: two flat builds ten core apart win 76.2% of best-of-three, which is 202 Elo. It is
+   *  the exchange rate the whole table is denominated in, and it moves only if `SKILL_K`/`RALLY_K`
+   *  move – in which case every anchor below must be re-derived, not rescaled by eye. */
+  eloPerCore: 20.2,
+  /** (rank, Elo) of the live list, binned-median and monotone. Interpolated in log2(rank). */
+  anchors: [
+    [1, 2195],
+    [3, 2090],
+    [8, 2002],
+    [14, 1932],
+    [22, 1908],
+    [36, 1815],
+    [58, 1781],
+    [94, 1715],
+    [152, 1603],
+    [247, 1477],
+    [402, 1352],
+    [653, 1296],
+    [1060, 1196],
+  ] as [number, number][],
+} as const
+
+/** The live list's Elo at a standing, interpolated in log2(rank) and extrapolated past its last
+ *  anchor along the final segment. Exported because it is the number a player should be shown. */
+export function eloForStanding(standing: number): number {
+  const a = SKILL_LAW.anchors
+  const x = Math.log2(Math.max(1, standing))
+  let i = 0
+  while (i < a.length - 2 && x > Math.log2(a[i + 1][0])) i++
+  const [r0, e0] = a[i]
+  const [r1, e1] = a[i + 1]
+  const t = (x - Math.log2(r0)) / (Math.log2(r1) - Math.log2(r0))
+  return e0 + t * (e1 - e0)
+}
+
+/** THE LAW ITSELF: how strong the professional standing at this place is. Pure arithmetic, no RNG,
+ *  no state – which is what lets the UI quote it without importing the world. */
+export function coreForStanding(standing: number): number {
+  return SKILL_LAW.top + (eloForStanding(standing) - SKILL_LAW.anchors[0][1]) / SKILL_LAW.eloPerCore
+}
+
 /** A tier's points for a core drawn inside its band: the band lerp, bent by gamma. */
 function pointsForCore(tier: (typeof FIELD.tiers)[number], core: number): number {
   const [cLo, cHi] = tier.core
@@ -639,6 +746,10 @@ function makeFieldPro(
   seasonIndex: number,
   n: number,
   tier: (typeof FIELD.tiers)[number],
+  /** how many chairs stand ABOVE this storey – the offset that turns her place inside it into a
+   *  place in the world. Passed rather than re-derived so `fieldProsFor`'s walk stays the one
+   *  authority on storey order. */
+  tierOffset: number,
   taken: Set<string>,
 ): FieldPro {
   const career = careerAt(seed, n, seasonIndex)
@@ -649,8 +760,27 @@ function makeFieldPro(
   let last = SURNAMES[pickInt(rng, 0, SURNAMES.length - 1)]
   const nation = NATION_POOL[pickInt(rng, 0, NATION_POOL.length - 1)]
 
+  // ⚠ ONE DRAW, TWO JOBS, AND THE SPLIT IS THE WHOLE REASON THIS CHANGE HAS NO BLAST RADIUS IN THE
+  // TABLE. `u` is the SHIPPED uniform, taken in the shipped position off the shipped stream, so not
+  // one draw moves anywhere. It still decides her POINTS exactly as it always did – `pointsForCore`
+  // reduces to `pLo + (pHi-pLo)*u^gamma`, so passing `bandCore` back into it is byte-identical
+  // arithmetic and every pro's `wtaPoints`, every rank of the merged table and every acceptance cut
+  // come out unchanged. What `u` no longer decides is how STRONG she is.
+  //
+  // ⚠ HER STRENGTH NOW COMES FROM HER STANDING, and the standing is derived from `u` rather than
+  // drawn again – which is what keeps skill and points CORRELATED. Base points are monotone in `u`
+  // inside a storey and the storeys are disjoint in base points, so the pros standing above her are
+  // exactly (everyone in a higher storey) + (the share of her own storey that out-drew her). Reading
+  // her core off a fresh draw instead would have set that correlation to zero inside every storey –
+  // the precise defect this wave exists to remove, re-introduced by the fix.
+  //
+  // The remaining spread between standing and strength is deliberate and is the owner's «шансы
+  // выиграть должны быть у всех, но не у всех одинаковые»: `careerArc` moves her book by her age,
+  // `FIELD.jitter` wobbles it +/-10% a season, and `attrSpread` gives her a shape rather than a bar.
   const [cLo, cHi] = tier.core
-  const core = cLo + rng() * (cHi - cLo)
+  const u = rng()
+  const bandCore = cLo + u * (cHi - cLo)
+  const core = coreForStanding(tierOffset + (1 - u) * tier.count + 1)
   const spread = FIELD.attrSpread
   const serve = clamp01to100(core + spread * (2 * rng() - 1))
   const ret = clamp01to100(core + spread * (2 * rng() - 1))
@@ -687,7 +817,7 @@ function makeFieldPro(
 
   const wtaPoints = Math.max(
     1,
-    Math.round(pointsForCore(tier, core) * careerArc(ageYears) * (1 + FIELD.jitter * (2 * jitterRoll - 1))),
+    Math.round(pointsForCore(tier, bandCore) * careerArc(ageYears) * (1 + FIELD.jitter * (2 * jitterRoll - 1))),
   )
 
   const pro: FieldPro = {
@@ -748,7 +878,8 @@ export function fieldProsFor(
   const pros: FieldPro[] = []
   let n = 0
   for (const tier of FIELD.tiers) {
-    for (let i = 0; i < tier.count; i++) pros.push(makeFieldPro(seed, seasonIndex, n++, tier, taken))
+    const tierOffset = n
+    for (let i = 0; i < tier.count; i++) pros.push(makeFieldPro(seed, seasonIndex, n++, tier, tierOffset, taken))
   }
   memo = { key, pros }
   return pros

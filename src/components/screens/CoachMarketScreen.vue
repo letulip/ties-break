@@ -227,6 +227,18 @@ const travelsOnEventWeeks = computed(() => billing.value?.onEventWeeks ?? false)
  *  asked of the one fare definition rather than of a list of covers, so this branch cannot go stale
  *  when a third support stream ships.
  *
+ *  ⚠⚠ 17.08 – AND THE THIRD SENTENCE IS THE ONE THAT REDUCES **HIS** SEAT, which nothing did until
+ *  round-21 #2's last item. A sponsor's travel share now comes off the coach's fare too at the events
+ *  that pay prize money, so both sentences above became untrue for those families - one promised
+ *  twice the fare and the other promised he travels at the full price. `coachFareCoverPct` is the
+ *  engine's own term, printed rather than derived from the totals, and it is checked first because it
+ *  is the stronger fact about the money.
+ *
+ *  ⚠ THE THREE BRANCHES ARE NOT THREE RULES. There is ONE sponsor share and it covers both seats; the
+ *  scholarship covers hers alone. The branches exist because those two facts make three different
+ *  sentences true for three different families, and a family reading this needs the one that is true
+ *  for it - not the union.
+ *
  *  ⚠ NO PRONOUN NAMES THE COACH (R15-7, owner 09.08) - `buildCoachRoster` puts a woman on every
  *  roster by construction, so "his seat" would print under Sabine Kobayashi. The first draft of this
  *  line said "a trip HE comes on ... HIS seat", and `round15-surfaces.test.ts` caught it MOUNTED on
@@ -236,12 +248,20 @@ const travelSubLine = computed(() => {
   if (!hasCoach.value) return 'You are coaching her yourself – there is nobody to send. Turn it on and it takes effect when you hire somebody.'
   const b = billing.value
   const covered = b?.travelCovered ?? false
-  const rule = covered
-    ? 'The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.'
-    : 'Twice the fare on every trip – a second seat beside hers.'
+  // ROUND-21 #2, 17.08: a sponsor's travel share now comes off the SECOND seat too at the events that
+  // pay prize money, so the two sentences below were both promising something untrue to the families
+  // that hold such a deal. This branch is checked FIRST because it is the stronger fact: a family
+  // whose contract is paying for the coach needs to be told that before it is told what a scholarship
+  // does not do. The percentage is the engine's own term and is never derived from the totals.
+  const byBrand = b?.coachFareCoverPct ?? 0
+  const rule = byBrand > 0
+    ? `Your sponsor pays ${byBrand}% of the second seat at the events that pay prize money – the rest is yours.`
+    : covered
+      ? 'The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.'
+      : 'Twice the fare on every trip – a second seat beside hers.'
   if (!b || b.travelTrips === 0) return rule
   const trips = b.travelTrips === 1 ? '1 trip' : `${b.travelTrips} trips`
-  return covered
+  return covered || byBrand > 0
     ? `${rule} Her seats cost ${formatCents(b.travelHerFareCents)} over the ${trips} ahead; the second seat adds ${formatCents(b.travelFareCents)}.`
     : `${rule} ${formatCents(b.travelFareCents)} over the ${trips} she has booked this season.`
 })

@@ -14,7 +14,7 @@
 // a statement about the pipeline, not about the balance model.
 
 import { test, expect } from './careerAt'
-import { answerOpeningKnock, onScreenWeek, openMoney, weekButton } from './journey'
+import { answerOpeningKnock, dismissTourBriefing, onScreenWeek, openMoney, weekButton } from './journey'
 import { formatCents } from '../src/shared/money'
 
 test.describe('advancing a week', () => {
@@ -94,6 +94,8 @@ test.describe('advancing a week', () => {
     page.on('pageerror', (error) => crashes.push(error.message))
 
     const { facts } = await careerAt('pro')
+    // Top-50 boot briefing - see dismissTourBriefing. This spec is about a season boundary.
+    await dismissTourBriefing(page)
     await answerOpeningKnock(page)
 
     await weekButton(page).click()

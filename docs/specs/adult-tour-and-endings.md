@@ -1,8 +1,22 @@
+---
+type: spec
+status: current
+area: design/adult-tour
+canonical: false
+last-reviewed: 2026-08-16
+---
+
 # The adult tour and the endings — design note (29.07.2026, pre-code)
 
 Written because the owner asked what happens to the heroine when the conveyor retires the field
 around her. The answer today is "nothing, ever", and that answer hides three holes. This is the plan
 for closing them. **Nothing here is implemented.**
+
+> ⚠ **THAT LAST SENTENCE IS 29.07's AND IS NO LONGER TRUE** – most of §7 has shipped and carries ✅
+> markers where it did. Two things this document says about AGES were reversed by the owner on
+> 16.08 and are corrected in place, at §4.1's banner and §7's B1. **It does not state the age grid:
+> that lives in one place,**
+> [`docs/specs/college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 
 ---
 
@@ -80,12 +94,48 @@ Mechanically:
 
 ### 4.1 The handover
 
-`maxAgeYears: 18` on the J tiers (real ITF juniors is U18), plus an age view in `selectEntrants` so a
-J30 field is juniors and a W15 field is adults.
+> ### ⚠⚠ HALF OF THIS SECTION WAS REVERSED BY THE OWNER ON 16.08 – READ THIS FIRST
+>
+> The sentence written here on 29.07, kept because everything below is built on it:
+>
+> *"`maxAgeYears: 18` on the J tiers (real ITF juniors is U18), plus an age view in `selectEntrants`
+> so a J30 field is juniors and **a W15 field is adults**."*
+>
+> **The cap and the age view are right and shipped. "A W15 field is adults" is FALSE**, and it was
+> never true of the sport: «настоящих порогов только два – 14 и 18. – вот как есть в регламенте, так
+> и у нас» (16.08). W15 opens at **14** in the code, so a W15 draw holds fourteen-year-olds. What a
+> W15 field is not is a *junior* field – that is the distinction `selectEntrants` actually enforces,
+> and it is a ceiling on the J rungs rather than a floor on the W ones.
+>
+> **The overlap therefore runs 14-18, not 16-18.** ⚠ And the widely-quoted pillar sentence *"a
+> sixteen-to-eighteen-year-old holds both tours at once and arrives at nineteen having seen what each
+> one costs and pays"* **is not in this document and never was** – it was written in
+> `docs/specs/junior-access-2026-08.md` §2a as a paraphrase, then re-quoted from there as if it were
+> §4.1's own words. Both copies now carry the correction.
+>
+> **The grid is stated once, and not here:**
+> [`docs/specs/college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
+
+**The handover is a CEILING, and the ceiling is the half that survived.** `maxAgeYears: 18` on the J
+tiers is real ITF juniors (U18), and it is the only tier age rule that ends anything: the junior tour
+stops at eighteen and nothing else does. The professional rungs have no ceiling and their floor is
+low – so the two tours are open at once from **fourteen** to eighteen, and what she arrives at
+nineteen having seen is five years of both rather than three.
+
+**And what meters a fourteen-year-old on the second tour is a COUNT, not a locked door.** The AER
+gives her **8** professional events in her fourteenth year against an unrestricted junior calendar,
+**10** at fifteen, **12** at sixteen, **16** at seventeen. Measured on the ruling
+(`tools/two-tour-overlap.ts`, 27 careers, identical seeds): at fourteen a quarter of careers hold
+both tours, on a mean of **1.7** professional entries beside **7.3** junior ones; at fifteen two
+thirds do, on 6.1. **That is the design, and it is better than the door was** – a fourteen-year-old
+who is exceptional gets a handful of W15s and finds out what they cost, and the arithmetic that stops
+her from moving onto that tour is her own budget and eight entries, not a birthday.
 
 **This cannot ship before §2 and §3.** Cap the junior tiers first and at 19 her calendar loses
 everything she has been climbing, leaving Local / Regional / National — a step *down* into a dead
-end. That is not a cliff, it is a wall. The adult rungs are what turn 19 into a fork.
+end. That is not a cliff, it is a wall. **The adult rungs are what turn 19 into a fork**, and the
+wider overlap does not soften that: the eight-event allowance means the tour she has been sampling
+since fourteen is the one she must now live on full-time, at the exact week the scholarship ends.
 
 The domestic ladder stays open at every age. It is ours, not the ITF's, and it is where an adult who
 is not good enough still plays — which is most of them, and is the truth.
@@ -199,6 +249,9 @@ watch is the week prize money first exceeds the week's costs, and how many caree
 
 **B1. The cap.** `maxAgeYears: 18` on the J tiers (real ITF juniors is U18) plus an age view in
 `selectEntrants`, so a J30 field is juniors and a W15 field is adults. Blocked on A1.
+⚠ **"A W15 field is adults" is false and was corrected in §4.1 – read the banner there.** The cap and
+the age view are right; the label is not. W15 opens at 14, so its draws are mixed. Grid, stated once:
+[`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 
 **B2. The fork at 19.** ✅ **SHIPPED 04.08**, as a three-way choice – college joined it (contract
 §5.1). One decision, once, with everything on the table: her rank, the family balance, the
