@@ -185,7 +185,10 @@ export interface TierDef {
    *  ⚠ WTA-TRACK RUNGS ONLY. The number is a WORLD rank, and the only table where an entrant's ordinal
    *  position IS a world rank is the merged W standings every W caller passes. A junior or domestic
    *  rung is ranked in its own 199-row population, where "#50" means nothing – so declaring this on one
-   *  would silently bar the top quarter of the cohort. `tests/ladder.test.ts` enforces the scope. */
+   *  would silently bar the top quarter of the cohort. `tests/season/tournament.test.ts` enforces the
+   *  scope – and, since 17.08, the ORDERING too: two rungs carry a head now (wta250 at 64, wta500 at
+   *  50) and the higher rung must open at the SMALLER number, or the smaller tournament draws the
+   *  stronger field for half the points. */
   acceptsFromRank?: number
 
   /** R12-6: the smallest allowed distance, in weeks, between two events OF THIS TIER. Absent (or 1)

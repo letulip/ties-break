@@ -1958,6 +1958,36 @@ career was walked, and the bench was run first. New rule: type-check a new bench
 
 ---
 
+## 17.08.2026 – ⭐⭐ «ДАВАЙ 50»: the WTA 500 gets a head, and the ladder is finally in order (`docs/specs/the-head-of-the-list-is-a-ladder-2026-08.md`)
+
+He asked what the shorthand meant – «какое сейчас значение и что значат 64 40 и 64 50?» – and then
+picked. **`wta500.acceptsFromRank = 50`**, beside the 250's 64.
+
+The defect it closes is his own sentence, «на 500, соответственно, должно быть тоже возможно выжить»:
+at the shipped setting a #86 survived her opening match at a WTA 500 **43.2%** of the time – *less
+often than at the WTA 1000 above it* (44.9%) – because `selectEntrants` filled the rung from a band
+opening at #22 and drew a field whose core was 69.4 with **67% of the draw stronger than she is**. At
+head 50: **55.1%**, core 64.4, 42% stronger. The ladder now runs 125 easiest → 250 → 500 → Slam →
+1000 hardest.
+
+**The cost, stated before he chose:** the WTA 1000 drops 44.9% → 40.9%.
+
+⚠ **A consequence the sweep did not show, and a guard did.** The 500's window is now #50–120 and the
+250's is #64–200, so the two overlap across #64–120 and share **18 of 32** entrants – redding the arm
+that said they share fewer than half. That arm was a PROXY: the original defect was fields of the same
+*strength* (core 68.4 / 68.9 / 68.4 across 250/500/1000), and these are 60.5 against 64.4, correctly
+ordered. So it was replaced by the two things it had been standing in for – the higher rung draws the
+higher-ranked field, and each rung keeps a band the other cannot reach – both of which would have gone
+red on the original defect, which a personnel count only did by accident of where the bands opened.
+
+⚠ **And the pair is a LADDER now, with an invariant nothing held before:** the higher rung must open at
+the SMALLER number (500 at 50, 250 at 64), or the smaller tournament draws the stronger field for half
+the points. Two stale cross-references were fixed on the way – both `calendar.ts` and `types.ts` named
+`tests/ladder.test.ts` as the guard, and the guard is in `tests/season/tournament.test.ts` – as was a
+comment on the 250 claiming "the number is 50" when the value is 64.
+
+---
+
 ## 17.08.2026 – ⭐⭐ THE SECOND SEAT: he refused the machinery, and the measurement agreed with him (`docs/specs/the-second-seat-2026-08.md`)
 
 Round-21 #2's last item. He had scoped it twice – «про спонсоров и оплату доли поездки тренера я

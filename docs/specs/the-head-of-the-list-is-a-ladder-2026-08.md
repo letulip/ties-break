@@ -9,6 +9,25 @@
 **Nothing is proposed here and no constant ships with this document.** He asked for a ladder with its
 numbers; this is the ladder with its numbers, and the row is his to pick.
 
+> ## ⭐⭐ HE PICKED — «давай 50», 17.08
+>
+> **`wta500.acceptsFromRank = 50` shipped**, beside the `wta250.acceptsFromRank = 64` already in.
+> The ⭐⭐ row of §2: the 500 goes **43.2% → 55.1%** for a fixed #86, its field core 69.4 → 64.4, and
+> the share of the draw stronger than her **67% → 42%**. The ladder is in the right order for the
+> first time — 125 easiest, then 250, 500, Slam, with the 1000 hardest.
+>
+> **The cost, which he was told before he chose:** the WTA 1000 drops 44.9% → 40.9%.
+>
+> ⚠ **And one consequence that was NOT in the table below, found by a guard rather than by the
+> sweep.** With a head at 50 the 500's window runs #50–120 while the 250's runs #64–200, so the two
+> rungs now overlap across #64–120 and share **18 of 32** entrants where they shared under half
+> before. `tests/season/tournament.test.ts` caught it as a red arm. It is not the old defect
+> returning — that was fields of the same *strength* (core 68.4 / 68.9 / 68.4), and these are 60.5
+> against 64.4, correctly ordered — so the personnel-count assertion was replaced by the two
+> properties it had been standing in for: the higher rung draws the higher-ranked field, and each
+> rung keeps a band the other cannot reach. Recorded here because a shared field is a thing he can
+> see on screen, and he should not meet it as a surprise.
+
 ⚠ **The age grid is not restated here.** It is written out once, in
 [`college-is-its-own-branch-2026-08.md` §0a](college-is-its-own-branch-2026-08.md).
 

@@ -1135,7 +1135,17 @@ export const TIERS: Record<TierId, TierDef> = {
     // ⭐⭐ AND THE HEAD OF THAT LIST, WHICH FOR THREE WAVES DID NOT EXIST (round 21 #4, 17.08 – the
     // owner: «с этим точно надо что-то делать … Инес за 2 года не смогла вообще никуда сдвинуться в
     // 250+ … а мы говорим о 86 ракетке с хорошими статами»). Read `TierDef.acceptsFromRank` for the
-    // mechanism; this is why the number is 50 and why this rung is the only one that carries it.
+    // mechanism; this note is why the number is 64.
+    //
+    // ⚠ AND IT IS NO LONGER THE ONLY RUNG THAT CARRIES ONE. The WTA 500 took a head of its own on
+    // 17.08 (owner: «давай 50»), for the defect this rung's fix left standing – see that note.
+    //
+    // ⚠⚠ THE TWO ARE A LADDER NOW AND THE ORDER IS LOAD-BEARING: **the higher rung opens HIGHER up
+    // the table.** The 500 starts at #50 and this rung at #64, so the 500 admits #50-63 and the 250
+    // does not – the excluded storey here (#1-63) is a SUPERSET of the 500's (#1-49), which is the
+    // arithmetic form of "a bigger tournament draws a stronger field". Any future edit that pushed
+    // this number BELOW the 500's would invert the ladder and hand the 250 the stronger draw.
+    // `tests/season/tournament.test.ts` holds the ordering.
     //
     // THE DEFECT, MEASURED (round21-measured-2026-08.md §3f): this band opens at #32 and the WTA
     // 500's at #22, so the two rungs drew the SAME PEOPLE – mean field core 68.4 against 68.9 – for
@@ -1216,6 +1226,38 @@ export const TIERS: Record<TierId, TierDef> = {
     // The range table's floor (~#40-120). ⚠ NOT SOURCED - see the note on w35. Left as it is: only
     // 6 of 54 measured careers ever clear it, which is the top of the ladder behaving as act 3 wants.
     acceptsRank: 120,
+    // ⭐⭐ AND THE HEAD OF THAT LIST (17.08, owner: «давай 50»). Read `TierDef.acceptsFromRank` for the
+    // mechanism and the note on `wta250` for the ladder the two now form.
+    //
+    // ⚠⚠ WHY THIS RUNG NEEDED ITS OWN, given the 250 had just been fixed: because fixing the 250
+    // alone left the 500 as the WORST-SHAPED RUNG ON THE LADDER. Measured
+    // (`the-head-of-the-list-is-a-ladder-2026-08.md` §2, 4 worlds x 470 weeks, 300 bracket replays a
+    // rung, the professional actually standing at #86 held fixed as the reference), P(past R1):
+    //
+    //     500 head    250     **500**    1000    Slam
+    //     open        60.9%   **43.2%**  44.9%   51.8%     <- shipped before this line
+    //     40          60.0%   **49.8%**  40.8%   52.5%
+    //     50 (this)   60.7%   **55.1%**  40.9%   54.3%
+    //
+    // At `open` a #86 survived a 500 LESS OFTEN than the WTA 1000 above it - 43.2% against 44.9% -
+    // because `selectEntrants` filled this rung from the top of a band opening at #22 and drew a
+    // field whose core was 69.4 with **67% of the draw stronger than she is**. That is the owner's
+    // «на 500, соответственно, должно быть тоже возможно выжить» going unmet. At 50 the field's core
+    // is 64.4 and the share stronger than her is 42%.
+    //
+    // ⚠ WHY 50 AND NOT 40, since both clear the defect: 40 leaves the 500 at 49.8% - still a coin
+    // flip - while 50 puts it at 55.1% and, with it, puts the whole ladder in the right ORDER for the
+    // first time: 125 easiest, then 250, then 500, then Slam, with the 1000 hardest. 64 was swept too
+    // (58.9%) and rejected for making the 500 easier than the 250 beneath it.
+    //
+    // ⚠ THE COST, STATED RATHER THAN BURIED: the WTA 1000 drops 44.9% -> 40.9%. It becomes the hardest
+    // rung in the game, which is correct for what it is, but it IS a change and it was not asked for.
+    // Flagged for the owner in the spec's §5 rather than presented as free.
+    //
+    // ⚠ READ THE SWEEP AS A SHAPE, NOT AS ODDS. The reference #86 is not equally strong in every world
+    // (core 70.8 / 60.3 / 71.0 / ...), so every cell is pooled across four of them.
+    // ⚠ NOT SOURCED, like `acceptsRank` above it, and flagged the same way.
+    acceptsFromRank: 50,
     // 42 candidates in the canonical universe, 117 in the merged one - see the note on wta250.
     entrantPctBand: [0.012, 0.22],
   },
