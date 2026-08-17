@@ -2519,17 +2519,30 @@ export interface ForkState {
    *  silently re-price every career already mid-course, halfway through a bill it had agreed to.
    *
    *  ⚠⚠ `null` MEANS "NEVER MEASURED", NOT "REFUSED", and a refusal has its own shape inside the
-   *  offer (`offer.programme === null` = no programme, and even then she may enrol and pay). A career
+   *  offer (a quote with `athleticShare === 0` is a WALK-ON place – nobody funded her and she may
+   *  still enrol and pay for it). A career
    *  migrated from v50 with the fork already open carries `null` here, because the v51 migration
    *  invents nothing – exactly the discipline v50 applied to the college ledger it could not
    *  reconstruct. Such a career is charged nothing and the card falls back to the pre-v51 copy. */
   offer: CollegeOffer | null
 }
 
-/** WHICH KIND OF PROGRAMME OFFERED HER A PLACE. Three, because the research supports a spread and not
- *  a curve – §4 items 15 and 16 of `docs/research/college-and-the-junior-exit.md` are explicit that
- *  no per-sport award distribution could be sourced. */
-export type CollegeProgrammeTier = 'strong' | 'solid' | 'small'
+/** ⭐⭐ WHICH KIND OF PLACE SHE PICKED – a PRICE and a QUALITY, and the player chooses between them
+ *  (owner, 17.08, `docs/specs/the-college-choice-2026-08.md`).
+ *
+ *  ⚠⚠ `CollegeProgrammeTier = 'strong' | 'solid' | 'small'` WAS HERE AND IT WAS NOT A PLACE AT ALL.
+ *  Its own note read *"Three, because the research supports a spread and not a curve"* – true of the
+ *  funding spread it described, and the three values were **funding SHARES** (0.85 / 0.55 / 0.30)
+ *  **derived from her junior record**, over a price that was the same at all three. So the player
+ *  chose nothing, and the card printed a residual ($8,673) under a sourced sticker ($30,990) with
+ *  nothing on screen to connect them. The owner asked where the figure came from and there was no
+ *  surface that could tell him.
+ *
+ *  ⚠ THE THREE IDS ARE THE THREE SOURCED PRICES, in that order: public in-state **$30,990**, public
+ *  out-of-state **$50,920**, private nonprofit **$65,470** `[S]` (College Board, Trends in College
+ *  Pricing and Student Aid 2025, Figure CP-1). The QUALITY LADDER laid over them is OURS and is
+ *  labelled as ours everywhere it appears – `engine/collegeOffer.ts` carries the table. */
+export type CollegeTier = 'state' | 'national' | 'private'
 
 /** ⭐⭐ THE COLLEGE OFFER – a place, a share of the bill, and the rest of the bill.
  *
@@ -2543,25 +2556,66 @@ export type CollegeProgrammeTier = 'strong' | 'solid' | 'small'
  *  family; `needShare` is means-tested and reads nothing about her tennis. The engine keeps them apart
  *  because the sport does: there is no means test anywhere in Bylaw 15 on athletics aid, and the only
  *  means test in the system is on the other layer. `engine/collegeOffer.ts` carries the sources. */
-export interface CollegeOffer {
-  /** `null` = no programme offered her a place. ⚠ SHE MAY STILL ENROL AND PAY – nothing removes the
-   *  third answer (owner, 16.08), and a roster limit is not a scholarship count, so an unfunded
-   *  walk-on is a real thing. The refusal is measured on an EMPTY JUNIOR RECORD and never on a
-   *  professional result. */
-  programme: CollegeProgrammeTier | null
-  /** ⚠⚠ MERIT ONLY, 0-1 of the year's bill. Reads her junior record and the programme's own funding
-   *  and nothing else – `athleticShareOf`'s signature takes no family and no country, which is the
-   *  proof rather than the promise. */
-  athleticShare: number
-  /** the need-based layer beside it, 0-1. Means-tested by family background, and effectively shut to a
-   *  non-American: 34 CFR §668.33 bars federal student aid to anyone in the US "for a temporary
-   *  purpose" `[S]`, and NAFSA calls institutional aid to undergraduate internationals "uncommon". */
-  needShare: number
-  /** one year's published cost of attendance, cents */
+export interface CollegeQuote {
+  tier: CollegeTier
+  /** one year's published cost of attendance at this kind of place, cents `[S]` */
   costPerYearCents: number
-  /** what the family pays for a year, cents – the bill after both layers, and the number the ledger
-   *  actually charges, one fifty-second at a time */
+  /** ⚠⚠ MERIT ONLY, 0-1 **of the price of THIS tier**. Reads her junior record and the programme's
+   *  own funding and nothing else – `athleticShareOf`'s signature takes a tier, a score and a die and
+   *  no family at all, which is the proof rather than the promise.
+   *
+   *  ⚠ THE SAME RECORD IS WORTH A DIFFERENT SHARE AT EACH TIER, and that is the trade the choice is
+   *  about: a dearer place is a stronger squad, so she sits lower on its recruiting board. */
+  athleticShare: number
+  /** the need-based layer beside it, 0-1. Means-tested on the family's position at enrolment, and
+   *  effectively shut to a non-American: 34 CFR §668.33 bars federal student aid to anyone in the US
+   *  "for a temporary purpose" `[S]`, and NAFSA calls institutional aid to undergraduate
+   *  internationals "uncommon". */
+  needShare: number
+  /** what the family pays for a year at this place, cents – the price after both layers, and the
+   *  number the ledger charges one fifty-second at a time once she has picked it */
   familyPerYearCents: number
+  /** ⚠ IS THIS PLACE HERS TO PICK? False on exactly one case and it is primary law rather than a
+   *  balance knob: the in-state price IS residence, and a non-resident alien is never in-state
+   *  anywhere. **Two tiers are always open**, so nothing here can remove the college answer (owner,
+   *  16.08) – it removes one SCHOOL from a list of three. */
+  open: boolean
+}
+
+/** ⭐⭐ THE COLLEGE OFFER – every place she could take, and the one she took.
+ *
+ *  All shares are fractions of ONE YEAR'S PUBLISHED COST OF ATTENDANCE at the tier they belong to,
+ *  which is what "a full ride" means in the sport's own rulebook: Bylaw 15.02.5 defines a full
+ *  grant-in-aid as tuition, fees, living expenses, books and other expenses **up to the cost of
+ *  attendance** `[S]`. There is no separate athletics price list.
+ *
+ *  ⚠⚠ THE OWNER'S QUESTION OF 16.08 – «едины для всех или тоже от достатка?» – IS ANSWERED BY THE FACT
+ *  THAT EACH QUOTE CARRIES TWO SHARES AND NOT ONE. `athleticShare` is merit-only and reads nothing
+ *  about the family; `needShare` is means-tested and reads nothing about her tennis. The engine keeps
+ *  them apart because the sport does: there is no means test anywhere in Bylaw 15 on athletics aid.
+ *
+ *  ⚠ AND HE GUESSED THE CEILING EXACTLY. A scholarship may not exceed the price – Bylaw 15.1 – and
+ *  the trim falls on the NEED layer (15.1.3), never on the award. */
+export interface CollegeOffer {
+  /** one per tier, cheapest first. ⚠ ALWAYS ALL THREE, including the one residence shuts: the card
+   *  shows what a place costs even when it is not hers, because a list that silently loses a row is
+   *  a list the player cannot reason about. */
+  quotes: CollegeQuote[]
+  /** which she took. `null` while the fork is still open – **there is no default**, because a default
+   *  on this card would be a recommendation drawn in preselection (ruling 4, 30.07). */
+  chosen: CollegeTier | null
+  /** ⭐ WHAT A YEAR OF THIS FAMILY'S MONEY IS, measured the week the fork is raised: the parents'
+   *  annualised contribution plus their savings spread over the four years she would be enrolled.
+   *
+   *  ⚠ IT IS NOT THE MEANS TEST AND MUST NOT BE CONFUSED WITH IT. `familyPositionCents` shields the
+   *  first $25,000 of savings because a means test does not expect a family to liquidate its cushion;
+   *  this number does not, because a family deciding whether it can pay absolutely does count its
+   *  cushion. Two questions, two numbers – see `familyCanPayPerYearCents`.
+   *
+   *  ⚠ `null` MEANS "NEVER MEASURED", NOT "SHE CAN PAY NOTHING" – a career migrated from v51 was
+   *  quoted a price before this question existed, and the v52 migration invents no answer to it. Same
+   *  discipline as `ForkState.offer`'s own `null`. */
+  canPayPerYearCents: number | null
 }
 
 /** THE NATURAL END'S OFFER (§5.3). Raised in the off-season, answered before time can move again.
@@ -3188,9 +3242,9 @@ export interface Snapshot {
     ageYears: number
     /** ⭐⭐ WHAT THE THIRD ANSWER COSTS, so the card can say it (v51). ⚠ THIS IS NOT `collegeOpen`
      *  COMING BACK. That flag decided whether the button was DRAWN; this one decides what the button
-     *  SAYS, and there is no value of it that removes an answer – `offer.programme === null` still
-     *  draws three answers and still lets her enrol, at the full price. The owner's ruling of 16.08 is
-     *  about the answer's existence and it is untouched.
+     *  SAYS, and there is no value of it that removes an answer – an offer whose every quote is a
+     *  walk-on still draws three answers and still lets her enrol, at the full price. The owner's
+     *  ruling of 16.08 is about the answer's existence and it is untouched.
      *
      *  ⚠ AND UNLIKE `collegeOpen` IT IS PERSISTED STATE RATHER THAN A SNAPSHOT DERIVATION – it is
      *  copied off `world.fork.offer`, which is why v51 is a schema move and the removal of
@@ -3324,7 +3378,11 @@ export type ToWorker =
   // the fork at nineteen, the natural end's offer, and the single button on a college epilogue.
   // None of them can be issued unprompted – the engine refuses when its question is not open, which
   // is what stops a stale screen ending a career that never asked.
-  | { id: number; type: 'answerFork'; answer: ForkAnswer; baseRevision: number }
+  // ⭐⭐ `tier` IS THE PLAYER'S CHOICE OF PLACE (17.08) and it is OPTIONAL on the wire on purpose:
+  // only the college answer has one, and a command that carried a tier beside «stop» would be a
+  // shape the engine has to re-validate for no reason. Absent = the cheapest place open to her, which
+  // is the one default that cannot read as advice. The card always sends one.
+  | { id: number; type: 'answerFork'; answer: ForkAnswer; tier?: CollegeTier; baseRevision: number }
   | { id: number; type: 'answerRetirement'; retire: boolean; baseRevision: number }
   // «Another year» – spends ONE college year and re-latches, or clears the latch on the last of
   // them (§5.1, and P5's docs/specs/college-as-a-second-act-2026-08.md for why it is not four).

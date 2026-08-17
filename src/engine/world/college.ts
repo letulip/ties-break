@@ -24,7 +24,14 @@ import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { parentIncomeForWeekCents } from '../economy'
 import { NATIONAL_TEAM, callUpLine, rollCallUp } from '../nationalTeam'
-import { JUNIOR_RUNGS, collegeOfferFor, type CollegeRecruitView, type JuniorRung } from '../collegeOffer'
+import {
+  COLLEGE_TIERS,
+  JUNIOR_RUNGS,
+  chosenQuoteOf,
+  collegeOfferFor,
+  type CollegeRecruitView,
+  type JuniorRung,
+} from '../collegeOffer'
 import type { CollegeOffer, CollegeProgressView } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidAgeYears } from './age'
@@ -97,9 +104,12 @@ export function measureCollegeOffer(world: WorldState): CollegeOffer {
  *  entered college before this phase existed was never quoted a price and is not billed one now. */
 export function resolveCollegeBill(world: WorldState): void {
   if (!inCollege(world)) return
-  const offer = world.fork?.offer
-  if (!offer || offer.familyPerYearCents <= 0) return
-  const weekly = Math.round(offer.familyPerYearCents / WEEKS_PER_YEAR)
+  // ⭐ THE PLACE SHE PICKED, AND ONLY THAT ONE (17.08). The offer carries a quote for every tier so
+  // the card can show a choice; the ledger charges the one she took. `chosenQuoteOf` is the single
+  // reader, shared with the screens, so the number printed and the number charged cannot disagree.
+  const quote = chosenQuoteOf(world.fork?.offer)
+  if (!quote || quote.familyPerYearCents <= 0) return
+  const weekly = Math.round(quote.familyPerYearCents / WEEKS_PER_YEAR)
   if (weekly <= 0) return
   world.fundsCents -= weekly
   addEvent(world, {
@@ -251,8 +261,55 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // ⚠ AND A MIGRATED CAREER READS 0, WHICH IS TRUE FOR IT. A v50 career that entered college before
     // the bill existed carries a null offer, `resolveCollegeBill` returns at its second line, and this
     // says so rather than inventing a price it was never quoted.
-    billPerYearCents: world.fork?.offer?.familyPerYearCents ?? 0,
+    billPerYearCents: chosenQuoteOf(world.fork?.offer)?.familyPerYearCents ?? 0,
   }
+}
+
+// =================================================================================================
+// ⭐⭐ WHAT THE SQUAD IS FOR – the dual-match season, and the ONE thing a dearer place actually does
+// to her tennis (17.08, docs/specs/the-college-choice-2026-08.md §2)
+// =================================================================================================
+//
+// The owner approved two dimensions beyond price – TEAM STRENGTH and THE CHANCE OF RETURNING TO THE
+// TOUR – and this phase proposed a third, HOW MUCH HER GAME DEVELOPS IN THE FOUR YEARS. They collapse
+// into one mechanism on purpose, and the collapsing is a claim rather than a shortcut:
+//
+//   * TEAM STRENGTH is what a college programme HAS. On its own it is a number on a card.
+//   * WHAT IT DOES is put her on court against it. A stronger squad plays a longer, harder dual-match
+//     season, and `growWeek`'s `matchesThisWeek` term is the engine's own already-tuned price of
+//     competition (`ECONOMY.development.matchBonus`, 0.18 a match, capped at 3).
+//   * THE RETURN TO THE TOUR IS NOT A SECOND KNOB AND MUST NOT BECOME ONE. A per-tier probability
+//     that she "makes it back" would be a die that overrides the career the player actually had, and
+//     this repo does not grant outcomes – it measures them. What she comes back with is her game and
+//     her family's balance, and BOTH already move with the tier. §3 of the spec measures the return
+//     per tier instead of assigning it.
+//
+// ⚠ TWO INVENTED NUMBERS AND THEY SAY SO: the season's length and position (ours), and how many
+// matches a week each tier plays (ours – `COLLEGE_TIERS[*].matchesPerWeek`). The NCAA dual-match
+// season is real; these numbers are not it.
+//
+// ⚠ ZERO DRAWS, ZERO EVENTS. It returns a count, at the one call site that feeds `growWeek`. It does
+// NOT write to `world.events` or `world.results`: a college match awards no ranking points and no
+// money, so a result row for it would break the `prizeCentsFor` invariant ("a result cannot award one
+// without the other") to no purpose. The frozen MAIN capture cannot see arithmetic.
+
+/** ⚠ OURS. The block of the season the squad plays its dual matches in, as season weeks `[from, to)`.
+ *  Thirteen weeks – a spring season – placed so it contains the national-team week (14) rather than
+ *  dodging it, because she is playing tennis in that week either way and a gap carved around it would
+ *  be a coincidence the fiction cannot explain. */
+export const COLLEGE_MATCH_SEASON = { fromSeasonWeek: 4, toSeasonWeek: 17 } as const
+
+/** How many matches the programme plays her in THIS week – 0 outside college and outside the season.
+ *  ⚠ THE DEAR TIER SATURATES THE ENGINE'S OWN CAP (`matchBonusCap` = 3) and that is deliberate: the
+ *  ceiling on what competition is worth was tuned long before college had a price, and this phase is
+ *  not entitled to raise it to make its own dimension look bigger. */
+export function collegeMatchesThisWeek(world: WorldState): number {
+  if (!inCollege(world)) return 0
+  const tier = chosenQuoteOf(world.fork?.offer)?.tier
+  if (!tier) return 0
+  const seasonWeek = world.week % WEEKS_PER_YEAR
+  if (seasonWeek < COLLEGE_MATCH_SEASON.fromSeasonWeek || seasonWeek >= COLLEGE_MATCH_SEASON.toSeasonWeek) return 0
+  return COLLEGE_TIERS[tier].matchesPerWeek
 }
 
 /** ⭐⭐ WHAT SHE COMES BACK WITH, AND IT IS MEASURED RATHER THAN ASSERTED.

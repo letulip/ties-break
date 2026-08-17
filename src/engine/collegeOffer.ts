@@ -49,10 +49,37 @@
 // STRONGER rather than weaker: the merit-only sweep in `tests/college-offer.test.ts` block A now
 // varies income and savings as well as background and nationality, so an edit that made the award
 // read the new fields fails a test that did not previously exist.
-import type { CollegeOffer, CollegeProgrammeTier, FamilyBackground } from '../shared/protocol'
+//   ⚠ RE-AIMED, NOT DELETED (the rebuild below): the first argument is a TIER now – the place the
+//   PLAYER picked – and not the funding band her record bought. The property the sentence is about is
+//   unchanged and is stronger for it, because the one new input is a player's decision. The sweep is
+//   wider still: every background x both nationalities x four incomes x four savings x EVERY TIER.
+//
+// ⭐⭐⭐⭐ ROUND 21, THE SAME DAY, LATER: THE OWNER READ THE REPORT AND IT ANSWERED A QUESTION HE HAD
+// NOT ASKED. `docs/specs/the-college-choice-2026-08.md` is the rebuild and this file is its centre.
+// Verbatim: «Есть стоимость в год, она складывается из 52 недельных платежей семьи простым
+// суммированием, плюс может быть ситуация, что есть деньги на счете и семья хочет выбрать колледж
+// дороже… И всё. мы больше ничего ни с чем не сравниваем.»
+//
+// ⚠⚠ WHAT WAS WRONG WAS NOT THE ARITHMETIC. It was that A TIER WAS NOT A PLACE. `strong` / `solid` /
+// `small` were FUNDING SHARES – 0.85 / 0.55 / 0.30 – **derived from her junior record**, laid over a
+// price that was identical at all three. So:
+//
+//   * the PLAYER chose nothing. Her results picked the "tier" for her, which is the opposite of the
+//     owner's «семья хочет выбрать колледж дороже»;
+//   * and the card printed **$8,673 a year** under a sourced **$30,990** sticker with nothing on
+//     screen connecting them. $8,673 is the family's RESIDUAL after the award. He could not find
+//     where it came from because no surface said so.
+//
+// SO A TIER IS NOW A PLACE WITH A PRICE, three of them on the three sourced stickers, and the player
+// picks one. The award is merit-only and is a share OF THE PLACE SHE PICKED. The family pays the rest
+// weekly and may go into debt – which `resolveCollegeBill` has done since v51 and is NOT rebuilt.
+//
+// ⚠ THE PRICES ARE SOURCED. THE QUALITY LADDER OVER THEM IS OURS – see `COLLEGE_TIERS`, where every
+// invented number says so on its own line. §0a of the spec is the table.
+import type { CollegeOffer, CollegeQuote, CollegeTier, FamilyBackground } from '../shared/protocol'
 import type { Rng } from './rng'
 
-export type { CollegeOffer, CollegeProgrammeTier }
+export type { CollegeOffer, CollegeQuote, CollegeTier }
 
 /** ⭐⭐ THE SECOND LADDER, AND IT IS THE ONE THE PLAYER CAN ACTUALLY READ.
  *
@@ -123,58 +150,73 @@ export interface CollegeRecruitView {
   familyAssetsCents: number
 }
 
+/** ⭐⭐ THE THREE PLACES, CHEAPEST FIRST. **The prices are sourced; everything else here is ours.**
+ *
+ *  ⚠⚠ THE PRICES `[S]`: College Board, *Trends in College Pricing and Student Aid 2025*, Figure CP-1
+ *  – **$30,990** public four-year in-state, **$50,920** public four-year out-of-state, **$65,470**
+ *  private nonprofit. Round 20's model shipped two of the three and its own note said why the third
+ *  was left out: *"it would need a driver, and the honest drivers are all inventions."* **The owner
+ *  supplied the driver**, and it is the one thing an invented selector could never be – A PLAYER'S
+ *  CHOICE. The third sticker is no longer recorded-and-not-modelled; it is the dear place.
+ *
+ *  ⚠ `residentOnly` IS THE ONE PROPERTY HERE THAT IS NOT OURS. In-state versus out-of-state IS
+ *  residence and a non-resident alien is never in-state anywhere, so the cheap place is not open to a
+ *  girl on a student visa. Two places always are: **nothing here can remove the college answer**
+ *  (owner, 16.08) – it removes one school from a list of three.
+ *
+ *  ⚠⚠ `squad` IS OURS AND IT IS AN INVENTION WITH A SCALE, NOT A FINDING. It is the programme's own
+ *  playing level on the SAME 0-100 scale her skills use, so the card can put it beside her and the
+ *  player can read the difference. No source rates a college squad on our scale and none could. The
+ *  three are set to BRACKET the measured skill mean at the fork (**58.64**, P5 §2b, n = 52): the
+ *  cheap place is below her, the middle one just above, the dear one well above.
+ *
+ *  ⚠⚠ `fullAwardScore` IS OURS TOO, BUT IT IS SET ON A MEASUREMENT RATHER THAN ON TASTE – the same
+ *  discipline the retired `programmes.minJuniorScore` used. It is the junior score at which a
+ *  programme funds her whole bill, i.e. the score at which she is the top of its recruiting board,
+ *  and the three are the MEASURED QUANTILES of our own junior score over 44 careers walked to the
+ *  fork (min 4 · p25 6 · **median 11** · **p75 18** · **p90 23** · max 25). So the cheap place funds
+ *  the median junior completely, and the dear place funds only the top tenth completely.
+ *
+ *  ⚠ `matchesPerWeek` IS OURS. The NCAA dual-match season is real; its length here and the number of
+ *  matches a tier plays in it are ours. It is the one thing the squad DOES – see
+ *  `collegeMatchesThisWeek` in `world/college.ts`, and §3 of the spec for how little it turned out to
+ *  be worth. */
+export const COLLEGE_TIERS = {
+  state: {
+    costPerYearCents: 30_990_00,
+    residentOnly: true,
+    squad: 55,
+    fullAwardScore: 11,
+    matchesPerWeek: 1,
+  },
+  national: {
+    costPerYearCents: 50_920_00,
+    residentOnly: false,
+    squad: 65,
+    fullAwardScore: 18,
+    matchesPerWeek: 2,
+  },
+  private: {
+    costPerYearCents: 65_470_00,
+    residentOnly: false,
+    squad: 75,
+    fullAwardScore: 23,
+    matchesPerWeek: 3,
+  },
+} as const satisfies Record<
+  CollegeTier,
+  { costPerYearCents: number; residentOnly: boolean; squad: number; fullAwardScore: number; matchesPerWeek: number }
+>
+
+/** cheapest first, and the order the card draws them in. ⚠ THE ORDER IS THE PRICE'S, NOT A RANKING –
+ *  a card that led with the dear place would be recommending it in reading order (ruling 4). */
+export const COLLEGE_TIER_ORDER = ['state', 'national', 'private'] as const
+
 export const COLLEGE_OFFER = {
-  /** ⚠⚠ TWO STICKERS, AND NATIONALITY IS THE ONLY SOURCED THING THAT PICKS BETWEEN THEM.
-   *
-   *  §1d's table has three: **$30,990** public in-state, **$50,920** public out-of-state, **$65,470**
-   *  private nonprofit, all `[S]` (College Board, Trends 2025, Figure CP-1). We ship two.
-   *
-   *  WHY NOT THE PRIVATE ONE: it would need a driver, and the honest drivers are all inventions – a
-   *  strong programme is not more likely to be private, and no source says otherwise. A third
-   *  constant with a made-up selector is exactly the failure `docs/specs/acceptance-cuts-2026-08.md`
-   *  §0 finding 2 records. It is recorded here and not modelled.
-   *
-   *  WHY NATIONALITY PICKS THE OTHER TWO: in-state versus out-of-state IS residence, and a
-   *  non-resident alien is never in-state anywhere. That is the one split the sources actually
-   *  determine, so it is the one we model.
-   *
-   *  ⚠ AND THE AMERICAN FIGURE IS THE FLOOR OF THE RANGE, STATED AS A SIMPLIFICATION. An American
-   *  recruited by an out-of-state programme pays $50,920 too, and we do not model which school is in
-   *  which state. So our US bill is the cheapest a real place can be, never the dearest. */
-  costPerYearInStateCents: 30_990_00,
-  costPerYearOutOfStateCents: 50_920_00,
-  /** recorded, not modelled – §1d's third sticker, kept so the gap is visible rather than forgotten */
-  costPerYearPrivateNonprofitCents: 65_470_00,
-  /** the country code that gets the in-state figure and the need-based layer. ⚠ Both of those are US
+  /** the country code that gets the in-state place and the need-based layer. ⚠ Both of those are US
    *  federal facts (34 CFR §668.33; the state-residence tuition split), so this is not a nationality
    *  preference in the game – it is the one place the sourced law is US-specific. */
   usCountryCode: 'US',
-
-  /** ⚠⚠ OURS, NOT THE SPORT'S – said as plainly as `college-is-its-own-branch-2026-08.md` §0a says it
-   *  of the Local/Regional/National rungs.
-   *
-   *  WHAT IS SOURCED: partial awards are the norm (*"Most scholarships are partial"*, NCAA `[S]`); a
-   *  school may fund any or all of its ten roster places (Bylaw 17.2 + 16.13.1.5 `[S]`); a FULLY
-   *  FUNDED programme at the 2024-25 limit averaged ~85% of a full ride per player, or 80% against
-   *  the new roster of ten (`[I]`, §1d, arithmetic shown there).
-   *
-   *  WHAT IS NOT: the low end. §4 items 15 and 16 are explicit – no per-sport award figure exists and
-   *  the share of programmes that fund to their limit is unknown. **So `strong` sits at the sourced
-   *  ceiling and the two below it are ours**, spaced so the card shows a real difference. Anyone
-   *  re-tuning these is tuning our numbers, not the sport's, and §4 item 15 is the check that would
-   *  replace them. */
-  /** ⚠⚠ AND THE THRESHOLDS ARE THE MEASURED QUARTILES OF THE SCORE, NOT ROUND NUMBERS I LIKED.
-   *
-   *  The first set (12 / 5 / 1) put **88 of 90 careers in `strong`** and produced a median family
-   *  bill of **$0** – a phase about college not being free, measuring it as free. Re-shaping the score
-   *  (see `prestigeWeight`) gave it real spread over 44 careers walked to the fork: **min 4 · p25 6 ·
-   *  median 11 · p75 18 · p90 23 · max 25**. These three sit on that distribution's own quarters.
-   *  Spec §3b has both runs. */
-  programmes: {
-    strong: { base: 0.85, minJuniorScore: 18 },
-    solid: { base: 0.55, minJuniorScore: 7 },
-    small: { base: 0.3, minJuniorScore: 1 },
-  } as Record<CollegeProgrammeTier, { base: number; minJuniorScore: number }>,
 
   /** how far a programme's own funding moves the award either side of its band, ± this.
    *  ⚠ THIS IS THE SOURCED MECHANISM AND NOT A COSMETIC WOBBLE: since the House settlement the
@@ -340,42 +382,56 @@ export function titleVolume(juniorTitles: number): number {
   return Math.min(COLLEGE_OFFER.maxTitleVolume, Math.floor(juniorTitles / 2))
 }
 
-/** WHICH PROGRAMME, or `null` for an empty record. */
-export function programmeFor(juniorScore: number): CollegeProgrammeTier | null {
-  const p = COLLEGE_OFFER.programmes
-  if (juniorScore >= p.strong.minJuniorScore) return 'strong'
-  if (juniorScore >= p.solid.minJuniorScore) return 'solid'
-  if (juniorScore >= p.small.minJuniorScore) return 'small'
-  return null
+/** ⭐ DID ANYBODY SEE HER AT ALL? Zero = an empty junior record – she never reached a quarter-final at
+ *  any junior rung in her whole junior career.
+ *
+ *  ⚠⚠ IT IS NOT A REFUSAL AND IT REMOVES NOTHING (owner, 16.08). She enrols as a WALK-ON at whichever
+ *  place she picks and pays its whole price: the roster limit is a ROSTER limit and not a scholarship
+ *  count, so a school may carry an unfunded player (Bylaw 17.2 + 16.13.1.5 `[S]`). Measured, this is
+ *  3 of 90 careers.
+ *
+ *  ⚠ `programmeFor(score)` WAS HERE and it answered a different question – WHICH funding band her
+ *  record bought, back when the band was the "tier". The band is gone (see the header); what survives
+ *  is the only part of it that was ever about the world rather than about money. */
+export function recruitedAtAll(juniorScore: number): boolean {
+  return juniorScore > 0
 }
 
-/** ⚠⚠ THE ATHLETIC SHARE, AND ITS SIGNATURE IS THE ARGUMENT.
+/** ⚠ IS THIS PLACE HERS TO PICK? Residence, and nothing else. Primary law, not a balance knob. */
+export function tierOpenTo(tier: CollegeTier, country: string): boolean {
+  return !COLLEGE_TIERS[tier].residentOnly || country === COLLEGE_OFFER.usCountryCode
+}
+
+/** ⚠⚠ THE ATHLETIC SHARE, AND ITS SIGNATURE IS STILL THE ARGUMENT.
  *
- *  It takes a programme, a junior score and a die. **It does not take a `CollegeRecruitView`**, so it
- *  physically cannot read `background` or `country`. That is the owner's question answered in the
- *  type system rather than in a comment: an athletics award that read family wealth would be a rule
- *  the sport does not have – there is no means test anywhere in Bylaw 15 on athletics aid – and it
- *  would read as unfair on a card that is already the most expensive click in the game.
+ *  It takes a TIER, a junior score and a die. **It does not take a `CollegeRecruitView`**, so it
+ *  physically cannot read `background`, `country`, `familyIncomeCents` or `familyAssetsCents`. That is
+ *  the owner's question answered in the type system rather than in a comment: an athletics award that
+ *  read family wealth would be a rule the sport does not have – there is no means test anywhere in
+ *  Bylaw 15 on athletics aid – and it would read as unfair on a card that is already the most
+ *  expensive click in the game.
  *
- *  ⚠ `tests/college-offer.test.ts` sweeps all three backgrounds and both nationalities against one
- *  junior record and asserts this number does not move, and that test is mutation-verified. */
-export function athleticShareOf(programme: CollegeProgrammeTier, juniorScore: number, rng: Rng): number {
-  const band = COLLEGE_OFFER.programmes[programme]
+ *  ⚠⚠ WHAT CHANGED IN THE REBUILD IS THE FIRST ARGUMENT ONLY, AND THAT IS DELIBERATE. It used to be
+ *  the funding band her record had bought (`'strong'`), so the argument was a re-statement of the
+ *  second one; it is now the PLACE THE PLAYER PICKED, which the function cannot derive and must be
+ *  told. The merit-only property is therefore stronger than before rather than weaker: the one new
+ *  input is a player decision, and a player decision is not a family's wealth.
+ *
+ *  ⚠ THE SHAPE IS A RECRUITING BOARD AND IT IS OURS. Her score against the tier's `fullAwardScore`,
+ *  clipped at a whole ride and floored so nobody is offered a place and nothing at all. The SAME
+ *  record is worth less at a dearer place because a dearer place is a stronger squad – she sits
+ *  further down its board. That is the whole of the trade the choice is about.
+ *
+ *  ⚠ `tests/college-offer.test.ts` sweeps every background, both nationalities, four incomes and four
+ *  savings positions against every tier and asserts this number does not move; it is
+ *  mutation-verified. */
+export function athleticShareOf(tier: CollegeTier, juniorScore: number, rng: Rng): number {
+  if (!recruitedAtAll(juniorScore)) return 0
+  const board = COLLEGE_TIERS[tier]
   // The programme's own funding, ± the spread. One draw, on a sub-stream (see `collegeOfferFor`).
   const funding = (rng() * 2 - 1) * COLLEGE_OFFER.programmeFundingSpread
-  // ⚠ AND A HALF-STEP FOR THE RECORD INSIDE THE BAND, so the band edges are not cliffs: the top of a
-  // band is worth a little more than its floor at the same programme. Scaled by the band's own width
-  // so it can never carry her into the next band's money.
-  const nextFloor = programme === 'strong' ? COLLEGE_OFFER.maxJuniorScore : nextBandFloor(programme)
-  const span = Math.max(1, nextFloor - band.minJuniorScore)
-  const within = Math.min(1, Math.max(0, (juniorScore - band.minJuniorScore) / span))
-  const shaped = band.base + within * COLLEGE_OFFER.programmeFundingSpread
-  return clamp(shaped + funding, COLLEGE_OFFER.minAthleticShare, 1)
-}
-
-function nextBandFloor(programme: CollegeProgrammeTier): number {
-  const p = COLLEGE_OFFER.programmes
-  return programme === 'small' ? p.solid.minJuniorScore : p.strong.minJuniorScore
+  const merit = juniorScore / board.fullAwardScore
+  return clamp(merit + funding, COLLEGE_OFFER.minAthleticShare, 1)
 }
 
 /** ⚠⚠ THE NEED-BASED SHARE – means-tested, and SHUT TO A NON-AMERICAN, which is primary law.
@@ -438,66 +494,94 @@ export function fundingBandOf(covered: number): CollegeFundingBand {
   return 'none'
 }
 
-/** What the offer covers between the two layers, capped at the Bylaw 15.1 ceiling. One expression,
+/** What a quote covers between the two layers, capped at the Bylaw 15.1 ceiling. One expression,
  *  used by the band and by the bill, so the card and the ledger cannot disagree about it. */
-export function coveredShareOf(offer: Pick<CollegeOffer, 'athleticShare' | 'needShare'>): number {
-  return Math.min(1, offer.athleticShare + offer.needShare)
+export function coveredShareOf(quote: Pick<CollegeQuote, 'athleticShare' | 'needShare'>): number {
+  return Math.min(1, quote.athleticShare + quote.needShare)
 }
 
-/** ⭐⭐ THE OFFER. One draw, on the sub-stream the caller derives (`seed:collegeoffer:<week>`) –
- *  never MAIN (CLAUDE.md invariant 2).
+/** ⭐⭐ WHAT A YEAR OF THIS FAMILY'S MONEY IS, and it is a DIFFERENT QUESTION from the means test.
  *
- *  ⚠ THE TWO LAYERS ARE METERED TOGETHER AT ONE CEILING, AND THE CEILING IS THE BILL. Bylaw 15.1: a
+ *  ⚠⚠ NO SHIELD, ON PURPOSE. `familyPositionCents` protects the first $25,000 of savings because a
+ *  means test does not expect a family to liquidate its cushion. A family deciding whether it can
+ *  afford a place counts the cushion – that is what a cushion is for, and it is the owner's own
+ *  sentence: «есть деньги на счете и семья хочет выбрать колледж дороже». Two questions, two numbers,
+ *  and folding them into one would have made the dear place unaffordable to every family that had
+ *  saved for exactly this.
+ *
+ *  ⚠ SAVINGS ARE SPREAD OVER THE FOUR YEARS, so this is in the same unit as the bill beside it:
+ *  both are "dollars available in a year". ⚠ AND IT FLOORS AT ZERO – a family already in debt can
+ *  still enrol (nothing removes the college answer); what it cannot do is call the debt income. */
+export function familyCanPayPerYearCents(view: Pick<CollegeRecruitView, 'familyIncomeCents' | 'familyAssetsCents'>): number {
+  const savings = Math.max(0, view.familyAssetsCents)
+  return Math.max(0, view.familyIncomeCents + Math.round(savings / COLLEGE_OFFER.needTest.assetSpreadYears))
+}
+
+/** ⭐⭐ ONE PLACE, PRICED FOR THIS GIRL AND THIS FAMILY. One draw per quote, on the sub-stream the
+ *  caller derives (`seed:collegeoffer:<week>`) – never MAIN (CLAUDE.md invariant 2).
+ *
+ *  ⚠ THE TWO LAYERS ARE METERED TOGETHER AT ONE CEILING, AND THE CEILING IS THE PRICE. Bylaw 15.1: a
  *  student-athlete is ineligible if she *"receives financial aid that exceeds the value of the cost of
- *  attendance"* `[S]`. So `athletic + need` is capped at 1.
+ *  attendance"* `[S]`. So `athletic + need` is capped at 1. **The owner guessed this rule exactly**
+ *  before being told it, which is recorded in the spec rather than buried here.
  *
  *  ⚠⚠ AND THE TRIM FALLS ON THE NEED LAYER, NEVER ON THE ATHLETIC ONE. Two reasons and both matter:
  *  the sport's own remedy is to reduce INSTITUTIONAL aid (15.1.3), and trimming the athletic award
  *  instead would make a merit number move with family wealth – the exact thing the owner's question
  *  is about. A strong girl from a poor family therefore pays nothing; her award is not shaved to
  *  make room for her need. */
-export function collegeOfferFor(view: CollegeRecruitView, rng: Rng): CollegeOffer {
-  const costPerYearCents =
-    view.country === COLLEGE_OFFER.usCountryCode
-      ? COLLEGE_OFFER.costPerYearInStateCents
-      : COLLEGE_OFFER.costPerYearOutOfStateCents
-
-  const score = juniorRecordScore(view)
-  const programme = programmeFor(score)
-
-  // ⭐⭐ NO PROGRAMME IS NOT NO ANSWER, AND THIS IS WHERE THE OWNER'S RULING AND THE RESEARCH STOP
-  // PULLING AGAINST EACH OTHER.
-  //
-  // §1a says the route is narrow and a place is something somebody has to OFFER. The owner's ruling
-  // of 16.08 says nothing removes the third answer. Both are satisfied by the same sentence: **she
-  // can always enrol; what she may not have is anyone paying for it.** A girl with no offer is a
-  // walk-on – the roster limit is a ROSTER limit, not a scholarship count, and a school may carry an
-  // unfunded player on it (Bylaw 17.2 + 16.13.1.5 `[S]`).
-  //
-  // ⚠ AND THE NEED-BASED LAYER STILL REACHES HER, because it was never an athletics thing. Pell is
+export function quoteFor(tier: CollegeTier, view: CollegeRecruitView, rng: Rng): CollegeQuote {
+  const costPerYearCents = COLLEGE_TIERS[tier].costPerYearCents
+  const athleticShare = athleticShareOf(tier, juniorRecordScore(view), rng)
+  // ⚠ AND THE NEED-BASED LAYER REACHES A WALK-ON TOO, because it was never an athletics thing. Pell is
   // means-tested aid to a STUDENT; a poor American family gets it whether or not a coach ever called.
-  // So the athletic share is zero here and the other layer is not.
-  if (programme === null) {
-    const walkOnNeed = needShareOf(view)
-    return {
-      programme: null,
-      athleticShare: 0,
-      needShare: walkOnNeed,
-      costPerYearCents,
-      familyPerYearCents: Math.round(costPerYearCents * (1 - walkOnNeed)),
-    }
-  }
-
-  const athleticShare = athleticShareOf(programme, score, rng)
   const needShare = Math.min(needShareOf(view), 1 - athleticShare)
   const covered = coveredShareOf({ athleticShare, needShare })
   return {
-    programme,
+    tier,
+    costPerYearCents,
     athleticShare,
     needShare,
-    costPerYearCents,
     familyPerYearCents: Math.round(costPerYearCents * (1 - covered)),
+    open: tierOpenTo(tier, view.country),
   }
+}
+
+/** ⭐⭐ THE OFFER – EVERY PLACE SHE COULD TAKE, MEASURED AT ONCE, AND NOBODY HAS PICKED ONE YET.
+ *
+ *  ⚠⚠ ALL THREE ARE PRICED EVEN THOUGH SHE WILL TAKE ONE, and that is the point of the rebuild: the
+ *  owner asked for a CHOICE, and a choice the player cannot see the price of is not one. The card
+ *  draws the list; `chosen` stays `null` until she answers.
+ *
+ *  ⚠ THERE IS NO DEFAULT AND THERE MAY NOT BE. A preselected place is a recommendation drawn in
+ *  preselection, and ruling 4 (30.07) forbids this card an opinion about which answer to take.
+ *
+ *  ⚠ ONE DRAW PER TIER, IN TIER ORDER, ON THE CALLER'S SUB-STREAM. Three draws where round 20 took
+ *  one – invisible to the frozen MAIN capture by construction, because the stream is
+ *  `seed:collegeoffer:<week>` and is re-derived at the call site. */
+export function collegeOfferFor(view: CollegeRecruitView, rng: Rng): CollegeOffer {
+  return {
+    quotes: COLLEGE_TIER_ORDER.map((tier) => quoteFor(tier, view, rng)),
+    chosen: null,
+    canPayPerYearCents: familyCanPayPerYearCents(view),
+  }
+}
+
+/** The quote she actually took, or `null` while the fork is open. ⚠ ONE READER FOR THE LEDGER AND THE
+ *  SCREENS ALIKE, so the number the card prints is the number the tick is charging. */
+export function chosenQuoteOf(offer: CollegeOffer | null | undefined): CollegeQuote | null {
+  if (!offer || offer.chosen === null) return null
+  return offer.quotes.find((q) => q.tier === offer.chosen) ?? null
+}
+
+/** ⚠ CAN THE FAMILY PAY FOR THIS PLACE OUT OF WHAT IT HAS? A fact for the card, never a verdict:
+ *  a family that cannot goes into DEBT, not away (owner, 16.08 – nothing removes the college answer),
+ *  and `resolveCollegeBill` will happily take it under water.
+ *  ⚠ `null` = the question was never measured (a career migrated from v51). The card prints nothing
+ *  rather than guessing – a screen that answered an unmeasured question would be inventing. */
+export function canAfford(offer: CollegeOffer, quote: CollegeQuote): boolean | null {
+  if (offer.canPayPerYearCents === null) return null
+  return quote.familyPerYearCents <= offer.canPayPerYearCents
 }
 
 function clamp(v: number, lo: number, hi: number): number {

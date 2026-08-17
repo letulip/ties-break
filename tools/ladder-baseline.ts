@@ -64,8 +64,15 @@ import { kidAgeExact, kidAgeAt, kidPoints, tableSize } from '../src/engine/world
 // this population, kept so the frozen battery's arms stay comparable on the dimension the
 // junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
 import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
-import { COLLEGE_OFFER, type CollegeOffer, type CollegeProgrammeTier } from '../src/engine/collegeOffer'
+import { COLLEGE_OFFER, COLLEGE_TIERS, type CollegeOffer, type CollegeTier } from '../src/engine/collegeOffer'
 import type { FamilyBackground } from '../src/shared/protocol'
+
+/** ⚠ THE CHEAPEST PLACE OPEN TO HER – the one college column that means the same thing before and
+ *  after the 17.08 rebuild. This battery never answers the fork, so it can report what a place would
+ *  cost but never which one she took. */
+function cheapestOpen(offer: CollegeOffer | null | undefined) {
+  return offer?.quotes.find((q) => q.open) ?? null
+}
 import { computeCountingResults } from '../src/engine/world/snapshot'
 import { BEST_N_BY_TRACK } from '../src/engine/season/ranking'
 import { ENDINGS } from '../src/engine/ending'
@@ -290,7 +297,9 @@ export interface Row {
   /** the family this career was run on, so §6a can split the bill by background */
   background: FamilyBackground
   /** which programme offered, `null` = nobody did (walk-on), `undefined` = never reached the fork */
-  offerProgramme: CollegeProgrammeTier | null | undefined
+  /** ⚠ RE-AIMED 17.08: the TIER of the cheapest place open to her, not the funding band her record
+   *  bought. `null` = no offer measured at all. */
+  offerProgramme: CollegeTier | null | undefined
   offerAthleticShare: number | null
   offerNeedShare: number | null
   offerCostPerYearCents: number | null
@@ -554,11 +563,16 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
     collegeOpenAtFork,
     collegeOpenAfterFork,
     background: preset.background,
-    offerProgramme: forkSeen ? offer?.programme ?? null : undefined,
-    offerAthleticShare: offer?.athleticShare ?? null,
-    offerNeedShare: offer?.needShare ?? null,
-    offerCostPerYearCents: offer?.costPerYearCents ?? null,
-    offerFamilyPerYearCents: offer?.familyPerYearCents ?? null,
+    // ⚠ RE-AIMED FOR THE 17.08 REBUILD, NOT WIDENED. A tier is a PLACE with a price now and the
+    // player picks one, so there is no single "the offer" to read at the fork – this battery never
+    // answers the fork (its own header) and so never picks. It reports the CHEAPEST PLACE OPEN TO
+    // HER, which is the one column that meant the same thing before and after: the least the college
+    // branch can cost this career. `tools/college-price-probe.ts` is where the choice is measured.
+    offerProgramme: forkSeen ? cheapestOpen(offer)?.tier ?? null : undefined,
+    offerAthleticShare: cheapestOpen(offer)?.athleticShare ?? null,
+    offerNeedShare: cheapestOpen(offer)?.needShare ?? null,
+    offerCostPerYearCents: cheapestOpen(offer)?.costPerYearCents ?? null,
+    offerFamilyPerYearCents: cheapestOpen(offer)?.familyPerYearCents ?? null,
     forkWeek,
     forkAge,
     endingType,
@@ -820,13 +834,16 @@ if (wants('6')) {
     console.log(`\n  ${rule(84)}`)
     console.log(`  6a. THE OFFER (v51) – the shipped game, not the counterfactual. n ${atFork.length} careers reaching the fork`)
     console.log(`  ${rule(84)}`)
-    const funded = atFork.filter((r) => r.offerProgramme !== null)
+    // ⚠ RE-AIMED 17.08 AND NOT LOOSENED. "Funded" used to mean `programme !== null`; a tier is a
+    // PLACE now and every career is quoted one, so the walk-on is the career whose AWARD is zero –
+    // which is what the old flag actually meant (nobody funded her). Same population, honest name.
+    const funded = atFork.filter((r) => (r.offerAthleticShare ?? 0) > 0)
     console.log(`\n  ${padE('OFFERED A FUNDED PLACE', 34)}${pad(funded.length, 4)} / ${atFork.length}   ${pct(funded.length, atFork.length)}`)
     console.log(`  ${padE('walk-on (no programme funded her)', 34)}${pad(atFork.length - funded.length, 4)} / ${atFork.length}   ${pct(atFork.length - funded.length, atFork.length)}`)
-    console.log(`\n  WHICH PROGRAMME, AND WHAT THE AWARD COVERS`)
-    console.log(`  ${padE('programme', 12)}${pad('careers', 9)}${pad('share', 8)}${pad('athletic %', 12)}${pad('need %', 9)}${pad('family $/yr', 13)}`)
+    console.log(`\n  THE CHEAPEST PLACE OPEN TO HER, AND WHAT THE AWARD COVERS THERE`)
+    console.log(`  ${padE('place', 12)}${pad('careers', 9)}${pad('share', 8)}${pad('athletic %', 12)}${pad('need %', 9)}${pad('family $/yr', 13)}`)
     console.log(`  ${rule(64)}`)
-    for (const p of ['strong', 'solid', 'small', null] as (CollegeProgrammeTier | null)[]) {
+    for (const p of ['state', 'national', 'private', null] as (CollegeTier | null)[]) {
       const g = atFork.filter((r) => r.offerProgramme === p)
       if (g.length === 0) continue
       console.log(
@@ -858,7 +875,7 @@ if (wants('6')) {
     console.log(`    min ${usd(bill.min)} · p25 ${usd(bill.p25)} · median ${usd(bill.p50)} · p75 ${usd(bill.p75)} · max ${usd(bill.max)}`)
     console.log(`    free rides: ${atFork.filter((r) => (r.offerFamilyPerYearCents ?? 0) === 0).length} of ${atFork.length}`)
     console.log(`\n  ⚠ EVERY CAREER HERE IS \`country: '${COLLEGE_OFFER.usCountryCode}'\` – the bench's own profile. A non-American faces the`)
-    console.log(`    out-of-state sticker (${usd(COLLEGE_OFFER.costPerYearOutOfStateCents)}/yr vs ${usd(COLLEGE_OFFER.costPerYearInStateCents)}) AND no need-based layer at all (34 CFR 668.33),`)
+    console.log(`    out-of-state sticker (${usd(COLLEGE_TIERS.national.costPerYearCents)}/yr vs ${usd(COLLEGE_TIERS.state.costPerYearCents)}) AND no need-based layer at all (34 CFR 668.33),`)
     console.log(`    so this table is the CHEAPEST the college branch can be. See the spec's §4.`)
   }
 }

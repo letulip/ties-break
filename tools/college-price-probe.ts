@@ -1,3 +1,12 @@
+// ⚠⚠ RETIRED AS THE ANSWER TO THE OWNER'S QUESTION ON 17.08, AND KEPT AS THE INSTRUMENT IT WAS.
+// This file's whole architecture is a COMPARISON – college against four years on tour – and the owner
+// ruled that out: «мы больше ничего ни с чем не сравниваем». `tools/college-choice-probe.ts` measures
+// college on its own terms and is what the college reporting now uses. This one stays because P6's
+// decomposition question (below) is a real question it answers, and because deleting a shipped
+// instrument to make a report tidier is how a corpus loses its own history.
+// ⚠ AND IT READS THE CHEAPEST PLACE, NOT "THE OFFER". A tier is a place with a price since 17.08 and
+// the player picks one; this probe never picks.
+//
 // WHAT DOES THE THIRD ANSWER ACTUALLY COST, AND WHICH TERM IS THE BIG ONE?
 //
 //   npx vite-node tools/college-price-probe.ts -- [--seeds N]
@@ -35,7 +44,11 @@ import { answerFork } from '../src/engine/world/endings'
 // this population, kept so the frozen battery's arms stay comparable on the dimension the
 // junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
 import { retiredCollegeDoorOpen } from './retired-college-rule'
-import { COLLEGE_OFFER } from '../src/engine/collegeOffer'
+import { COLLEGE_TIERS, type CollegeOffer } from '../src/engine/collegeOffer'
+
+/** ⚠ THE CHEAPEST PLACE OPEN TO HER. This probe never picks, so this is the only quote it can
+ *  honestly read – see the note on `answerFork` below. */
+const cheapest = (offer: CollegeOffer | null | undefined) => offer?.quotes.find((q) => q.open) ?? null
 import { kidLadderRank } from '../src/engine/world/snapshot'
 import { parentIncomeForWeekCents } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -178,14 +191,18 @@ for (let p = 0; p < PRESETS.length; p++) {
       // ⚠ TAKEN BEFORE `answerFork`, which is the whole point: this is her position AT ENROLMENT.
       const incomeAtFork = parentIncomeForWeekCents(at.world.seed, at.world.profile.background, at.world.week) * WEEKS_PER_YEAR
       const assetsAtFork = at.world.fundsCents
+      // ⚠ NO TIER ARGUMENT, WHICH IS THIS TOOL SAYING WHAT IT IS SINCE THE 17.08 REBUILD: the player
+      // picks a place now, and this probe never was a player. `answerFork` falls back to the CHEAPEST
+      // place open to her, so this file measures the college branch at its floor price and nothing
+      // else. The choice is measured in `tools/college-choice-probe.ts`.
       answerFork(at.world, 'college')
       for (let y = 0; y < YEARS; y++) resumeFromCollege(at.world, at.rng)
       college.push({
         background: PRESETS[p].background,
-        offerFamilyPerYearCents: offer?.familyPerYearCents ?? 0,
-        offerAthleticShare: offer?.athleticShare ?? 0,
-        offerNeedShare: offer?.needShare ?? 0,
-        offerProgramme: offer?.programme ?? 'walk-on',
+        offerFamilyPerYearCents: cheapest(offer)?.familyPerYearCents ?? 0,
+        offerAthleticShare: cheapest(offer)?.athleticShare ?? 0,
+        offerNeedShare: cheapest(offer)?.needShare ?? 0,
+        offerProgramme: cheapest(offer)?.tier ?? 'walk-on',
         incomeAtForkCents: incomeAtFork,
         assetsAtForkCents: assetsAtFork,
         tuitionPaid: tuitionSoFar(at.world) - tuitionBefore,
@@ -399,12 +416,12 @@ console.log(`    CHEAPEST bills the college branch can produce.`)
 // out-of-state (a non-resident alien is never in-state anywhere), and the need layer is zero
 // (`needShareOf` returns 0 for any country but 'US'; 34 CFR 668.33 is the citation).
 {
-  const IN = COLLEGE_OFFER.costPerYearInStateCents
-  const OUT = COLLEGE_OFFER.costPerYearOutOfStateCents
+  const IN = COLLEGE_TIERS.state.costPerYearCents
+  const OUT = COLLEGE_TIERS.national.costPerYearCents
   const nonUsPerYear = (r: Arm) => Math.round(OUT * (1 - Math.min(1, r.offerAthleticShare)))
   const usPerYear = (r: Arm) => r.offerFamilyPerYearCents
   console.log(`\n⭐⭐ THE SAME PLACE, PRICED FOR A NON-AMERICAN (n=${college.length})`)
-  console.log(`  the two stickers: in-state ${usd(IN)}/yr   ·   out-of-state ${usd(OUT)}/yr   ·   (private nonprofit ${usd(COLLEGE_OFFER.costPerYearPrivateNonprofitCents)}/yr, recorded not modelled)`)
+  console.log(`  the two stickers: in-state ${usd(IN)}/yr   ·   out-of-state ${usd(OUT)}/yr   ·   (private nonprofit ${usd(COLLEGE_TIERS.private.costPerYearCents)}/yr – A PLACE SHE MAY PICK since 17.08)`)
   console.log(`\n  ${''.padEnd(24)}${'AMERICAN'.padStart(16)}${'NON-AMERICAN'.padStart(16)}${'x'.padStart(9)}`)
   const usY = med(college.map(usPerYear))
   const nonY = med(college.map(nonUsPerYear))

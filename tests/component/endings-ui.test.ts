@@ -199,7 +199,11 @@ describe('the fork at nineteen', () => {
     const spy = vi.spyOn(game, 'answerFork').mockResolvedValue(undefined)
     const w = mount(ForkDialog)
     await w.findAll('.fork-answer')[2].trigger('click')
-    expect(spy).toHaveBeenCalledWith('stop')
+    // ⚠ RE-AIMED 17.08, NOT LOOSENED: `answerFork` gained a second argument (the college place the
+    // player picked) and «stop» carries none, which this now states explicitly rather than by
+    // omission. A tier riding on the stop answer would be a shape the engine has to re-validate for
+    // no reason – see the command's own note in `protocol.ts`.
+    expect(spy).toHaveBeenCalledWith('stop', undefined)
     w.unmount()
   })
 

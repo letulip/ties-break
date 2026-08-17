@@ -24,7 +24,14 @@ import {
   fundingBandOf,
   juniorRecordScore,
   needShareOf,
-  programmeFor,
+  COLLEGE_TIERS,
+  COLLEGE_TIER_ORDER,
+  canAfford,
+  chosenQuoteOf,
+  familyCanPayPerYearCents,
+  familyPositionCents,
+  recruitedAtAll,
+  tierOpenTo,
   type CollegeFundingBand,
   type CollegeRecruitView,
   type JuniorRung,
@@ -82,20 +89,24 @@ describe('A. the athletics award is merit-only', () => {
     const SAVINGS = [-40_000_00, 0, 19_650_00, 335_586_00]
     for (const [label, bests, titles] of RECORDS) {
       const score = juniorRecordScore({ juniorBests: bests, juniorTitles: titles })
-      const programme = programmeFor(score)
-      if (programme === null) continue
-      const shares = new Set<number>()
-      for (const background of BACKGROUNDS) {
-        for (const country of ['US', 'RU', 'AU']) {
-          for (const income of INCOMES) {
-            for (const savings of SAVINGS) {
-              const offer = collegeOfferFor(view(bests, background, country, titles, income, savings), rngFromSeed('fixed:offer'))
-              shares.add(offer.athleticShare)
+      if (!recruitedAtAll(score)) continue
+      // ⚠⚠ AND SINCE 17.08 THE SWEEP RUNS PER TIER, because the award is a share of the price of the
+      // place SHE CHOSE. An edit that made a dear place read a rich family would pass a sweep that
+      // only looked at one tier, so every tier is swept and every one must be flat.
+      for (const tier of COLLEGE_TIER_ORDER) {
+        const shares = new Set<number>()
+        for (const background of BACKGROUNDS) {
+          for (const country of ['US', 'RU', 'AU']) {
+            for (const income of INCOMES) {
+              for (const savings of SAVINGS) {
+                const offer = collegeOfferFor(view(bests, background, country, titles, income, savings), rngFromSeed('fixed:offer'))
+                shares.add(offer.quotes.find((q) => q.tier === tier)!.athleticShare)
+              }
             }
           }
         }
+        expect(shares.size, `${label}/${tier}: the athletics award took ${shares.size} different values`).toBe(1)
       }
-      expect(shares.size, `${label}: the athletics award took ${shares.size} different values`).toBe(1)
     }
   })
 
@@ -104,11 +115,14 @@ describe('A. the athletics award is merit-only', () => {
   // tested one: it calls the function directly, which a version that had grown a `background`
   // parameter could not satisfy without a compile error here.
   it('is computable with no family and no country in scope at all', () => {
-    const direct = athleticShareOf('solid', 10, rngFromSeed('fixed:offer'))
+    const direct = athleticShareOf('state', 10, rngFromSeed('fixed:offer'))
     const throughView = collegeOfferFor(view({ j300: 3 }, 'wealthy', 'US'), rngFromSeed('fixed:offer'))
     expect(juniorRecordScore({ juniorBests: { j300: 3 }, juniorTitles: 0 })).toBe(10)
-    expect(programmeFor(10)).toBe('solid')
-    expect(throughView.athleticShare).toBeCloseTo(direct, 12)
+    // ⚠ THE FIRST QUOTE IS THE FIRST DRAW, in `COLLEGE_TIER_ORDER` – so the same die read the same
+    // way. A version of `athleticShareOf` that had grown a `background` parameter could not satisfy
+    // this line without a compile error here, which is the point of calling it directly.
+    expect(throughView.quotes[0].tier).toBe('state')
+    expect(throughView.quotes[0].athleticShare).toBeCloseTo(direct, 12)
   })
 
   // ⚠ THE RECRUIT VIEW HAS NO PROFESSIONAL FIELD, and that is what makes the deleted rule
@@ -139,8 +153,26 @@ describe('B. nothing removes the third answer', () => {
   it('offers a place on the weakest record that has anything in it at all', () => {
     // A single J300 quarter-final and nothing else in five junior seasons.
     const offer = collegeOfferFor(view({ j300: 7 }, 'working', 'US'), rngFromSeed('weak'))
-    expect(offer.programme).toBe('small')
-    expect(offer.athleticShare).toBeGreaterThan(0)
+    // ⚠ RE-AIMED 17.08: ALL THREE PLACES ARE ON THE TABLE FOR HER, and a weak record buys a small
+    // share at each of them rather than relegating her to a small "programme". That is the owner's
+    // scheme: the player picks the place, the record decides how much of it she pays for.
+    expect(offer.quotes).toHaveLength(3)
+    for (const q of offer.quotes) expect(q.athleticShare, q.tier).toBeGreaterThan(0)
+    // and the same record is worth less at a dearer place – she sits lower on a stronger board.
+    expect(offer.quotes[0].athleticShare).toBeGreaterThan(offer.quotes[2].athleticShare)
+  })
+
+  // ⚠⚠ AND THE ONE PLACE RESIDENCE SHUTS IS ONE SCHOOL, NEVER THE ANSWER. Two tiers are always open,
+  // which is the owner's ruling of 16.08 held structurally rather than by a copy check.
+  it('leaves at least two places open to everybody, American or not', () => {
+    for (const country of ['US', 'RU', 'AU', 'FR']) {
+      const offer = collegeOfferFor(view({ j300: 3 }, 'working', country), rngFromSeed('anyone'))
+      expect(offer.quotes.filter((q) => q.open).length, country).toBeGreaterThanOrEqual(2)
+    }
+    expect(tierOpenTo('state', 'US')).toBe(true)
+    expect(tierOpenTo('state', 'RU')).toBe(false)
+    expect(tierOpenTo('national', 'RU')).toBe(true)
+    expect(tierOpenTo('private', 'RU')).toBe(true)
   })
 
   // ⚠ AN EMPTY RECORD IS A WALK-ON, NOT A CLOSED DOOR. She enrols and pays; the answer is still
@@ -155,31 +187,39 @@ describe('B. nothing removes the third answer', () => {
   // now get the need layer, which is the intended new behaviour and not a leak in this test.
   it('still enrols a girl no programme funded, at the full price', () => {
     const offer = collegeOfferFor(view({}, 'wealthy', 'US', 0, 55_153_00, 15_518_00), rngFromSeed('nobody'))
-    expect(offer.programme).toBeNull()
-    expect(offer.athleticShare).toBe(0)
-    expect(offer.needShare).toBe(0)
-    expect(offer.familyPerYearCents).toBe(COLLEGE_OFFER.costPerYearInStateCents)
+    expect(recruitedAtAll(0)).toBe(false)
+    for (const q of offer.quotes) {
+      expect(q.athleticShare, q.tier).toBe(0)
+      expect(q.needShare, q.tier).toBe(0)
+      // ⚠ AND EVERY PLACE IS STILL ON THE TABLE AT ITS OWN FULL PRICE. She enrols and pays.
+      expect(q.familyPerYearCents, q.tier).toBe(COLLEGE_TIERS[q.tier].costPerYearCents)
+    }
   })
 
   // ⚠ AND THE NEED LAYER STILL REACHES HER, because it was never an athletics thing. A poor American
   // family gets means-tested aid whether or not a coach ever called.
   it('gives an unfunded walk-on the need-based layer anyway', () => {
     const offer = collegeOfferFor(view({}, 'working', 'US'), rngFromSeed('nobody'))
-    expect(offer.programme).toBeNull()
-    expect(offer.needShare).toBe(COLLEGE_OFFER.needTest.maxNeedShare)
-    expect(offer.familyPerYearCents).toBeLessThan(COLLEGE_OFFER.costPerYearInStateCents)
+    for (const q of offer.quotes) {
+      expect(q.athleticShare, q.tier).toBe(0)
+      expect(q.needShare, q.tier).toBe(COLLEGE_OFFER.needTest.maxNeedShare)
+      expect(q.familyPerYearCents, q.tier).toBeLessThan(COLLEGE_TIERS[q.tier].costPerYearCents)
+    }
   })
 
   // A better junior record only ever buys MORE. Monotone, which is the direction that makes this
   // impossible to read as a punishment for playing.
   it('never pays a stronger junior record less than a weaker one', () => {
     const scores = RECORDS.map(([, b, t]) => juniorRecordScore({ juniorBests: b, juniorTitles: t })).sort((a, b) => a - b)
-    let last = -1
-    for (const score of scores) {
-      const programme = programmeFor(score)
-      const share = programme === null ? 0 : athleticShareOf(programme, score, rngFromSeed('fixed'))
-      expect(share).toBeGreaterThanOrEqual(last)
-      last = share
+    // ⚠ AT EVERY TIER, since 17.08 – the monotonicity has to hold at the place she picks and not only
+    // at the one her record used to be assigned.
+    for (const tier of COLLEGE_TIER_ORDER) {
+      let last = -1
+      for (const score of scores) {
+        const share = athleticShareOf(tier, score, rngFromSeed('fixed'))
+        expect(share, `${tier} at ${score}`).toBeGreaterThanOrEqual(last)
+        last = share
+      }
     }
   })
 })
@@ -191,8 +231,10 @@ describe('C. the two layers, one ceiling', () => {
       for (const background of BACKGROUNDS) {
         for (const country of ['US', 'FR']) {
           const o = collegeOfferFor(view(bests, background, country, titles), rngFromSeed(`${label}:${country}`))
-          expect(o.athleticShare + o.needShare, `${label}/${background}/${country}`).toBeLessThanOrEqual(1.000001)
-          expect(o.familyPerYearCents).toBeGreaterThanOrEqual(0)
+          for (const q of o.quotes) {
+            expect(q.athleticShare + q.needShare, `${label}/${background}/${country}/${q.tier}`).toBeLessThanOrEqual(1.000001)
+            expect(q.familyPerYearCents).toBeGreaterThanOrEqual(0)
+          }
         }
       }
     }
@@ -202,12 +244,14 @@ describe('C. the two layers, one ceiling', () => {
   // trimming the athletics award instead would make a merit number move with family wealth, which is
   // block A's property. So this case is A's second half rather than a duplicate of it.
   it('trims the need layer, not the award, when the two would overflow', () => {
-    const bare = athleticShareOf('strong', 26, rngFromSeed('rich-kid'))
+    const bare = athleticShareOf('state', 26, rngFromSeed('rich-kid'))
     const poor = collegeOfferFor(view({ j300: 0, j60: 0, j30: 0 }, 'working', 'US', 15), rngFromSeed('rich-kid'))
-    expect(poor.athleticShare).toBeCloseTo(bare, 12)
-    expect(poor.athleticShare + poor.needShare).toBeCloseTo(1, 6)
-    expect(poor.needShare).toBeLessThan(COLLEGE_OFFER.needTest.maxNeedShare)
-    expect(poor.familyPerYearCents).toBe(0)
+    const q = poor.quotes[0]
+    expect(q.tier).toBe('state')
+    expect(q.athleticShare).toBeCloseTo(bare, 12)
+    expect(q.athleticShare + q.needShare).toBeCloseTo(1, 6)
+    expect(q.needShare).toBeLessThan(COLLEGE_OFFER.needTest.maxNeedShare)
+    expect(q.familyPerYearCents).toBe(0)
   })
 
   // ⚠⚠ THE NATIONALITY SPLIT, WHICH IS PRIMARY LAW AND NOT A BALANCE CHOICE. 34 CFR §668.33 bars
@@ -219,14 +263,19 @@ describe('C. the two layers, one ceiling', () => {
     const bests = { j300: 3 }
     const home = collegeOfferFor(view(bests, 'working', 'US'), rngFromSeed('same'))
     const away = collegeOfferFor(view(bests, 'working', 'RU'), rngFromSeed('same'))
-    expect(away.athleticShare).toBeCloseTo(home.athleticShare, 12)
-    expect(home.needShare).toBeGreaterThan(0)
-    expect(away.needShare).toBe(0)
+    // ⚠ THE AWARD IS UNTOUCHED AT EVERY PLACE, which is the half of this that is Bylaw 15's.
+    for (const tier of COLLEGE_TIER_ORDER) {
+      const h = home.quotes.find((q) => q.tier === tier)!
+      const a = away.quotes.find((q) => q.tier === tier)!
+      expect(a.athleticShare, tier).toBeCloseTo(h.athleticShare, 12)
+      expect(h.needShare, tier).toBeGreaterThan(0)
+      expect(a.needShare, tier).toBe(0)
+    }
     expect(needShareOf({ country: 'RU', familyIncomeCents: 0, familyAssetsCents: 0 })).toBe(0)
-    // And she faces the out-of-state sticker, because a non-resident alien is never in-state.
-    expect(home.costPerYearCents).toBe(COLLEGE_OFFER.costPerYearInStateCents)
-    expect(away.costPerYearCents).toBe(COLLEGE_OFFER.costPerYearOutOfStateCents)
-    expect(away.familyPerYearCents).toBeGreaterThan(home.familyPerYearCents)
+    // ⚠ AND THE CHEAPEST PLACE OPEN TO HER IS A DEARER ONE, because a non-resident alien is never
+    // in-state. That is the residence split, and it removes one school and not the answer.
+    expect(home.quotes.find((q) => q.open)!.costPerYearCents).toBe(COLLEGE_TIERS.state.costPerYearCents)
+    expect(away.quotes.find((q) => q.open)!.costPerYearCents).toBe(COLLEGE_TIERS.national.costPerYearCents)
   })
 
   // ⚠⚠ RE-AIMED IN ROUND 21 FROM THE LABEL TO THE POSITION, and it now asserts MORE than it did.
@@ -316,7 +365,105 @@ describe('D. the funding band names what the two layers cover', () => {
   // non-zero figure.
   it('agrees with the bill: a full ride charges nothing', () => {
     const o = collegeOfferFor(view({ j300: 0, j60: 0, j30: 0 }, 'working', 'US', 15), rngFromSeed('full-ride'))
-    expect(fundingBandOf(coveredShareOf(o))).toBe('full')
-    expect(o.familyPerYearCents).toBe(0)
+    const q = o.quotes[0]
+    expect(fundingBandOf(coveredShareOf(q))).toBe('full')
+    expect(q.familyPerYearCents).toBe(0)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ E. THE CHOICE (17.08, docs/specs/the-college-choice-2026-08.md)
+// =================================================================================================
+//
+// The owner's scheme, as five properties the model has to hold rather than as copy on a card:
+// a tier is a PRICE and a QUALITY; the award is a share of the price of the place SHE CHOSE; the
+// family pays the rest weekly and may go into debt; the CHOICE is the player's; and nothing is
+// compared to the tour anywhere in here.
+describe('E. a tier is a place with a price, and the player picks it', () => {
+  it('prices all three sourced stickers, cheapest first, and nothing else', () => {
+    const offer = collegeOfferFor(view({ j300: 3 }, 'middle', 'US'), rngFromSeed('three'))
+    expect(offer.quotes.map((q) => q.tier)).toEqual(['state', 'national', 'private'])
+    // ⚠ THE THREE PRICES ARE THE SOURCED ONES – College Board, Trends 2025, Figure CP-1. Pinned
+    // exactly, because these are the only numbers in the tier that are not ours.
+    expect(offer.quotes.map((q) => q.costPerYearCents)).toEqual([30_990_00, 50_920_00, 65_470_00])
+  })
+
+  // ⚠⚠ THE TRADE, STATED AS ARITHMETIC. A dearer place is a stronger squad, so the SAME record earns
+  // a smaller share of a bigger price – which is why the family pays strictly more for it. If this
+  // ever inverts, the choice has stopped being a trade and become a free upgrade.
+  it('makes a dearer place cost the family more on the same junior record', () => {
+    for (const [label, bests, titles] of RECORDS) {
+      const offer = collegeOfferFor(view(bests, 'middle', 'US', titles), rngFromSeed(`trade:${label}`))
+      const bills = offer.quotes.map((q) => q.familyPerYearCents)
+      expect(bills[1], `${label}: national vs state`).toBeGreaterThanOrEqual(bills[0])
+      expect(bills[2], `${label}: private vs national`).toBeGreaterThanOrEqual(bills[1])
+      // and the squad really does climb with the price, which is the other half of the trade
+      const squads = offer.quotes.map((q) => COLLEGE_TIERS[q.tier].squad)
+      expect(squads[0]).toBeLessThan(squads[1])
+      expect(squads[1]).toBeLessThan(squads[2])
+    }
+  })
+
+  // ⚠ NOBODY HAS PICKED ANYTHING YET, and there is no default. A preselected place is a
+  // recommendation drawn in preselection – ruling 4 (30.07) forbids this card an opinion.
+  it('arrives with nothing chosen, and reads back the place once one is', () => {
+    const offer = collegeOfferFor(view({ j300: 3 }, 'middle', 'US'), rngFromSeed('pick'))
+    expect(offer.chosen).toBeNull()
+    expect(chosenQuoteOf(offer)).toBeNull()
+    const taken = { ...offer, chosen: 'private' as const }
+    expect(chosenQuoteOf(taken)?.tier).toBe('private')
+    expect(chosenQuoteOf(taken)?.costPerYearCents).toBe(65_470_00)
+  })
+
+  // ⭐⭐ CAN SHE PAY FOR IT? A FACT, NEVER A REFUSAL – the family goes into debt, not away.
+  //
+  // ⚠ AND THE AFFORDABILITY NUMBER IS NOT THE MEANS TEST. `familyPositionCents` shields the first
+  // $25,000 of savings; this one does not, because a family deciding whether it can pay counts its
+  // cushion. Two questions, two numbers, and conflating them would have priced the dear place out of
+  // reach of exactly the family that saved for it («есть деньги на счете»).
+  it('counts the whole cushion when asking whether the family can pay', () => {
+    const income = 31_531_00
+    const saved = 100_000_00
+    expect(familyCanPayPerYearCents({ familyIncomeCents: income, familyAssetsCents: saved })).toBe(income + saved / 4)
+    // ⚠ THE SHIELD IS THE DIFFERENCE, and it is what makes these two different questions.
+    expect(familyPositionCents({ country: 'US', familyIncomeCents: income, familyAssetsCents: saved })).toBeLessThan(
+      familyCanPayPerYearCents({ familyIncomeCents: income, familyAssetsCents: saved }),
+    )
+    // a family in debt can still enrol; it just cannot call the debt income
+    expect(familyCanPayPerYearCents({ familyIncomeCents: 0, familyAssetsCents: -40_000_00 })).toBe(0)
+  })
+
+  // ⚠ THE FAMILY HERE IS THE MEASURED MIDDLE ONE ($31,531 a year in, nothing saved) ON A SINGLE J300
+  // QUARTER-FINAL. Chosen over the working family on purpose, and the reason is a finding rather than
+  // a convenience: at the working position the need layer pays its full 45%, which brings even the
+  // $65,470 place inside reach. The family the dear place is actually beyond is the one just out of
+  // Pell's range – which is `needShareByBackground.middle`'s old note read back on a real case.
+  it('says plainly which places this family can pay for, and never refuses one', () => {
+    const offer = collegeOfferFor(view({ j300: 7 }, 'middle', 'US', 0, 31_531_00, 0), rngFromSeed('middling'))
+    const affordable = offer.quotes.map((q) => canAfford(offer, q))
+    expect(affordable[0], 'the state place is within reach').toBe(true)
+    // the dear one is not – and it is STILL on the table, at its own price, which is the owner's
+    // ruling of 16.08. A family that cannot pay goes into debt, not away.
+    expect(affordable[2], 'the private place is beyond this family').toBe(false)
+    expect(offer.quotes[2].familyPerYearCents).toBeGreaterThan(0)
+    expect(offer.quotes[2].open).toBe(true)
+  })
+
+  // ⚠ THE UNMEASURED CASE. A career migrated from v51 was never asked this question, and the card
+  // prints nothing rather than guessing.
+  it('answers "never measured" rather than "she can pay nothing"', () => {
+    const offer = collegeOfferFor(view({ j300: 3 }, 'middle', 'US'), rngFromSeed('migrated'))
+    expect(canAfford({ ...offer, canPayPerYearCents: null }, offer.quotes[0])).toBeNull()
+  })
+
+  // ⚠⚠ ONE QUOTE PER TIER AND NOTHING PROFESSIONAL ANYWHERE IN THE SHAPE. The rule the owner deleted
+  // on 16.08 – a tour result closing the college door – stays unrepresentable through the rebuild.
+  it('carries no professional field on any quote', () => {
+    const offer = collegeOfferFor(view({ j300: 0 }, 'middle', 'US', 4), rngFromSeed('shape'))
+    for (const q of offer.quotes) {
+      for (const k of Object.keys(q)) {
+        expect(/rank|prize|wta|itf|w[0-9]|pro\b|earn/i.test(k), `${k} looks like a professional result`).toBe(false)
+      }
+    }
   })
 })

@@ -371,8 +371,11 @@ describe('the latch, on a real world', () => {
     expect('collegeOpen' in fork!, 'the flag has not come back under its own name either').toBe(false)
     // ⚠⚠ AND THE W75 TITLE BOUGHT HER NOTHING AND COST HER NOTHING. The offer reads her JUNIOR
     // record; the professional title is not an input, so a programme still offered her a place.
-    expect(fork!.offer?.programme, 'a W75 champion is still offered a college place').not.toBeNull()
-    expect(fork!.offer?.athleticShare).toBeGreaterThan(0)
+    // ⚠ RE-AIMED FOR THE 17.08 REBUILD, NOT LOOSENED. A tier is a PLACE now and the offer carries a
+    // quote for each, so "was she offered a place" is "does the cheapest open quote fund her".
+    const cheapest = fork!.offer?.quotes.find((q) => q.open) ?? null
+    expect(cheapest, 'a W75 champion is still quoted a college place').not.toBeNull()
+    expect(cheapest!.athleticShare).toBeGreaterThan(0)
   })
 
   it('⚠ ...and no entry card warns about a college place any more, because none can cost it', () => {

@@ -24,7 +24,7 @@ import {
   retirementDue,
   debtWeeks,
 } from '../ending'
-import type { CareerEnding, DebtView, EndingView, ForkAnswer } from '../../shared/protocol'
+import type { CareerEnding, CollegeTier, DebtView, EndingView, ForkAnswer } from '../../shared/protocol'
 import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
 import { activeLadderOf } from './ladder'
@@ -302,7 +302,7 @@ export function resolveEndings(world: WorldState): void {
 
 /** THE MOST EXPENSIVE CLICK IN THE GAME (adult spec's own risk note). Three answers, two of which
  *  end the career, and «стоп» must be able to be the right one. */
-export function answerFork(world: WorldState, answer: ForkAnswer): void {
+export function answerFork(world: WorldState, answer: ForkAnswer, tier?: CollegeTier): void {
   guardNotEnded(world)
   if (world.fork === null || world.fork.answer !== null) throw new Error('The fork is not open')
   // ⚠ #6's ENGINE-SIDE RE-VALIDATION IS GONE WITH THE RULE IT ENFORCED (owner, 16.08). It read:
@@ -313,6 +313,23 @@ export function answerFork(world: WorldState, answer: ForkAnswer): void {
   // whole of what this command can refuse, and it is still engine-side.
   world.fork = { ...world.fork, answer }
   if (answer === 'college') {
+    // ⭐⭐ THE PLACE SHE PICKED IS RECORDED HERE AND NOWHERE ELSE (17.08, the-college-choice spec).
+    //
+    // ⚠⚠ IT IS RE-VALIDATED ENGINE-SIDE, WHICH IS CLAUDE.md INVARIANT 1 READ LITERALLY. The card
+    // stops drawing a place residence shuts; this is what makes that a RULE rather than a decoration,
+    // and a stale screen cannot enrol her somewhere she cannot be.
+    //
+    // ⚠ AND THE FALLBACK IS THE CHEAPEST PLACE OPEN TO HER, not the dearest and not a preference. A
+    // command with no tier is a caller that never asked the player – every bench and every test in
+    // this repo – and the cheapest open place is the only default that cannot be read as advice.
+    // ⚠ IT NEVER REFUSES THE ANSWER ITSELF: an unknown or shut tier falls back, it does not throw.
+    // Nothing removes the college answer (owner, 16.08), including a bad argument.
+    const offer = world.fork.offer
+    if (offer) {
+      const wanted = tier ? (offer.quotes.find((q) => q.tier === tier && q.open)?.tier ?? null) : null
+      const fallback = offer.quotes.find((q) => q.open)?.tier ?? null
+      world.fork = { ...world.fork, offer: { ...offer, chosen: wanted ?? fallback } }
+    }
     // ⚠ `untilWeek` IS THE WHOLE COURSE EVEN THOUGH SHE MAY LEAVE AFTER ONE YEAR (P5). It is the
     // contract she signed, and `leaveCollege` (world/college.ts) is what breaks it – by moving this
     // week BACK to the week she leaves, which is what makes `inCollege` false with no second flag.

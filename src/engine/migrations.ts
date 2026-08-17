@@ -1518,6 +1518,62 @@ export function migrateSave(raw: unknown): WorldState {
     v = 51
   }
 
+  // v52 – A COLLEGE TIER STOPS BEING A FUNDING SHARE AND BECOMES A PLACE WITH A PRICE, AND A CAREER
+  // ALREADY PAYING FOR ONE KEEPS PAYING EXACTLY WHAT IT AGREED TO
+  // (docs/specs/the-college-choice-2026-08.md).
+  //
+  // v51 froze `ForkState.offer` as ONE quote – `{ programme: 'strong'|'solid'|'small'|null,
+  // athleticShare, needShare, costPerYearCents, familyPerYearCents }` – where `programme` was a
+  // FUNDING BAND her junior record had bought and the price was the same at every band. The owner's
+  // scheme of 17.08 is the other way round: three PLACES with three sourced prices, and the PLAYER
+  // picks one. So the offer is now a list of quotes plus the one she chose.
+  //
+  // ⚠⚠ IT REBUILDS ONE QUOTE, NOT THREE, AND THAT IS THE `null`-INVENTS-NOTHING DISCIPLINE AGAIN.
+  // A v51 career was quoted exactly one price and may be four weeks into paying it. The two places it
+  // was never shown are not facts about it, and writing them would mean re-deriving an award against
+  // tiers that did not exist when the career agreed to its bill – the same silent re-pricing the v51
+  // block refused. So the migration carries across what was actually measured:
+  //
+  //   * the TIER is read off the PRICE, which is the one field that identifies a place: $30,990 is
+  //     the public in-state sticker ('state') and $50,920 the out-of-state one ('national'). Those
+  //     were the only two v51 could produce. Anything else falls back to 'state' rather than throwing –
+  //     a save that will not load is worse than a save that loads with the cheap label.
+  //   * `chosen` is that tier IF she took the college answer, and `null` otherwise, so a career still
+  //     standing at the fork is still standing at it and `resolveCollegeBill` charges it nothing.
+  //   * `open: true`, because it was quoted to her – residence had already been applied upstream.
+  //   * `canPayPerYearCents: null` = NEVER MEASURED. v51 never asked whether the family could afford
+  //     the place, and a migration that answered would be inventing. The card prints nothing for it.
+  //
+  // ⚠ THE BILL IS BYTE-IDENTICAL ACROSS THE MOVE. `familyPerYearCents` is copied, `chosenQuoteOf`
+  // returns this quote, and the weekly debit is the same arithmetic on the same number.
+  //
+  // Idempotent in v30's sense (it converts only the frozen shape, recognised by `programme` being
+  // present), and zero draws on any stream – it writes literals – so the frozen MAIN capture
+  // (41550 / e6b0c709) is untouched by construction.
+  if (v === 51) {
+    const w = save as { fork?: { answer?: unknown; offer?: Record<string, unknown> | null } | null }
+    const offer = w.fork && typeof w.fork === 'object' ? w.fork.offer : null
+    if (offer && typeof offer === 'object' && 'programme' in offer) {
+      const cost = typeof offer.costPerYearCents === 'number' ? offer.costPerYearCents : 30_990_00
+      const tier = cost === 50_920_00 ? 'national' : 'state'
+      w.fork!.offer = {
+        quotes: [
+          {
+            tier,
+            costPerYearCents: cost,
+            athleticShare: typeof offer.athleticShare === 'number' ? offer.athleticShare : 0,
+            needShare: typeof offer.needShare === 'number' ? offer.needShare : 0,
+            familyPerYearCents: typeof offer.familyPerYearCents === 'number' ? offer.familyPerYearCents : cost,
+            open: true,
+          },
+        ],
+        chosen: w.fork!.answer === 'college' ? tier : null,
+        canPayPerYearCents: null,
+      }
+    }
+    v = 52
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

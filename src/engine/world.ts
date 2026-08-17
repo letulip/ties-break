@@ -191,6 +191,7 @@ import { ENDINGS } from './ending'
 import {
   bankCollegeYear,
   collegeEpilogueLine,
+  collegeMatchesThisWeek,
   inCollege,
   leaveCollege as leaveCollegeState,
   openCollegeYear,
@@ -198,8 +199,10 @@ import {
   resolveCollegeBill,
 } from './world/college'
 export {
+  COLLEGE_MATCH_SEASON,
   bankCollegeYear,
   collegeEpilogueLine,
+  collegeMatchesThisWeek,
   collegeProgressOf,
   collegeRecruitViewOf,
   inCollege,
@@ -378,7 +381,7 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
 // ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
 // number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
-export const SAVE_SCHEMA_VERSION = 51
+export const SAVE_SCHEMA_VERSION = 52
 
 
 
@@ -3128,7 +3131,18 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     //     about whether he came - which is what made the R4 reversal a one-line change here.
     coach: coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null,
     playStyle: world.profile.playStyle,
-    matchesThisWeek,
+    // ⭐⭐ AND AT COLLEGE THE MATCHES ARE THE SQUAD'S (17.08, docs/specs/the-college-choice-2026-08.md).
+    //
+    // `world.events` has no match rows inside the freeze – she enters nothing – so this term was 0 for
+    // 208 weeks and a college programme was, developmentally, a girl practising alone. It is the one
+    // thing a dearer place buys her tennis: a stronger squad plays a longer, harder dual-match season.
+    //
+    // ⚠ THE ADDITION IS SAFE BECAUSE EXACTLY ONE OF THE TWO IS EVER NON-ZERO. `collegeMatchesThisWeek`
+    // returns 0 outside the freeze, and inside it the filter above finds nothing. ⚠ AND IT SPENDS THE
+    // ENGINE'S OWN TUNED TERM RATHER THAN A NEW ONE – `matchBonus` / `matchBonusCap` are unchanged, so
+    // this phase cannot inflate its own dimension by raising the ceiling on what a match is worth.
+    // ⚠ ZERO DRAWS: a count, not a roll.
+    matchesThisWeek: matchesThisWeek + collegeMatchesThisWeek(world),
     seed: world.seed,
     week: world.week,
     // ⚠ W4 – THE PRICE OF RESTING A KNOCK, and the whole reason `growWeek` gained this knob. She is

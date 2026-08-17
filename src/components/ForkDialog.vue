@@ -27,16 +27,22 @@
 //
 // ⚠ AND ABSENT-OVER-DISABLED, the round-17 note's own choice, is now moot rather than overruled.
 // There is no case in which this card draws two answers.
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
-import { TIERS, TIER_SHORT } from '../engine/season/calendar'
-import { coveredShareOf, fundingBandOf, type CollegeFundingBand } from '../engine/collegeOffer'
+import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../engine/season/calendar'
+import {
+  COLLEGE_TIERS,
+  canAfford,
+  coveredShareOf,
+  fundingBandOf,
+  type CollegeFundingBand,
+} from '../engine/collegeOffer'
 import { ENDINGS } from '../engine/ending'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
 import { formatCents } from '../shared/money'
-import { activeLadderOfSnapshot, type ForkAnswer } from '../shared/protocol'
+import { activeLadderOfSnapshot, type CollegeTier, type ForkAnswer } from '../shared/protocol'
 
 const game = useGameStore()
 const fork = computed(() => game.snapshot?.fork ?? null)
@@ -98,44 +104,39 @@ const tourHead = computed(() => `${TIER_SHORT[TOUR_RUNG]} admits down to`)
 //
 // The button used to promise "four years on a college scholarship" and the engine then charged
 // nothing, so the card was making a claim about money that the simulation did not honour. It says
-// what is on the table now: which programme, how much of the bill the award covers, and what is left
-// for the family.
+// what is on the table now.
 //
-// ⚠⚠ IT STILL MAY NOT RECOMMEND (ruling 4, 30.07). These are FIGURES IN THE SAME REGISTER as the
-// four already on the card – her funds, her rank, what she has spent, what the tennis has paid – and
-// the comparison is the player's. No sentence here says college is affordable, unaffordable, better
-// or worse than the tour.
+// ⭐⭐⭐ AND ON 17.08 IT STOPPED BEING ONE OFFER AND BECAME A CHOICE
+// (docs/specs/the-college-choice-2026-08.md). The owner read the card and could not find where
+// **$8,673 a year** came from under a sourced **$30,990** sticker – because $8,673 is the family's
+// RESIDUAL after the award and no line on this card said so. It now shows the arithmetic as three
+// places she could take: THE PRICE, WHAT THE AWARD COVERS, THE WEEKLY PAYMENT, AND WHETHER THE
+// FAMILY CAN PAY IT. Nothing on this card compares any of it to the tour – his own instruction:
+// «мы больше ничего ни с чем не сравниваем».
 //
-// ⚠ AND THE THIRD ANSWER IS STILL UNCONDITIONAL. There is no value of `offer` that removes a button:
-// `programme === null` means nobody offered her a funded place, and the copy says she can enrol and
-// pay rather than that the answer is gone. The owner's ruling of 16.08 is what this card is drawn
-// against and nothing here bends it.
+// ⚠⚠ IT STILL MAY NOT RECOMMEND (ruling 4, 30.07), AND THE CHOICE IS WHERE THAT GOT HARDER:
+//   * **no place is preselected.** A pressed row on arrival is a recommendation drawn in
+//     preselection, so the rows arrive unpressed;
+//   * **no answer is disabled, ever.** The college button is live from the first frame – the owner's
+//     ruling of 16.08 is that nothing removes the college answer, and a control the player has to
+//     unlock is not "nothing";
+//   * **so the button says which place it will take.** Pressed with no row chosen it takes the
+//     CHEAPEST place open to her, which is the least of the family's money and the only default that
+//     cannot be read as advice – and the line under the button names it, because a button whose
+//     effect is invisible is worse than one with a stated default.
 //
 // ⚠ `offer === null` IS A MIGRATED CAREER (v50 and earlier, fork already open) and it falls back to
 // the pre-v51 line. Never "refused" – see the v51 migration.
 const offer = computed(() => fork.value?.offer ?? null)
-const PROGRAMME_LABEL: Record<string, string> = {
-  strong: 'A strong programme',
-  solid: 'A solid programme',
-  small: 'A small programme',
-}
-const programmeLine = computed(() => {
-  const o = offer.value
-  if (!o) return null
-  return o.programme === null ? 'No programme has offered a place' : PROGRAMME_LABEL[o.programme]
-})
-const pct = (share: number): string => `${Math.round(share * 100)}%`
 
-// ⭐⭐ ROUND 21 – THE FUNDING BAND, WHICH IS THE RUNG THE OWNER ASKED FOR (17.08: legible rungs, the
-// quote is in docs/specs/the-college-tariff-2026-08.md rather than here, per the copy rules).
-//
-// ⚠ THE CARD USED TO SAY «62% of the bill» AND STOP. A percentage is not a rung: nothing on this
-// card says whether 62% is a good offer or a poor one, and the player meets this screen once in a
-// career with nothing to compare it against. The band is the comparison, given as a name – and the
-// percentages stay beside it, because the name is the summary and not a replacement for the figure.
-//
-// ⚠ IT IS DERIVED, NOT STORED. `fundingBandOf(coveredShareOf(offer))` – the same arithmetic the
-// engine bills off, so this card cannot say "a full ride" over a non-zero figure.
+// ⚠ THE NAMES ARE PLACES, NOT VERDICTS. The three prices are sourced and the quality ladder over them
+// is ours (engine/collegeOffer.ts, COLLEGE_TIERS) – so the row states the squad as a number beside the
+// price rather than smuggling a judgement into the noun.
+const TIER_LABEL: Record<CollegeTier, string> = {
+  state: 'A state programme',
+  national: 'A national programme',
+  private: 'A private programme',
+}
 const BAND_LABEL: Record<CollegeFundingBand, string> = {
   full: 'A full ride',
   most: 'Most of the bill',
@@ -143,40 +144,80 @@ const BAND_LABEL: Record<CollegeFundingBand, string> = {
   part: 'Part of the bill',
   none: 'Nothing at all',
 }
-const bandLine = computed(() => {
-  const o = offer.value
-  return o ? BAND_LABEL[fundingBandOf(coveredShareOf(o))] : null
-})
-// The two layers under the band, as one line, and they stay two figures because they are two
-// different things – one reads her tennis, one reads her family.
-const awardLine = computed(() => {
-  const o = offer.value
-  if (!o) return null
-  return o.programme === null ? 'Walk-on, no athletics award' : `${pct(o.athleticShare)} athletics`
-})
-const aidLine = computed(() => {
-  const o = offer.value
-  if (!o || o.needShare <= 0) return null
-  return `${pct(o.needShare)} need-based`
-})
+const pct = (share: number): string => `${Math.round(share * 100)}%`
 
-// ⭐⭐ THE BILL, AS A YEAR AND AS THE WHOLE COURSE – transparent payment with an annual drawdown, the
-// owner's second and third asks of 17.08.
-//
-// ⚠ THE FOUR-YEAR FIGURE IS THE ONE THE DECISION IS ACTUALLY ABOUT and the card did not carry it.
-// She is answering a question about four years; a per-year number asks her to do the multiplication
-// on the most expensive click in the game. Both are shown, and the per-week phrasing says plainly
-// that this is a drawdown and not a lump – the engine debits `familyPerYearCents / 52` every week
-// she is enrolled, and a family can run out mid-degree.
-const billLine = computed(() => {
-  const o = offer.value
-  if (!o) return null
-  return o.familyPerYearCents <= 0 ? 'Nothing' : `${formatCents(o.familyPerYearCents)} a year`
-})
-const billTotalLine = computed(() => {
-  const o = offer.value
-  if (!o || o.familyPerYearCents <= 0) return null
-  return `${formatCents(o.familyPerYearCents * ENDINGS.collegeYears)} over ${ENDINGS.collegeYears} years, charged weekly`
+// ⭐ THE PLAYER'S PICK. Null until she presses a row – see the ruling note above.
+const picked = ref<CollegeTier | null>(null)
+const quotes = computed(() => offer.value?.quotes ?? [])
+/** ⚠ THE PLACE THE BUTTON WILL ACTUALLY TAKE – her pick, or the cheapest place open to her. The same
+ *  fallback `answerFork` applies engine-side, so the card cannot promise a place the engine would not
+ *  give (CLAUDE.md invariant 1: the engine re-validates, the screen does not decide). */
+const effective = computed<CollegeTier | null>(
+  () => picked.value ?? quotes.value.find((q) => q.open)?.tier ?? null,
+)
+const effectiveQuote = computed(() => quotes.value.find((q) => q.tier === effective.value) ?? null)
+
+interface TierRow {
+  tier: CollegeTier
+  open: boolean
+  name: string
+  /** ours, and the card says so by printing it as a bare number beside a sourced price */
+  squad: number
+  price: string
+  award: string
+  bill: string
+  /** null = never measured (a migrated career). The card prints nothing rather than guessing. */
+  affordable: boolean | null
+}
+
+const rows = computed<TierRow[]>(() =>
+  quotes.value.map((q) => ({
+    tier: q.tier,
+    open: q.open,
+    name: TIER_LABEL[q.tier],
+    squad: COLLEGE_TIERS[q.tier].squad,
+    price: `${formatCents(q.costPerYearCents)} a year`,
+    // ⚠ THE BAND IS THE HEADLINE AND THE PERCENTAGE IS THE WORKING – the name is a summary of the
+    // figure and not a replacement for it. A walk-on is named as one: nobody funded her, and she may
+    // still enrol and pay, which is the owner's ruling of 16.08 read on a row instead of a button.
+    award:
+      q.athleticShare <= 0 && q.needShare <= 0
+        ? 'Walk-on, no award'
+        : `${BAND_LABEL[fundingBandOf(coveredShareOf(q))]} (${pct(coveredShareOf(q))})`,
+    // ⚠ THE WEEK IS THE UNIT THE ENGINE CHARGES IN. `resolveCollegeBill` debits one fifty-second of
+    // the year every week she is enrolled, out of the same balance the coach came out of, so a family
+    // can run out mid-degree. A card quoting only a year would describe a different mechanic.
+    // ⚠⚠ TWO FIGURES ON THE ROW AND THE THIRD ON THE BUTTON, AND A PHONE IS WHY. The first draft put
+    // the week, the year AND the whole course on every row; at 320x568 each of those lines wrapped to
+    // three and the mounted fit assertion went red – the round-20 defect, caught by the test that
+    // exists for it rather than by the owner. The four-year figure is the one the decision is
+    // actually about, so it moved to the button that commits her (see `effectiveLine`) instead of
+    // being printed three times.
+    bill:
+      q.familyPerYearCents <= 0
+        ? 'The family pays nothing'
+        : `The family pays ${formatCents(Math.round(q.familyPerYearCents / WEEKS_PER_YEAR))} a week – ${formatCents(q.familyPerYearCents)} a year`,
+    affordable: offer.value ? canAfford(offer.value, q) : null,
+  })),
+)
+
+function pick(row: TierRow): void {
+  if (row.open) picked.value = row.tier
+}
+
+/** ⚠ A FACT, NOT A REFUSAL. She may take a place the family cannot pay for – it goes into debt, not
+ *  away (owner, 16.08) – so this line is beside the price and never on the button. */
+const effectiveLine = computed(() => {
+  const q = effectiveQuote.value
+  if (!q) return null
+  // ⚠ THE WHOLE COURSE, ON THE CONTROL THAT COMMITS HER TO IT. She is answering a question about four
+  // years; a per-year number alone asks her to do the multiplication on the most expensive click in
+  // the game. A free ride says so instead of printing $0.
+  const course =
+    q.familyPerYearCents <= 0
+      ? 'Nothing to pay'
+      : `${formatCents(q.familyPerYearCents * ENDINGS.collegeYears)} over ${ENDINGS.collegeYears} years`
+  return `${TIER_LABEL[q.tier]}. ${course}, and no ranking points.`
 })
 
 const stage = computed(() => portraitStage(snap.value?.ageYears ?? 19))
@@ -187,7 +228,9 @@ const artStyle = computed(() => {
 })
 
 async function answer(a: ForkAnswer): Promise<void> {
-  await game.answerFork(a)
+  // ⚠ THE TIER RIDES ONLY ON THE COLLEGE ANSWER. «stop» and «turn professional» carry none, which is
+  // the command's own shape in `protocol.ts`.
+  await game.answerFork(a, a === 'college' ? (effective.value ?? undefined) : undefined)
 }
 </script>
 
@@ -259,33 +302,45 @@ async function answer(a: ForkAnswer): Promise<void> {
                – and false about the scholarship, which paid $0 and covered a bill that did not
                exist. The line below states the same trade without asserting the direction, and the
                figures under it are what the direction actually is this career. -->
-          <span v-if="offer">Four years of student tennis. No ranking points, and the tour moves on without her.</span>
+          <span v-if="effectiveLine">{{ effectiveLine }}</span>
           <span v-else>Four years of student tennis on a college scholarship. No ranking points, and the money goes the other way.</span>
         </button>
-        <!-- ⭐⭐ THE OFFER, UNDER THE BUTTON IT BELONGS TO – three short rows, no sentence, no advice.
-             It sits BELOW the answer rather than inside it so the three answers keep the equal weight
-             ruling 4 requires: a button carrying three extra rows of detail is a recommendation drawn
-             in whitespace. -->
-        <dl v-if="offer" class="fork-offer">
-          <div>
-            <dt>The place</dt>
-            <dd>{{ programmeLine }}</dd>
-          </div>
-          <div>
-            <dt>The award covers</dt>
-            <dd>
-              {{ bandLine }}
-              <small>{{ awardLine }}<template v-if="aidLine"> + {{ aidLine }}</template></small>
-            </dd>
-          </div>
-          <div>
-            <dt>The family pays</dt>
-            <dd>
-              {{ billLine }}
-              <small v-if="billTotalLine">{{ billTotalLine }}</small>
-            </dd>
-          </div>
-        </dl>
+        <!-- ⭐⭐⭐ THE THREE PLACES, UNDER THE BUTTON THEY BELONG TO (17.08). They sit BELOW the answer
+             rather than inside it so the three answers keep the equal weight ruling 4 requires: a
+             button carrying nine rows of detail is a recommendation drawn in whitespace.
+
+             ⚠ THE ROWS ARE CONTROLS AND THE ANSWERS ARE ANSWERS, and the styling says which is which.
+             A row is a hairline in the FACTS idiom with no border and no fill; nothing here can be
+             mistaken for a fourth thing to end the career with.
+
+             ⚠ NOTHING IS PRESSED ON ARRIVAL. `aria-pressed` is false on all three until the player
+             chooses, because a preselected place is a recommendation. -->
+        <ul v-if="rows.length" class="fork-places">
+          <li v-for="row in rows" :key="row.tier">
+            <button
+              class="fork-place"
+              type="button"
+              :aria-pressed="picked === row.tier"
+              :class="{ 'is-picked': picked === row.tier, 'is-shut': !row.open }"
+              :disabled="game.busy || !row.open"
+              @click="pick(row)"
+            >
+              <span class="fork-place-head">
+                <strong>{{ row.name }}</strong>
+                <em>{{ row.price }}</em>
+              </span>
+              <!-- ⚠ THE SQUAD IS OURS AND THE PRICE IS SOURCED, and they are deliberately in the same
+                   row: the player is choosing between a number we invented and a number we did not,
+                   and the card is not entitled to hide which is which. The spec's §0a is the table. -->
+              <span class="fork-place-line">Squad {{ row.squad }} · {{ row.award }}</span>
+              <span class="fork-place-line">{{ row.bill }}</span>
+              <!-- ⚠ A FACT, NEVER A REFUSAL. She may take a place the family cannot pay for: it goes
+                   into debt, not away (owner, 16.08). -->
+              <span v-if="row.affordable === false" class="fork-place-line">Beyond what the family has</span>
+              <span v-if="!row.open" class="fork-place-line">In-state, and she is not a resident</span>
+            </button>
+          </li>
+        </ul>
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
           <strong>Stop here</strong>
           <span>She had a childhood in the sport. That is a whole thing to have had.</span>
@@ -398,61 +453,91 @@ async function answer(a: ForkAnswer): Promise<void> {
   color: var(--ink-soft);
 }
 
-/* ⭐⭐ THE OFFER (v51). Three rows, deliberately in the FACTS idiom and not the ANSWERS idiom: no
-   border, no press target, nothing that could read as a fourth thing to choose. It is quieter than
-   the buttons it sits under, which is the only styling opinion ruling 4 permits – the card may not
-   emphasise an answer, and it may not make an answer's detail look like an answer either.
+/* ⭐⭐⭐ THE THREE PLACES (17.08). Deliberately in the FACTS idiom and not the ANSWERS idiom: no
+   border, no fill, nothing that could read as a fourth thing to end the career with. They are
+   quieter than the buttons they sit under, which is the only styling opinion ruling 4 permits – the
+   card may not emphasise an answer, and it may not make an answer's detail look like an answer.
+
+   ⚠⚠ AND NO ROW IS EMPHASISED OVER ANOTHER UNTIL THE PLAYER PRESSES IT. `.is-picked` is the only
+   accent in this block and it is a consequence of a click, never a default. A card that arrived with
+   one place highlighted would be recommending it before she had read the prices.
 
    ⚠ IT MUST NOT GROW A max-height OF ITS OWN. The card's bound is on the shared `.dialog-card`
    (`max-height: 100%; overflow-y: auto`, round-20 #3) and the whole point of putting it there was
    that one box owns the scroll. A cap here would nest a second scroller inside the first and hide
-   the family's bill behind it – exactly the class of defect the round-20 gotcha is about. */
-.fork-offer {
+   the family's bill behind it – exactly the class of defect the round-20 gotcha is about, and this
+   block is three times the height of the one it replaced. */
+.fork-places {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 2px 0 2px;
-  padding: 10px 14px 12px;
-  /* ⚠ A HAIRLINE, NOT A FILL, AND THE TOKEN IS ONE THAT EXISTS. The first draft reached for
-     `var(--panel-sunk, transparent)` – and `--panel-sunk` is not declared anywhere in `style.css`, so
-     it silently resolved to `transparent` and the block had no container at all. `--line` is the
-     app's real hairline token. Two rules borrowed from the same palette beat one invented name. */
+  gap: 1px;
+  margin: 2px 0;
+  padding: 0;
+  list-style: none;
+  /* ⚠ A HAIRLINE, NOT A FILL, AND THE TOKEN IS ONE THAT EXISTS. The v51 block's first draft reached
+     for `var(--panel-sunk, transparent)` – undeclared, so it silently resolved to `transparent` and
+     the block had no container at all. `--line` is the app's real hairline token. */
   border-top: var(--stroke-hair) solid var(--line);
   border-bottom: var(--stroke-hair) solid var(--line);
 }
 
-.fork-offer div {
+.fork-place {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+  text-align: left;
+  /* ⚠⚠ THE VERTICAL PADDING IS A MEASURED NUMBER, NOT A TASTE. At 8px this block put `.fork-answers`
+     at 537px against 536px of room on a 320x568 screen and the mounted fit assertion went red – by
+     one pixel, on the narrowest phone, which is exactly how round-20 #3 shipped. Anything added to a
+     row from here has to be re-measured, not reasoned about. */
+  padding: 6px 10px;
+  border: none;
+  border-left: 2px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.fork-place.is-picked {
+  border-left-color: var(--ink);
+}
+
+.fork-place:disabled {
+  cursor: default;
+}
+
+.fork-place.is-shut {
+  opacity: 0.55;
+}
+
+.fork-place-head {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 10px;
 }
 
-.fork-offer dt {
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
+.fork-place-head strong {
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.fork-offer dd {
-  margin: 0;
+.fork-place-head em {
+  font-style: normal;
   font-size: 13px;
-  color: var(--ink);
-  text-align: right;
   font-variant-numeric: tabular-nums;
+  color: var(--ink);
 }
-/* ⭐ THE FIGURES UNDER THE BAND, AND UNDER THE YEAR'S BILL (round 21).
-   ⚠ THE BAND IS THE HEADLINE AND THE PERCENTAGES ARE THE WORKING, so they are one step down in
-   size and dimmed – but they are still on the card, because the name is a summary of the figures
-   and not a replacement for them. Ruling 4 (the card «may not recommend») is not touched: a smaller
-   font on the arithmetic is a reading order, not an opinion about which answer to take.
-   ⚠ AND THE CARD IS MEASURED AGAINST A PHONE AFTER THIS, not argued about – round-20 #3 shipped
-   because a dialog grew by one honest line at a time. `tests/component/college-offer-card.test.ts`
-   and `round21-dialogs.test.ts` both re-measure the 375x667 fit, and both are mutation-proved. */
-.fork-offer dd small {
-  display: block;
+
+/* ⚠ THE WORKING, ONE STEP DOWN FROM THE HEADLINE. Ruling 4 is untouched: a smaller font on the
+   arithmetic is a reading order, not an opinion about which answer to take. */
+.fork-place-line {
   font-size: 11px;
-  line-height: 1.3;
+  line-height: 1.35;
   color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
 }
 </style>

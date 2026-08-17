@@ -3,6 +3,7 @@ import { request, WorkerRestartError } from '../worker/client'
 import {
   DEFAULT_PROFILE,
   type CareerMeta,
+  type CollegeTier,
   type ForkAnswer,
   type KitGrade,
   type KitLine,
@@ -250,9 +251,11 @@ export const useGameStore = defineStore('game', {
     // of them: the hand-off's «raise another» is a UI transition into onboarding, not a command, and
     // that is the whole point of §5.6 - nothing mechanical carries over, so there is nothing for the
     // worker to carry.
-    async answerFork(answer: ForkAnswer) {
+    // ⭐ `tier` IS THE PLACE THE PLAYER PICKED (17.08). Optional on the wire because only one of the
+    // three answers has one – see the command's own note in `protocol.ts`.
+    async answerFork(answer: ForkAnswer, tier?: CollegeTier) {
       await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'answerFork', answer, baseRevision: this.revision }))
+        const res = this.takeOk(await request({ type: 'answerFork', answer, tier, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
