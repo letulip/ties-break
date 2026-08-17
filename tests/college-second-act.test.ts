@@ -32,7 +32,9 @@ import { NATIONAL_TEAM, binomial, callUpLine, rollCallUp, rubberWinChance } from
 import { rngFromSeed, initMainState } from '../src/engine/rng'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { COLLEGE_TIERS, collegeOfferFor } from '../src/engine/collegeOffer'
+import { COLLEGE_TRIP_WEEKS, collegeMatchesThisWeek } from '../src/engine/world/college'
+import { DEFAULT_PROFILE, type CollegeTier } from '../src/shared/protocol'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 
@@ -377,4 +379,99 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
     // The two streams have been pulled the same number of times: the next value off each is equal.
     expect(rngA()).toBe(rngB())
   }, 60_000)
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 21 #5 – THE COLLEGE SEASON IS TWO TRIPS, NOT THIRTEEN WEEKS
+// =================================================================================================
+//
+// ⚠⚠ THE SHRINK NEEDS A GUARD BECAUSE THE THING IT PROTECTS IS A DESIGN RULING AND NOT A NUMBER.
+// College is the SHORTCUT – «1-2 национальных выезда в год и перелистывание 1 года за клик» – and a
+// thirteen-week dual-match season at one to three matches a week is a playable season inside the one
+// branch that exists to be a page-turn, in weeks the parent is not at and cannot act on. Nothing
+// tested `COLLEGE_MATCH_SEASON` at all when it shipped, so it could have grown back silently.
+//
+// ⚠ AND IT IS A COUNT AND NOTHING ELSE. `collegeMatchesThisWeek` feeds `growWeek`; it writes no
+// result row, awards no ranking points and no money, because the sport awards neither – so a result
+// for it would break the `prizeCentsFor` invariant to no purpose.
+
+/** A career enrolled at a named place, with the offer the ledger and the season both read. */
+function enrolledAt(tier: CollegeTier, seed = 'r21-trips'): WorldState {
+  const { world, rng } = freshWorld(seed)
+  const offer = collegeOfferFor(
+    {
+      juniorBests: { j300: 3 },
+      juniorTitles: 4,
+      background: 'middle',
+      country: 'US',
+      familyIncomeCents: 31_000_00,
+      familyAssetsCents: 40_000_00,
+    },
+    rngFromSeed(`${seed}:offer`),
+  )
+  world.fork = { askedWeek: world.week, answer: null, offer }
+  answerFork(world, 'college', tier)
+  void rng
+  return world
+}
+
+/** the first season boundary at or after enrolment, so a season week can be addressed directly */
+const yearStart = (world: WorldState) => world.college!.fromWeek - (world.college!.fromWeek % WEEKS_PER_YEAR) + WEEKS_PER_YEAR
+
+describe('⭐⭐ the college season is two national trips a year', () => {
+  it('plays her only on the trip weeks, and at the place\'s own rate', () => {
+    const world = enrolledAt('private')
+    const base = yearStart(world)
+    const played: number[] = []
+    for (let s = 0; s < WEEKS_PER_YEAR; s++) {
+      world.week = base + s
+      played[s] = collegeMatchesThisWeek(world)
+    }
+    for (const w of COLLEGE_TRIP_WEEKS) {
+      expect(played[w], `trip week ${w} at the private place`).toBe(COLLEGE_TIERS.private.matchesPerWeek)
+    }
+    const busy = played.map((n, i) => (n > 0 ? i : -1)).filter((i) => i >= 0)
+    expect(busy, 'and no other week of the season is a match week').toEqual([...COLLEGE_TRIP_WEEKS])
+  })
+
+  it('⚠ the cheap place plays fewer on the same weeks – the tier still differs', () => {
+    const cheap = enrolledAt('state')
+    const dear = enrolledAt('private')
+    const w = COLLEGE_TRIP_WEEKS[0]
+    cheap.week = yearStart(cheap) + w
+    dear.week = yearStart(dear) + w
+    expect(collegeMatchesThisWeek(cheap)).toBe(COLLEGE_TIERS.state.matchesPerWeek)
+    expect(collegeMatchesThisWeek(cheap)).toBeLessThan(collegeMatchesThisWeek(dear))
+  })
+
+  // ⚠⚠ MUTATION PROOF OF THE SHRINK ITSELF, AND THE FIRST VERSION OF IT WAS VACUOUS – recorded
+  // because it is the exact failure CLAUDE.md names. It skipped any week that is IN
+  // `COLLEGE_TRIP_WEEKS`, so restoring the thirteen-week block `[4, 17)` skipped every candidate and
+  // the case passed green on the very configuration it exists to forbid. **A guard derived from the
+  // constant it guards cannot fail.** So the count is pinned against HIS OWN NUMBER – «1-2
+  // национальных выезда в год» – and the old block's weeks are written out as literals.
+  it('⚠⚠ is at most his two trips, and the thirteen-week block cannot come back', () => {
+    expect(COLLEGE_TRIP_WEEKS.length, 'one or two national trips a year, and no more').toBeLessThanOrEqual(2)
+    const world = enrolledAt('private')
+    const base = yearStart(world)
+    // the old block was `{ fromSeasonWeek: 4, toSeasonWeek: 17 }` – thirteen consecutive weeks
+    let matchWeeks = 0
+    for (let w = 4; w < 17; w++) {
+      world.week = base + w
+      if (collegeMatchesThisWeek(world) > 0) matchWeeks += 1
+    }
+    expect(matchWeeks, 'the old thirteen-week block is not a season any more').toBeLessThanOrEqual(2)
+  })
+
+  it('⚠ neither trip is the national-team week, so three weeks of tennis read as three beats', () => {
+    expect(COLLEGE_TRIP_WEEKS as readonly number[]).not.toContain(NATIONAL_TEAM.seasonWeek)
+  })
+
+  it('⚠ and a girl who is not at college plays none of them', () => {
+    const world = enrolledAt('private')
+    const base = yearStart(world)
+    world.college = null
+    world.week = base + COLLEGE_TRIP_WEEKS[0]
+    expect(collegeMatchesThisWeek(world)).toBe(0)
+  })
 })
