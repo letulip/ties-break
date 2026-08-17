@@ -1877,3 +1877,81 @@ while the field's strength lives in another agent's file.
 (74%). Eleven careers there never finish, and the survivors come out with $64,903 against $116,844 to
 fund a comeback with. **You pay more, you train better, and you can still price yourself out of the
 return.**
+
+---
+
+## 17.08.2026 – round 21, the talent breakdown: college is not the lever, and the re-deal may have broken more than the pace (`docs/specs/college-by-talent-2026-08.md`)
+
+> «вот это мощный темп, конечно, но мне кажется малореалистичный. А еще мне интересно посмотреть на
+> разбивку по бесталанная, средняя, талантливая и одаренная … 22 года - это у нас вроде где-то на
+> финальной части пути до максимума, верно? Может быть тогда мы проанализируем и примем решение,
+> нужно ли притормозить развитие в колледже и если да, то на сколько.»
+
+**⚠ NOTHING IS SHIPPED. The recommendation is DO NOT SLOW COLLEGE, and the options are priced in §7b.**
+
+**HIS PREMISE ABOUT 22 IS RIGHT AND IT IS SHARPER THAN "somewhere near".** `ageCurve` grows 13→18 and
+`plateauStart` is **23**. College is 19-23, so **the scholarship occupies the last four years she can
+grow at all** – it ends the week the plateau begins. That is why "is the pace realistic" and "should
+college be slowed" arrive as one question.
+
+**⚠⚠ THE GAME HAS NO TALENT BANDS AND HIS FOUR WORDS HAVE NO CODE TO ATTACH TO.** `rollPotential`
+draws a **continuous** per-attribute headroom out of `potentialBand` [4, 26]; nothing slices it,
+nothing names it, and #11 records that the ceiling is deliberately never shown. The one constant that
+bands a ceiling is `ECONOMY.academy.ceilingBand` [56, 70] – the scout's ruler, not a set of bands. **So
+the four bands are quartiles of `ceilingOf(potential)`, they are OURS, and his words are in the report
+and in no source file.**
+
+**⭐⭐ COLLEGE IS NOT THE LEVER, AND TWO INDEPENDENT ROUTES AGREE.** (a) Off the shipped constants: the
+whole dimension spans **0.30 skill points** (`self` 0.82 → `high` 1.11), and on the shipped rank-to-core
+law that is **1 place at #10, 3 at #20, 5 at #50, 3 at #100**. (b) Measured, paired, same girl same
+rung: the college↔tour **career-high difference is +1 / −2 / 0 / −1 places** on HEAD and **+6 / +2 /
+−11 / −6** on the control. **The acceleration he objects to is eighty-five places (#97 → #12).
+College is about 5% of it.** Even option 4 – reverting all three places to `self`, the largest change
+anyone could ask for – buys back ~5 places, and it is **not a balance setting**: it reinstates the
+older bug where 208 college weeks read the parent-on-the-court rate for a girl at a university.
+
+**⭐⭐ WHAT THE PACE ACTUALLY IS, IN ONE PAIR OF NUMBERS.** Whole population reaching the **top 10**:
+**2% / 5% with `a412162` reverted, 46% / 50% with it in** (college / tour, n=105 and 107). The
+career-high spread across the whole talent range **collapses from about 100 places to about 6**: on the
+control a career high runs #121 for the untalented girl to #33 for the gifted one; on HEAD every band
+lands between #6 and #15.
+
+**⭐⭐ AND THE PRICE OF COLLEGE IS NOT RANK, IT IS FOUR YEARS OF HER PEAK – which is the honest answer
+to «за какой срок».** Age at career high, college vs tour, **gifted band: 26.9 vs 22.7 on HEAD (+4.2
+years), 27.3 vs 24.0 on the control (+3.3).** Later in **8 of 8** band-arm pairs. On the tour arm the
+`exit → career high` column goes **negative** for the gifted band (−171 weeks) – she had already peaked
+before twenty-three. She is ranked again **1-5 weeks** after graduating in every band, and by
+twenty-seven the two answers have converged (#12 vs #12). **So the trade is real and it is a clock, not
+a ceiling** – which means making college SLOWER does not make it more of a trade; making the return
+harder or later would, and that is a different build.
+
+**⚠⚠ THE FLAG THAT IS NOT HIS QUESTION AND MAY MATTER MORE.** On the control the top-100 rate rises
+**4% → 50% → 54% → 88%** with talent – monotone. On HEAD it reads **77% → 93% → 89% → 100%**, and the
+top-10 row is **non-monotone**: the untalented band reaches the top ten **50%** of the time against the
+average band's **18%**. ⚠ **Nine girls a cell (see below), so it is a flag, not a finding** – but if it
+survives, the re-deal did not only make the game faster, it **decoupled the outcome from the talent she
+was born with**. Settling it costs one re-run at `--seeds 48`, about an hour a side, no new code.
+
+**⚠⚠ THE LIMITATION THAT GOVERNS EVERY PER-BAND NUMBER, MEASURED RATHER THAN ASSUMED.** `econ-bench`'s
+seed is `bench-${background}-${index}` – **the coach rung is not in it** – so 108 career rows are
+**36 distinct girls, 9 per band**, each walked at 2-4 rungs, and the backgrounds are uneven (working
+3×, middle 4×, wealthy 2×). Same trap `tools/college-fork.ts`'s header already records. **What
+survives: the college↔tour comparison (PAIRED – same girl, same rung, same world to the fork) and the
+A-vs-B level over the whole population. What does not: the ordering BETWEEN bands.**
+
+**ARMS: B = `7c0d1f1` (HEAD), A = `7c0d1f1` with `a412162` reverted in `../tb-talent-A`.** Checks that
+had to pass before either table was read: the two arms differ in **112 lines** (not a self-comparison);
+the band cut is **identical to six decimals** on both, because it is taken at week 0 before any career
+is walked; **0 of 105 / 0 of 107** careers have a different ceiling across arms; **saturation 2-3%**, so
+the age curve and not the horizon stopped the climb; **0%** of college careers ended inside the four
+years, so the return columns carry no survivorship gap. ⚠ **The reader was checked too**: `git grep`
+for `SKILL_LAW` / `coreForStanding` on the A tree returns one hit outside `fieldPros.ts`, and it is a
+**comment** – no live import survives the revert.
+
+**⚠ AND THE INSTRUMENT FOUND A BUG IN ITSELF THAT LOOKED EXACTLY LIKE A NULL RESULT.** The first smoke
+run reported *"never ranked 18/18, every career still going"*. `kidAgeExact` takes `(week, birthMonth)`,
+not a world; the world argument made it `NaN`, `NaN < TO_AGE` is false, and **the whole post-fork walk
+was skipped in silence**. The tell was the clock – 21 seconds for eighteen careers that should have
+walked 830 weeks each. ⚠⚠ **`tools/**/*.ts` IS in `tsconfig.app.json`'s include and `tsc` gives
+`TS2554: Expected 2 arguments, but got 1` – `vue-tsc -b --force` would have caught it before a single
+career was walked, and the bench was run first. New rule: type-check a new bench before running it.**
