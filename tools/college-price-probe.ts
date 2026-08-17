@@ -561,3 +561,29 @@ for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
 }
 console.log(`\n  ⚠ THE OVERLAP IS THE FINDING. Where the savings ranges of two backgrounds overlap, the`)
 console.log(`    label and the position DISAGREE about the same family – and today the bill reads the label.`)
+
+// =================================================================================================
+// ⭐⭐ HOW MUCH OF THE BILL IS COVERED – the distribution the FUNDING BANDS are calibrated on.
+// =================================================================================================
+//
+// ⚠⚠ THE SAME DISCIPLINE THE PROGRAMME BANDS LEARNED THE HARD WAY. `collegeOffer.ts`'s own note
+// records that the first set of programme thresholds (12 / 5 / 1) put 88 of 90 careers in one band
+// and produced a median family bill of $0. A band that holds nearly everybody carries no information
+// about anybody, and the only way to know before shipping is to measure the axis first.
+//
+// ⚠ `covered` is `min(1, athletic + need)` – the Bylaw 15.1 ceiling – which is exactly the number a
+// funding band would be named for, and it is pure arithmetic on two persisted fields.
+{
+  const covered = college.map((r) => Math.min(1, r.offerAthleticShare + r.offerNeedShare))
+  const pctOf = (q: number) => `${(100 * pctl(covered, q)).toFixed(1)}%`
+  console.log(`\n⭐⭐ SHARE OF THE BILL COVERED (athletic + need, capped at the Bylaw 15.1 ceiling), n=${covered.length}`)
+  console.log(
+    `  min ${(100 * Math.min(...covered)).toFixed(1)}%  ·  p10 ${pctOf(0.1)}  ·  p25 ${pctOf(0.25)}  ·  median ${pctOf(0.5)}` +
+      `  ·  p75 ${pctOf(0.75)}  ·  p90 ${pctOf(0.9)}  ·  max ${(100 * Math.max(...covered)).toFixed(1)}%`,
+  )
+  const at = (lo: number, hi: number) => covered.filter((c) => c >= lo && c < hi).length
+  console.log(
+    `  fully covered (=100%) ${covered.filter((c) => c >= 1).length}/${covered.length}` +
+      `  ·  80-100% ${at(0.8, 1)}  ·  55-80% ${at(0.55, 0.8)}  ·  1-55% ${at(0.0001, 0.55)}  ·  nothing at all ${covered.filter((c) => c <= 0).length}`,
+  )
+}
