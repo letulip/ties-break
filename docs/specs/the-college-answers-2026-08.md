@@ -276,6 +276,70 @@ game chose – and «national» in particular reads as a RANK in a game whose ev
 
 ---
 
+## 5. ⭐⭐ THE COLLEGE SEASON – shrunk to the shortcut he designed, and here is what each way costs
+
+> «13 недель – это в половину меньше, чем у нас в регулярном сезоне примерно, но может быть мы можем
+> еще ужать, не уверен, что столько нужно, но готов услышать аргументы.»
+>
+> «1-2 национальных выезда в год и перелистывание 1 года за клик» · «родители не будут посещать все
+> игры в колледже»
+
+**The second quote is the objection, and it is decisive.** Thirteen weeks at one to three matches a
+week is **thirty-nine simulated matches a year** – a playable season, inside the one branch of this
+game that exists to be a page-turn. The player of this game is the parent, and the parent is not at
+those matches; there is nothing for him to decide in any of the thirteen weeks and no surface that
+shows him one. **A second season inside the shortcut is the thing the shortcut exists to skip.**
+
+**So it is shrunk to his own number: `COLLEGE_TRIP_WEEKS = [8, 20]`** – two national trips a year, at
+the tier's own 1 / 2 / 3 matches. ⚠ Neither is the national-team week (14): three separate weeks of
+tennis in a year read as three beats, and a trip landing on the call-up week would silently be one.
+
+### 5a. ⚠⚠ THE ARMS, AND THE COMMIT EACH WAS BUILT AT
+
+| arm | what it is | commit | provenance check |
+| --- | --- | --- | --- |
+| **A – the thirteen-week season** | `82eb452` with **`79ef9ce` reverted** (`git revert --no-commit`) in a dedicated worktree `../tb-college-season-A` | `82eb452` − `79ef9ce` | `COLLEGE_MATCH_SEASON` present with its reader in `world/college.ts` |
+| **B – the two trips** | `82eb452` | `82eb452` | `COLLEGE_TRIP_WEEKS` present with its reader |
+
+⚠ **The control is MY commit reverted, not the previous commit** – another agent is committing on this
+branch and "the head before mine" would measure both waves. **And arm A reproduces the previous
+phase's published figures exactly (+1.11 / +1.14 / +1.17, +0.03 / +0.06), which is the strongest
+provenance evidence available**: the A tree is demonstrably the tree that measurement came from.
+Instrument, population, policy and seeds identical: `tools/college-choice-probe.ts --seeds 6`, n = 53.
+
+### 5b. THE COST OF EACH WAY, MEASURED
+
+| | **A: 13 weeks, 39 matches a year** | **B: 2 trips, 2–6 matches a year** | what the shrink costs |
+| --- | --- | --- | --- |
+| four-year skill gain, at home | **+1.11** | **+1.08** | −0.03 |
+| out of state | **+1.14** | **+1.07** | −0.07 |
+| private | **+1.17** | **+1.07** | −0.10 |
+| **the tier's development dimension** | **+0.06** cheapest→dearest | **+0.00** (−0.01 / −0.00) | **the dimension, entirely** |
+
+**Everything else is byte-identical** – the same medians for the award, the bill, affordability,
+take-up and the six bankruptcies, because none of them reads the season.
+
+### 5c. ⭐⭐ THE CHOICE, PUT PLAINLY
+
+* **Keeping 13 weeks buys +0.06 of one skill point between the cheapest place and the dearest, over
+  four years.** That is the entire payoff of the playable season, it was measured at the previous
+  phase and reported then as invisible, and it costs 39 unattended matches a year inside a page-turn.
+  **I could not write the paragraph arguing for it on the strength of what it buys the player, because
+  0.06 of a skill point is not something a player can be shown.**
+* **Shrinking costs a tenth of one skill point over four years at the dear place** (and three
+  hundredths at the cheap one), and it costs the tier its development dimension outright – so the
+  place a player picks now differs in **price and in nothing else that touches her tennis**.
+* **⚠ Neither is visible in the odds.** The top-100 column moved by up to six points between two runs
+  whose only difference was this constant, on the same seeds – i.e. a 0.03–0.10 skill-point change
+  reshuffles *which* careers cross the line without moving the population's capability. **At n = 53
+  that column cannot resolve the season length at all**, which is also the reason 38 / 40 / 34 must not
+  be read as a ranking of the three places.
+
+**It is one constant to put back.** `COLLEGE_TRIP_WEEKS` in `src/engine/world/college.ts`; restoring
+`{ fromSeasonWeek: 4, toSeasonWeek: 17 }` and the range test returns arm A exactly.
+
+---
+
 ## 6. ⭐⭐ THE BANKRUPTCIES – real arithmetic, and an artefact of the model of a player
 
 > «я не верю, что это возможно с твоими ценами выше, доходом родителей 600+ даже на бюджетном тире и
@@ -347,3 +411,35 @@ now warns about twice: on the row, and in the drawdown on the Money screen.
 
 **⚠ VERDICT: it is real, it is correctly modelled, and it is not the headline it looked like.** No
 lever was pulled. §8 restates the three that exist if he still wants it softer.
+
+---
+
+## 7. ⭐⭐ THE PREDICTIONS, JUDGED
+
+| # | prediction | verdict |
+| --- | --- | --- |
+| **R1** | ≥80% ranked within one season | ✅ **HELD, and by a distance.** 96% / 98% / 96%, at a median of **three weeks**, not one season. |
+| **R2** | median rank one year out within 60 places of her rank at the fork | ✅ **held.** #157 / #157 / #156 against a fork population whose diagnostic seeds ran #140–#259. |
+| **R3** | the top-200 odds sit inside a 25-point spread, bounded away from 0 and 100 | ⚠ **HALF WRONG, AND THE WRONG HALF MATTERS.** The spread is 13 points (96 / 96 / 83) but **top-200 is not bounded away from 100** – 96% is 51 of 53, a ceiling. So the band that got printed is **top 100**, where the population actually spreads. Predicting the band before measuring it was the error. |
+| **R4** | the tier moves the odds through money, and the gap is accounted for by careers that ended | ✅ **HELD, and it is the finding.** Among survivors: 38 / 40 / 38 top-100 and 96 / 98 / 94 top-200. The dear place's deficit is six bankruptcies, not six weaker players. |
+| **R5** | the bankruptcies are real arithmetic, a slow drawdown and not a cliff | ✅ **held.** $370 a week in, $630 out, eighteen weeks from $3,161 to zero, everything-else at $0 throughout. §6b. |
+| **R6** | under dearest-**affordable** the count is 2 or fewer | ✅ **HELD, at ZERO.** 0 / 53 under both readable models; 6 / 53 only under «dearest always», which forces the place on the 15 careers the card has already refused. |
+| **R7** | shrinking the season costs under 0.5 of a skill point at every tier | ✅ **held by a factor of five.** −0.03 / −0.07 / −0.10. ⚠ But it costs the tier's development dimension **entirely** (+0.06 → +0.00), which the prediction did not name and which is the part he has to rule on. |
+
+---
+
+## 8. WHAT IS THE OWNER'S TO DECIDE
+
+1. **⭐ The season length.** Shipped at two trips (§5). One constant returns the thirteen weeks; the
+   measured price of each way is in §5b and I could not make the argument for keeping it.
+2. **The three places now differ in PRICE and in nothing else that reaches her tennis.** That is the
+   consequence of #1 plus the 0.06 finding it inherited. If the tier should be legible through her
+   game, the build that does it is **college match RESULTS** feeding the ladder – named in
+   `the-college-choice-2026-08.md` §4b, still not built, and the honest cost of calibrating `squad`.
+3. **The cheap place funds the median junior COMPLETELY** (100% covered, 29 of 53 full rides), and the
+   only sourced arithmetic that exists bounds a fully funded programme's mean award at **80–85%** of a
+   full ride. The state tier is the rung most worth arguing with, and `fullAwardScore: 11` is the
+   number to move. §3b.
+4. **The bankruptcies stay.** 0 of 53 under any model that reads the card; 6 of 53 only when a family
+   takes a place the row already told it it cannot afford. The three levers from the previous spec are
+   unpulled and unchanged.

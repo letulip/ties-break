@@ -1694,3 +1694,66 @@ lottery** (#1 vs #10: 47.4% → 7.3%). **Blast radius: the whole game** – ever
 on-ramp in both directions, ladder pace, sponsors, the wall, the endings, and every existing career's
 world re-deals (no schema bump – field pros are derived and take no MAIN draw; 41550 / `e6b0c709`
 untouched). Nothing is done until he rules.
+
+---
+
+## 17.08.2026 – round 21, the owner's six answers on college (`docs/specs/the-college-answers-2026-08.md`)
+
+He read the college rebuild and pushed back on six things. **One was a bug in an instrument, one was
+scope creep, one was a question with a plain answer, and three were right.**
+
+**⭐⭐⭐ 1. THE ROAD BACK WAS NEVER GONE – THE PROBE STOPPED WALKING.** «обратной дороги в тур по сути
+нет… Откуда взялась эта статистика вообще?» It came from `college-choice-probe`, which sampled her
+rank **on the graduation week** – the one week of the whole career when the 52-week ranking window is
+empty by construction. That column could only ever print zero. **Walked past graduation, 96–98% of
+careers hold a WTA rank again within one season, at a median of THREE WEEKS, median #157 a year out.**
+Every candidate was checked rather than assumed: the career does not end at the fork, `leaveCollege`
+fires on both routes, the ladder does not refuse her (W15's floor is a LATCH, not a rolling window),
+and the horizon runs to 38. **No engine change was needed and none was made.** New instrument:
+`tools/college-return-probe.ts`, and the old artefact column is now printed beside the real one.
+
+**⭐⭐ 2. `Squad 55` IS OFF THE CARD, REPLACED BY A MEASURED ODDS – he was right.** A squad number was
+ours, on a scale the card never printed her own number on, so there was nothing to compare it to. The
+row now reads **«Top 100 for 38 in 100»** – 38 / 40 / 34 careers in a hundred reach the world top 100
+within four years of leaving, measured at `82eb452`, n = 53 per place, with the window named under the
+list. **⚠ AND THE HONEST HALF: THE PLACE BARELY MOVES IT.** Among careers the bill did not end it is
+38 / 40 / 38. The dear place's lower figures are **six families going bankrupt**, not a weaker
+programme. What would make the three differ is college MATCH RESULTS feeding the ladder – named, not
+built. Staleness is caught mechanically: `COLLEGE_ODDS_MEASURED_AT` fingerprints every tier input and
+`tests/college-offer.test.ts` block F goes red naming the probe to re-run.
+
+**3. WHERE 72% COMES FROM.** The `0.85 / 0.55 / 0.30` he is quoting no longer exist – they were the
+old funding bands the rebuild replaced. 72% is `her junior score / the place's recruiting bar ± 0.10`.
+**Sourced:** the three prices, the Bylaw 15.1 ceiling and its trim falling on the need layer, «most
+awards are partial», the equivalency fact, the residence split, the federal need shape and its
+nationality bar. **OURS:** the recruiting bar 11 / 18 / 23 (measured quantiles of our own junior
+score), the spread's size, the need knots, and the junior score itself. ⚠ **And the ladder straddles
+the only sourced bound there is** – 8 scholarships ÷ 9.4 roster ≈ 85% at a fully funded programme –
+with the cheap place ABOVE it at 100%. **That is the rung most worth arguing with.**
+
+**4. THE NAMES.** «Штатное / национальное / частное» were the College Board's own column headings and
+«national» read as a rank. Now **the university at home · a university out of state · a private
+university**, in ONE copy (`COLLEGE_TIER_NAME`) instead of two. The persisted ids are untouched.
+
+**⭐⭐ 5. THE COLLEGE SEASON IS SHRUNK TO HIS OWN SHORTCUT, AND I COULD NOT ARGUE OTHERWISE.** Thirteen
+weeks at 1–3 matches is **39 unattended matches a year** inside the branch designed as «перелистывание
+1 года за клик», and «родители не будут посещать все игры в колледже» is decisive. It is **two
+national trips a year** now. **Measured cost, A = `82eb452` with `79ef9ce` reverted in a worktree, B =
+`82eb452`:** the four-year skill gain falls by 0.03 / 0.07 / 0.10, and **the tier's development
+dimension goes from +0.06 to +0.00 – it is gone.** ⚠ Arm A reproduces the previous phase's published
+figures exactly, which is what proves the arm. **One constant returns the season if he disagrees.**
+
+**⭐⭐ 6. THE BANKRUPTCIES ARE REAL AND THEY ARE ALSO AN ARTEFACT OF A MODEL OF A PLAYER.** Income
+arrives every week of the freeze ($370–$371, no `inCollege` guard on `resolveParentIncome`), savings
+are the balance the bill is drawn against, and banked prize money is in it. The traced career enrolled
+with **$3,161**, paid **$630 a week** against **$370 a week** coming in, with **everything else at
+$0** – no coach, no travel, no entry fees – and was under water in **eighteen weeks**. **Nothing is
+wrong with the arithmetic.** But the 6 / 53 was measured under «dearest always», which forces the
+private place on the **15 careers the card already marks «Beyond what the family has»**. **Under
+dearest-AFFORDABLE it is 0 of 53.** Reported, nothing tuned.
+
+⚠⚠ **A PROVENANCE NEAR-MISS, RECORDED BECAUSE IT ALMOST SHIPPED.** An earlier run of the return probe
+survived the kill meant to stop it, finished against the thirteen-week tree, and wrote over the same
+output path. A complete and plausible table (42 / 38 / 38) described a tree that no longer existed and
+**was already written into `COLLEGE_TIER_ODDS`** before the elapsed-seconds line changing between two
+reads of a write-once file gave it away. **A measurement is not identified by its filename.**
