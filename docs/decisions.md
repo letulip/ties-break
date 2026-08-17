@@ -1429,3 +1429,40 @@ buys a story, not progress. Three rulings he owes:
 fills slots in a W draw – so the AI half is S/M. **Her own card is M-L**: it is a new acceptance rule
 and owes its own bench. ⚠ **And it does not close the refused band** – only #128 does, and #128 is
 "everybody in the draw gets in", which is not a door.
+
+### ITEM 2b – THE WILD CARDS: **BUILT** (17.08)
+
+**Verbatim:** «2b. Wild card ×8». The shape is the one costed the day before and recorded in the
+section above – **home-nation cards only**, she can receive one on the same rule as everybody else, a
+marker on the tournament card. `docs/specs/the-wild-cards-2026-08.md` is the spec.
+
+**What a wild card is now.** Eight of a Slam's 128 are held and given to players of the event's HOST
+NATION whom the acceptance list refused – outside `slam.acceptsRank` (112) and inside the rung's own
+entrant band ceiling, roughly **#113–#333**. The host nation is derived from `(seed, event.id)` on its
+own sub-stream at **zero persisted bytes**; no schema moves, no migration, no golden fixture.
+Qualifying is still unmodelled and stays that way: a qualifier earns a place in a draw we do not run.
+
+⚠ **One mechanism, two configurations.** The eight held places are `fillOnRamp` called a second time,
+not a second held-slot mechanism – the pool filtered to the host nation, the door inverted to
+"the rung refused her", and its own `seed:wildcard:` stream so the field the week already selected is
+bit-for-bit unchanged. **Nothing is added to MAIN.**
+
+⚠ **A RETURNING NAME IS DROPPED EXPLICITLY, and it is written into the code so the next reader does
+not try.** Field pros are re-derived per season and persist zero bytes, so a former ranking has
+nowhere to live. Unrepresentable, not unbuilt.
+
+⚠ **THE GAP THE BUILD FOUND, and it would have been a silent dead branch.** The onboarding wizard
+offers twenty-four countries; the population's `NATION_WEIGHTS` has thirty-six and **`BY` is in the
+first and not the second** – so a player from there would have had a mechanic that never fires and no
+way to learn why. `HOST_NATIONS` is the population's pool plus the playable codes it lacks, and a
+source pin now holds the two lists together across a boundary the engine may not import across.
+
+⚠ **The one guard re-aimed, and it was strengthened rather than loosened.** The wild card is the first
+door on this ladder that is a fact about ONE TOURNAMENT rather than about a rung, so
+`tierOpenFor` gained an optional event id and `tests/rankingGate.test.ts` now names the event on BOTH
+sides. Asked without one, every existing caller reads exactly the acceptance cut it read before –
+`Snapshot.tierOpen` still says "the Slam takes the top 112", which is the honest per-rung summary.
+
+⚠ **It is not a fix for a stall, because there is no stall** (0 of 14, §5b of the round-21 spec). The
+measurement was aimed at the opposite question – *did it move anything it should not have* – and the
+answer is in the spec's §4.
