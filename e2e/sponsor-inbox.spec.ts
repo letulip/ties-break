@@ -23,7 +23,7 @@
 // a contract two surfaces agree about.
 
 import { test, expect } from './careerAt'
-import { answerOpeningKnock, openMoney } from './journey'
+import { answerOpeningKnock, dismissTourBriefing, openMoney } from './journey'
 
 /** A row in the inbox list that is still waiting on an answer. The pill is the engine's own fact -
  *  `live(o)` is `state === 'open' && week <= deadlineWeek` - so counting these counts OPEN OFFERS as
@@ -38,6 +38,9 @@ test('signing a kit letter closes the whole table, and the deal reaches the mone
   page.on('pageerror', (error) => crashes.push(error.message))
 
   const { facts } = await careerAt('pro')
+  // She is inside the top 50 on this build, so the tour-commitment briefing blocks the boot - see
+  // dismissTourBriefing. Stepped through, never asserted: this spec is about a kit letter.
+  await dismissTourBriefing(page)
   await answerOpeningKnock(page)
 
   // --- the post ---------------------------------------------------------------------------------
