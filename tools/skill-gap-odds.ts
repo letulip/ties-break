@@ -154,26 +154,8 @@ function proposalProbability(a: MatchPlayer, b: MatchPlayer): number {
   return Math.min(1 - FLOOR, Math.max(FLOOR, p))
 }
 
-function sectionC(): void {
-  const pairs: [number, number][] = [
-    [1, 10],
-    [1, 50],
-    [1, 100],
-    [1, 300],
-    [10, 50],
-    [10, 100],
-    [50, 100],
-    [50, 150],
-    [50, 200],
-    [50, 300],
-    [50, 500],
-    [100, 200],
-    [100, 300],
-    [200, 300],
-    [200, 500],
-    [300, 600],
-    [500, 1000],
-  ]
+function sectionC(): Map<string, number> {
+  const pairs = PAIRS
   const cells = new Map<string, Cell>()
   for (const [r1, r2] of pairs) {
     cells.set(`${r1}:${r2}`, { closed: [], sim: [], coreA: [], coreB: [], baseClamps: 0, finalClamps: 0, points: 0, built: [] })
@@ -214,6 +196,7 @@ function sectionC(): void {
     }
   }
 
+  const out = new Map<string, number>()
   const mean = (xs: number[]): number => xs.reduce((s, x) => s + x, 0) / xs.length
   console.log(`\n=== C. THE RANK AXIS – OUR UPSET RATE (${WORLDS} worlds x ${SIMS} sims per pair) ===`)
   console.log('   share of matches the LOWER-ranked player wins')
@@ -222,6 +205,7 @@ function sectionC(): void {
     const c = cells.get(`${r1}:${r2}`)!
     const cA = mean(c.coreA)
     const cB = mean(c.coreB)
+    out.set(`${r1}:${r2}`, 1 - mean(c.closed))
     console.log(
       `      #${String(r1).padEnd(5)}    #${String(r2).padEnd(5)}  ${cA.toFixed(1).padStart(5)}  ${cB.toFixed(1).padStart(5)}  ${(cA - cB).toFixed(1).padStart(5)}   ${pct(1 - mean(c.closed))}%        ${pct(1 - mean(c.sim))}%       ${String(c.baseClamps).padStart(4)}/${WORLDS}    ${String(c.finalClamps).padStart(6)}/${c.points}`,
     )
@@ -236,6 +220,7 @@ function sectionC(): void {
       console.log(`      #${String(r1).padEnd(5)}    #${String(r2).padEnd(5)}   ${pct(1 - mean(c.closed))}%          ${pct(1 - mean(props))}%`)
     }
   }
+  return out
 }
 
 // -------------------------------------------------------------------------------------------------
@@ -271,7 +256,191 @@ function sectionD(): void {
   )
 }
 
+// -------------------------------------------------------------------------------------------------
+// R. REALITY – the two sourced routes, computed here so ours and the sport's come off one program.
+//    Provenance and every URL: docs/research/the-upset-rate.md. Nothing here is invented; the two
+//    constants below are quoted from their papers and the Elo table is parsed from its own report.
+// -------------------------------------------------------------------------------------------------
+
+/** Klaassen & Magnus (2003), EJOR 148:257-267, eq. 3 and section 3. WOMEN'S coefficient.
+ *  P(favourite) = exp(lambda*D)/(1+exp(lambda*D)), D = log2(rank_underdog / rank_favourite). */
+const KM_LAMBDA_WOMEN = 0.715
+
+/** Tennis Abstract WTA Elo report, list of 2026-08-03, median Elo within +/-12 of each rank.
+ *  ⚠ SMOOTHED BY THE READER, NOT PUBLISHED AS A TABLE – tagged [I] in the research doc, and the
+ *  report's own population is selected (>=10 matches at tour level / ITF 50K+ in 52 weeks), so it
+ *  cannot resolve anything past about #300. Rows past the end are deliberately absent, not guessed. */
+const WTA_ELO_BY_RANK: [number, number][] = [
+  [1, 2058],
+  [10, 1999],
+  [25, 1879],
+  [50, 1786],
+  [100, 1709],
+  [150, 1617],
+  [200, 1550],
+  [250, 1432],
+  [300, 1429],
+]
+
+function kmFavourite(rFav: number, rDog: number): number {
+  const d = Math.log2(rDog / rFav)
+  return 1 / (1 + Math.exp(-KM_LAMBDA_WOMEN * d))
+}
+
+function eloAt(rank: number): number | null {
+  for (let i = 0; i < WTA_ELO_BY_RANK.length - 1; i++) {
+    const [r0, e0] = WTA_ELO_BY_RANK[i]
+    const [r1, e1] = WTA_ELO_BY_RANK[i + 1]
+    if (rank >= r0 && rank <= r1) {
+      const t = (Math.log2(rank) - Math.log2(r0)) / (Math.log2(r1) - Math.log2(r0))
+      return e0 + t * (e1 - e0)
+    }
+  }
+  return null
+}
+
+const eloFavourite = (rFav: number, rDog: number): number | null => {
+  const a = eloAt(rFav)
+  const b = eloAt(rDog)
+  return a === null || b === null ? null : 1 / (1 + Math.pow(10, -(a - b) / 400))
+}
+
+/** Our engine's own exchange rate, MEASURED rather than read off the constants: how much p one core
+ *  point buys on each side, and how many Elo points that is worth once compounded over a Bo3. */
+function measuredExchange(): { pPerCore: number; eloPerCore: number } {
+  const pPerCore = basePServe(flat('a', 51), flat('b', 50), OPTS) - basePServe(flat('a', 50), flat('b', 50), OPTS)
+  const p10 = fastMatchProbability(flat('a', 60), flat('b', 50), OPTS)
+  const eloPerCore = (400 * Math.log10(p10 / (1 - p10))) / 10
+  return { pPerCore, eloPerCore }
+}
+
+const PAIRS: [number, number][] = [
+  [1, 10],
+  [1, 50],
+  [1, 100],
+  [1, 300],
+  [10, 50],
+  [10, 100],
+  [50, 100],
+  [50, 150],
+  [50, 200],
+  [50, 300],
+  [50, 500],
+  [100, 200],
+  [100, 300],
+  [200, 300],
+  [200, 500],
+  [300, 600],
+  [500, 1000],
+]
+
+function sectionR(ours: Map<string, number>): void {
+  const { pPerCore, eloPerCore } = measuredExchange()
+  console.log('\n=== R. REALITY BESIDE OURS ===')
+  console.log(`   our measured exchange rate: 1 core point = ${pPerCore.toFixed(5)} of p per side = ${eloPerCore.toFixed(1)} Elo`)
+  console.log(`   the sport's own constant: ${((400 * KM_LAMBDA_WOMEN) / Math.LN10).toFixed(1)} Elo per DOUBLING of rank (Klaassen-Magnus lambda ${KM_LAMBDA_WOMEN}, women)`)
+  console.log('\n   share of matches the LOWER-ranked player wins')
+  console.log('   favourite  underdog   K&M [I]   Elo [I]    OURS      ours/reality')
+  for (const [r1, r2] of PAIRS) {
+    const km = 1 - kmFavourite(r1, r2)
+    const el = eloFavourite(r1, r2)
+    const our = ours.get(`${r1}:${r2}`)!
+    const ref = el === null ? km : (km + (1 - el)) / 2
+    console.log(
+      `      #${String(r1).padEnd(5)}    #${String(r2).padEnd(5)}   ${pct(km)}%   ${el === null ? '   -  ' : pct(1 - el) + '%'}    ${pct(our)}%      x${(our / ref).toFixed(2)}`,
+    )
+  }
+  console.log('   (Elo route has no rows past #300 – its list ends there. Blank is honest, not zero.)')
+
+  // THE MECHANISM, IN ONE COLUMN. A rank gap is only worth what the population's core curve puts
+  // between the two ranks, so measure that curve's SLOPE segment by segment and price it in the
+  // sport's own unit. A flat segment is a segment where rank carries no information.
+  console.log('\n   OUR CORE CURVE, SEGMENT BY SEGMENT (the thing a rank gap is actually made of):')
+  console.log('   from    to     doublings   core drop   core/doubling   Elo/doubling   vs the sport')
+  const pros = fieldProsFor('skillgap-world-0', 0)
+  const table = mergedWtaRanking([], pros)
+  const byId = new Map(pros.map((p) => [p.id, p]))
+  const meanCoreAt = (rank: number): number => {
+    let sum = 0
+    for (let w = 0; w < WORLDS; w++) {
+      const ps = fieldProsFor(`skillgap-world-${w}`, 0)
+      const t = mergedWtaRanking([], ps)
+      const m = new Map(ps.map((p) => [p.id, p]))
+      sum += coreOf(m.get(t[rank - 1].playerId)!)
+    }
+    return sum / WORLDS
+  }
+  void table
+  void byId
+  const segments: [number, number][] = [
+    [1, 10],
+    [10, 50],
+    [50, 100],
+    [100, 200],
+    [200, 300],
+    [300, 500],
+    [500, 1000],
+    [1, 1000],
+  ]
+  const cache = new Map<number, number>()
+  const core = (r: number): number => {
+    if (!cache.has(r)) cache.set(r, meanCoreAt(r))
+    return cache.get(r)!
+  }
+  for (const [r0, r1] of segments) {
+    const db = Math.log2(r1 / r0)
+    const drop = core(r0) - core(r1)
+    const perDb = drop / db
+    const elo = perDb * eloPerCore
+    console.log(
+      `   #${String(r0).padEnd(5)} #${String(r1).padEnd(5)} ${db.toFixed(2).padStart(9)} ${drop.toFixed(1).padStart(11)} ${perDb.toFixed(2).padStart(15)} ${elo.toFixed(0).padStart(14)}   x${(elo / ((400 * KM_LAMBDA_WOMEN) / Math.LN10)).toFixed(2)}`,
+    )
+  }
+}
+
+// -------------------------------------------------------------------------------------------------
+// P. THE PROPOSAL – ONE LAW: core is a straight line in log2(rank), and the two gains multiply to
+//    the sport's own 124 Elo per doubling. Computed here; NOTHING in src/ is touched.
+// -------------------------------------------------------------------------------------------------
+function sectionP(ours: Map<string, number>): void {
+  const { pPerCore, eloPerCore } = measuredExchange()
+  const targetEloPerDoubling = (400 * KM_LAMBDA_WOMEN) / Math.LN10
+  const gains = [1, 1.5, 2, 2.5, 3]
+  console.log('\n=== P. THE PROPOSED LAW – core(rank) = C0 - s*log2(rank), with gain*s = the sport ===')
+  console.log(`   target: ${targetEloPerDoubling.toFixed(1)} Elo per doubling of rank`)
+  console.log('\n   ⚠ THE ODDS TABLE IS THE SAME FOR EVERY GAIN, AND THAT IS THE STRUCTURAL POINT: the')
+  console.log('   product gain x slope is pinned by the sport, so the pair has ONE free parameter and it')
+  console.log('   is not the odds – it is WHERE THE CORE SCALE SITS. Odds printed once, curves per gain.')
+
+  const c0 = 76.4 // anchor: the world #1 keeps the strength she has today
+  const sAt = (g: number): number => targetEloPerDoubling / (eloPerCore * g)
+
+  console.log('\n   favourite  underdog   OURS today   PROPOSED    K&M [I]')
+  for (const [r1, r2] of PAIRS) {
+    const s = sAt(1)
+    const d = s * Math.log2(r2 / r1)
+    const prop = 1 - pMatchBo3(0.57 + d * pPerCore, 0.57 - d * pPerCore)
+    console.log(
+      `      #${String(r1).padEnd(5)}    #${String(r2).padEnd(5)}   ${pct(ours.get(`${r1}:${r2}`)!)}%       ${pct(prop)}%     ${pct(1 - kmFavourite(r1, r2))}%`,
+    )
+  }
+
+  console.log('\n   THE FREE PARAMETER – what each gain does to the world table and to her own levers:')
+  console.log('   gain   1 core =   s (core/doubling)   #1    #10   #50   #100  #300  #1000 #1600   +1 core is worth')
+  for (const g of gains) {
+    const s = sAt(g)
+    const coreAt = (r: number): number => c0 - s * Math.log2(r)
+    const one = pMatchBo3(0.57 + pPerCore * g, 0.57 - pPerCore * g)
+    const shape = [1, 10, 50, 100, 300, 1000, 1600].map((r) => coreAt(r).toFixed(1).padStart(5)).join(' ')
+    console.log(`   x${g.toFixed(1)}   ${(eloPerCore * g).toFixed(1).padStart(5)} Elo   ${s.toFixed(2).padStart(16)}  ${shape}   ${pct(one)}%`)
+  }
+  console.log(`   (today: 1 core = ${eloPerCore.toFixed(1)} Elo and +1 core is worth ${pct(pMatchBo3(0.57 + pPerCore, 0.57 - pPerCore))}%;`)
+  console.log("    the shipped world table is #1=76.4 #10=75.2 #50=67.5 #100=54.2 #300=41.7 #1000=29.0 #1600=17.2)")
+}
+
 sectionA()
 sectionB()
 sectionD()
-sectionC()
+const ourUpsets = sectionC()
+sectionR(ourUpsets)
+sectionP(ourUpsets)
