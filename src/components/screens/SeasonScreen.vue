@@ -42,6 +42,9 @@ import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
+// The wild-card badge quotes the engine's own count, never a literal – see the badge in the
+// template and `WILD_CARD` in engine/season/tournament.ts for why the number lives there.
+import { WILD_CARD } from '../../engine/season/tournament'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
@@ -395,6 +398,11 @@ const condition = computed(() => game.snapshot?.condition ?? 0)
 // v21: the share of every trip the academy is paying. One number for the whole calendar – the
 // scholarship is a rate, not a per-event deal – so each card can print it without re-deriving it.
 const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.coverShare ?? 0) * 100))
+
+/** How many places a wild-card tournament holds, read out of the engine so the badge's tooltip
+ *  cannot go on saying eight after a bench has swept the constant. Not a computed – it is a
+ *  module constant and never changes inside a session. */
+const wildCardSlots = WILD_CARD.slots
 
 // ⚠ HER PROFESSIONAL ALLOWANCE, ON EVERY W CARD (round-16 #7). It used to appear in exactly one
 // place: the lock pill, on the card that had already run out ("Tour age rule – 12 of 12"). So the
@@ -1335,6 +1343,20 @@ function closeExhibition(): void {
                 {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
               </span>
               <span v-if="row.event.entered" class="pill ok">Entered</span>
+              <!-- ⭐⭐ THE WILD CARD (round 21 #2b) – the half of the item the owner asked for by
+                   name: the event row says the place was a wild card. The flag is the ENGINE's
+                   (`UpcomingEvent.wildCard`), set only when the acceptance list would have refused
+                   her, so this badge can never appear on a place she earned. The rule itself lives
+                   in engine/season/tournament.ts and is never restated here; the tooltip quotes
+                   `WILD_CARD.slots` rather than a literal eight so a swept constant cannot leave a
+                   sentence behind saying the old number. -->
+              <span
+                v-if="row.event.wildCard"
+                class="pill wildcard-chip"
+                :title="`One of the ${wildCardSlots} places this tournament holds for players of the host nation – she is outside the acceptance list.`"
+              >
+                wild card
+              </span>
               <!-- THE DEFENDING BADGE (W2-LADDER §3: the points window made visible - the
                    owner's phrase is quoted at `defendingPts` in the script). Last year's counted
                    result at this exact week is about to age out of her rolling professional
@@ -1815,7 +1837,12 @@ section.bare .event-cards {
 
 /* The defending badge (W2-LADDER §3): the accent register the Entered pill already uses - points
    at stake is good news to act on, not a warning - with the number kept tabular. */
-.defend-chip {
+/* ⚠ ONE RULE, TWO CHIPS, AND NO NEW COLOUR IS INVENTED HERE. Both say something about the PLACE
+   she holds rather than about the week, so they share the accent token the palette already
+   defines – the wild-card badge adds a selector to an existing declaration instead of a second
+   palette entry that would then have to be kept in step with this one. */
+.defend-chip,
+.wildcard-chip {
   color: var(--accent);
   border-color: var(--accent);
   font-variant-numeric: tabular-nums;

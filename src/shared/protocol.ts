@@ -1143,6 +1143,20 @@ export interface UpcomingEvent {
    *  from reading it as a refusal again. An outgrown card is ENTERABLE, says so, and loses the week's
    *  slot to any rung she has not passed – see `preferredWeekEvent`. */
   outgrown?: boolean
+  /** ⭐⭐ HER PLACE HERE IS A WILD CARD, not a direct acceptance (round 21 #2b, 17.08). A Grand Slam's
+   *  128 is 112 direct acceptances + 8 qualifiers + 8 wild cards, and these are the eight the
+   *  tournament gives away – ours go to players of the HOST NATION whom the acceptance list refused.
+   *  See `WILD_CARD` in engine/season/tournament.ts for the whole rule, including which of reality's
+   *  three grounds we can express and which one is not expressible at all.
+   *
+   *  ⚠ PRESENT ONLY WHEN THE LIST WOULD HAVE REFUSED HER, which is what keeps the badge honest: the
+   *  rule's first clause is "outside `acceptsRank`", so a direct acceptance never carries it and the
+   *  card can never claim she was given a place she earned.
+   *
+   *  Snapshot-only and derived, exactly like `eligible` and `outgrown`: the host nation is a pure
+   *  function of `(seed, event.id)` and her rank is folded from the ledger, so nothing is persisted
+   *  and no save schema moves. */
+  wildCard?: boolean
   /** a SOFT warning on an event the kid CAN still enter (eligible stays true): 'fatigued' = her
    *  condition is below the tier's floor, so racing risks a deeper hole / injury. The owner's call
    *  is that a tired body is a tough-parent decision, not a hard rule. */

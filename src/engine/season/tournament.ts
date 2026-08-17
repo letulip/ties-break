@@ -7,6 +7,7 @@ import { rngFromSeed, type Rng } from '../rng'
 import type { MatchPlayer, Tour } from '../match/types'
 import { simulateMatch, fastMatchProbability } from '../match/engine'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from './calendar'
+import { NATION_POOL } from './cohort'
 import { ECONOMY } from '../economy'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './types'
 
@@ -189,6 +190,118 @@ export interface OnRamp {
  *  the table above in hand: 6 gives the cohort half again as much professional tennis and costs the
  *  `econ-reach` 14->16 band a re-aim. docs/specs/ai-w-onramp.md §4f and §5. */
 export const ON_RAMP: { slots: number } = { slots: 2 }
+
+// =================================================================================================
+// ⭐⭐ THE WILD CARDS (round 21 #2b, 17.08 – the owner: «112 и надо подумать про wild card 8»)
+// =================================================================================================
+//
+// A Grand Slam's 128 is **112 direct acceptances + 8 qualifiers + 8 wild cards** (2026 Grand Slam
+// Rule Book, the same line `slam.acceptsRank = 112` is read off). We model the direct-acceptance
+// line exactly; these are the eight the tournament GIVES AWAY. Qualifying is still not modelled and
+// is not modelled here either – a qualifier earns her place in a draw we do not run.
+//
+// ⚠⚠ IT IS NOT A FIX FOR A STALL, BECAUSE THERE IS NO STALL. Measured before it was built
+// (docs/specs/round21-measured-2026-08.md §5b): **0 of 14 careers had a career best inside the
+// refused band**, and the band costs a median of fourteen weeks at the shipped 112. A wild card
+// buys a STORY – one home crowd, one draw she had not earned – and if it is ever measured
+// materially moving who reaches what, that is a finding to report and not a success.
+//
+// ⚠ WHY THE HOME-NATION GROUND AND NOT THE OTHER TWO. Reality uses three and we can express two:
+//   * A HOME PLAYER. Built. There is no venue machinery anywhere in `src/`, but a host nation is
+//     derivable from `(seed, event.id)` at zero persisted bytes, and every player already carries
+//     `nation`. It is the one ground with a CAP INSIDE ITS OWN DEFINITION – at most one Slam a
+//     season can be anybody's home Slam – so it needs no second tuning number to stop it running
+//     away, and it reads as a reward rather than a gift.
+//   * A YOUNG PROSPECT. Not built, and deliberately: `juniorReservedPlace` IS that idea one ladder
+//     down, and `ON_RAMP` already holds two places in every W draw for exactly that population.
+//     A third route with the same purpose would be the drift this file's ⚠⚠ box warns about.
+//   * ⚠ A RETURNING NAME IS NOT EXPRESSIBLE AND IS DROPPED – SAID ONCE HERE SO THE NEXT READER DOES
+//     NOT TRY. "She used to be #12 and has been away" needs a memory of a rank a player no longer
+//     holds. Field pros persist ZERO BYTES (they are re-derived per season from `seed:field:<n>`,
+//     see fieldPros.ts), so there is nowhere for a former ranking to live and nothing to read it
+//     back from. It is not a missing feature; it is unrepresentable in this population model.
+//
+// ⚠ ONE MECHANISM, TWO CONFIGURATIONS – `fillOnRamp` is called a second time and NOT reimplemented.
+// The eight held places are that function's exact existing shape: hold N of the draw, key one draw
+// per candidate off the band, drop the LAST DIRECT ACCEPTANCES to make room. Two ways to hold a
+// place in one draw is how the next inconsistency gets written, and the sport itself does it this
+// way – qualifiers and wild cards are two reserved routes filled by one entry-list process.
+
+/** HOW MANY PLACES A SLAM HOLDS FOR ITS WILD CARDS, and the rung it is the published number of.
+ *
+ *  ⚠ A PLAIN OBJECT, NOT A BARE `const`, the same idiom and the same reason as `ON_RAMP` and
+ *  `BEST_N_BY_TRACK`: a bench can sweep `slots` and restore it rather than patch this module.
+ *  Engine code never writes it.
+ *
+ *  ⚠ THE SLAM ALONE, AND THAT IS THE RULEBOOK'S OWN SCOPE. Research §4c-B prints four wild cards
+ *  in a 32-draw W event too – but those rungs already hold `ON_RAMP.slots` for the junior on-ramp,
+ *  and the W regulations are ONE "System of Merit" ordering with no published cut to be outside of
+ *  (§4-A), so "a player the list refused" is not even expressible there. The Slam is the one rung
+ *  whose regulation states a count, which is the same sentence that made `acceptsRank: 112`
+ *  possible. See docs/decisions.md, round 21 item 2. */
+export const WILD_CARD: { tier: TierId; slots: number } = { tier: 'slam', slots: 8 }
+
+/** THE NATIONS A TOURNAMENT CAN BE HELD IN – the population's own weighted pool, plus the playable
+ *  countries that pool happens not to contain.
+ *
+ *  ⚠ THE SECOND HALF IS THE WHOLE REASON THIS IS NOT JUST `NATION_POOL`. `NATION_WEIGHTS` is the
+ *  distribution the WORLD's players are drawn from; the onboarding wizard offers a partly different
+ *  list of twenty-four countries to the PLAYER. A code in one and not the other would give that
+ *  player a mechanic that silently never fires – the quiet dead branch, not a refusal she could
+ *  read. `tests/season/wildCard.test.ts` pins the two lists against each other by source, because
+ *  the engine may not import a component (invariant 1) and a list that can drift needs a guard that
+ *  cannot.
+ *
+ *  ⚠ NOT A SPECIAL CASE FOR THE PLAYER: the pool is a fixed array, identical in every career, and
+ *  is never widened by reading `profile.country`. Her nation is one entry among the rest.
+ *
+ *  ⚠ AND IT IS NOT `NATION_WEIGHTS` ITSELF, which must not move: `makeJunior` spends one `pickInt`
+ *  against `NATION_POOL`, so appending to it would re-map every existing seed's entire field – the
+ *  cost the SURNAMES note in cohort.ts spells out. Appending HERE costs nothing, because nothing
+ *  else reads this array. */
+export const HOST_NATIONS: readonly string[] = [...NATION_POOL, 'BY']
+
+/** WHERE THIS EVENT IS PLAYED – one draw on a purpose-scoped sub-stream, persisted nowhere.
+ *
+ *  ⚠ `seed:host:<eventId>`, NEVER MAIN, and re-derived at the call site every time (invariant 2).
+ *  The event id is `${year}-w${week}-${tier}`, so a given Slam of a given season is held in the same
+ *  country however many times anybody asks, across a save/load, and with no byte spent on it. That
+ *  is what makes "no venue machinery in `src/`" a non-obstacle rather than a blocker.
+ *
+ *  ⚠ THE REAL FOUR MAJORS DO NOT ROTATE and ours do – a stated deviation. We name no city and no
+ *  country anywhere in the UI (engine/nationalTeam.ts's note is the standing rule), so a fixed four
+ *  would buy nothing a player could see while denying the beat to twenty of the twenty-four
+ *  countries he may pick. The weighting still puts most home Slams in the deep tennis nations,
+ *  which is the pattern that actually shows. */
+export function hostNationOf(seed: string, eventId: string): string {
+  const rng = rngFromSeed(`${seed}:host:${eventId}`)
+  return HOST_NATIONS[Math.min(HOST_NATIONS.length - 1, Math.floor(rng() * HOST_NATIONS.length))]
+}
+
+/** ⭐ THE WILD-CARD RULE ITSELF, AS A PREDICATE OVER A RANK – written ONCE and read by both sides.
+ *
+ *  This is `proDoors`' discipline applied to a second door: the kid's gate and the AI fill ask the
+ *  SAME function, so they cannot drift. "She can receive one on the same rule as everybody else"
+ *  is not a promise in a comment here – it is the fact that there is one function.
+ *
+ *  `rank` is a 1-based position in the MERGED W table; `total` is that table's size.
+ *
+ *  TWO CLAUSES, AND NEITHER IS A NEW TUNING NUMBER:
+ *   1. **Outside the rung's acceptance cut.** A direct acceptance does not need a wild card and
+ *      must never be counted as having used one – that is what would turn the marker into a lie.
+ *   2. **Inside the rung's own entrant band ceiling** (`entrantPctBand[1]`), which is the exact
+ *      expression `fillOnRamp` already keys its candidates on. It is what stops the eight places
+ *      going to a #900: a real home wild card goes to a player of roughly the level, and at the
+ *      shipped numbers this window is about #113 to #333 of a ~1,799-row table.
+ *
+ *  ⚠ IT DOES NOT CLOSE THE REFUSED BAND AND IS NOT TRYING TO. Only #128 would, and #128 is
+ *  "everybody in the draw size gets in", which is not a door at all. */
+export function wildCardWindow(tier: TierId, rank: number, total: number, accepts: number | undefined): boolean {
+  if (tier !== WILD_CARD.tier || accepts === undefined) return false
+  if (rank <= accepts) return false
+  const ceiling = TIERS[tier].entrantPctBand[1]
+  return total > 0 && rank / total <= ceiling
+}
 
 /** THE HELD SLOTS, FILLED – called once per W event after `resolveDoubleBookings` has settled the
  *  week (see the ⚠⚠ box above for why it is here and not inside `selectEntrants`).

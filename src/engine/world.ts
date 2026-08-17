@@ -90,6 +90,9 @@ import {
   weekFieldExclusion,
   ON_RAMP,
   fillOnRamp,
+  WILD_CARD,
+  hostNationOf,
+  wildCardWindow,
 } from './season/tournament'
 // THE FIELD TIER (living-field phase W, 01.08). Field pros are DERIVED, NEVER PERSISTED – see
 // season/fieldPros.ts for the whole argument. world.ts only ever asks three questions of them:
@@ -239,8 +242,8 @@ export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, rankingFor, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, PLAY_DOWN, playDownBars, type ProDoors } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, PLAY_DOWN, playDownBars }
+import { cohortIds, inTrack, fieldProsOf, fullRanking, rankingFor, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars, type ProDoors } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow } from './world/entryCaps'
@@ -2175,9 +2178,75 @@ function fillWeekOnRamps(
       fatigue,
       booked,
     )
-    fields.set(d.event.id, after)
-    for (const p of after) booked.add(p.id)
+    const withCards = fillWildCards(world, d.event, after, tour, fatigue, booked)
+    fields.set(d.event.id, withCards)
+    for (const p of withCards) booked.add(p.id)
   }
+}
+
+/** ⭐⭐ THE EIGHT WILD CARDS OF A SLAM DRAW (round 21 #2b) – `fillOnRamp` in its second
+ *  configuration, and NOT a second held-slot mechanism. See `WILD_CARD` in season/tournament.ts for
+ *  what a wild card is here, why the ground is the home nation, and why a returning name is not
+ *  expressible.
+ *
+ *  THE FOUR THINGS THIS CALL SITE DECIDES, all of which `fillOnRamp` then obeys unchanged:
+ *
+ *  1. **THE POOL IS THE HOST NATION'S PLAYERS** – `fillOnRamp` has no idea what a nation is and is
+ *     not being taught one. The whole home-nation ground is a filter on the pool it is handed, which
+ *     is the same seam `universeForTier` uses to keep a population question out of bracket code.
+ *     ⚠ It is the event's WHOLE universe (cohort ∪ derived professionals), not `world.cohort`: at
+ *     #113-#333 of a 1,799-row table almost everybody is a professional, and a wild card drawn from
+ *     the live juniors alone would be `ON_RAMP` again under a different name.
+ *
+ *  2. **THE DOOR IS INVERTED** – `OnRamp.admits` is normally "the rung accepts her"; here it is
+ *     `wildCardWindow`, i.e. "the rung REFUSED her and she is still of the level". A direct
+ *     acceptance who was also handed a wild card would make the marker on the card a lie.
+ *
+ *  3. **ITS OWN SUB-STREAM, so the event's `seed:aitour:` draws do not move** – one draw per
+ *     host-nation candidate off `seed:wildcard:<eventId>`. Nothing is added to MAIN (invariant 2),
+ *     and the field the week already selected is bit-for-bit the field it selected.
+ *
+ *  4. **AFTER THE ON-RAMP, not before.** Both passes drop the last direct acceptances, so whichever
+ *     runs second can displace what the first put in. The order is the entry list's own – places
+ *     close, then the tournament announces its wild cards – and it is very nearly moot in practice:
+ *     the on-ramp's candidates must clear `doors.at('slam')`, i.e. sit inside #112 of a table with
+ *     1,600 professionals in it, which a live junior essentially never does.
+ *
+ *  ⚠ HER OWN DRAW IS NOT TOUCHED, and that is the seam `fillOnRamp`'s ⚠ SCOPE box already names:
+ *  the shadow bracket she plays in (`seed:kidtour:`) fills from professionals alone, so widening it
+ *  moves her measured difficulty at every W rung and is a second change wanting its own measurement.
+ *  What decides whether SHE holds a wild card is the entry gate, not this function – see
+ *  `homeWildCardPlace` in world/ladder.ts, which reads the same `wildCardWindow`. */
+function fillWildCards(
+  world: WorldState,
+  event: SeasonEvent,
+  field: AiPlayer[],
+  tour: TourWeek,
+  fatigue: Map<string, number>,
+  booked: ReadonlySet<string>,
+): AiPlayer[] {
+  if (event.tier !== WILD_CARD.tier || WILD_CARD.slots <= 0) return field
+  const host = hostNationOf(world.seed, event.id)
+  const pool = tour.universe.filter((p) => p.nation === host)
+  if (!pool.length) return field
+  const accepts = acceptanceRank(world, event.tier)
+  const total = tour.ranking.length
+  const rankOf = new Map<string, number>()
+  for (const r of tour.ranking) rankOf.set(r.playerId, r.rank)
+  return fillOnRamp(
+    event,
+    field,
+    tour.ranking,
+    rngFromSeed(`${world.seed}:wildcard:${event.id}`),
+    {
+      pool,
+      ranking: tour.ranking,
+      admits: (id) => wildCardWindow(event.tier, rankOf.get(id) ?? total, total, accepts),
+      slots: WILD_CARD.slots,
+    },
+    fatigue,
+    booked,
+  )
 }
 
 function runAiTournament(
