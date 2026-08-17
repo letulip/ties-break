@@ -653,6 +653,40 @@ and `CollegeOffer` are untouched, and `SAVE_SCHEMA_VERSION` stays at 52.
 ⚠ **The frozen MAIN capture is not re-pinned.** `collegeMatchesThisWeek` is arithmetic on a persisted
 offer and draws nothing; the season shrink removes draws from no stream because it never made any.
 
+### 9b. ⚠⚠ THE SECOND GATE, AFTER THE DEVELOPMENT RULING – AND SIX RED TESTS THAT ARE NOT THIS PHASE'S
+
+| step | result |
+| --- | --- |
+| `npm run context:audit` | **0** |
+| `npx vue-tsc -b --force` | **0** |
+| `npx vitest run --project unit --no-file-parallelism` | **1** – 146 of 148 files passed, **2 red** |
+| `npx vitest run --project component` | **0** – 42 files passed |
+| `npx vite build` | **0** |
+
+**The two red files are `tests/coach-travel-edge.test.ts` (5 cases) and `tests/season-mirror.test.ts`
+(1 case), and they are the skill wave's, not this phase's.** The control was run rather than argued:
+the same two files, the same command, **in `../tb-dev-A` – my own commit with my own change
+reverted** – fail with the **identical six cases**. CLAUDE.md's rule, and it ended the question in one
+run.
+
+The corroborating evidence, in order:
+
+* **The first gate, at `f0ffa72`, was 147 of 147 green** – and `a412162` (`season/fieldPros.ts`, the
+  rank-to-core re-deal) landed after it and before `3b6d92e`.
+* `coach-travel-edge` is the **frozen-career hash battery**. Re-dealing every opponent's skill changes
+  every career's results, so those hashes move by construction – that is a re-pin their wave owns.
+* **None of the six careers goes to college**, so no college code runs in any of them.
+
+⚠ **Not fixed here, deliberately.** Re-pinning another agent's frozen hashes mid-wave would overwrite
+the very measurement they are taking, and `tests/coach-travel-edge.test.ts` is a file they are already
+editing. **Flagged, not touched.**
+
+⚠ **`npm run e2e:fixtures` and `npm run test:e2e` were NOT run** – another agent's, both gates.
+
+⚠ **Still no schema change.** `coachesAt` is a constant on `COLLEGE_TIERS`, `coachFactorOverride` is an
+optional argument. Nothing new is persisted and `SAVE_SCHEMA_VERSION` stays at 52. **The frozen MAIN
+capture is not re-pinned** – the override is a multiplier and draws nothing.
+
 ### 9a. The commits, in order
 
 | commit | what |
@@ -662,6 +696,9 @@ offer and draws nothing; the season shrink removes draws from no stream because 
 | `f09991f` | **#4** – the three names, in one copy instead of two |
 | `daaa677` | **#2** – the measured odds replace `Squad 55`, with the staleness fingerprint |
 | `cc574f1` | **#5** – the shrink's guard, after the first version of it proved vacuous |
+| `3b6d92e` | **§10** – the programme coaches her; the staleness pin widened to the whole tier object |
+| `4df334d` | **§10** – the coaching guard: it climbs, it beats the parent rate, it never reaches elite, the family is not billed |
+| `d18e7d8` | **§10h** – the odds re-measured on the paired arms |
 
 ⚠ **Every commit is pathspec-form.** Another agent is committing a skill/win-probability audit on this
 same branch and `git commit` takes the whole index.
