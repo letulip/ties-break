@@ -32,6 +32,7 @@ import { useGameStore } from '../stores/game'
 import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../engine/season/calendar'
 import {
   COLLEGE_TIERS,
+  COLLEGE_TIER_NAME,
   canAfford,
   coveredShareOf,
   fundingBandOf,
@@ -129,14 +130,11 @@ const tourHead = computed(() => `${TIER_SHORT[TOUR_RUNG]} admits down to`)
 // the pre-v51 line. Never "refused" – see the v51 migration.
 const offer = computed(() => fork.value?.offer ?? null)
 
-// ⚠ THE NAMES ARE PLACES, NOT VERDICTS. The three prices are sourced and the quality ladder over them
-// is ours (engine/collegeOffer.ts, COLLEGE_TIERS) – so the row states the squad as a number beside the
-// price rather than smuggling a judgement into the noun.
-const TIER_LABEL: Record<CollegeTier, string> = {
-  state: 'A state programme',
-  national: 'A national programme',
-  private: 'A private programme',
-}
+// ⚠ THE NAMES ARE PLACES, NOT VERDICTS, and since round 21 there is exactly one copy of them –
+// `COLLEGE_TIER_NAME` in engine/collegeOffer.ts, imported here and by `EndingScreen.vue`. The three
+// prices are sourced and the quality over them is measured (see `row.odds`), so nothing is smuggled
+// into the noun.
+const TIER_LABEL = COLLEGE_TIER_NAME
 const BAND_LABEL: Record<CollegeFundingBand, string> = {
   full: 'A full ride',
   most: 'Most of the bill',

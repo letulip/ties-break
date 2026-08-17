@@ -20,19 +20,15 @@ import { SURNAMES, FIRST_NAMES } from '../engine/season/cohort'
 import {
   DEFAULT_PROFILE,
   type CoachTier,
-  type CollegeTier,
   type FamilyBackground,
   type PlayerProfile,
   type PlayStyle,
 } from '../shared/protocol'
 
-/** ⚠ THE SAME THREE NAMES THE FORK CARD USES, and they are places rather than verdicts. The prices
- *  behind them are sourced; the squad ladder over them is ours (engine/collegeOffer.ts). */
-const COLLEGE_PLACE: Record<CollegeTier, string> = {
-  state: 'A state programme',
-  national: 'A national programme',
-  private: 'A private programme',
-}
+/** ⚠ THE SAME THREE NAMES THE FORK CARD USES, and since round 21 that is literally true rather than a
+ *  promise in a comment: both screens import `COLLEGE_TIER_NAME` from the engine, so the two can no
+ *  longer drift. They are places rather than verdicts; the prices behind them are sourced. */
+import { COLLEGE_TIER_NAME as COLLEGE_PLACE } from '../engine/collegeOffer'
 import { daysInBirthMonth } from '../shared/dates'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'

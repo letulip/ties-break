@@ -178,10 +178,10 @@ describe('⭐⭐ the card says what each college place costs', () => {
   it('⭐⭐ arrives with nothing chosen and names the cheapest open place on the button', async () => {
     const w = mountFork(FUNDED)
     for (const b of w.findAll('.fork-place')) expect(b.attributes('aria-pressed')).toBe('false')
-    expect(w.findAll('.fork-answer')[1].text()).toContain('A state programme')
+    expect(w.findAll('.fork-answer')[1].text()).toContain('The university at home')
     await w.findAll('.fork-place')[2].trigger('click')
     expect(w.findAll('.fork-place')[2].attributes('aria-pressed')).toBe('true')
-    expect(w.findAll('.fork-answer')[1].text()).toContain('A private programme')
+    expect(w.findAll('.fork-answer')[1].text()).toContain('A private university')
     w.unmount()
   })
 
@@ -195,7 +195,7 @@ describe('⭐⭐ the card says what each college place costs', () => {
     expect(places[1].attributes('disabled')).toBeUndefined()
     expect(places[2].attributes('disabled')).toBeUndefined()
     expect(w.findAll('.fork-answer')[1].text(), 'the button falls to the cheapest place that is hers').toContain(
-      'A national programme',
+      'A university out of state',
     )
     for (const a of w.findAll('.fork-answer')) expect(a.attributes('disabled')).toBeUndefined()
     w.unmount()

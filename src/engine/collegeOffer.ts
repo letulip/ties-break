@@ -212,6 +212,31 @@ export const COLLEGE_TIERS = {
  *  a card that led with the dear place would be recommending it in reading order (ruling 4). */
 export const COLLEGE_TIER_ORDER = ['state', 'national', 'private'] as const
 
+/** ⭐⭐ WHAT THE PLAYER READS ON THE ROW – round 21 #6, 17.08. The owner: «"Штатное / национальное /
+ *  частное" – окей, но надо переформулировать точно.»
+ *
+ *  ⚠⚠ THE OLD NAMES WERE US ADMINISTRATIVE CATEGORIES AND HE NEVER CHOSE THEM. "A state programme"
+ *  and "A national programme" are what the College Board's own table calls its three columns; they
+ *  say nothing to a parent deciding where to send a nineteen-year-old, and "national" in particular
+ *  reads as a RANK in a game whose every other ladder is one. These say where the place IS, which is
+ *  the only thing that separates the three in the fiction – and «out of state» is not jargon here, it
+ *  is the sourced reason the second price is higher than the first.
+ *
+ *  ⚠ THE IDS ARE UNTOUCHED. `CollegeTier` is persisted in `ForkState.offer.chosen` since v52, so
+ *  renaming the id would be a save-schema change to fix a caption. The name is a caption; the id is a
+ *  save field, and the two are now different things in different places.
+ *
+ *  ⚠ AND IT LIVES HERE RATHER THAN IN A COMPONENT BECAUSE IT HAD TWO COPIES – `ForkDialog.vue`'s
+ *  `TIER_LABEL` and `EndingScreen.vue`'s `COLLEGE_PLACE`, identical, with a comment on the second
+ *  saying "the same three names the fork card uses". That is exactly the shape of the four-copies
+ *  failure this area already had once (the "the family stops paying" line, fixed in round 21). One
+ *  copy, imported by both. */
+export const COLLEGE_TIER_NAME: Record<CollegeTier, string> = {
+  state: 'The university at home',
+  national: 'A university out of state',
+  private: 'A private university',
+}
+
 export const COLLEGE_OFFER = {
   /** the country code that gets the in-state place and the need-based layer. ⚠ Both of those are US
    *  federal facts (34 CFR §668.33; the state-residence tuition split), so this is not a nationality
