@@ -71,9 +71,11 @@ her beat #300 makes #50 beat her.
 ## 2. PROVENANCE OF THE ARMS
 
 **There is only one arm and it is the shipped engine**, because nothing in `src/` was changed: the
-whole measurement is a read of the code as it stands. The bench is `tools/skill-gap-odds.ts`, built
-and run at commit **`5ad87f1`** on `wave/round21`, which is this agent's own commit with the other
-agent's college work already in the tree and untouched by it. The proposal in §5 is computed **inside
+whole measurement is a read of the code as it stands. The bench is `tools/skill-gap-odds.ts`, first run
+at commit **`5ad87f1`** and **re-run at `82b16b8`** on `wave/round21` – the two runs are
+**byte-identical**, which is what makes the second commit's dead-code removal provably invisible to
+the numbers. Both commits are this agent's own, with the other agent's college work already in the
+tree and untouched by either. The proposal in §5 is computed **inside
 the bench**, from constants measured out of the shipped engine at run time – so there is no A/B pair
 to confound, and the CLAUDE.md hazard the shared checkout keeps producing (a control built at the
 wrong commit, or restored with `git checkout -- src`) cannot arise here.
