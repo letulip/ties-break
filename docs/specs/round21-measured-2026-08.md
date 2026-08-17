@@ -23,10 +23,10 @@ rule `tools/round17-read.ts` and `tools/round18-read.ts` carry.
 | --- | --- | --- | --- |
 | **3** | Ines' last two seasons – is this right for her level? | **not a defect, and she is UNDER-ranked** | her core **57.1** against a mean **50.4** for the band #101-#150 she stands in |
 | **3'** | no QF at a big event in two seasons – ok for her build? | **not a defect – the unlucky fifth of a fair distribution** | the model gives her **15.0%** per WTA 250 and **13.0%** per WTA 500; over her 14 big events **P(no QF) = 20.5%** |
-| **3''** | ⚠ *asked for, and found*: a field-strength asymmetry at the big rungs | **real, and it is NOT the seeding** | the WTA **250, 500 and 1000 draw fields of the same strength** (core 68.4 / 68.9 / 68.4), so a 250 pays her **20.1** expected points – the worst rung in the game |
+| **3''** | ⚠ *asked for, and found*: a field-strength asymmetry at the big rungs | **real, and it is NOT the seeding** · ⭐ **FIXED 17.08** | the WTA **250, 500 and 1000 draw fields of the same strength** (core 68.4 / 68.9 / 68.4), so a 250 pays her **20.1** expected points – the worst rung in the game |
 | **4** | an 18-year-old at #2 – how is that possible? | **not a defect – the head is OLDER than the field, not younger** | teens are **11.38%** of the field but **5.35%** of the top 50 and **1.25%** of #1s; a top-3 eighteen-year-old happens in **8.13%** of world-seasons |
 | **7** | barred from the Slam at #116 – normal? | **the arithmetic is exact; the cost is a speed bump, not a wall** | 12 of 14 careers pass through #105-#128 and **12 of 12 cross #104** – median **19 weeks**; **0 of 14 stall** |
-| **7'** | his proposal: fold the 16 qualifiers in, 104 → 120 | **it works, and it drags one number with it** | refusal falls **23.5 → 9 weeks**; but at 120 a Slam shares a door with the WTA 500 (`acceptsRank` already 120) |
+| **7'** | his proposal: fold the 16 qualifiers in, 104 → 120 | **it works, and it drags one number with it** · ⭐ **he took 112 instead, 17.08** | refusal falls **23.5 → 9 weeks**; but at 120 a Slam shares a door with the WTA 500 (`acceptsRank` already 120) |
 | **8** | "college beats the tour" – but the tour can make 1-2M | **he is right and the failing was mine** | the tour passes college at the **74th percentile**; **30%** of careers do better on tour; tour max **$5,573,608** against college max **$260,410** |
 | **8'** | ...and what a non-American pays | ⭐ **"college beats the tour" is an AMERICAN sentence** | **$80,090** over four years against $25,592, 0 free rides of 53 – and the paired median **flips to −$8,070**, with **51%** better off on tour |
 | **9** | is a 1,600 world big enough? | **the table is the right size; the CHAIRS are not** | 1,600 pointed rows against a real list of ~1,550 – but **2.12** W main-draw chairs per professional per season against a real ~20 events a year |
@@ -303,6 +303,13 @@ because the brief asked me to look for it and it is there** – but her own resu
 the distribution this world produces (§3c), so it is a WORLD-SHAPE question and not the answer to
 "why no quarter-final".
 
+> ⭐⭐ **RESOLVED THE NEXT DAY – THE KNOB WAS PULLED, AND IT WAS OPTION 2.** The owner ruled on 17.08
+> («с этим точно надо что-то делать»), and `TierDef.acceptsFromRank` shipped: the entry list gets a
+> HEAD as well as a tail, and `wta250.acceptsFromRank = 64` – exactly the `tourElite` storey. Measured
+> at matched n: the 250's field core **68.4 → 60.6**, her P(QF+) **12.8% → 27.5%**, expected points
+> **17.1 → 33.3** against a W50's 30.8, and **every other rung identical to the digit.**
+> See `docs/specs/the-250-is-not-a-1000-2026-08.md`.
+
 ---
 
 ## 4. Q4 – AN EIGHTEEN-YEAR-OLD AT #2
@@ -471,6 +478,11 @@ W rungs the honest version of his idea is **the soft tail**, which is the design
 on 16.08 (`docs/specs/the-acceptance-tail-2026-08.md`, «пусть остануться жесткие отсечки»). **The
 Slam is the one rung where "+16" is even expressible, because it is the one rung whose regulation
 states a count.**
+
+> ⭐ **RESOLVED THE NEXT DAY: HE TOOK 112**, the rulebook's third configuration, over his own 120 –
+> because 120 would have tied a Slam's door to `wta500.acceptsRank`. Re-measured on the shipped
+> engine: the median career is refused **29 weeks at #104 and 14 at #112**, and **0 of 14 stall at
+> either**. `docs/specs/the-250-is-not-a-1000-2026-08.md` §6.
 
 ### 5e. ⚠ The wild-card half is a real mechanic and is NOT designed here
 
