@@ -359,7 +359,68 @@ decisions.** The college squad stays worth +0.17 points of match probability and
 
 ---
 
-## 6. VERDICT ON THE PREDICTIONS
+## 5f. ⚠ HE RULED: SHIP IT. His words, and the two things they change about this document
+
+> «я хочу, чтобы "верх таблицы перестаёт быть лотереей" произошло… у игрока с силой 16 и броском 20
+> есть шансы против игрока с силой 25 и таким же дайсом д20 в руках. У нас тоже есть сила, тренер,
+> выезд тренера и прочее. И в данный момент складывается ощущение, что рейтинг в статистике и таблице
+> ничего не значит, а хотелось бы, чтобы значил. Сделай как считаешь нужным пожалуйста, **шансы
+> выиграть должны быть у всех, но не у всех одинаковые**.»
+
+**Shipped: `gain ×1.5`, `s = 4.10`, `C0 = 76.4`.** The pair is chosen because it is the
+minimum-disruption one by summed core movement (54.7 against 99.8 at ×1.0 and 71.9 at ×2.0), not
+because it reads best – §5c is the arithmetic. He accepted the upset tripling to 12.9% with his eyes
+open.
+
+**⚠ THE FIRST HONEST COST: A CONSTANT SLOPE CANNOT REPRODUCE THE REAL TOP TEN, AND WE ARE TAKING THE
+LAW ANYWAY.** The live Elo list says #1 against #10 is nearly even (Route B: 41.6% upset); the
+124-per-doubling law says 8.5%; we ship 7.3%. **So the top of our table becomes STEEPER than the
+modern sport's, not merely less flat than ours was.** That is the price of a rule a player can
+compute, and it is deliberate: a slope that bends to match the real top-ten compression is a slope
+nobody can hold in their head, which is the request. Stated here so it is never discovered later and
+called a regression. It also means the sport's own #1-vs-#10 is the one cell where we are knowingly
+wrong, and the direction is "the champion is too good".
+
+**THE SECOND: HIS d20 IS THE ACCEPTANCE TEST.** Strength 16 against strength 25 must still win
+sometimes, and the chance must be **readable before the roll**. Delivering the maths without the
+screen is delivering half the request – §7 is that half.
+
+---
+
+## 6. THE SHIPPING PREDICTIONS, WRITTEN BEFORE THE IMPLEMENTATION
+
+Committed before a line of `src/` moved. **The change is smaller than §5d feared, and S1 is why.**
+
+**S1 – ⚠ THE RANKING TABLE DOES NOT MOVE AT ALL.** A pro's points come from `pointsForCore`, which
+reduces to `pLo + (pHi−pLo)·u^gamma` where `u` is her one uniform band draw – **the core VALUE never
+enters it**. So if the draw is kept and only the core value is replaced, every pro's `wtaPoints` is
+byte-identical, `mergedWtaRanking` is byte-identical, and **every acceptance cut admits exactly the
+same population**. Predicted: identical points at #1…#1600, identical ranks, identical cuts. If this
+fails, the implementation is wrong, not the theory.
+
+**S2 – the frozen MAIN capture does not move.** `fieldPros.ts` takes no MAIN draw and the change adds
+none; the gain constants are pure arithmetic inside `basePServe`. Predicted 41550 / `e6b0c709`
+unchanged. **Checked, not assumed.**
+
+**S3 – the upset table lands on §5b.** #1 v #10 → 7.3% ±1.5 · #50 v #100 → 33% ±2 · #50 v #200 →
+19% ±2 · **#50 v #300 → 12.9% ±1.5** · #200 v #300 → 40% ±2.
+
+**S4 – no clamp binds, still.** The widest gap the new curve can produce is #1 (76.4) against #1600
+(32.7) = 43.7 core × 0.00405 = 0.177 of p, so `pA = 0.747`, inside `BASE_CLAMP`'s 0.82. Predicted 0
+incidence again.
+
+**S5 – the ladder tilts: the head gets much easier, the on-ramp slightly harder.** The top 50 lose
+14 core points and #100 loses 5, while everything past #365 – which is where W15 draws from – **gains**
+3 to 4. Predicted: the reference build's **W15 title probability FALLS** from ~20% to 12–17%, and her
+finishes at W100/WTA 125 **improve sharply**.
+
+**S6 – careers accelerate through the middle and the top.** Predicted: median peak rank improves by
+**at least 40 places**, and the improvement is bigger the further up the career already went, because
+the core the table demands at #50 falls from 67.5 to 53.2.
+
+**S7 – the three frozen careers move, on match-outcome keys only.** No schema key, no `rngMain` key.
+
+## 7. VERDICT ON THE PREDICTIONS
 
 | | prediction | outcome |
 |---|-----------|---------|
