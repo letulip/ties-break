@@ -1357,11 +1357,13 @@ and it would REMOVE content from a player rather than add it – so it is flagge
 ### HIS SECOND CLAUSE – «на нижних вылетала периодически» – measured, and it is not a second defect
 
 The field-strength shape does **not** reach below the WTA 125: field core rises smoothly 44.6 · 46.5 ·
-50.1 · 55.0 and only then jumps to 68.4. Her own record, off the counting window: **9 events below the
-125, exactly 2 exits before the quarter-final, both at W75, and both R16 – she won her opening match
-and lost the second.** The model predicts **1.92**. ⭐ **There is not one first-round exit below the
-WTA 500 anywhere in her book.** A 32-draw is five rounds; a 78%-QF player goes out early one event in
-five. "Periodically" is the right word and the right rate.
+50.1 · 55.0 and only then jumps to 68.4. Her own record, reconstructed exactly from the per-rung W-L
+and named by the counting window: **9 events below the 125, exactly 2 exits before the quarter-final,
+both at W75, and both R16 – she won her opening match and lost the second.** The model predicts
+**1.92**. ⭐ **Below the WTA 125 she did not lose a single opening match all season.** The one first
+round she did lose was her one WTA 250, for 1 point – which is item 4 from the other side. A 32-draw
+is five rounds; a 78%-QF player goes out early one event in five. "Periodically" is the right word and
+the right rate, and there is no second defect underneath item 4.
 
 ### ITEM 2 – THE SLAM DOOR: 104 → 112
 
