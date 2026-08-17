@@ -160,37 +160,43 @@ at tour level, qualifying or ITF $50K+ inside 52 weeks – so it is not the circ
 
 ## 3. THE TABLE – upset rate by ranking gap `[I]` throughout
 
-Share of matches the **lower-ranked** player wins. Route A = `[S-7]` evaluated. Route B = `[I]` Elo
-table through `[S-9]`'s mapping. **Both are model output, neither is a frequency count.**
+Share of matches the **lower-ranked** player wins. **The LIVE columns are the target** – the owner's
+ruling, §2c. Route A (K&M 1992–95) is kept beside them as the second instrument and the era contrast,
+and is explicitly NOT what we aim at. **All three are model output; none is a frequency count.**
 
-| favourite | underdog | Route A (K&M) | Route B (Elo) | verdict |
-|-----------|----------|---------------|---------------|---------|
-| #1 | #10 | 8.5% | 41.6% | `[?]` **routes disagree – do not use** |
-| #1 | #50 | 1.7% | 17.3% | `[?]` **routes disagree – do not use** |
-| #1 | #100 | 0.9% | 11.8% | `[WEAK]` somewhere around 5–12% |
-| #10 | #50 | 16.0% | 22.7% | `[I]` ~16–23% |
-| #10 | #100 | 8.5% | 15.9% | `[I]` ~9–16% |
-| **#50** | **#100** | **32.8%** | **39.1%** | `[I]` **~33–39%** |
-| #50 | #150 | 24.4% | 27.4% | `[I]` ~24–27% |
-| **#50** | **#200** | **19.3%** | **20.4%** | `[I]` **~19–20%, routes agree** |
-| **#50** | **#300** | **13.6%** | **11.4%** | `[I]` **~11–14%, routes agree** |
-| #50 | #500 | 8.5% | – | `[I]` ~9%, single route |
-| #100 | #200 | 32.8% | 28.6% | `[I]` ~29–33% |
-| #100 | #300 | 24.4% | 16.6% | `[I]` ~17–24% |
-| #200 | #300 | 39.7% | 33.3% | `[I]` ~33–40% |
-| #200 | #500 | 28.0% | – | `[I]` ~28%, single route |
-| #500 | #1000 | 32.8% | – | `[I]` ~33%, single route |
+*"live curve" = the binned-median curve of §2c. "live + spread" additionally integrates the residual
+sd, i.e. asks "a player ranked r1 against a player ranked r2" rather than "the median of r1 against
+the median of r2". The second is the honest one and is the one our engine is measured against.*
 
-**The owner's own question, answered: a #300 beating a #50 happens about one time in eight** – call
-it 11–14%, and it is the row where the two independent routes agree most closely. His instinct
-("вероятность такого довольно мала") is right, and his tolerance ("это спорт, всякое случается") is
-also right: it is not a freak event, it is roughly one match per round of a 16-draw.
+| favourite | underdog | **live curve** | **live + spread** | K&M 1992–95 |
+|-----------|----------|----------------|-------------------|-------------|
+| #1 | #10 | 23.9% | **24.7%** | 8.5% |
+| #1 | #50 | 9.0% | **9.4%** | 1.7% |
+| #1 | #100 | 5.6% | **6.0%** | 0.9% |
+| #10 | #50 | 23.9% | **25.0%** | 16.0% |
+| #10 | #100 | 15.8% | **17.2%** | 8.5% |
+| **#50** | **#100** | 37.3% | **38.0%** | 32.8% |
+| #50 | #150 | 25.5% | **26.9%** | 24.4% |
+| **#50** | **#200** | 18.2% | **19.9%** | 19.3% |
+| **#50** | **#300** | 10.9% | **12.5%** | 13.6% |
+| #50 | #500 | 6.4% | **7.7%** | 8.5% |
+| #100 | #200 | 27.2% | **28.9%** | 32.8% |
+| #100 | #300 | 17.0% | **19.2%** | 24.4% |
+| **#200** | **#300** | 35.4% | **37.2%** | 39.7% |
+| #200 | #500 | 23.5% | **26.3%** | 28.0% |
+| #300 | #600 | 33.2% | **35.7%** | 32.8% |
+| #500 | #1000 | 33.5% | **35.9%** | 32.8% |
 
-**⚠ WHERE THE ROUTES DISAGREE, WE GIVE NO NUMBER.** The #1 rows are the worst case and the reason is
-diagnosable rather than mysterious: Route A's λ was fitted on the most top-heavy era in the women's
-game, and Route B's #1 row is depressed ~150 Elo by our own smoothing window. Using Sabalenka's
-actual 2209 instead of the smoothed 2058 moves #1 vs #100 from 11.8% to about 5%. **We do not pick
-between them.** Anyone who needs the head of the table should compute it from the unsmoothed Elo list.
+**The owner's own question, answered: a #300 beating a #50 happens about one time in eight** – 10.9%
+on the curve, 12.5% once the spread inside a rank is allowed for. His instinct («вероятность такого
+довольно мала») is right, and his tolerance («это спорт, всякое случается») is also right: it is not a
+freak event, it is roughly one match per round of a 16-draw.
+
+**⚠ WHERE THE TWO INSTRUMENTS AGREE AND WHERE THEY DO NOT, because it is diagnosable rather than
+mysterious.** Through the middle and the tail they are close – #50 v #200 (19.9 against 19.3), #50 v
+#300 (12.5 / 13.6), #200 v #300 (37.2 / 39.7). **They diverge at the HEAD**: #1 v #10 is 24.7% live
+against 8.5% in 1992–95. That is precisely the "1990s dominance" the owner refused, and it is the one
+place where using K&M would have been an error rather than a conservatism.
 
 **⚠ THE DEEP TAIL IS UNSOURCED AND THE MODEL IS EXTRAPOLATING.** Rows below #300 come from Route A
 alone, i.e. from a logistic fitted on Wimbledon main draws – a population containing no #500 and no
