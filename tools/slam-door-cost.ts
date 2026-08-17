@@ -272,7 +272,13 @@ section(`3. ⭐ HIS OWN PROPOSAL, EVALUATED – "raz u nas net kvaly, mozhet pro
 // OVER THE MEASURED RANK SERIES above, which is what makes the rows survive him picking a different
 // number. Same discipline as tools/college-fork.ts.
 {
-  const CANDIDATES = [DIRECT, 112, 120, DRAW]
+  // ⚠ THE RULEBOOK'S THREE, THE OWNER'S ONE AND THE SHIPPED ONE, DEDUPED AND ORDERED (17.08). It
+  // used to read `[DIRECT, 112, 120, DRAW]`, which was right only while `DIRECT` was 104: the day
+  // round 21 #2 moved the constant to 112 the table printed the shipped row TWICE and dropped 104
+  // entirely – so the one comparison the section exists to make, the shipped cut against the one it
+  // replaced, disappeared at exactly the moment it became interesting. The candidates are now stated
+  // rather than derived, and `DIRECT` is folded in so the SHIPPED row is always present whatever it is.
+  const CANDIDATES = [...new Set([104, 108, 112, 120, DIRECT, DRAW])].sort((a, b) => a - b)
   console.log(
     `\n  the rulebook's own three permitted configurations (docs/research/ranking-points-by-tier.md §4-D:` +
       `\n  direct 104/108/112 · qualifiers 16/12/8 · wild cards 8, and only WC=8 is fixed) plus his 120.\n`,
@@ -290,11 +296,14 @@ section(`3. ⭐ HIS OWN PROPOSAL, EVALUATED – "raz u nas net kvaly, mozhet pro
         refusedWeeks.push(n)
       }
     }
-    const label =
-      cut === DIRECT ? 'direct acceptances only (SHIPPED)'
-        : cut === 112 ? 'direct 112 / qual 8 – the third config'
-          : cut === 120 ? 'direct 104 + the 16 qualifiers  <- HIS'
-            : 'direct + qualifiers + wild cards'
+    const of = (n: number) =>
+      n === 104 ? 'direct 104 / qual 16 – the old cut'
+        : n === 108 ? 'direct 108 / qual 12 – config two'
+          : n === 112 ? 'direct 112 / qual 8 – config three'
+            : n === 120 ? 'direct 104 + the 16 qualifiers <- HIS'
+              : n === DRAW ? 'direct + qualifiers + wild cards'
+                : `direct ${n}`
+    const label = cut === DIRECT ? `${of(cut)} · SHIPPED` : of(cut)
     console.log(
       `  ${padE('#' + cut, 8)}${pad(label, 34)}${pad(`${refusedCareers}/${careers.length}`, 17)}` +
         `${pad(median(refusedWeeks), 20)}${pad(refusedWeeks.length ? Math.max(...refusedWeeks) : 0, 9)}`,
