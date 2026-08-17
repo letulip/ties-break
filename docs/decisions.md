@@ -1339,8 +1339,11 @@ the best event in the game for a #121 player, which is a worse defect than the o
 most-entered professional rung in the game from 19 (5.0-5.5 entries a year, twice any other), so
 n=90: **career high median #112 → #94**, p25 **#75 → #48**, rank at 25 **#174 → #157**.
 ⚠ **AND ONE ROW WENT THE WRONG WAY: 87/90 → 84/90 careers ever hold a professional ranking** – three
-marginal careers lost the only points they had, because each 250's two on-ramp slots now fall on a
-different pair of cohort players. Flagged, not tuned away. **FOR HIM.**
+marginal careers lost the only points they had. ⚠ **The mechanism is a hypothesis, not a measurement**:
+it cannot be the 250's value (that only adds points to her), so it is most likely her CALENDAR – every
+W acceptance cut reads her position in the MERGED table, and the cohort's own 250 results moved it.
+**3 of 90, at the bottom of the distribution, against a median career high eighteen places better.**
+Flagged, not tuned away. **FOR HIM.**
 
 ⚠ **The frozen careers moved on ONE key of sixty-three – `events` – in all three**, and the per-key
 diff is the receipt: no frozen career played a different match (the freeze ends at 16.6 and the
