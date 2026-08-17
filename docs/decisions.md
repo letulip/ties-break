@@ -1625,3 +1625,72 @@ three old hashes byte for byte (`PRE_V52`). `rngMain` untouched; the frozen MAIN
 
 ⚠ **`tests/e2e-fixtures.test.ts` is RED and deliberately left so**: the e2e manifest is at v51 and
 needs `npm run e2e:fixtures`, which this agent was instructed not to run.
+
+## 17.08.2026 – ⭐⭐ DOES SKILL DECIDE A MATCH? Both his sentences are true, of different halves of the table (MEASURED, NOTHING SHIPPED)
+
+**His oldest complaint, made more than once:**
+
+> «есть впечатление, что скилл особо ни на что не влияет… когда играют топ-50 против топ-200 или
+> топ-300 – это совсем другое дело… Я бы хотел, чтобы у нас тоже появились четкие формулы, по которым
+> более менее точно можно предсказывать.» And: «Я допускаю, что 300 вполне может обыграть 50… но
+> вероятность такого довольно мала, как мне кажется. Можно поискать статистику.»
+
+**⚠ NO CONSTANT MOVED. Not a line of `src/` changed.** The wave is a research document, a bench and a
+spec: `docs/research/the-upset-rate.md`, `tools/skill-gap-odds.ts`,
+`docs/specs/the-skill-gap-2026-08.md`. Everything below is measured at commit `82b16b8`, 40 worlds ×
+25 sims per rank pair = 17,000 played matches and 2.4 M logged points, and the run reproduces
+byte-identically.
+
+**THE STATISTIC HE ASKED FOR EXISTS, WITH A CAVEAT THAT IS PART OF THE ANSWER.** Nobody has published
+an empirical WTA table of "the lower-ranked player wins X% at gap N" – we looked hard and it is not
+there. What exists is two sourced models that **agree on one constant: 124 Elo per doubling of rank**
+(Klaassen & Magnus's women's λ = 0.715, fitted on Wimbledon 1992–95, N=504; and a straight-line fit to
+the live Tennis Abstract WTA Elo list, 2026-08-03). Every probability is therefore tagged `[I]`, never
+`[S]`. **A #300 beats a #50 about one time in eight – 11–14%.** His instinct was right.
+
+**⚠⚠ AND AT THAT GAP OUR GAME IS ALREADY MORE DECISIVE THAN THE SPORT, BY A FACTOR OF THREE.**
+Ours: **4.3%**. #50 vs #200: sport ~19–20%, ours **7.3%**. #50 vs #100: sport ~33–39%, ours **21.1%**.
+**We are not flat in the band he named. We are too steep.**
+
+**⚠⚠ HE IS RIGHT ANYWAY, AT THE PLACE HE ACTUALLY PLAYS. #1 against #10 is a 47.4% upset in our world
+– the world number one is a coin flip against the world number ten.** That is the flatness he can
+feel, and it is exactly where a career that has arrived spends the rest of its life.
+
+**THE MECHANISM IS NAMED AND IT IS NOT IN THE MATCH ENGINE.** Both suspects were checked and both are
+innocent: the point→match compounding reproduces the literature 4 times out of 4 (±0.3 points), and
+**no clamp binds anywhere – 0 of 40 worlds on `BASE_CLAMP`, 0 of 2,404,297 logged points on
+`FINAL_CLAMP`** (probed for reachability, not assumed: core 100 vs core 0 does hit it). The match
+model prices a core gap almost perfectly logistically at **1 core point = 20.2 Elo**. What a *rank*
+gap is worth is decided by **`FIELD.tiers` in `src/engine/season/fieldPros.ts`**, where core is drawn
+**uniformly inside a storey** – so rank carries no skill information *inside* a storey and all of it
+sits at the seams. Per doubling, against the sport's 124 Elo: **#1→#10 = 7 Elo (×0.06)**, #10→#50 = 67
+(×0.54), **#50→#100 = 269 (×2.16)**, #500→#1000 = 135 (×1.09). **Over the whole table our span is only
+23% short – it is laid on the rank axis as a staircase instead of a line.** `fieldPros.ts` says so
+itself: *"Step 2 re-deals every core in this table off the real Elo curve"* – step 1 shipped, step 2
+never did.
+
+**AND WHY MOVING THE FIELD MOVED THE WIN RATES WHILE MOVING HER DID NOT.** The engine's response to
+skill is steep – **+2.84 points of match probability per core point**, and Ines's measured +6.7 over
+her band is worth **+18.3**. What is flat is her ACCESS to it: four years of the dear college squad is
+**+0.06 core = +0.17 points**, the whole coached/un-coached gap is **+0.12 core = +0.34 points**,
+against a world axis of 59 core points. **The complaint "my choices do not matter" is a different
+defect in a different file (`development.ts`), and no change to the match model touches it.**
+
+**THE PROPOSAL, UNSHIPPED, AND THE THING HE HAS TO RULE ON.** The legible formula he asked for already
+exists – `P = 1/(1+10^(−ΔElo/400))`, `ΔElo = 20.2 × core gap` – and could be shown on screen tomorrow.
+What is missing is `core(rank) = C0 − s·log2(rank)` with a **constant** `s`, in `fieldPros.ts`, leaving
+`match/` untouched. ⚠ **The gain and the slope are the same move seen twice** (their product is pinned
+by the sport), so the pair has **one free parameter and it is not the odds** – it is where the core
+scale sits. `gain ×1.5` is the minimum-disruption setting by summed core movement (54.7 against 99.8
+and 71.9), and leaves #300 where it stands.
+
+⚠⚠ **THE PRICE, AND IT IS HIS CALL: the upset he wants "rare but real" becomes THREE TIMES MORE COMMON
+than today – #300 over #50 goes 4.3% → 12.9% – and it cuts both ways.** The #300 who beats his
+daughter also triples. **The rate being aimed at is 12.9%, one match in eight, and it is the sport's
+own number rather than a taste** – he can keep 4.3%, take 12.9%, or pick anything between by scaling
+λ, which is defensible because the sourced constant carries a top-heavy era in it (its own base rate
+is 7–13 points above the modern game's). **What he buys is that the top of the table stops being a
+lottery** (#1 vs #10: 47.4% → 7.3%). **Blast radius: the whole game** – every acceptance cut, the W15
+on-ramp in both directions, ladder pace, sponsors, the wall, the endings, and every existing career's
+world re-deals (no schema bump – field pros are derived and take no MAIN draw; 41550 / `e6b0c709`
+untouched). Nothing is done until he rules.
