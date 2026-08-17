@@ -1955,3 +1955,115 @@ was skipped in silence**. The tell was the clock – 21 seconds for eighteen car
 walked 830 weeks each. ⚠⚠ **`tools/**/*.ts` IS in `tsconfig.app.json`'s include and `tsc` gives
 `TS2554: Expected 2 arguments, but got 1` – `vue-tsc -b --force` would have caught it before a single
 career was walked, and the bench was run first. New rule: type-check a new bench before running it.**
+
+---
+
+## 17.08.2026 – ⚠⚠ EIGHTEEN OWNER RULINGS LIVED ONLY IN TWO `.vue` COMMENTS, AND THE COPY RULE WAS ABOUT TO ERASE THEM (`wave/round21`)
+
+Two rules in `CLAUDE.md` collide on `src/components/screens/CalendarScreen.vue` and
+`src/components/screens/SeasonScreen.vue`: the Style section says comments *"deliberately record
+owner rulings and the reasoning behind non-obvious choices"* and must be preserved, and round 21's
+standing rule is **English only in a `.vue`, including comments**. Between them the two files carried
+**eighteen rulings quoted in his own words** – 12 Cyrillic lines in the calendar, 18 in the season
+feed – and **a check against this log found not one of them recorded here**. Translating in place
+would have been the only edit in the wave capable of destroying a decision.
+
+**So they are recorded first, verbatim, and the translation lands in the commit after this one.** Three
+of the eighteen exist nowhere else in the repository at all – «сначала концепт», «больше декора, но
+осмысленного» and «а там есть какое-то разнообразие в словах тренера?»; the rest are echoed in a test,
+a composable or a spec that quotes the same ruling, and none of those is this log.
+
+⚠ **This is a RECORD, not a re-decision.** Every one of these is already shipped, and the reasoning
+behind each stays in the file it governs – in English now, with a pointer back here.
+
+### 29.07 – the calendar screen waits for a concept
+
+* **«сначала концепт»** – `CalendarScreen.vue`. Screen H was parked from 29.07 until the concept was
+  agreed; what shipped is that agreed concept rather than the design handoff's sketch.
+
+### 30.07 – one overlay convention for every screen that covers the tabs
+
+* **«надо все одинаково сделать оверлеем поверх всего экрана»** – `SeasonScreen.vue`. The takeover is
+  the other half of `ScreenShell`: a screen that covers the tab bar uses one shared stack
+  (`ui/TakeoverShell.vue`), not a per-screen improvisation.
+
+### 31.07 – six rulings in one sitting
+
+* **«Жмем training week – видим календарь и короткую анимацию как неделя проходит»** –
+  `CalendarScreen.vue`. The week button on Home stops spending the week where it is pressed: it takes
+  the player to the calendar, and the calendar plays the week with a sweep, because the sweep is what
+  stands in for a trip on a week with no tournament in it.
+* **«сейчас в календаре пишут про покрытие текущего идущего чемпионата, на который она даже не поехала
+  – это лишнее, надо убрать»** – `CalendarScreen.vue`. The header's surface chip is gone. On a training
+  week `calendar.surface` is the dominant surface of the season BLOCK, so the calendar was reporting
+  somebody else's tournament on a page about her own week; only a week she is actually playing names a
+  court now.
+* **«очень даже должна [рисоваться], никакой разницы. Просто содержание сетки будет другим.»** –
+  `CalendarScreen.vue`, overruling a null grid on four kinds of week. A trip, a family week, the exam
+  fortnight and a layoff all draw the seven-day grid, each with its own content; the second, plainer
+  drawing for them is gone.
+* **«удачи на экзамене»**, **«держим за тебя кулачки»** – `CalendarScreen.vue`. The fridge note gets two
+  WEEK pools beside the domestic default, because on a week that already contains a big fact a note
+  about that fact is simply true. (A family week and a layoff stay domestic on purpose: those are
+  claims about how the week goes, which the fridge cannot know in advance.)
+* **«иногда попадается "On paper this is hers to lose" при 92% =) и в обратную сторону тоже бывает»** –
+  `SeasonScreen.vue`. Two faults, not one: the coach's line reads the whole FIELD while the ring reads
+  ONE opponent (they contradict each other on 22.5% of cards, measured over 150,336 by
+  `tools/coach-line-drift.ts`), and hedged wordings are a joke on a ring the card already calls a
+  near-certainty. Neither fact was made to lie – the coach says the second one out loud, and the hedges
+  are withheld above `RING_CERTAIN`.
+* **«грустно-унылые»** (of the calendar's colours) – `CalendarScreen.vue`. The day blocks moved off the
+  mid-dark `--event-*` family onto the `--cat-*` brights, which is why their ink is `--paper-ink`.
+
+### 01.08 – where the practice week lands
+
+* **«он должен вести на пре-матч экран»** – `SeasonScreen.vue`. Playing the booked friendly claims the
+  post-advance navigation BEFORE the advance, so the shell's watcher cannot switch tabs out from under
+  the flow and destroy the pre-match card the press was for.
+
+### 02.08 – the planning counter
+
+* **«сколько доступных турниров и какого уровня у нас до конца года вообще осталось, это даст человеку
+  возможность планировать»** – `SeasonScreen.vue`. The season feed carries a supply line off the
+  engine's read of the WHOLE remaining season, deliberately not the screen's eight-week window and not
+  filtered by the two-type rule, so the rare rungs are counted where the feed can only mention them.
+
+### 09.08 – nobody is hired, so nobody professional is speaking
+
+* **«на 8к без тренера на карточках в season написано coach says и очень профессионально… непонятно чем
+  этот вариант отличается от тренера»** (R15-18) – `SeasonScreen.vue`. `coachSays` never asked whether a
+  coach existed, so a family paying nothing got professional draw analysis under a plaque reading
+  *Coach says*. The fix is a REGISTER, not a deletion: a parent at the kitchen table reading the draw
+  sheet, same verdicts, same seam, same sub-stream, different mouth.
+* ⚠ And the second half of that ruling – **«чем этот вариант отличается»** – is deliberately NOT answered
+  by the copy. What a coach actually buys is the per-day training controls he ruled on in the same
+  session; `preview` is untouched so this line cannot pre-empt them by inventing a difference.
+
+### Undated in the source, and shipped
+
+* **«больше декора, но осмысленного»** – `CalendarScreen.vue`. The reason the calendar tab exists: a
+  training week was "skip, or match + skip", which feels thin next to a tournament trip. Decoration
+  that carries information – the training plan across the days, matches marked, injury weeks legible,
+  entry markers, and a real main action button like Home's.
+* **«простую анимацию вычеркивания дней»** – `CalendarScreen.vue`. The days cross themselves out, pausing
+  on a match / an injury / a knock, and it ends on the end-of-week screen. It is the SCREEN's
+  decoration and not the button's, which is why Home's press still advances instantly.
+* **«раньше в углу карточки в календаре была пилюля с типом покрытия и цветом – было сильно лучше, чем
+  кружок сейчас. Надо вернуть пилюлю, а вот под ней оставить просто подходит или нет, а название
+  поверхности убрать.»** – `SeasonScreen.vue` (R11-15, reverting R10-11). The coloured pill is back with
+  the court's name inside it, the line beneath carries the verdict only, and the surface name now
+  appears exactly once on the card.
+* **«а там есть какое-то разнообразие в словах тренера?»** – `SeasonScreen.vue`. There was not. Four
+  wordings per verdict, picked off `seed:coachsay:<eventId>` – keyed on the EVENT, so two cards on
+  screen together do not echo each other and the MAIN stream pays nothing.
+* **«очковое окно возможностей»** – `SeasonScreen.vue` (W2-LADDER §3). The defending badge prints the
+  counted professional result exactly 52 weeks behind the card's week – the slot this event replaces in
+  her rolling window. W-track cards only, or it would invite the cross-currency reading
+  `two-ladders.md` forbids.
+* **«Она уже вымотана – ещё матч?»** – `SeasonScreen.vue`. The guardrail is a WARNING inside the practice
+  confirmation, not a block: it lands where the parent can still say yes, and the confirm button reads
+  *Push through* when it does.
+* **«She played her practice match - Watch it live на кнопке. Ну точно не live, а replay, да?»** –
+  `SeasonScreen.vue`. He caught the two words on the Weekly Story's copy of the control and they were
+  no truer on the season feed's: the handler ADVANCES THE WEEK and the flow re-simulates a stored
+  record, so nothing is ever watched as it happens. Renamed *"Play it and watch →"* in both places.
