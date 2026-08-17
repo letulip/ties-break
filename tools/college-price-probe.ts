@@ -382,10 +382,37 @@ console.log(`    CHEAPEST bills the college branch can produce.`)
   console.log(`  ${`over ${YEARS} years`.padEnd(24)}${usd(usY * YEARS).padStart(16)}${usd(nonY * YEARS).padStart(16)}`)
   console.log(`  ${'free rides'.padEnd(24)}${String(college.filter((r) => usPerYear(r) === 0).length + '/' + college.length).padStart(16)}${String(college.filter((r) => nonUsPerYear(r) === 0).length + '/' + college.length).padStart(16)}`)
   console.log(`\n  ⚠ AND THE COMPARISON THAT MATTERS – the four-year bill against what the arm BANKS:`)
+  // ⚠⚠ THE AMERICAN BILL IS ALREADY INSIDE `fundsDelta` AND MUST BE ADDED BACK BEFORE THE OTHER ONE
+  // IS TAKEN OFF. The first cut of this block printed `colMed - usBill` as "less the American bill",
+  // which double-charges it: `resolveCollegeBill` debits tuition weekly through the tick, so the
+  // measured delta is ALREADY net of it. The honest counterfactual is delta + usBill - nonUsBill.
+  // ⚠⚠ AND IT IS COMPUTED PER CAREER AND THEN TAKEN A MEDIAN OF, NEVER median±median. A median does
+  // not add, and this file's own round-21 correction above is about exactly that mistake in the other
+  // direction (a difference of medians is not the median of the difference). Each career's
+  // counterfactual is `fundsDelta_i + usBill_i - nonUsBill_i`, and the median is taken last.
   const colMed = med(college.map((r) => r.fundsDelta))
-  console.log(`    college funds delta over ${YEARS}y (median)   ${usd(colMed)}`)
-  console.log(`    ...less the American bill                 ${usd(colMed - usY * YEARS)}`)
-  console.log(`    ...less the NON-AMERICAN bill             ${usd(colMed - nonY * YEARS)}`)
+  const preTuition = college.map((r) => r.fundsDelta + usPerYear(r) * YEARS)
+  const nonUsNet = college.map((r) => r.fundsDelta + usPerYear(r) * YEARS - nonUsPerYear(r) * YEARS)
+  const tourMed = med(tour.map((r) => r.fundsDelta))
+  console.log(`    college funds delta over ${YEARS}y (median)   ${usd(colMed)}   ← ALREADY net of the American bill`)
+  console.log(`    before any tuition at all                 ${usd(med(preTuition))}`)
+  console.log(`    ...net for a NON-AMERICAN                 ${usd(med(nonUsNet))}`)
+  console.log(`    the tour arm's median, for comparison     ${usd(tourMed)}`)
+  console.log(
+    `\n    ⭐ college's advantage over the tour's median: American ${usd(colMed - tourMed)}` +
+      `  ·  NON-AMERICAN ${usd(med(nonUsNet) - tourMed)}`,
+  )
+  // The PAIRED version of the same question, which is the honest one for a forked pair.
+  const pairedUs = college.map((r, i) => r.fundsDelta - tour[i].fundsDelta)
+  const pairedNon = college.map((r, i) => r.fundsDelta + usPerYear(r) * YEARS - nonUsPerYear(r) * YEARS - tour[i].fundsDelta)
+  console.log(
+    `    ⭐ PAIRED (median of the per-career difference): American ${usd(med(pairedUs))}` +
+      `  ·  NON-AMERICAN ${usd(med(pairedNon))}`,
+  )
+  console.log(
+    `    careers that would do better ON TOUR: American ${pairedUs.filter((x) => x < 0).length}/${college.length}` +
+      `  ·  NON-AMERICAN ${pairedNon.filter((x) => x < 0).length}/${college.length}`,
+  )
   console.log(`\n  by background, four-year bill:`)
   console.log(`    ${'background'.padEnd(11)}${'n'.padStart(4)}${'athletic %'.padStart(12)}${'AMERICAN'.padStart(14)}${'NON-AMERICAN'.padStart(15)}`)
   for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {

@@ -1225,9 +1225,13 @@ against (*"UNRANKED IS NOT A NUMBER"*) and the raw `kidRank*` fields do not. Her
 trajectory over those seasons is **#86 → #86 → #121**. It reaches `StatsScreen.vue` too, whose
 career-best fold reports **#5** – a junior ranking from season 1.
 
-**THE KNOB, NAMED AND NOT PULLED.** Either write the track she actually played, or omit the field when
-no points stand behind it (v46 already set that precedent for this record: *"absent means NOT RECORDED
-rather than ZERO"*). ⚠ Either is schema-visible and owes the three-part move. **FOR HIM to choose.**
+⭐⭐ **AND THE GOOD NEWS: THE RIGHT NUMBER IS ALREADY IN THE SAVE.** `byTrack` has carried a per-track
+rank since v46 and already obeys "absent means NOT RECORDED" – her ITF cell for those seasons is
+correctly empty, and `byTrack.wta.endRank` reads **#91 → #151 → #86 → #86 → #121**. **So this is a
+READER bug, not a schema one: no bump, no migration, no fixture.** `StatsScreen.vue`'s career-best
+fold should prefer `byTrack[track].endRank` and fall back to the legacy field only for pre-v46 rows –
+the shape `SeasonHistoryTable.vue` already uses. ⚠ Retiring the legacy field itself would be
+schema-visible and is NOT needed to fix what he is seeing. **FOR HIM to schedule.**
 
 ### ⭐ AND THE ANSWER TO "WHY DID SHE FALL" IS HER CALENDAR, NOT A BUG
 
@@ -1236,9 +1240,27 @@ where she went **4-13**. Expected points per event say the schedule is upside do
 57.7 and she played two; the WTA 500 pays 37.8 and she played ten; the WTA 250 pays 20.1, the worst
 thing she can enter, below even a W50.** Nothing is mispriced – but no screen tells her this.
 
-⚠ **The round-21 #4 seeding fix (`b790ea0`, 15.08) is on this branch and NOT on `main`, so his two
-seasons were played without it.** Measured: it cost her seeding at **W50, W75 and W100 only** – at WTA
-125 and above she is unseeded either way. **So the record he is asking about is clean evidence.**
+⚠ **The round-21 #4 seeding fix (`b790ea0`, 15.08) is on this branch and NOT on `main`**, so unless he
+is on a build cut from this branch his two seasons carry the bug. Measured, it cost her seeding at
+**W50, W75 and W100 only** – at WTA 125 and above she is unseeded either way. **So the record he is
+asking about is clean evidence.**
+
+### ⚠⚠ AND THE ASYMMETRY I WAS TOLD TO LOOK FOR IS THERE – but it is the FIELD, not the seeding
+
+**The WTA 250, 500 and 1000 draw fields of the same strength** – mean core **68.4 / 68.9 / 68.4**, and
+94-97% of each stronger than she is. The Grand Slam draws a *weaker* one (63.2). Their bands open at
+**#32 · #22 · #11** of a 1,799-row table – three windows onto one head. **That is the same defect
+shape `fieldPros.ts` records for the old top three rungs**, fixed then by adding a storey and never by
+re-spacing the bands.
+
+⚠ **And the sport runs the other way**: research §4c-C is explicit – *"Reality gates the strong OUT; we
+gate the weak IN."* We ship half of it (`playDownBars` gates HER out of outgrown rungs; nothing keeps
+the field's top 40 out of a WTA 250). **Consequence: a WTA 250 is worth 20.1 expected points an event
+to her, the worst rung in the game, below a W50's 29.7 – a 1000-strength field for 250-level points.**
+
+**KNOB, NAMED AND NOT PULLED**, two options: re-space `wta250.entrantPctBand[0]` (0.018 against 0.012
+and 0.006 above it), or extend the play-down ceiling to the entrant pool, which is what reality runs.
+**Both are balance changes with their own bench. FOR HIM.**
 
 ### HIS SLAM PROPOSAL – defensible, and it drags one number with it
 
@@ -1275,5 +1297,11 @@ both are printed now, and the arms are paired.
 ⭐⭐ **THE NON-AMERICAN NUMBER, OUT OF THE FOOTNOTE**: **$80,090** over four years against **$25,592**,
 and **0 free rides of 53**. Worse, a non-American **working** family pays **$95,240** – MORE than a
 non-American **wealthy** one at **$65,405** – because the need layer is US-only law (34 CFR §668.33)
-and the merit channel then runs unopposed. **The third answer is an American answer.** Flagged, not
-tuned: both stickers and the absence of the layer are primary-sourced.
+and the merit channel then runs unopposed.
+
+⭐⭐⭐ **AND THE TWO STATISTICS DISAGREE IN SIGN, WHICH IS THE WHOLE LESSON.** For a non-American the
+difference-of-medians still says college wins by **$35,119**; the PAIRED median – the honest one for
+two arms forked from one world – says it **LOSES by $8,070**, and **27 of 53 careers (51%) do better
+on tour**. **"College beats the tour" is an American sentence.** Reachable in ordinary play: onboarding
+lets the player pick a country and his own career is IT. Flagged, not tuned – both stickers and the
+absence of the layer are primary-sourced.

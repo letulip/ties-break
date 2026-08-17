@@ -21,12 +21,17 @@
 // ⚠ MEASUREMENT ONLY. Imports the engine read-only, patches no constant, ships no fixture, reads no
 // save.
 //
-// THE ARM. The career profile is `tools/ladder-walk.ts`'s, deliberately and unchanged: wealthy family,
+// THE ARM. The career PROFILE is `tools/ladder-walk.ts`'s, deliberately and unchanged: wealthy family,
 // elite coach, funds that never bind, potential at the p99 of `rollPotential`. That is the arm that
 // asks "is the ladder climbable" rather than "can this family afford it", and it is the only arm in
 // which a meaningful number of careers reach the band at all – a median career never gets near #128,
 // so measuring the door on one would report a zero that means "nobody knocked", not "the door is
 // cheap". Stated here so the n is read as what it is: the strong tail of the population.
+//
+// ⚠ THE ENTRY POLICY IS **NOT** `ladder-walk.ts`'s, and that is a measured decision rather than a
+// preference – see the box on `bestEntry`. Its whole-ladder greed put 0 of 14 careers in the band in
+// twelve seasons; the same fourteen careers under `--pro-first` reach a career best of #5-#95. Pass
+// `--ladder-walk-policy` to reproduce the first arm.
 import {
   createWorld,
   tickWeek,

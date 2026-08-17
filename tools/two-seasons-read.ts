@@ -119,11 +119,17 @@ async function main(): Promise<void> {
   section(`SEASON HISTORY – every season, and ⚠ WHICH TABLE THE HEADLINE RANK IS FROM`)
   console.log(
     `\n  ${padE('season', 8)}${pad('endRank', 9)}${pad('pts', 7)}${pad('W', 5)}${pad('L', 5)}${pad('win%', 7)}` +
-      `   |${pad('dom pts', 9)}${pad('W-L', 8)}  |${pad('itf pts', 9)}${pad('W-L', 8)}  |${pad('wta pts', 9)}${pad('W-L', 8)}`,
+      `   |${pad('dom pts', 9)}${pad('W-L', 8)}${pad('rank', 7)}  |${pad('itf pts', 9)}${pad('W-L', 8)}${pad('rank', 7)}  |${pad('wta pts', 9)}${pad('W-L', 8)}${pad('rank', 7)}`,
   )
   for (const h of w.seasonHistory) {
     const bt = h.byTrack
-    const cell = (t: LadderTrack) => (bt ? `${pad(bt[t].points, 9)}${pad(`${bt[t].wins}-${bt[t].losses}`, 8)}` : `${pad('–', 9)}${pad('–', 8)}`)
+    // ⭐ THE PER-TRACK RANK IS PRINTED BECAUSE IT IS THE WHOLE FINDING: v46 already records it, and it
+    // already obeys "absent means NOT RECORDED" (an ITF row with no points carries no `endRank`). So
+    // the headline column beside it is the only place the zero-tie's place still survives.
+    const cell = (t: LadderTrack) =>
+      bt
+        ? `${pad(bt[t].points, 9)}${pad(`${bt[t].wins}-${bt[t].losses}`, 8)}${pad(bt[t].endRank !== undefined ? '#' + bt[t].endRank : '–', 7)}`
+        : `${pad('–', 9)}${pad('–', 8)}${pad('–', 7)}`
     const wr = h.wins + h.losses > 0 ? `${((100 * h.wins) / (h.wins + h.losses)).toFixed(0)}%` : '–'
     console.log(
       `  ${padE(h.seasonIndex, 8)}${pad('#' + h.endRank, 9)}${pad(h.points, 7)}${pad(h.wins, 5)}${pad(h.losses, 5)}${pad(wr, 7)}` +
@@ -134,8 +140,22 @@ async function main(): Promise<void> {
     `\n  ⚠⚠ READ THE endRank COLUMN AGAINST THE THREE BESIDE IT. \`SeasonHistoryEntry.endRank\` is the` +
       `\n  ITF fold and always has been (protocol.ts says so in its own comment: "the wrap writes` +
       `\n  world.kidRank"). Any season whose itf row is 0-0 earned NOTHING in the table its headline` +
-      `\n  rank is quoted from.`,
+      `\n  rank is quoted from – and the itf 'rank' cell for those seasons is correctly ABSENT, because` +
+      `\n  v46's byTrack already obeys "absent means NOT RECORDED". ⭐ SO THE RIGHT NUMBER IS ALREADY` +
+      `\n  STORED: the wta 'rank' column is her real professional line, and no schema change is needed` +
+      `\n  to show it – only a reader that prefers it to the legacy field.`,
   )
+  {
+    const wtaRanks = w.seasonHistory
+      .map((h) => h.byTrack?.wta.endRank)
+      .filter((r): r is number => r !== undefined)
+    const legacy = w.seasonHistory.map((h) => h.endRank).filter((r) => r > 0)
+    console.log(
+      `\n  career best, the two ways it can be folded:` +
+        `\n    from byTrack.wta.endRank (correct)     #${wtaRanks.length ? Math.min(...wtaRanks) : '–'}   from ${wtaRanks.length} recorded seasons` +
+        `\n    from the legacy endRank (StatsScreen)  #${legacy.length ? Math.min(...legacy) : '–'}   ← what the Stats screen shows today`,
+    )
+  }
 
   // =============================================================================================
   const from = (season - SEASONS_BACK + 1) * WEEKS_PER_YEAR

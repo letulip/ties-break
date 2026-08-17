@@ -23,14 +23,18 @@ rule `tools/round17-read.ts` and `tools/round18-read.ts` carry.
 | --- | --- | --- | --- |
 | **3** | Ines' last two seasons – is this right for her level? | **not a defect, and she is UNDER-ranked** | her core **57.1** against a mean **50.4** for the band #101-#150 she stands in |
 | **3'** | no QF at a big event in two seasons – ok for her build? | **not a defect – the unlucky fifth of a fair distribution** | the model gives her **15.0%** per WTA 250 and **13.0%** per WTA 500; over her 14 big events **P(no QF) = 20.5%** |
+| **3''** | ⚠ *asked for, and found*: a field-strength asymmetry at the big rungs | **real, and it is NOT the seeding** | the WTA **250, 500 and 1000 draw fields of the same strength** (core 68.4 / 68.9 / 68.4), so a 250 pays her **20.1** expected points – the worst rung in the game |
 | **4** | an 18-year-old at #2 – how is that possible? | **not a defect – the head is OLDER than the field, not younger** | teens are **11.38%** of the field but **5.35%** of the top 50 and **1.25%** of #1s; a top-3 eighteen-year-old happens in **8.13%** of world-seasons |
 | **7** | barred from the Slam at #116 – normal? | **the arithmetic is exact; the cost is a speed bump, not a wall** | 12 of 14 careers pass through #105-#128 and **12 of 12 cross #104** – median **19 weeks**; **0 of 14 stall** |
-| **7'** | his proposal: fold the 16 qualifiers in, 104 → 120 | **defensible, and it drags one number with it** | at 120 a Slam shares a door with the WTA 500 (`acceptsRank` already 120) |
+| **7'** | his proposal: fold the 16 qualifiers in, 104 → 120 | **it works, and it drags one number with it** | refusal falls **23.5 → 9 weeks**; but at 120 a Slam shares a door with the WTA 500 (`acceptsRank` already 120) |
 | **8** | "college beats the tour" – but the tour can make 1-2M | **he is right and the failing was mine** | the tour passes college at the **74th percentile**; **30%** of careers do better on tour; tour max **$5,573,608** against college max **$260,410** |
+| **8'** | ...and what a non-American pays | ⭐ **"college beats the tour" is an AMERICAN sentence** | **$80,090** over four years against $25,592, 0 free rides of 53 – and the paired median **flips to −$8,070**, with **51%** better off on tour |
 | **9** | is a 1,600 world big enough? | **the table is the right size; the CHAIRS are not** | 1,600 pointed rows against a real list of ~1,550 – but **2.12** W main-draw chairs per professional per season against a real ~20 events a year |
 
 ⭐⭐ **AND ONE DEFECT FOUND THAT HE DID NOT ASK ABOUT, which is probably the source of "что-то не то":
-the season-history rank he has been reading is not a ranking.** §2.
+the season-history rank he has been reading is not a ranking.** His 87 → 79 → 81 is the head of the
+junior zero-tie; her real professional line is **#91 → #151 → #86 → #86 → #121** – and it is already
+in the save. **A reader bug, not a schema one.** §2.
 
 ---
 
@@ -116,25 +120,44 @@ tail ties on zero hands every member of that tie the head of the tie's place, wh
 failure `kidLadderRank` carries a guard against – *"UNRANKED IS NOT A NUMBER"* – and the raw
 `world.kidRank*` fields do not.
 
-**So seasons 6, 7 and 8 report the position of the head of the junior zero-tie**, and her real
-professional trajectory over the same three seasons is **#86 → #86 → #121**.
+**So seasons 6, 7 and 8 report the position of the head of the junior zero-tie.**
 
-⚠ **It reaches a second surface.** `StatsScreen.vue` folds career-best year-end rank out of the same
-field (`seasonHistory.map(h => h.endRank).filter(r => r > 0)`), so her career best reads as **#5** –
-a junior ranking from season 1 – rather than her professional best of #86.
+### 2a. ⭐⭐ AND THE GOOD NEWS: THE RIGHT NUMBER IS ALREADY STORED – THIS IS NOT A SCHEMA BUG
 
-**THE KNOB, NAMED AND NOT PULLED.** Two candidates, both small, and the choice is the owner's:
+`byTrack` has carried a per-track rank since **v46**, and it *already* obeys the "absent means NOT
+RECORDED" rule – the ITF cell for seasons 6-8 is correctly empty. Her save, read straight:
 
-1. **Write the track she played.** `endRank` becomes the rank of whichever table earned points that
-   season, or the WTA one once she is professional.
-2. **Omit it when it is not a rank.** v46 already established the precedent for this field's own
-   record – *"absent means NOT RECORDED rather than ZERO"* – so a season with no ITF points writes no
-   `endRank`, and `SeasonHistoryTable.vue` already renders an absent rank correctly.
+| season | legacy `endRank` | domestic | itf | **wta (the real one)** |
+| --- | --- | --- | --- | --- |
+| 4 | #70 | – | #70 | **#91** |
+| 5 | #63 | – | #63 | **#151** |
+| **6** | **#87** | – | **– (no points)** | **#86** |
+| **7** | **#79** | – | **– (no points)** | **#86** |
+| **8** | **#81** | – | **– (no points)** | **#121** |
 
-⚠ Either is a **schema-visible change to a shipped field** and therefore the three-part move
-(`SAVE_SCHEMA_VERSION`, append-only migration, golden fixture). Option 2 needs no migration of
-existing rows if the reader treats a rank with no points behind it as absent; option 1 cannot
-retro-fit seasons whose results were pruned years ago and would have to leave old rows alone.
+⭐ **Her real professional line is #91 → #151 → #86 → #86 → #121, and it is in the save already.**
+
+⚠ **It reaches a second surface, and that is where it bites.** `StatsScreen.vue` folds career-best
+year-end rank out of the **legacy** field (`seasonHistory.map(h => h.endRank).filter(r => r > 0)`).
+Measured on his save, the two folds disagree:
+
+| career best, folded from | result |
+| --- | --- |
+| `byTrack.wta.endRank` (correct) | **#86**, over 5 recorded seasons |
+| the legacy `endRank` (what Stats shows today) | **#5** – a junior ranking from season 1 |
+
+**THE KNOB, NAMED AND NOT PULLED – and it is smaller than I first wrote.** No schema bump, no
+migration, no golden fixture: **the data exists.** The fix is a reader change:
+
+1. **`StatsScreen.vue`'s career-best fold** should prefer `byTrack[track].endRank` and fall back to
+   the legacy `endRank` only for pre-v46 rows (seasons 0-3 here), which is exactly the shape
+   `SeasonHistoryTable.vue` already uses.
+2. **Optionally**, stop writing the legacy field when no points stand behind it. ⚠ *That* half would
+   be schema-visible and is the only part that owes the three-part move – and it is not needed to fix
+   what he is seeing.
+
+⚠ **A pre-v46 row cannot be repaired either way**: `pruneResults` deleted the results those seasons
+were folded from years ago, so seasons 0-3 keep whatever they were written with.
 
 ---
 
@@ -147,9 +170,10 @@ retro-fit seasons whose results were pruned years ago and would have to leave ol
 ### 3a. ⚠ The seeding input was checked FIRST, because round-21 #4 was exactly this shape
 
 `b790ea0` (15.08) fixed a bug in which she entered every draw as the lowest-ranked player, because
-`kidSeedIndexIn` was handed a table she is deliberately folded out of. **That fix is on this wave
-branch and not on `main`, so his two seasons were played without it** – which makes the contamination
-question load-bearing rather than academic.
+`kidSeedIndexIn` was handed a table she is deliberately folded out of. ⚠ **The fix is on this wave
+branch and has NOT merged to `main`**, so unless he is playing a build cut from this branch his two
+seasons carry the bug – which makes the contamination question load-bearing rather than academic.
+**The measurement below settles it either way**, which is why it is asked before anything else.
 
 | rung | seeds | her seed index (fixed) | seeded? | pre-fix index | pre-fix seeded? |
 | --- | --- | --- | --- | --- | --- |
@@ -221,6 +245,63 @@ against ten WTA 500s at 37.8.** ⚠ **And the WTA 250 is the worst thing she can
 even a W50** – because its board pays 1 for a first-round loss and she takes one 60% of the time.
 **That is a player-facing insight and not an engine change**: nothing here is mispriced, but the
 Season screen has no surface that says it.
+
+### 3f. ⚠⚠ THE STRUCTURAL ASYMMETRY I WAS ASKED TO WATCH FOR – IT IS REAL, AND IT IS NOT THE SEEDING
+
+The instruction was to check for *"a seeding or field-strength asymmetry at the big rungs"*. The
+seeding half is clean (§3a). **The field-strength half is not**, and §3b's own two right-hand columns
+are the evidence:
+
+| rung | field core | % of field stronger than her | band opens at | title pays |
+| --- | --- | --- | --- | --- |
+| wta125 | 55.0 | 32% | #79 | 125 |
+| **wta250** | **68.4** | **97%** | **#32** | 250 |
+| **wta500** | **68.9** | **97%** | #22 | 500 |
+| **wta1000** | **68.4** | **94%** | #11 | 1000 |
+| slam | 63.2 | 68% | #1 | 2000 |
+
+⚠ **"% stronger" is a core-of-FOUR comparison and slightly overstates her disadvantage**, because
+`core` excludes groundstrokes and hers (69.6) is far above her own core while a pro's tracks hers by
+construction (`rivalGroundstrokes` derives it from serve and return). **It is a descriptive column
+only** – the P(QF+) numbers beside it come from the real match engine on her real five-attribute
+build, so the outcome figures are unaffected.
+
+⭐⭐ **The WTA 250, 500 and 1000 draw fields of the SAME strength to within half a core point.** The
+Grand Slam draws a *weaker* one, because its band reaches to #333 across a 128-draw. And the step from
+the WTA 125 to the WTA 250 is **13.4 core points and 32% → 97%** – by far the biggest cliff on the
+ladder, at the rung whose acceptance line (#200) lets her walk in.
+
+⚠ **This is the same defect SHAPE `fieldPros.ts` records for the old top three rungs** – *"The top
+THREE rungs draw the SAME field, to one decimal place, because entry is position-biased and all three
+windows open at the same head of a table whose head is one thirty-strong storey."* That was fixed by
+adding a storey above them; the bands themselves were never re-spaced at the top, and the openings are
+now **#32 · #22 · #11** – three windows onto the same head.
+
+**AND THE SPORT RUNS THE OTHER WAY.** `docs/research/ranking-points-by-tier.md` §4c-C reads the WTA's
+own published rule: players ranked 1-20 may not play a WTA 125 in most weeks and *"up to 4 players
+ranked 21-50 may only play via Wild Card"* (2026 WTA Rulebook III.C.2.b); the ITF's Play Down rules bar
+the world top 50 from every W-series event. The research doc's own summary is **"Reality gates the
+strong OUT; we gate the weak IN."** We ship half of that: `playDownBars` gates HER out of rungs she
+has outgrown (`docs/specs/play-down-2026-08.md`), but **nothing keeps the field's top 40 out of a
+WTA 250**, so a #121 player meets a 1000-strength field for 250-level points.
+
+**THE CONSEQUENCE, IN ONE NUMBER:** the WTA 250 is worth **20.1 expected points an event to her – the
+worst rung in the game, below a W50's 29.7** – because she is meeting the field of a rung four times
+its size.
+
+**THE KNOB, NAMED AND NOT PULLED**, two candidates:
+
+1. **Re-space the top bands.** `wta250.entrantPctBand[0]` is **0.018** against `wta500`'s 0.012 and
+   `wta1000`'s 0.006 – the three openings are 21 places apart on a 1,799-row table. Moving the 250's
+   opening down is the smallest possible change and needs no new mechanic.
+2. **Give the field a play-down ceiling.** The rule already exists for her; extending it to the
+   entrant pool is the version reality actually runs, and it is the one the research supports.
+
+⚠ **BOTH ARE BALANCE CHANGES AND NEITHER IS TAKEN HERE.** Option 1 moves who plays every event at three
+rungs; option 2 is a new gate on `selectEntrants` and would need its own bench. **This is reported
+because the brief asked me to look for it and it is there** – but her own results are still inside
+the distribution this world produces (§3c), so it is a WORLD-SHAPE question and not the answer to
+"why no quarter-final".
 
 ---
 
@@ -464,15 +545,35 @@ anywhere) and the need layer is zero (34 CFR §668.33).
 | **over 4 years** | **$25,592** | **$80,090** | |
 | free rides | 11 / 53 | **0 / 53** | |
 
-**Against what the four years actually bank** (college median funds delta $106,995):
+**Against what the four years actually bank.** ⚠⚠ **The first cut of this block got the arithmetic
+wrong and the correction is worth recording**: it printed "college delta *less* the American bill",
+which **double-charges** it – `resolveCollegeBill` debits tuition weekly through the tick, so the
+measured `fundsDelta` is *already net of it*. The honest counterfactual adds the American bill back
+before taking the other one off.
 
-| | net after the bill |
+| | four-year funds delta (median) |
 | --- | --- |
-| American | **$81,403** |
-| non-American | **$26,906** |
+| college, American (as measured) | **$106,995** ← already net of the bill |
+| ...before any tuition at all | $146,060 |
+| **college, NON-AMERICAN** | **$67,078** |
+| the tour arm's median, for comparison | $31,959 |
 
-⭐ **For a non-American the college arm's advantage over the tour's median very nearly disappears** –
-$26,906 against the tour's $31,959 median. **The third answer is an American answer.**
+⭐⭐ **AND HERE THE TWO STATISTICS DISAGREE IN SIGN, WHICH IS THE WHOLE LESSON OF THIS SECTION:**
+
+| college's advantage over the tour | AMERICAN | NON-AMERICAN |
+| --- | --- | --- |
+| marginal (difference of medians) | +$75,036 | **+$35,119** |
+| **paired (median of the per-career difference)** | +$72,363 | **−$8,070** |
+| careers that would do better ON TOUR | 16 / 53 (30%) | **27 / 53 (51%)** |
+
+⭐⭐ **FOR A NON-AMERICAN THE MEDIAN CAREER IS BETTER OFF ON TOUR, and 51% of them are.** The
+difference-of-medians still says college wins by $35,119; the paired statistic – the honest one for
+two arms forked from one world – says it loses by $8,070. **"College beats the tour" is an American
+sentence.**
+
+⚠ **That is not a bug, it is the sourced law showing up in the outcome**: out-of-state tuition plus no
+need layer. But it is reachable in ordinary play, because our onboarding lets the player choose a
+country, and his own career is `IT`.
 
 **And by background, the four-year bill:**
 
@@ -597,7 +698,14 @@ and W35 weeks, not more people.
 | `tools/teen-at-the-top.ts` | **new** – the teen-at-the-head rate over 480 world-seasons, plus the `ageRampFloor` counterfactual |
 | `tools/slam-door-cost.ts` | **new** – the band's cost in weeks, and the sweep over candidate acceptance cuts |
 | `tools/population-depth.ts` | **new** – table size, curve depth, band floors, and the chairs-per-player arithmetic |
-| `tools/college-price-probe.ts` | **extended** – full distribution, the paired difference, the marginal crossing, and the non-American bill |
+| `tools/college-price-probe.ts` | **extended** – full distribution, the paired difference, the marginal crossing, and the non-American bill computed per career |
+
+⚠ **TWO ARITHMETIC CORRECTIONS WERE MADE TO THIS FILE'S OWN NEW BLOCK DURING THE AUDIT, and both are
+the same family of mistake this round is about.** The first printed "college delta *less* the American
+bill", double-charging a bill already inside the delta. The second took a median of medians –
+`medianDelta + medianUsBill − medianNonBill` – which does not compose; it now computes each career's
+counterfactual and takes the median last, exactly as §6a's paired row does. **Recorded rather than
+quietly fixed**: I flagged a difference-of-medians in the old report and then wrote one.
 
 ```bash
 npx vite-node tools/two-seasons-read.ts -- --save <his>.tsave --seasons 2
