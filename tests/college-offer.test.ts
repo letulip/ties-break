@@ -28,6 +28,8 @@ import {
   COLLEGE_TIER_ORDER,
   canAfford,
   chosenQuoteOf,
+  COLLEGE_TIER_ODDS,
+  COLLEGE_ODDS_MEASURED_AT,
   familyCanPayPerYearCents,
   familyPositionCents,
   recruitedAtAll,
@@ -36,6 +38,7 @@ import {
   type CollegeRecruitView,
   type JuniorRung,
 } from '../src/engine/collegeOffer'
+import { COLLEGE_TRIP_WEEKS } from '../src/engine/world/college'
 import { rngFromSeed } from '../src/engine/rng'
 import type { FamilyBackground } from '../src/shared/protocol'
 
@@ -464,6 +467,67 @@ describe('E. a tier is a place with a price, and the player picks it', () => {
       for (const k of Object.keys(q)) {
         expect(/rank|prize|wta|itf|w[0-9]|pro\b|earn/i.test(k), `${k} looks like a professional result`).toBe(false)
       }
+    }
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ F. THE ODDS ON THE CARD ARE A MEASUREMENT, AND THIS IS WHAT KEEPS THEM ONE (round 21 #2)
+// =================================================================================================
+//
+// `COLLEGE_TIER_ODDS` replaced `squad` on the fork card. The owner's requirement was not "put a
+// number there" – it was that the number be MEASURED, with the run behind it, and REFRESHED WHEN THE
+// TIERS MOVE. The first two are documentation and the third cannot be: a comment saying "re-run the
+// probe if you re-tune this" is a comment, and the next agent to move a price will not read it.
+//
+// ⚠⚠ SO THE STALENESS IS MECHANICAL. This block recomputes the fingerprint of every input the odds
+// were measured against and pins it. Move a sticker, a recruiting bar, a match count or a trip week
+// and it goes red, naming the probe to re-run. It is the same discipline as the frozen MAIN capture:
+// a documented measurement with a gate that notices when its subject moved underneath it.
+//
+// ⚠ IT DOES NOT ASSERT THE ODDS ARE RIGHT – nothing in a unit test can, the run takes five minutes.
+// It asserts they are not silently describing a different game.
+describe('F. the measured odds cannot go stale without a test noticing', () => {
+  const fingerprint = () =>
+    [
+      ...COLLEGE_TIER_ORDER.map(
+        (t) =>
+          `${t} ${COLLEGE_TIERS[t].costPerYearCents}/${COLLEGE_TIERS[t].fullAwardScore}/${COLLEGE_TIERS[t].matchesPerWeek}`,
+      ),
+      `trips ${COLLEGE_TRIP_WEEKS.join(',')}`,
+    ].join(' · ')
+
+  it('⭐⭐ pins the tier table the odds were measured against', () => {
+    expect(
+      fingerprint(),
+      'A college tier input moved. `COLLEGE_TIER_ODDS` no longer describes this game – re-run ' +
+        '`npx vite-node tools/college-return-probe.ts -- --seeds 6`, write the new figures and the new ' +
+        'commit into `COLLEGE_TIER_ODDS`, update `docs/specs/the-college-answers-2026-08.md` §2, and ' +
+        'move `COLLEGE_ODDS_MEASURED_AT` to the string this failure printed.',
+    ).toBe(COLLEGE_ODDS_MEASURED_AT)
+  })
+
+  // ⚠ MUTATION PROOF, INLINE. A guard that cannot fail on the thing it guards is not a guard, and
+  // this one is cheap to prove: the fingerprint is a pure fold, so a changed input is a changed
+  // string. Without this the case above would pass on a fingerprint that read nothing at all.
+  it('⚠⚠ and the pin really does move when a tier input moves', () => {
+    expect(fingerprint()).toContain(`${COLLEGE_TIERS.private.costPerYearCents}`)
+    expect(fingerprint()).toContain(`trips ${COLLEGE_TRIP_WEEKS.join(',')}`)
+    const mutated = fingerprint().replace(
+      `${COLLEGE_TIERS.private.costPerYearCents}`,
+      `${COLLEGE_TIERS.private.costPerYearCents + 1}`,
+    )
+    expect(mutated).not.toBe(COLLEGE_ODDS_MEASURED_AT)
+  })
+
+  // ⚠ AND THE THREE FIGURES ARE SHARES OF A HUNDRED CAREERS, not shares of one. A card printing
+  // "Top 100 for 0.42 in 100" is the unit error this catches.
+  it('states each place\'s odds as whole careers in a hundred', () => {
+    for (const t of COLLEGE_TIER_ORDER) {
+      const odds = COLLEGE_TIER_ODDS[t].top100In100
+      expect(Number.isInteger(odds), `${t} is not a whole number of careers`).toBe(true)
+      expect(odds).toBeGreaterThan(0)
+      expect(odds).toBeLessThanOrEqual(100)
     }
   })
 })

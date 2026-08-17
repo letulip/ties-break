@@ -31,8 +31,8 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../engine/season/calendar'
 import {
-  COLLEGE_TIERS,
   COLLEGE_TIER_NAME,
+  COLLEGE_TIER_ODDS,
   canAfford,
   coveredShareOf,
   fundingBandOf,
@@ -159,8 +159,8 @@ interface TierRow {
   tier: CollegeTier
   open: boolean
   name: string
-  /** ours, and the card says so by printing it as a bare number beside a sourced price */
-  squad: number
+  /** ⭐ MEASURED, and it replaced `squad` – see `COLLEGE_TIER_ODDS` */
+  odds: string
   price: string
   award: string
   bill: string
@@ -173,7 +173,10 @@ const rows = computed<TierRow[]>(() =>
     tier: q.tier,
     open: q.open,
     name: TIER_LABEL[q.tier],
-    squad: COLLEGE_TIERS[q.tier].squad,
+    // ⭐⭐ THE ODDS REPLACED THE SQUAD (round 21 #2). `Squad 55` was ours, on a scale the card never
+    // printed her own number on, so there was nothing to compare it to; this is a measured share of
+    // careers out of this build. ⚠ THE WINDOW IS NAMED ONCE UNDER THE LIST, not three times on it.
+    odds: `Top 100 for ${COLLEGE_TIER_ODDS[q.tier].top100In100} in 100`,
     price: `${formatCents(q.costPerYearCents)} a year`,
     // ⚠ THE BAND IS THE HEADLINE AND THE PERCENTAGE IS THE WORKING – the name is a summary of the
     // figure and not a replacement for it. A walk-on is named as one: nobody funded her, and she may
@@ -191,10 +194,16 @@ const rows = computed<TierRow[]>(() =>
     // exists for it rather than by the owner. The four-year figure is the one the decision is
     // actually about, so it moved to the button that commits her (see `effectiveLine`) instead of
     // being printed three times.
+    // ⚠⚠ AND IT LOST ITS DEFINITE ARTICLE TO A PHONE (round 21 #2). At the dear place «The family
+    // pays $1,259 a week – $65,470 a year» is 46 character-units against the 44 a 320px row holds, so
+    // it wrapped to two lines, and three wrapped rows plus the measured-odds caption took the whole
+    // answers block past what the screen can hold – the mounted 320x568 assertion went red at
+    // y=-10. Two units bought the line back. ⚠ The WEEK stays, because the week is the unit the
+    // engine charges in and a card quoting only a year would describe a different mechanic.
     bill:
       q.familyPerYearCents <= 0
-        ? 'The family pays nothing'
-        : `The family pays ${formatCents(Math.round(q.familyPerYearCents / WEEKS_PER_YEAR))} a week – ${formatCents(q.familyPerYearCents)} a year`,
+        ? 'Family pays nothing'
+        : `Family pays ${formatCents(Math.round(q.familyPerYearCents / WEEKS_PER_YEAR))} a week – ${formatCents(q.familyPerYearCents)} a year`,
     affordable: offer.value ? canAfford(offer.value, q) : null,
   })),
 )
@@ -327,10 +336,11 @@ async function answer(a: ForkAnswer): Promise<void> {
                 <strong>{{ row.name }}</strong>
                 <em>{{ row.price }}</em>
               </span>
-              <!-- ⚠ THE SQUAD IS OURS AND THE PRICE IS SOURCED, and they are deliberately in the same
-                   row: the player is choosing between a number we invented and a number we did not,
-                   and the card is not entitled to hide which is which. The spec's §0a is the table. -->
-              <span class="fork-place-line">Squad {{ row.squad }} · {{ row.award }}</span>
+              <!-- ⭐⭐ MEASURED, WHERE `Squad {{ }}` WAS INVENTED (round 21 #2). The owner asked for
+                   the place's quality as an odds he could compare something to, and he was right that
+                   a squad number is not one. ⚠ AND THE THREE ARE NEARLY THE SAME, which is the
+                   finding rather than a bug: what a dearer place changes is the bill, not her odds. -->
+              <span class="fork-place-line">{{ row.odds }} · {{ row.award }}</span>
               <span class="fork-place-line">{{ row.bill }}</span>
               <!-- ⚠ A FACT, NEVER A REFUSAL. She may take a place the family cannot pay for: it goes
                    into debt, not away (owner, 16.08). -->
@@ -339,6 +349,13 @@ async function answer(a: ForkAnswer): Promise<void> {
             </button>
           </li>
         </ul>
+        <!-- ⚠ THE WINDOW, ONCE, UNDER THE LIST. A measured share means nothing without the span it
+             was measured over, and printing it on all three rows would be the third copy of a
+             sentence on a card that already scrolls.
+             ⚠⚠ AND IT IS ONE SHORT LINE BECAUSE THE FIRST DRAFT WAS TWO AND THE MOUNTED 320x568
+             ASSERTION WENT RED – the dismiss control sat at y=-25, which is round-20 #3 arriving on
+             this card by exactly the route CLAUDE.md describes: one honest sentence at a time. -->
+        <p v-if="rows.length" class="fork-places-note">Four years after she leaves, over 53 careers.</p>
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
           <strong>Stop here</strong>
           <span>She had a childhood in the sport. That is a whole thing to have had.</span>
@@ -540,5 +557,14 @@ async function answer(a: ForkAnswer): Promise<void> {
   line-height: 1.35;
   color: var(--ink-dim);
   font-variant-numeric: tabular-nums;
+}
+
+/* ⚠ THE WINDOW THE ODDS WERE MEASURED OVER – one caption under the whole list, not a fourth line on
+   every row. It is a note about the numbers and not a control, so it carries no border and no fill. */
+.fork-places-note {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ink-dim);
 }
 </style>

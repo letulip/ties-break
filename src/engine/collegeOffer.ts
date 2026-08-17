@@ -165,10 +165,17 @@ export interface CollegeRecruitView {
  *  (owner, 16.08) – it removes one school from a list of three.
  *
  *  ⚠⚠ `squad` IS OURS AND IT IS AN INVENTION WITH A SCALE, NOT A FINDING. It is the programme's own
- *  playing level on the SAME 0-100 scale her skills use, so the card can put it beside her and the
- *  player can read the difference. No source rates a college squad on our scale and none could. The
- *  three are set to BRACKET the measured skill mean at the fork (**58.64**, P5 §2b, n = 52): the
- *  cheap place is below her, the middle one just above, the dear one well above.
+ *  playing level on the SAME 0-100 scale her skills use. No source rates a college squad on our scale
+ *  and none could. The three are set to BRACKET the measured skill mean at the fork (**58.64**, P5
+ *  §2b, n = 52): the cheap place is below her, the middle one just above, the dear one well above.
+ *
+ *  ⚠⚠ AND SINCE ROUND 21 #2 NOTHING PRINTS IT. The owner: *«"шанс выйти в топ-200"… это измеримо как
+ *  мне кажется»* – and he is right that 55 was not. A player has nothing to hold it against: the card
+ *  never printed her daughter's own number on that scale, so the only thing 55 said was that 75 is
+ *  bigger. `COLLEGE_TIER_ODDS` is what the row carries now. **`squad` survives as the model's own
+ *  statement of the quality ladder** – it is the reason `fullAwardScore` and `matchesPerWeek` climb
+ *  together and the thing a future calibration would set – and it is not deleted, because deleting it
+ *  would leave those two climbing for no stated reason.
  *
  *  ⚠⚠ `fullAwardScore` IS OURS TOO, BUT IT IS SET ON A MEASUREMENT RATHER THAN ON TASTE – the same
  *  discipline the retired `programmes.minJuniorScore` used. It is the junior score at which a
@@ -236,6 +243,56 @@ export const COLLEGE_TIER_NAME: Record<CollegeTier, string> = {
   national: 'A university out of state',
   private: 'A private university',
 }
+
+/** ⭐⭐⭐ WHAT A PLACE IS WORTH, AS AN ODDS – round 21 #2, and it REPLACES `squad` on the card
+ *  (17.08, docs/specs/the-college-answers-2026-08.md §2). The owner:
+ *
+ *  > «"команда средней силы, стипендия закрыла 72% цены" – это лучше звучит, но еще лучше будет
+ *  >  что-то вроде "шанс выйти в топ-200"… это измеримо как мне кажется»
+ *
+ *  **He is right, and `squad` was the thing he was right about.** 55 / 65 / 75 was an invention on
+ *  our own skill scale, no source rates a college squad on it, and a player has nothing to compare
+ *  55 against – not her daughter's skills, which the card does not print, and not the other rows,
+ *  which only tell her that 75 is more than 55. **How many careers reach the world top 100** is a
+ *  measurement of THIS BUILD and a player can hold it against her own ambition.
+ *
+ *  ⚠⚠ IT IS MEASURED AND THE RUN IS NAMED. `tools/college-return-probe.ts --seeds 6`, at commit
+ *  `82eb452`, n = 53 careers walked to the fork under `POLICIES[1]` and then re-walked once per
+ *  place: four years enrolled, then **four years back on tour**, counting the careers that touch the
+ *  band at any week of the return. §2 of the spec has the full table and the two bands either side
+ *  (top 200: 96 / 96 / 83 · top 50: 26 / 26 / 23).
+ *
+ *  ⚠⚠ AND THE HONEST HALF: THE PLACE BARELY MOVES IT, AND THE CARD IS NOT ALLOWED TO PRETEND
+ *  OTHERWISE. 38 / 40 / 34 is FLAT, and the middle place being nominally the best of the three is
+ *  noise at n = 53 rather than a finding. Among the careers the BILL did not end it is flatter still
+ *  (38 / 40 / 38, n = 53 / 52 / 47). The dear place's lower figures are not a weaker programme; they
+ *  are six families going bankrupt paying for it. What would make these three numbers genuinely
+ *  differ is college MATCH RESULTS feeding the ladder, which `the-college-choice-2026-08.md` §4b
+ *  names and deliberately did not build.
+ *
+ *  ⚠⚠ AND THE PROVENANCE WAS NEARLY WRONG, WHICH IS RECORDED RATHER THAN TIDIED AWAY. An earlier run
+ *  of this probe survived the kill that was meant to stop it, finished against the THIRTEEN-WEEK
+ *  season, and wrote its output over the same path – so a complete, plausible table (42 / 38 / 38)
+ *  sat in the file for several minutes describing a tree that no longer exists. It was caught by the
+ *  elapsed-seconds line changing between two reads of a file that should have been written once.
+ *  **A measurement is not identified by its filename** – §2a of the spec.
+ *
+ *  ⚠ THEY ARE NOT SELF-REFRESHING AND THE STALENESS IS CAUGHT MECHANICALLY, not by a comment:
+ *  `tests/college-offer.test.ts` pins `COLLEGE_ODDS_MEASURED_AT` against a fingerprint recomputed
+ *  from `COLLEGE_TIERS` and `COLLEGE_TRIP_WEEKS`, so moving a price, a recruiting bar, a match count
+ *  or a trip week turns a test red with the probe to re-run named in the failure. */
+export const COLLEGE_TIER_ODDS: Record<CollegeTier, { top100In100: number }> = {
+  state: { top100In100: 38 },
+  national: { top100In100: 40 },
+  private: { top100In100: 34 },
+}
+
+/** ⚠⚠ THE TIER TABLE THE ODDS ABOVE WERE MEASURED AGAINST. Any edit to it invalidates them, and the
+ *  test that reads this is the only thing standing between a re-tune and a card quoting a run that
+ *  no longer describes the game. ⚠ IT IS A STRING RATHER THAN A HASH ON PURPOSE: a failure has to say
+ *  WHAT moved, and a hex digest says only that something did. */
+export const COLLEGE_ODDS_MEASURED_AT =
+  'state 3099000/11/1 · national 5092000/18/2 · private 6547000/23/3 · trips 8,20'
 
 export const COLLEGE_OFFER = {
   /** the country code that gets the in-state place and the need-based layer. ⚠ Both of those are US

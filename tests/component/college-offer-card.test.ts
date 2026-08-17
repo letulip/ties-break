@@ -134,14 +134,24 @@ describe('⭐⭐ the card says what each college place costs', () => {
     w.unmount()
   })
 
-  // ⚠ OURS IS PRINTED BESIDE SOURCED, AND SAID AS A BARE NUMBER. The squad is an invention; the price
-  // is not. The card is not entitled to hide which is which.
-  it('states the squad as its own number on each place', () => {
+  // ⚠⚠ RE-AIMED, NOT DELETED (round 21 #2). It used to assert `Squad 55 / 65 / 75` – ours, on a scale
+  // the card never printed her own number on, so a player had nothing to compare it against. The
+  // owner asked for the place's quality as a measurable odds and he was right. The property the case
+  // was standing in for survives exactly – **every row states what the place is worth, in its own
+  // stated unit, beside the sourced price** – and it is stronger, because the number is now measured
+  // out of this build (`tools/college-return-probe.ts`, n = 53 per place) rather than invented.
+  it('⭐⭐ states each place\'s measured odds, and the window it was measured over', () => {
     const w = mountFork(FUNDED)
     const rows = rowsOf(w)
-    expect(rows[0]).toContain('Squad 55')
-    expect(rows[1]).toContain('Squad 65')
-    expect(rows[2]).toContain('Squad 75')
+    expect(rows[0]).toContain('Top 100 for 38 in 100')
+    expect(rows[1]).toContain('Top 100 for 40 in 100')
+    expect(rows[2]).toContain('Top 100 for 34 in 100')
+    // ⚠ AND A SHARE WITH NO SPAN UNDER IT IS NOT A MEASUREMENT. The window is named once, under the
+    // list – a card that printed a bare percentage would be quoting a run it never identified.
+    expect(w.find('.fork-places-note').text()).toContain('Four years after she leaves')
+    expect(w.find('.fork-places-note').text()).toContain('53 careers')
+    // ⚠ AND THE INVENTED NUMBER IS OFF THE SURFACE, which is the half of this the owner asked for.
+    expect(w.find('.fork-places').text()).not.toMatch(/Squad \d/)
     w.unmount()
   })
 
@@ -169,7 +179,7 @@ describe('⭐⭐ the card says what each college place costs', () => {
   it('says the family pays nothing rather than $0 when the award covers the year', () => {
     const w = mountFork(FREE_RIDE)
     expect(rowsOf(w)[0]).toContain('A full ride')
-    expect(rowsOf(w)[0]).toContain('The family pays nothing')
+    expect(rowsOf(w)[0]).toContain('Family pays nothing')
     w.unmount()
   })
 
