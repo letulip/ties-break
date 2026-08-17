@@ -551,6 +551,13 @@ the top.**
 entries sextuple, because a higher-ranked girl is accepted into far more big events. That is the
 acceleration in §7c seen from the other side, not a second effect.
 
+**⚠ AND A SECOND, INDEPENDENT INSTRUMENT MEASURED THE SAME THING WITHOUT LOOKING FOR IT.** The
+college agent, re-measuring its own wave on this tree, reports the **median college career now peaking
+at world #16 (was #114)**, **78–81% reaching the top 50**, and a graduate ranked again **one week
+after leaving**. That is a different tool, a different career shape and a different question, landing
+on the same effect as the `#97 → #12` above. **Two instruments agreeing is why this is reported as a
+property of the wave and not as noise in one bench.**
+
 **⚠ IT IS NOT AN ODDS ERROR, AND THE ARITHMETIC PROVES IT RATHER THAN EXCUSING IT.** This file's own
 population note records `rollPotential`'s measured output: the mean-of-four a career can reach is
 **p50 63.2 · p90 68.8 · p99 73.2 · max 80.8**. Feed those into the shipped law and a **median-talent
