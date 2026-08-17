@@ -400,7 +400,7 @@ function sectionR(ours: Map<string, number>): void {
   // between the two ranks, so measure that curve's SLOPE segment by segment and price it in the
   // sport's own unit. A flat segment is a segment where rank carries no information.
   console.log('\n   OUR CORE CURVE, SEGMENT BY SEGMENT (the thing a rank gap is actually made of):')
-  console.log('   from    to     doublings   core drop   core/doubling   Elo/doubling   vs the sport')
+  console.log('   from    to     doublings   core drop   core/doubling   Elo/doubling   LIVE here    ratio')
   const meanCoreAt = (rank: number): number => {
     let sum = 0
     for (let w = 0; w < WORLDS; w++) {
@@ -431,50 +431,55 @@ function sectionR(ours: Map<string, number>): void {
     const drop = core(r0) - core(r1)
     const perDb = drop / db
     const elo = perDb * eloPerCore
+    const liveSlope = (interpAt(LIVE.anchors, r0) - interpAt(LIVE.anchors, r1)) / db
     console.log(
-      `   #${String(r0).padEnd(5)} #${String(r1).padEnd(5)} ${db.toFixed(2).padStart(9)} ${drop.toFixed(1).padStart(11)} ${perDb.toFixed(2).padStart(15)} ${elo.toFixed(0).padStart(14)}   x${(elo / ((400 * KM_LAMBDA_WOMEN) / Math.LN10)).toFixed(2)}`,
+      `   #${String(r0).padEnd(5)} #${String(r1).padEnd(5)} ${db.toFixed(2).padStart(9)} ${drop.toFixed(1).padStart(11)} ${perDb.toFixed(2).padStart(15)} ${elo.toFixed(0).padStart(14)} ${liveSlope.toFixed(0).padStart(12)}   x${(elo / liveSlope).toFixed(2)}`,
     )
   }
 }
 
 // -------------------------------------------------------------------------------------------------
-// P. THE PROPOSAL – ONE LAW: core is a straight line in log2(rank), and the two gains multiply to
-//    the sport's own 124 Elo per doubling. Computed here; NOTHING in src/ is touched.
+// P. THE ACCEPTANCE TEST – the five rows the owner's ruling is judged on, against the LIVE list.
+//
+// ⚠ THE CONSTANT-SLOPE PROPOSAL THAT USED TO LIVE HERE IS GONE, AND ITS EPITAPH IS THE POINT. It
+// fitted ONE slope (124.2 Elo per doubling, Klaassen & Magnus 1992-95) and paired it with a x1.5 lift
+// of SKILL_K. Measured against the live 2026 list it would have fixed #1 v #10 and made every other
+// row worse - 1990s dominance, which the owner explicitly refused. The shipped answer fits the live
+// curve's SHAPE instead and leaves SKILL_K alone. docs/specs/the-skill-gap-2026-08.md §5.
 // -------------------------------------------------------------------------------------------------
 function sectionP(ours: Map<string, number>): void {
-  const { pPerCore, eloPerCore } = measuredExchange()
-  const targetEloPerDoubling = (400 * KM_LAMBDA_WOMEN) / Math.LN10
-  const gains = [1, 1.5, 2, 2.5, 3]
-  console.log('\n=== P. THE PROPOSED LAW – core(rank) = C0 - s*log2(rank), with gain*s = the sport ===')
-  console.log(`   target: ${targetEloPerDoubling.toFixed(1)} Elo per doubling of rank`)
-  console.log('\n   ⚠ THE ODDS TABLE IS THE SAME FOR EVERY GAIN, AND THAT IS THE STRUCTURAL POINT: the')
-  console.log('   product gain x slope is pinned by the sport, so the pair has ONE free parameter and it')
-  console.log('   is not the odds – it is WHERE THE CORE SCALE SITS. Odds printed once, curves per gain.')
-
-  const c0 = 76.4 // anchor: the world #1 keeps the strength she has today
-  const sAt = (g: number): number => targetEloPerDoubling / (eloPerCore * g)
-
-  console.log('\n   favourite  underdog   OURS today   PROPOSED    K&M [I]')
-  for (const [r1, r2] of PAIRS) {
-    const s = sAt(1)
-    const d = s * Math.log2(r2 / r1)
-    const prop = 1 - pMatchBo3(0.57 + d * pPerCore, 0.57 - d * pPerCore)
+  const rows: [number, number][] = [
+    [1, 10],
+    [50, 100],
+    [50, 200],
+    [50, 300],
+    [200, 300],
+  ]
+  console.log('\n=== P. THE ACCEPTANCE TEST – his five rows, against the live 2026 list ===')
+  console.log('   favourite  underdog   LIVE +spread    OURS      miss')
+  let tot = 0
+  for (const [r1, r2] of rows) {
+    const live = 1 - liveFavourite(r1, r2, true)
+    const our = ours.get(`${r1}:${r2}`)!
+    tot += Math.abs(our - live)
     console.log(
-      `      #${String(r1).padEnd(5)}    #${String(r2).padEnd(5)}   ${pct(ours.get(`${r1}:${r2}`)!)}%       ${pct(prop)}%     ${pct(1 - kmFavourite(r1, r2))}%`,
+      `      #${String(r1).padEnd(5)}    #${String(r2).padEnd(5)}    ${pct(live)}%       ${pct(our)}%    ${(our - live >= 0 ? '+' : '') + ((our - live) * 100).toFixed(1)} pts`,
     )
   }
+  console.log(`   mean absolute miss on the five rows: ${((tot / rows.length) * 100).toFixed(2)} points`)
 
-  console.log('\n   THE FREE PARAMETER – what each gain does to the world table and to her own levers:')
-  console.log('   gain   1 core =   s (core/doubling)   #1    #10   #50   #100  #300  #1000 #1600   +1 core is worth')
-  for (const g of gains) {
-    const s = sAt(g)
-    const coreAt = (r: number): number => c0 - s * Math.log2(r)
-    const one = pMatchBo3(0.57 + pPerCore * g, 0.57 - pPerCore * g)
-    const shape = [1, 10, 50, 100, 300, 1000, 1600].map((r) => coreAt(r).toFixed(1).padStart(5)).join(' ')
-    console.log(`   x${g.toFixed(1)}   ${(eloPerCore * g).toFixed(1).padStart(5)} Elo   ${s.toFixed(2).padStart(16)}  ${shape}   ${pct(one)}%`)
+  let all = 0
+  for (const [r1, r2] of PAIRS) all += Math.abs(ours.get(`${r1}:${r2}`)! - (1 - liveFavourite(r1, r2, true)))
+  console.log(`   mean absolute miss over ALL ${PAIRS.length} pairs: ${((all / PAIRS.length) * 100).toFixed(2)} points`)
+
+  // WHAT HER OWN EDGE IS WORTH - the thing that must NOT shrink, since the complaint that started
+  // this was "skill does not matter". Unchanged by construction (SKILL_K untouched), measured anyway.
+  const { pPerCore } = measuredExchange()
+  console.log('\n   HER OWN EDGE, in match points (SKILL_K is untouched, so this must not move):')
+  for (const d of [0.06, 0.12, 1, 2.4, 6.7]) {
+    const p = pMatchBo3(0.57 + d * pPerCore, 0.57 - d * pPerCore)
+    console.log(`     +${String(d).padStart(4)} core -> ${pct(p)}%  (+${((p - 0.5) * 100).toFixed(2)} pts)`)
   }
-  console.log(`   (today: 1 core = ${eloPerCore.toFixed(1)} Elo and +1 core is worth ${pct(pMatchBo3(0.57 + pPerCore, 0.57 - pPerCore))}%;`)
-  console.log("    the shipped world table is #1=76.4 #10=75.2 #50=67.5 #100=54.2 #300=41.7 #1000=29.0 #1600=17.2)")
 }
 
 sectionA()

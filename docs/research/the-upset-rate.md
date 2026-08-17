@@ -82,35 +82,81 @@ gap", and is why substituting ATP data here would have been a real error rather 
 speak Elo: a logistic in log₂(rank) with λ = 0.715 is exactly `400·λ/ln(10)` = **124.2 Elo points per
 doubling of rank**. That single constant reproduces the entire model and is the number §3 is built on.
 
-### 2c. The live Elo table – an independent second route
+### 2c. ⚠⚠ THE LIVE ELO LIST – RE-DONE PROPERLY, AND THE FIRST CUT OF THIS SECTION WAS WRONG
+
+**The owner, ruling on which instrument we aim at:**
+
+> «"расчёт по живому рейтингу Elo на август этого года" – вот это же супер-ценная и актуальная
+> информация, **нам не нужно доминирования, как в 90х**.»
+
+**So this is the target and K&M is the contrast.** Which made the quality of this section load-bearing,
+and the first cut of it was not good enough – it is corrected here rather than quietly patched.
 
 `[S-8]` [Tennis Abstract WTA Elo report](https://tennisabstract.com/reports/wta_elo_ratings.html),
-list of **2026-08-03**, 556 players. Published mapping on the same page:
+list of **2026-08-03**. Now **parsed in full**: **547 players who hold both an Elo rating and an
+official WTA rank**, stored as (rank, Elo) pairs at
+[`docs/research/raw/2026-08-17-wta-elo-by-rank.json`](raw/2026-08-17-wta-elo-by-rank.json).
+⚠ **Player names are deliberately not stored** – CLAUDE.md forbids making real surnames
+constructible.
+
+`[S-9]` The report's own published mapping, which the standard formula reproduces exactly:
 
 > "A 100-point difference in Elo ratings implies that the favorite has a 64% chance"
 
-`[S-9]` and the report's own scale: Elo gap **100 → 64% · 200 → 76% · 300 → 85% · 400 → 91% ·
-500 → 95%** (best-of-three).
+Elo gap **100 → 64% · 200 → 76% · 300 → 85% · 400 → 91% · 500 → 95%** (best-of-three).
 
-`[I]` **Elo by rank**, median within ±12 of each rank, computed by us from the report's raw HTML:
+#### ⚠ THE CORRECTION – what the first cut got wrong and by how much
 
-| rank | 1 | 10 | 25 | 50 | 100 | 150 | 200 | 250 | 300 |
-|------|---|----|----|----|-----|-----|-----|-----|-----|
-| Elo  | 2058 | 1999 | 1879 | 1786 | 1709 | 1617 | 1550 | 1432 | 1429 |
+The first cut of this file read Elo by rank as *the median within ±12 ranks*, by hand. That window
+**averages the world #1 together with #2–#13**, and the world #1 is one person, not a band: it printed
+**#1 = 2058** where the actual figure is **2194.6**. Everything derived from that row was wrong in the
+same direction, and the error was large:
 
-⚠ **Three limits, all load-bearing.** (a) The smoothing is ours, so the table is `[I]`, not `[S]`;
-the actual #1 (Sabalenka) is **2209.4**, and the ±12 window pulls the top row down by 150 points –
-which is why the #1 row of §3 is the least trustworthy in the file. (b) The report's population is
-**selected**: at least 10 matches at tour level, qualifying or ITF $50K+ inside 52 weeks. It is not
-the circuit at large. (c) It **cannot resolve anything past about #300** – our parse gives #250 = 1432
-and #300 = 1429, indistinguishable. Rows past #300 are therefore **absent from §3, not zero**.
+| | first cut (±12 by hand) | **corrected** |
+|---|---|---|
+| #1's Elo | 2058 | **2194.6** |
+| #1 vs #10 upset | 41.6% | **23.9%** |
+| #1 vs #50 upset | 17.3% | **9.0%** |
 
-`[I]` **The two routes agree on the constant.** Fitting a straight line to the Elo table over
-#10–#300 gives **116 Elo per doubling**; over #25–#300, **125**; over #50–#300, **138**. Klaassen &
-Magnus give **124.2**. Two entirely independent instruments – a 1990s Wimbledon logit and a 2026 Elo
-list – land within about 10% of each other, and that convergence is the strongest thing in this file.
+**The corrected figure is not a small revision – it halves the headline row**, and that row was being
+used to decide how flat the top of our table is allowed to be. The lesson is the one this repo keeps
+recording: a smoothing window is a modelling choice, and a hand-applied one with no stated
+justification is an unsourced number wearing a source's clothes.
 
----
+#### The curve as it actually is `[I]`
+
+Median Elo of log2-rank bins of the 547 pairs, forced monotone, with the **residual spread inside each
+bin** – the quantity a curve alone cannot express:
+
+| rank | 1 | 5 | 8 | 13 | 22 | 36 | 58 | 94 | 152 | 247 | 402 | 653 | 1060 |
+|------|---|---|---|----|----|----|----|----|-----|-----|-----|-----|------|
+| median Elo | 2195 | 2088 | 2034 | 1932 | 1913 | 1816 | 1784 | 1719 | 1603 | 1477 | 1353 | 1296 | 1196 |
+| residual sd | – | 27 | 56 | 75 | 53 | 51 | 52 | 69 | 82 | 101 | 104 | 120 | 117 |
+
+**⚠ THE SHAPE IS NOT A STRAIGHT LINE, AND THAT IS THE WHOLE FINDING OF THIS SECTION.** A single fitted
+slope over the binned medians gives 116 Elo per doubling with a maximum bin deviation of 71 Elo – a
+decent *average* and a bad *description*. The local slope, in Elo per doubling:
+
+| segment | #1→#13 | #13→#58 | #58→#152 | #152→#402 | #402→#1060 |
+|---------|--------|---------|----------|-----------|------------|
+| Elo/doubling | ~79 | ~62 | ~123 | ~180 | ~117 |
+
+**Shallow over the top fifty, steepest through #150–#400, shallow again in the tail.** That is why the
+two instruments agree on an average and diverge at the head, and it is why a constant slope cannot be
+the answer.
+
+**⚠ THE RESIDUAL SPREAD IS EVIDENCE IN ITS OWN RIGHT, and it is the owner's «шансы выиграть должны
+быть у всех».** Two players at the same rank differ by 50–120 Elo of Elo rating. Integrating that
+spread raises every upset cell by 1–3 points and is the honest form of the question "a player ranked
+#50 against a player ranked #300", as opposed to "the median of #50 against the median of #300". Both
+columns are given in §3. ⚠ Part of this spread is genuine skill variation and part is Elo and the WTA
+ranking simply disagreeing (the report publishes a "Log diff" column for exactly that) – **we cannot
+separate the two**, so it is reported as a band and never used as a single number.
+
+**⚠ Two limits still apply, unchanged.** The report's population is **selected** – at least 10 matches
+at tour level, qualifying or ITF $50K+ inside 52 weeks – so it is not the circuit at large; and it
+**thins out past about #650** (7 players in the last bin), so everything below that is the curve
+*continued* rather than observed.
 
 ## 3. THE TABLE – upset rate by ranking gap `[I]` throughout
 
