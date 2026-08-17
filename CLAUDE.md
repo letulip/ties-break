@@ -152,6 +152,14 @@ docs/review/     2026-08 full review + P1–P9 proposals
   the reader is present — `git grep <theConstant> -- src/` on the A tree costs one command. The
   cheapest sanity check is to set the constant to an absurd value and watch the output move; if it
   does not, the arm is wrong before the hypothesis is.
+- **⚠ IN A SHARED CHECKOUT THE CONTROL IS YOUR COMMIT WITH YOUR CHANGE REVERTED, NEVER THE PREVIOUS
+  COMMIT.** Somebody else's work lands between yours, so "branch head before mine vs mine" measures
+  both. On 17.08 this produced a false NEGATIVE for one agent (a merit-only award appearing to move
+  with family wealth) and a false POSITIVE for another (wild cards credited with a college change) in
+  the same hour. Build the A arm as `git revert --no-commit <your engine commit>` in a dedicated
+  worktree. ⚠ And restoring B is `git reset --hard`, not `git checkout -- src`: checkout restores
+  from the INDEX, which a staged revert has already overwritten, so "back to B" silently runs A
+  twice and yields a byte-identical diff that looks like a null result.
 - **`git checkout <sha> -- <path>` is the concurrent-agent hazard pointing the other way.** The note
   above about `git commit` taking the whole index has a mirror: an agent bisecting a hash divergence
   reverted `src` under another agent's live edits on 16.08. Nothing was lost — the pathspec habit
