@@ -488,12 +488,23 @@ describe('E. a tier is a place with a price, and the player picks it', () => {
 // ⚠ IT DOES NOT ASSERT THE ODDS ARE RIGHT – nothing in a unit test can, the run takes five minutes.
 // It asserts they are not silently describing a different game.
 describe('F. the measured odds cannot go stale without a test noticing', () => {
+  // ⚠⚠ RE-AIMED, NOT DELETED, AND THE RE-AIMING IS THE POINT (round 21, the development ruling).
+  // The first version listed THREE NAMED FIELDS – price, recruiting bar, matches a week – and it was
+  // measured blind: adding `coachesAt` and moving a place from `high` to `elite`, which is a large
+  // change to what four years there develop, left this block GREEN. **A fingerprint over named fields
+  // cannot see a field that did not exist when it was written**, which is exactly the input a future
+  // phase is most likely to add. So it folds the WHOLE tier object now, keys sorted, and a new
+  // property trips it on the day it appears.
   const fingerprint = () =>
     [
-      ...COLLEGE_TIER_ORDER.map(
-        (t) =>
-          `${t} ${COLLEGE_TIERS[t].costPerYearCents}/${COLLEGE_TIERS[t].fullAwardScore}/${COLLEGE_TIERS[t].matchesPerWeek}`,
-      ),
+      ...COLLEGE_TIER_ORDER.map((t) => {
+        const tier = COLLEGE_TIERS[t] as Record<string, unknown>
+        const props = Object.keys(tier)
+          .sort()
+          .map((k) => `${k}=${String(tier[k])}`)
+          .join(',')
+        return `${t} ${props}`
+      }),
       `trips ${COLLEGE_TRIP_WEEKS.join(',')}`,
     ].join(' · ')
 
@@ -507,17 +518,21 @@ describe('F. the measured odds cannot go stale without a test noticing', () => {
     ).toBe(COLLEGE_ODDS_MEASURED_AT)
   })
 
-  // ⚠ MUTATION PROOF, INLINE. A guard that cannot fail on the thing it guards is not a guard, and
-  // this one is cheap to prove: the fingerprint is a pure fold, so a changed input is a changed
-  // string. Without this the case above would pass on a fingerprint that read nothing at all.
-  it('⚠⚠ and the pin really does move when a tier input moves', () => {
-    expect(fingerprint()).toContain(`${COLLEGE_TIERS.private.costPerYearCents}`)
+  // ⚠ MUTATION PROOF, INLINE. A guard that cannot fail on the thing it guards is not a guard.
+  //
+  // ⚠⚠ AND THE PROPERTY IT NOW PROVES IS THE ONE THE OLD VERSION LACKED: **every property of every
+  // place is inside the fold**, so a phase that adds a fourth axis cannot measure the odds against a
+  // tier table the pin has never seen. The old proof mutated the PRICE, which the old fingerprint did
+  // read – so it passed while being blind to everything else.
+  it('⚠⚠ and every property of every place is inside the pin', () => {
+    for (const t of COLLEGE_TIER_ORDER) {
+      for (const [k, v] of Object.entries(COLLEGE_TIERS[t] as Record<string, unknown>)) {
+        expect(fingerprint(), `${t}.${k} is not in the fingerprint`).toContain(`${k}=${String(v)}`)
+      }
+    }
     expect(fingerprint()).toContain(`trips ${COLLEGE_TRIP_WEEKS.join(',')}`)
-    const mutated = fingerprint().replace(
-      `${COLLEGE_TIERS.private.costPerYearCents}`,
-      `${COLLEGE_TIERS.private.costPerYearCents + 1}`,
-    )
-    expect(mutated).not.toBe(COLLEGE_ODDS_MEASURED_AT)
+    // a changed input is a changed string, so the pin above would go red
+    expect(fingerprint().replace('coachesAt=high', 'coachesAt=elite')).not.toBe(COLLEGE_ODDS_MEASURED_AT)
   })
 
   // ⚠ AND THE THREE FIGURES ARE SHARES OF A HUNDRED CAREERS, not shares of one. A card printing

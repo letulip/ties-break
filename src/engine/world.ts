@@ -190,6 +190,7 @@ import {
 import { ENDINGS } from './ending'
 import {
   bankCollegeYear,
+  collegeCoachFactor,
   collegeEpilogueLine,
   collegeMatchesThisWeek,
   inCollege,
@@ -204,6 +205,7 @@ export {
   // ever read it – it shipped on 17.08 and this is the same day – so the rename breaks no call site.
   COLLEGE_TRIP_WEEKS,
   bankCollegeYear,
+  collegeCoachFactor,
   collegeEpilogueLine,
   collegeMatchesThisWeek,
   collegeProgressOf,
@@ -3146,6 +3148,15 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // this phase cannot inflate its own dimension by raising the ceiling on what a match is worth.
     // ⚠ ZERO DRAWS: a count, not a roll.
     matchesThisWeek: matchesThisWeek + collegeMatchesThisWeek(world),
+    // ⭐⭐⭐ AND AT COLLEGE THE PROGRAMME COACHES HER (round 21, the owner's ruling of 17.08:
+    // «она училась и работала»). `undefined` on every other week of every career, so this line is
+    // provably inert outside the freeze – see `collegeCoachFactor`, which returns undefined the
+    // moment `inCollege` is false or the career was never quoted a place.
+    //
+    // ⚠ THE `coach:` LINE ABOVE STAYS AS IT IS AND IS STILL `null` HERE, because `coachWorksThisWeek`
+    // is what the BILL reads: the family is not paying for the programme's coaching and must not be.
+    // The override replaces the rate; it does not hire anybody.
+    coachFactorOverride: collegeCoachFactor(world),
     seed: world.seed,
     week: world.week,
     // ⚠ W4 – THE PRICE OF RESTING A KNOCK, and the whole reason `growWeek` gained this knob. She is

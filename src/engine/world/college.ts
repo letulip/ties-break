@@ -19,6 +19,7 @@
 // (CLAUDE.md invariant 2). Everything else here is pure state – a counter, two measurements and an
 // append. The frozen MAIN capture cannot see any of it.
 import { rngFromSeed } from '../rng'
+import { coachFactor } from '../coach'
 import { SKILL_KEYS, type KidSkills } from '../development'
 import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
@@ -325,6 +326,37 @@ export function collegeMatchesThisWeek(world: WorldState): number {
   const seasonWeek = world.week % WEEKS_PER_YEAR
   if (!(COLLEGE_TRIP_WEEKS as readonly number[]).includes(seasonWeek)) return 0
   return COLLEGE_TIERS[tier].matchesPerWeek
+}
+
+/** ⭐⭐⭐ WHO COACHES HER FOR FOUR YEARS – the owner's ruling of 17.08, «она училась и работала»
+ *  (docs/specs/the-college-answers-2026-08.md §10). `undefined` outside college, so every other week
+ *  of every career is byte-identical.
+ *
+ *  ⚠⚠ WHAT THIS FIXES IS OLDER THAN THE SEASON IT REPLACES. `growWeek` reads
+ *  `coachFactor(tierOf(coach), …)` and at college `coach` is `null`, so for 208 weeks she developed at
+ *  **`self` = 0.82** – the parent-on-the-court rate, for a girl who is not with her parent and is at a
+ *  university with a squad, a training week and a strength programme. The dimension the owner asked
+ *  for was never really a missing feature; it was that nobody was coaching her.
+ *
+ *  ⚠ IT IS A SEPARATE INPUT AND NOT A CHANGE TO `coachWorksThisWeek`, AND THAT IS THE WHOLE CARE
+ *  TAKEN HERE. That predicate's own comment says one clause moves the BILL and the RATE together –
+ *  which is exactly right for a hired coach and exactly wrong here, because the scholarship's whole
+ *  economic point is that the family stops paying (owner, W2-ENDINGS §5.1). So the rate moves and the
+ *  bill does not, through an argument no billing code reads.
+ *
+ *  ⚠ A MIGRATED CAREER KEEPS WHAT IT HAD. A v50/v51 career at college was never quoted a place, has no
+ *  chosen tier, and gets `undefined` – the same discipline `resolveCollegeBill` keeps when it declines
+ *  to charge a career that was never quoted a price.
+ *
+ *  ⚠ ZERO DRAWS. It returns a constant off a persisted offer; the frozen MAIN capture cannot see it. */
+export function collegeCoachFactor(world: WorldState): number | undefined {
+  if (!inCollege(world)) return undefined
+  const tier = chosenQuoteOf(world.fork?.offer)?.tier
+  if (!tier) return undefined
+  // ⚠ THE FIT TERM IS NEUTRAL AND THAT IS A STATEMENT, NOT A DEFAULT. `coachFitFor` asks whether ONE
+  // man's game transfers to hers; a programme is several coaches, so the question does not apply and
+  // inventing an answer to it would be a fourth invented number. `good` is the 1.0 rung.
+  return coachFactor(COLLEGE_TIERS[tier].coachesAt, 'good')
 }
 
 /** ⭐⭐ WHAT SHE COMES BACK WITH, AND IT IS MEASURED RATHER THAN ASSERTED.

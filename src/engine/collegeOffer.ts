@@ -76,7 +76,7 @@
 //
 // ⚠ THE PRICES ARE SOURCED. THE QUALITY LADDER OVER THEM IS OURS – see `COLLEGE_TIERS`, where every
 // invented number says so on its own line. §0a of the spec is the table.
-import type { CollegeOffer, CollegeQuote, CollegeTier, FamilyBackground } from '../shared/protocol'
+import type { CoachTier, CollegeOffer, CollegeQuote, CollegeTier, FamilyBackground } from '../shared/protocol'
 import type { Rng } from './rng'
 
 export type { CollegeOffer, CollegeQuote, CollegeTier }
@@ -184,10 +184,35 @@ export interface CollegeRecruitView {
  *  fork (min 4 · p25 6 · **median 11** · **p75 18** · **p90 23** · max 25). So the cheap place funds
  *  the median junior completely, and the dear place funds only the top tenth completely.
  *
- *  ⚠ `matchesPerWeek` IS OURS. The NCAA dual-match season is real; its length here and the number of
- *  matches a tier plays in it are ours. It is the one thing the squad DOES – see
- *  `collegeMatchesThisWeek` in `world/college.ts`, and §3 of the spec for how little it turned out to
- *  be worth. */
+ *  ⚠ `matchesPerWeek` IS OURS. The NCAA dual-match season is real; the two national trips a year here
+ *  and the number of matches a place plays on one are ours. See `collegeMatchesThisWeek` in
+ *  `world/college.ts`, and §5 of `the-college-answers-2026-08.md` for how little it turned out to be
+ *  worth once the season shrank to the shortcut it was designed as.
+ *
+ *  ⭐⭐⭐ `coachesAt` IS THE THIRD AXIS, AND IT IS THE ONE THE OWNER RULED BACK IN (17.08,
+ *  `the-college-answers-2026-08.md` §10): «да, она училась и работала, мы точно знаем на сколько за
+ *  каждый год в колледже надо прибавить».
+ *
+ *  ⚠⚠ IT REPLACES THE MATCH TERM AS THE CARRIER OF THAT DIMENSION, DELIBERATELY. He killed the
+ *  thirteen-week dual-match season on a lore argument – the parent is not at those matches – so
+ *  rebuilding the development gain out of match count would smuggle the season back through the side
+ *  door and make the gain's SIZE hostage to a trip count he has already ruled on. A programme's
+ *  coaching happens whether anybody is in the stands, it is what «училась и работала» describes, and
+ *  it makes this dimension **independent of the calendar**: a future change to `COLLEGE_TRIP_WEEKS`
+ *  cannot silently zero it again.
+ *
+ *  ⚠⚠ AND IT INVENTS NO MAGNITUDE. Before this, `growWeek` saw `coach: null` for all 208 weeks and
+ *  developed her at **`self` = 0.82** – the parent-on-the-court rate, for a girl who is not with her
+ *  parent and is at a university. That was the real defect and it is older than the season. Each place
+ *  now names a rung of `ECONOMY.coach.developmentFactor` **by name rather than by number**, so a
+ *  re-tune of the coach ladder moves the college places with it and the two cannot drift.
+ *
+ *  ⚠ THE ASSIGNMENT IS OURS. budget / middle / high is a judgement, not a finding, in exactly the
+ *  sense `fullAwardScore` is – and unlike `fullAwardScore` it does not even sit on a measured quantile.
+ *  **`elite` is deliberately not reached**: the top rung stays something only money on tour buys,
+ *  because a university programme is not better than the best coach in the world. ⚠ AND THE OWNER'S
+ *  «точно знаем на сколько» IS NOT A SOURCE – §10a of the spec says so in his own frame rather than
+ *  letting it harden into a sourced-sounding constant. */
 export const COLLEGE_TIERS = {
   state: {
     costPerYearCents: 30_990_00,
@@ -195,6 +220,7 @@ export const COLLEGE_TIERS = {
     squad: 55,
     fullAwardScore: 11,
     matchesPerWeek: 1,
+    coachesAt: 'budget',
   },
   national: {
     costPerYearCents: 50_920_00,
@@ -202,6 +228,7 @@ export const COLLEGE_TIERS = {
     squad: 65,
     fullAwardScore: 18,
     matchesPerWeek: 2,
+    coachesAt: 'middle',
   },
   private: {
     costPerYearCents: 65_470_00,
@@ -209,10 +236,19 @@ export const COLLEGE_TIERS = {
     squad: 75,
     fullAwardScore: 23,
     matchesPerWeek: 3,
+    coachesAt: 'high',
   },
 } as const satisfies Record<
   CollegeTier,
-  { costPerYearCents: number; residentOnly: boolean; squad: number; fullAwardScore: number; matchesPerWeek: number }
+  {
+    costPerYearCents: number
+    residentOnly: boolean
+    squad: number
+    fullAwardScore: number
+    matchesPerWeek: number
+    /** ⚠ OURS – see the note above. A rung of `ECONOMY.coach.developmentFactor`, named not copied. */
+    coachesAt: CoachTier
+  }
 >
 
 /** cheapest first, and the order the card draws them in. ⚠ THE ORDER IS THE PRICE'S, NOT A RANKING –
@@ -292,7 +328,9 @@ export const COLLEGE_TIER_ODDS: Record<CollegeTier, { top100In100: number }> = {
  *  no longer describes the game. ⚠ IT IS A STRING RATHER THAN A HASH ON PURPOSE: a failure has to say
  *  WHAT moved, and a hex digest says only that something did. */
 export const COLLEGE_ODDS_MEASURED_AT =
-  'state 3099000/11/1 · national 5092000/18/2 · private 6547000/23/3 · trips 8,20'
+  'state coachesAt=budget,costPerYearCents=3099000,fullAwardScore=11,matchesPerWeek=1,residentOnly=true,squad=55 · ' +
+  'national coachesAt=middle,costPerYearCents=5092000,fullAwardScore=18,matchesPerWeek=2,residentOnly=false,squad=65 · ' +
+  'private coachesAt=high,costPerYearCents=6547000,fullAwardScore=23,matchesPerWeek=3,residentOnly=false,squad=75 · trips 8,20'
 
 export const COLLEGE_OFFER = {
   /** the country code that gets the in-state place and the need-based layer. ⚠ Both of those are US
