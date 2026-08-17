@@ -131,7 +131,15 @@ for (let p = 0; p < PRESETS.length; p++) {
       // are all American so this never fires today; the row records the tier it ASKED for and the
       // engine's re-validation is what decides. See `answerFork`'s own note.
       answerFork(at.world, 'college', tier)
-      for (let y = 0; y < YEARS && at.world.ending?.type === 'college'; y++) resumeFromCollege(at.world, at.rng)
+      let firstYearTuition = 0
+      for (let y = 0; y < YEARS && at.world.ending?.type === 'college'; y++) {
+        resumeFromCollege(at.world, at.rng)
+        // ⚠⚠ THE LEDGER CHECK IS TAKEN AFTER ONE YEAR AND NOT AFTER FOUR, AND THAT IS THE INSTRUMENT
+        // BEING HONEST ABOUT ITS OWN WINDOW. `financeWeeks` keeps a ROLLING 60 WEEKS, so a four-year
+        // sum off it reads about a quarter of what was actually charged and looks exactly like an
+        // engine that under-bills. One year is inside the window, so this comparison is exact.
+        if (y === 0) firstYearTuition = tuitionSoFar(at.world) - tuitionBefore
+      }
       rows[tier] = {
         tier,
         costPerYearCents: quote.costPerYearCents,
@@ -143,7 +151,7 @@ for (let p = 0; p < PRESETS.length; p++) {
         affordable: canAfford(o, quote) === true,
         skillBefore,
         skillAfter: skillMeanOf(at.world.skills),
-        tuitionPaidCents: tuitionSoFar(at.world) - tuitionBefore,
+        tuitionPaidCents: firstYearTuition,
         fundsBeforeCents: fundsBefore,
         fundsAfterCents: at.world.fundsCents,
         ranOut: at.world.fundsCents < 0,
@@ -281,11 +289,31 @@ for (const tier of COLLEGE_TIER_ORDER) {
 // =================================================================================================
 const walkOns = careers.filter((c) => c.walkOn).length
 console.log(`\n⚠ NOBODY FUNDED HER AT ALL: ${walkOns} of ${n} (${pctOf(walkOns, n)}) – an EMPTY junior record, and she still enrols and pays`)
-console.log(`\n⚠ THE QUOTE AGAINST THE LEDGER – the card's promise against what the tick took, per place`)
+console.log(`\n⚠ THE QUOTE AGAINST THE LEDGER – the card's promise against what the tick took, over the FIRST YEAR`)
+console.log(`  (⚠ one year, not four: \`financeWeeks\` is a rolling 60-week window and a four-year sum off it reads a quarter of the truth)`)
 for (const tier of COLLEGE_TIER_ORDER) {
   const rs = careers.map((c) => c.rows[tier])
-  const quoted = median(rs.map((r) => r.familyPerYearCents * YEARS))
+  const quoted = median(rs.map((r) => r.familyPerYearCents))
   const charged = median(rs.map((r) => -r.tuitionPaidCents))
   console.log(`  ${padE(tier, 11)}quoted ${padE(usd(quoted), 12)}charged ${padE(usd(charged), 12)}delta ${usd(charged - quoted)}`)
+}
+
+// ⭐⭐ AND WHAT ENDED THOSE CAREERS. The dear place is the first thing on the college branch that can
+// end one, and the owner has to be told which mechanic does it rather than that "some ended".
+console.log(`\n⭐⭐ WHAT ENDED A CAREER INSIDE THE ${YEARS} YEARS, per place`)
+for (const tier of COLLEGE_TIER_ORDER) {
+  const rs = careers.map((c) => c.rows[tier])
+  const kinds = new Map<string, number>()
+  for (const r of rs) if (r.ended !== null && r.ended !== 'college') kinds.set(r.ended, (kinds.get(r.ended) ?? 0) + 1)
+  const list = [...kinds.entries()].map(([k, v]) => `${k} ${v}`).join(' · ') || 'nothing ended'
+  console.log(`  ${padE(tier, 11)}${list}`)
+}
+
+// ⚠ THE FAMILY'S OWN POSITION, so the affordability column above is legible rather than a verdict.
+console.log(`\n⚠ WHAT A YEAR OF THIS FAMILY'S MONEY IS AT THE FORK (income + savings spread over the ${YEARS} years)`)
+{
+  const cp = careers.map((c) => c.canPayPerYearCents).sort((a, b) => a - b)
+  const q = (f: number) => usd(cp[Math.min(cp.length - 1, Math.floor(f * cp.length))])
+  console.log(`  min ${q(0)} · p25 ${q(0.25)} · median ${q(0.5)} · p75 ${q(0.75)} · max ${q(0.999)}`)
 }
 console.log()

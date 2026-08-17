@@ -493,7 +493,10 @@ async function answer(a: ForkAnswer): Promise<void> {
      row from here has to be re-measured, not reasoned about. */
   padding: 6px 10px;
   border: none;
-  border-left: 2px solid transparent;
+  /* ⚠ 3px BECAUSE THE APP HAS ONE ACCENT RAIL AND THIS IS IT (owner, 30.07). The first draft used
+     2px and `tests/ui-control-system.test.ts` caught it – the rail is the left edge at 3px, or 4px
+     when it carries a result, and a fourth weight would be a fourth idiom. */
+  border-left: 3px solid transparent;
   border-radius: var(--radius-control);
   background: transparent;
   font: inherit;

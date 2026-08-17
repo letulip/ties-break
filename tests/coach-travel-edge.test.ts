@@ -650,9 +650,12 @@ describe('the two readouts say the bonus exists, without overstating it', () => 
 // capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709).
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
-  middleGrinder: 'e58423232d888c525e53f81c10fcd42e3aeb9fb43952220b6d9321608ee4d5c4',
+  /** ⚠ MOVED WITH ITS TWINS A FOURTH TIME (17.08, the college choice – schema v52). All three moved
+   *  by exactly ONE KEY again, and `PRE_V52` below proves it: rolling `schemaVersion` back to 51 on
+   *  the NEW world reproduces the old hashes byte for byte, for all three. */
+  middleGrinder: '9fd6df02c7cfbe2997cb8ed123fb7ec425fa96ab2b6d605bd2751e038775ccb3',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: 'a6973e5edc6dd14b5dcb91d7607cd2cd62e95a3ebfb7d718f8a4c9a01bfbd68a',
+  eliteGrinder: 'c3f46867049090eb6774a45022c65456186ccf1368d96b9f6982279234dfc8fc',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -732,7 +735,7 @@ const FROZEN = {
    *  purpose-scoped sub-streams, re-derived at the call site, persisting nothing. The frozen MAIN
    *  capture in tests/condition.test.ts is untouched BY CONSTRUCTION – count 41550, hash e6b0c709 –
    *  and it is verified below rather than promised. */
-  selfTravelling: '95ecdc39debc2d69d95568db71ad17df97e5ec5d1fe152b023931ee45b0e6c74',
+  selfTravelling: 'df041a0c7273a7637f73bd67aab2b8e463cd2cbbea4ea0863b691450537dcbb9',
 }
 
 /** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
@@ -751,6 +754,24 @@ const FROZEN = {
  *  a reason instead of just a different hash. `rngMain` is untouched for the sixth wave running: the
  *  offer draws on a `seed:collegeoffer:<week>` sub-stream and the bill draws nothing at all, so the
  *  frozen MAIN capture (41550 / e6b0c709) is not re-pinned. */
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v51 – the identity that proves the v52 re-freeze
+ *  moved ONE key and nothing else.
+ *
+ *  ⚠ AND ALL THREE HELD THIS TIME, which is worth stating because the previous two re-freezes could
+ *  not say it: v52 replaces the SHAPE of `ForkState.offer` (a funding share becomes a place with a
+ *  price) and adds a match-play term to `growWeek` that only fires inside the college freeze. Neither
+ *  is reachable at week 156 – the fork is 32 weeks away and `world.college` is null – and
+ *  `walkFrozenCareer` asserts both rather than assuming them. So the whole of what the college choice
+ *  did to these three careers is the version number, and this block is the proof rather than the
+ *  claim. `rngMain` is untouched for the seventh wave running: the offer draws on a
+ *  `seed:collegeoffer:<week>` sub-stream (three draws now instead of one, still not MAIN) and the
+ *  match term draws nothing at all, so the frozen MAIN capture (41550 / e6b0c709) is not re-pinned. */
+const PRE_V52 = {
+  middleGrinder: 'e58423232d888c525e53f81c10fcd42e3aeb9fb43952220b6d9321608ee4d5c4',
+  eliteGrinder: 'a6973e5edc6dd14b5dcb91d7607cd2cd62e95a3ebfb7d718f8a4c9a01bfbd68a',
+  selfTravelling: '95ecdc39debc2d69d95568db71ad17df97e5ec5d1fe152b023931ee45b0e6c74',
+}
+
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
  *  moved ONE key and nothing else. */
 const PRE_V51 = {
@@ -835,6 +856,16 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v52: rolling ONLY the schema back to 51 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT THE COLLEGE CHOICE DID TO THESE THREE CAREERS, as an identity. All three
+    // freeze hashes moved and all three roll back exactly, so the change is one number and not three
+    // different careers. If the new `ForkState.offer` shape or the college match-play term had
+    // reached any of these worlds, this case would be red beside the freeze.
+    expect(careerHashAtSchema(5, 0, 51), '25k · middle coach · grinder').toBe(PRE_V52.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 51), '120k · elite coach · grinder').toBe(PRE_V52.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 51), '8k · self-coached · player').toBe(PRE_V52.selfTravelling)
   })
 
   it('⭐⭐ v51: rolling ONLY the schema back to 50 reproduces the previous hashes byte for byte', () => {
