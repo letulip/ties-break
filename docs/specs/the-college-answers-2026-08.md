@@ -443,3 +443,41 @@ lever was pulled. §8 restates the three that exist if he still wants it softer.
 4. **The bankruptcies stay.** 0 of 53 under any model that reads the card; 6 of 53 only when a family
    takes a place the row already told it it cannot afford. The three levers from the previous spec are
    unpulled and unchanged.
+
+---
+
+## 9. THE GATE
+
+Run **serialised** – this machine wedges the vitest pool, and a parallel run times out with zero
+assertion failures (CLAUDE.md). Exit codes read from each command, never through a pipe.
+
+| step | result |
+| --- | --- |
+| `npm run context:audit` | **0** |
+| `npx vue-tsc -b --force` | **0** (re-run after the comment-only `.vue` edits – **0** again) |
+| `npx vitest run --project unit --no-file-parallelism` | **0** – **147 files passed** |
+| `npx vitest run --project component` | **0** – **42 files passed** (re-run after the `.vue` edits – **0**) |
+| `npx vite build` | **0** |
+
+⚠ **`npm run e2e:fixtures` and `npm run test:e2e` were NOT run** – they belong to another agent on
+this branch and this phase was instructed not to touch them.
+
+⚠ **No schema change and no migration.** `COLLEGE_TIER_ODDS`, `COLLEGE_ODDS_MEASURED_AT`,
+`COLLEGE_TIER_NAME` and `COLLEGE_TRIP_WEEKS` are constants; nothing new is persisted, `CollegeTier`
+and `CollegeOffer` are untouched, and `SAVE_SCHEMA_VERSION` stays at 52.
+
+⚠ **The frozen MAIN capture is not re-pinned.** `collegeMatchesThisWeek` is arithmetic on a persisted
+offer and draws nothing; the season shrink removes draws from no stream because it never made any.
+
+### 9a. The commits, in order
+
+| commit | what |
+| --- | --- |
+| `f663540` | `tools/college-return-probe.ts` – the instrument that walks past graduation |
+| `79ef9ce` | **#5** – the thirteen-week season becomes two trips (the constant arm A reverts) |
+| `f09991f` | **#4** – the three names, in one copy instead of two |
+| `daaa677` | **#2** – the measured odds replace `Squad 55`, with the staleness fingerprint |
+| `cc574f1` | **#5** – the shrink's guard, after the first version of it proved vacuous |
+
+⚠ **Every commit is pathspec-form.** Another agent is committing a skill/win-probability audit on this
+same branch and `git commit` takes the whole index.
