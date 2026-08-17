@@ -220,8 +220,8 @@ const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   // money sink the owner wants to see, and the practice court fee is the small recurring one.
   { key: 'vacation', label: 'Vacations' },
   { key: 'practice', label: 'Practice matches' },
-  // ⭐⭐ THE COLLEGE BILL (round 21, docs/specs/the-college-tariff-2026-08.md; owner 17.08:
-  // «понятные ступени с прозрачной оплатой и годовым списанием»).
+  // ⭐⭐ THE COLLEGE BILL (round 21, docs/specs/the-college-tariff-2026-08.md; owner 17.08 asked for
+  // legible rungs, transparent payment and an annual drawdown – his words are in the spec).
   //
   // ⚠⚠ THE ENGINE HAS CHARGED THIS SINCE v51 AND THIS SCREEN HAS NEVER SHOWN IT. `resolveCollegeBill`
   // debits `familyPerYearCents / 52` every week she is enrolled and writes a `tuition` ledger row,

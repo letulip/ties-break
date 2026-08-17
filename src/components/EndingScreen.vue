@@ -296,9 +296,9 @@ async function leaveCollege(): Promise<void> {
               <dd>{{ formatCents(lastYear.fundsDeltaCents) }}</dd>
             </div>
             <!-- ⭐⭐ THE YEAR'S BILL, BESIDE WHAT THE YEAR BANKED (round 21). The two rows are the
-                 whole of the owner's «какая дельта»: one is what the family paid, the other is what
-                 the balance did anyway. Neither is an opinion about the other, and the card still
-                 offers no verdict (ruling 4, 30.07). -->
+                 whole of the owner's delta question of 17.08: one is what the family paid, the other
+                 is what the balance did anyway. Neither is an opinion about the other, and the card
+                 still offers no verdict (ruling 4, 30.07). -->
             <div v-if="collegeBillLine">
               <dt>Tuition</dt>
               <dd>{{ formatCents(college!.billPerYearCents) }}</dd>

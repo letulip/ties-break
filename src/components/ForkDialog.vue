@@ -126,7 +126,8 @@ const programmeLine = computed(() => {
 })
 const pct = (share: number): string => `${Math.round(share * 100)}%`
 
-// ⭐⭐ ROUND 21 – THE FUNDING BAND, WHICH IS THE RUNG THE OWNER ASKED FOR («понятные ступени»).
+// ⭐⭐ ROUND 21 – THE FUNDING BAND, WHICH IS THE RUNG THE OWNER ASKED FOR (17.08: legible rungs, the
+// quote is in docs/specs/the-college-tariff-2026-08.md rather than here, per the copy rules).
 //
 // ⚠ THE CARD USED TO SAY «62% of the bill» AND STOP. A percentage is not a rung: nothing on this
 // card says whether 62% is a good offer or a poor one, and the player meets this screen once in a
@@ -159,7 +160,8 @@ const aidLine = computed(() => {
   return `${pct(o.needShare)} need-based`
 })
 
-// ⭐⭐ THE BILL, AS A YEAR AND AS THE WHOLE COURSE – «прозрачной оплатой и годовым списанием».
+// ⭐⭐ THE BILL, AS A YEAR AND AS THE WHOLE COURSE – transparent payment with an annual drawdown, the
+// owner's second and third asks of 17.08.
 //
 // ⚠ THE FOUR-YEAR FIGURE IS THE ONE THE DECISION IS ACTUALLY ABOUT and the card did not carry it.
 // She is answering a question about four years; a per-year number asks her to do the multiplication
