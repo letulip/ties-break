@@ -82,7 +82,18 @@ hides, **understating exactly the gap it exists to measure.** Fixed in the same 
 ## 2. RUN LENGTHS – BEFORE
 
 `npx vite-node tools/empty-week-census.ts --seeds 2`, **18 careers x 676 weeks (ages 14-26),
-`POLICIES[1]`**, 8,964 non-blackout weeks.
+`POLICIES[1]`**, 12,168 weeks lived, **8,959 non-blackout** (the denominator), 1 career latched an
+ending inside the horizon.
+
+⚠ **The RATE is unchanged and that is the point of printing it first: 12.1% empty, 4.9 weeks a
+season**, against yesterday's 12.6% / ~5 on the build he played. Nothing about how much empty there
+is has moved. **The rate was never the complaint.**
+
+⚠ **And it is front-loaded, which the rate also hid.** Age 14 alone is **26.2% empty, 10.7 weeks a
+season** – she has almost no rungs open yet. Every pro age sits between **8.5% and 12.0%**
+(3.6-4.8 a season), so the screenshot he sent, at WTA 500 level, is from the flat part of the curve.
+**The 55.9% headline cause is `locked` – events on the week she was not ranked for** – which is the
+half a denser calendar cannot touch: adding tournaments she is not ranked for adds nothing.
 
 ### 2a. EMPTY RUNS – the calendar's own answer
 
@@ -213,3 +224,14 @@ already made:
    every world – a bench run, a full battery and a fresh `--seeds 10` baseline – to close a gap the
    measurement says is 0.29 multi-week runs per season and never longer than three. **The drought he
    is describing is on the screen, not in the world.**
+
+   ⚠ **And it would miss anyway.** 55.9% of empty weeks are `locked` – there WAS an event and she
+   was not ranked for it – with only 23.1% "nothing scheduled at all". **Adding tournaments she is
+   not ranked for adds nothing.** If the density question is ever reopened, the lever is the
+   eligibility band, not the event count.
+
+4. **The `tierPhase` co-phasing candidate named in the round brief is already retired**, and by its
+   own author: the note over `tierPhase` in `engine/season/calendar.ts` records that
+   `PLACEMENT_JITTER` broke the fixed W-only-week pattern per world, *"which retires the co-phase
+   the W rungs with their J mirrors candidate fix as the answer to a defect that no longer has a
+   fixed address."* Nothing here re-opens it.
