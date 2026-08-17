@@ -140,7 +140,7 @@ describe('the album', () => {
       ending: endingView('college', {
         ending: { type: 'college', week: 265, ageYears: 19, detail: 'x', resumesWeek: 317 },
         handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: 317, resumesAgeYears: 20 },
-        college: { yearsDone: 0, totalYears: 4, last: null, final: false, billPerYearCents: 8_673_00 },
+        college: { yearsDone: 0, totalYears: 4, last: null, final: false, billPerYearCents: 8_673_00, tier: 'state' },
       }),
     })
     const w = mount(EndingScreen)

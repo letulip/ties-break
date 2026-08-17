@@ -262,6 +262,7 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // the bill existed carries a null offer, `resolveCollegeBill` returns at its second line, and this
     // says so rather than inventing a price it was never quoted.
     billPerYearCents: chosenQuoteOf(world.fork?.offer)?.familyPerYearCents ?? 0,
+    tier: chosenQuoteOf(world.fork?.offer)?.tier ?? null,
   }
 }
 

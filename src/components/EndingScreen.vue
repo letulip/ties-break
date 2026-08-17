@@ -17,7 +17,22 @@ import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
 import { STARTING_FUNDS_CENTS } from '../engine/world'
 import { SURNAMES, FIRST_NAMES } from '../engine/season/cohort'
-import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
+import {
+  DEFAULT_PROFILE,
+  type CoachTier,
+  type CollegeTier,
+  type FamilyBackground,
+  type PlayerProfile,
+  type PlayStyle,
+} from '../shared/protocol'
+
+/** ⚠ THE SAME THREE NAMES THE FORK CARD USES, and they are places rather than verdicts. The prices
+ *  behind them are sourced; the squad ladder over them is ours (engine/collegeOffer.ts). */
+const COLLEGE_PLACE: Record<CollegeTier, string> = {
+  state: 'A state programme',
+  national: 'A national programme',
+  private: 'A private programme',
+}
 import { daysInBirthMonth } from '../shared/dates'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
@@ -150,7 +165,12 @@ const collegeLead = computed(() => {
   // the "Another year" button below and `ending.ts`'s own detail line. All three are fixed together,
   // because the failure was that only ONE of the four copies of the claim got fixed when the bill landed.
   if (c.yearsDone === 0) {
-    return 'A scholarship, a closed league that pays no ranking points, and the family pays whatever the award does not. She can leave at the end of any year.'
+    // ⭐ 17.08 – IT NAMES THE PLACE SHE PICKED. The tier is a price and a squad now, chosen at the
+    // fork, and four years are lived here; a screen that never said which one she took would be
+    // hiding the decision the player actually made. ⚠ NULL ON A CAREER THAT ENTERED BEFORE THE
+    // CHOICE EXISTED – it says nothing rather than naming a place it was never told.
+    const place = c.tier ? `${COLLEGE_PLACE[c.tier]}. ` : ''
+    return `${place}A scholarship, a closed league that pays no ranking points, and the family pays whatever the award does not. She can leave at the end of any year.`
   }
   if (c.final) return 'One year of the scholarship left. After it she is out either way.'
   return `${c.yearsDone} ${c.yearsDone === 1 ? 'year' : 'years'} spent, ${c.totalYears - c.yearsDone} left on the scholarship.`

@@ -2840,6 +2840,10 @@ export interface CollegeProgressView {
    *  career that entered college before v51 carries a null offer and reads **0** here, which is the
    *  truth for it: it was never quoted a price and is never charged one. */
   billPerYearCents: number
+  /** ⭐ WHICH PLACE SHE IS AT (17.08). Derived from `fork.offer.chosen` at snapshot time – no save
+   *  field, no migration. `null` on a career that entered college before the choice existed, and the
+   *  screen says nothing rather than naming a place it was never told. */
+  tier: CollegeTier | null
 }
 
 export interface Snapshot {
