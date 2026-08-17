@@ -420,7 +420,168 @@ the core the table demands at #50 falls from 67.5 to 53.2.
 
 **S7 – the three frozen careers move, on match-outcome keys only.** No schema key, no `rngMain` key.
 
-## 7. VERDICT ON THE PREDICTIONS
+## 6a. ⚠⚠ AND THEN THE OWNER OVERRULED THE REFERENCE, AND THE DIAGNOSIS REVERSED
+
+**Before a line of §6's plan was measured, he ruled again:**
+
+> «"расчёт по живому рейтингу Elo на август этого года" – вот это же супер-ценная и актуальная
+> информация, **нам не нужно доминирования, как в 90х**.»
+
+**He is right and the plan in §5f was wrong.** `gain ×1.5, s = 4.10` was calibrated to Klaassen &
+Magnus's 124.2 Elo per doubling – a coefficient fitted on **Wimbledon 1992–95**, the most top-heavy
+window the women's game has had. Measured against the live 2026 list it would have fixed #1 v #10 and
+made **every other row worse**. That is 1990s dominance, and it is what he had just refused.
+
+**⚠ AND THE ERROR RAN DEEPER THAN THE CHOICE OF INSTRUMENT: OUR OWN LIVE-ELO COLUMN WAS WRONG.**
+§2c's first cut read the report by hand, as "the median Elo within ±12 ranks" – a window that averages
+the world #1 with #2–#13. It printed **#1 = 2058**; the actual figure is **2194.6**, and the headline
+row halved as a result:
+
+| | first cut (±12 by hand) | corrected (547 pairs parsed) |
+|---|---|---|
+| #1 vs #10 upset | 41.6% | **23.9%** |
+| #1 vs #50 upset | 17.3% | **9.0%** |
+
+So the re-aim came with a re-parse: the whole report is now in
+`docs/research/raw/2026-08-17-wta-elo-by-rank.json` – **547 (rank, Elo) pairs, no player names**
+(CLAUDE.md forbids making real surnames constructible) – and `tools/skill-gap-odds.ts` re-derives the
+reference from that file rather than importing our own constant, so an edit to the engine's anchors
+cannot silently move the target.
+
+### ⚠⚠ WHAT FITTING THE LIVE CURVE DID TO THE CHANGE: IT MADE IT SMALLER, AND IT KILLED THE GAIN LIFT
+
+Priced at the **shipped** gain (20.2 Elo per core point), our table's Elo profile relative to #1
+already tracked the live list from #100 down – −633 against −665 at #200, −701/−755 at #300,
+−823/−875 at #500, −958/−995 at #1000. **From #100 to the bottom we were already right, and `×1.5`
+would have broken the only part that was.** The whole defect is #1–#100: too flat from #1 to #50
+(180 Elo where the live list has 403) and a cliff from #50 to #100 (269 where the live list has 91).
+
+**So `SKILL_K`, `RALLY_K` and `PACE_K` are UNTOUCHED and `src/engine/match/` does not change at all.**
+
+### WHAT SHIPPED
+
+`SKILL_LAW` in `src/engine/season/fieldPros.ts`: the live list's own binned-median curve, interpolated
+in log2(rank), with `core(rank) = 76.4 + (Elo(rank) − 2195) / 20.2`.
+
+| rank | #1 | #10 | #25 | #50 | #100 | #200 | #300 | #500 | #1000 | #1600 |
+|------|----|----|----|----|------|------|------|------|-------|-------|
+| **shipped** | 76.4 | 65.5 | 61.0 | 56.4 | 51.9 | 43.6 | 38.4 | 33.4 | 27.5 | 22.7 |
+| was | 76.4 | 75.2 | 70.9 | 67.5 | 54.2 | 45.1 | 41.7 | 35.7 | 29.0 | 17.2 |
+
+⚠ **One uniform draw, two jobs, and that is what keeps the blast radius small.** `u` – the shipped
+draw, in the shipped position on the shipped stream – still decides her POINTS exactly as before
+(`pointsForCore` reduces to `pLo + (pHi−pLo)·u^gamma`, so the core VALUE never entered it). Her
+STRENGTH now comes from her implied standing, which is derived from the same `u` rather than drawn
+again – if it were a fresh draw the correlation between skill and points would be **zero inside every
+storey**, which is the exact defect this wave exists to remove.
+
+## 7. SHIPPED – PROVENANCE, AND WHAT THE ARMS MEASURED
+
+**B arm** = commit `a412162` (the law) as it stands at `b02537c`, in worktree `tb-B`.
+**A arm** = the SAME commit `b02537c` with `git revert --no-commit a412162` applied in worktree
+`tb-A`, then `tools/` and `docs/` restored from `b02537c` so both arms run the identical bench.
+Reader check on A: `grep -c coreForStanding src/engine/season/fieldPros.ts` returns **0**, and the
+shipped uniform draw `const core = cLo + rng() * (cHi - cLo)` is present. Reader check on B: the
+constant is there and read.
+
+⚠ **NEITHER ARM IS THE SHARED CHECKOUT, and that is not pedantry** – midway through this wave the
+other agent's tree went dirty in `development.ts` and `world.ts`, both of which a career bench walks.
+The first career run was launched against it and is discarded unread.
+
+### 7a. THE ACCEPTANCE TEST – his five rows, against the live 2026 list
+
+| favourite | underdog | LIVE + spread | **A (before)** | **B (shipped)** |
+|-----------|----------|---------------|----------------|-----------------|
+| #1 | #10 | 24.7% | 47.4% | **31.3%** |
+| #50 | #100 | 38.0% | 21.1% | **39.3%** |
+| #50 | #200 | 19.9% | 7.3% | **19.8%** |
+| #50 | #300 | 12.5% | 4.3% | **10.1%** |
+| #200 | #300 | 37.2% | 38.9% | **33.6%** |
+| **mean absolute miss** | | | **12.44 pts** | **2.79 pts** |
+| **over all 17 pairs** | | | **7.36 pts** | **2.44 pts** |
+
+**Four of the five land inside 3.6 points. The fifth – #1 v #10 – is the one that is still off, at
++6.6**, and it is off in the direction the owner asked for rather than against it: our champion is
+still too beatable, not too dominant. The residual cause is measured: `FIELD.jitter` and `careerArc`
+move a chair's POINTS by up to ±10% and by her age, so the player who ends up ranked #1 is not always
+the strongest core in the world – the noise that makes an upset possible also blurs the very top.
+
+### 7b. THE MECHANISM, RE-MEASURED – seven of eight segments now inside 6%
+
+Elo per doubling of rank, ours against the live list's own local slope:
+
+| segment | A (before) | **B (shipped)** | LIVE | B vs LIVE |
+|---------|-----------|-----------------|------|-----------|
+| #1→#10 | 7 | **46** | 60 | ×0.76 |
+| #10→#50 | 67 | **83** | 86 | ×0.96 |
+| #50→#100 | 269 | **88** | 90 | ×0.98 |
+| #100→#200 | 183 | **162** | 171 | ×0.95 |
+| #200→#300 | 116 | **190** | 179 | ×1.06 |
+| #300→#500 | 165 | **140** | 136 | ×1.03 |
+| #500→#1000 | 135 | **118** | 119 | ×0.99 |
+| #1→#1000 | 96 | **93** | 99 | ×0.94 |
+
+The staircase is gone: the flat top (×0.06) and the cliff (×2.16) are both within 4% of the sport.
+
+### 7c. ⚠⚠ AND THE THING HE MUST RULE ON: THE CAREER ACCELERATED, HARD
+
+`tools/ladder-baseline.ts --seeds 10`, both arms, same seeds and policy:
+
+| | A (before) | **B (shipped)** |
+|---|---|---|
+| median WTA rank at 19 | #171 | **#126** |
+| median WTA rank at 21 | #163 | **#23** |
+| median WTA rank at 25 | #152 | **#18** |
+| **median career high** | **#97** | **#12** |
+| p25 career high | #58 | **#7** |
+
+**S6 predicted "at least 40 places". It is 85, and that is not a rounding – it is a different game at
+the top.** `tools/big-rung-finishes.ts --seeds 6` on the B arm: WTA 250 **title 15.4%, QF+ 46.6%**;
+WTA 500 title 9.4%; WTA 1000 title 5.1%.
+
+**⚠ IT IS NOT AN ODDS ERROR, AND THE ARITHMETIC PROVES IT RATHER THAN EXCUSING IT.** This file's own
+population note records `rollPotential`'s measured output: the mean-of-four a career can reach is
+**p50 63.2 · p90 68.8 · p99 73.2 · max 80.8**. Feed those into the shipped law and a **median-talent
+career peaks at world #15** – against a measured median career high of **#12**. The Monte-Carlo and
+the closed-form agree, so this is exactly what the game's own potential distribution has always
+implied. **The old table hid it by making all 64 of the top storey superhuman (core 67–77 drawn
+uniformly). Honest strengths did not break the ladder – they exposed that the ladder was calibrated
+against an inflated top.**
+
+### 7d. THE DIAL, AND WHY IT IS HIS AND NOT MINE
+
+`(SKILL_K, RALLY_K, PACE_K)` and `SKILL_LAW.eloPerCore` scale **together**, by construction – the
+product is what the sport pins, so **the odds in §7a are invariant to this choice**. What it moves is
+where her own scale sits against the world:
+
+| k | #1 | #10 | #50 | #100 | #300 | #1000 | #1600 | a median-talent career peaks at |
+|---|----|----|----|------|------|-------|-------|--------------------------------|
+| **×1.0 (shipped)** | 76.4 | 65.5 | 56.4 | 51.9 | 38.4 | 27.5 | 22.7 | **world #15** |
+| ×1.5 | 76.4 | 69.1 | 63.1 | 60.1 | 51.1 | 43.8 | 40.6 | world #48 |
+| ×2.0 | 76.4 | 70.9 | 66.4 | 64.2 | 57.4 | 52.0 | 49.6 | world #118 |
+| *the old staircase* | 76.4 | 75.2 | 67.5 | 54.2 | 41.7 | 29.0 | 17.2 | *measured #97* |
+
+**⚠ AND THERE IS NO k THAT FIXES IT, WHICH IS WHY IT IS A DECISION AND NOT A TUNING.** `×2.0` would
+restore the old ladder pace almost exactly (#118 against a measured #97) – **and it lifts #1600 from
+core 17.2 to 49.6**, making the bottom of the table nearly as strong as the old #100 and burying the
+W15 on-ramp. The old shape was wrong at *both* ends: the live sport puts **41%** of the #1→#1000 Elo
+span above #50 and we put **19%**. Fixing the shape has to move one end or the other.
+
+**The three honest options, in the order I would put them to him:**
+
+1. **Keep `k = 1` and re-tune her development** – `rollPotential`'s bands, so a median career peaks
+   around #100 as it used to. This is the option that keeps the world honest and admits the real
+   defect is that a median-talent girl was always built to be a top-15 player. **It is a separate
+   wave** and it moves every progression number in the game.
+2. **`k = 2`** – the old pace back at the top, the on-ramp destroyed. Would need `entrantPctBand`
+   re-derived for every W rung.
+3. **Ship as is and let the ceiling be low.** Careers reach the top ten. He may simply like that.
+
+**Nothing is tuned away here.** The world's odds are the sport's, and where the player's ladder sits
+inside them is a design question with his name on it.
+
+## 8. VERDICT ON THE PREDICTIONS
+
 
 | | prediction | outcome |
 |---|-----------|---------|
