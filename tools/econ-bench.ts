@@ -647,7 +647,23 @@ export function stepCareerWeek(
     // Ranking gate (before affordability): the kid may only enter tiers her EARNED points open.
     // Two ladders: the domestic rungs read her domestic best-6 and the international ones read her
     // ITF RANK, so the policy asks the engine's own single gate instead of re-deriving either.
-    if (!tierOpenFor(world, e.tier)) continue
+    //
+    // ⚠⚠ `e.id` IS PASSED, AND FOR MOST OF THIS FILE'S LIFE IT WAS NOT – WHICH MADE EVERY BENCH BUILT
+    // ON THIS LOOP BLIND TO A WHOLE MECHANIC (round 21 #2b, 17.08). Since the wild cards, one door on
+    // this ladder is a fact about ONE TOURNAMENT and not about a rung: a Grand Slam played in her
+    // country holds eight places for home players the acceptance list refused. Asked without an event
+    // id, `tierOpenFor` answers the honest PER-RUNG summary – "the Slam takes the top 112" – so this
+    // line skipped every card the wild card opens, BEFORE `enterEvent` (which would have accepted it,
+    // and which is the game's own gate) was ever asked. The bench was strictly stricter than the game.
+    //
+    // Measured cost of that blindness: `tools/wild-card-reach.ts` says 49 of 54 careers are OFFERED at
+    // least one wild card, median 2 per career – and `ladder-baseline` and `big-rung-finishes` counted
+    // exactly zero of them. A null from an instrument that cannot see the change is a null ARM, not a
+    // null result, which is the lesson CLAUDE.md carries from the day before.
+    //
+    // ⚠ EVERY OTHER RUNG IS BYTE-IDENTICAL: the wild-card clause is Slam-only and returns false for
+    // everything else, so this argument changes nothing anywhere but a home major.
+    if (!tierOpenFor(world, e.tier, e.id)) continue
     // ...and the VETO, if this arm has one: a parent who does what his coach tells him. It sits
     // AFTER the ranking gate and BEFORE affordability on purpose - an opinion is only worth asking
     // for about a trip she is actually allowed to take.

@@ -297,6 +297,15 @@ export function hostNationOf(seed: string, eventId: string): string {
  *  ⚠ IT DOES NOT CLOSE THE REFUSED BAND AND IS NOT TRYING TO. Only #128 would, and #128 is
  *  "everybody in the draw size gets in", which is not a door at all. */
 export function wildCardWindow(tier: TierId, rank: number, total: number, accepts: number | undefined): boolean {
+  // ⚠ NO PLACES HELD ⇒ NOBODY HOLDS ONE, AND THIS LINE IS WHAT MAKES `WILD_CARD.slots` A REAL
+  // MASTER SWITCH rather than half of one (found 17.08 while building the A/B for the field-strength
+  // measurement). `fillWildCards` already returns early at `slots <= 0`, so the AI side went quiet –
+  // but HER door read only the tier and the window, so at `slots 0` a tournament that holds no wild
+  // cards would still have let her in on one. That is the two-sides-of-one-rule drift `proDoors`
+  // exists to prevent, and it is also what a bench needs: `ON_RAMP`'s own note says the constant is a
+  // plain object precisely so a probe can sweep it and get the pre-mechanic world back. It could not,
+  // until this line.
+  if (WILD_CARD.slots <= 0) return false
   if (tier !== WILD_CARD.tier || accepts === undefined) return false
   if (rank <= accepts) return false
   const ceiling = TIERS[tier].entrantPctBand[1]

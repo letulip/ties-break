@@ -398,6 +398,23 @@ describe('the eight places cost the rest of the draw nothing', () => {
     expect(WILD_CARD.slots).toBe(8)
     expect(WILD_CARD.tier).toBe('slam')
   })
+
+  // ⚠⚠ AND IT IS A MASTER SWITCH FOR BOTH SIDES, WHICH IT WAS NOT UNTIL 17.08. `fillWildCards`
+  // returned early at `slots <= 0` so the AI side went quiet, but HER door read only the tier and the
+  // window – so a tournament holding no wild cards would still have admitted her on one. A bench that
+  // sweeps the constant to get the pre-mechanic world back (which is what `ON_RAMP`'s own note says
+  // the plain-object idiom is FOR) would have got half of it. This is the whole of that fix.
+  it('holding zero places shuts HER door too, not just the AI half', () => {
+    const before = WILD_CARD.slots
+    try {
+      expect(wildCardWindow('slam', 200, 1799, 112)).toBe(true)
+      WILD_CARD.slots = 0
+      expect(wildCardWindow('slam', 200, 1799, 112)).toBe(false)
+    } finally {
+      WILD_CARD.slots = before
+    }
+    expect(WILD_CARD.slots).toBe(before)
+  })
 })
 
 // =================================================================================================
