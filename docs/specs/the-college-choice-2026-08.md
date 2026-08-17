@@ -120,7 +120,82 @@ Recorded here first, per CLAUDE.md invariant 4 and the standing practice of
 
 ## 2. WHAT A TIER IS
 
-*(filled in by the build – see `src/engine/collegeOffer.ts`)*
+### 2a. The table
+
+| place | price a year `[S]` | squad **(ours)** | full-award score **(ours)** | matches a week in season **(ours)** | open to |
+| --- | --- | --- | --- | --- | --- |
+| **state** | **$30,990** public in-state | 55 | 11 | 1 | US residents only `[S]` |
+| **national** | **$50,920** public out-of-state | 65 | 18 | 2 | everybody |
+| **private** | **$65,470** private nonprofit | 75 | 23 | 3 | everybody |
+
+**The prices are College Board, Trends 2025, Figure CP-1.** Everything in the three middle columns is
+ours, and `COLLEGE_TIERS` says so on each line.
+
+* **`squad`** is the programme's own playing level on the same 0-100 scale her skills use, so the card
+  can print it beside her. The three bracket the measured skill mean at the fork (**58.64**, P5 §2b,
+  n = 52): the cheap place is below her, the middle just above, the dear one well above.
+* **`fullAwardScore`** is the junior score at which a programme funds her whole bill – the score at
+  which she is the top of its recruiting board. The three are the **measured quantiles** of our own
+  junior score over 44 careers walked to the fork (min 4 · p25 6 · **median 11** · **p75 18** ·
+  **p90 23** · max 25). So the cheap place funds the median junior completely and the dear place funds
+  only the top tenth completely.
+* **`matchesPerWeek`** is what the squad DOES – see §2c.
+
+### 2b. The award, and why it is smaller at a dearer place
+
+```ts
+export function athleticShareOf(tier: CollegeTier, juniorScore: number, rng: Rng): number {
+  if (!recruitedAtAll(juniorScore)) return 0
+  const merit = juniorScore / COLLEGE_TIERS[tier].fullAwardScore
+  return clamp(merit + funding, COLLEGE_OFFER.minAthleticShare, 1)
+}
+```
+
+**The signature is still the argument.** It takes a tier, a score and a die and **cannot be handed a
+family** – the owner's question of 16.08 («едины для всех или тоже от достатка?») answered in the type
+system. What changed is only the first argument: it used to be the funding band her record had bought,
+which was a re-statement of the second argument; it is now **the place the player picked**, which the
+function cannot derive and must be told. **The merit-only property is stronger for it**, because the
+one new input is a player's decision and a player's decision is not a family's wealth.
+
+**The same record is worth less at a dearer place**, because a dearer place is a stronger squad and
+she sits further down its recruiting board. That is the whole of the trade: pay more, get a stronger
+team – and get less help paying for it.
+
+### 2c. ⚠⚠ THE THREE DIMENSIONS COLLAPSE INTO ONE MECHANISM, AND THE COLLAPSING IS A CLAIM
+
+The owner approved **team strength** and **the chance of returning to the tour**; this phase proposed
+**how much her game develops in the four years**. They are not three knobs:
+
+* **TEAM STRENGTH is what a programme HAS.** On its own it is a number on a card.
+* **WHAT IT DOES is put her on court against it.** A stronger squad plays a longer, harder dual-match
+  season, and `growWeek`'s `matchesThisWeek` term is the engine's own **already-tuned** price of
+  competition (`ECONOMY.development.matchBonus` = 0.18 a match, capped at 3). Before this phase
+  `matchesThisWeek` was **0 for all 208 weeks** – she entered nothing, so developmentally a college
+  programme was a girl practising alone. ⚠ The dear tier saturates the engine's own cap, deliberately:
+  the ceiling on what a match is worth was tuned long before college had a price and this phase is not
+  entitled to raise it to make its own dimension look bigger.
+* **⚠⚠ THE RETURN TO THE TOUR IS NOT A SECOND KNOB AND WAS DELIBERATELY NOT BUILT AS ONE.** A per-tier
+  probability that she "makes it back" would be a die that overrides the career the player actually
+  had. This repo does not grant outcomes; it measures them. What she comes back with is **her game and
+  her family's balance**, and both already move with the tier – so §3 measures the return per tier
+  instead of assigning it.
+  ⚠ **And the natural home for a per-tier return lever already exists and is somebody else's**: the
+  wild-card mechanism landing on this same branch is exactly the shape of "the programme's contacts
+  get a returning player into a draw". It is named here and **not touched**.
+
+### 2d. What was NOT rebuilt
+
+`resolveCollegeBill` – the weekly drawdown, the `tuition` ledger row, the family going into debt. It
+has worked since v51 and the owner's «52 недельных платежей» is a description of it. One line changed:
+it reads **the quote she chose** instead of "the offer".
+
+### 2e. Residence, and the one door it shuts
+
+The in-state price **is** residence, so the cheap place is not open to a girl on a student visa. **Two
+places always are**, so nothing here can remove the college answer (owner, 16.08) – it removes one
+school from a list of three, states the reason on the row, and `answerFork` re-validates it
+engine-side so a stale screen cannot enrol her somewhere she cannot be.
 
 ---
 
