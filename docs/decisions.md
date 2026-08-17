@@ -1561,3 +1561,67 @@ re-measure. ⚠ **The game is unaffected** – `snapshot.ts` and `enterEvent` bo
 ⚠ **Frozen careers: ONE of three moved** (`selfTravelling`), per-key diff taken first, and the A arm
 reproduces all three shipped constants at all three schema versions – so none of it is the other
 agent's. `rngMain` unmoved; the frozen MAIN capture 41550 / `e6b0c709` still verifies.
+
+---
+
+## 17.08.2026 – ⭐⭐ COLLEGE, REBUILT TO HIS OWN SCHEME: a tier is a PLACE with a PRICE, and the player picks it
+
+**He read yesterday's college report and did not understand it, and he was right not to.** What it
+reported was a DELTA AGAINST THE TOUR – inherited from the old plan where college was "the third
+answer at the fork". He does not want a comparison:
+
+> «Есть стоимость в год, она складывается из 52 недельных платежей семьи простым суммированием, плюс
+> может быть ситуация, что есть деньги на счете и семья хочет выбрать колледж дороже… И всё. мы больше
+> ничего ни с чем не сравниваем.»
+
+And he could not find where **$8,673 a year** came from under a sourced **$30,990** sticker – because
+it is the family's RESIDUAL after the award and nothing on screen said so.
+
+**THE SCHEME, BUILT AS HE APPROVED IT** (`docs/specs/the-college-choice-2026-08.md`). Three places on
+the three sourced College Board stickers – **$30,990 · $50,920 · $65,470** `[S]` – a merit-only award
+that is a share of the price of **the place she chose**, the family paying the rest in 52 weekly
+payments, and **the choice is the player's**. The old `strong`/`solid`/`small` were funding SHARES
+(0.85/0.55/0.30) derived from her results over one price; the player chose nothing and the tiers were
+not places. **Schema v52**, append-only migration, golden fixture.
+
+⚠ **He guessed the ceiling rule exactly and should be told so.** A scholarship cannot exceed the
+price – that is **NCAA Bylaw 15.1**, and the trim falls on the NEED layer (15.1.3), never on the
+award, because trimming the award would make a merit number move with family wealth.
+
+⚠⚠ **WHAT IS SOURCED AND WHAT IS OURS.** The three PRICES and the residence split are sourced.
+**The squad (55/65/75), the recruiting bar (11/18/23) and the dual-match season are OURS**, labelled
+as ours in the code and in the spec's §0a. The recruiting bar at least sits on a MEASUREMENT – the
+median/p75/p90 of our own junior score – rather than on taste.
+
+**MEASURED, and both arms named their commit.** A = `9dca805` with `9dca805` reverted in a dedicated
+worktree; B = `9dca805`. ⚠ The obvious A would have been wrong: another agent is committing wild-card
+work on this branch, so "the head before mine" measures both waves. `git grep COLLEGE_TIERS -- src/`
+returns nothing on A and three files on B, so neither arm is a tree where the change sits without its
+reader. n = 53 both sides, same policy and seeds.
+
+* **The choice is real and it spans $23,128 a year.** Median family bill: **state $0 · national
+  $14,144 · private $23,128**. Arm A's single offer sits almost exactly on the new NATIONAL place
+  (72.4% covered against 72.2%) – so the rebuild did not make college dearer, it **put a spread around
+  the one price there used to be**.
+* **⚠⚠ AND THE DEAR PLACE CAN NOW END A CAREER. 6 of 53 go bankrupt inside the four years at
+  `private`, 1 at `national`, none at `state`. Arm A: 0 of 53.** Nothing removes the college ANSWER –
+  all three places are on the card and a family that cannot pay goes into debt – but the debt can now
+  run to bankruptcy. **Reported, not tuned away: §5 of the spec has the three levers and it is his
+  call.**
+* **⚠ THE THIRD DIMENSION I PROPOSED IS TINY, AND THAT IS THE HONEST ANSWER.** Four years of the dear
+  squad's match play against the cheap squad's is **+0.06 of one skill point** (+1.11 / +1.14 / +1.17).
+  The mechanism works and is monotone; the amount is invisible, because at nineteen she is nearly out
+  of headroom – P5 measured the whole coached/un-coached gap at 0.12. **Predicted before the build
+  (P4) and it held by a factor of eight.** So **"the chance of returning to the tour" is FLAT too**:
+  0/53, 0/53, 1/53 come back with a professional rank. **The tier's currency is money, not her game.**
+* **⚠ The return-to-tour dimension was deliberately NOT built as a die.** A per-tier probability that
+  she "makes it back" would override the career the player had. Its natural home is the wild-card
+  mechanism another agent is landing on this branch; named in the spec, not touched.
+
+**The three frozen careers moved by exactly `schemaVersion`** – rolling v52 back to 51 reproduces all
+three old hashes byte for byte (`PRE_V52`). `rngMain` untouched; the frozen MAIN capture 41550 /
+`e6b0c709` is not re-pinned (the offer draws three times instead of one, still on
+`seed:collegeoffer:<week>`).
+
+⚠ **`tests/e2e-fixtures.test.ts` is RED and deliberately left so**: the e2e manifest is at v51 and
+needs `npm run e2e:fixtures`, which this agent was instructed not to run.
