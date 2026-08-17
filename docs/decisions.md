@@ -1335,9 +1335,27 @@ is why one sixty-four-chair storey filled all three rungs above the 125.
 the criteria written and committed before the run. #50 leaves the 250 still below a W50; #80 makes it
 the best event in the game for a #121 player, which is a worse defect than the one being fixed.
 
-⚠ **IT COSTS THE WHOLE LADDER, WHICH IS THE POINT AND IS REPORTED AS SUCH.** The WTA 250 is the
-most-entered professional rung in the game from 19 (5.0-5.5 entries a year, twice any other), so
-n=90: **career high median #112 → #94**, p25 **#75 → #48**, rank at 25 **#174 → #157**.
+⚠⚠ **AND THE POPULATION EFFECT IS SMALLER AND MIXED – CORRECTED AFTER A COORDINATOR'S ARM
+CONTRADICTED MINE.** The table above is a **fixed-rank replay**: her build, her #121, only the field
+moved. That is his actual save and his actual complaint, and there it is large and clean. Over 54
+DRIVEN careers, where her rank moves too, the observed ledger says:
+
+| | before | after |
+| --- | --- | --- |
+| careers ever past round one at a 250 | 81.6% | **88.0%** |
+| careers ever reaching a QF there | 67.3% | **72.0%** |
+| ⚠ careers ever reaching a final there | 30.6% | **24.0%** |
+| ⚠ **per ENTRY, past round one** | 51.6% | **45.1%** |
+
+⚠ **Per entry she gets past round one LESS often** – because she now plays **9% more** WTA 250s and
+the extra entries are made at worse ranks. Per career the direction is the one he asked for; per entry
+it is not, and deep runs got rarer. **Both are reported.**
+
+⚠⚠ **AND THE HEADLINE I FIRST GAVE WAS THE WRONG STATISTIC.** Career high median moved **#112 → #94
+at n=90 but only #115 → #110 at n=54** – the same careers plus four per preset. The stable number is
+the **p25: #75 → #48 and #72 → #50** at the two sizes, and rank at 21 **#178 → #162 / #181 → #156**.
+**The change helps the careers that actually reach a 250 often and barely moves the median career.**
+I quoted a median without checking it against a second n – the same error as the college report.
 ⚠ **AND ONE ROW WENT THE WRONG WAY: 87/90 → 84/90 careers ever hold a professional ranking** – three
 marginal careers lost the only points they had. ⚠ **The mechanism is a hypothesis, not a measurement**:
 it cannot be the 250's value (that only adds points to her), so it is most likely her CALENDAR – every
