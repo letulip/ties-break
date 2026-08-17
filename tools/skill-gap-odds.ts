@@ -35,6 +35,8 @@ import { fastMatchProbability, simulateMatch } from '../src/engine/match/engine'
 import type { MatchPlayer, MatchOptions } from '../src/engine/match/types'
 import { fieldProsFor, mergedWtaRanking, FIELD, type FieldPro } from '../src/engine/season/fieldPros'
 import { rivalMatchPlayer } from '../src/engine/season/rival'
+import { rngFromSeed } from '../src/engine/rng'
+import { readFileSync } from 'node:fs'
 
 const argv = process.argv.slice(2)
 const num = (flag: string, dflt: number): number => {
@@ -266,44 +268,83 @@ function sectionD(): void {
  *  P(favourite) = exp(lambda*D)/(1+exp(lambda*D)), D = log2(rank_underdog / rank_favourite). */
 const KM_LAMBDA_WOMEN = 0.715
 
-/** Tennis Abstract WTA Elo report, list of 2026-08-03, median Elo within +/-12 of each rank.
- *  ⚠ SMOOTHED BY THE READER, NOT PUBLISHED AS A TABLE – tagged [I] in the research doc, and the
- *  report's own population is selected (>=10 matches at tour level / ITF 50K+ in 52 weeks), so it
- *  cannot resolve anything past about #300. Rows past the end are deliberately absent, not guessed. */
-const WTA_ELO_BY_RANK: [number, number][] = [
-  [1, 2058],
-  [10, 1999],
-  [25, 1879],
-  [50, 1786],
-  [100, 1709],
-  [150, 1617],
-  [200, 1550],
-  [250, 1432],
-  [300, 1429],
-]
-
+/** ⚠ THE LIVE CURVE IS RE-DERIVED FROM THE RAW FILE HERE, NOT IMPORTED FROM THE ENGINE, AND THAT IS
+ *  DELIBERATE. `SKILL_LAW.anchors` in fieldPros.ts is FITTED to this same data, so importing it
+ *  would make the reference and the thing under test one object and the comparison vacuous. Reading
+ *  the 547 raw (rank, Elo) pairs and re-binning them means that if anybody edits the engine's
+ *  anchors, this column stays put and the disagreement shows up in the table – which is the alarm
+ *  you want. Provenance: Tennis Abstract WTA Elo report, list of 2026-08-03, parsed to
+ *  docs/research/raw/2026-08-17-wta-elo-by-rank.json (names deliberately not stored). */
 function kmFavourite(rFav: number, rDog: number): number {
-  const d = Math.log2(rDog / rFav)
-  return 1 / (1 + Math.exp(-KM_LAMBDA_WOMEN * d))
+  return 1 / (1 + Math.exp(-KM_LAMBDA_WOMEN * Math.log2(rDog / rFav)))
 }
 
-function eloAt(rank: number): number | null {
-  for (let i = 0; i < WTA_ELO_BY_RANK.length - 1; i++) {
-    const [r0, e0] = WTA_ELO_BY_RANK[i]
-    const [r1, e1] = WTA_ELO_BY_RANK[i + 1]
-    if (rank >= r0 && rank <= r1) {
-      const t = (Math.log2(rank) - Math.log2(r0)) / (Math.log2(r1) - Math.log2(r0))
-      return e0 + t * (e1 - e0)
-    }
+const RAW: [number, number][] = JSON.parse(
+  readFileSync(new URL('../docs/research/raw/2026-08-17-wta-elo-by-rank.json', import.meta.url), 'utf8'),
+)
+
+/** median Elo of log2-rank bins of the live list, forced monotone; top rows individual because there
+ *  is exactly one world #1. Plus the residual spread per bin, which is the part a curve alone cannot
+ *  say: two players at the same rank are NOT the same strength, and that spread is what makes an
+ *  upset possible for everyone. */
+function liveCurve(): { anchors: [number, number][]; spread: [number, number][] } {
+  const edges = [0, 0.5, 1.2, 2.0, 2.7, 3.4, 4.1, 4.8, 5.5, 6.2, 6.9, 7.6, 8.3, 9.0, 9.7, 10.4]
+  const anchors: [number, number][] = []
+  const spread: [number, number][] = []
+  for (let i = 0; i < edges.length - 1; i++) {
+    const v = RAW.filter(([r]) => Math.log2(r) >= edges[i] && Math.log2(r) < edges[i + 1]).map(([, e]) => e)
+    if (v.length < 3) continue
+    v.sort((a, b) => a - b)
+    const mid = Math.pow(2, (edges[i] + edges[i + 1]) / 2)
+    const med = v[Math.floor(v.length / 2)]
+    const mean = v.reduce((s, x) => s + x, 0) / v.length
+    const sd = Math.sqrt(v.reduce((s, x) => s + (x - mean) ** 2, 0) / v.length)
+    anchors.push([mid, med])
+    spread.push([mid, sd])
   }
-  return null
+  // the world #1 is one person, not a bin
+  anchors.unshift([1, RAW[0][1]])
+  spread.unshift([1, spread[0][1]])
+  for (let i = 1; i < anchors.length; i++) anchors[i][1] = Math.min(anchors[i][1], anchors[i - 1][1])
+  return { anchors, spread }
 }
 
-const eloFavourite = (rFav: number, rDog: number): number | null => {
-  const a = eloAt(rFav)
-  const b = eloAt(rDog)
-  return a === null || b === null ? null : 1 / (1 + Math.pow(10, -(a - b) / 400))
+const LIVE = liveCurve()
+
+function interpAt(tab: [number, number][], rank: number): number {
+  const x = Math.log2(Math.max(1, rank))
+  let i = 0
+  while (i < tab.length - 2 && x > Math.log2(tab[i + 1][0])) i++
+  const [r0, v0] = tab[i]
+  const [r1, v1] = tab[i + 1]
+  return v0 + ((x - Math.log2(r0)) / (Math.log2(r1) - Math.log2(r0))) * (v1 - v0)
 }
+
+/** Gaussian sample from a purpose-scoped stream – Box-Muller, so the residual arm is deterministic. */
+function gauss(rng: () => number): number {
+  return Math.sqrt(-2 * Math.log(1 - rng())) * Math.cos(2 * Math.PI * rng())
+}
+
+/** P(favourite) on the live curve. `withSpread` integrates the residual, i.e. asks the honest
+ *  question "a player ranked r1 against a player ranked r2" rather than "the median of r1 against
+ *  the median of r2" – the spread pushes every cell toward a coin flip, which is the sport's own
+ *  «шансы у всех». */
+function liveFavourite(rFav: number, rDog: number, withSpread: boolean): number {
+  const eA = interpAt(LIVE.anchors, rFav)
+  const eB = interpAt(LIVE.anchors, rDog)
+  if (!withSpread) return 1 / (1 + Math.pow(10, -(eA - eB) / 400))
+  const sA = interpAt(LIVE.spread, rFav)
+  const sB = interpAt(LIVE.spread, rDog)
+  const rng = rngFromSeed(`skillgap:live:${rFav}:${rDog}`)
+  let tot = 0
+  const N = 20000
+  for (let i = 0; i < N; i++) {
+    const d = eA + sA * gauss(rng) - (eB + sB * gauss(rng))
+    tot += 1 / (1 + Math.pow(10, -d / 400))
+  }
+  return tot / N
+}
+
 
 /** Our engine's own exchange rate, MEASURED rather than read off the constants: how much p one core
  *  point buys on each side, and how many Elo points that is worth once compounded over a Bo3. */
@@ -338,19 +379,22 @@ function sectionR(ours: Map<string, number>): void {
   const { pPerCore, eloPerCore } = measuredExchange()
   console.log('\n=== R. REALITY BESIDE OURS ===')
   console.log(`   our measured exchange rate: 1 core point = ${pPerCore.toFixed(5)} of p per side = ${eloPerCore.toFixed(1)} Elo`)
-  console.log(`   the sport's own constant: ${((400 * KM_LAMBDA_WOMEN) / Math.LN10).toFixed(1)} Elo per DOUBLING of rank (Klaassen-Magnus lambda ${KM_LAMBDA_WOMEN}, women)`)
+  console.log('   REFERENCE = the LIVE Tennis Abstract WTA Elo list of 2026-08-03 (547 players, re-binned here).')
+  console.log('   K&M 1992-95 is kept as the second instrument and the era contrast, and is NOT the target:')
+  console.log('   the owner ruled «нам не нужно доминирования, как в 90х».')
   console.log('\n   share of matches the LOWER-ranked player wins')
-  console.log('   favourite  underdog   K&M [I]   Elo [I]    OURS      ours/reality')
+  console.log('   favourite  underdog   LIVE curve  LIVE +spread   K&M [I]     OURS      ours vs LIVE+spread')
   for (const [r1, r2] of PAIRS) {
     const km = 1 - kmFavourite(r1, r2)
-    const el = eloFavourite(r1, r2)
+    const lv = 1 - liveFavourite(r1, r2, false)
+    const lvs = 1 - liveFavourite(r1, r2, true)
     const our = ours.get(`${r1}:${r2}`)!
-    const ref = el === null ? km : (km + (1 - el)) / 2
     console.log(
-      `      #${String(r1).padEnd(5)}    #${String(r2).padEnd(5)}   ${pct(km)}%   ${el === null ? '   -  ' : pct(1 - el) + '%'}    ${pct(our)}%      x${(our / ref).toFixed(2)}`,
+      `      #${String(r1).padEnd(5)}    #${String(r2).padEnd(5)}    ${pct(lv)}%      ${pct(lvs)}%      ${pct(km)}%   ${pct(our)}%          ${(our - lvs) >= 0 ? '+' : ''}${((our - lvs) * 100).toFixed(1)} pts`,
     )
   }
-  console.log('   (Elo route has no rows past #300 – its list ends there. Blank is honest, not zero.)')
+  console.log('\n   the live list, as this bench re-derives it (rank -> median Elo, residual sd):')
+  console.log(`     ${LIVE.anchors.map(([r, e], i) => `#${Math.round(r)}=${Math.round(e)}(${Math.round(LIVE.spread[i][1])})`).join(' ')}`)
 
   // THE MECHANISM, IN ONE COLUMN. A rank gap is only worth what the population's core curve puts
   // between the two ranks, so measure that curve's SLOPE segment by segment and price it in the
