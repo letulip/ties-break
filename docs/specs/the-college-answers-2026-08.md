@@ -440,7 +440,13 @@ lever was pulled. §8 restates the three that exist if he still wants it softer.
    only sourced arithmetic that exists bounds a fully funded programme's mean award at **80–85%** of a
    full ride. The state tier is the rung most worth arguing with, and `fullAwardScore: 11` is the
    number to move. §3b.
-4. **The bankruptcies stay.** 0 of 53 under any model that reads the card; 6 of 53 only when a family
+4. **⚠⚠⚠ THE FIELD RE-DEAL HAS MADE THE TOUR VERY EASY, AND THIS PHASE'S INSTRUMENT IS WHAT SAW IT.**
+   On the current branch the median college career peaks at **world #16**, **78–81% reach the top 50**,
+   and she is ranked again **one week** after graduating. Three hours earlier the same probe read #114
+   and 23–26%. **The paired arm proves it is not the college coaching** (+0 / +8 / +2 on the top-100
+   row; the level is 85 / 85 / 72 with the coaching reverted). It is `a412162`, the skill wave's
+   rank-to-core law. **Not mine to tune, and it needs a ruling.** §10h.
+5. **The bankruptcies stay.** 0 of 53 under any model that reads the card; 6 of 53 only when a family
    takes a place the row already told it it cannot afford. The three levers from the previous spec are
    unpulled and unchanged.
 
