@@ -34,6 +34,7 @@ import {
   selectEntrants,
 } from '../../src/engine/season/tournament'
 import { NATION_POOL } from '../../src/engine/season/cohort'
+import { DEFAULT_PROFILE } from '../../src/shared/protocol'
 import { fieldProsFor, mergedWtaRanking, universeForTier } from '../../src/engine/season/fieldPros'
 import { BEST_N_BY_TRACK, computeRanking } from '../../src/engine/season/ranking'
 import { TIERS } from '../../src/engine/season/calendar'
@@ -161,8 +162,10 @@ describe('the host pool covers every country the player may pick', () => {
   })
 
   it('never widens itself by reading her country – identical in every career', () => {
-    const us = createWorld('pool-us', { country: 'US' })
-    const by = createWorld('pool-by', { country: 'BY' })
+    // A profile is a whole object, not a patch - spread the default rather than narrowing it, or the
+    // call typechecks only by accident of what createWorld happens to read.
+    const us = createWorld('pool-us', { ...DEFAULT_PROFILE, country: 'US' })
+    const by = createWorld('pool-by', { ...DEFAULT_PROFILE, country: 'BY' })
     // The pool is a module constant; the two careers see the same array, which is what "not a
     // special case for the player" means mechanically.
     expect(HOST_NATIONS).toContain(us.profile.country)

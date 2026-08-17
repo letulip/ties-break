@@ -66,7 +66,9 @@ for (let p = 0; p < PRESETS.length; p++) {
     for (let w = 0; w < WEEKS; w++) {
       stepCareerWeek(world, rng, POLICY)
       const rank = world.kidRankWta
-      if (rank !== null && kidPoints(world, 'wta') > 0) {
+      // `!= null` and not `!== null`: `kidRankWta` is `number | null | undefined` – the cache is absent
+      // before her first professional point, and a strict check narrows only half of that.
+      if (rank != null && kidPoints(world, 'wta') > 0) {
         row.bestRank = row.bestRank === null ? rank : Math.min(row.bestRank, rank)
         const accepts = acceptanceRank(world, WILD_CARD.tier)
         const total = tableSize(world, 'wta')
@@ -82,7 +84,7 @@ for (let p = 0; p < PRESETS.length; p++) {
         if (hostNationOf(world.seed, e.id) === world.profile.country) row.homeSlams++
         if (homeWildCardPlace(world, e.tier, e.id)) {
           row.offered++
-          if (world.kidRankWta !== null) row.offerRanks.push(world.kidRankWta)
+          if (world.kidRankWta != null) row.offerRanks.push(world.kidRankWta)
         }
       }
     }
