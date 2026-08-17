@@ -141,6 +141,17 @@ docs/review/     2026-08 full review + P1–P9 proposals
   `collect` alone burned 3636 s of CPU **before any test logic**. Two cheap confirmations to run
   first, in this order: `--no-file-parallelism` (if the whole shard then passes in ~250 s the WORK is
   fine and the pool is the problem), and the same shard on the last known-green commit.
+- **⚠⚠ BEFORE YOU BELIEVE A NULL RESULT, PROVE THE ARM CONTAINS BOTH THE CHANGE AND ITS READER.**
+  On 17.08 two people measured the same fix and both got a convincing "it does nothing", by opposite
+  mistakes made within an hour of each other. One built the A arm in a worktree at the commit BEFORE
+  the engine change, so the new constant sat in a tree where no code read it — a constant without its
+  reader is a null arm that looks like a null result. The other ran both arms against the SAME tree,
+  because the agent under measurement had been committing as it went, and got a byte-identical diff
+  which is exactly what comparing a thing with itself produces. **A null result is a claim and needs
+  the same provenance check as a positive one**: name the commit each arm was built at, and confirm
+  the reader is present — `git grep <theConstant> -- src/` on the A tree costs one command. The
+  cheapest sanity check is to set the constant to an absurd value and watch the output move; if it
+  does not, the arm is wrong before the hypothesis is.
 - **`git checkout <sha> -- <path>` is the concurrent-agent hazard pointing the other way.** The note
   above about `git commit` taking the whole index has a mirror: an agent bisecting a hash divergence
   reverted `src` under another agent's live edits on 16.08. Nothing was lost — the pathspec habit
