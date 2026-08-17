@@ -150,8 +150,15 @@ describe('the field is a pure derivation', () => {
     // for why they moved off the first draft.
     const elites = pros.filter((p) => p.strengthTier === 'elite')
     const eliteMean = elites.reduce((s, p) => s + power(p), 0) / elites.length
-    expect(eliteMean).toBeGreaterThanOrEqual(60)
-    expect(eliteMean).toBeLessThanOrEqual(70)
+    // ⚠⚠ RE-AIMED 60-70 -> 49-59 (17.08, THE SKILL LAW – docs/specs/the-skill-gap-2026-08.md).
+    // A STOREY NO LONGER DECIDES A CORE. Strength is now `coreForStanding`, a curve fitted to the
+    // live 2026 WTA Elo list, so `elite` means "the chairs at #65-94" and the core that goes with
+    // those places is ~53, not ~65. The old band was a restatement of `FIELD.tiers[1].core`; this one
+    // is a claim about where the curve puts that slice of the table, which is the thing worth
+    // guarding. Measured 53.9. The guard is NOT deleted and NOT widened to vacuity – a ten-point
+    // window on a quantity whose sd across seeds is well under one point still fails on a real move.
+    expect(eliteMean).toBeGreaterThanOrEqual(49)
+    expect(eliteMean).toBeLessThanOrEqual(59)
   })
 
   // ⚠ THE PYRAMID IS FIVE STOREYS SINCE LADDER-PACE STEP 1, AND THE COUNTS ARE THE WORLD'S SHAPE.
@@ -187,7 +194,14 @@ describe('the field is a pure derivation', () => {
     //    ±6 attribute spread live, so this is the property after the shape is dealt, not before.
     const elites = pros.filter((p) => p.strengthTier === 'elite')
     const meanCore = (xs: typeof pros) => xs.reduce((s, p) => s + power(p), 0) / xs.length
-    expect(meanCore(top)).toBeGreaterThan(meanCore(elites) + 8)
+    // ⚠⚠ RE-AIMED +8 -> +4 (17.08, THE SKILL LAW). The old margin came from the two storey bands
+    // being DISJOINT by construction ([67,77] against [56,66]); under the curve a storey is a slice
+    // of ranks and its cores are whatever the live Elo list puts there, so `tourElite` (#1-64) now
+    // spans 76.4 down to ~56.5 and averages 59.6 against elite's 53.9. THE ORDERING IS STILL THE
+    // CLAIM and it still holds – measured gap 5.7 – but it is now a property of the curve rather
+    // than of two literals, which is the whole point of the wave. Mutation-checked: swapping the two
+    // storeys' rank ranges fails this line.
+    expect(meanCore(top)).toBeGreaterThan(meanCore(elites) + 4)
     // 2. TOP-HEAVY, which is what the storey's gamma buys: one or two genuine world-#1-scale names exist and
     //    the MEDIAN of the storey does not. Without this the storey is 64 co-#1s and the table's
     //    head reads like a spreadsheet.
