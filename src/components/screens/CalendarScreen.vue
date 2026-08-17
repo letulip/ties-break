@@ -631,6 +631,14 @@ const showGo = computed(() => !game.snapshot?.pending)
             <b>{{ Math.round(marker.preview.firstMatchChance * 100) }}</b><i>%</i>
           </ProgressRing>
           <p class="cal-card-odds-note">First round vs {{ marker.preview.opponentName }}</p>
+          <!-- ⚠ THE TWO NUMBERS THE RING IS MADE OF (round 21, the owner's D&D ruling). The ring on
+               its own is a percentage a player cannot check; these are its inputs, and
+               `1 / (1 + 10^((hers - mine) / 400))` reproduces the ring to inside a point
+               (tests/rating.test.ts). Silent when there is no opponent to be rated against - a
+               dangling "1642 vs" says less than nothing. -->
+          <p v-if="marker.preview.opponentRating !== null" class="cal-card-odds-ratings">
+            Rating <b>{{ marker.preview.kidRating }}</b> vs <b>{{ marker.preview.opponentRating }}</b>
+          </p>
         </div>
 
         <!-- Both cautions are the ENGINE's own sentences, and they are independent: one is the rule
@@ -1305,6 +1313,17 @@ const showGo = computed(() => !game.snapshot?.pending)
   margin: 0;
   font-size: 12px;
   color: var(--ink-soft);
+}
+
+.cal-card-odds-ratings {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.cal-card-odds-ratings b {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 .cal-card-actions {

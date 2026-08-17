@@ -50,6 +50,7 @@
 import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 import { fastMatchProbability } from '../match/engine'
+import { ratingOf } from '../match/rating'
 import type { MatchPlayer } from '../match/types'
 import { rivalConditions, rivalMatchPlayer } from './rival'
 import {
@@ -73,6 +74,17 @@ export interface EventPreview {
   /** the opponent that chance is against, so the card can name her rather than assert a number */
   opponentName: string
   opponentRank: number | null
+  /** ⚠ THE TWO NUMBERS THE CHANCE IS MADE OF (round 21, the owner's D&D ruling: «шансы выиграть
+   *  должны быть у всех, но не у всех одинаковые», and «чтобы игрокам не биться головой в бетон»).
+   *
+   *  `firstMatchChance` above is a percentage the player has no way to check. These are its INPUTS,
+   *  on the surface this event is played on, and they satisfy
+   *      firstMatchChance = 1 / (1 + 10^((opponentRating - kidRating) / 400))
+   *  to inside a percentage point over the whole reachable build range (tests/rating.test.ts). So a
+   *  player can do what a D&D player does: read both strengths and know the odds BEFORE committing.
+   *  Null when there is no first-round opponent to be rated against. */
+  kidRating: number
+  opponentRating: number | null
   fieldStrength: FieldStrength
   /** decorative, deterministic per event; degrees C */
   temperatureC: number
@@ -253,6 +265,10 @@ export function previewEvent(
     firstMatchChance: opp
       ? fastMatchProbability(kid, opp, { surface: event.surface, tour: JUNIOR_TOUR, seed: '' })
       : 0,
+    // Same (player, surface, tour) the chance above is computed from - one source, two readings, so
+    // the card can never quote a rating that disagrees with the ring beside it.
+    kidRating: ratingOf(kid, event.surface, JUNIOR_TOUR),
+    opponentRating: opp ? ratingOf(opp, event.surface, JUNIOR_TOUR) : null,
     opponentName: opp?.name ?? '',
     opponentRank: opp ? (ranking.find((r) => r.playerId === opp.id)?.rank ?? null) : null,
     fieldStrength: strengthOf(alive, kid, ranking),
