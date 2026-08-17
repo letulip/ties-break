@@ -112,8 +112,9 @@ const tourHead = computed(() => `${TIER_SHORT[TOUR_RUNG]} admits down to`)
 // **$8,673 a year** came from under a sourced **$30,990** sticker – because $8,673 is the family's
 // RESIDUAL after the award and no line on this card said so. It now shows the arithmetic as three
 // places she could take: THE PRICE, WHAT THE AWARD COVERS, THE WEEKLY PAYMENT, AND WHETHER THE
-// FAMILY CAN PAY IT. Nothing on this card compares any of it to the tour – his own instruction:
-// «мы больше ничего ни с чем не сравниваем».
+// FAMILY CAN PAY IT. Nothing on this card compares any of it to the tour – his own instruction, and
+// it is quoted verbatim in `docs/specs/the-college-choice-2026-08.md` rather than here, because a
+// `.vue` file carries no Cyrillic at all, comments included (CLAUDE.md style).
 //
 // ⚠⚠ IT STILL MAY NOT RECOMMEND (ruling 4, 30.07), AND THE CHOICE IS WHERE THAT GOT HARDER:
 //   * **no place is preselected.** A pressed row on arrival is a recommendation drawn in

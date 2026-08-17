@@ -39,8 +39,10 @@ const emit = defineEmits<{ (e: 'newCareer'): void }>()
 
 // --- THE HAND-OFF (career-contract-v1.md §5.6) --------------------------------------------------
 //
-// «Можно сделать в конце какой-то выбор с авто-созданием нового рандомного персонажа, спросим только
-// вилку начального капитала и все.»
+// The owner's ruling, quoted verbatim in `docs/specs/career-contract-v1.md` §5.6 and not here – a
+// `.vue` file carries no Cyrillic at all, comments included (CLAUDE.md style). In English: at the end
+// offer a choice that auto-generates a new random daughter, asking only for the band of starting
+// capital and nothing else.
 //
 // ⚠ ONE QUESTION, AND IT IS THE ONE ONBOARDING ALREADY ASKS. Not the six-step wizard: the whole
 // point of the seam is that a player who has just watched a career end is ONE TAP from the next one.
