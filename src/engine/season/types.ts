@@ -179,7 +179,7 @@ export interface TierDef {
    *
    *  ⚠ WHAT IT IS *NOT*: it is not a cut on HER. It is read by `selectEntrants` only – the AI field –
    *  and the symmetric half that would refuse her a WTA 250 once she is inside it is a SECOND decision
-   *  and deliberately not taken here (docs/specs/the-250-is-not-a-1000-2026-08.md §5). The machinery
+   *  and deliberately not taken here (docs/specs/the-250-is-not-a-1000-2026-08.md §5d). The machinery
    *  for it exists and is named: `playDownBars`.
    *
    *  ⚠ WTA-TRACK RUNGS ONLY. The number is a WORLD rank, and the only table where an entrant's ordinal
