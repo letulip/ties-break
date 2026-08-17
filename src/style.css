@@ -181,6 +181,14 @@
      adding it there would be a no-op pretending to be a fix. */
   --crop-vacation-x: 90%;
   --cat-practice: #6f8fd8;
+  /* ⭐ THE COLLEGE BILL (round 21). ⚠ IT IS THE ONE SPENDING HUE DELIBERATELY OUTSIDE THE SPORT'S
+     PALETTE – a deep academic red against a table of limes, blues and teals – because it is the one
+     row that is not tennis (`WorldEventCategory`'s own note: "the first cost in the game that is not
+     tennis"). It also has to survive being the LARGEST slice on the ring for four years running
+     without reading as an alarm, so it is a saturated red rather than the warning red. Checked
+     against its neighbours: nearest hue in the table is `gear` #d97f52 at 20deg, this sits at 6deg
+     with far more chroma, so the donut cannot confuse them. */
+  --cat-tuition: #c0453f;
   --cat-other: #8b95a1;
   /* The grid-only three: hours with no line on the wallet. */
   --cat-school: #7f8fa6;

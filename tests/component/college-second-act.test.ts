@@ -60,7 +60,11 @@ function collegeYear(over: Partial<CollegeYear> = {}): CollegeYear {
 }
 
 function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressView {
-  return { yearsDone: 1, totalYears: ENDINGS.collegeYears, last: collegeYear(), final: false, ...over }
+  // ⚠ ROUND 21: `billPerYearCents` is a real bill by default, not 0. A fixture that defaulted to zero
+  // would go on measuring the free-ride card and quietly stop covering the one the player sees – the
+  // same slow failure `round21-dialogs.test.ts` records about the fork's own fixture. $8,673 is the
+  // shipped example bill from `what-the-college-place-costs-2026-08.md` §1a.
+  return { yearsDone: 1, totalYears: ENDINGS.collegeYears, last: collegeYear(), final: false, billPerYearCents: 8_673_00, ...over }
 }
 
 function endingView(college: CollegeProgressView | null): EndingView {

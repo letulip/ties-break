@@ -107,6 +107,50 @@ describe('⭐⭐ v51 – the card says what the college answer costs', () => {
     w.unmount()
   })
 
+  // ⭐⭐ ROUND 21 – THE NAMED BAND AND THE FOUR-YEAR TOTAL. The owner, 17.08: «понятные ступени с
+  // прозрачной оплатой и годовым списанием».
+  //
+  // ⚠ THE CARD USED TO SAY «62% of the bill» AND STOP, and a percentage is not a rung – nothing on a
+  // card the player meets once tells her whether 62% is generous. The band is that, in words.
+  it('⭐⭐ names the funding band, and the percentages survive underneath it', () => {
+    const w = mountFork(FUNDED)
+    const award = w.findAll('.fork-offer dd')[1].text()
+    // 62% + 10% = 72% covered -> the 'half' band (>= 0.55, < 0.80).
+    expect(award).toContain('About half the bill')
+    expect(award, 'the name summarises the figures, it does not replace them').toContain('62%')
+    expect(award).toContain('10%')
+    w.unmount()
+  })
+
+  it('⭐⭐ names a full ride as a full ride, and charges nothing under it', () => {
+    const w = mountFork(FREE_RIDE)
+    expect(w.findAll('.fork-offer dd')[1].text()).toContain('A full ride')
+    expect(w.findAll('.fork-offer dd')[2].text()).toBe('Nothing')
+    w.unmount()
+  })
+
+  // ⚠⚠ THE FOUR-YEAR FIGURE IS THE ONE THE DECISION IS ABOUT, and the card did not carry it. She is
+  // answering a question about four years; a per-year number makes her do the multiplication on the
+  // most expensive click in the game.
+  // ⚠ AND THE COPY SAYS "charged weekly", BECAUSE THAT IS WHAT THE ENGINE DOES. `resolveCollegeBill`
+  // debits a fifty-second of the year every week she is enrolled, out of the same balance the coach
+  // came out of – so a family can run out mid-degree. A card implying one settled payment would be
+  // describing a different mechanic.
+  it('⭐⭐ states the whole course, not just the year, and says it is a drawdown', () => {
+    const w = mountFork(FUNDED)
+    const bill = w.findAll('.fork-offer dd')[2].text()
+    expect(bill).toContain('$8,673')
+    expect(bill, '8,673 x 4').toContain('$34,692')
+    expect(bill).toContain('charged weekly')
+    w.unmount()
+  })
+
+  it('⚠ shows no four-year total where there is no bill at all', () => {
+    const w = mountFork(FREE_RIDE)
+    expect(w.findAll('.fork-offer dd')[2].text()).not.toContain('over')
+    w.unmount()
+  })
+
   it('drops the need row entirely when there is no need-based layer', () => {
     const w = mountFork({ ...FUNDED, needShare: 0, familyPerYearCents: 11_776_00 })
     const award = w.findAll('.fork-offer dd')[1].text()

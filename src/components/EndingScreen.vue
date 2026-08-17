@@ -144,11 +144,31 @@ const collegeHeading = computed(() => {
 const collegeLead = computed(() => {
   const c = college.value
   if (!c) return ''
+  // ⚠⚠ "the family stops paying" WAS FALSE AND SHIPPED FOR A WAVE (fixed round 21,
+  // docs/specs/the-college-tariff-2026-08.md). v51 gave the college years a bill and `resolveCollegeBill`
+  // has charged it weekly ever since; this screen went on telling the player the opposite, and so did
+  // the "Another year" button below and `ending.ts`'s own detail line. All three are fixed together,
+  // because the failure was that only ONE of the four copies of the claim got fixed when the bill landed.
   if (c.yearsDone === 0) {
-    return 'A scholarship, a closed league that pays no ranking points, and the family stops paying. She can leave at the end of any year.'
+    return 'A scholarship, a closed league that pays no ranking points, and the family pays whatever the award does not. She can leave at the end of any year.'
   }
   if (c.final) return 'One year of the scholarship left. After it she is out either way.'
   return `${c.yearsDone} ${c.yearsDone === 1 ? 'year' : 'years'} spent, ${c.totalYears - c.yearsDone} left on the scholarship.`
+})
+
+/** ⭐⭐ ROUND 21 – WHAT THE NEXT YEAR COSTS, said before she agrees to it.
+ *
+ *  ⚠ THE BILL IS A DRAWDOWN AND THE COPY SAYS SO. It is not settled at enrolment: `resolveCollegeBill`
+ *  takes a fifty-second of it every week she is there, out of the same balance the coach and the
+ *  travel come out of – which is why a family can run out of money in the middle of a degree, and why
+ *  this line belongs on the button that starts another year rather than in a summary afterwards.
+ *
+ *  ⚠ NULL ON A FREE RIDE AND ON A MIGRATED CAREER, because both of them genuinely pay nothing and a
+ *  «$0 a year» row is a bill drawn where there is none. */
+const collegeBillLine = computed(() => {
+  const cents = college.value?.billPerYearCents ?? 0
+  if (cents <= 0) return null
+  return `${formatCents(cents)} for the year, charged weekly`
 })
 
 /** #A -> #B across the year, or a dash at either end where she is on no list at all. `null` is not
@@ -275,6 +295,14 @@ async function leaveCollege(): Promise<void> {
               <dt>Banked</dt>
               <dd>{{ formatCents(lastYear.fundsDeltaCents) }}</dd>
             </div>
+            <!-- ⭐⭐ THE YEAR'S BILL, BESIDE WHAT THE YEAR BANKED (round 21). The two rows are the
+                 whole of the owner's «какая дельта»: one is what the family paid, the other is what
+                 the balance did anyway. Neither is an opinion about the other, and the card still
+                 offers no verdict (ruling 4, 30.07). -->
+            <div v-if="collegeBillLine">
+              <dt>Tuition</dt>
+              <dd>{{ formatCents(college!.billPerYearCents) }}</dd>
+            </div>
             <div>
               <dt>Rank</dt>
               <dd>{{ collegeRankSpan }}</dd>
@@ -290,7 +318,12 @@ async function leaveCollege(): Promise<void> {
               @click="resumeCollege"
             >
               <strong>{{ college.yearsDone === 0 ? 'Play the first year' : 'Another year' }}</strong>
-              <span>Student tennis, no ranking points, and the family still pays nothing.</span>
+              <!-- ⚠⚠ THIS SPAN SAID "and the family still pays nothing" UNTIL ROUND 21, ON THE BUTTON
+                   THAT COMMITS HER TO ANOTHER YEAR OF THE BILL. v51 priced the college years and the
+                   engine has charged them weekly ever since; the one place a player could have been
+                   told was the control that starts one, and it asserted the opposite. -->
+              <span v-if="collegeBillLine">Student tennis, no ranking points – {{ collegeBillLine }}.</span>
+              <span v-else>Student tennis, no ranking points, and the award covers the whole year.</span>
             </button>
             <button
               v-if="canLeaveCollege"

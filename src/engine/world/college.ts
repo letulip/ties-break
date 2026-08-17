@@ -241,6 +241,17 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // What the screen needs is the difference between a question with years behind it and the last
     // question there will be, which is exactly `RetirementOffer.final`'s job one door along.
     final: college.years.length + 1 >= ENDINGS.collegeYears,
+    // ⭐⭐ ROUND 21 – THE YEAR'S BILL, OFF THE OFFER SHE AGREED TO AT NINETEEN.
+    //
+    // ⚠ IT READS `world.fork.offer` RATHER THAN RE-DERIVING THE PRICE, and that is `ForkState.offer`'s
+    // own argument kept: the offer is persisted precisely so a later re-tune cannot silently re-price
+    // a career halfway through a bill it had already accepted. The number the card prints is the
+    // number the tick is charging.
+    //
+    // ⚠ AND A MIGRATED CAREER READS 0, WHICH IS TRUE FOR IT. A v50 career that entered college before
+    // the bill existed carries a null offer, `resolveCollegeBill` returns at its second line, and this
+    // says so rather than inventing a price it was never quoted.
+    billPerYearCents: world.fork?.offer?.familyPerYearCents ?? 0,
   }
 }
 

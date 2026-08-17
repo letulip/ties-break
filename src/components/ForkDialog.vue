@@ -30,6 +30,8 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_SHORT } from '../engine/season/calendar'
+import { coveredShareOf, fundingBandOf, type CollegeFundingBand } from '../engine/collegeOffer'
+import { ENDINGS } from '../engine/ending'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -123,21 +125,56 @@ const programmeLine = computed(() => {
   return o.programme === null ? 'No programme has offered a place' : PROGRAMME_LABEL[o.programme]
 })
 const pct = (share: number): string => `${Math.round(share * 100)}%`
-// The two layers, as one line each, and they are two lines because they are two different things.
+
+// ⭐⭐ ROUND 21 – THE FUNDING BAND, WHICH IS THE RUNG THE OWNER ASKED FOR («понятные ступени»).
+//
+// ⚠ THE CARD USED TO SAY «62% of the bill» AND STOP. A percentage is not a rung: nothing on this
+// card says whether 62% is a good offer or a poor one, and the player meets this screen once in a
+// career with nothing to compare it against. The band is the comparison, given as a name – and the
+// percentages stay beside it, because the name is the summary and not a replacement for the figure.
+//
+// ⚠ IT IS DERIVED, NOT STORED. `fundingBandOf(coveredShareOf(offer))` – the same arithmetic the
+// engine bills off, so this card cannot say "a full ride" over a non-zero figure.
+const BAND_LABEL: Record<CollegeFundingBand, string> = {
+  full: 'A full ride',
+  most: 'Most of the bill',
+  half: 'About half the bill',
+  part: 'Part of the bill',
+  none: 'Nothing at all',
+}
+const bandLine = computed(() => {
+  const o = offer.value
+  return o ? BAND_LABEL[fundingBandOf(coveredShareOf(o))] : null
+})
+// The two layers under the band, as one line, and they stay two figures because they are two
+// different things – one reads her tennis, one reads her family.
 const awardLine = computed(() => {
   const o = offer.value
   if (!o) return null
-  return o.programme === null ? 'Walk-on, no athletics award' : `${pct(o.athleticShare)} of the bill`
+  return o.programme === null ? 'Walk-on, no athletics award' : `${pct(o.athleticShare)} athletics`
 })
 const aidLine = computed(() => {
   const o = offer.value
   if (!o || o.needShare <= 0) return null
   return `${pct(o.needShare)} need-based`
 })
+
+// ⭐⭐ THE BILL, AS A YEAR AND AS THE WHOLE COURSE – «прозрачной оплатой и годовым списанием».
+//
+// ⚠ THE FOUR-YEAR FIGURE IS THE ONE THE DECISION IS ACTUALLY ABOUT and the card did not carry it.
+// She is answering a question about four years; a per-year number asks her to do the multiplication
+// on the most expensive click in the game. Both are shown, and the per-week phrasing says plainly
+// that this is a drawdown and not a lump – the engine debits `familyPerYearCents / 52` every week
+// she is enrolled, and a family can run out mid-degree.
 const billLine = computed(() => {
   const o = offer.value
   if (!o) return null
   return o.familyPerYearCents <= 0 ? 'Nothing' : `${formatCents(o.familyPerYearCents)} a year`
+})
+const billTotalLine = computed(() => {
+  const o = offer.value
+  if (!o || o.familyPerYearCents <= 0) return null
+  return `${formatCents(o.familyPerYearCents * ENDINGS.collegeYears)} over ${ENDINGS.collegeYears} years, charged weekly`
 })
 
 const stage = computed(() => portraitStage(snap.value?.ageYears ?? 19))
@@ -234,11 +271,17 @@ async function answer(a: ForkAnswer): Promise<void> {
           </div>
           <div>
             <dt>The award covers</dt>
-            <dd>{{ awardLine }}<template v-if="aidLine"> + {{ aidLine }}</template></dd>
+            <dd>
+              {{ bandLine }}
+              <small>{{ awardLine }}<template v-if="aidLine"> + {{ aidLine }}</template></small>
+            </dd>
           </div>
           <div>
             <dt>The family pays</dt>
-            <dd>{{ billLine }}</dd>
+            <dd>
+              {{ billLine }}
+              <small v-if="billTotalLine">{{ billTotalLine }}</small>
+            </dd>
           </div>
         </dl>
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
@@ -395,5 +438,19 @@ async function answer(a: ForkAnswer): Promise<void> {
   color: var(--ink);
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+/* ⭐ THE FIGURES UNDER THE BAND, AND UNDER THE YEAR'S BILL (round 21).
+   ⚠ THE BAND IS THE HEADLINE AND THE PERCENTAGES ARE THE WORKING, so they are one step down in
+   size and dimmed – but they are still on the card, because the name is a summary of the figures
+   and not a replacement for them. Ruling 4 (the card «may not recommend») is not touched: a smaller
+   font on the arithmetic is a reading order, not an opinion about which answer to take.
+   ⚠ AND THE CARD IS MEASURED AGAINST A PHONE AFTER THIS, not argued about – round-20 #3 shipped
+   because a dialog grew by one honest line at a time. `tests/component/college-offer-card.test.ts`
+   and `round21-dialogs.test.ts` both re-measure the 375x667 fit, and both are mutation-proved. */
+.fork-offer dd small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--ink-dim);
 }
 </style>

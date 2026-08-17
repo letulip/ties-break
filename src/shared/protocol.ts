@@ -2772,6 +2772,20 @@ export interface CollegeProgressView {
    *  difference between a question with years behind it and the LAST question there will be – the
    *  same job `RetirementOffer.final` does one door along, and the copy has to carry it. */
   final: boolean
+  /** ⭐⭐ WHAT THIS YEAR COSTS THE FAMILY, in cents – round 21, the owner's «прозрачной оплатой и
+   *  годовым списанием».
+   *
+   *  ⚠⚠ THE MONEY WAS ALREADY LEAVING AND THIS SCREEN SAID IT WAS NOT. `resolveCollegeBill` has
+   *  debited `familyPerYearCents / 52` every week she is enrolled since v51, and the epilogue went on
+   *  printing "the family stops paying" on two separate lines. A player deciding whether to spend
+   *  another year was being asked to agree to a bill nothing on the screen named.
+   *
+   *  ⚠ IT IS A WIRE FIELD AND NOT A SAVE FIELD, deliberately. It is read straight off the persisted
+   *  `fork.offer` at snapshot time – the offer is the contract she agreed to at nineteen and it does
+   *  not move – so this adds no `SAVE_SCHEMA_VERSION` bump, no migration and no golden fixture. A
+   *  career that entered college before v51 carries a null offer and reads **0** here, which is the
+   *  truth for it: it was never quoted a price and is never charged one. */
+  billPerYearCents: number
 }
 
 export interface Snapshot {
