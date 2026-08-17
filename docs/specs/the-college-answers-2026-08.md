@@ -504,6 +504,79 @@ her, a dearer programme coaches her better, and the ladder it is expressed on is
 | **D6** | **The frozen MAIN capture does not move.** The override is a multiplier on a rate; it draws nothing. | |
 | **D7** | **The odds on the card move by more than the underlying change justifies.** §5c measured the top-100 column shifting up to six points on a 0.03–0.10 skill-point change, so a change several times larger will move it – and the direction may still not be monotone at n = 53. | |
 
+### 10c. ⚠⚠ THE ARMS, AND THE COMMIT EACH WAS BUILT AT
+
+| arm | what it is | built at | provenance check |
+| --- | --- | --- | --- |
+| **A** – nobody coaches her | `3b6d92e` with **`3b6d92e` reverted** (`git revert --no-commit`) in `../tb-dev-A` | `3b6d92e` | `git grep coachFactorOverride -- src/` returns **0** in `development.ts` and **0** in `world.ts`, and `coachesAt` **0** in `collegeOffer.ts` – the change and its reader are both absent |
+| **B** – the programme coaches her | `3b6d92e` in `../tb-dev-B` | `3b6d92e` | the override present in **both** the definition and its call site, `coachesAt` present 8 times – the reader is there |
+
+⚠⚠ **BOTH ARMS ARE IN WORKTREES AT MY OWN COMMIT, AND THAT IS NOT PEDANTRY THIS TIME.** Another agent
+is re-dealing the whole field's skill on this branch, and it shows in the population: the skill mean at
+the fork reads **58.71 over 54 careers** here against **58.59 over 53** three hours ago. **So no number
+in this section is comparable with §5b's**, and the A/B delta is the only thing that is – which is
+exactly what a paired arm at one commit buys.
+
+### 10d. ⭐⭐ MEASURED – the dimension is back, and it is bigger than the season ever made it
+
+`tools/college-choice-probe.ts --seeds 6`, n = 54, `POLICIES[1]`, identical seeds both sides.
+
+| place | **A** – `self`, 0.82 | **B** – the programme | what the coaching buys | **vs the cheap place** |
+| --- | --- | --- | --- | --- |
+| the university at home | +1.07 | **+1.21** | +0.14 | – |
+| a university out of state | +1.06 | **+1.30** | +0.24 | **+0.09** |
+| a private university | +1.07 | **+1.37** | +0.30 | **+0.16** |
+
+**The cheapest→dearest spread goes +0.00 → +0.16 of one skill point** – nearly three times what the
+thirteen-week dual-match season ever produced (+0.06), on a term that no calendar decision can reach.
+
+⚠⚠ **AND THE PROOF THAT NOTHING ELSE MOVED IS A DIFF, NOT AN ASSURANCE.** `diff` of the two arms'
+whole output is **three lines long** – the three skill rows above. The award, the covered share, the
+family's bill, affordability, the take-up models, the quote-against-ledger check, the walk-on count and
+**all six bankruptcies** are byte-identical, because none of them reads development.
+
+### 10e. In his own frame – what a year at each place costs her against a coached year
+
+The middle place **is** a coached year by construction (`coachesAt: 'middle'`, the same rung a hired
+middle coach sits on), so this is a paired ratio inside one run rather than a comparison across two:
+
+| place | four-year gain | **against a coached year** |
+| --- | --- | --- |
+| the university at home | +1.21 | **93%** |
+| a university out of state | +1.30 | **100%** |
+| a private university | +1.37 | **105%** |
+
+**So «на сколько за каждый год в колледже надо прибавить» now has an answer with a shape:** the cheap
+place costs her about 7% of a coached year, the middle place costs her nothing, and the dear place is
+slightly better than hiring a middle coach would have been. ⚠ **Those three percentages are a
+consequence of the budget / middle / high assignment, not evidence for it** – they are what we chose,
+read back. §10a says so and §10g says what would replace it.
+
+### 10f. THE PREDICTIONS, JUDGED
+
+| # | prediction | verdict |
+| --- | --- | --- |
+| **D1** | spread ≥ 0.15 of one skill point | ✅ **held, at +0.16** – and only just, which is the honest way to report a threshold I set myself |
+| **D2** | even the cheap place beats today's gain | ✅ **held** – +1.21 against the same arm's +1.07 |
+| **D3** | roughly 91% / 100% / 107% of a coached year | ✅ **held** – measured **93% / 100% / 105%**, within two points at both ends |
+| **D4** | ⚠⚠ the staleness fingerprint does NOT trip, and that is a defect | ✅ **HELD, AND IT WAS EXACTLY THAT.** Moving `private` from `high` to `elite` – a large change to what four years there develop – left block F **green**. It listed three named fields, so a field that did not exist when it was written was invisible to it. **Fixed**: it folds the whole tier object now, keys sorted, and the mutation case asserts every property of every place is inside the fold. It went red on this very change, naming the probe to re-run |
+| **D5** | nothing else moves | ✅ **held, provably** – the arms' full outputs differ by three lines |
+| **D6** | the frozen MAIN capture does not move | ✅ **held – no re-pin.** The override is a multiplier; it draws nothing |
+| **D7** | the odds move by more than the change justifies, and may not be monotone | *§10h* |
+
+### 10g. What would replace the assignment
+
+**Nothing published rates a university programme against a private coach**, and nothing will – it is
+the same `[GAP]` `squad` sits in. The honest replacement is not a source but a **calibration**: play
+the three places against our own cohort and set each one where its players actually land. That needs
+college MATCH RESULTS, which is the same build §8 item 2 already names, and it is the honest cost of
+the decision. ⚠ **Until then budget / middle / high is a judgement**, and the owner's «мы точно знаем
+на сколько» describes a confidence the evidence does not carry.
+
+⚠ **The card says none of this, and that is a phone constraint rather than a choice.** `.fork-answers`
+measures **530.5px against the 536px** a 320x568 screen holds, so there is no room for a fourth line on
+a row. The dimension reaches the player through the odds figure it moves, and §10h is that figure.
+
 ---
 
 ## 9. THE GATE
