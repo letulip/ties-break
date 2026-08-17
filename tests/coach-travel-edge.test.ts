@@ -700,7 +700,39 @@ const FROZEN = {
    *  event-scoped `seed:aitour:` / `seed:kidtour:` sub-streams and never on MAIN, so the frozen MAIN
    *  capture in tests/condition.test.ts is untouched BY CONSTRUCTION – count 41550, hash e6b0c709 –
    *  and it is verified below rather than promised. */
-  selfTravelling: '402829dcefcbbf9e694c17a173c14624781837209578dc7010d78aa23d5aef3e',
+  /** ⭐⭐ RE-FROZEN AN EIGHTH TIME (17.08, round 21 #2b – docs/specs/the-wild-cards-2026-08.md), AND
+   *  ONLY THIS ONE OF THE THREE. The two grinder hashes above are untouched, which is this file's
+   *  own signature for "a change that reached one career of three" and is the whole reason it holds
+   *  three careers instead of one.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands (`tools/frozen-key-diff.ts`, preset
+   *  0 policy 1 – which IS this career). What moved: `results`, `events`, `entries`, `seasonEntries`,
+   *  `seasonHistory`, `kidRank*`, `skills`, `condition`, `fundsCents`, `academy`, `knockHistory`,
+   *  `injuryHistory`, `trophiesByTier`, `bestFinishByTier`. So unlike the last three re-freezes this
+   *  one is NOT a schema field – **this career really did play a different season**, and the two
+   *  rollback identities below move with it rather than reproducing the old values.
+   *
+   *  ⚠⚠ AND THE ATTRIBUTION WAS TAKEN RATHER THAN ASSUMED, because another agent was committing into
+   *  this branch throughout. The A arm was built as **5737c40 with the engine commit fd66d52 reverted**
+   *  – i.e. the wild card removed and everything else, that agent's college work included, held
+   *  identical – and it reproduces **all three shipped constants byte for byte**, at all three schema
+   *  versions. So 100% of this movement is the wild cards and none of it is theirs. Naming the arms as
+   *  "before and after HEAD" would have credited this file with somebody else's change; measured that
+   *  way first, it did.
+   *
+   *  ⭐ WHY THIS CAREER AND NOT THE OTHER TWO, and it is the shape of the mechanic rather than luck.
+   *  The eight held places change who is in a **Slam** draw. A Slam draw is almost entirely derived
+   *  professionals, and `runAiTournament` writes NO ledger row for a field pro – so a changed Slam
+   *  usually changes nothing that any table can read. It bites only when a LIVE cohort player is in
+   *  the draw, and then the merged W standings move, and then the fields of her own shadow draws move.
+   *  That reached the player-policy career and not the two grinders.
+   *
+   *  ⚠ `rngMain` UNMOVED, for the eighth wave running, and it is again the load-bearing half. The
+   *  wild-card pass draws on `seed:wildcard:<eventId>` and the host nation on `seed:host:<eventId>` –
+   *  purpose-scoped sub-streams, re-derived at the call site, persisting nothing. The frozen MAIN
+   *  capture in tests/condition.test.ts is untouched BY CONSTRUCTION – count 41550, hash e6b0c709 –
+   *  and it is verified below rather than promised. */
+  selfTravelling: '95ecdc39debc2d69d95568db71ad17df97e5ec5d1fe152b023931ee45b0e6c74',
 }
 
 /** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
@@ -724,7 +756,14 @@ const FROZEN = {
 const PRE_V51 = {
   middleGrinder: '645aaf98f6f7f25904495ac22738a2dd1ffb6b65c84545dc047cfda328eb1ec7',
   eliteGrinder: '0a48edca6280c681eb019285991dc1f47687659d22684f725515314e26a13d91',
-  selfTravelling: '4222718d35724809d9560e4134d0920418491946a73163825cf82c9269eda3e0',
+  /** ⚠ MOVED WITH THE FREEZE ABOVE (17.08, round 21 #2b) AND THAT IS THE HONEST OUTCOME, not a
+   *  weakening. The v51 case asks "does rolling ONLY the schema back reproduce the v50 hashes" – and
+   *  for the two grinders it still does, untouched. For THIS career it no longer can, because the
+   *  wild cards changed the career itself and not a schema field: rolling the version back on a
+   *  different season cannot produce the old season. The identity is re-anchored to the new world, so
+   *  it goes on doing its job – if a LATER wave moves this career through anything but
+   *  `SAVE_SCHEMA_VERSION`, this line goes red beside the freeze exactly as it just did. */
+  selfTravelling: 'dd2356fb561c64d0259c175a8e1e056947d328559bd47f4f25d69eb1d730a7a4',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -748,7 +787,11 @@ const PRE_V50 = {
    *  with the same proof beside it. The two grinder rollback hashes above did NOT move, which is the
    *  identity doing its job: a change that reaches one career of three shows up in one pair of hashes
    *  of three, not in all six. */
-  selfTravelling: 'e0b2f48e6f4c77337ddb996a493acc4e8b922b562fd53c68b70557f8d38481c9',
+  /** ⚠ MOVED WITH ITS TWIN A THIRD TIME (17.08, round 21 #2b), for the reason written on the v50
+   *  line: this wave changed the CAREER, not a schema field, so the rollback is re-anchored to the
+   *  new world. The two grinder hashes in this block did NOT move, which is the identity doing its
+   *  job – a change that reaches one career of three shows up in one pair of hashes of three. */
+  selfTravelling: 'f6ec95f8b0a2d3114c7a9ce599d03ef8476ed83e8ba250237786470d417863ce',
 }
 const FREEZE_WEEKS = 156
 
