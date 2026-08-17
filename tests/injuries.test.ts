@@ -286,7 +286,16 @@ const REF = { //
   // reproduce byte-for-byte and are asserted BEFORE this constant is read. P2 adds no draw to any
   // stream - an entry allowance is a post-draw gate - which is why the hash could not move and did
   // not, and why the input-independence A/B halves in tests/planner.test.ts still pass unchanged.
-  kidRank: 93 }
+  // ⚠⚠ kidRank RE-PINNED 93 -> 88 (17.08, THE SKILL LAW - docs/specs/the-skill-gap-2026-08.md).
+  // `season/fieldPros.ts` replaced eight uniform core bands with one curve fitted to the live 2026 WTA
+  // Elo list, so a professional's STRENGTH is now a function of her standing rather than a uniform
+  // draw inside her storey. World #10 went core 75.2 -> 65.5 and #50 67.5 -> 56.4, so she is five
+  // places better because the players above her got weaker. THE CAPTURE AND THE A/B HALVES ARE
+  // UNTOUCHED: count 41550, hash e6b0c709, and the input-independence comparison this block exists for
+  // still passes - only the companion constant moved. Verified on both arms; the control (this agent's
+  // commit reverted in a worktree) reproduces 93.
+
+  kidRank: 88 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
