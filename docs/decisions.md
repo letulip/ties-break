@@ -1757,3 +1757,69 @@ survived the kill meant to stop it, finished against the thirteen-week tree, and
 output path. A complete and plausible table (42 / 38 / 38) described a tree that no longer existed and
 **was already written into `COLLEGE_TIER_ODDS`** before the elapsed-seconds line changing between two
 reads of a write-once file gave it away. **A measurement is not identified by its filename.**
+
+## 17.08.2026 – ⭐⭐ THE SKILL LAW SHIPPED: strength is the live 2026 Elo curve, and the top of the table stops being a lottery
+
+**He ruled twice, and the second ruling reversed the first plan.**
+
+> «я хочу, чтобы "верх таблицы перестаёт быть лотереей" произошло… шансы выиграть должны быть у всех,
+> но не у всех одинаковые.»
+
+and then, on which statistic we aim at:
+
+> «"расчёт по живому рейтингу Elo на август этого года" – вот это же супер-ценная и актуальная
+> информация, **нам не нужно доминирования, как в 90х**.»
+
+**⚠ THE FIRST PLAN WAS WRONG AND WAS NOT SHIPPED.** It fitted ONE slope (124.2 Elo per doubling, from
+Klaassen & Magnus's women's λ, **Wimbledon 1992–95**) and paired it with a ×1.5 lift of `SKILL_K`.
+Against the live 2026 list that would have fixed #1 v #10 and made **every other row worse** – the
+1990s dominance he had just refused. **And our own live-Elo column was wrong too**: it had been read
+by hand as "the median within ±12 ranks", a window that averages the world #1 with #2–#13 and printed
+**#1 = 2058** where the real figure is **2194.6**. The headline row halved on correction: #1 v #10
+went **41.6% → 23.9%**. The whole report is now parsed – 547 (rank, Elo) pairs, **no player names** –
+into `docs/research/raw/2026-08-17-wta-elo-by-rank.json`, and the bench re-derives the reference from
+that file rather than from our own constant.
+
+**⚠⚠ FITTING THE LIVE CURVE MADE THE CHANGE SMALLER AND KILLED THE GAIN LIFT.** At the shipped gain
+our Elo profile already tracked the live list from #100 down (−633 vs −665 at #200, −958 vs −995 at
+#1000). **The entire defect was #1–#100.** So `SKILL_K`, `RALLY_K` and `PACE_K` are **untouched** and
+`src/engine/match/` does not change at all. What shipped is `SKILL_LAW` in `season/fieldPros.ts`: the
+live list's binned-median curve, `core(rank) = 76.4 + (Elo(rank) − 2195) / 20.2`.
+
+**MEASURED, both arms in clean worktrees** (B = `a412162` at `b02537c`; A = the same commit with that
+one reverted – reader check `grep -c coreForStanding` returns 0 on A, and the shared checkout was
+NOT used because the other agent's tree went dirty in `development.ts` and `world.ts` mid-wave):
+
+* **Mean absolute miss against the live sport: 12.44 → 2.79 points on his five rows** (7.36 → 2.44
+  over all seventeen). #50 v #100 **21.1% → 39.3%** (live 38.0); #50 v #300 **4.3% → 10.1%** (live
+  12.5); **#1 v #10 47.4% → 31.3%** (live 24.7) – the top is no longer a coin flip.
+* **Seven of eight rank segments are now inside 6% of the live curve's own local slope.** The flat top
+  (×0.06) and the #50/#100 cliff (×2.16) are both gone.
+* **⚠ THE POINTS TABLE DID NOT MOVE AT ALL** – measured, not argued: the merged 1,600-row ranking
+  hashes **identically** on both arms across five worlds. Every acceptance cut admits exactly the same
+  population, the points economy is untouched, no schema, no migration.
+* **The frozen capture held for the eighth time**: 41550 / `e6b0c709`, head and tail byte-identical.
+  Only the derived `kidRank` moved, **93 → 88**, re-pinned with its reason (guard re-aimed, not
+  deleted); the control passes 44/44.
+* **⚠ Her own edge did NOT shrink**, which was the risk flagged before the build: +6.7 core is worth
+  **+18.34 match points on BOTH arms**, byte-identical, because the gain never moved.
+
+**THE D&D HALF IS BUILT.** `src/engine/match/rating.ts` gives every player a rating whose *difference*
+reproduces the engine's own match probability to **1.03 percentage points**, measured over every build
+pair on all three surfaces and mutation-verified. The calendar card now prints
+**"Rating 1642 vs 1801"** under the odds ring it already had, so the percentage stops being magic.
+⚠ The first version of that rating was wrong by up to **7.98 points** – converting a win probability
+against a distant reference does not compose – and the test is what caught it; the epitaph is in the
+file.
+
+**⚠⚠ AND THE THING HE MUST RULE ON, NOT TUNED AWAY: THE CAREER ACCELERATED HARD.** Median career high
+**#97 → #12**; median rank at 25 **#152 → #18**; WTA 250 title 15.4%, QF+ 46.6%. **It is not an odds
+error and the arithmetic proves it**: `rollPotential`'s own measured output is p50 core 63.2, and
+under the shipped law core 63.2 **is** world #15 – against a measured median of #12. **The old table
+hid this by making all 64 of its top storey superhuman. Honest strengths did not break the ladder;
+they exposed that the ladder was calibrated against an inflated top.** The dial is
+`(SKILL_K…, SKILL_LAW.eloPerCore)` scaled together – **the odds are invariant to it** – and there is
+no setting that fixes both ends: `×2.0` restores the old pace (#118) and lifts #1600 from core 17.2 to
+**49.6**, burying the W15 on-ramp. Three options, his call, in `docs/specs/the-skill-gap-2026-08.md`
+§7d: re-tune `rollPotential` (a separate wave), take `×2.0` and re-derive every `entrantPctBand`, or
+accept that careers reach the top ten.
