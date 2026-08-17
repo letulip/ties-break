@@ -335,3 +335,20 @@ will hand a place to somebody already in the draw. The first cut of the held-pla
 `booked` from every field the week has resolved, this event's included – `resolveDoubleBookings`
 writes a row per drawn event on both its branches), but the property was load-bearing and undocumented.
 It is now pinned.
+
+---
+
+## 6. THE GATE
+
+Serialised, as CLAUDE.md's pool note requires, at `f732d26`:
+
+| project | result |
+| --- | --- |
+| `unit --no-file-parallelism` | **147 files / 3,099 tests passed**, exit 0 |
+| `component --no-file-parallelism` | **42 files / 489 tests passed**, exit 0 |
+| `scripts/context-audit.mjs --check` | **ok** |
+
+⚠ **`vue-tsc -b --force` is clean on every file this item touched.** The only type errors in the tree
+during the wave were in `tests/college-offer.test.ts`, another agent's live edit, and they cleared on
+their own. **Not run, deliberately and on instruction: `npm run e2e:fixtures` and `npm run test:e2e`.**
+`test:sim` was not run either – nothing here touches the sim project.
