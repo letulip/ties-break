@@ -39,7 +39,7 @@ to a second rung, with the numbers he asked for.
 
 ## 1. HOW IT WAS MEASURED
 
-`npx vite-node tools/head-ladder-sweep.ts -- --seeds 4 --weeks 470 --runs 300`
+`npx vite-node tools/head-ladder-sweep.ts -- --seeds 4 --weeks 470 --runs 300`, at commit `0101955`.
 
 * **4 worlds × 470 weeks**, so the merged table and the professional population are the real ones.
 * **The reference player is the professional actually STANDING at #86** in each world – his «мы

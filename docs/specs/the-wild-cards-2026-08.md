@@ -439,3 +439,20 @@ now *take* them, and the population effect is large.
 
 **⚠ This wants an owner ruling before it is called finished**, and the two knobs are named: the window
 (`entrantPctBand[1]`, ~#333 today) and `WILD_CARD.slots` (8). Neither is touched here.
+
+### 7e. ⚠ THE FROZEN CAREERS DID NOT MOVE, AND THE SHARED CHECKOUT SAID THEY DID
+
+`tests/coach-travel-edge.test.ts` went red in the shared checkout after the instrument fix – two of
+three careers, with fresh hashes. **It was not the instrument, and it was not the wild cards.** At the
+same commit (`9b3dc29`) in a **clean worktree** the file is **28/28 green** and the per-key diff for
+preset 5 is byte-identical.
+
+The main checkout was mid **save-schema bump to v52** by another agent – `migrations.ts`,
+`protocol.ts`, `world.ts`, `endings.ts`, `sim.worker.ts` and a new `tests/fixtures/saves/v52.json`, all
+uncommitted – and `resolveEndings` runs every tick, so their work reaches every career walked.
+
+⭐ **No re-freeze was taken.** Re-freezing there would have baked another agent's in-flight state into
+this branch's fixture under a message about wild cards – the same class of error as §4a, and the
+third time in one session that a shared checkout produced a false reading. **The instrument fix moves
+none of the three careers**, which is what it should do: they stop at 156 weeks (age 16.6), and a wild
+card needs a professional ranking inside ~#333.
