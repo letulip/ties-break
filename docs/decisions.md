@@ -1198,3 +1198,82 @@ else. v51 does not reach the world outside college.
 
 ⚠ **FOR HIM: `npm run e2e:fixtures` needs running.** The schema bumped, so `tests/e2e-fixtures.test.ts`
 is red until the corpus is regenerated. The e2e corpus and the browser suite are his.
+
+## 17.08.2026 – ROUND 21, THE MEASURED HALF: seven questions, six "not a defect", and one he did not ask about (`wave/round21`, audit)
+
+**AUDIT ONLY. No balance constant moved, no engine file changed.** Five measurement tools ship, one is
+extended, and the whole of the evidence is `docs/specs/round21-measured-2026-08.md`.
+
+### THE VERDICTS, SHORTEST FIRST
+
+| his question | verdict | the number that settles it |
+| --- | --- | --- |
+| Ines' two seasons – right for her level? | **not a defect – she is UNDER-ranked** | core **57.1** against **50.4** mean for the band #101-#150 she stands in |
+| no QF at a big event in two seasons? | **not a defect – the unlucky fifth** | model gives **15.0%** per WTA 250, **13.0%** per WTA 500; over her 14 big events **P(no QF) = 20.5%** |
+| an 18-year-old at #2? | **not a defect – the head is OLDER than the field** | teens are **11.4%** of the field, **5.4%** of the top 50, **1.25%** of #1s |
+| barred from the Slam at #116? | **arithmetic exact; the cost is 19 weeks** | 12/14 careers pass the band, **12/12 cross it, 0/14 stall** |
+| "college beats the tour"? | ⭐ **HE IS RIGHT AND THE FAILING WAS MINE** | the tour passes college at the **74th percentile**; **30%** of careers do better on tour |
+| is 1,600 enough? | **the table is right; the CHAIRS are not** | **2.12** W chairs per professional per season against a real ~20 events a year |
+
+### ⭐⭐ THE ONE DEFECT, AND HE HAS BEEN READING IT ALL ALONG
+
+He quoted his seasons as **"endRank 87 → 79 → 81"**. **Those are not her ranking.**
+`SeasonHistoryEntry.endRank` is written from `world.kidRank` – the **ITF** fold – and she has held
+**zero ITF points since season 5**. A dense rank over a table whose tail all ties on zero hands every
+member of that tie the head of the tie's place, which is exactly the failure `kidLadderRank` guards
+against (*"UNRANKED IS NOT A NUMBER"*) and the raw `kidRank*` fields do not. Her real professional
+trajectory over those seasons is **#86 → #86 → #121**. It reaches `StatsScreen.vue` too, whose
+career-best fold reports **#5** – a junior ranking from season 1.
+
+**THE KNOB, NAMED AND NOT PULLED.** Either write the track she actually played, or omit the field when
+no points stand behind it (v46 already set that precedent for this record: *"absent means NOT RECORDED
+rather than ZERO"*). ⚠ Either is schema-visible and owes the three-part move. **FOR HIM to choose.**
+
+### ⭐ AND THE ANSWER TO "WHY DID SHE FALL" IS HER CALENDAR, NOT A BUG
+
+Thirteen of her twenty-five events in season 8 – **52% of the calendar** – were WTA 500s and Slams,
+where she went **4-13**. Expected points per event say the schedule is upside down: **W100 pays her
+57.7 and she played two; the WTA 500 pays 37.8 and she played ten; the WTA 250 pays 20.1, the worst
+thing she can enter, below even a W50.** Nothing is mispriced – but no screen tells her this.
+
+⚠ **The round-21 #4 seeding fix (`b790ea0`, 15.08) is on this branch and NOT on `main`, so his two
+seasons were played without it.** Measured: it cost her seeding at **W50, W75 and W100 only** – at WTA
+125 and above she is unseeded either way. **So the record he is asking about is clean evidence.**
+
+### HIS SLAM PROPOSAL – defensible, and it drags one number with it
+
+«раз у нас нет квалы, может быть просто тогда брать "+16 из таблицы"?» → `slam.acceptsRank` 104 → 120.
+**Measured, it works**: the median career's refusal falls from **23.5 weeks to 9** and two of fourteen
+careers stop meeting the door at all. ⚠ **But `TIERS.wta500.acceptsRank` is already 120**, so at 120
+the hardest draw in the game shares a door with the rung two storeys below it. ⚠ **And the rulebook
+offers a cheaper version**: §4-D permits **104/108/112** direct acceptances – **112 is inside the
+regulation** (refusal 23.5 → 15.5 weeks) and 120 is a modelling choice outside it.
+⚠⚠ **The same argument does NOT transfer to the W rungs** – they have no threshold to add to (one
+"System of Merit" ordering, no cut anywhere in it), so there the honest version of his idea is the
+**soft tail he already deferred on 16.08**. The wild-card half is a real mechanic needing three
+rulings and is flagged, not sketched.
+
+### THE POPULATION: DO NOT WIDEN
+
+1,600 pointed rows against a real list of ~1,550, and the points curve is within a few per cent of the
+real anchors to #500. But the deepest band floor in the game is **#1295 of 1,799**, so **504
+professionals (28%) are in nobody's draw, ever** – and there are only **2.12 W main-draw chairs per
+professional per season.** **Widening makes that ratio worse.** If he wants a fuller bottom of the
+ladder the lever is **more W15/W35 weeks**, not more people.
+
+### COLLEGE VERSUS THE TOUR – the distribution I owed him
+
+| funds delta over 4y | p10 | p25 | median | p75 | p90 | **max** |
+| --- | --- | --- | --- | --- | --- | --- |
+| COLLEGE | $74,898 | $87,823 | $106,995 | $141,234 | $225,811 | **$260,410** |
+| ON TOUR | -$3,819 | $4,184 | $31,959 | $169,294 | $494,677 | **$5,573,608** |
+
+**3 of 53 careers clear a million in four years and the best banks $5.57M; the college arm has no tail
+at all.** ⚠ And the old row was a **difference of medians**, which is not the median of the difference –
+both are printed now, and the arms are paired.
+
+⭐⭐ **THE NON-AMERICAN NUMBER, OUT OF THE FOOTNOTE**: **$80,090** over four years against **$25,592**,
+and **0 free rides of 53**. Worse, a non-American **working** family pays **$95,240** – MORE than a
+non-American **wealthy** one at **$65,405** – because the need layer is US-only law (34 CFR §668.33)
+and the merit channel then runs unopposed. **The third answer is an American answer.** Flagged, not
+tuned: both stickers and the absence of the layer are primary-sourced.

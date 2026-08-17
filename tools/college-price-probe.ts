@@ -35,6 +35,7 @@ import { answerFork } from '../src/engine/world/endings'
 // this population, kept so the frozen battery's arms stay comparable on the dimension the
 // junior-access phases moved most. `tools/retired-college-rule.ts` is the one definition of it.
 import { retiredCollegeDoorOpen } from './retired-college-rule'
+import { COLLEGE_OFFER } from '../src/engine/collegeOffer'
 import { kidLadderRank } from '../src/engine/world/snapshot'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'
@@ -219,6 +220,80 @@ console.log(
   `  careers that ENDED        college ${college.filter((r) => r.ended !== null && r.ended !== 'college').length}/${college.length}   ·   tour ${tour.filter((r) => r.ended !== null).length}/${tour.length}`,
 )
 
+// =================================================================================================
+// ⭐⭐⭐ THE DISTRIBUTION – ROUND 21, AND IT IS A CORRECTION OF THIS FILE'S OWN REPORTING.
+// =================================================================================================
+//
+// THE OWNER'S QUESTION (round 21): «И что значит "колледж лучше тура", если на туре за 4 года вполне
+// можно 1-2 млн поднять?»
+//
+// HE IS RIGHT AND THE FAILING WAS IN THE REPORT, NOT IN THE MEASUREMENT. The four-year comparison
+// was handed to him as a pair of MEDIANS – $106,995 against $31,959 – with no spread beside them.
+// A median cannot answer "can you make one to two million on tour", because that claim is about the
+// TAIL, and a median is the one statistic that is deliberately blind to it. His own career is the
+// counter-example: Ines banks $1.97M by week 465.
+//
+// ⚠ AND THE ROW ABOVE IS A DIFFERENCE OF MEDIANS, WHICH IS NOT THE MEDIAN OF THE DIFFERENCE. The two
+// arms are PAIRED – forked from one world at one week, byte-identical up to the fork – so the honest
+// per-career statistic is `college_i - tour_i`, and it is printed here beside the marginals rather
+// than instead of them, because the two answer different questions ("which arm is bigger typically"
+// vs "how often, and by how much, does THIS career do better by going").
+const sorted = (xs: number[]) => [...xs].sort((a, b) => a - b)
+/** ⚠ NEAREST-RANK, and stated because the choice matters at n≈50: p90 of 53 rows is a real row, not
+ *  an interpolation between two. Same convention as the quartiles in `collegeOffer.ts`'s own note. */
+const pctl = (xs: number[], q: number) => {
+  if (!xs.length) return 0
+  const a = sorted(xs)
+  return a[Math.min(a.length - 1, Math.max(0, Math.ceil(q * a.length) - 1))]
+}
+const QS = [0.1, 0.25, 0.5, 0.75, 0.9] as const
+
+console.log(`\n⭐⭐ THE DISTRIBUTION OVER FOUR YEARS – funds delta, n=${college.length} paired careers`)
+console.log(`  ${''.padEnd(20)}${'min'.padStart(13)}${'p10'.padStart(13)}${'p25'.padStart(13)}${'median'.padStart(13)}${'p75'.padStart(13)}${'p90'.padStart(13)}${'max'.padStart(13)}`)
+const distRow = (label: string, xs: number[]) =>
+  console.log(
+    `  ${label.padEnd(20)}${usd(Math.min(...xs)).padStart(13)}` +
+      QS.map((q) => usd(pctl(xs, q)).padStart(13)).join('') +
+      usd(Math.max(...xs)).padStart(13),
+  )
+const cFunds = college.map((r) => r.fundsDelta)
+const tFunds = tour.map((r) => r.fundsDelta)
+distRow('COLLEGE', cFunds)
+distRow('ON TOUR', tFunds)
+distRow('paired (col - tour)', college.map((r, i) => r.fundsDelta - tour[i].fundsDelta))
+
+// ⭐ WHERE THE ARMS CROSS. Two different crossings, and conflating them is how a median misleads:
+//   (a) the MARGINAL crossing – the quantile at which the tour's own distribution passes college's
+//       own distribution at the same quantile. This is what "the tour overtakes college" means when
+//       reading the two columns above.
+//   (b) the PAIRED crossing – the share of individual careers that did better by staying on tour.
+{
+  const cS = sorted(cFunds)
+  const tS = sorted(tFunds)
+  let cross: number | null = null
+  for (let i = 0; i < cS.length; i++) {
+    if (tS[i] > cS[i]) {
+      cross = (i + 1) / cS.length
+      break
+    }
+  }
+  const paired = college.filter((r, i) => r.fundsDelta - tour[i].fundsDelta < 0).length
+  console.log(
+    `\n  ⭐ MARGINAL CROSSING: the tour arm passes the college arm at the ${cross === null ? 'NEVER – not at any quantile measured' : `${(100 * cross).toFixed(0)}th percentile and above`}.`,
+  )
+  console.log(`  ⭐ PAIRED: ${paired} of ${college.length} careers (${((100 * paired) / college.length).toFixed(0)}%) banked MORE by staying on tour.`)
+  console.log(
+    `\n  the four-year tour tail, in his own units:` +
+      `\n    careers banking over   $500,000 on tour: ${tFunds.filter((x) => x >= 500_000_00).length} / ${tFunds.length}` +
+      `\n    careers banking over $1,000,000 on tour: ${tFunds.filter((x) => x >= 1_000_000_00).length} / ${tFunds.length}` +
+      `\n    careers banking over $2,000,000 on tour: ${tFunds.filter((x) => x >= 2_000_000_00).length} / ${tFunds.length}`,
+  )
+  console.log(
+    `    ...and the same three on the COLLEGE arm:` +
+      `  ${cFunds.filter((x) => x >= 500_000_00).length} · ${cFunds.filter((x) => x >= 1_000_000_00).length} · ${cFunds.filter((x) => x >= 2_000_000_00).length}`,
+  )
+}
+
 console.log('\n⭐ THE DECOMPOSITION – which term carries the difference')
 const dEarn = med(college.map((r) => r.earned)) - med(tour.map((r) => r.earned))
 const dSpend = med(tour.map((r) => r.spent)) - med(college.map((r) => r.spent))
@@ -276,3 +351,54 @@ for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
 console.log(`\n  ⚠ EVERY CAREER HERE IS country 'US' – the bench's own profile. A non-American faces the`)
 console.log(`    out-of-state sticker and NO need-based layer at all (34 CFR 668.33), so these are the`)
 console.log(`    CHEAPEST bills the college branch can produce.`)
+
+// =================================================================================================
+// ⭐⭐ THE NON-AMERICAN BILL, COMPUTED RATHER THAN ESTIMATED – round 21, the owner's second half.
+// =================================================================================================
+//
+// §4.3 of `what-the-college-place-costs-2026-08.md` said "roughly $100,000 over four years against
+// $28,316" and called the bench blind to it. The bench is not blind to it – it is one line of exact
+// arithmetic over rows already measured, and it belongs BESIDE the American number rather than in a
+// paragraph three sections down.
+//
+// ⚠ WHY IT IS EXACT AND NOT A MODEL. `resolveCollegeBill` is `sticker x (1 - min(1, athletic +
+// need))`. The athletic award is MERIT-ONLY and physically cannot read `country` –
+// `tests/college-offer.test.ts` block A proves that by sweep and by mutation – so every career's
+// `offerAthleticShare` below is ALREADY the share a non-American would be given. Only two inputs
+// change, and both are sourced constants rather than judgements: the sticker moves in-state ->
+// out-of-state (a non-resident alien is never in-state anywhere), and the need layer is zero
+// (`needShareOf` returns 0 for any country but 'US'; 34 CFR 668.33 is the citation).
+{
+  const IN = COLLEGE_OFFER.costPerYearInStateCents
+  const OUT = COLLEGE_OFFER.costPerYearOutOfStateCents
+  const nonUsPerYear = (r: Arm) => Math.round(OUT * (1 - Math.min(1, r.offerAthleticShare)))
+  const usPerYear = (r: Arm) => r.offerFamilyPerYearCents
+  console.log(`\n⭐⭐ THE SAME PLACE, PRICED FOR A NON-AMERICAN (n=${college.length})`)
+  console.log(`  the two stickers: in-state ${usd(IN)}/yr   ·   out-of-state ${usd(OUT)}/yr   ·   (private nonprofit ${usd(COLLEGE_OFFER.costPerYearPrivateNonprofitCents)}/yr, recorded not modelled)`)
+  console.log(`\n  ${''.padEnd(24)}${'AMERICAN'.padStart(16)}${'NON-AMERICAN'.padStart(16)}${'x'.padStart(9)}`)
+  const usY = med(college.map(usPerYear))
+  const nonY = med(college.map(nonUsPerYear))
+  console.log(`  ${'family pays / year'.padEnd(24)}${usd(usY).padStart(16)}${usd(nonY).padStart(16)}${(usY ? (nonY / usY).toFixed(1) : '–').padStart(9)}`)
+  console.log(`  ${`over ${YEARS} years`.padEnd(24)}${usd(usY * YEARS).padStart(16)}${usd(nonY * YEARS).padStart(16)}`)
+  console.log(`  ${'free rides'.padEnd(24)}${String(college.filter((r) => usPerYear(r) === 0).length + '/' + college.length).padStart(16)}${String(college.filter((r) => nonUsPerYear(r) === 0).length + '/' + college.length).padStart(16)}`)
+  console.log(`\n  ⚠ AND THE COMPARISON THAT MATTERS – the four-year bill against what the arm BANKS:`)
+  const colMed = med(college.map((r) => r.fundsDelta))
+  console.log(`    college funds delta over ${YEARS}y (median)   ${usd(colMed)}`)
+  console.log(`    ...less the American bill                 ${usd(colMed - usY * YEARS)}`)
+  console.log(`    ...less the NON-AMERICAN bill             ${usd(colMed - nonY * YEARS)}`)
+  console.log(`\n  by background, four-year bill:`)
+  console.log(`    ${'background'.padEnd(11)}${'n'.padStart(4)}${'athletic %'.padStart(12)}${'AMERICAN'.padStart(14)}${'NON-AMERICAN'.padStart(15)}`)
+  for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+    const g = college.filter((r) => r.background === b)
+    if (!g.length) continue
+    console.log(
+      `    ${b.padEnd(11)}${String(g.length).padStart(4)}${(100 * mean(g.map((r) => r.offerAthleticShare))).toFixed(1).padStart(12)}` +
+        `${usd(med(g.map(usPerYear)) * YEARS).padStart(14)}${usd(med(g.map(nonUsPerYear)) * YEARS).padStart(15)}`,
+    )
+  }
+  console.log(
+    `\n  ⭐ THE NEED LAYER IS THE WHOLE OF THE DIFFERENCE FOR A WORKING FAMILY, AND IT IS US-ONLY.` +
+      `\n  A non-American working family pays the same as a non-American wealthy one on the same record:` +
+      `\n  merit is all they get. That is the sourced law, not a design choice – flagged, not tuned.`,
+  )
+}
