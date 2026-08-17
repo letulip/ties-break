@@ -37,6 +37,7 @@ import { answerFork } from '../src/engine/world/endings'
 import { retiredCollegeDoorOpen } from './retired-college-rule'
 import { COLLEGE_OFFER } from '../src/engine/collegeOffer'
 import { kidLadderRank } from '../src/engine/world/snapshot'
+import { parentIncomeForWeekCents } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
@@ -66,6 +67,18 @@ interface Arm {
   offerAthleticShare: number
   offerNeedShare: number
   offerProgramme: string
+  /** ⭐⭐ ROUND 21 – THE FAMILY'S ACTUAL POSITION THE WEEK SHE ENROLS, and it is measured here BEFORE
+   *  anything reads it, so the calibration of a means test can be set on the real distribution rather
+   *  than on the three background labels. The owner, 17.08: «с учетом доходов семьи на момент
+   *  поступления и прочего».
+   *
+   *  ⚠ `incomeAtForkCents` IS THE PARENTS' ANNUALISED CONTRIBUTION, NOT A HOUSEHOLD INCOME. It is
+   *  `parentIncomeForWeekCents x 52` – what they put INTO the tennis – and the distinction is why no
+   *  federal dollar threshold can be laid over it directly. See the spec's §2.
+   *  ⚠ `assetsAtForkCents` is `world.fundsCents` at the fork, which is genuinely the family's savings
+   *  and CAN be negative: a career carrying debt into college is a real state (§2e). */
+  incomeAtForkCents: number
+  assetsAtForkCents: number
   tuitionPaid: number
   fundsDelta: number
   earned: number
@@ -73,6 +86,12 @@ interface Arm {
   prize: number
   rankAfter: number | null
   ended: string | null
+  /** ⭐ ROUND 21 – DID THE MONEY RUN OUT WHILE SHE WAS THERE? `fundsAfter < 0` or a live debt spell at
+   *  the end of the four years. §2e of `what-the-college-place-costs-2026-08.md` named this state as
+   *  newly reachable and did not measure it; the owner's «может она околонулевая будет или всё-таки
+   *  расходы перевесят» is exactly the question it answers. */
+  fundsAfter: number
+  inDebtAfter: boolean
 }
 
 /** Walk a fresh career to the week the fork is raised. Returns null if it never got there with the
@@ -156,6 +175,9 @@ for (let p = 0; p < PRESETS.length; p++) {
       const from = snapshot(at.world)
       const offer = at.world.fork?.offer ?? null
       const tuitionBefore = tuitionSoFar(at.world)
+      // ⚠ TAKEN BEFORE `answerFork`, which is the whole point: this is her position AT ENROLMENT.
+      const incomeAtFork = parentIncomeForWeekCents(at.world.seed, at.world.profile.background, at.world.week) * WEEKS_PER_YEAR
+      const assetsAtFork = at.world.fundsCents
       answerFork(at.world, 'college')
       for (let y = 0; y < YEARS; y++) resumeFromCollege(at.world, at.rng)
       college.push({
@@ -164,10 +186,14 @@ for (let p = 0; p < PRESETS.length; p++) {
         offerAthleticShare: offer?.athleticShare ?? 0,
         offerNeedShare: offer?.needShare ?? 0,
         offerProgramme: offer?.programme ?? 'walk-on',
+        incomeAtForkCents: incomeAtFork,
+        assetsAtForkCents: assetsAtFork,
         tuitionPaid: tuitionSoFar(at.world) - tuitionBefore,
         ...delta(at.world, from),
         rankAfter: kidLadderRank(at.world, 'wta'),
         ended: at.world.ending ? at.world.ending.type : null,
+        fundsAfter: at.world.fundsCents,
+        inDebtAfter: at.world.debtSinceWeek !== null,
       })
     }
 
@@ -188,10 +214,14 @@ for (let p = 0; p < PRESETS.length; p++) {
         offerAthleticShare: 0,
         offerNeedShare: 0,
         offerProgramme: 'n/a',
+        incomeAtForkCents: 0,
+        assetsAtForkCents: 0,
         tuitionPaid: 0,
         ...delta(at.world, from),
         rankAfter: kidLadderRank(at.world, 'wta'),
         ended: at.world.ending ? at.world.ending.type : null,
+        fundsAfter: at.world.fundsCents,
+        inDebtAfter: at.world.debtSinceWeek !== null,
       })
     }
   }
@@ -428,4 +458,106 @@ console.log(`    CHEAPEST bills the college branch can produce.`)
       `\n  A non-American working family pays the same as a non-American wealthy one on the same record:` +
       `\n  merit is all they get. That is the sourced law, not a design choice – flagged, not tuned.`,
   )
+
+  // ===============================================================================================
+  // ⭐⭐⭐ ROUND 21 – THE DELTA, BY BACKGROUND, AS A DISTRIBUTION. THE DELIVERABLE.
+  // ===============================================================================================
+  //
+  // THE OWNER, 17.08: «Копят деньги и оплачивают. Какая дельта? Может она околонулевая будет или
+  // всё-таки расходы перевесят.»
+  //
+  // ⚠⚠ AND IT IS PRINTED AS A DISTRIBUTION AND NEVER AS A MEDIAN ALONE. He has caught a bare median
+  // here twice. The block above already fixed the AGGREGATE reporting; this one fixes it PER
+  // BACKGROUND, which is the cut he actually asked for – a median per background is three bare
+  // medians rather than one, and no better.
+  //
+  // ⚠ EVERY ROW IS THE PAIRED STATISTIC `college_i - tour_i`. The two arms fork from one world at one
+  // week and are byte-identical up to it, so the per-career difference is the honest unit and a
+  // difference of medians is not the median of the difference.
+  console.log(`\n\n⭐⭐⭐ THE DELTA OVER ${YEARS} YEARS, BY BACKGROUND – paired (college minus tour), n=${college.length}`)
+  console.log(`  ${'background'.padEnd(11)}${'n'.padStart(4)}${'p10'.padStart(13)}${'p25'.padStart(13)}${'MEDIAN'.padStart(13)}${'p75'.padStart(13)}${'p90'.padStart(13)}${'better on tour'.padStart(16)}`)
+  const pairedOf = (b: FamilyBackground | null) => {
+    const idx = college.map((_, i) => i).filter((i) => b === null || college[i].background === b)
+    return idx.map((i) => college[i].fundsDelta - tour[i].fundsDelta)
+  }
+  const deltaRow = (label: string, xs: number[]) => {
+    if (!xs.length) return
+    const worse = xs.filter((x) => x < 0).length
+    console.log(
+      `  ${label.padEnd(11)}${String(xs.length).padStart(4)}` +
+        [0.1, 0.25, 0.5, 0.75, 0.9].map((q) => usd(pctl(xs, q)).padStart(13)).join('') +
+        `${`${worse}/${xs.length} (${Math.round((100 * worse) / xs.length)}%)`.padStart(16)}`,
+    )
+  }
+  for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) deltaRow(b, pairedOf(b))
+  deltaRow('ALL', pairedOf(null))
+
+  console.log(`\n  ...AND THE SAME THREE FOR A NON-AMERICAN (out-of-state sticker, no need layer – 34 CFR 668.33)`)
+  console.log(`  ${'background'.padEnd(11)}${'n'.padStart(4)}${'p10'.padStart(13)}${'p25'.padStart(13)}${'MEDIAN'.padStart(13)}${'p75'.padStart(13)}${'p90'.padStart(13)}${'better on tour'.padStart(16)}`)
+  const pairedNonOf = (b: FamilyBackground | null) => {
+    const idx = college.map((_, i) => i).filter((i) => b === null || college[i].background === b)
+    return idx.map((i) => college[i].fundsDelta + usPerYear(college[i]) * YEARS - nonUsPerYear(college[i]) * YEARS - tour[i].fundsDelta)
+  }
+  for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) deltaRow(b, pairedNonOf(b))
+  deltaRow('ALL', pairedNonOf(null))
+
+  // ===============================================================================================
+  // ⭐⭐ DID THE MONEY RUN OUT WHILE SHE WAS THERE? (§2e, named and never measured)
+  // ===============================================================================================
+  console.log(`\n⭐⭐ THE FAMILY RAN OUT MID-DEGREE?  – the state §2e said became reachable and did not measure`)
+  const broke = college.filter((r) => r.fundsAfter < 0 || r.inDebtAfter)
+  const brokeTour = tour.filter((r) => r.fundsAfter < 0 || r.inDebtAfter)
+  console.log(`  under water after ${YEARS} years      college ${broke.length}/${college.length}   ·   tour ${brokeTour.length}/${tour.length}`)
+  console.log(`  careers ENDED inside the ${YEARS}y     college ${college.filter((r) => r.ended !== null && r.ended !== 'college').length}/${college.length}   ·   tour ${tour.filter((r) => r.ended !== null).length}/${tour.length}`)
+  for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+    const g = college.filter((r) => r.background === b)
+    if (!g.length) continue
+    console.log(`    ${b.padEnd(11)}under water ${String(g.filter((r) => r.fundsAfter < 0 || r.inDebtAfter).length).padStart(3)}/${String(g.length).padEnd(4)} · funds after, median ${usd(med(g.map((r) => r.fundsAfter)))}`)
+  }
 }
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 21 – WHAT THE FAMILY ACTUALLY HAS THE WEEK SHE ENROLS.
+// =================================================================================================
+//
+// THE OWNER, 17.08: «...с учетом доходов семьи на момент поступления и прочего».
+//
+// ⚠⚠ THIS BLOCK IS THE CALIBRATION INPUT FOR A MEANS TEST AND IT IS PRINTED BEFORE ANYTHING READS IT.
+// The need layer priced by the three background LABELS until round 21. To price it on the family's
+// real position instead, the real position has to be measured first – and the headline finding is
+// that the two axes are not the same axis at all:
+//
+//   * INCOME here is `parentIncomeForWeekCents x 52` – the parents' annualised contribution to the
+//     TENNIS, grown by five seasons of `incomeGrowthBand`. It is NOT a household income, it is far
+//     below the US median ($105,800 `[S]`), and that is why no federal dollar threshold can be laid
+//     over it. Any knot set on it is OURS.
+//   * ASSETS is `world.fundsCents` at the fork – genuinely the family's savings, genuinely what
+//     «копят деньги» means, and it CAN BE NEGATIVE.
+console.log(`\n\n⭐⭐⭐ THE FAMILY AT ENROLMENT – the position a means test would read, n=${college.length}`)
+console.log(`  ${''.padEnd(30)}${'min'.padStart(13)}${'p10'.padStart(13)}${'p25'.padStart(13)}${'median'.padStart(13)}${'p75'.padStart(13)}${'p90'.padStart(13)}${'max'.padStart(13)}`)
+const posRow = (label: string, xs: number[]) => {
+  if (!xs.length) return
+  console.log(
+    `  ${label.padEnd(30)}${usd(Math.min(...xs)).padStart(13)}` +
+      QS.map((q) => usd(pctl(xs, q)).padStart(13)).join('') +
+      usd(Math.max(...xs)).padStart(13),
+  )
+}
+posRow('parent income /yr (ALL)', college.map((r) => r.incomeAtForkCents))
+posRow('savings at the fork (ALL)', college.map((r) => r.assetsAtForkCents))
+console.log(`\n  BY BACKGROUND – and the SPREAD INSIDE a background is the whole argument for reading the`)
+console.log(`  position rather than the label: a label has none.`)
+console.log(`  ${'background'.padEnd(11)}${'n'.padStart(4)}${'income p25'.padStart(14)}${'income med'.padStart(14)}${'income p75'.padStart(14)}${'savings p25'.padStart(14)}${'savings med'.padStart(14)}${'savings p75'.padStart(14)}`)
+for (const b of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+  const g = college.filter((r) => r.background === b)
+  if (!g.length) continue
+  const inc = g.map((r) => r.incomeAtForkCents)
+  const sav = g.map((r) => r.assetsAtForkCents)
+  console.log(
+    `  ${b.padEnd(11)}${String(g.length).padStart(4)}` +
+      [0.25, 0.5, 0.75].map((q) => usd(pctl(inc, q)).padStart(14)).join('') +
+      [0.25, 0.5, 0.75].map((q) => usd(pctl(sav, q)).padStart(14)).join(''),
+  )
+}
+console.log(`\n  ⚠ THE OVERLAP IS THE FINDING. Where the savings ranges of two backgrounds overlap, the`)
+console.log(`    label and the position DISAGREE about the same family – and today the bill reads the label.`)
