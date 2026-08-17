@@ -203,6 +203,28 @@ for (let b = 0; b < BUCKETS.length; b++) {
 }
 console.log('')
 
+console.log('2b. ⭐ THE DRAW SHE FACES **AT A GIVEN RANK** – the confound-free version of section 1')
+console.log('')
+console.log('   Section 1 averages over DIFFERENT SETS of entries, so it cannot separate "the draw got')
+console.log('   harder" from "she now enters Slams she used to be refused, where she is far down the table".')
+console.log('   Split by entrant rank, that confound is gone: a flat row is a draw that did not change.')
+console.log('')
+console.log('  bucket        slots 0: 1st-match   opp rank      slots 8: 1st-match   opp rank')
+for (let b = 0; b < BUCKETS.length; b++) {
+  const cells = [armOff, armOn].map((arm) => {
+    const rows = arm.entries.filter((e) => bucketOf(e.rank) === b)
+    return {
+      fc: mean(rows.map((e) => e.firstMatchChance).filter((x) => Number.isFinite(x))),
+      or: mean(rows.map((e) => e.opponentRank).filter((x): x is number => x !== null)),
+    }
+  })
+  const fmt = (x: number) => (Number.isFinite(x) ? x.toFixed(1) : '   –')
+  console.log(
+    `  ${BUCKETS[b][0].padEnd(12)} ${fmt(100 * cells[0].fc).padStart(17)}%   ${fmt(cells[0].or).padStart(8)}   ${fmt(100 * cells[1].fc).padStart(17)}%   ${fmt(cells[1].or).padStart(8)}`,
+  )
+}
+console.log('')
+
 console.log('3. THE MIX – how many entries came from each bucket, which is the denominator')
 console.log('')
 console.log('  bucket         slots 0    slots 8')
@@ -219,6 +241,30 @@ console.log('4. HOW MANY OF THOSE ENTRIES WERE WILD CARDS AT ALL')
 console.log(`  slots 0   ${wcOff} of ${armOn.entries.length ? armOff.entries.length : 0}   (must be zero – the master switch)`)
 console.log(`  slots 8   ${wcOn} of ${armOn.entries.length}`)
 console.log('')
+{
+  // ⭐ THE HEADLINE THE OTHER SECTIONS DECOMPOSE, and it supersedes the 41.8% → 44.3% this wave first
+  // reported: that pair was measured through a bench that could not enter a wild card at all.
+  const overall = [armOff, armOn].map((arm) => {
+    const rows = joined(arm)
+    return { n: rows.length, lost: rows.filter((e) => e.finish === last).length }
+  })
+  console.log('5. THE HEADLINE – first-match loss rate over ALL Slam entries')
+  console.log(`  slots 0   ${overall[0].lost}/${overall[0].n} = ${pct(overall[0].lost, overall[0].n)}`)
+  console.log(`  slots 8   ${overall[1].lost}/${overall[1].n} = ${pct(overall[1].lost, overall[1].n)}`)
+  // Direct standardisation: arm A's per-bucket rates applied to arm B's mix. The gap between this and
+  // arm A's own headline is the part the MIX explains; the rest is a real change in difficulty.
+  let num = 0
+  let den = 0
+  for (let b = 0; b < BUCKETS.length; b++) {
+    const a = joined(armOff).filter((e) => bucketOf(e.rank) === b)
+    const c = joined(armOn).filter((e) => bucketOf(e.rank) === b)
+    if (!a.length || !c.length) continue
+    num += c.length * (a.filter((e) => e.finish === last).length / a.length)
+    den += c.length
+  }
+  console.log(`  standardised (A's rates, B's mix, shared buckets only)   ${den ? ((100 * num) / den).toFixed(1) : '–'}%   over ${den} entries`)
+  console.log('')
+}
 console.log(`  careers entering a Slam:   slots 0 ${armOff.careersEntering.size}   slots 8 ${armOn.careersEntering.size}`)
 console.log(`  ...ever past R1 there:     slots 0 ${armOff.careersPastR1.size}   slots 8 ${armOn.careersPastR1.size}`)
 console.log('')

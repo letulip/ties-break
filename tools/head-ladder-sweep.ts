@@ -80,6 +80,16 @@ const LADDERS: Array<{ label: string; wta250: number | null; wta500: number | nu
   { label: 'SHIPPED TODAY (250 only)', wta250: 64, wta500: null },
   { label: '250 #64 · 500 #24', wta250: 64, wta500: 24 },
   { label: '250 #64 · 500 #32', wta250: 64, wta500: 32 },
+  // ⭐⭐ THE THREE ROWS THE FIRST SWEEP WAS MISSING, AND WITHOUT THEM THE TABLE HAD NO ANSWER. The
+  // first cut moved BOTH heads up together on every row, so every ladder that made the 500 survivable
+  // had also pushed the 250's head past #80 – where the 250 becomes EASIER than the WTA 125 below it
+  // (measured: 77.1% past R1 against the 125's 76.0%), i.e. a farm. But «пропорционально» constrains
+  // only that the higher rung excludes the SMALLER slice; it does not require the lower head to move
+  // at all. Holding the 250 at the #64 that round 21 #4 already measured, and raising the 500's head
+  // alone, is both proportional and the only region where the two criteria can both hold.
+  { label: '250 #64 · 500 #40', wta250: 64, wta500: 40 },
+  { label: '250 #64 · 500 #50', wta250: 64, wta500: 50 },
+  { label: '250 #64 · 500 #64', wta250: 64, wta500: 64 },
   { label: '250 #80 · 500 #32', wta250: 80, wta500: 32 },
   { label: '250 #100 · 500 #40', wta250: 100, wta500: 40 },
   { label: '250 #100 · 500 #50', wta250: 100, wta500: 50 },
