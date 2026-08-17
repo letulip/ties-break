@@ -313,6 +313,13 @@ bonus doing it – but the AMOUNT is invisible, and P4 said so before the build 
 same four years at 0.12 points; this is half of that, which is exactly what a term of that size can
 buy.
 
+⭐ **AND IN THE OWNER'S OWN FRAME – "college costs 90% of what a coached year develops, so a strong
+programme should cost less of it" – it does, and by almost nothing.** Against P5's coached
+counterfactual (+1.177 over the same four years) the three places keep **94% · 97% · 99%** of it. The
+loss the dear place saves her is **six per cent of a tenth of a skill point**. ⚠ That comparison is
+across two runs at different commits, not a paired arm, so it is indicative; the paired figure is the
++0.06 above.
+
 ⭐⭐ **So "the chance of returning to the tour" is measured and it is FLAT: 0 / 53, 0 / 53, 1 / 53.**
 She comes back off the professional list at every place, because she was off it walking in (P5 §2c) –
 and no tier changes that. **The tier's real currency is money, not her game.** That is the answer to
