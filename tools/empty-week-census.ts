@@ -97,7 +97,7 @@ import {
   vacationForWeek,
   kidAgeAt,
 } from '../src/engine/world'
-import { isOffSeasonWeek, WEEKS_PER_YEAR, TIER_LADDER, tierAgeBlock } from '../src/engine/season/calendar'
+import { isOffSeasonWeek, WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
 import { activeLadderOf, tierOpenFor, hasOutgrown } from '../src/engine/world/ladder'
 import { UPCOMING_WEEKS } from '../src/engine/world/constants'
 import { seasonLastWeek } from '../src/engine/offers'
@@ -218,7 +218,13 @@ function headerCounts(world: ReturnType<typeof openCareer>['world']): { id: stri
 /** THE FEED'S OWN PREDICATE, through the real `feedContext`/`feedShows` the screen calls, over the
  *  real `UPCOMING_WEEKS` horizon the snapshot clips to. `entered`/`eligible` are filled from the same
  *  gate the snapshot fills them from. */
-function feedDraws(world: ReturnType<typeof openCareer>['world']): { id: string; week: number; tier: TierId }[] {
+interface FeedRead {
+  /** what the rung and horizon rules let through */
+  admitted: { id: string; week: number; tier: TierId }[]
+  /** ...and what survives the one-row-per-week collapse */
+  drawn: { id: string; week: number; tier: TierId }[]
+}
+function feedDraws(world: ReturnType<typeof openCareer>['world']): FeedRead {
   const entered = new Set(world.entries)
   const facts = world.season
     .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)

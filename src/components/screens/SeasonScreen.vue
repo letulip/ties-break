@@ -644,6 +644,41 @@ const supplyLine = computed<{ total: number; weeks: number; parts: string[] } | 
   return { total, weeks: supply.weeksLeft, parts }
 })
 
+/** ⭐⭐ ROUND-21 #2b – HOW MANY OF THAT COUNT THE FEED BELOW ACTUALLY DRAWS.
+ *
+ *  THE OWNER'S REPORT, and it is two sentences about one screen: there are lots of them on the
+ *  season page at the top, and he does not see them in the feed. His screenshot reads
+ *  `9 left to enter over 10 weeks`. Both numbers were right. The header counts every rung the
+ *  engine opens, across the rest of the season; the feed draws eight weeks, of the rungs that pay
+ *  into her tables, one row a week, and a week she has booked renders as the booking. Six
+ *  independent reasons the two can differ, and not one of them was on screen.
+ *
+ *  ⚠⚠ AND THE GAME ALREADY KNEW. The `title` on this line has said so since it shipped -
+ *  "including the rare ones the eight-week feed cannot show" - and a `title` is a HOVER tooltip.
+ *  This is a phone game. The explanation existed the whole time, in the one place the device it is
+ *  played on cannot reach, which is the same failure family as round-20 #3: a surface measured by
+ *  what it SAYS rather than by what the screen can deliver.
+ *
+ *  So the reconciliation goes on screen as a number, next to the number it reconciles. Measured
+ *  over 18 careers x 676 weeks (tools/empty-week-census.ts): 78.3% of the events this header counts
+ *  never reach the feed, and 5.2% of her non-blackout weeks had tennis she could have entered that
+ *  the feed never drew a card for at all. Saying "9" and showing four is not a defect in either
+ *  number; saying "9" and never saying "four of them are below" is.
+ *
+ *  ⚠ IT COUNTS THROUGH `calendarRows`, NOT THROUGH `visibleUpcoming`. Those are different sets: a
+ *  stacked week collapses to one row and a booked week draws its booking instead, so the rows are
+ *  what the parent can actually see and the upcoming list is what survived the rung filter. The
+ *  whole point of this line is to name the second number, so it must be read off the first surface.
+ *  The enterability test is `seasonSupply`'s own, so the two numbers count the same KIND of thing. */
+const supplyOnScreen = computed<number>(() => {
+  let n = 0
+  for (const r of calendarRows.value) {
+    if (r.kind !== 'event' || !r.event) continue
+    if (r.event.entered || (r.event.eligible && week.value <= r.event.deadlineWeek)) n++
+  }
+  return n
+})
+
 // A passed deadline swaps the Enter button for a muted "Entries closed" pill (round-5
 // item 2); an open event only ever disables Enter for insufficient funds.
 function entriesClosed(e: UpcomingEvent): boolean {
@@ -1124,6 +1159,15 @@ function closeExhibition(): void {
         <p v-if="supplyLine" class="season-supply" :title="'Tournaments you can still enter this season, counted across every level open to her - including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.'">
           {{ supplyLine.total }} left to enter over {{ supplyLine.weeks }} weeks
           <span class="season-supply-tiers">{{ supplyLine.parts.join(' · ') }}</span>
+          <!-- ⭐⭐ ROUND-21 #2b: the sentence that reconciles this count with the cards under it.
+               The `title` above has always said the feed cannot show them all, and a title is a
+               hover tooltip on a phone game - see `supplyOnScreen` in the script for the owner's
+               report and the measurement. Drawn only when the two numbers actually differ: on a
+               week where every counted event is on screen this line would be noise, and the point
+               of it is to explain a gap rather than to narrate agreement. -->
+          <span v-if="supplyOnScreen < supplyLine.total" class="season-supply-here">
+            {{ supplyOnScreen }} of them on the cards below
+          </span>
         </p>
       </div>
       <IconButton class="tier-guide-btn" label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</IconButton>
@@ -1757,6 +1801,16 @@ section.bare .event-cards {
 }
 .season-supply-tiers::before {
   content: '· ';
+}
+/* ⭐⭐ ROUND-21 #2b – ITS OWN LINE, and that is the whole of the styling decision. The rung list
+   above it is a `· `-joined tail because it is DETAIL about the total; this sentence is not detail,
+   it is the reconciliation between this line and the cards under it, and appended to the same run
+   of text it would read as one more rung. `display: block` also means it cannot push the tiers into
+   a second line at 320px, which is where the strip is tightest. Same quiet register as the tail -
+   it explains a number, it is not a warning. */
+.season-supply-here {
+  display: block;
+  opacity: 0.7;
 }
 
 /* The defending badge (W2-LADDER §3): the accent register the Entered pill already uses - points

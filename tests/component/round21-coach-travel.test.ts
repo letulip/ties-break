@@ -873,9 +873,18 @@ describe('§5 the card says what the second fare buys', () => {
       const current = w.findAll('.cm-row').filter((r) => r.classes().includes('current'))
       expect(current.length, 'the fixture has a coach hired').toBe(1)
 
+      //
+      // ⚠ RE-AIMED, ROUND-21 #1 – THE HIRED ROW'S STRIP IS 78px NOW, and this test measures the
+      // HIRED row (`.cm-row.current`, the only card that carries these two lines at all). The owner
+      // asked for a wider window on the coach she has and `.cm-body` moved right with it, so the
+      // 12px corridor below is unchanged and is still the claim; only the edge it is measured from
+      // moved. The literal is kept rather than softened to "whatever the strip reports", because a
+      // strip that went back to shrink-wrapping the image would drag the corridor with it and a
+      // self-referential bound would notice nothing. See tests/component/round21-coach-photo.test.ts,
+      // which holds this 78 against the 132px row floor that pays for it.
       const art = current[0].find('.cm-art').element as HTMLElement
       const strip = parseFloat(getComputedStyle(art).width)
-      expect(strip, 'the strip has a width of its own').toBe(62)
+      expect(strip, 'the hired row\'s strip has a width of its own').toBe(78)
       expect(getComputedStyle(art).overflow, 'and clips the picture at it').toContain('hidden')
 
       const inkLeft = (sel: string): number => {
