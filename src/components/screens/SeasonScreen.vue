@@ -10,6 +10,11 @@
 // "+ Plan week" -> PlanWeekSheet (Practice / Vacation). A booked week renders with its package
 // name and a Cancel. When she is worn out the screen OFFERS a rescue vacation – an offer, never
 // an auto-book.
+//
+// ⚠ THE OWNER'S RULINGS BELOW ARE TRANSLATED, NOT SUMMARISED. This is a `.vue`, so its comments are
+// English – and every ruling in this file is quoted in his own words, under its own date, in
+// docs/decisions.md (17.08.2026, "eighteen owner rulings"). Translate one, never shorten it: the
+// reasoning IS the record, and the record now lives in two places rather than one.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
@@ -27,8 +32,9 @@ import TierGuide from '../TierGuide.vue'
 // the component - the photograph card here and the notecard on Home were already two shared rules
 // in the sheet, so the variant records a split that existed rather than inventing one.
 import ScreenShell from '../ui/ScreenShell.vue'
-// THE TAKEOVER, AND IT IS THE OTHER HALF OF `ScreenShell` (owner, 30.07: «надо все одинаково сделать
-// оверлеем поверх всего экрана»). `ScreenShell` is the stack a TABBED screen gets; this is the stack a
+// THE TAKEOVER, AND IT IS THE OTHER HALF OF `ScreenShell` (owner, 30.07: it must all be done the
+// same way, as an overlay over the whole screen – his words verbatim in docs/decisions.md).
+// `ScreenShell` is the stack a TABBED screen gets; this is the stack a
 // screen that COVERS the tabs gets, and the sandbox exhibition below is the fourth and last place
 // MatchViewer is mounted. It was the one that did not have it - see the note at its call site.
 import TakeoverShell from '../ui/TakeoverShell.vue'
@@ -94,9 +100,10 @@ function surfaceNote(surface: Surface): string | null {
 // R11-15 – the event card's surface PILL, back in the card corner. THIS REVERTS R10-11.
 //
 // R10-11 replaced the coloured pill with a ringed colour DOT and moved the surface name underneath
-// it. The owner's verdict on that swap: «раньше в углу карточки в календаре была пилюля с типом
-// покрытия и цветом – было сильно лучше, чем кружок сейчас. Надо вернуть пилюлю, а вот под ней
-// оставить просто подходит или нет, а название поверхности убрать.» So the pill is back, with the
+// it. The owner's verdict on that swap: the card corner used to carry a PILL with the surface type
+// and its colour, and that was far better than the circle it has now - bring the pill back, and
+// underneath it leave just "suits her or not", with the surface name taken off that line (his words
+// verbatim in docs/decisions.md). So the pill is back, with the
 // court's colour and its NAME inside it, and the line beneath carries the verdict ONLY.
 //
 // The surface name now appears EXACTLY ONCE, inside the pill – which is the whole reason the fit line
@@ -226,8 +233,9 @@ function venueUrl(e: UpcomingEvent): string {
 /** WHAT THE COACH SAYS about an event. Two clauses at most: how the field reads, and - only when
  *  the court actually has an opinion about her build - whether it suits her.
  *
- *  THE FIELD CLAUSE HAS FOUR WORDINGS PER VERDICT, picked off `seed:coachsay:<eventId>` (owner:
- *  «а там есть какое-то разнообразие в словах тренера?» - there was not). The event's own
+ *  THE FIELD CLAUSE HAS FOUR WORDINGS PER VERDICT, picked off `seed:coachsay:<eventId>` (owner,
+ *  asking whether there is any variety at all in what the coach says - his words verbatim in
+ *  docs/decisions.md; there was not). The event's own
  *  sub-stream, so a tournament's line never changes between renders and costs the MAIN stream
  *  nothing; and because it is keyed on the EVENT rather than the week, two cards on screen together
  *  do not echo each other.
@@ -257,8 +265,9 @@ const COACH_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
 
 // ⚠ THE COACH AND THE RING WERE ANSWERING DIFFERENT QUESTIONS, AND THE CARD PRINTED THEM AS ONE.
 //
-// Owner, 31.07: «иногда попадается "On paper this is hers to lose" при 92% =) и в обратную сторону
-// тоже бывает». Both halves of that are real, and they are two different faults:
+// Owner, 31.07: sometimes "On paper this is hers to lose" turns up at 92% =) and it happens the
+// other way round too (his words verbatim in docs/decisions.md). Both halves of that are real, and
+// they are two different faults:
 //
 //   * THE SEAM. The ring is `firstMatchChance` – her odds against ONE named opponent in the first
 //     round. The coach's line comes off `fieldStrength` – the share of the WHOLE field ranked above
@@ -285,9 +294,10 @@ const RING_CERTAIN = 0.85
  *  because a parent squinting at a draw sheet really is unsure of the reading at 92 percent too. */
 const HEDGED_LINES = new Set(['On paper this is hers to lose.', 'A field she should be beating.'])
 
-// ⚠ AND WHEN NOBODY IS HIRED, NOBODY PROFESSIONAL IS SPEAKING (R15-18, owner 09.08: «на 8к без
-// тренера на карточках в season написано coach says и очень профессионально… непонятно чем этот
-// вариант отличается от тренера»).
+// ⚠ AND WHEN NOBODY IS HIRED, NOBODY PROFESSIONAL IS SPEAKING (R15-18, owner 09.08: on the 8k
+// background with no coach, the season cards still say "coach says" and say it very professionally…
+// it is unclear how this option differs from having a coach. His words verbatim in
+// docs/decisions.md).
 //
 // `coachSays` read `e.preview` alone and never asked whether a coach was hired, so a family paying
 // nothing was handed professional draw analysis under a plaque that said Coach says. Two separate
@@ -300,7 +310,8 @@ const HEDGED_LINES = new Set(['On paper this is hers to lose.', 'A field she sho
 // some of them, rather than a professional reading a field. Same verdicts, same seam, same
 // sub-stream, different mouth.
 //
-// ⚠ THE MECHANICAL ANSWER TO «чем этот вариант отличается» IS NOT HERE. What a coach actually buys
+// ⚠ THE MECHANICAL ANSWER TO "how this option differs" - the second half of that same 09.08 ruling,
+// in his own words in docs/decisions.md - IS NOT HERE. What a coach actually buys
 // is the per-day training controls the owner ruled on in the same session, and this line must not
 // pre-empt them by inventing a difference in what the preview contains. `preview` is untouched.
 const SELF_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
@@ -605,7 +616,8 @@ function packageLabel(packageId: string): string {
   return vacationPackage(packageId)?.label ?? packageId
 }
 
-// THE DEFENDING BADGE's number (W2-LADDER §3, the owner's «очковое окно возможностей»): the
+// THE DEFENDING BADGE's number (W2-LADDER §3, the owner's "window of points opportunity" - his
+// phrase, verbatim in docs/decisions.md): the
 // counted PROFESSIONAL result exactly 52 weeks
 // behind this card's week - the slot this event replaces in her rolling window. W-track cards
 // only: the badge is about the professional window, and a junior card wearing a WTA number would
@@ -627,8 +639,9 @@ const proBudgetLine = computed<string | null>(() => {
   return `Pro entries this season: ${cap.used} of ${cap.limit}`
 })
 
-// THE PLANNING COUNTER (owner, 02.08: «сколько доступных турниров и какого уровня у нас до конца
-// года вообще осталось, это даст человеку возможность планировать»). The engine's own read of the
+// THE PLANNING COUNTER (owner, 02.08: how many tournaments are available to us and at what level,
+// with how much of the year left at all - that gives a person the chance to plan. His words verbatim
+// in docs/decisions.md). The engine's own read of the
 // WHOLE remaining season - not this screen's eight-week feed, and deliberately NOT filtered by the
 // two-type rule, so the rare rungs she may enter are counted where the feed can only mention them.
 // Null before the first snapshot and in a season with nothing left, where a row of zeroes would be
@@ -892,7 +905,8 @@ function openPlanner(row: CalendarRow): void {
 }
 
 /** The sheet emitted a practice choice: confirm it (with the guardrail warning in the copy –
- *  the owner's «Она уже вымотана – ещё матч?» lands HERE, where the parent can still say yes). */
+ *  the owner's "She is already worn out – another match?" lands HERE, where the parent can still say
+ *  yes; his words verbatim in docs/decisions.md). */
 function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number; caution: PracticeCaution }): void {
   const what = p.withCoach ? 'Practice match with the coach' : 'Practice match'
   pendingConfirm.value = {
@@ -1075,14 +1089,16 @@ function openPracticeLive(match: WorldMatch, atWeek: number): void {
  *  lands and nothing opens – the news event explains it, as before.
  *
  *  ⚠ W4 RENAMED THE BUTTON THIS SITS BEHIND, from "Watch it live →" to "Play it and watch →". The
- *  owner caught the same two words on the Weekly Story's copy of this control – «She played her
- *  practice match - Watch it live на кнопке. Ну точно не live, а replay, да?» – and they were no
+ *  owner caught the same two words on the Weekly Story's copy of this control – "She played her
+ *  practice match - Watch it live, it says on the button. That is definitely not live, it is a
+ *  replay, no?" (his words verbatim in docs/decisions.md) – and they were no
  *  truer here, one tick removed: this handler ADVANCES THE WEEK, the engine resolves the friendly
  *  inside that tick exactly as it always did, and PracticeFlow then re-simulates the stored record
  *  under its stored seed. There is no moment at which anything is being watched as it happens. The
  *  new label is what the press actually costs and buys, in that order. */
 async function playPracticeWeek(): Promise<void> {
-  // ⚠ CLAIM THE POST-ADVANCE NAVIGATION FIRST (owner, 01.08: «он должен вести на пре-матч экран»).
+  // ⚠ CLAIM THE POST-ADVANCE NAVIGATION FIRST (owner, 01.08: it must lead to the pre-match screen –
+  // his words verbatim in docs/decisions.md).
   // App.vue's watcher fires INSIDE the awaited advance - the snapshot lands before the next line
   // here runs - so the claim has to be made before the call, not after it. Without it the watcher
   // switched tabs (story, or Home), this screen unmounted, and the flow this function opens two
