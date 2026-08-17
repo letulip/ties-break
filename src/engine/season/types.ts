@@ -152,6 +152,42 @@ export interface TierDef {
    *  meaning (`hasAcceptanceList`). W15 is the on-ramp and has neither field. */
   acceptsRank?: number
 
+  /** ⭐⭐ THE OTHER END OF THE SAME LIST – THE HEAD (round 21 #4, 17.08). `acceptsRank` is where a
+   *  rung's entry list STOPS; this is where it STARTS. The list runs `acceptsFromRank` … `acceptsRank`,
+   *  and a player ranked INSIDE this number is not on it: she is somewhere better that week.
+   *
+   *  ⚠⚠ IT EXISTS BECAUSE THE ENGINE ONLY HAD THE TAIL, AND THAT IS HALF A RULE. Measured on the
+   *  owner's own save (docs/specs/round21-measured-2026-08.md §3f): the WTA 250, 500 and 1000 drew
+   *  fields of the SAME strength – mean core 68.4 / 68.9 / 68.4, with 94-97% of each stronger than
+   *  the #121 player standing in them – because `selectEntrants` fills a rung from the TOP of its
+   *  `entrantPctBand` and the three bands open at #32 · #22 · #11 of a 1,799-row table. Three windows
+   *  onto one head, and the head is a single sixty-four-chair storey. **The consequence, in one
+   *  number: a WTA 250 was worth 20.1 expected points an event to her – the worst rung in the game,
+   *  below a W50's 29.7** – a 1000-strength field for 250-level points.
+   *
+   *  ⚠ AND THE SPORT RUNS THE OTHER WAY, which is the whole argument for putting it here rather than
+   *  re-spacing a band. `docs/research/ranking-points-by-tier.md` §4c-C: the ITF's Play Down rules bar
+   *  WTA #1-50 from every W-series event and #1-150 from W15/W35; a WTA 125 bars #1-20. The research
+   *  doc's own summary is *"Reality gates the strong OUT; we gate the weak IN."* We already ship the
+   *  first half for HER (`PLAY_DOWN` / `playDownBars`, world/ladder.ts) and had no equivalent anywhere
+   *  for the FIELD, which is why one head filled all three rungs.
+   *
+   *  ⚠ AN ABSOLUTE RANK, FOR `acceptsRank`'s OWN REASON, and read the note above this one for it in
+   *  full: the W table's points are the real curve's, so position #50 in it is an attempt at world #50
+   *  and not a share of whoever happens to exist. A share would move when `FIELD.size` does; this
+   *  number means what the tour means by it whatever the population.
+   *
+   *  ⚠ WHAT IT IS *NOT*: it is not a cut on HER. It is read by `selectEntrants` only – the AI field –
+   *  and the symmetric half that would refuse her a WTA 250 once she is inside it is a SECOND decision
+   *  and deliberately not taken here (docs/specs/the-250-is-not-a-1000-2026-08.md §5). The machinery
+   *  for it exists and is named: `playDownBars`.
+   *
+   *  ⚠ WTA-TRACK RUNGS ONLY. The number is a WORLD rank, and the only table where an entrant's ordinal
+   *  position IS a world rank is the merged W standings every W caller passes. A junior or domestic
+   *  rung is ranked in its own 199-row population, where "#50" means nothing – so declaring this on one
+   *  would silently bar the top quarter of the cohort. `tests/ladder.test.ts` enforces the scope. */
+  acceptsFromRank?: number
+
   /** R12-6: the smallest allowed distance, in weeks, between two events OF THIS TIER. Absent (or 1)
    *  means adjacency is fine, which is the historical behaviour and the right one for the dense
    *  entry rungs. 2 means "never on consecutive weeks".

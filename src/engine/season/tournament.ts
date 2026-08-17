@@ -346,7 +346,38 @@ export function selectEntrants(
   // week and nothing else - is untouched BY CONSTRUCTION rather than by luck. Verified: it
   // re-derives byte-for-byte on this branch. The three domestic rungs carry no age gate at all, so
   // their sub-streams are byte-identical as well.
-  const band = eligible.filter((p) => isEntrantBand(event.tier, pctOf(p.id)))
+  const banded = eligible.filter((p) => isEntrantBand(event.tier, pctOf(p.id)))
+
+  // ⭐⭐ THE HEAD OF THE ENTRY LIST (round 21 #4, 17.08) – `TierDef.acceptsFromRank`, and the whole
+  // mechanism is three lines because the band already had the other end of it.
+  //
+  // `acceptsRank` is where a rung's list STOPS and this is where it STARTS: a player ranked inside
+  // it is not refused a WTA 250, she is at a 1000 or a major that week. Without it the top of the
+  // table filled every rung above the WTA 125 – measured, mean field core 68.4 / 68.9 / 68.4 at the
+  // 250 / 500 / 1000, three windows onto one sixty-four-chair storey – and the 250 was worth 20.1
+  // expected points to a #121 player against a W50's 29.7. See docs/specs/round21-measured-2026-08.md
+  // §3f for the measurement and the-250-is-not-a-1000-2026-08.md for the fix.
+  //
+  // ⚠ THE POSITION, NOT THE DENSE RANK, exactly as the band above reads it and for the same reason:
+  // dense ranks collapse every zero-point player onto one number. `position + 1` is a world rank
+  // here because every W caller passes the MERGED W standings (world.ts's `selRanking`, the canonical
+  // `tour.ranking`, preview.ts's) – which is why the field is documented WTA-track-only.
+  //
+  // ⚠ IT YIELDS TO FILLABILITY, in the same order and for the same reason as the age gate and the
+  // week exclusion two blocks up: a draw that cannot be filled is a crash, not a compromise. It
+  // cannot fire at the shipped number (the 250's band holds ~400 candidates against a draw of 32 and
+  // the head takes 18 of them), and it is here so a caller handing this function a small,
+  // cohort-only ranking – a bench, an old test – degrades to the pre-rule field instead of to an
+  // undefined player in a bracket.
+  //
+  // ⚠ RNG: the candidate COUNT moves, which is the documented mutable class this function has moved
+  // in at every band and age re-pick (see the box above). It moves as a function of (tier, the
+  // kid-free ranking's ordinal positions, ages, the week's exclusions) and of NOTHING the player
+  // does, so input-independence – the fairness property – is untouched, and not one draw of this is
+  // on the MAIN weekly stream.
+  const head = TIERS[event.tier].acceptsFromRank
+  const gated = head ? banded.filter((p) => (posOf.get(p.id) ?? total - 1) + 1 > head) : banded
+  const band = gated.length >= drawSize ? gated : banded
 
   // Position-biased stochastic entry: lower key = more likely to enter. Jitter is a
   // fraction of the draw so strong players usually enter but the field still moves.

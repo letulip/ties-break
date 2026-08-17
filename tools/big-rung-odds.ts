@@ -65,6 +65,27 @@ const numOf = (n: string, d: number): number => {
 const RUNS = numOf('runs', 400)
 /** how many professionals from her own rank band get the same replay, for the "is she alone" half */
 const BAND = numOf('band', 12)
+/** ⭐ THE HEAD SWEEP (round 21 #4, 17.08) – `--head-sweep 0,40,50,64,80` re-runs section 2's own
+ *  replay for ONE rung at each candidate `TierDef.acceptsFromRank`, so the number that ships is
+ *  chosen by measurement rather than by argument. `0` is the OFF arm and must reproduce the shipped
+ *  row exactly, which is what makes the rest of the column readable.
+ *
+ *  ⚠ IT PATCHES `TIERS` IN MEMORY AND RESTORES IT, the same A/B idiom `tools/field-quality.ts` uses
+ *  on `entrantPctBand`. Nothing under `src/` is touched and the tool stays measurement-only.
+ *
+ *  ⚠ SECTION 4 IS SKIPPED WHILE SWEEPING – it is twelve professionals x four rungs x `--runs`
+ *  brackets and answers a different question ("is she alone"), which the sweep does not move. */
+const SWEEP = ((): number[] => {
+  const s = strOf('head-sweep')
+  return s ? s.split(',').map(Number).filter((x) => Number.isFinite(x)) : []
+})()
+/** which rung the sweep moves. The 250 is the one the audit measured; a later wave can point it elsewhere. */
+const SWEEP_TIER = (strOf('sweep-tier') ?? 'wta250') as TierId
+/** ⭐ THE A-ARM FOR THE WHOLE RUN – `--head-off` clears `acceptsFromRank` on every rung before a line
+ *  of section 2 runs, so the pre-round-21 world can be measured at the SAME `--runs` and on the SAME
+ *  sub-streams as the shipped one. Without it a before/after table compares two sample sizes and
+ *  calls the difference a fix. Same idiom and same purpose as `tools/w-onramp-probe.ts --slots 0`. */
+const HEAD_OFF = args.includes('--head-off')
 
 const pad = (s: string | number, w: number) => String(s).padStart(w)
 const padE = (s: string | number, w: number) => String(s).padEnd(w)
@@ -118,8 +139,11 @@ async function main(): Promise<void> {
     deadlineWeek: w.week,
   })
 
+  if (HEAD_OFF) for (const t of Object.values(TIERS)) t.acceptsFromRank = undefined
+
   console.log(
-    `BIG-RUNG ODDS – ${w.profile.kidName} ${w.profile.kidLastName}, week ${w.week}, WTA #${w.kidRankWta} on ${kidPoints(w, 'wta')} pts` +
+    (HEAD_OFF ? '⚠ --head-off: every rung\'s `acceptsFromRank` cleared – this is the PRE-round-21 world\n' : '') +
+      `BIG-RUNG ODDS – ${w.profile.kidName} ${w.profile.kidLastName}, week ${w.week}, WTA #${w.kidRankWta} on ${kidPoints(w, 'wta')} pts` +
       `\n  build: serve ${w.skills.serve.toFixed(1)} · ret ${w.skills.ret.toFixed(1)} · comp ${w.skills.composure.toFixed(1)}` +
       ` · stam ${w.skills.stamina.toFixed(1)} · grnd ${w.skills.groundstrokes.toFixed(1)}  ·  core ${core4(w.skills).toFixed(1)}` +
       `\n  ${RUNS} bracket replays per rung, on scratch \`bigrung:\` sub-streams (MAIN untouched)`,
@@ -236,7 +260,9 @@ async function main(): Promise<void> {
 
   // =============================================================================================
   section(`4. IS SHE ALONE? – the same replay for the professionals STANDING at her rank`)
-  {
+  if (SWEEP.length) {
+    console.log(`\n  (skipped – --head-sweep is running and this section answers a different question)`)
+  } else {
     const byId = new Map<string, FieldPro>(pros.map((x) => [x.id, x]))
     const me = w.kidRankWta ?? 0
     const neighbours = selRanking
@@ -273,6 +299,42 @@ async function main(): Promise<void> {
     console.log(
       `\n  ⭐ IF THE BAND'S NUMBERS LOOK LIKE HERS, THE DISTRIBUTION IS THE ANSWER AND NOT A DEFECT.` +
         `\n  If hers is far below a band she out-cores, the probability is wrong somewhere and this is the row that says so.`,
+    )
+  }
+
+  // =============================================================================================
+  if (SWEEP.length) {
+    section(`5. THE HEAD SWEEP – ${SWEEP_TIER}.acceptsFromRank, ${RUNS} replays per setting`)
+    const def = TIERS[SWEEP_TIER]
+    const was = def.acceptsFromRank
+    console.log(
+      `\n  The entry list's HEAD: a player ranked INSIDE the cut is not on this rung's list that week.` +
+        `\n  0 = OFF and must reproduce the shipped row of section 2 exactly.` +
+        `\n  band ${JSON.stringify(def.entrantPctBand)} · accepts to #${def.acceptsRank} · draw ${def.drawSize}` +
+        `\n\n  ${padE('head', 8)}${pad('P(QF+)', 9)}${pad('P(SF+)', 9)}${pad('P(title)', 10)}${pad('exp pts', 9)}` +
+        `${pad('modal finish', 14)}${pad('field core', 12)}${pad('% stronger', 12)}${pad('her seed idx', 14)}`,
+    )
+    for (const head of SWEEP) {
+      def.acceptsFromRank = head > 0 ? head : undefined
+      const d = replay(SWEEP_TIER, kid, null, `sweep-${head}`)
+      const n = d.counts.reduce((a, b) => a + b, 0)
+      const atLeast = (f: number) => d.counts.slice(0, f + 1).reduce((a, b) => a + b, 0) / n
+      const modal = d.counts.indexOf(Math.max(...d.counts))
+      const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
+      const ev = eventFor(SWEEP_TIER, 0)
+      const ents = selectEntrants(ev, universeForTier(SWEEP_TIER, w.cohort, pros), selRanking, rngFromSeed(`bigrung:${SWEEP_TIER}:seedcheck`))
+      const idx = kidSeedIndexIn(fieldOf(ents, ev.surface), seedRanking, KID_ID)
+      console.log(
+        `  ${padE(head > 0 ? '#' + head : 'OFF', 8)}${pad(`${(100 * atLeast(3)).toFixed(1)}%`, 9)}${pad(`${(100 * atLeast(2)).toFixed(1)}%`, 9)}` +
+          `${pad(`${(100 * atLeast(0)).toFixed(2)}%`, 10)}${pad((d.pts / n).toFixed(1), 9)}` +
+          `${pad(FINISH_NAMES[modal] ?? `f${modal}`, 14)}${pad(mean(d.fieldCore).toFixed(1), 12)}` +
+          `${pad(`${(100 * mean(d.stronger)).toFixed(0)}%`, 12)}${pad(idx < seedsFor(def.drawSize) ? `${idx} SEEDED` : idx, 14)}`,
+      )
+    }
+    def.acceptsFromRank = was
+    console.log(
+      `\n  ⚠ CANDIDATE COUNT is what the head moves, and it must stay above the draw – see` +
+        `\n  \`selectEntrants\`' fillability ladder, which silently returns the un-gated band if it does not.`,
     )
   }
 }

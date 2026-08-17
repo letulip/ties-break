@@ -453,3 +453,100 @@ describe('weekFieldExclusion — the higher W rung draws first', () => {
     )
   })
 })
+
+// =================================================================================================
+// ⭐⭐ THE HEAD OF THE ENTRY LIST (round 21 #4, 17.08) – `TierDef.acceptsFromRank`.
+//
+// `acceptsRank` says where a rung's list STOPS; this says where it STARTS. Without it the WTA 250,
+// 500 and 1000 drew fields of the SAME strength – mean core 68.4 / 68.9 / 68.4, measured on the
+// owner's own save – because all three bands open on one sixty-four-chair storey, and a WTA 250 was
+// worth 20.1 expected points to a #121 player against a W50's 29.7. See
+// docs/specs/the-250-is-not-a-1000-2026-08.md.
+//
+// ⚠ MUTATION-VERIFIED, EACH WATCHED RED FIRST, because a field-composition test that cannot fail is
+// the failure mode this repo has a standing note about: (a) deleting the `head` filter in
+// `selectEntrants` reddens the exclusion case; (b) turning the fillability fallback into a hard
+// filter reddens the small-table case; (c) setting `wta250.acceptsFromRank = undefined` reddens the
+// shipped-value case; (d) declaring it on `w75` reddens the scope case.
+// =================================================================================================
+describe('⭐⭐ acceptsFromRank — a rung`s entry list has a head as well as a tail', () => {
+  const pros = fieldProsFor('head-cohort', 0, cohort.map((p) => p.name))
+  const universe = universeForTier('wta250', cohort, pros)
+  const merged = mergedWtaRanking(
+    cohort.map((p) => ({ playerId: p.id, points: 0, rank: 1 })),
+    pros,
+  )
+  const SEED = 'head-seed'
+  const posOf = new Map(merged.map((r, i) => [r.playerId, i + 1]))
+  const drawAt = (tier: TierId) => {
+    const e = ev(tier, 12)
+    return selectEntrants(e, universe, merged, rngFromSeed(`${SEED}:kidtour:${e.id}`))
+  }
+
+  it('⚠ the shipped value is 64 and it is the only rung that carries one', () => {
+    // Both halves matter. The number is swept (spec §3) and a silent change to it moves who plays
+    // every WTA 250 in the game; the SCOPE is what keeps the rule meaningful, because the number is
+    // a WORLD rank and only the merged W standings make an entrant's position one.
+    expect(TIERS.wta250.acceptsFromRank, 'the tourElite storey – FIELD.tiers[0].count').toBe(64)
+    const carriers = TIER_LADDER.filter((t) => TIERS[t].acceptsFromRank !== undefined)
+    expect(carriers).toEqual(['wta250'])
+  })
+
+  it('⭐⭐ nobody inside the head plays a WTA 250 – and the same people still fill the 500', () => {
+    const at250 = drawAt('wta250')
+    expect(at250).toHaveLength(TIERS.wta250.drawSize)
+    const head = TIERS.wta250.acceptsFromRank!
+    const inside = at250.filter((p) => (posOf.get(p.id) ?? merged.length) <= head)
+    expect(inside.map((p) => p.id), 'the top storey is not on a 250`s entry list').toEqual([])
+
+    // ...and the rung above is untouched, which is the whole point: the defect was that the two drew
+    // the SAME people. The 500 declares no head, so its field still opens on the head of the table.
+    const at500 = drawAt('wta500')
+    expect(at500.filter((p) => (posOf.get(p.id) ?? merged.length) <= head).length).toBeGreaterThan(0)
+    // The two fields are now genuinely different people rather than one head twice over.
+    const shared = at250.filter((p) => at500.some((q) => q.id === p.id))
+    expect(shared.length, 'the 250 and the 500 no longer draw one field').toBeLessThan(at250.length / 2)
+  })
+
+  it('⭐ ...and the draw still FILLS from inside the band – no silent backfill bought the rule', () => {
+    const at250 = drawAt('wta250')
+    const [lo, hi] = TIERS.wta250.entrantPctBand
+    const outOfBand = at250.filter((p) => {
+      const pct = (posOf.get(p.id) ?? merged.length) / merged.length
+      return pct < lo || pct > hi
+    })
+    expect(outOfBand.map((p) => p.id), 'the head cost the band candidates it could not afford').toEqual([])
+  })
+
+  it('⚠ it YIELDS TO FILLABILITY – a table too small to gate degrades to the pre-rule field', () => {
+    // The hazard is a caller handing this function a small, cohort-only ranking: a bench, an older
+    // test, a preview built before the merged universe existed. There every 250 candidate sits
+    // inside the top 64 of a 199-row table, so a hard filter would empty the band and hand
+    // `buildDraw` a short field – which reads `undefined` as a player. It must degrade instead.
+    const small = rankByOrder(cohort)
+    const e = ev('wta250', 12)
+    const got = selectEntrants(e, cohort, small, rngFromSeed(`${SEED}:small`))
+    expect(got).toHaveLength(TIERS.wta250.drawSize)
+    // ...and byte-identically to the world without the rule, which is what "degrades" has to mean.
+    const was = TIERS.wta250.acceptsFromRank
+    TIERS.wta250.acceptsFromRank = undefined
+    const pre = selectEntrants(e, cohort, small, rngFromSeed(`${SEED}:small`))
+    TIERS.wta250.acceptsFromRank = was
+    expect(got.map((p) => p.id)).toEqual(pre.map((p) => p.id))
+  })
+
+  it('⚠ a rung with no head is byte-identical to the pre-rule function', () => {
+    // Nine of the ten W rungs and all six junior/domestic ones take this path, so this is the guard
+    // that says the wave touched one rung and not the ladder.
+    for (const tier of ['w15', 'w50', 'w100', 'wta125', 'wta500', 'j300'] as TierId[]) {
+      const e = ev(tier, 12)
+      const uni = universeForTier(tier, cohort, pros)
+      const rank = TIERS[tier].track === 'wta' ? merged : rankByOrder(cohort)
+      const a = selectEntrants(e, uni, rank, rngFromSeed(`${SEED}:${tier}`))
+      const was = TIERS[tier].acceptsFromRank
+      expect(was, `${tier} declares no head`).toBeUndefined()
+      const b = selectEntrants(e, uni, rank, rngFromSeed(`${SEED}:${tier}`))
+      expect(b.map((p) => p.id), tier).toEqual(a.map((p) => p.id))
+    }
+  })
+})

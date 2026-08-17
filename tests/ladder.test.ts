@@ -751,7 +751,23 @@ describe('⭐⭐ L6b — the acceptance chain is monotone in ladder order', () =
     )
     // ...and it is the ONE sourced number in the family, which is the whole reason it is not simply
     // corrected here. A 32-draw Slam is the deviation; 104 is the rulebook's.
-    expect(TIERS.slam.acceptsRank).toBe(104)
+    //
+    // ⚠ RE-AIMED 104 → 112 (round 21 #2, owner 17.08: «112 и надо подумать про wild card 8»). NOT
+    // deleted and not loosened: it still pins ONE exact number and it is still a rulebook one. The
+    // Grand Slam Rule Book publishes three permitted compositions – 104/16/8, 108/12/8, **112/8/8** –
+    // and the owner chose the third, because his own earlier "+16 = 120" would have tied the Slam's
+    // door to `wta500.acceptsRank`, which is already 120. See the constant for the measurement.
+    //
+    // ⚠⚠ AND THE EXEMPTION'S OWN REASONING ABOVE IS NOW STALE IN ONE CLAUSE, flagged rather than
+    // rewritten: it says «Our Slam draws 32», and `TIERS.slam.drawSize` has been **128** since
+    // W3-ACT2 (with the 1000 at 64). So the inversion this list exempts is no longer a deviation at
+    // all – acceptance depth scaling with draw size is exactly what the real ladder does, and ours
+    // now has the real draw sizes. The pair is left exempt and the escalation left standing, because
+    // retiring it is an owner's call about the top of the ladder and not a test's.
+    expect(TIERS.slam.acceptsRank).toBe(112)
+    expect(TIERS.slam.acceptsRank, 'still below the 500\'s own door – no two-storey collision').toBeLessThan(
+      TIERS.wta500.acceptsRank!,
+    )
   })
 
   it('⚠ the two rungs this block was written for hold their fixed values', () => {

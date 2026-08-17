@@ -1132,6 +1132,45 @@ export const TIERS: Record<TierId, TierDef> = {
     // acceptance DEPTH, so #200 is ours. Left as it is: it binds 41 of 52 measured careers and sits
     // above where a 14→20 career reaches. acceptance-cuts-2026-08.md §2a.
     acceptsRank: 200,
+    // ⭐⭐ AND THE HEAD OF THAT LIST, WHICH FOR THREE WAVES DID NOT EXIST (round 21 #4, 17.08 – the
+    // owner: «с этим точно надо что-то делать … Инес за 2 года не смогла вообще никуда сдвинуться в
+    // 250+ … а мы говорим о 86 ракетке с хорошими статами»). Read `TierDef.acceptsFromRank` for the
+    // mechanism; this is why the number is 50 and why this rung is the only one that carries it.
+    //
+    // THE DEFECT, MEASURED (round21-measured-2026-08.md §3f): this band opens at #32 and the WTA
+    // 500's at #22, so the two rungs drew the SAME PEOPLE – mean field core 68.4 against 68.9 – for
+    // half the points. A WTA 250 was worth **20.1 expected points** to a #121 player against a W50's
+    // 29.7: the worst rung in the game sat two storeys above the rung it was worth less than.
+    //
+    // WHY THE HEAD AND NOT THE BAND FLOOR, given the two are arithmetically interchangeable here:
+    // the floor is a SHARE of a table whose size has moved three times (300 → 364 → 520 → 1,600) and
+    // would move again; the head is the sport's own unit and does not. And it says the true sentence
+    // out loud – the top fifty are not refused a 250, they are ELSEWHERE that week.
+    //
+    // ⭐ 64 IS THE PYRAMID'S OWN BOUNDARY, NOT A ROUND NUMBER: it is exactly `FIELD.tiers[0].count` –
+    // the `tourElite` storey, core 67-77, points 1,400-11,500. So the rule reads as one sentence about
+    // the world rather than as a tuning constant: **the top storey does not play a WTA 250.** Against
+    // the sport it lands where the sourced rule one rung below does – the ITF bars WTA #1-50 from
+    // every W-series event (research §4c-C) and we already ship that as `PLAY_DOWN.fromAllW` – and
+    // against the real points curve #64 is about the real #55-60.
+    //
+    // ⚠ A LITERAL AND NOT A READ OF `FIELD.tiers[0].count`, deliberately. Coupling the calendar to the
+    // field's storey table would make this number move silently the day a storey is re-counted, and
+    // this one was chosen by measurement (below) rather than derived. The derivation is the REASON,
+    // recorded here; the value is fixed.
+    //
+    // ⚠⚠ AND IT WAS SWEPT, NOT TAKEN. `--head-sweep 0,40,50,64,80` on her own save, 300 replays a
+    // setting (the-250-is-not-a-1000-2026-08.md §3), expected points to a #121 player:
+    //     OFF 17.7 · #40 20.3 · #50 25.9 · **#64 32.9** · #80 64.2
+    // The criteria were written before the run and only #64 meets both: it clears the W50's 29.7 –
+    // the owner's own statement of the defect, «worst rung in the game» – without passing the W100's
+    // 57.7, which #80 does by a mile and which would simply move the farm one storey up.
+    //
+    // ⚠ A HARD CUT, BECAUSE THE SOFT ONE IS ALREADY RULED OUT. Real top-20s do play the odd 250; the
+    // faithful model is probabilistic participation, and «пусть остануться жесткие отсечки» (owner,
+    // 16.08, docs/specs/the-acceptance-tail-2026-08.md) settles which way this engine spells a cut.
+    // ⚠ NOT SOURCED, like `acceptsRank` beside it, and flagged the same way.
+    acceptsFromRank: 64,
     // ⚠ THE BAND IS MEASURED AGAINST TWO UNIVERSES OF VERY DIFFERENT SIZE, AND W3-ACT2 IS WHERE
     // THAT STOPPED BEING FREE. Read this note once; the three rungs above refer back to it.
     //
@@ -1385,7 +1424,29 @@ export const TIERS: Record<TierId, TierDef> = {
     // biggest event on earth is the EASIEST of the top three to get into, because it has the most
     // chairs. Nothing reads this as a ceiling (the top four rungs never close - see TERMINAL_RUNGS),
     // so the non-monotone step cannot leak into the window.
-    acceptsRank: 104,
+    //
+    // ⭐⭐ 104 → 112 (owner, 17.08: «112 и надо подумать про wild card 8»), AND IT IS STILL THE
+    // RULEBOOK'S OWN NUMBER – which is the whole reason he chose it over his own earlier proposal.
+    // The composition line above prints THREE permitted configurations, not one: **104/16/8 ·
+    // 108/12/8 · 112/8/8**. 112 is the third of them, so the cut stays inside the primary source and
+    // the 8 wild cards stay unmodelled by construction rather than by omission – which is honest,
+    // because we do not model them (docs/specs/the-250-is-not-a-1000-2026-08.md §7 costs that).
+    //
+    // ⚠ WHAT IT COSTS AND WHAT IT REFUSED TO COST. His earlier idea was "+16 = 120", folding the
+    // qualifiers in. Measured (round21-measured-2026-08.md §5c): 120 more than halves the refusal in
+    // the #105-#128 band, **23.5 → 9 weeks** – but `wta500.acceptsRank` is ALREADY 120, so at 120 the
+    // hardest draw in the game would share a door with the rung two storeys below it. **112 buys
+    // 23.5 → 15.5 weeks and creates no collision.** He took the smaller number to avoid the tie.
+    //
+    // ⚠⚠ AND THE "+16" ARGUMENT DOES NOT TRANSFER DOWN THE LADDER. Somebody will want to apply it to
+    // the W rungs; it cannot be applied there, because there is nothing to add sixteen TO. Research
+    // §4-A reads the 2026 ITF WTT Regulations as ONE "System of Merit" ordering with no published cut
+    // anywhere in it – an unranked player is not refused a W75, she is placed at the BOTTOM of the
+    // acceptance list. The Slam is the one rung on this ladder whose regulation states a count, which
+    // is the one and only reason the arithmetic is even expressible here. At the W rungs the honest
+    // version of the same idea is the soft tail, and the owner ruled against it on 16.08
+    // (docs/specs/the-acceptance-tail-2026-08.md: «пусть остануться жесткие отсечки»).
+    acceptsRank: 112,
     // The head of the merged table, at last. THE FLOOR IS 0 AND ONLY HERE: `wta125`'s own note says
     // why it kept 0.025 ("the two or three names on 9,000+ points play a tour this game does not
     // simulate yet") - this is that tour. The world #1 is resident in exactly one rung, and it is
