@@ -352,3 +352,90 @@ Serialised, as CLAUDE.md's pool note requires, at `f732d26`:
 during the wave were in `tests/college-offer.test.ts`, another agent's live edit, and they cleared on
 their own. **Not run, deliberately and on instruction: `npm run e2e:fixtures` and `npm run test:e2e`.**
 `test:sim` was not run either – nothing here touches the sim project.
+
+---
+
+## 7. ⚠⚠ THE INSTRUMENT WAS FIXED, AND §4c's HEADLINE IS SUPERSEDED
+
+§4d recorded that `tools/econ-bench.ts` pre-filtered the week with `tierOpenFor(world, e.tier)` – the
+per-rung gate, no event id – so **every bench built on that loop skipped the Slams a wild card opens**.
+That is now fixed (`tierOpenFor(world, e.tier, e.id)`), and with it the numbers in §4c are wrong: they
+were measured through an instrument that could not enter a wild card at all.
+
+⚠ **`WILD_CARD.slots` is a master switch on both sides now, and it was not before.** `fillWildCards`
+already returned early at `slots <= 0`, but *her* door read only the tier and the window – so at
+`slots 0` a tournament holding no wild cards would still have admitted her on one. `wildCardWindow`
+now refuses at `slots <= 0`, which is both the right semantics and what makes the arm below honest.
+
+### 7a. The arms – a constant sweep, which is stronger than two trees
+
+`npx vite-node tools/slam-difficulty.ts -- --seeds 12` · **n 108 careers × 676 weeks**, run in a
+**dedicated worktree at `d21cabc`** because the shared checkout was transiently broken by another
+agent's half-saved `collegeOffer.ts` (the run crashed inside it – a measurement against a
+mid-edit tree is not a measurement).
+
+Both arms are the **same bytes with one number changed** – `WILD_CARD.slots` 0 vs 8 – so no second
+commit and no other agent's work can leak into one side, which is exactly what went wrong at §4a.
+`slots 0` is verified to produce **0 wild cards of 685 commitments**.
+
+### 7b. ⭐⭐ THE HEADLINE, RESTATED
+
+| | slots 0 | slots 8 |
+| --- | --- | --- |
+| Slam entries that produced a scored result | 107 | 160 |
+| **first-match loss rate** | **40.2%** | **51.9%** |
+| careers ever entering a Slam | 34 / 108 | **66 / 108** |
+| ...ever past R1 there | 29 | 50 |
+| of all commitments, how many were wild cards | 0 of 685 | **230 of 934** |
+
+**So the move is +11.7pp, not the +2.5pp §4c reported** – the blind bench was hiding almost all of it.
+And the mechanic is far bigger than §4b suggested: **it nearly doubles the number of careers that ever
+play a major** (34 → 66 of 108).
+
+### 7c. THE OWNER'S QUESTION – «независимо от уровня скилла??» – and the answer is NOT the tidy one
+
+**Was it the draw, or the mix?** Both were measured; **neither explains it.**
+
+**THE MIX EXPLAINS ALMOST NONE OF IT.** Direct standardisation – arm A's own per-bucket loss rates
+applied to arm B's mix of buckets – gives **42.1%** against arm A's own 40.2%. So of the +11.7pp,
+**the composition shift accounts for about +1.9pp and the other ~+9.8pp is within-bucket.**
+
+| her rank at entry | slots 0 lost R1 | slots 8 lost R1 | delta |
+| --- | --- | --- | --- |
+| #1-50 | 26.8% (n 41) | 43.9% (n 41) | **+17.1pp** |
+| #51-104 | 49.0% (n 49) | 62.3% (n 61) | **+13.3pp** |
+| #105-150 | 47.1% (n 17) | 53.7% (n 41) | +6.6pp |
+| #151+ | – (n 0) | 29.4% (n 17) | – |
+
+**THE DRAW DID NOT GET HARDER EITHER**, by the engine's own reading of the very same draws:
+
+| her rank at entry | slots 0: 1st-match chance | slots 8 | opp rank 0 → 8 |
+| --- | --- | --- | --- |
+| #1-50 | 66.1% | **67.8%** (easier) | 77.0 → 83.8 (weaker) |
+| #51-104 | 50.5% | **52.0%** (easier) | 63.9 → 64.7 |
+| #105-150 | 51.2% | 44.0% (harder) | 67.9 → 58.3 |
+
+⭐ **That is a genuine contradiction and it is reported as one.** In the two biggest buckets the
+engine says her opening opponent got *weaker*, and she lost *more often*. Both numbers come from the
+same runs.
+
+⚠ **The leading candidate, stated as a hypothesis and NOT verified:** the preview is computed when she
+**commits**, and the match is played weeks later. With wild cards she plays a fuller calendar – 934
+commitments against 685 – so she arrives at more of them tired. Condition is not in the preview and is
+in the match. **A fatigue-at-arrival column would settle it and is not built.** Until it is, "the Slam
+got harder" is unsupported and so is "it is only the denominator".
+
+⚠ **And her own draw provably never sees a wild card**: `computeShadowTournament` builds her field off
+`seed:kidtour:` from professionals alone and never calls the wild-card pass. So whatever the residual
+is, it is **not** wild-card entrants appearing in her bracket.
+
+### 7d. What this does to §0's frame
+
+§0 said a wild card buys a story and not progress, and that a material change in who reaches what
+would be a finding rather than a success. **It is now a finding.** 34 → 66 careers of 108 ever
+playing a major is not a story beat; it is a different game at the top. The rate is unchanged in
+kind – `tools/wild-card-reach.ts` still says one offer about every five seasons – but the bench can
+now *take* them, and the population effect is large.
+
+**⚠ This wants an owner ruling before it is called finished**, and the two knobs are named: the window
+(`entrantPctBand[1]`, ~#333 today) and `WILD_CARD.slots` (8). Neither is touched here.

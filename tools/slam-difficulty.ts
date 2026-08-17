@@ -167,9 +167,14 @@ console.log(`SLAM DIFFICULTY · ${PRESETS.length} presets x ${SEEDS} seeds = n $
 console.log(`  arms are WILD_CARD.slots 0 (pre-mechanic, both sides shut) vs 8 (shipped) – same bytes, one number`)
 console.log('')
 
-console.log("1. THE FIELD SHE MEETS – the engine's own readings, per entry")
+console.log("1. THE FIELD SHE MEETS – the engine's own readings, per entry COMMITMENT")
 console.log('')
-console.log('  arm              entries   mean 1st-match chance   mean opponent rank   "strong field"')
+console.log('  ⚠ "commitments" IS NOT "matches played", and the gap is large and deliberate: this counts')
+console.log('    every Slam that appeared on `world.entries`, while sections 2 and 5 count only the ones')
+console.log('    that produced a SCORED ledger row. An entry released, withdrawn, cut short by injury or')
+console.log('    still pending at the horizon has no result, and counting it as a loss would invent one.')
+console.log('')
+console.log('  arm          commitments   mean 1st-match chance   mean opponent rank   "strong field"')
 for (const [label, arm] of [['slots 0', armOff], ['slots 8', armOn]] as const) {
   const fc = arm.entries.map((e) => e.firstMatchChance).filter((x) => Number.isFinite(x))
   const orr = arm.entries.map((e) => e.opponentRank).filter((x): x is number => x !== null)
