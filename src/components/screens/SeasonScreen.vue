@@ -1406,14 +1406,11 @@ function closeExhibition(): void {
                 <b>{{ Math.round(row.event.preview.firstMatchChance * 100) }}</b><i>%</i>
               </ProgressRing>
             </div>
-            <!-- ⚠ THE TWO NUMBERS THE RING IS MADE OF – the same pair the calendar card carries, and
-                 the same reason (round 21, the owner's D&D ruling). The ring alone is a percentage a
-                 player cannot check; these are its inputs, and
-                 `1 / (1 + 10^((hers - mine) / 400))` reproduces it to inside a point
-                 (tests/rating.test.ts). Silent when there is no opponent to be rated against. -->
-            <p v-if="row.event.preview.opponentRating !== null" class="odds-ratings">
-              Rating <b>{{ row.event.preview.kidRating }}</b> vs <b>{{ row.event.preview.opponentRating }}</b>
-            </p>
+            <!-- ⚠⚠ THE "Rating 1642 vs 1801" LINE WAS HERE AND IS REMOVED BY OWNER RULING (round 21):
+                 "I did not ask for this, it is surplus information, please take it out." It was the
+                 calendar card's twin and it goes for the same reason - see the fuller note at the
+                 same place in CalendarScreen.vue. `src/engine/match/rating.ts` stays exported and
+                 tested; it has no surface, and giving it one again is his decision. -->
 
             <div class="controls" style="margin-top: 12px">
               <!-- Entered, list still OPEN: an ordinary withdrawal, fee refunded. -->
@@ -2373,17 +2370,6 @@ section.bare .event-cards {
 
 .bracket-score {
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.odds-ratings {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: var(--ink-soft);
-  text-align: right;
-}
-
-.odds-ratings b {
-  color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 

@@ -80,8 +80,20 @@ export interface EventPreview {
    *  `firstMatchChance` above is a percentage the player has no way to check. These are its INPUTS,
    *  on the surface this event is played on, and they satisfy
    *      firstMatchChance = 1 / (1 + 10^((opponentRating - kidRating) / 400))
-   *  to inside a percentage point over the whole reachable build range (tests/rating.test.ts). So a
-   *  player can do what a D&D player does: read both strengths and know the odds BEFORE committing.
+   *  to inside a percentage point over the whole reachable build range (tests/rating.test.ts).
+   *
+   *  ⚠⚠ AND NOTHING DRAWS THEM. THIS IS A RULING, NOT DEAD CODE THAT NOBODY NOTICED. The «Rating
+   *  1642 vs 1801» line under the odds ring lived on the calendar card and the season card for two
+   *  commits; the owner took it off, round 21: «я не просил этого делать, лишняя информация, убери
+   *  пожалуйста». The full argument is at the top of engine/match/rating.ts – in short, he asked for
+   *  the odds to BE a formula, not for the card to print one.
+   *
+   *  They are computed anyway, and on purpose: they are the audit trail of the ring beside them (one
+   *  source, two readings, so a quoted rating can never disagree with the percentage it explains),
+   *  they cost two pure calls on a preview that already ran the match model, and the day a surface is
+   *  wanted the pipe is already built and already measured. ⚠ If the answer is instead "take the pipe
+   *  out too", that is a second decision and it is his, not a tidy-up.
+   *
    *  Null when there is no first-round opponent to be rated against. */
   kidRating: number
   opponentRating: number | null

@@ -631,14 +631,20 @@ const showGo = computed(() => !game.snapshot?.pending)
             <b>{{ Math.round(marker.preview.firstMatchChance * 100) }}</b><i>%</i>
           </ProgressRing>
           <p class="cal-card-odds-note">First round vs {{ marker.preview.opponentName }}</p>
-          <!-- ⚠ THE TWO NUMBERS THE RING IS MADE OF (round 21, the owner's D&D ruling). The ring on
-               its own is a percentage a player cannot check; these are its inputs, and
-               `1 / (1 + 10^((hers - mine) / 400))` reproduces the ring to inside a point
-               (tests/rating.test.ts). Silent when there is no opponent to be rated against - a
-               dangling "1642 vs" says less than nothing. -->
-          <p v-if="marker.preview.opponentRating !== null" class="cal-card-odds-ratings">
-            Rating <b>{{ marker.preview.kidRating }}</b> vs <b>{{ marker.preview.opponentRating }}</b>
-          </p>
+          <!-- ⚠⚠ THE "Rating 1642 vs 1801" LINE WAS HERE AND IS REMOVED BY OWNER RULING (round 21).
+               His words, in translation because this file carries no Cyrillic: "I did not ask for
+               this, it is surplus information, please take it out." The line shipped one commit
+               earlier on a reading of his D&D request that he had not made - he asked for odds that
+               are not all the same and that a player is not made to bang her head against, and a
+               second number on the card is not that. The ruling itself is quoted in its own words in
+               docs/decisions.md, which is where the Russian belongs.
+
+               ⚠ THE MODULE BEHIND IT IS NOT REMOVED and this is deliberate, not an oversight:
+               `src/engine/match/rating.ts` reproduces this engine's own match probability to 1.03
+               points across every reachable build and all three surfaces, and it is mutation-verified
+               in `tests/rating.test.ts`. It simply has no surface. Putting one back is HIS decision
+               and not a refactor - `tests/rating.test.ts`'s last block is the guard that says so and
+               will go red if this line returns. -->
         </div>
 
         <!-- Both cautions are the ENGINE's own sentences, and they are independent: one is the rule
@@ -1313,17 +1319,6 @@ const showGo = computed(() => !game.snapshot?.pending)
   margin: 0;
   font-size: 12px;
   color: var(--ink-soft);
-}
-
-.cal-card-odds-ratings {
-  margin: 2px 0 0;
-  font-size: 12px;
-  color: var(--ink-soft);
-}
-
-.cal-card-odds-ratings b {
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
 }
 
 .cal-card-actions {

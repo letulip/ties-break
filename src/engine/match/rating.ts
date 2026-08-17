@@ -27,6 +27,32 @@
 //
 // ⚠ ZERO RNG, ZERO STATE, NO WORLD. Pure in (player, surface, tour). That is what lets the UI quote
 // it and the engine invariant hold – see CLAUDE.md invariant 1.
+//
+// =================================================================================================
+// ⚠⚠ AND IT IS DELIBERATELY NOT ON ANY SCREEN. THIS IS A RULING, NOT AN OVERSIGHT.
+// =================================================================================================
+//
+// It had a surface for exactly two commits – a «Rating 1642 vs 1801» line under the odds ring on the
+// calendar card and the season card. The owner took it off, round 21: «под кольцом на карточке
+// турнира и на карточке сезона пишется "Рейтинг 1642 против 1801" - я не просил этого делать, лишняя
+// информация, убери пожалуйста.»
+//
+// ⚠ THE REQUEST HE DID MAKE AND THE SURFACE I BUILT ARE NOT THE SAME THING, which is the lesson worth
+// keeping. He asked for PREDICTABLE FORMULAS – «чтобы более менее точно можно предсказывать» – so
+// that a player is not made to bang her head against concrete. That is a property of the MODEL: the
+// odds have to be derivable, monotone and never zero. It is not a request for a second number beside
+// the first. The ring already answers "what are her chances"; the rating answers "why", and he did
+// not ask the card to answer why.
+//
+// ⚠ SO THE MODULE IS KEPT, AND KEPT MEASURED. Deleting it would throw away the only artefact that
+// proves the odds ARE a formula – the property he asked for – and it costs nothing to keep: pure,
+// stateless, no RNG, no world, ~90 lines, and mutation-verified. `season/preview.ts` still computes
+// `kidRating` / `opponentRating` onto every `EventPreview` for the same reason: they are the audit
+// trail of the ring beside them, and the day a surface is wanted the pipe is already there.
+//
+// ⚠ PUTTING A SURFACE BACK IS THE OWNER'S DECISION AND NOT A REFACTOR. `tests/rating.test.ts`'s last
+// block is a negative guard on both `.vue` files and will go red the moment a rating is rendered
+// again. If he asks for one, move the guard – do not delete it.
 
 import type { MatchPlayer, Surface, Tour } from './types'
 import { basePServe } from './point'
