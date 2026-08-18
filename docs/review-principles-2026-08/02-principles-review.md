@@ -189,4 +189,10 @@ The codebase does not need a “clean architecture” rewrite. It needs four pre
 4. cohesive phase and view extraction behind existing behavior tests.
 
 That combination improves all four requested principles without turning a solo game into an
+> ⭐ **OWNER RULING, 18.08.2026 — narrowed.** Fix comments that are FACTUALLY WRONG about current
+> behaviour; KEEP comments that record a decision and its reasoning, even when the decision is also in
+> `docs/decisions.md`. The removal half of this finding conflicts with `CLAUDE.md`'s "preserve them
+> verbatim" and with the 17.08 decision entry, which states that the reasoning deliberately stays in
+> the file it governs. See PR-19 in `07-proposals-and-roadmap.md` for the full ruling.
+
 enterprise framework.

@@ -343,6 +343,33 @@ career action while bypassing the economy.
 
 ### PR-19 — Comment and decision lifecycle
 
+> ## ⭐⭐ OWNER RULING, 18.08.2026 — NARROWED, AND THE NARROWING IS BINDING
+>
+> **«согласен»** — to this scope and no wider:
+>
+> **A comment that is FACTUALLY WRONG about current behaviour gets fixed. A comment that records a
+> decision and its reasoning STAYS, even when the decision is also in the archive.**
+>
+> ⚠ The proposal as written asks for more than that – *"when a ruling moves to the decision archive,
+> remove or rewrite the old narrative at its source"* – and that conflicts with two standing records
+> the review did not cite:
+>
+> * `CLAUDE.md` (Style): *"this codebase deliberately records owner rulings and the reasoning behind
+>   non-obvious choices. **Preserve them verbatim** when moving code."*
+> * `docs/decisions.md`, 17.08.2026, the very entry the review reads as evidence of un-removed
+>   duplicates: *"⚠ This is a RECORD, not a re-decision… the reasoning behind each **stays in the file
+>   it governs** – in English now, with a pointer back here."* Leaving them in place was the intent,
+>   not an oversight.
+>
+> ⚠ **The four examples in TB-10 are all in scope** – each is a comment that describes behaviour the
+> code no longer has, and those are exactly the ones to fix. The 18.08 age-clock wave found four more
+> of the same kind and fixed them the same way: two files naming `tests/ladder.test.ts` as a guard that
+> lives in `tests/season/tournament.test.ts`, a comment on `wta250` claiming *"the number is 50"* while
+> the value is 64, and a measurement tool reporting *"0 lost birthdays"* while filtering the losses out
+> before counting. Wrong-about-behaviour is the test, not age.
+>
+> **So: no comment-character target, and no sweep. Fix what is false; keep what is history.**
+
 **Priority:** P2 retrieval
 **Effort:** Ongoing; S per touched hub
 **Risk:** Losing rationale if rushed.
