@@ -390,7 +390,19 @@ describe('cumulative run fatigue (the ladder)', () => {
     const conditionAfterTick = world.condition
     skipEvent(world, eventId)
     expect(world.pendingTournament).toBeNull()
-    expect(world.condition).toBe(conditionAfterTick) // no run committed -> no per-match drain, no ladder
+    // ⚠ 18.08 – A SKIPPED WEEK NOW PAYS THE SAME BASE RECOVERY AS A MEDICAL WITHDRAWAL. This line
+    // asserted `conditionAfterTick` unchanged, which was the short payment the architect's note
+    // flagged; the claim this test is named for is about RUNS - no match record, no drain, no ladder
+    // step - and that claim is untouched. Recovery is a different fact and is asserted as the
+    // engine's own expression.
+    expect(world.condition).toBe(
+      Math.min(
+        100,
+        conditionAfterTick +
+          (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
+          restRecoveryBonus(world.plan.rest),
+      ),
+    ) // no run committed
   })
 
   it('a WALKOVER still costs NOTHING: the trip that never happened has no run to charge', () => {
@@ -546,10 +558,28 @@ describe('R9-9 — skipEvent at the tournament week', () => {
     ).toBe(true)
     // nothing resolved: no matches, no points, no W-L, no match drain. The week ended
     // match-free after all, so she earns the slider recovery bonus tickWeek withheld.
+    //
+    // ⚠⚠ RE-AIMED 18.08 – IT PINNED THE SLIDER BONUS ALONE, WHICH WAS THE SHORT PAYMENT. The
+    // architect's note beside the medical withdrawal had flagged it: both constants were 2 when this
+    // was written so the difference was zero, then the V2 flip set `matchWeekRecoveryBase` to 0 and
+    // the two match-free weeks silently parted by `recoveryBase` – eight points, depending only on
+    // whether the doctor pulled her out or the parent chose not to enter. The owner ruled it a fix,
+    // not a tuning call: «она и в одном случае не играла и в другом», against the standing «мы ни за
+    // что не наказываем».
+    //
+    // ⚠ THE EXPRESSION IS THE ENGINE'S OWN, NOT A COPIED NUMBER, so a later re-pricing of either knob
+    // moves this pin with it rather than freezing today's eight.
     expect(world.events.some((e) => e.type === 'match')).toBe(false)
     expect(world.results.filter((r) => r.playerId === KID_ID)).toHaveLength(0)
     expect(world.seasonWins + world.seasonLosses).toBe(0)
-    expect(world.condition).toBe(Math.min(100, conditionAfterTick + restRecoveryBonus(world.plan.rest)))
+    expect(world.condition).toBe(
+      Math.min(
+        100,
+        conditionAfterTick +
+          (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
+          restRecoveryBonus(world.plan.rest),
+      ),
+    )
     // time moves again — the week is closed.
     tickWeek(world, rng)
     expect(world.week).toBe(weekOfEvent + 1)

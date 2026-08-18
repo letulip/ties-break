@@ -181,8 +181,49 @@ function birthDate(birthMonth: number, birthDay: number): { month: number; day: 
 function birthdayYearIn(week: number, birthMonth: number, birthDay: number): number | null {
   const { month, day } = birthDate(birthMonth, birthDay)
   const monday = weekYear(week)
-  for (const year of [monday, monday + 1]) if (weekOfDate(month, day, year) === week) return year
+  // ⚠ THREE CANDIDATE YEARS, AND THE FIRST ONE IS FOR 31 DECEMBER (18.08). The `monday + 1` arm has
+  // always been here for a girl born 1-5 January, whose birthday can sit in a week whose Monday is
+  // still in the old year. `monday - 1` is its mirror and it was missing: a 31 December birthday the
+  // calendar cannot place is carried by the first week PAST it, which is in JANUARY of the next year -
+  // so `weekYear(week)` is already the following year and that girl's own year was never a candidate.
+  // Measured: it was the last two of the fourteen lost birthdays, both hers (skips 17->19, 22->24).
+  for (const year of [monday - 1, monday, monday + 1]) {
+    const at = weekOfDate(month, day, year)
+    if (at === week) return year
+    // ⭐⭐ AND A BIRTHDAY THE CALENDAR CANNOT PLACE IS GIVEN THE FIRST WEEK PAST IT (18.08). Measured
+    // before the fix: **14 birthdays a career simply never fired**, across seven dates - 1-6 January
+    // and 31 December, twice each over fourteen seasons. The seasons re-anchor to the first Monday of
+    // each year, so those dates fall in the gap between the last career week of one season and the
+    // first of the next: `weekOfDate` returns null and the girl silently got no note and no gift.
+    //
+    // ⚠ IT WAS REPORTED AS "none lost" AND IT WAS NOT. `tools/birthday-age-read.ts` skips a year the
+    // moment `weekOfDate` is null - `continue` - and then counts how many of the REMAINING birthdays
+    // are wrong. The metric filtered out the very failure it is named for. Fixed in that tool too.
+    //
+    // ⚠ AND IT CANNOT DOUBLE-FIRE. The clause asks for the FIRST career week past the date - this
+    // Monday is on or after it and the previous Monday is not - so exactly one week in the year can
+    // answer, and only in a year the calendar genuinely has no week for. Every ordinary date takes
+    // the `at === week` branch above and never reaches here.
+    // ⚠ `week > 0` IS NOT DEFENSIVE, IT IS THE CAREER'S OWN START. Without it the clause fires at week
+    // 0 for a date a whole YEAR before the game opens - a girl born 1 January was announced turning
+    // THIRTEEN in her first week, because week 0 is the first Monday past 1 January 2030 as surely as
+    // it is past 1 January 2031. Anything before week 0 is prologue and has no week to be announced in;
+    // her 14th genuinely predates the career, which is what `birthdayWeek`'s note has always said.
+    if (week > 0 && at === null && mondayOnOrAfter(week, month, day, year) && !mondayOnOrAfter(week - 1, month, day, year)) {
+      return year
+    }
+  }
   return null
+}
+
+/** Is the Monday that opens `week` on or after (`month`, `day`) of `year`? The three scalar readers
+ *  composed into one date comparison – see `weekStartDay` in shared/dates.ts for why they are scalars. */
+function mondayOnOrAfter(week: number, month: number, day: number, year: number): boolean {
+  if (week < 0) return false
+  const wy = weekYear(week)
+  if (wy !== year) return wy > year
+  const wm = weekMonth(week)
+  return wm > month || (wm === month && weekStartDay(week) >= day)
 }
 
 /** The career week her birthday falls in for the calendar year containing `week`, or null if that date is

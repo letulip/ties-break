@@ -63,7 +63,7 @@ import { buildTourBriefing } from './mandatory'
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
-import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
@@ -396,27 +396,14 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
  *
  *  Pure derivation over the ledger the world already keeps - no persisted field, no schema bump, no
  *  migration, zero RNG draws. */
-/** HER PLACE IN ONE TABLE, or null when she holds no counting result in it.
- *
- *  ⚠ ONE IMPLEMENTATION, TWO CONSUMERS, and the second one is why it was extracted (31.07): the
- *  tournament overlay prints her rank too, and it must print the SAME number the Home chip and the
- *  Stats tab are showing at that moment or the app contradicts itself on the one screen where the
- *  player is looking hardest. That is not automatic - on a reveal week the tick DEFERS the rank
- *  recompute to `finalizeTournament` (see step 5) while the week's AI results are already in the
- *  ledger, so a freshly-folded rank and the cached one legitimately differ by a place or two until
- *  she finishes her run. Reading the cache through one function is what makes the two agree by
- *  construction instead of by coincidence. */
-/** ⚠ THE TEST IS HER POINTS, NOT THE LENGTH OF HER RESULTS LIST (points-by-the-book, 05.08), and
- *  the two came apart when §VIII.A.2.b's minimum landed. It used to ask `countingResults.length > 0`,
- *  which was the same question while every counting result paid something: a player with rows had
- *  points and a player without had neither. Two rules broke that equivalence – a `mandatoryMiss`
- *  zero is a counting row worth nothing, and a professional below the minimum has rows that do not
- *  put her on the list – and under either she would have read as a RANK on a total of zero, which is
- *  the "unranked is not a number" bug this function exists to prevent, arriving from the other side.
- *  Behaviour-identical on the domestic and ITF tables, where neither rule applies. */
-export function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
-  return kidPoints(world, track) > 0 ? rankIn(world, track) : null
-}
+// ⚠ `kidLadderRank` MOVED DOWN TO ./ladder.ts (TB-07) – its notes went with it. It is a two-call
+// composition of `kidPoints` and `rankIn`, both of which already live there, and while it lived HERE
+// world/college.ts had to import it from the snapshot module to use it. That made a MUTATION module
+// depend on the aggregate PROJECTION layer, which closed two runtime cycles at once
+// (birthday → college → snapshot → birthday, and coachMarket → endings → college → snapshot →
+// coachMarket), because snapshot imports birthday, endings and coachMarket to build its views.
+// Deliberately NOT re-exported from here: a re-export would leave college importing this file and
+// the cycles standing. Import it from ./ladder.
 
 export function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
   const counting = computeCountingResults(world, track)

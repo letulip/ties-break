@@ -84,6 +84,42 @@ export function formatScore(score: MatchScore): string {
   return `${setsPart} ${gamePart}`
 }
 
+// --- the tiebreak serve rotation (shared) -------------------------------------
+//
+// Tiebreak serve pattern relative to the opener: point 1 = opener, then serves
+// alternate every two points -> S, O, O, S, S, O, O, S, ...
+// `tbFlip(i)` is 0 when the server of point i is the opener, 1 otherwise.
+//
+// ⚠ THIS MODULE IS THE ONE OWNER OF THE ROTATION. `liveProb.ts` used to carry a
+// byte-equivalent private copy, under a comment reading "scoring.ts owns the
+// canonical versions but does not export them; these mirror it exactly
+// (touch-only-my-files rule)" – a work-partitioning constraint from the initial
+// build, not a design rule: it appears nowhere in CLAUDE.md or docs/decisions.md,
+// and the comment itself already named scoring.ts as canonical. The only thing
+// holding the copy in place was the missing `export`, so the copy is gone and the
+// export is here. The hazard it left behind was real: correct one copy and the
+// match serves with one rotation while the displayed live probability assumes
+// another, silently (review TB-01, P1).
+//
+// The net against that is behavioural, not a source pin:
+// tests/match/liveProb.test.ts – "cross-consumer rotation parity". Do not delete
+// it if a future wave reintroduces a local copy; make it pass.
+function tbFlip(i: number): 0 | 1 {
+  if (i === 1) return 0
+  const pair = Math.floor((i - 2) / 2)
+  return pair % 2 === 0 ? 1 : 0
+}
+
+/** Who serves point `i` of a tiebreak whose first point was served by `opener`. */
+export function tiebreakServer(opener: Side, i: number): Side {
+  return tbFlip(i) === 0 ? opener : flip(opener)
+}
+
+/** The inverse: recover the tiebreak's opener from the server of point `i`. */
+export function tiebreakOpenerFrom(serverOfI: Side, i: number): Side {
+  return tbFlip(i) === 0 ? serverOfI : flip(serverOfI)
+}
+
 // --- internals ---------------------------------------------------------------
 
 function flip(side: Side): Side {
@@ -149,23 +185,6 @@ function completeSetViaTiebreak(score: MatchScore, tbWinner: Side): void {
   // The tiebreak counts as one game for rotation: the next set opens with the
   // player who did NOT serve the tiebreak's first point.
   score.server = flip(opener)
-}
-
-// Tiebreak serve pattern relative to the opener: point 1 = opener, then serves
-// alternate every two points -> S, O, O, S, S, O, O, S, ...
-// `tbFlip(i)` is 0 when the server of point i is the opener, 1 otherwise.
-function tbFlip(i: number): 0 | 1 {
-  if (i === 1) return 0
-  const pair = Math.floor((i - 2) / 2)
-  return pair % 2 === 0 ? 1 : 0
-}
-
-function tiebreakServer(opener: Side, i: number): Side {
-  return tbFlip(i) === 0 ? opener : flip(opener)
-}
-
-function tiebreakOpenerFrom(serverOfI: Side, i: number): Side {
-  return tbFlip(i) === 0 ? serverOfI : flip(serverOfI)
 }
 
 function advanceTiebreakServer(score: MatchScore): void {

@@ -40,7 +40,9 @@ import {
 } from './econ-bench'
 import { answerFork, answerRetirement, kidAgeExact, resumeFromCollege } from '../src/engine/world'
 import { ceilingOf } from '../src/engine/academy'
-import { kidLadderRank } from '../src/engine/world/snapshot'
+// ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
+// world/college.ts could stop importing the aggregate projection layer. Same function.
+import { kidLadderRank } from '../src/engine/world/ladder'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'

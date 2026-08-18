@@ -10,14 +10,15 @@ last-reviewed: 2026-08-03
 
 ## Current truth
 
-- The engine is TypeScript domain code independent of Vue and Pinia; the worker is its runtime
-  owner, while tests and benches invoke engine functions directly.
-- Careers are deterministic. The main RNG position is persisted, and most feature randomness uses
+- The engine is TypeScript domain code independent of Vue and Pinia; the worker owns it at runtime,
+  while tests and benches call engine functions directly.
+- Careers are deterministic: the main RNG position is persisted, and feature randomness uses
   purpose-scoped seed strings so player choices cannot reroll unrelated outcomes.
-- Match scoring/outcomes are generated independently from visualization. Court animation,
-  commentary, speed, and replay presentation must not change the result.
-- Rankings use separate domestic and ITF-junior tracks, with pro-entry history now persisted at
-  schema v36.
+- Match outcomes are generated independently of visualization: animation, commentary, speed and
+  replay must not change the result.
+- Rankings keep three tables, not two (`LadderTrack`): domestic, ITF junior and the adult WTA one –
+  a seventeen-year-old holds two at once, and a junior Slam pays zero WTA points. Pro-entry history
+  is persisted; the saves pack holds the schema number, not this file.
 - Balance claims require distributions from tests or tools. A plausible anecdote is not a tuning
   result.
 
@@ -32,25 +33,23 @@ last-reviewed: 2026-08-03
 
 - Never call `Math.random()` inside the engine.
 - Preserve main-stream input independence and purpose-scoped sub-stream naming.
-- Do not tune a simulation number merely to satisfy one seed or UI example.
-- Keep exact scoring rules in scoring modules rather than reimplementing them in UI code.
+- Do not tune a number merely to satisfy one seed or UI example.
+- Keep exact scoring rules in scoring modules, never reimplemented in UI code.
 - A visualization consumes a match record; it cannot feed information back into the outcome.
 - Changes affecting stored state follow the save-schema discipline in the saves context pack.
-- The tour age grid (tier floors, the U18 junior ceiling, the AER's per-year counts) is written out in
-  prose in exactly one place: [college is its own branch §0a](../specs/college-is-its-own-branch-2026-08.md).
-  Link to it rather than restating it – restating is how the corpus grew two documents that disagreed
-  about what a W15 field is.
+- The tour age grid (tier floors, U18 ceiling, AER per-year counts) is in prose in exactly one place:
+  [college is its own branch §0a](../specs/college-is-its-own-branch-2026-08.md). Link to it; restating
+  it is how the corpus grew two documents that disagreed about a W15 field.
 
 ## Focused verification
 
 - Match rules: `npm test -- tests/match/`
 - RNG: `npm test -- tests/rng.test.ts tests/sim-worker-rng.test.ts`
 - Rankings and fields: run the matching ranking, ladder, rival, or season tests.
-- Fast unit gate: `npm test`
+- Fast unit gate: `npm run test:quiet`
 - Heavy calibration: `npm run test:sim`
 
-The heavy simulation project is evidence for balance-sensitive work, not a routine first command
-for UI or documentation changes.
+The sim project is evidence for balance work, not a routine first command.
 
 ## Broaden context when
 

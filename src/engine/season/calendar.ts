@@ -5,9 +5,11 @@
 import { rngFromSeed, pickInt, type Rng } from '../rng'
 import type { Surface } from '../match/types'
 import type { FamilyBackground } from '../../shared/protocol'
-// ⚠ THE ONE DATE IMPORT, and it is the CEILING of the summer window (see `isSummerWeek`). Pure
-// arithmetic over the fixed epoch, no engine state, no cycle: `shared/dates.ts` imports nothing.
-import { weekMonth } from '../../shared/dates'
+// ⚠ THE DATE IMPORTS, and neither can close a cycle: `shared/dates.ts` imports nothing. `weekMonth`
+// is the CEILING of the summer window (see `isSummerWeek`) – pure arithmetic over the fixed epoch,
+// no engine state. `WEEKS_IN_SEASON` is the season length, and it is now the SOLE owner of the 52
+// (TB-02): `WEEKS_PER_YEAR` below is an alias of it rather than a second literal.
+import { weekMonth, WEEKS_IN_SEASON } from '../../shared/dates'
 import { ECONOMY } from '../economy'
 import type { SeasonEvent, TierDef, TierId } from './types'
 
@@ -1667,7 +1669,11 @@ export function tierFromLabel(text: string): TierId | undefined {
 // no travel. Tied to the absolute week number (not to whatever span buildSeason
 // happens to be called with) so it lines up with world.ts's year-boundary logic
 // regardless of chunking.
-export const WEEKS_PER_YEAR = 52
+// ⚠ AN ALIAS OF `shared/dates.ts`'s `WEEKS_IN_SEASON`, not a second literal (TB-02). The two numbers
+// were always required to be equal – dates.ts said so in a comment – and keeping them as two
+// literals is the duplicated-magic-number shape this engine avoids everywhere else. The name stays:
+// 111 files import `WEEKS_PER_YEAR` from here and that public API does not change.
+export const WEEKS_PER_YEAR = WEEKS_IN_SEASON
 export const OFF_SEASON_WEEKS = 3
 
 /** True for the last `OFF_SEASON_WEEKS` weeks of a season year (e.g. weeks 49-51 of

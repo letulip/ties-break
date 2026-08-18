@@ -52,8 +52,11 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
  *  the ONE place the epoch year is stated; `weekYear(0)` still returns it, and tests pin that. */
 const EPOCH_YEAR = 2031
 
-/** A season is exactly 52 career weeks. === WEEKS_PER_YEAR in engine/season/calendar.ts (pinned in
- *  tests). Declared up here because `weekStart` is now a function OF the season index. */
+/** A season is exactly 52 career weeks – THE ONLY 52 IN THE ENGINE since TB-02. Declared up here
+ *  because `weekStart` is now a function OF the season index. `WEEKS_PER_YEAR` in
+ *  engine/season/calendar.ts is an alias of this (it used to be its own literal, kept equal by a
+ *  comment), and engine/economy.ts reads this directly rather than the calendar's copy – that edge
+ *  was half of a runtime import cycle that crashed the browser at module load. */
 export const WEEKS_IN_SEASON = 52
 
 const MONTHS = [

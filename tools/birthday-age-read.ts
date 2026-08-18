@@ -59,6 +59,14 @@ function rungOpenings(bm: number, cap: number): Map<string, number | null> {
   return out
 }
 
+/** The week `birthdayTurning` actually fires this birthday on, or null if it never does – the AFTER
+ *  side of the lost-birthday count, asked of the shipped function rather than re-derived. */
+function rescuedWeekFor(m: number, d: number, y: number): number | null {
+  const truth = y - kidBirthYear()
+  for (let w = 0; w < 14 * WEEKS_IN_SEASON; w++) if (birthdayTurning(w, m, d) === truth) return w
+  return null
+}
+
 async function main(): Promise<void> {
   const args = process.argv.slice(2)
   const saves: string[] = []
@@ -147,8 +155,26 @@ async function main(): Promise<void> {
     for (let d = 1; d <= daysInBirthMonth(m); d++) {
       for (let y = 2031; y < 2031 + SEASONS; y++) {
         const target = weekOfDate(m, d, y)
-        // null = the date is in the real calendar week that belongs to no career week. Honest.
-        if (target === null || target < 0 || target >= SEASONS * WEEKS_IN_SEASON) continue
+        // ⚠⚠ THIS `continue` USED TO FILTER OUT THE FAILURE THE METRIC IS NAMED FOR (fixed 18.08).
+        // `weekOfDate` returns null when the date falls between career weeks - which is EXACTLY a lost
+        // birthday - and skipping those years meant "birthday never fired: 0" was counted over only
+        // the birthdays the calendar could already place. It reported none lost while fourteen a career
+        // were being lost, across 1-6 January and 31 December. The owner found the real ones by
+        // playing; this line is why nothing here saw them.
+        //
+        // A null `target` is now COUNTED as a loss rather than skipped, and the AFTER column proves the
+        // fix: `birthdayTurning` carries such a date on the first career week past it, so the loss must
+        // be visible BEFORE and absent AFTER. Out-of-horizon years are still skipped - that is a
+        // property of the 14-season window, not of the calendar.
+        if (target !== null && (target < 0 || target >= SEASONS * WEEKS_IN_SEASON)) continue
+        if (target === null) {
+          // The date has no career week of its own. Did the fix give it one anyway?
+          lostBefore++
+          lostDatesBefore.add(`${m}/${d}`)
+          const rescued = rescuedWeekFor(m, d, y)
+          if (rescued === null) { lostAfter++; lostDatesAfter.add(`${m}/${d}`) }
+          continue
+        }
         const truth = y - kidBirthYear()
         const before = oldBirthdayTurning(target, m, d)
         const after = birthdayTurning(target, m, d)

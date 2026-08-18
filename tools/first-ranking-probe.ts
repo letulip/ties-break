@@ -22,7 +22,9 @@
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, mean, median } from './econ-bench'
 import { kidAgeExact, kidPoints } from '../src/engine/world'
-import { kidLadderRank } from '../src/engine/world/snapshot'
+// ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
+// world/college.ts could stop importing the aggregate projection layer. Same function.
+import { kidLadderRank } from '../src/engine/world/ladder'
 import { LADDER_TRACKS } from '../src/shared/protocol'
 import type { LadderTrack } from '../src/engine/season/types'
 

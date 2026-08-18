@@ -10,18 +10,19 @@ last-reviewed: 2026-08-03
 
 ## Current truth
 
-- The simulation worker owns the mutable `WorldState`; UI code communicates through the typed
-  protocol and consumes snapshots.
-- `SAVE_SCHEMA_VERSION` is v45. The persisted main RNG position was introduced at v35, so current
-  loads resume `{s, n}` rather than replaying the whole career to recover the stream. ⚠ This bullet
-  had said v36 since 03.08 while nine versions shipped past it – read `src/engine/world.ts` for the
-  number, and correct this line in the same commit that moves it.
-- Every schema version from v0 through the current version has a golden fixture, and the golden-save
-  test requires a new fixture whenever the version increases.
-- Exported saves use a versioned binary envelope, gzip payload, and SHA-256 integrity check. Import
-  validation and migrations are separate responsibilities.
-- IndexedDB slots and autosave recovery are user data. Changes here require failure-path tests, not
-  only successful round trips.
+- The worker owns the mutable `WorldState`; UI code talks through the typed protocol and
+  consumes snapshots.
+- `SAVE_SCHEMA_VERSION` is v52 (`src/engine/world.ts`); the persisted main RNG position arrived at
+  v35, so loads resume `{s, n}` rather than replaying the career.
+- ⚠ THAT NUMBER ROTS SILENTLY BECAUSE NOTHING CHECKS IT – wrong twice already (v36, then v45).
+  `context:audit` covers structure, links, metadata and budgets; the only claim it reads the engine
+  for is the age grid. So verify without trusting this file: the highest fixture in
+  `tests/fixtures/saves/` IS the current version, since `goldenSaves.test.ts` enforces one per
+  version from v0. Fix this line in the commit that bumps the constant.
+- Exported saves use a versioned binary envelope, gzip payload and SHA-256 check; import validation
+  and migrations are separate responsibilities.
+- IndexedDB slots and autosave recovery are user data: changes need failure-path tests, not only
+  happy round trips.
 
 ## Read order
 
@@ -42,12 +43,14 @@ last-reviewed: 2026-08-03
 
 ## Focused verification
 
-- `npm test -- tests/goldenSaves.test.ts tests/migrations.test.ts`
-- `npm test -- tests/saveCodec.test.ts tests/save-import-guard.test.ts`
-- `npm test -- tests/saves.test.ts tests/storage-recovery.test.ts tests/store-recovery.test.ts`
-- `npm test -- tests/sim-worker-pipeline.test.ts tests/worker-client-recovery.test.ts`
+`npm test --` plus the smallest relevant group:
 
-Run the smallest relevant group during development and `npm run check` before delivery.
+- `tests/goldenSaves.test.ts tests/migrations.test.ts`
+- `tests/saveCodec.test.ts tests/save-import-guard.test.ts`
+- `tests/saves.test.ts tests/storage-recovery.test.ts tests/store-recovery.test.ts`
+- `tests/sim-worker-pipeline.test.ts tests/worker-client-recovery.test.ts`
+
+Then `npm run check` before delivery.
 
 ## Broaden context when
 

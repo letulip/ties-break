@@ -181,7 +181,12 @@ describe('the queue cannot deadlock', () => {
 })
 
 describe('⭐⭐ the two clocks became one – round-17 #7 is closed', () => {
-  it('the fork can no longer be raised BEFORE her birthday, for any birth date', () => {
+  // ⚠ AN EXPLICIT TIMEOUT, BECAUSE THIS ONE IS GENUINELY EXPENSIVE AND NOT SLOW BY ACCIDENT. It walks
+  // eight birth dates to the fork at nineteen, and `atTheFork` ticks up to eight seasons per date -
+  // roughly 3,300 simulated weeks. It sat just under the 20s default and tipped over it once the
+  // date-clock wave pushed every fork a week later. The dates ARE the coverage (each one used to
+  // fail), so the honest fix is to declare the cost rather than to thin the sweep.
+  it('the fork can no longer be raised BEFORE her birthday, for any birth date', { timeout: 60_000 }, () => {
     // ⚠⚠ THIS BLOCK IS THE INVERSE OF WHAT IT SAID UNTIL 18.08, AND ON THIS FILE'S OWN INSTRUCTIONS.
     // It used to record round-17 #7 as a FINDING: `forkDue` read the birth MONTH while
     // `pendingBirthday` read the birth DAY, so a girl born late in a month met the fork weeks before

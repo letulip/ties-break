@@ -36,7 +36,11 @@ import {
 import type { CollegeOffer, CollegeProgressView } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidAgeYears } from './age'
-import { kidLadderRank } from './snapshot'
+// ⚠ FROM ./ladder, NOT ./snapshot (TB-07). This file MUTATES the world; snapshot BUILDS the
+// aggregate projection over it, and importing upward from one to the other closed two runtime
+// cycles (birthday → college → snapshot → birthday, coachMarket → endings → college → snapshot →
+// coachMarket). `kidLadderRank` is a composition of ladder functions and now lives with them.
+import { kidLadderRank } from './ladder'
 import type { WorldState } from '../world'
 
 /** ⭐⭐ WHAT A COLLEGE PROGRAMME IS SHOWN WHEN IT LOOKS HER UP – the world side of P4's decoupled-leaf

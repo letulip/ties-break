@@ -632,15 +632,33 @@ export function juniorReservedPlace(world: WorldState, week: number, tier: TierI
  *  below it – exams, injury, the doctor's veto, the entry cap, a booked family week – is asked
  *  afterwards and unchanged. */
 export function homeWildCardPlace(world: WorldState, tier: TierId, eventId?: string): boolean {
-  if (eventId === undefined || tier !== WILD_CARD.tier) return false
-  if (hostNationOf(world.seed, eventId) !== world.profile.country) return false
+  if (tier !== WILD_CARD.tier) return false
+  // ⚠⚠ THE WORLD-LEVEL GATES COME FIRST, AND THE ORDER IS A MEASURED FIX RATHER THAN A TIDY-UP
+  // (18.08). The event-less scan below was added the same day and sat UNDERNEATH the per-event work,
+  // so `toSnapshot` - which asks `tierOpenFor` for ALL SIXTEEN rungs - ran a season scan with a
+  // `hostNationOf` draw per event, sixteen times per snapshot. Two test files began timing out at 5s
+  // with zero assertion failures. These three checks decide almost every player in O(1) and none of
+  // them looks at an event, so hoisting them is free and the semantics are unchanged.
+  //
   // UNRANKED IS NOT RANK ONE, the same guard `meetsAcceptanceCut` carries and for the same reason:
   // with nobody holding a point the whole field ties at zero and a fresh fourteen-year-old reads as
   // world #1. A wild card is for a player of roughly the level, and "no professional result at all"
   // is not that.
   if (kidPoints(world, 'wta') <= 0) return false
   const total = tableSize(world, 'wta')
-  return wildCardWindow(tier, world.kidRankWta ?? total, total, acceptanceRank(world, tier))
+  if (!wildCardWindow(tier, world.kidRankWta ?? total, total, acceptanceRank(world, tier))) return false
+  // ⚠ WITHOUT AN EVENT, ASK THE CARD SHE IS ACTUALLY LOOKING AT (18.08, the owner: «есть дефект -
+  // чиним»). This used to return FALSE for a missing `eventId`, which was right for the turnstile and
+  // wrong for the CALENDAR: `Snapshot.tierOpen` is built per rung with no event, `tierState.ts` judges
+  // every card on it, and so a girl holding a wild card to a Slam was shown a SHUT rung and admitted
+  // at the door. The calendar can never be more generous than the turnstile - both ask this one
+  // function - only as generous. An empty season answers false, exactly as before.
+  if (eventId === undefined) {
+    return world.season.some(
+      (e) => e.tier === tier && e.week >= world.week && hostNationOf(world.seed, e.id) === world.profile.country,
+    )
+  }
+  return hostNationOf(world.seed, eventId) === world.profile.country
 }
 
 /** HER OWN WAY IN: the rung's published acceptance cut, read against the W table. Extracted so the
@@ -972,4 +990,34 @@ export function prevRankIn(world: WorldState, track: LadderTrack): number | null
   if (track === 'itf') return world.prevKidRank
   if (track === 'wta') return world.prevKidRankWta ?? null
   return world.prevKidRankDomestic ?? null
+}
+
+// ⚠ MOVED HERE FROM world/snapshot.ts (TB-07), UNCHANGED. It is `kidPoints` and `rankIn` in one
+// line, both of which are declared in this file, so the projection layer was never where it
+// belonged – and keeping it there forced world/college.ts, a MUTATION module, to import the
+// aggregate snapshot builder. That single edge closed two runtime cycles
+// (birthday → college → snapshot → birthday, and coachMarket → endings → college → snapshot →
+// coachMarket), since snapshot imports birthday, endings and coachMarket to assemble its views.
+// snapshot.ts now imports it from here like every other ladder reader; its original notes follow.
+
+/** HER PLACE IN ONE TABLE, or null when she holds no counting result in it.
+ *
+ *  ⚠ ONE IMPLEMENTATION, TWO CONSUMERS, and the second one is why it was extracted (31.07): the
+ *  tournament overlay prints her rank too, and it must print the SAME number the Home chip and the
+ *  Stats tab are showing at that moment or the app contradicts itself on the one screen where the
+ *  player is looking hardest. That is not automatic - on a reveal week the tick DEFERS the rank
+ *  recompute to `finalizeTournament` (see step 5) while the week's AI results are already in the
+ *  ledger, so a freshly-folded rank and the cached one legitimately differ by a place or two until
+ *  she finishes her run. Reading the cache through one function is what makes the two agree by
+ *  construction instead of by coincidence. */
+/** ⚠ THE TEST IS HER POINTS, NOT THE LENGTH OF HER RESULTS LIST (points-by-the-book, 05.08), and
+ *  the two came apart when §VIII.A.2.b's minimum landed. It used to ask `countingResults.length > 0`,
+ *  which was the same question while every counting result paid something: a player with rows had
+ *  points and a player without had neither. Two rules broke that equivalence – a `mandatoryMiss`
+ *  zero is a counting row worth nothing, and a professional below the minimum has rows that do not
+ *  put her on the list – and under either she would have read as a RANK on a total of zero, which is
+ *  the "unranked is not a number" bug this function exists to prevent, arriving from the other side.
+ *  Behaviour-identical on the domestic and ITF tables, where neither rule applies. */
+export function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
+  return kidPoints(world, track) > 0 ? rankIn(world, track) : null
 }

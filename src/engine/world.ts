@@ -3046,11 +3046,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // are set to – and so this stays byte-consistent with the bench's independent trace, which
     // reads the week as free. Integer, clamped, zero draws.
     //
-    // NOTE for the architect: skipEvent (R9-9) hands back the rest-slider bonus ALONE. That was
-    // exactly right when it was written (matchWeekRecoveryBase == recoveryBase == 2) and quietly
-    // became a short payment at the V2 flip, which set matchWeekRecoveryBase to 0 – so a skipped
-    // event week still under-pays by recoveryBase. NOT touched here: fixing it moves shipped
-    // condition traces, which is a tuning call, not a merge call.
+    // ⭐ THE NOTE THAT USED TO STAND HERE IS ANSWERED (18.08). It read: "skipEvent (R9-9) hands back
+    // the rest-slider bonus ALONE … a skipped event week still under-pays by recoveryBase. NOT touched
+    // here: fixing it moves shipped condition traces, which is a tuning call, not a merge call."
+    // The owner ruled it a fix rather than a tuning call - the two weeks are the same week - and
+    // `skipEvent` now uses this identical expression. The two paths cannot part again without both
+    // being edited.
     world.condition = clamp(
       world.condition +
         (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
@@ -3352,8 +3353,25 @@ export function skipEvent(world: WorldState, eventId: string): void {
   // The week ends match-free after all, so she earns the slider recovery bonus that tickWeek
   // withheld when it still believed she would play (accrueCondition ran with played = true).
   // Integer, clamped – "the week then resolves as a normal non-playing week".
+  //
+  // ⭐⭐ AND THE BASE RECOVERY WITH IT SINCE 18.08 – THE SAME EXPRESSION THE MEDICAL WITHDRAWAL USES.
+  // This line handed back the slider bonus ALONE, and the note left for the architect beside the
+  // withdrawal explained why: it was exactly right when written, because `matchWeekRecoveryBase` and
+  // `recoveryBase` were both 2 and the difference was zero. The V2 flip set `matchWeekRecoveryBase`
+  // to 0 and the two paths silently parted by `recoveryBase` – EIGHT condition points for the same
+  // match-free week, depending only on whether the doctor pulled her out or the parent chose not to
+  // enter.
+  //
+  // ⚠ IT WAS NEVER A DESIGNED PENALTY, WHICH IS WHY THIS IS A FIX AND NOT A TUNING CHANGE. The owner,
+  // 18.08: «мне кажется тут всё явно: она и в одном случае не играла и в другом» - and the standing
+  // ruling it offends is «мы ни за что не наказываем». A week with no match is a week with no match.
+  //
+  // ⚠ THE THIRD CASE IS DELIBERATELY UNTOUCHED, and the owner named it: retiring MID-MATCH through
+  // injury. She walked on court and played, so that week is not match-free and never reaches here.
   world.condition = clamp(
-    world.condition + restRecoveryBonus(world.plan.rest),
+    world.condition +
+      (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
+      restRecoveryBonus(world.plan.rest),
     ECONOMY.condition.min,
     ECONOMY.condition.max,
   )

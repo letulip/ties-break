@@ -7,7 +7,7 @@ PWA tennis career sim where you play the **parent** raising a future star (WTA-f
 ```bash
 npm run check      # vue-tsc -b --force + unit tests + build — the pre-push gate
 npm run test:quiet # unit project, dot reporter — PREFER THIS: 5.6k chars of output vs 29k
-npm test           # unit project, full reporter (~35s, 103 files / 2230 tests)
+npm test           # unit project, full reporter – 148 files, ~4 min
 npm run test:sim   # sim project (~70s, serialised) — exits 0 on green since the P6 wave
 npm run test:component # mounted Vue components (~1s) — the only real UI regression gate
 npm run build      # vue-tsc -b && vite build
@@ -20,7 +20,7 @@ Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:l
 ## Graphify (code graph) — what it is and is not for
 
 ```bash
-npm run graph        # rebuild — ~18 s, zero model tokens, 7,750 nodes / 20,244 edges
+npm run graph        # rebuild – ~10 s, 0 tokens; it PRINTS its size (11,013/28,620, 18.08)
 npm run graph:check  # is it stale? exits 1 if source moved since the build
 ```
 
@@ -100,7 +100,7 @@ docs/review/     2026-08 full review + P1–P9 proposals
 
 `world.ts` is being decomposed into `src/engine/world/*.ts` (see `docs/review/proposals/P4-world-decomposition.md`). Rules for that work:
 - Extracted modules import `WorldState` as **`import type`** from `../world` — type-only, erased at compile time, so no runtime cycle.
-- `world.ts` imports the values back and **re-exports them under their historical names**: 111 files import from `engine/world` and that public API must not change.
+- `world.ts` imports the values back and **re-exports them under their historical names**: 279 files import from `engine/world` (18.08) and that public API must not change.
 - If a candidate block calls back into `world.ts` at runtime, it is **not** ready to move — that needs dependency inversion, not a span-move.
 
 ## Style
