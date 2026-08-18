@@ -54,7 +54,7 @@ function injectEvent(world: WorldState, week: number, tier: TierId): SeasonEvent
 function proWorld(seed: string, age = 21): WorldState {
   const world = createWorld(seed)
   const rng = resumeMain(world.rngMain)
-  while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
+  while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < age) tickWeek(world, rng)
   world.condition = 100
   world.fundsCents = 500_000_00
   world.season = []
@@ -119,7 +119,7 @@ describe('it is a rank READ, so it reverses itself', () => {
     // `tableSize(world,'wta')` is a perfectly good-looking integer.
     const world = createWorld('pd-unranked')
     world.kidRankWta = 1
-    expect(kidAgeYears(world.week, world.profile.birthMonth)).toBeLessThan(99)
+    expect(kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)).toBeLessThan(99)
     for (const t of W_SERIES) expect(playDownBars(world, t), t).toBe(false)
   })
 })

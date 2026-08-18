@@ -75,7 +75,7 @@ function windowRows(w: WorldState, track: LadderTrack): SeasonResult[] {
 
 function readOne(w: WorldState, label: string): void {
   const p = w.profile
-  section(`${label} – week ${w.week} (${weekLabel(w.week)}), age ${kidAgeYears(w.week, p.birthMonth)}`)
+  section(`${label} – week ${w.week} (${weekLabel(w.week)}), age ${kidAgeYears(w.week, p.birthMonth, p.birthDay)}`)
   console.log(`rank (wta / itf)  : #${w.kidRankWta ?? '–'} / #${w.kidRank ?? '–'}`)
 
   const bestN = BEST_N_BY_TRACK.wta

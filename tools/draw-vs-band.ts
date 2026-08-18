@@ -439,7 +439,7 @@ async function main(): Promise<void> {
     const w0 = await load(path)
     // FRESH, cloned – the world on disk is never written and the engine never sees a mutated one.
     const world: WorldState = { ...w0, condition: CONDITION }
-    const age = kidAgeExact(world.week, world.profile.birthMonth)
+    const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     section(`${path.split('/').pop()}  ·  v${world.schemaVersion}  ·  week ${world.week}  ·  age ${age.toFixed(1)}`)
     console.log(
       `  ${world.profile.kidName} ${world.profile.kidLastName} · ${world.profile.background} · coach ${world.profile.coachTier}` +

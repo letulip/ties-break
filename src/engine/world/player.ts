@@ -213,7 +213,7 @@ export function kidMatchPlayerFor(
     applySurfaceStyle(
       {
         ...raw,
-        age: kidAgeExact(world.week, world.profile.birthMonth),
+        age: kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
         serve: raw.serve * factor,
         ret: raw.ret * factor,
         composure: raw.composure * factor,

@@ -35,7 +35,7 @@ function oldBirthdayWeek(week: number, birthMonth: number, birthDay: number): nu
 }
 function oldBirthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
   if (week !== oldBirthdayWeek(week, birthMonth, birthDay)) return null
-  return kidAgeYears(week, birthMonth)
+  return kidAgeYears(week, birthMonth, 1)
 }
 
 function section(title: string): void {
@@ -52,7 +52,7 @@ function rungOpenings(bm: number, cap: number): Map<string, number | null> {
   for (const tier of TIER_LADDER) {
     let at: number | null = null
     for (let w = 0; w <= cap; w++) {
-      if (isTierAgeOpen(tier, kidAgeYears(w, bm))) { at = w; break }
+      if (isTierAgeOpen(tier, kidAgeYears(w, bm, 1))) { at = w; break }
     }
     out.set(tier, at)
   }
@@ -120,7 +120,7 @@ async function main(): Promise<void> {
     let ageDigest = 0
     let injDigest = 0
     for (let k = 0; k <= cap; k++) {
-      const age = kidAgeYears(k, bm)
+      const age = kidAgeYears(k, bm, 1)
       ageDigest = (ageDigest * 31 + age) % 1_000_000_007
       injDigest = (injDigest * 31 + Math.round(ageInjuryFactor(age) * 1000)) % 1_000_000_007
       for (const tier of TIER_LADDER) ageDigest = (ageDigest * 31 + (isTierAgeOpen(tier, age) ? 1 : 0)) % 1_000_000_007

@@ -67,7 +67,7 @@ function runCareer(seed: string, background: FamilyBackground, weeks: number): W
 /** The first career week in which SHE is `age`, off her own birth date – the one clock every gate in
  *  the game reads since 09.08 (src/engine/world/age.ts). */
 function firstWeekAged(world: WorldState, age: number): number {
-  for (let w = 0; w < 52 * 30; w++) if (kidAgeYears(w, world.profile.birthMonth) >= age) return w
+  for (let w = 0; w < 52 * 30; w++) if (kidAgeYears(w, world.profile.birthMonth, world.profile.birthDay) >= age) return w
   throw new Error(`no week reaches age ${age}`)
 }
 

@@ -39,7 +39,7 @@ import {
   tickWeek,
   toSnapshot,
 } from '../src/engine/world'
-import { markBirthday } from '../src/engine/world/age'
+import { kidAgeExact, markBirthday } from '../src/engine/world/age'
 import { WEEKS_IN_SEASON, daysInBirthMonth, weekMonth, weekOfDate, weekYear } from '../src/shared/dates'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -163,11 +163,82 @@ describe('the age she is told she is turning', () => {
     for (let m = 1; m <= 12; m++) {
       for (let d = 1; d <= daysInBirthMonth(m); d++) {
         for (const [w, age] of announcements(m, d)) {
-          const lead = age - kidAgeYears(w, m)
-          expect(lead, `${m}/${d} w${w}: announced ${age}, printed ${kidAgeYears(w, m)}`).toBeLessThanOrEqual(1)
+          const lead = age - kidAgeYears(w, m, d)
+          expect(lead, `${m}/${d} w${w}: announced ${age}, printed ${kidAgeYears(w, m, d)}`).toBeLessThanOrEqual(1)
           expect(lead).toBeGreaterThanOrEqual(0)
           // ...and it is closed by the next Monday, every time.
-          if (lead === 1) expect(kidAgeYears(w + 1, m), `w${w + 1} catches up`).toBe(age)
+          if (lead === 1) expect(kidAgeYears(w + 1, m, d), `w${w + 1} catches up`).toBe(age)
+        }
+      }
+    }
+  })
+
+  // ===============================================================================================
+  // 4b. ⭐⭐ AND THE OTHER DIRECTION, WHICH IS THE ONE THAT WAS MISSING (18.08)
+  // ===============================================================================================
+  it('⭐⭐ the printed age NEVER runs ahead of a birthday she has not had', () => {
+    // ⚠⚠ THIS ARM EXISTS BECAUSE ITS ABSENCE HID A REAL DEFECT FOR ELEVEN WAVES, and the shape of the
+    // miss is the lesson. The arm above measures `announced - printed` and bounds it at +1: it asks
+    // whether the ANNOUNCEMENT runs ahead. Nothing asked whether the PRINT does – and it did, because
+    // `kidAgeExact` was built on the birth MONTH, so her age rose on the first Monday of that month
+    // rather than on her birthday.
+    //
+    // The owner found it by playing (18.08): «23 года было в интерфейсе на главной написано на неделю
+    // раньше, чем случился сам день рождения». Measured across all 365 birth dates before the fix:
+    // **287 of them** printed an age she had not reached, for 7,574 (date, week) pairs, by as much as
+    // SIX WEEKS – and a 31 December date printed 19 while she was 17. Every one of those was invisible
+    // to the arm above, which returned 0 for exactly the weeks that were wrong.
+    //
+    // ⚠ IT IS THE OWNER'S RULING OF 09.08 IN ASSERTION FORM: «Есть год рождения и дата. Это всё… Дальше
+    // когда ДР – тогда и +1 год.» A clock that adds the year before the date has arrived is not that
+    // ruling, whatever else it gets right.
+    // ⚠ ANCHORED ON THE ANNOUNCEMENTS THAT EXIST, and the first draft of this arm was not - which is
+    // how it found a second thing. Asking "is the printed age <= the last announced age" assumes every
+    // birthday IS announced, and 14 of them over 14 seasons are not: the seasons re-anchor to the first
+    // Monday of each year, so 1-6 January and 31 December fall into the gap between the last career
+    // week of one season and the first of the next, twice each per career. The calendar genuinely has
+    // no week for them (`weekOfDate` returns null and says so), the girl still ages correctly, and only
+    // the note and the gift are missed. Anchoring the other way round is immune to that.
+    for (let m = 1; m <= 12; m++) {
+      for (let d = 1; d <= daysInBirthMonth(m); d++) {
+        for (const [bw, age] of announcements(m, d)) {
+          if (bw === 0) continue
+          expect(
+            kidAgeYears(bw - 1, m, d),
+            `${m}/${d}: told she turns ${age} in w${bw}, but w${bw - 1} already printed ${kidAgeYears(bw - 1, m, d)}`,
+          ).toBeLessThan(age)
+        }
+      }
+    }
+  })
+
+  it('⭐⭐ THE FRACTION MAY NEVER MOVE THE WHOLE YEAR – one clock, not a decimal point', () => {
+    // ⚠⚠ THIS ARM IS HERE BECAUSE THE DATE-CLOCK FIX GOT IT WRONG TWICE, IN OPPOSITE DIRECTIONS, on
+    // the way in (18.08) - and both drafts read plausibly. `kidAgeExact` returns whole years plus a
+    // fraction for the development curve; the whole part must come from the DATE TEST alone, and a
+    // fraction that can carry into `Math.floor` is a second clock with a decimal point.
+    //
+    //   * scaled by the CURRENT month it went NEGATIVE and dropped a year - born 30 January, asked in
+    //     the week of 1 February, `(1 - 30) / 28` = -1.04, printing twenty the week after she was told
+    //     she turned twenty-one;
+    //   * scaled by HER month it EXCEEDED twelve and added one - born 1 February, week of Monday 31
+    //     January, `11 + 30/28` = 12.07, so her sixteenth arrived a week early.
+    //
+    // Both were caught by other arms rather than by reading the formula, which is the argument for
+    // pinning the invariant itself rather than the two cases.
+    for (let m = 1; m <= 12; m++) {
+      for (let d = 1; d <= daysInBirthMonth(m); d++) {
+        let previous = -1
+        for (let w = 0; w <= 728; w++) {
+          const exact = kidAgeExact(w, m, d)
+          const whole = kidAgeYears(w, m, d)
+          expect(Math.floor(exact), `${m}/${d} w${w}: exact ${exact} floors away from ${whole}`).toBe(whole)
+          // ...and the clock only ever runs forward, one year at a time.
+          if (previous >= 0) {
+            expect(whole, `${m}/${d} w${w}: the age went backwards`).toBeGreaterThanOrEqual(previous)
+            expect(whole - previous, `${m}/${d} w${w}: the age jumped more than a year`).toBeLessThanOrEqual(1)
+          }
+          previous = whole
         }
       }
     }

@@ -135,7 +135,7 @@ function fmtDate(ts: number) {
  *  wave on (shared/protocol.ts), so a career last saved before it has no birthday to read and the
  *  band is the honest best guess rather than an invented one. One autosave replaces it. */
 function careerAge(c: CareerMeta): number {
-  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth)
+  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1)
 }
 
 // Coarse relative time for the autosave row – doesn't need second-level precision.

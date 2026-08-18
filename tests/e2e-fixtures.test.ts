@@ -264,6 +264,15 @@ describe('e2e fixtures: each is the state its name promises', () => {
   it('ending is past the fork at nineteen, with the racket down', () => {
     const f = facts('ending')
     expect(f.endingType).toBe('stopped')
-    expect(f.ageYears).toBeGreaterThanOrEqual(ENDINGS.forkAgeYears)
+    // ⚠ 18.08 – THE AGE READING IS 18 HERE AND THE FIXTURE IS STILL PAST THE FORK. This career sits in
+    // the very week she turns nineteen: the date clock reports the age at the week's MONDAY, and the
+    // fork is raised on the birthday itself (`kidAgeThroughWeek`, engine/world/endings.ts §7c), so the
+    // two legitimately differ for exactly this one week. It used to read 19 because the month clock
+    // turned her age on the first Monday of her birth month, days before the birthday.
+    //
+    // So the claim is asserted on the thing it is about - she reached the fork and answered it - and
+    // the age is bounded rather than dropped, so a fixture that regressed to seventeen still fails.
+    expect(f.ageYears).toBeGreaterThanOrEqual(ENDINGS.forkAgeYears - 1)
+    expect(f.endingType, 'and the fork was genuinely reached and answered').toBe('stopped')
   })
 })

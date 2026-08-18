@@ -60,7 +60,7 @@ async function main() {
   const world = await decodeExportFile(new Uint8Array(readFileSync(save)))
   const season = seasonIndexOf(world.week)
   const kid = `${world.profile.kidName} ${world.profile.kidLastName}`.trim()
-  const age = kidAgeYears(world.week, world.profile.birthMonth)
+  const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
   console.log(`career "${kid}" seed=${world.seed} week=${world.week} (season index ${season}, age ${age})`)
 
   // 1. HER LEDGER ---------------------------------------------------------------------------------

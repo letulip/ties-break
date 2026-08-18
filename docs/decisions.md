@@ -1958,6 +1958,75 @@ career was walked, and the bench was run first. New rule: type-check a new bench
 
 ---
 
+## 18.08.2026 – ⭐⭐ THE AGE CLOCK READS HER DATE, NOT HER MONTH (owner: «чини часы правильно, по дате, померь сколько гейтов поедет»)
+
+He found it by playing: «23 года было в интерфейсе на главной написано на неделю раньше, чем случился
+сам день рождения». Measured, it was worse than one week and far wider than one save.
+
+**THE DEFECT.** `kidAgeExact` was built on the birth MONTH, so her age rose on the first Monday of that
+month rather than on her birthday. Across all 365 birth dates: **287 printed an age she had not
+reached**, 7,574 (date, week) pairs in a 14-season career, by as much as **six weeks** – and a 31
+December date printed **19 while she was 17**. His own save (21 December) was a two-week case.
+
+⚠ **It contradicted his ruling of 09.08 directly** – «Есть год рождения и дата. Это всё… Дальше когда
+ДР – тогда и +1 год» – and survived eleven waves because **the guard measured the opposite
+direction**: `birthday-announce.test.ts` bounded how far the ANNOUNCEMENT could run ahead of the
+print, and returned 0 for exactly the weeks that were wrong.
+
+**THE BLAST RADIUS, MEASURED** (`tools/age-gate-shift.ts`, new – every age gate in the game has the
+form `age >= N`, so the complete radius is one table of first-week-reaching-N):
+
+| shift | cells |
+| --- | --- |
+| +1 week | 840 |
+| +2 weeks | 840 |
+| +3 weeks | 840 |
+| +4 weeks | 608 |
+| +5 weeks | 35 |
+
+**351 of 365 birth dates move; 3,163 of 3,650 (date, gate) cells; every shift is FORWARD.** She was
+being let into every age door 1–5 weeks early, mean 2.4.
+
+⚠ **TWO BUGS WENT IN ON THE WAY, IN OPPOSITE DIRECTIONS, AND THE GUARDS CAUGHT BOTH** – scaling the
+day gap by the CURRENT month went negative and dropped a year (born 30 January, printed twenty the
+week after she was told she turned twenty-one); scaling it by HER month exceeded twelve and added one
+(born 1 February, sixteenth a week early). Root cause both times: **the fraction could move the whole
+year.** It cannot now – `whole` comes from the date test alone and `frac` is clamped into [0,1) – and
+that invariant is pinned over all 365 dates × 728 weeks.
+
+⚠ **v39's MIGRATION KEEPS THE OLD ARITHMETIC, FROZEN IN PLACE.** A shipped migration may not change
+its mind: the same file imported yesterday and tomorrow must land on the same `fork.askedWeek`.
+
+**FOUR THINGS FOUND ON THE WAY, ALL REAL:**
+
+1. ⭐ **Round-17 #7 is CLOSED.** The fork at nineteen used to be raised up to THREE WEEKS **before** her
+   birthday (born 20 Dec: fork w307, nineteenth w310). Both now key off the same day and the fork lands
+   in the birthday's own week for every date – `kidAgeThroughWeek`, a one-week look-ahead for
+   CELEBRATIONS and never for gates. The test that recorded the gap is replaced by a guard against it.
+2. ⚠ **14 birthdays a career are never announced** – dates 1–6 January and 31 December, twice each. The
+   seasons re-anchor to the first Monday of the year and those dates fall in the gap between the last
+   career week of one season and the first of the next. Her age is right; the note and the gift are
+   lost. **And the tool that reported "0 lost" `continue`s on exactly those cases before counting.**
+3. ⚠ **A January girl is now correctly THIRTEEN at career start**, which is his 09.08 ruling word for
+   word – so her opening ITF allowance falls **14 → 10**. Two tests asserted 14 while their own
+   comments said thirteen.
+4. ⚠ **Wild cards: the door admits, the calendar shows shut.** `entryStatus` has a fourth door
+   (`homeWildCardPlace`) that `tierOpenFor` knows nothing about. **Pre-existing** – verified by control,
+   the file is 26/26 green on the pre-change tree – and surfaced only because the fixture moved a week.
+   **Open for the owner:** the fix is the calendar learning the same door, which changes what is on
+   screen.
+
+**TENTH RE-FREEZE, AND UNLIKE THE NINE BEFORE IT THE CAREERS REALLY MOVED.** Per-key diff first,
+control = this tree with the clock reverted. **27 keys of 63** moved – `results`, `skills`,
+`condition`, `fundsCents`, `kidRank`, `trophiesByTier`. UNMOVED: `rngMain` (tenth wave), `season`,
+`profile`, `potential` – same world, same calendar, same dice. Different weeks eligible, different
+careers.
+
+Gate: vue-tsc 0 · unit 3142 · component 42/42, 493/493 · context-audit ok · build ok · frozen MAIN
+capture untouched (41550 / e6b0c709).
+
+---
+
 ## 17.08.2026 – ⭐⭐ «ДАВАЙ 50»: the WTA 500 gets a head, and the ladder is finally in order (`docs/specs/the-head-of-the-list-is-a-ladder-2026-08.md`)
 
 He asked what the shorthand meant – «какое сейчас значение и что значат 64 40 и 64 50?» – and then

@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   const w = (await decodeExportFile(new Uint8Array(readFileSync(path)))) as WorldState
 
   section('WHO, AND WHICH TABLE SHE IS ON')
-  console.log(`week ${w.week}  ·  season ${seasonIndexOf(w.week)}  ·  age ${kidAgeYears(w.week, w.profile.birthMonth)}`)
+  console.log(`week ${w.week}  ·  season ${seasonIndexOf(w.week)}  ·  age ${kidAgeYears(w.week, w.profile.birthMonth, w.profile.birthDay)}`)
   console.log(`kidRank (the ITF / international alias) = ${w.kidRank ?? '–'}`)
   console.log(`kidRankWta (the professional table)     = ${w.kidRankWta ?? '–'}`)
   console.log(`retirementOffer on the save             = ${JSON.stringify(w.retirementOffer)}`)

@@ -145,6 +145,24 @@ export function weekMonth(week: number): number {
   return weekStart(week).month + 1
 }
 
+/** THE DAY OF THE MONTH the week's Monday falls on, 1-31 – the third of the three numbers that make
+ *  a week's Monday a real date (`weekYear`, `weekMonth`, this).
+ *
+ *  ⚠ IT EXISTS FOR THE AGE CLOCK, AND FOR ONE DEFECT IT CLOSES (18.08). `kidAgeExact` was built on
+ *  the MONTH alone, so a girl's age rose on the first Monday of her birth month rather than on her
+ *  birthday: measured across all 365 birth dates, **287 of them** printed an age she had not reached,
+ *  by up to SIX WEEKS, and a 31 December date could print 19 while she was 17. The owner's ruling of
+ *  09.08 is the standard it failed – «Есть год рождения и дата. Это всё… Дальше когда ДР – тогда и
+ *  +1 год» – and a date needs a day.
+ *
+ *  ⚠ ONE NUMBER RATHER THAN THE WHOLE `Ymd`, deliberately. The internal shape is frozen and shared
+ *  between every formatter in this file; handing it out would make the module's public surface a
+ *  struct that callers could come to depend on the layout of. Three scalar readers compose into a
+ *  date wherever one is genuinely needed, and nowhere else has needed one in eleven waves. */
+export function weekStartDay(week: number): number {
+  return weekStart(week).day
+}
+
 /** Month names in full, for the ONE label that is about a person rather than about a week. */
 const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',

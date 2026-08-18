@@ -126,7 +126,7 @@ export function factsOf(world: WorldState): FixtureFacts {
   return {
     week: world.week,
     seasonIndex: seasonIndexOf(world.week),
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
     fundsCents: world.fundsCents,
     kidRank: world.kidRank,
     rankedDomestic: domesticPoints > 0,

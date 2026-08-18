@@ -50,14 +50,14 @@ async function main(): Promise<void> {
     console.log(`\n[1] AGE`)
     console.log(`  birth: day ${bd} of month ${bm}`)
     console.log(`  band  ageAtWeek(${w.week})      = ${ageAtWeek(w.week)}`)
-    console.log(`  girl  kidAgeExact(${w.week})    = ${kidAgeExact(w.week, bm).toFixed(2)}`)
-    console.log(`  disagreement now: ${ageAtWeek(w.week) - Math.floor(kidAgeExact(w.week, bm))} year(s)`)
+    console.log(`  girl  kidAgeExact(${w.week})    = ${kidAgeExact(w.week, bm, 1).toFixed(2)}`)
+    console.log(`  disagreement now: ${ageAtWeek(w.week) - Math.floor(kidAgeExact(w.week, bm, 1))} year(s)`)
     console.log(`  season boundaries – band vs girl, and when the birthday actually lands:`)
     for (let s = 0; s <= Math.floor(w.week / WEEKS_PER_YEAR); s++) {
       const w0 = s * WEEKS_PER_YEAR
       const bwk = birthdayWeek(w0, bm, bd)
       const band0 = ageAtWeek(w0)
-      const girl0 = Math.floor(kidAgeExact(w0, bm))
+      const girl0 = Math.floor(kidAgeExact(w0, bm, 1))
       console.log(
         `   season ${s} (${seasonYear(s)}) w${w0}: band ${band0} · girl ${girl0}` +
           `${band0 !== girl0 ? '  <-- MISMATCH' : ''}` +

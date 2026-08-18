@@ -305,7 +305,7 @@ function runCareer(cell: FamilyBackground, arm: Arm, index: number): Career {
     }
 
     // birthday snapshots, at the top of the week exactly as what-money-buys captures them
-    const age = Math.floor(kidAgeExact(world.week, world.profile.birthMonth))
+    const age = Math.floor(kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay))
     if (!byAge.has(age)) {
       const rank = typeof world.kidRankWta === 'number' && kidPoints(world, 'wta') > 0 ? world.kidRankWta : null
       byAge.set(age, {

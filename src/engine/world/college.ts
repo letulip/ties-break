@@ -170,7 +170,7 @@ export function resolveCallUp(world: WorldState): void {
   if (!callUpWeek(world)) return
   const call = rollCallUp(
     {
-      ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
       skillMean: skillMeanOf(world.skills),
     },
     rngFromSeed(`${world.seed}:callup:${world.week}`),
@@ -381,7 +381,7 @@ export function collegeEpilogueLine(world: WorldState): string {
   const banked = college.years.reduce((sum, y) => sum + y.fundsDeltaCents, 0)
   const calls = college.years.filter((y) => y.callUp !== null).length
   const rank = kidLadderRank(world, 'wta')
-  const age = kidAgeYears(world.week, world.profile.birthMonth)
+  const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
   const played =
     calls === 0
       ? 'Her country never called'

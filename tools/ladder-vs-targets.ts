@@ -229,7 +229,7 @@ function runCareer(cell: string, preset: Preset, index: number, policy: Policy):
       slamEntries.push({
         week: world.week,
         season: seasonIndexOf(world.week),
-        age: kidAgeExact(world.week, world.profile.birthMonth),
+        age: kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
         rank: rankBefore ?? tableSize(world, 'wta'),
       })
     }

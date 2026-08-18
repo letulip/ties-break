@@ -61,7 +61,7 @@ for (const preset of PRESETS) {
     for (let w = 0; w < WEEKS; w++) {
       stepCareerWeek(world, rng, POLICY)
       if (world.ending) break
-      const age = kidAgeExact(world.week, world.profile.birthMonth)
+      const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
       const rank = kidPoints(world, 'wta') > 0 ? (world.kidRankWta ?? null) : null
       if (rank !== null && rank <= PLAY_DOWN.fromLowW && !row.everInside150) {
         row.everInside150 = true

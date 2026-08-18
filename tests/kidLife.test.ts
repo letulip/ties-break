@@ -353,7 +353,12 @@ describe('a real career', () => {
     // Three seasons of a career that actually plays: enter whatever the gate allows, resolve every
     // reveal, and keep going.
     const seen = new Set<string>()
-    for (let i = 0; i < 170; i++) {
+    // ⚠ 18.08 – THE BOUND IS "UNTIL SHE IS SEVENTEEN", NOT 170 WEEKS. It was a literal 170 while the
+    // age clock read her birth MONTH, which turned her seventeenth on the first Monday of April; the
+    // date clock turns it on the 15th, so the same 170 weeks now end with a sixteen-year-old and the
+    // test's own title stopped being true. Walking to the age this test is about is what it meant all
+    // along, and it cannot drift again with the calendar. The cap is a runaway guard, not the target.
+    for (let i = 0; i < 200 && toSnapshot(world).ageYears < 17; i++) {
       const snap = toSnapshot(world)
       for (const e of snap.upcoming) {
         if (e.eligible && !e.entered && e.week > world.week && e.deadlineWeek >= world.week) {

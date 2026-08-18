@@ -1013,11 +1013,11 @@ describe('C8 — age curve', () => {
       w.week = 0
       const kitEarly = kitInjuryFactor(kitWearAt(w.seed, w.profile.background, 0))
       const early = injuryTau(w) / kitEarly
-      const ageEarly = kidAgeYears(0, birthMonth)
+      const ageEarly = kidAgeYears(0, birthMonth, w.profile.birthDay)
       w.week = 104
       const kitLate = kitInjuryFactor(kitWearAt(w.seed, w.profile.background, 104))
       const late = injuryTau(w) / kitLate
-      const ageLate = kidAgeYears(104, birthMonth)
+      const ageLate = kidAgeYears(104, birthMonth, w.profile.birthDay)
       expect(ageLate - ageEarly, `${birthMonth}: two seasons is two years`).toBe(2)
       expect(late / early, `birthMonth ${birthMonth}`).toBeCloseTo(
         ageInjuryFactor(ageLate) / ageInjuryFactor(ageEarly),
@@ -1028,8 +1028,8 @@ describe('C8 — age curve', () => {
       expect(kitLate, `birthMonth ${birthMonth}: the shoe cycle actually moved`).not.toBeCloseTo(kitEarly, 6)
     }
     // and the owner's own case, spelled out: a December girl really is 13 in the opening January
-    expect(kidAgeYears(0, 12)).toBe(13)
-    expect(kidAgeYears(0, 1)).toBe(14)
+    expect(kidAgeYears(0, 12, 1)).toBe(13)
+    expect(kidAgeYears(0, 1, 1)).toBe(14)
   })
 
   it('Monte-Carlo direction: more onsets in the age-16 window than the age-14 window', () => {

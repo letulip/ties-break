@@ -53,7 +53,7 @@ describe('the planned-spend quote reads the MARKET clock, never the printed age'
   it('the fixture really does hold two different ages, or the test below is vacuous', () => {
     const snap = decemberSnapshot()
     expect(snap.ageYears, 'her age – the one clock, and what the screen prints').toBe(16)
-    expect(kidAgeYears(snap.week, snap.profile.birthMonth)).toBe(16)
+    expect(kidAgeYears(snap.week, snap.profile.birthMonth, snap.profile.birthDay)).toBe(16)
     expect(ageAtWeek(snap.week), "the coach market's restocking clock").toBe(17)
     // ...and a coach really is hired, so `coachById` has something to resolve
     expect(snap.coachId).toBeTruthy()
