@@ -255,7 +255,7 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
       if (e[t] <= 0) continue
       entries[t] += e[t]
       if (firstEntryAge[t] === undefined) {
-        firstEntryAge[t] = kidAgeExact(weekOfEntry, world.profile.birthMonth)
+        firstEntryAge[t] = kidAgeExact(weekOfEntry, world.profile.birthMonth, world.profile.birthDay)
         firstEntryRank[t] = world.kidRankWta ?? null
       }
     }
@@ -280,14 +280,14 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
         }
       }
     }
-    const ageNow = kidAgeExact(world.week, world.profile.birthMonth)
+    const ageNow = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     for (const m of MONEY_LINES) if (prizeCrossAge[m] === null && prizeCents >= m) prizeCrossAge[m] = ageNow
     for (const r of RANK_LINES) {
       if (rankCrossAge[r] === null && typeof world.kidRankWta === 'number' && world.kidRankWta <= r) rankCrossAge[r] = ageNow
     }
     for (const t of GATED) {
       if (cutClearedAge[t] === undefined && tierFloorOpen(world, t)) {
-        cutClearedAge[t] = kidAgeExact(world.week, world.profile.birthMonth)
+        cutClearedAge[t] = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
       }
     }
     // The per-rung counting finish, read exactly as `collegeStillOpen` reads it: a finish index
@@ -297,11 +297,11 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
       const finish = world.bestFinishByTier[t]
       if (finish === undefined) continue
       if (finish >= TIERS[t].points.length - 1) continue
-      if (TIERS[t].points[finish] > 0) firstCountingAge[t] = kidAgeExact(world.week, world.profile.birthMonth)
+      if (TIERS[t].points[finish] > 0) firstCountingAge[t] = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     }
     if (collegeShutWeek === null && !retiredCollegeDoorOpen(world)) {
       collegeShutWeek = world.week
-      collegeShutAge = kidAgeExact(world.week, world.profile.birthMonth)
+      collegeShutAge = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
       for (const t of COLLEGE_CLOSERS) {
         const finish = world.bestFinishByTier[t]
         if (finish === undefined) continue
@@ -312,7 +312,7 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
         }
       }
     }
-    if (!forkSeen && kidAgeExact(world.week, world.profile.birthMonth) >= ENDINGS.forkAgeYears) {
+    if (!forkSeen && kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay) >= ENDINGS.forkAgeYears) {
       forkSeen = true
       forkWeek = world.week
       collegeOpenAtFork = retiredCollegeDoorOpen(world)

@@ -4,7 +4,7 @@
 // imports these values with no runtime cycle. Only `markBirthday` touches the world; everything else
 // is pure arithmetic over (week, birthMonth, birthDay) and draws on no RNG stream at all.
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import { daysInBirthMonth, weekMonth, weekOfDate, weekYear } from '../../shared/dates'
+import { daysInBirthMonth, weekMonth, weekOfDate, weekStartDay, weekYear } from '../../shared/dates'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
 
@@ -79,17 +79,35 @@ export function kidBirthYear(): number {
  *  A January girl is 14.0 at week 0; a December girl is 13.08 and does not turn 14 until week ~48. Feeds
  *  development (`growWeek`), her eligibility allowance, the injury table and every surface that prints an
  *  age - everything, in short, that is about the GIRL rather than about her age group. */
-export function kidAgeExact(week: number, birthMonth: number): number {
-  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
-  // Months elapsed since her birthday, as a fraction of a year, measured on the real calendar.
-  const monthsIntoYear = weekMonth(week) - month
-  const yearsSinceBirthYear = weekYear(week) - kidBirthYear()
-  return yearsSinceBirthYear + monthsIntoYear / 12
+export function kidAgeExact(week: number, birthMonth: number, birthDay: number): number {
+  const { month, day } = birthDate(birthMonth, birthDay)
+  const year = weekYear(week)
+  const m = weekMonth(week)
+  const d = weekStartDay(week)
+  // Has her birthday in THIS calendar year already arrived, by the Monday this week starts on?
+  const turned = m > month || (m === month && d >= day)
+  const whole = year - kidBirthYear() - (turned ? 0 : 1)
+  // Months elapsed since that birthday, with the day carried as a fraction of the current month, so
+  // the answer rises smoothly inside the year and crosses New Year without a step.
+  // ⚠⚠ THE WHOLE YEAR COMES FROM THE DATE TEST ALONE, AND THE FRACTION MAY NEVER MOVE IT. Both drafts
+  // of this line got that wrong in opposite directions and both were caught by the guards rather than
+  // by reading: scaling the day gap by the CURRENT month dropped a year (born 30 January, asked in the
+  // week of 1 February, printed twenty the week after she was told she turned twenty-one), and scaling
+  // it by HER month let it exceed twelve and ADD one (born 1 February, week of Monday 31 January:
+  // `11 + 30/28` is 12.07, so her sixteenth arrived a week early). A fraction that can change `floor`
+  // is a second clock wearing a decimal point, which is the exact thing the 09.08 ruling abolished.
+  //
+  // So `whole` is the answer and `frac` is only ever presentation: clamped into [0, 1) by
+  // construction, so `Math.floor(kidAgeExact(...)) === whole` for every date and every week.
+  const monthsWhole = turned ? m - month : m - month + 12
+  const dayFrac = (d - day) / daysInBirthMonth(month)
+  const frac = Math.min(0.999999, Math.max(0, (monthsWhole + dayFrac) / 12))
+  return whole + frac
 }
 
 /** ...and the whole-years version, which is what the age-keyed tables want. */
-export function kidAgeYears(week: number, birthMonth: number): number {
-  return Math.floor(kidAgeExact(week, birthMonth))
+export function kidAgeYears(week: number, birthMonth: number, birthDay: number): number {
+  return Math.floor(kidAgeExact(week, birthMonth, birthDay))
 }
 
 /** HER AGE IN `week`, whole years, read off the world's own profile - the ONE clock, at the call sites
@@ -101,7 +119,7 @@ export function kidAgeYears(week: number, birthMonth: number): number {
  *  world.profile.birthMonth)`. One name means a later question about which age a rule reads has one
  *  place to be answered, and it is why `git grep kidAgeAt` is the audit of the ruling. */
 export function kidAgeAt(world: WorldState, week: number): number {
-  return kidAgeYears(week, world.profile.birthMonth)
+  return kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay)
 }
 
 /** THE FIRST WEEK OF THE AGE-YEAR CONTAINING `week` – the opening of her birthday-to-birthday window
@@ -210,6 +228,24 @@ export function birthdayWeek(week: number, birthMonth: number, birthDay: number)
 export function birthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
   const year = birthdayYearIn(week, birthMonth, birthDay)
   return year === null ? null : year - kidBirthYear()
+}
+
+/** ⭐⭐ THE AGE SHE REACHES BY THE END OF `week` – her age, plus a birthday that lands INSIDE it.
+ *
+ *  ⚠ IT EXISTS BECAUSE THE DATE CLOCK SPLIT TWO THINGS THAT USED TO COINCIDE (18.08). `kidAgeAt`
+ *  answers for the week's MONDAY, which is the right question for a rule that governs a whole week;
+ *  `birthdayTurning` fires in the week CONTAINING her date. For a birthday that falls on any day but
+ *  a Monday those are different weeks, so a rule meant to be raised ON HER BIRTHDAY - the fork at
+ *  nineteen is the one - would fire the Monday AFTER the cake.
+ *
+ *  ⚠ THIS IS NOT A SECOND CLOCK. It is `kidAgeAt` with a one-week look-ahead that only ever applies
+ *  in the birthday's own week, and it is for events that are ABOUT the birthday. Every gate stays on
+ *  `kidAgeAt`: an eligibility rule governs the whole week and must not open mid-week. If you are
+ *  gating, use `kidAgeAt`; if you are CELEBRATING or asking her a question the birthday prompts, use
+ *  this one. The fork is the only caller today, deliberately. */
+export function kidAgeThroughWeek(world: WorldState, week: number): number {
+  const turning = birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay)
+  return Math.max(kidAgeAt(world, week), turning ?? -1)
 }
 
 /** Numbers she is old enough to be told in words. The notes are somebody's voice, and a parent does not

@@ -463,7 +463,7 @@ function expectedKid(world: WorldState, surface: Surface, atSkills?: KidSkills, 
     applySurfaceStyle(
       {
         ...raw,
-        age: kidAgeExact(week, world.profile.birthMonth),
+        age: kidAgeExact(week, world.profile.birthMonth, world.profile.birthDay),
         serve: raw.serve * factor,
         ret: raw.ret * factor,
         composure: raw.composure * factor,

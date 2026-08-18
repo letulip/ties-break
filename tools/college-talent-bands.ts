@@ -106,7 +106,7 @@ const yr = (x: number) => x.toFixed(1)
  *  makes it NaN, `NaN < TO_AGE` is false, and the entire post-fork walk was skipped in silence: a
  *  broken arm that looks exactly like a null result (CLAUDE.md's own warning, and it caught me). The
  *  tell was the clock – 21s for eighteen careers that should have walked 830 weeks each. */
-const ageOf = (w: WorldState): number => kidAgeExact(w.week, w.profile.birthMonth)
+const ageOf = (w: WorldState): number => kidAgeExact(w.week, w.profile.birthMonth, w.profile.birthDay)
 
 // --- the bands ---------------------------------------------------------------------------------
 

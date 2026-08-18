@@ -107,7 +107,7 @@ const OFF_THE_LIST = 1
 function juniorWorld(seed: string, age: number, juniorRank: number | null, wBook = 300): WorldState {
   const world = createWorld(seed)
   const rng = resumeMain(world.rngMain)
-  while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
+  while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < age) tickWeek(world, rng)
   world.condition = 100
   world.fundsCents = 500_000_00
   world.season = []
@@ -233,7 +233,7 @@ describe('the Accelerator is a junior\'s route and nothing else', () => {
     const junior = juniorWorld('acc-adult-j', 17, null, OFF_THE_LIST)
     expect(juniorAccessOpen(junior, junior.week, 'w75'), 'a junior off both lists is refused').toBe(false)
     const adult = juniorWorld('acc-adult-a', JUNIOR_MAX_AGE_YEARS + 1, null)
-    expect(kidAgeYears(adult.week, adult.profile.birthMonth)).toBeGreaterThan(JUNIOR_MAX_AGE_YEARS)
+    expect(kidAgeYears(adult.week, adult.profile.birthMonth, adult.profile.birthDay)).toBeGreaterThan(JUNIOR_MAX_AGE_YEARS)
     expect(juniorAccessOpen(adult, adult.week, 'w75'), 'the same girl a year later is not').toBe(true)
   })
 
@@ -248,7 +248,7 @@ describe('the Accelerator is a junior\'s route and nothing else', () => {
     // ⚠ THE BANKED JUNIOR RANK IS `null` HERE, which is the whole point: she is on no junior list,
     // the Accelerator holds nothing for her, and the rung is open anyway.
     const world = juniorWorld('acc-own-cut', 17, null)
-    expect(kidAgeYears(world.week, world.profile.birthMonth)).toBeLessThanOrEqual(JUNIOR_MAX_AGE_YEARS)
+    expect(kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)).toBeLessThanOrEqual(JUNIOR_MAX_AGE_YEARS)
     expect(acceleratorAdmits(world, world.week, 'w75', null), 'the programme holds nothing for her').toBe(false)
     expect(juniorAccessOpen(world, world.week, 'w75'), 'and the rung is hers regardless').toBe(true)
     expect(tierFloorOpen(world, 'w75'), 'the calendar agrees').toBe(true)

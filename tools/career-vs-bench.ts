@@ -70,7 +70,7 @@ async function main(): Promise<void> {
   console.log('season   age    points   wins-losses        earned         spent          net')
   for (const s of w.seasonHistory) {
     const row = s as unknown as { spentCents?: number; earnedCents?: number; fundsDeltaCents?: number }
-    const age = kidAgeYears(s.seasonIndex * WEEKS_PER_YEAR + 26, p.birthMonth)
+    const age = kidAgeYears(s.seasonIndex * WEEKS_PER_YEAR + 26, p.birthMonth, p.birthDay)
     const cell = (v: number | undefined): string => (v === undefined ? '–' : money(v))
     console.log(
       `  ${String(s.seasonIndex).padStart(2)}     ${String(age).padStart(2)}    ${String(s.points).padStart(5)}     ${String(s.wins).padStart(3)}-${String(s.losses).padEnd(3)}   ${cell(row.earnedCents).padStart(12)}  ${cell(row.spentCents).padStart(12)}  ${cell(row.fundsDeltaCents).padStart(12)}`,

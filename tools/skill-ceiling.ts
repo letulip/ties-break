@@ -358,7 +358,7 @@ function runCareerSkills(preset: Preset, index: number, policy: Policy, opts: Ar
     const m = meanFive(world.skills)
     if (m > peakMean) {
       peakMean = m
-      peakMeanAge = kidAgeExact(world.week, world.profile.birthMonth)
+      peakMeanAge = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
       peakCore = meanFour(world.skills)
       peakBuild = { ...world.skills }
     }
@@ -397,7 +397,7 @@ function runCareerSkills(preset: Preset, index: number, policy: Policy, opts: Ar
     realisedByKey,
     peakWtaRank,
     peakKidRank,
-    endedAge: world.ending ? kidAgeExact(world.week, world.profile.birthMonth) : null,
+    endedAge: world.ending ? kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay) : null,
     ending: world.ending?.type ?? null,
     weeksLived: world.week,
     matches,

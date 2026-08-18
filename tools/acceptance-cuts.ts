@@ -285,7 +285,7 @@ function runOne(preset: Preset, index: number, policy = POLICIES[1]): Row {
     for (const t of TIER_LADDER) {
       if (e[t] <= 0) continue
       entries[t] += e[t]
-      if (firstAge[t] === undefined) firstAge[t] = kidAgeExact(weekOfEntry, world.profile.birthMonth)
+      if (firstAge[t] === undefined) firstAge[t] = kidAgeExact(weekOfEntry, world.profile.birthMonth, world.profile.birthDay)
     }
     for (const fw of world.financeWeeks) {
       if (seenWeeks.has(fw.week)) continue
@@ -295,11 +295,11 @@ function runOne(preset: Preset, index: number, policy = POLICIES[1]): Row {
     // The cut, asked WITHOUT the age gate – `tierFloorOpen` is the rank half alone (world/ladder.ts).
     for (const t of GATED) {
       if (cutClearedAge[t] !== undefined) continue
-      if (tierFloorOpen(world, t)) cutClearedAge[t] = kidAgeExact(world.week, world.profile.birthMonth)
+      if (tierFloorOpen(world, t)) cutClearedAge[t] = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     }
     if (collegeShutWeek === null && !retiredCollegeDoorOpen(world)) {
       collegeShutWeek = world.week
-      collegeShutAge = kidAgeExact(world.week, world.profile.birthMonth)
+      collegeShutAge = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
       // WHICH RUNG SHUT IT – the same read `collegeStillOpen` makes, reported rather than folded.
       for (const t of COLLEGE_CLOSERS) {
         const finish = world.bestFinishByTier[t]
@@ -311,7 +311,7 @@ function runOne(preset: Preset, index: number, policy = POLICIES[1]): Row {
         }
       }
     }
-    if (!forkSeen && kidAgeExact(world.week, world.profile.birthMonth) >= ENDINGS.forkAgeYears) {
+    if (!forkSeen && kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay) >= ENDINGS.forkAgeYears) {
       forkSeen = true
       collegeOpenAtFork = retiredCollegeDoorOpen(world)
     }

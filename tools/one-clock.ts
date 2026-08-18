@@ -110,7 +110,7 @@ function clockArm(): void {
   console.log(`  ${pad('week', 8)}${pad('band', 8)}${BIRTH_MONTHS.map((m) => pad(`girl(${MONTHS[m].slice(0, 3)})`, 14)).join('')}`)
   for (let s = 0; s <= 5; s++) {
     const w = s * WEEKS_PER_YEAR
-    const cells = BIRTH_MONTHS.map((m) => pad(`${kidAgeYears(w, m)}  (${kidAgeExact(w, m).toFixed(2)})`, 14))
+    const cells = BIRTH_MONTHS.map((m) => pad(`${kidAgeYears(w, m, 1)}  (${kidAgeExact(w, m, 1).toFixed(2)})`, 14))
     console.log(`  ${pad(`w${w}`, 8)}${pad(ageAtWeek(w), 8)}${cells.join('')}`)
   }
   console.log('')

@@ -88,10 +88,10 @@ function levelAfter(seed: string, birthMonth: number, weeks: number): number {
 // January to November, so a December girl in the 14s is genuinely thirteen for eleven months of it.
 describe('the band and the girl are two different numbers', () => {
   it('⚠ A DECEMBER GIRL IS 13 IN THE OPENING JANUARY, and a January girl is 14', () => {
-    expect(kidAgeYears(0, 12)).toBe(13)
-    expect(kidAgeYears(0, 1)).toBe(14)
+    expect(kidAgeYears(0, 12, 1)).toBe(13)
+    expect(kidAgeYears(0, 1, 1)).toBe(14)
     // ...and the exact ages bracket a year, which is the eleven months the whole effect is about
-    expect(kidAgeExact(0, 1) - kidAgeExact(0, 12)).toBeCloseTo(11 / 12, 6)
+    expect(kidAgeExact(0, 1, 1) - kidAgeExact(0, 12, 1)).toBeCloseTo(11 / 12, 6)
   })
 
   it('the BAND is birth-month-free, because the coach roster is derived from it', () => {
@@ -106,21 +106,28 @@ describe('the band and the girl are two different numbers', () => {
     expect(toSnapshot(dec).coachMarket.map((c) => c.id)).toEqual(toSnapshot(jan).coachMarket.map((c) => c.id))
   })
 
-  // ⚠ RE-AIMED, NOT WEAKENED (round-16 #100). Every claim below is unchanged and still passes; what
-  // changed is what they are ALLOWED to prove. All three read birth DAY 15, and the 15th of a month is
-  // always in a week whose Monday is the 9th-15th – the same month. So the two clocks agree here BY
-  // CONSTRUCTION, and the identity on the last line is a fact about day 15, not a general law: for a
-  // girl born on the 1st-6th the announcement leads the month clock by up to one week, on purpose and
-  // measured. That is the whole of #100 and it is pinned in tests/birthday-announce.test.ts, which
-  // sweeps all 365 dates. Do not widen this block to other days expecting it to hold.
+  // ⚠ RE-AIMED A SECOND TIME (18.08, the date clock), AND THE OLD PREMISE IS WHY. Round-16 #100 wrote
+  // here that "the 15th of a month is always in a week whose Monday is the 9th-15th – the same month,
+  // so the two clocks agree here BY CONSTRUCTION". That was a fact about the MONTH clock: it only
+  // needed the Monday to be in her month. The clock now reads the DATE, so a week whose Monday is the
+  // 13th holds her 15th birthday while she is still, on that Monday, a year younger - and the two
+  // stop agreeing for exactly one week, on day 15 the same as on any other day.
+  //
+  // ⚠ WHICH MAKES THE OLD IDENTITY A SPECIAL CASE OF THE GENERAL LAW rather than a separate fact, so
+  // it is asserted as the law: the announcement may LEAD by one week and never more, and the print
+  // catches up the following Monday. Swept over all 365 dates in tests/birthday-announce.test.ts;
+  // asserted here on the three months this block is about.
   it('she really does turn a year older, once, on her own month (birth day 15)', () => {
     for (const birthMonth of [1, 6, 12]) {
       const turns = [...Array(52).keys()].filter((w) => birthdayTurning(w, birthMonth, 15) !== null)
       expect(turns.length, `birthMonth ${birthMonth}: one birthday a season`).toBe(1)
       const w = turns[0]
       expect(weekMonth(w), 'and it lands in her own month').toBe(birthMonth)
-      // the age she turns is the age she then is – for day 15, see the ⚠ note above
-      expect(birthdayTurning(w, birthMonth, 15)).toBe(kidAgeYears(w, birthMonth))
+      const announced = birthdayTurning(w, birthMonth, 15)!
+      const lead = announced - kidAgeYears(w, birthMonth, 15)
+      expect(lead, `bm ${birthMonth}: the announcement leads the print by 0 or 1 week`).toBeGreaterThanOrEqual(0)
+      expect(lead, `bm ${birthMonth}: and never by more`).toBeLessThanOrEqual(1)
+      expect(kidAgeYears(w + 1, birthMonth, 15), `bm ${birthMonth}: the Monday after agrees`).toBe(announced)
     }
   })
 
@@ -179,15 +186,27 @@ describe('the band and the girl are two different numbers', () => {
       for (const week of [0, 26, 52, 104, 130, 156, 208]) {
         world.week = week
         const snap = toSnapshot(world)
-        expect(snap.ageYears, `bm ${birthMonth} w${week}`).toBe(kidAgeYears(week, birthMonth))
+        expect(snap.ageYears, `bm ${birthMonth} w${week}`).toBe(kidAgeYears(week, birthMonth, 15))
         const turning = birthdayTurning(week, birthMonth, 15)
         if (turning !== null) {
-          expect(turning, `the note and the header, bm ${birthMonth} w${week}`).toBe(snap.ageYears)
+          // ⚠ 18.08: the note may lead the header by ONE WEEK and never more - the date clock reads
+          // her Monday, the note reads the day her birthday actually falls on. Fifty weeks is still
+          // forbidden; one is the truth, and it closes on the next Monday.
+          const lead = turning - snap.ageYears
+          expect(lead, `the note and the header, bm ${birthMonth} w${week}`).toBeGreaterThanOrEqual(0)
+          expect(lead, `the note and the header, bm ${birthMonth} w${week}`).toBeLessThanOrEqual(1)
         }
       }
-      // ...and at week 0 that is THIRTEEN for everyone not born in the first week of January
+      // ...and at week 0 that is THIRTEEN for everyone not born in the first week of January.
+      //
+      // ⚠⚠ THE JANUARY ARM WAS `14` UNTIL 18.08 AND THE LINE ABOVE IT ALWAYS SAID OTHERWISE. Week 0 is
+      // Monday 6 January and this girl is born on the 15th, so she is not born in the first week of
+      // January and her birthday has not arrived - she is THIRTEEN. The month clock called her
+      // fourteen because it only asked which month it was, and the owner's ruling of 09.08 is the one
+      // the comment was quoting all along: «на начало игры ей всё ещё 13, так же, как и всем
+      // остальным, кто родился НЕ на 1й неделе января». The assertion now matches its own sentence.
       world.week = 0
-      expect(toSnapshot(world).ageYears).toBe(birthMonth === 1 ? 14 : 13)
+      expect(toSnapshot(world).ageYears).toBe(13)
     }
   })
 
@@ -225,9 +244,9 @@ describe('the band and the girl are two different numbers', () => {
     // door opens on HER birthday and therefore eleven months apart across the band. Read off the
     // catalogue it survives the ruling and would survive the next one.
     const opensAt = TIERS.w15.minAgeYears!
-    expect(kidAgeYears(jan, 1), 'January').toBe(opensAt)
-    expect(kidAgeYears(mar, 3), 'March').toBe(opensAt)
-    expect(kidAgeYears(dec, 12), 'December').toBe(opensAt)
+    expect(kidAgeYears(jan, 1, 1), 'January').toBe(opensAt)
+    expect(kidAgeYears(mar, 3, 1), 'March').toBe(opensAt)
+    expect(kidAgeYears(dec, 12, 1), 'December').toBe(opensAt)
     // ...and the season boundary of the year the BAND turns that age is NOT it for the March girl,
     // which is exactly item 19a. Derived from the rung so the ruling cannot make it vacuous.
     const bandWeek = (opensAt - START_AGE_YEARS) * 52
@@ -240,18 +259,22 @@ describe('the band and the girl are two different numbers', () => {
     // tour eleven months after a January one. The give and the take are ONE rule, and pinning only
     // the take would let somebody "fix" the cost by putting the ceiling back on the band.
     const agesOut = (birthMonth: number): number => {
-      for (let w = 4 * 52; w < 8 * 52; w++) if (!isTierAgeOpen('j30', kidAgeYears(w, birthMonth))) return w
+      for (let w = 4 * 52; w < 8 * 52; w++) if (!isTierAgeOpen('j30', kidAgeYears(w, birthMonth, 1))) return w
       throw new Error('never aged out')
     }
     expect(agesOut(12) - agesOut(1), 'eleven months of junior eligibility').toBeGreaterThanOrEqual(44)
-    expect(kidAgeYears(agesOut(12), 12), 'and it is her nineteenth that closes it').toBe(19)
+    expect(kidAgeYears(agesOut(12), 12, 1), 'and it is her nineteenth that closes it').toBe(19)
   })
 
   it('⚠ THE ITF ALLOWANCE IS HER AGE\'S – a December girl opens on 13\'s ten, not 14\'s fourteen', () => {
-    for (const [birthMonth, expected] of [[1, 14], [6, 10], [12, 10]] as const) {
+    // ⚠ THE JANUARY ARM WAS 14 UNTIL 18.08. On the date clock a girl born 15 January has not had her
+    // birthday by Monday 6 January, so she is THIRTEEN at week 0 like everybody else not born in the
+    // first week of the month - the owner's ruling of 09.08 - and thirteen's allowance is ten. The
+    // December contrast this test is named for is unchanged; what moved is that January joins it.
+    for (const [birthMonth, expected] of [[1, 10], [6, 10], [12, 10]] as const) {
       const world = createWorld(`one-clock-cap-${birthMonth}`, { ...DEFAULT_PROFILE, birthMonth, birthDay: 15 })
       expect(entryCapUsage(world, 0).limit, `bm ${birthMonth}`).toBe(expected)
-      expect(entryCapUsage(world, 0).limit).toBe(annualEntryLimit(kidAgeYears(0, birthMonth)))
+      expect(entryCapUsage(world, 0).limit).toBe(annualEntryLimit(kidAgeYears(0, birthMonth, 15)))
     }
     // ⚠ AND IT RISES ON HER BIRTHDAY AND NEVER FALLS inside a season block - the property that makes
     // an entry impossible to retro-invalidate. See engine/world/entryCaps.ts.
@@ -260,14 +283,26 @@ describe('the band and the girl are two different numbers', () => {
       if (w % 52 === 0) continue // a new block resets the ledger, not the monotonicity claim
       expect(entryCapUsage(june, w).limit, `w${w}`).toBeGreaterThanOrEqual(entryCapUsage(june, w - 1).limit)
     }
-    // ⚠ THE STEP IS AT MONTH RESOLUTION, which is `kidAgeExact`'s own design (shared/protocol.ts:
-    // the relative age effect is a position INSIDE the birth year, so the age turns with the month
-    // while the birthday CARD lands on the day). So the last May week still holds 13's ten.
-    const lastMay = 20
-    expect(weekMonth(lastMay), 'the fixture week really is May').toBe(5)
-    expect(weekMonth(lastMay + 1), '...and the next one is her June').toBe(6)
-    expect(entryCapUsage(june, lastMay).limit, 'still 13 in May').toBe(10)
-    expect(entryCapUsage(june, lastMay + 1).limit, '...and 14 from her June').toBe(14)
+    // ⚠⚠ THE STEP IS AT **DATE** RESOLUTION SINCE 18.08, AND THIS BLOCK USED TO SAY THE OPPOSITE. It
+    // read: "the step is at MONTH resolution, which is `kidAgeExact`'s own design ... the age turns
+    // with the month while the birthday CARD lands on the day". That WAS the design and it was the
+    // defect: the owner found it by playing - «23 года было в интерфейсе написано на неделю раньше,
+    // чем случился сам день рождения» - and the clock now turns on her birthday like the card does.
+    //
+    // So the allowance rises in the week her birthday falls in, NOT on the first Monday of her month.
+    // Asserted as that relationship rather than as a fixture week, so it cannot drift with the
+    // calendar: the step week is found by walking, then checked against `birthdayWeek`.
+    let stepWeek = -1
+    for (let w = 1; w < 52; w++) {
+      if (entryCapUsage(june, w).limit > entryCapUsage(june, w - 1).limit) { stepWeek = w; break }
+    }
+    expect(stepWeek, 'the allowance really does step up inside the first season').toBeGreaterThan(0)
+    expect(entryCapUsage(june, stepWeek - 1).limit, "13's ten, the week before her birthday").toBe(10)
+    expect(entryCapUsage(june, stepWeek).limit, "...and 14's fourteen from her birthday week").toBe(14)
+    // ⚠ AND THE STEP IS HER BIRTHDAY, not merely somewhere in June - the whole point of the fix.
+    expect(kidAgeYears(stepWeek, 6, 15), 'she is fourteen in the step week').toBe(14)
+    expect(kidAgeYears(stepWeek - 1, 6, 15), '...and thirteen the week before').toBe(13)
+    expect(weekMonth(stepWeek), 'and it lands in her own month').toBe(6)
   })
 
   it('⚠⚠ THE ALLOWANCE WINDOW IS HER BIRTHDAY YEAR (P2) – her sixteenth year is ONE allowance', () => {
@@ -284,7 +319,7 @@ describe('the band and the girl are two different numbers', () => {
     // returns TWICE the row, because the second season block hands her a fresh one mid-birthday-year.
     const june = createWorld('p2-window', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15 })
     const firstWeekAt = (age: number): number => {
-      for (let w = 0; w < 8 * 52; w++) if (kidAgeYears(w, 6) === age) return w
+      for (let w = 0; w < 8 * 52; w++) if (kidAgeYears(w, 6, 15) === age) return w
       throw new Error(`never turned ${age}`)
     }
     const from = firstWeekAt(16)
@@ -316,7 +351,7 @@ describe('the band and the girl are two different numbers', () => {
     // and an entry made after it must not count against the year that ended.
     const june = createWorld('p2-turnover', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15 })
     let b = -1
-    for (let w = 1; w < 8 * 52; w++) if (kidAgeYears(w, 6) === 16 && kidAgeYears(w - 1, 6) === 15) { b = w; break }
+    for (let w = 1; w < 8 * 52; w++) if (kidAgeYears(w, 6, 15) === 16 && kidAgeYears(w - 1, 6, 15) === 15) { b = w; break }
     expect(b, 'found her sixteenth birthday week').toBeGreaterThan(0)
     june.proEntryWeeks = [b - 1, b]
     expect(proEntryCapUsage(june, b).used, 'only the row inside the sixteenth year').toBe(1)
@@ -401,7 +436,9 @@ describe('the band and the girl are two different numbers', () => {
     // reading: `slotBeginning`'s caption was the CONSTANT `START_AGE_YEARS`, so putting a literal
     // 14 back into the string leaves the banned expression absent and the pin green. A ban on one
     // spelling of the band is not a claim about the number that reaches the page. This one is.
-    for (const [birthMonth, expected] of [[1, 14], [6, 13], [12, 13]] as const) {
+    // ⚠ JANUARY 14 -> 13 (18.08, the date clock): born on the 15th, she is still thirteen in the week
+    // the album's first slot is captioned. Same ruling as the allowance block above.
+    for (const [birthMonth, expected] of [[1, 13], [6, 13], [12, 13]] as const) {
       const world = createWorld(`one-clock-album-${birthMonth}`, { ...DEFAULT_PROFILE, birthMonth, birthDay: 15 })
       const beginning = buildAlbum(world).find((p) => p.slot === 1)!
       expect(beginning.caption, `bm ${birthMonth}`).toBe(`${expected} years old, and we said yes`)

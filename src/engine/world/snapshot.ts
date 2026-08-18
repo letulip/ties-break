@@ -1038,7 +1038,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     fork: world.fork && world.fork.answer === null
       ? {
           askedWeek: world.fork.askedWeek,
-          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth),
+          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth, world.profile.birthDay),
           // ⭐⭐ THE OFFER, STRAIGHT OFF PERSISTED STATE (v51). It is measured once, the week the fork
           // is raised, and it is not recomputed here – a snapshot that re-derived it would answer a
           // different question on the week a constant moved, and this one is money.

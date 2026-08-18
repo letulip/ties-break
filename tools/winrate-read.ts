@@ -265,7 +265,7 @@ function cause(w: WorldState): void {
 }
 
 function header(w: WorldState, name: string): void {
-  const age = kidAgeExact(w.week, w.profile.birthMonth)
+  const age = kidAgeExact(w.week, w.profile.birthMonth, w.profile.birthDay)
   section(`${name}  ·  v${w.schemaVersion}  ·  week ${w.week}  ·  age ${age.toFixed(1)}`)
   console.log(
     `  ${w.profile.kidName} ${w.profile.kidLastName} · ${w.profile.background} · coach ${w.profile.coachTier} · ${w.profile.playStyle} · condition ${w.condition}`,

@@ -20,7 +20,6 @@ import {
   SAVE_SCHEMA_VERSION,
   openingCoachId,
   replayMainState,
-  kidAgeYears,
   seasonStartWeek,
   seedWorldForV6,
   startingSkills,
@@ -42,7 +41,7 @@ import { rngFromSeed, pickInt, type MainRngState } from './rng'
 import { OFF_SEASON_WEEKS, TIERS, tierFromLabel, WEEKS_PER_YEAR } from './season/calendar'
 import { milestoneKey } from './diary'
 import { schoolEndWeek } from './kidLife'
-import { WEEKS_IN_SEASON, weekYear } from '../shared/dates'
+import { WEEKS_IN_SEASON, weekMonth, weekYear } from '../shared/dates'
 import type { TierId } from './season/types'
 
 // Save-data migrations. Append-only: never renumber, never delete a block.
@@ -58,9 +57,32 @@ import type { TierId } from './season/types'
  *  arithmetic ever moves - which a hard-coded week absolutely would. */
 function nineteenthBirthdayWeek(birthMonth: number, cap: number): number {
   for (let w = 0; w <= cap; w++) {
-    if (kidAgeYears(w, birthMonth) >= 19) return w
+    if (frozenMonthClockAge(w, birthMonth) >= 19) return w
   }
   return cap
+}
+
+/** ⚠⚠ THE AGE CLOCK AS IT STOOD WHEN v39 SHIPPED, FROZEN HERE BECAUSE A MIGRATION MAY NOT CHANGE ITS
+ *  MIND (18.08). `kidAgeYears` became DATE-aware on 18.08 – it had been reading the birth MONTH, so a
+ *  girl's age rose on the first Monday of her birth month rather than on her birthday, by up to six
+ *  weeks. That was a real defect and it is fixed at the source.
+ *
+ *  ⚠ BUT v39 IS SHIPPED, AND THE APPEND-ONLY RULE IS ABOUT THE OUTPUT, NOT THE SOURCE TEXT. A v38
+ *  save migrated last month got `fork.askedWeek` off the month clock; the same file migrated tomorrow
+ *  must land on the same week, or two players who imported the same save on different days hold
+ *  careers that diverge. The comment two functions down states the rule in its own words - "widening
+ *  this line would make a v38 save skip straight to a v51 shape, which is the edit the append-only
+ *  rule forbids" - and following the new clock here would be exactly that edit wearing a fix's
+ *  clothes.
+ *
+ *  ⚠ SO THE DRIFT WARNING ON `nineteenthBirthdayWeek` WAS HALF RIGHT AND IS NOW ANSWERED. It said the
+ *  search "cannot drift if the age arithmetic ever moves". It could - the arithmetic moved on 18.08 -
+ *  and what stops it is this copy rather than the search. The back-fill is bounded and self-correcting
+ *  anyway: it only ever writes `askedWeek` for a career already past nineteen, and the LIVE fork every
+ *  career raises from here on reads the real clock through `forkDue`. */
+function frozenMonthClockAge(week: number, birthMonth: number): number {
+  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
+  return Math.floor(weekYear(week) - (weekYear(0) - 14) + (weekMonth(week) - month) / 12)
 }
 
 const EPOCH_SEASON_YEAR = weekYear(0) // 2031 – the year season 0 opened in
@@ -1114,7 +1136,7 @@ export function migrateSave(raw: unknown): WorldState {
       // what back-fills `offer: null` onto it. Widening this line would make a v38 save skip straight
       // to a v51 shape, which is the edit the append-only rule forbids.
       save.fork =
-        kidAgeYears(week, birthMonth) >= 19 ? ({ askedWeek: nineteenth, answer: 'continue' } as ForkState) : null
+        frozenMonthClockAge(week, birthMonth) >= 19 ? ({ askedWeek: nineteenth, answer: 'continue' } as ForkState) : null
     }
     if (save.retirementOffer === undefined || typeof save.retirementOffer !== 'object') {
       save.retirementOffer = null

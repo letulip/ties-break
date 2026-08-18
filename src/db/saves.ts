@@ -322,6 +322,7 @@ async function runAutosaveTx(
           revision,
           // One clock, on the Careers list too (09.08) – the row printed the band before this.
           birthMonth: world.profile.birthMonth,
+        birthDay: world.profile.birthDay,
         }
         saves.put(record)
         careers.put(meta)
@@ -458,6 +459,7 @@ export async function writeNamed(world: WorldState, name: string, revision: numb
         revision: ahead ? revision : existing?.revision,
         // One clock, on the Careers list too (09.08) – the row printed the band before this.
         birthMonth: world.profile.birthMonth,
+        birthDay: world.profile.birthDay,
       } satisfies CareerMeta)
       out = toMeta(record)
     }
