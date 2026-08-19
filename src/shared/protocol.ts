@@ -1595,10 +1595,16 @@ export type OfferKind = 'kit' | 'entry' | 'tour'
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
  *  not say which rule it came from would be exactly the thing the ruling forbids.
  *
- *  `conduct` is DECLARED AND NOT YET WRITTEN. §6 lists on-court conduct as a penalty source «once
- *  psyche (v38) exists» - the anger system finally getting a price tag - and psyche is its own wave.
- *  Naming it here costs nothing and means that wave widens a union rather than redesigning one, the
- *  same courtesy `OfferKind` was built with. */
+ *  ⚠ EVERY MEMBER HERE HAS A PRODUCER, AND THAT IS NOW THE RULE (YAGNI-2, round-22 review). A
+ *  fifth member `conduct` sat here reserved for the psyche wave - §6 lists on-court conduct as a
+ *  penalty source «once psyche (v38) exists» - and nothing anywhere ever wrote it. A reserved
+ *  member is not free: it is a value every reader of a save, a screen or a test has to consider and
+ *  no career can ever contain, so it reads as coverage that does not exist. The psyche wave adds it
+ *  back in the commit that first CHARGES it, which is one line and the same widening the
+ *  reservation was meant to buy.
+ *
+ *  Removing it needed no migration and no schema bump: with no producer, no save - shipped or
+ *  fixture - can hold the value, so this narrows a declaration and not any persisted data. */
 export type PenaltyReason =
   /** she never entered a mandatory event her standing obliged her to play */
   | 'skip'
@@ -1608,8 +1614,6 @@ export type PenaltyReason =
   | 'no-show'
   /** she finished the season short of the 500-level commitment */
   | 'quota'
-  /** reserved: on-court conduct, when psyche ships (§6) */
-  | 'conduct'
 
 /** ONE PENALTY, as the tour charged it. Persisted (schema v38, `WorldState.penalties`). */
 export interface PenaltyRow {
