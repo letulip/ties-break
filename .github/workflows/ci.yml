@@ -20,6 +20,13 @@ jobs:
       # ships silently. It goes FIRST for the same reason `check` puts it first – it is a few
       # seconds of pure file reading, and a gate should fail on its cheapest step.
       - run: npm run context:audit
+      # ⚠ THE GENERATED SYMBOL MAP, AND THE CHECK IS THE WHOLE POINT OF GENERATING IT (TOK-4).
+      # `tools/generated/world-symbol-map.md` says which module DECLARES each of the 233 names the
+      # `engine/world` barrel re-exports - the question 277 importers cannot otherwise answer
+      # without opening a 3,600-line file. A generated index nobody verifies is just a document
+      # that goes stale, so this fails the PR that moves a symbol without regenerating. It reads
+      # source text and runs in about a second; the fix is one command, named in the failure.
+      - run: node scripts/world-map.mjs --check
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force
