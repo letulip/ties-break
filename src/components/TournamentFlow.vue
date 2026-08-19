@@ -34,6 +34,7 @@ import { playSfx, primeSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { computeMatchStats } from '../engine/match/matchStats'
+import { matchStatMeta, matchStatRows } from '../composables/matchStatTable'
 import { surfaceStyleHint } from '../engine/match/style'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { TIERS } from '../engine/season/calendar'
@@ -44,6 +45,7 @@ import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
 import type { MatchOptions, Side } from '../engine/match/types'
+import type { MatchStatRow } from '../composables/matchStatTable'
 import type { WorldMatch } from '../shared/protocol'
 // HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
@@ -586,34 +588,24 @@ const oppShort = computed(() => (oppName.value ? formatShortName(oppName.value) 
 const viewerRankA = computed<number | null>(() => (kidSide.value === 0 ? kidRank.value : currentOppRank.value))
 const viewerRankB = computed<number | null>(() => (kidSide.value === 0 ? currentOppRank.value : kidRank.value))
 
-interface StatRow {
-  label: string
-  kid: string
-  opp: string
-}
-const statRows = computed<StatRow[]>(() => {
-  const a = annotated.value
-  const m = currentMatch.value
-  if (!a || !m) return []
-  const s = computeMatchStats(a, m.a, m.b)
-  const k = kidSide.value
-  const o: Side = k === 0 ? 1 : 0
-  const pair = (v: [number, number]): { kid: string; opp: string } => ({ kid: String(v[k]), opp: String(v[o]) })
-  return [
-    { label: 'Aces', ...pair(s.aces) },
-    { label: 'Double faults', ...pair(s.doubleFaults) },
-    { label: 'Winners', ...pair(s.winners) },
-    { label: 'Unforced errors', ...pair(s.unforcedErrors) },
-    { label: 'Max serve', kid: `${s.serveSpeed.max[k]} km/h`, opp: `${s.serveSpeed.max[o]} km/h` },
-  ]
-})
-const matchMeta = computed(() => {
+// THE BOX SCORE'S FIVE ROWS ARE THE FRIENDLY'S FIVE ROWS - one definition, in composables/
+// matchStatTable.ts. What used to be here was a `StatRow` interface, the five labels, the side-swap
+// and the `km/h` suffix, all written out again character for character in PracticeFlow.
+//
+// ⚠ THE NULL GATE STAYS HERE, AND THAT IS THE DIFFERENCE BETWEEN THE TWO SCREENS. A friendly always
+// has its match; the box score is one of FIVE phases here and there is no match until a round has
+// been played, so the stats are nullable, `statRows` falls back to an empty list and `matchMeta`
+// renders behind a `v-if`. That gate is this screen's own and is not pushed into the shared shape.
+const stats = computed(() => {
   const a = annotated.value
   const m = currentMatch.value
   if (!a || !m) return null
-  const s = computeMatchStats(a, m.a, m.b)
-  return { rally: s.meanRallyLength.toFixed(1), duration: s.durationEstimate }
+  return computeMatchStats(a, m.a, m.b)
 })
+const statRows = computed<MatchStatRow[]>(() =>
+  stats.value ? matchStatRows(stats.value, kidSide.value) : [],
+)
+const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : null))
 
 </script>
 

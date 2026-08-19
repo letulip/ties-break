@@ -20,11 +20,10 @@ import ConfirmDialog from '../../src/components/ConfirmDialog.vue'
 // `measureDialog` refuses a document with no `<style>` in it for exactly that reason.
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
-import { rngFromSeed } from '../../src/engine/rng'
 import { weekLabel } from '../../src/shared/dates'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
 import type { CareerMeta, SavePeek, Snapshot } from '../../src/shared/protocol'
+import { careerSnapshot } from '../helpers/career'
 
 // ⚠ THIS RUNNER HAS NO localStorage AND MoreScreen READS IT ON MOUNT (the sound, motion and match
 // defaults). The same shim round20-ui.test.ts and round19-wrapup.test.ts install, for the reason
@@ -45,12 +44,7 @@ Object.defineProperty(globalThis, 'localStorage', {
 })
 
 /** A real career through the real protocol – never a hand-written snapshot shape. */
-function snapshotAfter(weeks: number, seed = 'round21-dialogs'): Snapshot {
-  const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
-}
+const snapshotAfter = (weeks: number, seed = 'round21-dialogs'): Snapshot => careerSnapshot(weeks, seed)
 
 function career(over: Partial<CareerMeta> = {}): CareerMeta {
   return {

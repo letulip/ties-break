@@ -83,17 +83,13 @@ import { layoffCovering } from '../src/engine/world/medical'
 import { OFF_SEASON_WEEKS, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { SeasonEvent } from '../src/engine/season/types'
 import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../src/shared/protocol'
+// Comments are not code - the `codeOf` discipline, now in tests/helpers/source.ts. Load-bearing
+// here: this file's subjects document themselves at length, and one of them explains in prose
+// exactly the thing a raw scan is looking for.
+import { codeOf } from './helpers/source'
+import { fnv1aHex } from './helpers/hash'
 
 const read = (p: string) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), 'utf8')
-
-/** Comments are not code - the `codeOf` discipline tests/paper-note.test.ts and
- *  tests/calendar-screen.test.ts keep. Load-bearing here: this file's subjects document themselves at
- *  length, and one of them explains in prose exactly the thing a raw scan is looking for. */
-const codeOf = (src: string) =>
-  src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
 
 // =================================================================================================
 // 1. ⚠ MAIN-STREAM INVARIANCE - blocks merge. Pairwise since v35 (P3, rng-persistence): the
@@ -101,15 +97,8 @@ const codeOf = (src: string) =>
 // action arm against the letters-ignored baseline built by the same harness, same code.
 // =================================================================================================
 
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(16).padStart(8, '0')
-}
-const hashOf = (draws: number[]) => fnv1a(draws.map((d) => d.toString()).join(','))
+// FNV-1a over the stringified draw stream – the hash lives in tests/helpers/hash.ts.
+const hashOf = (draws: number[]) => fnv1aHex(draws.map((d) => d.toString()).join(','))
 
 /** The bench career the capture is made of, with a recording tap on the MAIN stream. `mutate` runs
  *  before the first tick; `each` runs after every one, which is where a career answers its letters. */

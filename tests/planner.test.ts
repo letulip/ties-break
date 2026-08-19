@@ -38,6 +38,7 @@ import {
 import { TIERS } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type FamilyBackground, type PlayerProfile } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { fnv1aHex } from './helpers/hash'
 
 /** ⚠ W4: PUT THE CAREER INSIDE THE KNOCK COOLDOWN, so the advance under test cannot be interrupted.
  *
@@ -64,16 +65,9 @@ function noKnocksFor(world: WorldState): void {
 // B1/C1 capture (see REF below) – P1 below re-proves it with a booking-heavy career.
 // ---------------------------------------------------------------------------
 
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(16).padStart(8, '0')
-}
+// FNV-1a over the stringified draw stream – the hash lives in tests/helpers/hash.ts.
 function hashOf(draws: number[]): string {
-  return fnv1a(draws.map((d) => d.toString()).join(','))
+  return fnv1aHex(draws.map((d) => d.toString()).join(','))
 }
 // ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 draws (hash
 // cae178fc -> e6b0c709) by the AI sub-stream refactor. The canonical AI tournaments left the MAIN

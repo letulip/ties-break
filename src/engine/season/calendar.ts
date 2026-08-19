@@ -938,7 +938,17 @@ export const TIERS: Record<TierId, TierDef> = {
   wta125: {
     id: 'wta125',
     track: 'wta',
-    label: 'WTA 125',
+    // ⚠ "World Tour 125", NOT "WTA 125" (owner, 18.08: «WTA 125/250/500/1000 – переименовать в World
+    // Tour по аналогии с предыдущими»). The four professional rungs shipped wearing the tour's real
+    // acronym while the five below them were already fictionalised, so the catalogue contradicted the
+    // Style rule it is the main subject of ("Tournament and organisation names are fictional"). The
+    // NUMBER carries over untouched because it is the same unit on both halves of this family - the
+    // winner's points, stated for W15..W100 in the block above and for this rung two lines down - so
+    // 15/35/50/75/100/125/250/500/1000 reads as one ascending ladder, which is exactly what
+    // TIER_LADDER is. ⚠ THE ID `wta125` DOES NOT MOVE: it is persisted in every save (results,
+    // entries, trophiesByTier, bestFinishByTier, seasonEntries) and in the golden corpus, so a key
+    // rename would be a schema break. This is a rename of NAMES.
+    label: 'World Tour 125',
     drawSize: 32,
     entryFeeCents: 700_00,
     travelCostCents: [2100_00, 4200_00],
@@ -1102,7 +1112,8 @@ export const TIERS: Record<TierId, TierDef> = {
   wta250: {
     id: 'wta250',
     track: 'wta',
-    label: 'WTA 250',
+    // Fictionalised with its family - see the note on `wta125.label`. The id stays `wta250`.
+    label: 'World Tour 250',
     drawSize: 32,
     entryFeeCents: 800_00,
     travelCostCents: [2300_00, 4600_00],
@@ -1208,7 +1219,8 @@ export const TIERS: Record<TierId, TierDef> = {
   wta500: {
     id: 'wta500',
     track: 'wta',
-    label: 'WTA 500',
+    // Fictionalised with its family - see the note on `wta125.label`. The id stays `wta500`.
+    label: 'World Tour 500',
     drawSize: 32,
     entryFeeCents: 900_00,
     travelCostCents: [2500_00, 5000_00],
@@ -1266,7 +1278,8 @@ export const TIERS: Record<TierId, TierDef> = {
   wta1000: {
     id: 'wta1000',
     track: 'wta',
-    label: 'WTA 1000',
+    // Fictionalised with its family - see the note on `wta125.label`. The id stays `wta1000`.
+    label: 'World Tour 1000',
     // ⚠ 64 SINCE 14.08, AND IT IS THE REAL 56-DRAW ROUNDED UP TO THIS ENGINE'S BRACKET. See the
     // points row below for why 56 rather than 96 is the honest target: the 56 column is the one the
     // rulebook prints all the way down, so nothing had to be invented. Measured the same way the
@@ -1577,14 +1590,22 @@ export const TIER_SHORT: Record<TierId, string> = {
   w50: 'W50',
   w75: 'W75',
   w100: 'W100',
-  // The tour's own shorthand too: everybody in the sport calls these "125s", but a bare number on a
-  // width-starved surface reads as a value, not a name - so the short form keeps the tour prefix,
-  // which is also how the WTA's own calendar prints it.
-  wta125: 'WTA 125',
-  // The same rule one rung up, and the same reason: "250" alone is a number, "WTA 250" is a name.
-  wta250: 'WTA 250',
-  wta500: 'WTA 500',
-  wta1000: 'WTA 1000',
+  // ⚠ "WT", NOT "W", AND THAT IS THE WHOLE ARGUMENT FOR THIS PREFIX (owner's rename, 18.08). Two
+  // rules meet on these four and the second one decides:
+  //   * a bare number on a width-starved surface reads as a VALUE, not a name - the rule that gave
+  //     the outgoing "WTA 125" its prefix - so the number never ships alone; and
+  //   * "W125" would put the professional rungs inside the W-series' own spelling. `W_SERIES` says
+  //     it in as many words - *"'starts with W' is a fact about a STRING and `wta125` starts with W
+  //     too"* - and the break between the two tours is REAL (different acceptance rule, different
+  //     pay scale, the Play Down and Junior Accelerator rules are written about one and not the
+  //     other). The strip, the next-week button and the trophy shelf are exactly where the player
+  //     reads the rungs side by side, so that is where the break has to stay visible.
+  // The long labels are a smooth numeric run by design (see `wta125.label`); the short forms are
+  // where the tour boundary shows. Also one glyph narrower than the "WTA 125" it replaces.
+  wta125: 'WT125',
+  wta250: 'WT250',
+  wta500: 'WT500',
+  wta1000: 'WT1000',
   // ⚠ "Slam" AND NOT THE MAJOR'S NAME. Tournament names in this game are fictional (ITF/WTA/ATP and
   // the majors' own names are trademarks - see the Style rules), so the four anchored weeks are
   // four Grand Slams with no city on them. The short form is the category, which is also what a

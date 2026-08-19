@@ -46,11 +46,19 @@ const manifest = loadManifest()
  *  player surnames must not be constructible. A fixture inherits it from the engine that generated
  *  it – this is the check that the inheritance actually holds.
  *
- *  ⚠ `WTA nnn` IS EXPECTED AND IS NOT A LEAK. `TIER_SHORT` labels the four adult rungs "WTA 125"
- *  … "WTA 1000" as a deliberate, argued choice in season/calendar.ts (the tour's own shorthand;
- *  the Slam is handled the other way, with no major's name). The feed quotes those labels, so they
- *  reach the save. What this test forbids is a fixture carrying ANY OTHER organisation string –
- *  which is what a generator inventing its own names would produce. */
+ *  ⚠ RE-AIMED AND STRICTLY STRENGTHENED BY THE OWNER'S RENAME (18.08). It used to read *"`WTA nnn`
+ *  IS EXPECTED AND IS NOT A LEAK"*, because `TIER_SHORT` spelled the four professional rungs
+ *  "WTA 125" … "WTA 1000" while the five below them were already fictional – so the corpus
+ *  legitimately carried a trademark and this scan had to exempt it. Those four are "World Tour
+ *  125/250/500/1000" (short "WT125" … "WT1000") now, and with them the LAST licensed trademark
+ *  string left the catalogue: a save this engine writes today should contain none at all.
+ *
+ *  The allowlist stays DERIVED from `TIER_SHORT` rather than emptied, and that is deliberate – it is
+ *  the exemption's one legitimate source, so a rung that ever needs one again is covered by the
+ *  table it is declared in instead of by a literal somebody has to remember to add here. What this
+ *  test forbids is a fixture carrying an organisation string the shipped catalogue does not license –
+ *  which is what a generator inventing its own names, or a stale binary from before a rename, would
+ *  produce. */
 const ALLOWED_TRADEMARK_STRINGS = new Set(Object.values(TIER_SHORT))
 const TRADEMARK = /\b(?:ITF|WTA|ATP)\b/
 
@@ -77,10 +85,25 @@ describe('e2e fixtures: the manifest and the files agree', () => {
   it('the trademark scan is looking at real text (positive control)', async () => {
     // Without this, `trademarkOffenders` returning [] would be indistinguishable from a regex that
     // never matches anything – the empty-set pass every scanner of this shape eventually rots into.
-    // A career that has played weeks quotes the adult tier labels in its feed, so the scan must both
-    // FIND the token and exempt it.
+    //
+    // ⚠ RE-AIMED BY THE OWNER'S RENAME (18.08), AND THE ARM MOVED BECAUSE THE OLD ARM STOPPED
+    // EXISTING. Liveness used to be proved on `pro.tsave` itself: a played career quoted "WTA 250" in
+    // its feed, so the scan had to both FIND that token and exempt it. The four professional rungs
+    // are World Tour rungs now, so a fixture this engine writes carries no trademark at all – and a
+    // corpus with nothing to find cannot tell a live scanner from a dead one. So liveness moves to a
+    // PLANTED payload, which is the honest place for it: it exercises the string extractor and the
+    // regex without needing the shipped corpus to contain a leak. The corpus is then held to the
+    // stronger claim the rename earned – not "its trademarks are licensed" but "it has none".
+    const planted = JSON.stringify({ events: [{ text: 'B. Karras won the WTA 250.' }] })
+    expect(TRADEMARK.test(planted)).toBe(true)
+    expect(trademarkOffenders(planted), 'the scan still finds a leak when there is one').toEqual([
+      'B. Karras won the WTA 250.',
+    ])
+    // ⚠ AND THE PLANT IS THE FEED LINE THE OLD FIXTURES ACTUALLY CARRIED, not an invented one, so
+    // this doubles as the regression pin for the rename: a stale binary generated before it goes red
+    // on the fixtures below, and the sentence that would have made it go red is right here.
     const json = JSON.stringify(await decodeExportFile(readFixtureBytes('pro.tsave')))
-    expect(TRADEMARK.test(json)).toBe(true)
+    expect(TRADEMARK.test(json), 'no shipped label licenses a trademark any more').toBe(false)
     expect(trademarkOffenders(json)).toEqual([])
   })
 

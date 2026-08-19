@@ -29,6 +29,7 @@ import { applyKit, FRESH_KIT, kitMultipliers, kitWearAt } from '../src/engine/eq
 import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import { INCOME_CATS } from '../tools/econ-bench'
+import { fnv1aHex } from './helpers/hash'
 
 // ---------------------------------------------------------------------------
 // Round-9 pt3 — engine pack: savings interest (R9-1), per-match tournament
@@ -43,17 +44,10 @@ import { INCOME_CATS } from '../tools/econ-bench'
 // the skip test below re-proves the capture.
 // ---------------------------------------------------------------------------
 
-// FNV-1a over the stringified draw stream (same fingerprint as B1/C1).
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(16).padStart(8, '0')
-}
+// FNV-1a over the stringified draw stream (same fingerprint as B1/C1). The hash lives in
+// tests/helpers/hash.ts.
 function hashOf(draws: number[]): string {
-  return fnv1a(draws.map((d) => d.toString()).join(','))
+  return fnv1aHex(draws.map((d) => d.toString()).join(','))
 }
 // ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 (hash cae178fc ->
 // e6b0c709) by the AI sub-stream refactor – the canonical AI tournaments now run on their own

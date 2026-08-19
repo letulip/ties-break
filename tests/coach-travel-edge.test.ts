@@ -697,14 +697,45 @@ describe('the two readouts say the bonus exists, without overstating it', () => 
 // `PRE_V50` are re-taken against the new world. Swapping only `schemaVersion` on the SAME live world
 // still reproduces them byte for byte, which is the property those constants exist to assert.
 // =================================================================================================
+// ⭐⭐ RE-FROZEN A NINTH TIME (18.08, THE OWNER'S RENAME) – AND THIS IS THE NARROWEST DIFF IN THE
+// FILE'S HISTORY: **ONE KEY OF SIXTY-FOUR, `events`, ON ALL THREE CAREERS.** The owner asked for the
+// four professional rungs to join the World Tour family («WTA 125/250/500/1000 – переименовать в
+// World Tour по аналогии с предыдущими»), so `TIERS.wta125.label` … `TIERS.wta1000.label` are
+// "World Tour 125" … "World Tour 1000" now. Nothing else moved: the tier IDS did not change, and a
+// label is display.
+//
+// PER-KEY DIFF TAKEN FIRST, as this file demands – `tools/frozen-key-diff.ts`, all three presets, a
+// detached worktree at `46998dd` (this branch with nothing of the rename in it) against this tree.
+// Reader check on the control: the A tree's `calendar.ts` still carries `label: 'WTA 125'` and this
+// one carries `label: 'World Tour 125'`.
+//
+//   MOVED (1 of 64 · 1 of 64 · 1 of 63):  **events**
+//
+//   UNMOVED IN ALL THREE (everything else, and the four worth naming out loud): **results ·
+//     entries · seasonEntries · trophiesByTier · bestFinishByTier · kidRank(+Wta/Domestic) ·
+//     fundsCents · financeWeeks · skills · condition · milestones · offers · academy · cohort ·
+//     rngMain · schemaVersion** – i.e. every ledger keyed by tier id, which is the proof that the
+//     ids did not move with the names.
+//
+// ⭐⭐ AND THE MECHANISM IS MEASURED RATHER THAN INFERRED. Dumping `world.events[].text` on both arms
+// (middle-grinder): **16 lines of 400 differ, and all sixteen are the same sentence with one word
+// changed** – "🏆 P. Delgado won the WTA 500." -> "🏆 P. Delgado won the World Tour 500.". Same
+// winner, same week, same rung; only the spelling of the rung. ⚠ AND SHE IS IN NONE OF THEM: at week
+// 156 she is 16.6 and has never entered a professional rung, so every one of the sixteen is TOUR
+// NEWS about the AI field. A rename that had reached her career would have shown up in `results`,
+// and `results` is byte-identical.
+//
+// ⚠ `rngMain` IS AMONG THE UNMOVED FOR THE NINTH WAVE RUNNING – a label is not a draw – so the frozen
+// MAIN capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709).
+// =================================================================================================
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
   /** ⚠ MOVED WITH ITS TWINS A FOURTH TIME (17.08, the college choice – schema v52). All three moved
    *  by exactly ONE KEY again, and `PRE_V52` below proves it: rolling `schemaVersion` back to 51 on
    *  the NEW world reproduces the old hashes byte for byte, for all three. */
-  middleGrinder: 'a43ea99562e2622d912e71c59df261d7192c64dba916d25953bbe92b4ff4d162',
+  middleGrinder: 'f2209d621aa96858fb1c3c362c238e9d5a68389410febc3b7bb3fe3ec362f339',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '035ed1378b2d00271a1a32fb40c4d2666a02e0c2541b0ca1f3f0d328b45480f2',
+  eliteGrinder: 'b0a21350e744a6e1b875554412a5d7ba31e5ff11a55ea77640515ff02f4e68f4',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -854,7 +885,7 @@ const FROZEN = {
    *  ⚠ `rngMain` UNMOVED IS THE LOAD-BEARING HALF and it is doing real work here: `power()` is read by
    *  the conveyor's SORT, which is a post-draw ordering, so no draw moved. The frozen MAIN capture in
    *  tests/condition.test.ts is untouched - count 41550, hash e6b0c709 - and verified below. */
-  selfTravelling: '47c77dabe5b86b5744fa61bb95cb49f2ead8fa47d9a3e8a9c2edbf37f215e025',
+  selfTravelling: 'c26372df5a6876dced883ea9eb56e5138e0dcdcf664db6f5184da703ae629ffd',
 }
 
 /** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
@@ -885,17 +916,24 @@ const FROZEN = {
  *  claim. `rngMain` is untouched for the seventh wave running: the offer draws on a
  *  `seed:collegeoffer:<week>` sub-stream (three draws now instead of one, still not MAIN) and the
  *  match term draws nothing at all, so the frozen MAIN capture (41550 / e6b0c709) is not re-pinned. */
+/** ⚠ ALL THREE RE-ANCHORED WITH THE FREEZE (18.08, the rename), NOT BROKEN – the file's own
+ *  precedent language for a wave that changes the CAREER rather than a schema field. The rename
+ *  changed `events` on all three, so rolling `schemaVersion` back on the OLD worlds cannot reproduce
+ *  the new ones; these are re-taken by swapping only `schemaVersion` on the new world, which is
+ *  exactly the property the three PRE_ blocks assert. They go on doing their job: a later wave that
+ *  moves one of these careers through anything but `SAVE_SCHEMA_VERSION` still goes red here beside
+ *  a red freeze, and the pair is what says which kind of change it was. */
 const PRE_V52 = {
-  middleGrinder: '0ef44d3483c40428413c5922da2a7ad2df5226f2124e0df57153be71fa3b350d',
-  eliteGrinder: '82c923bbdfd7383c0293a94c9afcb4ce83cdc36f1f4a05348b9803938f963875',
-  selfTravelling: '3e1b6b6d38b2399ac8f57700f40d289bcf407a20c6a88115808cbdcca128752c',
+  middleGrinder: '8719bf00d36d2f732b4ca9fec0a8083d52ef2ede3c5224bc1582262fa204f890',
+  eliteGrinder: 'ec272b82aad64e0a24bd9cb3fba5c0d8277a406a656b83f85c85e7bc83c12d86',
+  selfTravelling: '691ed970a1f453b627d4bc8514855a72f24d949fb8d1548db3be20993840f098',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
  *  moved ONE key and nothing else. */
 const PRE_V51 = {
-  middleGrinder: '402b7d1fac7f0574624269425a408d253e34a9ddc063038e2d8fc12c86007180',
-  eliteGrinder: '8511163f017f6383f1c3ca9f2760c41c34a9f0a3c5820eeed2727db1697626aa',
+  middleGrinder: '66b0dd90d201c56670d6199f1cebab2b404197799eb151265e9ef64fc1dc19f7',
+  eliteGrinder: '5802d31dc575e331ef169c657812353fd2de8d914ec0ad35d9ed6e68845ef941',
   /** ⚠ MOVED WITH THE FREEZE ABOVE (17.08, round 21 #2b) AND THAT IS THE HONEST OUTCOME, not a
    *  weakening. The v51 case asks "does rolling ONLY the schema back reproduce the v50 hashes" – and
    *  for the two grinders it still does, untouched. For THIS career it no longer can, because the
@@ -903,7 +941,7 @@ const PRE_V51 = {
    *  different season cannot produce the old season. The identity is re-anchored to the new world, so
    *  it goes on doing its job – if a LATER wave moves this career through anything but
    *  `SAVE_SCHEMA_VERSION`, this line goes red beside the freeze exactly as it just did. */
-  selfTravelling: '51c225dce4dd7f6cc28253dd0254c19a75433d48d8e7503e1c40b6f340f9d975',
+  selfTravelling: 'cbc4fec7c178119ee19c028350e8505a18971b7d405e0ea6b1f174445614c8b0',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -914,8 +952,8 @@ const PRE_V50 = {
    *  full: the WTA 250's field changed, so the tour NEWS in `events` changed, and `events` is inside
    *  the hash. The rollback identity itself is untouched in meaning – swapping only `schemaVersion`
    *  on the new world still reproduces exactly this, which is what these three lines are for. */
-  middleGrinder: '3edace6390340af38414a5ceed66f0c3206c54fdc81e727fd44c8fb8a2ced88f',
-  eliteGrinder: 'e604eac7d07bf6989132e6a24131b25f0aded61faf3983cb55950822266ce30a',
+  middleGrinder: '728da7abb155b80b7b8a95cb8f633ec86a5d714271e9b8a8ce79b9e56a680327',
+  eliteGrinder: '19ec14a6c9fe9ebf4df6eddf87133e52f10ded344b897775dae27df6b4462bb8',
   /** ⚠ MOVED WITH ITS TWIN ABOVE, AND THE PARAGRAPH ON `FROZEN` PREDICTED EXACTLY THIS: *"if a later
    *  wave moves one of these careers for a real reason, the rollback case goes red beside the freeze
    *  and says which kind of change it was."* It did, on 16.08, and it said so – both hashes red, and
@@ -931,7 +969,7 @@ const PRE_V50 = {
    *  line: this wave changed the CAREER, not a schema field, so the rollback is re-anchored to the
    *  new world. The two grinder hashes in this block did NOT move, which is the identity doing its
    *  job – a change that reaches one career of three shows up in one pair of hashes of three. */
-  selfTravelling: 'ef767c9b0aa2c659bc0ddb0eb3defb07be89240c385fdb723d17f74ca600f6cc',
+  selfTravelling: '636a31d0f1056e338b18650d07316617ee2c102ffd9a95105a3744ec70ea7a45',
 }
 const FREEZE_WEEKS = 156
 

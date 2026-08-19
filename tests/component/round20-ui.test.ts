@@ -28,14 +28,10 @@ import { rngFromSeed } from '../../src/engine/rng'
 import { TIER_LADDER, TIER_SHORT } from '../../src/engine/season/calendar'
 import { latestNewsId, newestLetterId, useLetterWatermark } from '../../src/composables/inboxCue'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
+import { careerSnapshot } from '../helpers/career'
 
 /** A real career, walked `weeks` weeks. */
-function snapshotAfter(weeks: number, seed = 'component-round20'): Snapshot {
-  const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
-}
+const snapshotAfter = (weeks: number, seed = 'component-round20'): Snapshot => careerSnapshot(weeks, seed)
 
 function withSnapshot(snapshot: Snapshot) {
   const store = useGameStore()

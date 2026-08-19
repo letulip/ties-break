@@ -12,12 +12,10 @@ last-reviewed: 2026-08-03
 
 - The canonical router for project knowledge: links and short authority rules, not duplicated specs.
 - Code and tests define shipped behavior. Packs route to that evidence; they do not replace it.
-- [The August roadmap](plans/roadmap-2026-08.md) gives delivery ordering. ⚠ Its schema numbers and
-  "already done" notes are planning-time and the runtime is far past them – take ordering from it,
-  state from the code. The older [strategy plan](plan.md) still helps positioning; its phase
-  ordering is superseded.
-- Review trees are dated audits: a finding is not current merely for appearing in one – check
-  whether later work landed.
+- [Now / next / later](now-next-later.md) is the one current delivery view. The August
+  [roadmap](plans/roadmap-2026-08.md), [launch plan](plans/launch-plan-2026-08.md) and
+  [strategy plan](plan.md) are superseded – history, not ordering.
+- Review trees are dated audits: check whether later work landed before treating a finding as open.
 - Documents without governance metadata are unclassified: candidate context until code or a test
   confirms them.
 - **The tour age grid is stated ONCE in prose**, at
@@ -32,7 +30,7 @@ When sources disagree, use this order and record material conflicts:
 
 1. Current executable code and passing tests for shipped behavior.
 2. This index and the canonical context packs for routing and maintained invariants.
-3. [Owner decisions](decisions.md) and the current dated roadmap for product intent and ordering.
+3. [Owner decisions](decisions.md) and [now / next / later](now-next-later.md) for intent and order.
 4. Feature specifications for acceptance criteria and design intent.
 5. Research for external evidence and calibration inputs.
 6. Review reports, round notes, and superseded plans as historical evidence.
@@ -48,7 +46,8 @@ A lower source can justify changing a higher one; it never silently overrides it
 | Money, progression, fatigue, injury | [Economy and progression](context/economy-and-progression.md) | `src/engine/economy.ts`, development/condition/injury/coach modules | economy, condition, injury, coach and bench tests |
 | Screens, components, accessibility, PWA | [UI and design](context/ui-and-design.md) | `src/App.vue`, `src/components`, `src/composables`, `src/style.css`, `vite.config.ts` | screen, design-token, UI-control and PWA tests |
 | Pitch, daughter agency, story, endings | [Product and narrative](context/product-and-narrative.md) | `src/engine/world/endings.ts`, `EndingScreen.vue`, protocol/world state, diary, milestones | `ending`, `college-*`, diary, event and week-story tests; psyche has none – it has no runtime |
-| Delivery sequence | [Roadmap](plans/roadmap-2026-08.md) then [launch plan](plans/launch-plan-2026-08.md) | The wave named by the plan | The wave's specified gate plus `npm run check` |
+| Where an engine symbol lives | [Engine symbol map](context/engine-symbol-map.md) | The owner it names, not the `engine/world` barrel | Its owner's tests |
+| Delivery sequence | [Now / next / later](now-next-later.md) | The wave named there | That wave's gate plus `npm run check` |
 | Funding and commercial scenarios | [Funding routes and cost model](funding-and-roadmap.md) | Not runtime code | Recheck assumptions and source dates before external use |
 | Architecture or quality audit | Relevant context packs, then dated reviews | Verify every claim against current code | Reproduce findings; do not inherit old severity blindly |
 

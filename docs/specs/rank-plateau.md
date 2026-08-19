@@ -1,3 +1,11 @@
+---
+type: spec
+status: reference
+area: simulation-and-balance
+canonical: false
+last-reviewed: 2026-08-19
+---
+
 # Why her rank is pinned near #90 — diagnosis (29.07.2026)
 
 Her dense rank has sat between #80 and #101 at every age, at every power level, before and after the

@@ -36,20 +36,15 @@ import {
 } from '../src/composables/trophyArrival'
 import type { Snapshot, TierTrophies } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+// CODE WITH THE PROSE TAKEN OUT – the house helper, now in tests/helpers/source.ts, and this file
+// needs it more than most: half the assertions below ban a string that the source explains itself by
+// QUOTING. `art/trophies.ts` says in a comment why there is no 'bronze'; the finale's script says
+// what the emoji it replaced used to be. A ban that reads the comments fires on its own
+// documentation, and the only way to satisfy it would be to delete the reasoning.
+import { codeOf } from './helpers/source'
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 const read = (p: string) => readFileSync(`${ROOT}${p}`, 'utf8')
-
-/** CODE WITH THE PROSE TAKEN OUT – tests/round13-nav.test.ts's own helper, and this file needs it
- *  for the same reason that one does, only more so: half the assertions below ban a string that the
- *  source explains itself by QUOTING. `art/trophies.ts` says in a comment why there is no 'bronze';
- *  the finale's script says what the emoji it replaced used to be. A ban that reads the comments
- *  fires on its own documentation, and the only way to satisfy it would be to delete the reasoning. */
-const codeOf = (src: string) =>
-  src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
 
 const RESOLVER = 'src/art/trophies.ts'
 const ARRIVAL = 'src/composables/trophyArrival.ts'

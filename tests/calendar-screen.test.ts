@@ -15,6 +15,10 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { componentLogic } from './worldSource'
+// Comments stripped, so a note that NAMES a forbidden call is not read as making it – the house
+// helper, now in tests/helpers/source.ts. These are source-reading tests, and this codebase
+// documents at length, including documenting what it deliberately did not do.
+import { codeOf } from './helpers/source'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -107,16 +111,6 @@ function event(over: Partial<UpcomingEvent> = {}): UpcomingEvent {
 // =================================================================================================
 // (c) THE DAY LAYOUT – 4 / 5 / 6 sessions, as the owner named them
 // =================================================================================================
-/** Comments stripped, so a note that NAMES a forbidden call is not read as making it. Same helper
- *  tests/knock.test.ts keeps, and for the same reason: these are source-reading tests, and this codebase
- *  documents at length - including documenting what it deliberately did not do. */
-function codeOf(src: string): string {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
-}
-
 describe('the plan, read back as days', () => {
   it("the three presets ARE the owner's 4 / 5 / 6 – and not because a table says so", () => {
     // The count is `plan.train` per cent OF SEVEN DAYS, which is what `train` already means

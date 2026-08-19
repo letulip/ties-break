@@ -1,9 +1,10 @@
 ---
 type: spec
-status: current
+status: superseded
 area: simulation-and-balance
 canonical: false
-last-reviewed: 2026-08-15
+last-reviewed: 2026-08-19
+superseded-by: docs/specs/acceptance-cuts-corrected-2026-08.md
 ---
 
 # The acceptance cuts, audited against reality – and the constant that also decides the college ending

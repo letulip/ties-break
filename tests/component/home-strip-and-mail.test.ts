@@ -25,11 +25,10 @@ import { nextTick } from 'vue'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import OfferLetter from '../../src/components/OfferLetter.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
-import { rngFromSeed } from '../../src/engine/rng'
 import { SPONSOR_TIERS } from '../../src/engine/offers'
 import type { Snapshot, Offer, TierOpenMap } from '../../src/shared/protocol'
 import type { TierId } from '../../src/engine/season/types'
+import { careerSnapshot } from '../helpers/career'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE MARKER IS ABOUT localStorage. Same finding and the
 // same shim as tests/component/round20-ui.test.ts, quoted there in full: happy-dom is configured
@@ -58,12 +57,7 @@ const LADDER: TierId[] = [
   'wta250', 'wta500', 'wta1000', 'slam',
 ]
 
-function snapshotAfter(weeks: number, seed = 'component-home'): Snapshot {
-  const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
-}
+const snapshotAfter = (weeks: number, seed = 'component-home'): Snapshot => careerSnapshot(weeks, seed)
 
 /** The snapshot with an explicit per-rung verdict. `tierOpen` is a TOTAL map on the protocol
  *  (`Record<TierId, boolean>`), so this answers for every rung rather than leaving holes that would
@@ -245,7 +239,12 @@ describe('Home season strip – the row is the engine window, not the span acros
     // `slam` open means the aspiration clamps to the last rung, and a gap chip standing in for
     // nothing would be a control that lies about having something behind it.
     const wrapper = mountHome(withWindow(snapshotAfter(6), ['wta1000', 'slam']))
-    expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['WTA 1000', 'Slam'])
+    // ⚠ RE-AIMED, NOT WEAKENED (owner's rename, 18.08): the LABEL moved, the guard did not. The chip
+    // still has to be the top rung's own short name and the row still has to end there – only the
+    // spelling of that name changed, `TIER_SHORT.wta1000` 'WTA 1000' -> 'WT1000', when the four
+    // professional rungs joined the World Tour family. The tier id `wta1000` is untouched, which is
+    // why `withWindow` above needs no edit and this is a display re-aim rather than a data one.
+    expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['WT1000', 'Slam'])
     expect(gapChips(wrapper)).toHaveLength(1) // the one below, nothing above
     wrapper.unmount()
   })

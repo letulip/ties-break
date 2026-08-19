@@ -292,6 +292,21 @@ export function kidAgeThroughWeek(world: WorldState, week: number): number {
 /** Numbers she is old enough to be told in words. The notes are somebody's voice, and a parent does not
  *  say "she is 15 today". Past the junior years the words stop being the natural register, so the map
  *  covers the ages a career can actually reach and the caller falls back to the numeral. */
+/** ⭐⭐ HOW THIS GAME SPELLS AN AGE, in one place (19.08). Words while the number is one a parent would
+ *  say out loud, the numeral once it stops being one.
+ *
+ *  ⚠ IT WAS A PRIVATE MAP AND ONE CALLER UNTIL THE VOICE WAVE WANTED A SECOND. `markBirthday` had
+ *  `AGE_WORDS[turning] ?? String(turning)` inline; the birthday DIALOG then grew its own headings and
+ *  spelled the same age as a numeral in five age bands and as a word in one - so the popup and the feed
+ *  line it sits above disagreed about the same birthday, and the popup disagreed with itself.
+ *
+ *  ⚠ THE FALLBACK IS THE RULE, NOT A GUARD. Twenty is where the map stops on purpose: past it the
+ *  numeral IS how it is said. So "she is twenty this week" and "27 today" are both correct, and both
+ *  come out of this function rather than out of whoever is writing copy that day. */
+export function ageInWords(age: number): string {
+  return AGE_WORDS[age] ?? String(age)
+}
+
 const AGE_WORDS: Record<number, string> = {
   13: 'thirteen',
   14: 'fourteen',
@@ -309,7 +324,7 @@ const AGE_WORDS: Record<number, string> = {
 export function markBirthday(world: WorldState): void {
   const turning = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
   if (turning === null) return
-  const words = AGE_WORDS[turning] ?? String(turning)
+  const words = ageInWords(turning)
   addEvent(world, {
     week: world.week,
     type: 'info',

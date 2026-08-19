@@ -391,7 +391,7 @@ export { birthdayOffer, birthdayOptions, pendingBirthday, buildBirthdayPrompt, c
 // choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
 // ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
 // number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
-export const SAVE_SCHEMA_VERSION = 52
+export const SAVE_SCHEMA_VERSION = 53
 
 
 
@@ -580,6 +580,26 @@ export interface WorldState {
    *  Optional so a hand-built probe world loads without it; every writer guards with `??=`, exactly as
    *  `careerTotals` does. */
   seasonEntries?: SeasonEntryLedger
+  /** ⭐⭐ v53 – THE FIELD'S OWN SEASON, so the professional table stops standing still. Points a field
+   *  professional has EARNED in the current season, by her id; absent ids have earned nothing yet.
+   *
+   *  ⚠⚠ WHY IT EXISTS. The owner, playing: «таблица professional ranking не двигается вообще… И номер
+   *  1 мы обыгрывали на шлеме, кстати. Кажется что таблица просто "стоит"». He was exactly right, and
+   *  the cause was one line in `runAiTournament`: every AI tournament genuinely resolves and every
+   *  finisher's points are computed, and then `if (isFieldProId(playerId)) continue` threw the field's
+   *  rows away. Her standing was a pure function of (seed, seasonIndex) – so nothing that happened on
+   *  court could move it, including losing to the player at a Slam.
+   *
+   *  ⚠ A RUNNING TALLY AND NOT ROWS, and the shape is the measured one. Rows would be ~6,048 a season
+   *  (189 AI events x a 32 draw) in a save whose 52-week prune is sized for 199 people – which is the
+   *  exact objection the discarded-row comment made, and it was right. A per-pro total is 1,600 numbers,
+   *  ~3 KB a season, and it is all `mergedWtaRanking` needs.
+   *
+   *  ⚠ IT IS EARNED POINTS, ADDED TO HER DERIVED BOOK RATHER THAN REPLACING IT. `wtaPoints` stays the
+   *  standing she brings INTO the season - her career arc, her storey, her form - and this is what she
+   *  has done since. Replacing it would empty the table every January and hand the player a world with
+   *  no history in it. */
+  fieldSeasonPoints?: Record<string, number>
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
    *  point and pruned to a 60-week trailing window. Feeds the Money breakdown/ledger so they
    *  survive the 60-event snapshot cap; see FinanceWeek in protocol.ts. */
@@ -1564,6 +1584,7 @@ function computeShadowTournament(
           inTrack('wta'),
         ),
         pros,
+        world.fieldSeasonPoints,
       )
     : ranking
   // ⚠ AND ONE PRO PLAYS ONE EVENT A WEEK (W2-FIELD2, act2-pro-tour.md §8.2). When two W rungs land
@@ -2276,7 +2297,23 @@ function runAiTournament(
     // her condition is 100 by construction, so a row for her would be a row nothing ever reads –
     // bought with permanent bytes in a save that prunes on a 52-week window sized for 199 people.
     // She played the tournament; the tournament simply does not write her down.
-    if (isFieldProId(playerId)) continue
+    // ⭐⭐ v53 – THE FIELD'S POINTS ARE KEPT NOW, AS A TALLY RATHER THAN AS ROWS. This line used to be
+    // a bare `continue`, and the comment above it argued – correctly – that a per-finisher ROW for a
+    // field pro is bytes nobody reads in a save pruned for 199 people. What it did not see is that
+    // throwing the row away also threw away the RESULT: her standing was a pure function of (seed,
+    // season), so no match anybody played could move it. The owner found it from the seat: «таблица
+    // просто "стоит"… и номер 1 мы обыгрывали на шлеме».
+    //
+    // ⚠ SO THE ROW STAYS GONE AND THE POINTS STAY. One number per pro per season, ~3 KB, against
+    // ~6,048 rows – see `WorldState.fieldSeasonPoints`. Zero RNG: the finish is already decided.
+    if (isFieldProId(playerId)) {
+      const earned = pts[finish] ?? 0
+      if (earned > 0) {
+        world.fieldSeasonPoints ??= {}
+        world.fieldSeasonPoints[playerId] = (world.fieldSeasonPoints[playerId] ?? 0) + earned
+      }
+      continue
+    }
     world.results.push({ playerId, week: world.week, points: pts[finish] ?? 0, tier: event.tier })
   }
   announceTourChampion(world, event, result)
@@ -2969,6 +3006,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
       inTrack('wta'),
     ),
     seasonPros,
+    world.fieldSeasonPoints,
   )
   const tourWeek: TourWeek = {
     pros: seasonPros,

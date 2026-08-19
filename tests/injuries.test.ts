@@ -39,6 +39,7 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { PRESETS, stepCareerWeek, EXPENSE_CATS } from '../tools/econ-bench'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { FamilyBackground, InjurySeverity, PlayerProfile, WorldEvent } from '../src/shared/protocol'
+import { fnv1aHex } from './helpers/hash'
 
 // ---------------------------------------------------------------------------
 // Season-Life slice C — fatigue-driven injuries + physio.
@@ -47,17 +48,10 @@ import type { FamilyBackground, InjurySeverity, PlayerProfile, WorldEvent } from
 // byte-identical to slice B's frozen capture (C1, blocks merge).
 // ---------------------------------------------------------------------------
 
-// FNV-1a over the stringified draw stream (same fingerprint as B1).
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(16).padStart(8, '0')
-}
+// FNV-1a over the stringified draw stream (same fingerprint as B1). The hash lives in
+// tests/helpers/hash.ts.
 function hashOf(draws: number[]): string {
-  return fnv1a(draws.map((d) => d.toString()).join(','))
+  return fnv1aHex(draws.map((d) => d.toString()).join(','))
 }
 
 // B1's frozen reference: seed bench-working-0, weeks 1..52.

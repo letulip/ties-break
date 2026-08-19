@@ -908,10 +908,21 @@ export function fieldProsFor(
 // and not merely the same convention: `assignCompetitionRanks` (season/ranking.ts) owns the
 // numbering, this function owns only the three-key sort above, which is the half that is genuinely
 // different here. The comment used to be the whole guarantee; now it is only the history of one.
-export function mergedWtaRanking(live: readonly RankingRow[], pros: readonly FieldPro[]): RankingRow[] {
+export function mergedWtaRanking(
+  live: readonly RankingRow[],
+  pros: readonly FieldPro[],
+  earned?: Readonly<Record<string, number>>,
+): RankingRow[] {
+  // ⭐⭐ v53 – A PRO'S ROW IS HER BOOK PLUS WHAT SHE HAS WON THIS SEASON. `earned` is
+  // `WorldState.fieldSeasonPoints`, the tally `runAiTournament` keeps; absent (a bench, an old save,
+  // a caller with no world) it reads as zero and this function behaves exactly as it did before.
+  //
+  // ⚠ ADDED TO `wtaPoints`, NOT REPLACING IT. Her derived book is the standing she brought INTO the
+  // season – career arc, storey, form – and the tally is what she has done since. Replacing it would
+  // empty the table every January.
   const rows = [
     ...live.map((r, i) => ({ playerId: r.playerId, points: r.points, live: 1, ord: i })),
-    ...pros.map((p, i) => ({ playerId: p.id, points: p.wtaPoints, live: 0, ord: i })),
+    ...pros.map((p, i) => ({ playerId: p.id, points: p.wtaPoints + (earned?.[p.id] ?? 0), live: 0, ord: i })),
   ]
   return assignCompetitionRanks(rows, (a, b) => b.points - a.points || b.live - a.live || a.ord - b.ord)
 }

@@ -14,6 +14,8 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import type { TierId } from '../src/engine/season/types'
+// Comments are not code – the house helper, now in tests/helpers/source.ts.
+import { codeOf } from './helpers/source'
 
 // =================================================================================================
 // THE SLIDING WINDOW (act2-pro-tour.md §11, owner ruling 11) — and the stacked-week pick that
@@ -41,11 +43,6 @@ import type { TierId } from '../src/engine/season/types'
 // =================================================================================================
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
-const codeOf = (src: string) =>
-  src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
 
 /** A feed row. `eligible` defaults true; `capped` marks the pro-cap refusal shape. */
 function row(tier: TierId, week: number, over: Partial<FeedEventFacts> = {}): FeedEventFacts {

@@ -66,16 +66,12 @@ import { weekDayNumbers } from '../src/shared/dates'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type SessionKind } from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
 import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+// Comments are not code – the house helper, now in tests/helpers/source.ts. This codebase documents
+// at length, INCLUDING documenting what it deliberately did not do, so a `not.toContain` over raw
+// source fails on a note that merely names the thing it forbids.
+import { codeOf } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
-/** Comments are not code. The house helper (tests/calendar-screen.test.ts, tests/knock.test.ts):
- *  this codebase documents at length, INCLUDING documenting what it deliberately did not do, so a
- *  `not.toContain` over raw source fails on a note that merely names the thing it forbids. */
-const codeOf = (src: string) =>
-  src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
 const screen = read('../src/components/screens/CalendarScreen.vue')
 const module_ = read('../src/composables/weekGrid.ts')
 const sheet = read('../src/style.css')

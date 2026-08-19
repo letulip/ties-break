@@ -13,16 +13,12 @@ import { fileURLToPath } from 'node:url'
 import { consumePostAdvanceNav, holdPostAdvanceNav, recapExists, thisWeekDotShows } from '../src/composables/weekRecap'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { Snapshot, WorldEvent } from '../src/shared/protocol'
+// Comments are not code – the house helper, now in tests/helpers/source.ts. This codebase documents
+// at length, INCLUDING documenting what it deliberately no longer does, so a `not.toContain` over
+// raw source fails on a note that merely names the thing it forbids.
+import { codeOf } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
-/** Comments are not code. The house helper (tests/calendar-screen.test.ts, tests/knock.test.ts): this
- *  codebase documents at length, INCLUDING documenting what it deliberately no longer does, so a
- *  `not.toContain` over raw source fails on a note that merely names the thing it forbids. */
-const codeOf = (src: string) =>
-  src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
 
 const app = read('../src/App.vue')
 const home = read('../src/components/screens/HomeScreen.vue')

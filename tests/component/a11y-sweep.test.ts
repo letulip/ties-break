@@ -50,11 +50,10 @@ import StatRow from '../../src/components/ui/StatRow.vue'
 import InboxSheet from '../../src/components/InboxSheet.vue'
 import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
-import { rngFromSeed } from '../../src/engine/rng'
 import { weekDateLine, weekLabel } from '../../src/shared/dates'
 import { latestNewsId } from '../../src/composables/inboxCue'
 import type { CareerMeta, KnockPrompt, SeasonSummary, Snapshot } from '../../src/shared/protocol'
+import { careerSnapshot } from '../helpers/career'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND HomeScreen READS IT AT SETUP. Same finding and the same
 // shim as tests/component/home-strip-and-mail.test.ts and round20-ui.test.ts, argued at length
@@ -77,12 +76,7 @@ Object.defineProperty(globalThis, 'localStorage', {
 
 /** A real career through the real protocol, so nothing below is a hand-written shape that can drift
  *  from `Snapshot`. Same fixture discipline as season-screen.test.ts and home-strip-and-mail.test.ts. */
-function snapshotAfter(weeks: number, seed = 'a11y-sweep'): Snapshot {
-  const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
-}
+const snapshotAfter = (weeks: number, seed = 'a11y-sweep'): Snapshot => careerSnapshot(weeks, seed)
 
 function withSnapshot(snapshot: Snapshot): void {
   useGameStore().snapshot = snapshot

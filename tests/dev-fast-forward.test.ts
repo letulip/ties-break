@@ -11,7 +11,8 @@ import {
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { encodeExportFile } from '../src/engine/saveCodec'
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type ToWorker } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
+import { workerHarness } from './helpers/workerHarness'
 
 // =================================================================================================
 // P6 (c) — THE DEV FAST-FORWARD CANNOT OUTRUN A DECISION, in two layers.
@@ -95,36 +96,20 @@ interface Reply {
   revision?: number
 }
 
-const waiters = new Map<number, (r: Reply) => void>()
 /** The committed revision as of the last ok reply — what a real client tracks off responses and
  *  hands back as `baseRevision`. The guard tests below MUST send a live one: a stale value would
  *  be refused as STALE_REVISION before the tick guard even runs, and the suite would then be
- *  pinning the wrong refusal. */
+ *  pinning the wrong refusal.
+ *
+ *  ⚠ THIS IS THE ONE THING THIS SUITE'S HARNESS DOES THAT THE OTHER THREE DO NOT, which is why
+ *  tests/helpers/workerHarness.ts takes an `onReply` hook rather than flattening the four copies
+ *  into one. The latch runs on every reply, before the waiter, exactly where it ran locally. */
 let lastRevision = 0
-const workerGlobal = {
-  onmessage: null as null | ((e: { data: ToWorker }) => void),
-  postMessage(m: unknown) {
-    const r = m as Reply
-    if (r.ok && typeof r.revision === 'number') lastRevision = r.revision
-    waiters.get(r.id)?.(r)
-    waiters.delete(r.id)
-  },
-}
-// Must exist before the worker module evaluates (it assigns self.onmessage at top level).
-;(globalThis as unknown as { self: unknown }).self = workerGlobal
-
-/** Omit that DISTRIBUTES over a union: plain Omit<ToWorker, 'id'> collapses the message union to
- *  its common keys ({ id, type }) and rejects every payload field. */
-type WorkerMsg<T = ToWorker> = T extends { id: number } ? Omit<T, 'id'> : never
-
-let nextId = 1
-function send(msg: WorkerMsg): Promise<Reply> {
-  return new Promise((resolve) => {
-    const id = nextId++
-    waiters.set(id, resolve)
-    workerGlobal.onmessage!({ data: { ...msg, id } as ToWorker })
-  })
-}
+// ⚠ TOP LEVEL, AND IT MUST STAY TOP LEVEL: the factory assigns `globalThis.self`, and the worker
+// module reads it while evaluating – which is why the import of it below is dynamic.
+const { send, workerGlobal } = workerHarness<Reply>((r) => {
+  if (r.ok && typeof r.revision === 'number') lastRevision = r.revision
+})
 
 /** A world stopped ON an open reveal: enter the nearest enterable event, walk to its week. */
 function pendingTournamentWorld(): WorldState {

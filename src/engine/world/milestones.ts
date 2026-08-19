@@ -578,6 +578,15 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // "began at or before the first week" test above passes for it. Resetting at week 52 instead would
   // drop the off-season's own entries on the floor.
   world.seasonEntries = emptySeasonEntries(wrapWeek)
+  // ⭐⭐ v53 – AND THE FIELD'S SEASON CLOSES WITH HERS. `fieldSeasonPoints` is what each professional
+  // has EARNED since January; at the wrap it is spent, because `makeFieldPro` re-derives her book for
+  // the new season and that derivation already carries her forward - a season older, one step further
+  // along `careerArc`, with a fresh form roll. Carrying the tally across would count the same tennis
+  // twice: once in the new derived book and once again in the old total.
+  //
+  // ⚠ THIS IS THE ONE PLACE IT IS CLEARED, and it is the same line the kid's own ledgers are cleared
+  // on, so the field's year and hers can never be a week apart.
+  world.fieldSeasonPoints = {}
 }
 
 /** ⭐ ROUND-19 #2 – IS THE SEASON'S WRAP-UP STILL OWED THIS WEEK? The season's index, or null.

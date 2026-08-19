@@ -1,3 +1,12 @@
+---
+type: proposal
+status: audit
+area: project-review
+canonical: false
+last-reviewed: 2026-08-19
+baseline: b7a9358
+---
+
 <!-- Build-ready proposal derived from the 2026-08-01 full review (docs/review/). Reviewed at b7a9358. -->
 
 # P4 – world.ts staged decomposition

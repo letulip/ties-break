@@ -1596,6 +1596,22 @@ export function migrateSave(raw: unknown): WorldState {
     v = 52
   }
 
+  // v52 -> v53: THE FIELD'S SEASON LEDGER. `fieldSeasonPoints` is what each professional has earned
+  // since January, so the professional table stops being a pure function of (seed, season).
+  //
+  // ⚠ THE BACK-FILL IS EMPTY, AND THAT IS A PRESERVATION RATHER THAN A DEFAULT CHOSEN FOR ANYBODY.
+  // Every career saved before v53 was played under an engine that discarded the field's results, so
+  // an empty tally is exactly what those seasons contained - the same table, the same ranks, the same
+  // acceptance cuts as the week it was saved. Inventing a tally would rewrite her standing retroactively
+  // against results this save never had.
+  //
+  // ⚠ AND IT FILLS ITSELF FROM THE NEXT TOURNAMENT WEEK ON, so an old save is a season behind for at
+  // most the rest of its current season and is level from the next wrap.
+  if (v === 52) {
+    if (save.fieldSeasonPoints === undefined) save.fieldSeasonPoints = {}
+    v = 53
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

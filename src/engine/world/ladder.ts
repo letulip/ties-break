@@ -101,7 +101,7 @@ export function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] 
   // caches (kidRankWta), the Stats standings, the tournament overlay's opponent ranks and the
   // entry gates all flow through this line, so no surface can see a different W table.
   if (track !== 'wta') return live
-  return mergedWtaRanking(live, fieldProsOf(world))
+  return mergedWtaRanking(live, fieldProsOf(world), world.fieldSeasonPoints)
 }
 
 /** THE table when only one is meant: the ITF one. It is what opens the international rungs and what

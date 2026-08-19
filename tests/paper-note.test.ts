@@ -27,6 +27,10 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
+// Comments are not code – the same `codeOf` discipline, now in tests/helpers/source.ts. This file is
+// about which element an attribute is ON, and the component documents its own history at length,
+// including quoting the markup it used to have.
+import { codeOf } from './helpers/source'
 
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 const read = (p: string) => readFileSync(p, 'utf8')
@@ -41,15 +45,6 @@ function walk(dir: string, out: string[] = []): string[] {
   return out
 }
 const VUE = walk(SRC)
-
-/** Comments are not code – the same `codeOf` discipline tests/calendar-screen.test.ts keeps. This
- *  file is about which element an attribute is ON, and the component documents its own history at
- *  length, including quoting the markup it used to have. */
-const codeOf = (src: string) =>
-  src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
 
 const PAPER = join(SRC, 'components/ui/PaperNote.vue')
 const paper = read(PAPER)

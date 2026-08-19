@@ -35,7 +35,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import SkillsRadar from '../../src/components/SkillsRadar.vue'
 import KidScreen from '../../src/components/screens/KidScreen.vue'
 import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
@@ -44,6 +43,7 @@ import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier, type RadarAxis, type Snapshot } from '../../src/shared/protocol'
 import { SKILL_KEYS } from '../../src/engine/development'
+import { mountSeason } from '../helpers/mountSeason'
 
 /** A real career at a chosen rung, walked far enough to have a calendar with previews on it. */
 function snapshotAt(coachTier: CoachTier, weeks = 12, seed = `r15-${coachTier}`): Snapshot {
@@ -51,12 +51,6 @@ function snapshotAt(coachTier: CoachTier, weeks = 12, seed = `r15-${coachTier}`)
   const rng = rngFromSeed(world.seed)
   for (let i = 0; i < weeks; i++) tickWeek(world, rng)
   return toSnapshot(world)
-}
-
-function mountSeason(snapshot: Snapshot) {
-  const store = useGameStore()
-  store.snapshot = snapshot
-  return mount(SeasonScreen, { global: { stubs: { teleport: true } } })
 }
 
 function mountWithSnapshot(component: typeof KidScreen | typeof CoachMarketScreen, snapshot: Snapshot) {

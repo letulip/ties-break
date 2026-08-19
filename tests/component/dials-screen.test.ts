@@ -31,8 +31,6 @@ import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vu
 import WeekRecapCard from '../../src/components/WeekRecapCard.vue'
 import { calendarWeekFor } from '../../src/composables/weekDays'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
-import { rngFromSeed } from '../../src/engine/rng'
 import {
   PLAN_MAX_SESSIONS,
   PLAN_MIN_SESSIONS,
@@ -46,15 +44,12 @@ import {
   type Snapshot,
   type WeekPlan,
 } from '../../src/shared/protocol'
+import { careerSnapshot } from '../helpers/career'
 
 /** A real career through the real protocol, so nothing here is a hand-written shape that can drift
  *  from `Snapshot`. Same fixture discipline as season-screen.test.ts. */
-function snapshotAfter(weeks = 12, seed = 'dials-screen', coachTier = DEFAULT_PROFILE.coachTier): Snapshot {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier })
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
-}
+const snapshotAfter = (weeks = 12, seed = 'dials-screen', coachTier = DEFAULT_PROFILE.coachTier): Snapshot =>
+  careerSnapshot(weeks, seed, { ...DEFAULT_PROFILE, coachTier })
 
 /** The tab, mounted over a snapshot poked into the shape a test is about. `setPlan` is stubbed: the
  *  worker is not running, and what these tests want to see is the COMMAND, not a round trip.

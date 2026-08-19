@@ -17,24 +17,13 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
-import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
 import { WILD_CARD } from '../../src/engine/season/tournament'
+import { careerSnapshot } from '../helpers/career'
+import { mountSeason } from '../helpers/mountSeason'
 
 /** A real career, walked `weeks` weeks, as the engine's own tests build one. */
-function snapshotAfter(weeks: number, seed = 'component-season'): Snapshot {
-  const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
-}
-
-function mountSeason(snapshot: Snapshot) {
-  const store = useGameStore()
-  store.snapshot = snapshot
-  return mount(SeasonScreen, { global: { stubs: { teleport: true } } })
-}
+const snapshotAfter = (weeks: number, seed = 'component-season'): Snapshot => careerSnapshot(weeks, seed)
 
 describe('SeasonScreen – the fixture', () => {
   beforeEach(() => setActivePinia(createPinia()))

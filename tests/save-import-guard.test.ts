@@ -11,8 +11,9 @@ import {
   MAX_EXPANDED_BYTES,
   type SaveFileErrorCode,
 } from '../src/engine/saveGuard'
-import { DEFAULT_PROFILE, type ToWorker } from '../src/shared/protocol'
+import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { closeDb } from '../src/db/saves'
+import { workerHarness } from './helpers/workerHarness'
 
 // =================================================================================================
 // W1-INTEGRITY-B (Codex TB-06) — THE IMPORT GATE'S FUZZ CORPUS, in three layers.
@@ -232,28 +233,9 @@ interface Reply {
   careers?: { careerId: string }[]
 }
 
-const waiters = new Map<number, (r: Reply) => void>()
-const workerGlobal = {
-  onmessage: null as null | ((e: { data: ToWorker }) => void),
-  postMessage(m: unknown) {
-    const r = m as Reply
-    waiters.get(r.id)?.(r)
-    waiters.delete(r.id)
-  },
-}
-;(globalThis as unknown as { self: unknown }).self = workerGlobal
-
-// Omit must distribute over the message union (same trick as client.ts's DistributiveOmit).
-type WorkerMsg<T = ToWorker> = T extends { id: number } ? Omit<T, 'id'> : never
-
-let nextId = 1
-function send(msg: WorkerMsg): Promise<Reply> {
-  return new Promise((resolve) => {
-    const id = nextId++
-    waiters.set(id, resolve)
-    workerGlobal.onmessage!({ data: { ...msg, id } as ToWorker })
-  })
-}
+// ⚠ TOP LEVEL, AND IT MUST STAY TOP LEVEL: the factory assigns `globalThis.self`, and the worker
+// module reads it while evaluating – which is why the import of it below is dynamic.
+const { send, workerGlobal } = workerHarness<Reply>()
 
 async function importIntoWorker(world: WorldState): Promise<Reply> {
   const bytes = (await encodeExportFile(world)).slice()

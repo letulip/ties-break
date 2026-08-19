@@ -43,12 +43,13 @@
 // the TOUR has rules, the GAME has none. Nothing here leans on the player, nothing tells him what she
 // ought to do, and a penalty is a price she chose to pay – the same voice `engine/offers.ts` sets
 // above `raiseMandatoryDueLetter`. The briefing's last line says so out loud, and it is the engine's.
-import { computed, ref, watch, useTemplateRef } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
 import { weekLabel } from '../shared/dates'
-import { tourBriefedKey } from '../composables/tourBriefing'
+import { useWatermark } from '../composables/inboxCue'
+import { TOUR_BRIEFED_PREFIX } from '../composables/tourBriefing'
 import Eyebrow from './ui/Eyebrow.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 
@@ -56,33 +57,42 @@ const emit = defineEmits<{ (e: 'continue'): void }>()
 
 const game = useGameStore()
 
-// PER CAREER, mirrored into a ref because localStorage is not a reactive dependency – the same shape
-// and the same reason as every other watermark in this app (App.vue's news / This-week / trophy /
-// injury notes argue it at length). Re-read on a career switch so one career's acknowledgement can
-// never silence another's briefing.
-const briefedAt = ref<string | null>(localStorage.getItem(tourBriefedKey(game.snapshot?.careerId)))
-watch(
-  () => game.snapshot?.careerId,
-  (id) => {
-    briefedAt.value = localStorage.getItem(tourBriefedKey(id))
-  },
+// PER CAREER, in localStorage, never in the save – the argument is in composables/tourBriefing.ts
+// and the machinery is the app's one watermark (composables/inboxCue.ts). The three lines that used
+// to sit here (a `getItem` at setup, a `setItem` in `acknowledge`, a `watch` on `careerId` to
+// re-read) were the fifth hand-rolled copy of that helper, and this file's own header calls the
+// shape "the same shape the injury report, the news feed, the trophy cabinet and the This-week dot
+// all use" – so it now IS that shape rather than a fifth transcription of it. The component still
+// OWNS the record, which is the whole reason the watermark is here and not in App.vue.
+//
+// ⚠ THE THREE ARGUMENTS ARE THIS ITEM'S SEMANTICS, STATED RATHER THAN IMPLIED:
+//   `newest`   the week it was read at. It is a RECEIPT, not a comparison - nothing ever reads the
+//              number back, which is why the predicate below ignores it. It is stored because
+//              "which week was he told" is the one thing worth having if this is ever debugged.
+//   `absent`   null, and null means UNBRIEFED. The asymmetry the header argues: a save that already
+//              binds and carries no watermark gets the briefing once, because showing it twice costs
+//              a tap and never showing it is the item.
+//   `isNewer`  "nothing has been recorded yet". Not `now !== seen`, which the letterbox uses and
+//              which would raise this sheet again on every week of a bound career.
+const { unseen, markSeen } = useWatermark<string | null>(
+  TOUR_BRIEFED_PREFIX,
+  computed<string | null>(() => String(game.snapshot?.week ?? 0)),
+  (_now, seen) => seen === null,
+  { value: null },
 )
 
 /** What is on screen: the engine's briefing, unless this career has already read it. One computed,
  *  so there is no second place that could decide the popup is up while the record says it is done. */
-const briefing = computed(() =>
-  briefedAt.value !== null ? null : game.snapshot?.tourBriefing ?? null,
-)
+const briefing = computed(() => (unseen.value ? game.snapshot?.tourBriefing ?? null : null))
 
 function acknowledge(): void {
   // Guards a double-tap while the parent re-renders – two fast presses on the one button would
-  // otherwise emit twice.
-  if (briefedAt.value !== null) return
-  const at = String(game.snapshot?.week ?? 0)
-  // THE RECORD FIRST, then the ref, then the parent. The write is what survives a reload, and it is
-  // the only thing that has to happen for the promise "it does not reappear" to hold.
-  localStorage.setItem(tourBriefedKey(game.snapshot?.careerId), at)
-  briefedAt.value = at
+  // otherwise emit twice. `markSeen` is itself idempotent (it re-tests `isNewer` before writing), so
+  // this guard is now about the EMIT rather than about the record.
+  if (!unseen.value) return
+  // THE RECORD FIRST, then the parent. The write is what survives a reload, and it is the only thing
+  // that has to happen for the promise "it does not reappear" to hold.
+  markSeen()
   playSfx('clickSoft')
   emit('continue')
 }
