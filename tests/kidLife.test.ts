@@ -168,6 +168,44 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
     const notes = [9, 12, 3, 6].map((m) => schoolTile(view({ birthMonth: m })).note)
     expect(notes).toEqual(['Oldest in class', 'Older than most', 'Young in class', 'Youngest of all'])
   })
+
+  // ⭐ ROUND-22 – A WEEK BEFORE THE CAREER OPENS IS A NEGATIVE WEEK, AND 0 IS NOT A SAFE DEFAULT.
+  //
+  // The report: «clamping the week to 0 for the pre-career ages printed "8th grade" under a
+  // nine-year-old – schoolTile derives her cohort from the season year, so the week has to go
+  // negative for ages before week 0.» The arithmetic is exactly that: the tile's cohort is
+  // `seasonYear` and `pastSeptember(week)`, and a view built off a clamped week carries the CAREER'S
+  // season year with it – so week 0 says «8th grade» at nine, at ten and at thirteen alike. Clamping
+  // does not withhold an answer here, it asserts a wrong one.
+  //
+  // ⚠ THIS IS A GUARD, NOT A FIX. Measured 19.08: nothing in the tree asks the tile about a
+  // pre-career week – `toSnapshot` is its only caller and `world.week` is never negative – and the
+  // module needs no change to answer one, because every week predicate under it normalises its
+  // modulo (`pastSeptember`, `isExamWeek`, `isSummerWeek`) and `seasonIndexOf` floors. What this
+  // forbids is the clamp being added HERE, which is the shape the report describes.
+  //
+  // ⚠ MUTATION-VERIFIED: `const birthYear = kidBirthYear()` preceded by `view = { ...view, week:
+  // Math.max(0, view.week) }` in `schoolTile` -> this goes red on the September turnover, because a
+  // clamped week freezes the school year at the one the career opens in.
+  it('a pre-career week is NEGATIVE, and the tile answers on her real cohort', () => {
+    const preCareer = [9, 10, 11, 12, 13].map((age) => {
+      const v = view({ week: (age - 14) * 52 })
+      return { age: v.ageYears, grade: schoolTile(v).lead }
+    })
+    expect(preCareer).toEqual([
+      { age: 9, grade: '3rd grade' },
+      { age: 10, grade: '4th grade' },
+      { age: 11, grade: '5th grade' },
+      { age: 12, grade: '6th grade' },
+      { age: 13, grade: '7th grade' },
+    ])
+    // ...against the ONE number a week clamped to 0 prints at every one of those ages.
+    expect(schoolTile(view({ week: 0 })).lead).toBe('8th grade')
+    // And the 1 September still turns the year over inside a pre-career season: week -226 is the
+    // `SCHOOL_YEAR_TURNS_AT` of the season she turns ten, which a clamp would flatten away.
+    expect(schoolTile(view({ week: -227 })).lead).toBe('3rd grade')
+    expect(schoolTile(view({ week: -226 })).lead).toBe('4th grade')
+  })
 })
 
 // ===========================================================================
