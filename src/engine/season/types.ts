@@ -276,7 +276,14 @@ export interface AiPlayer extends Omit<MatchPlayer, 'groundstrokes' | 'age'> {
   /** her ceiling, per attribute (v20). Same idea as the kid's: growth is a share of the distance
    *  still to go, so a rival approaches her limit and stops. The BAND is wide on purpose - most of
    *  a junior cohort never becomes anything, and a field where everyone is a future champion is
-   *  the same rising tide with extra steps. */
+   *  the same rising tide with extra steps.
+   *
+   *  ⚠ FOUR KEYS, AND THE FIFTH CEILING IS DERIVED - `rivalGroundstrokePotential` (season/rival.ts),
+   *  round 22. She HAS a groundstroke ceiling of her own and develops toward it; it is simply not
+   *  stored, for the same two reasons the attribute itself is not (see the Omit note above, plus
+   *  `makeJunior`'s load-bearing 13-draw order - a fifth ceiling would want a fifth draw inside the
+   *  cohort loop and re-map every existing seed's field). Derived from the same `gs:<id>` offset the
+   *  current value uses, so the two can never disagree. */
   potential: { serve: number; ret: number; composure: number; stamina: number }
 }
 export interface RankingRow { playerId: string; points: number; rank: number }

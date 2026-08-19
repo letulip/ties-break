@@ -211,6 +211,13 @@ export function power(p: AiPlayer): number {
   // истины везде без дублей кода». The four-attribute mean had been copied by hand into seven other
   // places and `tools/kit-bench.ts` had already drifted to five, so the tools disagreed with the engine
   // and with each other. They now call this.
+  //
+  // ⚠ AND SINCE ROUND 22 THE FIFTH TERM ADDS ONLY WHAT IS ACTUALLY NEW. `rivalGroundstrokes` is now
+  // `mean(four) + offset` (it was `(serve + ret) / 2 + offset`), so this whole expression collapses to
+  // `mean(four) + offset / 5`: the four are weighted evenly and the fifth axis contributes exactly its
+  // own independent tilt. Under the old anchor the fifth term was 60% serve/ret again, so a serve-first
+  // rival was priced up twice for one weapon - the same double-counting defect the box above records,
+  // pointing the other way. Nothing here changed; the change is in what it calls.
   return (p.serve + p.ret + p.composure + p.stamina + rivalGroundstrokes(p)) / 5
 }
 

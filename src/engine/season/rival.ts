@@ -277,25 +277,85 @@ export function styleOf(player: Pick<MatchPlayer, 'serve' | 'ret' | 'stamina'>):
  *  and it exists for the same two reasons: a stored field would cost a cohort schema bump, and a
  *  fifth weekly draw in `driftCohort` would move the frozen MAIN capture. See season/types.ts.
  *
- *  ANCHORED ON HER FIRST-STRIKE LEVEL, `(serve + ret) / 2`, so it tracks her development for free -
- *  a rival who closes on her ceiling hits harder every season, with no new state and no new draws.
- *  It also reads the styles correctly without being told them, which is the part worth noticing:
- *  a serve-first rival (serve well ahead of return) lands BELOW her serve, because her groundstroke
- *  is her weaker half; a counterpuncher (high return, high legs) lands in the middle, because she
- *  does not hit through people; an aggressive rival (both weapons high) lands high. Exactly what
- *  `styleOf` says about the same three numbers.
+ *  ⚠⚠ RE-ANCHORED ON HER OVERALL STANDARD, ROUND 22 - owner: «ты же вроде сделал хорошую формулу
+ *  для него [power()]. Мне кажется надо на нее опираться, тогда у всех появится аналог пятого
+ *  навыка». It used to read `(serve + ret) / 2`, and that anchor had TWO defects that are one defect
+ *  seen twice:
+ *
+ *  1. IT WAS NOT A FIFTH AXIS, IT WAS A THIRD READING OF THE FIRST TWO. Bolted to the first-strike
+ *     pair with a ±8 offset, a rival's groundstroke could never sit more than 8 points off what her
+ *     serve and return already said - so the cohort could not contain a groundstroke SPECIALIST, and
+ *     the one axis the player CAN specialise on rewarded only the kid. `power()` averages all five;
+ *     with the old anchor the fifth term was 60% serve/ret again, so the field was priced on a
+ *     quantity that double-counted the first ball.
+ *  2. IT HAD NO CEILING OF ITS OWN. Her other four develop toward `potential`; this one just tracked
+ *     serve/ret wherever they went, up or down, with nothing to arrive at.
+ *
+ *  BOTH ARE FIXED BY THE SAME ONE-LINE MOVE: the anchor is now the mean of ALL FOUR stored
+ *  attributes - the same "how good is she" reading `power()` leans on - so composure and stamina
+ *  carry half the weight and the serve/ret pair no longer dictates the answer. Written out, the
+ *  identity is `groundstrokes = mean(four) + offset` and `potential = mean(four ceilings) + offset`,
+ *  which is why `rivalGroundstrokePotential` below is THE SAME FUNCTION fed her ceilings instead of
+ *  her current numbers. She therefore develops toward that ceiling exactly as her four do, arrives
+ *  at it when they arrive, and DECLINES off it when `aiDeclineFactor` starts taking points back -
+ *  all of it derived, no new state, no new draw, no schema bump.
+ *
+ *  ⚠ AND THE STYLE COUPLING WAS NOT DROPPED, IT MOVED TO WHERE IT BELONGS. The old note argued the
+ *  anchor for reading `styleOf` correctly without being told it – a serve-first rival landing below
+ *  her serve, an aggressive one landing high. That reading survives (a serve-first build's mean of
+ *  four sits well under her serve by definition), but it is no longer the ANCHOR's job: the surface
+ *  x style table in `match/style.ts` moves the groundstroke explicitly, and `rivalMatchPlayer` joins
+ *  this value BEFORE `applySurfaceStyle` precisely so it can. One rule, stated once, in the table.
+ *
+ *  ⚠ WHAT IS HERS AND WHAT IS SHARED, stated plainly because the limit is deliberate. The fifth axis
+ *  owns its LEVEL and its CEILING (the offset is drawn once, off her own sub-stream, and is hers for
+ *  ever). It does NOT own its weekly SCHEDULE: it closes on its ceiling at the mean rate of her four,
+ *  not on a fifth roll of its own. A schedule of its own would need per-week state, and per-week
+ *  state is the stored field this whole file exists to avoid.
  *
  *  THE OFFSET IS WHY THIS IS AN ATTRIBUTE AND NOT A FORMULA. Without it `opp.groundstrokes` would be
- *  a deterministic function of `opp.serve`/`opp.ret`, and the radar's evidence read for the new axis
+ *  a deterministic function of her other four, and the radar's evidence read for the new axis
  *  ("has anybody out-hit her") would collapse into a restatement of its serve/return reads. One
  *  uniform draw off the player's own `gs:<id>` sub-stream gives the field genuine spread on the new
  *  axis: stable for ever (the id never changes), and ZERO draws on any stream the tick is walking. */
 export const RIVAL_GS_SPREAD = 8
 
-export function rivalGroundstrokes(player: Pick<AiPlayer, 'id' | 'serve' | 'ret'>): number {
-  const base = (player.serve + player.ret) / 2
-  const u = rngFromSeed(`gs:${player.id}`)()
-  return clamp(base + RIVAL_GS_SPREAD * (2 * u - 1), 0, 100)
+/** Her personal tilt on the fifth axis, in points, uniform on ±`RIVAL_GS_SPREAD`.
+ *
+ *  ⚠ THE SEED STRING IS UNCHANGED (`gs:<id>`) ON PURPOSE. It is the same one draw it has always
+ *  been, so a rival's tilt is the same number this and last release - only what it is added TO
+ *  moved. A rename to `gspot:<id>` would have re-rolled the whole field for no gain. */
+function gsOffset(id: string): number {
+  return RIVAL_GS_SPREAD * (2 * rngFromSeed(`gs:${id}`)() - 1)
+}
+
+/** The mean of the four the cohort actually stores – `power()`'s own shape, minus the fifth term,
+ *  which is what stops this being a recursive definition. */
+function meanOfFour(serve: number, ret: number, composure: number, stamina: number): number {
+  return (serve + ret + composure + stamina) / 4
+}
+
+export function rivalGroundstrokes(
+  player: Pick<AiPlayer, 'id' | 'serve' | 'ret' | 'composure' | 'stamina'>,
+): number {
+  const level = meanOfFour(player.serve, player.ret, player.composure, player.stamina)
+  return clamp(level + gsOffset(player.id), 0, 100)
+}
+
+/** HER GROUNDSTROKE CEILING – the fifth `potential`, derived rather than stored (round 22).
+ *
+ *  ⚠ IT IS NOT A FIELD ON `AiPlayer.potential`, AND THAT IS THE SAME RULING AS THE ATTRIBUTE ITSELF.
+ *  A fifth ceiling in the cohort row is persisted state: it would want its own draw inside
+ *  `makeJunior`, and `makeJunior`'s draw order is load-bearing (13 draws per player – adding one
+ *  re-maps every existing seed's entire field), on top of the schema bump. Derived from the same
+ *  `gs:<id>` offset the current value uses, it costs nothing and cannot disagree with it.
+ *
+ *  A FIELD PRO ARRIVES ALREADY THERE, by construction rather than by a special case: her
+ *  `potential` IS her four attributes (season/fieldPros.ts – her game is drawn once and never
+ *  drifted), so this returns exactly what `rivalGroundstrokes` does for her. */
+export function rivalGroundstrokePotential(player: Pick<AiPlayer, 'id' | 'potential'>): number {
+  const c = player.potential
+  return clamp(meanOfFour(c.serve, c.ret, c.composure, c.stamina) + gsOffset(player.id), 0, 100)
 }
 
 /** THE one helper both tournament paths call (the kid's shadow run and the canonical AI bracket),
