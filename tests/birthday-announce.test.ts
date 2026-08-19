@@ -270,4 +270,65 @@ describe('the age she is told she is turning', () => {
     expect(said.join(' | ')).toMatch(/she is fifteen this week/i)
     expect(toSnapshot(world).diary.facts.birthdayAge).toBe(15)
   })
+
+  // ⭐ THE COLLEGE YEARS GET AN ENTRY WHERE THEY CANNOT GET A DIALOG (owner, 19.08: «колледжевые
+  // годы получают не попап, а свою запись в дневнике, что механику не ломает»). Both halves of that
+  // sentence are asserted: the entry appears, AND it does not become a prompt.
+  describe('the four college birthdays', () => {
+    const atCollegeWorld = (week: number) => {
+      const world = createWorld('bday-college', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
+      world.week = week
+      return world
+    }
+
+    it('writes its OWN line, not the one every other year gets', () => {
+      const target = WEEKS_IN_SEASON - 1
+      const home = atCollegeWorld(target)
+      const away = atCollegeWorld(target)
+      markBirthday(home, false)
+      markBirthday(away, true)
+      const homeText = home.events.filter((e) => e.week === target).map((e) => e.text).join(' | ')
+      const awayText = away.events.filter((e) => e.week === target).map((e) => e.text).join(' | ')
+      // The age still reads the same way - it is the SAME birthday, told from further off.
+      expect(homeText).toMatch(/she is fifteen this week/i)
+      expect(awayText).toMatch(/she is fifteen this week/i)
+      // ...and it is a different sentence, which is the whole request.
+      expect(awayText, 'the college year is telling the identical line - the entry is not its own').not.toBe(homeText)
+    })
+
+    it('⚠ gives each college year a DIFFERENT line – four identical entries in a row is the thing this undoes', () => {
+      const lines = new Set<string>()
+      for (const age of [18, 19, 20, 21]) {
+        const world = createWorld(`bday-college-${age}`, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
+        // ⚠ THE WEEK IS FOUND, NOT COMPUTED. Since the date-clock fix a birthday lands on the week
+        // that CONTAINS it, and real dates do not repeat on the same week index every year - which
+        // is the drift the fix exists to model. A `52 * n` formula silently missed age 18 entirely
+        // and the arm read as "wrote no entry" rather than as "asked the wrong week".
+        let target = -1
+        for (let w = 0; w < 12 * WEEKS_IN_SEASON; w++) {
+          if (birthdayTurning(w, world.profile.birthMonth, world.profile.birthDay) === age) {
+            target = w
+            break
+          }
+        }
+        expect(target, `no week in twelve seasons turns her ${age}`).toBeGreaterThanOrEqual(0)
+        world.week = target
+        markBirthday(world, true)
+        const said = world.events.filter((e) => e.week === target).map((e) => e.text)
+        expect(said.length, `age ${age} wrote no entry at all`).toBeGreaterThan(0)
+        lines.add(said.join(' | '))
+      }
+      expect(lines.size, 'two college years are telling the same story').toBe(4)
+    })
+
+    it('⚠⚠ and it is still NOT a prompt – the four-year jump must never stop for it', () => {
+      // The mechanic the owner asked us not to break: `resumeFromCollege` spends four years in one
+      // call, so a blocking birthday inside the freeze would strand it with nobody to answer.
+      const world = createWorld('bday-college-nostop', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
+      world.week = WEEKS_IN_SEASON - 1
+      const before = world.birthdays.length
+      markBirthday(world, true)
+      expect(world.birthdays.length, 'a college birthday recorded a parent decision that nobody made').toBe(before)
+    })
+  })
 })

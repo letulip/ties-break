@@ -83,13 +83,26 @@ describe('P2 item 4 — the cohort is already inside the age-eligibility rule', 
     expect(kid.length + kidLedger, 'and the kid played some too, for scale').toBeGreaterThan(0)
   })
 
-  it('⭐ NO cohort player exceeds the AER row for her own age – the asymmetry is already harmless', () => {
+  it('⭐ NO LIVE PLAYER EXCEEDS THE AER ROW FOR HER OWN AGE – and since 19.08 that is ENFORCED, not lucky', () => {
     // ⚠ THE BOUND IS THE ENGINE'S OWN TABLE, never a copied number, so a phase that retunes
     // `proPerYearByAge` re-measures this claim instead of silently outliving it.
+    //
+    // ⚠⚠ THIS ARM USED TO PASS BY LUCK AND NOW PASSES BY RULE, and the history is the point. The
+    // file's own header records the original finding: the cohort was INSIDE the AER without being
+    // subject to it, because no rival had ever been drawn into more events than her row allows. That
+    // was an asymmetry - the rule was enforced on exactly one person in the world, the kid - and it
+    // held only as long as draw composition did.
+    //
+    // The live professional table (v53) ended it. A field pro's standing moves with her results, the
+    // merged table moves with her, `selectEntrants` draws from a different order, and this arm went
+    // RED on `ai-177 at 14: 10 > 8` - a fourteen-year-old in ten capped draws against a rulebook row
+    // of eight. The owner ruled the rule rather than a wider guard: «да, это как раз защитит нас от
+    // 16 летних в топ-10». `withinAnnualEntryLimit` (world/entryCaps.ts) now gates the DRAW'S
+    // UNIVERSE on both call sites, so what this arm asserts is enforced upstream of it.
     const over = rows.filter((r) => r.entries > annualProEntryLimit(r.ageYears))
     expect(
       over.map((r) => `${r.playerId} at ${r.ageYears}: ${r.entries} > ${annualProEntryLimit(r.ageYears)}`),
-      'a capped-age rival playing more than the rule allows – the cohort now needs the AER built for it',
+      'a capped-age rival playing more than the rule allows – the field gate is not holding',
     ).toEqual([])
   })
 

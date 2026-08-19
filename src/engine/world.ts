@@ -255,7 +255,7 @@ import { cohortIds, inTrack, fieldProsOf, fullRanking, rankingFor, recomputeKidR
 export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
-import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow } from './world/entryCaps'
+import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow, rivalProEntries, withinAnnualEntryLimit } from './world/entryCaps'
 // P1 – the junior access rulebook (the Accelerator table and the W15 reserved-place door). Re-exported
 // under its own names for the same reason the caps are: the worker, the snapshot and the tools must
 // read ONE implementation. `docs/specs/junior-access-2026-08.md`.
@@ -1543,6 +1543,10 @@ function computeShadowTournament(
   event: SeasonEvent,
   ranking: RankingRow[],
   fatigue: Map<string, number>,
+  /** the field's professional entries in the trailing year (`rivalProEntries`), for the AER gate on
+   *  the universe below. REQUIRED and not optional: an entry rule handed `undefined` is a rule that
+   *  does nothing, and a silent null arm is the one failure mode this gate cannot afford. */
+  entries: ReadonlyMap<string, number>,
 ): PendingTournament {
   // R9-19 coupling ON: the kid plays at her CURRENT condition (post this week's accrual –
   // step 1c runs before step 2), on the event's surface as her play style meets it (surface-style).
@@ -1573,7 +1577,16 @@ function computeShadowTournament(
   // same class as every band/age re-pick – and the MAIN capture is untouched by construction.
   const isW = TIERS[event.tier].track === 'wta'
   const pros = isW ? fieldProsOf(world) : null
-  const universe = pros ? universeForTier(event.tier, world.cohort, pros) : world.cohort
+  // ⭐⭐ AND THE AGE-ELIGIBILITY RULE NOW GATES THE FIELD TOO (owner, 19.08), on the universe and
+  // before the bands, for the reason `withinAnnualEntryLimit` states in full: both of
+  // `selectEntrants`' backfills reach outside the entrant window, so a gate applied later would be
+  // walked around. Non-capped tiers get the identical universe back, by reference.
+  const universe = withinAnnualEntryLimit(
+    pros ? universeForTier(event.tier, world.cohort, pros) : world.cohort,
+    event.tier,
+    entries,
+    TIERS[event.tier].drawSize,
+  ) as AiPlayer[]
   const selRanking = pros
     ? mergedWtaRanking(
         computeRanking(
@@ -2156,13 +2169,20 @@ function drawAiEntrants(
   aiRanking: RankingRow[],
   tour: TourWeek,
   fatigue: Map<string, number>,
+  /** see `computeShadowTournament`'s own note - the AER ledger, required for the same reason. */
+  entries: ReadonlyMap<string, number>,
 ): { event: SeasonEvent; entrants: AiPlayer[]; rng: Rng } {
   const rng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
   // `universeForTier` is the seam and it is asked BY TIER, so a non-W event provably gets
   // `world.cohort` itself back (reference equality, pinned in tests/season/fieldPros.test.ts) and
   // reads the mixed junior table it always read.
   const isW = TIERS[event.tier].track === 'wta'
-  const universe = universeForTier(event.tier, world.cohort, tour.pros)
+  const universe = withinAnnualEntryLimit(
+    universeForTier(event.tier, world.cohort, tour.pros),
+    event.tier,
+    entries,
+    TIERS[event.tier].drawSize,
+  ) as AiPlayer[]
   return {
     event,
     entrants: selectEntrants(event, universe, isW ? tour.ranking : aiRanking, rng, fatigue),
@@ -2193,6 +2213,8 @@ function fillWeekOnRamps(
   aiRanking: RankingRow[],
   tour: TourWeek,
   fatigue: Map<string, number>,
+  /** the AER ledger - see `computeShadowTournament`'s note. Required for the same reason. */
+  entries: ReadonlyMap<string, number>,
 ): void {
   const booked = new Set<string>()
   for (const field of fields.values()) for (const p of field) booked.add(p.id)
@@ -2201,16 +2223,26 @@ function fillWeekOnRamps(
     .sort((a, b) => byAllocationPriority(a.event, b.event))
   for (const d of wEvents) {
     const before = fields.get(d.event.id) ?? d.entrants
+  // ⭐⭐ ...AND THE AER REACHES THE BACKFILLS TOO, which is where the first attempt leaked. Gating
+  // the DRAW's universe left `ai-177` one entry over her row, because the held slots do not come
+  // from that universe: this pool is `world.cohort` itself, and the on-ramp exists precisely to hand
+  // W slots to juniors - the one population the rule caps. A gate the backfills can walk around is
+  // the thing `selectEntrants`' own age-gate comment warns about, one storey up.
     const after = fillOnRamp(
       d.event,
       before,
       tour.ranking,
       d.rng,
-      { pool: world.cohort, ranking: aiRanking, admits: tour.doors.at(d.event.tier), slots: ON_RAMP.slots },
+      {
+        pool: withinAnnualEntryLimit(world.cohort, d.event.tier, entries, ON_RAMP.slots) as AiPlayer[],
+        ranking: aiRanking,
+        admits: tour.doors.at(d.event.tier),
+        slots: ON_RAMP.slots,
+      },
       fatigue,
       booked,
     )
-    const withCards = fillWildCards(world, d.event, after, tour, fatigue, booked)
+    const withCards = fillWildCards(world, d.event, after, tour, fatigue, booked, entries)
     fields.set(d.event.id, withCards)
     for (const p of withCards) booked.add(p.id)
   }
@@ -2256,10 +2288,19 @@ function fillWildCards(
   tour: TourWeek,
   fatigue: Map<string, number>,
   booked: ReadonlySet<string>,
+  /** the AER ledger - see `computeShadowTournament`'s note. A wild card is a DOOR and not an
+   *  exemption: it decides WHO the host nation may promote, never how many events a fifteen-year-old
+   *  may play. Same reading as `fillWeekOnRamps` one function up. */
+  entries: ReadonlyMap<string, number>,
 ): AiPlayer[] {
   if (event.tier !== WILD_CARD.tier || WILD_CARD.slots <= 0) return field
   const host = hostNationOf(world.seed, event.id)
-  const pool = tour.universe.filter((p) => p.nation === host)
+  const pool = withinAnnualEntryLimit(
+    tour.universe.filter((p) => p.nation === host),
+    event.tier,
+    entries,
+    WILD_CARD.slots,
+  ) as AiPlayer[]
   if (!pool.length) return field
   const accepts = acceptanceRank(world, event.tier)
   const total = tour.ranking.length
@@ -2982,6 +3023,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // and the kid's shadow run (step 2) and the canonical AI brackets (step 4) can never disagree
   // about how tired an opponent is. Pure derivation, ZERO main-stream draws.
   const rivalFatigue = rivalConditions(world.results, world.week)
+  // ⭐⭐ ...AND THE FIELD'S AER LEDGER, derived here for exactly the reasons the line above is:
+  // ONCE per week, before any bracket runs, so every event of the week gates against the same
+  // ledger and the kid's shadow run (step 2) and the canonical AI brackets (step 4) can never
+  // disagree about how much of her allowance a rival has spent. Pure derivation, ZERO main-stream
+  // draws. See `rivalProEntries` for why it is derived rather than persisted.
+  const rivalEntries = rivalProEntries(world.results, world.week)
 
   // ⚠ THE PROFESSIONAL SIDE OF THE WEEK (W3-FIELD3, 04.08) – the canonical W brackets' universe and
   // table, derived here beside the other two snapshots so every event of the week sees one world.
@@ -3121,7 +3168,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
         text: `Doctor's warning – she is cleared for the ${TIERS[enteredThisWeek.tier].label}, but only just. A warning is all it is; nobody can forbid it.`,
       })
     }
-    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue)
+    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue, rivalEntries)
   }
 
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
@@ -3250,7 +3297,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     deciding her whole relative-age story was invisible. Now the week it names stops and says so.
   //     ZERO DRAWS: a calendar comparison. Placed after `rollKnock` so a birthday week that also carries
   //     a knock reads in the order it happened - she came off court sore, and it was her birthday.
-  markBirthday(world)
+  //     ⭐ ...AND THE COLLEGE YEARS GET THEIR OWN LINE RATHER THAN THE DIALOG (owner, 19.08). The
+  //     prompt is still refused inside the freeze - see `pendingBirthday` - so what those four years
+  //     gain is an ENTRY, not a decision. `inCollege` is read here rather than inside `markBirthday`
+  //     because both are already in scope at this one call site, which keeps age.ts free of a college
+  //     import it has never needed.
+  markBirthday(world, inCollege(world))
 
   // 3e. ...AND ONE SEPTEMBER SHE DOES NOT GO BACK (W4-SCHOOL). The owner: «Школа должна когда-то
   //     закончиться, ей уже 21» and «Конец школы – в конце учебного года». Beside the birthday for
@@ -3295,12 +3347,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //    a cohort player could never be drawn into a W event, so could never earn a W point, so could
   //    never leave the position that kept her out (measured: 0.0 LIVE W rows a season). It runs
   //    AFTER 4b on purpose, from the players the resolved week has left free: see `fillWeekOnRamps`.
-  const weekDraws = scheduled.map((e) => drawAiEntrants(world, e, aiRanking, tourWeek, rivalFatigue))
+  const weekDraws = scheduled.map((e) => drawAiEntrants(world, e, aiRanking, tourWeek, rivalFatigue, rivalEntries))
   const weekFields = resolveDoubleBookings(weekDraws, world.cohort, aiRanking, rivalFatigue, {
     universe: tourWeek.universe,
     ranking: tourWeek.ranking,
   })
-  fillWeekOnRamps(world, weekDraws, weekFields, aiRanking, tourWeek, rivalFatigue)
+  fillWeekOnRamps(world, weekDraws, weekFields, aiRanking, tourWeek, rivalFatigue, rivalEntries)
   for (const d of weekDraws) {
     runAiTournament(world, d.event, weekFields.get(d.event.id) ?? d.entrants, d.rng, rivalFatigue)
   }

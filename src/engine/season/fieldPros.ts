@@ -464,6 +464,10 @@ export const FIELD = {
   },
   /** how much of her skill-implied points a debutante has banked (ramps to 1 by `career.peakFrom`) */
   ageRampFloor: 0.65,
+  /** ⭐ HOW FAR ONE SEASON'S RESULTS MAY MOVE A PRO'S ROW, as a fraction of her derived book.
+   *  The live table's amplitude, and the only tuned number in it - `mergedWtaRanking`'s share is
+   *  normalised off the population and needs no constant. See `livePoints` for what it is FOR. */
+  liveSwing: 0.2,
   /** multiplicative points wobble: ×(1 ± this) */
   jitter: 0.1,
   /** salted re-draw attempts on a name collision before the collision is accepted (the LIVE cohort
@@ -889,6 +893,26 @@ export function fieldProsFor(
   return pros
 }
 
+/** ⚠⚠ AND THE MOVE IS BOUNDED (`FIELD.liveSwing`). A season's results shift a pro's row; they may
+ *  not rewrite it. Without a bound the middle of the table churns hard, because in this model
+ *  PLAYING AND LOSING IS WORSE THAN NOT PLAYING AT ALL: an active pro who exits in the first round
+ *  pays her share of the book and earns nothing back, while the four fifths our calendar could not
+ *  seat pay nothing. That is not a bug in the arithmetic - it is the honest consequence of a 1,600
+ *  -chair table on a calendar with ~350 seats - but left unbounded it moves the kid too.
+ *
+ *  ⭐ MEASURED, and this is why the bound exists rather than being a taste: the same career on the
+ *  same seed, holding 250 professional points, stood 277th before the live table and 226th after -
+ *  fifty-one places for tennis SHE did not play. `tests/ladder-floor.test.ts` caught it from the
+ *  other end, as a W100 opening for a career that could not reach it ("a ceiling that stopped
+ *  refusing must not become a reason to ADMIT"). The bound keeps the table live and keeps her
+ *  ladder honest, which is the pair of things this whole mechanism has to hold at once. */
+function livePoints(p: FieldPro, earned: number, share: number): number {
+  if (earned <= 0 || share <= 0) return p.wtaPoints
+  const moved = p.wtaPoints * (1 - share) + earned
+  const swing = p.wtaPoints * FIELD.liveSwing
+  return Math.round(Math.max(p.wtaPoints - swing, Math.min(p.wtaPoints + swing, moved)))
+}
+
 // =================================================================================================
 // THE MERGED W TABLE – LIVE rows as earned, field rows as derived, ONE ranking.
 // =================================================================================================
@@ -913,16 +937,67 @@ export function mergedWtaRanking(
   pros: readonly FieldPro[],
   earned?: Readonly<Record<string, number>>,
 ): RankingRow[] {
-  // ⭐⭐ v53 – A PRO'S ROW IS HER BOOK PLUS WHAT SHE HAS WON THIS SEASON. `earned` is
-  // `WorldState.fieldSeasonPoints`, the tally `runAiTournament` keeps; absent (a bench, an old save,
-  // a caller with no world) it reads as zero and this function behaves exactly as it did before.
+  // ⭐⭐ v53 – A PRO'S ROW MOVES WITH WHAT SHE WINS. `earned` is `WorldState.fieldSeasonPoints`, the
+  // tally `runAiTournament` keeps; absent (a bench, an old save, a caller with no world) it reads as
+  // zero, `share` is zero, and this function is BYTE-IDENTICAL to its pre-v53 self.
   //
-  // ⚠ ADDED TO `wtaPoints`, NOT REPLACING IT. Her derived book is the standing she brought INTO the
-  // season – career arc, storey, form – and the tally is what she has done since. Replacing it would
-  // empty the table every January.
+  // ⚠⚠ IT REPLACES A SHARE OF `wtaPoints` AND IS NOT ADDED TO IT – and the first shipped version of
+  // v53 got this wrong, which cost the player her whole career. THE ARGUMENT IS THE SEASON WRAP'S
+  // OWN, one file over: `world/milestones.ts` refuses to carry the tally across January because "that
+  // would count the same tennis twice: once in the new derived book and once again in the old total".
+  // The identical objection applies INSIDE the season and was missed: `wtaPoints` is not a January
+  // opening balance, it is her WHOLE derived 52-week book for this season, so adding this season's
+  // winnings on top counts the same tennis twice right now.
+  //
+  // ⭐ WHAT IT COST, MEASURED (tools/live-table-inflation.ts, 8 seasons): only ~350 of 1600 pros earn
+  // anything, so the table did not inflate evenly – a fifth of it gained up to +46% by the wrap while
+  // four fifths stood still, and that fifth leapfrogged everybody. The acceptance cuts read the
+  // result, refused the kid, and she fell back down the ladder: ten seasons of one career went
+  // `wta 0` in EVERY season and finished on DOMESTIC events at 22. With the term corrected the same
+  // career turns professional in season 2 and stays there – 30/43/45/43/61/62/55/60 W matches.
+  //
+  // ⚠ THE NORMALISER IS THE POPULATION ITSELF, never a tuned constant, so nothing here drifts when
+  // the calendar or the points table is retuned. `share` is what the field has won this season as a
+  // fraction of what it is carrying; each pro gives up that fraction of her book and gets her own
+  // winnings back. Two properties follow, and both are the point:
+  //   - THE TABLE'S TOTAL IS EXACTLY PRESERVED: sum(book x (1-share)) + sum(earned) = sum(book), by
+  //     construction rather than by tuning. No inflation is possible at any point in the season.
+  //   - A PRO WHO WINS HER PROPORTIONAL SHARE HOLDS HER PLACE; one who wins more climbs, one who
+  //     wins less slides. That is exactly the live table the owner asked for, and the movement is now
+  //     RELATIVE - which is the only kind a ranking can honestly have.
+  //
+  // ⚠⚠ THE SHARE IS NORMALISED OVER THE PROS WHO PLAYED, NOT OVER THE WHOLE TABLE - and the first
+  // cut of this correction got THAT wrong in turn, which is worth writing down because the error is
+  // subtle and the guard that caught it is not the one you would expect. Our calendar can only seat
+  // ~350 of 1600 pros in a season. Charging the share to all 1600 preserved the table's total but
+  // TILTED it: the fifth who play were made whole by their own winnings while the four fifths who
+  // never got a draw quietly gave up a fifth of their book. The tail of the table collapsed through
+  // the season, and a kid on 250 points rose past it for free - `tests/ladder-floor.test.ts` caught
+  // it as a professional rung OPENING that the same career could not reach before ("a ceiling that
+  // stopped refusing must not become a reason to ADMIT").
+  //
+  // Charging it only to the players keeps the identity - sum(book x (1-share)) + sum(earned) over
+  // that subset is still exactly sum(book) over it - and leaves everybody else's standing alone. A
+  // pro who never got a draw is not penalised for a chair our calendar never offered her.
+  let totalDerived = 0
+  let totalEarned = 0
+  if (earned) {
+    for (const p of pros) {
+      const e = earned[p.id] ?? 0
+      if (e <= 0) continue
+      totalDerived += p.wtaPoints
+      totalEarned += e
+    }
+  }
+  const share = totalDerived > 0 ? Math.min(1, totalEarned / totalDerived) : 0
   const rows = [
     ...live.map((r, i) => ({ playerId: r.playerId, points: r.points, live: 1, ord: i })),
-    ...pros.map((p, i) => ({ playerId: p.id, points: p.wtaPoints + (earned?.[p.id] ?? 0), live: 0, ord: i })),
+    ...pros.map((p, i) => ({
+      playerId: p.id,
+      points: livePoints(p, earned?.[p.id] ?? 0, share),
+      live: 0,
+      ord: i,
+    })),
   ]
   return assignCompetitionRanks(rows, (a, b) => b.points - a.points || b.live - a.live || a.ord - b.ord)
 }

@@ -218,7 +218,18 @@ describe('the upper bound stays a wall', () => {
   it('...and outgrowing a rung never opens one above it', () => {
     // The failure this forbids is the mirror of the one the wave fixes: a ceiling that stopped
     // refusing must not become a reason to ADMIT. `hasOutgrown` is a label; it enters nothing.
-    const world = proWorld('floor-no-lift', 17, 250)
+    // ⚠ THE BOOK MOVED 250 -> 200 ON 19.08, AND THE CLAIM DID NOT. Both halves of this arm still
+    // have to hold together - she HAS outgrown w15, and the rung above is STILL shut - which is what
+    // makes it a guard rather than an assertion about one number.
+    //
+    // Why it had to move: the live professional table changed what 250 points is WORTH. Measured on
+    // this seed, the same career holding 250 stood 277th before the correction and 226th after, and
+    // the W100 acceptance cut falls between those two - so at 250 she now clears it ON MERIT. That is
+    // not the failure this arm forbids: she is admitted by her RANK, never by `hasOutgrown`, which
+    // enters nothing and is still only a label. A witness sitting on the cut tests the cut, not the
+    // rule; 200 restores the margin the arm was written with (swept: 180 and 200 both outgrow w15
+    // with W100 shut, 250 does not).
+    const world = proWorld('floor-no-lift', 17, 200)
     expect(hasOutgrown(world, 'w15')).toBe(true)
     expect(tierOpenFor(world, 'wta125')).toBe(false)
     expect(tierOpenFor(world, 'w100')).toBe(false)

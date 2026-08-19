@@ -89,6 +89,11 @@ export const SURNAMES = [
   'Hamdi', 'Mansouri',
   'Barlow', 'Delaney', 'Fairchild', 'Kingsley', 'Lockhart', 'Nolan', 'Rutledge', 'Sinclair',
   'Vaughn', 'Corrigan', 'Donnelly', 'Pemberton',
+  // APPENDED 19.08 (owner: «"Martin" - добавь пожалуйста. Alice Martin это вообще дефолтное
+  // имя»). At the END, which is the whole of the append-only rule above: the pool's LENGTH is
+  // part of `pickInt`'s index arithmetic, so a name inserted anywhere else re-maps every draw
+  // after it. Appending re-maps nothing that is already persisted.
+  'Martin',
 ]
 
 /** Deterministic surname for a seed – the v7 migration default for `profile.kidLastName`
