@@ -39,6 +39,29 @@ const sizeBudgets = new Map([
   ['docs/context/product-and-narrative.md', 6_500],
 ])
 
+// --- SIZE BUDGETS, AND THEY ARE WARNINGS ON PURPOSE (TOK-8) -------------------------------------
+//
+// The review's own framing, and it is the whole design: "Files may exceed the warning with a
+// written reason: migrations, curated commentary, and tuning catalogues are legitimate exceptions.
+// A hard line cap would incentivize micro-files and worse retrieval."
+//
+// ⚠ SO THIS NEVER FAILS A BUILD, and that is not timidity. Every hub in this repo is already over
+// the suggested trigger and two of them GREW while the review sat unread - a gate that went red on
+// the first commit would be switched off the same afternoon, and then nobody has the number at all.
+// The trigger is a REVIEW QUESTION ("more than one reason to change?"), not a defect, so it is
+// reported, counted, and left to a human. Nothing below is allowed to touch `errors`.
+//
+// A file may answer the question in writing: a `size-budget:` line anywhere in it records the
+// reason and moves the file from the warning list to the acknowledged count. That is the written
+// exception the review asks for, kept next to the code it excuses rather than in a side list.
+const SOURCE_BUDGETS = {
+  tsLines: 1_000,
+  tsCommentCharacters: 20_000,
+  vueScriptLines: 800,
+}
+const BUDGET_WAIVER = /size-budget:/
+const SOURCE_ROOTS = ['src']
+
 function relative(file) {
   return path.relative(root, file).split(path.sep).join('/')
 }
@@ -64,6 +87,152 @@ async function walkMarkdown(dir) {
       }),
   )
   return nested.flat()
+}
+
+async function walkSource(dir) {
+  let entries
+  try {
+    entries = await fs.readdir(dir, { withFileTypes: true })
+  } catch {
+    return []
+  }
+  const nested = await Promise.all(
+    entries
+      .filter((entry) => !entry.name.startsWith('.'))
+      .map(async (entry) => {
+        const file = path.join(dir, entry.name)
+        if (entry.isDirectory()) return walkSource(file)
+        return entry.isFile() && /\.(ts|vue)$/.test(entry.name) ? [file] : []
+      }),
+  )
+  return nested.flat()
+}
+
+/** Comment volume, classified BY LINE the way the review's own table was.
+ *
+ *  ⚠ Deliberately not a tokenizer. A character-level scanner has to tell `//` inside a regex
+ *  literal from a comment, gets it wrong on `/^\/\//`, and silently over-counts - and this number
+ *  only ever raises a question for a human, so robustness beats precision. A line whose content
+ *  begins with `//`, `/*` or a block-comment continuation is comment; everything else is code,
+ *  including a trailing comment on a line of code (which is under-counting, and the safe
+ *  direction). */
+function commentMetrics(text) {
+  const lines = text.split(/\r?\n/)
+  let inBlock = false
+  let commentLines = 0
+  let commentCharacters = 0
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+    let isComment = inBlock
+    if (!inBlock) {
+      if (trimmed.startsWith('//')) isComment = true
+      else if (trimmed.startsWith('/*')) {
+        isComment = true
+        if (!trimmed.includes('*/')) inBlock = true
+      }
+    } else if (trimmed.includes('*/')) {
+      inBlock = false
+    }
+    if (isComment) {
+      commentLines += 1
+      commentCharacters += line.length + 1
+    }
+  }
+
+  return { commentLines, commentCharacters }
+}
+
+/** The physical lines inside an SFC's `<script>` blocks – the measure the review budgets, because
+ *  a template is not the thing that makes a component expensive to reason about. */
+function scriptLines(text) {
+  let total = 0
+  for (const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)) {
+    total += match[1].split(/\r?\n/).length
+  }
+  return total
+}
+
+async function sourceBudgets() {
+  const files = (await Promise.all(SOURCE_ROOTS.map((dir) => walkSource(path.join(root, dir))))).flat()
+  const over = []
+  let acknowledged = 0
+
+  for (const file of files.sort()) {
+    const text = await fs.readFile(file, 'utf8')
+    const rel = relative(file)
+    const triggers = []
+
+    if (rel.endsWith('.vue')) {
+      const lines = scriptLines(text)
+      if (lines > SOURCE_BUDGETS.vueScriptLines) {
+        triggers.push({
+          measure: 'script lines',
+          value: lines,
+          trigger: SOURCE_BUDGETS.vueScriptLines,
+          question: 'multiple state owners or independently testable panels?',
+        })
+      }
+    } else {
+      const lines = text.split(/\r?\n/).length
+      if (lines > SOURCE_BUDGETS.tsLines) {
+        triggers.push({
+          measure: 'lines',
+          value: lines,
+          trigger: SOURCE_BUDGETS.tsLines,
+          question: 'more than one reason to change?',
+        })
+      }
+      const { commentCharacters } = commentMetrics(text)
+      if (commentCharacters > SOURCE_BUDGETS.tsCommentCharacters) {
+        triggers.push({
+          measure: 'comment characters',
+          value: commentCharacters,
+          trigger: SOURCE_BUDGETS.tsCommentCharacters,
+          question: 'is the history compressible to an invariant plus a decision link?',
+        })
+      }
+    }
+
+    if (!triggers.length) continue
+    if (BUDGET_WAIVER.test(text)) {
+      acknowledged += 1
+      continue
+    }
+    over.push({ file: rel, triggers, worst: Math.max(...triggers.map((t) => t.value / t.trigger)) })
+  }
+
+  over.sort((a, b) => b.worst - a.worst)
+  return { files: files.length, over, acknowledged }
+}
+
+// --- THE CORRECTION PAIR: ONE MECHANIC, TWO DOCUMENTS, BOTH STILL CURRENT ------------------------
+//
+// ⚠ THE HOLE THIS CLOSES. Everything else here asks whether a document is well-formed; nothing
+// asked whether TWO of them describe the same mechanic with different answers. The corpus writes a
+// correction as a sibling file - `x-corrected-2026-08.md` beside `x-2026-08.md` - and the audit
+// waved both through as `current`, so a reader who found the older one had no signal at all that a
+// document three lines away in the same directory says something else. Two such pairs existed.
+//
+// ⚠ NARROW BY THE SAME RULE AS THE AGE GRID. It reads the FILENAME CONVENTION and nothing else: no
+// prose similarity, no title matching, no guessing at what "the same mechanic" means. A correction
+// that does not use the convention is not caught, and that is the trade - this fires only where the
+// author already declared the relationship in the name, which is why it cannot produce a false
+// positive that costs somebody an afternoon.
+const CORRECTION_SEGMENTS = new Set(['corrected', 'correction'])
+
+/** The document a `-corrected-` file is the correction OF, if the corpus holds one. */
+function correctionBases(rel) {
+  const directory = rel.slice(0, rel.lastIndexOf('/'))
+  const name = rel.slice(rel.lastIndexOf('/') + 1).replace(/\.md$/, '')
+  const parts = name.split('-')
+  const bases = []
+  for (let index = 0; index < parts.length; index++) {
+    if (!CORRECTION_SEGMENTS.has(parts[index])) continue
+    const without = [...parts.slice(0, index), ...parts.slice(index + 1)]
+    if (without.length) bases.push(`${directory}/${without.join('-')}.md`)
+  }
+  return bases
 }
 
 function parseScalar(value) {
@@ -312,6 +481,30 @@ async function main() {
     if (files.length > 1) errors.push(`canonical area '${area}' has multiple documents: ${files.join(', ')}`)
   }
 
+  const byFile = new Map(records.map((record) => [record.file, record]))
+  const correctionPairs = []
+  for (const record of docsRecords) {
+    for (const base of correctionBases(record.file)) {
+      const superseded = byFile.get(base)
+      if (!superseded) continue
+      correctionPairs.push({ correction: record.file, base })
+      const status = superseded.metadata?.status ?? 'unclassified'
+      if (status !== 'superseded') {
+        errors.push(
+          `correction pair: ${record.file} corrects ${base}, but ${base} is still '${status}' - ` +
+            `set status: superseded and superseded-by: ${record.file}`,
+        )
+        continue
+      }
+      const pointer = superseded.metadata['superseded-by']
+      if (pointer !== record.file) {
+        warnings.push(
+          `correction pair: ${base} is superseded by '${pointer}' rather than by its own correction ${record.file}`,
+        )
+      }
+    }
+  }
+
   for (const link of brokenLinks) errors.push(`broken local link: ${link}`)
 
   const budgets = []
@@ -350,6 +543,8 @@ async function main() {
     .slice(0, 5)
     .map(({ file, estimatedTokens, lines }) => ({ file, estimatedTokens, lines }))
 
+  const source = await sourceBudgets()
+
   const result = {
     ok: errors.length === 0,
     check,
@@ -361,6 +556,16 @@ async function main() {
       unclassified: unclassified.length,
     },
     budgets,
+    correctionPairs,
+    // ⚠ A SEPARATE FIELD FROM `errors` AND FROM `warnings`, DELIBERATELY. Not `errors` because a
+    // size trigger is a question, not a defect (see SOURCE_BUDGETS); not `warnings` because a dozen
+    // hub files would crowd out the governance warnings that DO need answering.
+    sourceBudgets: {
+      files: source.files,
+      trigger: SOURCE_BUDGETS,
+      acknowledged: source.acknowledged,
+      over: source.over.map(({ file, triggers }) => ({ file, triggers })),
+    },
     largest,
     errors,
     warnings,
@@ -388,6 +593,26 @@ async function main() {
       console.log(
         `    ${record.file}: ~${record.estimatedTokens.toLocaleString('en-US')} tokens / ${record.lines.toLocaleString('en-US')} lines`,
       )
+    }
+    // ⚠ WARNINGS. This block never fails the run – see SOURCE_BUDGETS.
+    console.log(
+      `  size budgets (warnings, never a failure): ${source.over.length} of ${source.files} source files over a review trigger` +
+        (source.acknowledged ? `, ${source.acknowledged} with a written reason` : ''),
+    )
+    const shown = verbose ? source.over : source.over.slice(0, 8)
+    for (const entry of shown) {
+      for (const trigger of entry.triggers) {
+        console.log(
+          `    ${entry.file}: ${trigger.value.toLocaleString('en-US')} ${trigger.measure} over ${trigger.trigger.toLocaleString('en-US')} - ${trigger.question}`,
+        )
+      }
+    }
+    if (source.over.length > shown.length) {
+      console.log(`    ... and ${source.over.length - shown.length} more (--verbose to list)`)
+    }
+    if (correctionPairs.length) {
+      console.log(`  correction pairs: ${correctionPairs.length}`)
+      for (const pair of correctionPairs) console.log(`    ${pair.correction} corrects ${pair.base}`)
     }
     if (warnings.length) {
       console.log(`  warnings: ${warnings.length}`)
