@@ -7,6 +7,10 @@
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
+// The app's one red-to-green ramp, shared with the Season and Calendar odds rings. `{ pct }` names
+// the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
+// will not let the two be confused.
+import { readingColor } from '../composables/readingColor'
 import { finaleUrl } from '../art/preload'
 // THE REAL SILVERWARE, and the flight that carries it to the cabinet – see the ⚠ over
 // `herTrophy` and over `continueFinale`.
@@ -324,7 +328,7 @@ const coachSignature = computed(() => {
  * thing across the app.
  */
 const condition = computed(() => game.snapshot?.condition ?? 0)
-const conditionColor = computed(() => `hsl(${Math.round(Math.max(0, Math.min(1, condition.value / 100)) * 120)}, 72%, 48%)`)
+const conditionColor = computed(() => readingColor({ pct: condition.value }))
 
 // --- L. Champion / M. Runner-up: the poster ------------------------------------
 // Both screens are one card with one `outcome` (the handoff's own ResultPoster, §22). The parts

@@ -67,8 +67,13 @@ import { entryBandTrack, feedContext, feedShows, pointsLockNote, preferredWeekEv
 // promise a window the feed does not cover.
 import { UPCOMING_WEEKS } from '../../engine/world/constants'
 // THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
-// court's verdict for her build, the scholarship's share, and how an odds ring is coloured and named.
-import { chanceColor, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+// court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
+// is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
+import { firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+// The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
+// scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
+// not let the two be confused.
+import { readingColor } from '../../composables/readingColor'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with the
 // Calendar so the two surfaces cannot call the same tournament two different things.
 import { enterActionName } from '../../composables/eventName'
@@ -1422,7 +1427,7 @@ function closeExhibition(): void {
               <ProgressRing
                 class="chance-ring"
                 :value="row.event.preview.firstMatchChance"
-                :color="chanceColor(row.event.preview.firstMatchChance)"
+                :color="readingColor({ fraction: row.event.preview.firstMatchChance })"
                 :label="firstMatchLabel(row.event.preview)"
                 :title="firstMatchTitle(row.event.preview)"
               >

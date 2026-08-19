@@ -10,9 +10,14 @@
 // than by two selector lists sitting next to each other.
 //
 // OUR CONTINUOUS HUE STAYS OURS. `color` is a plain string, so a caller passes whatever it means -
-// Home passes `hsl(pct*120, 72%, 48%)`, the red-to-green ramp read continuously so 61% and 62% are
-// genuinely different colours; Season passes its own. The colour is DATA, which is why it is a prop
-// and not a variant.
+// the red-to-green ramp read continuously, so 61% and 62% are genuinely different colours. The
+// colour is DATA, which is why it is a prop and not a variant.
+//
+// ⚠ AND THE RAMP HAS ONE OWNER NOW: `src/composables/readingColor.ts`. This comment used to say
+// "Home passes hsl(pct*120, 72%, 48%); Season passes its own", which was true and was the problem -
+// all five callers passed the SAME expression, written out four separate times, on two different
+// input scales. They all call `readingColor` today. Nothing here changed: this component still takes
+// a plain string and still has no opinion about the ramp.
 import { computed } from 'vue'
 
 const props = withDefaults(

@@ -4,9 +4,16 @@
 // ⚠ WHAT THIS IS NOT. It is not a mega-card component and it is not a view-model framework. The two
 // screens draw genuinely different cards: Season's is a row in a scrolling feed with the entry and
 // withdrawal controls on it, the Calendar's is a takeover opened from a marker, and their markup,
-// classes and copy stay their own. What was duplicated is not the CARD, it is the four small facts
-// the card is made of – the photograph, the court's verdict, the scholarship's share, and the way an
-// odds ring is coloured and named – and those are what live here.
+// classes and copy stay their own. What was duplicated is not the CARD, it is the small facts the
+// card is made of – the photograph, the court's verdict, the scholarship's share, and the way an
+// odds ring is named – and those are what live here.
+//
+// ⚠ THE RING'S COLOUR LEFT FOR `composables/readingColor.ts` AND WAS NOT REPLACED BY A WRAPPER.
+// `chanceColor` was here, and it was one of FOUR copies of the same red-to-green ramp – the other
+// three sat inline in HomeScreen, KidScreen and TournamentFlow, which draw a CONDITION ring and have
+// nothing to do with an event card. A ramp that five surfaces share cannot be owned by the module
+// that owns two of them, so it moved out whole; the two screens here now call `readingColor` for
+// themselves, exactly as the other three do.
 //
 // ⚠ THE RING'S ACCESSIBLE NAME IS THE ONE THAT ACTUALLY MATTERED. It was written out twice, as a
 // template literal inside each screen's `:label`, which means the two surfaces could have described
@@ -32,13 +39,6 @@ export interface PaintableEvent {
 export interface FirstMatchOdds {
   firstMatchChance: number
   opponentName: string
-}
-
-/** Her odds on the app's one red-to-green ramp – the same ramp the condition ring uses, so a
- *  percentage means the same thing everywhere in the app. Data, not geometry: the ring's arithmetic
- *  belongs to `ui/ProgressRing.vue` and only the COLOUR is decided here. */
-export function chanceColor(chance: number): string {
-  return `hsl(${Math.round(Math.max(0, Math.min(1, chance)) * 120)}, 72%, 48%)`
 }
 
 /** The odds ring's ACCESSIBLE NAME. A ring is a graphic and its visible `42%` is a bare number, so

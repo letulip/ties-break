@@ -412,6 +412,34 @@ export function endingForRetirement(
  *  ⚠ NONE OF THESE MAY CONSOLE, and that is a harder rule than it sounds. «Стоп» must be able to be
  *  the right answer (ruling 4, 30.07); a line that reassures the player about it is a line that has
  *  quietly decided it was the wrong one. */
+/** ⭐⭐ RESTORED 18.08 – DELETED FOR A DAY AND PUT BACK BY THE OWNER, and the reason is worth keeping.
+ *  A grep for consumers is exactly right for a CONSTANT and exactly wrong for authored copy: this is
+ *  six lines of epilogue prose, one per ending, and "nothing renders it" means the ending SCREEN has
+ *  not been built out yet, not that the writing is dead. The owner: «может быть мы просто не добрались
+ *  еще до концовок и рано что-то удалять».
+ *
+ *  ⚠ SO THE RULE THIS CORRECTS: an unconsumed EXPORT is a candidate for deletion; unconsumed WRITING
+ *  is a candidate for the owner. `ENDING_TITLE` below is live and this is its unwritten other half. */
+export const ENDING_BLURB: Record<CareerEndingType, string> = {
+  stopped:
+    'The junior ladder ran out and the next one wanted more than the family had. She put the racket down at nineteen, and that is an ending, not a loss.',
+  // ⚠ P5 – IT NO LONGER PROMISES FOUR YEARS OR A DEGREE, because she may leave after one and the
+  // sport's own case is that she does. It also no longer asserts "no ranking at all": measured over
+  // the freeze (spec §4) her professional rank is IDENTICAL at both ends in the median career,
+  // because she was already off the list the week she walked in. The line that replaced it says the
+  // thing that IS true of every college career and of nothing else in this game.
+  college:
+    'A scholarship, a closed league that pays no ranking points, and a stretch of years in which the money finally goes the other way. The tour does not wait, and it does not remember.',
+  bankruptcy:
+    'Week after week below zero, and then a week with no entry fee in it. Nobody chose this one – the arithmetic did.',
+  injury:
+    'The body had been telling the same story for years. This time it was not a layoff, it was the end of the sentence.',
+  natural:
+    'She was asked every off-season and for years she said one more. This year she did not.',
+  plateau:
+    'The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.',
+}
+
 export const ENDING_TITLE: Record<CareerEndingType, string> = {
   stopped: 'She stopped at nineteen',
   college: 'She went to college',

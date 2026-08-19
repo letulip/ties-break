@@ -46,6 +46,10 @@ import CountingResultsTable from '../CountingResultsTable.vue'
 import SkillsRadar from '../SkillsRadar.vue'
 import type { RadarAxis } from '../../shared/protocol'
 import { useKidEmotion } from '../../composables/kidEmotion'
+// The app's one red-to-green ramp, shared with the Season and Calendar odds rings. `{ pct }` names
+// the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
+// will not let the two be confused.
+import { readingColor } from '../../composables/readingColor'
 import { birthDateLabel, weekLabel } from '../../shared/dates'
 import { rankLabel } from '../../shared/format'
 // ⚠ MERGE: `FamilyBackground` left with the Family tile (screen C now draws the export's six, and
@@ -186,14 +190,12 @@ const pointsText = computed(() =>
 )
 
 // --- THE CONDITION TILE --------------------------------------------------------------------
-// The export's Confidence ring, wearing the app's own continuous hue: `hsl(pct*120, 72%, 48%)`, so
-// a percentage means the same colour here as it does on Home. The ramp is DATA and therefore a
-// prop - see src/components/ui/ProgressRing.vue.
+// The export's Confidence ring, wearing the app's own continuous hue, so a percentage means the same
+// colour here as it does on Home. The ramp is DATA and therefore a prop - see
+// src/components/ui/ProgressRing.vue - and the hue is `composables/readingColor.ts`, which is where
+// the expression this file used to spell out for itself now lives, once, for all five rings.
 const condition = computed(() => Math.round(game.snapshot?.condition ?? 0))
-const conditionColor = computed(() => {
-  const pct = Math.max(0, Math.min(100, condition.value))
-  return `hsl(${Math.round((pct / 100) * 120)}, 72%, 48%)`
-})
+const conditionColor = computed(() => readingColor({ pct: condition.value }))
 
 // --- THE COACH TILE ------------------------------------------------------------------------
 // Who she trains with TODAY, which is `world.coachId` and not the rung chosen at onboarding - the
