@@ -64,15 +64,28 @@ const props = withDefaults(
      *  match belongs to - the same number the Season card printed for that tournament, passed in
      *  rather than re-derived, because two call sites computing one fact is how they drift.
      *
-     *  ⚠ NOT WIRED YET, AND THE REASON IS ONE MISSING FIELD. `PendingView` (shared/protocol.ts) -
-     *  what TournamentFlow gets while a tournament is being watched - carries `eventId`, `tier`
-     *  and `surface` but no preview, and `snapshot.upcoming` (which does carry previews) is
-     *  filtered to `week > world.week`, so an event being PLAYED has already dropped out of it.
-     *  The hook is `PendingView.temperatureC: number`, filled where the pending view is built,
-     *  and then `:temperature-c="pending.temperatureC"` at TournamentFlow's two viewer call
-     *  sites. Both files are outside this slice - and `tests/preview.test.ts` deliberately greps
-     *  world.ts for `eventTemperature`, so that guard is the owner's to re-aim, not mine.
-     *  null (default) draws no plate at all, so nothing shows a made-up number in the meantime. */
+     *  ⚠ IT IS WIRED, AND THIS PARAGRAPH USED TO SAY IT WAS NOT. It described a missing field, a
+     *  second viewer call site and a guard somebody else would have to re-aim; none of the three
+     *  was true when the principles review read it, and the review repeated the claim. What exists:
+     *    * `PendingView.temperatureC: number` (shared/protocol.ts), filled in `world/snapshot.ts`
+     *      from the engine's own `eventTemperature` generator - the one the Season card quotes too.
+     *      ⚠ NAMED WITHOUT ITS PARENTHESES ON PURPOSE: tests/screen-i-live-match.test.ts forbids
+     *      that name followed by an open bracket anywhere in this FILE, prose included. The guard is
+     *      right and stays as strict as it was - the viewer must never derive the day itself, and a
+     *      pin that has to tell code from English is not a pin;
+     *    * `:temperature-c="pending?.temperatureC ?? null"` at TournamentFlow's ONE viewer call
+     *      site. There is exactly one `<MatchViewer` in that file and there has only ever been one;
+     *    * `tests/preview.test.ts` re-aimed, not weakened: the match engine and the tournament
+     *      still may not name `eventTemperature` at all, world.ts is exempted for one use, and that
+     *      use's exact text is asserted so a second cannot hide behind the first.
+     *
+     *  ⚠ WHY IT RIDES ON THE PENDING VIEW rather than on a preview, which was the true half all
+     *  along: `snapshot.upcoming` is filtered to `week > world.week`, so an event being PLAYED has
+     *  already dropped out of it and its preview is unreachable from here.
+     *
+     *  null (default) draws no plate at all, and three of the four callers take it - MatchReplay,
+     *  PracticeFlow and the Season sandbox have no tournament day behind the match, so no plate is
+     *  the truth there rather than a gap. */
     temperatureC?: number | null
     /** THE PRE-MATCH PREVIEW'S TOURNAMENT CONTEXT (round 16, owner's own ask) - the tier and the
      *  round, which together decide BOTH how much the intro says (the ladder of voices, four

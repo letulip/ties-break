@@ -68,6 +68,9 @@ import { seasonYear, weekLabel } from '../../shared/dates'
 import { formatCents, formatCentsSigned } from '../../shared/money'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
+// The scholarship's share, from the module the two event cards read it out of. Same rate, same
+// rounding – this page reports it as a season total and they print it per trip.
+import { useAcademyCoverPct } from '../../composables/eventCard'
 // U0 - the shared components (docs/specs/ui-components.md), plus the NINTH, which this screen is
 // the reason for: StatRow. docs/specs/ui-components.md deliberately left it out of that slice
 // ("it comes with the Money screen in U1, where it has a real caller"), and the three rows below -
@@ -597,7 +600,7 @@ const dealTerm = computed(() => {
 // family's side - somebody else is paying part of the bill, and the parent cannot plan against a
 // subsidy he cannot see. Read-only, engine-derived, and it changes nothing about what is charged.
 const academy = computed(() => game.snapshot?.academy ?? null)
-const academyCoverPct = computed(() => Math.round((academy.value?.coverShare ?? 0) * 100))
+const academyCoverPct = useAcademyCoverPct()
 
 /** Is any rung on this line PART-paid - the brand covering some of it and the family the rest? That
  *  only ever happens on the purchase that empties the pot, and it is exactly the case the owner

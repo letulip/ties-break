@@ -3,7 +3,12 @@ import { diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { surfaceStyleAffinity, surfaceStyleHint, SURFACE_STYLE_DELTAS } from '../src/engine/match/style'
-import { HORIZON_WEEKS, entryBandTrack, gapInResultsNote, isTierOpen, pointsLockNote, tierState, type TierStateInput } from '../src/composables/tierState'
+import { entryBandTrack, gapInResultsNote, isTierOpen, pointsLockNote, tierState, type TierStateInput } from '../src/composables/tierState'
+// ⚠ RE-AIMED, NOT WEAKENED: this used to import `HORIZON_WEEKS` from `tierState`, which was a
+// hand-copied 8 with a comment saying it mirrored the engine. The mirror is gone and `tierState`
+// imports the owner, so the test asks the owner too. The protected fact is unchanged - the note
+// names the SAME horizon the tier states are computed over, and it now cannot name a different one.
+import { UPCOMING_WEEKS } from '../src/engine/world/constants'
 import { LADDER_POINTS_LABEL } from '../src/shared/protocol'
 import { resultShowsOnHerFace } from '../src/composables/kidEmotion'
 import type { PlayStyle, WorldEvent, WorldMatch } from '../src/shared/protocol'
@@ -263,7 +268,7 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     ageYears: 16,
     points: 0,
     upcoming: [],
-    horizonWeeks: HORIZON_WEEKS,
+    horizonWeeks: UPCOMING_WEEKS,
     proEntryCap: { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER }, // the pro AER has its own arm; untouched here
     entryCap: { used: 0, limit: 25, remaining: 25 },
   }
@@ -339,7 +344,7 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     expect(j30.kind).toBe('scheduled')
     expect(nat.kind).toBe('unscheduled')
     expect(isTierOpen(nat)).toBe(true) // she is NOT locked out – that was the whole confusion
-    expect(nat.note).toContain(`${HORIZON_WEEKS} weeks`)
+    expect(nat.note).toContain(`${UPCOMING_WEEKS} weeks`)
     expect(nat.note).not.toContain('Reach')
     expect(nat.title).toContain('not locked')
   })

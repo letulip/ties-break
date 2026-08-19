@@ -128,12 +128,6 @@ export const ENDINGS = {
   injuryPriorWeeksOut: 20,
 } as const
 
-/** The severities that count toward the accumulation MEASURE (`majorPlusCount` in the bench). The
- *  predicate itself reads weeks lost – see `injuryPriorWeeksOut` for the measurement that decided
- *  it – but the bench still reports this, because it is the shape P1 proposed and the record of why
- *  it was not shipped belongs beside the number that ruled it out. */
-export const CAREER_ENDING_PRIOR_SEVERITIES: readonly string[] = ['major', 'severe']
-
 // --- #3 and #4: the two that HAPPEN TO her ------------------------------------------------------
 
 /** The narrow slice the automatic detectors read. Nothing about her skills, her rank or her tennis
@@ -426,26 +420,3 @@ export const ENDING_TITLE: Record<CareerEndingType, string> = {
   natural: 'She played until she was done',
   plateau: 'She had gone as far as she was going',
 }
-
-/** One sentence under the headline. Present tense for the two that are her decision, past for the
- *  two that happened to her – the grammar is doing the same job the copy is. */
-export const ENDING_BLURB: Record<CareerEndingType, string> = {
-  stopped:
-    'The junior ladder ran out and the next one wanted more than the family had. She put the racket down at nineteen, and that is an ending, not a loss.',
-  // ⚠ P5 – IT NO LONGER PROMISES FOUR YEARS OR A DEGREE, because she may leave after one and the
-  // sport's own case is that she does. It also no longer asserts "no ranking at all": measured over
-  // the freeze (spec §4) her professional rank is IDENTICAL at both ends in the median career,
-  // because she was already off the list the week she walked in. The line that replaced it says the
-  // thing that IS true of every college career and of nothing else in this game.
-  college:
-    'A scholarship, a closed league that pays no ranking points, and a stretch of years in which the money finally goes the other way. The tour does not wait, and it does not remember.',
-  bankruptcy:
-    'Week after week below zero, and then a week with no entry fee in it. Nobody chose this one – the arithmetic did.',
-  injury:
-    'The body had been telling the same story for years. This time it was not a layoff, it was the end of the sentence.',
-  natural:
-    'She was asked every off-season and for years she said one more. This year she did not.',
-  plateau:
-    'The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.',
-}
-

@@ -103,24 +103,14 @@
 
 import { spawnSync } from 'node:child_process'
 import { classify, recoveredNote } from './lib/stall.mjs'
-
-/** Measured, not guessed: the slowest files under contention, and the only ones holding a core for
- *  double digits of seconds. Re-derive with `--reporter=json` and sum per file. The three radar
- *  entries were one file until 11.08 – see THE SECOND TIME, above. */
-const HEAVY_UNIT_FILES = [
-  'tests/economy.test.ts',
-  'tests/radar.test.ts',
-  'tests/radar-read.test.ts',
-  'tests/radar-training.test.ts',
-  'tests/kidLife.test.ts',
-  // ⚠ CAME BACK FROM THE SIM PROJECT (13.08) – see THE FILE THAT CAME BACK, above. 12.2 s solo.
-  'tests/endings-bench.test.ts',
-  // ⚠ 13.08: the two largest files still in the bulk when CI stalled with everything green – see the
-  // note on the twin list in vite.config.ts. The bench policy rebuilt the same day tripled the
-  // matches a driven career plays, and these two drive careers.
-  'tests/travel-home.test.ts',
-  'tests/ladder-floor.test.ts',
-]
+// ⚠ IMPORTED, NOT A SECOND COPY (round-22 review). This file used to carry its own hand-maintained
+// duplicate of the list vite.config.ts declared – measured, commented and correct, and with nothing
+// but discipline keeping the two in step. A file added to one and not the other either runs twice
+// or stays in the bulk pool it was moved out of, and the symptom of THAT is the birpc stall this
+// whole script exists to prevent, arriving months later on a CI runner with every test green.
+// One array now, read by this script and by the unit project's `exclude`. See scripts/heavy-tests.mjs
+// (which carries the measurements this docblock used to).
+import { HEAVY_UNIT_FILES } from './heavy-tests.mjs'
 
 const reporter = process.argv.includes('--verbose') ? 'default' : 'dot'
 const started = Date.now()

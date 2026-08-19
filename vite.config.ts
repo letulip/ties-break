@@ -2,6 +2,12 @@ import { defineConfig, configDefaults, type Plugin } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { optimizeArt } from './scripts/optimize-art.mjs'
+// ⚠ THE HEAVY-TEST LISTS ARE NOT DECLARED HERE ANY MORE, and that is the point (round-22 review).
+// They lived here as two literal arrays while `scripts/sim.mjs` regex-parsed one of them back out
+// of this file's SOURCE TEXT and `scripts/units.mjs` kept a hand-copied duplicate of the other –
+// three statements of one fact, two of which could go quietly stale on a rename. One module, three
+// importers; scripts/heavy-tests.mjs's header carries the full argument.
+import { HEAVY_SIM_FILES, HEAVY_UNIT_FILES, asProjectGlobs } from './scripts/heavy-tests.mjs'
 
 /**
  * build/webp-only — the art pipeline runs INSIDE the build, not beside it.
@@ -99,84 +105,6 @@ function noStowaways(): Plugin {
 }
 
 // BASE_PATH is set by CI to "/<repo-name>/" for GitHub Pages; locally the app serves from "/".
-/** The Monte-Carlo files: 104s of the suite's 183s, and the reason CI's reporter RPC times out.
- *  Declared once so the two projects below cannot disagree about which files are heavy.
- *  econ-reach is the reach-tracker describe SPLIT OUT of econ-bench (P6 (d)): that describe alone
- *  was ~40s, and no sim file may sit near birpc's hard 60s RPC ceiling on a 2-core runner. */
-const HEAVY_SIM_FILES = [
-  '**/tests/econ-bench.test.ts',
-  '**/tests/econ-bench-survival.test.ts',
-  '**/tests/econ-reach.test.ts',
-  '**/tests/econ-reach-agree.test.ts',
-  '**/tests/econ-reach-pro.test.ts',
-  // ⚠ `endings-bench` USED TO SIT HERE AND HAS MOVED TO HEAVY_UNIT_FILES (13.08). Its entry said it
-  // was here "for SERIALISATION, not for cost" – and being out of the PR gate was the price of that
-  // placement, which nobody had priced. It is a REGRESSION test (its own header: "the smallest
-  // slice that can still catch the three things a refactor could silently break", and "it asserts
-  // BEHAVIOUR, not the printed numbers"), and it is 12.2 s wall / 10.9 s of test time solo. A
-  // process of its own gives it exactly the serialisation it was placed here for, and the gate gets
-  // it back. See the list below and .github/workflows/simulation.yml for where the line is drawn.
-  '**/tests/fatigue-bench.test.ts',
-  '**/tests/fatigue-bench-planner.test.ts',
-  '**/tests/fatigue-bench-policy.test.ts',
-  '**/tests/fatigue-bench-policy-104w.test.ts',
-  '**/tests/match/calibration.test.ts',
-]
-
-/** THE HEAVY UNIT TAIL – regression tests, so they stay in the PR gate, but they hold a core long
- *  enough to matter. Measured 05.08 with `--reporter=json`, summed per file under contention:
- *  economy 44s, radar 24s solo (17s before `FIELD.size` went 520 -> 1,600), kidLife 22s. Nothing
- *  here is near birpc's 60s window ALONE; together with 109 other files on CI's slower cores, one
- *  of them is. `scripts/units.mjs` gives each a process; this list is what it skips in the bulk
- *  pass. Grow it rather than trimming assertions if the tail grows.
- *
- *  ⚠ 11.08: A PROCESS OF ITS OWN STOPPED BEING ENOUGH FOR RADAR. It grew to 34.2s solo and went
- *  over birpc's window on CI at 64.51s - every test green, exit 1 - and it was already alone in its
- *  process, so there was nothing left to shard. The FILE was the unit, so the file was split into
- *  the three listed below (same 61 tests, same seeds, same week counts; scripts/units.mjs's header
- *  carries the measurement). All three stay heavy: 9.3s / 15.0s / 10.3s solo, so the largest is
- *  about where the original stood when this list was first written.
- *
- *  ⚠ 13.08: THE LIST NOW ALSO TAKES REGRESSION TESTS BACK OUT OF THE SIM PROJECT, and that is the
- *  same rule read in the other direction rather than a new one. The sim project's exclusion from
- *  the gate is about MONTE-CARLO SWEEPS – deterministic calibration that catches a changed model,
- *  not a flake (simulation.yml's header argues it in full, and it is right). `endings-bench` is not
- *  one: it is a behaviour regression test that happens to drive careers, and it had been filed with
- *  the sweeps because it shares their SHAPE. Filed there, it left the gate, and it went red on
- *  clean `main` and stayed red unnoticed – which is the cost of the misfiling, measured.
- *
- *  All eleven sim files were timed solo before anything moved (one vitest process each, quiet
- *  machine, wall clock) – scripts/units.mjs carries the table and what it turned up:
- *
- *      econ-reach-pro 41.9 · econ-bench 39.0 · econ-reach 37.9 · econ-reach-agree 35.8
- *      fatigue-bench 29.4 · econ-bench-survival 29.1 · fatigue-bench-planner 22.3 (RED)
- *      fatigue-bench-policy-104w 19.7 · match/calibration 14.9 · endings-bench 12.2  <- moved
- *      fatigue-bench-policy 65.2 (RED: two tests green, exit 1 – birpc's wall, on a quiet Mac)
- *
- *  ⚠ THE BAR IS TWO TESTS AND BOTH MATTER: a regression test by its own header, AND real headroom
- *  under birpc's 60 s wall at CI's ~1.9x local (scripts/units.mjs's own calibration). On cost alone
- *  `match/calibration` at 14.9 s would come back too – and it is calibration, which is exactly the
- *  file family the exclusion was written about. endings-bench is the only file clearing both: 12.2 s
- *  local is ~23 s on CI, about a third of the window, and it can triple before it is near it. */
-const HEAVY_UNIT_FILES = [
-  '**/tests/economy.test.ts',
-  '**/tests/radar.test.ts',
-  '**/tests/radar-read.test.ts',
-  '**/tests/radar-training.test.ts',
-  '**/tests/kidLife.test.ts',
-  '**/tests/endings-bench.test.ts',
-  // ⚠ MOVED 13.08 AFTER CI STALLED WITH EVERY TEST GREEN – `Timeout calling "onTaskUpdate"`, 132
-  // files and 2762 tests passed, exit 1, «1 stalled twice (runner, not tests)». The unit bulk's
-  // summed test time was 733 s on a TWO-CORE runner, and these two were the largest files still in
-  // it: travel-home 39.8 s and ladder-floor 28.4 s locally (measured under load, so the ordering is
-  // the signal, not the absolute). Both drive real careers, and the bench policy was rebuilt the
-  // same day so that every career now plays a professional calendar instead of village events –
-  // three times the matches, which is where the time went. A file near 40 s locally is past birpc's
-  // unraisable 60 s window at CI's ~1.9x. Same remedy as every entry above: one process each.
-  '**/tests/travel-home.test.ts',
-  '**/tests/ladder-floor.test.ts',
-]
-
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [
@@ -208,27 +136,42 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
         // The big character paintings stay OUT of the precache, on purpose (R11-9; re-measured
         // on build/webp-only, after the duplicate `-fs8` set was deleted).
-        // MEASURED, not guessed: public/images/fem-euro-brunnet/ is 42 webp / 2348 KiB — so
-        // precaching the art would still more than DOUBLE the install.
+        // MEASURED, not guessed, and RE-MEASURED 19.08: public/images/fem-euro-brunnet/ is
+        // 64 webp / 2915 KiB – so precaching the art would still more than DOUBLE the install.
         //
-        // The reachable share GREW on 27.07: `PortraitStage` gained `milf` and `AvatarEmotion`
-        // gained `angry`, so 35 of the 42 (5 bands x 7 emotions) are now requestable, against 24
-        // before. Only 7 files / 400 KiB are still unreachable, and they are STORY frames rather
-        // than a missing band — bride / funeral / graduated / pregnant-first / pregnant-last /
-        // farewell / retired. They have no AvatarEmotion to name them and no surface that shows
-        // them; they wait on a life-events feature, not on a type.
+        // ⚠ THE COUNTS IN THIS BLOCK WERE FOUR WEEKS STALE (they read "42 webp / 2348 KiB" and
+        // "35 of the 42"), which matters because the next-but-one paragraph SIZES A CACHE off
+        // them. What arrived since: `rehab` (5 paintings), the 12 `-travel-{mood}-{scene}` journey
+        // frames and the `welcome-1` onboarding hero. Counted by `ls`, not by memory:
+        //
+        //     reachable   53 / 2419 KiB   5 bands x 8 painted faces (40) + 12 travel + welcome-1
+        //     unreachable 11 /  496 KiB   7 story frames (394 KiB) + 4 `-sleepy-` rename leftovers
+        //
+        // The 7 STORY frames are bride / funeral / graduated / pregnant-early / pregnant-last /
+        // farewell / retired. They have no `PortraitEmotion` to name them and no surface that
+        // shows them; they wait on a life-events feature, not on a type – docs/lore/setting.md
+        // §"the art" describes each one and docs/research/life-events-motherhood.md counts them as
+        // an in-repo prerequisite for the Phase-6 adult arc. Round 22 proposed deleting them as
+        // dead weight and the deletion was NOT taken: unreachable is proven, but "unused" is the
+        // owner's call and the record says they are parked, not orphaned. The 4 `-sleepy-` files
+        // are a different case with an existing home – docs/art-placeholders.md registers them as
+        // superseded by the `-travel-` group, and tests/art-placeholders.test.ts holds that row.
         //
         // Keeping the art out of the precache matters MORE now, not less: a career only ever
         // occupies one band at a time, and src/art/preload.ts fetches that band on demand.
         //
         // What IS offline-safe by precache: the small 256px crops in public/avatars (37 files /
-        // 528 KiB — was 20 / 324 KiB before the adult and milf crops were cut), which is why the
-        // header and the Home card never break offline at any age.
+        // 369 KiB, re-measured 19.08 – was 20 files before the adult and milf crops were cut),
+        // which is why the header and the Home card never break offline at any age.
         globIgnores: ['**/images/**'],
         // ...and the big paintings get a CacheFirst runtime route instead: one age band is only
         // ~361-424 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
         // renders ahead of its art), and once fetched a painting is offline-durable for 60 days.
-        // maxEntries 80 still comfortably holds the whole reachable set (35 files) plus headroom.
+        // maxEntries 80 still holds the whole reachable set plus headroom – but the margin has
+        // narrowed from 35/80 to 53/80 while nobody was watching (see the re-measure above), and
+        // an eviction here is silent: the oldest painting is dropped and re-fetched, so it costs a
+        // blank frame offline rather than an error. The next art wave that adds a face or a scene
+        // to all five bands should raise this number in the same commit.
         // ⚠ CACHEFIRST NEVER REVALIDATES, AND THE OWNER'S UPDATED TROPHIES PROVED IT (01.08). He
         // replaced two trophy paintings; the new webps reached main the same evening - and his
         // phone kept showing the old ones, because a CacheFirst entry at the SAME URL is served
@@ -322,7 +265,7 @@ export default defineConfig({
           // a missing `document`.
           exclude: [
             ...configDefaults.exclude,
-            ...HEAVY_SIM_FILES,
+            ...asProjectGlobs(HEAVY_SIM_FILES),
             'tests/component/**',
             // ⚠ THE HEAVY UNIT TAIL, SKIPPED ONLY WHEN `scripts/units.mjs` IS ABOUT TO RUN IT
             // ITSELF (05.08). Those three files still gate every pull request - they are regression
@@ -330,7 +273,7 @@ export default defineConfig({
             // a core past birpc's unraisable 60s window. The env var exists because vitest's CLI
             // `--exclude` does not merge into a project that declares its own `exclude`: passing it
             // three times still ran all 112 files, measured. Unset, nothing changes.
-            ...(process.env.TB_UNIT_SKIP_HEAVY ? HEAVY_UNIT_FILES : []),
+            ...(process.env.TB_UNIT_SKIP_HEAVY ? asProjectGlobs(HEAVY_UNIT_FILES) : []),
           ],
           // ⚠ 20s, AND IT IS A CONTENTION BUDGET RATHER THAN A SLOW-TEST ALLOWANCE (31.07).
           //
@@ -405,7 +348,7 @@ export default defineConfig({
         // declarations across the three fatigue files (was 36 in one) and 4 across the two econ-reach
         // files (was 4), 77 expanded tests before and after. Wall-clock is unchanged too, because
         // this project runs one file at a time regardless.
-        test: { name: 'sim', include: HEAVY_SIM_FILES },
+        test: { name: 'sim', include: asProjectGlobs(HEAVY_SIM_FILES) },
       },
       {
         // THE COMPONENT PROJECT (P9). The first tests in this repo that MOUNT anything.

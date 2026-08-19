@@ -40,6 +40,10 @@ import {
   type MatchSpeed,
 } from '../../composables/matchDefaults'
 import type { ViewMode } from '../../viz/types'
+// HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
+// byte-identical in five components and the name map was written out in two; a twenty-fifth
+// country would have had to be added in two files with nothing to say so.
+import { flagEmoji } from '../../composables/countries'
 
 const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -114,11 +118,6 @@ watch(
     if (op?.status === 'ok') okTimer = setTimeout(() => (okVisible.value = false), 2500)
   },
 )
-
-function flagEmoji(code: string): string {
-  if (!code) return ''
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
-}
 
 function fmtDate(ts: number) {
   return new Date(ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })

@@ -12,7 +12,6 @@
 // ⚠ RNG: NOTHING HERE DRAWS. Every ending is deterministic – a counter, a post-draw predicate over
 // an injury the `seed:injury:<week>` stream has already rolled, an age comparison, or an answer.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
-import { formatCents } from '../../shared/money'
 import type { AutoEndingView, PlateauView } from '../ending'
 import {
   ENDINGS,
@@ -447,12 +446,4 @@ export function buildDebtView(world: WorldState): DebtView | null {
     weeks: debtWeeks({ week: world.week, debtSinceWeek: world.debtSinceWeek }),
     graceWeeks: ENDINGS.bankruptcyGraceWeeks,
   }
-}
-
-/** One line for the news feed when the family goes under water, with the countdown in it. */
-export function debtWarningText(world: WorldState): string {
-  const view = buildDebtView(world)
-  if (!view) return ''
-  const left = Math.max(0, view.graceWeeks - view.weeks)
-  return `${formatCents(world.fundsCents)} – ${view.weeks} weeks below zero, ${left} before there is no way back.`
 }

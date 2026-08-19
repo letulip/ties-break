@@ -13,6 +13,13 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # ⚠ THE CONTEXT AUDIT, AND IT WAS MISSING FROM THIS GATE (round-22 review). `npm run check`
+      # – the pre-push gate – has run it first since it was written, so a required context file
+      # deleted, a doc given an unknown status, or a recurring budget blown fails locally and
+      # passed here. Same class of hole as the art and legal gates: nothing breaks a build, so it
+      # ships silently. It goes FIRST for the same reason `check` puts it first – it is a few
+      # seconds of pure file reading, and a gate should fail on its cheapest step.
+      - run: npm run context:audit
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force

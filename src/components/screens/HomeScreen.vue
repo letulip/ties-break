@@ -63,6 +63,10 @@ import Eyebrow from '../ui/Eyebrow.vue'
 import Polaroid from '../ui/Polaroid.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 import { playSfx } from '../../audio/sfx'
+// HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
+// byte-identical in five components and the name map was written out in two; a twenty-fifth
+// country would have had to be added in two files with nothing to say so.
+import { flagEmoji } from '../../composables/countries'
 
 // The shell owns `tab`; the notecards that are doors ASK it to move. One event, no router.
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
@@ -154,11 +158,6 @@ const memoryStyle = computed(() => {
   const p = facePoint(`${memory.value.stage}-${memory.value.emotion}`)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
-
-function flagEmoji(code: string): string {
-  if (!code) return ''
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
-}
 
 // The export puts her FIRST NAME alone at 42px – the biggest type in the app, and the point of the
 // whole screen. Her full name still reads on the Kid screen and in every standings row.

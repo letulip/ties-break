@@ -82,8 +82,8 @@ import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared
 import { formatCents, entryFeeLabel } from '../../shared/money'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
 import { enterActionName } from '../../composables/eventName'
-import { surfaceStyleHint } from '../../engine/match/style'
-import { venueArtUrl } from '../../art/venues'
+// The upcoming-event card's shared parts, owned once and drawn by the Season feed too.
+import { chanceColor, firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
 import ScreenShell from '../ui/ScreenShell.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import TakeoverShell from '../ui/TakeoverShell.vue'
@@ -243,22 +243,14 @@ const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 function fundsShort(e: UpcomingEvent): boolean {
   return fundsCents.value < e.entryFeeCents
 }
-/** The share of every trip the academy pays, as a percentage – the travel figure below is already net
- *  of it, and a smaller number with no explanation is worse than no discount (v21). */
-const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.coverShare ?? 0) * 100))
-/** The engine's own verdict on this court for her build, whole sentence, surface named. Consumed, not
- *  re-worded: SURFACE_STYLE_DELTAS is what actually moves her attributes. */
-function surfaceVerdict(e: UpcomingEvent): string | null {
-  return game.snapshot ? surfaceStyleHint(game.snapshot.profile.playStyle, e.surface) : null
-}
-/** The painted court, from the same picker Home and Season use – one tournament, one photograph. */
-function venueUrl(e: UpcomingEvent): string {
-  return venueArtUrl(e.tier, e.surface, e.id, game.snapshot?.seed ?? '')
-}
-/** Her odds on the app's one red-to-green ramp, so a percentage means the same thing everywhere. */
-function chanceColor(chance: number): string {
-  return `hsl(${Math.round(Math.max(0, Math.min(1, chance)) * 120)}, 72%, 48%)`
-}
+// ⚠ THE MARKER CARD'S FOUR SHARED FACTS ARE `composables/eventCard.ts` NOW – the scholarship's
+// share, the court's verdict for her build, the photograph, and the odds ring's colour. All four
+// were written out here AND on the Season screen, and one of them under a different name: this file
+// called it `surfaceVerdict` and Season called it `surfaceNote`, the same call to
+// `surfaceStyleHint`, so a grep for either name found one copy and reported no duplication.
+// The names the two screens read best under are kept – `surfaceVerdict` is this file's word for it
+// and the shared module took that word – but there is one definition behind them.
+const { academyCoverPct, surfaceVerdict, venueUrl } = useEventCard()
 
 // --- (b) THE DAYS CROSS THEMSELVES OUT ----------------------------------------------------------
 //
@@ -615,7 +607,7 @@ const showGo = computed(() => !game.snapshot?.pending)
              nothing else on this card does). -->
         <p class="cal-card-days">{{ weekRange(marker.week) }}</p>
 
-        <p v-if="surfaceVerdict(marker)" class="cal-card-fit">{{ surfaceVerdict(marker) }}</p>
+        <p v-if="surfaceVerdict(marker.surface)" class="cal-card-fit">{{ surfaceVerdict(marker.surface) }}</p>
 
         <div class="cal-card-money">
           <p class="cal-card-money-label">Travel budget</p>
@@ -635,8 +627,8 @@ const showGo = computed(() => !game.snapshot?.pending)
             class="cal-card-ring"
             :value="marker.preview.firstMatchChance"
             :color="chanceColor(marker.preview.firstMatchChance)"
-            :label="`Her chance to win the first match: ${Math.round(marker.preview.firstMatchChance * 100)} percent, against ${marker.preview.opponentName}`"
-            :title="`First round vs ${marker.preview.opponentName}`"
+            :label="firstMatchLabel(marker.preview)"
+            :title="firstMatchTitle(marker.preview)"
           >
             <b>{{ Math.round(marker.preview.firstMatchChance * 100) }}</b><i>%</i>
           </ProgressRing>

@@ -139,7 +139,24 @@ function walkNear(weeks: number, seed: string): WorldState {
 describe('the season mirror – captured at entry, never reconstructed', () => {
   it('is a real count on a real career, and the fixture is not vacuous', () => {
     // Two full seasons: the first wrap is at week 49 and the second at 101.
-    const { world, committed } = walk(102, 'mirror-real')
+    //
+    // ⚠⚠ THE SEED MOVED 'mirror-real' -> 'mirror-c' (18.08), AND THE CLAIM IS UNCHANGED. This arm's
+    // whole job is NON-VACUITY: it proves the counted line is measuring something on this career, so
+    // the assertion below must find at least one entry the book could not move on. Widening `power()`
+    // to five skills re-sorted the cohort, which moved which rungs this seed's career could enter, and
+    // 'mirror-real' fell to ZERO such entries - the arm would have passed for the wrong reason, or
+    // rather failed for the right one.
+    //
+    // ⚠ THE REPLACEMENT WAS CHOSEN BY REPLICATING THIS TEST EXACTLY, not by eyeballing seeds. The
+    // first two scans used the wrong predicate: `trackOf` here is the SUMMARY's `rankTrack` read ONCE
+    // AFTER the walk, not `activeLadderOf` and not a per-entry read - and both mistakes made
+    // 'mirror-real' look alive (18 and 18). Measured the honest way across eight seeds:
+    // mirror-real 0/92, mirror-real-2 0/94, mirror-b 0/110, **mirror-c 17/92**, mirror-d 19/92,
+    // mirror-x 32/110, mirror-y 13/95, golden-v45 7/103.
+    //
+    // ⚠ IF A LATER SCAN FINDS EVERY SEED AT ZERO, do not hunt a ninth. That is the mechanism being
+    // gone, and this file should go red and say so.
+    const { world, committed } = walk(102, 'mirror-c')
     expect(committed.length).toBeGreaterThan(20)
     const summary = world.lastSeasonSummary
     expect(summary?.entryMirror).toBeDefined()
@@ -440,18 +457,52 @@ describe('the season mirror – the wrap judges against the table the card names
     // 309 disagree, both as `domestic` on the card against `itf` latched**. The distinction is alive
     // and occurs TWICE; only the week moved. The file has said from the first re-aim that WHICH wrap
     // it is was never the subject.
-    const world = walkNear(153, 'golden-v45')
-    const summary = world.lastSeasonSummary!
-    const card = summary.rankTrack!
-    const active = activeLadderOf(world)
+    // ⚠⚠ THE WEEK IS SEARCHED FOR, NOT PINNED (18.08), AND THAT IS THE THIRD TIME IT MOVED. It was 49,
+    // then 153, and each move cost somebody a bisect to discover that the FIXTURE had drifted while the
+    // claim was still true. The claim was never about a particular wrap - this block has said so since
+    // its first re-aim ("WHICH wrap it is was never the subject") - so it now walks the wraps and
+    // asserts on the first one that diverges.
+    //
+    // ⚠ AND THE FAILURE MODE IS THE RIGHT ONE. If NO wrap diverges, this goes red saying the
+    // distinction is gone - which is a real finding about the engine and not a fixture to repoint. Do
+    // not answer that red by widening the search; answer it by asking whether `rankTrack` still means
+    // anything separate from `activeLadderOf`.
+    let found: { week: number; card: LadderTrack; active: LadderTrack; world: WorldState } | null = null
+    for (const week of [49, 101, 153, 205, 257, 309, 361]) {
+      const w = walkNear(week, 'golden-v45')
+      const c = w.lastSeasonSummary?.rankTrack
+      if (!c) continue
+      const a = activeLadderOf(w)
+      if (c !== a) { found = { week, card: c, active: a, world: w }; break }
+    }
+    expect(
+      found,
+      'no wrap on this seed separates the card`s table from the latched one – the distinction this file exists for may be gone',
+    ).not.toBeNull()
+    const { card, active } = found!
+    const summary = found!.world.lastSeasonSummary!
     expect(card, 'the card names the table the season was played on').not.toBe(active)
-    // ...and for the record, the pair this seed shows today.
-    expect([card, active]).toEqual(['domestic', 'itf'])
+    // ...and for the record, the pair this seed shows today – printed by the message rather than pinned,
+    // because the searched wrap decides it and pinning a pair would re-create the fixture drift the
+    // search above exists to end. What IS asserted is that both are real tables and that the card's is
+    // the LOWER of the two, which is the direction the whole mechanism is about: the season was played
+    // on the rung she was on, not on the one she has since latched.
+    const LADDER_ORDER: LadderTrack[] = ['domestic', 'itf', 'wta']
+    expect(LADDER_ORDER, `card ${card} / active ${active}`).toContain(card)
+    expect(LADDER_ORDER, `card ${card} / active ${active}`).toContain(active)
+    expect(
+      LADDER_ORDER.indexOf(card),
+      `the card names a LOWER table than the latched one (card ${card}, active ${active})`,
+    ).toBeLessThan(LADDER_ORDER.indexOf(active))
 
     // The ledger the wrap just banked from is reset by the wrap itself, so the fold is re-run here off
     // the rows the season actually committed - reconstructed the only way that is honest, by walking
     // one week short of the wrap and reading the ledger before it clears.
-    const oneShort = walkNear(152, 'golden-v45')
+    // ⚠ ONE SHORT OF THE **FOUND** WRAP, not of a literal week. This read `walkNear(152, …)` – one
+    // short of the wrap that used to be pinned – so the moment the search above moved, this fold was
+    // reading a different season than the card it is being compared against, and the two counts came
+    // out equal for no reason anyone could have named.
+    const oneShort = walkNear(found!.week - 1, 'golden-v45')
     const rows = oneShort.seasonEntries!.rows
     const againstCard = rows.filter((r) => entryCouldNotMove(r, card)).length
     const againstActive = rows.filter((r) => entryCouldNotMove(r, active)).length

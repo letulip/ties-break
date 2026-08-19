@@ -230,7 +230,7 @@ describe('R11-6 guard – no surface prints a raw absolute week', () => {
         const expr = m[1].trim()
         // Quoted copy ("Training week") is text, not a value – only the CODE is inspected.
         const code = expr.replace(/'[^']*'|"[^"]*"/g, "''")
-        if (!/\bweek\b/.test(code)) continue // weeksInjured / totalWeeks / HORIZON_WEEKS are not weeks
+        if (!/\bweek\b/.test(code)) continue // weeksInjured / totalWeeks / UPCOMING_WEEKS are not weeks
         // `weekOnly()` and `seasonWeekRange()` are BUILT on weekLabel / on the shared formatter and
         // live in the same place; they exist because a card that already prints the year must not
         // print it twice. They are the formatter, sliced - not a second spelling of it.

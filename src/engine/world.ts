@@ -83,6 +83,7 @@ import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { BEST_N_BY_TRACK, RANKABLE_MIN, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import {
+  byAllocationPriority,
   selectEntrants,
   resolveDoubleBookings,
   runTournament,
@@ -2158,8 +2159,10 @@ function drawAiEntrants(
  *  draw. Filling here, from the players the resolved week has left free, makes "one body, one week"
  *  true of the held slots by construction and leaves the junior tour untouched.
  *
- *  STRONGEST RUNG FIRST, exactly as `resolveDoubleBookings` orders itself, so a graduate good enough
- *  for a W100 is not spent on the W15 that happens to sort first in the calendar. The brackets still
+ *  STRONGEST RUNG FIRST, exactly as `resolveDoubleBookings` orders itself – literally so since
+ *  round 22: both call the one `byAllocationPriority` in season/tournament.ts, so "exactly as" is a
+ *  fact the compiler holds rather than one this comment promises. A graduate good enough for a W100
+ *  is therefore not spent on the W15 that happens to sort first in the calendar. The brackets still
  *  PLAY in calendar order (the ledger's row order is unchanged); only the filling is re-ordered, and
  *  each event's own `seed:aitour:<id>` stream sees its draws in the same place either way. */
 function fillWeekOnRamps(
@@ -2174,11 +2177,7 @@ function fillWeekOnRamps(
   for (const field of fields.values()) for (const p of field) booked.add(p.id)
   const wEvents = drawn
     .filter((d) => TIERS[d.event.tier].track === 'wta')
-    .sort(
-      (a, b) =>
-        TIER_LADDER.indexOf(b.event.tier) - TIER_LADDER.indexOf(a.event.tier) ||
-        (a.event.id < b.event.id ? -1 : a.event.id > b.event.id ? 1 : 0),
-    )
+    .sort((a, b) => byAllocationPriority(a.event, b.event))
   for (const d of wEvents) {
     const before = fields.get(d.event.id) ?? d.entrants
     const after = fillOnRamp(

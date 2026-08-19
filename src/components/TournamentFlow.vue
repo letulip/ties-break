@@ -41,6 +41,10 @@ import { weekLabel, weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
 import type { MatchOptions, Side } from '../engine/match/types'
 import type { WorldMatch } from '../shared/protocol'
+// HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
+// byte-identical in five components and the name map was written out in two; a twenty-fifth
+// country would have had to be added in two files with nothing to say so.
+import { flagEmoji } from '../composables/countries'
 
 // R9-9a: the splash's "← Back" returns to the shell WITHOUT resolving anything – App.vue
 // hides the overlay and offers a Resume affordance while the week stays paused.
@@ -58,11 +62,6 @@ const game = useGameStore()
 // 404'd. One builder, checked against the files on disk by tests/art/preload.test.ts.
 const { stage: kidStage } = useKidEmotion()
 const artUrl = (emotion: 'happy' | 'sad' | 'serious') => finaleUrl(kidStage.value, emotion)
-
-function flagEmoji(code: string): string {
-  if (!code) return ''
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
-}
 
 const pending = computed(() => game.snapshot?.pending ?? null)
 const profile = computed(() => game.snapshot?.profile ?? null)

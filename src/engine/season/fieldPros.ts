@@ -61,6 +61,10 @@ import { rngFromSeed, pickInt } from '../rng'
 import { FIRST_NAMES, NATION_POOL, SURNAMES } from './cohort'
 import { rivalGroundstrokes } from './rival'
 import { TIERS, WEEKS_PER_YEAR } from './calendar'
+// ⚠ NOT A CYCLE. `season/ranking.ts` imports only `./calendar` (a value) and `./types` (types), and
+// nothing on that side reaches back here – so this new edge runs one way, exactly like the one
+// ranking.ts' own header note defends. Checked against tests/import-cycles.test.ts.
+import { assignCompetitionRanks } from './ranking'
 import type { AiPlayer, RankingRow, TierId } from './types'
 
 /** Which storey of the professional pyramid a pro was generated into. Labels, not numbers, so a
@@ -900,24 +904,16 @@ export function fieldProsFor(
 //      and the field's generation order is stable per season.
 //
 // Rank numbers are competition-style ("1224"), the same convention computeRanking uses, so a
-// merged table reads like every other table in the game.
+// merged table reads like every other table in the game – and since round 22 that is the same CODE
+// and not merely the same convention: `assignCompetitionRanks` (season/ranking.ts) owns the
+// numbering, this function owns only the three-key sort above, which is the half that is genuinely
+// different here. The comment used to be the whole guarantee; now it is only the history of one.
 export function mergedWtaRanking(live: readonly RankingRow[], pros: readonly FieldPro[]): RankingRow[] {
   const rows = [
     ...live.map((r, i) => ({ playerId: r.playerId, points: r.points, live: 1, ord: i })),
     ...pros.map((p, i) => ({ playerId: p.id, points: p.wtaPoints, live: 0, ord: i })),
   ]
-  rows.sort((a, b) => b.points - a.points || b.live - a.live || a.ord - b.ord)
-  const out: RankingRow[] = []
-  let rank = 0
-  let prevPoints: number | null = null
-  rows.forEach((row, i) => {
-    if (prevPoints === null || row.points !== prevPoints) {
-      rank = i + 1
-      prevPoints = row.points
-    }
-    out.push({ playerId: row.playerId, points: row.points, rank })
-  })
-  return out
+  return assignCompetitionRanks(rows, (a, b) => b.points - a.points || b.live - a.live || a.ord - b.ord)
 }
 
 /** WHO MAY BE DRAWN INTO A TIER'S EVENTS – the one seam where the field joins the game.

@@ -2793,7 +2793,16 @@ export interface ScrollSeason {
 
 /** THE HAND-OFF (§5.6): an OFFER, not a credits roll. One tap to a new career, the next daughter
  *  generated automatically, and exactly ONE question asked – the starting-capital fork the player
- *  already answers at onboarding. Nothing mechanical carries over. */
+ *  already answers at onboarding. Nothing mechanical carries over.
+ *
+ *  ⚠ THREE OF THE FOUR FIELDS ARE PRODUCED AND READ BY NOTHING (measured 19.08.2026, round 22).
+ *  `world/endings.ts` fills `childBorn`, `freshCapitalFork` and `resumesAgeYears` on every ending
+ *  view, and the only component that touches this interface – `EndingScreen.vue` – reads
+ *  `resumesWeek` and nothing else. Their remaining readers are `tests/ending.test.ts` and three
+ *  component-test fixtures, i.e. the contract testing itself. LEFT STANDING DELIBERATELY, NOT
+ *  OVERLOOKED: each carries an argument for being asked before it can be answered (see the field
+ *  comments below), and whether that argument outlives YAGNI is the owner's call, not an agent's.
+ *  Recorded here so the next reader does not have to re-derive the grep. */
 export interface HandoffView {
   /** ⚠ THE SEAM THAT ALWAYS ANSWERS NO IN v1. «Если ребенка родила за игру – то вполне может
    *  попробовать продолжить»: if a child was born during the career, THAT child is the next

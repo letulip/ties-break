@@ -644,6 +644,31 @@ export function selectEntrants(
   return chosen.map((c) => c.p)
 }
 
+// --- ALLOCATION PRIORITY: THE ORDER THE WEEK'S EVENTS CLAIM PLAYERS IN ---------------------------
+//
+// ONE COMPARATOR, THREE CALLERS (round 22 consolidation). `weekFieldExclusion` below,
+// `resolveDoubleBookings` further down and `fillWeekOnRamps` in world.ts each spelled this ordering
+// out for themselves, in three byte-identical copies. They are not three rules that happen to
+// agree - they are ONE rule, «which event gets first refusal on a player when several of one week
+// want her», and three copies of a rule is three places for a correction to miss one. It lives here
+// because this file already owns two of the three call sites and world.ts imports from it, so the
+// dependency runs the way it already ran.
+//
+// THE ID TIE-BREAK IS UNREACHABLE AT THE SHIPPED CALENDAR and is here anyway (moved verbatim from
+// `resolveDoubleBookings`, which is where the argument was written): `buildSeason` tracks occupancy
+// PER TIER, so a tier runs at most one event in a week. It is here so the order is TOTAL - an
+// ordering that is only deterministic while an invariant in ANOTHER module holds is a latent
+// non-determinism, and this one would show up as a save that replays differently.
+
+/** Strongest rung first (`TIER_LADDER`, never a map's or the calendar's iteration order), event id
+ *  ascending as the tie-break. A TOTAL order over the events of one week. */
+export function byAllocationPriority(a: SeasonEvent, b: SeasonEvent): number {
+  return (
+    TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier) ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  )
+}
+
 // --- ONE BODY, ONE WEEK, ON THE PROFESSIONAL SIDE TOO -------------------------------------------
 //
 // WEEK EXCLUSIVITY FOR THE W TRACK (W2-FIELD2, act2-pro-tour.md §8.2: «when two W rungs share a
@@ -704,11 +729,7 @@ export function weekFieldExclusion(
         TIERS[e.tier].track === 'wta' &&
         TIER_LADDER.indexOf(e.tier) > rung,
     )
-    .sort(
-      (a, b) =>
-        TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier) ||
-        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
-    )
+    .sort(byAllocationPriority)
   for (const e of above) {
     const rng = rngFromSeed(`${seed}:kidtour:${e.id}`)
     for (const p of selectEntrants(e, universe, ranking as RankingRow[], rng, conditions, booked)) {
@@ -899,16 +920,9 @@ export function resolveDoubleBookings(
   const proPos = pro ? indexOf(pro.ranking) : null
   const proTotal = pro ? pro.ranking.length || pro.universe.length : 0
 
-  // Rule 1. Strongest rung first. The id tie-break is unreachable at the shipped calendar
-  // (`buildSeason` tracks occupancy PER TIER, so a tier runs at most one event in a week) and is
-  // here so the order is TOTAL – an ordering that is only deterministic while an invariant in
-  // another module holds is a latent non-determinism, and this one would show up as a save that
-  // replays differently.
-  const order = [...drawn].sort(
-    (a, b) =>
-      TIER_LADDER.indexOf(b.event.tier) - TIER_LADDER.indexOf(a.event.tier) ||
-      (a.event.id < b.event.id ? -1 : a.event.id > b.event.id ? 1 : 0),
-  )
+  // Rule 1. Strongest rung first – `byAllocationPriority` above, which now owns this ordering and
+  // the argument for why its id tie-break exists even though the shipped calendar cannot reach it.
+  const order = [...drawn].sort((a, b) => byAllocationPriority(a.event, b.event))
 
   const booked = new Set<string>()
   for (const { event, entrants } of order) {

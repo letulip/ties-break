@@ -24,6 +24,10 @@ import ScreenShell from './ui/ScreenShell.vue'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
+// HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
+// byte-identical in five components and the name map was written out in two; a twenty-fifth
+// country would have had to be added in two files with nothing to say so.
+import { COUNTRY_NAMES, flagEmoji } from '../composables/countries'
 
 const game = useGameStore()
 
@@ -50,13 +54,6 @@ const COUNTRIES = [
   'KZ', 'BY', 'AU', 'JP', 'CN', 'KR', 'IN', 'BR', 'AR', 'CA', 'NL', 'SE',
 ]
 
-const COUNTRY_NAMES: Record<string, string> = {
-  US: 'United States', GB: 'United Kingdom', FR: 'France', ES: 'Spain', IT: 'Italy', DE: 'Germany',
-  RU: 'Russia', RS: 'Serbia', CH: 'Switzerland', CZ: 'Czechia', PL: 'Poland', UA: 'Ukraine',
-  KZ: 'Kazakhstan', BY: 'Belarus', AU: 'Australia', JP: 'Japan', CN: 'China', KR: 'South Korea',
-  IN: 'India', BR: 'Brazil', AR: 'Argentina', CA: 'Canada', NL: 'Netherlands', SE: 'Sweden',
-}
-
 // P's nine POPULAR tiles, in the design's own order (docs/design/screenshots/P-onboarding-country).
 // A shortcut into the same 24, never a different list: whatever is chosen here is one of COUNTRIES.
 const POPULAR_COUNTRIES = ['US', 'GB', 'AU', 'CA', 'DE', 'FR', 'ES', 'IT', 'JP']
@@ -79,11 +76,18 @@ const MONTHS = [
 // coach" deliberately lands on `middle` and NOT on the dearest rung – handing a new middle-class
 // family an Elite coach is exactly the wall docs/specs/coach-tiers.md exists to close.
 //
-// WHAT A PROPER CHOOSER NEEDS (screen T, Coach Market – designed, and a later slice): all five
-// rungs as sections rather than two cards, each rung's weekly band quoted at HER age and HER plan
-// (coachWeeklyBandCents already returns it), the great / good / off fit pill read against the play
-// style chosen on the next step, and a budget bar. Two of those - the price and the fit - are the
-// whole point of the ladder, and neither fits on a card that has to stay a boolean.
+// THE PROPER CHOOSER SHIPS – screen T, the Coach Market (`screens/CoachMarketScreen.vue`, reached
+// from App's `market` tab). This comment used to call it "designed, and a later slice" and then list
+// what it would need; it has all of it. A tier is a SECTION rather than a filter, all five rungs
+// deep; each rung's weekly band is quoted at HER age and HER plan off `coachWeeklyBandCents`; the
+// great / good / off fit pill is read against her play style, through a lens that re-reads every
+// pill if the parent asks "what if she played differently"; and the budget meter is there.
+//
+// So this card stays two options ON PURPOSE and not for want of a better screen. It is the first
+// minute of a career, before there is a budget to meter or a style to fit against – the style is
+// chosen on the NEXT step – and the two things that make the ladder worth reading, the price and the
+// fit, are exactly the two a boolean cannot carry. The market is where that choice is really made,
+// and it is one tab away from the moment the career starts.
 //
 // ⚠ THE BLURBS ARE SHORTER THAN THEY WERE, because Q's coaching card is a 2-line centred cell and
 // the old sentences were three lines each. `middle` keeps "a real weekly bill" rather than the
@@ -188,11 +192,6 @@ function randomName(): string {
 
 function randomSurname(): string {
   return SURNAMES[Math.floor(Math.random() * SURNAMES.length)]
-}
-
-function flagEmoji(code: string): string {
-  if (!code) return ''
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
 }
 
 const STEP_COUNT = 6

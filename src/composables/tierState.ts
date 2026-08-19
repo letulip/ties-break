@@ -33,6 +33,7 @@ import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER, hasAcceptanceList } from '../engine/season/calendar'
 import { isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
+import { UPCOMING_WEEKS } from '../engine/world/constants'
 import { weekRange } from '../shared/dates'
 import { LADDER_POINTS_LABEL, LADDER_TRACKS, type EntryCapUsage } from '../shared/protocol'
 import type { LadderTrack, TierId } from '../engine/season/types'
@@ -807,9 +808,12 @@ export function isTierOpen(state: TierState): boolean {
   return state.kind === 'scheduled' || state.kind === 'unscheduled'
 }
 
-/** The snapshot's own horizon: `upcoming` carries `week > current && week <= current + 8`
- *  (world.ts UPCOMING_WEEKS). Named here so the copy above and the calendar agree on "soon". */
-export const HORIZON_WEEKS = 8
+// ⚠ THE HORIZON IS `UPCOMING_WEEKS`, IMPORTED – it used to be `HORIZON_WEEKS = 8` right here, with
+// a comment saying it mirrored the engine's constant. A comment is not a link: the engine could have
+// moved its horizon and this copy would have gone on saying eight, and the Season screen held a
+// THIRD hand-copied eight of its own. `snapshot.upcoming` carries `week > current && week <=
+// current + UPCOMING_WEEKS`, so that constant is not "a number the UI also happens to use" – it is
+// the definition of what this module can see, and there is nothing here to name it a second time.
 
 /** Every rung's state, ladder order, off the live snapshot. The store read lives here so the two
  *  screens consume one computed instead of each rebuilding the input. */
@@ -824,7 +828,7 @@ export function useTierStates(): ComputedRef<TierState[]> {
       // thresholds; see `TierStateInput.points` for what that showed the owner.
       points: snap?.ladders.domestic.points ?? 0,
       upcoming: snap?.upcoming ?? [],
-      horizonWeeks: HORIZON_WEEKS,
+      horizonWeeks: UPCOMING_WEEKS,
       // No snapshot yet = nothing spent and nothing to say; the age gate/point band answer first.
       entryCap: snap?.entryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
       proEntryCap: snap?.proEntryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
