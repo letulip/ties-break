@@ -17,11 +17,11 @@
 // world-seasons of the professional table cost no career simulation at all.
 //
 // ⚠ MEASUREMENT ONLY. Imports the engine read-only, changes no constant. The counterfactual arm in
-// §4 re-scores MEASURED ROWS under an alternative `ageRampFloor` – it never re-runs the engine under
+// §4 re-scores MEASURED ROWS under an alternative `career.tenure.debutFloor` – it never re-runs the engine under
 // a changed rule, so nothing here can be mistaken for a shipped behaviour and the rows stay valid if
 // the owner picks a different number. Same discipline as `tools/college-fork.ts`.
 import { createWorld } from '../src/engine/world'
-import { FIELD, careerArc, fieldProsFor, type FieldPro } from '../src/engine/season/fieldPros'
+import { FIELD, careerArc, tenureRamp, fieldProsFor, type FieldPro } from '../src/engine/season/fieldPros'
 
 const args = process.argv.slice(2)
 const argOf = (name: string, fallback: number): number => {
@@ -150,68 +150,90 @@ section(`3. WHY – the two numbers that decide it, printed rather than argued`)
 console.log(`\n  a) THE CHAIR'S STOREY IS FIXED FOR EVER AND ITS CORE IS DRAWN ONCE PER CAREER.`)
 console.log(`     FIELD.tiers[0] = tourElite: ${FIELD.tiers[0].count} chairs, core ${JSON.stringify(FIELD.tiers[0].core)}, points ${JSON.stringify(FIELD.tiers[0].pts)}, gamma ${FIELD.tiers[0].gamma}.`)
 console.log(`     So a chair that drew a near-max core is a top-3 chair WHOEVER IS SITTING IN IT.`)
-console.log(`\n  b) THE CAREER ARC IS THE ONLY THING AGE MOVES, AND ITS FLOOR IS ${FIELD.ageRampFloor}.`)
-console.log(`     careerArc(age), the multiplier on that chair's book:`)
+console.log(`\n  b) AGE OWNS THE DECLINE; WHAT SHE HAS BANKED IS OWNED BY TENURE (changed 19.08).`)
+console.log(`     careerArc(age) – flat to the peak, then the body:`)
 console.log(`       ${[16, 17, 18, 19, 20, 21, 22, 26, 28, 30, 34].map((a) => `${a}:${careerArc(a).toFixed(2)}`).join('  ')}`)
+console.log(`     tenureRamp(seasons on tour) – the climb, from FIELD.career.tenure:`)
+console.log(`       ${[0, 1, 2, 3, 4].map((n) => `${n}:${tenureRamp(n).toFixed(2)}`).join('  ')}`)
 console.log(
-  `\n  ⭐ THE CONSEQUENCE, IN ONE SENTENCE: a debutante does not CLIMB into a chair, she INHERITS it at` +
-    `\n  ${(100 * FIELD.ageRampFloor).toFixed(0)}% of its value. A sixteen-year-old in the world-#1 chair still holds ${(100 * careerArc(16)).toFixed(0)}% of #1's book on` +
-    `\n  the day she arrives, and an eighteen-year-old ${(100 * careerArc(18)).toFixed(0)}%. Nothing in the model requires her to have` +
-    `\n  played a match for it, because a pro's points are DERIVED and never earned (fieldPros.ts's own` +
-    `\n  "a pro's canonical results change nothing about her").`,
+  `\n  ⭐ THE CONSEQUENCE, AND IT IS THE OPPOSITE OF WHAT THIS FILE FOUND IN ROUND 21. A debutante now` +
+    `\n  CLIMBS into a chair instead of inheriting it: she holds ${(100 * tenureRamp(0)).toFixed(0)}% of it in her first season and all of` +
+    `\n  it by her ${FIELD.career.tenure.fullFrom}th. Because debutAge is ${JSON.stringify(FIELD.career.debutAge)}, A SIXTEEN-YEAR-OLD IS ALWAYS IN HER DEBUT` +
+    `\n  SEASON – so the rule lands on exactly the population the owner objected to, and it lands on the` +
+    `\n  CAUSE (she has not played the tennis yet) rather than on the correlate (she is young).` +
+    `\n\n  ⚠ THE RAMP IS NORMALISED BY THE POPULATION'S OWN MEAN in fieldProsFor, so it changes the table's` +
+    `\n  SHAPE and never its LEVEL. Unnormalised it deflated the field ~10% and handed the kid a` +
+    `\n  professional rung she had not earned (tests/unranked-sentinel.test.ts caught it).`,
 )
 
 // =================================================================================================
-section(`4. THE KNOB, SIZED – re-scoring the SAME rows under a lower ageRampFloor`)
+section(`4. THE KNOB, SIZED – re-scoring the SAME rows under a different tenure floor`)
 // ⚠ A PREDICATE OVER MEASURED ROWS. Every pro's base book is `wtaPoints / careerArc(age)`, exactly
 // invertible because the arc is the last multiplicative term applied to it (`makeFieldPro`) apart
 // from the jitter, which is age-independent and therefore rides along unchanged. So an alternative
 // floor is scored by dividing out the shipped arc and multiplying in the candidate one – no engine
 // re-run, no constant moved, and the same 1,600 people in the same chairs.
-function arcWith(floor: number, age: number): number {
-  const c = FIELD.career
-  const [lo, hi] = FIELD.ageBand
-  if (age < c.peakFrom) {
-    const t = (age - lo) / (c.peakFrom - lo)
-    return floor + (1 - floor) * Math.max(0, Math.min(1, t))
-  }
-  if (age <= c.peakTo) return 1
-  const t = (age - c.peakTo) / (hi - c.peakTo)
-  return 1 - (1 - c.declineFloor) * Math.max(0, Math.min(1, t))
+function rampWith(floor: number, shippedTenure: number): number {
+  // ⚠ RECOVER `k` – how far through the climb she is – FROM THE SHIPPED RAMP rather than carrying
+  // her debut season around: tenureRamp is linear in k, so k = (shipped - floor) / (1 - floor) at
+  // the shipped floor, and the candidate's value at the same k is floor' + (1 - floor') * k. That
+  // keeps this a RE-SCORE of measured rows, which is what the file's ⚠ header promises.
+  const shippedFloor = FIELD.career.tenure.debutFloor
+  const k = shippedFloor >= 1 ? 1 : Math.max(0, Math.min(1, (shippedTenure - shippedFloor) / (1 - shippedFloor)))
+  return floor + (1 - floor) * k
 }
 
-const CANDIDATES = [FIELD.ageRampFloor, 0.5, 0.35, 0.2, 0.0]
-console.log(`\n  ${padE('ageRampFloor', 16)}${pad('arc@16', 9)}${pad('arc@18', 9)}${pad('teen(<=18) in top 3', 21)}${pad('in top 10', 12)}${pad('in top 50 (mean n)', 20)}`)
+
+const CANDIDATES = [FIELD.career.tenure.debutFloor, 0.4, 0.15, 0.0]
+console.log(`\n  ${padE('tenure floor', 16)}${pad('s0', 9)}${pad('s1', 9)}${pad('teen(<=18) in top 3', 21)}${pad('in top 10', 12)}${pad('in top 50 (mean n)', 20)}`)
 for (const floor of CANDIDATES) {
   let t3 = 0
   let t10 = 0
   let n50 = 0
   for (let s = 0; s < SEEDS; s++) {
     for (let season = 0; season < SEASONS; season++) {
-      const rows = fieldProsFor(`teen-top-${s}`, season, []).map((p) => ({
-        age: p.ageYears,
-        pts: (p.wtaPoints / careerArc(p.ageYears)) * arcWith(floor, p.ageYears),
-      }))
+      // ⚠ RE-RUN THE PERMUTATION, NOT A RE-SCORE OF THE POINTS. Since 19.08 tenure does not enter a
+      // row's VALUE at all - `fieldProsFor` keeps the calibrated books and lets tenure decide only
+      // who holds which one INSIDE HER OWN STOREY. So the honest counterfactual is that same
+      // permutation under a different floor, and it is done here exactly as the engine does it.
+      // (The older arm divided tenure out of the points; there is no longer any tenure in there to
+      // divide out, and it would have quietly measured nothing.)
+      const field = fieldProsFor(`teen-top-${s}`, season, [])
+      const rows: { age: number; pts: number }[] = []
+      for (const tier of FIELD.tiers) {
+        const group = field.filter((q) => q.strengthTier === tier.id)
+        if (!group.length) continue
+        // ⚠ FROM `chairBook`, NEVER FROM `wtaPoints`: the field handed back here is ALREADY permuted,
+        // so re-deriving the order from its points permutes a permuted table. That mistake measured
+        // 0.92% against the shipped field's 3.25% before it was caught.
+        const books = group.map((q) => q.chairBook).sort((a, b) => b - a)
+        group
+          .map((q, i) => ({ q, i, merit: q.chairBook * rampWith(floor, q.tenure) }))
+          .sort((a, b) => b.merit - a.merit || a.i - b.i)
+          .forEach((o, rank) => rows.push({ age: o.q.ageYears, pts: books[rank] }))
+      }
       rows.sort((a, b) => b.pts - a.pts)
       if (rows.slice(0, 3).some((p) => p.age <= 18)) t3 += 1
       if (rows.slice(0, 10).some((p) => p.age <= 18)) t10 += 1
       n50 += rows.slice(0, 50).filter((p) => p.age <= 18).length
     }
   }
-  const tag = floor === FIELD.ageRampFloor ? '  <- SHIPPED' : ''
+  const tag = floor === FIELD.career.tenure.debutFloor ? '  <- SHIPPED' : ''
   console.log(
-    `  ${padE(floor.toFixed(2), 16)}${pad(arcWith(floor, 16).toFixed(2), 9)}${pad(arcWith(floor, 18).toFixed(2), 9)}` +
+    `  ${padE(floor.toFixed(2), 16)}${pad(floor.toFixed(2), 9)}${pad(rampWith(floor, tenureRamp(1)).toFixed(2), 9)}` +
       `${pad(pct(t3, worldSeasons), 21)}${pad(pct(t10, worldSeasons), 12)}${pad((n50 / worldSeasons).toFixed(2), 20)}${tag}`,
   )
 }
 console.log(
-  `\n  ⚠ THE FLOOR IS NOT A FREE KNOB. FIELD.career's own comment records that these four numbers were` +
-    `\n  tuned to hold the population's mean multiplier at 0.9067 so the merged table's points-to-rank` +
-    `\n  curve – the one calibrated thing in that file – does not move. Lowering the floor moves it, so` +
-    `\n  the mean multiplier is printed beside every candidate below and any change owes a re-run of` +
-    `\n  bench:world --arc-probe.`,
+  `\n  ⚠ THE FLOOR NO LONGER MOVES THE TABLE'S LEVEL, AND THAT IS NEW (19.08). This warning used to` +
+    `\n  read that the arc's four numbers were tuned to hold the population's mean multiplier at 0.9067,` +
+    `\n  so any change owed a re-run of bench:world --arc-probe. That was true of \`ageRampFloor\`, which` +
+    `\n  was applied raw. \`tenureRamp\` is DIVIDED BY THE POPULATION'S OWN MEAN in fieldProsFor, so the` +
+    `\n  level is restored by construction whatever this floor is, and only the SHAPE moves.` +
+    `\n  The raw mean is still printed below, because the calibration being automatic is a claim that` +
+    `\n  should be visible rather than trusted - what it must NOT do is drift with the floor.`,
 )
-console.log(`\n  ${padE('ageRampFloor', 16)}${pad('mean multiplier over the population', 38)}${pad('drift vs shipped', 20)}`)
+console.log(`\n  ${padE('tenure floor', 16)}${pad('raw mean over the population', 38)}${pad('drift vs shipped', 20)}`)
 {
   const meanFor = (floor: number) => {
     let sum = 0
@@ -219,19 +241,19 @@ console.log(`\n  ${padE('ageRampFloor', 16)}${pad('mean multiplier over the popu
     for (let s = 0; s < SEEDS; s++) {
       for (let season = 0; season < SEASONS; season++) {
         for (const p of fieldProsFor(`teen-top-${s}`, season, [])) {
-          sum += arcWith(floor, p.ageYears)
+          sum += rampWith(floor, p.tenure)
           n += 1
         }
       }
     }
     return sum / n
   }
-  const base = meanFor(FIELD.ageRampFloor)
+  const base = meanFor(FIELD.career.tenure.debutFloor)
   for (const floor of CANDIDATES) {
     const m = meanFor(floor)
     console.log(
       `  ${padE(floor.toFixed(2), 16)}${pad(m.toFixed(4), 38)}${pad(`${(100 * (m / base - 1)).toFixed(2)}%`, 20)}` +
-        (floor === FIELD.ageRampFloor ? '  <- SHIPPED' : ''),
+        (floor === FIELD.career.tenure.debutFloor ? '  <- SHIPPED' : ''),
     )
   }
 }

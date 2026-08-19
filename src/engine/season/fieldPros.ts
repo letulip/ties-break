@@ -101,6 +101,14 @@ export interface FieldPro extends AiPlayer {
   groundstrokes: number
   /** her derived W-table points for THIS season – the virtual standing row's value */
   wtaPoints: number
+  /** ⚠ HER TENURE FACTOR, and the CHAIR'S OWN calibrated book before the storey permutation - both
+   *  kept so `fieldProsFor`'s ordering (see the ⭐⭐ box there) is reproducible from the row itself.
+   *  `chairBook` matters beyond tidiness: `wtaPoints` is post-permutation, so anything re-deriving
+   *  the order from it would permute an already-permuted table and compound the effect. That is not
+   *  hypothetical - `tools/teen-at-the-top.ts`'s counterfactual did exactly that and reported 0.92%
+   *  where the shipped field measures 3.25%. Derived, never persisted. */
+  tenure: number
+  chairBook: number
 }
 
 // =================================================================================================
@@ -461,8 +469,28 @@ export const FIELD = {
      *  (+0.31%)**; measured **0.9095 (+0.30%)**. The decline was NOT flattened to buy the number,
      *  which was the other way to reach it and would have cost the tenure this wave is for. */
     declineFloor: 0.55,
+    /** ⭐⭐ WHAT A PRO HAS BANKED AFTER `n` SEASONS ON TOUR - the replacement for `ageRampFloor`, and
+     *  the whole of "she climbs into the chair instead of inheriting it".
+     *
+     *  ⚠ WHY TENURE AND NOT AGE, precisely: `debutAge` is [16, 19], so a SIXTEEN-YEAR-OLD PRO IS
+     *  ALWAYS IN HER DEBUT SEASON, by construction. Tenure therefore lands on exactly the population
+     *  the owner objected to - and it lands on the CAUSE ("she has not played enough tennis yet")
+     *  rather than on the correlate ("she is young"). A twenty-two-year-old who only just turned pro
+     *  is now also a newcomer, which age could never say. */
+    tenure: {
+      /** her book in her DEBUT season, as a fraction of what her chair is worth */
+      debutFloor: 0.25,
+      /** ...and the season she is finally worth all of it */
+      fullFrom: 3,
+    },
   },
-  /** how much of her skill-implied points a debutante has banked (ramps to 1 by `career.peakFrom`) */
+  /** ⚠⚠ RETIRED AS A LEVER ON 19.08 AND KEPT AS HISTORY - read `tenure` below before touching it.
+   *  It used to be "how much of her skill-implied points a debutante has banked", ramping to 1 by
+   *  `career.peakFrom`, and it is what made a sixteen-year-old INHERIT a top chair at 65% of its
+   *  value without playing a match. The owner: «вот я хочу, чтобы этого не было». Age was never the
+   *  cause, only its proxy - what a debutante lacks is TENNIS PLAYED, and the model already knows
+   *  that exactly (`debutSeason`). `careerArc` now ramps from `tenure`, so this number is read by
+   *  nothing; it stays so a reader of the old benches can find what the number was. */
   ageRampFloor: 0.65,
   /** ⭐ HOW FAR ONE SEASON'S RESULTS MAY MOVE A PRO'S ROW, as a fraction of her derived book.
    *  The live table's amplitude, and the only tuned number in it - `mergedWtaRanking`'s share is
@@ -631,14 +659,28 @@ function pointsForCore(tier: (typeof FIELD.tiers)[number], core: number): number
  *  yet"). The plateau and the decline are the new half. */
 export function careerArc(age: number): number {
   const c = FIELD.career
-  const [lo, hi] = FIELD.ageBand
-  if (age < c.peakFrom) {
-    const t = (age - lo) / (c.peakFrom - lo)
-    return FIELD.ageRampFloor + (1 - FIELD.ageRampFloor) * Math.max(0, Math.min(1, t))
-  }
+  const [, hi] = FIELD.ageBand
+  // ⚠⚠ THE YOUNG RAMP IS GONE FROM HERE AND LIVES IN `tenureRamp` (19.08). This function used to
+  // ramp a pro's book UP with her age from `ageRampFloor`, which is what let a sixteen-year-old hold
+  // 65% of the world #1's book on the day she arrived - the owner's objection. Age still owns the
+  // DECLINE, because that half really is about the body; what it no longer owns is the climb, which
+  // is about tennis played. Below the peak this is now flat, and `tenureRamp` supplies the shape.
   if (age <= c.peakTo) return 1
   const t = (age - c.peakTo) / (hi - c.peakTo)
   return 1 - (1 - c.declineFloor) * Math.max(0, Math.min(1, t))
+}
+
+/** ⭐⭐ WHAT SHE HAS ACTUALLY BANKED, BY SEASONS ON TOUR - `n` is 0 in her debut season.
+ *
+ *  A chair is worth what it is worth; what changes is how much of it its occupant has earned yet.
+ *  At `debutFloor` on arrival, whole by `fullFrom`. THIS IS THE ANSWER TO "she inherits it": nobody
+ *  arrives at a top chair fully formed any more, whatever her age, and the top of the table is made
+ *  of players who have been there a while - which is what a ranking IS. */
+export function tenureRamp(seasonsOnTour: number): number {
+  const t = FIELD.career.tenure
+  if (seasonsOnTour >= t.fullFrom) return 1
+  const k = Math.max(0, seasonsOnTour) / t.fullFrom
+  return t.debutFloor + (1 - t.debutFloor) * k
 }
 
 // =================================================================================================
@@ -823,9 +865,21 @@ function makeFieldPro(
   }
   taken.add(`${first} ${last}`)
 
+  const tenure = tenureRamp(seasonIndex - career.debutSeason)
   const wtaPoints = Math.max(
     1,
-    Math.round(pointsForCore(tier, bandCore) * careerArc(ageYears) * (1 + FIELD.jitter * (2 * jitterRoll - 1))),
+    Math.round(
+      pointsForCore(tier, bandCore) *
+        careerArc(ageYears) *
+        // ⚠⚠ TENURE IS DELIBERATELY *NOT* A FACTOR HERE, and that is the whole correction. Cutting a
+        // newcomer's book changed what a ROW IS WORTH, and the rows are the one calibrated thing in
+        // this file - it put #100 on 384 points against a real ~850 and left the weakest head-storey
+        // chair below half the best elite one, collapsing the seam between the storeys. `tenure` is
+        // carried on the row instead and spends itself in `fieldProsFor`, where it decides only WHO
+        // holds which row inside her own storey. The book stays exactly what `pointsForCore`
+        // calibrated it to be.
+        (1 + FIELD.jitter * (2 * jitterRoll - 1)),
+    ),
   )
 
   const pro: FieldPro = {
@@ -848,6 +902,8 @@ function makeFieldPro(
     // Stored = derived, one value: see FieldPro. rivalGroundstrokes reads only (id, serve, ret).
     groundstrokes: 0,
     wtaPoints,
+    tenure,
+    chairBook: wtaPoints,
   }
   pro.groundstrokes = rivalGroundstrokes(pro)
   return pro
@@ -888,6 +944,55 @@ export function fieldProsFor(
   for (const tier of FIELD.tiers) {
     const tierOffset = n
     for (let i = 0; i < tier.count; i++) pros.push(makeFieldPro(seed, seasonIndex, n++, tier, tierOffset, taken))
+  }
+  // ⭐⭐ TENURE DECIDES WHO HOLDS A ROW, NEVER WHAT THE ROW IS WORTH. This is the third shape of this
+  // change and the first correct one; the two wrong ones are recorded because each was caught by a
+  // different guard and neither was visible by reading.
+  //
+  //   1. DISCOUNTING THE BOOK, raw. A newcomer's book was cut and that was that - but roughly a
+  //      quarter of any field is inside its first three seasons, so the whole table DEFLATED about a
+  //      tenth. A deflated field is a promotion the kid did not earn:
+  //      `tests/unranked-sentinel.test.ts` went from a three-rung acceptance window to a four-rung
+  //      one, an entire professional rung opening for the same career.
+  //   2. DISCOUNTING THE BOOK, then dividing by the population's mean. That restored the LEVEL and
+  //      still wrecked the SHAPE, which is worse, because the shape is the one calibrated thing in
+  //      this file. `tests/season/fieldPros.test.ts` anchors the merged table to real WTA rows
+  //      (#50 ~1400, #100 ~850, #300 ~190) and #100 came back holding 384. Discounted newcomers fell
+  //      through the middle of the table and dragged every row below them down with it.
+  //
+  // ⭐ THE FIX IS TO STOP TOUCHING THE ROWS AT ALL. The chairs and their point values are exactly
+  // what `pointsForCore` calibrated - the multiset below is the SAME multiset, merely sorted - and
+  // the only thing tenure decides is the ORDER they are handed out in. So the points-to-rank curve
+  // is preserved BY CONSTRUCTION rather than by a normaliser that has to be checked, and a debutante
+  // is pushed DOWN the table instead of sitting at the top holding a discounted row. That is the
+  // owner's sentence exactly: «вот я хочу, чтобы этого не было» - she does not inherit the chair,
+  // she is not GIVEN it.
+  //
+  // ⚠ THE ARRAY'S ORDER IS UNTOUCHED, only the values are permuted. `selectEntrants` positions
+  // candidates by id against a ranking built from this same array, and the memo hands it back by
+  // reference - so re-ordering the array itself would be a different and much larger change.
+  // Deterministic: ties break on the original index, never on object identity.
+  // ⚠⚠ AND IT IS PERMUTED WITHIN A STOREY, NEVER ACROSS THE TABLE - the third correction, and the
+  // one that says what this model actually is. A storey is not a points band alone: `strengthTier`
+  // fixes SKILL and POINTS together, and several guards read that link (the head storey must
+  // out-core the one below it AND hold the biggest books). Permuting across the whole field broke
+  // it - a veteran of a middle storey took the #1 row while out-skilled by everyone near her, and
+  // `tests/season/fieldPros.test.ts` said so twice.
+  //
+  // Inside a storey the link is untouched, because everyone there is drawn from the same skill band.
+  // What changes is only WHERE IN HER OWN STOREY a newcomer lands: at its foot rather than at its
+  // head. A sixteen-year-old is therefore still a fine player in a fine chair - she is simply not
+  // world #3 in her first season, which is the whole of what was asked.
+  for (const tier of FIELD.tiers) {
+    const group = pros.filter((p) => p.strengthTier === tier.id)
+    if (group.length < 2) continue
+    const books = group.map((p) => p.chairBook).sort((a, b) => b - a)
+    group
+      .map((p, i) => ({ p, i, merit: p.chairBook * p.tenure }))
+      .sort((a, b) => b.merit - a.merit || a.i - b.i)
+      .forEach((o, rank) => {
+        o.p.wtaPoints = books[rank]
+      })
   }
   memo = { key, pros }
   return pros

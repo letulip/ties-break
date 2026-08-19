@@ -290,7 +290,12 @@ function hashOf(draws: number[]): string {
 // UNTOUCHED: count 41550, hash e6b0c709, and the input-independence comparison this block exists for
 // still passes - only the companion constant moved. Verified on both arms; the control (this agent's
 // commit reverted in a worktree) reproduces 93.
-const REF = { kidRank: 88 }
+  // ⚠ 88 -> 87 ON 19.08, and it is a REFERENCE moving, not an invariant breaking. The tenure
+  // ordering (season/fieldPros.ts) changed who holds which professional row, so her rank beside
+  // that table moved one place. The MAIN stream did NOT move: the draw-tail and A/B arms in this
+  // very file pass unchanged, which is the assertion that blocks a merge - this one is the
+  // documented companion CLAUDE.md says to update with a real change.
+const REF = { kidRank: 87 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
