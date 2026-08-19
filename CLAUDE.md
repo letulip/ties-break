@@ -130,6 +130,13 @@ docs/review/     2026-08 full review + P1–P9 proposals
   (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
   `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
   pipeline.
+  (c) ⚠⚠ AND THE BACKGROUND TASK'S "exit code 0" IS THE SAME LIE WEARING A HARNESS. A run started
+  with `run_in_background` reports the status of the WRAPPER, not of `npm run check`: on 19.08 the
+  completion notice said *exit code 0* twice in a row while the log said `CHECK_EXIT=2` and then
+  `CHECK_EXIT=1` — sixteen real failures between them, including a `vue-tsc` duplicate-identifier
+  error. Believing the notice would have pushed a red branch and reported it green. **Append
+  `echo "CHECK_EXIT=$?"` to the log inside the command and read the verdict out of the FILE.** The
+  notification tells you the run finished; it does not tell you it passed.
 - **⚠⚠ BEFORE YOU HUNT A SLOWDOWN, REPRODUCE IT ON A COMMIT THAT CANNOT HAVE IT.** Same command,
   older code, in a worktree. It is one run and it ends the argument; skipping it cost most of 16.08.
   Twice that day a red `npm run check` — sixteen files timing out, **zero assertion failures** — was
