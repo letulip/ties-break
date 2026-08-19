@@ -479,7 +479,7 @@ const REF = {
   // arithmetic on it. ⚠ AND THE POINTS DID NOT MOVE EITHER, which is the stronger statement and is
   // measured rather than argued: the merged 1,600-row table hashes identically across five worlds on
   // both arms, so every acceptance cut still admits exactly the same population.
-  kidRank: 87,
+  kidRank: 90,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

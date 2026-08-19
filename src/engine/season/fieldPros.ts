@@ -899,7 +899,11 @@ function makeFieldPro(
     ageYears,
     potential: { serve, ret, composure, stamina },
     strengthTier: tier.id,
-    // Stored = derived, one value: see FieldPro. rivalGroundstrokes reads only (id, serve, ret).
+    // Stored = derived, one value: see FieldPro. ⚠ CORRECTED 19.08: `rivalGroundstrokes` reads id
+    // plus ALL FOUR attributes now, not (id, serve, ret) - the fifth skill stopped being an echo
+    // of the first two. The claim this line is DEFENDING is unchanged and still holds: the
+    // function never reads `groundstrokes` itself, so seeding it 0 here cannot feed itself, and
+    // `pro.groundstrokes === rivalGroundstrokes(pro)` still holds one line down.
     groundstrokes: 0,
     wtaPoints,
     tenure,
@@ -1054,12 +1058,16 @@ export function mergedWtaRanking(
   // opening balance, it is her WHOLE derived 52-week book for this season, so adding this season's
   // winnings on top counts the same tennis twice right now.
   //
-  // ⭐ WHAT IT COST, MEASURED (tools/live-table-inflation.ts, 8 seasons): only ~350 of 1600 pros earn
-  // anything, so the table did not inflate evenly – a fifth of it gained up to +46% by the wrap while
-  // four fifths stood still, and that fifth leapfrogged everybody. The acceptance cuts read the
-  // result, refused the kid, and she fell back down the ladder: ten seasons of one career went
-  // `wta 0` in EVERY season and finished on DOMESTIC events at 22. With the term corrected the same
-  // career turns professional in season 2 and stays there – 30/43/45/43/61/62/55/60 W matches.
+  // ⭐ WHAT IT COST, MEASURED – `tools/live-table-inflation.ts`, which prints both rules over the same
+  // measured rows. The additive one bloats the table's total by +10.7% at week 13, +22.8% at 26 and
+  // +32.7% at 39, EVERY season; the correction below reads 0.0% at every sample, because preserving
+  // the total is what it does by construction rather than by tuning.
+  //
+  // ⚠ AND IT WAS NEVER EVEN. Only ~300-450 of 1,600 pros get a draw in a season, so the bloat landed
+  // entirely on the fifth who played and they leapfrogged the four fifths who stood still. The
+  // acceptance cuts read the result, refused the kid, and she fell back down the ladder: ten seasons
+  // of one career went `wta 0` in EVERY season and finished on DOMESTIC events at 22. With the term
+  // corrected the same career turns professional in season 2 and stays there.
   //
   // ⚠ THE NORMALISER IS THE POPULATION ITSELF, never a tuned constant, so nothing here drifts when
   // the calendar or the points table is retuned. `share` is what the field has won this season as a

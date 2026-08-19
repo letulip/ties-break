@@ -770,9 +770,9 @@ const FROZEN = {
   /** ⚠ MOVED WITH ITS TWINS A FOURTH TIME (17.08, the college choice – schema v52). All three moved
    *  by exactly ONE KEY again, and `PRE_V52` below proves it: rolling `schemaVersion` back to 51 on
    *  the NEW world reproduces the old hashes byte for byte, for all three. */
-  middleGrinder: '76df588b078cac942cc11a23d05e93e6fb7e5f608d5dab566e39f7d56d813054',
+  middleGrinder: '2b2ddde17a07ec1e79108d2e6a71f242037791692d944071dd74ff56edaeef4c',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: 'f3c8d82864524e62478a21c39dc40af280ff7e025cfffd4c55a341f444b7543c',
+  eliteGrinder: 'fbdd6bc9a101a1f5716365e84bcb8ff0305b3d428d88fd5000221db709431707',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -922,7 +922,7 @@ const FROZEN = {
    *  ⚠ `rngMain` UNMOVED IS THE LOAD-BEARING HALF and it is doing real work here: `power()` is read by
    *  the conveyor's SORT, which is a post-draw ordering, so no draw moved. The frozen MAIN capture in
    *  tests/condition.test.ts is untouched - count 41550, hash e6b0c709 - and verified below. */
-  selfTravelling: '8eea36aa79bbfd5f2f5592d9ca378b3b1f8f0e6cdd61e1b88bcd1fde2c109916',
+  selfTravelling: '6ba8d8afd2e1baaaf3739a0fcb2ec55f269162f46a38cf46d6263fd4e6cad040',
 }
 
 /** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
@@ -961,16 +961,16 @@ const FROZEN = {
  *  moves one of these careers through anything but `SAVE_SCHEMA_VERSION` still goes red here beside
  *  a red freeze, and the pair is what says which kind of change it was. */
 const PRE_V52 = {
-  middleGrinder: 'cdeb6081ac9bd95167e7f4286e503f308f9b8e532202bffb92ec3a82e1d662b8',
-  eliteGrinder: 'f64430f44a2091f96e40ffb062b323f9d52ccc5c77c9c4ccd9556689bc2fbba7',
-  selfTravelling: '974342816b37b59baa1f709d028fcb86c63e898c7d8fae4f654f150a5f1b5fe0',
+  middleGrinder: '1b3e6e343227966a39f4eb48f3c28b141ad52641f9c98cf0e02d7c0ff288c25f',
+  eliteGrinder: '91a8f9f10264ecb812ea9cefb8b815ebd59d6efb03c74eb945cd2c7fbdf58167',
+  selfTravelling: '5dc1ecf394b6d5ebc67c5480785051a909b6300a72fa34b5bdb8bdf0310d6219',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
  *  moved ONE key and nothing else. */
 const PRE_V51 = {
-  middleGrinder: '08b66e705d982a92c94226acf09c529d9b8b77d2dc184c20de4cea4f3214d9e7',
-  eliteGrinder: 'b33e63fb9088c407f70a2f14eec3cbea2a7bf875dc80ec225096eca54d52362c',
+  middleGrinder: '590fe2a3b48be06452fb84bde1d2137280fc5c70dac11195f63ac081393630f9',
+  eliteGrinder: '6e7017fccb6b477ad4b43ba92976f24df99482625e11acaaa1180c47b7c5134e',
   /** ⚠ MOVED WITH THE FREEZE ABOVE (17.08, round 21 #2b) AND THAT IS THE HONEST OUTCOME, not a
    *  weakening. The v51 case asks "does rolling ONLY the schema back reproduce the v50 hashes" – and
    *  for the two grinders it still does, untouched. For THIS career it no longer can, because the
@@ -978,7 +978,7 @@ const PRE_V51 = {
    *  different season cannot produce the old season. The identity is re-anchored to the new world, so
    *  it goes on doing its job – if a LATER wave moves this career through anything but
    *  `SAVE_SCHEMA_VERSION`, this line goes red beside the freeze exactly as it just did. */
-  selfTravelling: '1ab57f4a148c2d409af5ceb37be3b66b0b26e9e7c67f0c034d8bf81ef1d5edbc',
+  selfTravelling: 'fb6bf3c79bad182f9a953c6892e1af537d2da447a8b3245fcc83bcb933ea9058',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -989,8 +989,8 @@ const PRE_V50 = {
    *  full: the WTA 250's field changed, so the tour NEWS in `events` changed, and `events` is inside
    *  the hash. The rollback identity itself is untouched in meaning – swapping only `schemaVersion`
    *  on the new world still reproduces exactly this, which is what these three lines are for. */
-  middleGrinder: 'e62e2094f57dbfdc2300d68011f8555b96f35b8ce502e9edabcdefa3aaf92674',
-  eliteGrinder: '8be9933bc3754e2c6065d046cff727c45b4a730207f36bb770f4131bd9fbccce',
+  middleGrinder: '4d0b27a55e8afcb12574171e88ece1c1fd8a8e2bcabb274f61f041483161052e',
+  eliteGrinder: '141ab5e82f581c547310e68da4597093df284632442edd0fe865683645beba79',
   /** ⚠ MOVED WITH ITS TWIN ABOVE, AND THE PARAGRAPH ON `FROZEN` PREDICTED EXACTLY THIS: *"if a later
    *  wave moves one of these careers for a real reason, the rollback case goes red beside the freeze
    *  and says which kind of change it was."* It did, on 16.08, and it said so – both hashes red, and
@@ -1006,7 +1006,7 @@ const PRE_V50 = {
    *  line: this wave changed the CAREER, not a schema field, so the rollback is re-anchored to the
    *  new world. The two grinder hashes in this block did NOT move, which is the identity doing its
    *  job – a change that reaches one career of three shows up in one pair of hashes of three. */
-  selfTravelling: 'e2f3b4276815b2bd48f64e8034d5e1f332b889df2c67a179f54162d83dee84e5',
+  selfTravelling: '453587286a0817873c4f1197356dcc9396476d583973fe08c55499aaaba97616',
 }
 const FREEZE_WEEKS = 156
 

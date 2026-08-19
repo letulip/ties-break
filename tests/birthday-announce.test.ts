@@ -194,7 +194,15 @@ describe('the age she is told she is turning', () => {
     // ruling, whatever else it gets right.
     // ⚠ ANCHORED ON THE ANNOUNCEMENTS THAT EXIST, and the first draft of this arm was not - which is
     // how it found a second thing. Asking "is the printed age <= the last announced age" assumes every
-    // birthday IS announced, and 14 of them over 14 seasons are not: the seasons re-anchor to the first
+    // birthday IS announced.
+    //
+    // ⚠⚠ THE FOURTEEN ARE GONE, AND THIS PARAGRAPH IS KEPT AS HISTORY (corrected 19.08). When it was
+    // written the gap below really did swallow fourteen birthdays over fourteen seasons; the carry fix
+    // closed it, and `tools/birthday-age-read.ts` now reads "birthday never fired: before 43, after 0".
+    // The paragraph stays because the ANCHORING ARGUMENT it makes is still the reason this arm is
+    // shaped the way it is - what is no longer true is the count, and a reader who takes the fourteen
+    // for current behaviour would go looking for a defect that was fixed. The mechanism, as it was:
+    // the seasons re-anchor to the first
     // Monday of each year, so 1-6 January and 31 December fall into the gap between the last career
     // week of one season and the first of the next, twice each per career. The calendar genuinely has
     // no week for them (`weekOfDate` returns null and says so), the girl still ages correctly, and only

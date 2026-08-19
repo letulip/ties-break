@@ -100,7 +100,15 @@ docs/review/     2026-08 full review + P1–P9 proposals
 
 `world.ts` is being decomposed into `src/engine/world/*.ts` (see `docs/review/proposals/P4-world-decomposition.md`). Rules for that work:
 - Extracted modules import `WorldState` as **`import type`** from `../world` — type-only, erased at compile time, so no runtime cycle.
-- `world.ts` imports the values back and **re-exports them under their historical names**: 279 files import from `engine/world` (18.08) and that public API must not change.
+- `world.ts` imports the values back and **re-exports them under their historical names**: **280** files
+  import from `engine/world` (19.08) and that public API must not change. ⚠ Count it, do not quote it –
+  three numbers for this were in circulation on one day (277 / 279 / 280) and all three were "essentially
+  right" under different scopes, which is how a stale number survives:
+  ```bash
+  git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l
+  ```
+  For the other half of the barrel problem – *which module actually owns a symbol* – use
+  `node scripts/world-map.mjs <symbol>`, or read `tools/generated/world-symbol-map.md`.
 - If a candidate block calls back into `world.ts` at runtime, it is **not** ready to move — that needs dependency inversion, not a span-move.
 
 ## Style

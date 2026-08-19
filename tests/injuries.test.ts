@@ -289,7 +289,7 @@ const REF = { //
   // still passes - only the companion constant moved. Verified on both arms; the control (this agent's
   // commit reverted in a worktree) reproduces 93.
 
-  kidRank: 87 }
+  kidRank: 90 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
