@@ -12,9 +12,10 @@ last-reviewed: 2026-08-03
 
 - The worker owns the mutable `WorldState`; UI code talks through the typed protocol and
   consumes snapshots.
-- `SAVE_SCHEMA_VERSION` is v52 (`src/engine/world.ts`); the persisted main RNG position arrived at
+- `SAVE_SCHEMA_VERSION` is v53 (`src/engine/world.ts`); the persisted main RNG position arrived at
   v35, so loads resume `{s, n}` rather than replaying the career.
-- ⚠ THAT NUMBER ROTS SILENTLY BECAUSE NOTHING CHECKS IT – wrong twice already (v36, then v45).
+- ⚠ THAT NUMBER ROTS SILENTLY BECAUSE NOTHING CHECKS IT – wrong three times now (v36, v45, and v52
+  when v53 shipped the field's season ledger on 19.08 without this line moving with it).
   `context:audit` covers structure, links, metadata and budgets; the only claim it reads the engine
   for is the age grid. So verify without trusting this file: the highest fixture in
   `tests/fixtures/saves/` IS the current version, since `goldenSaves.test.ts` enforces one per

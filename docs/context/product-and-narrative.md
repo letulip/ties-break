@@ -20,8 +20,10 @@ last-reviewed: 2026-08-19
   reserved field). Documents describing psyche are product intent, not shipped behavior.
 - The Russian concept doc is the original pitch; the lore bible is a dated art/tone reference –
   check both against code before asserting implementation.
-- The August roadmap gives delivery ordering, but its schema numbers are planning-time and the
-  runtime is far past them; reviews explain risks, they do not define the shipped set.
+- Delivery ordering is [now / next / later](../now-next-later.md) and nothing else. The August
+  roadmap and launch plan are `superseded` – they schedule schema v35–v39 against a runtime long past
+  it – so take neither ordering nor state from them. Reviews explain risks; they do not define the
+  shipped set.
 - Family prose uses a DERIVED narrative stage, not a residence fact. From 22 the parent hears about
   ordinary life through calls, messages and visits rather than sharing the household – so a late
   career never observes her homework or her bedroom. Voice only: nothing persisted, no move event.
