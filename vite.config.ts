@@ -167,11 +167,31 @@ export default defineConfig({
         // ...and the big paintings get a CacheFirst runtime route instead: one age band is only
         // ~361-424 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
         // renders ahead of its art), and once fetched a painting is offline-durable for 60 days.
-        // maxEntries 80 still holds the whole reachable set plus headroom – but the margin has
-        // narrowed from 35/80 to 53/80 while nobody was watching (see the re-measure above), and
-        // an eviction here is silent: the oldest painting is dropped and re-fetched, so it costs a
-        // blank frame offline rather than an error. The next art wave that adds a face or a scene
-        // to all five bands should raise this number in the same commit.
+        // ⚠⚠ AND `maxEntries: 80` IS NOT SIZED FOR WHAT THIS ROUTE ACTUALLY MATCHES (19.08, found
+        // while re-checking the counts above – the note that stood here read "still holds the whole
+        // reachable set plus headroom… the margin has narrowed from 35/80 to 53/80"). That
+        // arithmetic is TRUE ABOUT ONE DIRECTORY and the urlPattern below is not scoped to one: it
+        // takes every `/images/*.webp` the trophies|sponsors route above did not catch first, and
+        // public/images holds 205 webp, not 64. Counted by `ls`, not by memory:
+        //
+        //     trophies + sponsors    38   -> tb-art-small-v1, maxEntries 48, holds all of them
+        //     fem-euro-brunnet       64   the character paintings this note was written about
+        //     fields                 73   src/art/venues.ts
+        //     coaches                16   src/art/preload.ts
+        //     weeks                  14   src/art/weeks.ts
+        //     -----------------------------------------------------------------------------
+        //     reaching tb-art-v1    167   against maxEntries 80
+        //
+        // All three extra sets are live and reachable, not rename leftovers. So the eviction this
+        // route describes is not a future risk to watch: a career that visits enough venues already
+        // passes eighty distinct entries, and the cache drops the least-recently-used one silently –
+        // a blank frame OFFLINE rather than an error, which is why nothing has reported it.
+        //
+        // ⚠ THE NUMBER IS DELIBERATELY LEFT AT 80. It is a phone-storage budget and 167 entries at
+        // these sizes is a different install-footprint promise from 80, which is the owner's call
+        // and not a tidy-up. What is fixed here is the FALSE HEADROOM CLAIM. Whoever sets the cap
+        // next sizes it against the 167, not against one directory – and the same goes for an art
+        // wave that adds a face or a scene to all five bands.
         // ⚠ CACHEFIRST NEVER REVALIDATES, AND THE OWNER'S UPDATED TROPHIES PROVED IT (01.08). He
         // replaced two trophy paintings; the new webps reached main the same evening - and his
         // phone kept showing the old ones, because a CacheFirst entry at the SAME URL is served
