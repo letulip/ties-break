@@ -164,7 +164,7 @@ function runCareer(preset: Preset, index: number, policy: Policy, opts: ArmOpts 
     const m = meanFive(world.skills)
     if (m > peakMean) {
       peakMean = m
-      peakAge = kidAgeExact(world.week, world.profile.birthMonth)
+      peakAge = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     }
     if (world.kidRank < kidRank) kidRank = world.kidRank
     if (world.careerTotals.prizeCents > 0) {
@@ -193,7 +193,7 @@ function runCareer(preset: Preset, index: number, policy: Policy, opts: ArmOpts 
     wtaRank,
     kidRank,
     ending: world.ending?.type ?? null,
-    endedAge: world.ending ? kidAgeExact(world.week, world.profile.birthMonth) : null,
+    endedAge: world.ending ? kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay) : null,
     weeksLived: world.week,
     entries: everEntered.size,
     blockWeeks,
@@ -273,7 +273,7 @@ if (wants('0')) {
     const w = schoolEndWeek(bm)
     console.log(
       `  ${padE(bm, 14)}${pad(w, 13)}${pad(Math.floor(w / WEEKS_PER_YEAR), 8)}` +
-        `${pad(w % WEEKS_PER_YEAR, 8)}${pad(kidAgeExact(w, bm).toFixed(2), 14)}`,
+        `${pad(w % WEEKS_PER_YEAR, 8)}${pad(kidAgeExact(w, bm, 1).toFixed(2), 14)}`,
     )
   }
   console.log('  (offset 34 is the 1 September the school year turns over on – SCHOOL_YEAR_TURNS_AT)')

@@ -152,7 +152,7 @@ async function main(): Promise<void> {
   console.log('='.repeat(92))
   console.log(`seed ${w.seed}  ·  background ${w.profile.background}  ·  onboarding coach ${w.profile.coachTier}`)
   console.log(`her draw: start ${sum(start).toFixed(1)}  ceiling ${sum(pot).toFixed(1)}  (headroom ${(sum(pot) - sum(start)).toFixed(1)})`)
-  console.log(`age at the save: ${kidAgeYears(w.week, w.profile.birthMonth)}\n`)
+  console.log(`age at the save: ${kidAgeYears(w.week, w.profile.birthMonth, w.profile.birthDay)}\n`)
 
   // ⚠ HIS OWN ROW CANNOT REPORT ENTRIES OR CONDITION HISTORY - `world.results` is pruned to the
   // ranking window and condition is a scalar, not a series. What a save DOES carry per season is

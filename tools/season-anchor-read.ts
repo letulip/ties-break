@@ -55,10 +55,10 @@ function oldBirthdayWeek(week: number, birthMonth: number, birthDay: number): nu
 // --- shared shapes ------------------------------------------------------------------------------
 interface Clock {
   label: string
-  ageYears: (week: number, bm: number) => number
+  ageYears: (week: number, bm: number, bd: number) => number
   birthdayWeek: (week: number, bm: number, bd: number) => number | null
 }
-const OLD: Clock = { label: 'before', ageYears: oldKidAgeYears, birthdayWeek: oldBirthdayWeek }
+const OLD: Clock = { label: 'before', ageYears: (w: number, bm: number, _bd: number) => oldKidAgeYears(w, bm), birthdayWeek: oldBirthdayWeek }
 const NEW: Clock = { label: 'after ', ageYears: kidAgeYears, birthdayWeek }
 
 /** Every career week in `[0, cap)` that IS her birthday week, under `clock`. This is exactly the
@@ -71,8 +71,8 @@ function birthdayWeeks(clock: Clock, bm: number, bd: number, cap: number): numbe
 }
 
 /** The first career week the tier's age gate is open, under `clock`, or null inside the horizon. */
-function rungOpensAt(clock: Clock, tier: (typeof TIER_LADDER)[number], bm: number, cap: number): number | null {
-  for (let w = 0; w < cap; w++) if (isTierAgeOpen(tier, clock.ageYears(w, bm))) return w
+function rungOpensAt(clock: Clock, tier: (typeof TIER_LADDER)[number], bm: number, bd: number, cap: number): number | null {
+  for (let w = 0; w < cap; w++) if (isTierAgeOpen(tier, clock.ageYears(w, bm, bd))) return w
   return null
 }
 
@@ -113,7 +113,7 @@ function schoolLeavingAges(): void {
   for (let bm = 1; bm <= 12; bm++) {
     const w = schoolEndWeek(bm)
     const ageB = oldWeekYear(w) - kidBirthYear() + (oldWeekMonth(w) - bm) / 12
-    const ageA = kidAgeExact(w, bm)
+    const ageA = kidAgeExact(w, bm, 1)
     const flag = Math.floor(ageB) !== Math.floor(ageA) ? '  ⚠ whole year differs' : ''
     console.log(
       `  ${String(bm).padStart(2)}  ${String(w).padStart(6)}   ${String(oldWeekMonth(w)).padStart(12)}   ` +
@@ -205,8 +205,8 @@ async function main(): Promise<void> {
 
     // ---- 1. HER AGE RIGHT NOW ------------------------------------------------------------------
     console.log(`\n[1] HER AGE AT THE SAVED WEEK`)
-    const ageBefore = OLD.ageYears(w.week, bm)
-    const ageAfter = NEW.ageYears(w.week, bm)
+    const ageBefore = OLD.ageYears(w.week, bm, bd)
+    const ageAfter = NEW.ageYears(w.week, bm, bd)
     console.log(`  before ${ageBefore}   after ${ageAfter}   ${ageBefore === ageAfter ? 'SAME' : '⚠ MOVED'}`)
     console.log(`  the week she is in reads:  before ${weekRangeOld(w.week)}   after ${weekRange(w.week)}`)
 
@@ -223,8 +223,8 @@ async function main(): Promise<void> {
       // The age `birthdayTurning` ANNOUNCES on that week, both sides. It has to be compared as well
       // as the week: a birthday that keeps its slot but changes the number in "She is ___ this week"
       // would still be a career the player watched change under them.
-      const ageB = b.map((x) => OLD.ageYears(x, bm)).join(',') || '-'
-      const ageA = a.map((x) => NEW.ageYears(x, bm)).join(',') || '-'
+      const ageB = b.map((x) => OLD.ageYears(x, bm, bd)).join(',') || '-'
+      const ageA = a.map((x) => NEW.ageYears(x, bm, bd)).join(',') || '-'
       const shift = a.length !== b.length ? (a.length > b.length ? '⚠ GAINED' : '⚠ LOST') : b[0] === a[0] ? 'same week' : `moved ${a[0]! - b[0]!}w`
       const live = s * WEEKS_IN_SEASON <= w.week ? ' [played]' : ''
       console.log(
@@ -247,8 +247,8 @@ async function main(): Promise<void> {
     console.log(`  tier        minAge  before   after    shift   crosses w${w.week}?`)
     for (const t of TIER_LADDER) {
       const min = TIERS[t].minAgeYears
-      const b = rungOpensAt(OLD, t, bm, cap)
-      const a = rungOpensAt(NEW, t, bm, cap)
+      const b = rungOpensAt(OLD, t, bm, bd, cap)
+      const a = rungOpensAt(NEW, t, bm, bd, cap)
       const shift = b === null || a === null ? '?' : a - b
       const crosses =
         b !== null && a !== null && b !== a && Math.min(b, a) <= w.week && w.week < Math.max(b, a)

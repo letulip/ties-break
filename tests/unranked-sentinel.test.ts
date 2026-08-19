@@ -122,7 +122,7 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
   function worldAt(seed: string, age: number, book: number): WorldState {
     const world = createWorld(seed)
     const rng = resumeMain(world.rngMain)
-    while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
+    while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < age) tickWeek(world, rng)
     if (book > 0) world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
     world.onRampCleared = { itf: true, wta: true }
     // ⚠⚠ RE-AIMED TWICE, AND THE SECOND UNDOES THE FIRST (16.08). P1's note is kept verbatim below

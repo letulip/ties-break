@@ -156,7 +156,7 @@ function runCareer(preset: Preset, index: number, policy: Policy): CareerRow {
       condSum = 0
       season = {
         season: idx,
-        age: kidAgeYears(world.week, world.profile.birthMonth),
+        age: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
         onsets: [],
         weeksInjured: 0,
         weeksLived: 0,
@@ -182,7 +182,7 @@ function runCareer(preset: Preset, index: number, policy: Policy): CareerRow {
         liveTotalWeeks = world.injury.totalWeeks
         const onset: Onset = {
           week: world.week,
-          age: kidAgeYears(world.week, world.profile.birthMonth),
+          age: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
           severity: world.injury.severity,
           weeksOut: world.injury.totalWeeks,
           condition: conditionAtRoll,

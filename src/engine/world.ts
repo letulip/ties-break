@@ -3131,7 +3131,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // now a fact rather than a correction - and a December girl develops at 13 because she IS 13, which is
     // the owner's point. Same magnitude, one concept instead of two. No new draw: `growWeek` keeps
     // `seed:growth:<week>`.
-    ageYears: kidAgeExact(world.week, world.profile.birthMonth),
+    ageYears: kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
     plan: world.plan,
     // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR, and since 08.08 that is every week except college
     //     and a booked family holiday. The pairing is the invariant, not the list: a week the family
@@ -3541,7 +3541,7 @@ export function resumeFromCollege(world: WorldState, rng: Rng): void {
   latchEnding(world, {
     type: 'college',
     week: world.week,
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
     detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
     resumesWeek: Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR),
   })

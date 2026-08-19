@@ -47,7 +47,7 @@ for (let s = 0; s < SEEDS; s++) {
         const key = `${family}:${week}`
         if (seen.has(key)) continue
         seen.add(key)
-        const age = kidAgeYears(week, world.profile.birthMonth)
+        const age = kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay)
         const row = byAge.get(age) ?? { junior: 0, pro: 0 }
         row[family]++
         byAge.set(age, row)

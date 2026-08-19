@@ -37,14 +37,14 @@ async function main(): Promise<void> {
 
   section('WHO AND WHEN')
   console.log(`week ${w.week} (${weekLabel(w.week)})  ·  schema v${(w as unknown as { version?: number }).version ?? '?'}`)
-  console.log(`born ${p.birthDay}.${p.birthMonth}  ·  age exact ${kidAgeExact(w.week, p.birthMonth).toFixed(2)}  ·  age years ${kidAgeYears(w.week, p.birthMonth)}`)
+  console.log(`born ${p.birthDay}.${p.birthMonth}  ·  age exact ${kidAgeExact(w.week, p.birthMonth, p.birthDay).toFixed(2)}  ·  age years ${kidAgeYears(w.week, p.birthMonth, p.birthDay)}`)
   console.log(`funds ${money(w.fundsCents)}  ·  coachTier ${p.coachTier}  ·  coachId ${w.coachId ?? 'self'}`)
 
   section('#9 – THE SCHOOL CLOCK ON HIS SAVE')
   const end = schoolEndWeek(p.birthMonth)
   console.log(`schoolEndWeek(birthMonth=${p.birthMonth}) = ${end}  (${weekLabel(end)})`)
   console.log(`schoolIsOver(week ${w.week})               = ${schoolIsOver(w.week, p.birthMonth)}`)
-  console.log(`her age at that week                      = ${kidAgeYears(end, p.birthMonth)}`)
+  console.log(`her age at that week                      = ${kidAgeYears(end, p.birthMonth, p.birthDay)}`)
   console.log(`weeks since school ended                  = ${w.week - end}`)
 
   section('#7 – THE SEASON THAT MADE HER SNAP')

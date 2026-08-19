@@ -79,6 +79,22 @@ function atTheFork(birthMonth = 9, birthDay = 5) {
     // Answer every OTHER blocking question on the way, so the only ones still standing at the fork
     // are the two this file is about.
     if (pendingKnock(world)) decideKnock(world, 'rest')
+    // ⚠⚠ EVERY BIRTHDAY BUT THE NINETEENTH (18.08, the date clock). The collision this file is about
+    // is two blocking overlays standing at once, and until 18.08 the fixture got it for free: the
+    // month clock turned her nineteen on the first Monday of her birth month, which is also the week
+    // her birthday note fired, so both landed in one tick. The clock now turns on her DATE, and the
+    // note fires in the week CONTAINING that date - so the note comes first and the fork follows on
+    // the next Monday. Measured across eight birth dates: the gap is +1 week for every one of them.
+    //
+    // ⭐ WHICH IS ITSELF THE CLOSING OF ROUND-17 #7, recorded in the block above this function: that
+    // defect was the fork arriving up to THREE WEEKS **BEFORE** the birthday for late-month dates
+    // (born 20 Dec: fork w307, nineteenth w310). On the date clock the fork can no longer precede the
+    // birthday for any date, because both now key off the same day. The gap table below is kept as
+    // the record of what it used to be.
+    //
+    // So the fixture holds the nineteenth UNANSWERED, which is the real player situation anyway - a
+    // parent who has not yet opened the birthday when the fork is raised - and the queue this file
+    // tests is genuinely two deep.
     if (pendingBirthday(world) !== null) answerBirthday(world)
     tickWeek(world, rng)
   }
@@ -164,23 +180,39 @@ describe('the queue cannot deadlock', () => {
   })
 })
 
-describe('⚠ the two clocks – what this fix does NOT cover', () => {
-  it('for some birth dates the fork is raised BEFORE her birthday, and no ordering can fix that', () => {
-    // Round-17 #7's family, recorded here rather than fixed here: `forkDue` reads the birth MONTH
-    // and `pendingBirthday` reads the birth DAY, so a girl born late in a month meets the fork
-    // weeks before her nineteenth. Ordering two dialogs cannot help when only one of them exists.
+describe('⭐⭐ the two clocks became one – round-17 #7 is closed', () => {
+  it('the fork can no longer be raised BEFORE her birthday, for any birth date', () => {
+    // ⚠⚠ THIS BLOCK IS THE INVERSE OF WHAT IT SAID UNTIL 18.08, AND ON THIS FILE'S OWN INSTRUCTIONS.
+    // It used to record round-17 #7 as a FINDING: `forkDue` read the birth MONTH while
+    // `pendingBirthday` read the birth DAY, so a girl born late in a month met the fork weeks before
+    // her nineteenth - born 20 December, fork w307, nineteenth w310. Its own note said: "when #7 puts
+    // the two on one clock this case flips, and the right response is to delete it and widen
+    // `atTheFork`'s default rather than to weaken it."
     //
-    // This is a FINDING, not a guard on desired behaviour: when #7 puts the two on one clock this
-    // case flips, and the right response is to delete it and widen `atTheFork`'s default rather
-    // than to weaken it. ⚠ Do not "fix" this by loosening the assertion.
-    const { world } = atTheFork(6, 15)
-    expect(world.fork, 'the fork is open').not.toBeNull()
-    expect(
-      pendingBirthday(world),
-      'born 15 June she meets the fork two weeks before her nineteenth – see tools/fork-birthday-probe.ts',
-    ).toBeNull()
-    // ...and the queue is still coherent: the fork is simply the only question there is.
-    expect(blockingOverlay(toSnapshot(world))).toBe('fork')
+    // That is what happened. The date-clock wave put her age on her birth DATE, and the fork now asks
+    // `kidAgeThroughWeek`, which carries a birthday landing inside the week - so both key off the same
+    // day and the fork lands in the birthday's own week for every date. The finding is replaced by the
+    // guard, which is strictly stronger: it sweeps the dates that used to fail rather than the one
+    // that used to pass.
+    for (const [bm, bd] of [
+      [6, 15], // was TWO weeks early
+      [12, 20], // was THREE weeks early
+      [1, 10],
+      [9, 5],
+      [3, 1],
+      [11, 30], // the 30th of a short-followed month - the case that broke the fraction twice
+      [2, 28],
+      [7, 31],
+    ] as const) {
+      const { world } = atTheFork(bm, bd)
+      expect(world.fork, `${bd}/${bm}: the career reached the fork`).not.toBeNull()
+      expect(
+        pendingBirthday(world),
+        `${bd}/${bm}: the fork is raised in her birthday's own week, not before it`,
+      ).toBe(19)
+      // ...and the ordering rule still puts the cake first, which is what the whole file is about.
+      expect(blockingOverlay(toSnapshot(world)), `${bd}/${bm}: the birthday speaks first`).toBe('birthday')
+    }
   })
 })
 

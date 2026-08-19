@@ -3326,6 +3326,14 @@ export interface CareerMeta {
    *  is why the field exists at all. Optional: rows written before this wave have none, and the list
    *  falls back to the band for them rather than inventing a birthday. */
   birthMonth?: number
+  /** ...and her birth DAY, carried for the same reason and added the day the age clock started
+   *  needing it (18.08). The month alone answered "how old is she" to within six weeks; the date
+   *  answers it exactly, and the Careers list prints the same number Home does or it is not one clock.
+   *
+   *  ⚠ SAME OPTIONALITY AND SAME FALLBACK. A row written before this wave has a month and no day, and
+   *  `careerAge` reads the day as the 1st for it – which is the month clock's own answer, so an old
+   *  row keeps printing exactly what it printed rather than shifting under the reader. */
+  birthDay?: number
 }
 
 /** ⭐ ROUND-21 #1 – WHOSE CAREER IS IN THIS FILE, read WITHOUT importing it.

@@ -88,7 +88,7 @@ import type { CareerEndingType } from '../src/shared/protocol'
  *  engine (world/age.ts) and it is deliberately NOT a variable in this baseline. */
 const BIRTH_MONTH = DEFAULT_PROFILE.birthMonth
 /** Her exact age at a career week, on the one birth date this baseline uses. */
-const ageAt = (week: number) => kidAgeExact(week, BIRTH_MONTH)
+const ageAt = (week: number) => kidAgeExact(week, BIRTH_MONTH, 1)
 
 // --- args -------------------------------------------------------------------------------------
 
@@ -428,7 +428,7 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
         // `tools/college-fork.ts`'s exact reading and is replicated on purpose: §8 compares this
         // run's first-admission column against that spec's, and a one-week difference in where the
         // rank is read would put a spurious gap in the comparison. The drift is one week.
-        firstEntryAge[t] = kidAgeExact(weekOfEntry, world.profile.birthMonth)
+        firstEntryAge[t] = kidAgeExact(weekOfEntry, world.profile.birthMonth, world.profile.birthDay)
         firstEntryRankWta[t] = world.kidRankWta ?? tableSize(world, TRACK)
         firstEntryRankedWta[t] = kidPoints(world, TRACK) > 0
         firstEntryRankItf[t] = world.kidRank
@@ -442,7 +442,7 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
       prizeCents += Math.max(0, fw.byCategory.prize ?? 0)
     }
 
-    const ageNow = kidAgeExact(world.week, world.profile.birthMonth)
+    const ageNow = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     if (world.ending === null) liveThroughAge = Math.floor(ageNow)
 
     // 3. CAREER HIGH – see `bestRawWta` for why the expensive half is gated.
@@ -517,10 +517,10 @@ function runOne(preset: Preset, index: number, policy = POLICY, key = ''): Row {
     if (endingType === null && world.ending) {
       endingType = world.ending.type
       endingWeek = world.ending.week
-      endingAge = kidAgeExact(world.ending.week, world.profile.birthMonth)
+      endingAge = kidAgeExact(world.ending.week, world.profile.birthMonth, world.profile.birthDay)
     }
     if (retirementAskAge === null && world.retirementOffer) {
-      retirementAskAge = kidAgeExact(world.retirementOffer.askedWeek, world.profile.birthMonth)
+      retirementAskAge = kidAgeExact(world.retirementOffer.askedWeek, world.profile.birthMonth, world.profile.birthDay)
       retirementReason = world.retirementOffer.reason
     }
   }

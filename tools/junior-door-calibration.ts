@@ -48,7 +48,7 @@ for (const preset of PRESETS) {
         if (row) {
           crossRank.push(row.rank)
           crossPct.push(row.rank / tableSize(world, 'itf'))
-          crossAge.push(kidAgeExact(world.week, world.profile.birthMonth))
+          crossAge.push(kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay))
         }
       }
       if (w % 26 === 25) {

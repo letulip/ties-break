@@ -154,7 +154,7 @@ function careerAt(rung: CoachTier, seed: string): number {
       potential,
       // `growWeek` has always developed HER, not the band (world.ts) - so the bench feeds the same
       // clock the engine does rather than the market's restocking one.
-      ageYears: kidAgeYears(w, profile.birthMonth),
+      ageYears: kidAgeYears(w, profile.birthMonth, profile.birthDay),
       plan: { train: 70, rest: 30 },
       coach,
       playStyle: profile.playStyle,

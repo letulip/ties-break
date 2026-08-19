@@ -85,7 +85,7 @@ async function main(): Promise<void> {
   section('WHO, WHEN, AND WHAT SHE IS MADE OF')
   console.log(
     `  ${prof.kidName} ${prof.kidLastName}  ·  week ${w.week} (${weekLabel(w.week)})  ·  season ${season}` +
-      `  ·  age ${kidAgeExact(w.week, prof.birthMonth).toFixed(2)}  ·  schema v${w.schemaVersion}`,
+      `  ·  age ${kidAgeExact(w.week, prof.birthMonth, prof.birthDay).toFixed(2)}  ·  schema v${w.schemaVersion}`,
   )
   console.log(`  funds ${money(w.fundsCents)}  ·  coach ${w.coachId ?? 'self'} (${prof.coachTier})  ·  ${prof.background} family  ·  ${prof.country}`)
   console.log(`\n  ${padE('skill', 16)}${pad('now', 8)}${pad('potential', 11)}${pad('headroom', 10)}`)
@@ -275,7 +275,7 @@ async function main(): Promise<void> {
       if (row.playerId === KID_ID) {
         console.log(
           `  ${padE('#' + row.rank, 7)}${padE('>> ' + prof.kidName + ' <<', 22)}${pad(row.points, 7)}` +
-            `${pad(Math.floor(kidAgeExact(w.week, prof.birthMonth)), 5)}${pad(core.toFixed(1), 7)}` +
+            `${pad(Math.floor(kidAgeExact(w.week, prof.birthMonth, prof.birthDay)), 5)}${pad(core.toFixed(1), 7)}` +
             `${pad(w.skills.serve.toFixed(1), 7)}${pad(w.skills.ret.toFixed(1), 7)}${pad(w.skills.composure.toFixed(1), 7)}` +
             `${pad(w.skills.stamina.toFixed(1), 7)}${pad(w.skills.groundstrokes.toFixed(1), 7)}   (the player)`,
         )

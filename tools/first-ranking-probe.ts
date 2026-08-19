@@ -73,7 +73,7 @@ for (let p = 0; p < PRESETS.length; p++) {
       stepCareerWeek(world, rng, POLICY)
       if (world.ending && row.endedWeek === null) row.endedWeek = world.week
       if (world.ending) break
-      const age = kidAgeExact(world.week, world.profile.birthMonth)
+      const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
       for (const t of LADDER_TRACKS) {
         if (row.firstPointWeek[t] === undefined && kidPoints(world, t) > 0) row.firstPointWeek[t] = world.week
         if (row.firstRankWeek[t] === undefined && kidLadderRank(world, t) !== null) {
@@ -103,7 +103,7 @@ for (const t of LADDER_TRACKS) {
   const q = (f: number) => (ages.length === 0 ? '–' : one(ages[Math.min(ages.length - 1, Math.floor((ages.length - 1) * f))]))
   const ptAges = rows
     .filter((r) => r.firstPointWeek[t] !== undefined)
-    .map((r) => kidAgeExact(r.firstPointWeek[t] as number, 6))
+    .map((r) => kidAgeExact(r.firstPointWeek[t] as number, 6, 1))
   console.log(
     `  ${t.padEnd(10)} ${String(got.length).padStart(3)}/${n} ${pct(got.length).padStart(5)}   ` +
       `${q(0.25).padStart(5)} / ${q(0.5).padStart(6)} / ${q(0.75).padStart(5)}        ` +
@@ -127,7 +127,7 @@ for (const w of AT) {
     const held = alive.filter((r) => r.heldAt[w]?.[t]).length
     return `${held}/${alive.length} ${((100 * held) / Math.max(1, alive.length)).toFixed(0)}%`.padEnd(12)
   })
-  console.log(`  ${String(w).padStart(4)}   ${one(kidAgeExact(w, 6)).padStart(5)}  ${cells.join('')}`)
+  console.log(`  ${String(w).padStart(4)}   ${one(kidAgeExact(w, 6, 1)).padStart(5)}  ${cells.join('')}`)
 }
 
 console.log('\n⚠ EVER minus HELD is a DECAY, not a bypass – the domestic window is 52 weeks wide.')

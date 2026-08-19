@@ -176,7 +176,7 @@ function runOne(preset: Preset, index: number): Row {
 
   for (let i = 0; i < WEEKS; i++) {
     const weekOfEntry = world.week
-    const ageAtEntry = kidAgeExact(weekOfEntry, world.profile.birthMonth)
+    const ageAtEntry = kidAgeExact(weekOfEntry, world.profile.birthMonth, world.profile.birthDay)
     const ageBucket = Math.floor(ageAtEntry)
     const e = stepCareerWeek(world, rng, POLICY)
     weeksLived = i + 1
@@ -193,7 +193,7 @@ function runOne(preset: Preset, index: number): Row {
         firstEntryRankItf[t] = kidPoints(world, 'itf') > 0 ? world.kidRank : null
       }
     }
-    const ageNow = kidAgeExact(world.week, world.profile.birthMonth)
+    const ageNow = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     for (const t of RUNGS) {
       if (floorOpenAge[t] === undefined && tierFloorOpen(world, t)) floorOpenAge[t] = ageNow
       if (firstCountingAge[t] !== undefined) continue
@@ -215,7 +215,7 @@ function runOne(preset: Preset, index: number): Row {
       seenWeeks.add(fw.week)
       const prize = Math.max(0, fw.byCategory.prize ?? 0)
       prizeCents += prize
-      if (kidAgeExact(fw.week, world.profile.birthMonth) < ENDINGS.forkAgeYears) prizeBy19Cents += prize
+      if (kidAgeExact(fw.week, world.profile.birthMonth, world.profile.birthDay) < ENDINGS.forkAgeYears) prizeBy19Cents += prize
     }
     if (collegeShutAge === null && !retiredCollegeDoorOpen(world)) {
       collegeShutAge = ageNow
@@ -256,7 +256,7 @@ function runOne(preset: Preset, index: number): Row {
     prizeBy19Cents,
     prizeCents,
     endingKind: world.ending?.type ?? null,
-    endingAge: world.ending ? kidAgeExact(world.week, world.profile.birthMonth) : null,
+    endingAge: world.ending ? kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay) : null,
     weeksLived,
   }
 }

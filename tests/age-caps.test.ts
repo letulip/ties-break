@@ -31,6 +31,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { tierState, type TierStateInput } from '../src/composables/tierState'
 import { rngFromSeed } from '../src/engine/rng'
+import { kidAgeAt } from '../src/engine/world/age'
 import { DEFAULT_PROFILE, type SeasonHistoryEntry } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -297,19 +298,37 @@ describe('A3 — the allowance resets on the year boundary', () => {
     expect(prune).toContain('Math.min(')
   })
 
-  it('a full allowance really does clear once the world ticks into the next season', () => {
+  it('a full allowance really does clear once her age-year turns over', () => {
+    // ⚠⚠ RE-AIMED 18.08, AND THE OLD TRIGGER WAS THE POINT OF P2. This walked to the start of the next
+    // SEASON and asserted the ledger had cleared - but P2 moved the window to her BIRTHDAY year on
+    // purpose (the block above pins that in source: "the window is an age comparison ... and no longer
+    // a season block"). While the age clock read her birth MONTH the two coincided for this fixture,
+    // because she is born in January and the season opens in January; on the date clock they part
+    // company by a few days. She is born on the SIXTH and season 1 opens on Monday the fifth, so at
+    // the season boundary her birthday has not arrived and the allowance is correctly still spent.
+    //
+    // So the walk now runs to the event the rule is actually about - her age turning over - and the
+    // season boundary is asserted separately, as the thing that is NO LONGER the trigger.
     const world = openWorld('agecap-roll')
     fillCap(world, 14)
     expect(entryCapUsage(world, world.week).remaining).toBe(0)
     const rng = rngFromSeed(world.seed)
-    while (world.week < WEEKS_PER_YEAR) {
+    const ageAtStart = kidAgeAt(world, world.week)
+    let crossedSeasonBoundaryStillSpent = false
+    while (kidAgeAt(world, world.week) === ageAtStart) {
       tickWeek(world, rng)
       if (world.pendingTournament) {
         world.pendingTournament.finished = true
         world.pendingTournament = null
       }
+      if (world.week === WEEKS_PER_YEAR && entryCapUsage(world, world.week).used > 0) {
+        crossedSeasonBoundaryStillSpent = true
+      }
+      if (world.week > 2 * WEEKS_PER_YEAR) throw new Error('her age never turned over')
     }
-    expect(seasonStartWeek(world.week)).toBe(WEEKS_PER_YEAR)
+    // ⚠ AND THE SEASON BOUNDARY REALLY DID PASS WITHOUT CLEARING IT, which is P2 in one line. Without
+    // this the walk above would also pass on a world where the window was still the season block.
+    expect(crossedSeasonBoundaryStillSpent, 'the season boundary is not what clears the ledger').toBe(true)
     // ⚠ THE LIMIT IS 22 AND NOT 18 SINCE P2, AND THE FOUR ARE EARNED RATHER THAN LEAKED. This career
     // really does finish its first season inside the junior top twenty (`openWorld` hands her four
     // J300 titles), and Appendix F grants a top-20 fifteen-year-old four extra international events.

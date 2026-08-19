@@ -323,7 +323,7 @@ function runCareer(arm: Arm, index: number): Career {
       ? undefined
       : (w, e) => {
           if (TIERS[e.tier].track !== 'wta') return false
-          if (arm.wFromAge !== undefined && kidAgeExact(w.week, w.profile.birthMonth) < arm.wFromAge) return true
+          if (arm.wFromAge !== undefined && kidAgeExact(w.week, w.profile.birthMonth, w.profile.birthDay) < arm.wFromAge) return true
           if (arm.preferLowerRung) {
             return w.season.some(
               (x) => x.week === e.week && TIERS[x.tier].track !== 'wta' && w.week <= x.deadlineWeek && tierOpenFor(w, x.tier),
@@ -345,7 +345,7 @@ function runCareer(arm: Arm, index: number): Career {
 
     // the budget probe, at exactly the state the entry policy is about to read
     const probe = budgetProbe(world, POLICY)
-    const exactAge = kidAgeExact(world.week, world.profile.birthMonth)
+    const exactAge = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     if (probe.open) {
       weeksWithAnOpenRung++
       if (probe.binds) {
@@ -1294,7 +1294,7 @@ async function section6(paths: string[]): Promise<void> {
   console.log(rule())
   for (const path of paths) {
     const w = (await decodeExportFile(new Uint8Array(readFileSync(path)))) as WorldState
-    console.log(`\n  ${path.split('/').pop()}  ·  week ${w.week}  ·  age ${kidAgeExact(w.week, w.profile.birthMonth).toFixed(2)}`)
+    console.log(`\n  ${path.split('/').pop()}  ·  week ${w.week}  ·  age ${kidAgeExact(w.week, w.profile.birthMonth, w.profile.birthDay).toFixed(2)}`)
     console.log(`  background ${w.profile.background} · coach rung ${w.profile.coachTier} · coachId ${w.coachId ?? 'none'} · condition ${w.condition}`)
     const start = startingSkills(w.seed, w.profile)
     const pot = w.potential as unknown as Record<string, number>
@@ -1348,8 +1348,8 @@ async function section6(paths: string[]): Promise<void> {
     console.log(`  results retained: ${mine.length} rows, ${span}  ⚠ a ROLLING window – anything older is gone, so these are LOWER BOUNDS`)
     console.log(`    junior (ITF) points earned in the window : ${cumJ}   = ${(cumJ / 120).toFixed(1)}x the turnstile`)
     console.log(`    professional (WTA) points earned         : ${cumW}`)
-    console.log(`    first week the running ITF total cleared 120 : ${crossed120 < 0 ? 'not inside the window' : `w${crossed120} (age ${kidAgeExact(crossed120, w.profile.birthMonth).toFixed(1)})`}`)
-    console.log(`    first W-track result in the window          : ${firstW < 0 ? 'none' : `w${firstW} (age ${kidAgeExact(firstW, w.profile.birthMonth).toFixed(1)})`}`)
+    console.log(`    first week the running ITF total cleared 120 : ${crossed120 < 0 ? 'not inside the window' : `w${crossed120} (age ${kidAgeExact(crossed120, w.profile.birthMonth, w.profile.birthDay).toFixed(1)})`}`)
+    console.log(`    first W-track result in the window          : ${firstW < 0 ? 'none' : `w${firstW} (age ${kidAgeExact(firstW, w.profile.birthMonth, w.profile.birthDay).toFixed(1)})`}`)
     const jRows = mine.filter((r) => isJ(r.tier as TierId))
     const wRows = mine.filter((r) => isW(r.tier as TierId))
     console.log(`    appearances in the window: ${jRows.length} junior, ${wRows.length} professional, ${mine.length - jRows.length - wRows.length} domestic`)
@@ -1372,7 +1372,7 @@ async function section6(paths: string[]): Promise<void> {
     console.log(`\n  the §3 budget probe on this save RIGHT NOW: ${probe.open ? (probe.binds ? 'THE BUDGET BINDS' : 'money is not in the decision') : 'no rung open in the window'}`)
     console.log(`  what a season of her own rung would cost her today, at the balanced plan:`)
     for (const tier of COACH_TIERS) {
-      const ageYears = kidAgeExact(w.week, w.profile.birthMonth)
+      const ageYears = kidAgeExact(w.week, w.profile.birthMonth, w.profile.birthDay)
       const [lo, hi] = coachRateBandCents(tier, ageYears)
       const weekly =
         tier === 'self'
