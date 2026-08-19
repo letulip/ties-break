@@ -25,7 +25,9 @@ The intersection nobody occupies:
 
 ## Status
 
-Concept / planning phase (July 2026). See [docs/decisions.md](docs/decisions.md) and [docs/research/](docs/research/).
+Live and playable – [play here](https://letulip.github.io/ties-break/). Matches, rankings, the calendar, money, training and condition, injuries, coaches, sponsors, the college second act and six career endings all ship, on a save schema with migrations and a golden fixture for every version. Morale/psyche – pillar 3's inner life – is the main mechanic still unbuilt.
+
+See [docs/decisions.md](docs/decisions.md) for owner rulings, [docs/context-index.md](docs/context-index.md) to navigate the docs, and [docs/research/](docs/research/) for the calibration inputs.
 
 ## Tests: what is covered, and how to see it
 

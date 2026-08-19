@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { generateCohort, driftCohort, makeJunior } from '../../src/engine/season/cohort'
+import { generateCohort, driftCohort, makeJunior, power } from '../../src/engine/season/cohort'
+import { RIVAL_GS_SPREAD, rivalGroundstrokes, rivalGroundstrokePotential } from '../../src/engine/season/rival'
 import { relativeAgeHeadStart } from '../../src/engine/development'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { AiPlayer } from '../../src/engine/season/types'
@@ -145,5 +146,90 @@ describe('driftCohort — development, bounded by a ceiling and an age', () => {
     for (const p of cohort) p.serve = 100
     driftCohort(cohort, rngFromSeed('w'))
     for (const p of cohort) expect(p.serve).toBe(100)
+  })
+})
+
+// =================================================================================================
+// THE FIFTH AXIS, ROUND 22 – a rival's groundstroke is HERS, and it develops toward a ceiling
+// =================================================================================================
+//
+// Owner: «ты же вроде сделал хорошую формулу для него [power()]. Мне кажется надо на нее опираться,
+// тогда у всех появится аналог пятого навыка».
+//
+// It used to be `(serve + ret) / 2 + offset(±RIVAL_GS_SPREAD)`, which failed that ask twice over: a
+// rival could never sit more than the offset away from what her first-strike pair already said (so
+// the cohort could not contain a groundstroke SPECIALIST – only the kid could specialise on the
+// fifth axis), and it had no ceiling of its own to develop toward. It reads `mean(four) + offset`
+// now, and `rivalGroundstrokePotential` is the same function fed her ceilings.
+//
+// These cases are written so the OLD formula fails them. Mutation-verified against it: reverting
+// rival.ts turns the first two red, which is what makes the block worth its runtime.
+describe('the fifth axis – a rival specialises off the ground, and grows into it', () => {
+  const firstStrike = (p: AiPlayer): number => (p.serve + p.ret) / 2
+
+  it('is not a restatement of serve and return: real specialists exist, both ways', () => {
+    // THE CUT IS `RIVAL_GS_SPREAD` ITSELF, WHICH IS WHY THIS TEST CANNOT PASS ON THE OLD ANCHOR.
+    // Under `(serve + ret) / 2 + offset` the deviation from the first-strike pair WAS the offset, so
+    // |dev| > RIVAL_GS_SPREAD had probability zero for all 199 – not "rare", impossible. Measured on
+    // the shipped anchor: 52-71 of 199 across five seeds (tools/fifth-skill-probe.ts). The bound is
+    // set at 20, well under the measured floor, so it fails on a real regression and not on a seed.
+    const cohort = generateCohort('bench-working-0')
+    const devs = cohort.map((p) => rivalGroundstrokes(p) - firstStrike(p))
+    expect(devs.filter((d) => d > RIVAL_GS_SPREAD).length).toBeGreaterThan(20)
+    expect(devs.filter((d) => d < -RIVAL_GS_SPREAD).length).toBeGreaterThan(20)
+  })
+
+  it('develops toward a ceiling of its own, and a century of weeks never passes it', () => {
+    const cohort = generateCohort('gs-ceiling', 60)
+    // A ceiling is a property of the PLAYER, so it must not move while she develops – exactly what
+    // `potential` promises for the other four (the block above pins that).
+    const ceilings = cohort.map(rivalGroundstrokePotential)
+    const start = cohort.map(rivalGroundstrokes)
+    for (let i = 0; i < cohort.length; i++) {
+      expect(start[i], `${cohort[i].id} starts under her ceiling`).toBeLessThanOrEqual(ceilings[i] + 1e-9)
+    }
+    for (let w = 0; w < 520; w++) driftCohort(cohort, rngFromSeed(`gs-ceil-${w}`))
+    let climbed = 0
+    for (let i = 0; i < cohort.length; i++) {
+      const now = rivalGroundstrokes(cohort[i])
+      expect(rivalGroundstrokePotential(cohort[i]), `${cohort[i].id} ceiling moved`).toBeCloseTo(ceilings[i], 12)
+      expect(now, `${cohort[i].id} passed her ceiling`).toBeLessThanOrEqual(ceilings[i] + 1e-9)
+      if (now > start[i] + 1e-9) climbed++
+    }
+    // ...and it really is DEVELOPMENT and not a fixed number: the old formula grew only because
+    // serve/ret did, and had nothing to arrive at. Ten years of weeks moves nearly everybody.
+    expect(climbed).toBeGreaterThan(cohort.length / 2)
+  })
+
+  it('is personal: two rivals with identical attributes still hit differently', () => {
+    // The offset is drawn off her own `gs:<id>` sub-stream, so it is hers and nobody else's – which
+    // is what stops the axis collapsing into a deterministic function of the other four.
+    const rng = rngFromSeed('twins')
+    const a = makeJunior(rng, 'ai-twin-a', 14)
+    const b: AiPlayer = { ...a, id: 'ai-twin-b', potential: { ...a.potential } }
+    expect(rivalGroundstrokes(a)).not.toBeCloseTo(rivalGroundstrokes(b), 6)
+    // ...and `power()` carries exactly one fifth of that difference through – no more, because the
+    // fifth term no longer re-states serve/ret on top of its own content (see cohort.ts's note).
+    expect(power(a) - power(b)).toBeCloseTo((rivalGroundstrokes(a) - rivalGroundstrokes(b)) / 5, 12)
+  })
+
+  it('costs the MAIN stream nothing: driftCohort still spends exactly four draws per rival', () => {
+    // THE LAW THIS WHOLE DESIGN IS BUILT AROUND (season/types.ts's Omit note, tests/condition.test.ts
+    // B1b). A fifth STORED attribute or a fifth ceiling in the cohort row would want a fifth weekly
+    // draw and move the frozen MAIN capture; deriving both off `gs:<id>` costs nothing here.
+    const cohort = generateCohort('draw-count', 10)
+    let spent = 0
+    const base = rngFromSeed('count')
+    driftCohort(cohort, () => {
+      spent++
+      return base()
+    })
+    expect(spent).toBe(4 * cohort.length)
+    // ...and neither derivation draws on a passed stream at all – they take no generator.
+    for (const p of cohort) {
+      rivalGroundstrokes(p)
+      rivalGroundstrokePotential(p)
+    }
+    expect(spent).toBe(4 * cohort.length)
   })
 })

@@ -141,15 +141,15 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
     expect(lastTerm.lead).toBe('12th grade')
     const done = schoolTile(view({ week: 52 * 4 + SCHOOL_YEAR_TURNS_AT, birthMonth: 3 }))
     expect(view({ week: 52 * 4 + SCHOOL_YEAR_TURNS_AT }).ageYears).toBe(18)
-    expect(done.lead).toBe("School's done")
-    expect(done.note).toBe('Tennis full-time')
+    expect(done.lead).toBe('School finished')
+    expect(done.note).toBe('No more bells')
   })
 
   it('every month of every season of a career produces a real grade or a real ending', () => {
     for (let birthMonth = 1; birthMonth <= 12; birthMonth++) {
       for (let week = 0; week < 52 * 6; week += 7) {
         const tile = schoolTile(view({ week, birthMonth }))
-        expect(tile.lead, `m${birthMonth} w${week}`).toMatch(/^(\d+(st|nd|rd|th) grade|School's done)$/)
+        expect(tile.lead, `m${birthMonth} w${week}`).toMatch(/^(\d+(st|nd|rd|th) grade|School finished)$/)
         expect(tile.note.length, `m${birthMonth} w${week}`).toBeGreaterThan(0)
       }
     }
@@ -167,6 +167,44 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
   it('the class standing is monotone in age and never reads as a mark', () => {
     const notes = [9, 12, 3, 6].map((m) => schoolTile(view({ birthMonth: m })).note)
     expect(notes).toEqual(['Oldest in class', 'Older than most', 'Young in class', 'Youngest of all'])
+  })
+
+  // ⭐ ROUND-22 – A WEEK BEFORE THE CAREER OPENS IS A NEGATIVE WEEK, AND 0 IS NOT A SAFE DEFAULT.
+  //
+  // The report: «clamping the week to 0 for the pre-career ages printed "8th grade" under a
+  // nine-year-old – schoolTile derives her cohort from the season year, so the week has to go
+  // negative for ages before week 0.» The arithmetic is exactly that: the tile's cohort is
+  // `seasonYear` and `pastSeptember(week)`, and a view built off a clamped week carries the CAREER'S
+  // season year with it – so week 0 says «8th grade» at nine, at ten and at thirteen alike. Clamping
+  // does not withhold an answer here, it asserts a wrong one.
+  //
+  // ⚠ THIS IS A GUARD, NOT A FIX. Measured 19.08: nothing in the tree asks the tile about a
+  // pre-career week – `toSnapshot` is its only caller and `world.week` is never negative – and the
+  // module needs no change to answer one, because every week predicate under it normalises its
+  // modulo (`pastSeptember`, `isExamWeek`, `isSummerWeek`) and `seasonIndexOf` floors. What this
+  // forbids is the clamp being added HERE, which is the shape the report describes.
+  //
+  // ⚠ MUTATION-VERIFIED: `const birthYear = kidBirthYear()` preceded by `view = { ...view, week:
+  // Math.max(0, view.week) }` in `schoolTile` -> this goes red on the September turnover, because a
+  // clamped week freezes the school year at the one the career opens in.
+  it('a pre-career week is NEGATIVE, and the tile answers on her real cohort', () => {
+    const preCareer = [9, 10, 11, 12, 13].map((age) => {
+      const v = view({ week: (age - 14) * 52 })
+      return { age: v.ageYears, grade: schoolTile(v).lead }
+    })
+    expect(preCareer).toEqual([
+      { age: 9, grade: '3rd grade' },
+      { age: 10, grade: '4th grade' },
+      { age: 11, grade: '5th grade' },
+      { age: 12, grade: '6th grade' },
+      { age: 13, grade: '7th grade' },
+    ])
+    // ...against the ONE number a week clamped to 0 prints at every one of those ages.
+    expect(schoolTile(view({ week: 0 })).lead).toBe('8th grade')
+    // And the 1 September still turns the year over inside a pre-career season: week -226 is the
+    // `SCHOOL_YEAR_TURNS_AT` of the season she turns ten, which a clamp would flatten away.
+    expect(schoolTile(view({ week: -227 })).lead).toBe('3rd grade')
+    expect(schoolTile(view({ week: -226 })).lead).toBe('4th grade')
   })
 })
 
@@ -353,7 +391,12 @@ describe('a real career', () => {
     // Three seasons of a career that actually plays: enter whatever the gate allows, resolve every
     // reveal, and keep going.
     const seen = new Set<string>()
-    for (let i = 0; i < 170; i++) {
+    // ⚠ 18.08 – THE BOUND IS "UNTIL SHE IS SEVENTEEN", NOT 170 WEEKS. It was a literal 170 while the
+    // age clock read her birth MONTH, which turned her seventeenth on the first Monday of April; the
+    // date clock turns it on the 15th, so the same 170 weeks now end with a sixteen-year-old and the
+    // test's own title stopped being true. Walking to the age this test is about is what it meant all
+    // along, and it cannot drift again with the calendar. The cap is a runaway guard, not the target.
+    for (let i = 0; i < 200 && toSnapshot(world).ageYears < 17; i++) {
       const snap = toSnapshot(world)
       for (const e of snap.upcoming) {
         if (e.eligible && !e.entered && e.week > world.week && e.deadlineWeek >= world.week) {

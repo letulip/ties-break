@@ -4,13 +4,16 @@ status: superseded
 area: delivery
 canonical: false
 last-reviewed: 2026-08-03
-superseded-by: docs/plans/roadmap-2026-08.md
+superseded-by: docs/now-next-later.md
 ---
 
 # Strategy & implementation plan
 
-> The positioning and research base remain useful. The implementation ordering in this document
-> is superseded by [Roadmap 2026-08](plans/roadmap-2026-08.md).
+> The positioning and research base remain useful. The implementation ordering in this document was
+> superseded by [Roadmap 2026-08](plans/roadmap-2026-08.md) on 03.08, and **that roadmap was itself
+> superseded on 19.08** – so this page's `superseded-by` now points past it, at
+> [now / next / later](now-next-later.md), which is the one current delivery document. A chain that
+> hands a reader a second superseded page is a route, not a record.
 
 Working title: **Tennis Sim**. See [README](../README.md) for positioning, [decisions.md](decisions.md) for owner decisions, [research/](research/) for the evidence base.
 

@@ -43,16 +43,12 @@ import { RADAR_AXIS_LABEL } from '../src/engine/radar'
 import type { CountingResult, LadderView, RadarAxis, UpcomingEvent } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
 import { firstRoundValue } from './openerValue'
+// Comments are not code – the house helper, now in tests/helpers/source.ts. This card documents what
+// it deliberately STOPPED doing, and naming the composable it no longer calls was enough to fail a
+// raw `not.toContain` on the first run.
+import { codeOf } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
-/** Comments are not code – the house helper (tests/calendar-screen.test.ts, tests/knock.test.ts).
- *  This card documents what it deliberately STOPPED doing, and naming the composable it no longer
- *  calls was enough to fail a raw `not.toContain` on the first run. */
-const codeOf = (src: string) =>
-  src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
 
 function ladder(results: CountingResult[] = []): LadderView {
   return { rank: null, prevRank: null, points: 0, standings: [], countingResults: results }
@@ -300,15 +296,20 @@ describe('the goal the card prints', () => {
       upcoming: [event({ entered: true, tier: 'w100', label: 'World Tour 100 Dubai' })],
       ladders: { wta: ladder([result('w100', 0)]) },
     })
-    expect(nextGoalFor(w100).text).toBe('Win one match at the WTA 125')
-    // ⚠ RE-AIMED BY W3-ACT2, AND THE RE-AIM IS THE WHOLE POINT OF THE WAVE. A WTA 125 title used to
-    // be the top of the world, so "win it" was the honest goal there; there are four rungs above it
-    // now, so the escalation keeps going and the 125 case moves to the ordinary arm.
+    // ⚠ RE-AIMED AGAIN, AND ONLY THE SPELLING MOVED (owner's rename, 18.08). The four professional
+    // rungs joined the World Tour family - 'WTA 125' -> 'World Tour 125', 'WTA 250' -> 'World Tour
+    // 250' - so the goal line quotes a different name for the same rung. The ESCALATION is what these
+    // three assertions guard and it is untouched: a W100 title still points at the rung above it, and
+    // the tier ids ('w100', 'wta125', 'wta250') did not move at all.
+    expect(nextGoalFor(w100).text).toBe('Win one match at the World Tour 125')
+    // ⚠ RE-AIMED BY W3-ACT2, AND THE RE-AIM IS THE WHOLE POINT OF THAT WAVE. A 125 title used to be
+    // the top of the world, so "win it" was the honest goal there; there are four rungs above it now,
+    // so the escalation keeps going and the 125 case moves to the ordinary arm.
     const wta125 = facts({
-      upcoming: [event({ entered: true, tier: 'wta125', label: 'WTA 125 Limoges' })],
+      upcoming: [event({ entered: true, tier: 'wta125', label: 'World Tour 125 Limoges' })],
       ladders: { wta: ladder([result('wta125', 0)]) },
     })
-    expect(nextGoalFor(wta125).text).toBe('Win one match at the WTA 250')
+    expect(nextGoalFor(wta125).text).toBe('Win one match at the World Tour 250')
     // ...and at the very top there is still nothing above, so "win it" IS the honest goal - the one
     // case the old fallback was right about, kept right, one storey higher. The calendar's own
     // standing rule ("there must ALWAYS be somewhere to go") now runs out at a Grand Slam, which is

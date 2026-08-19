@@ -20,7 +20,6 @@ import {
   SAVE_SCHEMA_VERSION,
   openingCoachId,
   replayMainState,
-  kidAgeYears,
   seasonStartWeek,
   seedWorldForV6,
   startingSkills,
@@ -42,7 +41,7 @@ import { rngFromSeed, pickInt, type MainRngState } from './rng'
 import { OFF_SEASON_WEEKS, TIERS, tierFromLabel, WEEKS_PER_YEAR } from './season/calendar'
 import { milestoneKey } from './diary'
 import { schoolEndWeek } from './kidLife'
-import { WEEKS_IN_SEASON, weekYear } from '../shared/dates'
+import { WEEKS_IN_SEASON, weekMonth, weekYear } from '../shared/dates'
 import type { TierId } from './season/types'
 
 // Save-data migrations. Append-only: never renumber, never delete a block.
@@ -58,9 +57,32 @@ import type { TierId } from './season/types'
  *  arithmetic ever moves - which a hard-coded week absolutely would. */
 function nineteenthBirthdayWeek(birthMonth: number, cap: number): number {
   for (let w = 0; w <= cap; w++) {
-    if (kidAgeYears(w, birthMonth) >= 19) return w
+    if (frozenMonthClockAge(w, birthMonth) >= 19) return w
   }
   return cap
+}
+
+/** ⚠⚠ THE AGE CLOCK AS IT STOOD WHEN v39 SHIPPED, FROZEN HERE BECAUSE A MIGRATION MAY NOT CHANGE ITS
+ *  MIND (18.08). `kidAgeYears` became DATE-aware on 18.08 – it had been reading the birth MONTH, so a
+ *  girl's age rose on the first Monday of her birth month rather than on her birthday, by up to six
+ *  weeks. That was a real defect and it is fixed at the source.
+ *
+ *  ⚠ BUT v39 IS SHIPPED, AND THE APPEND-ONLY RULE IS ABOUT THE OUTPUT, NOT THE SOURCE TEXT. A v38
+ *  save migrated last month got `fork.askedWeek` off the month clock; the same file migrated tomorrow
+ *  must land on the same week, or two players who imported the same save on different days hold
+ *  careers that diverge. The comment two functions down states the rule in its own words - "widening
+ *  this line would make a v38 save skip straight to a v51 shape, which is the edit the append-only
+ *  rule forbids" - and following the new clock here would be exactly that edit wearing a fix's
+ *  clothes.
+ *
+ *  ⚠ SO THE DRIFT WARNING ON `nineteenthBirthdayWeek` WAS HALF RIGHT AND IS NOW ANSWERED. It said the
+ *  search "cannot drift if the age arithmetic ever moves". It could - the arithmetic moved on 18.08 -
+ *  and what stops it is this copy rather than the search. The back-fill is bounded and self-correcting
+ *  anyway: it only ever writes `askedWeek` for a career already past nineteen, and the LIVE fork every
+ *  career raises from here on reads the real clock through `forkDue`. */
+function frozenMonthClockAge(week: number, birthMonth: number): number {
+  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
+  return Math.floor(weekYear(week) - (weekYear(0) - 14) + (weekMonth(week) - month) / 12)
 }
 
 const EPOCH_SEASON_YEAR = weekYear(0) // 2031 – the year season 0 opened in
@@ -1114,7 +1136,7 @@ export function migrateSave(raw: unknown): WorldState {
       // what back-fills `offer: null` onto it. Widening this line would make a v38 save skip straight
       // to a v51 shape, which is the edit the append-only rule forbids.
       save.fork =
-        kidAgeYears(week, birthMonth) >= 19 ? ({ askedWeek: nineteenth, answer: 'continue' } as ForkState) : null
+        frozenMonthClockAge(week, birthMonth) >= 19 ? ({ askedWeek: nineteenth, answer: 'continue' } as ForkState) : null
     }
     if (save.retirementOffer === undefined || typeof save.retirementOffer !== 'object') {
       save.retirementOffer = null
@@ -1210,7 +1232,7 @@ export function migrateSave(raw: unknown): WorldState {
   // THE FACT NEEDS NO MIGRATION AND THAT IS WORTH SAYING FIRST. `schoolIsOver(week, birthMonth)` is a
   // pure function of two numbers a save has always carried, so the moment this build reads the
   // owner's twenty-two-year-old career the exam fortnight is gone, the calendar draws a
-  // professional's day and the School tile says "School's done". Nothing is stored and nothing can
+  // professional's day and the School tile says "School finished". Nothing is stored and nothing can
   // drift.
   //
   // WHAT THE MIGRATION IS FOR IS THE MOMENT. `markSchoolEnd` fires on exactly one week, and for every
@@ -1572,6 +1594,22 @@ export function migrateSave(raw: unknown): WorldState {
       }
     }
     v = 52
+  }
+
+  // v52 -> v53: THE FIELD'S SEASON LEDGER. `fieldSeasonPoints` is what each professional has earned
+  // since January, so the professional table stops being a pure function of (seed, season).
+  //
+  // ⚠ THE BACK-FILL IS EMPTY, AND THAT IS A PRESERVATION RATHER THAN A DEFAULT CHOSEN FOR ANYBODY.
+  // Every career saved before v53 was played under an engine that discarded the field's results, so
+  // an empty tally is exactly what those seasons contained - the same table, the same ranks, the same
+  // acceptance cuts as the week it was saved. Inventing a tally would rewrite her standing retroactively
+  // against results this save never had.
+  //
+  // ⚠ AND IT FILLS ITSELF FROM THE NEXT TOURNAMENT WEEK ON, so an old save is a season behind for at
+  // most the rest of its current season and is level from the next wrap.
+  if (v === 52) {
+    if (save.fieldSeasonPoints === undefined) save.fieldSeasonPoints = {}
+    v = 53
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

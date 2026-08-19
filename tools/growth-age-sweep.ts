@@ -272,7 +272,7 @@ function runTrace(preset: Preset, index: number, policy: Policy, weeks = FULL_CA
     world.debtSinceWeek = null
     const before = meanFive(world.skills)
     const headBefore = headroomOf(world.skills, potential)
-    const exactAge = kidAgeExact(world.week, world.profile.birthMonth)
+    const exactAge = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
     const af = ageFactor(exactAge)
 
     stepCareerWeek(world, rng, policy)
@@ -884,7 +884,7 @@ async function section7(paths: string[]): Promise<void> {
     const birth = startingSkills(w.seed, w.profile)
     const week1 = withHeadStart(birth, w.profile.birthMonth)
     const bump = relativeAgeHeadStart(w.profile.birthMonth)
-    const age = kidAgeExact(w.week, w.profile.birthMonth)
+    const age = kidAgeExact(w.week, w.profile.birthMonth, w.profile.birthDay)
     console.log(`\n  career at week ${w.week}, age ${f1(age)}, head start ${bump >= 0 ? '+' : ''}${f2(bump)}, coach rung ${w.coachId ? 'hired' : 'self'}\n`)
     console.log(
       `  ${padEnd('skill', 16)}${pad('week 1', 9)}${pad('now', 9)}${pad('ceiling', 10)}${pad('TRUE roll', 11)}` +

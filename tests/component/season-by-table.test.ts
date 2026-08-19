@@ -247,8 +247,15 @@ describe('R14-E - the standings say how old the girls are', () => {
     // The 09.08 ruling. `ageAtWeek` (the band, and the coach market's restocking clock) would have
     // printed 14 for both, which is the two-ages bug that had Home and her own birthday note fifty
     // weeks apart.
+    // ⚠ THE JANUARY GIRL IS BORN ON THE **1st** SINCE 18.08, AND THE DAY IS NOW LOAD-BEARING. She used
+    // to inherit `DEFAULT_PROFILE`'s 15th and still read 14, because the age clock only asked which
+    // MONTH it was. On the date clock a girl born 15 January has not had her birthday by Monday 6
+    // January - she reads 13, exactly like the December girl - so the contrast this test is named for
+    // needs the one date that genuinely is fourteen at week 0: the 1st. That is the owner's ruling in
+    // its own words - «всем остальным, кто родился НЕ на 1й неделе января» - and the fixture now
+    // stands on the first week of January rather than merely in the month.
     const december = toSnapshot(createWorld('r14e-dec', { ...DEFAULT_PROFILE, birthMonth: 12 }))
-    const january = toSnapshot(createWorld('r14e-jan', { ...DEFAULT_PROFILE, birthMonth: 1 }))
+    const january = toSnapshot(createWorld('r14e-jan', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 1 }))
     const kidAgeOn = (snap: Snapshot): number | undefined =>
       snap.ladders[snap.activeLadder].standings.find((r) => r.isKid)?.ageYears
     expect(kidAgeOn(december)).toBe(13)

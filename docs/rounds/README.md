@@ -33,10 +33,15 @@ rather than quietly editing the earlier entry's checkbox.
 | [round-17.md](round-17.md) | 17 – owner playtest, twenty-eight items + a live day of follow-ups (2026-08-12) | 28 + 13 | the first round to get its ledger the same day, and the reason the ledger discipline held. 24 shipped, 4 answered; **15** and **22** are `[>]` awaiting his word, **H** is task #84. ⚠ **14 was re-marked `[!]` by the 13.08 audit** – both its fixes landed on Home, and the coach PICKER he was talking about was never touched. Argument in `specs/round17-triage.md`, `specs/round17-match-screen.md` |
 | [round-18.md](round-18.md) | 18 – the first round run through `/fix-round` (2026-08-13) | 11 | items 1-3 are re-reports of round-17 #14's miss; 5 (the skill) shipped; **6 is this audit**, task #88. 4 and 8 are `[?]` waiting on him (§Q1, §Q2), 9 open, 10 in flight, 7 and 11 answered |
 
+| [round-19.md](round-19.md) | 19 – the wrap week lies to a climbing girl (2026-08-13) | 2 | all shipped |
+| [round-20.md](round-20.md) | 20 – a micro-round, and one of them is mine (2026-08-13) | 4 | all shipped. #3 is the blocking dialog that stopped his career on a phone, and #4 is the rule it earned in `CLAUDE.md` |
+| [round-21.md](round-21.md) | 21 – a full playtest on the 128-draw build (2026-08-14) | 12 | all shipped. ⚠ **Boxes 1 and 9 stayed `[ ]` for four days after the work landed** (`ac5ea3d`, 15.08) and #9's own body already read "✅ BUILT" above an unticked box; both were ticked by the 19.08 documentation pass, which found them being carried forward as open work in `now-next-later.md`. #2 became its own wave – the coach travels, and the bonus is his own coach ladder doubled |
+| [round-22.md](round-22.md) | 22 – the age clock, the living table, and the review's first three waves (2026-08-18/19) | 20, in commit-subject numbering | ⚠ **The only round in this folder whose ledger was written AFTER the wave, from the commits.** His own numbered list was never captured on any branch, so `#2-5` and `#9-14` do not divide evenly across what shipped and the file says so instead of reconstructing it. The file is **current through `faa5a6c`** and says so – the wave was still landing commits while it was written. Everything shipped; one thing is left open and three wait on him, listed at the foot of the file |
+
 Every item's checkbox and comment lives in its own file – this table is just navigation, not a
-duplicate ledger. Round 12 had no row here at all until 09.08, and rounds **16, 17 and 18** had no
-row until 13.08 – twice now, which is its own lesson about a navigation table nobody is required to
-update.
+duplicate ledger. Round 12 had no row here at all until 09.08, rounds **16, 17 and 18** had no row
+until 13.08, and rounds **19, 20, 21 and 22** had none until 19.08 – three times now, which is its
+own lesson about a navigation table nobody is required to update.
 
 ## ⚠ Two traps for the next auditor, found on 13.08
 

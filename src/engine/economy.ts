@@ -14,7 +14,10 @@
 import { rngFromSeed, pickInt, type Rng } from './rng'
 import type { CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
 import type { TierId } from './season/types'
-import { WEEKS_PER_YEAR } from './season/calendar'
+// ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
+// on `upliftHorizonWeeks` below for the browser crash the old edge caused. `shared/dates.ts` imports
+// nothing, so this direction can never close a cycle.
+import { WEEKS_IN_SEASON } from '../shared/dates'
 
 /** The four recurring gear line-items. rackets/shoes/apparel report under the 'gear'
  *  breakdown category; stringing gets its own 'stringing' category (it recurs far more
@@ -416,14 +419,23 @@ export const ECONOMY = {
     // knob moves, and the game already knows the answer. `weeks` is the horizon the projection runs
     // over - one season, because that is the unit a weekly bill is judged in.
     //
-    // ⚠ THE LITERAL 52 IS DELIBERATE and must not become `WEEKS_PER_YEAR`. This object is evaluated
-    // at MODULE LOAD, and economy.ts sits inside an import cycle with season/calendar.ts - so
-    // reading that constant HERE throws "Cannot access 'WEEKS_PER_YEAR' before initialization" in
-    // the browser's module order and takes the whole app down with it. It does NOT throw under
-    // vitest, whose resolution order differs, which is exactly how it got as far as a green suite;
-    // it was caught by loading the real app. The constant stays safe inside FUNCTION bodies, and
-    // parentIncomeForWeekCents below still uses it that way.
-    upliftHorizonWeeks: 52,
+    // ⚠ THIS NUMBER WAS A HARD-CODED LITERAL 52 FOR ONE REASON, AND THE CYCLE THAT FORCED IT IS NOW
+    // CLOSED (TB-02). economy.ts used to import `WEEKS_PER_YEAR` from season/calendar.ts while
+    // calendar.ts imported `ECONOMY` straight back – a runtime cycle. This object is evaluated at
+    // MODULE LOAD, so reading the calendar constant HERE threw "Cannot access 'WEEKS_PER_YEAR'
+    // before initialization" in the browser's module order and took the whole app down with it.
+    //
+    // WHAT IT COST: nothing caught it. It does NOT throw under vitest, whose resolution order
+    // differs, so the suite stayed green through the crash; it was found only by loading the real
+    // app. The workaround was to write `52` here and confine the imported constant to FUNCTION
+    // bodies, where the temporal dead zone has passed – a live landmine that a later edit moving
+    // any calendar read up to module scope would have stepped on again.
+    //
+    // THE FIX IS THE DIRECTION, NOT THE PLACEMENT: the season length now comes from
+    // `shared/dates.ts`, a leaf that imports nothing, so economy no longer depends on calendar at
+    // all and calendar derives `WEEKS_PER_YEAR` from the same leaf. There is one 52 in the codebase
+    // and no cycle to initialise around, which is why this may safely be a named constant again.
+    upliftHorizonWeeks: WEEKS_IN_SEASON,
   },
 
   // Travel scales with family means (wealthier travel = pricier + a money-sink; poorer = cheaper),
@@ -1378,7 +1390,7 @@ export const ECONOMY = {
   // AND WHEN IT ENDS IS HIS SECOND RULING: «Конец школы – в конце учебного года.» Not her birthday -
   // the school year containing it, which is what happens to a person and which the calendar already
   // has a boundary for (`SCHOOL_YEAR_TURNS_AT`, 1 September). `kidLife.ts`'s `gradeOf` has modelled
-  // exactly that since the School tile shipped, and it already returns null - "School's done" - past
+  // exactly that since the School tile shipped, and it already returns null - "School finished" - past
   // the last grade. Nothing else in the game read it. Now everything does.
   //
   // ⚠ THE LOAD HALF IS THE SUMMER BLOCK'S ARGUMENT WITH A LONGER WINDOW, AND IT IS DELIBERATELY THE
@@ -2601,7 +2613,7 @@ export function gearVoice(background: FamilyBackground, lineCoveredByBrand: bool
  *  no migration, nothing to desync). Rounded to whole cents once, AFTER the compounding, so the
  *  weekly ledger stays integer. Zero MAIN-stream draws. */
 export function parentIncomeForWeekCents(seedStr: string, background: FamilyBackground, week: number): number {
-  const season = Math.max(0, Math.floor(week / WEEKS_PER_YEAR))
+  const season = Math.max(0, Math.floor(week / WEEKS_IN_SEASON))
   let income = ECONOMY.parentIncomeCents[background]
   const [lo, hi] = ECONOMY.incomeGrowthBand
   for (let i = 1; i <= season; i++) {

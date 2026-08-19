@@ -1958,6 +1958,75 @@ career was walked, and the bench was run first. New rule: type-check a new bench
 
 ---
 
+## 18.08.2026 – ⭐⭐ THE AGE CLOCK READS HER DATE, NOT HER MONTH (owner: «чини часы правильно, по дате, померь сколько гейтов поедет»)
+
+He found it by playing: «23 года было в интерфейсе на главной написано на неделю раньше, чем случился
+сам день рождения». Measured, it was worse than one week and far wider than one save.
+
+**THE DEFECT.** `kidAgeExact` was built on the birth MONTH, so her age rose on the first Monday of that
+month rather than on her birthday. Across all 365 birth dates: **287 printed an age she had not
+reached**, 7,574 (date, week) pairs in a 14-season career, by as much as **six weeks** – and a 31
+December date printed **19 while she was 17**. His own save (21 December) was a two-week case.
+
+⚠ **It contradicted his ruling of 09.08 directly** – «Есть год рождения и дата. Это всё… Дальше когда
+ДР – тогда и +1 год» – and survived eleven waves because **the guard measured the opposite
+direction**: `birthday-announce.test.ts` bounded how far the ANNOUNCEMENT could run ahead of the
+print, and returned 0 for exactly the weeks that were wrong.
+
+**THE BLAST RADIUS, MEASURED** (`tools/age-gate-shift.ts`, new – every age gate in the game has the
+form `age >= N`, so the complete radius is one table of first-week-reaching-N):
+
+| shift | cells |
+| --- | --- |
+| +1 week | 840 |
+| +2 weeks | 840 |
+| +3 weeks | 840 |
+| +4 weeks | 608 |
+| +5 weeks | 35 |
+
+**351 of 365 birth dates move; 3,163 of 3,650 (date, gate) cells; every shift is FORWARD.** She was
+being let into every age door 1–5 weeks early, mean 2.4.
+
+⚠ **TWO BUGS WENT IN ON THE WAY, IN OPPOSITE DIRECTIONS, AND THE GUARDS CAUGHT BOTH** – scaling the
+day gap by the CURRENT month went negative and dropped a year (born 30 January, printed twenty the
+week after she was told she turned twenty-one); scaling it by HER month exceeded twelve and added one
+(born 1 February, sixteenth a week early). Root cause both times: **the fraction could move the whole
+year.** It cannot now – `whole` comes from the date test alone and `frac` is clamped into [0,1) – and
+that invariant is pinned over all 365 dates × 728 weeks.
+
+⚠ **v39's MIGRATION KEEPS THE OLD ARITHMETIC, FROZEN IN PLACE.** A shipped migration may not change
+its mind: the same file imported yesterday and tomorrow must land on the same `fork.askedWeek`.
+
+**FOUR THINGS FOUND ON THE WAY, ALL REAL:**
+
+1. ⭐ **Round-17 #7 is CLOSED.** The fork at nineteen used to be raised up to THREE WEEKS **before** her
+   birthday (born 20 Dec: fork w307, nineteenth w310). Both now key off the same day and the fork lands
+   in the birthday's own week for every date – `kidAgeThroughWeek`, a one-week look-ahead for
+   CELEBRATIONS and never for gates. The test that recorded the gap is replaced by a guard against it.
+2. ⚠ **14 birthdays a career are never announced** – dates 1–6 January and 31 December, twice each. The
+   seasons re-anchor to the first Monday of the year and those dates fall in the gap between the last
+   career week of one season and the first of the next. Her age is right; the note and the gift are
+   lost. **And the tool that reported "0 lost" `continue`s on exactly those cases before counting.**
+3. ⚠ **A January girl is now correctly THIRTEEN at career start**, which is his 09.08 ruling word for
+   word – so her opening ITF allowance falls **14 → 10**. Two tests asserted 14 while their own
+   comments said thirteen.
+4. ⚠ **Wild cards: the door admits, the calendar shows shut.** `entryStatus` has a fourth door
+   (`homeWildCardPlace`) that `tierOpenFor` knows nothing about. **Pre-existing** – verified by control,
+   the file is 26/26 green on the pre-change tree – and surfaced only because the fixture moved a week.
+   **Open for the owner:** the fix is the calendar learning the same door, which changes what is on
+   screen.
+
+**TENTH RE-FREEZE, AND UNLIKE THE NINE BEFORE IT THE CAREERS REALLY MOVED.** Per-key diff first,
+control = this tree with the clock reverted. **27 keys of 63** moved – `results`, `skills`,
+`condition`, `fundsCents`, `kidRank`, `trophiesByTier`. UNMOVED: `rngMain` (tenth wave), `season`,
+`profile`, `potential` – same world, same calendar, same dice. Different weeks eligible, different
+careers.
+
+Gate: vue-tsc 0 · unit 3142 · component 42/42, 493/493 · context-audit ok · build ok · frozen MAIN
+capture untouched (41550 / e6b0c709).
+
+---
+
 ## 17.08.2026 – ⭐⭐ «ДАВАЙ 50»: the WTA 500 gets a head, and the ladder is finally in order (`docs/specs/the-head-of-the-list-is-a-ladder-2026-08.md`)
 
 He asked what the shorthand meant – «какое сейчас значение и что значат 64 40 и 64 50?» – and then
@@ -2148,3 +2217,191 @@ behind each stays in the file it governs – in English now, with a pointer back
   `SeasonScreen.vue`. He caught the two words on the Weekly Story's copy of the control and they were
   no truer on the season feed's: the handler ADVANCES THE WEEK and the flow re-simulates a stored
   record, so nothing is ever watched as it happens. Renamed *"Play it and watch →"* in both places.
+
+---
+
+## 18.08.2026 – TB-04: THE EIGHT CONDITION POINTS ARE A DEFECT, NOT A DESIGNED PENALTY (`wave/round22`)
+
+⚠ **THIS RULING LIVED ONLY IN A COMMIT MESSAGE FOR A DAY.** It was made on 18.08, shipped in
+`b93e178`, quoted in `world.ts`'s own comment – and recorded in no log. A decision of his may not
+live in the git log; this entry closes that.
+
+**THE QUESTION.** A medical withdrawal converts a match-marked week into a full free week by adding
+`recoveryBase - matchWeekRecoveryBase + restRecoveryBonus`. A manual `skipEvent` added
+`restRecoveryBonus` alone. Two equivalent match-free weeks therefore differed by **eight condition
+points**, decided only by whether the doctor pulled her out or the parent chose not to enter.
+The review filed it as a balance
+question – *"it should be a measured balance wave, not a casual refactor"*.
+
+**HIS RULING – A FIX, NOT A TUNING CALL.** Verbatim, from the comment beside the code:
+
+> **«мне кажется тут всё явно: она и в одном случае не играла и в другом»**
+
+It offends the standing **«мы ни за что не наказываем»**, and the architect's own note beside the
+withdrawal had already explained why the gap is accidental: **both constants were 2 when it was
+written**, so the difference was zero. The condition-v2 flip set `matchWeekRecoveryBase` to 0 and the
+two paths silently parted. Nobody designed an eight-point charge for saying "we are not going".
+
+⭐ **AND HE NAMED THE CASE THAT STAYS UNTOUCHED**: retiring MID-MATCH through injury. She walked on
+court and played, so that week is not match-free and never reaches this expression.
+
+⚠ **IT SHIPPED WITHOUT A BENCH ARM, DECLARED RATHER THAN HIDDEN.** **No tool in `tools/` calls
+`skipEvent`**, so a bench would have returned an identical diff – the null-arm trap, named rather
+than run. That single sentence is the concrete case behind
+[the balance-methodology proposal](plans/balance-methodology-proposal-2026-08-19.md), which is
+**awaiting his ruling and is not adopted**.
+
+Both paths now write the same expression in `src/engine/world.ts`, and neither can move without the
+other being edited.
+
+---
+
+## 19.08.2026 – ⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE (`wave/round22`)
+
+**His ruling, verbatim:**
+
+> **«да, это как раз защитит нас от 16 летних в топ-10»**
+
+**WHAT WAS TRUE BEFORE.** The AER – the tour's own per-year cap on professional entries – was
+enforced on **exactly one person in the world: the kid**. `tests/aer-cohort.test.ts` had measured
+that asymmetry in P2 and recorded it as harmless, and it *was* harmless, because nobody had ever
+been drawn into more capped events than her own row allows.
+
+**WHAT ENDED IT.** The live professional table (v53). A field pro's standing now MOVES with her
+results, so draw composition moves with it – and a **fourteen-year-old rival reached ten capped
+draws against a rulebook row of eight**. He ruled the honest fix rather than a wider guard.
+
+**GATED ON ALL FOUR ROUTES INTO A W DRAW** – the entry list, the on-ramp's held slots, the slam wild
+cards, and the shadow bracket's universe. ⚠ **A gate the backfills can walk around is no gate**, and
+that cost one leaked entry before the on-ramp was closed too. The rule sits on the draw's UNIVERSE
+rather than on the entrant list, which is the same construction `selectEntrants`' own age gate uses
+and for the same stated reason.
+
+⚠ **THE WINDOW IS THE SEASON, AND THAT IS EXACT RATHER THAN CONVENIENT.** `ageCohort` runs once a
+year at the season boundary, so a rival's age-year IS a season. A rolling 52 weeks was the first
+attempt and it leaked: **THIRTEEN is deliberately not a row in `proPerYearByAge`** (economy.ts states
+why – *"a 0 in an allowance table is a rule pretending to be a budget"*), so a rolling window carried
+a thirteen-year-old's uncapped entries across her birthday and then measured them against the
+fourteen-year-old row.
+
+⚠ **AND THE KID'S OWN ROWS ARE SKIPPED WHEN BUILDING THE FIELD'S LEDGER.** Without that her entries
+feed rival selection, which moves standings, which the conveyor's retirement rolls read – and those
+are on the MAIN weekly stream, so a career that entered more events would leave the world's dice in a
+different place. It is the rule `world.ts` already states in its own words: *"who turns up to a
+canonical W100 may never depend on what she has entered."* Caught by the A/B independence guards
+rather than by reading.
+
+**NO NEW SAVE FIELD**, deliberately: the count is derived from `world.results`, which is already
+persisted and already pruned, so a load resumes the rule where it stood.
+
+---
+
+## 19.08.2026 – ⭐⭐ A PROFESSIONAL CLIMBS INTO HER CHAIR INSTEAD OF INHERITING IT (`wave/round22`)
+
+**His objection, verbatim, on a sixteen-year-old holding 65% of a top chair's book without having
+played a match:**
+
+> **«вот я хочу, чтобы этого не было»**
+
+⭐ **AGE WAS NEVER THE CAUSE, ONLY ITS PROXY.** What a debutante lacks is **tennis played**, and the
+model already knew that exactly – `debutSeason`. So `FIELD.ageRampFloor` is **retired as a lever**
+(kept as a constant so the old benches still read, but `careerArc` no longer consults it);
+`careerArc` keeps only the DECLINE, which really is about the body; and **`tenureRamp(seasons on
+tour)` owns the climb**.
+
+⚠ **AND BECAUSE `debutAge` IS [16, 19], A SIXTEEN-YEAR-OLD PRO IS ALWAYS IN HER DEBUT SEASON, by
+construction** – so the rule lands on exactly the population he objected to, and it also catches what
+age never could: a twenty-two-year-old who has only just turned professional is a newcomer too.
+
+**MEASURED, 300 seeds × 8 seasons:**
+
+| | before | after |
+| --- | --- | --- |
+| a teen at #1 | – | 0.33% |
+| a teen in the top 3 | 11.29% | **3.25%** |
+| a teen in the top 10 | 59.21% | **28.63%** |
+
+⚠⚠ **THREE SHAPES, AND THE FIRST TWO WERE WRONG. Each was caught by a guard, none by reading.**
+
+1. **Discount the book.** A quarter of any field is inside its first three seasons, so the table
+   DEFLATED ~10% and the kid was handed a professional rung she had not earned –
+   `tests/unranked-sentinel.test.ts` went from a three-rung acceptance window to four.
+2. **Discount, then divide by the population mean.** Restored the LEVEL and still wrecked the SHAPE,
+   which is worse, because the shape is the one calibrated thing in `fieldPros.ts`: #100 came back
+   holding 384 points against a real ~850, and the weakest head-storey chair fell below half the best
+   elite one, collapsing the seam between the storeys.
+3. **Tenure never touches a row's VALUE.** The books stay exactly as `pointsForCore` calibrated them;
+   tenure decides only WHO HOLDS WHICH ROW, and only inside her own storey. The points-to-rank curve
+   is preserved by construction rather than by a normaliser somebody has to keep checking.
+
+⚠ **WITHIN A STOREY, NEVER ACROSS THE TABLE.** `strengthTier` fixes SKILL and POINTS together and
+several guards read that link. Permuting across the field put a middle-storey veteran on the #1 row
+while out-skilled by everyone near her, and `tests/season/fieldPros.test.ts` said so twice. Inside a
+storey the link is untouched: a sixteen-year-old is still a fine player in a fine chair, she is
+simply not world #3 in her first season.
+
+⚠ **THE TOOL HAD TWO FAULTS OF THE VERY CLASS THIS WAVE IS FIXING.** `tools/teen-at-the-top.ts` still
+asserted a retired knob in its prose ("ITS FLOOR IS 0.65"), and its counterfactual permuted an
+ALREADY-permuted table, reporting 0.92% where the field measures 3.25%. `chairBook` is now carried on
+the row so the engine and the tool compute from one base.
+
+⚠ **CONSEQUENCE FOR THE RECORD**: `docs/specs/round21-measured-2026-08.md` §4d described that floor
+as shipped truth. It is now marked in place as superseded by this ruling rather than rewritten – it
+is still the honest record of what the field looked like on 17.08.
+
+---
+
+## 19.08.2026 – ⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK (`wave/round22`)
+
+**The mechanic he asked for is the one shipped the day before** – «таблица professional ranking не
+двигается вообще… Кажется что таблица просто "стоит"». **This entry is about the arithmetic of it,
+which was wrong on the first cut and killed the player's career.**
+
+**THE DEFECT.** A pro's season winnings were added ON TOP of her derived book. But `wtaPoints` is not
+a January opening balance – it is her **whole 52-week book for this season** – so this counted the
+same tennis twice. ⭐ **The objection is the season wrap's own, one file over**: `world/milestones.ts`
+refuses to carry the tally across January because *"that would count the same tennis twice"*. The
+identical objection applies INSIDE the season and was missed.
+
+**WHAT IT COST, MEASURED.** +24% inflation by mid-season, concentrated on the ~350 of 1,600 pros who
+actually get a draw – so the table did not inflate evenly, it inflated a fifth of itself and that
+fifth leapfrogged everybody. The acceptance cuts read the result and refused her: **a ten-season
+career reached the W tour in NO season and finished on domestic events at 22.** Corrected, the same
+career turns professional in season 2 and stays – 30/43/45/43/61/62/55/60 W matches.
+
+**THE RULING: winnings REPLACE a share of the derived book, never add to it.** Two corrections on top
+of the first cut, both caught by guards rather than by reading:
+
+* ⚠ **The share is charged ONLY to pros who played.** Charging all 1,600 preserved the total but
+  tilted it: the four fifths our calendar cannot seat quietly gave up a fifth of their book, the tail
+  collapsed, and **a kid on 250 points rose 277th → 226th for tennis she did not play**.
+  `tests/ladder-floor.test.ts` caught it from the other end, as a W100 opening she could not reach
+  before.
+* ⚠ **The per-season move is bounded** (`FIELD.liveSwing`): a season shifts a row and may not rewrite
+  it. Without the bound the middle of the table churns hard, because in this model playing and losing
+  is worse than not playing at all – the honest consequence of a 1,600-chair table on a calendar with
+  ~350 seats.
+
+**The normaliser is the population itself and never a tuned constant**, so the table's total is
+preserved by construction and no inflation is possible at any point in the season.
+
+---
+
+## 19.08.2026 – COLLEGE BIRTHDAYS GET A DIARY ENTRY, NOT A POPUP (`wave/round22`)
+
+**His ruling, verbatim:**
+
+> **«колледжевые годы получают не попап, а свою запись в дневнике, что механику не ломает»**
+
+**THE CONSTRAINT HE IS RULING AROUND.** College advances a year at a time inside a loop, so a
+blocking birthday choice raised in there would strand the command – which is why `pendingBirthday`
+correctly stays silent for those years. The cost was four years in which the birthday simply did not
+exist. He refused both of the obvious answers: no popup (it breaks the loop), and no silence either.
+
+**WHAT SHIPPED.** Four distinct lines, one per college year (`world/age.ts`, `collegeBirthdayLine`) –
+⚠ **one line per year and not a random pick, deliberately**: four college birthdays is the whole of
+the population, so a pool would repeat within a single career.
+
+⚠ **THE MECHANIC IS UNTOUCHED, WHICH IS THE HALF HIS SENTENCE INSISTS ON.** The prompt is still
+refused inside the four-year freeze – a feed row is written, never awaited – and `world.birthdays` is
+not appended to, so those years stay **ABSENT** in the ledger rather than recorded as "gave nothing".

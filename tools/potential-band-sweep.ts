@@ -499,7 +499,7 @@ function runCareer(preset: Preset, index: number, policy: Policy): CareerRow {
     peakMeanFive,
     peakCore,
     realised: realisedSum / SKILL_KEYS.length,
-    endedAge: world.ending ? kidAgeExact(world.week, world.profile.birthMonth) : null,
+    endedAge: world.ending ? kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay) : null,
     ending: world.ending?.type ?? null,
   }
 }
@@ -701,7 +701,7 @@ async function section4(paths: string[]): Promise<void> {
     const birth = startingSkills(w.seed, w.profile)
     const shown = withHeadStart(birth, w.profile.birthMonth)
     const bump = relativeAgeHeadStart(w.profile.birthMonth)
-    console.log(`\n  career at week ${w.week}, age ${kidAgeExact(w.week, w.profile.birthMonth).toFixed(1)}, head start ${bump >= 0 ? '+' : ''}${bump.toFixed(2)}\n`)
+    console.log(`\n  career at week ${w.week}, age ${kidAgeExact(w.week, w.profile.birthMonth, w.profile.birthDay).toFixed(1)}, head start ${bump >= 0 ? '+' : ''}${bump.toFixed(2)}\n`)
     console.log(
       `  ${padEnd('skill', 16)}${pad('birth', 8)}${pad('shown', 8)}${pad('now', 8)}${pad('ceiling', 9)}` +
         `${pad('TRUE roll', 11)}${pad('u in band', 11)}${VARIANTS.map((v) => pad(v.label.split(' ')[0], 10)).join('')}`,

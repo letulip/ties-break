@@ -36,7 +36,11 @@ import {
 import type { CollegeOffer, CollegeProgressView } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidAgeYears } from './age'
-import { kidLadderRank } from './snapshot'
+// ⚠ FROM ./ladder, NOT ./snapshot (TB-07). This file MUTATES the world; snapshot BUILDS the
+// aggregate projection over it, and importing upward from one to the other closed two runtime
+// cycles (birthday → college → snapshot → birthday, coachMarket → endings → college → snapshot →
+// coachMarket). `kidLadderRank` is a composition of ladder functions and now lives with them.
+import { kidLadderRank } from './ladder'
 import type { WorldState } from '../world'
 
 /** ⭐⭐ WHAT A COLLEGE PROGRAMME IS SHOWN WHEN IT LOOKS HER UP – the world side of P4's decoupled-leaf
@@ -170,7 +174,7 @@ export function resolveCallUp(world: WorldState): void {
   if (!callUpWeek(world)) return
   const call = rollCallUp(
     {
-      ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
       skillMean: skillMeanOf(world.skills),
     },
     rngFromSeed(`${world.seed}:callup:${world.week}`),
@@ -381,16 +385,17 @@ export function collegeEpilogueLine(world: WorldState): string {
   const banked = college.years.reduce((sum, y) => sum + y.fundsDeltaCents, 0)
   const calls = college.years.filter((y) => y.callUp !== null).length
   const rank = kidLadderRank(world, 'wta')
-  const age = kidAgeYears(world.week, world.profile.birthMonth)
+  const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
   const played =
     calls === 0
       ? 'Her country never called'
       : `Her country called ${calls === 1 ? 'once' : `${calls} times`}, and paid her nothing, which is what it pays everybody`
   const standing =
     rank === null
-      ? 'She is on no professional list at all, and the only way back in is qualifying'
-      : `She is #${rank}, and the only way up is qualifying`
-  return `${years} ${years === 1 ? 'year' : 'years'} of student tennis. ${played}. ${moneyClause(banked)} She is ${age}. ${standing}.`
+      ? 'no professional ranking. Qualifying is the front door again'
+      : `a ranking of #${rank}. Qualifying is the way forward again`
+  const yearsLine = `${years} ${years === 1 ? 'year' : 'years'} of student tennis, lived one season at a time.`
+  return `${yearsLine} ${played}. ${moneyClause(banked)} She comes back at ${age}, with ${standing}.`
 }
 
 /** ⚠ THE SIGN IS A DIFFERENT SENTENCE, NOT A DIFFERENT NUMBER IN THE SAME ONE. The scholarship

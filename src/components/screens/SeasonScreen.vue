@@ -45,13 +45,12 @@ import PrimaryPill from '../ui/PrimaryPill.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
-import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
+import { applySurfaceStyle } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isCappedProTier, isCappedTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
 // The wild-card badge quotes the engine's own count, never a literal – see the badge in the
 // template and `WILD_CARD` in engine/season/tournament.ts for why the number lives there.
 import { WILD_CARD } from '../../engine/season/tournament'
-import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
 import { rngFromSeed } from '../../engine/rng'
@@ -59,7 +58,22 @@ import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
 // feed rule (`feedContext`/`feedShows`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
-import { HORIZON_WEEKS, entryBandTrack, feedContext, feedShows, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
+import { entryBandTrack, feedContext, feedShows, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
+// ⚠ THE CALENDAR HORIZON, FROM ITS OWNER. This screen used to hold TWO independent eights: it
+// imported `tierState.HORIZON_WEEKS` for the open-tier note's copy and kept a private
+// `CALENDAR_HORIZON = 8` for the row loop, so one file could have printed one horizon and drawn
+// another. Both were hand copies of `UPCOMING_WEEKS`, which is the span `toSnapshot` actually clips
+// `upcoming` to – so the feed cannot draw a row the snapshot has no event for, and the note cannot
+// promise a window the feed does not cover.
+import { UPCOMING_WEEKS } from '../../engine/world/constants'
+// THE UPCOMING-EVENT CARD'S OWN PARTS, shared with the Calendar's marker card: the photograph, the
+// court's verdict for her build, the scholarship's share, and how an odds ring is NAMED. Its colour
+// is no longer one of them – that ramp is drawn on five surfaces, not two, so it lives a line below.
+import { firstMatchLabel, firstMatchTitle, useEventCard } from '../../composables/eventCard'
+// The app's one red-to-green ramp, shared with the three condition rings. `{ fraction }` names the
+// scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
+// not let the two be confused.
+import { readingColor } from '../../composables/readingColor'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with the
 // Calendar so the two surfaces cannot call the same tournament two different things.
 import { enterActionName } from '../../composables/eventName'
@@ -74,6 +88,10 @@ import { activeLadderOfSnapshot } from '../../shared/protocol'
 import type { PracticeBooking, UpcomingEvent, VacationBooking, WorldEvent, WorldMatch } from '../../shared/protocol'
 
 const game = useGameStore()
+// The upcoming-event card's shared parts, in one read of the snapshot. `surfaceVerdict` is what this
+// file used to call `surfaceNote`, one-for-one; the Calendar screen had the identical one-liner
+// under the second name, which is how one rule ends up with two of everything.
+const { academyCoverPct, surfaceVerdict, venueUrl } = useEventCard()
 const base = import.meta.env.BASE_URL
 // Round-7 item 18 / owner amendment: the this-week tournament row's watch control is now
 // ICON-ONLY – the word "Watch" dropped, just the play.svg glyph, accent-yellow and sized like
@@ -88,9 +106,10 @@ const playIconStyle = {
 
 // Surface x play style (docs/specs/surface-style.md): the calendar column stops being flavour, so
 // the card says so in one line – and says nothing at all when the court is neutral for her build.
-function surfaceNote(surface: Surface): string | null {
-  return game.snapshot ? surfaceStyleHint(game.snapshot.profile.playStyle, surface) : null
-}
+// ⚠ THE ONE-LINER MOVED to `composables/eventCard.ts` as `surfaceVerdict` (destructured above). It
+// was written out here as `surfaceNote` and again on the Calendar screen as `surfaceVerdict` – the
+// same call to `surfaceStyleHint` under two names, which is the version of this defect that a grep
+// for either name will never find.
 // ⚠ `surfaceAffinity()` went with `SurfaceView` (see the note below). It existed to colour the old
 // surface PILL by whether the court suited her; the ring is coloured by the COURT (`--surface-*`) and
 // the suits/against verdict reaches the player through the coach's plaque, which reads
@@ -127,7 +146,7 @@ function surfaceNote(surface: Surface): string | null {
  *  game"; the pill already says "grass", so only the tail belongs under it. Sliced off the engine's
  *  own string rather than re-written from the affinity, so the two can never word it differently. */
 function surfaceFit(surface: Surface): string | null {
-  const hint = surfaceNote(surface)
+  const hint = surfaceVerdict(surface)
   if (!hint) return null
   const dash = hint.indexOf('– ')
   return dash < 0 ? hint : hint.slice(dash + 2)
@@ -135,7 +154,7 @@ function surfaceFit(surface: Surface): string | null {
 /** The engine's whole sentence, surface name included, for the mark's title. Falls back to the bare,
  *  capitalised surface id rather than to a second copy of the label table. */
 function surfaceTitle(surface: Surface): string {
-  return surfaceNote(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1)
+  return surfaceVerdict(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1)
 }
 // --- THE SEASON CARD (wave 2, the owner's redesign) ---------------------------------------------
 // The export's big tournament card, one per upcoming event, scrolling. Three of its parts are ours
@@ -179,7 +198,7 @@ const kidStage = computed(() => portraitStage(game.snapshot?.ageYears ?? 14))
  *  each wear their own, the exam fortnight wears `study-*` (W6), everything else is the on-court frame
  *  (src/art/weeks.ts).
  *
- *  ⚠ HER CURRENT BAND, ON A ROW THAT MAY BE UP TO CALENDAR_HORIZON WEEKS AWAY, and that is the right
+ *  ⚠ HER CURRENT BAND, ON A ROW THAT MAY BE UP TO UPCOMING_WEEKS AWAY, and that is the right
  *  trade rather than an oversight: the band boundary is `young`→`teen` at 17, so the only rows this can
  *  get wrong are ones inside a few weeks of a birthday, and the alternative is a screen deriving her
  *  age at a future week - a fact the snapshot does not carry and the planner has no business computing.
@@ -224,11 +243,9 @@ const seasonYearLabel = computed(() => {
   return short ? `20${short}` : ''
 })
 
-/** The painted court for a card. Same picker Home uses, so one tournament wears one photograph
- *  wherever it appears. */
-function venueUrl(e: UpcomingEvent): string {
-  return venueArtUrl(e.tier, e.surface, e.id, game.snapshot?.seed ?? '')
-}
+// ⚠ THE PAINTED COURT is `venueUrl` off `useEventCard` (destructured at the top). It was written out
+// here and again on the Calendar screen, both wrapping `venueArtUrl` with the snapshot's seed – and
+// "one tournament wears one photograph wherever it appears" is a claim two copies cannot make.
 
 /** WHAT THE COACH SAYS about an event. Two clauses at most: how the field reads, and - only when
  *  the court actually has an opinion about her build - whether it suits her.
@@ -393,22 +410,17 @@ function coachSays(e: UpcomingEvent): string {
 }
 
 // U0: the ring's geometry and the arithmetic that turns a chance into a dash offset left for
-// ui/ProgressRing.vue, which Home's condition ring reads too. Only the COLOUR stays here, and only
-// because it is data.
-/** Her odds read on the same red-to-green ramp the condition ring uses, so a percentage means the
- *  same thing everywhere in the app. */
-function chanceColor(chance: number): string {
-  return `hsl(${Math.round(Math.max(0, Math.min(1, chance)) * 120)}, 72%, 48%)`
-}
-
-const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
+// ui/ProgressRing.vue, which Home's condition ring reads too. Only the COLOUR is data – and it, the
+// ring's accessible sentence and its title now live in `composables/eventCard.ts`, because the
+// Calendar's marker card drew the identical ring and the two could have worded it differently.
 
 const week = computed(() => game.snapshot?.week ?? 0)
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const condition = computed(() => game.snapshot?.condition ?? 0)
-// v21: the share of every trip the academy is paying. One number for the whole calendar – the
-// scholarship is a rate, not a per-event deal – so each card can print it without re-deriving it.
-const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.coverShare ?? 0) * 100))
+// v21: the share of every trip the academy is paying – one number for the whole calendar, since the
+// scholarship is a rate and not a per-event deal. It is `academyCoverPct` off `useEventCard` now
+// (destructured at the top): the Calendar's marker card printed the identical computed, and the
+// Money screen reports the same percentage as a season total.
 
 /** How many places a wild-card tournament holds, read out of the engine so the badge's tooltip
  *  cannot go on saying eight after a bench has swept the constant. Not a computed – it is a
@@ -569,7 +581,7 @@ const calendarRows = computed<CalendarRow[]>(() => {
     byWeek.set(e.week, preferredWeekEvent(held ? [held, e] : [e])!)
   }
   const rows: CalendarRow[] = []
-  for (let w = week.value + 1; w <= week.value + CALENDAR_HORIZON; w++) {
+  for (let w = week.value + 1; w <= week.value + UPCOMING_WEEKS; w++) {
     const e = byWeek.get(w)
     const vacation = vacations.value.find((v) => v.week === w)
     const practice = practices.value.find((p) => p.week === w)
@@ -1415,9 +1427,9 @@ function closeExhibition(): void {
               <ProgressRing
                 class="chance-ring"
                 :value="row.event.preview.firstMatchChance"
-                :color="chanceColor(row.event.preview.firstMatchChance)"
-                :label="`Her chance to win the first match: ${Math.round(row.event.preview.firstMatchChance * 100)} percent, against ${row.event.preview.opponentName}`"
-                :title="`First round vs ${row.event.preview.opponentName}`"
+                :color="readingColor({ fraction: row.event.preview.firstMatchChance })"
+                :label="firstMatchLabel(row.event.preview)"
+                :title="firstMatchTitle(row.event.preview)"
               >
                 <b>{{ Math.round(row.event.preview.firstMatchChance * 100) }}</b><i>%</i>
               </ProgressRing>
@@ -1638,7 +1650,7 @@ function closeExhibition(): void {
            simply absent. Now it says so, and says it is not a lock. -->
       <p v-if="openButUnscheduled.length" class="hint open-tier-note">
         Also open to her: {{ openButUnscheduled.join(', ') }} – none scheduled in the next
-        {{ HORIZON_WEEKS }} weeks. Not locked, just rarer: keep watching the calendar.
+        {{ UPCOMING_WEEKS }} weeks. Not locked, just rarer: keep watching the calendar.
       </p>
       <p class="hint">
         Weeks can carry more than one event now – she can only play one, so the pick is yours.

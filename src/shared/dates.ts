@@ -52,8 +52,11 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
  *  the ONE place the epoch year is stated; `weekYear(0)` still returns it, and tests pin that. */
 const EPOCH_YEAR = 2031
 
-/** A season is exactly 52 career weeks. === WEEKS_PER_YEAR in engine/season/calendar.ts (pinned in
- *  tests). Declared up here because `weekStart` is now a function OF the season index. */
+/** A season is exactly 52 career weeks – THE ONLY 52 IN THE ENGINE since TB-02. Declared up here
+ *  because `weekStart` is now a function OF the season index. `WEEKS_PER_YEAR` in
+ *  engine/season/calendar.ts is an alias of this (it used to be its own literal, kept equal by a
+ *  comment), and engine/economy.ts reads this directly rather than the calendar's copy – that edge
+ *  was half of a runtime import cycle that crashed the browser at module load. */
 export const WEEKS_IN_SEASON = 52
 
 const MONTHS = [
@@ -143,6 +146,24 @@ function weekEnd(week: number): Ymd {
  *  (docs/specs/season-anchor.md §3d). A season-week offset is not a month. */
 export function weekMonth(week: number): number {
   return weekStart(week).month + 1
+}
+
+/** THE DAY OF THE MONTH the week's Monday falls on, 1-31 – the third of the three numbers that make
+ *  a week's Monday a real date (`weekYear`, `weekMonth`, this).
+ *
+ *  ⚠ IT EXISTS FOR THE AGE CLOCK, AND FOR ONE DEFECT IT CLOSES (18.08). `kidAgeExact` was built on
+ *  the MONTH alone, so a girl's age rose on the first Monday of her birth month rather than on her
+ *  birthday: measured across all 365 birth dates, **287 of them** printed an age she had not reached,
+ *  by up to SIX WEEKS, and a 31 December date could print 19 while she was 17. The owner's ruling of
+ *  09.08 is the standard it failed – «Есть год рождения и дата. Это всё… Дальше когда ДР – тогда и
+ *  +1 год» – and a date needs a day.
+ *
+ *  ⚠ ONE NUMBER RATHER THAN THE WHOLE `Ymd`, deliberately. The internal shape is frozen and shared
+ *  between every formatter in this file; handing it out would make the module's public surface a
+ *  struct that callers could come to depend on the layout of. Three scalar readers compose into a
+ *  date wherever one is genuinely needed, and nowhere else has needed one in eleven waves. */
+export function weekStartDay(week: number): number {
+  return weekStart(week).day
 }
 
 /** Month names in full, for the ONE label that is about a person rather than about a week. */

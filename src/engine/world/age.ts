@@ -4,7 +4,7 @@
 // imports these values with no runtime cycle. Only `markBirthday` touches the world; everything else
 // is pure arithmetic over (week, birthMonth, birthDay) and draws on no RNG stream at all.
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import { daysInBirthMonth, weekMonth, weekOfDate, weekYear } from '../../shared/dates'
+import { daysInBirthMonth, weekMonth, weekOfDate, weekStartDay, weekYear } from '../../shared/dates'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
 
@@ -79,17 +79,35 @@ export function kidBirthYear(): number {
  *  A January girl is 14.0 at week 0; a December girl is 13.08 and does not turn 14 until week ~48. Feeds
  *  development (`growWeek`), her eligibility allowance, the injury table and every surface that prints an
  *  age - everything, in short, that is about the GIRL rather than about her age group. */
-export function kidAgeExact(week: number, birthMonth: number): number {
-  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
-  // Months elapsed since her birthday, as a fraction of a year, measured on the real calendar.
-  const monthsIntoYear = weekMonth(week) - month
-  const yearsSinceBirthYear = weekYear(week) - kidBirthYear()
-  return yearsSinceBirthYear + monthsIntoYear / 12
+export function kidAgeExact(week: number, birthMonth: number, birthDay: number): number {
+  const { month, day } = birthDate(birthMonth, birthDay)
+  const year = weekYear(week)
+  const m = weekMonth(week)
+  const d = weekStartDay(week)
+  // Has her birthday in THIS calendar year already arrived, by the Monday this week starts on?
+  const turned = m > month || (m === month && d >= day)
+  const whole = year - kidBirthYear() - (turned ? 0 : 1)
+  // Months elapsed since that birthday, with the day carried as a fraction of the current month, so
+  // the answer rises smoothly inside the year and crosses New Year without a step.
+  // ⚠⚠ THE WHOLE YEAR COMES FROM THE DATE TEST ALONE, AND THE FRACTION MAY NEVER MOVE IT. Both drafts
+  // of this line got that wrong in opposite directions and both were caught by the guards rather than
+  // by reading: scaling the day gap by the CURRENT month dropped a year (born 30 January, asked in the
+  // week of 1 February, printed twenty the week after she was told she turned twenty-one), and scaling
+  // it by HER month let it exceed twelve and ADD one (born 1 February, week of Monday 31 January:
+  // `11 + 30/28` is 12.07, so her sixteenth arrived a week early). A fraction that can change `floor`
+  // is a second clock wearing a decimal point, which is the exact thing the 09.08 ruling abolished.
+  //
+  // So `whole` is the answer and `frac` is only ever presentation: clamped into [0, 1) by
+  // construction, so `Math.floor(kidAgeExact(...)) === whole` for every date and every week.
+  const monthsWhole = turned ? m - month : m - month + 12
+  const dayFrac = (d - day) / daysInBirthMonth(month)
+  const frac = Math.min(0.999999, Math.max(0, (monthsWhole + dayFrac) / 12))
+  return whole + frac
 }
 
 /** ...and the whole-years version, which is what the age-keyed tables want. */
-export function kidAgeYears(week: number, birthMonth: number): number {
-  return Math.floor(kidAgeExact(week, birthMonth))
+export function kidAgeYears(week: number, birthMonth: number, birthDay: number): number {
+  return Math.floor(kidAgeExact(week, birthMonth, birthDay))
 }
 
 /** HER AGE IN `week`, whole years, read off the world's own profile - the ONE clock, at the call sites
@@ -101,7 +119,7 @@ export function kidAgeYears(week: number, birthMonth: number): number {
  *  world.profile.birthMonth)`. One name means a later question about which age a rule reads has one
  *  place to be answered, and it is why `git grep kidAgeAt` is the audit of the ruling. */
 export function kidAgeAt(world: WorldState, week: number): number {
-  return kidAgeYears(week, world.profile.birthMonth)
+  return kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay)
 }
 
 /** THE FIRST WEEK OF THE AGE-YEAR CONTAINING `week` – the opening of her birthday-to-birthday window
@@ -163,8 +181,49 @@ function birthDate(birthMonth: number, birthDay: number): { month: number; day: 
 function birthdayYearIn(week: number, birthMonth: number, birthDay: number): number | null {
   const { month, day } = birthDate(birthMonth, birthDay)
   const monday = weekYear(week)
-  for (const year of [monday, monday + 1]) if (weekOfDate(month, day, year) === week) return year
+  // ⚠ THREE CANDIDATE YEARS, AND THE FIRST ONE IS FOR 31 DECEMBER (18.08). The `monday + 1` arm has
+  // always been here for a girl born 1-5 January, whose birthday can sit in a week whose Monday is
+  // still in the old year. `monday - 1` is its mirror and it was missing: a 31 December birthday the
+  // calendar cannot place is carried by the first week PAST it, which is in JANUARY of the next year -
+  // so `weekYear(week)` is already the following year and that girl's own year was never a candidate.
+  // Measured: it was the last two of the fourteen lost birthdays, both hers (skips 17->19, 22->24).
+  for (const year of [monday - 1, monday, monday + 1]) {
+    const at = weekOfDate(month, day, year)
+    if (at === week) return year
+    // ⭐⭐ AND A BIRTHDAY THE CALENDAR CANNOT PLACE IS GIVEN THE FIRST WEEK PAST IT (18.08). Measured
+    // before the fix: **14 birthdays a career simply never fired**, across seven dates - 1-6 January
+    // and 31 December, twice each over fourteen seasons. The seasons re-anchor to the first Monday of
+    // each year, so those dates fall in the gap between the last career week of one season and the
+    // first of the next: `weekOfDate` returns null and the girl silently got no note and no gift.
+    //
+    // ⚠ IT WAS REPORTED AS "none lost" AND IT WAS NOT. `tools/birthday-age-read.ts` skips a year the
+    // moment `weekOfDate` is null - `continue` - and then counts how many of the REMAINING birthdays
+    // are wrong. The metric filtered out the very failure it is named for. Fixed in that tool too.
+    //
+    // ⚠ AND IT CANNOT DOUBLE-FIRE. The clause asks for the FIRST career week past the date - this
+    // Monday is on or after it and the previous Monday is not - so exactly one week in the year can
+    // answer, and only in a year the calendar genuinely has no week for. Every ordinary date takes
+    // the `at === week` branch above and never reaches here.
+    // ⚠ `week > 0` IS NOT DEFENSIVE, IT IS THE CAREER'S OWN START. Without it the clause fires at week
+    // 0 for a date a whole YEAR before the game opens - a girl born 1 January was announced turning
+    // THIRTEEN in her first week, because week 0 is the first Monday past 1 January 2030 as surely as
+    // it is past 1 January 2031. Anything before week 0 is prologue and has no week to be announced in;
+    // her 14th genuinely predates the career, which is what `birthdayWeek`'s note has always said.
+    if (week > 0 && at === null && mondayOnOrAfter(week, month, day, year) && !mondayOnOrAfter(week - 1, month, day, year)) {
+      return year
+    }
+  }
   return null
+}
+
+/** Is the Monday that opens `week` on or after (`month`, `day`) of `year`? The three scalar readers
+ *  composed into one date comparison – see `weekStartDay` in shared/dates.ts for why they are scalars. */
+function mondayOnOrAfter(week: number, month: number, day: number, year: number): boolean {
+  if (week < 0) return false
+  const wy = weekYear(week)
+  if (wy !== year) return wy > year
+  const wm = weekMonth(week)
+  return wm > month || (wm === month && weekStartDay(week) >= day)
 }
 
 /** The career week her birthday falls in for the calendar year containing `week`, or null if that date is
@@ -212,9 +271,42 @@ export function birthdayTurning(week: number, birthMonth: number, birthDay: numb
   return year === null ? null : year - kidBirthYear()
 }
 
+/** ⭐⭐ THE AGE SHE REACHES BY THE END OF `week` – her age, plus a birthday that lands INSIDE it.
+ *
+ *  ⚠ IT EXISTS BECAUSE THE DATE CLOCK SPLIT TWO THINGS THAT USED TO COINCIDE (18.08). `kidAgeAt`
+ *  answers for the week's MONDAY, which is the right question for a rule that governs a whole week;
+ *  `birthdayTurning` fires in the week CONTAINING her date. For a birthday that falls on any day but
+ *  a Monday those are different weeks, so a rule meant to be raised ON HER BIRTHDAY - the fork at
+ *  nineteen is the one - would fire the Monday AFTER the cake.
+ *
+ *  ⚠ THIS IS NOT A SECOND CLOCK. It is `kidAgeAt` with a one-week look-ahead that only ever applies
+ *  in the birthday's own week, and it is for events that are ABOUT the birthday. Every gate stays on
+ *  `kidAgeAt`: an eligibility rule governs the whole week and must not open mid-week. If you are
+ *  gating, use `kidAgeAt`; if you are CELEBRATING or asking her a question the birthday prompts, use
+ *  this one. The fork is the only caller today, deliberately. */
+export function kidAgeThroughWeek(world: WorldState, week: number): number {
+  const turning = birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay)
+  return Math.max(kidAgeAt(world, week), turning ?? -1)
+}
+
 /** Numbers she is old enough to be told in words. The notes are somebody's voice, and a parent does not
  *  say "she is 15 today". Past the junior years the words stop being the natural register, so the map
  *  covers the ages a career can actually reach and the caller falls back to the numeral. */
+/** ⭐⭐ HOW THIS GAME SPELLS AN AGE, in one place (19.08). Words while the number is one a parent would
+ *  say out loud, the numeral once it stops being one.
+ *
+ *  ⚠ IT WAS A PRIVATE MAP AND ONE CALLER UNTIL THE VOICE WAVE WANTED A SECOND. `markBirthday` had
+ *  `AGE_WORDS[turning] ?? String(turning)` inline; the birthday DIALOG then grew its own headings and
+ *  spelled the same age as a numeral in five age bands and as a word in one - so the popup and the feed
+ *  line it sits above disagreed about the same birthday, and the popup disagreed with itself.
+ *
+ *  ⚠ THE FALLBACK IS THE RULE, NOT A GUARD. Twenty is where the map stops on purpose: past it the
+ *  numeral IS how it is said. So "she is twenty this week" and "27 today" are both correct, and both
+ *  come out of this function rather than out of whoever is writing copy that day. */
+export function ageInWords(age: number): string {
+  return AGE_WORDS[age] ?? String(age)
+}
+
 const AGE_WORDS: Record<number, string> = {
   13: 'thirteen',
   14: 'fourteen',
@@ -229,13 +321,42 @@ const AGE_WORDS: Record<number, string> = {
 /** THE BIRTHDAY, in the feed. One line, in the family's own register, and it names the AGE because that is
  *  the fact of the week - the relative-age story is told by her age being 13 in a 14s draw, and this is
  *  where the player first meets it. */
-export function markBirthday(world: WorldState): void {
+export function markBirthday(world: WorldState, atCollege = false): void {
   const turning = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
   if (turning === null) return
-  const words = AGE_WORDS[turning] ?? String(turning)
+  const words = ageInWords(turning)
   addEvent(world, {
     week: world.week,
     type: 'info',
-    text: `She is ${words} this week.`,
+    text: atCollege ? collegeBirthdayLine(words, turning) : `She is ${words} this week.`,
   })
+}
+
+/** ⭐ THE COLLEGE YEARS GET THEIR OWN ENTRY (owner, 19.08: «колледжевые годы получают не попап, а
+ *  свою запись в дневнике, что механику не ломает»).
+ *
+ *  WHY THEY CANNOT HAVE THE DIALOG, unchanged: `pendingBirthday` (world/birthday.ts) refuses one at
+ *  college because `resumeFromCollege` spends four years in ONE call, so a blocking prompt raised
+ *  inside the freeze would strand the jump with nobody able to answer it. That stays exactly as it
+ *  was - THIS IS THE HALF THAT DOES NOT BREAK THE MECHANIC: a feed row is written, never awaited, so
+ *  the four-year jump runs through it without stopping.
+ *
+ *  ⚠ AND IT STILL RECORDS NO PARENT'S DECISION. `world.birthdays` is untouched here, so those four
+ *  years remain ABSENT rather than "gave nothing" - the distinction `pendingBirthday`'s note draws.
+ *  What changes is only that the year is no longer told in the same sentence as every other year: it
+ *  says where she was.
+ *
+ *  ⚠ ONE LINE PER YEAR AND NOT A RANDOM PICK, deliberately: four college birthdays is the whole of
+ *  it, a player sees them consecutively, and a repeat inside four consecutive entries is exactly the
+ *  "one template with the numbers swapped" impression `birthdayHeading` was rewritten to undo. Keyed
+ *  by AGE, which is what the caller knows, with a fallback for a career that reaches college on an
+ *  unusual clock. ZERO DRAWS - no stream is touched, so this is safe inside the freeze. */
+function collegeBirthdayLine(words: string, age: number): string {
+  const byAge: Record<number, string> = {
+    18: `She is ${words} this week – her first birthday away, and the photographs came a day late.`,
+    19: `She is ${words} this week. The hall made a fuss of it, apparently. You heard afterwards.`,
+    20: `She is ${words} this week – a phone call between a lecture and a practice court.`,
+    21: `She is ${words} this week. Old enough now that nobody thinks to tell you first.`,
+  }
+  return byAge[age] ?? `She is ${words} this week – away at college, and the news reached you late.`
 }

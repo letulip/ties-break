@@ -18,6 +18,7 @@ import { useKidEmotion } from '../composables/kidEmotion'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { computeMatchStats } from '../engine/match/matchStats'
+import { matchStatMeta, matchStatRows } from '../composables/matchStatTable'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { KID_ID, flipScore } from '../engine/world'
 import { formatShortName } from '../shared/format'
@@ -83,28 +84,15 @@ const weekDates = computed(() => weekRange(props.week))
 const viewerRankA = computed<number | null>(() => (kidSide.value === 0 ? props.kidRank : null))
 const viewerRankB = computed<number | null>(() => (kidSide.value === 0 ? null : props.kidRank))
 
-interface StatRow {
-  label: string
-  kid: string
-  opp: string
-}
-const statRows = computed<StatRow[]>(() => {
-  const s = computeMatchStats(annotated.value, props.match.a, props.match.b)
-  const k = kidSide.value
-  const o: Side = k === 0 ? 1 : 0
-  const pair = (v: [number, number]): { kid: string; opp: string } => ({ kid: String(v[k]), opp: String(v[o]) })
-  return [
-    { label: 'Aces', ...pair(s.aces) },
-    { label: 'Double faults', ...pair(s.doubleFaults) },
-    { label: 'Winners', ...pair(s.winners) },
-    { label: 'Unforced errors', ...pair(s.unforcedErrors) },
-    { label: 'Max serve', kid: `${s.serveSpeed.max[k]} km/h`, opp: `${s.serveSpeed.max[o]} km/h` },
-  ]
-})
-const matchMeta = computed(() => {
-  const s = computeMatchStats(annotated.value, props.match.a, props.match.b)
-  return { rally: s.meanRallyLength.toFixed(1), duration: s.durationEstimate }
-})
+// THE BOX SCORE'S FIVE ROWS ARE THE TOURNAMENT'S FIVE ROWS - one definition, in composables/
+// matchStatTable.ts. What used to be here was a `StatRow` interface, the five labels, the side-swap
+// and the `km/h` suffix, all written out again character for character in TournamentFlow. A friendly
+// and a final report the same match facts, so there is one place that decides what they are.
+// The stats themselves are computed ONCE here and read by both computeds below, which is the rule
+// serveSpeed.ts and matchClock.ts already live by: two readings of one number is a bug waiting.
+const stats = computed(() => computeMatchStats(annotated.value, props.match.a, props.match.b))
+const statRows = computed(() => matchStatRows(stats.value, kidSide.value))
+const matchMeta = computed(() => matchStatMeta(stats.value))
 
 function watchIt(): void {
   phase.value = 'live'

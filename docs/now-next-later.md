@@ -1,0 +1,98 @@
+---
+type: plan
+status: current
+area: delivery
+canonical: true
+last-reviewed: 2026-08-19
+---
+
+# Now / next / later
+
+## Current truth
+
+- **This is the only current delivery document.** The August [roadmap](plans/roadmap-2026-08.md) and
+  [launch plan](plans/launch-plan-2026-08.md) are `superseded` and kept as history: they schedule
+  save-schema work in the v35–v39 range, and `SAVE_SCHEMA_VERSION` in `src/engine/world.ts` is long
+  past it. Take neither ordering nor state from them.
+- **Nothing on this page is a new priority.** Every line is transcribed from [the owner's dated
+  log](decisions.md) or from a [round ledger](rounds/README.md) and names its source. A line with no
+  source does not belong here.
+- **State is read from the code and the ledgers, never copied here.** The schema number is the
+  constant; what shipped is the ledger box with the place it landed written in it.
+- **An item is done when its box is ticked with WHERE** – [`rounds/README.md`](rounds/README.md),
+  §"Keeping this true". Nothing enforces that mechanically, which is why this page routes to the
+  ledgers rather than restating them.
+
+## Now
+
+**`wave/round22` is the live wave and it has its ledger** – [round-22.md](rounds/round-22.md),
+written 19.08 from the commits. ⚠ Read its opening note before its checklist: **the owner's own
+numbered list for round 22 was never captured on any branch**, unlike every other round in the
+folder, so the item numbers come from six commit subjects and the mapping across `#2-5` and `#9-14`
+is stated as unestablished rather than reconstructed.
+
+⚠ **The wave was still live when that ledger was written**, and it says so: it is current through
+`faa5a6c` and nothing after. Check the log before reading its tail as final.
+
+The one thing it leaves for this wave to finish, `docs`-side and needing no ruling:
+
+- **No spec in `docs/specs/` for this wave's two balance changes** – the tenure ramp and the live
+  professional table. Both were measured; both records live only in commit bodies and source
+  comments. `CLAUDE.md` invariant 4 asks for a spec recording predicted vs measured.
+  ([round-22.md](rounds/round-22.md), "What is still open".)
+
+## Next – named, and nothing has to be decided first
+
+Each of these is already diagnosed in writing and none is waiting on a ruling.
+
+- **Round 18 items 1–3, all `[!]`** – three re-reports of one miss (round 17 #14): the coach plaque's
+  text alignment on the main screen, the spacing beside the coach pictures in the picker, and tapping
+  a chosen coach's plaque to reach the coach list. ([round-18.md](rounds/round-18.md).)
+- **Round 16 #8, kit wearing on holiday** – asked three times, never built – and **#20, keeping the
+  screen awake during a match**, where no code exists at all (no `wakeLock` reference in `src/`).
+  ([round-16.md](rounds/round-16.md).)
+- **Round 8 #1, the in-tournament player card** – untouched since 25.07 and the oldest open item in
+  the folder. ([rounds/README.md](rounds/README.md), the round-8 row.)
+
+⚠ **Three items were listed on this page on 19.08 that had already shipped, and all three are
+removed.** Two were transcribed out of the 18.08 decision entry's "four things found on the way"
+without being checked against the tree, and one out of a round ledger whose boxes had rotted. That is
+the failure this page's own "Current truth" rule exists to prevent: a source was named, and the
+source was stale. **Naming a source is not the same as checking one.**
+
+- ~~Fourteen birthdays a career are never announced~~ – **fixed in `b93e178`**; a birthday the
+  calendar cannot place is carried by the first career week past it. Re-measured 19.08:
+  `tools/birthday-age-read.ts` reads *"birthday never fired: before 43, after 0"*.
+- ~~Wild cards: the door admits, the calendar shows shut~~ – **fixed in `b93e178`**, in the same
+  commit as the birthdays, and listed here under *Later* as still needing his word. `tierOpenFor`
+  now scans her own season and asks `homeWildCardPlace` itself; the temporary exemption in
+  `tests/ladder-floor.test.ts` is removed and the strict assertion is back.
+- ~~Round 21 #1 and #9~~ – **both shipped on 15.08 in `ac5ea3d`**, four days before they were written
+  here as open. The import confirm names the career it replaces and is mounted-tested
+  (`tests/component/round21-dialogs.test.ts`); the popup-order rule is `popupMayShow` /
+  `screenBusy`, with injury and ending the only interrupts. The round-21 ledger's boxes were the
+  stale source and are now ticked.
+
+## Later – needs the owner's word, not an engineer's
+
+- **Our own tier labels are literal `WTA 125/250/500/1000` and `Grand Slam`** while `CLAUDE.md`'s
+  invariant says tournament and organisation names are fictional because ITF/WTA/ATP are trademarks –
+  and the ITF rungs ARE fictionalised as `World Tour`. Flagged and untouched.
+  ([round-22.md](rounds/round-22.md), #15–16.)
+- **The balance methodology of the review's chapter 04** – distributions not anecdotes, median plus
+  tails, corrections separated from tuning – is written up and **not adopted**; it is his call.
+  ([balance-methodology-proposal-2026-08-19.md](plans/balance-methodology-proposal-2026-08-19.md).)
+- **The dormant `HandoffView` fields** – confirmed dormant, left standing with a dated note.
+  ([round-22.md](rounds/round-22.md), #9–14.)
+- **Round 14 #17, the difficulty wrapper** – needs a ruling, not a build.
+  ([rounds/README.md](rounds/README.md), the round-14 row.)
+- **Round 17 #15, why pay a coach, and #22, rivals in commentary** – both `[>]`: measured and priced,
+  waiting on his word. ([round-17.md](rounds/round-17.md).)
+- **Round 16 #10 – `key` / `full` should drive the match, not only the text** – explicitly left
+  alone. ([round-16.md](rounds/round-16.md).)
+
+## What this page will not do
+
+It does not restate a ledger, count open items, or carry a schema number: all three go stale between
+the day they are written and the day they are read, which is what happened to the two plans it
+replaces. Route from here, then read the state from the ledger box or the constant.

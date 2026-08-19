@@ -39,6 +39,7 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { PRESETS, stepCareerWeek, EXPENSE_CATS } from '../tools/econ-bench'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { FamilyBackground, InjurySeverity, PlayerProfile, WorldEvent } from '../src/shared/protocol'
+import { fnv1aHex } from './helpers/hash'
 
 // ---------------------------------------------------------------------------
 // Season-Life slice C — fatigue-driven injuries + physio.
@@ -47,17 +48,10 @@ import type { FamilyBackground, InjurySeverity, PlayerProfile, WorldEvent } from
 // byte-identical to slice B's frozen capture (C1, blocks merge).
 // ---------------------------------------------------------------------------
 
-// FNV-1a over the stringified draw stream (same fingerprint as B1).
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(16).padStart(8, '0')
-}
+// FNV-1a over the stringified draw stream (same fingerprint as B1). The hash lives in
+// tests/helpers/hash.ts.
 function hashOf(draws: number[]): string {
-  return fnv1a(draws.map((d) => d.toString()).join(','))
+  return fnv1aHex(draws.map((d) => d.toString()).join(','))
 }
 
 // B1's frozen reference: seed bench-working-0, weeks 1..52.
@@ -295,7 +289,7 @@ const REF = { //
   // still passes - only the companion constant moved. Verified on both arms; the control (this agent's
   // commit reverted in a worktree) reproduces 93.
 
-  kidRank: 88 }
+  kidRank: 90 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -1013,11 +1007,11 @@ describe('C8 — age curve', () => {
       w.week = 0
       const kitEarly = kitInjuryFactor(kitWearAt(w.seed, w.profile.background, 0))
       const early = injuryTau(w) / kitEarly
-      const ageEarly = kidAgeYears(0, birthMonth)
+      const ageEarly = kidAgeYears(0, birthMonth, w.profile.birthDay)
       w.week = 104
       const kitLate = kitInjuryFactor(kitWearAt(w.seed, w.profile.background, 104))
       const late = injuryTau(w) / kitLate
-      const ageLate = kidAgeYears(104, birthMonth)
+      const ageLate = kidAgeYears(104, birthMonth, w.profile.birthDay)
       expect(ageLate - ageEarly, `${birthMonth}: two seasons is two years`).toBe(2)
       expect(late / early, `birthMonth ${birthMonth}`).toBeCloseTo(
         ageInjuryFactor(ageLate) / ageInjuryFactor(ageEarly),
@@ -1028,8 +1022,8 @@ describe('C8 — age curve', () => {
       expect(kitLate, `birthMonth ${birthMonth}: the shoe cycle actually moved`).not.toBeCloseTo(kitEarly, 6)
     }
     // and the owner's own case, spelled out: a December girl really is 13 in the opening January
-    expect(kidAgeYears(0, 12)).toBe(13)
-    expect(kidAgeYears(0, 1)).toBe(14)
+    expect(kidAgeYears(0, 12, 1)).toBe(13)
+    expect(kidAgeYears(0, 1, 1)).toBe(14)
   })
 
   it('Monte-Carlo direction: more onsets in the age-16 window than the age-14 window', () => {

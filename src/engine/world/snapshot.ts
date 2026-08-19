@@ -41,6 +41,7 @@ import {
   type FullBracketMatch,
   type PendingBracketRound,
   type TierOpenMap,
+  type TierRefusal,
   type StandingRow,
   type StopReason,
   type SeasonSupply,
@@ -63,9 +64,11 @@ import { buildTourBriefing } from './mandatory'
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
-import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { alternateQueuePosition } from './ladder'
+import { alternatePlacesOpen } from '../season/tournament'
+import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus } from './medical'
+import { arrivalStatus, entryStatus, tierVerdict } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
@@ -289,6 +292,11 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // A fatigued event is a CAUTION, not a block: she stays eligible. Only a HARD block
         // (point band, injured, unavailable, medical) removes eligibility.
         eligible: gate.level !== 'blocked',
+        // ⭐ THE ALTERNATES LIST, ON THE CARD (18.08). Both numbers, so a parent can read "two places
+        // open, you are first in line" before she commits - see `UpcomingEvent.alternateQueue`. The
+        // queue is arithmetic; the open chairs are the field's own withdrawals, drawn once per event.
+        alternateQueue: alternateQueuePosition(world, e.tier),
+        alternatesOpen: alternatePlacesOpen(world.seed, e),
         // R10-13: the entry is COMMITTED (the list has closed) but the week has not started yet –
         // the only window in which cancelling costs the fee and frees the week. Every row here is
         // a FUTURE week by construction, so the closed list is the whole condition.
@@ -396,27 +404,14 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
  *
  *  Pure derivation over the ledger the world already keeps - no persisted field, no schema bump, no
  *  migration, zero RNG draws. */
-/** HER PLACE IN ONE TABLE, or null when she holds no counting result in it.
- *
- *  ⚠ ONE IMPLEMENTATION, TWO CONSUMERS, and the second one is why it was extracted (31.07): the
- *  tournament overlay prints her rank too, and it must print the SAME number the Home chip and the
- *  Stats tab are showing at that moment or the app contradicts itself on the one screen where the
- *  player is looking hardest. That is not automatic - on a reveal week the tick DEFERS the rank
- *  recompute to `finalizeTournament` (see step 5) while the week's AI results are already in the
- *  ledger, so a freshly-folded rank and the cached one legitimately differ by a place or two until
- *  she finishes her run. Reading the cache through one function is what makes the two agree by
- *  construction instead of by coincidence. */
-/** ⚠ THE TEST IS HER POINTS, NOT THE LENGTH OF HER RESULTS LIST (points-by-the-book, 05.08), and
- *  the two came apart when §VIII.A.2.b's minimum landed. It used to ask `countingResults.length > 0`,
- *  which was the same question while every counting result paid something: a player with rows had
- *  points and a player without had neither. Two rules broke that equivalence – a `mandatoryMiss`
- *  zero is a counting row worth nothing, and a professional below the minimum has rows that do not
- *  put her on the list – and under either she would have read as a RANK on a total of zero, which is
- *  the "unranked is not a number" bug this function exists to prevent, arriving from the other side.
- *  Behaviour-identical on the domestic and ITF tables, where neither rule applies. */
-export function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
-  return kidPoints(world, track) > 0 ? rankIn(world, track) : null
-}
+// ⚠ `kidLadderRank` MOVED DOWN TO ./ladder.ts (TB-07) – its notes went with it. It is a two-call
+// composition of `kidPoints` and `rankIn`, both of which already live there, and while it lived HERE
+// world/college.ts had to import it from the snapshot module to use it. That made a MUTATION module
+// depend on the aggregate PROJECTION layer, which closed two runtime cycles at once
+// (birthday → college → snapshot → birthday, and coachMarket → endings → college → snapshot →
+// coachMarket), because snapshot imports birthday, endings and coachMarket to build its views.
+// Deliberately NOT re-exported from here: a re-export would leave college importing this file and
+// the cycles standing. Import it from ./ladder.
 
 export function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
   const counting = computeCountingResults(world, track)
@@ -683,6 +678,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   const diary = buildDiarySnapshot({
     seed: world.seed,
     week: world.week,
+    ageYears: kidAgeAt(world, world.week),
+    // Keep this structural instead of importing `inCollege`: college.ts already depends on this
+    // projection module for ladder presentation, and the diary must not create a runtime cycle.
+    inCollege: world.college !== null && world.week < world.college.untilWeek,
     schoolOver: schoolIsOver(world.week, world.profile.birthMonth),
     kidId: KID_ID,
     startAgeYears: START_AGE_YEARS,
@@ -756,7 +755,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // is a reporter and owns no catalogue: it is handed a NOUN and a pair of booleans, and prints them.
     //
     // ⚠ ALL THREE ARE NULL/FALSE UNTIL HE ANSWERS, and the note completing on the answer is the point –
-    // the birthday week's scrap says "She is sixteen today" while the dialog is up and gains the present
+    // the birthday week's scrap names her age while the dialog is up and gains the present
     // the moment he chooses one, which is the same week reading back richer rather than a second entry.
     ...birthdayGiftFactsOf(world),
     knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,
@@ -918,6 +917,26 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     tierAcceptance: Object.fromEntries(
       TIER_LADDER.map((t) => [t, acceptanceRank(world, t)]).filter(([, r]) => r !== undefined),
     ) as Partial<Record<TierId, number>>,
+    // ⭐⭐ WHY A SHUT RUNG IS SHUT (PR-09 / TB-05) – the third map in this family and the one that
+    // stops the UI rebuilding the rule. `tierVerdict` asks the SAME `entryVerdict` the turnstile
+    // asks, so a card and `enterEvent` cannot disagree by construction. Only refusals are written:
+    // an open rung has no entry here, which is why this never restates `tierOpen` beside it.
+    tierRefusal: Object.fromEntries(
+      TIER_LADDER.map((t) => {
+        const v = tierVerdict(world, t)
+        if (v.level !== 'blocked' || !v.reason || v.reason === 'outgrown') return [t, undefined]
+        return [
+          t,
+          {
+            reason: v.reason,
+            ...(v.detail !== undefined ? { detail: v.detail } : {}),
+            ...(v.pointsToEnter !== undefined ? { pointsToEnter: v.pointsToEnter } : {}),
+            ...(v.rankToEnter !== undefined ? { rankToEnter: v.rankToEnter } : {}),
+            ...(v.entryCap !== undefined ? { entryCap: v.entryCap } : {}),
+          },
+        ]
+      }).filter(([, r]) => r !== undefined),
+    ) as Partial<Record<TierId, TierRefusal>>,
     // R15-9: THE ON-RAMP LATCHES, read-only, for the SLIDING TIER WINDOW - the calendar hides the
     // rungs a latch says she has definitively left behind (a copy, like every object on this
     // message: the snapshot must never be a live view of engine state). Surfacing widens the
@@ -1038,7 +1057,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     fork: world.fork && world.fork.answer === null
       ? {
           askedWeek: world.fork.askedWeek,
-          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth),
+          ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth, world.profile.birthDay),
           // ⭐⭐ THE OFFER, STRAIGHT OFF PERSISTED STATE (v51). It is measured once, the week the fork
           // is raised, and it is not recomputed here – a snapshot that re-derived it would answer a
           // different question on the week a constant moved, and this one is money.

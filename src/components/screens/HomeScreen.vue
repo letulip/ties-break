@@ -35,6 +35,10 @@ import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
 import { useHeaderAvatar } from '../../composables/headerAvatar'
+// The app's one red-to-green ramp, shared with the Season and Calendar odds rings. `{ pct }` names
+// the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
+// will not let the two be confused.
+import { readingColor } from '../../composables/readingColor'
 import { facePoint } from '../../art/faceRects'
 import { coachPortraitUrl, coachUrlFor, portraitUrl as portraitArtUrl } from '../../art/preload'
 import { venueArtUrl } from '../../art/venues'
@@ -63,6 +67,10 @@ import Eyebrow from '../ui/Eyebrow.vue'
 import Polaroid from '../ui/Polaroid.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 import { playSfx } from '../../audio/sfx'
+// HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
+// byte-identical in five components and the name map was written out in two; a twenty-fifth
+// country would have had to be added in two files with nothing to say so.
+import { flagEmoji } from '../../composables/countries'
 
 // The shell owns `tab`; the notecards that are doors ASK it to move. One event, no router.
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
@@ -154,11 +162,6 @@ const memoryStyle = computed(() => {
   const p = facePoint(`${memory.value.stage}-${memory.value.emotion}`)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
-
-function flagEmoji(code: string): string {
-  if (!code) return ''
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
-}
 
 // The export puts her FIRST NAME alone at 42px – the biggest type in the app, and the point of the
 // whole screen. Her full name still reads on the Kid screen and in every standings row.
@@ -310,11 +313,13 @@ const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() =>
 // COLOUR the arc is, because that is data about her body, not styling.
 const condition = computed(() => game.snapshot?.condition ?? 0)
 /** The arc's colour: hue 0 (red) at 0 through hue 120 (green) at 100 – slice B's own ramp, now read
- *  continuously instead of in ten steps. */
-const ringColor = computed(() => {
-  const pct = Math.max(0, Math.min(100, condition.value))
-  return `hsl(${Math.round((pct / 100) * 120)}, 72%, 48%)`
-})
+ *  continuously instead of in ten steps.
+ *
+ *  ⚠ THE RAMP ITSELF IS NO LONGER WRITTEN HERE. It was, and so were three byte-identical copies of it
+ *  on other screens; `composables/readingColor.ts` owns the one expression now. What stays Home's is
+ *  the only part that was ever Home's – that the arc is coloured by her CONDITION, and that condition
+ *  is a percentage. The clamp went with the ramp: `readingColor` clamps to the ends of the range. */
+const ringColor = computed(() => readingColor({ pct: condition.value }))
 /** The BANDS survive in the spoken label only. The colour is now a smooth ramp, so it can no longer
  *  say "she is under the entry floor" by itself – and that is a fact worth keeping sayable. */
 const conditionStatus = computed<'red' | 'amber' | 'ok'>(() => {

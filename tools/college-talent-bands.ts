@@ -40,7 +40,9 @@ import {
 } from './econ-bench'
 import { answerFork, answerRetirement, kidAgeExact, resumeFromCollege } from '../src/engine/world'
 import { ceilingOf } from '../src/engine/academy'
-import { kidLadderRank } from '../src/engine/world/snapshot'
+// ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
+// world/college.ts could stop importing the aggregate projection layer. Same function.
+import { kidLadderRank } from '../src/engine/world/ladder'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
@@ -106,7 +108,7 @@ const yr = (x: number) => x.toFixed(1)
  *  makes it NaN, `NaN < TO_AGE` is false, and the entire post-fork walk was skipped in silence: a
  *  broken arm that looks exactly like a null result (CLAUDE.md's own warning, and it caught me). The
  *  tell was the clock – 21s for eighteen careers that should have walked 830 weeks each. */
-const ageOf = (w: WorldState): number => kidAgeExact(w.week, w.profile.birthMonth)
+const ageOf = (w: WorldState): number => kidAgeExact(w.week, w.profile.birthMonth, w.profile.birthDay)
 
 // --- the bands ---------------------------------------------------------------------------------
 

@@ -32,7 +32,9 @@ import { resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { skillMeanOf } from '../src/engine/world/college'
 import { COLLEGE_TIERS, COLLEGE_TIER_ORDER, canAfford, coveredShareOf, familyCanPayPerYearCents } from '../src/engine/collegeOffer'
-import { kidLadderRank } from '../src/engine/world/snapshot'
+// ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
+// world/college.ts could stop importing the aggregate projection layer. Same function.
+import { kidLadderRank } from '../src/engine/world/ladder'
 import { parentIncomeForWeekCents } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'

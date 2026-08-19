@@ -14,6 +14,8 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import type { TierId } from '../src/engine/season/types'
+// Comments are not code – the house helper, now in tests/helpers/source.ts.
+import { codeOf } from './helpers/source'
 
 // =================================================================================================
 // THE SLIDING WINDOW (act2-pro-tour.md §11, owner ruling 11) — and the stacked-week pick that
@@ -41,11 +43,6 @@ import type { TierId } from '../src/engine/season/types'
 // =================================================================================================
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
-const codeOf = (src: string) =>
-  src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
 
 /** A feed row. `eligible` defaults true; `capped` marks the pro-cap refusal shape. */
 function row(tier: TierId, week: number, over: Partial<FeedEventFacts> = {}): FeedEventFacts {
@@ -399,7 +396,7 @@ describe('round-21 #5 – the feed offers the rungs that pay into her table', ()
   function proWorld(seed: string, age: number, book: number) {
     const world = createWorld(seed)
     const rng = resumeMain(world.rngMain)
-    while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
+    while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < age) tickWeek(world, rng)
     world.season = []
     world.results.push({ playerId: KID_ID, week: world.week, points: book, tier: 'w15' })
     world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'national' })
@@ -456,7 +453,7 @@ describe('round-21 #5 – the feed offers the rungs that pay into her table', ()
     // allowance runs out.
     const world = createWorld('r21-5-seam')
     const rng = resumeMain(world.rngMain)
-    while (kidAgeYears(world.week, world.profile.birthMonth) < 16) tickWeek(world, rng)
+    while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < 16) tickWeek(world, rng)
     world.season = []
     world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'national' })
     world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'j300' })
@@ -483,7 +480,7 @@ describe('round-21 #5 – the feed offers the rungs that pay into her table', ()
     for (const [name, age, results] of cases) {
       const world = createWorld(`r21-5-below-${name}`)
       const rng = resumeMain(world.rngMain)
-      while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
+      while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < age) tickWeek(world, rng)
       world.season = []
       for (const [tier, points] of results) {
         world.results.push({ playerId: KID_ID, week: world.week, points, tier })

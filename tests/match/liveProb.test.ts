@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { matchWinProbability } from '../../src/engine/match/liveProb'
 import { pMatchBo3 } from '../../src/engine/match/closedForm'
-import { createScore, awardPoint } from '../../src/engine/match/scoring'
+import {
+  createScore,
+  awardPoint,
+  tiebreakServer,
+  tiebreakOpenerFrom,
+} from '../../src/engine/match/scoring'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
 import { basePServe } from '../../src/engine/match/point'
@@ -189,6 +194,132 @@ describe('liveProb — required test 4: never NaN / out of range over real match
       expect(Number.isFinite(v)).toBe(true)
       expect(v).toBeGreaterThanOrEqual(0)
       expect(v).toBeLessThanOrEqual(1)
+    }
+  })
+})
+
+// =================================================================================================
+// ⚠ CROSS-CONSUMER ROTATION PARITY (review TB-01, P1). READ BEFORE EDITING.
+//
+// `scoring.ts` and `liveProb.ts` each used to carry a private, byte-equivalent copy of the tiebreak
+// serve rotation – `tbFlip` / `tiebreakServer` / `tiebreakOpenerFrom` – kept in sync by hand under a
+// comment citing a "touch-only-my-files rule". Correct one copy and not the other and the match
+// SERVES with one rotation while the displayed live probability ASSUMES another. Nothing failed:
+// every existing test here checks liveProb against itself or against closedForm, and the scoring
+// rotation tests never look at liveProb. The rotation now has one owner (scoring.ts) and liveProb
+// imports it, but the import is not the guard – this block is.
+//
+// The guard is behavioural, not a source pin, so it survives any future re-layout and still fails if
+// someone reintroduces a local copy in liveProb and edits it. It works through the ONE-STEP
+// IDENTITY: a live win probability must equal the probability re-derived one point ahead,
+//
+//     P(X) == p_next * P(X after A wins the point) + (1 - p_next) * P(X after B wins the point)
+//
+// where BOTH the successor states AND the identity of the next server come from `scoring.awardPoint`
+// – i.e. from the rotation the match actually serves – while every P comes from liveProb. liveProb's
+// own reconstruction (`tiebreakOpenerFrom` then `tiebreakServer`) is self-inverse at the immediate
+// next point, so a divergent rotation stays invisible one point out; it shows up as soon as
+// liveProb's multi-point lookahead is forced to agree with scoring's actual single steps, which is
+// exactly what this identity does. Measured deviation on agreeing rotations is 2.2e-16 (float noise)
+// on every reachable state, boundary states included – hence the 1e-12 tolerance, ~4 orders of
+// magnitude clear of the noise and ~10 orders clear of a real disagreement.
+//
+// ⚠ pA and pB must stay SERVE-DOMINANT (pA != 1 - pB). With pA == 1 - pB it does not matter who
+// serves, every probability is rotation-independent, and this whole block passes on a broken engine.
+//
+// ⚠ MUTATION-VERIFIED, three mutations, each applied alone and watched red before this was believed.
+// The two `it`s below cover DIFFERENT halves of the chain and neither is redundant – the mutation
+// that reddens one leaves the other green:
+//
+//   A. liveProb gets its local copy back with the pairing off by one (`(i - 1) / 2`).
+//      -> 4 red: this parity test AND three pre-existing closed-form tests. Blunt: that particular
+//         drift also moves the FRESH-set number, so origin/main would have caught this one.
+//   B. liveProb gets a local `tiebreakOpenerFrom` only, drifting only for i > 1 – so a fresh 0-0
+//      tiebreak is byte-identical and every closed-form test still passes.
+//      -> 1 red, and it is the first `it` here. 90 others green. THIS IS THE FINDING: on origin/main
+//         that drift ships silently, and it is the honest reason this block exists.
+//   C. the match's own rotation drifts while the helper stays put: `advanceTiebreakServer` in
+//      scoring.ts advanced to `played + 2`.
+//      -> 3 red: the SECOND `it` here plus the two pre-existing scoring rotation tests. The first
+//         `it` stays GREEN, because liveProb re-anchors on `score.server` at every state and so
+//         follows the state machine wherever it goes. That blind spot is exactly what the second
+//         `it` is for. Do not merge them.
+// =================================================================================================
+
+describe('liveProb x scoring – tiebreak serve rotation parity', () => {
+  // An in-progress tiebreak at 6-6 in the current set, with `done` sets already banked.
+  function tiebreakAt(a: number, b: number, server: Side, done: [number, number][] = []): MatchScore {
+    return {
+      sets: [...done.map(([x, y]) => ({ a: x, b: y })), { a: 6, b: 6 }],
+      game: { a, b },
+      inTiebreak: true,
+      server,
+      winner: null,
+    }
+  }
+
+  // Serve-dominant on both sides: A wins 0.9 of its own points and only 0.1 on the other serve, so
+  // any disagreement about who serves a point moves the number hard.
+  const PAIRS: [number, number][] = [
+    [0.9, 0.9],
+    [0.8, 0.75],
+    [0.72, 0.85],
+  ]
+  const CONTEXTS: [string, [number, number][]][] = [
+    ['0-0 in sets', []],
+    ['1-0 in sets', [[7, 5]]],
+    ['0-1 in sets', [[5, 7]]],
+  ]
+
+  it('liveProb agrees with the rotation scoring actually serves, on every reachable tiebreak state', () => {
+    let checked = 0
+    for (const [pA, pB] of PAIRS) {
+      for (const [label, done] of CONTEXTS) {
+        for (let a = 0; a <= 9; a++) {
+          for (let b = 0; b <= 9; b++) {
+            if (Math.max(a, b) >= 7 && Math.abs(a - b) >= 2) continue // that tiebreak is already over
+            for (const server of [0, 1] as Side[]) {
+              const here = tiebreakAt(a, b, server, done)
+              const ifA = structuredClone(here)
+              awardPoint(ifA, 0) // scoring advances the rotation, not us
+              const ifB = structuredClone(here)
+              awardPoint(ifB, 1)
+              // The next point's server is scoring's `score.server`, read off the real state machine.
+              const pNext = here.server === 0 ? pA : 1 - pB
+              const oneStep =
+                pNext * matchWinProbability(ifA, pA, pB) + (1 - pNext) * matchWinProbability(ifB, pA, pB)
+              expect(
+                matchWinProbability(here, pA, pB),
+                `${label} TB ${a}-${b} server ${server} @ pA=${pA} pB=${pB}`,
+              ).toBeCloseTo(oneStep, 12)
+              checked++
+            }
+          }
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(500) // the sweep really ran
+  })
+
+  it('the shared helper reproduces the server sequence awardPoint writes, over a long tiebreak', () => {
+    // The other half of the chain: scoring's own exported rotation vs scoring's state machine. With
+    // the identity above this closes the loop scoring -> shared helper -> liveProb.
+    for (const first of [0, 1] as Side[]) {
+      const score = tiebreakAt(0, 0, first)
+      const opener = score.server
+      const fromMachine: Side[] = []
+      const fromHelper: Side[] = []
+      for (let i = 1; i <= 40; i++) {
+        fromMachine.push(score.server)
+        fromHelper.push(tiebreakServer(opener, i))
+        awardPoint(score, (i % 2) as Side) // alternate so the tiebreak never reaches margin 2
+        expect(score.inTiebreak, `tiebreak ended early at point ${i}`).toBe(true)
+      }
+      expect(fromHelper).toEqual(fromMachine)
+      // ...and the inverse recovers the opener from any point in the sequence.
+      for (let i = 1; i <= 40; i++) {
+        expect(tiebreakOpenerFrom(fromMachine[i - 1], i), `opener from point ${i}`).toBe(opener)
+      }
     }
   })
 })

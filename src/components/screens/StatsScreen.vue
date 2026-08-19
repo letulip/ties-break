@@ -196,6 +196,7 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
            screen's own class because the shared plate comes off here - see .stats-ladder-row. -->
       <SegmentedRow
         v-model="shownModel"
+        appearance="bare"
         class="stats-ladder-row"
         :options="options"
         group-label="Which ranking table"
@@ -358,16 +359,12 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
   margin: 2px 0 0;
 }
 
-/* ⚠ NO PLATE AROUND THIS SWITCH (owner, 02.08: «Мне не нравится круглая обводка у переключателя
-   уровня турниров в stats, без нее было лучше... Давай просто кнопки оставим и всё»). The shared
-   `.tab-row` plate - panel fill, hairline, pill radius, 4px inset - comes off THIS instance only:
-   the control stays SegmentedRow (same contract, same pills, same lime active fill as the app's
-   plainest active state), and every other caller of the plate keeps it. Scoped-over-shared wins on
-   specificity ((0,2,0) with the data-v attribute vs the sheet's (0,1,0)), so no !important and no
-   sheet edit. `padding: 0` lets the buttons sit flush with the heading above, which is what "just
-   buttons" looks like on this page.
+/* ⚠ THE PLATE RULING MOVED TO THE CONTROL (DRY-8, 19.08). The owner's 02.08 «Давай просто кнопки
+   оставим и всё» is now `SegmentedRow`'s `appearance="bare"` and lives once in `src/style.css` -
+   this screen, Money and More had each copied the same four declarations with the same specificity
+   note. What stays here is the ONLY thing that is this page's: the gap under the switcher.
 
-   ⚠ AND THE GAP UNDER IT IS THIS RULE'S JOB NOW (owner, 04.08: «На вкладке stats при переключении
+   ⚠ AND THE GAP UNDER IT IS THIS RULE'S JOB (owner, 04.08: «На вкладке stats при переключении
    international имеет небольшой отступ снизу, а national и professional нет – надо тоже добавить»).
 
    WHAT HE WAS SEEING, and it is a real inconsistency rather than a preference. Only ONE arm of this
@@ -385,10 +382,6 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
    armed for the fourth. The archive's own copy is deleted at `.stats-archive` above, with a pointer
    here, so the 10px is stated exactly once. */
 .stats-ladder-row {
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: none;
   margin-bottom: 10px;
 }
 </style>

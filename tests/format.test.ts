@@ -47,7 +47,13 @@ describe('shortTierLabel', () => {
     // Junior and World rungs, and "Grand Slam" would become "Grand".
     expect(shortTierLabel('Junior Tour 300')).toBe('Junior Tour 300')
     expect(shortTierLabel('World Tour 100')).toBe('World Tour 100')
-    expect(shortTierLabel('WTA 1000')).toBe('WTA 1000')
+    // ⚠ RE-AIMED, NOT WEAKENED (owner's rename, 18.08): 'WTA 1000' -> 'World Tour 1000'. The case
+    // this line buys is unchanged – a professional rung whose last word is a NUMBER and must survive
+    // the formatter whole – and it is now the same shape as the W100 line above it, which is the
+    // point of the rename. The literal is a raw label rather than `TIERS.wta1000.label` on purpose:
+    // this describes `shortTierLabel`'s contract on a STRING, and the catalogue-wide walk two blocks
+    // down is the test that ties that contract to the shipped ladder.
+    expect(shortTierLabel('World Tour 1000')).toBe('World Tour 1000')
     expect(shortTierLabel('Grand Slam')).toBe('Grand Slam')
   })
 

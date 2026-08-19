@@ -68,16 +68,14 @@
 // happens to be running, and both gates now answer it the same way.
 
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
 import { classify, recoveredNote } from './lib/stall.mjs'
-
-/** Parsed out of vite.config.ts so the list cannot drift from the project definition. */
-function simFiles() {
-  const config = readFileSync(new URL('../vite.config.ts', import.meta.url), 'utf8')
-  const block = config.match(/const HEAVY_SIM_FILES = \[([\s\S]*?)\]/)
-  if (!block) throw new Error('scripts/sim.mjs: HEAVY_SIM_FILES not found in vite.config.ts')
-  return [...block[1].matchAll(/'([^']+)'/g)].map((m) => m[1].replace(/^\*\*\//, ''))
-}
+// ⚠ IMPORTED, NOT REGEX-PARSED OUT OF vite.config.ts (round-22 review). This script used to read
+// the config's SOURCE TEXT and pull `HEAVY_SIM_FILES` out of it with two regexes, stripping the
+// `**/` off each entry to get a path back. It worked, and it was one rename away from silently
+// running fewer files than it printed – the exact "the number a script reads disagrees with the
+// number a human reads" shape this file's header was written about, one level up. The list and the
+// `sim` project's `include` are now the same array. See scripts/heavy-tests.mjs.
+import { HEAVY_SIM_FILES } from './heavy-tests.mjs'
 
 function runFile(file) {
   const at = Date.now()
@@ -92,7 +90,7 @@ function runFile(file) {
   return { secs: ((Date.now() - at) / 1000).toFixed(0), output, ...classify(run.status, output) }
 }
 
-const files = simFiles()
+const files = HEAVY_SIM_FILES
 const started = Date.now()
 const failed = []
 const stalled = []

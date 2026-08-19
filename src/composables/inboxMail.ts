@@ -30,8 +30,20 @@
 // So the bin means "I have dealt with this, take it off my list", the record survives in the save,
 // and the confirm says so in those words. If the owner ever wants a real destructor, it is an engine
 // command with a migration behind it - not this.
-import { computed, ref, watch } from 'vue'
+//
+// ⚠⚠ AND IT IS CAREER-KEYED BY THE SHARED RULE BUT IS NOT A WATERMARK - the distinction is the
+// reason this file still owns its own read and write. `careerKey` and `useCareerSync` (composables/
+// inboxCue.ts) are the two halves every career-scoped record shares: one shape of key, and one
+// re-read when the career changes. What `useWatermark` adds on top of them is a HIGH-WATER MARK -
+// one value, "newer than this is unseen" - and the paragraph above is precisely the argument that a
+// mark cannot answer this question: a player opens the interesting letter first, so the fact here is
+// a SET at per-letter grain. Its missing-key rule is a third one again, and stated in `readSet`:
+// nothing stored means the empty set, which is neither "claim nothing" nor a sentinel - it is the
+// safe direction for BOTH facts at once (an unread letter shown in bold costs a bold row; the
+// opposite default would hide a live offer). So the scoping is shared and the storage is not.
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
+import { careerKey, useCareerSync } from './inboxCue'
 import type { Offer } from '../shared/protocol'
 
 const READ_KEY = 'tb:inbox:read'
@@ -103,7 +115,7 @@ export interface InboxMail {
 export function useInboxMail(): InboxMail {
   const game = useGameStore()
   const careerId = computed(() => game.snapshot?.careerId ?? '')
-  const key = (prefix: string) => `${prefix}:${careerId.value}`
+  const key = (prefix: string) => careerKey(prefix, careerId.value)
 
   const read = ref<Set<string>>(new Set())
   const binned = ref<Set<string>>(new Set())
@@ -112,10 +124,10 @@ export function useInboxMail(): InboxMail {
     read.value = readSet(key(READ_KEY))
     binned.value = readSet(key(BINNED_KEY))
   }
-  sync()
   // Switching careers re-reads THAT career's own annotations. A global key would collide, which is
-  // the R9-21b lesson inboxCue.ts records at length.
-  watch(careerId, sync)
+  // the R9-21b lesson inboxCue.ts records at length - and `useCareerSync` is where that lesson lives
+  // as code, so this scope cannot drift out of step with the watermarks it sits beside.
+  useCareerSync(sync)
 
   function persist(which: 'read' | 'binned'): void {
     if (!careerId.value) return

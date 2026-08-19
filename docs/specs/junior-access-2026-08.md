@@ -1,9 +1,10 @@
 ---
 type: specification
-status: current
+status: superseded
 area: simulation-and-balance
 canonical: false
-last-reviewed: 2026-08-15
+last-reviewed: 2026-08-19
+superseded-by: docs/specs/junior-access-corrected-2026-08.md
 ---
 
 # Junior access – the Accelerator ladder and the W15 reserved place

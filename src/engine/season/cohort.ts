@@ -6,6 +6,19 @@ import { rngFromSeed, pickInt, type Rng } from '../rng'
 import type { AiPlayer } from './types'
 // Task 55: the same head-start pricing the kid uses. One number, one meaning - see `applyRelativeAge`.
 import { relativeAgeHeadStart } from '../development'
+import { rivalGroundstrokes } from './rival'
+import { FIRST_NAMES, NATION_POOL, SURNAMES } from './names'
+
+// ⚠ THE NAME POOLS MOVED OUT, AND THE RE-EXPORT IS WHY NOTHING ELSE CHANGED (TB-07). FIRST_NAMES,
+// SURNAMES, NATION_POOL and `pickSurname` now live in season/names.ts – a leaf that imports only the
+// RNG – because coach.ts reading SURNAMES from HERE put it inside a runtime cycle: cohort imports
+// `relativeAgeHeadStart` from development, and development imports coach back. The arrays are
+// byte-identical to the ones this file used to declare, so no draw and no persisted name moves.
+//
+// Their notes moved with them: the APPEND-ONLY / order rules and everything the comments below
+// point at as "the SURNAMES note" are in season/names.ts now. Re-exported under their historical
+// names so season/fieldPros.ts, the onboarding and ending screens and the tests are untouched.
+export { FIRST_NAMES, NATION_POOL, SURNAMES, pickSurname } from './names'
 
 /** THE COHORT'S OWN KNOBS (v20). Kept here rather than in ECONOMY because they describe the WORLD's
  *  population, not the family's money - and because the file that reads them is the only file that
@@ -28,105 +41,6 @@ export const COHORT = {
     declineAccel: 0.25,
   },
 } as const
-
-// 44 given names × 210 surnames (R11-13) – a broad pool so 199 juniors read as distinct.
-//
-// EXPORTED since the living-field slice (01.08): the FIELD tier (season/fieldPros.ts) draws its
-// ~300 professionals from the SAME pools, so the world has one naming vocabulary – a W15 field and
-// a J30 field read as the same world's people. Export-only change: the array itself is untouched,
-// and the APPEND-ONLY / order rules in the SURNAMES note below apply here identically (the cohort
-// draw indexes by pool length).
-export const FIRST_NAMES = [
-  'Aria', 'Bela', 'Camila', 'Dasha', 'Elena', 'Freya', 'Gaia', 'Hana',
-  'Ines', 'Jana', 'Kaia', 'Lena', 'Mila', 'Nora', 'Oksana', 'Petra',
-  'Quinn', 'Rina', 'Sasha', 'Tara', 'Uma', 'Vera', 'Wren', 'Xenia',
-  'Yara', 'Zoe', 'Aiko', 'Bianca', 'Clara', 'Dita', 'Emma', 'Farida',
-  'Greta', 'Ilse', 'Juna', 'Kira', 'Luca', 'Marta', 'Nina', 'Olga',
-  'Pia', 'Reni', 'Sofia', 'Talia',
-]
-
-// Exported: the kid draws a last name from the same pool (onboarding 🎲 + the v7
-// migration default), so juniors and the player share one surname vocabulary.
-//
-// R11-13 – GROWN 44 -> 210 (owner: too many juniors sharing a surname). 199 juniors over 44
-// surnames is ~4.5 each; over 210 it is ~0.95, and full-name clashes drop with it.
-//
-// APPEND-ONLY, AND THE ORDER OF THE FIRST 44 IS LOAD-BEARING. `pickSurname` and the cohort draw
-// both do `pickInt(rng, 0, SURNAMES.length - 1)` = `floor(rng() * length)`: the pool LENGTH is
-// part of the index arithmetic, so growing or reordering the array re-maps every draw. What makes
-// that safe here (proved in tests/season/surnames.test.ts):
-//   1. Names are PERSISTED, never recomputed. `cohort` (each junior's `name`) lives in WorldState
-//      and goes through JSON.stringify in saveCodec; `profile.kidLastName` has been persisted
-//      since v7. migrateSave only regenerates a cohort inside the `v < 6` block, and only fills
-//      kidLastName when the field is ABSENT – so no existing career is renamed by this change.
-//   2. The DRAW COUNT is untouched. `pickInt` consumes exactly one rng() value whatever its range,
-//      so generateCohort still spends 8 draws per junior in the same order: skills, nations,
-//      growth – and therefore the frozen MAIN-stream capture and kidRank 140 – are byte-identical.
-// What is NOT preserved: a NEW career on an OLD seed draws different surnames than it would have
-// before (same skills, same results, different names). That is the price of any pool change, and
-// the reason this array must only ever be appended to.
-export const SURNAMES = [
-  // --- the original 44 (v7-era pool). NEVER reorder, NEVER remove. -------------------
-  'Adler', 'Baros', 'Costa', 'Duval', 'Everts', 'Falk', 'Granados', 'Horvat',
-  'Ivanova', 'Janssen', 'Kovac', 'Lindqvist', 'Moreau', 'Novak', 'Oberg', 'Petrov',
-  'Quaranta', 'Rossi', 'Sato', 'Toma', 'Udall', 'Varga', 'Weiss', 'Xu',
-  'Yilmaz', 'Zima', 'Andersen', 'Blanco', 'Chen', 'Dumont', 'Esposito', 'Ferro',
-  'Georgiou', 'Haas', 'Ikeda', 'Jelic', 'Kern', 'Larsson', 'Mensah', 'Nagy',
-  'Ortiz', 'Pavic', 'Reyes', 'Sanches',
-  // --- appended R11-13. An international junior field: every tennis region that actually
-  // sends 14-year-olds to an ITF calendar, in rough proportion to NATION_WEIGHTS below.
-  // Invented-but-plausible: no surname of a real professional player, living or recent.
-  'Ahlberg', 'Bjornstad', 'Ekstrom', 'Halvorsen', 'Jokinen', 'Kallio', 'Moller', 'Ostergaard',
-  'Saarinen', 'Vikstrom', 'Kalnins', 'Tamm',
-  'Ashcroft', 'Brennan', 'Caldwell', 'Ellery', 'Fairbanks', 'Gilroy', 'Hollis', 'Kinsella',
-  'Marsden', 'Thorne',
-  'Bertrand', 'Chevalier', 'Delaunay', 'Fournier', 'Girard', 'Lemaire', 'Mercier', 'Poirier',
-  'Thibault', 'Vasseur',
-  'Arrieta', 'Bermudez', 'Delgado', 'Esquivel', 'Figueroa', 'Guzman', 'Herrera', 'Jimenez',
-  'Lozano', 'Paredes', 'Quintero', 'Zamora',
-  'Almeida', 'Barbosa', 'Carvalho', 'Machado', 'Nogueira', 'Pereira', 'Queiroz', 'Teixeira',
-  'Bellini', 'Cattaneo', 'Donati', 'Fabbri', 'Gallo', 'Lombardi', 'Marchetti', 'Perotti',
-  'Rinaldi', 'Sartori',
-  'Aigner', 'Brandt', 'Eichler', 'Gruber', 'Hellwig', 'Keller', 'Lindner', 'Nussbaum',
-  'Rieder', 'Steiner', 'Vogel', 'Zeller',
-  'Bakker', 'Claessen', 'Hendriks', 'Kuipers', 'Vandenberg', 'Verbeek', 'Verhoeven', 'Wouters',
-  'Balint', 'Dolezal', 'Fiala', 'Janik', 'Kalina', 'Malek', 'Nemec', 'Oravec',
-  'Prochazka', 'Sedlak', 'Urban', 'Zeman',
-  'Baranowski', 'Cieslak', 'Domanski', 'Grabowski', 'Kaminski', 'Lisowski', 'Ostrowski', 'Pawlak',
-  'Bondar', 'Danilov', 'Fedorenko', 'Kolesnyk', 'Lytvyn', 'Melnyk', 'Romanenko', 'Tkachenko',
-  'Fotiadis', 'Karras', 'Nikolaidis', 'Papadakis', 'Sideris',
-  'Aydin', 'Demir', 'Ozturk', 'Yalcin',
-  'Filipovic', 'Kostic', 'Markovic', 'Simic', 'Vukovic',
-  'Fujimoto', 'Hasegawa', 'Kobayashi', 'Nakamura', 'Okada', 'Yoshida',
-  'Fang', 'Jiang', 'Tang', 'Yuan', 'Choi', 'Yoon',
-  'Bhatia', 'Deshpande', 'Iyer', 'Nair', 'Sethi', 'Varma', 'Nguyen', 'Tran',
-  'Adeyemi', 'Bello', 'Diallo', 'Eze', 'Kamau', 'Kone', 'Ndiaye', 'Okonkwo',
-  'Hamdi', 'Mansouri',
-  'Barlow', 'Delaney', 'Fairchild', 'Kingsley', 'Lockhart', 'Nolan', 'Rutledge', 'Sinclair',
-  'Vaughn', 'Corrigan', 'Donnelly', 'Pemberton',
-]
-
-/** Deterministic surname for a seed – the v7 migration default for `profile.kidLastName`
- *  (uses a purpose-scoped sub-RNG so it never touches the main career streams). */
-export function pickSurname(seedStr: string): string {
-  const rng = rngFromSeed(seedStr + ':surname')
-  return SURNAMES[pickInt(rng, 0, SURNAMES.length - 1)]
-}
-
-// Tennis nations, weighted by rough player-pool depth. Duplicated entries give a
-// single pickInt draw the intended skew toward the strong tennis countries.
-const NATION_WEIGHTS: Array<[string, number]> = [
-  ['US', 10], ['ES', 9], ['FR', 8], ['IT', 7], ['RU', 6], ['DE', 6],
-  ['GB', 5], ['AU', 5], ['CZ', 4], ['RS', 4], ['AR', 4], ['HR', 3],
-  ['JP', 3], ['CN', 3], ['CA', 3], ['CH', 3], ['GR', 3], ['PL', 3],
-  ['NL', 2], ['BE', 2], ['AT', 2], ['BR', 2], ['SE', 2], ['KZ', 2],
-  ['DK', 2], ['SK', 2], ['UA', 2], ['RO', 2], ['IN', 2], ['SI', 1],
-  ['BG', 1], ['NO', 1], ['HU', 1], ['TN', 1], ['KR', 1], ['PT', 1],
-]
-
-// EXPORTED with FIRST_NAMES (living-field, 01.08) and for the same reason: the FIELD tier's
-// professionals come from the same tennis nations in the same proportions as the juniors do.
-export const NATION_POOL: string[] = NATION_WEIGHTS.flatMap(([code, w]) => Array<string>(w).fill(code))
 
 function clamp01to100(x: number): number {
   return x < 0 ? 0 : x > 100 ? 100 : x
@@ -274,7 +188,37 @@ export function applyRelativeAge(p: AiPlayer, seedStr: string): void {
  *  decide who is worth continuing for; nothing else in the engine needs a single "how good is she"
  *  number, which is why it lives here and not in the match model. */
 export function power(p: AiPlayer): number {
-  return (p.serve + p.ret + p.composure + p.stamina) / 4
+  // ⚠⚠ EVERY SKILL, AND IT USED TO BE FOUR (18.08). This read `(serve + ret + composure + stamina) / 4`
+  // and silently dropped GROUNDSTROKES – the attribute the match engine weighs most heavily through the
+  // rally. The owner asked for it directly: «хотелось бы, чтобы наши формулы учитывали в себе влияние
+  // всех показателей скиллов».
+  //
+  // ⚠ THE DEFECT IT CAUSED WAS A MEASUREMENT ONE, WHICH IS WORSE THAN A BALANCE ONE. A career is BANDED
+  // by talent on `ceilingOf` (all five) and JUDGED by the match engine (all five), but the FIELD was
+  // built and ranked on four - so a girl whose strength sits in her groundstrokes was priced as weaker
+  // than she plays. Measured on the owner's own save: Ines' `power()` of 57.3 prices her at about #40-45
+  // while her match rating of 1936 is worth roughly #14, and her profile shape alone is worth +140 Elo -
+  // the top 0.1% of a 1,600-strong field, where the field's own shape averages zero by construction.
+  //
+  // ⚠⚠ AND IT IS NOT `SKILL_KEYS`, WHICH THE COMPILER REFUSED AND WAS RIGHT TO. `AiPlayer` is declared
+  // `Omit<MatchPlayer, 'groundstrokes' | 'age'>` and that Omit is LOAD-BEARING: `driftCohort` spends
+  // exactly four MAIN draws per rival, and `52 x (4 x 199 + 3) + 2 = 41550` is literally what the
+  // frozen capture `e6b0c709` is made of. A fifth STORED attribute would want a fifth weekly draw and
+  // move it. So a rival's fifth skill is DERIVED at match time and this reads the same derivation the
+  // match itself reads - `rivalGroundstrokes`, off her own `gs:<id>` sub-stream, zero MAIN draws.
+  //
+  // ⚠ ONE DEFINITION, WHICH IS THE OTHER HALF OF THE INSTRUCTION - «нам точно нужен один источник
+  // истины везде без дублей кода». The four-attribute mean had been copied by hand into seven other
+  // places and `tools/kit-bench.ts` had already drifted to five, so the tools disagreed with the engine
+  // and with each other. They now call this.
+  //
+  // ⚠ AND SINCE ROUND 22 THE FIFTH TERM ADDS ONLY WHAT IS ACTUALLY NEW. `rivalGroundstrokes` is now
+  // `mean(four) + offset` (it was `(serve + ret) / 2 + offset`), so this whole expression collapses to
+  // `mean(four) + offset / 5`: the four are weighted evenly and the fifth axis contributes exactly its
+  // own independent tilt. Under the old anchor the fifth term was 60% serve/ret again, so a serve-first
+  // rival was priced up twice for one weapon - the same double-counting defect the box above records,
+  // pointing the other way. Nothing here changed; the change is in what it calls.
+  return (p.serve + p.ret + p.composure + p.stamina + rivalGroundstrokes(p)) / 5
 }
 
 // driftCohort – the cohort's development, and since v20 it has the same SHAPE as the kid's.

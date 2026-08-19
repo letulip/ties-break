@@ -100,7 +100,7 @@ function domesticWorld(seed: string, points: number): WorldState {
 function proWorld(seed: string, age: number, book: number): WorldState {
   const world = createWorld(seed)
   const rng = resumeMain(world.rngMain)
-  while (kidAgeYears(world.week, world.profile.birthMonth) < age) tickWeek(world, rng)
+  while (kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay) < age) tickWeek(world, rng)
   world.condition = 100
   world.fundsCents = 50_000_00
   world.season = []
@@ -218,7 +218,18 @@ describe('the upper bound stays a wall', () => {
   it('...and outgrowing a rung never opens one above it', () => {
     // The failure this forbids is the mirror of the one the wave fixes: a ceiling that stopped
     // refusing must not become a reason to ADMIT. `hasOutgrown` is a label; it enters nothing.
-    const world = proWorld('floor-no-lift', 17, 250)
+    // ⚠ THE BOOK MOVED 250 -> 200 ON 19.08, AND THE CLAIM DID NOT. Both halves of this arm still
+    // have to hold together - she HAS outgrown w15, and the rung above is STILL shut - which is what
+    // makes it a guard rather than an assertion about one number.
+    //
+    // Why it had to move: the live professional table changed what 250 points is WORTH. Measured on
+    // this seed, the same career holding 250 stood 277th before the correction and 226th after, and
+    // the W100 acceptance cut falls between those two - so at 250 she now clears it ON MERIT. That is
+    // not the failure this arm forbids: she is admitted by her RANK, never by `hasOutgrown`, which
+    // enters nothing and is still only a label. A witness sitting on the cut tests the cut, not the
+    // rule; 200 restores the margin the arm was written with (swept: 180 and 200 both outgrow w15
+    // with W100 shut, 250 does not).
+    const world = proWorld('floor-no-lift', 17, 200)
     expect(hasOutgrown(world, 'w15')).toBe(true)
     expect(tierOpenFor(world, 'wta125')).toBe(false)
     expect(tierOpenFor(world, 'w100')).toBe(false)
@@ -254,7 +265,18 @@ describe('tierOpenFor and entryStatus cannot disagree about a rung', () => {
           shutSeen++
           // The converse: a rung the calendar shuts must refuse at the door for a POINT reason and
           // not merely because she happens to be injured or it is the off-season that week.
-          expect(gate.level, `${tier}: the calendar says shut, the turnstile lets her through`).toBe('blocked')
+          //
+          // ⚠ IT NEEDED AN EXEMPTION FOR ONE DAY AND NO LONGER DOES (18.08). The date-clock wave moved
+          // a fixture into a week where she holds a WILD CARD, and `entryStatus` admitted her while the
+          // calendar showed the rung shut - because `homeWildCardPlace` answered FALSE without an event
+          // id, and `Snapshot.tierOpen` is built per rung with no event. The owner's ruling was short -
+          // «есть дефект - чиним» - so the calendar learned to scan her own card for the same door, and
+          // the strict assertion is back. If this ever needs an exemption again, something is admitting
+          // at the turnstile that the screen cannot explain.
+          expect(
+            gate.level,
+            `${world.seed} w${world.week} ev${ev.week} ${tier}: shut on the calendar, open at the door (reason ${gate.reason})`,
+          ).toBe('blocked')
         }
       }
     }
@@ -262,6 +284,63 @@ describe('tierOpenFor and entryStatus cannot disagree about a rung', () => {
     // not pass by vacuity.
     expect(openSeen).toBeGreaterThan(20)
     expect(shutSeen).toBeGreaterThan(20)
+  })
+
+  // ⭐⭐ PR-09 / TB-05 – AND THE PROJECTED REASON CANNOT DISAGREE WITH THE PROJECTED VERDICT.
+  //
+  // `Snapshot.tierOpen` comes from `tierOpenFor`; `Snapshot.tierRefusal` comes from `tierVerdict`,
+  // which runs the same `entryVerdict` the turnstile runs. Both are built per rung with no event.
+  // Two answers to one question is precisely the shape this whole proposal exists to remove, so the
+  // one thing that must never happen is a rung the calendar calls OPEN carrying a refusal, or a rung
+  // it calls SHUT carrying none.
+  //
+  // ⚠ THIS IS THE NET UNDER THE UI CHANGE, not a restatement of the sweep above. `composables/
+  // tierState.ts` now settles "locked" from `refusal` when it is present, so if this map could drift
+  // from `tierOpen` the card would go back to disagreeing with `enterEvent` - the exact defect the
+  // file's own note at the top of this sweep records ("the calendar says open, the turnstile says
+  // locked"), arriving from a new direction.
+  it('⭐ the projected REASON and the projected VERDICT are one answer, over the same sweep', () => {
+    const worlds: WorldState[] = [
+      ...[0, 40, 86, 122, 200, 260, 400, 600].map((p) => domesticWorld(`refusal-dom-${p}`, p)),
+      ...[10, 50, 170, 200, 400].map((b) => proWorld(`refusal-pro-${b}`, 17, b)),
+    ]
+    const disagreements: string[] = []
+    let openSeen = 0
+    let shutSeen = 0
+    for (const world of worlds) {
+      const snap = toSnapshot(world)
+      for (const tier of TIER_LADDER) {
+        const open = snap.tierOpen[tier]
+        const refusal = snap.tierRefusal?.[tier]
+        if (open) {
+          openSeen += 1
+          if (refusal) disagreements.push(`${world.seed} ${tier}: open, yet refused '${refusal.reason}'`)
+        } else {
+          shutSeen += 1
+          if (!refusal) disagreements.push(`${world.seed} ${tier}: shut, yet carries no reason`)
+        }
+      }
+    }
+    expect(disagreements, 'the card and the turnstile have parted again').toEqual([])
+    // ...and both sides were really visited, or a projection that answered one way everywhere passes.
+    expect(openSeen, 'no open rung in the whole sweep').toBeGreaterThan(20)
+    expect(shutSeen, 'no shut rung in the whole sweep').toBeGreaterThan(20)
+  })
+
+  it('⚠ is not vacuous: the projection really names reasons, and the numbers behind them', () => {
+    const reasons = new Set<string>()
+    let withNumber = 0
+    for (const p of [0, 86, 200, 400]) {
+      const snap = toSnapshot(domesticWorld(`refusal-why-${p}`, p))
+      for (const tier of TIER_LADDER) {
+        const r = snap.tierRefusal?.[tier]
+        if (!r) continue
+        reasons.add(r.reason)
+        if (r.pointsToEnter !== undefined || r.rankToEnter !== undefined || r.entryCap !== undefined) withNumber += 1
+      }
+    }
+    expect(reasons.size, `reasons seen: ${[...reasons].join(', ')}`).toBeGreaterThan(0)
+    expect(withNumber, 'not one refusal carried the number behind it – the UI would have nothing to print').toBeGreaterThan(0)
   })
 })
 

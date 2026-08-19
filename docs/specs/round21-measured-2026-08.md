@@ -361,6 +361,20 @@ manages – which is a fat tail rather than broken arithmetic, and §4d prices i
 
 ### 4d. The knob, named and sized – `FIELD.ageRampFloor`
 
+> ⚠⚠ **SUPERSEDED ON 19.08. EVERYTHING BELOW IS THE FIELD AS IT STOOD ON 17.08 AND IS NO LONGER
+> CURRENT TRUTH.** The owner read this section's own sentence – *"a debutante does not climb into a
+> chair, she **inherits** it"* – and ruled against the behaviour it describes:
+> **«вот я хочу, чтобы этого не было»**. `FIELD.ageRampFloor` is **retired as a lever**: `careerArc`
+> no longer consults it and keeps only the DECLINE, and the climb moved to `tenureRamp(seasons on
+> tour)`, because what a debutante lacks is tennis played and not years. Teens in the top 10 went
+> **59.21% → 28.63%**, in the top 3 **11.29% → 3.25%**, over 300 seeds × 8 seasons.
+>
+> **The verdict at the foot of this section – "not a defect … a price the owner should decide on
+> rather than an agent" – was answered by him deciding.** The table is kept because it is the honest
+> record of what the field looked like on 17.08 and of what the knob was worth; it is not kept as a
+> description of the shipped engine. Ruling: [decisions.md](../decisions.md), 19.08, "a professional
+> climbs into her chair instead of inheriting it".
+
 The arc's floor is **0.65**: a debutante does not climb into a chair, she **inherits** it at 65% of
 its value. Re-scoring the same 768,000 rows under alternative floors (a predicate over measured rows,
 never an engine re-run):
@@ -707,7 +721,7 @@ and W35 weeks, not more people.
 | --- | --- |
 | `tools/two-seasons-read.ts` | **new** – per-rung derivation of her wins off the ledger, the counting window, the field at her rank, and the zero-tie rank check |
 | `tools/big-rung-odds.ts` | **new** – the seeding audit, and Monte-Carlo finish distributions for her build and for her rank band |
-| `tools/teen-at-the-top.ts` | **new** – the teen-at-the-head rate over 480 world-seasons, plus the `ageRampFloor` counterfactual |
+| `tools/teen-at-the-top.ts` | **new** – the teen-at-the-head rate over 480 world-seasons, plus the `ageRampFloor` counterfactual. ⚠ **RE-AIMED 19.08 when that knob was retired** (§4d's note), and it had two faults of its own: its prose still asserted the retired floor, and its counterfactual permuted an ALREADY-permuted table, reporting 0.92% where the field measures 3.25%. The command below still runs; the counterfactual it prints is now the tenure one |
 | `tools/slam-door-cost.ts` | **new** – the band's cost in weeks, and the sweep over candidate acceptance cuts |
 | `tools/population-depth.ts` | **new** – table size, curve depth, band floors, and the chairs-per-player arithmetic |
 | `tools/college-price-probe.ts` | **extended** – full distribution, the paired difference, the marginal crossing, and the non-American bill computed per career |

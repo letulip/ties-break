@@ -17,9 +17,10 @@ import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
 import { TIERS, isBlackoutWeek, isJuniorAge, isOffSeasonWeek, tierAgeBlock } from '../season/calendar'
 import { schoolIsOver } from '../kidLife'
-import type { LadderTrack, SeasonEvent } from '../season/types'
+import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
 import { kidAgeAt } from './age'
+import { alternateListPlace } from './ladder'
 import {
   entryCapUsage,
   proEntryCapUsage,
@@ -251,7 +252,14 @@ export function layoffBlock(input: {
   return { level: 'blocked', reason: 'injured', detail: injuredDetail(weeksRemaining!) }
 }
 
-export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
+export function availabilityStatus(
+  world: WorldState,
+  // ⚠ WIDENED TO WHAT IT READS (PR-09): this function touches `event.tier` and `event.week` and
+  // nothing else, measured. A `SeasonEvent` still satisfies it structurally, so every existing caller
+  // is unchanged - what it now also accepts is the rung-level `VerdictContext`, which is what let the
+  // one verdict answer both questions instead of the UI rebuilding it.
+  event: Pick<SeasonEvent, 'tier' | 'week'>,
+): AvailabilityStatus {
   // The injury window is read against the EVENT's week, never today's (R10-17 – see layoffCovering).
   // Note the CONDITION-driven branches below stay current-week reads: her condition in a future week
   // is unknowable, which is why the doctor re-checks her on arrival.
@@ -473,7 +481,60 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
   return { ...entryVerdict(world, event), outgrown: hasOutgrown(world, event.tier) }
 }
 
-function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
+/** ⭐⭐ THE SAME VERDICT, ASKED ABOUT A RUNG (PR-09 / TB-05). The UI needs one for a card whose rung
+ *  has no scheduled event yet, and until now it REBUILT the rule to get it - `composables/tierState.ts`
+ *  carrying its own age gate, its own point band and its own copy of `entryBandTrack`. That is the
+ *  "two sides asking different functions about one question" class, and it has shipped as a defect at
+ *  least four times: the wild cards, the age gates, the bench pre-filter, and the one this file's own
+ *  neighbour records - a W15 reading "68 / 120 international pts" while the engine held it open.
+ *
+ *  ⚠ IT IS THE ONE FUNCTION, not a parallel one. `entryStatus` and this call the SAME `entryVerdict`,
+ *  so the card and the turnstile cannot drift apart by construction rather than by a test noticing.
+ *  What differs is only the CONTEXT: no named tournament, so no per-event door (see `VerdictContext`),
+ *  and no availability tail - injury and condition are answered per event, on that event's week.
+ *
+ *  ⚠ THE WEEK IS `world.week`, deliberately. A rung's card means "where do I stand with this rung
+ *  TODAY", and her age, her allowance and the accelerator's usage are all read at that week. */
+export function tierVerdict(world: WorldState, tier: TierId): EntryStatus {
+  return {
+    ...entryVerdict(world, { tier, week: world.week, id: null }, false),
+    outgrown: hasOutgrown(world, tier),
+  }
+}
+
+/** ⭐⭐ PR-09 / TB-05 – WHAT THE VERDICT ACTUALLY NEEDS, which turned out not to be an event.
+ *
+ *  Measured before this was written: over `entryVerdict`'s refusal half the event appears as
+ *  `event.tier` twelve times, `event.week` five, and `event.id` twice. That is the whole of it - so
+ *  the refusal half is a function of (world, RUNG, WEEK, and whether a named tournament's own doors
+ *  are on offer), and never of anything else about an event.
+ *
+ *  ⚠ `id: null` MEANS "AN EVENT OF THIS RUNG, THIS WEEK, WITH NO PER-EVENT DOOR", and it is a
+ *  CONSERVATIVE BASELINE rather than a different rule. The three doors that read an id - the home
+ *  wild card, the alternates list, the reserved junior place - all sit in the NEGATIVE position of
+ *  one condition (`&& !reserved && !wildCard && !alternate`), so holding one SKIPS a refusal and none
+ *  of them can ever cause one. A named tournament can therefore only be MORE permissive than this
+ *  answer, never less, which is exactly what a rung's card should promise: it explains the rule, it
+ *  does not promise a door at a tournament it cannot name. */
+export interface VerdictContext {
+  tier: TierId
+  week: number
+  /** the tournament whose own doors are on offer, or null for the rung's baseline (see above). */
+  id: string | null
+}
+
+function entryVerdict(
+  world: WorldState,
+  event: VerdictContext,
+  /** ⚠ WHETHER THE WEEK'S AVAILABILITY IS PART OF THE ANSWER, and it is NOT for a rung-level ask.
+   *  `availabilityStatus` answers "can she play AT ALL this week" - a layoff covering it, her
+   *  condition, the off-season, an exam week, a booked holiday. None of that is a fact about a RUNG,
+   *  and `tierOpenFor` has never counted it, so including it made every rung of a resting world
+   *  report itself refused. Measured by the parity net the moment it was written: 27 disagreements,
+   *  every one of them 'unavailable' and every one of them ALL rungs of one world at once - which is
+   *  the signature of a world-level condition wearing a rung's clothes. */
+  availability = true,
+): EntryStatus {
   const tier = TIERS[event.tier]
   // AN ITF OR WTA RUNG IS AN ACCEPTANCE LIST, not a points threshold (docs/specs/two-ladders.md).
   // She gets in on her RANK IN THAT TABLE, the same signal the AI field is drawn on, so the two
@@ -561,7 +622,7 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
           pointsToEnter: minPoints,
         }
       }
-      return availabilityStatus(world, event)
+      return availability ? availabilityStatus(world, event) : { level: 'ok' }
     }
     // ⚠ UNRANKED IS NOT RANK ONE. With nobody holding a point in this table in week 1 the whole field
     // ties at zero, and competition ranking gives every member of a tie the SAME rank - so a fresh
@@ -586,8 +647,16 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
     // refusing it, on the one event the wild card exists for. `homeWildCardPlace` is the whole rule
     // and `wildCardWindow` inside it is the same function the AI draw's eight held places are
     // filled by; see season/tournament.ts.
-    const wildCard = homeWildCardPlace(world, event.tier, event.id)
-    if ((!ranked || rank > accepts) && !reserved && !wildCard) {
+    // ⚠ BOTH DOORS ARE OFF FOR A RUNG-LEVEL ASK (`id: null`), which is the conservative direction:
+    // see `VerdictContext`. They can only ever admit, so withholding them cannot invent a refusal
+    // that a real event would not make - it can only decline to promise one it might.
+    const wildCard = event.id !== null && homeWildCardPlace(world, event.tier, event.id)
+    // ⭐ THE ALTERNATES LIST (18.08) – the rung's middle, and the one door that can open BETWEEN weeks
+    // without her rank moving. Four places below the cut she stands in a queue; she takes a chair when
+    // enough of the field withdrew. `tierFloorOpen` asks the same function, so the calendar and this
+    // turnstile cannot disagree - the mistake the wild card made earlier the same day.
+    const alternate = event.id !== null && alternateListPlace(world, event.tier, event.id)
+    if ((!ranked || rank > accepts) && !reserved && !wildCard && !alternate) {
       const cut = ranked
         ? `${tier.label} takes the top ${accepts} – she is #${rank}`
         : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`
@@ -626,7 +695,7 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
         detail: acceleratorRefusalDetail(event.tier, yearEnd, acceleratorUsage(world, event.week, event.tier, yearEnd)),
       }
     }
-    return availabilityStatus(world, event)
+    return availability ? availabilityStatus(world, event) : { level: 'ok' }
   }
   const minPoints = tier.enterPointBand[0]
   const points = kidPoints(world, 'domestic')
@@ -652,7 +721,7 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
   // to change. What `tests/rankingGate.test.ts` caught when this arm was one branch short ("local:
   // the calendar says shut, the turnstile lets her through") cannot recur in either direction – the
   // calendar's verdict is `tierFloorOpen` and so is this one.
-  return availabilityStatus(world, event)
+  return availability ? availabilityStatus(world, event) : { level: 'ok' }
 }
 
 // --- THE ARRIVAL GATE (R12-15 / R12-3) ----------------------------------------------------------

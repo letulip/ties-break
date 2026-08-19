@@ -230,7 +230,7 @@ export function runToEnding(
     // second copy of the rule, which is what this file is trying not to own.
     if (bestBefore !== null && out.collegeShutWeek === null && !retiredCollegeDoorOpen(world)) {
       out.collegeShutWeek = world.week
-      out.collegeShutAge = kidAgeYears(world.week, world.profile.birthMonth)
+      out.collegeShutAge = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
       const from = TIER_LADDER.indexOf(RETIRED_COLLEGE_RUNG)
       const moved = (Object.keys(world.bestFinishByTier) as TierId[]).filter(
         (t) => world.bestFinishByTier[t] !== bestBefore[t] && TIER_LADDER.indexOf(t) >= from,

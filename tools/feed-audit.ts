@@ -42,7 +42,7 @@ if (i === -1 || !process.argv[i + 1]) {
 const world: WorldState = await decodeExportFile(new Uint8Array(readFileSync(process.argv[i + 1])))
 refreshDerivedRankCaches(world)
 const snap = toSnapshot(world)
-const age = kidAgeYears(world.week, world.profile.birthMonth)
+const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
 
 // 1. WHERE SHE STANDS -----------------------------------------------------------------------------
 console.log(`week ${world.week}, age ${age} – domestic #${world.kidRankDomestic}, itf #${world.kidRank}, wta #${world.kidRankWta}`)

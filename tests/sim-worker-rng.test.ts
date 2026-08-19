@@ -3,7 +3,8 @@ import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { createWorld, tickWeek, replayMainState, type WorldState } from '../src/engine/world'
 import { resumeMain, mainStateConsistent, initMainState } from '../src/engine/rng'
 import { encodeExportFile, decodeExportFile } from '../src/engine/saveCodec'
-import { DEFAULT_PROFILE, type ToWorker } from '../src/shared/protocol'
+import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { workerHarness } from './helpers/workerHarness'
 
 // =================================================================================================
 // v35 — THE WORKER'S RNG REGIME (docs/review/proposals/P3-rng-persistence.md).
@@ -48,27 +49,9 @@ interface Reply {
   revision?: number
 }
 
-const waiters = new Map<number, (r: Reply) => void>()
-const workerGlobal = {
-  onmessage: null as null | ((e: { data: ToWorker }) => void),
-  postMessage(m: unknown) {
-    const r = m as Reply
-    waiters.get(r.id)?.(r)
-    waiters.delete(r.id)
-  },
-}
-;(globalThis as unknown as { self: unknown }).self = workerGlobal
-
-type WorkerMsg<T = ToWorker> = T extends { id: number } ? Omit<T, 'id'> : never
-
-let nextId = 1
-function send(msg: WorkerMsg): Promise<Reply> {
-  return new Promise((resolve) => {
-    const id = nextId++
-    waiters.set(id, resolve)
-    workerGlobal.onmessage!({ data: { ...msg, id } as ToWorker })
-  })
-}
+// ⚠ TOP LEVEL, AND IT MUST STAY TOP LEVEL: the factory assigns `globalThis.self`, and the worker
+// module reads it while evaluating – which is why the import of it below is dynamic.
+const { send, workerGlobal } = workerHarness<Reply>()
 
 /** A career built the worker's own way: draws through `resumeMain(world.rngMain)`, so the
  *  persisted pair is LIVE (n tracks every draw) exactly as a real save's would be. */

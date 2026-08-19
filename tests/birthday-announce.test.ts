@@ -39,7 +39,7 @@ import {
   tickWeek,
   toSnapshot,
 } from '../src/engine/world'
-import { markBirthday } from '../src/engine/world/age'
+import { kidAgeExact, markBirthday } from '../src/engine/world/age'
 import { WEEKS_IN_SEASON, daysInBirthMonth, weekMonth, weekOfDate, weekYear } from '../src/shared/dates'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -163,11 +163,90 @@ describe('the age she is told she is turning', () => {
     for (let m = 1; m <= 12; m++) {
       for (let d = 1; d <= daysInBirthMonth(m); d++) {
         for (const [w, age] of announcements(m, d)) {
-          const lead = age - kidAgeYears(w, m)
-          expect(lead, `${m}/${d} w${w}: announced ${age}, printed ${kidAgeYears(w, m)}`).toBeLessThanOrEqual(1)
+          const lead = age - kidAgeYears(w, m, d)
+          expect(lead, `${m}/${d} w${w}: announced ${age}, printed ${kidAgeYears(w, m, d)}`).toBeLessThanOrEqual(1)
           expect(lead).toBeGreaterThanOrEqual(0)
           // ...and it is closed by the next Monday, every time.
-          if (lead === 1) expect(kidAgeYears(w + 1, m), `w${w + 1} catches up`).toBe(age)
+          if (lead === 1) expect(kidAgeYears(w + 1, m, d), `w${w + 1} catches up`).toBe(age)
+        }
+      }
+    }
+  })
+
+  // ===============================================================================================
+  // 4b. ⭐⭐ AND THE OTHER DIRECTION, WHICH IS THE ONE THAT WAS MISSING (18.08)
+  // ===============================================================================================
+  it('⭐⭐ the printed age NEVER runs ahead of a birthday she has not had', () => {
+    // ⚠⚠ THIS ARM EXISTS BECAUSE ITS ABSENCE HID A REAL DEFECT FOR ELEVEN WAVES, and the shape of the
+    // miss is the lesson. The arm above measures `announced - printed` and bounds it at +1: it asks
+    // whether the ANNOUNCEMENT runs ahead. Nothing asked whether the PRINT does – and it did, because
+    // `kidAgeExact` was built on the birth MONTH, so her age rose on the first Monday of that month
+    // rather than on her birthday.
+    //
+    // The owner found it by playing (18.08): «23 года было в интерфейсе на главной написано на неделю
+    // раньше, чем случился сам день рождения». Measured across all 365 birth dates before the fix:
+    // **287 of them** printed an age she had not reached, for 7,574 (date, week) pairs, by as much as
+    // SIX WEEKS – and a 31 December date printed 19 while she was 17. Every one of those was invisible
+    // to the arm above, which returned 0 for exactly the weeks that were wrong.
+    //
+    // ⚠ IT IS THE OWNER'S RULING OF 09.08 IN ASSERTION FORM: «Есть год рождения и дата. Это всё… Дальше
+    // когда ДР – тогда и +1 год.» A clock that adds the year before the date has arrived is not that
+    // ruling, whatever else it gets right.
+    // ⚠ ANCHORED ON THE ANNOUNCEMENTS THAT EXIST, and the first draft of this arm was not - which is
+    // how it found a second thing. Asking "is the printed age <= the last announced age" assumes every
+    // birthday IS announced.
+    //
+    // ⚠⚠ THE FOURTEEN ARE GONE, AND THIS PARAGRAPH IS KEPT AS HISTORY (corrected 19.08). When it was
+    // written the gap below really did swallow fourteen birthdays over fourteen seasons; the carry fix
+    // closed it, and `tools/birthday-age-read.ts` now reads "birthday never fired: before 43, after 0".
+    // The paragraph stays because the ANCHORING ARGUMENT it makes is still the reason this arm is
+    // shaped the way it is - what is no longer true is the count, and a reader who takes the fourteen
+    // for current behaviour would go looking for a defect that was fixed. The mechanism, as it was:
+    // the seasons re-anchor to the first
+    // Monday of each year, so 1-6 January and 31 December fall into the gap between the last career
+    // week of one season and the first of the next, twice each per career. The calendar genuinely has
+    // no week for them (`weekOfDate` returns null and says so), the girl still ages correctly, and only
+    // the note and the gift are missed. Anchoring the other way round is immune to that.
+    for (let m = 1; m <= 12; m++) {
+      for (let d = 1; d <= daysInBirthMonth(m); d++) {
+        for (const [bw, age] of announcements(m, d)) {
+          if (bw === 0) continue
+          expect(
+            kidAgeYears(bw - 1, m, d),
+            `${m}/${d}: told she turns ${age} in w${bw}, but w${bw - 1} already printed ${kidAgeYears(bw - 1, m, d)}`,
+          ).toBeLessThan(age)
+        }
+      }
+    }
+  })
+
+  it('⭐⭐ THE FRACTION MAY NEVER MOVE THE WHOLE YEAR – one clock, not a decimal point', () => {
+    // ⚠⚠ THIS ARM IS HERE BECAUSE THE DATE-CLOCK FIX GOT IT WRONG TWICE, IN OPPOSITE DIRECTIONS, on
+    // the way in (18.08) - and both drafts read plausibly. `kidAgeExact` returns whole years plus a
+    // fraction for the development curve; the whole part must come from the DATE TEST alone, and a
+    // fraction that can carry into `Math.floor` is a second clock with a decimal point.
+    //
+    //   * scaled by the CURRENT month it went NEGATIVE and dropped a year - born 30 January, asked in
+    //     the week of 1 February, `(1 - 30) / 28` = -1.04, printing twenty the week after she was told
+    //     she turned twenty-one;
+    //   * scaled by HER month it EXCEEDED twelve and added one - born 1 February, week of Monday 31
+    //     January, `11 + 30/28` = 12.07, so her sixteenth arrived a week early.
+    //
+    // Both were caught by other arms rather than by reading the formula, which is the argument for
+    // pinning the invariant itself rather than the two cases.
+    for (let m = 1; m <= 12; m++) {
+      for (let d = 1; d <= daysInBirthMonth(m); d++) {
+        let previous = -1
+        for (let w = 0; w <= 728; w++) {
+          const exact = kidAgeExact(w, m, d)
+          const whole = kidAgeYears(w, m, d)
+          expect(Math.floor(exact), `${m}/${d} w${w}: exact ${exact} floors away from ${whole}`).toBe(whole)
+          // ...and the clock only ever runs forward, one year at a time.
+          if (previous >= 0) {
+            expect(whole, `${m}/${d} w${w}: the age went backwards`).toBeGreaterThanOrEqual(previous)
+            expect(whole - previous, `${m}/${d} w${w}: the age jumped more than a year`).toBeLessThanOrEqual(1)
+          }
+          previous = whole
         }
       }
     }
@@ -198,5 +277,66 @@ describe('the age she is told she is turning', () => {
     const said = world.events.filter((e) => e.week === target).map((e) => e.text)
     expect(said.join(' | ')).toMatch(/she is fifteen this week/i)
     expect(toSnapshot(world).diary.facts.birthdayAge).toBe(15)
+  })
+
+  // ⭐ THE COLLEGE YEARS GET AN ENTRY WHERE THEY CANNOT GET A DIALOG (owner, 19.08: «колледжевые
+  // годы получают не попап, а свою запись в дневнике, что механику не ломает»). Both halves of that
+  // sentence are asserted: the entry appears, AND it does not become a prompt.
+  describe('the four college birthdays', () => {
+    const atCollegeWorld = (week: number) => {
+      const world = createWorld('bday-college', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
+      world.week = week
+      return world
+    }
+
+    it('writes its OWN line, not the one every other year gets', () => {
+      const target = WEEKS_IN_SEASON - 1
+      const home = atCollegeWorld(target)
+      const away = atCollegeWorld(target)
+      markBirthday(home, false)
+      markBirthday(away, true)
+      const homeText = home.events.filter((e) => e.week === target).map((e) => e.text).join(' | ')
+      const awayText = away.events.filter((e) => e.week === target).map((e) => e.text).join(' | ')
+      // The age still reads the same way - it is the SAME birthday, told from further off.
+      expect(homeText).toMatch(/she is fifteen this week/i)
+      expect(awayText).toMatch(/she is fifteen this week/i)
+      // ...and it is a different sentence, which is the whole request.
+      expect(awayText, 'the college year is telling the identical line - the entry is not its own').not.toBe(homeText)
+    })
+
+    it('⚠ gives each college year a DIFFERENT line – four identical entries in a row is the thing this undoes', () => {
+      const lines = new Set<string>()
+      for (const age of [18, 19, 20, 21]) {
+        const world = createWorld(`bday-college-${age}`, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
+        // ⚠ THE WEEK IS FOUND, NOT COMPUTED. Since the date-clock fix a birthday lands on the week
+        // that CONTAINS it, and real dates do not repeat on the same week index every year - which
+        // is the drift the fix exists to model. A `52 * n` formula silently missed age 18 entirely
+        // and the arm read as "wrote no entry" rather than as "asked the wrong week".
+        let target = -1
+        for (let w = 0; w < 12 * WEEKS_IN_SEASON; w++) {
+          if (birthdayTurning(w, world.profile.birthMonth, world.profile.birthDay) === age) {
+            target = w
+            break
+          }
+        }
+        expect(target, `no week in twelve seasons turns her ${age}`).toBeGreaterThanOrEqual(0)
+        world.week = target
+        markBirthday(world, true)
+        const said = world.events.filter((e) => e.week === target).map((e) => e.text)
+        expect(said.length, `age ${age} wrote no entry at all`).toBeGreaterThan(0)
+        lines.add(said.join(' | '))
+      }
+      expect(lines.size, 'two college years are telling the same story').toBe(4)
+    })
+
+    it('⚠⚠ and it is still NOT a prompt – the four-year jump must never stop for it', () => {
+      // The mechanic the owner asked us not to break: `resumeFromCollege` spends four years in one
+      // call, so a blocking birthday inside the freeze would strand it with nobody to answer.
+      const world = createWorld('bday-college-nostop', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
+      world.week = WEEKS_IN_SEASON - 1
+      const before = world.birthdays.length
+      markBirthday(world, true)
+      expect(world.birthdays.length, 'a college birthday recorded a parent decision that nobody made').toBe(before)
+    })
   })
 })

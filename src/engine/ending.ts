@@ -128,12 +128,6 @@ export const ENDINGS = {
   injuryPriorWeeksOut: 20,
 } as const
 
-/** The severities that count toward the accumulation MEASURE (`majorPlusCount` in the bench). The
- *  predicate itself reads weeks lost – see `injuryPriorWeeksOut` for the measurement that decided
- *  it – but the bench still reports this, because it is the shape P1 proposed and the record of why
- *  it was not shipped belongs beside the number that ruled it out. */
-export const CAREER_ENDING_PRIOR_SEVERITIES: readonly string[] = ['major', 'severe']
-
 // --- #3 and #4: the two that HAPPEN TO her ------------------------------------------------------
 
 /** The narrow slice the automatic detectors read. Nothing about her skills, her rank or her tennis
@@ -418,17 +412,14 @@ export function endingForRetirement(
  *  ⚠ NONE OF THESE MAY CONSOLE, and that is a harder rule than it sounds. «Стоп» must be able to be
  *  the right answer (ruling 4, 30.07); a line that reassures the player about it is a line that has
  *  quietly decided it was the wrong one. */
-export const ENDING_TITLE: Record<CareerEndingType, string> = {
-  stopped: 'She stopped at nineteen',
-  college: 'She went to college',
-  bankruptcy: 'The money ran out',
-  injury: 'The body stopped first',
-  natural: 'She played until she was done',
-  plateau: 'She had gone as far as she was going',
-}
-
-/** One sentence under the headline. Present tense for the two that are her decision, past for the
- *  two that happened to her – the grammar is doing the same job the copy is. */
+/** ⭐⭐ RESTORED 18.08 – DELETED FOR A DAY AND PUT BACK BY THE OWNER, and the reason is worth keeping.
+ *  A grep for consumers is exactly right for a CONSTANT and exactly wrong for authored copy: this is
+ *  six lines of epilogue prose, one per ending, and "nothing renders it" means the ending SCREEN has
+ *  not been built out yet, not that the writing is dead. The owner: «может быть мы просто не добрались
+ *  еще до концовок и рано что-то удалять».
+ *
+ *  ⚠ SO THE RULE THIS CORRECTS: an unconsumed EXPORT is a candidate for deletion; unconsumed WRITING
+ *  is a candidate for the owner. `ENDING_TITLE` below is live and this is its unwritten other half. */
 export const ENDING_BLURB: Record<CareerEndingType, string> = {
   stopped:
     'The junior ladder ran out and the next one wanted more than the family had. She put the racket down at nineteen, and that is an ending, not a loss.',
@@ -449,3 +440,11 @@ export const ENDING_BLURB: Record<CareerEndingType, string> = {
     'The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.',
 }
 
+export const ENDING_TITLE: Record<CareerEndingType, string> = {
+  stopped: 'She stopped at nineteen',
+  college: 'She went to college',
+  bankruptcy: 'The money ran out',
+  injury: 'The body stopped first',
+  natural: 'She played until she was done',
+  plateau: 'She had gone as far as she was going',
+}

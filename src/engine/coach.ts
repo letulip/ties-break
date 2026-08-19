@@ -36,7 +36,11 @@
 
 import { ECONOMY } from './economy'
 import { pickInt, rngFromSeed } from './rng'
-import { SURNAMES } from './season/cohort'
+// ⚠ FROM season/names.ts, NOT season/cohort.ts (TB-07). Importing SURNAMES from cohort put this file
+// inside a runtime cycle – cohort imports `relativeAgeHeadStart` from development, and development
+// imports `coachFactor` / `coachFitFor` / `tierOf` back from here – over a list of surnames that
+// depends on none of it. Same array, same draw; cohort re-exports it for older call sites.
+import { SURNAMES } from './season/names'
 import type { CoachEdgePlacement, CoachTier, FamilyBackground, PlayStyle, WeekPlan } from '../shared/protocol'
 
 /** The ladder, cheapest first. Exported as an array so the UI, the bench and the tests iterate the

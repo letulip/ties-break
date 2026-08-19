@@ -35,7 +35,7 @@ function oldBirthdayWeek(week: number, birthMonth: number, birthDay: number): nu
 }
 function oldBirthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
   if (week !== oldBirthdayWeek(week, birthMonth, birthDay)) return null
-  return kidAgeYears(week, birthMonth)
+  return kidAgeYears(week, birthMonth, 1)
 }
 
 function section(title: string): void {
@@ -52,11 +52,19 @@ function rungOpenings(bm: number, cap: number): Map<string, number | null> {
   for (const tier of TIER_LADDER) {
     let at: number | null = null
     for (let w = 0; w <= cap; w++) {
-      if (isTierAgeOpen(tier, kidAgeYears(w, bm))) { at = w; break }
+      if (isTierAgeOpen(tier, kidAgeYears(w, bm, 1))) { at = w; break }
     }
     out.set(tier, at)
   }
   return out
+}
+
+/** The week `birthdayTurning` actually fires this birthday on, or null if it never does – the AFTER
+ *  side of the lost-birthday count, asked of the shipped function rather than re-derived. */
+function rescuedWeekFor(m: number, d: number, y: number): number | null {
+  const truth = y - kidBirthYear()
+  for (let w = 0; w < 14 * WEEKS_IN_SEASON; w++) if (birthdayTurning(w, m, d) === truth) return w
+  return null
 }
 
 async function main(): Promise<void> {
@@ -120,7 +128,7 @@ async function main(): Promise<void> {
     let ageDigest = 0
     let injDigest = 0
     for (let k = 0; k <= cap; k++) {
-      const age = kidAgeYears(k, bm)
+      const age = kidAgeYears(k, bm, 1)
       ageDigest = (ageDigest * 31 + age) % 1_000_000_007
       injDigest = (injDigest * 31 + Math.round(ageInjuryFactor(age) * 1000)) % 1_000_000_007
       for (const tier of TIER_LADDER) ageDigest = (ageDigest * 31 + (isTierAgeOpen(tier, age) ? 1 : 0)) % 1_000_000_007
@@ -147,8 +155,26 @@ async function main(): Promise<void> {
     for (let d = 1; d <= daysInBirthMonth(m); d++) {
       for (let y = 2031; y < 2031 + SEASONS; y++) {
         const target = weekOfDate(m, d, y)
-        // null = the date is in the real calendar week that belongs to no career week. Honest.
-        if (target === null || target < 0 || target >= SEASONS * WEEKS_IN_SEASON) continue
+        // ⚠⚠ THIS `continue` USED TO FILTER OUT THE FAILURE THE METRIC IS NAMED FOR (fixed 18.08).
+        // `weekOfDate` returns null when the date falls between career weeks - which is EXACTLY a lost
+        // birthday - and skipping those years meant "birthday never fired: 0" was counted over only
+        // the birthdays the calendar could already place. It reported none lost while fourteen a career
+        // were being lost, across 1-6 January and 31 December. The owner found the real ones by
+        // playing; this line is why nothing here saw them.
+        //
+        // A null `target` is now COUNTED as a loss rather than skipped, and the AFTER column proves the
+        // fix: `birthdayTurning` carries such a date on the first career week past it, so the loss must
+        // be visible BEFORE and absent AFTER. Out-of-horizon years are still skipped - that is a
+        // property of the 14-season window, not of the calendar.
+        if (target !== null && (target < 0 || target >= SEASONS * WEEKS_IN_SEASON)) continue
+        if (target === null) {
+          // The date has no career week of its own. Did the fix give it one anyway?
+          lostBefore++
+          lostDatesBefore.add(`${m}/${d}`)
+          const rescued = rescuedWeekFor(m, d, y)
+          if (rescued === null) { lostAfter++; lostDatesAfter.add(`${m}/${d}`) }
+          continue
+        }
         const truth = y - kidBirthYear()
         const before = oldBirthdayTurning(target, m, d)
         const after = birthdayTurning(target, m, d)

@@ -23,10 +23,16 @@
 // cannot know whether the rules were ever explained must assume they were not. Every existing save
 // that already binds – the owner's own has been inside the top 50 for seasons – therefore gets the
 // briefing once on its next launch, which is the fix reaching the career that reported the problem.
+//
+// ⚠ THE READ AND THE WRITE ARE `useWatermark`'s NOW (composables/inboxCue.ts), NOT THIS FILE'S AND
+// NOT THE DIALOG'S. They were hand-rolled in TourBriefingDialog.vue – a `getItem` at setup, a
+// `setItem` in `acknowledge`, and a `watch` on `careerId` to re-read – which is character for
+// character what the news feed, the letterbox and the trophy cabinet already had one copy of. The
+// paragraph above is exactly the helper's `absent` parameter, so what was a fifth transcription of
+// the rule is now the rule stated once and PASSED IN. Nothing here changes: same key, same "an
+// absent key means unbriefed", same per-career scope.
 
-/** The one key, so the component that writes it and anything that ever reads it cannot disagree.
- *  A career id is always present in practice; the empty string keeps this total for a snapshot-less
- *  moment rather than inventing a second code path for one. */
-export function tourBriefedKey(careerId: string | undefined): string {
-  return `tb:tourBriefed:${careerId ?? ''}`
-}
+/** The namespace half of the key; `useWatermark` appends the career. It stays named here, beside the
+ *  argument for it, so the component that writes it and anything that ever reads it cannot disagree
+ *  about which string a briefing is recorded under. */
+export const TOUR_BRIEFED_PREFIX = 'tb:tourBriefed'

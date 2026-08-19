@@ -32,6 +32,7 @@ import { SUMMER_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR, isSummerWeek } from '
 // The holidays' ceiling is a REAL-CALENDAR fact since round-16 #16 - see `isSummerWeek`.
 import { weekMonth } from '../src/shared/dates'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { fnv1aHex } from './helpers/hash'
 
 /** ⚠ W4: PUT THE CAREER INSIDE THE KNOCK COOLDOWN, so the advance under test cannot be interrupted.
  *
@@ -54,17 +55,9 @@ function noKnocksFor(world: WorldState): void {
 // ---------------------------------------------------------------------------
 
 // FNV-1a over the stringified draw stream: a compact, order-sensitive fingerprint
-// of the MAIN RNG sequence (see B1).
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(16).padStart(8, '0')
-}
+// of the MAIN RNG sequence (see B1). The hash lives in tests/helpers/hash.ts.
 function hashOf(draws: number[]): string {
-  return fnv1a(draws.map((d) => d.toString()).join(','))
+  return fnv1aHex(draws.map((d) => d.toString()).join(','))
 }
 
 // Add a controlled event to a world's calendar (id-targeted, so the generated season
@@ -486,7 +479,7 @@ const REF = {
   // arithmetic on it. ⚠ AND THE POINTS DID NOT MOVE EITHER, which is the stronger statement and is
   // measured rather than argued: the merged 1,600-row table hashes identically across five worlds on
   // both arms, so every acceptance cut still admits exactly the same population.
-  kidRank: 88,
+  kidRank: 90,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

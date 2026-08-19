@@ -24,7 +24,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { summerLoadFactor, summerConditionCost, summerBlockWeek } from '../src/engine/world/summer'
 import { markSchoolEnd } from '../src/engine/world/milestones'
 import { schoolTile } from '../src/engine/kidLife'
-import { kidAgeExact } from '../src/engine/world/age'
+import { kidAgeExact, kidAgeYears } from '../src/engine/world/age'
 import { ECONOMY } from '../src/engine/economy'
 import { planFromWeek } from '../src/engine/plan'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -69,7 +69,7 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
     for (const bm of BIRTH_MONTHS) {
       const w = schoolEndWeek(bm)
       expect(w % WEEKS_PER_YEAR, `month ${bm} does not leave in September`).toBe(SCHOOL_YEAR_TURNS_AT)
-      const age = kidAgeExact(w, bm)
+      const age = kidAgeExact(w, bm, 1)
       expect(age, `month ${bm} leaves before eighteen`).toBeGreaterThanOrEqual(18)
       expect(age, `month ${bm} is still at school AFTER nineteen`).toBeLessThanOrEqual(19)
     }
@@ -82,8 +82,16 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
     // An August-born girl is the OLDEST in her school cohort (the cut-off is September) and leaves on
     // the September she turns eighteen. A September-born girl is the youngest, leaves a full school
     // year later, and her leaving September IS the September she turns nineteen.
-    expect(kidAgeExact(schoolEndWeek(8), 8), 'the oldest in the class').toBe(18)
-    expect(kidAgeExact(schoolEndWeek(9), 9), 'the youngest in the class').toBe(19)
+    // ⚠ WHOLE YEARS, AND THE `.00` IN THE TITLE STOPPED BEING LITERAL ON 18.08. `kidAgeExact` used to
+    // return a clean 18.00 here because the month clock's fraction was `(weekMonth - birthMonth)/12`,
+    // which is exactly zero for any week inside her birth month. The date clock carries the DAY too,
+    // so the same week is 18.07 - she is eighteen and one week, which is the truer number. The claim
+    // this test makes is about WHICH AGE she leaves on, so it is asserted on whole years, and the
+    // fraction is bounded separately so "18.07" cannot quietly become "18.9".
+    expect(kidAgeYears(schoolEndWeek(8), 8, 1), 'the oldest in the class').toBe(18)
+    expect(kidAgeYears(schoolEndWeek(9), 9, 1), 'the youngest in the class').toBe(19)
+    expect(kidAgeExact(schoolEndWeek(8), 8, 1) - 18, 'and she has only just turned it').toBeLessThan(1 / 12)
+    expect(kidAgeExact(schoolEndWeek(9), 9, 1) - 19, 'and so has she').toBeLessThan(1 / 12)
     // ...and they are a whole school year apart, which is the cut-off doing its job.
     expect(schoolEndWeek(9) - schoolEndWeek(8)).toBe(WEEKS_PER_YEAR)
   })
@@ -108,7 +116,7 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
           lossStreak: 0,
           weeksSinceTitle: null,
         })
-        const done = tile.lead === "School's done"
+        const done = tile.lead === 'School finished'
         expect(done, `month ${bm} week ${week}: tile and predicate disagree`).toBe(schoolIsOver(week, bm))
       }
     }
@@ -494,7 +502,7 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
           const tile = schoolTile({
             seed: 'exam-line',
             week,
-            ageYears: Math.floor(kidAgeExact(week, bm)),
+            ageYears: Math.floor(kidAgeExact(week, bm, 1)),
             seasonYear: seasonYear(Math.floor(week / WEEKS_PER_YEAR)),
             playStyle: 'all-court',
             birthMonth: bm,
@@ -503,9 +511,9 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
             lossStreak: 0,
             weeksSinceTitle: null,
           })
-          // Past her leaving week the tile is "School's done" and no exam line may survive on it.
+          // Past her leaving week the tile is "School finished" and no exam line may survive on it.
           if (schoolIsOver(week, bm)) {
-            expect(tile.lead, `bm ${bm} week ${week}`).toBe("School's done")
+            expect(tile.lead, `bm ${bm} week ${week}`).toBe('School finished')
             expect(tile.note, `bm ${bm} week ${week}`).not.toBe('Exams this week')
           } else {
             expect(tile.note, `bm ${bm} week ${week}`).toBe('Exams this week')

@@ -266,6 +266,43 @@ export function windowedBestSum(
   return rankableTotal(windowSlots(list, bestN))
 }
 
+/** COMPETITION RANKS, standard "1224" numbering – the same convention real tennis rankings use:
+ *  tied points share one rank, and the next distinct points value takes the rank equal to how many
+ *  players sit ahead of it (+1), i.e. it skips by the tie count (4, 4, 6 – never 4, 4, 5).
+ *
+ *  ⚠ ONE OWNER, TWO TABLES (round 22 consolidation). `computeRanking` below and `mergedWtaRanking`
+ *  in season/fieldPros.ts carried byte-identical copies of this loop, and the merged table's own
+ *  comment said so in words: «Rank numbers are competition-style ("1224"), the same convention
+ *  computeRanking uses, so a merged table reads like every other table in the game.» That history
+ *  is the reason this lives here rather than in a new neutral file – the merged table was written
+ *  to copy THIS module's convention, so this module is where the convention belongs. What was a
+ *  promise held by hand across two files is now held by the compiler.
+ *
+ *  THE SORT IS THE CALLER'S, AND IT HAS TO BE. The two tables break a points tie on different
+ *  things – recency then roster order here, LIVE-before-FIELD then generation order there – and
+ *  that is a genuine difference, not drift. Only the RANK NUMBER is shared, and it is a function of
+ *  POINTS alone: a tie-break decides ORDER and never the number a tied pair share.
+ *
+ *  ⚠ SORTS `rows` IN PLACE, exactly as both call sites already did to their own freshly built local
+ *  arrays. Hand it an array somebody else still holds and you have reordered theirs too. */
+export function assignCompetitionRanks<T extends { playerId: string; points: number }>(
+  rows: T[],
+  compare: (a: T, b: T) => number,
+): RankingRow[] {
+  rows.sort(compare)
+  const out: RankingRow[] = []
+  let rank = 0
+  let prevPoints: number | null = null
+  rows.forEach((row, i) => {
+    if (prevPoints === null || row.points !== prevPoints) {
+      rank = i + 1
+      prevPoints = row.points
+    }
+    out.push({ playerId: row.playerId, points: row.points, rank })
+  })
+  return out
+}
+
 // computeRanking – rolling 52-week window, best-N results per player (N is the TRACK's window
 // width, stated by every caller – see BEST_N_BY_TRACK), competition
 // ranks (ties share a rank; the next rank skips by the tie count, e.g. 4, 4, 6).
@@ -349,22 +386,8 @@ export function computeRanking(
     return { playerId, points, recency, idx }
   })
 
-  rows.sort((a, b) => b.points - a.points || b.recency - a.recency || a.idx - b.idx)
-
-  // Competition ranks (standard "1224" numbering, same convention real tennis rankings
-  // use): tied points share one rank, and the next distinct points value takes the rank
-  // equal to how many players sit ahead of it (+1) – i.e. it skips by the tie count
-  // (4, 4, 6 – never 4, 4, 5). Recency (set above, sort only) still breaks the *order*
-  // among equal-points players; it never affects the rank number they share.
-  const ranking: RankingRow[] = []
-  let rank = 0
-  let prevPoints: number | null = null
-  rows.forEach((row, i) => {
-    if (prevPoints === null || row.points !== prevPoints) {
-      rank = i + 1
-      prevPoints = row.points
-    }
-    ranking.push({ playerId: row.playerId, points: row.points, rank })
-  })
-  return ranking
+  // Competition ranks – `assignCompetitionRanks` above owns the "1224" numbering. THIS table's
+  // tie-break is the sort handed to it: recency (set above, sort only) breaks the *order* among
+  // equal-points players and never the rank number they share.
+  return assignCompetitionRanks(rows, (a, b) => b.points - a.points || b.recency - a.recency || a.idx - b.idx)
 }

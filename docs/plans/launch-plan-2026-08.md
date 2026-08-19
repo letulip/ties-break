@@ -1,9 +1,10 @@
 ---
 type: execution-plan
-status: current
+status: superseded
 area: delivery-execution
-canonical: true
-last-reviewed: 2026-08-03
+canonical: false
+last-reviewed: 2026-08-19
+superseded-by: docs/now-next-later.md
 ---
 
 # Launch plan 2026-08 — waves, agents, and the full findings ledger

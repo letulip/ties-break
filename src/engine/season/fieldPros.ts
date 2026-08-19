@@ -61,6 +61,10 @@ import { rngFromSeed, pickInt } from '../rng'
 import { FIRST_NAMES, NATION_POOL, SURNAMES } from './cohort'
 import { rivalGroundstrokes } from './rival'
 import { TIERS, WEEKS_PER_YEAR } from './calendar'
+// ⚠ NOT A CYCLE. `season/ranking.ts` imports only `./calendar` (a value) and `./types` (types), and
+// nothing on that side reaches back here – so this new edge runs one way, exactly like the one
+// ranking.ts' own header note defends. Checked against tests/import-cycles.test.ts.
+import { assignCompetitionRanks } from './ranking'
 import type { AiPlayer, RankingRow, TierId } from './types'
 
 /** Which storey of the professional pyramid a pro was generated into. Labels, not numbers, so a
@@ -97,6 +101,14 @@ export interface FieldPro extends AiPlayer {
   groundstrokes: number
   /** her derived W-table points for THIS season – the virtual standing row's value */
   wtaPoints: number
+  /** ⚠ HER TENURE FACTOR, and the CHAIR'S OWN calibrated book before the storey permutation - both
+   *  kept so `fieldProsFor`'s ordering (see the ⭐⭐ box there) is reproducible from the row itself.
+   *  `chairBook` matters beyond tidiness: `wtaPoints` is post-permutation, so anything re-deriving
+   *  the order from it would permute an already-permuted table and compound the effect. That is not
+   *  hypothetical - `tools/teen-at-the-top.ts`'s counterfactual did exactly that and reported 0.92%
+   *  where the shipped field measures 3.25%. Derived, never persisted. */
+  tenure: number
+  chairBook: number
 }
 
 // =================================================================================================
@@ -457,9 +469,33 @@ export const FIELD = {
      *  (+0.31%)**; measured **0.9095 (+0.30%)**. The decline was NOT flattened to buy the number,
      *  which was the other way to reach it and would have cost the tenure this wave is for. */
     declineFloor: 0.55,
+    /** ⭐⭐ WHAT A PRO HAS BANKED AFTER `n` SEASONS ON TOUR - the replacement for `ageRampFloor`, and
+     *  the whole of "she climbs into the chair instead of inheriting it".
+     *
+     *  ⚠ WHY TENURE AND NOT AGE, precisely: `debutAge` is [16, 19], so a SIXTEEN-YEAR-OLD PRO IS
+     *  ALWAYS IN HER DEBUT SEASON, by construction. Tenure therefore lands on exactly the population
+     *  the owner objected to - and it lands on the CAUSE ("she has not played enough tennis yet")
+     *  rather than on the correlate ("she is young"). A twenty-two-year-old who only just turned pro
+     *  is now also a newcomer, which age could never say. */
+    tenure: {
+      /** her book in her DEBUT season, as a fraction of what her chair is worth */
+      debutFloor: 0.25,
+      /** ...and the season she is finally worth all of it */
+      fullFrom: 3,
+    },
   },
-  /** how much of her skill-implied points a debutante has banked (ramps to 1 by `career.peakFrom`) */
+  /** ⚠⚠ RETIRED AS A LEVER ON 19.08 AND KEPT AS HISTORY - read `tenure` below before touching it.
+   *  It used to be "how much of her skill-implied points a debutante has banked", ramping to 1 by
+   *  `career.peakFrom`, and it is what made a sixteen-year-old INHERIT a top chair at 65% of its
+   *  value without playing a match. The owner: «вот я хочу, чтобы этого не было». Age was never the
+   *  cause, only its proxy - what a debutante lacks is TENNIS PLAYED, and the model already knows
+   *  that exactly (`debutSeason`). `careerArc` now ramps from `tenure`, so this number is read by
+   *  nothing; it stays so a reader of the old benches can find what the number was. */
   ageRampFloor: 0.65,
+  /** ⭐ HOW FAR ONE SEASON'S RESULTS MAY MOVE A PRO'S ROW, as a fraction of her derived book.
+   *  The live table's amplitude, and the only tuned number in it - `mergedWtaRanking`'s share is
+   *  normalised off the population and needs no constant. See `livePoints` for what it is FOR. */
+  liveSwing: 0.2,
   /** multiplicative points wobble: ×(1 ± this) */
   jitter: 0.1,
   /** salted re-draw attempts on a name collision before the collision is accepted (the LIVE cohort
@@ -623,14 +659,28 @@ function pointsForCore(tier: (typeof FIELD.tiers)[number], core: number): number
  *  yet"). The plateau and the decline are the new half. */
 export function careerArc(age: number): number {
   const c = FIELD.career
-  const [lo, hi] = FIELD.ageBand
-  if (age < c.peakFrom) {
-    const t = (age - lo) / (c.peakFrom - lo)
-    return FIELD.ageRampFloor + (1 - FIELD.ageRampFloor) * Math.max(0, Math.min(1, t))
-  }
+  const [, hi] = FIELD.ageBand
+  // ⚠⚠ THE YOUNG RAMP IS GONE FROM HERE AND LIVES IN `tenureRamp` (19.08). This function used to
+  // ramp a pro's book UP with her age from `ageRampFloor`, which is what let a sixteen-year-old hold
+  // 65% of the world #1's book on the day she arrived - the owner's objection. Age still owns the
+  // DECLINE, because that half really is about the body; what it no longer owns is the climb, which
+  // is about tennis played. Below the peak this is now flat, and `tenureRamp` supplies the shape.
   if (age <= c.peakTo) return 1
   const t = (age - c.peakTo) / (hi - c.peakTo)
   return 1 - (1 - c.declineFloor) * Math.max(0, Math.min(1, t))
+}
+
+/** ⭐⭐ WHAT SHE HAS ACTUALLY BANKED, BY SEASONS ON TOUR - `n` is 0 in her debut season.
+ *
+ *  A chair is worth what it is worth; what changes is how much of it its occupant has earned yet.
+ *  At `debutFloor` on arrival, whole by `fullFrom`. THIS IS THE ANSWER TO "she inherits it": nobody
+ *  arrives at a top chair fully formed any more, whatever her age, and the top of the table is made
+ *  of players who have been there a while - which is what a ranking IS. */
+export function tenureRamp(seasonsOnTour: number): number {
+  const t = FIELD.career.tenure
+  if (seasonsOnTour >= t.fullFrom) return 1
+  const k = Math.max(0, seasonsOnTour) / t.fullFrom
+  return t.debutFloor + (1 - t.debutFloor) * k
 }
 
 // =================================================================================================
@@ -815,9 +865,21 @@ function makeFieldPro(
   }
   taken.add(`${first} ${last}`)
 
+  const tenure = tenureRamp(seasonIndex - career.debutSeason)
   const wtaPoints = Math.max(
     1,
-    Math.round(pointsForCore(tier, bandCore) * careerArc(ageYears) * (1 + FIELD.jitter * (2 * jitterRoll - 1))),
+    Math.round(
+      pointsForCore(tier, bandCore) *
+        careerArc(ageYears) *
+        // ⚠⚠ TENURE IS DELIBERATELY *NOT* A FACTOR HERE, and that is the whole correction. Cutting a
+        // newcomer's book changed what a ROW IS WORTH, and the rows are the one calibrated thing in
+        // this file - it put #100 on 384 points against a real ~850 and left the weakest head-storey
+        // chair below half the best elite one, collapsing the seam between the storeys. `tenure` is
+        // carried on the row instead and spends itself in `fieldProsFor`, where it decides only WHO
+        // holds which row inside her own storey. The book stays exactly what `pointsForCore`
+        // calibrated it to be.
+        (1 + FIELD.jitter * (2 * jitterRoll - 1)),
+    ),
   )
 
   const pro: FieldPro = {
@@ -837,9 +899,15 @@ function makeFieldPro(
     ageYears,
     potential: { serve, ret, composure, stamina },
     strengthTier: tier.id,
-    // Stored = derived, one value: see FieldPro. rivalGroundstrokes reads only (id, serve, ret).
+    // Stored = derived, one value: see FieldPro. ⚠ CORRECTED 19.08: `rivalGroundstrokes` reads id
+    // plus ALL FOUR attributes now, not (id, serve, ret) - the fifth skill stopped being an echo
+    // of the first two. The claim this line is DEFENDING is unchanged and still holds: the
+    // function never reads `groundstrokes` itself, so seeding it 0 here cannot feed itself, and
+    // `pro.groundstrokes === rivalGroundstrokes(pro)` still holds one line down.
     groundstrokes: 0,
     wtaPoints,
+    tenure,
+    chairBook: wtaPoints,
   }
   pro.groundstrokes = rivalGroundstrokes(pro)
   return pro
@@ -881,8 +949,77 @@ export function fieldProsFor(
     const tierOffset = n
     for (let i = 0; i < tier.count; i++) pros.push(makeFieldPro(seed, seasonIndex, n++, tier, tierOffset, taken))
   }
+  // ⭐⭐ TENURE DECIDES WHO HOLDS A ROW, NEVER WHAT THE ROW IS WORTH. This is the third shape of this
+  // change and the first correct one; the two wrong ones are recorded because each was caught by a
+  // different guard and neither was visible by reading.
+  //
+  //   1. DISCOUNTING THE BOOK, raw. A newcomer's book was cut and that was that - but roughly a
+  //      quarter of any field is inside its first three seasons, so the whole table DEFLATED about a
+  //      tenth. A deflated field is a promotion the kid did not earn:
+  //      `tests/unranked-sentinel.test.ts` went from a three-rung acceptance window to a four-rung
+  //      one, an entire professional rung opening for the same career.
+  //   2. DISCOUNTING THE BOOK, then dividing by the population's mean. That restored the LEVEL and
+  //      still wrecked the SHAPE, which is worse, because the shape is the one calibrated thing in
+  //      this file. `tests/season/fieldPros.test.ts` anchors the merged table to real WTA rows
+  //      (#50 ~1400, #100 ~850, #300 ~190) and #100 came back holding 384. Discounted newcomers fell
+  //      through the middle of the table and dragged every row below them down with it.
+  //
+  // ⭐ THE FIX IS TO STOP TOUCHING THE ROWS AT ALL. The chairs and their point values are exactly
+  // what `pointsForCore` calibrated - the multiset below is the SAME multiset, merely sorted - and
+  // the only thing tenure decides is the ORDER they are handed out in. So the points-to-rank curve
+  // is preserved BY CONSTRUCTION rather than by a normaliser that has to be checked, and a debutante
+  // is pushed DOWN the table instead of sitting at the top holding a discounted row. That is the
+  // owner's sentence exactly: «вот я хочу, чтобы этого не было» - she does not inherit the chair,
+  // she is not GIVEN it.
+  //
+  // ⚠ THE ARRAY'S ORDER IS UNTOUCHED, only the values are permuted. `selectEntrants` positions
+  // candidates by id against a ranking built from this same array, and the memo hands it back by
+  // reference - so re-ordering the array itself would be a different and much larger change.
+  // Deterministic: ties break on the original index, never on object identity.
+  // ⚠⚠ AND IT IS PERMUTED WITHIN A STOREY, NEVER ACROSS THE TABLE - the third correction, and the
+  // one that says what this model actually is. A storey is not a points band alone: `strengthTier`
+  // fixes SKILL and POINTS together, and several guards read that link (the head storey must
+  // out-core the one below it AND hold the biggest books). Permuting across the whole field broke
+  // it - a veteran of a middle storey took the #1 row while out-skilled by everyone near her, and
+  // `tests/season/fieldPros.test.ts` said so twice.
+  //
+  // Inside a storey the link is untouched, because everyone there is drawn from the same skill band.
+  // What changes is only WHERE IN HER OWN STOREY a newcomer lands: at its foot rather than at its
+  // head. A sixteen-year-old is therefore still a fine player in a fine chair - she is simply not
+  // world #3 in her first season, which is the whole of what was asked.
+  for (const tier of FIELD.tiers) {
+    const group = pros.filter((p) => p.strengthTier === tier.id)
+    if (group.length < 2) continue
+    const books = group.map((p) => p.chairBook).sort((a, b) => b - a)
+    group
+      .map((p, i) => ({ p, i, merit: p.chairBook * p.tenure }))
+      .sort((a, b) => b.merit - a.merit || a.i - b.i)
+      .forEach((o, rank) => {
+        o.p.wtaPoints = books[rank]
+      })
+  }
   memo = { key, pros }
   return pros
+}
+
+/** ⚠⚠ AND THE MOVE IS BOUNDED (`FIELD.liveSwing`). A season's results shift a pro's row; they may
+ *  not rewrite it. Without a bound the middle of the table churns hard, because in this model
+ *  PLAYING AND LOSING IS WORSE THAN NOT PLAYING AT ALL: an active pro who exits in the first round
+ *  pays her share of the book and earns nothing back, while the four fifths our calendar could not
+ *  seat pay nothing. That is not a bug in the arithmetic - it is the honest consequence of a 1,600
+ *  -chair table on a calendar with ~350 seats - but left unbounded it moves the kid too.
+ *
+ *  ⭐ MEASURED, and this is why the bound exists rather than being a taste: the same career on the
+ *  same seed, holding 250 professional points, stood 277th before the live table and 226th after -
+ *  fifty-one places for tennis SHE did not play. `tests/ladder-floor.test.ts` caught it from the
+ *  other end, as a W100 opening for a career that could not reach it ("a ceiling that stopped
+ *  refusing must not become a reason to ADMIT"). The bound keeps the table live and keeps her
+ *  ladder honest, which is the pair of things this whole mechanism has to hold at once. */
+function livePoints(p: FieldPro, earned: number, share: number): number {
+  if (earned <= 0 || share <= 0) return p.wtaPoints
+  const moved = p.wtaPoints * (1 - share) + earned
+  const swing = p.wtaPoints * FIELD.liveSwing
+  return Math.round(Math.max(p.wtaPoints - swing, Math.min(p.wtaPoints + swing, moved)))
 }
 
 // =================================================================================================
@@ -900,24 +1037,82 @@ export function fieldProsFor(
 //      and the field's generation order is stable per season.
 //
 // Rank numbers are competition-style ("1224"), the same convention computeRanking uses, so a
-// merged table reads like every other table in the game.
-export function mergedWtaRanking(live: readonly RankingRow[], pros: readonly FieldPro[]): RankingRow[] {
+// merged table reads like every other table in the game – and since round 22 that is the same CODE
+// and not merely the same convention: `assignCompetitionRanks` (season/ranking.ts) owns the
+// numbering, this function owns only the three-key sort above, which is the half that is genuinely
+// different here. The comment used to be the whole guarantee; now it is only the history of one.
+export function mergedWtaRanking(
+  live: readonly RankingRow[],
+  pros: readonly FieldPro[],
+  earned?: Readonly<Record<string, number>>,
+): RankingRow[] {
+  // ⭐⭐ v53 – A PRO'S ROW MOVES WITH WHAT SHE WINS. `earned` is `WorldState.fieldSeasonPoints`, the
+  // tally `runAiTournament` keeps; absent (a bench, an old save, a caller with no world) it reads as
+  // zero, `share` is zero, and this function is BYTE-IDENTICAL to its pre-v53 self.
+  //
+  // ⚠⚠ IT REPLACES A SHARE OF `wtaPoints` AND IS NOT ADDED TO IT – and the first shipped version of
+  // v53 got this wrong, which cost the player her whole career. THE ARGUMENT IS THE SEASON WRAP'S
+  // OWN, one file over: `world/milestones.ts` refuses to carry the tally across January because "that
+  // would count the same tennis twice: once in the new derived book and once again in the old total".
+  // The identical objection applies INSIDE the season and was missed: `wtaPoints` is not a January
+  // opening balance, it is her WHOLE derived 52-week book for this season, so adding this season's
+  // winnings on top counts the same tennis twice right now.
+  //
+  // ⭐ WHAT IT COST, MEASURED – `tools/live-table-inflation.ts`, which prints both rules over the same
+  // measured rows. The additive one bloats the table's total by +10.7% at week 13, +22.8% at 26 and
+  // +32.7% at 39, EVERY season; the correction below reads 0.0% at every sample, because preserving
+  // the total is what it does by construction rather than by tuning.
+  //
+  // ⚠ AND IT WAS NEVER EVEN. Only ~300-450 of 1,600 pros get a draw in a season, so the bloat landed
+  // entirely on the fifth who played and they leapfrogged the four fifths who stood still. The
+  // acceptance cuts read the result, refused the kid, and she fell back down the ladder: ten seasons
+  // of one career went `wta 0` in EVERY season and finished on DOMESTIC events at 22. With the term
+  // corrected the same career turns professional in season 2 and stays there.
+  //
+  // ⚠ THE NORMALISER IS THE POPULATION ITSELF, never a tuned constant, so nothing here drifts when
+  // the calendar or the points table is retuned. `share` is what the field has won this season as a
+  // fraction of what it is carrying; each pro gives up that fraction of her book and gets her own
+  // winnings back. Two properties follow, and both are the point:
+  //   - THE TABLE'S TOTAL IS EXACTLY PRESERVED: sum(book x (1-share)) + sum(earned) = sum(book), by
+  //     construction rather than by tuning. No inflation is possible at any point in the season.
+  //   - A PRO WHO WINS HER PROPORTIONAL SHARE HOLDS HER PLACE; one who wins more climbs, one who
+  //     wins less slides. That is exactly the live table the owner asked for, and the movement is now
+  //     RELATIVE - which is the only kind a ranking can honestly have.
+  //
+  // ⚠⚠ THE SHARE IS NORMALISED OVER THE PROS WHO PLAYED, NOT OVER THE WHOLE TABLE - and the first
+  // cut of this correction got THAT wrong in turn, which is worth writing down because the error is
+  // subtle and the guard that caught it is not the one you would expect. Our calendar can only seat
+  // ~350 of 1600 pros in a season. Charging the share to all 1600 preserved the table's total but
+  // TILTED it: the fifth who play were made whole by their own winnings while the four fifths who
+  // never got a draw quietly gave up a fifth of their book. The tail of the table collapsed through
+  // the season, and a kid on 250 points rose past it for free - `tests/ladder-floor.test.ts` caught
+  // it as a professional rung OPENING that the same career could not reach before ("a ceiling that
+  // stopped refusing must not become a reason to ADMIT").
+  //
+  // Charging it only to the players keeps the identity - sum(book x (1-share)) + sum(earned) over
+  // that subset is still exactly sum(book) over it - and leaves everybody else's standing alone. A
+  // pro who never got a draw is not penalised for a chair our calendar never offered her.
+  let totalDerived = 0
+  let totalEarned = 0
+  if (earned) {
+    for (const p of pros) {
+      const e = earned[p.id] ?? 0
+      if (e <= 0) continue
+      totalDerived += p.wtaPoints
+      totalEarned += e
+    }
+  }
+  const share = totalDerived > 0 ? Math.min(1, totalEarned / totalDerived) : 0
   const rows = [
     ...live.map((r, i) => ({ playerId: r.playerId, points: r.points, live: 1, ord: i })),
-    ...pros.map((p, i) => ({ playerId: p.id, points: p.wtaPoints, live: 0, ord: i })),
+    ...pros.map((p, i) => ({
+      playerId: p.id,
+      points: livePoints(p, earned?.[p.id] ?? 0, share),
+      live: 0,
+      ord: i,
+    })),
   ]
-  rows.sort((a, b) => b.points - a.points || b.live - a.live || a.ord - b.ord)
-  const out: RankingRow[] = []
-  let rank = 0
-  let prevPoints: number | null = null
-  rows.forEach((row, i) => {
-    if (prevPoints === null || row.points !== prevPoints) {
-      rank = i + 1
-      prevPoints = row.points
-    }
-    out.push({ playerId: row.playerId, points: row.points, rank })
-  })
-  return out
+  return assignCompetitionRanks(rows, (a, b) => b.points - a.points || b.live - a.live || a.ord - b.ord)
 }
 
 /** WHO MAY BE DRAWN INTO A TIER'S EVENTS – the one seam where the field joins the game.

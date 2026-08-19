@@ -71,14 +71,21 @@ import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
 import { restRecoveryBonus, SAVE_SCHEMA_VERSION } from '../src/engine/world'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Knock, type PlayerProfile, type WeekPlan } from '../src/shared/protocol'
+import { scriptCodeOf } from './helpers/source'
+import { fnv1a } from './helpers/hash'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
-/** Comments stripped, so the module's own header may DOCUMENT the rules the pins below enforce. */
+/** Comments stripped, so the module's own header may DOCUMENT the rules the pins below enforce.
+ *
+ *  ⚠ `scriptCodeOf`, NOT the house `codeOf` – and this file is the reason the two exist separately.
+ *  It reads mostly `.ts` sources and deliberately does NOT want `<!-- -->` taken out everywhere:
+ *  the one `.vue` call site (the KnockDialog markup, below) applies that strip ITSELF, where the
+ *  choice is visible. Widening it here would silently shrink what the sim.worker pin below can see
+ *  (`.not.toMatch(/world\.knock\s*=/)`), and a negative source pin that stops seeing its target goes
+ *  GREEN. See tests/helpers/source.ts. */
 function codeOf(path: string): string {
-  return read(path)
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
+  return scriptCodeOf(read(path))
 }
 
 /** Walk a career, answering every knock the way a player does. Returns what happened, week by week.
@@ -113,15 +120,10 @@ function playAnswering(
 // 1. ⚠ THE RNG DISCIPLINE (blocks merge)
 // =================================================================================================
 
-/** FNV-1a over the draw list – the same hash tests/condition.test.ts's capture uses. */
-function fnv1a(s: string): number {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193) >>> 0
-  }
-  return h >>> 0
-}
+/** FNV-1a over the draw list – the same hash tests/condition.test.ts's capture uses, now shared from
+ *  tests/helpers/hash.ts. This file took the RAW 32-bit word and formatted it here; the five other
+ *  copies returned the hex directly. Same hash either way (the intra-loop `>>> 0` the local copy had
+ *  is a no-op: `h ^= c` re-coerces to int32 immediately after), so nothing pinned below moves. */
 function hashOf(draws: number[]): string {
   return fnv1a(draws.map(String).join(',')).toString(16).padStart(8, '0')
 }

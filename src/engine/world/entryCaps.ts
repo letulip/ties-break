@@ -8,6 +8,8 @@ import { ECONOMY } from '../economy'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, isWSeriesTier } from '../season/calendar'
 import type { EntryCapUsage, SeasonHistoryEntry } from '../../shared/protocol'
 import type { TierId } from '../season/types'
+import type { SeasonResult } from '../season/ranking'
+import { KID_ID } from './constants'
 import { seasonIndexOf, seasonStartWeek } from './ledger'
 import { ageWindowStartWeek, kidAgeAt } from './age'
 import type { WorldState } from '../world'
@@ -178,6 +180,98 @@ export function isCappedProTier(tier: TierId): boolean {
 export function annualProEntryLimit(ageYears: number): number {
   const table = ECONOMY.entryCap.proPerYearByAge
   return table[ageYears] ?? table.default
+}
+
+// =================================================================================================
+// ⭐⭐ AND THE SAME RULE, APPLIED TO THE FIELD (owner, 19.08 - «да, это как раз защитит нас от 16
+// летних в топ-10»). Until now the AER was enforced on ONE person in the world: the kid. Every rival
+// was free of it, which `tests/aer-cohort.test.ts` had recorded as an asymmetry that happened to be
+// harmless - nobody had ever been drawn into more events than her own row allows. The live
+// professional table (v53) ended that: a field pro's standing now MOVES with her results, so draw
+// composition moves with it, and a fourteen-year-old landed in ten capped draws against a rulebook
+// row of eight. The owner ruled the honest fix rather than a wider guard.
+// =================================================================================================
+
+/** Every LIVE player's professional entries in the trailing year, keyed by player id - the field's
+ *  side of `entryCapUsage`. `world.results` holds one row per ENTRANT per draw for every live player
+ *  (world.ts's `runAiTournament` writes it with `tier: event.tier`, which is what makes this
+ *  countable at all) and is pruned to a rolling year.
+ *
+ *  ⚠⚠ THE WINDOW IS THE SEASON, AND THAT IS EXACT RATHER THAN CONVENIENT. A rival's age-year IS a
+ *  season: `ageCohort` (season/cohort.ts) is "called once a year from the season boundary", so her
+ *  `ageYears` changes on exactly the week this window opens. Cutting the count at `seasonStartWeek`
+ *  therefore measures the same span her row is read for - which is what the kid's own
+ *  `ageWindowStartWeek` does for her, cut at the birthday the engine knows her to the day by.
+ *
+ *  ⚠ A ROLLING 52 WEEKS WAS THE FIRST ATTEMPT AND IT WAS WRONG, measured: it left `ai-177` at 9
+ *  entries against a 14-year-old's row of 8. The leak is that THIRTEEN IS DELIBERATELY NOT A ROW in
+ *  `proPerYearByAge` (economy.ts states why: "a 0 in an allowance table is a rule pretending to be a
+ *  budget" - not-eligible-at-all belongs in the age gate), so `annualProEntryLimit(13)` is
+ *  `default` = unlimited. A rolling window carries a thirteen-year-old's uncapped entries across her
+ *  birthday and then measures them against the fourteen-year-old row. A season-aligned window cannot:
+ *  the count resets on the same week the row does.
+ *
+ *  ⚠ NO NEW SAVE FIELD, deliberately. The count is DERIVED from `world.results`, which is already
+ *  persisted and already pruned, so a load resumes the rule exactly where it stood instead of
+ *  resetting every rival's allowance to zero mid-season. A counter in `WorldState` would have been a
+ *  schema bump whose only job was to restate a ledger we keep anyway - and one that a save/load
+ *  could silently desynchronise from it. */
+export function rivalProEntries(results: readonly SeasonResult[], week: number): Map<string, number> {
+  const from = seasonStartWeek(week)
+  const counts = new Map<string, number>()
+  for (const r of results) {
+    // ⚠⚠ THE KID'S OWN ROWS ARE SKIPPED, AND THIS LINE IS THE WHOLE OF INPUT-INDEPENDENCE. Without
+    // it her entries feed the FIELD's ledger, the ledger gates who is drawn into the AI brackets,
+    // those results move the standings, the conveyor's `stayChance` reads the standings, and its
+    // retirement rolls are ON THE MAIN WEEKLY STREAM - so a career that entered more events left the
+    // world's dice in a different place. Caught by the A/B guards rather than by reading:
+    // `tests/planner.test.ts` went 90 draws against 88 on the identical seed.
+    //
+    // It is also the rule the rest of the engine already states in its own words - world.ts's
+    // `aiRanking`: "who turns up to a canonical W100 may never depend on what she has entered".
+    // The field's ledger is the FIELD's; hers is `proEntryWeeks` and `entryCapUsage`, and the two
+    // were never meant to be one ledger.
+    if (r.playerId === KID_ID) continue
+    if (r.week < from || r.week > week) continue
+    if (!r.tier || !isCappedProTier(r.tier)) continue
+    counts.set(r.playerId, (counts.get(r.playerId) ?? 0) + 1)
+  }
+  return counts
+}
+
+/** The AER as a gate on a draw's UNIVERSE: who of `universe` may still enter a `tier` event.
+ *
+ *  ⚠ IT GATES THE UNIVERSE AND NOT THE ENTRANT LIST, for the reason `selectEntrants`' own age gate
+ *  states one line into itself: both of that function's backfills reach OUTSIDE the entrant window,
+ *  so a rule applied after the band would be walked around by the tired-elite path and would be no
+ *  rule at all. Filtering here - before the universe is handed in - puts it on the same footing as
+ *  the age gate by construction, and leaves `selectEntrants` byte-identical for the thirty-odd tools
+ *  and tests that call it without a ledger.
+ *
+ *  ⚠ IT YIELDS TO FILLABILITY, in the same order and for the same reason as every other gate in the
+ *  draw: a draw that cannot be filled is a crash, not a compromise. It cannot fire at the shipped
+ *  numbers - a capped tier is a W rung, whose universe is the 199-strong cohort PLUS the field pros,
+ *  and the only players it can ever remove are the 14-to-17s among them.
+ *
+ *  ⚠ RNG: this moves the candidate COUNT on capped tiers, which is the documented mutable class
+ *  `selectEntrants` has moved in at every band and age re-pick - those draws come off the event's own
+ *  `seed:aitour:<id>` sub-stream. NOT ONE DRAW OF IT IS ON THE MAIN WEEKLY STREAM: `driftCohort`
+ *  spends four draws per rival per week and the cohort's SIZE is untouched here, so the frozen MAIN
+ *  capture is safe by construction rather than by luck. And the count moves as a function of (tier,
+ *  ages, the results ledger) and of nothing the player does, so input-independence is untouched.
+ *
+ *  ⚠⚠ THE FILE'S OPENING NOTE SAID "an entry rule is a POST-DRAW gate, so the frozen MAIN capture
+ *  cannot move". That was true of the three helpers above it and is NOT true of this one, which is
+ *  a PRE-draw gate. The claim is narrowed here rather than left to be read as covering the file. */
+export function withinAnnualEntryLimit<T extends { id: string; ageYears: number }>(
+  universe: readonly T[],
+  tier: TierId,
+  entries: ReadonlyMap<string, number> | undefined,
+  drawSize: number,
+): readonly T[] {
+  if (!entries || !isCappedProTier(tier)) return universe
+  const allowed = universe.filter((p) => (entries.get(p.id) ?? 0) < annualProEntryLimit(p.ageYears))
+  return allowed.length >= drawSize ? allowed : universe
 }
 
 /** Her PRO allowance for the AGE-YEAR CONTAINING `week`, and how much is spent - `entryCapUsage`'s

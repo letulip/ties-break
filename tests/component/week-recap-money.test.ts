@@ -22,17 +22,11 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import WeekRecapCard from '../../src/components/WeekRecapCard.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
-import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
+import { careerSnapshot } from '../helpers/career'
 
 /** A real career, walked far enough that an ordinary week has both income and spend in it. */
-function snapshotAfter(weeks: number, seed = 'recap-money'): Snapshot {
-  const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
-}
+const snapshotAfter = (weeks: number, seed = 'recap-money'): Snapshot => careerSnapshot(weeks, seed)
 
 /** THE OWNER'S SAVE, IN ONE LINE: the money rows are gone from the feed and everything else stays.
  *  `financeWeeks` (and therefore `finance.weekly12`) is untouched, exactly as it was in his file. */

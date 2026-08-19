@@ -12,7 +12,6 @@
 // ⚠ RNG: NOTHING HERE DRAWS. Every ending is deterministic – a counter, a post-draw predicate over
 // an injury the `seed:injury:<week>` stream has already rolled, an age comparison, or an answer.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
-import { formatCents } from '../../shared/money'
 import type { AutoEndingView, PlateauView } from '../ending'
 import {
   ENDINGS,
@@ -29,7 +28,7 @@ import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
 import { activeLadderOf } from './ladder'
 import { collegeProgressOf, inCollege, measureCollegeOffer } from './college'
-import { kidAgeYears } from './age'
+import { kidAgeThroughWeek, kidAgeYears } from './age'
 import { buildAlbum, buildScroll } from './album'
 import type { WorldState } from '../world'
 
@@ -64,7 +63,7 @@ export function cheapestEntryFeeCents(world: WorldState): number {
 export function autoEndingViewOf(world: WorldState): AutoEndingView {
   return {
     week: world.week,
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
     fundsCents: world.fundsCents,
     debtSinceWeek: world.debtSinceWeek,
     cheapestEntryFeeCents: cheapestEntryFeeCents(world),
@@ -179,7 +178,7 @@ export function plateauViewOf(world: WorldState): PlateauView {
     if (endRank !== undefined) seasonEndRanks.push({ seasonIndex: season.seasonIndex, endRank })
   }
   return {
-    ageYears: kidAgeYears(world.week, world.profile.birthMonth),
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
     seasonIndex: seasonIndexOf(world.week),
     seasonEndRanks,
     // ...and the OTHER half of the rule is asked of the same table, by construction rather than by
@@ -235,7 +234,13 @@ export function resolveEndings(world: WorldState): void {
   }
 
   // 7c. THE FORK AT NINETEEN. Raised once, on the birthday week, and it BLOCKS until answered.
-  if (world.fork === null && forkDue(kidAgeYears(world.week, world.profile.birthMonth), false)) {
+  //
+  // ⚠ `kidAgeThroughWeek` AND NOT `kidAgeAt` (18.08), so that first sentence stays true. The date
+  // clock turns her age on the week's MONDAY; her birthday lands on whatever day it lands on. Asking
+  // the Monday's age raised this a week AFTER the cake for every girl not born on a Monday - and the
+  // whole design of the fork is that it is the birthday's own question. See that helper for why this
+  // look-ahead is for celebrations and never for gates.
+  if (world.fork === null && forkDue(kidAgeThroughWeek(world, world.week), false)) {
     // ⭐⭐ THE OFFER IS MEASURED HERE, ONCE, AND PERSISTED (v51,
     // docs/specs/what-the-college-place-costs-2026-08.md). Before this line the third answer was
     // offered unconditionally AND FREE in 100% of careers; now it is offered with a price on it.
@@ -344,7 +349,7 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
   const ending = endingForForkAnswer(
     answer,
     world.week,
-    kidAgeYears(world.week, world.profile.birthMonth),
+    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
     ENDINGS.collegeYears,
     WEEKS_PER_YEAR,
   )
@@ -382,7 +387,7 @@ export function answerRetirement(world: WorldState, retire: boolean): void {
     endingForRetirement(
       offer,
       world.week,
-      kidAgeYears(world.week, world.profile.birthMonth),
+      kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
       world.oneMoreYearCount,
     ),
   )
@@ -412,7 +417,7 @@ export function buildEndingView(world: WorldState): EndingView | null {
       freshCapitalFork: true,
       resumesWeek: ending.resumesWeek,
       resumesAgeYears:
-        ending.resumesWeek === null ? null : kidAgeYears(ending.resumesWeek, world.profile.birthMonth),
+        ending.resumesWeek === null ? null : kidAgeYears(ending.resumesWeek, world.profile.birthMonth, world.profile.birthDay),
     },
     totals: world.careerTotals,
     seasonsPlayed: world.seasonHistory.length,
@@ -441,12 +446,4 @@ export function buildDebtView(world: WorldState): DebtView | null {
     weeks: debtWeeks({ week: world.week, debtSinceWeek: world.debtSinceWeek }),
     graceWeeks: ENDINGS.bankruptcyGraceWeeks,
   }
-}
-
-/** One line for the news feed when the family goes under water, with the countdown in it. */
-export function debtWarningText(world: WorldState): string {
-  const view = buildDebtView(world)
-  if (!view) return ''
-  const left = Math.max(0, view.graceWeeks - view.weeks)
-  return `${formatCents(world.fundsCents)} – ${view.weeks} weeks below zero, ${left} before there is no way back.`
 }

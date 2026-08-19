@@ -38,6 +38,7 @@ import {
 import { TIERS } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type FamilyBackground, type PlayerProfile } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { fnv1aHex } from './helpers/hash'
 
 /** ⚠ W4: PUT THE CAREER INSIDE THE KNOCK COOLDOWN, so the advance under test cannot be interrupted.
  *
@@ -64,16 +65,9 @@ function noKnocksFor(world: WorldState): void {
 // B1/C1 capture (see REF below) – P1 below re-proves it with a booking-heavy career.
 // ---------------------------------------------------------------------------
 
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(16).padStart(8, '0')
-}
+// FNV-1a over the stringified draw stream – the hash lives in tests/helpers/hash.ts.
 function hashOf(draws: number[]): string {
-  return fnv1a(draws.map((d) => d.toString()).join(','))
+  return fnv1aHex(draws.map((d) => d.toString()).join(','))
 }
 // ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 draws (hash
 // cae178fc -> e6b0c709) by the AI sub-stream refactor. The canonical AI tournaments left the MAIN
@@ -296,7 +290,16 @@ function hashOf(draws: number[]): string {
 // UNTOUCHED: count 41550, hash e6b0c709, and the input-independence comparison this block exists for
 // still passes - only the companion constant moved. Verified on both arms; the control (this agent's
 // commit reverted in a worktree) reproduces 93.
-const REF = { kidRank: 88 }
+  // ⚠ 88 -> 87 -> 90 ON 19.08, TWICE IN ONE DAY, and both times a REFERENCE moving rather than an
+  // invariant breaking. First the tenure ordering (who holds which professional row), then the
+  // rivals' fifth skill (they hit differently, so the AI brackets resolve differently and
+  // different girls hold points). That this number moves with real engine work is exactly why it
+  // is a companion and not a gate. The tenure
+  // ordering (season/fieldPros.ts) changed who holds which professional row, so her rank beside
+  // that table moved one place. The MAIN stream did NOT move: the draw-tail and A/B arms in this
+  // very file pass unchanged, which is the assertion that blocks a merge - this one is the
+  // documented companion CLAUDE.md says to update with a real change.
+const REF = { kidRank: 90 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

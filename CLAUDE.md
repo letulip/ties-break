@@ -7,7 +7,7 @@ PWA tennis career sim where you play the **parent** raising a future star (WTA-f
 ```bash
 npm run check      # vue-tsc -b --force + unit tests + build — the pre-push gate
 npm run test:quiet # unit project, dot reporter — PREFER THIS: 5.6k chars of output vs 29k
-npm test           # unit project, full reporter (~35s, 103 files / 2230 tests)
+npm test           # unit project, full reporter – 148 files, ~4 min
 npm run test:sim   # sim project (~70s, serialised) — exits 0 on green since the P6 wave
 npm run test:component # mounted Vue components (~1s) — the only real UI regression gate
 npm run build      # vue-tsc -b && vite build
@@ -20,7 +20,7 @@ Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:l
 ## Graphify (code graph) — what it is and is not for
 
 ```bash
-npm run graph        # rebuild — ~18 s, zero model tokens, 7,750 nodes / 20,244 edges
+npm run graph        # rebuild – ~10 s, 0 tokens; it PRINTS its size (11,013/28,620, 18.08)
 npm run graph:check  # is it stale? exits 1 if source moved since the build
 ```
 
@@ -100,7 +100,15 @@ docs/review/     2026-08 full review + P1–P9 proposals
 
 `world.ts` is being decomposed into `src/engine/world/*.ts` (see `docs/review/proposals/P4-world-decomposition.md`). Rules for that work:
 - Extracted modules import `WorldState` as **`import type`** from `../world` — type-only, erased at compile time, so no runtime cycle.
-- `world.ts` imports the values back and **re-exports them under their historical names**: 111 files import from `engine/world` and that public API must not change.
+- `world.ts` imports the values back and **re-exports them under their historical names**: **280** files
+  import from `engine/world` (19.08) and that public API must not change. ⚠ Count it, do not quote it –
+  three numbers for this were in circulation on one day (277 / 279 / 280) and all three were "essentially
+  right" under different scopes, which is how a stale number survives:
+  ```bash
+  git grep -lE "from '[^']*/world'" -- src tests tools scripts e2e | wc -l
+  ```
+  For the other half of the barrel problem – *which module actually owns a symbol* – use
+  `node scripts/world-map.mjs <symbol>`, or read `tools/generated/world-symbol-map.md`.
 - If a candidate block calls back into `world.ts` at runtime, it is **not** ready to move — that needs dependency inversion, not a span-move.
 
 ## Style
@@ -130,6 +138,13 @@ docs/review/     2026-08 full review + P1–P9 proposals
   (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
   `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
   pipeline.
+  (c) ⚠⚠ AND THE BACKGROUND TASK'S "exit code 0" IS THE SAME LIE WEARING A HARNESS. A run started
+  with `run_in_background` reports the status of the WRAPPER, not of `npm run check`: on 19.08 the
+  completion notice said *exit code 0* twice in a row while the log said `CHECK_EXIT=2` and then
+  `CHECK_EXIT=1` — sixteen real failures between them, including a `vue-tsc` duplicate-identifier
+  error. Believing the notice would have pushed a red branch and reported it green. **Append
+  `echo "CHECK_EXIT=$?"` to the log inside the command and read the verdict out of the FILE.** The
+  notification tells you the run finished; it does not tell you it passed.
 - **⚠⚠ BEFORE YOU HUNT A SLOWDOWN, REPRODUCE IT ON A COMMIT THAT CANNOT HAVE IT.** Same command,
   older code, in a worktree. It is one run and it ends the argument; skipping it cost most of 16.08.
   Twice that day a red `npm run check` — sixteen files timing out, **zero assertion failures** — was

@@ -6,23 +6,20 @@
 
 import type { MatchScore, Side } from './types'
 import { pGame } from './closedForm'
+// ⚠ IMPORTED, NOT MIRRORED. This file used to hold its own byte-equivalent
+// `tbFlip` / `tiebreakServer` / `tiebreakOpenerFrom`, explained as: "scoring.ts
+// owns the canonical versions but does not export them; these mirror it exactly
+// (touch-only-my-files rule)". The mirror was the whole defect (review TB-01,
+// P1) – a scoring correction applied to one copy would leave the match serving
+// with one rotation while this file's displayed probability assumed another, and
+// nothing would fail. scoring.ts is the rotation's only owner because it is the
+// module that ENFORCES it (`advanceTiebreakServer` writes `score.server`); this
+// file only reconstructs it to predict. The import runs one way and cannot
+// cycle: scoring.ts has no runtime imports at all.
+import { tiebreakServer, tiebreakOpenerFrom } from './scoring'
 
 function flip(s: Side): Side {
   return (1 - s) as Side
-}
-
-// Tiebreak serve helpers. scoring.ts owns the canonical versions but does not
-// export them; these mirror it exactly (touch-only-my-files rule).
-function tbFlip(i: number): 0 | 1 {
-  if (i === 1) return 0
-  const pair = Math.floor((i - 2) / 2)
-  return pair % 2 === 0 ? 1 : 0
-}
-function tiebreakServer(opener: Side, i: number): Side {
-  return tbFlip(i) === 0 ? opener : flip(opener)
-}
-function tiebreakOpenerFrom(serverOfI: Side, i: number): Side {
-  return tbFlip(i) === 0 ? serverOfI : flip(serverOfI)
 }
 
 // P(A wins the CURRENT regular game) from raw counters (a, b), given who serves.

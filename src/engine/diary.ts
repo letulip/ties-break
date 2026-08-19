@@ -45,7 +45,15 @@ import { rngFromSeed } from './rng'
 import { seasonYear, weekLabel } from '../shared/dates'
 // W6c: the anatomy, so a line about her body can know which body it is about. A leaf module – see the
 // note at the top of body.ts for why the twelve parts do not live in world.ts any more.
-import { lastKidResultOf, lastKidTitleOf, milestoneKey, MEMORY_EMOTION, conditionBandOf, fundsPressureOf } from './diary/facts'
+import {
+  lastKidResultOf,
+  lastKidTitleOf,
+  milestoneKey,
+  MEMORY_EMOTION,
+  conditionBandOf,
+  fundsPressureOf,
+  diaryLifeStageFor,
+} from './diary/facts'
 import { TRAVEL_NOTES, travelNoteFor, coachTripNoteFor } from './diary/travelNotes'
 export { TRAVEL_NOTES, travelNoteFor, coachTripNoteFor }
 export type { TravelClaims, TravelNote } from './diary/travelNotes'
@@ -60,7 +68,7 @@ import type { DiaryWorldView } from './diary/facts'
 import { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor } from './diary/travelHome'
 export { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor }
 export type { TravelHomeFacts } from './diary/travelHome'
-export { lastKidResultOf, lastKidTitleOf, milestoneKey, MEMORY_EMOTION, conditionBandOf, fundsPressureOf }
+export { lastKidResultOf, lastKidTitleOf, milestoneKey, MEMORY_EMOTION, conditionBandOf, fundsPressureOf, diaryLifeStageFor }
 export type { DiaryWorldView } from './diary/facts'
 
 
@@ -81,6 +89,7 @@ const MILESTONE_PRIORITY: readonly MilestoneType[] = ['title', 'final', 'prize',
  *  zero draws on the MAIN weekly stream, from anything in this module, ever. */
 export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
   const { week } = view
+  const lifeStage = diaryLifeStageFor(view.ageYears, view.schoolOver, view.inCollege)
   const lastResult = lastKidResultOf(view.events, view.kidId)
   const lastTitle = lastKidTitleOf(view.events)
   // The engine's capture behind the third loss softener: strictly better rank than before this
@@ -114,11 +123,15 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     seed: view.seed,
     kidId: view.kidId,
     condition: view.condition,
+    lifeStage,
+    birthdayAge: view.birthdayAge,
     injury: view.injury,
     pendingUnfinished: view.pendingUnfinished,
   })
   return {
     week,
+    ageYears: view.ageYears,
+    lifeStage,
     emotion,
     resultFresh,
     won: resultFresh && lastResult.won,
@@ -564,6 +577,8 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     seed: view.seed,
     kidId: view.kidId,
     condition: view.condition,
+    lifeStage: facts.lifeStage,
+    birthdayAge: view.birthdayAge,
     injury: view.injury,
     pendingUnfinished: view.pendingUnfinished,
   })

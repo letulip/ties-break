@@ -40,6 +40,10 @@ import {
   type MatchSpeed,
 } from '../../composables/matchDefaults'
 import type { ViewMode } from '../../viz/types'
+// HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
+// byte-identical in five components and the name map was written out in two; a twenty-fifth
+// country would have had to be added in two files with nothing to say so.
+import { flagEmoji } from '../../composables/countries'
 
 const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -115,11 +119,6 @@ watch(
   },
 )
 
-function flagEmoji(code: string): string {
-  if (!code) return ''
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
-}
-
 function fmtDate(ts: number) {
   return new Date(ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 }
@@ -135,7 +134,7 @@ function fmtDate(ts: number) {
  *  wave on (shared/protocol.ts), so a career last saved before it has no birthday to read and the
  *  band is the honest best guess rather than an invented one. One autosave replaces it. */
 function careerAge(c: CareerMeta): number {
-  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth)
+  return c.birthMonth === undefined ? ageAtWeek(c.week) : kidAgeYears(c.week, c.birthMonth, c.birthDay ?? 1)
 }
 
 // Coarse relative time for the autosave row – doesn't need second-level precision.
@@ -461,6 +460,7 @@ const TAB_OPTIONS = [
        costs rather than by subject, is argued at TAB_OPTIONS in the script. -->
   <SegmentedRow
     v-model="screenTab"
+    appearance="chapter"
     class="more-tabs"
     :options="TAB_OPTIONS"
     group-label="Which settings"
@@ -892,32 +892,17 @@ const TAB_OPTIONS = [
 </template>
 
 <style scoped>
-/* ⚠ NO PLATE AROUND THIS SWITCH - the owner's 02.08 Stats ruling, applied to the app's ONE segmented
-   control wherever it is a page's chapter picker («Мне не нравится круглая обводка у переключателя
-   уровня турниров в stats, без нее было лучше... Давай просто кнопки оставим и всё»). Same four
-   declarations as `.stats-ladder-row` and `.money-tabs`, and copied rather than shared for the same
-   reason those two are: scoped-over-shared wins on specificity ((0,2,0) with the data-v attribute vs
-   the sheet's (0,1,0)), so nothing here reaches into src/style.css and no other caller of the plate
-   is touched.
-   The bottom margin is this screen's own: every `<section>` below opens with an `<h2>` that carries
-   no top margin of its own, so without it the first heading sits on the pills. */
+/* ⚠ BOTH RULINGS MOVED TO THE CONTROL (DRY-8, 19.08). The plate coming off (owner, 02.08) and the
+   bigger touch target for a page's chapter picker (owner, 05.08, naming this screen and the ledger
+   together) are `SegmentedRow`'s `appearance="chapter"`, stated once in `src/style.css` with the
+   measurement and the "not globally" argument beside them. This screen, Stats and Money had each
+   carried the same declarations privately, each with the same specificity note - and the
+   `:deep(.tab-pill)` escape they needed to reach the pills is gone with them.
+
+   WHAT STAYS HERE is this screen's own rhythm: every `<section>` below opens with an `<h2>` that
+   carries no top margin of its own, so without this the first heading sits on the pills. */
 .more-tabs {
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: none;
   margin-bottom: 14px;
 }
 
-/* ⚠ BIGGER, FOR THE SAME MEASUREMENT AS `.money-tabs` (owner, 05.08 – he named this screen and the
-   ledger in one sentence, so they move together and by the same amount). Measured before the change
-   at his 576-wide viewport: 27px tall, against 51px for the bottom bar's `.tab-btn` and the 44px
-   the platform guidelines ask for. Scoped to this chapter picker rather than to the shared
-   `.tab-pill`, and reached through `:deep` because the pills are SegmentedRow's children – the long
-   form of both arguments is beside `.money-tabs` in MoneyScreen.vue. The bottom margin this screen
-   already had is the one the owner asked the ledger to grow, so it is unchanged. */
-.more-tabs :deep(.tab-pill) {
-  padding: 10px 18px;
-  font-size: 14px;
-}
 </style>

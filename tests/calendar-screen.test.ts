@@ -14,6 +14,11 @@
 //      a per-day editor, and a second week button that computes its own state.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { componentLogic } from './worldSource'
+// Comments stripped, so a note that NAMES a forbidden call is not read as making it – the house
+// helper, now in tests/helpers/source.ts. These are source-reading tests, and this codebase
+// documents at length, including documenting what it deliberately did not do.
+import { codeOf } from './helpers/source'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -47,6 +52,10 @@ import { OFF_SEASON_WEEKS, SUMMER_WEEKS, WEEKS_PER_YEAR, isExamWeek, isOffSeason
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const app = read('../src/App.vue')
 const screen = read('../src/components/screens/CalendarScreen.vue')
+/** The SFC PLUS every composable it imports – for POSITIVE claims only, so a pin survives the
+ *  logic being extracted. `screen` above stays the .vue alone, which is the only honest corpus
+ *  for this file's many negative claims. */
+const screenLogic = componentLogic('components/screens/CalendarScreen.vue')
 const action = read('../src/composables/weekAction.ts')
 const days = read('../src/composables/weekDays.ts')
 const cross = read('../src/composables/dayCross.ts')
@@ -102,16 +111,6 @@ function event(over: Partial<UpcomingEvent> = {}): UpcomingEvent {
 // =================================================================================================
 // (c) THE DAY LAYOUT – 4 / 5 / 6 sessions, as the owner named them
 // =================================================================================================
-/** Comments stripped, so a note that NAMES a forbidden call is not read as making it. Same helper
- *  tests/knock.test.ts keeps, and for the same reason: these are source-reading tests, and this codebase
- *  documents at length - including documenting what it deliberately did not do. */
-function codeOf(src: string): string {
-  return src
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
-}
-
 describe('the plan, read back as days', () => {
   it("the three presets ARE the owner's 4 / 5 / 6 – and not because a table says so", () => {
     // The count is `plan.train` per cent OF SEVEN DAYS, which is what `train` already means
@@ -690,6 +689,7 @@ describe('ONE week button, two projections', () => {
     expect(screen).toContain('const dateLine = computed(() => weekDateLine(week.value + 1))')
     expect(screen).toContain('weekGridFor(week, snap.ageYears, weekDayNumbers(week.week)')
     expect(screen).toContain('fridgeNoteFor(snap.seed, week.week')
+    expect(screen).toContain('snap.diary.facts.lifeStage')
     // ...and the button is the same composable Home's is, which reads the week ahead and nothing else
     expect(days).toContain('return snap ? calendarWeekFor(snap, snap.week + 1) : null')
     expect(read('../src/composables/weekAhead.ts')).toContain('const next = snap.week + 1')
@@ -781,7 +781,16 @@ describe('the marker opens ONE event, with enter-or-close', () => {
     // ...and both cautions are the ENGINE's own sentences, never re-worded here
     expect(template).toContain('{{ marker.coachCaution }}')
     expect(template).toContain('marker.cautionDetail')
-    expect(screen).toContain('surfaceStyleHint(game.snapshot.profile.playStyle, e.surface)')
+    // ⚠ RE-AIMED, NOT WEAKENED: the one-liner moved to `composables/eventCard.ts` as
+    // `surfaceVerdict`, shared with the Season screen, which wrote out the identical call under the
+    // name `surfaceNote`. THE PROTECTED FACT IS UNCHANGED and is now actually stronger: the verdict
+    // on this card is still the ENGINE's own sentence rather than one this screen words, and there
+    // is one definition of it instead of two that could word it differently. It reads `screenLogic`
+    // (the SFC PLUS its composables) because the claim is POSITIVE - `screen`, the .vue alone, is
+    // the right corpus for the negative claims below and stays bound to it (CLAUDE.md pin hygiene,
+    // enforced by tests/pin-hygiene.test.ts).
+    expect(screenLogic).toContain('surfaceStyleHint(game.snapshot.profile.playStyle, surface)')
+    expect(screen, 'the card must consume the verdict, not re-word it').toContain('surfaceVerdict(marker.surface)')
   })
 
   it('a fatigued entry stays a warned CHOICE, never a block', () => {

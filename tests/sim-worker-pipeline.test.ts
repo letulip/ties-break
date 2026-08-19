@@ -4,7 +4,8 @@ import { createWorld, tickWeek, type WorldState } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { encodeExportFile, decodeExportFile } from '../src/engine/saveCodec'
 import { commitAutosave } from '../src/db/saves'
-import { DEFAULT_PROFILE, type ToWorker, type WorkerErrorCode } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type WorkerErrorCode } from '../src/shared/protocol'
+import { workerHarness } from './helpers/workerHarness'
 
 // =================================================================================================
 // W1-INTEGRITY-A — THE WORKER PIPELINE (Codex TB-02 serialized/revisioned + TB-03 transactional
@@ -45,27 +46,9 @@ interface Reply {
   bytes?: ArrayBuffer
 }
 
-const waiters = new Map<number, (r: Reply) => void>()
-const workerGlobal = {
-  onmessage: null as null | ((e: { data: ToWorker }) => void),
-  postMessage(m: unknown) {
-    const r = m as Reply
-    waiters.get(r.id)?.(r)
-    waiters.delete(r.id)
-  },
-}
-;(globalThis as unknown as { self: unknown }).self = workerGlobal
-
-type WorkerMsg<T = ToWorker> = T extends { id: number } ? Omit<T, 'id'> : never
-
-let nextId = 1
-function send(msg: WorkerMsg): Promise<Reply> {
-  return new Promise((resolve) => {
-    const id = nextId++
-    waiters.set(id, resolve)
-    workerGlobal.onmessage!({ data: { ...msg, id } as ToWorker })
-  })
-}
+// ⚠ TOP LEVEL, AND IT MUST STAY TOP LEVEL: the factory assigns `globalThis.self`, and the worker
+// module reads it while evaluating – which is why the import of it below is dynamic.
+const { send, workerGlobal } = workerHarness<Reply>()
 
 /** A career the worker's own way (draws through resumeMain(world.rngMain)), parked in the knock
  *  cooldown exactly like the rng suite's rides-test fixture: a just-retired knock row means no new

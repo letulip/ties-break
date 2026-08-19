@@ -38,23 +38,12 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
-import { rngFromSeed } from '../../src/engine/rng'
 import type { Snapshot } from '../../src/shared/protocol'
+import { careerSnapshot } from '../helpers/career'
+import { mountSeason } from '../helpers/mountSeason'
 
 /** A real career through the real protocol, as every other SeasonScreen test builds one. */
-function snapshotAfter(weeks: number, seed = 'r21-supply'): Snapshot {
-  const world = createWorld(seed)
-  const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
-}
-
-function mountSeason(snapshot: Snapshot) {
-  const store = useGameStore()
-  store.snapshot = snapshot
-  return mount(SeasonScreen, { global: { stubs: { teleport: true } } })
-}
+const snapshotAfter = (weeks: number, seed = 'r21-supply'): Snapshot => careerSnapshot(weeks, seed)
 
 /** The header's own count, off the snapshot rather than off the string – so the test compares two
  *  numbers the app computed and not a number this file re-derived. */

@@ -907,6 +907,9 @@ export interface BirthdayPrompt {
   week: number
   /** the age she turns – `birthdayTurning`, which is day-exact since round-16 #100 */
   age: number
+  /** A deterministic, age-aware heading. The component does not flatten every year into the same
+   *  "She is N today" sentence. */
+  heading: string
   /** ⭐ what she has been asking for, in prose. EXACTLY ONE of the four options answers it, and
    *  nothing marks which (spec §2ab / §5.4). */
   ask: string
@@ -1067,6 +1070,19 @@ export interface UpcomingEvent {
   week: number
   tier: TierId
   surface: Surface
+  /** ⭐⭐ THE ALTERNATES LIST, 18.08 – her place in the queue below this rung's cut (1 = first in
+   *  line, 0 = not on the list at all) and how many chairs the field's withdrawals have opened.
+   *
+   *  ⚠⚠ BOTH NUMBERS ARE HERE SO THE CARD CAN SHOW THEM BEFORE SHE COMMITS, WHICH IS THE WHOLE
+   *  DESIGN. The owner refused a probabilistic tail twice because «заявка станет частично броском
+   *  кубика, а это реальная потеря в игре про планирование сезона», and accepted this because the
+   *  numbers are readable in advance: "two places open, you are first in line" is something a parent
+   *  can plan a season around, and a hard cut tells her nothing about next week.
+   *
+   *  The world rolls `alternatesOpen` – a fact about the FIELD, on its own event-keyed sub-stream.
+   *  `alternateQueue` is arithmetic off the table and never rolls. */
+  alternateQueue: number
+  alternatesOpen: number
   /** what the Season card may say about an event she has not played: her odds in ROUND ONE against
    *  the field as it would be drawn today, who that opponent would be, how strong the field is, and
    *  two decorative readings (the temperature and the crowd). Derived at snapshot time, persists
@@ -1222,6 +1238,17 @@ export interface UpcomingEvent {
  *  exactly the failure HomeScreen's own comment warns against. The screens now ask the engine
  *  rather than re-deriving a rule that no longer covers every rung. */
 export type TierOpenMap = Record<TierId, boolean>
+
+/** Why one rung is shut, as `Snapshot.tierRefusal` carries it – the engine's `EntryStatus` narrowed
+ *  to the half a rung can answer. `detail` is the refusal's own words, the same string an event's
+ *  card gets, because 'unavailable' alone is five different refusals collapsed into one code. */
+export interface TierRefusal {
+  reason: 'locked' | 'injured' | 'unavailable' | 'medical' | 'capped'
+  detail?: string
+  pointsToEnter?: number
+  rankToEnter?: number
+  entryCap?: EntryCapUsage
+}
 
 export interface EntryCapUsage {
   used: number
@@ -1579,10 +1606,16 @@ export type OfferKind = 'kit' | 'entry' | 'tour'
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
  *  not say which rule it came from would be exactly the thing the ruling forbids.
  *
- *  `conduct` is DECLARED AND NOT YET WRITTEN. §6 lists on-court conduct as a penalty source «once
- *  psyche (v38) exists» - the anger system finally getting a price tag - and psyche is its own wave.
- *  Naming it here costs nothing and means that wave widens a union rather than redesigning one, the
- *  same courtesy `OfferKind` was built with. */
+ *  ⚠ EVERY MEMBER HERE HAS A PRODUCER, AND THAT IS NOW THE RULE (YAGNI-2, round-22 review). A
+ *  fifth member `conduct` sat here reserved for the psyche wave - §6 lists on-court conduct as a
+ *  penalty source «once psyche (v38) exists» - and nothing anywhere ever wrote it. A reserved
+ *  member is not free: it is a value every reader of a save, a screen or a test has to consider and
+ *  no career can ever contain, so it reads as coverage that does not exist. The psyche wave adds it
+ *  back in the commit that first CHARGES it, which is one line and the same widening the
+ *  reservation was meant to buy.
+ *
+ *  Removing it needed no migration and no schema bump: with no producer, no save - shipped or
+ *  fixture - can hold the value, so this narrows a declaration and not any persisted data. */
 export type PenaltyReason =
   /** she never entered a mandatory event her standing obliged her to play */
   | 'skip'
@@ -1592,8 +1625,6 @@ export type PenaltyReason =
   | 'no-show'
   /** she finished the season short of the 500-level commitment */
   | 'quota'
-  /** reserved: on-court conduct, when psyche ships (§6) */
-  | 'conduct'
 
 /** ONE PENALTY, as the tour charged it. Persisted (schema v38, `WorldState.penalties`). */
 export interface PenaltyRow {
@@ -2131,11 +2162,18 @@ export type ConditionBand = 'fresh' | 'ok' | 'worn' | 'drained'
 /** How the family wallet is breathing, as a band – the diary never quotes the balance. */
 export type FundsPressure = 'tight' | 'watchful' | 'ok'
 
+/** The narrator's relationship to her week. Derived at snapshot time; never persisted. */
+export type DiaryLifeStage = 'school' | 'after-school' | 'college' | 'independent'
+
 /** Everything a diary phrase is allowed to know – assembled by the ENGINE at snapshot time, all
  *  read off facts that already exist on the world. A phrase is selected BY these and may assert
  *  nothing they do not carry (the honesty pin in tests/diary.test.ts sweeps exactly that). */
 export interface DiaryFacts {
   week: number
+  /** Her actual age and the corresponding narrative viewpoint. These keep a late-career diary
+   *  from observing a grown woman's homework, bedroom, or breakfast as if she still lived at home. */
+  ageYears: number
+  lifeStage: DiaryLifeStage
   /** the ONE face decision, computed engine-side (same inputs the paintings render).
    *  `PortraitEmotion`, not `AvatarEmotion`: the decision can land on the painting-only `rehab`
    *  (R14-1 – the layoff is a state and wears its own picture), and nothing renders a crop of it. */
@@ -2780,7 +2818,16 @@ export interface ScrollSeason {
 
 /** THE HAND-OFF (§5.6): an OFFER, not a credits roll. One tap to a new career, the next daughter
  *  generated automatically, and exactly ONE question asked – the starting-capital fork the player
- *  already answers at onboarding. Nothing mechanical carries over. */
+ *  already answers at onboarding. Nothing mechanical carries over.
+ *
+ *  ⚠ THREE OF THE FOUR FIELDS ARE PRODUCED AND READ BY NOTHING (measured 19.08.2026, round 22).
+ *  `world/endings.ts` fills `childBorn`, `freshCapitalFork` and `resumesAgeYears` on every ending
+ *  view, and the only component that touches this interface – `EndingScreen.vue` – reads
+ *  `resumesWeek` and nothing else. Their remaining readers are `tests/ending.test.ts` and three
+ *  component-test fixtures, i.e. the contract testing itself. LEFT STANDING DELIBERATELY, NOT
+ *  OVERLOOKED: each carries an argument for being asked before it can be answered (see the field
+ *  comments below), and whether that argument outlives YAGNI is the owner's call, not an agent's.
+ *  Recorded here so the next reader does not have to re-derive the grep. */
 export interface HandoffView {
   /** ⚠ THE SEAM THAT ALWAYS ANSWERS NO IN v1. «Если ребенка родила за игру – то вполне может
    *  попробовать продолжить»: if a child was born during the career, THAT child is the next
@@ -2970,6 +3017,26 @@ export interface Snapshot {
    *  acceptance list AND with the population – the illustrative "top 50" that used to sit in a comment
    *  was stale by two re-pins when it was found. Derived at snapshot time, persists nothing. */
   tierAcceptance: Partial<Record<TierId, number>>
+  /** ⭐⭐ WHY A RUNG IS SHUT, IN THE ENGINE'S OWN WORDS (PR-09 / TB-05, 19.08). Present only for a
+   *  rung the engine refuses; ABSENT means open, so this map never restates `tierOpen`.
+   *
+   *  ⚠ IT EXISTS BECAUSE THE UI USED TO REBUILD THE REASON. `tierOpen` has answered "may she" since
+   *  W2-LADDER, but not "why not" - so `composables/tierState.ts` kept its own age gate, its own
+   *  point band and its own copy of `entryBandTrack` to produce the sentence. That is the "two sides
+   *  asking different functions about one question" class, and it has shipped as a defect four times
+   *  (the wild cards, the age gates, the bench pre-filter, and a W15 reading "68 / 120 international
+   *  pts" while the engine held it open).
+   *
+   *  ⚠ THE SAME FIELDS AN EVENT'S REFUSAL ALREADY CARRIES, deliberately - `ineligibleReason` and its
+   *  numbers, one shape for both scopes, so a card and a tournament row explain a refusal the same
+   *  way. What is NOT here is anything already on the Snapshot: `outgrown` is `tierOutgrown`, open is
+   *  `tierOpen`, and duplicating either would be this proposal's own defect.
+   *
+   *  ⚠ IT IS THE RUNG'S BASELINE, not a promise about any one tournament: computed with no per-event
+   *  door (`tierVerdict`'s `id: null`). The home wild card, the alternates list and the reserved
+   *  junior place can only ever ADMIT, so a named event may be MORE permissive than this and never
+   *  less. Derived at snapshot time, persists nothing. */
+  tierRefusal: Partial<Record<TierId, TierRefusal>>
   /** THE ON-RAMP LATCHES (v34 state, surfaced read-only in R15-9): has she EVER cleared the way
    *  onto each upper table. The event feed no longer reads them directly - W2-LADDER §4's
    *  two-type rule derives its pair from `tierOpen` below (see `feedContext` in
@@ -3326,6 +3393,14 @@ export interface CareerMeta {
    *  is why the field exists at all. Optional: rows written before this wave have none, and the list
    *  falls back to the band for them rather than inventing a birthday. */
   birthMonth?: number
+  /** ...and her birth DAY, carried for the same reason and added the day the age clock started
+   *  needing it (18.08). The month alone answered "how old is she" to within six weeks; the date
+   *  answers it exactly, and the Careers list prints the same number Home does or it is not one clock.
+   *
+   *  ⚠ SAME OPTIONALITY AND SAME FALLBACK. A row written before this wave has a month and no day, and
+   *  `careerAge` reads the day as the 1st for it – which is the month clock's own answer, so an old
+   *  row keeps printing exactly what it printed rather than shifting under the reader. */
+  birthDay?: number
 }
 
 /** ⭐ ROUND-21 #1 – WHOSE CAREER IS IN THIS FILE, read WITHOUT importing it.

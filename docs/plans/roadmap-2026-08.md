@@ -1,9 +1,10 @@
 ---
 type: roadmap
-status: current
+status: superseded
 area: delivery
-canonical: true
-last-reviewed: 2026-08-03
+canonical: false
+last-reviewed: 2026-08-19
+superseded-by: docs/now-next-later.md
 ---
 
 # Roadmap 2026-08 — the strategy after two reviews

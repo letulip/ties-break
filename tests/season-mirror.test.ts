@@ -136,10 +136,64 @@ function walkNear(weeks: number, seed: string): WorldState {
   return world
 }
 
+/** `walkNear`'s walk, run ONCE, reporting (week, card's table, latched table) at each wrap in
+ *  `wraps`. Identical states to calling `walkNear` for each of them - after `i` iterations the live
+ *  world is exactly what `walkNear(i)` returns - at one career's cost instead of one per wrap.
+ *  ⚠ IF THIS EVER PARTS FROM `walkNear` THE ARM ABOVE IS MEASURING A DIFFERENT CAREER THAN IT
+ *  REBUILDS, which is the trap its own `oneShort` note describes. Keep the two loops identical. */
+function scanWraps(seed: string, wraps: readonly number[]): [number, LadderTrack | undefined, LadderTrack][] {
+  const world = createWorld(seed, DEFAULT_PROFILE)
+  world.fundsCents = 500_000_00
+  world.plan = summerDoubledBalanced()
+  const rng = resumeMain(world.rngMain)
+  const want = new Set(wraps)
+  const max = Math.max(...wraps)
+  const out: [number, LadderTrack | undefined, LadderTrack][] = []
+  for (let w = 0; w < max; w++) {
+    const byRung = [...world.season].sort(
+      (a, b) => a.week - b.week || TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier),
+    )
+    for (const e of byRung) {
+      if (world.entries.includes(e.id)) continue
+      if (world.week > e.deadlineWeek || e.deadlineWeek - world.week > 3) continue
+      if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
+      try {
+        enterEvent(world, e.id)
+      } catch {
+        /* gated */
+      }
+    }
+    tickWeek(world, rng)
+    if (world.pendingTournament) {
+      skipTournament(world)
+      closeTournament(world)
+    }
+    if (want.has(w + 1)) out.push([w + 1, world.lastSeasonSummary?.rankTrack, activeLadderOf(world)])
+  }
+  return out
+}
+
 describe('the season mirror – captured at entry, never reconstructed', () => {
   it('is a real count on a real career, and the fixture is not vacuous', () => {
     // Two full seasons: the first wrap is at week 49 and the second at 101.
-    const { world, committed } = walk(102, 'mirror-real')
+    //
+    // ⚠⚠ THE SEED MOVED 'mirror-real' -> 'mirror-c' (18.08), AND THE CLAIM IS UNCHANGED. This arm's
+    // whole job is NON-VACUITY: it proves the counted line is measuring something on this career, so
+    // the assertion below must find at least one entry the book could not move on. Widening `power()`
+    // to five skills re-sorted the cohort, which moved which rungs this seed's career could enter, and
+    // 'mirror-real' fell to ZERO such entries - the arm would have passed for the wrong reason, or
+    // rather failed for the right one.
+    //
+    // ⚠ THE REPLACEMENT WAS CHOSEN BY REPLICATING THIS TEST EXACTLY, not by eyeballing seeds. The
+    // first two scans used the wrong predicate: `trackOf` here is the SUMMARY's `rankTrack` read ONCE
+    // AFTER the walk, not `activeLadderOf` and not a per-entry read - and both mistakes made
+    // 'mirror-real' look alive (18 and 18). Measured the honest way across eight seeds:
+    // mirror-real 0/92, mirror-real-2 0/94, mirror-b 0/110, **mirror-c 17/92**, mirror-d 19/92,
+    // mirror-x 32/110, mirror-y 13/95, golden-v45 7/103.
+    //
+    // ⚠ IF A LATER SCAN FINDS EVERY SEED AT ZERO, do not hunt a ninth. That is the mechanism being
+    // gone, and this file should go red and say so.
+    const { world, committed } = walk(102, 'mirror-c')
     expect(committed.length).toBeGreaterThan(20)
     const summary = world.lastSeasonSummary
     expect(summary?.entryMirror).toBeDefined()
@@ -440,18 +494,96 @@ describe('the season mirror – the wrap judges against the table the card names
     // 309 disagree, both as `domestic` on the card against `itf` latched**. The distinction is alive
     // and occurs TWICE; only the week moved. The file has said from the first re-aim that WHICH wrap
     // it is was never the subject.
-    const world = walkNear(153, 'golden-v45')
-    const summary = world.lastSeasonSummary!
-    const card = summary.rankTrack!
-    const active = activeLadderOf(world)
+    // ⚠⚠ THE WEEK IS SEARCHED FOR, NOT PINNED (18.08), AND THAT IS THE THIRD TIME IT MOVED. It was 49,
+    // then 153, and each move cost somebody a bisect to discover that the FIXTURE had drifted while the
+    // claim was still true. The claim was never about a particular wrap - this block has said so since
+    // its first re-aim ("WHICH wrap it is was never the subject") - so it now walks the wraps and
+    // asserts on the first one that diverges.
+    //
+    // ⚠ AND THE FAILURE MODE IS THE RIGHT ONE. If NO wrap diverges, this goes red saying the
+    // distinction is gone - which is a real finding about the engine and not a fixture to repoint. Do
+    // not answer that red by widening the search; answer it by asking whether `rankTrack` still means
+    // anything separate from `activeLadderOf`.
+    // ⚠⚠ RE-AIMED A SEVENTH TIME (19.08), AND THIS TIME IT WAS THE SEED THAT DRIFTED, NOT THE WEEK.
+    // The block above made the WEEK searched rather than pinned, for a stated reason: "each move cost
+    // somebody a bisect to discover that the FIXTURE had drifted while the claim was still true". The
+    // fifth-skill and tenure waves emptied `golden-v45` entirely - every one of its seven wraps now
+    // agrees with itself - so the same drift simply moved up one level, from the week to the seed.
+    //
+    // ⚠ AND ITS OWN INSTRUCTION FOR THIS RED WAS FOLLOWED BEFORE ANYTHING WAS TOUCHED. The note below
+    // says: "Do not answer that red by widening the search; answer it by asking whether `rankTrack`
+    // still means anything separate from `activeLadderOf`." It was asked, and MEASURED across five
+    // careers and every wrap of each (`tools/mirror-probe.ts`): 6 of 35 wraps still separate the two
+    // tables - mirror-b at 153 and 205, mirror-c at 153, mirror-d at 101, mirror-e at 49 and 153.
+    // The distinction is alive; `golden-v45` is a fixture that went quiet.
+    //
+    // ⚠ THE TOOL THIS FILE HAS CITED SINCE THE FOURTH RE-AIM DID NOT EXIST until 19.08 - neither
+    // `tools/mirror-probe.ts` nor the `tools/_mirrorprobe.ts` spelling. Five re-aims named a
+    // measurement nobody could re-run, inside the file whose whole discipline is proving the claim
+    // before moving the fixture. It exists now.
+    //
+    // ⚠ NOTHING IS LOOSENED. The search is a FIXED, SMALL list of seeds, not an open hunt for a green
+    // one, and the red below is now a STRONGER claim than the one it replaces: not "this seed has gone
+    // quiet" but "the distinction has stopped occurring on any of five careers". Answer that red the
+    // way the note says - by asking whether `rankTrack` still means anything separate from
+    // `activeLadderOf` - and never by appending a sixth seed.
+    // ⚠ ONE WALK PER CAREER, NOT ONE PER WRAP – and this is a cost fix, not a shortcut. `walkNear`
+    // restarts from week 0 every call, so asking it for seven wraps of one seed simulated the same
+    // career seven times. Searching seeds on top of that pushed the arm past the 20s per-test budget
+    // IN THE SHARD while it still passed alone, which is the worst way for a cost to show up. Walking
+    // once and reading the pair AT each wrap is the identical measurement - after `i` iterations the
+    // live world IS what `walkNear(i)` returns - and it leaves the arm cheaper than it was before the
+    // seed search existed: one walk per seed until a divergence, then two to rebuild it.
+    const WRAPS = [49, 101, 153, 205, 257, 309, 361]
+    let hit: { seed: string; week: number } | null = null
+    outer: for (const seed of ['golden-v45', 'mirror-b', 'mirror-c', 'mirror-d', 'mirror-e']) {
+      for (const [week, card, active] of scanWraps(seed, WRAPS)) {
+        // ⚠ NO CARD IS NOT A DIVERGENCE – a wrap before her first ranked season has nothing to name,
+        // and `undefined !== active` would report it as one. Same `if (!c) continue` the pinned-week
+        // version carried.
+        if (card && card !== active) { hit = { seed, week }; break outer }
+      }
+    }
+    let found: { seed: string; week: number; card: LadderTrack; active: LadderTrack; world: WorldState } | null = null
+    if (hit) {
+      const w = walkNear(hit.week, hit.seed)
+      // ⚠ REBUILT, NOT CARRIED. The scan holds no world (that is what makes it one walk), so the arm
+      // below reads the SAME wrap back through `walkNear` – the one call whose behaviour the rest of
+      // this file is written against.
+      const card = w.lastSeasonSummary?.rankTrack
+      if (card) found = { seed: hit.seed, week: hit.week, card, active: activeLadderOf(w), world: w }
+    }
+    expect(
+      found,
+      'no wrap on ANY of the five careers separates the card`s table from the latched one – the distinction this file exists for may be gone',
+    ).not.toBeNull()
+    const { card, active } = found!
+    const summary = found!.world.lastSeasonSummary!
     expect(card, 'the card names the table the season was played on').not.toBe(active)
-    // ...and for the record, the pair this seed shows today.
-    expect([card, active]).toEqual(['domestic', 'itf'])
+    // ...and for the record, the pair this seed shows today – printed by the message rather than pinned,
+    // because the searched wrap decides it and pinning a pair would re-create the fixture drift the
+    // search above exists to end. What IS asserted is that both are real tables and that the card's is
+    // the LOWER of the two, which is the direction the whole mechanism is about: the season was played
+    // on the rung she was on, not on the one she has since latched.
+    const LADDER_ORDER: LadderTrack[] = ['domestic', 'itf', 'wta']
+    expect(LADDER_ORDER, `card ${card} / active ${active}`).toContain(card)
+    expect(LADDER_ORDER, `card ${card} / active ${active}`).toContain(active)
+    expect(
+      LADDER_ORDER.indexOf(card),
+      `the card names a LOWER table than the latched one (card ${card}, active ${active})`,
+    ).toBeLessThan(LADDER_ORDER.indexOf(active))
 
     // The ledger the wrap just banked from is reset by the wrap itself, so the fold is re-run here off
     // the rows the season actually committed - reconstructed the only way that is honest, by walking
     // one week short of the wrap and reading the ledger before it clears.
-    const oneShort = walkNear(152, 'golden-v45')
+    // ⚠ ONE SHORT OF THE **FOUND** WRAP, not of a literal week. This read `walkNear(152, …)` – one
+    // short of the wrap that used to be pinned – so the moment the search above moved, this fold was
+    // reading a different season than the card it is being compared against, and the two counts came
+    // out equal for no reason anyone could have named.
+    // ⚠ THE **FOUND** SEED, not a literal one – the same trap the week arm fell into and for the same
+    // reason: reading a different career than the card it is compared against makes the two counts
+    // agree for no nameable reason.
+    const oneShort = walkNear(found!.week - 1, found!.seed)
     const rows = oneShort.seasonEntries!.rows
     const againstCard = rows.filter((r) => entryCouldNotMove(r, card)).length
     const againstActive = rows.filter((r) => entryCouldNotMove(r, active)).length

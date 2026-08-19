@@ -14,17 +14,20 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+// The file minus its comments, so a pin can never pass off the prose that explains it.
+//
+// ⚠ `scriptCodeOf`, NOT `codeOf` – this file's local copy stripped the two JS comment forms and NOT
+// `<!-- -->`, and the two are not interchangeable (tests/helpers/source.ts explains why at length).
+// The subject here is `src/pwa.ts`, a script; nothing asked for template comments to be removed
+// under it, and quietly widening what a pin cannot see is how a source pin goes green on a
+// violation. The two forms produce byte-identical output on `src/pwa.ts` today – measured – so this
+// is prospective, which is the only kind of hazard worth writing down.
+import { scriptCodeOf } from './helpers/source'
 
 const pwa = readFileSync(fileURLToPath(new URL('../src/pwa.ts', import.meta.url)), 'utf8')
 
-/** The file minus its comments, so a pin can never pass off the prose that explains it. Same
- *  `codeOf` idiom tests/calendar-screen.test.ts introduced after a guard did exactly that. */
-function codeOf(text: string): string {
-  return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
-}
-
 describe('the app goes looking for a new build, not just at startup', () => {
-  const code = codeOf(pwa)
+  const code = scriptCodeOf(pwa)
 
   it('re-checks when the app comes back to the foreground - the case that bites a phone', () => {
     expect(code, 'no visibilitychange listener: a resumed PWA would never re-ask').toContain(

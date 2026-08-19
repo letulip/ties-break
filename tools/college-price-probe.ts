@@ -49,7 +49,9 @@ import { COLLEGE_TIERS, type CollegeOffer } from '../src/engine/collegeOffer'
 /** ⚠ THE CHEAPEST PLACE OPEN TO HER. This probe never picks, so this is the only quote it can
  *  honestly read – see the note on `answerFork` below. */
 const cheapest = (offer: CollegeOffer | null | undefined) => offer?.quotes.find((q) => q.open) ?? null
-import { kidLadderRank } from '../src/engine/world/snapshot'
+// ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
+// world/college.ts could stop importing the aggregate projection layer. Same function.
+import { kidLadderRank } from '../src/engine/world/ladder'
 import { parentIncomeForWeekCents } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'

@@ -46,6 +46,10 @@ import CountingResultsTable from '../CountingResultsTable.vue'
 import SkillsRadar from '../SkillsRadar.vue'
 import type { RadarAxis } from '../../shared/protocol'
 import { useKidEmotion } from '../../composables/kidEmotion'
+// The app's one red-to-green ramp, shared with the Season and Calendar odds rings. `{ pct }` names
+// the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
+// will not let the two be confused.
+import { readingColor } from '../../composables/readingColor'
 import { birthDateLabel, weekLabel } from '../../shared/dates'
 import { rankLabel } from '../../shared/format'
 // ⚠ MERGE: `FamilyBackground` left with the Family tile (screen C now draws the export's six, and
@@ -65,6 +69,10 @@ import Eyebrow from '../ui/Eyebrow.vue'
 import IconButton from '../ui/IconButton.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
+// HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
+// byte-identical in five components and the name map was written out in two; a twenty-fifth
+// country would have had to be added in two files with nothing to say so.
+import { COUNTRY_NAMES, flagEmoji } from '../../composables/countries'
 
 const game = useGameStore()
 // THE DOOR TO THE COACH MARKET (screen T). It lives on the Coach TILE rather than on Home for two
@@ -118,21 +126,6 @@ const MOOD_LABEL: Record<PortraitEmotion, string> = {
   rehab: 'On the mend',
   angry: 'Angry',
 }
-// Her country in words. The export prints only a flag next to her name, and a flag emoji on its own
-// is a riddle - so the name is the flag's ACCESSIBLE label rather than a fourth line of chrome laid
-// over the painting.
-const COUNTRY_NAMES: Record<string, string> = {
-  US: 'United States', GB: 'United Kingdom', FR: 'France', ES: 'Spain', IT: 'Italy', DE: 'Germany',
-  RU: 'Russia', RS: 'Serbia', CH: 'Switzerland', CZ: 'Czechia', PL: 'Poland', UA: 'Ukraine',
-  KZ: 'Kazakhstan', BY: 'Belarus', AU: 'Australia', JP: 'Japan', CN: 'China', KR: 'South Korea',
-  IN: 'India', BR: 'Brazil', AR: 'Argentina', CA: 'Canada', NL: 'Netherlands', SE: 'Sweden',
-}
-
-function flagEmoji(code: string): string {
-  if (!code) return ''
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
-}
-
 const kidName = computed(() => game.snapshot?.profile.kidName ?? '')
 const kidFullName = computed(() => {
   const p = game.snapshot?.profile
@@ -149,6 +142,10 @@ const birthDate = computed(() => {
   const p = game.snapshot?.profile
   return p ? birthDateLabel(p.birthMonth, p.birthDay) : ''
 })
+// Her country in words. The export prints only a flag next to her name, and a flag emoji on its own
+// is a riddle - so the name is the flag's ACCESSIBLE label rather than a fourth line of chrome laid
+// over the painting. The table and the flag builder are `composables/countries.ts` now; the reason
+// this screen prints BOTH is the sentence above, and it stays with the pair it explains.
 const countryFlag = computed(() => flagEmoji(game.snapshot?.profile.country ?? ''))
 const countryName = computed(() => {
   const code = game.snapshot?.profile.country ?? ''
@@ -193,14 +190,12 @@ const pointsText = computed(() =>
 )
 
 // --- THE CONDITION TILE --------------------------------------------------------------------
-// The export's Confidence ring, wearing the app's own continuous hue: `hsl(pct*120, 72%, 48%)`, so
-// a percentage means the same colour here as it does on Home. The ramp is DATA and therefore a
-// prop - see src/components/ui/ProgressRing.vue.
+// The export's Confidence ring, wearing the app's own continuous hue, so a percentage means the same
+// colour here as it does on Home. The ramp is DATA and therefore a prop - see
+// src/components/ui/ProgressRing.vue - and the hue is `composables/readingColor.ts`, which is where
+// the expression this file used to spell out for itself now lives, once, for all five rings.
 const condition = computed(() => Math.round(game.snapshot?.condition ?? 0))
-const conditionColor = computed(() => {
-  const pct = Math.max(0, Math.min(100, condition.value))
-  return `hsl(${Math.round((pct / 100) * 120)}, 72%, 48%)`
-})
+const conditionColor = computed(() => readingColor({ pct: condition.value }))
 
 // --- THE COACH TILE ------------------------------------------------------------------------
 // Who she trains with TODAY, which is `world.coachId` and not the rung chosen at onboarding - the

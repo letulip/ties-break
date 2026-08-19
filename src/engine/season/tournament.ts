@@ -241,6 +241,65 @@ export const ON_RAMP: { slots: number } = { slots: 2 }
  *  possible. See docs/decisions.md, round 21 item 2. */
 export const WILD_CARD: { tier: TierId; slots: number } = { tier: 'slam', slots: 8 }
 
+/** ⭐⭐ THE ALTERNATES LIST – how many places below a rung's acceptance cut stay reachable, and the
+ *  answer to the owner's oldest complaint about this ladder: **every rung of ours is a cliff.**
+ *
+ *  THE PROBLEM, IN THE SPEC'S OWN WORDS (`docs/specs/the-acceptance-tail-2026-08.md` §4): "a hard cut
+ *  has no middle. The rung is hers or it does not exist, so the only way to make it selective is to
+ *  make it empty" – and P3 shipped a `j300` number it knew to be FIVE TIMES looser than reality for
+ *  exactly that reason, because below 0.20 the rung fell off a cliff rather than narrowing.
+ *
+ *  ⚠⚠ AND IT IS NOT THE PROBABILISTIC TAIL THAT SPEC DESCRIBED. That version rolled for HER entry,
+ *  and the owner refused it twice for one reason: «заявка станет частично броском кубика, а это
+ *  реальная потеря в игре про планирование сезона». His replacement (18.08): «давай сделаем доп. окно
+ *  допуска здесь просто, тогда как раз и проще планировать будет».
+ *
+ *  So the world rolls and SHE DOES NOT. `alternatePlacesOpen` draws how many players withdrew - a fact
+ *  about the field, resolved per event on its own sub-stream - and her queue position is pure
+ *  arithmetic off the table. She reads "two places open, you are first in line" on the card BEFORE she
+ *  commits, which is strictly MORE plannable than a hard cut, not less: a cliff tells her nothing
+ *  about next week.
+ *
+ *  ⚠ FOUR, AND IT IS THE DRAW'S OWN NUMBER RATHER THAN A PERCENTAGE (owner, 18.08: «ок»). A real main
+ *  draw takes four qualifiers; `WILD_CARD.slots` above is eight held places on the same rung from the
+ *  same rulebook. A share of the table would move with `FIELD.size` and mean something different every
+ *  time the population is re-priced; four chairs are four chairs.
+ *
+ *  ⚠ A PLAIN OBJECT for the reason `WILD_CARD` is one: a bench sweeps `places` and restores it. */
+export const ALTERNATES: { places: number } = { places: 4 }
+
+/** HOW MANY OF THOSE FOUR CHAIRS ARE ACTUALLY EMPTY at `event` – the withdrawals, drawn once per
+ *  event and identical every time it is asked.
+ *
+ *  ⚠⚠ THE RATE IS OURS AND MEASURED, NOT INVENTED (owner, 18.08: «выведи из уже измеренного… ок»).
+ *  `ECONOMY.availability.injuryBaseChance` is 0.003 per healthy week and climbs with fatigue; a field
+ *  professional deep in a season is not at condition 100, so this uses the base rate as the floor it
+ *  is and nothing more. No new balance number enters the game through this function.
+ *
+ *  ⚠ AND THE WINDOW IS THE ONE THE CALENDAR ALREADY MODELS: `deadlineWeek` to `week`, the weeks an
+ *  entry list stands before it is played. A player who breaks down in that window is the player whose
+ *  chair opens. Inventing a window would have been inventing a constant.
+ *
+ *  ⚠ ITS OWN SUB-STREAM, NEVER MAIN (invariant 2). Keyed on the event id, so the answer is the same
+ *  every time any caller asks - the card, the turnstile and the draw cannot disagree about how many
+ *  places are open - and the frozen MAIN capture is untouched. This is a fact about the FIELD, which
+ *  is why it may roll at all: her own entry stays arithmetic. */
+export function alternatePlacesOpen(seed: string, event: SeasonEvent): number {
+  const def = TIERS[event.tier]
+  if (def.acceptsRank === undefined) return 0
+  const weeks = Math.max(0, Math.floor(event.week) - Math.floor(event.deadlineWeek))
+  if (weeks === 0) return 0
+  const rng = rngFromSeed(`${seed}:alternates:${event.id}`)
+  const perWeek = ECONOMY.availability.injuryBaseChance
+  let open = 0
+  for (let i = 0; i < def.drawSize; i++) {
+    // one Bernoulli per player over the whole window, so the shape follows the calendar rather than a
+    // curve of its own: a list that stands for five weeks loses more players than one that stands for one.
+    if (rng() < 1 - Math.pow(1 - perWeek, weeks)) open++
+  }
+  return Math.min(open, ALTERNATES.places)
+}
+
 /** THE NATIONS A TOURNAMENT CAN BE HELD IN – the population's own weighted pool, plus the playable
  *  countries that pool happens not to contain.
  *
@@ -585,6 +644,31 @@ export function selectEntrants(
   return chosen.map((c) => c.p)
 }
 
+// --- ALLOCATION PRIORITY: THE ORDER THE WEEK'S EVENTS CLAIM PLAYERS IN ---------------------------
+//
+// ONE COMPARATOR, THREE CALLERS (round 22 consolidation). `weekFieldExclusion` below,
+// `resolveDoubleBookings` further down and `fillWeekOnRamps` in world.ts each spelled this ordering
+// out for themselves, in three byte-identical copies. They are not three rules that happen to
+// agree - they are ONE rule, «which event gets first refusal on a player when several of one week
+// want her», and three copies of a rule is three places for a correction to miss one. It lives here
+// because this file already owns two of the three call sites and world.ts imports from it, so the
+// dependency runs the way it already ran.
+//
+// THE ID TIE-BREAK IS UNREACHABLE AT THE SHIPPED CALENDAR and is here anyway (moved verbatim from
+// `resolveDoubleBookings`, which is where the argument was written): `buildSeason` tracks occupancy
+// PER TIER, so a tier runs at most one event in a week. It is here so the order is TOTAL - an
+// ordering that is only deterministic while an invariant in ANOTHER module holds is a latent
+// non-determinism, and this one would show up as a save that replays differently.
+
+/** Strongest rung first (`TIER_LADDER`, never a map's or the calendar's iteration order), event id
+ *  ascending as the tie-break. A TOTAL order over the events of one week. */
+export function byAllocationPriority(a: SeasonEvent, b: SeasonEvent): number {
+  return (
+    TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier) ||
+    (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+  )
+}
+
 // --- ONE BODY, ONE WEEK, ON THE PROFESSIONAL SIDE TOO -------------------------------------------
 //
 // WEEK EXCLUSIVITY FOR THE W TRACK (W2-FIELD2, act2-pro-tour.md §8.2: «when two W rungs share a
@@ -645,11 +729,7 @@ export function weekFieldExclusion(
         TIERS[e.tier].track === 'wta' &&
         TIER_LADDER.indexOf(e.tier) > rung,
     )
-    .sort(
-      (a, b) =>
-        TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier) ||
-        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
-    )
+    .sort(byAllocationPriority)
   for (const e of above) {
     const rng = rngFromSeed(`${seed}:kidtour:${e.id}`)
     for (const p of selectEntrants(e, universe, ranking as RankingRow[], rng, conditions, booked)) {
@@ -840,16 +920,9 @@ export function resolveDoubleBookings(
   const proPos = pro ? indexOf(pro.ranking) : null
   const proTotal = pro ? pro.ranking.length || pro.universe.length : 0
 
-  // Rule 1. Strongest rung first. The id tie-break is unreachable at the shipped calendar
-  // (`buildSeason` tracks occupancy PER TIER, so a tier runs at most one event in a week) and is
-  // here so the order is TOTAL – an ordering that is only deterministic while an invariant in
-  // another module holds is a latent non-determinism, and this one would show up as a save that
-  // replays differently.
-  const order = [...drawn].sort(
-    (a, b) =>
-      TIER_LADDER.indexOf(b.event.tier) - TIER_LADDER.indexOf(a.event.tier) ||
-      (a.event.id < b.event.id ? -1 : a.event.id > b.event.id ? 1 : 0),
-  )
+  // Rule 1. Strongest rung first – `byAllocationPriority` above, which now owns this ordering and
+  // the argument for why its id tie-break exists even though the shipped calendar cannot reach it.
+  const order = [...drawn].sort((a, b) => byAllocationPriority(a.event, b.event))
 
   const booked = new Set<string>()
   for (const { event, entrants } of order) {

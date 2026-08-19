@@ -56,7 +56,7 @@ import {
   skipTournament,
   closeTournament,
   financeWindow,
-  availabilityStatus,
+  entryStatus,
   travelCostFor,
   activeLadderOf,
   hasOutgrown,
@@ -688,9 +688,18 @@ export function stepCareerWeek(
       }
       if (past) continue
     }
-    // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
-    // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
-    if (availabilityStatus(world, e).level === 'blocked') continue
+    // ⚠⚠ THE FULL DOOR, NOT JUST AVAILABILITY (18.08). This asked `availabilityStatus` - exams and
+    // injury - and said, correctly, that it was skipping "events enterEvent throws on". But
+    // `enterEvent` re-validates against `entryStatus`, which is availability PLUS the acceptance cut
+    // and the junior programme, so the pre-filter was a strict subset of the thing it was predicting.
+    // It survived because no bench career had ever been offered a rung its rank could not enter -
+    // until `power()` was unified over all five skills, which re-sorted the cohort, moved her year-end
+    // junior rank, and the run died on "World Tour 50 holds no junior places - year-end junior #39".
+    //
+    // ⚠ SAME CLASS AS THE TWO CALENDAR-VERSUS-DOOR DEFECTS FIXED THE SAME DAY: two sides asking
+    // different functions about one question. 'caution' (fatigue) stays enterable by design - only a
+    // HARD block is skipped, exactly as before.
+    if (entryStatus(world, e).level === 'blocked') continue
     // THE REST FLOOR (player arm): the grinder ignores the fatigue caution by design; a player
     // does not race worn out. `restFloor` 0 leaves the historical behaviour byte-identical.
     // ⭐ R4 – and it is now a TRADE against what the event is worth, not a flat gate: see

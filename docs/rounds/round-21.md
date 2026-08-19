@@ -7,10 +7,22 @@ opener-price and real-draw waves.
 Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]` in flight, agent named
 · `[ ]` open · `[?]` waiting on the owner's answer · `[!]` REOPENED (was reported done, was not).
 
-- [ ] **1. «Загрузка сейва, нужен диалог, подтверждающий намерение, особенно актуально, если сейв
+- [x] **1. «Загрузка сейва, нужен диалог, подтверждающий намерение, особенно актуально, если сейв
   перетирает существующий.»** – BUILD. Importing a save is destructive and currently silent. Wanted:
   a confirm step before the import lands, and it must say plainly WHEN it is overwriting a career
   that already exists rather than warning identically in both cases.
+  → ✅ **SHIPPED 15.08 (`ac5ea3d`), and this box stayed open for four days.** Ticked on 19.08 by the
+  round-22 documentation pass, which found this item written up as still open in
+  [now-next-later.md](../now-next-later.md) and checked it against the tree.
+  - `MoreScreen.vue`'s `importConfirmMessage` decodes the file FIRST – `game.peekSave` reads it in
+    the WORKER without importing it – so the question names the career the file actually holds.
+  - **The two messages are not the same message**, which is the half he asked for: an import that
+    replaces an existing career says so and gets the RED `Overwrite` button; one that replaces
+    nothing gets `Import` and is not a red button. An unreadable file is a THIRD message, because
+    "cannot say" is not "safe".
+  - Evidence: `tests/component/round21-dialogs.test.ts` – Cancel really cancels, confirming runs it
+    once on the file that was picked, picking the same file twice still asks, and the confirm fits a
+    375x667 phone on its longest message.
 - [x] **2. ⚠ REOPENED, THIRD ASK. «Тренер всё ещё не едет на соревнования, как так? Уже 3й раз прошу
   сделать»** – BUILD. Round-20 #1 answered this with an explanation instead of a build: the mechanic
   was measured in three versions on 30.07, all three failed, he cancelled it, `docs/decisions.md`
@@ -465,7 +477,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     `<p>` rather than a fourth button; a negative pin that no rung name is typed into the template.
     Mutation-verified. Plus the 375×667 fit assertion below, since the card was lengthened.
   - **Files** – `src/components/ForkDialog.vue` only. The engine was not touched.
-- [ ] **9. «Попап с развилкой появился сразу после финального матча чемпионата перекрыв интерфейс
+- [x] **9. «Попап с развилкой появился сразу после финального матча чемпионата перекрыв интерфейс
   таблицы и завершения. Нам надо как-то всё-таки разобраться с порядком появления попапов, чтобы они
   не конфликтовали с происходящим на экране... кроме травмы, которая как раз должна появляться в
   моменте.»** – BUILD, and the general rule is the deliverable rather than the one collision: a

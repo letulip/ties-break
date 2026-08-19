@@ -7,6 +7,10 @@
 import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
+// The app's one red-to-green ramp, shared with the Season and Calendar odds rings. `{ pct }` names
+// the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
+// will not let the two be confused.
+import { readingColor } from '../composables/readingColor'
 import { finaleUrl } from '../art/preload'
 // THE REAL SILVERWARE, and the flight that carries it to the cabinet – see the ⚠ over
 // `herTrophy` and over `continueFinale`.
@@ -30,6 +34,7 @@ import { playSfx, primeSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { computeMatchStats } from '../engine/match/matchStats'
+import { matchStatMeta, matchStatRows } from '../composables/matchStatTable'
 import { surfaceStyleHint } from '../engine/match/style'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { TIERS } from '../engine/season/calendar'
@@ -40,7 +45,12 @@ import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
 import type { MatchOptions, Side } from '../engine/match/types'
+import type { MatchStatRow } from '../composables/matchStatTable'
 import type { WorldMatch } from '../shared/protocol'
+// HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
+// byte-identical in five components and the name map was written out in two; a twenty-fifth
+// country would have had to be added in two files with nothing to say so.
+import { flagEmoji } from '../composables/countries'
 
 // R9-9a: the splash's "← Back" returns to the shell WITHOUT resolving anything – App.vue
 // hides the overlay and offers a Resume affordance while the week stays paused.
@@ -58,11 +68,6 @@ const game = useGameStore()
 // 404'd. One builder, checked against the files on disk by tests/art/preload.test.ts.
 const { stage: kidStage } = useKidEmotion()
 const artUrl = (emotion: 'happy' | 'sad' | 'serious') => finaleUrl(kidStage.value, emotion)
-
-function flagEmoji(code: string): string {
-  if (!code) return ''
-  return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
-}
 
 const pending = computed(() => game.snapshot?.pending ?? null)
 const profile = computed(() => game.snapshot?.profile ?? null)
@@ -325,7 +330,7 @@ const coachSignature = computed(() => {
  * thing across the app.
  */
 const condition = computed(() => game.snapshot?.condition ?? 0)
-const conditionColor = computed(() => `hsl(${Math.round(Math.max(0, Math.min(1, condition.value / 100)) * 120)}, 72%, 48%)`)
+const conditionColor = computed(() => readingColor({ pct: condition.value }))
 
 // --- L. Champion / M. Runner-up: the poster ------------------------------------
 // Both screens are one card with one `outcome` (the handoff's own ResultPoster, §22). The parts
@@ -583,34 +588,24 @@ const oppShort = computed(() => (oppName.value ? formatShortName(oppName.value) 
 const viewerRankA = computed<number | null>(() => (kidSide.value === 0 ? kidRank.value : currentOppRank.value))
 const viewerRankB = computed<number | null>(() => (kidSide.value === 0 ? currentOppRank.value : kidRank.value))
 
-interface StatRow {
-  label: string
-  kid: string
-  opp: string
-}
-const statRows = computed<StatRow[]>(() => {
-  const a = annotated.value
-  const m = currentMatch.value
-  if (!a || !m) return []
-  const s = computeMatchStats(a, m.a, m.b)
-  const k = kidSide.value
-  const o: Side = k === 0 ? 1 : 0
-  const pair = (v: [number, number]): { kid: string; opp: string } => ({ kid: String(v[k]), opp: String(v[o]) })
-  return [
-    { label: 'Aces', ...pair(s.aces) },
-    { label: 'Double faults', ...pair(s.doubleFaults) },
-    { label: 'Winners', ...pair(s.winners) },
-    { label: 'Unforced errors', ...pair(s.unforcedErrors) },
-    { label: 'Max serve', kid: `${s.serveSpeed.max[k]} km/h`, opp: `${s.serveSpeed.max[o]} km/h` },
-  ]
-})
-const matchMeta = computed(() => {
+// THE BOX SCORE'S FIVE ROWS ARE THE FRIENDLY'S FIVE ROWS - one definition, in composables/
+// matchStatTable.ts. What used to be here was a `StatRow` interface, the five labels, the side-swap
+// and the `km/h` suffix, all written out again character for character in PracticeFlow.
+//
+// ⚠ THE NULL GATE STAYS HERE, AND THAT IS THE DIFFERENCE BETWEEN THE TWO SCREENS. A friendly always
+// has its match; the box score is one of FIVE phases here and there is no match until a round has
+// been played, so the stats are nullable, `statRows` falls back to an empty list and `matchMeta`
+// renders behind a `v-if`. That gate is this screen's own and is not pushed into the shared shape.
+const stats = computed(() => {
   const a = annotated.value
   const m = currentMatch.value
   if (!a || !m) return null
-  const s = computeMatchStats(a, m.a, m.b)
-  return { rally: s.meanRallyLength.toFixed(1), duration: s.durationEstimate }
+  return computeMatchStats(a, m.a, m.b)
 })
+const statRows = computed<MatchStatRow[]>(() =>
+  stats.value ? matchStatRows(stats.value, kidSide.value) : [],
+)
+const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : null))
 
 </script>
 

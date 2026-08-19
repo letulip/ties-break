@@ -12,7 +12,6 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import CalendarScreen from '../../src/components/screens/CalendarScreen.vue'
 import PlanWeekSheet from '../../src/components/PlanWeekSheet.vue'
 import InboxSheet from '../../src/components/InboxSheet.vue'
@@ -25,6 +24,7 @@ import { letterDeletable } from '../../src/composables/inboxMail'
 import { enterActionName } from '../../src/composables/eventName'
 import { weekRange } from '../../src/shared/dates'
 import type { Offer, Snapshot } from '../../src/shared/protocol'
+import { mountSeason } from '../helpers/mountSeason'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND ITEM 2 IS ABOUT localStorage. The same shim
 // tests/component/home-strip-and-mail.test.ts and round20-ui.test.ts already carry, for the same
@@ -80,11 +80,6 @@ function careerWithVacation(packageId = 'seaside'): { snapshot: Snapshot; week: 
  *  than one red assertion. Vitest's cwd is the repo root, so that is what these resolve against; the
  *  length bounds at every call site are what would catch it if that stopped being true. */
 const repoFile = (rel: string): string => readFileSync(resolve(process.cwd(), rel), 'utf8')
-
-function mountSeason(snapshot: Snapshot) {
-  useGameStore().snapshot = snapshot
-  return mount(SeasonScreen, { global: { stubs: { teleport: true } } })
-}
 
 // ===========================================================================
 // ITEM 1 – a booked vacation can be cancelled, from where booking lives.
