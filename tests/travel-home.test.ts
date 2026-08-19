@@ -245,6 +245,8 @@ describe('R14-2 — on the facts object, and on a real career', () => {
   const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
     seed: 's',
     week: 11,
+    ageYears: 14,
+    inCollege: false,
     // W4-SCHOOL: a schoolgirl – every fixture here is a girl of 14-17.
     schoolOver: false,
     kidId: KID_ID,
@@ -524,6 +526,8 @@ function* sweepTravel(): Generator<TravelHomeFacts> {
                   // lies to the next reader. The sweep is over the same licence space either way –
                   // no note in the pool ever read the week number.
                   week: 20,
+                  lifeStage: 'school',
+                  birthdayAge: null,
                   scene,
                   mood,
                   // ⚠ W5: the LADDER's own tier, not a stand-in for `abroad`. `longWay` reads it.
@@ -667,7 +671,7 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
 
   it('the facts carry the mood, and it is null on exactly the weeks the scene is', () => {
     const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
-      seed: 's', week: 11, schoolOver: false, kidId: KID_ID, startAgeYears: 14, condition: 80, fundsCents: 100_000_00,
+      seed: 's', week: 11, ageYears: 14, inCollege: false, schoolOver: false, kidId: KID_ID, startAgeYears: 14, condition: 80, fundsCents: 100_000_00,
       injury: null, events: [], lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
       vacationPackageId: null,
@@ -688,6 +692,7 @@ describe('ui/travel-set — the note may not lie', () => {
   /** Every claim, re-derived from the facts INDEPENDENTLY of the licence that let the line through.
    *  A line whose licence and whose claims disagree is a failing test, not a matter of taste. */
   const HOLDS: Record<string, (t: TravelHomeFacts) => boolean> = {
+    birthday: (t) => t.birthdayAge !== null,
     title: (t) => t.wonTitle,
     runnerUp: (t) => t.lostFinal,
     lost: (t) => !t.wonTitle,
@@ -808,6 +813,15 @@ describe('ui/travel-set — the note may not lie', () => {
     const bySeed = new Set(Array.from({ length: 60 }, (_, i) => travelNoteFor(t, `career-${i}`)))
     expect(bySeed.size, 'a pool of one wearing a draw\'s clothes').toBeGreaterThan(1)
   })
+
+  it('a birthday on the road takes the scrap, in the right narrative distance', () => {
+    const base = [...sweepTravel()].find((t) => !t.injured)!
+    const young = { ...base, lifeStage: 'school' as const, birthdayAge: 16 }
+    const adult = { ...base, lifeStage: 'independent' as const, birthdayAge: 24 }
+    expect(travelNoteFor(young, 'birthday-road')).toMatch(/birthday/i)
+    expect(travelNoteFor(adult, 'birthday-road')).toMatch(/birthday/i)
+    expect(travelNoteFor(young, 'birthday-road')).not.toBe(travelNoteFor(adult, 'birthday-road'))
+  })
 })
 
 describe('ui/travel-set — the note is the PARENT, and it fits on a scrap of paper', () => {
@@ -923,6 +937,7 @@ describe('ui/travel-set — on a real career', () => {
         seed: world.seed,
         kidId: KID_ID,
         condition: world.condition,
+        lifeStage: snap.diary.facts.lifeStage,
         injury: world.injury,
         pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
       })
@@ -995,6 +1010,7 @@ describe('ui/travel-set — on a real career', () => {
         seed: world.seed,
         kidId: KID_ID,
         condition: world.condition,
+        lifeStage: toSnapshot(world).diary.facts.lifeStage,
         injury: world.injury,
         pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
       })
@@ -1012,7 +1028,7 @@ describe('ui/travel-set — on a real career', () => {
 
   it('buildDiarySnapshot is field-for-field deterministic with the journey on it', () => {
     const view: DiaryWorldView = {
-      seed: 's', week: 11, schoolOver: false, kidId: KID_ID, startAgeYears: 14, condition: 30, fundsCents: 100_000_00,
+      seed: 's', week: 11, ageYears: 14, inCollege: false, schoolOver: false, kidId: KID_ID, startAgeYears: 14, condition: 30, fundsCents: 100_000_00,
       // ⚠ W4: the trip is in the view's OWN week now (11), not the one before it.
       injury: null, events: trip(11, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,

@@ -392,9 +392,10 @@ export function collegeEpilogueLine(world: WorldState): string {
       : `Her country called ${calls === 1 ? 'once' : `${calls} times`}, and paid her nothing, which is what it pays everybody`
   const standing =
     rank === null
-      ? 'She is on no professional list at all, and the only way back in is qualifying'
-      : `She is #${rank}, and the only way up is qualifying`
-  return `${years} ${years === 1 ? 'year' : 'years'} of student tennis. ${played}. ${moneyClause(banked)} She is ${age}. ${standing}.`
+      ? 'no professional ranking. Qualifying is the front door again'
+      : `a ranking of #${rank}. Qualifying is the way forward again`
+  const yearsLine = `${years} ${years === 1 ? 'year' : 'years'} of student tennis, lived one season at a time.`
+  return `${yearsLine} ${played}. ${moneyClause(banked)} She comes back at ${age}, with ${standing}.`
 }
 
 /** ⚠ THE SIGN IS A DIFFERENT SENTENCE, NOT A DIFFERENT NUMBER IN THE SAME ONE. The scholarship

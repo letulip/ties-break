@@ -1390,7 +1390,7 @@ export const ECONOMY = {
   // AND WHEN IT ENDS IS HIS SECOND RULING: «Конец школы – в конце учебного года.» Not her birthday -
   // the school year containing it, which is what happens to a person and which the calendar already
   // has a boundary for (`SCHOOL_YEAR_TURNS_AT`, 1 September). `kidLife.ts`'s `gradeOf` has modelled
-  // exactly that since the School tile shipped, and it already returns null - "School's done" - past
+  // exactly that since the School tile shipped, and it already returns null - "School finished" - past
   // the last grade. Nothing else in the game read it. Now everything does.
   //
   // ⚠ THE LOAD HALF IS THE SUMMER BLOCK'S ARGUMENT WITH A LONGER WINDOW, AND IT IS DELIBERATELY THE

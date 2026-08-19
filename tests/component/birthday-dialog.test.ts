@@ -138,7 +138,7 @@ describe('BirthdayDialog – the four presents', () => {
     expect(card.attributes('aria-modal')).toBe('true')
     // Labelled by the two heading lines, in the order they are read.
     expect(card.attributes('aria-labelledby')).toBe('birthday-dialog-kicker birthday-dialog-title')
-    expect(w.find('#birthday-dialog-title').text()).toMatch(/She is \d+ today\./)
+    expect(w.find('#birthday-dialog-title').text()).toBe(snap.birthdayPrompt!.heading)
     w.unmount()
   })
 

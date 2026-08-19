@@ -12,7 +12,14 @@ import { TIERS } from '../season/calendar'
 import type { TierId } from '../season/types'
 import { rngFromSeed } from '../rng'
 import { resultShowsOnHerFace } from '../../shared/avatarEmotion'
-import type { ConditionBand, Milestone, TravelHomeMood, TravelHomeScene, WorldEvent } from '../../shared/protocol'
+import type {
+  ConditionBand,
+  DiaryLifeStage,
+  Milestone,
+  TravelHomeMood,
+  TravelHomeScene,
+  WorldEvent,
+} from '../../shared/protocol'
 import { tierFromEventId, conditionBandOf } from './facts'
 
 // --- the journey home (R14-2) ----------------------------------------------------------------
@@ -232,6 +239,9 @@ export interface TravelHomeFacts {
    *  `week - 1`", and once the two are the same number, keeping both is a lie waiting for the first
    *  reader who trusts the name. Everything that used it reads `week` now. */
   week: number
+  lifeStage: DiaryLifeStage
+  /** Her birthday can fall on a tournament week; the journey note owns the scrap on those weeks. */
+  birthdayAge: number | null
   scene: TravelHomeScene
   mood: TravelHomeMood
   tier: TierId
@@ -485,6 +495,8 @@ export function travelHomeFactsFor(args: {
   seed: string
   kidId: string
   condition: number
+  lifeStage: DiaryLifeStage
+  birthdayAge?: number | null
   /** the active injury the week she gets home, or null */
   injury: { totalWeeks: number } | null
   pendingUnfinished?: boolean
@@ -510,6 +522,8 @@ export function travelHomeFactsFor(args: {
   const retired = matches.some((e) => e.match!.retiredId === args.kidId)
   return {
     week: args.week,
+    lifeStage: args.lifeStage,
+    birthdayAge: args.birthdayAge ?? null,
     scene,
     mood: travelHomeMoodFor({ reachedFinal, condition: args.condition, seed: args.seed, week: args.week, retired }),
     tier,
@@ -538,4 +552,3 @@ export function travelHomeFactsFor(args: {
     conditionBand,
   }
 }
-

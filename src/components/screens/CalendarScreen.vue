@@ -214,7 +214,12 @@ const NOTE_MOOD: Record<DayKind, NoteMood> = {
 const fridgeNote = computed(() => {
   const snap = game.snapshot
   const week = calendar.value
-  return snap && week ? fridgeNoteFor(snap.seed, week.week, NOTE_MOOD[week.days[0]?.kind ?? 'court']) : ''
+  return snap && week
+    ? fridgeNoteFor(snap.seed, week.week,
+        NOTE_MOOD[week.days[0]?.kind ?? 'court'],
+        snap.diary.facts.lifeStage,
+      )
+    : ''
 })
 
 // --- (d) THE MARKER'S CARD ----------------------------------------------------------------------

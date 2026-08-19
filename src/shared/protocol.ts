@@ -907,6 +907,9 @@ export interface BirthdayPrompt {
   week: number
   /** the age she turns – `birthdayTurning`, which is day-exact since round-16 #100 */
   age: number
+  /** A deterministic, age-aware heading. The component does not flatten every year into the same
+   *  "She is N today" sentence. */
+  heading: string
   /** ⭐ what she has been asking for, in prose. EXACTLY ONE of the four options answers it, and
    *  nothing marks which (spec §2ab / §5.4). */
   ask: string
@@ -2144,11 +2147,18 @@ export type ConditionBand = 'fresh' | 'ok' | 'worn' | 'drained'
 /** How the family wallet is breathing, as a band – the diary never quotes the balance. */
 export type FundsPressure = 'tight' | 'watchful' | 'ok'
 
+/** The narrator's relationship to her week. Derived at snapshot time; never persisted. */
+export type DiaryLifeStage = 'school' | 'after-school' | 'college' | 'independent'
+
 /** Everything a diary phrase is allowed to know – assembled by the ENGINE at snapshot time, all
  *  read off facts that already exist on the world. A phrase is selected BY these and may assert
  *  nothing they do not carry (the honesty pin in tests/diary.test.ts sweeps exactly that). */
 export interface DiaryFacts {
   week: number
+  /** Her actual age and the corresponding narrative viewpoint. These keep a late-career diary
+   *  from observing a grown woman's homework, bedroom, or breakfast as if she still lived at home. */
+  ageYears: number
+  lifeStage: DiaryLifeStage
   /** the ONE face decision, computed engine-side (same inputs the paintings render).
    *  `PortraitEmotion`, not `AvatarEmotion`: the decision can land on the painting-only `rehab`
    *  (R14-1 – the layoff is a state and wears its own picture), and nothing renders a crop of it. */

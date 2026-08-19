@@ -1232,7 +1232,7 @@ export function migrateSave(raw: unknown): WorldState {
   // THE FACT NEEDS NO MIGRATION AND THAT IS WORTH SAYING FIRST. `schoolIsOver(week, birthMonth)` is a
   // pure function of two numbers a save has always carried, so the moment this build reads the
   // owner's twenty-two-year-old career the exam fortnight is gone, the calendar draws a
-  // professional's day and the School tile says "School's done". Nothing is stored and nothing can
+  // professional's day and the School tile says "School finished". Nothing is stored and nothing can
   // drift.
   //
   // WHAT THE MIGRATION IS FOR IS THE MOMENT. `markSchoolEnd` fires on exactly one week, and for every

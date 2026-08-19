@@ -3,7 +3,7 @@ type: context-pack
 status: current
 area: narrative
 canonical: true
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-19
 ---
 
 # Product and narrative context
@@ -22,14 +22,18 @@ last-reviewed: 2026-08-03
   check both against code before asserting implementation.
 - The August roadmap gives delivery ordering, but its schema numbers are planning-time and the
   runtime is far past them; reviews explain risks, they do not define the shipped set.
+- Family prose uses a DERIVED narrative stage, not a residence fact. From 22 the parent hears about
+  ordinary life through calls, messages and visits rather than sharing the household – so a late
+  career never observes her homework or her bedroom. Voice only: nothing persisted, no move event.
 
 ## Read order
 
 1. `README.md` and `docs/concept-ru.md` for the proposition (caveat above).
 2. `docs/lore/setting.md` for tone and art constraints.
 3. `docs/decisions.md` for owner decisions, newest applicable first.
-4. Current code: diary, kid life, milestones, knocks, sponsors, screens, protocol.
-5. Review chapters only when examining gaps or rationale.
+4. `docs/design/human-voice-guide.md` for the speaker and age-distance rules.
+5. Current code: diary, kid life, milestones, knocks, sponsors, screens, protocol.
+6. Review chapters only when examining gaps or rationale.
 
 ## Invariants
 
@@ -50,4 +54,3 @@ last-reviewed: 2026-08-03
 
 - Work changes the pitch, child agency, a terminal state, long-term memory, ethical framing or
   investor-facing claims.
-

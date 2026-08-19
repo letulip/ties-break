@@ -9,6 +9,7 @@
 import { resultShowsOnHerFace, type AvatarEmotion, type LastKidResult, type LastKidTitle } from '../../shared/avatarEmotion'
 import type {
   ConditionBand,
+  DiaryLifeStage,
   FundsPressure,
   Milestone,
   MilestoneType,
@@ -128,6 +129,10 @@ export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
 export interface DiaryWorldView {
   seed: string
   week: number
+  /** Current age and college status are carried only to choose an honest narrative viewpoint.
+   *  Neither is persisted by the diary. */
+  ageYears: number
+  inCollege: boolean
   /** W4-SCHOOL: is she past her last school year in THIS week? The diary owns no calendar
    *  arithmetic, so the answer arrives with the facts – `schoolIsOver(week, birthMonth)`. A view
    *  that omits it is a view about a schoolgirl, which is why it is required rather than optional:
@@ -193,6 +198,18 @@ export interface DiaryWorldView {
   birthdayWanted: boolean
   /** ⭐ v48: the age she was the last time she was given this exact thing, or null the first time. */
   birthdayRepeatAge: number | null
+}
+
+/** One derived answer for every diary surface that needs to know how close the parent is to the
+ *  ordinary week. Twenty-two is a voice boundary, not a new gameplay or save-system rule. */
+export function diaryLifeStageFor(
+  ageYears: number,
+  schoolOver: boolean,
+  inCollege: boolean,
+): DiaryLifeStage {
+  if (!schoolOver) return 'school'
+  if (inCollege) return 'college'
+  return ageYears >= 22 ? 'independent' : 'after-school'
 }
 
 /** Condition, as the word Home speaks (D3). The 80/60/40 rungs mirror the idle-emotion ladder

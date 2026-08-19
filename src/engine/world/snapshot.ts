@@ -677,6 +677,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   const diary = buildDiarySnapshot({
     seed: world.seed,
     week: world.week,
+    ageYears: kidAgeAt(world, world.week),
+    // Keep this structural instead of importing `inCollege`: college.ts already depends on this
+    // projection module for ladder presentation, and the diary must not create a runtime cycle.
+    inCollege: world.college !== null && world.week < world.college.untilWeek,
     schoolOver: schoolIsOver(world.week, world.profile.birthMonth),
     kidId: KID_ID,
     startAgeYears: START_AGE_YEARS,
@@ -750,7 +754,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // is a reporter and owns no catalogue: it is handed a NOUN and a pair of booleans, and prints them.
     //
     // ⚠ ALL THREE ARE NULL/FALSE UNTIL HE ANSWERS, and the note completing on the answer is the point –
-    // the birthday week's scrap says "She is sixteen today" while the dialog is up and gains the present
+    // the birthday week's scrap names her age while the dialog is up and gains the present
     // the moment he chooses one, which is the same week reading back richer rather than a second entry.
     ...birthdayGiftFactsOf(world),
     knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,

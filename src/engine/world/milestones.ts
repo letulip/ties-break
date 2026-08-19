@@ -64,7 +64,7 @@ export function captureMilestone(world: WorldState, m: Milestone): void {
  *  capture (41550 / e6b0c709) cannot see it. */
 export function markSchoolEnd(world: WorldState): void {
   if (world.week !== schoolEndWeek(world.profile.birthMonth)) return
-  fireMilestone(world, 'school', 'School is behind her. From Monday the mornings are hers too.')
+  fireMilestone(world, 'school', 'Last bell. From Monday the mornings are hers.')
   captureMilestone(world, { type: 'school', week: world.week })
 }
 

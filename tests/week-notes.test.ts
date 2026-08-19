@@ -70,6 +70,8 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
   const condition = over.condition ?? 70
   return {
     week: 20,
+    ageYears: 14,
+    lifeStage: 'school',
     emotion: 'norm',
     resultFresh: false,
     won: false,
@@ -343,6 +345,25 @@ describe('W2 — the ordinary week note is HONEST', () => {
       expect(licensed.length, 'a layoff week must still have words').toBeGreaterThan(0)
       for (const n of licensed) expect(n.claims.injured, `"${render(n, f)}" on a layoff week`).toBe(true)
     }
+  })
+
+  it('22+ weeks never borrow the schoolgirl or live-at-home voice', () => {
+    const adult = { ageYears: 24, lifeStage: 'independent' as const, schoolOver: true }
+    const weeks = [
+      homeWeek({ ...adult, trainPct: 85, condition: 50 }),
+      homeWeek({ ...adult, trainPct: 60 }),
+      homeWeek({ ...adult, injured: { kind: 'ankle strain', weeksRemaining: 3, totalWeeks: 6 } }),
+      homeWeek({ ...adult, knockChoice: 'rest', knockPart: 'ankle' }),
+      homeWeek({ ...adult, birthdayAge: 24 }),
+    ]
+    const lines = weeks.flatMap((f) => WEEK_NOTES.filter((n) => n.license(f)).map((n) => render(n, f)))
+    expect(lines.length).toBeGreaterThan(10)
+    for (const line of lines) {
+      expect(line, line).not.toMatch(
+        /homework|garage door|we said no|doctor's orders, and ours|taller than her mother|before we were up|machine has not stopped|spent on the sofa/i,
+      )
+    }
+    expect(lines.some((line) => /voice note|called|calendar|physio|her own/i.test(line))).toBe(true)
   })
 
   it('a hard week and an easy week can never be handed each other\'s words', () => {
