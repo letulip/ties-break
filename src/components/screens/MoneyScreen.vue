@@ -757,6 +757,7 @@ const TAB_OPTIONS = [
            `TAB_OPTIONS` in the script. The plate is off, per the Stats ruling - see .money-tabs. -->
       <SegmentedRow
         v-model="screenTab"
+        appearance="chapter"
         class="money-tabs"
         :options="TAB_OPTIONS"
         group-label="Which part of the budget"
@@ -1254,47 +1255,26 @@ const TAB_OPTIONS = [
 
 /* --- 1b. THE SECTION SWITCHER ------------------------------------------------------------------ */
 
-/* ⚠ NO PLATE AROUND THIS SWITCH, and it is the SAME ruling Stats carries (owner, 02.08: «Мне не
-   нравится круглая обводка у переключателя уровня турниров в stats, без нее было лучше... Давай
-   просто кнопки оставим и всё»). He ruled on a control, not on a screen: the app has ONE segmented
-   row, and a second instance of it that kept the panel fill and the hairline would be the app
-   disagreeing with itself two taps apart. Copied deliberately rather than shared, exactly as
-   `.stats-ladder-row` did it - scoped-over-shared wins on specificity ((0,2,0) with the data-v
-   attribute vs the sheet's (0,1,0)), so no `!important` and no edit to src/style.css.
-   ⚠ THE PERIOD SWITCH BELOW KEEPS ITS PLATE. That one is not the same object doing the same job:
-   these tabs are the page's own chapters, the 12w/season pills are a filter INSIDE one of them, and
-   the plate is what says so. Two identical-looking rows stacked six pixels apart would read as one
-   broken control. */
+/* ⚠ BOTH RULINGS MOVED TO THE CONTROL (DRY-8, 19.08). The plate coming off (owner, 02.08) is
+   `SegmentedRow`'s `appearance="bare"`; the bigger touch target for a page's chapter picker (owner,
+   05.08, naming this screen and the settings together) is `appearance="chapter"`. Both live once in
+   `src/style.css`, with the measurement and the "not globally" argument beside them - this screen,
+   Stats and More had each carried a private copy, and the `:deep(.tab-pill)` escape each needed is
+   gone with them.
+
+   ⚠ THE PERIOD SWITCH BELOW KEEPS ITS PLATE, and that is the whole reason `chapter` is opt-in rather
+   than a global pill size. That one is not the same object doing the same job: these tabs are the
+   page's own chapters, the 12w/season pills are a filter INSIDE one of them, and the plate is what
+   says so. Two identical-looking rows stacked six pixels apart would read as one broken control.
+
+   WHAT STAYS HERE is the gap under the switcher, which is this page's rhythm: «и с отступом внизу
+   небольшим» (owner, 05.08). The switcher had none at all, so the first block of whichever chapter
+   is open opened flush against the pills. The same 14px `.more-tabs` has carried since it shipped,
+   so the two screens he named in one sentence breathe the same amount. */
 .money-tabs {
-  padding: 0;
-  border: none;
-  border-radius: 0;
-  background: none;
-  /* «и с отступом внизу небольшим» (owner, 05.08). The switcher had none at all, so the first block
-     of whichever chapter is open opened flush against the pills. Same 14px `.more-tabs` has carried
-     since it shipped, so the two screens he named in one sentence breathe the same amount. */
   margin-bottom: 14px;
 }
 
-/* ⚠ BIGGER, BECAUSE 27px IS NOT A TOUCH TARGET (owner, 05.08: «Верхние переключатели-вкладки в
-   ledger и настройках сделать немного крупнее и с отступом внизу небольшим»). MEASURED in the
-   browser at his own 576-wide viewport before touching anything: the pill was 27px tall - against
-   51px for the bottom bar's `.tab-btn`, which is the app's own answer to "how big is a thing you
-   navigate with", and against the 44px both platform guidelines ask for. It was the smallest
-   control on the page by a wide margin.
-
-   ⚠ AND IT IS SCOPED TO THE CHAPTER PICKERS, NOT TO `.tab-pill`. The shared pill in src/style.css
-   is also the draw's round switcher and the 12w/season filter six pixels below this row - growing
-   it globally would inflate a filter INSIDE a chapter to the size of the chapter picker above it,
-   which is the "two identical-looking rows stacked six pixels apart" the note above is about. So
-   the same copy-not-share the four declarations above already use, for the same reason.
-
-   `:deep`, because the pills are SegmentedRow's children: a scoped selector reaches the child's
-   ROOT (which is why the block above works unaided) and stops there. */
-.money-tabs :deep(.tab-pill) {
-  padding: 10px 18px;
-  font-size: 14px;
-}
 
 /* --- 3. THE PERIOD ---------------------------------------------------------------------------- */
 

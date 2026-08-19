@@ -2444,6 +2444,54 @@ tr.kid-row td {
   background: var(--bg);
 }
 
+/* ⭐⭐ THE PLATE COMES OFF (DRY-8 of the August review, consolidated 19.08). The owner, 02.08: «Мне
+   не нравится круглая обводка у переключателя уровня турниров в stats, без нее было лучше... Давай
+   просто кнопки оставим и всё».
+
+   He ruled on a CONTROL and not on a screen, and that is exactly why this belongs here. Three
+   screens – Stats, Money and More – had each copied these four declarations privately, each with its
+   own note making the same specificity argument, because the app has ONE segmented row and a second
+   instance of it that kept the panel fill and the hairline would be the app disagreeing with itself
+   two taps apart.
+
+   ⚠ IT IS OPT-IN AND NOT GLOBAL, which is the objection those three private copies were protecting:
+   the shared plate is also the draw's round switcher and the 12w/season filter, and both keep it.
+   `SegmentedRow`'s `appearance` prop is what asks. Shared `.tab-row.as-bare` is (0,2,0) against the
+   plate's (0,1,0), so it wins on specificity with no `!important` – the same argument each copy used
+   to make with a scoped data-v attribute, now made once.
+
+   ⚠ NO MARGIN HERE. The gap under one of these rows is PAGE RHYTHM and stays with the page: Stats
+   spaces itself by 10px (and its own note explains why that number lives on the switcher rather than
+   on what follows it), the two screens the owner named together by 14px. */
+.tab-row.as-bare {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+/* ⭐ ...AND A ROW THAT PICKS THE PAGE'S CHAPTERS IS ALSO A REAL TOUCH TARGET. A second, narrower
+   ruling – the owner, 05.08: «Верхние переключатели-вкладки в ledger и настройках сделать немного
+   крупнее и с отступом внизу небольшим».
+
+   MEASURED IN THE BROWSER at his own 576-wide viewport before anything moved: the pill was 27px
+   tall, against 51px for the bottom bar's `.tab-btn` – the app's own answer to "how big is a thing
+   you navigate with" – and against the 44px both platform guidelines ask for. It was the smallest
+   control on the page by a wide margin.
+
+   ⚠ SCOPED TO THE CHAPTER PICKERS, NEVER TO `.tab-pill` ITSELF. The shared pill is also the draw's
+   round switcher and the 12w/season filter SIX PIXELS BELOW one of these rows; growing it globally
+   would inflate a filter INSIDE a chapter to the size of the chapter picker above it, and two
+   identical-looking rows stacked six pixels apart read as one broken control.
+
+   ⚠ AND STATS IS DELIBERATELY NOT HERE. It takes `as-bare` alone: the 02.08 plate ruling covers
+   every one of these rows, but this one named the ledger and the settings, and growing a third
+   control he did not ask about would be inventing a decision rather than recording one. */
+.tab-row.as-chapter .tab-pill {
+  padding: 10px 18px;
+  font-size: 14px;
+}
+
 .tab-pill {
   border: none;
   border-radius: var(--radius-pill);
