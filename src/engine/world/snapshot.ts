@@ -63,6 +63,8 @@ import { buildTourBriefing } from './mandatory'
 import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
+import { alternateQueuePosition } from './ladder'
+import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus } from './medical'
@@ -289,6 +291,11 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // A fatigued event is a CAUTION, not a block: she stays eligible. Only a HARD block
         // (point band, injured, unavailable, medical) removes eligibility.
         eligible: gate.level !== 'blocked',
+        // ⭐ THE ALTERNATES LIST, ON THE CARD (18.08). Both numbers, so a parent can read "two places
+        // open, you are first in line" before she commits - see `UpcomingEvent.alternateQueue`. The
+        // queue is arithmetic; the open chairs are the field's own withdrawals, drawn once per event.
+        alternateQueue: alternateQueuePosition(world, e.tier),
+        alternatesOpen: alternatePlacesOpen(world.seed, e),
         // R10-13: the entry is COMMITTED (the list has closed) but the week has not started yet –
         // the only window in which cancelling costs the fee and frees the week. Every row here is
         // a FUTURE week by construction, so the closed list is the whole condition.

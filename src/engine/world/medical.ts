@@ -20,6 +20,7 @@ import { schoolIsOver } from '../kidLife'
 import type { LadderTrack, SeasonEvent } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
 import { kidAgeAt } from './age'
+import { alternateListPlace } from './ladder'
 import {
   entryCapUsage,
   proEntryCapUsage,
@@ -587,7 +588,12 @@ function entryVerdict(world: WorldState, event: SeasonEvent): EntryStatus {
     // and `wildCardWindow` inside it is the same function the AI draw's eight held places are
     // filled by; see season/tournament.ts.
     const wildCard = homeWildCardPlace(world, event.tier, event.id)
-    if ((!ranked || rank > accepts) && !reserved && !wildCard) {
+    // ⭐ THE ALTERNATES LIST (18.08) – the rung's middle, and the one door that can open BETWEEN weeks
+    // without her rank moving. Four places below the cut she stands in a queue; she takes a chair when
+    // enough of the field withdrew. `tierFloorOpen` asks the same function, so the calendar and this
+    // turnstile cannot disagree - the mistake the wild card made earlier the same day.
+    const alternate = alternateListPlace(world, event.tier, event.id)
+    if ((!ranked || rank > accepts) && !reserved && !wildCard && !alternate) {
       const cut = ranked
         ? `${tier.label} takes the top ${accepts} – she is #${rank}`
         : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`

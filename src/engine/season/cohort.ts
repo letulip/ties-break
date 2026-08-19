@@ -6,6 +6,7 @@ import { rngFromSeed, pickInt, type Rng } from '../rng'
 import type { AiPlayer } from './types'
 // Task 55: the same head-start pricing the kid uses. One number, one meaning - see `applyRelativeAge`.
 import { relativeAgeHeadStart } from '../development'
+import { rivalGroundstrokes } from './rival'
 import { FIRST_NAMES, NATION_POOL, SURNAMES } from './names'
 
 // ⚠ THE NAME POOLS MOVED OUT, AND THE RE-EXPORT IS WHY NOTHING ELSE CHANGED (TB-07). FIRST_NAMES,
@@ -187,7 +188,30 @@ export function applyRelativeAge(p: AiPlayer, seedStr: string): void {
  *  decide who is worth continuing for; nothing else in the engine needs a single "how good is she"
  *  number, which is why it lives here and not in the match model. */
 export function power(p: AiPlayer): number {
-  return (p.serve + p.ret + p.composure + p.stamina) / 4
+  // ⚠⚠ EVERY SKILL, AND IT USED TO BE FOUR (18.08). This read `(serve + ret + composure + stamina) / 4`
+  // and silently dropped GROUNDSTROKES – the attribute the match engine weighs most heavily through the
+  // rally. The owner asked for it directly: «хотелось бы, чтобы наши формулы учитывали в себе влияние
+  // всех показателей скиллов».
+  //
+  // ⚠ THE DEFECT IT CAUSED WAS A MEASUREMENT ONE, WHICH IS WORSE THAN A BALANCE ONE. A career is BANDED
+  // by talent on `ceilingOf` (all five) and JUDGED by the match engine (all five), but the FIELD was
+  // built and ranked on four - so a girl whose strength sits in her groundstrokes was priced as weaker
+  // than she plays. Measured on the owner's own save: Ines' `power()` of 57.3 prices her at about #40-45
+  // while her match rating of 1936 is worth roughly #14, and her profile shape alone is worth +140 Elo -
+  // the top 0.1% of a 1,600-strong field, where the field's own shape averages zero by construction.
+  //
+  // ⚠⚠ AND IT IS NOT `SKILL_KEYS`, WHICH THE COMPILER REFUSED AND WAS RIGHT TO. `AiPlayer` is declared
+  // `Omit<MatchPlayer, 'groundstrokes' | 'age'>` and that Omit is LOAD-BEARING: `driftCohort` spends
+  // exactly four MAIN draws per rival, and `52 x (4 x 199 + 3) + 2 = 41550` is literally what the
+  // frozen capture `e6b0c709` is made of. A fifth STORED attribute would want a fifth weekly draw and
+  // move it. So a rival's fifth skill is DERIVED at match time and this reads the same derivation the
+  // match itself reads - `rivalGroundstrokes`, off her own `gs:<id>` sub-stream, zero MAIN draws.
+  //
+  // ⚠ ONE DEFINITION, WHICH IS THE OTHER HALF OF THE INSTRUCTION - «нам точно нужен один источник
+  // истины везде без дублей кода». The four-attribute mean had been copied by hand into seven other
+  // places and `tools/kit-bench.ts` had already drifted to five, so the tools disagreed with the engine
+  // and with each other. They now call this.
+  return (p.serve + p.ret + p.composure + p.stamina + rivalGroundstrokes(p)) / 5
 }
 
 // driftCohort – the cohort's development, and since v20 it has the same SHAPE as the kid's.

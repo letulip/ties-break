@@ -12,6 +12,7 @@
 // from the ledger, so the frozen MAIN capture cannot notice this file.
 
 import { TIERS, TIER_LADDER, hasAcceptanceList, isJuniorAge, isTierAgeOpen, isWSeriesTier } from '../season/calendar'
+import { ALTERNATES, alternatePlacesOpen } from '../season/tournament'
 import { WILD_CARD, hostNationOf, wildCardWindow } from '../season/tournament'
 import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
 import type { LadderTrack, RankingRow, TierId } from '../season/types'
@@ -661,6 +662,39 @@ export function homeWildCardPlace(world: WorldState, tier: TierId, eventId?: str
   return hostNationOf(world.seed, eventId) === world.profile.country
 }
 
+/** ⭐⭐ THE ALTERNATES LIST – her queue position below the cut, and whether the queue has reached her.
+ *
+ *  Returns 0 when she is not on the list at all; otherwise her place in it, 1-based. `1` means she is
+ *  first in line. The CALLER compares that against `alternatePlacesOpen` – see `alternateListPlace`.
+ *
+ *  ⚠⚠ PURE ARITHMETIC OFF THE TABLE, AND THAT IS THE OWNER'S WHOLE POINT. The world rolls how many
+ *  players withdrew; her position among those waiting is her rank minus the cut and nothing else. She
+ *  can read it on the card before she commits, which is what makes this MORE plannable than the cliff
+ *  it replaces rather than less - «доп. окно допуска… тогда как раз и проще планировать будет».
+ *
+ *  ⚠ IT NEEDS A REAL PROFESSIONAL RANKING, the same guard `meetsAcceptanceCut` carries: with nobody
+ *  holding a point the field ties at zero and an unranked fourteen-year-old reads as world #1, which
+ *  would put her first in every queue in the game. */
+export function alternateQueuePosition(world: WorldState, tier: TierId): number {
+  const accepts = acceptanceRank(world, tier)
+  if (accepts === undefined) return 0
+  if (kidPoints(world, 'wta') <= 0) return 0
+  const rank = world.kidRankWta ?? tableSize(world, 'wta')
+  if (rank <= accepts) return 0
+  const behind = rank - accepts
+  return behind <= ALTERNATES.places ? behind : 0
+}
+
+/** ...and whether the queue actually reached her at THIS event: she is on the list and enough chairs
+ *  opened. Both halves are visible to her before she decides – `Snapshot` carries them. */
+export function alternateListPlace(world: WorldState, tier: TierId, eventId?: string): boolean {
+  const queue = alternateQueuePosition(world, tier)
+  if (queue === 0) return false
+  const event = eventId === undefined ? null : world.season.find((e) => e.id === eventId)
+  if (event === null || event === undefined) return false
+  return queue <= alternatePlacesOpen(world.seed, event)
+}
+
 /** HER OWN WAY IN: the rung's published acceptance cut, read against the W table. Extracted so the
  *  ordinary door and the reserved place are the SAME sentence in both places that ask – `tierFloorOpen`
  *  returns it and `juniorAccessOpen` offers it first, and one expression cannot disagree with itself. */
@@ -712,10 +746,16 @@ export function tierFloorOpen(world: WorldState, tier: TierId, eventId?: string)
     // scan, `tierOutgrown` – so all of them read exactly the acceptance cut they read before and
     // this line is provably inert for them. It is the TURNSTILE that names an event, and
     // `entryVerdict` asks the same three doors in the same order.
+    // ⭐ AND A FOURTH SINCE 18.08 – THE ALTERNATES LIST, which is the rung's MIDDLE. Above the cut she
+    // enters; within four places below it she is in the queue, and she takes a chair when enough of
+    // the field withdrew. Asked here as well as at the turnstile on the lesson the wild card taught
+    // the same day: a door the calendar does not know about shows her a SHUT rung and admits her
+    // anyway. See `alternateQueuePosition` - her place in the queue is arithmetic, never a roll.
     return (
       meetsAcceptanceCut(world, tier) ||
       juniorReservedPlace(world, world.week, tier) ||
-      homeWildCardPlace(world, tier, eventId)
+      homeWildCardPlace(world, tier, eventId) ||
+      alternateListPlace(world, tier, eventId)
     )
   }
   // ⚠⚠ THE FLOOR HALF ONLY, AND THIS LINE IS WHERE THE 06.08 RULING NEARLY LEAKED PAST. It read

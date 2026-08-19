@@ -1067,6 +1067,19 @@ export interface UpcomingEvent {
   week: number
   tier: TierId
   surface: Surface
+  /** ⭐⭐ THE ALTERNATES LIST, 18.08 – her place in the queue below this rung's cut (1 = first in
+   *  line, 0 = not on the list at all) and how many chairs the field's withdrawals have opened.
+   *
+   *  ⚠⚠ BOTH NUMBERS ARE HERE SO THE CARD CAN SHOW THEM BEFORE SHE COMMITS, WHICH IS THE WHOLE
+   *  DESIGN. The owner refused a probabilistic tail twice because «заявка станет частично броском
+   *  кубика, а это реальная потеря в игре про планирование сезона», and accepted this because the
+   *  numbers are readable in advance: "two places open, you are first in line" is something a parent
+   *  can plan a season around, and a hard cut tells her nothing about next week.
+   *
+   *  The world rolls `alternatesOpen` – a fact about the FIELD, on its own event-keyed sub-stream.
+   *  `alternateQueue` is arithmetic off the table and never rolls. */
+  alternateQueue: number
+  alternatesOpen: number
   /** what the Season card may say about an event she has not played: her odds in ROUND ONE against
    *  the field as it would be drawn today, who that opponent would be, how strong the field is, and
    *  two decorative readings (the temperature and the crowd). Derived at snapshot time, persists
