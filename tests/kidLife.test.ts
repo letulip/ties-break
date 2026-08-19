@@ -141,15 +141,15 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
     expect(lastTerm.lead).toBe('12th grade')
     const done = schoolTile(view({ week: 52 * 4 + SCHOOL_YEAR_TURNS_AT, birthMonth: 3 }))
     expect(view({ week: 52 * 4 + SCHOOL_YEAR_TURNS_AT }).ageYears).toBe(18)
-    expect(done.lead).toBe("School's done")
-    expect(done.note).toBe('Tennis full-time')
+    expect(done.lead).toBe('School finished')
+    expect(done.note).toBe('No more bells')
   })
 
   it('every month of every season of a career produces a real grade or a real ending', () => {
     for (let birthMonth = 1; birthMonth <= 12; birthMonth++) {
       for (let week = 0; week < 52 * 6; week += 7) {
         const tile = schoolTile(view({ week, birthMonth }))
-        expect(tile.lead, `m${birthMonth} w${week}`).toMatch(/^(\d+(st|nd|rd|th) grade|School's done)$/)
+        expect(tile.lead, `m${birthMonth} w${week}`).toMatch(/^(\d+(st|nd|rd|th) grade|School finished)$/)
         expect(tile.note.length, `m${birthMonth} w${week}`).toBeGreaterThan(0)
       }
     }

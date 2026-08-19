@@ -29,7 +29,7 @@ export interface DiaryClaims {
   /** asserts SHE HAS A BIRTHDAY this week - unselectable unless `birthdayAge` is non-null.
    *
    *  ⚠ ALWAYS PAIRED WITH `affect: 'neutral'`, and that is the point rather than a shrug. The pin refuses a
-   *  positive-affect line on a sad, angry or laid-up week, and rightly - but "She is fifteen today" makes no
+   *  positive-affect line on a sad, angry or laid-up week, and rightly - but "Fifteen today" makes no
    *  claim about how the week went. It is a fact, true whether she won, lost or is in a brace, and neutral
    *  affect is what lets it survive a bad week without lying about one. */
   birthday?: true
@@ -79,6 +79,10 @@ export interface DiaryPhrase {
   license: (f: DiaryFacts) => boolean
 }
 
+const familyHomeVoice = (f: DiaryFacts): boolean =>
+  f.lifeStage === 'school' || f.lifeStage === 'after-school'
+const independentVoice = (f: DiaryFacts): boolean => f.lifeStage === 'independent'
+
 
 // The Diary-1 pool. ~60 lines across the three surfaces (memory lines live in MEMORY_LINES below
 // – they read a Milestone, not the week's facts). Every line: player-facing English, short dash,
@@ -92,20 +96,32 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
   // only place the game can say her birth month somewhere he will actually look.
   //
   // NO `affect` CLAIM, deliberately. The honesty pin refuses a positive-affect line on a sad, angry or
-  // laid-up week, and rightly - but "She is fifteen today" is not a claim about how the week went. It is a
+  // laid-up week, and rightly - but "Fifteen today" is not a claim about how the week went. It is a
   // fact, and it is true whether she won, lost or is in a brace. Claiming `birthday` and nothing else is
   // what lets it survive a bad week without lying about one.
   {
     surface: 'photo',
-    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. Somehow already.`,
     claims: { affect: 'neutral', birthday: true },
-    license: (f) => f.birthdayAge !== null,
+    license: (f) => f.birthdayAge !== null && familyHomeVoice(f),
   },
   {
     surface: 'photo',
-    text: (f) => `She is ${ageWord(f.birthdayAge)}.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. The candles made it official.`,
     claims: { affect: 'neutral', birthday: true },
-    license: (f) => f.birthdayAge !== null,
+    license: (f) => f.birthdayAge !== null && familyHomeVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. We found a gap in her calendar.`,
+    claims: { affect: 'neutral', birthday: true },
+    license: (f) => f.birthdayAge !== null && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. Cake when she could make it.`,
+    claims: { affect: 'neutral', birthday: true },
+    license: (f) => f.birthdayAge !== null && independentVoice(f),
   },
   // --- photo card (D2): fresh WIN --------------------------------------------------------------
   { surface: 'photo', text: "Can't stop smiling.", claims: { affect: 'positive', won: true }, license: (f) => f.won },
@@ -119,19 +135,31 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'She replayed the last point for us at dinner – twice.',
     claims: { affect: 'positive', won: true },
-    license: (f) => f.won,
+    license: (f) => f.won && familyHomeVoice(f),
   },
   {
     surface: 'photo',
     text: 'The trophy went straight onto the kitchen table.',
     claims: { affect: 'positive', won: true, title: true },
-    license: (f) => f.won && f.titleThisWeek,
+    license: (f) => f.won && f.titleThisWeek && familyHomeVoice(f),
   },
   {
     surface: 'photo',
     text: 'She fell asleep holding the draw sheet.',
     claims: { affect: 'positive', won: true, title: true },
     license: (f) => f.won && f.titleThisWeek,
+  },
+  {
+    surface: 'photo',
+    text: 'A voice note after the last point. Mostly laughing.',
+    claims: { affect: 'positive', won: true },
+    license: (f) => f.won && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'The trophy appeared in a photo before she did.',
+    claims: { affect: 'positive', won: true, title: true },
+    license: (f) => f.won && f.titleThisWeek && independentVoice(f),
   },
   // --- photo card: runner-up (serious by R8-6a) ------------------------------------------------
   // R13-4: a final lost is a GOOD result and deserves its own words – the pool grew, and while it
@@ -210,32 +238,50 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'She went straight to her room after dinner.',
     claims: { affect: 'negative', lost: true },
-    license: (f) => f.resultFresh && f.emotion === 'sad',
+    license: (f) => f.resultFresh && f.emotion === 'sad' && familyHomeVoice(f),
   },
   {
     surface: 'photo',
     text: 'Quiet in the car. Quiet at the table.',
     claims: { affect: 'negative', lost: true },
-    license: (f) => f.resultFresh && f.emotion === 'sad',
+    license: (f) => f.resultFresh && f.emotion === 'sad' && familyHomeVoice(f),
   },
   {
     surface: 'photo',
     text: 'Her bag is still packed by the door.',
     claims: { affect: 'negative', lost: true },
-    license: (f) => f.resultFresh && f.emotion === 'sad',
+    license: (f) => f.resultFresh && f.emotion === 'sad' && familyHomeVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'One short message: home safe. Nothing about the match.',
+    claims: { affect: 'negative', lost: true },
+    license: (f) => f.resultFresh && f.emotion === 'sad' && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'She called from the car park and talked about the weather.',
+    claims: { affect: 'negative', lost: true },
+    license: (f) => f.resultFresh && f.emotion === 'sad' && independentVoice(f),
   },
   // --- photo card: the crossing (angry) --------------------------------------------------------
   {
     surface: 'photo',
     text: 'The bag hit the hallway floor harder than it needed to.',
     claims: { affect: 'negative', lost: true, angry: true },
-    license: (f) => f.emotion === 'angry',
+    license: (f) => f.emotion === 'angry' && familyHomeVoice(f),
   },
   {
     surface: 'photo',
     text: 'She slammed the car door. We let it go.',
     claims: { affect: 'negative', lost: true, angry: true },
     license: (f) => f.emotion === 'angry',
+  },
+  {
+    surface: 'photo',
+    text: 'The call lasted nineteen seconds. We let it be enough.',
+    claims: { affect: 'negative', lost: true, angry: true },
+    license: (f) => f.emotion === 'angry' && independentVoice(f),
   },
   // --- photo card: THE MOMENT she got hurt ------------------------------------------------------
   // R14-1: these three lines all read `emotion === 'injury'` when that was one meaning wearing two
@@ -248,7 +294,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'The ice pack lives on the kitchen counter now.',
     claims: { affect: 'negative', injured: true, justHurt: true },
-    license: justHurt,
+    license: (f) => justHurt(f) && familyHomeVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'The first photo was of the ice pack, not the injury.',
+    claims: { affect: 'negative', injured: true, justHurt: true },
+    license: (f) => justHurt(f) && independentVoice(f),
   },
   // --- photo card: the LAYOFF (idle rehab) ------------------------------------------------------
   // ...and these two are about the weeks that follow. Watching from the bench and counting down are
@@ -271,7 +323,7 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'Asleep before nine, two nights running.',
     claims: { affect: 'negative', tired: true },
-    license: (f) => f.emotion === 'tired',
+    license: (f) => f.emotion === 'tired' && familyHomeVoice(f),
   },
   {
     surface: 'photo',
@@ -285,6 +337,12 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'negative', tired: true },
     license: (f) => f.emotion === 'tired',
   },
+  {
+    surface: 'photo',
+    text: 'Her replies arrived the next morning.',
+    claims: { affect: 'negative', tired: true },
+    license: (f) => f.emotion === 'tired' && independentVoice(f),
+  },
   // --- photo card: composed but low (idle serious, 40-59) --------------------------------------
   {
     surface: 'photo',
@@ -296,7 +354,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'Focused, and a little far away at dinner.',
     claims: { affect: 'neutral', tired: true },
-    license: (f) => !f.resultFresh && f.emotion === 'serious',
+    license: (f) => !f.resultFresh && f.emotion === 'serious' && familyHomeVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'She called, then changed the subject before we could ask.',
+    claims: { affect: 'neutral', tired: true },
+    license: (f) => !f.resultFresh && f.emotion === 'serious' && independentVoice(f),
   },
   // --- photo card: the week itself (idle norm, something domestic happened) --------------------
   {
@@ -364,7 +428,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'We talk about money after she goes to bed.',
     claims: { affect: 'negative', fundsTight: true },
-    license: (f) => f.fundsPressure === 'tight' && !f.resultFresh && f.emotion !== 'happy',
+    license: (f) => familyHomeVoice(f) && f.fundsPressure === 'tight' && !f.resultFresh && f.emotion !== 'happy',
+  },
+  {
+    surface: 'photo',
+    text: 'We talk about money after the call ends.',
+    claims: { affect: 'negative', fundsTight: true },
+    license: (f) => independentVoice(f) && f.fundsPressure === 'tight' && !f.resultFresh && f.emotion !== 'happy',
   },
   // --- photo card: an ordinary week (idle norm) – lines AND silences ---------------------------
   // R13-10 (owner, first Diary-1 playtest: «там же тоже жизнь продолжается»): the ordinary-week
@@ -389,7 +459,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'An ordinary week – practice, pasta, an early night.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm' && f.schoolOver,
+    license: (f) => quiet(f) && f.emotion === 'norm' && f.lifeStage === 'after-school',
+  },
+  {
+    surface: 'photo',
+    text: 'An ordinary week – practice, errands, an early night.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
   },
   {
     surface: 'photo',
@@ -401,19 +477,19 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'Homework at the kitchen table, racquet by the door.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && f.lifeStage === 'school',
   },
   {
     surface: 'photo',
     text: 'She missed the bus and ran for it, laughing.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && f.lifeStage === 'school',
   },
   {
     surface: 'photo',
     text: 'Pasta again. Nobody complained.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && familyHomeVoice(f),
   },
   {
     surface: 'photo',
@@ -425,7 +501,7 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'Her phone buzzed all evening. The homework got done anyway.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && f.lifeStage === 'school',
   },
   {
     surface: 'photo',
@@ -437,19 +513,67 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'photo',
     text: 'Groceries together on Saturday. She pushed the cart.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && familyHomeVoice(f),
   },
   {
     surface: 'photo',
     text: 'A new month on the kitchen calendar. The same routine.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && familyHomeVoice(f),
   },
   {
     surface: 'photo',
     text: 'Warm evenings – dinner ran long on the balcony.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.emotion === 'norm',
+    license: (f) => quiet(f) && f.emotion === 'norm' && familyHomeVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'A voice note from the supermarket: no milk, plenty of string.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'She called while cooking. Something burned; the story survived.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'Her washing machine lost a fight with red clay.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'A spare key on her own ring. We are still getting used to that.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'She came by for twenty minutes and stayed for dinner.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'The family chat got one photo: racquet, coffee, rain.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'She forgot to call. Then called twice on Sunday.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
+  },
+  {
+    surface: 'photo',
+    text: 'Her calendar said rest. She said errands counted.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm' && independentVoice(f),
   },
   // Four deliberate silences against the twelve lines above: roughly one quiet week in four says
   // nothing at all (R13-10 – down from one-in-two).
@@ -565,7 +689,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'condition',
     text: 'Off-season – rest, family, and the block where next year gets built.',
     claims: { affect: 'neutral', offSeason: true },
-    license: (f) => f.offSeasonWeek && f.injured === null && !f.vacationWeek && f.schoolOver,
+    license: (f) => f.offSeasonWeek && f.injured === null && !f.vacationWeek && f.lifeStage === 'after-school',
+  },
+  {
+    surface: 'condition',
+    text: 'Off-season – rest, errands, and the block where next year gets built.',
+    claims: { affect: 'neutral', offSeason: true },
+    license: (f) => f.offSeasonWeek && f.injured === null && !f.vacationWeek && independentVoice(f),
   },
   {
     surface: 'condition',
@@ -592,7 +722,13 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     surface: 'condition',
     text: 'Training, sleep, repeat.',
     claims: { affect: 'neutral', quietWeek: true },
-    license: (f) => quiet(f) && f.schoolOver,
+    license: (f) => quiet(f) && f.lifeStage === 'after-school',
+  },
+  {
+    surface: 'condition',
+    text: 'Training, laundry, sleep, repeat.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && independentVoice(f),
   },
   {
     surface: 'condition',

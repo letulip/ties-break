@@ -119,7 +119,7 @@ const DAY_TOGETHER: BirthdayGift = {
   note: 'No present at all. The whole day, and nothing else in the calendar.',
   again: 'The same as last time, and she asked for it again. The whole day, nothing in the calendar.',
   repeat: 'repeatable',
-  ask: 'She has not asked for a thing. One day, she said – not a week, not a trip. One day, and nothing else in the calendar.',
+  ask: 'When we asked, she shook her head: no thing. One day – not a week, not a trip. One day, with nothing else in the calendar.',
   short: BIRTHDAY_DAY_NOUN,
 }
 
@@ -148,7 +148,7 @@ const BANDS: Band[] = [
         repeat: 'durable',
         // ⚠ "Every single week" was the tail of this ask and it is gone: a scale word in an ask that
         // has nothing to do with scale is a red herring in a band where the DAY is one of the four.
-        ask: 'She has been asking for a bicycle since the spring. She has not once let it drop.',
+        ask: 'The bicycle has been on her list since spring. She has not once let it drop.',
         short: 'the bicycle',
       },
       {
@@ -157,7 +157,7 @@ const BANDS: Band[] = [
         note: 'Everyone in her year has one. She has mentioned that.',
         again: 'She has a phone from us already. This would be the one that survives a season on the road.',
         repeat: 'durable',
-        ask: 'She has been asking for a phone of her own. She has a list of reasons, and they are all quite good.',
+        ask: 'Her case for a phone of her own now has headings. Annoyingly, most of them are good.',
         short: 'the phone',
       },
       {
@@ -170,7 +170,7 @@ const BANDS: Band[] = [
         note: 'No racquet in it anywhere. Hers to be bad at, with nobody watching.',
         again: 'She had paints from us before. She used every one of them up.',
         repeat: 'repeatable',
-        ask: 'She has been asking for paints. Proper ones, she says, and a pad big enough for them.',
+        ask: 'Proper paints, she said. And a pad big enough to make a mess on.',
         short: 'the paints',
       },
       {
@@ -179,7 +179,7 @@ const BANDS: Band[] = [
         note: 'Her first one that was not handed down from somebody.',
         again: 'There is a bag from us in the hall already. This one would be the bigger.',
         repeat: 'durable',
-        ask: 'She has been asking for a bag of her own – the one she carries was somebody else\'s first.',
+        ask: 'The bag she carries was somebody else\'s first. She would like one that begins with her.',
         short: 'the bag',
       },
       {
@@ -188,7 +188,7 @@ const BANDS: Band[] = [
         note: 'She has known the name since she was nine.',
         again: 'There is one on her wall from us already. This would be the next one along.',
         repeat: 'durable',
-        ask: 'She has been asking for a poster of the player she has followed since she was nine.',
+        ask: 'That player has been her answer since she was nine. The poster is apparently overdue.',
         short: 'the poster',
       },
     ],
@@ -204,7 +204,7 @@ const BANDS: Band[] = [
         note: 'Airports, coaches, waiting rooms, other people\'s warm-ups.',
         again: 'She has a pair from us already. She also left them in an airport in the spring.',
         repeat: 'durable',
-        ask: 'She has been asking for headphones. She says the airports are the worst part.',
+        ask: 'Airports are the worst part, she says. Headphones would make them bearable.',
         short: 'the headphones',
       },
       {
@@ -213,7 +213,7 @@ const BANDS: Band[] = [
         note: 'She has started taking pictures of everywhere she goes.',
         again: 'She has a camera from us already. This would be the lens she keeps mentioning.',
         repeat: 'durable',
-        ask: 'She has been asking for a camera. She has started photographing every town we land in.',
+        ask: 'Every town now gets photographed on her phone. A camera, she says, would make her do it properly.',
         short: 'the camera',
       },
       {
@@ -222,7 +222,7 @@ const BANDS: Band[] = [
         note: 'She has been borrowing ours all season.',
         again: 'She has one from us already, and it has been round the world since.',
         repeat: 'durable',
-        ask: 'She has been asking for a suitcase of her own. She has borrowed ours all season.',
+        ask: 'Our suitcase has quietly become hers. She thinks we should admit it and buy her one.',
         short: 'the suitcase',
       },
       {
@@ -233,7 +233,7 @@ const BANDS: Band[] = [
         // players every time, which is the whole of why she wants to go.
         again: 'We did this before and she still talks about it. Somebody else this time.',
         repeat: 'repeatable',
-        ask: 'She has been asking to go and WATCH a tournament. Not play in one. Watch one.',
+        ask: 'For once she wants to WATCH a tournament. Not enter, not warm up, not check in. Watch.',
         short: 'the tickets',
       },
     ],
@@ -257,7 +257,7 @@ const BANDS: Band[] = [
         note: 'Her hand on it in the shop, not ours. She picks.',
         again: 'There is one she chose with us already. This one she would choose alone.',
         repeat: 'durable',
-        ask: 'She has been asking to choose her own frame. With us, she says – but her choosing.',
+        ask: 'At the shop her hand stayed on one frame. With us, she said – but her choosing.',
         short: 'the frame she chose',
       },
       {
@@ -266,7 +266,7 @@ const BANDS: Band[] = [
         note: 'The travelling is not going to get any shorter.',
         again: 'She has had lessons from us already. These would be the ones after the test.',
         repeat: 'durable',
-        ask: 'She has been asking for driving lessons. She is counting the months.',
+        ask: 'She knows exactly how many months until she can drive. The lessons are already in her head.',
         short: 'the driving lessons',
       },
       {
@@ -275,7 +275,7 @@ const BANDS: Band[] = [
         note: 'Passport, licences, entry forms. The travelling is her job now.',
         again: 'She has one from us already. It is full, and the zip has gone.',
         repeat: 'durable',
-        ask: 'She has been asking for somewhere to keep the passport and the entry forms that is hers.',
+        ask: 'The passport and entry forms live in our drawer. She wants a wallet that lives in hers.',
         short: 'the document wallet',
       },
       {
@@ -284,7 +284,7 @@ const BANDS: Band[] = [
         note: 'The indoor season starts in a car park at seven in the morning.',
         again: 'She has a coat from us already, and she has grown out of the sleeves of it.',
         repeat: 'durable',
-        ask: 'She has been asking for a coat that actually works. The indoor season starts outdoors.',
+        ask: 'The indoor season starts outdoors, as she keeps pointing out. Her coat is losing the argument.',
         short: 'the winter coat',
       },
     ],
@@ -300,7 +300,7 @@ const BANDS: Band[] = [
         note: 'School and tournament admin, on the same desk.',
         again: 'She has one from us already and it is four years old and it sounds like it.',
         repeat: 'durable',
-        ask: 'She has been asking for a laptop. School and the entry forms are on the same desk now.',
+        ask: 'School and the entry forms share one tired machine. She has made the case for a laptop.',
         short: 'the laptop',
       },
       {
@@ -313,7 +313,7 @@ const BANDS: Band[] = [
         note: 'The one from two years ago did not.',
         again: 'She has one from us already, and it did not survive either. This would be the third.',
         repeat: 'durable',
-        ask: 'She has been asking for a suitcase that survives a season. The last one did not.',
+        ask: 'The last suitcase did not survive the season. She would like the next one to manage it.',
         short: 'the suitcase',
       },
       {
@@ -322,7 +322,7 @@ const BANDS: Band[] = [
         note: 'Something she will still have at thirty.',
         again: 'She has a watch from us already. This would be the one she wears off court.',
         repeat: 'durable',
-        ask: 'She has been asking for a watch. Something, she said, that lasts.',
+        ask: 'Something that lasts, she said, and tapped the empty place where a watch would go.',
         short: 'the watch',
       },
     ],
@@ -340,7 +340,7 @@ const BANDS: Band[] = [
         note: 'She is earning now. It should be in her name.',
         again: 'The account is open already. This would be taking our name off it.',
         repeat: 'durable',
-        ask: 'She has been asking for an account in her own name. She is the one earning.',
+        ask: 'Her earnings still arrive under our name. She wants the account to say what is already true.',
         short: 'the bank account',
       },
       {
@@ -349,7 +349,7 @@ const BANDS: Band[] = [
         note: 'The classic one. The one that gets engraved.',
         again: 'She has a watch from us already. This one would carry the date on the back.',
         repeat: 'durable',
-        ask: 'She has been asking for the watch. The eighteenth one, engraved, the way it is done.',
+        ask: 'The eighteenth watch, engraved, the way it is done. She pretends not to care about tradition.',
         short: 'the watch',
       },
       {
@@ -360,7 +360,7 @@ const BANDS: Band[] = [
         note: 'Somewhere with no courts anywhere near it, and a flight to get there.',
         again: 'We sent her somewhere before. She wants somewhere new, and further.',
         repeat: 'repeatable',
-        ask: 'She has been asking to go somewhere with no courts anywhere near it. Not a day at home – a trip, with a flight in it.',
+        ask: 'Somewhere with no courts at all, she said. Not a day at home, not a week there – a trip, with a flight in it.',
         short: 'the trip',
       },
     ],
@@ -393,7 +393,7 @@ const BANDS: Band[] = [
         note: 'So the driving stops being ours.',
         again: 'There is a car outside from us already. This one would be the second.',
         repeat: 'durable',
-        ask: 'She has been asking for a car. She has been driving ours since February.',
+        ask: 'Our car has been hers since February, except on paper. She would like the paper corrected.',
         short: 'the car',
       },
       {
@@ -405,7 +405,7 @@ const BANDS: Band[] = [
         note: 'She is furnishing a life we do not live in, and it starts with somewhere to eat.',
         again: 'The table in that kitchen is already ours. This would be the chairs round it.',
         repeat: 'durable',
-        ask: 'She has been asking about a kitchen table. What she eats off now is a box with a cloth over it.',
+        ask: 'What she eats off is still a box with a cloth over it. A kitchen table has become urgent.',
         short: 'the kitchen table',
       },
     ],
@@ -427,7 +427,7 @@ const BANDS: Band[] = [
         note: 'Seven mornings in a row, no courts, no flights, nobody else in the house.',
         again: 'We had one of these last time, and she has asked for the same again.',
         repeat: 'repeatable',
-        ask: 'She has been asking for a week at home between the seasons. Not a day – a whole week, all of us, nothing booked.',
+        ask: 'Between the seasons she wants a week at home. Not a day, not a trip – one whole week, all of us, nothing booked.',
         short: 'the week at home',
       },
       {
@@ -475,7 +475,7 @@ const BANDS: Band[] = [
         note: 'Every year of it, in order, starting at the first draw she was ever in.',
         again: 'There is an album from us already. This one would be the years since it.',
         repeat: 'durable',
-        ask: 'She has been asking whether anybody kept an album of it – the photographs, the draw sheets, the first year. She thinks nobody did.',
+        ask: 'Did anybody keep the photographs and old draw sheets? She thinks not. The album would prove her wrong.',
         short: 'the album',
       },
       {
@@ -484,7 +484,7 @@ const BANDS: Band[] = [
         note: 'Seven mornings in a row, no courts, no flights, nobody else in the house.',
         again: 'We had one of these last time, and she has asked for the same again.',
         repeat: 'repeatable',
-        ask: 'She has been asking for a week at home between the seasons. Not a day – a whole week, all of us, nothing booked.',
+        ask: 'Between the seasons she wants a week at home. Not a day, not a trip – one whole week, all of us, nothing booked.',
         short: 'the week at home',
       },
       {
@@ -625,6 +625,26 @@ export function pendingBirthday(world: WorldState): number | null {
   return world.birthdays.some((b) => b.week === world.week) ? null : age
 }
 
+/** The title is flavour, so it gets a dedicated sub-stream and cannot move the gift offer or MAIN.
+ *  The voice grows up with her: close domestic observation while she lives at home, then the small
+ *  negotiations of keeping family time once she has a place and calendar of her own. */
+export function birthdayHeading(seed: string, age: number): string {
+  const lines =
+    age <= 14
+      ? [`${age}. Somehow already.`, 'Happy birthday, kiddo.', `${age} today. The candles made it official.`]
+      : age <= 17
+        ? [`${age}. That came round quickly.`, 'Happy birthday. She beat us to the candles.', `${age} today. Her plans started before breakfast.`]
+        : age === 18
+          ? ['Eighteen. That arrived quickly.', 'Happy birthday. An adult, apparently.', 'Eighteen candles and a very full calendar.']
+          : age <= 21
+            ? [`${age}. She brought her own plans.`, 'Happy birthday. Dinner fitted around practice.', `${age} today. The day already had opinions.`]
+            : age <= 28
+              ? [`${age}. We found a gap in her calendar.`, 'Happy birthday. She chose the time; we kept the cake ready.', `${age} today. Her own keys, our old birthday plates.`]
+              : [`${age}. The calendar argued with dinner. Dinner won.`, 'Happy birthday. Cake when she could make it.', `${age} today. Still no sensible number of candles.`]
+  const rng = rngFromSeed(`${seed}:birthday:${age}:heading`)
+  return lines[Math.floor(rng() * lines.length)]
+}
+
 /** ⭐ THE DIALOG'S OWN WORDS, assembled HERE and not in the component – the same rule KnockDialog
  *  and KidScreen keep, so the copy can be tested and one surface cannot start speaking differently.
  *
@@ -642,6 +662,7 @@ export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
   return {
     week: world.week,
     age,
+    heading: birthdayHeading(world.seed, age),
     ask: asked.ask,
     options: birthdayOptions(options, alreadyGiven),
   }
@@ -717,8 +738,8 @@ export function chooseGift(world: WorldState, giftId: string): void {
     // the screen (spec §0), and an `amountCents` here would put the gift in the Money breakdown.
     text:
       given.id === DAY_TOGETHER.id
-        ? 'Her birthday. No present – the whole day, and nothing else booked.'
-        : `Her birthday. ${given.label}.`,
+        ? 'Her birthday. No parcel – just the day, kept clear for each other.'
+        : `Her birthday. ${given.label}, opened before the cake.`,
   })
 }
 

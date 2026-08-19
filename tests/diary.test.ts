@@ -11,6 +11,7 @@ import {
   conditionBandOf,
   DIARY_POOL,
   diaryLine,
+  diaryLifeStageFor,
   fundsPressureOf,
   lastKidResultOf,
   lastKidTitleOf,
@@ -133,6 +134,8 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
     const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
       seed: 's',
       week: 10,
+      ageYears: 14,
+      inCollege: false,
       // W4-SCHOOL: a schoolgirl, which is what every fixture in this file was written about.
       schoolOver: false,
       kidId: KID_ID,
@@ -179,6 +182,16 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
 // The facts sweep + THE HONESTY PIN.
 // ---------------------------------------------------------------------------
 
+describe('the diary viewpoint grows up with her', () => {
+  it('derives one narrative stage without adding a save field', () => {
+    expect(diaryLifeStageFor(16, false, false)).toBe('school')
+    expect(diaryLifeStageFor(19, true, false)).toBe('after-school')
+    expect(diaryLifeStageFor(20, true, true)).toBe('college')
+    expect(diaryLifeStageFor(22, true, false)).toBe('independent')
+    expect(diaryLifeStageFor(31, true, false)).toBe('independent')
+  })
+})
+
 /** Build a coherent facts object the way the engine would: the emotion is avatarEmotion over the
  *  same inputs, and the week-shape flags come from a named scenario. */
 interface SweepResult {
@@ -223,6 +236,8 @@ function makeFacts(input: {
   const s = input.scenario
   return {
     week,
+    ageYears: 14,
+    lifeStage: 'school',
     emotion,
     resultFresh: input.result !== null,
     won: input.result?.won ?? false,

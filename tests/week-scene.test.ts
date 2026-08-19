@@ -84,6 +84,8 @@ function trip(week: number, tier: TierId): WorldEvent[] {
 const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   seed: 's',
   week: 11,
+  ageYears: 14,
+  inCollege: false,
   // W4-SCHOOL: a schoolgirl – every fixture here is a girl of 14-17.
   schoolOver: false,
   kidId: KID_ID,

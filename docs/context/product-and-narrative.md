@@ -3,7 +3,7 @@ type: context-pack
 status: current
 area: narrative
 canonical: true
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-19
 ---
 
 # Product and narrative context
@@ -14,8 +14,11 @@ last-reviewed: 2026-08-03
   honest economics, observable matches, and the cost of pursuing the dream.
 - Shipped mechanics strongly cover matches, rankings, calendar choices, money, training/condition,
   injuries, coaches, sponsors, diary texture, and tournament presentation.
-- A general morale/bond/burnout/quit system and complete career-ending/epilogue state are not yet in
-  the runtime. Documents describing them are product intent, not shipped behavior.
+- Career forks, college years and ending/epilogue views are in runtime. A general
+  morale/bond/burnout system is not; documents describing it remain product intent.
+- Family prose uses a derived narrative stage. From 22 onward the parent hears about ordinary life
+  through calls, messages and visits rather than automatically sharing the household. This is a
+  voice rule, not a persisted residence mechanic.
 - The Russian concept document is the original pitch reference. The lore bible is a dated art and
   tone reference and must be checked against current code before asserting implementation.
 - The current delivery sequence is the August roadmap; reviews explain risks but do not define the
@@ -26,12 +29,13 @@ last-reviewed: 2026-08-03
 1. `README.md` and `docs/concept-ru.md` for the proposition, with the caveat above.
 2. `docs/lore/setting.md` for tone and art constraints.
 3. `docs/decisions.md` for explicit owner decisions, newest applicable decision first.
-4. The relevant current code: diary, kid life, milestones, knocks, sponsors, screens, and protocol.
-5. Product/narrative review chapters only when examining gaps or rationale.
+4. `docs/design/human-voice-guide.md` for the current speaker and age-distance rules.
+5. The relevant current code: diary, kid life, milestones, knocks, sponsors, screens, and protocol.
+6. Product/narrative review chapters only when examining gaps or rationale.
 
 ## Invariants
 
-- Do not present planned daughter agency or endings as shipped functionality.
+- Do not present planned morale, bonds, or broader daughter agency as shipped functionality.
 - The parent shapes circumstances; narrative copy should not reduce the daughter to a stat asset.
 - Drama should emerge from mechanics and evidence rather than moralized punishment or false odds.
 - Player-facing claims about price, ranking, probability, or eligibility must match engine data.
@@ -49,4 +53,3 @@ last-reviewed: 2026-08-03
 
 - Work changes the pitch, child agency, a terminal state, long-term memory, ethical framing, or
   investor-facing claims.
-

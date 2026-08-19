@@ -151,6 +151,12 @@ export const plainTraining = (f: DiaryFacts): boolean =>
   !f.vacationWeek &&
   !f.playedPractice
 
+/** Narrative distance only. `athome` means "not travelling"; it never proves that a grown woman
+ *  spent the week in her parents' house. */
+const familyHomeVoice = (f: DiaryFacts): boolean =>
+  f.lifeStage === 'school' || f.lifeStage === 'after-school'
+const independentVoice = (f: DiaryFacts): boolean => f.lifeStage === 'independent'
+
 export const WEEK_NOTES: readonly WeekNote[] = [
   // --- A GRIND WEEK: what 85/15 actually looks like from the kitchen -----------------------------
   {
@@ -161,27 +167,37 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: 'Out before we were up, back after dark. All week.',
     claims: { grind: true, athome: true },
-    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+    license: (f) => plainTraining(f) && familyHomeVoice(f) && f.trainPct >= WEEK_NOTE_GRIND,
   },
   {
     text: 'She fell asleep on the sofa with her shoes on. Twice.',
     claims: { grind: true, tired: true, athome: true },
-    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND && f.conditionBand !== 'fresh' && f.conditionBand !== 'ok',
+    license: (f) => plainTraining(f) && familyHomeVoice(f) && f.trainPct >= WEEK_NOTE_GRIND && f.conditionBand !== 'fresh' && f.conditionBand !== 'ok',
   },
   {
     text: 'Three shirts a day this week. The machine has not stopped.',
     claims: { grind: true, athome: true },
-    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+    license: (f) => plainTraining(f) && familyHomeVoice(f) && f.trainPct >= WEEK_NOTE_GRIND,
   },
   {
     text: 'She asked for an extra hour on Sunday. We said no. She went anyway.',
     claims: { grind: true, athome: true },
-    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+    license: (f) => plainTraining(f) && familyHomeVoice(f) && f.trainPct >= WEEK_NOTE_GRIND,
   },
   {
     text: 'A blister on her serving hand. She taped it and said nothing.',
     claims: { grind: true, athome: true },
     license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+  },
+  {
+    text: 'Three voice notes this week, all sent after dark.',
+    claims: { grind: true, athome: true },
+    license: (f) => plainTraining(f) && independentVoice(f) && f.trainPct >= WEEK_NOTE_GRIND,
+  },
+  {
+    text: 'She asked about Sunday. By the time we replied, she had booked the court.',
+    claims: { grind: true, athome: true },
+    license: (f) => plainTraining(f) && independentVoice(f) && f.trainPct >= WEEK_NOTE_GRIND,
   },
   // --- A LIGHT WEEK: the slack he gave back, and what she did with it ----------------------------
   {
@@ -197,17 +213,22 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: 'She had time to be fifteen this week. It suited her.',
     claims: { light: true, athome: true },
-    license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+    license: (f) => plainTraining(f) && f.ageYears === 15 && f.trainPct <= WEEK_NOTE_LIGHT,
   },
   {
     text: 'Light week. She and the neighbour argued about a film for an hour.',
     claims: { light: true, athome: true },
-    license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+    license: (f) => plainTraining(f) && familyHomeVoice(f) && f.trainPct <= WEEK_NOTE_LIGHT,
   },
   {
     text: 'Rest days, and she was restless by the second one.',
     claims: { light: true, athome: true },
     license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
+  {
+    text: 'A light week. She called before nine, which is how we knew she was bored.',
+    claims: { light: true, athome: true },
+    license: (f) => plainTraining(f) && independentVoice(f) && f.trainPct <= WEEK_NOTE_LIGHT,
   },
   // --- THE MIDDLE, AND ANY TRAINING WEEK AT ALL -------------------------------------------------
   // Licensed on the plain training week alone, so the long stretches at Balanced are not four
@@ -224,7 +245,12 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: 'Drills, dinner, bed. She did not complain once.',
     claims: { athome: true },
-    license: (f) => plainTraining(f) && f.schoolOver,
+    license: (f) => plainTraining(f) && f.lifeStage === 'after-school',
+  },
+  {
+    text: 'Training, physio, groceries, sleep. Her own little circuit.',
+    claims: { athome: true },
+    license: (f) => plainTraining(f) && independentVoice(f),
   },
   {
     text: 'Same courts, same hours. She is getting quietly better at this.',
@@ -234,7 +260,7 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: 'She practised her toss against the garage door until it got dark.',
     claims: { athome: true },
-    license: plainTraining,
+    license: (f) => plainTraining(f) && familyHomeVoice(f),
   },
   {
     text: 'A week of nothing much. She read a whole book on the bus.',
@@ -254,12 +280,22 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: 'She watched a match on her phone at the table and forgot to eat.',
     claims: { athome: true },
-    license: plainTraining,
+    license: (f) => plainTraining(f) && familyHomeVoice(f),
   },
   {
     text: 'Rain all week. She hit against the wall in the car park instead.',
     claims: { athome: true },
     license: plainTraining,
+  },
+  {
+    text: 'A photo of the new strings. No caption; apparently none was needed.',
+    claims: { athome: true },
+    license: (f) => plainTraining(f) && independentVoice(f),
+  },
+  {
+    text: 'She called after practice and talked about everything except practice.',
+    claims: { athome: true },
+    license: (f) => plainTraining(f) && independentVoice(f),
   },
   // --- HER BODY, on a week nothing else is the story --------------------------------------------
   {
@@ -284,7 +320,7 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     license: (f) => plainTraining(f) && f.fundsPressure === 'tight',
   },
   {
-    text: 'She offered to skip a session to save the money. We did not let her.',
+    text: 'She offered to drop a session. We found something else to cut.',
     claims: { fundsTight: true, athome: true },
     license: (f) => plainTraining(f) && f.fundsPressure === 'tight',
   },
@@ -347,12 +383,17 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: 'Off-season. The bag is in the cupboard and the house is louder.',
     claims: { offSeason: true, athome: true },
-    license: (f) => athome(f) && f.offSeasonWeek && !f.vacationWeek && f.injured === null,
+    license: (f) => athome(f) && familyHomeVoice(f) && f.offSeasonWeek && !f.vacationWeek && f.injured === null,
   },
   {
     text: 'December. She is teaching her cousin to serve, badly.',
     claims: { offSeason: true, athome: true },
     license: (f) => athome(f) && f.offSeasonWeek && !f.vacationWeek && f.injured === null,
+  },
+  {
+    text: 'Off-season. She came over without the racquet bag. We noticed.',
+    claims: { offSeason: true, athome: true },
+    license: (f) => athome(f) && independentVoice(f) && f.offSeasonWeek && !f.vacationWeek && f.injured === null,
   },
   {
     text: 'A hit-out at the club. She played the whole thing like it counted.',
@@ -388,7 +429,7 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: "Rest week – doctor's orders, and ours. She watched the others hit.",
     claims: { restingKnock: true, athome: true },
-    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'rest',
+    license: (f) => athome(f) && familyHomeVoice(f) && f.injured === null && f.knockChoice === 'rest',
   },
   {
     text: (f) => `Ice, stretching, no court. The ${f.knockPart} is quieter than it was.`,
@@ -398,7 +439,12 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: 'She asked twice if she could go in for an hour. Twice we said no.',
     claims: { restingKnock: true, athome: true },
-    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'rest',
+    license: (f) => athome(f) && familyHomeVoice(f) && f.injured === null && f.knockChoice === 'rest',
+  },
+  {
+    text: 'Rest week. She asked the physio twice. The answer stayed no.',
+    claims: { restingKnock: true, athome: true },
+    license: (f) => athome(f) && independentVoice(f) && f.injured === null && f.knockChoice === 'rest',
   },
   {
     text: (f) => `She trained on the ${f.knockPart} all week and did not mention it once.`,
@@ -444,24 +490,24 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   // the whole point - a December girl turning fourteen in the last month of a season she played as a
   // thirteen-year-old is the relative-age story in one line.
   {
-    text: (f) => `She is ${ageWord(f.birthdayAge)} today. Cake, and then she asked to go and hit.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She cut the first slice too large.`,
     claims: { birthday: true, athome: true },
-    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+    license: (f) => athome(f) && familyHomeVoice(f) && f.birthdayAge !== null && f.injured === null,
   },
   {
-    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She says she feels exactly the same.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She says nothing feels different.`,
     claims: { birthday: true, athome: true },
-    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+    license: (f) => athome(f) && familyHomeVoice(f) && f.birthdayAge !== null && f.injured === null,
   },
   {
-    text: (f) => `Her birthday. ${capitalise(ageWord(f.birthdayAge))}, and taller than her mother now.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. We worked around her calendar for once.`,
     claims: { birthday: true, athome: true },
-    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+    license: (f) => athome(f) && independentVoice(f) && f.birthdayAge !== null && f.injured === null,
   },
   {
-    text: 'Her birthday. She wanted a restring and a new grip, and nothing else.',
+    text: 'Her birthday. She chose the time; we kept the cake ready.',
     claims: { birthday: true, athome: true },
-    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+    license: (f) => athome(f) && independentVoice(f) && f.birthdayAge !== null && f.injured === null,
   },
   // =============================================================================================
   // ⭐ v48 – AND WHAT HE GAVE HER. docs/specs/birthday-and-gifts.md §2b: «the DIARY reads it
@@ -489,13 +535,13 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   // budget is measured on what the player actually reads. The catalogue's three longest nouns were
   // shortened in the same pass, which is why 31 is the number.
   {
-    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. She asked for ${f.birthdayGift}, and got it.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')}, and a smile she tried to hide.`,
     claims: { birthday: true, athome: true },
     license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null &&
       f.birthdayGift !== null && f.birthdayWanted && f.birthdayRepeatAge === null && f.birthdayGift !== BIRTHDAY_DAY_NOUN,
   },
   {
-    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. She got ${f.birthdayGift}. Not what she asked for.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')}. A pause, then a very good thank-you.`,
     claims: { birthday: true, athome: true },
     license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null &&
       f.birthdayGift !== null && !f.birthdayWanted && f.birthdayRepeatAge === null && f.birthdayGift !== BIRTHDAY_DAY_NOUN,
@@ -503,13 +549,13 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   // THE DAY, and it gets its own arm because it is the one answer that is not a thing. It must read
   // as one of the good choices or the scene collapses into a menu with a correct order (spec §0).
   {
-    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. No present – the whole day, nothing booked.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She left the day blank, so we took it slowly.`,
     claims: { birthday: true, athome: true },
     license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null && f.birthdayGift === BIRTHDAY_DAY_NOUN,
   },
   // ⭐ THE CALLBACK, and it is the line this whole slice was built to be able to write.
   {
-    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')} again, like at ${f.birthdayRepeatAge}.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))}. ${capitalise(f.birthdayGift ?? '')} again – a tradition since ${f.birthdayRepeatAge}.`,
     claims: { birthday: true, athome: true },
     license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null && f.birthdayRepeatAge !== null,
   },
@@ -519,14 +565,14 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     // wrist strain. The owner found that class of error by reading; the guard found this one before it
     // shipped, which is the whole return on having written it. A birthday line has no business naming a
     // body part in the first place.
-    text: (f) => `Her birthday, spent on the sofa. ${capitalise(ageWord(f.birthdayAge))}, and furious about it.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. Candles, a brace, and very bad timing.`,
     claims: { birthday: true, injured: true, athome: true },
-    license: (f) => athome(f) && f.birthdayAge !== null && f.injured !== null,
+    license: (f) => athome(f) && familyHomeVoice(f) && f.birthdayAge !== null && f.injured !== null,
   },
   {
-    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today, and eight weeks of rehab for a present.`,
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. The physio got the first call; we got the second.`,
     claims: { birthday: true, injured: true, athome: true },
-    license: (f) => athome(f) && f.birthdayAge !== null && f.injured !== null,
+    license: (f) => athome(f) && independentVoice(f) && f.birthdayAge !== null && f.injured !== null,
   },
   {
     text: 'Her birthday. She blew out the candles and asked the physio how long.',
@@ -547,12 +593,17 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   {
     text: 'She sat by the court with her homework and watched the others hit.',
     claims: { injured: true, athome: true },
-    license: (f) => athome(f) && f.injured !== null && !f.examsWeek,
+    license: (f) => athome(f) && f.lifeStage === 'school' && f.injured !== null && !f.examsWeek,
   },
   {
     text: 'The physio says it is going well. She wanted a second opinion.',
     claims: { injured: true, athome: true },
     license: (f) => athome(f) && f.injured !== null && !f.examsWeek,
+  },
+  {
+    text: 'A photo from rehab: three bands, one coffee, no patience.',
+    claims: { injured: true, athome: true },
+    license: (f) => athome(f) && independentVoice(f) && f.injured !== null && !f.examsWeek,
   },
   // --- W6b: THE FORTNIGHT INSIDE A LAYOFF. Both facts, in one sentence each. ---------------------
   //

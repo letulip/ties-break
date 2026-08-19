@@ -136,7 +136,7 @@ export function gradeOf(birthYear: number, birthMonth: number, schoolYearStart: 
 // =================================================================================================
 //
 // ⚠ THIS IS THE SAME ARITHMETIC AS `gradeOf` AND IT HAD BETTER STAY THAT WAY, which is why it is
-// derived from it rather than written beside it. The School tile has said "School's done" past the
+// derived from it rather than written beside it. The School tile has said "School finished" past the
 // last grade since it shipped; every other surface in the game - the exam blackout, the day grid's
 // eight-o'clock lesson block, the diary, the planner's refusal - ignored it, which is how a
 // twenty-two-year-old professional ended up still sitting papers. One derivation, read everywhere.
@@ -240,7 +240,7 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
   // Which September the school year running NOW began in: this season's, once it has passed.
   const schoolYearStart = view.seasonYear - (pastSeptember(view.week) ? 0 : 1)
   const grade = gradeOf(birthYear, view.birthMonth, schoolYearStart)
-  if (grade === null) return { lead: "School's done", note: 'Tennis full-time' }
+  if (grade === null) return { lead: 'School finished', note: 'No more bells' }
   return {
     lead: `${ordinal(grade)} grade`,
     // ⚠ HER BIRTH MONTH, NOT A CONSTANT (round-21 #6). This argument was the literal `false`, on the
@@ -281,7 +281,7 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
  * in September or later she starts (and therefore finishes) a year behind the girls born earlier in
  * her own birth year – so this speaks for exactly those four months and is silent for the other
  * eight, where "she finishes later than the others" would be false. It is also silent once she is
- * out: `gradeOf` returning null is "School's done", which needs no explanation at all.
+ * out: `gradeOf` returning null is "School finished", which needs no explanation at all.
  *
  * ⚠ NOT A TILE LINE. Both `KidLifeTile` lines are `nowrap` on a 17-character budget; this is a
  * sentence and it renders under the grid (see `KidLife.schoolWhy`). Player copy: short dash only.

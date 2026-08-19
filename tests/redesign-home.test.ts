@@ -124,6 +124,8 @@ function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
     travelHomeScene: null,
     travelHomeMood: null,
     week: 10,
+    ageYears: 14,
+    lifeStage: 'school',
     emotion: 'norm',
     resultFresh: false,
     won: false,

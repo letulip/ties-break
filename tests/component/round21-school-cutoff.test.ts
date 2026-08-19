@@ -129,14 +129,14 @@ describe('⭐ ROUND-21 #6 – the School tile explains its own September', () =>
   })
 
   it('...and it stops once school is behind her, when there is nothing left to explain', () => {
-    // `schoolEndWeek(12)` is 294; one week past it the tile reads "School's done", which accounts
+    // `schoolEndWeek(12)` is 294; one week past it the tile reads "School finished", which accounts
     // for itself.
     const snap = careerAt(schoolEndWeek(12) + 1, 12, 'school-12-done')
     expect(snap.ending ?? null, 'the career is still running').toBeNull()
     const w = mountKid(snap)
     const tiles = w.findAll('.kid-tile')
     const school = tiles.find((t) => t.find('.kid-tile-label').text() === 'School')
-    expect(school!.findAll('.kid-tile-line')[0].text()).toMatch(/done/i)
+    expect(school!.findAll('.kid-tile-line')[0].text()).toMatch(/finished/i)
     expect(w.find('.kid-grid-note').exists()).toBe(false)
     w.unmount()
   })

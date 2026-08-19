@@ -78,7 +78,7 @@ useDialogFocus(card)
       <p id="birthday-dialog-kicker" class="season-summary-kicker">
         Her birthday – {{ weekLabel(prompt.week) }}
       </p>
-      <h2 id="birthday-dialog-title" class="season-summary-title">She is {{ prompt.age }} today.</h2>
+      <h2 id="birthday-dialog-title" class="season-summary-title">{{ prompt.heading }}</h2>
 
       <!-- ⭐ THE ASK, IN PROSE, AND NOTHING BELOW IT IS MARKED. One of the four rows answers this and
            three do not; the player reads. -->

@@ -690,6 +690,7 @@ describe('ONE week button, two projections', () => {
     expect(screen).toContain('const dateLine = computed(() => weekDateLine(week.value + 1))')
     expect(screen).toContain('weekGridFor(week, snap.ageYears, weekDayNumbers(week.week)')
     expect(screen).toContain('fridgeNoteFor(snap.seed, week.week')
+    expect(screen).toContain('snap.diary.facts.lifeStage')
     // ...and the button is the same composable Home's is, which reads the week ahead and nothing else
     expect(days).toContain('return snap ? calendarWeekFor(snap, snap.week + 1) : null')
     expect(read('../src/composables/weekAhead.ts')).toContain('const next = snap.week + 1')

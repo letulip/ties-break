@@ -12,6 +12,10 @@ import { rngFromSeed } from '../rng'
 import { road, air, inCar, longWay, shortHop, asleep, awake, ordinary, plainLoss } from './words'
 import type { TravelHomeFacts } from './travelHome'
 
+const familyTravelVoice = (t: TravelHomeFacts): boolean =>
+  t.lifeStage === 'school' || t.lifeStage === 'after-school'
+const independentTravelVoice = (t: TravelHomeFacts): boolean => t.lifeStage === 'independent'
+
 // --- the note on the scrap under the journey painting -----------------------------------------
 //
 // The owner, 29.07: «про неё родительской рукой – так и делай, надо прям красиво, жизненно и уютно
@@ -45,6 +49,8 @@ import type { TravelHomeFacts } from './travelHome'
 
 /** What a journey-home line ASSERTS, as data the honesty pin can hold against the trip's facts. */
 export interface TravelClaims {
+  /** asserts that the trip home landed on her birthday week */
+  birthday?: true
   /** asserts she won the tournament */
   title?: true
   /** asserts she reached the final and lost it */
@@ -127,6 +133,27 @@ export interface TravelNote {
 
 
 export const TRAVEL_NOTES: readonly TravelNote[] = [
+  // --- HER BIRTHDAY, WHEN THE JOURNEY OWNS THE SCRAP ----------------------------------------------
+  {
+    text: 'Her birthday, somewhere between the draw and home. Cake tomorrow.',
+    claims: { birthday: true },
+    license: (t) => t.birthdayAge !== null && !t.injured && familyTravelVoice(t),
+  },
+  {
+    text: 'Her birthday on the road. She called when she got in; the candles can wait.',
+    claims: { birthday: true },
+    license: (t) => t.birthdayAge !== null && !t.injured && independentTravelVoice(t),
+  },
+  {
+    text: 'Her birthday, and the trip ended at the clinic. Cake tomorrow.',
+    claims: { birthday: true, injured: true },
+    license: (t) => t.birthdayAge !== null && t.injured && familyTravelVoice(t),
+  },
+  {
+    text: 'Her birthday on the road. The first call was from the clinic; cake can wait.',
+    claims: { birthday: true, injured: true },
+    license: (t) => t.birthdayAge !== null && t.injured && independentTravelVoice(t),
+  },
   // --- SHE WON IT --------------------------------------------------------------------------------
   {
     // ⚠ W5: `inCar`, not `road` – a coach does not pull over for chips. Same edit on the five lines
@@ -236,7 +263,12 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   {
     text: 'One win, and out the next day. She asked what was for dinner.',
     claims: { lost: true, wonMatches: true },
-    license: (t) => plainLoss(t) && t.matchesWon === 1,
+    license: (t) => plainLoss(t) && t.matchesWon === 1 && familyTravelVoice(t),
+  },
+  {
+    text: 'One win, then out. Her message home was a photograph of dinner.',
+    claims: { lost: true, wonMatches: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 1 && independentTravelVoice(t),
   },
   // ⚠ THE TWO THAT COUNT. A junior tournament is one week and one match a day, so a parent writing
   // "two days of winning" is writing `matchesWon === 2` – and these two were licensed on
@@ -319,7 +351,12 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   {
     text: 'Home late. She ate standing up at the counter and went straight to bed.',
     claims: { lost: true },
-    license: plainLoss,
+    license: (t) => plainLoss(t) && familyTravelVoice(t),
+  },
+  {
+    text: 'Home late. A message at 00:14: ate, showered, alive.',
+    claims: { lost: true },
+    license: (t) => plainLoss(t) && independentTravelVoice(t),
   },
   {
     text: 'A long way for a short week. She slept from the ring road onward.',
@@ -339,7 +376,7 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   {
     text: 'She slept the whole way back and then went up to bed anyway.',
     claims: { tired: true, slept: true },
-    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t),
+    license: (t) => plainLoss(t) && familyTravelVoice(t) && t.conditionBand === 'drained' && asleep(t),
   },
   {
     text: 'She was asleep before we were out of the car park.',
@@ -356,7 +393,7 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   {
     text: 'She ate, she showered, she was gone by half past eight.',
     claims: { tired: true },
-    license: (t) => plainLoss(t) && t.conditionBand === 'drained',
+    license: (t) => plainLoss(t) && familyTravelVoice(t) && t.conditionBand === 'drained',
   },
   {
     text: 'She was asleep in her kit before we had the bags out of the car.',
@@ -367,6 +404,11 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
     text: 'Two days home and she is still catching up on the sleep.',
     claims: { tired: true },
     license: (t) => plainLoss(t) && t.conditionBand === 'drained',
+  },
+  {
+    text: 'Her only message had three words: home, food, sleep.',
+    claims: { tired: true },
+    license: (t) => plainLoss(t) && independentTravelVoice(t) && t.conditionBand === 'drained',
   },
   // --- W5: THE SHORT HOP, which is the commonest journey in the game -----------------------------
   //
@@ -389,7 +431,12 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   {
     text: 'Home in time for dinner, and she talked through the whole of it.',
     claims: {},
-    license: (t) => ordinary(t) && shortHop(t) && awake(t),
+    license: (t) => ordinary(t) && familyTravelVoice(t) && shortHop(t) && awake(t),
+  },
+  {
+    text: 'Back before dark. She called while the kettle was still boiling.',
+    claims: {},
+    license: (t) => ordinary(t) && independentTravelVoice(t) && shortHop(t) && awake(t),
   },
   {
     text: 'A packed lunch, one draw, and she stayed to watch the final.',
@@ -483,7 +530,7 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   {
     text: 'We watched something stupid on television and did not mention tennis once.',
     claims: { injured: true },
-    license: (t) => t.injured,
+    license: (t) => t.injured && familyTravelVoice(t),
   },
   {
     // A niggle only. On a layoff of a season this reads as a parent not listening, so it is capped:
@@ -500,12 +547,12 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   {
     text: 'She has the calendar out, counting. We took it off her and made tea.',
     claims: { injured: true },
-    license: (t) => t.injured && t.injuryWeeks >= 6,
+    license: (t) => t.injured && familyTravelVoice(t) && t.injuryWeeks >= 6,
   },
   {
     text: 'She is on the sofa with the ice on, working out who she would have played next.',
     claims: { injured: true },
-    license: (t) => t.injured,
+    license: (t) => t.injured && familyTravelVoice(t),
   },
   {
     // ⚠ FENCED OFF THE RETIREMENT (10.08). She played, so the fee bought her a tournament and the
@@ -513,6 +560,16 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
     text: 'She is worried about the wrong thing. She asked if the entry fee comes back.',
     claims: { injured: true },
     license: (t) => t.injured && !t.retired,
+  },
+  {
+    text: 'She called from the clinic and spent half of it apologising for worrying us.',
+    claims: { injured: true },
+    license: (t) => t.injured && independentTravelVoice(t),
+  },
+  {
+    text: 'A photo of the ice, the brace and a mug. No explanation needed.',
+    claims: { injured: true },
+    license: (t) => t.injured && independentTravelVoice(t),
   },
   // --- SHE DID NOT FINISH ------------------------------------------------------------------------
   // The week she walked off. Register unchanged – the parent observing, plain, present tense,
@@ -567,8 +624,14 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
  *  long way (see the `longWay` claim). The replacement asserts only that she went and came back,
  *  which is the definition of the week this function is reached on. */
 export function travelNoteFor(travel: TravelHomeFacts, seed: string): string {
-  const pool = TRAVEL_NOTES.filter((n) => n.license(travel))
-  if (pool.length === 0) return 'There and back, and the bag is by the door again.'
+  const eligible = TRAVEL_NOTES.filter((n) => n.license(travel))
+  const birthday = eligible.filter((n) => n.claims.birthday)
+  const pool = birthday.length > 0 ? birthday : eligible
+  if (pool.length === 0) {
+    return independentTravelVoice(travel)
+      ? 'There and back. A message when she got in, then silence.'
+      : 'There and back, and the bag is by the door again.'
+  }
   const rng = rngFromSeed(`${seed}:travelnote:${travel.week}`)
   return pool[Math.floor(rng() * pool.length)].text
 }

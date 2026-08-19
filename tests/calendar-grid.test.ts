@@ -50,7 +50,14 @@ import {
   type DayBlock,
   type OrdinaryKind,
 } from '../src/composables/weekGrid'
-import { EXAM_NOTES, FRIDGE_NOTES, TRIP_NOTES, fridgeNoteFor } from '../src/composables/fridgeNote'
+import {
+  EXAM_NOTES,
+  FRIDGE_NOTES,
+  INDEPENDENT_NOTES,
+  INDEPENDENT_TRIP_NOTES,
+  TRIP_NOTES,
+  fridgeNoteFor,
+} from '../src/composables/fridgeNote'
 import {
   SUMMER_WEEKS,
   calendarWeekFor,
@@ -873,7 +880,7 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
       'flight', 'plane', 'airport', 'trip', 'travel', 'hotel', 'luck',
     ]
     const bad: string[] = []
-    for (const line of FRIDGE_NOTES) {
+    for (const line of [...FRIDGE_NOTES, ...INDEPENDENT_NOTES]) {
       for (const word of FORBIDDEN) {
         if (new RegExp(`\\b${word}\\b`, 'i').test(line)) bad.push(`"${line}"  – says "${word}"`)
       }
@@ -887,8 +894,10 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
     expect(FRIDGE_NOTES.length).toBeGreaterThanOrEqual(40)
     expect(FRIDGE_NOTES.length).toBeLessThanOrEqual(60)
     expect(new Set(FRIDGE_NOTES).size).toBe(FRIDGE_NOTES.length)
+    expect(INDEPENDENT_NOTES.length).toBeGreaterThanOrEqual(20)
+    expect(new Set(INDEPENDENT_NOTES).size).toBe(INDEPENDENT_NOTES.length)
     // the two week pools are deliberately small – they only have one week each to be true on
-    for (const [what, pool] of [['exams', EXAM_NOTES], ['a trip', TRIP_NOTES]] as const) {
+    for (const [what, pool] of [['exams', EXAM_NOTES], ['a trip', TRIP_NOTES], ['an adult trip', INDEPENDENT_TRIP_NOTES]] as const) {
       expect(pool.length, `${what}: not enough scraps to avoid a photocopy`).toBeGreaterThanOrEqual(6)
       expect(new Set(pool).size, `${what}: duplicates`).toBe(pool.length)
       // ...and no line belongs to two pools, which would make the mood do nothing on that week
@@ -906,7 +915,7 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
       'won', 'win', 'wins', 'lost', 'beat', 'champion', 'title', 'trophy', 'final', 'semi',
       'quarter', 'round', 'passed', 'failed', 'grade', 'mark', 'marks', 'score', 'ranked',
     ]
-    for (const [what, pool] of [['exams', EXAM_NOTES], ['a trip', TRIP_NOTES]] as const) {
+    for (const [what, pool] of [['exams', EXAM_NOTES], ['a trip', TRIP_NOTES], ['an adult trip', INDEPENDENT_TRIP_NOTES]] as const) {
       for (const line of pool) {
         for (const word of UNKNOWABLE) {
           expect(
@@ -922,7 +931,7 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
   })
 
   it('player copy: short dash only, no Cyrillic, and short enough to be a scrap', () => {
-    for (const line of [...FRIDGE_NOTES, ...EXAM_NOTES, ...TRIP_NOTES]) {
+    for (const line of [...FRIDGE_NOTES, ...INDEPENDENT_NOTES, ...EXAM_NOTES, ...TRIP_NOTES, ...INDEPENDENT_TRIP_NOTES]) {
       expect(line, 'long dash on the fridge').not.toContain('—')
       expect(line, 'Cyrillic on the fridge').not.toMatch(/[Ѐ-ӿ]/)
       expect(line.length, `"${line}" is a letter, not a note`).toBeLessThanOrEqual(56)
@@ -941,6 +950,10 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
       expect(fridgeNoteFor('abc', week, 'exam')).toBe(fridgeNoteFor('abc', week, 'exam'))
       expect(EXAM_NOTES).toContain(fridgeNoteFor('abc', week, 'exam'))
       expect(TRIP_NOTES).toContain(fridgeNoteFor('abc', week, 'trip'))
+      expect(INDEPENDENT_NOTES).toContain(fridgeNoteFor('abc', week, 'home', 'independent'))
+      expect(INDEPENDENT_TRIP_NOTES).toContain(fridgeNoteFor('abc', week, 'trip', 'independent'))
+      expect(fridgeNoteFor('abc', week, 'home', 'independent'))
+        .toBe(fridgeNoteFor('abc', week, 'home', 'independent'))
       // ⚠ AND THE DEFAULT IS THE DOMESTIC POOL, unchanged line for unchanged line: adding the moods
       // must not have reshuffled a single scrap in a career that already existed.
       expect(fridgeNoteFor('abc', week, 'home')).toBe(fridgeNoteFor('abc', week))
@@ -972,7 +985,7 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
     const pool = codeOf(read('../src/composables/fridgeNote.ts'))
     expect(pool).not.toContain('rngFromSeed')
     expect(pool).not.toContain("from '../engine/")
-    expect(pool).not.toMatch(/^import /m) // it imports nothing at all
+    expect(pool).not.toMatch(/^import (?!type\b)/m) // no runtime dependency; the life stage is type-only
     expect(pool).not.toContain('Math.random')
     // ...and no licence machinery came in through the back door
     expect(pool).not.toContain('claims')
@@ -987,6 +1000,7 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
     // The rule pinned is unchanged (one week, read once, shared by the paper and the picture), so it
     // matches the call's opening rather than its arity. The mapping itself is pinned just below.
     expect(screen).toContain('fridgeNoteFor(snap.seed, week.week')
+    expect(screen).toContain('snap.diary.facts.lifeStage')
     // the week's kind chooses the pool, and it is a total map – a ninth DayKind fails to compile
     expect(screen).toContain('const NOTE_MOOD: Record<DayKind, NoteMood>')
     expect(screen).toMatch(/away: 'trip',/)

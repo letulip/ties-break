@@ -335,7 +335,7 @@ describe('P5 – the epilogue line', () => {
     resumeFromCollege(world, rng)
     const line = collegeEpilogueLine(world)
     expect(line).toMatch(/\$[\d,]+ better off/)
-    expect(line).toMatch(/qualifying/)
+    expect(line).toMatch(/[Qq]ualifying/)
   }, 60_000)
 
   it('⚠ THE SIGN IS A DIFFERENT SENTENCE: a family further under water is not "worse better off"', () => {

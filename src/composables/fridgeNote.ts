@@ -68,8 +68,10 @@
 // quietly stopped being swept is how "Good luck tomorrow!" gets back onto an ordinary week.
 //
 // WHICH WEEK GETS WHICH POOL is not decided here: the screen knows what kind of week it is drawing
-// and maps it (CalendarScreen's `NOTE_MOOD`), so this file needs no engine facts and keeps its "it
-// imports nothing at all" property.
+// and maps it (CalendarScreen's `NOTE_MOOD`), so this file needs no engine facts. Its only imported
+// shape is the snapshot's type-only narrative stage.
+
+import type { DiaryLifeStage } from '../shared/protocol'
 
 /** THE POOL. Household noise, in a parent's hand: chores, small kindnesses, the ordinary business of
  *  a family. Player copy rules in full - short dash "–" and never "—", no Cyrillic.
@@ -130,6 +132,36 @@ export const FRIDGE_NOTES: readonly string[] = [
   'Dentist appointment on the calendar. Do not forget.',
 ]
 
+/** Once she has her own place, the paper is no longer a chore list left in the same hallway. It is
+ *  the small message a parent sends instead. Still domestic and unlicensed: these assert a
+ *  relationship, not a result, trip, injury, or balance. */
+export const INDEPENDENT_NOTES: readonly string[] = [
+  'Call when you have a minute. No emergency, for once.',
+  'Your post came here again. I did not open it.',
+  'Dinner Sunday? This is me booking early.',
+  'The spare key is still where you left it.',
+  'Grandma says you never ring. She told me by ringing.',
+  'Soup here if you are passing. No questions asked.',
+  'You left a charger here. Of course you did.',
+  'Come over when you can. Bring nothing.',
+  'You called while I was out. Call again; I liked it.',
+  'The family chat needs a reply, even one full stop.',
+  'We are home Sunday. The kettle will be on.',
+  'No advice today. Just eat something.',
+  'Proud of you. Not because of anything in particular.',
+  'Parcel here for you. It can wait. I apparently cannot.',
+  'Saw your message. I was asleep at nine. Roles reversed.',
+  'Your keys are not here. I checked before you asked.',
+  'Sunday lunch still counts if you arrive at three.',
+  'The hall is quieter. I am not saying that is better.',
+  'Blue mug found. You did not take everything after all.',
+  'Text when you get in. Yes, I know you are grown.',
+  'I put the old photos in a box. Come and veto it.',
+  'The plant you left us is doing suspiciously well.',
+  'Nothing urgent. I just wanted to hear your voice.',
+  'Too much bread again. Some things do not change.',
+]
+
 /** WHICH SCRAP THIS WEEK GETS. `home` is the unlicensed domestic pool and the default for every week
  *  in a career; the other two are the weeks that have a fact big enough for a parent to mention.
  *
@@ -167,6 +199,19 @@ export const TRIP_NOTES: readonly string[] = [
   'Good luck. Ring us when you get there.',
 ]
 
+/** The same tournament-week claim after she has moved out: wishes sent to her, not instructions
+ *  left beside a bag in the family hallway. */
+export const INDEPENDENT_TRIP_NOTES: readonly string[] = [
+  'Safe travels. Message when the hotel door closes.',
+  'Good luck. Call after, not before.',
+  'Passport, charger, tape. You know the list now.',
+  'Whatever happens, send a sign of life.',
+  'We are all thinking of you. No reply required.',
+  'Play, eat, sleep. Call when the order changes.',
+  'The family chat has started. You have been warned.',
+  'Home when you can. Dinner when you get here.',
+]
+
 const POOLS: Record<NoteMood, readonly string[]> = {
   home: FRIDGE_NOTES,
   exam: EXAM_NOTES,
@@ -198,7 +243,19 @@ export function hash32(text: string): number {
  *  the week's own number, and the mood only chooses which pool the index falls in. So a domestic week
  *  reads the identical line it read before the sub-pools existed, and no career's scraps were
  *  reshuffled by adding them. */
-export function fridgeNoteFor(seed: string, week: number, mood: NoteMood = 'home'): string {
-  const pool = POOLS[mood]
+export function fridgeNoteFor(
+  seed: string,
+  week: number,
+  mood: NoteMood = 'home',
+  lifeStage: DiaryLifeStage = 'school',
+): string {
+  const livingAway = lifeStage === 'college' || lifeStage === 'independent'
+  const pool = livingAway
+    ? mood === 'trip'
+      ? INDEPENDENT_TRIP_NOTES
+      : mood === 'home'
+        ? INDEPENDENT_NOTES
+        : EXAM_NOTES
+    : POOLS[mood]
   return pool[hash32(`${seed}:fridge:${week}`) % pool.length]
 }

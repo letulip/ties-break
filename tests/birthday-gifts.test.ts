@@ -24,6 +24,7 @@ import {
   BIRTHDAY_DAY_TOGETHER,
   SAVE_SCHEMA_VERSION,
   advanceWeeks,
+  birthdayHeading,
   birthdayOffer,
   birthdayTurning,
   chooseGift,
@@ -137,7 +138,7 @@ describe('the birthday popup', () => {
 
     // 1. THE CLIENT IS NOT TOLD THE ANSWER. Not "the UI chooses not to show it" – it is not there.
     const wire = JSON.parse(JSON.stringify(prompt)) as Record<string, unknown>
-    expect(Object.keys(wire).sort()).toEqual(['age', 'ask', 'options', 'week'])
+    expect(Object.keys(wire).sort()).toEqual(['age', 'ask', 'heading', 'options', 'week'])
     for (const option of prompt.options) {
       expect(Object.keys(option).sort(), 'a row carries an id, a label and a note – nothing else').toEqual([
         'id',
@@ -154,6 +155,13 @@ describe('the birthday popup', () => {
       at[options.findIndex((o) => o.id === askedId)]++
     }
     for (let i = 0; i < 4; i++) expect(at[i], `slot ${i} of ${at.join('/')}`).toBeGreaterThan(400 / 4 / 3)
+  })
+
+  it('the heading is stable, varied, and grows out of the school-age voice', () => {
+    expect(birthdayHeading('same', 24)).toBe(birthdayHeading('same', 24))
+    expect(new Set(Array.from({ length: 40 }, (_, i) => birthdayHeading(`voice-${i}`, 24))).size)
+      .toBeGreaterThan(1)
+    expect(birthdayHeading('age-band', 14)).not.toBe(birthdayHeading('age-band', 24))
   })
 
   // ===============================================================================================

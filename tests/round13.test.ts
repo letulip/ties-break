@@ -52,6 +52,8 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     birthdayWanted: false,
     birthdayRepeatAge: null,
     week: 10,
+    ageYears: 14,
+    lifeStage: 'school',
     emotion: 'sad', // recomputed below
     resultFresh: true,
     won: false,
@@ -322,6 +324,8 @@ describe('R13-10 — the ordinary-week pool', () => {
     birthdayWanted: false,
     birthdayRepeatAge: null,
     week: 10,
+    ageYears: 14,
+    lifeStage: 'school',
     emotion: 'norm',
     resultFresh: false,
     won: false,

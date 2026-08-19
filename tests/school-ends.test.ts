@@ -108,7 +108,7 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
           lossStreak: 0,
           weeksSinceTitle: null,
         })
-        const done = tile.lead === "School's done"
+        const done = tile.lead === 'School finished'
         expect(done, `month ${bm} week ${week}: tile and predicate disagree`).toBe(schoolIsOver(week, bm))
       }
     }
@@ -503,9 +503,9 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
             lossStreak: 0,
             weeksSinceTitle: null,
           })
-          // Past her leaving week the tile is "School's done" and no exam line may survive on it.
+          // Past her leaving week the tile is "School finished" and no exam line may survive on it.
           if (schoolIsOver(week, bm)) {
-            expect(tile.lead, `bm ${bm} week ${week}`).toBe("School's done")
+            expect(tile.lead, `bm ${bm} week ${week}`).toBe('School finished')
             expect(tile.note, `bm ${bm} week ${week}`).not.toBe('Exams this week')
           } else {
             expect(tile.note, `bm ${bm} week ${week}`).toBe('Exams this week')
