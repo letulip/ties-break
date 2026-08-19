@@ -496,7 +496,10 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
  *  ⚠ THE WEEK IS `world.week`, deliberately. A rung's card means "where do I stand with this rung
  *  TODAY", and her age, her allowance and the accelerator's usage are all read at that week. */
 export function tierVerdict(world: WorldState, tier: TierId): EntryStatus {
-  return { ...entryVerdict(world, { tier, week: world.week, id: null }), outgrown: hasOutgrown(world, tier) }
+  return {
+    ...entryVerdict(world, { tier, week: world.week, id: null }, false),
+    outgrown: hasOutgrown(world, tier),
+  }
 }
 
 /** ⭐⭐ PR-09 / TB-05 – WHAT THE VERDICT ACTUALLY NEEDS, which turned out not to be an event.
@@ -520,7 +523,18 @@ export interface VerdictContext {
   id: string | null
 }
 
-function entryVerdict(world: WorldState, event: VerdictContext): EntryStatus {
+function entryVerdict(
+  world: WorldState,
+  event: VerdictContext,
+  /** ⚠ WHETHER THE WEEK'S AVAILABILITY IS PART OF THE ANSWER, and it is NOT for a rung-level ask.
+   *  `availabilityStatus` answers "can she play AT ALL this week" - a layoff covering it, her
+   *  condition, the off-season, an exam week, a booked holiday. None of that is a fact about a RUNG,
+   *  and `tierOpenFor` has never counted it, so including it made every rung of a resting world
+   *  report itself refused. Measured by the parity net the moment it was written: 27 disagreements,
+   *  every one of them 'unavailable' and every one of them ALL rungs of one world at once - which is
+   *  the signature of a world-level condition wearing a rung's clothes. */
+  availability = true,
+): EntryStatus {
   const tier = TIERS[event.tier]
   // AN ITF OR WTA RUNG IS AN ACCEPTANCE LIST, not a points threshold (docs/specs/two-ladders.md).
   // She gets in on her RANK IN THAT TABLE, the same signal the AI field is drawn on, so the two
@@ -608,7 +622,7 @@ function entryVerdict(world: WorldState, event: VerdictContext): EntryStatus {
           pointsToEnter: minPoints,
         }
       }
-      return availabilityStatus(world, event)
+      return availability ? availabilityStatus(world, event) : { level: 'ok' }
     }
     // ⚠ UNRANKED IS NOT RANK ONE. With nobody holding a point in this table in week 1 the whole field
     // ties at zero, and competition ranking gives every member of a tie the SAME rank - so a fresh
@@ -681,7 +695,7 @@ function entryVerdict(world: WorldState, event: VerdictContext): EntryStatus {
         detail: acceleratorRefusalDetail(event.tier, yearEnd, acceleratorUsage(world, event.week, event.tier, yearEnd)),
       }
     }
-    return availabilityStatus(world, event)
+    return availability ? availabilityStatus(world, event) : { level: 'ok' }
   }
   const minPoints = tier.enterPointBand[0]
   const points = kidPoints(world, 'domestic')
@@ -707,7 +721,7 @@ function entryVerdict(world: WorldState, event: VerdictContext): EntryStatus {
   // to change. What `tests/rankingGate.test.ts` caught when this arm was one branch short ("local:
   // the calendar says shut, the turnstile lets her through") cannot recur in either direction – the
   // calendar's verdict is `tierFloorOpen` and so is this one.
-  return availabilityStatus(world, event)
+  return availability ? availabilityStatus(world, event) : { level: 'ok' }
 }
 
 // --- THE ARRIVAL GATE (R12-15 / R12-3) ----------------------------------------------------------

@@ -320,10 +320,20 @@ function render({ resolved, barrelLines }) {
       out.push(`${list[0].banner}.`)
       out.push('')
     }
+    // ⚠⚠ NO LINE NUMBERS IN THE CHECKED-IN MAP, DELIBERATELY (19.08). They were here for one day and
+    // the `--check` in CI went red on the very next commit - the diff was SIX LINES and every one of
+    // them was a line number that had moved; all 233 symbols and all 30 owners were identical. A map
+    // that reddens when somebody adds a COMMENT above an export is not a stale map, it is a tripwire
+    // on formatting, and a CI step that cries wolf every wave is one people learn to skip. That is
+    // the same trap TOK-8 avoided by making size budgets a warning rather than a failure.
+    //
+    // ⭐ NAVIGATION DID NOT MOVE - IT GOT BETTER. `node scripts/world-map.mjs <symbol>` still prints
+    // owner AND line, and it reads the source live, so it is exact at the moment you ask instead of
+    // exact at the moment somebody last regenerated. What the FILE answers is the question a file can
+    // answer honestly: which module owns this symbol.
     for (const entry of [...list].sort((a, b) => a.exported.localeCompare(b.exported))) {
       const kind = entry.typeOnly ? ' *(type)*' : ''
-      const where = entry.line ? `:${entry.line}` : ''
-      out.push(`- \`${entry.exported}\`${kind} – \`${owner}${where}\`${renameNote(entry)}`)
+      out.push(`- \`${entry.exported}\`${kind} – \`${owner}\`${renameNote(entry)}`)
     }
     out.push('')
   }

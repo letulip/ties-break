@@ -41,6 +41,7 @@ import {
   type FullBracketMatch,
   type PendingBracketRound,
   type TierOpenMap,
+  type TierRefusal,
   type StandingRow,
   type StopReason,
   type SeasonSupply,
@@ -67,7 +68,7 @@ import { alternateQueuePosition } from './ladder'
 import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus } from './medical'
+import { arrivalStatus, entryStatus, tierVerdict } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
@@ -916,6 +917,26 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     tierAcceptance: Object.fromEntries(
       TIER_LADDER.map((t) => [t, acceptanceRank(world, t)]).filter(([, r]) => r !== undefined),
     ) as Partial<Record<TierId, number>>,
+    // ⭐⭐ WHY A SHUT RUNG IS SHUT (PR-09 / TB-05) – the third map in this family and the one that
+    // stops the UI rebuilding the rule. `tierVerdict` asks the SAME `entryVerdict` the turnstile
+    // asks, so a card and `enterEvent` cannot disagree by construction. Only refusals are written:
+    // an open rung has no entry here, which is why this never restates `tierOpen` beside it.
+    tierRefusal: Object.fromEntries(
+      TIER_LADDER.map((t) => {
+        const v = tierVerdict(world, t)
+        if (v.level !== 'blocked' || !v.reason || v.reason === 'outgrown') return [t, undefined]
+        return [
+          t,
+          {
+            reason: v.reason,
+            ...(v.detail !== undefined ? { detail: v.detail } : {}),
+            ...(v.pointsToEnter !== undefined ? { pointsToEnter: v.pointsToEnter } : {}),
+            ...(v.rankToEnter !== undefined ? { rankToEnter: v.rankToEnter } : {}),
+            ...(v.entryCap !== undefined ? { entryCap: v.entryCap } : {}),
+          },
+        ]
+      }).filter(([, r]) => r !== undefined),
+    ) as Partial<Record<TierId, TierRefusal>>,
     // R15-9: THE ON-RAMP LATCHES, read-only, for the SLIDING TIER WINDOW - the calendar hides the
     // rungs a latch says she has definitively left behind (a copy, like every object on this
     // message: the snapshot must never be a live view of engine state). Surfacing widens the

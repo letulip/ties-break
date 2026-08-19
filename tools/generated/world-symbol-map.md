@@ -51,382 +51,382 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file.
 
-- `advanceWeeks` – `src/engine/world.ts:3485`
-- `closeTournament` – `src/engine/world.ts:2052`
-- `coachWorksThisWeek` – `src/engine/world.ts:1105`
-- `createWorld` – `src/engine/world.ts:2518`
-- `endCollegeEarly` – `src/engine/world.ts:3667`
-- `ensureSeason` – `src/engine/world.ts:997`
-- `maxMainDraws` – `src/engine/world.ts:2696`
-- `PARENT_INCOME_CENTS` – `src/engine/world.ts:819`
-- `PendingTournament` *(type)* – `src/engine/world.ts:403`
-- `rankingDeltaSuffix` – `src/engine/world.ts:1706`
-- `replayMainState` – `src/engine/world.ts:2677`
-- `resumeFromCollege` – `src/engine/world.ts:3626`
-- `revealTournamentRound` – `src/engine/world.ts:2003`
-- `reviewAcademy` – `src/engine/world.ts:1411`
-- `SAVE_SCHEMA_VERSION` – `src/engine/world.ts:394`
-- `seedWorldForV6` – `src/engine/world.ts:2701`
-- `skipEvent` – `src/engine/world.ts:3393`
-- `skipTournament` – `src/engine/world.ts:2029`
-- `STARTING_FUNDS_CENTS` – `src/engine/world.ts:810`
-- `tickWeek` – `src/engine/world.ts:2789`
-- `WorldState` *(type)* – `src/engine/world.ts:413`
+- `advanceWeeks` – `src/engine/world.ts`
+- `closeTournament` – `src/engine/world.ts`
+- `coachWorksThisWeek` – `src/engine/world.ts`
+- `createWorld` – `src/engine/world.ts`
+- `endCollegeEarly` – `src/engine/world.ts`
+- `ensureSeason` – `src/engine/world.ts`
+- `maxMainDraws` – `src/engine/world.ts`
+- `PARENT_INCOME_CENTS` – `src/engine/world.ts`
+- `PendingTournament` *(type)* – `src/engine/world.ts`
+- `rankingDeltaSuffix` – `src/engine/world.ts`
+- `replayMainState` – `src/engine/world.ts`
+- `resumeFromCollege` – `src/engine/world.ts`
+- `revealTournamentRound` – `src/engine/world.ts`
+- `reviewAcademy` – `src/engine/world.ts`
+- `SAVE_SCHEMA_VERSION` – `src/engine/world.ts`
+- `seedWorldForV6` – `src/engine/world.ts`
+- `skipEvent` – `src/engine/world.ts`
+- `skipTournament` – `src/engine/world.ts`
+- `STARTING_FUNDS_CENTS` – `src/engine/world.ts`
+- `tickWeek` – `src/engine/world.ts`
+- `WorldState` *(type)* – `src/engine/world.ts`
 
 ### `src/engine/world/ladder.ts`
 
 THE LADDER: where she stands, and what that standing opens.
 
-- `acceptanceRank` – `src/engine/world/ladder.ts:342`
-- `activeLadderOf` – `src/engine/world/ladder.ts:310`
-- `bookClosedTo` – `src/engine/world/ladder.ts:948`
-- `captureEntryRow` – `src/engine/world/ladder.ts:1008`
-- `entryCouldNotMove` – `src/engine/world/ladder.ts:1001`
-- `hasOutgrown` – `src/engine/world/ladder.ts:911`
-- `homeWildCardPlace` – `src/engine/world/ladder.ts:635`
-- `inTrack` – `src/engine/world/ladder.ts:45`
-- `isTierEligible` – `src/engine/world/ladder.ts:320`
-- `juniorAccessOpen` – `src/engine/world/ladder.ts:569`
-- `kidDomesticPoints` – `src/engine/world/ladder.ts:256`
-- `kidPoints` – `src/engine/world/ladder.ts:251`
-- `outgrewTier` – `src/engine/world/ladder.ts:889`
-- `PLAY_DOWN` – `src/engine/world/ladder.ts:503`
-- `playDownBars` – `src/engine/world/ladder.ts:532`
-- `proDoors` – `src/engine/world/ladder.ts:819`
-- `recomputeKidRank` – `src/engine/world/ladder.ts:126`
-- `refreshDerivedRankCaches` – `src/engine/world/ladder.ts:152`
-- `tableSize` – `src/engine/world/ladder.ts:83`
-- `tierFloorOpen` – `src/engine/world/ladder.ts:712`
-- `tierOpenFor` – `src/engine/world/ladder.ts:393`
-- `tierOutgrown` – `src/engine/world/ladder.ts:449`
+- `acceptanceRank` – `src/engine/world/ladder.ts`
+- `activeLadderOf` – `src/engine/world/ladder.ts`
+- `bookClosedTo` – `src/engine/world/ladder.ts`
+- `captureEntryRow` – `src/engine/world/ladder.ts`
+- `entryCouldNotMove` – `src/engine/world/ladder.ts`
+- `hasOutgrown` – `src/engine/world/ladder.ts`
+- `homeWildCardPlace` – `src/engine/world/ladder.ts`
+- `inTrack` – `src/engine/world/ladder.ts`
+- `isTierEligible` – `src/engine/world/ladder.ts`
+- `juniorAccessOpen` – `src/engine/world/ladder.ts`
+- `kidDomesticPoints` – `src/engine/world/ladder.ts`
+- `kidPoints` – `src/engine/world/ladder.ts`
+- `outgrewTier` – `src/engine/world/ladder.ts`
+- `PLAY_DOWN` – `src/engine/world/ladder.ts`
+- `playDownBars` – `src/engine/world/ladder.ts`
+- `proDoors` – `src/engine/world/ladder.ts`
+- `recomputeKidRank` – `src/engine/world/ladder.ts`
+- `refreshDerivedRankCaches` – `src/engine/world/ladder.ts`
+- `tableSize` – `src/engine/world/ladder.ts`
+- `tierFloorOpen` – `src/engine/world/ladder.ts`
+- `tierOpenFor` – `src/engine/world/ladder.ts`
+- `tierOutgrown` – `src/engine/world/ladder.ts`
 
 ### `src/engine/world/entryCaps.ts`
 
 THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks.
 
-- `ACCELERATOR` – `src/engine/world/entryCaps.ts:473`
-- `acceleratorAdmits` – `src/engine/world/entryCaps.ts:596`
-- `acceleratorUsage` – `src/engine/world/entryCaps.ts:573`
-- `annualEntryLimit` – `src/engine/world/entryCaps.ts:30`
-- `annualProEntryLimit` – `src/engine/world/entryCaps.ts:180`
-- `bestJuniorRankInWindow` – `src/engine/world/entryCaps.ts:124`
-- `entryCapUsage` – `src/engine/world/entryCaps.ts:69`
-- `isCappedProTier` – `src/engine/world/entryCaps.ts:173`
-- `isCappedTier` – `src/engine/world/entryCaps.ts:24`
-- `JUNIOR_RESERVED` – `src/engine/world/entryCaps.ts:504`
-- `juniorMerit` – `src/engine/world/entryCaps.ts:130`
-- `juniorReservedRank` – `src/engine/world/entryCaps.ts:507`
-- `proEntryCapUsage` – `src/engine/world/entryCaps.ts:285`
-- `proMerit` – `src/engine/world/entryCaps.ts:148`
-- `proSubCapRefusalDetail` – `src/engine/world/entryCaps.ts:404`
-- `proSubCapUsage` – `src/engine/world/entryCaps.ts:391`
-- `yearEndJuniorRank` – `src/engine/world/entryCaps.ts:321`
+- `ACCELERATOR` – `src/engine/world/entryCaps.ts`
+- `acceleratorAdmits` – `src/engine/world/entryCaps.ts`
+- `acceleratorUsage` – `src/engine/world/entryCaps.ts`
+- `annualEntryLimit` – `src/engine/world/entryCaps.ts`
+- `annualProEntryLimit` – `src/engine/world/entryCaps.ts`
+- `bestJuniorRankInWindow` – `src/engine/world/entryCaps.ts`
+- `entryCapUsage` – `src/engine/world/entryCaps.ts`
+- `isCappedProTier` – `src/engine/world/entryCaps.ts`
+- `isCappedTier` – `src/engine/world/entryCaps.ts`
+- `JUNIOR_RESERVED` – `src/engine/world/entryCaps.ts`
+- `juniorMerit` – `src/engine/world/entryCaps.ts`
+- `juniorReservedRank` – `src/engine/world/entryCaps.ts`
+- `proEntryCapUsage` – `src/engine/world/entryCaps.ts`
+- `proMerit` – `src/engine/world/entryCaps.ts`
+- `proSubCapRefusalDetail` – `src/engine/world/entryCaps.ts`
+- `proSubCapUsage` – `src/engine/world/entryCaps.ts`
+- `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
 
 ### `src/engine/world/medical.ts`
 
 THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
 
-- `accrueCondition` – `src/engine/world/medical.ts:76`
-- `arrivalStatus` – `src/engine/world/medical.ts:717`
-- `ArrivalStatus` *(type)* – `src/engine/world/medical.ts:701`
-- `ArrivalVerdict` *(type)* – `src/engine/world/medical.ts:700`
-- `availabilityStatus` – `src/engine/world/medical.ts:255`
-- `AvailabilityStatus` *(type)* – `src/engine/world/medical.ts:131`
-- `entryStatus` – `src/engine/world/medical.ts:473`
-- `EntryStatus` *(type)* – `src/engine/world/medical.ts:443`
-- `layoffBlock` – `src/engine/world/medical.ts:242`
-- `LayoffBlock` *(type)* – `src/engine/world/medical.ts:237`
-- `layoffCovering` – `src/engine/world/medical.ts:194`
-- `layoffCoversWeek` – `src/engine/world/medical.ts:210`
-- `medicalBlock` – `src/engine/world/medical.ts:171`
-- `MedicalBlock` *(type)* – `src/engine/world/medical.ts:166`
-- `medicalClearance` – `src/engine/world/medical.ts:151`
-- `MedicalClearance` *(type)* – `src/engine/world/medical.ts:150`
-- `restRecoveryBonus` – `src/engine/world/medical.ts:63`
+- `accrueCondition` – `src/engine/world/medical.ts`
+- `arrivalStatus` – `src/engine/world/medical.ts`
+- `ArrivalStatus` *(type)* – `src/engine/world/medical.ts`
+- `ArrivalVerdict` *(type)* – `src/engine/world/medical.ts`
+- `availabilityStatus` – `src/engine/world/medical.ts`
+- `AvailabilityStatus` *(type)* – `src/engine/world/medical.ts`
+- `entryStatus` – `src/engine/world/medical.ts`
+- `EntryStatus` *(type)* – `src/engine/world/medical.ts`
+- `layoffBlock` – `src/engine/world/medical.ts`
+- `LayoffBlock` *(type)* – `src/engine/world/medical.ts`
+- `layoffCovering` – `src/engine/world/medical.ts`
+- `layoffCoversWeek` – `src/engine/world/medical.ts`
+- `medicalBlock` – `src/engine/world/medical.ts`
+- `MedicalBlock` *(type)* – `src/engine/world/medical.ts`
+- `medicalClearance` – `src/engine/world/medical.ts`
+- `MedicalClearance` *(type)* – `src/engine/world/medical.ts`
+- `restRecoveryBonus` – `src/engine/world/medical.ts`
 
 ### `src/engine/world/coachMarket.ts`
 
 THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does.
 
-- `COACH_EDGE_REVEAL_WEEKS` – `src/engine/world/coachMarket.ts:592`
-- `coachBilling` – `src/engine/world/coachMarket.ts:259`
-- `coachEdgeView` – `src/engine/world/coachMarket.ts:744`
-- `coachLadderNote` – `src/engine/world/coachMarket.ts:1019`
-- `coachMarket` – `src/engine/world/coachMarket.ts:509`
-- `coachPlaqueLine` – `src/engine/world/coachMarket.ts:678`
-- `coachRoomNote` – `src/engine/world/coachMarket.ts:851`
-- `coachSinceWeek` – `src/engine/world/coachMarket.ts:130`
-- `coachTravelsWithHer` – `src/engine/world/coachMarket.ts:237`
-- `hireCoach` – `src/engine/world/coachMarket.ts:64`
-- `matchesEverPlayed` – `src/engine/world/coachMarket.ts:151`
-- `openingCoachId` – `src/engine/world/coachMarket.ts:40`
-- `practiceCoachRateFor` – `src/engine/world/coachMarket.ts:47`
-- `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts:179`
-- `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts:211`
+- `COACH_EDGE_REVEAL_WEEKS` – `src/engine/world/coachMarket.ts`
+- `coachBilling` – `src/engine/world/coachMarket.ts`
+- `coachEdgeView` – `src/engine/world/coachMarket.ts`
+- `coachLadderNote` – `src/engine/world/coachMarket.ts`
+- `coachMarket` – `src/engine/world/coachMarket.ts`
+- `coachPlaqueLine` – `src/engine/world/coachMarket.ts`
+- `coachRoomNote` – `src/engine/world/coachMarket.ts`
+- `coachSinceWeek` – `src/engine/world/coachMarket.ts`
+- `coachTravelsWithHer` – `src/engine/world/coachMarket.ts`
+- `hireCoach` – `src/engine/world/coachMarket.ts`
+- `matchesEverPlayed` – `src/engine/world/coachMarket.ts`
+- `openingCoachId` – `src/engine/world/coachMarket.ts`
+- `practiceCoachRateFor` – `src/engine/world/coachMarket.ts`
+- `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts`
+- `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts`
 
 ### `src/engine/world/college.ts`
 
 ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md).
 
-- `bankCollegeYear` – `src/engine/world/college.ts:198`
-- `COLLEGE_TRIP_WEEKS` – `src/engine/world/college.ts:320`
-- `collegeCoachFactor` – `src/engine/world/college.ts:356`
-- `collegeEpilogueLine` – `src/engine/world/college.ts:381`
-- `collegeMatchesThisWeek` – `src/engine/world/college.ts:326`
-- `collegeProgressOf` – `src/engine/world/college.ts:247`
-- `collegeRecruitViewOf` – `src/engine/world/college.ts:59`
-- `inCollege` – `src/engine/world/college.ts:137`
-- `measureCollegeOffer` – `src/engine/world/college.ts:94`
-- `openCollegeYear` – `src/engine/world/college.ts:223`
-- `resolveCallUp` – `src/engine/world/college.ts:173`
-- `resolveCollegeBill` – `src/engine/world/college.ts:110`
-- `skillMeanOf` – `src/engine/world/college.ts:143`
+- `bankCollegeYear` – `src/engine/world/college.ts`
+- `COLLEGE_TRIP_WEEKS` – `src/engine/world/college.ts`
+- `collegeCoachFactor` – `src/engine/world/college.ts`
+- `collegeEpilogueLine` – `src/engine/world/college.ts`
+- `collegeMatchesThisWeek` – `src/engine/world/college.ts`
+- `collegeProgressOf` – `src/engine/world/college.ts`
+- `collegeRecruitViewOf` – `src/engine/world/college.ts`
+- `inCollege` – `src/engine/world/college.ts`
+- `measureCollegeOffer` – `src/engine/world/college.ts`
+- `openCollegeYear` – `src/engine/world/college.ts`
+- `resolveCallUp` – `src/engine/world/college.ts`
+- `resolveCollegeBill` – `src/engine/world/college.ts`
+- `skillMeanOf` – `src/engine/world/college.ts`
 
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
 
-- `answerFork` – `src/engine/world/endings.ts:310`
-- `answerRetirement` – `src/engine/world/endings.ts:369`
-- `autoEndingViewOf` – `src/engine/world/endings.ts:63`
-- `buildDebtView` – `src/engine/world/endings.ts:442`
-- `buildEndingView` – `src/engine/world/endings.ts:398`
-- `cheapestEntryFeeCents` – `src/engine/world/endings.ts:53`
-- `guardNotEnded` – `src/engine/world/endings.ts:43`
-- `lastRungSeasonIndexOf` – `src/engine/world/endings.ts:111`
-- `latchEnding` – `src/engine/world/endings.ts:192`
-- `plateauViewOf` – `src/engine/world/endings.ts:173`
-- `resolveEndings` – `src/engine/world/endings.ts:219`
-- `wasThereAChild` – `src/engine/world/endings.ts:437`
+- `answerFork` – `src/engine/world/endings.ts`
+- `answerRetirement` – `src/engine/world/endings.ts`
+- `autoEndingViewOf` – `src/engine/world/endings.ts`
+- `buildDebtView` – `src/engine/world/endings.ts`
+- `buildEndingView` – `src/engine/world/endings.ts`
+- `cheapestEntryFeeCents` – `src/engine/world/endings.ts`
+- `guardNotEnded` – `src/engine/world/endings.ts`
+- `lastRungSeasonIndexOf` – `src/engine/world/endings.ts`
+- `latchEnding` – `src/engine/world/endings.ts`
+- `plateauViewOf` – `src/engine/world/endings.ts`
+- `resolveEndings` – `src/engine/world/endings.ts`
+- `wasThereAChild` – `src/engine/world/endings.ts`
 
 ### `src/engine/world/birthday.ts`
 
 HER BIRTHDAY, AND WHAT YOU GIVE HER.
 
-- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts:783`
-- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts:784`
-- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts:788`
-- `birthdayHeading` – `src/engine/world/birthday.ts:631`
-- `birthdayHistory` – `src/engine/world/birthday.ts:763`
-- `birthdayOffer` – `src/engine/world/birthday.ts:572`
-- `birthdayOptions` – `src/engine/world/birthday.ts:709`
-- `buildBirthdayPrompt` – `src/engine/world/birthday.ts:669`
-- `chooseGift` – `src/engine/world/birthday.ts:734`
-- `giftNoun` – `src/engine/world/birthday.ts:772`
-- `pendingBirthday` – `src/engine/world/birthday.ts:620`
+- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
+- `birthdayHeading` – `src/engine/world/birthday.ts`
+- `birthdayHistory` – `src/engine/world/birthday.ts`
+- `birthdayOffer` – `src/engine/world/birthday.ts`
+- `birthdayOptions` – `src/engine/world/birthday.ts`
+- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
+- `chooseGift` – `src/engine/world/birthday.ts`
+- `giftNoun` – `src/engine/world/birthday.ts`
+- `pendingBirthday` – `src/engine/world/birthday.ts`
 
 ### `src/engine/world/mandatory.ts`
 
 THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6).
 
-- `buildTourBriefing` – `src/engine/world/mandatory.ts:220`
-- `chargeMandatoryPenalty` – `src/engine/world/mandatory.ts:405`
-- `dueMandatoriesAt` – `src/engine/world/mandatory.ts:350`
-- `isMandatoryTier` – `src/engine/world/mandatory.ts:53`
-- `isSuspendedAt` – `src/engine/world/mandatory.ts:291`
-- `mandatoryBinds` – `src/engine/world/mandatory.ts:90`
-- `mandatoryBindsRank` – `src/engine/world/mandatory.ts:65`
-- `penaltyPointsAt` – `src/engine/world/mandatory.ts:280`
-- `quotaPlayedIn` – `src/engine/world/mandatory.ts:361`
-- `quotaShortfallAt` – `src/engine/world/mandatory.ts:376`
-- `suspensionWeeksLeft` – `src/engine/world/mandatory.ts:297`
+- `buildTourBriefing` – `src/engine/world/mandatory.ts`
+- `chargeMandatoryPenalty` – `src/engine/world/mandatory.ts`
+- `dueMandatoriesAt` – `src/engine/world/mandatory.ts`
+- `isMandatoryTier` – `src/engine/world/mandatory.ts`
+- `isSuspendedAt` – `src/engine/world/mandatory.ts`
+- `mandatoryBinds` – `src/engine/world/mandatory.ts`
+- `mandatoryBindsRank` – `src/engine/world/mandatory.ts`
+- `penaltyPointsAt` – `src/engine/world/mandatory.ts`
+- `quotaPlayedIn` – `src/engine/world/mandatory.ts`
+- `quotaShortfallAt` – `src/engine/world/mandatory.ts`
+- `suspensionWeeksLeft` – `src/engine/world/mandatory.ts`
 
 ### `src/engine/world/sponsors.ts`
 
 THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
 
-- `acceptOffer` – `src/engine/world/sponsors.ts:540`
-- `appearanceFeeFor` – `src/engine/world/sponsors.ts:845`
-- `coachTravelFareFor` – `src/engine/world/sponsors.ts:676`
-- `declineOffer` – `src/engine/world/sponsors.ts:552`
-- `isRetainerWeek` – `src/engine/world/sponsors.ts:819`
-- `localSponsorCents` – `src/engine/world/sponsors.ts:109`
-- `resultBonusFor` – `src/engine/world/sponsors.ts:863`
-- `reviewSponsors` – `src/engine/world/sponsors.ts:316`
-- `rolloverKitAllowance` – `src/engine/world/sponsors.ts:95`
-- `sponsorNeedMet` – `src/engine/world/sponsors.ts:192`
-- `travelCostFor` – `src/engine/world/sponsors.ts:585`
+- `acceptOffer` – `src/engine/world/sponsors.ts`
+- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
+- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
+- `declineOffer` – `src/engine/world/sponsors.ts`
+- `isRetainerWeek` – `src/engine/world/sponsors.ts`
+- `localSponsorCents` – `src/engine/world/sponsors.ts`
+- `resultBonusFor` – `src/engine/world/sponsors.ts`
+- `reviewSponsors` – `src/engine/world/sponsors.ts`
+- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
+- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
+- `travelCostFor` – `src/engine/world/sponsors.ts`
 
 ### `src/engine/world/age.ts`
 
 HER AGE: the band and the girl, and the birthday that lands in the feed.
 
-- `ageAtWeek` – `src/engine/world/age.ts:67`
-- `ageWindowStartWeek` – `src/engine/world/age.ts:147`
-- `birthdayTurning` – `src/engine/world/age.ts:269`
-- `birthdayWeek` – `src/engine/world/age.ts:243`
-- `kidAgeAt` – `src/engine/world/age.ts:121`
-- `kidAgeExact` – `src/engine/world/age.ts:82`
-- `kidAgeYears` – `src/engine/world/age.ts:109`
-- `kidBirthYear` – `src/engine/world/age.ts:73`
-- `START_AGE_YEARS` – `src/engine/world/age.ts:12`
+- `ageAtWeek` – `src/engine/world/age.ts`
+- `ageWindowStartWeek` – `src/engine/world/age.ts`
+- `birthdayTurning` – `src/engine/world/age.ts`
+- `birthdayWeek` – `src/engine/world/age.ts`
+- `kidAgeAt` – `src/engine/world/age.ts`
+- `kidAgeExact` – `src/engine/world/age.ts`
+- `kidAgeYears` – `src/engine/world/age.ts`
+- `kidBirthYear` – `src/engine/world/age.ts`
+- `START_AGE_YEARS` – `src/engine/world/age.ts`
 
 ### `src/engine/world/kit.ts`
 
 THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it.
 
-- `goodWeeksFor` – `src/engine/world/kit.ts:81`
-- `KIT_LINES` – `src/engine/world/kit.ts:42`
-- `kitAllowanceRemainingCents` – `src/engine/world/kit.ts:211`
-- `kitDealView` – `src/engine/world/kit.ts:219`
-- `kitLineViews` – `src/engine/world/kit.ts:264`
-- `kitPurchaseSplit` – `src/engine/world/kit.ts:192`
-- `kitStateOf` – `src/engine/world/kit.ts:46`
-- `setKitGrade` – `src/engine/world/kit.ts:149`
+- `goodWeeksFor` – `src/engine/world/kit.ts`
+- `KIT_LINES` – `src/engine/world/kit.ts`
+- `kitAllowanceRemainingCents` – `src/engine/world/kit.ts`
+- `kitDealView` – `src/engine/world/kit.ts`
+- `kitLineViews` – `src/engine/world/kit.ts`
+- `kitPurchaseSplit` – `src/engine/world/kit.ts`
+- `kitStateOf` – `src/engine/world/kit.ts`
+- `setKitGrade` – `src/engine/world/kit.ts`
 
 ### `src/engine/world/knock.ts`
 
 THE KNOCK: she comes off court sore, and the parent rests it or sends her back out.
 
-- `coachLoadViewOf` – `src/engine/world/knock.ts:246`
-- `decideKnock` – `src/engine/world/knock.ts:264`
-- `expireKnock` – `src/engine/world/knock.ts:75`
-- `isCompetitionWeek` – `src/engine/world/knock.ts:294`
-- `ordinaryTrainingWeek` – `src/engine/world/knock.ts:61`
-- `pendingKnock` – `src/engine/world/knock.ts:50`
-- `radarViewOf` – `src/engine/world/knock.ts:202`
-- `rollKnock` – `src/engine/world/knock.ts:85`
+- `coachLoadViewOf` – `src/engine/world/knock.ts`
+- `decideKnock` – `src/engine/world/knock.ts`
+- `expireKnock` – `src/engine/world/knock.ts`
+- `isCompetitionWeek` – `src/engine/world/knock.ts`
+- `ordinaryTrainingWeek` – `src/engine/world/knock.ts`
+- `pendingKnock` – `src/engine/world/knock.ts`
+- `radarViewOf` – `src/engine/world/knock.ts`
+- `rollKnock` – `src/engine/world/knock.ts`
 
 ### `src/engine/world/injury.ts`
 
 INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates.
 
-- `ageInjuryFactor` – `src/engine/world/injury.ts:46`
-- `consecutivePlayFactor` – `src/engine/world/injury.ts:53`
-- `injuryTau` – `src/engine/world/injury.ts:78`
-- `playedWeeksInTrailing4` – `src/engine/world/injury.ts:66`
-- `resolvePhysio` – `src/engine/world/injury.ts:423`
-- `retirementInjury` – `src/engine/world/injury.ts:410`
-- `rollInjury` – `src/engine/world/injury.ts:178`
+- `ageInjuryFactor` – `src/engine/world/injury.ts`
+- `consecutivePlayFactor` – `src/engine/world/injury.ts`
+- `injuryTau` – `src/engine/world/injury.ts`
+- `playedWeeksInTrailing4` – `src/engine/world/injury.ts`
+- `resolvePhysio` – `src/engine/world/injury.ts`
+- `retirementInjury` – `src/engine/world/injury.ts`
+- `rollInjury` – `src/engine/world/injury.ts`
 
 ### `src/engine/world/planner.ts`
 
 THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives.
 
-- `bookPractice` – `src/engine/world/planner.ts:175`
-- `bookVacation` – `src/engine/world/planner.ts:113`
-- `cancelPractice` – `src/engine/world/planner.ts:197`
-- `cancelVacation` – `src/engine/world/planner.ts:142`
-- `consecutivePracticeWeeks` – `src/engine/world/planner.ts:209`
-- `practiceCaution` – `src/engine/world/planner.ts:235`
-- `PracticeCaution` *(type)* – `src/engine/world/planner.ts:226`
+- `bookPractice` – `src/engine/world/planner.ts`
+- `bookVacation` – `src/engine/world/planner.ts`
+- `cancelPractice` – `src/engine/world/planner.ts`
+- `cancelVacation` – `src/engine/world/planner.ts`
+- `consecutivePracticeWeeks` – `src/engine/world/planner.ts`
+- `practiceCaution` – `src/engine/world/planner.ts`
+- `PracticeCaution` *(type)* – `src/engine/world/planner.ts`
 
 ### `src/engine/world/entries.ts`
 
 THE ENTRY COMMANDS: putting her in a draw, and taking her back out.
 
-- `cancelEntry` – `src/engine/world/entries.ts:260`
-- `enterEvent` – `src/engine/world/entries.ts:33`
-- `INJURY_RELEASE_SUFFIX` – `src/engine/world/entries.ts:155`
-- `RELEASE_LINE_PREFIX` – `src/engine/world/entries.ts:148`
-- `releaseEntry` – `src/engine/world/entries.ts:171`
-- `withdrawEvent` – `src/engine/world/entries.ts:125`
+- `cancelEntry` – `src/engine/world/entries.ts`
+- `enterEvent` – `src/engine/world/entries.ts`
+- `INJURY_RELEASE_SUFFIX` – `src/engine/world/entries.ts`
+- `RELEASE_LINE_PREFIX` – `src/engine/world/entries.ts`
+- `releaseEntry` – `src/engine/world/entries.ts`
+- `withdrawEvent` – `src/engine/world/entries.ts`
 
 ### `src/engine/world/milestones.ts`
 
 WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to.
 
-- `captureBreakEven` – `src/engine/world/milestones.ts:124`
-- `emptySeasonEntries` – `src/engine/world/milestones.ts:638`
-- `emptySeasonRecord` – `src/engine/world/milestones.ts:651`
-- `emptyTrophyLedger` – `src/engine/world/milestones.ts:674`
-- `maybeFireSeasonWrapUp` – `src/engine/world/milestones.ts:309`
-- `seasonWrapDue` – `src/engine/world/milestones.ts:627`
+- `captureBreakEven` – `src/engine/world/milestones.ts`
+- `emptySeasonEntries` – `src/engine/world/milestones.ts`
+- `emptySeasonRecord` – `src/engine/world/milestones.ts`
+- `emptyTrophyLedger` – `src/engine/world/milestones.ts`
+- `maybeFireSeasonWrapUp` – `src/engine/world/milestones.ts`
+- `seasonWrapDue` – `src/engine/world/milestones.ts`
 
 ### `src/engine/condition.ts`
 
 THE condition math – one rule, everybody.
 
-- `conditionMatchFactor` – `src/engine/condition.ts:118`
-- `matchDrain` – `src/engine/condition.ts:31`
-- `runFatigueExtra` – `src/engine/condition.ts:65`
-- `tournamentRunStrain` – `src/engine/condition.ts:109`
+- `conditionMatchFactor` – `src/engine/condition.ts`
+- `matchDrain` – `src/engine/condition.ts`
+- `runFatigueExtra` – `src/engine/condition.ts`
+- `tournamentRunStrain` – `src/engine/condition.ts`
 
 ### `src/engine/season/calendar.ts`
 
 Package L – tournament calendar.
 
-- `isBlackoutWeek` – `src/engine/season/calendar.ts:1735`
-- `isExamWeek` – `src/engine/season/calendar.ts:1726`
-- `isTierAgeOpen` – `src/engine/season/calendar.ts:1653`
-- `tierAgeBlock` – `src/engine/season/calendar.ts:1665`
+- `isBlackoutWeek` – `src/engine/season/calendar.ts`
+- `isExamWeek` – `src/engine/season/calendar.ts`
+- `isTierAgeOpen` – `src/engine/season/calendar.ts`
+- `tierAgeBlock` – `src/engine/season/calendar.ts`
 
 ### `src/engine/world/ledger.ts`
 
 THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out.
 
-- `financeSeries` – `src/engine/world/ledger.ts:102`
-- `financeWindow` – `src/engine/world/ledger.ts:75`
-- `seasonIndexOf` – `src/engine/world/ledger.ts:61`
-- `seasonStartWeek` – `src/engine/world/ledger.ts:68`
+- `financeSeries` – `src/engine/world/ledger.ts`
+- `financeWindow` – `src/engine/world/ledger.ts`
+- `seasonIndexOf` – `src/engine/world/ledger.ts`
+- `seasonStartWeek` – `src/engine/world/ledger.ts`
 
 ### `src/engine/kidLife.ts`
 
 HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results.
 
-- `schoolEndWeek` – `src/engine/kidLife.ts:163`
-- `schoolIsOver` – `src/engine/kidLife.ts:176`
-- `schoolIsOverForBand` – `src/engine/kidLife.ts:187`
+- `schoolEndWeek` – `src/engine/kidLife.ts`
+- `schoolIsOver` – `src/engine/kidLife.ts`
+- `schoolIsOverForBand` – `src/engine/kidLife.ts`
 
 ### `src/engine/world/player.ts`
 
 THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes.
 
-- `kidMatchPlayer` – `src/engine/world/player.ts:61`
-- `kidMatchPlayerFor` – `src/engine/world/player.ts:169`
-- `startingSkills` – `src/engine/world/player.ts:35`
+- `kidMatchPlayer` – `src/engine/world/player.ts`
+- `kidMatchPlayerFor` – `src/engine/world/player.ts`
+- `startingSkills` – `src/engine/world/player.ts`
 
 ### `src/engine/world/summer.ts`
 
 THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it.
 
-- `summerBlockWeek` – `src/engine/world/summer.ts:64`
-- `summerConditionCost` – `src/engine/world/summer.ts:122`
-- `summerLoadFactor` – `src/engine/world/summer.ts:107`
+- `summerBlockWeek` – `src/engine/world/summer.ts`
+- `summerConditionCost` – `src/engine/world/summer.ts`
+- `summerLoadFactor` – `src/engine/world/summer.ts`
 
 ### `src/engine/world/album.ts`
 
 THE ALBUM: seven polaroids, and the rule printed on every one of them.
 
-- `buildAlbum` – `src/engine/world/album.ts:380`
-- `buildScroll` – `src/engine/world/album.ts:427`
+- `buildAlbum` – `src/engine/world/album.ts`
+- `buildScroll` – `src/engine/world/album.ts`
 
 ### `src/engine/world/bookings.ts`
 
 THE BOOKINGS, read side: what the family has put in the diary for a given week.
 
-- `practiceForWeek` – `src/engine/world/bookings.ts:20`
-- `vacationForWeek` – `src/engine/world/bookings.ts:15`
+- `practiceForWeek` – `src/engine/world/bookings.ts`
+- `vacationForWeek` – `src/engine/world/bookings.ts`
 
 ### `src/engine/world/labels.ts`
 
 FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it.
 
-- `finishLabel` – `src/engine/world/labels.ts:12`
-- `prizeCentsFor` – `src/engine/world/labels.ts:38`
+- `finishLabel` – `src/engine/world/labels.ts`
+- `prizeCentsFor` – `src/engine/world/labels.ts`
 
 ### `src/engine/world/matchNews.ts`
 
 MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them.
 
-- `computeLossStreak` – `src/engine/world/matchNews.ts:78`
-- `flipScore` – `src/engine/world/matchNews.ts:18`
+- `computeLossStreak` – `src/engine/world/matchNews.ts`
+- `flipScore` – `src/engine/world/matchNews.ts`
 
 ### `src/engine/world/constants.ts`
 
 THE SHARED IDS AND CAPS: the handful of constants more than one world module needs.
 
-- `KID_ID` – `src/engine/world/constants.ts:8`
+- `KID_ID` – `src/engine/world/constants.ts`
 
 ### `src/engine/world/knockHistory.ts`
 
 THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out.
 
-- `KNOCK_HISTORY_MAX` – `src/engine/world/knockHistory.ts:13`
+- `KNOCK_HISTORY_MAX` – `src/engine/world/knockHistory.ts`
 
 ### `src/engine/world/snapshot.ts`
 
 THE SNAPSHOT: everything the UI is ever allowed to see, built fresh from the world on every command.
 
-- `toSnapshot` – `src/engine/world/snapshot.ts:669`
+- `toSnapshot` – `src/engine/world/snapshot.ts`
 

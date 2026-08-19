@@ -285,6 +285,63 @@ describe('tierOpenFor and entryStatus cannot disagree about a rung', () => {
     expect(openSeen).toBeGreaterThan(20)
     expect(shutSeen).toBeGreaterThan(20)
   })
+
+  // ⭐⭐ PR-09 / TB-05 – AND THE PROJECTED REASON CANNOT DISAGREE WITH THE PROJECTED VERDICT.
+  //
+  // `Snapshot.tierOpen` comes from `tierOpenFor`; `Snapshot.tierRefusal` comes from `tierVerdict`,
+  // which runs the same `entryVerdict` the turnstile runs. Both are built per rung with no event.
+  // Two answers to one question is precisely the shape this whole proposal exists to remove, so the
+  // one thing that must never happen is a rung the calendar calls OPEN carrying a refusal, or a rung
+  // it calls SHUT carrying none.
+  //
+  // ⚠ THIS IS THE NET UNDER THE UI CHANGE, not a restatement of the sweep above. `composables/
+  // tierState.ts` now settles "locked" from `refusal` when it is present, so if this map could drift
+  // from `tierOpen` the card would go back to disagreeing with `enterEvent` - the exact defect the
+  // file's own note at the top of this sweep records ("the calendar says open, the turnstile says
+  // locked"), arriving from a new direction.
+  it('⭐ the projected REASON and the projected VERDICT are one answer, over the same sweep', () => {
+    const worlds: WorldState[] = [
+      ...[0, 40, 86, 122, 200, 260, 400, 600].map((p) => domesticWorld(`refusal-dom-${p}`, p)),
+      ...[10, 50, 170, 200, 400].map((b) => proWorld(`refusal-pro-${b}`, 17, b)),
+    ]
+    const disagreements: string[] = []
+    let openSeen = 0
+    let shutSeen = 0
+    for (const world of worlds) {
+      const snap = toSnapshot(world)
+      for (const tier of TIER_LADDER) {
+        const open = snap.tierOpen[tier]
+        const refusal = snap.tierRefusal?.[tier]
+        if (open) {
+          openSeen += 1
+          if (refusal) disagreements.push(`${world.seed} ${tier}: open, yet refused '${refusal.reason}'`)
+        } else {
+          shutSeen += 1
+          if (!refusal) disagreements.push(`${world.seed} ${tier}: shut, yet carries no reason`)
+        }
+      }
+    }
+    expect(disagreements, 'the card and the turnstile have parted again').toEqual([])
+    // ...and both sides were really visited, or a projection that answered one way everywhere passes.
+    expect(openSeen, 'no open rung in the whole sweep').toBeGreaterThan(20)
+    expect(shutSeen, 'no shut rung in the whole sweep').toBeGreaterThan(20)
+  })
+
+  it('⚠ is not vacuous: the projection really names reasons, and the numbers behind them', () => {
+    const reasons = new Set<string>()
+    let withNumber = 0
+    for (const p of [0, 86, 200, 400]) {
+      const snap = toSnapshot(domesticWorld(`refusal-why-${p}`, p))
+      for (const tier of TIER_LADDER) {
+        const r = snap.tierRefusal?.[tier]
+        if (!r) continue
+        reasons.add(r.reason)
+        if (r.pointsToEnter !== undefined || r.rankToEnter !== undefined || r.entryCap !== undefined) withNumber += 1
+      }
+    }
+    expect(reasons.size, `reasons seen: ${[...reasons].join(', ')}`).toBeGreaterThan(0)
+    expect(withNumber, 'not one refusal carried the number behind it – the UI would have nothing to print').toBeGreaterThan(0)
+  })
 })
 
 // =================================================================================================

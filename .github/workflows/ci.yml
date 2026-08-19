@@ -6,6 +6,14 @@ on:
 jobs:
   test-build:
     runs-on: ubuntu-latest
+    # ⚠⚠ A HUNG JOB MUST DIE, NOT BURN THE AFTERNOON (19.08). Neither job carried a timeout, so
+    # GitHub's default applied - SIX HOURS - and a run that wedged simply sat there "in progress",
+    # telling nobody anything and holding a runner. The owner saw exactly that. A ceiling turns
+    # "still running" into "failed at N minutes, here is the log", which is the difference between a
+    # signal and a silence. Sized well above the honest worst case (the unit shards run ~4 min
+    # locally, the e2e job spends ~2 of its own minutes fetching Chromium), so it can only ever fire
+    # on a wedge and never on a slow-but-working run.
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -59,6 +67,8 @@ jobs:
   # and a red `e2e-smoke` names what broke without anyone reading a log to find out.
   e2e-smoke:
     runs-on: ubuntu-latest
+    # See `test-build`'s note: a wedge has to report, not hold a runner until the six-hour default.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7

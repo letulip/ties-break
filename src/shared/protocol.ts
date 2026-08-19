@@ -1239,6 +1239,17 @@ export interface UpcomingEvent {
  *  rather than re-deriving a rule that no longer covers every rung. */
 export type TierOpenMap = Record<TierId, boolean>
 
+/** Why one rung is shut, as `Snapshot.tierRefusal` carries it – the engine's `EntryStatus` narrowed
+ *  to the half a rung can answer. `detail` is the refusal's own words, the same string an event's
+ *  card gets, because 'unavailable' alone is five different refusals collapsed into one code. */
+export interface TierRefusal {
+  reason: 'locked' | 'injured' | 'unavailable' | 'medical' | 'capped'
+  detail?: string
+  pointsToEnter?: number
+  rankToEnter?: number
+  entryCap?: EntryCapUsage
+}
+
 export interface EntryCapUsage {
   used: number
   limit: number
@@ -3006,6 +3017,26 @@ export interface Snapshot {
    *  acceptance list AND with the population – the illustrative "top 50" that used to sit in a comment
    *  was stale by two re-pins when it was found. Derived at snapshot time, persists nothing. */
   tierAcceptance: Partial<Record<TierId, number>>
+  /** ⭐⭐ WHY A RUNG IS SHUT, IN THE ENGINE'S OWN WORDS (PR-09 / TB-05, 19.08). Present only for a
+   *  rung the engine refuses; ABSENT means open, so this map never restates `tierOpen`.
+   *
+   *  ⚠ IT EXISTS BECAUSE THE UI USED TO REBUILD THE REASON. `tierOpen` has answered "may she" since
+   *  W2-LADDER, but not "why not" - so `composables/tierState.ts` kept its own age gate, its own
+   *  point band and its own copy of `entryBandTrack` to produce the sentence. That is the "two sides
+   *  asking different functions about one question" class, and it has shipped as a defect four times
+   *  (the wild cards, the age gates, the bench pre-filter, and a W15 reading "68 / 120 international
+   *  pts" while the engine held it open).
+   *
+   *  ⚠ THE SAME FIELDS AN EVENT'S REFUSAL ALREADY CARRIES, deliberately - `ineligibleReason` and its
+   *  numbers, one shape for both scopes, so a card and a tournament row explain a refusal the same
+   *  way. What is NOT here is anything already on the Snapshot: `outgrown` is `tierOutgrown`, open is
+   *  `tierOpen`, and duplicating either would be this proposal's own defect.
+   *
+   *  ⚠ IT IS THE RUNG'S BASELINE, not a promise about any one tournament: computed with no per-event
+   *  door (`tierVerdict`'s `id: null`). The home wild card, the alternates list and the reserved
+   *  junior place can only ever ADMIT, so a named event may be MORE permissive than this and never
+   *  less. Derived at snapshot time, persists nothing. */
+  tierRefusal: Partial<Record<TierId, TierRefusal>>
   /** THE ON-RAMP LATCHES (v34 state, surfaced read-only in R15-9): has she EVER cleared the way
    *  onto each upper table. The event feed no longer reads them directly - W2-LADDER §4's
    *  two-type rule derives its pair from `tierOpen` below (see `feedContext` in
