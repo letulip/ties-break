@@ -84,14 +84,43 @@ interaction. Two seats become three, the travel line roughly **doubles**, and ha
 is back where the family started. The discount stops being a holiday from the economy and becomes
 what pays for the staff.
 
-## 4. ⚠ The trap to avoid
+## 4. ⚠⚠ CORRECTED BY THE OWNER – the goal is NOT a forced trade
 
-**Do not let the staff become strictly-buy.** If a masseur pays for himself in fewer injury weeks and
-a psychologist in more matches won, the correct play is "hire both, always", and two decisions
-collapse into a loading screen. Each must be a genuine trade:
+I proposed making each hire compete with the coach: the masseur for the seat on the plane, the
+psychologist for the coach's rung. **He rejected it (19.08), on two grounds, and both are right:**
 
-* the masseur competes with the COACH for the same seat on the plane;
-* the psychologist competes with the coach's own rung – a better coach or a head to talk to.
+> «Это разные специалисты и игрок может сам решать надо их с собой возить или нет. Это раз. А два –
+> не факт, что другие карьеры будут по 2,5 млн в год поднимать, далеко не факт. Наша задача сделать
+> так, чтобы специалисты не были декоративными, а реально несли какую-то пользу и это было видно и
+> заметно. Вот это надо проработать.»
+
+⭐ **The first ground is a design point I had backwards.** A manufactured rivalry between a masseur
+and a coach is a slider wearing two hats – the player is not choosing between two people, he is being
+told he may only have one. Whether to fly a specialist is ALREADY a decision, because the fare is
+already real; it does not need an artificial opponent.
+
+⚠ **The second corrects a measurement error of mine.** I sized the item against Ines' $2.57M year.
+That is the TOP of a career and it is not typical – Alice at 18 banks $113k against $64k of costs, and
+most careers never reach either. Designing the staff so it only reads as a decision for a
+multi-millionaire is designing it for the one player who does not need it.
+
+### ⭐ So the real task, in his words: they must not be DECORATIVE
+
+The failure mode is not "too cheap to matter". It is **"you paid, and you cannot tell"** – a salary
+that leaves the ledger every week against an effect buried in a distribution the player never sees.
+That is the thing to work out, and it has two halves:
+
+1. **The effect must be real** – large enough to survive the noise of a season, not a 1% nudge that
+   only a bench can find. It must be measurable in the units the player already reads: weeks not
+   lost, matches not thrown away after a bad start.
+2. ⚠ **AND IT MUST BE LEGIBLE, which is the harder half.** The game already knows how to do this and
+   how to fail at it. The coach's room note says what he is worth in plain words and quotes no figure
+   (round 23 #1). The academy paid $20,879 of fares and the owner never noticed it existed (#16). A
+   specialist whose benefit lands only inside `condition` will be exactly the academy again.
+
+**Concretely, before either hire ships:** name the sentence the player reads that tells him the
+masseur earned his fare this month, and the one that tells him the psychologist did. If neither can
+be written, the effect is in the wrong place – fix the effect, not the sentence.
 
 ## 5. Sequencing
 

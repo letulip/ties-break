@@ -111,7 +111,23 @@ Everything in this game so far is her, alone, with a parent paying. A college or
 first time she plays **for somebody other than herself**. That is what college is FOR narratively,
 and `nationalTeam.ts` is already half of it. §3 buys the mechanic; this is the reason to buy it.
 
-### 7c. ⚠ THE PARENT HAS NO JOB FOR FOUR YEARS, AND NOTHING REPLACES IT
+### 7c. ⚠⚠ WITHDRAWN BY THE OWNER, AND HE IS RIGHT – kept here because the reasoning matters
+
+I raised this as the brief's biggest risk. He answered it (19.08) and the answer is better than the
+worry: «если у нас появятся соревнования в процессе колледжа, то для родителя это будет примерно как
+2 месяца сезона с играми пролистать. Там у него тоже не много работы так-то. Иными словами, я не вижу
+проблему при наличии турниров.»
+
+⭐ **The concern was CONDITIONAL and I stated it as absolute.** A college year with a competition in
+it is an ordinary stretch of season – and an ordinary stretch of season is *already* mostly advancing
+weeks. Measured against the game we actually have rather than against an ideal, there is no deficit
+to fill.
+
+**So it collapses into §3 and adds nothing of its own:** with the competitions, this is a non-issue;
+without them, «4 клика и диплом» (his words) is the whole failure, and §3 is already the item that
+prevents it. What follows is kept as the record of an argument that was made and settled.
+
+### 7c-orig. THE PARENT HAS NO JOB FOR FOUR YEARS (as originally written)
 
 In college the programme coaches her – the bill says so («At college – the programme coaches her, not
 us»). So the game's central decision, the coach and his travel, is **suspended for four years**. A
@@ -135,9 +151,18 @@ The world ran for four years while she was gone. The conveyor turned the cohort 
 round 23 #13, almost nobody survives even one season at the top. **She returns to a field she does
 not recognise**, and nothing currently says so. One screen, at re-entry, naming who is gone.
 
-### 7f. AND THE THING THE BRIEF DOES NOT MENTION: CAN SHE FAIL?
+### 7f. CAN COLLEGE DISAPPOINT? – ⭐ ANSWERED BY THE OWNER, AND THE ANSWER IS A DESIGN
 
-Four years, one competition a year, and a graduation card. ⚠ Nothing in the brief can go WRONG. An
-injury in college, a bad year, a programme that drops her – any one of them makes the four years a
-story rather than a corridor. This is a question for him, not a proposal: **should college be able to
-disappoint?**
+I asked whether college should be able to go wrong: an injury, a bad year, a programme that drops
+her. His answer (19.08): «я тоже об этом думал и склоняюсь к мысли, что это каждый для себя решит
+сам, мы же не знаем как ее карьера дальше будет разворачиваться после колледжа, верно?»
+
+⭐ **THE DISAPPOINTMENT IS RETROSPECTIVE, NOT SCRIPTED.** Whether four years were the right call is
+decided by what happens AFTER them, and the game does not know that at the time – so it must not
+pretend to. A scripted setback would be the game telling the player what his choice was worth; the
+answer he gives leaves that judgement where it belongs.
+
+⚠ **What this rules OUT, concretely:** no "college goes badly" event, no programme that drops her, no
+punitive arm on the fork. **What it rules IN:** the years must be RECORDED well enough that a player
+can look back and judge them – which is §1's end screen, §7d's ledger, and §7e's changed world doing
+work they were already going to do.
