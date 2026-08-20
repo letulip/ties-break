@@ -15,7 +15,23 @@ import MatchViewer from './MatchViewer.vue'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 
-const props = defineProps<{ match: WorldMatch }>()
+const props = withDefaults(
+  defineProps<{
+    match: WorldMatch
+    /** ⭐⭐ WHAT THIS MATCH WAS – the college wave, and it is the owner's "only the tournament names
+     *  differing" taken literally (19.08, quoted verbatim in `docs/plans/college-as-a-place.md` §3).
+     *  A tour re-watch is headed "Match replay" because the occasion line under the
+     *  viewer already names the rung; a national-team rubber has NO rung (`occasionOf` correctly
+     *  returns null on an id that names no tier), so without this the one screen that could say which
+     *  competition she was playing in would say nothing at all.
+     *
+     *  ⚠ DEFAULTED, NOT REQUIRED, so both existing call sites (the Home feed and the Season bracket)
+     *  are byte-identical. `TakeoverShell.title` is deliberately required-and-nullable one layer
+     *  down; that rule is about "no header versus a header", which is not the question here. */
+    title?: string
+  }>(),
+  { title: 'Match replay' },
+)
 defineEmits<{ close: [] }>()
 
 const opts = computed<MatchOptions>(() => ({
@@ -61,7 +77,7 @@ const previewEvent = computed(() => occasionOf(props.match.eventId, props.match.
        fourth copy drift into a real bug. All four surfaces now draw the layer, the header and the
        scroller through `ui/TakeoverShell.vue`; the classes are unchanged, they just have one author.
        (`.tf-card` was in that list until 30.07 took the outer frame off all three - see below.) -->
-  <TakeoverShell title="Match replay">
+  <TakeoverShell :title="title">
     <template #sub>
       <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
     </template>

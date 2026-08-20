@@ -40,7 +40,26 @@
 // ⚠ NAMES ARE FICTIONAL (CLAUDE.md Style): the real competitions are trademarks, so this one is
 //   named for its category the way every rung on the ladder is – "Local Open", "World Tour 75",
 //   "Grand Slam". No nation of ours is ever named either; her country is `profile.country`.
-import type { Rng } from './rng'
+//
+// ⭐⭐ AND SINCE THE COLLEGE WAVE THE RUBBERS ARE PLAYED RATHER THAN COUNTED. The owner's brief
+// (19.08): «в каждом году минимум одни соревнования, которые можно смотреть так же, как и наши
+// текущие, т.е. тот же самый механизм в точности, кроме названий турниров». The fixture below is
+// unchanged – the letter, how many ties she is on court for, where her nation finishes – and what
+// changed is that the RESULT of each rubber now comes out of `simulateMatch`, off a stored seed,
+// through the same record shape a tournament match and a practice friendly already use. So the
+// week is watchable in the app's own viewer instead of arriving as one summary line.
+//
+// ⚠ `binomial` AND `rubberWinChance` ARE THE CALIBRATION TARGET NOW, NOT DEAD CODE. Two different
+// things keep them here and they are worth separating. THE DRAW stays inside `rollCallUp` because
+// removing it would re-map every later draw on `seed:callup:<week>` – `nationFinish` is taken after
+// it – and because the count may not depend on the outcome. THE CURVE stays because it is what the
+// played result is measured against: `tests/college-second-act.test.ts` carries the two side by side
+// over the whole skill band, so a match engine that quietly stopped agreeing with the calibration is
+// caught rather than assumed. The seam (`world/college.ts`) overwrites `rubbersWon` with what
+// actually happened on court.
+import type { MatchPlayer } from './match/types'
+import { FIRST_NAMES, NATION_POOL, SURNAMES } from './season/names'
+import { pickInt, type Rng } from './rng'
 
 /** ⚠ EVERY NUMBER THE RESEARCH GIVES IS MARKED `[R]` AND CARRIES ITS SECTION. Everything else is
  *  OURS and says so – the failure `acceptance-cuts-2026-08.md` §0 was written about is a number
@@ -79,13 +98,36 @@ export const NATIONAL_TEAM = {
    *  never routine. */
   callChance: 0.4,
 
-  /** ⚠ OURS. Her rubbers are counted, not played: this file does NOT run the match engine. A week
-   *  that is one line in the record does not get a bracket, and the two constants below are what
-   *  stands in for one. `standard` is the skill mean at which she is an even bet in a rubber and
-   *  `slope` is what a point of skill either side of it is worth. Calibrated in
+  /** ⚠ OURS. `standard` is the skill mean at which she is an even bet in a rubber and `slope` is
+   *  what a point of skill either side of it is worth. Calibrated in
    *  `docs/specs/college-as-a-second-act-2026-08.md` §4 against the measured skill mean at the fork,
-   *  so a nineteen-year-old at the median comes out near even. */
+   *  so a nineteen-year-old at the median comes out near even.
+   *
+   *  ⚠⚠ AND `standard` IS NOW A PLAYER RATHER THAN A THRESHOLD, which is the whole of the college
+   *  wave's change to this file. It used to be the midpoint of a probability curve that decided the
+   *  rubbers without playing them; it is now the SKILL MEAN OF THE WOMAN ACROSS THE NET
+   *  (`callUpOpponent` below), and the rubber is decided by `simulateMatch` between the two of them.
+   *  The constant means the same thing either way – "the level at which this is an even match" – so
+   *  nothing was re-tuned to make the change; what moved is who resolves it. */
   rubber: { standard: 62, slope: 0.02, floor: 0.08, ceiling: 0.92 },
+
+  /** ⚠ OURS. How far either side of `rubber.standard` one of her opponent's five attributes may
+   *  land. A national side is not five identical women, and a fixture where every rubber is the
+   *  same mirror match would read as one match played three times. The band is symmetric, so the
+   *  EXPECTED opponent is exactly `standard` and the calibration above is untouched in the mean. */
+  opponentSpread: 10,
+
+  /** ⚠ OURS. The age band a senior national side draws from. It exists because `MatchPlayer.age`
+   *  is the age half of the serve-speed curve (`match/serveSpeed.ts`), so an opponent with no age
+   *  would serve at the type's fallback rather than like a grown woman. The floor is the
+   *  competition's own `minAgeYears` + 4 – she is meeting selected seniors, not the youngest
+   *  eligible girl in the country. */
+  opponentAgeBand: [18, 28] as const,
+
+  /** ⚠ OURS, AND IT IS A CHOICE RATHER THAN A DRAW. Real ties are played on whatever the hosting
+   *  nation has; ours are on hard, because a surface drawn per week would be a fourth invented
+   *  number and the ONE thing it would change is a decorative mark on the viewer. */
+  surface: 'hard' as const,
 
   /** `[R]` §5.1: the level she is at holds fourteen nations in seven ties. Her nation finishes
    *  somewhere in it, and – this is the whole point of the week – WHERE IS NOT ABOUT HER. */
@@ -128,6 +170,12 @@ export function rollCallUp(view: CallUpView, rng: Rng): CallUp | null {
   // worse off. The obvious shortcut – reusing one uniform against `played` different thresholds –
   // is NOT this, and it is wrong in a way that flatters her: the thresholds have to grow to stay
   // monotone, so the second and third rubbers end up easier than the first.
+  //
+  // ⚠⚠ AND SINCE THE COLLEGE WAVE THIS IS THE MODEL, NOT THE RESULT. `world/college.ts` plays the
+  // rubbers through `simulateMatch` and overwrites this count with what happened on court. The draw
+  // STAYS – deleting it would re-map `nationFinish`, which is taken off this same stream one line
+  // down, and the count may not depend on the outcome. Same shape as the sponsor gift's discarded
+  // payout: the roll happens, only the value is thrown away.
   const won = binomial(played, rubberWinChance(view.skillMean), rng())
   // ⚠ AND HER NATION'S FINISH IS DRAWN FLAT AND IS NOT ABOUT HER. This is the property the research
   // calls the reason to build the thing at all (§11.1.2): "Nothing else we model pays her on
@@ -138,6 +186,70 @@ export function rollCallUp(view: CallUpView, rng: Rng): CallUp | null {
   if (!called) return null
   if (view.ageYears < NATIONAL_TEAM.minAgeYears) return null
   return { rubbersPlayed: played, rubbersWon: won, nationFinish }
+}
+
+/** ⭐⭐ THE WOMAN ACROSS THE NET, composed – one opponent for one rubber.
+ *
+ *  ⚠⚠ SHE IS DRAWN AROUND `rubber.standard` AND THAT IS THE WHOLE OF THE MODEL. The old code took
+ *  one uniform against `rubberWinChance(herSkillMean)`; this builds an opponent whose EXPECTED skill
+ *  mean is the same `standard` that probability curve was centred on, and hands both players to
+ *  `simulateMatch`. Nothing was re-tuned to make that swap – the constant already meant "the level at
+ *  which she is an even bet", and it now means it as a person instead of as a midpoint.
+ *
+ *  ⚠ THE CURVE IS STEEPER THAN THE ONE IT REPLACES, MEASURED RATHER THAN GUESSED, and it costs
+ *  nothing: a rubber pays no ranking points and no prize money, takes no condition and feeds no
+ *  development, so what moved is the LINE IN THE RECORD and not a balance. The figures are in
+ *  `tests/college-second-act.test.ts` ("the played rubber tracks the model it replaced").
+ *
+ *  ⚠ NINE DRAWS, ALWAYS, IN THIS ORDER. The caller composes one of these per tie in the week –
+ *  `tiesInTheWeek` of them, whether or not she is on court for all of them – so who her nation drew
+ *  is a fact about the week rather than about how many rubbers she was given. That is the same
+ *  post-draw discipline `rollCallUp` keeps for its own four.
+ *
+ *  ⚠ A LEAF, STILL. This composes numbers and a name off the world's own naming vocabulary
+ *  (`season/names.ts`, which imports nothing but the RNG); it knows no `WorldState`, no calendar and
+ *  no tier. `world/college.ts` is what puts her on court. */
+export function callUpOpponent(id: string, rng: Rng): CallUpOpponent {
+  const first = FIRST_NAMES[pickInt(rng, 0, FIRST_NAMES.length - 1)]
+  const last = SURNAMES[pickInt(rng, 0, SURNAMES.length - 1)]
+  const nation = NATION_POOL[pickInt(rng, 0, NATION_POOL.length - 1)]
+  const attr = (): number =>
+    pickInt(rng, NATIONAL_TEAM.rubber.standard - NATIONAL_TEAM.opponentSpread, NATIONAL_TEAM.rubber.standard + NATIONAL_TEAM.opponentSpread)
+  const serve = attr()
+  const ret = attr()
+  const composure = attr()
+  const stamina = attr()
+  // ⚠ THE FIFTH ATTRIBUTE IS DRAWN AND NOT DERIVED, which is the one place this deviates from a
+  // cohort rival. `rivalGroundstrokes` folds the other four and adds a per-id personality offset off
+  // its own `gs:<id>` sub-stream – correct for a player who is PERSISTED and has to answer the same
+  // way every week she is looked up. These women are composed once, for one rubber, from a stream
+  // that is re-derived at the call site, so the personality is already in the four draws above and a
+  // second sub-stream to hold it would be a stream with nothing to remember.
+  const groundstrokes = attr()
+  const [ageLo, ageHi] = NATIONAL_TEAM.opponentAgeBand
+  return {
+    nation,
+    player: {
+      id,
+      name: `${first} ${last}`,
+      serve,
+      ret,
+      composure,
+      stamina,
+      groundstrokes,
+      age: pickInt(rng, ageLo, ageHi),
+    },
+  }
+}
+
+/** One rubber's opponent: the player the match engine takes, and the country on her shirt.
+ *
+ *  ⚠ THE NATION RIDES BESIDE HER RATHER THAN ON HER, because `MatchPlayer` has no such field and
+ *  giving it one would touch every match in the game to decorate three a year. */
+export interface CallUpOpponent {
+  player: MatchPlayer
+  /** ISO-2, out of the same `NATION_POOL` the cohort and the professional field are drawn from */
+  nation: string
 }
 
 /** How many of `n` rubbers she wins at probability `p`, drawn from one uniform `u` in [0,1).
@@ -170,6 +282,10 @@ export function rubberWinChance(skillMean: number): number {
 /** The week, as it happened. Persisted inside `CollegeYear` – see `shared/protocol.ts`. */
 export interface CallUp {
   rubbersPlayed: number
+  /** ⚠ WHAT SHE ACTUALLY WON ON COURT since the college wave. `rollCallUp` fills this from the
+   *  binomial model and `resolveCallUp` overwrites it with the count of rubbers `simulateMatch`
+   *  gave her. The field's shape and meaning are unchanged, which is why this needed no schema
+   *  bump: a career saved before the rubbers were played reads exactly the same. */
   rubbersWon: number
   /** 1..`nationsAtHerLevel`; 1 is the level won */
   nationFinish: number

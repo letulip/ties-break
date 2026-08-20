@@ -394,8 +394,21 @@ const goalLine = computed(() => (game.snapshot ? nextGoalFor(game.snapshot).text
 
 // The week's booked friendly, if it was played (an injury cancels + refunds it, and then there is
 // no match event at all). The engine already resolved it; the flow only presents it.
+// ⚠ NARROWED TO A BOOKED PRACTICE WEEK BY THE COLLEGE WAVE, and it is a trap closed rather than a
+// bug fixed. `friendly` means "a watchable match that awards ZERO ranking points", and since that
+// wave a national-team RUBBER wears the same flag – deliberately, because it is the one predicate the
+// radar, the avatar's emotion, the knock history and the Weekly Story all read to decide whether a
+// match is evidence about her form, and a rubber is not. What `friendly` never meant is "practice",
+// which is the word the sentence beside this button says. It cannot fire today (the epilogue covers
+// the shell for every college week, and the week the recap draws is the year boundary rather than the
+// call-up), and "cannot fire today" is precisely how the unreachable copy this wave was sent to fix
+// came about. `practice-w<week>` is what `resolvePractice` files under; `nations-w<week>-r<i>` is what
+// a rubber does.
 const friendlyMatch = computed<WorldMatch | null>(
-  () => weekEvents.value.find((e) => e.type === 'match' && e.friendly && e.match)?.match ?? null,
+  () =>
+    weekEvents.value.find(
+      (e) => e.type === 'match' && e.friendly && e.match?.eventId.startsWith('practice-w'),
+    )?.match ?? null,
 )
 const practiceLive = ref<WorldMatch | null>(null)
 // Same one answer the rank-move line above uses, and the same reason – see `activeLadderOfSnapshot`.

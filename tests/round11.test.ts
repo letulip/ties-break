@@ -217,9 +217,16 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // `week % 52 === 0`, this advance hard-stops at `% 52 === 49`, and the shell steps by four - so
     // 49 + 4 = 53 made the verdict week the one week of the season a player can never land on. It
     // had passed in silence for a whole career (his, measured: still in the ledger 205 weeks later).
+    // ⚠⚠ THE COLLEGE WAVE ADDED 'call-up', AND IT IS THE FIRST MEMBER NO `advanceWeeks` EVER SETS.
+    // Every reason above is produced by the advance loop; this one is produced by
+    // `resumeFromCollege`, which spends a whole college YEAR in one call with no player in it. Since
+    // that wave her national-team rubbers are REAL matches played through `simulateMatch`, and the
+    // owner asked for a competition he can watch – so a reason with no precedence slot would be
+    // filtered out of the return value and a year of played tennis would report nothing at all. The
+    // same bug class as R11-1, arriving through a second producer.
     // ⚠ THE HAND-WRITTEN LIST IS THE POINT OF THIS TEST and must stay hand-written: derived from
     // STOP_PRECEDENCE it could never catch a member that has no slot, which is the whole bug class.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy']
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'call-up']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {

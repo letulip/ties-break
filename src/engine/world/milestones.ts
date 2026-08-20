@@ -599,7 +599,8 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
  *    2. the retirement offer is raised ON that week by design, and it outranks the summary in
  *       `blockingOverlay` – correctly: a question time is stopped on comes before a report;
  *    3. the player answers, `answerRetirement` runs, and the worker builds a fresh snapshot – with no
- *       `stopReasons`, because only an `advance` ever sets them;
+ *       `stopReasons`, because only a WEEK-SPENDING command sets them (`advance`, and since the
+ *       college wave `resumeFromCollege`; `answerRetirement` is neither);
  *    4. `'season-end'` is gone for ever, so the gate that required it can never be satisfied again
  *       and the season's summary is lost. The fork, one rank above it in the same list, erased the
  *       same beat by the same argument.

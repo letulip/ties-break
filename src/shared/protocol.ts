@@ -294,6 +294,19 @@ export type StopReason =
    *  Good news rather than a cost, so it sits low in the precedence below; but it landed on the one
    *  week a player stepping by four can never see, and passed in silence for a whole career. */
   | 'academy'
+  /** ⭐⭐ THE COLLEGE WAVE: her country played, and since this wave the rubbers are REAL MATCHES.
+   *
+   *  ⚠⚠ IT EXISTS FOR THE SAME REASON 'academy' DOES, ONE TURN OF THE SCREW WORSE. The academy's
+   *  verdict landed on the one week a `+4` could never reach; a college call-up lands inside
+   *  `resumeFromCollege`, which spends **a whole year in one call with no player in it at all**. The
+   *  owner asked for a competition he can WATCH («которые можно смотреть так же, как и наши
+   *  текущие»), and a match played inside a 52-week loop that reports nothing is a match nobody can
+   *  watch however well it is simulated. This is the channel that carries the week back out.
+   *
+   *  ⚠ IT IS THE ONE MEMBER NO `advanceWeeks` EVER SETS. `resumeFromCollege` is the only producer –
+   *  the call-up fires only inside the freeze and the freeze is only ever spent by that command –
+   *  and `mutate` puts the returned reasons on the snapshot exactly as it does for an advance. */
+  | 'call-up'
   /** R12-15: an entered tournament came round while she was still inside her layoff, so the week
    *  resolved as a WALKOVER – 0 points, and the entry fee forfeited (the list had closed with her on
    *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
@@ -358,6 +371,14 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // ROUND 23 #16: BELOW the three that cost her something and above the ordinary week – a
   // scholarship arriving is news she should not miss, and never an emergency.
   'academy',
+  // ⭐⭐ THE COLLEGE CALL-UP, immediately below the academy and above everything dismissable, for
+  // the same reason and with one sharpening: it is the only member of this list that can arrive
+  // ALONGSIDE 'ending' every single time it fires, because `resumeFromCollege` re-latches the
+  // epilogue on the very call that produces it. 'ending' carries no toast copy (its surface IS the
+  // screen), so the toast falls through to this line – which is precisely the ordering R11-1 exists
+  // to decide. It costs her nothing by the time it fires, so it sits under the academy's news and
+  // far under the three that cost money.
+  'call-up',
   // W4: fourth, above everything that can wait a click, for a stronger reason than the three
   // medical beats have – the advance CANNOT continue until it is answered (`advanceWeeks` returns
   // early on an undecided knock). A stop nobody surfaces would strand the career, so it has to
@@ -2940,6 +2961,20 @@ export interface CollegeProgressView {
    *  field, no migration. `null` on a career that entered college before the choice existed, and the
    *  screen says nothing rather than naming a place it was never told. */
   tier: CollegeTier | null
+  /** ⭐⭐ THE RUBBERS OF `last`'s CALL-UP WEEK, WATCHABLE – the college wave, the owner's item 3.
+   *
+   *  ⚠ THE RECORDS THEMSELVES, because that is what watching one takes: `MatchReplay` re-runs
+   *  `simulateMatch(a, b, {surface, tour, seed})` under the stored seed and reproduces the match
+   *  point for point. A list of scorelines would be a report about a match; this is the match.
+   *
+   *  ⚠ A WIRE FIELD AND NOT A SAVE FIELD, on exactly `billPerYearCents`' argument two doors up. The
+   *  rows live in `world.events` like every other match in the game and are read out at snapshot
+   *  time by `callUpRubbersOf`, so this adds no `SAVE_SCHEMA_VERSION` bump, no migration and no
+   *  golden fixture.
+   *
+   *  EMPTY in a year nobody wrote to her, and empty on the year she was named and never took the
+   *  court – which is a real outcome, not a missing one, and the copy beside it says so. */
+  rubbers: WorldMatch[]
 }
 
 export interface Snapshot {
@@ -3348,11 +3383,17 @@ export interface Snapshot {
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
    *  Stats. Empty until the first wrap-up. */
   seasonHistory: SeasonHistoryEntry[]
-  /** EVERY reason an `advance` stopped early, in STOP_PRECEDENCE order; absent when the advance ran
+  /** EVERY reason the WEEK-SPENDING command reported, in STOP_PRECEDENCE order; absent when it ran
    *  its full course. R11-1: this replaced a single `stopReason`, which could only ever report one
    *  of the week's true reasons and silently dropped the rest (a fresh injury on the wrap-up week
    *  came back as 'season-end' alone). The UI dispatches off the SET, so an injury and the season
-   *  wrap-up are both reachable from one advance. */
+   *  wrap-up are both reachable from one advance.
+   *
+   *  ⚠ TWO PRODUCERS SINCE THE COLLEGE WAVE, and the noun above changed for it: `advanceWeeks`, and
+   *  `resumeFromCollege`, which spends a college YEAR in one command and has to report the
+   *  national-team week played inside it ('call-up'). No consumer changes – both hand the same array
+   *  through the same `mutate` – but "an advance" was the wrong word for the field as soon as there
+   *  was a second one, and a wrong word here is quoted back as a rule three comments away. */
   stopReasons?: StopReason[]
   /** present while a tournament reveal is in progress (drives TournamentFlow) */
   pending?: PendingView

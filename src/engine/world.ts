@@ -204,6 +204,7 @@ import {
 import { ENDINGS } from './ending'
 import {
   bankCollegeYear,
+  callUpPlayedThisWeek,
   collegeCoachFactor,
   collegeEpilogueLine,
   collegeMatchesThisWeek,
@@ -219,6 +220,10 @@ export {
   // ever read it – it shipped on 17.08 and this is the same day – so the rename breaks no call site.
   COLLEGE_TRIP_WEEKS,
   bankCollegeYear,
+  // ⭐⭐ THE COLLEGE WAVE: the played rubbers and the predicate that stops them passing in silence.
+  callUpPlayedThisWeek,
+  callUpRubberId,
+  callUpRubbersOf,
   collegeCoachFactor,
   collegeEpilogueLine,
   collegeMatchesThisWeek,
@@ -3761,25 +3766,59 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
  *
  *  ⚠ THE LOOP BREAKS ON A FRESH ENDING. A career-ending injury can land at college – she is playing
  *  a lot of tennis – and when it does she never comes back, which is a true story rather than an
- *  edge case to be defended against. */
-export function resumeFromCollege(world: WorldState, rng: Rng): void {
+ *  edge case to be defended against.
+ *
+ *  ⭐⭐⭐ AND IT NOW REPORTS THE WEEK THAT IS NOT HERS – the college wave, the owner's item 3:
+ *  «в каждом году минимум одни соревнования, которые можно смотреть так же, как и наши текущие».
+ *
+ *  ⚠⚠ THE HAZARD THIS ANSWERS IS ROUND 23 #16's, ARRIVING FROM THE OTHER SIDE. That item was an
+ *  academy verdict firing on the one week a `+4` advance could never land on; this is a national-team
+ *  week firing inside a loop that spends FIFTY-TWO weeks with nobody watching. Now that the rubbers
+ *  are really played (`world/college.ts`), a year that produced three matches and reported one
+ *  sentence would be the same silence with better tennis behind it.
+ *
+ *  ⚠ IT COLLECTS, IT DOES NOT HALT – and that is the owner's own ruling rather than a shortcut. He
+ *  designed college as the SHORTCUT: «1-2 национальных выезда в год и перелистывание 1 года за клик»,
+ *  and «родители не будут посещать все игры в колледже» is why `COLLEGE_TRIP_WEEKS` shrank a
+ *  thirteen-week season to two trips. A year that stopped in the middle and demanded a second click
+ *  to finish itself would be the playable season the fork exists to skip. So the year is still ONE
+ *  click, and what changes is that the click hands back the reason – `mutate` puts it on the
+ *  snapshot exactly as it does for an advance, the epilogue's year card offers the rubbers to
+ *  replay, and the toast says the week happened. `stops` is a Set filtered through STOP_PRECEDENCE
+ *  for the identical reason `advanceWeeks` does it: one call can be several things at once (the
+ *  classic here: a call-up in April and the ending re-latched in December), and the caller decides
+ *  the order to show them in. */
+export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   const college = world.college
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
   if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
   const start = openCollegeYear(world)
   const yearEnds = Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR)
   world.ending = null
-  while (world.week < yearEnds && world.ending === null) tickWeek(world, rng)
+  const stops = new Set<StopReason>()
+  while (world.week < yearEnds && world.ending === null) {
+    tickWeek(world, rng)
+    // ⚠ ASKED AFTER THE TICK AND OF THE WORLD, never threaded back through `tickWeek` – the whole
+    // point of `callUpPlayedThisWeek` being a predicate. One `stops.add`, exactly like the academy's.
+    if (callUpPlayedThisWeek(world)) stops.add('call-up')
+  }
   // ⚠ A YEAR CUT SHORT BY AN ENDING IS STILL BANKED. The album's last page is allowed to say what
   // she was doing when it happened, and a row that stops mid-year is the honest record of that.
   bankCollegeYear(world, start)
   if (world.ending !== null) {
     college.doneWeek = world.week
-    return
+    // ⚠ 'ending' JOINS THE SET RATHER THAN REPLACING IT, which is R11-1's rule kept on a second
+    // caller: the year she got hurt out of the game may ALSO be the year her country called, and a
+    // return that reported one of them would be the lost-injury-popup bug wearing college colours.
+    stops.add('ending')
+    return STOP_PRECEDENCE.filter((r) => stops.has(r))
   }
   if (world.week >= college.untilWeek) {
     finishCollege(world)
-    return
+    // ⚠ NO 'ending' HERE, AND THE ASYMMETRY IS THE FACT. `finishCollege` takes the latch OFF for
+    // good – she has graduated and the tab shell comes back – so the toast this returns is the one
+    // the player can actually read, on the one call of the four where nothing covers the screen.
+    return STOP_PRECEDENCE.filter((r) => stops.has(r))
   }
   // ⭐ THE LATCH GOES BACK ON, and this is the whole of "one year at a time". The screen that asks
   // «another year?» is the epilogue screen, so the epilogue has to still be there to ask it – and
@@ -3791,6 +3830,8 @@ export function resumeFromCollege(world: WorldState, rng: Rng): void {
     detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
     resumesWeek: Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR),
   })
+  stops.add('ending')
+  return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
 /** ⭐ THE EARLY RETURN – «I am going back on tour now», answered at a year boundary.

@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: college
 canonical: false
-last-reviewed: 2026-08-19
+last-reviewed: 2026-08-20
 ---
 
 # College as a PLACE, not a pause – the owner's brief, round 23 (19.08.2026)
@@ -11,8 +11,10 @@ last-reviewed: 2026-08-19
 He is about to reach the fork and will verify this himself. His words, and my reading, item by item –
 plus §7, which is his own question back to me: «что еще добавишь?»
 
-⚠ **This is a PLAN. Nothing here is built.** Where a thing already exists it says so, because the
-biggest risk in this brief is rebuilding what `nationalTeam.ts` already does.
+⚠ **This was a PLAN and §3 is now BUILT (20.08)** – the rest is not. Where a thing already exists it
+says so, because the biggest risk in this brief is rebuilding what `nationalTeam.ts` already does,
+and that risk was real: the wave that shipped §3 changed how a rubber is RESOLVED and touched neither
+the letter, the fixture nor the placing.
 
 ---
 
@@ -46,13 +48,67 @@ already distinguishes all three outcomes and the kid-life tile already renders t
 engine-correct and pinned, and **cannot be reached today** because `showEnding` replaces the tab
 shell, so screen C is never mounted between years. Whoever builds this owns that ruling.
 
+⭐ **WHAT THE COLLEGE WAVE FOUND, 20.08, AND THE RULING IT DID NOT MAKE.** Three of the four screens
+this item asks for already exist under other names, and it is worth writing down which:
+
+* **the start screen** is the epilogue's college block at `yearsDone === 0` – it names the place, the
+  bill, «Play the first year», and «She can leave at the end of any year»;
+* **the between-year screen** is the same block at `yearsDone > 0`, and since this wave it also lists
+  the year's rubbers with a Watch control each;
+* **the end screen** already arrives, through the app's ordinary machinery rather than a new surface:
+  `finishCollege` / `endCollegeEarly` write `collegeEpilogueLine` as a `milestone` on the CURRENT
+  week, `'milestone'` is a `HIGHLIGHT_TYPES` member, and the tab shell routes to the week's own story
+  the moment the latch comes off. So graduation lands on a screen that says what four years did.
+
+⚠⚠ **THE STUDYING LINE IS STILL UNREACHABLE, AND THE OBVIOUS FIX IS A ROUND-20 DEAD END.** The
+tempting move is a «look around» door out of the epilogue into the tab shell. It cannot be taken
+casually: the epilogue is a BLOCKING takeover precisely because `advanceWeeks` returns `['ending']`
+and `guardNotEnded` throws on most commands, so a player let into the shell mid-college meets a
+sticky "Play week" bar, an Enter-event button and a coach market that the engine will REFUSE. That is
+a screen full of controls that error – the round-20 failure with a different cause. **The ruling this
+needs is which controls the shell hides while an ending is latched**, and that is a shell-wide
+decision, not a college one. Left for the owner.
+
 ## 2. His item 2 – transitional screens between years
 
 The hook exists: the epilogue already asks «another year?» once per year, and `bankCollegeYear`
 already banks one. What is missing is what the screen SAYS between them – see §7c, which is the
 sharpest risk in this whole brief.
 
-## 3. His item 3 – ⭐ one watchable competition per year
+⭐ **PART-ANSWERED BY §3 (20.08), WHICH IS WHERE §7c SAID IT WOULD BE ANSWERED.** The between-year
+card now carries the year's competition as something to DO rather than something to read: one row per
+rubber, opponent and result, and the match itself one tap away. What it still does not carry is a
+DECISION – §7c-orig's candidate list (does she play the summer, what does she study, does the family
+keep paying for anything on the side) is untouched, and remains the honest gap in this item.
+
+## 3. His item 3 – ⭐ one watchable competition per year – ✅ **BUILT (20.08)**
+
+⭐⭐ **SHIPPED.** The rubbers are played through `simulateMatch` on `seed:rubbers:<week>` /
+`seed:rubber:<week>:<i>`, land in `world.events` as `match` rows with the same record every other
+match carries, and are watched in `MatchReplay` – the same viewer the tour re-watches a match in,
+headed with the competition's name (his «кроме названий турниров»). `resumeFromCollege` now returns
+`StopReason[]` and adds `'call-up'`, so the year cannot pass in silence; the epilogue's year card
+lists one row per rubber with a Watch control. **No save-schema change** – the records live in the
+feed, `CollegeCallUp` keeps its three numbers, and `rubbersWon` is simply counted off the court now.
+
+⚠ **Measured, because the model it replaces was a probability curve** (n = 2,000 per row):
+
+| her skill mean | 50 | 54 | 58 | **62** | 66 | 70 | 76 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| the old model `rubberWinChance` | .260 | .340 | .420 | **.500** | .580 | .660 | .780 |
+| played through `simulateMatch` | .211 | .294 | .407 | **.479** | .615 | .726 | .838 |
+
+The played curve tracks and is slightly steeper – a real match compounds a skill edge over a set –
+and it costs nothing, because a rubber still pays no points, no money, takes no condition and feeds
+no development. The table is pinned in `tests/college-second-act.test.ts`.
+
+⚠ **Deliberately NOT done, and each is a balance change §0 and invariant 4 own:** a condition drain
+for the rubbers, a layoff when she retires hurt in one (the verb says it happened; the body does
+not), and anything that would make the week feed `growWeek`.
+
+*The brief, as written, follows.*
+
+## 3-orig. His item 3, as first read
 
 > «в каждом году минимум одни соревнования, которые можно смотреть так же, как и наши текущие, т.е.
 > тот же самый механизм в точности, кроме названий турниров»
@@ -72,6 +128,15 @@ result already exist; what changes is that the match is *played* rather than *su
 its own sub-stream and a re-freeze, and `resolveCallUp` sits INSIDE `resumeFromCollege` – a four-year
 loop with no player in it. A played match that wants a viewer is a stop, and a stop inside that loop
 is the same 49+4 trap round 23 #16 just fixed. **Design the stop before the match.**
+
+⭐ **HOW IT CAME OUT (20.08).** The stop was designed first and it is a REPORT rather than a halt,
+which is his own ruling rather than a shortcut: college is the shortcut («перелистывание 1 года за
+клик»), and a year that stopped in the middle and needed a second click to finish itself is the
+playable season the fork exists to skip. So the year is still one click and the click hands back the
+reason. **And there was no re-freeze to take:** the new draws are on `seed:rubbers:<week>`, a private
+sub-stream, `seed:callup:<week>` is byte-identical, and the three frozen careers in
+`tests/coach-travel-edge.test.ts` never reach college – they are green untouched, MAIN capture
+included (41550 / `e6b0c709`).
 
 ## 4. His item 4 – «заканчиваем или продолжаем?»
 

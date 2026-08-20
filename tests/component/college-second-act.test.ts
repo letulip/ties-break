@@ -28,7 +28,9 @@ import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import { ENDINGS } from '../../src/engine/ending'
 import { boxOf, setViewport, NARROW_PHONE, PHONE, type Viewport } from './fits'
-import type { AlbumPage, CollegeProgressView, CollegeYear, EndingView, Snapshot } from '../../src/shared/protocol'
+import { NATIONAL_TEAM } from '../../src/engine/nationalTeam'
+import type { AlbumPage, CollegeProgressView, CollegeYear, EndingView, Snapshot, WorldMatch } from '../../src/shared/protocol'
+import type { MatchPlayer } from '../../src/engine/match/types'
 
 function albumPage(slot: number): AlbumPage {
   return {
@@ -59,6 +61,31 @@ function collegeYear(over: Partial<CollegeYear> = {}): CollegeYear {
   }
 }
 
+/** ⭐⭐ THE COLLEGE WAVE – A RUBBER, AS THE ENGINE FILES IT. `seed` is what makes it replayable:
+ *  `MatchReplay` re-runs `simulateMatch(a, b, {surface, tour, seed})` and reproduces the match point
+ *  for point, so a fixture without one would mount a viewer with nothing to show. */
+function rubberPlayer(id: string, name: string): MatchPlayer {
+  return { id, name, serve: 62, ret: 60, composure: 61, stamina: 63, groundstrokes: 62, age: 21 }
+}
+
+function rubber(index: number, over: Partial<WorldMatch> = {}): WorldMatch {
+  const opp = rubberPlayer(`nations-w295-r${index}`, index === 0 ? 'Petra Kovac' : 'Nina Larsson')
+  return {
+    round: index,
+    aId: 'kid',
+    bId: opp.id,
+    winnerId: index === 0 ? 'kid' : opp.id,
+    seed: `fixture:rubber:295:${index}`,
+    score: index === 0 ? '6-4 6-3' : '3-6 4-6',
+    eventId: `nations-w295-r${index}`,
+    surface: 'hard',
+    oppName: opp.name,
+    a: rubberPlayer('kid', 'Mila Adler'),
+    b: opp,
+    ...over,
+  }
+}
+
 function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressView {
   // ⚠ ROUND 21: `billPerYearCents` is a real bill by default, not 0. A fixture that defaulted to zero
   // would go on measuring the free-ride card and quietly stop covering the one the player sees – the
@@ -66,6 +93,10 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
   // shipped example bill from `what-the-college-place-costs-2026-08.md` §1a.
     // ⚠ 17.08: `tier` is the place she picked, and the default is a real one for the same reason the
   // bill's default is – a fixture that defaulted to `null` would go on measuring the migrated card.
+  // ⚠ AND `rubbers` DEFAULTS TO THE TWO SHE PLAYED, for the third time in this function's history and
+  // for the same reason the bill and the tier do: the default fixture must be the card the player
+  // sees. `collegeYear()` above says she played two rubbers, so a default of `[]` would have been a
+  // fixture asserting a week the engine cannot produce.
   return {
     yearsDone: 1,
     totalYears: ENDINGS.collegeYears,
@@ -73,6 +104,7 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
     final: false,
     billPerYearCents: 8_673_00,
     tier: 'state',
+    rubbers: [rubber(0), rubber(1)],
     ...over,
   }
 }
@@ -132,10 +164,91 @@ describe('P5 – the college year block', () => {
     wrapper.unmount()
   })
 
+  // ===============================================================================================
+  // ⭐⭐ THE COLLEGE WAVE – THE COMPETITION IS WATCHED, NOT SUMMARISED (owner's item 3, 19.08)
+  // ===============================================================================================
+  //
+  // «в каждом году минимум одни соревнования, которые можно смотреть так же, как и наши текущие,
+  // т.е. тот же самый механизм в точности, кроме названий турниров.»
+  //
+  // The engine plays the rubbers now; these three say the player can reach them. The load-bearing
+  // one is the second: it mounts the REAL `MatchReplay`, the same component the tour re-watches a
+  // match in, so "the same mechanism exactly" is asserted rather than claimed in a comment.
+
+  it('⭐⭐ every rubber she played is a row, with who and what it finished', async () => {
+    const wrapper = await openEpilogue(collegeView())
+    const rows = wrapper.findAll('.college-rubber')
+    expect(rows, 'two rubbers played, two rows').toHaveLength(2)
+    expect(rows[0].text()).toContain('Rubber 1')
+    expect(rows[0].text()).toContain('Kovac')
+    expect(rows[0].text()).toContain('Won 6-4 6-3')
+    expect(rows[1].text()).toContain('Lost 3-6 4-6')
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ pressing one opens the SAME replay the tour opens, headed with the competition', async () => {
+    const wrapper = await openEpilogue(collegeView())
+    expect(wrapper.findComponent({ name: 'MatchReplay' }).exists(), 'nothing open to begin with').toBe(false)
+    await wrapper.findAll('.college-rubber')[0].trigger('click')
+    const replay = wrapper.findComponent({ name: 'MatchReplay' })
+    expect(replay.exists(), 'the rubber opens the app\'s own match viewer').toBe(true)
+    // ⚠ THE TITLE IS THE OWNER'S «кроме названий турниров», and it is the ONE thing that differs from
+    // a tour replay. A rubber has no rung behind it, so `occasionOf` correctly says nothing – without
+    // this header the screen would never name the competition at all.
+    expect(replay.text()).toContain(NATIONAL_TEAM.label)
+    // ⚠⚠ AND IT PAINTS OVER THE EPILOGUE RATHER THAN UNDER IT, MEASURED THROUGH THE REAL CASCADE.
+    // This is the one way the control could fail silently: the player taps Watch, the component
+    // mounts, and nothing appears because the takeover's `z-index: 55` lost to the epilogue's 60.
+    // It does not, and the reason is a rule rather than a number – `.ending` is `position: fixed`
+    // with a numeric z-index, so it OPENS A STACKING CONTEXT and its descendants are ordered inside
+    // it. Both halves are asserted, because either one changing breaks the claim: a takeover that
+    // stopped being fixed would be clipped by `.ending`'s own `overflow-y: auto`, and an `.ending`
+    // that stopped opening a context would put a 55 under a 60.
+    const shell = replay.find('.tournament-flow').element
+    const ending = wrapper.find('.ending').element
+    expect(getComputedStyle(shell).position, 'the takeover escapes the epilogue\'s scroller').toBe('fixed')
+    expect(getComputedStyle(ending).position).toBe('fixed')
+    expect(Number(getComputedStyle(ending).zIndex), '.ending opens a stacking context').toBeGreaterThan(0)
+    expect(Number(getComputedStyle(shell).zIndex), 'and the takeover is ordered inside it').toBeGreaterThan(0)
+    // ...and it closes back onto the same undecided question.
+    await replay.vm.$emit('close')
+    expect(wrapper.findComponent({ name: 'MatchReplay' }).exists()).toBe(false)
+    expect(wrapper.findAll('.ending-fork-option')).toHaveLength(2)
+    wrapper.unmount()
+  })
+
+  it('⚠ a rubber she walked out of says so, in the result sheet\'s own notation', async () => {
+    // A bare "Lost 6-4 2-1" hides that she stopped, which is the lie the news line's verb exists to
+    // prevent one layer down. `ret.` sits beside the verb, so which of the two women retired is never
+    // in doubt: the one who retires is always the one who lost.
+    const hers = rubber(0, { retiredId: 'kid', winnerId: 'nations-w295-r0', score: '6-4 2-1' })
+    const theirs = rubber(1, { retiredId: 'nations-w295-r1', winnerId: 'kid', score: '6-4 3-0' })
+    const wrapper = await openEpilogue(collegeView({ rubbers: [hers, theirs] }))
+    const rows = wrapper.findAll('.college-rubber')
+    expect(rows[0].text()).toContain('Lost 6-4 2-1 ret.')
+    expect(rows[1].text()).toContain('Won 6-4 3-0 ret.')
+    wrapper.unmount()
+  })
+
+  it('⚠ named in the squad and never on court draws NO rows – the outcome, not a gap', async () => {
+    // Research §5.7: representation is deemed to occur on nomination, not on playing. A squad of four
+    // for three ties means one of them sits, and the week is still a week. What there is not is a
+    // match, so there is nothing to open and the card must not offer one.
+    const wrapper = await openEpilogue(
+      collegeView({ last: collegeYear({ callUp: { week: 295, rubbersPlayed: 0, rubbersWon: 0, nationFinish: 11 } }), rubbers: [] }),
+    )
+    expect(wrapper.text()).toContain('never on court')
+    expect(wrapper.findAll('.college-rubber')).toHaveLength(0)
+    wrapper.unmount()
+  })
+
   it('⚠ and says it plainly when nobody wrote to her', async () => {
-    const wrapper = await openEpilogue(collegeView({ last: collegeYear({ callUp: null }) }))
+    const wrapper = await openEpilogue(collegeView({ last: collegeYear({ callUp: null }), rubbers: [] }))
     expect(wrapper.text()).toContain('Nobody wrote to her this year')
     expect(wrapper.text()).not.toContain('Her country called')
+    // ⚠ AND NO RUBBER ROW EITHER – a year with no letter has nothing to open, and a "Watch" control
+    // with no match behind it is the empty-popup failure of R10-16 wearing a different button.
+    expect(wrapper.findAll('.college-rubber')).toHaveLength(0)
     wrapper.unmount()
   })
 
@@ -149,7 +262,7 @@ describe('P5 – the college year block', () => {
   it('⚠ THE LEAVE ANSWER IS ABSENT BEFORE THE FIRST YEAR IS SPENT, and the engine agrees', async () => {
     // `endCollegeEarly` throws on a career with no banked year, so a button here would be a control
     // that cannot work. The screen agrees with the rule; it is not the rule (CLAUDE.md invariant 1).
-    const wrapper = await openEpilogue(collegeView({ yearsDone: 0, last: null }))
+    const wrapper = await openEpilogue(collegeView({ yearsDone: 0, last: null, rubbers: [] }))
     const labels = wrapper.findAll('.ending-fork-option strong').map((n) => n.text())
     expect(labels).toEqual(['Play the first year'])
     expect(wrapper.text()).toContain('Year 1 of 4')
@@ -264,8 +377,12 @@ describe('⚠⚠ P5 – the college question fits a phone, and the measurement c
     it(`both answers are reachable at ${vp.width}x${vp.height}`, async () => {
       const wrapper = await openEpilogue(collegeView(), vp)
       const root = wrapper.find('.ending').element
-      const controls = wrapper.findAll('.college-year .ending-fork-option').map((n) => n.element)
-      expect(controls).toHaveLength(2)
+      // ⚠ THE RUBBER ROWS ARE MEASURED WITH THE ANSWERS (the college wave). They are the newest
+      // controls on the longest card in the game, they sit ABOVE the two answers, and the failure
+      // mode this whole describe exists for is a card that grows one honest row at a time until
+      // something falls off the bottom of a phone.
+      const controls = wrapper.findAll('.college-year .ending-fork-option, .college-year .college-rubber').map((n) => n.element)
+      expect(controls, 'two answers and two rubbers').toHaveLength(4)
       assertTakeoverReachable(root, controls, vp, 'EndingScreen (college question)')
       wrapper.unmount()
     })
