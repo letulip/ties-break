@@ -138,3 +138,42 @@ band, so the two compete for the same money and the player has to choose.
    good ending; one that silently drops them is a bug the player will feel.
 4. **Is any of it inheritable by HER?** Round 23 item 18 asks for prize money to reach her account
    at 18. If she has money, does she have a shelf of her own? That is a much bigger game.
+
+---
+
+## 7. ⭐⭐ CHARITY – and the owner's instinct to have it both ways is right
+
+He asked (19.08) whether giving should buy something back or be honestly disinterested, and then
+answered better than the question: «попробовал бы в лучших традициях взять и объединить обе части».
+
+**My view, and why the combination is not a compromise.**
+
+⚠ THE TWO OPTIONS ARE NOT ACTUALLY OPPOSITES. "It gives something back" and "it is disinterested"
+only conflict if the return is a PRICE LIST – donate X, receive Y. That version is not charity, it is
+a shop with a halo, and it is strictly worse than the shop we already designed: the optimal play is
+to give exactly as much as the reward is worth and not a cent more.
+
+But a return that is **real, unpriced and unpromised** breaks nothing:
+
+* she is invited somewhere because of who she has become, not because a counter filled;
+* a sponsor whose values match turns up on his own – ⭐ note this one specifically converts giving
+  into MONEY, which is the tycoon loop the shop otherwise owns;
+* a line in the ending that names it, which costs nothing and is the whole point.
+
+⭐ **SO THE COMBINATION IS: THE GIVING IS FREE, AND THE WORLD NOTICES.** No progress bar, no tier, no
+"donate $50,000 to unlock". The player never knows in advance what a gift will do, which is the only
+state in which the choice is genuinely his – and the game's own habit of not promising numbers (the
+coach's room note, the broker in §4 above) is already this rule, applied elsewhere.
+
+⚠ AND CHARITY IS THE ONLY MECHANIC IN THIS FILE THAT SPENDS MONEY WITH NO WAY BACK. Property can be
+sold, investments grow, a car depreciates but is still a car. A gift is gone. That is what makes it
+the one thing that can turn late-career wealth into a STATEMENT instead of a bigger number – and
+round 23's measurement is why it matters: Ines earns $2.57M a year against $220k of costs, and her
+INTEREST ALONE ($251k) exceeds every outgoing she has. The money has nowhere to go. That is the hole
+this fills.
+
+### The question that stays open for him
+
+**Is it HER giving or the FAMILY's?** Round 23 #18 put her prize share in her own account from 18. If
+the money is hers, the parent proposing a gift is a different scene entirely – and possibly a better
+one than either half of the original question.
