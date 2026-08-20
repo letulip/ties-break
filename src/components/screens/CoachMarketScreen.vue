@@ -42,6 +42,13 @@ import IconButton from '../ui/IconButton.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
 import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
+// ⭐ ROUND-23 #5 / #1 – TWO PURE LOOKUPS, in the same register as `COACH_TIER_LABEL` above and for the
+// same reason: they are label tables keyed on data the row already carries, not decisions. `coachBlurb`
+// maps a portrait stem to that coach's own description and `ROOM_NOTE_SEP` is the separator the engine
+// wrote the room note with, read here so the split cannot drift from the join. Neither touches a world,
+// draws anything, or knows what a career is - see their notes in the engine for why the blurb could not
+// simply ride on `CoachMarketRow` this wave.
+import { coachBlurb, ROOM_NOTE_SEP } from '../../engine/world/coachMarket'
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
 import { formatCents } from '../../shared/money'
 
@@ -326,7 +333,28 @@ async function doSendToJuniors() {
 // tests/coachTiers.test.ts). The answer is that a rung's worth is a share of her REMAINING headroom,
 // so it falls as she fills her ceiling and as the age curve eases - honestly, and until now
 // silently. Engine-computed (`coachRoomNote`); this screen only prints it.
+//
+// ⭐ ROUND-23 #1 – AND THE BAND IS NOW THE FIRST THING ON THE LINE. The owner asked for the reading to
+// be said «более явно» and handed three examples of what he meant, every one of them a band in plain
+// words rather than a figure. The engine still decides which band she is in and still refuses to quote
+// the ceiling (`KidScreen`'s fog of war); what this pair does is SPLIT the label off the argument so
+// the label can be set in bold and read at a glance.
+//
+// ⚠ THE SPLIT IS PRESENTATION AND NOTHING ELSE. It is on `ROOM_NOTE_SEP` - the engine's own separator,
+// imported rather than retyped - and it takes the FIRST occurrence only, so a sentence that happens to
+// contain another dash keeps the rest of itself. A note with no separator at all (or an empty one)
+// falls through to `band = ''` and the whole string as the body, which is the shipped rendering before
+// this change: the split can shorten the line's emphasis, never its content.
 const roomNote = computed(() => game.snapshot?.coachRoomNote ?? '')
+const roomBand = computed(() => {
+  const at = roomNote.value.indexOf(ROOM_NOTE_SEP)
+  return at > 0 ? roomNote.value.slice(0, at) : ''
+})
+// ⚠ THE TAIL IS THE REST OF THE ENGINE'S OWN STRING, separator and all, rather than a body re-joined
+// to a separator this file also knows. `band + tail === note` for every possible note, so the line on
+// screen is the sentence the engine wrote to the character and a test can assert exactly that - which
+// is the check that would catch a screen quietly editing copy it does not own.
+const roomTail = computed(() => roomNote.value.slice(roomBand.value.length))
 
 // --- THE PLAQUE: WHAT THE COACH SHE ACTUALLY HAS TURNED OUT TO BE WORTH ------------------------
 //
@@ -755,8 +783,17 @@ function scrollToTier(tier: CoachTier): void {
          whole ladder inside four tenths of a point). He asked why his coach's number kept falling; this
          is the sentence that answers it, and it is engine-computed so it can never contradict the rows.
          It deliberately quotes no figure - `KidScreen` keeps her ceiling behind a fog of war and this
-         must not be the back door through it. -->
-    <p v-if="roomNote" class="hint cm-room-note">{{ roomNote }}</p>
+         must not be the back door through it.
+
+         ⭐ ROUND-23 #1 - AND THE BAND IS NAMED OUT LOUD IN FRONT OF IT. His words are in the engine
+         beside `coachRoomNote` (no Cyrillic in a template, tests/round13-nav.test.ts); the short of it
+         is that the reading was true and buried, and he asked to be told it plainly. The label is the
+         engine's own first clause, set in bold - the same device `.cm-travel-cost` above uses to put
+         the figure a parent is looking for at the front of a sentence. The fog is untouched: the band
+         is one of four words-only readings and no digit may appear in either half. -->
+    <p v-if="roomNote" class="hint cm-room-note">
+      <strong v-if="roomBand" class="cm-room-band">{{ roomBand }}</strong>{{ roomTail }}
+    </p>
 
     <!-- Tier chips SCROLL to a section rather than filtering the list to nothing (design §T.1). -->
     <div class="controls market-chips">
@@ -838,6 +875,17 @@ function scrollToTier(tier: CoachTier): void {
             <span class="fit-pill" :class="FIT_CLASS[r.fitNow]">{{ FIT_LABEL[r.fitNow] }}</span>
             <span class="cm-tags">{{ PLAY_STYLE_LABEL[r.style] }}</span>
           </span>
+          <!-- ⭐ ROUND-23 #5 - WHO THIS ONE IS. Every other line on this card is a fact about his RUNG
+               (the pill is the style table, both bands are tier tables, the load note is a `switch
+               (tier)`), so four coaches on a rung printed four identical arguments under four drawn
+               names. This is the one line that belongs to the person, keyed on his portrait stem in
+               `coachBlurb` - never rolled, so the same face carries the same description in every
+               career, exactly as it carries the same style.
+
+               DIRECTLY UNDER THE NAME AND THE PILL, above the figures: it is identity, and identity is
+               read before argument. It takes the load note's own treatment rather than a louder one -
+               the uplift is still the card's headline and a description must not compete with it. -->
+          <span v-if="coachBlurb(r.id)" class="cm-blurb">{{ coachBlurb(r.id) }}</span>
           <!-- WHAT THE RUNG IS WORTH TO HER, computed from her own headroom. Its own line, because
                it is the number the owner asked for and it must never be the thing that truncates.
 
@@ -930,3 +978,22 @@ function scrollToTier(tier: CoachTier): void {
     />
   </template>
 </template>
+
+<!-- ⭐ ROUND-23 #5 – THE ONE RULE THIS SCREEN OWNS, in the scoped block rather than in src/style.css,
+     which is the placement HomeScreen already documents for a rule that belongs to exactly one
+     surface (see its module header). It is one declaration set and no other screen can want it: the
+     coach description exists only on a market row.
+
+     ⚠ IT IS `.cm-load`'s TREATMENT, DELIBERATELY AND TO THE VALUE. Size, line-height and colour are
+     copied from that rule on purpose: the description and the load note are both quiet prose under
+     the name, and giving the new one its own weight or its own grey would make the card argue about
+     which of two sentences matters more. The one difference is the margin – `.cm-load` opens a 2px
+     gap above itself to separate the body note from the FIGURES, and this line sits directly under
+     the meta row where `.cm-body`'s own 4px gap is already the separation. -->
+<style scoped>
+.cm-blurb {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+</style>

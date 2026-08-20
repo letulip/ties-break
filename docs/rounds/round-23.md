@@ -26,12 +26,51 @@ are analyses OF them; every other item that needs a world builds its own.
 
 ## The checklist
 
-- [ ] **1. «Давай как-то по-другому оформим подсказки про уровень девушки на карточке тренера. Может
+- [x] **1. «Давай как-то по-другому оформим подсказки про уровень девушки на карточке тренера. Может
   что-то вроде "она близка к своему потолку" или "ещё есть куда расти" или "у неё большой потенциал"
   или что-то в таком духе, что даст игроку понять более явно»**
   – *build.* The coach card's readout of where she stands against her ceiling is too oblique. He
   wants a plain-language band, and has given three of them by example. The number behind it already
   exists (potential vs current); what changes is how it is said.
+
+  **SHIPPED. The band is named out loud, the fog stays shut – and one of the four bands turned out
+  to be a string no player could ever have been shown.**
+
+  *What he reads now,* on ONE real ticked career (`final-a`, middle rung), pulled off the mounted
+  screen and not out of the source:
+
+  ```
+  w  1  age 14   Huge potential – most of her game is still ahead of her, and this is where a coach buys the most.
+  w 60  age 15   Still room to grow – there is real room left in her game, and a coach is what buys it.
+  w120  age 16   Close to her ceiling – she is running out of room, and every rung is worth less than it was.
+  w200  age 17   At her ceiling – no coach can add much more now, whatever the price.
+  ```
+
+  The label is the engine's own first clause, split off on `ROOM_NOTE_SEP` and set in bold by screen
+  T; `band + tail === note`, so the screen owns the emphasis and never the words. **The ruling at
+  `CoachMarketScreen.vue:757` stands** – no figure appears in either half, at any headroom, and that
+  is asserted on the rendered paragraph rather than on the engine string.
+
+  ⚠ **AND THE THRESHOLDS HAD TO MOVE, because they were measured for the first time.** The 08.08
+  ladder was 0.6 / 0.8 / 0.92 on realised share. Twelve careers ticked ten seasons say she is **never
+  below 68%** at any age: min 68.2 at 14, median 80.6 at 14 → 88.9 at 16 → 92.8 at 18 → 95.9 at 24.
+  So band 0 was DEAD COPY and band 1 expired five to thirty-five weeks into the first season – four
+  bands were really two, and saying that in bold would have been the loud version of a wrong reading.
+  Re-cut to **0.82 / 0.88 / 0.92**, calibrated on what the market still offers (elite.hi − budget.hi,
+  measured: 2.44pp at 70% realised, 1.48 at 80, 0.98 at 84, 0.66 at 88, 0.44 at 91, 0.31 at 93, 0.08
+  at 96). **The top threshold did not move** – 0.92 is where the whole ladder falls inside half a
+  point, which is his own 08.08 complaint at 93.4%. Five re-walked seeds now enter all four bands in
+  order and never step back. ⚠ Copy only: `coachRoomBandIndex` is read by one sentence and by nothing
+  else – no draw, no bill, no schema, no frozen hash.
+
+  *Evidence:* `tests/round23-coach-copy.test.ts` (#1: label/separator contract, dense monotonicity
+  sweep, no-figure sweep, and a 468-week walk on a real career asserting the band index is
+  non-decreasing AND that all four are reached) + `tests/component/round23-coach-card.test.ts` (#1:
+  two headrooms render two DIFFERENT bands, the ladder walks all four on screen, no digit in the
+  rendered line at seven headrooms, and the rendered paragraph equals `snapshot.coachRoomNote`).
+  Mutation-verified, ten mutations – notably **restoring the shipped 0.6 / 0.8 / 0.92 reddens the
+  career walk's reachability assertion ALONE**, and deleting the `<strong class="cm-room-band">`
+  reddens three component tests and nothing in the unit file.
 
 - [ ] **2. «Письмо Entries Suspended вызывает во мне странные чувства, особенно последняя строчка
   этого письма. Как будто её откуда-то сняли. Может быть можем как-то переформулировать?»**
@@ -184,10 +223,53 @@ are analyses OF them; every other item that needs a world builds its own.
   the first, and the flat floor, the one-row 1000 delta and the words-not-detail finding are asserted
   by the other four.
 
-- [ ] **5. «Разный текст для каждой из карточек тренеров с микро описанием каждого из них в своём
+- [x] **5. «Разный текст для каждой из карточек тренеров с микро описанием каждого из них в своём
   тире»**
   – *build.* Each coach gets his own short description, distinct WITHIN his tier – so two coaches of
   the same rung do not read as one man with two names.
+
+  **SHIPPED. Sixteen descriptions, one per portrait stem, no repeat inside a rung or anywhere else.**
+
+  *Why the cards read as one man:* every other line on a coach card is a fact about his RUNG – the
+  fit pill is `styleAffinity`, both bands are tier tables, and `coachLoadNote` is literally a
+  `switch (tier)`. Four coaches on a rung printed four identical arguments under four drawn names.
+
+  *Rendered, off the mounted screen* (seed `final-b`, w160 – names and prices are the seed's, the
+  descriptions are the portrait's):
+
+  ```
+  budget  Lidia Kone       All-court     $176/wk  Teaches the basics, and drills them until they hold.
+          Sabine Fotiadis  Aggressive    $183/wk  An ex-satellite hitter who still swings for the lines.
+          Andres Malek     Big serve     $198/wk  Cheap, blunt, and obsessed with a repeatable toss.
+          Goran Chen       Counterpunch  $198/wk  A club-court lifer – patience first, power much later.
+  high    Ferran Balint    All-court     $582/wk  Has taken pupils onto the tour – thinks in seasons.
+          Pavel Donati     Aggressive    $454/wk  Short points, high risk – coaches the way the tour plays.
+          Eva Udall        Counterpunch  $467/wk  Believes the extra ball back wins more than the winner.
+          Ulrike Teixeira  Big serve     $548/wk  Rebuilt a serve from scratch once, and teaches it that way.
+  elite   Irina Malek      All-court     $919/wk  A Grand Slam quarter-final on the CV, and no time to waste.
+          Vesna Markovic   Aggressive    $643/wk  A tour-bench veteran with a plan for every draw.
+          Otto Donnelly    Counterpunch  $758/wk  A chess player – will make a pupil think a set ahead.
+          Bruno Figueroa   Big serve     $931/wk  Built two tour serves, and prices the third accordingly.
+  ```
+
+  **Keyed on the id, which is the portrait stem – never rolled.** `buildCoachRoster` draws only a
+  coach's NAME and RATE off `seed:coaches`; portrait, tier, style and gender come from
+  `ECONOMY.coach.roster`. So the same face carries the same description in every career, exactly as
+  it carries the same style, and two seeds meet `high-2` under two names with one line.
+
+  Four properties keep it from rotting, all mechanical: one entry per roster slot (a portrait added
+  without one fails), **no personal pronoun anywhere** (R15-7 – a slot's gender is fixed, so "he"
+  would be right today and silently wrong after a swap), no digit (spec §4's anti-shopping rule – a
+  CV number would be his own value wearing a story), and ≤60 characters (§4a's measured two-line
+  ceiling for that column at 320px, so no row grows a third line).
+
+  *Evidence:* `tests/round23-coach-copy.test.ts` (#5: within-tier duplicates off the REAL roster,
+  whole-market duplicates, roster completeness, two-seed identity, pronouns, digits, width) +
+  `tests/component/round23-coach-card.test.ts` (#5: every rendered card carries one, no duplicate
+  inside a rendered tier section, and the rendered set per tier equals the engine's set for that
+  tier's ids). Mutation-verified: `high-2`'s line set to `high-1`'s – the exact defect – reddens the
+  within-tier test in both files and nothing in #1; deleting the `<span class="cm-blurb">` reddens
+  all three component tests and nothing in the unit file.
 
 - [ ] **6. «Что можем вместо school finished на личной странице написать? Может быть разное что-то
   там можно отображать в течение взросления? Про колледж и его окончание (если пошла и закончила

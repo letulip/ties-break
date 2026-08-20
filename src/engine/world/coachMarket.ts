@@ -846,6 +846,31 @@ const TRAVEL_EDGE_LINE = 'Twice that on the trips the coach travels to.'
  * A band of four phrasings says the thing that changes a decision - is a better coach worth buying -
  * without ever quoting the ceiling itself.
  *
+ * ⭐ ROUND-23 #1 - AND THE BAND NOW HAS A NAME IN FRONT OF IT. Owner, 19.08: «Давай как-то по-другому
+ * оформим подсказки про уровень девушки на карточке тренера. Может что-то вроде "она близка к своему
+ * потолку" или "ещё есть куда расти" или "у неё большой потенциал" или что-то в таком духе, что даст
+ * игроку понять более явно».
+ *
+ * ⚠ HE IS NOT ASKING FOR THE NUMBER, and the fog-of-war ruling two paragraphs up STANDS. Every one of
+ * his three examples is a BAND said in plain words - "big potential", "still room to grow", "close to
+ * her ceiling" - which is the quantity this function already computes and was already saying, only
+ * buried inside a remark. What changes is that the band is now the first thing on the line, in its own
+ * two or three words, with the argument for it after a dash. Nothing new is revealed: `realised` is
+ * still bucketed to four values before a word of it is written, so the sentence carries exactly the
+ * two bits it carried yesterday.
+ *
+ * ⚠ THE LABEL AND THE SENTENCE ARE ONE STRING, joined by `ROOM_NOTE_SEP`, because `Snapshot` carries
+ * `coachRoomNote` as a plain `string` and this wave may not widen the protocol. Screen T splits on the
+ * FIRST separator to set the label in bold; a note with no separator degrades to a plain sentence
+ * there, so the split can never be the thing that empties the line.
+ *
+ * ⚠ MONOTONE IN HEADROOM AND UNABLE TO FLICKER. `level + room` is `mean(potential)` for every skill at
+ * or under its ceiling, so `realised` is `mean(skills) / mean(potential)` - and `growSkills` adds
+ * `rate * headroom * luck` with `weekLuck` positive at both ends, so skills only rise until
+ * `declineFactor` opens at 29. The band index is therefore non-decreasing week over week on a career
+ * that is merely progressing, with no hysteresis needed and nothing persisted to give it any.
+ * `tests/coachTiers.test.ts` ticks a real career and asserts exactly that.
+ *
  * Pure, zero draws, derived at snapshot time.
  */
 export function coachRoomNote(world: WorldState): string {
@@ -854,11 +879,102 @@ export function coachRoomNote(world: WorldState): string {
   const level = skills.reduce((a, b) => a + b, 0) / skills.length
   const room = headroom.reduce((a, b) => a + b, 0) / headroom.length
   if (level + room <= 0) return ''
-  const realised = level / (level + room)
-  if (realised < 0.6) return 'She has a long way to go – this is where a coach buys the most.'
-  if (realised < 0.8) return 'There is real room left in her game, and a coach is what buys it.'
-  if (realised < 0.92) return 'She is closing on her own ceiling – every rung is worth less than it was.'
-  return 'She is near her own ceiling now. No coach can add much more, whatever the price.'
+  const band = ROOM_BANDS[coachRoomBandIndex(level / (level + room))]
+  return `${band.label}${ROOM_NOTE_SEP}${band.note}`
+}
+
+/** What separates the named band from its argument. One definition, two readers - this module writes
+ *  it and screen T splits on it - so the two can never disagree about where the label ends. Short
+ *  dash, spaced, which is the app's own prose separator (CLAUDE.md style). */
+export const ROOM_NOTE_SEP = ' – '
+
+/** THE FOUR BANDS, cheapest headroom last, in the owner's own vocabulary.
+ *
+ *  ⚠ THE ORDER IS THE LADDER. Index 0 is the most room left and index 3 the least, so a reader can
+ *  compare two careers by index without re-reading the thresholds - which is what makes "monotone in
+ *  headroom" a mechanical claim rather than a promise about four strings.
+ *
+ *  ⚠ AND NOT ONE OF THEM CONTAINS A DIGIT. That is the fog-of-war rule restated as a property a test
+ *  can check on the RENDERED line, and it is why the labels are words ("Huge potential") rather than
+ *  the obvious grades ("Band 1 of 4"), which would be the percentage wearing a hat. */
+const ROOM_BANDS: { label: string; note: string }[] = [
+  {
+    label: 'Huge potential',
+    note: 'most of her game is still ahead of her, and this is where a coach buys the most.',
+  },
+  {
+    label: 'Still room to grow',
+    note: 'there is real room left in her game, and a coach is what buys it.',
+  },
+  {
+    label: 'Close to her ceiling',
+    note: 'she is running out of room, and every rung is worth less than it was.',
+  },
+  {
+    label: 'At her ceiling',
+    note: 'no coach can add much more now, whatever the price.',
+  },
+]
+
+/** Which band a realisation share falls in, as an INDEX rather than a string - the form the
+ *  monotonicity and no-flicker checks need, and the form that keeps the thresholds in one place.
+ *
+ * ⚠⚠ THE BOTTOM TWO THRESHOLDS MOVED, AND THEY MOVED BECAUSE THEY WERE MEASURED (round-23 #1). The
+ * 08.08 ladder was 0.6 / 0.8 / 0.92, written before anybody had looked at what `realised` actually
+ * does over a career - and the first thing this item did was look. Twelve careers, budget and middle
+ * rungs, ticked ten seasons, realised share by age:
+ *
+ *     age    min    p25    med    p75    max
+ *      14   68.2   78.2   80.6   82.7   87.2
+ *      16   82.8   87.8   88.9   90.0   92.8
+ *      18   89.4   92.1   92.8   93.3   95.2
+ *      20   92.5   94.2   94.6   95.1   96.4
+ *      24   94.9   95.3   95.9   96.1   97.2
+ *
+ * SHE IS NEVER BELOW 68%, at any age, in any career. So the first band was DEAD COPY - a string no
+ * player could ever be shown - and under those thresholds the second one lasted five to thirty-five
+ * weeks of the first season before expiring (walked week by week on three seeds: every one opened on
+ * band 1 and was in the top band by 17, 17 and 18). Four bands were really two, and the loud version
+ * of this item would have shipped that fact in bold, which is the reason they were re-cut here rather
+ * than reported and left. ⚠ NO ENGINE BEHAVIOUR MOVES WITH THEM: this function is read by one
+ * sentence of copy and by nothing else - no draw, no bill, no schema, no frozen hash.
+ *
+ * ⚠ THE TOP THRESHOLD DID NOT MOVE, and that is the other half of the same measurement. What the band
+ * is for is whether a better coach is still worth buying, so the calibration target is the SPREAD the
+ * market still offers - `coachSeasonUplift`'s dearest elite quote minus its dearest budget one:
+ *
+ *     realised    70%    80%    84%    88%    91%    93%    95%    96%
+ *     spread     2.44   1.48   0.98   0.66   0.44   0.31   0.20   0.08  pp
+ *
+ * 0.92 is where that falls under half a point, which is the owner's own «весь ладдер в четырёх
+ * десятых» at 93.4% - the complaint this sentence was written for on 08.08. It is earned; it stays.
+ * The two below it are placed on the same curve, at roughly a doubling of the spread each: under 0.82
+ * the top rung is worth about three times the bottom one in absolute terms, and by 0.92 the whole
+ * market is inside a rounding error. Re-walked on five seeds afterwards, EVERY ONE of them now enters
+ * all four in order and never steps back: band 0 from week 0, band 1 at weeks 12-82, band 2 at weeks
+ * 78-159, band 3 from ages 17-19. Four readings a player actually passes through, which is what the
+ * owner asked for when he asked to be told «более явно». */
+export function coachRoomBandIndex(realised: number): number {
+  if (realised < 0.82) return 0
+  if (realised < 0.88) return 1
+  if (realised < 0.92) return 2
+  return 3
+}
+
+/** The band a WORLD is in, or null when there is nothing to say (a career with no ceiling at all).
+ *  Exported for the tests that walk a real career week by week; the screen never sees a world. */
+export function coachRoomBandOf(world: WorldState): number | null {
+  const skills = SKILL_KEYS.map((k) => world.skills[k])
+  const headroom = SKILL_KEYS.map((k) => Math.max(0, world.potential[k] - world.skills[k]))
+  const level = skills.reduce((a, b) => a + b, 0) / skills.length
+  const room = headroom.reduce((a, b) => a + b, 0) / headroom.length
+  if (level + room <= 0) return null
+  return coachRoomBandIndex(level / (level + room))
+}
+
+/** The label of one band, for a test that wants the words without re-deriving them from a sentence. */
+export function coachRoomBandLabel(index: number): string {
+  return ROOM_BANDS[index].label
 }
 
 /** WHAT EACH RUNG DOES ABOUT HER BODY, for the market card - the load wave's two new differences said
@@ -888,6 +1004,85 @@ export function coachLoadNote(tier: CoachTier): string {
     case 'elite':
       return 'The best medical team money buys – her body is handled, and you hear about it after.'
   }
+}
+
+// =================================================================================================
+// ⭐ ROUND-23 #5 – WHO THIS ONE IS, and the point of it is that he is not the other three
+// =================================================================================================
+//
+// Owner, 19.08: «Разный текст для каждой из карточек тренеров с микро описанием каждого из них в
+// своём тире». The card already said three things about a coach and every one of them was a fact
+// about his RUNG or about a table: the fit pill is `styleAffinity`, the uplift band is
+// `coachSeasonUplift` on his tier, the per-match corridor is `coachEdgeCorridorPp` on his tier, and
+// `coachLoadNote` above is literally a `switch (tier)`. Four coaches on a rung therefore printed four
+// identical arguments under four drawn names - one man with four faces - and the choice between them
+// read as arbitrary because nothing on the card was about the PERSON.
+//
+// ⚠ KEYED ON THE ID, WHICH IS THE PORTRAIT STEM, so this is the one column of the card that belongs
+// to the individual and not to his bracket. `buildCoachRoster` draws a coach's NAME and his RATE off
+// `seed:coaches` and takes everything else - portrait, tier, style, gender - from
+// `ECONOMY.coach.roster`, so the man in the picture is the same man in every career and his
+// description can be too. Nothing is rolled here, at render time or at snapshot time: two careers on
+// two seeds meet `high-2` under two names with one description, exactly as they meet her under one
+// face. A drawn line would have made the same card say different things on two consecutive snapshots.
+//
+// ⚠ DISTINCT WITHIN THE TIER IS THE WHOLE ASK, and it is checked mechanically rather than admired -
+// `tests/coachTiers.test.ts` groups the real roster by rung and refuses a duplicate. They happen to
+// be distinct GLOBALLY too, which is a stronger property and free, but the tier is what the owner
+// asked about and the tier is what the test asserts.
+//
+// ⚠ NO PRONOUN NAMES THE COACH ON ANY OF THEM. This is R15-7 (owner, 09.08) applied one level
+// further in: `ECONOMY.coach.roster` fixes a gender per slot, so a pronoun here would be CORRECT
+// today and silently wrong the day somebody swaps a portrait's gender - the failure R15-7 already
+// paid for once, when four tier sentences called Sabine Kobayashi "he". Writing them with no personal
+// pronoun at all costs nothing at this length and cannot rot; the test pins it.
+//
+// ⚠ AND NOT ONE OF THEM QUOTES A NUMBER. Spec §4's anti-shopping rule says a coach's own value may
+// never appear on an unhired card - that is what `edgePct` quotes a RUNG for, and what the plaque
+// waits a season to say. A CV line reading "two into the top 200" would be that number wearing a
+// story, so the descriptions carry character and no arithmetic.
+//
+// Length: 60 characters or under, each. That is the ceiling a real browser measured for this column
+// at 320px (§4a, and see TRAVEL_EDGE_LINE above), so every one of these costs the card at most the
+// two lines `.cm-load` already costs it and no row grows a third.
+
+/** The micro-description for one coach, by id. Empty for an id no roster knows - the same shape
+ *  `coachById` takes, so a save holding a retired portrait degrades to a card with one less line
+ *  rather than to `undefined` printed on screen. */
+export function coachBlurb(id: string): string {
+  return COACH_BLURB[id] ?? ''
+}
+
+/** ⚠ ONE ENTRY PER `ECONOMY.coach.roster` SLOT, and the test asserts the two lists match - a portrait
+ *  added to the roster without a line here is a coach who says nothing about himself, which is the
+ *  defect this item exists to close. Ordered as the roster is: budget, middle, high, elite. */
+const COACH_BLURB: Record<string, string> = {
+  // BUDGET – the club end of the market. Nobody here has been anywhere; what separates them is what
+  // they believe, and each of the four believes something the other three do not.
+  'budget-1': 'A club-court lifer – patience first, power much later.',
+  'budget-2': 'Teaches the basics, and drills them until they hold.',
+  'budget-3': 'An ex-satellite hitter who still swings for the lines.',
+  // ⚠ `middle-4` IS A BUDGET SLOT. The stem names the master art file and not the rung (see the
+  // roster's own note in economy.ts), so the description follows the SLOT, not the filename.
+  'middle-4': 'Cheap, blunt, and obsessed with a repeatable toss.',
+
+  // MIDDLE – the first rung where somebody is running a programme rather than an hour.
+  'middle-1': 'Builds a whole game slowly, one shot at a time.',
+  'middle-2': 'Keeps a notebook on every opponent in the region.',
+  'middle-3': 'Serve and forehand first – the rest can wait.',
+  'middle-5': 'Drills the first strike until it lands more often.',
+
+  // HIGH – people who have been on the road with somebody else's daughter already.
+  'high-1': 'Has taken pupils onto the tour – thinks in seasons.',
+  'high-2': 'Believes the extra ball back wins more than the winner.',
+  'high-3': 'Short points, high risk – coaches the way the tour plays.',
+  'high-4': 'Rebuilt a serve from scratch once, and teaches it that way.',
+
+  // ELITE – a CV, and the price of one.
+  'elit-1': 'A tour-bench veteran with a plan for every draw.',
+  'elit-2': 'A Grand Slam quarter-final on the CV, and no time to waste.',
+  'elit-3': 'Built two tour serves, and prices the third accordingly.',
+  'elit-4': 'A chess player – will make a pupil think a set ahead.',
 }
 
 /** What he says when he would rather she skipped a trip. Three sentences, picked by HOW tired she is

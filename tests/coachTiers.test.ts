@@ -761,14 +761,23 @@ describe('the room note says why the numbers are what they are', () => {
   }
 
   it('moves through four bands as she fills her ceiling, and never quotes the ceiling', () => {
-    const notes = [at(0.4), at(0.7), at(0.87), at(0.97)]
+    // ⚠ THE SAMPLE POINTS MOVED WITH THE THRESHOLDS (round-23 #1). 0.4 and 0.7 now name the SAME
+    // band, because `coachRoomBandIndex`'s bottom two arms were re-cut onto the range a career
+    // actually occupies - measured at 68-97% realised across twelve careers, so the old 0.6 arm was
+    // a string no player could ever see. The measurement is written out over that function.
+    const notes = [at(0.7), at(0.85), at(0.9), at(0.97)]
     expect(new Set(notes).size).toBe(4) // four distinct readings, not one string
     // ⚠ IT MUST NEVER PRINT A FIGURE. KidScreen keeps her ceiling behind a fog of war, and a
     //   percentage here would be the back door through it.
     for (const n of notes) expect(n).not.toMatch(/\d/)
     // The top band is the one his save is in, and it has to say the useful thing out loud.
-    expect(notes[3]).toMatch(/near her own ceiling/i)
-    expect(notes[0]).toMatch(/long way to go/i)
+    // ⭐ ROUND-23 #1 – AND IT NOW SAYS IT AS A NAMED BAND. Owner, 19.08: «Может что-то вроде "она
+    // близка к своему потолку" или "ещё есть куда расти" или "у неё большой потенциал"... что даст
+    // игроку понять более явно». Same four bands off the same thresholds – what moved is that the
+    // reading is the first clause instead of being buried in a remark. The fog-of-war rule above is
+    // untouched and still the loop two lines up. tests/round23-coach-copy.test.ts carries the rest.
+    expect(notes[3]).toMatch(/at her ceiling/i)
+    expect(notes[0]).toMatch(/huge potential/i)
   })
 })
 
