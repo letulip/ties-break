@@ -48,10 +48,9 @@ import { weekLabel } from '../shared/dates'
 // Type-only on the way back (shared/avatarEmotion imports `type TierId` from engine/season/types),
 // so this is a leaf dependency, not a cycle.
 import type { MatchPlayer } from './match/types'
-import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
+import type { AiPlayer, LadderTrack, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import {
   TIERS,
-  TIER_LADDER,
   buildSeason,
   WEEKS_PER_YEAR,
   OFF_SEASON_WEEKS } from './season/calendar'
@@ -138,7 +137,15 @@ import {
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
 import { activeLadderOf, playerShortName, toSnapshot } from './world/snapshot'
 export { activeLadderOf, toSnapshot }
-import { flipScore, fallbackPlayer, kidMatchesOf, kidMatchEvent, computeLossStreak } from './world/matchNews'
+import {
+  flipScore,
+  fallbackPlayer,
+  kidMatchesOf,
+  kidMatchEvent,
+  computeLossStreak,
+  rivalRetirementNews,
+  tierMakesWorldNews,
+} from './world/matchNews'
 export { flipScore, computeLossStreak }
 import { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek } from './world/knock'
 export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek }
@@ -2016,6 +2023,30 @@ function finalizeTournament(world: WorldState): void {
   p.finished = true
 }
 
+/** ONE revealed kid match: the `match` row itself, and – when the girl across the net could not
+ *  finish – the one news row that says so (round 23 #3b).
+ *
+ *  ⚠ IT SITS RIGHT UNDER THE MATCH IT IS ABOUT, and that is the whole reason it is emitted here
+ *  rather than beside the champion line in `finalizeTournament`: the feed then reads in the order
+ *  the week happened – the scoreline, then why it stopped – and it reads the same whether the player
+ *  watched the reveal round by round or hit "Skip tournament". Both paths call this, which is also
+ *  why it exists: two copies of the emit is exactly how the two paths drift apart.
+ *
+ *  ⚠ TYPE `'info'`, NOT `'injury'` – the same ruling `world/knock.ts` records for the same reason:
+ *  `'injury'` is a row about HER body, and the Memory card's first-injury milestone reads that
+ *  channel. Nothing has happened to the kid here. ZERO RNG. */
+function emitKidMatch(
+  world: WorldState,
+  event: SeasonEvent,
+  m: MatchRecord,
+  players: Record<string, MatchPlayer>,
+): void {
+  const ev = kidMatchEvent(world, event, m, players)
+  addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+  const hurt = rivalRetirementNews(world, event, m, players)
+  if (hurt) addEvent(world, { week: world.week, type: 'info', text: hurt })
+}
+
 /** Reveal ONE more kid match: emit its News `match` event, bump `revealedRounds`, and finalize the
  *  run once the kid's last match (elimination or the final) has been shown. Idempotent when done. */
 export function revealTournamentRound(world: WorldState): void {
@@ -2037,8 +2068,7 @@ export function revealTournamentRound(world: WorldState): void {
     finalizeTournament(world)
     return
   }
-  const ev = kidMatchEvent(world, event, m, p.players)
-  addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+  emitKidMatch(world, event, m, p.players)
   p.revealedRounds++
   if (p.revealedRounds >= kidMatches.length) finalizeTournament(world)
 }
@@ -2059,8 +2089,7 @@ export function skipTournament(world: WorldState): void {
   if (!event) return
   const kidMatches = kidMatchesOf(p.result)
   while (p.revealedRounds < kidMatches.length) {
-    const ev = kidMatchEvent(world, event, kidMatches[p.revealedRounds], p.players)
-    addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+    emitKidMatch(world, event, kidMatches[p.revealedRounds], p.players)
     p.revealedRounds++
   }
   finalizeTournament(world)
@@ -2378,13 +2407,9 @@ function runAiTournament(
   announceTourChampion(world, event, result)
 }
 
-/** WHICH RUNGS' CANONICAL CHAMPIONS MAKE THE NEWS – W100 and up, and the cut is a feed budget
- *  rather than a taste (`EVENTS_CAP` is 400 non-`keep` rows and `pruneEvents` sacrifices ordinary
- *  rows first). All ten W rungs would be ~98 lines a season against a feed that already takes ~364;
- *  W100-and-up is ~37, i.e. under one row a week. Expressed as a position in `TIER_LADDER` – the
- *  project's single source of truth for "is tier A above tier B" – so a re-ordered or re-named rung
- *  cannot silently fall out of the rule. */
-const NEWSWORTHY_FROM: TierId = 'w100'
+// WHICH RUNGS' CANONICAL CHAMPIONS MAKE THE NEWS – now `tierMakesWorldNews` in world/matchNews.ts,
+// moved there whole by round 23 #3b when the retirement line became its second reader. The rule and
+// the feed-budget arithmetic behind it are unchanged; see that function's own note.
 
 /** THE W TOUR CAN NAME ITS CHAMPION NOW, AND SHE CAN BE A PROFESSIONAL (W3-FIELD3, acceptance
  *  criterion 2). Before this wave the canonical brackets resolved in silence and the only champion
@@ -2402,8 +2427,7 @@ const NEWSWORTHY_FROM: TierId = 'w100'
  *  Names resolve through `playerShortName`, the same id→name function every bracket surface uses,
  *  so an `fp-` id comes back as a person rather than as an id. */
 function announceTourChampion(world: WorldState, event: SeasonEvent, result: TournamentResult): void {
-  if (TIER_LADDER.indexOf(event.tier) < TIER_LADDER.indexOf(NEWSWORTHY_FROM)) return
-  if (TIERS[event.tier].track !== 'wta') return
+  if (!tierMakesWorldNews(event.tier)) return
   if (world.entries.includes(event.id)) return
   const championId = Object.entries(result.finishes).find(([, f]) => f === 0)?.[0]
   if (!championId) return

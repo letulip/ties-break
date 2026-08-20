@@ -232,6 +232,22 @@ are analyses OF them; every other item that needs a world builds its own.
   case, promising a four-week layoff, filing the row as `'injury'`, widening the cut to W75, dropping
   the "her match" guard and dropping her name each redden the test that owns that claim.
 
+  ⚠ **IT MOVES THE THREE FROZEN CAREERS IN `tests/coach-travel-edge.test.ts`, BY EXACTLY THE TWO
+  KEYS IT SHOULD.** A news row lives inside that whole-world hash – the same way the WTA 250's field
+  moved it on 17.08 – so a 156-week career that saw a rival stop serialises differently. Per-key
+  diff (`tools/frozen-key-diff.ts`, the protocol that file demands, run at `41ce43a` with and without
+  this change), identical in all three careers: **MOVED `events` and `nextEventId`. UNMOVED: every
+  one of the other 63 keys** – `rngMain`, `results`, `entries`, `season`, `skills`, `fundsCents`,
+  `bestFinishByTier` and all three rank caches included. No draw, no award and no calendar moved;
+  only the feed did, which is what a copy item should do.
+
+  ⚠ **NOT RE-FROZEN HERE, DELIBERATELY.** Those five cases were ALREADY red at `41ce43a` before this
+  change – they are green at `c518ad1`, so a commit in between moved the same three careers and did
+  not re-freeze – and the kidLife/v54 slice still in flight will move them a third time. ONE
+  re-freeze once the wave's movers have all landed is right; three competing ones, each baking in
+  somebody else's unattributed movement, is how a hash pin dies. The per-key diff above is what this
+  wave owes that re-freeze, and it is recorded here so it cannot be lost.
+
 - [x] **4. «Проверь ещё раз текстовые трансляции на 500+ сериях пожалуйста, добавилось ли там
   детализации.»**
   – *measure, then build.* A re-check of an earlier fix: did the commentary at the 500-and-above
