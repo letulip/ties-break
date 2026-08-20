@@ -21,6 +21,7 @@ import { computeMatchStats } from '../engine/match/matchStats'
 import { matchStatMeta, matchStatRows } from '../composables/matchStatTable'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { KID_ID, flipScore } from '../engine/world'
+import { occasionOf } from '../viz/preview'
 import { formatShortName } from '../shared/format'
 import { weekLabel, weekRange } from '../shared/dates'
 import type { MatchOptions, Side } from '../engine/match/types'
@@ -71,6 +72,22 @@ const annotated = computed(() => {
   const result = simulateMatch(props.match.a, props.match.b, opts.value)
   return annotateMatch(result, props.match.a, props.match.b, opts.value)
 })
+
+/**
+ * ⭐ ROUND-23 #4 – AND HERE THE ANSWER IS GENUINELY null, WHICH IS WHY IT IS COMPUTED AND NOT OMITTED.
+ *
+ * A booked friendly has no draw behind it: `resolvePractice` files it under `practice-w<week>`, an id
+ * that names no tier, so `occasionOf` returns null and the viewer gives the thinnest intro and the
+ * bottom rung's log. That is the truth here – "no draw, nothing on it" – and it is exactly what this
+ * screen's own "No ranking points" pill says one row down.
+ *
+ * ⚠ SO WHY BIND IT AT ALL. Because silence and an answer looked identical, and that is how the same
+ * prop went missing on `MatchReplay` for two rounds without anybody noticing: `previewEvent` defaults
+ * to null, null is correct for two callers, and nothing distinguishes "I meant null" from "I forgot".
+ * Every match surface now derives the same fact through the same function, and a friendly's null is a
+ * computed answer.
+ */
+const previewEvent = computed(() => occasionOf(props.match.eventId, props.match.round))
 
 const kidSide = computed<Side>(() => (props.match.aId === KID_ID ? 0 : 1))
 const kidPlayer = computed(() => (kidSide.value === 0 ? props.match.a : props.match.b))
@@ -198,6 +215,7 @@ function close(): void {
       :surface="match.surface"
       :rank-a="viewerRankA"
       :rank-b="viewerRankB"
+      :preview-event="previewEvent"
       mode="replay"
       proceed-label="To the result"
       @finish="toResult"

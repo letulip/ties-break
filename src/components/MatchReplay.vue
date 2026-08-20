@@ -10,6 +10,7 @@ import type { MatchOptions } from '../engine/match/types'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
+import { occasionOf } from '../viz/preview'
 import MatchViewer from './MatchViewer.vue'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
@@ -27,6 +28,19 @@ const annotated = computed(() => {
   const result = simulateMatch(props.match.a, props.match.b, opts.value)
   return annotateMatch(result, props.match.a, props.match.b, opts.value)
 })
+
+/**
+ * ⭐ ROUND-23 #4 – WHICH TOURNAMENT THIS WAS, and it is the fix for a bug the owner keeps catching by
+ * looking at frames: this screen passed NOTHING, so every re-watch in the game fell to storey 1.
+ *
+ * This component is how a match is watched again from BOTH the Season bracket and the Home feed, and
+ * a stored `WorldMatch` carries a rung's worth of context in its `eventId` – so a Grand Slam
+ * quarter-final re-opened here narrated like a Sunday-morning local draw: no stake named, no room, no
+ * standing, and (since round 23) none of the extra beats the top of the tour is owed. The occasion is
+ * DERIVED rather than remembered – see `occasionOf` for why that distinction is the actual fix – and
+ * a practice friendly, whose id names no tier, still correctly gets null.
+ */
+const previewEvent = computed(() => occasionOf(props.match.eventId, props.match.round))
 </script>
 
 <template>
@@ -70,6 +84,14 @@ const annotated = computed(() => {
          a `.tf-card` - 16px of padding and a hairline - wrapped around a stack of `Card`s the viewer
          draws itself, so the border was doubled and the padding bought nothing. Measured at 375pt:
          291 -> 327px of canvas, 244.4 -> 274.9px of painted court, 32px of height back. -->
-    <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" mode="replay" />
+    <!-- ⭐ ROUND-23 #4: `preview-event` is the one prop this screen never passed – see the script. -->
+    <MatchViewer
+      :match="annotated"
+      :player-a="match.a"
+      :player-b="match.b"
+      :surface="match.surface"
+      :preview-event="previewEvent"
+      mode="replay"
+    />
   </TakeoverShell>
 </template>

@@ -49,15 +49,38 @@
 
 import { fastMatchProbability } from '../engine/match/engine'
 import { TIERS } from '../engine/season/calendar'
+import { tierFromEventId } from '../engine/diary/facts'
+import { stageLabel } from '../engine/world/labels'
 import type { TierId } from '../engine/season/types'
 import type { MatchPlayer, Side, Surface, Tour } from '../engine/match/types'
 
 /** The four storeys of the ladder, low to high. */
 export type Storey = 1 | 2 | 3 | 4
 
-/** Which storey a rung stands on. The three families are the game's own tracks plus the split at the
- *  top of the professional ladder, where the tour stops being a grind and starts being television. */
-export function storeyOf(tier: TierId): Storey {
+/**
+ * ⭐ THE SAME LADDER AT THE RESOLUTION THE RUNNING COMMENTARY NEEDS - round 23 item 4.
+ *
+ * ⚠ WHY A SECOND NUMBER EXISTS AT ALL, AND WHY IT IS NOT A SECOND LADDER. `storeyOf` answers "how
+ * much does the PRE-MATCH INTRO say", and four answers is exactly right for it: the intro's entries
+ * are whole facts (the officials, her chance, where the two of them stand) and there is no fifth
+ * fact a 500 holds that a 250 does not. But the RUNNING commentary's lever is not which facts exist,
+ * it is how much of the match gets told - and there the top storey was one flat floor four rungs
+ * wide. Measured over 120 seeded matches (tests/commentary-tier-detail.test.ts): a WTA 500 and a WTA
+ * 250 narrated BYTE-IDENTICALLY, and so did a WTA 500 final and a Grand Slam final, because
+ * `storeyOf` collapses them and `wta250.drawSize === wta500.drawSize` leaves the round label nothing
+ * to say either. The owner has climbed from a 250 to a 500 and the log did not move.
+ *
+ * ⚠ SO `storeyOf` IS DERIVED FROM THIS, NOT PARALLEL TO IT. One switch decides where a tier sits and
+ * the storey is a lookup on the answer, so the two can never disagree - the same discipline that
+ * made viz/commentary.ts import `storeyOf` rather than restate it. Every storey is a contiguous run
+ * of rungs, which is what makes the derivation total and the ladder still monotone.
+ */
+export type Rung = 1 | 2 | 3 | 4 | 5 | 6 | 7
+
+/** Which rung a tier stands on, low to high. The three lower families are one rung each - the
+ *  intro's own three storeys - and the professional top is spread over four, one per series, because
+ *  that is the stretch of the ladder a player spends years climbing and the one she can see. */
+export function rungOf(tier: TierId): Rung {
   switch (tier) {
     case 'local':
     case 'regional':
@@ -74,15 +97,63 @@ export function storeyOf(tier: TierId): Storey {
     case 'w100':
     case 'wta125':
       return 3
+    case 'wta500':
+      return 5
+    case 'wta1000':
+      return 6
+    case 'slam':
+      return 7
+    // wta250, and anything a later wave adds. ⚠ THE DEFAULT IS THE BOTTOM OF THE TOP STOREY, NOT THE
+    // TOP OF IT: an unrecognised tier used to fall to `storeyOf`'s `default: 4`, and this keeps that
+    // answer exactly (rung 4 maps to storey 4) rather than quietly promoting it to a Slam.
     default:
       return 4
   }
+}
+
+const STOREY_OF_RUNG: Record<Rung, Storey> = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 4, 6: 4, 7: 4 }
+
+/** Which storey a rung stands on. The three families are the game's own tracks plus the split at the
+ *  top of the professional ladder, where the tour stops being a grind and starts being television. */
+export function storeyOf(tier: TierId): Storey {
+  return STOREY_OF_RUNG[rungOf(tier)]
 }
 
 export interface PreviewEvent {
   tier: TierId
   /** 'Final' | 'Semifinal' | 'Quarterfinal' | 'Round of N' - `stageLabel`'s own output. */
   roundLabel: string
+}
+
+/**
+ * ⭐ THE OCCASION BEHIND A STORED MATCH - round 23 item 4, and it is a BUG FIX with a shape.
+ *
+ * ⚠ WHAT WAS WRONG. `MatchViewer.previewEvent` is optional and defaults to null, and null is a real
+ * answer for two of its four callers (the friendly, the sandbox hit-out) - so a caller that simply
+ * FORGOT to pass it is indistinguishable from one that meant it. Exactly one caller passed it:
+ * `TournamentFlow`. `MatchReplay` - which is how every re-watch in the game opens, from the Season
+ * bracket and from the Home feed alike - passed nothing, so a Grand Slam quarter-final watched a
+ * second time narrated as storey 1: no stake, no room, no standing, the poorest log in the game, on
+ * a match that had just been played at the top of the tour.
+ *
+ * ⚠ AND THE FIX IS NOT "REMEMBER TO PASS THE PROP". A stored `WorldMatch` already carries the two
+ * fields the occasion is made of, so the honest answer is DERIVED rather than remembered, in one
+ * place all four call sites read. Silence stops being ambiguous: a practice friendly's id does not
+ * name a tier, this returns null for it, and that null is now a computed answer rather than an
+ * omission somebody has to notice.
+ *
+ * ⚠ IT PARSES NOTHING ITSELF. `tierFromEventId` is the engine's own reader of its own id format
+ * (`${year}-w${week}-${tier}`) and `stageLabel` is the engine's own namer of a round - two readers of
+ * either would be exactly how a draw-size assumption gets in, which is the rule `remainingIn` below
+ * is already written under.
+ *
+ * @param eventId the stored `WorldMatch.eventId`; `practice-w12` and any foreign id yield null
+ * @param round the stored `MatchRecord.round`, 0 = first round
+ */
+export function occasionOf(eventId: string | undefined, round: number | undefined): PreviewEvent | null {
+  const tier = tierFromEventId(eventId)
+  if (tier === undefined || round === undefined || !Number.isFinite(round)) return null
+  return { tier, roundLabel: stageLabel(round, TIERS[tier].drawSize) }
 }
 
 export interface PreviewInput {

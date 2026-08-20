@@ -157,86 +157,193 @@ are analyses OF them; every other item that needs a world builds its own.
   *Evidence:* `tests/match/rival-retirement.test.ts` (5 tests, green) – the printed example, the
   per-side rate, the rival's field list, the guarded call sites, and the week-11 re-entry.
 
-- [!] **4. «Проверь ещё раз текстовые трансляции на 500+ сериях пожалуйста, добавилось ли там
-  детализации.»**
-  – *measure.* A re-check of an earlier fix: did the commentary at the 500-and-above tiers actually
-  gain detail? ⚠ Phrased as a RE-check, so if it did not, this is `[!]` REOPENED, not a new ask.
+- [x] **3b. «Травмы соперницам пока не строим, но сходы можно записать как травмы в логе матча,
+  недели или новостях. Это должно быть довольно дешево. Хотя бы тех, с кем она играла на неделе, а
+  не всех. А если мы в общих мировых новостях пишем, что кто-то выиграл 250-500-1000-Шлем, то вполне
+  можем в такой же манере писать и если кто-то из этих турниров травму получил. Мир по ощущениям
+  станет чуть живее»** – his call after reading the analysis above (20.08).
+  – *build, copy only.* **SHIPPED, AND NOTHING WAS BUILT.** The mechanic stays ruled out: no rival
+  carries an injury, a layoff or a missed draw, `season/rival.ts` L22 is still true to the letter,
+  and the girl who could not finish on Tuesday is in Monday's draw at full strength exactly as
+  before. What changed is that `MatchRecord.retiredId` – persisted since the retirement slice – is
+  now SAID. **Zero RNG draws, zero schema, zero state on any rival.**
 
-  **⚠ REOPENED. The detail is not there, and at the 500 specifically it never was.**
+  *What he reads now,* off real seeded draws, real names, the record's own scores:
+
+  ```
+  HER WEEK   (a real career, seed "ret-news-33", week 9, straight out of world.events)
+    Semifinal: V. Martin beat a retiring O. Kovac 6-3 4-6 5-5
+    🩹 O. Kovac retired hurt against V. Martin – she went off in the third set.
+
+  WORLD NEWS (the World Tour 500, the same feed the champion line writes into)
+    Round of 16: V. Martin beat a retiring O. Deshpande 4-6 6-3 4-5
+    🩹 O. Deshpande retired hurt at the World Tour 500 – she went off in the third set.
+  ```
+
+  **TWO REGISTERS, ONE ROW.** At a rung the world already reports on it names the TOURNAMENT, in the
+  same breath as «🏆 … won the World Tour 500» – his «в такой же манере». Below that cut it names
+  the girl it happened AGAINST, because the world is not watching a Local Open. It is never both:
+  printing the tour line and the week line for the same girl in the same feed is a state dump, not
+  news. The cut is the champion line's OWN – `NEWSWORTHY_FROM = 'w100'` moved out of `world.ts` into
+  `world/matchNews.ts` as `tierMakesWorldNews`, behaviour byte-identical, so "which rungs does the
+  world report on" now has exactly one answer for both writers. Junior draws stay silent.
+
+  **THE SENTENCE IS HELD TO WHAT THE MODEL KNOWS.** She retired from a match; she has no diagnosis,
+  no scan and no return date, because none of those exist for a rival. So it says *retired hurt* and
+  names the set – both true off the record – and never a layoff. Asserted as a copy contract at seven
+  rungs: no `out for` / `will miss` / `back in`, no body part, no clinic, no figure outside the tier's
+  own name, no Cyrillic, short dash only. The set ordinal is read off the scoreline and gets the one
+  hard case right: `match/engine.ts` pops a trailing 0-0 ("real result sheets print 6-4 ret."), so a
+  COMPLETE last set means she went off **after** it, not in it – "6-4" reads *after the first set*,
+  "6-4 2-1" reads *in the second*.
+
+  **⚠ AND THE MIRROR IS NOT SYMMETRIC, WHICH IS THE ONE THING WORTH KNOWING BEFORE HE READS IT.**
+  The champion line can report a tournament she never entered, because the canonical bracket plays
+  itself out every week. The retirement line cannot: AI-AI rows resolve through
+  `fastMatchProbability`, one Bernoulli with no points played, so **no draw she is not in can
+  produce a retirement to report** – item 3's *(c)*, above. World news therefore names a girl who went off at a
+  250/500/1000/Slam only when SHE was in that draw – which is also, exactly, his «хотя бы тех, с кем
+  она играла». Widening it past that is the mechanic he ruled out.
+
+  **MEASURED, 12 careers x 572 weeks = 132 season-equivalents** on the heaviest schedule the gates
+  allow (`bench:retire`'s own policy – one entry a week, money never the reason). 7,076 of her
+  matches, 1,779 of them at rungs world news covers. 102 rival retirements = **1.44% of her matches**,
+  21 of them at covered rungs. Rows written, one per retirement, none lost:
+
+  | register | rows | per season |
+  |---|---|---|
+  | her week | 81 | **0.61** |
+  | world news | 21 | **0.16** |
+  | *for scale*: weeks carrying a «won the …» line | 4,513 | *34.19* |
+
+  So: **it does not drown the wins** – the champion line is ~215x commoner – and it is **not so rare
+  he never sees one**: about one every season and a half in her own week, one every six seasons in
+  the tour-news register, and none at all before she reaches the professional rungs. On a lighter
+  schedule than this bench's, both numbers fall.
+
+  *Evidence:* `tests/round23-retirement-news.test.ts` (9 tests, green, 1.05 s) – both rendered
+  registers off real draws, the seven-rung honesty sweep, the set-ordinal table including the change
+  of ends, the null cases, a real career carrying the row into `world.events` directly under its own
+  match row, `type: 'info'` and not `'injury'` (world/knock.ts's ruling, for its reason), one row per
+  retirement, `world.rngMain` unmoved across the reveal, and a source pin that the writer takes no
+  `Rng`. **Mutation-verified, ten mutations, every one red:** deleting the emit reddens both
+  integration tests; dropping the tier gate and forcing it on redden opposite pairs; dropping the
+  `KID_ID` guard reddens the two "her own stop is already said" tests; collapsing the change-of-ends
+  case, promising a four-week layoff, filing the row as `'injury'`, widening the cut to W75, dropping
+  the "her match" guard and dropping her name each redden the test that owns that claim.
+
+- [x] **4. «Проверь ещё раз текстовые трансляции на 500+ сериях пожалуйста, добавилось ли там
+  детализации.»**
+  – *measure, then build.* A re-check of an earlier fix: did the commentary at the 500-and-above
+  tiers actually gain detail? ⚠ Phrased as a RE-check, so if it did not, this is `[!]` REOPENED, not
+  a new ask.
+
+  **REOPENED, THEN SHIPPED. The detail was not there, at the 500 it never was – and the reason the
+  round-21 fix missed is that its instrument could not see the rung he was standing on.**
 
   *The earlier fix.* Commit `8e38c0d`, round 21 item 3, *"the running commentary knows which rung
-  she is playing on"* – his SECOND ask on the same subject («проверь пожалуйста что с комментариями
-  текстовой трансляции на 1000 и шлемах, кажется ничего не изменилось»). It gave `buildCommentary`
-  a fourth argument, the occasion, and drove three levers off `viz/preview.ts`'s four-storey ladder:
-  the phrase pools grow at storey 3 and again at storey 4, the stake is named from storey 2 up, and
-  the room appears from storey 3 up. It shipped with its own instrument, `tools/commentary-rung-probe.ts`.
+  she is playing on"*. It gave `buildCommentary` a fourth argument, the occasion, and drove three
+  levers off `viz/preview.ts`'s four-storey ladder. It shipped with its own instrument,
+  `tools/commentary-rung-probe.ts`.
 
-  *Measured now, 120 seeded matches, the same corpus in every arm* (`tests/commentary-tier-detail.test.ts`):
+  **WHAT WAS WRONG, and it is two mistakes stacked:**
+  1. **The top of the ladder was one flat floor four rungs wide.** `storeyOf` puts
+     `wta250`/`wta500`/`wta1000`/`slam` all on storey 4, and both the 250 and the 500 are 32-draw –
+     so a WTA 500 and a WTA 250 narrated **byte-identically**, and so did a WTA 500 final and a
+     **Grand Slam final**. Climbing from a 250 to a 500 bought him nothing at all.
+  2. **The fix answered the wrong word.** He asked for **детализация**; what shipped was **variety**.
+     Storey 4 reworded 56.7% of rows against a W75 for **+1.1% characters, the same 16.20 beats and
+     1.8% FEWER sentences** – `clausesUpTo`'s 120-char budget makes an arriving stake clause DISPLACE
+     a colour clause. Its success metric was distinct phrasings (396 → 611), and phrasings are blind
+     to substitution.
+  3. **And the instrument built to find this was blind to it.** `tools/commentary-rung-probe.ts` had
+     a J30 arm, a W75 arm, a 1000 arm and a Slam arm – **no 250 arm and no 500 arm** – and diffed
+     every arm against ONE J30 baseline, so "56% of rows differ" read as success while the two
+     adjacent rungs he was climbing between were identical.
 
-  | arm | storey | draw | beats/m | sentences/m | chars/m | distinct phrasings |
-  |---|---|---|---|---|---|---|
-  | J30 opener | 2 | 32 | 16.20 | 29.52 | 961.0 | 396 |
-  | J30 final | 2 | 32 | 16.20 | 29.52 | 952.5 | 396 |
-  | W75 opener | 3 | 32 | 16.20 | 31.76 | 1066.3 | 526 |
-  | W75 final | 3 | 32 | 16.20 | 31.99 | 1065.3 | 528 |
-  | WTA 250 opener | 4 | 32 | 16.20 | 31.18 | 1077.8 | 606 |
-  | WTA 250 final | 4 | 32 | 16.20 | 31.40 | 1077.2 | 611 |
-  | **WTA 500 opener** | 4 | 32 | **16.20** | **31.18** | **1077.8** | **606** |
-  | **WTA 500 final** | 4 | 32 | **16.20** | **31.40** | **1077.2** | **611** |
-  | WTA 1000 opener | 4 | 64 | 16.20 | 31.18 | 1077.8 | 606 |
-  | WTA 1000 final | 4 | 64 | 16.20 | 31.40 | 1077.2 | 611 |
-  | Slam opener | 4 | 128 | 16.20 | 31.18 | 1077.8 | 606 |
-  | Slam final | 4 | 128 | 16.20 | 31.40 | 1077.2 | 611 |
+  ⭐ **THE INSTRUMENT WAS FIXED FIRST, and that is the part that stops a fourth miss.** The probe now
+  has an arm on **every** rung at both ends of the draw, grades on **beats/match and
+  sentences/match** as its first two columns, diffs each rung against the **rung below** (a flat step
+  prints as `⚠ FLAT`), and prints beats-per-match **by kind** so addition and substitution can be
+  told apart. Phrasings is printed last and labelled as variety.
 
-  Rows differing, same match, same row index, out of 1944:
+  *Measured, 120 seeded matches, the same corpus in every arm, before and after
+  (`tests/commentary-tier-detail.test.ts`):*
 
-  | pair | differing | |
+  | arm | rung | beats/m | sent/m | chars/m | phrasings |
+  |---|---|---|---|---|---|
+  | J30 final | 2 | 16.20 → **16.20** | 29.52 → **29.52** | 952.5 → **952.5** | 396 → 396 |
+  | W75 final | 3 | 16.20 → **16.20** | 31.99 → **31.99** | 1065.3 → **1065.3** | 528 → 528 |
+  | WTA 250 final | 4 | 16.20 → **16.80** | 31.40 → **32.60** | 1077.2 → **1106.2** | 611 → 626 |
+  | **WTA 500 final** | **5** | 16.20 → **17.90** | 31.40 → **34.86** | 1077.2 → **1192.7** | 611 → 684 |
+  | WTA 1000 final | 6 | 16.20 → **18.95** | 31.40 → **36.43** | 1077.2 → **1238.2** | 611 → 690 |
+  | Slam final | 7 | 16.20 → **20.83** | 31.40 → **38.32** | 1077.2 → **1334.4** | 611 → 696 |
+
+  Every rung from the W75 up is unchanged below it and strictly richer above it: a Slam now says
+  **+29% rows and +20% sentences** against the W75 it used to match beat for beat. Rows differing
+  from the rung below, out of the whole corpus:
+
+  | pair | before | after |
   |---|---|---|
-  | J30 opener → W75 opener | 1064 | 54.7% |
-  | W75 opener → WTA 250 opener | 1087 | 55.9% |
-  | **WTA 250 opener → WTA 500 opener** | **0** | **0.0%** |
-  | WTA 500 opener → WTA 1000 opener | 120 | 6.2% |
-  | **WTA 500 final → Slam final** | **0** | **0.0%** |
-  | J30 final → WTA 500 final | 1130 | 58.1% |
+  | W75 → WTA 250 | 1087 (55.9%) | 1408 / 2016 (**69.8%**) |
+  | **WTA 250 → WTA 500** | **0 (0.0%)** | 955 / 2148 (**44.5%**) |
+  | WTA 500 → WTA 1000 | 120 (6.2%, the draw label only) | 1103 / 2274 (**48.5%**) |
+  | **WTA 500 final → Slam final** | **0 (0.0%)** | **> 0, asserted** |
 
-  **Three findings, and the third is the one that answers him.**
+  **WHAT CHANGED, and it is beats rather than words.**
+  1. **A fifth-to-seventh rung: `rungOf` (`viz/preview.ts`).** The same ladder at the resolution the
+     running log needs – 250 / 500 / 1000 / slam are four rungs, not one floor. ⚠ `storeyOf` is now
+     **derived from** `rungOf` rather than parallel to it, so there is still one authority; the
+     pre-match intro's four storeys and its monotone test are untouched.
+  2. **The bar comes down as the rung goes up (`BARS`, `viz/commentary.ts`).** Every optional beat
+     family has a numeric bar and a bigger event tells the same tennis closer up – the research's own
+     escalation («ENTRY FREQUENCY and entry length, not louder adjectives»). Each step moves a
+     different family, so the climb is legible in the log: the **500** starts telling him about the
+     single break point she saved, the **1000** about five points in a row, the **Slam** about the
+     second-longest rally of the set (the one place the per-set rally cap lifts).
+  3. **One genuinely new fact: `deuce`, the long game.** A game that went to four, five, six deuces
+     is invisible in the score column – `4-3` prints the same whether that game took four points or
+     twenty-four – and no existing beat could say it. Anchored at the game's LAST deuce, which is at
+     least two points before the game ends, so it **cannot collide** with the break/hold beat that
+     game already gets: one long game now prints as two rows, which is how a person tells it.
+     Measured headroom picked the thresholds (≥3 deuces = 3.23 games/match, ≥4 = 1.41, ≥2 = 6.78 and
+     a drum).
 
-  1. **The top of the ladder is one flat floor.** `storeyOf` (`viz/preview.ts` L60) puts
-     `wta250`/`wta500`/`wta1000`/`slam` all on storey 4, and `wta250.drawSize` and
-     `wta500.drawSize` are both 32 – so a WTA 500 and a WTA 250 narrate **byte-identically**, and a
-     WTA 500 final and a **Grand Slam final** narrate byte-identically too. The only thing separating
-     a 500 from a 1000 is **one row per match**: the opener's `stageLabel`, which names the draw size
-     ("Round of 64" vs "Round of 32"). Climbing from a 250 to a 500 to a 1000 buys him nothing.
-  2. **The beat count never moves at all.** 16.20 rows per match at every rung from J30 to Slam. The
-     log's beats are chosen by the *match*, never by the *rung*.
-  3. **⚠ WHY THE ROUND-21 FIX MISSED, and it is two mistakes stacked.**
-     *First, the arms.* `tools/commentary-rung-probe.ts` has a J30 arm, a W75 arm, a WTA 1000 arm
-     and a Slam arm – **and no WTA 250 arm and no WTA 500 arm**. It only ever compared the top of
-     the ladder against the bottom, where the storey genuinely changes; it never compared two rungs
-     *inside* storey 4, so the flat floor was invisible to the instrument that was built to find
-     exactly this. The rung he is standing on now has never been measured until today.
-     *Second, and worse, the fix answered the wrong word.* He asked for **детализация**; what
-     shipped was **variety**. Storey 4 rewords 56.7% of the rows against a W75 – and delivers
-     **+1.1% characters, the same 16.20 beats, and 1.8% FEWER sentences** (31.18 vs 31.76). It says
-     *fewer* things in *different* words. The mechanism is the per-row budget: `clausesUpTo` caps a
-     row at 120 characters, so an arriving stake or room clause **displaces** a colour clause instead
-     of joining it. The round-21 commit noticed this in passing – *"the stake arrives and costs one
-     colour clause to the row budget"* – and shipped anyway, because its success metric was distinct
-     phrasings (396 → 611, a real +54%) and phrasings are blind to substitution.
+  ⚠ **THE ROW BUDGET WAS THE OTHER OPTION AND IT WAS A/B'd, NOT ARGUED ABOUT.** `BEAT_MAX_CHARS` set
+  to 400, one probe run, reverted: lifting the cap entirely buys **+0.72 sentences and +30 characters
+  a match** at the professional rungs and **zero extra beats** – the cap has never decided whether a
+  row exists. The bars and the long game buy **+4.5 beats and +6.3 sentences a match** at a major
+  over the same corpus, nearly nine times as much, and they cost the phone nothing, while a bigger
+  cap spends exactly the protection the cap exists for (a 123-character row wrapping to four lines on
+  a 390px frame). **More rows, not longer rows.**
 
-     **So the line that stops a third attempt missing the same way:** any next fix must be graded on
-     beats-per-match and sentences-per-match with a **500-vs-250 arm in the instrument**, not on
-     phrasing counts against a junior arm.
+  ⚠ *Two honest costs, both small and both visible in the by-kind table:* `games` beats fall 0.40 →
+  0.36 and `rally` 1.82 → 1.78 per match at the upper rungs, because the new beats sometimes win the
+  point off them under `PRIORITY`. That is the file's own doctrine (the bigger beat takes the row and
+  the score column carries the smaller fact), and the invariant that matters is asserted instead: **no
+  rung ever goes silent where a junior spoke** – every point index that produced a row lower down
+  still produces one higher up, because every bar only ever comes DOWN.
 
-  *Not built:* the fix lives in `src/viz/commentary.ts` and `src/viz/preview.ts`, outside this
-  agent's lane (`src/engine/match/**` + tests). Handing over the measurement and the diagnosis.
-  ⚠ Also worth his knowing: only `TournamentFlow` passes `preview-event` into `MatchViewer` –
-  `MatchReplay`, `PracticeFlow` and `SeasonScreen` do not, so a re-watched match falls all the way
-  back to **storey 1**, the poorest log in the game.
+  **AND THE RE-WATCH BUG, same lane.** `MatchViewer.previewEvent` is optional, defaults to null, and
+  null is the RIGHT answer for two of its four callers – so a caller that MEANT null and one that
+  FORGOT rendered identically, and exactly one caller (`TournamentFlow`) ever passed it. `MatchReplay`
+  is how a match is watched again from **both** the Season bracket and the Home feed, and it passed
+  nothing: a WTA 500 quarter-final re-opened there narrated as **storey 1**, the poorest log in the
+  game. Fixed by DERIVING the occasion instead of remembering to pass it – `occasionOf(eventId, round)`
+  in `viz/preview.ts`, reading the engine's own `tierFromEventId` and `stageLabel` rather than parsing
+  an id twice. `MatchReplay` and `PracticeFlow` both derive it now (a friendly's `practice-w41` names
+  no tier, so its null is a computed answer), and SeasonScreen's sandbox hit-out – which has no stored
+  match to derive from – binds a literal null with the reason beside it, so silence is not an answer
+  any more anywhere in the match flow.
 
-  *Evidence:* `tests/commentary-tier-detail.test.ts` (5 tests, green) – the table above is printed by
-  the first, and the flat floor, the one-row 1000 delta and the words-not-detail finding are asserted
-  by the other four.
+  *Evidence:* `tests/commentary-tier-detail.test.ts` (7 tests) – the table above, **a test that
+  reddens if a 250 and a 500 ever narrate identically again**, beats AND sentences climbing at every
+  step, the no-rung-goes-silent invariant, and a volume ceiling so the top rung stays richer rather
+  than chattier. `tests/component/round23-replay-occasion.test.ts` (4 mounted tests,
+  **mutation-verified**: removing the `preview-event` binding from MatchReplay turns two of them red
+  and leaves the friendly green). `tests/component/match-viewer.test.ts` and
+  `tests/viz/commentary.test.ts` had the *"same rows, different words"* claim in them and both are
+  re-aimed at *"the ladder only ever ADDS rows"* – asserting that freeze is what let this ship twice.
 
 - [x] **5. «Разный текст для каждой из карточек тренеров с микро описанием каждого из них в своём
   тире»**

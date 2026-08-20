@@ -736,9 +736,13 @@ describe('commentary – item 3: the log knows which rung she is playing on', ()
     for (const m of corpus(80)) {
       const junior = rows(m, J30_R1)
       const slam = rows(m, SLAM_FINAL)
-      expect(slam.length, 'the cut is text-only: the same match keeps the same rows').toBe(junior.length)
-      let same = true
-      for (let i = 0; i < junior.length; i++) {
+      // ⭐ ROUND-23 #4: the Slam log is LONGER now, and that is the fix rather than a drift. It used
+      // to be the same rows in different words, which is precisely why he could not see the round-21
+      // change - see BARS and THE LONG GAME in the source. A row the junior has and the Slam does not
+      // is still counted as differing, which is what makes the comparison honest at unequal lengths.
+      expect(slam.length, 'a bigger occasion may never say LESS').toBeGreaterThanOrEqual(junior.length)
+      let same = slam.length === junior.length
+      for (let i = 0; i < Math.max(junior.length, slam.length); i++) {
         total++
         if (junior[i] !== slam[i]) {
           differing++
@@ -848,17 +852,38 @@ describe('commentary – item 3: the log knows which rung she is playing on', ()
     }
   })
 
-  it('⚠ the occasion does not change the CUT: same rows, same key moments, same volume', () => {
-    // The escalation is entry LENGTH and vocabulary, never row count (live-text-adult-tour.md §2.7).
-    // If a rung ever started emitting more rows, the key cut and the volume pins would be deciding
-    // different things at different rungs, which is not a ladder - it is two products.
+  // ⚠⚠ THIS TEST USED TO ASSERT THE OPPOSITE, AND ASSERTING IT IS WHY THE OWNER ASKED A THIRD TIME.
+  // It read "the occasion does not change the CUT: same rows, same key moments, same volume", on the
+  // reasoning that escalation is entry LENGTH and vocabulary and never row count. Half of the
+  // research says otherwise in the same sentence - live-text-adult-tour.md §2.7 is "ENTRY FREQUENCY
+  // and entry length" - and freezing the row count is exactly what left the top of the ladder saying
+  // the same things in different words. Round 23 item 4 measured it: 16.20 beats a match at every
+  // rung from a J30 to a Slam, +1.1% characters and 1.8% FEWER sentences for a 56% reword.
+  //
+  // What replaces it is the property that was actually worth protecting, and it is strictly stronger
+  // than a row-count freeze: THE LADDER ONLY ADDS. Every bar in `BARS` only ever comes DOWN as the
+  // rung goes up, so every candidate a junior rung had is still a candidate above it and no point
+  // that spoke can fall silent. A higher rung may swap WHICH beat wins a point (a long game outranks
+  // the rally inside it - see PRIORITY), and it may never leave the point empty.
+  it('⚠ the ladder only ever ADDS ROWS: a higher rung never goes silent where a junior spoke', () => {
+    let juniorRows = 0
+    let slamRows = 0
     for (const m of corpus(60)) {
       const junior = buildCommentary(m, A.name, B.name, J30_R1)
       const slam = buildCommentary(m, A.name, B.name, SLAM_FINAL)
-      expect(slam.map((b) => [b.pointIndex, b.kind, b.keyMoment, b.score, b.set])).toEqual(
-        junior.map((b) => [b.pointIndex, b.kind, b.keyMoment, b.score, b.set]),
-      )
+      const spoken = new Set(slam.map((b) => b.pointIndex))
+      for (const b of junior) {
+        expect(spoken.has(b.pointIndex), `a Slam lost the row a J30 has at point ${b.pointIndex}`).toBe(true)
+      }
+      expect(slam.length, 'a bigger occasion may never say less').toBeGreaterThanOrEqual(junior.length)
+      juniorRows += junior.length
+      slamRows += slam.length
     }
+    // ...and it must be a REAL gain rather than a row here and there, or this is the round-21 fix
+    // again wearing a new number. Measured at 1.28 over 200 matches in tools/commentary-rung-probe.ts.
+    expect(slamRows / juniorRows, `a Slam says ${(slamRows / juniorRows).toFixed(2)}x what a J30 says`).toBeGreaterThan(
+      1.2,
+    )
   })
 
   it('⚠ is still deterministic with an occasion, and still draws nothing', () => {

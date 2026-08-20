@@ -23,6 +23,10 @@
 //   streak    six or more points in a row. The owner's own example, and it is the one beat that
 //             is invisible in a scoreline - "she won six straight" never shows up as 6-4.
 //   rally     one exchange so long it is its own memory. Twelve shots plus, ending in a winner.
+//   deuce     A GAME THAT WOULD NOT END - four or more deuces (round 23 item 4). The score column
+//             prints 4-3 whether that game took four points or twenty-four, and no other beat here
+//             could say which: a hold says the break points were saved, a streak is points won in a
+//             row, and a deuce war is by definition neither. Professional rungs only.
 //   games     a run of GAMES, not points - four or more in a row. Round 16 item 11: the research
 //             names it as the thing a 6-1 set is entirely made of and that nothing here ever said
 //             (commentary-generation.md §5.2, "visible in 6-1 but never said"). A streak of points
@@ -39,12 +43,17 @@
 //
 // VOLUME CAPS, because "detectable" is not "worth telling":
 //   * ONE beat per point (see PRIORITY): a set won on a break is ONE row that says both.
-//   * at most ONE streak and ONE rally per set - the longest, so a set's best moment is the one
-//     that gets told and the second-best stays quiet.
+//   * at most ONE streak, ONE long game and ONE rally per set - the longest, so a set's best moment
+//     is the one that gets told and the second-best stays quiet. ⚠ THE RALLY CAP LIFTS TO TWO AT A
+//     MAJOR AND NOWHERE ELSE (round 23 item 4, see BARS): it is the one rung where the sport's own
+//     coverage really does publish the second one, and it is a deliberate exception to this rule
+//     rather than a softening of it.
 //   * silence is allowed. A dull set with no break, no streak and no long rally says nothing but
 //     its set beat, and that is correct: the quiet sets are what make the loud ones land.
-// Measured over 200 real simulated matches this lands at ~4-6 beats per set (see
-// tests/viz/commentary.test.ts, which FAILS if the density drifts back toward a point log).
+// Measured over 200 real simulated matches this lands at ~4-6 beats per set on the junior rungs (see
+// tests/viz/commentary.test.ts, which FAILS if the density drifts back toward a point log) and
+// climbs to ~8 at a major, which is the round-23 ladder doing its job - `tests/commentary-tier-
+// detail.test.ts` holds the top of that band down.
 //
 // ---------------------------------------------------------------------------------------------
 // THE KEY CUT - what 'key' shows that 'full' does not (owner, 06.08)
@@ -156,6 +165,48 @@
 // (docs/specs/round16-triage.md §3), and a commentary module that invented its own answer would be
 // the second authority on one question. Import it, do not restate it.
 //
+// ---------------------------------------------------------------------------------------------
+// ⭐ ROUND 23 ITEM 4 - THE SAME ASK A THIRD TIME, AND WHY THE SECOND FIX MISSED (owner, 19.08)
+// ---------------------------------------------------------------------------------------------
+// «Проверь ещё раз текстовые трансляции на 500+ сериях пожалуйста, добавилось ли там детализации.»
+// Measured over 120 seeded matches (tests/commentary-tier-detail.test.ts), the answer was no, twice
+// over, and the two reasons are different mistakes:
+//
+//   1. THE TOP OF THE LADDER WAS ONE FLAT FLOOR FOUR RUNGS WIDE. `storeyOf` puts 250/500/1000/slam
+//      on storey 4 and `wta250.drawSize === wta500.drawSize`, so a WTA 500 and a WTA 250 narrated
+//      BYTE-IDENTICALLY - as did a WTA 500 final and a Grand Slam final. Climbing bought nothing.
+//      Fixed by `rungOf` (viz/preview.ts): the SAME ladder at the resolution this file needs, with
+//      `storeyOf` derived from it so there is still one authority.
+//   2. THE ROUND-21 FIX ANSWERED THE WRONG WORD. He asked for ДЕТАЛИЗАЦИЯ and what shipped was
+//      VARIETY: storey 4 reworded 56.7% of rows against a W75 for +1.1% characters, the SAME 16.20
+//      beats and 1.8% FEWER sentences. Its success metric was distinct phrasings (396 -> 611) and
+//      phrasings are blind to substitution - the per-row budget means an arriving stake clause
+//      DISPLACES a colour clause instead of joining it.
+//
+// ⭐ SO THE LEVER IS BEATS, NOT WORDS, and this is the line that has to stop a fourth attempt: a
+// rung is richer than the rung below it when the log says MORE THINGS. `tools/commentary-rung-probe
+// .ts` grades on beats/match and sentences/match with an arm on every rung and a diff against the
+// rung BELOW; phrasings is printed last and labelled as variety. Two mechanisms carry it, and both
+// are the research's own ("the human layer's escalation is ENTRY FREQUENCY and ENTRY LENGTH, not
+// louder adjectives", live-text-adult-tour.md §2.7):
+//
+//   1. THE BAR COMES DOWN AS THE RUNG GOES UP (`BARS`). Every optional beat family has a numeric
+//      bar - a rally's shots, a run's points, a hold's saved break points - and a bigger event
+//      publishes the same tennis told closer up. One table, one bar per family per rung, and every
+//      step of the professional ladder moves a different family so the climb is legible.
+//   2. ONE GENUINELY NEW FACT: THE LONG GAME (`deuce`). See THE LONG GAME below. Beats are the unit
+//      of detail, and a NEW beat is the only kind of detail that cannot displace an old one - it is
+//      its own row and it does not compete for another row's 120 characters.
+//
+// ⚠ THE ROW BUDGET IS DELIBERATELY UNCHANGED, AND THAT WAS THE OTHER OPTION ON THE TABLE. It was
+// A/B'd rather than argued about (`BEAT_MAX_CHARS` set to 400, one probe run, reverted): lifting the
+// cap entirely buys **+0.72 sentences a match** at the professional rungs and +30 characters a match,
+// and it buys ZERO extra beats because the cap has never decided whether a row exists. The bars and
+// the long game buy **+4.5 beats and +6.3 sentences a match** at a major over the same corpus - nearly
+// nine times as much - and they cost the phone nothing, while a bigger cap spends exactly the
+// protection the cap was added for (a 123-character row wrapping to four lines on a 390px frame). So
+// the answer to "the stake clause displaced the colour clause" is not a longer row, it is another row.
+//
 // ⚠ NO EVENT MEANS STOREY 1, WHICH MEANS TODAY'S OUTPUT EXACTLY. The friendly, the sandbox hit-out
 // and every existing caller that passes nothing get a byte-identical log - the ladder only ever ADDS,
 // and its bottom step is where the file already was. `tests/viz/commentary.test.ts` still runs
@@ -200,7 +251,7 @@ import { awardPoint } from '../engine/match/scoring'
 import { matchWinProbability } from '../engine/match/liveProb'
 // ⚠ THE OCCASION LADDER, IMPORTED RATHER THAN RESTATED - see ROUND 21 ITEM 3 above. Both are viz
 // modules and `preview.ts` imports nothing from here, so there is no cycle to create.
-import { storeyOf, remainingIn, type PreviewEvent, type Storey } from './preview'
+import { rungOf, storeyOf, remainingIn, type PreviewEvent, type Rung, type Storey } from './preview'
 
 export type BeatKind =
   | 'open'
@@ -210,6 +261,9 @@ export type BeatKind =
   | 'streak'
   | 'rally'
   | 'games'
+  /** ⭐ ROUND-23 #4: a game that would not end. The one fact in this file that no other beat and no
+   *  column can carry – see THE LONG GAME below. */
+  | 'deuce'
   | 'set'
   | 'match'
   /** ⭐ ROUND-21 #2: the coach in her corner at a set break – emitted only on a match his family
@@ -287,6 +341,70 @@ const STREAK_MIN = 6
 const RALLY_MIN = 12
 /** Two break points saved is a story; one is a Tuesday. */
 const SAVES_MIN = 2
+
+/**
+ * ⭐ ROUND 23 #4 - HOW MUCH OF THE MATCH EACH RUNG TELLS, and the whole of "more detail higher up".
+ *
+ * The four constants above are the bar a beat family has to clear at the BOTTOM of the ladder, and
+ * they stay exactly what they were: rungs 1-3 read this table's first three columns and are
+ * byte-identical to the log this file produced before round 23. What the professional rungs buy is
+ * the same tennis TOLD CLOSER UP - the bar comes down, so more of what happened clears it.
+ *
+ * ⚠ WHY A BAR AND NOT A LOUDER SENTENCE. This is the research's own escalation
+ * (live-text-adult-tour.md §2.7, commentary-lexicon.md §5.3): the human layer at a big event does
+ * not use bigger adjectives, it files MORE ENTRIES. Round 21 reached for vocabulary instead and the
+ * owner could not see it, because rewording a row that was going to be printed anyway changes
+ * nothing about how much the log says.
+ *
+ * ⚠ EVERY STEP MOVES A DIFFERENT FAMILY, ON PURPOSE. A ladder whose every rung lowers every bar is
+ * one lever with four names; this way the climb is legible in the log itself - the 500 starts
+ * telling you about the single break point she saved, the 1000 starts telling you about five in a
+ * row, the Slam starts telling you about the second-best rally of the set.
+ *
+ * MEASURED HEADROOM (200 seeded matches, tools/commentary-rung-probe.ts and its scratch companion),
+ * which is what picked every number below rather than taste:
+ *   deuces per game   >=3: 3.23 games/match   >=4: 1.41   >=5: 0.69   (>=2 is 6.78 - a drum)
+ *   holds saving      exactly 1 bp: 1.40/match      >=2 bp: 1.46/match
+ *   rallies to a winner  >=12 shots: 3.96/match  >=10: 6.63  >=9: 8.80
+ *   point runs        >=6: 2.54/match   >=5: 5.16   >=4: 10.66 (a run of four is a long game, not a
+ *                     story - it is the score column's own arithmetic)
+ * The per-set caps below turn those into rows: a family capped at one per set can never contribute
+ * more than ~2.46 rows a match however low its bar goes, which is why the bars move a step at a time
+ * and why the Slam's rally cap is the one cap that lifts.
+ */
+interface Bars {
+  /** shots a rally needs before it earns a row */
+  rally: number
+  /** rally rows a set may spend - the "one per set, the longest" cap, lifted only at the top */
+  ralliesPerSet: number
+  /** consecutive points a run needs */
+  streak: number
+  /** break points a hold must have saved */
+  saves: number
+  /** deuces a game needs before THE LONG GAME speaks; 0 turns the beat off entirely */
+  deuce: number
+}
+
+const BARS: Record<Rung, Bars> = {
+  // 1-3: the bottom of the ladder, unchanged since before round 23 existed.
+  1: { rally: RALLY_MIN, ralliesPerSet: 1, streak: STREAK_MIN, saves: SAVES_MIN, deuce: 0 },
+  2: { rally: RALLY_MIN, ralliesPerSet: 1, streak: STREAK_MIN, saves: SAVES_MIN, deuce: 0 },
+  3: { rally: RALLY_MIN, ralliesPerSet: 1, streak: STREAK_MIN, saves: SAVES_MIN, deuce: 0 },
+  // 4 - WTA 250: the long game arrives, at four deuces (1.41 games a match clear it).
+  4: { rally: RALLY_MIN, ralliesPerSet: 1, streak: STREAK_MIN, saves: SAVES_MIN, deuce: 4 },
+  // 5 - WTA 500: a single saved break point becomes a story. ⚠ THIS OVERRIDES A RULING, KNOWINGLY -
+  // `SAVES_MIN`'s own comment says "one break point saved is a Tuesday", and it is, on a Tuesday at a
+  // W15. The ruling was made when there was one bar for the whole ladder; at the top of the tour every
+  // live feed in the sport files that game, which is the entry-frequency escalation exactly.
+  5: { rally: RALLY_MIN, ralliesPerSet: 1, streak: STREAK_MIN, saves: 1, deuce: 4 },
+  // 6 - WTA 1000: five points in a row is a run, and the long game speaks a deuce earlier.
+  6: { rally: RALLY_MIN, ralliesPerSet: 1, streak: 5, saves: 1, deuce: 3 },
+  // 7 - a major: the rally cap lifts to the two longest of the set, at ten shots. ⚠ THE ONE PLACE
+  // THE PER-SET CAP MOVES. "At most one rally per set" is a volume rule this file argues for at
+  // length, and it holds everywhere else; a Grand Slam is the single rung where the sport's own
+  // coverage really does publish the second one too.
+  7: { rally: 10, ralliesPerSet: 2, streak: 5, saves: 1, deuce: 3 },
+}
 /** Four GAMES in a row. Round 16 item 11.
  *
  *  MEASURED, not chosen (tools/commentary-register-probe.ts, 200 matches / 506 sets): the longest
@@ -357,12 +475,18 @@ const PRIORITY: Record<BeatKind, number> = {
   // - a quiet game in the middle of a rout - and it fires in about a third of matches, which is
   // what a beat about a set running away should do.
   games: 4,
-  streak: 5,
-  rally: 6,
+  // ⭐ ROUND-23 #4 – above a streak and a rally, below a game run. It is a claim about a whole GAME,
+  // so it outranks the two beats that are claims about points inside one; and a run of games is the
+  // larger fact again. ⚠ IT CANNOT COLLIDE WITH break/hold/set/tiebreak AT ALL: those sit on a
+  // game's LAST point and this sits on its last DEUCE, which is at least two points earlier by
+  // construction (deuce, then an advantage, then the game).
+  deuce: 5,
+  streak: 6,
+  rally: 7,
   // ⭐ ROUND-21 #2 – LAST, AND DELIBERATELY LAST. The coach's beat is anchored to the first point of a
   // new set, which is where a `rally` or a `streak` beat can also land; when they collide the TENNIS
   // wins, every time. Presence is a thing the log mentions, never a thing it interrupts a match for.
-  coach: 7,
+  coach: 8,
 }
 
 const ORDINAL = ['first', 'second', 'third', 'fourth', 'fifth'] as const
@@ -429,6 +553,12 @@ function storeyFor(event: CommentaryEvent | null): Storey {
   return event ? storeyOf(event.tier) : 1
 }
 
+/** ⭐ ROUND-23 #4: the same ladder at the finer resolution `BARS` is indexed by. Still one authority -
+ *  `storeyOf` is derived from `rungOf` in viz/preview.ts - and a friendly is still the bottom step. */
+function rungFor(event: CommentaryEvent | null): Rung {
+  return event ? rungOf(event.tier) : 1
+}
+
 /**
  * ⚠ A PHRASE POOL THAT GROWS WITH THE OCCASION - the mechanism behind "a bigger stage gets more
  * varied language", and it is ADDITIVE by construction: storey 3 is storey 2 plus entries, storey 4
@@ -486,6 +616,43 @@ const HOLD_SAVE_FROM_4: readonly ((who: string, n: string) => string)[] = [
 const STREAK_LINES: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points in a row for ${who}.`]
 const STREAK_FROM_3: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points without reply for ${who}.`]
 const STREAK_FROM_4: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} points in a row, all of them ${who}'s.`]
+
+/**
+ * ⭐ ROUND 23 #4 - THE LONG GAME, and it is the only genuinely NEW fact this file has gained since it
+ * was written.
+ *
+ * A game that goes to deuce five or six times is the thing a person in the stands actually retells,
+ * and NOTHING in this log could say it. The score column prints `4-3` whether that game took four
+ * points or twenty-four; a `hold` beat says the break points were saved and not that the game would
+ * not end; a `streak` beat is about points won in a row, which a deuce war is by definition not.
+ * It is the clearest case in the file of the design rule at the top - "what would someone SAY" - and
+ * it went unsaid for three rounds.
+ *
+ * ⚠ IT IS A ROW OF ITS OWN, WHICH IS THE WHOLE POINT. Round 21's detail arrived as extra CLAUSES on
+ * rows that already existed and `clausesUpTo` pushed a colour clause out to make room, so the log
+ * changed words without gaining anything. A new beat cannot do that: it has its own 120 characters.
+ *
+ * ⚠ ANCHORED AT THE GAME'S LAST DEUCE, NOT AT ITS LAST POINT. Two reasons, and the second is the
+ * important one. It cannot collide with the break/hold/set beat that sits on the game's final point
+ * (a deuce is at least two points before it), so one long game now prints the fact that it was long
+ * AND the fact of who won it, as two rows - which is exactly how a person tells it. And every claim
+ * below is true at the moment it is anchored: the game really is still being played there.
+ *
+ * ⚠ AND EVERY LINE OPENS ON ITS NUMBER, like the streak and game-run lines beside it, so the honesty
+ * test can read the first word back as the count the beat claims.
+ *
+ * ⚠ TWO SENTENCES, NOT ONE, AND IT IS NOT A STYLE CHOICE. The measurement that reopened this item
+ * grades on sentences as well as beats, and the storey-4 phrase pools that round 21 added are mostly
+ * single-sentence moulds - so the step onto the professional tour was costing the log 0.55 sentences
+ * a match even before the row budget cut anything. The count and the server are two facts and read
+ * naturally as two short sentences, which is this file's own register anyway; written as one they
+ * would have made the 250 step invisible on the number it is graded by.
+ */
+const DEUCE_LINES: readonly ((n: string, server: string) => string)[] = [
+  (n, who) => `${n} deuces in this game. ${who} is still serving.`,
+  (n, who) => `${n} times to deuce, and it is not over. ${who} goes again.`,
+  (n, who) => `${n} deuces. ${who} has still not held it.`,
+]
 
 const GAMES_LINES: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} games in a row for ${who}.`]
 const GAMES_FROM_3: readonly ((n: string, who: string) => string)[] = [(n, who) => `${n} games without reply for ${who}.`]
@@ -672,6 +839,10 @@ interface GameSpan {
   mpFaced: [number, number]
   /** per side: this side stood at love-forty in this game (0 points to the other's 3) */
   loveForty: [boolean, boolean]
+  /** ⭐ ROUND-23 #4: the index of every point that put this game AT deuce - three-all and every
+   *  return to it. Its length is the deuce count and its last entry is where the long-game beat is
+   *  anchored (see THE LONG GAME). A tiebreak contributes none: 3-3 in a breaker is not deuce. */
+  deuceAt: number[]
   gamesBefore: [number, number]
   gamesAfter: [number, number]
   setsBefore: [number, number]
@@ -705,6 +876,7 @@ function scan(points: readonly AnnotatedPoint[]): Scan {
   const mpFaced: [number, number] = [0, 0]
   const loveForty: [boolean, boolean] = [false, false]
   const gamePts: [number, number] = [0, 0]
+  let deuceAt: number[] = []
   let tiebreak = false
 
   for (let i = 0; i < points.length; i++) {
@@ -735,6 +907,9 @@ function scan(points: readonly AnnotatedPoint[]): Scan {
     if (!p.entry.tiebreak) {
       if (gamePts[0] === 0 && gamePts[1] === 3) loveForty[0] = true
       if (gamePts[1] === 0 && gamePts[0] === 3) loveForty[1] = true
+      // ⭐ DEUCE, on the raw counters: level from three points each up. Three-all is the first, and
+      // every return to level after it is another - which is the count a person gives out loud.
+      if (gamePts[0] >= 3 && gamePts[0] === gamePts[1]) deuceAt.push(i)
     }
     if (p.gameEnd) {
       const w = p.entry.winner
@@ -750,6 +925,7 @@ function scan(points: readonly AnnotatedPoint[]): Scan {
         spFaced: [spFaced[0], spFaced[1]],
         mpFaced: [mpFaced[0], mpFaced[1]],
         loveForty: [loveForty[0], loveForty[1]],
+        deuceAt,
         gamesBefore,
         gamesAfter: [games[0], games[1]],
         setsBefore: [sets[0], sets[1]],
@@ -763,6 +939,8 @@ function scan(points: readonly AnnotatedPoint[]): Scan {
       mpFaced[1] = 0
       loveForty[0] = false
       loveForty[1] = false
+      // ⚠ A FRESH ARRAY, NOT `length = 0`: the GameSpan just pushed holds this reference.
+      deuceAt = []
       gamePts[0] = 0
       gamePts[1] = 0
       tiebreak = false
@@ -1148,6 +1326,9 @@ export function buildCommentary(
   // WHICH RUNG SHE IS PLAYING ON - see ROUND 21 ITEM 3 at the head of this file. One number, read
   // once, and every phrase pool and occasion clause below is filtered by it.
   const storey = storeyFor(event)
+  // ...and the same answer at the finer resolution the BARS are indexed by (round 23 item 4). The
+  // storey decides WHICH WORDS; the rung decides HOW MUCH OF THE MATCH gets a row at all.
+  const bars = BARS[rungFor(event)]
 
   /** The room's line for a beat, or '' below storey 3 where there is no room to speak of.
    *
@@ -1443,9 +1624,12 @@ export function buildCommentary(
           // longer deuce war saved MORE than three, and then the count is the better line.
           g.loveForty[w] && g.bpFaced === 3
           ? `${names[w]} holds from love-forty down.`
-          : g.bpFaced >= SAVES_MIN
+          : g.bpFaced >= bars.saves
             ? // The one repeated hold framing, so it is the one that gets the occasion's extra
               // moulds. The other three are earned by a specific score and say the specific thing.
+              // ⭐ ROUND-23 #4: `bars.saves` is 2 up to the WTA 250 - `SAVES_MIN`, exactly as before -
+              // and 1 from the 500 up, which is the single largest source of new rows at the top of
+              // the tour (measured: 1.40 more holds a match).
               pooledHoldSave[pick('hold', g.last, pooledHoldSave.length)](
                 names[w],
                 nPoints(g.bpFaced, 'break point'),
@@ -1497,11 +1681,52 @@ export function buildCommentary(
     }
   }
 
+  // --- the long game: the deuce war, one per set (round 23 item 4) ---------------------------
+  // See THE LONG GAME above for what this may claim and why it is anchored where it is. One per
+  // set, the LONGEST - the same discipline the streak and rally beats keep, so a set's best moment
+  // is the one that gets told and the second-best stays quiet. Silent below the professional rungs
+  // (`bars.deuce === 0`), which is what keeps every existing caller's log byte-identical.
+  //
+  // ⚠ THE KEY CUT ASKS THE SAME QUESTION IT ASKS OF EVERY NON-STRUCTURAL BEAT: did the match move
+  // across the span this beat describes - here the game, from the point before it began to the last
+  // deuce. A deuce war on serve at 1-0 is a long game and nothing more; one at 5-5 in a decider is
+  // the set, and `swing` is what tells them apart.
+  if (bars.deuce > 0) {
+    const best = new Map<number, { deuces: number; from: number; at: number; server: Side }>()
+    let prevLast = 0
+    for (const g of s.games) {
+      const from = prevLast
+      prevLast = g.last
+      if (g.deuceAt.length < bars.deuce) continue
+      const cur = best.get(g.set)
+      if (cur && cur.deuces >= g.deuceAt.length) continue
+      best.set(g.set, {
+        deuces: g.deuceAt.length,
+        from,
+        at: g.deuceAt[g.deuceAt.length - 1],
+        server: g.server,
+      })
+    }
+    for (const d of best.values()) {
+      push(
+        d.at,
+        'deuce',
+        'Deuce.',
+        // The bare hash rather than the rotor, for the reason `room` gives: these are pushed outside
+        // the chronological per-game loop, so "what was just said" would be the wrong neighbour.
+        DEUCE_LINES[variant(d.at, DEUCE_LINES.length)](Num(d.deuces), names[d.server]),
+        undefined,
+        swing(d.from, d.at) >= KEY_SWING,
+      )
+    }
+  }
+
   // --- streaks: the longest run of >= STREAK_MIN points in each set, at the point it ended ----
   {
     const best = new Map<number, Run>()
     for (const r of runs(points)) {
-      if (r.len < STREAK_MIN) continue
+      // ⭐ ROUND-23 #4: `bars.streak` is STREAK_MIN up to the WTA 500 and 5 from the 1000 up.
+      if (r.len < bars.streak) continue
       const setIdx = s.setOf[r.end] ?? 0
       const cur = best.get(setIdx)
       if (!cur || r.len > cur.len) best.set(setIdx, r)
@@ -1522,17 +1747,23 @@ export function buildCommentary(
   }
 
   // --- rallies: the longest >= RALLY_MIN shot rally ending in a winner, one per set ----------
+  // ⭐ ROUND-23 #4: `bars.rally` is RALLY_MIN everywhere but a major, and `bars.ralliesPerSet` is 1
+  // everywhere but a major - the one rung where the per-set cap lifts, to the two longest. See BARS.
   {
-    const best = new Map<number, { shots: number; index: number }>()
+    const best = new Map<number, { shots: number; index: number }[]>()
     for (let i = 0; i < points.length; i++) {
       const shots = points[i].rally.shots
       const last = shots[shots.length - 1]
-      if (shots.length < RALLY_MIN || last?.result !== 'winner') continue
+      if (shots.length < bars.rally || last?.result !== 'winner') continue
       const setIdx = s.setOf[i] ?? 0
-      const cur = best.get(setIdx)
-      if (!cur || shots.length > cur.shots) best.set(setIdx, { shots: shots.length, index: i })
+      // Longest first, then cut to the cap - so a set's second row is genuinely its second-best
+      // rally rather than whichever one happened to come along after the first.
+      const kept = best.get(setIdx) ?? []
+      kept.push({ shots: shots.length, index: i })
+      kept.sort((x, y) => y.shots - x.shots || x.index - y.index)
+      best.set(setIdx, kept.slice(0, bars.ralliesPerSet))
     }
-    for (const r of best.values()) {
+    for (const r of [...best.values()].flat()) {
       const shots = points[r.index].rally.shots
       const last = shots[shots.length - 1]
       push(
