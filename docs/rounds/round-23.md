@@ -522,7 +522,7 @@ are analyses OF them; every other item that needs a world builds its own.
   the domestic table would close that – and would re-map every domestic event's own sub-stream in
   every existing career. **Owner call, not a fix-round build.**
 
-- [~] **12. «А ещё в national таблице надо проверить как считаются очки у соперниц: мне кажется,
+- [x] **12. «А ещё в national таблице надо проверить как считаются очки у соперниц: мне кажется,
   что у лидера было 600+, а после моей победы стало 400+, т.е. как будто отнялись, хотя как-будто
   таблица должна просто показывать 6 лучших за сезон.»**
   – *build or already-works.* A rival's domestic total apparently FELL after his win. Best-6 over a
@@ -658,7 +658,7 @@ are analyses OF them; every other item that needs a world builds its own.
   `tests/condition.test.ts` B1c re-aimed with a ⚠ note (same identity, same strength, now read off
   the engine's own constant); breaking the `kidRankDomestic` writer still turns it red.
 
-- [~] **13. «Куда-то сменилась вся верхушка национальной таблицы к концу сезона полностью»**
+- [x] **13. «Куда-то сменилась вся верхушка национальной таблицы к концу сезона полностью»**
   – *measure.* Same table, different symptom: total turnover of the top by season's end. Measure the
   churn; decide whether it is the conveyor working as designed or the same defect as 12.
   → ✅ **MEASURED, 6 SEEDS, TWO SEASONS. HE IS RIGHT, AND IT IS THE SAME CAUSE AS 12 – NOT THE
