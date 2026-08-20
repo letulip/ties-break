@@ -72,10 +72,25 @@ are analyses OF them; every other item that needs a world builds its own.
   career walk's reachability assertion ALONE**, and deleting the `<strong class="cm-room-band">`
   reddens three component tests and nothing in the unit file.
 
-- [ ] **2. «Письмо Entries Suspended вызывает во мне странные чувства, особенно последняя строчка
+- [x] **2. «Письмо Entries Suspended вызывает во мне странные чувства, особенно последняя строчка
   этого письма. Как будто её откуда-то сняли. Может быть можем как-то переформулировать?»**
   – *build (copy).* The suspension letter's closing line reads as if she has been struck off
   something. Find the string as RENDERED with real data, not in source, and rewrite the ending.
+  **DONE.** The letter lives in `OfferLetter.vue`'s `notice === 'suspension'` arm, and the line only
+  exists once rendered. Mounted on a real suspension (`chargeMandatoryPenalty` to the tenth point,
+  12 points, sentence to W7 '36):
+  - OLD: `Entries are suspended through W7 '36 – 12 penalty points inside 52 weeks.` / `She may train
+    and travel; she may not enter a tournament until that week has passed.` / **`Nothing is owed and
+    nothing is taken back.`**
+  - NEW closing line: **`Her ranking, her points and her place on every entry list are exactly where
+    she left them – the weeks are the whole price, and there is no fine on top.`**
+  The old line was two DENIALS of things nobody had proposed, and "taken back" is the one that did
+  the damage: a promise that nothing is revoked can only be parsed by first supposing that something
+  could be, so the paper planted a striking-off in the act of denying it. Both facts it carried are
+  still there, said as a presence. **The mechanic is untouched** – the reason and the end date are
+  unchanged, and naming the price ("the weeks are the whole price") is the opposite of softening it.
+  Ruling quoted on the script side at `isTour`; asserted in
+  `tests/component/round23-tour-suspension.test.ts` (reverting the copy turns it red).
 
 - [~] **3. «А может ли соперница травмироваться во время матча?»**
   – *answer, possibly build.* Straight question about the match engine: is a rival's in-match injury
@@ -475,14 +490,51 @@ are analyses OF them; every other item that needs a world builds its own.
   view on whether the 25k start is survivable. ⚠ He explicitly softened this – do not build a
   balance change off it without saying so first.
 
-- [ ] **16. «Что-то я не увидел когда академия появилась, покрывающая расходы на поездки. Проверь
+- [>] **16. «Что-то я не увидел когда академия появилась, покрывающая расходы на поездки. Проверь
   функционал оповещения пожалуйста»**
   – *build.* The academy that covers travel arrived without him noticing. The suspect is the
   NOTIFICATION, not the academy: verify the event fires and reaches a surface he actually reads.
+  **DIAGNOSED, TEST LANDED, FIX NEEDS A PATH GRANT.** Three questions, in order:
+  1. **Did the academy appear?** YES. His save carries `academy = { level 0.4399, sinceWeek 52,
+     seasonIndex 4, coveredCents 2_087_945 }` – a 33% travel scholarship taken on at week 52 that
+     has paid **$20,879.45** of fares this season alone.
+  2. **Did an event fire?** YES, once, and it is still in his ledger 205 weeks later: `academy-in-1`,
+     `type: 'milestone'`, `keep: true`, week 52 – «An academy has taken her on – a scholarship
+     covering 33% of her travel.» The three later reviews (104 / 156 / 208) said nothing because
+     `reviewAcademy` only speaks when the ROUNDED share moves, and his never left 33%.
+  3. **Did it reach a surface he reads?** ⚠ **NO, and it is arithmetic, not luck.** `reviewAcademy`
+     runs at `week % 52 === 0`; `advanceWeeks` hard-stops at `week % 52 === 49` (the season wrap);
+     the shell's bigger step is FOUR weeks. **49 + 4 = 53.** The verdict week is the one week of the
+     season a `+4` player cannot land on, and `WeekRecapCard` renders only the CURRENT week's
+     events – so the card the line appears on is never drawn. Measured on 7 careers: landings round
+     the boundary are `…, 49, 53, 57, …` in every one. Aggravating: there is no
+     `MilestoneType: 'academy'`, so it is not on the Kid screen's album either, and the only
+     persistent statement is Money → Bills' "With them since W1 '32", which says the scholarship
+     EXISTS and never that it ARRIVED.
+  **`tests/academy-notice.test.ts`** pins all three notice arms (arrival / changed share / end;
+  mutation-verified – deleting the `fireMilestone` call turns it red) plus the collision as a named
+  DEFECT pin. **THE FIX IS NOT APPLIED**: it is R12-15's walkover shape – a `StopReason`
+  (`shared/protocol.ts`), one `stops.add` in `advanceWeeks` (`engine/world.ts`) and one line of toast
+  copy (`App.vue`) – and all three are outside the paths this agent was given. Route it.
 
-- [ ] **17. «Перед ценами на карточках Bills написать "Around", тогда точно не будет вопросов
+- [x] **17. «Перед ценами на карточках Bills написать "Around", тогда точно не будет вопросов
   "почему ракетка стоит 920, а мы заплатили 1070?"»**
   – *build (copy).* Smallest item in the round and fully specified.
+  **DONE, and his two numbers reconcile exactly.** `kitLinePriceCents` quotes the MID of the
+  family's band times the rung factor: middle family, `pro` frame = mid($180-280) × 4 = **$920.00**,
+  the figure on his card to the cent. The RECURRING bill is a fresh `pickInt($180, $280)` per
+  replacement times the same factor, so **$1,070 is a $267.50 draw** – inside the band. His own
+  ledger shows the same swing on the fastest line: restrings at $127.40 / $136.72 / $160.20 /
+  $156.84 against a card that says $146.00. Rendered now: `Kestra Pro Stock · 31 good weeks ·
+  **Around $920**`.
+  **WHERE IT DOES *NOT* GO, row by row** (his own warning: a qualifier on an exact figure is a new
+  lie in place of an old confusion) – "Started this career with $25,000" is a constant that never
+  moves; the kit deal's "$2,463.78 of $3,000 used" / "Allowance left this season" are a contract pot
+  and a real spend; the academy's "Travel they have paid" is money already paid; the physio pair
+  ("$43-74/wk", "$57-126/wk") is already printed as the corridor's TRUE bounds, so qualifying it
+  would qualify a range with a range. `tests/component/round23-bills-around.test.ts` asserts the
+  qualifier on all 12 rungs and both price arms, and asserts it appears **nowhere else on the tab**.
+  One clause was added to the kit note so the word is not mysterious.
 
 - [ ] **18. «О! А ещё можно сделать после появления её счета в банке в 18 начать ей призовые
   переводить какие-то суммы, например начать с 10-20% и может быть наращивать год к году»**
