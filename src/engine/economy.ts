@@ -1254,6 +1254,43 @@ export const ECONOMY = {
   // >= 1 cent as an `income` event under the dedicated 'interest' category. Zero RNG.
   savings: { apyWeekly: 0.0006 },
 
+  // =================================================================================================
+  // HER SHARE OF THE PRIZE MONEY (round-23 #18) – the one income line the family stops keeping
+  // =================================================================================================
+  //
+  // THE OWNER: «после появления её счета в банке в 18 начать ей призовые переводить какие-то суммы,
+  // например начать с 10-20% и может быть наращивать год к году», and then, on the ceiling:
+  // «да, давай, но может не до 30, а до 40 или 50 вообще, это всё-таки ее карьера?»
+  //
+  // So it is a RAMP and not a rate: 10% the year she turns eighteen, five points more every birthday,
+  // and it stops at half. The four numbers live here rather than inside `kidPrizeShareBps` because a
+  // literal in a formula is a balance decision nobody can find – the rule this file exists for.
+  //
+  // ⚠ WHY EIGHTEEN AND NOT THE BANK CARD. Her account is a BIRTHDAY GIFT (`world/birthday.ts`, the
+  // eighteenth's `bankcard` row: «Her own bank card and account – she is earning now, it should be in
+  // her name»), and a gift is one of four the parent chooses between. Keying the ramp to it would
+  // make the mechanic invisible in three careers out of four and, worse, make a father who bought her
+  // a watch the reason his daughter never got paid. Eighteen is the age the game already treats as
+  // the threshold – school is over by 18.92 for every birth month, the junior rungs shut, the fork is
+  // one year away – so the account is the FICTION of this rule and her age is its trigger.
+  //
+  // ⚠ AND THE MONEY GENUINELY LEAVES THE FAMILY WALLET. See `finalizeTournament`: the family is
+  // credited its part and she is credited hers, so the parent watches the cheque get smaller as she
+  // grows. A share that only counted beside the wallet would be a number, not a mechanic, and «это
+  // всё-таки её карьера» is an argument about whose money it is.
+  kidShare: {
+    /** The birthday the transfers start on. Her own bank account is the eighteenth's gift. */
+    fromAgeYears: 18,
+    /** What she keeps of every cheque in that first year – 10%, the bottom of his own «10-20%». */
+    startBps: 1000,
+    /** ...and what each birthday after it adds. Five points a year is his «наращивать год к году». */
+    stepBps: 500,
+    /** The ceiling, reached at 26 – «может не до 30, а до 40 или 50 вообще». Half is the legible
+     *  version of what he asked for: an even split between the girl who won it and the family that
+     *  paid to get her there, arriving in the years she is worth the most. */
+    capBps: 5000,
+  },
+
   // Season-Life condition accumulator (0..100, 100 = fresh). Pure INTEGER arithmetic –
   // accrueCondition draws ZERO main-stream RNG, so none of these can shift the weekly draw
   // sequence (the B1 invariance test guards it).
@@ -1390,8 +1427,9 @@ export const ECONOMY = {
   // AND WHEN IT ENDS IS HIS SECOND RULING: «Конец школы – в конце учебного года.» Not her birthday -
   // the school year containing it, which is what happens to a person and which the calendar already
   // has a boundary for (`SCHOOL_YEAR_TURNS_AT`, 1 September). `kidLife.ts`'s `gradeOf` has modelled
-  // exactly that since the School tile shipped, and it already returns null - "School finished" - past
-  // the last grade. Nothing else in the game read it. Now everything does.
+  // exactly that since the School tile shipped, and it already returns null past the last grade.
+  // Nothing else in the game read it. Now everything does. (What the tile SAYS when it returns null
+  // stopped being "School finished" in round 23 #6 – see `lifeStageTile`; the arithmetic is the same.)
   //
   // ⚠ THE LOAD HALF IS THE SUMMER BLOCK'S ARGUMENT WITH A LONGER WINDOW, AND IT IS DELIBERATELY THE
   // SAME NUMBER. The owner's summer ruling was about a week «с 2 тренировками в день» because there
@@ -2621,4 +2659,35 @@ export function parentIncomeForWeekCents(seedStr: string, background: FamilyBack
     income *= 1 + lo + rng() * (hi - lo)
   }
   return Math.round(income)
+}
+
+/** ⭐⭐ ROUND-23 #18 – WHAT SHARE OF A CHEQUE IS HERS, in basis points, at a given age.
+ *
+ *  `ECONOMY.kidShare` holds all four numbers; this is the ramp read off them and nothing else, so a
+ *  retune moves the whole game and this function does not change. Zero before the threshold birthday,
+ *  and flat once the cap is reached (age 26 on the shipped ladder):
+ *
+ *      18   19   20   21   22   23   24   25   26+
+ *      10%  15%  20%  25%  30%  35%  40%  45%  50%
+ *
+ *  ⚠ IT TAKES HER REAL AGE IN WHOLE YEARS (`kidAgeYears`), never the ITF band's – the one-clock
+ *  ruling of 09.08. A December girl is 18 for the last three weeks of the season her band turned 19
+ *  in, and paying her the nineteen-year-old's share in those weeks would be the same defect the
+ *  School tile had before it started reading her birthday.
+ *
+ *  Pure integer arithmetic on a persisted-nowhere input: no draw, no state, no schema. */
+export function kidPrizeShareBps(ageYears: number): number {
+  const { fromAgeYears, startBps, stepBps, capBps } = ECONOMY.kidShare
+  if (ageYears < fromAgeYears) return 0
+  return Math.min(capBps, startBps + (Math.floor(ageYears) - fromAgeYears) * stepBps)
+}
+
+/** Her cut of one cheque, in whole cents – `kidPrizeShareBps` applied and rounded ONCE.
+ *
+ *  ⚠ THE FAMILY GETS `prizeCents - kidPrizeShareCents(...)`, computed by subtraction rather than by a
+ *  second rounding, so the two halves add up to the cheque exactly. A pair of independent
+ *  `Math.round`s loses or invents a cent on half the finishes, and this money is booked into two
+ *  different balances that a player can add up on screen. */
+export function kidPrizeShareCents(prizeCents: number, ageYears: number): number {
+  return Math.round((prizeCents * kidPrizeShareBps(ageYears)) / 10_000)
 }

@@ -88,7 +88,10 @@ describe('⭐ ROUND-21 #6 – the School tile explains its own September', () =>
     expect(school!.findAll('.kid-tile-line')[0].text()).toMatch(/grade/i)
 
     // ...and the line under the grid accounts for it.
-    const note = w.find('.kid-grid-note')
+    // ⚠ `.kid-note-school` AND NOT `.kid-grid-note` SINCE ROUND 23: two more notes share that layout
+    // class (the college sentence, her own account), so the bare class would stop being a claim about
+    // THIS sentence the moment either of them fires.
+    const note = w.find('.kid-note-school')
     expect(note.exists(), 'the September has an explanation on the screen it appears on').toBe(true)
     const text = note.text()
     // It names the tile it belongs to, the rule, the consequence and the comparison - and nothing
@@ -110,7 +113,7 @@ describe('⭐ ROUND-21 #6 – the School tile explains its own September', () =>
     // screen - and by this week she has left school anyway.
     const snap = careerAt(HER_SEPTEMBER, 6, 'school-6-same-week')
     const w = mountKid(snap)
-    expect(w.find('.kid-grid-note').exists()).toBe(false)
+    expect(w.find('.kid-note-school').exists()).toBe(false)
     w.unmount()
   })
 
@@ -119,25 +122,26 @@ describe('⭐ ROUND-21 #6 – the School tile explains its own September', () =>
     // school, because she started a year behind them too. So the line follows the BIRTH MONTH and
     // not the week; this is the arm that tells the two apart while both are still schoolgirls.
     const dec = mountKid(careerAt(12, 12, 'school-12-young'))
-    expect(dec.find('.kid-grid-note').exists(), 'a December girl at 14 is already a year behind them').toBe(true)
+    expect(dec.find('.kid-note-school').exists(), 'a December girl at 14 is already a year behind them').toBe(true)
     dec.unmount()
 
     setActivePinia(createPinia())
     const jun = mountKid(careerAt(12, 6, 'school-6-young'))
-    expect(jun.find('.kid-grid-note').exists()).toBe(false)
+    expect(jun.find('.kid-note-school').exists()).toBe(false)
     jun.unmount()
   })
 
   it('...and it stops once school is behind her, when there is nothing left to explain', () => {
-    // `schoolEndWeek(12)` is 294; one week past it the tile reads "School finished", which accounts
-    // for itself.
+    // `schoolEndWeek(12)` is 294; one week past it the cell has left the classroom entirely - since
+    // round 23 #6 its HEADING moves too, so the tile is found by the new label rather than the old.
     const snap = careerAt(schoolEndWeek(12) + 1, 12, 'school-12-done')
     expect(snap.ending ?? null, 'the career is still running').toBeNull()
     const w = mountKid(snap)
     const tiles = w.findAll('.kid-tile')
-    const school = tiles.find((t) => t.find('.kid-tile-label').text() === 'School')
-    expect(school!.findAll('.kid-tile-line')[0].text()).toMatch(/finished/i)
-    expect(w.find('.kid-grid-note').exists()).toBe(false)
+    const school = tiles.find((t) => t.find('.kid-tile-label').text() === 'After school')
+    expect(school, 'the cell is headed for the stage she is at').toBeTruthy()
+    expect(school!.findAll('.kid-tile-line')[0].text()).toBe('The last bell')
+    expect(w.find('.kid-note-school').exists()).toBe(false)
     w.unmount()
   })
 })

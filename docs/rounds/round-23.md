@@ -409,12 +409,81 @@ are analyses OF them; every other item that needs a world builds its own.
   within-tier test in both files and nothing in #1; deleting the `<span class="cm-blurb">` reddens
   all three component tests and nothing in the unit file.
 
-- [?] **6. «Что можем вместо school finished на личной странице написать? Может быть разное что-то
+- [x] **6. «Что можем вместо school finished на личной странице написать? Может быть разное что-то
   там можно отображать в течение взросления? Про колледж и его окончание (если пошла и закончила
   конечно) ещё что-то предложишь?»**
   – *build + ask.* Two asks: (6a) replace the terminal "school finished" line with something that
   moves as she grows, and (6b) propose what college and its completion should say. The second is a
   proposal to him, not a build to make unilaterally.
+
+  **[x] SHIPPED 20.08. He was offered two shapes for the college half and chose A – «да, давай так»:
+  one line for the whole course plus a separate line once it is over. Built, with a THIRD state he
+  did not ask for and the game can produce.**
+
+  ⚠ **THE DEFECT WAS THE TENSE, NOT THE WORDS.** Grades 8 to 12 move once a year for four years and
+  then the cell froze at "School finished / No more bells" for the remaining twenty seasons – on the
+  one screen in the game that is about the girl rather than the ladder. It now walks a ladder, and
+  the CELL'S OWN HEADING walks with it (School → College → After school), because a cell still called
+  School above "Year 2 of 4" is the same frozen tense one line higher up.
+
+  *What he reads now,* pulled off `toSnapshot` on one real ticked career (seed `life-a`, born June,
+  middle·middle, POLICIES[1]) and not out of the source:
+
+  ```
+  w  0 age 13  [School]        8th grade        / Youngest of all
+  w200 age 17  [School]        12th grade       / Youngest of all
+  w241 age 18  [School]        12th grade       / Summer break
+  w242 age 18  [After school]  The last bell    / 12 years done      <- the September she leaves
+  w293 age 19  [After school]  The last bell    / 12 years done
+  w294 age 19  [After school]  Tennis full-time / No more classes    <- one year out, to the week
+  w400 age 21  [After school]  Tennis full-time / No more classes
+  w468 age 22  [After school]  Grown up         / Her own life now   <- the diary's own 22 boundary
+  w624 age 25  [After school]  Grown up         / Her own life now
+  ```
+
+  And the three college states, on real careers that reached the fork by playing and answered it
+  «college» (seed `life-college-*`, enrolled at w282, the university at home):
+
+  ```
+  studying   [College]       Year 2 of 4  / Student tennis   | The university at home – she is in year 2 of 4.
+  studying   [College]       Year 3 of 4  / Student tennis   | The university at home – she is in year 3 of 4.
+  graduated  [After school]  Graduate     / 4 years done     | The university at home – she stayed all 4 years and finished the course.
+  left @1yr  [After school]  Left college / 1 of 4 years     | The university at home – 1 year of the 4, and she left before the course ended.
+  left @2yrs [After school]  Left college / 2 of 4 years     | The university at home – 2 years of the 4, and she left before the course ended.
+  ```
+
+  ⭐ **THREE STATES AND NOT TWO, which is the half he did not ask for.** `resumeFromCollege` spends
+  the four years ONE AT A TIME and `endCollegeEarly` is a real answer at every boundary (P5's own
+  reason for breaking the block up – Shnaider left after about a season). A tile that knew only
+  "she went" and "she graduated" would hand the graduate's line to a girl who left after one year.
+  The last-year note says «Final year» rather than «Student tennis», off the same `yearsDone + 1 >=
+  totalYears` the epilogue's `final` flag uses.
+
+  ⚠⚠ **AND ONE FINDING HE SHOULD SEE: THE «STUDYING» LINE IS CORRECT AND CURRENTLY UNREACHABLE ON
+  THAT SCREEN.** College is an ENDING-latched state, and `showEnding` in `App.vue` *replaces the tab
+  shell* – «there is nothing behind an epilogue worth painting». The four years are spent one
+  `resumeFromCollege` at a time from the epilogue screen, so between the years the app shell (and
+  therefore her page) is never mounted. Of the three states, GRADUATED and LEFT render on her page
+  today; STUDYING is built, engine-correct and pinned, and it appears the moment the college freeze
+  stops replacing the shell. Not fixed here: that is a navigation ruling, not a copy one, and it
+  belongs to whoever owns `EndingScreen`/`App.vue`.
+
+  ⚠ Copy only, and no new persisted state: `KidLife` gains `schoolLabel`, `collegeNote` and (for
+  #18) `ownAccount`, all derived at snapshot time. Zero MAIN draws, no schema bump for this item, no
+  bill, no frozen hash. The September note (round-21 #6) and the college note are mutually exclusive
+  by construction – one is silent once `gradeOf` returns null, the other until it does – and that is
+  swept over four birth months x twenty years rather than argued.
+
+  *Evidence:* `tests/round23-kid-life.test.ts` (15 arms: "School finished" gone from every week of a
+  25-year career x 4 birth months; the ladder monotone and all four rungs reached over 20 seasons;
+  the hand-over is byte-for-byte `schoolIsOver`; every line inside `TILE_LINE_MAX`; the three college
+  states; and TWO END-TO-END arms on careers that really enrol – one leaves after a year, one stays
+  the course) + `tests/component/round23-kid-page.test.ts` (5 arms on the mounted screen). Ten
+  mutations, each applied alone: pinning `afterSchoolTile` to one rung reddens the ladder arms;
+  dropping the `yearsDone >= totalYears` test reddens the left-vs-graduate arm ALONE; freezing
+  `stageLabelOf` reddens the label arm in both files; letting `collegeNote` speak for a null college
+  reddens the silence arm; hard-coding the heading back to "School" in the template reddens the
+  component label arm and nothing in the engine.
 
 - [~] **7. «50% покрытия расходов от Meridian - не многовато? Есть какие-то вообще референсы из
   мирового спорта?»**
@@ -853,10 +922,84 @@ are analyses OF them; every other item that needs a world builds its own.
   qualifier on all 12 rungs and both price arms, and asserts it appears **nowhere else on the tab**.
   One clause was added to the kit note so the word is not mysterious.
 
-- [?] **18. «О! А ещё можно сделать после появления её счета в банке в 18 начать ей призовые
+- [x] **18. «О! А ещё можно сделать после появления её счета в банке в 18 начать ей призовые
   переводить какие-то суммы, например начать с 10-20% и может быть наращивать год к году»**
   – *ask, then build.* A new mechanic with a number he has left open ("10-20%, maybe growing"). Turn
   it into a choice before building.
+
+  **[x] SHIPPED 20.08. He took the ramp and then widened the ceiling himself – «да, давай, но может
+  не до 30, а до 40 или 50 вообще, это всё-таки ее карьера?» – so it is 10% at 18, +5 points every
+  birthday, and 50% from 26. Four numbers in `ECONOMY.kidShare`, never a literal in a formula.**
+
+  ⚠⚠ **THE MONEY LEAVES THE FAMILY WALLET, and that is the decision he asked for without asking.**
+  `finalizeTournament` splits the cheque at the moment it is written: `world.fundsCents` receives the
+  family's part ONLY and `world.kidFundsCents` receives hers. The alternative on the table was to
+  credit the wallet in full and tally hers beside it – that costs the player nothing, decides nothing
+  and would have been a counter rather than a mechanic. His own verb is «переводить», and «это
+  всё-таки её карьера» is an argument about whose money it is. The ledger row is what the family
+  actually banked, which is the academy travel subsidy's own precedent («taken off the travel line
+  itself, so the ledger shows the reduced price the family actually paid»); the transfer gets its own
+  news row with no `amountCents`, so the same cents are never counted twice.
+
+  *One real career, age by age* (`120k · wealthy · elite coach #1`, POLICIES[1], 15 seasons):
+
+  ```
+  age  share   gross cheques    family kept        her cut    realised    her balance    family wallet
+   17     0%         $72,540         $72,540             $0       0.0%             $0         $50,727
+   18    10%        $894,900        $804,750        $90,150      10.1%        $90,150        $715,257
+   19    15%      $2,817,900      $2,395,215       $422,685      15.0%       $512,835      $2,858,270
+   20    20%      $3,915,200      $3,131,410       $783,790      20.0%     $1,296,625      $5,836,232
+   21    25%      $5,111,600      $3,833,275     $1,278,325      25.0%     $2,574,950      $9,658,917
+   22    30%      $4,614,100      $3,229,120     $1,384,980      30.0%     $3,959,930     $12,996,073
+   23    35%      $3,425,400      $2,226,510     $1,198,890      35.0%     $5,158,820     $15,372,721
+   24    40%      $4,682,700      $2,809,620     $1,873,080      40.0%     $7,031,900     $18,459,878
+   25    45%      $1,747,700        $961,235       $786,465      45.0%     $7,818,365     $19,759,939
+   26    50%      $2,182,100      $1,091,050     $1,091,050      50.0%     $8,909,415     $21,253,974
+   27    50%      $2,780,900      $1,390,450     $1,390,450      50.0%    $10,299,865     $23,104,437
+  ```
+
+  A `25k · middle · high coach` career runs the same ladder on smaller money: $11,035 kept at 18 out
+  of $110,350 won, $4,638,005 in her account by 26 against a family wallet of $8,756,493. **Realised
+  share equals the nominal share to within a rounding cent at every rung** – the cheque is rounded
+  once and the family gets the remainder, so the two balances always add up to what the tournament
+  paid.
+
+  ⚠ **AND IT WAS MEASURED BEFORE IT SHIPPED (invariant 4), because taking half of the largest income
+  line in the game is a balance change.** 9 presets x 3 seeds x 15 seasons, split ON against a
+  control arm with the ramp patched to 0%:
+
+  | arm | still playing at 28 | endings | mean wallet of survivors |
+  |---|---|---|---|
+  | ON (10 → 50%) | 26 / 27 | 1 injury | $13,963,392 |
+  | OFF (0%) | 26 / 27 | 1 injury | $21,933,221 |
+
+  **Identical ending profile – nobody is bankrupted by it, on any background, at any coach rung.**
+  The family is genuinely poorer (−36% on the survivors' mean balance by 28) and that is the point;
+  what it does not do is turn a solvent career into a failed one. The transfers only ever start at
+  18, by which time prize money is real, so the junior years – the ones the bankruptcy grace window
+  was tuned on – are untouched by construction.
+
+  ⚠ **THE SAVE-SCHEMA MOVE IS COMPLETE, all four parts.** `SAVE_SCHEMA_VERSION` 53 → **54**; an
+  append-only v53 → v54 step that back-fills **0**; `tests/fixtures/saves/v54.json` = the real
+  migration's own output on `v53.json` (one field added, `schemaVersion` bumped, nothing else moved);
+  `npm run e2e:fixtures` re-run and byte-stable across two runs. Zero is the TRUE value and not a
+  placeholder – v30's case, not v29's: no shipped build ever transferred her a cent, so there is no
+  history being declined. It could not be reconstructed even if it should be, since `financeWeeks`
+  prunes at 60 weeks and the ramp is a function of her age at each cheque.
+
+  ⚠ **NOTHING SPENDS IT YET.** It accumulates and no mechanic draws on it; the shop in
+  `docs/backlog/the-shop-and-the-broker.md` is the obvious first claimant, and the line on her page
+  is the only surface that mentions the rule at all.
+
+  *Evidence:* `tests/round23-kid-share.test.ts` (12 arms; the ramp table is written out as LITERALS
+  rather than by calling the function under test) + the account line in
+  `tests/component/round23-kid-page.test.ts`. The sharpest arm is the A/B: two arms of ONE seed
+  differing only in `ECONOMY.kidShare`, checked comparable first (same weeks, same tournaments), then
+  asserting **the family's booked prize income falls by exactly her balance**. Five mutations, each
+  alone: `capBps: 3000` (the number he rejected) reddens four arms; `fromAgeYears: 17` reddens
+  "not one cent before her eighteenth"; crediting the whole cheque to the family and keeping her
+  credit reddens the A/B arm and nothing else; a migration that back-fills half the career prize
+  reddens both v53 arms; silencing `ownAccountNote` reddens the copy arms alone.
 
 - [~] **19. «Вот мой свежий профиль с 5 сезонами, сделай анализ пожалуйста… "не слишком ли быстро мы
   добрались до топ-100" снова? Или это мне только кажется и "глаз замылился"?»**
@@ -908,8 +1051,22 @@ bug it exists for.
 | --- | --- |
 | **4** | `[!]` reopened, diagnosed, not yet built – the fix lives in `src/viz/commentary.ts` |
 | **15** | the local-sponsor rule, still with the architect |
-| **6b, 9, 12/13, 18** | `[?]` waiting on the owner – four decisions, each sharpened to a choice |
+| **9** | `[?]` still waiting on the owner – the physio/psychologist count and the ~340k question |
+| **6 · 18** | `[x]` CLOSED 20.08 – he answered both, and both are built and measured |
 
 ⚠ And two findings NOT raised by him, recorded so they are not lost: the acceptance cut behaves
 as a cliff (item 20), and a re-watched match falls back to the poorest commentary storey because
 only `TournamentFlow` passes `preview-event` (item 4).
+
+⚠⚠ **AND TWO MORE FROM THE 6/18 PASS, both recorded rather than fixed here.**
+1. **The college «studying» line cannot currently be seen on her page** (item 6b): college is an
+   ending-latched state and `showEnding` REPLACES the tab shell, so the four years are spent from
+   the epilogue and screen C is never mounted between them. The line is built, engine-correct and
+   pinned; it needs a navigation ruling on `App.vue`/`EndingScreen.vue`, which this pass did not own.
+2. ⚠ **`tests/coach-travel-edge.test.ts` IS RED ON THIS BRANCH AND IT IS NOT THE SCHEMA MOVE.**
+   Five whole-world hash freezes. Bisected in a detached worktree, one file, one test, four commits:
+   `c518ad1` **green** → `364e557` (#4) **green** → `41ce43a` (#12/#13, the domestic table becomes
+   season-to-date) **RED**. It was already red at HEAD before a line of #6/#18 existed. Deliberately
+   **NOT re-frozen** – a hash freeze re-cut by whoever trips it is a freeze that never says anything
+   again. The v54 field is a second, independent reason those same hashes must move (the freeze
+   hashes the whole world object), so whoever re-cuts them should re-cut them once, for both.

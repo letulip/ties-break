@@ -2427,9 +2427,21 @@ export interface KidLifeTile {
 export interface KidLife {
   /** her play style, read as a person and never as tennis. Fixed for the career. */
   personality: KidLifeTile
-  /** her grade, on a 1-September school year, plus her place in the class by age. Moves once a
-   *  year, and says "Exams this week" while the calendar is holding an exam blackout. */
+  /** ⭐⭐ ROUND-23 #6 – HER LIFE STAGE, and it keeps moving after the last bell.
+   *
+   *  At school: her grade, on a 1-September school year, plus her place in the class by age. Moves
+   *  once a year, and says "Exams this week" while the calendar is holding an exam blackout.
+   *
+   *  ⚠ IT USED TO SAY "School finished" FOR THE REMAINING TWENTY SEASONS. The owner: «Что можем
+   *  вместо school finished на личной странице написать? Может быть разное что-то там можно
+   *  отображать в течение взросления?» So past the last grade it walks a ladder – the year she left,
+   *  the years tennis is the whole week, and the grown woman from 22 – and the college years take it
+   *  over when she is on a scholarship (`engine/kidLife.ts afterSchoolTile`). */
   school: KidLifeTile
+  /** ⭐ ROUND-23 #6 – WHAT THE CELL IS CALLED, which is a fact about her life and not a caption:
+   *  "School", then "College", then "After school". A grid cell still headed School above "Year 2 of
+   *  4" would be the same frozen tense the tile itself just lost. */
+  schoolLabel: string
   /** ⭐ ROUND-21 #6 – WHY SHE IS STILL AT SCHOOL WHEN HER TENNIS YEAR HAS LEFT, or '' when there is
    *  nothing to explain.
    *
@@ -2442,6 +2454,25 @@ export interface KidLife {
    *  her own age group has already left. He ruled the cut-off STAYS; what was missing is that nothing
    *  on screen said so, and unexplained correct behaviour reads exactly like a bug. */
   schoolWhy: string
+  /** ⭐⭐ ROUND-23 #6b – THE COLLEGE SENTENCE, or '' for a career that never took the place.
+   *
+   *  The owner asked for something to say «про колледж и его окончание (если пошла и закончила
+   *  конечно)» and picked the shape that names the campus: one line for the whole course, another
+   *  once it is over. There are THREE states behind it and not two – `resumeFromCollege` spends the
+   *  four years one at a time and `endCollegeEarly` is a real answer at each boundary – so a course
+   *  that stopped short says so rather than borrowing the graduate's line.
+   *
+   *  ⚠ A SENTENCE, FOR `schoolWhy`'S REASON: every college place is longer than the 16-character
+   *  `nowrap` cell, so the tile carries the year and this carries the place. The two notes are
+   *  mutually exclusive by construction (one speaks only at school, the other only once she is out). */
+  collegeNote: string
+  /** ⭐⭐ ROUND-23 #18 – HER OWN BANK BALANCE and the share that fills it, or '' before eighteen.
+   *
+   *  The only surface that tells a player the ramp exists: what the account holds, what she keeps of
+   *  every cheque today, and where that stops. Every figure is read from `ECONOMY.kidShare` through
+   *  `kidPrizeShareBps` – the same function the till divides by – so it cannot promise a percentage
+   *  the engine is not transferring. */
+  ownAccount: string
   /** who she is closest to this school year, and how that is going this week. Deterministic
    *  (purpose-scoped sub-streams, never Math.random), and it moves with both clocks. */
   friends: KidLifeTile

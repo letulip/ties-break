@@ -60,7 +60,13 @@ import { parentIncomeForWeekCents,
   GEAR_CATEGORIES,
   gearHitForWeek,
   gearVoice,
+  kidPrizeShareBps,
+  kidPrizeShareCents,
 } from './economy'
+// v54 (round-23 #18): the one string the engine writes about her own account. `shared/money.ts` is
+// the ONE cents-to-dollars implementation in the app and `weekLabel` above records why the engine is
+// allowed to reach into shared/ for a player-facing string.
+import { formatCents } from '../shared/money'
 import { generateCohort, driftCohort, ageCohort, COHORT_SIZE } from './season/cohort'
 import { renewCohort } from './season/conveyor'
 import { growWeek, rollPotential, type KidSkills } from './development'
@@ -398,7 +404,15 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
 // ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
 // number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
-export const SAVE_SCHEMA_VERSION = 53
+// ⭐ v54 = ONE FIELD, `kidFundsCents` – HER OWN BANK ACCOUNT (round-23 #18). The owner: «после
+// появления её счета в банке в 18 начать ей призовые переводить какие-то суммы, например начать с
+// 10-20% и может быть наращивать год к году», capped on his own widening – «может не до 30, а до 40
+// или 50 вообще, это всё-таки ее карьера?». `ECONOMY.kidShare` is the ramp; `finalizeTournament`
+// splits the cheque; the migration back-fills ZERO and invents no history (a career that reached
+// this build has never made a transfer, and re-deriving eight years of them is impossible anyway –
+// `financeWeeks` prunes at sixty weeks). Pure state, zero draws on any stream, so the frozen MAIN
+// capture cannot see it.
+export const SAVE_SCHEMA_VERSION = 54
 
 
 
@@ -433,6 +447,22 @@ export interface WorldState {
    *  purpose-scoped seed string, which is why nothing else needed persisting. */
   rngMain: MainRngState
   fundsCents: number
+  /** ⭐⭐ v54 – HER OWN ACCOUNT (round-23 #18), in cents. The owner: «после появления её счета в банке
+   *  в 18 начать ей призовые переводить какие-то суммы, например начать с 10-20% и может быть
+   *  наращивать год к году».
+   *
+   *  ⚠ IT IS A SECOND BALANCE AND NOT A COUNTER, which is the whole of the design decision. The
+   *  transfer in `finalizeTournament` credits the family its part and her hers, so the cheque the
+   *  parent banks genuinely shrinks as she grows – «это всё-таки её карьера». A share that stayed in
+   *  `fundsCents` and was merely tallied beside it would cost the player nothing and mean nothing.
+   *
+   *  ⚠ PERSISTED BECAUSE IT CANNOT BE REBUILT. `financeWeeks` prunes to sixty weeks and `results` to
+   *  fifty-two, so by the time she is twenty-six there is nothing left in the save from which the
+   *  eight years of transfers could be re-derived – `CareerTotals`' own argument, and invariant 3's.
+   *
+   *  ⚠ NOTHING SPENDS IT YET. It is hers, it accumulates, and no mechanic in this build draws on it;
+   *  the shop in `docs/backlog/the-shop-and-the-broker.md` is the obvious first claimant. */
+  kidFundsCents: number
   profile: PlayerProfile
   plan: WeekPlan
   /** ~199 AI juniors; drifts weekly (Phase-4 placeholder). */
@@ -1853,16 +1883,61 @@ function finalizeTournament(world: WorldState): void {
   // to everybody. If a future slice wants a background-scaled income, it must NOT reach for this one.
   const prize = prizeCentsFor(event.tier, kidFinish)
   if (prize > 0) {
-    world.fundsCents += prize
+    // ⭐⭐ ROUND-23 #18 – AND FROM EIGHTEEN THE CHEQUE IS SPLIT BEFORE IT REACHES THE FAMILY.
+    //
+    // The owner: «после появления её счета в банке в 18 начать ей призовые переводить какие-то суммы,
+    // например начать с 10-20% и может быть наращивать год к году», and on the ceiling: «может не до
+    // 30, а до 40 или 50 вообще, это всё-таки ее карьера?». The ramp is `ECONOMY.kidShare` (10% at
+    // 18, +5 a birthday, half from 26); nothing about it is spelled out here.
+    //
+    // ⚠⚠ IT LEAVES THE FAMILY WALLET, AND THAT IS THE DECISION. `world.fundsCents` receives the
+    // family's part ONLY, so a parent watching his daughter's cheques get bigger also watches his own
+    // share of them get smaller – which is the mechanic he asked for. The alternative on the table was
+    // to credit the wallet in full and tally hers beside it; that costs the player nothing, decides
+    // nothing, and «это всё-таки её карьера» is an argument about whose money it is.
+    //
+    // ⚠ ONE ROUNDING, AND THE FAMILY GETS THE REMAINDER. `kidPrizeShareCents` rounds once and this
+    // subtracts, so the two balances add up to the tournament's cheque to the cent – a player can put
+    // the two numbers side by side on screen and they must not disagree by a penny.
+    //
+    // ⚠ THE LEDGER ROW IS WHAT THE FAMILY ACTUALLY BANKED, which is the academy travel subsidy's own
+    // precedent one file over: a scholarship's travel half «is taken off the travel line itself, so
+    // the ledger shows the reduced price the family actually paid». `careerTotals.prizeCents` follows
+    // it and therefore becomes prize money THE FAMILY KEPT – the number the album's break-even page
+    // is really about, since the family is the side that did the spending.
+    //
+    // ⚠ HER REAL AGE (`kidAgeYears`), never the band's – the one-clock ruling of 09.08. Zero draws:
+    // this is integer arithmetic on a cheque that has already been decided.
+    const ageNow = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
+    const herShare = kidPrizeShareCents(prize, ageNow)
+    const familyShare = prize - herShare
+    world.fundsCents += familyShare
+    world.kidFundsCents = (world.kidFundsCents ?? 0) + herShare
     addEvent(world, {
       week: world.week,
       type: 'income',
       category: 'prize',
       // Names the finish, because the whole design is that the player should be able to read this
       // line against the travel line two rows up and feel the arithmetic. Short dash only.
-      text: `${tier.label} prize money – ${finishLabel(kidFinish)}`,
-      amountCents: prize,
+      // ⚠ AND IT NAMES THE SPLIT WHEN THERE IS ONE, because a prize row that quietly shrank by half
+      // would read as a bug in the till. Silent before her eighteenth, where nothing is deducted.
+      text:
+        herShare > 0
+          ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow) / 100}% share`
+          : `${tier.label} prize money – ${finishLabel(kidFinish)}`,
+      amountCents: familyShare,
     })
+    // ...and the transfer itself gets a row of its own, so the money can be followed out of one
+    // account and into the other. NO `amountCents`: the family ledger has already recorded what it
+    // received, and booking her share as a family EXPENSE would count the same cents twice - once
+    // against `careerTotals.spentCents`, which is the denominator of the album's break-even page.
+    if (herShare > 0) {
+      addEvent(world, {
+        week: world.week,
+        type: 'info',
+        text: `${world.profile.kidName}'s share of the prize money – ${formatCents(herShare)} into her own account`,
+      })
+    }
     // D10 + R15-5: THE FIRST CHEQUE IS A MILESTONE (owner, 01.08: «я believe it's a very memorable
     // moment»). The first week the tennis pays her anything at all - after years of the family
     // paying for everything - is a beat the career keeps: captured into the durable ledger (one row
@@ -2584,6 +2659,10 @@ export function createWorld(
     // the career are one object — the worker resumes from this pair and its draws advance it.
     rngMain: initMainState(seed),
     fundsCents,
+    // v54: her own account opens empty and stays empty until the first cheque after her eighteenth –
+    // `kidPrizeShareBps` returns 0 for every week of the junior story, so this is not a placeholder,
+    // it is the true balance for the first four seasons of every career.
+    kidFundsCents: 0,
     profile,
     plan: { ...WEEK_PLAN_PRESETS.balanced },
     cohort,
