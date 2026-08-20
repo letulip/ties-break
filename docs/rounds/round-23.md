@@ -286,19 +286,28 @@ are analyses OF them; every other item that needs a world builds its own.
   within-tier test in both files and nothing in #1; deleting the `<span class="cm-blurb">` reddens
   all three component tests and nothing in the unit file.
 
-- [ ] **6. «Что можем вместо school finished на личной странице написать? Может быть разное что-то
+- [?] **6. «Что можем вместо school finished на личной странице написать? Может быть разное что-то
   там можно отображать в течение взросления? Про колледж и его окончание (если пошла и закончила
   конечно) ещё что-то предложишь?»**
   – *build + ask.* Two asks: (6a) replace the terminal "school finished" line with something that
   moves as she grows, and (6b) propose what college and its completion should say. The second is a
   proposal to him, not a build to make unilaterally.
 
-- [ ] **7. «50% покрытия расходов от Meridian - не многовато? Есть какие-то вообще референсы из
+- [~] **7. «50% покрытия расходов от Meridian - не многовато? Есть какие-то вообще референсы из
   мирового спорта?»**
   – *answer.* A balance question wanting REAL-WORLD references, not an opinion. Answer with sourced
   numbers on what sponsors and federations actually cover, then say whether 50% sits inside that.
 
-- [ ] **8. «Может добавить какой-то "магазин" в игру? Инвестиции, элитная недвижимость, машины,
+  **[~] ANSWERED 19.08.** Premium tier is gated at WTA <= 50: $8k season + $30k retainer, $15k
+  appearance at wta250+, and half the travel. Against our OWN sourced row (`02-tennis-economics.md`):
+  cash sponsorship exists only at the very top and the reference given is young Sharapova at
+  **$25-50k covering equipment AND travel** - as a JUNIOR. Meridian arrives at a top-50 professional,
+  where real apparel deals are six figures. ⚠ SO BY REALISM 50% IS IF ANYTHING MODEST. The honest
+  counter-argument is mechanical, not factual: travel is the dominant cost line in OUR economy, so
+  half of it is stronger here than the same clause would be in life. That is a balance call, not a
+  research one, and it is his.
+
+- [x] **8. «Может добавить какой-то "магазин" в игру? Инвестиции, элитная недвижимость, машины,
   яхты? Сделай отдельный файл в беклог пожалуйста с мыслями на этот счёт. Можно как раз на вкладку
   Family budget отдельным пунктом добавить как вариант. А ещё можно какую-то логику простенькую
   изменения цены на эти вещи добавить, кстати, чтобы что-то могло обесцениться, например, или
@@ -308,7 +317,13 @@ are analyses OF them; every other item that needs a world builds its own.
   the shop, its home on the Family budget tab, simple price movement (depreciate / spike / freeze),
   and a weekly-cost broker modelled on the coach.
 
-- [ ] **9. «И наверное пора задуматься над логикой психолога и массажиста… Текущие траты у меня в
+  **[x] SHIPPED 19.08** - `docs/backlog/the-shop-and-the-broker.md`. His three price states made
+  mechanical (drift / shock / FROZEN - the freeze is the sharpest of the three and the only one that
+  can punish a player who did everything right). Two warnings recorded large: assets must never
+  out-return a career, or the optimal play inverts the premise; and the broker sells LEGIBILITY, not
+  return - the moment he names a number, he and the shop both stop being decisions.
+
+- [?] **9. «И наверное пора задуматься над логикой психолога и массажиста… Текущие траты у меня в
   год 70к поездки с носа (того 140к), 23к тренер… Итого примерно 280к затрат только на этих ребят…
   Итого тотал по году примерно 340к затрат. Профессионально звучит, кстати?»**
   – *measure + ask.* He has done the arithmetic himself and wants it checked against the game's real
@@ -478,10 +493,15 @@ are analyses OF them; every other item that needs a world builds its own.
   the window past 52. (b) is the one that matches his own words. Recommend he picks before anything
   moves – `docs/specs/rank-plateau.md`'s discipline: predict, measure, then ship.
 
-- [ ] **14. «По какому правилу считается количество допусков на турниры? По сезону не обновляется,
+- [~] **14. «По какому правилу считается количество допусков на турниры? По сезону не обновляется,
   получается, только по возрасту или как?»**
   – *answer.* He is asking the RULE for the entry allowance and has noticed it does not reset per
   season. Answer with the actual window (`entryCapUsage` / `annualProEntryLimit`) and its rows.
+
+  **[~] ANSWERED 19.08.** Two tables, never merged - junior `13:10 14:14 15:18 16:25 17+:unlimited`,
+  pro AER `14:8 15:10 16:12 17:16 18+:unlimited`. ⚠ AND THE WINDOW IS NEITHER OF HIS GUESSES: it is
+  the AGE-YEAR cut at HER BIRTHDAY (`ageWindowStartWeek`), not the season and not a flat per-age
+  count. His observation that it does not reset per season is correct - it is not supposed to.
 
 - [ ] **15. «И что-то как-то 25к хуже всех, получается пока что… Проверь там правило пожалуйста про
   поддержку этих ребят? Поправка: пришёл донейшн от локального спонсора почти на самом дне. Так что
@@ -490,7 +510,7 @@ are analyses OF them; every other item that needs a world builds its own.
   view on whether the 25k start is survivable. ⚠ He explicitly softened this – do not build a
   balance change off it without saying so first.
 
-- [>] **16. «Что-то я не увидел когда академия появилась, покрывающая расходы на поездки. Проверь
+- [x] **16. «Что-то я не увидел когда академия появилась, покрывающая расходы на поездки. Проверь
   функционал оповещения пожалуйста»**
   – *build.* The academy that covers travel arrived without him noticing. The suspect is the
   NOTIFICATION, not the academy: verify the event fires and reaches a surface he actually reads.
@@ -517,6 +537,16 @@ are analyses OF them; every other item that needs a world builds its own.
   (`shared/protocol.ts`), one `stops.add` in `advanceWeeks` (`engine/world.ts`) and one line of toast
   copy (`App.vue`) – and all three are outside the paths this agent was given. Route it.
 
+  **[x] SHIPPED 19.08.** Diagnosed in three steps: the academy DID appear (level 0.44, since w52,
+  $20,879 covered), the event DID fire (still in his ledger 205 weeks later), and it never reached a
+  surface. ⚠ THE CAUSE IS ARITHMETIC: `reviewAcademy` speaks at `week % 52 === 0`, `advanceWeeks`
+  hard-stops at `% 52 === 49`, and the shell steps by FOUR - so 49 + 4 = 53 made the verdict week the
+  one week of a season a player can never land on. Measured on seven careers: `..., 49, 53, 57, ...`
+  every time. Fixed in R12-15's walkover shape (a `StopReason`, one `stops.add`, one line of copy),
+  and it turned out BETTER than announcing it: the stop halts the advance ON the verdict week, so he
+  stands there and reads its recap card. The signal is shared constants read by writer and reader, so
+  a reworded notice cannot silently stop stopping. Mutation-verified.
+
 - [x] **17. «Перед ценами на карточках Bills написать "Around", тогда точно не будет вопросов
   "почему ракетка стоит 920, а мы заплатили 1070?"»**
   – *build (copy).* Smallest item in the round and fully specified.
@@ -536,24 +566,63 @@ are analyses OF them; every other item that needs a world builds its own.
   qualifier on all 12 rungs and both price arms, and asserts it appears **nowhere else on the tab**.
   One clause was added to the kit note so the word is not mysterious.
 
-- [ ] **18. «О! А ещё можно сделать после появления её счета в банке в 18 начать ей призовые
+- [?] **18. «О! А ещё можно сделать после появления её счета в банке в 18 начать ей призовые
   переводить какие-то суммы, например начать с 10-20% и может быть наращивать год к году»**
   – *ask, then build.* A new mechanic with a number he has left open ("10-20%, maybe growing"). Turn
   it into a choice before building.
 
-- [ ] **19. «Вот мой свежий профиль с 5 сезонами, сделай анализ пожалуйста… "не слишком ли быстро мы
+- [~] **19. «Вот мой свежий профиль с 5 сезонами, сделай анализ пожалуйста… "не слишком ли быстро мы
   добрались до топ-100" снова? Или это мне только кажется и "глаз замылился"?»**
   – *measure.* Analysis of `alice-cfbv_w257`: starting data, progress, and the top-100 pace against
   the real-ladder references. ⚠ He is asking whether he is IMAGINING it – so the answer has to be a
   distribution, not one career read sympathetically.
 
-- [ ] **20. «И свежий сезон Инес на свежем коде тоже сравнить перформанс, движение, победы и всё
+  **[~] MEASURED 19.08** (`tools/round23-read.ts`). Alice Martin, AU, counterpuncher, age 18.0 at
+  w257. WTA 411 -> 198 -> 155 -> **106**; she has NOT ended a season inside the top 100. Ceiling gaps
+  2.9/4.3/4.6/5.0, so ~93% realised. ⭐ THE ANSWER IS THAT HIS EYE IS TIRED, AND THE OPPOSITE WAY
+  ROUND: `real-ladder-pace.md` puts the top-100 crossing at 19.8 +/- 1.9 for the population and
+  **18.2 +/- 1.6 for the future-top-10 sub-group**, and names #150 -> #100 as a 17.6-month bottleneck.
+  She is 18.0 at #106 - inside that bottleneck, on the future-top-10 line, not ahead of it.
+
+- [~] **20. «И свежий сезон Инес на свежем коде тоже сравнить перформанс, движение, победы и всё
   остальное с нашей системой выстроенной.»**
   – *measure.* Same, for `ines-xgv7_w570`, against what the system predicts for a player at her
   level. The pair (19 + 20) is one question asked at two career lengths.
 
+  **[~] MEASURED 19.08.** Ines Marchetti, IT, all-court, age 24 at w570. First season ending inside
+  the WTA top 100: **season 4 at age 18.0 (#91)** - the same 18.2 +/- 1.6 mark. Now #5 at the wrap,
+  peak age 23-24, which is the research's own peak window. Her book is a real calendar: 8 x wta500,
+  8 x wta1000, 4 slams, 4 x wta250.
+  ⚠ ONE THING TORN OUT FOR HIM: season 8 -> 9 goes WTA **#121 -> #10**, points 693 -> 4588 (x6.6) in
+  ONE season. Mechanically explicable - she cleared an acceptance cut and the big series pay another
+  order of magnitude - but the cut behaves as a CLIFF where reality is a slope. Not raised by him,
+  not built; recorded here so it is not lost.
+
 ---
 
-## Triage, bundles and evidence
+## How it was run
 
-*Filled in at Step 2/3 – see the commit that follows this one.*
+Four agents, bundled by COLLISION SURFACE rather than by theme, so no two touched a file:
+coach cards (1, 5) · the domestic ladder (10-13) · copy and notices (2, 16, 17) · the match
+engine (3, 4). Items 6-9, 14, 15 and 18-20 stayed with the architect. Gated ONCE, after every
+agent had finished, on a quiet machine – `CHECK_EXIT` read from a file, never from a pipe and
+never from a background-task notification.
+
+⚠ **Two gate reds on the way, both honest.** The world symbol map went stale because `world.ts`
+gained two real exports (`ACADEMY_NOTICE`, `academySpokeThisWeek`) – the first time that check
+has fired on an API change rather than on a moved line number. Then `STOP_PRECEDENCE`'s guard
+caught the new `'academy'` reason having no slot. It was updated and NOT weakened: its list is
+hand-written on purpose, since one derived from `STOP_PRECEDENCE` could never catch the very
+bug it exists for.
+
+## Still open after this round
+
+| item | why |
+| --- | --- |
+| **4** | `[!]` reopened, diagnosed, not yet built – the fix lives in `src/viz/commentary.ts` |
+| **15** | the local-sponsor rule, still with the architect |
+| **6b, 9, 12/13, 18** | `[?]` waiting on the owner – four decisions, each sharpened to a choice |
+
+⚠ And two findings NOT raised by him, recorded so they are not lost: the acceptance cut behaves
+as a cliff (item 20), and a re-watched match falls back to the poorest commentary storey because
+only `TournamentFlow` passes `preview-event` (item 4).

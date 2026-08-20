@@ -212,7 +212,14 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // ⚠ v48 ADDED 'birthday', and the argument above transfers word for word: the birthday BLOCKS
     // (advanceWeeks returns early on it), so a member with no precedence slot would be filtered out
     // of the return value and the career would stop dead with the UI told nothing at all.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement']
+    // ⚠ ROUND 23 #16 ADDED 'academy', and it is the FIRST member here that is good news. The argument
+    // for a slot is the same one and arrives from a new direction: the academy's verdict fires at
+    // `week % 52 === 0`, this advance hard-stops at `% 52 === 49`, and the shell steps by four - so
+    // 49 + 4 = 53 made the verdict week the one week of the season a player can never land on. It
+    // had passed in silence for a whole career (his, measured: still in the ledger 205 weeks later).
+    // ⚠ THE HAND-WRITTEN LIST IS THE POINT OF THIS TEST and must stay hand-written: derived from
+    // STOP_PRECEDENCE it could never catch a member that has no slot, which is the whole bug class.
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {

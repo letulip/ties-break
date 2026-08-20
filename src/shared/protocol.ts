@@ -290,6 +290,10 @@ export type StopReason =
   | 'season-end'
   | 'injury'
   | 'medical'
+  /** ROUND 23 #16: the academy's season verdict – it took her on, changed her share, or ended it.
+   *  Good news rather than a cost, so it sits low in the precedence below; but it landed on the one
+   *  week a player stepping by four can never see, and passed in silence for a whole career. */
+  | 'academy'
   /** R12-15: an entered tournament came round while she was still inside her layoff, so the week
    *  resolved as a WALKOVER – 0 points, and the entry fee forfeited (the list had closed with her on
    *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
@@ -351,6 +355,9 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // she gets hurt) both fire – the injury dialog leads, the walkover toast rides above it – because
   // they are two different facts and R11-1's whole point is that a week may be several things.
   'walkover',
+  // ROUND 23 #16: BELOW the three that cost her something and above the ordinary week – a
+  // scholarship arriving is news she should not miss, and never an emergency.
+  'academy',
   // W4: fourth, above everything that can wait a click, for a stronger reason than the three
   // medical beats have – the advance CANNOT continue until it is answered (`advanceWeeks` returns
   // early on an undecided knock). A stop nobody surfaces would strand the career, so it has to

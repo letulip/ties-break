@@ -776,6 +776,11 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // the fee forfeited, and the only trace was one line in the news feed. The button that spent it
   // had just said "Play". Now the advance halts and says what it cost.
   walkover: 'Stopped: she was too injured to play – walkover, entry fee forfeited.',
+  // ROUND 23 #16 – the same shape as the walkover above, and found the same way: the owner did not
+  // see it happen. The academy's verdict fires at the season boundary, the advance hard-stops three
+  // weeks earlier, and a player stepping by four lands on 49 then 53 - never on the week it spoke.
+  // It is the one good-news stop in this table, so it says what changed rather than what it cost.
+  academy: 'Stopped: the academy has reviewed her year – check her scholarship.',
 }
 // R11-1: an advance reports the SET of reasons it stopped for, already in surfacing order
 // (STOP_PRECEDENCE, medical first). Every gate below asks "is my reason in the set?" instead of

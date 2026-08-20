@@ -1408,6 +1408,24 @@ function turnOverField(world: WorldState, seasonIndex: number): void {
 // Runs at the season boundary, on the rank she CARRIES IN (the one the season just gone earned
 // her) and the year of tournaments behind it. Zero draws on any stream – see engine/academy.ts.
 
+/** ⭐⭐ THE THREE THINGS AN ACADEMY REVIEW CAN SAY, as openings that the WRITER below and the STOP in
+ *  `advanceWeeks` both read (round 23 #16). They are shared constants and not two copies of a string
+ *  for one reason: the stop has to fire on "the review spoke this week", and matching that by
+ *  re-spelling the sentence at the reader would mean a reworded notice silently stops stopping. The
+ *  test `academy-notice` mutates each of these and watches the stop go with it. */
+export const ACADEMY_NOTICE = {
+  arrived: 'An academy has taken her on',
+  reviewed: 'Academy review:',
+  ended: 'The academy has ended her scholarship',
+} as const
+
+/** Did the academy say anything at `world.week`? The signal the season-boundary review leaves behind,
+ *  read out of the ledger it already writes – so it needs no new persisted field and no schema move. */
+export function academySpokeThisWeek(world: WorldState): boolean {
+  const openings = Object.values(ACADEMY_NOTICE)
+  return world.events.some((e) => e.week === world.week && openings.some((o) => e.text.startsWith(o)))
+}
+
 export function reviewAcademy(world: WorldState): void {
   const seasonIndex = seasonIndexOf(world.week)
   const prev = world.academy
@@ -1440,7 +1458,7 @@ export function reviewAcademy(world: WorldState): void {
       addEvent(world, {
         week: world.week,
         type: 'info',
-        text: `The academy has ended her scholarship – ${reason}.`,
+        text: `${ACADEMY_NOTICE.ended} – ${reason}.`,
       })
     }
     world.academy = null
@@ -1449,14 +1467,14 @@ export function reviewAcademy(world: WorldState): void {
 
   const pct = Math.round(level * ECONOMY.academy.travelCover * 100)
   if (!prev) {
-    fireMilestone(world, `academy-in-${seasonIndex}`, `An academy has taken her on – a scholarship covering ${pct}% of her travel.`)
+    fireMilestone(world, `academy-in-${seasonIndex}`, `${ACADEMY_NOTICE.arrived} – a scholarship covering ${pct}% of her travel.`)
   } else {
     const wasPct = Math.round(prev.level * ECONOMY.academy.travelCover * 100)
     if (pct !== wasPct) {
       addEvent(world, {
         week: world.week,
         type: 'info',
-        text: `Academy review: her scholarship ${pct > wasPct ? 'rises' : 'falls'} to ${pct}% of her travel.`,
+        text: `${ACADEMY_NOTICE.reviewed} her scholarship ${pct > wasPct ? 'rises' : 'falls'} to ${pct}% of her travel.`,
       })
     }
   }
@@ -3577,6 +3595,18 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // promised a tournament. Note this fires INDEPENDENTLY of 'injury': the walkover usually lands
     // a week or more AFTER the onset, when the injury is no longer fresh and nothing else stops.
     if (world.walkoverWeek === world.week) stops.add('walkover')
+    // ⭐⭐ ROUND 23 #16 – THE ACADEMY'S VERDICT, and the reason it needed a stop is arithmetic rather
+    // than luck. The owner: «Что-то я не увидел когда академия появилась, покрывающая расходы на
+    // поездки». It fired correctly and it is still in his ledger 205 weeks later – but
+    // `reviewAcademy` speaks at `week % 52 === 0`, this loop hard-stops at `% 52 === 49`, and the
+    // shell's step is FOUR. 49 + 4 = 53, so the verdict week is the one week of the season a player
+    // stepping by four can never land on, and `WeekRecapCard` renders only the current week. Measured
+    // across seven careers: the landings round the boundary are `…, 49, 53, 57, …` in every one.
+    //
+    // ⚠ A SCHOLARSHIP IS NOT A COST, so it sits below the medical trio and the walkover – it can wait
+    // a click, which is exactly what a stop is for. What it may not do is pass in silence, which is
+    // the same complaint R12-15's walkover answered.
+    if (academySpokeThisWeek(world)) stops.add('academy')
     if (world.fundsCents < 0) stops.add('funds')
     // W2-ENDINGS. The three that the week may have just produced. `'ending'` is collected rather
     // than returned early so a week that is BOTH an ending and something else (the classic: the

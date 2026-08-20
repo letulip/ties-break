@@ -2,19 +2,19 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (3,697 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (3,727 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-233 exported names across 30 owning modules.
+235 exported names across 30 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
-| `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 21 |
+| `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 23 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 17 |
@@ -51,6 +51,8 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file.
 
+- `ACADEMY_NOTICE` – `src/engine/world.ts`
+- `academySpokeThisWeek` – `src/engine/world.ts`
 - `advanceWeeks` – `src/engine/world.ts`
 - `closeTournament` – `src/engine/world.ts`
 - `coachWorksThisWeek` – `src/engine/world.ts`

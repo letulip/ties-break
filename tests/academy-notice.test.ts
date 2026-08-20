@@ -156,27 +156,24 @@ describe('Round 23 #16 – the academy says so when it takes her on', () => {
   })
 
   // ===============================================================================================
-  // ⚠⚠ THE MEASUREMENT, AND IT IS THE ANSWER TO HIS QUESTION. Everything above passes today: the
-  // notice fires, on every arm, and survives the prune. What fails is the last hop.
+  // ⭐⭐ REPLACED, EXACTLY AS THE PINNED DEFECT ASKED TO BE (round 23 #16, same day).
   //
-  // ⚠ THIS PINS A DEFECT, WHICH IS WHY IT SAYS SO IN ITS NAME. On the day `advanceWeeks` learns to
-  // stop on the academy's verdict (the shape R12-15 gave the walkover: a StopReason, one
-  // `stops.add`, one line of toast copy), this test goes red on the `landed` assertion and should be
-  // REPLACED by one that asserts the stop, not repaired. It is here so the collision cannot change
-  // shape unnoticed in the meantime – if the off-season length or the advance step ever moves, this
-  // is the file that says the arithmetic moved with it.
+  // The test that stood here said of itself: *"On the day `advanceWeeks` learns to stop on the
+  // academy's verdict … this test goes red on the `landed` assertion and should be REPLACED by one
+  // that asserts the stop, not repaired."* That day is this one, so it is replaced rather than
+  // repaired – and the arithmetic it protected is kept below, because the collision is still REAL:
+  // the stop does not move where the advance lands, it makes the skipped week SPEAK.
   // ===============================================================================================
-  it('⚠ DEFECT, PINNED: the verdict week is the one week a +4 advance steps over', () => {
+  it('⭐ the verdict is still stepped over – and now it stops and says so', () => {
     // The two constants that collide, read from the engine rather than written out.
     const wrapWeek = WEEKS_PER_YEAR - OFF_SEASON_WEEKS // 49 – where `advanceWeeks` adds 'season-end'
     const verdictWeek = WEEKS_PER_YEAR // 52 – where `reviewAcademy` runs (`week % 52 === 0`)
     expect(verdictWeek - wrapWeek, 'the verdict lands inside one +4 step of the wrap').toBeLessThan(4)
 
-    const world = createWorld('r23-academy-skip', { ...DEFAULT_PROFILE, background: 'working' })
+    // A career that has actually EARNED a verdict, not a bare world: the arrival arm above is what
+    // makes this non-vacuous, and without it the stop would have nothing to fire on.
+    const world = runCareer('r23-academy-stop', 'working', wrapWeek - 1)
     const rng = rngFromSeed(world.seed)
-    // Stand her on the week before the wrap. Nothing has been entered, so nothing blocks: the two
-    // presses below are the shell's own `advance(1)` and `advance(4)`, with no dialog in between.
-    world.week = wrapWeek - 1
     const landed: number[] = []
 
     const toWrap = advanceWeeks(world, rng, 1)
@@ -185,12 +182,25 @@ describe('Round 23 #16 – the academy says so when it takes her on', () => {
     expect(toWrap, 'and the advance really does halt on it').toContain('season-end')
 
     // ...and now the press he would have made: the season is over, so +4.
-    advanceWeeks(world, rng, 4)
+    const past = advanceWeeks(world, rng, 4)
     landed.push(world.week)
-    expect(world.week, 'one +4 from the wrap lands past the verdict').toBe(wrapWeek + 4)
-    expect(
-      landed,
-      'the verdict week is never a landing week, so its recap card is never rendered',
-    ).not.toContain(verdictWeek)
+
+    // ⭐⭐ AND IT IS BETTER THAN "IT ANNOUNCES IT". The stop HALTS the advance on the verdict week, so
+    // the week stops being un-landable at all: measured here, the +4 press lands on 52 rather than
+    // stepping to 53. The owner's complaint was «я не увидел когда академия появилась» – he now
+    // stands on the week it happened and gets its recap card, not just a toast about a week behind
+    // him. ⚠ The arithmetic that caused it is UNCHANGED (49 + 4 = 53 still); what changed is that a
+    // reason to stop now exists between them.
+    const spoke = academyLines(world).some((e) => e.week === verdictWeek)
+    if (spoke) {
+      expect(past, 'the academy spoke and the advance walked past it in silence').toContain('academy')
+      expect(landed, 'the stop did not halt the advance on the week it fired').toContain(verdictWeek)
+      expect(world.week, 'she should be STANDING on the verdict week, reading its card').toBe(verdictWeek)
+    } else {
+      // Non-vacuity in the other direction: if this seed's academy never spoke at the verdict week
+      // there is nothing to surface, and asserting a stop would be asserting a false positive.
+      expect(past, 'no verdict this season, so no academy stop belongs in the set').not.toContain('academy')
+      expect(landed, 'nothing fired, so the old step-over is what should happen').not.toContain(verdictWeek)
+    }
   })
 })
