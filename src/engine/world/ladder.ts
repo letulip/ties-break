@@ -14,7 +14,7 @@
 import { TIERS, TIER_LADDER, hasAcceptanceList, isJuniorAge, isTierAgeOpen, isWSeriesTier } from '../season/calendar'
 import { ALTERNATES, alternatePlacesOpen } from '../season/tournament'
 import { WILD_CARD, hostNationOf, wildCardWindow } from '../season/tournament'
-import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
+import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, computeRanking, isCountingResult, windowFromWeek, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
 import type { LadderTrack, RankingRow, TierId } from '../season/types'
 import type { SeasonEntryRow } from '../../shared/protocol'
 import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPros'
@@ -92,7 +92,14 @@ export function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] 
   // flows through (rank caches, standings, acceptance cuts, LadderViews), no surface can count a
   // season on the wrong rule. The same line is where §VIII.A.2.b's minimum lands, for the same
   // reason: "does she appear on the list at all" has to have exactly one answer.
-  const live = computeRanking(world.results, world.week, BEST_N_BY_TRACK[track], [...cohortIds(world), KID_ID], inTrack(track))
+  //
+  // ⚠ AND SINCE ROUND 23 THE WINDOW IS THE TRACK'S TOO (`WINDOW_BY_TRACK`, the owner's ruling on
+  // items 12 and 13): the ITF and WTA tables stay on the rolling 52 weeks their real tours use, and
+  // the DOMESTIC table - which is our own invention - counts this season only. It rides the very
+  // same line as `BEST_N_BY_TRACK` for the very same reason: the two facts are one decision about
+  // one table, and a surface that could read one of them without the other is the drift this
+  // function exists to make unrepresentable.
+  const live = computeRanking(world.results, world.week, BEST_N_BY_TRACK[track], [...cohortIds(world), KID_ID], inTrack(track), WINDOW_BY_TRACK[track])
   // ⚠ THE W TABLE IS THE MERGED TABLE, everywhere it is read (living-field phase W, 01.08). The
   // professional table used to be ~199 zero rows and whatever the canonical W brackets had paid the
   // juniors – which is why five W15 titles printed "#9" and the acceptance cuts measured nothing.
@@ -248,8 +255,16 @@ export function latchOnRamps(world: WorldState): void {
 // NO DEFAULT, DELIBERATELY. There are two tables now and "her points" is no longer a question with
 // one answer, so every caller has to say which one it means. Making the argument required turns a
 // silent change of meaning into a compile error - which is what a change of this kind should be.
+//
+// ⚠ AND IT CARRIES THE TRACK'S WINDOW (`WINDOW_BY_TRACK`, round 23 #12/#13) FOR A REASON BIGGER THAN
+// TIDINESS: this number is not only what the table shows, it is the CURRENCY the domestic rungs'
+// bands are denominated in (`tierOpenFor`, `hasOutgrown`, `onRampOpen`'s junior arm). If the table
+// counted a season and this counted 52 weeks, a card would say 200 while the turnstile read 430 -
+// "two currencies, no exchange rate", which is the exact error docs/specs/world-strength-audit-
+// 2026-08.md §6 is about and the reason `rankingFor` is a single fold at all. One rule, both
+// readers. The measured consequence for HER climb is in docs/rounds/round-23.md #12.
 export function kidPoints(world: WorldState, track: LadderTrack): number {
-  return windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track))
+  return windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track), WINDOW_BY_TRACK[track])
 }
 
 /** Her domestic best-6 - the number the domestic rungs' bands are denominated in. */
@@ -842,6 +857,10 @@ export function proDoors(world: WorldState, merged: readonly RankingRow[]): ProD
       BEST_N_BY_TRACK.itf,
       cohortIds(world),
       inTrack('itf'),
+      // Stated rather than defaulted, exactly as the N beside it is: this is the ITF table and the
+      // ITF table is a rolling 52 weeks. Reading it off `WINDOW_BY_TRACK` means a future ruling
+      // about that table reaches the cohort's door without anybody having to remember this line.
+      WINDOW_BY_TRACK.itf,
     )) {
       itfPointsOf.set(r.playerId, r.points)
       itfRankOf.set(r.playerId, r.rank)
@@ -948,6 +967,13 @@ export function hasOutgrown(world: WorldState, tier: TierId): boolean {
 export function bookClosedTo(world: WorldState, tier: TierId): boolean {
   const track = TIERS[tier].track
   const bestN = BEST_N_BY_TRACK[track]
+  // ⚠ THE WINDOW IS THE TRACK'S (round 23 #12/#13) AND THE FILTER IS SPELLED THE FOLD'S WAY. It read
+  // `world.week - r.week <= RESULTS_WINDOW`, which is `windowFromWeek(week, 'rolling52')` written
+  // out by hand - true for the two professional-side tracks and wrong for the domestic one the day
+  // its table became season-to-date. This function's whole contract is that it "asks the same
+  // question `computeCountingResults` answers on screen, so the coach cannot contradict the list she
+  // is looking at"; that promise is only kept if it borrows the window as well as the width.
+  const from = windowFromWeek(world.week, WINDOW_BY_TRACK[track])
   const hers = world.results
     .filter(
       (r) =>
@@ -955,7 +981,7 @@ export function bookClosedTo(world: WorldState, tier: TierId): boolean {
         inTrack(track)(r) &&
         isCountingResult(r) &&
         r.week <= world.week &&
-        world.week - r.week <= RESULTS_WINDOW,
+        r.week >= from,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
   const counted = windowSlots(hers, bestN)

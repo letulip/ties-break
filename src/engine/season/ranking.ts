@@ -1,15 +1,18 @@
-// Package L – the rolling ranking. Pure and total: a deterministic function of the
-// results ledger and the current week. No RNG, no mutation of the input.
+// Package L – the ranking fold. Pure and total: a deterministic function of the
+// results ledger, the current week and the track's two window facts (`BEST_N_BY_TRACK`,
+// `WINDOW_BY_TRACK`). No RNG, no mutation of the input.
 //
-// ⚠ THE ONE VALUE IMPORT, AND WHY IT IS NOT A CYCLE. `TIERS` is a frozen constant table and
-// `season/calendar.ts` imports nothing from this file (checked: rng, match/types, protocol, economy,
-// ./types), so the edge is one-way and the module stays pure and total. It is here because the
-// rulebook's ranking rules are stated in terms of tournament CATEGORIES - eighteen results "which
-// must include four (4) Grand Slams", a minimum that governs the WTA list and not the ITF one - and
-// a ranking module that cannot tell a Slam from a W15 cannot express them. `world/ladder.ts`'
-// `inTrack` reads the same table for the same reason.
+// ⚠ THE VALUE IMPORTS, AND WHY THEY ARE NOT A CYCLE. `TIERS` and `WEEKS_PER_YEAR` are frozen
+// constants and `season/calendar.ts` imports nothing from this file (checked: rng, match/types,
+// protocol, economy, ./types), so the edge is one-way and the module stays pure and total. `TIERS`
+// is here because the rulebook's ranking rules are stated in terms of tournament CATEGORIES -
+// eighteen results "which must include four (4) Grand Slams", a minimum that governs the WTA list
+// and not the ITF one - and a ranking module that cannot tell a Slam from a W15 cannot express
+// them. `world/ladder.ts`' `inTrack` reads the same table for the same reason. `WEEKS_PER_YEAR` is
+// here because a table's window is no longer one rule for all three tracks - see
+// `WINDOW_BY_TRACK`.
 
-import { TIERS } from './calendar'
+import { TIERS, WEEKS_PER_YEAR } from './calendar'
 import type { LadderTrack, RankingRow, TierId } from './types'
 
 /** ONE APPEARANCE in a draw – "she was in it", with what it paid.
@@ -93,6 +96,80 @@ const WINDOW_WEEKS = 52
  *  the window width is worth to a perfect season - docs/specs/ranking-ceiling-2026-08.md section 6,
  *  where narrowing to best-8 measures as 50 places and widening past 16 as exactly nothing. */
 export const BEST_N_BY_TRACK: Record<LadderTrack, number> = { domestic: 6, itf: 6, wta: 18 }
+
+/** OVER WHAT STRETCH A TABLE COUNTS THOSE N - the other half of "how a table counts", and the
+ *  companion of `BEST_N_BY_TRACK` above. `BEST_N_BY_TRACK` says HOW MANY results a table folds;
+ *  this says WHICH WEEKS it folds them from. Two facts, one per track, side by side, because they
+ *  are one decision: "best six of the last 52 weeks" and "best six of this season" are different
+ *  games and the pair has to be readable in one glance.
+ *
+ *  `'rolling52'`   - the last 52 weeks, always. What every table in this game did until round 23.
+ *  `'seasonToDate'` - week 0 of the current season up to today. Resets at every wrap.
+ *
+ *  ⚠⚠ THE DOMESTIC TRACK IS SEASON-TO-DATE, AND IT IS THE OWNER'S OWN RULING (round 23 items 12 and
+ *  13, 20.08). He reported a rival's national total falling from 600+ to 400+ "right after my win"
+ *  and, in the same sentence, said what he thought the table was: «таблица должна просто показывать
+ *  6 лучших ЗА СЕЗОН». The measurement (docs/rounds/round-23.md #12, `tools/domestic-ladder-probe.ts`
+ *  §C - 6 seeds x 110 weeks) found 51 falls in the domestic top 3, **51 of them a row leaving the
+ *  52-week window and 0 unexplained**: his own case was a National title of 200 points, won 53 weeks
+ *  earlier, ageing out. Nothing was ever subtracted; the table was simply answering a different
+ *  question from the one he was asking it. Item 13 is the same mechanism at scale - a mean of 0.3 of
+ *  the week-8 top TEN survived to the season wrap, because 9-10 of that ten stood on a pre-history
+ *  row and every pre-history row is outside a 52-week window by week 52.
+ *
+ *  Shown the three options (leave it / season-to-date / widen the window) he chose season-to-date:
+ *  «да, это мелочь, а будет хорошо, мне кажется. Тем более, что первый сезон у нас показательный.»
+ *
+ *  ⚠ AND ONLY THE DOMESTIC TRACK. The ITF and WTA tracks model REAL tours that genuinely work this
+ *  way - "a rolling, 52-week period" is the WTA rulebook's own phrase (§VIII.A.4.a.i, quoted in full
+ *  on `BEST_N_BY_TRACK`), and ITF Juniors Reg 10 is the same shape. Our domestic rungs are an
+ *  invention (`economy.ts` says so at the entry-cap comment; `rankableTotal` below says "our domestic
+ *  ladder is invented outright"), so they are the one table free to behave the way a player expects
+ *  rather than the way a governing body writes it down. A season-to-date ITF table would be a
+ *  wrong model of a real ranking; a season-to-date domestic table is our own race, and races reset.
+ *
+ *  ⚠ BEST-N SURVIVES THE CHANGE - it is still best-6, now of this season. The owner's sentence says
+ *  «6 лучших за сезон», so best-6 is the half he was NOT complaining about, and dropping it for a
+ *  plain sum of everything would silently answer a question nobody asked. It also keeps the two
+ *  domestic-facing numbers explicable together: `computeCountingResults` shows exactly the rows the
+ *  total is made of, and a six-row list under a total is a thing a player can check. A full-season
+ *  sum would make the table a participation count - twenty-four Locals a season would beat a
+ *  National title - which inverts the ladder the three rungs were tuned as.
+ *
+ *  ⚠ A PLAIN OBJECT, NOT `as const`, ON THE SAME LICENCE `BEST_N_BY_TRACK` CARRIES: the A/B arms of
+ *  `tools/domestic-season-to-date.ts` patch `.domestic` back to `'rolling52'` and restore it, which
+ *  is what makes the before/after in the ledger a measurement of THIS constant rather than of two
+ *  different trees. Engine code never writes it. */
+export type RankingWindow = 'rolling52' | 'seasonToDate'
+export const WINDOW_BY_TRACK: Record<LadderTrack, RankingWindow> = {
+  domestic: 'seasonToDate',
+  itf: 'rolling52',
+  wta: 'rolling52',
+}
+
+/** THE EARLIEST RESULT WEEK THAT STILL COUNTS at `currentWeek`, for one window rule - the single
+ *  definition every fold in the engine filters on, so no two of them can disagree about what
+ *  "in the window" means.
+ *
+ *  Both arms are a LOWER BOUND on `r.week` and nothing else, which is what let the two rules share
+ *  one filter: `r.week >= currentWeek - 52` is the old `currentWeek - r.week <= WINDOW_WEEKS`
+ *  rewritten, term for term, with no change of meaning at any week including negative ones.
+ *
+ *  ⚠ SEASON-TO-DATE IS A SUBSET OF ROLLING-52 AT EVERY WEEK, by arithmetic: a season is
+ *  `WEEKS_PER_YEAR` = 52 weeks long, so `currentWeek - seasonStart` is at most 51. That is what
+ *  makes this change safe against `pruneResults`, which deletes rows older than `RESULTS_WINDOW`
+ *  (52): the season-to-date fold can never want a row the pruner has already taken.
+ *
+ *  ⚠ IT IS `world/ledger.ts`'s `seasonStartWeek`, RE-DERIVED RATHER THAN IMPORTED, and the reason is
+ *  layering: `season/` may not import `world/` (that edge runs the other way - world.ts re-exports
+ *  `seasonStartWeek`, and ladder.ts imports this module). The arithmetic is four tokens and
+ *  `tests/season/domestic-season-to-date.test.ts` pins the two equal across a multi-season sweep,
+ *  so the copy cannot drift silently - which is the standard this repo holds a second copy to. */
+export function windowFromWeek(currentWeek: number, window: RankingWindow): number {
+  return window === 'seasonToDate'
+    ? Math.floor(currentWeek / WEEKS_PER_YEAR) * WEEKS_PER_YEAR
+    : currentWeek - WINDOW_WEEKS
+}
 
 /** THE OTHER HALF OF §VIII.A.4.a.i: eleven of the eighteen slots are RESERVED for the tour's own
  *  compulsory events, and a reserved slot she has no result for CONVERTS INTO AN OPEN ONE -
@@ -252,7 +329,18 @@ export function windowedBestSum(
   /** Same track filter `computeRanking` takes, for the same reason: her domestic points and her ITF
    *  points are two numbers, and every caller has to say which one it is asking for. */
   countsFor?: (r: SeasonResult) => boolean,
+  /** THE TRACK'S WINDOW RULE - `WINDOW_BY_TRACK[track]` at every ladder call site (round 23 #12/#13).
+   *
+   *  ⚠ IT DEFAULTS, WHERE `bestN` ABOVE POINTEDLY DOES NOT, and the asymmetry is deliberate rather
+   *  than lazy. `bestN` has no default because BOTH of its answers were live and a silent 6 would
+   *  have folded a professional season on the junior rule. Here the default IS the old behaviour and
+   *  the only track that departs from it is domestic, which is folded in exactly two places
+   *  (`rankingFor` and `kidPoints`, both in world/ladder.ts) - so a caller that says nothing keeps
+   *  the rolling window it has always had, which is the right answer for every mixed fold, every
+   *  bench and every characterisation test that predates this parameter. */
+  window: RankingWindow = 'rolling52',
 ): number {
+  const from = windowFromWeek(currentWeek, window)
   const list = results
     .filter(
       (r) =>
@@ -260,7 +348,7 @@ export function windowedBestSum(
         r.playerId === playerId &&
         (!countsFor || countsFor(r)) &&
         r.week <= currentWeek &&
-        currentWeek - r.week <= WINDOW_WEEKS,
+        r.week >= from,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
   return rankableTotal(windowSlots(list, bestN))
@@ -303,7 +391,8 @@ export function assignCompetitionRanks<T extends { playerId: string; points: num
   return out
 }
 
-// computeRanking – rolling 52-week window, best-N results per player (N is the TRACK's window
+// computeRanking – the track's window (rolling 52 weeks, or season-to-date on the domestic table –
+// see WINDOW_BY_TRACK), best-N results per player (N is the TRACK's window
 // width, stated by every caller – see BEST_N_BY_TRACK), competition
 // ranks (ties share a rank; the next rank skips by the tie count, e.g. 4, 4, 6).
 // Ties on points break by the more recent counted result for *order* only; remaining
@@ -332,13 +421,20 @@ export function computeRanking(
    *  cost no persisted state, no schema bump and no migration. Absent ⇒ every result counts, which
    *  is what the pre-history generator and the old single-table callers want. */
   countsFor?: (r: SeasonResult) => boolean,
+  /** THE TRACK'S WINDOW RULE - `WINDOW_BY_TRACK[track]`, and see `windowedBestSum` above for why
+   *  this one defaults and `bestN` does not. The two functions must take it on the same terms: they
+   *  are the same fold read two ways, and the whole point of `windowSlots` living outside both is
+   *  that they can never disagree about what a ranking is. */
+  window: RankingWindow = 'rolling52',
 ): RankingRow[] {
-  // Keep only counting results inside the window (age ≤ 52 weeks, not in the future).
+  // Keep only counting results inside the window (not in the future, not before `from` – which is
+  // 52 weeks back on a rolling table and this season's week 0 on a season-to-date one).
+  const from = windowFromWeek(currentWeek, window)
   const perPlayer = new Map<string, SeasonResult[]>()
   for (const res of results) {
     if (!isCountingResult(res)) continue
     if (countsFor && !countsFor(res)) continue
-    if (res.week > currentWeek || currentWeek - res.week > WINDOW_WEEKS) continue
+    if (res.week > currentWeek || res.week < from) continue
     const list = perPlayer.get(res.playerId)
     if (list) list.push(res)
     else perPlayer.set(res.playerId, [res])
