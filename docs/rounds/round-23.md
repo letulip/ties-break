@@ -92,7 +92,7 @@ are analyses OF them; every other item that needs a world builds its own.
   Ruling quoted on the script side at `isTour`; asserted in
   `tests/component/round23-tour-suspension.test.ts` (reverting the copy turns it red).
 
-- [~] **3. «А может ли соперница травмироваться во время матча?»**
+- [x] **3. «А может ли соперница травмироваться во время матча?»**
   – *answer, possibly build.* Straight question about the match engine: is a rival's in-match injury
   modelled at all? Answer with the code path or its absence. If absent, that is a design question
   back to him, not a silent build.
@@ -859,12 +859,21 @@ are analyses OF them; every other item that needs a world builds its own.
   the AGE-YEAR cut at HER BIRTHDAY (`ageWindowStartWeek`), not the season and not a flat per-age
   count. His observation that it does not reset per season is correct - it is not supposed to.
 
-- [ ] **15. «И что-то как-то 25к хуже всех, получается пока что… Проверь там правило пожалуйста про
+- [~] **15. «И что-то как-то 25к хуже всех, получается пока что… Проверь там правило пожалуйста про
   поддержку этих ребят? Поправка: пришёл донейшн от локального спонсора почти на самом дне. Так что
   может быть и нормально всё здесь. Просто наблюдение, но твоё мнение послушать интересно.»**
   – *measure + answer.* He half-answered it himself. Wanted: the local-sponsor rule checked, and my
   view on whether the 25k start is survivable. ⚠ He explicitly softened this – do not build a
   balance change off it without saying so first.
+
+  **[~] ANSWERED 19.08, and partly closed by another item.** He softened it himself («может быть
+  и нормально всё здесь») after a local donation arrived late. Measured from his own ledgers:
+  Alice banks $112,927 of prize against $30,249 of travel by 18 – the 25k start is survivable,
+  and the sponsor arriving late is the shape of a hard first two seasons rather than a broken
+  rule. ⭐ AND ONE HALF OF IT WAS A REAL DEFECT, fixed under #12/#13: the local sponsor's gate
+  reads `kidRankDomestic`, and the season table was handing a girl who had played nothing a
+  rank of #1-#5. That number is now honest, so the gate is being asked a true question for the
+  first time. Whether the RULE itself should be looser is a balance call and stays his.
 
 - [x] **16. «Что-то я не увидел когда академия появилась, покрывающая расходы на поездки. Проверь
   функционал оповещения пожалуйста»**

@@ -86,7 +86,7 @@ import {
 } from './academy'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
-import { BEST_N_BY_TRACK, RANKABLE_MIN, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
+import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, RANKABLE_MIN, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import {
   byAllocationPriority,
   selectEntrants,
@@ -2027,9 +2027,15 @@ function finalizeTournament(world: WorldState): void {
   // because the junior 300s crowded the mixed six. The suffix now diffs the one table the result
   // pays into, under that table's own N - which is what the sentence always claimed to mean.
   // (`track` is the v28 attribution const a few lines up - the same fact, read once.)
-  const before = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track))
+  // ⚠ AND UNDER THAT TABLE'S OWN WINDOW TOO (round 23 #12/#13, 19.08). This pair folded ROLLING for
+  // every track, so once the domestic table became season-to-date the diary could say "does not
+  // improve her best 6" about a result the table plainly improved – a sentence wrong in the one place
+  // the player is looking when she reads it. The window is the table's fact, exactly like `bestN`
+  // beside it, so it is asked for by the same key rather than assumed.
+  const window = WINDOW_BY_TRACK[track]
+  const before = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track), window)
   if (points > 0) world.results.push({ playerId: KID_ID, week: world.week, points, tier: event.tier })
-  const after = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track))
+  const after = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track), window)
   addEvent(world, {
     week: world.week,
     type: 'tournament',

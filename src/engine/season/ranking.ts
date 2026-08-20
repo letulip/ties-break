@@ -485,5 +485,33 @@ export function computeRanking(
   // Competition ranks – `assignCompetitionRanks` above owns the "1224" numbering. THIS table's
   // tie-break is the sort handed to it: recency (set above, sort only) breaks the *order* among
   // equal-points players and never the rank number they share.
-  return assignCompetitionRanks(rows, (a, b) => b.points - a.points || b.recency - a.recency || a.idx - b.idx)
+  const ranked = assignCompetitionRanks(rows, (a, b) => b.points - a.points || b.recency - a.recency || a.idx - b.idx)
+  // ⚠⚠ A ZERO TOTAL IS NOT A FIRST PLACE (round 23 #12/#13, 19.08). Competition ranking is right that
+  // equal totals share a number, and on a ROLLING table that never mattered - somebody always had
+  // points, so the zeroes shared the BACK of the list. A SEASON-TO-DATE table opens each January with
+  // everybody on zero, and then "everybody is equal" resolves to **everybody is first**: a girl who
+  // has not hit a ball this season reads as #1 in the country. Two arms of `tests/economy.test.ts`
+  // caught it on a career that ENTERS NO TOURNAMENTS AT ALL, and the live reader is the local
+  // sponsor's gate.
+  //
+  // ⭐ FIXED HERE, IN THE FOLD, AND NOWHERE ELSE - two earlier attempts are the reason that matters:
+  //   * dropping unscored players from the list shrinks it, and the domestic entry bands are
+  //     PERCENTILES of that list, so it silently redefined every acceptance cut and took four
+  //     unrelated suites red;
+  //   * special-casing her cached number in `recomputeKidRank` made the CACHE disagree with the FOLD,
+  //     which `tests/condition.test.ts` B1c caught in one line - and two answers to one question is
+  //     the very defect class this round kept finding.
+  // The list keeps every member and its exact size; a scoreless row simply sits at the bottom of it,
+  // however many share that bottom. That is what "Unranked" already means everywhere else in the
+  // game, and round 23 #11 measured that sentinel telling the truth about rivals in her position.
+  //
+  // ⚠ AND ONLY ON A SEASON TABLE, which is the third correction and the one that says what the bug
+  // really is. Applied to every fold it moved HER ITF rank 90 -> 200, and that was a regression, not
+  // a fix: on a ROLLING table 89 players hold points and 111 sit on zero, so "the zeroes are 90th"
+  // is competition ranking answering correctly. The degeneracy needs EVERY row at zero to appear, and
+  // only a season table opens that way. The rolling arm is left byte-identical, and with it every
+  // professional and junior table in the game.
+  if (window !== 'seasonToDate' || !ranked.length) return ranked
+  const last = ranked.length
+  return ranked.map((r) => (r.points > 0 ? r : { ...r, rank: last }))
 }
