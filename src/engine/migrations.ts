@@ -1232,7 +1232,8 @@ export function migrateSave(raw: unknown): WorldState {
   // THE FACT NEEDS NO MIGRATION AND THAT IS WORTH SAYING FIRST. `schoolIsOver(week, birthMonth)` is a
   // pure function of two numbers a save has always carried, so the moment this build reads the
   // owner's twenty-two-year-old career the exam fortnight is gone, the calendar draws a
-  // professional's day and the School tile says "School finished". Nothing is stored and nothing can
+  // professional's day and the School tile has left the classroom behind (round 23 #6 replaced the
+  // terminal "School finished" with a stage that keeps moving). Nothing is stored and nothing can
   // drift.
   //
   // WHAT THE MIGRATION IS FOR IS THE MOMENT. `markSchoolEnd` fires on exactly one week, and for every
@@ -1610,6 +1611,28 @@ export function migrateSave(raw: unknown): WorldState {
   if (v === 52) {
     if (save.fieldSeasonPoints === undefined) save.fieldSeasonPoints = {}
     v = 53
+  }
+
+  // v53 -> v54: HER OWN BANK ACCOUNT (round-23 #18). `kidFundsCents` is the balance the prize split
+  // in `finalizeTournament` pays into from her eighteenth birthday – see `ECONOMY.kidShare`.
+  //
+  // ⚠ THE BACK-FILL IS ZERO, AND ZERO IS THE TRUE VALUE RATHER THAN A PLACEHOLDER. This is v30's
+  // case and not v29's: no build before this one ever transferred a cent to her, so there is no
+  // history being declined – there is no history. A migrated career keeps every dollar it ever
+  // banked (nothing is clawed back out of `fundsCents`) and starts splitting from its next cheque.
+  //
+  // ⚠ AND IT COULD NOT BE RECONSTRUCTED EVEN IF IT SHOULD BE. `financeWeeks` prunes at sixty weeks
+  // and `results` at fifty-two, so a twenty-six-year-old's save holds no trace of the cheques she
+  // was paid at nineteen. `careerTotals.prizeCents` survives, but it is a career total with no ages
+  // attached, and the ramp is a function of her age at each cheque – applying today's percentage to
+  // it would invent a number, which is the one thing a balance must never be.
+  //
+  // Defensive (an absent or non-numeric value is written whole) for the append-only reason v30
+  // states, which also makes it idempotent. It writes a literal: zero draws on any stream, so the
+  // frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 53) {
+    if (typeof save.kidFundsCents !== 'number' || !Number.isFinite(save.kidFundsCents)) save.kidFundsCents = 0
+    v = 54
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

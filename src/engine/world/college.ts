@@ -24,7 +24,13 @@ import { SKILL_KEYS, type KidSkills } from '../development'
 import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { parentIncomeForWeekCents } from '../economy'
-import { NATIONAL_TEAM, callUpLine, rollCallUp } from '../nationalTeam'
+import { NATIONAL_TEAM, callUpLine, callUpOpponent, rollCallUp, type CallUpOpponent } from '../nationalTeam'
+import { simulateMatch } from '../match/engine'
+import { JUNIOR_TOUR } from '../season/tournament'
+import { kidMatchPlayerFor } from './player'
+import { KID_ID } from './constants'
+import { formatShortName } from '../../shared/format'
+import type { WorldMatch } from '../../shared/protocol'
 import {
   COLLEGE_TIERS,
   JUNIOR_RUNGS,
@@ -180,13 +186,148 @@ export function resolveCallUp(world: WorldState): void {
     rngFromSeed(`${world.seed}:callup:${world.week}`),
   )
   if (!call) return
-  world.college!.pendingCallUp = { week: world.week, ...call }
+  // ⭐⭐ AND HERE THE WEEK STOPS BEING A SUMMARY. The owner's brief, 19.08: «в каждом году минимум
+  // одни соревнования, которые можно смотреть так же, как и наши текущие, т.е. тот же самый механизм
+  // в точности, кроме названий турниров». The fixture above is unchanged – the letter, the ties, the
+  // placing – and `rubbersWon` is now COUNTED OFF THE COURT rather than drawn.
+  const asPlayed = { ...call, rubbersWon: playCallUpRubbers(world, call.rubbersPlayed) }
+  world.college!.pendingCallUp = { week: world.week, ...asPlayed }
   addEvent(world, {
     week: world.week,
     type: 'milestone',
     keep: true,
-    text: callUpLine(call),
+    text: callUpLine(asPlayed),
   })
+}
+
+/** ⭐⭐ DID HER COUNTRY PLAY **THIS** WEEK – the predicate the year's loop asks so the week cannot
+ *  pass in silence (round 23 #16's shape: `academySpokeThisWeek`, one door along).
+ *
+ *  ⚠⚠ IT IS A READING OF STATE AND NOT A RETURN VALUE, AND THAT IS THE WHOLE POINT. `resolveCallUp`
+ *  runs six frames deep inside `tickWeek`; a boolean threaded back out would have to pass through
+ *  every one of them, and the one thing round 23 #16 proved about this class of bug is that the
+ *  report gets dropped somewhere in the middle. `pendingCallUp` is the week itself, held until
+ *  `bankCollegeYear` folds it into the year, so asking the world is asking the fact.
+ *
+ *  ⚠ AND `rubbersPlayed === 0` STILL COUNTS. She was named, she travelled and she sat: that is a
+ *  week the parent should be told about, and the record already says so in its own words
+ *  ("She was named in the squad and never took the court"). A stop that fired only when there was a
+ *  match to watch would be silent on exactly the outcome nobody expects. */
+export function callUpPlayedThisWeek(world: WorldState): boolean {
+  return world.college?.pendingCallUp?.week === world.week
+}
+
+/** ⭐⭐ THE RUBBERS, PLAYED – the same `simulateMatch` every other match in this game goes through,
+ *  and the same record shape, so the app's own viewer replays them without knowing what they are.
+ *
+ *  ⚠⚠ IT IS THE PRACTICE FRIENDLY'S PATH AND NOT THE TOURNAMENT'S, and the choice is the invariant
+ *  rather than convenience. A tournament run is a `PendingTournament` over a `SeasonEvent` in the
+ *  calendar, and `finalizeTournament` awards points and a cheque off `TIERS[tier]` – but this
+ *  competition awards NEITHER, by its own rulebook (see `engine/nationalTeam.ts`), so a run through
+ *  that machinery would either invent a tier or break `finalizeTournament`'s "a result cannot award
+ *  one without the other". `resolvePractice` is the shape this game already has for a match that is
+ *  really played, really watchable and worth nothing: one `simulateMatch` under a stored seed, one
+ *  `match` row carrying the record. `world.results` is still never touched and no rank is recomputed.
+ *
+ *  ⚠ `friendly: true`, AND THE FLAG'S OWN DOCSTRING IS WHY: "a watchable friendly that awards ZERO
+ *  ranking points, so the UI can keep it out of the tournament card and label it honestly". That is
+ *  exactly a rubber. It is also what keeps this wave surgical – the flag is the one predicate the
+ *  radar (R11-2), the avatar's emotion, the knock history and the Weekly Story all read to decide
+ *  whether a match is EVIDENCE about her form, and a national-team week that pays nothing and takes
+ *  nothing must not silently become evidence in four subsystems at once. The word is wrong for a tie
+ *  and the behaviour it selects is right; renaming a persisted, player-visible flag to fix a noun is
+ *  the trade `StopReason`'s own 'walkover' note already declines to make.
+ *
+ *  ⚠ ZERO BODY COST, DELIBERATELY, AND IT IS A CUT RATHER THAN AN OVERSIGHT. `resolvePractice`
+ *  subtracts `matchDrain` and opens a layoff on a retirement; neither happens here. The call-up week
+ *  has cost her nothing measurable since it shipped – that is what made it shippable INSIDE the
+ *  freeze at all (see `callUpWeek`) – and giving it a condition price is a balance change, which
+ *  CLAUDE.md invariant 4 says ships with a bench run and a spec. Playing the rubbers was the ask;
+ *  re-pricing the week was not.
+ *
+ *  ⚠ RNG: `seed:rubbers:<week>`, ITS OWN SUB-STREAM, derived at the call site and persisting
+ *  nothing – NOT `seed:callup:<week>`, so the fixture's four draws are byte-identical to what they
+ *  were before this shipped and the MAIN stream cannot see any of it (CLAUDE.md invariant 2). Each
+ *  match then runs on its own `seed:rubber:<week>:<i>`, which is what makes the stored record
+ *  replayable: `simulateMatch` is a pure function of (a, b, {surface, tour, seed}).
+ *
+ *  ⚠ THE WHOLE SIDE IS DRAWN, NOT JUST THE RUBBERS SHE PLAYS. `tiesInTheWeek` opponents, always, in
+ *  the same order – so who her nation drew is a fact about the week rather than about how many
+ *  rubbers the captain gave her. Same post-draw discipline `rollCallUp` keeps. */
+function playCallUpRubbers(world: WorldState, rubbers: number): number {
+  const rng = rngFromSeed(`${world.seed}:rubbers:${world.week}`)
+  const surface = NATIONAL_TEAM.surface
+  const opponents: CallUpOpponent[] = []
+  for (let i = 0; i < NATIONAL_TEAM.tiesInTheWeek; i++) {
+    opponents.push(callUpOpponent(callUpRubberId(world.week, i), rng))
+  }
+  // ⚠ AFTER the draws, never before them – that is what "the count cannot depend on the outcome"
+  // means, and returning early above would have made the whole side depend on the captain's team
+  // sheet. She was named and she sat: a real outcome, and the record says so in its own words.
+  if (rubbers <= 0) return 0
+  // She hits at her CURRENT condition and on the court her style earns her – the one composition
+  // point every path that puts her in a match goes through, so a rubber is not a different game.
+  const kid = kidMatchPlayerFor(world, surface)
+  const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+  let won = 0
+  for (let i = 0; i < rubbers; i++) {
+    const { player: opp, nation } = opponents[i]
+    const eventId = callUpRubberId(world.week, i)
+    const seed = `${world.seed}:rubber:${world.week}:${i}`
+    const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
+    const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
+    const kidWon = result.winner === 0
+    if (kidWon) won += 1
+    // ⚠ A RUBBER IS A MATCH AND SHE CAN STOP IN ONE – the same sentence `resolvePractice` writes,
+    // and for the same reason: a short scoreline with no verb is the lie the number tells by itself.
+    const retiredId = result.retired ? (result.retired.side === 0 ? KID_ID : opp.id) : undefined
+    const verb = retiredId === KID_ID ? 'had to stop against' : retiredId ? 'was playing a retiring' : kidWon ? 'beat' : 'lost to'
+    const match: WorldMatch = {
+      round: i,
+      aId: KID_ID,
+      bId: opp.id,
+      winnerId: kidWon ? KID_ID : opp.id,
+      seed,
+      score,
+      ...(retiredId ? { retiredId } : {}),
+      eventId,
+      surface,
+      oppName: opp.name,
+      a: { ...kid },
+      b: { ...opp },
+    }
+    addEvent(world, {
+      week: world.week,
+      type: 'match',
+      friendly: true,
+      // ⚠ KEPT, like the summary line one call up. `pruneResults` deletes everything else about
+      // these weeks and the album is drawn four years later; a week she is still allowed to watch
+      // has to still be in the feed to open. Twelve rows at the very outside, over a whole degree.
+      keep: true,
+      text:
+        `${NATIONAL_TEAM.label}: ${kidShort} ${verb} ` +
+        `${formatShortName(opp.name)} (${nation}) ${score} – no ranking points`,
+      match,
+    })
+  }
+  return won
+}
+
+/** The id a rubber is filed under. ⚠ IT NAMES NO TIER ON PURPOSE: `occasionOf` derives the
+ *  commentary's occasion from the event id, and a rubber genuinely has no rung behind it – the same
+ *  answer `practice-w<week>` gets, and for the same reason. */
+export function callUpRubberId(week: number, index: number): string {
+  return `nations-w${week}-r${index}`
+}
+
+/** ⭐ THE RUBBERS OF ONE CALL-UP WEEK, out of the feed – what the epilogue's year card offers to
+ *  replay. Derived rather than persisted: the records live in `world.events` exactly like every
+ *  other match in the game, so this adds no save field, no migration and no golden fixture (the
+ *  same argument `CollegeProgressView.billPerYearCents` makes one door along). */
+export function callUpRubbersOf(world: WorldState, week: number): WorldMatch[] {
+  return world.events
+    .filter((e) => e.week === week && e.match !== undefined && e.match.eventId.startsWith(`nations-w${week}-r`))
+    .map((e) => e.match!)
 }
 
 /** THE YEAR, BANKED. Called once per college year, on the week it ends.
@@ -247,10 +388,11 @@ export function leaveCollege(world: WorldState): void {
 export function collegeProgressOf(world: WorldState): CollegeProgressView | null {
   const college = world.college
   if (!college || college.doneWeek !== null) return null
+  const last = college.years[college.years.length - 1] ?? null
   return {
     yearsDone: college.years.length,
     totalYears: ENDINGS.collegeYears,
-    last: college.years[college.years.length - 1] ?? null,
+    last,
     // ⚠ IT MEANS "THE NEXT YEAR IS THE LAST ONE", not "she is done" – a career that is done has no
     // ending latched at all, so the done state is never rendered and a flag for it would be dead.
     // What the screen needs is the difference between a question with years behind it and the last
@@ -268,6 +410,10 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // says so rather than inventing a price it was never quoted.
     billPerYearCents: chosenQuoteOf(world.fork?.offer)?.familyPerYearCents ?? 0,
     tier: chosenQuoteOf(world.fork?.offer)?.tier ?? null,
+    // ⭐⭐ THE COLLEGE WAVE – the year's rubbers, so the card that reports the week can also OFFER it.
+    // Read out of the feed by week, never persisted twice (see `callUpRubbersOf`). A year with no
+    // letter has no week to read, and says so with an empty list rather than a null.
+    rubbers: last?.callUp ? callUpRubbersOf(world, last.callUp.week) : [],
   }
 }
 

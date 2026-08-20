@@ -22,7 +22,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 // v47: the week joins the RNG-invariance sweep – see the ⚠ in `variants` and B1d below.
 import { planFromWeek } from '../src/engine/plan'
 import { SESSION_KINDS, type SessionKind } from '../src/shared/protocol'
@@ -701,9 +701,20 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
       enterWhatSheCan(world)
       if (world.results.some((r) => r.playerId === KID_ID && inTrack('domestic')(r))) sawDomestic = true
 
+      // ⚠ RE-AIMED 20.08 (round 23 #12/#13), AND IT IS A RE-AIM RATHER THAN A WEAKENING. This test's
+      // invariant is «each cache IS the fold it names», and the domestic fold gained a second
+      // per-track fact that week: `WINDOW_BY_TRACK` – best-6 of THIS SEASON on the domestic table,
+      // still a rolling 52 weeks on the two that model real tours. Spelling the fold by hand without
+      // it made this line assert that `kidRankDomestic` equals a fold nothing in the engine performs
+      // any more, so it went red on a career that had merely stopped agreeing with a stale
+      // re-derivation. The assertion is unchanged in strength: the SAME identity, against the SAME
+      // one writer, read off the engine's own constant so the next ruling about a table's window
+      // reaches this guard without anybody remembering it exists. (The `itf` and `mixed` folds below
+      // are byte-identical to what they were – `WINDOW_BY_TRACK.itf` IS 'rolling52' – and are stated
+      // rather than defaulted for exactly that reason.)
       const ids = [...world.cohort.map((c) => c.id), KID_ID]
-      const itf = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, ids, inTrack('itf'))
-      const dom = computeRanking(world.results, world.week, BEST_N_BY_TRACK.domestic, ids, inTrack('domestic'))
+      const itf = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, ids, inTrack('itf'), WINDOW_BY_TRACK.itf)
+      const dom = computeRanking(world.results, world.week, BEST_N_BY_TRACK.domestic, ids, inTrack('domestic'), WINDOW_BY_TRACK.domestic)
       const mixed = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, ids)
       const itfRank = itf.find((r) => r.playerId === KID_ID)!.rank
       const domRank = dom.find((r) => r.playerId === KID_ID)!.rank

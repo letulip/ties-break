@@ -339,6 +339,10 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'answerRetirement': {
       return mutate(msg.id, msg.baseRevision, (world) => answerRetirement(world, msg.retire))
     }
+    // ⭐⭐ THE COLLEGE WAVE: this is the second producer of stop reasons in the whole app, and the
+    // only one that is not an `advance`. `resumeFromCollege` spends a college YEAR in one mutate, so
+    // a national-team week played inside it would otherwise never reach a screen – the reasons it
+    // returns are what carry it out (see the command's own note, and `StopReason`'s 'call-up').
     case 'resumeFromCollege': {
       return mutate(msg.id, msg.baseRevision, (world, rng) => resumeFromCollege(world, rng))
     }

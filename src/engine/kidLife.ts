@@ -31,11 +31,13 @@
 // pinned in tests/kidLife.test.ts, not left to a careful author.
 
 import { rngFromSeed } from './rng'
-import { ECONOMY } from './economy'
+import { ECONOMY, kidPrizeShareBps } from './economy'
+import { COLLEGE_TIER_NAME } from './collegeOffer'
 import { isExamWeek, isOffSeasonWeek, isSummerWeek, WEEKS_PER_YEAR } from './season/calendar'
 import { kidBirthYear } from './world/age'
 import { seasonYear } from '../shared/dates'
-import type { KidLife, KidLifeTile, PlayStyle } from '../shared/protocol'
+import { formatCents } from '../shared/money'
+import type { CollegeTier, KidLife, KidLifeTile, PlayStyle } from '../shared/protocol'
 
 /** The widest a tile line may be, in characters.
  *
@@ -136,7 +138,7 @@ export function gradeOf(birthYear: number, birthMonth: number, schoolYearStart: 
 // =================================================================================================
 //
 // ⚠ THIS IS THE SAME ARITHMETIC AS `gradeOf` AND IT HAD BETTER STAY THAT WAY, which is why it is
-// derived from it rather than written beside it. The School tile has said "School finished" past the
+// derived from it rather than written beside it. The School tile has moved off the classroom past the
 // last grade since it shipped; every other surface in the game - the exam blackout, the day grid's
 // eight-o'clock lesson block, the diary, the planner's refusal - ignored it, which is how a
 // twenty-two-year-old professional ended up still sitting papers. One derivation, read everywhere.
@@ -213,10 +215,62 @@ function classStanding(birthMonth: number): string {
   return 'Youngest of all'
 }
 
-/** THE SCHOOL TILE. Grade from age and birth month; the second line is the exam blackout when the
- *  calendar is holding one (ECONOMY.availability.examWeeks - real weeks, in which she cannot enter
- *  anything), the summer training block when the holidays are running, and her place in the class
- *  the rest of the time.
+// =================================================================================================
+// ⭐⭐ ROUND-23 #6 – AND WHAT THE TILE SAYS FOR THE OTHER TWENTY YEARS
+// =================================================================================================
+//
+// THE OWNER: «Что можем вместо school finished на личной странице написать? Может быть разное
+// что-то там можно отображать в течение взросления? Про колледж и его окончание (если пошла и
+// закончила конечно) ещё что-то предложишь?» – and, on the shape offered back: «да, давай так».
+//
+// ⚠ WHAT WAS WRONG WITH "School finished" IS NOT THE WORDS, IT IS THE TENSE. Grades 8 to 12 move
+// once a year for four years and then the tile freezes for the remaining twenty seasons of a career
+// – on the PERSONAL page, the one screen in the game that is about the girl rather than the ladder.
+// A frozen cell is wallpaper (the Friends tile's own note makes the same argument), and "finished"
+// is the one thing about her the parent already knows.
+//
+// THE LADDER, and every rung is selected by a fact the simulation already holds:
+//
+//   at school        her grade                    `gradeOf`, unchanged since it shipped
+//   the year out     the last bell                `schoolEndWeek` – the September she left
+//   19 to 21         tennis is the whole week     `schoolIsOver` + her age
+//   22 and up        grown, and living her way    the SAME 22 boundary `diaryLifeStageFor` uses
+//   enrolled         year N of four               `college.years.length`
+//   graduated        four years, done             `doneWeek` + a full course
+//   left early       N of four, and then she left `doneWeek` + a short one
+//
+// ⚠ THREE COLLEGE STATES AND NOT TWO, because `resumeFromCollege` spends the four years ONE AT A
+// TIME and `endCollegeEarly` is a real answer at every boundary – the sport's own case, and the
+// reason P5 broke the four-year block up in the first place. A tile that knew only "she went" and
+// "she graduated" would print the graduate's line for a girl who left after one year.
+//
+// ⚠ THE LABEL MOVES WITH IT (`KidLife.schoolLabel`). The design's grid cell is called "School"
+// (docs/design/README.md §"C. Kid Profile"); a cell still called that above "Year 2 of 4" would be
+// the same frozen-tense defect one line higher up. Three values, all of them short enough for the
+// 115px cell: School, College, After school.
+
+/** How the tile is HEADED at each rung – the cell's own name, which is a fact about her life rather
+ *  than a caption. Kept beside the tile that fills it so the two can never disagree. */
+export const STAGE_LABEL = {
+  school: 'School',
+  college: 'College',
+  after: 'After school',
+} as const
+
+/** The age at which the after-school ladder's last rung opens.
+ *
+ *  ⚠ IT IS THE DIARY'S OWN BOUNDARY AND THE SAME NUMBER ON PURPOSE. `diaryLifeStageFor` splits
+ *  `'after-school'` from `'independent'` at 22 – "twenty-two is a voice boundary" – and the two
+ *  surfaces are the same parent looking at the same girl in the same week. A second number here
+ *  would let the diary call her independent while her own page still had her finding her feet. */
+export const GROWN_UP_AGE_YEARS = 22
+
+/** THE LIFE-STAGE TILE (round 23 #6; it was `schoolTile` while school was all it could say).
+ *
+ *  While she is at school: her grade from age and birth month, and a second line that is the exam
+ *  blackout when the calendar is holding one (ECONOMY.availability.examWeeks - real weeks, in which
+ *  she cannot enter anything), the summer training block when the holidays are running, and her
+ *  place in the class the rest of the time.
  *
  *  ⚠ THE SUMMER LINE IS A FACT ABOUT HER WEEK NOW, NOT DECORATION (W3-SUMMER). This module's own
  *  rule 1 is FACTS FIRST - "every line is selected BY facts the simulation already holds" - and until
@@ -226,7 +280,7 @@ function classStanding(birthMonth: number): string {
  *  the tile is reporting rather than colouring. It outranks the class standing because it is what the
  *  week IS; the exam fortnight still outranks it, and cannot collide with it anyway (weeks 23-24
  *  against 25-33). */
-export function schoolTile(view: KidLifeWorldView): KidLifeTile {
+export function lifeStageTile(view: KidLifeWorldView): KidLifeTile {
   // ⚠ HER BIRTH YEAR IS THE BAND'S YEAR, NOT `seasonYear - ageYears` (one-clock ruling, 09.08). The
   // subtraction was exact only while `ageYears` was the band's - the two agreed by construction. They
   // do not now: a girl born in April is 13 through the January of 2031 and 14 from the April, so the
@@ -240,7 +294,7 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
   // Which September the school year running NOW began in: this season's, once it has passed.
   const schoolYearStart = view.seasonYear - (pastSeptember(view.week) ? 0 : 1)
   const grade = gradeOf(birthYear, view.birthMonth, schoolYearStart)
-  if (grade === null) return { lead: 'School finished', note: 'No more bells' }
+  if (grade === null) return afterSchoolTile(view)
   return {
     lead: `${ordinal(grade)} grade`,
     // ⚠ HER BIRTH MONTH, NOT A CONSTANT (round-21 #6). This argument was the literal `false`, on the
@@ -262,6 +316,115 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
   }
 }
 
+/** WHICH RUNG THE TILE IS ON, as the heading above it. The one place the three stages are told
+ *  apart, so the label, the tile and the sentence under the grid cannot disagree about her life. */
+export function stageLabelOf(view: KidLifeWorldView): string {
+  if (!schoolIsOver(view.week, view.birthMonth)) return STAGE_LABEL.school
+  return view.college?.studying ? STAGE_LABEL.college : STAGE_LABEL.after
+}
+
+/** THE TILE PAST THE LAST GRADE – three post-school rungs and three college ones.
+ *
+ *  ⚠ COLLEGE OUTRANKS THE AGE LADDER, because it is what she is DOING and the ladder is only where
+ *  she has got to. A twenty-year-old on a scholarship is at college, not "tennis full-time" – that
+ *  is precisely the four years the college branch exists to be different from.
+ *
+ *  ⚠ AND "SHE LEFT" IS NOT "SHE FINISHED". `years.length` against `totalYears` is the whole test:
+ *  `endCollegeEarly` is a real answer at every year boundary (P5's own reason for breaking the block
+ *  up), and a career-ending injury inside the freeze closes the door the same way. Both are a course
+ *  that stopped; neither is a degree, and printing the graduate's line for either would be the tile
+ *  telling the player something that did not happen. */
+function afterSchoolTile(view: KidLifeWorldView): KidLifeTile {
+  const college = view.college
+  if (college) {
+    if (college.studying) {
+      const year = Math.min(college.yearsDone + 1, college.totalYears)
+      return {
+        lead: `Year ${year} of ${college.totalYears}`,
+        note: year >= college.totalYears ? 'Final year' : 'Student tennis',
+      }
+    }
+    if (college.yearsDone >= college.totalYears) {
+      return { lead: 'Graduate', note: `${college.totalYears} years done` }
+    }
+    return { lead: 'Left college', note: `${college.yearsDone} of ${college.totalYears} years` }
+  }
+  // THE YEAR SHE LEFT. `schoolEndWeek` is the September she would have started a thirteenth grade,
+  // so this window is her first twelve months out - the one stretch in which the classroom is still
+  // the most recent thing that happened to her.
+  if (view.week < schoolEndWeek(view.birthMonth) + WEEKS_PER_YEAR) {
+    return { lead: 'The last bell', note: `${ECONOMY.school.lastGrade} years done` }
+  }
+  // 19 to 21: school is behind her and nothing has replaced it, which is the fact - `ECONOMY.school`
+  // gives those weeks straight back to training (`loadFactor` 1.4, the summer block's own number).
+  if (view.ageYears < GROWN_UP_AGE_YEARS) return { lead: 'Tennis full-time', note: 'No more classes' }
+  // ...and from 22 she is simply a grown woman with a job, which is the diary's own reading of the
+  // same birthday (`diaryLifeStageFor`: 'after-school' becomes 'independent' here).
+  return { lead: 'Grown up', note: 'Her own life now' }
+}
+
+/** The place she took, as the player was shown it on the fork card. `COLLEGE_TIER_NAME` is imported
+ *  rather than re-spelled: it already had two copies once (`ForkDialog`'s `TIER_LABEL` and
+ *  `EndingScreen`'s `COLLEGE_PLACE`) and round 21 collapsed them into one on purpose.
+ *
+ *  `null` is the v51-migrated career whose offer was never measured - it really did take a place and
+ *  the save cannot say which, so this names the fact without inventing the campus. */
+function collegePlacePhrase(tier: CollegeTier | null): string {
+  return tier ? COLLEGE_TIER_NAME[tier] : 'The college place she took'
+}
+
+/** ⭐⭐ ROUND-23 #6b – THE COLLEGE SENTENCE, under the grid beside the September note.
+ *
+ *  The owner asked for a line «в течение всего колледжа» plus one for after it, and picked the shape
+ *  that names the place: «Studying at …, year 2 of 4». Both halves are here, and so is the third
+ *  state he did not ask about and the game can produce – she left before the course ended.
+ *
+ *  ⚠ NOT A TILE LINE, for `schoolCutOffNote`'s reason one rung up: both `KidLifeTile` lines are
+ *  `nowrap` inside a 115px cell on a 16-character budget and every college place is longer than that.
+ *  The tile carries the year; this carries the campus.
+ *
+ *  ⚠ THE TWO NOTES CAN NEVER BOTH SPEAK. `schoolCutOffNote` is silent once `gradeOf` returns null
+ *  and this is silent until she is out of school, so the screen never has to choose between them.
+ *
+ *  Pure: three integers and a name off a frozen table. Zero draws, nothing persisted. */
+export function collegeNote(view: KidLifeWorldView): string {
+  const college = view.college
+  if (!college) return ''
+  const place = collegePlacePhrase(college.tier)
+  if (college.studying) {
+    const year = Math.min(college.yearsDone + 1, college.totalYears)
+    return `${place} – she is in year ${year} of ${college.totalYears}.`
+  }
+  if (college.yearsDone >= college.totalYears) {
+    return `${place} – she stayed all ${college.totalYears} years and finished the course.`
+  }
+  const years = college.yearsDone === 1 ? '1 year' : `${college.yearsDone} years`
+  return `${place} – ${years} of the ${college.totalYears}, and she left before the course ended.`
+}
+
+/** ⭐⭐ ROUND-23 #18 – HER OWN ACCOUNT, said on the page that is about her.
+ *
+ *  The owner: «после появления её счета в банке в 18 начать ей призовые переводить какие-то суммы».
+ *  The ramp itself is `ECONOMY.kidShare` and the transfer happens in `finalizeTournament`; this is the
+ *  only place a player is told about either, so it states the balance AND the rule that fills it.
+ *
+ *  ⚠ EVERY FIGURE IS THE ENGINE'S OWN, `trainingBillNote`'s rule on the Money screen: the percentage
+ *  is `kidPrizeShareBps` (the function the till divides by) and the ceiling is `ECONOMY.kidShare`, so
+ *  a retune moves the sentence with the money instead of leaving a stale promise on her page.
+ *
+ *  Empty before the threshold birthday - there is no account and no rule to explain yet. */
+export function ownAccountNote(view: KidLifeWorldView): string {
+  const bps = kidPrizeShareBps(view.ageYears)
+  if (bps <= 0) return ''
+  const share = `${bps / 100}% of every cheque`
+  const held = `Her own account – ${formatCents(view.kidFundsCents)}.`
+  if (bps >= ECONOMY.kidShare.capBps) return `${held} She keeps ${share} now, and the share goes no higher.`
+  return (
+    `${held} She keeps ${share} now, ${ECONOMY.kidShare.stepBps / 100} points more every birthday ` +
+    `up to ${ECONOMY.kidShare.capBps / 100}%.`
+  )
+}
+
 /**
  * ⭐ ROUND-21 #6 – THE ONE LINE THAT EXPLAINS THE SEPTEMBER, on the tile he found it on.
  *
@@ -281,7 +444,8 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
  * in September or later she starts (and therefore finishes) a year behind the girls born earlier in
  * her own birth year – so this speaks for exactly those four months and is silent for the other
  * eight, where "she finishes later than the others" would be false. It is also silent once she is
- * out: `gradeOf` returning null is "School finished", which needs no explanation at all.
+ * out: `gradeOf` returning null hands the tile to `afterSchoolTile`, whose own rungs need no
+ * explanation of the cut-off at all – and `collegeNote` has that half of the grid to itself there.
  *
  * ⚠ NOT A TILE LINE. Both `KidLifeTile` lines are `nowrap` on a 17-character budget; this is a
  * sentence and it renders under the grid (see `KidLife.schoolWhy`). Player copy: short dash only.
@@ -511,7 +675,7 @@ export interface KidLifeWorldView {
   /** HER age in whole years, off her own birth date (`kidAgeAt`) - not the 14 + season-index band it
    *  used to be (one-clock ruling, 09.08).
    *
-   *  ⚠ AND `schoolTile` DELIBERATELY DOES NOT DERIVE HER BIRTH YEAR FROM IT. Standard age arithmetic
+   *  ⚠ AND `lifeStageTile` DELIBERATELY DOES NOT DERIVE HER BIRTH YEAR FROM IT. Standard age arithmetic
    *  is off by one before a birthday, so `seasonYear - ageYears` would move her school cohort twice a
    *  year; the tile reads `kidBirthYear()` instead. Kept on the view because it is the module's
    *  declared slice of the world, not because the school line still needs it. */
@@ -531,14 +695,39 @@ export interface KidLifeWorldView {
   lossStreak: number
   /** weeks since her most recent title, or null if she has never won one */
   weeksSinceTitle: number | null
+  /** ⭐ ROUND-23 #6b – HER COLLEGE YEARS, or `null` for a career that never took the place.
+   *
+   *  ⚠ THE SPAN PREDICATE AND THE BANKED-YEAR COUNT, not a verdict. `studying` is `inCollege(world)`
+   *  (derived from `untilWeek`, never a second flag - see `leaveCollege`) and `yearsDone` is
+   *  `CollegeState.years.length`, the rows P5 appends as each year finishes. The tile decides what
+   *  those two mean; this view asserts nothing. */
+  college: KidLifeCollegeView | null
+  /** ⭐ ROUND-23 #18 – what her own account holds, in cents. Zero until the first cheque after her
+   *  eighteenth: `ECONOMY.kidShare` is what fills it and `finalizeTournament` is what moves it. */
+  kidFundsCents: number
+}
+
+/** Her four years, as the personal page is allowed to see them (round 23 #6b). */
+export interface KidLifeCollegeView {
+  /** `inCollege(world)` – true only while the freeze is running */
+  studying: boolean
+  /** college years LIVED and banked so far (`CollegeState.years.length`) */
+  yearsDone: number
+  /** the length of the course – `ENDINGS.collegeYears` */
+  totalYears: number
+  /** the place she chose, or `null` on a career migrated from v51 whose offer was never measured */
+  tier: CollegeTier | null
 }
 
 /** Everything screen C's three derived tiles need. Called once per snapshot. */
 export function buildKidLife(view: KidLifeWorldView): KidLife {
   return {
     personality: PERSONALITY[view.playStyle] ?? PERSONALITY['all-court'],
-    school: schoolTile(view),
+    school: lifeStageTile(view),
+    schoolLabel: stageLabelOf(view),
     schoolWhy: schoolCutOffNote(view),
+    collegeNote: collegeNote(view),
+    ownAccount: ownAccountNote(view),
     friends: friendsTile(view),
   }
 }

@@ -29,7 +29,12 @@ import {
  *  promise in a comment: both screens import `COLLEGE_TIER_NAME` from the engine, so the two can no
  *  longer drift. They are places rather than verdicts; the prices behind them are sourced. */
 import { COLLEGE_TIER_NAME as COLLEGE_PLACE } from '../engine/collegeOffer'
+import { NATIONAL_TEAM } from '../engine/nationalTeam'
+import { KID_ID } from '../engine/world/constants'
+import { formatShortName } from '../shared/format'
 import { daysInBirthMonth } from '../shared/dates'
+import type { WorldMatch } from '../shared/protocol'
+import MatchReplay from './MatchReplay.vue'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -214,6 +219,47 @@ const collegeCallNote = computed(() => {
   return `Her country called – ${court}, and the nation finished ${c.nationFinish}th. No prize money and no ranking points; there are none to award.`
 })
 
+// --- ⭐⭐ THE COLLEGE WAVE – THE COMPETITION, WATCHED ---------------------------------------------
+//
+// The owner's item 3 (19.08). His words are quoted verbatim where a `.vue` file may not carry them –
+// `docs/plans/college-as-a-place.md` §3 and `engine/world/college.ts`; in English: every college year
+// holds at least one competition that can be watched exactly the way the current ones are, the same
+// mechanism precisely, only the tournament names differing. The engine now PLAYS her rubbers
+// (`world/college.ts`), and this is where they are watched.
+//
+// ⚠ IT IS `MatchReplay`, THE SAME COMPONENT THE TOUR RE-WATCHES A MATCH IN, and that is the owner's
+// own 30.07 ruling rather than an economy: «I suppose we need the same principle of opening live and
+// replay matches ... it looks just like a separate screen and works fine, let's stick to it». So
+// "the same mechanism exactly" is literally true here – identical viewer, identical panels, one
+// `mode` prop apart from the live tournament flow.
+//
+// ⚠ AND IT IS A CONTROL PER RUBBER, NOT ONE FOR THE WEEK. She plays up to three, they are three
+// different opponents from three different countries, and a single button would have had to pick
+// one of them for the player.
+const collegeRubbers = computed(() => college.value?.rubbers ?? [])
+const watching = ref<WorldMatch | null>(null)
+
+/** "Rubber 2 – L. Kovac" – which one it was and who it was against, off the FROZEN record rather
+ *  than off today's world, exactly like the box score's own names. The nation rides in the news line
+ *  rather than on `MatchPlayer`, so the label here is the name alone. */
+function rubberLabel(match: WorldMatch, index: number): string {
+  return `Rubber ${index + 1} – ${formatShortName(match.oppName)}`
+}
+
+/** Won or lost, in the record's own words and with no adjective anywhere near it (§6: the game does
+ *  not grade her, and ruling 4 keeps this card free of opinions).
+ *
+ *  ⚠ A RETIREMENT IS MARKED, AND IN THE RESULT SHEET'S OWN NOTATION. A bare "Won 6-4 2-1" reads as a
+ *  scoreline that cannot happen; the trailing `ret.` is what a real sheet prints, and it is
+ *  unambiguous beside the verb – "Lost 6-4 2-1 ret." is her walking off, "Won 6-4 2-1 ret." is the
+ *  other woman doing it, because the one who retires is always the one who lost. `retiredId` is on
+ *  the record precisely so no surface has to re-simulate the match to find out. */
+function rubberOutcome(match: WorldMatch): string {
+  const score = match.score ?? ''
+  const verb = match.winnerId === KID_ID ? 'Won' : 'Lost'
+  return `${verb} ${score}${match.retiredId ? ' ret.' : ''}`.trim()
+}
+
 /** She may only leave a year she has actually spent. The engine refuses it too – this is the screen
  *  agreeing with the rule rather than being the rule (CLAUDE.md invariant 1). */
 const canLeaveCollege = computed(() => (college.value?.yearsDone ?? 0) > 0)
@@ -328,6 +374,20 @@ async function leaveCollege(): Promise<void> {
           </dl>
           <p v-if="lastYear" class="college-call">{{ collegeCallNote }}</p>
 
+          <!-- ⭐⭐ THE COMPETITION, WATCHABLE. One row per rubber she actually played: who it was
+               against, what it finished, and the same replay the tour opens. A year with no letter
+               (or a year she was named and never took the court) draws nothing here, because there
+               is nothing to open – the sentence above has already said which of the two it was. -->
+          <ul v-if="collegeRubbers.length > 0" class="college-rubbers">
+            <li v-for="(m, i) in collegeRubbers" :key="m.eventId">
+              <button class="college-rubber" type="button" @click="watching = m">
+                <span class="rubber-who">{{ rubberLabel(m, i) }}</span>
+                <span class="rubber-score">{{ rubberOutcome(m) }}</span>
+                <span class="rubber-watch">Watch</span>
+              </button>
+            </li>
+          </ul>
+
           <div class="ending-fork">
             <button
               class="ending-fork-option"
@@ -387,6 +447,20 @@ async function leaveCollege(): Promise<void> {
         </template>
       </footer>
     </section>
+
+    <!-- ⚠ INSIDE `.ending`, AND THAT IS THE Z-ORDER RATHER THAN A CONVENIENCE. `.ending` is
+         `position: fixed; z-index: 60`, so it OPENS A STACKING CONTEXT; the takeover's own
+         `z-index: 55` therefore paints above the album and the footer without having to outrank the
+         epilogue itself. Mounted as a sibling of the album section (not inside the footer) so it
+         covers the whole surface the way it covers the tab shell everywhere else.
+         ⚠ AND IT IS THE ONLY THING ON THIS SCREEN THAT IS NOT A DECISION – closing it puts the
+         player back on the same question, with nothing decided and nothing lost. -->
+    <MatchReplay
+      v-if="watching"
+      :match="watching"
+      :title="NATIONAL_TEAM.label"
+      @close="watching = null"
+    />
   </div>
 </template>
 
@@ -663,6 +737,54 @@ async function leaveCollege(): Promise<void> {
   font-size: 16px;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* ⭐⭐ THE RUBBERS. Rows rather than cards: they are three readings of one week, and the week has
+   already been introduced by the sentence above them. Each is a full-width control, inside the
+   takeover's own scroller like every other control on this screen, so the round-20 measurement in
+   tests/component/college-second-act.test.ts covers them without a second shape to reason about. */
+.college-rubbers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.college-rubber {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: var(--stroke-hair) solid var(--ink-dim);
+  border-radius: var(--radius-control);
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.rubber-who {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rubber-score {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.rubber-watch {
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* --- the record underneath --- */

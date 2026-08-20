@@ -29,8 +29,8 @@ import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { LADDER_LABEL } from '../../shared/protocol'
-import { TIERS, TIER_SHORT } from '../../engine/season/calendar'
-import { BEST_N_BY_TRACK, RANKABLE_MIN } from '../../engine/season/ranking'
+import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../../engine/season/calendar'
+import { BEST_N_BY_TRACK, RANKABLE_MIN, WINDOW_BY_TRACK } from '../../engine/season/ranking'
 import { finishPhrase } from '../../composables/tierState'
 import type { LadderTrack } from '../../engine/season/types'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -137,8 +137,17 @@ const windowInfo = computed(() => {
   const cap = BEST_N_BY_TRACK[shown.value]
   const weakest = Math.min(...list.map((r) => r.points))
   const oldest = list.reduce((a, b) => (b.week < a.week ? b : a))
-  // windowedBestSum keeps a result while `week - r.week <= 52`, so it drops AT r.week + 53.
-  const dropInWeeks = oldest.week + 53 - snap.week
+  // ⚠ WHEN A RESULT DROPS DEPENDS ON THE TABLE NOW (round 23 #12/#13). The domestic table became
+  // SEASON-TO-DATE, so on that tab nothing ages out mid-season at all – EVERY row leaves together at
+  // the wrap, and the rolling arithmetic below would have promised the player a date that never
+  // comes. Read off `WINDOW_BY_TRACK` rather than re-deciding it here: the screen and the fold have
+  // to agree about which table she is looking at, and that is precisely the disagreement this whole
+  // round kept finding.
+  const dropInWeeks =
+    WINDOW_BY_TRACK[shown.value] === 'seasonToDate'
+      ? WEEKS_PER_YEAR - (snap.week % WEEKS_PER_YEAR)
+      : // rolling: windowedBestSum keeps a result while `week - r.week <= 52`, so it drops AT r.week + 53.
+        oldest.week + 53 - snap.week
   const finish = oldest.tier ? TIERS[oldest.tier].points.indexOf(oldest.points) : -1
   const what =
     oldest.tier && finish >= 0

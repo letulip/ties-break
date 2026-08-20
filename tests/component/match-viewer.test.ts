@@ -715,10 +715,19 @@ describe('MatchViewer – the pre-match preview', () => {
     const junior = await beatsAt({ tier: 'j30', roundLabel: 'Round of 32' })
     const slam = await beatsAt({ tier: 'slam', roundLabel: 'Final' })
     expect(junior.length, 'no beats rendered at all').toBeGreaterThan(4)
-    // Same match, same rows, DIFFERENT WORDS - the escalation is vocabulary, never row count.
-    expect(slam.length).toBe(junior.length)
+    // ⭐ ROUND-23 #4: MORE ROWS, NOT THE SAME ROWS IN DIFFERENT WORDS. This line used to read
+    // `expect(slam.length).toBe(junior.length)` on the reasoning that "the escalation is vocabulary,
+    // never row count" - and freezing the row count is exactly what made the owner ask a third time.
+    // Measured: 16.20 beats a match at every rung from a J30 to a Slam, for a 56% reword. The bars in
+    // viz/commentary.ts come down as the rung goes up, and this is that arriving through the DOM.
+    expect(slam.length, 'a Grand Slam final renders no more rows than a J30 first round').toBeGreaterThan(
+      junior.length,
+    )
     const differing = junior.filter((row, i) => row !== slam[i]).length
     expect(differing, 'a Grand Slam final and a J30 first round rendered identically').toBeGreaterThan(1)
+    // ...and the extra rows include the one beat kind round 23 added, which no rewording could fake.
+    expect(slam.join(' '), 'the long game never reached the screen').toMatch(/deuces?\b/i)
+    expect(junior.join(' '), 'a junior draw grew a long-game beat').not.toMatch(/deuces?\b/i)
     // The two most specific things the occasion adds, seen through the DOM: the title on the line,
     // and a room that only exists at the top of the tour.
     expect(slam.join(' ')).toContain('the title with it')

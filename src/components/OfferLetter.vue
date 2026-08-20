@@ -83,6 +83,26 @@ const entryWithdrew = computed(() => entryTerms.value.cancelled === true && !ent
 // the GAME never leans on the player and never scolds. So the due notice reads as a fixture list
 // with a price on it, the penalty notice reads as an invoice with a running balance, and the
 // suspension notice states a date. Nothing here says "you should have gone".
+//
+// ⭐ ROUND-23 #2 – AND THE SUSPENSION'S LAST LINE WAS THE ONE PLACE THAT VOICE SLIPPED. The owner,
+// 19.08: «Письмо Entries Suspended вызывает во мне странные чувства, особенно последняя строчка
+// этого письма. Как будто её откуда-то сняли. Может быть можем как-то переформулировать?»
+//
+// The line was «Nothing is owed and nothing is taken back.» Two DENIALS of things nobody had
+// proposed, and the second one is what did the damage: a sentence promising that nothing is being
+// revoked can only be parsed by first supposing that something COULD be, so the paper planted a
+// striking-off in the act of denying it. That is the «как будто её откуда-то сняли» he felt, and it
+// is also why the line read as lifted off some other form – a denial with no antecedent is the
+// grammar of boilerplate.
+//
+// ⚠ THE MECHANIC IS UNTOUCHED. He asked about the wording and nothing else, so both facts the old
+// line carried are still on the paper, said as a PRESENCE instead of as an absence: her standing
+// survives the sentence («her ranking, her points and her place on every entry list are exactly
+// where she left them») and the sentence carries no bill («there is no fine on top»). Naming what
+// the price IS – «the weeks are the whole price» – is the opposite of softening it.
+//
+// The rendered line is asserted in tests/component/round23-tour-suspension.test.ts, which builds a
+// real suspension through `chargeMandatoryPenalty` and reads the paper rather than the source.
 const isTour = computed(() => props.offer.kind === 'tour')
 const tourTerms = computed(() => props.offer.terms as TourLetterTerms)
 
@@ -348,7 +368,13 @@ const settled = computed(() => {
         </p>
         <ul class="offer-terms">
           <li>She may train and travel; she may not enter a tournament until that week has passed.</li>
-          <li>Nothing is owed and nothing is taken back.</li>
+          <!-- ⭐ ROUND-23 #2 – THE CLOSING LINE, REWRITTEN. It read "Nothing is owed and nothing is
+               taken back." and the owner said it made him feel she had been struck off something.
+               The owner's words and the argument are on the script side, at `isTour`. -->
+          <li>
+            Her ranking, her points and her place on every entry list are exactly where she left
+            them – the weeks are the whole price, and there is no fine on top.
+          </li>
         </ul>
       </template>
       <p class="offer-sign-off">– Tour office</p>

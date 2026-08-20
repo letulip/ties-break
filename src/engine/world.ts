@@ -48,10 +48,9 @@ import { weekLabel } from '../shared/dates'
 // Type-only on the way back (shared/avatarEmotion imports `type TierId` from engine/season/types),
 // so this is a leaf dependency, not a cycle.
 import type { MatchPlayer } from './match/types'
-import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
+import type { AiPlayer, LadderTrack, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import {
   TIERS,
-  TIER_LADDER,
   buildSeason,
   WEEKS_PER_YEAR,
   OFF_SEASON_WEEKS } from './season/calendar'
@@ -61,7 +60,13 @@ import { parentIncomeForWeekCents,
   GEAR_CATEGORIES,
   gearHitForWeek,
   gearVoice,
+  kidPrizeShareBps,
+  kidPrizeShareCents,
 } from './economy'
+// v54 (round-23 #18): the one string the engine writes about her own account. `shared/money.ts` is
+// the ONE cents-to-dollars implementation in the app and `weekLabel` above records why the engine is
+// allowed to reach into shared/ for a player-facing string.
+import { formatCents } from '../shared/money'
 import { generateCohort, driftCohort, ageCohort, COHORT_SIZE } from './season/cohort'
 import { renewCohort } from './season/conveyor'
 import { growWeek, rollPotential, type KidSkills } from './development'
@@ -81,7 +86,7 @@ import {
 } from './academy'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
-import { BEST_N_BY_TRACK, RANKABLE_MIN, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
+import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, RANKABLE_MIN, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import {
   byAllocationPriority,
   selectEntrants,
@@ -138,7 +143,15 @@ import {
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
 import { activeLadderOf, playerShortName, toSnapshot } from './world/snapshot'
 export { activeLadderOf, toSnapshot }
-import { flipScore, fallbackPlayer, kidMatchesOf, kidMatchEvent, computeLossStreak } from './world/matchNews'
+import {
+  flipScore,
+  fallbackPlayer,
+  kidMatchesOf,
+  kidMatchEvent,
+  computeLossStreak,
+  rivalRetirementNews,
+  tierMakesWorldNews,
+} from './world/matchNews'
 export { flipScore, computeLossStreak }
 import { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek } from './world/knock'
 export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek }
@@ -191,6 +204,7 @@ import {
 import { ENDINGS } from './ending'
 import {
   bankCollegeYear,
+  callUpPlayedThisWeek,
   collegeCoachFactor,
   collegeEpilogueLine,
   collegeMatchesThisWeek,
@@ -206,6 +220,10 @@ export {
   // ever read it – it shipped on 17.08 and this is the same day – so the rename breaks no call site.
   COLLEGE_TRIP_WEEKS,
   bankCollegeYear,
+  // ⭐⭐ THE COLLEGE WAVE: the played rubbers and the predicate that stops them passing in silence.
+  callUpPlayedThisWeek,
+  callUpRubberId,
+  callUpRubbersOf,
   collegeCoachFactor,
   collegeEpilogueLine,
   collegeMatchesThisWeek,
@@ -391,7 +409,15 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // choice. Pure state, zero draws on any stream – the frozen MAIN capture cannot see it.
 // ⚠ AND IT TAKES 49 UNDER THE RULE THE v48 NOTE ABOVE STATES: whoever lands in code first owns the
 // number. The flags/grant wave is still documents, so docs/plans/wave-flags-grant.md now reserves 50.
-export const SAVE_SCHEMA_VERSION = 53
+// ⭐ v54 = ONE FIELD, `kidFundsCents` – HER OWN BANK ACCOUNT (round-23 #18). The owner: «после
+// появления её счета в банке в 18 начать ей призовые переводить какие-то суммы, например начать с
+// 10-20% и может быть наращивать год к году», capped on his own widening – «может не до 30, а до 40
+// или 50 вообще, это всё-таки ее карьера?». `ECONOMY.kidShare` is the ramp; `finalizeTournament`
+// splits the cheque; the migration back-fills ZERO and invents no history (a career that reached
+// this build has never made a transfer, and re-deriving eight years of them is impossible anyway –
+// `financeWeeks` prunes at sixty weeks). Pure state, zero draws on any stream, so the frozen MAIN
+// capture cannot see it.
+export const SAVE_SCHEMA_VERSION = 54
 
 
 
@@ -426,6 +452,22 @@ export interface WorldState {
    *  purpose-scoped seed string, which is why nothing else needed persisting. */
   rngMain: MainRngState
   fundsCents: number
+  /** ⭐⭐ v54 – HER OWN ACCOUNT (round-23 #18), in cents. The owner: «после появления её счета в банке
+   *  в 18 начать ей призовые переводить какие-то суммы, например начать с 10-20% и может быть
+   *  наращивать год к году».
+   *
+   *  ⚠ IT IS A SECOND BALANCE AND NOT A COUNTER, which is the whole of the design decision. The
+   *  transfer in `finalizeTournament` credits the family its part and her hers, so the cheque the
+   *  parent banks genuinely shrinks as she grows – «это всё-таки её карьера». A share that stayed in
+   *  `fundsCents` and was merely tallied beside it would cost the player nothing and mean nothing.
+   *
+   *  ⚠ PERSISTED BECAUSE IT CANNOT BE REBUILT. `financeWeeks` prunes to sixty weeks and `results` to
+   *  fifty-two, so by the time she is twenty-six there is nothing left in the save from which the
+   *  eight years of transfers could be re-derived – `CareerTotals`' own argument, and invariant 3's.
+   *
+   *  ⚠ NOTHING SPENDS IT YET. It is hers, it accumulates, and no mechanic in this build draws on it;
+   *  the shop in `docs/backlog/the-shop-and-the-broker.md` is the obvious first claimant. */
+  kidFundsCents: number
   profile: PlayerProfile
   plan: WeekPlan
   /** ~199 AI juniors; drifts weekly (Phase-4 placeholder). */
@@ -1408,6 +1450,24 @@ function turnOverField(world: WorldState, seasonIndex: number): void {
 // Runs at the season boundary, on the rank she CARRIES IN (the one the season just gone earned
 // her) and the year of tournaments behind it. Zero draws on any stream – see engine/academy.ts.
 
+/** ⭐⭐ THE THREE THINGS AN ACADEMY REVIEW CAN SAY, as openings that the WRITER below and the STOP in
+ *  `advanceWeeks` both read (round 23 #16). They are shared constants and not two copies of a string
+ *  for one reason: the stop has to fire on "the review spoke this week", and matching that by
+ *  re-spelling the sentence at the reader would mean a reworded notice silently stops stopping. The
+ *  test `academy-notice` mutates each of these and watches the stop go with it. */
+export const ACADEMY_NOTICE = {
+  arrived: 'An academy has taken her on',
+  reviewed: 'Academy review:',
+  ended: 'The academy has ended her scholarship',
+} as const
+
+/** Did the academy say anything at `world.week`? The signal the season-boundary review leaves behind,
+ *  read out of the ledger it already writes – so it needs no new persisted field and no schema move. */
+export function academySpokeThisWeek(world: WorldState): boolean {
+  const openings = Object.values(ACADEMY_NOTICE)
+  return world.events.some((e) => e.week === world.week && openings.some((o) => e.text.startsWith(o)))
+}
+
 export function reviewAcademy(world: WorldState): void {
   const seasonIndex = seasonIndexOf(world.week)
   const prev = world.academy
@@ -1440,7 +1500,7 @@ export function reviewAcademy(world: WorldState): void {
       addEvent(world, {
         week: world.week,
         type: 'info',
-        text: `The academy has ended her scholarship – ${reason}.`,
+        text: `${ACADEMY_NOTICE.ended} – ${reason}.`,
       })
     }
     world.academy = null
@@ -1449,14 +1509,14 @@ export function reviewAcademy(world: WorldState): void {
 
   const pct = Math.round(level * ECONOMY.academy.travelCover * 100)
   if (!prev) {
-    fireMilestone(world, `academy-in-${seasonIndex}`, `An academy has taken her on – a scholarship covering ${pct}% of her travel.`)
+    fireMilestone(world, `academy-in-${seasonIndex}`, `${ACADEMY_NOTICE.arrived} – a scholarship covering ${pct}% of her travel.`)
   } else {
     const wasPct = Math.round(prev.level * ECONOMY.academy.travelCover * 100)
     if (pct !== wasPct) {
       addEvent(world, {
         week: world.week,
         type: 'info',
-        text: `Academy review: her scholarship ${pct > wasPct ? 'rises' : 'falls'} to ${pct}% of her travel.`,
+        text: `${ACADEMY_NOTICE.reviewed} her scholarship ${pct > wasPct ? 'rises' : 'falls'} to ${pct}% of her travel.`,
       })
     }
   }
@@ -1828,16 +1888,61 @@ function finalizeTournament(world: WorldState): void {
   // to everybody. If a future slice wants a background-scaled income, it must NOT reach for this one.
   const prize = prizeCentsFor(event.tier, kidFinish)
   if (prize > 0) {
-    world.fundsCents += prize
+    // ⭐⭐ ROUND-23 #18 – AND FROM EIGHTEEN THE CHEQUE IS SPLIT BEFORE IT REACHES THE FAMILY.
+    //
+    // The owner: «после появления её счета в банке в 18 начать ей призовые переводить какие-то суммы,
+    // например начать с 10-20% и может быть наращивать год к году», and on the ceiling: «может не до
+    // 30, а до 40 или 50 вообще, это всё-таки ее карьера?». The ramp is `ECONOMY.kidShare` (10% at
+    // 18, +5 a birthday, half from 26); nothing about it is spelled out here.
+    //
+    // ⚠⚠ IT LEAVES THE FAMILY WALLET, AND THAT IS THE DECISION. `world.fundsCents` receives the
+    // family's part ONLY, so a parent watching his daughter's cheques get bigger also watches his own
+    // share of them get smaller – which is the mechanic he asked for. The alternative on the table was
+    // to credit the wallet in full and tally hers beside it; that costs the player nothing, decides
+    // nothing, and «это всё-таки её карьера» is an argument about whose money it is.
+    //
+    // ⚠ ONE ROUNDING, AND THE FAMILY GETS THE REMAINDER. `kidPrizeShareCents` rounds once and this
+    // subtracts, so the two balances add up to the tournament's cheque to the cent – a player can put
+    // the two numbers side by side on screen and they must not disagree by a penny.
+    //
+    // ⚠ THE LEDGER ROW IS WHAT THE FAMILY ACTUALLY BANKED, which is the academy travel subsidy's own
+    // precedent one file over: a scholarship's travel half «is taken off the travel line itself, so
+    // the ledger shows the reduced price the family actually paid». `careerTotals.prizeCents` follows
+    // it and therefore becomes prize money THE FAMILY KEPT – the number the album's break-even page
+    // is really about, since the family is the side that did the spending.
+    //
+    // ⚠ HER REAL AGE (`kidAgeYears`), never the band's – the one-clock ruling of 09.08. Zero draws:
+    // this is integer arithmetic on a cheque that has already been decided.
+    const ageNow = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
+    const herShare = kidPrizeShareCents(prize, ageNow)
+    const familyShare = prize - herShare
+    world.fundsCents += familyShare
+    world.kidFundsCents = (world.kidFundsCents ?? 0) + herShare
     addEvent(world, {
       week: world.week,
       type: 'income',
       category: 'prize',
       // Names the finish, because the whole design is that the player should be able to read this
       // line against the travel line two rows up and feel the arithmetic. Short dash only.
-      text: `${tier.label} prize money – ${finishLabel(kidFinish)}`,
-      amountCents: prize,
+      // ⚠ AND IT NAMES THE SPLIT WHEN THERE IS ONE, because a prize row that quietly shrank by half
+      // would read as a bug in the till. Silent before her eighteenth, where nothing is deducted.
+      text:
+        herShare > 0
+          ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow) / 100}% share`
+          : `${tier.label} prize money – ${finishLabel(kidFinish)}`,
+      amountCents: familyShare,
     })
+    // ...and the transfer itself gets a row of its own, so the money can be followed out of one
+    // account and into the other. NO `amountCents`: the family ledger has already recorded what it
+    // received, and booking her share as a family EXPENSE would count the same cents twice - once
+    // against `careerTotals.spentCents`, which is the denominator of the album's break-even page.
+    if (herShare > 0) {
+      addEvent(world, {
+        week: world.week,
+        type: 'info',
+        text: `${world.profile.kidName}'s share of the prize money – ${formatCents(herShare)} into her own account`,
+      })
+    }
     // D10 + R15-5: THE FIRST CHEQUE IS A MILESTONE (owner, 01.08: «я believe it's a very memorable
     // moment»). The first week the tennis pays her anything at all - after years of the family
     // paying for everything - is a beat the career keeps: captured into the durable ledger (one row
@@ -1927,9 +2032,15 @@ function finalizeTournament(world: WorldState): void {
   // because the junior 300s crowded the mixed six. The suffix now diffs the one table the result
   // pays into, under that table's own N - which is what the sentence always claimed to mean.
   // (`track` is the v28 attribution const a few lines up - the same fact, read once.)
-  const before = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track))
+  // ⚠ AND UNDER THAT TABLE'S OWN WINDOW TOO (round 23 #12/#13, 19.08). This pair folded ROLLING for
+  // every track, so once the domestic table became season-to-date the diary could say "does not
+  // improve her best 6" about a result the table plainly improved – a sentence wrong in the one place
+  // the player is looking when she reads it. The window is the table's fact, exactly like `bestN`
+  // beside it, so it is asked for by the same key rather than assumed.
+  const window = WINDOW_BY_TRACK[track]
+  const before = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track), window)
   if (points > 0) world.results.push({ playerId: KID_ID, week: world.week, points, tier: event.tier })
-  const after = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track))
+  const after = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track), window)
   addEvent(world, {
     week: world.week,
     type: 'tournament',
@@ -1998,6 +2109,30 @@ function finalizeTournament(world: WorldState): void {
   p.finished = true
 }
 
+/** ONE revealed kid match: the `match` row itself, and – when the girl across the net could not
+ *  finish – the one news row that says so (round 23 #3b).
+ *
+ *  ⚠ IT SITS RIGHT UNDER THE MATCH IT IS ABOUT, and that is the whole reason it is emitted here
+ *  rather than beside the champion line in `finalizeTournament`: the feed then reads in the order
+ *  the week happened – the scoreline, then why it stopped – and it reads the same whether the player
+ *  watched the reveal round by round or hit "Skip tournament". Both paths call this, which is also
+ *  why it exists: two copies of the emit is exactly how the two paths drift apart.
+ *
+ *  ⚠ TYPE `'info'`, NOT `'injury'` – the same ruling `world/knock.ts` records for the same reason:
+ *  `'injury'` is a row about HER body, and the Memory card's first-injury milestone reads that
+ *  channel. Nothing has happened to the kid here. ZERO RNG. */
+function emitKidMatch(
+  world: WorldState,
+  event: SeasonEvent,
+  m: MatchRecord,
+  players: Record<string, MatchPlayer>,
+): void {
+  const ev = kidMatchEvent(world, event, m, players)
+  addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+  const hurt = rivalRetirementNews(world, event, m, players)
+  if (hurt) addEvent(world, { week: world.week, type: 'info', text: hurt })
+}
+
 /** Reveal ONE more kid match: emit its News `match` event, bump `revealedRounds`, and finalize the
  *  run once the kid's last match (elimination or the final) has been shown. Idempotent when done. */
 export function revealTournamentRound(world: WorldState): void {
@@ -2019,8 +2154,7 @@ export function revealTournamentRound(world: WorldState): void {
     finalizeTournament(world)
     return
   }
-  const ev = kidMatchEvent(world, event, m, p.players)
-  addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+  emitKidMatch(world, event, m, p.players)
   p.revealedRounds++
   if (p.revealedRounds >= kidMatches.length) finalizeTournament(world)
 }
@@ -2041,8 +2175,7 @@ export function skipTournament(world: WorldState): void {
   if (!event) return
   const kidMatches = kidMatchesOf(p.result)
   while (p.revealedRounds < kidMatches.length) {
-    const ev = kidMatchEvent(world, event, kidMatches[p.revealedRounds], p.players)
-    addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+    emitKidMatch(world, event, kidMatches[p.revealedRounds], p.players)
     p.revealedRounds++
   }
   finalizeTournament(world)
@@ -2360,13 +2493,9 @@ function runAiTournament(
   announceTourChampion(world, event, result)
 }
 
-/** WHICH RUNGS' CANONICAL CHAMPIONS MAKE THE NEWS – W100 and up, and the cut is a feed budget
- *  rather than a taste (`EVENTS_CAP` is 400 non-`keep` rows and `pruneEvents` sacrifices ordinary
- *  rows first). All ten W rungs would be ~98 lines a season against a feed that already takes ~364;
- *  W100-and-up is ~37, i.e. under one row a week. Expressed as a position in `TIER_LADDER` – the
- *  project's single source of truth for "is tier A above tier B" – so a re-ordered or re-named rung
- *  cannot silently fall out of the rule. */
-const NEWSWORTHY_FROM: TierId = 'w100'
+// WHICH RUNGS' CANONICAL CHAMPIONS MAKE THE NEWS – now `tierMakesWorldNews` in world/matchNews.ts,
+// moved there whole by round 23 #3b when the retirement line became its second reader. The rule and
+// the feed-budget arithmetic behind it are unchanged; see that function's own note.
 
 /** THE W TOUR CAN NAME ITS CHAMPION NOW, AND SHE CAN BE A PROFESSIONAL (W3-FIELD3, acceptance
  *  criterion 2). Before this wave the canonical brackets resolved in silence and the only champion
@@ -2384,8 +2513,7 @@ const NEWSWORTHY_FROM: TierId = 'w100'
  *  Names resolve through `playerShortName`, the same id→name function every bracket surface uses,
  *  so an `fp-` id comes back as a person rather than as an id. */
 function announceTourChampion(world: WorldState, event: SeasonEvent, result: TournamentResult): void {
-  if (TIER_LADDER.indexOf(event.tier) < TIER_LADDER.indexOf(NEWSWORTHY_FROM)) return
-  if (TIERS[event.tier].track !== 'wta') return
+  if (!tierMakesWorldNews(event.tier)) return
   if (world.entries.includes(event.id)) return
   const championId = Object.entries(result.finishes).find(([, f]) => f === 0)?.[0]
   if (!championId) return
@@ -2542,6 +2670,10 @@ export function createWorld(
     // the career are one object — the worker resumes from this pair and its draws advance it.
     rngMain: initMainState(seed),
     fundsCents,
+    // v54: her own account opens empty and stays empty until the first cheque after her eighteenth –
+    // `kidPrizeShareBps` returns 0 for every week of the junior story, so this is not a placeholder,
+    // it is the true balance for the first four seasons of every career.
+    kidFundsCents: 0,
     profile,
     plan: { ...WEEK_PLAN_PRESETS.balanced },
     cohort,
@@ -3577,6 +3709,18 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // promised a tournament. Note this fires INDEPENDENTLY of 'injury': the walkover usually lands
     // a week or more AFTER the onset, when the injury is no longer fresh and nothing else stops.
     if (world.walkoverWeek === world.week) stops.add('walkover')
+    // ⭐⭐ ROUND 23 #16 – THE ACADEMY'S VERDICT, and the reason it needed a stop is arithmetic rather
+    // than luck. The owner: «Что-то я не увидел когда академия появилась, покрывающая расходы на
+    // поездки». It fired correctly and it is still in his ledger 205 weeks later – but
+    // `reviewAcademy` speaks at `week % 52 === 0`, this loop hard-stops at `% 52 === 49`, and the
+    // shell's step is FOUR. 49 + 4 = 53, so the verdict week is the one week of the season a player
+    // stepping by four can never land on, and `WeekRecapCard` renders only the current week. Measured
+    // across seven careers: the landings round the boundary are `…, 49, 53, 57, …` in every one.
+    //
+    // ⚠ A SCHOLARSHIP IS NOT A COST, so it sits below the medical trio and the walkover – it can wait
+    // a click, which is exactly what a stop is for. What it may not do is pass in silence, which is
+    // the same complaint R12-15's walkover answered.
+    if (academySpokeThisWeek(world)) stops.add('academy')
     if (world.fundsCents < 0) stops.add('funds')
     // W2-ENDINGS. The three that the week may have just produced. `'ending'` is collected rather
     // than returned early so a week that is BOTH an ending and something else (the classic: the
@@ -3622,25 +3766,59 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
  *
  *  ⚠ THE LOOP BREAKS ON A FRESH ENDING. A career-ending injury can land at college – she is playing
  *  a lot of tennis – and when it does she never comes back, which is a true story rather than an
- *  edge case to be defended against. */
-export function resumeFromCollege(world: WorldState, rng: Rng): void {
+ *  edge case to be defended against.
+ *
+ *  ⭐⭐⭐ AND IT NOW REPORTS THE WEEK THAT IS NOT HERS – the college wave, the owner's item 3:
+ *  «в каждом году минимум одни соревнования, которые можно смотреть так же, как и наши текущие».
+ *
+ *  ⚠⚠ THE HAZARD THIS ANSWERS IS ROUND 23 #16's, ARRIVING FROM THE OTHER SIDE. That item was an
+ *  academy verdict firing on the one week a `+4` advance could never land on; this is a national-team
+ *  week firing inside a loop that spends FIFTY-TWO weeks with nobody watching. Now that the rubbers
+ *  are really played (`world/college.ts`), a year that produced three matches and reported one
+ *  sentence would be the same silence with better tennis behind it.
+ *
+ *  ⚠ IT COLLECTS, IT DOES NOT HALT – and that is the owner's own ruling rather than a shortcut. He
+ *  designed college as the SHORTCUT: «1-2 национальных выезда в год и перелистывание 1 года за клик»,
+ *  and «родители не будут посещать все игры в колледже» is why `COLLEGE_TRIP_WEEKS` shrank a
+ *  thirteen-week season to two trips. A year that stopped in the middle and demanded a second click
+ *  to finish itself would be the playable season the fork exists to skip. So the year is still ONE
+ *  click, and what changes is that the click hands back the reason – `mutate` puts it on the
+ *  snapshot exactly as it does for an advance, the epilogue's year card offers the rubbers to
+ *  replay, and the toast says the week happened. `stops` is a Set filtered through STOP_PRECEDENCE
+ *  for the identical reason `advanceWeeks` does it: one call can be several things at once (the
+ *  classic here: a call-up in April and the ending re-latched in December), and the caller decides
+ *  the order to show them in. */
+export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   const college = world.college
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
   if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
   const start = openCollegeYear(world)
   const yearEnds = Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR)
   world.ending = null
-  while (world.week < yearEnds && world.ending === null) tickWeek(world, rng)
+  const stops = new Set<StopReason>()
+  while (world.week < yearEnds && world.ending === null) {
+    tickWeek(world, rng)
+    // ⚠ ASKED AFTER THE TICK AND OF THE WORLD, never threaded back through `tickWeek` – the whole
+    // point of `callUpPlayedThisWeek` being a predicate. One `stops.add`, exactly like the academy's.
+    if (callUpPlayedThisWeek(world)) stops.add('call-up')
+  }
   // ⚠ A YEAR CUT SHORT BY AN ENDING IS STILL BANKED. The album's last page is allowed to say what
   // she was doing when it happened, and a row that stops mid-year is the honest record of that.
   bankCollegeYear(world, start)
   if (world.ending !== null) {
     college.doneWeek = world.week
-    return
+    // ⚠ 'ending' JOINS THE SET RATHER THAN REPLACING IT, which is R11-1's rule kept on a second
+    // caller: the year she got hurt out of the game may ALSO be the year her country called, and a
+    // return that reported one of them would be the lost-injury-popup bug wearing college colours.
+    stops.add('ending')
+    return STOP_PRECEDENCE.filter((r) => stops.has(r))
   }
   if (world.week >= college.untilWeek) {
     finishCollege(world)
-    return
+    // ⚠ NO 'ending' HERE, AND THE ASYMMETRY IS THE FACT. `finishCollege` takes the latch OFF for
+    // good – she has graduated and the tab shell comes back – so the toast this returns is the one
+    // the player can actually read, on the one call of the four where nothing covers the screen.
+    return STOP_PRECEDENCE.filter((r) => stops.has(r))
   }
   // ⭐ THE LATCH GOES BACK ON, and this is the whole of "one year at a time". The screen that asks
   // «another year?» is the epilogue screen, so the epilogue has to still be there to ask it – and
@@ -3652,6 +3830,8 @@ export function resumeFromCollege(world: WorldState, rng: Rng): void {
     detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
     resumesWeek: Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR),
   })
+  stops.add('ending')
+  return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
 /** ⭐ THE EARLY RETURN – «I am going back on tour now», answered at a year boundary.

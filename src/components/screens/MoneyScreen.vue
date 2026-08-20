@@ -537,6 +537,35 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
 // Up is a purchase charged the moment it is confirmed; down costs nothing and only changes what the
 // family buys next time the cadence comes round. So the confirm is on the irreversible half alone -
 // the discipline `signOffer` established, applied to a much smaller decision.
+//
+// ⭐⭐ ROUND-23 #17 – AND THE PRICE ON THE BUTTON IS A QUOTE, WHICH IS NOW SAID OUT LOUD. The owner,
+// 19.08: «Перед ценами на карточках Bills написать "Around", тогда точно не будет вопросов "почему
+// ракетка стоит 920, а мы заплатили 1070?"»
+//
+// HIS TWO NUMBERS RECONCILE EXACTLY, and that is what makes this a copy fix rather than a bug.
+// `kitLinePriceCents` quotes the MID of the family's band times the rung factor: middle family,
+// `pro` frame = mid($180-280) x 4 = $920.00, which is the figure on his card to the cent. The
+// RECURRING bill is a different arithmetic on the same band - `gearHitsUpTo` draws a fresh
+// `pickInt($180, $280)` per replacement and world.ts multiplies it by the same rung factor - so
+// $1,070 is a $267.50 draw, comfortably inside the band. His own ledger shows the same swing on the
+// line that replaces fastest: four restrings at $127.40 / $136.72 / $160.20 / $156.84 against a card
+// that says $146.00.
+//
+// ⚠ THE ONE THING THIS WORD MUST NOT BE READ AS. Buying UP a rung from this button charges
+// `kitLinePriceCents` to the cent (`setKitGrade`), so the confirm dialog names an exact price and
+// takes exactly that. "Around $920" is true of $920; what it qualifies is the LIFE of the rung -
+// the note above the ladder already says the price is "billed every time the family replaces it,
+// not once", and it is those replacements that come out anywhere in the band.
+//
+// ⚠ AND IT GOES ON NOTHING ELSE ON THIS TAB. The owner's warning is a real trap: a qualifier on an
+// exact figure is a new lie in place of an old confusion. The audit, row by row:
+//   * kit rung prices          – A QUOTE. The word goes here. (Above.)
+//   * "Started this career with $8,000"   – a constant that never moves. Committed, historical.
+//   * kit deal "$2,463.78 of $3,000 used" / "Allowance left this season" – a contract figure and a
+//     real ledger total. Both exact, both already spent or already promised on paper.
+//   * academy "Travel they have paid"     – the engine's own running total of money already paid.
+//   * physio "$45-70/wk" / the rehab rate – `weeklyBand` prints the TRUE bounds of the corridor, so
+//     the figure is already an interval. "Around $45-70/wk" would qualify a range with a range.
 const kitLines = computed(() => game.snapshot?.kit ?? [])
 const LINE_TITLE: Record<string, string> = { strings: 'Strings', frame: 'Racket', shoes: 'Shoes' }
 
@@ -961,7 +990,8 @@ const TAB_OPTIONS = [
              the model refuses to give. What it says now is the true and more interesting sentence. -->
         <p class="money-panel-note">
           New kit plays the same whatever it cost – what a better rung buys is TIME before it goes
-          off, and it is billed every time the family replaces it, not once.
+          off, and it is billed every time the family replaces it, not once. The shop's price moves a
+          little between replacements, so the figures below are what a rung costs about.
         </p>
         <!-- ⚠ THE SPONSOR'S RUNNING BALANCE, AND IT IS THE POINT OF THIS BLOCK. The allowance is a
              pot for the season, not a discount rate: once it is spent the same kit is billed to the
@@ -1026,11 +1056,28 @@ const TAB_OPTIONS = [
                   ({{ view.goodWeeksLeft }} left)
                 </span>
               </span>
+              <!-- ⭐ ROUND-23 #17 – "Around" IN FRONT OF EVERY RUNG PRICE. The owner asked for the
+                   word so that "why does the racquet say 920 when we paid 1070?" cannot be asked
+                   again. It goes HERE and on no other Bills figure, and the audit that decided that
+                   is on the script side at `kitLines` – every other number on this tab is money
+                   already committed, or a band that is already printed as a range.
+
+                   ⚠ ONE PREFIX FOR THE WHOLE SPAN, INCLUDING THE COVERED ARM. The sticker is the
+                   quote in both arms and the family's share is derived from it, so "free" is a
+                   quote too. "Around free" is not English, so the word leads the span once and
+                   governs everything after it. -->
               <span v-if="rung.payableCents < rung.priceCents" class="kit-rung-price is-covered">
+                <!-- ⚠ THE SPACE IS EXPLICIT. Vue's `condense` drops a whitespace-only text node
+                     that spans a newline, so a bare line break here renders "Around$920" – the CSS
+                     margin would still open a gap on screen, but the accessible name and every
+                     copy-paste of this button would have the two words fused. -->
+                <span class="kit-rung-approx">Around</span>{{ ' ' }}
                 <s>{{ formatCents(rung.priceCents) }}</s>
                 {{ rung.payableCents === 0 ? 'free' : formatCents(rung.payableCents) }}
               </span>
-              <span v-else class="kit-rung-price">{{ formatCents(rung.priceCents) }}</span>
+              <span v-else class="kit-rung-price">
+                <span class="kit-rung-approx">Around</span> {{ formatCents(rung.priceCents) }}
+              </span>
             </button>
           </div>
           <!-- ⚠ THE SECOND HALF OF THE SAME FIX. "They pay for what she buys until the allowance
@@ -1607,8 +1654,25 @@ const TAB_OPTIONS = [
 
 /* A line the brand is paying for: the sticker is struck through and what the family actually hands
    over sits beside it, in the money-in colour the ledger already uses for somebody else's money. */
+/* ROUND-23 #17: the qualifier is quieter than the number it qualifies - the parent is deciding with
+   the price, and a word set at the same weight would read as part of the figure. It sits inline so
+   the two-column grid at 375px can break the line between the word and the money rather than
+   widening the button. */
+.kit-rung-approx {
+  font-weight: 500;
+  color: var(--ink-soft);
+  opacity: 0.8;
+}
+
 .kit-rung-price.is-covered {
   color: var(--money-in);
+}
+
+/* ...and inside the covered arm it must not take the money-in colour: it qualifies the STICKER, and
+   the green is reserved for the half somebody else is paying. */
+.kit-rung-price.is-covered .kit-rung-approx {
+  color: var(--ink-soft);
+  margin-right: 4px;
 }
 .kit-rung-price.is-covered s {
   color: var(--ink-soft);

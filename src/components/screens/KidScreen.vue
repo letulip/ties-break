@@ -14,7 +14,8 @@
 //   Personality   snapshot.life.personality   her play style, read as a girl (engine/kidLife.ts)
 //   Confidence    snapshot.condition          the ring Home draws, on the same continuous hue
 //   Mood          diary.facts.emotion         as a word and as her own face
-//   School        snapshot.life.school        her grade, from her age and her birth month
+//   School        snapshot.life.school        her LIFE STAGE - a grade while there is one, then the
+//                 + .schoolLabel              after-school ladder and the college years (round 23 #6)
 //   Friends       snapshot.life.friends       who she is closest to, and how that is going
 //   Coach         coachMarket's current row   - and the door to screen T
 //
@@ -413,8 +414,19 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
           <p class="kid-tile-lead">{{ moodLabel }}</p>
         </Card>
 
+        <!-- ⭐⭐ ROUND-23 #6 – THE CELL THAT USED TO STOP AT EIGHTEEN.
+             The owner asked what could be shown instead of "School finished" on her personal page,
+             and whether it could keep changing as she grows up. His words are quoted in full in
+             tests/round23-kid-life.test.ts - this file may not carry them, because
+             tests/template-copy-rules.test.ts bans Cyrillic inside a template, comments included.
+             The tile now walks a ladder past the last grade (the year she left, tennis full-time,
+             grown up) and the college years take it over - see engine/kidLife.ts `afterSchoolTile`.
+             ⚠ THE HEADING IS BOUND, NOT WRITTEN. It is "School", then "College", then "After
+             school", and it comes from the engine for this screen's own standing rule: screen C
+             derives no fact of its own. A cell hard-coded "School" above "Year 2 of 4" would be the
+             frozen tense the tile itself just lost, one line higher up. -->
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">School</p>
+          <p class="kid-tile-label">{{ life?.schoolLabel ?? 'School' }}</p>
           <p class="kid-tile-line">{{ life?.school.lead }}</p>
           <p class="kid-tile-line kid-tile-line-soft">{{ life?.school.note }}</p>
         </Card>
@@ -452,7 +464,34 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            this is a sentence. It sits directly below the School tile, which is the first cell of the
            second row. Engine-composed (`kidLife.schoolCutOffNote`), empty for the eight birth months
            it would be false of and once she is out of school. -->
-      <p v-if="life?.schoolWhy" class="hint kid-grid-note">School – {{ life.schoolWhy }}</p>
+      <p v-if="life?.schoolWhy" class="hint kid-grid-note kid-note-school">School – {{ life.schoolWhy }}</p>
+
+      <!-- ⭐⭐ ROUND-23 #6b – THE COLLEGE SENTENCE, and it names the campus.
+           He asked for something to say about college AND about finishing it - if she went and if
+           she finished - and chose the shape that runs for the whole course and then reports it:
+           "Studying at ..., year 2 of 4", plus a line once she is out. His words are in
+           tests/round23-kid-life.test.ts, for the Cyrillic reason above. THREE states behind it,
+           not two - she may also leave before the fourth year, which `endCollegeEarly` makes a real
+           answer at every boundary.
+           ⚠ HERE RATHER THAN IN THE CELL for the same reason the September note is: every college
+           place is longer than the 16-character `nowrap` tile line. The tile carries the year, this
+           carries the place. Engine-composed (`kidLife.collegeNote`), empty for a career that never
+           took a place - and it can never collide with the note above it, which is silent from the
+           moment she is out of school. -->
+      <p v-if="life?.collegeNote" class="hint kid-grid-note kid-note-college">College – {{ life.collegeNote }}</p>
+
+      <!-- ⭐⭐ ROUND-23 #18 – HER OWN ACCOUNT, on the page that is about her.
+           He asked that once she has her own bank account at eighteen, some share of her prize
+           money start being transferred to her - starting around 10-20% and growing year by year -
+           and then widened the ceiling himself to 40 or 50, "it is her career after all". His words
+           are in tests/round23-kid-share.test.ts, for the Cyrillic reason above. Built as a ramp in
+           `ECONOMY.kidShare` (10% at 18, five points a birthday, half from 26) and paid at the
+           moment the cheque is written, in `finalizeTournament`. This is the ONLY surface that
+           tells a player the rule exists, so it carries the balance and the rule together.
+           ⚠ ENGINE-COMPOSED, figures included (`kidLife.ownAccountNote`): the percentage is read
+           back out of the same function the till divides by, so this line cannot promise a share
+           the engine is not transferring. Empty before her eighteenth. -->
+      <p v-if="life?.ownAccount" class="hint kid-grid-note kid-note-account">{{ life.ownAccount }}</p>
 
       <!-- ========================== 3. THE SKILLS RADAR ==========================
            decisions.md #11, finally built. No numbers anywhere on it, ever. -->

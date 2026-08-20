@@ -23,7 +23,7 @@ import { assertPlannable } from '../src/engine/world/planner'
 import { migrateSave } from '../src/engine/migrations'
 import { summerLoadFactor, summerConditionCost, summerBlockWeek } from '../src/engine/world/summer'
 import { markSchoolEnd } from '../src/engine/world/milestones'
-import { schoolTile } from '../src/engine/kidLife'
+import { lifeStageTile } from '../src/engine/kidLife'
 import { kidAgeExact, kidAgeYears } from '../src/engine/world/age'
 import { ECONOMY } from '../src/engine/economy'
 import { planFromWeek } from '../src/engine/plan'
@@ -104,7 +104,7 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
       const end = schoolEndWeek(bm)
       for (const week of [end - 1, end]) {
         const seasonIndex = Math.floor(week / WEEKS_PER_YEAR)
-        const tile = schoolTile({
+        const tile = lifeStageTile({
           seed: 's',
           week,
           ageYears: 14 + seasonIndex,
@@ -115,8 +115,12 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
           weeksAway: 0,
           lossStreak: 0,
           weeksSinceTitle: null,
+          college: null,
+          kidFundsCents: 0,
         })
-        const done = tile.lead === 'School finished'
+        // ⭐ ROUND-23 #6: "School finished" is gone – past the last grade the tile hands over to the
+        // after-school ladder, so "is she out" is "the tile is no longer printing a grade".
+        const done = !/ grade$/.test(tile.lead)
         expect(done, `month ${bm} week ${week}: tile and predicate disagree`).toBe(schoolIsOver(week, bm))
       }
     }
@@ -499,7 +503,7 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
       for (let season = 0; season < 8; season++) {
         for (let offset = lo; offset <= hi; offset++) {
           const week = season * WEEKS_PER_YEAR + offset
-          const tile = schoolTile({
+          const tile = lifeStageTile({
             seed: 'exam-line',
             week,
             ageYears: Math.floor(kidAgeExact(week, bm, 1)),
@@ -510,10 +514,13 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
             weeksAway: 0,
             lossStreak: 0,
             weeksSinceTitle: null,
+            college: null,
+            kidFundsCents: 0,
           })
-          // Past her leaving week the tile is "School finished" and no exam line may survive on it.
+          // Past her leaving week the tile has left the classroom (round 23 #6 – no grade, and the
+          // after-school ladder instead) and no exam line may survive on it.
           if (schoolIsOver(week, bm)) {
-            expect(tile.lead, `bm ${bm} week ${week}`).toBe('School finished')
+            expect(tile.lead, `bm ${bm} week ${week}`).not.toMatch(/ grade$/)
             expect(tile.note, `bm ${bm} week ${week}`).not.toBe('Exams this week')
           } else {
             expect(tile.note, `bm ${bm} week ${week}`).toBe('Exams this week')

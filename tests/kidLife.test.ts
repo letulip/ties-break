@@ -25,7 +25,7 @@ import {
   friendNameAt,
   gradeOf,
   schoolYearIndex,
-  schoolTile,
+  lifeStageTile,
   friendsTile,
   PERSONALITY,
   SCHOOL_CUTOFF_MONTH,
@@ -68,6 +68,10 @@ function view(over: Partial<KidLifeWorldView> = {}): KidLifeWorldView {
     weeksAway: 0,
     lossStreak: 0,
     weeksSinceTitle: null,
+    // ⭐ ROUND-23: a career that never took a college place and an account that is still empty –
+    // the defaults every pre-#6/#18 case in this file was written against.
+    college: null,
+    kidFundsCents: 0,
     ...over,
   }
 }
@@ -107,15 +111,15 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
   })
 
   it('the tile reads as a school year, not a number', () => {
-    expect(schoolTile(view({ birthMonth: 3 })).lead).toBe('8th grade')
-    expect(schoolTile(view({ week: 34, birthMonth: 3 })).lead).toBe('9th grade')
+    expect(lifeStageTile(view({ birthMonth: 3 })).lead).toBe('8th grade')
+    expect(lifeStageTile(view({ week: 34, birthMonth: 3 })).lead).toBe('9th grade')
   })
 
   it('the grade turns over in September, not in January with her tennis age', () => {
     const grades = [0, 33, 34, 51, 52, 85, 86].map((week) => ({
       week,
       age: view({ week }).ageYears,
-      grade: schoolTile(view({ week, birthMonth: 3 })).lead,
+      grade: lifeStageTile(view({ week, birthMonth: 3 })).lead,
     }))
     expect(grades).toEqual([
       { week: 0, age: 14, grade: '8th grade' },
@@ -137,19 +141,24 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
     expect(gradeOf(2017, 3, 2034)).toBe(ECONOMY.school.lastGrade)
     expect(gradeOf(2017, 3, 2035)).toBeNull()
     // Which lands in the autumn of the season she turns 18 – her last first-day-of-term.
-    const lastTerm = schoolTile(view({ week: 52 * 3 + SCHOOL_YEAR_TURNS_AT, birthMonth: 3 }))
+    const lastTerm = lifeStageTile(view({ week: 52 * 3 + SCHOOL_YEAR_TURNS_AT, birthMonth: 3 }))
     expect(lastTerm.lead).toBe('12th grade')
-    const done = schoolTile(view({ week: 52 * 4 + SCHOOL_YEAR_TURNS_AT, birthMonth: 3 }))
+    // ⭐ ROUND-23 #6: "School finished / No more bells" was the terminal pair here, and it is gone –
+    // the tile hands over to the after-school ladder instead. The FIRST rung of it is the year she
+    // left, which is what this week is.
+    const done = lifeStageTile(view({ week: 52 * 4 + SCHOOL_YEAR_TURNS_AT, birthMonth: 3 }))
     expect(view({ week: 52 * 4 + SCHOOL_YEAR_TURNS_AT }).ageYears).toBe(18)
-    expect(done.lead).toBe('School finished')
-    expect(done.note).toBe('No more bells')
+    expect(done.lead).toBe('The last bell')
+    expect(done.note).toBe(`${ECONOMY.school.lastGrade} years done`)
   })
 
-  it('every month of every season of a career produces a real grade or a real ending', () => {
+  it('every month of every season of a career produces a real grade or a real life stage', () => {
     for (let birthMonth = 1; birthMonth <= 12; birthMonth++) {
       for (let week = 0; week < 52 * 6; week += 7) {
-        const tile = schoolTile(view({ week, birthMonth }))
-        expect(tile.lead, `m${birthMonth} w${week}`).toMatch(/^(\d+(st|nd|rd|th) grade|School finished)$/)
+        const tile = lifeStageTile(view({ week, birthMonth }))
+        expect(tile.lead, `m${birthMonth} w${week}`).toMatch(
+          /^(\d+(st|nd|rd|th) grade|The last bell|Tennis full-time|Grown up)$/,
+        )
         expect(tile.note.length, `m${birthMonth} w${week}`).toBeGreaterThan(0)
       }
     }
@@ -160,12 +169,12 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
     // ⚠ `false` – SHE IS AT SCHOOL (W4-SCHOOL). `isExamWeek` takes the answer now, because it used
     // to be a pure function of the week and a twenty-two-year-old still sat papers.
     const examWeek = [...Array(52).keys()].find((w) => isExamWeek(w, false))!
-    expect(schoolTile(view({ week: examWeek, birthMonth: 3 })).note).toBe('Exams this week')
-    expect(schoolTile(view({ week: examWeek + 6, birthMonth: 3 })).note).not.toBe('Exams this week')
+    expect(lifeStageTile(view({ week: examWeek, birthMonth: 3 })).note).toBe('Exams this week')
+    expect(lifeStageTile(view({ week: examWeek + 6, birthMonth: 3 })).note).not.toBe('Exams this week')
   })
 
   it('the class standing is monotone in age and never reads as a mark', () => {
-    const notes = [9, 12, 3, 6].map((m) => schoolTile(view({ birthMonth: m })).note)
+    const notes = [9, 12, 3, 6].map((m) => lifeStageTile(view({ birthMonth: m })).note)
     expect(notes).toEqual(['Oldest in class', 'Older than most', 'Young in class', 'Youngest of all'])
   })
 
@@ -190,7 +199,7 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
   it('a pre-career week is NEGATIVE, and the tile answers on her real cohort', () => {
     const preCareer = [9, 10, 11, 12, 13].map((age) => {
       const v = view({ week: (age - 14) * 52 })
-      return { age: v.ageYears, grade: schoolTile(v).lead }
+      return { age: v.ageYears, grade: lifeStageTile(v).lead }
     })
     expect(preCareer).toEqual([
       { age: 9, grade: '3rd grade' },
@@ -200,11 +209,11 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
       { age: 13, grade: '7th grade' },
     ])
     // ...against the ONE number a week clamped to 0 prints at every one of those ages.
-    expect(schoolTile(view({ week: 0 })).lead).toBe('8th grade')
+    expect(lifeStageTile(view({ week: 0 })).lead).toBe('8th grade')
     // And the 1 September still turns the year over inside a pre-career season: week -226 is the
     // `SCHOOL_YEAR_TURNS_AT` of the season she turns ten, which a clamp would flatten away.
-    expect(schoolTile(view({ week: -227 })).lead).toBe('3rd grade')
-    expect(schoolTile(view({ week: -226 })).lead).toBe('4th grade')
+    expect(lifeStageTile(view({ week: -227 })).lead).toBe('3rd grade')
+    expect(lifeStageTile(view({ week: -226 })).lead).toBe('4th grade')
   })
 })
 

@@ -1727,6 +1727,15 @@ function closeExhibition(): void {
       <template #exit>
         <IconButton icon="close" label="Close the friendly" title="Close" @click="closeExhibition" />
       </template>
+      <!-- ⭐ ROUND-23 #4: `preview-event` is bound to a LITERAL null here, and the literal is the
+           point. Round 23 found that a re-watched tournament match narrated as a Sunday-morning local
+           draw because `MatchReplay` never passed this prop, and nothing caught it for two rounds -
+           the prop defaults to null and null is genuinely right for two of the four match surfaces,
+           so "I meant it" and "I forgot" rendered identically. The other three surfaces now DERIVE
+           the answer from the stored match (`occasionOf`); this one has no stored match to derive
+           from - the friendly is generated at click time and written nowhere - so it says so out
+           loud instead of staying silent. There is no draw behind a hit-out: that is the truth, and
+           it is the same truth the "No points, no money" pill above states. -->
       <MatchViewer
         :match="exhibitionMatch"
         :player-a="exhibitionPlayerA"
@@ -1734,6 +1743,7 @@ function closeExhibition(): void {
         :surface="exhibitionSurface"
         :rank-a="kidRank"
         :rank-b="null"
+        :preview-event="null"
         mode="live"
       />
     </TakeoverShell>

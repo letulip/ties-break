@@ -290,6 +290,23 @@ export type StopReason =
   | 'season-end'
   | 'injury'
   | 'medical'
+  /** ROUND 23 #16: the academy's season verdict – it took her on, changed her share, or ended it.
+   *  Good news rather than a cost, so it sits low in the precedence below; but it landed on the one
+   *  week a player stepping by four can never see, and passed in silence for a whole career. */
+  | 'academy'
+  /** ⭐⭐ THE COLLEGE WAVE: her country played, and since this wave the rubbers are REAL MATCHES.
+   *
+   *  ⚠⚠ IT EXISTS FOR THE SAME REASON 'academy' DOES, ONE TURN OF THE SCREW WORSE. The academy's
+   *  verdict landed on the one week a `+4` could never reach; a college call-up lands inside
+   *  `resumeFromCollege`, which spends **a whole year in one call with no player in it at all**. The
+   *  owner asked for a competition he can WATCH («которые можно смотреть так же, как и наши
+   *  текущие»), and a match played inside a 52-week loop that reports nothing is a match nobody can
+   *  watch however well it is simulated. This is the channel that carries the week back out.
+   *
+   *  ⚠ IT IS THE ONE MEMBER NO `advanceWeeks` EVER SETS. `resumeFromCollege` is the only producer –
+   *  the call-up fires only inside the freeze and the freeze is only ever spent by that command –
+   *  and `mutate` puts the returned reasons on the snapshot exactly as it does for an advance. */
+  | 'call-up'
   /** R12-15: an entered tournament came round while she was still inside her layoff, so the week
    *  resolved as a WALKOVER – 0 points, and the entry fee forfeited (the list had closed with her on
    *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
@@ -351,6 +368,17 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // she gets hurt) both fire – the injury dialog leads, the walkover toast rides above it – because
   // they are two different facts and R11-1's whole point is that a week may be several things.
   'walkover',
+  // ROUND 23 #16: BELOW the three that cost her something and above the ordinary week – a
+  // scholarship arriving is news she should not miss, and never an emergency.
+  'academy',
+  // ⭐⭐ THE COLLEGE CALL-UP, immediately below the academy and above everything dismissable, for
+  // the same reason and with one sharpening: it is the only member of this list that can arrive
+  // ALONGSIDE 'ending' every single time it fires, because `resumeFromCollege` re-latches the
+  // epilogue on the very call that produces it. 'ending' carries no toast copy (its surface IS the
+  // screen), so the toast falls through to this line – which is precisely the ordering R11-1 exists
+  // to decide. It costs her nothing by the time it fires, so it sits under the academy's news and
+  // far under the three that cost money.
+  'call-up',
   // W4: fourth, above everything that can wait a click, for a stronger reason than the three
   // medical beats have – the advance CANNOT continue until it is answered (`advanceWeeks` returns
   // early on an undecided knock). A stop nobody surfaces would strand the career, so it has to
@@ -2420,9 +2448,21 @@ export interface KidLifeTile {
 export interface KidLife {
   /** her play style, read as a person and never as tennis. Fixed for the career. */
   personality: KidLifeTile
-  /** her grade, on a 1-September school year, plus her place in the class by age. Moves once a
-   *  year, and says "Exams this week" while the calendar is holding an exam blackout. */
+  /** ⭐⭐ ROUND-23 #6 – HER LIFE STAGE, and it keeps moving after the last bell.
+   *
+   *  At school: her grade, on a 1-September school year, plus her place in the class by age. Moves
+   *  once a year, and says "Exams this week" while the calendar is holding an exam blackout.
+   *
+   *  ⚠ IT USED TO SAY "School finished" FOR THE REMAINING TWENTY SEASONS. The owner: «Что можем
+   *  вместо school finished на личной странице написать? Может быть разное что-то там можно
+   *  отображать в течение взросления?» So past the last grade it walks a ladder – the year she left,
+   *  the years tennis is the whole week, and the grown woman from 22 – and the college years take it
+   *  over when she is on a scholarship (`engine/kidLife.ts afterSchoolTile`). */
   school: KidLifeTile
+  /** ⭐ ROUND-23 #6 – WHAT THE CELL IS CALLED, which is a fact about her life and not a caption:
+   *  "School", then "College", then "After school". A grid cell still headed School above "Year 2 of
+   *  4" would be the same frozen tense the tile itself just lost. */
+  schoolLabel: string
   /** ⭐ ROUND-21 #6 – WHY SHE IS STILL AT SCHOOL WHEN HER TENNIS YEAR HAS LEFT, or '' when there is
    *  nothing to explain.
    *
@@ -2435,6 +2475,25 @@ export interface KidLife {
    *  her own age group has already left. He ruled the cut-off STAYS; what was missing is that nothing
    *  on screen said so, and unexplained correct behaviour reads exactly like a bug. */
   schoolWhy: string
+  /** ⭐⭐ ROUND-23 #6b – THE COLLEGE SENTENCE, or '' for a career that never took the place.
+   *
+   *  The owner asked for something to say «про колледж и его окончание (если пошла и закончила
+   *  конечно)» and picked the shape that names the campus: one line for the whole course, another
+   *  once it is over. There are THREE states behind it and not two – `resumeFromCollege` spends the
+   *  four years one at a time and `endCollegeEarly` is a real answer at each boundary – so a course
+   *  that stopped short says so rather than borrowing the graduate's line.
+   *
+   *  ⚠ A SENTENCE, FOR `schoolWhy`'S REASON: every college place is longer than the 16-character
+   *  `nowrap` cell, so the tile carries the year and this carries the place. The two notes are
+   *  mutually exclusive by construction (one speaks only at school, the other only once she is out). */
+  collegeNote: string
+  /** ⭐⭐ ROUND-23 #18 – HER OWN BANK BALANCE and the share that fills it, or '' before eighteen.
+   *
+   *  The only surface that tells a player the ramp exists: what the account holds, what she keeps of
+   *  every cheque today, and where that stops. Every figure is read from `ECONOMY.kidShare` through
+   *  `kidPrizeShareBps` – the same function the till divides by – so it cannot promise a percentage
+   *  the engine is not transferring. */
+  ownAccount: string
   /** who she is closest to this school year, and how that is going this week. Deterministic
    *  (purpose-scoped sub-streams, never Math.random), and it moves with both clocks. */
   friends: KidLifeTile
@@ -2902,6 +2961,20 @@ export interface CollegeProgressView {
    *  field, no migration. `null` on a career that entered college before the choice existed, and the
    *  screen says nothing rather than naming a place it was never told. */
   tier: CollegeTier | null
+  /** ⭐⭐ THE RUBBERS OF `last`'s CALL-UP WEEK, WATCHABLE – the college wave, the owner's item 3.
+   *
+   *  ⚠ THE RECORDS THEMSELVES, because that is what watching one takes: `MatchReplay` re-runs
+   *  `simulateMatch(a, b, {surface, tour, seed})` under the stored seed and reproduces the match
+   *  point for point. A list of scorelines would be a report about a match; this is the match.
+   *
+   *  ⚠ A WIRE FIELD AND NOT A SAVE FIELD, on exactly `billPerYearCents`' argument two doors up. The
+   *  rows live in `world.events` like every other match in the game and are read out at snapshot
+   *  time by `callUpRubbersOf`, so this adds no `SAVE_SCHEMA_VERSION` bump, no migration and no
+   *  golden fixture.
+   *
+   *  EMPTY in a year nobody wrote to her, and empty on the year she was named and never took the
+   *  court – which is a real outcome, not a missing one, and the copy beside it says so. */
+  rubbers: WorldMatch[]
 }
 
 export interface Snapshot {
@@ -3310,11 +3383,17 @@ export interface Snapshot {
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
    *  Stats. Empty until the first wrap-up. */
   seasonHistory: SeasonHistoryEntry[]
-  /** EVERY reason an `advance` stopped early, in STOP_PRECEDENCE order; absent when the advance ran
+  /** EVERY reason the WEEK-SPENDING command reported, in STOP_PRECEDENCE order; absent when it ran
    *  its full course. R11-1: this replaced a single `stopReason`, which could only ever report one
    *  of the week's true reasons and silently dropped the rest (a fresh injury on the wrap-up week
    *  came back as 'season-end' alone). The UI dispatches off the SET, so an injury and the season
-   *  wrap-up are both reachable from one advance. */
+   *  wrap-up are both reachable from one advance.
+   *
+   *  ⚠ TWO PRODUCERS SINCE THE COLLEGE WAVE, and the noun above changed for it: `advanceWeeks`, and
+   *  `resumeFromCollege`, which spends a college YEAR in one command and has to report the
+   *  national-team week played inside it ('call-up'). No consumer changes – both hand the same array
+   *  through the same `mutate` – but "an advance" was the wrong word for the field as soon as there
+   *  was a second one, and a wrong word here is quoted back as a rule three comments away. */
   stopReasons?: StopReason[]
   /** present while a tournament reveal is in progress (drives TournamentFlow) */
   pending?: PendingView

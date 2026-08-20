@@ -609,10 +609,15 @@ function dismissRecovered(): void {
   game.$patch({ recovered: false })
 }
 
-// Package N: `stopReasons` lives ON the snapshot (only `advance` ever sets them –
-// `tick`/enterEvent/etc. never do), not as an independent store flag, so a local
+// Package N: `stopReasons` lives ON the snapshot, not as an independent store flag, so a local
 // dismiss flag is reset whenever a fresh snapshot arrives (any action) and set
 // when the user dismisses the toast by hand.
+// ⚠ "ONLY `advance` EVER SETS THEM" WAS TRUE UNTIL THE COLLEGE WAVE and is not any more:
+// `resumeFromCollege` returns reasons too, because it spends a whole college YEAR in one mutate and
+// the national-team week played inside it has no other way out. `tick`/enterEvent/etc. still never
+// do. Nothing below changes – the two producers hand back the same `StopReason[]` through the same
+// `mutate` – but the sentence is load-bearing in three comments in this file, so it is corrected
+// here rather than left to be quoted back as evidence.
 const stopToastDismissed = ref(false)
 // Round-7 item 4: the season-end stop is owned by SeasonSummaryDialog, not the toast.
 //
@@ -776,6 +781,18 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // the fee forfeited, and the only trace was one line in the news feed. The button that spent it
   // had just said "Play". Now the advance halts and says what it cost.
   walkover: 'Stopped: she was too injured to play – walkover, entry fee forfeited.',
+  // ROUND 23 #16 – the same shape as the walkover above, and found the same way: the owner did not
+  // see it happen. The academy's verdict fires at the season boundary, the advance hard-stops three
+  // weeks earlier, and a player stepping by four lands on 49 then 53 - never on the week it spoke.
+  // It is the one good-news stop in this table, so it says what changed rather than what it cost.
+  academy: 'Stopped: the academy has reviewed her year – check her scholarship.',
+  // ⭐⭐ THE COLLEGE WAVE – the only line in this table that a `resumeFromCollege` puts up rather
+  // than an advance. Her country played, and since this wave the rubbers are real matches with
+  // stored seeds. On the three years that re-latch the epilogue this toast sits behind it and the
+  // year card does the talking; on the year that FINISHES college the latch comes off, the tab shell
+  // is back, and this is what the player reads – so it points at the FEED, which is where the rows
+  // are on both paths, and never at a card that only exists on one of them.
+  'call-up': 'Her country called this year – her matches are in the news feed, and they can be watched.',
 }
 // R11-1: an advance reports the SET of reasons it stopped for, already in surfacing order
 // (STOP_PRECEDENCE, medical first). Every gate below asks "is my reason in the set?" instead of
@@ -809,9 +826,10 @@ function dismissStopToast(): void {
 // W4 – THE KNOCK. Gated on the SNAPSHOT FIELD, not on a stop reason, and that difference is the
 // whole reason it cannot be lost.
 //
-// Every other popup here reads `stopReasons`, which only an `advance` ever sets – fine for the eight
-// beats that REPORT something, because a beat that has already happened can wait for the next advance
-// to be re-reported. A knock is a QUESTION, and `advanceWeeks` refuses to tick a single week until it
+// Every other popup here reads `stopReasons`, which only a WEEK-SPENDING command ever sets (`advance`,
+// and since the college wave `resumeFromCollege` too – see the note on `stopToastDismissed`) – fine
+// for the beats that REPORT something, because a beat that has already happened can wait for the next
+// advance to be re-reported. A knock is a QUESTION, and `advanceWeeks` refuses to tick a single week until it
 // is answered. If this gate read the stop reason, then any action that produces a fresh snapshot
 // without stop reasons (setting the plan, entering an event, hiring a coach, a reload) would clear the
 // dialog and leave the career frozen with nothing on screen explaining why. So it reads
@@ -927,7 +945,9 @@ const showInjuryStop = computed(
 // The owner: «И по-моему за этим попапом скрылся или не показался попап с итогами сезона.»
 //
 // IT WAS NOT A RACE. `stopReasons.includes('season-end')` was the gate, and stop reasons are set by
-// the ADVANCE that produced them – every other command builds a snapshot without any. The retirement
+// the WEEK-SPENDING command that produced them – every other command builds a snapshot without any.
+// (`advance` was the only such command when this was written; `resumeFromCollege` joined it in the
+// college wave. The argument is unchanged: the reason dies with the command either way.) The retirement
 // offer is raised ON the wrap week by construction and outranks the recap in `blockingOverlay`, which
 // is correct: a question time is stopped on comes before a report. But answering it is a REAL
 // COMMAND, so the reason died with it and the summary could never be satisfied again. The injury

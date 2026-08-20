@@ -28,7 +28,11 @@ import {
   buildEndingView,
   toSnapshot,
 } from '../src/engine/world'
-import { NATIONAL_TEAM, binomial, callUpLine, rollCallUp, rubberWinChance } from '../src/engine/nationalTeam'
+import { NATIONAL_TEAM, binomial, callUpLine, callUpOpponent, rollCallUp, rubberWinChance } from '../src/engine/nationalTeam'
+import { KID_ID, callUpRubberId, callUpRubbersOf } from '../src/engine/world'
+import { simulateMatch } from '../src/engine/match/engine'
+import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { STOP_PRECEDENCE } from '../src/shared/protocol'
 import { rngFromSeed, initMainState } from '../src/engine/rng'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -39,6 +43,7 @@ import { growWeek, type KidSkills } from '../src/engine/development'
 import { coachWorksThisWeek } from '../src/engine/world'
 import { COLLEGE_TRIP_WEEKS, collegeCoachFactor, collegeMatchesThisWeek } from '../src/engine/world/college'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CollegeTier } from '../src/shared/protocol'
+import type { MatchPlayer } from '../src/engine/match/types'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 
@@ -201,12 +206,20 @@ describe('P5 – the national-team call-up', () => {
     const { world, rng } = atTheFork('p5-callup-record')
     answerFork(world, 'college')
     for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(world, rng)
+    // ⚠ RE-AIMED BY THE COLLEGE WAVE, NOT WEAKENED. The competition's label now appears on TWO kinds
+    // of row – the summary milestone this case was written about, and one `match` record per rubber
+    // she played, because the rubbers are really played since that wave. Asserting `type` over the
+    // whole filtered set therefore stopped describing anything. What the case is FOR is unchanged
+    // and is now asserted twice: `keep: true` on every row, so `pruneResults` and `pruneEvents` still
+    // cannot take the week away, plus the kind of each row named separately.
     const rows = world.events.filter((e) => e.text.includes(NATIONAL_TEAM.label))
     expect(rows.length).toBeGreaterThan(0)
-    for (const row of rows) {
-      expect(row.type).toBe('milestone')
-      expect(row.keep).toBe(true)
-    }
+    for (const row of rows) expect(row.keep, 'every row of the week survives the prune').toBe(true)
+    const summaries = rows.filter((e) => e.match === undefined)
+    const rubbers = rows.filter((e) => e.match !== undefined)
+    expect(summaries.length, 'one summary line per letter').toBeGreaterThan(0)
+    for (const row of summaries) expect(row.type).toBe('milestone')
+    for (const row of rubbers) expect(row.type).toBe('match')
   }, 90_000)
 
   it('⚠ the same seed gives the same weeks, and a REPLAY of the same week is identical', () => {
@@ -312,6 +325,224 @@ describe('P5 – the national-team call-up', () => {
       expect(label, `"${word}" must not appear in a shipped event name`).not.toContain(word)
     }
   })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ THE COLLEGE WAVE – THE COMPETITION IS PLAYED, NOT SUMMARISED (the owner's item 3, 19.08)
+// =================================================================================================
+//
+// «в каждом году минимум одни соревнования, которые можно смотреть так же, как и наши текущие, т.е.
+// тот же самый механизм в точности, кроме названий турниров.»
+//
+// The call-up, the fixture and the opponents were already here; what this block is about is that
+// `binomial(n, p, u)` no longer DECIDES the rubbers. They go through `simulateMatch` under a stored
+// seed, land in `world.events` as `match` rows with the record every other match in this game
+// carries, and can therefore be replayed in the app's own viewer. Four properties, and the third is
+// the one round 23 #16 taught:
+//
+//   1. THE RUBBERS ARE MATCHES. A record with a seed, two composed players and a scoreline, and
+//      `rubbersWon` counted off them rather than drawn.
+//   2. THE RECORD REPLAYS. `simulateMatch` is a pure function of (a, b, {surface, tour, seed}), so
+//      re-running the stored one reproduces the match – which is exactly what the viewer does.
+//   3. THE YEAR REPORTS IT. `resumeFromCollege` spends 52 weeks in ONE call with no player in it, so
+//      a played match inside it that nothing carries out is a match nobody can watch.
+//   4. IT STILL PAYS NOTHING AND COSTS NOTHING. Playing them was the ask; re-pricing the week was
+//      not, and the whole reason the call-up could ship inside the freeze is that it is free.
+
+/** Spend the whole course and hand back the first year that produced a letter. */
+function collegeYearsWithACall(seed: string): { world: WorldState; stops: string[][] } {
+  const { world, rng } = atTheFork(seed)
+  answerFork(world, 'college')
+  const stops: string[][] = []
+  for (let y = 0; y < ENDINGS.collegeYears; y++) stops.push(resumeFromCollege(world, rng))
+  return { world, stops }
+}
+
+describe('⭐⭐⭐ the college competition is played', () => {
+  it('⭐⭐ 1. the rubbers are REAL MATCHES, and the count in the record is what happened on court', () => {
+    const { world } = collegeYearsWithACall('college-rubbers-played')
+    const calls = world.college!.years.filter((y) => y.callUp !== null)
+    expect(calls.length, 'at least one letter over four years').toBeGreaterThan(0)
+    let anyPlayed = 0
+    for (const year of calls) {
+      const call = year.callUp!
+      const rubbers = callUpRubbersOf(world, call.week)
+      expect(rubbers, `week ${call.week}: one record per rubber she played`).toHaveLength(call.rubbersPlayed)
+      anyPlayed += call.rubbersPlayed
+      // ⚠ THE COUNT IS DERIVED FROM THE ROWS, which is the whole of the change. Before this wave it
+      // was `binomial(played, rubberWinChance(skillMean), u)` and no match existed to disagree with.
+      const won = rubbers.filter((m) => m.winnerId === KID_ID).length
+      expect(won, `week ${call.week}: rubbersWon is counted off the court`).toBe(call.rubbersWon)
+      for (const m of rubbers) {
+        expect(m.seed, 'a record with no seed cannot be replayed').toBeTruthy()
+        expect(m.score, 'a real scoreline, not a summary').toMatch(/\d-\d/)
+        expect(m.aId).toBe(KID_ID)
+        expect(m.a.serve, 'her side is the composed player, not a stub').toBeGreaterThan(0)
+        expect(m.b.serve, 'and so is the woman across the net').toBeGreaterThan(0)
+        expect(m.surface).toBe(NATIONAL_TEAM.surface)
+      }
+    }
+    expect(anyPlayed, 'over four years she took the court at least once').toBeGreaterThan(0)
+  }, 120_000)
+
+  it('⭐⭐ 2. the stored record REPLAYS – the same mechanism, exactly, as any other match', () => {
+    // This is the owner's «так же, как и наши текущие» as a mechanical claim: `MatchReplay` and
+    // `PracticeFlow` both re-run `simulateMatch(a, b, {surface, tour, seed})` and draw the result.
+    // If a rubber's record did not reproduce, the viewer would show a different match from the one
+    // the record says she played.
+    const { world } = collegeYearsWithACall('college-rubbers-replay')
+    const all = world.college!.years.flatMap((y) => (y.callUp ? callUpRubbersOf(world, y.callUp.week) : []))
+    expect(all.length).toBeGreaterThan(0)
+    for (const m of all) {
+      const again = simulateMatch(m.a, m.b, { surface: m.surface, tour: JUNIOR_TOUR, seed: m.seed! })
+      expect(again.sets.map((s) => `${s.a}-${s.b}`).join(' '), 'byte-for-byte, off the stored seed').toBe(m.score)
+      expect(again.winner === 0 ? KID_ID : m.bId).toBe(m.winnerId)
+    }
+  }, 120_000)
+
+  it('⭐⭐⭐ 3. THE YEAR REPORTS THE WEEK – the four-year loop stops where the player can see it', () => {
+    // ⚠⚠ THE GUARD, AND IT FAILS IF THE STOP STOPS STOPPING. Round 23 #16 was an academy verdict on
+    // the one week a `+4` could never land on; this is a competition inside a call that spends the
+    // whole year. `resumeFromCollege` returns the reasons exactly as `advanceWeeks` does, `mutate`
+    // puts them on the snapshot, and the epilogue's year card is what opens the matches.
+    const { world, stops } = collegeYearsWithACall('college-rubbers-report')
+    const years = world.college!.years
+    expect(years.length).toBeGreaterThan(0)
+    let reported = 0
+    for (let i = 0; i < years.length; i++) {
+      const hadACall = years[i].callUp !== null
+      expect(
+        stops[i].includes('call-up'),
+        `year ${i + 1} ${hadACall ? 'had a letter and must say so' : 'had none and must not invent one'}`,
+      ).toBe(hadACall)
+      if (hadACall) reported += 1
+    }
+    expect(reported, 'at least one year of the four reported its competition').toBeGreaterThan(0)
+    // ...and every returned list is in STOP_PRECEDENCE order, like an advance's.
+    for (const list of stops) {
+      const order = list.map((r) => STOP_PRECEDENCE.indexOf(r as never))
+      expect([...order].sort((a, b) => a - b), 'precedence order, not insertion order').toEqual(order)
+    }
+  }, 120_000)
+
+  it('⚠ 3b. a year that RE-LATCHES the epilogue reports both, and the last year reports no ending', () => {
+    // R11-1's rule on a second producer: one call can be several things at once. The three years
+    // that ask «another year?» hand back 'ending' too – the epilogue is the surface that renders it –
+    // and the fourth takes the latch off for good, so the tab shell is what the player lands on.
+    const { world, stops } = collegeYearsWithACall('college-rubbers-both')
+    for (let i = 0; i < stops.length - 1; i++) {
+      expect(stops[i], `year ${i + 1} re-latches the question`).toContain('ending')
+    }
+    expect(stops[stops.length - 1], 'the course is finished: no latch left').not.toContain('ending')
+    expect(world.ending).toBeNull()
+  }, 120_000)
+
+  it('⚠ 4. it still pays nothing and costs nothing: no result, no rank, no cheque, no condition', () => {
+    const before = atTheFork('college-rubbers-free')
+    answerFork(before.world, 'college')
+    const world = before.world
+    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(world, before.rng)
+    expect(world.results.filter((r) => r.playerId === KID_ID), 'her column of the ledger is empty').toHaveLength(0)
+    expect(world.entries).toHaveLength(0)
+    // ⚠ AND THE ROWS ARE MARKED SO FOUR SUBSYSTEMS KEEP IGNORING THEM. `friendly` is the one
+    // predicate the radar (R11-2), the avatar's emotion, the knock history and the Weekly Story read
+    // to decide whether a match is evidence about her form. A rubber that pays nothing and takes
+    // nothing must not silently become evidence in all four at once.
+    const rows = world.events.filter((e) => e.match?.eventId.startsWith('nations-w'))
+    expect(rows.length).toBeGreaterThan(0)
+    for (const row of rows) {
+      expect(row.type).toBe('match')
+      expect(row.friendly, 'not evidence – it awards nothing and takes nothing').toBe(true)
+      expect(row.keep, 'kept, so the week is still watchable four years later').toBe(true)
+      expect(row.amountCents, 'no money changes hands').toBeUndefined()
+      expect(row.text).toContain('no ranking points')
+    }
+  }, 120_000)
+
+  it('⚠ 5. the played rubber TRACKS THE MODEL IT REPLACED – the calibration is measured, not asserted', () => {
+    // `NATIONAL_TEAM.rubber.standard` means "the level at which she is an even bet", and it now means
+    // it as a PERSON: `callUpOpponent` draws the woman across the net around that mean. So a girl AT
+    // the standard has to come out near even against her, or the constant stopped meaning what both
+    // halves of this file claim it means.
+    //
+    // ⚠⚠ MEASURED BEFORE IT WAS BELIEVED (CLAUDE.md invariant 4), n = 2,000 per row, against the
+    // model this replaces – `rubberWinChance` – over the whole band a college-age girl occupies:
+    //
+    //     skill mean │  model p │ played p
+    //         50     │  0.260   │  0.211
+    //         54     │  0.340   │  0.294
+    //         58     │  0.420   │  0.407
+    //         62     │  0.500   │  0.479   <- the standard: still an even match
+    //         66     │  0.580   │  0.615
+    //         70     │  0.660   │  0.726
+    //         76     │  0.780   │  0.838
+    //
+    // ⭐ THE CURVE TRACKS AND IS SLIGHTLY STEEPER, which is the honest shape of the change: a linear
+    // 0.02-per-point model versus a real match engine, where a skill edge compounds over a set. It
+    // COSTS NOTHING – a rubber pays no points and no money, takes no condition and feeds no
+    // development – so this is a different line in the record, not a re-balance.
+    //
+    // ⚠ THE BAND BELOW IS WIDE ON PURPOSE. This is a guard against the calibration falling over (a
+    // mirror match coming out 90/10), not a tuning pin. n is 300 here, so a 4-sigma band.
+    const level: MatchPlayer = {
+      id: KID_ID,
+      name: 'Level Player',
+      serve: NATIONAL_TEAM.rubber.standard,
+      ret: NATIONAL_TEAM.rubber.standard,
+      composure: NATIONAL_TEAM.rubber.standard,
+      stamina: NATIONAL_TEAM.rubber.standard,
+      groundstrokes: NATIONAL_TEAM.rubber.standard,
+      age: 21,
+    }
+    let won = 0
+    const n = 300
+    for (let i = 0; i < n; i++) {
+      const { player: opp } = callUpOpponent(`cal-${i}`, rngFromSeed(`calibration:rubbers:${i}`))
+      const res = simulateMatch(level, opp, {
+        surface: NATIONAL_TEAM.surface,
+        tour: JUNIOR_TOUR,
+        seed: `calibration:rubber:${i}`,
+      })
+      if (res.winner === 0) won += 1
+    }
+    const rate = won / n
+    expect(rate, `a level player wins ${(rate * 100).toFixed(1)}% of rubbers – the model says 50%`).toBeGreaterThan(0.4)
+    expect(rate).toBeLessThan(0.6)
+  }, 120_000)
+
+  it('⚠ the opponent is a real player, drawn around the standard, and her side is drawn whole', () => {
+    // Nine draws each, `tiesInTheWeek` of them per week whether or not she plays them all – so who
+    // her nation drew is a fact about the week, not about how many rubbers the captain gave her.
+    const rng = rngFromSeed('shape:rubbers:295')
+    const squad = [0, 1, 2].map((i) => callUpOpponent(`nations-w295-r${i}`, rng))
+    const { standard, } = NATIONAL_TEAM.rubber
+    for (const { player, nation } of squad) {
+      expect(nation, 'a country on her shirt, out of the world\'s own pool').toMatch(/^[A-Z]{2}$/)
+      expect(player.name).toMatch(/^\S+ \S+$/)
+      for (const attr of [player.serve, player.ret, player.composure, player.stamina, player.groundstrokes]) {
+        expect(attr).toBeGreaterThanOrEqual(standard - NATIONAL_TEAM.opponentSpread)
+        expect(attr).toBeLessThanOrEqual(standard + NATIONAL_TEAM.opponentSpread)
+      }
+      const [lo, hi] = NATIONAL_TEAM.opponentAgeBand
+      expect(player.age!).toBeGreaterThanOrEqual(lo)
+      expect(player.age!).toBeLessThanOrEqual(hi)
+    }
+    expect(new Set(squad.map((s) => s.player.name)).size, 'three different women').toBe(3)
+    // Deterministic: the same stream gives the same side.
+    const again = [0, 1, 2].map((i) => callUpOpponent(`nations-w295-r${i}`, rngFromSeed('shape:rubbers:295')))[0]
+    expect(again).toEqual(squad[0])
+  })
+
+  it('⚠ the epilogue view carries the rubbers, so the card that reports the week can OFFER it', () => {
+    const { world } = collegeYearsWithACall('college-rubbers-view')
+    // Wind back to a boundary that still has an open question and a letter behind it.
+    const year = world.college!.years.find((y) => y.callUp !== null && y.callUp.rubbersPlayed > 0)
+    expect(year, 'a year in which she took the court').toBeDefined()
+    const rubbers = callUpRubbersOf(world, year!.callUp!.week)
+    expect(rubbers).toHaveLength(year!.callUp!.rubbersPlayed)
+    // and the id names no tier, so the commentary correctly claims no occasion (see `occasionOf`).
+    for (const m of rubbers) expect(m.eventId).toBe(callUpRubberId(year!.callUp!.week, m.round))
+  }, 120_000)
 })
 
 // =================================================================================================

@@ -25,11 +25,16 @@ import { hasLiveOffer, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, schoolEndWeek, schoolIsOver } from '../kidLife'
+// v54 / round-23 #6b: the length of the course and the place she agreed to pay for. Both are leaves
+// (`ending.ts` is a constants module; `collegeOffer.ts` imports nothing but types and `Rng`), so
+// neither closes a cycle back into this file the way `world/college.ts` would.
+import { ENDINGS } from '../ending'
+import { chosenQuoteOf } from '../collegeOffer'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
 import { previewEvent, eventCrowd, eventTemperature } from '../season/preview'
-import { BEST_N_BY_TRACK, isCountingResult, windowSlots, windowedBestSum } from '../season/ranking'
+import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
 import { isFieldProId, universeForTier } from '../season/fieldPros'
-import { weekFieldExclusion } from '../season/tournament'
+import { entrantNationAt, weekFieldExclusion } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
 import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId } from '../season/types'
 import {
@@ -49,7 +54,6 @@ import {
 } from '../../shared/protocol'
 import {
   KID_ID,
-  RESULTS_WINDOW,
   SNAPSHOT_EVENTS,
   SNAPSHOT_FINANCIAL_EVENTS,
   UPCOMING_WEEKS,
@@ -375,13 +379,25 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
   // rows that does not add up to her own total, which is the one thing this function must never do.
   // Sorted strongest-first afterwards, because `windowSlots` returns reserved rows first and a
   // player reads this list as a league table.
+  //
+  // ⚠⚠ AND THE WINDOW IS THE TRACK'S SINCE ROUND 23 (`WINDOW_BY_TRACK` – the owner's ruling on items
+  // 12/13 that the DOMESTIC table counts this season, not a rolling 52 weeks). The filter below used
+  // to be `world.week - r.week <= RESULTS_WINDOW`, i.e. `windowFromWeek(week, 'rolling52')` spelled
+  // out by hand – correct while all three tables shared one window and silently wrong the moment one
+  // of them stopped. This is the function whose stated contract is that a "plain slice would show
+  // her a set of rows that does not add up to her own total, which is the one thing this function
+  // must never do": `kidPoints` is folded at `WINDOW_BY_TRACK[track]` two files away, so borrowing
+  // the WIDTH without the WINDOW would have produced exactly that – a domestic total of 200 over a
+  // list of last season's rows adding to 430, and `LadderView.banked` firing the WTA minimum's
+  // explanation on a domestic table where §VIII.A.2.b does not apply at all.
+  const from = windowFromWeek(world.week, WINDOW_BY_TRACK[track])
   const inWindow = world.results.filter(inTrack(track))
     .filter(
       (r) =>
         isCountingResult(r) &&
         r.playerId === KID_ID &&
         r.week <= world.week &&
-        world.week - r.week <= RESULTS_WINDOW,
+        r.week >= from,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
   return windowSlots(inWindow, BEST_N_BY_TRACK[track])
@@ -577,7 +593,19 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // printed came from the international table even when the trophy on the table paid national points.
   const track = tier.track
   const ranks = new Map(rankingFor(world, track).map((r) => [r.playerId, r.rank]))
-  const oppNation = world.cohort.find((c) => c.id === oppId)?.nation ?? ''
+  // ⭐⭐ AND ON THE THREE DOMESTIC RUNGS THE FLAG IS HERS (round 23 #10, the owner: «я просил уже
+  // как-то раз, чтобы local, Regional, national были все игроки с её домашним флагом»). This is the
+  // ONLY place in the app a rival's flag is ever rendered - `TournamentFlow.vue` reads
+  // `pending.opponent.nation` at its two VS plates and nothing else in `src/components` touches
+  // `.nation` at all - so the rule needs exactly one reader, and it is written once in
+  // `season/tournament.ts` where the whole argument for it lives (see `entrantNationAt`: a filter is
+  // unfillable at every playable country, so the domestic ladder re-labels rather than re-deals).
+  // `AiPlayer.nation` is untouched: the same girl carries her own flag at a J event next week.
+  const oppNation = entrantNationAt(
+    event.tier,
+    world.cohort.find((c) => c.id === oppId)?.nation ?? '',
+    world.profile.country,
+  )
   const oppAge = p.players[oppId]?.age
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   // UNRANKED IS NOT A NUMBER, for either girl, and it is the same rule `computeLadderView` applies to
@@ -598,8 +626,16 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // ledger fold below would read 0 and print her "unranked" – on the very row the merged table
   // ranks her by. The earned-points guard exists to stop TIE-FLOOR ranks being printed for players
   // with nothing; a pro's standing row is never that, by construction (wtaPoints >= 1).
+  // ⚠ THE GUARD MUST FOLD THE SAME TABLE `ranks` CAME FROM (round 23 #12/#13). `ranks` is built from
+  // `rankingFor(world, track)`, which counts the domestic table season-to-date now; folding the
+  // guard on the rolling window would print a NUMBER for an opponent the table itself has at the
+  // tie floor - "unranked is not rank one" arriving from the third side. `WINDOW_BY_TRACK[track]` is
+  // how the two stay one question. It does mean more Unranked opponents in the opening weeks of a
+  // domestic season, which is the table honestly saying the season's race has not started - measured
+  // in docs/rounds/round-23.md #12.
   const oppRankIn = (id: string): number | null =>
-    isFieldProId(id) || windowedBestSum(world.results, world.week, id, BEST_N_BY_TRACK[track], inTrack(track)) > 0
+    isFieldProId(id) ||
+    windowedBestSum(world.results, world.week, id, BEST_N_BY_TRACK[track], inTrack(track), WINDOW_BY_TRACK[track]) > 0
       ? (ranks.get(id) ?? null)
       : null
 
@@ -1023,6 +1059,28 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         const title = lastKidTitleOf(world.events)
         return title ? world.week - title.week : null
       })(),
+      // ⭐ ROUND-23 #6b – HER COLLEGE YEARS. `null` for a career that never took the place, which is
+      // what keeps the tile's own default ("after school") the honest one for everybody else.
+      //
+      // ⚠ `studying` IS THE SPAN AND NOT A FLAG, spelled the way `inCollege` spells it. It is written
+      // out structurally rather than imported for `snapshot.inCollege`'s own reason four hundred lines
+      // up: `world/college.ts` depends on this module, so an import would close a runtime cycle.
+      //
+      // ⚠ THE PLACE COMES OFF THE OFFER SHE AGREED TO, through `chosenQuoteOf` – the single reader the
+      // college bill and the fork card already share, so the campus her page names is the campus the
+      // family is being billed for.
+      college:
+        world.college === null
+          ? null
+          : {
+              studying: world.week < world.college.untilWeek,
+              yearsDone: world.college.years.length,
+              totalYears: ENDINGS.collegeYears,
+              tier: chosenQuoteOf(world.fork?.offer)?.tier ?? null,
+            },
+      // ⭐ ROUND-23 #18 – what her own account holds. `?? 0` for the hand-built probe worlds that
+      // predate v54, the discipline every optional world field on this view already keeps.
+      kidFundsCents: world.kidFundsCents ?? 0,
     }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
     // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by

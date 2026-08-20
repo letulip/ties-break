@@ -10,11 +10,28 @@ import type { MatchOptions } from '../engine/match/types'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
+import { occasionOf } from '../viz/preview'
 import MatchViewer from './MatchViewer.vue'
 import IconButton from './ui/IconButton.vue'
 import TakeoverShell from './ui/TakeoverShell.vue'
 
-const props = defineProps<{ match: WorldMatch }>()
+const props = withDefaults(
+  defineProps<{
+    match: WorldMatch
+    /** ⭐⭐ WHAT THIS MATCH WAS – the college wave, and it is the owner's "only the tournament names
+     *  differing" taken literally (19.08, quoted verbatim in `docs/plans/college-as-a-place.md` §3).
+     *  A tour re-watch is headed "Match replay" because the occasion line under the
+     *  viewer already names the rung; a national-team rubber has NO rung (`occasionOf` correctly
+     *  returns null on an id that names no tier), so without this the one screen that could say which
+     *  competition she was playing in would say nothing at all.
+     *
+     *  ⚠ DEFAULTED, NOT REQUIRED, so both existing call sites (the Home feed and the Season bracket)
+     *  are byte-identical. `TakeoverShell.title` is deliberately required-and-nullable one layer
+     *  down; that rule is about "no header versus a header", which is not the question here. */
+    title?: string
+  }>(),
+  { title: 'Match replay' },
+)
 defineEmits<{ close: [] }>()
 
 const opts = computed<MatchOptions>(() => ({
@@ -27,6 +44,19 @@ const annotated = computed(() => {
   const result = simulateMatch(props.match.a, props.match.b, opts.value)
   return annotateMatch(result, props.match.a, props.match.b, opts.value)
 })
+
+/**
+ * ⭐ ROUND-23 #4 – WHICH TOURNAMENT THIS WAS, and it is the fix for a bug the owner keeps catching by
+ * looking at frames: this screen passed NOTHING, so every re-watch in the game fell to storey 1.
+ *
+ * This component is how a match is watched again from BOTH the Season bracket and the Home feed, and
+ * a stored `WorldMatch` carries a rung's worth of context in its `eventId` – so a Grand Slam
+ * quarter-final re-opened here narrated like a Sunday-morning local draw: no stake named, no room, no
+ * standing, and (since round 23) none of the extra beats the top of the tour is owed. The occasion is
+ * DERIVED rather than remembered – see `occasionOf` for why that distinction is the actual fix – and
+ * a practice friendly, whose id names no tier, still correctly gets null.
+ */
+const previewEvent = computed(() => occasionOf(props.match.eventId, props.match.round))
 </script>
 
 <template>
@@ -47,7 +77,7 @@ const annotated = computed(() => {
        fourth copy drift into a real bug. All four surfaces now draw the layer, the header and the
        scroller through `ui/TakeoverShell.vue`; the classes are unchanged, they just have one author.
        (`.tf-card` was in that list until 30.07 took the outer frame off all three - see below.) -->
-  <TakeoverShell title="Match replay">
+  <TakeoverShell :title="title">
     <template #sub>
       <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
     </template>
@@ -70,6 +100,14 @@ const annotated = computed(() => {
          a `.tf-card` - 16px of padding and a hairline - wrapped around a stack of `Card`s the viewer
          draws itself, so the border was doubled and the padding bought nothing. Measured at 375pt:
          291 -> 327px of canvas, 244.4 -> 274.9px of painted court, 32px of height back. -->
-    <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" mode="replay" />
+    <!-- ⭐ ROUND-23 #4: `preview-event` is the one prop this screen never passed – see the script. -->
+    <MatchViewer
+      :match="annotated"
+      :player-a="match.a"
+      :player-b="match.b"
+      :surface="match.surface"
+      :preview-event="previewEvent"
+      mode="replay"
+    />
   </TakeoverShell>
 </template>
