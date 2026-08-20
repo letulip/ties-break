@@ -26,6 +26,7 @@
 // The advance button is NOT here – it is App.vue's sticky bar, global on every tab (R13-12).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
+import { coachRoomBand } from '../../engine/world/coachMarket'
 import { LADDER_LABEL, rankChipTrack, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
@@ -502,6 +503,16 @@ const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> 
 const coachQuote = computed(() =>
   game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
 )
+
+/** ⭐ ROUND 24 #1 – the plain-language band, read off the engine's own note through the ONE splitter
+ *  (`coachRoomBand`), never a second `indexOf` here. Empty before there is anything to say.
+ *
+ *  The owner asked for it twice. Round 23: «Давай как-то по-другому оформим подсказки про уровень
+ *  девушки на карточке тренера. Может что-то вроде "она близка к своему потолку"…». It was built on
+ *  the Coach Market screen, and round 24 came back with «Слова для тренеров о потолке девочки ты
+ *  предложил, но в интерфейсе не поменял» – because THIS is the card he actually reads, every week,
+ *  and its line was five canned quotes per play style that know nothing about her. */
+const roomBand = computed(() => coachRoomBand(game.snapshot?.coachRoomNote ?? ''))
 
 
 // --- Season strip: REAL tier progress. Reads the kid's best finish per tier off the snapshot: a
@@ -1259,6 +1270,18 @@ function openRankHelp(): void {
           <div class="coach-body">
             <Eyebrow>Coach note</Eyebrow>
             <p class="coach-line">{{ coachQuote }}</p>
+            <!-- ⭐⭐ ROUND 24 #1 – WHERE SHE ACTUALLY STANDS, ON THE CARD HE SEES EVERY WEEK. Round 23
+                 #1 asked for a plain reading of her level on the coach card; it landed on the Coach
+                 MARKET screen instead - a page he opens rarely - so his verdict was exact. THIS is
+                 the coach card. His words are quoted beside `roomBand` in the script, because
+                 Cyrillic inside a <template> is forbidden (tests/round13-nav.test.ts).
+                 ⚠ THE QUOTE ABOVE IS NOT REPLACED. It is owner-approved copy from round 7 #5d, five
+                 lines per play style settling every four weeks, and it is his COACH's voice. This is
+                 a second, shorter line under it: the voice keeps saying what it says, and the card
+                 now also says the one thing the player was asking it for.
+                 ⚠ The band and nothing else - no digit, ever. `KidScreen` keeps her ceiling behind a
+                 fog of war and the market screen's own note (:757 there) is written to that rule. -->
+            <p v-if="roomBand" class="coach-room">{{ roomBand }}</p>
             <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
                  appears only when there is a him. -->
             <p v-if="coachSignature" class="coach-sign">{{ coachSignature }}</p>
@@ -2103,6 +2126,21 @@ button.note-card:active:not(:disabled) {
   line-height: 1.42;
   font-weight: 500;
   color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* ⭐ ROUND 24 #1 – the band, under his line and above his name. Smaller and quieter than the quote:
+   the quote is his VOICE and this is a READING, so it must not shout over him. Accent-toned because
+   it is the one thing on this card the player came looking for.
+   ⚠ NO WIDTH OR HEIGHT OF ITS OWN. `.coach-card` is `card-short` and the note has to keep fitting a
+   375px phone with the portrait beside it - a fixed size here is how that stops being true one
+   sentence later. `tests/component/round24-coach-card.test.ts` measures the box instead. */
+.coach-room {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.36;
+  font-weight: 600;
+  color: var(--accent);
   text-wrap: pretty;
 }
 

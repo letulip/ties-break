@@ -44,11 +44,11 @@ import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
 import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
 // ⭐ ROUND-23 #5 / #1 – TWO PURE LOOKUPS, in the same register as `COACH_TIER_LABEL` above and for the
 // same reason: they are label tables keyed on data the row already carries, not decisions. `coachBlurb`
-// maps a portrait stem to that coach's own description and `ROOM_NOTE_SEP` is the separator the engine
+// maps a portrait stem to that coach's own description and `coachRoomBand` is the one splitter the engine
 // wrote the room note with, read here so the split cannot drift from the join. Neither touches a world,
 // draws anything, or knows what a career is - see their notes in the engine for why the blurb could not
 // simply ride on `CoachMarketRow` this wave.
-import { coachBlurb, ROOM_NOTE_SEP } from '../../engine/world/coachMarket'
+import { coachBlurb, coachRoomBand } from '../../engine/world/coachMarket'
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
 import { formatCents } from '../../shared/money'
 
@@ -346,10 +346,15 @@ async function doSendToJuniors() {
 // falls through to `band = ''` and the whole string as the body, which is the shipped rendering before
 // this change: the split can shorten the line's emphasis, never its content.
 const roomNote = computed(() => game.snapshot?.coachRoomNote ?? '')
-const roomBand = computed(() => {
-  const at = roomNote.value.indexOf(ROOM_NOTE_SEP)
-  return at > 0 ? roomNote.value.slice(0, at) : ''
-})
+// ⚠ THE SPLIT MOVED TO THE ENGINE (`coachRoomBand`, 20.08) because Home's coach card needs the same
+// clause, and two screens each running their own `indexOf` on one string is how the two drift apart.
+//
+// ⚠⚠ AND ROUND 24 DELIBERATELY DID **NOT** ADD IT TO THE HIRED COACH'S CARD. It was built there for
+// an hour and taken out again on his ruling: «Добавлять на карточку новую информацию не вижу смысла,
+// там и так уже много букв.» What he wanted was the PLAQUE'S OWN SENTENCE made readable - he had
+// misread "that band" himself - so `PLACEMENT_PHRASE` and both null arms were rewritten in
+// `world/coachMarket.ts` instead, and this card gained no new line at all.
+const roomBand = computed(() => coachRoomBand(roomNote.value))
 // ⚠ THE TAIL IS THE REST OF THE ENGINE'S OWN STRING, separator and all, rather than a body re-joined
 // to a separator this file also knows. `band + tail === note` for every possible note, so the line on
 // screen is the sentence the engine wrote to the character and a test can assert exactly that - which

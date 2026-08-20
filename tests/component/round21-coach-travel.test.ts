@@ -827,7 +827,7 @@ describe('§5 the card says what the second fare buys', () => {
     expect(plaque.exists()).toBe(true)
     expect(plaque.text()).toBe(stays.coachEdge.plaqueLine)
     // §7's referent pairing survives the addition: the plaque still points at a band printed above it.
-    expect(plaque.text()).toMatch(/that band/)
+    expect(plaque.text()).toMatch(/at this price/)
     // ...and no state of this card prints a per-match figure for him.
     expect(w.find('.cm-row.current').text()).not.toMatch(INDIVIDUAL)
     w.unmount()
