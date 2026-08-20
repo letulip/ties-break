@@ -29,7 +29,7 @@ import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
 import { previewEvent, eventCrowd, eventTemperature } from '../season/preview'
 import { BEST_N_BY_TRACK, isCountingResult, windowSlots, windowedBestSum } from '../season/ranking'
 import { isFieldProId, universeForTier } from '../season/fieldPros'
-import { weekFieldExclusion } from '../season/tournament'
+import { entrantNationAt, weekFieldExclusion } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
 import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId } from '../season/types'
 import {
@@ -577,7 +577,19 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // printed came from the international table even when the trophy on the table paid national points.
   const track = tier.track
   const ranks = new Map(rankingFor(world, track).map((r) => [r.playerId, r.rank]))
-  const oppNation = world.cohort.find((c) => c.id === oppId)?.nation ?? ''
+  // ⭐⭐ AND ON THE THREE DOMESTIC RUNGS THE FLAG IS HERS (round 23 #10, the owner: «я просил уже
+  // как-то раз, чтобы local, Regional, national были все игроки с её домашним флагом»). This is the
+  // ONLY place in the app a rival's flag is ever rendered - `TournamentFlow.vue` reads
+  // `pending.opponent.nation` at its two VS plates and nothing else in `src/components` touches
+  // `.nation` at all - so the rule needs exactly one reader, and it is written once in
+  // `season/tournament.ts` where the whole argument for it lives (see `entrantNationAt`: a filter is
+  // unfillable at every playable country, so the domestic ladder re-labels rather than re-deals).
+  // `AiPlayer.nation` is untouched: the same girl carries her own flag at a J event next week.
+  const oppNation = entrantNationAt(
+    event.tier,
+    world.cohort.find((c) => c.id === oppId)?.nation ?? '',
+    world.profile.country,
+  )
   const oppAge = p.players[oppId]?.age
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   // UNRANKED IS NOT A NUMBER, for either girl, and it is the same rule `computeLadderView` applies to

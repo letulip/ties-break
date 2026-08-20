@@ -337,6 +337,54 @@ export function hostNationOf(seed: string, eventId: string): string {
   return HOST_NATIONS[Math.min(HOST_NATIONS.length - 1, Math.floor(rng() * HOST_NATIONS.length))]
 }
 
+/** ⭐⭐ THE FLAG A PLAYER WEARS AT AN EVENT – and on the three DOMESTIC rungs it is always HERS
+ *  (round 23 #10, 20.08, the owner: «я просил уже как-то раз, чтобы local, Regional, national были
+ *  все игроки с её домашним флагом»).
+ *
+ *  WHY IT IS A LABEL AND NOT A FILTER, WHICH IS THE WHOLE OF THIS DECISION AND THE REASON THE
+ *  OBVIOUS BUILD IS THE WRONG ONE. "Draw the domestic field from her compatriots" is unfillable at
+ *  every one of the twenty-four playable countries – measured, tools/domestic-ladder-probe.ts §A:
+ *
+ *    country   cohort members (expected, of 199)   |   rung       draw
+ *    US                      16.9                  |   local        8
+ *    ES                      15.2                  |   regional    16
+ *    FR                      13.5                  |   national    32
+ *    GB / AU                  8.4                  |
+ *    KR                       1.7                  |
+ *    BY                       0.0   ← playable, and NOT in NATION_POOL at all
+ *
+ *  `NATION_POOL` is 118 weighted slots over 36 nations and the cohort is 199 juniors, so the very
+ *  deepest tennis nation we ship expects SEVENTEEN compatriots against a National's draw of
+ *  thirty-two, and one playable country expects none. A filter would therefore fall straight through
+ *  `selectEntrants`' fillability ladder to "everybody eligible plays" – i.e. it would change the
+ *  draw and still not produce a home field. The only way to make it fillable is to re-roll the
+ *  cohort's nations, and that re-maps every existing seed's entire field (`makeJunior` spends one
+ *  `pickInt` against `NATION_POOL`; see the SURNAMES note in season/names.ts for what that costs).
+ *
+ *  SO THE DOMESTIC LADDER RE-LABELS RATHER THAN RE-DEALS, and that is what the rungs already ARE.
+ *  The three of them are OURS, not the ITF's (calendar.ts, `j30.maxAgeYears`: «the domestic ladder
+ *  is OURS ... and stays open at every age»); they pay into a table nobody else in the world reads;
+ *  their crowd is written as «a national championship at home is a stand full of people who know
+ *  her» (season/preview.ts). A national championship IS an all-one-nation field, and the cohort is
+ *  the pool of BODIES this world has – so at a domestic event those bodies are her countrywomen.
+ *
+ *  ⚠ ZERO RNG, ZERO SCHEMA, ZERO DRAW-COUNT MOVEMENT – which is the constraint that made this the
+ *  only shippable shape. It is a pure function of (tier, nation, nation): no sub-stream, nothing on
+ *  MAIN, no candidate list filtered, no persisted byte. `AiPlayer.nation` is untouched, so the same
+ *  girl carries her own flag the moment she walks onto the J tour, which is correct – the J rungs
+ *  are the international ones and the whole point of them is that they are not hers.
+ *
+ *  ⚠ AND IT IS DELIBERATELY NOT `hostNationOf`. That one rolls a host for a SLAM off
+ *  `seed:host:<eventId>`, because a major is played somewhere and could be played anywhere. A
+ *  domestic event has no venue question to answer: it is her federation's, every season, by
+ *  definition, so reading a die for it would be inventing a variable the rung does not have.
+ *
+ *  `homeNation` empty ⇒ the player's own, so a caller without a profile degrades to today's
+ *  behaviour rather than to a blank flag. */
+export function entrantNationAt(tier: TierId, playerNation: string, homeNation: string): string {
+  return TIERS[tier].track === 'domestic' && homeNation ? homeNation : playerNation
+}
+
 /** ⭐ THE WILD-CARD RULE ITSELF, AS A PREDICATE OVER A RANK – written ONCE and read by both sides.
  *
  *  This is `proDoors`' discipline applied to a second door: the kid's gate and the AI fill ask the

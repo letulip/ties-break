@@ -219,26 +219,167 @@ are analyses OF them; every other item that needs a world builds its own.
   the count first, and the count decides whether the 50% travel discount becomes the strong offer he
   suspects.
 
-- [ ] **10. «Я просил уже как-то раз, чтобы local, Regional, national были все игроки с её домашним
+- [x] **10. «Я просил уже как-то раз, чтобы local, Regional, national были все игроки с её домашним
   флагом, можешь сделать пожалуйста»**
   – *build.* ⚠ **[!] REOPENED by his own words – "я просил уже как-то раз".** The domestic rungs
   should be an all-home-nation field. Find what the earlier attempt aimed at and why it missed
   before writing anything.
+  → ✅ **SHIPPED.** At a `local` / `regional` / `national` event every entrant now wears her flag.
 
-- [ ] **11. «Я встретил unranked на national турнире, мне кажется это надо проверить»**
+  **THE EARLIER ATTEMPT, FOUND AND NAMED – IT WAS AIMED AT A DIFFERENT RUNG.** There is exactly one
+  piece of home-nation machinery in the whole history of this repo: `hostNationOf` / `HOST_NATIONS`
+  / `fillWildCards` / `homeWildCardPlace`, shipped 17.08 as round 21 #2b (`fd66d52`, whose own
+  subject line reads *"a home nation derived at zero bytes"*). It gives eight Grand Slam wild cards
+  to players of the host nation, and its first line is `if (event.tier !== WILD_CARD.tier) return`
+  with `WILD_CARD.tier === 'slam'` – so it can never touch a domestic rung. **The domestic ask
+  itself was never captured anywhere**: not in round-3 through round-22, not in `docs/decisions.md`,
+  not in any spec, not in the git log. He asked in conversation, the home-nation *idea* was built
+  onto the Slam, and the domestic half was never written down. That is why it missed – an
+  uncaptured item, not a bad build. (Its second reason for missing is below, and it would have hit
+  any implementation.)
+
+  **AND THE OBVIOUS BUILD IS THE WRONG ONE – A FILTER IS UNFILLABLE AT EVERY PLAYABLE COUNTRY.**
+  Measured before a line was written, `tools/domestic-ladder-probe.ts` §A: `NATION_POOL` is 118
+  weighted slots over 36 nations against a 199-strong cohort, so the deepest tennis nation we ship
+  expects **16.9 compatriots** – against a National draw of **32** – and one of the twenty-four
+  PLAYABLE countries (`BY`) is not in the pool at all and expects **0.0**. `GB` and `AU` expect 8.4,
+  `KR` 1.7. A nation filter inside the entrant band would therefore fall straight through
+  `selectEntrants`' fillability ladder to *"everybody eligible plays"*: a draw that has MOVED and is
+  still not home-flagged – the quiet dead branch, not a refusal anyone could read. The only way to
+  make a filter fillable is to re-roll the cohort's nations, which re-maps every existing seed's
+  entire field (`makeJunior` spends one `pickInt` against `NATION_POOL`).
+
+  **SO THE DOMESTIC LADDER RE-LABELS RATHER THAN RE-DEALS**, which is what those three rungs already
+  are: ours and not the ITF's, paying into a table nobody else in the world reads, with a crowd the
+  engine already describes as *"a stand full of people who know her"*. New pure rule
+  `entrantNationAt(tier, playerNation, homeNation)` in `season/tournament.ts`; **one reader**, at
+  `pendingView`'s `oppNation` in `world/snapshot.ts` – which is the only place in the entire app a
+  rival's flag is ever rendered (`TournamentFlow.vue`'s two VS plates; nothing else in
+  `src/components` touches `.nation` at all).
+
+  ⚠ **RNG: NOTHING MOVED, AND THAT WAS THE CONSTRAINT.** Zero draws added on any stream, zero
+  candidate lists filtered, zero persisted bytes, no schema. `AiPlayer.nation` is untouched, so the
+  same girl carries her own flag at a J event next week – the international rungs stay
+  international. `tests/condition.test.ts`'s frozen MAIN capture and `tests/planner.test.ts`'s A/B
+  arms: **95 tests green, unchanged.**
+
+  *Evidence:* `tests/season/domestic-nation.test.ts` (4 tests) – 8 seeds × 3 rungs = 24 real draws,
+  every entrant home-flagged, with a discriminator proving the raw draw is genuinely mixed (>100
+  foreign entrants across the sweep, ~3 of 32 share her flag at a National); the negative arm at
+  j30/j60/j300; and a 160-week career asserting the VS card flies her flag at every domestic reveal
+  and the rival's own at every international one. **Mutation-verified**: reverting the `oppNation`
+  line turns the domestic arm red (`Expected "US", Received "IT"`).
+
+- [~] **11. «Я встретил unranked на national турнире, мне кажется это надо проверить»**
   – *build or already-works.* Reproduce first: an unranked entrant in a NATIONAL draw. It may be
   correct (a debutante has no ranking yet) – if so, the reproduction is the deliverable.
+  → ✅ **REPRODUCED, AND THE SENTINEL IS RIGHT. NOTHING CHANGED** – the reproduction is the
+  deliverable, exactly as the triage anticipated.
 
-- [ ] **12. «А ещё в national таблице надо проверить как считаются очки у соперниц: мне кажется,
+  **THE REPRO** (`tools/domestic-ladder-probe.ts` §B, 5 seeds). Week 60, seed `dom-probe-2`, event
+  `1-w67-national`: **4 of 32 entrants** read Unranked. Named: `ai-26` Nora Sideris, 16, **28 ledger
+  rows** in the world and **2 domestic rows, both scoreless**; `ai-108` Lena Jiang, 14, 28 rows / 1
+  domestic / 0 counting; `ai-127` Pia Falk, 15; `ai-171` Mila Zeman, 19. Every seed shows the same
+  shape – 1 to 5 of 32 at week 60, and **5 to 15 of 32 at week 8**.
+
+  **WHY IT IS CORRECT.** "Unranked" on the VS card is `oppRankIn` finding no *counting* result in
+  **that table's** 52-week window (`snapshot.ts`), and that is the same rule her own chip obeys.
+  These girls are not debutantes – they play 17-30 events a year – they play them on the **J tour**,
+  and a first-round exit at a domestic event writes a real row worth zero. No scoring domestic
+  result in a year ⇒ no national ranking. Real tennis says the same thing about a player who turns
+  up at her nationals off an international season.
+
+  ⚠ **AND THE STRUCTURAL REASON IT IS COMMONEST EARLY**, worth recording because it looks like a
+  bug and is not: `season/prehistory.ts` awards each rival her pre-history at
+  `topBandForPercentile(q)`, and for most of the National band (`entrantPctBand [0.2, 0.7]`) that
+  walks up to **j60 or j30 – an ITF rung**. So a large part of the National field opens the game
+  with a real junior book and *zero* domestic rows, which is precisely the population the band is
+  written to describe (*"the domestic elite is a mid-table field once the real prospects are away on
+  the J tour"*).
+
+  ⚠ **ONE SEAM WORTH HIS RULING, FLAGGED NOT BUILT.** The draw is filled by position in the MIXED
+  all-tracks table (`world.ts`'s `aiRanking`) while the card prints her place in the DOMESTIC one,
+  so a girl the engine ranks perfectly well reads "Unranked" next to it. Selecting domestic draws on
+  the domestic table would close that – and would re-map every domestic event's own sub-stream in
+  every existing career. **Owner call, not a fix-round build.**
+
+- [~] **12. «А ещё в national таблице надо проверить как считаются очки у соперниц: мне кажется,
   что у лидера было 600+, а после моей победы стало 400+, т.е. как будто отнялись, хотя как-будто
   таблица должна просто показывать 6 лучших за сезон.»**
   – *build or already-works.* A rival's domestic total apparently FELL after his win. Best-6 over a
   rolling window can legitimately fall as old results age out – but "right after my win" is a
   different claim. Reproduce against the ledger before deciding.
+  → ✅ **HIS NUMBER REPRODUCED TO THE POINT, AND NOTHING WAS SUBTRACTED.** `tools/
+  domestic-ladder-probe.ts` §C, 6 seeds × 110 weeks, every fall in the domestic top 3 classified:
 
-- [ ] **13. «Куда-то сменилась вся верхушка национальной таблицы к концу сезона полностью»**
+  | falls | a row LEFT the 52-week window | pushed out of the best-6 | ⚠ unexplained |
+  |------:|------------------------------:|-------------------------:|--------------:|
+  |  **51** | **51** | 0 | **0** |
+
+  **The biggest single-week fall in the whole sweep is his: `ai-80`, week 17 → 18, `600 → 400`** –
+  and the cause printed beside it is `out of window: national 200`. A National **title** is 200
+  points; it had been won 53 weeks earlier; the window is 52. Nothing took anything away.
+
+  The ledger, row by row, for a second case (`ai-66`, the week she *did* bank a domestic result):
+
+  ```
+  ai-66 at week 24: total 370      ai-66 at week 25: total 355
+    w  -7  national  200  COUNTS     w  -7  national  200  COUNTS
+    w  -2  national  120  COUNTS     w  -2  national  120  COUNTS
+    w  20  national   35  COUNTS     w  20  national   35  COUNTS
+    w -28  national   15  COUNTS     (gone – 53 weeks old)
+  LEFT THE 52-WEEK WINDOW: w-28 national 15pts · PUSHED OUT OF THE BEST-6: nothing · JOINED: nothing
+  ```
+
+  **WHY IT LOOKS CAUSAL AND IS NOT.** She banks a domestic result on **20% of all weeks** in a young
+  career (132 of 660 measured weeks), so one fall in five lands on one of her weeks by arithmetic
+  alone – measured **14 of 51, i.e. 27%**, against that 20% base rate. Nothing in the engine can do
+  otherwise: the canonical AI brackets run for **every** scheduled event whether she entered it or
+  not (`world.ts` step 4), which is the input-independence invariant, so her win cannot reach a
+  rival's ledger even in principle.
+
+  ⚠ **THE HALF OF HIS SENTENCE THAT IS A REAL GAP IS THE LAST ONE, AND IT IS HIS TO RULE ON.**
+  «таблица должна просто показывать 6 лучших **за сезон**» – he expects a season-to-date table; we
+  ship best-6 over a **rolling 52 weeks** (`WINDOW_WEEKS`, mirroring ITF Juniors Reg 10, which our
+  invented domestic ladder copied). Both are defensible; they are different games, and the rolling
+  one is the one that produced items 12 **and** 13. Nothing here should be tuned until he says which
+  he wants – see 13.
+
+- [~] **13. «Куда-то сменилась вся верхушка национальной таблицы к концу сезона полностью»**
   – *measure.* Same table, different symptom: total turnover of the top by season's end. Measure the
   churn; decide whether it is the conveyor working as designed or the same defect as 12.
+  → ✅ **MEASURED, 6 SEEDS, TWO SEASONS. HE IS RIGHT, AND IT IS THE SAME CAUSE AS 12 – NOT THE
+  CONVEYOR.** How much of the domestic top-10 at week N is still in the top 10 at that season's wrap
+  (`tools/domestic-ladder-probe.ts` §D, mean of 6 seeds, out of 10):
+
+  | season 1 | w8 | w16 | w26 | w36 | w44 |
+  |---|---:|---:|---:|---:|---:|
+  | survivors to w52 | **0.3** | 0.7 | 1.8 | 4.3 | 7.7 |
+
+  | season 2 | w60 | w68 | w78 | w88 | w96 |
+  |---|---:|---:|---:|---:|---:|
+  | survivors to w104 | **2.8** | 3.7 | 4.3 | 7.0 | 9.7 |
+
+  **THREE FINDINGS, IN THE ORDER THAT MATTERS.**
+  1. **It is not the conveyor.** Of the season-2 openers gone by the wrap, only **0.7 of 7 on
+     average had actually left the world** (`stayChance` / `renewCohort` retired them); the rest are
+     still in the cohort and simply lost their points. Per seed: 0/7, 1/7, 0/6, 3/9, 0/7, 0/7.
+  2. **Season 1's turnover is TOTAL and it is the pre-history ageing out.** `prehistory.ts` writes
+     the opening world's results at weeks **−1 … −51**, so every one of them is outside the 52-week
+     window by week 52. Measured: **9 or 10 of 10** of the week-8 top-10 stand on a pre-history row
+     (five seeds at 10/10, one at 9/10); **0 of 10** at week 52, on every seed. The first season's
+     table is guaranteed to turn over completely.
+  3. **After that it is item 12's mechanism, at scale.** A National pays 200 and runs 6 times a
+     season; best-6 over a rolling 52 weeks means a leader loses her biggest row on a fixed
+     schedule and can only replace it when the next National comes round. That is a table that
+     rotates by the calendar rather than by form – which is exactly what he is seeing.
+
+  ⚠ **NOTHING TUNED, DELIBERATELY, AND NOT BECAUSE OF ONE CAREER.** Every lever here is his call and
+  they are different games: (a) leave it – a rolling ITF-style window, which is what the real junior
+  ranking is; (b) make the domestic table **season-to-date**, which is what he assumed it already
+  was in item 12 and would end both symptoms at once; (c) widen `BEST_N_BY_TRACK.domestic` past 6 or
+  the window past 52. (b) is the one that matches his own words. Recommend he picks before anything
+  moves – `docs/specs/rank-plateau.md`'s discipline: predict, measure, then ship.
 
 - [ ] **14. «По какому правилу считается количество допусков на турниры? По сезону не обновляется,
   получается, только по возрасту или как?»**
