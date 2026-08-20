@@ -564,6 +564,100 @@ are analyses OF them; every other item that needs a world builds its own.
   one is the one that produced items 12 **and** 13. Nothing here should be tuned until he says which
   he wants – see 13.
 
+  **[x] SHIPPED 20.08 – HE RULED (b), AND HIS SYMPTOM IS GONE.** «да, это мелочь, а будет хорошо,
+  мне кажется. Тем более, что первый сезон у нас показательный.» `WINDOW_BY_TRACK` now sits beside
+  `BEST_N_BY_TRACK` in `season/ranking.ts` as the second per-track fact about a table – how many
+  results it counts, and **over what stretch**. The domestic track is `seasonToDate`; ITF and WTA
+  keep `rolling52`, because those two model real tours whose own rulebooks say *"a rolling, 52-week
+  period"* and our domestic rungs are an invention. **Best-6 survives**: his own sentence is «6
+  лучших **за сезон**», and a plain full-season sum would let twenty-four Locals at 30 pts beat a
+  National title.
+
+  **HIS EXACT SYMPTOM, MEASURED BOTH WAYS IN ONE PROCESS** (`tools/domestic-season-to-date.ts` §C,
+  6 seeds × 110 weeks; the arms are the same tree with `WINDOW_BY_TRACK.domestic` patched – the
+  licensed idiom `BEST_N_BY_TRACK` already carries, because a worktree A/B in this shared checkout
+  would have measured three other agents as well):
+
+  | arm | falls in the top 3 | a row left the window | ⚠ **MID-SEASON** | pushed out of best-6 | unexplained | biggest |
+  |---|---:|---:|---:|---:|---:|---:|
+  | **A** rolling 52 (before) | 132 | 132 | **132** | 0 | 0 | 200 |
+  | **B** season-to-date (now) | 36 | 36 | **0** | 0 | 0 | 498 |
+
+  Every fall that survives is **at a season wrap**, which is the rule working: the race starts
+  again. Mid-season the number is zero. (The ledger's original 51 is the same sweep tracking only
+  players still in the top 3 the following week; carrying last week's leaders forward finds 132 and
+  makes the wrap visible – §C explains it in its own comment. Both arms were re-measured on the new
+  tracking, so the two columns are comparable.)
+
+  **AND HIS OWN ROW, PRINTED SIDE BY SIDE** (§G):
+
+  ```
+  A rolling52                                B seasonToDate
+    ai-80 at w17: total 600                    ai-80 at w17: total 0   (window starts at w0)
+      w  -3  national 200  COUNTS              (all three rows are LAST season's)
+      w -24  national 200  COUNTS
+      w -35  national 200  COUNTS  ← 52w old
+    ai-80 at w18: total 400                    ai-80 at w18: total 0
+  ⇒ 600 → 400   FELL by 200                  ⇒ 0 → 0   unchanged
+  ```
+
+  ⚠ **AND THAT ROW ALSO SHOWS THE PRICE OF THE RULING – SEE 13.** All three of the leader's
+  Nationals are **pre-history**, written at negative weeks. A season fold cannot see them.
+
+  **WHERE THE RULE IS APPLIED, and it is one place.** `rankingFor` and `kidPoints` (`world/ladder.ts`)
+  both read `WINDOW_BY_TRACK[track]`, so the table and the **currency the domestic rungs' bands are
+  denominated in** stay one number – otherwise a card would say 200 while the turnstile read 430,
+  which is the "two currencies, no exchange rate" error `rankingFor` is a single fold to prevent.
+  `bookClosedTo` and `computeCountingResults` re-spelled the 52-week filter by hand and now borrow
+  the window too.
+
+  ⚠ **TWO SCOPE NOTES, BOTH HONEST.**
+  1. **`world/snapshot.ts` was edited outside the path grant** – two lines (`computeCountingResults`,
+     `oppRankIn`). Without them the Kid screen prints a season-to-date total over a list of last
+     season's rows that does not add up to it, which that function's own comment calls *"the one
+     thing this function must never do"*, and `LadderView.banked` fires the WTA minimum's explanation
+     on a domestic table where §VIII.A.2.b does not apply. The test that catches the half-finished
+     version is in the file and mutation-verified.
+  2. ⚠ **`world.ts` was NOT touched and still needs one argument – ROUTED.** `rankingDeltaSuffix`'s
+     pair (`const before = windowedBestSum(…, inTrack(track))` / `const after = …`, the diary's
+     "(+30 pts)" clause) folds on the rolling window for every track. For a domestic event early in
+     a season it under-states the delta and can say "does not improve best 6" about a table the
+     result plainly improved – the exact sentence that comment block already apologises for once.
+     The fix is `WINDOW_BY_TRACK[track]` as a sixth argument on both lines, or simply
+     `kidPoints(world, track)`, which is what they spell. **Not applied because another agent had
+     `world.ts` open with 40 uncommitted insertions**, and a pathspec commit would have swallowed
+     them.
+
+  ⚠ **ONE LANDMINE FLAGGED, NOT ARMED** (§F). In a table where nobody has scored, competition
+  ranking hands **everybody rank 1** – and `recomputeKidRank` writes that 1 into
+  `world.kidRankDomestic`, which `sponsors.ts` reads as `nationalRank`. Measured exposure: **12 of
+  624 career-weeks, and every one is week 1 or 2 of a brand-new save** – a season wrap never goes
+  flat, because there is a Local in week 0 of every season. No live reader consults it there: the
+  screens go through `kidLadderRank`, which returns null on zero points, and sponsors read at week
+  47 (`sponsorWindowOpensAt` = seasonStart + 47, the FULLEST week of a season-to-date table). The
+  one-line hardening is
+  `world.kidRankDomestic = dom && dom.points > 0 ? dom.rank : tableSize(world, 'domestic')` – which
+  is what `sponsors.ts`' own comment already claims happens – but it moves a pointless kid from the
+  tie floor (~#150) to #200 **today, on the rolling arm too**, so it is a balance change and not
+  part of this item.
+
+  ⚠ **`tests/coach-travel-edge.test.ts` HASHES MOVED – REPORTED, NOT RE-FROZEN**, and the
+  attribution was RUN rather than assumed. With this agent's three files reverted to `HEAD` and
+  everyone else's work left in place, **the same five assertions are already red**, so the freeze
+  was broken before this landed. This change then moves them further, legitimately: her domestic
+  points gate which rungs she may enter, so a career that climbs makes different entries and saves a
+  different world. `tests/e2e-fixtures.test.ts` is red for a different agent's `SAVE_SCHEMA_VERSION`
+  bump to **v54** (round-23 #18, `kidFundsCents`) with the fixtures not yet regenerated – nothing
+  here adds a persisted field or needs a migration.
+
+  **REGRESSION, targeted rather than gated** (the owner gates once when the wave is done): **37 unit
+  files / ~990 assertions green**, plus 3 component files. ⭐ **The frozen MAIN capture did not
+  move** – `count` 41550, `hash` `e6b0c709`, head and tail byte-identical, re-derived on this branch.
+  It could not have: the ranking fold draws nothing, and `aiRanking` – the mixed table
+  `selectEntrants` positions candidates by – was deliberately left on `rolling52`.
+  `tests/condition.test.ts` B1c re-aimed with a ⚠ note (same identity, same strength, now read off
+  the engine's own constant); breaking the `kidRankDomestic` writer still turns it red.
+
 - [~] **13. «Куда-то сменилась вся верхушка национальной таблицы к концу сезона полностью»**
   – *measure.* Same table, different symptom: total turnover of the top by season's end. Measure the
   churn; decide whether it is the conveyor working as designed or the same defect as 12.
@@ -599,6 +693,76 @@ are analyses OF them; every other item that needs a world builds its own.
   was in item 12 and would end both symptoms at once; (c) widen `BEST_N_BY_TRACK.domestic` past 6 or
   the window past 52. (b) is the one that matches his own words. Recommend he picks before anything
   moves – `docs/specs/rank-plateau.md`'s discipline: predict, measure, then ship.
+
+  **[x] SHIPPED 20.08 – HE PICKED (b), AND SEASON 1 STOPS BEING THE ODD ONE OUT.** Same sweep, same
+  shape, both arms in one process (`tools/domestic-season-to-date.ts` §D). ⚠ **WITH ONE CORRECTION TO
+  THE ORIGINAL TABLE, and it matters:** the ledger's wrap mark was **week 52**, which is a fine "end
+  of season 1" reading of a ROLLING table and is `seasonStartWeek(52)` – *season TWO's week zero* –
+  on a season-to-date one. Measured against it, arm B reads 0/10 everywhere and looks like total
+  churn when it is in fact perfectly stable. Both marks are now printed; **w51 is the honest
+  comparison**, w52 is kept so the A arm reproduces the numbers above line for line.
+
+  **Survivors of the top-10 at week N to the season's LAST week, mean of 6 seeds, out of 10:**
+
+  | | w8 | w16 | w26 | w36 | w44 |
+  |---|---:|---:|---:|---:|---:|
+  | season 1 – **A** rolling 52 (before) | 0.3 | 0.7 | 1.8 | 4.7 | 8.0 |
+  | season 1 – **B** season-to-date (now) | **2.8** | **3.7** | **5.0** | **7.0** | **9.8** |
+  | season 2 – **A** rolling 52 (before) | 2.8 | 3.7 | 4.3 | 7.0 | 9.7 |
+  | season 2 – **B** season-to-date (now) | **3.0** | **3.8** | **5.0** | **7.2** | **10.0** |
+
+  **THE FINDING IS THE SHAPE, NOT THE SIZE.** Season 1 now behaves exactly like season 2 – which is
+  the whole diagnosis of #13 arriving as a fix. The old season 1 was an outlier (0.3 against 2.8 at
+  w8) for one reason: **9 or 10 of that week-8 top ten stood on a pre-history row**, and no
+  pre-history row survives a 52-week window to week 52. Under season-to-date the fold cannot see a
+  negative week at all, so the pre-history simply is not in this table and there is nothing left to
+  age out. `preh@w8` falls from **10/10 to 3–5/10**, and none of those are standing on it. The churn
+  that remains is *form* – 2.8 of 10 at week 8 is a table where nobody yet has a full best-6, which
+  is what an eight-week-old race should look like – rather than *calendar*.
+  Not the conveyor, in either arm: of the season-2 openers gone by w103, a mean of **1.2 of 7** had
+  actually left the world (arm A: 0.7 of 7).
+
+  ⚠⚠ **AND WHAT IT DOES TO HER, WHICH IS NOT FREE AND IS THE PART HE SHOULD READ** (§E, 6 seeds ×
+  4 seasons, `kidLadderRank(world, 'domestic')` – exactly what the screens print):
+
+  | | s1 best | s2 best | s3 best | s4 best | peak dom pts s1 | ITF on-ramp latches | Unranked weeks |
+  |---|---:|---:|---:|---:|---:|---:|---:|
+  | **A** rolling 52 | 9.2 | 2.0 | 5.7 | 14.8 | 217 | w59 (6/6) | 8 / 208 |
+  | **B** season-to-date | **1.8** | 1.0 | 4.8 | **47.2** | 216 | **w70** (6/6) | **36 / 208** |
+
+  1. ⭐ **HER FIRST-SEASON DOMESTIC CLIMB GETS EASIER, ON IDENTICAL POINTS.** Mean best rank 9.2 →
+     **1.8**, while her peak domestic total is unchanged (217 → 216). She is not earning more; the
+     field around her is thinner, because `generatePreHistory` writes the cohort's opening book at
+     weeks −51…−1 and a season fold cannot see it. In season 1 she plays a domestic event most
+     weeks and the AI plays a scattered calendar, so **she tops the national race in year one on
+     most seeds**. Two readings are available and it is his call which one he wants: it is either
+     the race honestly rewarding the girl who turned up, or the pre-history's stated purpose («so a
+     fresh career opens on a REAL ranking table instead of a 199-way tie at zero») quietly voided
+     for this one table. **The lever, if he wants season 1 to keep a real field: give the cohort a
+     denser domestic calendar in season 1, or write the pre-history forward into weeks 0…k instead
+     of backward into −51…−1.** Nothing was tuned here.
+  2. **The international door opens about eleven weeks later** – the ITF on-ramp (250 domestic
+     points) latches at a mean of week 70 instead of 59, one seed as late as 133. Still **6 of 6
+     careers**, so it is a slower door and not a shut one, and `onRampCleared` latches for ever so
+     the reset can never take it back.
+  3. **She reads "Unranked" domestically for 36 weeks of 208 instead of 8** (one seed 69, one whole
+     season). That is a girl who has moved to the J tour and played no domestic event that season –
+     honest, and mostly invisible, because `activeLadderOf` hands her the ITF table the moment she
+     owns an ITF point. Season 4's mean best rank 14.8 → 47.2 is the same fact.
+  4. **The beginner rung re-opens for a mean of 5 weeks per 208-week career** (max 12), because a
+     reset total is briefly back inside Local's `[0, 85]` band. Small, and `hasOutgrown`'s other two
+     ceilings (`tierOutgrown`, `playDownBars`) do not reset – but it is the one place the ruling can
+     be *farmed*, and it is worth his eye.
+  5. **The sponsor read is unharmed and mostly better**: `sponsorWindowOpensAt` is season-start + 47,
+     the fullest week of a season-to-date table. Mean domestic points at w47: s1 217→216, s2
+     223→275, s3 157→184, s4 66→26.
+
+  **THE GUARD** is `tests/season/domestic-season-to-date.test.ts`: the total is monotonic
+  non-decreasing within a season and resets at the wrap, asserted on a synthetic ledger week by week
+  AND on a real walked world; the ITF table is asserted to STILL fall mid-season, so a future
+  "make it consistent" tidy-up trips; the counting-results list is asserted to add up to the total
+  beside it. Mutation-verified five ways (flip the constant, revert either fold, skew the season
+  arithmetic, break the rank writer) – each turns exactly the intended assertion red.
 
 - [~] **14. «По какому правилу считается количество допусков на турниры? По сезону не обновляется,
   получается, только по возрасту или как?»**
