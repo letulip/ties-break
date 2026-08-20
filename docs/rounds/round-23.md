@@ -38,15 +38,151 @@ are analyses OF them; every other item that needs a world builds its own.
   – *build (copy).* The suspension letter's closing line reads as if she has been struck off
   something. Find the string as RENDERED with real data, not in source, and rewrite the ending.
 
-- [ ] **3. «А может ли соперница травмироваться во время матча?»**
+- [~] **3. «А может ли соперница травмироваться во время матча?»**
   – *answer, possibly build.* Straight question about the match engine: is a rival's in-match injury
   modelled at all? Answer with the code path or its absence. If absent, that is a design question
   back to him, not a silent build.
 
-- [ ] **4. «Проверь ещё раз текстовые трансляции на 500+ сериях пожалуйста, добавилось ли там
+  **ANSWERED, and it is two answers. SHE CAN STOP. SHE IS NEVER HURT.**
+
+  *(a) The firing path exists and is symmetric.* `simulateMatch` (`src/engine/match/engine.ts`
+  L89-94, L192-206) draws **two** retirement uniforms off `${seed}:ret`, one per side, and walks
+  `retireHazard(pointNumber, stamina)` forward for both. Side 1 is the rival's seat and it is not a
+  spectator – measured over 900 seeded matches of a low-stamina pair: **side 0 fifteen, side 1
+  sixteen, 3.44% of matches**. `playMatch` (`season/tournament.ts` L1000-1003) writes her id into
+  `MatchRecord.retiredId`, the kid advances on a full undiscounted win, and `world/matchNews.ts`
+  L65-68 gives the feed its own verb – *"beat a retiring"*. Three real ones, printed by
+  `tests/match/rival-retirement.test.ts` out of 52 seeded Local Open draws:
+
+  ```
+  seed "rival-2"   round 2/3   ai-0 v kid   4-6 6-3 3-2   retired: ai-0   winner: kid
+  seed "rival-41"  round 0/3   ai-0 v kid   7-6 4-6 4-2   retired: ai-0   winner: kid
+  seed "rival-51"  round 1/3   ai-2 v kid   7-6 6-6       retired: ai-2   winner: kid
+  ```
+
+  *(b) But stopping is a SCORELINE event for her, never a BODY event – and this is the half he is
+  really asking about.* The layoff is opened by `retirementInjury(world)` (`world/injury.ts` L410),
+  which takes **only `world`** – the kid's world – and has no player-id parameter it could aim
+  anywhere else. Both of its call sites guard on the kid: `world.ts` L1962 (`if (retiredMatch)`,
+  where `retiredMatch` is `…find((m) => m.retiredId === KID_ID)` at L1741) and `world/planner.ts`
+  L420 (`if (retiredId === KID_ID)`). **THE FUNCTION THAT WOULD HAVE TO EXIST AND DOES NOT** is a
+  rival-side twin of it – something like `rivalUnavailable(world, cohortId, week)` – plus a reader
+  for it in `selectEntrants`. Neither exists, and there is nowhere to put the state: a rival is made
+  of exactly `ageYears, composure, growth, id, name, nation, potential, ret, serve, stamina` and
+  nothing else, and `season/rival.ts` L22 states the rule outright – *"Rivals get NO injuries, NO
+  physio, NO vacations and NO plan slider: that asymmetry is the player's edge, and it is
+  deliberate."* Proved behaviourally, not just read: the girl who retired in week 10 is byte-
+  identical afterwards and is entered, drawn and playing in week 11.
+
+  *(c) And in a match the kid is not in it cannot happen at all.* AI-AI rows resolve through
+  `fastMatchProbability` – one Bernoulli against a closed form, no points played, so no in-match
+  fatigue to integrate (`season/types.ts` L307 says so on the field itself; pinned by
+  `tests/match-retirement.test.ts`). So even if a rival body were added, only rivals who broke down
+  **in front of him** could ever be hurt – the rest of the field would stay immortal.
+
+  *(d) What the world DOES already model:* `alternatePlacesOpen` (`season/tournament.ts` L287) rolls
+  how many entrants withdrew before each event off `ECONOMY.availability.injuryBaseChance`. The
+  field breaking down is already fiction the game tells – anonymously, as a count of empty chairs.
+  What is missing is a **named** girl carrying it.
+
+  ⚠ **OWNER CALL, NOT A FIX-ROUND BUILD – and the cheap door is cheaper than it looks.** `retiredId`
+  is already persisted on the match row, so a rival's layoff could be *derived* from `world.results`
+  exactly the way `season/rival.ts` already derives her fatigue – **zero schema bump, zero RNG
+  draws**, which is the one route that respects that module's "derive, never store" contract (a
+  stored field on `AiPlayer` would cost a `SAVE_SCHEMA_VERSION` bump *and* re-map all 199 cohort
+  draws). The engine slice is genuinely small: a predicate plus a filter in `selectEntrants`.
+  **THE EXPENSIVE HALF IS EVERYTHING DOWNSTREAM.** A rival missing draws changes `finishes` →
+  changes the `world.results` rows → changes the standings → changes who is in every later draw →
+  changes who she meets and what she wins. That is a re-roll of every career's field from the week
+  the first rival retirement lands: every frozen hash and golden save that encodes a field or a
+  table moves, the corpus benches and the sim project's calibration bands need re-measuring, and
+  **his two live careers diverge from that week**. My estimate: a wave of its own, and the
+  re-freeze/re-measure tail is bigger than the feature. Recommend it is scheduled deliberately or
+  declined deliberately – not smuggled into a fix round.
+
+  *Evidence:* `tests/match/rival-retirement.test.ts` (5 tests, green) – the printed example, the
+  per-side rate, the rival's field list, the guarded call sites, and the week-11 re-entry.
+
+- [!] **4. «Проверь ещё раз текстовые трансляции на 500+ сериях пожалуйста, добавилось ли там
   детализации.»**
   – *measure.* A re-check of an earlier fix: did the commentary at the 500-and-above tiers actually
   gain detail? ⚠ Phrased as a RE-check, so if it did not, this is `[!]` REOPENED, not a new ask.
+
+  **⚠ REOPENED. The detail is not there, and at the 500 specifically it never was.**
+
+  *The earlier fix.* Commit `8e38c0d`, round 21 item 3, *"the running commentary knows which rung
+  she is playing on"* – his SECOND ask on the same subject («проверь пожалуйста что с комментариями
+  текстовой трансляции на 1000 и шлемах, кажется ничего не изменилось»). It gave `buildCommentary`
+  a fourth argument, the occasion, and drove three levers off `viz/preview.ts`'s four-storey ladder:
+  the phrase pools grow at storey 3 and again at storey 4, the stake is named from storey 2 up, and
+  the room appears from storey 3 up. It shipped with its own instrument, `tools/commentary-rung-probe.ts`.
+
+  *Measured now, 120 seeded matches, the same corpus in every arm* (`tests/commentary-tier-detail.test.ts`):
+
+  | arm | storey | draw | beats/m | sentences/m | chars/m | distinct phrasings |
+  |---|---|---|---|---|---|---|
+  | J30 opener | 2 | 32 | 16.20 | 29.52 | 961.0 | 396 |
+  | J30 final | 2 | 32 | 16.20 | 29.52 | 952.5 | 396 |
+  | W75 opener | 3 | 32 | 16.20 | 31.76 | 1066.3 | 526 |
+  | W75 final | 3 | 32 | 16.20 | 31.99 | 1065.3 | 528 |
+  | WTA 250 opener | 4 | 32 | 16.20 | 31.18 | 1077.8 | 606 |
+  | WTA 250 final | 4 | 32 | 16.20 | 31.40 | 1077.2 | 611 |
+  | **WTA 500 opener** | 4 | 32 | **16.20** | **31.18** | **1077.8** | **606** |
+  | **WTA 500 final** | 4 | 32 | **16.20** | **31.40** | **1077.2** | **611** |
+  | WTA 1000 opener | 4 | 64 | 16.20 | 31.18 | 1077.8 | 606 |
+  | WTA 1000 final | 4 | 64 | 16.20 | 31.40 | 1077.2 | 611 |
+  | Slam opener | 4 | 128 | 16.20 | 31.18 | 1077.8 | 606 |
+  | Slam final | 4 | 128 | 16.20 | 31.40 | 1077.2 | 611 |
+
+  Rows differing, same match, same row index, out of 1944:
+
+  | pair | differing | |
+  |---|---|---|
+  | J30 opener → W75 opener | 1064 | 54.7% |
+  | W75 opener → WTA 250 opener | 1087 | 55.9% |
+  | **WTA 250 opener → WTA 500 opener** | **0** | **0.0%** |
+  | WTA 500 opener → WTA 1000 opener | 120 | 6.2% |
+  | **WTA 500 final → Slam final** | **0** | **0.0%** |
+  | J30 final → WTA 500 final | 1130 | 58.1% |
+
+  **Three findings, and the third is the one that answers him.**
+
+  1. **The top of the ladder is one flat floor.** `storeyOf` (`viz/preview.ts` L60) puts
+     `wta250`/`wta500`/`wta1000`/`slam` all on storey 4, and `wta250.drawSize` and
+     `wta500.drawSize` are both 32 – so a WTA 500 and a WTA 250 narrate **byte-identically**, and a
+     WTA 500 final and a **Grand Slam final** narrate byte-identically too. The only thing separating
+     a 500 from a 1000 is **one row per match**: the opener's `stageLabel`, which names the draw size
+     ("Round of 64" vs "Round of 32"). Climbing from a 250 to a 500 to a 1000 buys him nothing.
+  2. **The beat count never moves at all.** 16.20 rows per match at every rung from J30 to Slam. The
+     log's beats are chosen by the *match*, never by the *rung*.
+  3. **⚠ WHY THE ROUND-21 FIX MISSED, and it is two mistakes stacked.**
+     *First, the arms.* `tools/commentary-rung-probe.ts` has a J30 arm, a W75 arm, a WTA 1000 arm
+     and a Slam arm – **and no WTA 250 arm and no WTA 500 arm**. It only ever compared the top of
+     the ladder against the bottom, where the storey genuinely changes; it never compared two rungs
+     *inside* storey 4, so the flat floor was invisible to the instrument that was built to find
+     exactly this. The rung he is standing on now has never been measured until today.
+     *Second, and worse, the fix answered the wrong word.* He asked for **детализация**; what
+     shipped was **variety**. Storey 4 rewords 56.7% of the rows against a W75 – and delivers
+     **+1.1% characters, the same 16.20 beats, and 1.8% FEWER sentences** (31.18 vs 31.76). It says
+     *fewer* things in *different* words. The mechanism is the per-row budget: `clausesUpTo` caps a
+     row at 120 characters, so an arriving stake or room clause **displaces** a colour clause instead
+     of joining it. The round-21 commit noticed this in passing – *"the stake arrives and costs one
+     colour clause to the row budget"* – and shipped anyway, because its success metric was distinct
+     phrasings (396 → 611, a real +54%) and phrasings are blind to substitution.
+
+     **So the line that stops a third attempt missing the same way:** any next fix must be graded on
+     beats-per-match and sentences-per-match with a **500-vs-250 arm in the instrument**, not on
+     phrasing counts against a junior arm.
+
+  *Not built:* the fix lives in `src/viz/commentary.ts` and `src/viz/preview.ts`, outside this
+  agent's lane (`src/engine/match/**` + tests). Handing over the measurement and the diagnosis.
+  ⚠ Also worth his knowing: only `TournamentFlow` passes `preview-event` into `MatchViewer` –
+  `MatchReplay`, `PracticeFlow` and `SeasonScreen` do not, so a re-watched match falls all the way
+  back to **storey 1**, the poorest log in the game.
+
+  *Evidence:* `tests/commentary-tier-detail.test.ts` (5 tests, green) – the table above is printed by
+  the first, and the flat floor, the one-row 1000 delta and the words-not-detail finding are asserted
+  by the other four.
 
 - [ ] **5. «Разный текст для каждой из карточек тренеров с микро описанием каждого из них в своём
   тире»**
