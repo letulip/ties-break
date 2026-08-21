@@ -168,8 +168,8 @@ const SEED_IN_THIRD: Record<CoachEdgePlacement, string> = {
  *  The whole state is covered by tests/component/round21-coach.test.ts; these two names are here so
  *  the two long-standing assertions in this file read as the same claim they always made. */
 const NOT_YET = {
-  near: 'Against this price – we will know in the off-season.',
-  far: 'Against this price – too soon, ask next off-season.',
+  near: 'Against most coaches – we will know in the off-season.',
+  far: 'Against most coaches – too soon, ask next off-season.',
 } as const
 
 /** What the plaque says, per place and per confidence band (docs/specs/coach-match-edge.md §7/§8a).
@@ -178,19 +178,19 @@ const NOT_YET = {
  *  blame, no figure - are re-readable straight off this table. */
 const PLAQUE: Record<'s1' | 's2' | 's3', Record<CoachEdgePlacement, string>> = {
   s1: {
-    upper: 'A season in – it looks like more than most at this price.',
-    middle: 'A season in – it looks like about average at this price.',
-    lower: 'A season in – it looks like less than most at this price.',
+    upper: 'A season in – it looks like more than most coaches would.',
+    middle: 'A season in – it looks like about what most coaches would.',
+    lower: 'A season in – it looks like less than most coaches would.',
   },
   s2: {
-    upper: 'Two seasons in and it holds – more than most at this price.',
-    middle: 'Two seasons in and it holds – about average at this price.',
-    lower: 'Two seasons in and it holds – less than most at this price.',
+    upper: 'Two seasons in and it holds – more than most coaches would.',
+    middle: 'Two seasons in and it holds – about what most coaches would.',
+    lower: 'Two seasons in and it holds – less than most coaches would.',
   },
   s3: {
-    upper: 'Season after season – more than most at this price.',
-    middle: 'Season after season – about average at this price.',
-    lower: 'Season after season – less than most at this price.',
+    upper: 'Season after season – more than most coaches would.',
+    middle: 'Season after season – about what most coaches would.',
+    lower: 'Season after season – less than most coaches would.',
   },
 }
 
@@ -359,7 +359,7 @@ describe('the plaque after a season names where in the band he fell', () => {
     // what is left is byte-identical, so there is nowhere for an adjective to hide; (b) the line
     // carries no state-dependent class, so the CSS cannot colour a low draw as bad news.
     const frames = (['lower', 'middle', 'upper'] as CoachEdgePlacement[]).map((p) =>
-      PLAQUE.s1[p].replace(/(more|less) than most at this price|about average at this price/, 'X'),
+      PLAQUE.s1[p].replace(/(more|less) than most coaches would|about what most coaches would/, 'X'),
     )
     expect(new Set(frames).size, 'one frame, three coordinates').toBe(1)
     for (const band of [PLAQUE.s1, PLAQUE.s2, PLAQUE.s3]) {
@@ -593,8 +593,8 @@ describe('the hedge lifts as the years go by', () => {
     // simply states it, and both name the same place in the same words.
     expect(early).toMatch(/it looks like/)
     expect(late).not.toMatch(/it looks like/)
-    expect(early).toContain('about average at this price')
-    expect(late).toContain('about average at this price')
+    expect(early).toContain('about what most coaches would')
+    expect(late).toContain('about what most coaches would')
     // ...and neither of them, at any tenure, has grown a figure for him (§7).
     for (const text of [early, late]) expect(text).not.toMatch(INDIVIDUAL)
   })
@@ -637,7 +637,7 @@ describe('letting him go and taking him back', () => {
     const text = wrapper.find('.cm-row.current .cm-plaque').text()
     // Same place, hedged again – the working relationship is new even though the man is not.
     expect(text).toBe(PLAQUE.s1.middle)
-    expect(text).toContain('about average at this price')
+    expect(text).toContain('about what most coaches would')
     expect(text, 'the hedging restarted with the partnership').not.toBe(before)
     expect(text).not.toMatch(INDIVIDUAL)
     wrapper.unmount()

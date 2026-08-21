@@ -472,9 +472,9 @@ describe('what the UI slice reads', () => {
     expect(coachEdgeView(world).revealWeek).toBe(257)
     world.week = 205 // season 3's own off-season comes and goes with nothing to say
     expect(coachEdgeView(world).revealed).toBe(false)
-    expect(coachEdgeView(world).plaqueLine).toBe('Against this price – too soon, ask next off-season.')
+    expect(coachEdgeView(world).plaqueLine).toBe('Against most coaches – too soon, ask next off-season.')
     world.week = 208 // ...and a new season opens, so the near arm takes over by itself
-    expect(coachEdgeView(world).plaqueLine).toBe('Against this price – we will know in the off-season.')
+    expect(coachEdgeView(world).plaqueLine).toBe('Against most coaches – we will know in the off-season.')
     world.week = 257
     expect(coachEdgeView(world).revealed).toBe(true)
   })
@@ -566,17 +566,17 @@ describe('the sentence on the plaque', () => {
   // ⚠ NOTHING IS LOOSENED: this arm still pins all nine sentences verbatim, and the two length
   // properties §7 measured are asserted below rather than trusted.
   it('is the §7/§8a table, verbatim – three places by three bands of certainty', () => {
-    expect(line('upper', 1)).toBe('A season in – it looks like more than most at this price.')
-    expect(line('middle', 1)).toBe('A season in – it looks like about average at this price.')
-    expect(line('lower', 1)).toBe('A season in – it looks like less than most at this price.')
+    expect(line('upper', 1)).toBe('A season in – it looks like more than most coaches would.')
+    expect(line('middle', 1)).toBe('A season in – it looks like about what most coaches would.')
+    expect(line('lower', 1)).toBe('A season in – it looks like less than most coaches would.')
 
-    expect(line('upper', 2)).toBe('Two seasons in and it holds – more than most at this price.')
-    expect(line('middle', 2)).toBe('Two seasons in and it holds – about average at this price.')
-    expect(line('lower', 2)).toBe('Two seasons in and it holds – less than most at this price.')
+    expect(line('upper', 2)).toBe('Two seasons in and it holds – more than most coaches would.')
+    expect(line('middle', 2)).toBe('Two seasons in and it holds – about what most coaches would.')
+    expect(line('lower', 2)).toBe('Two seasons in and it holds – less than most coaches would.')
 
-    expect(line('upper', 3)).toBe('Season after season – more than most at this price.')
-    expect(line('middle', 3)).toBe('Season after season – about average at this price.')
-    expect(line('lower', 3)).toBe('Season after season – less than most at this price.')
+    expect(line('upper', 3)).toBe('Season after season – more than most coaches would.')
+    expect(line('middle', 3)).toBe('Season after season – about what most coaches would.')
+    expect(line('lower', 3)).toBe('Season after season – less than most coaches would.')
   })
 
   it('⭐ and the card cannot jump: every sentence fits §4a, and the three places are one length', () => {
@@ -611,8 +611,8 @@ describe('the sentence on the plaque', () => {
    *  [половине сезона] - уже можно готовить "мало времени прошло" … и сдвигать эту планку дальше по
    *  году». All three asks are readable straight off these two strings. */
   it('says when the verdict comes, names the off-season, and counts nothing', () => {
-    expect(line(null, 0)).toBe('Against this price – we will know in the off-season.')
-    expect(line(null, 0, 'far')).toBe('Against this price – too soon, ask next off-season.')
+    expect(line(null, 0)).toBe('Against most coaches – we will know in the off-season.')
+    expect(line(null, 0, 'far')).toBe('Against most coaches – too soon, ask next off-season.')
 
     for (const text of [line(null, 0), line(null, 0, 'far')]) {
       // #7b, mechanically: no numeral of any kind survives - the "of 52" framing cannot creep back
@@ -627,7 +627,7 @@ describe('the sentence on the plaque', () => {
       // meant: «я значит не так понял эту фразу про "that band" и вообще что это такое». A referent
       // living in another element only works if the reader's eye has been where the author's was.
       // It is now the PRICE, which is on the card in currency and needs no eye-travel at all.
-      expect(text, text).toContain('this price')
+      expect(text, text).toContain('most coaches')
       // ⚠ AND THE LENGTH IS A MEASURED CONSTRAINT, not taste. The nine revealed sentences run 49-58
       // characters and every one wraps to exactly two lines at 320px and 375px, which is what keeps
       // the card from jumping when the reveal lands. A pre-reveal arm outside that window would
@@ -670,7 +670,7 @@ describe('the sentence on the plaque', () => {
         // `PLACEMENT_PHRASE` and will go stale again the next time the words change - which is the
         // trade the test accepts, because deriving it from the table would let a frame difference
         // hide inside the substitution and this arm exists to catch exactly that.
-        line(p, seasons).replace(/(more|less) than most at this price|about average at this price/, 'X'),
+        line(p, seasons).replace(/(more|less) than most coaches would|about what most coaches would/, 'X'),
       )
       expect(new Set(frames).size, `season ${seasons}`).toBe(1)
     }

@@ -76,8 +76,8 @@ function assertSheetPresent(): void {
 
 /** THE TWO PRE-REVEAL SENTENCES, longhand. Written out rather than imported from the engine so the
  *  WORDS are pinned here too: a change to either has to be deliberate. */
-const NEAR = 'Against this price – we will know in the off-season.'
-const FAR = 'Against this price – too soon, ask next off-season.'
+const NEAR = 'Against most coaches – we will know in the off-season.'
+const FAR = 'Against most coaches – too soon, ask next off-season.'
 
 /** `--accent`, the app's yellow (src/style.css `:root`). Longhand for the same reason. */
 const ACCENT: [number, number, number] = [207, 225, 82]
@@ -244,7 +244,7 @@ describe('#7c the bar moves with the hire', () => {
     // matching the old "…of that band." tail. The wording was rewritten because the owner could not
     // read it, so the tail is now the price; the claim is unchanged and still fails if the card is
     // still saying "we will know in the off-season".
-    expect(plaque, 'a placement, at last').toMatch(/ at this price\.$/)
+    expect(plaque, 'a placement, at last').toMatch(/ most coaches would\.$/)
     expect(plaque, 'the card is still promising rather than telling').not.toMatch(/off-season/)
     expect(plaque).not.toBe(NEAR)
     expect(plaque).not.toBe(FAR)
