@@ -30,7 +30,7 @@ import { activeLadderOf } from './ladder'
 import { collegeProgressOf, inCollege, measureCollegeOffer } from './college'
 import { kidAgeThroughWeek, kidAgeYears } from './age'
 import { buildAlbum, buildScroll } from './album'
-import { guardNotEnded } from './constants'
+import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood } from './constants'
 // ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
 // has to hand back the entries the college answer strands, and every rule about what a release
 // refunds – the fee, the year's ITF slot, the pro slot, the season mirror, the desk's letter – lives
@@ -52,8 +52,14 @@ import type { WorldState } from '../world'
  *  NAME, so `world.ts`'s barrel and the seven other command modules are untouched. The move is a
  *  dependency fix, not tidiness: `answerFork` below now RELEASES her outstanding entries, the refund
  *  ladder lives in `world/entries.ts`, and `entries.ts` importing this guard back out of here was the
- *  one edge that made that a cycle. See the note beside the definition. */
-export { guardNotEnded }
+ *  one edge that made that a cycle. See the note beside the definition.
+ *
+ *  ⚠⚠ AND SINCE ROUND 24 IT SAYS TWO THINGS. A career at COLLEGE is frozen, not finished, and D1's
+ *  shell put every one of these controls back under the player's thumb – so the guard now names
+ *  which latch it hit (`COLLEGE_FREEZE_REFUSAL` / `CAREER_ENDED_REFUSAL`). `guardNotEndedForGood` is
+ *  the same rule minus the freeze, for the two planner cancels; both sentences and both guards are
+ *  re-exported here so the command modules keep importing one place. */
+export { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood }
 
 // --- the views the leaf reads -------------------------------------------------------------------
 

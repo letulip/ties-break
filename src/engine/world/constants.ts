@@ -24,9 +24,67 @@ export const KID_ID = 'kid'
  *
  *  ⚠ ONLY `world/entries.ts` HAD TO BE REPOINTED, and the other seven callers deliberately still
  *  import it from `./endings` – they are edges INTO endings, which close nothing. Repointing them
- *  would be churn in files this wave has no other business in. */
+ *  would be churn in files this wave has no other business in.
+ *
+ *  ⚠⚠ AND IT SAYS TWO DIFFERENT THINGS NOW, BECAUSE THE PLAYER CAN REACH IT (round 24, E2). See
+ *  `COLLEGE_FREEZE_REFUSAL` below for the whole of why. */
+
+/** The sentence behind a latch that never comes off – «стоп», retirement, bankruptcy, the
+ *  career-ending injury, the natural end, the plateau. Exported so a test can pin the refusal
+ *  without pinning a spelling, on the precedent of `RELEASE_LINE_PREFIX`. */
+export const CAREER_ENDED_REFUSAL = 'This career has ended'
+
+/** ⭐⭐ ROUND 24, E2 – THE SENTENCE WHILE SHE IS AT COLLEGE, AND IT EXISTS BECAUSE D1 PUT THE TAB
+ *  SHELL BACK ON SCREEN UNDERNEATH THE FREEZE.
+ *
+ *  ⚠⚠ THIS IS NOT AN OLD BUG BEING TIDIED – IT IS NEWLY REACHABLE. College is implemented as an
+ *  ENDING that can be resumed, so `guardNotEnded` has always refused every mutating command through
+ *  the four years. Until c473258 the epilogue REPLACED the shell, so no control that reaches this
+ *  guard could be pressed; now the coach market, the sponsors, the planner and the calendar are all
+ *  one tap away and every one of them told a nineteen-year-old at university that her career was
+ *  over. Nothing corrupts – the refusal is engine-side and total – but the sentence was false.
+ *
+ *  ⚠ THE REFUSAL STAYS TOTAL. What changes is what it SAYS, not whether it refuses: the latch is
+ *  still what keeps a frozen career from being mutated, and `resumeFromCollege` is still the only
+ *  command in the game that clears one. B1 added `COLLEGE_REVEAL_REFUSAL` this same round on the
+ *  same principle – a silent no-op was the failure and a loud refusal was the fix.
+ *
+ *  ⚠ IT NAMES THE STATE AND THE WAY OUT (R10-16's doctrine, and the shape `COLLEGE_REVEAL_REFUSAL`
+ *  and `COLLEGE_SHUT_DETAIL` both take): where she is, that the career is alive, and what has to
+ *  happen before the control works. Nothing here shames the player – it is the game's bookkeeping. */
+export const COLLEGE_FREEZE_REFUSAL =
+  'She is at college – the career is not over, and this waits until she is back on tour'
+
 export function guardNotEnded(world: WorldState): void {
-  if (world.ending) throw new Error('This career has ended')
+  if (!world.ending) return
+  // ⚠ `ending.type` AND NOT `inCollege(world)`, and the difference is a dependency as well as a
+  // meaning. This module is the BOTTOM of the world package's graph and imports no value at all
+  // (see the header) – `inCollege` lives in `world/college.ts`, which would be a back edge from the
+  // leaf into the middle of the package. It is also the more precise question: `inCollege` is "is
+  // she at a university this week", while this is "is the latch on screen a FREEZE or an END", which
+  // is exactly what the sentence has to distinguish. They part on the one week that matters: a
+  // career-ending injury inside the freeze re-latches its own ending, and this correctly goes back
+  // to saying the career is over. It is the same half-predicate `App.vue`'s `showCollege` opens with.
+  if (world.ending.type === 'college') throw new Error(COLLEGE_FREEZE_REFUSAL)
+  throw new Error(CAREER_ENDED_REFUSAL)
+}
+
+/** ⭐ THE SAME GUARD MINUS THE FREEZE – for the handful of commands that a college week does not
+ *  stop. A terminal latch still refuses, exactly as above; the college branch passes through.
+ *
+ *  ⚠⚠ IT IS DELIBERATELY A SECOND NAME AND NOT A FLAG ON THE FIRST. The eighteen call sites of
+ *  `guardNotEnded` are the default and must stay visibly the default: a reader scanning a command
+ *  module should see WHICH of the two a command took without opening this file, and an options
+ *  object would have made the exemption a parameter that is easy to copy by accident. ⚠ Do not
+ *  "tidy" these two into one – the split IS the audit.
+ *
+ *  ⚠ AND THE LIST IT SERVES IS SHORT ON PURPOSE (round 24, E2's audit). Everything the college
+ *  freeze already shuts off in `tickWeek` – the academy, the sponsors, the gear, the knock, the
+ *  birthday, the entries B1's `releaseEntriesForTheFreeze` hands back – keeps `guardNotEnded`, with
+ *  the honest sentence. This is only for a command that is about the FAMILY'S OWN CALENDAR, where
+ *  being at a university plainly does not stop it, and where opening it can break nothing. */
+export function guardNotEndedForGood(world: WorldState): void {
+  if (world.ending && world.ending.type !== 'college') throw new Error(CAREER_ENDED_REFUSAL)
 }
 
 export const SEASON_MIN_FUTURE = 26 // always keep at least this many future weeks scheduled

@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (3,955 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (3,961 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-239 exported names across 30 owning modules.
+242 exported names across 30 owning modules.
 
 ## Areas
 
@@ -31,6 +31,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
+| `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
@@ -39,7 +40,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
 | `src/engine/world/album.ts` | THE ALBUM: seven polaroids, and the rule printed on every one of them | 2 |
 | `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 2 |
-| `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 2 |
 | `src/engine/world/labels.ts` | FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it | 2 |
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
 | `src/engine/world/knockHistory.ts` | THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out | 1 |
@@ -338,6 +338,16 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `maybeFireSeasonWrapUp` – `src/engine/world/milestones.ts`
 - `seasonWrapDue` – `src/engine/world/milestones.ts`
 
+### `src/engine/world/constants.ts`
+
+THE SHARED IDS AND CAPS: the handful of constants more than one world module needs.
+
+- `CAREER_ENDED_REFUSAL` – `src/engine/world/constants.ts`
+- `COLLEGE_FREEZE_REFUSAL` – `src/engine/world/constants.ts`
+- `guardNotEnded` – `src/engine/world/constants.ts`
+- `guardNotEndedForGood` – `src/engine/world/constants.ts`
+- `KID_ID` – `src/engine/world/constants.ts`
+
 ### `src/engine/condition.ts`
 
 THE condition math – one rule, everybody.
@@ -402,13 +412,6 @@ THE BOOKINGS, read side: what the family has put in the diary for a given week.
 
 - `practiceForWeek` – `src/engine/world/bookings.ts`
 - `vacationForWeek` – `src/engine/world/bookings.ts`
-
-### `src/engine/world/constants.ts`
-
-THE SHARED IDS AND CAPS: the handful of constants more than one world module needs.
-
-- `guardNotEnded` – `src/engine/world/constants.ts`
-- `KID_ID` – `src/engine/world/constants.ts`
 
 ### `src/engine/world/labels.ts`
 
