@@ -177,3 +177,26 @@ this fills.
 **Is it HER giving or the FAMILY's?** Round 23 #18 put her prize share in her own account from 18. If
 the money is hers, the parent proposing a gift is a different scene entirely – and possibly a better
 one than either half of the original question.
+
+---
+
+## 8. Steps
+
+The owner, 20.08: «Мы еще обсуждали магазин для трат и инвестиций, это тоже очень большой слой и
+независимый.» ⭐ **INDEPENDENT is the word that matters** – nothing in this file needs the private
+life, the advertising deals or the specialists, and none of them need it. It can be built whenever,
+or never, without stranding anything else.
+
+⚠ Each step is its own save-schema move (bump, append-only migration, golden fixture, e2e fixtures).
+
+| # | step | done when |
+| --- | --- | --- |
+| **1** | **the tab, with static prices** – buy, own, sell. No movement at all. | a bench career can buy a thing, keep it, and see it in the ledger |
+| **2** | **drift** – one sub-stream, no shocks | a season of prices reads as alive rather than as noise, measured |
+| **3** | **shock and freeze** (§3) | a freeze is survivable and a shock is a story, both measured over careers |
+| **4** | **the broker** (§4) – legibility, never return | he names a band and never a number, and the fee competes with a coach rung |
+| **5** | **charity** (§7) – the giving is free and the world notices | a gift changes something unpromised, and the ending can name it |
+
+⚠ **AND THE GATE ON STEP 1 IS §6.1's QUESTION, NOT A DATE**: a shop that opens before the money turns
+positive is a shop with an empty shelf. Round 23 measured that turn at season 2-3 on his own careers
+(-$11k, -$9k, +$20k, +$47k, +$126k), so "her first professional season" is the honest candidate.

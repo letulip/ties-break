@@ -92,6 +92,42 @@ the small ones, and they belong where the game is still tight.**
 5. ⚠ **No progress bar and no tier list.** Same rule the charity section of the shop file already
    argues: an unpromised return is the only kind that leaves the choice with the player.
 
+## 4a. ⭐⭐ THE COST, NAMED BY THE OWNER – it is the WEEK'S RECOVERY, not the week
+
+> «наверное в зависимости от всяких съемок и прочего может меняться восстанавливающий эффект недели»
+
+⭐ **THIS IS BETTER THAN THE VERSION ABOVE AND IT SHOULD REPLACE IT.** §4.3 proposed that a deal books
+appearance WEEKS, which needs a second calendar of its own and collides with entries, blackouts and
+vacations. His version needs none of that: the week stays hers, and what changes is **how much of it
+she gets back**.
+
+The channel already exists and is already legible. `ECONOMY.physio.conditionBonusPerWeek`, the rest
+bonus a skipped tournament pays, the vacation packages that buy a deep reset – **recovery is a number
+this game already moves for good reasons, and the player already reads it.** A shoot week that
+recovers like a travel week rather than a rest week is a real cost, stated in a currency he knows.
+
+⚠ **AND IT SCALES THE RIGHT WAY.** A small local deal costs a little recovery; a campaign costs a
+lot. No new state, no second calendar, no new surface – one modifier on an existing weekly figure.
+
+## 4b. What else these contracts can carry, from eighteen on
+
+He asked for the additional mechanics («какие у нас могут быть механики этих контрактов
+дополнительные от 18+ лет начиная и дальше»). Candidates, cheapest first:
+
+1. **Her own money.** Round 23 #18 already routes a share of prize money to `kidFundsCents` from
+   eighteen. ⭐ An advertising deal is HERS by nature – a brand buys her face, not the family's – so
+   this is the first income the parent genuinely does not control, and it needs no new machinery.
+2. **The refusal, and its reason.** A brand she will not be seen with. ⚠ This only works if declining
+   is sometimes RIGHT – see §5.3.
+3. **Obligations that outlive form.** A three-season deal signed at a peak still owes its shoots two
+   seasons later at #90. Fame lags results in both directions, and this is where that bites.
+4. **A conflict with the kit ladder.** Two brands in the same category cannot both have her. ⚠ A real
+   constraint that costs nothing to model: signing one closes a door on the other.
+5. **The private life feeding it.** `the-private-life.md` is where the story comes from; a marriage,
+   a public relationship or a loss all move fame, in both directions.
+
+---
+
 ## 5. Open for him
 
 1. **Is fame a number we are willing to own?** It is a second reputation axis and it will want a
@@ -100,3 +136,22 @@ the small ones, and they belong where the game is still tight.**
    cost; the second is free money wearing a cost's clothes.
 3. **Should refusing ever be right?** If declining is always wrong, it is not a decision. If it is
    sometimes right, the game has to say why – and that is a moral statement, not a balance one.
+
+---
+
+## 6. Steps
+
+⚠ Each needs a save-schema move. And ⚠ §3's measurement decides where this is worth building at all:
+**early, where the budget is still tight** – not at the top, where an ad cheque is noise.
+
+| # | step | done when |
+| --- | --- | --- |
+| **1** | **one non-endemic offer**, gated on results only, cash only, no cost at all | it arrives, it can be signed, and the ledger shows it |
+| **2** | **the recovery cost** (§4a) – a shoot week recovers like a travel week | a bench shows the season it costs, measured in weeks not lost |
+| **3** | **fame** – a slow second axis that rises with results and falls slower than a ranking | a photogenic #40 can out-earn a dour #8 in a bench, which is the whole claim |
+| **4** | **refusal with a reason** (§4b.2) | declining is sometimes the better play, and the game can say why |
+| **5** | **her own account** (§4b.1) – the deal pays HER, not the family | the parent can see money he cannot spend |
+| **6** | **obligations that outlive form** (§4b.3) | a deal signed at a peak still owes its weeks at #90 |
+
+⚠ **STEPS 1-2 ARE A COMPLETE FEATURE.** Everything from 3 on is the second axis, and that is a much
+larger commitment – fame wants a surface, a fog rule and its own calibration.

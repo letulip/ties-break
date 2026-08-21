@@ -27,6 +27,8 @@ import {
   venueCandidates,
   venueOrdinal,
   venueVariants,
+  occasionCandidates,
+  occasionArtUrl,
 } from '../../src/art/venues'
 import { buildSeason, TIER_LADDER } from '../../src/engine/season/calendar'
 import { SEASON_CHUNK } from '../../src/engine/world/constants'
@@ -333,5 +335,53 @@ describe('the rungs that borrow somebody else\'s art', () => {
       pairs++
     }
     expect(pairs).toBeGreaterThan(5)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 24 #4 – A FIXTURE WITH NO RUNG STILL GETS AN HONEST PICTURE
+// =================================================================================================
+//
+// The owner: «Картинки для студенческих турниров мне кажется можно взять из национальной ветки. Они
+// домашние и уютные, как мне кажется, как раз для студенческих лиг должны подойти.»
+//
+// ⚠ IT COULD NOT GO THROUGH `ART_TIER_BORROWS`. That maps TierId onto TierId, and these fixtures have
+// no tier by design – `callUpRubberId`'s own note says it "NAMES NO TIER ON PURPOSE" because the
+// commentary derives its occasion from the id. So an OCCASION borrows a set, and the tier system is
+// untouched. This file is what stops the borrow going stale.
+describe('round 24 #4 – rungless fixtures borrow a domestic set', () => {
+  it('⭐ every occasion resolves to real art, on every surface', () => {
+    const surfaces = ['hard', 'clay', 'grass'] as const
+    for (const occasion of ['nations-cup', 'college-league'] as const) {
+      for (const surface of surfaces) {
+        const pool = occasionCandidates(occasion, surface)
+        expect(pool.length, `${occasion} on ${surface} has no picture at all`).toBeGreaterThan(0)
+        for (const stem of pool) {
+          expect(FIELD_ART, `${stem} is not a shipped master`).toContain(stem)
+        }
+      }
+    }
+  })
+
+  it('⚠ and it borrows a DOMESTIC set – the owner named the reason, not just the folder', () => {
+    // His argument was that the domestic courts read as home courts, which is the right register for
+    // a fixture played for a country or a college rather than for ranking points. A borrow that
+    // quietly moved to a WTA 1000 venue would lose that without failing anything else.
+    for (const occasion of ['nations-cup', 'college-league'] as const) {
+      for (const stem of occasionCandidates(occasion, 'hard')) {
+        expect(stem, `${occasion} borrowed ${stem}`).toMatch(/^(local|regional|national)-/)
+      }
+    }
+  })
+
+  it('⚠ the same fixture always shows the same photograph, and two do not', () => {
+    // The property the whole picker exists for, asked of the new door: one fixture, one picture.
+    const a1 = occasionArtUrl('nations-cup', 'hard', 'callup-66-0', 'seed-a')
+    const a2 = occasionArtUrl('nations-cup', 'hard', 'callup-66-0', 'seed-a')
+    expect(a2, 'the same rubber repainted itself').toBe(a1)
+    const others = ['callup-66-1', 'callup-66-2', 'callup-118-0', 'callup-118-1'].map((id) =>
+      occasionArtUrl('nations-cup', 'hard', id, 'seed-a'),
+    )
+    expect(new Set([a1, ...others]).size, 'every rubber drew the same frame').toBeGreaterThan(1)
   })
 })

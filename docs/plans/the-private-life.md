@@ -134,12 +134,34 @@ has nothing to be good at.
 
 ---
 
-## 5. The questions only the owner can answer
+## 4a. ⭐⭐ ANSWERED BY THE OWNER – and it supplies the mechanic the layer was missing
 
-1. ⭐ **Whose decision is it – hers or his?** Round 23 #18 gave her a bank account at eighteen. The
-   same fork is here and it is sharper: does the parent get a say in her private life, ever? A game
-   where he can steer it is a different game from one where he can only react – and the second is
-   truer to the premise.
+I asked whether the parent gets a say at all. His answer (20.08):
+
+> «конечно имеет, и мы это обсуждали, но решения всё равно будут за девочкой, а в зависимости от
+> выборов родителя будет мораль развиваться. Отношения можно укрепить или разрушить и так далее.»
+
+⭐ **THIS IS THE WHOLE DESIGN, AND IT RESOLVES §0's PROBLEM.** I had framed it as a binary – either
+he steers her life or he only watches. It is neither. **She decides; he responds; the response is
+what moves the number.** So the player's input is real and constant without ever being a menu of her
+choices, which is the thing that would have broken the premise.
+
+Three consequences, and they are what the beats in §3 should be built to:
+
+1. **Every beat needs a REACTION, not a decision.** The scene is not "does she marry him" – it is what
+   the parent says when told. The existing dialog machinery already does exactly this shape.
+2. **`spirit` becomes two things, and they must not be confused.** ⚠ There is what LIFE did to her (a
+   break-up, a loss) and what the PARENT did about it. The first is weather; the second is the
+   relationship between them, and it accumulates. A single number cannot carry both honestly – the
+   second is «отношения можно укрепить или разрушить», and it is the one with a memory.
+3. **A wrong reaction has to be able to cost something**, or the choice is decoration. ⚠ And it must
+   be recoverable, or one bad click at fifteen ruins a ten-season career, which is not a game.
+
+⚠ **AND THE STAT DOES NOT EXIST YET**, which he confirms: «сейчас этого показателя нет вообще, мы как
+раз делаем так, чтобы он появился». So this layer is not "add events to an existing system" – it is
+where the system itself gets built, and everything in §3 depends on §2's spine landing first.
+
+## 5. The questions only the owner can answer
 2. **Can any of it be refused at the start?** A career sim that inserts a bereavement into somebody's
    evening without asking is a different product from one that does not. This is a settings question
    before it is a design one.
@@ -148,3 +170,24 @@ has nothing to be good at.
 4. **How much can `spirit` move a match?** If it is small, the layer is decoration. If it is large,
    the parent is watching a number he cannot touch decide his daughter's season. ⚠ Neither extreme is
    right and the middle needs a bench, not a taste.
+
+---
+
+## 6. Steps
+
+Each is its own wave, its own schema move, and its own gate. ⚠ The order is not a preference: every
+step reads the one above it.
+
+| # | step | what it is done when |
+| --- | --- | --- |
+| **1** | **the two numbers** – `spirit` (weather) and the parent's standing (memory). No events yet. | a bench career shows both moving and neither drifting to an extreme |
+| **2** | **one reaction surface** – a beat fires, the parent answers, standing moves. Use the existing dialog. | reverting the reaction changes the number, measured |
+| **3** | **3a someone exists** – the smallest whole beat, feed-first, possibly late | he can be told about a boyfriend by the feed and it reads as a scene |
+| **4** | **3b it ends** – the recovery curve, which is the first cost he cannot buy off | a fortnight of below-herself tennis is visible in results, not just in a stat |
+| **5** | **the psychologist** – shortens step 4's curve, and is legible because of it | the player sees her back sooner and knows why, with no number quoted |
+| **6** | **3c marriage** – a second adult with a claim on the career | the spouse can disagree with a schedule the player chose |
+| **7** | **3d pregnancy** – the fork that stops the career | a protected-ranking return exists and is not automatic |
+| **8** | **3e a death in the family** – last, carefully, with an off switch | ⚠ see §3e; this one can reach the player, not only her |
+
+⚠ **STOP AFTER ANY STEP.** Each is shippable alone, and steps 1-4 are a complete feature on their
+own. Nothing below step 5 is required for the layer to be worth having.
