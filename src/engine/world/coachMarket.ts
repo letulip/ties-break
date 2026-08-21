@@ -665,26 +665,34 @@ export function coachRevealWeek(sinceWeek: number): number {
  *  carried one and `coach-edge.test.ts` enforces it across all eleven states. The first draft of this
  *  rewrite said "his price" in every line and the guard caught all of them at once.
  *
- *  ⚠⚠ AND IT IS NOT ABOUT MONEY, WHICH WAS THE SECOND MISS. The first rewrite said "more than most
- *  AT THIS PRICE" - true, and it centred the fee, so the owner read it as a complaint about wages:
- *  «сейчас это звучит как "мне недостаточно платят или мне избыточно платят"». The fact this line
- *  carries is about WORK - how much this coach is getting out of her against what a coach typically
- *  gets - so the comparison is now to the coaches and not to the cheque. «Давай как-то попробуем
- *  абстрагироваться от бендов и цены и более доступным языком донести эти мысли.»
+ *  ⚠⚠ IT TOOK FOUR GOES, AND THE OWNER WROTE THE FOURTH. The record is short and it is the useful
+ *  part of this comment:
+ *    «the upper end of that band»    - the referent was an element two lines up on the card. He wrote
+ *                                      this game and could not read it, so no player would.
+ *    «more than most at this price»  - visible referent, WRONG SUBJECT. Centring the fee made a line
+ *                                      about her progress read as a coach complaining about wages:
+ *                                      «звучит как "мне недостаточно платят"».
+ *    «more than most coaches would»  - still a statistic wearing a person's coat.
+ *    what is here now                - HIS OWN DRAFT, edited to fit. A coach does not compare
+ *                                      himself to a population; he says what he hoped for and what
+ *                                      he is seeing. «Давай как-то попробуем абстрагироваться от
+ *                                      бендов и цены и более доступным языком донести эти мысли.»
  *
- *  ⚠ "MOST COACHES" IS THE SHARED REFERENT. §7's pairing requires the revealed sentence and the
- *  not-yet arm to point at the same thing, so the card asks one question either way. It was «that
- *  band» (invisible), then the price (visible but wrong), and it is now the other coaches - which is
- *  what the placement has meant all along.
+ *  ⚠ THE REGISTER IS STILL SYMMETRIC, which is what the no-praise rule was protecting: "more than"
+ *  and "less than I had hoped for" are the same sentence with one word moved, so a low draw is
+ *  reported exactly as calmly as a high one.
+ *
+ *  ⚠ "HER PROGRESS" IS THE SHARED REFERENT. §7's pairing needs the revealed sentence and the not-yet
+ *  arm to point at one thing, and now both are about the girl rather than about the man or his fee.
  *
  *  ⚠ NO PRAISE EITHER - `good`, `better`, `value`, `bargain` and their family are banned outright, so
  *  a low draw is reported in the same register as a high one. Measured: every composed sentence is
  *  50-59 characters, inside the 49-58 band the old nine occupied and under §4a's 60-character
  *  two-line ceiling at 320px. */
 const PLACEMENT_PHRASE: Record<CoachEdgePlacement, string> = {
-  upper: 'more than most coaches would',
-  middle: 'about what most coaches would',
-  lower: 'less than most coaches would',
+  upper: 'more than I had hoped for',
+  middle: 'about the pace I expected',
+  lower: 'less than I had hoped for',
 }
 
 /** THE PLAQUE, IN ONE SENTENCE (docs/specs/coach-match-edge.md §7 + §8a) - what the coach she
@@ -744,8 +752,8 @@ export function coachPlaqueLine(view: {
   // when the reveal lands.
   if (view.placement === null) {
     return seasonIndexOf(view.week) === seasonIndexOf(view.revealWeek)
-      ? 'Against most coaches – we will know in the off-season.'
-      : 'Against most coaches – too soon, ask next off-season.'
+      ? 'Her progress – I will know in the off-season.'
+      : 'Her progress – too soon, ask next off-season.'
   }
   const place = PLACEMENT_PHRASE[view.placement]
   // ONE SEASON IS ONE LOOK. The hedge is doing honest work here: a season is a small sample and the
