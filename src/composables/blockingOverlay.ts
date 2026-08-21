@@ -90,8 +90,19 @@ export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | nu
  *  the next dialog somebody adds inherits the wait"). The coach marks are not a dialog and do not
  *  block – `.coach-tour` is `pointer-events: none` everywhere but the card – but they black the
  *  screen out behind a 4000px shadow and hang a card off a measured rect, so landing them on a
- *  tournament reveal is exactly the collision round-21 #9 was raised about. */
-export type Popup = BlockingOverlay | 'injury' | 'season-summary' | 'tour-briefing' | 'onboarding-tour'
+ *  tournament reveal is exactly the collision round-21 #9 was raised about.
+ *
+ *  ⚠ `college-graduation` JOINED IT IN ROUND 24 (#4) AND THAT IS THIS HEADER'S PREDICTION COMING
+ *  TRUE A SECOND TIME. It is the card that closes the college years, and because college stopped
+ *  borrowing the epilogue as its shell that week is now an ORDINARY week on the tab shell – so the
+ *  new report inherits the wait by being named here instead of by growing a private `!pending`. */
+export type Popup =
+  | BlockingOverlay
+  | 'injury'
+  | 'season-summary'
+  | 'tour-briefing'
+  | 'onboarding-tour'
+  | 'college-graduation'
 
 /** ⭐ THE POPUPS THAT MAY LAND ON A BUSY SCREEN, and there are exactly two.
  *

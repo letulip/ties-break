@@ -451,7 +451,18 @@ describe('the advance button lives in the App shell, and splits by what a stray 
     // a stray tap is dangerous on a screen whose subject is elsewhere, and the calendar's whole
     // subject is the seven days that press spends. The sibling test below is where the calendar is
     // held to the half that has not moved an inch - the ACT stays the shell's.
-    expect(app).toContain(`<div v-if="tab === 'home' || game.snapshot?.pending" class="next-week-bar">`)
+    //
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 24 #3, AND NEITHER ARM IS WEAKENED – A THIRD CLAUSE JOINED THEM.
+    // College weeks run on the Home shell now, and `advanceWeeks` refuses to tick a single week
+    // behind an ending: on those weeks this button is a control that CANNOT WORK, which is R10-16's
+    // own bug (a refused control with no reason on screen). So the ADVANCE arm carries `&&
+    // !showCollege` and HomeScreen puts the week's two real answers in the same place instead.
+    // ⚠ THE RESUME ARM IS UNTOUCHED AND THAT IS LOAD-BEARING, not tidiness: if a reveal is ever open
+    // at college it is the ONLY way to clear the state `resumeFromCollege` refuses to tick past
+    // (COLLEGE_REVEAL_REFUSAL, round 24 rule 2), so it must stay global and unconditional. Both
+    // halves are pinned separately below precisely so a future edit cannot merge them by accident.
+    expect(app).toContain(`v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"`)
+    expect(app).toContain(`class="next-week-bar"`)
     // ...and the room reserved under it follows the same rule rather than being paid on every tab.
     expect(app).toContain(`<main class="app-content with-next-week-bar" :class="{ home: tab === 'home' }">`)
   })
@@ -473,6 +484,18 @@ describe('the advance button lives in the App shell, and splits by what a stray 
       expect(src, `${rel} must not carry the bar`).not.toContain('next-week-bar')
       expect(src, `${rel} must not advance`).not.toContain('game.advance(')
     }
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 24 #3 – AND THE ACT HALF IS WHAT SAYS THE EXCEPTION IS NOT A BREACH.
+    // Home DOES draw a fixed bottom control now, on the weeks she is at college: `.college-bar`, with
+    // the two answers in it. That is a different object from the shell's bar and it is not an
+    // advance – `advanceWeeks` refuses to tick a single week behind an ending, so `resumeFromCollege`
+    // and `endCollegeEarly` are the only two commands that can move a college week, and neither is
+    // reachable from the shell's bar. The sweep above still holds Home to the rule that matters (it
+    // may not call `game.advance(`), and this pins that the exception is exactly those two commands
+    // rather than a second week control growing quietly on a tab screen.
+    const homeSrc = read('../src/components/screens/HomeScreen.vue')
+    expect(homeSrc).toContain('await game.resumeFromCollege()')
+    expect(homeSrc).toContain('await game.endCollegeEarly()')
+    expect(homeSrc, 'and the shell still owns the week button on every other week').toContain('collegeWeek')
     // ...and the one screen that DOES carry a week control asks for it by event, so `playWeek` stays
     // the single door: same handler, same composable, same mode.
     //

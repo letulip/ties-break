@@ -49,6 +49,9 @@ import KnockDialog from './components/KnockDialog.vue'
 import BirthdayDialog from './components/BirthdayDialog.vue'
 import TourBriefingDialog from './components/TourBriefingDialog.vue'
 import EndingScreen from './components/EndingScreen.vue'
+// ⭐⭐ ROUND 24 #4 – the last college screen. See `showCollegeDone` for why it reads `world.college`
+// rather than a stop reason, and why one card covers both doors out of the freeze.
+import CollegeDoneDialog from './components/CollegeDoneDialog.vue'
 import ForkDialog from './components/ForkDialog.vue'
 import RetirementDialog from './components/RetirementDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
@@ -785,7 +788,14 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // see it happen. The academy's verdict fires at the season boundary, the advance hard-stops three
   // weeks earlier, and a player stepping by four lands on 49 then 53 - never on the week it spoke.
   // It is the one good-news stop in this table, so it says what changed rather than what it cost.
-  academy: 'Stopped: the academy has reviewed her year – check her scholarship.',
+  //
+  // ⚠⚠ ROUND 24 #1 – AND IT NAMES A DESTINATION NOW, WHICH IS THE OTHER HALF OF THE OWNER'S ITEM.
+  // The owner, 20.08: «Я бы и рад изучить, да только далее не знаю где.» The old line said "check her
+  // scholarship" and there was nothing in the game to check – the toast said WHEN and pointed at
+  // nowhere. C1 made the academy's three notices into kept letters and the tick raises them
+  // (`settleAcademyLetters`), so the sentence can honestly point at the inbox, in the voice the
+  // 'call-up' line one row down already uses – the surface, named, rather than an instruction.
+  academy: 'Stopped: the academy has reviewed her year – the letter is in her inbox, on Home.',
   // ⭐⭐ THE COLLEGE WAVE – the only line in this table that a `resumeFromCollege` puts up rather
   // than an advance. Her country played, and since this wave the rubbers are real matches with
   // stored seeds. On the three years that re-latch the epilogue this toast sits behind it and the
@@ -866,7 +876,44 @@ const showKnock = computed(() => overlay.value === 'knock')
 // `showEnding` is not a dialog at all. It REPLACES the tab shell, which is why it is branched in the
 // top-level chain beside OnboardingWizard rather than laid over the shell like the four overlays -
 // there is nothing behind an epilogue worth painting.
-const showEnding = computed(() => overlay.value === 'ending')
+//
+// =================================================================================================
+// ⭐⭐⭐ ROUND 24 #2b / #3 – COLLEGE IS NOT AN EPILOGUE, AND THIS IS WHERE THAT IS DECIDED
+// =================================================================================================
+//
+// The owner, 20.08: «После выбора колледжа показывают фотоальбом как будто карьера закончилась» and
+// «Весь флоу колледжа перенести на домашний экран… или отдельный параллельный полноэкранный».
+//
+// ⚠⚠ IT WAS NEVER A BUG – IT IS THE ARCHITECTURE SHOWING THROUGH. College is implemented as an
+// ENDING that can be resumed (`world.ending.type === 'college'`; `resumeFromCollege` is the one
+// command in the game that CLEARS an ending), so `blockingOverlay` answered 'ending', so the album
+// rendered. That was a sound engineering choice and it became a product problem: the player was
+// shown the end of the story in the middle of it.
+//
+// ⚠ THE FIX IS ONE PREDICATE AND NOT A SECOND FLOW. The owner offered two shapes and the cheaper is
+// right: college weeks run on the HOME shell with college content, not in a parallel full-screen
+// flow that would duplicate the week, the recap, the feed and the bottom control and then have to be
+// kept in step with them. So nothing about the ENGINE changes – the latch is still on, the world is
+// still frozen, `resumeFromCollege` is still the only way forward – and what changes is that the
+// takeover steps aside for the tab shell it has been standing in front of.
+//
+// ⚠ THE SPLIT IS TOTAL AND IT FAILS SAFE, which is the property that matters more than the split.
+// `ending.college` is `collegeProgressOf`, the OPEN QUESTION's own view: non-null exactly while she
+// is enrolled and has not left, null on every other ending in the game. So:
+//   * college, still enrolled          -> the Home shell (HomeScreen draws the year, the calendar,
+//                                         the rubbers and the two answers)
+//   * a real ending, college included   -> the epilogue, album and all. A career-ending injury or a
+//     once she is out                    bankruptcy INSIDE the freeze latches its own ending and
+//                                        `collegeProgressOf` returns null the same tick, so those go
+//                                        to the album exactly as they always did.
+//   * 'college' with no progress view   -> the epilogue's `resumes !== null` fallback, which is the
+//     (a shape no live path produces)    branch EndingScreen keeps so there can be no fourth.
+// The three cases are exhaustive over `snapshot.ending`, so no state can fall through to a blank
+// screen – the failure mode a two-way `v-if` on a takeover actually has.
+const showCollege = computed(
+  () => overlay.value === 'ending' && game.snapshot?.ending?.ending.type === 'college' && game.snapshot.ending.college !== null,
+)
+const showEnding = computed(() => overlay.value === 'ending' && !showCollege.value)
 const showFork = computed(() => overlay.value === 'fork')
 const showRetirement = computed(() => overlay.value === 'retirement')
 
@@ -976,6 +1023,66 @@ function dismissSeasonSummary(): void {
   if (season === null) return
   seasonWrapSeen.value = String(season)
   localStorage.setItem(seasonWrapSeenKey(), seasonWrapSeen.value)
+}
+
+// =================================================================================================
+// ⭐⭐ ROUND 24 #4 – «После выпуска экран graduated, потом домашний экран»
+// =================================================================================================
+//
+// The last year used to end with nothing at all. `finishCollege` takes the latch off FOR GOOD (its
+// own comment says so, and calls the asymmetry "the fact"), so the epilogue vanished on the click
+// and the tab shell reappeared with no beat between them: four years closed with less ceremony than
+// an ordinary training week. Now the fourth year hands over to a card, and the card hands over to
+// Home – which is the owner's own sequence, in his own order.
+//
+// ⚠ IT READS THE SNAPSHOT, NOT A STOP REASON, and this is the identical argument the knock, the
+// ending, the injury report and the season recap all make. `resumeFromCollege` deliberately returns
+// NO 'ending' reason on the year that finishes college (world.ts says why: that toast is the one the
+// player can actually read), so a gate built on stop reasons would have had nothing to read on three
+// of the four paths and the wrong thing on the fourth. `world.college` survives the freeze with
+// `doneWeek` set, so this beat is still there after a reload.
+//
+// ⚠ AND IT COVERS BOTH DOORS OUT. The engine has exactly two – the four years spent (`finishCollege`)
+// and «Back on tour now» (`endCollegeEarly`) – and they run the SAME two lines: `leaveCollegeState`
+// plus one kept milestone. `doneWeek === week` is therefore the whole predicate, and the card's
+// heading is the only thing that differs between them, on a COUNT rather than on a flag.
+//
+// ⚠ THE WATERMARK IS `injuryReported`'s, for `injuryReported`'s reason: `doneWeek` does not move
+// again (nothing advances a week until the player presses something), so without one the card would
+// re-open on every fresh snapshot. Keyed per career AND per week, in localStorage, never in the save.
+const collegeDoneKey = () => `tb:collegeDone:${game.snapshot?.careerId ?? ''}`
+/** The week she came out, or null on every career that is not out this week. */
+const collegeDoneWeek = computed(() => {
+  const s = game.snapshot
+  if (!s || s.ending !== null || s.college === null) return null
+  return s.college.doneWeek === s.week ? s.week : null
+})
+const collegeDoneSeen = ref<string | null>(localStorage.getItem(collegeDoneKey()))
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    collegeDoneSeen.value = localStorage.getItem(collegeDoneKey())
+  },
+)
+const showCollegeDone = computed(
+  () =>
+    // Behind every blocking question and behind a reveal, like every report that is not the injury –
+    // `queued` rather than `overlay`, the stricter of the two. In practice nothing is queued on this
+    // week (the latch is off and the world is idle), which is exactly why the clause is cheap to keep
+    // and would be expensive to omit the first time that stops being true.
+    queued.value === null &&
+    popupMayShow('college-graduation', game.snapshot ?? null, liveSequence.value) &&
+    collegeDoneWeek.value !== null &&
+    String(collegeDoneWeek.value) !== collegeDoneSeen.value,
+)
+function dismissCollegeDone(): void {
+  const week = collegeDoneWeek.value
+  if (week === null) return
+  collegeDoneSeen.value = String(week)
+  localStorage.setItem(collegeDoneKey(), collegeDoneSeen.value)
+  // «…потом домашний экран». The card is the last COLLEGE screen and Home is what it hands to, so
+  // the handover is stated here rather than left to wherever the player happened to be standing.
+  tab.value = 'home'
 }
 
 // =================================================================================================
@@ -1147,6 +1254,10 @@ function reopenTour(): void {
        nothing behind it to go back to. «Raise another» drops the in-memory career, which flips
        `showOnboarding` above and hands the player to the wizard: exactly the seam MoreScreen's own
        new-career flow uses, and exactly what §5.6 asks for - one tap, one question, nothing carried. -->
+  <!-- ⭐⭐ ROUND 24 #2b/#3: ...AND A COLLEGE WEEK IS NOT ONE OF THEM ANY MORE. `showEnding` excludes
+       the enrolled college latch (see the script), so this branch falls through to the tab shell
+       below and HomeScreen draws the year. Nothing about the engine moved: the latch is still on and
+       `resumeFromCollege` is still the only way forward. -->
   <EndingScreen v-else-if="showEnding" @new-career="game.$patch({ snapshot: null })" />
 
   <template v-else>
@@ -1255,7 +1366,19 @@ function reopenTour(): void {
              out of - so it stays global. R13-8 deleted the paused-tournament banner precisely
              because this button carried resume on every tab; keeping that arm global is what lets
              the banner stay deleted. -->
-    <div v-if="tab === 'home' || game.snapshot?.pending" class="next-week-bar">
+    <!-- ⚠⚠ ROUND 24 #3 – AND IT STANDS DOWN ON A COLLEGE WEEK, on Home only. `advanceWeeks` refuses
+         to tick a single week behind an ending, so while the college latch is on this button is a
+         control that CANNOT WORK – R10-16's own bug, which is a refused control with no reason on
+         screen. HomeScreen puts the week's two real answers in the same place instead («Another
+         year» / «Back on tour now»), so the bottom of the screen still spends the week.
+         ⚠ THE PENDING ARM IS UNTOUCHED AND THAT IS DELIBERATE. If a reveal is ever open at college
+         the resume button must still render on every tab – it is the ONLY way to clear the state
+         `resumeFromCollege` now refuses to tick past (COLLEGE_REVEAL_REFUSAL), and before this wave
+         there was no surface in the app that could draw the reveal at all. -->
+    <div
+      v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"
+      class="next-week-bar"
+    >
       <!-- R10-7: one button, a label that names the plan for the week it is about to play.
            R13-5/R13-8: it routes through playWeek – a paused tournament re-opens its overlay, a
            booked practice week opens the flow, everything else advances as before. -->
@@ -1345,6 +1468,13 @@ function reopenTour(): void {
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />
+
+    <!-- ⭐⭐ ROUND 24 #4 – the last college screen, and its Continue is the handover to Home. (The
+         owner's own sentence is quoted at `showCollegeDone` in the script; no Cyrillic may appear in
+         a template – tests/template-copy-rules.test.ts.) Inside the tab-shell branch rather than
+         beside EndingScreen, because by this week the latch is OFF: the career is live again, and
+         this is a report over a shell rather than a takeover replacing one. -->
+    <CollegeDoneDialog v-if="showCollegeDone" @continue="dismissCollegeDone" />
 
     <!-- R9-21a: a fresh injury raises a BLOCKING popup (kind, layoff, what was auto-withdrawn +
          refunds) and an alert sfx – no more quiet missable toast. R16 #19: gated on the SNAPSHOT,

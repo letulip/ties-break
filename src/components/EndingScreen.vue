@@ -25,16 +25,10 @@ import {
   type PlayStyle,
 } from '../shared/protocol'
 
-/** ⚠ THE SAME THREE NAMES THE FORK CARD USES, and since round 21 that is literally true rather than a
- *  promise in a comment: both screens import `COLLEGE_TIER_NAME` from the engine, so the two can no
- *  longer drift. They are places rather than verdicts; the prices behind them are sourced. */
-import { COLLEGE_TIER_NAME as COLLEGE_PLACE } from '../engine/collegeOffer'
-import { NATIONAL_TEAM } from '../engine/nationalTeam'
-import { KID_ID } from '../engine/world/constants'
-import { formatShortName } from '../shared/format'
+/* ⚠ SIX IMPORTS LEFT THIS FILE WITH THE COLLEGE BLOCK (round 24 #2b): `COLLEGE_TIER_NAME`,
+   `NATIONAL_TEAM`, `KID_ID`, `formatShortName`, `WorldMatch` and `MatchReplay` were all the year
+   card's, and they are `CollegeYearCard.vue`'s now. The epilogue watches no matches. */
 import { daysInBirthMonth } from '../shared/dates'
-import type { WorldMatch } from '../shared/protocol'
-import MatchReplay from './MatchReplay.vue'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -132,141 +126,22 @@ async function resumeCollege(): Promise<void> {
   await game.resumeFromCollege()
 }
 
-// --- ⭐⭐ P5: THE COLLEGE YEARS, ONE AT A TIME ---------------------------------------------------
+// --- ⭐⭐⭐ ROUND 24 #2b/#3: THE COLLEGE YEARS LEFT THIS FILE ------------------------------------
 //
-// College used to be one button reading «Four years later –» and 208 weeks spent behind it. Reality
-// says the return is normal and often EARLY – Diana Shnaider left NC State after about a season and
-// is inside the WTA top 15 – so the four-year block was the wrong SHAPE as well as an empty one.
-// This block is the question at each year boundary, and the year just lived is what it is asked
-// against. See docs/specs/college-as-a-second-act-2026-08.md.
+// The owner, 20.08 (a script comment may carry his words; a rendered template may not – and the
+// literal tag name may not appear here either: tests/template-copy-rules.test.ts finds the block by
+// the FIRST occurrence of it in the file, so writing it in a comment moves the guard's own window):
+// «После выбора колледжа показывают фотоальбом как будто карьера закончилась» and «Весь флоу
+// колледжа перенести на домашний экран».
 //
-// ⚠ IT MAY NOT RECOMMEND (ruling 4, 30.07 – the same rule the fork at nineteen keeps). The two
-// answers are drawn as two options of ONE weight, not a CTA and a link, because the styling is an
-// opinion in a different font. The card states the year's numbers and stops: no verdict on whether
-// another one is a good idea, and no adjective anywhere near her rubbers.
+// P5's year block – the heading, the lead, the year's facts, the call-up note, the watchable rubbers
+// and the two answers – is `components/CollegeYearCard.vue` now, drawn by `HomeScreen` on a college
+// week. It moved verbatim; nothing about it was rewritten, and there is no second copy of it here.
 //
-// ⚠ AND EVERY NUMBER ON IT COMES FROM THE ENGINE. `CollegeYear` is measured at the two ends of the
-// year and persisted, because nothing else in the save can reconstruct it – `pruneResults` deletes a
-// result 52 weeks after it happened and `financeWeeks` keeps a 60-week window.
-const college = computed(() => view.value?.college ?? null)
-const lastYear = computed(() => college.value?.last ?? null)
+// WHAT STAYS is `resumeCollege` and the `resumes !== null` pill below it, because that is the branch
+// an ending typed 'college' WITHOUT a progress view still lands on (App.vue's `showCollege` requires
+// one) and a blocking takeover may not have a state with no way out of it.
 
-/** «Year 1 of 4» – off the engine's own count, never a template's idea of four. */
-const collegeHeading = computed(() => {
-  const c = college.value
-  if (!c) return ''
-  return `Year ${Math.min(c.yearsDone + 1, c.totalYears)} of ${c.totalYears}`
-})
-
-/** The one-line answer to "what was that year". Empty before the first one is spent. */
-const collegeLead = computed(() => {
-  const c = college.value
-  if (!c) return ''
-  // ⚠⚠ "the family stops paying" WAS FALSE AND SHIPPED FOR A WAVE (fixed round 21,
-  // docs/specs/the-college-tariff-2026-08.md). v51 gave the college years a bill and `resolveCollegeBill`
-  // has charged it weekly ever since; this screen went on telling the player the opposite, and so did
-  // the "Another year" button below and `ending.ts`'s own detail line. All three are fixed together,
-  // because the failure was that only ONE of the four copies of the claim got fixed when the bill landed.
-  if (c.yearsDone === 0) {
-    // ⭐ 17.08 – IT NAMES THE PLACE SHE PICKED. The tier is a price and a squad now, chosen at the
-    // fork, and four years are lived here; a screen that never said which one she took would be
-    // hiding the decision the player actually made. ⚠ NULL ON A CAREER THAT ENTERED BEFORE THE
-    // CHOICE EXISTED – it says nothing rather than naming a place it was never told.
-    const place = c.tier ? `${COLLEGE_PLACE[c.tier]}. ` : ''
-    return `${place}A scholarship, a closed league that pays no ranking points, and the family pays whatever the award does not. She can leave at the end of any year.`
-  }
-  if (c.final) return 'One year of the scholarship left. After it she is out either way.'
-  return `${c.yearsDone} ${c.yearsDone === 1 ? 'year' : 'years'} spent, ${c.totalYears - c.yearsDone} left on the scholarship.`
-})
-
-/** ⭐⭐ ROUND 21 – WHAT THE NEXT YEAR COSTS, said before she agrees to it.
- *
- *  ⚠ THE BILL IS A DRAWDOWN AND THE COPY SAYS SO. It is not settled at enrolment: `resolveCollegeBill`
- *  takes a fifty-second of it every week she is there, out of the same balance the coach and the
- *  travel come out of – which is why a family can run out of money in the middle of a degree, and why
- *  this line belongs on the button that starts another year rather than in a summary afterwards.
- *
- *  ⚠ NULL ON A FREE RIDE AND ON A MIGRATED CAREER, because both of them genuinely pay nothing and a
- *  «$0 a year» row is a bill drawn where there is none. */
-const collegeBillLine = computed(() => {
-  const cents = college.value?.billPerYearCents ?? 0
-  if (cents <= 0) return null
-  return `${formatCents(cents)} for the year, charged weekly`
-})
-
-/** #A -> #B across the year, or a dash at either end where she is on no list at all. `null` is not
- *  #1 – the same contract `LadderView.rank` keeps, and the reason this is not a number. */
-function rankMark(rank: number | null): string {
-  return rank === null ? '–' : `#${rank}`
-}
-
-const collegeRankSpan = computed(() => {
-  const y = lastYear.value
-  return y === null ? '' : `${rankMark(y.startRank)} to ${rankMark(y.endRank)}`
-})
-
-/** THE ONE WEEK OF THE YEAR THAT WAS NOT HERS. Her country picks the squad and there is no declining
- *  it; it pays no prize money and no ranking points, because the sport awards neither. */
-const collegeCallNote = computed(() => {
-  const y = lastYear.value
-  if (y === null) return ''
-  if (y.callUp === null) return 'Nobody wrote to her this year.'
-  const c = y.callUp
-  const court =
-    c.rubbersPlayed === 0
-      ? 'named in the squad, never on court'
-      : `${c.rubbersWon} of ${c.rubbersPlayed} rubbers won`
-  return `Her country called – ${court}, and the nation finished ${c.nationFinish}th. No prize money and no ranking points; there are none to award.`
-})
-
-// --- ⭐⭐ THE COLLEGE WAVE – THE COMPETITION, WATCHED ---------------------------------------------
-//
-// The owner's item 3 (19.08). His words are quoted verbatim where a `.vue` file may not carry them –
-// `docs/plans/college-as-a-place.md` §3 and `engine/world/college.ts`; in English: every college year
-// holds at least one competition that can be watched exactly the way the current ones are, the same
-// mechanism precisely, only the tournament names differing. The engine now PLAYS her rubbers
-// (`world/college.ts`), and this is where they are watched.
-//
-// ⚠ IT IS `MatchReplay`, THE SAME COMPONENT THE TOUR RE-WATCHES A MATCH IN, and that is the owner's
-// own 30.07 ruling rather than an economy: «I suppose we need the same principle of opening live and
-// replay matches ... it looks just like a separate screen and works fine, let's stick to it». So
-// "the same mechanism exactly" is literally true here – identical viewer, identical panels, one
-// `mode` prop apart from the live tournament flow.
-//
-// ⚠ AND IT IS A CONTROL PER RUBBER, NOT ONE FOR THE WEEK. She plays up to three, they are three
-// different opponents from three different countries, and a single button would have had to pick
-// one of them for the player.
-const collegeRubbers = computed(() => college.value?.rubbers ?? [])
-const watching = ref<WorldMatch | null>(null)
-
-/** "Rubber 2 – L. Kovac" – which one it was and who it was against, off the FROZEN record rather
- *  than off today's world, exactly like the box score's own names. The nation rides in the news line
- *  rather than on `MatchPlayer`, so the label here is the name alone. */
-function rubberLabel(match: WorldMatch, index: number): string {
-  return `Rubber ${index + 1} – ${formatShortName(match.oppName)}`
-}
-
-/** Won or lost, in the record's own words and with no adjective anywhere near it (§6: the game does
- *  not grade her, and ruling 4 keeps this card free of opinions).
- *
- *  ⚠ A RETIREMENT IS MARKED, AND IN THE RESULT SHEET'S OWN NOTATION. A bare "Won 6-4 2-1" reads as a
- *  scoreline that cannot happen; the trailing `ret.` is what a real sheet prints, and it is
- *  unambiguous beside the verb – "Lost 6-4 2-1 ret." is her walking off, "Won 6-4 2-1 ret." is the
- *  other woman doing it, because the one who retires is always the one who lost. `retiredId` is on
- *  the record precisely so no surface has to re-simulate the match to find out. */
-function rubberOutcome(match: WorldMatch): string {
-  const score = match.score ?? ''
-  const verb = match.winnerId === KID_ID ? 'Won' : 'Lost'
-  return `${verb} ${score}${match.retiredId ? ' ret.' : ''}`.trim()
-}
-
-/** She may only leave a year she has actually spent. The engine refuses it too – this is the screen
- *  agreeing with the rule rather than being the rule (CLAUDE.md invariant 1). */
-const canLeaveCollege = computed(() => (college.value?.yearsDone ?? 0) > 0)
-
-async function leaveCollege(): Promise<void> {
-  await game.endCollegeEarly()
-}
 </script>
 
 <template>
@@ -347,81 +222,26 @@ async function leaveCollege(): Promise<void> {
 
         <button class="ending-link" type="button" @click="scrollOpen = true">The whole record</button>
 
-        <!-- ⭐⭐ P5 – COLLEGE IS THE ONLY ENDING THAT RESUMES, AND IT RESUMES ONE YEAR AT A TIME.
-             The year just lived, then the two answers. Two options of one weight and no CTA: the
-             card is not allowed an opinion about which of them is right (ruling 4, 30.07). -->
-        <section v-if="college" class="college-year">
-          <Eyebrow as="h3">{{ collegeHeading }}</Eyebrow>
-          <p class="college-lead">{{ collegeLead }}</p>
+        <!-- ⭐⭐⭐ ROUND 24 #2b/#3 – THE COLLEGE YEAR BLOCK HAS LEFT THIS SCREEN, and its absence is
+             the whole of the owner's item – the album read to him as if the career had ended. (His
+             words are in the script block above; no Cyrillic may appear in a template –
+             tests/template-copy-rules.test.ts.) It was never a bug in this file: college is an
+             ENDING that can be resumed, so the epilogue was correctly what rendered – but the player
+             was being shown the end of the story in the middle of it.
+             It now lives in `components/CollegeYearCard.vue` and is drawn by `HomeScreen` on a
+             college week, with the two answers as the screen's bottom control. App.vue's
+             `showCollege` is the one predicate that routes it, and it is stated there.
+             ⚠ THE MARKUP MOVED VERBATIM – same computeds, same copy, same class names – because the
+             words were never the fault. Nothing here is a rewrite of it, and nothing here is a
+             SECOND copy of it: that is the failure this file has already paid for once, when the
+             college bill landed and only one of four copies of "the family stops paying" was fixed.
 
-          <dl v-if="lastYear" class="college-facts">
-            <div>
-              <dt>Banked</dt>
-              <dd>{{ formatCents(lastYear.fundsDeltaCents) }}</dd>
-            </div>
-            <!-- ⭐⭐ THE YEAR'S BILL, BESIDE WHAT THE YEAR BANKED (round 21). The two rows are the
-                 whole of the owner's delta question of 17.08: one is what the family paid, the other
-                 is what the balance did anyway. Neither is an opinion about the other, and the card
-                 still offers no verdict (ruling 4, 30.07). -->
-            <div v-if="collegeBillLine">
-              <dt>Tuition</dt>
-              <dd>{{ formatCents(college!.billPerYearCents) }}</dd>
-            </div>
-            <div>
-              <dt>Rank</dt>
-              <dd>{{ collegeRankSpan }}</dd>
-            </div>
-          </dl>
-          <p v-if="lastYear" class="college-call">{{ collegeCallNote }}</p>
-
-          <!-- ⭐⭐ THE COMPETITION, WATCHABLE. One row per rubber she actually played: who it was
-               against, what it finished, and the same replay the tour opens. A year with no letter
-               (or a year she was named and never took the court) draws nothing here, because there
-               is nothing to open – the sentence above has already said which of the two it was. -->
-          <ul v-if="collegeRubbers.length > 0" class="college-rubbers">
-            <li v-for="(m, i) in collegeRubbers" :key="m.eventId">
-              <button class="college-rubber" type="button" @click="watching = m">
-                <span class="rubber-who">{{ rubberLabel(m, i) }}</span>
-                <span class="rubber-score">{{ rubberOutcome(m) }}</span>
-                <span class="rubber-watch">Watch</span>
-              </button>
-            </li>
-          </ul>
-
-          <div class="ending-fork">
-            <button
-              class="ending-fork-option"
-              type="button"
-              :disabled="game.busy"
-              @click="resumeCollege"
-            >
-              <strong>{{ college.yearsDone === 0 ? 'Play the first year' : 'Another year' }}</strong>
-              <!-- ⚠⚠ THIS SPAN SAID "and the family still pays nothing" UNTIL ROUND 21, ON THE BUTTON
-                   THAT COMMITS HER TO ANOTHER YEAR OF THE BILL. v51 priced the college years and the
-                   engine has charged them weekly ever since; the one place a player could have been
-                   told was the control that starts one, and it asserted the opposite. -->
-              <span v-if="collegeBillLine">Student tennis, no ranking points – {{ collegeBillLine }}.</span>
-              <span v-else>Student tennis, no ranking points, and the award covers the whole year.</span>
-            </button>
-            <button
-              v-if="canLeaveCollege"
-              class="ending-fork-option"
-              type="button"
-              :disabled="game.busy"
-              @click="leaveCollege"
-            >
-              <strong>Back on tour now</strong>
-              <span>She leaves the scholarship and starts again from qualifying.</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- ⚠ THE THIRD BRANCH EXISTS SO THERE IS NO FOURTH. `college` and `resumes` are both
-             non-null on every college ending the engine can produce today, and both null on every
-             other one – but a footer whose branches are not exhaustive is a DEAD END on a blocking
-             takeover, which is the round-20 failure with a different cause. If a resume week ever
-             arrives without a progress view, the way back is still one tap. -->
-        <PrimaryPill v-else-if="resumes !== null" variant="cta" @click="resumeCollege">
+             ⚠ AND THIS BRANCH IS WHAT KEEPS THE FOOTER EXHAUSTIVE. `showCollege` requires a progress
+             view; an ending that says 'college' WITHOUT one therefore arrives here, and a footer
+             whose branches are not exhaustive is a dead end on a blocking takeover (the round-20
+             failure with a different cause). If a resume week ever arrives without a progress view,
+             the way back is still one tap. -->
+        <PrimaryPill v-if="resumes !== null" variant="cta" @click="resumeCollege">
           Another year –
         </PrimaryPill>
 
@@ -448,19 +268,6 @@ async function leaveCollege(): Promise<void> {
       </footer>
     </section>
 
-    <!-- ⚠ INSIDE `.ending`, AND THAT IS THE Z-ORDER RATHER THAN A CONVENIENCE. `.ending` is
-         `position: fixed; z-index: 60`, so it OPENS A STACKING CONTEXT; the takeover's own
-         `z-index: 55` therefore paints above the album and the footer without having to outrank the
-         epilogue itself. Mounted as a sibling of the album section (not inside the footer) so it
-         covers the whole surface the way it covers the tab shell everywhere else.
-         ⚠ AND IT IS THE ONLY THING ON THIS SCREEN THAT IS NOT A DECISION – closing it puts the
-         player back on the same question, with nothing decided and nothing lost. -->
-    <MatchReplay
-      v-if="watching"
-      :match="watching"
-      :title="NATIONAL_TEAM.label"
-      @close="watching = null"
-    />
   </div>
 </template>
 
@@ -686,106 +493,10 @@ async function leaveCollege(): Promise<void> {
   color: var(--ink-soft);
 }
 
-/* ⭐ P5 – THE COLLEGE YEAR BLOCK. It lives INSIDE the ending's own scroller (`.ending` is
-   `position: fixed; inset: 0; overflow-y: auto`), which is what makes both answers reachable however
-   long the copy gets – the property `tests/component/college-second-act.test.ts` asserts and proves
-   by mutation. The round-20 rule is about a CENTRED card with no height bound; this is the other
-   shape, and it is measured as that shape rather than waved through. */
-.college-year {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 360px;
-}
-
-.college-lead,
-.college-call {
-  margin: 0;
-  max-width: 34ch;
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--ink-soft);
-  text-align: center;
-}
-
-/* The year's two numbers, in the totals' own idiom so the page has one voice. */
-.college-facts {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin: 0;
-  width: 100%;
-}
-
-.college-facts div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.college-facts dt {
-  font-size: 11px;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
-.college-facts dd {
-  margin: 0;
-  font-size: 16px;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ⭐⭐ THE RUBBERS. Rows rather than cards: they are three readings of one week, and the week has
-   already been introduced by the sentence above them. Each is a full-width control, inside the
-   takeover's own scroller like every other control on this screen, so the round-20 measurement in
-   tests/component/college-second-act.test.ts covers them without a second shape to reason about. */
-.college-rubbers {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.college-rubber {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: baseline;
-  gap: 10px;
-  width: 100%;
-  text-align: left;
-  padding: 9px 12px;
-  border: var(--stroke-hair) solid var(--ink-dim);
-  border-radius: var(--radius-control);
-  background: transparent;
-  font: inherit;
-  font-size: 13px;
-  color: var(--ink);
-  cursor: pointer;
-}
-
-.rubber-who {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rubber-score {
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-
-.rubber-watch {
-  color: var(--ink-2);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
+/* ⚠ AND THE COLLEGE YEAR BLOCK'S RULES WENT WITH ITS MARKUP (round 24 #2b) – `.college-year`,
+   `.college-lead`, `.college-call`, `.college-facts`, `.college-rubbers`, `.college-rubber` and the
+   three `.rubber-*` spans are `CollegeYearCard.vue`'s scoped sheet now. `.ending-fork` above STAYS:
+   the hand-off's three capital cards are the same object and are the only caller left. */
 
 /* --- the record underneath --- */
 .ending-scroll-body {
