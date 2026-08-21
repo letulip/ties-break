@@ -381,14 +381,46 @@ export function assignCompetitionRanks<T extends { playerId: string; points: num
   const out: RankingRow[] = []
   let rank = 0
   let prevPoints: number | null = null
+  // ⚠⚠ A TABLE WHERE NOBODY HAS SCORED RANKS NOBODY (round 24 #4, 21.08). A ranking is a statement
+  // about who is AHEAD OF WHOM, and a table on which nobody has scored says nothing – so the honest
+  // answer is not a place, it is "she is not ranked here". Competition numbering cannot reach that
+  // answer on its own: ties share a number, so with every row on zero every row is FIRST, and the
+  // owner opened a save that told him his daughter was world number one on a table where no player
+  // in the world held a point. (The all-zero table was itself a symptom – an entry that outlived
+  // the college fork froze the world's housekeeping for 204 weeks, fixed separately. This rule is
+  // the DEFENCE: whatever empties a table, an empty table may not crown anybody.)
+  let scored = false
   rows.forEach((row, i) => {
+    if (row.points > 0) scored = true
     if (prevPoints === null || row.points !== prevPoints) {
       rank = i + 1
       prevPoints = row.points
     }
     out.push({ playerId: row.playerId, points: row.points, rank })
   })
-  return out
+  // ⚠ THE TABLE KEEPS EVERY ROW AND ITS EXACT SIZE, and that is not a detail – dropping the unscored
+  // was the FIRST attempt at the neighbouring bug (see `computeRanking` below) and it shrank the
+  // list the domestic entry bands take their PERCENTILES from, silently redefining every acceptance
+  // cut. Nobody is ranked, so everybody sits at the bottom of the list: `out.length` is the table's
+  // own size, which is what "unranked" is already worth everywhere else in the engine
+  // (`world/ladder.ts`'s `tableSize` – *"each table's own size is its own unranked"* – and the
+  // `row?.rank ?? tableSize(...)` fallback `recomputeKidRank` writes for a player who is not in the
+  // table at all). So the fold and the cache reach the SAME number by two routes, which is the
+  // property that makes this fixable here and only here.
+  //
+  // ⚠ INERT THE MOMENT ANYONE SCORES, by construction: one row with points and this returns `out`
+  // untouched. That is what keeps it clear of the regression the round-23 note records – on a ROLLING
+  // table 89 juniors hold points and 111 sit on zero, and "the zeroes are 90th" is competition
+  // ranking answering correctly, not a bug to fix. The degeneracy needs EVERY row at zero.
+  //
+  // ⚠ IT LIVES IN THE SHARED NUMBERING RATHER THAN IN EITHER TABLE, because there are two tables and
+  // they must not answer this differently: `computeRanking` folds the three live tables and
+  // `mergedWtaRanking` (season/fieldPros.ts) folds the merged W standings, and since round 22 both
+  // get their rank numbers from this one function. A rule written in one of them would have been the
+  // second answer to one question this consolidation exists to prevent.
+  if (scored || !out.length) return out
+  const last = out.length
+  return out.map((r) => ({ ...r, rank: last }))
 }
 
 // computeRanking – the track's window (rolling 52 weeks, or season-to-date on the domestic table –
@@ -511,6 +543,15 @@ export function computeRanking(
   // is competition ranking answering correctly. The degeneracy needs EVERY row at zero to appear, and
   // only a season table opens that way. The rolling arm is left byte-identical, and with it every
   // professional and junior table in the game.
+  //
+  // ⚠⚠ ...EXCEPT THE ONE CASE THIS RULE CANNOT SEE, AND ROUND 24 #4 IS IT. "Only a season table opens
+  // that way" was true of January and false of a FROZEN world: a rolling table whose whole 52-week
+  // window has emptied is every row at zero too, and this arm never runs on it because the window is
+  // not `seasonToDate`. That degeneracy is handled one level up, in `assignCompetitionRanks` above,
+  // where it belongs – it is a fact about EVERY table rather than about this one, and the merged W
+  // standings have to get the same answer. This arm is unchanged and still needed: it is the MIXED
+  // case (some rows scored, some not) on a season table, which the rule above deliberately leaves
+  // alone. On an all-zero table the two agree – every row is already at `last` when this runs.
   if (window !== 'seasonToDate' || !ranked.length) return ranked
   const last = ranked.length
   return ranked.map((r) => (r.points > 0 ? r : { ...r, rank: last }))

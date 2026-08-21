@@ -102,6 +102,20 @@ const jPeak = computed<number | null>(() => {
 // screen no longer counts results to work it out for itself.
 const ranked = computed(() => ladder.value?.rank !== null && ladder.value?.rank !== undefined)
 const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ranked.value))
+// ⚠⚠ AND THE TABLE ITSELF CAN BE UNRANKED – round 24 #4, and this column is where the owner read it.
+// `LadderView.rank` has been nullable since the two-ladders wave so HER line says "Unranked"
+// honestly, but the standings beside it print `r.rank` for every row, and on a table where nobody
+// has scored that printed a place for all two hundred of them. The engine no longer says #1 there
+// (`assignCompetitionRanks` sends an all-zero table to the bottom of itself), but a number is still
+// the wrong WORD for it: the tile above says Unranked and the table under it must not disagree.
+//
+// ⚠ IT IS NOT A SECOND COPY OF THE ENGINE'S RULE, it is a read of what the engine sent. `standings`
+// is `computeStandings`' window – top 10 plus a window around her – so index 0 of the whole table is
+// always in it, and the table is sorted points-descending; "no row here has scored" is therefore
+// "no row in the table has scored" and not an approximation of it.
+// `tests/component/round24-unranked-table.test.ts` pins that dependency against a real world, because
+// it is a fact about `computeStandings` rather than about this file.
+const tableRanked = computed(() => standings.value.some((r) => r.points > 0))
 const points = computed(() => ladder.value?.points ?? 0)
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
 
@@ -275,7 +289,9 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
               <td colspan="4">…</td>
             </tr>
             <tr :class="{ 'kid-row': r.isKid }">
-              <td class="num">{{ r.rank }}</td>
+              <!-- A dash when NOBODY in this table has scored – see `tableRanked`. The same choice the
+                   age column makes one row down, for the same reason: an absent fact is not a value. -->
+              <td class="num">{{ tableRanked ? r.rank : '–' }}</td>
               <td>{{ formatShortName(r.name) }}</td>
               <!-- Her OWN age, whole years - never the band; see StandingRow.ageYears. A dash rather
                    than a zero for a row with nobody behind it: a missing age is not an age of none. -->
