@@ -35,7 +35,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
-import type { EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
+import type { AcademyLetterTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
 import { SPONSOR_TIERS, dealUntilWeek } from '../engine/offers'
 import { weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
@@ -80,6 +80,12 @@ const open = computed(() => letters.value.filter(live))
 function senderOf(o: Offer): string {
   if (o.kind === 'entry') return 'Tournament desk'
   if (o.kind === 'tour') return 'Tour office'
+  // ⭐ ROUND 24 #1 – and the academy signs like the two desks do, with what it IS rather than with a
+  // name. It has no brand and it never gets one: `engine/academy.ts` models the scholarship as a
+  // continuous level and a need factor, not as a named institution on a ladder, so inventing a
+  // letterhead here would be inventing a fact the engine does not hold. (It is also the one place
+  // this letter does not fit the kit shape – no `tier`, no mark, no `SPONSOR_TIERS` rung.)
+  if (o.kind === 'academy') return 'The academy'
   return (o.terms as KitOfferTerms).brand
 }
 
@@ -100,6 +106,15 @@ function subjectOf(o: Offer): string {
     if (t.notice === 'due') return `Required event – ${t.label ?? 'the tour'}`
     if (t.notice === 'penalty') return 'Penalty points recorded'
     return 'Entries suspended'
+  }
+  // ⭐ ROUND 24 #1 – the scholarship's three subjects. Each one restates its own sheet's first
+  // sentence, which is this function's rule; the share is on the line because the share is the whole
+  // content of two of the three, and it is the number the owner went looking for and could not find.
+  if (o.kind === 'academy') {
+    const t = o.terms as AcademyLetterTerms
+    if (t.notice === 'arrived') return `A scholarship – ${t.sharePct}% of her travel`
+    if (t.notice === 'ended') return 'The scholarship has ended'
+    return `Scholarship review – ${t.sharePct}% of her travel`
   }
   const t = o.terms as KitOfferTerms
   if (t.ended) return 'The kit deal has ended'

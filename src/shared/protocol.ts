@@ -1627,8 +1627,18 @@ export interface TierTrophies {
 /** Which instrument wrote. `kit` is the sponsor; `entry` is THE TOURNAMENT DESK (W2-LADDER §6,
  *  owner ruling 1: «у нас уже система писем есть для этого, надо использовать») - the letter that
  *  arrives when she registers for a professional event, and the short confirmation when she
- *  cancels in time. The agent (§4.2) and the investor (§4.3) still have no representation. */
-export type OfferKind = 'kit' | 'entry' | 'tour'
+ *  cancels in time. The agent (§4.2) and the investor (§4.3) still have no representation.
+ *
+ *  ⭐ `academy` IS ROUND 24 #1 – the junior scholarship's three notices, on paper. See
+ *  `AcademyLetterTerms` for what it says and why the feed alone could not keep it.
+ *
+ *  ⚠ THE WIDENING COSTS NO SCHEMA MOVE, and that is this union's own precedent rather than a
+ *  shortcut taken here: commit 2763caa added the whole `entry` family – the kind, the terms shape
+ *  and `cancelled` – and left `SAVE_SCHEMA_VERSION` at 36, because no save written before a kind
+ *  exists can contain it, nothing is renamed and no existing shape gains a required field. There is
+ *  nothing to migrate and nothing to back-fill; see `settleAcademyLetters` for the one thing an old
+ *  career CAN have derived for it, which is derived in the engine rather than in a migration. */
+export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy'
 
 /** WHICH RULE A PENALTY WAS (W3-ACT2, act2-pro-tour.md §6). A closed union, and it is closed on
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
@@ -2130,7 +2140,73 @@ export type KitEndReason =
   /** it simply ran to the end of its term, terms honoured on both sides */
   | 'term'
 
-export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms
+/** ⭐⭐ THE ACADEMY'S THREE NOTICES, AS PAPER (round 24 #1). The owner, 20.08: «сейчас как-то
+ *  незаметно появляется один маленький попапчик сверху, который призывает изучить scholarship и
+ *  кнопка dismiss. Я бы и рад изучить, да только далее не знаю где.»
+ *
+ *  ⚠ THE TOAST WAS THE FIX AND NOT THE SURFACE. Round 23 #16 found the verdict landing on `week % 52
+ *  === 0` – the one week a `+4` advance can never reach – and gave it a stop. That stop still does
+ *  its job, which is to say WHEN. What it never had was a destination: the toast said "check her
+ *  scholarship" and there was nothing in the game to check. So the same three notices the review
+ *  already writes into the feed now also arrive as letters, in the surface this game already has for
+ *  «somebody wrote to this family», and they are KEPT there.
+ *
+ *  ⚠ AND KEPT IS THE POINT, WHICH IS WHY IT IS A LETTER RATHER THAN A LOUDER EVENT. `pruneEvents`
+ *  caps the feed at 400 non-`keep` rows, and only the ARRIVAL is written with `keep: true`
+ *  (`fireMilestone`) – the changed share and the ending are ordinary `info` rows and a long career
+ *  has already lost them. `pruneEntryLetters` drops `entry` and `tour` letters at the season
+ *  boundary and NEVER touches anything else, so an `academy` letter lives as long as the career
+ *  does, exactly like the kit contract it sits beside.
+ *
+ *  ⚠ NUMBERS, NEVER ASSEMBLED PROSE – the rule `TourLetterTerms.requirements` states and for the
+ *  identical reason: `world.offers` is persisted, so a sentence written here would survive a retune
+ *  of `ECONOMY.academy` and go on stating a share that is no longer the rule. `sharePct` is what the
+ *  academy actually covers the week the letter was written; the sentence is rebuilt from it by
+ *  `OfferLetter.vue` on every read. */
+export type AcademyNotice =
+  /** nobody was backing her, and now somebody is */
+  | 'arrived'
+  /** they are still backing her and the share has MOVED – the review is silent when it has not */
+  | 'reviewed'
+  /** the run of support is over */
+  | 'ended'
+
+/** WHY THE SCHOLARSHIP STOPPED. The same three the feed line already distinguishes, because "she
+ *  aged out" and "she stopped playing" are different stories and the second one is a lesson. */
+export type AcademyEndReason =
+  /** past `ECONOMY.academy.ageBand[1]` – their junior programme has an upper age and she is past it */
+  | 'aged-out'
+  /** short of `minEventsPerYear`: nobody funds a prospect who does not compete */
+  | 'stopped-playing'
+  /** she competed and she is in the band – the year simply did not make their case */
+  | 'not-this-year'
+
+/** WHAT AN ACADEMY LETTER STATES. Every number on it is one the review had in its hand the week it
+ *  wrote; nothing here is re-derived at read time from a world that has moved on. */
+export interface AcademyLetterTerms {
+  /** which of the three this is */
+  notice: AcademyNotice
+  /** the share of every travel bill they pick up, as a WHOLE PERCENT – the same rounding the feed
+   *  line and the toast quote, so the paper and the ledger can never disagree by a decimal. 0 on an
+   *  ending letter. */
+  sharePct: number
+  /** `reviewed` only: what the share was before this review. The letter's whole content is the move,
+   *  so it has to carry both ends of it. */
+  wasPct?: number
+  /** `ended` only. */
+  reason?: AcademyEndReason
+  /** the week the CURRENT unbroken run of support began (`AcademySupport.sinceWeek`) – so a renewal
+   *  can say "with them since 2033" and an ending letter can say how long it ran. */
+  sinceWeek: number
+  /** the season index of the review that wrote it. It is also the letter's IDENTITY: one review per
+   *  season means one letter per season, and `academyLetterId` keys on nothing else. */
+  seasonIndex: number
+  /** the kit grant that landed with this review, in cents. Absent when none did – she is outside a
+   *  supported year, or a brand already covers all three lines. Money in cents, like everything. */
+  grantCents?: number
+}
+
+export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms | AcademyLetterTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */

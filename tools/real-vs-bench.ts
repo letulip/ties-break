@@ -511,7 +511,13 @@ function runBenchCareer(preset: Preset, index: number, seasons: number, arm: Arm
         for (const o of world.offers) {
           if (o.kind !== 'kit' || o.state !== 'open') continue
           if (world.week > o.deadlineWeek) continue
-          const tier = o.terms?.tier
+          // ⚠ ROUND 24 – AND THE READ IS NOW EXPLICITLY "A PROPERTY THAT MAY NOT BE THERE". The
+          // note above holds and this is not the cast it warns against: `academy` (round 24 #1)
+          // joined `OfferKind` with terms that carry no tier at all, so `o.terms.tier` stopped
+          // type-checking across the union. Asking a `{ tier?: unknown }` view for the property
+          // asserts nothing about WHICH member this is – it is the same honest string compare the
+          // line below already does.
+          const tier = (o.terms as { tier?: unknown }).tier
           const rank = tier === undefined ? -1 : ladder.indexOf(String(tier))
           if (rank < floor) continue // a local letter is left to lapse, exactly as both saves show
           // acceptOffer throws on the one-brand rule; a parent who already has a deal simply does

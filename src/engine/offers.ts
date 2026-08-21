@@ -87,8 +87,8 @@ import { seasonIndexOf } from './world/ledger'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
-  EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier,
-  TourLetterTerms,
+  AcademyLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason,
+  SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -1367,6 +1367,61 @@ export function raiseKitEndLetter(
   }
   const already = offers.find((o) => o.id === notice.id)
   if (already) return already
+  offers.push(notice)
+  return notice
+}
+
+// --- the academy's post (round 24 #1) -----------------------------------------------------------
+
+/** ONE REVIEW, ONE SEASON, ONE LETTER – the idempotency key for the academy's paper.
+ *
+ *  ⚠ THE SEASON IS THE WHOLE KEY, and the notice deliberately is NOT part of it. `reviewAcademy` can
+ *  say exactly one of its three things per season boundary (arrive, move the share, end), so a key
+ *  that also carried the notice would let a replayed week that re-decided the verdict write two
+ *  letters about one review. The same reasoning `raiseTourSeasonLetter` states for `tour-season-N`. */
+export function academyLetterId(seasonIndex: number): string {
+  return `academy-${seasonIndex}`
+}
+
+/** Every academy letter, oldest review first. `world.offers` is push-ordered and academy letters are
+ *  never pruned, but a career healed by `settleAcademyLetters` can have its back-filled arrival
+ *  pushed AFTER letters from later seasons – so this sorts on the season rather than trusting the
+ *  array, which is the same reason `InboxSheet` sorts on `week` rather than reversing the list. */
+export function academyLetters(offers: Offer[]): Offer[] {
+  return offers
+    .filter((o) => o.kind === 'academy')
+    .sort((a, b) => (a.terms as AcademyLetterTerms).seasonIndex - (b.terms as AcademyLetterTerms).seasonIndex)
+}
+
+/** The last thing the academy said, or null if it has never written. */
+export function newestAcademyLetter(offers: Offer[]): Offer | null {
+  const all = academyLetters(offers)
+  return all.length ? all[all.length - 1] : null
+}
+
+/** THE ACADEMY WRITES (round 24 #1). A NOTICE, not a proposal: `state: 'info'`, so there is nothing
+ *  to sign, nothing to refuse, and `expireOffers` has nothing to lapse – the same shape the tour's
+ *  four notices and the brand's goodbye already have.
+ *
+ *  ⚠ IT IS RAISED FOR ALL THREE, INCLUDING THE ENDING, and that is the half the feed was worst at:
+ *  a scholarship that stops is the moment the player most needs a record, and it is exactly the row
+ *  `pruneEvents` throws away first. The letter is `kind: 'academy'`, which `pruneEntryLetters` never
+ *  touches, so it is still there a season later when he goes looking.
+ *
+ *  ⚠ IDEMPOTENT ON ITS ID, like every other `raise*` in this file. Nothing here draws. */
+export function raiseAcademyLetter(offers: Offer[], week: number, terms: AcademyLetterTerms): Offer {
+  const id = academyLetterId(terms.seasonIndex)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const notice: Offer = {
+    id,
+    kind: 'academy',
+    week,
+    // Informational letters never expire on their own; see `raiseKitEndLetter`.
+    deadlineWeek: week,
+    terms: { ...terms },
+    state: 'info',
+  }
   offers.push(notice)
   return notice
 }
