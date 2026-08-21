@@ -31,12 +31,15 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../engine/season/calendar'
 import {
+  COLLEGE_SHUT_DETAIL,
   COLLEGE_TIER_NAME,
   COLLEGE_TIER_ODDS,
   canAfford,
   coveredShareOf,
   fundingBandOf,
+  quoteShutFor,
   type CollegeFundingBand,
+  type CollegeShutReason,
 } from '../engine/collegeOffer'
 import { ENDINGS } from '../engine/ending'
 import { portraitStage } from '../shared/avatarEmotion'
@@ -150,9 +153,10 @@ const picked = ref<CollegeTier | null>(null)
 const quotes = computed(() => offer.value?.quotes ?? [])
 /** ⚠ THE PLACE THE BUTTON WILL ACTUALLY TAKE – her pick, or the cheapest place open to her. The same
  *  fallback `answerFork` applies engine-side, so the card cannot promise a place the engine would not
- *  give (CLAUDE.md invariant 1: the engine re-validates, the screen does not decide). */
+ *  give (CLAUDE.md invariant 1: the engine re-validates, the screen does not decide).
+ *  ⚠ IT READS `rows`, NOT `quotes`, so this card holds exactly ONE notion of "open" – see `rows`. */
 const effective = computed<CollegeTier | null>(
-  () => picked.value ?? quotes.value.find((q) => q.open)?.tier ?? null,
+  () => picked.value ?? rows.value.find((r) => r.open)?.tier ?? null,
 )
 const effectiveQuote = computed(() => quotes.value.find((q) => q.tier === effective.value) ?? null)
 
@@ -167,46 +171,75 @@ interface TierRow {
   bill: string
   /** null = never measured (a migrated career). The card prints nothing rather than guessing. */
   affordable: boolean | null
+  /** ⭐⭐ WHY THIS PLACE IS REFUSED, or null when it is hers. See `rows`. */
+  shut: CollegeShutReason | null
+  /** the engine's own sentence for `shut`, never this file's. null when the row is open. */
+  refusal: string | null
 }
 
+// ⭐⭐⭐ ROUND 24 #2a – EVERY REFUSED PLACE STATES ITS REASON, AND THE REASON IS THE ENGINE'S.
+//
+// The owner, after a played career, could not tell why the cheapest place was unpickable (his own
+// words are in `docs/plans/college-the-flow.md` §2a; this file is English-only, its own rule). The
+// row was dead and the template typed its own explanation next to the boolean – a sentence BESIDE
+// the verdict rather than one derived from it. That is the shape `EntryStatus.ineligibleDetail` exists
+// to forbid one door along, in its own words: *"the fallback must not be a SECOND GUESS at which
+// refusal this was"* – a guess that once printed "Exams this week" on a rung a twenty-year-old was
+// age-locked out of.
+//
+// ⚠⚠ SO `open` IS DERIVED FROM THE REASON HERE TOO, AND NOT READ SEPARATELY. `quoteShutFor` takes
+// the engine's own persisted `quote.open` – the identical boolean `answerFork` re-validates on – and
+// names the rule behind it. A row therefore CANNOT be drawn refused without a reason, because the
+// reason is what makes it refused; and the card cannot disagree with the engine about whether a rung
+// is open, because there is one boolean and this file does not compute a second one.
+//
+// ⚠ RE-DERIVING FROM HER COUNTRY WOULD HAVE BEEN THE DEFECT. It is the same fact today, and it is a
+// second judgement: two answers that happen to agree are still two answers.
 const rows = computed<TierRow[]>(() =>
-  quotes.value.map((q) => ({
-    tier: q.tier,
-    open: q.open,
-    name: TIER_LABEL[q.tier],
-    // ⭐⭐ THE ODDS REPLACED THE SQUAD (round 21 #2). `Squad 55` was ours, on a scale the card never
-    // printed her own number on, so there was nothing to compare it to; this is a measured share of
-    // careers out of this build. ⚠ THE WINDOW IS NAMED ONCE UNDER THE LIST, not three times on it.
-    odds: `Top 100 for ${COLLEGE_TIER_ODDS[q.tier].top100In100} in 100`,
-    price: `${formatCents(q.costPerYearCents)} a year`,
-    // ⚠ THE BAND IS THE HEADLINE AND THE PERCENTAGE IS THE WORKING – the name is a summary of the
-    // figure and not a replacement for it. A walk-on is named as one: nobody funded her, and she may
-    // still enrol and pay, which is the owner's ruling of 16.08 read on a row instead of a button.
-    award:
-      q.athleticShare <= 0 && q.needShare <= 0
-        ? 'Walk-on, no award'
-        : `${BAND_LABEL[fundingBandOf(coveredShareOf(q))]} (${pct(coveredShareOf(q))})`,
-    // ⚠ THE WEEK IS THE UNIT THE ENGINE CHARGES IN. `resolveCollegeBill` debits one fifty-second of
-    // the year every week she is enrolled, out of the same balance the coach came out of, so a family
-    // can run out mid-degree. A card quoting only a year would describe a different mechanic.
-    // ⚠⚠ TWO FIGURES ON THE ROW AND THE THIRD ON THE BUTTON, AND A PHONE IS WHY. The first draft put
-    // the week, the year AND the whole course on every row; at 320x568 each of those lines wrapped to
-    // three and the mounted fit assertion went red – the round-20 defect, caught by the test that
-    // exists for it rather than by the owner. The four-year figure is the one the decision is
-    // actually about, so it moved to the button that commits her (see `effectiveLine`) instead of
-    // being printed three times.
-    // ⚠⚠ AND IT LOST ITS DEFINITE ARTICLE TO A PHONE (round 21 #2). At the dear place «The family
-    // pays $1,259 a week – $65,470 a year» is 46 character-units against the 44 a 320px row holds, so
-    // it wrapped to two lines, and three wrapped rows plus the measured-odds caption took the whole
-    // answers block past what the screen can hold – the mounted 320x568 assertion went red at
-    // y=-10. Two units bought the line back. ⚠ The WEEK stays, because the week is the unit the
-    // engine charges in and a card quoting only a year would describe a different mechanic.
-    bill:
-      q.familyPerYearCents <= 0
-        ? 'Family pays nothing'
-        : `Family pays ${formatCents(Math.round(q.familyPerYearCents / WEEKS_PER_YEAR))} a week – ${formatCents(q.familyPerYearCents)} a year`,
-    affordable: offer.value ? canAfford(offer.value, q) : null,
-  })),
+  quotes.value.map((q) => {
+    const shut = quoteShutFor(q)
+    return {
+      tier: q.tier,
+      open: shut === null,
+      shut,
+      // ⚠ THE ENGINE'S SENTENCE, LOOKED UP – never written here. `COLLEGE_SHUT_DETAIL` is a total
+      // `Record` over the reason codes, so a new refusal cannot reach this card without its words.
+      refusal: shut === null ? null : COLLEGE_SHUT_DETAIL[shut],
+      name: TIER_LABEL[q.tier],
+      // ⭐⭐ THE ODDS REPLACED THE SQUAD (round 21 #2). `Squad 55` was ours, on a scale the card never
+      // printed her own number on, so there was nothing to compare it to; this is a measured share of
+      // careers out of this build. ⚠ THE WINDOW IS NAMED ONCE UNDER THE LIST, not three times on it.
+      odds: `Top 100 for ${COLLEGE_TIER_ODDS[q.tier].top100In100} in 100`,
+      price: `${formatCents(q.costPerYearCents)} a year`,
+      // ⚠ THE BAND IS THE HEADLINE AND THE PERCENTAGE IS THE WORKING – the name is a summary of the
+      // figure and not a replacement for it. A walk-on is named as one: nobody funded her, and she may
+      // still enrol and pay, which is the owner's ruling of 16.08 read on a row instead of a button.
+      award:
+        q.athleticShare <= 0 && q.needShare <= 0
+          ? 'Walk-on, no award'
+          : `${BAND_LABEL[fundingBandOf(coveredShareOf(q))]} (${pct(coveredShareOf(q))})`,
+      // ⚠ THE WEEK IS THE UNIT THE ENGINE CHARGES IN. `resolveCollegeBill` debits one fifty-second of
+      // the year every week she is enrolled, out of the same balance the coach came out of, so a family
+      // can run out mid-degree. A card quoting only a year would describe a different mechanic.
+      // ⚠⚠ TWO FIGURES ON THE ROW AND THE THIRD ON THE BUTTON, AND A PHONE IS WHY. The first draft put
+      // the week, the year AND the whole course on every row; at 320x568 each of those lines wrapped to
+      // three and the mounted fit assertion went red – the round-20 defect, caught by the test that
+      // exists for it rather than by the owner. The four-year figure is the one the decision is
+      // actually about, so it moved to the button that commits her (see `effectiveLine`) instead of
+      // being printed three times.
+      // ⚠⚠ AND IT LOST ITS DEFINITE ARTICLE TO A PHONE (round 21 #2). At the dear place «The family
+      // pays $1,259 a week – $65,470 a year» is 46 character-units against the 44 a 320px row holds, so
+      // it wrapped to two lines, and three wrapped rows plus the measured-odds caption took the whole
+      // answers block past what the screen can hold – the mounted 320x568 assertion went red at
+      // y=-10. Two units bought the line back. ⚠ The WEEK stays, because the week is the unit the
+      // engine charges in and a card quoting only a year would describe a different mechanic.
+      bill:
+        q.familyPerYearCents <= 0
+          ? 'Family pays nothing'
+          : `Family pays ${formatCents(Math.round(q.familyPerYearCents / WEEKS_PER_YEAR))} a week – ${formatCents(q.familyPerYearCents)} a year`,
+      affordable: offer.value ? canAfford(offer.value, q) : null,
+    }
+  }),
 )
 
 function pick(row: TierRow): void {
@@ -279,6 +312,72 @@ async function answer(a: ForkAnswer): Promise<void> {
         </div>
       </dl>
 
+      <!-- ⭐⭐⭐ ROUND 24 #2a – THE PLACES MOVED ABOVE THE ANSWERS, AND THAT IS THE OWNER'S FIRST
+           FAULT FIXED. They shipped BELOW the college button, so the card asked him to choose before
+           it let him read: the descriptions and the quotes for the three places sat under the very
+           control that spends them. Reading order is now facts -> what the three places cost ->
+           the three answers, so the most expensive click in the game is made after its prices.
+
+           ⚠ AND IT MAKES RULING 4 EASIER, NOT HARDER (30.07 – the card «may not recommend»). The
+           block used to hang off ONE of the three answers, which is nine rows of detail attached to
+           the college button and nothing attached to the other two. Out here it belongs to the card
+           rather than to an answer, and `.fork-answers` is three equal controls again with nothing
+           between them.
+
+           ⚠ NOTHING IS PRESSED ON ARRIVAL. `aria-pressed` is false on all three until the player
+           chooses, because a preselected place is a recommendation.
+
+           ⚠ THE ROWS ARE CONTROLS AND THE ANSWERS ARE ANSWERS, and the styling says which is which.
+           A row is a hairline in the FACTS idiom with no border and no fill; nothing here can be
+           mistaken for a fourth thing to end the career with. -->
+      <section v-if="rows.length" class="fork-places-block">
+        <!-- ⚠ A LABEL, NOT A LEAD-IN. It states the condition the block is about and says nothing
+             about whether to take it – the conditional is what keeps it out of ruling 4's way. -->
+        <h3 class="fork-places-head">If she goes to college, these are the three places</h3>
+        <ul class="fork-places">
+          <li v-for="row in rows" :key="row.tier">
+            <button
+              class="fork-place"
+              type="button"
+              :aria-pressed="picked === row.tier"
+              :class="{ 'is-picked': picked === row.tier, 'is-shut': !row.open }"
+              :disabled="game.busy || !row.open"
+              @click="pick(row)"
+            >
+              <span class="fork-place-head">
+                <strong>{{ row.name }}</strong>
+                <em>{{ row.price }}</em>
+              </span>
+              <!-- ⭐⭐ MEASURED, WHERE `Squad {{ }}` WAS INVENTED (round 21 #2). The owner asked for
+                   the place's quality as an odds he could compare something to, and he was right that
+                   a squad number is not one. ⚠ AND THE THREE ARE NEARLY THE SAME, which is the
+                   finding rather than a bug: what a dearer place changes is the bill, not her odds. -->
+              <span class="fork-place-line">{{ row.odds }} · {{ row.award }}</span>
+              <span class="fork-place-line">{{ row.bill }}</span>
+              <!-- ⚠ A FACT, NEVER A REFUSAL. She may take a place the family cannot pay for: it goes
+                   into debt, not away (owner, 16.08). -->
+              <span v-if="row.affordable === false" class="fork-place-line">Beyond what the family has</span>
+              <!-- ⭐⭐⭐ AND THIS ONE IS THE REFUSAL, SO IT SAYS WHY (round 24 #2a). It is the
+                   engine's own sentence off `COLLEGE_SHUT_DETAIL`, reached through the same value
+                   that disabled the button one attribute up – see `rows`. A row can therefore never
+                   be dead and silent: `row.open` IS `row.refusal === null`.
+
+                   ⚠ IT IS NOT DIMMED WITH THE REST OF THE ROW. The greying is what made this
+                   unreadable in the first place; on a refused row the reason is the one thing the
+                   player still needs, so `.fork-place-refusal` sits outside `.is-shut`'s fade. -->
+              <span v-if="row.refusal" class="fork-place-refusal">{{ row.refusal }}</span>
+            </button>
+          </li>
+        </ul>
+        <!-- ⚠ THE WINDOW, ONCE, UNDER THE LIST. A measured share means nothing without the span it
+             was measured over, and printing it on all three rows would be the third copy of a
+             sentence on a card that already scrolls.
+             ⚠⚠ AND IT IS ONE SHORT LINE BECAUSE THE FIRST DRAFT WAS TWO AND THE MOUNTED 320x568
+             ASSERTION WENT RED – the dismiss control sat at y=-25, which is round-20 #3 arriving on
+             this card by exactly the route CLAUDE.md describes: one honest sentence at a time. -->
+        <p class="fork-places-note">Four years after she leaves, over 53 careers.</p>
+      </section>
+
       <div class="fork-answers">
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('continue')">
           <strong>Turn professional</strong>
@@ -313,50 +412,6 @@ async function answer(a: ForkAnswer): Promise<void> {
           <span v-if="effectiveLine">{{ effectiveLine }}</span>
           <span v-else>Four years of student tennis on a college scholarship. No ranking points, and the money goes the other way.</span>
         </button>
-        <!-- ⭐⭐⭐ THE THREE PLACES, UNDER THE BUTTON THEY BELONG TO (17.08). They sit BELOW the answer
-             rather than inside it so the three answers keep the equal weight ruling 4 requires: a
-             button carrying nine rows of detail is a recommendation drawn in whitespace.
-
-             ⚠ THE ROWS ARE CONTROLS AND THE ANSWERS ARE ANSWERS, and the styling says which is which.
-             A row is a hairline in the FACTS idiom with no border and no fill; nothing here can be
-             mistaken for a fourth thing to end the career with.
-
-             ⚠ NOTHING IS PRESSED ON ARRIVAL. `aria-pressed` is false on all three until the player
-             chooses, because a preselected place is a recommendation. -->
-        <ul v-if="rows.length" class="fork-places">
-          <li v-for="row in rows" :key="row.tier">
-            <button
-              class="fork-place"
-              type="button"
-              :aria-pressed="picked === row.tier"
-              :class="{ 'is-picked': picked === row.tier, 'is-shut': !row.open }"
-              :disabled="game.busy || !row.open"
-              @click="pick(row)"
-            >
-              <span class="fork-place-head">
-                <strong>{{ row.name }}</strong>
-                <em>{{ row.price }}</em>
-              </span>
-              <!-- ⭐⭐ MEASURED, WHERE `Squad {{ }}` WAS INVENTED (round 21 #2). The owner asked for
-                   the place's quality as an odds he could compare something to, and he was right that
-                   a squad number is not one. ⚠ AND THE THREE ARE NEARLY THE SAME, which is the
-                   finding rather than a bug: what a dearer place changes is the bill, not her odds. -->
-              <span class="fork-place-line">{{ row.odds }} · {{ row.award }}</span>
-              <span class="fork-place-line">{{ row.bill }}</span>
-              <!-- ⚠ A FACT, NEVER A REFUSAL. She may take a place the family cannot pay for: it goes
-                   into debt, not away (owner, 16.08). -->
-              <span v-if="row.affordable === false" class="fork-place-line">Beyond what the family has</span>
-              <span v-if="!row.open" class="fork-place-line">In-state, and she is not a resident</span>
-            </button>
-          </li>
-        </ul>
-        <!-- ⚠ THE WINDOW, ONCE, UNDER THE LIST. A measured share means nothing without the span it
-             was measured over, and printing it on all three rows would be the third copy of a
-             sentence on a card that already scrolls.
-             ⚠⚠ AND IT IS ONE SHORT LINE BECAUSE THE FIRST DRAFT WAS TWO AND THE MOUNTED 320x568
-             ASSERTION WENT RED – the dismiss control sat at y=-25, which is round-20 #3 arriving on
-             this card by exactly the route CLAUDE.md describes: one honest sentence at a time. -->
-        <p v-if="rows.length" class="fork-places-note">Four years after she leaves, over 53 careers.</p>
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
           <strong>Stop here</strong>
           <span>She had a childhood in the sport. That is a whole thing to have had.</span>
@@ -469,9 +524,28 @@ async function answer(a: ForkAnswer): Promise<void> {
   color: var(--ink-soft);
 }
 
+/* ⭐⭐⭐ THE PLACES BLOCK (round 24 #2a) – it now sits ABOVE `.fork-answers` rather than inside it.
+   Its own margin is what used to be the gap `.fork-answers` gave it. */
+.fork-places-block {
+  margin: 0 0 14px;
+}
+
+/* ⚠ A LABEL IN THE FACTS IDIOM, THE SAME ONE `.fork-facts dt` USES – so the block reads as a table
+   of prices and not as a fourth answer. It may not look like `.fork-title`: a heading in the card's
+   heading font over three pressable rows is emphasis, and ruling 4 gives this card no emphasis to
+   spend. */
+.fork-places-head {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
 /* ⭐⭐⭐ THE THREE PLACES (17.08). Deliberately in the FACTS idiom and not the ANSWERS idiom: no
    border, no fill, nothing that could read as a fourth thing to end the career with. They are
-   quieter than the buttons they sit under, which is the only styling opinion ruling 4 permits – the
+   quieter than the buttons beside them, which is the only styling opinion ruling 4 permits – the
    card may not emphasise an answer, and it may not make an answer's detail look like an answer.
 
    ⚠⚠ AND NO ROW IS EMPHASISED OVER ANOTHER UNTIL THE PLAYER PRESSES IT. `.is-picked` is the only
@@ -528,8 +602,26 @@ async function answer(a: ForkAnswer): Promise<void> {
   cursor: default;
 }
 
-.fork-place.is-shut {
+/* ⚠⚠ THE FADE IS ON THE ROW'S FIGURES, NOT ON THE WHOLE ROW (round 24 #2a). It used to be
+   `.fork-place.is-shut { opacity: 0.55 }`, which greyed the refusal's own sentence along with the
+   prices it explains – and the sentence is the one thing a player still needs off a row he cannot
+   press. The row still reads as unavailable; the reason is not part of what is dimmed. */
+.fork-place.is-shut .fork-place-head,
+.fork-place.is-shut .fork-place-line {
   opacity: 0.55;
+}
+
+/* ⭐⭐ THE REFUSAL'S OWN LINE. Its own class rather than a fourth `.fork-place-line` for two
+   reasons: a test can find it (a refused row that states nothing is the defect this fixes), and it
+   is the only line on a shut row that is not faded. `--ink-soft` is one step brighter than the
+   figures above it – the house's own reading order, and the same weight `.fork-answer span` carries.
+
+   ⚠ NO BORDER, NO FILL, NO RAIL. The app has ONE accent rail (the left edge at 3px, `is-picked`)
+   and a refusal is not an accent. */
+.fork-place-refusal {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ink-soft);
 }
 
 .fork-place-head {

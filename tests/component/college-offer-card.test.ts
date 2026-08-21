@@ -30,6 +30,8 @@ import ForkDialog from '../../src/components/ForkDialog.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
+// ⚠ THE ENGINE'S OWN REFUSAL, IMPORTED RATHER THAN RETYPED – see the residence case below.
+import { COLLEGE_SHUT_DETAIL, quoteShutFor } from '../../src/engine/collegeOffer'
 import type { CollegeOffer, CollegeQuote, CollegeTier, Snapshot } from '../../src/shared/protocol'
 
 const PRICES: Record<CollegeTier, number> = { state: 30_990_00, national: 50_920_00, private: 65_470_00 }
@@ -197,13 +199,29 @@ describe('⭐⭐ the card says what each college place costs', () => {
 
   // ⚠⚠ THE RESIDENCE SPLIT REMOVES ONE SCHOOL AND NEVER THE ANSWER. Two places stay pressable, the
   // third states its reason, and the button falls to the cheapest one that IS hers.
+  //
+  // ⚠⚠ RE-AIMED BY ROUND 24 #2a, NOT WEAKENED. It asserted the literal string
+  // «In-state, and she is not a resident», which was TYPED INTO THE TEMPLATE beside the boolean –
+  // and pinning a template literal is what let the card hold an opinion the engine never issued.
+  // The claim it stood for is unchanged and is stricter for being sourced: the refused row states
+  // the ENGINE'S sentence for the reason the ENGINE gave, off `COLLEGE_SHUT_DETAIL`. A card that
+  // types its own words now fails here.
+  //
+  // ⚠ AND IT IS THE HAND-BUILT ARM ON PURPOSE. `tests/component/round24-fork-places.test.ts` walks a
+  // real world into this state and asserts the same property against `tierShutFor`; this case keeps
+  // the surface honest for a quote shape the world happens not to produce today.
   it('⚠ shuts the in-state place to a non-resident and keeps the answer live', () => {
     const w = mountFork(NON_RESIDENT)
     const places = w.findAll('.fork-place')
     expect(places[0].attributes('disabled')).toBeDefined()
-    expect(places[0].text()).toContain('In-state, and she is not a resident')
+    const shut = quoteShutFor(NON_RESIDENT.quotes[0])
+    expect(shut, 'the engine names the rule behind its own `open: false`').not.toBeNull()
+    expect(places[0].find('.fork-place-refusal').text(), 'the engine\'s sentence, not the card\'s').toBe(
+      COLLEGE_SHUT_DETAIL[shut!],
+    )
     expect(places[1].attributes('disabled')).toBeUndefined()
     expect(places[2].attributes('disabled')).toBeUndefined()
+    expect(places[1].find('.fork-place-refusal').exists(), 'and an open row explains nothing').toBe(false)
     expect(w.findAll('.fork-answer')[1].text(), 'the button falls to the cheapest place that is hers').toContain(
       'A university out of state',
     )
