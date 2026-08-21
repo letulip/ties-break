@@ -2108,6 +2108,11 @@ export type EntryReleaseReason =
   | 'parent'
   /** an injury layoff swallows the event week, so the desk takes her name off the list */
   | 'injury'
+  /** ⭐ round 24 – she answered the fork with «college», so the FREEZE releases every entry that was
+   *  still outstanding when it started. The tour is not something she is pulling out of; she is
+   *  leaving it for four years. ⚠ It is the one reason that refunds PAST the entry deadline too – see
+   *  `REFUSED_PAST_DEADLINE` in `world/entries.ts` for the owner's ruling that decides it. */
+  | 'college'
 
 /** WHY A DEAL STOPPED, on the letter the brand sends when it does (owner, 04.08: «I've figured out
  *  there's no active sponsor. I believe we need to send an email with the termination message»).

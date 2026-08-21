@@ -24,7 +24,12 @@ import { chargeMandatoryPenalty, mandatoryBinds } from './mandatory'
 import { ECONOMY } from '../economy'
 import type { EntryReleaseReason } from '../../shared/protocol'
 import type { WorldState } from '../world'
-import { guardNotEnded } from './endings'
+// ⚠ FROM ./constants, NOT ./endings, AND THE SWAP IS A CYCLE FIX (round 24). `answerFork` releases
+// her outstanding entries when the college answer freezes the career, so `endings.ts` now imports
+// `releaseEntry` from THIS file – and this file importing the guard back out of `endings.ts` would
+// have been the first value-import cycle in `src/engine/world/*`. The guard's body moved to the leaf;
+// `endings.ts` still re-exports it, so nothing else had to move. Same function, same error text.
+import { guardNotEnded } from './constants'
 
 
 /** Enter the kid in a scheduled event: validates deadline / funds / duplicates / ranking
@@ -148,6 +153,32 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
 export const RELEASE_LINE_PREFIX: Record<EntryReleaseReason, string> = {
   parent: 'Withdrew from ',
   injury: 'Taken out of ',
+  college: 'Released from ',
+}
+
+/** ⚠⚠ WHICH RELEASES A CLOSED LIST CAN STILL REFUSE – the deadline rule, written as a table so the
+ *  next reason on `EntryReleaseReason` cannot inherit an answer nobody chose for it.
+ *
+ *  `true` is the historical rule and it is about a PULL-OUT: past `deadlineWeek` the list has closed
+ *  with her name in it, so the organisers keep the fee whatever the reason she does not appear
+ *  (`cancelEntry`'s late arm, `skipEvent`, the medical withdrawal in `tickWeek` – all three forfeit).
+ *  The fee HAS to bite there or «enter it and see» becomes the dominant strategy. `'parent'` is that
+ *  rule by definition; `'injury'` keeps it too and its caller already filters on the same date
+ *  (`world/injury.ts`: `world.week <= e.deadlineWeek`), so that arm is byte-identical.
+ *
+ *  ⭐ `'college'` IS THE FIRST `false`, AND IT IS THE OWNER'S OWN LAW RATHER THAN A CONVENIENCE.
+ *  «Мы ни за что не наказываем.» She is not skipping a tournament: she has answered the fork, and
+ *  the GAME is taking her off the tour for four years – the plan's own sentence is «an entry made
+ *  four years ago is not a commitment she made» (docs/plans/college-the-flow.md §4). Charging a
+ *  forfeited fee, or the late-withdrawal penalty points `cancelEntry` can add, would put a price on
+ *  the most expensive click in the game that the fork card never quoted – a punishment for answering
+ *  a question the game itself raised. So this release refunds in full and returns the slot however
+ *  late it lands, and it never touches `mandatoryBinds`/`chargeMandatoryPenalty` (which live in
+ *  `cancelEntry` alone and are not reachable from here). */
+const REFUSED_PAST_DEADLINE: Record<EntryReleaseReason, boolean> = {
+  parent: true,
+  injury: true,
+  college: false,
 }
 
 /** ...and the clause the injury row ends with, so a surface can quote the ENTRY without repeating the
@@ -172,7 +203,9 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
   if (!world.entries.includes(eventId)) throw new Error('Not entered in this event')
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')
-  if (world.week > event.deadlineWeek) throw new Error('Cannot withdraw after the deadline')
+  if (REFUSED_PAST_DEADLINE[releasedBy] && world.week > event.deadlineWeek) {
+    throw new Error('Cannot withdraw after the deadline')
+  }
   const fee = TIERS[event.tier].entryFeeCents
   world.fundsCents += fee
   world.entries = world.entries.filter((id) => id !== eventId)
@@ -230,6 +263,13 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
       break
     case 'injury':
       line = `${RELEASE_LINE_PREFIX.injury}${label} – ${weekLabel(event.week)}${INJURY_RELEASE_SUFFIX}`
+      break
+    case 'college':
+      // ⚠ NOT "Withdrew", FOR THE REASON THE WHOLE SWITCH EXISTS: he answered a question about her
+      // future, not this tournament, and a feed row telling him he pulled her out of a World Tour
+      // 500 would be the 05.08 bug in college colours. And no apology and no price in the sentence –
+      // the fee is back, and the release is the game's own housekeeping.
+      line = `${RELEASE_LINE_PREFIX.college}${label} – ${weekLabel(event.week)}, she is taking the scholarship.`
       break
   }
   addEvent(world, { week: world.week, type: 'entry', text: line })

@@ -290,6 +290,25 @@ const settled = computed(() => {
           <li>Her place goes to the next name on the list. We hope to see her back soon.</li>
         </ul>
       </template>
+      <!-- ⭐ ROUND 24: the college freeze releases every entry that was still outstanding when it
+           started, so the desk writes its own arm rather than falling through. It is written like the
+           injury one – WE acted, the money is back – but with the two sentences that are only true
+           here: nothing is recorded against her because there was nothing to record, and the place
+           is held open rather than mourned. No price and no apology; see `REFUSED_PAST_DEADLINE`
+           in engine/world/entries.ts for the ruling that this letter is the receipt for. -->
+      <template v-else-if="entryTerms.releasedBy === 'college'">
+        <p class="offer-body">
+          We have taken her name off the entry list for the {{ entryTerms.label }}
+          ({{ weekRange(entryTerms.eventWeek) }}). She has accepted a college place, so she is off the
+          tour for the next few years – rather than hold a spot she cannot travel to, we have released
+          her ourselves.
+        </p>
+        <ul class="offer-terms">
+          <li>The entry fee is refunded in full, and the year's entry is returned.</li>
+          <li>Nothing is recorded against her – this is not a withdrawal, and there is no charge.</li>
+          <li>Her name comes back on the list the day she wants it there. Good luck at school.</li>
+        </ul>
+      </template>
       <!-- ⚠ THE FALLBACK IS DELIBERATELY GENERIC RATHER THAN THE NEAREST NICE PARAGRAPH, and that
            is the whole lesson of this fix. A future `EntryReleaseReason` that fell through to the
            voluntary arm would tell the player he withdrew her - which is the bug, arriving again by

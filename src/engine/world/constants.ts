@@ -3,9 +3,31 @@
 // ⚠ DEPENDENCY DIRECTION. This module imports NOTHING from the engine – it is the bottom of the
 // world package's graph, which is exactly why the ids live here rather than in world.ts. A module
 // that needs `KID_ID` can take it from a leaf instead of reaching back up into the integration core.
+// The one import below is `import type`, erased at compile time, so that property still holds.
+import type { WorldState } from '../world'
 
 /** The kid's stable player id inside cohort/ranking/tournament space. */
 export const KID_ID = 'kid'
+
+/** W2-ENDINGS – THE COMMAND GUARD: a career that has ended has no next week, so a mutating PLAYER
+ *  command must refuse rather than spend money for a girl who has retired. The engine re-validates
+ *  every command because the worker is not the gate (CLAUDE.md invariant 1).
+ *
+ *  ⚠⚠ IT IS DEFINED HERE, AT THE BOTTOM OF THE GRAPH, AND `world/endings.ts` RE-EXPORTS IT. It was
+ *  declared in `endings.ts`, which every command module imported it from – and that back edge is
+ *  what made `endings.ts` unable to reach the entry rulebook. The college answer has to RELEASE her
+ *  outstanding entries (round 24, §2d/#7), the refund rules live in `world/entries.ts` and nowhere
+ *  else, and `entries.ts → endings.ts` closed the loop the moment `answerFork` imported them back.
+ *  There were exactly two ways out: a second copy of the refund ladder inside `endings.ts`, or this
+ *  two-line predicate moved to the leaf it always belonged in. `src/engine/world/*` had NO
+ *  value-import cycles before this wave and still has none.
+ *
+ *  ⚠ ONLY `world/entries.ts` HAD TO BE REPOINTED, and the other seven callers deliberately still
+ *  import it from `./endings` – they are edges INTO endings, which close nothing. Repointing them
+ *  would be churn in files this wave has no other business in. */
+export function guardNotEnded(world: WorldState): void {
+  if (world.ending) throw new Error('This career has ended')
+}
 
 export const SEASON_MIN_FUTURE = 26 // always keep at least this many future weeks scheduled
 export const SEASON_CHUNK = 52 // generate the calendar one deterministic year-block at a time

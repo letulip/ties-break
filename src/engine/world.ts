@@ -417,7 +417,17 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // this build has never made a transfer, and re-deriving eight years of them is impossible anyway –
 // `financeWeeks` prunes at sixty weeks). Pure state, zero draws on any stream, so the frozen MAIN
 // capture cannot see it.
-export const SAVE_SCHEMA_VERSION = 54
+// ⭐⭐⭐ v55 – THE STRANDED REVEAL, CLEARED ON LOAD (round 24, the freeze's hygiene). It is a REPAIR
+// and not a shape: no field is added, removed or renamed. A career that came out of the college
+// freeze holding a `pendingTournament` whose event is no longer on the calendar cannot be played at
+// all, and cannot be RESCUED from inside the app either – `pendingView` returns undefined when
+// `eventById` misses, so the snapshot's `pending` is null, so `TournamentFlow` never mounts, the
+// sticky bar never draws its resume button, and `advanceWeeks` returns 'tournament' with no tick and
+// no toast ('tournament' is deliberately absent from `STOP_REASON_TEXT` because the overlay owns it).
+// Measured on the owner's own w474 save: season 0, results 1, `pendingTournament` 5-w270-wta500
+// finished, `snapshot.pending` NULL. Rules 1-3 stop new careers reaching that state; this is the one
+// door already-broken ones can come back through. See the migration for what it does and does not do.
+export const SAVE_SCHEMA_VERSION = 55
 
 
 
@@ -3199,7 +3209,29 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
   //    fully-computed shadow tournament. Nothing kid-specific is emitted/awarded here – the flow does.
-  const enteredThisWeek = scheduled.find((e) => world.entries.includes(e.id))
+  //
+  // ⭐⭐⭐ ROUND 24, RULE 3 – AND SHE IS NOT ON THE TOUR THIS WEEK IF SHE IS AT COLLEGE. This line had
+  // no `inCollege` guard, and that is the link in A1's chain where the owner's world actually died:
+  // `resumeFromCollege` ticks fifty-two weeks with nobody watching, so an entry that outlived the
+  // fork was PLAYED inside the freeze – `computeShadowTournament` stashed a reveal that the epilogue
+  // screen (which replaces the app shell) had no surface to answer, and from that week `tickWeek`
+  // skipped the whole of step 5-6 below. 204 weeks with no `housekeep`, no `ensureSeason`, no rank.
+  //
+  // ⚠ IT IS DEFENCE IN DEPTH, NOT THE FIX. Rule 1 (`answerFork`) releases the entries at the fork, so
+  // after this wave there is nothing left for this line to find; rule 2 (`resumeFromCollege`) refuses
+  // to tick past a reveal however one arrives. This guard is the third: it makes the reveal
+  // UNCONSTRUCTIBLE inside the freeze rather than merely absent, which is what stops the next route
+  // in from re-opening the same silent, total failure.
+  //
+  // ⚠ SIX OTHER STEPS OF THIS TICK ALREADY READ `inCollege` (the academy, the sponsors, the gear, the
+  // knock, the birthday, the fork), so the freeze's own rule – she lives the weeks, she does not play
+  // the tour in them – is not new here; only this step was missing from it.
+  //
+  // ⚠ RNG: ZERO. Everything this branch guards is event-scoped or pure – `chargeTravel`,
+  // `chargeCoachTravel` and `computeShadowTournament` take no `rng` argument and the shadow run draws
+  // on `seed:kidtour:<event.id>`. The frozen MAIN capture cannot move, and the probe's `rngDraws`
+  // column is asserted identical across the wave.
+  const enteredThisWeek = inCollege(world) ? undefined : scheduled.find((e) => world.entries.includes(e.id))
   // An injury turns an entered event into a walkover: no travel, no shadow run, 0 points.
   // Only a POST-deadline entry can still be live here – pre-deadline entries were auto-withdrawn
   // (and refunded) at onset by rollInjury; past the deadline the fee is forfeited (withdrawEvent
@@ -3736,6 +3768,16 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
+/** ⭐ ROUND 24, RULE 2 – WHAT `resumeFromCollege` SAYS WHEN A REVEAL IS STILL OPEN. Exported so a
+ *  test can pin the refusal without pinning a spelling, on the precedent of `RELEASE_LINE_PREFIX`:
+ *  the wording is player-facing (it reaches the toast through the worker's error channel) and a
+ *  string literal copied into a test is a rename that breaks a report in silence.
+ *
+ *  ⚠ IT NAMES THE STATE AND THE WAY OUT, which is R10-16's doctrine – a refused control with no
+ *  reason on screen is the bug. Nothing here shames the player: it is the game's own bookkeeping. */
+export const COLLEGE_REVEAL_REFUSAL =
+  'A tournament is still waiting to be resolved – close it before spending another college year'
+
 /** «ANOTHER YEAR» – the one command that CLEARS an ending (contract §5.1).
  *
  *  College is the only ending that resumes, and this is where it does. The latch comes off, ONE year
@@ -3792,12 +3834,38 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   const college = world.college
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
   if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
+  // ⭐⭐⭐ ROUND 24, RULE 2 – A YEAR MAY NOT BE SPENT OVER AN UNANSWERED REVEAL. THIS IS THE RULE THAT
+  // CLOSES THE CLASS, and it is the guard `advanceWeeks` (`if (world.pendingTournament) return
+  // ['tournament']`) and the worker's dev `tick` (P6 (c): "a refusal at entry, a stop mid-loop") have
+  // both had for waves. This command – the only one in the game that CLEARS an ending, and the only
+  // other producer of stop reasons – never had it, and that is the whole of why the owner's career
+  // could die in silence: with a reveal open, `tickWeek` skips its entire step 5-6, so every week
+  // after it costs its RNG draws and buys nothing. His save proves the weeks really ticked
+  // (`rngMain.n` 166k at week 474) and that the world simply had nothing in it.
+  //
+  // ⚠⚠ A REFUSAL AND NOT A STOP, AND THE EPILOGUE IS THE REASON. `advanceWeeks` can return
+  // 'tournament' because its caller is the app shell, where `TournamentFlow` mounts and the sticky
+  // bar's primary button re-opens it on every tab. THIS caller is behind the epilogue: `App.vue`
+  // branches `EndingScreen` with `v-else-if` ABOVE the shell, `TournamentFlow` lives inside the
+  // `v-else`, and `blockingOverlay`'s INTERRUPTS set lets 'ending' show over a pending reveal – so
+  // while the college latch is on there is no surface in the app that can draw the reveal at all. A
+  // stop reason handed to a screen that cannot act on it is a silent no-op, which is the failure
+  // being fixed rather than a fix. A throw is loud, and through the worker it is also FREE: `mutate`
+  // runs on a candidate clone, so a refusal provably leaves the committed career without one tick
+  // applied – close the reveal (or repair it) and the same click works.
+  //
+  // ⚠ MID-LOOP TOO, ON THE SAME CONTRACT AND FOR THE SAME REASON. After rule 3 no reveal can be
+  // CONSTRUCTED inside the freeze, so this is a tripwire over a state that should not exist; if a
+  // later wave finds a new way to open one, the career stops at that week with nothing committed
+  // instead of ticking out the year and the three after it.
+  if (world.pendingTournament) throw new Error(COLLEGE_REVEAL_REFUSAL)
   const start = openCollegeYear(world)
   const yearEnds = Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR)
   world.ending = null
   const stops = new Set<StopReason>()
   while (world.week < yearEnds && world.ending === null) {
     tickWeek(world, rng)
+    if (world.pendingTournament) throw new Error(COLLEGE_REVEAL_REFUSAL)
     // ⚠ ASKED AFTER THE TICK AND OF THE WORLD, never threaded back through `tickWeek` – the whole
     // point of `callUpPlayedThisWeek` being a predicate. One `stops.add`, exactly like the academy's.
     if (callUpPlayedThisWeek(world)) stops.add('call-up')

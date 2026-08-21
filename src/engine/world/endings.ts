@@ -30,6 +30,13 @@ import { activeLadderOf } from './ladder'
 import { collegeProgressOf, inCollege, measureCollegeOffer } from './college'
 import { kidAgeThroughWeek, kidAgeYears } from './age'
 import { buildAlbum, buildScroll } from './album'
+import { guardNotEnded } from './constants'
+// ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
+// has to hand back the entries the college answer strands, and every rule about what a release
+// refunds – the fee, the year's ITF slot, the pro slot, the season mirror, the desk's letter – lives
+// in `world/entries.ts` and must go on living in exactly one place. This edge is only legal because
+// `guardNotEnded` moved to the leaf above it; see the note beside its definition.
+import { releaseEntry } from './entries'
 import type { WorldState } from '../world'
 
 /** ⚠ THE GUARD, RE-AIMED RATHER THAN ADDED TO EVERY CALLER'S BODY. Every mutating engine command
@@ -39,10 +46,14 @@ import type { WorldState } from '../world'
  *
  *  ⚠ AND IT IS A THROW RATHER THAN A SILENT NO-OP, which is the house rule for every other refused
  *  command in this engine (`enterEvent` throws on a passed deadline, `signOffer` on a closed
- *  window). A no-op would let the UI believe the command landed. */
-export function guardNotEnded(world: WorldState): void {
-  if (world.ending) throw new Error('This career has ended')
-}
+ *  window). A no-op would let the UI believe the command landed.
+ *
+ *  ⚠⚠ ITS BODY MOVED TO `world/constants.ts` (round 24) AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
+ *  NAME, so `world.ts`'s barrel and the seven other command modules are untouched. The move is a
+ *  dependency fix, not tidiness: `answerFork` below now RELEASES her outstanding entries, the refund
+ *  ladder lives in `world/entries.ts`, and `entries.ts` importing this guard back out of here was the
+ *  one edge that made that a cycle. See the note beside the definition. */
+export { guardNotEnded }
 
 // --- the views the leaf reads -------------------------------------------------------------------
 
@@ -305,6 +316,55 @@ export function resolveEndings(world: WorldState): void {
  *  the sentence states a consequence that cannot happen, on the one surface where the player is about
  *  to spend money. A false warning on an entry card is worse than no warning. */
 
+/** ⭐⭐⭐ ROUND 24, RULE 1 – AN ENTRY THAT WAS STILL OUTSTANDING WHEN THE FREEZE STARTED IS RELEASED.
+ *
+ *  ⚠⚠ THIS IS THE ROOT OF THE OWNER'S DEAD CAREER, MEASURED (tools/college-freeze-probe.ts, A1,
+ *  21.08). He entered a World Tour 500 for week 270 and answered the fork on week 266. Four weeks
+ *  later `resumeFromCollege` ticked THROUGH the event's play week, `tickWeek` step 2 found the entry
+ *  and stashed a reveal, and the epilogue screen – which REPLACES the app shell – had no surface that
+ *  could answer it. From that week `tickWeek` skipped the whole of step 5-6 (`if
+ *  (!world.pendingTournament)`), so `housekeep` / `ensureSeason` / `recomputeRankAndMilestones` never
+ *  ran again: 204 weeks with no calendar, no results and no rank. His save at graduation: **0 season
+ *  events, 1 result row, and `kidRank` 1** – every row of a 200-strong junior table tied at #1 on
+ *  zero points. The same career with the entry released comes out with 164 events, 2,289 rows and her
+ *  at 70.
+ *
+ *  ⚠ THE PROBE'S OWN CONTROL IS THIS RULE. Its `clean` arm empties `world.entries` at the fork by
+ *  hand and is healthy on every seed; its `stale` arm books one entry and is dead on every seed. Two
+ *  of four plain seed careers reproduced it with no help at all – the two that reached the fork
+ *  holding live entries (4 and 3).
+ *
+ *  ⚠ RELEASING NEVER PUNISHES HER, and that is the owner's law rather than a courtesy («Мы ни за что
+ *  не наказываем»). It is the full-refund rung of the withdrawal ladder – fee back, ITF/pro slot back,
+ *  the season mirror's row dropped, the desk's letter written in the desk's own voice – and it is the
+ *  ONE release that refunds past the entry deadline as well. See `REFUSED_PAST_DEADLINE` in
+ *  `world/entries.ts` for why: the forfeiting rungs all price a PULL-OUT, and she is not pulling out
+ *  of a tournament – the game is taking her off the tour. No forfeited fee, no `mandatoryBinds`
+ *  late-withdrawal points (those live in `cancelEntry`, which this path never touches), no no-show.
+ *
+ *  ⚠⚠ AND IT IS THE COLLEGE ANSWER ONLY – «стоп», `answerRetirement`, bankruptcy and the
+ *  career-ending injury deliberately keep their entries. Two reasons, and the second is decisive.
+ *  (a) Nothing ticks behind a terminal ending – `advanceWeeks` returns `['ending']` and college is the
+ *  only latch that ever comes off – so a surviving entry there can never become a reveal, which is
+ *  the whole hazard. (b) A refund moves `world.fundsCents`, and `resolveEndings` reads that number to
+ *  decide the DEBT SPELL and the bankruptcy ending; handing money back on the week a career goes
+ *  under would rewrite the verdict that ended it. The album's last page is a record of a life as it
+ *  was lived, not a tidy-up.
+ *
+ *  ⚠ ORPHANS ARE LEFT TO `ensureSeason`. The loop walks `world.season` rather than `world.entries`,
+ *  so an id whose event is no longer on the calendar is skipped instead of throwing 'Unknown event'
+ *  out of the most expensive click in the game. `ensureSeason` drops those ids on the next housekeep –
+ *  it always has – and with the `inCollege` guard in `tickWeek` step 2 an orphan can no longer do
+ *  anything on its way out.
+ *
+ *  ⚠ RNG: ZERO DRAWS, on any stream. `releaseEntry` is pure state plus ledger writes (its own header
+ *  says so) and the frozen MAIN capture cannot see it – measured, see the wave's report. */
+function releaseEntriesForTheFreeze(world: WorldState): void {
+  for (const event of world.season) {
+    if (world.entries.includes(event.id)) releaseEntry(world, event.id, 'college')
+  }
+}
+
 /** THE MOST EXPENSIVE CLICK IN THE GAME (adult spec's own risk note). Three answers, two of which
  *  end the career, and «стоп» must be able to be the right one. */
 export function answerFork(world: WorldState, answer: ForkAnswer, tier?: CollegeTier): void {
@@ -345,6 +405,7 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
       years: [],
       pendingCallUp: null,
     }
+    releaseEntriesForTheFreeze(world)
   }
   const ending = endingForForkAnswer(
     answer,

@@ -1635,6 +1635,55 @@ export function migrateSave(raw: unknown): WorldState {
     v = 54
   }
 
+  // ⭐⭐⭐ v54 -> v55: THE STRANDED REVEAL IS CLEARED (round 24, the freeze's hygiene). A REPAIR, and
+  // the only one in this file that is not a shape change – nothing is added, nothing is renamed.
+  //
+  // ⚠⚠ WHY A CAREER CAN NEED IT, AND WHY IT CANNOT FIX ITSELF. Before this wave, an entry that was
+  // still outstanding when the college fork was answered was PLAYED inside the freeze: `tickWeek`
+  // stashed a `pendingTournament` that the epilogue screen had no surface to answer, and from that
+  // week the tick skipped its whole housekeeping step – no `ensureSeason`, no `pruneResults`, no
+  // rank – for as long as the freeze lasted. The owner's own save came out of four years with **0
+  // calendar events, 1 result row and a 200-row junior table tied at #1 on zero points**.
+  //
+  // The state SEALS ITSELF, which is the fact that makes this migration necessary rather than
+  // convenient: `pendingView` returns undefined when `eventById` cannot find the reveal's event, and
+  // the same freeze emptied `world.season`. So `snapshot.pending` is null, `TournamentFlow` never
+  // mounts, the sticky bar's resume button never renders, and `advanceWeeks` returns 'tournament'
+  // having ticked nothing – with no toast, because 'tournament' is deliberately absent from
+  // `STOP_REASON_TEXT` (the overlay owns that message, and the overlay is not there). Pressing Play
+  // does nothing and says nothing, for ever. There is no tap in the app that reaches it.
+  //
+  // ⚠ THE PREDICATE IS THE MECHANISM, NOT THE SYMPTOM. "The reveal's event is not on the calendar"
+  // is exactly `pendingView`'s own refusal, i.e. exactly "no surface can draw this". A college-shaped
+  // test (`college.doneWeek !== null`) would be both too wide – it would discard a perfectly
+  // playable reveal whose event IS still scheduled – and too narrow, since any future route to the
+  // same seal would go unrepaired. Nothing else can produce it: `advanceWeeks` refuses to move time
+  // while a reveal is open and the worker's dev `tick` refuses at entry, so the event cannot age out
+  // from under a live reveal by any other path.
+  //
+  // ⚠ NOTHING IS LOST EITHER WAY. A FINISHED reveal has already been awarded – `finalizeTournament`
+  // banks the points and runs the deferred housekeeping when the last round is revealed, and
+  // `closeTournament` is a bare `pendingTournament = null` – so this is the Continue button she never
+  // got to press. An UNFINISHED one had awarded nothing yet, so there is no ledger row to orphan.
+  //
+  // ⚠ AND IT WRITES NO NEWS. A migration that invented a feed row would be putting words in a
+  // career's mouth about weeks it did not live. The repair is silent by design and the world heals
+  // itself: two ticks rebuild the calendar (`housekeep` -> `ensureSeason`) and one season restores
+  // the table – measured on the owner's save, rank 27 by +6 weeks and the junior table back to 71
+  // scored rows, in an arm with no player action in it at all.
+  //
+  // Idempotent (a save already at v55 never reaches this branch, and a second run would find
+  // `pendingTournament` null anyway) and it writes a literal: ZERO draws on any stream, so the frozen
+  // MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 54) {
+    const pending = save.pendingTournament as { eventId?: unknown } | null | undefined
+    if (pending && typeof pending === 'object') {
+      const season = Array.isArray(save.season) ? (save.season as Array<{ id?: unknown }>) : []
+      if (!season.some((e) => e && e.id === pending.eventId)) save.pendingTournament = null
+    }
+    v = 55
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
