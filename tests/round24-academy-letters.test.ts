@@ -36,7 +36,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { settleAcademyLetters, travelCoverPct } from '../src/engine/academy'
-import { academyLetters, pruneEntryLetters } from '../src/engine/offers'
+import { academyLetterId, academyLetters, pruneEntryLetters, raiseAcademyLetter } from '../src/engine/offers'
 import { seasonIndexOf } from '../src/engine/world/ledger'
 import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -261,15 +261,31 @@ describe('Round 24 #1 – the academy writes, and what it writes is true', () =>
     // 2. And a mid-season settle never writes a REVIEW either: a share that moved three seasons ago
     //    is not in the save, and stamping it at today's week would be a record of a week in which
     //    nothing happened.
+    //
+    // ⚠ THE SEASON'S OWN LETTER IS STRIPPED FIRST, AND WITHOUT THAT THIS TEST PROVES NOTHING. It was
+    // written without it and survived mutation (arm A6): with `academy-5` already filed, the writer's
+    // idempotency swallows the letter and the missing boundary guard cannot be seen. Stripping it is
+    // the state a SILENT review leaves – the review says nothing when the rounded share does not
+    // move – so this is the real case rather than a contrived one, and it is the case in which a
+    // dropped guard writes a letter dated a Tuesday in mid-season.
     const live = runCareer('r24-life', 'middle', 5 * WEEKS_PER_YEAR + 11).world
+    expect(live.week % WEEKS_PER_YEAR).not.toBe(0)
+    live.offers = live.offers.filter((o) => o.id !== `academy-${live.academy!.seasonIndex}`)
     const before = academyLetters(live.offers).length
     live.academy!.level = live.academy!.level * 0.5
     settleAcademyLetters(live)
     expect(academyLetters(live.offers)).toHaveLength(before)
+    expect(live.offers.some((o) => o.kind === 'academy' && o.week === live.week)).toBe(false)
   })
 
   it('settling twice writes nothing twice, and draws nothing at all', () => {
-    const w = runCareer('r24-idem', 'working', 2 * WEEKS_PER_YEAR + 4).world
+    // ⚠ ON THE BOUNDARY WEEK, AND THAT IS THE POINT OF THE `+ 0`. This ended `+ 4` and survived
+    // mutation (arm A10): off the boundary every arm returns before the writer is reached, so
+    // deleting the writer's own idempotency guard changed nothing. A settle ON the review week is
+    // the only one that reaches it.
+    const w = runCareer('r24-idem', 'working', 2 * WEEKS_PER_YEAR).world
+    expect(w.week % WEEKS_PER_YEAR).toBe(0)
+    expect(academyLetters(w.offers).length).toBeGreaterThan(0)
     const offers = w.offers.length
     const draws = w.rngMain?.n
     settleAcademyLetters(w)
@@ -277,5 +293,18 @@ describe('Round 24 #1 – the academy writes, and what it writes is true', () =>
     settleAcademyLetters(w)
     expect(w.offers.length).toBe(offers)
     expect(w.rngMain?.n).toBe(draws)
+  })
+
+  it('the writer itself refuses a second sheet about one review', () => {
+    // The direct claim on `raiseAcademyLetter`, because the settler's arms can all return before
+    // reaching it – the other half of arm A10. One id, one letter, and the same object handed back.
+    const offers: Offer[] = []
+    const terms: AcademyLetterTerms = { notice: 'arrived', sharePct: 33, sinceWeek: 52, seasonIndex: 1 }
+    const first = raiseAcademyLetter(offers, 52, terms)
+    const again = raiseAcademyLetter(offers, 60, { ...terms, sharePct: 99 })
+    expect(offers).toHaveLength(1)
+    expect(again).toBe(first)
+    expect(termsOf(offers[0]).sharePct).toBe(33)
+    expect(offers[0].id).toBe(academyLetterId(1))
   })
 })
