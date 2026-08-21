@@ -16,11 +16,14 @@
 // letter outlives the career – which is what test 3 measures, on a walked world rather than a
 // hand-built one.
 //
-// ⚠⚠⚠ THE WALK CALLS `settleAcademyLetters` ITSELF, AND THAT IS A STATED GAP RATHER THAN A TRICK.
-// The settler's production home is the tick's inbox block, one line beside `settleTourSeasonNotice`
-// in `engine/world.ts` – a file this agent does not own and another agent was mid-flight in. Until
-// that line lands these tests drive the settler exactly where the tick would, so every claim below
-// is about a REAL walked career and none of them is about a hand-written world. See the report.
+// ⚠⚠⚠ THE WALK DOES NOT CALL `settleAcademyLetters` – `tickWeek` DOES, and that is deliberate.
+// The settler was written before its production home existed (the tick's inbox block, one line
+// beside `settleTourSeasonNotice` in `engine/world.ts`, wired 21.08) and the walk drove it by hand
+// until then. It no longer does, and the difference is not cosmetic: with the hand call in place
+// every test below stayed green whether or not the tick was wired, so the ONE LINE that makes this
+// feature reach a player had no guard anywhere in the repo. It now has twelve. Do not reintroduce a
+// direct call here – a walked career is the whole claim, and the walk must ask the engine, not the
+// settler.
 import { describe, it, expect, vi } from 'vitest'
 
 // Six to eight seasons of a real career per arm; measured at ~2s each, but the runner is shared.
@@ -78,8 +81,6 @@ function runCareer(seed: string, background: FamilyBackground, weeks: number, st
       skipTournament(world)
       closeTournament(world)
     }
-    // ⚠ THE ONE LINE THE TICK IS OWED. See the file header.
-    settleAcademyLetters(world)
     for (const e of world.events) {
       if (e.week === world.week && Object.values(ACADEMY_NOTICE).some((o) => e.text.startsWith(o))) {
         feed.push({ week: e.week, text: e.text })

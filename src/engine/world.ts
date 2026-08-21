@@ -82,6 +82,8 @@ import {
 import {
   kitGrantCents,
   reviewLevel,
+  settleAcademyLetters,
+  travelCoverPct,
   type AcademySupport,
 } from './academy'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
@@ -1517,11 +1519,11 @@ export function reviewAcademy(world: WorldState): void {
     return
   }
 
-  const pct = Math.round(level * ECONOMY.academy.travelCover * 100)
+  const pct = travelCoverPct(level)
   if (!prev) {
     fireMilestone(world, `academy-in-${seasonIndex}`, `${ACADEMY_NOTICE.arrived} – a scholarship covering ${pct}% of her travel.`)
   } else {
-    const wasPct = Math.round(prev.level * ECONOMY.academy.travelCover * 100)
+    const wasPct = travelCoverPct(prev.level)
     if (pct !== wasPct) {
       addEvent(world, {
         week: world.week,
@@ -3051,6 +3053,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         notice reach the inbox before the letter that explains what a due notice is. The blocking
   //         half of the same item is `buildTourBriefing`, read at snapshot time. ZERO draws.
   settleTourSeasonNotice(world)
+  // ⭐ round-24 #1 – AND THE SCHOLARSHIP IS ON PAPER TOO (owner, 20.08: «Я бы и рад изучить, да
+  //         только далее не знаю где»). The toast round 23 #16 gave the verdict still does its own
+  //         job, which is to say WHEN; this is the destination it never had. It sits HERE, one line
+  //         under the tour's own season letter, because the letter has to be able to report the week
+  //         it describes: `reviewAcademy` has already spoken this tick (above, in the season-boundary
+  //         block) and the grant's income row is already written, so `settleAcademyLetters` reads
+  //         both rather than re-deriving either. ZERO draws.
+  settleAcademyLetters(world)
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)

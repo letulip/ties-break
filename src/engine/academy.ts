@@ -168,10 +168,11 @@ export function kitGrantCents(level: number): number {
 /** THE SHARE, AS THE WHOLE PERCENT EVERY SURFACE QUOTES. One definition, so the feed line, the
  *  scholarship's own paper and anything that ever prints the number cannot disagree by a decimal.
  *
- *  ⚠ `reviewAcademy` (engine/world.ts) still holds its own copy of this expression – the wave that
- *  wires `settleAcademyLetters` into the tick should fold it into this call, and until it does
- *  `tests/round24-academy-letters.test.ts` pins the two against a walked career rather than against
- *  each other's source. */
+ *  ⚠ `reviewAcademy` (engine/world.ts) HELD ITS OWN COPY of this expression until round 24 wired
+ *  `settleAcademyLetters` into the tick; it now calls this, so the feed line and the letter quote one
+ *  number by one route. `tests/round24-academy-letters.test.ts` still pins the two against a WALKED
+ *  career rather than against each other's source, which is what would catch them drifting apart
+ *  again. */
 export function travelCoverPct(level: number): number {
   return Math.round(level * ECONOMY.academy.travelCover * 100)
 }
