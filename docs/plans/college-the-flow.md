@@ -130,17 +130,100 @@ still broken and needs a repair path* – see step 2.
 
 ---
 
-## Steps
+## Steps, with who does them
 
-| # | step | done when |
-| --- | --- | --- |
-| **1** | ⚠⚠ **Establish whether the world still stops during college.** Reproduce from his w257 save through the UI path, not the probe: save and reload between years, try each tier, try an early exit. | either a reproduction exists, or a written statement of which commit fixed it and the test that now covers it |
-| **2** | **Repair his save.** A world whose calendar is empty and whose table is all zeros should heal on the next tick (measured: 6 ticks restore 142 events and rank 27). Confirm, and if it does not, write the migration. | his w474 save loads into a playable career |
-| **3** | **Clear entries at the freeze** (#2d) and refuse an entry the rank cannot support | a stale W500 cannot survive four years |
-| **4** | **The academy letters** (#1) – three notices into the inbox, kept | the toast has somewhere to go and the letter is still there next season |
-| **5** | **The fork screen** (#2a) – quotes before the choice, every refusal states its reason | no rung is greyed out in silence |
-| **6** | ⭐ **The college shell** (#3, #2b, #4) – college weeks on the Home shell; graduation hands back to Home | four years stop looking like four endings |
-| **7** | **The academic year** (#5) – ask in spring, reserve, depart in autumn | she plays the summer she is currently losing |
-| **8** | **Her opinion** (#6) – built as the first surface of the private-life stat, not as a string | she can want something the player does not |
+⚠ **THREE WAVES, AND THE ORDER IS NOT A PREFERENCE.** Wave 1's investigation decides whether wave 2
+exists at all; wave 3 is a redesign and must not start while the bugs are still moving underneath it.
+Inside a wave the agents are bundled by COLLISION SURFACE – no two touch the same file.
 
-⚠ **STEPS 1-3 ARE THE BUG FIXES AND SHOULD SHIP FIRST**, separately from 4-8, which are the redesign.
+⭐ **ONE ROOT, THREE SYMPTOMS.** `ensureSeason` is what rebuilds the calendar AND what drops entries
+for events that no longer exist (`world.entries = world.entries.filter(...)`, world.ts:1056). If the
+world stops during the freeze, all three of his symptoms follow from that one fact: the calendar is
+empty (#7), the four-year-old W500 entry survives (#2d), and the all-zero table makes her world #1
+(#4). Fixing the stop may fix all three; that is exactly what wave 1 has to establish.
+
+---
+
+### WAVE 1 – find out what is actually broken (nothing else may start first)
+
+| agent | type | owns (collision surface) | items |
+| --- | --- | --- | --- |
+| **A1 – the freeze audit** | `general-purpose` | `tools/**` ONLY. **Read-only on `src/`.** | §0, #7, #2d |
+
+**A1's brief.** Reproduce the emptying, or prove it gone. His save shows 0 calendar events, 1 result
+row and world rank 1 at graduation; the same career driven through `resumeFromCollege` on current code
+shows 164 / 2,289 / rank 70. **Find which path produces his state**, trying at least: a save and
+reload between years (the likeliest – it is what a player does), each college tier, `endCollegeEarly`,
+and the UI's own message sequence rather than a direct call. ⚠ **If it cannot be reproduced, that is
+the finding** – then say which commit fixed it and what test now covers it, and wave 2 shrinks to
+step B2 alone.
+
+**Evidence:** a committed probe under `tools/`, its output for each path tried, and a one-line verdict.
+
+---
+
+### WAVE 2 – the bug fixes (only what wave 1 confirms)
+
+| agent | type | owns (collision surface) | items |
+| --- | --- | --- | --- |
+| **B1 – the freeze's hygiene** | `general-purpose` | `src/engine/world.ts`, `src/engine/world/college.ts`, tests | #2d, #7 |
+| **B2 – the table that ties at first** | `general-purpose` | `src/engine/season/ranking.ts`, `src/engine/world/ladder.ts`, tests | #4 |
+
+**B1** makes the freeze keep the world honest: the calendar continues, stale entries do not survive it,
+and a career comes out of college into a world that has been playing. ⚠ Scope depends entirely on
+A1's verdict – if the stop is already fixed, B1 is only "an entry made before the freeze is released
+when the freeze starts", which is a small, self-contained rule.
+
+**B2** fixes the rank, and the rule is narrower than it looks. ⚠ Round 23 already met this on the
+DOMESTIC table and the fix was scoped to season tables **because applying it to rolling tables was a
+regression** (her ITF rank moved 90 → 200; with 89 players holding points and 111 on zero, "the zeroes
+are 90th" is competition ranking answering correctly). The honest rule is narrower than both attempts:
+**when EVERY row is on zero, nobody is ranked.** That leaves the normal case untouched and kills the
+degenerate one. ⚠ Read `computeRanking`'s round-23 note before writing anything – it records both
+earlier attempts and why each was wrong.
+
+**Evidence, both:** the failure reproduced first, then gone; his w474 save loading into a playable
+career; the MAIN-stream arms in `condition`/`planner` green and stated.
+
+---
+
+### WAVE 3 – the redesign (after wave 2 is merged)
+
+| agent | type | owns (collision surface) | items |
+| --- | --- | --- | --- |
+| **C1 – the academy's letters** | `general-purpose` | `src/engine/academy.ts`, `src/engine/offers.ts`, `src/components/InboxSheet.vue`, `src/composables/inboxMail.ts` | #1 |
+| **C2 – the fork screen** | `general-purpose` | `src/components/ForkDialog.vue` + its tests | #2a |
+| **D1 – the college shell** | `general-purpose` | `src/App.vue`, `src/components/EndingScreen.vue`, `src/components/screens/HomeScreen.vue` | #2b, #3, #4 |
+| **D2 – the academic year** | `general-purpose` | `src/engine/ending.ts`, `src/engine/world/endings.ts`, tests | #5 |
+| **E1 – what she wants** | ⚠ **NOT YET** | – | #6 |
+
+**C1.** The academy's three notices (arrival, changed share, end) become letters that stay in the
+inbox. ⚠ The round-23 toast keeps its job – it says *when* – and gains a destination. Do not remove
+the stop; it exists because the verdict lands on the one week a `+4` advance cannot reach.
+
+**C2.** Quotes before the choice, and ⚠ **every refused tier states its reason** – the house rule the
+entry gate and the coach card already follow. He could not tell why the cheapest was unavailable.
+
+**D1 – the biggest, and the one the others hang off.** College borrows the EPILOGUE as its shell, so
+it inherits an ending's furniture: an album, a sense of conclusion, one button. ⚠ **The owner offered
+two shapes and the cheaper is right**: college weeks run on the HOME shell with college content, not
+in a second full-screen flow that duplicates the week, the recap and the bottom control and then has
+to be kept in step with them. Graduation shows its card and hands back to Home.
+
+**D2.** The fork moves off her birthday: asked after school ends, the place RESERVED, she keeps
+playing, she leaves when the academic year starts. ⚠ This is a DESIGN CHANGE, not a bug fix –
+`forkDue` does exactly what it was written to do, and `kidAgeThroughWeek`'s comment says so. It also
+moves a MAIN-stream-adjacent gate, so it needs the A/B arms checked.
+
+**E1 is deliberately unassigned.** #6 – «где-то её мнение увидеть» – is the first surface of the stat
+`the-private-life.md` says does not exist. Building it here as a string on the fork would create the
+second opinion system that file exists to prevent. It waits for that layer's step 1.
+
+---
+
+## What this needs from the owner before anything starts
+
+1. **Approve the waves and the D1 shape** (Home shell rather than a parallel flow).
+2. ⚠ **Confirm E1 waits.** The alternative is a throwaway string now and a rebuild later.
+3. **Say whether his w474 career must be repairable**, or whether a broken save may simply be
+   superseded. It changes B1's scope from "fix forward" to "fix forward AND heal".
