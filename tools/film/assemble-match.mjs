@@ -36,10 +36,15 @@ const at = (what) => {
 // --- segments, anchored on the marks --------------------------------------------------------------
 const watch = at('watch')
 const segs = [
-  { label: 'tournament card', start: at('tournament') + 0.1, dur: Math.max(1, watch - at('tournament') - 0.3) },
+  // The clip opens on the BRIEFING - the venue, the surface, the dates - and only then on the
+  // pre-match card with the full-height painting. Two screens, not one.
+  { label: 'venue', start: at('briefing') + 0.15, dur: Math.max(1, at('tournament') - at('briefing') - 0.4) },
+  { label: 'pre-match card', start: at('tournament') + 0.1, dur: Math.max(1, watch - at('tournament') - 0.3) },
   { label: '1x + intro', start: watch - 0.15, dur: at('speed2') - watch + 0.1 },
   { label: '2x + shout', start: at('speed2') + 0.05, dur: at('speed4') - at('speed2') - 0.1 },
-  { label: '4x + shouts', start: at('speed4'), dur: Math.min(14, at('end') - at('speed4') - 2.6) },
+  { label: '4x + shouts', start: at('speed4'), dur: 10 },
+  // ...and it closes on the match she WINS, rather than on a scoreline mid-set.
+  { label: 'the win', start: at('matchdone') - 1.9, dur: 4.7 },
 ]
 segs.push({ label: 'logo', start: 0.25, dur: CARD, card: true })
 
