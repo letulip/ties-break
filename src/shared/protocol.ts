@@ -307,6 +307,17 @@ export type StopReason =
    *  the call-up fires only inside the freeze and the freeze is only ever spent by that command –
    *  and `mutate` puts the returned reasons on the snapshot exactly as it does for an advance. */
   | 'call-up'
+  /** ⭐⭐⭐ ROUND 24 – THE COLLEGE LEAGUE WAS PLAYED. The sibling of 'call-up' one line up, and the
+   *  difference between them is the whole of this round's design: 'call-up' reports a week that MAY
+   *  happen (measured at 40% of college years, and it is now earned), this one reports a week that
+   *  ALWAYS happens. Every college year raises it exactly once.
+   *
+   *  ⚠ IT SITS ABOVE 'call-up' IN THE PRECEDENCE AND THAT IS CAUSAL ORDER, NOT IMPORTANCE. The
+   *  championship is played on `COLLEGE_LEAGUE.seasonWeek` and read by the selectors two weeks
+   *  later, so on a year that produced both, the toast that explains the other one has to lead.
+   *
+   *  ⚠ LIKE 'call-up', NO `advanceWeeks` EVER SETS IT. `resumeFromCollege` is the only producer. */
+  | 'college-league'
   /** R12-15: an entered tournament came round while she was still inside her layoff, so the week
    *  resolved as a WALKOVER – 0 points, and the entry fee forfeited (the list had closed with her on
    *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
@@ -378,6 +389,14 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // screen), so the toast falls through to this line – which is precisely the ordering R11-1 exists
   // to decide. It costs her nothing by the time it fires, so it sits under the academy's news and
   // far under the three that cost money.
+  //
+  // ⭐⭐⭐ ROUND 24 – AND THE COLLEGE LEAGUE SITS IMMEDIATELY ABOVE IT, WHICH IS CAUSAL ORDER. Both
+  // are produced by `resumeFromCollege` and a year that raises the call-up has ALWAYS raised the
+  // league too (the championship is on the calendar, the letter is read off its result), so this
+  // pair co-occurs by construction rather than by coincidence – the only such pair in this list. The
+  // championship is the week that explains the other one, so it leads; the toast speaks for the
+  // highest-precedence reason that has copy, and it is now this.
+  'college-league',
   'call-up',
   // W4: fourth, above everything that can wait a click, for a stronger reason than the three
   // medical beats have – the advance CANNOT continue until it is answered (`advanceWeeks` returns
@@ -2846,6 +2865,14 @@ export interface CollegeState {
    *  freeze and a top-level field would have to be nulled by every other code path that ends a
    *  career. Here it dies with the object that gives it meaning. */
   pendingCallUp: CollegeCallUp | null
+  /** ⭐⭐⭐ v56 – THE COLLEGE LEAGUE OF THE YEAR IN PROGRESS, held from the week it is played until
+   *  `bankCollegeYear` folds it into the year. Null the rest of the time, exactly like
+   *  `pendingCallUp` one line up and for the same lifetime reason.
+   *
+   *  ⚠⚠ IT IS ALSO HALF OF WHAT THE CALL-UP READS, and the other half is the banked years – see
+   *  `lastLeagueRun` in `engine/world/college.ts`. There is deliberately NO second "last result"
+   *  field: one persisted copy plus a lookup cannot drift from itself, and two could. */
+  pendingLeague: CollegeLeagueRun | null
 }
 
 /** ⭐ P5 – ONE COLLEGE YEAR, banked the week it finishes.
@@ -2871,6 +2898,28 @@ export interface CollegeYear {
   fundsDeltaCents: number
   /** the national-team week, or null in a year nobody wrote to her – see `engine/nationalTeam.ts` */
   callUp: CollegeCallUp | null
+  /** ⭐⭐⭐ v56 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED (`engine/collegeLeague.ts`).
+   *
+   *  ⚠ NULLABLE EVEN THOUGH IT IS GUARANTEED, AND THE NULL IS NOT A HOLE IN THE GUARANTEE. Two
+   *  careers legitimately have one: a v55 save migrated in mid-freeze (its banked years were lived
+   *  before this fixture existed and inventing a result for them would be putting a scoreline in a
+   *  career's mouth), and a year cut short by an ending before week `COLLEGE_LEAGUE.seasonWeek` came
+   *  round. Both are years that really did hold no championship. */
+  league: CollegeLeagueRun | null
+}
+
+/** ⭐⭐⭐ v56 – ONE COLLEGE LEAGUE, PERSISTED. The leaf's `CollegeLeagueResult` plus the week it was
+ *  played on – exactly the split `CollegeCallUp` keeps against `nationalTeam.ts`'s `CallUp`.
+ *
+ *  ⚠ ZERO MONEY AND ZERO RANKING POINTS, by design and not by omission: she is an amateur while she
+ *  is there, and a student fixture that paid points would make four years of college a ranking route
+ *  and stop the fork being a real choice. `engine/collegeLeague.ts` carries the argument. */
+export interface CollegeLeagueRun {
+  week: number
+  /** 0..`rounds`; `rounds` means she won the title */
+  roundsWon: number
+  /** the draw's round count as it was when she played – 3 for a draw of 8 */
+  rounds: number
 }
 
 /** One national-team week inside a college year. Zero money and zero ranking points, by the
@@ -3056,6 +3105,22 @@ export interface CollegeProgressView {
    *  EMPTY in a year nobody wrote to her, and empty on the year she was named and never took the
    *  court – which is a real outcome, not a missing one, and the copy beside it says so. */
   rubbers: WorldMatch[]
+  /** ⭐⭐⭐ v56 – THE COLLEGE LEAGUE OF THE YEAR JUST FINISHED, or of the year in progress once it has
+   *  been played. Null only before the first championship of the career (and on a v55 career
+   *  migrated in mid-freeze, whose banked years genuinely held none).
+   *
+   *  ⚠ IT IS READ FROM `pendingLeague` FIRST AND THE BANKED YEARS SECOND – `lastLeagueRun` – so the
+   *  card reports the championship the WEEK it is played rather than at the year boundary. That
+   *  matters because it is also what the call-up two weeks later is about to read: the player sees
+   *  the fact the selectors will use, before they use it. */
+  league: CollegeLeagueRun | null
+  /** ⭐⭐⭐ v56 – THE CHAMPIONSHIP'S MATCHES, WATCHABLE, on `rubbers`' own argument two doors up: the
+   *  records themselves, because that is what watching one takes. A wire field and not a save field
+   *  – the rows live in `world.events` like every other match in the game.
+   *
+   *  Between one and three rows: she is in the draw every year, so unlike `rubbers` this is EMPTY
+   *  only on a career that has not reached its first championship week. */
+  leagueMatches: WorldMatch[]
 }
 
 export interface Snapshot {

@@ -1,7 +1,7 @@
 {
   "generatedBy": "tools/e2e-fixtures.ts",
   "command": "npm run e2e:fixtures",
-  "schemaVersion": 55,
+  "schemaVersion": 56,
   "fixtures": [
     {
       "name": "fresh",
@@ -11,7 +11,7 @@
       "careerId": "c-e2e-fresh",
       "slot": "auto:c-e2e-fresh:a",
       "targetWeek": 0,
-      "schemaVersion": 55,
+      "schemaVersion": 56,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -22,7 +22,7 @@
       },
       "bytes": 23979,
       "payloadBytes": 23935,
-      "sha256": "0e64d44bfa0f9b0a34bfa72b3b3c26a3e84f05d04c1d7e29f57b3f58b056a79e",
+      "sha256": "bc7173690204e4f626aee84212b4a6db1a5d74935776fb60c970f21013ba5c10",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -60,7 +60,7 @@
       "careerId": "c-e2e-junior",
       "slot": "auto:c-e2e-junior:a",
       "targetWeek": 120,
-      "schemaVersion": 55,
+      "schemaVersion": 56,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -69,9 +69,9 @@
         "kidLastName": "Sartori",
         "country": "US"
       },
-      "bytes": 57902,
-      "payloadBytes": 57858,
-      "sha256": "3803e00be27f7298fd6cadf3144ab1358e0c148bf2d3145d55fe601d78c72132",
+      "bytes": 57950,
+      "payloadBytes": 57906,
+      "sha256": "d3ed5b29d0e0142b304982ca4736b498a0190240eddbb5fb52d63add44aab441",
       "seedsTried": 3,
       "facts": {
         "week": 120,
@@ -109,7 +109,7 @@
       "careerId": "c-e2e-pro",
       "slot": "auto:c-e2e-pro:a",
       "targetWeek": 412,
-      "schemaVersion": 55,
+      "schemaVersion": 56,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -118,9 +118,9 @@
         "kidLastName": "Ostrowski",
         "country": "US"
       },
-      "bytes": 80216,
-      "payloadBytes": 80172,
-      "sha256": "c64f966661b98ac6c9052cc6269c4cf0c62d9e39f23a1865bf5d485bca033d74",
+      "bytes": 80395,
+      "payloadBytes": 80351,
+      "sha256": "59cbc8e91fd7e0dd04b5fb22cbc558fa65a3ecc34356dd6cffb70d2e49b1e4c5",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -158,7 +158,7 @@
       "careerId": "c-e2e-sinking",
       "slot": "auto:c-e2e-sinking:a",
       "targetWeek": 45,
-      "schemaVersion": 55,
+      "schemaVersion": 56,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -167,9 +167,9 @@
         "kidLastName": "Fujimoto",
         "country": "US"
       },
-      "bytes": 52953,
-      "payloadBytes": 52909,
-      "sha256": "22da36c2a4258259539a28c599e23b7f8933872aa1012a6af62d2c50a0b819b7",
+      "bytes": 52955,
+      "payloadBytes": 52911,
+      "sha256": "bdb05ff7d5326f09733d7e038dbea26eaed9a9a95f9ac704440c8043b272cc90",
       "seedsTried": 1,
       "facts": {
         "week": 45,
@@ -207,7 +207,7 @@
       "careerId": "c-e2e-broke",
       "slot": "auto:c-e2e-broke:a",
       "targetWeek": 118,
-      "schemaVersion": 55,
+      "schemaVersion": 56,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -216,9 +216,9 @@
         "kidLastName": "Kern",
         "country": "US"
       },
-      "bytes": 60514,
-      "payloadBytes": 60470,
-      "sha256": "590ba02d9c232ae8990cc60fe7b3ffef1d9c668146fbe6769ca3db526fd3800a",
+      "bytes": 60600,
+      "payloadBytes": 60556,
+      "sha256": "0012246fcd70d900ed15e4709c91bf095796e9457d82b8380b2c01a9e1ec8832",
       "seedsTried": 1,
       "facts": {
         "week": 118,
@@ -256,7 +256,7 @@
       "careerId": "c-e2e-ending",
       "slot": "auto:c-e2e-ending:a",
       "targetWeek": 282,
-      "schemaVersion": 55,
+      "schemaVersion": 56,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 78660,
-      "payloadBytes": 78616,
-      "sha256": "b0d9ba95cbca51987fd59df15c8fe8dfd45d80dfeb6e498b57b76385bb964661",
+      "bytes": 78796,
+      "payloadBytes": 78752,
+      "sha256": "c5cc43074eead5c7fce739f3cd81352fed45600bd97ef51db5985cbd96b14a5c",
       "seedsTried": 1,
       "facts": {
         "week": 282,

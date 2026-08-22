@@ -209,12 +209,14 @@ import {
   callUpPlayedThisWeek,
   collegeCoachFactor,
   collegeEpilogueLine,
+  collegeLeaguePlayedThisWeek,
   collegeMatchesThisWeek,
   inCollege,
   leaveCollege as leaveCollegeState,
   openCollegeYear,
   resolveCallUp,
   resolveCollegeBill,
+  resolveCollegeLeague,
 } from './world/college'
 export {
   // ⚠ RENAMED, NOT DROPPED (round 21 #5): `COLLEGE_MATCH_SEASON` was a thirteen-week block and the
@@ -228,14 +230,23 @@ export {
   callUpRubbersOf,
   collegeCoachFactor,
   collegeEpilogueLine,
+  // ⭐⭐⭐ ROUND 24 – THE STUDENT CHAMPIONSHIP: the one tournament a college year is guaranteed, and
+  // the predicate that keeps its week from passing in silence. Same six names, same shape, as the
+  // call-up above it – deliberately, because they are the same KIND of thing.
+  collegeLeagueMatchId,
+  collegeLeagueMatchesOf,
+  collegeLeaguePlayedThisWeek,
+  collegeLeagueWeek,
   collegeMatchesThisWeek,
   collegeProgressOf,
   collegeRecruitViewOf,
   inCollege,
+  lastLeagueRun,
   measureCollegeOffer,
   openCollegeYear,
   resolveCallUp,
   resolveCollegeBill,
+  resolveCollegeLeague,
   skillMeanOf,
 } from './world/college'
 export {
@@ -435,7 +446,7 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // Measured on the owner's own w474 save: season 0, results 1, `pendingTournament` 5-w270-wta500
 // finished, `snapshot.pending` NULL. Rules 1-3 stop new careers reaching that state; this is the one
 // door already-broken ones can come back through. See the migration for what it does and does not do.
-export const SAVE_SCHEMA_VERSION = 55
+export const SAVE_SCHEMA_VERSION = 56
 
 
 
@@ -3467,8 +3478,22 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //   reads `seed:knock:<week>` – so the frozen MAIN capture cannot see it either.
   //   It pays NO money and NO ranking points, because the sport awards neither: it never touches
   //   `world.results` and no rank is recomputed for it. See engine/nationalTeam.ts for the sources.
+  // ⭐⭐⭐ ROUND 24 – AND ONE WEEK OF THE YEAR IS HERS: THE STUDENT CHAMPIONSHIP. The owner, 21.08:
+  //   «как минимум 1 турнир в год колледжа… тогда вызов в сборную можно будет опереть на результаты
+  //   студенческого». Measured before it: 48 college years held 0.71 watchable matches between them,
+  //   because the two squad trips write no rows and the letter was a 40% roll.
+  //   ⚠ THE LEAGUE IS RESOLVED FIRST AND THAT IS CAUSAL ORDER RATHER THAN NEED. The two fire on
+  //   different weeks (season 12 and 14), so neither can see the other's tick; the order here says
+  //   which one the reader should understand first, and `resolveCallUp` reads the championship
+  //   through `lastLeagueRun` rather than through anything this line arranges.
+  //   ⚠ ITS OWN SUB-STREAM, `seed:collegeleague:<week>`, plus one `seed:collegematch:<week>:<r>` per
+  //   round – so `seed:callup:<week>` is byte-identical to what it was and the frozen MAIN capture
+  //   (41550 / e6b0c709) cannot see either of them.
   if (!inCollege(world)) rollKnock(world)
-  else resolveCallUp(world)
+  else {
+    resolveCollegeLeague(world)
+    resolveCallUp(world)
+  }
 
   // 3d. AND SHE HAS A BIRTHDAY. The owner, 30.07: the birth month should show up in the notes.
   //
@@ -3885,6 +3910,11 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
     // ⚠ ASKED AFTER THE TICK AND OF THE WORLD, never threaded back through `tickWeek` – the whole
     // point of `callUpPlayedThisWeek` being a predicate. One `stops.add`, exactly like the academy's.
     if (callUpPlayedThisWeek(world)) stops.add('call-up')
+    // ⭐⭐⭐ ROUND 24 – AND THE ONE WEEK THAT ALWAYS HAPPENS. Unlike every other member of this set
+    // the championship is not a roll, so this line fires in EVERY college year – which is the point:
+    // a year that produced a tournament and reported nothing would be the silence round 23 #16 was
+    // about, with better tennis behind it.
+    if (collegeLeaguePlayedThisWeek(world)) stops.add('college-league')
   }
   // ⚠ A YEAR CUT SHORT BY AN ENDING IS STILL BANKED. The album's last page is allowed to say what
   // she was doing when it happened, and a row that stops mid-year is the honest record of that.

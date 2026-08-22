@@ -410,6 +410,10 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
       doneWeek: null,
       years: [],
       pendingCallUp: null,
+      // ⭐ v56 – the student championship of the year in progress. Null at enrolment: her first one
+      // is on the first `COLLEGE_LEAGUE.seasonWeek` the freeze ticks through, and until then there
+      // is genuinely nothing on her record for the selectors to read.
+      pendingLeague: null,
     }
     releaseEntriesForTheFreeze(world)
   }

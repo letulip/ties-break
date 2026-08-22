@@ -1684,6 +1684,46 @@ export function migrateSave(raw: unknown): WorldState {
     v = 55
   }
 
+  // ⭐⭐⭐ v55 -> v56: THE COLLEGE YEAR GETS ITS OWN TOURNAMENT (round 24, the owner's «как минимум 1
+  // турнир в год колледжа»). Two new fields, both nullable, both on the college state only:
+  // `college.pendingLeague` (the championship of the year in progress) and `year.league` on every
+  // banked year.
+  //
+  // ⚠⚠ NULL IS THE TRUE VALUE HERE AND NOT A PLACEHOLDER – v30's case, exactly. A career already
+  // three years into a freeze lived those years before this fixture existed, so it played no
+  // championship in them, and there is nothing to reconstruct: a run is three seeded matches against
+  // a drawn field, and inventing one would write a scoreline into a week that did not have one. The
+  // years it has left get real championships from the next `COLLEGE_LEAGUE.seasonWeek` the freeze
+  // ticks through, which is at most 52 weeks away and usually much less.
+  //
+  // ⚠ WHAT IT COSTS SUCH A CAREER, STATED RATHER THAN GLOSSED: at most ONE call-up. The letter is
+  // now read off `lastLeagueRun`, and a migrated career has no championship on record until its next
+  // week 12 – so if its next week 14 arrives first (which it does for careers whose remaining year
+  // is positioned that way), that one year gets no letter. Every later year has a championship
+  // behind it and is unaffected. Nothing else in the save changes meaning: `callUp`, the banked
+  // ranks, skills and money are all untouched, and a career that has already LEFT college
+  // (`doneWeek !== null`) is unaffected in every respect – nothing reads these fields after that.
+  //
+  // ⚠ AND IT IS SHAPED LIKE v53's: defensive (a missing or wrongly-typed value is written whole),
+  // therefore idempotent, and it walks `years` because that array is the only other place the field
+  // belongs. A save with no `college` at all – every career that never reached the fork, which is
+  // most of them – falls straight through and is byte-identical.
+  //
+  // Writes literals only: ZERO draws on any stream, so the frozen MAIN capture (41550 / e6b0c709) is
+  // untouched by construction.
+  if (v === 55) {
+    const college = save.college as { pendingLeague?: unknown; years?: unknown } | null | undefined
+    if (college && typeof college === 'object') {
+      if (college.pendingLeague === undefined) college.pendingLeague = null
+      if (Array.isArray(college.years)) {
+        for (const year of college.years as Array<{ league?: unknown }>) {
+          if (year && typeof year === 'object' && year.league === undefined) year.league = null
+        }
+      }
+    }
+    v = 56
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

@@ -819,9 +819,26 @@ const FROZEN = {
    *  assumed. `rngMain` is untouched for the twelfth wave running: nothing this wave added draws on
    *  any stream, so the frozen MAIN capture in tests/condition.test.ts (count 41550, hash e6b0c709)
    *  is not re-pinned, and it was re-run green beside this re-freeze. */
-  middleGrinder: '5adaba3d2f9200f45d75189cd50bc8dac5da6f67e1e62d1fe3ffd4a3b93dc8f4',
+  /** ⚠ MOVED WITH ITS TWINS ONCE MORE (22.08, round 24 – the student championship, schema v56), and
+   *  again by EXACTLY ONE KEY. `PRE_V56` below is the proof rather than the claim: rolling
+   *  `schemaVersion` back to 55 on the NEW world reproduces the previous three hashes byte for byte.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, control = **this branch with MY OWN COMMIT REVERTED** in a detached
+   *  worktree (`git revert --no-commit`) – never the previous commit and never a worktree at HEAD.
+   *  All three arms, headers checked against the filenames: **one line of 66 differs, and it is
+   *  `schemaVersion`.**
+   *
+   *  ⚠ AND THAT IS BY CONSTRUCTION. The championship fires on `COLLEGE_LEAGUE.seasonWeek` behind
+   *  `inCollege`, and the earned call-up reads `lastLeagueRun`, a field that only exists inside
+   *  `world.college`. Week 156 is 32 weeks short of the fork, so both are null here – asserted in
+   *  `walkFrozenCareer`, not assumed. `rngMain` is untouched for the thirteenth wave running: the
+   *  new draws are on `seed:collegeleague:<week>` and `seed:collegematch:<week>:<r>`, and the
+   *  call-up's own four pulls on `seed:callup:<week>` are byte-identical – only the threshold the
+   *  first is compared against moved. The frozen MAIN capture (41550 / e6b0c709) is not re-pinned
+   *  and was re-run green beside this re-freeze. */
+  middleGrinder: '94b9f1cef8eb5f74c573b909cd1a19c4bbe6888aed6c7070bedbb4371db4bcef',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '5b966447a2d321ce81c0239568aec6d48400518871fa5b8b36781ba5b749cd9b',
+  eliteGrinder: '52a3e09c48882dc43dc78644eb4b288b3c48f1f9b59e0f3add6d3db611fbc4e2',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -998,6 +1015,30 @@ const FROZEN = {
   /** ⚠ MOVED WITH `middleGrinder` AND WITHOUT `eliteGrinder` (21.08, round 24 #1). See the paragraph
    *  above: one key of 66 – `offers` – and this career is the one on the largest scholarship of the
    *  three. `PRE_V55` reproduces this exact value by rolling only `schemaVersion` back to 54. */
+  selfTravelling: 'fa2ac758e478fbff67f80c9ed8b6015c2401f581de73c496debae125e6f44f6c',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v55 – the identity that proves the v56 re-freeze
+ *  moved ONE key and nothing else.
+ *
+ *  ⚠ ALL THREE HELD, which is the signature of a change that reached no career at all. Round 24's
+ *  student championship (`engine/collegeLeague.ts`) fires only on `COLLEGE_LEAGUE.seasonWeek` INSIDE
+ *  the college freeze, and the earned call-up reads a field that only exists inside it; week 156 is
+ *  32 weeks short of the fork, which `walkFrozenCareer` asserts rather than assumes. So what the wave
+ *  did to these three careers is the version number and nothing else.
+ *
+ *  ⚠ PER-KEY DIFF TAKEN FIRST, control = **this branch with my own commit reverted** in a detached
+ *  worktree – never the previous commit and never a worktree at HEAD. Headers checked against the
+ *  filenames on every arm (5/0, 8/0, 0/1).
+ *
+ *  ⚠ `rngMain` UNMOVED for the twelfth wave running, and it is the load-bearing half: the
+ *  championship draws on `seed:collegeleague:<week>` and `seed:collegematch:<week>:<r>`, both
+ *  re-derived at the call site, and the call-up's own four draws on `seed:callup:<week>` are
+ *  byte-identical – only the threshold the first one is compared against moved. The frozen MAIN
+ *  capture is untouched: count 41550, hash e6b0c709. */
+const PRE_V56 = {
+  middleGrinder: '5adaba3d2f9200f45d75189cd50bc8dac5da6f67e1e62d1fe3ffd4a3b93dc8f4',
+  eliteGrinder: '5b966447a2d321ce81c0239568aec6d48400518871fa5b8b36781ba5b749cd9b',
   selfTravelling: 'f8587cf69a0a388176ee89b181f8b1409b60a7b988d3bf0adb02f3bdf4c1d46e',
 }
 
@@ -1140,6 +1181,17 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v56: rolling ONLY the schema back to 55 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 24'S STUDENT CHAMPIONSHIP DID TO THESE THREE CAREERS, as an identity.
+    // The fixture fires on `COLLEGE_LEAGUE.seasonWeek` inside the college freeze and the earned
+    // call-up reads a field that only exists there, so neither is reachable at week 156 – asserted in
+    // `walkFrozenCareer`, not assumed. If either had leaked into an ordinary career, THIS case would
+    // be red beside the freeze, which is the one signal a whole-world hash cannot otherwise give.
+    expect(careerHashAtSchema(5, 0, 55), '25k · middle coach · grinder').toBe(PRE_V56.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 55), '120k · elite coach · grinder').toBe(PRE_V56.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 55), '8k · self-coached · player').toBe(PRE_V56.selfTravelling)
   })
 
   it('⭐⭐ v55: rolling ONLY the schema back to 54 reproduces the previous hashes byte for byte', () => {

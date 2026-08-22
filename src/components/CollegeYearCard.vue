@@ -34,6 +34,16 @@ import { KID_ID } from '../engine/world/constants'
 import { COLLEGE_TRIP_WEEKS } from '../engine/world'
 import { WEEKS_PER_YEAR } from '../engine/season/calendar'
 import { NATIONAL_TEAM } from '../engine/nationalTeam'
+/** ⭐⭐⭐ ROUND 24 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED. Every name here is the engine's, for
+ *  the reason the tier names one import down already are: two ideas of what a draw of eight is
+ *  called is exactly how a card and a ledger come to disagree. */
+import { COLLEGE_LEAGUE, leagueExitLabel, leagueMatchesPlayed, wonTheLeague } from '../engine/collegeLeague'
+import { stageLabel } from '../engine/world/labels'
+/** ⚠ THE ART IS THE OWNER'S OWN CHOICE AND IT ALREADY EXISTED – round 24 #4: «Картинки для
+ *  студенческих турниров мне кажется можно взять из национальной ветки… как раз для студенческих
+ *  лиг». `occasionArtUrl` borrows a tier's set BY OCCASION precisely so a fixture with no rung never
+ *  needs a rung invented to hang a picture on. Nothing new was drawn for this card. */
+import { occasionArtUrl } from '../art/venues'
 /** ⚠ THE SAME THREE NAMES THE FORK CARD USES, and since round 21 that is literally true rather than
  *  a promise in a comment: both screens import from the engine, so the two can no longer drift. */
 import { COLLEGE_TIERS, COLLEGE_TIER_NAME as COLLEGE_PLACE } from '../engine/collegeOffer'
@@ -130,6 +140,67 @@ const collegeCallNote = computed(() => {
 // of them for the player.
 const collegeRubbers = computed(() => college.value?.rubbers ?? [])
 const watching = ref<WorldMatch | null>(null)
+/** ⚠ THE VIEWER'S HEADING IS STATE NOW RATHER THAN A CONSTANT, because the card offers TWO
+ *  competitions and it used to offer one. A single hard-coded `NATIONAL_TEAM.label` would have
+ *  headed a college championship match with her country's name – the exact class of quiet lie the
+ *  «кроме названий турниров» ruling is about. */
+const watchingTitle = ref<string>(NATIONAL_TEAM.label)
+
+function watch(match: WorldMatch, title: string): void {
+  watching.value = match
+  watchingTitle.value = title
+}
+
+// --- ⭐⭐⭐ ROUND 24 – THE STUDENT CHAMPIONSHIP ---------------------------------------------------
+//
+// The owner, 21.08: «я бы хотел, чтобы как минимум 1 турнир в год колледжа был… Тогда вызов в
+// сборную можно будет опереть на результаты студенческого и тогда у нас будет минимум 1, максимум 2
+// турнира на учебный год».
+//
+// ⚠⚠ WHAT THIS CARD USED TO REPORT, MEASURED: over 48 college years the ONLY watchable thing was a
+// call-up that landed in 40% of them, so two thirds of the time the block below the calendar was a
+// sentence saying nobody wrote. The championship is not a roll – it is on the calendar every year –
+// so this block draws in every year, and the call-up's sentence underneath it now has a cause.
+const league = computed(() => college.value?.league ?? null)
+const leagueMatches = computed(() => college.value?.leagueMatches ?? [])
+
+/** How far she went, in the draw sheet's own words and with no adjective anywhere near it (ruling 4,
+ *  and §6: the game does not grade her). A title and a first-round exit are stated the same way. */
+const leagueNote = computed(() => {
+  const run = league.value
+  if (run === null) return ''
+  const played = leagueMatchesPlayed(run)
+  const matches = `${played} ${played === 1 ? 'match' : 'matches'}, ${run.roundsWon} ${run.roundsWon === 1 ? 'win' : 'wins'}`
+  return wonTheLeague(run)
+    ? `She won it – ${matches}. No prize money and no ranking points; a student field awards neither.`
+    : `She went out in the ${leagueExitLabel(run)} – ${matches}. No prize money and no ranking points; a student field awards neither.`
+})
+
+/** ⭐ THE ONE LINE ON THIS CARD THAT NAMES A MECHANISM, and it is a fact rather than advice: the
+ *  national selectors read this result. Ruling 4 forbids a RECOMMENDATION, not an explanation – and
+ *  a stake the player cannot see is not a stake. */
+const leagueStakeLine = computed(() =>
+  league.value === null ? '' : `${NATIONAL_TEAM.label} selectors read this result when they pick the squad.`,
+)
+
+/** ⚠ OFF THE FIRST MATCH OF THE RUN, so the picture belongs to a fixture that really happened rather
+ *  than to a week number. Empty before her first championship, and the `<img>` is not drawn at all. */
+const leagueArt = computed(() => {
+  const first = leagueMatches.value[0]
+  const seed = game.snapshot?.seed
+  return first && seed ? occasionArtUrl('college-league', COLLEGE_LEAGUE.surface, first.eventId, seed) : ''
+})
+
+/** "Quarterfinal – L. Kovac" – which round it was and who it was against, off the FROZEN record.
+ *
+ *  ⚠ THE STAGE NAME IS `stageLabel`, THE ENGINE'S OWN NAMER, and the draw it is asked about is the
+ *  one PERSISTED WITH THE RUN rather than today's `COLLEGE_LEAGUE.drawSize`. A career that played a
+ *  draw of eight keeps reading as one after a re-tune – which is exactly why `CollegeLeagueRun`
+ *  carries `rounds` beside the result – and a second idea of what a round is called cannot get in. */
+function leagueLabel(match: WorldMatch): string {
+  const rounds = league.value?.rounds ?? match.round + 1
+  return `${stageLabel(match.round, 2 ** rounds)} – ${formatShortName(match.oppName)}`
+}
 
 /** "Rubber 2 – L. Kovac" – which one it was and who it was against, off the FROZEN record rather
  *  than off today's world, exactly like the box score's own names. */
@@ -155,15 +226,22 @@ function rubberOutcome(match: WorldMatch): string {
 // the college years had none at all, so the four years were three clicks with nothing between them.
 //
 // ⚠⚠ IT INVENTS NOTHING. Every row below is a week the ENGINE already treats as different, read off
-// the two constants that decide them – `COLLEGE_TRIP_WEEKS` (world/college.ts: the dual matches that
-// feed `growWeek`'s `matchesThisWeek`) and `NATIONAL_TEAM.seasonWeek` (the call-up). There are
-// exactly THREE of them in fifty-two, which is a fact about the year rather than about this card,
-// and the card's job is to stop that fact being invisible.
+// the three constants that decide them – `COLLEGE_TRIP_WEEKS` (world/college.ts: the dual matches
+// that feed `growWeek`'s `matchesThisWeek`), `COLLEGE_LEAGUE.seasonWeek` (the student championship)
+// and `NATIONAL_TEAM.seasonWeek` (the call-up). There are exactly FOUR of them in fifty-two, which
+// is a fact about the year rather than about this card, and the card's job is to stop that fact
+// being invisible.
 //
-// ⚠ AND THE TWO KINDS ARE NOT THE SAME PROMISE, so the copy does not pretend they are. A trip week
+// ⚠ AND THE THREE KINDS ARE NOT THE SAME PROMISE, so the copy does not pretend they are. A trip week
 // is CERTAIN and unwatchable – `collegeMatchesThisWeek` returns a count that feeds her development
-// and writes no rows. The Nations Cup week is a ROLL (`rollCallUp` can come back with nothing) and,
-// when it lands, it is the only tennis in the freeze that is really played and really watchable.
+// and writes no rows. The College League week is CERTAIN and watchable: a draw of eight, played
+// through the same `simulateMatch` every other match in the game goes through. The Nations Cup week
+// is the only one that is a ROLL, and since round 24 the roll is read off the championship two weeks
+// earlier rather than off nothing.
+//
+// ⚠ ROUND 24 CHANGED THIS COMMENT'S NUMBER AND THAT IS THE POINT OF THE ROUND. Three marked weeks
+// held 0.71 watchable matches per college year, measured over 48 of them; four hold at least one
+// tournament in every single one.
 interface CollegeWeekRow {
   week: number
   label: string
@@ -186,8 +264,20 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
   const until = Math.min(state.untilWeek, snap.week + WEEKS_PER_YEAR)
   for (let w = snap.week; w < until; w++) {
     const seasonWeek = w % WEEKS_PER_YEAR
-    if (seasonWeek === NATIONAL_TEAM.seasonWeek) {
-      rows.push({ week: w, label: NATIONAL_TEAM.label, what: 'If her country calls, the rubbers can be watched' })
+    if (seasonWeek === COLLEGE_LEAGUE.seasonWeek) {
+      // ⭐ THE ONE ROW THAT IS A PROMISE. It is on the calendar of every college year of every
+      // career at every tier, so the copy may say «every year» without a hedge.
+      rows.push({
+        week: w,
+        label: COLLEGE_LEAGUE.label,
+        what: `A draw of ${COLLEGE_LEAGUE.drawSize}, every year – her matches can be watched`,
+      })
+    } else if (seasonWeek === NATIONAL_TEAM.seasonWeek) {
+      rows.push({
+        week: w,
+        label: NATIONAL_TEAM.label,
+        what: 'If the selectors call her off the championship, the rubbers can be watched',
+      })
     } else if ((COLLEGE_TRIP_WEEKS as readonly number[]).includes(seasonWeek)) {
       const n = matchesPerTrip.value
       rows.push({
@@ -224,6 +314,31 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
           <dd>{{ collegeRankSpan }}</dd>
         </div>
       </dl>
+      <!-- ⭐⭐⭐ ROUND 24 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED, and it is drawn ABOVE the
+           call-up because that is the order the two happened in AND the direction the causality runs:
+           the championship is week 12 and the letter that reads it is week 14. -->
+      <div v-if="league" class="college-league">
+        <p class="college-league-head">{{ COLLEGE_LEAGUE.label }}</p>
+        <!-- ⚠ NO ART IS CREATED HERE. `occasionArtUrl` borrows the shipped regional set by OCCASION
+             (round 24 #4, the owner's own choice), so a fixture with no rung still has an honest
+             picture and nothing new was drawn for it. -->
+        <img v-if="leagueArt" class="college-league-art" :src="leagueArt" alt="" loading="lazy" />
+        <p class="college-league-note">{{ leagueNote }}</p>
+        <p class="college-league-stake">{{ leagueStakeLine }}</p>
+        <!-- ⚠ THE ROW STYLE IS SHARED WITH THE RUBBERS (`.college-rubber`) AND THE EXTRA CLASS IS
+             FOR THE TESTS, NOT THE CSS: two competitions now draw match rows on one card, so an
+             assertion counting «the rows» had to be able to say which competition it meant. -->
+        <ul v-if="leagueMatches.length > 0" class="college-rubbers">
+          <li v-for="m in leagueMatches" :key="m.eventId">
+            <button class="college-rubber college-league-match" type="button" @click="watch(m, COLLEGE_LEAGUE.label)">
+              <span class="rubber-who">{{ leagueLabel(m) }}</span>
+              <span class="rubber-score">{{ rubberOutcome(m) }}</span>
+              <span class="rubber-watch">Watch</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
       <p v-if="lastYear" class="college-call">{{ collegeCallNote }}</p>
 
       <!-- ⭐⭐ THE COMPETITION, WATCHABLE. One row per rubber she actually played. A year with no
@@ -231,7 +346,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
            is nothing to open – the sentence above has already said which of the two it was. -->
       <ul v-if="collegeRubbers.length > 0" class="college-rubbers">
         <li v-for="(m, i) in collegeRubbers" :key="m.eventId">
-          <button class="college-rubber" type="button" @click="watching = m">
+          <button class="college-rubber" type="button" @click="watch(m, NATIONAL_TEAM.label)">
             <span class="rubber-who">{{ rubberLabel(m, i) }}</span>
             <span class="rubber-score">{{ rubberOutcome(m) }}</span>
             <span class="rubber-watch">Watch</span>
@@ -256,7 +371,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
 
     <!-- ⚠ THE ONLY THING ON THIS CARD THAT IS NOT A READ – closing it puts the player back on the
          same screen, with nothing decided and nothing lost. -->
-    <MatchReplay v-if="watching" :match="watching" :title="NATIONAL_TEAM.label" @close="watching = null" />
+    <MatchReplay v-if="watching" :match="watching" :title="watchingTitle" @close="watching = null" />
   </Card>
 </template>
 
@@ -323,6 +438,48 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
   font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+/* ⭐⭐⭐ ROUND 24 – THE STUDENT CHAMPIONSHIP'S BLOCK. It reuses `.college-rubbers` / `.college-rubber`
+   below rather than growing a parallel set of match-row rules: two competitions, one row style, so a
+   change to how a watchable match looks cannot land on one of them and miss the other. */
+.college-league {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.college-league-head {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* ⚠ A CAPPED HEIGHT AND `object-fit: cover`, because this card lives on Home under her photograph
+   and the round-20 rule is that a surface is measured against a phone before it ships. */
+.college-league-art {
+  width: 100%;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-card);
+  display: block;
+}
+
+.college-league-note,
+.college-league-stake {
+  margin: 0;
+  max-width: 40ch;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.college-league-stake {
+  font-size: 12px;
+  color: var(--ink-dim);
 }
 
 /* THE RUBBERS. One row per match, and the row IS the control – no separate «watch» button beside a

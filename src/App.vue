@@ -803,6 +803,16 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // is back, and this is what the player reads – so it points at the FEED, which is where the rows
   // are on both paths, and never at a card that only exists on one of them.
   'call-up': 'Her country called this year – her matches are in the news feed, and they can be watched.',
+  // ⭐⭐⭐ ROUND 24 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED. It sits ABOVE 'call-up' in
+  // STOP_PRECEDENCE, so on a year that had both this is the line the player reads – which is the
+  // right way round, because the championship is what decided whether the letter came at all.
+  //
+  // ⚠ IT POINTS AT THE FEED, LIKE ITS SIBLING AND FOR THE SAME REASON. Three of the four years
+  // re-latch the epilogue and this toast sits behind the college card; the year that FINISHES the
+  // course takes the latch off and hands the player the tab shell. The feed is where the rows are on
+  // both paths; the card is not.
+  'college-league':
+    'She played the college championship – the matches are in the news feed, and they can be watched.',
 }
 // R11-1: an advance reports the SET of reasons it stopped for, already in surfacing order
 // (STOP_PRECEDENCE, medical first). Every gate below asks "is my reason in the set?" instead of

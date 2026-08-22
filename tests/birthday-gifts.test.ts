@@ -524,7 +524,17 @@ describe('the birthday popup', () => {
     const rng = rngFromSeed(world.seed)
     const week = runToBirthday(world, rng)
     expect(pendingBirthday(world)).not.toBeNull()
-    world.college = { fromWeek: week, untilWeek: week + 208, doneWeek: null, years: [], pendingCallUp: null }
+    // ⚠ RE-AIMED BY ROUND 24, NOT WEAKENED: `pendingLeague` is a required field of `CollegeState`
+    // since v56 (the student championship of the year in progress). The case is unchanged – it is
+    // about a birthday inside the freeze, whatever the freeze is spent on.
+    world.college = {
+      fromWeek: week,
+      untilWeek: week + 208,
+      doneWeek: null,
+      years: [],
+      pendingCallUp: null,
+      pendingLeague: null,
+    }
     expect(pendingBirthday(world), 'silent at college').toBeNull()
     expect(advanceWeeks(world, rng, 2).includes('birthday'), 'and it does not block the jump').toBe(false)
     expect(world.birthdays, 'and writes nothing').toEqual([])

@@ -76,6 +76,13 @@ function collegeYear(over: Partial<CollegeYear> = {}): CollegeYear {
     endRank: null,
     fundsDeltaCents: 3_806_075,
     callUp: { week: 295, rubbersPlayed: 2, rubbersWon: 1, nationFinish: 11 },
+    // ⭐⭐⭐ ROUND 24 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED, and the default is a REAL run for
+    // the third time this fixture has had to make that argument (see `collegeView` below): the
+    // championship happens in every college year, so a default of `null` would be a fixture pinning
+    // a year the engine cannot produce. Week 293 is two before the call-up at 295 – the same gap the
+    // engine's own `COLLEGE_LEAGUE.seasonWeek` (12) and `NATIONAL_TEAM.seasonWeek` (14) have, and it
+    // is the gap the causality runs across.
+    league: { week: 293, roundsWon: 2, rounds: 3 },
     ...over,
   }
 }
@@ -105,6 +112,28 @@ function rubber(index: number, over: Partial<WorldMatch> = {}): WorldMatch {
   }
 }
 
+/** ⭐⭐⭐ ROUND 24 – ONE MATCH OF THE STUDENT CHAMPIONSHIP, AS THE ENGINE FILES IT. The id prefix is
+ *  the engine's own (`collegeLeagueMatchId` = `college-w<week>-r<round>`), because the card reads the
+ *  round off `WorldMatch.round` and the viewer reads the occasion off the id. She wins the first two
+ *  and loses the final, which is `roundsWon: 2` above – the fixture and the run agree. */
+function leagueMatch(round: number): WorldMatch {
+  const opp = rubberPlayer(`college-w293-r${round}`, ['Ivana Rusu', 'Elin Berg', 'Sara Novak'][round])
+  const kidWon = round < 2
+  return {
+    round,
+    aId: 'kid',
+    bId: opp.id,
+    winnerId: kidWon ? 'kid' : opp.id,
+    seed: `fixture:collegematch:293:${round}`,
+    score: kidWon ? '6-3 6-4' : '4-6 5-7',
+    eventId: `college-w293-r${round}`,
+    surface: 'hard',
+    oppName: opp.name,
+    a: rubberPlayer('kid', 'Mila Adler'),
+    b: opp,
+  }
+}
+
 function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressView {
   // ⚠ ROUND 21: `billPerYearCents` is a real bill by default, not 0. A fixture that defaulted to zero
   // would go on measuring the free-ride card and quietly stop covering the one the player sees – the
@@ -124,6 +153,11 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
     billPerYearCents: 8_673_00,
     tier: 'state',
     rubbers: [rubber(0), rubber(1)],
+    // ⚠ AND ROUND 24 MAKES THE SAME ARGUMENT A FOURTH TIME. The championship is on the calendar of
+    // EVERY college year, so a default of `null` / `[]` would be a fixture measuring a card the
+    // engine cannot produce – which is exactly the slow failure the bill's own note records.
+    league: { week: 293, roundsWon: 2, rounds: 3 },
+    leagueMatches: [leagueMatch(0), leagueMatch(1), leagueMatch(2)],
     ...over,
   }
 }
@@ -246,8 +280,11 @@ describe('P5 – the college year block', () => {
   // match in, so "the same mechanism exactly" is asserted rather than claimed in a comment.
 
   it('⭐⭐ every rubber she played is a row, with who and what it finished', async () => {
+    // ⚠ RE-AIMED BY ROUND 24, NOT WEAKENED. The card now draws match rows for TWO competitions on
+    // one surface, so «the rows» had to say which one it means: `.college-league-match` is the
+    // student championship's, and this case is about the Nations Cup's.
     const wrapper = await openCollegeHome(collegeView())
-    const rows = wrapper.findAll('.college-rubber')
+    const rows = wrapper.findAll('.college-rubber:not(.college-league-match)')
     expect(rows, 'two rubbers played, two rows').toHaveLength(2)
     expect(rows[0].text()).toContain('Rubber 1')
     expect(rows[0].text()).toContain('Kovac')
@@ -258,8 +295,10 @@ describe('P5 – the college year block', () => {
 
   it('⭐⭐ pressing one opens the SAME replay the tour opens, headed with the competition', async () => {
     const wrapper = await openCollegeHome(collegeView())
-    expect(wrapper.findAll('.college-rubber')).toHaveLength(2)
-    await wrapper.findAll('.college-rubber')[0].trigger('click')
+    // ⚠ RE-AIMED (round 24): the call-up's rows, told apart from the championship's.
+    const rubberRows = wrapper.findAll('.college-rubber:not(.college-league-match)')
+    expect(rubberRows).toHaveLength(2)
+    await rubberRows[0].trigger('click')
     const replay = wrapper.findAllComponents({ name: 'MatchReplay' })
     expect(replay.length, 'the rubber opens the app\'s own match viewer').toBeGreaterThan(0)
     const opened = replay[replay.length - 1]
@@ -289,7 +328,7 @@ describe('P5 – the college year block', () => {
     const hers = rubber(0, { retiredId: 'kid', winnerId: 'nations-w295-r0', score: '6-4 2-1' })
     const theirs = rubber(1, { retiredId: 'nations-w295-r1', winnerId: 'kid', score: '6-4 3-0' })
     const wrapper = await openCollegeHome(collegeView({ rubbers: [hers, theirs] }))
-    const rows = wrapper.findAll('.college-rubber')
+    const rows = wrapper.findAll('.college-rubber:not(.college-league-match)')
     expect(rows[0].text()).toContain('Lost 6-4 2-1 ret.')
     expect(rows[1].text()).toContain('Won 6-4 3-0 ret.')
     wrapper.unmount()
@@ -303,7 +342,7 @@ describe('P5 – the college year block', () => {
       collegeView({ last: collegeYear({ callUp: { week: 295, rubbersPlayed: 0, rubbersWon: 0, nationFinish: 11 } }), rubbers: [] }),
     )
     expect(wrapper.find('.college-year').text()).toContain('never on court')
-    expect(wrapper.findAll('.college-rubber')).toHaveLength(0)
+    expect(wrapper.findAll('.college-rubber:not(.college-league-match)')).toHaveLength(0)
     wrapper.unmount()
   })
 
@@ -314,7 +353,10 @@ describe('P5 – the college year block', () => {
     expect(text).not.toContain('Her country called')
     // ⚠ AND NO RUBBER ROW EITHER – a year with no letter has nothing to open, and a "Watch" control
     // with no match behind it is the empty-popup failure of R10-16 wearing a different button.
-    expect(wrapper.findAll('.college-rubber')).toHaveLength(0)
+    // ⚠ RE-AIMED (round 24): the CHAMPIONSHIP's rows are still there, because a year with no letter
+    // still had a tournament in it – which is the whole of what this round changed about such a year.
+    expect(wrapper.findAll('.college-rubber:not(.college-league-match)')).toHaveLength(0)
+    expect(wrapper.findAll('.college-league-match').length, 'the year still held a tournament').toBeGreaterThan(0)
     wrapper.unmount()
   })
 
@@ -412,6 +454,81 @@ describe('P5 – the college year block', () => {
     const text = wrapper.find('.college-calendar').text()
     expect(text).toContain(NATIONAL_TEAM.label)
     expect(text).toContain('Squad trip')
+    wrapper.unmount()
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ ROUND 24 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED, ON THE SHELL
+  // ===============================================================================================
+  //
+  // «я бы хотел, чтобы как минимум 1 турнир в год колледжа был… Тогда вызов в сборную можно будет
+  // опереть на результаты студенческого». Measured before it: 0.71 watchable matches per college
+  // year over 48 of them, because the two squad trips write no rows and the letter was a 40% roll.
+  // These four say the fixture REACHES the player: it is on the card, it is on the calendar, its
+  // matches open in the app's own viewer, and the card says what the result is FOR.
+
+  it('⭐⭐⭐ the championship is on the card, with its result and a row per match', async () => {
+    const wrapper = await openCollegeHome(collegeView())
+    const text = wrapper.find('.college-league').text()
+    expect(text).toContain('College League')
+    // Two wins in a draw of three rounds is the final, lost – stated with no adjective near it.
+    expect(text).toContain('Final')
+    expect(text).toContain('3 matches, 2 wins')
+    expect(text).toContain('No prize money and no ranking points')
+    const rows = wrapper.findAll('.college-league-match')
+    expect(rows, 'one row per match she played').toHaveLength(3)
+    expect(rows[0].text()).toContain('Quarterfinal')
+    expect(rows[0].text()).toContain('Rusu')
+    expect(rows[0].text()).toContain('Won 6-3 6-4')
+    expect(rows[2].text()).toContain('Final')
+    expect(rows[2].text()).toContain('Lost 4-6 5-7')
+    wrapper.unmount()
+  })
+
+  it('⭐⭐⭐ pressing one opens the SAME viewer, headed with THIS competition and not the other one', async () => {
+    // ⚠ THE HEADING IS THE LOAD-BEARING HALF. The card offers two competitions now and the viewer's
+    // title used to be a hard-coded `NATIONAL_TEAM.label` – so a championship match would have
+    // opened under her country's name, which is the quiet lie «кроме названий турниров» is about.
+    const wrapper = await openCollegeHome(collegeView())
+    await wrapper.findAll('.college-league-match')[0].trigger('click')
+    const replay = wrapper.findAllComponents({ name: 'MatchReplay' })
+    expect(replay.length, 'the championship opens the app\'s own match viewer').toBeGreaterThan(0)
+    const opened = replay[replay.length - 1]
+    expect(opened.text()).toContain('College League')
+    expect(opened.text(), 'and never the other competition\'s name').not.toContain(NATIONAL_TEAM.label)
+    const shell = opened.find('.tournament-flow').element
+    expect(getComputedStyle(shell).position, 'a full-screen takeover, like every other replay').toBe('fixed')
+    await opened.vm.$emit('close')
+    expect(wrapper.find('.college-year').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ the card says what the result is FOR – the stake, stated as a fact and not as advice', async () => {
+    // Ruling 4 forbids a RECOMMENDATION, not an explanation, and a stake the player cannot see is
+    // not a stake. The line names the mechanism and stops.
+    const wrapper = await openCollegeHome(collegeView())
+    const text = wrapper.find('.college-league').text()
+    expect(text).toContain(`${NATIONAL_TEAM.label} selectors read this result`)
+    // ⚠ AND NO VERDICT WORD ANYWHERE NEAR HER RESULT (the album's own rule, §6).
+    expect(text.toLowerCase()).not.toMatch(/unlucky|deserved|brave|sadly|at least|should have|well done/)
+    wrapper.unmount()
+  })
+
+  it('⭐ it is on the YEAR AHEAD calendar too, as a promise rather than a maybe', async () => {
+    const wrapper = await openCollegeHome(collegeView())
+    const text = wrapper.find('.college-calendar').text()
+    expect(text).toContain('College League')
+    expect(text).toContain('every year')
+    wrapper.unmount()
+  })
+
+  it('⚠ a career with no championship on record draws no block at all, and invents nothing', async () => {
+    // The migrated case (v55 mid-freeze) and the very first weeks of a career: there is genuinely
+    // no result, so the card says nothing rather than drawing an empty tournament.
+    const wrapper = await openCollegeHome(collegeView({ league: null, leagueMatches: [] }))
+    expect(wrapper.find('.college-league').exists()).toBe(false)
+    expect(wrapper.findAll('.college-league-match')).toHaveLength(0)
+    expect(wrapper.find('.college-year').exists(), 'and the rest of the card is untouched').toBe(true)
     wrapper.unmount()
   })
 

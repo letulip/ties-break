@@ -95,8 +95,49 @@ export const NATIONAL_TEAM = {
    *  rate for "what share of eligible players are nominated in a given year" and inventing a
    *  precise-looking one would be the §0 failure. This is a design choice: the letter should be a
    *  real event when it comes and the years it does not come should outnumber it, so that it is
-   *  never routine. */
+   *  never routine.
+   *
+   *  ⚠⚠ IT IS NO LONGER THE RATE – IT IS THE ANCHOR OF THE LADDER BELOW. Kept, because the ladder is
+   *  hung off it rather than replacing it with four fresh inventions, and because it is still the
+   *  rate a semifinalist sees. See `callChanceByLeague`. */
   callChance: 0.4,
+
+  /** ⭐⭐⭐ THE LETTER STOPS BEING A BARE ROLL – round 24, the owner's own design (21.08): «вызов в
+   *  сборную можно будет опереть на результаты студенческого».
+   *
+   *  ⚠⚠ WHAT THIS FIXES IS THE ONLY THING A COLLEGE YEAR HAD AND IT HAD NO STAKES. Measured over 48
+   *  college years, the call-up landed in 40% of them and nothing she did moved that number by a
+   *  hair – the roll read her age and her skill mean and neither is something the player spent a
+   *  week on. A guaranteed fixture on its own only fills a slot; a fixture whose RESULT decides
+   *  whether her country writes is the first time these four years contain a reason to care.
+   *
+   *  ⚠ INDEXED BY ROUNDS WON AT THE COLLEGE LEAGUE (`engine/collegeLeague.ts`), 0..3 for a draw of
+   *  eight: a first-round exit, a quarterfinal win, a losing finalist, the champion. It is
+   *  MONOTONE by construction and `tests/college-league.test.ts` pins that – a ladder that dipped
+   *  anywhere would mean playing better made the letter less likely, which is the one shape this may
+   *  never have.
+   *
+   *  ⚠ THE MIDDLE RUNG IS `callChance` ITSELF, WHICH IS WHY THERE ARE THREE INVENTED NUMBERS HERE
+   *  AND NOT FOUR. A semifinalist – the median student result – sees exactly the 0.4 the bare roll
+   *  used to give everybody, so the mechanic is re-shaped around its own historical mean rather than
+   *  re-tuned to a new one. Measured after the change: the letter lands in 47% of college years, up
+   *  from 40%, and 84% of champions get it against 15% of first-round losers.
+   *
+   *  ⚠ OURS, all three of them, and there is no research behind any of them: no published rate
+   *  exists for how a federation weighs a student result. What is defensible is the SHAPE – §5.3's
+   *  order of merit is a ranked list and a girl with no professional ranking has one result a year
+   *  to put on it – and the shape is what this encodes. */
+  callChanceByLeague: [0.15, 0.4, 0.65, 0.85] as const,
+
+  /** ⚠⚠ NO CHAMPIONSHIP ON RECORD, NO LETTER – and this zero is the mechanism rather than a guard
+   *  against a missing value. The selectors read one thing about a college player and it is her
+   *  championship; before she has played one there is nothing to read, so nobody writes. It bites in
+   *  exactly two places, both stated: a career that enrols on season week 12 or 13 meets the call-up
+   *  before its first championship and loses THAT year's letter (2 of 52 enrolment weeks), and a
+   *  career migrated into this schema mid-freeze can lose at most one for the same reason. A
+   *  fallback to `callChance` here would have quietly kept the bare roll alive in the one case the
+   *  ladder cannot see, which is how a mechanism becomes decorative. */
+  callChanceNoLeague: 0,
 
   /** ⚠ OURS. `standard` is the skill mean at which she is an even bet in a rubber and `slope` is
    *  what a point of skill either side of it is worth. Calibrated in
@@ -141,6 +182,29 @@ export interface CallUpView {
   ageYears: number
   /** her skill mean, 0-100 – the only thing about her that decides a rubber */
   skillMean: number
+  /** ⭐⭐ HOW FAR SHE WENT AT THE MOST RECENT COLLEGE LEAGUE, or `null` when there is no
+   *  championship on her record yet – the fact the selectors read (`callChanceFor`).
+   *
+   *  ⚠ IT IS A NUMBER AND NOT A `CollegeLeagueRun`, WHICH KEEPS THIS FILE A LEAF. The view may not
+   *  reach for a world, a calendar or a rung, and it may not reach for the other leaf either:
+   *  `world/college.ts` is the seam that knows both competitions, and it hands this one the single
+   *  number the rule uses. */
+  leagueRoundsWon: number | null
+}
+
+/** ⭐⭐⭐ WHAT THE LETTER'S CHANCE IS, GIVEN WHAT SHE DID AT THE COLLEGE LEAGUE.
+ *
+ *  ⚠ CLAMPED AT BOTH ENDS RATHER THAN INDEXED RAW. `callChanceByLeague` has one rung per possible
+ *  result of today's draw, and a later wave that widens `COLLEGE_LEAGUE.drawSize` would otherwise
+ *  read `undefined` off the end and turn every champion's chance into `NaN < u` – i.e. into "never
+ *  called", silently and only for the best result there is. The clamp makes the widening a
+ *  DEGRADATION (the top rung caps) instead of an inversion, and `tests/college-league.test.ts` pins
+ *  the ladder's length against the draw so the widening is caught anyway. */
+export function callChanceFor(leagueRoundsWon: number | null): number {
+  if (leagueRoundsWon === null) return NATIONAL_TEAM.callChanceNoLeague
+  const ladder = NATIONAL_TEAM.callChanceByLeague
+  const i = Math.max(0, Math.min(ladder.length - 1, Math.floor(leagueRoundsWon)))
+  return ladder[i]
 }
 
 /** ONE WEEK OF NATIONAL-TEAM TENNIS, or `null` in a year nobody wrote to her.
@@ -154,7 +218,11 @@ export interface CallUpView {
  *  ⚠ AND THE RNG MUST BE A PURPOSE-SCOPED SUB-STREAM, NEVER MAIN (CLAUDE.md invariant 2). The one
  *  caller derives `seed:callup:<week>` at the call site. */
 export function rollCallUp(view: CallUpView, rng: Rng): CallUp | null {
-  const called = rng() < NATIONAL_TEAM.callChance
+  // ⭐⭐⭐ ROUND 24 – THE THRESHOLD IS EARNED NOW, AND THE DRAW COUNT DID NOT MOVE. What changed is
+  // the number the first uniform is compared against; it is still ONE pull, still first, and the
+  // three below it are still taken unconditionally – so every later value on `seed:callup:<week>`
+  // sits at exactly the offset it always did and the fixture's shape is untouched.
+  const called = rng() < callChanceFor(view.leagueRoundsWon)
   // ⚠ SHE MAY BE NAMED AND NEVER TAKE THE COURT, and that is the regulation rather than a shortcut.
   // Research §0.7: the captain alone picks who plays out of the nomination, and §5.7 records that
   // representation "is deemed to occur ON NOMINATION, not on playing". A squad of four for three

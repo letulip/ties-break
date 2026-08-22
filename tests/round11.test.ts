@@ -224,9 +224,16 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // owner asked for a competition he can watch – so a reason with no precedence slot would be
     // filtered out of the return value and a year of played tennis would report nothing at all. The
     // same bug class as R11-1, arriving through a second producer.
+    // ⚠⚠ ROUND 24 ADDED 'college-league', AND IT IS THE FIRST MEMBER THAT IS NOT A ROLL AT ALL. The
+    // student championship is on the calendar of EVERY college year (the owner: «как минимум 1 турнир
+    // в год колледжа был»), so this reason fires in every one of the four – which makes a missing
+    // precedence slot worse here than anywhere above it, not better: it would silence the one week
+    // the round exists to make visible, every single year. It is also the first PAIR in this list
+    // that co-occurs by construction – the call-up is read off the championship two weeks earlier –
+    // and the ordering between them is asserted below.
     // ⚠ THE HAND-WRITTEN LIST IS THE POINT OF THIS TEST and must stay hand-written: derived from
     // STOP_PRECEDENCE it could never catch a member that has no slot, which is the whole bug class.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'call-up']
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'call-up', 'college-league']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {

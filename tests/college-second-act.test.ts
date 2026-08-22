@@ -225,8 +225,10 @@ describe('P5 – the national-team call-up', () => {
   it('⚠ the same seed gives the same weeks, and a REPLAY of the same week is identical', () => {
     // The sub-stream is re-derived at the call site and persists nothing, so the same `(seed, week)`
     // is the same letter however many times it is asked.
-    const a = rollCallUp({ ageYears: 20, skillMean: 60 }, rngFromSeed('x:callup:333'))
-    const b = rollCallUp({ ageYears: 20, skillMean: 60 }, rngFromSeed('x:callup:333'))
+    // ⚠ RE-AIMED BY ROUND 24, NOT WEAKENED. `CallUpView` gained `leagueRoundsWon` – the college
+    // championship the selectors read – so every direct call names one. The case is unchanged.
+    const a = rollCallUp({ ageYears: 20, skillMean: 60, leagueRoundsWon: 1 }, rngFromSeed('x:callup:333'))
+    const b = rollCallUp({ ageYears: 20, skillMean: 60, leagueRoundsWon: 1 }, rngFromSeed('x:callup:333'))
     expect(a).toEqual(b)
   })
 
@@ -242,7 +244,9 @@ describe('P5 – the national-team call-up', () => {
         pulls++
         return inner()
       }
-      const out = rollCallUp({ ageYears: 20, skillMean: 60 }, counting)
+      // ⚠ RE-AIMED: `leagueRoundsWon: 1` is the rung whose chance IS the old bare `callChance`
+      // (0.4), so this case still exercises both branches at exactly the rate it was written for.
+      const out = rollCallUp({ ageYears: 20, skillMean: 60, leagueRoundsWon: 1 }, counting)
       expect(pulls, `week ${week}`).toBe(4)
       if (out) called++
       else notCalled++
@@ -255,7 +259,7 @@ describe('P5 – the national-team call-up', () => {
     // §5.7, Reg 13.1.1. Fourteen, reached by the first day of the tie.
     for (let week = 0; week < 60; week++) {
       const out = rollCallUp(
-        { ageYears: NATIONAL_TEAM.minAgeYears - 1, skillMean: 90 },
+        { ageYears: NATIONAL_TEAM.minAgeYears - 1, skillMean: 90, leagueRoundsWon: 3 },
         rngFromSeed(`young:callup:${week}`),
       )
       expect(out).toBeNull()
@@ -268,8 +272,11 @@ describe('P5 – the national-team call-up', () => {
     const strong: number[] = []
     const weak: number[] = []
     for (let week = 0; week < 400; week++) {
-      const s = rollCallUp({ ageYears: 22, skillMean: 95 }, rngFromSeed(`n:callup:${week}`))
-      const w = rollCallUp({ ageYears: 22, skillMean: 20 }, rngFromSeed(`n:callup:${week}`))
+      // ⚠ RE-AIMED: the same league result on both arms, because this case is about her NATION's
+      // placing being independent of HER – and since round 24 the championship is the one thing that
+      // does move the letter, so it has to be held equal for the comparison to still mean what it did.
+      const s = rollCallUp({ ageYears: 22, skillMean: 95, leagueRoundsWon: 2 }, rngFromSeed(`n:callup:${week}`))
+      const w = rollCallUp({ ageYears: 22, skillMean: 20, leagueRoundsWon: 2 }, rngFromSeed(`n:callup:${week}`))
       if (s) strong.push(s.nationFinish)
       if (w) weak.push(w.nationFinish)
     }
