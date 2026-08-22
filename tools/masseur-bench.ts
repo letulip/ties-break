@@ -416,7 +416,7 @@ for (const presetIndex of ARMS_PRESETS) {
     const gross = base.map((r) => r.prizeCents + r.kidFundsCents)
     const cShare = base.map((r) => r.coachShareCents)
     const cFlat = base.map((r) => r.coachFlatCents)
-    const pct = base.map((r, i) => (gross[i] > 0 ? (100 * (cShare[i] + cFlat[i])) / gross[i] : NaN)).filter(Number.isFinite)
+    const pct = base.map((_, i) => (gross[i] > 0 ? (100 * (cShare[i] + cFlat[i])) / gross[i] : NaN)).filter(Number.isFinite)
     console.log(
       `team share  coach flat ${fmt(mean(cFlat))} + share ${fmt(mean(cShare))} on gross prize ${fmt(mean(gross))}` +
         ` -> coach ${(mean(pct)).toFixed(2)}% of prize (was 5.7% Alice / 0.94% Ines flat-only)`,
