@@ -227,3 +227,30 @@ second opinion system that file exists to prevent. It waits for that layer's ste
 2. ⚠ **Confirm E1 waits.** The alternative is a throwaway string now and a rebuild later.
 3. **Say whether his w474 career must be repairable**, or whether a broken save may simply be
    superseded. It changes B1's scope from "fix forward" to "fix forward AND heal".
+
+---
+
+## The owner's rulings, as they arrived
+
+**21.08 – all of the above approved** («да, всё утверждаю, сейв лечить желательно, запускай A1»), and
+the save proved both repairable and self-healing once B1's migration closes the orphaned reveal.
+
+**22.08 – the second batch, after the shell landed and exposed the year:**
+
+1. ⭐ **The college year gets a floor of real tennis** («я бы хотел, чтобы как минимум 1 турнир в год
+   колледжа был») – a student tournament EVERY academic year, guaranteed rather than rolled, and the
+   national call-up **leans on its result** instead of being a bare roll: «вызов в сборную можно
+   будет опереть на результаты студенческого». Minimum 1, maximum 2 tournaments per academic year –
+   the ceiling is his and it is deliberate. → agent G1.
+2. **The birthday at college is APPROVED** («да, день рождения делай»). E2's audit found she has four
+   birthdays inside the freeze and none of them happens – `pendingBirthday` returns null there
+   because a blocking dialog cannot be answered inside a 52-week loop. With the Home shell alive
+   during college this is now buildable: the year stops for her birthday the way it stops for a
+   call-up. → after G1, shares the resume loop.
+3. **D2 (#5) runs as discussed** («пункт 5 запускай как обсудили»): the fork is asked when school
+   ends, the place is RESERVED, she keeps playing, she leaves when the academic year starts – and
+   ⚠ **B1's entry release moves with her**: it fires at DEPARTURE, not at the answer, because an
+   entry made while she is still on tour before September IS a commitment she made. → after G1,
+   shares `answerFork` and the freeze clock.
+4. **E1 (#6, her opinion) stays paused** («да, пока на паузе») – it waits for the private-life stat's
+   own step 1, as argued above.
