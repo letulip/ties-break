@@ -44,6 +44,7 @@ import { ceilingOf } from '../src/engine/academy'
 // world/college.ts could stop importing the aggregate projection layer. Same function.
 import { kidLadderRank } from '../src/engine/world/ladder'
 import { ENDINGS } from '../src/engine/ending'
+import { nextAcademicYearStart } from '../src/engine/kidLife'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
 import type { WorldState } from '../src/engine/world'
@@ -223,6 +224,10 @@ function walkArm(preset: Preset, i: number, arm: Arm): Row | null {
     // cannot be read as advice». The tier spread was measured separately (decisions.md 17.08:
     // the coaching is worth +0 / +8 / +2 on the top-100 row) and is not this file's question.
     answerFork(world, 'college')
+    // ROUND 24 #5: the answer reserves – the gap year to the September departure is walked on the
+    // arm's own policy step, so the college arm plays its last junior season exactly as a player's
+    // world would before the freeze begins.
+    for (let gapW = 0; gapW < 54 && world.ending === null; gapW++) stepCareerWeek(world, rng, POLICY)
     // Round 24: the year pauses on her birthday week – press, answer, press again.
     for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
@@ -233,7 +238,10 @@ function walkArm(preset: Preset, i: number, arm: Arm): Row | null {
     exitWeek = world.week
   } else {
     answerFork(world, 'continue')
-    exitWeek = world.week + ENDINGS.collegeYears * WEEKS_PER_YEAR
+    // ROUND 24 #5: the college arm now exits at DEPARTURE + four years (the gap year is played on
+    // both arms), so the tour arm's like-for-like exit is the same calendar week – the next
+    // academic-year start plus the course.
+    exitWeek = nextAcademicYearStart(world.week) + ENDINGS.collegeYears * WEEKS_PER_YEAR
   }
   const rankAtLeaving = arm === 'college' ? kidLadderRank(world, 'wta') : null
 

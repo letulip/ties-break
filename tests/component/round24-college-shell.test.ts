@@ -99,7 +99,13 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
   answerFork(world, 'college')
-  expect(world.ending?.type, 'the fork really latched the college ending').toBe('college')
+  // ⚠ ROUND 24 #5: the answer reserves – the walk to the September departure is what latches the
+  // college ending now (the gap semantics are pinned in tests/college-departure.test.ts).
+  for (let i = 0; i < 54 && world.ending === null; i++) {
+    tickWeek(world, rng)
+    finishAnyReveal(world)
+  }
+  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   return { world, rng }
 }
 

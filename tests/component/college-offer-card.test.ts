@@ -162,7 +162,9 @@ describe('⭐⭐ the card says what each college place costs', () => {
   it('⭐⭐ still draws three live answers when no programme funded her', () => {
     const w = mountFork(WALK_ON)
     expect(w.findAll('.fork-answer')).toHaveLength(3)
-    expect(w.text()).toContain('Take the college place')
+    // ⚠ ROUND 24 #5: the button says «Reserve» now – the click books the place, she leaves at the
+    // September departure and plays until then.
+    expect(w.text()).toContain('Reserve the college place')
     for (const a of w.findAll('.fork-answer')) expect(a.attributes('disabled')).toBeUndefined()
     const rows = rowsOf(w)
     for (const r of rows) expect(r).toContain('Walk-on, no award')
@@ -251,7 +253,9 @@ describe('⭐⭐ the card says what each college place costs', () => {
     const w = mountFork(null)
     expect(w.find('.fork-places').exists(), 'no places block').toBe(false)
     expect(w.findAll('.fork-answer')).toHaveLength(3)
-    expect(w.text()).toContain('the money goes the other way')
+    // ⚠ ROUND 24 #5 re-aim: the migrated fallback names the departure fact instead of the money
+    // claim the engine never honoured.
+    expect(w.text()).toContain('from the next academic year')
     // ⚠ AND NO INVENTED PRICE ON THE THIRD ANSWER. Scoped to that button: the card's FACTS list
     // legitimately prints her funds and her prize money in dollars, and always has.
     expect(w.findAll('.fork-answer')[1].text(), 'no price quoted').not.toMatch(/\$\d/)

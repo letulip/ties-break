@@ -190,7 +190,7 @@ describe('the fork at nineteen', () => {
     // result before nineteen would cost her the academy. It cannot – they are separate mechanisms –
     // so the word had to stop being shared. The assertion follows the button; the claim is
     // unchanged, and it is stricter for naming college explicitly.
-    expect(w.text()).toContain('Take the college place')
+    expect(w.text()).toContain('Reserve the college place')
     expect(w.text()).toContain('Stop here')
     // ⚠ NO PRIMARY. «Stop» must be able to be the right answer, so the card may not style one of
     // them as the correct one - all three carry the same class and none is a PrimaryPill.
@@ -233,7 +233,7 @@ describe('the fork at nineteen', () => {
       patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, ...stale } as never })
       const w = mount(ForkDialog)
       expect(w.findAll('.fork-answer'), `stale ${JSON.stringify(stale)}`).toHaveLength(3)
-      expect(w.text()).toContain('Take the college place')
+      expect(w.text()).toContain('Reserve the college place')
       expect(w.findAll('.tb-pill'), 'and still no primary').toHaveLength(0)
       w.unmount()
     }

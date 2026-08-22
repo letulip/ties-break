@@ -258,7 +258,7 @@ describe('⭐ round-21 #8 – the fork offers all three doors, and no longer exp
     useGameStore().snapshot = forkSnapshot()
     const w = mount(ForkDialog)
     expect(w.findAll('.fork-answer'), 'three answers, one weight').toHaveLength(3)
-    expect(w.text()).toContain('Take the college place')
+    expect(w.text()).toContain('Reserve the college place')
     // ⚠ THE NEGATIVE IS THE HALF THAT MOVED. `.fork-shut` was the class and "two answers here and not
     // three" was the sentence; both are gone, and nothing replaced them with a softer version.
     expect(w.find('.fork-shut').exists(), 'the class is gone').toBe(false)

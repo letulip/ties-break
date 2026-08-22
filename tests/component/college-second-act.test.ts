@@ -207,6 +207,11 @@ function walkedCollegeSnapshot(): Snapshot {
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
   answerFork(world, 'college')
+  // ⚠ ROUND 24 #5: the answer reserves – walk the gap to the September departure first.
+  for (let i = 0; i < 54 && world.ending === null; i++) {
+    tickWeek(world, rng)
+    finishAnyReveal(world)
+  }
   resumeFromCollege(world, rng)
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {

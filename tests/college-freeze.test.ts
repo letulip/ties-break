@@ -17,8 +17,11 @@
 //      competition ranking tied them all at first and the game told him she was world number one.
 //
 // THE THREE RULES THIS FILE HOLDS, and each has an arm that dies when only that rule is removed:
-//   RULE 1  `answerFork(…, 'college')` RELEASES every outstanding entry – full refund, slot back, no
-//           forfeit and no penalty, however late it lands («Мы ни за что не наказываем»).
+//   RULE 1  the DEPARTURE releases every outstanding entry – full refund, slot back, no forfeit and
+//           no penalty, however late it lands («Мы ни за что не наказываем»). ⚠ ROUND 24 #5 moved it
+//           there from the answer, on the owner's own ruling: the college answer only RESERVES a
+//           place now, the gap year is played, and `resolveCollegeDeparture` fires the release the
+//           week she actually leaves – an entry made while she still plays IS a commitment she made.
 //   RULE 2  `resumeFromCollege` REFUSES to spend a year over an unanswered reveal, at entry and
 //           mid-loop. This is the rule that closes the CLASS: rule 1 kills the entry route, rule 2
 //           kills every route, including one this wave has not thought of.
@@ -98,6 +101,48 @@ function openTheFork(world: WorldState): void {
   world.fork = { askedWeek: world.week, answer: null, offer: null }
 }
 
+/** ⚠ ROUND 24 #5 RE-AIM – the college answer RESERVES now and the freeze starts at the DEPARTURE
+ *  (`fork.departsWeek`, the next academic-year September), which is where rule 1's release moved to.
+ *  This walks the gap the way the player's world does – ordinary ticks, reveals closed – and stops
+ *  on the latch. The gap-and-departure semantics themselves are pinned in
+ *  tests/college-departure.test.ts; this file keeps asking its original freeze questions. */
+function walkToDeparture(world: WorldState, rng: Rng): void {
+  for (let i = 0; i < WEEKS_PER_YEAR + 4 && world.ending === null; i++) {
+    tickWeek(world, rng)
+    if (world.pendingTournament) finishAnyReveal(world)
+  }
+  expect(world.ending?.type, 'the departure latched the college ending').toBe('college')
+}
+
+/** Walk to `weeksBefore` weeks short of the departure – the last playable stretch of the gap, where
+ *  an entry can be booked that is still OUTSTANDING when she leaves (play week past the departure). */
+function walkToJustBeforeDeparture(world: WorldState, rng: Rng, weeksBefore: number): number {
+  const departs = world.fork!.departsWeek!
+  while (world.week < departs - weeksBefore) {
+    tickWeek(world, rng)
+    if (world.pendingTournament) finishAnyReveal(world)
+  }
+  return departs
+}
+
+/** `bookAnEntry`, bounded to a play-week window – rule 1's cases need the play week ON or JUST past
+ *  the departure (outstanding when she leaves), and the past-deadline case needs it close enough
+ *  that the list provably closed first. Same engine-refusal discipline: nothing is forced. */
+function bookAnEntryBetween(world: WorldState, fromWeek: number, toWeek: number): string | null {
+  const cand = world.season
+    .filter((e) => e.week > world.week && e.week >= fromWeek && e.week <= toWeek && world.week <= e.deadlineWeek)
+    .sort((a, b) => b.week - a.week)
+  for (const e of cand) {
+    try {
+      enterEvent(world, e.id)
+      return e.id
+    } catch {
+      // her rank or her purse refuses this rung – try the next one down
+    }
+  }
+  return null
+}
+
 /** The four years, spent one at a time exactly as the epilogue's button spends them.
  *
  *  ⚠ RE-AIMED BY THE COLLEGE BIRTHDAY (round 24, «да, день рождения делай»): a year now PAUSES on
@@ -123,14 +168,24 @@ function spendOneYear(world: WorldState, rng: Rng): void {
 // ⭐⭐ THE CHAIN, END TO END – the guard the round is actually about
 // =================================================================================================
 describe('the freeze keeps the world playing', () => {
-  it('⭐⭐⭐ a career that reaches the fork WITH A LIVE ENTRY graduates into a world that has been playing', () => {
+  it('⭐⭐⭐ a career that reaches the DEPARTURE with a live entry graduates into a world that has been playing', () => {
+    // ⚠ ROUND 24 #5 RE-AIM, NOT A WEAKENING: the entry has to be outstanding when the FREEZE starts,
+    // and the freeze starts at the departure now – so the reproduction books it in the gap's last
+    // stretch, with a play week past the September she leaves on. The owner's week-270 W500 shape,
+    // relocated to where the release relocated.
     const { world, rng } = playedCareer('r24-chain', 60)
     openTheFork(world)
-    const entry = bookAnEntry(world, 4)
-    expect(entry, 'the reproduction needs a live entry – this is the owner\'s week-270 W500').not.toBeNull()
-    expect(world.entries, 'and it is outstanding when the fork is answered').toContain(entry!)
-
     answerFork(world, 'college')
+    const departs = walkToJustBeforeDeparture(world, rng, 4)
+    const entry = bookAnEntryBetween(world, departs, departs + 4)
+    expect(entry, 'the reproduction needs a live entry – this is the owner\'s week-270 W500').not.toBeNull()
+    expect(
+      world.season.find((e) => e.id === entry)!.week,
+      'and its play week is past the departure, so it is outstanding when she leaves',
+    ).toBeGreaterThanOrEqual(departs)
+
+    walkToDeparture(world, rng)
+    expect(world.entries, 'nothing outlives the departure').toHaveLength(0)
     spendTheYears(world, rng)
 
     // She is out the other side: four years banked, the latch off, the tab shell back.
@@ -162,22 +217,33 @@ describe('the freeze keeps the world playing', () => {
 // =================================================================================================
 // RULE 1 – THE RELEASE, AND WHAT IT MAY NOT COST HER
 // =================================================================================================
-describe('rule 1 – an outstanding entry is released when the freeze starts', () => {
+describe('rule 1 – an outstanding entry is released when the freeze starts, and the freeze starts at the departure', () => {
   it('⭐ the fee comes back in full, the slot comes back, and nothing is charged', () => {
-    const { world } = playedCareer('r24-release', 60)
+    // ⚠ ROUND 24 #5 RE-AIM: the release fires AT THE DEPARTURE now, in the departure week's own
+    // resolved tick – so «the whole fee» is asserted as the release's own ledger row (the one
+    // `releaseEntry` writes, amount = the fee, at the departure week) rather than as a funds delta a
+    // week of income and base costs would smear. Every other assertion is the original, asked at the
+    // moment the release actually happens.
+    const { world, rng } = playedCareer('r24-release', 60)
     openTheFork(world)
-    const entry = bookAnEntry(world, 4)
+    answerFork(world, 'college')
+    const departs = walkToJustBeforeDeparture(world, rng, 4)
+    const entry = bookAnEntryBetween(world, departs, departs + 4)
     expect(entry).not.toBeNull()
     const event = world.season.find((e) => e.id === entry)!
+    expect(event.week, 'outstanding at the departure').toBeGreaterThanOrEqual(departs)
     const fee = TIERS[event.tier].entryFeeCents
-    const fundsBefore = world.fundsCents
     const penaltiesBefore = world.penalties.length
     const suspendedBefore = world.suspendedUntilWeek
 
-    answerFork(world, 'college')
+    walkToDeparture(world, rng)
 
-    expect(world.entries, 'nothing outlives the fork').toHaveLength(0)
-    expect(world.fundsCents - fundsBefore, 'the whole fee, not a forfeit and not a part of one').toBe(fee)
+    expect(world.entries, 'nothing outlives the departure').toHaveLength(0)
+    const refunds = world.events.filter(
+      (e) => e.week === departs && e.type === 'income' && e.text === `Entry refunded: ${TIERS[event.tier].label}`,
+    )
+    expect(refunds, 'one refund row, at the departure week').toHaveLength(1)
+    expect(refunds[0].amountCents, 'the whole fee, not a forfeit and not a part of one').toBe(fee)
     // ⚠ «МЫ НИ ЗА ЧТО НЕ НАКАЗЫВАЕМ» IS THE ASSERTION, not a comment above one. `cancelEntry`'s late
     // arm can charge `lateWithdrawalPoints` and the no-show beat in `tickWeek` charges more; the
     // release must reach neither.
@@ -190,41 +256,57 @@ describe('rule 1 – an outstanding entry is released when the freeze starts', (
   }, 60_000)
 
   it('⭐ AND IT REFUNDS PAST THE ENTRY DEADLINE TOO – the one release that does', () => {
-    // Lists close two weeks out (`deadlineWeek = week - 2`), so an entry taken three weeks ahead and
-    // still standing two weeks later is a real, reachable state – and it is the state every other
-    // exit in the game FORFEITS the fee in. This one may not.
+    // Lists close two weeks out (`deadlineWeek = week - 2`), so an entry whose play week straddles
+    // the departure has ALWAYS had its list close before she leaves – the past-deadline arm is not
+    // an edge of the redesign, it is its ordinary case, and it is the state every other exit in the
+    // game FORFEITS the fee in. This one may not.
     const { world, rng } = playedCareer('r24-late-release', 60)
-    world.fundsCents = 500_000_00
-    const entry = bookAnEntry(world, 5)
+    openTheFork(world)
+    answerFork(world, 'college')
+    const departs = walkToJustBeforeDeparture(world, rng, 4)
+    // ⚠ SELECTED BY THE DEADLINE ITSELF, not by week arithmetic: the case needs a list that closes
+    // BEFORE she leaves for an event that plays AT or AFTER – deadlines are not uniformly week−2
+    // across rungs, so the candidate filter asks the calendar rather than assuming the offset.
+    const cand = world.season
+      .filter((e) => e.week >= departs && e.deadlineWeek < departs && world.week <= e.deadlineWeek)
+      .sort((a, b) => b.week - a.week)
+    let entry: string | null = null
+    for (const e of cand) {
+      try {
+        enterEvent(world, e.id)
+        entry = e.id
+        break
+      } catch {
+        // her rank or her purse refuses this rung – try the next one down
+      }
+    }
     expect(entry).not.toBeNull()
     const event = world.season.find((e) => e.id === entry)!
-    let ticks = 0
-    while (world.week <= event.deadlineWeek && world.week < event.week - 1 && ticks < 8) {
-      tickWeek(world, rng)
-      finishAnyReveal(world)
-      ticks++
-    }
-    expect(world.week, 'the list has closed with her name on it').toBeGreaterThan(event.deadlineWeek)
-    expect(world.entries, 'and she is still on it').toContain(entry!)
+    expect(event.week, 'outstanding at the departure').toBeGreaterThanOrEqual(departs)
 
-    openTheFork(world)
-    const fundsBefore = world.fundsCents
-    answerFork(world, 'college')
+    walkToDeparture(world, rng)
 
-    expect(world.entries).toHaveLength(0)
-    expect(world.fundsCents - fundsBefore, 'full refund – she is not pulling out, the game is').toBe(
-      TIERS[event.tier].entryFeeCents,
+    expect(departs, 'the list HAD closed with her name on it – the past-deadline arm was really taken').toBeGreaterThan(
+      event.deadlineWeek,
     )
+    expect(world.entries).toHaveLength(0)
+    const refunds = world.events.filter(
+      (e) => e.week === departs && e.type === 'income' && e.text === `Entry refunded: ${TIERS[event.tier].label}`,
+    )
+    expect(refunds, 'full refund – she is not pulling out, the game is').toHaveLength(1)
+    expect(refunds[0].amountCents).toBe(TIERS[event.tier].entryFeeCents)
     expect(world.penalties, 'and no price for the closed list either').toHaveLength(0)
   }, 60_000)
 
   it('⚠ the feed does not tell him HE withdrew her – the 05.08 misattribution bug, in college colours', () => {
-    const { world } = playedCareer('r24-release-voice', 60)
+    const { world, rng } = playedCareer('r24-release-voice', 60)
     openTheFork(world)
-    expect(bookAnEntry(world, 4)).not.toBeNull()
-    const before = world.events.length
     answerFork(world, 'college')
-    const written = world.events.slice(before).filter((e) => e.type === 'entry')
+    const departs = walkToJustBeforeDeparture(world, rng, 4)
+    expect(bookAnEntryBetween(world, departs, departs + 4)).not.toBeNull()
+    walkToDeparture(world, rng)
+    // ⚠ ROUND 24 #5 – the desk speaks at the DEPARTURE now, so the record is read at that week.
+    const written = world.events.filter((e) => e.week === departs && e.type === 'entry')
     expect(written.length, 'the release is on the record').toBeGreaterThan(0)
     for (const row of written) {
       expect(row.text.startsWith(RELEASE_LINE_PREFIX.parent), row.text).toBe(false)
@@ -250,9 +332,19 @@ describe('rule 2 – resumeFromCollege will not tick past an open reveal', () =>
     const event = world.season.find((e) => e.id === entry)!
     while (world.week < event.week) tickWeek(world, rng)
     expect(world.pendingTournament, 'her run is on screen and unresolved').not.toBeNull()
-    world.fork = { askedWeek: world.week, answer: null, offer: null }
-    answerFork(world, 'college')
-    expect(world.pendingTournament, 'the reveal survived the answer – this is the hazard').not.toBeNull()
+    // ⚠ ROUND 24 #5 RE-AIM: the answer only RESERVES now, so the latch can no longer arrive by
+    // answering over the finale. The route that still reaches «freeze + open reveal» is the header
+    // comment's own mechanism pointed at the departure: `finalizeTournament` calls `resolveEndings`
+    // WHILE `pendingTournament` is still set, and `resolveCollegeDeparture` runs inside it – so a
+    // career whose reservation comes due on the very week of its finale latches with the reveal
+    // still open. The reservation is written by hand (this fixture's own idiom, one line up from
+    // where it used to hand-open the fork) and the finale is revealed to the end.
+    world.fork = { askedWeek: world.week, answer: 'college', offer: null, departsWeek: world.week }
+    for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
+      revealTournamentRound(world)
+    }
+    expect(world.ending?.type, 'the departure latched over the finale').toBe('college')
+    expect(world.pendingTournament, 'the reveal survived the departure – this is the hazard').not.toBeNull()
     return { world, rng }
   }
 
@@ -310,6 +402,7 @@ describe('rule 3 – tickWeek plays no tournament for a girl who is at college',
     const { world, rng } = playedCareer('r24-inside', 60)
     openTheFork(world)
     answerFork(world, 'college')
+    walkToDeparture(world, rng)
     spendOneYear(world, rng)
     expect(inCollege(world), 'one year down, three to go').toBe(true)
 

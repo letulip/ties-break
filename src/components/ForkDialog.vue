@@ -1,10 +1,18 @@
 <script setup lang="ts">
-// THE FORK AT NINETEEN – the most expensive click in the game (adult-tour-and-endings.md's own
-// closing risk note), and the second act beginning.
+// THE FORK – the most expensive click in the game (adult-tour-and-endings.md's own closing risk
+// note), and the second act beginning.
 //
-// Three answers, and TWO OF THEM END THE CAREER. That is why it BLOCKS rather than toasts: the
-// engine refuses to tick until it is answered, exactly the contract an undecided knock has, and
-// there is deliberately no way out of this card that is not a choice.
+// ⭐⭐⭐ ROUND 24 #5 – IT IS ASKED WHEN SCHOOL ENDS NOW, NOT ON HER NINETEENTH BIRTHDAY («пункт 5
+// запускай как обсудили»). She is 18.0–18.9 on this card, her last junior season is still ahead,
+// and the college answer RESERVES a place she takes up on the next academic year's September
+// (`snapshot.collegeDepartsWeek`) – she keeps playing until then. 'Stop' and 'turn professional'
+// are still immediate. The copy below may not assert the birthday-era facts («she is nineteen»,
+// «the ladder is closed») because both are now false on the week the card draws.
+//
+// Three answers; ONE ends the career today and one books the end of the junior years. That is why
+// it BLOCKS rather than toasts: the engine refuses to tick until it is answered, exactly the
+// contract an undecided knock has, and there is deliberately no way out of this card that is not a
+// choice.
 //
 // ⚠ IT MAY NOT RECOMMEND. Ruling 4, 30.07: «"stop" CAN be the right answer at 19... a real ending
 // without shame». A game about honest economics whose fork quietly styles one button as the correct
@@ -46,6 +54,7 @@ import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
 import { formatCents } from '../shared/money'
+import { weekLabel } from '../shared/dates'
 import { activeLadderOfSnapshot, type CollegeTier, type ForkAnswer } from '../shared/protocol'
 
 const game = useGameStore()
@@ -246,6 +255,15 @@ function pick(row: TierRow): void {
   if (row.open) picked.value = row.tier
 }
 
+/** ⭐ ROUND 24 #5 – the week the reserved place is taken up, off the snapshot's own derivation
+ *  (`nextAcademicYearStart(askedWeek)` while the fork is open). The fallback cannot be reached on a
+ *  live card – the engine fills the field whenever a fork is open – but a hand-built fixture without
+ *  it should read as the season fact rather than crash the lede. */
+const departsLabel = computed(() => {
+  const w = snap.value?.collegeDepartsWeek ?? null
+  return w === null ? 'next September' : weekLabel(w)
+})
+
 /** ⚠ A FACT, NOT A REFUSAL. She may take a place the family cannot pay for – it goes into debt, not
  *  away (owner, 16.08) – so this line is beside the price and never on the button. */
 const effectiveLine = computed(() => {
@@ -280,10 +298,14 @@ async function answer(a: ForkAnswer): Promise<void> {
     <div class="dialog-card fork-card">
       <img class="fork-art" :src="artUrl" :style="artStyle" alt="" />
       <p class="fork-kicker">She is {{ fork.ageYears }}</p>
-      <h2 class="fork-title">The junior ladder is behind her.</h2>
+      <h2 class="fork-title">School is over.</h2>
+      <!-- ⚠ ROUND 24 #5 – the lede carries the ONE new fact of the redesign: college is a
+           reservation taken up at the academic year's start, and the season until then is played.
+           It may not recommend (ruling 4), so it states the three roads' timing and stops. -->
       <p class="fork-lede">
-        Every rung she has been climbing is closed on age now. The next one pays prize money and
-        costs more than it pays until she is good. Nobody has to keep going.
+        The junior rungs close on age at nineteen – the season ahead is the last of them. A college
+        place is reserved today and taken up when the academic year starts ({{ departsLabel }});
+        the other two roads begin now. Nobody has to keep going.
       </p>
 
       <dl class="fork-facts">
@@ -403,14 +425,16 @@ async function answer(a: ForkAnswer): Promise<void> {
           :disabled="game.busy"
           @click="answer('college')"
         >
-          <strong>Take the college place</strong>
+          <!-- ⚠ "RESERVE", NOT "TAKE" (round 24 #5): the click books the place; she leaves when the
+               academic year starts and plays until then. The lede above carries the week. -->
+          <strong>Reserve the college place</strong>
           <!-- ⚠ THE OLD LINE SAID "the money goes the other way" AND IT WAS A CLAIM THE ENGINE DID
                NOT HONOUR. It was true of the balance – she stops travelling, the coach stops billing
                – and false about the scholarship, which paid $0 and covered a bill that did not
                exist. The line below states the same trade without asserting the direction, and the
                figures under it are what the direction actually is this career. -->
           <span v-if="effectiveLine">{{ effectiveLine }}</span>
-          <span v-else>Four years of student tennis on a college scholarship. No ranking points, and the money goes the other way.</span>
+          <span v-else>Four years of student tennis on a college scholarship, from the next academic year. No ranking points.</span>
         </button>
         <button class="fork-answer" type="button" :disabled="game.busy" @click="answer('stop')">
           <strong>Stop here</strong>

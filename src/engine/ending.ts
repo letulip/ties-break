@@ -15,6 +15,7 @@
 // post-draw predicate over an injury the injury sub-stream has already rolled, an age comparison, or
 // a player's answer. So the frozen MAIN capture cannot notice this file exists, and a career that
 // goes bankrupt mid-replay keeps drawing identically to one that does not.
+import { schoolIsOver } from './kidLife'
 import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from '../shared/protocol'
 
 /** THE KNOBS. Every number here is either measured (`tools/endings-bench.ts`) or anchored in the
@@ -45,7 +46,12 @@ export const ENDINGS = {
   bankruptcyGraceWeeks: 12,
 
   // --- #1/#2 THE FORK AT NINETEEN --------------------------------------------------------------
-  /** the birthday the junior story runs out on (adult spec §4.1: real ITF juniors is U18) */
+  /** the birthday the junior story runs out on (adult spec §4.1: real ITF juniors is U18).
+   *  ⚠ SINCE ROUND 24 #5 THIS IS A FACT ABOUT THE GAP, NOT THE TRIGGER: the fork is ASKED when
+   *  school ends (`forkDue` reads `schoolIsOver`, age 18.0–18.9) and the college DEPARTURE lands on
+   *  the next academic-year start – which, for every birth month, is the first 1 September after
+   *  this birthday. The junior rungs still close on their own age gates at nineteen, inside the
+   *  ask→depart year. Kept because it documents that identity and the e2e stop fixture reads it. */
   forkAgeYears: 19,
   /** §5.1 – four years of student tennis on a scholarship, and she comes back at twenty-two. */
   collegeYears: 4,
@@ -233,13 +239,24 @@ export function detectEnding(view: AutoEndingView, graceWeeks: number = ENDINGS.
 
 // --- #1 and #2: the fork at nineteen ------------------------------------------------------------
 
-/** Is the fork due? Her nineteenth birthday week, once, and never again.
+/** Is the fork due? The week school ends, once, and never again.
  *
- *  ⚠ IT IS RAISED ON THE BIRTHDAY AND NOT AT THE SEASON BOUNDARY, because the junior cap is an AGE
- *  rule (`maxAgeYears: 18` on the J tiers), so the week her calendar loses the ladder she has been
- *  climbing is the week she turns nineteen – not the following January. */
-export function forkDue(ageYears: number, alreadyAsked: boolean): boolean {
-  return !alreadyAsked && ageYears >= ENDINGS.forkAgeYears
+ *  ⭐⭐⭐ ROUND 24 #5 – IT MOVED OFF HER BIRTHDAY, and the move is the owner's design rather than a
+ *  drift («В колледж она пошла ровно в день своего рождения, а должна была в начале учебного года»;
+ *  the approved shape is ask / hold / depart – docs/specs/college-departure-2026-08.md). The
+ *  question a family actually decides in her last school year is asked when that year ends:
+ *  `schoolEndWeek` – the game's ONE notion of school being finished (kidLife.ts, «Конец школы – в
+ *  конце учебного года»), age 18.00–18.92 for every birth month the game can roll. What used to be
+ *  asked here on the birthday – enrolment itself – now happens at the DEPARTURE, the next academic
+ *  year start, which for every birth month is also the first 1 September after her nineteenth: the
+ *  junior rungs close on age (`maxAgeYears: 18` on the J tiers) INSIDE the gap, so the year between
+ *  ask and departure is her last junior season, played rather than skipped.
+ *
+ *  ⚠ A WEEK PREDICATE NOW, NOT AN AGE ONE, because school's end is a September fact and not a
+ *  birthday fact – `ENDINGS.forkAgeYears` below keeps naming the age the junior story runs out on,
+ *  which is now a fact about the GAP rather than the trigger. */
+export function forkDue(week: number, birthMonth: number, alreadyAsked: boolean): boolean {
+  return !alreadyAsked && schoolIsOver(week, birthMonth)
 }
 
 /* ⭐⭐ `CollegeResultView` AND `collegeDoorOpen` WERE HERE, AND THEY GO WITH THE CONSTANT THEY READ
@@ -297,7 +314,9 @@ export function endingForForkAnswer(
     type: 'stopped',
     week,
     ageYears,
-    detail: 'she stopped at nineteen, and nobody had to call it a failure',
+    // ⚠ "at nineteen" UNTIL ROUND 24 #5 – the fork is asked when school ends now (age 18.0–18.9),
+    // so the line anchors to the moment that raises it rather than to an age it no longer fires at.
+    detail: 'she stopped when school ended, and nobody had to call it a failure',
     resumesWeek: null,
   }
 }
@@ -421,8 +440,11 @@ export function endingForRetirement(
  *  ⚠ SO THE RULE THIS CORRECTS: an unconsumed EXPORT is a candidate for deletion; unconsumed WRITING
  *  is a candidate for the owner. `ENDING_TITLE` below is live and this is its unwritten other half. */
 export const ENDING_BLURB: Record<CareerEndingType, string> = {
+  // ⚠ ROUND 24 #5 – the fork is asked when school ends now, so this stopped saying "at nineteen":
+  // she answers at 18.0–18.9, with her last junior season still ahead of her, and the blurb may not
+  // assert a year she chose not to play.
   stopped:
-    'The junior ladder ran out and the next one wanted more than the family had. She put the racket down at nineteen, and that is an ending, not a loss.',
+    'School ended and the next ladder wanted more than the family had. She put the racket down there, and that is an ending, not a loss.',
   // ⚠ P5 – IT NO LONGER PROMISES FOUR YEARS OR A DEGREE, because she may leave after one and the
   // sport's own case is that she does. It also no longer asserts "no ranking at all": measured over
   // the freeze (spec §4) her professional rank is IDENTICAL at both ends in the median career,
@@ -441,7 +463,7 @@ export const ENDING_BLURB: Record<CareerEndingType, string> = {
 }
 
 export const ENDING_TITLE: Record<CareerEndingType, string> = {
-  stopped: 'She stopped at nineteen',
+  stopped: 'She stopped after school',
   college: 'She went to college',
   bankruptcy: 'The money ran out',
   injury: 'The body stopped first',

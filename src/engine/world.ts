@@ -195,6 +195,7 @@ import {
   lastRungSeasonIndexOf,
   plateauViewOf,
   autoEndingViewOf,
+  resolveCollegeDeparture,
   resolveEndings,
   wasThereAChild,
 } from './world/endings'
@@ -260,6 +261,7 @@ export {
   lastRungSeasonIndexOf,
   plateauViewOf,
   autoEndingViewOf,
+  resolveCollegeDeparture,
   resolveEndings,
   wasThereAChild,
 }
@@ -446,7 +448,9 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // Measured on the owner's own w474 save: season 0, results 1, `pendingTournament` 5-w270-wta500
 // finished, `snapshot.pending` NULL. Rules 1-3 stop new careers reaching that state; this is the one
 // door already-broken ones can come back through. See the migration for what it does and does not do.
-export const SAVE_SCHEMA_VERSION = 57
+// v58 (round 24 #5): `fork.departsWeek` – the college answer RESERVES a place and she departs on the
+// next academic year's September; see the migration and docs/specs/college-departure-2026-08.md.
+export const SAVE_SCHEMA_VERSION = 58
 
 
 

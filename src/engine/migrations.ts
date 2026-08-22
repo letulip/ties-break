@@ -1755,6 +1755,32 @@ export function migrateSave(raw: unknown): WorldState {
     v = 57
   }
 
+  // ⭐⭐⭐ v57 -> v58: THE FORK MOVES OFF HER BIRTHDAY (round 24 #5, the owner's «пункт 5 запускай
+  // как обсудили»). One new field, nullable, on the fork only: `fork.departsWeek` – the week the
+  // college answer's reserved place is taken up. The ask now fires at `schoolEndWeek` (age
+  // 18.0–18.9), the college answer RESERVES rather than enrols, and `resolveCollegeDeparture`
+  // executes the move on the next academic year's own September.
+  //
+  // ⚠⚠ NULL IS THE TRUE VALUE FOR EVERY v57 SAVE, BY CONSTRUCTION AND NOT BY DEFAULT. Under the
+  // birthday-era clock the college answer enrolled in the same command, so no v57 save can hold an
+  // answered-but-not-departed fork: a college fork is either OPEN (no departure booked – and if the
+  // save's week is already past its new-clock ask week, the fork simply stands where it was raised;
+  // answering it on new code books a real departure at the next September) or already ENROLLED
+  // (`world.college` non-null – nothing reads `departsWeek` behind an enrolment, and the career
+  // continues exactly as it did: same latch, same `resumeFromCollege`, byte-for-byte weeks).
+  // 'continue' and 'stop' forks never consult it. There is nothing to reconstruct and nothing this
+  // null declines.
+  //
+  // Idempotent (`undefined` is the only state it rewrites) and it writes a literal: ZERO draws on
+  // any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 57) {
+    const fork = save.fork as { departsWeek?: unknown } | null | undefined
+    if (fork && typeof fork === 'object' && fork.departsWeek === undefined) {
+      fork.departsWeek = null
+    }
+    v = 58
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

@@ -104,6 +104,9 @@ function walkOneArm(
   const quote = offer.quotes.find((q) => q.tier === tier)!
   const rankAtFork = kidLadderRank(at.world, 'wta')
   answerFork(at.world, 'college', tier)
+  // ROUND 24 #5: the answer reserves – walk the gap to the September departure first, on the same
+  // bench step the career arrived on, so the tour arm and the college arm compare like for like.
+  for (let gapW = 0; gapW < 54 && at.world.ending === null; gapW++) stepCareerWeek(at.world, at.rng, POLICIES[0])
   const fundsAtEnrolCents = at.world.fundsCents
   for (let y = 0; y < YEARS && at.world.ending?.type === 'college'; y++) {
     const yearStart = at.world.week

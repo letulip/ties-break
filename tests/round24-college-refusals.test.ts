@@ -103,6 +103,11 @@ function careerAtCollege(seed: string): { world: WorldState; rng: Rng } {
   const { world, rng } = playedCareer(seed, 60)
   openTheFork(world)
   answerFork(world, 'college')
+  // ⚠ ROUND 24 #5: the answer reserves – walk the gap to the September departure first.
+  for (let i = 0; i < 54 && world.ending === null; i++) {
+    tickWeek(world, rng)
+    finishAnyReveal(world)
+  }
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
@@ -135,12 +140,25 @@ function bookableWeek(world: WorldState, kind: 'vacation' | 'practice', from: nu
 function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek: number; pracWeek: number } {
   const { world, rng } = playedCareer(seed, 60)
   openTheFork(world)
-  const vacWeek = bookableWeek(world, 'vacation', world.week + 60, world.week + 95)
-  const pracWeek = bookableWeek(world, 'practice', world.week + 60, world.week + 95)
+  answerFork(world, 'college')
+  // ⚠ ROUND 24 #5 RE-AIM: the answer reserves and the freeze starts at the September departure, so
+  // «a booking made before the freeze» is made in the GAP now – the family plans on the eve of the
+  // departure, exactly the commitment class the ruling protects. The walk stops six weeks short so
+  // the booking window (55–90 weeks out, the horizon the old fixture proved) lands in year TWO of
+  // the course, far enough that the year this walk really spends cannot consume them first.
+  const departs = world.fork!.departsWeek!
+  while (world.week < departs - 6) {
+    tickWeek(world, rng)
+    finishAnyReveal(world)
+  }
+  const vacWeek = bookableWeek(world, 'vacation', departs + 55, departs + 90)
+  const pracWeek = bookableWeek(world, 'practice', departs + 55, departs + 90)
   expect(vacWeek, 'the fixture needs a bookable holiday week in year two').not.toBeNull()
   expect(pracWeek, 'the fixture needs a bookable practice week in year two').not.toBeNull()
-
-  answerFork(world, 'college')
+  for (let i = 0; i < 10 && world.ending === null; i++) {
+    tickWeek(world, rng)
+    finishAnyReveal(world)
+  }
   // ⚠ Press-answer-press, exactly as `careerAtCollege` above – the year pauses for her birthday now.
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
@@ -245,6 +263,11 @@ describe('the family may take back a booking it made before the fork', () => {
     expect(week, 'the fixture needs a bookable week inside year one').not.toBeNull()
 
     answerFork(world, 'college')
+    // ⚠ ROUND 24 #5: the answer reserves – walk the gap to the September departure first.
+    for (let i = 0; i < 54 && world.ending === null; i++) {
+      tickWeek(world, rng)
+      finishAnyReveal(world)
+    }
     // ⚠ Press-answer-press (round 24): the year pauses on her birthday, which can land before the
     // booked court – the whole year has to be spent for the trap to be provably real.
     for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {

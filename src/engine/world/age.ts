@@ -283,7 +283,13 @@ export function birthdayTurning(week: number, birthMonth: number, birthDay: numb
  *  in the birthday's own week, and it is for events that are ABOUT the birthday. Every gate stays on
  *  `kidAgeAt`: an eligibility rule governs the whole week and must not open mid-week. If you are
  *  gating, use `kidAgeAt`; if you are CELEBRATING or asking her a question the birthday prompts, use
- *  this one. The fork is the only caller today, deliberately. */
+ *  this one.
+ *
+ *  ⚠ CALLER-LESS SINCE ROUND 24 #5, AND KEPT ON PURPOSE. The fork was the one caller until the
+ *  owner moved its ask off her birthday to school's end («пункт 5 запускай как обсудили» – `forkDue`
+ *  reads `schoolIsOver` now, docs/specs/college-departure-2026-08.md), so no question in the game is
+ *  currently birthday-prompted. The device is the documented answer for the NEXT one that is –
+ *  deleting it would delete the record of why a birthday question must not read the Monday's age. */
 export function kidAgeThroughWeek(world: WorldState, week: number): number {
   const turning = birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay)
   return Math.max(kidAgeAt(world, week), turning ?? -1)

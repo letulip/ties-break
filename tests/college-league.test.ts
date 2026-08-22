@@ -80,9 +80,16 @@ function atTheFork(seed: string): { world: WorldState; rng: Rng } {
  *  ⚠ RE-AIMED BY THE COLLEGE BIRTHDAY (round 24, «да, день рождения делай»): a year now PAUSES on
  *  her birthday week so the gift dialog can be answered, so spending it is press-answer-press. The
  *  day together is the one option every birthday offers, so it is always a legal answer here. */
+/** ⚠ ROUND 24 #5 – the college answer RESERVES; the freeze starts at the DEPARTURE (the next
+ *  academic-year September). These fixtures hold no entries, so the gap walk is plain ticks. */
+function answerCollegeAndDepart(world: WorldState, rng: Rng, tier?: CollegeTier): void {
+  answerFork(world, 'college', tier)
+  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) tickWeek(world, rng)
+}
+
 function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
   const { world, rng } = atTheFork(seed)
-  answerFork(world, 'college', tier)
+  answerCollegeAndDepart(world, rng, tier)
   for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
@@ -393,7 +400,7 @@ describe('the championship is watchable', () => {
     // latch off for good (`finishCollege`), so the state the player actually reads is a boundary
     // BEFORE that – two years spent, the question still open.
     const three = atTheFork('r24-league-shell')
-    answerFork(three.world, 'college')
+    answerCollegeAndDepart(three.world, three.rng)
     spendYears(three.world, three.rng, 2)
     const snap = toSnapshot(three.world)
     const college = snap.ending?.college ?? null
@@ -432,7 +439,7 @@ describe('the championship is watchable', () => {
 
   it('⚠ and the week reports itself out of the year-long loop – it cannot pass in silence', () => {
     const { world, rng } = atTheFork('r24-league-stop')
-    answerFork(world, 'college')
+    answerCollegeAndDepart(world, rng)
     const stops = resumeFromCollege(world, rng)
     expect(stops, 'every college year raises it, because the championship always happens').toContain('college-league')
     // ⚠ AND IT LEADS THE CALL-UP WHERE BOTH FIRED – causal order (STOP_PRECEDENCE).
@@ -549,15 +556,20 @@ describe('the freeze still behaves', () => {
     const rngA = rngFromSeed(college.seed)
     const rngB = rngFromSeed(control.seed)
     college.fork = { askedWeek: college.week, answer: null, offer: null }
-    answerFork(college, 'college')
+    // ⚠ ROUND 24 #5: the answer reserves and the college arm WALKS the gap to its September
+    // departure with plain ticks, so the reservation, the departure and the enrolment sit inside
+    // the compared span – and must cost MAIN nothing.
+    answerCollegeAndDepart(college, rngA)
     // ⚠ ROUND 24: the year pauses on her birthday and the gift is answered mid-walk – which makes
     // this arm STRONGER, not different: a paused, answered, resumed year must still sit in the SAME
-    // MAIN position as fifty-two uninterrupted control ticks, or the birthday moved the world's dice.
-    for (let press = 0; press < 4 && college.week < WEEKS_PER_YEAR; press++) {
+    // MAIN position as the same weeks of uninterrupted control ticks, or the birthday moved the
+    // world's dice.
+    const yearEnds = college.week + WEEKS_PER_YEAR
+    for (let press = 0; press < 4 && college.week < yearEnds; press++) {
       resumeFromCollege(college, rngA)
       if (pendingBirthday(college) !== null) chooseGift(college, 'day')
     }
-    for (let i = 0; i < WEEKS_PER_YEAR; i++) tickWeek(control, rngB)
+    while (control.week < college.week) tickWeek(control, rngB)
     expect(college.week).toBe(control.week)
     expect(college.rngMain.n, 'the same number of MAIN draws').toBe(control.rngMain.n)
     expect(rngA()).toBe(rngB())

@@ -50,6 +50,7 @@ import {
   skillMeanOf,
   tickWeek,
   toSnapshot,
+  SAVE_SCHEMA_VERSION,
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
@@ -92,8 +93,21 @@ function openedAtCollege(seed: string, birthMonth: number, birthDay: number): { 
   }
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: null }
+  // ⚠ ROUND 24 #5: the answer RESERVES; the walk to the September departure is what latches the
+  // college ending now. Reveals cannot arise (nothing is entered) and a birthday inside the gap is
+  // an ordinary tour birthday – answered below if the departure happens to rest on one.
   answerFork(world, 'college')
-  expect(world.ending?.type, 'the fork really latched the college ending').toBe('college')
+  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
+    tickWeek(world, rng)
+    finishAnyReveal(world)
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    if (world.ending === null && pendingBirthday(world) !== null) answerBirthday(world)
+  }
+  expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
+  // A birth date near 1 September can put a birthday IN the departure week itself – that one is the
+  // gap's own tour birthday, answered here so the fixture hands back the rest state this file's
+  // cases have always started from.
+  if (pendingBirthday(world) !== null) answerBirthday(world)
   return { world, rng }
 }
 
@@ -277,10 +291,12 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
   })
 
   it('⭐ a boundary birthday: the year banks first, the question waits at the rest state, nothing is lost', () => {
-    // Born 28 February the birthday's season week equals this fixture's boundary week, so the pause
-    // and the bank coincide: the year is genuinely over, so it banks – and the prompt stays pending
-    // where the player is standing.
-    const { world, rng } = openedAtCollege('probe-boundary', 2, 28)
+    // ⚠ RE-AIMED BY ROUND 24 #5: the enrolment week is the academic September now (the departure,
+    // season offset 34), so a BOUNDARY birthday is a birth date beside 1 September – born 3
+    // September her birthday week IS the year's closing week for this career's first press. The
+    // pause and the bank coincide: the year is genuinely over, so it banks – and the prompt stays
+    // pending where the player is standing.
+    const { world, rng } = openedAtCollege('probe-boundary', 9, 3)
     const stops = resumeFromCollege(world, rng)
     expect(stops).toContain('birthday')
     expect(world.college!.years, 'the completed year banked – a boundary birthday is not a pause').toHaveLength(1)
@@ -353,7 +369,9 @@ describe('a v56 save migrated mid-college is not retro-asked and not retro-bille
     const birthdaysBefore = JSON.stringify(raw.birthdays)
     const fundsBefore = raw.fundsCents
     const world = migrateSave(JSON.parse(readFileSync(`${DIR}/v56.json`, 'utf8')))
-    expect(world.schemaVersion).toBe(57)
+    // ⚠ NOT a literal 57: the corpus migrates to the CURRENT schema, and pinning yesterday's number
+    // here made this test fail for every later, unrelated version bump (it did on v58).
+    expect(world.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect((world.college as { pendingYearStart?: unknown }).pendingYearStart, 'the new field arrives null').toBeNull()
     expect(JSON.stringify(world.birthdays), 'not one row invented for a lived year').toBe(birthdaysBefore)
     expect(world.fundsCents, 'and not a cent moved – there is no gift billing to be retro about').toBe(fundsBefore)

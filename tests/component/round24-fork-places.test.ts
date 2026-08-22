@@ -315,7 +315,10 @@ describe('⭐⭐⭐ `answerFork` re-validates the tier, and never refuses the an
     expect(() => answerFork(world, 'college', 'state')).not.toThrow()
     expect(world.fork!.answer, 'the answer is never refused').toBe('college')
     expect(world.fork!.offer!.chosen, 'and it lands on the cheapest place that IS hers').toBe('national')
-    expect(world.ending?.type).toBe('college')
+    // ⚠ ROUND 24 #5: the answer RESERVES – no ending latches here; the September departure is booked
+    // instead, and the enrolment honours the quote chosen above (tests/college-departure.test.ts).
+    expect(world.ending, 'the reservation does not end anything').toBeNull()
+    expect(world.fork!.departsWeek ?? null, 'the departure is booked').not.toBeNull()
   })
 
   it('⭐ a caller with no tier gets the cheapest OPEN place, in both residence classes', () => {

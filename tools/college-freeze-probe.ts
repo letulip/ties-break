@@ -262,6 +262,15 @@ async function walkCollege(
   let { world, rng } = armFrom(at)
   if (clearEntries) world.entries = []
   answerFork(world, 'college', tier)
+  // ROUND 24 #5: the answer reserves and the freeze starts at the September departure – the gap is
+  // ticked plainly here (the reveal of a gap entry is closed like any other), which is itself the
+  // redesign's own health property: an entry that used to strand the freeze is now simply PLAYED
+  // before it, and only one still outstanding at the departure is released.
+  for (let gapW = 0; gapW < 54 && world.ending === null; gapW++) {
+    tickWeek(world, rng)
+    for (let r = 0; r < 40 && world.pendingTournament && !world.pendingTournament.finished; r++) revealTournamentRound(world)
+    if (world.pendingTournament) closeTournament(world)
+  }
   for (let y = 0; y < 12 && world.ending?.type === 'college'; y++) {
     if (leaveAfter !== null && (world.college?.years.length ?? 0) >= leaveAfter) {
       endCollegeEarly(world)

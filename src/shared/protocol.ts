@@ -2744,6 +2744,19 @@ export interface ForkState {
    *  invents nothing – exactly the discipline v50 applied to the college ledger it could not
    *  reconstruct. Such a career is charged nothing and the card falls back to the pre-v51 copy. */
   offer: CollegeOffer | null
+  /** ⭐⭐⭐ v58 – THE WEEK SHE LEAVES FOR COLLEGE (round 24 #5: ask / hold / depart). Set by
+   *  `answerFork` on the college answer only – `nextAcademicYearStart(answer week)`, the next
+   *  1 September – and read by `resolveCollegeDeparture`, which enrols her there. Between the two
+   *  the career is ON HOLD-but-playing: `answer === 'college'` with `world.college` still null is
+   *  the reservation state, and every freeze gate stays open because they all read `inCollege`.
+   *
+   *  ⚠ OPTIONAL FOR THE `pendingYearStart` REASON: absent and null mean the same thing – no
+   *  departure is booked. Null on every fork answered 'continue'/'stop', on every v≤57 fork (the
+   *  v58 migration writes the explicit null; an already-enrolled college career never consults it),
+   *  and until the college answer lands. Readers normalise with `?? null`. It SURVIVES the
+   *  departure as the record of the week she left – `college.fromWeek` equals it on every career
+   *  that departs on schedule, and differs only where a migrated save overshot and left late. */
+  departsWeek?: number | null
 }
 
 /** ⭐⭐ WHICH KIND OF PLACE SHE PICKED – a PRICE and a QUALITY, and the player chooses between them
@@ -3186,6 +3199,17 @@ export interface Snapshot {
    *  month, so a save from any version answers it the moment it is loaded and nothing can drift out
    *  of step with `world.week`. */
   schoolEndsWeek: number
+  /** ⭐⭐⭐ ROUND 24 #5 – THE WEEK SHE LEAVES FOR COLLEGE, or null when no departure is in front of
+   *  her. Non-null in exactly two states, and it is the same fact in both: while the fork is OPEN it
+   *  is the prospective `nextAcademicYearStart(askedWeek)` (what the college answer would book – the
+   *  dialog prints it), and through the HOLD (college answered, not yet enrolled) it is the booked
+   *  `fork.departsWeek` (the calendar's look-ahead marks it). Null once she enrols, on every other
+   *  fork answer, and behind any latched ending – a voided reservation never resurfaces.
+   *
+   *  DERIVED, never persisted as its own field: `toSnapshot` reads the fork. A week and not a
+   *  boolean, `schoolEndsWeek`'s own reason one line up – the look-ahead asks about weeks that are
+   *  not this one. */
+  collegeDepartsWeek: number | null
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan

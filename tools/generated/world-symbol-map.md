@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (4,063 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (4,067 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-248 exported names across 30 owning modules.
+249 exported names across 30 owning modules.
 
 ## Areas
 
@@ -20,8 +20,8 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 17 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
+| `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 12 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 11 |
-| `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
@@ -194,6 +194,23 @@ THE COACH MARKET: who is available at her age and rung, what they cost, and what
 - `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts`
 - `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts`
 
+### `src/engine/world/endings.ts`
+
+THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
+
+- `answerFork` – `src/engine/world/endings.ts`
+- `answerRetirement` – `src/engine/world/endings.ts`
+- `autoEndingViewOf` – `src/engine/world/endings.ts`
+- `buildDebtView` – `src/engine/world/endings.ts`
+- `buildEndingView` – `src/engine/world/endings.ts`
+- `cheapestEntryFeeCents` – `src/engine/world/endings.ts`
+- `lastRungSeasonIndexOf` – `src/engine/world/endings.ts`
+- `latchEnding` – `src/engine/world/endings.ts`
+- `plateauViewOf` – `src/engine/world/endings.ts`
+- `resolveCollegeDeparture` – `src/engine/world/endings.ts`
+- `resolveEndings` – `src/engine/world/endings.ts`
+- `wasThereAChild` – `src/engine/world/endings.ts`
+
 ### `src/engine/world/birthday.ts`
 
 HER BIRTHDAY, AND WHAT YOU GIVE HER.
@@ -209,22 +226,6 @@ HER BIRTHDAY, AND WHAT YOU GIVE HER.
 - `chooseGift` – `src/engine/world/birthday.ts`
 - `giftNoun` – `src/engine/world/birthday.ts`
 - `pendingBirthday` – `src/engine/world/birthday.ts`
-
-### `src/engine/world/endings.ts`
-
-THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
-
-- `answerFork` – `src/engine/world/endings.ts`
-- `answerRetirement` – `src/engine/world/endings.ts`
-- `autoEndingViewOf` – `src/engine/world/endings.ts`
-- `buildDebtView` – `src/engine/world/endings.ts`
-- `buildEndingView` – `src/engine/world/endings.ts`
-- `cheapestEntryFeeCents` – `src/engine/world/endings.ts`
-- `lastRungSeasonIndexOf` – `src/engine/world/endings.ts`
-- `latchEnding` – `src/engine/world/endings.ts`
-- `plateauViewOf` – `src/engine/world/endings.ts`
-- `resolveEndings` – `src/engine/world/endings.ts`
-- `wasThereAChild` – `src/engine/world/endings.ts`
 
 ### `src/engine/world/mandatory.ts`
 

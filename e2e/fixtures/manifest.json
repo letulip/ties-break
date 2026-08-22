@@ -1,7 +1,7 @@
 {
   "generatedBy": "tools/e2e-fixtures.ts",
   "command": "npm run e2e:fixtures",
-  "schemaVersion": 57,
+  "schemaVersion": 58,
   "fixtures": [
     {
       "name": "fresh",
@@ -11,7 +11,7 @@
       "careerId": "c-e2e-fresh",
       "slot": "auto:c-e2e-fresh:a",
       "targetWeek": 0,
-      "schemaVersion": 57,
+      "schemaVersion": 58,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -20,9 +20,9 @@
         "kidLastName": "Cieslak",
         "country": "US"
       },
-      "bytes": 23981,
-      "payloadBytes": 23937,
-      "sha256": "7783938f5632349709b79b1815a5a5f0f95cf94fae95f22285b3d37a9154c904",
+      "bytes": 23979,
+      "payloadBytes": 23935,
+      "sha256": "26bcd14339c2bebb87aa4c19d2cc265c270c0c1e3c6bfec9538aa6e925ef2cd5",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -60,7 +60,7 @@
       "careerId": "c-e2e-junior",
       "slot": "auto:c-e2e-junior:a",
       "targetWeek": 120,
-      "schemaVersion": 57,
+      "schemaVersion": 58,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -69,9 +69,9 @@
         "kidLastName": "Sartori",
         "country": "US"
       },
-      "bytes": 57950,
-      "payloadBytes": 57906,
-      "sha256": "378861ce8a05ca236fd185ce5219f7ef6f5e2ac19e1b05a4f22dc41222332365",
+      "bytes": 57951,
+      "payloadBytes": 57907,
+      "sha256": "01336762eb58c40f01f0a550bde3b3ba3ebef3b9eb7626ba4b535a76c9c5f7a9",
       "seedsTried": 3,
       "facts": {
         "week": 120,
@@ -109,7 +109,7 @@
       "careerId": "c-e2e-pro",
       "slot": "auto:c-e2e-pro:a",
       "targetWeek": 412,
-      "schemaVersion": 57,
+      "schemaVersion": 58,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -118,9 +118,9 @@
         "kidLastName": "Ostrowski",
         "country": "US"
       },
-      "bytes": 80395,
-      "payloadBytes": 80351,
-      "sha256": "dc44aca33eb8ed532fe73264482fbe5616c928c1db4f06fef4002cbc9f348c41",
+      "bytes": 80366,
+      "payloadBytes": 80322,
+      "sha256": "f8067b1acefa40a24337410f59bfc1b5115d5b3bb8c88c68eb68eff288e2d386",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -158,7 +158,7 @@
       "careerId": "c-e2e-sinking",
       "slot": "auto:c-e2e-sinking:a",
       "targetWeek": 45,
-      "schemaVersion": 57,
+      "schemaVersion": 58,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -169,7 +169,7 @@
       },
       "bytes": 52954,
       "payloadBytes": 52910,
-      "sha256": "46a321a06085ef488943ac5a734051bfeb2085638040356e6a1b4db265c7b2b3",
+      "sha256": "926dab66569f24373ff9527c26e637c76466d4116e90d9642d386477cc81414f",
       "seedsTried": 1,
       "facts": {
         "week": 45,
@@ -207,7 +207,7 @@
       "careerId": "c-e2e-broke",
       "slot": "auto:c-e2e-broke:a",
       "targetWeek": 118,
-      "schemaVersion": 57,
+      "schemaVersion": 58,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -216,9 +216,9 @@
         "kidLastName": "Kern",
         "country": "US"
       },
-      "bytes": 60600,
-      "payloadBytes": 60556,
-      "sha256": "16a47c9cf4ac110d710502eea818d3516356293edc5744820517893542f03c2c",
+      "bytes": 60598,
+      "payloadBytes": 60554,
+      "sha256": "163c41c630ae4e24bb4be4d6eecac357d645d1bf9b621d01d487191cd8bea18a",
       "seedsTried": 1,
       "facts": {
         "week": 118,
@@ -255,8 +255,8 @@
       "seed": "e2e-ending-0",
       "careerId": "c-e2e-ending",
       "slot": "auto:c-e2e-ending:a",
-      "targetWeek": 282,
-      "schemaVersion": 57,
+      "targetWeek": 242,
+      "schemaVersion": 58,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -265,24 +265,24 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 78797,
-      "payloadBytes": 78753,
-      "sha256": "a843d004a52fb83a7c01f0464a531dccb2bc16b30741a199ba72c6161041fc35",
+      "bytes": 81141,
+      "payloadBytes": 81097,
+      "sha256": "7a31779d2b99f93a472a9286439b46cdb4155d74359c3b21ab282cfe32b148e5",
       "seedsTried": 1,
       "facts": {
-        "week": 282,
-        "seasonIndex": 5,
+        "week": 242,
+        "seasonIndex": 4,
         "ageYears": 18,
-        "fundsCents": 16878150,
-        "kidRank": 94,
+        "fundsCents": 3192624,
+        "kidRank": 22,
         "rankedDomestic": false,
-        "rankedItf": false,
+        "rankedItf": true,
         "rankedWta": true,
         "domesticPoints": 0,
-        "itfPoints": 0,
-        "wtaPoints": 729,
-        "seasonsPlayed": 5,
-        "resultRows": 2284,
+        "itfPoints": 205,
+        "wtaPoints": 453,
+        "seasonsPlayed": 4,
+        "resultRows": 2252,
         "feedEvents": 402,
         "financeWeeks": 60,
         "cohortSize": 199,
@@ -292,8 +292,8 @@
         "openKitLetters": 0,
         "hasActiveKitDeal": false,
         "rngMain": {
-          "s": -1387980904,
-          "n": 225336
+          "s": 973149953,
+          "n": 193373
         }
       }
     }

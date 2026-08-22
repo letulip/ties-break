@@ -28,7 +28,9 @@ import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
 import { activeLadderOf } from './ladder'
 import { collegeProgressOf, inCollege, measureCollegeOffer } from './college'
-import { kidAgeThroughWeek, kidAgeYears } from './age'
+import { nextAcademicYearStart } from '../kidLife'
+import { weekLabel } from '../../shared/dates'
+import { kidAgeYears } from './age'
 import { buildAlbum, buildScroll } from './album'
 import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEndedForGood } from './constants'
 // ⚠ THE ENTRY RULEBOOK, IMPORTED RATHER THAN RE-STATED (round 24, the freeze's hygiene). `answerFork`
@@ -250,14 +252,16 @@ export function resolveEndings(world: WorldState): void {
     return
   }
 
-  // 7c. THE FORK AT NINETEEN. Raised once, on the birthday week, and it BLOCKS until answered.
+  // 7c. THE FORK, ASKED WHEN SCHOOL ENDS. Raised once, and it BLOCKS until answered.
   //
-  // ⚠ `kidAgeThroughWeek` AND NOT `kidAgeAt` (18.08), so that first sentence stays true. The date
-  // clock turns her age on the week's MONDAY; her birthday lands on whatever day it lands on. Asking
-  // the Monday's age raised this a week AFTER the cake for every girl not born on a Monday - and the
-  // whole design of the fork is that it is the birthday's own question. See that helper for why this
-  // look-ahead is for celebrations and never for gates.
-  if (world.fork === null && forkDue(kidAgeThroughWeek(world, world.week), false)) {
+  // ⭐⭐⭐ ROUND 24 #5 – IT MOVED OFF HER BIRTHDAY («пункт 5 запускай как обсудили»,
+  // docs/specs/college-departure-2026-08.md). `forkDue` reads `schoolIsOver` now: the question is
+  // asked on `schoolEndWeek` – the 1 September her school years end on, age 18.0–18.9 – the college
+  // answer only RESERVES a place (see `answerFork`), and enrolment happens at the DEPARTURE in 7c′
+  // below, on the next academic year's own September. The year in between is her last junior season,
+  // played. The birthday machinery this line used to ride (`kidAgeThroughWeek`) stays in `world/age.ts`
+  // for the next birthday-prompted question; this is no longer one.
+  if (world.fork === null && forkDue(world.week, world.profile.birthMonth, false)) {
     // ⭐⭐ THE OFFER IS MEASURED HERE, ONCE, AND PERSISTED (v51,
     // docs/specs/what-the-college-place-costs-2026-08.md). Before this line the third answer was
     // offered unconditionally AND FREE in 100% of careers; now it is offered with a price on it.
@@ -273,10 +277,16 @@ export function resolveEndings(world: WorldState): void {
       week: world.week,
       type: 'milestone',
       keep: true,
-      text: 'She is nineteen. The junior ladder is behind her, and the next one has to be paid for.',
+      // ⚠ ROUND 24 #5 – she is EIGHTEEN here and the junior rungs are still open for one more
+      // season; the old «She is nineteen. The junior ladder is behind her» would assert both wrong.
+      text: 'School is over. The junior ladder closes at nineteen, and the next one has to be paid for.',
     })
     return
   }
+
+  // 7c′. THE DEPARTURE – round 24 #5's third moment. Inert on every week but the one it names.
+  resolveCollegeDeparture(world)
+  if (world.ending) return
 
   // 7d. THE NATURAL END'S OFFER. Off-season only, once a year – `isSponsorReviewWeek`'s own week,
   //     which is the first off-season week and no other, so it cannot be raised twice in a season.
@@ -371,6 +381,66 @@ function releaseEntriesForTheFreeze(world: WorldState): void {
   }
 }
 
+/** ⭐⭐⭐ ROUND 24 #5 – THE DEPARTURE: the reserved place is taken up on the academic year's own
+ *  September. One moment became three (ask / hold / depart), and this is the third.
+ *
+ *  ⚠ IT RUNS AS STEP 7c′ OF A RESOLVED WEEK, BELOW THE `if (world.ending) return` EARLY-OUT AND
+ *  BELOW 7b's AUTO ENDINGS – and it guards on the latch itself as well, because it is exported. A
+ *  terminal ending in the gap (bankruptcy, the career-ending injury) therefore VOIDS the
+ *  reservation by construction: the career ends, she never departs, `world.college` stays null for
+ *  ever, and the epilogue shows no college she never attended (`collegeProgressOf` and
+ *  `buildEndingView.college` both read `world.college`). A latched ending is never resurrected –
+ *  this function refuses to run behind one, full stop.
+ *
+ *  ⚠ THE RELEASE FIRES HERE, NOT AT THE ANSWER – the half of the ruling the owner spelled out
+ *  («B1's entry release moves with her»). An entry made while she is still on tour before September
+ *  IS a commitment she made: an event whose play week lands inside the gap is simply played (its
+ *  result stands), and one landing ON the departure week still plays first, because this step runs
+ *  in the same deferred block `finalizeTournament` closes the reveal from. Whatever is STILL
+ *  outstanding when she leaves is released exactly as B1 releases it: `releaseEntriesForTheFreeze`,
+ *  the full-refund rung with the past-deadline exemption and the desk's letter – no penalty of any
+ *  kind («мы ни за что не наказываем»).
+ *
+ *  ⚠ `>=` RATHER THAN `===`, so a save that somehow rests past its departure week (a migrated
+ *  career answered under the birthday-era clock, a test walk that ticked through) departs on its
+ *  next resolved week instead of never. Enrolment is at `world.week` – the week it actually
+ *  happened – and `untilWeek` runs the whole course from there.
+ *
+ *  ⚠ RNG: ZERO DRAWS on any stream. State writes, ledger rows and `releaseEntry`'s pure refund
+ *  arithmetic; the frozen MAIN capture (41550 / e6b0c709) cannot see it. */
+export function resolveCollegeDeparture(world: WorldState): void {
+  if (world.ending !== null) return
+  const fork = world.fork
+  if (!fork || fork.answer !== 'college' || world.college !== null) return
+  const departsWeek = fork.departsWeek ?? null
+  if (departsWeek === null || world.week < departsWeek) return
+  // ⚠ `untilWeek` IS THE WHOLE COURSE EVEN THOUGH SHE MAY LEAVE AFTER ONE YEAR (P5). It is the
+  // contract she signed, and `leaveCollege` (world/college.ts) is what breaks it – by moving this
+  // week BACK to the week she leaves, which is what makes `inCollege` false with no second flag.
+  world.college = {
+    fromWeek: world.week,
+    untilWeek: world.week + ENDINGS.collegeYears * WEEKS_PER_YEAR,
+    doneWeek: null,
+    years: [],
+    pendingCallUp: null,
+    // ⭐ v56 – the student championship of the year in progress. Null at enrolment: her first one
+    // is on the first `COLLEGE_LEAGUE.seasonWeek` the freeze ticks through, and until then there
+    // is genuinely nothing on her record for the selectors to read. With departure on a season
+    // offset-34 week that first championship is now week 30 of every academic year, two weeks
+    // before the call-up that reads it – the §2a enrolment edge survives only in migrated saves.
+    pendingLeague: null,
+  }
+  releaseEntriesForTheFreeze(world)
+  const ending = endingForForkAnswer(
+    'college',
+    world.week,
+    kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    ENDINGS.collegeYears,
+    WEEKS_PER_YEAR,
+  )
+  if (ending) latchEnding(world, ending)
+}
+
 /** THE MOST EXPENSIVE CLICK IN THE GAME (adult spec's own risk note). Three answers, two of which
  *  end the career, and «стоп» must be able to be the right one. */
 export function answerFork(world: WorldState, answer: ForkAnswer, tier?: CollegeTier): void {
@@ -401,21 +471,33 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
       const fallback = offer.quotes.find((q) => q.open)?.tier ?? null
       world.fork = { ...world.fork, offer: { ...offer, chosen: wanted ?? fallback } }
     }
-    // ⚠ `untilWeek` IS THE WHOLE COURSE EVEN THOUGH SHE MAY LEAVE AFTER ONE YEAR (P5). It is the
-    // contract she signed, and `leaveCollege` (world/college.ts) is what breaks it – by moving this
-    // week BACK to the week she leaves, which is what makes `inCollege` false with no second flag.
-    world.college = {
-      fromWeek: world.week,
-      untilWeek: world.week + ENDINGS.collegeYears * WEEKS_PER_YEAR,
-      doneWeek: null,
-      years: [],
-      pendingCallUp: null,
-      // ⭐ v56 – the student championship of the year in progress. Null at enrolment: her first one
-      // is on the first `COLLEGE_LEAGUE.seasonWeek` the freeze ticks through, and until then there
-      // is genuinely nothing on her record for the selectors to read.
-      pendingLeague: null,
-    }
-    releaseEntriesForTheFreeze(world)
+    // ⭐⭐⭐ ROUND 24 #5 – THE ANSWER RESERVES; THE DEPARTURE ENROLS. Nothing freezes here: no
+    // `world.college`, no entry release, no latch. She plays the year out – her last junior season,
+    // the one the birthday design used to skip – and `resolveCollegeDeparture` (called from
+    // `resolveEndings`) executes the move on the next academic year's own September.
+    //
+    // ⚠ WHAT "RESERVED" MEANS, DECIDED HERE AND HONOURED AT THE DEPARTURE: the quote she picked –
+    // the price and the place – exactly as the two lines above froze it. Tier openness was
+    // re-validated engine-side AT THIS ANSWER; the departure re-validates nothing and re-measures
+    // nothing, which is `ForkState.offer`'s own doctrine («a later re-tune cannot silently re-price
+    // a career halfway through a bill it had already accepted») extended across the gap. Her junior
+    // record may still improve in the gap year – the programmes signed her on what they saw when
+    // they looked, which is what a real recruiting class is.
+    //
+    // ⚠ STRICTLY AFTER THE ANSWER WEEK (`nextAcademicYearStart`): the ask lands ON a September, so
+    // ">= the next one" would enrol her the week she answered and delete the gap. Persisted rather
+    // than re-derived at the departure check, because the fork BLOCKS (answer week === ask week
+    // today) but an old save's fork may have been asked on its birthday-era week – the honest
+    // departure is derived from the week she actually answered, and only this line knows it.
+    const departsWeek = nextAcademicYearStart(world.week)
+    world.fork = { ...world.fork, departsWeek }
+    addEvent(world, {
+      week: world.week,
+      type: 'milestone',
+      keep: true,
+      text: `A college place is reserved. She leaves when the academic year starts – ${weekLabel(departsWeek)} – and plays until then.`,
+    })
+    return
   }
   const ending = endingForForkAnswer(
     answer,

@@ -1152,6 +1152,13 @@ const showGo = computed(() => !game.snapshot?.pending)
   font-weight: 600;
 }
 
+/* ⭐ ROUND 24 #5 – the departure week. A decision already made, so the booked-week idiom applies;
+   it reads a step firmer still because it is the one row in the list the family cannot rebook. */
+.cal-band--college .cal-band-name {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .cal-foot-note {
   margin-top: 10px;
 }

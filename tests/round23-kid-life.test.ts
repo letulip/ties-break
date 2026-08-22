@@ -323,6 +323,16 @@ describe('#6b – on a career that really went', () => {
 
     answerFork(world, 'college')
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+    // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
+    // SAME player-policy step the career arrived on (it enters, plays and closes its own reveals;
+    // a bare tick would strand one open and the departure never resolves past it).
+    for (let i = 0; i < 56 && world.ending === null; i++) {
+      world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      const age = pendingBirthday(world)
+      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      stepCareerWeek(world, rng, POLICIES[1])
+    }
     // Press-answer-press (round 24): the year pauses on her birthday so the gift can be answered.
     for (let press = 0; press < 3 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
@@ -368,6 +378,15 @@ describe('#6b – on a career that really went', () => {
       if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
     }
     answerFork(world, 'college')
+    // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
+    // SAME player-policy step the career arrived on (see the leaving case above for why).
+    for (let i = 0; i < 56 && world.ending === null; i++) {
+      world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      const age = pendingBirthday(world)
+      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      stepCareerWeek(world, rng, POLICIES[1])
+    }
     // Press-answer-press (round 24): each year pauses on her birthday week.
     for (let press = 0; press < 3 * ENDINGS.collegeYears && world.college!.doneWeek === null; press++) {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)

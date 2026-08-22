@@ -39,6 +39,8 @@ import {
   toSnapshot,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { schoolEndWeek } from '../src/engine/kidLife'
+import { kidAgeYears } from '../src/engine/world/age'
 import { DEFAULT_PROFILE, type Snapshot } from '../src/shared/protocol'
 
 /** Take whatever this birthday is actually offering. `chooseGift` re-derives the four options from
@@ -52,24 +54,16 @@ function answerBirthday(world: ReturnType<typeof createWorld>): void {
 
 /** A career ticked to the week the fork opens, with every birthday before it answered.
  *
- *  ⚠ THE BIRTH DATE IS PART OF THE FIXTURE, AND `tools/fork-birthday-probe.ts` IS WHY. The fork and
- *  the birthday read two different clocks – `forkDue` takes `kidAgeYears(week, birthMonth)`, the
- *  MONTH only, while `pendingBirthday` takes `birthdayTurning(week, birthMonth, birthDay)` – so
- *  whether they collide depends on where in the month she was born. Measured over five dates:
+ *  ⚠⚠ RE-AIMED BY ROUND 24 #5 («пункт 5 запускай как обсудили»): the fork is asked when SCHOOL ENDS
+ *  now – `forkDue` reads `schoolIsOver`, so the ask lands on `schoolEndWeek(birthMonth)` (age
+ *  18.0–18.9), deliberately BEFORE her nineteenth for every birth date. The birthday+fork collision
+ *  this file's ordering cases stand on is therefore no longer the general case; it survives for
+ *  exactly the dates whose birthday falls INSIDE the school-end September week – the default
+ *  fixture date, 5 September, is one (schoolEndWeek(9) = 294 is the week 1–7 Sep '36 falls in, and
+ *  her nineteenth is 5 Sep '36). The ordering rule itself is date-agnostic UI logic and the sweep at
+ *  the bottom now pins the new clock per date.
  *
- *      born 10 Jan  fork w260, nineteenth w260   – same week
- *      born  5 Sep  fork w294, nineteenth w294   – same week
- *      born  1 Mar  fork w268, nineteenth w267   – birthday already first
- *      born 15 Jun  fork w281, nineteenth w283   – FORK TWO WEEKS EARLY
- *      born 20 Dec  fork w307, nineteenth w310   – FORK THREE WEEKS EARLY
- *
- *  The last two are round-17 #7's defect, not this one: `forkDue`'s own comment says it is "raised
- *  on the birthday and not at the season boundary" and for those dates it is not raised on the
- *  birthday at all. This file therefore pins the ORDER on a date where the two clocks agree, which
- *  is the owner's own case, and the block at the bottom records the dates where they do not so the
- *  gap cannot be mistaken for this fix having covered it.
- *
- *  ⚠ AND THE FORK CHECK IS AT THE TOP OF THE LOOP ON PURPOSE. Both are raised inside the same
+ *  ⚠ AND THE FORK CHECK IS AT THE TOP OF THE LOOP ON PURPOSE. Both can be raised inside the same
  *  `tickWeek`, so answering the birthday before re-testing the fork would walk straight past the
  *  collision this file is about and leave every case below testing an empty queue. */
 function atTheFork(birthMonth = 9, birthDay = 5) {
@@ -102,11 +96,14 @@ function atTheFork(birthMonth = 9, birthDay = 5) {
 }
 
 describe('the birthday speaks before the fork', () => {
-  it('they really do collide – the fork opens on the week she turns nineteen', () => {
+  it('they really do collide – for a girl born in the school-end week, the fork opens on her birthday', () => {
+    // ⚠ ROUND 24 #5: the general fork week is school's end, not the birthday – this collision now
+    // exists for the 1–7 September birth dates only, and 5 September is the fixture's date. The
+    // collision is the premise of the ordering cases below. If these ever stop landing together the
+    // ordering is still correct but this file is no longer testing what it claims to.
     const { world } = atTheFork()
     expect(world.fork, 'the career never reached the fork; the fixture is wrong, not the rule').not.toBeNull()
-    // The collision is the premise of the whole item. If these ever stop landing together the
-    // ordering below is still correct but this file is no longer testing what it claims to.
+    expect(world.fork!.askedWeek, 'the ask is the week school ends').toBe(schoolEndWeek(9))
     expect(pendingBirthday(world), 'her nineteenth is pending in the same week the fork opens').toBe(19)
   })
 
@@ -165,17 +162,23 @@ describe('the queue cannot deadlock', () => {
     expect(seen[seen.length - 1], 'the queue reaches empty').toBeNull()
   })
 
-  it('the same walk from the OTHER two fork answers – both end the career, and that is an exit too', () => {
-    // «college» and «stop» end the career on the click. The queue still terminates: `ending` replaces
-    // the shell and `pendingBirthday` returns null behind it. This is the state that used to EAT the
-    // birthday, and the point of the ordering is that by the time it is reachable the cake is done.
+  it('the same walk from the OTHER two fork answers – stop ends the career, college books the September', () => {
+    // ⚠ ROUND 24 #5 RE-AIM: «stop» still ends the career on the click. «college» RESERVES now – the
+    // shell frees, she plays the gap year, and the ending arrives at the September departure (the
+    // walked path is pinned in tests/college-departure.test.ts). The queue still terminates either
+    // way, and her birthday is RECORDED first – the beat happened, whatever she chose next.
     for (const answer of ['college', 'stop'] as const) {
       const { world } = atTheFork()
       answerBirthday(world)
-      // Her birthday is RECORDED before the career ends – the beat happened, whatever she chose next.
       expect(world.birthdays.some((b) => b.age === 19), `her nineteenth survives "${answer}"`).toBe(true)
       answerFork(world, answer)
-      expect(blockingOverlay(toSnapshot(world))).toBe('ending')
+      if (answer === 'stop') {
+        expect(blockingOverlay(toSnapshot(world))).toBe('ending')
+      } else {
+        const snap = toSnapshot(world)
+        expect(blockingOverlay(snap), 'the reservation frees the shell – the gap year is playable').toBeNull()
+        expect(snap.collegeDepartsWeek, 'and the departure is on the wire for the calendar to mark').not.toBeNull()
+      }
     }
   })
 })
@@ -186,24 +189,21 @@ describe('⭐⭐ the two clocks became one – round-17 #7 is closed', () => {
   // roughly 3,300 simulated weeks. It sat just under the 20s default and tipped over it once the
   // date-clock wave pushed every fork a week later. The dates ARE the coverage (each one used to
   // fail), so the honest fix is to declare the cost rather than to thin the sweep.
-  it('the fork can no longer be raised BEFORE her birthday, for any birth date', { timeout: 60_000 }, () => {
-    // ⚠⚠ THIS BLOCK IS THE INVERSE OF WHAT IT SAID UNTIL 18.08, AND ON THIS FILE'S OWN INSTRUCTIONS.
-    // It used to record round-17 #7 as a FINDING: `forkDue` read the birth MONTH while
-    // `pendingBirthday` read the birth DAY, so a girl born late in a month met the fork weeks before
-    // her nineteenth - born 20 December, fork w307, nineteenth w310. Its own note said: "when #7 puts
-    // the two on one clock this case flips, and the right response is to delete it and widen
-    // `atTheFork`'s default rather than to weaken it."
-    //
-    // That is what happened. The date-clock wave put her age on her birth DATE, and the fork now asks
-    // `kidAgeThroughWeek`, which carries a birthday landing inside the week - so both key off the same
-    // day and the fork lands in the birthday's own week for every date. The finding is replaced by the
-    // guard, which is strictly stronger: it sweeps the dates that used to fail rather than the one
-    // that used to pass.
+  it('the fork is raised at the week school ends, at eighteen, for every birth date', { timeout: 60_000 }, () => {
+    // ⚠⚠ RE-AIMED A SECOND TIME, BY ROUND 24 #5 – and this time the CLOCK moved, not the defect.
+    // The 18.08 version guarded «the fork lands in her birthday's own week for every date», which
+    // was the one-clock ruling's closing of round-17 #7. The owner's round-24 ruling then moved the
+    // ask off the birthday altogether («пункт 5 запускай как обсудили»): `forkDue` reads
+    // `schoolIsOver`, the ask lands on `schoolEndWeek(birthMonth)` at age eighteen, the college
+    // answer reserves, and enrolment happens at the September departure. So the guard this sweep
+    // holds is the NEW clock, exact to the week, per date – and the one date whose birthday shares
+    // the school-end week (5 September) still gets the cake before the fork, which is the ordering
+    // the file is named for.
     for (const [bm, bd] of [
-      [6, 15], // was TWO weeks early
-      [12, 20], // was THREE weeks early
+      [6, 15],
+      [12, 20],
       [1, 10],
-      [9, 5],
+      [9, 5], // born in the school-end September week: the one date the old collision survives on
       [3, 1],
       [11, 30], // the 30th of a short-followed month - the case that broke the fraction twice
       [2, 28],
@@ -211,12 +211,15 @@ describe('⭐⭐ the two clocks became one – round-17 #7 is closed', () => {
     ] as const) {
       const { world } = atTheFork(bm, bd)
       expect(world.fork, `${bd}/${bm}: the career reached the fork`).not.toBeNull()
+      expect(world.fork!.askedWeek, `${bd}/${bm}: asked the week school ends`).toBe(schoolEndWeek(bm))
       expect(
-        pendingBirthday(world),
-        `${bd}/${bm}: the fork is raised in her birthday's own week, not before it`,
-      ).toBe(19)
-      // ...and the ordering rule still puts the cake first, which is what the whole file is about.
-      expect(blockingOverlay(toSnapshot(world)), `${bd}/${bm}: the birthday speaks first`).toBe('birthday')
+        kidAgeYears(world.fork!.askedWeek, bm, bd),
+        `${bd}/${bm}: she is eighteen on the card – the ask precedes the nineteenth now`,
+      ).toBe(18)
+      if (pendingBirthday(world) !== null) {
+        // ...and where a birthday DOES share the week, the ordering rule still puts the cake first.
+        expect(blockingOverlay(toSnapshot(world)), `${bd}/${bm}: the birthday speaks first`).toBe('birthday')
+      }
     }
   })
 })

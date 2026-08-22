@@ -133,6 +133,8 @@ function walkCollege(at: { world: WorldState; rng: Rng; label: string }, tier?: 
   const world = structuredClone(at.world)
   const rng = at.rng
   answerFork(world, 'college', tier)
+  // ROUND 24 #5: the answer reserves – walk the gap to the September departure first.
+  for (let gapW = 0; gapW < 54 && world.ending === null; gapW++) stepCareerWeek(world, rng, POLICIES[0])
   // Round 24: the year pauses on her birthday week – press, answer, press again.
   for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
