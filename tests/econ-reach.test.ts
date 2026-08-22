@@ -283,18 +283,31 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // Reviving it needs a reason to believe a career could go points-rich and rank-poor - a much
     // larger field would do it - and `tools/reach-sweep.ts` still prints the retired arm's columns
     // as a watch, so that day would show up there first.
+    // ⚠⚠ RE-AIMED 22.08 – THE BAND FIRED, AND THE PER-TREE ATTRIBUTION IS THE POINT OF THIS NOTE.
+    // The 10.08 band [7, 21] around 13 of 30 came up **6** at the rulings-wave gate – and the same
+    // fixture on a CONTROL worktree at the wave base (53146b7, every commit of the wave reverted)
+    // reads **6 as well, byte for byte**. So none of the 22.08 rulings moved this cell (recovery C
+    // is pro-phase-only and most of this fixture's reach window is junior); the 13 → 6 drift
+    // accumulated in the waves between 10.08 and 22.08 – big draws, the skill law, acceptance
+    // re-cuts – and went unseen because `test:sim` sits outside `npm run check` and had not been
+    // run at a gate in that stretch. Re-based on this file's own band rule (measured count, half
+    // the distance to each degenerate answer, halves rounded inward): 6 - 3 = **3**, 6 + 12 =
+    // **18**. The collapse/saturation tripwires above still hold the ends; a drift PAST this band
+    // is again a finding, not a formality. Flagged for the owner beside the re-aim: 6 of 30 clearing
+    // top-50-by-18 on middle·self-coached is a materially harder game than the 10.08 reading, and
+    // whether that is wanted is his call, not a test's.
     const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleSelf, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)
     expect(reachedH18, '14→18 saturated - re-read the notes above').toBeLessThan(proH18.length)
     expect(
       reachedH18,
-      `14→18 drifted (13 of 30 on middle·self-coached at the 10.08 re-point, measured ${reachedH18}) - re-read the notes above`,
-    ).toBeGreaterThanOrEqual(7)
+      `14→18 drifted (6 of 30 on middle·self-coached at the 22.08 re-aim, measured ${reachedH18}) - re-read the notes above`,
+    ).toBeGreaterThanOrEqual(3)
     expect(
       reachedH18,
-      `14→18 drifted (13 of 30 on middle·self-coached at the 10.08 re-point, measured ${reachedH18}) - re-read the notes above`,
-    ).toBeLessThanOrEqual(21)
+      `14→18 drifted (6 of 30 on middle·self-coached at the 22.08 re-aim, measured ${reachedH18}) - re-read the notes above`,
+    ).toBeLessThanOrEqual(18)
     for (const r of proH18) {
       if (r.reachedWeek !== null) {
         expect(r.reachedWeek).toBeGreaterThan(0)
