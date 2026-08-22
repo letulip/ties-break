@@ -283,30 +283,54 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // Reviving it needs a reason to believe a career could go points-rich and rank-poor - a much
     // larger field would do it - and `tools/reach-sweep.ts` still prints the retired arm's columns
     // as a watch, so that day would show up there first.
-    // ⚠⚠ RE-AIMED 22.08 – THE BAND FIRED, AND THE PER-TREE ATTRIBUTION IS THE POINT OF THIS NOTE.
-    // The 10.08 band [7, 21] around 13 of 30 came up **6** at the rulings-wave gate – and the same
-    // fixture on a CONTROL worktree at the wave base (53146b7, every commit of the wave reverted)
-    // reads **6 as well, byte for byte**. So none of the 22.08 rulings moved this cell (recovery C
-    // is pro-phase-only and most of this fixture's reach window is junior); the 13 → 6 drift
-    // accumulated in the waves between 10.08 and 22.08 – big draws, the skill law, acceptance
-    // re-cuts – and went unseen because `test:sim` sits outside `npm run check` and had not been
-    // run at a gate in that stretch. Re-based on this file's own band rule (measured count, half
-    // the distance to each degenerate answer, halves rounded inward): 6 - 3 = **3**, 6 + 12 =
-    // **18**. The collapse/saturation tripwires above still hold the ends; a drift PAST this band
-    // is again a finding, not a formality. Flagged for the owner beside the re-aim: 6 of 30 clearing
-    // top-50-by-18 on middle·self-coached is a materially harder game than the 10.08 reading, and
-    // whether that is wanted is his call, not a test's.
+    //
+    // ⚠⚠ AN ELEVENTH READING – wave/sim-health, 22.08. THE BAND FIRED AT 6 OF 30, and the file's
+    // own procedure was run in order: sweep first, attribution second, re-pin last.
+    //
+    // THE STAIRCASE, bisected before this branch touched anything – two steps, both deliberate
+    // owner-ruled balance commits, neither of which ran test:sim:
+    //     14 -> 9   faa5a6c  the cohort's real fifth skill – specialists took her structural
+    //                        monopoly, so the same tennis buys fewer places
+    //      9 -> 6   41ce43a  the domestic season-to-date table – round 23 #12/#13 reshaped
+    //                        early-season acceptance routes
+    // (the 10.08 anchor was 13; 14 is the same cell read just before the first step.) The
+    // mid-range wobble (11-16 between the steps) is Monte-Carlo noise; the ITF window predicate
+    // is provably unchanged through both.
+    //
+    // THE SWEEP'S VERDICT (tools/reach-sweep.ts --float=100000000 at this revision): 6 of 30 as
+    // charged and 6 of 30 with a wallet that cannot empty – SOLVENCY 0, all 24 misses are the
+    // TENNIS. One career of thirty ever goes red and none latches bankruptcy. The fixture's
+    // second property held, so the a4b63ba re-point precedent does NOT apply: the cell stays,
+    // the band moves.
+    //
+    // THE OWNER'S RULING (22.08, verbatim): «да, проверь пожалуйста, но вообще ручной режим
+    // должен быть сложнее, как мне кажется» – the self-coached path being harder is INTENDED.
+    // So this is a re-pin of an intended balance shift, not a defect to fix, and nothing in the
+    // engine moves with it.
+    //
+    // THE BAND, by this note's own rule (half the distance to each degenerate answer):
+    // 6 – 3 = 3 and 6 + 12 = 18, no halves to round. **[3, 18] around 6 of 30.** Not a knife
+    // edge, checked the way the tenth reading checked its own: 5 careers clear at rank cut-off
+    // 48, 6 at 49-50, 8 at 51 – one career per place around the line – and FOURTEEN of the
+    // thirty (ten at the 10.08 re-point) never hold a counting ITF result at all, so no calendar
+    // re-spacing brings them near it.
+    //
+    // ⚠ AND THE RETIRED POINTS ARM'S WATCH TRIPPED FOR THE FIRST TIME, one preset over: on
+    // 25k·middle·middle coach, career #10 peaks at 62 ITF points with a best ranked rank of 53 –
+    // points-rich and rank-poor, exactly the revival condition the removal note above names. One
+    // career on one preset is a specimen, not a case; it is reported to the owner rather than
+    // acted on here.
     const proH18 = Array.from({ length: 30 }, (_, i) => runCareer(middleSelf, i, H18.weeks))
     const reachedH18 = proH18.filter((r) => r.reachedWeek !== null).length
     expect(reachedH18, '14→18 collapsed to never - re-read the notes above').toBeGreaterThan(0)
     expect(reachedH18, '14→18 saturated - re-read the notes above').toBeLessThan(proH18.length)
     expect(
       reachedH18,
-      `14→18 drifted (6 of 30 on middle·self-coached at the 22.08 re-aim, measured ${reachedH18}) - re-read the notes above`,
+      `14→18 drifted (6 of 30 on middle·self-coached at the 22.08 re-pin, measured ${reachedH18}) - re-read the notes above`,
     ).toBeGreaterThanOrEqual(3)
     expect(
       reachedH18,
-      `14→18 drifted (6 of 30 on middle·self-coached at the 22.08 re-aim, measured ${reachedH18}) - re-read the notes above`,
+      `14→18 drifted (6 of 30 on middle·self-coached at the 22.08 re-pin, measured ${reachedH18}) - re-read the notes above`,
     ).toBeLessThanOrEqual(18)
     for (const r of proH18) {
       if (r.reachedWeek !== null) {
