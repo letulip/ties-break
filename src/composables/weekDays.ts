@@ -246,7 +246,11 @@ export type CalendarWeekFacts = Pick<
   // v47: how many sessions ONE DAY of the drawn week may hold (1, or 2 with no school). Optional for
   // the same reason, and absence means a school day – which is a no-op for every plan written before
   // v47, since none of them puts two sessions anywhere.
-  Partial<Pick<Snapshot, 'planDayCapacity'>>
+  Partial<Pick<Snapshot, 'planDayCapacity'>> &
+  // ⭐ ROUND 24 #5: the week she leaves for college, so the look-ahead can mark the departure the
+  // way it marks every other week identity. Optional for the fixture reason above – absence means
+  // no departure is booked, which is what every fixture written before it was about.
+  Partial<Pick<Snapshot, 'collegeDepartsWeek'>>
 
 /** ⚠ THE SUMMER WINDOW MOVED INTO THE ENGINE (W3-SUMMER) AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
  *  NAMES, so every existing caller and every test that imports `SUMMER_WEEKS` / `isSummerWeek` from
@@ -583,7 +587,7 @@ export interface LookAheadRow {
   label: string
   /** the week's real days, already formatted (never re-derived in a template) */
   dates: string
-  kind: 'event' | 'vacation' | 'practice' | 'exam' | 'off-season' | 'training'
+  kind: 'event' | 'vacation' | 'practice' | 'college' | 'exam' | 'off-season' | 'training'
   /** the suitable tournament on this week – the marker's card – or null */
   event: UpcomingEvent | null
   /** the layoff covers this week: the red chip, so "why can I plan nothing" is answerable at a glance */
@@ -625,28 +629,38 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
     )
     const exam = isExamWeek(w, snap.schoolEndsWeek !== undefined && w >= snap.schoolEndsWeek)
     const offSeason = isOffSeasonWeek(w)
+    // ⭐ ROUND 24 #5 – THE DEPARTURE IS A WEEK IDENTITY, marked the way the other identities are.
+    // It sits BELOW an enterable event on purpose: an event playing on the departure week genuinely
+    // plays (the engine departs in the same deferred block the reveal closes from), so the tappable
+    // marker is still true. It outranks the decor bands – a week she leaves for college is not a
+    // training week, whatever else the season says about it.
+    const college = snap.collegeDepartsWeek != null && w === snap.collegeDepartsWeek
     const kind: LookAheadRow['kind'] = vacation
       ? 'vacation'
       : practice
         ? 'practice'
         : event
           ? 'event'
-          : exam
-            ? 'exam'
-            : offSeason
-              ? 'off-season'
-              : 'training'
+          : college
+            ? 'college'
+            : exam
+              ? 'exam'
+              : offSeason
+                ? 'off-season'
+                : 'training'
     const note = vacation
       ? (vacationPackage(vacation.packageId)?.label ?? vacation.packageId)
       : practice
         ? `Practice match${practice.withCoach ? ' + coach' : ''}`
         : event
           ? event.label
-          : exam
-            ? 'Exams'
-            : offSeason
-              ? 'Off-season'
-              : 'Training week'
+          : college
+            ? 'Leaves for college'
+            : exam
+              ? 'Exams'
+              : offSeason
+                ? 'Off-season'
+                : 'Training week'
     rows.push({
       week: w,
       label: weekLabel(w),

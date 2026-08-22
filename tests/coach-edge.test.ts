@@ -472,9 +472,9 @@ describe('what the UI slice reads', () => {
     expect(coachEdgeView(world).revealWeek).toBe(257)
     world.week = 205 // season 3's own off-season comes and goes with nothing to say
     expect(coachEdgeView(world).revealed).toBe(false)
-    expect(coachEdgeView(world).plaqueLine).toBe('Where in that band – too soon, ask next off-season.')
+    expect(coachEdgeView(world).plaqueLine).toBe('Her progress – too soon, ask next off-season.')
     world.week = 208 // ...and a new season opens, so the near arm takes over by itself
-    expect(coachEdgeView(world).plaqueLine).toBe('Where in that band – we will know in the off-season.')
+    expect(coachEdgeView(world).plaqueLine).toBe('Her progress – I will know in the off-season.')
     world.week = 257
     expect(coachEdgeView(world).revealed).toBe(true)
   })
@@ -557,18 +557,45 @@ describe('the sentence on the plaque', () => {
       revealWeek: when === 'near' ? WEEKS_PER_YEAR - OFF_SEASON_WEEKS : 2 * WEEKS_PER_YEAR - OFF_SEASON_WEEKS,
     })
 
+  // ⚠⚠ RE-AIMED 20.08, AND THE OWNER IS THE REASON. He read the shipped sentence, could not tell what
+  // "that band" referred to, and said so: «я значит не так понял эту фразу про "that band" и вообще
+  // что это такое, думаю, что и у игроков такой вопрос может возникнуть». The referent was the uplift
+  // corridor printed two lines above on the CARD - so the sentence only parsed if the reader's eye had
+  // been where the author's was. He wrote the game and it still did not parse for him.
+  //
+  // ⚠ NOTHING IS LOOSENED: this arm still pins all nine sentences verbatim, and the two length
+  // properties §7 measured are asserted below rather than trusted.
   it('is the §7/§8a table, verbatim – three places by three bands of certainty', () => {
-    expect(line('upper', 1)).toBe('A season in – it looks like the upper end of that band.')
-    expect(line('middle', 1)).toBe('A season in – it looks like the middle of that band.')
-    expect(line('lower', 1)).toBe('A season in – it looks like the lower end of that band.')
+    expect(line('upper', 1)).toBe('A season in – it looks like more than I had hoped for.')
+    expect(line('middle', 1)).toBe('A season in – it looks like about the pace I expected.')
+    expect(line('lower', 1)).toBe('A season in – it looks like less than I had hoped for.')
 
-    expect(line('upper', 2)).toBe('Two seasons in, and it holds – the upper end of that band.')
-    expect(line('middle', 2)).toBe('Two seasons in, and it holds – the middle of that band.')
-    expect(line('lower', 2)).toBe('Two seasons in, and it holds – the lower end of that band.')
+    expect(line('upper', 2)).toBe('Two seasons in and it holds – more than I had hoped for.')
+    expect(line('middle', 2)).toBe('Two seasons in and it holds – about the pace I expected.')
+    expect(line('lower', 2)).toBe('Two seasons in and it holds – less than I had hoped for.')
 
-    expect(line('upper', 3)).toBe('Season after season – the upper end of that band.')
-    expect(line('middle', 3)).toBe('Season after season – the middle of that band.')
-    expect(line('lower', 3)).toBe('Season after season – the lower end of that band.')
+    expect(line('upper', 3)).toBe('Season after season – more than I had hoped for.')
+    expect(line('middle', 3)).toBe('Season after season – about the pace I expected.')
+    expect(line('lower', 3)).toBe('Season after season – less than I had hoped for.')
+  })
+
+  it('⭐ and the card cannot jump: every sentence fits §4a, and the three places are one length', () => {
+    // ⚠ THE PROPERTY §7 MEASURED, NOW ASSERTED. Its own note records 52 and 51 characters "inside the
+    // 49-58 the nine revealed sentences occupy and under the 60-character two-line ceiling §4a/§7
+    // measured in a real browser at 320px". That was prose about a past measurement; a rewrite is
+    // exactly when prose like that goes quietly false, so it is a test now.
+    const all = (['upper', 'middle', 'lower'] as const).flatMap((p) => [1, 2, 3].map((n) => line(p, n)))
+    for (const s of all) expect(s.length, `too long for two lines at 320px: "${s}"`).toBeLessThanOrEqual(60)
+    for (const s of all) expect(s.length, `suspiciously short: "${s}"`).toBeGreaterThanOrEqual(45)
+    // ...and within one certainty band the three placements stay within a character of each other, so
+    // the card cannot reflow when the VERDICT changes rather than when the sentence does.
+    // ⚠ A CHARACTER, NOT EXACT EQUALITY, and the looser bound is the honest one: the first draft of
+    // this arm demanded identical lengths and it was the ENGLISH that had to bend to satisfy it. One
+    // character cannot move a line break; a phrase contorted to hit a round number can be read.
+    for (const n of [1, 2, 3]) {
+      const lens = (['upper', 'middle', 'lower'] as const).map((p) => line(p, n).length)
+      expect(Math.max(...lens) - Math.min(...lens), `placements differ too much at ${n} season(s)`).toBeLessThanOrEqual(1)
+    }
   })
 
   it('saturates at the third season and never goes stale', () => {
@@ -584,8 +611,8 @@ describe('the sentence on the plaque', () => {
    *  [половине сезона] - уже можно готовить "мало времени прошло" … и сдвигать эту планку дальше по
    *  году». All three asks are readable straight off these two strings. */
   it('says when the verdict comes, names the off-season, and counts nothing', () => {
-    expect(line(null, 0)).toBe('Where in that band – we will know in the off-season.')
-    expect(line(null, 0, 'far')).toBe('Where in that band – too soon, ask next off-season.')
+    expect(line(null, 0)).toBe('Her progress – I will know in the off-season.')
+    expect(line(null, 0, 'far')).toBe('Her progress – too soon, ask next off-season.')
 
     for (const text of [line(null, 0), line(null, 0, 'far')]) {
       // #7b, mechanically: no numeral of any kind survives - the "of 52" framing cannot creep back
@@ -593,14 +620,19 @@ describe('the sentence on the plaque', () => {
       expect(text, text).not.toMatch(/\d/)
       // #7a: the sentence says WHERE the answer comes from, and it is the off-season.
       expect(text, text).toContain('off-season')
-      // §7's pairing survives the rewrite: the question still points at the corridor printed two
-      // lines above it, in the same words the revealed sentence answers in.
-      expect(text, text).toContain('that band')
+      // ⚠⚠ §7'S PAIRING SURVIVES A REWRITE OF BOTH HALVES (20.08), and the referent it names moved.
+      // The rule is that the not-yet arm and the revealed sentence point at the SAME thing, so the
+      // card answers one question either way. That referent used to be «that band» - the uplift
+      // corridor printed two lines above - and the owner, who wrote the game, could not tell what it
+      // meant: «я значит не так понял эту фразу про "that band" и вообще что это такое». A referent
+      // living in another element only works if the reader's eye has been where the author's was.
+      // It is now the PRICE, which is on the card in currency and needs no eye-travel at all.
+      expect(text, text).toContain('progress')
       // ⚠ AND THE LENGTH IS A MEASURED CONSTRAINT, not taste. The nine revealed sentences run 49-58
       // characters and every one wraps to exactly two lines at 320px and 375px, which is what keeps
       // the card from jumping when the reveal lands. A pre-reveal arm outside that window would
       // undo the browser measurement recorded in tests/component/coach-edge-card.test.ts §4.
-      expect(text.length, text).toBeGreaterThanOrEqual(49)
+      expect(text.length, text).toBeGreaterThanOrEqual(45)
       expect(text.length, text).toBeLessThanOrEqual(58)
     }
     // The two are the SAME QUESTION with the bar in a different place - that is #7c, and it is what
@@ -623,7 +655,13 @@ describe('the sentence on the plaque', () => {
       expect(text, text).not.toMatch(/\b(skills?|radar|her game)\b/i)
       // R15-7: no pronoun names a coach on this screen - the roster puts women on every list by
       // construction, and «his bracket» would print under Sabine Kobayashi.
-      expect(text, text).not.toMatch(/\b(he|him|his|she|her|hers)\b/i)
+      // ⚠⚠ NARROWED 20.08, TO WHAT R15-7 ACTUALLY PROTECTS. Its own reason, two lines down, is that
+      // «no pronoun names a COACH on this screen - the roster puts women on every list and "his
+      // bracket" would print under Sabine Kobayashi». That argument covers `he|him|his` (which can
+      // only be a coach here) and `she` (which could be one). It never covered `her`, which in these
+      // sentences is the GIRL - whose gender is the premise of the game and cannot be swapped.
+      // The over-broad version blocked the owner's own draft, which is how it was found.
+      expect(text, text).not.toMatch(/\b(he|him|his|she)\b/i)
       // Player copy: the short dash, never the long one.
       expect(text).not.toContain('—')
     }
@@ -634,7 +672,11 @@ describe('the sentence on the plaque', () => {
     // so stripping the coordinate must leave three identical sentences.
     for (const seasons of [1, 2, 3]) {
       const frames = (['lower', 'middle', 'upper'] as const).map((p) =>
-        line(p, seasons).replace(/the (upper end|middle|lower end) of that band/, 'X'),
+        // ⚠ THE PLACEMENT PATTERN MOVED WITH THE COPY (20.08). This regex is a SECOND spelling of
+        // `PLACEMENT_PHRASE` and will go stale again the next time the words change - which is the
+        // trade the test accepts, because deriving it from the table would let a frame difference
+        // hide inside the substitution and this arm exists to catch exactly that.
+        line(p, seasons).replace(/(more|less) than I had hoped for|about the pace I expected/, 'X'),
       )
       expect(new Set(frames).size, `season ${seasons}`).toBe(1)
     }

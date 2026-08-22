@@ -35,7 +35,7 @@
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, mean, median } from './econ-bench'
-import { resumeFromCollege } from '../src/engine/world'
+import { chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 // ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
 // GAME. The owner removed the rule that closed the college door on a result («Колледж – это
@@ -198,7 +198,11 @@ for (let p = 0; p < PRESETS.length; p++) {
       // place open to her, so this file measures the college branch at its floor price and nothing
       // else. The choice is measured in `tools/college-choice-probe.ts`.
       answerFork(at.world, 'college')
-      for (let y = 0; y < YEARS; y++) resumeFromCollege(at.world, at.rng)
+      // Round 24: the year pauses on her birthday week – press, answer, press again.
+      for (let press = 0; press < 3 * YEARS && at.world.ending?.type === 'college'; press++) {
+        resumeFromCollege(at.world, at.rng)
+        if (pendingBirthday(at.world) !== null) chooseGift(at.world, 'day')
+      }
       college.push({
         background: PRESETS[p].background,
         offerFamilyPerYearCents: cheapest(offer)?.familyPerYearCents ?? 0,

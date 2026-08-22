@@ -510,23 +510,35 @@ describe('the birthday popup', () => {
   })
 
   // ===============================================================================================
-  // THE COLLEGE FREEZE – the one place the popup deliberately does not fire
+  // THE COLLEGE FREEZE – the popup fires there too now (round 24)
   // ===============================================================================================
-  it('⚠ no birthday is raised inside the college freeze, and none is recorded as "gave nothing"', () => {
-    // `resumeFromCollege` spends a college YEAR in one call with nobody able to answer, so a
-    // blocking birthday there would strand the jump – the identical reason `rollKnock` is skipped.
-    // Those birthdays are ABSENT rather than refused: nobody was asked, so there is no act to record.
-    // ⚠ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08): the freeze is spent one year at a time now
-    // (docs/specs/college-as-a-second-act-2026-08.md) so the jump is 52 weeks rather than 208, and a
-    // blocking birthday inside ANY of them strands it exactly as before. The span is unchanged here
-    // on purpose – the assertion is about a week inside the freeze, whatever the freeze is spent in.
+  it('⚠ RE-AIMED: a birthday inside the college freeze IS raised now, and behind a real epilogue it is not', () => {
+    // ⚠ RE-AIMED BY ROUND 24, NOT WEAKENED (the owner, 22.08: «да, день рождения делай»,
+    // docs/plans/college-the-flow.md ruling 2). This case used to pin the OPPOSITE truth – null at
+    // college – because a blocking dialog could not be answered inside the 52-week jump. Both halves
+    // of that reason are gone: the Home shell is alive under the latch (D1) and `resumeFromCollege`
+    // PAUSES on the birthday week (tests/college-birthday.test.ts walks the delivery end to end).
+    // What survives of the old claim, and is still pinned here: the popup never INVENTS a record –
+    // `world.birthdays` moves only when `chooseGift` answers – and a real epilogue still silences it.
     const world = career('college')
     const rng = rngFromSeed(world.seed)
     const week = runToBirthday(world, rng)
     expect(pendingBirthday(world)).not.toBeNull()
-    world.college = { fromWeek: week, untilWeek: week + 208, doneWeek: null, years: [], pendingCallUp: null }
-    expect(pendingBirthday(world), 'silent at college').toBeNull()
-    expect(advanceWeeks(world, rng, 2).includes('birthday'), 'and it does not block the jump').toBe(false)
-    expect(world.birthdays, 'and writes nothing').toEqual([])
+    world.college = {
+      fromWeek: week,
+      untilWeek: week + 208,
+      doneWeek: null,
+      years: [],
+      pendingCallUp: null,
+      pendingLeague: null,
+    }
+    expect(pendingBirthday(world), 'raised at college – the freeze no longer swallows it').not.toBeNull()
+    expect(world.birthdays, 'raised is not recorded: nobody has answered yet').toEqual([])
+    // ⚠ AND THE EPILOGUE EXCLUSION IS UNTOUCHED: a latch that never comes off still has no shell to
+    // render a dialog into, college enrolment or not.
+    world.ending = { type: 'injury', week: world.week, ageYears: 15, detail: 'the fixture', resumesWeek: null }
+    expect(pendingBirthday(world), 'silent behind a real ending').toBeNull()
+    world.ending = null
+    expect(pendingBirthday(world), 'and back the moment the latch is not terminal').not.toBeNull()
   })
 })

@@ -30,6 +30,8 @@ import ForkDialog from '../../src/components/ForkDialog.vue'
 import '../../src/style.css'
 import { useGameStore } from '../../src/stores/game'
 import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
+// ⚠ THE ENGINE'S OWN REFUSAL, IMPORTED RATHER THAN RETYPED – see the residence case below.
+import { COLLEGE_SHUT_DETAIL, quoteShutFor } from '../../src/engine/collegeOffer'
 import type { CollegeOffer, CollegeQuote, CollegeTier, Snapshot } from '../../src/shared/protocol'
 
 const PRICES: Record<CollegeTier, number> = { state: 30_990_00, national: 50_920_00, private: 65_470_00 }
@@ -160,7 +162,9 @@ describe('⭐⭐ the card says what each college place costs', () => {
   it('⭐⭐ still draws three live answers when no programme funded her', () => {
     const w = mountFork(WALK_ON)
     expect(w.findAll('.fork-answer')).toHaveLength(3)
-    expect(w.text()).toContain('Take the college place')
+    // ⚠ ROUND 24 #5: the button says «Reserve» now – the click books the place, she leaves at the
+    // September departure and plays until then.
+    expect(w.text()).toContain('Reserve the college place')
     for (const a of w.findAll('.fork-answer')) expect(a.attributes('disabled')).toBeUndefined()
     const rows = rowsOf(w)
     for (const r of rows) expect(r).toContain('Walk-on, no award')
@@ -197,13 +201,29 @@ describe('⭐⭐ the card says what each college place costs', () => {
 
   // ⚠⚠ THE RESIDENCE SPLIT REMOVES ONE SCHOOL AND NEVER THE ANSWER. Two places stay pressable, the
   // third states its reason, and the button falls to the cheapest one that IS hers.
+  //
+  // ⚠⚠ RE-AIMED BY ROUND 24 #2a, NOT WEAKENED. It asserted the literal string
+  // «In-state, and she is not a resident», which was TYPED INTO THE TEMPLATE beside the boolean –
+  // and pinning a template literal is what let the card hold an opinion the engine never issued.
+  // The claim it stood for is unchanged and is stricter for being sourced: the refused row states
+  // the ENGINE'S sentence for the reason the ENGINE gave, off `COLLEGE_SHUT_DETAIL`. A card that
+  // types its own words now fails here.
+  //
+  // ⚠ AND IT IS THE HAND-BUILT ARM ON PURPOSE. `tests/component/round24-fork-places.test.ts` walks a
+  // real world into this state and asserts the same property against `tierShutFor`; this case keeps
+  // the surface honest for a quote shape the world happens not to produce today.
   it('⚠ shuts the in-state place to a non-resident and keeps the answer live', () => {
     const w = mountFork(NON_RESIDENT)
     const places = w.findAll('.fork-place')
     expect(places[0].attributes('disabled')).toBeDefined()
-    expect(places[0].text()).toContain('In-state, and she is not a resident')
+    const shut = quoteShutFor(NON_RESIDENT.quotes[0])
+    expect(shut, 'the engine names the rule behind its own `open: false`').not.toBeNull()
+    expect(places[0].find('.fork-place-refusal').text(), 'the engine\'s sentence, not the card\'s').toBe(
+      COLLEGE_SHUT_DETAIL[shut!],
+    )
     expect(places[1].attributes('disabled')).toBeUndefined()
     expect(places[2].attributes('disabled')).toBeUndefined()
+    expect(places[1].find('.fork-place-refusal').exists(), 'and an open row explains nothing').toBe(false)
     expect(w.findAll('.fork-answer')[1].text(), 'the button falls to the cheapest place that is hers').toContain(
       'A university out of state',
     )
@@ -233,7 +253,9 @@ describe('⭐⭐ the card says what each college place costs', () => {
     const w = mountFork(null)
     expect(w.find('.fork-places').exists(), 'no places block').toBe(false)
     expect(w.findAll('.fork-answer')).toHaveLength(3)
-    expect(w.text()).toContain('the money goes the other way')
+    // ⚠ ROUND 24 #5 re-aim: the migrated fallback names the departure fact instead of the money
+    // claim the engine never honoured.
+    expect(w.text()).toContain('from the next academic year')
     // ⚠ AND NO INVENTED PRICE ON THE THIRD ANSWER. Scoped to that button: the card's FACTS list
     // legitimately prints her funds and her prize money in dollars, and always has.
     expect(w.findAll('.fork-answer')[1].text(), 'no price quoted').not.toMatch(/\$\d/)

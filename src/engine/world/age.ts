@@ -283,7 +283,13 @@ export function birthdayTurning(week: number, birthMonth: number, birthDay: numb
  *  in the birthday's own week, and it is for events that are ABOUT the birthday. Every gate stays on
  *  `kidAgeAt`: an eligibility rule governs the whole week and must not open mid-week. If you are
  *  gating, use `kidAgeAt`; if you are CELEBRATING or asking her a question the birthday prompts, use
- *  this one. The fork is the only caller today, deliberately. */
+ *  this one.
+ *
+ *  ⚠ CALLER-LESS SINCE ROUND 24 #5, AND KEPT ON PURPOSE. The fork was the one caller until the
+ *  owner moved its ask off her birthday to school's end («пункт 5 запускай как обсудили» – `forkDue`
+ *  reads `schoolIsOver` now, docs/specs/college-departure-2026-08.md), so no question in the game is
+ *  currently birthday-prompted. The device is the documented answer for the NEXT one that is –
+ *  deleting it would delete the record of why a birthday question must not read the Monday's age. */
 export function kidAgeThroughWeek(world: WorldState, week: number): number {
   const turning = birthdayTurning(week, world.profile.birthMonth, world.profile.birthDay)
   return Math.max(kidAgeAt(world, week), turning ?? -1)
@@ -320,43 +326,24 @@ const AGE_WORDS: Record<number, string> = {
 
 /** THE BIRTHDAY, in the feed. One line, in the family's own register, and it names the AGE because that is
  *  the fact of the week - the relative-age story is told by her age being 13 in a 14s draw, and this is
- *  where the player first meets it. */
-export function markBirthday(world: WorldState, atCollege = false): void {
+ *  where the player first meets it.
+ *
+ *  ⭐⭐⭐ ROUND 24 – THE COLLEGE VARIANT (`collegeBirthdayLine`, `atCollege`) IS GONE WITH THE RULING
+ *  THAT CREATED IT. The 19.08 ruling gave the college years a feed line INSTEAD of the dialog
+ *  («колледжевые годы получают не попап, а свою запись в дневнике») because a blocking prompt could
+ *  not be answered inside a 52-week loop; the 22.08 ruling («да, день рождения делай») delivers the
+ *  dialog – `resumeFromCollege` pauses the year on her birthday week and the parent answers on the
+ *  live Home shell. The substitute's whole reason is gone, and two of its four lines («Old enough
+ *  now that nobody thinks to tell you first», «the news reached you late») would be flatly
+ *  contradicted by a gift dialog asked THAT week. One sentence for every birthday of her life; where
+ *  she is that week is told by the shell around it and by the gift she is asked about. */
+export function markBirthday(world: WorldState): void {
   const turning = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
   if (turning === null) return
   const words = ageInWords(turning)
   addEvent(world, {
     week: world.week,
     type: 'info',
-    text: atCollege ? collegeBirthdayLine(words, turning) : `She is ${words} this week.`,
+    text: `She is ${words} this week.`,
   })
-}
-
-/** ⭐ THE COLLEGE YEARS GET THEIR OWN ENTRY (owner, 19.08: «колледжевые годы получают не попап, а
- *  свою запись в дневнике, что механику не ломает»).
- *
- *  WHY THEY CANNOT HAVE THE DIALOG, unchanged: `pendingBirthday` (world/birthday.ts) refuses one at
- *  college because `resumeFromCollege` spends four years in ONE call, so a blocking prompt raised
- *  inside the freeze would strand the jump with nobody able to answer it. That stays exactly as it
- *  was - THIS IS THE HALF THAT DOES NOT BREAK THE MECHANIC: a feed row is written, never awaited, so
- *  the four-year jump runs through it without stopping.
- *
- *  ⚠ AND IT STILL RECORDS NO PARENT'S DECISION. `world.birthdays` is untouched here, so those four
- *  years remain ABSENT rather than "gave nothing" - the distinction `pendingBirthday`'s note draws.
- *  What changes is only that the year is no longer told in the same sentence as every other year: it
- *  says where she was.
- *
- *  ⚠ ONE LINE PER YEAR AND NOT A RANDOM PICK, deliberately: four college birthdays is the whole of
- *  it, a player sees them consecutively, and a repeat inside four consecutive entries is exactly the
- *  "one template with the numbers swapped" impression `birthdayHeading` was rewritten to undo. Keyed
- *  by AGE, which is what the caller knows, with a fallback for a career that reaches college on an
- *  unusual clock. ZERO DRAWS - no stream is touched, so this is safe inside the freeze. */
-function collegeBirthdayLine(words: string, age: number): string {
-  const byAge: Record<number, string> = {
-    18: `She is ${words} this week – her first birthday away, and the photographs came a day late.`,
-    19: `She is ${words} this week. The hall made a fuss of it, apparently. You heard afterwards.`,
-    20: `She is ${words} this week – a phone call between a lecture and a practice court.`,
-    21: `She is ${words} this week. Old enough now that nobody thinks to tell you first.`,
-  }
-  return byAge[age] ?? `She is ${words} this week – away at college, and the news reached you late.`
 }

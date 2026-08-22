@@ -46,7 +46,16 @@ export type BlockingOverlay = 'ending' | 'knock' | 'birthday' | 'fork' | 'retire
  */
 export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | null {
   if (!snapshot) return null
-  if (snapshot.ending) return 'ending'
+  // ⭐⭐⭐ ROUND 24 – THE ONE 'ending' A BIRTHDAY MAY BE LAID OVER: the resumable college latch.
+  // Entry 1's whole rationale ("it REPLACES the tab shell, so nothing can be laid over it") stopped
+  // being true for exactly this latch when D1 put the Home shell back underneath the freeze – and
+  // the college year now PAUSES on her birthday week (the owner's «да, день рождения делай»), so a
+  // birthday raised there has a live shell to render over and MUST outrank the latch, or the year
+  // pauses with its question rendered nowhere and the career strands. The predicate is App.vue's
+  // own `showCollege` half ("this ending draws the Home shell, not the epilogue"), so the two
+  // cannot part; every other ending, college-after-leaving included, replaces the shell as before.
+  const collegeShell = snapshot.ending?.ending?.type === 'college' && snapshot.ending.college !== null
+  if (snapshot.ending && !(collegeShell && snapshot.birthdayPrompt)) return 'ending'
   if (snapshot.knockPrompt) return 'knock'
   if (snapshot.birthdayPrompt) return 'birthday'
   if (snapshot.fork) return 'fork'
@@ -90,8 +99,19 @@ export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | nu
  *  the next dialog somebody adds inherits the wait"). The coach marks are not a dialog and do not
  *  block – `.coach-tour` is `pointer-events: none` everywhere but the card – but they black the
  *  screen out behind a 4000px shadow and hang a card off a measured rect, so landing them on a
- *  tournament reveal is exactly the collision round-21 #9 was raised about. */
-export type Popup = BlockingOverlay | 'injury' | 'season-summary' | 'tour-briefing' | 'onboarding-tour'
+ *  tournament reveal is exactly the collision round-21 #9 was raised about.
+ *
+ *  ⚠ `college-graduation` JOINED IT IN ROUND 24 (#4) AND THAT IS THIS HEADER'S PREDICTION COMING
+ *  TRUE A SECOND TIME. It is the card that closes the college years, and because college stopped
+ *  borrowing the epilogue as its shell that week is now an ORDINARY week on the tab shell – so the
+ *  new report inherits the wait by being named here instead of by growing a private `!pending`. */
+export type Popup =
+  | BlockingOverlay
+  | 'injury'
+  | 'season-summary'
+  | 'tour-briefing'
+  | 'onboarding-tour'
+  | 'college-graduation'
 
 /** ⭐ THE POPUPS THAT MAY LAND ON A BUSY SCREEN, and there are exactly two.
  *

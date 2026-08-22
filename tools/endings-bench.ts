@@ -31,6 +31,8 @@ import {
 import {
   answerFork,
   answerRetirement,
+  chooseGift,
+  pendingBirthday,
   resumeFromCollege,
   kidAgeYears,
   type WorldState,
@@ -278,10 +280,18 @@ function answerWhateverIsOpen(
     // when the door is shut, so a reading taken afterwards would only ever see the open half.
     out.collegeOpenAtFork = retiredCollegeDoorOpen(world)
     answerFork(world, arm)
-    if (arm === 'college' && world.ending?.type === 'college') {
-      out.wentToCollege = true
-      // one tap, four years – the only ending that resumes
+  }
+  // ⚠ ROUND 24 #5: the college answer RESERVES and the ending latches at the September DEPARTURE –
+  // the walk simply keeps ticking the gap year (the outer loop's own weeks) and the year press
+  // moved from the answer's site to the latch's. Same shape as before: one college year is really
+  // spent, then the outer loop reads the re-latched ending and stops.
+  if (arm === 'college' && world.ending?.type === 'college') {
+    out.wentToCollege = true
+    // one year per press since P5 – and since round 24 a year pauses on her birthday week, so the
+    // press is press-answer-press.
+    for (let press = 0; press < 3 && (world.college?.years.length ?? 0) === 0 && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
   }
   if (world.retirementOffer !== null) {

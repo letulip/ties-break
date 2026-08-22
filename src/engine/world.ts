@@ -82,6 +82,8 @@ import {
 import {
   kitGrantCents,
   reviewLevel,
+  settleAcademyLetters,
+  travelCoverPct,
   type AcademySupport,
 } from './academy'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
@@ -193,6 +195,7 @@ import {
   lastRungSeasonIndexOf,
   plateauViewOf,
   autoEndingViewOf,
+  resolveCollegeDeparture,
   resolveEndings,
   wasThereAChild,
 } from './world/endings'
@@ -207,12 +210,14 @@ import {
   callUpPlayedThisWeek,
   collegeCoachFactor,
   collegeEpilogueLine,
+  collegeLeaguePlayedThisWeek,
   collegeMatchesThisWeek,
   inCollege,
   leaveCollege as leaveCollegeState,
   openCollegeYear,
   resolveCallUp,
   resolveCollegeBill,
+  resolveCollegeLeague,
 } from './world/college'
 export {
   // ⚠ RENAMED, NOT DROPPED (round 21 #5): `COLLEGE_MATCH_SEASON` was a thirteen-week block and the
@@ -226,14 +231,23 @@ export {
   callUpRubbersOf,
   collegeCoachFactor,
   collegeEpilogueLine,
+  // ⭐⭐⭐ ROUND 24 – THE STUDENT CHAMPIONSHIP: the one tournament a college year is guaranteed, and
+  // the predicate that keeps its week from passing in silence. Same six names, same shape, as the
+  // call-up above it – deliberately, because they are the same KIND of thing.
+  collegeLeagueMatchId,
+  collegeLeagueMatchesOf,
+  collegeLeaguePlayedThisWeek,
+  collegeLeagueWeek,
   collegeMatchesThisWeek,
   collegeProgressOf,
   collegeRecruitViewOf,
   inCollege,
+  lastLeagueRun,
   measureCollegeOffer,
   openCollegeYear,
   resolveCallUp,
   resolveCollegeBill,
+  resolveCollegeLeague,
   skillMeanOf,
 } from './world/college'
 export {
@@ -247,6 +261,7 @@ export {
   lastRungSeasonIndexOf,
   plateauViewOf,
   autoEndingViewOf,
+  resolveCollegeDeparture,
   resolveEndings,
   wasThereAChild,
 }
@@ -273,6 +288,12 @@ import { cohortIds, inTrack, fieldProsOf, fullRanking, rankingFor, recomputeKidR
 export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
+// ⭐⭐ ROUND 24, E2 – THE TWO SENTENCES THE COMMAND GUARD CAN SAY, and the guard that lets the college
+// freeze through. Re-exported off the barrel for the same reason `COLLEGE_REVEAL_REFUSAL` is exported
+// beside `resumeFromCollege`: they are PLAYER-FACING copy that reaches a toast through the worker's
+// error channel, so a test that pinned the spelling instead of the symbol would break a report in
+// silence. See the note beside `guardNotEnded` in world/constants.ts for why there are two.
+export { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEndedForGood } from './world/constants'
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow, rivalProEntries, withinAnnualEntryLimit } from './world/entryCaps'
 // P1 – the junior access rulebook (the Accelerator table and the W15 reserved-place door). Re-exported
 // under its own names for the same reason the caps are: the worker, the snapshot and the tools must
@@ -417,7 +438,19 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // this build has never made a transfer, and re-deriving eight years of them is impossible anyway –
 // `financeWeeks` prunes at sixty weeks). Pure state, zero draws on any stream, so the frozen MAIN
 // capture cannot see it.
-export const SAVE_SCHEMA_VERSION = 54
+// ⭐⭐⭐ v55 – THE STRANDED REVEAL, CLEARED ON LOAD (round 24, the freeze's hygiene). It is a REPAIR
+// and not a shape: no field is added, removed or renamed. A career that came out of the college
+// freeze holding a `pendingTournament` whose event is no longer on the calendar cannot be played at
+// all, and cannot be RESCUED from inside the app either – `pendingView` returns undefined when
+// `eventById` misses, so the snapshot's `pending` is null, so `TournamentFlow` never mounts, the
+// sticky bar never draws its resume button, and `advanceWeeks` returns 'tournament' with no tick and
+// no toast ('tournament' is deliberately absent from `STOP_REASON_TEXT` because the overlay owns it).
+// Measured on the owner's own w474 save: season 0, results 1, `pendingTournament` 5-w270-wta500
+// finished, `snapshot.pending` NULL. Rules 1-3 stop new careers reaching that state; this is the one
+// door already-broken ones can come back through. See the migration for what it does and does not do.
+// v58 (round 24 #5): `fork.departsWeek` – the college answer RESERVES a place and she departs on the
+// next academic year's September; see the migration and docs/specs/college-departure-2026-08.md.
+export const SAVE_SCHEMA_VERSION = 58
 
 
 
@@ -1507,11 +1540,11 @@ export function reviewAcademy(world: WorldState): void {
     return
   }
 
-  const pct = Math.round(level * ECONOMY.academy.travelCover * 100)
+  const pct = travelCoverPct(level)
   if (!prev) {
     fireMilestone(world, `academy-in-${seasonIndex}`, `${ACADEMY_NOTICE.arrived} – a scholarship covering ${pct}% of her travel.`)
   } else {
-    const wasPct = Math.round(prev.level * ECONOMY.academy.travelCover * 100)
+    const wasPct = travelCoverPct(prev.level)
     if (pct !== wasPct) {
       addEvent(world, {
         week: world.week,
@@ -3041,6 +3074,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         notice reach the inbox before the letter that explains what a due notice is. The blocking
   //         half of the same item is `buildTourBriefing`, read at snapshot time. ZERO draws.
   settleTourSeasonNotice(world)
+  // ⭐ round-24 #1 – AND THE SCHOLARSHIP IS ON PAPER TOO (owner, 20.08: «Я бы и рад изучить, да
+  //         только далее не знаю где»). The toast round 23 #16 gave the verdict still does its own
+  //         job, which is to say WHEN; this is the destination it never had. It sits HERE, one line
+  //         under the tour's own season letter, because the letter has to be able to report the week
+  //         it describes: `reviewAcademy` has already spoken this tick (above, in the season-boundary
+  //         block) and the grant's income row is already written, so `settleAcademyLetters` reads
+  //         both rather than re-deriving either. ZERO draws.
+  settleAcademyLetters(world)
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)
@@ -3199,7 +3240,29 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
   //    fully-computed shadow tournament. Nothing kid-specific is emitted/awarded here – the flow does.
-  const enteredThisWeek = scheduled.find((e) => world.entries.includes(e.id))
+  //
+  // ⭐⭐⭐ ROUND 24, RULE 3 – AND SHE IS NOT ON THE TOUR THIS WEEK IF SHE IS AT COLLEGE. This line had
+  // no `inCollege` guard, and that is the link in A1's chain where the owner's world actually died:
+  // `resumeFromCollege` ticks fifty-two weeks with nobody watching, so an entry that outlived the
+  // fork was PLAYED inside the freeze – `computeShadowTournament` stashed a reveal that the epilogue
+  // screen (which replaces the app shell) had no surface to answer, and from that week `tickWeek`
+  // skipped the whole of step 5-6 below. 204 weeks with no `housekeep`, no `ensureSeason`, no rank.
+  //
+  // ⚠ IT IS DEFENCE IN DEPTH, NOT THE FIX. Rule 1 (`answerFork`) releases the entries at the fork, so
+  // after this wave there is nothing left for this line to find; rule 2 (`resumeFromCollege`) refuses
+  // to tick past a reveal however one arrives. This guard is the third: it makes the reveal
+  // UNCONSTRUCTIBLE inside the freeze rather than merely absent, which is what stops the next route
+  // in from re-opening the same silent, total failure.
+  //
+  // ⚠ SIX OTHER STEPS OF THIS TICK ALREADY READ `inCollege` (the academy, the sponsors, the gear, the
+  // knock, the birthday, the fork), so the freeze's own rule – she lives the weeks, she does not play
+  // the tour in them – is not new here; only this step was missing from it.
+  //
+  // ⚠ RNG: ZERO. Everything this branch guards is event-scoped or pure – `chargeTravel`,
+  // `chargeCoachTravel` and `computeShadowTournament` take no `rng` argument and the shadow run draws
+  // on `seed:kidtour:<event.id>`. The frozen MAIN capture cannot move, and the probe's `rngDraws`
+  // column is asserted identical across the wave.
+  const enteredThisWeek = inCollege(world) ? undefined : scheduled.find((e) => world.entries.includes(e.id))
   // An injury turns an entered event into a walkover: no travel, no shadow run, 0 points.
   // Only a POST-deadline entry can still be live here – pre-deadline entries were auto-withdrawn
   // (and refunded) at onset by rollInjury; past the deadline the fee is forfeited (withdrawEvent
@@ -3419,8 +3482,22 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //   reads `seed:knock:<week>` – so the frozen MAIN capture cannot see it either.
   //   It pays NO money and NO ranking points, because the sport awards neither: it never touches
   //   `world.results` and no rank is recomputed for it. See engine/nationalTeam.ts for the sources.
+  // ⭐⭐⭐ ROUND 24 – AND ONE WEEK OF THE YEAR IS HERS: THE STUDENT CHAMPIONSHIP. The owner, 21.08:
+  //   «как минимум 1 турнир в год колледжа… тогда вызов в сборную можно будет опереть на результаты
+  //   студенческого». Measured before it: 48 college years held 0.71 watchable matches between them,
+  //   because the two squad trips write no rows and the letter was a 40% roll.
+  //   ⚠ THE LEAGUE IS RESOLVED FIRST AND THAT IS CAUSAL ORDER RATHER THAN NEED. The two fire on
+  //   different weeks (season 12 and 14), so neither can see the other's tick; the order here says
+  //   which one the reader should understand first, and `resolveCallUp` reads the championship
+  //   through `lastLeagueRun` rather than through anything this line arranges.
+  //   ⚠ ITS OWN SUB-STREAM, `seed:collegeleague:<week>`, plus one `seed:collegematch:<week>:<r>` per
+  //   round – so `seed:callup:<week>` is byte-identical to what it was and the frozen MAIN capture
+  //   (41550 / e6b0c709) cannot see either of them.
   if (!inCollege(world)) rollKnock(world)
-  else resolveCallUp(world)
+  else {
+    resolveCollegeLeague(world)
+    resolveCallUp(world)
+  }
 
   // 3d. AND SHE HAS A BIRTHDAY. The owner, 30.07: the birth month should show up in the notes.
   //
@@ -3429,12 +3506,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     deciding her whole relative-age story was invisible. Now the week it names stops and says so.
   //     ZERO DRAWS: a calendar comparison. Placed after `rollKnock` so a birthday week that also carries
   //     a knock reads in the order it happened - she came off court sore, and it was her birthday.
-  //     ⭐ ...AND THE COLLEGE YEARS GET THEIR OWN LINE RATHER THAN THE DIALOG (owner, 19.08). The
-  //     prompt is still refused inside the freeze - see `pendingBirthday` - so what those four years
-  //     gain is an ENTRY, not a decision. `inCollege` is read here rather than inside `markBirthday`
-  //     because both are already in scope at this one call site, which keeps age.ts free of a college
-  //     import it has never needed.
-  markBirthday(world, inCollege(world))
+  //     ⭐⭐⭐ ROUND 24: ...AND THE COLLEGE YEARS GET THE DIALOG NOW, SO THE SPECIAL LINE IS GONE
+  //     (owner, 22.08: «да, день рождения делай», superseding 19.08's feed-line substitute). The
+  //     prompt is raised inside the freeze too - `resumeFromCollege` pauses the year on this very
+  //     week - so the line is one sentence for every birthday of her life; see `markBirthday`.
+  markBirthday(world)
 
   // 3e. ...AND ONE SEPTEMBER SHE DOES NOT GO BACK (W4-SCHOOL). The owner: «Школа должна когда-то
   //     закончиться, ей уже 21» and «Конец школы – в конце учебного года». Beside the birthday for
@@ -3736,6 +3812,16 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
+/** ⭐ ROUND 24, RULE 2 – WHAT `resumeFromCollege` SAYS WHEN A REVEAL IS STILL OPEN. Exported so a
+ *  test can pin the refusal without pinning a spelling, on the precedent of `RELEASE_LINE_PREFIX`:
+ *  the wording is player-facing (it reaches the toast through the worker's error channel) and a
+ *  string literal copied into a test is a rename that breaks a report in silence.
+ *
+ *  ⚠ IT NAMES THE STATE AND THE WAY OUT, which is R10-16's doctrine – a refused control with no
+ *  reason on screen is the bug. Nothing here shames the player: it is the game's own bookkeeping. */
+export const COLLEGE_REVEAL_REFUSAL =
+  'A tournament is still waiting to be resolved – close it before spending another college year'
+
 /** «ANOTHER YEAR» – the one command that CLEARS an ending (contract §5.1).
  *
  *  College is the only ending that resumes, and this is where it does. The latch comes off, ONE year
@@ -3787,23 +3873,117 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
  *  replay, and the toast says the week happened. `stops` is a Set filtered through STOP_PRECEDENCE
  *  for the identical reason `advanceWeeks` does it: one call can be several things at once (the
  *  classic here: a call-up in April and the ending re-latched in December), and the caller decides
- *  the order to show them in. */
+ *  the order to show them in.
+ *
+ *  ⭐⭐⭐ ROUND 24 – WITH ONE EXCEPTION, AND IT IS A QUESTION RATHER THAN A REPORT: HER BIRTHDAY
+ *  (the owner, 22.08: «да, день рождения делай»). A call-up is news and can be read at the year's
+ *  end; a birthday is the one popup the owner asked to fire ALWAYS, all four of its buttons are
+ *  answers, and `chooseGift` records against `world.week` – so it cannot be collected, it has to be
+ *  ASKED, on its own week. The year therefore PAUSES there: the loop breaks, the latch goes back on
+ *  with the SAME year's end under it (`pendingYearStart` keeps the opening measurements honest), the
+ *  dialog renders over the live college Home shell, and the next press finishes the year. This does
+ *  not reopen the playable-season trade above – it is one extra click in the years that hold a
+ *  birthday, for the beat the owner explicitly asked to stop for, exactly as the tour's own `+4`
+ *  stops for it. */
 export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   const college = world.college
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
   if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
-  const start = openCollegeYear(world)
-  const yearEnds = Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR)
+  // ⭐⭐⭐ ROUND 24, RULE 2 – A YEAR MAY NOT BE SPENT OVER AN UNANSWERED REVEAL. THIS IS THE RULE THAT
+  // CLOSES THE CLASS, and it is the guard `advanceWeeks` (`if (world.pendingTournament) return
+  // ['tournament']`) and the worker's dev `tick` (P6 (c): "a refusal at entry, a stop mid-loop") have
+  // both had for waves. This command – the only one in the game that CLEARS an ending, and the only
+  // other producer of stop reasons – never had it, and that is the whole of why the owner's career
+  // could die in silence: with a reveal open, `tickWeek` skips its entire step 5-6, so every week
+  // after it costs its RNG draws and buys nothing. His save proves the weeks really ticked
+  // (`rngMain.n` 166k at week 474) and that the world simply had nothing in it.
+  //
+  // ⚠⚠ A REFUSAL AND NOT A STOP, AND THE EPILOGUE IS THE REASON. `advanceWeeks` can return
+  // 'tournament' because its caller is the app shell, where `TournamentFlow` mounts and the sticky
+  // bar's primary button re-opens it on every tab. THIS caller is behind the epilogue: `App.vue`
+  // branches `EndingScreen` with `v-else-if` ABOVE the shell, `TournamentFlow` lives inside the
+  // `v-else`, and `blockingOverlay`'s INTERRUPTS set lets 'ending' show over a pending reveal – so
+  // while the college latch is on there is no surface in the app that can draw the reveal at all. A
+  // stop reason handed to a screen that cannot act on it is a silent no-op, which is the failure
+  // being fixed rather than a fix. A throw is loud, and through the worker it is also FREE: `mutate`
+  // runs on a candidate clone, so a refusal provably leaves the committed career without one tick
+  // applied – close the reveal (or repair it) and the same click works.
+  //
+  // ⚠ MID-LOOP TOO, ON THE SAME CONTRACT AND FOR THE SAME REASON. After rule 3 no reveal can be
+  // CONSTRUCTED inside the freeze, so this is a tripwire over a state that should not exist; if a
+  // later wave finds a new way to open one, the career stops at that week with nothing committed
+  // instead of ticking out the year and the three after it.
+  if (world.pendingTournament) throw new Error(COLLEGE_REVEAL_REFUSAL)
+  // ⭐⭐⭐ ROUND 24 – AND NOT OVER AN UNANSWERED BIRTHDAY EITHER (the owner's «да, день рождения
+  // делай»). The identical contract `advanceWeeks` keeps at its own entry, engine-side because the
+  // worker is not the gate (invariant 1): the dialog covers the button, but a stale screen must not
+  // be able to spend a year past the one popup the owner asked to fire ALWAYS. A RETURN and not a
+  // throw, unlike the reveal above, because this state is HEALTHY – the dialog is on screen off the
+  // snapshot field, `chooseGift` is its exit, and the same click works the moment it is answered.
+  // Nothing is mutated and nothing is drawn; `['birthday']` is the same no-op report the advance
+  // gives, so the caller cannot mistake a refusal for a spent year.
+  if (pendingBirthday(world) !== null) return ['birthday']
+  // ⭐ THE YEAR IN PROGRESS, OR A FRESH ONE. `pendingYearStart` is non-null exactly when the last
+  // press paused mid-year on her birthday: the year's opening measurements are HISTORY by now (her
+  // skill, her rank and the family balance have moved since), so they are persisted at the pause and
+  // read back here rather than re-measured – or the banked year would open at the birthday week with
+  // the wrong four numbers. `?? null` because the field is optional (see CollegeState: D2 owns
+  // `answerFork` next, so enrolment does not write it; absent and null mean the same thing).
+  const start = college.pendingYearStart ?? openCollegeYear(world)
+  // Off the year's own OPENING, not off `world.week`: for a fresh year the two are the same week,
+  // and for a resumed one this is what keeps the academic boundary where the first press put it –
+  // a year paused for a cake is finished, not restarted.
+  const yearEnds = Math.min(college.untilWeek, start.week + WEEKS_PER_YEAR)
   world.ending = null
   const stops = new Set<StopReason>()
   while (world.week < yearEnds && world.ending === null) {
     tickWeek(world, rng)
+    if (world.pendingTournament) throw new Error(COLLEGE_REVEAL_REFUSAL)
     // ⚠ ASKED AFTER THE TICK AND OF THE WORLD, never threaded back through `tickWeek` – the whole
     // point of `callUpPlayedThisWeek` being a predicate. One `stops.add`, exactly like the academy's.
     if (callUpPlayedThisWeek(world)) stops.add('call-up')
+    // ⭐⭐⭐ ROUND 24 – AND THE ONE WEEK THAT ALWAYS HAPPENS. Unlike every other member of this set
+    // the championship is not a roll, so this line fires in EVERY college year – which is the point:
+    // a year that produced a tournament and reported nothing would be the silence round 23 #16 was
+    // about, with better tennis behind it.
+    if (collegeLeaguePlayedThisWeek(world)) stops.add('college-league')
+    // ⭐⭐⭐ ROUND 24 – HER BIRTHDAY, THE ONE MID-YEAR STOP. Unlike the two reports above it BREAKS,
+    // because it is a QUESTION: `chooseGift` records the gift against `world.week`, so the answer
+    // has to land ON the birthday week and a blocking dialog cannot be answered inside this loop –
+    // the exact sentence `pendingBirthday`'s old college exclusion was built on, now honoured by
+    // pausing instead of by silence. Collected before the break so a birthday that lands on the
+    // championship week reports both (R11-1's rule: one week can be several things at once).
+    if (pendingBirthday(world) !== null) {
+      stops.add('birthday')
+      break
+    }
+  }
+  // ⭐⭐⭐ THE PAUSE – the year stops mid-flight for her birthday and is NOT banked. The latch goes
+  // back on with the SAME year's end under it, the opening measurements are persisted for the press
+  // that finishes it, and the dialog renders over the college Home shell (blockingOverlay lets the
+  // birthday through exactly this one latch). Assigned directly rather than through `latchEnding`,
+  // deliberately: the latch writes a kept «College years – N of 4…» milestone per call, which is the
+  // YEAR's row – a paused year is the same year continued, and a second row about it every birthday
+  // would be the feed announcing an event that did not happen.
+  if (world.ending === null && world.week < yearEnds && pendingBirthday(world) !== null) {
+    college.pendingYearStart = start
+    world.ending = {
+      type: 'college',
+      week: world.week,
+      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+      detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
+      resumesWeek: yearEnds,
+    }
+    stops.add('ending')
+    return STOP_PRECEDENCE.filter((r) => stops.has(r))
   }
   // ⚠ A YEAR CUT SHORT BY AN ENDING IS STILL BANKED. The album's last page is allowed to say what
   // she was doing when it happened, and a row that stops mid-year is the honest record of that.
+  // (`bankCollegeYear` also clears `pendingYearStart`, so a resumed year cannot leak its start into
+  // the next one.) ⚠ A BIRTHDAY ON THE BOUNDARY WEEK ITSELF takes this path, not the pause: the year
+  // is genuinely over, so it banks and re-latches (or graduates) as always – and the prompt simply
+  // stays pending at the rest state, where the dialog shows and the entry guard above holds the next
+  // press until it is answered. Nothing is swallowed; 'birthday' is already in the stops.
   bankCollegeYear(world, start)
   if (world.ending !== null) {
     college.doneWeek = world.week
@@ -3849,6 +4029,16 @@ export function endCollegeEarly(world: WorldState): void {
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
   if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
   if (college.years.length === 0) throw new Error('She has not spent a year there yet')
+  // ⭐ ROUND 24 – "AT A BOUNDARY" GAINED A SECOND FAILURE MODE AND THIS CLOSES IT. The birthday
+  // pause created the first mid-year rest state this command can be reached from, and taking the
+  // latch off there would move `untilWeek` back to a week in the middle of an academic year and
+  // leave the half-spent year unbanked – a shape no reader of `college.years` expects (`isFullYear`,
+  // the album, the graduation card all assume years bank whole or are cut by an ENDING). The
+  // early return is answered at year boundaries, which is this function's own stated contract; the
+  // screen stands its button down too, and this is what makes that a rule rather than a decoration.
+  if ((college.pendingYearStart ?? null) !== null) {
+    throw new Error('The year she started is still running – it finishes first, then she can come back on tour')
+  }
   leaveCollegeState(world)
   world.ending = null
   addEvent(world, {

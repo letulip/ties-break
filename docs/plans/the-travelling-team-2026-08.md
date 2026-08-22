@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: economy
 canonical: false
-last-reviewed: 2026-08-19
+last-reviewed: 2026-08-22
 ---
 
 # The travelling team – masseur and psychologist (owner, round 23 item 9)
@@ -124,20 +124,38 @@ be written, the effect is in the wrong place – fix the effect, not the sentenc
 
 ## 5. Sequencing
 
-1. **Salaries only, no travel** – both hires, weekly cost, measurable effect. One screen, one ECONOMY
-   block, no new travel logic at all.
+⚠⚠ **RE-CUT 22.08, BY THE OWNER'S RULING: the psychologist leaves step 1.** As first written, this
+plan and `the-private-life.md` §4 contradicted each other – step 1 shipped his salary while that
+section (and §4 above) proves his only LEGIBLE effect is shortening a recovery curve that does not
+exist before the private-life layer. His channels here («composure under pressure», «the tilt after
+a loss») are not in the engine at all. A salary the player cannot see working is this file's own
+named failure, so the owner split the step:
+
+1. **The masseur, whole** – salary + the body effect (condition recovery, the injury tail: channels
+   that exist today) – and the SENTENCE named before it ships, per §4's rule: a room-note-style line
+   about the weeks his hands did not lose, quoting no figure.
 2. **The masseur's fare**, through `coachTravelFareFor`'s existing rule asked for a second seat.
 3. **Measure against the sponsor.** Re-run the travel line with three seats and check that Meridian's
    half lands where §3 predicts.
-4. Only then tune the effects.
+4. Only then tune the effect.
+
+⭐ **The psychologist ships with `the-private-life.md` STEP 5**, where shortening the 3b recovery
+makes him legible without a single number. His salary, his remote-only ruling and §6's open travel
+question all move there with him.
 
 ⚠ Each step needs a bench arm and a spec recording predicted vs measured (`CLAUDE.md` invariant 4),
-and step 1 alone is a save-schema move – the hires must persist.
+and step 1 alone is a save-schema move – the hire must persist.
+
+⚠ **AT COLLEGE, THE COACH'S RULE APPLIES TO EVERY SEAT (round 24):** the retainer is SUSPENDED, not
+cancelled – the coach's own precedent – and hiring inside the freeze refuses with the college
+sentence rather than the ended one (`COLLEGE_FREEZE_REFUSAL`). No specialist decision should reach a
+girl the programme is coaching.
 
 ## 6. Open for him
 
 1. **Does the psychologist travel at his option?** Ruling says remote, but a paid trip to a Slam is a
-   good decision to own.
+   good decision to own. *(Deferred with him, 22.08 – asked again when the private-life layer builds
+   him.)*
 2. **Does the masseur unlock earlier than the professional career?** Alice's physio line is already
    $3,056/yr at 18, so the body is being paid for before the tour.
 3. **Is «профессионально звучит» a target?** He asked it as a question. A ~340k staffed year IS the

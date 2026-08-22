@@ -324,6 +324,63 @@ export function fieldUrl(stem: string): string {
   return `${import.meta.env.BASE_URL}${FIELD_DIR}${stem}.webp`
 }
 
+// =================================================================================================
+// ⭐⭐ A FIXTURE WITH NO RUNG – round 24 #4 (owner: «Картинки для студенческих турниров мне кажется
+// можно взять из национальной ветки. Они домашние и уютные… как раз для студенческих лиг»)
+// =================================================================================================
+//
+// ⚠ WHY IT CANNOT USE `ART_TIER_BORROWS`. That table maps one TierId onto another, and the fixtures
+// this is for have no tier at all – deliberately. `world/college.ts`'s own note on `callUpRubberId`
+// says it "NAMES NO TIER ON PURPOSE", because `occasionOf` derives the commentary's occasion from the
+// event id and a rubber "genuinely has no rung behind it". Inventing a tier to hang a picture on
+// would put a rung back into the one fixture that is defined by not having one.
+//
+// So an OCCASION borrows a tier's art set by name, and the tier system is untouched.
+//
+// ⚠ THE SET IS THE OWNER'S CHOICE AND HIS REASON IS RECORDED: the domestic sets read as home courts,
+// which is the right register for a fixture played for a country or a college rather than for points.
+// `national` also carries the only two surface-neutral establishing frames in the whole catalogue
+// (`national-venue-1/2`), so a fixture whose surface is unknown still has an honest picture.
+export type RunglessOccasion = 'nations-cup' | 'college-league'
+
+const OCCASION_ART: Record<RunglessOccasion, TierId> = {
+  'nations-cup': 'national',
+  'college-league': 'regional',
+}
+
+/** The candidate pool for a fixture that has no rung – the same ladder `venueCandidates` walks, asked
+ *  about the borrowed set instead of about a tier of its own. Never empty, for the same reason. */
+export function occasionCandidates(occasion: RunglessOccasion, surface: Surface): string[] {
+  return venueCandidates(OCCASION_ART[occasion], surface)
+}
+
+/** What a rungless fixture's card binds to its `<img>`.
+ *
+ *  ⚠ NO CONSUMER YET, AND THAT IS STATED RATHER THAN HIDDEN. The college year screens are where a
+ *  call-up gets a card at all (docs/plans/college-as-a-place.md §1-2); today a rubber is a feed row
+ *  and feed rows carry no venue art. This ships now because the DECISION is the owner's and was made
+ *  now - it is a pure function with tests, so it cannot silently mislead the way an unread constant
+ *  in a measurement can. */
+export function occasionArtUrl(
+  occasion: RunglessOccasion,
+  surface: Surface,
+  eventId: string,
+  seed: string,
+): string {
+  const tier = OCCASION_ART[occasion]
+  const ring = venueVariants(tier, surface)
+  if (ring.length < 2) return fieldUrl(ring[0])
+  // ⚠⚠ ITS OWN ORDINAL, AND THE FIRST DRAFT DID NOT HAVE ONE. Going through `venueArtStem` looked
+  // right and gave every fixture the SAME PHOTOGRAPH – caught by the test below on its first run.
+  // `venueOrdinal` counts an event's place in the SEASON CALENDAR and returns 0 for anything it
+  // cannot find there ("not a calendar id – still deterministic"), which is exactly correct for it
+  // and exactly wrong here: a rungless fixture is never on the calendar, so every one of them is the
+  // zeroth. Counting the id itself is the fact this door actually has.
+  const ord = [...eventId].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0)
+  const offset = Math.floor(rngFromSeed(`${seed}:venue:${occasion}:${surface}`)() * ring.length)
+  return fieldUrl(ring[(ord + offset) % ring.length])
+}
+
 /** What the Home next-tournament card binds to its `<img>`. */
 export function venueArtUrl(tier: TierId, surface: Surface, eventId: string, seed: string): string {
   return fieldUrl(venueArtStem(tier, surface, eventId, seed))

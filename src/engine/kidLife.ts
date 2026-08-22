@@ -179,6 +179,27 @@ export function schoolIsOver(week: number, birthMonth: number): boolean {
   return week >= schoolEndWeek(birthMonth)
 }
 
+/** ⭐⭐ THE NEXT 1 SEPTEMBER STRICTLY AFTER `week` – the week the next academic year opens on
+ *  (round 24 #5, docs/specs/college-departure-2026-08.md).
+ *
+ *  ⚠ STRICTLY AFTER, AND THAT IS THE DESIGN RATHER THAN A CONVENTION. The college fork is now ASKED
+ *  on `schoolEndWeek` – which is itself a season-offset-34 week – and the place she reserves is
+ *  taken up when the NEXT academic year starts, not the one whose September she is standing in. An
+ *  `>=` here would collapse ask and departure into one week and delete the year the redesign exists
+ *  to give back. The identity that makes the gap coherent (measured over all twelve birth months):
+ *  `schoolEndWeek + 52` is also the first academic-year start after her NINETEENTH birthday, so the
+ *  junior story runs out inside the gap and she leaves at 19.0–19.96 for every girl the game can
+ *  generate.
+ *
+ *  Same arithmetic family as `schoolEndWeek` one screen up – `SCHOOL_YEAR_TURNS_AT` is the one
+ *  September offset the whole module runs on – so the ask and the departure cannot disagree about
+ *  what an academic year is. Pure, total, zero draws. */
+export function nextAcademicYearStart(week: number): number {
+  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  const delta = (SCHOOL_YEAR_TURNS_AT - offset + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return week + (delta === 0 ? WEEKS_PER_YEAR : delta)
+}
+
 /** The COHORT'S school end, on the band clock (`ageAtWeek`), for the rivals who have no birth month.
  *
  *  The band's median birth month is 6.5 (`relativeAgeYears`), and `schoolCohortYear` only asks

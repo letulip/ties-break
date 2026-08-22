@@ -308,6 +308,13 @@ describe('#6b – on a career that really went', () => {
       stepCareerWeek(world, rng, POLICIES[1])
     }
     expect(world.fork, 'she reached the fork at nineteen').not.toBeNull()
+    // ⚠ ROUND 24: the walk exits the moment the fork opens, which is her nineteenth birthday's own
+    // week – and the real flow answers the BIRTHDAY first (blockingOverlay, the 12.08 ruling). An
+    // unanswered birthday would now refuse the first college press, exactly as it refuses a `+4`.
+    {
+      const age = pendingBirthday(world)
+      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+    }
 
     // Before the answer: out of school, no college, no college line.
     const before = toSnapshot(world).life
@@ -316,7 +323,22 @@ describe('#6b – on a career that really went', () => {
 
     answerFork(world, 'college')
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
-    resumeFromCollege(world, rng)
+    // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
+    // SAME player-policy step the career arrived on (it enters, plays and closes its own reveals;
+    // a bare tick would strand one open and the departure never resolves past it).
+    for (let i = 0; i < 56 && world.ending === null; i++) {
+      world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      const age = pendingBirthday(world)
+      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      stepCareerWeek(world, rng, POLICIES[1])
+    }
+    // Press-answer-press (round 24): the year pauses on her birthday so the gift can be answered.
+    for (let press = 0; press < 3 && world.college!.years.length === 0; press++) {
+      resumeFromCollege(world, rng)
+      const age = pendingBirthday(world)
+      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+    }
     // ONE year lived, and she is still enrolled – the state the shipped flow spends the four years in.
     const enrolled = toSnapshot(world).life
     expect(enrolled.schoolLabel).toBe(STAGE_LABEL.college)
@@ -349,10 +371,28 @@ describe('#6b – on a career that really went', () => {
       if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
       stepCareerWeek(world, rng, POLICIES[1])
     }
+    // ⚠ ROUND 24: her nineteenth (the fork's own week) is answered before the fork, as the real
+    // flow orders it – an unanswered birthday refuses the college press now.
+    {
+      const age = pendingBirthday(world)
+      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+    }
     answerFork(world, 'college')
-    for (let i = 0; i < ENDINGS.collegeYears && world.college!.doneWeek === null; i++) {
+    // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
+    // SAME player-policy step the career arrived on (see the leaving case above for why).
+    for (let i = 0; i < 56 && world.ending === null; i++) {
+      world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      const age = pendingBirthday(world)
+      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      stepCareerWeek(world, rng, POLICIES[1])
+    }
+    // Press-answer-press (round 24): each year pauses on her birthday week.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.college!.doneWeek === null; press++) {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)
       resumeFromCollege(world, rng)
+      const age = pendingBirthday(world)
+      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
     }
     expect(world.college!.doneWeek, 'the course is over').not.toBeNull()
     expect(world.college!.years.length).toBe(ENDINGS.collegeYears)

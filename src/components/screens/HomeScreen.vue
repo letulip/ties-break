@@ -26,6 +26,7 @@
 // The advance button is NOT here – it is App.vue's sticky bar, global on every tab (R13-12).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
+import { coachRoomBand } from '../../engine/world/coachMarket'
 import { LADDER_LABEL, rankChipTrack, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
@@ -53,6 +54,9 @@ import RankHelpDialog from '../RankHelpDialog.vue'
 import ConfettiBurst from '../ui/ConfettiBurst.vue'
 // THE INBOX (docs/specs/offers-and-the-inbox.md) – the popup behind the second tool, beside the bell.
 import InboxSheet from '../InboxSheet.vue'
+// ⭐⭐ ROUND 24 #2b/#3 – the college year, drawn as a card on this page instead of as a page of an
+// epilogue. See `collegeWeek` at the foot of this script for why the predicate is the ending.
+import CollegeYearCard from '../CollegeYearCard.vue'
 // The bell's dot and the App bar's Home dot read ONE rule from here - see the module header for the
 // bug that made the extraction necessary.
 import { useLetterWatermark, useNewsWatermark } from '../../composables/inboxCue'
@@ -502,6 +506,16 @@ const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> 
 const coachQuote = computed(() =>
   game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
 )
+
+/** ⭐ ROUND 24 #1 – the plain-language band, read off the engine's own note through the ONE splitter
+ *  (`coachRoomBand`), never a second `indexOf` here. Empty before there is anything to say.
+ *
+ *  The owner asked for it twice. Round 23: «Давай как-то по-другому оформим подсказки про уровень
+ *  девушки на карточке тренера. Может что-то вроде "она близка к своему потолку"…». It was built on
+ *  the Coach Market screen, and round 24 came back with «Слова для тренеров о потолке девочки ты
+ *  предложил, но в интерфейсе не поменял» – because THIS is the card he actually reads, every week,
+ *  and its line was five canned quotes per play style that know nothing about her. */
+const roomBand = computed(() => coachRoomBand(game.snapshot?.coachRoomNote ?? ''))
 
 
 // --- Season strip: REAL tier progress. Reads the kid's best finish per tier off the snapshot: a
@@ -968,6 +982,69 @@ function openRankHelp(): void {
   playSfx('clickSoft')
   showRankHelp.value = true
 }
+
+// =================================================================================================
+// ⭐⭐ ROUND 24 #2b / #3 – A COLLEGE WEEK IS A WEEK, AND IT HAPPENS HERE
+// =================================================================================================
+//
+// The owner, 20.08: «После выбора колледжа показывают фотоальбом как будто карьера закончилась» and
+// «Весь флоу колледжа перенести на домашний экран… или отдельный параллельный полноэкранный».
+//
+// ⚠ THE CHEAPER OF HIS TWO SHAPES IS THE RIGHT ONE, and this is it. Home already has a week, a
+// bottom control, a photograph and a news feed; a college week is a week with different content. A
+// second full-screen flow would duplicate all four and then have to be kept in step with them – the
+// DRY problem this project has spent two rounds removing.
+//
+// ⚠ WHY THE PREDICATE IS THE ENDING AND NOT `snapshot.inCollege`. Both are true through the freeze,
+// but they answer different questions: `inCollege` is "is she at a university this week" (it is what
+// the tick reads to charge the bill and to skip the sponsors), while THIS is "is the shell being
+// replaced by an epilogue". `ending.college` is the OPEN QUESTION's own view – it is non-null
+// exactly while the latch is on AND she has not left – so the screen that answers the question and
+// the flag that raises it cannot come apart. It also fails SAFE: a career that gets a real ending
+// mid-freeze (a career-ending injury; she is playing a lot of tennis) has `college` null on its
+// ending view, this returns false, and App.vue hands it to the epilogue, which is correct.
+const collegeWeek = computed(
+  () => game.snapshot?.ending?.ending.type === 'college' && game.snapshot.ending.college !== null,
+)
+const collegeProgress = computed(() => game.snapshot?.ending?.college ?? null)
+
+/** «Play the first year» / «Another year» – the same two words the epilogue's card used, off the
+ *  engine's own count.
+ *
+ *  ⭐ ROUND 24, THE BIRTHDAY: «Finish the year» while one is paused mid-flight. Her birthday stops
+ *  the college year (`resumeFromCollege` breaks on the birthday week so the gift dialog can be
+ *  answered), and the press after the cake continues THAT year – a button still reading «Another
+ *  year» there would be offering a year it is not going to start. `yearInProgress` is the engine's
+ *  own fact (`college.pendingYearStart`), so this label and the year the press spends cannot part. */
+const collegeYearLabel = computed(() =>
+  collegeProgress.value?.yearInProgress
+    ? 'Finish the year'
+    : (collegeProgress.value?.yearsDone ?? 0) === 0
+      ? 'Play the first year'
+      : 'Another year',
+)
+
+/** She may only leave a year she has actually spent. The engine refuses it too (`endCollegeEarly`
+ *  throws on a career with no banked year) – this is the screen agreeing with the rule rather than
+ *  being the rule (CLAUDE.md invariant 1).
+ *
+ *  ⭐ ROUND 24: ...and never mid-year. The birthday pause created the first mid-year rest state, and
+ *  the early return is answered at year boundaries – the engine refuses it there too (`The year she
+ *  started is still running`), so this is again the screen agreeing rather than deciding. */
+const canLeaveCollege = computed(
+  () => (collegeProgress.value?.yearsDone ?? 0) > 0 && !collegeProgress.value?.yearInProgress,
+)
+
+/** ⚠ THE TWO ANSWERS ARE THE BOTTOM CONTROL, and that placement is the item rather than a detail.
+ *  They are where a week is spent on every other week of the game, they are two buttons of ONE
+ *  WEIGHT sharing one class (ruling 4, 30.07: «a CTA pill beside a text link is an opinion in a
+ *  different font»), and putting them here is what lets the card above be a pure report. */
+async function resumeCollege(): Promise<void> {
+  await game.resumeFromCollege()
+}
+async function leaveCollege(): Promise<void> {
+  await game.endCollegeEarly()
+}
 </script>
 
 <template>
@@ -1161,6 +1238,12 @@ function openRankHelp(): void {
         </div>
       </div>
 
+      <!-- ⭐⭐ 2b. THE COLLEGE YEAR – the week's content, on the weeks she is at a university. It sits
+           immediately under her photograph, where the next-tournament card is the first thing read in
+           an ordinary season, because on these weeks it IS the week. Drawn only while the college
+           latch is on; every other week of every other career is byte-identical. -->
+      <CollegeYearCard v-if="collegeWeek" />
+
       <!-- 3. THE CARD GRID – the visual signature. Two of the four are doors, and they say so by
            lifting under the finger; the two that are not, do not move. -->
       <div class="card-grid">
@@ -1192,6 +1275,14 @@ function openRankHelp(): void {
               <p class="note-figure">{{ nextTravel }}</p>
             </div>
           </template>
+          <!-- ⚠ AND A COLLEGE WEEK SAYS WHY IT IS EMPTY. «Nothing entered yet – the calendar is on
+               the Season tab» is a nudge to go and enter something, and at college that is a door
+               into a refusal: the tour writes to nobody on a scholarship, and every entry command is
+               engine-refused while the latch is on. The card states the rule instead of inviting a
+               dead click. -->
+          <p v-else-if="collegeWeek" class="note-empty">
+            No tour entries while the scholarship runs – she plays for the programme.
+          </p>
           <p v-else class="note-empty">Nothing entered yet – the calendar is on the Season tab.</p>
         </Card>
 
@@ -1259,6 +1350,18 @@ function openRankHelp(): void {
           <div class="coach-body">
             <Eyebrow>Coach note</Eyebrow>
             <p class="coach-line">{{ coachQuote }}</p>
+            <!-- ⭐⭐ ROUND 24 #1 – WHERE SHE ACTUALLY STANDS, ON THE CARD HE SEES EVERY WEEK. Round 23
+                 #1 asked for a plain reading of her level on the coach card; it landed on the Coach
+                 MARKET screen instead - a page he opens rarely - so his verdict was exact. THIS is
+                 the coach card. His words are quoted beside `roomBand` in the script, because
+                 Cyrillic inside a <template> is forbidden (tests/round13-nav.test.ts).
+                 ⚠ THE QUOTE ABOVE IS NOT REPLACED. It is owner-approved copy from round 7 #5d, five
+                 lines per play style settling every four weeks, and it is his COACH's voice. This is
+                 a second, shorter line under it: the voice keeps saying what it says, and the card
+                 now also says the one thing the player was asking it for.
+                 ⚠ The band and nothing else - no digit, ever. `KidScreen` keeps her ceiling behind a
+                 fog of war and the market screen's own note (:757 there) is written to that rule. -->
+            <p v-if="roomBand" class="coach-room">{{ roomBand }}</p>
             <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
                  appears only when there is a him. -->
             <p v-if="coachSignature" class="coach-sign">{{ coachSignature }}</p>
@@ -1370,6 +1473,40 @@ function openRankHelp(): void {
         </div>
       </Card>
     </ScreenShell>
+
+    <!-- ⭐⭐ THE BOTTOM CONTROL ON A COLLEGE WEEK – the two answers, and nothing else.
+         It stands where App.vue's floating week button stands (that bar is hidden while the latch is
+         on, because `advanceWeeks` refuses to tick a single week behind an ending and a control that
+         cannot work is R10-16's own bug). The geometry is the same: fixed, above the tab bar, inside
+         the same 520px column, and the room the shell reserves under Home is already paid for.
+
+         ⚠ TWO BUTTONS OF ONE WEIGHT, SHARING ONE CLASS. Ruling 4 (30.07), the same discipline the
+         fork at nineteen keeps: «a CTA pill beside a text link is an opinion in a different font».
+         Neither of these is the page's CTA and neither is a link.
+         ⚠ AND THE LEAVE ANSWER IS ABSENT BEFORE THE FIRST YEAR IS SPENT, because `endCollegeEarly`
+         throws on a career with no banked year – the screen agreeing with the engine's rule.
+
+         ⚠⚠ AND IT STANDS DOWN OVER AN OPEN REVEAL, which is round 24 rule 2 answered from the UI
+         side. `resumeFromCollege` REFUSES to spend a year while a tournament is still waiting to be
+         resolved (COLLEGE_REVEAL_REFUSAL) – a refusal that closes a whole class of silent failure and
+         must not be routed around. Before this wave that state had no exit at all, because the
+         epilogue covered the shell and nothing could draw the reveal; now the shell is up, so the
+         one control that clears it – App.vue's global resume button, plus `TournamentFlow` itself –
+         is on screen, and drawing a second bar over it would offer a press that can only be refused. -->
+    <div v-if="collegeWeek && !game.snapshot?.pending" class="college-bar">
+      <button class="college-answer" type="button" :disabled="game.busy" @click="resumeCollege">
+        {{ collegeYearLabel }}
+      </button>
+      <button
+        v-if="canLeaveCollege"
+        class="college-answer"
+        type="button"
+        :disabled="game.busy"
+        @click="leaveCollege"
+      >
+        Back on tour now
+      </button>
+    </div>
 
     <MatchReplay v-if="replayMatch" :match="replayMatch" @close="replayMatch = null" />
     <RankHelpDialog v-if="showRankHelp" @close="showRankHelp = false" />
@@ -2106,6 +2243,21 @@ button.note-card:active:not(:disabled) {
   text-wrap: pretty;
 }
 
+/* ⭐ ROUND 24 #1 – the band, under his line and above his name. Smaller and quieter than the quote:
+   the quote is his VOICE and this is a READING, so it must not shout over him. Accent-toned because
+   it is the one thing on this card the player came looking for.
+   ⚠ NO WIDTH OR HEIGHT OF ITS OWN. `.coach-card` is `card-short` and the note has to keep fitting a
+   375px phone with the portrait beside it - a fixed size here is how that stops being true one
+   sentence later. `tests/component/round24-coach-card.test.ts` measures the box instead. */
+.coach-room {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.36;
+  font-weight: 600;
+  color: var(--accent);
+  text-wrap: pretty;
+}
+
 /* His words need the room, so the text column starts past the opaque part of the portrait and the
    note is free to run to the bottom of the card. */
 .coach-line {
@@ -2241,5 +2393,66 @@ button.note-card:active:not(:disabled) {
   color: var(--accent);
   border-color: var(--accent);
   background: transparent;
+}
+
+/* --- ⭐⭐ ROUND 24 #3 – THE COLLEGE WEEK'S BOTTOM CONTROL ---------------------------------------
+   The same box as the shell's floating week strip (src/style.css): fixed, centred in the 520px
+   column, 58px clear of the tab bar, `pointer-events: none` so the strip itself never eats a tap.
+   What differs is that it holds TWO controls, so it has a gap and its buttons may shrink.
+   ⚠ THE SHELL'S OWN CLASS NAME IS NOT WRITTEN ANYWHERE IN THIS FILE, and that is the guard rather
+   than a style: `tests/round13-nav.test.ts` asserts no tab screen carries it, because a screen that
+   draws its own advance bar is how the app grows a second, unbudgeted way to spend a week.
+
+   ⚠ NEITHER BUTTON IS THE CTA (ruling 4). `.next-week-btn` is the app's one lime pill and it is
+   deliberately NOT what these are: the panel tone with a hairline is the app's neutral control, and
+   both answers wear it identically. A lime one beside a grey one would be the recommendation this
+   card is not allowed to make.
+   ⚠ AND `min-width: 0` IS LOAD-BEARING AT 320px. The shell's single pill carries a 206px minimum,
+   which is right for one and impossible for two – `tests/component/college-second-act.test.ts`
+   mutates exactly that back in and watches the pair break the viewport. */
+.college-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 58px;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+  pointer-events: none;
+  z-index: 39;
+}
+
+.college-answer {
+  pointer-events: auto;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 240px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.college-answer:hover:not(:disabled),
+.college-answer:focus-visible {
+  border-color: var(--accent);
+  color: var(--ink);
+  background: var(--panel);
+}
+
+.college-answer:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 </style>

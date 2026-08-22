@@ -24,7 +24,7 @@ import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
 import { hasLiveOffer, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
-import { buildKidLife, FRIENDS_WINDOW, schoolEndWeek, schoolIsOver } from '../kidLife'
+import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
 // v54 / round-23 #6b: the length of the course and the place she agreed to pay for. Both are leaves
 // (`ending.ts` is a constants module; `collegeOffer.ts` imports nothing but types and `Rng`), so
 // neither closes a cycle back into this file the way `world/college.ts` would.
@@ -819,6 +819,18 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // the first thing the owner saw. One clock now, and `birthdayTurning` below reads the same one.
     ageYears: kidAgeAt(world, world.week),
     schoolEndsWeek: schoolEndWeek(world.profile.birthMonth),
+    // ⭐⭐⭐ ROUND 24 #5 – the week she leaves for college, in its two live states (see the field's
+    // own doc in protocol.ts): the OPEN fork shows the prospective September the college answer
+    // would book; the HOLD shows the booked one. Null everywhere else – enrolled, terminal ending
+    // (a voided reservation never resurfaces), other answers, no fork yet.
+    collegeDepartsWeek:
+      world.ending === null && world.college === null && world.fork !== null
+        ? world.fork.answer === null
+          ? nextAcademicYearStart(world.fork.askedWeek)
+          : world.fork.answer === 'college'
+            ? (world.fork.departsWeek ?? null)
+            : null
+        : null,
     fundsCents: world.fundsCents,
     profile: world.profile,
     plan: world.plan,

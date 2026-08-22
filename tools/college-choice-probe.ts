@@ -28,7 +28,7 @@
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
-import { resumeFromCollege } from '../src/engine/world'
+import { chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { skillMeanOf } from '../src/engine/world/college'
 import { COLLEGE_TIERS, COLLEGE_TIER_ORDER, canAfford, coveredShareOf, familyCanPayPerYearCents } from '../src/engine/collegeOffer'
@@ -135,7 +135,11 @@ for (let p = 0; p < PRESETS.length; p++) {
       answerFork(at.world, 'college', tier)
       let firstYearTuition = 0
       for (let y = 0; y < YEARS && at.world.ending?.type === 'college'; y++) {
-        resumeFromCollege(at.world, at.rng)
+        // Round 24: the year pauses on her birthday week – press, answer, press again.
+        for (let press = 0; press < 3 && at.world.college!.years.length === y && at.world.ending?.type === 'college'; press++) {
+          resumeFromCollege(at.world, at.rng)
+          if (pendingBirthday(at.world) !== null) chooseGift(at.world, 'day')
+        }
         // ⚠⚠ THE LEDGER CHECK IS TAKEN AFTER ONE YEAR AND NOT AFTER FOUR, AND THAT IS THE INSTRUMENT
         // BEING HONEST ABOUT ITS OWN WINDOW. `financeWeeks` keeps a ROLLING 60 WEEKS, so a four-year
         // sum off it reads about a quarter of what was actually charged and looks exactly like an

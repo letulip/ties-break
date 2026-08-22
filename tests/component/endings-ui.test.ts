@@ -129,25 +129,30 @@ describe('the album', () => {
     w.unmount()
   })
 
-  it('⚠ COLLEGE offers another year instead of a new career – the only ending that resumes', async () => {
-    // ⭐ GUARD RE-AIMED, NOT WEAKENED (P5, 16.08, docs/specs/college-as-a-second-act-2026-08.md).
-    // The claim is unchanged and it is the load-bearing one: on a college ending the epilogue offers
-    // a WAY BACK and never the hand-off. What moved is the offer – one pill reading «Four years
-    // later –» became the year just lived plus two answers, because the sport's own case is an early
-    // return (Diana Shnaider left NC State after about a season). The college block's own content is
-    // covered in tests/component/college-second-act.test.ts; this asserts the branch.
+  it('⚠ COLLEGE offers a way back instead of a new career – the only ending that resumes', async () => {
+    // ⭐ GUARD RE-AIMED TWICE, NEVER WEAKENED. The claim is unchanged and it is the load-bearing one:
+    // on a college ending this screen offers a WAY BACK and never the hand-off.
+    //   P5 (16.08) moved the offer from one pill reading «Four years later –» to the year just lived
+    //   plus two answers, because the sport's own case is an early return (Diana Shnaider left NC
+    //   State after about a season).
+    //   ⭐⭐⭐ ROUND 24 (#2b) moved the year block OFF THIS SCREEN ENTIRELY – college weeks run on the
+    //   Home shell now, because showing the player the album mid-career read as «карьера
+    //   закончилась». So what reaches the epilogue on a college ending is the ONE state App.vue's
+    //   `showCollege` does not route away: type 'college' with NO progress view, which no live path
+    //   produces and which must still not dead-end. That is the branch asserted here, and it is why
+    //   `college` is null in the fixture. The live surface is
+    //   tests/component/college-second-act.test.ts (Home) and the routing itself is
+    //   tests/component/round24-college-shell.test.ts.
     patchSnapshot({
       ending: endingView('college', {
         ending: { type: 'college', week: 265, ageYears: 19, detail: 'x', resumesWeek: 317 },
         handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: 317, resumesAgeYears: 20 },
-        // ⚠ `rubbers` IS EMPTY HERE BECAUSE THE YEAR HAS NOT BEEN LIVED (`last: null`), not because
-        // the field is optional – the college wave made the year's rubbers watchable off this view.
-        college: { yearsDone: 0, totalYears: 4, last: null, final: false, billPerYearCents: 8_673_00, tier: 'state', rubbers: [] },
+        college: null,
       }),
     })
     const w = mount(EndingScreen)
     for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
-    expect(w.text()).toContain('Play the first year')
+    expect(w.text()).toContain('Another year')
     expect(w.text()).not.toContain('Raise another')
     w.unmount()
   })
@@ -185,7 +190,7 @@ describe('the fork at nineteen', () => {
     // result before nineteen would cost her the academy. It cannot – they are separate mechanisms –
     // so the word had to stop being shared. The assertion follows the button; the claim is
     // unchanged, and it is stricter for naming college explicitly.
-    expect(w.text()).toContain('Take the college place')
+    expect(w.text()).toContain('Reserve the college place')
     expect(w.text()).toContain('Stop here')
     // ⚠ NO PRIMARY. «Stop» must be able to be the right answer, so the card may not style one of
     // them as the correct one - all three carry the same class and none is a PrimaryPill.
@@ -228,7 +233,7 @@ describe('the fork at nineteen', () => {
       patchSnapshot({ fork: { askedWeek: 265, ageYears: 19, ...stale } as never })
       const w = mount(ForkDialog)
       expect(w.findAll('.fork-answer'), `stale ${JSON.stringify(stale)}`).toHaveLength(3)
-      expect(w.text()).toContain('Take the college place')
+      expect(w.text()).toContain('Reserve the college place')
       expect(w.findAll('.tb-pill'), 'and still no primary').toHaveLength(0)
       w.unmount()
     }

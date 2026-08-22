@@ -41,7 +41,7 @@
 // letter reports what actually happened and against which number. An obligation that fails silently
 // is the same invisibility one step later.
 import { computed } from 'vue'
-import type { EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
+import type { AcademyLetterTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import { dealUntilWeek } from '../engine/offers'
@@ -105,6 +105,40 @@ const entryWithdrew = computed(() => entryTerms.value.cancelled === true && !ent
 // real suspension through `chargeMandatoryPenalty` and reads the paper rather than the source.
 const isTour = computed(() => props.offer.kind === 'tour')
 const tourTerms = computed(() => props.offer.terms as TourLetterTerms)
+
+// ⭐⭐ THE ACADEMY (round 24 #1). The owner, 20.08: «сейчас как-то незаметно появляется один
+// маленький попапчик сверху, который призывает изучить scholarship и кнопка dismiss. Я бы и рад
+// изучить, да только далее не знаю где.» The toast is the round-23 stop and it stays; this is the
+// «где». Three notices, one sheet, no buttons – a scholarship is not a decision the parent takes.
+//
+// ⚠ NO LETTERHEAD, AND THAT IS A FACT ABOUT THE ENGINE RATHER THAN A MISSING PICTURE. The two desks
+// print no mark because they have no brand; the academy prints none because `engine/academy.ts`
+// models it as a level and a need factor and never names an institution. There is no art to reach
+// for and none may be made for it, so the sheet signs itself the way the desks' do.
+//
+// ⚠ AND THE VOICE IS THE FAMILY'S ONE PIECE OF GOOD NEWS. Two of the three notices are somebody
+// deciding to pay for her, so the paper reads as a letter from people who want to back her. The
+// ending is the same voice at the other end: it states what happened and what it costs from here,
+// and – the round-23 #2 lesson – it says both as a PRESENCE («her kit is hers», «her travel is the
+// family's again») rather than as a denial of things nobody proposed.
+const isAcademy = computed(() => props.offer.kind === 'academy')
+const academyTerms = computed(() => props.offer.terms as AcademyLetterTerms)
+/** Rose or fell – the whole content of a review letter is the MOVE, so the sheet names its direction
+ *  in the same word the feed line uses. */
+const academyRose = computed(() => academyTerms.value.sharePct > (academyTerms.value.wasPct ?? 0))
+/** WHY IT STOPPED, in the academy's own voice. Each reason is a different story and the letter tells
+ *  the true one; none of them tells the player off, which is the same ruling the tour's letters keep
+ *  («мы ни за что не наказываем» – the game states prices, it does not scold). */
+const academyEndBody = computed(() => {
+  const t = academyTerms.value
+  if (t.reason === 'aged-out') {
+    return 'Our programme is a junior one and she has grown out of the age we can fund, so this is where our part of it finishes. She was ours for a good stretch of it.'
+  }
+  if (t.reason === 'stopped-playing') {
+    return 'What we fund is a player who is out competing, and this year there were too few tournaments behind her for us to carry it on.'
+  }
+  return 'We have read her year and we are not able to go on backing her through the next one. It is a decision about our list rather than about her.'
+})
 
 const terms = computed(() => props.offer.terms as KitOfferTerms)
 
@@ -290,6 +324,25 @@ const settled = computed(() => {
           <li>Her place goes to the next name on the list. We hope to see her back soon.</li>
         </ul>
       </template>
+      <!-- ⭐ ROUND 24: the college freeze releases every entry that was still outstanding when it
+           started, so the desk writes its own arm rather than falling through. It is written like the
+           injury one – WE acted, the money is back – but with the two sentences that are only true
+           here: nothing is recorded against her because there was nothing to record, and the place
+           is held open rather than mourned. No price and no apology; see `REFUSED_PAST_DEADLINE`
+           in engine/world/entries.ts for the ruling that this letter is the receipt for. -->
+      <template v-else-if="entryTerms.releasedBy === 'college'">
+        <p class="offer-body">
+          We have taken her name off the entry list for the {{ entryTerms.label }}
+          ({{ weekRange(entryTerms.eventWeek) }}). She has accepted a college place, so she is off the
+          tour for the next few years – rather than hold a spot she cannot travel to, we have released
+          her ourselves.
+        </p>
+        <ul class="offer-terms">
+          <li>The entry fee is refunded in full, and the year's entry is returned.</li>
+          <li>Nothing is recorded against her – this is not a withdrawal, and there is no charge.</li>
+          <li>Her name comes back on the list the day she wants it there. Good luck at school.</li>
+        </ul>
+      </template>
       <!-- ⚠ THE FALLBACK IS DELIBERATELY GENERIC RATHER THAN THE NEAREST NICE PARAGRAPH, and that
            is the whole lesson of this fix. A future `EntryReleaseReason` that fell through to the
            voluntary arm would tell the player he withdrew her - which is the bug, arriving again by
@@ -378,6 +431,57 @@ const settled = computed(() => {
         </ul>
       </template>
       <p class="offer-sign-off">– Tour office</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <!-- ⭐⭐ THE ACADEMY (round 24 #1) – the destination the round-23 toast never had. Arrival, a share
+       that moved, and the end of the run: three notices on one sheet, no mark, no buttons. Every
+       number on it comes off `terms`, which is what the review had in its hand the week it wrote –
+       see AcademyLetterTerms for why a persisted letter may not carry an assembled sentence. -->
+  <article v-else-if="isAcademy" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <template v-if="academyTerms.notice === 'arrived'">
+        <p class="offer-body">
+          We have been watching her play, and we would like to take her on. From here we pay
+          {{ academyTerms.sharePct }}% of what it costs to get her to tournaments – the fares and the
+          nights away, on every trip she makes.
+        </p>
+        <ul class="offer-terms">
+          <li>{{ academyTerms.sharePct }}% comes off each travel bill as it is charged, so there is nothing to claim back.</li>
+          <li v-if="academyTerms.grantCents">
+            A kit grant of {{ formatCents(academyTerms.grantCents) }} comes with this – rackets, strings and shoes for the season.
+          </li>
+          <li>We look at it again at the end of each season, and the share moves with her year.</li>
+        </ul>
+      </template>
+
+      <template v-else-if="academyTerms.notice === 'reviewed'">
+        <p class="offer-body">
+          We have read her season. From this year our share of her travel
+          {{ academyRose ? 'goes up' : 'comes down' }} to {{ academyTerms.sharePct }}%, from
+          {{ academyTerms.wasPct }}%.
+        </p>
+        <ul class="offer-terms">
+          <li>We have backed her since {{ weekLabel(academyTerms.sinceWeek) }}, and this carries that on.</li>
+          <li v-if="academyTerms.grantCents">
+            This year's kit grant is {{ formatCents(academyTerms.grantCents) }}.
+          </li>
+          <li>The next look is at the end of the coming season.</li>
+        </ul>
+      </template>
+
+      <template v-else>
+        <p class="offer-body">{{ academyEndBody }}</p>
+        <ul class="offer-terms">
+          <li>We backed her from {{ weekLabel(academyTerms.sinceWeek) }} to {{ weekLabel(offer.week) }}.</li>
+          <li>The kit she has is hers, and from here her travel is the family's again.</li>
+          <li>If her tennis brings her back to us, our list is open every off-season.</li>
+        </ul>
+      </template>
+      <p class="offer-sign-off">– The academy</p>
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>

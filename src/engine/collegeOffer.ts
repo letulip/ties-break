@@ -528,9 +528,103 @@ export function recruitedAtAll(juniorScore: number): boolean {
   return juniorScore > 0
 }
 
-/** ⚠ IS THIS PLACE HERS TO PICK? Residence, and nothing else. Primary law, not a balance knob. */
+// =================================================================================================
+// ⭐⭐⭐ WHY A PLACE IS NOT HERS – round 24 #2a, and it is the HOUSE RULE rather than a nicety
+// =================================================================================================
+//
+// The owner, after a played career: «непонятно почему самый дешёвый нельзя выбрать». The cheapest
+// rung was drawn dead and the card typed its own explanation into the template – a sentence beside
+// the boolean rather than a sentence OFF it. This project already refuses that shape everywhere
+// else: `EntryStatus.ineligibleReason` carries a CODE and `ineligibleDetail` carries "THE ENGINE'S
+// OWN SENTENCE", and its docstring names exactly the failure being fixed here – *"the fallback must
+// not be a SECOND GUESS at which refusal this was"*. SeasonScreen's lock pill guessed once and
+// printed "Exams this week" on a rung a twenty-year-old was age-locked out of.
+//
+// ⚠⚠ SO `open` IS NOW DERIVED FROM THE REASON, AND NEVER THE OTHER WAY ROUND. `tierShutFor` is the
+// ONE decision; `tierOpenTo` is `tierShutFor(...) === null`. A rung cannot be shut without a rule in
+// the table below naming it, because the table is the only thing that can return `false`.
+//
+// ⚠ AND THE READOUT ASKS THE SAME TABLE. `quoteShutFor` takes the engine's own persisted verdict
+// (`quote.open` – the identical boolean `answerFork` re-validates on) as its INPUT and only names
+// the rule behind it, so the card and the engine cannot disagree about WHETHER a rung is shut: there
+// is one boolean and the screen does not compute a second one. Re-deriving from `country` at render
+// time would have been exactly the parallel judgement this comment is about.
+
+/** ⚠ ONE CODE PER RULE THAT CAN SHUT A PLACE. Adding a member without copy in
+ *  `COLLEGE_SHUT_DETAIL` is a compile error – the map is a total `Record`. */
+export type CollegeShutReason = 'not-a-resident'
+
+/** ⚠⚠ EVERY RULE THAT CAN SHUT A PLACE, AS DATA – read by the DECISION and by the READOUT, which is
+ *  what makes one question have one answer.
+ *
+ *  The split is the load-bearing part. `appliesTo` is a property of the PLACE and `firesFor` is a
+ *  property of the FAMILY, so a shut quote's rule is recoverable from the tier alone – which is all
+ *  a persisted quote carries. A rule that needed the family to know whether it even applies could
+ *  not be reported off a saved offer, and would have to ride on the quote instead (a save-schema
+ *  move, CLAUDE.md invariant 3).
+ *
+ *  ⚠ ORDER IS REPORTING ORDER. With one rule that is exact; a second rule joins the list in the
+ *  order the card should name it, the same contract `StopReason`'s own priority list keeps. */
+const COLLEGE_SHUT_RULES: ReadonlyArray<{
+  reason: CollegeShutReason
+  appliesTo: (tier: CollegeTier) => boolean
+  firesFor: (country: string) => boolean
+}> = [
+  {
+    // ⚠ THE ONE PROPERTY HERE THAT IS NOT OURS. In-state versus out-of-state IS residence and a
+    // non-resident alien is never in-state anywhere (see `COLLEGE_TIERS`). Two places are always
+    // open, so nothing here can remove the college answer (owner, 16.08).
+    reason: 'not-a-resident',
+    appliesTo: (tier) => COLLEGE_TIERS[tier].residentOnly,
+    firesFor: (country) => country !== COLLEGE_OFFER.usCountryCode,
+  },
+]
+
+/** ⭐ THE ENGINE'S OWN SENTENCE FOR EACH REFUSAL – `ineligibleDetail`'s twin, one door along, and it
+ *  lives in the engine for the reason that field's own docstring gives: a client holding only the
+ *  code has to guess, and a guess is what printed the wrong refusal on the season card.
+ *
+ *  ⚠ IT IS A TOTAL `Record`, so a new `CollegeShutReason` cannot ship without its words.
+ *
+ *  ⚠ AND IT SAYS WHAT IS TRUE OF **THIS PLACE**, NOT WHAT SHE SHOULD DO ABOUT IT. Ruling 4 (30.07):
+ *  the fork «may not recommend», and "take one of the others instead" is advice. The other rows are
+ *  live on the same screen and say so by being pressable. */
+export const COLLEGE_SHUT_DETAIL: Record<CollegeShutReason, string> = {
+  'not-a-resident': 'The in-state price is only for residents of the state, and she is not one.',
+}
+
+/** ⚠⚠ IS THIS PLACE HERS TO PICK, AND IF NOT, WHY – THE ONE DECISION. `null` = it is hers.
+ *  Residence, and nothing else: primary law, not a balance knob. */
+export function tierShutFor(tier: CollegeTier, country: string): CollegeShutReason | null {
+  for (const rule of COLLEGE_SHUT_RULES) {
+    if (rule.appliesTo(tier) && rule.firesFor(country)) return rule.reason
+  }
+  return null
+}
+
+/** ⚠ DERIVED FROM THE REASON, so a rung cannot be refused without one. Every historical caller is
+ *  unchanged – this is the same boolean it always returned. */
 export function tierOpenTo(tier: CollegeTier, country: string): boolean {
-  return !COLLEGE_TIERS[tier].residentOnly || country === COLLEGE_OFFER.usCountryCode
+  return tierShutFor(tier, country) === null
+}
+
+/** ⭐⭐ THE SAME ANSWER, OFF A QUOTE THE PLAYER IS LOOKING AT – what the card reads.
+ *
+ *  ⚠⚠ IT TAKES `quote.open` AS ITS INPUT RATHER THAN RE-DECIDING. That boolean is the engine's own
+ *  verdict, persisted at the fork and re-validated by `answerFork` when she answers, so a screen
+ *  built on this function is reading the engine's decision and naming it – never holding a second
+ *  opinion about it (CLAUDE.md invariant 1).
+ *
+ *  ⚠ TOTAL ON A SHUT QUOTE BY CONSTRUCTION: `open: false` is only producible by a rule whose
+ *  `appliesTo` is true for that tier, and that is the only thing this looks for.
+ *  `tests/college-offer.test.ts` sweeps every tier x both residence classes and asserts the two
+ *  functions agree on all six, so the construction is checked rather than argued. */
+export function quoteShutFor(quote: Pick<CollegeQuote, 'tier' | 'open'>): CollegeShutReason | null {
+  if (quote.open) return null
+  for (const rule of COLLEGE_SHUT_RULES) {
+    if (rule.appliesTo(quote.tier)) return rule.reason
+  }
+  return null
 }
 
 /** ⚠⚠ THE ATHLETIC SHARE, AND ITS SIGNATURE IS STILL THE ARGUMENT.

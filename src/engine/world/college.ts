@@ -25,11 +25,19 @@ import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
 import { parentIncomeForWeekCents } from '../economy'
 import { NATIONAL_TEAM, callUpLine, callUpOpponent, rollCallUp, type CallUpOpponent } from '../nationalTeam'
+import {
+  COLLEGE_LEAGUE,
+  COLLEGE_LEAGUE_ROUNDS,
+  collegeLeagueLine,
+  collegeLeagueOpponent,
+  type CollegeLeagueResult,
+} from '../collegeLeague'
 import { simulateMatch } from '../match/engine'
 import { JUNIOR_TOUR } from '../season/tournament'
 import { kidMatchPlayerFor } from './player'
 import { KID_ID } from './constants'
 import { formatShortName } from '../../shared/format'
+import type { MatchPlayer } from '../match/types'
 import type { WorldMatch } from '../../shared/protocol'
 import {
   COLLEGE_TIERS,
@@ -39,7 +47,7 @@ import {
   type CollegeRecruitView,
   type JuniorRung,
 } from '../collegeOffer'
-import type { CollegeOffer, CollegeProgressView } from '../../shared/protocol'
+import type { CollegeLeagueRun, CollegeOffer, CollegeProgressView, CollegeState, CollegeYearStart } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidAgeYears } from './age'
 // ⚠ FROM ./ladder, NOT ./snapshot (TB-07). This file MUTATES the world; snapshot BUILDS the
@@ -182,6 +190,10 @@ export function resolveCallUp(world: WorldState): void {
     {
       ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
       skillMean: skillMeanOf(world.skills),
+      // ⭐⭐⭐ ROUND 24 – THE LETTER IS EARNED NOW. The owner, 21.08: «вызов в сборную можно будет
+      // опереть на результаты студенческого». `lastLeagueRun` is the championship the selectors have
+      // in front of them, and `null` – no championship on her record at all – means nobody writes.
+      leagueRoundsWon: lastLeagueRun(world.college!)?.roundsWon ?? null,
     },
     rngFromSeed(`${world.seed}:callup:${world.week}`),
   )
@@ -330,6 +342,194 @@ export function callUpRubbersOf(world: WorldState, week: number): WorldMatch[] {
     .map((e) => e.match!)
 }
 
+// =================================================================================================
+// ⭐⭐⭐ THE ONE TOURNAMENT THE YEAR IS GUARANTEED – round 24, the owner's design (21.08)
+// =================================================================================================
+//
+// «я бы хотел, чтобы как минимум 1 турнир в год колледжа был… какой-то студенческий турнир,
+// например. Тогда вызов в сборную можно будет опереть на результаты студенческого и тогда у нас
+// будет минимум 1, максимум 2 турнира на учебный год»
+//
+// ⚠⚠ WHAT WAS MEASURED, BECAUSE THE ITEM CAME FROM A MEASUREMENT. Over 12 careers × 4 years = 48
+// college years the year held three marked weeks: two squad trips that write no rows and cannot be
+// watched, and one call-up that was a bare roll – it landed in 19 of 48 (40%) and she took the court
+// in 17 (35%). **0.71 watchable matches per college year.** On two thirds of college years the
+// calendar held one openable row and it was empty. The epilogue used to hide that behind a photo
+// album; D1's Home shell shows it.
+//
+// ⚠ THE FLOOR IS ARITHMETIC, NOT PROBABILITY. `COLLEGE_LEAGUE.seasonWeek` is compared against
+// `world.week % WEEKS_PER_YEAR`, and a college year is exactly fifty-two consecutive ticked weeks –
+// so every season week occurs in it EXACTLY ONCE, for every career, at every tier, with no draw
+// anywhere near the question. That is what makes "at least one tournament a year" a guarantee rather
+// than a high probability.
+//
+// ⚠ AND THE CEILING IS THE SAME ARITHMETIC. Two season weeks carry a tournament – 12 and 14 – and
+// each occurs once, so a year holds at most two and never three, which is the owner's own bound.
+// `tests/college-league.test.ts` pins both ends over walked careers rather than asserting them here.
+
+/** IS THIS THE WEEK THE STUDENT CHAMPIONSHIP IS PLAYED? A season-week comparison and nothing else –
+ *  the same shape `callUpWeek` has, and guarded on `inCollege` for the same reason: this is a closed
+ *  student field and a girl on the tour is not in it. */
+export function collegeLeagueWeek(world: WorldState): boolean {
+  return inCollege(world) && world.week % WEEKS_PER_YEAR === COLLEGE_LEAGUE.seasonWeek
+}
+
+/** ⭐⭐⭐ THE CHAMPIONSHIP, PLAYED AND FILED. The college mirror of `resolveCallUp`, two weeks up the
+ *  calendar from it, and it is the week that decides whether that one happens at all.
+ *
+ *  ⚠ IT WRITES NO RESULT ROW AND NO CHEQUE, exactly like the call-up. `world.results` is untouched,
+ *  no rank is recomputed, and the `prizeCentsFor` invariant ("a result cannot award one without the
+ *  other") is not being bent – there is no result. She is an AMATEUR while she is there, which is
+ *  why the sponsors, the academy and the gear shop are all shut inside the freeze (W2-ENDINGS,
+ *  «nobody writes to an amateur»); a student fixture paying WTA/ITF points would make four years of
+ *  college a quiet ranking route and the fork would stop being a real choice.
+ *
+ *  ⚠ RNG: `seed:collegeleague:<week>`, its own sub-stream, derived at the call site and persisting
+ *  nothing – NOT `seed:callup:<week>`, so the call-up's four draws are byte-identical to what they
+ *  were before this shipped and the MAIN capture cannot see any of it (CLAUDE.md invariant 2). */
+export function resolveCollegeLeague(world: WorldState): void {
+  if (!collegeLeagueWeek(world)) return
+  const run: CollegeLeagueRun = { week: world.week, ...playCollegeLeague(world) }
+  world.college!.pendingLeague = run
+  addEvent(world, {
+    week: world.week,
+    type: 'milestone',
+    keep: true,
+    text: collegeLeagueLine(run),
+  })
+}
+
+/** ⭐⭐ DID THE CHAMPIONSHIP HAPPEN **THIS** WEEK – the predicate `resumeFromCollege` asks so the week
+ *  cannot pass in silence. A reading of state and never a return value, for `callUpPlayedThisWeek`'s
+ *  own reason: `resolveCollegeLeague` runs six frames deep inside `tickWeek` and a boolean threaded
+ *  back out is a report that gets dropped somewhere in the middle (round 23 #16's finding). */
+export function collegeLeaguePlayedThisWeek(world: WorldState): boolean {
+  return world.college?.pendingLeague?.week === world.week
+}
+
+/** ⭐⭐⭐ THE CHAMPIONSHIP THE SELECTORS HAVE IN FRONT OF THEM – the most recent one on her record,
+ *  or `null` if she has not played one yet.
+ *
+ *  ⚠⚠ IT LOOKS AT THE YEAR IN PROGRESS FIRST AND THE BANKED YEARS SECOND, WHICH IS THE WHOLE OF THE
+ *  CAUSALITY. In the ordinary case the championship (season week 12) and the call-up (season week
+ *  14) are two weeks apart in the SAME academic year, so the letter is read off the result the
+ *  player has just watched.
+ *
+ *  ⚠ AND THE FALLBACK TO A BANKED YEAR IS NOT A CONVENIENCE EITHER. A college year is fifty-two
+ *  weeks from whatever week she enrolled on, so for two enrolment weeks in fifty-two (season weeks
+ *  12 and 13) the call-up comes round BEFORE that year's championship. Those years read the previous
+ *  year's result – which is what a selection panel with a year-old form line would actually do – and
+ *  in year one there is no previous result, so no letter comes. Both cases are stated at
+ *  `NATIONAL_TEAM.callChanceNoLeague` and measured in `tests/college-league.test.ts`.
+ *
+ *  ⚠ ONE PERSISTED COPY AND A LOOKUP, NEVER A SECOND «last result» FIELD. Two copies of one fact is
+ *  how a cache comes to disagree with its source; this cannot, because there is only one source. */
+export function lastLeagueRun(college: CollegeState): CollegeLeagueRun | null {
+  if (college.pendingLeague) return college.pendingLeague
+  for (let i = college.years.length - 1; i >= 0; i--) {
+    const run = college.years[i].league
+    if (run) return run
+  }
+  return null
+}
+
+/** ⭐⭐ THE ROUNDS, PLAYED – the same `simulateMatch` every other match in this game goes through and
+ *  the same record shape, so `MatchReplay` replays them without knowing what they are. Deliberately
+ *  `playCallUpRubbers`' twin: one mechanism for "a real match that is worth nothing", not two.
+ *
+ *  ⚠⚠ IT IS A KNOCKOUT AND THE LOOP BREAKS ON A LOSS, which is the one structural difference from a
+ *  tie. A rubber set is a fixed three matches whatever happens in them; a draw is over when she
+ *  loses. So the number of matches is BETWEEN ONE AND THREE and is the result itself, which is
+ *  exactly what makes «at least one watchable match a year» true by construction.
+ *
+ *  ⚠ THE WHOLE DRAW IS COMPOSED, NOT ONLY THE ROUNDS SHE REACHES – `COLLEGE_LEAGUE_ROUNDS`
+ *  opponents, always, in the same order, before a ball is struck. Same post-draw discipline
+ *  `playCallUpRubbers` and `rollCallUp` keep: who was waiting in the final is a fact about the draw
+ *  rather than about how far she got, and a loop that composed as it went would make the eventual
+ *  champion's identity depend on her own first-round result.
+ *
+ *  ⚠ `friendly: true`, on `playCallUpRubbers`' own argument: the flag is the one predicate the radar
+ *  (R11-2), the avatar's emotion, the knock history and the Weekly Story read to decide whether a
+ *  match is EVIDENCE about her form, and a week that pays nothing and takes nothing must not
+ *  silently become evidence in four subsystems at once.
+ *
+ *  ⚠ ZERO BODY COST AND ZERO DEVELOPMENT, DELIBERATELY, AND IT IS A CUT RATHER THAN AN OVERSIGHT –
+ *  the identical cut `playCallUpRubbers` states. A condition drain, a layoff on a retirement, or
+ *  feeding `growWeek`'s `matchesThisWeek` are each a balance change, and CLAUDE.md invariant 4 says
+ *  those ship with a bench run and a spec. Adding the fixture was the ask; re-pricing the year was
+ *  not, and doing both at once would have made the measurement unreadable. */
+function playCollegeLeague(world: WorldState): CollegeLeagueResult {
+  const rng = rngFromSeed(`${world.seed}:collegeleague:${world.week}`)
+  const rounds = COLLEGE_LEAGUE_ROUNDS
+  const surface = COLLEGE_LEAGUE.surface
+  const draw: MatchPlayer[] = []
+  for (let r = 0; r < rounds; r++) draw.push(collegeLeagueOpponent(collegeLeagueMatchId(world.week, r), rng))
+  const kid = kidMatchPlayerFor(world, surface)
+  const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+  let roundsWon = 0
+  for (let r = 0; r < rounds; r++) {
+    const opp = draw[r]
+    const eventId = collegeLeagueMatchId(world.week, r)
+    const seed = `${world.seed}:collegematch:${world.week}:${r}`
+    const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
+    const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
+    const kidWon = result.winner === 0
+    // ⚠ A ROUND IS A MATCH AND SHE CAN STOP IN ONE – the same sentence `resolvePractice` and
+    // `playCallUpRubbers` write, and for the same reason: a short scoreline with no verb is the lie
+    // the number tells by itself.
+    const retiredId = result.retired ? (result.retired.side === 0 ? KID_ID : opp.id) : undefined
+    const verb = retiredId === KID_ID ? 'had to stop against' : retiredId ? 'was playing a retiring' : kidWon ? 'beat' : 'lost to'
+    const match: WorldMatch = {
+      round: r,
+      aId: KID_ID,
+      bId: opp.id,
+      winnerId: kidWon ? KID_ID : opp.id,
+      seed,
+      score,
+      ...(retiredId ? { retiredId } : {}),
+      eventId,
+      surface,
+      oppName: opp.name,
+      a: { ...kid },
+      b: { ...opp },
+    }
+    addEvent(world, {
+      week: world.week,
+      type: 'match',
+      friendly: true,
+      // ⚠ KEPT. `pruneResults` and `pruneEvents` delete everything else about these weeks and the
+      // year card is drawn after them; a week she is still allowed to watch has to still be in the
+      // feed to open. Twelve rows at the very outside, over a whole degree.
+      keep: true,
+      text:
+        `${COLLEGE_LEAGUE.label}: ${kidShort} ${verb} ` +
+        `${formatShortName(opp.name)} ${score} – no ranking points`,
+      match,
+    })
+    if (!kidWon) break
+    roundsWon += 1
+  }
+  return { roundsWon, rounds }
+}
+
+/** The id a championship match is filed under. ⚠ IT NAMES NO TIER, on `callUpRubberId`'s own
+ *  argument: `occasionOf` derives the commentary's occasion from the event id by reading the LAST
+ *  dash-segment as a tier, and a student championship genuinely has no rung behind it. The art side
+ *  answers the same question a different way – `occasionArtUrl('college-league', …)` borrows the
+ *  regional set by OCCASION, so a picture never needs a tier invented for it either. */
+export function collegeLeagueMatchId(week: number, round: number): string {
+  return `college-w${week}-r${round}`
+}
+
+/** ⭐ THE MATCHES OF ONE CHAMPIONSHIP, out of the feed – what the year card offers to replay. Derived
+ *  rather than persisted, exactly like `callUpRubbersOf`: the records live in `world.events` like
+ *  every other match in the game, so this adds no save field of its own. */
+export function collegeLeagueMatchesOf(world: WorldState, week: number): WorldMatch[] {
+  return world.events
+    .filter((e) => e.week === week && e.match !== undefined && e.match.eventId.startsWith(`college-w${week}-r`))
+    .map((e) => e.match!)
+}
+
 /** THE YEAR, BANKED. Called once per college year, on the week it ends.
  *
  *  ⚠ THE TWO ENDS ARE MEASURED RATHER THAN DERIVED LATER, and that is invariant 3's own argument in
@@ -349,17 +549,30 @@ export function bankCollegeYear(world: WorldState, start: CollegeYearStart): voi
     endRank: kidLadderRank(world, 'wta'),
     fundsDeltaCents: world.fundsCents - start.fundsCents,
     callUp: college.pendingCallUp,
+    // ⭐⭐ ROUND 24 – THE YEAR'S CHAMPIONSHIP, folded in beside the letter it earned. ⚠ NULL ON A YEAR
+    // CUT SHORT BEFORE WEEK 12 CAME ROUND (an ending mid-year), which is the honest record of a year
+    // that really held none – the same discipline `callUp: null` already keeps one line up.
+    league: college.pendingLeague,
   })
   college.pendingCallUp = null
+  // ⚠ CLEARED AFTER THE FOLD, AND `lastLeagueRun` IS WHY THAT IS SAFE. The result is not lost when
+  // this is nulled – it is now in `years[n].league`, which is the second place that lookup reads. A
+  // second «last result» field kept alive across the boundary would be a copy that can drift.
+  college.pendingLeague = null
+  // ⭐ v57 – AND THE PAUSED YEAR'S OPENING GOES WITH THEM, whose lifetime it shares: it exists from
+  // a birthday pause to the bank, and a start left standing here would open the NEXT year with the
+  // LAST year's four numbers. Written unconditionally so the key normalises to null the first time
+  // any career banks a year (the field is optional at enrolment – see `CollegeState`).
+  college.pendingYearStart = null
 }
 
-/** The measurements a year has to be opened with, taken before the first of its weeks ticks. */
-export interface CollegeYearStart {
-  week: number
-  skill: number
-  rank: number | null
-  fundsCents: number
-}
+/** The measurements a year has to be opened with, taken before the first of its weeks ticks.
+ *
+ *  ⚠ v57 – THE SHAPE MOVED TO `shared/protocol.ts` (`CollegeYearStart`), because the birthday pause
+ *  made it persisted state: a year interrupted mid-flight banks against its own opening, and by the
+ *  press that finishes it the opening is history. Re-exported here so every historical import keeps
+ *  resolving. */
+export type { CollegeYearStart }
 
 export function openCollegeYear(world: WorldState): CollegeYearStart {
   return {
@@ -414,6 +627,22 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
     // Read out of the feed by week, never persisted twice (see `callUpRubbersOf`). A year with no
     // letter has no week to read, and says so with an empty list rather than a null.
     rubbers: last?.callUp ? callUpRubbersOf(world, last.callUp.week) : [],
+    // ⭐⭐⭐ ROUND 24 – THE CHAMPIONSHIP THE YEAR IS GUARANTEED, and the matches it produced.
+    //
+    // ⚠ IT IS `lastLeagueRun` AND NOT `last?.league`, WHICH IS A DIFFERENT QUESTION BY ONE WEEK. The
+    // banked year answers "what did the year that just closed hold"; this answers "what is the most
+    // recent championship on her record" – and those differ for the two enrolment weeks whose year
+    // runs out between the championship and the following call-up. The card is reporting the fact
+    // the selectors are about to use, so it has to be the same fact they read.
+    league: lastLeagueRun(college),
+    leagueMatches: (() => {
+      const run = lastLeagueRun(college)
+      return run ? collegeLeagueMatchesOf(world, run.week) : []
+    })(),
+    // ⭐ v57 – IS A YEAR PAUSED MID-FLIGHT (her birthday stopped it)? Off the persisted fact itself,
+    // so the bottom control's «Finish the year» and the engine's own early-return refusal cannot
+    // disagree about whether one is.
+    yearInProgress: (college.pendingYearStart ?? null) !== null,
   }
 }
 

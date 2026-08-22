@@ -76,8 +76,8 @@ function assertSheetPresent(): void {
 
 /** THE TWO PRE-REVEAL SENTENCES, longhand. Written out rather than imported from the engine so the
  *  WORDS are pinned here too: a change to either has to be deliberate. */
-const NEAR = 'Where in that band – we will know in the off-season.'
-const FAR = 'Where in that band – too soon, ask next off-season.'
+const NEAR = 'Her progress – I will know in the off-season.'
+const FAR = 'Her progress – too soon, ask next off-season.'
 
 /** `--accent`, the app's yellow (src/style.css `:root`). Longhand for the same reason. */
 const ACCENT: [number, number, number] = [207, 225, 82]
@@ -239,7 +239,13 @@ describe('#7c the bar moves with the hire', () => {
     expect(shown.coachEdge.revealed, 'the off-season arrives and so does the verdict').toBe(true)
     const plaque = await plaqueOf(shown)
     expect(plaque).toBe(shown.coachEdge.plaqueLine)
-    expect(plaque, 'a place in the band, at last').toMatch(/ of that band\.$|end of that band\.$/)
+    // ⚠ THE SHAPE, NOT THE OLD WORDS (re-aimed 20.08). This arm's claim is that the REVEAL has landed
+    // – the sentence now names a placement instead of promising one – and it used to test that by
+    // matching the old "…of that band." tail. The wording was rewritten because the owner could not
+    // read it, so the tail is now the price; the claim is unchanged and still fails if the card is
+    // still saying "we will know in the off-season".
+    expect(plaque, 'a placement, at last').toMatch(/ I had hoped for\.$|the pace I expected\.$/)
+    expect(plaque, 'the card is still promising rather than telling').not.toMatch(/off-season/)
     expect(plaque).not.toBe(NEAR)
     expect(plaque).not.toBe(FAR)
   })

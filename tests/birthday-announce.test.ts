@@ -39,7 +39,7 @@ import {
   tickWeek,
   toSnapshot,
 } from '../src/engine/world'
-import { kidAgeExact, markBirthday } from '../src/engine/world/age'
+import { ageInWords, kidAgeExact, markBirthday } from '../src/engine/world/age'
 import { WEEKS_IN_SEASON, daysInBirthMonth, weekMonth, weekOfDate, weekYear } from '../src/shared/dates'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -279,33 +279,30 @@ describe('the age she is told she is turning', () => {
     expect(toSnapshot(world).diary.facts.birthdayAge).toBe(15)
   })
 
-  // ⭐ THE COLLEGE YEARS GET AN ENTRY WHERE THEY CANNOT GET A DIALOG (owner, 19.08: «колледжевые
-  // годы получают не попап, а свою запись в дневнике, что механику не ломает»). Both halves of that
-  // sentence are asserted: the entry appears, AND it does not become a prompt.
+  // ⚠ RE-AIMED BY ROUND 24, NOT DELETED. This block used to pin the 19.08 substitute – the college
+  // years got a SPECIAL feed line INSTEAD of the dialog («колледжевые годы получают не попап, а свою
+  // запись в дневнике»), with a distinct sentence per year – because a blocking prompt could not be
+  // answered inside a 52-week loop. The 22.08 ruling («да, день рождения делай») delivers the dialog:
+  // `resumeFromCollege` now PAUSES on the birthday week and the parent answers on the live Home
+  // shell (tests/college-birthday.test.ts owns that walk). So the substitute is GONE with its
+  // reason, and what this block pins now is the new truth about the LINE: one sentence for every
+  // birthday of her life, and `markBirthday` itself still records no parent decision – the record
+  // row is `chooseGift`'s alone.
   describe('the four college birthdays', () => {
-    const atCollegeWorld = (week: number) => {
-      const world = createWorld('bday-college', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
-      world.week = week
-      return world
-    }
-
-    it('writes its OWN line, not the one every other year gets', () => {
+    it('writes the SAME line every other year gets – the special college sentence is gone with its ruling', () => {
       const target = WEEKS_IN_SEASON - 1
-      const home = atCollegeWorld(target)
-      const away = atCollegeWorld(target)
-      markBirthday(home, false)
-      markBirthday(away, true)
-      const homeText = home.events.filter((e) => e.week === target).map((e) => e.text).join(' | ')
-      const awayText = away.events.filter((e) => e.week === target).map((e) => e.text).join(' | ')
-      // The age still reads the same way - it is the SAME birthday, told from further off.
-      expect(homeText).toMatch(/she is fifteen this week/i)
-      expect(awayText).toMatch(/she is fifteen this week/i)
-      // ...and it is a different sentence, which is the whole request.
-      expect(awayText, 'the college year is telling the identical line - the entry is not its own').not.toBe(homeText)
+      const world = createWorld('bday-college', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
+      world.week = target
+      markBirthday(world)
+      const text = world.events.filter((e) => e.week === target).map((e) => e.text).join(' | ')
+      expect(text).toMatch(/she is fifteen this week/i)
+      // ⚠ The 19.08 lines claimed the parent heard late («the news reached you late», «nobody
+      // thinks to tell you first») – flatly contradicted by a gift dialog asked THAT week. None of
+      // that register may survive in the one line that remains.
+      expect(text).not.toMatch(/college|reached you late|heard afterwards|tell you first/i)
     })
 
-    it('⚠ gives each college year a DIFFERENT line – four identical entries in a row is the thing this undoes', () => {
-      const lines = new Set<string>()
+    it('⚠ each college-age birthday still writes an entry, with the age she actually turns', () => {
       for (const age of [18, 19, 20, 21]) {
         const world = createWorld(`bday-college-${age}`, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
         // ⚠ THE WEEK IS FOUND, NOT COMPUTED. Since the date-clock fix a birthday lands on the week
@@ -321,22 +318,22 @@ describe('the age she is told she is turning', () => {
         }
         expect(target, `no week in twelve seasons turns her ${age}`).toBeGreaterThanOrEqual(0)
         world.week = target
-        markBirthday(world, true)
+        markBirthday(world)
         const said = world.events.filter((e) => e.week === target).map((e) => e.text)
         expect(said.length, `age ${age} wrote no entry at all`).toBeGreaterThan(0)
-        lines.add(said.join(' | '))
+        expect(said.join(' | ')).toMatch(new RegExp(`she is ${ageInWords(age)} this week`, 'i'))
       }
-      expect(lines.size, 'two college years are telling the same story').toBe(4)
     })
 
-    it('⚠⚠ and it is still NOT a prompt – the four-year jump must never stop for it', () => {
-      // The mechanic the owner asked us not to break: `resumeFromCollege` spends four years in one
-      // call, so a blocking birthday inside the freeze would strand it with nobody to answer.
+    it('⚠⚠ and the LINE still records no decision – the record row is chooseGift\'s alone', () => {
+      // Re-aimed: the four-year jump DOES stop for a birthday now (the pause is the feature, walked
+      // in tests/college-birthday.test.ts). What must stay true of `markBirthday` itself is that a
+      // feed line is not a parent's act – `world.birthdays` moves only when he answers.
       const world = createWorld('bday-college-nostop', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 2, coachTier: 'self' })
       world.week = WEEKS_IN_SEASON - 1
       const before = world.birthdays.length
-      markBirthday(world, true)
-      expect(world.birthdays.length, 'a college birthday recorded a parent decision that nobody made').toBe(before)
+      markBirthday(world)
+      expect(world.birthdays.length, 'a feed line recorded a parent decision that nobody made').toBe(before)
     })
   })
 })

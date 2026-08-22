@@ -36,7 +36,7 @@ import { kidMatchPlayerFor } from './player'
 import { fullRanking } from './ladder'
 import { practiceCoachRateFor } from './coachMarket'
 import type { WorldState } from '../world'
-import { guardNotEnded } from './endings'
+import { guardNotEnded, guardNotEndedForGood } from './endings'
 
 // --- Season planner: vacations + practice matches ------------------------------
 // docs/specs/season-planner.md. TWO player-planned week types on otherwise empty weeks.
@@ -140,10 +140,28 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
 
 /** Cancel a booked vacation before its week starts: FULL refund (mirror of entry withdrawal). */
 export function cancelVacation(world: WorldState, week: number): void {
-  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
-  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
-  // spend money for a girl who has retired.
-  guardNotEnded(world)
+  // ⭐⭐ ROUND 24, E2 – `ForGood`, AND THE COLLEGE FREEZE IS THE ONLY THING THAT CHANGES. A terminal
+  // latch still refuses with the same sentence it always did; a career AT COLLEGE may cancel.
+  //
+  // ⚠⚠ THE REASON IS A TRAP THAT IS ALREADY IN THE TICK, NOT A WIDENING OF THE RULES. `resolveVacation`
+  // and `resolvePractice` sit at world.ts step 3 with NO `inCollege` gate around them – unlike the
+  // academy, the sponsors, the gear, the knock and the birthday, all of which the freeze shuts off.
+  // So a booking made the week before the fork is really RESOLVED inside the freeze, inside a call
+  // that spends fifty-two weeks in one click, and until this change the parent had no way to take it
+  // back: the money was gone and the guard said her career had ended. That is a refused control with
+  // no honest reason on screen (R10-16) sitting on top of a booking the game still intends to honour.
+  //
+  // ⚠ AND ONLY THE CANCELS OPEN, NOT `bookVacation` / `bookPractice`. A cancel can only REMOVE state,
+  // so there is nothing it can collide with. A booking creates state on a calendar `assertPlannable`
+  // cannot see: it knows about entries, exams and the off-season, and knows NOTHING about
+  // `COLLEGE_TRIP_WEEKS` or `NATIONAL_TEAM.seasonWeek`, so a holiday booked on the call-up week would
+  // put her at the seaside and in her country's shirt in the same week. Whether the family may plan
+  // a college week at all is a rule the owner has not ruled on, and it is in E2's report rather than
+  // in this file.
+  //
+  // ⚠ ZERO DRAWS, on MAIN or anywhere: this is state removal plus two ledger rows. The frozen capture
+  // cannot see it.
+  guardNotEndedForGood(world)
   const booking = vacationForWeek(world, week)
   if (!booking) throw new Error('No vacation booked that week')
   if (week <= world.week) throw new Error('That vacation week has already started')
@@ -195,10 +213,12 @@ export function bookPractice(world: WorldState, week: number, withCoach: boolean
 
 /** Cancel a booked practice before its week starts: full refund of the rental. */
 export function cancelPractice(world: WorldState, week: number): void {
-  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
-  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
-  // spend money for a girl who has retired.
-  guardNotEnded(world)
+  // ⭐ ROUND 24, E2 – `ForGood`, for exactly the reasons written out at `cancelVacation` above: a
+  // practice booked before the fork is really played inside the freeze (`resolvePractice` has no
+  // `inCollege` gate), so the parent must be able to call it off. The BOOKING half keeps
+  // `guardNotEnded` – a friendly IS a match, which is the same line this module already draws at
+  // `assertPlannable` for the layoff and the doctor's floor.
+  guardNotEndedForGood(world)
   const booking = practiceForWeek(world, week)
   if (!booking) throw new Error('No practice match booked that week')
   if (week <= world.week) throw new Error('That practice week has already started')

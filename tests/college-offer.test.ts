@@ -34,6 +34,11 @@ import {
   familyPositionCents,
   recruitedAtAll,
   tierOpenTo,
+  // ⭐ ROUND 24 #2a – the one decision, its readout off a quote, and its words.
+  tierShutFor,
+  quoteShutFor,
+  COLLEGE_SHUT_DETAIL,
+  type CollegeShutReason,
   type CollegeFundingBand,
   type CollegeRecruitView,
   type JuniorRung,
@@ -176,6 +181,65 @@ describe('B. nothing removes the third answer', () => {
     expect(tierOpenTo('state', 'RU')).toBe(false)
     expect(tierOpenTo('national', 'RU')).toBe(true)
     expect(tierOpenTo('private', 'RU')).toBe(true)
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ ROUND 24 #2a – A SHUT PLACE CAN ALWAYS BE ASKED WHY, AND THERE IS ONLY ONE ANSWER
+  // ===============================================================================================
+  //
+  // The owner could not tell why the cheapest place was unpickable. The house rule is that a refusal
+  // names its reason (`EntryStatus.ineligibleReason` + `ineligibleDetail`), and the hazard that rule
+  // exists for is a SECOND, PARALLEL judgement: a screen holding its own opinion about a refusal it
+  // did not make. SeasonScreen's lock pill did exactly that once and printed the wrong refusal.
+  //
+  // So `tierShutFor` is the one decision and `tierOpenTo` is derived from it; `quoteShutFor` reports
+  // it off a persisted quote. These three cases are what make "one question, one answer" a
+  // measurement instead of a comment.
+  it('⭐⭐⭐ `open` is DERIVED from the reason – a place cannot be shut without one', () => {
+    // The whole reachable state space: every tier x both residence classes. Six states, all walked.
+    for (const country of ['US', 'RU']) {
+      for (const tier of COLLEGE_TIER_ORDER) {
+        const shut = tierShutFor(tier, country)
+        expect(tierOpenTo(tier, country), `${country} ${tier}`).toBe(shut === null)
+        // and every code that can come out of it has words
+        if (shut !== null) expect(COLLEGE_SHUT_DETAIL[shut], `${country} ${tier}`).toBeTruthy()
+      }
+    }
+    // anti-vacuity: the sweep really does contain a refusal and an open place
+    expect(tierShutFor('state', 'RU')).not.toBeNull()
+    expect(tierShutFor('state', 'US')).toBeNull()
+  })
+
+  it('⭐⭐⭐ the reason recovered from a QUOTE is the reason the quote was priced with', () => {
+    // ⚠ THIS IS THE ONE THE CARD DEPENDS ON. A screen holds a persisted quote and nothing else – no
+    // country – so `quoteShutFor` has to give the same answer `tierShutFor` gave when `quoteFor` set
+    // `open`. If those two ever part, the card explains one refusal and the engine enforces another.
+    for (const country of ['US', 'RU', 'AU']) {
+      const offer = collegeOfferFor(view({ j300: 3 }, 'working', country), rngFromSeed(`why-${country}`))
+      for (const q of offer.quotes) {
+        expect(quoteShutFor(q), `${country} ${q.tier}`).toBe(tierShutFor(q.tier, country))
+        // ...and the boolean the engine re-validates on is exactly the reason's absence
+        expect(q.open, `${country} ${q.tier}: one boolean, not two`).toBe(quoteShutFor(q) === null)
+      }
+    }
+  })
+
+  it('⚠ every refusal code carries a sentence, and it is player copy', () => {
+    // ⚠ THE MAP IS TOTAL BY TYPE (`Record<CollegeShutReason, string>`), so this case is about the
+    // WORDS rather than about coverage: the app's dash, no Cyrillic, and something a parent can read.
+    const codes = Object.keys(COLLEGE_SHUT_DETAIL) as CollegeShutReason[]
+    expect(codes.length, 'there is at least one refusal to explain').toBeGreaterThan(0)
+    for (const code of codes) {
+      const line = COLLEGE_SHUT_DETAIL[code]
+      expect(line.length, `${code}: says something`).toBeGreaterThan(20)
+      expect(line, `${code}: short dash only`).not.toContain('—')
+      expect(line, `${code}: no Cyrillic in player copy`).not.toMatch(/[Ѐ-ӿ]/)
+      // ⚠ AND IT MAY NOT RECOMMEND. Ruling 4 (30.07): the fork card has no opinion about which
+      // answer to take, and a refusal that suggests a substitute is exactly that opinion.
+      for (const steer of ['should', 'better', 'instead', 'recommend', 'consider']) {
+        expect(line.toLowerCase(), `${code}: no verdict ("${steer}")`).not.toContain(steer)
+      }
+    }
   })
 
   // ⚠ AN EMPTY RECORD IS A WALK-ON, NOT A CLOSED DOOR. She enrols and pays; the answer is still

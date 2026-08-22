@@ -800,9 +800,89 @@ const FROZEN = {
   /** ⚠ MOVED WITH ITS TWINS A FOURTH TIME (17.08, the college choice – schema v52). All three moved
    *  by exactly ONE KEY again, and `PRE_V52` below proves it: rolling `schemaVersion` back to 51 on
    *  the NEW world reproduces the old hashes byte for byte, for all three. */
-  middleGrinder: 'c8ed842b790523d17e21f26b3e75fa478598f0d5804a3de4e2c2f56196113f3f',
+  /** ⚠ MOVED WITH ITS TWINS AGAIN (21.08, round 24 – the freeze's hygiene, schema v55), and again by
+   *  EXACTLY ONE KEY. `PRE_V55` below is the proof rather than the claim: rolling `schemaVersion`
+   *  back to 54 on the NEW world reproduces the old hashes byte for byte, for all three careers.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, and the control was **this branch
+   *  with MY OWN COMMIT REVERTED** in a dedicated worktree (`git revert --no-commit`) – not the
+   *  previous commit, because B2's ranking wave landed on this branch between them and comparing
+   *  against it would have measured both. `tools/frozen-key-diff.ts` on all three (preset/policy 5/0,
+   *  8/0, 0/1), headers checked against the filenames: **one line of 66 differs, and it is
+   *  `schemaVersion`.** `rngMain`, `results`, `season`, `cohort`, `events`, `fundsCents`, `kidRank`,
+   *  `skills` – every one byte-identical.
+   *
+   *  ⚠ AND THAT IS BY CONSTRUCTION. Round 24's three rules all live inside the college freeze:
+   *  `answerFork(…, 'college')` releases her entries, `resumeFromCollege` refuses on an open reveal,
+   *  and `tickWeek` step 2 is gated on `inCollege`. Week 156 is 32 weeks short of the fork, so
+   *  `world.fork` and `world.college` are both null here – asserted in `walkFrozenCareer`, not
+   *  assumed. `rngMain` is untouched for the twelfth wave running: nothing this wave added draws on
+   *  any stream, so the frozen MAIN capture in tests/condition.test.ts (count 41550, hash e6b0c709)
+   *  is not re-pinned, and it was re-run green beside this re-freeze. */
+  /** ⚠ MOVED WITH ITS TWINS ONCE MORE (22.08, round 24 – the student championship, schema v56), and
+   *  again by EXACTLY ONE KEY. `PRE_V56` below is the proof rather than the claim: rolling
+   *  `schemaVersion` back to 55 on the NEW world reproduces the previous three hashes byte for byte.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, control = **this branch with MY OWN COMMIT REVERTED** in a detached
+   *  worktree (`git revert --no-commit`) – never the previous commit and never a worktree at HEAD.
+   *  All three arms, headers checked against the filenames: **one line of 66 differs, and it is
+   *  `schemaVersion`.**
+   *
+   *  ⚠ AND THAT IS BY CONSTRUCTION. The championship fires on `COLLEGE_LEAGUE.seasonWeek` behind
+   *  `inCollege`, and the earned call-up reads `lastLeagueRun`, a field that only exists inside
+   *  `world.college`. Week 156 is 32 weeks short of the fork, so both are null here – asserted in
+   *  `walkFrozenCareer`, not assumed. `rngMain` is untouched for the thirteenth wave running: the
+   *  new draws are on `seed:collegeleague:<week>` and `seed:collegematch:<week>:<r>`, and the
+   *  call-up's own four pulls on `seed:callup:<week>` are byte-identical – only the threshold the
+   *  first is compared against moved. The frozen MAIN capture (41550 / e6b0c709) is not re-pinned
+   *  and was re-run green beside this re-freeze. */
+  /** ⚠ MOVED WITH ITS TWINS ONCE MORE (22.08, round 24 – the college birthday, schema v57), and
+   *  again by EXACTLY ONE KEY. `PRE_V57` below is the proof rather than the claim: rolling
+   *  `schemaVersion` back to 56 on the NEW world reproduces the previous three hashes byte for byte.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands. The wave was UNCOMMITTED and its
+   *  agent the only one running, so "this branch with my own change reverted" IS a detached worktree
+   *  at `1356712` – the shared tree held nothing but this wave on top of that commit. Verified both
+   *  ways rather than assumed (the 17.08 null-arm hazard): `grep -c pendingYearStart` returns 0 in
+   *  the A tree's engine and 6/2 (world.ts / protocol.ts) in B's, so the A arm lacks the change and
+   *  the B arm contains its reader. All three arms (preset/policy 5/0, 8/0, 0/1), headers checked
+   *  against the invocations: **one line of 66 differs, and it is `schemaVersion`**
+   *  (7688b6ef5255 -> c837649cce43).
+   *
+   *  ⚠ AND THAT IS BY CONSTRUCTION. v57's field (`college.pendingYearStart`, the opening of a year
+   *  paused on her birthday) lives on a college state that is null in all three careers – week 156
+   *  is 32 weeks short of the fork, asserted in `walkFrozenCareer` – and `pendingBirthday`'s opened
+   *  guard changes behaviour only when `world.college` exists or the latch is the resumable college
+   *  one, neither of which a frozen career ever has. ⚠⚠ THE TOUR BIRTHDAY PATH IS BYTE-IDENTICAL:
+   *  each of these careers holds three tour birthdays inside its 156 weeks, and every key that could
+   *  see one – `birthdays`, `events`, `rngMain` – hashed identically on both arms. `rngMain` unmoved
+   *  for the fourteenth wave running: a guard is not a draw, and the gift never was one
+   *  (`seed:birthday:<age>`, never MAIN). The frozen MAIN capture (41550 / e6b0c709) is not
+   *  re-pinned and was re-run green beside this re-freeze. */
+  /** ⚠ MOVED WITH ITS TWINS ONCE MORE (22.08, round 24 #5 – the fork moves off her birthday, schema
+   *  v58), and again by EXACTLY ONE KEY. `PRE_V58` below is the proof rather than the claim: rolling
+   *  `schemaVersion` back to 57 on the NEW world reproduces the previous three hashes byte for byte.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands. The wave was UNCOMMITTED and its
+   *  agent the only one running, so "this branch with my own change reverted" IS a detached worktree
+   *  at HEAD (`8b057bc`, a docs-only review commit on top of `7c64ea6` – five plan files, zero
+   *  engine lines). All three arms (preset/policy 5/0, 8/0, 0/1), headers checked against the
+   *  invocations: **one line of 66 differs, and it is `schemaVersion`** (c837649cce43 ->
+   *  6208ef0f7750), on all three.
+   *
+   *  ⚠ AND THAT IS BY CONSTRUCTION. The redesign's whole machinery sits past these careers' horizon:
+   *  the ask now fires at `schoolEndWeek(6)` = week 242 – measured, 86 weeks past the 156-week
+   *  freeze (under the old birthday clock it was ≈283) – so `world.fork` is still null here
+   *  (asserted in `walkFrozenCareer`, not assumed), no reservation exists, `fork.departsWeek` is
+   *  never written, and `resolveCollegeDeparture` returns at its first guard on every one of the 156
+   *  resolved weeks. `rngMain` is unmoved for the fifteenth wave running, and it is the load-bearing
+   *  half: the ask is a week comparison, the reservation is state, and the departure draws nothing –
+   *  the offer's own draws live on `seed:collegeoffer:<week>` and are not reached at all here. The
+   *  frozen MAIN capture (41550 / e6b0c709) is not re-pinned and was re-run green beside this
+   *  re-freeze. */
+  middleGrinder: '3c1876b343be327f440f61f40a4f845e31274e74e729c3ad79807ca54d05e24c',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '19a26b42147619412944d74e3ddffe37290d3387b66629267f377ede31e0e301',
+  eliteGrinder: '1ab7aae6fc3b6a5df9e778e878c6dffff91b099f2c19f00d8bcf3bed8f45927f',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -952,7 +1032,126 @@ const FROZEN = {
    *  ⚠ `rngMain` UNMOVED IS THE LOAD-BEARING HALF and it is doing real work here: `power()` is read by
    *  the conveyor's SORT, which is a post-draw ordering, so no draw moved. The frozen MAIN capture in
    *  tests/condition.test.ts is untouched - count 41550, hash e6b0c709 - and verified below. */
-  selfTravelling: '98a87a4c9ed689309e16b16b2e48261261b312de19fd956943c80df49be0a240',
+  /** ⭐⭐ AND MOVED AGAIN THE SAME DAY (21.08, round 24 #1 – the tick raises the academy's letters),
+   *  BY ONE KEY AND ON TWO CAREERS OF THREE. This is a CONTENT move, not a schema one, and the split
+   *  is the evidence: `eliteGrinder` is byte-identical here and in all four `PRE_*` sets below,
+   *  because the 120k family never qualifies for a scholarship and so never receives a letter. The
+   *  two that moved are the ones that do – measured, not inferred: `middleGrinder` (middle
+   *  background) carries academy level 0.354 and three letters, `selfTravelling` (working background)
+   *  carries 0.721 and three. The need factor is visible in which hashes moved.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, control = **this branch with my own commit reverted** in a detached
+   *  worktree – not the previous commit, which carried two other agents' waves. All three arms
+   *  (preset/policy 5/0, 8/0, 0/1), headers checked against the filenames: **exactly one key of 66
+   *  differs and it is `offers`.** `rngMain`, `results`, `season`, `cohort`, `events`, `fundsCents`,
+   *  `kidRank`, `skills` – every one byte-identical, on every arm.
+   *
+   *  ⚠⚠ SO THE `PRE_*` SETS ARE RE-TAKEN AGAINST THE NEW WORLD, on this file's own recorded
+   *  precedent for a career-content wave (see the v52 block: *"this wave changed the CAREER, not a
+   *  schema field, so PRE_V52/PRE_V51/PRE_V50 are re-taken against the new world"*). Rolling
+   *  `schemaVersion` back on the OLD worlds cannot reproduce the new ones – a data key moved, not a
+   *  version number – but the rollback IDENTITY keeps its meaning unchanged: swapping only
+   *  `schemaVersion` on the new world still reproduces exactly these, which is all those lines ever
+   *  claimed.
+   *
+   *  ⚠ `rngMain` UNMOVED IS AGAIN THE LOAD-BEARING HALF: raising a letter is arithmetic and one
+   *  idempotent push, and the frozen MAIN capture is untouched – count 41550, hash e6b0c709. */
+  /** ⚠ MOVED WITH `middleGrinder` AND WITHOUT `eliteGrinder` (21.08, round 24 #1). See the paragraph
+   *  above: one key of 66 – `offers` – and this career is the one on the largest scholarship of the
+   *  three. `PRE_V55` reproduces this exact value by rolling only `schemaVersion` back to 54. */
+  /** ⚠ MOVED WITH BOTH TWINS (22.08, the college birthday, v57) by the version number alone – see
+   *  the paragraph on `middleGrinder`, and `PRE_V57` below for the identity. */
+  /** ⚠ MOVED WITH ITS TWINS a fourth time (22.08, round 24 #5, schema v58) – see the paragraph on
+   *  `middleGrinder`, and `PRE_V58` below for the identity. */
+  selfTravelling: 'f3ad9f88a2b8b95572c5670a78d70939160ccf251a3511b6d0535bd9776c05de',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
+ *  moved ONE key and nothing else.
+ *
+ *  ⚠ ALL THREE HELD, which is the signature of a change that reached no career at all. Round 24's
+ *  college birthday pauses `resumeFromCollege` on her birthday week and persists the paused year's
+ *  opening (`college.pendingYearStart`) – all of it behind a college state that is null in every
+ *  frozen career, and behind a latch none of them ever wears. Week 156 is 32 weeks short of the
+ *  fork, which `walkFrozenCareer` asserts rather than assumes. The THREE TOUR BIRTHDAYS inside each
+ *  of these careers are the sharper half of the claim: `pendingBirthday`, `chooseGift` and
+ *  `markBirthday` were all touched this wave, and `birthdays`, `events` and `rngMain` hashed
+ *  byte-identical on both arms anyway – the change is confined to the freeze path, measured rather
+ *  than promised.
+ *
+ *  ⚠ PER-KEY DIFF TAKEN FIRST, control = this tree's own wave absent (a detached worktree at
+ *  `1356712`; the wave was uncommitted and its agent alone, so that IS "my own change reverted" –
+ *  and it was verified to lack the change while the B arm was verified to contain its reader).
+ *  Headers checked against the invocations on every arm (5/0, 8/0, 0/1).
+ *
+ *  ⚠ `rngMain` UNMOVED for the fourteenth wave running, and it is the load-bearing half: the pause
+ *  is a break in a loop, the guard is a read, and the gift's offer lives on `seed:birthday:<age>` –
+ *  none of it is a draw. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
+const PRE_V57 = {
+  middleGrinder: '94b9f1cef8eb5f74c573b909cd1a19c4bbe6888aed6c7070bedbb4371db4bcef',
+  eliteGrinder: '52a3e09c48882dc43dc78644eb4b288b3c48f1f9b59e0f3add6d3db611fbc4e2',
+  selfTravelling: 'fa2ac758e478fbff67f80c9ed8b6015c2401f581de73c496debae125e6f44f6c',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v57 – the identity that proves the v58 re-freeze
+ *  moved ONE key and nothing else.
+ *
+ *  ⚠ ALL THREE MOVED TOGETHER, which is the signature of a schema bump rather than a career change.
+ *  Round 24 #5 moved the fork's ask to `schoolEndWeek` (week 242 for these birth-month-6 careers,
+ *  86 weeks past this freeze's horizon; the old birthday ask was ≈283) and made the college answer
+ *  a reservation executed at the September departure – all of it unreachable in 156 weeks, which
+ *  `walkFrozenCareer`'s own `world.fork` null assertion checks rather than assumes.
+ *
+ *  ⚠ PER-KEY DIFF TAKEN FIRST, control = **this branch with my own change reverted** in a detached
+ *  worktree – the wave was uncommitted and its agent alone, so the worktree at HEAD (`8b057bc`,
+ *  docs-only on top of `7c64ea6`) IS that control. Headers checked against the invocations on every
+ *  arm (5/0, 8/0, 0/1): one line of 66 differs, `schemaVersion`, on all three.
+ *
+ *  ⚠ `rngMain` UNMOVED for the fifteenth wave running, and it is the load-bearing half: `forkDue`
+ *  became a week comparison, the reservation is pure state, and `resolveCollegeDeparture` draws
+ *  nothing on any stream. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
+const PRE_V58 = {
+  middleGrinder: '2137a9e5e2a69ca0af681e051b3c224dcb2179bc41c2f2c9f6eb4215b82064e2',
+  eliteGrinder: '87b7f5860fb28f3147a416a275fd49fd8e8d684319fee18372df554c91a9cc1d',
+  selfTravelling: '8d379176f767d1e74a986d585f45cd3d08a74f1d1517a68a26cc289700fae299',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v55 – the identity that proves the v56 re-freeze
+ *  moved ONE key and nothing else.
+ *
+ *  ⚠ ALL THREE HELD, which is the signature of a change that reached no career at all. Round 24's
+ *  student championship (`engine/collegeLeague.ts`) fires only on `COLLEGE_LEAGUE.seasonWeek` INSIDE
+ *  the college freeze, and the earned call-up reads a field that only exists inside it; week 156 is
+ *  32 weeks short of the fork, which `walkFrozenCareer` asserts rather than assumes. So what the wave
+ *  did to these three careers is the version number and nothing else.
+ *
+ *  ⚠ PER-KEY DIFF TAKEN FIRST, control = **this branch with my own commit reverted** in a detached
+ *  worktree – never the previous commit and never a worktree at HEAD. Headers checked against the
+ *  filenames on every arm (5/0, 8/0, 0/1).
+ *
+ *  ⚠ `rngMain` UNMOVED for the twelfth wave running, and it is the load-bearing half: the
+ *  championship draws on `seed:collegeleague:<week>` and `seed:collegematch:<week>:<r>`, both
+ *  re-derived at the call site, and the call-up's own four draws on `seed:callup:<week>` are
+ *  byte-identical – only the threshold the first one is compared against moved. The frozen MAIN
+ *  capture is untouched: count 41550, hash e6b0c709. */
+const PRE_V56 = {
+  middleGrinder: '5adaba3d2f9200f45d75189cd50bc8dac5da6f67e1e62d1fe3ffd4a3b93dc8f4',
+  eliteGrinder: '5b966447a2d321ce81c0239568aec6d48400518871fa5b8b36781ba5b749cd9b',
+  selfTravelling: 'f8587cf69a0a388176ee89b181f8b1409b60a7b988d3bf0adb02f3bdf4c1d46e',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v54 – the identity that proves the v55 re-freeze
+ *  moved ONE key and nothing else.
+ *
+ *  ⚠ ALL THREE HELD, which is the signature of a change that reached no career at all. Round 24's
+ *  three rules are entirely inside the college freeze and week 156 is 32 weeks short of the fork, so
+ *  what the wave did to these careers is the version number and nothing else. The per-key diff –
+ *  control built as this branch with the wave's own commit reverted, never the previous commit –
+ *  named `schemaVersion` and no other key, on all three. */
+const PRE_V55 = {
+  middleGrinder: '9fbeef43715151638d343637f513019421f8eaa8bb9c2430d221abdaca73466e',
+  eliteGrinder: '19a26b42147619412944d74e3ddffe37290d3387b66629267f377ede31e0e301',
+  selfTravelling: '43f39be1aa604cbd457a049ee2cbd93e61c4fa596da1562d4412ff38ecdbe82a',
 }
 
 /** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
@@ -991,15 +1190,15 @@ const FROZEN = {
  *  moves one of these careers through anything but `SAVE_SCHEMA_VERSION` still goes red here beside
  *  a red freeze, and the pair is what says which kind of change it was. */
 const PRE_V52 = {
-  middleGrinder: '5d73d9f103e89e76c1286d7421c57aaf43f37562affa17de14624231ab6e418f',
+  middleGrinder: '957a343dee1e3c9c8135b821cc223aa72779e2f2687cc00d7d55f369b7f7c399',
   eliteGrinder: '3d78611cd6cb3185044aeab113809a363b1b8ed2bea06538483d8498aa8ee0d7',
-  selfTravelling: '57fa15714f72e875d2fd21775282dd6856d176dd39a08c25a2e5e2432bbe7d5c',
+  selfTravelling: 'cbf86bc0370206c527118fc36ede642016520829d6ffbb510f9e027fb59f74f5',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
  *  moved ONE key and nothing else. */
 const PRE_V51 = {
-  middleGrinder: '036268e25904e4ff10dd9816375944111ffc5f0100e65f0e90318d150a91642c',
+  middleGrinder: '1a27b99d593239e354deb1bf9b1e4822682e01caabc1da724838e401cb136bf0',
   eliteGrinder: 'f1082e29809c242438ac1163fe904f77b4bfb80b8ed08b6b56b90f5297cc7988',
   /** ⚠ MOVED WITH THE FREEZE ABOVE (17.08, round 21 #2b) AND THAT IS THE HONEST OUTCOME, not a
    *  weakening. The v51 case asks "does rolling ONLY the schema back reproduce the v50 hashes" – and
@@ -1008,7 +1207,7 @@ const PRE_V51 = {
    *  different season cannot produce the old season. The identity is re-anchored to the new world, so
    *  it goes on doing its job – if a LATER wave moves this career through anything but
    *  `SAVE_SCHEMA_VERSION`, this line goes red beside the freeze exactly as it just did. */
-  selfTravelling: 'cbbd50d8b691ce00d0526e0f95b886dbc831520df31d19f1f0667003995cc234',
+  selfTravelling: '9ea5dab5d2a8f9a3e6a5a20b316843b981990b0884939b2f474450f87a07b149',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -1019,7 +1218,7 @@ const PRE_V50 = {
    *  full: the WTA 250's field changed, so the tour NEWS in `events` changed, and `events` is inside
    *  the hash. The rollback identity itself is untouched in meaning – swapping only `schemaVersion`
    *  on the new world still reproduces exactly this, which is what these three lines are for. */
-  middleGrinder: '229b7b550f0a273a4a15351b2df400f172651a3c16066d1263cb0db39d423932',
+  middleGrinder: 'a664e84b1ac5c94975e1b64be814f22f3cf2e44e2a8815be764f5f6a997865a4',
   eliteGrinder: 'b7a622eb775f9964bf9bc84074d86635c3004d81f4071293e87f1945a5f2491a',
   /** ⚠ MOVED WITH ITS TWIN ABOVE, AND THE PARAGRAPH ON `FROZEN` PREDICTED EXACTLY THIS: *"if a later
    *  wave moves one of these careers for a real reason, the rollback case goes red beside the freeze
@@ -1036,7 +1235,7 @@ const PRE_V50 = {
    *  line: this wave changed the CAREER, not a schema field, so the rollback is re-anchored to the
    *  new world. The two grinder hashes in this block did NOT move, which is the identity doing its
    *  job – a change that reaches one career of three shows up in one pair of hashes of three. */
-  selfTravelling: '14819ad899b9f4e281ab24d624f2e7d1af0ad43b50fce638f66bec61a4d1efbf',
+  selfTravelling: '42a85714d6392ee4d78e7653e391ca3937ea36212168d2b5187b3c53a4311621',
 }
 const FREEZE_WEEKS = 156
 
@@ -1048,14 +1247,16 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
   // about the mechanic being INERT here. Checked rather than assumed - a bench policy that started
   // ticking this would move the numbers for a reason the comment above says is impossible.
   expect(world.coachOnJuniorEvents, 'the v49 stance is present and OFF in the frozen careers').toBe(false)
-  // ⚠ v50: and none of them goes to COLLEGE either – week 156 is 32 weeks short of the fork – so
+  // ⚠ v50: and none of them goes to COLLEGE either – the fork sits far past week 156 – so
   // everything P5 added is unreachable here by construction, not by luck.
   expect(world.college, 'the v50 freeze is not entered by any frozen career').toBeNull()
-  // ⚠ v51: and the fork is never RAISED here either – week 156 is 32 weeks short of it – so there is
-  // no college offer to measure and no tuition line to charge. That is why all three hashes moved by
-  // exactly `schemaVersion` and nothing else (see `PRE_V51`), and it is checked rather than assumed:
-  // a wave that moved the fork earlier would go red HERE, with a sentence, instead of three hashes
-  // drifting for a reason nobody could name.
+  // ⚠ v51: and the fork is never RAISED here either, so there is no college offer to measure and no
+  // tuition line to charge. ⚠ ROUND 24 #5 moved the ask off her birthday (≈283 for these
+  // birth-month-6 careers) to `schoolEndWeek(6)` = 242 – measured, still 86 weeks past this freeze's
+  // 156-week horizon. That is why all three hashes moved by exactly `schemaVersion` and nothing else
+  // (see `PRE_V51`…`PRE_V58`), and it is checked rather than assumed: a wave that moved the fork
+  // under week 156 would go red HERE, with a sentence, instead of three hashes drifting for a
+  // reason nobody could name.
   expect(world.fork, 'the v51 offer is unreachable in a frozen career: the fork is never raised').toBeNull()
   return world
 }
@@ -1080,6 +1281,54 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v58: rolling ONLY the schema back to 57 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 24 #5 DID TO THESE THREE CAREERS, as an identity. The ask moved to
+    // `schoolEndWeek` – week 242 for these careers, 86 weeks past this freeze's horizon (the old
+    // birthday ask was ≈283) – so the fork is still never raised here (`walkFrozenCareer` asserts
+    // it), no reservation is written and the departure step returns at its first guard every week.
+    // If the earlier ask, the hold or the departure had leaked into an ordinary 156-week career,
+    // THIS case would be red beside the freeze – the one signal a whole-world hash cannot give.
+    expect(careerHashAtSchema(5, 0, 57), '25k · middle coach · grinder').toBe(PRE_V58.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 57), '120k · elite coach · grinder').toBe(PRE_V58.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 57), '8k · self-coached · player').toBe(PRE_V58.selfTravelling)
+  })
+
+  it('⭐⭐ v57: rolling ONLY the schema back to 56 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT THE COLLEGE BIRTHDAY DID TO THESE THREE CAREERS, as an identity. The pause,
+    // the persisted year-opening and the opened guard all live behind a college state that is null
+    // here and a latch these careers never wear – asserted in `walkFrozenCareer`, not assumed. The
+    // three TOUR birthdays inside each career are the case this wave was most required not to move,
+    // and if any of `pendingBirthday`'s, `chooseGift`'s or `markBirthday`'s tour behaviour had
+    // shifted one byte, THIS case would be red beside the freeze – which is the one signal a
+    // whole-world hash cannot otherwise give.
+    expect(careerHashAtSchema(5, 0, 56), '25k · middle coach · grinder').toBe(PRE_V57.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 56), '120k · elite coach · grinder').toBe(PRE_V57.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 56), '8k · self-coached · player').toBe(PRE_V57.selfTravelling)
+  })
+
+  it('⭐⭐ v56: rolling ONLY the schema back to 55 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 24'S STUDENT CHAMPIONSHIP DID TO THESE THREE CAREERS, as an identity.
+    // The fixture fires on `COLLEGE_LEAGUE.seasonWeek` inside the college freeze and the earned
+    // call-up reads a field that only exists there, so neither is reachable at week 156 – asserted in
+    // `walkFrozenCareer`, not assumed. If either had leaked into an ordinary career, THIS case would
+    // be red beside the freeze, which is the one signal a whole-world hash cannot otherwise give.
+    expect(careerHashAtSchema(5, 0, 55), '25k · middle coach · grinder').toBe(PRE_V56.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 55), '120k · elite coach · grinder').toBe(PRE_V56.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 55), '8k · self-coached · player').toBe(PRE_V56.selfTravelling)
+  })
+
+  it('⭐⭐ v55: rolling ONLY the schema back to 54 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 24'S FREEZE FIXES DID TO THESE THREE CAREERS, as an identity. The
+    // three rules – the entry release at the fork, `resumeFromCollege`'s refusal on an open reveal,
+    // and `tickWeek`'s `inCollege` gate – all live inside the college freeze, and `walkFrozenCareer`
+    // asserts below that neither `world.fork` nor `world.college` is reachable at week 156. If any of
+    // them had leaked into an ordinary career, THIS case would be red beside the freeze, which is the
+    // one signal a whole-world hash cannot otherwise give.
+    expect(careerHashAtSchema(5, 0, 54), '25k · middle coach · grinder').toBe(PRE_V55.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 54), '120k · elite coach · grinder').toBe(PRE_V55.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 54), '8k · self-coached · player').toBe(PRE_V55.selfTravelling)
   })
 
   it('⭐⭐ v52: rolling ONLY the schema back to 51 reproduces the previous hashes byte for byte', () => {

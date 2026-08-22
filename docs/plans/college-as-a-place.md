@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: college
 canonical: false
-last-reviewed: 2026-08-20
+last-reviewed: 2026-08-22
 ---
 
 # College as a PLACE, not a pause – the owner's brief, round 23 (19.08.2026)
@@ -11,10 +11,12 @@ last-reviewed: 2026-08-20
 He is about to reach the fork and will verify this himself. His words, and my reading, item by item –
 plus §7, which is his own question back to me: «что еще добавишь?»
 
-⚠ **This was a PLAN and §3 is now BUILT (20.08)** – the rest is not. Where a thing already exists it
-says so, because the biggest risk in this brief is rebuilding what `nationalTeam.ts` already does,
-and that risk was real: the wave that shipped §3 changed how a rubber is RESOLVED and touched neither
-the letter, the fixture nor the placing.
+⚠ **This was round 23's PLAN, and round 24 (20–22.08) BUILT most of it.** The wave record lives in
+`docs/plans/college-the-flow.md` and is not duplicated here. Still open in THIS file: §7c-orig's
+between-year decisions, §7e's re-entry screen, §7a's missing price, §6's art order, and §6b's
+control list. Where a thing exists the section now says so, because the biggest risk in this brief
+was always rebuilding what already works – and that risk was real twice over: the §3 wave changed
+only how a rubber is RESOLVED, and the League wave reused the fixture clock it found.
 
 ---
 
@@ -60,7 +62,18 @@ this item asks for already exist under other names, and it is worth writing down
   week, `'milestone'` is a `HIGHLIGHT_TYPES` member, and the tab shell routes to the week's own story
   the moment the latch comes off. So graduation lands on a screen that says what four years did.
 
-⚠⚠ **THE STUDYING LINE IS STILL UNREACHABLE, AND THE OBVIOUS FIX IS A ROUND-20 DEAD END.** The
+⭐⭐ **RESOLVED (21.08), AND NOT THE WAY THE PARAGRAPH BELOW FEARED.** What shipped is the full
+residency, not a door: college weeks run ON the Home shell (`showCollege` routes the latch,
+`CollegeYearCard` is the year, graduation is `CollegeDoneDialog` and hands back to Home), and the
+screen-full-of-errors problem was closed from the other side – E2's audit walked all 20 command
+sites, `guardNotEnded` answers college with the college sentence (`COLLEGE_FREEZE_REFUSAL`: "She is
+at college – the career is not over…"), the vacation/practice cancels are OPEN through
+`guardNotEndedForGood`, and the rest refuse honestly, each awaiting its own ruling (§6b). The
+shell-wide ruling this section left for the owner was made: hide nothing, refuse truthfully, open
+what is unambiguous.
+
+⚠ *As first written (20.08), kept because the risk was real:* THE STUDYING LINE IS UNREACHABLE, AND
+THE OBVIOUS FIX IS A ROUND-20 DEAD END. The
 tempting move is a «look around» door out of the epilogue into the tab shell. It cannot be taken
 casually: the epilogue is a BLOCKING takeover precisely because `advanceWeeks` returns `['ending']`
 and `guardNotEnded` throws on most commands, so a player let into the shell mid-college meets a
@@ -77,9 +90,12 @@ sharpest risk in this whole brief.
 
 ⭐ **PART-ANSWERED BY §3 (20.08), WHICH IS WHERE §7c SAID IT WOULD BE ANSWERED.** The between-year
 card now carries the year's competition as something to DO rather than something to read: one row per
-rubber, opponent and result, and the match itself one tap away. What it still does not carry is a
-DECISION – §7c-orig's candidate list (does she play the summer, what does she study, does the family
-keep paying for anything on the side) is untouched, and remains the honest gap in this item.
+rubber, opponent and result, and the match itself one tap away. What it still did not carry was a
+DECISION – and ⭐ **the first one arrived 22.08: her birthday.** The year PAUSES on her week (the
+same stop machinery as the call-up), the gift dialog renders on the live Home shell, and the chosen
+gift is recorded in `world.birthdays` – free, by the owner's own spec ruling, so the scene is a
+reaction and never a purchase. §7c-orig's remaining candidates (does she play the summer, what does
+she study, does the family keep paying for anything on the side) are still the honest gap.
 
 ## 3. His item 3 – ⭐ one watchable competition per year – ✅ **BUILT (20.08)**
 
@@ -138,6 +154,25 @@ sub-stream, `seed:callup:<week>` is byte-identical, and the three frozen careers
 `tests/coach-travel-edge.test.ts` never reach college – they are green untouched, MAIN capture
 included (41550 / `e6b0c709`).
 
+### 3+. ⭐⭐ AND THEN THE FLOOR (22.08) – the League, and the call-up earned
+
+The call-up alone left the year mostly silent, measured the moment the Home shell stopped hiding it
+behind an album: **0.71 watchable matches per college year**, and on ~⅔ of years one openable row
+with nothing in it. The owner's ruling: «я бы хотел, чтобы как минимум 1 турнир в год колледжа был…
+вызов в сборную можно будет опереть на результаты студенческого… минимум 1, максимум 2 турнира на
+учебный год».
+
+Built as the **College League** (`src/engine/collegeLeague.ts`): a draw of eight at season week 12,
+played through `simulateMatch`, watched in `MatchReplay`. ⭐ The floor is ARITHMETIC, not
+probability – a college year is 52 consecutive ticked weeks, so season week 12 occurs in it exactly
+once, at every tier; and only weeks 12 and 14 carry a tournament, so the ceiling of two holds by the
+same argument. The call-up stopped being a bare roll: `callChanceByLeague` reads how far she went –
+**0.15 / 0.40 / 0.65 / 0.85** by rounds won, and **0 with no championship on record** (the selectors
+have one thing to read about a college player; before she has played one, nobody writes). Measured
+at n = 399 years: 2.63–2.72 watchable matches/year, zero years with nothing to open, call-up
+16/33/68/84% by result. It awards no points and no money – she is an amateur, and a student fixture
+that paid points would quietly make four years of college a ranking route around the fork.
+
 ## 4. His item 4 – «заканчиваем или продолжаем?»
 
 ⭐ **This already works.** `resumeFromCollege` runs ONE year and returns to the epilogue, which asks
@@ -155,6 +190,42 @@ until §7a gives college a real price. Two prices at once and the fork stops bei
 ⚠ **This is an ART ORDER, not a code task.** Builders here may not create, derive, recolour or
 generate art – a standing rule. So item 6 is: decide how many portrait ages exist, commission or
 approve the assets, and only then wire them. The wiring is trivial by comparison.
+
+---
+
+## 6a. What round 24 fixed UNDERNEATH this plan – so nobody re-fears it
+
+⚠⚠ **THE FREEZE COULD KILL THE WORLD, and it was live in the owner's own save.** An entry that
+outlived the fork opened an unanswerable reveal inside the freeze; `tickWeek` skips housekeeping
+while a reveal is open, so the world ticked 204 weeks EMPTY – no calendar, no results, an all-zero
+table crowning her world #1. Fixed by three rules (the fork releases her entries; `resumeFromCollege`
+refuses to tick past a reveal; the entry scan is gated on `inCollege`) plus the v55 migration that
+heals a stranded save on load, and the ranking rule that stops an all-zero table crowning anybody.
+Record: `tools/college-freeze-probe.ts`, `tests/college-freeze.test.ts`.
+
+⭐ **D2 – the academic year – LANDED 22.08.** The fork moved off her birthday («В колледж она пошла
+ровно в день своего рождения, а должна была в начале учебного года») to three moments: the ASK
+fires when school ends (`schoolEndWeek` – week 242 for Jan–Aug births, 294 for Sep–Dec, against the
+old ~261–309 on the 19th birthday), the HOLD locks the quote she reserved and books
+`fork.departsWeek`, and the DEPART lands on the first September after her 19th – so the 52-week gap
+is her last junior season, fully playable, and the entry release fires AT departure (B1's
+full-refund rung verbatim: an entry made while she still plays is a commitment she made). A terminal
+ending in the gap voids the reservation and shows the right epilogue. Schema v58; the calendar
+carries a "Leaves for college" marker. Spec: `docs/specs/college-departure-2026-08.md`.
+
+## 6b. The open controls at college – E2's audit, for the owner to rule on
+
+All 20 command sites were walked (21.08). Refusals now say the true thing, two are OPEN (cancel
+vacation, cancel practice – a booking honoured inside the freeze must be retractable), and these
+stay REFUSED awaiting a ruling each:
+
+| control | why it is not obvious |
+| --- | --- |
+| hire / fire the coach | the retainer is suspended, not cancelled; re-hiring prices off a market she is not in |
+| book a vacation | the planner knows nothing of the squad trips (wk 8, 20), the League (12) or the Cup (14) – THREE collision weeks now |
+| buy a racquet | gear resolution is shut in the freeze; squad kit is unmodelled |
+| training plan / physio | development runs, but the programme coaches her – the parent's lever is suspended with the coach's |
+| the birthday gift | ✅ RESOLVED 22.08 – the year pauses and asks (see §2) |
 
 ---
 
@@ -210,11 +281,19 @@ No travel, no coach, no entries. After two seasons of bleeding – measured on h
 then −$9k before the turn – four years of **not** bleeding is a story the ledger can tell for free.
 It is also the honest counterweight to §7a: college costs her ranking and gives him his money back.
 
+⭐ And the rest is when the SHOP would matter most – see `docs/backlog/the-shop-and-the-broker.md`
+§0a: four idle years and an idle wallet are that file's best moment, and a shop command is exactly
+the `guardNotEndedForGood` family class round 24 created.
+
 ### 7e. WHAT SHE COMES BACK TO
 
 The world ran for four years while she was gone. The conveyor turned the cohort over – measured in
 round 23 #13, almost nobody survives even one season at the top. **She returns to a field she does
 not recognise**, and nothing currently says so. One screen, at re-entry, naming who is gone.
+
+⭐ **NOW THE BRANCH'S STRONGEST NEXT CANDIDATE (22.08):** with the shell, the League and the
+birthday in, re-entry is the remaining unbuilt scene – and D2's departure week gives the four years
+a natural opening bookend that this screen would close.
 
 ### 7f. CAN COLLEGE DISAPPOINT? – ⭐ ANSWERED BY THE OWNER, AND THE ANSWER IS A DESIGN
 

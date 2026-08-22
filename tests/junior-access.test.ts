@@ -307,15 +307,32 @@ describe('W15 is the junior reserved place, and it reads a junior RANKING', () =
 
   it('⚠ UNRANKED IS NOT RANK ONE – a fresh fourteen-year-old does not walk onto the pro tour', () => {
     const world = createWorld('w15-unranked')
-    // With every ITF row removed the whole field ties at zero, and competition ranking hands every
-    // member of a tie the same number – so she reads #1 on a table nobody has a place in.
+    // With every ITF row removed the whole field ties at zero.
     world.results = world.results.filter((r) => r.tier === undefined || r.tier === 'local')
     recomputeKidRank(world)
     expect(kidPoints(world, 'itf'), 'she holds no ITF point').toBe(0)
-    expect(world.kidRank, 'and the tie at zero reads as the top of the list').toBeLessThanOrEqual(
+
+    // ⚠ RE-AIMED 21.08 (round 24 #4) AND INVERTED, NOT DROPPED. This line used to pin the HAZARD –
+    // *"the tie at zero reads as the top of the list"* – because competition numbering hands every
+    // member of a tie the same number, and with every row on zero every row was FIRST: she read #1
+    // on a table nobody had a place in. That is the state the owner opened a save in, and
+    // `assignCompetitionRanks` now answers it at the source by sending every row of an all-zero table
+    // to the bottom of it. So the fact this line guards is the opposite one, and it is the stricter
+    // of the two: an exact number instead of a band.
+    expect(world.kidRank, 'a table nobody has scored on ranks nobody').toBe(tableSize(world, 'itf'))
+    expect(world.kidRank, 'and that is well outside the reserved place').toBeGreaterThan(
       juniorReservedRank(tableSize(world, 'itf')),
     )
+
+    // ⚠⚠ AND THE BELT IS STILL PROVEN ON ITS OWN, which is why this test may not shrink to the pin
+    // above. `tierFloorOpen`'s `kidPoints > 0` clause answers a FINER question than the fold does –
+    // *this player* has not scored, rather than *nobody* has – and it has to hold even when her
+    // NUMBER reads well: a rank arriving from some other table, or a future degeneracy shaped
+    // differently. Forced into the reserved band by hand, the door is still shut, and it is shut on
+    // the points.
     expect(tierFloorOpen(world, 'w15'), 'a tie at zero is not an acceptance list').toBe(false)
+    world.kidRank = 1
+    expect(tierFloorOpen(world, 'w15'), '...and a first place with no point behind it opens nothing').toBe(false)
   })
 
   it('the latch still holds the door open once she has crossed it', () => {

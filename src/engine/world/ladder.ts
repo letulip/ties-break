@@ -129,7 +129,21 @@ export function domesticRanking(world: WorldState): RankingRow[] {
  *  same predicate, same fallback, same one writer. `kidRank` did NOT move to the professional table
  *  when the third one arrived, and that is a deliberate non-decision – WHICH table is "hers" is
  *  `activeLadderOf`'s question and the handover at 19 is what answers it (docs/specs/
- *  adult-tour-and-endings.md §4). This function only guarantees all three are true at once. */
+ *  adult-tour-and-endings.md §4). This function only guarantees all three are true at once.
+ *
+ *  ⚠⚠ AND ON A TABLE WHERE NOBODY HAS SCORED, THE TWO BRANCHES OF EACH LINE BELOW AGREE – which is
+ *  the whole reason round 24 #4 was fixed in the FOLD and not here. `assignCompetitionRanks` puts
+ *  every row of an all-zero table at the bottom of it, so `row.rank` IS `tableSize(world, track)`,
+ *  the same number the `??` writes for a player who is not in the table at all. One question, one
+ *  answer, by two routes that cannot drift.
+ *
+ *  ⚠ SO DO NOT SPECIAL-CASE HER NUMBER HERE. That was the second failed attempt at the round-23
+ *  version of this bug: a guard written in this function made the CACHE disagree with the FOLD, and
+ *  `tests/condition.test.ts` B1c caught it in one line. Every reader of a rank in this file
+ *  (`meetsAcceptanceCut`, `tierFloorOpen`, `homeWildCardPlace`, `alternateQueuePosition`,
+ *  `onRampOpen`, `proDoors`) carries its own `points > 0` guard, each added one at a time with the
+ *  same sentence in its comment – "unranked is not rank one". They are belt to the fold's braces and
+ *  they stay: they answer a FINER question (this player has not scored) than the fold's (nobody has). */
 export function recomputeKidRank(world: WorldState): void {
   const row = fullRanking(world).find((r) => r.playerId === KID_ID)
   world.kidRank = row?.rank ?? tableSize(world, 'itf')

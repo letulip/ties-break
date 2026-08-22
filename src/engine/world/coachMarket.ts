@@ -646,10 +646,53 @@ export function coachRevealWeek(sinceWeek: number): number {
  *  appears in any of them, the frame around them is byte-identical, and the card draws all three in
  *  the same colour (`.cm-plaque` is deliberately not accent-coloured). A low draw is reported exactly
  *  as a high one is - «мы ни за что не наказываем», read as a rule about copy. */
+/** ⭐⭐ REWRITTEN 20.08, ALL OF THEM – the owner could not read the old ones and said so:
+ *  «я значит не так понял эту фразу про "that band" и вообще что это такое, думаю, что и у игроков
+ *  такой вопрос может возникнуть… фразу про "that band" точно надо переписать в более понятной
+ *  манере, и, вероятно, все 3 фразы даже, а не только эту одну».
+ *
+ *  ⚠ THE REFERENT WAS THE WHOLE PROBLEM. "That band" pointed at the uplift corridor printed two lines
+ *  above on the card (`+1.2-3.4% a season`), and a sentence whose subject lives in another element is
+ *  a sentence that only works if the reader's eye has been where the author's was. He read it, wrote
+ *  the game, and still did not know what it meant – so no player will.
+ *
+ *  ⭐ THE FIX IS TO NAME THE COMPARISON INSTEAD OF POINTING AT IT. What the placement actually means
+ *  is "against other coaches costing what he costs", and now it says that. No referent, no figure,
+ *  and the sentence stands alone wherever it is printed.
+ *
+ *  ⚠⚠ AND NO PRONOUN, WHICH IS WHY IT SAYS "THIS PRICE" AND NOT "HIS". R15-7: a slot's gender is
+ *  fixed, so "his" is right today and wrong the moment a portrait is swapped - the plaque has never
+ *  carried one and `coach-edge.test.ts` enforces it across all eleven states. The first draft of this
+ *  rewrite said "his price" in every line and the guard caught all of them at once.
+ *
+ *  ⚠⚠ IT TOOK FOUR GOES, AND THE OWNER WROTE THE FOURTH. The record is short and it is the useful
+ *  part of this comment:
+ *    «the upper end of that band»    - the referent was an element two lines up on the card. He wrote
+ *                                      this game and could not read it, so no player would.
+ *    «more than most at this price»  - visible referent, WRONG SUBJECT. Centring the fee made a line
+ *                                      about her progress read as a coach complaining about wages:
+ *                                      «звучит как "мне недостаточно платят"».
+ *    «more than most coaches would»  - still a statistic wearing a person's coat.
+ *    what is here now                - HIS OWN DRAFT, edited to fit. A coach does not compare
+ *                                      himself to a population; he says what he hoped for and what
+ *                                      he is seeing. «Давай как-то попробуем абстрагироваться от
+ *                                      бендов и цены и более доступным языком донести эти мысли.»
+ *
+ *  ⚠ THE REGISTER IS STILL SYMMETRIC, which is what the no-praise rule was protecting: "more than"
+ *  and "less than I had hoped for" are the same sentence with one word moved, so a low draw is
+ *  reported exactly as calmly as a high one.
+ *
+ *  ⚠ "HER PROGRESS" IS THE SHARED REFERENT. §7's pairing needs the revealed sentence and the not-yet
+ *  arm to point at one thing, and now both are about the girl rather than about the man or his fee.
+ *
+ *  ⚠ NO PRAISE EITHER - `good`, `better`, `value`, `bargain` and their family are banned outright, so
+ *  a low draw is reported in the same register as a high one. Measured: every composed sentence is
+ *  50-59 characters, inside the 49-58 band the old nine occupied and under §4a's 60-character
+ *  two-line ceiling at 320px. */
 const PLACEMENT_PHRASE: Record<CoachEdgePlacement, string> = {
-  upper: 'the upper end of that band',
-  middle: 'the middle of that band',
-  lower: 'the lower end of that band',
+  upper: 'more than I had hoped for',
+  middle: 'about the pace I expected',
+  lower: 'less than I had hoped for',
 }
 
 /** THE PLAQUE, IN ONE SENTENCE (docs/specs/coach-match-edge.md §7 + §8a) - what the coach she
@@ -709,8 +752,8 @@ export function coachPlaqueLine(view: {
   // when the reveal lands.
   if (view.placement === null) {
     return seasonIndexOf(view.week) === seasonIndexOf(view.revealWeek)
-      ? 'Where in that band – we will know in the off-season.'
-      : 'Where in that band – too soon, ask next off-season.'
+      ? 'Her progress – I will know in the off-season.'
+      : 'Her progress – too soon, ask next off-season.'
   }
   const place = PLACEMENT_PHRASE[view.placement]
   // ONE SEASON IS ONE LOOK. The hedge is doing honest work here: a season is a small sample and the
@@ -718,7 +761,7 @@ export function coachPlaqueLine(view: {
   if (view.seasonsTogether <= 1) return `A season in – it looks like ${place}.`
   // TWO SEASONS: THE FIRST READ SURVIVED A SECOND YEAR. "It holds" is the whole of the middle band -
   // the same placement, arrived at twice.
-  if (view.seasonsTogether === 2) return `Two seasons in, and it holds – ${place}.`
+  if (view.seasonsTogether === 2) return `Two seasons in and it holds – ${place}.`
   // THREE AND ON: THE HEDGE IS GONE, and its absence is the confidence. No counter either - "season
   // after season" saturates the way §8a says the knowledge does, and it cannot go stale at ten.
   return `Season after season – ${place}.`
@@ -887,6 +930,21 @@ export function coachRoomNote(world: WorldState): string {
  *  it and screen T splits on it - so the two can never disagree about where the label ends. Short
  *  dash, spaced, which is the app's own prose separator (CLAUDE.md style). */
 export const ROOM_NOTE_SEP = ' – '
+
+/** ⭐⭐ THE BAND ALONE – the plain-language reading of how much of her game is still ahead of her,
+ *  without the argument that follows it (round 23 #1, re-aimed 20.08).
+ *
+ *  ⚠ IT EXISTS SO THAT TWO SCREENS DO NOT EACH SPLIT THE SAME STRING. `CoachMarketScreen` had the
+ *  split inline; the coach card on Home now needs the same clause, and a second `indexOf` would be
+ *  the "two sides asking different functions about one question" defect this project keeps finding.
+ *  One splitter, one separator, one answer.
+ *
+ *  Returns '' when there is no note or no separator, which is what both callers already treat as
+ *  "say nothing" – the fog stays intact and no digit can appear, because none is in the note. */
+export function coachRoomBand(note: string): string {
+  const at = note.indexOf(ROOM_NOTE_SEP)
+  return at > 0 ? note.slice(0, at) : ''
+}
 
 /** THE FOUR BANDS, cheapest headroom last, in the owner's own vocabulary.
  *

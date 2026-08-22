@@ -1635,6 +1635,152 @@ export function migrateSave(raw: unknown): WorldState {
     v = 54
   }
 
+  // ⭐⭐⭐ v54 -> v55: THE STRANDED REVEAL IS CLEARED (round 24, the freeze's hygiene). A REPAIR, and
+  // the only one in this file that is not a shape change – nothing is added, nothing is renamed.
+  //
+  // ⚠⚠ WHY A CAREER CAN NEED IT, AND WHY IT CANNOT FIX ITSELF. Before this wave, an entry that was
+  // still outstanding when the college fork was answered was PLAYED inside the freeze: `tickWeek`
+  // stashed a `pendingTournament` that the epilogue screen had no surface to answer, and from that
+  // week the tick skipped its whole housekeeping step – no `ensureSeason`, no `pruneResults`, no
+  // rank – for as long as the freeze lasted. The owner's own save came out of four years with **0
+  // calendar events, 1 result row and a 200-row junior table tied at #1 on zero points**.
+  //
+  // The state SEALS ITSELF, which is the fact that makes this migration necessary rather than
+  // convenient: `pendingView` returns undefined when `eventById` cannot find the reveal's event, and
+  // the same freeze emptied `world.season`. So `snapshot.pending` is null, `TournamentFlow` never
+  // mounts, the sticky bar's resume button never renders, and `advanceWeeks` returns 'tournament'
+  // having ticked nothing – with no toast, because 'tournament' is deliberately absent from
+  // `STOP_REASON_TEXT` (the overlay owns that message, and the overlay is not there). Pressing Play
+  // does nothing and says nothing, for ever. There is no tap in the app that reaches it.
+  //
+  // ⚠ THE PREDICATE IS THE MECHANISM, NOT THE SYMPTOM. "The reveal's event is not on the calendar"
+  // is exactly `pendingView`'s own refusal, i.e. exactly "no surface can draw this". A college-shaped
+  // test (`college.doneWeek !== null`) would be both too wide – it would discard a perfectly
+  // playable reveal whose event IS still scheduled – and too narrow, since any future route to the
+  // same seal would go unrepaired. Nothing else can produce it: `advanceWeeks` refuses to move time
+  // while a reveal is open and the worker's dev `tick` refuses at entry, so the event cannot age out
+  // from under a live reveal by any other path.
+  //
+  // ⚠ NOTHING IS LOST EITHER WAY. A FINISHED reveal has already been awarded – `finalizeTournament`
+  // banks the points and runs the deferred housekeeping when the last round is revealed, and
+  // `closeTournament` is a bare `pendingTournament = null` – so this is the Continue button she never
+  // got to press. An UNFINISHED one had awarded nothing yet, so there is no ledger row to orphan.
+  //
+  // ⚠ AND IT WRITES NO NEWS. A migration that invented a feed row would be putting words in a
+  // career's mouth about weeks it did not live. The repair is silent by design and the world heals
+  // itself: two ticks rebuild the calendar (`housekeep` -> `ensureSeason`) and one season restores
+  // the table – measured on the owner's save, rank 27 by +6 weeks and the junior table back to 71
+  // scored rows, in an arm with no player action in it at all.
+  //
+  // Idempotent (a save already at v55 never reaches this branch, and a second run would find
+  // `pendingTournament` null anyway) and it writes a literal: ZERO draws on any stream, so the frozen
+  // MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 54) {
+    const pending = save.pendingTournament as { eventId?: unknown } | null | undefined
+    if (pending && typeof pending === 'object') {
+      const season = Array.isArray(save.season) ? (save.season as Array<{ id?: unknown }>) : []
+      if (!season.some((e) => e && e.id === pending.eventId)) save.pendingTournament = null
+    }
+    v = 55
+  }
+
+  // ⭐⭐⭐ v55 -> v56: THE COLLEGE YEAR GETS ITS OWN TOURNAMENT (round 24, the owner's «как минимум 1
+  // турнир в год колледжа»). Two new fields, both nullable, both on the college state only:
+  // `college.pendingLeague` (the championship of the year in progress) and `year.league` on every
+  // banked year.
+  //
+  // ⚠⚠ NULL IS THE TRUE VALUE HERE AND NOT A PLACEHOLDER – v30's case, exactly. A career already
+  // three years into a freeze lived those years before this fixture existed, so it played no
+  // championship in them, and there is nothing to reconstruct: a run is three seeded matches against
+  // a drawn field, and inventing one would write a scoreline into a week that did not have one. The
+  // years it has left get real championships from the next `COLLEGE_LEAGUE.seasonWeek` the freeze
+  // ticks through, which is at most 52 weeks away and usually much less.
+  //
+  // ⚠ WHAT IT COSTS SUCH A CAREER, STATED RATHER THAN GLOSSED: at most ONE call-up. The letter is
+  // now read off `lastLeagueRun`, and a migrated career has no championship on record until its next
+  // week 12 – so if its next week 14 arrives first (which it does for careers whose remaining year
+  // is positioned that way), that one year gets no letter. Every later year has a championship
+  // behind it and is unaffected. Nothing else in the save changes meaning: `callUp`, the banked
+  // ranks, skills and money are all untouched, and a career that has already LEFT college
+  // (`doneWeek !== null`) is unaffected in every respect – nothing reads these fields after that.
+  //
+  // ⚠ AND IT IS SHAPED LIKE v53's: defensive (a missing or wrongly-typed value is written whole),
+  // therefore idempotent, and it walks `years` because that array is the only other place the field
+  // belongs. A save with no `college` at all – every career that never reached the fork, which is
+  // most of them – falls straight through and is byte-identical.
+  //
+  // Writes literals only: ZERO draws on any stream, so the frozen MAIN capture (41550 / e6b0c709) is
+  // untouched by construction.
+  if (v === 55) {
+    const college = save.college as { pendingLeague?: unknown; years?: unknown } | null | undefined
+    if (college && typeof college === 'object') {
+      if (college.pendingLeague === undefined) college.pendingLeague = null
+      if (Array.isArray(college.years)) {
+        for (const year of college.years as Array<{ league?: unknown }>) {
+          if (year && typeof year === 'object' && year.league === undefined) year.league = null
+        }
+      }
+    }
+    v = 56
+  }
+
+  // ⭐⭐⭐ v56 -> v57: HER COLLEGE BIRTHDAYS HAPPEN (round 24, the owner's «да, день рождения делай»).
+  // One new field, nullable, on the college state only: `college.pendingYearStart` – the opening
+  // measurements of a college year paused mid-flight, because `resumeFromCollege` now BREAKS on her
+  // birthday week so the gift dialog can be answered on the live Home shell, and the press that
+  // finishes the year has to bank it against numbers that are history by then.
+  //
+  // ⚠⚠ NULL IS THE TRUE VALUE FOR EVERY v56 SAVE, BY CONSTRUCTION AND NOT BY DEFAULT. A college year
+  // was spent in ONE worker command until this version, so no v56 save can rest mid-year: every save
+  // inside the freeze is standing at an academic year boundary, where no year is in progress. There
+  // is nothing to reconstruct and nothing this null declines.
+  //
+  // ⚠ WHAT AN OLD SAVE MIGRATED MID-COLLEGE GETS, STATED RATHER THAN GLOSSED. Its LIVED college
+  // birthdays stay exactly as they were – ABSENT from `world.birthdays`, no rows invented, no
+  // dialogs raised for weeks that already ticked (`pendingBirthday` only ever asks about the CURRENT
+  // week), and nothing is billed because a gift has never cost a cent anywhere (spec §0, the owner:
+  // «про цену момент, давай не будем это учитывать в нашем кошельке вообще»). The one dialog such a
+  // save can meet on load is its own RESTING week's, if that boundary happens to be her birthday
+  // week – the same popup the v48 migration's note calls "exactly right" for a tour save resting on
+  // one, and the same one a new career meets on that week. Every college birthday still AHEAD of it
+  // pauses the year and is asked properly.
+  //
+  // Idempotent (`undefined` is the only state it rewrites) and it writes a literal: ZERO draws on
+  // any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 56) {
+    const college = save.college as { pendingYearStart?: unknown } | null | undefined
+    if (college && typeof college === 'object' && college.pendingYearStart === undefined) {
+      college.pendingYearStart = null
+    }
+    v = 57
+  }
+
+  // ⭐⭐⭐ v57 -> v58: THE FORK MOVES OFF HER BIRTHDAY (round 24 #5, the owner's «пункт 5 запускай
+  // как обсудили»). One new field, nullable, on the fork only: `fork.departsWeek` – the week the
+  // college answer's reserved place is taken up. The ask now fires at `schoolEndWeek` (age
+  // 18.0–18.9), the college answer RESERVES rather than enrols, and `resolveCollegeDeparture`
+  // executes the move on the next academic year's own September.
+  //
+  // ⚠⚠ NULL IS THE TRUE VALUE FOR EVERY v57 SAVE, BY CONSTRUCTION AND NOT BY DEFAULT. Under the
+  // birthday-era clock the college answer enrolled in the same command, so no v57 save can hold an
+  // answered-but-not-departed fork: a college fork is either OPEN (no departure booked – and if the
+  // save's week is already past its new-clock ask week, the fork simply stands where it was raised;
+  // answering it on new code books a real departure at the next September) or already ENROLLED
+  // (`world.college` non-null – nothing reads `departsWeek` behind an enrolment, and the career
+  // continues exactly as it did: same latch, same `resumeFromCollege`, byte-for-byte weeks).
+  // 'continue' and 'stop' forks never consult it. There is nothing to reconstruct and nothing this
+  // null declines.
+  //
+  // Idempotent (`undefined` is the only state it rewrites) and it writes a literal: ZERO draws on
+  // any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 57) {
+    const fork = save.fork as { departsWeek?: unknown } | null | undefined
+    if (fork && typeof fork === 'object' && fork.departsWeek === undefined) {
+      fork.departsWeek = null
+    }
+    v = 58
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

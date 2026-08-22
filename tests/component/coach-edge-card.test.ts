@@ -168,8 +168,8 @@ const SEED_IN_THIRD: Record<CoachEdgePlacement, string> = {
  *  The whole state is covered by tests/component/round21-coach.test.ts; these two names are here so
  *  the two long-standing assertions in this file read as the same claim they always made. */
 const NOT_YET = {
-  near: 'Where in that band – we will know in the off-season.',
-  far: 'Where in that band – too soon, ask next off-season.',
+  near: 'Her progress – I will know in the off-season.',
+  far: 'Her progress – too soon, ask next off-season.',
 } as const
 
 /** What the plaque says, per place and per confidence band (docs/specs/coach-match-edge.md §7/§8a).
@@ -178,19 +178,19 @@ const NOT_YET = {
  *  blame, no figure - are re-readable straight off this table. */
 const PLAQUE: Record<'s1' | 's2' | 's3', Record<CoachEdgePlacement, string>> = {
   s1: {
-    upper: 'A season in – it looks like the upper end of that band.',
-    middle: 'A season in – it looks like the middle of that band.',
-    lower: 'A season in – it looks like the lower end of that band.',
+    upper: 'A season in – it looks like more than I had hoped for.',
+    middle: 'A season in – it looks like about the pace I expected.',
+    lower: 'A season in – it looks like less than I had hoped for.',
   },
   s2: {
-    upper: 'Two seasons in, and it holds – the upper end of that band.',
-    middle: 'Two seasons in, and it holds – the middle of that band.',
-    lower: 'Two seasons in, and it holds – the lower end of that band.',
+    upper: 'Two seasons in and it holds – more than I had hoped for.',
+    middle: 'Two seasons in and it holds – about the pace I expected.',
+    lower: 'Two seasons in and it holds – less than I had hoped for.',
   },
   s3: {
-    upper: 'Season after season – the upper end of that band.',
-    middle: 'Season after season – the middle of that band.',
-    lower: 'Season after season – the lower end of that band.',
+    upper: 'Season after season – more than I had hoped for.',
+    middle: 'Season after season – about the pace I expected.',
+    lower: 'Season after season – less than I had hoped for.',
   },
 }
 
@@ -359,7 +359,7 @@ describe('the plaque after a season names where in the band he fell', () => {
     // what is left is byte-identical, so there is nowhere for an adjective to hide; (b) the line
     // carries no state-dependent class, so the CSS cannot colour a low draw as bad news.
     const frames = (['lower', 'middle', 'upper'] as CoachEdgePlacement[]).map((p) =>
-      PLAQUE.s1[p].replace(/the (upper end|middle|lower end) of that band/, 'X'),
+      PLAQUE.s1[p].replace(/(more|less) than I had hoped for|about the pace I expected/, 'X'),
     )
     expect(new Set(frames).size, 'one frame, three coordinates').toBe(1)
     for (const band of [PLAQUE.s1, PLAQUE.s2, PLAQUE.s3]) {
@@ -593,8 +593,8 @@ describe('the hedge lifts as the years go by', () => {
     // simply states it, and both name the same place in the same words.
     expect(early).toMatch(/it looks like/)
     expect(late).not.toMatch(/it looks like/)
-    expect(early).toContain('the middle of that band')
-    expect(late).toContain('the middle of that band')
+    expect(early).toContain('about the pace I expected')
+    expect(late).toContain('about the pace I expected')
     // ...and neither of them, at any tenure, has grown a figure for him (§7).
     for (const text of [early, late]) expect(text).not.toMatch(INDIVIDUAL)
   })
@@ -637,7 +637,7 @@ describe('letting him go and taking him back', () => {
     const text = wrapper.find('.cm-row.current .cm-plaque').text()
     // Same place, hedged again – the working relationship is new even though the man is not.
     expect(text).toBe(PLAQUE.s1.middle)
-    expect(text).toContain('the middle of that band')
+    expect(text).toContain('about the pace I expected')
     expect(text, 'the hedging restarted with the partnership').not.toBe(before)
     expect(text).not.toMatch(INDIVIDUAL)
     wrapper.unmount()

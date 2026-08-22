@@ -307,6 +307,17 @@ export type StopReason =
    *  the call-up fires only inside the freeze and the freeze is only ever spent by that command –
    *  and `mutate` puts the returned reasons on the snapshot exactly as it does for an advance. */
   | 'call-up'
+  /** ⭐⭐⭐ ROUND 24 – THE COLLEGE LEAGUE WAS PLAYED. The sibling of 'call-up' one line up, and the
+   *  difference between them is the whole of this round's design: 'call-up' reports a week that MAY
+   *  happen (measured at 40% of college years, and it is now earned), this one reports a week that
+   *  ALWAYS happens. Every college year raises it exactly once.
+   *
+   *  ⚠ IT SITS ABOVE 'call-up' IN THE PRECEDENCE AND THAT IS CAUSAL ORDER, NOT IMPORTANCE. The
+   *  championship is played on `COLLEGE_LEAGUE.seasonWeek` and read by the selectors two weeks
+   *  later, so on a year that produced both, the toast that explains the other one has to lead.
+   *
+   *  ⚠ LIKE 'call-up', NO `advanceWeeks` EVER SETS IT. `resumeFromCollege` is the only producer. */
+  | 'college-league'
   /** R12-15: an entered tournament came round while she was still inside her layoff, so the week
    *  resolved as a WALKOVER – 0 points, and the entry fee forfeited (the list had closed with her on
    *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
@@ -337,7 +348,13 @@ export type StopReason =
   /** ⭐ v48: IT IS HER BIRTHDAY AND NOBODY HAS ANSWERED IT. Blocks exactly like a knock, and for the
    *  ruling's own reason rather than by imitation: the owner asked for the popup to fire ALWAYS
    *  («я бы оставил попап на ДР всегда»), and a popup a `+4` can tick straight past does not always
-   *  fire. All four buttons are valid answers, so this can never dead-end a career. */
+   *  fire. All four buttons are valid answers, so this can never dead-end a career.
+   *
+   *  ⭐⭐⭐ ROUND 24 – AND `resumeFromCollege` NOW PRODUCES IT TOO (the owner's «да, день рождения
+   *  делай»). Unlike its two college siblings above it does not merely report a week that happened:
+   *  the year PAUSES on her birthday week – the loop breaks, the college latch goes back on with the
+   *  SAME year's end under it, and the gift dialog renders on the live Home shell. The next press
+   *  finishes the year. It is the one member of this list that both blocking commands raise. */
   | 'birthday'
   /** W2-ENDINGS: the story has no next week. It outranks everything because its surface REPLACES
    *  the app shell rather than laying a dialog over it – there is nothing behind an epilogue left
@@ -378,6 +395,14 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // screen), so the toast falls through to this line – which is precisely the ordering R11-1 exists
   // to decide. It costs her nothing by the time it fires, so it sits under the academy's news and
   // far under the three that cost money.
+  //
+  // ⭐⭐⭐ ROUND 24 – AND THE COLLEGE LEAGUE SITS IMMEDIATELY ABOVE IT, WHICH IS CAUSAL ORDER. Both
+  // are produced by `resumeFromCollege` and a year that raises the call-up has ALWAYS raised the
+  // league too (the championship is on the calendar, the letter is read off its result), so this
+  // pair co-occurs by construction rather than by coincidence – the only such pair in this list. The
+  // championship is the week that explains the other one, so it leads; the toast speaks for the
+  // highest-precedence reason that has copy, and it is now this.
+  'college-league',
   'call-up',
   // W4: fourth, above everything that can wait a click, for a stronger reason than the three
   // medical beats have – the advance CANNOT continue until it is answered (`advanceWeeks` returns
@@ -396,6 +421,11 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // shoulder is answered. Unlike a knock it CAN co-occur with 'tournament' and with 'season-end' – a
   // birthday lands wherever the date lands, including a playing week and the off-season – which is
   // exactly the ordering this line decides.
+  //
+  // ⭐⭐⭐ ROUND 24: ...and since the college birthday it can co-occur with 'college-league' and
+  // 'call-up' too – a birthday inside the freeze lands wherever the date lands, including the
+  // championship week. Both college reports rank above it here, which is right twice over: they are
+  // NEWS the toast has copy for, while the birthday's surface is the blocking dialog itself.
   'birthday',
   // W2-ENDINGS. The fork and the natural end's offer sit here, below the knock and above everything
   // that owns a dismissable toast, because they BLOCK: `advanceWeeks` refuses to restart until they
@@ -1627,8 +1657,18 @@ export interface TierTrophies {
 /** Which instrument wrote. `kit` is the sponsor; `entry` is THE TOURNAMENT DESK (W2-LADDER §6,
  *  owner ruling 1: «у нас уже система писем есть для этого, надо использовать») - the letter that
  *  arrives when she registers for a professional event, and the short confirmation when she
- *  cancels in time. The agent (§4.2) and the investor (§4.3) still have no representation. */
-export type OfferKind = 'kit' | 'entry' | 'tour'
+ *  cancels in time. The agent (§4.2) and the investor (§4.3) still have no representation.
+ *
+ *  ⭐ `academy` IS ROUND 24 #1 – the junior scholarship's three notices, on paper. See
+ *  `AcademyLetterTerms` for what it says and why the feed alone could not keep it.
+ *
+ *  ⚠ THE WIDENING COSTS NO SCHEMA MOVE, and that is this union's own precedent rather than a
+ *  shortcut taken here: commit 2763caa added the whole `entry` family – the kind, the terms shape
+ *  and `cancelled` – and left `SAVE_SCHEMA_VERSION` at 36, because no save written before a kind
+ *  exists can contain it, nothing is renamed and no existing shape gains a required field. There is
+ *  nothing to migrate and nothing to back-fill; see `settleAcademyLetters` for the one thing an old
+ *  career CAN have derived for it, which is derived in the engine rather than in a migration. */
+export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy'
 
 /** WHICH RULE A PENALTY WAS (W3-ACT2, act2-pro-tour.md §6). A closed union, and it is closed on
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
@@ -2108,6 +2148,11 @@ export type EntryReleaseReason =
   | 'parent'
   /** an injury layoff swallows the event week, so the desk takes her name off the list */
   | 'injury'
+  /** ⭐ round 24 – she answered the fork with «college», so the FREEZE releases every entry that was
+   *  still outstanding when it started. The tour is not something she is pulling out of; she is
+   *  leaving it for four years. ⚠ It is the one reason that refunds PAST the entry deadline too – see
+   *  `REFUSED_PAST_DEADLINE` in `world/entries.ts` for the owner's ruling that decides it. */
+  | 'college'
 
 /** WHY A DEAL STOPPED, on the letter the brand sends when it does (owner, 04.08: «I've figured out
  *  there's no active sponsor. I believe we need to send an email with the termination message»).
@@ -2125,7 +2170,73 @@ export type KitEndReason =
   /** it simply ran to the end of its term, terms honoured on both sides */
   | 'term'
 
-export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms
+/** ⭐⭐ THE ACADEMY'S THREE NOTICES, AS PAPER (round 24 #1). The owner, 20.08: «сейчас как-то
+ *  незаметно появляется один маленький попапчик сверху, который призывает изучить scholarship и
+ *  кнопка dismiss. Я бы и рад изучить, да только далее не знаю где.»
+ *
+ *  ⚠ THE TOAST WAS THE FIX AND NOT THE SURFACE. Round 23 #16 found the verdict landing on `week % 52
+ *  === 0` – the one week a `+4` advance can never reach – and gave it a stop. That stop still does
+ *  its job, which is to say WHEN. What it never had was a destination: the toast said "check her
+ *  scholarship" and there was nothing in the game to check. So the same three notices the review
+ *  already writes into the feed now also arrive as letters, in the surface this game already has for
+ *  «somebody wrote to this family», and they are KEPT there.
+ *
+ *  ⚠ AND KEPT IS THE POINT, WHICH IS WHY IT IS A LETTER RATHER THAN A LOUDER EVENT. `pruneEvents`
+ *  caps the feed at 400 non-`keep` rows, and only the ARRIVAL is written with `keep: true`
+ *  (`fireMilestone`) – the changed share and the ending are ordinary `info` rows and a long career
+ *  has already lost them. `pruneEntryLetters` drops `entry` and `tour` letters at the season
+ *  boundary and NEVER touches anything else, so an `academy` letter lives as long as the career
+ *  does, exactly like the kit contract it sits beside.
+ *
+ *  ⚠ NUMBERS, NEVER ASSEMBLED PROSE – the rule `TourLetterTerms.requirements` states and for the
+ *  identical reason: `world.offers` is persisted, so a sentence written here would survive a retune
+ *  of `ECONOMY.academy` and go on stating a share that is no longer the rule. `sharePct` is what the
+ *  academy actually covers the week the letter was written; the sentence is rebuilt from it by
+ *  `OfferLetter.vue` on every read. */
+export type AcademyNotice =
+  /** nobody was backing her, and now somebody is */
+  | 'arrived'
+  /** they are still backing her and the share has MOVED – the review is silent when it has not */
+  | 'reviewed'
+  /** the run of support is over */
+  | 'ended'
+
+/** WHY THE SCHOLARSHIP STOPPED. The same three the feed line already distinguishes, because "she
+ *  aged out" and "she stopped playing" are different stories and the second one is a lesson. */
+export type AcademyEndReason =
+  /** past `ECONOMY.academy.ageBand[1]` – their junior programme has an upper age and she is past it */
+  | 'aged-out'
+  /** short of `minEventsPerYear`: nobody funds a prospect who does not compete */
+  | 'stopped-playing'
+  /** she competed and she is in the band – the year simply did not make their case */
+  | 'not-this-year'
+
+/** WHAT AN ACADEMY LETTER STATES. Every number on it is one the review had in its hand the week it
+ *  wrote; nothing here is re-derived at read time from a world that has moved on. */
+export interface AcademyLetterTerms {
+  /** which of the three this is */
+  notice: AcademyNotice
+  /** the share of every travel bill they pick up, as a WHOLE PERCENT – the same rounding the feed
+   *  line and the toast quote, so the paper and the ledger can never disagree by a decimal. 0 on an
+   *  ending letter. */
+  sharePct: number
+  /** `reviewed` only: what the share was before this review. The letter's whole content is the move,
+   *  so it has to carry both ends of it. */
+  wasPct?: number
+  /** `ended` only. */
+  reason?: AcademyEndReason
+  /** the week the CURRENT unbroken run of support began (`AcademySupport.sinceWeek`) – so a renewal
+   *  can say "with them since 2033" and an ending letter can say how long it ran. */
+  sinceWeek: number
+  /** the season index of the review that wrote it. It is also the letter's IDENTITY: one review per
+   *  season means one letter per season, and `academyLetterId` keys on nothing else. */
+  seasonIndex: number
+  /** the kit grant that landed with this review, in cents. Absent when none did – she is outside a
+   *  supported year, or a brand already covers all three lines. Money in cents, like everything. */
+  grantCents?: number
+}
+
+export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms | AcademyLetterTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */
@@ -2633,6 +2744,19 @@ export interface ForkState {
    *  invents nothing – exactly the discipline v50 applied to the college ledger it could not
    *  reconstruct. Such a career is charged nothing and the card falls back to the pre-v51 copy. */
   offer: CollegeOffer | null
+  /** ⭐⭐⭐ v58 – THE WEEK SHE LEAVES FOR COLLEGE (round 24 #5: ask / hold / depart). Set by
+   *  `answerFork` on the college answer only – `nextAcademicYearStart(answer week)`, the next
+   *  1 September – and read by `resolveCollegeDeparture`, which enrols her there. Between the two
+   *  the career is ON HOLD-but-playing: `answer === 'college'` with `world.college` still null is
+   *  the reservation state, and every freeze gate stays open because they all read `inCollege`.
+   *
+   *  ⚠ OPTIONAL FOR THE `pendingYearStart` REASON: absent and null mean the same thing – no
+   *  departure is booked. Null on every fork answered 'continue'/'stop', on every v≤57 fork (the
+   *  v58 migration writes the explicit null; an already-enrolled college career never consults it),
+   *  and until the college answer lands. Readers normalise with `?? null`. It SURVIVES the
+   *  departure as the record of the week she left – `college.fromWeek` equals it on every career
+   *  that departs on schedule, and differs only where a migrated save overshot and left late. */
+  departsWeek?: number | null
 }
 
 /** ⭐⭐ WHICH KIND OF PLACE SHE PICKED – a PRICE and a QUALITY, and the player chooses between them
@@ -2765,6 +2889,42 @@ export interface CollegeState {
    *  freeze and a top-level field would have to be nulled by every other code path that ends a
    *  career. Here it dies with the object that gives it meaning. */
   pendingCallUp: CollegeCallUp | null
+  /** ⭐⭐⭐ v56 – THE COLLEGE LEAGUE OF THE YEAR IN PROGRESS, held from the week it is played until
+   *  `bankCollegeYear` folds it into the year. Null the rest of the time, exactly like
+   *  `pendingCallUp` one line up and for the same lifetime reason.
+   *
+   *  ⚠⚠ IT IS ALSO HALF OF WHAT THE CALL-UP READS, and the other half is the banked years – see
+   *  `lastLeagueRun` in `engine/world/college.ts`. There is deliberately NO second "last result"
+   *  field: one persisted copy plus a lookup cannot drift from itself, and two could. */
+  pendingLeague: CollegeLeagueRun | null
+  /** ⭐⭐⭐ v57 – THE OPENING MEASUREMENTS OF A YEAR PAUSED MID-FLIGHT (round 24, the owner's «да,
+   *  день рождения делай»). Her birthday now PAUSES the college year – `resumeFromCollege` breaks
+   *  on the birthday week, the gift dialog renders on the live Home shell, and the next press
+   *  finishes the year. That next press must bank the year against the measurements taken when the
+   *  year OPENED, and those are history by then: her skill, her rank and the family balance have
+   *  all moved since. A measurement is a new fact and has to be persisted – `CollegeYear`'s own
+   *  argument, one interface up.
+   *
+   *  Non-null exactly while a year is paused mid-flight; `bankCollegeYear` nulls it beside
+   *  `pendingCallUp` and `pendingLeague`, whose lifetime it shares.
+   *
+   *  ⚠ OPTIONAL FOR A SEQUENCING REASON, NOT A STYLE ONE. Making it required would force a field
+   *  into `answerFork`'s college literal, and agent D2 owns `answerFork` next (the fork moves to the
+   *  academic year). Absent and null mean the same thing – no year is mid-flight – the v57 migration
+   *  writes the explicit null for migrated saves, and every reader normalises with `?? null`. */
+  pendingYearStart?: CollegeYearStart | null
+}
+
+/** ⭐ v57 – WHAT A COLLEGE YEAR IS OPENED WITH: the measurements `bankCollegeYear` will close it
+ *  against, taken before the first of its weeks ticks. Lived in `engine/world/college.ts` unpersisted
+ *  since P5; the birthday pause made it savable state, and persisted shapes are defined here. */
+export interface CollegeYearStart {
+  week: number
+  /** her skill mean, 0-100 – `skillMeanOf(world.skills)` at the year's opening */
+  skill: number
+  /** her professional rank, or null when she is not on the list (`LadderView.rank`'s contract) */
+  rank: number | null
+  fundsCents: number
 }
 
 /** ⭐ P5 – ONE COLLEGE YEAR, banked the week it finishes.
@@ -2790,6 +2950,28 @@ export interface CollegeYear {
   fundsDeltaCents: number
   /** the national-team week, or null in a year nobody wrote to her – see `engine/nationalTeam.ts` */
   callUp: CollegeCallUp | null
+  /** ⭐⭐⭐ v56 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED (`engine/collegeLeague.ts`).
+   *
+   *  ⚠ NULLABLE EVEN THOUGH IT IS GUARANTEED, AND THE NULL IS NOT A HOLE IN THE GUARANTEE. Two
+   *  careers legitimately have one: a v55 save migrated in mid-freeze (its banked years were lived
+   *  before this fixture existed and inventing a result for them would be putting a scoreline in a
+   *  career's mouth), and a year cut short by an ending before week `COLLEGE_LEAGUE.seasonWeek` came
+   *  round. Both are years that really did hold no championship. */
+  league: CollegeLeagueRun | null
+}
+
+/** ⭐⭐⭐ v56 – ONE COLLEGE LEAGUE, PERSISTED. The leaf's `CollegeLeagueResult` plus the week it was
+ *  played on – exactly the split `CollegeCallUp` keeps against `nationalTeam.ts`'s `CallUp`.
+ *
+ *  ⚠ ZERO MONEY AND ZERO RANKING POINTS, by design and not by omission: she is an amateur while she
+ *  is there, and a student fixture that paid points would make four years of college a ranking route
+ *  and stop the fork being a real choice. `engine/collegeLeague.ts` carries the argument. */
+export interface CollegeLeagueRun {
+  week: number
+  /** 0..`rounds`; `rounds` means she won the title */
+  roundsWon: number
+  /** the draw's round count as it was when she played – 3 for a draw of 8 */
+  rounds: number
 }
 
 /** One national-team week inside a college year. Zero money and zero ranking points, by the
@@ -2975,6 +3157,27 @@ export interface CollegeProgressView {
    *  EMPTY in a year nobody wrote to her, and empty on the year she was named and never took the
    *  court – which is a real outcome, not a missing one, and the copy beside it says so. */
   rubbers: WorldMatch[]
+  /** ⭐⭐⭐ v56 – THE COLLEGE LEAGUE OF THE YEAR JUST FINISHED, or of the year in progress once it has
+   *  been played. Null only before the first championship of the career (and on a v55 career
+   *  migrated in mid-freeze, whose banked years genuinely held none).
+   *
+   *  ⚠ IT IS READ FROM `pendingLeague` FIRST AND THE BANKED YEARS SECOND – `lastLeagueRun` – so the
+   *  card reports the championship the WEEK it is played rather than at the year boundary. That
+   *  matters because it is also what the call-up two weeks later is about to read: the player sees
+   *  the fact the selectors will use, before they use it. */
+  league: CollegeLeagueRun | null
+  /** ⭐⭐⭐ v56 – THE CHAMPIONSHIP'S MATCHES, WATCHABLE, on `rubbers`' own argument two doors up: the
+   *  records themselves, because that is what watching one takes. A wire field and not a save field
+   *  – the rows live in `world.events` like every other match in the game.
+   *
+   *  Between one and three rows: she is in the draw every year, so unlike `rubbers` this is EMPTY
+   *  only on a career that has not reached its first championship week. */
+  leagueMatches: WorldMatch[]
+  /** ⭐ v57 – IS A YEAR PAUSED MID-FLIGHT (her birthday stopped it)? True exactly while
+   *  `college.pendingYearStart` is held, so the bottom control can say «Finish the year» instead of
+   *  offering to start one, and the early return can stand down until the year she started is done.
+   *  A wire field off persisted state – no schema implications of its own. */
+  yearInProgress: boolean
 }
 
 export interface Snapshot {
@@ -2996,6 +3199,17 @@ export interface Snapshot {
    *  month, so a save from any version answers it the moment it is loaded and nothing can drift out
    *  of step with `world.week`. */
   schoolEndsWeek: number
+  /** ⭐⭐⭐ ROUND 24 #5 – THE WEEK SHE LEAVES FOR COLLEGE, or null when no departure is in front of
+   *  her. Non-null in exactly two states, and it is the same fact in both: while the fork is OPEN it
+   *  is the prospective `nextAcademicYearStart(askedWeek)` (what the college answer would book – the
+   *  dialog prints it), and through the HOLD (college answered, not yet enrolled) it is the booked
+   *  `fork.departsWeek` (the calendar's look-ahead marks it). Null once she enrols, on every other
+   *  fork answer, and behind any latched ending – a voided reservation never resurfaces.
+   *
+   *  DERIVED, never persisted as its own field: `toSnapshot` reads the fork. A week and not a
+   *  boolean, `schoolEndsWeek`'s own reason one line up – the look-ahead asks about weeks that are
+   *  not this one. */
+  collegeDepartsWeek: number | null
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan

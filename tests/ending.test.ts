@@ -31,6 +31,8 @@ import {
   tickWeek,
   answerFork,
   answerRetirement,
+  chooseGift,
+  pendingBirthday,
   resumeFromCollege,
   enterEvent,
   hireCoach,
@@ -41,6 +43,7 @@ import {
   measureCollegeOffer,
   lastRungSeasonIndexOf,
   plateauViewOf,
+  resolveCollegeDeparture,
   resolveEndings,
   buildEndingView,
   buildAlbum,
@@ -48,8 +51,10 @@ import {
   closeTournament,
   captureBreakEven,
   toSnapshot,
+  type WorldState,
 } from '../src/engine/world'
-import { rngFromSeed, resumeMain, initMainState } from '../src/engine/rng'
+import { rngFromSeed, resumeMain, initMainState, type Rng } from '../src/engine/rng'
+import { nextAcademicYearStart, schoolEndWeek } from '../src/engine/kidLife'
 import { DEFAULT_PROFILE, LADDER_TRACKS } from '../src/shared/protocol'
 import type { SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
 import type { LadderTrack } from '../src/engine/season/types'
@@ -175,11 +180,22 @@ describe('detectEnding – bankruptcy leads, and neither is a verdict', () => {
   })
 })
 
-describe('#1/#2 the fork at nineteen', () => {
-  it('is due once she is nineteen and never once answered', () => {
-    expect(forkDue(18, false)).toBe(false)
-    expect(forkDue(19, false)).toBe(true)
-    expect(forkDue(24, true)).toBe(false)
+describe('#1/#2 the fork, asked when school ends', () => {
+  // ⚠ RE-AIMED BY ROUND 24 #5 (owner: «пункт 5 запускай как обсудили»). The predicate used to read
+  // her AGE («due once she is nineteen»); it reads the WEEK against `schoolEndWeek` now – the ask
+  // moved off her birthday to the week school ends, and enrolment moved to the departure. The
+  // anchor weeks are the measured ones from docs/specs/school-ends-2026-08.md §2: 242 (Jan–Aug
+  // births), 294 (Sep–Dec).
+  it('is due once school is over and never once asked', () => {
+    expect(forkDue(schoolEndWeek(6) - 1, 6, false)).toBe(false)
+    expect(forkDue(schoolEndWeek(6), 6, false)).toBe(true)
+    expect(forkDue(schoolEndWeek(6) + 300, 6, true)).toBe(false)
+    // ...and the cohort split is the school's, not the draw sheet's: a December girl leaves a year
+    // later in absolute weeks than a June girl, so her fork waits for HER September.
+    expect(schoolEndWeek(6)).toBe(242)
+    expect(schoolEndWeek(12)).toBe(294)
+    expect(forkDue(242, 12, false)).toBe(false)
+    expect(forkDue(294, 12, false)).toBe(true)
   })
 
   it('"continue" is the only answer that is not an ending', () => {
@@ -271,6 +287,16 @@ function freshWorld(seed = 'ending-test') {
   return { world, rng }
 }
 
+/** ⚠ ROUND 24 #5 – the college answer RESERVES; enrolment happens at the DEPARTURE (the next
+ *  academic-year September, `fork.departsWeek`). The freeze cases in this file are about the YEARS,
+ *  so this helper walks the gap the way a player's world does – it simply ticks – and hands back
+ *  the enrolled career. The walked-gap semantics themselves are pinned in
+ *  tests/college-departure.test.ts. */
+function answerCollegeAndDepart(world: WorldState, rng: Rng): void {
+  answerFork(world, 'college')
+  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) tickWeek(world, rng)
+}
+
 describe('the latch, on a real world', () => {
   it('advanceWeeks refuses to move an ended world, and reports the reason', () => {
     const { world, rng } = freshWorld()
@@ -340,7 +366,15 @@ describe('the latch, on a real world', () => {
     world.bestFinishByTier = { w75: 0, wta250: 1, w15: 0 }
     answerFork(world, 'college')
     expect(world.fork?.answer, 'the answer is taken').toBe('college')
-    expect(world.college, 'and she is in the four years, which P5 built and this ruling leaves alone').not.toBeNull()
+    // ⚠ RE-AIMED BY ROUND 24 #5, NOT WEAKENED: the answer RESERVES now – the four years begin at
+    // the DEPARTURE, the next academic-year September – so "she is in the four years" is asserted
+    // at the departure instead of at the click. The property under test is unchanged: no result of
+    // any kind spends the answer or the place.
+    expect(world.fork?.departsWeek).toBe(nextAcademicYearStart(world.week))
+    expect(world.college, 'the hold – reserved, not enrolled').toBeNull()
+    world.week = world.fork!.departsWeek!
+    resolveCollegeDeparture(world)
+    expect(world.college, 'and at the departure she is in the four years, which P5 built and this ruling leaves alone').not.toBeNull()
     expect(world.college?.untilWeek).toBe(world.week + ENDINGS.collegeYears * 52)
   })
 
@@ -666,13 +700,18 @@ describe('#2 college – the only ending that resumes', () => {
   it('latches, freezes four years, and gives them back one year at a time', () => {
     const { world, rng } = freshWorld('college-test')
     world.fork = { askedWeek: world.week, answer: null, offer: null }
-    answerFork(world, 'college')
+    answerCollegeAndDepart(world, rng)
     expect(world.ending?.type).toBe('college')
     expect(world.college).not.toBeNull()
     expect(inCollege(world)).toBe(true)
     const from = world.week
     for (let year = 1; year <= ENDINGS.collegeYears; year++) {
-      resumeFromCollege(world, rng)
+      // ⚠ ROUND 24 («да, день рождения делай»): the year PAUSES on her birthday week now, so a year
+      // is press-answer-press. Every original assertion is unchanged and asked at the same boundary.
+      for (let press = 0; press < 3 && world.college!.years.length < year; press++) {
+        resumeFromCollege(world, rng)
+        if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      }
       expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
       expect(world.college!.years, `one row per year lived`).toHaveLength(year)
       // The latch goes back on for every year but the last – that is what makes the question exist.
@@ -691,8 +730,12 @@ describe('#2 college – the only ending that resumes', () => {
     const { world, rng } = freshWorld('college-rank')
     for (let i = 0; i < 40; i++) tickWeek(world, rng)
     world.fork = { askedWeek: world.week, answer: null, offer: null }
-    answerFork(world, 'college')
-    for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
+    answerCollegeAndDepart(world, rng)
+    // Press-answer-press (round 24): each year pauses on her birthday week.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
   }, 90_000)
@@ -700,10 +743,15 @@ describe('#2 college – the only ending that resumes', () => {
   it('the family stops paying: no coaching is billed across the freeze', () => {
     const { world, rng } = freshWorld('college-money')
     world.fork = { askedWeek: world.week, answer: null, offer: null }
-    answerFork(world, 'college')
+    answerCollegeAndDepart(world, rng)
     const spentBefore = world.careerTotals.spentCents
     const from = world.week
-    for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
+    // Press-answer-press (round 24): each year pauses on her birthday week – and the gift charges
+    // nothing, which is exactly what this case goes on to measure.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
     // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last
     // fourteen months of the freeze - which is exactly the stretch a bug would have to survive.
@@ -823,9 +871,18 @@ describe('⚠ input-independence survives college', () => {
     const rngB = resumeMain(b.rngMain)
     // A goes to college; B does nothing at all. Same seed, same weeks, same MAIN sequence.
     a.fork = { askedWeek: a.week, answer: null, offer: null }
-    answerFork(a, 'college')
-    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(a, rngA)
-    for (let i = 0; i < ENDINGS.collegeYears * WEEKS_PER_YEAR; i++) tickWeek(b, rngB)
+    // ⚠ ROUND 24 #5 – the answer reserves and A WALKS the gap to its September departure with
+    // ordinary ticks (the same weeks B ticks), then spends the four years. The reservation, the
+    // departure, the release and the enrolment must all cost the MAIN stream not one draw.
+    answerCollegeAndDepart(a, rngA)
+    // ⚠ ROUND 24 – AND THE PROPERTY GETS STRONGER, NOT DIFFERENT: the years pause on her birthdays
+    // and the gifts are answered mid-walk, so the arm now proves that pausing, answering and
+    // resuming cost the MAIN stream not one draw either. The B arm never pauses at all.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && a.ending?.type === 'college'; press++) {
+      resumeFromCollege(a, rngA)
+      if (pendingBirthday(a) !== null) chooseGift(a, 'day')
+    }
+    while (b.week < a.week) tickWeek(b, rngB)
     expect(a.week).toBe(b.week)
     expect(a.rngMain.n).toBe(b.rngMain.n)
     expect(a.rngMain.s).toBe(b.rngMain.s)

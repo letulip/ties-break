@@ -1,4 +1,12 @@
-# The shop, the assets and the broker — backlog (owner, round 23 item 8, 19.08.2026)
+---
+type: plan
+status: draft
+area: economy
+canonical: false
+last-reviewed: 2026-08-22
+---
+
+# The shop, the assets and the broker – backlog (owner, round 23 item 8, 19.08.2026)
 
 This file records design intent, NOT a built feature. Fictional brands only. Player-facing copy uses
 the short dash "–". Money is in CENTS in the engine.
@@ -28,6 +36,21 @@ and its first job is to make late-career wealth mean something other than a bigg
 ⚠ **AND IT MUST NOT BECOME THE OPTIMAL PLAY.** If assets out-return the tennis, the correct strategy
 becomes "under-invest in her, buy property" – which inverts the entire premise. The design rule
 below is therefore: **assets never beat a career, they only survive one.**
+
+---
+
+## 0a. ⭐ The shop's best moment already exists: the college years (22.08)
+
+Round 24 made college a lived phase on the Home shell – and it is the one stretch where BOTH of this
+file's preconditions hold at once: the wallet finally rests (no travel, no coach, no entries –
+`college-as-a-place.md` §7d) and the parent has no weekly job to do (§7c-orig of the same file).
+Four years of idle money and an idle parent are exactly what a shop is for. Mechanically it is ready
+to be allowed there: a shop command is about the FAMILY'S OWN money, i.e. the `guardNotEndedForGood`
+class round 24 created – the short list that already holds the vacation cancels and the birthday
+gift – not the tour-command guard that refuses inside the freeze.
+
+⚠ **An opportunity, not a dependency.** The owner's word for this branch is «независимый», and it
+stays true: the shop needs nothing from college, it merely lands best there.
 
 ---
 
@@ -64,7 +87,7 @@ the rest of the app is made of.
 
 ---
 
-## 3. Prices that move — the owner's own list, made mechanical
+## 3. Prices that move – the owner's own list, made mechanical
 
 > «чтобы что-то могло обесцениться, например, или стихийно взлететь в цене. Или вообще заморозиться
 > на неопределенный срок»
@@ -138,6 +161,8 @@ band, so the two compete for the same money and the player has to choose.
    good ending; one that silently drops them is a bug the player will feel.
 4. **Is any of it inheritable by HER?** Round 23 item 18 asks for prize money to reach her account
    at 18. If she has money, does she have a shelf of her own? That is a much bigger game.
+   *(22.08: the rail exists – `kidFundsCents` is live since schema v54. The design question stands;
+   the plumbing no longer blocks it.)*
 
 ---
 
@@ -177,3 +202,26 @@ this fills.
 **Is it HER giving or the FAMILY's?** Round 23 #18 put her prize share in her own account from 18. If
 the money is hers, the parent proposing a gift is a different scene entirely – and possibly a better
 one than either half of the original question.
+
+---
+
+## 8. Steps
+
+The owner, 20.08: «Мы еще обсуждали магазин для трат и инвестиций, это тоже очень большой слой и
+независимый.» ⭐ **INDEPENDENT is the word that matters** – nothing in this file needs the private
+life, the advertising deals or the specialists, and none of them need it. It can be built whenever,
+or never, without stranding anything else.
+
+⚠ Each step is its own save-schema move (bump, append-only migration, golden fixture, e2e fixtures).
+
+| # | step | done when |
+| --- | --- | --- |
+| **1** | **the tab, with static prices** – buy, own, sell. No movement at all. | a bench career can buy a thing, keep it, and see it in the ledger |
+| **2** | **drift** – one sub-stream, no shocks | a season of prices reads as alive rather than as noise, measured |
+| **3** | **shock and freeze** (§3) | a freeze is survivable and a shock is a story, both measured over careers |
+| **4** | **the broker** (§4) – legibility, never return | he names a band and never a number, and the fee competes with a coach rung |
+| **5** | **charity** (§7) – the giving is free and the world notices | a gift changes something unpromised, and the ending can name it |
+
+⚠ **AND THE GATE ON STEP 1 IS §6.1's QUESTION, NOT A DATE**: a shop that opens before the money turns
+positive is a shop with an empty shelf. Round 23 measured that turn at season 2-3 on his own careers
+(-$11k, -$9k, +$20k, +$47k, +$126k), so "her first professional season" is the honest candidate.
