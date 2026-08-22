@@ -1534,6 +1534,22 @@ export const ECONOMY = {
     // re-measured rather than re-tuned - see `rivalFatigueWindowWeeks` below, whose whole premise
     // ("at recoveryBase 1/week their drain outruns their recovery permanently") this number retires.
     recoveryBase: 8,
+    // ⭐ THE PRO PHASE RECOVERS ON 5, NOT 8 (owner 22.08, variant C of his own proposal: «может
+    // быть нам тогда стоит дефолтное восстановление с 10 в неделю на 7 опустить? тогда массажист
+    // как раз будет еще немного накидывать, может вполне гармонично получиться»). His 10 = base 8
+    // + the 60/40 slider's +2, so his 7 = base 5 – and it applies ONLY while
+    // `activeLadderOf === 'wta'` (the masseur's own unlock boundary), read through
+    // `recoveryBaseFor` in world/medical.ts. Juniors and ALL 199 RIVALS keep `recoveryBase` above.
+    //
+    // ⚠ THE GLOBAL DROP (variant B) WAS MEASURED AND REJECTED – docs/specs/the-masseur-2026-08.md
+    // §10, 32 paired seeds × 2 presets: B lands 2/3 of its damage outside the place he aimed at
+    // (junior condition −1.6..−2.2 at 3.5-5 SEM, +3 bankruptcies across 64 base careers, two
+    // careers per preset never turn professional) and the one thing the proposal was FOR – the
+    // masseur's uplift – SHRINKS (~40% fewer rehab receipts). C keeps the junior era byte-identical
+    // (measured 0.00 ± 0.00 on every metric) and makes the pro grind honestly harder exactly where
+    // he pointed. His «накидывать» arithmetic only works here too: base 5 + slider 2 + the entry
+    // rung's +1 = 8 for a staffed professional against today's unstaffed 10.
+    proPhaseRecoveryBase: 5,
     // V2 SHIPPED (owner verdict 25.07 "V2 хорош", after two fatigue-bench rounds): a tournament
     // week is travel + competition, not rest – NO base recovery on a week the kid plays. The
     // knob stays (the bench's 'legacy' scenario patches it back to 2 for reference runs).

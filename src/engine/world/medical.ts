@@ -34,6 +34,7 @@ import {
 } from './entryCaps'
 import {
   acceptanceRank,
+  activeLadderOf,
   hasOutgrown,
   juniorAccessOpen,
   juniorReservedPlace,
@@ -68,12 +69,28 @@ export function restRecoveryBonus(restPercent: number): number {
   return 0
 }
 
+/** ⭐ THE BASE A WEEK RETURNS, BY CAREER PHASE (owner 22.08, the recovery question's variant C –
+ *  docs/specs/the-masseur-2026-08.md §10-11). The professional grind recovers on
+ *  `proPhaseRecoveryBase` (5); the junior era – and every rival, who reads the constant directly
+ *  in season/rival.ts – keeps `recoveryBase` (8). The boundary is the masseur's own unlock gate,
+ *  `activeLadderOf === 'wta'`: her first counting W-series result on the never-pruned mark, a
+ *  one-way door, so the base can never flap back mid-career.
+ *
+ *  ⚠ ONE HELPER, THREE READERS, BY CONSTRUCTION: `accrueCondition` below plus the two 18.08 makeup
+ *  expressions in world.ts (the medical-withdrawal arm and `skipEvent`). The makeups hand back
+ *  «what a non-playing week pays», so they MUST pay the same phase's base or the doctor's veto
+ *  becomes worth 3 condition more than an ordinary week in the pro era. Pure read, zero draws. */
+export function recoveryBaseFor(world: WorldState): number {
+  return activeLadderOf(world) === 'wta' ? ECONOMY.condition.proPhaseRecoveryBase : ECONOMY.condition.recoveryBase
+}
+
 /** Pure INTEGER condition accumulator (zero RNG). Round-9 owner redesign: fatigue comes from
  *  MATCHES (matchDrain, applied when a run COMMITS at finalizeTournament – so a skipped event
  *  week (R9-9) or a walkover costs nothing by construction); recovery comes from TIME:
- *  recoveryBase every week, + the train/rest slider bonus on match-free weeks only, + the
- *  physio bonus while the retainer runs (R9-14 – the billed value finally visible), + the
- *  blackout bonus on off-season/exam weeks. Clamps to [min,max]. */
+ *  the phase's base (`recoveryBaseFor` – 8 junior, 5 pro since the owner's 22.08 ruling) every
+ *  week, + the train/rest slider bonus on match-free weeks only, + the physio bonus while the
+ *  retainer runs (R9-14 – the billed value finally visible), + the blackout bonus on
+ *  off-season/exam weeks. Clamps to [min,max]. */
 export function accrueCondition(world: WorldState, playedThisWeek: boolean): void {
   const c = ECONOMY.condition
   // WEEK-TYPE RECOVERY LADDER (season-planner spec §4, owner 25.07 – 0 / base / base+slider):
@@ -85,11 +102,8 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   // The practice flag is read off world state (not a parameter) so the signature – and with it
   // the zero-RNG, arity-2 contract the B1 invariance test pins – stays exactly as it was.
   const practiced = !playedThisWeek && practiceForWeek(world, world.week) !== undefined
-  let recovery = playedThisWeek
-    ? c.matchWeekRecoveryBase
-    : practiced
-      ? c.recoveryBase
-      : c.recoveryBase + restRecoveryBonus(world.plan.rest)
+  const base = recoveryBaseFor(world)
+  let recovery = playedThisWeek ? c.matchWeekRecoveryBase : practiced ? base : base + restRecoveryBonus(world.plan.rest)
   if (world.physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
   // The masseur's at-home table (travelling team steps 1+2): the RUNG's bonus beside the physio's
   // +1, THROUGH THE ONE PREDICATE his bill reads – a suspended week (college, family holiday) buys

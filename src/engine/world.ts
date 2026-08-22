@@ -273,8 +273,8 @@ import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, decline
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
 export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
-import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
-export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
+import { restRecoveryBonus, recoveryBaseFor, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
+export { restRecoveryBonus, recoveryBaseFor, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.
@@ -3408,9 +3408,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // dial his bonus is withheld on played weeks (she is away, nobody is on the table) – so a week
     // that turns out match-free after all has to hand it back, or the doctor's veto quietly costs a
     // staffed family the rung bonus it costs nobody else.
+    // ⭐ THE PHASE'S OWN BASE (owner 22.08, recovery variant C): `recoveryBaseFor` – 8 junior, 5
+    // pro – or the veto would hand a professional back 3 more than an ordinary week pays her.
     world.condition = clamp(
       world.condition +
-        (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
+        (recoveryBaseFor(world) - ECONOMY.condition.matchWeekRecoveryBase) +
         restRecoveryBonus(world.plan.rest) +
         (masseurWorksThisWeek(world) ? masseurRungOf(world).conditionBonusPerWeek : 0),
       ECONOMY.condition.min,
@@ -3756,9 +3758,11 @@ export function skipEvent(world: WorldState, eventId: string): void {
   //
   // ⭐ v59 STEP 2: the masseur's at-home rung bonus rides in the same makeup, for the identical
   // 18.08 reason – see the medical-withdrawal arm; the two paths carry the same expression.
+  // ⭐ AND THE PHASE'S OWN BASE with it (owner 22.08, recovery variant C): `recoveryBaseFor` – 8
+  // junior, 5 pro – the same helper all three readers share, so the paths cannot part again.
   world.condition = clamp(
     world.condition +
-      (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
+      (recoveryBaseFor(world) - ECONOMY.condition.matchWeekRecoveryBase) +
       restRecoveryBonus(world.plan.rest) +
       (masseurWorksThisWeek(world) ? masseurRungOf(world).conditionBonusPerWeek : 0),
     ECONOMY.condition.min,
