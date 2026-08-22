@@ -33,6 +33,7 @@
 // leaves – ledger, ladder, college, bookings, constants. Deliberately NOT from coachMarket.ts:
 // importing it here would close a runtime cycle through endings → entries → medical → this file.
 import { ECONOMY } from '../economy'
+import { clamp } from '../condition'
 import { addEvent } from './ledger'
 import { guardNotEnded } from './constants'
 import { activeLadderOf } from './ladder'
@@ -192,15 +193,36 @@ export function masseurWorksThisWeek(world: WorldState): boolean {
   return vacationForWeek(world, world.week) === undefined
 }
 
-/** WEEKLY SALARY (tick step 1c, beside `resolvePhysio`). A flat contract per RUNG in cents –
- *  sessions × the professional session rate, deliberately not a corridor draw and not jittered, so
- *  the line on the ledger is the number on the card, every week, and the player can read the deal
- *  he signed. Suspended weeks (college, family holiday) charge nothing and say nothing: the
- *  physio's own shape, and the card on screen T carries the standing fact. The retainer RUNS on a
- *  tournament week whether or not the masseur travels – the coach's own 08.08 rule: a weekly
- *  retainer does not stop being owed because she is away at an event. ZERO draws on any stream. */
+/** ⭐ WHAT A TOUR WEEK COSTS (owner 22.08: «на неделе выезда по-матчевая цена заменяет
+ *  недельную») – matches played × the professional session rate, the same $75 every rung's home
+ *  week is built from. The draw table prices itself: a Slam title week is 7 matches = $525 –
+ *  exactly the daily rung's home week – a wta1000 up to 6 ($450), a 32-draw up to 5 ($375), and a
+ *  first-round exit is one session's worth ($75). Billed at `finalizeTournament`, where the
+ *  matches are known; the weekly rung bill stands down for that week (see `resolveMasseur`).
+ *  Pure integer arithmetic, zero draws. */
+export function masseurTourWeekCents(matchesPlayed: number): number {
+  return Math.max(0, matchesPlayed) * ECONOMY.masseur.perSessionCents
+}
+
+/** WEEKLY SALARY (charged once per tick, after the play arm has decided the week's shape). A flat
+ *  contract per RUNG in cents – sessions × the professional session rate, deliberately not a
+ *  corridor draw and not jittered, so the line on the ledger is the number on the card, every
+ *  week, and the player can read the deal he signed. Suspended weeks (college, family holiday)
+ *  charge nothing and say nothing: the physio's own shape, and the card on screen T carries the
+ *  standing fact. The retainer RUNS on a tournament week he STAYS HOME from – the coach's own
+ *  08.08 rule: a weekly retainer does not stop being owed because she is away at an event.
+ *
+ *  ⭐ EXCEPT THE WEEK HE BOARDS (owner 22.08: «на неделе выезда по-матчевая цена заменяет
+ *  недельную»): when the fare was charged this very tick, the play arm has recorded
+ *  `pendingTournament.masseurThere` – the round-21 #2 "asked once, carried" doctrine, the same
+ *  fact the tour relief reads – and the weekly bill STANDS DOWN: `finalizeTournament` bills
+ *  matches played × the session rate instead (`masseurTourWeekCents`). One decision about one
+ *  week, read where it was written; a stale pending cannot reach here because `advanceWeeks`
+ *  refuses to tick past an open reveal. ZERO draws on any stream. */
 export function resolveMasseur(world: WorldState): void {
   if (!masseurWorksThisWeek(world)) return
+  const p = world.pendingTournament
+  if (p !== null && !p.finished && (p.masseurThere ?? false)) return
   const cost = masseurWeeklyCents(world)
   world.fundsCents -= cost
   addEvent(world, {
@@ -209,6 +231,39 @@ export function resolveMasseur(world: WorldState): void {
     category: 'staff',
     text: 'Masseur – weekly salary',
     amountCents: -cost,
+  })
+}
+
+/** ⭐ THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1 сеанс
+ *  массажа по возвращении»). `finalizeTournament` marks the debt – `world.masseurReturnDue` – when
+ *  a hired masseur was NOT flown to the run (`!pendingTournament.masseurThere`: he waited at
+ *  home); this settles it on the FIRST non-played week after, one extra session's worth of
+ *  recovery (`ECONOMY.masseur.returnSessionBonus`) with its own receipt.
+ *
+ *  THE RULES, each one sentence: a played week postpones it (back-to-back trips – she is not home
+ *  yet); the moment passes WHEN SHE RETURNS, so the mark is cleared on that first home week
+ *  whether or not he still works it (released, or the family away on a booked week: no table, no
+ *  session, no receipt – and no debt carried to some later hire); a run he was FLOWN to never
+ *  writes the mark, because the between-rounds relief was that week's work (`masseurTourRelief`).
+ *
+ *  Called by `tickWeek` beside `resolveMasseur`. Integer, clamped, ZERO draws on any stream. */
+export function resolveMasseurReturn(world: WorldState, playedThisWeek: boolean): void {
+  if (playedThisWeek) return
+  if (world.masseurReturnDue === undefined || world.masseurReturnDue === null) return
+  // The mark comes OFF the world, not onto `undefined`: a serialised save never carries a spent
+  // debt, and the per-key freeze tooling never meets a key that means nothing.
+  delete world.masseurReturnDue
+  if (!masseurWorksThisWeek(world)) return
+  world.condition = clamp(
+    world.condition + ECONOMY.masseur.returnSessionBonus,
+    ECONOMY.condition.min,
+    ECONOMY.condition.max,
+  )
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    // No digits, no pronoun for the masseur (R15-7), short dash – the receipt idiom of the house.
+    text: 'Back from the tour – an extra session on the table works the trip out of her legs.',
   })
 }
 

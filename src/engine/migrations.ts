@@ -1810,6 +1810,11 @@ export function migrateSave(raw: unknown): WorldState {
   //     buys the seat, and a migration never buys anything.
   // A save's `pendingTournament` MAY carry `masseurThere` from a step-2 build; absent means he
   // stayed home, so nothing is back-filled there either.
+  //   * ...and the world MAY carry `masseurReturnDue` (22.08, the owner's return-week session:
+  //     «довесить послетурнирное восстановление 1 сеанс массажа по возвращении») – transient,
+  //     written by `finalizeTournament` when a hired masseur was not flown, spent by
+  //     `resolveMasseurReturn` on the next non-played week and DELETED. Absent means nothing is
+  //     owed, which is the true value for every earlier save: same discipline, nothing back-filled.
   if (v === 58) {
     if (typeof save.masseurHired !== 'boolean') save.masseurHired = false
     if (typeof save.masseurSessionsPerWeek !== 'number') save.masseurSessionsPerWeek = 4

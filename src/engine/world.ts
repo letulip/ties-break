@@ -174,8 +174,8 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
-import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, masseurRungOf, masseurWeeklyCents, masseurTourRelief, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
-export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, masseurRungOf, masseurWeeklyCents, masseurTourRelief, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
+import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
+export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
 import { eventById } from './world/bookings'
@@ -918,6 +918,13 @@ export interface WorldState {
    *  the seat. The fare is `masseurTravelFareFor` (the coach's own price rule, one more seat), and
    *  what it buys is `masseurTourRelief` at finalize – recovery between rounds, by depth. */
   masseurTravels: boolean
+  /** ⭐ THE RETURN-WEEK SESSION'S MARK (v59, owner 22.08: «довесить послетурнирное восстановление
+   *  1 сеанс массажа по возвращении»). The week of the last finalized run a HIRED masseur was NOT
+   *  flown to; `resolveMasseurReturn` settles it (+1 recovery, receipt) on the first non-played
+   *  week after and clears it. OPTIONAL AND TRANSIENT by design – absent means nothing is owed,
+   *  which is the true value for every earlier save, so nothing is back-filled (the
+   *  `pendingTournament.masseurThere` / `weeksSaved` discipline, recorded in the v59 migration). */
+  masseurReturnDue?: number
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -2104,6 +2111,37 @@ function finalizeTournament(world: WorldState): void {
       text: 'Deep week, fresh legs – the table work on tour kept the run from eating her.',
     })
   }
+  // ⭐ ...AND THE WEEK HE BOARDED IS BILLED PER MATCH (owner 22.08: «на неделе выезда по-матчевая
+  // цена заменяет недельную»). `resolveMasseur` stood the weekly rung bill down when the play arm
+  // recorded `masseurThere`; this is the replacement, at the one point the matches are known –
+  // matches played × the $75 session, so a Slam title week is 7 × $75 = $525 (exactly the daily
+  // rung's home week) and a first-round exit is one session. Charged off the recorded fact, not
+  // the current hire – he made the trip whatever the family decided since (the round-21 #2
+  // doctrine). Fare on top, exactly as at home. Zero draws.
+  if (p.masseurThere ?? false) {
+    const tourBill = masseurTourWeekCents(runMatches.length)
+    if (tourBill > 0) {
+      world.fundsCents -= tourBill
+      addEvent(world, {
+        week: world.week,
+        type: 'expense',
+        category: 'staff',
+        text: `Masseur on tour – ${runMatches.length} ${runMatches.length === 1 ? 'match' : 'matches'} worked, billed per match`,
+        amountCents: -tourBill,
+      })
+    }
+    // A trip he MADE settles any older return debt too: the between-rounds relief was this
+    // week's work, and the return she comes home from is this tournament's, not a stale one's.
+    delete world.masseurReturnDue
+  } else if (world.masseurHired ?? false) {
+    // ⭐ THE RETURN-WEEK SESSION'S MARK (owner 22.08: «довесить послетурнирное восстановление 1
+    // сеанс массажа по возвращении»): he was NOT flown, so the first non-played week after this
+    // run gets one extra session's worth of recovery – settled and receipted by
+    // `resolveMasseurReturn`. Written at the commit point for the same reason the cheque is: a
+    // walkover, a skip or a medical withdrawal never reaches finalize, and none of them is a trip
+    // to return from. Overwriting an unspent older mark is correct – she has been home since.
+    world.masseurReturnDue = world.week
+  }
 
   // Effective ranking delta = kid's windowed best-6 sum after adding the result minus before.
   //
@@ -3237,12 +3275,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   resolveVacation(world)
   resolvePractice(world)
   resolvePhysio(world)
-  // 1c-masseur (v59, travelling team step 1). The salary beside the physio bill it must stay
-  //        distinguishable from: a FLAT contract, zero draws on any stream, suspended – not
-  //        cancelled – at college and on booked family weeks (the coach's own stand-down pair,
-  //        asked of a second seat; see masseurWorksThisWeek). His effects ride the same predicate:
-  //        the +1 inside accrueCondition above, and the rehab cadence inside rollInjury.
-  resolveMasseur(world)
+  // 1c-masseur: MOVED BELOW THE PLAY ARM (owner 22.08, per-match tour pricing). The salary used to
+  //        bill here beside `resolvePhysio`; since «на неделе выезда по-матчевая цена заменяет
+  //        недельную» the bill must know whether the fare was charged this very week, and that fact
+  //        is written by the play arm (`pendingTournament.masseurThere`) – so the charge now sits
+  //        directly after it, reading the recorded fact instead of re-deriving the arm. Zero draws
+  //        either way, and on a home week nothing between the two positions writes a ledger row, so
+  //        the move is invisible everywhere the masseur is not travelling.
 
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)
@@ -3455,6 +3494,22 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // was actually charged, so absence keeps meaning "he stayed home" for every earlier save.
     if (masseurFare > 0) world.pendingTournament.masseurThere = true
   }
+
+  // 1c-masseur, settled HERE since the per-match tour pricing (v59; the step-1 position was beside
+  // `resolvePhysio` – see the note at 1c). The salary beside the physio bill it must stay
+  // distinguishable from: a FLAT contract per rung, zero draws on any stream, suspended – not
+  // cancelled – at college and on booked family weeks (the coach's own stand-down pair, asked of a
+  // second seat; see masseurWorksThisWeek). His effects ride the same predicate: the rung bonus
+  // inside accrueCondition above, and the rehab cadence inside rollInjury. ⭐ On the week he
+  // BOARDS (`pendingTournament.masseurThere`, written three lines up in the arm that charged the
+  // fare) the weekly bill stands down and finalize bills the week per match – the owner's «на
+  // неделе выезда по-матчевая цена заменяет недельную». The walkover and medical arms above never
+  // set the flag, so a trip that never happened is billed as the home week it really was.
+  resolveMasseur(world)
+  // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
+  // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
+  // non-played week after it gets one extra session's worth of recovery, receipt included.
+  resolveMasseurReturn(world, playedThisWeek)
 
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
   driftCohort(world.cohort, rng)

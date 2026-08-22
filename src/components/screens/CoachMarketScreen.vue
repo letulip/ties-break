@@ -618,7 +618,12 @@ async function toggleMasseurTravel(): Promise<void> {
   await game.setMasseurTravels(!masseurTravels.value)
 }
 const masseurTravelSub = computed(() => {
-  const rule = 'Table work between rounds – one more fare on every trip to a paying event.'
+  // ⭐ The per-match sentence is the owner's 22.08 pricing rule («на неделе выезда по-матчевая
+  // цена заменяет недельную»), on the switch that buys it: a travel week is billed per match at
+  // the session rate instead of the weekly figure above – the price READS off the card before the
+  // switch is flipped, which is the whole legibility contract of this screen.
+  const rule =
+    `Table work between rounds – one more fare on every trip to a paying event, and the week is billed per match there (${formatCents(ECONOMY.masseur.perSessionCents)} each) instead of the weekly rate.`
   const trips = game.snapshot?.masseurTravelTrips ?? 0
   if (trips === 0) return rule
   const t = trips === 1 ? '1 trip' : `${trips} trips`
