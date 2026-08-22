@@ -158,6 +158,10 @@ function collegeView(over: Partial<CollegeProgressView> = {}): CollegeProgressVi
     // engine cannot produce – which is exactly the slow failure the bill's own note records.
     league: { week: 293, roundsWon: 2, rounds: 3 },
     leagueMatches: [leagueMatch(0), leagueMatch(1), leagueMatch(2)],
+    // ⚠ ROUND 24, the birthday: the default fixture is a year at REST at a boundary, which is the
+    // card the player sees on every press – the paused-mid-year state has its own walk in
+    // tests/college-birthday.test.ts and its own label case in HomeScreen.
+    yearInProgress: false,
     ...over,
   }
 }

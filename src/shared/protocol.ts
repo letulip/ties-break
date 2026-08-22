@@ -348,7 +348,13 @@ export type StopReason =
   /** ⭐ v48: IT IS HER BIRTHDAY AND NOBODY HAS ANSWERED IT. Blocks exactly like a knock, and for the
    *  ruling's own reason rather than by imitation: the owner asked for the popup to fire ALWAYS
    *  («я бы оставил попап на ДР всегда»), and a popup a `+4` can tick straight past does not always
-   *  fire. All four buttons are valid answers, so this can never dead-end a career. */
+   *  fire. All four buttons are valid answers, so this can never dead-end a career.
+   *
+   *  ⭐⭐⭐ ROUND 24 – AND `resumeFromCollege` NOW PRODUCES IT TOO (the owner's «да, день рождения
+   *  делай»). Unlike its two college siblings above it does not merely report a week that happened:
+   *  the year PAUSES on her birthday week – the loop breaks, the college latch goes back on with the
+   *  SAME year's end under it, and the gift dialog renders on the live Home shell. The next press
+   *  finishes the year. It is the one member of this list that both blocking commands raise. */
   | 'birthday'
   /** W2-ENDINGS: the story has no next week. It outranks everything because its surface REPLACES
    *  the app shell rather than laying a dialog over it – there is nothing behind an epilogue left
@@ -415,6 +421,11 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // shoulder is answered. Unlike a knock it CAN co-occur with 'tournament' and with 'season-end' – a
   // birthday lands wherever the date lands, including a playing week and the off-season – which is
   // exactly the ordering this line decides.
+  //
+  // ⭐⭐⭐ ROUND 24: ...and since the college birthday it can co-occur with 'college-league' and
+  // 'call-up' too – a birthday inside the freeze lands wherever the date lands, including the
+  // championship week. Both college reports rank above it here, which is right twice over: they are
+  // NEWS the toast has copy for, while the birthday's surface is the blocking dialog itself.
   'birthday',
   // W2-ENDINGS. The fork and the natural end's offer sit here, below the knock and above everything
   // that owns a dismissable toast, because they BLOCK: `advanceWeeks` refuses to restart until they
@@ -2873,6 +2884,34 @@ export interface CollegeState {
    *  `lastLeagueRun` in `engine/world/college.ts`. There is deliberately NO second "last result"
    *  field: one persisted copy plus a lookup cannot drift from itself, and two could. */
   pendingLeague: CollegeLeagueRun | null
+  /** ⭐⭐⭐ v57 – THE OPENING MEASUREMENTS OF A YEAR PAUSED MID-FLIGHT (round 24, the owner's «да,
+   *  день рождения делай»). Her birthday now PAUSES the college year – `resumeFromCollege` breaks
+   *  on the birthday week, the gift dialog renders on the live Home shell, and the next press
+   *  finishes the year. That next press must bank the year against the measurements taken when the
+   *  year OPENED, and those are history by then: her skill, her rank and the family balance have
+   *  all moved since. A measurement is a new fact and has to be persisted – `CollegeYear`'s own
+   *  argument, one interface up.
+   *
+   *  Non-null exactly while a year is paused mid-flight; `bankCollegeYear` nulls it beside
+   *  `pendingCallUp` and `pendingLeague`, whose lifetime it shares.
+   *
+   *  ⚠ OPTIONAL FOR A SEQUENCING REASON, NOT A STYLE ONE. Making it required would force a field
+   *  into `answerFork`'s college literal, and agent D2 owns `answerFork` next (the fork moves to the
+   *  academic year). Absent and null mean the same thing – no year is mid-flight – the v57 migration
+   *  writes the explicit null for migrated saves, and every reader normalises with `?? null`. */
+  pendingYearStart?: CollegeYearStart | null
+}
+
+/** ⭐ v57 – WHAT A COLLEGE YEAR IS OPENED WITH: the measurements `bankCollegeYear` will close it
+ *  against, taken before the first of its weeks ticks. Lived in `engine/world/college.ts` unpersisted
+ *  since P5; the birthday pause made it savable state, and persisted shapes are defined here. */
+export interface CollegeYearStart {
+  week: number
+  /** her skill mean, 0-100 – `skillMeanOf(world.skills)` at the year's opening */
+  skill: number
+  /** her professional rank, or null when she is not on the list (`LadderView.rank`'s contract) */
+  rank: number | null
+  fundsCents: number
 }
 
 /** ⭐ P5 – ONE COLLEGE YEAR, banked the week it finishes.
@@ -3121,6 +3160,11 @@ export interface CollegeProgressView {
    *  Between one and three rows: she is in the draw every year, so unlike `rubbers` this is EMPTY
    *  only on a career that has not reached its first championship week. */
   leagueMatches: WorldMatch[]
+  /** ⭐ v57 – IS A YEAR PAUSED MID-FLIGHT (her birthday stopped it)? True exactly while
+   *  `college.pendingYearStart` is held, so the bottom control can say «Finish the year» instead of
+   *  offering to start one, and the early return can stand down until the year she started is done.
+   *  A wire field off persisted state – no schema implications of its own. */
+  yearInProgress: boolean
 }
 
 export interface Snapshot {

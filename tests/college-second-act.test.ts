@@ -21,6 +21,8 @@ import {
   advanceWeeks,
   tickWeek,
   answerFork,
+  chooseGift,
+  pendingBirthday,
   resumeFromCollege,
   endCollegeEarly,
   collegeEpilogueLine,
@@ -59,6 +61,25 @@ function atTheFork(seed: string): { world: WorldState; rng: Rng } {
   return { world, rng }
 }
 
+/** One college year, spent exactly as the Home shell's button spends it – press, answer the
+ *  birthday it pauses for, press again (round 24, the owner's «да, день рождения делай»). The day
+ *  together is the one option every birthday offers, so it is always a legal answer here. */
+function spendYear(world: WorldState, rng: Rng): void {
+  const before = world.college!.years.length
+  for (let press = 0; press < 3 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+    resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  }
+}
+
+/** The whole course, spent the same way. */
+function spendCourse(world: WorldState, rng: Rng): void {
+  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  }
+}
+
 // =================================================================================================
 // 1. FOUR YEARS, ONE AT A TIME – AND SHE MAY LEAVE AFTER ANY OF THEM
 // =================================================================================================
@@ -71,7 +92,9 @@ describe('P5 – the college years are lived one at a time', () => {
     // the whole of "one at a time".
     expect(world.ending!.resumesWeek).toBe(from + WEEKS_PER_YEAR)
 
-    resumeFromCollege(world, rng)
+    // ⚠ ROUND 24: the year pauses on her birthday week – spending it is press-answer-press, and
+    // every boundary assertion below is unchanged.
+    spendYear(world, rng)
     expect(world.week).toBe(from + WEEKS_PER_YEAR)
     expect(world.college!.years).toHaveLength(1)
     expect(world.ending?.type, 'the latch goes back on, so the question can be asked').toBe('college')
@@ -83,7 +106,7 @@ describe('P5 – the college years are lived one at a time', () => {
     // The sport's own case. Diana Shnaider left NC State after about a season.
     const { world, rng } = atTheFork('p5-early-return')
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    spendYear(world, rng)
     const leftAt = world.week
     endCollegeEarly(world)
     expect(world.ending, 'the latch comes off for good').toBeNull()
@@ -112,7 +135,7 @@ describe('P5 – the college years are lived one at a time', () => {
   it('the fourth year needs no question: it finishes the course and clears the latch itself', () => {
     const { world, rng } = atTheFork('p5-full-course')
     answerFork(world, 'college')
-    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(world, rng)
+    spendCourse(world, rng) // round 24: press-answer-press, the years pause on her birthdays
     expect(world.ending).toBeNull()
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
     expect(inCollege(world)).toBe(false)
@@ -125,7 +148,7 @@ describe('P5 – the college years are lived one at a time', () => {
     const { world, rng } = atTheFork('p5-year-card')
     const fundsBefore = world.fundsCents
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    spendYear(world, rng)
     const year = world.college!.years[0]
     expect(year.index).toBe(1)
     expect(year.untilWeek - year.fromWeek).toBe(WEEKS_PER_YEAR)
@@ -142,7 +165,7 @@ describe('P5 – the college progress view', () => {
   it('is null on every ending that is not an open college question', () => {
     const { world, rng } = atTheFork('p5-view-null')
     answerFork(world, 'college')
-    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(world, rng)
+    spendCourse(world, rng) // round 24: press-answer-press, the years pause on her birthdays
     // She is out: no ending, so no view at all.
     expect(buildEndingView(world)).toBeNull()
   }, 90_000)
@@ -153,7 +176,7 @@ describe('P5 – the college progress view', () => {
     expect(buildEndingView(world)!.college!.yearsDone).toBe(0)
     expect(buildEndingView(world)!.college!.final, 'four years still to run').toBe(false)
     for (let y = 1; y < ENDINGS.collegeYears; y++) {
-      resumeFromCollege(world, rng)
+      spendYear(world, rng)
       const view = buildEndingView(world)!.college!
       expect(view.yearsDone).toBe(y)
       expect(view.totalYears).toBe(ENDINGS.collegeYears)
@@ -165,7 +188,7 @@ describe('P5 – the college progress view', () => {
   it('the snapshot carries it, so a reload lands back on the same question', () => {
     const { world, rng } = atTheFork('p5-view-snapshot')
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    spendYear(world, rng)
     const snap = toSnapshot(world)
     expect(snap.ending!.college).not.toBeNull()
     expect(snap.ending!.college!.yearsDone).toBe(1)
@@ -183,7 +206,7 @@ describe('P5 – the national-team call-up', () => {
     // without the other" invariant is therefore not being bent – there is no result.
     const { world, rng } = atTheFork('p5-callup-pays-nothing')
     answerFork(world, 'college')
-    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(world, rng)
+    spendCourse(world, rng) // round 24: press-answer-press, the years pause on her birthdays
     const calls = world.college!.years.filter((y) => y.callUp !== null)
     expect(calls.length, 'at least one letter over four years').toBeGreaterThan(0)
     // ⚠ HERS, not the ledger's length: the AI field plays every week of those years and its rows are
@@ -205,7 +228,7 @@ describe('P5 – the national-team call-up', () => {
   it('⚠ it lands in the record with `keep: true`, so the album still has it four years later', () => {
     const { world, rng } = atTheFork('p5-callup-record')
     answerFork(world, 'college')
-    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(world, rng)
+    spendCourse(world, rng) // round 24: press-answer-press, the years pause on her birthdays
     // ⚠ RE-AIMED BY THE COLLEGE WAVE, NOT WEAKENED. The competition's label now appears on TWO kinds
     // of row – the summary milestone this case was written about, and one `match` record per rubber
     // she played, because the rubbers are really played since that wave. Asserting `type` over the
@@ -356,13 +379,28 @@ describe('P5 – the national-team call-up', () => {
 //   4. IT STILL PAYS NOTHING AND COSTS NOTHING. Playing them was the ask; re-pricing the week was
 //      not, and the whole reason the call-up could ship inside the freeze is that it is free.
 
-/** Spend the whole course and hand back the first year that produced a letter. */
-function collegeYearsWithACall(seed: string): { world: WorldState; stops: string[][] } {
+/** Spend the whole course and hand back the first year that produced a letter.
+ *
+ *  ⚠ RE-AIMED BY THE COLLEGE BIRTHDAY (round 24, «да, день рождения делай»), NOT WEAKENED: a year
+ *  can take TWO presses now – it pauses on her birthday week so the gift dialog can be answered –
+ *  so `stops` is the per-YEAR union of its presses (in STOP_PRECEDENCE order, which is what the
+ *  player was shown across them), and `presses` keeps the raw per-press lists for the latch checks. */
+function collegeYearsWithACall(seed: string): { world: WorldState; stops: string[][]; presses: string[][] } {
   const { world, rng } = atTheFork(seed)
   answerFork(world, 'college')
   const stops: string[][] = []
-  for (let y = 0; y < ENDINGS.collegeYears; y++) stops.push(resumeFromCollege(world, rng))
-  return { world, stops }
+  const presses: string[][] = []
+  for (let y = 0; y < ENDINGS.collegeYears; y++) {
+    const seen = new Set<string>()
+    for (let press = 0; press < 3 && world.college!.years.length === y; press++) {
+      const list = resumeFromCollege(world, rng)
+      presses.push(list)
+      for (const s of list) seen.add(s)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
+    stops.push((STOP_PRECEDENCE as readonly string[]).filter((r) => seen.has(r)))
+  }
+  return { world, stops, presses }
 }
 
 describe('⭐⭐⭐ the college competition is played', () => {
@@ -412,7 +450,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
     // the one week a `+4` could never land on; this is a competition inside a call that spends the
     // whole year. `resumeFromCollege` returns the reasons exactly as `advanceWeeks` does, `mutate`
     // puts them on the snapshot, and the epilogue's year card is what opens the matches.
-    const { world, stops } = collegeYearsWithACall('college-rubbers-report')
+    const { world, stops, presses } = collegeYearsWithACall('college-rubbers-report')
     const years = world.college!.years
     expect(years.length).toBeGreaterThan(0)
     let reported = 0
@@ -425,30 +463,38 @@ describe('⭐⭐⭐ the college competition is played', () => {
       if (hadACall) reported += 1
     }
     expect(reported, 'at least one year of the four reported its competition').toBeGreaterThan(0)
-    // ...and every returned list is in STOP_PRECEDENCE order, like an advance's.
-    for (const list of stops) {
+    // ...and every returned list is in STOP_PRECEDENCE order, like an advance's – asserted on the
+    // RAW presses, since the per-year union is ordered by construction.
+    for (const list of presses) {
       const order = list.map((r) => STOP_PRECEDENCE.indexOf(r as never))
       expect([...order].sort((a, b) => a - b), 'precedence order, not insertion order').toEqual(order)
     }
-  }, 120_000)
+  }, 240_000)
 
-  it('⚠ 3b. a year that RE-LATCHES the epilogue reports both, and the last year reports no ending', () => {
-    // R11-1's rule on a second producer: one call can be several things at once. The three years
-    // that ask «another year?» hand back 'ending' too – the epilogue is the surface that renders it –
-    // and the fourth takes the latch off for good, so the tab shell is what the player lands on.
-    const { world, stops } = collegeYearsWithACall('college-rubbers-both')
-    for (let i = 0; i < stops.length - 1; i++) {
-      expect(stops[i], `year ${i + 1} re-latches the question`).toContain('ending')
+  it('⚠ 3b. every press that leaves the latch on reports it, and the last press reports no ending', () => {
+    // R11-1's rule on a second producer: one call can be several things at once. ⚠ RE-AIMED BY THE
+    // COLLEGE BIRTHDAY, NOT WEAKENED – the claim moved from "per year" to "per press", which is the
+    // surface the player actually reads: a birthday pause re-latches the question exactly as a year
+    // boundary does (its press carries 'ending' beside 'birthday'), and only the press that FINISHES
+    // the course takes the latch off for good, landing the player on the tab shell.
+    const { world, presses } = collegeYearsWithACall('college-rubbers-both')
+    expect(presses.length, 'the course took more than four presses – the birthdays paused it').toBeGreaterThan(ENDINGS.collegeYears)
+    for (let i = 0; i < presses.length - 1; i++) {
+      expect(presses[i], `press ${i + 1} re-latches the question`).toContain('ending')
     }
-    expect(stops[stops.length - 1], 'the course is finished: no latch left').not.toContain('ending')
+    expect(presses[presses.length - 1], 'the course is finished: no latch left').not.toContain('ending')
     expect(world.ending).toBeNull()
-  }, 120_000)
+  }, 240_000)
 
   it('⚠ 4. it still pays nothing and costs nothing: no result, no rank, no cheque, no condition', () => {
     const before = atTheFork('college-rubbers-free')
     answerFork(before.world, 'college')
     const world = before.world
-    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(world, before.rng)
+    // Round 24: press-answer-press – the years pause on her birthdays.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      resumeFromCollege(world, before.rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
     expect(world.results.filter((r) => r.playerId === KID_ID), 'her column of the ledger is empty').toHaveLength(0)
     expect(world.entries).toHaveLength(0)
     // ⚠ AND THE ROWS ARE MARKED SO FOUR SUBSYSTEMS KEEP IGNORING THEM. `friendly` is the one
@@ -559,7 +605,7 @@ describe('P5 – the epilogue line', () => {
   it('⚠ it no longer says "four years" after one, and it never says "a degree" she has not got', () => {
     const { world, rng } = atTheFork('p5-epilogue-early')
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    spendYear(world, rng)
     endCollegeEarly(world)
     const line = world.events.filter((e) => e.type === 'milestone').at(-1)!.text
     expect(line).toContain('1 year of student tennis')
@@ -570,7 +616,7 @@ describe('P5 – the epilogue line', () => {
   it('states the money, because that is the one thing the years demonstrably did', () => {
     const { world, rng } = atTheFork('p5-epilogue-money')
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    spendYear(world, rng)
     const line = collegeEpilogueLine(world)
     expect(line).toMatch(/\$[\d,]+ better off/)
     expect(line).toMatch(/[Qq]ualifying/)
@@ -579,7 +625,7 @@ describe('P5 – the epilogue line', () => {
   it('⚠ THE SIGN IS A DIFFERENT SENTENCE: a family further under water is not "worse better off"', () => {
     const { world, rng } = atTheFork('p5-epilogue-debt')
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    spendYear(world, rng)
     world.college!.years = world.college!.years.map((y) => ({ ...y, fundsDeltaCents: -412_300 }))
     const line = collegeEpilogueLine(world)
     expect(line).toContain('$4,123 further under')
@@ -590,7 +636,7 @@ describe('P5 – the epilogue line', () => {
   it('⚠ and it reports the CALL-UPS honestly, including none at all', () => {
     const { world, rng } = atTheFork('p5-epilogue-calls')
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    spendYear(world, rng)
     world.college!.years = world.college!.years.map((y) => ({ ...y, callUp: null }))
     expect(collegeEpilogueLine(world)).toContain('Her country never called')
   }, 60_000)
@@ -614,7 +660,13 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
 
     college.fork = { askedWeek: college.week, answer: null, offer: null }
     answerFork(college, 'college')
-    resumeFromCollege(college, rngA)
+    // ⚠ ROUND 24: the year pauses on her birthday and the gift is answered mid-walk – which makes
+    // the arm STRONGER: pausing, answering and resuming must leave MAIN exactly where fifty-two
+    // uninterrupted control ticks leave it, or the birthday moved the world's dice.
+    for (let press = 0; press < 4 && college.week < WEEKS_PER_YEAR; press++) {
+      resumeFromCollege(college, rngA)
+      if (pendingBirthday(college) !== null) chooseGift(college, 'day')
+    }
     for (let i = 0; i < WEEKS_PER_YEAR; i++) tickWeek(control, rngB)
 
     expect(college.week).toBe(control.week)

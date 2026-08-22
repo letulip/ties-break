@@ -31,6 +31,8 @@ import {
   tickWeek,
   answerFork,
   answerRetirement,
+  chooseGift,
+  pendingBirthday,
   resumeFromCollege,
   enterEvent,
   hireCoach,
@@ -672,7 +674,12 @@ describe('#2 college – the only ending that resumes', () => {
     expect(inCollege(world)).toBe(true)
     const from = world.week
     for (let year = 1; year <= ENDINGS.collegeYears; year++) {
-      resumeFromCollege(world, rng)
+      // ⚠ ROUND 24 («да, день рождения делай»): the year PAUSES on her birthday week now, so a year
+      // is press-answer-press. Every original assertion is unchanged and asked at the same boundary.
+      for (let press = 0; press < 3 && world.college!.years.length < year; press++) {
+        resumeFromCollege(world, rng)
+        if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      }
       expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
       expect(world.college!.years, `one row per year lived`).toHaveLength(year)
       // The latch goes back on for every year but the last – that is what makes the question exist.
@@ -692,7 +699,11 @@ describe('#2 college – the only ending that resumes', () => {
     for (let i = 0; i < 40; i++) tickWeek(world, rng)
     world.fork = { askedWeek: world.week, answer: null, offer: null }
     answerFork(world, 'college')
-    for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
+    // Press-answer-press (round 24): each year pauses on her birthday week.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
   }, 90_000)
@@ -703,7 +714,12 @@ describe('#2 college – the only ending that resumes', () => {
     answerFork(world, 'college')
     const spentBefore = world.careerTotals.spentCents
     const from = world.week
-    for (let year = 0; year < ENDINGS.collegeYears; year++) resumeFromCollege(world, rng)
+    // Press-answer-press (round 24): each year pauses on her birthday week – and the gift charges
+    // nothing, which is exactly what this case goes on to measure.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
     // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last
     // fourteen months of the freeze - which is exactly the stretch a bug would have to survive.
@@ -824,7 +840,13 @@ describe('⚠ input-independence survives college', () => {
     // A goes to college; B does nothing at all. Same seed, same weeks, same MAIN sequence.
     a.fork = { askedWeek: a.week, answer: null, offer: null }
     answerFork(a, 'college')
-    for (let y = 0; y < ENDINGS.collegeYears; y++) resumeFromCollege(a, rngA)
+    // ⚠ ROUND 24 – AND THE PROPERTY GETS STRONGER, NOT DIFFERENT: the years pause on her birthdays
+    // and the gifts are answered mid-walk, so the arm now proves that pausing, answering and
+    // resuming cost the MAIN stream not one draw either. The B arm never pauses at all.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && a.ending?.type === 'college'; press++) {
+      resumeFromCollege(a, rngA)
+      if (pendingBirthday(a) !== null) chooseGift(a, 'day')
+    }
     for (let i = 0; i < ENDINGS.collegeYears * WEEKS_PER_YEAR; i++) tickWeek(b, rngB)
     expect(a.week).toBe(b.week)
     expect(a.rngMain.n).toBe(b.rngMain.n)

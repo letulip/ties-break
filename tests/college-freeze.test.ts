@@ -34,6 +34,8 @@ import {
   tickWeek,
   enterEvent,
   answerFork,
+  chooseGift,
+  pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
   closeTournament,
@@ -96,10 +98,24 @@ function openTheFork(world: WorldState): void {
   world.fork = { askedWeek: world.week, answer: null, offer: null }
 }
 
-/** The four years, spent one at a time exactly as the epilogue's button spends them. */
+/** The four years, spent one at a time exactly as the epilogue's button spends them.
+ *
+ *  ⚠ RE-AIMED BY THE COLLEGE BIRTHDAY (round 24, «да, день рождения делай»): a year now PAUSES on
+ *  her birthday week so the gift dialog can be answered, so spending it is press-answer-press. The
+ *  day together is the one option every birthday offers, so it is always a legal answer. */
 function spendTheYears(world: WorldState, rng: Rng): void {
-  for (let y = 0; y < ENDINGS.collegeYears && world.ending?.type === 'college'; y++) {
+  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  }
+}
+
+/** Press until ONE more year is banked – the boundary every card is read at. */
+function spendOneYear(world: WorldState, rng: Rng): void {
+  const before = world.college!.years.length
+  for (let press = 0; press < 3 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+    resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
 }
 
@@ -259,7 +275,8 @@ describe('rule 2 – resumeFromCollege will not tick past an open reveal', () =>
     finishAnyReveal(world)
     expect(world.pendingTournament).toBeNull()
     const from = world.week
-    resumeFromCollege(world, rng)
+    // ⚠ Press-answer-press (round 24): the year pauses on her birthday and lands on the same boundary.
+    spendOneYear(world, rng)
     expect(world.week, 'the year is spent, exactly as it always was').toBe(from + WEEKS_PER_YEAR)
     expect(world.college!.years).toHaveLength(1)
   }, 60_000)
@@ -293,7 +310,7 @@ describe('rule 3 – tickWeek plays no tournament for a girl who is at college',
     const { world, rng } = playedCareer('r24-inside', 60)
     openTheFork(world)
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    spendOneYear(world, rng)
     expect(inCollege(world), 'one year down, three to go').toBe(true)
 
     // ⚠ PUT THERE BY HAND ON PURPOSE. Rule 1 releases everything at the fork and no command can add
@@ -303,7 +320,7 @@ describe('rule 3 – tickWeek plays no tournament for a girl who is at college',
     expect(target, 'the calendar reaches into the coming year').toBeDefined()
     world.entries.push(target!.id)
 
-    resumeFromCollege(world, rng)
+    spendOneYear(world, rng)
 
     expect(world.pendingTournament, 'no run was ever computed for her').toBeNull()
     expect(world.college!.years, 'and the year was spent normally').toHaveLength(2)

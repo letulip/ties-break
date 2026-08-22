@@ -80,9 +80,15 @@ export function guardNotEnded(world: WorldState): void {
  *
  *  ⚠ AND THE LIST IT SERVES IS SHORT ON PURPOSE (round 24, E2's audit). Everything the college
  *  freeze already shuts off in `tickWeek` – the academy, the sponsors, the gear, the knock, the
- *  birthday, the entries B1's `releaseEntriesForTheFreeze` hands back – keeps `guardNotEnded`, with
- *  the honest sentence. This is only for a command that is about the FAMILY'S OWN CALENDAR, where
- *  being at a university plainly does not stop it, and where opening it can break nothing. */
+ *  entries B1's `releaseEntriesForTheFreeze` hands back – keeps `guardNotEnded`, with the honest
+ *  sentence. This is only for a command that is about the FAMILY'S OWN CALENDAR, where being at a
+ *  university plainly does not stop it, and where opening it can break nothing.
+ *
+ *  ⭐ THE THIRD MEMBER IS `chooseGift` (round 24, the owner's «да, день рождения делай»). The
+ *  college year now PAUSES on her birthday week and the answer lands while the latch is on, so the
+ *  one command that clears a pending birthday has to pass the freeze – the most family-and-calendar
+ *  command in the game, which is the exact sentence this list was defined by. Appended, not widened:
+ *  cancelVacation, cancelPractice, chooseGift, and nothing else. */
 export function guardNotEndedForGood(world: WorldState): void {
   if (world.ending && world.ending.type !== 'college') throw new Error(CAREER_ENDED_REFUSAL)
 }

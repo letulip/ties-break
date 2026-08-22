@@ -43,10 +43,12 @@ import CollegeDoneDialog from '../../src/components/CollegeDoneDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   answerFork,
+  chooseGift,
   closeTournament,
   createWorld,
   endCollegeEarly,
   measureCollegeOffer,
+  pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
   tickWeek,
@@ -204,8 +206,12 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
    *  noise, so it is removed from the fixture rather than worked around in the assertions. */
   function graduate(seed: string): WorldState {
     const { world, rng } = atCollege(seed)
-    for (let y = 0; y < ENDINGS.collegeYears && world.ending?.type === 'college'; y++) {
+    // Round 24: each year pauses on her birthday week – press, answer, press again. Answering as we
+    // go is also what keeps a pending birthday from standing ahead of the graduation card below,
+    // exactly as the knock line under this loop already explains for the shoulder.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.ending, 'she came out the other side – the latch is off for good').toBeNull()
     expect(world.college?.years).toHaveLength(ENDINGS.collegeYears)
@@ -242,7 +248,11 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // `endCollegeEarly` and `finishCollege` run the SAME two lines (`leaveCollegeState` + one kept
     // milestone), so a card for only one of them would have left the other as the silent exit it was.
     const { world, rng } = atCollege('r24-grad-early')
-    resumeFromCollege(world, rng)
+    // Round 24: press-answer-press – the year pauses on her birthday week.
+    for (let press = 0; press < 3 && world.college!.years.length === 0; press++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
     endCollegeEarly(world)
     world.knock = null // the walked-career artefact, see `graduate` above
     const { w } = await openShell(world)

@@ -446,7 +446,7 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // Measured on the owner's own w474 save: season 0, results 1, `pendingTournament` 5-w270-wta500
 // finished, `snapshot.pending` NULL. Rules 1-3 stop new careers reaching that state; this is the one
 // door already-broken ones can come back through. See the migration for what it does and does not do.
-export const SAVE_SCHEMA_VERSION = 56
+export const SAVE_SCHEMA_VERSION = 57
 
 
 
@@ -3502,12 +3502,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     deciding her whole relative-age story was invisible. Now the week it names stops and says so.
   //     ZERO DRAWS: a calendar comparison. Placed after `rollKnock` so a birthday week that also carries
   //     a knock reads in the order it happened - she came off court sore, and it was her birthday.
-  //     ⭐ ...AND THE COLLEGE YEARS GET THEIR OWN LINE RATHER THAN THE DIALOG (owner, 19.08). The
-  //     prompt is still refused inside the freeze - see `pendingBirthday` - so what those four years
-  //     gain is an ENTRY, not a decision. `inCollege` is read here rather than inside `markBirthday`
-  //     because both are already in scope at this one call site, which keeps age.ts free of a college
-  //     import it has never needed.
-  markBirthday(world, inCollege(world))
+  //     ⭐⭐⭐ ROUND 24: ...AND THE COLLEGE YEARS GET THE DIALOG NOW, SO THE SPECIAL LINE IS GONE
+  //     (owner, 22.08: «да, день рождения делай», superseding 19.08's feed-line substitute). The
+  //     prompt is raised inside the freeze too - `resumeFromCollege` pauses the year on this very
+  //     week - so the line is one sentence for every birthday of her life; see `markBirthday`.
+  markBirthday(world)
 
   // 3e. ...AND ONE SEPTEMBER SHE DOES NOT GO BACK (W4-SCHOOL). The owner: «Школа должна когда-то
   //     закончиться, ей уже 21» and «Конец школы – в конце учебного года». Beside the birthday for
@@ -3870,7 +3869,18 @@ export const COLLEGE_REVEAL_REFUSAL =
  *  replay, and the toast says the week happened. `stops` is a Set filtered through STOP_PRECEDENCE
  *  for the identical reason `advanceWeeks` does it: one call can be several things at once (the
  *  classic here: a call-up in April and the ending re-latched in December), and the caller decides
- *  the order to show them in. */
+ *  the order to show them in.
+ *
+ *  ⭐⭐⭐ ROUND 24 – WITH ONE EXCEPTION, AND IT IS A QUESTION RATHER THAN A REPORT: HER BIRTHDAY
+ *  (the owner, 22.08: «да, день рождения делай»). A call-up is news and can be read at the year's
+ *  end; a birthday is the one popup the owner asked to fire ALWAYS, all four of its buttons are
+ *  answers, and `chooseGift` records against `world.week` – so it cannot be collected, it has to be
+ *  ASKED, on its own week. The year therefore PAUSES there: the loop breaks, the latch goes back on
+ *  with the SAME year's end under it (`pendingYearStart` keeps the opening measurements honest), the
+ *  dialog renders over the live college Home shell, and the next press finishes the year. This does
+ *  not reopen the playable-season trade above – it is one extra click in the years that hold a
+ *  birthday, for the beat the owner explicitly asked to stop for, exactly as the tour's own `+4`
+ *  stops for it. */
 export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   const college = world.college
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
@@ -3900,8 +3910,26 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
   // later wave finds a new way to open one, the career stops at that week with nothing committed
   // instead of ticking out the year and the three after it.
   if (world.pendingTournament) throw new Error(COLLEGE_REVEAL_REFUSAL)
-  const start = openCollegeYear(world)
-  const yearEnds = Math.min(college.untilWeek, world.week + WEEKS_PER_YEAR)
+  // ⭐⭐⭐ ROUND 24 – AND NOT OVER AN UNANSWERED BIRTHDAY EITHER (the owner's «да, день рождения
+  // делай»). The identical contract `advanceWeeks` keeps at its own entry, engine-side because the
+  // worker is not the gate (invariant 1): the dialog covers the button, but a stale screen must not
+  // be able to spend a year past the one popup the owner asked to fire ALWAYS. A RETURN and not a
+  // throw, unlike the reveal above, because this state is HEALTHY – the dialog is on screen off the
+  // snapshot field, `chooseGift` is its exit, and the same click works the moment it is answered.
+  // Nothing is mutated and nothing is drawn; `['birthday']` is the same no-op report the advance
+  // gives, so the caller cannot mistake a refusal for a spent year.
+  if (pendingBirthday(world) !== null) return ['birthday']
+  // ⭐ THE YEAR IN PROGRESS, OR A FRESH ONE. `pendingYearStart` is non-null exactly when the last
+  // press paused mid-year on her birthday: the year's opening measurements are HISTORY by now (her
+  // skill, her rank and the family balance have moved since), so they are persisted at the pause and
+  // read back here rather than re-measured – or the banked year would open at the birthday week with
+  // the wrong four numbers. `?? null` because the field is optional (see CollegeState: D2 owns
+  // `answerFork` next, so enrolment does not write it; absent and null mean the same thing).
+  const start = college.pendingYearStart ?? openCollegeYear(world)
+  // Off the year's own OPENING, not off `world.week`: for a fresh year the two are the same week,
+  // and for a resumed one this is what keeps the academic boundary where the first press put it –
+  // a year paused for a cake is finished, not restarted.
+  const yearEnds = Math.min(college.untilWeek, start.week + WEEKS_PER_YEAR)
   world.ending = null
   const stops = new Set<StopReason>()
   while (world.week < yearEnds && world.ending === null) {
@@ -3915,9 +3943,43 @@ export function resumeFromCollege(world: WorldState, rng: Rng): StopReason[] {
     // a year that produced a tournament and reported nothing would be the silence round 23 #16 was
     // about, with better tennis behind it.
     if (collegeLeaguePlayedThisWeek(world)) stops.add('college-league')
+    // ⭐⭐⭐ ROUND 24 – HER BIRTHDAY, THE ONE MID-YEAR STOP. Unlike the two reports above it BREAKS,
+    // because it is a QUESTION: `chooseGift` records the gift against `world.week`, so the answer
+    // has to land ON the birthday week and a blocking dialog cannot be answered inside this loop –
+    // the exact sentence `pendingBirthday`'s old college exclusion was built on, now honoured by
+    // pausing instead of by silence. Collected before the break so a birthday that lands on the
+    // championship week reports both (R11-1's rule: one week can be several things at once).
+    if (pendingBirthday(world) !== null) {
+      stops.add('birthday')
+      break
+    }
+  }
+  // ⭐⭐⭐ THE PAUSE – the year stops mid-flight for her birthday and is NOT banked. The latch goes
+  // back on with the SAME year's end under it, the opening measurements are persisted for the press
+  // that finishes it, and the dialog renders over the college Home shell (blockingOverlay lets the
+  // birthday through exactly this one latch). Assigned directly rather than through `latchEnding`,
+  // deliberately: the latch writes a kept «College years – N of 4…» milestone per call, which is the
+  // YEAR's row – a paused year is the same year continued, and a second row about it every birthday
+  // would be the feed announcing an event that did not happen.
+  if (world.ending === null && world.week < yearEnds && pendingBirthday(world) !== null) {
+    college.pendingYearStart = start
+    world.ending = {
+      type: 'college',
+      week: world.week,
+      ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+      detail: `${college.years.length} of ${ENDINGS.collegeYears} years on the scholarship`,
+      resumesWeek: yearEnds,
+    }
+    stops.add('ending')
+    return STOP_PRECEDENCE.filter((r) => stops.has(r))
   }
   // ⚠ A YEAR CUT SHORT BY AN ENDING IS STILL BANKED. The album's last page is allowed to say what
   // she was doing when it happened, and a row that stops mid-year is the honest record of that.
+  // (`bankCollegeYear` also clears `pendingYearStart`, so a resumed year cannot leak its start into
+  // the next one.) ⚠ A BIRTHDAY ON THE BOUNDARY WEEK ITSELF takes this path, not the pause: the year
+  // is genuinely over, so it banks and re-latches (or graduates) as always – and the prompt simply
+  // stays pending at the rest state, where the dialog shows and the entry guard above holds the next
+  // press until it is answered. Nothing is swallowed; 'birthday' is already in the stops.
   bankCollegeYear(world, start)
   if (world.ending !== null) {
     college.doneWeek = world.week
@@ -3963,6 +4025,16 @@ export function endCollegeEarly(world: WorldState): void {
   if (!college || college.doneWeek !== null) throw new Error('She is not at college')
   if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
   if (college.years.length === 0) throw new Error('She has not spent a year there yet')
+  // ⭐ ROUND 24 – "AT A BOUNDARY" GAINED A SECOND FAILURE MODE AND THIS CLOSES IT. The birthday
+  // pause created the first mid-year rest state this command can be reached from, and taking the
+  // latch off there would move `untilWeek` back to a week in the middle of an academic year and
+  // leave the half-spent year unbanked – a shape no reader of `college.years` expects (`isFullYear`,
+  // the album, the graduation card all assume years bank whole or are cut by an ENDING). The
+  // early return is answered at year boundaries, which is this function's own stated contract; the
+  // screen stands its button down too, and this is what makes that a rule rather than a decoration.
+  if ((college.pendingYearStart ?? null) !== null) {
+    throw new Error('The year she started is still running – it finishes first, then she can come back on tour')
+  }
   leaveCollegeState(world)
   world.ending = null
   addEvent(world, {

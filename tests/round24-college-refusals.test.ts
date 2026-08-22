@@ -46,6 +46,7 @@ import {
   hireCoach,
   inCollege,
   latchEnding,
+  pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
   setCoachOnEventWeeks,
@@ -92,12 +93,20 @@ function openTheFork(world: WorldState): void {
 }
 
 /** Walk, answer «college», and really spend a year of it. Returns the world sitting INSIDE the
- *  freeze with one year banked – the exact state a player is in when he taps the coach's card. */
+ *  freeze with one year banked – the exact state a player is in when he taps the coach's card.
+ *
+ *  ⚠ RE-AIMED BY THE COLLEGE BIRTHDAY (round 24, «да, день рождения делай»), NOT WEAKENED: the year
+ *  now PAUSES on her birthday week so the gift dialog can be answered, so spending a year is
+ *  press-answer-press rather than one press – exactly what the Home shell's button does. The state
+ *  handed back is the same one as before: latched at a boundary, one year banked. */
 function careerAtCollege(seed: string): { world: WorldState; rng: Rng } {
   const { world, rng } = playedCareer(seed, 60)
   openTheFork(world)
   answerFork(world, 'college')
-  resumeFromCollege(world, rng)
+  for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
+    resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  }
   expect(world.ending?.type, 'the latch is back on with the next year under it').toBe('college')
   expect(inCollege(world), 'and she really is at a university this week').toBe(true)
   expect(world.college!.years.length, 'a year really was spent, not skipped over').toBe(1)
@@ -132,7 +141,11 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
   expect(pracWeek, 'the fixture needs a bookable practice week in year two').not.toBeNull()
 
   answerFork(world, 'college')
-  resumeFromCollege(world, rng)
+  // ⚠ Press-answer-press, exactly as `careerAtCollege` above – the year pauses for her birthday now.
+  for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
+    resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  }
   expect(world.ending?.type).toBe('college')
   // ⚠ AND BOTH SURVIVED THE YEAR – `prunePlannerBookings` keeps four trailing weeks, and these are
   // still ahead of her. If this ever goes false the test below is measuring nothing.
@@ -145,16 +158,24 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
  *  rejected on their own merits a line later – the guard is first in every one of these bodies, so
  *  what comes back is the guard's sentence and nothing else.
  *
+ *  ⚠ RE-AIMED BY THE COLLEGE BIRTHDAY (round 24, «да, день рождения делай»), NOT WEAKENED:
+ *  `chooseGift` LEFT the college half of this list – it takes `guardNotEndedForGood` now, the third
+ *  member of the short list, because the year pauses on her birthday week and the answer has to land
+ *  while the latch is on. It is still in the TERMINAL half (`kind: 'ended'`): a career that has
+ *  really ended refuses it with the unchanged sentence, which section 3 walks. Its college-side
+ *  behaviour – refusing on its OWN rule on a week with no birthday – has its own case below, the
+ *  same shape the two cancels' own-rules case takes.
+ *
  *  ⚠ THE WORKER'S TWO INLINE SITES ARE THE LAST ROW. `setPlan` and `setPhysio` call `guardNotEnded`
  *  in the handler body rather than in an engine command, so the direct call IS what they run. */
-function refusedCommands(world: WorldState): Array<[string, () => unknown]> {
+function refusedCommands(world: WorldState, kind: 'college' | 'ended' = 'college'): Array<[string, () => unknown]> {
   const anyEvent = world.season[0]?.id ?? 'no-such-event'
   return [
     ['enterEvent', () => enterEvent(world, anyEvent)],
     ['withdrawEvent', () => withdrawEvent(world, anyEvent)],
     ['cancelEntry', () => cancelEntry(world, anyEvent)],
     ['skipEvent', () => skipEvent(world, anyEvent)],
-    ['chooseGift', () => chooseGift(world, 'day-together')],
+    ...(kind === 'ended' ? ([['chooseGift', () => chooseGift(world, 'day-together')]] as Array<[string, () => unknown]>) : []),
     ['hireCoach', () => hireCoach(world, null)],
     ['setCoachOnEventWeeks', () => setCoachOnEventWeeks(world, true)],
     ['setCoachOnJuniorEvents', () => setCoachOnJuniorEvents(world, true)],
@@ -195,7 +216,7 @@ describe('a refused command at college says where she is', () => {
     expect(CAREER_ENDED_REFUSAL).not.toMatch(/[Ѐ-ӿ]/)
   })
 
-  it('⚠ THE REFUSAL DRAWS NOTHING – seventeen of them do not move the MAIN stream', () => {
+  it('⚠ THE REFUSAL DRAWS NOTHING – sixteen of them do not move the MAIN stream', () => {
     const { world } = careerAtCollege('e2-rng')
     const before = { ...world.rngMain }
     const fundsBefore = world.fundsCents
@@ -224,7 +245,12 @@ describe('the family may take back a booking it made before the fork', () => {
     expect(week, 'the fixture needs a bookable week inside year one').not.toBeNull()
 
     answerFork(world, 'college')
-    resumeFromCollege(world, rng)
+    // ⚠ Press-answer-press (round 24): the year pauses on her birthday, which can land before the
+    // booked court – the whole year has to be spent for the trap to be provably real.
+    for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
 
     // The friendly's own record, keyed by the week it was booked for – `resolvePractice` writes it.
     expect(
@@ -252,6 +278,18 @@ describe('the family may take back a booking it made before the fork', () => {
     expect(() => cancelPractice(world, pracWeek)).not.toThrow()
     expect(world.practices.some((p) => p.week === pracWeek), 'the court is given up').toBe(false)
     expect(world.fundsCents - funds, 'full refund, the same one a tour week gets').toBe(paid)
+  })
+
+  it('⭐ ROUND 24: chooseGift passed the freeze too – and refuses on its OWN rule on an ordinary week', () => {
+    // The third member of the short list (the college birthday, «да, день рождения делай»). At a
+    // year boundary that is not her birthday week the guard lets it through and the command's own
+    // re-validation speaks – never the freeze sentence, and never the ended one. The answering path
+    // itself – a birthday week inside the freeze, answered with the latch on – is walked in
+    // tests/college-birthday.test.ts.
+    const { world } = careerAtCollege('e2-gift-rules')
+    expect(pendingBirthday(world), 'the fixture rests on an ordinary week').toBeNull()
+    expect(() => chooseGift(world, 'day')).toThrow('There is no birthday to answer this week')
+    expect(() => chooseGift(world, 'day'), 'and it does not call the career frozen').not.toThrow(COLLEGE_FREEZE_REFUSAL)
   })
 
   it('a cancel at college still refuses on its OWN rules – the guard is the only thing that moved', () => {
@@ -290,7 +328,7 @@ describe('a career that has really ended still hears that it has ended', () => {
         detail: 'the fixture',
         resumesWeek: null, // ⚠ the five that do not resume – college is the only one that does
       })
-      for (const [name, run] of refusedCommands(world)) {
+      for (const [name, run] of refusedCommands(world, 'ended')) {
         expect(run, `${type}/${name} refuses`).toThrow(CAREER_ENDED_REFUSAL)
         expect(run, `${type}/${name} is not told she is at college`).not.toThrow(COLLEGE_FREEZE_REFUSAL)
       }

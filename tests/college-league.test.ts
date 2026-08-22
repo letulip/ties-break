@@ -31,6 +31,8 @@ import { fileURLToPath } from 'node:url'
 import {
   createWorld,
   answerFork,
+  chooseGift,
+  pendingBirthday,
   resumeFromCollege,
   collegeLeagueMatchId,
   collegeLeagueMatchesOf,
@@ -73,14 +75,27 @@ function atTheFork(seed: string): { world: WorldState; rng: Rng } {
   return { world, rng: rngFromSeed(world.seed) }
 }
 
-/** Four years, spent one at a time exactly as the Home shell's «Another year» spends them. */
+/** Four years, spent one at a time exactly as the Home shell's «Another year» spends them.
+ *
+ *  ⚠ RE-AIMED BY THE COLLEGE BIRTHDAY (round 24, «да, день рождения делай»): a year now PAUSES on
+ *  her birthday week so the gift dialog can be answered, so spending it is press-answer-press. The
+ *  day together is the one option every birthday offers, so it is always a legal answer here. */
 function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
   const { world, rng } = atTheFork(seed)
   answerFork(world, 'college', tier)
-  for (let y = 0; y < ENDINGS.collegeYears && world.ending?.type === 'college'; y++) {
+  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
   return world
+}
+
+/** Press until exactly `years` are banked – the boundary the college card is read at. */
+function spendYears(world: WorldState, rng: Rng, years: number): void {
+  for (let press = 0; press < 3 * years && world.college!.years.length < years && world.ending?.type === 'college'; press++) {
+    resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  }
 }
 
 /** ⚠ A RANGE OF CAREERS AND NOT ONE LUCKY SEED – the whole point of the floor. Walked once and
@@ -379,7 +394,7 @@ describe('the championship is watchable', () => {
     // BEFORE that – two years spent, the question still open.
     const three = atTheFork('r24-league-shell')
     answerFork(three.world, 'college')
-    for (let y = 0; y < 2; y++) resumeFromCollege(three.world, three.rng)
+    spendYears(three.world, three.rng, 2)
     const snap = toSnapshot(three.world)
     const college = snap.ending?.college ?? null
     expect(college, 'the college card has a view to draw').not.toBeNull()
@@ -535,7 +550,13 @@ describe('the freeze still behaves', () => {
     const rngB = rngFromSeed(control.seed)
     college.fork = { askedWeek: college.week, answer: null, offer: null }
     answerFork(college, 'college')
-    resumeFromCollege(college, rngA)
+    // ⚠ ROUND 24: the year pauses on her birthday and the gift is answered mid-walk – which makes
+    // this arm STRONGER, not different: a paused, answered, resumed year must still sit in the SAME
+    // MAIN position as fifty-two uninterrupted control ticks, or the birthday moved the world's dice.
+    for (let press = 0; press < 4 && college.week < WEEKS_PER_YEAR; press++) {
+      resumeFromCollege(college, rngA)
+      if (pendingBirthday(college) !== null) chooseGift(college, 'day')
+    }
     for (let i = 0; i < WEEKS_PER_YEAR; i++) tickWeek(control, rngB)
     expect(college.week).toBe(control.week)
     expect(college.rngMain.n, 'the same number of MAIN draws').toBe(control.rngMain.n)
@@ -570,9 +591,14 @@ describe('a career migrated mid-college', () => {
     expect(lastLeagueRun(world.college!), 'so the selectors have nothing to read yet').toBeNull()
 
     // ...and the years it has LEFT are ordinary years: the next one holds a championship.
+    // ⚠ Round 24: an ordinary year pauses on her birthday too – a migrated career's remaining years
+    // are asked properly, so the walk is press-answer-press like everyone else's.
     const before = world.college!.years.length
     const rng = resumeMain(world.rngMain)
-    resumeFromCollege(world, rng)
+    for (let press = 0; press < 3 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    }
     const banked = world.college!.years
     expect(banked.length).toBe(before + 1)
     expect(banked[banked.length - 1].league, 'the first year it plays under v56 has one').not.toBeNull()

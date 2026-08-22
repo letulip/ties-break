@@ -47,7 +47,7 @@ import {
   type CollegeRecruitView,
   type JuniorRung,
 } from '../collegeOffer'
-import type { CollegeLeagueRun, CollegeOffer, CollegeProgressView, CollegeState } from '../../shared/protocol'
+import type { CollegeLeagueRun, CollegeOffer, CollegeProgressView, CollegeState, CollegeYearStart } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidAgeYears } from './age'
 // ⚠ FROM ./ladder, NOT ./snapshot (TB-07). This file MUTATES the world; snapshot BUILDS the
@@ -559,15 +559,20 @@ export function bankCollegeYear(world: WorldState, start: CollegeYearStart): voi
   // this is nulled – it is now in `years[n].league`, which is the second place that lookup reads. A
   // second «last result» field kept alive across the boundary would be a copy that can drift.
   college.pendingLeague = null
+  // ⭐ v57 – AND THE PAUSED YEAR'S OPENING GOES WITH THEM, whose lifetime it shares: it exists from
+  // a birthday pause to the bank, and a start left standing here would open the NEXT year with the
+  // LAST year's four numbers. Written unconditionally so the key normalises to null the first time
+  // any career banks a year (the field is optional at enrolment – see `CollegeState`).
+  college.pendingYearStart = null
 }
 
-/** The measurements a year has to be opened with, taken before the first of its weeks ticks. */
-export interface CollegeYearStart {
-  week: number
-  skill: number
-  rank: number | null
-  fundsCents: number
-}
+/** The measurements a year has to be opened with, taken before the first of its weeks ticks.
+ *
+ *  ⚠ v57 – THE SHAPE MOVED TO `shared/protocol.ts` (`CollegeYearStart`), because the birthday pause
+ *  made it persisted state: a year interrupted mid-flight banks against its own opening, and by the
+ *  press that finishes it the opening is history. Re-exported here so every historical import keeps
+ *  resolving. */
+export type { CollegeYearStart }
 
 export function openCollegeYear(world: WorldState): CollegeYearStart {
   return {
@@ -634,6 +639,10 @@ export function collegeProgressOf(world: WorldState): CollegeProgressView | null
       const run = lastLeagueRun(college)
       return run ? collegeLeagueMatchesOf(world, run.week) : []
     })(),
+    // ⭐ v57 – IS A YEAR PAUSED MID-FLIGHT (her birthday stopped it)? Off the persisted fact itself,
+    // so the bottom control's «Finish the year» and the engine's own early-return refusal cannot
+    // disagree about whether one is.
+    yearInProgress: (college.pendingYearStart ?? null) !== null,
   }
 }
 

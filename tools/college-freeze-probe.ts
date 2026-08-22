@@ -70,6 +70,8 @@ import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
 import {
+  chooseGift,
+  pendingBirthday,
   resumeFromCollege,
   endCollegeEarly,
   tickWeek,
@@ -260,12 +262,14 @@ async function walkCollege(
   let { world, rng } = armFrom(at)
   if (clearEntries) world.entries = []
   answerFork(world, 'college', tier)
-  for (let y = 0; y < 8 && world.ending?.type === 'college'; y++) {
+  for (let y = 0; y < 12 && world.ending?.type === 'college'; y++) {
     if (leaveAfter !== null && (world.college?.years.length ?? 0) >= leaveAfter) {
       endCollegeEarly(world)
       break
     }
     resumeFromCollege(world, rng)
+    // Round 24: the year pauses on her birthday week; answer it so the next press finishes the year.
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     if (trip !== 'none' && world.ending?.type === 'college') {
       world = trip === 'export'
         ? await decodeExportFile(await encodeExportFile(world))
@@ -325,7 +329,11 @@ function walkWithStaleEntry(at: AtFork, weeksOut: number, finishReveal: boolean)
   const { world, rng } = armFrom(at)
   const entry = bookAnEntryInsideTheFreeze(world, weeksOut)
   answerFork(world, 'college', undefined)
-  for (let y = 0; y < 8 && world.ending?.type === 'college'; y++) resumeFromCollege(world, rng)
+  for (let y = 0; y < 16 && world.ending?.type === 'college'; y++) {
+    resumeFromCollege(world, rng)
+    // Round 24: the year pauses on her birthday week; answer it so the next press finishes the year.
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  }
   if (finishReveal && world.pendingTournament) {
     for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
       revealTournamentRound(world)
@@ -362,9 +370,13 @@ async function walkCollegeThroughWorker(at: AtFork, tier: CollegeTier | undefine
 
   const answered = await send({ type: 'answerFork', answer: 'college', tier, baseRevision: revision })
   if (!answered.ok) throw new Error(`answerFork refused: ${answered.error}`)
-  for (let y = 0; y < 8; y++) {
+  for (let y = 0; y < 12; y++) {
     const res = await send({ type: 'resumeFromCollege', baseRevision: revision })
     if (!res.ok) break
+    // Round 24: the worker route pauses on her birthday too – answer through the same wire. The
+    // engine re-validates, so on a week with no birthday this is a refused no-op and is ignored;
+    // this probe's `Reply` deliberately carries no snapshot to read the prompt off.
+    await send({ type: 'chooseGift', giftId: 'day', baseRevision: revision })
   }
   const out = await send({ type: 'exportSave' })
   if (!out.ok) throw new Error(`exportSave refused: ${out.error}`)

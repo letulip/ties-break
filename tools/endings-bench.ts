@@ -31,6 +31,8 @@ import {
 import {
   answerFork,
   answerRetirement,
+  chooseGift,
+  pendingBirthday,
   resumeFromCollege,
   kidAgeYears,
   type WorldState,
@@ -280,8 +282,12 @@ function answerWhateverIsOpen(
     answerFork(world, arm)
     if (arm === 'college' && world.ending?.type === 'college') {
       out.wentToCollege = true
-      // one tap, four years – the only ending that resumes
-      resumeFromCollege(world, rng)
+      // one year per press since P5 – and since round 24 a year pauses on her birthday week, so the
+      // press is press-answer-press.
+      for (let press = 0; press < 3 && (world.college?.years.length ?? 0) === 0 && world.ending?.type === 'college'; press++) {
+        resumeFromCollege(world, rng)
+        if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      }
     }
   }
   if (world.retirementOffer !== null) {

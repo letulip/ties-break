@@ -46,8 +46,7 @@
 import { rngFromSeed } from '../rng'
 import { addEvent } from './ledger'
 import { ageInWords, birthdayTurning } from './age'
-import { guardNotEnded } from './endings'
-import { inCollege } from './college'
+import { guardNotEndedForGood } from './endings'
 import { BIRTHDAY_DAY_NOUN } from '../../shared/protocol'
 import type { BirthdayGift, BirthdayOption, BirthdayPrompt, BirthdayRecord } from '../../shared/protocol'
 import type { WorldState } from '../world'
@@ -605,21 +604,36 @@ function giftsAlreadyGiven(world: WorldState): string[] {
  *  is no `pending` boolean that could survive a reload out of step with it, and answering is exactly
  *  "the row appears".
  *
- *  ⚠ TWO EXCLUSIONS, AND BOTH ARE THE SAME HAZARD THE KNOCK ALREADY HAS.
- *  * BEHIND AN EPILOGUE there is no shell to render a dialog into (`advanceWeeks` returns 'ending'
- *    above every other reason for exactly this).
- *  * AT COLLEGE THERE IS NO PARENT IN THE LOOP. `resumeFromCollege` spends four years in ONE call –
- *    `while (world.week < college.untilWeek) tickWeek(...)` – so a blocking birthday raised inside
- *    the freeze would strand the jump with nobody able to answer it. `rollKnock` is skipped for this
- *    exact reason and this is skipped beside it.
+ *  ⚠ ONE EXCLUSION LEFT, AND IT IS THE HAZARD THE KNOCK ALREADY HAS: BEHIND AN EPILOGUE there is no
+ *  shell to render a dialog into (`advanceWeeks` returns 'ending' above every other reason for
+ *  exactly this). The resumable college latch is carved OUT of that exclusion since round 24 – D1
+ *  put the Home shell back on screen underneath the freeze, so that one "ending" has a live surface
+ *  and the dialog renders on it.
  *
- *    ⚠ AND THOSE FOUR BIRTHDAYS ARE RECORDED AS ABSENT, NOT AS "gave nothing". Nobody was asked, so
- *    there is no act to record – the same distinction spec §5.5 draws for a migrated career. Her
- *    birthday still reaches the FEED those years (`markBirthday` is unconditional); what it does not
- *    do is invent a parent's decision out of a freeze. */
+ *  ⭐⭐⭐ ROUND 24 – THE COLLEGE EXCLUSION IS GONE, ON THE OWNER'S RULING («да, день рождения делай»,
+ *  22.08, docs/plans/college-the-flow.md). It existed because `resumeFromCollege` spent a whole year
+ *  in ONE call – a blocking birthday inside that loop would have stranded the jump with nobody able
+ *  to answer it, which is why the 19.08 ruling gave those years a feed line INSTEAD of the dialog
+ *  («колледжевые годы получают не попап, а свою запись в дневнике»). Both halves of that reason are
+ *  now gone: the Home shell is alive during college (D1) and `resumeFromCollege` PAUSES on the
+ *  birthday week exactly as `advanceWeeks` blocks on it – the year stops, the player answers, the
+ *  next press finishes the year. A girl spends four years at university and every one of her
+ *  birthdays happens.
+ *
+ *  ⚠ THE FOUR YEARS ALREADY LIVED BY AN OLD SAVE STAY ABSENT, NOT "gave nothing" – the distinction
+ *  spec §5.5 draws is untouched, because this predicate only ever asks about the CURRENT week. A
+ *  save migrated mid-college is never retro-asked for a week that already ticked; the one dialog it
+ *  can meet is its own resting week's, if that week happens to be her birthday – the same answer the
+ *  v48 migration recorded for a tour save resting on one. */
 export function pendingBirthday(world: WorldState): number | null {
-  if (world.ending !== null) return null
-  if (inCollege(world)) return null
+  if (world.ending !== null) {
+    // The RESUMABLE latch and nothing wider: `ending.type` alone would also match the no-live-path
+    // shape App.vue routes to the epilogue fallback (a 'college' ending with the question already
+    // closed), and behind an epilogue there is still no shell. `doneWeek === null` is the same half
+    // of the predicate `collegeProgressOf` keys the open question on.
+    const resumable = world.ending.type === 'college' && world.college !== null && world.college.doneWeek === null
+    if (!resumable) return null
+  }
   const age = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
   if (age === null) return null
   return world.birthdays.some((b) => b.week === world.week) ? null : age
@@ -732,7 +746,15 @@ export function birthdayOptions(
  *  RECORDS and does not consume (spec §2b – «мораль и психологи у нас в будущем, так что сейчас можно
  *  просто подготовку сделать»). The diary reads the record; nothing else does. */
 export function chooseGift(world: WorldState, giftId: string): void {
-  guardNotEnded(world)
+  // ⭐⭐⭐ ROUND 24 – `guardNotEndedForGood`, NOT `guardNotEnded`, because the answer has to land
+  // WHILE THE COLLEGE LATCH IS ON: the year pauses on her birthday week with the latch re-latched
+  // under the dialog, and a guard that refuses the freeze would refuse the one command that lets
+  // time move again. This is exactly the class E2 built the second guard for – a command about the
+  // FAMILY'S OWN CALENDAR, which being at a university plainly does not stop – and it is the third
+  // member of that deliberately short list (see constants.ts). A terminal latch still refuses with
+  // the ended sentence, which `pendingBirthday` makes doubly sure of: it returns null behind every
+  // epilogue, so past the guard there is no birthday to answer there anyway.
+  guardNotEndedForGood(world)
   const age = pendingBirthday(world)
   if (age === null) throw new Error('There is no birthday to answer this week')
   // ⚠ DERIVED BEFORE THE PUSH BELOW, which is what keeps this the SAME ask the dialog printed: the

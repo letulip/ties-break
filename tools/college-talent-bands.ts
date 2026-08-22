@@ -38,7 +38,7 @@ import {
   median,
   type Preset,
 } from './econ-bench'
-import { answerFork, answerRetirement, kidAgeExact, resumeFromCollege } from '../src/engine/world'
+import { answerFork, answerRetirement, chooseGift, kidAgeExact, pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { ceilingOf } from '../src/engine/academy'
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
 // world/college.ts could stop importing the aggregate projection layer. Same function.
@@ -223,8 +223,10 @@ function walkArm(preset: Preset, i: number, arm: Arm): Row | null {
     // cannot be read as advice». The tier spread was measured separately (decisions.md 17.08:
     // the coaching is worth +0 / +8 / +2 on the top-100 row) and is not this file's question.
     answerFork(world, 'college')
-    for (let y = 0; y < ENDINGS.collegeYears && world.ending?.type === 'college'; y++) {
+    // Round 24: the year pauses on her birthday week – press, answer, press again.
+    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     graduated = world.ending === null
     endedInCollege = world.ending ? world.ending.type : null

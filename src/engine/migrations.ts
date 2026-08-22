@@ -1724,6 +1724,37 @@ export function migrateSave(raw: unknown): WorldState {
     v = 56
   }
 
+  // ⭐⭐⭐ v56 -> v57: HER COLLEGE BIRTHDAYS HAPPEN (round 24, the owner's «да, день рождения делай»).
+  // One new field, nullable, on the college state only: `college.pendingYearStart` – the opening
+  // measurements of a college year paused mid-flight, because `resumeFromCollege` now BREAKS on her
+  // birthday week so the gift dialog can be answered on the live Home shell, and the press that
+  // finishes the year has to bank it against numbers that are history by then.
+  //
+  // ⚠⚠ NULL IS THE TRUE VALUE FOR EVERY v56 SAVE, BY CONSTRUCTION AND NOT BY DEFAULT. A college year
+  // was spent in ONE worker command until this version, so no v56 save can rest mid-year: every save
+  // inside the freeze is standing at an academic year boundary, where no year is in progress. There
+  // is nothing to reconstruct and nothing this null declines.
+  //
+  // ⚠ WHAT AN OLD SAVE MIGRATED MID-COLLEGE GETS, STATED RATHER THAN GLOSSED. Its LIVED college
+  // birthdays stay exactly as they were – ABSENT from `world.birthdays`, no rows invented, no
+  // dialogs raised for weeks that already ticked (`pendingBirthday` only ever asks about the CURRENT
+  // week), and nothing is billed because a gift has never cost a cent anywhere (spec §0, the owner:
+  // «про цену момент, давай не будем это учитывать в нашем кошельке вообще»). The one dialog such a
+  // save can meet on load is its own RESTING week's, if that boundary happens to be her birthday
+  // week – the same popup the v48 migration's note calls "exactly right" for a tour save resting on
+  // one, and the same one a new career meets on that week. Every college birthday still AHEAD of it
+  // pauses the year and is asked properly.
+  //
+  // Idempotent (`undefined` is the only state it rewrites) and it writes a literal: ZERO draws on
+  // any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 56) {
+    const college = save.college as { pendingYearStart?: unknown } | null | undefined
+    if (college && typeof college === 'object' && college.pendingYearStart === undefined) {
+      college.pendingYearStart = null
+    }
+    v = 57
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

@@ -1009,15 +1009,31 @@ const collegeWeek = computed(
 const collegeProgress = computed(() => game.snapshot?.ending?.college ?? null)
 
 /** «Play the first year» / «Another year» – the same two words the epilogue's card used, off the
- *  engine's own count. */
+ *  engine's own count.
+ *
+ *  ⭐ ROUND 24, THE BIRTHDAY: «Finish the year» while one is paused mid-flight. Her birthday stops
+ *  the college year (`resumeFromCollege` breaks on the birthday week so the gift dialog can be
+ *  answered), and the press after the cake continues THAT year – a button still reading «Another
+ *  year» there would be offering a year it is not going to start. `yearInProgress` is the engine's
+ *  own fact (`college.pendingYearStart`), so this label and the year the press spends cannot part. */
 const collegeYearLabel = computed(() =>
-  (collegeProgress.value?.yearsDone ?? 0) === 0 ? 'Play the first year' : 'Another year',
+  collegeProgress.value?.yearInProgress
+    ? 'Finish the year'
+    : (collegeProgress.value?.yearsDone ?? 0) === 0
+      ? 'Play the first year'
+      : 'Another year',
 )
 
 /** She may only leave a year she has actually spent. The engine refuses it too (`endCollegeEarly`
  *  throws on a career with no banked year) – this is the screen agreeing with the rule rather than
- *  being the rule (CLAUDE.md invariant 1). */
-const canLeaveCollege = computed(() => (collegeProgress.value?.yearsDone ?? 0) > 0)
+ *  being the rule (CLAUDE.md invariant 1).
+ *
+ *  ⭐ ROUND 24: ...and never mid-year. The birthday pause created the first mid-year rest state, and
+ *  the early return is answered at year boundaries – the engine refuses it there too (`The year she
+ *  started is still running`), so this is again the screen agreeing rather than deciding. */
+const canLeaveCollege = computed(
+  () => (collegeProgress.value?.yearsDone ?? 0) > 0 && !collegeProgress.value?.yearInProgress,
+)
 
 /** ⚠ THE TWO ANSWERS ARE THE BOTTOM CONTROL, and that placement is the item rather than a detail.
  *  They are where a week is spent on every other week of the game, they are two buttons of ONE

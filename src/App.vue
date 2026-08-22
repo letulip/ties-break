@@ -920,8 +920,14 @@ const showKnock = computed(() => overlay.value === 'knock')
 //     (a shape no live path produces)    branch EndingScreen keeps so there can be no fourth.
 // The three cases are exhaustive over `snapshot.ending`, so no state can fall through to a blank
 // screen – the failure mode a two-way `v-if` on a takeover actually has.
+// ⭐⭐⭐ ROUND 24, THE BIRTHDAY: THE LATCH ALONE, NOT `overlay === 'ending'`. The college year now
+// PAUSES on her birthday week with the latch back on, and `blockingOverlay` answers 'birthday' over
+// exactly that latch so the dialog can render – so gating this on the overlay would flip the shell
+// out of college dress for precisely the frames the dialog is up (the college bar giving way to the
+// tour's Play-week pill behind a birthday card is the kind of lie a backdrop tells). The latch is
+// the fact; which question is painted over it is `overlay`'s business.
 const showCollege = computed(
-  () => overlay.value === 'ending' && game.snapshot?.ending?.ending.type === 'college' && game.snapshot.ending.college !== null,
+  () => game.snapshot?.ending?.ending.type === 'college' && game.snapshot.ending.college !== null,
 )
 const showEnding = computed(() => overlay.value === 'ending' && !showCollege.value)
 const showFork = computed(() => overlay.value === 'fork')

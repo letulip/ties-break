@@ -1,7 +1,7 @@
 {
   "generatedBy": "tools/e2e-fixtures.ts",
   "command": "npm run e2e:fixtures",
-  "schemaVersion": 56,
+  "schemaVersion": 57,
   "fixtures": [
     {
       "name": "fresh",
@@ -11,7 +11,7 @@
       "careerId": "c-e2e-fresh",
       "slot": "auto:c-e2e-fresh:a",
       "targetWeek": 0,
-      "schemaVersion": 56,
+      "schemaVersion": 57,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -20,9 +20,9 @@
         "kidLastName": "Cieslak",
         "country": "US"
       },
-      "bytes": 23979,
-      "payloadBytes": 23935,
-      "sha256": "bc7173690204e4f626aee84212b4a6db1a5d74935776fb60c970f21013ba5c10",
+      "bytes": 23981,
+      "payloadBytes": 23937,
+      "sha256": "7783938f5632349709b79b1815a5a5f0f95cf94fae95f22285b3d37a9154c904",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -60,7 +60,7 @@
       "careerId": "c-e2e-junior",
       "slot": "auto:c-e2e-junior:a",
       "targetWeek": 120,
-      "schemaVersion": 56,
+      "schemaVersion": 57,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -71,7 +71,7 @@
       },
       "bytes": 57950,
       "payloadBytes": 57906,
-      "sha256": "d3ed5b29d0e0142b304982ca4736b498a0190240eddbb5fb52d63add44aab441",
+      "sha256": "378861ce8a05ca236fd185ce5219f7ef6f5e2ac19e1b05a4f22dc41222332365",
       "seedsTried": 3,
       "facts": {
         "week": 120,
@@ -109,7 +109,7 @@
       "careerId": "c-e2e-pro",
       "slot": "auto:c-e2e-pro:a",
       "targetWeek": 412,
-      "schemaVersion": 56,
+      "schemaVersion": 57,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -120,7 +120,7 @@
       },
       "bytes": 80395,
       "payloadBytes": 80351,
-      "sha256": "59cbc8e91fd7e0dd04b5fb22cbc558fa65a3ecc34356dd6cffb70d2e49b1e4c5",
+      "sha256": "dc44aca33eb8ed532fe73264482fbe5616c928c1db4f06fef4002cbc9f348c41",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -158,7 +158,7 @@
       "careerId": "c-e2e-sinking",
       "slot": "auto:c-e2e-sinking:a",
       "targetWeek": 45,
-      "schemaVersion": 56,
+      "schemaVersion": 57,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -167,9 +167,9 @@
         "kidLastName": "Fujimoto",
         "country": "US"
       },
-      "bytes": 52955,
-      "payloadBytes": 52911,
-      "sha256": "bdb05ff7d5326f09733d7e038dbea26eaed9a9a95f9ac704440c8043b272cc90",
+      "bytes": 52954,
+      "payloadBytes": 52910,
+      "sha256": "46a321a06085ef488943ac5a734051bfeb2085638040356e6a1b4db265c7b2b3",
       "seedsTried": 1,
       "facts": {
         "week": 45,
@@ -207,7 +207,7 @@
       "careerId": "c-e2e-broke",
       "slot": "auto:c-e2e-broke:a",
       "targetWeek": 118,
-      "schemaVersion": 56,
+      "schemaVersion": 57,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -218,7 +218,7 @@
       },
       "bytes": 60600,
       "payloadBytes": 60556,
-      "sha256": "0012246fcd70d900ed15e4709c91bf095796e9457d82b8380b2c01a9e1ec8832",
+      "sha256": "16a47c9cf4ac110d710502eea818d3516356293edc5744820517893542f03c2c",
       "seedsTried": 1,
       "facts": {
         "week": 118,
@@ -256,7 +256,7 @@
       "careerId": "c-e2e-ending",
       "slot": "auto:c-e2e-ending:a",
       "targetWeek": 282,
-      "schemaVersion": 56,
+      "schemaVersion": 57,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 78796,
-      "payloadBytes": 78752,
-      "sha256": "c5cc43074eead5c7fce739f3cd81352fed45600bd97ef51db5985cbd96b14a5c",
+      "bytes": 78797,
+      "payloadBytes": 78753,
+      "sha256": "a843d004a52fb83a7c01f0464a531dccb2bc16b30741a199ba72c6161041fc35",
       "seedsTried": 1,
       "facts": {
         "week": 282,

@@ -46,7 +46,16 @@ export type BlockingOverlay = 'ending' | 'knock' | 'birthday' | 'fork' | 'retire
  */
 export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | null {
   if (!snapshot) return null
-  if (snapshot.ending) return 'ending'
+  // ⭐⭐⭐ ROUND 24 – THE ONE 'ending' A BIRTHDAY MAY BE LAID OVER: the resumable college latch.
+  // Entry 1's whole rationale ("it REPLACES the tab shell, so nothing can be laid over it") stopped
+  // being true for exactly this latch when D1 put the Home shell back underneath the freeze – and
+  // the college year now PAUSES on her birthday week (the owner's «да, день рождения делай»), so a
+  // birthday raised there has a live shell to render over and MUST outrank the latch, or the year
+  // pauses with its question rendered nowhere and the career strands. The predicate is App.vue's
+  // own `showCollege` half ("this ending draws the Home shell, not the epilogue"), so the two
+  // cannot part; every other ending, college-after-leaving included, replaces the shell as before.
+  const collegeShell = snapshot.ending?.ending?.type === 'college' && snapshot.ending.college !== null
+  if (snapshot.ending && !(collegeShell && snapshot.birthdayPrompt)) return 'ending'
   if (snapshot.knockPrompt) return 'knock'
   if (snapshot.birthdayPrompt) return 'birthday'
   if (snapshot.fork) return 'fork'

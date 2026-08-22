@@ -836,9 +836,32 @@ const FROZEN = {
    *  call-up's own four pulls on `seed:callup:<week>` are byte-identical – only the threshold the
    *  first is compared against moved. The frozen MAIN capture (41550 / e6b0c709) is not re-pinned
    *  and was re-run green beside this re-freeze. */
-  middleGrinder: '94b9f1cef8eb5f74c573b909cd1a19c4bbe6888aed6c7070bedbb4371db4bcef',
+  /** ⚠ MOVED WITH ITS TWINS ONCE MORE (22.08, round 24 – the college birthday, schema v57), and
+   *  again by EXACTLY ONE KEY. `PRE_V57` below is the proof rather than the claim: rolling
+   *  `schemaVersion` back to 56 on the NEW world reproduces the previous three hashes byte for byte.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands. The wave was UNCOMMITTED and its
+   *  agent the only one running, so "this branch with my own change reverted" IS a detached worktree
+   *  at `1356712` – the shared tree held nothing but this wave on top of that commit. Verified both
+   *  ways rather than assumed (the 17.08 null-arm hazard): `grep -c pendingYearStart` returns 0 in
+   *  the A tree's engine and 6/2 (world.ts / protocol.ts) in B's, so the A arm lacks the change and
+   *  the B arm contains its reader. All three arms (preset/policy 5/0, 8/0, 0/1), headers checked
+   *  against the invocations: **one line of 66 differs, and it is `schemaVersion`**
+   *  (7688b6ef5255 -> c837649cce43).
+   *
+   *  ⚠ AND THAT IS BY CONSTRUCTION. v57's field (`college.pendingYearStart`, the opening of a year
+   *  paused on her birthday) lives on a college state that is null in all three careers – week 156
+   *  is 32 weeks short of the fork, asserted in `walkFrozenCareer` – and `pendingBirthday`'s opened
+   *  guard changes behaviour only when `world.college` exists or the latch is the resumable college
+   *  one, neither of which a frozen career ever has. ⚠⚠ THE TOUR BIRTHDAY PATH IS BYTE-IDENTICAL:
+   *  each of these careers holds three tour birthdays inside its 156 weeks, and every key that could
+   *  see one – `birthdays`, `events`, `rngMain` – hashed identically on both arms. `rngMain` unmoved
+   *  for the fourteenth wave running: a guard is not a draw, and the gift never was one
+   *  (`seed:birthday:<age>`, never MAIN). The frozen MAIN capture (41550 / e6b0c709) is not
+   *  re-pinned and was re-run green beside this re-freeze. */
+  middleGrinder: '2137a9e5e2a69ca0af681e051b3c224dcb2179bc41c2f2c9f6eb4215b82064e2',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '52a3e09c48882dc43dc78644eb4b288b3c48f1f9b59e0f3add6d3db611fbc4e2',
+  eliteGrinder: '87b7f5860fb28f3147a416a275fd49fd8e8d684319fee18372df554c91a9cc1d',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1015,6 +1038,35 @@ const FROZEN = {
   /** ⚠ MOVED WITH `middleGrinder` AND WITHOUT `eliteGrinder` (21.08, round 24 #1). See the paragraph
    *  above: one key of 66 – `offers` – and this career is the one on the largest scholarship of the
    *  three. `PRE_V55` reproduces this exact value by rolling only `schemaVersion` back to 54. */
+  /** ⚠ MOVED WITH BOTH TWINS (22.08, the college birthday, v57) by the version number alone – see
+   *  the paragraph on `middleGrinder`, and `PRE_V57` below for the identity. */
+  selfTravelling: '8d379176f767d1e74a986d585f45cd3d08a74f1d1517a68a26cc289700fae299',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
+ *  moved ONE key and nothing else.
+ *
+ *  ⚠ ALL THREE HELD, which is the signature of a change that reached no career at all. Round 24's
+ *  college birthday pauses `resumeFromCollege` on her birthday week and persists the paused year's
+ *  opening (`college.pendingYearStart`) – all of it behind a college state that is null in every
+ *  frozen career, and behind a latch none of them ever wears. Week 156 is 32 weeks short of the
+ *  fork, which `walkFrozenCareer` asserts rather than assumes. The THREE TOUR BIRTHDAYS inside each
+ *  of these careers are the sharper half of the claim: `pendingBirthday`, `chooseGift` and
+ *  `markBirthday` were all touched this wave, and `birthdays`, `events` and `rngMain` hashed
+ *  byte-identical on both arms anyway – the change is confined to the freeze path, measured rather
+ *  than promised.
+ *
+ *  ⚠ PER-KEY DIFF TAKEN FIRST, control = this tree's own wave absent (a detached worktree at
+ *  `1356712`; the wave was uncommitted and its agent alone, so that IS "my own change reverted" –
+ *  and it was verified to lack the change while the B arm was verified to contain its reader).
+ *  Headers checked against the invocations on every arm (5/0, 8/0, 0/1).
+ *
+ *  ⚠ `rngMain` UNMOVED for the fourteenth wave running, and it is the load-bearing half: the pause
+ *  is a break in a loop, the guard is a read, and the gift's offer lives on `seed:birthday:<age>` –
+ *  none of it is a draw. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
+const PRE_V57 = {
+  middleGrinder: '94b9f1cef8eb5f74c573b909cd1a19c4bbe6888aed6c7070bedbb4371db4bcef',
+  eliteGrinder: '52a3e09c48882dc43dc78644eb4b288b3c48f1f9b59e0f3add6d3db611fbc4e2',
   selfTravelling: 'fa2ac758e478fbff67f80c9ed8b6015c2401f581de73c496debae125e6f44f6c',
 }
 
@@ -1181,6 +1233,19 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v57: rolling ONLY the schema back to 56 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT THE COLLEGE BIRTHDAY DID TO THESE THREE CAREERS, as an identity. The pause,
+    // the persisted year-opening and the opened guard all live behind a college state that is null
+    // here and a latch these careers never wear – asserted in `walkFrozenCareer`, not assumed. The
+    // three TOUR birthdays inside each career are the case this wave was most required not to move,
+    // and if any of `pendingBirthday`'s, `chooseGift`'s or `markBirthday`'s tour behaviour had
+    // shifted one byte, THIS case would be red beside the freeze – which is the one signal a
+    // whole-world hash cannot otherwise give.
+    expect(careerHashAtSchema(5, 0, 56), '25k · middle coach · grinder').toBe(PRE_V57.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 56), '120k · elite coach · grinder').toBe(PRE_V57.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 56), '8k · self-coached · player').toBe(PRE_V57.selfTravelling)
   })
 
   it('⭐⭐ v56: rolling ONLY the schema back to 55 reproduces the previous hashes byte for byte', () => {

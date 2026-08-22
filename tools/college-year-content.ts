@@ -24,7 +24,7 @@
 //
 // ⚠ MEASUREMENT ONLY. Nothing under `src/` is touched and no save is written.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
-import { resumeFromCollege } from '../src/engine/world'
+import { chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { NATIONAL_TEAM } from '../src/engine/nationalTeam'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -133,8 +133,10 @@ function walkCollege(at: { world: WorldState; rng: Rng; label: string }, tier?: 
   const world = structuredClone(at.world)
   const rng = at.rng
   answerFork(world, 'college', tier)
-  for (let y = 0; y < ENDINGS.collegeYears && world.ending?.type === 'college'; y++) {
+  // Round 24: the year pauses on her birthday week – press, answer, press again.
+  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
   return rowsFor(world, at.label)
 }
