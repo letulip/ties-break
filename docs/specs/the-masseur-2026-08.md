@@ -1,8 +1,8 @@
 ---
 type: spec
-status: shipped
-area: economy
-canonical: true
+status: current
+area: engine/staff
+canonical: false
 last-reviewed: 2026-08-22
 ---
 
