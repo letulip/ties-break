@@ -145,7 +145,7 @@ describe('season planner (REAL mechanics – bookings through the engine command
     expect(careful.planner.targetAbove).toBeGreaterThan(ECONOMY.practice.rescueTargetCondition)
   })
 
-  it("the doctor's veto is counted, and only the degenerate policy ever meets it", () => {
+  it("the doctor's veto is counted, and recklessness pays him more than care – per career and in the ledger", () => {
     const floor = ECONOMY.availability.medicalFloor
     // *** RE-PINNED 25.07 (ladder-up union): this used to hardcode `working` + seed 3, because
     // that was the crash cell when the calendar topped out at national. With the J-tiers the
@@ -334,14 +334,52 @@ describe('season planner (REAL mechanics – bookings through the engine command
     // policy attempts several events in one bad week, so "blocks" multiply-count a single dip and
     // make a brittle pin. The earlier `=== 0 for balanced and careful` pin broke twice from changes
     // that had nothing to do with the floor; the guarantee is a ratio, not a zero.
-    const managed = PROFILES.flatMap((p) =>
-      [balanced, careful].map((policy) => runFatigueCareer(p, policy, 3, H104.weeks)),
-    )
-    const share = (rs: typeof managed) =>
+    // *** RE-AIMED AT THE OWNER'S OWN CRITERION (wave/sim-health, 22.08), BECAUSE THE OLD METRIC
+    // INVERTED WITHOUT THE PHENOMENON INVERTING. Three assertions here went simultaneously false
+    // on main: the 3x under-floor ratio read 2.38x, and BOTH raw-sum direction checks flipped
+    // (blocks 26 vs 59, withdrawals 14 vs 16) – the managed policies apparently "meeting the
+    // doctor" more than the policy that ignores every warning. Bisected before this branch: the
+    // blocks direction flipped at 7494525 (the coach's edge – coached careers go deeper, play
+    // more, meet the doctor more) and the ratio fell 3.30x -> 2.38x at 41ce43a (the domestic
+    // season-to-date table). Diagnosed here (docs/specs/fatigue-doctor-ledger-2026-08.md): the
+    // phenomenon did not invert – the METRIC did, in three ways. (a) The raw sums compared 4
+    // grinder careers against 8 managed ones, an asymmetry that never mattered at 199-vs-5 and
+    // decides everything at 26-vs-59. (b) "Blocks" multiply-count calendar density x wallet
+    // (this file's own warning, a few notes up), and since the coach's edge those correlate with
+    // CARE: the managed policies win more, go deeper, and occasionally end a week under the floor
+    // in front of a dense, affordable calendar – the wealthy·elite cell alone was 45 of the
+    // managed 59. (c) One seed, at magnitudes ~8x smaller than when the pins were set (grinder
+    // life under the floor: 27.9% of weeks at the 26.07 measure, ~5% today; per-seed the pooled
+    // ratio wobbles 1.8x to 18x). A third suppression channel is a finding, not a defect: 37% of
+    // the grinder's sub-floor weeks offer NO vetoable event at all, because only 3 of her 16
+    // careers ever hold a rank and the international rungs stay shut – the career price feeding
+    // back into the metric.
+    //
+    // THE OWNER'S RULING THIS SECTION NOW PINS (22.08, verbatim): «если кто-то из игроков плюнет
+    // на восстановление – сам будет виноват и сам будет нести последствия в виде травм и прочего,
+    // это должно быть четко и явно. Я аккуратно играл и всё равно травмы были, так что я ожидаю,
+    // что у играющих неаккуратно должно быть больше последствий и жестче» – recklessness must
+    // cost more than care, clearly and visibly. So the claims below are per-career and
+    // ledger-wide, on the SAME widened sample the withdrawal<block claim above already uses
+    // (seeds 0-3 x 4 profiles: 16 grinder careers against 16+16 managed ones, seed-paired so
+    // every policy faces the same worlds). MEASURED at this revision, per career: blocks 5.69 vs
+    // 3.25, withdrawals 3.50 vs 1.09, warnings 8.69 vs 1.78; under-floor share 5.23% vs 1.62%
+    // (3.22x); and the ledger – wins/career 48.6 vs 74.8 (balanced) / 71.9 (careful), end ITF
+    // points 5.1 vs 59.3 / 61.3, careers ever ranked 3/16 vs 14/16 and 14/16, injuries per 100
+    // matches 3.56 vs 2.28 / 2.66. Every assertion below is mutation-verified (comparison
+    // inverted, red observed). ***
+    const sweepOf = (policy: typeof balanced) =>
+      [0, 1, 2, 3].flatMap((seed) => PROFILES.map((p) => runFatigueCareer(p, policy, seed, H104.weeks)))
+    const balancedSweep = sweepOf(balanced)
+    const carefulSweep = sweepOf(careful)
+    const managedSweep = [...balancedSweep, ...carefulSweep]
+    const share = (rs: typeof managedSweep) =>
       rs.reduce((s, r) => s + r.weeksBelowMedicalFloor, 0) / rs.reduce((s, r) => s + r.weekly.length, 0)
-    const managedShare = share(managed)
-    // the doctor is a grinder phenomenon: she lives under the floor several times as often…
-    expect(share(grinderRuns)).toBeGreaterThan(3 * managedShare)
+    const managedShare = share(managedSweep)
+    // the PHENOMENON: the grinder still lives under the floor a multiple of the managed share.
+    // The bound is 2x against a measured 3.22x – half the distance to the degenerate answer
+    // (1x, no separation), the same half-distance rule every band in econ-reach uses.
+    expect(share(vetoSweep)).toBeGreaterThan(2 * managedShare)
     // …and a load-managed career practically never gets there.
     // *** RE-MEASURED 28.07 with the random draw: 0.031 (was under 0.02). The SEPARATION above -
     // the grinder lives under the floor several times as often - is the claim this test exists for
@@ -350,15 +388,40 @@ describe('season planner (REAL mechanics – bookings through the engine command
     // she plays a second match in the same week and occasionally dips under 15 where she never used
     // to get the chance. 3% of weeks is still "practically never" for a two-season career; the
     // bound moves with it rather than pretending 2% was a property. ***
+    // (Bound unchanged by the 22.08 re-aim; the widened sample measures 0.016.)
     expect(managedShare).toBeLessThan(0.05)
-    // refusals point the same way (kept as a direction check, not a magnitude pin) – on BOTH
-    // surfaces, so a load-managed career is not quietly paying forfeited entry fees either.
-    expect(grinderRuns.reduce((s, r) => s + r.medicalBlocks, 0)).toBeGreaterThan(
-      managed.reduce((s, r) => s + r.medicalBlocks, 0),
+    // the DOCTOR, per career rather than per unequal-sized pool – every surface points at the
+    // grinder: he refuses more of her trips, pulls her off more already-paid-for ones, and talks
+    // to her more, per career lived.
+    const perCareer = (rs: typeof managedSweep, f: (r: (typeof managedSweep)[number]) => number) =>
+      rs.reduce((s, r) => s + f(r), 0) / rs.length
+    expect(perCareer(vetoSweep, (r) => r.medicalBlocks)).toBeGreaterThan(
+      perCareer(managedSweep, (r) => r.medicalBlocks),
     )
-    expect(grinderRuns.reduce((s, r) => s + r.medicalWithdrawals, 0)).toBeGreaterThan(
-      managed.reduce((s, r) => s + r.medicalWithdrawals, 0),
+    expect(perCareer(vetoSweep, (r) => r.medicalWithdrawals)).toBeGreaterThan(
+      perCareer(managedSweep, (r) => r.medicalWithdrawals),
     )
+    expect(perCareer(vetoSweep, (r) => r.medicalWarnings)).toBeGreaterThan(
+      perCareer(managedSweep, (r) => r.medicalWarnings),
+    )
+    // the LEDGER – «больше последствий и жестче», delivered where the game actually charges it.
+    // 16 paired careers per policy, so every comparison is seed-for-seed fair. Recklessness costs
+    // the TENNIS (fewer wins, an order of magnitude fewer end points, almost no ranked careers)
+    // and the BODY PER MATCH PLAYED – the honest injury claim: her absolute onset total sits near
+    // the managed ones only because she loses her openers and plays ~25% fewer matches, so per
+    // match taken, playing wrecked costs visibly more.
+    const total = (rs: typeof managedSweep, f: (r: (typeof managedSweep)[number]) => number) =>
+      rs.reduce((s, r) => s + f(r), 0)
+    for (const other of [balancedSweep, carefulSweep]) {
+      expect(total(vetoSweep, (r) => r.wins)).toBeLessThan(total(other, (r) => r.wins))
+      expect(total(vetoSweep, (r) => r.endPoints)).toBeLessThan(total(other, (r) => r.endPoints))
+      expect(vetoSweep.filter((r) => r.bestRank !== null).length).toBeLessThan(
+        other.filter((r) => r.bestRank !== null).length,
+      )
+      expect(
+        total(vetoSweep, (r) => r.injuriesTotal) / total(vetoSweep, (r) => r.matchesPlayed),
+      ).toBeGreaterThan(total(other, (r) => r.injuriesTotal) / total(other, (r) => r.matchesPlayed))
+    }
     expect(floor).toBeLessThan(ECONOMY.availability.minConditionToEnter.local)
     // the warning band sits directly above the floor and is a WARNING, never a block
     expect(ECONOMY.availability.medicalWarningCeiling).toBeGreaterThan(floor)
