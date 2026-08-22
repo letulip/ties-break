@@ -64,6 +64,13 @@ const CELLS_ARG = strArgOf('cells')
  *  cross-ARM comparison (the same seeds walked under a locally patched engine) can be paired
  *  per seed OUTSIDE this process – the runs are separate processes by construction. */
 const CSV_PATH = strArgOf('csv')
+/** ⭐ `--relief <n>` patches `ECONOMY.masseur.tourRecoveryPerRound` IN PROCESS (the house
+ *  Object.assign idiom) – the combined grid's task-3 arms: the owner's «+2 за каждый круг не
+ *  многовато?» is answered by running the same grid at 1 and at 2 and reading the tour channel's
+ *  SEM. The header line below prints the effective value so an arm can never be mislabelled (the
+ *  zsh word-split incident, coach-travel-edge.test.ts). */
+const RELIEF = argOf('relief', ECONOMY.masseur.tourRecoveryPerRound)
+Object.assign(ECONOMY.masseur, { tourRecoveryPerRound: RELIEF })
 const POLICY = POLICIES[1] // 'player' – the reasonable parent
 const ARMS_PRESETS = [5, 2] // 25k · middle · middle coach, and 8k · working · middle coach
 
@@ -144,6 +151,17 @@ interface Run {
   releases: number
   endedWeek: number | null
   salaryCents: number
+  /** ⭐ per-match tour bills («по-матчевая цена») – the travel week's replacement for the salary. */
+  tourBillCents: number
+  tourBillWeeks: number
+  /** ⭐ the return-week sessions actually paid (the receipt line). */
+  returnReceipts: number
+  /** ⭐ the team's results shares (round 24): coach 10%/5%, masseur 3%/1.5% of gross cheques. */
+  coachShareCents: number
+  masseurShareCents: number
+  /** every `coaching`-category expense EXCLUDING the share – the flat retainer + courts, for the
+   *  plan's coach-%-of-prize table. */
+  coachFlatCents: number
   fareCents: number
   fareTrips: number
   fareDiscountedTrips: number
@@ -153,6 +171,7 @@ interface Run {
   tourReceipts: number
   proWins: number
   prizeCents: number
+  kidFundsCents: number
   fundsCents: number
   endRankWta: number | null
   meanProCondition: number | null
@@ -168,6 +187,12 @@ function walk(presetIndex: number, seedIndex: number, cell: Cell): Run {
   let releases = 0
   let endedWeek: number | null = null
   let salaryCents = 0
+  let tourBillCents = 0
+  let tourBillWeeks = 0
+  let returnReceipts = 0
+  let coachShareCents = 0
+  let masseurShareCents = 0
+  let coachFlatCents = 0
   let fareCents = 0
   let fareTrips = 0
   let fareDiscountedTrips = 0
@@ -205,7 +230,19 @@ function walk(presetIndex: number, seedIndex: number, cell: Cell): Run {
     const phase = unlockWeek !== null ? pro : junior
     for (const e of world.events) {
       if (e.week !== world.week) continue
-      if (e.category === 'staff' && (e.amountCents ?? 0) < 0) salaryCents += -e.amountCents!
+      // ⚠ THE `staff` BUCKET HOLDS THREE ROWS NOW (weekly salary, the per-match tour bill, the
+      // masseur's results share) and the money story needs them apart – matched by their own
+      // texts, never by the bucket alone.
+      if (e.text === 'Masseur – weekly salary') salaryCents += -(e.amountCents ?? 0)
+      if (e.text.startsWith('Masseur on tour')) {
+        tourBillCents += -(e.amountCents ?? 0)
+        tourBillWeeks++
+      }
+      if (e.text.startsWith('Back from the tour')) returnReceipts++
+      if (e.text.startsWith("Coach's share of the prize money")) coachShareCents += -(e.amountCents ?? 0)
+      if (e.text.startsWith("Masseur's share of the prize money")) masseurShareCents += -(e.amountCents ?? 0)
+      if (e.category === 'coaching' && (e.amountCents ?? 0) < 0 && !e.text.startsWith("Coach's share"))
+        coachFlatCents += -e.amountCents!
       if (e.category === 'travel' && e.text.includes('masseur travels')) {
         fareCents += -(e.amountCents ?? 0)
         fareTrips++
@@ -258,6 +295,12 @@ function walk(presetIndex: number, seedIndex: number, cell: Cell): Run {
     releases,
     endedWeek,
     salaryCents,
+    tourBillCents,
+    tourBillWeeks,
+    returnReceipts,
+    coachShareCents,
+    masseurShareCents,
+    coachFlatCents,
     fareCents,
     fareTrips,
     fareDiscountedTrips,
@@ -267,6 +310,7 @@ function walk(presetIndex: number, seedIndex: number, cell: Cell): Run {
     tourReceipts,
     proWins,
     prizeCents: world.careerTotals.prizeCents ?? 0,
+    kidFundsCents: world.kidFundsCents ?? 0,
     fundsCents: world.fundsCents,
     endRankWta: (world as WorldState & { kidRankWta?: number | null }).kidRankWta ?? null,
     meanProCondition: proWeeks > 0 ? proConditionSum / proWeeks : null,
@@ -288,7 +332,8 @@ const sem = (xs: number[]) => sd(xs) / Math.sqrt(xs.length)
 const SEVERITIES = ['minor', 'moderate', 'major', 'severe']
 const csvRows: string[] = [
   'preset,cell,seed,unlockWeek,endedWeek,ended,weeksLost,weeksSaved,tourReceipts,onsets,' +
-    'salaryCents,fareCents,fareTrips,releases,hiredWeeks,prizeCents,fundsCents,endRankWta,' +
+    'salaryCents,tourBillCents,tourBillWeeks,returnReceipts,coachShareCents,masseurShareCents,coachFlatCents,kidFundsCents,' +
+    'fareCents,fareTrips,releases,hiredWeeks,prizeCents,fundsCents,endRankWta,' +
     'jWeeks,jCondMean,jFloorWeeks,jOnsets,jInjWeeks,jVetoes,jWins,' +
     'pWeeks,pCondMean,pFloorWeeks,pOnsets,pInjWeeks,pVetoes,pWins,' +
     SEVERITIES.map((s) => `jSev_${s}`).join(',') +
@@ -320,7 +365,7 @@ function phaseLine(label: string, runs: Run[], pick: (r: Run) => PhaseStats): st
 }
 
 for (const presetIndex of ARMS_PRESETS) {
-  console.log(`\n== ${PRESETS[presetIndex].label} · policy ${POLICY.id} · ${SEEDS} paired seeds · ${WEEKS} weeks ==`)
+  console.log(`\n== ${PRESETS[presetIndex].label} · policy ${POLICY.id} · ${SEEDS} paired seeds · ${WEEKS} weeks · relief ${RELIEF}/round ==`)
   // Walk every cell for every seed – the `none` arm once per seed, paired against each B-cell.
   const bySeed: Array<Record<string, Run>> = []
   for (let i = 0; i < SEEDS; i++) {
@@ -338,7 +383,9 @@ for (const presetIndex of ARMS_PRESETS) {
           [
             PRESETS[presetIndex].label.replace(/\s+/g, ''), cell.label.replace(/\s+/g, ''), i,
             r.unlockWeek ?? '', r.endedWeek ?? '', r.ended, r.weeksLost, r.weeksSaved,
-            r.tourReceipts, r.onsets, r.salaryCents, r.fareCents, r.fareTrips, r.releases,
+            r.tourReceipts, r.onsets, r.salaryCents, r.tourBillCents, r.tourBillWeeks,
+            r.returnReceipts, r.coachShareCents, r.masseurShareCents, r.coachFlatCents,
+            r.kidFundsCents, r.fareCents, r.fareTrips, r.releases,
             r.hiredWeeks, r.prizeCents, r.fundsCents, r.endRankWta ?? '',
             j.weeks, j.weeks > 0 ? (j.conditionSum / j.weeks).toFixed(3) : '', j.floorWeeks,
             j.onsets, j.injuredWeeks, j.vetoes, j.wins,
@@ -362,6 +409,17 @@ for (const presetIndex of ARMS_PRESETS) {
     console.log(phaseLine('pro        ', base, (r) => r.pro))
     console.log(
       `endings     ${JSON.stringify(count(base.map((r) => r.ended)))} | weeksLost ${mean(base.map((r) => r.weeksLost)).toFixed(1)}±${sem(base.map((r) => r.weeksLost)).toFixed(2)} | prize ${fmt(mean(base.map((r) => r.prizeCents)))} | endRank ${mean(base.filter((r) => r.endRankWta !== null).map((r) => r.endRankWta!)).toFixed(0)}`,
+    )
+    // ⭐ The plan's coach-%-of-prize table, "after" column (docs/plans/the-team-share.md §2): the
+    // base game's own coach economics – flat + the round-24 results share – against GROSS prize
+    // (family-kept + her ramp: the cheque as the tournament wrote it).
+    const gross = base.map((r) => r.prizeCents + r.kidFundsCents)
+    const cShare = base.map((r) => r.coachShareCents)
+    const cFlat = base.map((r) => r.coachFlatCents)
+    const pct = base.map((r, i) => (gross[i] > 0 ? (100 * (cShare[i] + cFlat[i])) / gross[i] : NaN)).filter(Number.isFinite)
+    console.log(
+      `team share  coach flat ${fmt(mean(cFlat))} + share ${fmt(mean(cShare))} on gross prize ${fmt(mean(gross))}` +
+        ` -> coach ${(mean(pct)).toFixed(2)}% of prize (was 5.7% Alice / 0.94% Ines flat-only)`,
     )
   }
   for (const cell of CELLS.slice(1)) {
@@ -390,10 +448,13 @@ for (const presetIndex of ARMS_PRESETS) {
       `proWins     B ${mean(b.map((r) => r.proWins)).toFixed(1)} vs A ${mean(a.map((r) => r.proWins)).toFixed(1)} | paired ${mean(dWins).toFixed(2)} sem ${sem(dWins).toFixed(2)}`,
     )
     console.log(
-      `receipts    rehab ${mean(b.map((r) => r.weeksSaved)).toFixed(2)} | tour ${mean(b.map((r) => r.tourReceipts)).toFixed(2)}`,
+      `receipts    rehab ${mean(b.map((r) => r.weeksSaved)).toFixed(2)} | tour ${mean(b.map((r) => r.tourReceipts)).toFixed(2)} | return sessions ${mean(b.map((r) => r.returnReceipts)).toFixed(2)}`,
     )
     console.log(
-      `money       salary ${fmt(mean(b.map((r) => r.salaryCents)))} over ${mean(b.map((r) => r.hiredWeeks)).toFixed(0)} hired wks (${mean(b.map((r) => r.releases)).toFixed(1)} releases) | fares ${fmt(mean(b.map((r) => r.fareCents)))} over ${mean(b.map((r) => r.fareTrips)).toFixed(1)} trips (${mean(b.map((r) => r.fareDiscountedTrips)).toFixed(1)} discounted) | staff total ${fmt(mean(b.map((r) => r.salaryCents + r.fareCents)))}`,
+      `money       salary ${fmt(mean(b.map((r) => r.salaryCents)))} over ${mean(b.map((r) => r.hiredWeeks)).toFixed(0)} hired wks (${mean(b.map((r) => r.releases)).toFixed(1)} releases) | tour bills ${fmt(mean(b.map((r) => r.tourBillCents)))} over ${mean(b.map((r) => r.tourBillWeeks)).toFixed(1)} wks | fares ${fmt(mean(b.map((r) => r.fareCents)))} over ${mean(b.map((r) => r.fareTrips)).toFixed(1)} trips (${mean(b.map((r) => r.fareDiscountedTrips)).toFixed(1)} discounted) | staff total ${fmt(mean(b.map((r) => r.salaryCents + r.tourBillCents + r.fareCents + r.masseurShareCents)))}`,
+    )
+    console.log(
+      `team share  coach ${fmt(mean(b.map((r) => r.coachShareCents)))} (Δ vs none ${fmt(mean(d((r) => r.coachShareCents)))}) | masseur ${fmt(mean(b.map((r) => r.masseurShareCents)))} | coach flat ${fmt(mean(b.map((r) => r.coachFlatCents)))}`,
     )
     console.log(
       `outcome     prize ${fmt(mean(dPrize))} sem ${fmt(sem(dPrize))} | funds ${fmt(mean(dFunds))} | rank ${mean(dRank).toFixed(1)} (n=${dRank.length}, neg=better) | endings B ${JSON.stringify(count(b.map((r) => r.ended)))} vs A ${JSON.stringify(count(a.map((r) => r.ended)))}`,

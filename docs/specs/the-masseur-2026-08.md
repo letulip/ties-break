@@ -176,13 +176,45 @@ game's own scale, so the masseur READS as «a professional on retainer», never 
   legibility argument moved one level up: the rung is chosen, the bill is flat per rung, the
   ledger row is the number on the card.
 
-### The pricing table – for the owner to rule on
+### The pricing table – ⭐ RULED AND AMENDED 22.08 (the shipped shape)
 
-| rung | sessions/wk | per week | per year | what the price READS as, in-game | the effect it buys |
+| rung | sessions/wk | per week at home | per year | what the price READS as, in-game | the effect it buys |
 | --- | ---: | ---: | ---: | --- | --- |
-| Twice a week | 2 | **$150** | ~$7.8k | step 1's own number – the entry rung; half the middle coach's week | rehab cadence N=3 (one week off a moderate layoff), +1 condition on home weeks |
-| Every other day | 4 | **$300** | ~$15.6k | **the middle coach's whole weekly bill – «a professional on retainer»**; the DEFAULT | cadence N=2 (step 1's measured arm: a third off moderate+ layoffs), +1 condition |
-| Daily | 7 | **$525** | ~$27.3k | between the high coach ($500/wk) and the elite ($800/wk) – the full-time body man; beside his own «+2 специалиста = +46к» sketch (~$23k each) | **cadence N=1 – long layoffs halved**, +2 condition on home weeks |
+| Twice a week | 2 | **$150** | ~$7.8k | step 1's own number – the entry rung; half the middle coach's week | rehab cadence N=3 (one week off a moderate layoff), **+1** condition on home weeks |
+| Every other day | 4 | **$300** | ~$15.6k | **the middle coach's whole weekly bill – «a professional on retainer»**; the DEFAULT | cadence N=2 (step 1's measured arm: a third off moderate+ layoffs), **+2** condition |
+| Daily | 7 | **$525** | ~$27.3k | between the high coach ($500/wk) and the elite ($800/wk) – the full-time body man; beside his own «+2 специалиста = +46к» sketch (~$23k each) | **cadence N=1 – long layoffs halved**, **+3** condition on home weeks |
+
+⭐ **The condition column is the owner's 22.08 amendment: +1/+2/+3, was +1/+1/+2.** The old ladder
+had a flaw his ruling also fixes: rungs 1–2 were indistinguishable on any week without an injury
+(same bonus; only the rehab cadence separated them), i.e. the $150 step bought nothing a healthy
+player could read – the §4 law's own failure. The ladder now steps by one point per rung and the
+strict monotonicity is pinned in tests/masseur.test.ts.
+
+⭐ **THE TOUR WEEK IS PRICED PER MATCH, NOT PER WEEK** – his ruling verbatim: «на неделе выезда
+по-матчевая цена заменяет недельную». When he TRAVELS (the fare charged, `masseurThere` recorded),
+that week's bill is **$75 × matches played**, replacing the weekly rung bill; the fare rides on top
+exactly as before. When he stays home – tournament week or not – the weekly contract runs as
+always (the coach's 08.08 retainer rule). The draw table prices itself off the calendar
+(rounds = log2(drawSize)):
+
+| draw | max matches | max tour-week bill | reads as |
+| --- | ---: | ---: | --- |
+| Slam (128) | 7 | **$525** | exactly his daily home rate – a title week is daily work |
+| WTA 1000 (64) | 6 | **$450** | between the every-other-day and daily home weeks |
+| 32-draws (W15…WTA 500, 250, 125) | 5 | **$375** | a deep week costs more than the default rung, less than daily |
+| any first-round exit | 1 | **$75** | one session – the table barely worked |
+
+Edge, stated rather than smuggled: a travel week she SKIPS at the venue (post-deadline `skipEvent`)
+bills $0 per match – zero matches at the per-match price; the unrefunded fare stays the wasted
+insurance, exactly like the coach's. Pinned in tests/masseur.test.ts §10.
+
+⭐ **THE RETURN-WEEK SESSION** – «довесить послетурнирное восстановление 1 сеанс массажа по
+возвращении»: when he was NOT flown to a tournament, the first non-played week after it pays one
+extra session's worth of recovery (+1, `returnSessionBonus`) with its own receipt («Back from the
+tour – an extra session on the table works the trip out of her legs.»). A played week postpones
+it; the moment passes on the first home week whether or not he still works it (released, family
+week away); a run he WAS flown to never owes it – the between-rounds relief was that week's work.
+Pinned in tests/masseur.test.ts §11.
 
 Anchors read out of the game, not out of the real world: middle coach at 17–22 ≈ $300/wk, high ≈
 $500/wk, elite ≈ $800/wk (`hourlyRateCents` mid × 5h); the physio clinic line ≈ $57/wk. The niggle
@@ -370,15 +402,18 @@ second travelling specialist; the psychologist went remote by the owner's own ru
   migration-wrong-default → the §6 fixture test; dial-aria-hardcoded → the component §5 test.
   Ten arms, ten distinct catches, zero survivors – on top of step 1's eight.
 
-## 9. Left open
+## 9. Left open – re-cut 22.08 after the rulings
 
-* The owner rules on the pricing table (§5) – the rungs are knobs in `ECONOMY.masseur`, one line
-  each to retune, and the bench grid re-runs as-is.
+* ~~The owner rules on the pricing table~~ – RULED: the table stands, amended (+1/+2/+3, the
+  per-match tour price, the return-week session – §5 carries all three verbatim).
+* ~~The owner rules on §10~~ – RULED: «окей, делаем» on variant C; §11 is the shipped record.
 * The psychologist ships with the private-life layer (the 22.08 re-cut), where §6's fare question
-  will be asked again for a THIRD seat – `staffSeatFareCents` is already the one place to ask it.
-* The owner rules on §10 – the recovery-base question is measured, nothing is shipped.
+  will be asked again for a THIRD seat – `staffSeatFareCents` is already the one place to ask it,
+  and `staffResultShareBps` (the round-24 prize share) the one place to ask HIS percentage.
+* The owner may retune any of: the three rungs, `tourRecoveryPerRound`, `returnSessionBonus`,
+  `ECONOMY.staffShare` – all one-line constants; the §11 grid re-runs as-is.
 
-## 10. ⭐ The owner's recovery question (22.08) – A/B/C measured, NOTHING SHIPPED
+## 10. ⭐ The owner's recovery question (22.08) – A/B/C measured; C RULED IN the same day (§11)
 
 His proposal, verbatim: «может быть нам тогда стоит дефолтное восстановление с 10 в неделю на 7
 опустить? тогда массажист как раз будет еще немного накидывать, может вполне гармонично получиться,
@@ -470,3 +505,49 @@ base 5 + slider 2 + his rung's +1 = 8 for a staffed pro against today's unstaffe
 **Recommendation**: if the 10→7 drop is wanted, ship it as C – pro-phase-only, on the masseur's
 own boundary (three engine lines; capture and every test stay green) – and never as the global
 constant. B should not ship in this form.
+
+⭐ **RULED THE SAME DAY: «окей, делаем» – C SHIPPED**, as `ECONOMY.condition.proPhaseRecoveryBase
+= 5` read through ONE helper (`recoveryBaseFor`, world/medical.ts) at all three kid readers –
+`accrueCondition` and both 18.08 makeup expressions – exactly S3's measured arm-C shape promoted
+from patch to constant. Juniors and all 199 rivals keep `recoveryBase = 8`. Pins in
+tests/condition.test.ts (B2-pro): junior base 8, pro base 5, the boundary IS the ladder handover,
+both makeup paths, the knob.
+
+## 11. ⭐⭐ THE COMBINED GRID – everything the 22.08 rulings shipped, measured together
+
+One branch now carries five game changes at once – recovery C (pro base 5), the dial's +1/+2/+3,
+per-match tour pricing, the return-week session, and the team's results shares (coach 10%/5%,
+masseur 3%/1.5% – docs/plans/the-team-share.md) – so the honest measurement is ONE grid with
+everything on, not five deltas against five different bases. `tools/masseur-bench.ts` (S3's
+phase-split extension + the new tallies: per-match bills, return receipts, both shares, coach
+flat), 32 paired seeds × 2 presets × 7 cells, 416 weeks, plus the task-3 relief arms
+(`--relief 1` vs the shipped 2 – the owner's «+2 за каждый круг не многовато?») on the tour cells.
+
+### Predicted (written before the grid ran)
+
+* **The base game is §10's C column** plus the coach's share coming off title/final cheques: base
+  prize (family-kept) drops a few percent against §10-C; no new bankruptcies (the share only
+  exists where a cheque does); junior era byte-identical to §10-C by construction.
+* **The coach-%-of-prize table gets its "after" column**: flat-only was 5.7% (Alice) / 0.94%
+  (Ines, the top). The share adds roughly 4–7% of gross prize (titles and finals dominate a good
+  career's prize), so predicted after ≈ 8–12% at the Alice-shaped presets' early years and ≈ 5–8%
+  lifetime – i.e. INSIDE the real convention's 5–10%, which is the plan's own «self-scales» claim.
+* **The masseur's share** lands at roughly a third of the coach's on the same cheques
+  ($60–130k/career at the 8k preset's ~$5M gross).
+* **Home cells' condition uplift roughly doubles** at rungs 4/7 (+1→+2, +2→+3 on ~150 worked
+  weeks): 4/wk home from +0.06..0.26 to ≈ +0.3..0.6, 7/wk home to ≈ +0.5..0.9, with the return
+  session adding ≈ +0.1..0.2 more (one +1 week per untravelled tournament, ~25-35/career).
+* **Tour cells get CHEAPER for the big rungs**: a typical travel week plays 1–2 matches, so
+  per-match ($75–150) undercuts the 4/wk ($300) and 7/wk ($525) weekly bills – masseur pay in
+  tour cells drops ~30–50% while the entry rung is roughly a wash; the uplift channels (condition
+  +1..+2, wins at 8k) hold at relief 2.
+* **Relief 1 vs 2**: the tour condition channel at relief 1 ≈ 55–70% of relief 2's (+0.9..1.3 at
+  8k against +1.6..1.9), still ≥ 3 SEM; the wins channel ≈ +5..7 at 8k, hovering at the 2-SEM
+  line. The rule agreed with the architect: **ship 1 if the tour channel keeps ≥2 SEM on its
+  headline metrics** (pro condition, and wins where §7 had them ≥2 SEM); otherwise keep 2.
+* **Solvency**: the parent-guard absorbs the stack (releases rise slightly at 25k); zero NEW
+  bankruptcies vs the §10-C base in every cell.
+
+### Measured
+
+_(the grid runs after the freeze re-pin; filled below)_
