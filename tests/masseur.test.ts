@@ -254,7 +254,7 @@ describe('5. ⭐ the sentence – the §4 room note, four states and no digits',
     world.injury = { kind: 'ankle strain', severity: 'moderate', weeksRemaining: 3, totalWeeks: 6, sinceWeek: world.week - 3, weeksSaved: 1 }
     expect(masseurRoomNote(world)).toBe('Working the rehab – her return is closer than the clinic promised.')
     world.injury.weeksSaved = undefined
-    expect(masseurRoomNote(world)).toBe('On the table twice a day – the rehab is his work now.')
+    expect(masseurRoomNote(world)).toBe('On the table twice a day – the rehab is in professional hands.')
   })
 
   it('⭐ the flagship: a recent layoff that ended early reads as the weeks his hands did not lose', () => {

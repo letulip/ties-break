@@ -137,7 +137,7 @@ export const MASSEUR_NOTE_WINDOW_WEEKS = 13
  *  Four states, most recent work first:
  *   1. a layoff is RUNNING and he has already taken weeks off it – the return date the player is
  *      staring at has visibly moved closer;
- *   2. a layoff is running and he has not yet – the rehab is his work now;
+ *   2. a layoff is running with no week bought yet – the rehab is in professional hands;
  *   3. a recent layoff ENDED EARLY under his hands (within `MASSEUR_NOTE_WINDOW_WEEKS`) – the
  *      flagship line, «the weeks his hands did not lose»;
  *   4. quiet weeks – the salary is buying recovery the grind would otherwise eat.
@@ -152,7 +152,7 @@ export function masseurRoomNote(world: WorldState): string {
   if (world.injury !== null) {
     return (world.injury.weeksSaved ?? 0) > 0
       ? 'Working the rehab – her return is closer than the clinic promised.'
-      : 'On the table twice a day – the rehab is his work now.'
+      : 'On the table twice a day – the rehab is in professional hands.'
   }
   const recentSave = world.injuryHistory.some(
     (h) => (h.weeksSaved ?? 0) > 0 && h.week >= world.week - MASSEUR_NOTE_WINDOW_WEEKS,
