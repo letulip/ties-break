@@ -2254,6 +2254,33 @@ export const ECONOMY = {
     conditionBonusPerWeek: 1,
   },
 
+  // --- THE MASSEUR (travelling team step 1, docs/specs/the-masseur-2026-08.md) -------------------
+  // A salaried person, pro-career gated, hired/fired like the coach. DISTINCT FROM THE PHYSIO
+  // ABOVE, and the distinction is the design: the physio is a coach-bundled clinic SERVICE whose
+  // work is prevention (tau, and the layoff dealt at onset); the masseur is RECOVERY THE PLAYER
+  // WATCHES – he works the layoff she is already in and the week-to-week body. See
+  // src/engine/world/masseur.ts for the whole argument.
+  masseur: {
+    // A FLAT CONTRACT, deliberately: no corridor, no jitter, no draw – the one staff line whose
+    // ledger row is the number on the card. Sized at the plan's proposal «about half the coach's
+    // rung», read against the MIDDLE rung at 17-22 (the first "somebody runs a programme" coach a
+    // fresh professional typically has: ~$60/h × 5h ≈ $300/wk) – and measured, not trusted: the
+    // bench arm and predicted-vs-measured live in the spec. $150/wk ≈ $7.8k/yr, designed to be a
+    // real decision for an Alice ($64k/yr outgoings), a rounding error for an Ines – which is the
+    // plan's own acceptance.
+    salaryPerWeekCents: 150_00,
+    // The at-home table, on top of the physio's own +1. THE SAME HAIR-TRIGGER DIAL the physio note
+    // above records («at 2 the retainer alone erased every policy difference»), so it enters at 1
+    // and the season equation (W2-FATIGUE) keeps its shape; his headline channel is the rehab
+    // cadence below, which condition cannot buy at any price.
+    conditionBonusPerWeek: 1,
+    // THE REHAB CADENCE: every Nth week of an ACTIVE layoff his hands take one extra week off it
+    // (deterministic, off week − sinceWeek; see rollInjury). At 3, a niggle gains nothing – honest:
+    // nobody massages a one-week soreness away – and the moderate-and-up layoffs lose roughly a
+    // week in three, which is where «the weeks his hands did not lose» comes from.
+    rehabExtraEveryNWeeks: 3,
+  },
+
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
   // ONE shared catalogue; money is the only gate. A vacation week is a hard blackout (nothing
   // enterable) that pays a condition gain on top of a FREE week's recovery, and the two top

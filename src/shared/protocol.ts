@@ -197,6 +197,11 @@ export type WorldEventCategory =
   | 'income'
   | 'interest'
   | 'physio'
+  /** 'staff' (v59, the travelling team) is the SALARIED PEOPLE beyond the coach – the masseur
+   *  today, the rest of the team as it hires. Deliberately NOT folded into 'physio': that bucket
+   *  is the clinic service, and a salary the player cannot find on the breakdown is the academy's
+   *  $20,879 mistake again (round 23 #16) – you paid, and you could not tell. */
+  | 'staff'
   | 'vacation'
   | 'practice'
   | 'other'
@@ -837,6 +842,10 @@ export interface SnapshotInjury {
   totalWeeks: number
   /** the week the layoff opened. `sinceWeek === Snapshot.week` is "this happened just now". */
   sinceWeek: number
+  /** v59: weeks the masseur has already taken off THIS layoff – the gap between `totalWeeks` and
+   *  the return date on screen. Absent (never 0) when he has taken none, so every pre-v59 save and
+   *  every masseur-less career serialises byte-for-byte as before. */
+  weeksSaved?: number
 }
 
 // --- Season planner (schema v13) ---------------------------------------------
@@ -3231,6 +3240,21 @@ export interface Snapshot {
   /** whether physio recovery is active (its cost lever is billed in Slice C; in B this just
    *  reflects/sets the flag, default = every coach tier but self-coached). */
   physioActive: boolean
+  /** v59, the travelling team step 1: is the masseur on the payroll. Suspends (does not cancel) at
+   *  college and on booked family weeks – the coach's own stand-down pair. */
+  masseurHired: boolean
+  /** ...whether the hire is even on offer – her first counting W-series result opens the door
+   *  (`masseurUnlocked`, the professional table's own one-way latch). The card locks with
+   *  `MASSEUR_LOCKED_DETAIL` until this is true, so the disabled state and the refused click can
+   *  never tell two stories. */
+  masseurUnlocked: boolean
+  /** ...his weekly salary in cents – a FLAT contract (no corridor, no jitter), so the card's quote
+   *  IS the ledger's row. */
+  masseurSalaryCents: number
+  /** ⭐ THE MASSEUR'S OWN ROOM NOTE (the plan's §4 law): one plain sentence that says what his
+   *  hands did lately – the rehab he is working, the layoff that ended early, the quiet weeks –
+   *  quoting no figure, '' when nobody is hired. See `masseurRoomNote`. */
+  masseurNote: string
   /** W4 – THE UNANSWERED KNOCK, or null. Non-null on exactly the weeks a decision is outstanding
    *  (`knock.choice === null`), which is the same condition `advanceWeeks` blocks on – so the dialog
    *  and the engine can never disagree about whether the career is waiting for him.
@@ -3762,6 +3786,10 @@ export type ToWorker =
   | { id: number; type: 'signOffer'; offerId: string; baseRevision: number }
   | { id: number; type: 'refuseOffer'; offerId: string; baseRevision: number }
   | { id: number; type: 'setPhysio'; active: boolean; baseRevision: number }
+  // v59, the travelling team step 1: put the masseur on the payroll, or take him off it. The engine
+  // re-validates the pro-career gate and the college freeze (`hireMasseur` – guardNotEnded first),
+  // so a stale screen can neither hire before her first counting W result nor inside the freeze.
+  | { id: number; type: 'hireMasseur'; hire: boolean; baseRevision: number }
   // W3-KIT: move one line of her kit onto another rung. Moving UP buys the item over the counter
   // (charged at once, and she is holding a new one from this week); moving DOWN is free and takes
   // effect at the next scheduled purchase - nobody is refunded for a racket they own.

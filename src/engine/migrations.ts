@@ -1781,6 +1781,29 @@ export function migrateSave(raw: unknown): WorldState {
     v = 58
   }
 
+  // ⭐⭐⭐ v58 -> v59: THE MASSEUR – the first seat of the travelling team (owner round 23 item 9,
+  // ruling Б; step 1 of docs/plans/the-travelling-team-2026-08.md). One new field on the world:
+  // `masseurHired`, the pro-career-gated staff hire whose salary and body effect live in
+  // world/masseur.ts.
+  //
+  // ⚠⚠ FALSE IS THE TRUE VALUE FOR EVERY v58 SAVE, BY CONSTRUCTION AND NOT BY DEFAULT. The seat did
+  // not exist before this version, so no earlier career can have hired him – there is nothing to
+  // reconstruct and nothing this false declines. The hire itself stays a decision the player takes
+  // on screen T, never a migration's gift.
+  //
+  // ⚠ `injuryHistory` ROWS MAY NOW CARRY `weeksSaved` (and `weeksOut` records the weeks she was
+  // ACTUALLY out, shorter than the dealt layoff when his hands bought some back). NOTHING IS
+  // BACK-FILLED HERE: the key is written only from the week a hired masseur first saves one, no
+  // old save can hold it, and absent reads as 0 at every consumer – the same discipline as v44's
+  // 'facility' rows.
+  //
+  // Idempotent (a non-boolean is the only state it rewrites) and it writes a literal: ZERO draws on
+  // any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 58) {
+    if (typeof save.masseurHired !== 'boolean') save.masseurHired = false
+    v = 59
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

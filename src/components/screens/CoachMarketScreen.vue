@@ -49,6 +49,7 @@ import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, t
 // draws anything, or knows what a career is - see their notes in the engine for why the blurb could not
 // simply ride on `CoachMarketRow` this wave.
 import { coachBlurb, coachRoomBand } from '../../engine/world/coachMarket'
+import { MASSEUR_LOCKED_DETAIL } from '../../engine/world/masseur'
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
 import { formatCents } from '../../shared/money'
 
@@ -571,6 +572,43 @@ async function doRelease(): Promise<void> {
   await game.hireCoach(null)
 }
 
+// --- the masseur (v59, the travelling team step 1) -----------------------------------------------
+// The first staff seat beyond the coach, on this screen because it is the same decision family:
+// people the family pays weekly for her game. Every fact on the card is the SNAPSHOT's – the flag,
+// the gate, the flat salary, and his room note (the plan's §4 sentence) – so the card cannot invent
+// a number the engine did not derive.
+const masseurHired = computed(() => game.snapshot?.masseurHired ?? false)
+const masseurUnlocked = computed(() => game.snapshot?.masseurUnlocked ?? false)
+const masseurSalary = computed(() => formatCents(game.snapshot?.masseurSalaryCents ?? 0))
+// The one line under his name, by state. LOCKED prints the ENGINE's own refusal
+// (MASSEUR_LOCKED_DETAIL – the sentence `hireMasseur` throws), the R10-16 doctrine: a disabled
+// control and the click it refuses must tell one story. HIRED prints the room note. UNHIRED prints
+// the pitch – what the salary buys, in the units the player reads, no figures (they are on the
+// price beside it).
+const masseurLine = computed(() => {
+  if (!masseurUnlocked.value) return MASSEUR_LOCKED_DETAIL
+  if (masseurHired.value) return game.snapshot?.masseurNote ?? ''
+  return 'Table work at home every week, and a hand on every rehab – layoffs end sooner.'
+})
+const hiringMasseur = ref(false)
+const releasingMasseur = ref(false)
+// Both directions ask, the screen's own doctrine (see `releasing` above): a screen that asks before
+// it starts paying somebody and not before it stops is not neutral about the two directions.
+const masseurHireMessage = computed(
+  () => `Put a masseur on the payroll at ${masseurSalary.value} a week? Cancellable any week, like the coach.`,
+)
+const masseurReleaseMessage = computed(
+  () => 'Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.',
+)
+async function doHireMasseur(): Promise<void> {
+  hiringMasseur.value = false
+  await game.hireMasseur(true)
+}
+async function doReleaseMasseur(): Promise<void> {
+  releasingMasseur.value = false
+  await game.hireMasseur(false)
+}
+
 // Warm every face HERE and nowhere else: this is the only surface that can show them, which is the
 // rule src/art/preload.ts states for the whole coach set. Idempotent, so the watcher is free.
 watchEffect(() => preloadCoachMarketArt(rows.value.map((r) => r.id)))
@@ -961,6 +999,27 @@ function scrollToTier(tier: CoachTier): void {
       </p>
       <button v-if="current" :disabled="game.busy" @click="releasing = true">Coach her yourself</button>
     </section>
+
+    <!-- v59, the travelling team step 1: the first salaried seat beyond the coach. The line under
+         the name is the engine's own sentence in every state (the lock, the note, the pitch) and
+         the price is the snapshot's flat salary - this card derives nothing itself. -->
+    <section class="bare masseur-block">
+      <p class="tier-head">
+        <span class="tier-name">Support staff</span>
+        <span class="tier-range">{{ masseurSalary }} /wk</span>
+      </p>
+      <div class="masseur-card" :class="{ locked: !masseurUnlocked }">
+        <span class="masseur-body">
+          <span class="cm-name">Masseur</span>
+          <span class="cm-load masseur-line">{{ masseurLine }}</span>
+        </span>
+        <span class="masseur-right">
+          <span v-if="!masseurUnlocked" class="cm-action is-locked">Locked</span>
+          <button v-else-if="!masseurHired" :disabled="game.busy" @click="hiringMasseur = true">Hire</button>
+          <button v-else :disabled="game.busy" @click="releasingMasseur = true">Let go</button>
+        </span>
+      </div>
+    </section>
     </template>
 
     <ConfirmDialog
@@ -969,6 +1028,20 @@ function scrollToTier(tier: CoachTier): void {
       confirm-label="Hire"
       @confirm="doHire"
       @cancel="pending = null"
+    />
+    <ConfirmDialog
+      v-if="hiringMasseur"
+      :message="masseurHireMessage"
+      confirm-label="Hire"
+      @confirm="doHireMasseur"
+      @cancel="hiringMasseur = false"
+    />
+    <ConfirmDialog
+      v-if="releasingMasseur"
+      :message="masseurReleaseMessage"
+      confirm-label="Let go"
+      @confirm="doReleaseMasseur"
+      @cancel="releasingMasseur = false"
     />
     <!-- The other direction of the same decision - see `releaseMessage` for what it may and may not
          claim. Its own dialog rather than a second mode of the one above: the two messages are
@@ -1000,5 +1073,36 @@ function scrollToTier(tier: CoachTier): void {
   font-size: 10.5px;
   line-height: 1.35;
   color: var(--muted);
+}
+
+/* v59 - the masseur card. Scoped for the HomeScreen-documented reason: exactly one surface can
+   want it. It borrows the roster's own text classes (.cm-name / .cm-load / .cm-action) so the two
+   card families read as one screen, and only the frame is its own: no portrait strip, so the
+   .cm-row grid does not fit, and a plain flex row does. */
+.masseur-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+}
+.masseur-card.locked {
+  opacity: 0.75;
+}
+.masseur-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+.masseur-line {
+  margin-top: 0;
+}
+.masseur-right {
+  flex: none;
+  display: flex;
+  align-items: center;
 }
 </style>

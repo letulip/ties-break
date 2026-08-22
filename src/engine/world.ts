@@ -174,6 +174,8 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
+import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
+export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
 import { eventById } from './world/bookings'
@@ -450,7 +452,11 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // door already-broken ones can come back through. See the migration for what it does and does not do.
 // v58 (round 24 #5): `fork.departsWeek` – the college answer RESERVES a place and she departs on the
 // next academic year's September; see the migration and docs/specs/college-departure-2026-08.md.
-export const SAVE_SCHEMA_VERSION = 58
+// v59 (travelling team step 1): `masseurHired` – the first staff seat beyond the coach, pro-career
+// gated, salary + body effect in world/masseur.ts; false for every earlier save (the seat did not
+// exist). Rows of `injuryHistory` MAY now carry `weeksSaved`, written only when he saved something –
+// absent everywhere in old saves, so nothing is back-filled. See docs/specs/the-masseur-2026-08.md.
+export const SAVE_SCHEMA_VERSION = 59
 
 
 
@@ -687,8 +693,11 @@ export interface WorldState {
    *  the persisted shape and the surfaced one are now the same four-plus-one fields – see
    *  `SnapshotInjury`. Still a VIEW change only: the save has always held this field. */
   injury: SnapshotInjury | null
-  /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B). */
-  injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number }>
+  /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B).
+   *  ⚠ `weeksOut` IS THE WEEKS SHE WAS ACTUALLY OUT (v59): shorter than the dealt layoff when the
+   *  masseur bought weeks back, and `weeksSaved` says how many – the key exists only on rows where
+   *  he did, so every earlier row (and every career without him) serialises byte-for-byte. */
+  injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number; weeksSaved?: number }>
   /** whether physio recovery is active (default = `coachIncludesPhysio(profile.coachTier)`, i.e.
    *  every rung but self-coached – the old rule was "a hired coach comes with a physio" and
    *  self-coaching is the only rung that is not a hire). The cost lever is billed in Slice C; in B
@@ -880,6 +889,11 @@ export interface WorldState {
   /** HER FOUR YEARS AT COLLEGE (v39), once she has chosen them – null for every career that did
    *  not. `doneWeek` is null while the freeze has not been spent yet. */
   college: CollegeState | null
+  /** THE MASSEUR IS ON THE PAYROLL (v59, travelling team step 1) – hired/fired like the coach,
+   *  pro-career gated, salary and effect in world/masseur.ts. False for every earlier save: the
+   *  seat did not exist. His retainer SUSPENDS at college and on family holidays rather than
+   *  cancelling, so the flag survives the freeze – see `masseurWorksThisWeek`. */
+  masseurHired: boolean
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -2812,6 +2826,11 @@ export function createWorld(
     retirementOffer: null,
     oneMoreYearCount: 0,
     college: null,
+    // v59: no masseur on day one – he is pro-career gated, and the hire is a decision, never a
+    // default. ⚠ LAST KEY OF THE LITERAL, deliberately: the frozen-career identity in
+    // tests/coach-travel-edge.test.ts reproduces the pre-v59 hashes by dropping exactly this key,
+    // which only works while the rest of the serialisation order is untouched.
+    masseurHired: false,
   }
   addEvent(world, {
     week: 0,
@@ -3171,6 +3190,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   resolveVacation(world)
   resolvePractice(world)
   resolvePhysio(world)
+  // 1c-masseur (v59, travelling team step 1). The salary beside the physio bill it must stay
+  //        distinguishable from: a FLAT contract, zero draws on any stream, suspended – not
+  //        cancelled – at college and on booked family weeks (the coach's own stand-down pair,
+  //        asked of a second seat; see masseurWorksThisWeek). His effects ride the same predicate:
+  //        the +1 inside accrueCondition above, and the rehab cadence inside rollInjury.
+  resolveMasseur(world)
 
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)

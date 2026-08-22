@@ -47,6 +47,7 @@ import {
   yearEndJuniorRank,
 } from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
+import { masseurWorksThisWeek } from './masseur'
 import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
 
@@ -90,6 +91,10 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
       ? c.recoveryBase
       : c.recoveryBase + restRecoveryBonus(world.plan.rest)
   if (world.physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
+  // The masseur's at-home table (travelling team step 1): +1 beside the physio's +1, THROUGH THE
+  // ONE PREDICATE his bill reads – a suspended week (college, family holiday) buys nothing, which
+  // keeps the paid week and the bought week the same week. Pure read, zero draws, arity untouched.
+  if (masseurWorksThisWeek(world)) recovery += ECONOMY.masseur.conditionBonusPerWeek
   if (isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))) {
     recovery += c.blackoutBonus
   }

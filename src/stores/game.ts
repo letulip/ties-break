@@ -373,6 +373,14 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    /** v59, the travelling team step 1: the masseur on or off the payroll. The engine re-validates
+     *  the pro-career gate and the college freeze; this is a thin RPC like every other command. */
+    async hireMasseur(hire: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'hireMasseur', hire, baseRevision: this.revision }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+      })
+    },
     /** Buy the coach for competition weeks too, or send him home for them. */
     async setCoachOnEventWeeks(on: boolean) {
       await this.run(async () => {

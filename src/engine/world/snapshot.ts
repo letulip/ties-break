@@ -76,6 +76,7 @@ import { arrivalStatus, entryStatus, tierVerdict } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
+import { masseurRoomNote, masseurUnlocked } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
@@ -859,9 +860,19 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
           weeksRemaining: world.injury.weeksRemaining,
           totalWeeks: world.injury.totalWeeks,
           sinceWeek: world.injury.sinceWeek,
+          // v59: present only while the masseur has taken weeks off THIS layoff – the projection
+          // mirrors the persisted shape, absent-for-none included.
+          ...(world.injury.weeksSaved !== undefined ? { weeksSaved: world.injury.weeksSaved } : {}),
         }
       : null,
     physioActive: world.physioActive,
+    // v59, the travelling team step 1 – the masseur card's four facts, all derived: the flag, the
+    // gate (the professional table's own one-way latch), the flat salary, and his room note (the
+    // plan's §4 sentence – '' when nobody is hired).
+    masseurHired: world.masseurHired ?? false,
+    masseurUnlocked: masseurUnlocked(world),
+    masseurSalaryCents: ECONOMY.masseur.salaryPerWeekCents,
+    masseurNote: masseurRoomNote(world),
     // W4: the knock, and the question it is asking. Both DERIVED (the prompt's copy is assembled per
     // snapshot off `seed:knockread:<sinceWeek>`, its own sub-stream); only `world.knock` itself is
     // persisted, and only because `choice` is the player's decision.
