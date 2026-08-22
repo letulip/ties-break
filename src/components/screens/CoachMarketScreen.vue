@@ -1073,7 +1073,7 @@ function scrollToTier(tier: CoachTier): void {
           <span class="rung-price">{{ formatCents(r.sessions * ECONOMY.masseur.perSessionCents) }}/wk</span>
         </button>
       </div>
-      <!-- ...AND THE SEAT (ruling Б: the masseur travels) - the coach's own switch idiom one
+      <!-- ...AND THE SEAT (the owner's ruling B: the masseur travels) - the coach's own switch idiom one
            section up, asked of the next seat over. Only while HIRED: with nobody on the payroll
            the switch would send nobody anywhere, and a row that looked live would be the control
            lying about itself (the round-20 #1 defect). -->
