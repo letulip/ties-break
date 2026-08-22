@@ -8,13 +8,20 @@ import {
   masseurRungOf,
   masseurWeeklyCents,
   masseurTourRelief,
+  masseurTourWeekCents,
   masseurTravelFareFor,
   setMasseurSessions,
   setMasseurTravels,
   resolveMasseur,
+  resolveMasseurReturn,
   rollInjury,
   accrueCondition,
+  skipEvent,
+  skipTournament,
+  closeTournament,
+  tickWeek,
   toSnapshot,
+  KID_ID,
   MASSEUR_CHANGE_KEY,
   MASSEUR_LOCKED_DETAIL,
   MASSEUR_NOTE_WINDOW_WEEKS,
@@ -26,6 +33,8 @@ import { coachTravelFareFor } from '../src/engine/world'
 import { kitTermsFor } from '../src/engine/offers'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
+import { rngFromSeed } from '../src/engine/rng'
+import { TIERS } from '../src/engine/season/calendar'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -179,6 +188,19 @@ describe('4a. the effect – condition, through the same predicate as the bill',
     accrueCondition(with_, false)
     accrueCondition(without, false)
     expect(with_.condition - without.condition).toBe(masseurRungOf(with_).conditionBonusPerWeek)
+  })
+
+  it('⭐ the rung ladder is +1/+2/+3 and STRICTLY monotone – no two rungs are indistinguishable on a healthy week (owner 22.08)', () => {
+    // Written as LITERALS, the round23-kid-share discipline: a ladder checked against the object
+    // under test is a tautology. The old +1/+1/+2 made rungs 1-2 identical without an injury –
+    // the exact «you paid and you cannot tell» failure the plan's §4 law exists to catch.
+    expect(ECONOMY.masseur.rungs.map((r) => r.conditionBonusPerWeek)).toEqual([1, 2, 3])
+    for (let i = 1; i < ECONOMY.masseur.rungs.length; i++) {
+      expect(
+        ECONOMY.masseur.rungs[i].conditionBonusPerWeek,
+        `${ECONOMY.masseur.rungs[i].label} must beat ${ECONOMY.masseur.rungs[i - 1].label} on the table, not only in rehab`,
+      ).toBeGreaterThan(ECONOMY.masseur.rungs[i - 1].conditionBonusPerWeek)
+    }
   })
 
   it('⭐ the dial scales the table: the daily rung recovers more than the lower two', () => {
@@ -542,5 +564,224 @@ describe('9. ⭐ what the fare buys – recovery between rounds, by depth (step 
   it('is capped at the strain itself – hands cannot make a week restful, only less expensive', () => {
     expect(masseurTourRelief(5, 3, true)).toBe(3)
     expect(masseurTourRelief(5, 0, true)).toBe(0)
+  })
+})
+
+// =================================================================================================
+// 10. ⭐ PER-MATCH TOUR PRICING (owner 22.08: «на неделе выезда по-матчевая цена заменяет
+// недельную») – the week he BOARDS is billed matches × the $75 session instead of the weekly rung
+// bill; the fare rides on top exactly as before; a week he stays home from – tournament or not –
+// bills the weekly contract as always.
+// =================================================================================================
+
+/** A seed whose PRIVATE injury sub-stream cannot fire on weeks 1..`through` – the condition.test
+ *  trick, so a random layoff cannot turn the play week under test into a walkover. */
+function injuryProofSeed(prefix: string, through: number): string {
+  const cap = ECONOMY.availability.injuryChanceCap
+  for (let i = 0; i < 400; i++) {
+    const seed = `${prefix}-${i}`
+    let clean = true
+    for (let w = 1; w <= through && clean; w++) {
+      if (rngFromSeed(`${seed}:injury:${w}`)() < cap) clean = false
+    }
+    if (clean) return seed
+  }
+  throw new Error('no injury-proof seed found')
+}
+
+/** A hired-masseur career ticked INTO a W15 play week (id-targeted event, the calendar around it
+ *  cleared), reveal spawned. The travel stance is the one divergence the callers flip. */
+function playedTourWeek(prefix: string, travels: boolean, playWeek = 5) {
+  const world = createWorld(injuryProofSeed(prefix, playWeek + 1), DEFAULT_PROFILE)
+  world.bestFinishByTier.w15 = 0 // the pro gate – the hire is legal, the ladder professional
+  hireMasseur(world, true)
+  if (travels) setMasseurTravels(world, true)
+  world.physioActive = false
+  world.season = []
+  const event: SeasonEvent = {
+    id: `tour-${prefix}`,
+    week: playWeek,
+    tier: 'w15',
+    surface: 'hard',
+    travelCostCents: 900_00,
+    deadlineWeek: playWeek - 2,
+  }
+  world.season.push(event)
+  world.entries.push(event.id)
+  const rng = rngFromSeed(world.seed)
+  while (world.week < playWeek) tickWeek(world, rng)
+  expect(world.week).toBe(playWeek)
+  expect(world.injury, 'the seed guarantees a healthy arrival').toBeNull()
+  expect(world.pendingTournament, 'the reveal spawned').not.toBeNull()
+  return { world, event, rng }
+}
+
+const weeklySalaryRows = (world: WorldState, week: number) =>
+  world.events.filter((e) => e.week === week && e.text === 'Masseur – weekly salary')
+const tourBillRows = (world: WorldState, week: number) =>
+  world.events.filter((e) => e.week === week && e.text.startsWith('Masseur on tour'))
+
+describe('10. ⭐ per-match tour pricing – the travel week is billed per match, not per week', () => {
+  it('the arithmetic and the draw table: a Slam title week is 7 × $75 = $525, exactly the daily rung`s home week', () => {
+    expect(masseurTourWeekCents(1)).toBe(75_00)
+    expect(masseurTourWeekCents(5)).toBe(375_00) // a 32-draw title
+    expect(masseurTourWeekCents(6)).toBe(450_00) // a wta1000 title
+    expect(masseurTourWeekCents(7)).toBe(525_00) // the Slam
+    expect(masseurTourWeekCents(0)).toBe(0)
+    // The table IS the calendar's: rounds = log2(drawSize), so the caps price themselves.
+    expect(Math.log2(TIERS.slam.drawSize)).toBe(7)
+    expect(Math.log2(TIERS.wta1000.drawSize)).toBe(6)
+    expect(Math.log2(TIERS.wta250.drawSize)).toBe(5)
+    // ...and the identity the owner's price rests on: a Slam title week = the daily home rate.
+    expect(masseurTourWeekCents(7)).toBe(7 * ECONOMY.masseur.perSessionCents)
+  })
+
+  it('⭐ the week he boards: NO weekly bill at the tick, the per-match bill lands at finalize, fare on top', () => {
+    const { world, event } = playedTourWeek('tour-bill', true)
+    expect(world.pendingTournament!.masseurThere, 'the fare was charged and recorded').toBe(true)
+    expect(weeklySalaryRows(world, world.week), 'the weekly rung bill stood down').toHaveLength(0)
+    const fareRow = world.events.find((e) => e.week === world.week && e.text.includes('masseur travels'))
+    expect(fareRow, 'the fare itself is charged exactly as before').toBeTruthy()
+    expect(fareRow!.amountCents).toBe(-event.travelCostCents)
+
+    skipTournament(world)
+    const matches = world.pendingTournament!.result.matches.filter((m) => m.aId === KID_ID || m.bId === KID_ID).length
+    expect(matches).toBeGreaterThan(0)
+    const bills = tourBillRows(world, world.week)
+    expect(bills, 'one per-match row, at the commit point').toHaveLength(1)
+    expect(bills[0].category, 'his own ledger bucket, exactly like the weekly bill').toBe('staff')
+    expect(bills[0].amountCents).toBe(-matches * ECONOMY.masseur.perSessionCents)
+    // ...and no return-week debt: he WAS there (the relief was that week's work).
+    expect(world.masseurReturnDue).toBeUndefined()
+    closeTournament(world)
+  })
+
+  it('the week he stays home from a tournament still bills the weekly contract – the coach`s own 08.08 rule', () => {
+    const { world } = playedTourWeek('tour-home', false)
+    expect(world.pendingTournament!.masseurThere ?? false).toBe(false)
+    expect(weeklySalaryRows(world, world.week), 'the retainer does not stop being owed').toHaveLength(1)
+    skipTournament(world)
+    expect(tourBillRows(world, world.week), 'no per-match bill for a table he never took on the road').toHaveLength(0)
+    // ⭐ ...and the return-week session is now owed: he waited at home (task 3 pins the payout).
+    expect(world.masseurReturnDue).toBe(world.week)
+    closeTournament(world)
+  })
+
+  it('⚠ a skipEvent travel week bills nothing per match – zero matches is a $0 week; the fare stays the wasted money', () => {
+    const { world, event } = playedTourWeek('tour-skip', true)
+    expect(weeklySalaryRows(world, world.week)).toHaveLength(0)
+    skipEvent(world, event.id)
+    expect(tourBillRows(world, world.week)).toHaveLength(0)
+    expect(weeklySalaryRows(world, world.week), 'and the weekly bill is not resurrected either').toHaveLength(0)
+    expect(world.masseurReturnDue, 'no run, no return').toBeUndefined()
+  })
+
+  it('the stand-down is the RECORDED fact, not the stance: a stale/finished pending never suppresses the bill', () => {
+    const world = proWorld('tour-stale')
+    hireMasseur(world, true)
+    world.pendingTournament = {
+      eventId: 'x',
+      result: { matches: [], finishes: {} },
+      revealedRounds: 0,
+      finished: true, // a finished reveal awaiting Continue – not this week's boarding
+      players: {},
+      masseurThere: true,
+    } as unknown as WorldState['pendingTournament']
+    const before = world.fundsCents
+    resolveMasseur(world)
+    expect(before - world.fundsCents, 'the weekly bill runs').toBe(masseurWeeklyCents(world))
+  })
+})
+
+// =================================================================================================
+// 11. ⭐ THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1 сеанс
+// массажа по возвращении») – he was NOT flown, so the first non-played week after the tournament
+// pays one extra session's worth of recovery, with its own receipt.
+// =================================================================================================
+describe('11. ⭐ the return-week session – one session of recovery when he waited at home', () => {
+  const RECEIPT = 'Back from the tour – an extra session on the table works the trip out of her legs.'
+
+  function owed(seed: string): WorldState {
+    const world = proWorld(seed)
+    hireMasseur(world, true)
+    world.masseurReturnDue = world.week - 1
+    return world
+  }
+
+  it('⭐ pays exactly the one session on the first non-played week, prints the receipt, clears the mark', () => {
+    const world = owed('return-pays')
+    world.condition = 50
+    resolveMasseurReturn(world, false)
+    expect(world.condition).toBe(50 + ECONOMY.masseur.returnSessionBonus)
+    expect(world.events.filter((e) => e.text === RECEIPT)).toHaveLength(1)
+    expect(world.masseurReturnDue).toBeUndefined()
+    expect('masseurReturnDue' in world, 'the spent mark comes OFF the save, not onto undefined').toBe(false)
+    // ...and it does not pay twice: the next quiet week is an ordinary week.
+    world.condition = 50
+    resolveMasseurReturn(world, false)
+    expect(world.condition).toBe(50)
+    expect(world.events.filter((e) => e.text === RECEIPT)).toHaveLength(1)
+  })
+
+  it('a played week postpones it – she is not home yet, the mark survives to the real return', () => {
+    const world = owed('return-postpone')
+    world.condition = 50
+    resolveMasseurReturn(world, true)
+    expect(world.condition).toBe(50)
+    expect(world.masseurReturnDue).toBe(world.week - 1)
+  })
+
+  it('the moment passes when she returns: released masseur or a family week away – no session, no receipt, mark cleared', () => {
+    const released = owed('return-released')
+    hireMasseur(released, false)
+    released.condition = 50
+    resolveMasseurReturn(released, false)
+    expect(released.condition).toBe(50)
+    expect(released.masseurReturnDue).toBeUndefined()
+    expect(released.events.some((e) => e.text === RECEIPT)).toBe(false)
+
+    const away = owed('return-away')
+    away.vacations = [{ week: away.week, packageId: 'grandma', paidCents: 0 }]
+    away.condition = 50
+    resolveMasseurReturn(away, false)
+    expect(away.condition).toBe(50)
+    expect(away.masseurReturnDue).toBeUndefined()
+  })
+
+  it('clamped at the ceiling, worthless when she is already fresh – a bonus, never an overflow', () => {
+    const world = owed('return-clamp')
+    world.condition = ECONOMY.condition.max
+    resolveMasseurReturn(world, false)
+    expect(world.condition).toBe(ECONOMY.condition.max)
+  })
+
+  it('the receipt obeys the house law: no digits, no Cyrillic, short dash only, no masseur pronoun', () => {
+    expect(RECEIPT).not.toMatch(/\d/)
+    expect(RECEIPT).not.toMatch(/[Ѐ-ӿ]/)
+    expect(RECEIPT).not.toMatch(/—/)
+    expect(RECEIPT).not.toMatch(/\bhe\b|\bhis\b|\bhim\b/i)
+  })
+
+  it('⭐ end to end: home-stance tournament, then the next quiet week pays +1 over its identical control', () => {
+    // Two byte-identical post-tournament worlds; the control's mark is removed – "my change
+    // reverted" in world form – so the paired delta is exactly the session and nothing else.
+    const { world } = playedTourWeek('return-e2e', false)
+    skipTournament(world)
+    expect(world.masseurReturnDue).toBe(world.week)
+    closeTournament(world)
+    const control = JSON.parse(JSON.stringify(world)) as WorldState
+    delete control.masseurReturnDue
+    // Pin the arms well off the ceiling so the paired delta cannot be eaten by the clamp.
+    world.condition = 50
+    control.condition = 50
+    const rngA = rngFromSeed('return-e2e-a')
+    const rngB = rngFromSeed('return-e2e-a')
+    // The next week is quiet by construction: the calendar was cleared but for the played event.
+    tickWeek(world, rngA)
+    tickWeek(control, rngB)
+    expect(world.events.filter((e) => e.text === RECEIPT)).toHaveLength(1)
+    expect(control.events.some((e) => e.text === RECEIPT)).toBe(false)
+    expect(world.condition - control.condition).toBe(ECONOMY.masseur.returnSessionBonus)
+    expect(world.masseurReturnDue).toBeUndefined()
   })
 })

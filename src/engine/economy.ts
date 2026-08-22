@@ -2307,14 +2307,20 @@ export const ECONOMY = {
     //     for. A 1-2 week niggle gains nothing at ANY rung (the totalWeeks > 2 guard in
     //     rollInjury) – honest: nobody massages a one-week soreness away.
     //   * conditionBonusPerWeek: the at-home table, on top of the physio's own +1, on the weeks she
-    //     is NOT away at a tournament (the away weeks are the travel stance's business below). The
-    //     physio note above records the hair trigger («at 2 the retainer alone erased every policy
-    //     difference»), so the two lower rungs enter at 1 and only the daily rung buys 2 – priced
-    //     at $525/wk, measured in the bench before it shipped.
+    //     is NOT away at a tournament (the away weeks are the travel stance's business below).
+    //     ⭐ +1/+2/+3 SINCE THE OWNER'S 22.08 RULING – the shipped +1/+1/+2 had a measured flaw the
+    //     dial's own §4 law forbids: rungs 1 and 2 were INDISTINGUISHABLE on any week without an
+    //     injury (same bonus, and the cadence only separates them inside a layoff), i.e. the $150
+    //     step from «twice a week» to «every other day» bought nothing a healthy player could
+    //     read. The ladder now steps by exactly one point per rung. The physio note's hair trigger
+    //     («at 2 the retainer alone erased every policy difference») was about the UNPRICED
+    //     retainer bonus on every profile; these rungs are priced $150/$300/$525 a week and land
+    //     in the pro phase, whose base dropped to 5 in the same wave – the combined grid in
+    //     docs/specs/the-masseur-2026-08.md §11 measures the whole stack together.
     rungs: [
       { sessions: 2, label: 'Twice a week', rehabExtraEveryNWeeks: 3, conditionBonusPerWeek: 1 },
-      { sessions: 4, label: 'Every other day', rehabExtraEveryNWeeks: 2, conditionBonusPerWeek: 1 },
-      { sessions: 7, label: 'Daily', rehabExtraEveryNWeeks: 1, conditionBonusPerWeek: 2 },
+      { sessions: 4, label: 'Every other day', rehabExtraEveryNWeeks: 2, conditionBonusPerWeek: 2 },
+      { sessions: 7, label: 'Daily', rehabExtraEveryNWeeks: 1, conditionBonusPerWeek: 3 },
     ],
     // What a fresh hire (and every pre-v59 save) stands on: the middle rung – the professional
     // default the pricing above is anchored to. A LITERAL 4 in the v59 migration, by the house
@@ -2327,6 +2333,12 @@ export const ECONOMY = {
     // exit has no nights between rounds and buys nothing, a title week has the most – which is
     // literally the owner's question answered. Zero draws; the knob is read post-strain.
     tourRecoveryPerRound: 2,
+    // ⭐ THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1 сеанс
+    // массажа по возвращении»): when he was NOT flown to a tournament, the first non-played week
+    // after it pays one extra session's worth of recovery on top of the ordinary week – the home
+    // table working the trip out of her legs. Small and legible on purpose: it is one session, not
+    // a second tour-relief channel, and it prints its own receipt (`resolveMasseurReturn`).
+    returnSessionBonus: 1,
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
