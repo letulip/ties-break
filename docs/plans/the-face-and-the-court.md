@@ -109,6 +109,28 @@ recovers like a travel week rather than a rest week is a real cost, stated in a 
 ⚠ **AND IT SCALES THE RIGHT WAY.** A small local deal costs a little recovery; a campaign costs a
 lot. No new state, no second calendar, no new surface – one modifier on an existing weekly figure.
 
+### 4a-1. ⭐ SHIPPED AS STEP 2 (22.08), and the ladder above it is RECORDED, not built
+
+The owner read step 1's letter line «no appearances scheduled» and ruled it dead: «съемки должны
+быть иногда и это надо как-то прописывать и отражать потом в свободных неделях, соответственно и
+восстановления на тех неделях должно быть чуть меньше». The sized version he approved («утверждаю,
+для начала точно ок»):
+
+- **Quiet Hour ($20,000 / 12 months): exactly 2 shoot weeks per term**, IN-SEASON – §5.2's own
+  answer, an off-season cost is free money wearing a cost's clothes – **named in the letter at the
+  signature** (drawn on `seed:ad:shoots:<week>`, spaced, never adjacent, never before a 4-week
+  lead), marked on the calendar look-ahead, and each recovering **like a travel week rather than a
+  rest week** (`accrueCondition` + the `withheldFreeWeekRecovery` refunds). A tournament on a shoot
+  week is not blocked and not double-charged – she simply recovers worse. A shoot the college
+  freeze swallows lapses silently (§4c's law applied to weeks as well as money).
+- ⚠ **THE LADDER, RECORDED ONLY – nothing below this line is built**: bigger campaigns would carry
+  3-4 shoot weeks, a global house 5-6, and the sum of live deals must never exceed **6 shoot weeks
+  a year**. When a second house ever arrives, it takes these numbers from here, not from a guess.
+- Bench + predicted-vs-measured: `docs/specs/ad-shoot-recovery-2026-08.md` (`npm run bench:adshoot`).
+  The measured season: −9 condition on every deficit shoot week (the balanced rest week, forfeited),
+  0 at the ceiling and on tournament collisions, 0 weeks lost, and an off-season landing impossible
+  over 20,000 draws.
+
 ## 4b. What else these contracts can carry, from eighteen on
 
 He asked for the additional mechanics («какие у нас могут быть механики этих контрактов
@@ -145,7 +167,8 @@ step 6 ships.
 1. **Is fame a number we are willing to own?** It is a second reputation axis and it will want a
    surface, a fog rule, and its own calibration.
 2. **Do the appearance weeks come out of the season, or out of the off-season?** The first is a real
-   cost; the second is free money wearing a cost's clothes.
+   cost; the second is free money wearing a cost's clothes. ⭐ *Answered 22.08: in-season, by
+   construction – see §4a-1.*
 3. **Should refusing ever be right?** If declining is always wrong, it is not a decision. If it is
    sometimes right, the game has to say why – and that is a moral statement, not a balance one.
 4. **What happens to a live deal when she enrols?** Pause or lapse – see §4c.
@@ -159,8 +182,8 @@ step 6 ships.
 
 | # | step | done when |
 | --- | --- | --- |
-| **1** | **one non-endemic offer**, gated on results only, cash only, no cost at all | it arrives, it can be signed, and the ledger shows it |
-| **2** | **the recovery cost** (§4a) – a shoot week recovers like a travel week | a bench shows the season it costs, measured in weeks not lost |
+| **1** | ⭐ **SHIPPED 22.08** – **one non-endemic offer**, gated on results only, cash only | it arrives, it can be signed, and the ledger shows it – `tests/ad-offer.test.ts` walks all three |
+| **2** | ⭐ **SHIPPED 22.08** – **the recovery cost** (§4a-1): 2 shoot weeks per term, letter-named, calendar-marked, travel-week recovery | the bench bar is met: `ad-shoot-recovery-2026-08.md` shows −9 per deficit shoot week and **0 weeks lost** |
 | **3** | **fame** – a slow second axis that rises with results and falls slower than a ranking | a photogenic #40 can out-earn a dour #8 in a bench, which is the whole claim |
 | **4** | **refusal with a reason** (§4b.2) | declining is sometimes the better play, and the game can say why |
 | **5** | **her own account** (§4b.1) – the deal pays HER, not the family | the parent can see money he cannot spend |
