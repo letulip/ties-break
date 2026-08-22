@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (4,067 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (4,092 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-249 exported names across 30 owning modules.
+257 exported names across 31 owning modules.
 
 ## Areas
 
@@ -27,6 +27,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
+| `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
@@ -298,6 +299,19 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `pendingKnock` – `src/engine/world/knock.ts`
 - `radarViewOf` – `src/engine/world/knock.ts`
 - `rollKnock` – `src/engine/world/knock.ts`
+
+### `src/engine/world/masseur.ts`
+
+THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
+
+- `hireMasseur` – `src/engine/world/masseur.ts`
+- `MASSEUR_CHANGE_KEY` – `src/engine/world/masseur.ts`
+- `MASSEUR_LOCKED_DETAIL` – `src/engine/world/masseur.ts`
+- `MASSEUR_NOTE_WINDOW_WEEKS` – `src/engine/world/masseur.ts`
+- `masseurRoomNote` – `src/engine/world/masseur.ts`
+- `masseurUnlocked` – `src/engine/world/masseur.ts`
+- `masseurWorksThisWeek` – `src/engine/world/masseur.ts`
+- `resolveMasseur` – `src/engine/world/masseur.ts`
 
 ### `src/engine/world/injury.ts`
 
