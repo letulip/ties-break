@@ -2370,6 +2370,12 @@ export const ECONOMY = {
     // (matches − 1), capped at the strain itself. Scales with DEPTH by construction: a first-round
     // exit has no nights between rounds and buys nothing, a title week has the most – which is
     // literally the owner's question answered. Zero draws; the knob is read post-strain.
+    //
+    // ⚠ 1-vs-2 WAS MEASURED ON THE OWNER'S OWN QUESTION («+2 за каждый круг не многовато?») and 2
+    // STAYS – the combined grid's relief arms (docs/specs/the-masseur-2026-08.md §11): at 1/round
+    // the tour condition channel survives at half size but the deep-run WINS channel drops under
+    // 2 SEM everywhere (8k +8.2±2.3 -> +4.7±2.6) and the 8k prize delta goes to noise – the fare
+    // would buy a number the player cannot feel, the decorative-staff failure again.
     tourRecoveryPerRound: 2,
     // ⭐ THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1 сеанс
     // массажа по возвращении»): when he was NOT flown to a tournament, the first non-played week

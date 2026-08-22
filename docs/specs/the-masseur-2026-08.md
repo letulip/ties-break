@@ -548,6 +548,90 @@ flat), 32 paired seeds × 2 presets × 7 cells, 416 weeks, plus the task-3 relie
 * **Solvency**: the parent-guard absorbs the stack (releases rise slightly at 25k); zero NEW
   bankruptcies vs the §10-C base in every cell.
 
-### Measured
+### Measured – the combined grid at the shipped relief (2/round)
 
-_(the grid runs after the freeze re-pin; filled below)_
+`tools/masseur-bench.ts --seeds 32 --weeks 416 --relief 2` (logs + per-seed CSVs in
+`bench-combined/`, untracked like `bench-recovery/`). n = 31/32 reached the gate on both presets.
+
+**The base game (`none`), against §10's C column**: pro condition 81.1 (25k) / 82.0 (8k) – within
+0.2 of §10-C's 81.1/81.9 as predicted (the same engine; the share does not touch condition).
+Family-kept prize drops to $3.02M / $4.77M (§10-C: $2.88M / $4.62M – noise-range, the share's cost
+visible in the split below, not in the totals). Endings: 25k 30 alive + 1 injury, 8k 31 alive –
+**zero new bankruptcies vs §10-C, in the base and in every one of the twelve cells** (every cell's
+endings column is byte-identical to its own base arm).
+
+**⭐ The coach-%-of-prize table, "after" column** (the plan's §2 – flat-only was 5.7% Alice /
+0.94% top): flat + share on the base career's gross prize = **4.83%** (25k, $39.0k flat + $77.2k
+share on $3.70M) and **3.36%** (8k, $27.1k flat + $196.3k share on $5.74M). The share self-scales
+exactly as the plan claimed: at the top it turns a 0.94% rounding error into real money (the 8k
+career's coach share alone is 7× the flat bill), while a struggling career pays nearly nothing –
+the shares only exist where titles and finals do. The masseur's slice: $62–88k per staffed 8k
+career, $24–35k at 25k – a third of the coach's, as ruled.
+
+**Measured, 25k · middle · middle coach** (paired vs `none`, ± = SEM):
+
+| cell | pro condition | pro wins | weeks lost | rehab / tour / return receipts | masseur pay over hired wks | fares (trips) | endings vs base |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 2/wk home | +0.24 ± 0.13 | +2.0 ± 2.8 | −0.45 ± 0.50 | 0.61 / 0 / **17.2** | $19,031 / 158 | – | identical |
+| 4/wk home | +0.42 ± 0.15 | +1.3 ± 2.4 | +0.03 ± 0.89 | 1.10 / 0 / 17.2 | $36,435 / 151 | – | identical |
+| 7/wk home | +0.27 ± 0.13 | +2.7 ± 2.2 | **−1.03 ± 0.66** | 1.65 / 0 / 16.6 | $62,170 / 148 | – | identical |
+| 2/wk tour | **+1.53 ± 0.17** | −0.5 ± 2.9 | +1.00 ± 0.78 | 0.74 / 26.3 / 0.2 | $8,342 + $11,206 tour bills | $210,157 (56.7) | identical |
+| 4/wk tour | **+1.33 ± 0.17** | +5.0 ± 2.8 | +0.23 ± 0.95 | 0.77 / 25.4 / 0.1 | $15,542 + $10,778 | $195,025 (52.8) | identical |
+| 7/wk tour | **+1.57 ± 0.17** | +4.0 ± 2.8 | −0.32 ± 0.81 | 1.10 / 26.9 / 0.1 | $28,011 + $11,434 | $212,223 (57.1) | identical |
+
+**Measured, 8k · working · middle coach – the Alice end**:
+
+| cell | pro condition | pro wins | weeks lost | rehab / tour / return receipts | masseur pay over hired wks | fares (trips) | endings vs base |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 2/wk home | +0.18 ± 0.19 | −0.1 ± 2.1 | **−1.29 ± 0.45** | 0.90 / 0 / **19.2** | $23,139 / 195 | – | identical (31 alive) |
+| 4/wk home | +0.22 ± 0.18 | +1.8 ± 2.3 | **−1.94 ± 0.56** | 1.55 / 0 / 19.2 | $45,948 / 194 | – | identical |
+| 7/wk home | +0.26 ± 0.21 | +1.3 ± 2.6 | **−2.90 ± 0.67** | 2.29 / 0 / 19.2 | $77,920 / 188 | – | identical |
+| 2/wk tour | **+1.81 ± 0.26** | **+6.0 ± 2.5** | **−1.81 ± 0.77** | 0.68 / 37.5 / 0.7 | $11,182 + $15,999 tour bills | $207,581 (74.2) | identical |
+| 4/wk tour | **+1.74 ± 0.30** | **+8.2 ± 2.3** | **−2.42 ± 0.76** | 1.32 / 37.6 / 0.7 | $21,716 + $16,019 | $207,150 (74.0) | identical |
+| 7/wk tour | **+1.81 ± 0.31** | **+9.8 ± 2.5** | **−2.84 ± 0.79** | 1.90 / 36.8 / 0.7 | $36,750 + $15,859 | $205,405 (73.2) | identical |
+
+**Reading it against the predictions:**
+
+* ⭐ **The per-match price makes the travelling table CHEAPER at every rung above the entry one,
+  exactly as predicted**: tour weeks bill ~$216/week (mean ~2.9 matches × $75) against the old
+  $300/$525 weekly – the 4/wk tour masseur's whole pay is $37.7k (was $46.5k under weekly billing,
+  §7) and the 7/wk tour's $52.6k (was $78.2k). The entry rung pays slightly MORE on tour ($216 vs
+  $150), which reads honestly: a travelling week works harder than two home sessions.
+* ⭐ **The tour channel holds through the stack**: 8k +1.7..1.8 condition (6–7 SEM) and +6..10
+  wins (2.4–3.9 SEM) – §7's channel, intact under base-5, the new ladder and the shares.
+* **The home dial's headline moved from condition to WEEKS at 8k** – −1.3 → −1.9 → −2.9 lost
+  weeks, monotone, 2.9–4.3 SEM (stronger than §7's −0.7..−2.0: base-5 pro weeks make the rehab
+  cadence bind harder) – while the predicted doubling of the home CONDITION uplift did not
+  materialise (+0.18..0.42 against §7's +0.06..0.27, direction right, size ~half the prediction):
+  at condition ~82 the extra point mostly falls where the week was already capped or she is away;
+  the return session (+19/career) similarly lands as legibility (19 receipts) more than as mean
+  condition. Prediction wrong in size, recorded as such – the dial's separation now lives in the
+  weeks-lost column and the receipts, which is where a rehab specialist should live.
+* **The masseur pays for himself at the working preset, again**: tour cells +$620..786k prize
+  (±~250k, 2.5–3.1 SEM – §7's «roughly pays for himself» is now 2–3 SEM) against ~$320–350k of
+  staff cost including his own share. At 25k he stays a luxury (prize Δ noise-to-negative), as §7
+  found and the owner priced.
+* **Solvency**: zero new bankruptcies anywhere; the parent-guard's releases stay at 0.1–0.9 per
+  career. The stack is affordable exactly where §7 said the seat was.
+
+### ⭐ The relief question decided – «+2 за каждый круг не многовато?» – THE ANSWER IS NO, KEEP 2
+
+The owner asked whether 2 per round is too much; the step-1 grid's +9.6..10.5 match wins at 8k
+looked strong. Decision rule agreed with the architect before the run: **ship 1 if the tour
+channel keeps ≥2 SEM on its headline metrics at 1/round; otherwise keep 2.** The same 32 seeds,
+same combined engine, `--relief 1` on the tour cells (`bench-combined/relief1.log`):
+
+| tour channel, paired vs `none` | relief 2 (shipped) | relief 1 |
+| --- | --- | --- |
+| 8k pro condition | +1.74..1.81 ± 0.26-0.31 (**6-7 SEM**) | +0.68..0.83 ± 0.23-0.29 (**2.5-3.6 SEM**) |
+| 25k pro condition | +1.33..1.57 ± 0.17 (**8-9 SEM**) | +0.74..1.21 ± 0.16-0.23 (**4.6-5.3 SEM**) |
+| 8k pro match wins | +6.0 / +8.2 / +9.8 ± 2.3-2.5 (**2.4-3.9 SEM**) | +3.2 / +4.7 / +2.9 ± 2.6-3.2 (**1.0-1.8 SEM – none clears 2**) |
+| 8k prize Δ | +$620k..786k ± 233-270k (2.5-3.1 SEM) | +$15k..210k ± 213-277k (**noise**) |
+
+**The verdict, in the rule's own terms**: at 1/round the condition half of the channel survives at
+half size, but the half the fare EXISTS to buy – the deep-run wins and the prize that follows –
+loses statistical existence at the working preset (the one where §7 found the masseur an
+investment rather than a luxury). The rule's condition is not met; **`tourRecoveryPerRound`
+stays 2**. His «многовато» instinct was still partly right and the combined stack already answers
+it: under base-5 pro weeks the 8k wins channel reads +6..10 (was +9.6..10.5 in the step-1 grid) –
+measurable, no longer outsized. One knob, one line, if he still wants 1 after reading this table.
