@@ -2275,10 +2275,16 @@ export const ECONOMY = {
     // cadence below, which condition cannot buy at any price.
     conditionBonusPerWeek: 1,
     // THE REHAB CADENCE: every Nth week of an ACTIVE layoff his hands take one extra week off it
-    // (deterministic, off week − sinceWeek; see rollInjury). At 3, a niggle gains nothing – honest:
-    // nobody massages a one-week soreness away – and the moderate-and-up layoffs lose roughly a
-    // week in three, which is where «the weeks his hands did not lose» comes from.
-    rehabExtraEveryNWeeks: 3,
+    // (deterministic, off week − sinceWeek; see rollInjury). A 1-2 week niggle gains nothing at any
+    // N – honest: nobody massages a one-week soreness away.
+    //
+    // ⚠ 2, AND IT WAS 3 FOR ONE BENCH RUN (docs/specs/the-masseur-2026-08.md §3). At 3 the measured
+    // whole-career effect was -1.7 weeks against a paired sd of 8 with 1-2 receipts per ~5
+    // professional seasons – a real lever at the EDGE of season noise, which is the plan's own
+    // named failure («not a 1% nudge only a bench can find»). At 2 the moderate-and-up layoffs
+    // lose roughly a third and the receipts arrive roughly once a season, which is what makes the
+    // salary readable; the bench table in the spec carries both arms, predicted vs measured.
+    rehabExtraEveryNWeeks: 2,
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------

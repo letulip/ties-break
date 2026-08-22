@@ -188,17 +188,17 @@ describe('4b. the effect – the rehab cadence, the channel the player can watch
     throw new Error('layoff never cleared')
   }
 
-  it('a 6-week layoff clears in 5 – one bought week, one receipt, honest accounting', () => {
+  it('a 6-week layoff clears in 4 – two bought weeks, two receipts, honest accounting', () => {
     const world = proWorld('masseur-rehab')
     hireMasseur(world, true)
     withLayoff(world, 6)
     const out = walkOut(world)
-    expect(out).toBe(6 - 1)
-    expect(world.events.filter((e) => e.text.includes('the masseur bought a week back')).length).toBe(1)
+    expect(out).toBe(6 - 2)
+    expect(world.events.filter((e) => e.text.includes('the masseur bought a week back')).length).toBe(2)
     const row = world.injuryHistory[world.injuryHistory.length - 1]
-    expect(row.weeksOut, 'the record keeps the weeks she was ACTUALLY out').toBe(5)
-    expect(row.weeksSaved).toBe(1)
-    expect(world.careerTotals.weeksLostToInjury, 'the ending hazard reads the fact, not the forecast').toBe(5)
+    expect(row.weeksOut, 'the record keeps the weeks she was ACTUALLY out').toBe(4)
+    expect(row.weeksSaved).toBe(2)
+    expect(world.careerTotals.weeksLostToInjury, 'the ending hazard reads the fact, not the forecast').toBe(4)
     expect(world.events.some((e) => e.type === 'recovery' && e.text.includes('ahead of schedule'))).toBe(true)
   })
 
@@ -214,7 +214,7 @@ describe('4b. the effect – the rehab cadence, the channel the player can watch
   })
 
   it('a niggle gains nothing – nobody massages a one-week soreness away', () => {
-    for (const totalWeeks of [1, 2, 3]) {
+    for (const totalWeeks of [1, 2]) {
       const world = proWorld(`masseur-niggle-${totalWeeks}`)
       hireMasseur(world, true)
       withLayoff(world, totalWeeks)
@@ -223,21 +223,23 @@ describe('4b. the effect – the rehab cadence, the channel the player can watch
     }
   })
 
-  it('a long layoff loses roughly a week in three: 9 dealt, 7 served', () => {
+  it('a long layoff loses roughly a third: 9 dealt, 6 served', () => {
     const world = proWorld('masseur-rehab-long')
     hireMasseur(world, true)
     withLayoff(world, 9)
-    expect(walkOut(world)).toBe(7)
-    expect(world.injuryHistory[world.injuryHistory.length - 1].weeksSaved).toBe(2)
+    expect(walkOut(world)).toBe(6)
+    expect(world.injuryHistory[world.injuryHistory.length - 1].weeksSaved).toBe(3)
   })
 
   it('⚠ a suspended week is not a rehab week he works – the cadence skips a family week away', () => {
     const world = proWorld('masseur-rehab-vac')
     hireMasseur(world, true)
     withLayoff(world, 6)
-    // The one week his hands would have bought (rehab week 3) is booked as a family week away.
-    world.vacations = [{ week: world.week + 3, packageId: 'grandma', paidCents: 0 }]
-    expect(walkOut(world), 'no masseur week, no bought week').toBe(6)
+    // A cadence week (rehab week 2) is booked as a family week away: that extra never fires, the
+    // week-4 one still does, so she is out 5 instead of the worked-through 4.
+    world.vacations = [{ week: world.week + 2, packageId: 'grandma', paidCents: 0 }]
+    expect(walkOut(world), 'a stood-down week buys nothing; the next worked cadence week still does').toBe(5)
+    expect(world.injuryHistory[world.injuryHistory.length - 1].weeksSaved).toBe(1)
   })
 })
 

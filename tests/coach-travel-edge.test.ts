@@ -880,9 +880,34 @@ const FROZEN = {
    *  the offer's own draws live on `seed:collegeoffer:<week>` and are not reached at all here. The
    *  frozen MAIN capture (41550 / e6b0c709) is not re-pinned and was re-run green beside this
    *  re-freeze. */
-  middleGrinder: '3c1876b343be327f440f61f40a4f845e31274e74e729c3ad79807ca54d05e24c',
+  /** ⚠ MOVED WITH ITS TWINS ONCE MORE (22.08, the travelling team step 1 – the masseur, schema
+   *  v59), and for the first time the one line is a NEW KEY rather than a moved one: `masseurHired`
+   *  appears (hash fcbcf165908d = `false`) beside the `schemaVersion` bump. `PRE_V59` below is the
+   *  proof rather than the claim: rolling the schema back to 58 AND dropping that one key – which
+   *  is what "this save at v58" literally means, the key did not exist – reproduces the previous
+   *  three hashes byte for byte, for all three careers.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands. The wave sat alone on
+   *  `wave/staff-masseur` in its own worktree, so the control is a detached worktree at the branch
+   *  base `2a398f0` – which IS this branch with the wave's one commit reverted. Verified both ways
+   *  rather than assumed (the 17.08 null-arm hazard): `grep -c masseur` returns 0 in the A tree's
+   *  engine and the B tree carries both the field and its readers. All three arms (preset/policy
+   *  5/0, 8/0, 0/1), headers checked against the invocations: **`schemaVersion` moved
+   *  (6208ef0f7750 -> 3e1e967e9b79) and `masseurHired` appeared, and NOTHING ELSE** – `rngMain`,
+   *  `results`, `season`, `events`, `entries`, `fundsCents`, `condition`, `injury`,
+   *  `injuryHistory`, `careerTotals`, `skills` – every other key byte-identical on all three.
+   *
+   *  ⚠ AND THAT IS BY CONSTRUCTION. The hire is pro-career gated (`activeLadderOf === 'wta'`) and
+   *  no bench policy ever hires him, so `masseurHired` is false here – asserted in
+   *  `walkFrozenCareer`, not assumed – and every effect (the salary, the +1 condition, the rehab
+   *  cadence) sits behind `masseurWorksThisWeek`, which is false without a hire. `rngMain` is
+   *  unmoved for the sixteenth wave running, and it is the load-bearing half: the hire is a
+   *  boolean, the salary is a flat subtraction, and the rehab cadence is arithmetic off
+   *  (week − sinceWeek) – ZERO draws on any stream by design. The frozen MAIN capture
+   *  (41550 / e6b0c709) is not re-pinned and was re-run green beside this re-freeze. */
+  middleGrinder: 'e80068c63f04d7114443767c39a9c84d5db05a47263534fbc8e50b205e071657',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '1ab7aae6fc3b6a5df9e778e878c6dffff91b099f2c19f00d8bcf3bed8f45927f',
+  eliteGrinder: 'd76506b31c33b2805810f7d884ed89be4569ea7872953d767d7e0d152adc5af7',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1063,7 +1088,7 @@ const FROZEN = {
    *  the paragraph on `middleGrinder`, and `PRE_V57` below for the identity. */
   /** ⚠ MOVED WITH ITS TWINS a fourth time (22.08, round 24 #5, schema v58) – see the paragraph on
    *  `middleGrinder`, and `PRE_V58` below for the identity. */
-  selfTravelling: 'f3ad9f88a2b8b95572c5670a78d70939160ccf251a3511b6d0535bd9776c05de',
+  selfTravelling: '6105b4826fc4491d3a8898f81ec55f1db61040fe71087b0bd7fe9a030bee8471',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1114,6 +1139,16 @@ const PRE_V58 = {
   middleGrinder: '2137a9e5e2a69ca0af681e051b3c224dcb2179bc41c2f2c9f6eb4215b82064e2',
   eliteGrinder: '87b7f5860fb28f3147a416a275fd49fd8e8d684319fee18372df554c91a9cc1d',
   selfTravelling: '8d379176f767d1e74a986d585f45cd3d08a74f1d1517a68a26cc289700fae299',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v58 – the identity that proves the v59 re-freeze
+ *  (the masseur, travelling team step 1) moved the schema number, ADDED one inert key, and touched
+ *  nothing else. These are the v58-era `FROZEN` values verbatim; `careerHashAtSchema(…, 58)` drops
+ *  the key v59 added before hashing, because a v58 serialisation never held it. */
+const PRE_V59 = {
+  middleGrinder: '3c1876b343be327f440f61f40a4f845e31274e74e729c3ad79807ca54d05e24c',
+  eliteGrinder: '1ab7aae6fc3b6a5df9e778e878c6dffff91b099f2c19f00d8bcf3bed8f45927f',
+  selfTravelling: 'f3ad9f88a2b8b95572c5670a78d70939160ccf251a3511b6d0535bd9776c05de',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v55 – the identity that proves the v56 re-freeze
@@ -1258,6 +1293,11 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
   // under week 156 would go red HERE, with a sentence, instead of three hashes drifting for a
   // reason nobody could name.
   expect(world.fork, 'the v51 offer is unreachable in a frozen career: the fork is never raised').toBeNull()
+  // ⚠ v59: and none of them ever hires the masseur – the hire is pro-career gated and no bench
+  // policy takes it – so everything the travelling team's step 1 added is inert here by
+  // construction, not by luck. A policy that started hiring would move the hashes for a reason
+  // this line names instead of leaving three hashes drifting.
+  expect(world.masseurHired, 'the v59 seat is present and EMPTY in the frozen careers').toBe(false)
   return world
 }
 
@@ -1267,10 +1307,18 @@ function careerHash(presetIndex: number, policyIndex: number, force?: Partial<{ 
 
 /** The same walk, hashed with `schemaVersion` rolled back – the identity that proves the v50 re-freeze
  *  moved ONE key. Overwriting the value in place preserves `JSON.stringify`'s key order, so this is
- *  the same serialisation with one number changed and nothing else. */
+ *  the same serialisation with one number changed and nothing else.
+ *
+ *  ⚠ v59: A ROLLBACK BELOW 59 ALSO DROPS `masseurHired`, and that is what "this save at v58" means
+ *  rather than a convenience – the key did not exist at any earlier schema, so a pre-59
+ *  serialisation containing it would be a shape no shipped version ever wrote. It is the LAST key
+ *  of `createWorld`'s literal (placed there for exactly this), so dropping it leaves every other
+ *  key's order untouched and all seven older identities reproduce their constants byte for byte. */
 function careerHashAtSchema(presetIndex: number, policyIndex: number, schemaVersion: number): string {
   const world = walkFrozenCareer(presetIndex, policyIndex)
-  return createHash('sha256').update(JSON.stringify({ ...world, schemaVersion })).digest('hex')
+  const { masseurHired: _seat, ...preMasseur } = world
+  const shape = schemaVersion < 59 ? preMasseur : world
+  return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 
 describe('the byte-identity of a career that does not travel', () => {
@@ -1281,6 +1329,19 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v59: rolling the schema back to 58 – and dropping the key v59 added – reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT THE MASSEUR DID TO THESE THREE CAREERS, as an identity. The hire is
+    // pro-career gated and no bench policy takes it, so `masseurHired` is false here (asserted in
+    // `walkFrozenCareer`) and every effect sits behind `masseurWorksThisWeek`, which a false flag
+    // shuts. If the salary, the condition bonus or the rehab cadence had leaked into a career that
+    // never hired him, THIS case would be red beside the freeze – the one signal a whole-world
+    // hash cannot otherwise give. Unlike every earlier rollback this drops a KEY as well as a
+    // number, because v59 added one: see `careerHashAtSchema`.
+    expect(careerHashAtSchema(5, 0, 58), '25k · middle coach · grinder').toBe(PRE_V59.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 58), '120k · elite coach · grinder').toBe(PRE_V59.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 58), '8k · self-coached · player').toBe(PRE_V59.selfTravelling)
   })
 
   it('⭐⭐ v58: rolling ONLY the schema back to 57 reproduces the previous hashes byte for byte', () => {
