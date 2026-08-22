@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: economy
 canonical: false
-last-reviewed: 2026-08-20
+last-reviewed: 2026-08-22
 ---
 
 # Advertising contracts – what the sponsor ladder does NOT have (owner, round 24 item 2)
@@ -117,6 +117,7 @@ He asked for the additional mechanics («какие у нас могут быт�
 1. **Her own money.** Round 23 #18 already routes a share of prize money to `kidFundsCents` from
    eighteen. ⭐ An advertising deal is HERS by nature – a brand buys her face, not the family's – so
    this is the first income the parent genuinely does not control, and it needs no new machinery.
+   *(22.08: the rail is live in the tree since schema v54 – a fact now, not a prediction.)*
 2. **The refusal, and its reason.** A brand she will not be seen with. ⚠ This only works if declining
    is sometimes RIGHT – see §5.3.
 3. **Obligations that outlive form.** A three-season deal signed at a peak still owes its shoots two
@@ -128,6 +129,17 @@ He asked for the additional mechanics («какие у нас могут быт�
 
 ---
 
+## 4c. ⚠ The freeze: nobody writes to an amateur (round 24)
+
+At college the sponsor settle is gated off inside the freeze, and an advertising deal follows the
+same law – no offers arrive while she is enrolled. ⚠ Which raises the question §5 now carries: a
+deal SIGNED before the fork whose term crosses it. The honest candidates are a pause (the
+obligations wait for her return) or a lapse (the brand walks, no penalty – «мы ни за что не
+наказываем» applies to contracts too); a scripted punishment is out. Owner's call, needed before
+step 6 ships.
+
+---
+
 ## 5. Open for him
 
 1. **Is fame a number we are willing to own?** It is a second reputation axis and it will want a
@@ -136,6 +148,7 @@ He asked for the additional mechanics («какие у нас могут быт�
    cost; the second is free money wearing a cost's clothes.
 3. **Should refusing ever be right?** If declining is always wrong, it is not a decision. If it is
    sometimes right, the game has to say why – and that is a moral statement, not a balance one.
+4. **What happens to a live deal when she enrols?** Pause or lapse – see §4c.
 
 ---
 
@@ -155,3 +168,8 @@ He asked for the additional mechanics («какие у нас могут быт�
 
 ⚠ **STEPS 1-2 ARE A COMPLETE FEATURE.** Everything from 3 on is the second axis, and that is a much
 larger commitment – fame wants a surface, a fog rule and its own calibration.
+
+⚠ **AND THE PAUSE UPSTREAM (22.08):** the private life – fame's feeder and half of §2's claim – is
+paused by the owner until its own steps 1–2 exist. So steps 1–2 here are the only near-term
+shippable chunk, and the stop after step 2 is not merely complete – it is currently the only honest
+stopping place. Steps 3+ wait for `the-private-life.md` step 3 or later.

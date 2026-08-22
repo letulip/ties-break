@@ -1,4 +1,12 @@
-# The shop, the assets and the broker — backlog (owner, round 23 item 8, 19.08.2026)
+---
+type: plan
+status: draft
+area: economy
+canonical: false
+last-reviewed: 2026-08-22
+---
+
+# The shop, the assets and the broker – backlog (owner, round 23 item 8, 19.08.2026)
 
 This file records design intent, NOT a built feature. Fictional brands only. Player-facing copy uses
 the short dash "–". Money is in CENTS in the engine.
@@ -28,6 +36,21 @@ and its first job is to make late-career wealth mean something other than a bigg
 ⚠ **AND IT MUST NOT BECOME THE OPTIMAL PLAY.** If assets out-return the tennis, the correct strategy
 becomes "under-invest in her, buy property" – which inverts the entire premise. The design rule
 below is therefore: **assets never beat a career, they only survive one.**
+
+---
+
+## 0a. ⭐ The shop's best moment already exists: the college years (22.08)
+
+Round 24 made college a lived phase on the Home shell – and it is the one stretch where BOTH of this
+file's preconditions hold at once: the wallet finally rests (no travel, no coach, no entries –
+`college-as-a-place.md` §7d) and the parent has no weekly job to do (§7c-orig of the same file).
+Four years of idle money and an idle parent are exactly what a shop is for. Mechanically it is ready
+to be allowed there: a shop command is about the FAMILY'S OWN money, i.e. the `guardNotEndedForGood`
+class round 24 created – the short list that already holds the vacation cancels and the birthday
+gift – not the tour-command guard that refuses inside the freeze.
+
+⚠ **An opportunity, not a dependency.** The owner's word for this branch is «независимый», and it
+stays true: the shop needs nothing from college, it merely lands best there.
 
 ---
 
@@ -64,7 +87,7 @@ the rest of the app is made of.
 
 ---
 
-## 3. Prices that move — the owner's own list, made mechanical
+## 3. Prices that move – the owner's own list, made mechanical
 
 > «чтобы что-то могло обесцениться, например, или стихийно взлететь в цене. Или вообще заморозиться
 > на неопределенный срок»
@@ -138,6 +161,8 @@ band, so the two compete for the same money and the player has to choose.
    good ending; one that silently drops them is a bug the player will feel.
 4. **Is any of it inheritable by HER?** Round 23 item 18 asks for prize money to reach her account
    at 18. If she has money, does she have a shelf of her own? That is a much bigger game.
+   *(22.08: the rail exists – `kidFundsCents` is live since schema v54. The design question stands;
+   the plumbing no longer blocks it.)*
 
 ---
 

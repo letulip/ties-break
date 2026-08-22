@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: life
 canonical: false
-last-reviewed: 2026-08-20
+last-reviewed: 2026-08-22
 ---
 
 # The private life – relationships, loss, and what a parent is allowed to know
@@ -14,8 +14,12 @@ The owner, round 24 item 3:
 > мораль и психолог до кучи. Очень большой слой, как мне кажется. Давай хотя бы в отдельный файл план
 > и идеи сложим?»
 
-⚠ **A PLAN, NOTHING BUILT.** And the first job of this file is to say why the layer is bigger than it
-looks, because that is the part that decides whether it is ever worth starting.
+⚠ **A PLAN, NOTHING OF THE LAYER BUILT.** And the first job of this file is to say why the layer is
+bigger than it looks, because that is the part that decides whether it is ever worth starting.
+
+⚠ **22.08:** the owner paused the fork-opinion surface («где-то её мнение увидеть… да, пока на
+паузе») until this layer's steps 1–2 exist – the exact sequencing §6 argues for. And round 24 built
+two things this layer will inherit; see the last two rows of §1's table.
 
 ---
 
@@ -56,6 +60,8 @@ Named so nobody rebuilds it:
 | the fork machinery | `world/college.ts`, `answerFork` | a life decision that stops the career and asks – the exact shape needed |
 | `coachRoomNote`'s fog | `coachMarket.ts` | the house rule for saying something true without a number |
 | the psychologist | ⚠ NOT BUILT – `docs/plans/the-travelling-team-2026-08.md` | see §4 |
+| the birthday dialog + `world.birthdays` | `world/birthday.ts`, round 24 | ⭐ a beat the parent ANSWERS inside a paused week – the exact «reaction surface» shape step 2 needs, already built and walked; the gift is free by the owner's ruling, so a reaction is never a purchase |
+| the college pause machinery | `resumeFromCollege` stops, `pendingYearStart` | a life beat can stop a running year and wait on the live shell – built for the birthday, reusable for any beat that must be answered |
 
 ⚠ **THERE IS NO MORALE STAT, AND THAT IS THE FIRST DECISION.** The owner's item names «мораль» as if
 it exists. It does not. `composure` is a SKILL – a permanent attribute that grows toward a ceiling –
@@ -132,6 +138,10 @@ the player sees her come back sooner than last time, and knows why.
 ⚠ Which means the ORDER matters: the psychologist should probably not ship before 3a/3b exist, or he
 has nothing to be good at.
 
+⭐ **RULED 22.08:** he now officially ships HERE, as step 5 – the owner moved him out of
+`the-travelling-team-2026-08.md`'s step 1, for this section's own reason. His salary, his
+remote-only shape and his open travel question arrive with him.
+
 ---
 
 ## 4a. ⭐⭐ ANSWERED BY THE OWNER – and it supplies the mechanic the layer was missing
@@ -157,17 +167,26 @@ Three consequences, and they are what the beats in §3 should be built to:
 3. **A wrong reaction has to be able to cost something**, or the choice is decoration. ⚠ And it must
    be recoverable, or one bad click at fifteen ruins a ten-season career, which is not a game.
 
+⚠ **AND THE FIRST SCENE HAS A HOME WAITING (22.08):** D2 splits the college fork into ask (when
+school ends) – hold – depart (September). A decision taken in the spring and acted on in the autumn
+is exactly where her opinion has room to matter, and the gap now exists in the engine. When step 2's
+reaction surface lands, the fork gap is its readiest beat.
+
 ⚠ **AND THE STAT DOES NOT EXIST YET**, which he confirms: «сейчас этого показателя нет вообще, мы как
 раз делаем так, чтобы он появился». So this layer is not "add events to an existing system" – it is
 where the system itself gets built, and everything in §3 depends on §2's spine landing first.
 
 ## 5. The questions only the owner can answer
-2. **Can any of it be refused at the start?** A career sim that inserts a bereavement into somebody's
+
+*(Question 1 – does the parent get a say at all – was answered and now lives as §4a above; the rest
+are renumbered.)*
+
+1. **Can any of it be refused at the start?** A career sim that inserts a bereavement into somebody's
    evening without asking is a different product from one that does not. This is a settings question
    before it is a design one.
-3. **Does the career survive motherhood in OUR model, or is it an ending?** The research says both
+2. **Does the career survive motherhood in OUR model, or is it an ending?** The research says both
    happen in life. The game has to pick, or offer both.
-4. **How much can `spirit` move a match?** If it is small, the layer is decoration. If it is large,
+3. **How much can `spirit` move a match?** If it is small, the layer is decoration. If it is large,
    the parent is watching a number he cannot touch decide his daughter's season. ⚠ Neither extreme is
    right and the middle needs a bench, not a taste.
 
