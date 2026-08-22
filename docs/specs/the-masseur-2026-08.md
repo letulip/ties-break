@@ -376,3 +376,97 @@ second travelling specialist; the psychologist went remote by the owner's own ru
   each to retune, and the bench grid re-runs as-is.
 * The psychologist ships with the private-life layer (the 22.08 re-cut), where §6's fare question
   will be asked again for a THIRD seat – `staffSeatFareCents` is already the one place to ask it.
+* The owner rules on §10 – the recovery-base question is measured, nothing is shipped.
+
+## 10. ⭐ The owner's recovery question (22.08) – A/B/C measured, NOTHING SHIPPED
+
+His proposal, verbatim: «может быть нам тогда стоит дефолтное восстановление с 10 в неделю на 7
+опустить? тогда массажист как раз будет еще немного накидывать, может вполне гармонично получиться,
+как мне кажется». His 10 = `recoveryBase` 8 + the 60/40 slider's +2 (§4's own unit), so his 7 =
+**base 5**. Three arms, same 32 paired seeds per preset, same walk (`tools/masseur-bench.ts`,
+cells none / 4-a-week home / 4-a-week tour – the DEFAULT rung), phase-split junior/pro on the
+masseur's own gate:
+
+* **A** – as-is (base 8), tree clean at `5e61373`.
+* **B** – his drop read literally: `recoveryBase: 5`, the CONSTANT – so the junior era, both
+  makeup paths and ALL 199 RIVALS move with it (they read the same knob, rival.ts).
+* **C** – the pro-only variant: base 5 only while `activeLadderOf === 'wta'` (the masseur's own
+  unlock boundary), patched at the kid's three readers – `accrueCondition` plus the two 18.08
+  makeup expressions – juniors and rivals keep 8.
+
+Both patches were LOCAL and are reverted byte-clean (`git status src/` empty between arms); each
+arm's reader was proven by the null-result law first – the constant set to an absurd 0 moved junior
+condition 91→77-79 in B, and in C cratered the pro phase while leaving the junior phase
+byte-identical. C's junior identity then held over the full grid: **junior deltas C−A = 0.00±0.00
+on every metric, every cell, every seed** – the gate is the phase split.
+
+`tests/condition.test.ts` per arm, predicted → measured: A green (gate log) → green 44/44.
+B «capture green, literal pins red» → exactly that: count 41550 / hash e6b0c709 byte-identical
+(zero draws anywhere near this knob), 3 red = the two B2 free-week-ladder literals (95/90 assume
+base 8; base 5 arithmetic lands 65/60) and the POST-draw dense-rank pin (90 → 95 – slower rivals
+re-deal who holds counting points). C «all green – no unit fixture holds a counting W result» →
+green 44/44. The capture cannot see any of these arms, as §4 predicted it could not.
+
+### The base game per arm (cell `none`; paired Δ vs A, ± = SEM; pro pairs need the gate in both)
+
+| 25k · middle | A | B (Δ vs A) | C (Δ vs A) |
+| --- | --- | --- | --- |
+| junior condition | 89.7 | **−1.56 ± 0.35** | 0.00 ± 0.00 |
+| pro condition | 83.0 | **−1.63 ± 0.59** | **−1.89 ± 0.32** |
+| pro weeks under medical floor | 1.03% | −0.08 ± 0.18 pp | +0.17 ± 0.13 pp |
+| pro onsets / arrival vetoes | 5.19 / 1.10 | −0.11 ± 0.48 / −0.36 ± 0.32 | −0.52 ± 0.38 / +0.19 ± 0.19 |
+| weeks lost to injury (career) | 20.3 | **−2.78 ± 1.56** | −0.69 ± 1.13 |
+| pro match wins | 247.9 | −4.6 ± 9.8 | −10.1 ± 6.3 |
+| end W rank (positive = worse) | 38 | +9.5 ± 9.1 | +16.7 ± 12.1 |
+| prize Δ | $3.10M | −$70k ± 354k | −$223k ± 258k |
+| reached the pro gate / endings | 31/32 · 32 alive | **29/32** · 31 + **1 bankruptcy** | 31/32 · 31 + 1 injury |
+
+| 8k · working | A | B (Δ vs A) | C (Δ vs A) |
+| --- | --- | --- | --- |
+| junior condition | 89.8 | **−2.24 ± 0.45** | 0.00 ± 0.00 |
+| pro condition | 83.0 | **−1.59 ± 0.63** | **−1.15 ± 0.30** |
+| pro weeks under medical floor | 0.86% | +0.22 ± 0.13 pp | +0.07 ± 0.09 pp |
+| pro onsets / arrival vetoes | 4.55 / 0.74 | +0.36 ± 0.54 / +0.14 ± 0.19 | −0.29 ± 0.28 / +0.03 ± 0.16 |
+| weeks lost to injury (career) | 17.1 | −0.16 ± 1.66 | +0.34 ± 0.84 |
+| pro match wins | 243.9 | +5.9 ± 10.2 | −0.3 ± 2.7 |
+| end W rank (positive = worse) | 33 | +10.1 ± 9.7 | **+5.7 ± 3.2** |
+| prize Δ | $4.92M | **−$796k ± 574k** | −$298k ± 344k |
+| reached the pro gate / endings | 31/32 · 31 + 1 injury | **29/32** · 29 + **2 bankruptcies** + 1 injury | 31/32 · **32 alive** |
+
+Severity mix moves nowhere (minor/moderate ratios within noise in every arm). B's careers also
+unlock EARLIER (−7.4 / −9.1 weeks to the gate): rivals bear the full base-5 with no slider, no
+physio, no vacations, while the kid's policy compensates – the global drop makes her junior era
+RELATIVELY easier, a side-effect nobody asked for.
+
+### The masseur's uplift per arm (hired − none, same seed, default rung)
+
+| cell · preset | A | B | C |
+| --- | --- | --- | --- |
+| 4/wk home · 25k – weeks lost | **−0.78 ± 0.39** | +0.16 ± 0.50 | **−0.75 ± 0.57** |
+| 4/wk home · 25k – rehab receipts | 1.06 | 0.63 | **1.19** |
+| 4/wk tour · 25k – pro condition | +1.29 ± 0.20 | +1.15 ± 0.20 | +0.97 ± 0.16 |
+| 4/wk home · 8k – weeks lost | −1.25 ± 0.65 | −1.00 ± 0.49 | **−1.44 ± 0.49** |
+| 4/wk tour · 8k – weeks lost | **−1.56 ± 0.62** | 0.00 ± 0.61 | **−2.03 ± 0.65** |
+| 4/wk tour · 8k – pro condition / wins | +1.84 ± 0.27 / +9.6 ± 3.5 | +1.46 ± 0.24 / +7.0 ± 2.8 | +1.53 ± 0.33 / +9.4 ± 3.0 |
+
+### Verdict, in his words
+
+**B is not «гармонично» – it bleeds everywhere and the masseur SHRINKS.** The global cut lands
+2/3 of its damage outside the place he aimed at: the junior era drops 1.6-2.2 condition (3.5-5
+SEM), two careers per preset never turn professional inside 8 seasons, three new bankruptcies
+appear across 64 base careers (the working preset loses ~$800k of prize money), and the one thing
+the proposal was FOR – «массажист будет еще немного накидывать» – measures BACKWARDS: his rehab
+receipts drop ~40% (1.06→0.63, 1.63→1.19) and his weeks-lost uplift goes to statistical zero in
+two of four cells, because the world he works in is poorer, plays less and deals him thinner
+layoffs.
+
+**C is the shape of his sentence.** Junior era byte-untouched, rivals untouched; the pro phase
+gets honestly harder exactly where he pointed – condition −1.2..−1.9 (4-6 SEM), wins −6..−10 at
+25k, rank +6..+17, prize down inside noise, zero new bankruptcies – and the masseur's weeks-bought
+channel reads AS LARGE OR LARGER than today (8k tour −2.03 vs −1.56; receipts held), though that
+enlargement is directional (~1 SEM), not proven. The «накидывать» arithmetic also only works in C:
+base 5 + slider 2 + his rung's +1 = 8 for a staffed pro against today's unstaffed 10.
+
+**Recommendation**: if the 10→7 drop is wanted, ship it as C – pro-phase-only, on the masseur's
+own boundary (three engine lines; capture and every test stay green) – and never as the global
+constant. B should not ship in this form.
