@@ -1329,6 +1329,94 @@ export const ECONOMY = {
     masseur: { titleBps: 300, finalBps: 150 },
   } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number }>,
 
+  // =================================================================================================
+  // THE ADVERTISING DEAL (round 24 item 2, docs/plans/the-face-and-the-court.md §6 STEPS 1-2)
+  // =================================================================================================
+  //
+  // THE OWNER: «Рекламные контракты будем добавлять какие-то?» – and the plan's answer is that the
+  // kit ladder above is complete and ENDEMIC (tennis brands paying for tennis), so what is missing
+  // is the other kind entirely: a non-endemic house paying cash for her FACE. Step 1 is the smallest
+  // honest slice of it – one offer, results-gated, cash only; step 2 gives the cheque its price in
+  // TIME (the shoot weeks below, §4a) – and the build stops there on the plan's own order: fame
+  // (step 3+) is paused upstream with the private life.
+  //
+  // ⚠ WHERE THE GATE SITS IS THE PLAN'S OWN MEASUREMENT (§3, the owner's two careers): at Ines'
+  // level (24, interest $251,439 a year against $220,000 of ALL outgoings) an advertising cheque is
+  // noise; at Alice's (18, interest $3,235 against $64,000 of outgoings) it is real money against a
+  // real budget. So the deal belongs EARLY – mid-career, where the budget is still tight – which
+  // inverts the instinct to gate it on the top ten.
+  advertising: {
+    /** The age the owner scoped advertising mechanics to («какие у нас могут быть механики этих
+     *  контрактов дополнительные от 18+ лет начиная и дальше»). Eighteen is already the engine's
+     *  threshold age – `kidShare.fromAgeYears` above starts her own prize split there, school is
+     *  over by 18.92 for every birth month, the junior rungs shut – so the boundary exists and this
+     *  reads the same clock (`kidAgeYears`, the one-clock ruling of 09.08). */
+    fromAgeYears: 18,
+    /** THE RESULTS BAR: a counting W standing inside the world's top 200. Two hundred is the number
+     *  the game already uses for "the first professional rung that pays cash" – the tour rung's
+     *  `maxWtaRank` (Baseline Athletic, the first retainer) – so a non-endemic brand notices her
+     *  exactly when the first endemic cash does: a measured boundary, not an invented one. Its OWN
+     *  constant rather than a read of `sponsorship.tour`, the `appearanceFromTier` instinct: a kit
+     *  retune must never silently retune advertising.
+     *
+     *  ⚠ WHY NOT TOP-100 OR TIGHTER: `development.ageCurve` is calibrated «first points 17-18,
+     *  top-100 about 4.5 years later» – a top-100 bar would first clear at ~22, Ines territory,
+     *  where §3 measured the cheque as noise. Top-200 is crossed on the way up, at 18-20, which is
+     *  Alice's stage – the years the plan says the deal is worth building for. And there is
+     *  deliberately no UPPER cutoff: a top-10 girl still qualifies, her cheque is simply noise, which
+     *  is §3's claim and not a bug. The `wtaRanked` guard is the ladder's own: everybody without a
+     *  counting W result ties at the floor of that table, so a position there is not a standing. */
+    maxWtaRank: 200,
+    /** THE FEE, in cents, once, on signature. Sized against the plan's §3 numbers: about 31% of
+     *  Alice's-stage ANNUAL outgoings ($64,000) – felt, not budget-solving; more than three times
+     *  the tour rung's cash for a season ($1,500/qtr), because «cash, and a lot of it» is the whole
+     *  difference between this letter and the kit ladder at her rung; and under the premium rung's
+     *  $30,000-a-year retainer, so mid-career the endemic ladder still out-earns one photograph.
+     *  At Ines' stage it is 8% of her interest alone – noise, exactly as §3 predicts. Its measured
+     *  counterweight is the shoot weeks below: two weeks a term that recover like travel weeks,
+     *  benched in docs/specs/ad-shoot-recovery-2026-08.md. */
+    cashCents: 20_000_00,
+    /** Twelve months of her face, from the week the paper is signed. While the term runs no second
+     *  advertising letter arrives – one deal at a time, the plan's §4.1 – and it survives a college
+     *  enrolment by simply running out on its own clock (plan §4c: no penalty, ever; a shoot week
+     *  the freeze swallows lapses silently with it). */
+    termWeeks: 52,
+    /** ⭐ STEP 2 (§4a, owner ruling 22.08: «съемки должны быть иногда и это надо как-то прописывать
+     *  и отражать потом в свободных неделях, соответственно и восстановления на тех неделях должно
+     *  быть чуть меньше», sized and approved: «утверждаю, для начала точно ок») – HOW MANY SHOOT
+     *  WEEKS the term asks. Exactly two for Quiet Hour, IN-SEASON by construction (§5.2's own
+     *  answer: an off-season cost is free money wearing a cost's clothes), named in the letter at
+     *  signature so the player plans the season around them. Frozen onto `AdOfferTerms.shootCount`
+     *  at arrival. The bigger asks – campaigns 3-4, global houses 5-6, a cap of 6 a year – are
+     *  RECORDED in the plan doc only and deliberately not built: this catalogue has one house.
+     *
+     *  The COST of a shoot week is not a number here on purpose: it is a SHAPE, the owner's own
+     *  design – the week recovers like a travel week (`condition.matchWeekRecoveryBase`) rather
+     *  than a rest week (`condition.recoveryBase` + the slider). One modifier on an existing weekly
+     *  figure, no second calendar, no blocking: see `accrueCondition`. */
+    shootWeeksPerTerm: 2,
+    /** The earliest a shoot may land after the signature, in weeks – the studio is booked about a
+     *  month out, and it is the same courtesy the letter's own four decide weeks extend: a cost the
+     *  player can SEE coming is a plan, a cost that lands the week he agreed to it is a trap. Engine
+     *  mechanics of the choice, not a promise on the paper – so it is read at signature, not frozen
+     *  into terms. */
+    shootLeadWeeks: 4,
+    /** The weekly chance a qualifying week produces the letter, on its own sub-stream
+     *  (`seed:ad:<week>`, never MAIN). 5% a week puts the median arrival ~13 weeks after she
+     *  crosses the bar and the mean ~20 – the plan's §2 row «when it arrives: after results, and it
+     *  LAGS them», bought with one number instead of a second calendar. Unlike the kit window's
+     *  once-a-season 70%, this rolls weekly because a campaign is not an off-season ritual: brands
+     *  write when they notice her. */
+    offerChance: 0.05,
+    /** Four weeks to decide – the same thinking time the kit window's letters get («давать человеку
+     *  какое-то время на подумать»), stated on the paper and enforced by `expireOffers`. */
+    decideWeeks: 4,
+    /** THE HOUSE THAT WRITES: a watchmaker – the plan's own first example of non-endemic («a watch,
+     *  a bank, an airline, a cosmetics house»). Fictional, like every brand on the ladder above,
+     *  and deliberately nothing constructible into a real company or trademark. */
+    brand: 'Quiet Hour',
+  },
+
   // Season-Life condition accumulator (0..100, 100 = fresh). Pure INTEGER arithmetic –
   // accrueCondition draws ZERO main-stream RNG, so none of these can shift the weekly draw
   // sequence (the B1 invariance test guards it).

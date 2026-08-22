@@ -270,13 +270,13 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, chargeCoachTravel, masseurTravelFareFor, chargeMasseurTravel, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, chargeCoachTravel, masseurTravelFareFor, chargeMasseurTravel, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
-export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
-import { restRecoveryBonus, recoveryBaseFor, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
-export { restRecoveryBonus, recoveryBaseFor, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
+export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
+import { restRecoveryBonus, recoveryBaseFor, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
+export { restRecoveryBonus, recoveryBaseFor, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.
@@ -3177,6 +3177,18 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //   from being free money. `reviewSponsors` draws on `seed:offer:<week>`, never MAIN.
   if (isSponsorWindowWeek(world.week) && !inCollege(world)) reviewSponsors(world)
 
+  // ⭐ 0a0c-quater (round 24 item 2, the-face-and-the-court.md §6 STEP 1): AND, FROM EIGHTEEN, THE
+  //         OTHER KIND OF SPONSOR – a non-endemic house paying cash for her face. Weekly rather than
+  //         windowed, because a campaign is not an off-season ritual and the plan's own table says
+  //         the deal LAGS results; the gate (18+, a counting W standing inside the bar, one deal at
+  //         a time) is `reviewAdOffer`'s own. Behind the SAME freeze gate as the kit review one line
+  //         up – «nobody writes to an amateur» silences both kinds of sponsor identically, while a
+  //         deal SIGNED before she enrolled keeps its banked fee and lapses on its own clock, its
+  //         shoot weeks lapsing silently with it (plan §4c – no penalty, ever; `accrueCondition`
+  //         guards the freeze before it charges a shoot). At most one draw, on `seed:ad:<week>`,
+  //         never MAIN: the frozen capture (41550 / e6b0c709) cannot see it.
+  if (!inCollege(world)) reviewAdOffer(world)
+
   // 0a0c-ter (W3-ACT2 §7): AND THE PROFESSIONAL RUNGS PAY A QUARTERLY RETAINER. Four arrivals a
   //         season on fixed offsets (0 / 13 / 26 / 39) rather than one number at the boundary,
   //         because a retainer is a WAGE and one annual figure would read as the cheque the whole
@@ -3481,30 +3493,24 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     })
     // The week is match-free after all, so she earns the FULL free-week recovery ladder that
     // accrueCondition withheld when it still believed she would play (it ran with played = true, so
-    // she banked matchWeekRecoveryBase instead of recoveryBase + the rest-slider bonus). Written as
-    // the DIFFERENCE so it lands on exactly what a non-playing week pays, whatever the two knobs
-    // are set to – and so this stays byte-consistent with the bench's independent trace, which
-    // reads the week as free. Integer, clamped, zero draws.
+    // she banked matchWeekRecoveryBase instead of recoveryBase + the rest-slider bonus). The
+    // difference is the ONE oracle `withheldFreeWeekRecovery` computes for all three refund sites
+    // ('tournament' names the rung that was banked), so it lands on exactly what a non-playing week
+    // pays, whatever the knobs are set to – and ⭐ on a SHOOT week (ad step 2, §4a) that is the
+    // travel figure she already banked, so nothing is owed: the first ad-shoot bench caught this
+    // exact site refunding a shoot week its rest (+9) through the doctor's arm. Integer, clamped,
+    // zero draws.
     //
     // ⭐ THE NOTE THAT USED TO STAND HERE IS ANSWERED (18.08). It read: "skipEvent (R9-9) hands back
     // the rest-slider bonus ALONE … a skipped event week still under-pays by recoveryBase. NOT touched
     // here: fixing it moves shipped condition traces, which is a tuning call, not a merge call."
     // The owner ruled it a fix rather than a tuning call - the two weeks are the same week - and
-    // `skipEvent` now uses this identical expression. The two paths cannot part again without both
-    // being edited.
-    //
-    // ⭐ v59 STEP 2: AND THE MASSEUR'S AT-HOME TABLE WITH IT, for the same 18.08 reason. Since the
-    // dial his bonus is withheld on played weeks (she is away, nobody is on the table) – so a week
-    // that turns out match-free after all has to hand it back, or the doctor's veto quietly costs a
-    // staffed family the rung bonus it costs nobody else.
-    // ⭐ THE PHASE'S OWN BASE (owner 22.08, recovery variant C): `recoveryBaseFor` – 8 junior, 5
-    // pro – or the veto would hand a professional back 3 more than an ordinary week pays her.
+    // `skipEvent` now reads the identical oracle. The paths cannot part again: there is one
+    // expression left to edit.
+    // ⭐ ROUND-25 COLLECT: the oracle also carries the phase base (variant C) and the masseur's
+    // table since the merge – the two waves' parallel edits to this seam, folded into one expression.
     world.condition = clamp(
-      world.condition +
-        (recoveryBaseFor(world) - ECONOMY.condition.matchWeekRecoveryBase) +
-        restRecoveryBonus(world.plan.rest) +
-        (masseurWorksThisWeek(world) ? masseurRungOf(world).conditionBonusPerWeek : 0),
-      ECONOMY.condition.min,
+      world.condition + withheldFreeWeekRecovery(world, 'tournament'),      ECONOMY.condition.min,
       ECONOMY.condition.max,
     )
   } else if (enteredThisWeek) {
@@ -3861,16 +3867,12 @@ export function skipEvent(world: WorldState, eventId: string): void {
   // ⚠ THE THIRD CASE IS DELIBERATELY UNTOUCHED, and the owner named it: retiring MID-MATCH through
   // injury. She walked on court and played, so that week is not match-free and never reaches here.
   //
-  // ⭐ v59 STEP 2: the masseur's at-home rung bonus rides in the same makeup, for the identical
-  // 18.08 reason – see the medical-withdrawal arm; the two paths carry the same expression.
-  // ⭐ AND THE PHASE'S OWN BASE with it (owner 22.08, recovery variant C): `recoveryBaseFor` – 8
-  // junior, 5 pro – the same helper all three readers share, so the paths cannot part again.
+  // ⭐ SHOOT-AWARE SINCE AD STEP 2 (§4a): the oracle pays nothing on a shoot week – the travel
+  // figure was banked and the travel figure is what that week's rest is worth, skipped event or no.
+  // ⭐ ROUND-25 COLLECT: the oracle also carries the phase base (variant C) and the masseur's
+  // table since the merge – the two waves' parallel edits to this seam, folded into one expression.
   world.condition = clamp(
-    world.condition +
-      (recoveryBaseFor(world) - ECONOMY.condition.matchWeekRecoveryBase) +
-      restRecoveryBonus(world.plan.rest) +
-      (masseurWorksThisWeek(world) ? masseurRungOf(world).conditionBonusPerWeek : 0),
-    ECONOMY.condition.min,
+    world.condition + withheldFreeWeekRecovery(world, 'tournament'),    ECONOMY.condition.min,
     ECONOMY.condition.max,
   )
   // Close the week: the rank recompute + housekeeping that tickWeek deferred to the flow.

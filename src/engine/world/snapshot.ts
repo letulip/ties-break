@@ -21,7 +21,7 @@ import { formatShortName } from '../../shared/format'
 import { coachById, tierOf } from '../coach'
 import { coachManagesLoad, coachWarnsEntry } from '../coachLoad'
 import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
-import { hasLiveOffer, seasonLastWeek } from '../offers'
+import { activeAdDeal, hasLiveOffer, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
@@ -38,6 +38,7 @@ import { entrantNationAt, weekFieldExclusion } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
 import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId } from '../season/types'
 import {
+  type AdOfferTerms,
   type ArrivalPreview,
   type CountingResult,
   type LadderView,
@@ -832,6 +833,16 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
             ? (world.fork.departsWeek ?? null)
             : null
         : null,
+    // ⭐ AD STEP 2 (§4a) – the running endorsement's shoot weeks, off the signed paper's own frozen
+    // terms (`activeAdDeal` honours [fromWeek, untilWeek] and not a week further), so the calendar's
+    // markers and the recovery `accrueCondition` actually charges can never name different weeks.
+    // Null with no deal in force; the brand rides along so the row can say whose shoot it is.
+    adShoot: (() => {
+      const deal = activeAdDeal(world.offers, world.week)
+      if (!deal) return null
+      const t = deal.terms as AdOfferTerms
+      return t.shootWeeks && t.shootWeeks.length > 0 ? { brand: t.brand, weeks: [...t.shootWeeks] } : null
+    })(),
     fundsCents: world.fundsCents,
     profile: world.profile,
     plan: world.plan,

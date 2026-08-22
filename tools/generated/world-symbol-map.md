@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (4,268 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (4,270 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-266 exported names across 31 owning modules.
+269 exported names across 31 owning modules.
 
 ## Areas
 
@@ -17,12 +17,12 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 24 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 22 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
-| `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 18 |
+| `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 20 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 15 |
+| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 13 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 12 |
-| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 12 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
@@ -136,6 +136,7 @@ THE LADDER: where she stands, and what that standing opens.
 THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
 
 - `accrueCondition` – `src/engine/world/medical.ts`
+- `adShootHolds` – `src/engine/world/medical.ts`
 - `arrivalStatus` – `src/engine/world/medical.ts`
 - `ArrivalStatus` *(type)* – `src/engine/world/medical.ts`
 - `ArrivalVerdict` *(type)* – `src/engine/world/medical.ts`
@@ -153,6 +154,7 @@ THE GATES: condition, the doctor's veto, the layoff, and whether she may enter a
 - `MedicalClearance` *(type)* – `src/engine/world/medical.ts`
 - `recoveryBaseFor` – `src/engine/world/medical.ts`
 - `restRecoveryBonus` – `src/engine/world/medical.ts`
+- `withheldFreeWeekRecovery` – `src/engine/world/medical.ts`
 
 ### `src/engine/world/entryCaps.ts`
 
@@ -216,6 +218,24 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
 
+### `src/engine/world/sponsors.ts`
+
+THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
+
+- `acceptOffer` – `src/engine/world/sponsors.ts`
+- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
+- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
+- `declineOffer` – `src/engine/world/sponsors.ts`
+- `isRetainerWeek` – `src/engine/world/sponsors.ts`
+- `localSponsorCents` – `src/engine/world/sponsors.ts`
+- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
+- `resultBonusFor` – `src/engine/world/sponsors.ts`
+- `reviewAdOffer` – `src/engine/world/sponsors.ts`
+- `reviewSponsors` – `src/engine/world/sponsors.ts`
+- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
+- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
+- `travelCostFor` – `src/engine/world/sponsors.ts`
+
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
@@ -232,23 +252,6 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `resolveCollegeDeparture` – `src/engine/world/endings.ts`
 - `resolveEndings` – `src/engine/world/endings.ts`
 - `wasThereAChild` – `src/engine/world/endings.ts`
-
-### `src/engine/world/sponsors.ts`
-
-THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
-
-- `acceptOffer` – `src/engine/world/sponsors.ts`
-- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
-- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
-- `declineOffer` – `src/engine/world/sponsors.ts`
-- `isRetainerWeek` – `src/engine/world/sponsors.ts`
-- `localSponsorCents` – `src/engine/world/sponsors.ts`
-- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
-- `resultBonusFor` – `src/engine/world/sponsors.ts`
-- `reviewSponsors` – `src/engine/world/sponsors.ts`
-- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
-- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
-- `travelCostFor` – `src/engine/world/sponsors.ts`
 
 ### `src/engine/world/birthday.ts`
 

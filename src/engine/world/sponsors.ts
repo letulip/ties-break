@@ -16,12 +16,13 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { activeKitDeal, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { activeKitDeal, adSpokenFor, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
-import { LADDER_LABEL, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
+import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidPoints, tableSize } from './ladder'
 import { KID_ID } from './constants'
+import { kidAgeAt } from './age'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
 
@@ -531,6 +532,60 @@ export function reviewSponsors(world: WorldState): void {
   addEvent(world, { week: world.week, type: 'info', text: parts.join(' ') })
 }
 
+// =================================================================================================
+// THE ADVERTISING LETTER'S GATE (round 24 item 2, the-face-and-the-court.md §6 step 1)
+// =================================================================================================
+//
+// «Рекламные контракты будем добавлять какие-то?» – and step 1 of the plan's answer, whole: ONE
+// non-endemic offer, gated on results only, cash only, no cost at all. The paper and its dice live
+// in engine/offers.ts (`raiseAdOffer` / `adWritesAt`); this function is the gate, because the gate
+// is made of things only the world knows – her age, her standing, what is already on the table.
+//
+// ⚠ THE COLLEGE FREEZE IS NOT CHECKED HERE, AND THAT IS THE SPONSOR REVIEW'S OWN LAYOUT. «Nobody
+// writes to an amateur» is enforced where the tick calls this – `if (!inCollege(world))
+// reviewAdOffer(world)`, the exact gate `reviewSponsors` stands behind one line up – so the two
+// kinds of sponsor can never disagree about what the freeze silences. A deal SIGNED before she
+// enrols is deliberately untouched: the fee was banked the week the paper was signed, so the term
+// simply keeps running and lapses on its own clock – no pause, no clawback – and a shoot week the
+// freeze swallows lapses silently with it (`accrueCondition` guards the freeze before it charges;
+// no penalty, no makeup week): «мы ни за что не наказываем» applies to contracts too (plan §4c).
+//
+// RNG DISCIPLINE: at most ONE draw, on `seed:ad:<week>` – its own purpose-scoped sub-stream inside
+// `adWritesAt`, created, read once, discarded. ZERO draws on MAIN, and the draw is keyed on the
+// week, so a save reloaded and replayed gets the same letter on the same Monday. The frozen MAIN
+// capture (41550 / e6b0c709) cannot see it.
+
+/** WHETHER THIS IS THE WEEK A CAMPAIGN NOTICES HER – and if it is, the letter is raised. Weekly,
+ *  not windowed: an endorsement is not an off-season ritual, and the plan's own table says the deal
+ *  LAGS results – `ECONOMY.advertising.offerChance` a week, from the week she qualifies, is that
+ *  lag with no second calendar. */
+export function reviewAdOffer(world: WorldState): void {
+  const s = ECONOMY.advertising
+  // FROM EIGHTEEN («от 18+ лет начиная») – her real age, `kidAgeYears` through `kidAgeAt`, the
+  // one-clock ruling: never the band's clock, never a birthday approximation.
+  if (kidAgeAt(world, world.week) < s.fromAgeYears) return
+  // RESULTS ONLY: a counting professional standing inside the bar. The `wtaRanked` guard is the
+  // brand ladder's own – a floor tie is not a standing – and the bar is measured, not invented:
+  // see ECONOMY.advertising.maxWtaRank for the §3 arithmetic that puts it at the tour rung's 200.
+  const standing = sponsorStandingOf(world)
+  if (!standing.wtaRanked || standing.wtaRank > s.maxWtaRank) return
+  // ONE DEAL AT A TIME (plan §4.1): a letter still open on the table, or a signed term still
+  // running, turns the next house away before any dice are read.
+  if (adSpokenFor(world.offers, world.week)) return
+  if (!adWritesAt(world.seed, world.week, s.offerChance)) return
+  // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives him
+  // the kit window's own four weeks to think. `shootCount` is on the paper from the first read (step
+  // 2, §4a): the letter states its own price in time, and a catalogue retune between arrival and
+  // signature cannot change what this letter promised. The WEEKS themselves are the signature's to
+  // name – see `acceptOffer`.
+  raiseAdOffer(
+    world.offers,
+    world.week,
+    { brand: s.brand, cashCents: s.cashCents, termWeeks: s.termWeeks, shootCount: s.shootWeeksPerTerm },
+    world.week + s.decideWeeks - 1,
+  )
+}
+
 /** THE PARENT SIGNS. Returns the signed offer, or throws with the engine's own reason – past the
  *  deadline, already answered, or no such letter. Irreversible: there is no unsign, on purpose.
  *
@@ -544,6 +599,42 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   guardNotEnded(world)
   const signed = signOfferIn(world.offers, offerId, world.week)
   if (!signed) throw new Error(offerAnswerErrorFor(world, offerId))
+  // ⭐ THE ADVERTISING FEE IS PAID HERE, THE WEEK THE PAPER IS SIGNED (plan §6 step 1: «cash only…
+  // done when it arrives, it can be signed, and the ledger shows it»). Signature-time and not
+  // settled weekly, because that is what the letter promises – one fee, once – and the till and the
+  // paper may not tell two stories. INTO THE FAMILY WALLET: step 5 is where the plan routes an
+  // endorsement to her own account (`kidFundsCents`), and until that ships this money lands beside
+  // every other sponsor dollar the family banks.
+  //
+  // ⚠ THE LEDGER ROW IS THE RECEIPT, under 'sponsor' – the category brand money has always used –
+  // so the Money breakdown files the fee with the other backing rather than under the family's own
+  // income. One row per signing (at most one a year, `termWeeks` deep), which is inside the feed
+  // budget the retainer's four-a-season already spends. Zero draws: arithmetic on a decided deal.
+  if (signed.kind === 'ad') {
+    const t = signed.terms as AdOfferTerms
+    // ⭐ STEP 2 (§4a) – THE SIGNATURE NAMES THE SHOOT WEEKS, before the money moves, so the paper is
+    // complete the moment it is a record: `shootCount` weeks, in-season and spaced by construction,
+    // anchored on the signing week (`chooseShootWeeks` – the choice's own comment carries the whole
+    // design). On the ad sub-stream at the moment of the player's action, exactly as the arrival
+    // roll is; ZERO draws on MAIN, so signing can never move the world's dice (input-independence).
+    // The lead is read from the catalogue at signature rather than frozen at arrival because it is
+    // mechanics of the choosing, not a promise on the paper – the letter never states it.
+    t.shootWeeks = chooseShootWeeks(
+      world.seed,
+      world.week,
+      t.termWeeks,
+      t.shootCount,
+      ECONOMY.advertising.shootLeadWeeks,
+    )
+    world.fundsCents += t.cashCents
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'sponsor',
+      text: `${t.brand} endorsement – the campaign fee, on signing`,
+      amountCents: t.cashCents,
+    })
+  }
   return signed
 }
 

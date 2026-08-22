@@ -185,15 +185,20 @@ describe('⚠ the inbox adds NO main-stream draws (blocks merge)', () => {
 })
 
 describe('the offer module draws only on its own purpose-scoped sub-stream', () => {
-  it('every stream it opens is `seed:offer:` and nothing else', () => {
+  it('every stream it opens is `seed:offer:` or `seed:ad:` and nothing else', () => {
     // A CLOSED ALLOWLIST rather than a generic pattern, the shape tests/preview.test.ts established:
     // a second sub-stream has to be added here deliberately, by somebody who has read this comment,
     // instead of appearing by accident. The bare `${seed}` is the MAIN weekly stream — the one whose
     // position careers persist as `rngMain` since v35 — and it must never appear in this module.
+    //
+    // ⭐ `seed:ad:` EARNED ITS SLOT WITH ROUND 24 ITEM 2 (the-face-and-the-court.md §6 step 1): the
+    // advertising letter's one roll, in `adWritesAt`. It is deliberately NOT `seed:offer:` — putting
+    // both letters on one stream would make the kit roll and the ad roll read the same dice on the
+    // same week, which is exactly the coupling purpose-scoping exists to forbid.
     const src = codeOf(read('../src/engine/offers.ts'))
     const keys = [...src.matchAll(/rngFromSeed\(`([^`]+)`\)/g)].map((m) => m[1])
     expect(keys.length, 'the sweep found no draws at all - the regex has gone stale').toBeGreaterThan(0)
-    for (const k of keys) expect(k, `offers reads ${k}`).toMatch(/^\$\{seed\}:offer:/)
+    for (const k of keys) expect(k, `offers reads ${k}`).toMatch(/^\$\{seed\}:(offer|ad):/)
   })
 
   it('no function in the module takes an Rng – there is no parameter to misuse', () => {
