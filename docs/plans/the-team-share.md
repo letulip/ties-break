@@ -40,55 +40,74 @@ error» (the travelling-team plan §1, the advertising plan §3, the masseur gri
 against $270k of staff). A share self-scales: real money at the top, near-nothing for a struggling
 family. It is the one price shape that stays a decision at every stage of a career.
 
-## 3. The mechanic
+## 3. The mechanic – ⭐ RE-CUT TO THE OWNER'S RULING, 22.08 (the form design is DEAD)
 
-1. **A contract FORM, chosen at hire** – the real convention is a choice, so it is one in the game:
-   * **Flat** – today's contract, unchanged (and what every existing save keeps);
-   * **Base + share** – a reduced weekly base (candidate: ~60% of the rung's bill) plus a share of
-     every cheque (candidate: 10%), deducted at `finalizeTournament` beside the prize row, with its
-     own ledger row. Exact base/share pairs are bench-tuned (§5), not guessed.
-2. **The share is computed on the FULL cheque and paid from the FAMILY wallet.** ⚠ Open design
-   question for the owner (§6.1) – the recommendation: the parent is the employer (the game's own
-   premise), so her `kidShare` split (round 23 #18) is untouched and the family's side carries the
-   whole coach bill, as it carries every other cost.
-3. **Specialists stay salary people** – the masseur and the future psychologist take no percentage,
-   which is the real world's own line. An optional later step gives them the real thing they do
-   get: a one-off negotiated TITLE bonus (§5 step 3).
-4. RNG: pure arithmetic at finalize – zero draws, the frozen MAIN capture cannot move.
+The owner ruled the model himself, in one sentence with his own worked example:
 
-## 4. Engine seams (named so nobody rebuilds them)
+> «3млн призовые из них отчисляется процент дочери (скажем 30 для примера) и тренеру (скажем 10
+> для примера) – это будет 900к дочери и 300к тренеру плюс остальные расходы»
 
-* `finalizeTournament` (world.ts, the prize block) – the one place a cheque lands; the share is a
-  deduction beside it, after `kidPrizeShareCents`, with the same to-the-cent rounding discipline.
-* `hireCoach` / the coach market card – the form is chosen where the coach is chosen.
-* Schema: the form + share persist → **v60, the full 4-part move**, as its own wave AFTER
-  `wave/staff-masseur` merges (that branch's v59 is already carrying the masseur; two schema
-  streams never run in parallel – the standing rule).
-* The season wrap and the Money screen already itemise coaching – the share joins the same rows.
+...and on eligibility: «тренер может не ездить, но долю получать наверное за победы или 2е места
+вполне может. За 2е только по-меньше». What ships (and SHIPPED, on `wave/staff-masseur`):
 
-## 5. Steps (each with a bench arm and predicted-vs-measured in a spec – invariant 4)
+1. **A UNIVERSAL rule – no contract form, no choice at hire, nothing persisted per career.** The
+   original §3.1 design (flat vs base+share, chosen at the market card, schema v60) is dead by his
+   ruling; nobody rebuilds it. The share is computed at `finalizeTournament` from
+   `ECONOMY.staffShare` and the finish, exactly like the kid's ramp – no schema move of any kind
+   (verified: nothing persists beyond ordinary event/ledger rows).
+2. **Results-stepped, not a cut of every cheque**: a TITLE pays `titleBps`, a FINAL pays half
+   («за 2е только по-меньше»), below a final NOTHING – «за победы или 2е места», his words. The
+   real convention (5–15% of everything, §1) was considered and his sharper version chosen.
+3. **Rates** (`ECONOMY.staffShare`, tunable constants – the grid in the masseur spec §11 shows
+   what they cost): coach `titleBps: 1000` / `finalBps: 500` – his own 10% example and its half.
+4. **⭐ THE MASSEUR TAKES A SHARE TOO** – his ruling later the same day: «мне всё-таки кажется, что
+   массажисту тоже можно за призовые месте давать бонус, может по-меньше чем тренеру, но давать,
+   давай тоже сделаем». Same mechanism (`staffResultShareBps` / `staffPrizeShareCents` – ONE
+   implementation, two takers), rates a third of the coach's: `titleBps: 300` / `finalBps: 150`.
+   This SUPERSEDES the old step 3 ("one-off negotiated specialist title bonus"): what he chose is
+   a standing percentage, smaller than the coach's, not a one-off.
+5. **Both shares off the GROSS cheque, family pays, kid ramp untouched**: each share rounds once,
+   the family keeps the remainder – `prize − kidShare − coachShare − masseurShare`, re-adding to
+   the cheque to the cent (the round-23 #18 rounding discipline, now four hands on one cheque).
+   On his Slam example at the age-22 rung: $900k hers, $300k coach, $90k masseur, $1.71M family.
+6. **Pro tour only** (`track === 'wta'`), **independent of every travel switch** («может не
+   ездить, но долю получать»), and only a FILLED seat – a self-coached family owes no coach share,
+   an empty table no masseur share. Ledger: expense rows in the seats' own categories (`coaching` /
+   `staff`), so the Money screen, the season wrap's coaching line and `careerTotals.spentCents`
+   absorb them through `addEvent`'s one choke point – no second tally anywhere.
+7. RNG: pure arithmetic at finalize – zero draws, the frozen MAIN capture cannot move (verified).
 
-| # | step | done when |
+## 4. Engine seams (as built)
+
+* `finalizeTournament` (world.ts, the prize block) – the one place a cheque lands; both shares are
+  deductions beside it, after `kidPrizeShareCents`, same to-the-cent rounding discipline.
+* `ECONOMY.staffShare` + `staffResultShareBps` / `staffPrizeShareCents` (economy.ts, beside the
+  kid ramp) – the ONE share mechanism both takers call; a third seat asks the same function.
+* **No schema move** – the v60 line above is retired with the form design: nothing persists.
+* The season wrap and the Money screen itemise the shares through their own categories with no new
+  code – `addEvent` is the one choke point that tallies `byCategory` and `careerTotals`.
+
+## 5. Steps – re-cut to the ruling (22.08)
+
+| # | step | status |
 | --- | --- | --- |
-| **1** | **the coach's base+share contract** – both forms at hire, share at finalize, ledger row | A/B bench: at Alice's stage the two forms cost within noise of each other; at Ines' stage the share form reads 5–10% of prize; no bankruptcy spike; old saves untouched on flat |
-| 2 | **sliding by depth** – the share climbs for SF/F/title finishes | the sliding form pays more for a title run than a flat share, measured, and the card says so in words |
-| 3 | **the specialist title bonus** – one-off, negotiated, masseur first | a title week shows the bonus row; no standing percentage anywhere on a specialist |
-| 4 | tune the base/share pairs against the bench | the corridor matches §2's table |
+| **1** | **the results-stepped share for the coach** – universal, title/final, at finalize | ⭐ **SHIPPED** on `wave/staff-masseur` (tests/team-share.test.ts reproduces his 3M example to the cent); measured in the combined grid, masseur spec §11 |
+| **1b** | **the masseur's smaller share** – same mechanism, 3%/1.5% | ⭐ **SHIPPED beside it** – his same-day ruling; supersedes old step 3 (the one-off bonus): a standing percentage, smaller than the coach's |
+| 2 | ~~sliding by depth~~ | DEAD – the ruled model IS stepped by finish (title/final/nothing); a deeper ladder is a retune of two constants, not a step |
+| 3 | ~~one-off specialist title bonus~~ | SUPERSEDED by 1b – «массажисту тоже можно за призовые месте давать бонус … но давать» chose a standing share |
+| 4 | tune the rates against the bench | the §11 grid carries the coach-%-of-prize "after" column against §2's table; rates are one-line retunes |
 
-⚠ **STOP AFTER STEP 1 – it is a complete feature.** Steps 2–3 are flavour on a working mechanic.
+## 6. Rulings that closed the old questions
 
-## 6. Open for the owner
+1. **Who pays** – the family; her ramp untouched; both staff shares off the GROSS (his own 3M
+   arithmetic is exactly this shape).
+2. **Форма контракта** – no forms exist, so nothing switches; killed by the universal rule.
+3. **Junior prize money** – pro tour only (`track === 'wta'`); structurally free, since only W
+   rungs carry `prizeCents` at all, and the gate is still written for the day that changes.
 
-1. **Who pays the share** – §3.2's recommendation (family pays, her split untouched), or off the
-   gross before the split (her career co-pays her team, which is also defensible)?
-2. **May an existing career SWITCH forms?** Re-negotiation at re-hire is the cheap honest answer –
-   the form is the coach's contract, and a new contract is a new hire.
-3. **Does the share apply to junior prize money?** Junior cheques are small; the real convention is
-   a pro convention. Recommendation: pro tour only, from the same gate the masseur uses.
+## 7. Sequencing – as it happened
 
-## 7. Sequencing
-
-After `wave/staff-masseur` merges (it owns v59 and the coach-market surface this touches), as its
-own wave. The masseur's approved amendments (+1/+2/+3 bonuses, per-match tour pricing at $75 x
-matches played – 7 at a Slam, 6 at a 1000 – the return-week session, the per-round relief question)
-land on the staff branch FIRST, driven by the S3 measurement.
+Everything landed on `wave/staff-masseur` itself, by the owner's «в конце всё открытое по игровым
+правкам в одну ветку собирай»: recovery variant C, the +1/+2/+3 dial, per-match tour pricing
+($75 × matches – 7 at a Slam $525, 6 at a 1000 $450, 5 at a 32-draw $375), the return-week
+session, and both prize shares – then ONE combined grid (masseur spec §11) measured the stack.

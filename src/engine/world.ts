@@ -62,6 +62,8 @@ import { parentIncomeForWeekCents,
   gearVoice,
   kidPrizeShareBps,
   kidPrizeShareCents,
+  staffPrizeShareCents,
+  staffResultShareBps,
 } from './economy'
 // v54 (round-23 #18): the one string the engine writes about her own account. `shared/money.ts` is
 // the ONE cents-to-dollars implementation in the app and `weekLabel` above records why the engine is
@@ -2019,6 +2021,54 @@ function finalizeTournament(world: WorldState): void {
         week: world.week,
         type: 'info',
         text: `${world.profile.kidName}'s share of the prize money – ${formatCents(herShare)} into her own account`,
+      })
+    }
+    // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
+    // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем
+    // 30 для примера) и тренеру (скажем 10 для примера) – это будет 900к дочери и 300к тренеру плюс
+    // остальные расходы» – and the masseur joined the same day, smaller («может по-меньше чем
+    // тренеру, но давать»). A UNIVERSAL rule, not a contract form: computed here from `ECONOMY`
+    // constants and the finish, nothing persisted, nothing chosen at hire – the architect's
+    // form-choice design is dead by the owner's own ruling.
+    //
+    // ⚠ TITLES AND FINALS ONLY («за победы или 2е места», «за 2е только по-меньше») – below a
+    // final `staffPrizeShareCents` returns 0 and no row is written. PRO TOUR ONLY (`track ===
+    // 'wta'`): junior tennis is not the convention's world and its cheques are pocket change.
+    // INDEPENDENT OF ANY TRAVEL SWITCH – «тренер может не ездить, но долю получать … вполне
+    // может» – but only a FILLED seat: a self-coached family owes no coach share and an empty
+    // table no masseur share.
+    //
+    // ⚠ BOTH SHARES OFF THE GROSS, EACH ROUNDED ONCE, THE FAMILY KEEPS THE REMAINDER – the kid
+    // ramp's own discipline, fourth and fifth hands on the same cheque: her share is untouched
+    // above, and funds move by familyShare − coachShare − masseurShare, so the four pieces re-add
+    // to the tournament's cheque to the cent.
+    //
+    // ⚠ EXPENSE ROWS, NOT A SMALLER INCOME ROW, and the categories are the seats' own: the coach's
+    // share lands under `coaching` and the masseur's under `staff`, so the Money screen's
+    // breakdown, the season wrap and `careerTotals.spentCents` all absorb them through `addEvent`'s
+    // one choke point with no second tally – the coaching line the wrap prints simply stops lying
+    // by never having been given the chance. Zero draws: integer arithmetic on a decided cheque.
+    const coachShare = track === 'wta' && world.coachId !== null ? staffPrizeShareCents('coach', prize, kidFinish) : 0
+    if (coachShare > 0) {
+      world.fundsCents -= coachShare
+      addEvent(world, {
+        week: world.week,
+        type: 'expense',
+        category: 'coaching',
+        // No pronoun names the coach (R15-7 – women are on every roster by construction).
+        text: `Coach's share of the prize money – ${staffResultShareBps('coach', kidFinish) / 100}% of the ${tier.label} cheque`,
+        amountCents: -coachShare,
+      })
+    }
+    const masseurShare = track === 'wta' && (world.masseurHired ?? false) ? staffPrizeShareCents('masseur', prize, kidFinish) : 0
+    if (masseurShare > 0) {
+      world.fundsCents -= masseurShare
+      addEvent(world, {
+        week: world.week,
+        type: 'expense',
+        category: 'staff',
+        text: `Masseur's share of the prize money – ${staffResultShareBps('masseur', kidFinish) / 100}% of the ${tier.label} cheque`,
+        amountCents: -masseurShare,
       })
     }
     // D10 + R15-5: THE FIRST CHEQUE IS A MILESTONE (owner, 01.08: «я believe it's a very memorable

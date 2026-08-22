@@ -1291,6 +1291,44 @@ export const ECONOMY = {
     capBps: 5000,
   },
 
+  // =================================================================================================
+  // ⭐⭐ THE TEAM'S SHARE OF THE PRIZE MONEY (owner, round 24, 22.08 – docs/plans/the-team-share.md)
+  // =================================================================================================
+  //
+  // HIS MODEL, VERBATIM: «3млн призовые из них отчисляется процент дочери (скажем 30 для примера) и
+  // тренеру (скажем 10 для примера) – это будет 900к дочери и 300к тренеру плюс остальные расходы».
+  // And on eligibility: «тренер может не ездить, но долю получать наверное за победы или 2е места
+  // вполне может. За 2е только по-меньше». Then, the same day, the masseur joined: «мне всё-таки
+  // кажется, что массажисту тоже можно за призовые месте давать бонус, может по-меньше чем
+  // тренеру, но давать, давай тоже сделаем».
+  //
+  // WHAT THAT RULING KILLED, so nobody rebuilds it: the plan's original contract-FORM design (flat
+  // vs base+share, chosen at hire, persisted per career) is DEAD. The share is a UNIVERSAL rule –
+  // no form, no choice, nothing persisted: computed at `finalizeTournament` from these constants
+  // and the finish, exactly like the kid's ramp one block up.
+  //
+  // THE SHAPE – «за победы или 2е места», NOT every cheque: a TITLE pays `titleBps`, a FINAL pays
+  // `finalBps` («за 2е только по-меньше» – half), below a final NOTHING. The real-world convention
+  // (5-15% of every cheque, sliding by depth) was researched and shown to him (the plan's §1); his
+  // version is the sharper one and it is the one that ships. Both shares are computed OFF THE
+  // GROSS cheque – the kid's ramp (round-23 #18) is untouched and each share rounds ONCE, the
+  // family keeping the remainder to the cent (`staffPrizeShareCents` + the finalize subtraction).
+  //
+  // WHO PAYS AND WHEN: the family (the parent is the employer – the game's premise), pro tour only
+  // (`track === 'wta'` – junior tennis pays no prize money worth sharing and the convention is a
+  // pro convention), independent of any travel switch (his own words: «может не ездить, но долю
+  // получать»), and only a seat that is actually FILLED – a self-coached family owes no coach
+  // share, an empty table no masseur share.
+  //
+  // THE MASSEUR'S RATES are roughly a third of the coach's («по-меньше чем тренеру») – the same
+  // sizing logic the travelling-team plan used for specialist money against coach money. On his
+  // own worked example (a $3M Slam title): coach $300k, masseur $90k, daughter $900k (at the
+  // age-22 rung), family $1.71M «плюс остальные расходы».
+  staffShare: {
+    coach: { titleBps: 1000, finalBps: 500 },
+    masseur: { titleBps: 300, finalBps: 150 },
+  } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number }>,
+
   // Season-Life condition accumulator (0..100, 100 = fresh). Pure INTEGER arithmetic –
   // accrueCondition draws ZERO main-stream RNG, so none of these can shift the weekly draw
   // sequence (the B1 invariance test guards it).
@@ -2777,4 +2815,26 @@ export function kidPrizeShareBps(ageYears: number): number {
  *  different balances that a player can add up on screen. */
 export function kidPrizeShareCents(prizeCents: number, ageYears: number): number {
   return Math.round((prizeCents * kidPrizeShareBps(ageYears)) / 10_000)
+}
+
+/** ⭐⭐ ROUND-24 – WHAT A FINISH PAYS THE STAFF, in basis points. ONE mechanism, two takers (the
+ *  coach and the masseur), because two independent copies of "what does a finish pay" is this
+ *  repo's own recurring disease – two surfaces asking different functions about one question.
+ *
+ *  The owner's shape, not the tour's: «за победы или 2е места» – a TITLE pays `titleBps`, a FINAL
+ *  pays `finalBps` («за 2е только по-меньше»), and below a final NOTHING – never a cut of every
+ *  cheque. `finishIdx` is the finish index `finalizeTournament` already holds (0 = champion,
+ *  1 = finalist). All four numbers live in `ECONOMY.staffShare`; this reads them and nothing
+ *  else, so a retune moves the whole game and this function does not change. */
+export function staffResultShareBps(role: 'coach' | 'masseur', finishIdx: number): number {
+  const rates = ECONOMY.staffShare[role]
+  return finishIdx === 0 ? rates.titleBps : finishIdx === 1 ? rates.finalBps : 0
+}
+
+/** A staff member's cut of one cheque, in whole cents – the role's bps applied to the GROSS prize
+ *  and rounded ONCE (the `kidPrizeShareCents` discipline one function up: every share rounds once,
+ *  and the family gets the remainder by SUBTRACTION at finalize, so the pieces always re-add to
+ *  the tournament's cheque to the cent). Zero draws, no state, no schema. */
+export function staffPrizeShareCents(role: 'coach' | 'masseur', prizeCents: number, finishIdx: number): number {
+  return Math.round((prizeCents * staffResultShareBps(role, finishIdx)) / 10_000)
 }
