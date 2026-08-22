@@ -1,3 +1,29 @@
+# THE MONTE-CARLO CALIBRATION – IN FRONT OF EVERY PULL REQUEST SINCE 22.08 (owner's ruling).
+#
+# ⚠⚠ THE PARAGRAPHS BELOW ARGUED THE OPPOSITE AND THEY ARE KEPT, re-aimed rather than deleted,
+# because the reasons the line moved matter as much as the line:
+#
+#   1. The failure mode that justified the exclusion is GONE. The red-on-green stories below -
+#      birpc's 60s wall, exit 1 with every assertion passing - predate the P6 wave, since which
+#      `npm run test:sim` runs serialised and exits 0 on green. The same command has run weekly on
+#      this very runner without a wall since.
+#   2. The "working rule" (touch the model -> run the bench yourself, numbers in the PR) FAILED
+#      TWICE IN ONE WEEK, measured by the 22.08 bisect: faa5a6c (the rivals' fifth skill) and
+#      41ce43a (the domestic season table) both reshaped careers, neither author ran test:sim, and
+#      fatigue-bench-planner sat red for 8 days / ~200 commits - SEEN on day one (the 13.08
+#      postscript below records exactly that sighting) and then lost, because the weekly run's
+#      reader loop is nobody. A red X beside the merge button is a reader loop that exists.
+#   3. The cost is ~5-6 min of ubuntu runner per PR and zero local minutes; timeout-minutes bounds
+#      a hang, and the concurrency group cancels superseded runs on force-push.
+#
+# The weekly cron stays as the merge-skew backstop; workflow_dispatch stays for on-demand runs.
+# The distinction the postscript draws - a REGRESSION test never lives here just because it is
+# slow - stands unchanged.
+#
+# =================================================================================================
+# ⚠ AS ORIGINALLY ARGUED (pre-22.08), kept as the record of a doctrine and why it held as long as
+# it did:
+#
 # THE MONTE-CARLO CALIBRATION, DELIBERATELY OUT OF THE PR GATE.
 #
 # Three files - tests/econ-bench, tests/fatigue-bench, tests/match/calibration - are 143s of CPU
@@ -54,13 +80,19 @@
 name: Simulation calibration
 
 on:
+  pull_request:
   schedule:
-    - cron: '0 4 * * 1' # Mondays, 04:00 UTC
+    - cron: '0 4 * * 1' # Mondays, 04:00 UTC - the merge-skew backstop
   workflow_dispatch:
+
+concurrency:
+  group: sim-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   simulation:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
