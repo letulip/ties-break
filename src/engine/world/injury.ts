@@ -28,7 +28,7 @@ import { KID_ID } from './constants'
 import { captureMilestone } from './milestones'
 import { layoffCovering } from './medical'
 import { eventById, refundPractice, vacationForWeek } from './bookings'
-import { masseurWorksThisWeek } from './masseur'
+import { masseurRungOf, masseurWorksThisWeek } from './masseur'
 import { releaseEntry } from './entries'
 import { retireKnock } from './knockHistory'
 import type { WorldState } from '../world'
@@ -191,11 +191,17 @@ export function rollInjury(world: WorldState): void {
     // ⚠ THE GUARD IS `weeksRemaining > 0`: an extra decrement may CLEAR the layoff a week early
     // (that is the product), but a layoff already clearing this tick has nothing left to save – no
     // receipt is printed for a week nobody bought. `masseurWorksThisWeek` keeps the paid week and
-    // the bought week the same week (college and family holidays suspend both), and a niggle under
-    // the cadence gains nothing, which is honest: nobody massages a one-week soreness away.
-    if (world.injury.weeksRemaining > 0 && masseurWorksThisWeek(world)) {
+    // the bought week the same week (college and family holidays suspend both).
+    //
+    // ⚠ THE CADENCE IS THE RUNG'S OWN since the dial (step 2, `masseurRungOf`): every 3rd rehab
+    // week at twice-a-week, every 2nd at every-other-day (step 1's measured arm), every week at
+    // daily. And the NIGGLE RULE IS A GUARD NOW rather than an arithmetic accident: at N=2/3 a 1-2
+    // week layoff could never meet the cadence, but the daily rung's N=1 could halve a two-week
+    // soreness – so `totalWeeks > 2` states the honest rule («nobody massages a one-week soreness
+    // away») structurally, at every rung, byte-identical for the two rungs that never needed it.
+    if (world.injury.weeksRemaining > 0 && world.injury.totalWeeks > 2 && masseurWorksThisWeek(world)) {
       const rehabWeek = world.week - world.injury.sinceWeek
-      if (rehabWeek > 0 && rehabWeek % ECONOMY.masseur.rehabExtraEveryNWeeks === 0) {
+      if (rehabWeek > 0 && rehabWeek % masseurRungOf(world).rehabExtraEveryNWeeks === 0) {
         world.injury.weeksRemaining -= 1
         world.injury.weeksSaved = (world.injury.weeksSaved ?? 0) + 1
         addEvent(world, {

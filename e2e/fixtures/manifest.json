@@ -20,9 +20,9 @@
         "kidLastName": "Cieslak",
         "country": "US"
       },
-      "bytes": 23994,
-      "payloadBytes": 23950,
-      "sha256": "6a5a3694fa42207e2ffa8897babcbef40c4e572e9fe9f321c6b1f2b3691de04f",
+      "bytes": 24016,
+      "payloadBytes": 23972,
+      "sha256": "302f2843799b0bcbc379e6255993e9a2fc4da59ab2109429c4fc9aa2fcbbc056",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -69,9 +69,9 @@
         "kidLastName": "Sartori",
         "country": "US"
       },
-      "bytes": 57959,
-      "payloadBytes": 57915,
-      "sha256": "824cd69a0a5861313868ed3befedf69749d78fbfca8f4e898363567f1d700fcc",
+      "bytes": 57975,
+      "payloadBytes": 57931,
+      "sha256": "1fca56527dcf7260723b510f2a84409818add949196aa546dceb47551c7ebdd0",
       "seedsTried": 3,
       "facts": {
         "week": 120,
@@ -118,9 +118,9 @@
         "kidLastName": "Ostrowski",
         "country": "US"
       },
-      "bytes": 80375,
-      "payloadBytes": 80331,
-      "sha256": "de228ebc31543e7e5e0e392adf52450fb83cfc95d50d04bbe9568dd72dd6d993",
+      "bytes": 80393,
+      "payloadBytes": 80349,
+      "sha256": "568c046801111577406349ab33897c371ddd16012d43ac9e2e3a25a828ba9b9b",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -167,9 +167,9 @@
         "kidLastName": "Fujimoto",
         "country": "US"
       },
-      "bytes": 52968,
-      "payloadBytes": 52924,
-      "sha256": "d84ba53f6713f9bc5cc85b354eaf0ba05ef1dbb1d187af960c72891ea8f473db",
+      "bytes": 52989,
+      "payloadBytes": 52945,
+      "sha256": "7be08b8322ccfa6a916d0d917d967ad138313c647e7da3bf6aaa0d0f9aec813a",
       "seedsTried": 1,
       "facts": {
         "week": 45,
@@ -216,9 +216,9 @@
         "kidLastName": "Kern",
         "country": "US"
       },
-      "bytes": 60613,
-      "payloadBytes": 60569,
-      "sha256": "f9cc8e77e76e957fba6faf0d4f11e431662959d90ef3a83dc591916fbdeb991e",
+      "bytes": 60630,
+      "payloadBytes": 60586,
+      "sha256": "19cf0712c39c4a37798f72cd4c280c9d52ab52c7b43f365c4783c9b991c5ba02",
       "seedsTried": 1,
       "facts": {
         "week": 118,
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 81154,
-      "payloadBytes": 81110,
-      "sha256": "1feb13661b08a6b8b2644eb149c631fe6ad8b32de1ecec756c81ec0ef993fc31",
+      "bytes": 81173,
+      "payloadBytes": 81129,
+      "sha256": "6c3d973e5b56991f262a785caf992af54bbcfa81ac758242bc8ca95a1f18237f",
       "seedsTried": 1,
       "facts": {
         "week": 242,

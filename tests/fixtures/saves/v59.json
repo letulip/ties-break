@@ -26747,5 +26747,7 @@
   "fp-1": 470
  },
  "kidFundsCents": 0,
- "masseurHired": false
+ "masseurHired": false,
+ "masseurSessionsPerWeek": 4,
+ "masseurTravels": false
 }

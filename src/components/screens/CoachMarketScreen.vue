@@ -50,6 +50,11 @@ import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, t
 // simply ride on `CoachMarketRow` this wave.
 import { coachBlurb, coachRoomBand } from '../../engine/world/coachMarket'
 import { MASSEUR_LOCKED_DETAIL } from '../../engine/world/masseur'
+// v59 step 2 - the dial's option table. A static market catalogue in the same register as
+// `COACH_TIER_LABEL` above: labels and prices keyed on nothing the world decides, so reading it
+// here cannot leak a derivation the snapshot should own (the card's own price stays the
+// snapshot's `masseurSalaryCents`, asserted in tests/component/masseur-card.test.ts).
+import { ECONOMY } from '../../engine/economy'
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
 import { formatCents } from '../../shared/money'
 
@@ -590,12 +595,42 @@ const masseurLine = computed(() => {
   if (masseurHired.value) return game.snapshot?.masseurNote ?? ''
   return 'Table work at home every week, and a hand on every rehab – layoffs end sooner.'
 })
+// ⭐ v59 step 2 – THE DIAL, the owner's own idea («настройки сколько раз в неделю он дает свои
+// услуги»). Three rungs off the market catalogue; the ACTIVE one is the snapshot's, the click is a
+// command the engine re-validates, and the card's headline price follows the snapshot because the
+// engine prices the rung – this screen sets a dial, it never computes a bill.
+const MASSEUR_RUNGS = ECONOMY.masseur.rungs
+const masseurSessions = computed(
+  () => game.snapshot?.masseurSessionsPerWeek ?? ECONOMY.masseur.defaultSessions,
+)
+async function setMasseurRung(sessions: number): Promise<void> {
+  if (sessions === masseurSessions.value) return
+  await game.setMasseurSessions(sessions)
+}
+const masseurRungLabel = computed(
+  () => MASSEUR_RUNGS.find((r) => r.sessions === masseurSessions.value)?.label ?? '',
+)
+// ...AND THE SEAT (ruling Б: the masseur travels). The coach's own switch idiom one section up,
+// asked of the next seat over; the sub-line quotes the booked trips off the SNAPSHOT's as-if
+// price, so the row can say what the switch costs before it is flipped.
+const masseurTravels = computed(() => game.snapshot?.masseurTravels ?? false)
+async function toggleMasseurTravel(): Promise<void> {
+  await game.setMasseurTravels(!masseurTravels.value)
+}
+const masseurTravelSub = computed(() => {
+  const rule = 'Table work between rounds – one more fare on every trip to a paying event.'
+  const trips = game.snapshot?.masseurTravelTrips ?? 0
+  if (trips === 0) return rule
+  const t = trips === 1 ? '1 trip' : `${trips} trips`
+  return `${rule} ${formatCents(game.snapshot?.masseurTravelFareCents ?? 0)} over the ${t} booked.`
+})
 const hiringMasseur = ref(false)
 const releasingMasseur = ref(false)
 // Both directions ask, the screen's own doctrine (see `releasing` above): a screen that asks before
 // it starts paying somebody and not before it stops is not neutral about the two directions.
 const masseurHireMessage = computed(
-  () => `Put a masseur on the payroll at ${masseurSalary.value} a week? Cancellable any week, like the coach.`,
+  () =>
+    `Put a masseur on the payroll at ${masseurSalary.value} a week (${masseurRungLabel.value.toLowerCase()})? Cancellable any week, like the coach.`,
 )
 const masseurReleaseMessage = computed(
   () => 'Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.',
@@ -1019,6 +1054,49 @@ function scrollToTier(tier: CoachTier): void {
           <button v-else :disabled="game.busy" @click="releasingMasseur = true">Let go</button>
         </span>
       </div>
+      <!-- ⭐ v59 step 2: THE DIAL - the owner's own idea, three rungs off the market catalogue.
+           Offered from the unlock (choosing the arrangement BEFORE hiring prices the card and the
+           confirm honestly); the active rung is the snapshot's, and the headline price above
+           follows it because the ENGINE prices the rung. -->
+      <div v-if="masseurUnlocked" class="masseur-dial" role="radiogroup" aria-label="Masseur sessions per week">
+        <button
+          v-for="r in MASSEUR_RUNGS"
+          :key="r.sessions"
+          class="masseur-rung"
+          :class="{ active: masseurSessions === r.sessions }"
+          role="radio"
+          :aria-checked="masseurSessions === r.sessions ? 'true' : 'false'"
+          :disabled="game.busy"
+          @click="setMasseurRung(r.sessions)"
+        >
+          <span class="rung-label">{{ r.label }}</span>
+          <span class="rung-price">{{ formatCents(r.sessions * ECONOMY.masseur.perSessionCents) }}/wk</span>
+        </button>
+      </div>
+      <!-- ...AND THE SEAT (ruling Б: the masseur travels) - the coach's own switch idiom one
+           section up, asked of the next seat over. Only while HIRED: with nobody on the payroll
+           the switch would send nobody anywhere, and a row that looked live would be the control
+           lying about itself (the round-20 #1 defect). -->
+      <section v-if="masseurHired" class="cm-travel masseur-travel">
+        <div class="cm-travel-text">
+          <p class="cm-travel-title">Masseur travels to tournaments</p>
+          <p class="cm-travel-sub">{{ masseurTravelSub }}</p>
+        </div>
+        <button
+          class="cm-switch"
+          role="switch"
+          :aria-checked="masseurTravels ? 'true' : 'false'"
+          :disabled="game.busy"
+          :aria-label="
+            masseurTravels
+              ? 'Masseur travels to tournaments - on. Press to keep the table work at home.'
+              : 'Masseur travels to tournaments - off. Press to buy one more fare on every trip, for table work between rounds.'
+          "
+          @click="toggleMasseurTravel"
+        >
+          <span class="cm-switch-knob"></span>
+        </button>
+      </section>
     </section>
     </template>
 
@@ -1104,5 +1182,37 @@ function scrollToTier(tier: CoachTier): void {
   flex: none;
   display: flex;
   align-items: center;
+}
+/* v59 step 2 - the dial. Three equal pills under the card; the active one carries the accent the
+   segmented rows already use, so the control reads as the same family without borrowing the
+   roster's grid. */
+.masseur-dial {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.masseur-rung {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: none;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.masseur-rung.active {
+  border-color: var(--accent, #4da3ff);
+  color: var(--accent, #4da3ff);
+}
+.masseur-rung .rung-price {
+  font-size: 10px;
+  opacity: 0.75;
+}
+.masseur-travel {
+  margin-top: 8px;
 }
 </style>

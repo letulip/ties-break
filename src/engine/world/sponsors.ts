@@ -735,10 +735,67 @@ export function coachTravelFareFor(world: WorldState, event: SeasonEvent): numbe
   //
   // ⚠ ONE MULTIPLY AGAINST THE PRINTED PRICE, NEVER AGAINST AN ALREADY-REDUCED NUMBER. `travelCostFor`
   // composes two covers on her seat; his has exactly one payer besides the family.
+  return staffSeatFareCents(world, event, paysPrizeMoney)
+}
+
+/** ⭐ ONE MORE SEAT, PRICED ONCE – the arithmetic shared by every travelling member of the staff
+ *  (the coach's fare above, the masseur's below), extracted so the travelling team can never grow
+ *  a second price model. It is the round-22 ruling in one function («просто стоимость поездки на 2
+ *  умножать»): a seat is the calendar's own printed price – never `travelCostFor`, whose academy
+ *  cover is a needs-based rescue that may not buy the entourage a plane ticket (15.08) – and the
+ *  ONE cover that reaches it is the brand's travel share, at the rungs that pay prize money
+ *  (17.08: «a sponsor's travel share comes off both seats; a scholarship comes off hers alone»).
+ *  One multiply against the printed price, zero draws. */
+function staffSeatFareCents(world: WorldState, event: SeasonEvent, paysPrizeMoney: boolean): number {
   if (!paysPrizeMoney) return event.travelCostCents
   const share = kitTravelShare(world.offers, world.week)
   if (share <= 0) return event.travelCostCents
   return event.travelCostCents - Math.round(event.travelCostCents * share)
+}
+
+/** ⭐ TRAVELLING TEAM STEP 2 – WHAT THE MASSEUR'S SEAT COSTS, and it is the coach's own rule asked
+ *  for one more seat (`staffSeatFareCents`), NOT a second implementation – the owner refused a
+ *  parallel travel model at round 22 and the same reasoning holds for a third seat.
+ *
+ *  THE GATES ARE THE STANCE'S OWN: hired, and the family has switched the trips on
+ *  (`masseurTravels`, the coach's `coachOnEventWeeks` pattern – default off, the switch is what
+ *  adds the seat). He goes to the rungs that pay prize money and to no others: the hire is
+ *  pro-career gated in the first place, and no junior override exists here because no junior
+ *  career can hold the hire – the coach's junior stance answers a question this seat is never
+ *  asked.
+ *
+ *  ⚠ WHAT THE FARE BUYS IS RECORDED WHERE IT IS CHARGED: the play arm sets
+ *  `pendingTournament.masseurThere` beside this charge, and `finalizeTournament` relieves the
+ *  run's strain through `masseurTourRelief` – so the bill and the effect are one decision about
+ *  one week by construction. Charged on the PLAY week only (the arm where she actually boarded),
+ *  so the injury walkover and the medical withdrawal never pay it. Zero draws. */
+export function masseurTravelFareFor(world: WorldState, event: SeasonEvent): number {
+  if (!(world.masseurHired ?? false)) return 0
+  if (!(world.masseurTravels ?? false)) return 0
+  const paysPrizeMoney = TIERS[event.tier].prizeCents !== undefined
+  if (!paysPrizeMoney) return 0
+  return staffSeatFareCents(world, event, true)
+}
+
+/** THE CHARGE – `chargeCoachTravel`'s shape for the next seat over: category `travel` (a fare
+ *  moves with the calendar, not with the week), its own line, the payer named on the line itself.
+ *  Returns the fare actually charged so the play arm can record the presence the money bought.
+ *  No pronoun names the masseur in player copy (R15-7's standing order). Zero draws. */
+export function chargeMasseurTravel(world: WorldState, event: SeasonEvent): number {
+  const fare = masseurTravelFareFor(world, event)
+  if (fare <= 0) return 0
+  world.fundsCents -= fare
+  const share = fare < event.travelCostCents ? kitTravelShare(world.offers, world.week) : 0
+  const deal = share > 0 ? activeKitDeal(world.offers, world.week) : null
+  const payer = deal ? ` (${(deal.terms as KitOfferTerms).brand} covers ${Math.round(share * 100)}%)` : ''
+  addEvent(world, {
+    week: world.week,
+    type: 'expense',
+    category: 'travel',
+    text: `Your masseur travels to the ${TIERS[event.tier].label} – one more fare${payer}`,
+    amountCents: -fare,
+  })
+  return fare
 }
 
 /** THE CHARGE, on the week she travelled and he came with her. One row, its own line in the feed:

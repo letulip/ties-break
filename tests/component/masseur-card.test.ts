@@ -73,10 +73,13 @@ describe('the masseur card on screen T', () => {
     expect(pro.masseurUnlocked).toBe(true)
     const wrapper = await mountCard(pro)
     const block = wrapper.find('.masseur-block')
-    // The price is the snapshot's flat salary, asserted through the app's own formatter and the
-    // engine knob together – a retune moves the expectation with it, and the claim stays "the
+    // The price is the snapshot's rung-priced flat bill, asserted through the app's own formatter
+    // and the snapshot together – a retune moves the expectation with it, and the claim stays "the
     // engine's number reaches the card", never a format.
-    expect(block.text()).toContain(formatCents(ECONOMY.masseur.salaryPerWeekCents))
+    expect(block.text()).toContain(formatCents(pro.masseurSalaryCents))
+    expect(pro.masseurSalaryCents, 'the default rung`s price, engine-derived').toBe(
+      ECONOMY.masseur.defaultSessions * ECONOMY.masseur.perSessionCents,
+    )
     const hire = block.findAll('button').find((b) => b.text() === 'Hire')
     expect(hire, 'the Hire control is offered').toBeTruthy()
     expect(wrapper.text()).not.toContain('Put a masseur on the payroll')
@@ -108,6 +111,40 @@ describe('the masseur card on screen T', () => {
     const doctored = { ...pro, masseurSalaryCents: 987_53 }
     const wrapper = await mountCard(doctored)
     expect(wrapper.find('.masseur-block').text()).toContain(formatCents(987_53))
+    wrapper.unmount()
+  })
+
+  it('§5 – ⭐ the dial: three rungs from the market, the ACTIVE one is the snapshot`s, locked juniors see none', async () => {
+    const { junior, pro } = snapshots()
+    const lockedWrapper = await mountCard(junior)
+    expect(lockedWrapper.find('.masseur-dial').exists(), 'no dial while locked').toBe(false)
+    lockedWrapper.unmount()
+    const doctored = { ...pro, masseurSessionsPerWeek: 7 }
+    const wrapper = await mountCard(doctored)
+    const rungs = wrapper.findAll('.masseur-rung')
+    expect(rungs.length).toBe(ECONOMY.masseur.rungs.length)
+    for (const [i, rung] of ECONOMY.masseur.rungs.entries()) {
+      expect(rungs[i].text()).toContain(rung.label)
+      expect(rungs[i].text()).toContain(formatCents(rung.sessions * ECONOMY.masseur.perSessionCents))
+      expect(rungs[i].attributes('aria-checked'), `active follows the snapshot (${rung.label})`).toBe(
+        rung.sessions === 7 ? 'true' : 'false',
+      )
+    }
+    wrapper.unmount()
+  })
+
+  it('§6 – ⭐ the travel switch: hired only, aria state off the snapshot, the as-if fare quoted on the sub-line', async () => {
+    const { pro, hired } = snapshots()
+    const unhiredWrapper = await mountCard(pro)
+    expect(unhiredWrapper.find('.masseur-travel').exists(), 'no switch while nobody is on the payroll').toBe(false)
+    unhiredWrapper.unmount()
+    const doctored = { ...hired, masseurTravels: true, masseurTravelTrips: 2, masseurTravelFareCents: 1234_00 }
+    const wrapper = await mountCard(doctored)
+    const row = wrapper.find('.masseur-travel')
+    expect(row.exists()).toBe(true)
+    expect(row.find('.cm-switch').attributes('aria-checked')).toBe('true')
+    expect(row.text(), 'the booked trips are priced off the snapshot').toContain(formatCents(1234_00))
+    expect(row.text()).toContain('2 trips')
     wrapper.unmount()
   })
 })

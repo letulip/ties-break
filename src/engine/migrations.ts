@@ -1799,8 +1799,21 @@ export function migrateSave(raw: unknown): WorldState {
   //
   // Idempotent (a non-boolean is the only state it rewrites) and it writes a literal: ZERO draws on
   // any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  //
+  // ⚠ EXTENDED IN PLACE BY STEP 2, ON THE SAME UNMERGED BRANCH (22.08). v59 shipped to no player,
+  // so append-only does not bind it yet and the dial rides in the same block rather than burning a
+  // version number on a build nobody holds:
+  //   * `masseurSessionsPerWeek = 4` – the owner's sessions dial (round 24), opened on the MIDDLE
+  //     rung (every other day – the professional default the pricing is anchored to; the literal
+  //     matches `ECONOMY.masseur.defaultSessions` by the house rule of writing literals here);
+  //   * `masseurTravels = false` – the travel stance, the coach's own default: the switch is what
+  //     buys the seat, and a migration never buys anything.
+  // A save's `pendingTournament` MAY carry `masseurThere` from a step-2 build; absent means he
+  // stayed home, so nothing is back-filled there either.
   if (v === 58) {
     if (typeof save.masseurHired !== 'boolean') save.masseurHired = false
+    if (typeof save.masseurSessionsPerWeek !== 'number') save.masseurSessionsPerWeek = 4
+    if (typeof save.masseurTravels !== 'boolean') save.masseurTravels = false
     v = 59
   }
 

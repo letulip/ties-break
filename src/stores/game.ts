@@ -381,6 +381,24 @@ export const useGameStore = defineStore('game', {
         if (res.type === 'snapshot') this.snapshot = res.snapshot
       })
     },
+    /** v59 step 2: the sessions dial – the engine refuses a rung the market does not sell. */
+    async setMasseurSessions(sessions: number) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setMasseurSessions', sessions, baseRevision: this.revision }),
+        )
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+      })
+    },
+    /** v59 step 2: the travel stance – one more fare on every trip to a paying rung. */
+    async setMasseurTravels(on: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setMasseurTravels', on, baseRevision: this.revision }),
+        )
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+      })
+    },
     /** Buy the coach for competition weeks too, or send him home for them. */
     async setCoachOnEventWeeks(on: boolean) {
       await this.run(async () => {

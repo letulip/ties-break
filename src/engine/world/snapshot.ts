@@ -76,12 +76,12 @@ import { arrivalStatus, entryStatus, tierVerdict } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
-import { masseurRoomNote, masseurUnlocked } from './masseur'
+import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
-import { coachTravelFareFor, travelCostFor } from './sponsors'
+import { coachTravelFareFor, masseurTravelFareFor, travelCostFor } from './sponsors'
 import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
@@ -866,13 +866,33 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         }
       : null,
     physioActive: world.physioActive,
-    // v59, the travelling team step 1 – the masseur card's four facts, all derived: the flag, the
-    // gate (the professional table's own one-way latch), the flat salary, and his room note (the
-    // plan's §4 sentence – '' when nobody is hired).
+    // v59, the travelling team steps 1+2 – the masseur card's facts, all derived: the flag, the
+    // gate (the professional table's own one-way latch), the RUNG's flat weekly bill, his room
+    // note (the plan's §4 sentence – '' when nobody is hired), the dial and the travel stance, and
+    // what the booked trips would cost him a seat on (the coach billing's own as-if trick: priced
+    // with the stance forced ON, because a price the switch's row quotes must not change the
+    // moment the switch is flipped).
     masseurHired: world.masseurHired ?? false,
     masseurUnlocked: masseurUnlocked(world),
-    masseurSalaryCents: ECONOMY.masseur.salaryPerWeekCents,
+    masseurSalaryCents: masseurWeeklyCents(world),
     masseurNote: masseurRoomNote(world),
+    masseurSessionsPerWeek: masseurRungOf(world).sessions,
+    masseurTravels: world.masseurTravels ?? false,
+    ...(() => {
+      const asIf: WorldState = { ...world, masseurHired: true, masseurTravels: true }
+      let masseurTravelFareCents = 0
+      let masseurTravelTrips = 0
+      for (const id of world.entries) {
+        const e = eventById(world, id)
+        if (!e || e.week < world.week) continue
+        const fare = masseurTravelFareFor(asIf, e)
+        if (fare > 0) {
+          masseurTravelFareCents += fare
+          masseurTravelTrips++
+        }
+      }
+      return { masseurTravelFareCents, masseurTravelTrips }
+    })(),
     // W4: the knock, and the question it is asking. Both DERIVED (the prompt's copy is assembled per
     // snapshot off `seed:knockread:<sinceWeek>`, its own sub-stream); only `world.knock` itself is
     // persisted, and only because `choice` is the player's decision.

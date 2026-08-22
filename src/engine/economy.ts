@@ -2261,30 +2261,56 @@ export const ECONOMY = {
   // WATCHES – he works the layoff she is already in and the week-to-week body. See
   // src/engine/world/masseur.ts for the whole argument.
   masseur: {
-    // A FLAT CONTRACT, deliberately: no corridor, no jitter, no draw – the one staff line whose
-    // ledger row is the number on the card. Sized at the plan's proposal «about half the coach's
-    // rung», read against the MIDDLE rung at 17-22 (the first "somebody runs a programme" coach a
-    // fresh professional typically has: ~$60/h × 5h ≈ $300/wk) – and measured, not trusted: the
-    // bench arm and predicted-vs-measured live in the spec. $150/wk ≈ $7.8k/yr, designed to be a
-    // real decision for an Alice ($64k/yr outgoings), a rounding error for an Ines – which is the
-    // plan's own acceptance.
-    salaryPerWeekCents: 150_00,
-    // The at-home table, on top of the physio's own +1. THE SAME HAIR-TRIGGER DIAL the physio note
-    // above records («at 2 the retainer alone erased every policy difference»), so it enters at 1
-    // and the season equation (W2-FATIGUE) keeps its shape; his headline channel is the rehab
-    // cadence below, which condition cannot buy at any price.
-    conditionBonusPerWeek: 1,
-    // THE REHAB CADENCE: every Nth week of an ACTIVE layoff his hands take one extra week off it
-    // (deterministic, off week − sinceWeek; see rollInjury). A 1-2 week niggle gains nothing at any
-    // N – honest: nobody massages a one-week soreness away.
+    // ⭐ STEP 2 RE-CUT THE CONTRACT INTO A DIAL (owner, round 24: «а не слишком ли дешево это для
+    // специалиста?… может быть добавлять настройки сколько раз в неделю он дает свои услуги»). The
+    // step-1 flat $150/wk was half the middle coach's weekly bill and the owner read it right: at
+    // his own real-world friendly rate ($50/h) it buys THREE hours, and a professional's body work
+    // is not three hours. The honest recalibration is RELATIVE, inside the game's own scale:
     //
-    // ⚠ 2, AND IT WAS 3 FOR ONE BENCH RUN (docs/specs/the-masseur-2026-08.md §3). At 3 the measured
-    // whole-career effect was -1.7 weeks against a paired sd of 8 with 1-2 receipts per ~5
-    // professional seasons – a real lever at the EDGE of season noise, which is the plan's own
-    // named failure («not a 1% nudge only a bench can find»). At 2 the moderate-and-up layoffs
-    // lose roughly a third and the receipts arrive roughly once a season, which is what makes the
-    // salary readable; the bench table in the spec carries both arms, predicted vs measured.
-    rehabExtraEveryNWeeks: 2,
+    //   * a SESSION is priced at the top of the middle coach's 17-22 hourly band ($48-72/h,
+    //     `coach.hourlyRateCents`) – a specialist's hour, not a friendly visit;
+    //   * the rungs below make the WEEK read against the staff the game already sells: 2×$75 =
+    //     $150/wk (step 1's own number, surviving as the entry rung), 4×$75 = $300/wk (the middle
+    //     coach's whole weekly bill – «a professional on retainer»), 7×$75 = $525/wk (between the
+    //     high coach's $500 and the elite's $800 – the full-time body man; ≈$27k/yr, beside the
+    //     owner's own «+2 специалиста это ещё +46к» sketch).
+    //
+    // STILL A FLAT CONTRACT PER RUNG: no corridor, no jitter, no draw – the rung is chosen, the
+    // bill is flat per rung, and the ledger row is the number on the card (step 1's legibility
+    // argument, moved one level up).
+    perSessionCents: 75_00,
+    // THE DIAL – how many times a week the table is hers, the owner's own idea. Three rungs, and
+    // each must MEASURABLY beat the one below or the dial is decoration (the plan's §4 law); the
+    // bench table in docs/specs/the-masseur-2026-08.md carries every cell.
+    //
+    //   * rehabExtraEveryNWeeks: every Nth week of an ACTIVE layoff the hands take one extra week
+    //     off it (deterministic, off week − sinceWeek; see rollInjury). N=3 was measured in step 1
+    //     at the EDGE of season noise (-1.7 ± sd 8) – acceptable as the CHEAP rung of a dial, a
+    //     named failure as the only effect of a flat contract. N=2 is step 1's shipped-and-measured
+    //     arm (-2.3..-2.5 weeks/career). N=1 halves a long layoff, which is what daily hands are
+    //     for. A 1-2 week niggle gains nothing at ANY rung (the totalWeeks > 2 guard in
+    //     rollInjury) – honest: nobody massages a one-week soreness away.
+    //   * conditionBonusPerWeek: the at-home table, on top of the physio's own +1, on the weeks she
+    //     is NOT away at a tournament (the away weeks are the travel stance's business below). The
+    //     physio note above records the hair trigger («at 2 the retainer alone erased every policy
+    //     difference»), so the two lower rungs enter at 1 and only the daily rung buys 2 – priced
+    //     at $525/wk, measured in the bench before it shipped.
+    rungs: [
+      { sessions: 2, label: 'Twice a week', rehabExtraEveryNWeeks: 3, conditionBonusPerWeek: 1 },
+      { sessions: 4, label: 'Every other day', rehabExtraEveryNWeeks: 2, conditionBonusPerWeek: 1 },
+      { sessions: 7, label: 'Daily', rehabExtraEveryNWeeks: 1, conditionBonusPerWeek: 2 },
+    ],
+    // What a fresh hire (and every pre-v59 save) stands on: the middle rung – the professional
+    // default the pricing above is anchored to. A LITERAL 4 in the v59 migration, by the house
+    // rule; keep the two in step.
+    defaultSessions: 4,
+    // ⭐ WHAT THE FARE BUYS (step 2, the owner's «влияет ли он на восстановление на глубоких
+    // играх»): when the masseur TRAVELS to a tournament (fare paid, `pendingTournament.masseurThere`),
+    // the run's strain at finalize is relieved by this much PER NIGHT BETWEEN ROUNDS – i.e. ×
+    // (matches − 1), capped at the strain itself. Scales with DEPTH by construction: a first-round
+    // exit has no nights between rounds and buys nothing, a title week has the most – which is
+    // literally the owner's question answered. Zero draws; the knob is read post-strain.
+    tourRecoveryPerRound: 2,
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------

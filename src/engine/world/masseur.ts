@@ -15,15 +15,18 @@
 // player is staring at, and every week he buys back prints a receipt in the feed. Prevention is
 // insurance; recovery is receipts. That is the legible line between the two hires.
 //
-// ⚠ STEP 1 IS SALARY + EFFECT ONLY. The fare – he travels, through `coachTravelFareFor`'s rule
-// asked for a second seat – is step 2 of the plan and none of it is built here. His work in step 1
-// happens AT HOME: the weekly table between trips, and the rehab room during a layoff.
+// ⭐ STEP 2 (owner, round 24): THE DIAL AND THE SEAT. The flat $150 contract became a three-rung
+// sessions-per-week dial (`ECONOMY.masseur.rungs` – the owner's own idea, «настройки сколько раз в
+// неделю он дает свои услуги»), priced per session at a professional's rate; and he TRAVELS now,
+// through `coachTravelFareFor`'s own price rule asked for one more seat (`masseurTravelFareFor` in
+// sponsors.ts – the same `staffSeatFareCents`, never a second implementation). What the fare buys
+// is `masseurTourRelief` below: recovery between rounds, scaled by the depth of the run.
 //
-// ⚠ RNG: NOTHING HERE DRAWS, on any stream. The salary is a flat contract (deliberately not a
-// corridor draw – a salary is a negotiated number the player can read, unlike the physio's
-// per-session band), the hire is a boolean, and the rehab acceleration in injury.ts is a
-// deterministic cadence off (week − sinceWeek). The frozen MAIN capture (41550 / e6b0c709) cannot
-// see this file, by construction.
+// ⚠ RNG: NOTHING HERE DRAWS, on any stream. The salary is a flat contract per rung (deliberately
+// not a corridor draw – a salary is a negotiated number the player can read, unlike the physio's
+// per-session band), the hire, the rung and the travel stance are plain state, and the rehab
+// acceleration in injury.ts is a deterministic cadence off (week − sinceWeek). The frozen MAIN
+// capture (41550 / e6b0c709) cannot see this file, by construction.
 //
 // ⚠ DEPENDENCY DIRECTION. `WorldState` is a TYPE-ONLY import (erased at compile time), so world.ts
 // imports these values with no runtime cycle. Everything needed at runtime comes from SIBLING
@@ -88,6 +91,88 @@ export function hireMasseur(world: WorldState, hire: boolean): void {
  *  two changes can never collide. */
 export const MASSEUR_CHANGE_KEY = 'masseur-since-'
 
+/** THE RUNG SHE IS ON – the one lookup the bill, the cadence and the condition bonus all read, so
+ *  the three can never disagree about what the family is buying. `masseurSessionsPerWeek` is
+ *  validated at the one writer (`setMasseurSessions`), but a hand-built probe world may hold
+ *  anything, so an unknown value falls back to the default rung rather than to a crash – the same
+ *  identity-element discipline `kit ?? null` uses. Pure read, zero draws. */
+export function masseurRungOf(world: WorldState) {
+  const rungs = ECONOMY.masseur.rungs
+  return (
+    rungs.find((r) => r.sessions === (world.masseurSessionsPerWeek ?? ECONOMY.masseur.defaultSessions)) ??
+    rungs.find((r) => r.sessions === ECONOMY.masseur.defaultSessions) ??
+    rungs[0]
+  )
+}
+
+/** WHAT A WEEK COSTS AT HER FAMILY'S CHOSEN RUNG – sessions × the professional session rate, flat.
+ *  The coach's own shape (`coachWeeklyCents` = rate × hours), asked of a second seat: the rung is
+ *  chosen, the bill is flat per rung, and the card's quote IS the ledger's row. Zero draws. */
+export function masseurWeeklyCents(world: WorldState): number {
+  return masseurRungOf(world).sessions * ECONOMY.masseur.perSessionCents
+}
+
+/** THE DIAL (owner, round 24: «настройки сколько раз в неделю он дает свои услуги»). Sets the
+ *  sessions-per-week rung; the engine re-validates against `ECONOMY.masseur.rungs`, so a stale
+ *  screen cannot buy an arrangement the market does not sell. Works with or without a live hire –
+ *  a stance recorded before the hire simply prices the card – but only a HIRED change writes a
+ *  ledger line, because only then does the bill move. `guardNotEnded` FIRST: inside the college
+ *  freeze this refuses with the college sentence, the same order `hireMasseur` documents.
+ *  ZERO draws on any stream. */
+export function setMasseurSessions(world: WorldState, sessions: number): void {
+  guardNotEnded(world)
+  const rung = ECONOMY.masseur.rungs.find((r) => r.sessions === sessions)
+  if (!rung) throw new Error('No such arrangement – the masseur works twice a week, every other day, or daily.')
+  if ((world.masseurSessionsPerWeek ?? ECONOMY.masseur.defaultSessions) === sessions) return
+  world.masseurSessionsPerWeek = sessions
+  if (world.masseurHired ?? false) {
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      // The label, not a number: the price change is on the next weekly bill, which is the row
+      // that may carry figures. Gender-free by construction (R15-7's standing order).
+      text: `The masseur's week is re-cut – ${rung.label.toLowerCase()} on the table from the next bill.`,
+    })
+  }
+}
+
+/** THE TRAVEL STANCE – the coach's `setCoachOnEventWeeks`, asked of the second seat (the plan's
+ *  ruling Б: «массажист ездит»). Default OFF, the owner's own framing for the coach: the automatic
+ *  behaviour is that competition weeks are not staff weeks, and the switch is what adds the seat.
+ *  The fare itself is `masseurTravelFareFor` (sponsors.ts – the coach's price rule, one more
+ *  seat), charged in the play arm beside the coach's; what it buys is `masseurTourRelief` below.
+ *  ZERO draws on any stream. */
+export function setMasseurTravels(world: WorldState, on: boolean): void {
+  guardNotEnded(world)
+  if ((world.masseurTravels ?? false) === on) return
+  world.masseurTravels = on
+  if (world.masseurHired ?? false) {
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: on
+        ? 'The masseur travels to tournaments now – one more fare on every trip, and table work between rounds.'
+        : 'The masseur stays home on tournament weeks – the table waits for her return.',
+    })
+  }
+}
+
+/** ⭐ WHAT THE FARE BUYS (the owner's deep-run question, «влияет ли он на восстановление на
+ *  глубоких играх»): the relief taken off a committed run's strain at `finalizeTournament`, when
+ *  the masseur actually made the trip (`pendingTournament.masseurThere` – recorded in the same arm
+ *  that charged the fare, so the effect and the bill can never disagree about the week).
+ *
+ *  PER NIGHT BETWEEN ROUNDS – × (matches − 1) – which is what makes it the owner's question
+ *  answered rather than a flat discount: a first-round exit has no nights between rounds and buys
+ *  NOTHING (honest – the fare was insurance she did not need that week), a deep run has the most.
+ *  Capped at the strain itself: hands cannot make a week restful, only less expensive.
+ *
+ *  Pure integer arithmetic, zero draws on any stream. */
+export function masseurTourRelief(matchesPlayed: number, strain: number, masseurThere: boolean): number {
+  if (!masseurThere) return 0
+  return Math.min(Math.max(0, strain), ECONOMY.masseur.tourRecoveryPerRound * Math.max(0, matchesPlayed - 1))
+}
+
 /** IS HE WORKING THIS WEEK – the one predicate the bill, the condition bonus and the rehab
  *  acceleration all read, so the three can never disagree about whether he was there.
  *
@@ -107,14 +192,16 @@ export function masseurWorksThisWeek(world: WorldState): boolean {
   return vacationForWeek(world, world.week) === undefined
 }
 
-/** WEEKLY SALARY (tick step 1c, beside `resolvePhysio`). A flat contract in cents – deliberately
- *  not a corridor draw and not jittered, so the line on the ledger is the number on the card, every
- *  week, and the player can read the deal he signed. Suspended weeks (college, family holiday)
- *  charge nothing and say nothing: the physio's own shape, and the card on screen T carries the
- *  standing fact. ZERO draws on any stream. */
+/** WEEKLY SALARY (tick step 1c, beside `resolvePhysio`). A flat contract per RUNG in cents –
+ *  sessions × the professional session rate, deliberately not a corridor draw and not jittered, so
+ *  the line on the ledger is the number on the card, every week, and the player can read the deal
+ *  he signed. Suspended weeks (college, family holiday) charge nothing and say nothing: the
+ *  physio's own shape, and the card on screen T carries the standing fact. The retainer RUNS on a
+ *  tournament week whether or not the masseur travels – the coach's own 08.08 rule: a weekly
+ *  retainer does not stop being owed because she is away at an event. ZERO draws on any stream. */
 export function resolveMasseur(world: WorldState): void {
   if (!masseurWorksThisWeek(world)) return
-  const cost = ECONOMY.masseur.salaryPerWeekCents
+  const cost = masseurWeeklyCents(world)
   world.fundsCents -= cost
   addEvent(world, {
     week: world.week,
@@ -152,7 +239,9 @@ export function masseurRoomNote(world: WorldState): string {
   if (world.injury !== null) {
     return (world.injury.weeksSaved ?? 0) > 0
       ? 'Working the rehab – her return is closer than the clinic promised.'
-      : 'On the table twice a day – the rehab is in professional hands.'
+      : // ⚠ CADENCE-NEUTRAL SINCE THE DIAL: the old line said «twice a day», which the twice-a-week
+        // rung would make a lie on its own card. The verdict survives; the schedule left it.
+        'On the table through the layoff – the rehab is in professional hands.'
   }
   const recentSave = world.injuryHistory.some(
     (h) => (h.weeksSaved ?? 0) > 0 && h.week >= world.week - MASSEUR_NOTE_WINDOW_WEEKS,

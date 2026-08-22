@@ -3248,9 +3248,25 @@ export interface Snapshot {
    *  `MASSEUR_LOCKED_DETAIL` until this is true, so the disabled state and the refused click can
    *  never tell two stories. */
   masseurUnlocked: boolean
-  /** ...his weekly salary in cents – a FLAT contract (no corridor, no jitter), so the card's quote
-   *  IS the ledger's row. */
+  /** ...the weekly bill at the family's chosen rung, in cents – a FLAT contract per rung (sessions
+   *  × the professional session rate, no corridor, no jitter), so the card's quote IS the ledger's
+   *  row. */
   masseurSalaryCents: number
+  /** ⭐ v59 step 2 – THE DIAL (the owner's own idea): sessions a week on the table, one of the
+   *  `ECONOMY.masseur.rungs` sessions values (2 / 4 / 7). The bill, the rehab cadence and the
+   *  condition bonus all follow the rung. */
+  masseurSessionsPerWeek: number
+  /** ...and THE TRAVEL STANCE (step 2, ruling Б: «массажист ездит») – the coach's
+   *  `coachOnEventWeeks` pattern for the next seat: default off, the switch buys one more fare on
+   *  every trip to a paying rung, and the fare buys table work between rounds (the strain relief at
+   *  finalize). */
+  masseurTravels: boolean
+  /** What the booked trips would cost the masseur's seat – priced with the stance forced ON (the
+   *  coach billing's as-if rule: a price the switch's row quotes must not change when the switch is
+   *  flipped), summed over the entries currently held at paying rungs. */
+  masseurTravelFareCents: number
+  /** ...over how many booked trips. */
+  masseurTravelTrips: number
   /** ⭐ THE MASSEUR'S OWN ROOM NOTE (the plan's §4 law): one plain sentence that says what his
    *  hands did lately – the rehab he is working, the layoff that ended early, the quiet weeks –
    *  quoting no figure, '' when nobody is hired. See `masseurRoomNote`. */
@@ -3790,6 +3806,12 @@ export type ToWorker =
   // re-validates the pro-career gate and the college freeze (`hireMasseur` – guardNotEnded first),
   // so a stale screen can neither hire before her first counting W result nor inside the freeze.
   | { id: number; type: 'hireMasseur'; hire: boolean; baseRevision: number }
+  // v59 step 2, the sessions dial and the travel stance. Both re-validated engine-side
+  // (`setMasseurSessions` refuses a rung the market does not sell; both refuse inside the college
+  // freeze through `guardNotEnded`), so a stale screen can neither invent an arrangement nor spend
+  // inside the freeze.
+  | { id: number; type: 'setMasseurSessions'; sessions: number; baseRevision: number }
+  | { id: number; type: 'setMasseurTravels'; on: boolean; baseRevision: number }
   // W3-KIT: move one line of her kit onto another rung. Moving UP buys the item over the counter
   // (charged at once, and she is holding a new one from this week); moving DOWN is free and takes
   // effect at the next scheduled purchase - nobody is refunded for a racket they own.
