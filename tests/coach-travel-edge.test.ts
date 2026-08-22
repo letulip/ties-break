@@ -1113,7 +1113,44 @@ const FROZEN = {
    *  the paragraph on `middleGrinder`, and `PRE_V57` below for the identity. */
   /** ⚠ MOVED WITH ITS TWINS a fourth time (22.08, round 24 #5, schema v58) – see the paragraph on
    *  `middleGrinder`, and `PRE_V58` below for the identity. */
-  selfTravelling: '7f1b959ac0abd0b2e07a3957a783ab0ad6353c94e37d940fb6885b64277ac006',
+  /** ⭐⭐ RE-FROZEN – ALONE OF THE THREE – FOR THE 22.08 RULINGS WAVE (recovery variant C, the
+   *  dial's +1/+2/+3, per-match tour pricing, the return-week session, the team's prize shares),
+   *  and the SPLIT IS THE ATTRIBUTION: the two grinder hashes are byte-identical across the whole
+   *  wave, because week 156 ends at age 16.6 and neither grinder career has a counting W-series
+   *  result – so `activeLadderOf` never says 'wta' for them and every one of the five changes is
+   *  gated behind that door, a hire (none exists), or a wta cheque (none is won). This career –
+   *  the 8k player-policy one – IS on the professional ladder inside the freeze, and variant C's
+   *  base-5 pro weeks really did change the seasons it played.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file demands: `tools/frozen-key-diff.ts` on both trees,
+   *  control = a detached worktree at `53146b7` (this branch with every commit of the wave
+   *  reverted – the agent was alone on the branch, so the branch base IS "my own change
+   *  reverted"). Null-arm checked both ways (the 17.08 hazard): `grep -rl proPhaseRecoveryBase|
+   *  staffPrizeShareCents|masseurTourWeekCents|masseurReturnDue` = 0 files in A's src, and B
+   *  carries each constant plus its readers. All three arms, headers checked against the
+   *  invocations – ⚠ and the check caught a THIRD zsh word-split (a `set -- $arm` loop fed every
+   *  run `preset 0 policy 1`); those captures were thrown away and re-taken with explicit flags.
+   *
+   *  THE VERDICT: grinder arms **0 keys of 69 moved**. Player arm **25 value keys moved** –
+   *  `condition`, `results`, `events`, `fundsCents`, `skills`, `kidRankWta`, `seasonHistory`,
+   *  `careerTotals`, `trophiesByTier`, `bestFinishByTier`, `knock`, `academy`, `offers`,
+   *  `milestones`, `financeWeeks`, `internationalEntryWeeks`, `proEntryWeeks`,
+   *  `medicalWithdrawalWeek`, `lastSeasonSummary`, `nextEventId`, `prevKidRank`, `prevKidRankWta`,
+   *  `seasonRecord`, `seasonStartRank`, `seasonWins` – a career that genuinely played different
+   *  professional weeks on base 5. UNMOVED, and the list is the argument: **`rngMain`**
+   *  (seventeenth wave running – nothing here draws), **`schemaVersion`** (59 both sides – the
+   *  share mechanic persists NOTHING, verified rather than promised), `entries`, `seasonEntries`,
+   *  `season`, `cohort`, `profile`, `potential`, `injury`, `injuryHistory`, `kidFundsCents`
+   *  (under 18 at week 156), `coachId` (null – so ZERO share rows on this arm by the self-coached
+   *  rule), and all three masseur keys on their defaults. Same calendar, same entries, same dice –
+   *  what changed is how tired a professional week leaves her, which is exactly the ruling.
+   *
+   *  ⚠ THE `PRE_*` selfTravelling IDENTITIES ARE RE-TAKEN against the new world (the file's own
+   *  precedent for a career-content wave – the v50/wild-cards paragraph): a data wave cannot be
+   *  rolled back by a version number, but swapping ONLY `schemaVersion` on the new world still
+   *  reproduces each, which is all those lines ever claimed. The frozen MAIN capture
+   *  (41550 / e6b0c709) is untouched and was re-run green beside this re-freeze. */
+  selfTravelling: '2c87f829d75a63674900e88dad48ffe797e5c8a20d9b43e55c2f917b7a2ce2c1',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1140,7 +1177,7 @@ const FROZEN = {
 const PRE_V57 = {
   middleGrinder: '94b9f1cef8eb5f74c573b909cd1a19c4bbe6888aed6c7070bedbb4371db4bcef',
   eliteGrinder: '52a3e09c48882dc43dc78644eb4b288b3c48f1f9b59e0f3add6d3db611fbc4e2',
-  selfTravelling: 'fa2ac758e478fbff67f80c9ed8b6015c2401f581de73c496debae125e6f44f6c',
+  selfTravelling: 'fcb7ca425632583aad2efa58ffb012c10d1e5751dd9a873aba9357aad852a8e0',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v57 – the identity that proves the v58 re-freeze
@@ -1163,7 +1200,7 @@ const PRE_V57 = {
 const PRE_V58 = {
   middleGrinder: '2137a9e5e2a69ca0af681e051b3c224dcb2179bc41c2f2c9f6eb4215b82064e2',
   eliteGrinder: '87b7f5860fb28f3147a416a275fd49fd8e8d684319fee18372df554c91a9cc1d',
-  selfTravelling: '8d379176f767d1e74a986d585f45cd3d08a74f1d1517a68a26cc289700fae299',
+  selfTravelling: '13cf9b6d871d21365a3ae410997ae0eb9196a5da872699e1c5f5a87955660c7d',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v58 – the identity that proves the v59 re-freeze
@@ -1173,7 +1210,7 @@ const PRE_V58 = {
 const PRE_V59 = {
   middleGrinder: '3c1876b343be327f440f61f40a4f845e31274e74e729c3ad79807ca54d05e24c',
   eliteGrinder: '1ab7aae6fc3b6a5df9e778e878c6dffff91b099f2c19f00d8bcf3bed8f45927f',
-  selfTravelling: 'f3ad9f88a2b8b95572c5670a78d70939160ccf251a3511b6d0535bd9776c05de',
+  selfTravelling: '4f3d56881fdc538a6b326c9185de9fe1e3089ce2e077ae445055bd3cfd606e2d',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v55 – the identity that proves the v56 re-freeze
@@ -1197,7 +1234,7 @@ const PRE_V59 = {
 const PRE_V56 = {
   middleGrinder: '5adaba3d2f9200f45d75189cd50bc8dac5da6f67e1e62d1fe3ffd4a3b93dc8f4',
   eliteGrinder: '5b966447a2d321ce81c0239568aec6d48400518871fa5b8b36781ba5b749cd9b',
-  selfTravelling: 'f8587cf69a0a388176ee89b181f8b1409b60a7b988d3bf0adb02f3bdf4c1d46e',
+  selfTravelling: '00420f786008bace3fd37fc16ba01cc727094000281bc4995d1eb0d8cf67f70c',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v54 – the identity that proves the v55 re-freeze
@@ -1211,7 +1248,7 @@ const PRE_V56 = {
 const PRE_V55 = {
   middleGrinder: '9fbeef43715151638d343637f513019421f8eaa8bb9c2430d221abdaca73466e',
   eliteGrinder: '19a26b42147619412944d74e3ddffe37290d3387b66629267f377ede31e0e301',
-  selfTravelling: '43f39be1aa604cbd457a049ee2cbd93e61c4fa596da1562d4412ff38ecdbe82a',
+  selfTravelling: 'e91be33c67f4dfebd6670bf9748e394addd62b5244452f17c555c86056762a5b',
 }
 
 /** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
@@ -1252,7 +1289,7 @@ const PRE_V55 = {
 const PRE_V52 = {
   middleGrinder: '957a343dee1e3c9c8135b821cc223aa72779e2f2687cc00d7d55f369b7f7c399',
   eliteGrinder: '3d78611cd6cb3185044aeab113809a363b1b8ed2bea06538483d8498aa8ee0d7',
-  selfTravelling: 'cbf86bc0370206c527118fc36ede642016520829d6ffbb510f9e027fb59f74f5',
+  selfTravelling: 'a0e29c36acb0452d1b4c6800bfb18bbdcd7f8c1079be75f0708a6e0b731e8505',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
@@ -1267,7 +1304,7 @@ const PRE_V51 = {
    *  different season cannot produce the old season. The identity is re-anchored to the new world, so
    *  it goes on doing its job – if a LATER wave moves this career through anything but
    *  `SAVE_SCHEMA_VERSION`, this line goes red beside the freeze exactly as it just did. */
-  selfTravelling: '9ea5dab5d2a8f9a3e6a5a20b316843b981990b0884939b2f474450f87a07b149',
+  selfTravelling: 'bb14cdecda0a13668df1bb7bb5024406a9ed21a02161eb1a53698a48bbecbd14',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -1295,7 +1332,7 @@ const PRE_V50 = {
    *  line: this wave changed the CAREER, not a schema field, so the rollback is re-anchored to the
    *  new world. The two grinder hashes in this block did NOT move, which is the identity doing its
    *  job – a change that reaches one career of three shows up in one pair of hashes of three. */
-  selfTravelling: '42a85714d6392ee4d78e7653e391ca3937ea36212168d2b5187b3c53a4311621',
+  selfTravelling: 'b6edef407671d1c2a0da8cbff9c8eacdce2296315cf58980d931010495da0629',
 }
 const FREEZE_WEEKS = 156
 
@@ -1329,6 +1366,15 @@ function walkFrozenCareer(presetIndex: number, policyIndex: number, force?: Part
   // would move the hashes for a reason these two lines name.
   expect(world.masseurSessionsPerWeek, 'the v59 dial is present and on its default').toBe(4)
   expect(world.masseurTravels, 'the v59 travel stance is present and OFF').toBe(false)
+  // ⚠ 22.08 rulings wave: the return-week mark needs a HIRE at finalize, so it can never exist
+  // here – asserted, because a key that appears only sometimes is exactly what a whole-world hash
+  // is worst at explaining. And no share row can exist either: a share needs a wta cheque, which
+  // the grinders never win inside 156 weeks, or a coach, which the player arm does not have.
+  expect('masseurReturnDue' in world, 'no return-session mark in a masseur-less career').toBe(false)
+  expect(
+    world.events.some((e) => e.text.includes("share of the prize money") && e.type === 'expense'),
+    'no staff share row in any frozen career',
+  ).toBe(false)
   return world
 }
 
