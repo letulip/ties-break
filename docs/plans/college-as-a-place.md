@@ -203,11 +203,15 @@ refuses to tick past a reveal; the entry scan is gated on `inCollege`) plus the 
 heals a stranded save on load, and the ranking rule that stops an all-zero table crowning anybody.
 Record: `tools/college-freeze-probe.ts`, `tests/college-freeze.test.ts`.
 
-⚠ **D2 – the academic year – in work 22.08.** The fork moves off her birthday («В колледж она пошла
-ровно в день своего рождения, а должна была в начале учебного года») to ask-after-school /
-place-RESERVED / depart-in-September, and the entry release moves WITH her to the departure – an
-entry made while she still plays before September is a commitment she made. *(Status line to update
-when D2 reports.)*
+⭐ **D2 – the academic year – LANDED 22.08.** The fork moved off her birthday («В колледж она пошла
+ровно в день своего рождения, а должна была в начале учебного года») to three moments: the ASK
+fires when school ends (`schoolEndWeek` – week 242 for Jan–Aug births, 294 for Sep–Dec, against the
+old ~261–309 on the 19th birthday), the HOLD locks the quote she reserved and books
+`fork.departsWeek`, and the DEPART lands on the first September after her 19th – so the 52-week gap
+is her last junior season, fully playable, and the entry release fires AT departure (B1's
+full-refund rung verbatim: an entry made while she still plays is a commitment she made). A terminal
+ending in the gap voids the reservation and shows the right epilogue. Schema v58; the calendar
+carries a "Leaves for college" marker. Spec: `docs/specs/college-departure-2026-08.md`.
 
 ## 6b. The open controls at college – E2's audit, for the owner to rule on
 
