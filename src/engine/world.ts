@@ -271,8 +271,8 @@ import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, accep
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
 export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, rolloverKitAllowance }
-import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
-export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
+import { restRecoveryBonus, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
+export { restRecoveryBonus, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.
@@ -3029,9 +3029,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         the deal LAGS results; the gate (18+, a counting W standing inside the bar, one deal at
   //         a time) is `reviewAdOffer`'s own. Behind the SAME freeze gate as the kit review one line
   //         up – «nobody writes to an amateur» silences both kinds of sponsor identically, while a
-  //         deal SIGNED before she enrolled keeps its banked fee and lapses on its own clock (plan
-  //         §4c – no penalty, ever). At most one draw, on `seed:ad:<week>`, never MAIN: the frozen
-  //         capture (41550 / e6b0c709) cannot see it.
+  //         deal SIGNED before she enrolled keeps its banked fee and lapses on its own clock, its
+  //         shoot weeks lapsing silently with it (plan §4c – no penalty, ever; `accrueCondition`
+  //         guards the freeze before it charges a shoot). At most one draw, on `seed:ad:<week>`,
+  //         never MAIN: the frozen capture (41550 / e6b0c709) cannot see it.
   if (!inCollege(world)) reviewAdOffer(world)
 
   // 0a0c-ter (W3-ACT2 §7): AND THE PROFESSIONAL RUNGS PAY A QUARTERLY RETAINER. Four arrivals a
@@ -3331,21 +3332,22 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     })
     // The week is match-free after all, so she earns the FULL free-week recovery ladder that
     // accrueCondition withheld when it still believed she would play (it ran with played = true, so
-    // she banked matchWeekRecoveryBase instead of recoveryBase + the rest-slider bonus). Written as
-    // the DIFFERENCE so it lands on exactly what a non-playing week pays, whatever the two knobs
-    // are set to – and so this stays byte-consistent with the bench's independent trace, which
-    // reads the week as free. Integer, clamped, zero draws.
+    // she banked matchWeekRecoveryBase instead of recoveryBase + the rest-slider bonus). The
+    // difference is the ONE oracle `withheldFreeWeekRecovery` computes for all three refund sites
+    // ('tournament' names the rung that was banked), so it lands on exactly what a non-playing week
+    // pays, whatever the knobs are set to – and ⭐ on a SHOOT week (ad step 2, §4a) that is the
+    // travel figure she already banked, so nothing is owed: the first ad-shoot bench caught this
+    // exact site refunding a shoot week its rest (+9) through the doctor's arm. Integer, clamped,
+    // zero draws.
     //
     // ⭐ THE NOTE THAT USED TO STAND HERE IS ANSWERED (18.08). It read: "skipEvent (R9-9) hands back
     // the rest-slider bonus ALONE … a skipped event week still under-pays by recoveryBase. NOT touched
     // here: fixing it moves shipped condition traces, which is a tuning call, not a merge call."
     // The owner ruled it a fix rather than a tuning call - the two weeks are the same week - and
-    // `skipEvent` now uses this identical expression. The two paths cannot part again without both
-    // being edited.
+    // `skipEvent` now reads the identical oracle. The paths cannot part again: there is one
+    // expression left to edit.
     world.condition = clamp(
-      world.condition +
-        (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
-        restRecoveryBonus(world.plan.rest),
+      world.condition + withheldFreeWeekRecovery(world, 'tournament'),
       ECONOMY.condition.min,
       ECONOMY.condition.max,
     )
@@ -3676,10 +3678,11 @@ export function skipEvent(world: WorldState, eventId: string): void {
   //
   // ⚠ THE THIRD CASE IS DELIBERATELY UNTOUCHED, and the owner named it: retiring MID-MATCH through
   // injury. She walked on court and played, so that week is not match-free and never reaches here.
+  //
+  // ⭐ SHOOT-AWARE SINCE AD STEP 2 (§4a): the oracle pays nothing on a shoot week – the travel
+  // figure was banked and the travel figure is what that week's rest is worth, skipped event or no.
   world.condition = clamp(
-    world.condition +
-      (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
-      restRecoveryBonus(world.plan.rest),
+    world.condition + withheldFreeWeekRecovery(world, 'tournament'),
     ECONOMY.condition.min,
     ECONOMY.condition.max,
   )

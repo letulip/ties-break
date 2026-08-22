@@ -140,35 +140,55 @@ const academyEndBody = computed(() => {
   return 'We have read her year and we are not able to go on backing her through the next one. It is a decision about our list rather than about her.'
 })
 
-// ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, the-face-and-the-court.md §6 step 1). The other kind
-// of sponsor entirely: a non-endemic house – a watchmaker – paying cash for her FACE, not kit for
-// her tennis. A proposal like the kit letters (Sign / Refuse / a real deadline), NOT a notice, so it
-// shares their foot; what it does not share is their paper's contents, because the deal is three
-// facts and no obligation: the fee, the term, and that nothing else is asked of her.
+// ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, the-face-and-the-court.md §6 steps 1-2). The other
+// kind of sponsor entirely: a non-endemic house – a watchmaker – paying cash for her FACE, not kit
+// for her tennis. A proposal like the kit letters (Sign / Refuse / a real deadline), NOT a notice,
+// so it shares their foot; what it does not share is their paper's contents, because the deal is
+// four facts: the fee, the term, the shoot weeks that are its price in time (step 2, §4a – the
+// owner's ruling), and the bound on everything else.
 //
 // ⚠ NO LETTERHEAD, AND THAT IS THE ACADEMY'S OWN RULE APPLIED, NOT A MISSING PICTURE. The sponsor
 // marks are keyed by KIT RUNG (`public/images/sponsors/<tier>.webp`) and an advertising house is on
 // no rung of that ladder; there is no art for it and none may be made for it, so the sheet signs
 // itself the way the desks' and the academy's do.
 //
-// ⚠ THE NO-CONSEQUENCE LINE IS ON THE PAPER for the same reason the kit letter states its failure
-// mode: a letter must leave no consequence unstated, and here the consequence IS that there is
-// none – step 1's deal is «cash only, no cost at all», and a parent should be able to read that and
-// distrust it slightly, which is what makes step 2's priced version land later.
+// ⚠ THE SHOOT WEEKS ARE ON THE PAPER for the same reason the kit letter states its failure mode: a
+// letter must leave no consequence unstated. Step 2 (§4a, the owner's ruling) priced the cheque in
+// TIME – `shootCount` working weeks a term, named by the signature – so the open letter states the
+// count and the rule, and the signed letter names the weeks themselves (the engine's own
+// `shootWeeks`, never a number this sheet worked out). The cost is stated in the house's words, not
+// the engine's: a shoot week rests her the way a trip does, and no figure is quoted.
 const isAd = computed(() => props.offer.kind === 'ad')
 const adTerms = computed(() => props.offer.terms as AdOfferTerms)
 /** "Twelve months", because a house writing to a family says it the way the kit letters say "three
  *  seasons" – words, not a numeral – falling back to the numeral past the terms the game issues. */
 const adTermWord = computed(() => (adTerms.value.termWeeks === 52 ? 'Twelve months' : `${adTerms.value.termWeeks} weeks`))
-/** What the paper reports once it is a record. The signed arm quotes the engine's own `untilWeek` –
- *  the week `signOffer` froze onto the deal – never a number this sheet worked out. */
+/** The promise count, in a house's words ("Two") – same rule as the term above – falling back to
+ *  the numeral past the counts the game issues (the catalogue says 2; the plan's bigger asks are
+ *  recorded, not built). */
+const adShootCountWord = computed(() => {
+  const n = adTerms.value.shootCount
+  return n === 1 ? 'One' : n === 2 ? 'Two' : n === 3 ? 'Three' : `${n}`
+})
+/** The named weeks once the signature has chosen them, in the game's own calendar words
+ *  ("W14 '31 and W38 '31") – `weekLabel` is the unit every surface speaks. Empty until signed. */
+const adShootWeekLine = computed(() => {
+  const weeks = adTerms.value.shootWeeks ?? []
+  const labels = weeks.map((w) => weekLabel(w))
+  if (labels.length <= 1) return labels[0] ?? ''
+  return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
+})
+/** What the paper reports once it is a record. The signed arm quotes the engine's own `untilWeek`
+ *  and `shootWeeks` – the facts `signOffer`/`acceptOffer` froze onto the deal – never a number this
+ *  sheet worked out. */
 const adSettled = computed(() => {
   const o = props.offer
   switch (o.state) {
     case 'signed': {
       const running = props.week <= (o.untilWeek ?? -1)
+      const shoots = adShootWeekLine.value
       return running
-        ? `Signed – the fee is banked, and the campaign runs to ${weekLabel(o.untilWeek ?? o.week)}.`
+        ? `Signed – the fee is banked, the campaign runs to ${weekLabel(o.untilWeek ?? o.week)}${shoots ? `, and her shoot weeks are ${shoots}` : ''}.`
         : 'Signed. The fee was banked, and the campaign has run its course.'
     }
     case 'refused':
@@ -528,10 +548,10 @@ const settled = computed(() => {
     </div>
   </article>
 
-  <!-- ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, step 1) – the non-endemic house. A PROPOSAL, so it
-       keeps the kit letters' foot (the window, Sign/Refuse, the settled line) and none of their
-       paper: no letterhead (no rung, no mark – see the script), no kit, no obligation. The terms
-       are the whole deal and the last line says out loud that nothing else is in it. -->
+  <!-- ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, steps 1-2) – the non-endemic house. A PROPOSAL, so
+       it keeps the kit letters' foot (the window, Sign/Refuse, the settled line) and none of their
+       paper: no letterhead (no rung, no mark – see the script), no kit. The terms are the whole
+       deal, the shoot weeks are its whole price, and the last line bounds what is owed. -->
   <article v-else-if="isAd" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <p class="offer-body">
@@ -547,9 +567,15 @@ const settled = computed(() => {
           {{ adTermWord }} from signing, her face is with us – and in no other campaign while that
           runs.
         </li>
+
         <li>
-          Nothing else is asked of her: no tournaments owed, no appearances scheduled, nothing to
-          pay back – whatever the season brings.
+          {{ adShootCountWord }} weeks of her season are shoot weeks – ours. In season, spread
+          apart, and named the day this is signed, so the family can plan around them. A shoot is a
+          working week: she will rest less in it, as she would on any trip.
+        </li>
+        <li>
+          Beyond those weeks nothing is owed: no tournaments, no results, nothing to pay back –
+          whatever the season brings.
         </li>
       </ul>
       <p class="offer-sign-off">– {{ adTerms.brand }}</p>

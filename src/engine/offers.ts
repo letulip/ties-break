@@ -1471,6 +1471,73 @@ export function adWritesAt(seed: string, week: number, chance: number): boolean 
   return rng() < chance
 }
 
+/** ⭐⭐ THE SHOOT WEEKS, CHOSEN BY THE SIGNATURE (the-face-and-the-court.md §4a, step 2 – the
+ *  owner's own design: «наверное в зависимости от всяких съемок и прочего может меняться
+ *  восстанавливающий эффект недели»). NO second calendar, no blocking, no conflicts: these are
+ *  ordinary weeks of her season that will simply recover like travel weeks rather than rest weeks
+ *  (`accrueCondition` reads them through `adShootWeek`), so the whole choice is WHICH weeks the
+ *  letter names.
+ *
+ *  THE CONSTRUCTION, and each clause is a promise the letter makes:
+ *   - `count` of them (Quiet Hour's paper says 2 – `AdOfferTerms.shootCount`, frozen at arrival);
+ *   - IN-SEASON by construction – the off-season weeks are filtered out of every pool, because a
+ *     cost paid in the off-season is free money wearing a cost's clothes (plan §5.2, owner-ruled);
+ *   - SPACED APART – one draw per equal slice of the term, so two shoots cannot bunch into one
+ *     fortnight, and a hard non-adjacency filter besides (a campaign is not a tour);
+ *   - no earlier than `leadWeeks` after the signature, so the player reads the named weeks with
+ *     time to plan around them rather than inside one of them.
+ *
+ *  RNG: `count` draws on `${seed}:ad:shoots:<signWeek>` – the ad post's own purpose scope (the
+ *  allowlist in tests/offers.test.ts names `seed:ad:` deliberately), keyed on the SIGNING week so a
+ *  replayed signature names the same weeks. ZERO draws on MAIN: a player action may draw on a
+ *  purpose-scoped stream at the moment of the action (the arrival roll's own discipline), and the
+ *  frozen capture (41550 / e6b0c709) cannot see it.
+ *
+ *  A degenerate term (shorter than its slices can hold in-season) yields FEWER weeks rather than an
+ *  off-season or bunched one – the promises above outrank the count, and the shipped catalogue
+ *  (52-week term, 3-week off-season, lead 4) leaves every slice ~20 eligible weeks deep. */
+export function chooseShootWeeks(
+  seed: string,
+  signWeek: number,
+  termWeeks: number,
+  count: number,
+  leadWeeks: number,
+): number[] {
+  const rng = rngFromSeed(`${seed}:ad:shoots:${signWeek}`)
+  const until = signWeek + Math.max(1, termWeeks) - 1
+  const from = Math.min(signWeek + Math.max(0, leadWeeks), until)
+  const span = until - from + 1
+  const slice = Math.max(1, Math.floor(span / Math.max(1, count)))
+  const weeks: number[] = []
+  for (let i = 0; i < count; i++) {
+    const lo = from + i * slice
+    const hi = i === count - 1 ? until : Math.min(until, lo + slice - 1)
+    const pool: number[] = []
+    for (let w = lo; w <= hi; w++) {
+      if (isOffSeasonWeek(w)) continue
+      if (weeks.some((s) => Math.abs(s - w) <= 1)) continue
+      pool.push(w)
+    }
+    if (pool.length === 0) continue
+    weeks.push(pool[Math.floor(rng() * pool.length)])
+  }
+  return weeks
+}
+
+/** IS THIS WEEK A SHOOT WEEK OF THE DEAL IN FORCE? The one question the condition accumulator asks
+ *  (`accrueCondition` gives a yes the travel week's recovery instead of the rest week's), answered
+ *  off the signed paper's own named weeks and nothing else – no re-derivation, so the recovery the
+ *  engine charges and the weeks the letter names can never disagree. Pure read, zero draws.
+ *
+ *  ⚠ THE COLLEGE FREEZE IS NOT CHECKED HERE, deliberately – this file owns the paper, the world
+ *  owns the freeze. The caller that charges recovery guards the freeze itself (see
+ *  `accrueCondition`): a shoot week the freeze swallows lapses silently, no penalty, no makeup. */
+export function adShootWeek(offers: Offer[], week: number): boolean {
+  const deal = activeAdDeal(offers, week)
+  if (!deal) return false
+  return ((deal.terms as AdOfferTerms).shootWeeks ?? []).includes(week)
+}
+
 /** THE ADVERTISING DEAL IN FORCE THIS WEEK, or null. Same contract as `activeKitDeal`: honoured
  *  from `fromWeek` to `untilWeek` and not a week further, off the offer's own frozen terms. */
 export function activeAdDeal(offers: Offer[], week: number): Offer | null {

@@ -16,6 +16,8 @@ import InboxSheet from '../../src/components/InboxSheet.vue'
 import OfferLetter from '../../src/components/OfferLetter.vue'
 import { useGameStore } from '../../src/stores/game'
 import { ECONOMY } from '../../src/engine/economy'
+import { chooseShootWeeks } from '../../src/engine/offers'
+import { weekLabel } from '../../src/shared/dates'
 import type { AdOfferTerms, Offer, Snapshot } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
 
@@ -48,7 +50,7 @@ function letter(overrides: Partial<Offer> = {}, terms: Partial<AdOfferTerms> = {
     week,
     deadlineWeek: week + AD.decideWeeks - 1,
     state: 'open',
-    terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, ...terms },
+    terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: AD.shootWeeksPerTerm, ...terms },
     ...overrides,
   } as Offer
 }
@@ -68,10 +70,18 @@ describe('OfferLetter – the advertising house has its own sheet', () => {
     expect(text).toContain('paid the day this is signed')
     // The term, in a house's words rather than a numeral.
     expect(text).toContain('Twelve months')
-    // ⚠ STEP 1'S WHOLE DEAL, SAID OUT LOUD: no consequence may go unstated, and here the
-    // consequence IS that there is none.
-    expect(text).toContain('Nothing else is asked of her')
+    // ⚠ RE-AIMED FOR STEP 2 (owner ruling 22.08). Step 1's letter said «Nothing else is asked of
+    // her: … no appearances scheduled» and the owner read that line and ruled it dead: «съемки
+    // должны быть иногда и это надо как-то прописывать». The paper now states its price in time –
+    // the shoot count in the house's words, the naming rule, and the cost said plainly WITHOUT an
+    // engine figure – and bounds what is owed beyond it.
+    expect(text).toContain('Two weeks of her season are shoot weeks')
+    expect(text).toContain('named the day this is signed')
+    expect(text).toContain('she will rest less in it')
+    expect(text).toContain('Beyond those weeks nothing is owed')
     expect(text).toContain('nothing to pay back')
+    expect(text).not.toContain('Nothing else is asked of her')
+    expect(text).not.toContain('no appearances scheduled')
     // A PROPOSAL: both controls, and the window under them.
     expect(text).toContain('Sign')
     expect(text).toContain('Refuse')
@@ -93,10 +103,16 @@ describe('OfferLetter – the advertising house has its own sheet', () => {
   })
 
   it('the four settled states are four different sentences, and none offers a decision', () => {
-    const signedRunning = letter({ state: 'signed', decidedWeek: 300, fromWeek: 300, untilWeek: 351 })
+    const signedRunning = letter(
+      { state: 'signed', decidedWeek: 300, fromWeek: 300, untilWeek: 351 },
+      { shootWeeks: [314, 340] },
+    )
     const running = mount(OfferLetter, { props: { offer: signedRunning, week: 320 } as never })
     expect(running.text()).toContain('the campaign runs to')
     expect(running.text()).toContain('fee is banked')
+    // ⭐ STEP 2: the record NAMES the weeks the signature chose, in the game's own calendar words –
+    // the engine's `shootWeeks` verbatim, never a number the sheet worked out.
+    expect(running.text()).toContain(`her shoot weeks are ${weekLabel(314)} and ${weekLabel(340)}`)
     running.unmount()
 
     const signedOver = mount(OfferLetter, { props: { offer: signedRunning, week: 400 } as never })
@@ -170,6 +186,23 @@ describe('InboxSheet – the letter is in the list, the row says what it is, the
     expect(text).toContain('one-time fee')
     expect(text).toContain('paid to the family now')
     expect(text).toContain('This cannot be undone.')
+    // ⭐ STEP 2 (⚠ re-aimed from step 1's «nothing else asked of her», which the owner ruled dead):
+    // the confirm PREVIEWS the exact weeks the signature will name – the same `chooseShootWeeks`
+    // call the engine makes, on the snapshot's own seed and week, so deciding happens with the
+    // weeks in hand. The expectation computes them the same way; a drifted preview fails here.
+    const store = useGameStore()
+    const t = open.terms as AdOfferTerms
+    const expected = chooseShootWeeks(
+      store.snapshot!.seed,
+      store.snapshot!.week,
+      t.termWeeks,
+      t.shootCount,
+      ECONOMY.advertising.shootLeadWeeks,
+    ).map((w) => weekLabel(w))
+    expect(expected).toHaveLength(AD.shootWeeksPerTerm)
+    expect(text).toContain(`with her shoot weeks on ${expected.join(' and ')}`)
+    expect(text).toContain('working weeks, less rest in them')
+    expect(text).not.toContain('nothing else asked of her')
     // ...and not the KIT confirm's sentence: the branch must not fall through to kit arithmetic.
     expect(text).not.toContain('tournaments a season')
     wrapper.unmount()

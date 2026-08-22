@@ -8,7 +8,8 @@
 //
 // ⚠ DEPENDENCY DIRECTION. `WorldState` is a TYPE-ONLY import (erased at compile time), so world.ts
 // imports these values with no runtime cycle. Everything this file needs at runtime comes from
-// SIBLING leaves – ledger, age, entryCaps, ladder, bookings – which is what made the cut clean:
+// SIBLING leaves – ledger, age, entryCaps, ladder, bookings – plus the engine leaf offers.ts
+// (ad step 2's shoot-week read) – which is what made the cut clean:
 // measured at 11 call-backs into world.ts before those landed, 0 after.
 //
 // ⚠ RNG: nothing here draws. These are pure reads over persisted state plus the ECONOMY knobs, so
@@ -47,6 +48,10 @@ import {
   yearEndJuniorRank,
 } from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
+// ⭐ Ad step 2 (§4a): the one question the recovery ladder asks the signed endorsement – is this a
+// shoot week? `offers.ts` is an engine LEAF (it reaches only economy/rng/calendar/world-ledger), so
+// the edge runs the same direction as every other import in this file.
+import { adShootWeek } from '../offers'
 import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
 
@@ -67,6 +72,45 @@ export function restRecoveryBonus(restPercent: number): number {
   return 0
 }
 
+/** ⭐ AD STEP 2 (§4a): IS A SHOOT WEEK IN FORCE – the signed endorsement's named week, outside the
+ *  college freeze? ONE predicate, read by the accumulator below AND by every withheld-recovery
+ *  refund (`withheldFreeWeekRecovery`), so the charge and its refunds can never disagree about
+ *  what kind of week this was.
+ *
+ *  ⚠ THE FREEZE HALF IS `inCollege`'s own comparison INLINED, not a second opinion:
+ *  `world/college.ts` is the middle of the package and this file is a gate leaf (see the header's
+ *  dependency note – the same reason `guardNotEnded` in world/constants.ts reads `ending.type`
+ *  instead of importing it). A shoot week the freeze swallows lapses silently – no penalty, no
+ *  makeup week («мы ни за что не наказываем», plan §4c). Pure read, zero draws. */
+export function adShootHolds(world: WorldState): boolean {
+  const atCollege = world.college !== null && world.week < world.college.untilWeek
+  return !atCollege && adShootWeek(world.offers, world.week)
+}
+
+/** THE WITHHELD RECOVERY, OWED WHEN A "PLAYING" WEEK ENDS MATCH-FREE – the one oracle behind the
+ *  three refund sites (the medical withdrawal and `skipEvent` in world.ts, the practice medical
+ *  cancellation in planner.ts). `accrueCondition` pays a week believing she will play; when the
+ *  match then never happens, the difference between the MATCH-FREE figure and what was banked is
+ *  handed back, "the week resolves as a normal non-playing week" (owner 18.08: «она и в одном
+ *  случае не играла и в другом»).
+ *
+ *  ⭐ AND IT IS SHOOT-AWARE, which is why it is a function and not three inline expressions any
+ *  more: on a shoot week the match-free figure IS the travel figure (§4a – the week recovers like
+ *  a trip whatever else it holds), and `accrueCondition` already banked exactly that, so NOTHING
+ *  is owed. Without this the refund paths quietly handed a shoot week its rest back – measured
+ *  live by tools/ad-shoot-bench.ts's first draft: a medically-withdrawn entry on a shoot week
+ *  netted +9, the full rest week the ruling says she does not get.
+ *
+ *  `paid` names the rung `accrueCondition` banked when it believed she would play: 'tournament'
+ *  weeks banked `matchWeekRecoveryBase`, 'practice' weeks banked `recoveryBase` (the friendly
+ *  forfeits only the slider). Pure integer, zero draws – the caller clamps. */
+export function withheldFreeWeekRecovery(world: WorldState, paid: 'tournament' | 'practice'): number {
+  const c = ECONOMY.condition
+  if (adShootHolds(world)) return 0
+  const matchFree = c.recoveryBase + restRecoveryBonus(world.plan.rest)
+  return matchFree - (paid === 'tournament' ? c.matchWeekRecoveryBase : c.recoveryBase)
+}
+
 /** Pure INTEGER condition accumulator (zero RNG). Round-9 owner redesign: fatigue comes from
  *  MATCHES (matchDrain, applied when a run COMMITS at finalizeTournament – so a skipped event
  *  week (R9-9) or a walkover costs nothing by construction); recovery comes from TIME:
@@ -77,14 +121,25 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   const c = ECONOMY.condition
   // WEEK-TYPE RECOVERY LADDER (season-planner spec §4, owner 25.07 – 0 / base / base+slider):
   //  - TOURNAMENT week: matchWeekRecoveryBase (0 shipped) – travel + competition, not rest;
+  //  - ⭐ SHOOT week (ad step 2, the-face-and-the-court.md §4a, owner 22.08): the SAME travel
+  //    figure – a campaign shoot is lights, flights and a working day, not rest, so the week
+  //    recovers «like a travel week rather than a rest week». His own design, verbatim: no second
+  //    calendar, no blocking – the week stays hers, and what changes is how much of it she gets
+  //    back. ⚠ NO STACKING on a played week, again by his design: a tournament on a shoot week
+  //    already recovers at the travel figure, and the match drain (at finalizeTournament) is what
+  //    makes it the worse week – she simply recovers worse, no rule needed. Physio and blackout
+  //    still add on top, exactly as they do on a real trip.
   //  - PRACTICE week: the base only – she keeps it but FORFEITS the slider rest bonus, because
   //    she played, even if the match was a friendly (the drain lands in resolvePractice);
   //  - free / vacation week: recoveryBase + the rest-slider bonus (the vacation's package gain
   //    rides on top in resolveVacation).
-  // The practice flag is read off world state (not a parameter) so the signature – and with it
-  // the zero-RNG, arity-2 contract the B1 invariance test pins – stays exactly as it was.
+  // The practice and shoot flags are read off world state (not parameters) so the signature – and
+  // with it the zero-RNG, arity-2 contract the B1 invariance test pins – stays exactly as it was.
+  // The freeze-lapse rule (a shoot the college years swallow charges nothing) lives in
+  // `adShootHolds`, the one predicate this and every refund site read.
+  const shooting = adShootHolds(world)
   const practiced = !playedThisWeek && practiceForWeek(world, world.week) !== undefined
-  let recovery = playedThisWeek
+  let recovery = playedThisWeek || shooting
     ? c.matchWeekRecoveryBase
     : practiced
       ? c.recoveryBase

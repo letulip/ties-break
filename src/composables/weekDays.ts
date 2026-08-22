@@ -250,7 +250,12 @@ export type CalendarWeekFacts = Pick<
   // ⭐ ROUND 24 #5: the week she leaves for college, so the look-ahead can mark the departure the
   // way it marks every other week identity. Optional for the fixture reason above – absence means
   // no departure is booked, which is what every fixture written before it was about.
-  Partial<Pick<Snapshot, 'collegeDepartsWeek'>>
+  Partial<Pick<Snapshot, 'collegeDepartsWeek'>> &
+  // ⭐ AD STEP 2 (§4a): the running endorsement's named shoot weeks, so the look-ahead can mark them
+  // the way it marks the departure – a decision already made, visible before it arrives. Optional
+  // for the same fixture reason – absence means no deal is running, which is what every fixture
+  // written before it was about.
+  Partial<Pick<Snapshot, 'adShoot'>>
 
 /** ⚠ THE SUMMER WINDOW MOVED INTO THE ENGINE (W3-SUMMER) AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
  *  NAMES, so every existing caller and every test that imports `SUMMER_WEEKS` / `isSummerWeek` from
@@ -587,7 +592,7 @@ export interface LookAheadRow {
   label: string
   /** the week's real days, already formatted (never re-derived in a template) */
   dates: string
-  kind: 'event' | 'vacation' | 'practice' | 'college' | 'exam' | 'off-season' | 'training'
+  kind: 'event' | 'vacation' | 'practice' | 'college' | 'shoot' | 'exam' | 'off-season' | 'training'
   /** the suitable tournament on this week – the marker's card – or null */
   event: UpcomingEvent | null
   /** the layoff covers this week: the red chip, so "why can I plan nothing" is answerable at a glance */
@@ -635,6 +640,14 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
     // marker is still true. It outranks the decor bands – a week she leaves for college is not a
     // training week, whatever else the season says about it.
     const college = snap.collegeDepartsWeek != null && w === snap.collegeDepartsWeek
+    // ⭐ AD STEP 2 (§4a) – A SHOOT WEEK IS MARKED, NOT BLOCKED. The letter named these weeks at the
+    // signature and the player plans the season around them, so they read like the other
+    // already-decided identities. It sits BELOW an event and the bookings on purpose – the owner's
+    // whole design is that the week stays hers: a tournament or a family week on a shoot week
+    // genuinely happens (she simply recovers worse), so the tappable/booked marker stays true and
+    // the shoot never pretends to own the week. Below `college` too: leaving for four years
+    // outranks one working day.
+    const shoot = snap.adShoot != null && snap.adShoot.weeks.includes(w)
     const kind: LookAheadRow['kind'] = vacation
       ? 'vacation'
       : practice
@@ -643,11 +656,13 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
           ? 'event'
           : college
             ? 'college'
-            : exam
-              ? 'exam'
-              : offSeason
-                ? 'off-season'
-                : 'training'
+            : shoot
+              ? 'shoot'
+              : exam
+                ? 'exam'
+                : offSeason
+                  ? 'off-season'
+                  : 'training'
     const note = vacation
       ? (vacationPackage(vacation.packageId)?.label ?? vacation.packageId)
       : practice
@@ -656,11 +671,13 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
           ? event.label
           : college
             ? 'Leaves for college'
-            : exam
-              ? 'Exams'
-              : offSeason
-                ? 'Off-season'
-                : 'Training week'
+            : shoot
+              ? `${snap.adShoot!.brand} shoot`
+              : exam
+                ? 'Exams'
+                : offSeason
+                  ? 'Off-season'
+                  : 'Training week'
     rows.push({
       week: w,
       label: weekLabel(w),

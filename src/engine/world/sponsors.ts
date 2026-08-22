@@ -16,7 +16,7 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { activeKitDeal, adSpokenFor, adWritesAt, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { activeKitDeal, adSpokenFor, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, letDownThisWindow, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
@@ -545,9 +545,10 @@ export function reviewSponsors(world: WorldState): void {
 // writes to an amateur» is enforced where the tick calls this – `if (!inCollege(world))
 // reviewAdOffer(world)`, the exact gate `reviewSponsors` stands behind one line up – so the two
 // kinds of sponsor can never disagree about what the freeze silences. A deal SIGNED before she
-// enrols is deliberately untouched: the fee was banked the week the paper was signed and the term
-// asks nothing of her, so it simply keeps running and lapses on its own clock – no pause, no
-// clawback, «мы ни за что не наказываем» applies to contracts too (plan §4c).
+// enrols is deliberately untouched: the fee was banked the week the paper was signed, so the term
+// simply keeps running and lapses on its own clock – no pause, no clawback – and a shoot week the
+// freeze swallows lapses silently with it (`accrueCondition` guards the freeze before it charges;
+// no penalty, no makeup week): «мы ни за что не наказываем» applies to contracts too (plan §4c).
 //
 // RNG DISCIPLINE: at most ONE draw, on `seed:ad:<week>` – its own purpose-scoped sub-stream inside
 // `adWritesAt`, created, read once, discarded. ZERO draws on MAIN, and the draw is keyed on the
@@ -573,11 +574,14 @@ export function reviewAdOffer(world: WorldState): void {
   if (adSpokenFor(world.offers, world.week)) return
   if (!adWritesAt(world.seed, world.week, s.offerChance)) return
   // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives him
-  // the kit window's own four weeks to think.
+  // the kit window's own four weeks to think. `shootCount` is on the paper from the first read (step
+  // 2, §4a): the letter states its own price in time, and a catalogue retune between arrival and
+  // signature cannot change what this letter promised. The WEEKS themselves are the signature's to
+  // name – see `acceptOffer`.
   raiseAdOffer(
     world.offers,
     world.week,
-    { brand: s.brand, cashCents: s.cashCents, termWeeks: s.termWeeks },
+    { brand: s.brand, cashCents: s.cashCents, termWeeks: s.termWeeks, shootCount: s.shootWeeksPerTerm },
     world.week + s.decideWeeks - 1,
   )
 }
@@ -608,6 +612,20 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
   // budget the retainer's four-a-season already spends. Zero draws: arithmetic on a decided deal.
   if (signed.kind === 'ad') {
     const t = signed.terms as AdOfferTerms
+    // ⭐ STEP 2 (§4a) – THE SIGNATURE NAMES THE SHOOT WEEKS, before the money moves, so the paper is
+    // complete the moment it is a record: `shootCount` weeks, in-season and spaced by construction,
+    // anchored on the signing week (`chooseShootWeeks` – the choice's own comment carries the whole
+    // design). On the ad sub-stream at the moment of the player's action, exactly as the arrival
+    // roll is; ZERO draws on MAIN, so signing can never move the world's dice (input-independence).
+    // The lead is read from the catalogue at signature rather than frozen at arrival because it is
+    // mechanics of the choosing, not a promise on the paper – the letter never states it.
+    t.shootWeeks = chooseShootWeeks(
+      world.seed,
+      world.week,
+      t.termWeeks,
+      t.shootCount,
+      ECONOMY.advertising.shootLeadWeeks,
+    )
     world.fundsCents += t.cashCents
     addEvent(world, {
       week: world.week,

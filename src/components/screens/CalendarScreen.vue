@@ -1159,6 +1159,13 @@ const showGo = computed(() => !game.snapshot?.pending)
   font-weight: 700;
 }
 
+/* ⭐ AD STEP 2 (§4a) – a shoot week the signed letter named. A decision already made, so it reads at
+   the booked-week level (the vacation/practice weight, not college's: the week is still hers). */
+.cal-band--shoot .cal-band-name {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
 .cal-foot-note {
   margin-top: 10px;
 }

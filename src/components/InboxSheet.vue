@@ -36,7 +36,8 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import type { AcademyLetterTerms, AdOfferTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
-import { SPONSOR_TIERS, dealUntilWeek } from '../engine/offers'
+import { SPONSOR_TIERS, chooseShootWeeks, dealUntilWeek } from '../engine/offers'
+import { ECONOMY } from '../engine/economy'
 import { weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
 import OfferLetter from './OfferLetter.vue'
@@ -210,11 +211,35 @@ const confirmMessage = computed(() => {
   // ⭐ ROUND 24 ITEM 2 – the endorsement's own confirm, because every number below this branch is
   // kit arithmetic (`dealUntilWeek` anchors on seasons; an ad term runs from the signature). The
   // last thing he reads restates the deal in the paper's own words – the fee, where it lands, how
-  // long her face is theirs – and the one thing the letter cannot say: that this cannot be undone.
+  // long her face is theirs, WHICH weeks the shoots would land on – and the one thing the letter
+  // cannot say: that this cannot be undone.
+  //
+  // ⭐ STEP 2 (§4a): THE SHOOT WEEKS ARE PREVIEWED, EXACTLY. `chooseShootWeeks` is a pure function
+  // of (seed, signing week, the paper's own terms) and signing happens on the snapshot's week, so
+  // this calls THE function the engine will call with THE arguments it will get – the same-code
+  // rule `dealUntilWeek` established for this confirm's kit sibling; nothing is re-derived, so the
+  // preview and the signed letter cannot disagree. Reading it draws on no persisted stream (the ad
+  // sub-stream is re-derived at every call site and persists nothing). The player therefore
+  // DECIDES knowing the weeks, which is the whole point of naming them: he plans the season around
+  // them, starting now.
   if (pendingSign.value.kind === 'ad') {
     const t = pendingSign.value.terms as AdOfferTerms
     const until = weekLabel(week.value + Math.max(1, t.termWeeks) - 1)
-    return `Sign with ${t.brand}? A one-time fee of ${formatCents(t.cashCents)}, paid to the family now – her face in their campaign to ${until}, and nothing else asked of her. This cannot be undone.`
+    const shoots = chooseShootWeeks(
+      game.snapshot?.seed ?? '',
+      week.value,
+      t.termWeeks,
+      t.shootCount,
+      ECONOMY.advertising.shootLeadWeeks,
+    ).map((w) => weekLabel(w))
+    const shootLine =
+      shoots.length > 1
+        ? `${shoots.slice(0, -1).join(', ')} and ${shoots[shoots.length - 1]}`
+        : (shoots[0] ?? '')
+    // The clause folds away on a degenerate term with no room for a shoot (`chooseShootWeeks`
+    // yields fewer weeks rather than a broken promise) – the shipped catalogue always names them.
+    const shootClause = shootLine ? `, with her shoot weeks on ${shootLine} – working weeks, less rest in them` : ''
+    return `Sign with ${t.brand}? A one-time fee of ${formatCents(t.cashCents)}, paid to the family now – her face in their campaign to ${until}${shootClause}. This cannot be undone.`
   }
   const t = pendingSign.value.terms as KitOfferTerms
   const value = formatCents(t.kitAllowanceCents)

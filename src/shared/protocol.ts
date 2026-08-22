@@ -2240,28 +2240,37 @@ export interface AcademyLetterTerms {
   grantCents?: number
 }
 
-/** WHAT AN ADVERTISING LETTER SAYS – the non-endemic deal, step 1 of
+/** WHAT AN ADVERTISING LETTER SAYS – the non-endemic deal, steps 1-2 of
  *  docs/plans/the-face-and-the-court.md §6: «one non-endemic offer, gated on results only, cash
- *  only, no cost at all – done when: it arrives, it can be signed, and the ledger shows it».
+ *  only» (step 1) plus «the recovery cost (§4a) – a shoot week recovers like a travel week»
+ *  (step 2, the owner's own ruling: «съемки должны быть иногда и это надо как-то прописывать и
+ *  отражать потом в свободных неделях, соответственно и восстановления на тех неделях должно быть
+ *  чуть меньше»).
  *
- *  ⚠ DELIBERATELY THREE FIELDS AND NOT SIX. The plan's later steps – the recovery cost of a shoot
- *  week (§4a, step 2), fame (step 3), the refusal with a reason (step 4), her own account (step 5),
- *  obligations that outlive form (step 6) – are NOT represented here, on the same build-order rule
- *  the kit slice recorded at the top of this block: the smallest step that proves the whole shape.
- *  Step 1's deal asks nothing of her, so the paper carries only who pays, what, and for how long.
+ *  ⚠ DELIBERATELY FIVE FIELDS AND NOT EIGHT. The plan's later steps – fame (step 3), the refusal
+ *  with a reason (step 4), her own account (step 5), obligations that outlive form (step 6) – are
+ *  NOT represented here, on the same build-order rule the kit slice recorded at the top of this
+ *  block: the smallest step that proves the whole shape. The paper carries who pays, what, for how
+ *  long, and what the term asks of her – nothing a later step owns.
  *
- *  ⚠ THE MONEY IS THE FAMILY'S in step 1. Step 5 is where the plan routes an advertising fee to
+ *  ⚠ THE MONEY IS THE FAMILY'S in step 1-2. Step 5 is where the plan routes an advertising fee to
  *  `kidFundsCents` («a brand buys her face, not the family's»); until that ships, the fee lands in
  *  `world.fundsCents` beside every other sponsor dollar, and `acceptOffer` writes the ledger row.
  *
- *  ⚠ TERMS ARE A SNAPSHOT, NOT A FORMULA – `kitTermsFor`'s standing rule. Every field is frozen
+ *  ⚠ TERMS ARE A SNAPSHOT, NOT A FORMULA – `kitTermsFor`'s standing rule. Every promise is frozen
  *  onto the offer at arrival from `ECONOMY.advertising` and never re-read, so a deal signed under
- *  one catalogue keeps its own numbers if the catalogue is retuned.
+ *  one catalogue keeps its own numbers if the catalogue is retuned. `shootWeeks` is the ONE
+ *  signature-time write, and it is not an exception to the rule: like `fromWeek`/`untilWeek` on the
+ *  offer itself, it is a fact only the signature can create (the weeks are anchored on the signing
+ *  week), recorded once and never re-read from anywhere.
  *
  *  ⚠ ADDITIVE, SO NO SCHEMA BUMP – the same move the whole `entry` letter family shipped as
  *  (commit 2763caa, `SAVE_SCHEMA_VERSION` stayed at 36): a new kind plus a new terms shape, nothing
  *  renamed, no existing shape gaining a required field. No save written before `'ad'` existed can
- *  contain an `'ad'` letter, so there is nothing to migrate and nothing to back-fill. */
+ *  contain an `'ad'` letter, so there is nothing to migrate and nothing to back-fill. ⚠ AND THAT
+ *  COVERS STEP 2'S WIDENING TOO: `'ad'` has never shipped (step 1 and step 2 ride one unmerged
+ *  branch), so no save can contain an ad letter without `shootCount` – widening the shape is free
+ *  exactly once, and this is that once. */
 export interface AdOfferTerms {
   /** who is writing – a FICTIONAL non-endemic house (a watchmaker), never a tennis brand and never
    *  anything constructible into a real company. It is on the terms, not derived, for the same
@@ -2271,13 +2280,27 @@ export interface AdOfferTerms {
    *  only – no kit, no travel share, no retainer schedule: that is the whole difference between
    *  this letter and the ladder above it. */
   cashCents: number
-  /** how long her face is theirs, in weeks from signature. The term is the only thing the deal
-   *  "does" after the fee is banked: while it runs, no second advertising letter arrives – one deal
-   *  at a time, over time and not merely one letter at a time. `signOffer` writes
-   *  `fromWeek`/`untilWeek` from it. It asks nothing of her while it runs, so a term still running
-   *  when she enrols at college simply keeps running and lapses on its own clock – nothing is
-   *  clawed back, «мы ни за что не наказываем» applies to contracts too (plan §4c). */
+  /** how long her face is theirs, in weeks from signature. While the term runs no second
+   *  advertising letter arrives – one deal at a time, over time and not merely one letter at a
+   *  time. `signOffer` writes `fromWeek`/`untilWeek` from it. A term still running when she enrols
+   *  at college simply keeps running and lapses on its own clock – nothing is clawed back, and a
+   *  shoot week the freeze swallows lapses silently with it (see `shootWeeks`): «мы ни за что не
+   *  наказываем» applies to contracts too (plan §4c). */
   termWeeks: number
+  /** ⭐ STEP 2 (§4a): how many SHOOT WEEKS the term asks – the campaign's whole price in time,
+   *  frozen at arrival like every other promise so the letter can state its own obligation and keep
+   *  stating it after a catalogue retune (the `AcademyLetterTerms` rule: numbers, never assembled
+   *  prose). Quiet Hour asks exactly 2; the bigger asks (campaigns 3-4, global 5-6, cap 6/yr) are
+   *  RECORDED in the plan doc only and deliberately not built. */
+  shootCount: number
+  /** ⭐ STEP 2 (§4a): THE NAMED WEEKS – absolute career weeks, written ONCE by the signature
+   *  (`acceptOffer`'s ad arm via `chooseShootWeeks`), absent exactly while the letter is unsigned.
+   *  In-season and non-adjacent by construction, `shootCount` of them, all inside the term. NO
+   *  second calendar and no blocking – the owner's own design: the week stays hers, and what
+   *  changes is how much of it she gets back (`accrueCondition` gives a shoot week the travel
+   *  week's recovery, not the rest week's). A week the college freeze swallows simply lapses –
+   *  silently, no penalty, no makeup week. */
+  shootWeeks?: number[]
 }
 
 export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms | AcademyLetterTerms | AdOfferTerms
@@ -3254,6 +3277,15 @@ export interface Snapshot {
    *  boolean, `schoolEndsWeek`'s own reason one line up – the look-ahead asks about weeks that are
    *  not this one. */
   collegeDepartsWeek: number | null
+  /** ⭐ AD STEP 2 (the-face-and-the-court.md §4a) – THE RUNNING ENDORSEMENT'S SHOOT WEEKS, or null
+   *  when no signed advertising deal is in force this week. The calendar look-ahead marks them the
+   *  way it marks the college departure – a decision already made, visible before it arrives – and
+   *  the brand rides along so the row can say WHOSE shoot it is without the UI re-deriving a deal.
+   *
+   *  DERIVED, never persisted: `toSnapshot` reads the active deal's own frozen terms
+   *  (`activeAdDeal`), so the markers and the recovery the engine actually charges can never name
+   *  different weeks. Weeks are absolute career weeks, `weekLabel`'s own unit. */
+  adShoot: { brand: string; weeks: number[] } | null
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan

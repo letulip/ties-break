@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (4,078 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (4,081 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-250 exported names across 30 owning modules.
+252 exported names across 30 owning modules.
 
 ## Areas
 
@@ -17,8 +17,8 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 24 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 22 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
+| `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 19 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
-| `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 17 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 12 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 12 |
@@ -130,6 +130,30 @@ THE LADDER: where she stands, and what that standing opens.
 - `tierOpenFor` – `src/engine/world/ladder.ts`
 - `tierOutgrown` – `src/engine/world/ladder.ts`
 
+### `src/engine/world/medical.ts`
+
+THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
+
+- `accrueCondition` – `src/engine/world/medical.ts`
+- `adShootHolds` – `src/engine/world/medical.ts`
+- `arrivalStatus` – `src/engine/world/medical.ts`
+- `ArrivalStatus` *(type)* – `src/engine/world/medical.ts`
+- `ArrivalVerdict` *(type)* – `src/engine/world/medical.ts`
+- `availabilityStatus` – `src/engine/world/medical.ts`
+- `AvailabilityStatus` *(type)* – `src/engine/world/medical.ts`
+- `entryStatus` – `src/engine/world/medical.ts`
+- `EntryStatus` *(type)* – `src/engine/world/medical.ts`
+- `layoffBlock` – `src/engine/world/medical.ts`
+- `LayoffBlock` *(type)* – `src/engine/world/medical.ts`
+- `layoffCovering` – `src/engine/world/medical.ts`
+- `layoffCoversWeek` – `src/engine/world/medical.ts`
+- `medicalBlock` – `src/engine/world/medical.ts`
+- `MedicalBlock` *(type)* – `src/engine/world/medical.ts`
+- `medicalClearance` – `src/engine/world/medical.ts`
+- `MedicalClearance` *(type)* – `src/engine/world/medical.ts`
+- `restRecoveryBonus` – `src/engine/world/medical.ts`
+- `withheldFreeWeekRecovery` – `src/engine/world/medical.ts`
+
 ### `src/engine/world/entryCaps.ts`
 
 THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks.
@@ -151,28 +175,6 @@ THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) 
 - `proSubCapRefusalDetail` – `src/engine/world/entryCaps.ts`
 - `proSubCapUsage` – `src/engine/world/entryCaps.ts`
 - `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
-
-### `src/engine/world/medical.ts`
-
-THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
-
-- `accrueCondition` – `src/engine/world/medical.ts`
-- `arrivalStatus` – `src/engine/world/medical.ts`
-- `ArrivalStatus` *(type)* – `src/engine/world/medical.ts`
-- `ArrivalVerdict` *(type)* – `src/engine/world/medical.ts`
-- `availabilityStatus` – `src/engine/world/medical.ts`
-- `AvailabilityStatus` *(type)* – `src/engine/world/medical.ts`
-- `entryStatus` – `src/engine/world/medical.ts`
-- `EntryStatus` *(type)* – `src/engine/world/medical.ts`
-- `layoffBlock` – `src/engine/world/medical.ts`
-- `LayoffBlock` *(type)* – `src/engine/world/medical.ts`
-- `layoffCovering` – `src/engine/world/medical.ts`
-- `layoffCoversWeek` – `src/engine/world/medical.ts`
-- `medicalBlock` – `src/engine/world/medical.ts`
-- `MedicalBlock` *(type)* – `src/engine/world/medical.ts`
-- `medicalClearance` – `src/engine/world/medical.ts`
-- `MedicalClearance` *(type)* – `src/engine/world/medical.ts`
-- `restRecoveryBonus` – `src/engine/world/medical.ts`
 
 ### `src/engine/world/coachMarket.ts`
 

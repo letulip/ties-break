@@ -1,10 +1,18 @@
-// ROUND 24 ITEM 2, STEP 1 – ONE NON-ENDEMIC OFFER (docs/plans/the-face-and-the-court.md §6).
+// ROUND 24 ITEM 2, STEPS 1-2 – ONE NON-ENDEMIC OFFER, AND ITS PRICE IN TIME
+// (docs/plans/the-face-and-the-court.md §6).
 //
 // The owner: «Рекламные контракты будем добавлять какие-то?» – and step 1, whole: one advertising
-// letter from a house that is not a tennis brand, gated on results only, cash only, no cost at all.
+// letter from a house that is not a tennis brand, gated on results only, cash only.
 // «Done when: it arrives, it can be signed, and the ledger shows it» – which is exactly the three
 // things this file measures, plus the two silences that make the gate a gate: nothing before
 // eighteen or below the bar, and nothing inside the college freeze («nobody writes to an amateur»).
+//
+// ⭐ STEP 2 RIDES THE SAME FILE (§4a, owner ruling 22.08: «съемки должны быть иногда … и
+// восстановления на тех неделях должно быть чуть меньше»): the signature names `shootCount` shoot
+// weeks – in-season, spaced, inside the term – and each one recovers like a TRAVEL week rather than
+// a rest week (`accrueCondition`), with the college freeze lapsing a shoot silently. The last
+// describes below measure exactly that and nothing later: fame, refusal reasons and her own account
+// are steps 3+ and stay behind the terms fence.
 //
 // ⚠ THE WALK ASKS THE ENGINE, NOT THE REVIEWER – the round24-academy-letters lesson, kept: the
 // arrival tests drive `tickWeek` and never call `reviewAdOffer` by hand, so the ONE line that wires
@@ -30,20 +38,26 @@ import { describe, it, expect, vi } from 'vitest'
 vi.setConfig({ testTimeout: 300_000 })
 
 import {
+  accrueCondition,
   acceptOffer,
+  adShootHolds,
+  withheldFreeWeekRecovery,
   createWorld,
   declineOffer,
   kidAgeYears,
   recomputeKidRank,
   reviewAdOffer,
   tickWeek,
+  toSnapshot,
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
-import { activeAdDeal, adOfferId, adSpokenFor, adWritesAt, hasLiveOffer, isOfferLive } from '../src/engine/offers'
+import { activeAdDeal, adOfferId, adShootWeek, adSpokenFor, adWritesAt, chooseShootWeeks, hasLiveOffer, isOfferLive } from '../src/engine/offers'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { ECONOMY } from '../src/engine/economy'
+import { isOffSeasonWeek } from '../src/engine/season/calendar'
+import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
@@ -119,15 +133,23 @@ describe('step 1.1 – it arrives', () => {
     expect(hasLiveOffer(world.offers, world.week)).toBe(true)
   })
 
-  it('terms are the catalogue, frozen at arrival – brand, cash, term, and nothing else', () => {
+  it('terms are the catalogue, frozen at arrival – brand, cash, term, the shoot promise, and nothing else', () => {
     const t = adPost(life.world)[0].terms as AdOfferTerms
     expect(t.brand).toBe(AD.brand)
     expect(t.cashCents).toBe(AD.cashCents)
     expect(t.termWeeks).toBe(AD.termWeeks)
-    // ⚠ THE SCOPE FENCE, AS AN ASSERTION. Step 1 carries no obligation of any kind: no events owed,
-    // no recovery cost, no fame, nothing that outlives the term. A field appearing here is a later
-    // step arriving early, which the plan's build order forbids.
-    expect(Object.keys(t).sort()).toEqual(['brand', 'cashCents', 'termWeeks'])
+    expect(t.shootCount).toBe(AD.shootWeeksPerTerm)
+    // ...and the WEEKS are not on the arrival paper: they are the signature's to name, so an open
+    // letter that already carried them would be a choice made before the player made it.
+    expect(t.shootWeeks).toBeUndefined()
+    // ⚠ THE SCOPE FENCE, AS AN ASSERTION – RE-AIMED FOR STEP 2 (owner ruling 22.08). Step 1 pinned
+    // ['brand','cashCents','termWeeks']; the owner then ruled the shoots in («съемки должны быть
+    // иногда и это надо как-то прописывать»), so `shootCount` joined the paper DELIBERATELY – which
+    // is precisely what this fence exists to force. It still forbids everything later: fame, a
+    // refusal reason, her own account, obligations outliving the term. A new key here is a step 3+
+    // field arriving early, and it must arrive the way this one did – by a ruling, re-aiming this
+    // line on purpose.
+    expect(Object.keys(t).sort()).toEqual(['brand', 'cashCents', 'shootCount', 'termWeeks'])
   })
 
   it('nothing arrived on the walk to eighteen, and nothing before the dice said yes', () => {
@@ -402,5 +424,345 @@ describe('«nobody writes to an amateur» – the college freeze (plan §4c)', (
     expect(sponsorRows).toHaveLength(1)
     expect(sponsorRows[0].amountCents).toBe(AD.cashCents)
     expect(world.events.some((e) => (e.amountCents ?? 0) < 0 && e.text.includes(AD.brand))).toBe(false)
+  })
+})
+
+// =================================================================================================
+// STEP 2 – THE SHOOT WEEKS (§4a, owner ruling 22.08)
+// =================================================================================================
+//
+// «Съемки должны быть иногда и это надо как-то прописывать и отражать потом в свободных неделях,
+// соответственно и восстановления на тех неделях должно быть чуть меньше» – and the sized version
+// he approved («утверждаю, для начала точно ок»): exactly two shoot weeks per Quiet Hour term,
+// in-season, named in the letter at the signature, each recovering like a TRAVEL week rather than a
+// rest week. No second calendar, no blocking: the week stays hers.
+
+/** The walked career, signed – the shared fixture for everything the signature creates. */
+function signedLife() {
+  const world = structuredClone(life.world)
+  const offer = adPost(world)[0]
+  acceptOffer(world, offer.id)
+  return { world, offer }
+}
+
+describe('step 2.1 – the signature names the weeks', () => {
+  it('exactly shootCount weeks, all inside the term, none earlier than the lead', () => {
+    const { world, offer } = signedLife()
+    const t = offer.terms as AdOfferTerms
+    expect(t.shootWeeks).toBeDefined()
+    expect(t.shootWeeks!).toHaveLength(t.shootCount)
+    for (const w of t.shootWeeks!) {
+      expect(w).toBeGreaterThanOrEqual(world.week + AD.shootLeadWeeks)
+      expect(w).toBeLessThanOrEqual(offer.untilWeek!)
+    }
+  })
+
+  it('in-season by construction, and spaced – never adjacent', () => {
+    const t = signedLife().offer.terms as AdOfferTerms
+    for (const w of t.shootWeeks!) expect(isOffSeasonWeek(w), `week ${w} is off-season`).toBe(false)
+    const [a, b] = t.shootWeeks!
+    expect(Math.abs(a - b)).toBeGreaterThanOrEqual(2)
+  })
+
+  it('deterministic at the signature: the same career signed the same week names the same weeks', () => {
+    const first = signedLife().offer.terms as AdOfferTerms
+    const second = signedLife().offer.terms as AdOfferTerms
+    expect(second.shootWeeks).toEqual(first.shootWeeks)
+    // ...and they are the sub-stream's own answer, not a coincidence of the walk.
+    expect(first.shootWeeks).toEqual(
+      chooseShootWeeks(life.world.seed, life.world.week, AD.termWeeks, AD.shootWeeksPerTerm, AD.shootLeadWeeks),
+    )
+  })
+
+  it('signing draws ZERO on MAIN – the persisted stream position does not move by a bit', () => {
+    const world = structuredClone(life.world)
+    const mainBefore = structuredClone(world.rngMain)
+    acceptOffer(world, adPost(world)[0].id)
+    expect(world.rngMain).toEqual(mainBefore)
+  })
+
+  it('over many draws an off-season or adjacent pair is impossible by construction', () => {
+    // 500 signature points spread over 10 seeds x 50 sign weeks – the (c) arm of the bench, pinned
+    // small here so a retune that breaks the construction fails in CI rather than in a hand-run.
+    let pairs = 0
+    for (let n = 0; n < 10; n++) {
+      for (let sw = 220; sw < 270; sw++) {
+        const weeks = chooseShootWeeks(`ad-shoot-sweep-${n}`, sw, AD.termWeeks, AD.shootWeeksPerTerm, AD.shootLeadWeeks)
+        expect(weeks).toHaveLength(2)
+        for (const w of weeks) expect(isOffSeasonWeek(w), `seed ${n} sign ${sw}: week ${w} off-season`).toBe(false)
+        expect(Math.abs(weeks[0] - weeks[1])).toBeGreaterThanOrEqual(2)
+        pairs++
+      }
+    }
+    expect(pairs).toBe(500)
+    // ⚠ THE ADJACENCY WITNESS, found by reading the dice (the R1 rule: a property a fixture needs
+    // is asserted, not hoped for). With the non-adjacency filter REMOVED, this exact signature
+    // draws [239, 240] – the first pick lands on the last eligible week of its slice and the second
+    // on the first of its own – so this one case fails DETERMINISTICALLY under that mutation, where
+    // the 500 random pairs above would only fail by luck (the mutant measured 33 adjacent in
+    // 20,000: ~1/600 a pair).
+    const witness = chooseShootWeeks('adj-0', 212, AD.termWeeks, AD.shootWeeksPerTerm, AD.shootLeadWeeks)
+    expect(witness[0]).toBe(239)
+    expect(Math.abs(witness[0] - witness[1])).toBeGreaterThanOrEqual(2)
+  })
+})
+
+describe('step 2.2 – a shoot week recovers like a travel week, not a rest week', () => {
+  /** A surgical probe in the B2 idiom (tests/condition.test.ts): a fresh world handed a signed deal
+   *  whose shoot weeks this test controls, so one condition varies per arm. Light 60/40 plan – the
+   *  rest week's figure is the pinned +10 (base 8 + slider 2) – no physio, condition mid-range so
+   *  nothing clamps. */
+  function shootProbe(shootWeeks: number[], week: number): WorldState {
+    const world = createWorld('ad-shoot-probe', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    world.week = week
+    world.plan = { train: 60, rest: 40 }
+    world.physioActive = false
+    world.condition = 50
+    world.offers.push({
+      id: adOfferId(week - 10),
+      kind: 'ad',
+      week: week - 10,
+      deadlineWeek: week - 7,
+      state: 'signed',
+      decidedWeek: week - 10,
+      fromWeek: week - 10,
+      untilWeek: week - 10 + AD.termWeeks - 1,
+      terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: 2, shootWeeks },
+    })
+    return world
+  }
+  // Week 216 is a mid-season adult week (offset 8 of season 5): not off-season, not an exam offset,
+  // school over – asserted below so a calendar retune fails loudly instead of testing nothing.
+  const WEEK = 216
+
+  it('fixture fact: the probe week is an ordinary in-season week', () => {
+    expect(isOffSeasonWeek(WEEK)).toBe(false)
+    const world = shootProbe([], WEEK)
+    accrueCondition(world, false)
+    expect(world.condition).toBe(60) // the rest week's own +10 – the control this file measures against
+  })
+
+  it('the same week as a SHOOT week: the travel figure – base and slider both forfeited', () => {
+    const world = shootProbe([WEEK], WEEK)
+    expect(adShootWeek(world.offers, world.week)).toBe(true)
+    accrueCondition(world, false)
+    // matchWeekRecoveryBase is 0 shipped: she gets the week's travel recovery, which is none.
+    expect(world.condition).toBe(50 + ECONOMY.condition.matchWeekRecoveryBase)
+    expect(world.condition).toBe(50)
+  })
+
+  it('physio still pays on a shoot week – the travel week SHAPE, not a special zero', () => {
+    const world = shootProbe([WEEK], WEEK)
+    world.physioActive = true
+    accrueCondition(world, false)
+    expect(world.condition).toBe(51) // +1, exactly what the retainer adds on a real trip week
+  })
+
+  it('a tournament on the shoot week does NOT stack – she simply recovers worse, via the match drain', () => {
+    // played=true on a shoot week and played=true on a plain week are the SAME accrual: the drain
+    // (charged at finalizeTournament, not here) is what makes the shoot+tournament week the worst
+    // one. A hidden second malus would show as a difference between these two arms.
+    const shoot = shootProbe([WEEK], WEEK)
+    accrueCondition(shoot, true)
+    const plain = shootProbe([], WEEK)
+    accrueCondition(plain, true)
+    expect(shoot.condition).toBe(plain.condition)
+    expect(shoot.condition).toBe(50 + ECONOMY.condition.matchWeekRecoveryBase)
+  })
+
+  it('at the ceiling a shoot week holds – recovery is forfeited, nothing is taken', () => {
+    const world = shootProbe([WEEK], WEEK)
+    world.condition = 100
+    accrueCondition(world, false)
+    expect(world.condition).toBe(100) // «чуть меньше восстановления», never a charge
+  })
+
+  it('the week after the shoot is an ordinary week again – one week, not a debuff', () => {
+    const world = shootProbe([WEEK], WEEK + 1)
+    accrueCondition(world, false)
+    expect(world.condition).toBe(60)
+  })
+
+  it('through the real tick: the signed career pays the travel figure on its own named weeks', () => {
+    const { world, offer } = signedLife()
+    const t = offer.terms as AdOfferTerms
+    const rng = resumeMain(world.rngMain)
+    const target = t.shootWeeks![0]
+    while (world.week < target - 1) tickWeek(world, rng)
+    // A clean read needs a week that is only a shoot: skip if the walk booked anything else on it.
+    world.condition = 50
+    world.physioActive = false
+    world.plan = { train: 60, rest: 40 }
+    const before = world.condition
+    tickWeek(world, rng)
+    expect(world.week).toBe(target)
+    // The travel figure, plus at most the exam blackout's +1 (a shoot is in-season by construction,
+    // but the exam fortnight IS in-season and pays its bonus on trips too – the travel-week SHAPE).
+    // The mutation this pins: without the shoot mechanism this free light-plan week returns +10.
+    expect(world.condition - before).toBeLessThanOrEqual(
+      ECONOMY.condition.matchWeekRecoveryBase + ECONOMY.condition.blackoutBonus,
+    )
+  })
+})
+
+describe('step 2.2b – the refund paths cannot hand a shoot week its rest back', () => {
+  // ⚠ THE LEAK THE FIRST BENCH RUN CAUGHT (tools/ad-shoot-bench.ts): `accrueCondition` withheld the
+  // shoot week's rest, and then the medical withdrawal refunded it – +9, the full rest week the
+  // ruling says she does not get – because three sites re-derived "what a match-free week pays"
+  // without asking about the shoot. They now read ONE oracle, `withheldFreeWeekRecovery`, and this
+  // is its pin: 'tournament' names the banked matchWeekRecoveryBase rung (the medical withdrawal
+  // and skipEvent), 'practice' the banked recoveryBase rung (the friendly's cancellation).
+  function oracleProbe(shootWeeks: number[], week: number): WorldState {
+    const world = createWorld('ad-refund-probe', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    world.week = week
+    world.plan = { train: 60, rest: 40 }
+    world.offers.push({
+      id: adOfferId(week - 10),
+      kind: 'ad',
+      week: week - 10,
+      deadlineWeek: week - 7,
+      state: 'signed',
+      decidedWeek: week - 10,
+      fromWeek: week - 10,
+      untilWeek: week - 10 + AD.termWeeks - 1,
+      terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: 2, shootWeeks },
+    })
+    return world
+  }
+  const WEEK = 216 // the same asserted ordinary in-season week the accrual probes use
+
+  it('an ordinary week refunds the whole ladder: base + slider for a tournament, slider for a friendly', () => {
+    const world = oracleProbe([], WEEK)
+    // Light 60/40: matchFree = 8 + 2; tournament banked 0, practice banked 8.
+    expect(withheldFreeWeekRecovery(world, 'tournament')).toBe(10)
+    expect(withheldFreeWeekRecovery(world, 'practice')).toBe(2)
+    world.plan = { train: 85, rest: 15 }
+    expect(withheldFreeWeekRecovery(world, 'tournament')).toBe(8)
+    expect(withheldFreeWeekRecovery(world, 'practice')).toBe(0)
+  })
+
+  it('a shoot week refunds NOTHING on either path – the travel figure was banked and is owed', () => {
+    const world = oracleProbe([WEEK], WEEK)
+    expect(adShootHolds(world)).toBe(true)
+    expect(withheldFreeWeekRecovery(world, 'tournament')).toBe(0)
+    expect(withheldFreeWeekRecovery(world, 'practice')).toBe(0)
+  })
+
+  it('inside the college freeze the shoot lapses, so the refund is ORDINARY again – no penalty by any route', () => {
+    const world = oracleProbe([WEEK], WEEK)
+    world.college = { fromWeek: WEEK - 2, untilWeek: WEEK - 2 + 208, doneWeek: null, years: [], pendingCallUp: null, pendingLeague: null }
+    expect(adShootHolds(world)).toBe(false)
+    expect(withheldFreeWeekRecovery(world, 'tournament')).toBe(10)
+  })
+})
+
+describe('step 2.3 – the college freeze lapses a shoot, silently (plan §4c)', () => {
+  it('a shoot week inside the freeze charges nothing – the week recovers as the free week it is', () => {
+    const WEEK = 216
+    const world = createWorld('ad-shoot-freeze', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    world.week = WEEK
+    world.plan = { train: 60, rest: 40 }
+    world.physioActive = false
+    world.condition = 50
+    world.offers.push({
+      id: adOfferId(WEEK - 10),
+      kind: 'ad',
+      week: WEEK - 10,
+      deadlineWeek: WEEK - 7,
+      state: 'signed',
+      decidedWeek: WEEK - 10,
+      fromWeek: WEEK - 10,
+      untilWeek: WEEK - 10 + AD.termWeeks - 1,
+      terms: { brand: AD.brand, cashCents: AD.cashCents, termWeeks: AD.termWeeks, shootCount: 2, shootWeeks: [WEEK, WEEK + 20] },
+    })
+    world.college = {
+      fromWeek: WEEK - 2,
+      untilWeek: WEEK - 2 + 208,
+      doneWeek: null,
+      years: [],
+      pendingCallUp: null,
+      pendingLeague: null,
+    }
+    const eventsBefore = world.events.length
+    accrueCondition(world, false)
+    // The rest week's own +10: the shoot lapsed, it did not bite. «Мы ни за что не наказываем» –
+    // and silently means SILENTLY: no event row, no makeup week appended to the term.
+    expect(world.condition).toBe(60)
+    expect(world.events.length).toBe(eventsBefore)
+    expect((world.offers[world.offers.length - 1].terms as AdOfferTerms).shootWeeks).toEqual([WEEK, WEEK + 20])
+    // ...and the same week OUT of the freeze does bite – the control that proves the guard is the
+    // freeze and not an accident.
+    world.college = null
+    world.condition = 50
+    accrueCondition(world, false)
+    expect(world.condition).toBe(50)
+  })
+})
+
+describe('step 2.4 – the calendar shows them coming (the D2 marker idiom)', () => {
+  const facts = (over: Partial<CalendarWeekFacts>): CalendarWeekFacts =>
+    ({
+      week: 300,
+      plan: { train: 60, rest: 40 },
+      profile: { ...DEFAULT_PROFILE },
+      injury: null,
+      knock: null,
+      vacations: [],
+      practices: [],
+      upcoming: [],
+      arrival: null,
+      pending: null,
+      ...over,
+    }) as CalendarWeekFacts
+
+  it('the snapshot carries the signed deal\'s weeks, and only a signed deal\'s', () => {
+    const open = structuredClone(life.world)
+    expect(toSnapshot(open).adShoot).toBeNull() // arrived, not signed – nothing to mark yet
+
+    const { world, offer } = signedLife()
+    const t = offer.terms as AdOfferTerms
+    const snap = toSnapshot(world)
+    expect(snap.adShoot).toEqual({ brand: AD.brand, weeks: t.shootWeeks })
+
+    // ...and the wire goes quiet when the term does: the marker cannot outlive the deal. (The term
+    // is ENDED on the paper rather than the week moved, so the snapshot is read in a week the
+    // season has actually generated.)
+    offer.untilWeek = world.week - 1
+    expect(toSnapshot(world).adShoot).toBeNull()
+  })
+
+  it('a shoot week inside the look-ahead window is a row of its own kind, named by the brand', () => {
+    const rows = lookAheadFor(facts({ adShoot: { brand: AD.brand, weeks: [305, 330] } }))
+    const marked = rows.find((r) => r.week === 305)
+    expect(marked).toBeDefined()
+    expect(marked!.kind).toBe('shoot')
+    expect(marked!.note).toBe(`${AD.brand} shoot`)
+    expect(rows.filter((r) => r.kind === 'shoot')).toHaveLength(1) // 330 is past the seven-week window
+    // No deal, no marker.
+    const bare = lookAheadFor(facts({}))
+    expect(bare.every((r) => r.kind !== 'shoot')).toBe(true)
+  })
+
+  it('the week stays hers: an entered tournament on the shoot week keeps its tappable marker', () => {
+    const rows = lookAheadFor(
+      facts({
+        adShoot: { brand: AD.brand, weeks: [305] },
+        upcoming: [
+          {
+            id: 'evt-305',
+            week: 305,
+            tier: 'w100',
+            label: 'W100 Harbourside',
+            surface: 'hard',
+            entered: true,
+            eligible: true,
+            deadlineWeek: 304,
+          } as never,
+        ],
+      }),
+    )
+    const row = rows.find((r) => r.week === 305)
+    expect(row!.kind).toBe('event') // the tournament genuinely plays – the shoot never blocks
+    expect(row!.event).not.toBeNull()
   })
 })
