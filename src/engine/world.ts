@@ -266,11 +266,11 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, chargeCoachTravel, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, chargeCoachTravel, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
-export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, rolloverKitAllowance }
+export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, rolloverKitAllowance }
 import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
@@ -3022,6 +3022,17 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //   an endorsement, which is a real rule and also the only thing that keeps the four-year freeze
   //   from being free money. `reviewSponsors` draws on `seed:offer:<week>`, never MAIN.
   if (isSponsorWindowWeek(world.week) && !inCollege(world)) reviewSponsors(world)
+
+  // ⭐ 0a0c-quater (round 24 item 2, the-face-and-the-court.md §6 STEP 1): AND, FROM EIGHTEEN, THE
+  //         OTHER KIND OF SPONSOR – a non-endemic house paying cash for her face. Weekly rather than
+  //         windowed, because a campaign is not an off-season ritual and the plan's own table says
+  //         the deal LAGS results; the gate (18+, a counting W standing inside the bar, one deal at
+  //         a time) is `reviewAdOffer`'s own. Behind the SAME freeze gate as the kit review one line
+  //         up – «nobody writes to an amateur» silences both kinds of sponsor identically, while a
+  //         deal SIGNED before she enrolled keeps its banked fee and lapses on its own clock (plan
+  //         §4c – no penalty, ever). At most one draw, on `seed:ad:<week>`, never MAIN: the frozen
+  //         capture (41550 / e6b0c709) cannot see it.
+  if (!inCollege(world)) reviewAdOffer(world)
 
   // 0a0c-ter (W3-ACT2 §7): AND THE PROFESSIONAL RUNGS PAY A QUARTERLY RETAINER. Four arrivals a
   //         season on fixed offsets (0 / 13 / 26 / 39) rather than one number at the boundary,

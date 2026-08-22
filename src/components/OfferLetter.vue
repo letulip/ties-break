@@ -41,7 +41,7 @@
 // letter reports what actually happened and against which number. An obligation that fails silently
 // is the same invisibility one step later.
 import { computed } from 'vue'
-import type { AcademyLetterTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
+import type { AcademyLetterTerms, AdOfferTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import { dealUntilWeek } from '../engine/offers'
@@ -138,6 +138,46 @@ const academyEndBody = computed(() => {
     return 'What we fund is a player who is out competing, and this year there were too few tournaments behind her for us to carry it on.'
   }
   return 'We have read her year and we are not able to go on backing her through the next one. It is a decision about our list rather than about her.'
+})
+
+// ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, the-face-and-the-court.md §6 step 1). The other kind
+// of sponsor entirely: a non-endemic house – a watchmaker – paying cash for her FACE, not kit for
+// her tennis. A proposal like the kit letters (Sign / Refuse / a real deadline), NOT a notice, so it
+// shares their foot; what it does not share is their paper's contents, because the deal is three
+// facts and no obligation: the fee, the term, and that nothing else is asked of her.
+//
+// ⚠ NO LETTERHEAD, AND THAT IS THE ACADEMY'S OWN RULE APPLIED, NOT A MISSING PICTURE. The sponsor
+// marks are keyed by KIT RUNG (`public/images/sponsors/<tier>.webp`) and an advertising house is on
+// no rung of that ladder; there is no art for it and none may be made for it, so the sheet signs
+// itself the way the desks' and the academy's do.
+//
+// ⚠ THE NO-CONSEQUENCE LINE IS ON THE PAPER for the same reason the kit letter states its failure
+// mode: a letter must leave no consequence unstated, and here the consequence IS that there is
+// none – step 1's deal is «cash only, no cost at all», and a parent should be able to read that and
+// distrust it slightly, which is what makes step 2's priced version land later.
+const isAd = computed(() => props.offer.kind === 'ad')
+const adTerms = computed(() => props.offer.terms as AdOfferTerms)
+/** "Twelve months", because a house writing to a family says it the way the kit letters say "three
+ *  seasons" – words, not a numeral – falling back to the numeral past the terms the game issues. */
+const adTermWord = computed(() => (adTerms.value.termWeeks === 52 ? 'Twelve months' : `${adTerms.value.termWeeks} weeks`))
+/** What the paper reports once it is a record. The signed arm quotes the engine's own `untilWeek` –
+ *  the week `signOffer` froze onto the deal – never a number this sheet worked out. */
+const adSettled = computed(() => {
+  const o = props.offer
+  switch (o.state) {
+    case 'signed': {
+      const running = props.week <= (o.untilWeek ?? -1)
+      return running
+        ? `Signed – the fee is banked, and the campaign runs to ${weekLabel(o.untilWeek ?? o.week)}.`
+        : 'Signed. The fee was banked, and the campaign has run its course.'
+    }
+    case 'refused':
+      return 'Turned down.'
+    case 'expired':
+      return 'Expired – they needed an answer.'
+    default:
+      return props.week > props.offer.deadlineWeek ? 'Expired – they needed an answer.' : ''
+  }
 })
 
 const terms = computed(() => props.offer.terms as KitOfferTerms)
@@ -485,6 +525,44 @@ const settled = computed(() => {
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <!-- ⭐⭐ THE ADVERTISING LETTER (round 24 item 2, step 1) – the non-endemic house. A PROPOSAL, so it
+       keeps the kit letters' foot (the window, Sign/Refuse, the settled line) and none of their
+       paper: no letterhead (no rung, no mark – see the script), no kit, no obligation. The terms
+       are the whole deal and the last line says out loud that nothing else is in it. -->
+  <article v-else-if="isAd" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <p class="offer-body">
+        We make watches, and we have been following her results. We would like her face in our
+        campaign – her photograph beside our name, and the fee below for the family.
+      </p>
+      <ul class="offer-terms">
+        <li>
+          A one-time fee of {{ formatCents(adTerms.cashCents) }}, paid the day this is signed.
+          Money, not kit – we are not a tennis house.
+        </li>
+        <li>
+          {{ adTermWord }} from signing, her face is with us – and in no other campaign while that
+          runs.
+        </li>
+        <li>
+          Nothing else is asked of her: no tournaments owed, no appearances scheduled, nothing to
+          pay back – whatever the season brings.
+        </li>
+      </ul>
+      <p class="offer-sign-off">– {{ adTerms.brand }}</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p v-if="live" class="offer-window">
+        {{ weeksLeft }} {{ weeksLeft === 1 ? 'week' : 'weeks' }} to decide. The terms will not change.
+      </p>
+      <p v-else class="offer-window settled">{{ adSettled }}</p>
+      <div v-if="live" class="offer-actions">
+        <button class="offer-refuse" @click="emit('refuse', offer.id)">Refuse</button>
+        <button class="offer-sign primary" @click="emit('sign', offer.id)">Sign</button>
+      </div>
     </div>
   </article>
 

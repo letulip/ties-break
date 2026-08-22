@@ -1662,13 +1662,17 @@ export interface TierTrophies {
  *  ⭐ `academy` IS ROUND 24 #1 – the junior scholarship's three notices, on paper. See
  *  `AcademyLetterTerms` for what it says and why the feed alone could not keep it.
  *
+ *  ⭐ `ad` IS THE OTHER KIND OF SPONSOR ENTIRELY (docs/plans/the-face-and-the-court.md §6 step 1):
+ *  a NON-ENDEMIC brand – a watch house, not a racquet maker – paying cash for her FACE rather than
+ *  kit for her tennis. See `AdOfferTerms` for what step 1 deliberately is and is not.
+ *
  *  ⚠ THE WIDENING COSTS NO SCHEMA MOVE, and that is this union's own precedent rather than a
  *  shortcut taken here: commit 2763caa added the whole `entry` family – the kind, the terms shape
  *  and `cancelled` – and left `SAVE_SCHEMA_VERSION` at 36, because no save written before a kind
  *  exists can contain it, nothing is renamed and no existing shape gains a required field. There is
  *  nothing to migrate and nothing to back-fill; see `settleAcademyLetters` for the one thing an old
  *  career CAN have derived for it, which is derived in the engine rather than in a migration. */
-export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy'
+export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad'
 
 /** WHICH RULE A PENALTY WAS (W3-ACT2, act2-pro-tour.md §6). A closed union, and it is closed on
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
@@ -2236,7 +2240,47 @@ export interface AcademyLetterTerms {
   grantCents?: number
 }
 
-export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms | AcademyLetterTerms
+/** WHAT AN ADVERTISING LETTER SAYS – the non-endemic deal, step 1 of
+ *  docs/plans/the-face-and-the-court.md §6: «one non-endemic offer, gated on results only, cash
+ *  only, no cost at all – done when: it arrives, it can be signed, and the ledger shows it».
+ *
+ *  ⚠ DELIBERATELY THREE FIELDS AND NOT SIX. The plan's later steps – the recovery cost of a shoot
+ *  week (§4a, step 2), fame (step 3), the refusal with a reason (step 4), her own account (step 5),
+ *  obligations that outlive form (step 6) – are NOT represented here, on the same build-order rule
+ *  the kit slice recorded at the top of this block: the smallest step that proves the whole shape.
+ *  Step 1's deal asks nothing of her, so the paper carries only who pays, what, and for how long.
+ *
+ *  ⚠ THE MONEY IS THE FAMILY'S in step 1. Step 5 is where the plan routes an advertising fee to
+ *  `kidFundsCents` («a brand buys her face, not the family's»); until that ships, the fee lands in
+ *  `world.fundsCents` beside every other sponsor dollar, and `acceptOffer` writes the ledger row.
+ *
+ *  ⚠ TERMS ARE A SNAPSHOT, NOT A FORMULA – `kitTermsFor`'s standing rule. Every field is frozen
+ *  onto the offer at arrival from `ECONOMY.advertising` and never re-read, so a deal signed under
+ *  one catalogue keeps its own numbers if the catalogue is retuned.
+ *
+ *  ⚠ ADDITIVE, SO NO SCHEMA BUMP – the same move the whole `entry` letter family shipped as
+ *  (commit 2763caa, `SAVE_SCHEMA_VERSION` stayed at 36): a new kind plus a new terms shape, nothing
+ *  renamed, no existing shape gaining a required field. No save written before `'ad'` existed can
+ *  contain an `'ad'` letter, so there is nothing to migrate and nothing to back-fill. */
+export interface AdOfferTerms {
+  /** who is writing – a FICTIONAL non-endemic house (a watchmaker), never a tennis brand and never
+   *  anything constructible into a real company. It is on the terms, not derived, for the same
+   *  reason `KitOfferTerms.brand` is: the letter is persisted and must keep naming its own author. */
+  brand: string
+  /** the one-time fee, in cents, paid into the FAMILY wallet the week the paper is signed. Cash
+   *  only – no kit, no travel share, no retainer schedule: that is the whole difference between
+   *  this letter and the ladder above it. */
+  cashCents: number
+  /** how long her face is theirs, in weeks from signature. The term is the only thing the deal
+   *  "does" after the fee is banked: while it runs, no second advertising letter arrives – one deal
+   *  at a time, over time and not merely one letter at a time. `signOffer` writes
+   *  `fromWeek`/`untilWeek` from it. It asks nothing of her while it runs, so a term still running
+   *  when she enrols at college simply keeps running and lapses on its own clock – nothing is
+   *  clawed back, «мы ни за что не наказываем» applies to contracts too (plan §4c). */
+  termWeeks: number
+}
+
+export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms | AcademyLetterTerms | AdOfferTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */

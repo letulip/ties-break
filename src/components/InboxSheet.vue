@@ -35,7 +35,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
-import type { AcademyLetterTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
+import type { AcademyLetterTerms, AdOfferTerms, EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
 import { SPONSOR_TIERS, dealUntilWeek } from '../engine/offers'
 import { weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
@@ -86,6 +86,10 @@ function senderOf(o: Offer): string {
   // letterhead here would be inventing a fact the engine does not hold. (It is also the one place
   // this letter does not fit the kit shape – no `tier`, no mark, no `SPONSOR_TIERS` rung.)
   if (o.kind === 'academy') return 'The academy'
+  // ⭐ ROUND 24 ITEM 2 – the advertising house signs with its name exactly as a kit brand does: it
+  // HAS a brand, unlike the desks; what it lacks is a rung, so `rungOf` leaves it at -1 with the
+  // rest of the non-kit post and the letter prints no mark (see OfferLetter's script).
+  if (o.kind === 'ad') return (o.terms as AdOfferTerms).brand
   return (o.terms as KitOfferTerms).brand
 }
 
@@ -116,6 +120,10 @@ function subjectOf(o: Offer): string {
     if (t.notice === 'ended') return 'The scholarship has ended'
     return `Scholarship review – ${t.sharePct}% of her travel`
   }
+  // ⭐ ROUND 24 ITEM 2 – the endorsement's subject restates its own sheet's first sentence, this
+  // function's rule, and carries the fee because the fee is the whole content: cash for her face is
+  // exactly what makes this letter not a sixth rung of the kit ladder.
+  if (o.kind === 'ad') return `Her face in a campaign – ${formatCents((o.terms as AdOfferTerms).cashCents)}`
   const t = o.terms as KitOfferTerms
   if (t.ended) return 'The kit deal has ended'
   return t.renewal ? 'Another year in our kit' : 'A kit deal for your daughter'
@@ -199,6 +207,15 @@ const pendingSign = ref<Offer | null>(null)
 const LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
 const confirmMessage = computed(() => {
   if (!pendingSign.value) return ''
+  // ⭐ ROUND 24 ITEM 2 – the endorsement's own confirm, because every number below this branch is
+  // kit arithmetic (`dealUntilWeek` anchors on seasons; an ad term runs from the signature). The
+  // last thing he reads restates the deal in the paper's own words – the fee, where it lands, how
+  // long her face is theirs – and the one thing the letter cannot say: that this cannot be undone.
+  if (pendingSign.value.kind === 'ad') {
+    const t = pendingSign.value.terms as AdOfferTerms
+    const until = weekLabel(week.value + Math.max(1, t.termWeeks) - 1)
+    return `Sign with ${t.brand}? A one-time fee of ${formatCents(t.cashCents)}, paid to the family now – her face in their campaign to ${until}, and nothing else asked of her. This cannot be undone.`
+  }
   const t = pendingSign.value.terms as KitOfferTerms
   const value = formatCents(t.kitAllowanceCents)
   const words = t.covers.map((l) => LINE_WORDS[l] ?? l)
