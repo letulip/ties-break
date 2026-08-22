@@ -6,13 +6,15 @@ canonical: false
 last-reviewed: 2026-08-22
 ---
 
-# The masseur, whole – travelling team step 1
+# The masseur, whole – travelling team steps 1 and 2
 
 Owner round 23 item 9, ruling Б («массажист ездит, психолог работает дистанционно»), re-cut 22.08:
 the psychologist leaves step 1 entirely (he ships with the private-life layer, where his only
-legible channel exists), and step 1 is the masseur's **salary + body effect only**. The fare – he
-travels, through `coachTravelFareFor`'s rule asked for a second seat – is step 2 and none of it is
-built here. Plan: `docs/plans/the-travelling-team-2026-08.md`.
+legible channel exists), and step 1 is the masseur's **salary + body effect only**. §§1–4 are step
+1's record, kept verbatim. **Step 2 landed the same day on the same unmerged branch** – the owner's
+round-24 challenge («а не слишком ли дешево это для специалиста?») – and §§5–9 are its record: the
+price recalibrated as a sessions dial, the fare through the coach's own rule, what the fare buys on
+deep runs, and the grid that measured all of it. Plan: `docs/plans/the-travelling-team-2026-08.md`.
 
 ## 1. The physio question, answered before a line was written
 
@@ -70,15 +72,22 @@ legibility seams keep them apart at a glance:
   > **Weeks bought back – the last layoff ended sooner than it should have.**
 
   The other three states: «Working the rehab – her return is closer than the clinic promised.»
-  (layoff running, weeks already bought), «On the table twice a day – the rehab is his work now.»
-  (layoff running, none yet), «Fresh legs – the weekly table work keeps her body ahead of the
-  grind.» (quiet weeks). The window for «recent» is 13 weeks (`MASSEUR_NOTE_WINDOW_WEEKS`).
+  (layoff running, weeks already bought), «On the table through the layoff – the rehab is in
+  professional hands.» (layoff running, none yet – re-worded twice: R15-7 took the guessed pronoun
+  out, and the dial took out «twice a day», which the twice-a-week rung would have made a lie),
+  «Fresh legs – the weekly table work keeps her body ahead of the grind.» (quiet weeks). The
+  window for «recent» is 13 weeks (`MASSEUR_NOTE_WINDOW_WEEKS`).
 * **Schema v59** – `masseurHired: boolean` (false for every earlier save – the seat did not
   exist), append-only migration, golden `v59.json` = the real migration's output on `v58.json`,
   `npm run e2e:fixtures` re-run. `injuryHistory` rows may carry `weeksSaved`, written only when he
   saved something – nothing back-filled.
 
 ## 3. The band – predicted vs measured (invariant 4)
+
+⚠ **STEP 1's RECORD, superseded the same day**: the owner challenged the $150/wk flat contract
+(«ко мне приезжал массажист и брал 50 долларов в час на дружеском тарифе») and §5 re-cut it into
+the sessions dial – $150/wk survives as the dial's ENTRY rung. The table below stands as the
+honest record of what the flat contract measured.
 
 The plan proposed «about half the coach's rung». Read against the MIDDLE rung at 17-22 – the first
 «somebody runs a programme» coach a fresh professional typically has, ~$60/h × 5h ≈ $300/wk – half
@@ -146,10 +155,224 @@ hits – rarely, and unmistakably.
   accounting-counts-forecast → the honest-accounting test. Eight arms, eight distinct catches,
   zero survivors.
 
-## 5. Deliberately left for step 2 (the fare)
+## 5. ⭐ Step 2: the price recalibrated – THE DIAL (owner round 24)
 
-No travel of any kind: no fare, no stance switch, no seat on `coachTravelFareFor`, no effect at
-tournament weeks (his condition bonus is the AT-HOME table; a tournament week's
-`matchWeekRecoveryBase` stays 0 for everybody). Step 2 asks the existing fare rule for a second
-seat and extends his hands to the trips – and step 3 measures Meridian's 50% against three seats,
-exactly as the plan sequences it.
+His challenge, verbatim: «а не слишком ли дешево это для специалиста? ко мне приезжал массажист и
+брал 50 долларов в час на дружеском тарифе. А здесь мы говорим про спорт профессионала (кстати
+может быть добавлять настройки сколько раз в неделю он дает свои услуги имеет смысл)…»
+
+**He is right, and his own anchor says why**: $150/wk at his real friendly rate buys THREE hours,
+and a professional's body work is daily. But the game's economy is compressed (a real coach is
+$1500+/wk; the game's middle rung is ~$300), so the honest recalibration is RELATIVE – inside the
+game's own scale, so the masseur READS as «a professional on retainer», never as a friendly visit:
+
+* **the session** is priced at **$75** – the TOP of the middle coach's 17–22 hourly band
+  ($48–72/h, `ECONOMY.coach.hourlyRateCents`): a specialist's hour above a mid-rung coach's, and
+  visibly not the owner's $50 «дружеский тариф»;
+* **the dial** (his own idea, «настройки сколько раз в неделю») is `masseurSessionsPerWeek`,
+  three rungs in `ECONOMY.masseur.rungs`, set from the card and re-validated by
+  `setMasseurSessions` – the coach's hours machinery (`coachHoursForPlan`: rate × hours) asked of
+  a second seat, never a second idiom. **The bill stays a flat contract per rung** – step 1's
+  legibility argument moved one level up: the rung is chosen, the bill is flat per rung, the
+  ledger row is the number on the card.
+
+### The pricing table – for the owner to rule on
+
+| rung | sessions/wk | per week | per year | what the price READS as, in-game | the effect it buys |
+| --- | ---: | ---: | ---: | --- | --- |
+| Twice a week | 2 | **$150** | ~$7.8k | step 1's own number – the entry rung; half the middle coach's week | rehab cadence N=3 (one week off a moderate layoff), +1 condition on home weeks |
+| Every other day | 4 | **$300** | ~$15.6k | **the middle coach's whole weekly bill – «a professional on retainer»**; the DEFAULT | cadence N=2 (step 1's measured arm: a third off moderate+ layoffs), +1 condition |
+| Daily | 7 | **$525** | ~$27.3k | between the high coach ($500/wk) and the elite ($800/wk) – the full-time body man; beside his own «+2 специалиста = +46к» sketch (~$23k each) | **cadence N=1 – long layoffs halved**, +2 condition on home weeks |
+
+Anchors read out of the game, not out of the real world: middle coach at 17–22 ≈ $300/wk, high ≈
+$500/wk, elite ≈ $800/wk (`hourlyRateCents` mid × 5h); the physio clinic line ≈ $57/wk. The niggle
+rule holds at every rung – `totalWeeks > 2` is a structural guard now, so daily hands still cannot
+massage a 1–2-week soreness away.
+
+## 6. ⭐ Step 2: the fare, and what it buys on deep runs
+
+* **The fare is the coach's own rule asked for one more seat** – the round-22 ruling («просто
+  стоимость поездки на 2 умножать») and NOT a second implementation: `staffSeatFareCents`
+  (sponsors.ts) is now the ONE seat-price both `coachTravelFareFor` and `masseurTravelFareFor`
+  read – the calendar's printed price, gross (no scholarship ever reaches a staff seat, 15.08),
+  with the brand's travel share coming off at paying rungs (17.08: «a sponsor's share comes off
+  both seats»). A parity test pins the identity: one world, one event, both seats quote the same
+  fare.
+* **The stance is the coach's own switch** – `masseurTravels`, default OFF («the switch is what
+  buys the seat»), set from the card beside the coach's own toggle. He goes to the rungs that pay
+  prize money and no others; no junior override exists because no junior career can hold the
+  pro-gated hire.
+* **What the fare buys** – the owner's question answered literally («влияет ли он на
+  восстановление на глубоких играх»): when the fare is actually charged, the play arm records
+  `pendingTournament.masseurThere`, and at finalize `masseurTourRelief` takes
+  `tourRecoveryPerRound × (matches − 1)` off the run's strain, capped at the strain itself.
+  **Per night BETWEEN ROUNDS**, so it scales with depth by construction: an R1 exit buys nothing
+  (the fare was insurance she did not need), a title week buys the most. `matchWeekRecoveryBase`
+  itself is untouched, still 0 for everybody.
+* **The at-home bonus stopped pretending** – step 1 paid the table bonus on tournament weeks too,
+  which the deep-run question exposed: she is away and nobody is on the home table. Since step 2
+  the rung's condition bonus lands on non-played worked weeks only; a played week that turns out
+  match-free (medical withdrawal, skipped event) hands it back through the same 18.08 makeup
+  expression both paths share. Tournament-week recovery is now exactly what the travel stance
+  sells.
+* **The receipt** (§4's law): a run of 3+ matches with him there prints one bounded line –
+  «Deep week, fresh legs – the table work on tour kept the run from eating her.» – and the fare
+  row itself names the payer when a brand covers a share.
+
+### The Meridian interaction (the plan's step 3)
+
+Unit-pinned: with a signed premium deal (`Meridian Sport`, travelShare 0.5) the masseur's seat
+costs **exactly half the printed price** – the same `kitTravelShare` her seat and the coach's
+read, one number, three seats. The arithmetic of the plan's §3, stated honestly: with all three
+seats on a full-price trip the travel line is 3× her single seat; under Meridian it is 1.5× – half
+of the staffed line, one seat's worth above where a staff-less family stands. (The plan predicted
+TWO extra specialists; the psychologist went remote by the owner's own ruling, so the doubling it
+sketched is now a 1.5×.) The grid below reports how many real fares rode under a discount.
+
+## 7. ⭐ Step 2 measured – the grid (invariant 4)
+
+`tools/masseur-bench.ts`: 32 paired seeds × 2 presets (25k·middle·middle and 8k·working·middle),
+`player` policy, 416 weeks, **7 cells per seed** – `none`, then {2, 4, 7 sessions} × {home, tour} –
+paired per seed against `none`, SEM (sd/√n) reported per cell.
+
+⚠ **The B arms manage the hire like a parent, and the first probe is why**: hire-at-the-gate-and-
+hold-for-ever bankrupted knife-edge careers (the gate opens at the family's junior-years low), so
+the walk (re)hires above $25k funds and releases below $10k – the measured releases are in the
+money row. A walk stops at its career's ending; walking past one would bill a dead world (the tick
+is total by design).
+
+**Predicted** (written before the grid ran): rehab receipts monotone in the dial (N=3 < N=2 < N=1);
+weeks lost scaling -1 → -2.5 → -4..-6; tour arms +1..+2 condition over home arms and a positive
+match-win delta on deep-run weeks; onsets untouched directly (any movement via condition→tau,
+expected small negative); fares ≈ $2-4k/trip at W rungs; the middle preset knife-edged enough that
+the parent-guard fires releases.
+
+**Measured, 25k · middle · middle coach** (n=31 of 32 reached the gate; paired vs `none`, ± = SEM):
+
+| cell | weeks lost | onsets | pro condition | pro match wins | rehab / tour receipts | salary over hired wks | fares (trips) | prize Δ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2/wk home | -0.39 ± 0.32 | -0.03 ± 0.12 | +0.26 ± 0.15 | -2.6 ± 1.9 | 0.77 / 0 | $20,192 / 165 | – | -$100k ± 91k |
+| 2/wk tour | -0.10 ± 0.65 | +0.35 ± 0.24 | **+1.08 ± 0.12** | **+5.0 ± 2.0** | 0.58 / 28.3 | $18,489 / 148 | $227,774 (60.9) | -$27k ± 191k |
+| 4/wk home | -0.81 ± 0.40 | +0.06 ± 0.10 | +0.16 ± 0.17 | -1.8 ± 2.0 | 1.10 / 0 | $38,729 / 159 | – | -$50k ± 147k |
+| 4/wk tour | -0.26 ± 0.63 | +0.35 ± 0.26 | **+1.29 ± 0.20** | +2.6 ± 3.2 | 0.87 / 26.1 | $32,816 / 132 | $201,527 (54.0) | -$120k ± 306k |
+| 7/wk home | -0.74 ± 0.67 | +0.06 ± 0.12 | +0.27 ± 0.20 | -1.8 ± 2.8 | 1.65 / 0 | $65,066 / 153 | – | -$102k ± 178k |
+| 7/wk tour | -0.55 ± 0.80 | +0.16 ± 0.27 | **+1.32 ± 0.17** | +3.7 ± 2.8 | 1.55 / 27.3 | $59,833 / 137 | $210,415 (56.5) | -$188k ± 270k |
+
+All 31 careers alive in every cell (the parent-guard fires 0.2-0.9 releases/career; the
+hold-forever probe's bankruptcies are gone). Zero discounted fares: no 25k career signed a
+travel-share deal while touring.
+
+**Measured, 8k · working · middle coach – the Alice end** (n=31 of 32 reached the gate):
+
+| cell | weeks lost | onsets | pro condition | pro match wins | rehab / tour receipts | salary over hired wks | fares (trips) | prize Δ |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2/wk home | -0.68 ± 0.59 | **-0.19 ± 0.09** | +0.07 ± 0.07 | +2.2 ± 1.8 | 0.97 / 0 | $24,261 / 202 | – | +$209k ± 198k |
+| 2/wk tour | -0.74 ± 0.66 | -0.13 ± 0.20 | **+1.93 ± 0.22** | **+9.6 ± 3.5** | 0.84 / 39.7 | $24,000 / 195 | $225,254 (80.1) | +$566k ± 329k |
+| 4/wk home | -1.29 ± 0.67 | -0.16 ± 0.13 | +0.06 ± 0.07 | +1.8 ± 2.0 | 1.68 / 0 | $47,565 / 198 | – | +$121k ± 180k |
+| 4/wk tour | **-1.61 ± 0.63** | -0.19 ± 0.20 | **+1.84 ± 0.27** | **+9.6 ± 3.5** | 1.58 / 39.0 | $46,471 / 189 | $220,830 (78.4) | +$549k ± 331k |
+| 7/wk home | **-2.00 ± 0.63** | -0.10 ± 0.18 | +0.19 ± 0.11 | +2.6 ± 2.8 | 2.26 / 0 | $81,951 / 196 | – | -$112k ± 244k |
+| 7/wk tour | **-2.39 ± 0.75** | -0.10 ± 0.21 | **+1.62 ± 0.31** | **+10.5 ± 4.5** | 2.00 / 38.5 | $78,157 / 182 | $213,672 (75.8) | +$516k ± 354k |
+
+⭐ **The one career-ending injury in the A arm is averted in five of the six B cells** (A: 30
+alive + 1 career-ending injury; every B cell but 7/wk-tour: 31 alive) – step 1's «a rehab
+specialist pays off exactly when disaster hits», reproduced at 32 seeds.
+
+**Reading the 25k grid honestly:**
+
+* ⭐ **The FARE is the measurable channel, exactly as the owner suspected.** The tour arms clear
+  **6-9 SEM on pro-phase condition** (+1.1..+1.3) and the 2/wk tour arm clears 2.5 SEM on match
+  wins (+5.0 ± 2.0) – the deep-run relief is real, visible, and it is what the fare buys. The
+  receipts arrive steadily – 26-28 tour lines per career over ~5-6 pro seasons, roughly one
+  every deep run.
+* **The dial's rehab channel scales monotonically** – receipts 0.77 → 1.10 → 1.65 per career, the
+  6-week-layoff walk is pinned at 5/4/3 weeks served – but the whole-career weeks-lost delta sits
+  at 1-2 SEM here, weaker than step 1's -2.48: the parent-guard employs him ~160 weeks against
+  step 1's 227, and the weeks he is released cluster exactly where money is tight. The dial is NOT
+  decoration – the receipts and the pinned cadence separate the rungs – but at this preset its
+  headline is the price, not the weeks.
+* **Tour onsets +0.35 ± 0.25 is EXPOSURE, not a broken lever**: fresher legs pass the fatigue
+  caution more often, so she enters and plays more (+2.6..+5.0 wins), and played weeks carry
+  `injuryPlayingMultiplier`. More tennis, slightly more injuries – the honest shape of buying
+  freshness.
+* **The travelling masseur does not pay for himself in prize money here** – fares ~$200-230k
+  against prize deltas that are negative-to-noise. Like the coach's own measured fare, it is a
+  LUXURY: the family buys condition, wins and receipts, not ROI. At the 25k preset that is a real
+  decision (~$40-50k/season of pro career), which is what the owner asked the price to be.
+
+**Reading the 8k grid** (and it reads differently from the 25k one, which is the plan's own Alice
+test doing its job):
+
+* ⭐ **At the working preset the dial IS the weeks**: -0.68 → -1.29/-1.61 → -2.00/-2.39 lost weeks
+  per career, monotone in the rung, with the 7/wk cells clearing **3 SEM** – and rehab receipts
+  0.97 → 1.68 → 2.26. Every rung measurably beats the one below it: the dial is not decoration.
+* ⭐ **The travelling masseur roughly pays for himself here**: ~$250-290k of staff cost against
+  prize deltas of **+$516..566k (± ~330k, direction consistent across all three tour cells)** and
+  **+9.6..+10.5 match wins at ~2.8 SEM**. The working family's masseur is an investment; the
+  25k family's is a luxury – the same asymmetry the plan's §1 found in the owner's own two saves.
+* **The tour condition effect is preset-stable**: +1.6..+1.9 (6-9 SEM), beside the 25k's
+  +1.1..+1.3 – the deep-run relief is the mechanism, not a preset artefact.
+
+### The injury-risk verdict (the owner's «влияет ли он на риск травм»)
+
+**No direct lever shipped, and the grid says none is needed.** The split stands: prevention (the
+tau multiply, the layoff dealt at onset) is the physio's; the masseur is recovery you watch – plus,
+since step 2, the tournament week the fare buys. What the grid measured about risk:
+
+* the sessions dial DOES move onsets, but only through channels the player already reads: at 8k,
+  -0.10..-0.19 onsets/career (2/wk home clears 2 SEM at -0.19 ± 0.09) – the condition→tau chain;
+  at 25k the TOUR cells move the other way, +0.35 ± 0.25 – fresher legs pass the fatigue caution,
+  she enters and plays more (+2.6..+5.0 wins), and played weeks carry `injuryPlayingMultiplier`.
+  **More recovery is sometimes more exposure – an emergent trade, not a broken lever.**
+* a direct `tau` multiply on masseur sessions would be a second hand on `physioRiskFactor`'s own
+  number, with no surface of its own to be read on – «you paid and you cannot tell», the exact
+  decorative trap this plan exists to avoid, now with the measurement showing the indirect
+  channels already produce every effect a player could feel. **Risk stays the physio's.**
+
+### The Meridian interaction, honestly bounded
+
+The grid's «discounted trips» column read **0 in all 12 cells – by construction**: the econ
+bench's policy never signs a sponsor (`signOffer` is a player command no walk issues), so
+`kitTravelShare` is 0 for every walked fare. The interaction is therefore pinned where it can be
+seen exactly: the unit test builds the real premium terms (`Meridian Sport`, travelShare 0.5) and
+asserts the masseur's seat at **precisely half the printed price**, and the coach-parity identity
+makes the same true of the second seat by the same read. The travel-line arithmetic for a staffed
+family under Meridian: three full seats = 3× her single fare; under the 50% share = 1.5× – half of
+the staffed line, one seat above where a staff-less family stands (the plan's §3 sketch assumed a
+second travelling specialist; the psychologist went remote by the owner's own ruling, so its
+«doubled» is this build's 1.5×).
+
+## 8. RNG, freezes, guards – step 2's additions
+
+* **Still zero draws anywhere**: the dial and the stance are plain state, the fare is a
+  subtraction in the play arm, the tour relief is post-strain arithmetic, `masseurThere` is a
+  recorded boolean. The frozen MAIN capture **41550 / e6b0c709** re-run green.
+* **Frozen careers** (tests/coach-travel-edge.test.ts): per-key protocol run FIRST, control = a
+  detached worktree at `c976786` (step 2 reverted), null-arm checked both ways. Verdict: **two new
+  keys appeared – `masseurSessionsPerWeek` (4b227777d4dd = `4`) and `masseurTravels` (fcbcf165908d
+  = `false`) – and NOTHING else moved** on all three arms; `schemaVersion` stays 59 both sides.
+  The first per-key run was thrown away because all three arms came back `preset 0 policy 1` (a
+  zsh word-split ate the flags) – the protocol's «check headers against invocations» clause
+  earning its keep. Hashes re-frozen; the `PRE_V59` rollback identity now drops all THREE masseur
+  keys and still reproduces the v58-era hashes byte for byte.
+* **Schema v59, extended in place** – the version shipped to no player, so append-only does not
+  bind it yet (deliberate, recorded in the migration): v59 now writes `masseurHired = false`,
+  `masseurSessionsPerWeek = 4`, `masseurTravels = false` for every pre-v59 save;
+  `pendingTournament` MAY carry `masseurThere`; golden `v59.json` regenerated through the real
+  migration (diff = exactly the two new keys), `npm run e2e:fixtures` re-run.
+* **Guards re-aimed**: `setMasseurSessions` and `setMasseurTravels` joined `refusedCommands` in
+  tests/round24-college-refusals.test.ts – inside the freeze both refuse with the COLLEGE
+  sentence through `guardNotEnded`, the same order `hireMasseur` documents.
+* **Mutation arms, step 2** (each run red on the named test, then reverted, tree re-run green):
+  bill-ignores-dial → §3's rung-bill test; cadence-ignores-rung → the dial-scales-cadence test;
+  niggle-guard-removed → the daily-niggle test; played-week-bonus-restored → the she-plays test;
+  fare-never-charged → the charge test; share-ignored → the Meridian test;
+  relief-when-home → §9's zero-when-home test; relief-not-by-depth → the per-night test;
+  migration-wrong-default → the §6 fixture test; dial-aria-hardcoded → the component §5 test.
+  Ten arms, ten distinct catches, zero survivors – on top of step 1's eight.
+
+## 9. Left open
+
+* The owner rules on the pricing table (§5) – the rungs are knobs in `ECONOMY.masseur`, one line
+  each to retune, and the bench grid re-runs as-is.
+* The psychologist ships with the private-life layer (the 22.08 re-cut), where §6's fare question
+  will be asked again for a THIRD seat – `staffSeatFareCents` is already the one place to ask it.
