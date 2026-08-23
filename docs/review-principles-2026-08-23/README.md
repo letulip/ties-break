@@ -62,6 +62,10 @@ worker/UI state-ownership breach.
 
 ## Review set
 
+The [18 August review](../review-principles-2026-08/README.md) is included in this branch as the
+historical baseline; its former work plan is explicitly marked as superseded by this review's
+current roadmap.
+
 1. [Method, baseline and change map](01-method-baseline-and-change-map.md)
 2. [DRY, KISS, YAGNI, SOLID, architecture and code](02-principles-architecture-and-code.md)
 3. [Product, plot, design and mechanics](03-product-plot-design-and-mechanics.md)

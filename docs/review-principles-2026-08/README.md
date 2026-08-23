@@ -12,6 +12,10 @@ baseline: 13d8f95a8e4581008a0c209d676d578b00d68200
 > Point-in-time audit of `main` at `13d8f95` on 2026-08-18. It describes evidence, not current
 > project truth forever. Recheck a finding against code and tests before implementing it.
 
+> **Superseded for current planning:** the [23 August re-review](../review-principles-2026-08-23/README.md)
+> rechecks every review area against `origin/main` at `52a5f13` and includes a fix matrix for this
+> audit. Keep this set as the historical baseline for that comparison.
+
 ## Verdict
 
 Ties Break is no longer merely a promising PoC. Its deterministic simulation, transactional

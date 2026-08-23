@@ -1,12 +1,16 @@
 ---
 type: plan
-status: current
+status: audit
 area: process
 canonical: false
 last-reviewed: 2026-08-18
+superseded-by: docs/review-principles-2026-08-23/07-proposals-and-roadmap.md
 ---
 
 # The work plan – what was done, what is running, what is left, and what needs the owner
+
+> **Historical ledger:** use the [23 August roadmap](../review-principles-2026-08-23/07-proposals-and-roadmap.md)
+> for current sequencing. This page remains the audited record of the first review wave.
 
 **Written 18.08.2026, after an independent audit of every item in this review against the code.**
 The owner's instruction: «я как раз и просил сделать планы работ… и запустить по понятным и
