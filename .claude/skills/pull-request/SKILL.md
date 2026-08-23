@@ -29,17 +29,29 @@ a box it has not proven with a command in this session.
    `git diff --stat main...HEAD`. The What-section is written from what actually changed, not from
    memory: two sentences, the owner's numbering where the wave answered his items.
 
-4. **The checklist, verified box by box:**
-   - *Linked Issue* – ask the owner for the Issue number if the change is beyond a small fix and
-     none is known. Never invent one; an unticked box with a reason beats a false tick.
-   - *Tests added or updated, npm test green* – green comes from step 2's log; "added or updated"
-     is checked against the diff (a `src/**` change with zero `tests/**` changes gets a stated
-     reason in the body, not a silent tick).
-   - *No Vue/Pinia imports into engine* – step 2's purity line.
-   - *npm run check green* – step 2's `CHECK_EXIT=0`, quoted.
+4. **The checklist, EARNED box by box – the check runs, then the box is ticked, in that order.**
+   The owner's own words: «идут проверки и мы галочки проставляем». Every box in the template maps
+   to a command or a fact from THIS session; run it, then write `[x]`:
+   - *Prior discussion* – the Issue number, or the owner's ruling/session named in What (their real
+     workflow: rulings happen in working sessions, not Issues). Never invent either.
+   - *Tests added or updated, npm test green* – green from step 2's log; "added or updated" checked
+     against the diff (a `src/**` change with zero `tests/**` changes gets a stated reason in What,
+     not a silent tick).
+   - *Engine purity* – step 2's `engine purity: ok` line, quoted mentally, ticked.
+   - *npm run check green* – step 2's `CHECK_EXIT=0` from the FILE.
+   - *Frozen capture* – run `npx vitest run tests/condition.test.ts`; unmoved → tick; moved → the
+     re-pin story goes in What and the box is ticked only with it written.
+   - *Save schema* – `git diff main...HEAD -- src/engine/migrations.ts src/engine/world.ts` tells
+     the truth: untouched → tick; moved → the 4 parts named in What, then tick.
+   - *Sim* – model/bench untouched per the diff → tick; touched → `npm run test:sim` locally
+     (exit code from a file), numbers into What, then tick.
+   A box whose command did not run in this session stays `[ ]`, with one line in What saying why –
+   the checklist CI job will hold the merge, which is exactly its job.
 
 5. **The body.** Fill `.github/pull_request_template.md` verbatim – What, then the checklist with
-   every earned box ticked `[x]`. Append, when they exist: the sim numbers (step 2), the schema
+   every earned box ticked `[x]`. ⚠ For an EXISTING PR (a red `checklist` job on an open PR is the
+   usual reason this skill is invoked) the deliverable is the same body as a REPLACEMENT – the
+   owner pastes it over the description and the job re-runs on the edit. Append, when they exist: the sim numbers (step 2), the schema
    move (version, migration, fixture), the frozen-capture verdict (41550 / e6b0c709 moved or not),
    and re-aimed guard tests with their ⚠ reasons. Short dash `–` only; no Cyrillic in anything a
    public PR renders except the owner's own quoted rulings.
