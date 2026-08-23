@@ -23,3 +23,10 @@ tests, the coverage map honest); everything here is the layer ABOVE it or the pl
 | 8 | **TB-24's second half – pure builds** – `art:ingest`/`art:optimize` split (only `optimize-art.mjs` exists), masters into versioned storage (the one-laptop risk the trophy incident proved), pinned toolchain, release checklist. | [09-detailed-proposals.md](../review-codex/09-detailed-proposals.md) TB-24 | the owner does the storage half (his masters, his cloud) | M |
 | 9 | **The round-22 spec gap** – the tenure ramp and the live professional table were measured and shipped with no spec in `docs/specs/`; both records live only in commit bodies and source comments. Invariant 4's paper trail is owed retroactively. | [round-22.md](../rounds/round-22.md), «What is still open» #1 | nothing – it is a writing task | S |
 | 10 | **Wake lock during a match** (round 16 #20) – the screen sleeps mid-match; no `wakeLock` reference anywhere in `src/`. A PWA capability with a small, well-trodden API. | [round-16.md](../rounds/round-16.md) #20 | nothing | S |
+
+**Not a backlog item, noted so nobody re-plans it:** P4, the `world.ts` decomposition, is ONGOING
+– the standing interleaved work with its own rules in `CLAUDE.md` (the type-only import pattern,
+the 280-importer public API, the pin query). Status and method:
+[P4-world-decomposition.md](../review/proposals/P4-world-decomposition.md). `world.ts` measures
+3,830 lines today against 5,521 at review time – the direction is real; it continues in gaps, never
+concurrent with a feature wave in the same region.
