@@ -55,7 +55,8 @@ technical blocks the prologue; the backlog row says the same.
 `ageFactor` clamp returns **peak rate** for any younger age. A prologue that reuses `growWeek` gives
 a seven-year-old six extra years at the maximum junior rate. The spec's rule stands: **the prologue
 may not reuse `growWeek` below 13** – and this plan's answer is stronger: the prologue has no weekly
-growth at all (§4).
+growth at all, and since 23.08 the trap is closed by construction – the year cards' one target is
+the standard starting rose she must arrive at (§4, the blurred rose).
 
 **Scale.** 8 years × 52 weeks = 416 weeks – twice the whole main game (208). The year is the grain;
 `docs/plan.md` Phase 6 ("quarter/year ticks") and the spec agree.
@@ -119,7 +120,7 @@ Three rules follow, and they are the whole "ненавязчиво":
 | **Money** | the budget card | **8** | the club across town is ~3× the municipal court – the first real ledger rows are hers |
 | **Coach market** | the Kid screen's coach tile | **9** | group or one-to-one – the roster IS the decision, and the screen already renders a rung and a price |
 | **Season** | the tab | **10** | a Local Open in six weeks – where entering happens, what it costs; the junior rows show `'age-locked'` ("Opens at 13"), which is a promise, not a wall |
-| **TournamentFlow** (reveal) | raises itself | **10** | the entered week resolving – IF the Open is real (open question 2) |
+| **TournamentFlow** (reveal) | raises itself | **10** | the entered week resolving – the FULL flow, ruled 23.08 (§9.2) |
 | **Calendar** | the tab | **11** | sports school or ordinary school – the year as weeks: school, exams, what childhood is spent on (`kidLife.ts` already owns the school calendar) |
 | **Inbox** | the envelope | **11** | the sports school's admission arrives as a LETTER – offers come by post in this game, and this is the first one |
 | **Stats** | the tab | **12** | the fork's evidence – the radar of what six years built, fog and all; the time-series stays short, and that is honest |
@@ -132,11 +133,43 @@ Three rules follow, and they are the whole "ненавязчиво":
 a lie), More/settings (meta – the gear and tour step 10 cover it), `KnockDialog` (first knock;
 self-explaining by design), `TourBriefingDialog` (fires when her ranking first binds her – round-18
 #8 machinery), `SeasonSummaryDialog` (first W49), `MatchViewer` as a full screen (first watched
-match; the age-10 result may offer a watch, not require one), `InjuryStopDialog`, the college and
-retirement surfaces, `EndingScreen`.
+match – the age-10 Open's full flow offers the watch exactly as the main game does, and never
+forces it), `InjuryStopDialog`, the college and retirement surfaces, `EndingScreen`.
 
 `BirthdayDialog` is the deliberate exception in neither list: it is REUSED as the prologue's year
 boundary (§5), so it self-onboards eight times before week 0 ever fires it.
+
+### 3.2 The trial boundary – a DESIGN CONSTRAINT, not a feature (owner, 23.08)
+
+His framing, verbatim:
+
+> «у меня изначально была идея, что пролог + 1й год тенниса это бесплатный ознакомительный
+> фрагмент игры, а потом "понравилось и хотите узнать что дальше? оплатите пожалуйста" так что
+> надо это как-то сделать аккуратно и гармонично»
+
+So the prologue is not only the game's onboarding – it is most of the game's FREE TRIAL, and that
+binds this plan as a constraint even though nothing of monetisation is built here:
+
+1. **The trial's exit must read as an invitation, never a verdict.** The player who reaches the
+   boundary must arrive WANTING more – «понравилось и хотите узнать что дальше?» is a question
+   asked of someone mid-appetite. No beat may be placed so that the trial's natural stop lands on
+   a loss, an injury, a refusal or an empty wallet: the last free scene is a door opening, not a
+   door closing.
+2. **The age-12 stop is part of the trial's own arc.** Open question 3's fork («she is tired / she
+   wants more») sits INSIDE the free fragment, and its «stop» answer must keep reading as what it
+   is designed to be – a real ending without shame – and never as a fail state parked in front of
+   a paywall. A player who chooses «stop» at 12 chose an ending; a player who chooses «more» meets
+   the trial boundary later, from the wanting side. The two must never blur, or the fork's honesty
+   dies with them.
+3. **Monetisation surfaces are their own future work.** Where the door stands, what it costs, how
+   it is worded – none of it is this plan's to decide, and nothing in steps 1–6 builds any of it.
+   The prologue's whole obligation is negative: do not FIGHT the future paywall – keep the arc's
+   emotional shape rising through the boundary («аккуратно и гармонично»), and keep the boundary's
+   exact placement flexible, because «1й год тенниса» is his sketch of the line, not yet a ruled
+   week number.
+4. **The skip door is part of that future work too.** §9.1's «Начать с 14» path crosses the same
+   boundary from a different side; how a trial player meets it is decided with the monetisation
+   pass, not here.
 
 ---
 
@@ -164,9 +197,56 @@ The MAIN stream is untouched until week 0, so:
   That equivalence gets a test, not an assumption.
 
 **No `growWeek` below 13, and no weekly growth at all.** Each year card writes bounded, declared
-deltas into `startingSkills` at the handover, using the `relativeAgeHeadStart` pattern (post-draw
-arithmetic at `createWorld`, shipped 30.07, proven). "Development" at seven is coordination, habit
-and whether she likes it – it is card outcomes, not a curve.
+deltas using the `relativeAgeHeadStart` pattern (post-draw arithmetic at `createWorld`, shipped
+30.07, proven). "Development" at seven is coordination, habit and whether she likes it – it is
+card outcomes, not a curve. ⭐ And since 23.08 those deltas have a stated destination – the
+blurred rose:
+
+### ⭐ The blurred rose – the owner's design (23.08), and the growth/playStyle model it replaces
+
+His design, quoted in full because it settles three questions at once:
+
+> «может быть чтобы она как раз к точке 13 лет приходила уже с этой "начальной" розой скиллов,
+> тогда как раз "круг замкнется" корректно и ничего менять не придется. Может быть как раз
+> оставить выбор стратегии на корте в пользу пролога, т.к. ни один родитель и тренер в 6 лет не
+> знают как она будет играть в будущем и в чем будет сильна… мы можем вообще с полностью
+> блюренной зоны начинать, которая как раз сформируется в начальную линию к 13-14 - как раз к
+> началу основной игры.»
+
+**1. The year rule's TARGET is the standard starting rose – and that closes the `growthStart`
+trap by construction.** The eight cards' deltas are not free-floating bonuses that a growth model
+must then absorb: their sum is CONSTRUCTED to land, at 13, on the same starting line
+`createWorld` rolls for a direct-14 career. The prologue moves the SHAPE of the rose – which
+wings lean, because of what she practised and what the cards decided – never its total, so «круг
+замкнется» exactly as he says: the main game's calibration (the age curve from `growthStart: 13`,
+the ladder pace, the acceptance cuts) is untouched **by construction, not by tuning**, and §1's
+trap dissolves rather than being guarded against – below 13 there is no growth model because
+there is nothing to grow toward except the line she must arrive at. «ничего менять не придется»
+is literally the implementation note.
+
+**2. `playStyle` EMERGES – the age-14 menu dies on the prologue path.** «ни один родитель и
+тренер в 6 лет не знают как она будет играть в будущем и в чем будет сильна» – so the wizard's
+play-style pick is not moved into the prologue, it is REPLACED by it. Style forms from two feeds:
+what the cards had her practise (his choices) and **her own revealed inclinations**, drawn on the
+prologue's own sub-streams – hers, not his, so a girl can lean against everything she was drilled
+in, which is the sentence's whole point. The wizard's play-style step survives only on the
+skip-to-14 door (§7 already moved it out; this ruling is why it left).
+
+**3. The radar starts fully fogged and de-fogs year by year.** «мы можем вообще с полностью
+блюренной зоны начинать» – at 6 every axis sits at maximum band, and the existing fog machinery
+([skills-radar.md](../specs/skills-radar.md): a band per axis, EVIDENCE lifts fog, never elapsed
+time) is simply pointed at childhood: each year's beats – the first class, the first coach, the
+Local Open – are the evidence that sharpens the contour, and by 13–14 it «сформируется в
+начальную линию», the very rose the main game opens on. Nothing new is built; the prologue feeds
+the radar's own §2 mechanics eight years of honest evidence.
+
+**The one seam, stated as a rule: `potential` stays rolled at creation.** The ceilings are drawn
+once, when the world is created at 6, and the prologue REVEALS them through the fog – it never
+re-rolls them and no card may move them. **«какой она пришла к 13» is childhood; «во что она
+вырастет» is fate** – a timing or effort effect must never become a talent effect (the spec's
+rule, now sharpened to cover re-drawing as well as moving). The pin is §8 step 1's week-0
+equivalence test: a prologue career and a direct-14 career on the same seed carry the same
+ceilings.
 
 **The market at 9.** `ageAtWeek` is the coach market's restocking clock and must not learn about
 the prologue (see the one-clock notes in `age.ts`). The age-9 visit renders the real
@@ -177,17 +257,20 @@ only. The real market starts at week 0 exactly as today.
 phase (plan → enter → play → recap), then returns to the year grain for the handover card. This is
 the only place the two grains touch, and it is the point of it.
 
-### What the prologue may move (the spec's list, unchanged)
+### What the prologue may move (the spec's list, re-read through the blurred rose)
 
 `fundsCents` at week 0 (the strongest – the $8k/$25k/$120k of `STARTING_FUNDS_CENTS` becomes a
-number with a history), `startingSkills` (bounded deltas), `playStyle` (earned from what she
-practised, deleting an arbitrary wizard choice), the coach rung she arrives with, possibly an
-academy door already ajar ([academy-invitation.md](../specs/academy-invitation.md) machinery).
+number with a history), the SHAPE of the starting rose (bounded deltas summing onto the standard
+starting line – rule 1 above; the spec's `startingSkills` clause, now with a stated destination),
+`playStyle` (emergent per rule 2 – earned and revealed, not picked), the coach rung she arrives
+with, possibly an academy door already ajar
+([academy-invitation.md](../specs/academy-invitation.md) machinery).
 
 ### What it must not move
 
 **`potential`.** The spec's rule, held by three systems already (coach §6, relative age, the
-radar's fog): a timing or effort effect must never become a talent effect.
+radar's fog), and sharpened 23.08 into the seam rule above: the prologue reveals the ceilings
+through the fog – it never moves them and never re-rolls them.
 
 ---
 
@@ -201,7 +284,7 @@ few and real; not every year has one.
 | 6–7 | she likes it; a racquet and a group class | does she start at all – the hook, and it is cheap | Home (the stage), Kid at 7 | small funds debit; motivation seed |
 | 8 | the club across town, or the municipal court | the first real money: a club is ~3× and it is where the coaches are | Money | funds path diverges; a skills nudge if club |
 | 9 | the group is full of eight-year-olds | group or one-to-one – the first "what share of our income is this" | Coach market | coach habit; funds; motivation |
-| 10 | a Local Open in six weeks | enter her? the tier exists and has no age gate | Season (+ the reveal, per ruling) | first result; a trophy if won; motivation either way |
+| 10 | a Local Open in six weeks | enter her? the tier exists and has no age gate | Season (+ the FULL TournamentFlow – ruled 23.08, §9.2) | first result; a trophy if won; motivation either way |
 | 11 | the sports school takes children at eleven | sports school or ordinary school – how much childhood we spend | Calendar, Inbox (the letter) | school track (`kidLife` reads it); skills/motivation trade |
 | 12 | she is tired of it / she wants more | the fork the real world is full of – a consequence of the eight cards before it, not a menu | Stats (the radar), the ForkDialog contract | motivation resolves; possibly the career ends (open question 3) |
 | 13 | the junior tour opens (already true in code) | do you go? the first passport, the first flight, the first real bill | This week + the plan sheet + the next-week button – one real week | the J30 bill; the travel habit; the handover profile firms up |
@@ -254,8 +337,9 @@ The prologue and the 11-mark tour answer the same question for two different pla
 
 The wizard does not disappear – it donates. Name, birth date and country stay as the prologue's
 opening card (they are the girl, not the difficulty). Family setup remains the prologue's starting
-condition (question 4). Play style leaves the wizard entirely: it is derived from the eight years.
-This is the spec §7 claim made concrete: the prologue REPLACES the first ten minutes of menus
+condition (question 4). Play style leaves the wizard entirely: it is derived from the eight years
+– ruled 23.08, §4's blurred rose, and it is the ruling's own reason: nobody at 6 knows how she
+will play. This is the spec §7 claim made concrete: the prologue REPLACES the first ten minutes of menus
 rather than adding a system beside them – and it is also backlog item 3's "truthful onboarding"
 satisfied for free, because a claim the player lived through cannot be flavour text.
 
@@ -295,12 +379,14 @@ existing save as prologue-absent and touches nothing else. Append-only migration
    career offers «Начать с 6» / «Начать с 14», and the 14 door is today's wizard + tour, untouched.
    A veteran on his fifth career will not forgive eight mandatory cards, and the skip path is what
    keeps the 11-mark tour earning its keep.
-2. **Is the age-10 Local Open real** (an engine draw and a result) or a card that narrates one?
-   Recommendation: real result, optional spectacle – the tier is open, `serveSpeedBase(10)`
-   answers, and a small draw from a `seed:prologue:open` sub-stream costs little; the card reports
-   the result and offers "watch the final point", it does not force the full match screen. The
-   spec's own caution stands: a full TournamentFlow may be more game than a ten-year-old's Sunday
-   deserves.
+2. **RULED 23.08 – the age-10 Local Open runs the FULL tournament flow.** His word, verbatim:
+   «у нас всё для турниров есть, используем этот флой полноценно». Not a narrated card and not a
+   result-only draw: the real TournamentFlow, the reveal, the match surfaces – at ten, on a
+   `seed:prologue:open` sub-stream. The one thing the ruling needs is already in §1's receiver
+   list: **the age-appropriate ball speed is INHERITED** – `serveSpeedBase(ageYears)` is a
+   function defined down to 6, so a ten-year-old's serve reads honestly with nothing to build.
+   (The spec's old caution – a full flow may be more game than a ten-year-old's Sunday deserves –
+   is answered by the ruling itself: the flow IS the game, and the prologue uses it.)
 3. **Can the prologue end the career at 12?** Recommendation: yes – «"stop" CAN be the right
    answer... a real ending without shame» is the fork's own standing ruling, and dropout IS the
    story of junior sport. Behind a confirm, writing a real (short) ending card. If the owner finds

@@ -114,16 +114,34 @@ replay is byte-identical, the same trick `kit`, `skills` and `coachId` already u
 | knock: push / push on a repeated part | −3 / −5 |
 | entering her under a `'warn'` medical clearance (played hurt) | −4 |
 | birthday: the time-together ids only – `day` / `familyweek` / `trip` (`chooseGift`) | +2 / +3 / +4 |
-| birthday: any material gift | 0 |
+| birthday: a material gift she did NOT ask for | 0 |
+| birthday: ⭐ the material gift she ASKED for, granted (`asked` = `given`) | +2..+3 (proposal – bench) |
+| birthday: she asked and was refused (`given` null, or another thing) | −1..−2 (proposal – bench) |
 | a vacation that resolves | +1 |
 | season wrapped with zero vacations booked | −3 |
 | step 2+: a reaction option | −4..+3 (per beat) |
 
 The birthday row is the seam `birthday.ts` explicitly left waiting – the owner on the day/week
-pair: «когда будем мораль делать может быть надо будет учитывать оба». Material gifts stay at 0 to
-preserve the module's ruling 2 (a gift that moves a number is a purchase): TIME moves the
-relationship, THINGS never do. ⚠ Ruling 2's comment must be amended in the same commit, and the
-owner asked – open question 4.
+pair: «когда будем мораль делать может быть надо будет учитывать оба».
+
+⭐ **AND HE CORRECTED THE «материальные 0» RULE, 23.08.** The draft had every material gift at 0,
+to preserve the module's ruling 2 (a gift that moves a number is a purchase). His word, verbatim:
+
+> «а как же с теми, которых она сама просила? мне кажется там вполне может двигаться в
+> положительную сторону мораль»
+
+So the zero survives only for UNPROMPTED material purchases. **An asked-for gift granted is a
+heard request, and a heard request moves the relationship** – which is not a purchase, and ruling
+2 survives intact for the reason the birthday spec already built: the ask is drawn on
+`seed:birthday:<age>` – (seed, calendar), never a choice – so a player cannot manufacture the ask
+and buy the bond; he can only ANSWER it. The mechanic costs nothing new:
+[birthday-and-gifts.md](../specs/birthday-and-gifts.md) §2ab already records the three-way outcome
+per birthday (`asked` = `given` match / they differ / `given` null), so the three bond rows above
+read a record that exists. Proposed deltas – **+2..+3 for the asked-for gift granted, −1..−2 for
+the refusal** (null harsher than a different real present) – are for the bench, not rulings; the
+step-1 bench corridor absorbs them. ⚠ The build commit must amend BOTH homes in the same move:
+ruling 2's comment in `birthday.ts` and the birthday spec's «records and does not consume» §2b –
+this table is the consumer it was waiting for.
 
 * **The memory property:** deltas land immediately and then regress toward 70 at **0.5/week** –
   nothing else moves it. A −25 season heals in ~50 weeks, which is §4a.3's recoverability («one bad
@@ -248,7 +266,8 @@ wire first.
 
 **Trigger conditions:**
 
-* age gate: nothing fires before `kidAgeExact ≥ 16` (recommendation; open question 5);
+* age gate: nothing fires before `kidAgeExact ≥ 16` – ⭐ RULED 23.08, 16 confirmed (question 5,
+  closed);
 * hazard while the slot is empty and the cooldown is clear: **1.0%/week before 18, 2.5%/week from
   18**, one uniform on `seed:life:arrival:<week>` per eligible week. Median first arrival ≈ 17.3;
   ~90% of careers have met someone by 19;
@@ -330,14 +349,125 @@ a stream), arm B is the same seed untouched. Bars:
 
 ---
 
-## 6. Steps 5–8 – sized sketches only
+## 6. Steps 5–8 – sized sketches, plus the owner's 23.08 words on them (§6a–6b)
 
 | # | step | size | sketch |
 | --- | --- | --- | --- |
-| 5 | the psychologist | **M** | Remote-only by the owner's ruling ([the-travelling-team-2026-08.md](the-travelling-team-2026-08.md) §5 moved him here). A salaried retainer (schema move: the hire persists), effect = **+3/week while `spiritShock` is live** – the curve of step 4 is his product and his legibility («видно и заметно» with no figure). The masseur's seams are the template: `staffSeatFareCents` / `staffResultShareBps` already answer the seat and the percentage questions if he ever travels ([the-masseur-2026-08.md](../specs/the-masseur-2026-08.md) §9). Bench: re-run step 4's paired arms with him hired – weeks under the knee 2 ± 1. |
-| 6 | marriage (3c) | **L** | The slot latches (`attachment.latched`, schema move); a second adult with an OPINION – a small disagreement surface over schedule and travel through step 2's machinery, and the first outside claim on money (round 23 #18 put her prize share in her own account; the claim reads that seam, it does not invent one). Needs courtship states on the slot and the partner finally needs a name – the fictional-name pass lands here. |
-| 7 | pregnancy (3d) | **L** | The fork that stops the career – the college fork's machinery, months out, a return that is not guaranteed, protected ranking modelled from [life-events-motherhood.md](../research/life-events-motherhood.md). Not before 3a–3c (the design's own order). `spiritShock` gains a kind; the ranking decay while away is the hard half. |
-| 8 | a death in the family (3e) | **M–L** | Deliberately NOT on the attachment machinery (design §3e). Its own shock kind with an asymmetric, longer curve, it can reach the parent, and it ships behind an off switch – the settings question is open question 1 and must be answered before this is built. Last, carefully. |
+| 5 | the psychologist | **M** | ⭐ EXPANDED 23.08 by the owner's word – he is not one hire with one number, he is a LADDER. The full design section is §6a below; the sketch that stood here (remote-only, salaried retainer, +3/week while `spiritShock` is live, the masseur's travel seams if he ever travels) survives inside it as the middle rung's shape. |
+| 6 | marriage (3c) | **L** | The slot latches (`attachment.latched`, schema move) – ⭐ and not before 22, his 23.08 gate (§6b); a second adult with an OPINION – a small disagreement surface over schedule and travel through step 2's machinery, and the first outside claim on money (round 23 #18 put her prize share in her own account; the claim reads that seam, it does not invent one). Needs courtship states on the slot and the partner finally needs a name – the fictional-name pass lands here. First-sketch stack: [the-wedding-and-the-children.md](the-wedding-and-the-children.md). |
+| 7 | pregnancy (3d) | **L** | The fork that stops the career – the college fork's machinery, months out, a return that is not guaranteed, protected ranking modelled from [life-events-motherhood.md](../research/life-events-motherhood.md). Not before 3a–3c (the design's own order). `spiritShock` gains a kind; the ranking decay while away is the hard half. Sketched further in [the-wedding-and-the-children.md](the-wedding-and-the-children.md). |
+| 8 | a death in the family (3e) | **M–L** | Deliberately NOT on the attachment machinery (design §3e). Its own shock kind with an asymmetric, longer curve, it can reach the parent, and it ships behind an off switch – the settings question is open question 1 and must be answered before this is built. Last, carefully. ⭐ AND RULED INTO THE ORDER 23.08 – the funeral itself, gated on the adult rung; see §6b. |
+
+### 6a. ⭐ Step 5 expanded – the psychologist has LEVELS (owner, 23.08)
+
+His word, verbatim:
+
+> «надо еще отдельным слоем добавить психолога туда как раз и его влияние, варианты работы с ним,
+> по идее это 1 сессия в неделю но может быть тогда будут разные уровни психологов с разной
+> эффективностью, надо подумать этот момент»
+
+So step 5 is a ladder, and the built precedent is the masseur's dial
+([the-masseur-2026-08.md](../specs/the-masseur-2026-08.md) §5): rungs, honest prices in the game's
+own scale, and **each rung measurably better than the one below or it is decoration** – the exact
+flaw his 22.08 masseur amendment fixed (rungs 1–2 had been indistinguishable on any healthy week,
+so the $150 step bought nothing a player could read) and that spec's §4 law. Strict monotonicity
+gets a pin, as the masseur's condition ladder has.
+
+**The base shape, kept from the sketch.** Remote-only (his ruling recorded in
+[the-travelling-team-2026-08.md](the-travelling-team-2026-08.md) §5), a salaried retainer that
+persists (schema move), **1 session a week** – his own cadence, at every rung. That cadence is
+also why the bill reads as a flat weekly retainer rather than a bookings surface: one session,
+every week, priced per rung – the masseur's flat-contract legibility argument, one level up. If he
+ever travels, `staffSeatFareCents` / `staffResultShareBps` already answer the seat and the share
+questions ([the-masseur-2026-08.md](../specs/the-masseur-2026-08.md) §9); nothing here reopens
+them.
+
+**What he reads: `spiritShock`, and nothing else.** Step 4 built the flag for exactly him – «is a
+recovery running». His effect lands on the recovery slope while a shock is live, which is his
+whole hiring case: the player sees her back sooner than last time and knows why, with no number
+quoted (design §4). He does not touch the weekly return rule outside a shock, he does not touch
+`bond`, and he does not soften the shock's depth – life hits how it hits; he helps her through it,
+he does not pre-numb her.
+
+**What the levels change – the candidate rungs.** ⚠ Every number below is a proposal for the
+bench, none is ruled – his own «надо подумать этот момент» is the instruction:
+
+| rung (working name) | price idea, in the game's own scale | while a shock is live | what else the rung might buy |
+| --- | --- | --- | --- |
+| a counsellor | ~$100/wk – below the masseur's entry $150; a weekly hour, not a specialist | **+2/week** on top of the standing +4 | – |
+| a sport psychologist | ~$200/wk – between the masseur's entry and default rungs | **+3/week** (the sketch's number) | – |
+| a tour-grade specialist | ~$400/wk – the high coach's neighbourhood, below elite | **+4/week** | ⭐ the wants read – see below |
+
+⚠ **The honest arithmetic problem the bench must settle before any ruling: the slope axis blurs at
+the top.** From the step-4 shock (47 after a lifted 75), weeks under the knee read ~3 / 2 / 2
+across +2/+3/+4 – the top two rungs are near-indistinguishable on the metric that is his
+legibility, which is precisely the masseur's pre-amendment flaw. Two ways out, both for the owner
+after the bench prices them:
+
+* step the slope wider (+1/+3/+5), buying separation at the cost of the top rung nearly erasing
+  the excursion (a break-up over in a fortnight may be too cheap – §5.3's own bound applies to the
+  RELIEF as much as to the cost);
+* give the top rung a second, different axis instead of a third slope step: **the wants read** –
+  steps 3–4 draw what she wants (private-vs-open, space-vs-company) and surface it only in the
+  feed line's wording; a tour-grade psychologist briefs the parent, and the wording becomes
+  legible rather than ambiguous. That raises the chance of a MATCHED reaction without ever moving
+  `bond` itself – the bond-reaction quality as the top rung's product, his «разной
+  эффективностью» read as «he makes YOU better at this», not only her.
+
+**Bench (the decoration test made mechanical):** re-run step 4's paired arms per rung – weeks
+under the knee strictly monotone in rung (the pin), and each rung's paired delta > 2×SEM against
+the rung below, or the rung is re-priced. Plus a hired-before-any-shock corridor: the share of
+careers where a hired psychologist never fires must be printed, because a retainer that never
+works is the academy-fares failure (round 23 #16) wearing a new coat.
+
+**Open questions for the owner, each with a recommendation:**
+
+1. **What do the rungs change?** Recommendation: the recovery slope as the base axis, and the TOP
+   rung distinguished by the wants read rather than a third slope step – the arithmetic above says
+   the slope alone cannot honestly separate three rungs, and the masseur's lesson should be
+   pre-applied, not re-learned. Bench first, then his word.
+2. **Does he ever read anything but shocks?** (exam weeks, the weekly return rate.)
+   Recommendation: no – shocks only. An effect inside the weekly rule is condition-style
+   invisible, the exact failure the design plan's §4 names as what he must not be.
+3. **One session a week at every rung?** Recommendation: yes – «1 сессия в неделю» is the cadence;
+   «разные уровни психологов» reads as WHO comes to the call, not how often. The top rung buys a
+   better specialist, never a busier calendar.
+4. **Can he be hired before any shock exists?** Recommendation: yes, retainer-shaped like the
+   masseur pre-injury – but the hire card says plainly what he is for, and the bench corridor
+   above keeps the never-fired share honest.
+
+### 6b. Owner's 23.08 rulings on steps 6–8 – recorded where they land
+
+**The romance gate is 16, CONFIRMED** – step 3's `kidAgeExact ≥ 16` is no longer a
+recommendation (open question 5 is closed below).
+
+**Weddings from 22, and both romance trajectories are first-class.** His word, verbatim:
+
+> «Свадьбы предлагаю с 22+ уже делать. Романов может быть как несколько, так и один, как мне
+> кажется, это тоже будет сильно»
+
+So step 6's latch carries its own age gate – **no marriage before 22** – beside step 3's 16, and
+the slot's life between those gates may CYCLE (arrival → end → cooldown → someone new) or HOLD
+(one long romance carried into the latch). Both are his design, not edge cases: step 4's hazards
+already produce both (median duration ≈ 57 weeks, ~28% of relationships reach year two), and no
+bench or tuning pass may treat either trajectory as the golden path – a career of several romances
+and a career of one are both «сильно», his word. The branch behind the latch – the wedding itself,
+pregnancy, children – now has its own first-sketch stack:
+[the-wedding-and-the-children.md](the-wedding-and-the-children.md).
+
+**The funerals, gated on the adult rung.** His word, verbatim:
+
+> «Где-то начиная со ступени adult нам еще надо будет вплести похороны с соответствующими
+> эффектами»
+
+So step 8 gains a hard gate the sketch did not have: nothing of it fires before the **adult
+rung** – the game's own stage ladder puts `adult` at 23+ (`portraitStageFor`,
+`src/shared/avatarEmotion.ts`: jun <11 · young 11–16 · teen 17–22 · adult 23–30 · milf 31+), so
+the recommendation is a `kidAgeExact ≥ 23` gate, and the junior years never see a bereavement.
+The funeral itself is part of the beat – «с соответствующими эффектами» – not a feed line: its own
+shock kind on step 8's asymmetric, longer curve, and everything §3e already holds still stands:
+deliberately NOT on the attachment machinery, it can reach the parent, it ships behind an off
+switch (open question 1 must be answered first), last, carefully.
 
 ---
 
@@ -369,12 +499,15 @@ the protocol.ts wire lands first. Waves are strictly sequential – every step r
    prices a break-up at ~0.9–3.4 pp per match for about a month – bigger than decoration, smaller
    than fatigue at every point. The step-4 bench measures the realised pp; the corridor [1, 8] pp
    is the honest middle §5.3 asks for, and the two constants are one line each to retune.
-4. **The birthday licence.** Ruling 2 in `birthday.ts` says a gift moves nothing; your later word
-   on the day/week pair says «может быть надо будет учитывать оба». Recommendation: time-together
-   ids move `bond` (+2/+3/+4 by unit), material gifts stay at 0 forever – time is not a purchase,
-   things stay worthless, ruling 2's comment amended in the same commit. Needs your yes.
-5. **The romance age gate.** Recommendation: 16.0 exact age. Below it the layer has nothing to say
-   that `kidLife`'s school texture does not already say better.
+4. **The birthday licence – ANSWERED 23.08, with a correction.** The draft's «material gifts stay
+   at 0 forever» did not survive contact with him: «а как же с теми, которых она сама просила? мне
+   кажется там вполне может двигаться в положительную сторону мораль». The rule as it now stands
+   is §1d's: time-together ids move `bond`, the ASKED-FOR material gift granted moves it up, the
+   refusal down, and only the unprompted material purchase stays at 0. What remains open is only
+   the deltas' exact size (the +2..+3 / −1..−2 corridors are bench proposals) – and the build
+   commit owes the amendment to ruling 2's comment and the birthday spec, as §1d records.
+5. **The romance age gate – RULED 23.08: 16 confirmed.** (The recommendation stood: below 16 the
+   layer has nothing to say that `kidLife`'s school texture does not already say better.)
 6. **Does spirit ever help above baseline?** Recommendation: no – factor 1.0 everywhere ≥ 60,
    mirroring condition; the lift's value is the buffer before the knee. A symmetric upside is
    form's designed property and building it here would pre-empt the parked spec.

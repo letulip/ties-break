@@ -236,6 +236,49 @@ post-return fragility (`docs/backlog/injuries-gear-and-open-bugs.md` #3) – bot
 and its dose are his ruling to make, and whichever line he picks ships as its own change with the
 invariant-4 bench run this file already is the baseline for.
 
+## Next arms, owner-approved 23.08 – running now, recorded so the spec and the work cannot drift
+
+He read the landscape the day it landed and approved two further measurements the same day
+(23.08); both are running on this machine as this section is written, on this spec's own
+instruments, under the same law – **measurement only, nothing ships**, measurement-local patches
+proved live by an absurd-value probe and reverted byte-clean. They are recorded here, before their
+results exist, so the running work and this spec cannot diverge about what was asked.
+
+**Arm A – his own cadence, replayed under base 5.** §4's professional rows are priced on the
+
+> His approval, verbatim (23.08): «сделай пожалуйста, и я тоже поиграю сам на каком-то сейве и отгружу свежие данные позже.» – the live-data columns exist for the second half of that sentence.
+
+reprice spec's pair schedule – a bench player entering 30+ events a season – while §2's honest
+baseline (his five saves, ~a dozen entries a season, «я аккуратно играл и всё равно травмы были»)
+plays a different calendar, and Finding 6 left a debt on exactly that seam: the reference cell
+reads 60% prevalence at K=0, above the reprice's 46–54% band, before any lever is touched. The
+arm replays HIS entry cadence through `tools/pro-season-probe.ts` under the shipped
+`proPhaseRecoveryBase 5` (recovery variant C), the cadence taken from the saves through the same
+read-only door as §2 (`tools/injury-saves-read.ts`; the save never copied, never committed). What
+it answers: whether §4's sub-knee exposure and the K=0 band drift are facts about the game's
+professional season or about the bench schedule's density – whether an honest professional at his
+own cadence lives inside the band. The replay-on-his-own-material method is
+`tools/policy-vs-owner.ts`'s, already proven: same girl, same world, change only how often she
+enters.
+
+**Arm B – the rehab-development fraction: 0 / 30 / 50%.** Finding 4's perverse effect has a named
+
+> His approval, verbatim (23.08): «да, надо померить, но звучит хорошо.»
+
+suspect: `growWeek` is injury-blind – world.ts step 3b passes the training plan whatever
+`world.injury` says, so a laid-up week develops at the plan's own full rate, and every forced
+layoff is forced rest AND uninterrupted development. That is half the machinery by which injuries
+quietly repair a grinder's career (ranked careers 8/40 → 17/40 across the §3 sweep). The arm
+prices development during laid-up weeks at **0%, 30% and 50%** of the normal rate against the
+shipped 100%, on the §1 cells, and answers two things: how much of Finding 4's rank-repair is
+development-through-rehab rather than rest, and which fraction keeps a layoff a real cost without
+pretending an injured girl learns nothing for months. Post-draw arithmetic on the growth term,
+zero draws moved on any stream, the frozen capture untouched by construction – the K sweep's own
+discipline.
+
+Both arms land in this file as their own sections with predicted-vs-measured when the runs
+finish; neither moves an engine line without his separate ruling.
+
 ---
 
 # Appended 23.08 – the two owner-approved arms («сделай пожалуйста» / «да, надо померить»)
