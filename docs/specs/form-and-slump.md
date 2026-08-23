@@ -113,3 +113,12 @@ scholarship's $948 (task #90).
 5. **Does it interact with the knock thread?** `knock.ts` already models "she is carrying something
    and keeps being sent out". A body thread and a head thread that ignore each other would be two
    systems where the story wants one.
+
+## ⚠ Adopted while parked (23.08, from the Codex perspective review)
+
+When the owner unparks this, the driver is RESULTS RELATIVE TO PRE-MATCH EXPECTATION, never raw
+wins and losses – losing to the world number one must not produce the state change of losing a
+heavily favoured match. The odds ring already computes the expectation; form reads the residual.
+And the standing sequencing rule is confirmed from both directions: form ships only WITH the
+psychology surfaces that give it meaning (`the-private-life-build.md`) – alone it is an invisible
+match modifier, the failure mode the perspective and this spec name identically.

@@ -514,3 +514,12 @@ the protocol.ts wire lands first. Waves are strictly sequential – every step r
 7. **Is 3a's reaction dialog in step 3, or is 3a feed-only?** Recommendation: in step 3 – §4a.1
    says every beat needs a reaction, the machinery is already paid for by step 2, and a beat with
    no answer is the slot machine §0 warns about. The feed-only cut stays named as the fallback.
+
+## ⚠ One cross-review note (23.08)
+
+The Codex perspective argued psychology should mostly NOT touch match probability. The house answer,
+recorded in `docs/review-codex/12-backlog-perspective-response-2026-08-23.md`: `bond` never touches
+a match (diary bands only – convergent); `spirit` touches it DELIBERATELY as a bounded NAMED term
+(floor 0.90, smaller than fatigue at every point, decaying) – which satisfies the perspective's own
+protected principle for match terms. Awaiting the owner's explicit confirmation, listed in
+`docs/backlog/awaiting-his-word.md`.

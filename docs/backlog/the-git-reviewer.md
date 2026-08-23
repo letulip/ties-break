@@ -67,11 +67,11 @@ for («по организации кода, соблюдению наших п�
 
 ## 3. What he must decide before it can ship
 
-| decision | the honest statement |
-| --- | --- |
-| **`ANTHROPIC_API_KEY` repo secret** | The Action bills API tokens per review on his key. This is a real running cost, named here on purpose, and only he can accept it. |
-| **Advises or blocks** | Recommend: **advises** – a comment, never a required check, until trust is earned. A blocking gate that misfires gets switched off within a week (the repo has measured this pattern twice: the sim gate, the size budgets in `../../scripts/context-audit.mjs`). Promotion to required-check is a later, separate ruling. |
-| **Scope** | Changed files only (cheap, focused) vs whole-repo context (better verdicts on cross-cutting rules, more tokens). Recommend: the diff plus the files the prompt names in §2. |
+| decision | the honest statement | state |
+| --- | --- | --- |
+| **`ANTHROPIC_API_KEY` repo secret** | The Action bills API tokens per review on his key. This is a real running cost, named here on purpose, and only he can accept it. | Next |
+| **Advises or blocks** | Recommend: **advises** – a comment, never a required check, until trust is earned. A blocking gate that misfires gets switched off within a week (the repo has measured this pattern twice: the sim gate, the size budgets in `../../scripts/context-audit.mjs`). Promotion to required-check is a later, separate ruling. | Next |
+| **Scope** | Changed files only (cheap, focused) vs whole-repo context (better verdicts on cross-cutting rules, more tokens). Recommend: the diff plus the files the prompt names in §2. | Next |
 
 ## 4. The zero-cloud-cost alternative, and what the Action actually adds
 

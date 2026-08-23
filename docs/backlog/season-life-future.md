@@ -34,6 +34,15 @@ Real incidents the owner surfaced as material for dramatic, "price of the dream"
 pros: cardiac death, heat-stroke collapse, brain-hemorrhage collapse, repeat faintings, panic attacks
 + suicidal ideation). Use fictional analogues.
 
+⚠⚠ **STATE: partly REJECTED (23.08, the Codex perspective review – convergent with «мы ни за что не
+наказываем» and the §3e care rules).** The following shapes from this research are Rejected and are
+kept here only as evidence against reopening them by accident: a HIDDEN heart stat capable of an
+irreversible or terminal outcome; suicidal-ideation as event flavour or a difficulty beat; chronic
+conditions as invisible penalties; any high-cost irreversible outcome from a fully hidden roll.
+What survives of the theme: pressure, withdrawal and burnout through humane conversations and
+support (the private-life layer), and any chronic condition – if ever – revealed early enough to
+plan around, as a managed trade-off. Every deferred row below is read through that ruling.
+
 ### Folded into slice C now
 - **Body-region injury distribution** (~48% lower-limb, 28% upper, rest core) → injury `kind` is
   region-composed and lower-limb-skewed (see the slice-C spec).
@@ -41,8 +50,14 @@ pros: cardiac death, heat-stroke collapse, brain-hemorrhage collapse, repeat fai
   give its news beat dramatic (fictional) flavor.
 
 ### Deferred — each needs a system we don't have yet
-- **Dual fatigue: Stamina + Thermoregulation.** A second heat/hydration gauge that drains faster in
-  hot tournaments (heat → real-world +47% medical calls, +41% heat incidents). *Needs* a weather/venue
+- **Dual fatigue: Stamina + Thermoregulation.** ⚠ REJECTED as a second gauge (23.08): the adopted
+  weather shape is EVENT-LOCAL strain – a forecast before entry (cool/normal/hot, calm/windy,
+  indoor/outdoor), heat raising the condition cost or medical-retirement risk, wind taxing
+  aggressive-style reliability – absorbed by the EXISTING condition system, with any in-match
+  collapse only ever following a visible warning and an explicit decision to continue. The
+  real-world numbers stay (heat → +47% medical calls, +41% heat incidents) as calibration targets
+  for that shape. The original dual-gauge sketch, for the record: a second heat/hydration gauge
+  draining faster in hot tournaments. *Needs* a weather/venue
   model + surfacing on the match viz. Big, evocative; a Phase-6+ system.
 - **In-match "Collapse" event.** Thermoregulation → 0 mid-match ⇒ stretchered off (auto-loss + a
   health penalty for N matches). *Needs* match-engine integration (the match currently resolves from

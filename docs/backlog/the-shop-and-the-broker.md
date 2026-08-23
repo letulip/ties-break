@@ -69,12 +69,12 @@ option is one row in `TAB_OPTIONS` and one `v-if` block. No new navigation.
 Four families, deliberately different in what they DO rather than in price alone – a shop where the
 only difference is cost is a list, not a decision.
 
-| family | example | what it is FOR |
-| --- | --- | --- |
-| **investments** | index fund, bonds, a stake in a club | the boring one: small, steady, liquid |
-| **property** | apartment, house, a place near the academy | slow, large, and can pay rent |
-| **vehicles** | car, then the absurd ones | pure status, and it DEPRECIATES |
-| **the absurd** | yacht, art, a horse | status with a running cost that hurts |
+| family | example | what it is FOR | state |
+| --- | --- | --- | --- |
+| **investments** | index fund, bonds, a stake in a club | the boring one: small, steady, liquid | Later |
+| **property** | apartment, house, a place near the academy | slow, large, and can pay rent | Later |
+| **vehicles** | car, then the absurd ones | pure status, and it DEPRECIATES | Later |
+| **the absurd** | yacht, art, a horse | status with a running cost that hurts | Later |
 
 ⚠ **AT LEAST ONE FAMILY MUST LOSE MONEY BY DESIGN.** Vehicles are the honest one: a car is a
 *decision to spend*, dressed as an asset. If everything on the shelf appreciates, the shop is a
@@ -214,13 +214,13 @@ or never, without stranding anything else.
 
 ⚠ Each step is its own save-schema move (bump, append-only migration, golden fixture, e2e fixtures).
 
-| # | step | done when |
-| --- | --- | --- |
-| **1** | **the tab, with static prices** – buy, own, sell. No movement at all. | a bench career can buy a thing, keep it, and see it in the ledger |
-| **2** | **drift** – one sub-stream, no shocks | a season of prices reads as alive rather than as noise, measured |
-| **3** | **shock and freeze** (§3) | a freeze is survivable and a shock is a story, both measured over careers |
-| **4** | **the broker** (§4) – legibility, never return | he names a band and never a number, and the fee competes with a coach rung |
-| **5** | **charity** (§7) – the giving is free and the world notices | a gift changes something unpromised, and the ending can name it |
+| # | step | done when | state |
+| --- | --- | --- | --- |
+| **1** | **the tab, with static prices** – buy, own, sell. No movement at all. | a bench career can buy a thing, keep it, and see it in the ledger | Later |
+| **2** | **drift** – one sub-stream, no shocks | a season of prices reads as alive rather than as noise, measured | Later |
+| **3** | **shock and freeze** (§3) | a freeze is survivable and a shock is a story, both measured over careers | Later |
+| **4** | **the broker** (§4) – legibility, never return | he names a band and never a number, and the fee competes with a coach rung | Later |
+| **5** | **charity** (§7) – the giving is free and the world notices | a gift changes something unpromised, and the ending can name it | Later |
 
 ⚠ **AND THE GATE ON STEP 1 IS §6.1's QUESTION, NOT A DATE**: a shop that opens before the money turns
 positive is a shop with an empty shelf. Round 23 measured that turn at season 2-3 on his own careers
