@@ -2,8 +2,35 @@ name: CI (pull requests)
 
 on:
   pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+# A superseded run on the same PR is dead weight - cancel it, keep the runner.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  # ⚠ THE CHECKLIST IS A CONTRACT, NOT DECORATION (owner, 22.08: «Как нам сделать, чтобы они
+  # проверялись и работали?»). This job fails while ANY box in the PR body is unticked, so the
+  # template's four attestations gate the merge exactly like a test does. Two of the four are
+  # ALSO machine-proven regardless of the tick (tests green + check green = the jobs below;
+  # engine purity = its own step below); the tick remains the author's signature that the
+  # human-only halves - the linked Issue, «tests added or UPDATED» - are true.
+  # `types: [edited]` above is what re-runs this the moment a box is ticked in the web UI.
+  checklist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || ''
+            const unchecked = body.match(/^\s*[-*] \[ \] .+$/gm) || []
+            if (unchecked.length) {
+              core.setFailed(`PR checklist: ${unchecked.length} box(es) unticked:\n` + unchecked.join('\n'))
+            } else {
+              console.log('PR checklist: every box ticked')
+            }
   test-build:
     runs-on: ubuntu-latest
     # ⚠⚠ A HUNG JOB MUST DIE, NOT BURN THE AFTERNOON (19.08). Neither job carried a timeout, so
@@ -28,6 +55,9 @@ jobs:
       # ships silently. It goes FIRST for the same reason `check` puts it first – it is a few
       # seconds of pure file reading, and a gate should fail on its cheapest step.
       - run: npm run context:audit
+      # Invariant 1, machine-enforced: src/engine|worker|db|shared import no vue/pinia. Seconds of
+      # file reading; the PR template's third checkbox states what this step has already proven.
+      - run: node scripts/engine-purity.mjs
       # ⚠ THE GENERATED SYMBOL MAP, AND THE CHECK IS THE WHOLE POINT OF GENERATING IT (TOK-4).
       # `tools/generated/world-symbol-map.md` says which module DECLARES each of the 233 names the
       # `engine/world` barrel re-exports - the question 277 importers cannot otherwise answer

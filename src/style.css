@@ -166,6 +166,12 @@
   --cat-gear: #d97f52;
   --cat-stringing: #5ec9ac;
   --cat-physio: #57b0e0;
+  /* v59, the travelling team: the salaried people beyond the coach. A deep sea-green – the body
+     family's third hue, sitting between physio blue and stringing mint without matching either
+     (nearest neighbour is stringing #5ec9ac, a lighter, lower-chroma mint; this is darker and
+     greener), because on the wallet the masseur must be tellable from the clinic at a glance –
+     that distinction is the whole design of the hire. */
+  --cat-staff: #3fa07c;
   --cat-vacation: #e0748f;
   /* ⚠ WHERE SHE IS IN A VACATION FRAME – ONE MEASURED NUMBER, FOR EVERY SURFACE THAT CROPS ONE.
      Round-17 #26, and the third time this has been found: the owner ruled on it on 30.07 («square of

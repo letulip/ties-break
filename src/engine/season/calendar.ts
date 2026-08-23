@@ -1102,7 +1102,10 @@ export const TIERS: Record<TierId, TierDef> = {
   //
   // ⚠ AND THE RESEARCH TABLE IS NORMALISED TO 32 MAIN-DRAW ROWS - it says so on its own first line
   // ("32 main draw rows") - which is why all four rows below are exactly six numbers long and why
-  // all four draws are 32. See `slam.drawSize` for the measured reason the big draws did not ship.
+  // all four draws are 32. ⚠ THE BIG DRAWS THEMSELVES SHIPPED 14.08 (`slam.drawSize` 128,
+  // `wta1000.drawSize` 64, with their R64/R128 points independently sourced) - see the history on
+  // `slam.drawSize` for how the "did not ship" objections died; only these four families stay 32,
+  // because 32 is what their own rulebook rows are normalised to.
   //
   // ⚠ THE CHEQUES ARE THE SPEC'S DESIGN VALUES AND THE RESEARCH IS SILENT ON THEM. §7's data-quality
   // note is primary for POINTS above W100 and gives purses only up to W75 ($60k). So §2's ~$40k /

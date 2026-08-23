@@ -332,6 +332,7 @@ function zeroCats(): Record<WorldEventCategory, number> {
     gear: 0,
     stringing: 0,
     physio: 0,
+    staff: 0,
     vacation: 0,
     practice: 0,
     sponsor: 0,

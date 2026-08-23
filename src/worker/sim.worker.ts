@@ -15,6 +15,9 @@ import {
   cancelVacation,
   bookPractice,
   hireCoach,
+  hireMasseur,
+  setMasseurSessions,
+  setMasseurTravels,
   setCoachOnEventWeeks,
   setCoachOnJuniorEvents,
   setKitGrade,
@@ -318,6 +321,20 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'hireCoach': {
       return mutate(msg.id, msg.baseRevision, (world) => hireCoach(world, msg.coachId))
     }
+    case 'hireMasseur': {
+      // v59, the travelling team step 1. Re-validated engine-side like every command: the pro-career
+      // gate and the college freeze both refuse inside `hireMasseur` (guardNotEnded first), so a
+      // stale screen cannot put a masseur on a junior's – or a student's – payroll.
+      return mutate(msg.id, msg.baseRevision, (world) => hireMasseur(world, msg.hire))
+    }
+    case 'setMasseurSessions': {
+      // v59 step 2, the dial. `setMasseurSessions` refuses a rung the market does not sell and
+      // refuses inside the freeze (guardNotEnded first) – the worker is not the gate.
+      return mutate(msg.id, msg.baseRevision, (world) => setMasseurSessions(world, msg.sessions))
+    }
+    case 'setMasseurTravels': {
+      return mutate(msg.id, msg.baseRevision, (world) => setMasseurTravels(world, msg.on))
+    }
     case 'setCoachOnEventWeeks': {
       return mutate(msg.id, msg.baseRevision, (world) => setCoachOnEventWeeks(world, msg.on))
     }
@@ -610,6 +627,9 @@ function errorMsg(id: number, err: unknown): ToUI {
 //   cancelVacation     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   bookPractice       mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   hireCoach          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   hireMasseur        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setMasseurSessions mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setMasseurTravels  mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnEventWeeks mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnJuniorEvents mutation mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   cancelPractice     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision

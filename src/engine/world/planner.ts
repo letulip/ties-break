@@ -30,7 +30,7 @@ import { addEvent, seasonStartWeek } from './ledger'
 import { ageWindowStartWeek } from './age'
 import { KID_ID } from './constants'
 import { practiceForWeek, refundPractice, vacationForWeek } from './bookings'
-import { layoffCovering, medicalBlock, medicalClearance, restRecoveryBonus } from './medical'
+import { layoffCovering, medicalBlock, medicalClearance, withheldFreeWeekRecovery } from './medical'
 import { retirementInjury } from './injury'
 import { kidMatchPlayerFor } from './player'
 import { fullRanking } from './ladder'
@@ -349,11 +349,14 @@ export function resolvePractice(world: WorldState): void {
     refundPractice(world, booking, 'Medical')
     // The week is match-free after all, so she earns the FULL free-week recovery that
     // accrueCondition withheld when it still believed she would play a friendly (it paid
-    // recoveryBase alone, the practice-week rung of the ladder). Written as the DIFFERENCE from a
-    // free week, exactly like the tournament withdrawal in tickWeek: base is already in, only the
-    // rest-slider bonus is owed. Integer, clamped, zero draws.
+    // recoveryBase alone, the practice-week rung of the ladder). The difference is the ONE oracle
+    // `withheldFreeWeekRecovery` now computes for all three refund sites – 'practice' names the
+    // rung that was banked, so on an ordinary week this is the rest-slider bonus exactly as it
+    // always was, and ⭐ on a SHOOT week (ad step 2, §4a) it is nothing: the travel figure was
+    // banked and the travel figure is what a shoot week's match-free rest is worth.
+    // Integer, clamped, zero draws.
     world.condition = clamp(
-      world.condition + restRecoveryBonus(world.plan.rest),
+      world.condition + withheldFreeWeekRecovery(world, 'practice'),
       ECONOMY.condition.min,
       ECONOMY.condition.max,
     )

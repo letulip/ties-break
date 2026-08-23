@@ -6,16 +6,19 @@ import {
   enterEvent,
   advanceWeeks,
   accrueCondition,
+  activeLadderOf,
   availabilityStatus,
   entryStatus,
   isBlackoutWeek,
   medicalBlock,
   medicalClearance,
+  recoveryBaseFor,
   restRecoveryBonus,
   summerBlockWeek,
   summerConditionCost,
   summerLoadFactor,
   toSnapshot,
+  skipEvent,
   skipTournament,
   closeTournament,
   inTrack,
@@ -943,6 +946,89 @@ describe('B2 — condition dynamics', () => {
 })
 
 // ---------------------------------------------------------------------------
+// B2-pro — ⭐ THE PRO PHASE RECOVERS ON 5, NOT 8 (owner 22.08, recovery variant C:
+// «дефолтное восстановление с 10 в неделю на 7 опустить» – his 10 = base 8 + the
+// 60/40 slider's 2, so his 7 = base 5). The A/B/C measurement that rejected the
+// GLOBAL drop (juniors −1.6..−2.2 condition, +3 bankruptcies, the masseur's own
+// uplift shrinking ~40%) is docs/specs/the-masseur-2026-08.md §10; what shipped is
+// C – pro-phase only, on the masseur's own unlock boundary. Three pins:
+//   1. a junior week still recovers on base 8 (the block above is that pin, kept);
+//   2. a professional week recovers on base 5;
+//   3. the boundary IS the ladder handover (`activeLadderOf`), nothing else.
+// ---------------------------------------------------------------------------
+describe('B2-pro — the professional recovery base (owner 22.08, variant C)', () => {
+  /** Her first counting W-series finish on the never-pruned mark – exactly the one-way door
+   *  `activeLadderOf` (and `masseurUnlocked`, and the §10 bench's phase split) reads. */
+  function turnPro(w: WorldState): void {
+    w.bestFinishByTier.w15 = 0
+  }
+
+  it('the two knobs themselves: 8 junior, 5 pro – and the drop is exactly 3', () => {
+    expect(ECONOMY.condition.recoveryBase).toBe(8)
+    expect(ECONOMY.condition.proPhaseRecoveryBase).toBe(5)
+    // His arithmetic depends on this shape: 10 → 7 on the slider-2 preset is a base drop of 3.
+    expect(ECONOMY.condition.recoveryBase - ECONOMY.condition.proPhaseRecoveryBase).toBe(3)
+  })
+
+  it('⭐ a professional match-free week recovers on base 5: grind +5, balanced +6, light +7', () => {
+    for (const [plan, perWeek] of [
+      [{ train: 85, rest: 15 }, 5],
+      [{ train: 75, rest: 25 }, 6],
+      [{ train: 60, rest: 40 }, 7],
+    ] as const) {
+      const w = createWorld('b2-pro')
+      turnPro(w)
+      w.physioActive = false
+      w.condition = 10
+      w.plan = { ...plan }
+      for (let i = 0; i < 10; i++) accrueCondition(w, false)
+      expect(w.condition, `rest ${plan.rest}`).toBe(10 + 10 * perWeek)
+    }
+  })
+
+  it('⭐ the boundary is the ladder handover and nothing else – flip the mark, the base flips', () => {
+    const w = createWorld('b2-pro-boundary')
+    w.physioActive = false
+    w.plan = { train: 85, rest: 15 }
+    expect(activeLadderOf(w), 'a fresh career is not on the professional table').not.toBe('wta')
+    expect(recoveryBaseFor(w)).toBe(ECONOMY.condition.recoveryBase)
+    w.condition = 50
+    accrueCondition(w, false)
+    expect(w.condition, 'junior: base 8').toBe(58)
+    turnPro(w)
+    expect(activeLadderOf(w)).toBe('wta')
+    expect(recoveryBaseFor(w)).toBe(ECONOMY.condition.proPhaseRecoveryBase)
+    w.condition = 50
+    accrueCondition(w, false)
+    expect(w.condition, 'professional: base 5, same world, same week').toBe(55)
+  })
+
+  it('a professional MATCH week still earns matchWeekRecoveryBase (0) – the drop is about free weeks', () => {
+    const w = createWorld('b2-pro-match')
+    turnPro(w)
+    w.physioActive = false
+    w.condition = 60
+    w.plan = { train: 60, rest: 40 }
+    accrueCondition(w, true)
+    expect(w.condition).toBe(60 + ECONOMY.condition.matchWeekRecoveryBase)
+  })
+
+  it('the knob is the object, not the code – retuning proPhaseRecoveryBase moves the pro week alone', () => {
+    const saved = ECONOMY.condition.proPhaseRecoveryBase
+    Object.assign(ECONOMY.condition, { proPhaseRecoveryBase: 7 })
+    try {
+      const pro = createWorld('b2-pro-knob')
+      turnPro(pro)
+      expect(recoveryBaseFor(pro)).toBe(7)
+      const junior = createWorld('b2-pro-knob')
+      expect(recoveryBaseFor(junior), 'the junior base does not read the pro knob').toBe(8)
+    } finally {
+      Object.assign(ECONOMY.condition, { proPhaseRecoveryBase: saved })
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
 // B3 — tournament fatigue. Re-pinned deliberately for round-9 R9-7 (owner redesign):
 // fatigue is PER MATCH (matchDrain: scoreline grade + tier surcharge) and lands at
 // finalizeTournament (the commit point) – accrueCondition applies NO match fatigue at
@@ -1418,6 +1504,36 @@ describe('the doctor on ARRIVAL — the play-week re-check', () => {
       world.plan = plan
       tickWeek(world, rng)
       expect(world.condition).toBe(ECONOMY.condition.recoveryBase + restRecoveryBonus(plan.rest))
+      expect(world.pendingTournament).toBeNull()
+    }
+  })
+
+  it('⭐ B2-pro: a skipEvent week pays the PRO base too – the third reader of the same helper', () => {
+    // The 18.08 ruling made the doctor's veto and the parent's own late skip the SAME non-playing
+    // week; variant C must hold that identity in the pro phase or the two paths part by 3 again.
+    const { world, event, rng } = arriveAt('skip-pro-makeup', 80)
+    world.bestFinishByTier.w15 = 0
+    tickWeek(world, rng)
+    expect(world.pendingTournament, 'she was cleared and the reveal spawned').not.toBeNull()
+    world.condition = 40
+    skipEvent(world, event.id)
+    // 85/15 plan (the fixture pins it): slider 0, so the makeup is exactly the pro base.
+    expect(world.condition).toBe(40 + ECONOMY.condition.proPhaseRecoveryBase)
+    expect(world.pendingTournament).toBeNull()
+  })
+
+  it('⭐ B2-pro: the withdrawn week pays the PRO base in the pro phase – the makeup reads the phase, not the constant', () => {
+    // The 22.08 variant-C rule reaches all THREE readers or the doctor's veto quietly hands a
+    // professional 3 more condition than an ordinary free week pays her (the same 18.08 defect the
+    // makeup expression exists to prevent, one phase over). The pro mark is set on the eve of the
+    // play week – the never-pruned one-way door – so this is the identical fixture one it-block up,
+    // with the phase flipped and nothing else.
+    for (const plan of [{ train: 85, rest: 15 }, { train: 60, rest: 40 }]) {
+      const { world, rng } = arriveAt(`arrive-recover-pro-${plan.rest}`, 0)
+      world.bestFinishByTier.w15 = 0
+      world.plan = plan
+      tickWeek(world, rng)
+      expect(world.condition).toBe(ECONOMY.condition.proPhaseRecoveryBase + restRecoveryBonus(plan.rest))
       expect(world.pendingTournament).toBeNull()
     }
   })

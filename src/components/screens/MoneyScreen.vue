@@ -219,6 +219,10 @@ const EXPENSE_META: { key: ExpenseCategory; label: string }[] = [
   { key: 'gear', label: 'Gear' },
   { key: 'stringing', label: 'Stringing' },
   { key: 'physio', label: 'Fitness & medical' },
+  // v59, the travelling team: the SALARIED people beyond the coach – the masseur today. Its own row
+  // beside the clinic bucket above, deliberately: a salary folded into 'Fitness & medical' would be
+  // the academy's invisible $20,879 again (round 23 #16) – paid every week and findable nowhere.
+  { key: 'staff', label: 'Support staff' },
   // Season planner (v13): the two planned spends get their own rows - a vacation package is a real
   // money sink the owner wants to see, and the practice court fee is the small recurring one.
   { key: 'vacation', label: 'Vacations' },
@@ -258,6 +262,10 @@ const ICON_PATHS: Record<string, string[]> = {
   travel: ['M3 15.5l18-5.6-2-3.2-4.6 1.5-5.2-4.4-2.2.7 3 4.9-4 1.3-2.6-1.9-1.6.5z', 'M4.5 19.5h15'],
   practice: ['M12 3.6a8.4 8.4 0 1 1 0 16.8 8.4 8.4 0 0 1 0-16.8z', 'M5.2 6.6c3.6 2.2 3.6 8.6 0 10.8M18.8 6.6c-3.6 2.2-3.6 8.6 0 10.8'],
   other: ['M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15z', 'M12 8.2V12l2.4 1.6'],
+  // The massage table, seen from the side: the bed, two legs, and the head-end bolster - the one
+  // piece of furniture the staff row is about. Same 24x24 / 1.5-stroke grid as its neighbours, and
+  // deliberately not a person: every other glyph in this table is the thing bought, not the buyer.
+  staff: ['M3.5 12.5h17', 'M6.5 12.5v6M17.5 12.5v6', 'M5.5 10.2a1.5 1.5 0 1 1 3 0'],
   // A graduation cap: the board, the crown under it, the tassel. Drawn on the same 24x24 / 1.5-stroke
   // grid, and deliberately not a building or a dollar – the row is the DEGREE she is paying for, and
   // every other glyph in this table is the thing bought rather than the money.
@@ -283,6 +291,7 @@ const CAT_COLOR: Record<string, string> = {
   gear: 'var(--cat-gear)',
   stringing: 'var(--cat-stringing)',
   physio: 'var(--cat-physio)',
+  staff: 'var(--cat-staff)',
   vacation: 'var(--cat-vacation)',
   practice: 'var(--cat-practice)',
   tuition: 'var(--cat-tuition)',

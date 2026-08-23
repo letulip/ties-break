@@ -133,11 +133,16 @@ named failure, so the owner split the step:
 
 1. **The masseur, whole** – salary + the body effect (condition recovery, the injury tail: channels
    that exist today) – and the SENTENCE named before it ships, per §4's rule: a room-note-style line
-   about the weeks his hands did not lose, quoting no figure.
+   about the weeks his hands did not lose, quoting no figure. *(SHIPPED 22.08 – the spec's §§1–4.)*
 2. **The masseur's fare**, through `coachTravelFareFor`'s existing rule asked for a second seat.
+   *(SHIPPED 22.08, folded with the owner's round-24 price challenge: the flat salary became his
+   own sessions DIAL, and the fare's step landed with what it BUYS – recovery between rounds on
+   deep runs. The spec's §§5–6.)*
 3. **Measure against the sponsor.** Re-run the travel line with three seats and check that Meridian's
-   half lands where §3 predicts.
-4. Only then tune the effect.
+   half lands where §3 predicts. *(MEASURED 22.08 – unit-pinned half-price seat + the grid; the
+   spec's §§6–7. One honest correction: the psychologist went remote by the ruling above, so the
+   «doubled» line of §3 is a 1.5× with the seats that actually exist.)*
+4. Only then tune the effect. *(OPEN – the owner rules on the spec's §5 pricing table.)*
 
 ⭐ **The psychologist ships with `the-private-life.md` STEP 5**, where shortening the 3b recovery
 makes him legible without a single number. His salary, his remote-only ruling and §6's open travel

@@ -75,6 +75,17 @@ slice returning −1. Verify scope, range arithmetic and anchoring before filing
 
 **4. Tuning is measured, not guessed.** Balance changes ship with a bench run and a spec in `docs/specs/` recording predicted vs measured. `docs/specs/rank-plateau.md` is the model: predict a fix, measure it doing nothing, find the real cause.
 
+## The simulation suite's standing regime (owner's final ruling, 22.08 – do not revisit)
+
+`test:sim` NEVER runs in front of a pull request. It was tried for one day and the runner measured
+it out (20+ min on 2 cores against ~5.5 min locally, red by timeout). The regime that stands:
+weekly cron + on-demand in `.github/workflows/simulation.yml`, **a red weekly run files a
+`sim-health` Issue by itself** (the reader loop that was always missing), and the working rule,
+UPGRADED 22.08 at the owner's ask: **every PR assembly runs `npm run test:sim` locally,
+unconditionally** – the August drift came from commits that did not LOOK like model changes, so
+"only when the model moved" is exactly the heuristic that failed. The `pull-request` skill runs it
+as a fixed step and the PR body carries the verdict.
+
 ## Git workflow
 
 - **Never push to `main`.** Branch → PR → the owner merges. This holds in every project.

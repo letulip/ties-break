@@ -44,6 +44,9 @@ import {
   guardNotEnded,
   guardNotEndedForGood,
   hireCoach,
+  hireMasseur,
+  setMasseurSessions,
+  setMasseurTravels,
   inCollege,
   latchEnding,
   pendingBirthday,
@@ -195,6 +198,14 @@ function refusedCommands(world: WorldState, kind: 'college' | 'ended' = 'college
     ['skipEvent', () => skipEvent(world, anyEvent)],
     ...(kind === 'ended' ? ([['chooseGift', () => chooseGift(world, 'day-together')]] as Array<[string, () => unknown]>) : []),
     ['hireCoach', () => hireCoach(world, null)],
+    // ⚠ v59, RE-AIMED WIDER, NOT WEAKENED: the masseur is a new command in the same family, and the
+    // plan's own college clause («no specialist decision should reach a girl the programme is
+    // coaching») is exactly this list's sentence. `guardNotEnded` runs before the pro-career gate,
+    // so the freeze answers first – which is the order the sentence needs.
+    ['hireMasseur', () => hireMasseur(world, true)],
+    // v59 step 2: the dial and the seat are the same family of decision, behind the same latch.
+    ['setMasseurSessions', () => setMasseurSessions(world, 7)],
+    ['setMasseurTravels', () => setMasseurTravels(world, true)],
     ['setCoachOnEventWeeks', () => setCoachOnEventWeeks(world, true)],
     ['setCoachOnJuniorEvents', () => setCoachOnJuniorEvents(world, true)],
     ['answerFork', () => answerFork(world, 'continue')],

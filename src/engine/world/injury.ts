@@ -28,6 +28,7 @@ import { KID_ID } from './constants'
 import { captureMilestone } from './milestones'
 import { layoffCovering } from './medical'
 import { eventById, refundPractice, vacationForWeek } from './bookings'
+import { masseurRungOf, masseurWorksThisWeek } from './masseur'
 import { releaseEntry } from './entries'
 import { retireKnock } from './knockHistory'
 import type { WorldState } from '../world'
@@ -178,9 +179,55 @@ export function medicalBillCents(world: WorldState, rng: Rng, band: readonly [nu
 export function rollInjury(world: WorldState): void {
   if (world.injury !== null) {
     world.injury.weeksRemaining -= 1
+    // THE MASSEUR'S REHAB CADENCE (travelling team step 1): every Nth week of an active layoff his
+    // hands take ONE extra week off it – the one effect in this file the player can WATCH, because
+    // it moves the "back in N weeks" already on screen, and each moment prints a receipt below.
+    //
+    // ⚠ DETERMINISTIC AND DRAW-FREE, deliberately: the cadence reads (week − sinceWeek), which
+    // prior extra decrements cannot move, so this branch spends nothing on any stream and the
+    // frozen MAIN capture (41550 / e6b0c709) cannot see it. A career with no masseur (every save
+    // before v59, every hand-built probe world) takes the exact path it always took.
+    //
+    // ⚠ THE GUARD IS `weeksRemaining > 0`: an extra decrement may CLEAR the layoff a week early
+    // (that is the product), but a layoff already clearing this tick has nothing left to save – no
+    // receipt is printed for a week nobody bought. `masseurWorksThisWeek` keeps the paid week and
+    // the bought week the same week (college and family holidays suspend both).
+    //
+    // ⚠ THE CADENCE IS THE RUNG'S OWN since the dial (step 2, `masseurRungOf`): every 3rd rehab
+    // week at twice-a-week, every 2nd at every-other-day (step 1's measured arm), every week at
+    // daily. And the NIGGLE RULE IS A GUARD NOW rather than an arithmetic accident: at N=2/3 a 1-2
+    // week layoff could never meet the cadence, but the daily rung's N=1 could halve a two-week
+    // soreness – so `totalWeeks > 2` states the honest rule («nobody massages a one-week soreness
+    // away») structurally, at every rung, byte-identical for the two rungs that never needed it.
+    if (world.injury.weeksRemaining > 0 && world.injury.totalWeeks > 2 && masseurWorksThisWeek(world)) {
+      const rehabWeek = world.week - world.injury.sinceWeek
+      if (rehabWeek > 0 && rehabWeek % masseurRungOf(world).rehabExtraEveryNWeeks === 0) {
+        world.injury.weeksRemaining -= 1
+        world.injury.weeksSaved = (world.injury.weeksSaved ?? 0) + 1
+        addEvent(world, {
+          week: world.week,
+          type: 'info',
+          text: 'Rehab ahead of schedule – the masseur bought a week back.',
+        })
+      }
+    }
     if (world.injury.weeksRemaining <= 0) {
       const { kind, severity, totalWeeks } = world.injury
-      world.injuryHistory.push({ kind, severity, week: world.week, weeksOut: totalWeeks })
+      // ⚠ THE RECORD KEEPS THE WEEKS SHE WAS ACTUALLY OUT. `totalWeeks` is the clinic's dealt
+      // number; with a masseur the true absence is shorter, and a history row (or a career total,
+      // or the ending hazard's prior-weeks sum) that counted the forecast instead of the fact
+      // would erase his work from every ledger that matters. Identical to the old value whenever
+      // `weeksSaved` is 0, and the key is written only when he saved something, so a career
+      // without him serialises byte-for-byte as before.
+      const weeksSaved = world.injury.weeksSaved ?? 0
+      const actualWeeks = totalWeeks - weeksSaved
+      world.injuryHistory.push({
+        kind,
+        severity,
+        week: world.week,
+        weeksOut: actualWeeks,
+        ...(weeksSaved > 0 ? { weeksSaved } : {}),
+      })
       if (world.injuryHistory.length > 20) world.injuryHistory.splice(0, world.injuryHistory.length - 20)
       // ⚠ AND THE MONOTONE TOTAL, BECAUSE THE LINE ABOVE THROWS HISTORY AWAY (v40, the audit's §6).
       // The career-ending injury reads the SUM of the layoffs a body has already been through, and
@@ -191,9 +238,18 @@ export function rollInjury(world: WorldState): void {
       // disagree about what "recovered" means. Pure state, zero draws.
       // `??=` for the hand-built probe worlds in tests that predate `careerTotals`.
       world.careerTotals ??= { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
-      world.careerTotals.weeksLostToInjury = (world.careerTotals.weeksLostToInjury ?? 0) + totalWeeks
+      world.careerTotals.weeksLostToInjury = (world.careerTotals.weeksLostToInjury ?? 0) + actualWeeks
       world.injury = null
-      addEvent(world, { week: world.week, type: 'recovery', text: 'Back on court – cleared to play.' })
+      addEvent(world, {
+        week: world.week,
+        type: 'recovery',
+        // The early return says so – the beat the receipts were building to. The plain line is the
+        // shipped copy, byte-identical for every career without a masseur.
+        text:
+          weeksSaved > 0
+            ? 'Back on court – cleared to play, ahead of schedule.'
+            : 'Back on court – cleared to play.',
+      })
     }
     return
   }

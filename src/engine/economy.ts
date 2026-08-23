@@ -1291,6 +1291,132 @@ export const ECONOMY = {
     capBps: 5000,
   },
 
+  // =================================================================================================
+  // ⭐⭐ THE TEAM'S SHARE OF THE PRIZE MONEY (owner, round 24, 22.08 – docs/plans/the-team-share.md)
+  // =================================================================================================
+  //
+  // HIS MODEL, VERBATIM: «3млн призовые из них отчисляется процент дочери (скажем 30 для примера) и
+  // тренеру (скажем 10 для примера) – это будет 900к дочери и 300к тренеру плюс остальные расходы».
+  // And on eligibility: «тренер может не ездить, но долю получать наверное за победы или 2е места
+  // вполне может. За 2е только по-меньше». Then, the same day, the masseur joined: «мне всё-таки
+  // кажется, что массажисту тоже можно за призовые месте давать бонус, может по-меньше чем
+  // тренеру, но давать, давай тоже сделаем».
+  //
+  // WHAT THAT RULING KILLED, so nobody rebuilds it: the plan's original contract-FORM design (flat
+  // vs base+share, chosen at hire, persisted per career) is DEAD. The share is a UNIVERSAL rule –
+  // no form, no choice, nothing persisted: computed at `finalizeTournament` from these constants
+  // and the finish, exactly like the kid's ramp one block up.
+  //
+  // THE SHAPE – «за победы или 2е места», NOT every cheque: a TITLE pays `titleBps`, a FINAL pays
+  // `finalBps` («за 2е только по-меньше» – half), below a final NOTHING. The real-world convention
+  // (5-15% of every cheque, sliding by depth) was researched and shown to him (the plan's §1); his
+  // version is the sharper one and it is the one that ships. Both shares are computed OFF THE
+  // GROSS cheque – the kid's ramp (round-23 #18) is untouched and each share rounds ONCE, the
+  // family keeping the remainder to the cent (`staffPrizeShareCents` + the finalize subtraction).
+  //
+  // WHO PAYS AND WHEN: the family (the parent is the employer – the game's premise), pro tour only
+  // (`track === 'wta'` – junior tennis pays no prize money worth sharing and the convention is a
+  // pro convention), independent of any travel switch (his own words: «может не ездить, но долю
+  // получать»), and only a seat that is actually FILLED – a self-coached family owes no coach
+  // share, an empty table no masseur share.
+  //
+  // THE MASSEUR'S RATES are roughly a third of the coach's («по-меньше чем тренеру») – the same
+  // sizing logic the travelling-team plan used for specialist money against coach money. On his
+  // own worked example (a $3M Slam title): coach $300k, masseur $90k, daughter $900k (at the
+  // age-22 rung), family $1.71M «плюс остальные расходы».
+  staffShare: {
+    coach: { titleBps: 1000, finalBps: 500 },
+    masseur: { titleBps: 300, finalBps: 150 },
+  } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number }>,
+
+  // =================================================================================================
+  // THE ADVERTISING DEAL (round 24 item 2, docs/plans/the-face-and-the-court.md §6 STEPS 1-2)
+  // =================================================================================================
+  //
+  // THE OWNER: «Рекламные контракты будем добавлять какие-то?» – and the plan's answer is that the
+  // kit ladder above is complete and ENDEMIC (tennis brands paying for tennis), so what is missing
+  // is the other kind entirely: a non-endemic house paying cash for her FACE. Step 1 is the smallest
+  // honest slice of it – one offer, results-gated, cash only; step 2 gives the cheque its price in
+  // TIME (the shoot weeks below, §4a) – and the build stops there on the plan's own order: fame
+  // (step 3+) is paused upstream with the private life.
+  //
+  // ⚠ WHERE THE GATE SITS IS THE PLAN'S OWN MEASUREMENT (§3, the owner's two careers): at Ines'
+  // level (24, interest $251,439 a year against $220,000 of ALL outgoings) an advertising cheque is
+  // noise; at Alice's (18, interest $3,235 against $64,000 of outgoings) it is real money against a
+  // real budget. So the deal belongs EARLY – mid-career, where the budget is still tight – which
+  // inverts the instinct to gate it on the top ten.
+  advertising: {
+    /** The age the owner scoped advertising mechanics to («какие у нас могут быть механики этих
+     *  контрактов дополнительные от 18+ лет начиная и дальше»). Eighteen is already the engine's
+     *  threshold age – `kidShare.fromAgeYears` above starts her own prize split there, school is
+     *  over by 18.92 for every birth month, the junior rungs shut – so the boundary exists and this
+     *  reads the same clock (`kidAgeYears`, the one-clock ruling of 09.08). */
+    fromAgeYears: 18,
+    /** THE RESULTS BAR: a counting W standing inside the world's top 200. Two hundred is the number
+     *  the game already uses for "the first professional rung that pays cash" – the tour rung's
+     *  `maxWtaRank` (Baseline Athletic, the first retainer) – so a non-endemic brand notices her
+     *  exactly when the first endemic cash does: a measured boundary, not an invented one. Its OWN
+     *  constant rather than a read of `sponsorship.tour`, the `appearanceFromTier` instinct: a kit
+     *  retune must never silently retune advertising.
+     *
+     *  ⚠ WHY NOT TOP-100 OR TIGHTER: `development.ageCurve` is calibrated «first points 17-18,
+     *  top-100 about 4.5 years later» – a top-100 bar would first clear at ~22, Ines territory,
+     *  where §3 measured the cheque as noise. Top-200 is crossed on the way up, at 18-20, which is
+     *  Alice's stage – the years the plan says the deal is worth building for. And there is
+     *  deliberately no UPPER cutoff: a top-10 girl still qualifies, her cheque is simply noise, which
+     *  is §3's claim and not a bug. The `wtaRanked` guard is the ladder's own: everybody without a
+     *  counting W result ties at the floor of that table, so a position there is not a standing. */
+    maxWtaRank: 200,
+    /** THE FEE, in cents, once, on signature. Sized against the plan's §3 numbers: about 31% of
+     *  Alice's-stage ANNUAL outgoings ($64,000) – felt, not budget-solving; more than three times
+     *  the tour rung's cash for a season ($1,500/qtr), because «cash, and a lot of it» is the whole
+     *  difference between this letter and the kit ladder at her rung; and under the premium rung's
+     *  $30,000-a-year retainer, so mid-career the endemic ladder still out-earns one photograph.
+     *  At Ines' stage it is 8% of her interest alone – noise, exactly as §3 predicts. Its measured
+     *  counterweight is the shoot weeks below: two weeks a term that recover like travel weeks,
+     *  benched in docs/specs/ad-shoot-recovery-2026-08.md. */
+    cashCents: 20_000_00,
+    /** Twelve months of her face, from the week the paper is signed. While the term runs no second
+     *  advertising letter arrives – one deal at a time, the plan's §4.1 – and it survives a college
+     *  enrolment by simply running out on its own clock (plan §4c: no penalty, ever; a shoot week
+     *  the freeze swallows lapses silently with it). */
+    termWeeks: 52,
+    /** ⭐ STEP 2 (§4a, owner ruling 22.08: «съемки должны быть иногда и это надо как-то прописывать
+     *  и отражать потом в свободных неделях, соответственно и восстановления на тех неделях должно
+     *  быть чуть меньше», sized and approved: «утверждаю, для начала точно ок») – HOW MANY SHOOT
+     *  WEEKS the term asks. Exactly two for Quiet Hour, IN-SEASON by construction (§5.2's own
+     *  answer: an off-season cost is free money wearing a cost's clothes), named in the letter at
+     *  signature so the player plans the season around them. Frozen onto `AdOfferTerms.shootCount`
+     *  at arrival. The bigger asks – campaigns 3-4, global houses 5-6, a cap of 6 a year – are
+     *  RECORDED in the plan doc only and deliberately not built: this catalogue has one house.
+     *
+     *  The COST of a shoot week is not a number here on purpose: it is a SHAPE, the owner's own
+     *  design – the week recovers like a travel week (`condition.matchWeekRecoveryBase`) rather
+     *  than a rest week (`condition.recoveryBase` + the slider). One modifier on an existing weekly
+     *  figure, no second calendar, no blocking: see `accrueCondition`. */
+    shootWeeksPerTerm: 2,
+    /** The earliest a shoot may land after the signature, in weeks – the studio is booked about a
+     *  month out, and it is the same courtesy the letter's own four decide weeks extend: a cost the
+     *  player can SEE coming is a plan, a cost that lands the week he agreed to it is a trap. Engine
+     *  mechanics of the choice, not a promise on the paper – so it is read at signature, not frozen
+     *  into terms. */
+    shootLeadWeeks: 4,
+    /** The weekly chance a qualifying week produces the letter, on its own sub-stream
+     *  (`seed:ad:<week>`, never MAIN). 5% a week puts the median arrival ~13 weeks after she
+     *  crosses the bar and the mean ~20 – the plan's §2 row «when it arrives: after results, and it
+     *  LAGS them», bought with one number instead of a second calendar. Unlike the kit window's
+     *  once-a-season 70%, this rolls weekly because a campaign is not an off-season ritual: brands
+     *  write when they notice her. */
+    offerChance: 0.05,
+    /** Four weeks to decide – the same thinking time the kit window's letters get («давать человеку
+     *  какое-то время на подумать»), stated on the paper and enforced by `expireOffers`. */
+    decideWeeks: 4,
+    /** THE HOUSE THAT WRITES: a watchmaker – the plan's own first example of non-endemic («a watch,
+     *  a bank, an airline, a cosmetics house»). Fictional, like every brand on the ladder above,
+     *  and deliberately nothing constructible into a real company or trademark. */
+    brand: 'Quiet Hour',
+  },
+
   // Season-Life condition accumulator (0..100, 100 = fresh). Pure INTEGER arithmetic –
   // accrueCondition draws ZERO main-stream RNG, so none of these can shift the weekly draw
   // sequence (the B1 invariance test guards it).
@@ -1534,6 +1660,22 @@ export const ECONOMY = {
     // re-measured rather than re-tuned - see `rivalFatigueWindowWeeks` below, whose whole premise
     // ("at recoveryBase 1/week their drain outruns their recovery permanently") this number retires.
     recoveryBase: 8,
+    // ⭐ THE PRO PHASE RECOVERS ON 5, NOT 8 (owner 22.08, variant C of his own proposal: «может
+    // быть нам тогда стоит дефолтное восстановление с 10 в неделю на 7 опустить? тогда массажист
+    // как раз будет еще немного накидывать, может вполне гармонично получиться»). His 10 = base 8
+    // + the 60/40 slider's +2, so his 7 = base 5 – and it applies ONLY while
+    // `activeLadderOf === 'wta'` (the masseur's own unlock boundary), read through
+    // `recoveryBaseFor` in world/medical.ts. Juniors and ALL 199 RIVALS keep `recoveryBase` above.
+    //
+    // ⚠ THE GLOBAL DROP (variant B) WAS MEASURED AND REJECTED – docs/specs/the-masseur-2026-08.md
+    // §10, 32 paired seeds × 2 presets: B lands 2/3 of its damage outside the place he aimed at
+    // (junior condition −1.6..−2.2 at 3.5-5 SEM, +3 bankruptcies across 64 base careers, two
+    // careers per preset never turn professional) and the one thing the proposal was FOR – the
+    // masseur's uplift – SHRINKS (~40% fewer rehab receipts). C keeps the junior era byte-identical
+    // (measured 0.00 ± 0.00 on every metric) and makes the pro grind honestly harder exactly where
+    // he pointed. His «накидывать» arithmetic only works here too: base 5 + slider 2 + the entry
+    // rung's +1 = 8 for a staffed professional against today's unstaffed 10.
+    proPhaseRecoveryBase: 5,
     // V2 SHIPPED (owner verdict 25.07 "V2 хорош", after two fatigue-bench rounds): a tournament
     // week is travel + competition, not rest – NO base recovery on a week the kid plays. The
     // knob stays (the bench's 'legacy' scenario patches it back to 2 for reference runs).
@@ -2254,6 +2396,83 @@ export const ECONOMY = {
     conditionBonusPerWeek: 1,
   },
 
+  // --- THE MASSEUR (travelling team step 1, docs/specs/the-masseur-2026-08.md) -------------------
+  // A salaried person, pro-career gated, hired/fired like the coach. DISTINCT FROM THE PHYSIO
+  // ABOVE, and the distinction is the design: the physio is a coach-bundled clinic SERVICE whose
+  // work is prevention (tau, and the layoff dealt at onset); the masseur is RECOVERY THE PLAYER
+  // WATCHES – he works the layoff she is already in and the week-to-week body. See
+  // src/engine/world/masseur.ts for the whole argument.
+  masseur: {
+    // ⭐ STEP 2 RE-CUT THE CONTRACT INTO A DIAL (owner, round 24: «а не слишком ли дешево это для
+    // специалиста?… может быть добавлять настройки сколько раз в неделю он дает свои услуги»). The
+    // step-1 flat $150/wk was half the middle coach's weekly bill and the owner read it right: at
+    // his own real-world friendly rate ($50/h) it buys THREE hours, and a professional's body work
+    // is not three hours. The honest recalibration is RELATIVE, inside the game's own scale:
+    //
+    //   * a SESSION is priced at the top of the middle coach's 17-22 hourly band ($48-72/h,
+    //     `coach.hourlyRateCents`) – a specialist's hour, not a friendly visit;
+    //   * the rungs below make the WEEK read against the staff the game already sells: 2×$75 =
+    //     $150/wk (step 1's own number, surviving as the entry rung), 4×$75 = $300/wk (the middle
+    //     coach's whole weekly bill – «a professional on retainer»), 7×$75 = $525/wk (between the
+    //     high coach's $500 and the elite's $800 – the full-time body man; ≈$27k/yr, beside the
+    //     owner's own «+2 специалиста это ещё +46к» sketch).
+    //
+    // STILL A FLAT CONTRACT PER RUNG: no corridor, no jitter, no draw – the rung is chosen, the
+    // bill is flat per rung, and the ledger row is the number on the card (step 1's legibility
+    // argument, moved one level up).
+    perSessionCents: 75_00,
+    // THE DIAL – how many times a week the table is hers, the owner's own idea. Three rungs, and
+    // each must MEASURABLY beat the one below or the dial is decoration (the plan's §4 law); the
+    // bench table in docs/specs/the-masseur-2026-08.md carries every cell.
+    //
+    //   * rehabExtraEveryNWeeks: every Nth week of an ACTIVE layoff the hands take one extra week
+    //     off it (deterministic, off week − sinceWeek; see rollInjury). N=3 was measured in step 1
+    //     at the EDGE of season noise (-1.7 ± sd 8) – acceptable as the CHEAP rung of a dial, a
+    //     named failure as the only effect of a flat contract. N=2 is step 1's shipped-and-measured
+    //     arm (-2.3..-2.5 weeks/career). N=1 halves a long layoff, which is what daily hands are
+    //     for. A 1-2 week niggle gains nothing at ANY rung (the totalWeeks > 2 guard in
+    //     rollInjury) – honest: nobody massages a one-week soreness away.
+    //   * conditionBonusPerWeek: the at-home table, on top of the physio's own +1, on the weeks she
+    //     is NOT away at a tournament (the away weeks are the travel stance's business below).
+    //     ⭐ +1/+2/+3 SINCE THE OWNER'S 22.08 RULING – the shipped +1/+1/+2 had a measured flaw the
+    //     dial's own §4 law forbids: rungs 1 and 2 were INDISTINGUISHABLE on any week without an
+    //     injury (same bonus, and the cadence only separates them inside a layoff), i.e. the $150
+    //     step from «twice a week» to «every other day» bought nothing a healthy player could
+    //     read. The ladder now steps by exactly one point per rung. The physio note's hair trigger
+    //     («at 2 the retainer alone erased every policy difference») was about the UNPRICED
+    //     retainer bonus on every profile; these rungs are priced $150/$300/$525 a week and land
+    //     in the pro phase, whose base dropped to 5 in the same wave – the combined grid in
+    //     docs/specs/the-masseur-2026-08.md §11 measures the whole stack together.
+    rungs: [
+      { sessions: 2, label: 'Twice a week', rehabExtraEveryNWeeks: 3, conditionBonusPerWeek: 1 },
+      { sessions: 4, label: 'Every other day', rehabExtraEveryNWeeks: 2, conditionBonusPerWeek: 2 },
+      { sessions: 7, label: 'Daily', rehabExtraEveryNWeeks: 1, conditionBonusPerWeek: 3 },
+    ],
+    // What a fresh hire (and every pre-v59 save) stands on: the middle rung – the professional
+    // default the pricing above is anchored to. A LITERAL 4 in the v59 migration, by the house
+    // rule; keep the two in step.
+    defaultSessions: 4,
+    // ⭐ WHAT THE FARE BUYS (step 2, the owner's «влияет ли он на восстановление на глубоких
+    // играх»): when the masseur TRAVELS to a tournament (fare paid, `pendingTournament.masseurThere`),
+    // the run's strain at finalize is relieved by this much PER NIGHT BETWEEN ROUNDS – i.e. ×
+    // (matches − 1), capped at the strain itself. Scales with DEPTH by construction: a first-round
+    // exit has no nights between rounds and buys nothing, a title week has the most – which is
+    // literally the owner's question answered. Zero draws; the knob is read post-strain.
+    //
+    // ⚠ 1-vs-2 WAS MEASURED ON THE OWNER'S OWN QUESTION («+2 за каждый круг не многовато?») and 2
+    // STAYS – the combined grid's relief arms (docs/specs/the-masseur-2026-08.md §11): at 1/round
+    // the tour condition channel survives at half size but the deep-run WINS channel drops under
+    // 2 SEM everywhere (8k +8.2±2.3 -> +4.7±2.6) and the 8k prize delta goes to noise – the fare
+    // would buy a number the player cannot feel, the decorative-staff failure again.
+    tourRecoveryPerRound: 2,
+    // ⭐ THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1 сеанс
+    // массажа по возвращении»): when he was NOT flown to a tournament, the first non-played week
+    // after it pays one extra session's worth of recovery on top of the ordinary week – the home
+    // table working the trip out of her legs. Small and legible on purpose: it is one session, not
+    // a second tour-relief channel, and it prints its own receipt (`resolveMasseurReturn`).
+    returnSessionBonus: 1,
+  },
+
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
   // ONE shared catalogue; money is the only gate. A vacation week is a hard blackout (nothing
   // enterable) that pays a condition gain on top of a FREE week's recovery, and the two top
@@ -2690,4 +2909,26 @@ export function kidPrizeShareBps(ageYears: number): number {
  *  different balances that a player can add up on screen. */
 export function kidPrizeShareCents(prizeCents: number, ageYears: number): number {
   return Math.round((prizeCents * kidPrizeShareBps(ageYears)) / 10_000)
+}
+
+/** ⭐⭐ ROUND-24 – WHAT A FINISH PAYS THE STAFF, in basis points. ONE mechanism, two takers (the
+ *  coach and the masseur), because two independent copies of "what does a finish pay" is this
+ *  repo's own recurring disease – two surfaces asking different functions about one question.
+ *
+ *  The owner's shape, not the tour's: «за победы или 2е места» – a TITLE pays `titleBps`, a FINAL
+ *  pays `finalBps` («за 2е только по-меньше»), and below a final NOTHING – never a cut of every
+ *  cheque. `finishIdx` is the finish index `finalizeTournament` already holds (0 = champion,
+ *  1 = finalist). All four numbers live in `ECONOMY.staffShare`; this reads them and nothing
+ *  else, so a retune moves the whole game and this function does not change. */
+export function staffResultShareBps(role: 'coach' | 'masseur', finishIdx: number): number {
+  const rates = ECONOMY.staffShare[role]
+  return finishIdx === 0 ? rates.titleBps : finishIdx === 1 ? rates.finalBps : 0
+}
+
+/** A staff member's cut of one cheque, in whole cents – the role's bps applied to the GROSS prize
+ *  and rounded ONCE (the `kidPrizeShareCents` discipline one function up: every share rounds once,
+ *  and the family gets the remainder by SUBTRACTION at finalize, so the pieces always re-add to
+ *  the tournament's cheque to the cent). Zero draws, no state, no schema. */
+export function staffPrizeShareCents(role: 'coach' | 'masseur', prizeCents: number, finishIdx: number): number {
+  return Math.round((prizeCents * staffResultShareBps(role, finishIdx)) / 10_000)
 }

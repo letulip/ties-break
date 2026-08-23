@@ -62,6 +62,8 @@ import { parentIncomeForWeekCents,
   gearVoice,
   kidPrizeShareBps,
   kidPrizeShareCents,
+  staffPrizeShareCents,
+  staffResultShareBps,
 } from './economy'
 // v54 (round-23 #18): the one string the engine writes about her own account. `shared/money.ts` is
 // the ONE cents-to-dollars implementation in the app and `weekLabel` above records why the engine is
@@ -174,6 +176,8 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
+import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
+export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
 import { eventById } from './world/bookings'
@@ -266,13 +270,13 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, chargeCoachTravel, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, chargeCoachTravel, masseurTravelFareFor, chargeMasseurTravel, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
-export { localSponsorCents, reviewSponsors, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, rolloverKitAllowance }
-import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
-export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
+export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
+import { restRecoveryBonus, recoveryBaseFor, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
+export { restRecoveryBonus, recoveryBaseFor, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.
@@ -450,7 +454,16 @@ export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, build
 // door already-broken ones can come back through. See the migration for what it does and does not do.
 // v58 (round 24 #5): `fork.departsWeek` – the college answer RESERVES a place and she departs on the
 // next academic year's September; see the migration and docs/specs/college-departure-2026-08.md.
-export const SAVE_SCHEMA_VERSION = 58
+// v59 (the travelling team, steps 1+2): `masseurHired` – the first staff seat beyond the coach,
+// pro-career gated, salary + body effect in world/masseur.ts; false for every earlier save (the
+// seat did not exist). ⚠ EXTENDED IN PLACE BY STEP 2 ON THE SAME UNMERGED BRANCH (22.08) – v59 has
+// never reached a player, so append-only does not bind it yet: `masseurSessionsPerWeek` (the
+// owner's sessions dial, 4 = the middle rung for every earlier save) and `masseurTravels` (the
+// travel stance, false – the switch is what buys the seat) ride in the same migration.
+// Rows of `injuryHistory` MAY carry `weeksSaved`, written only when he saved something – absent
+// everywhere in old saves, so nothing is back-filled; `pendingTournament` MAY carry `masseurThere`
+// on a week he made the trip. See docs/specs/the-masseur-2026-08.md.
+export const SAVE_SCHEMA_VERSION = 59
 
 
 
@@ -467,6 +480,12 @@ export interface PendingTournament {
   /** true once the last kid match is revealed and points/summary/rank are committed */
   finished: boolean
   players: Record<string, MatchPlayer>
+  /** ⭐ v59 step 2: the masseur MADE THIS TRIP – written in the play arm beside the fare he was
+   *  actually charged for (`chargeMasseurTravel`), read once at finalize by `masseurTourRelief`.
+   *  Recorded rather than re-derived so a stance flipped mid-reveal cannot buy an effect the fare
+   *  never paid for (the round-21 #2 "asked once, carried" doctrine). Absent = he stayed home,
+   *  which is what every pre-step-2 save means by not having the key. */
+  masseurThere?: boolean
 }
 
 export interface WorldState {
@@ -687,8 +706,11 @@ export interface WorldState {
    *  the persisted shape and the surfaced one are now the same four-plus-one fields – see
    *  `SnapshotInjury`. Still a VIEW change only: the save has always held this field. */
   injury: SnapshotInjury | null
-  /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B). */
-  injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number }>
+  /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B).
+   *  ⚠ `weeksOut` IS THE WEEKS SHE WAS ACTUALLY OUT (v59): shorter than the dealt layoff when the
+   *  masseur bought weeks back, and `weeksSaved` says how many – the key exists only on rows where
+   *  he did, so every earlier row (and every career without him) serialises byte-for-byte. */
+  injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number; weeksSaved?: number }>
   /** whether physio recovery is active (default = `coachIncludesPhysio(profile.coachTier)`, i.e.
    *  every rung but self-coached – the old rule was "a hired coach comes with a physio" and
    *  self-coaching is the only rung that is not a hire). The cost lever is billed in Slice C; in B
@@ -880,6 +902,31 @@ export interface WorldState {
   /** HER FOUR YEARS AT COLLEGE (v39), once she has chosen them – null for every career that did
    *  not. `doneWeek` is null while the freeze has not been spent yet. */
   college: CollegeState | null
+  /** THE MASSEUR IS ON THE PAYROLL (v59, travelling team step 1) – hired/fired like the coach,
+   *  pro-career gated, salary and effect in world/masseur.ts. False for every earlier save: the
+   *  seat did not exist. His retainer SUSPENDS at college and on family holidays rather than
+   *  cancelling, so the flag survives the freeze – see `masseurWorksThisWeek`. */
+  masseurHired: boolean
+  /** ⭐ THE DIAL (v59, step 2 – the owner's own idea: «настройки сколько раз в неделю он дает свои
+   *  услуги»): how many sessions a week the table is hers, one of `ECONOMY.masseur.rungs`' sessions
+   *  values (2 / 4 / 7). The bill, the rehab cadence and the condition bonus all follow the rung
+   *  through `masseurRungOf`. Persisted because it is a CHOICE, like `kit` and `coachId` – this
+   *  engine never re-derives a decision. Written by `createWorld` and the v59 migration (4, the
+   *  middle rung); validated at its one writer, `setMasseurSessions`. */
+  masseurSessionsPerWeek: number
+  /** ...AND DOES HE COME TO TOURNAMENTS (v59, step 2 – the ruling Б's whole point, «массажист
+   *  ездит»)? The coach's `coachOnEventWeeks` pattern for the next seat over: default FALSE – the
+   *  automatic behaviour is that competition weeks are not staff weeks, and the switch is what buys
+   *  the seat. The fare is `masseurTravelFareFor` (the coach's own price rule, one more seat), and
+   *  what it buys is `masseurTourRelief` at finalize – recovery between rounds, by depth. */
+  masseurTravels: boolean
+  /** ⭐ THE RETURN-WEEK SESSION'S MARK (v59, owner 22.08: «довесить послетурнирное восстановление
+   *  1 сеанс массажа по возвращении»). The week of the last finalized run a HIRED masseur was NOT
+   *  flown to; `resolveMasseurReturn` settles it (+1 recovery, receipt) on the first non-played
+   *  week after and clears it. OPTIONAL AND TRANSIENT by design – absent means nothing is owed,
+   *  which is the true value for every earlier save, so nothing is back-filled (the
+   *  `pendingTournament.masseurThere` / `weeksSaved` discipline, recorded in the v59 migration). */
+  masseurReturnDue?: number
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -1976,6 +2023,54 @@ function finalizeTournament(world: WorldState): void {
         text: `${world.profile.kidName}'s share of the prize money – ${formatCents(herShare)} into her own account`,
       })
     }
+    // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
+    // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем
+    // 30 для примера) и тренеру (скажем 10 для примера) – это будет 900к дочери и 300к тренеру плюс
+    // остальные расходы» – and the masseur joined the same day, smaller («может по-меньше чем
+    // тренеру, но давать»). A UNIVERSAL rule, not a contract form: computed here from `ECONOMY`
+    // constants and the finish, nothing persisted, nothing chosen at hire – the architect's
+    // form-choice design is dead by the owner's own ruling.
+    //
+    // ⚠ TITLES AND FINALS ONLY («за победы или 2е места», «за 2е только по-меньше») – below a
+    // final `staffPrizeShareCents` returns 0 and no row is written. PRO TOUR ONLY (`track ===
+    // 'wta'`): junior tennis is not the convention's world and its cheques are pocket change.
+    // INDEPENDENT OF ANY TRAVEL SWITCH – «тренер может не ездить, но долю получать … вполне
+    // может» – but only a FILLED seat: a self-coached family owes no coach share and an empty
+    // table no masseur share.
+    //
+    // ⚠ BOTH SHARES OFF THE GROSS, EACH ROUNDED ONCE, THE FAMILY KEEPS THE REMAINDER – the kid
+    // ramp's own discipline, fourth and fifth hands on the same cheque: her share is untouched
+    // above, and funds move by familyShare − coachShare − masseurShare, so the four pieces re-add
+    // to the tournament's cheque to the cent.
+    //
+    // ⚠ EXPENSE ROWS, NOT A SMALLER INCOME ROW, and the categories are the seats' own: the coach's
+    // share lands under `coaching` and the masseur's under `staff`, so the Money screen's
+    // breakdown, the season wrap and `careerTotals.spentCents` all absorb them through `addEvent`'s
+    // one choke point with no second tally – the coaching line the wrap prints simply stops lying
+    // by never having been given the chance. Zero draws: integer arithmetic on a decided cheque.
+    const coachShare = track === 'wta' && world.coachId !== null ? staffPrizeShareCents('coach', prize, kidFinish) : 0
+    if (coachShare > 0) {
+      world.fundsCents -= coachShare
+      addEvent(world, {
+        week: world.week,
+        type: 'expense',
+        category: 'coaching',
+        // No pronoun names the coach (R15-7 – women are on every roster by construction).
+        text: `Coach's share of the prize money – ${staffResultShareBps('coach', kidFinish) / 100}% of the ${tier.label} cheque`,
+        amountCents: -coachShare,
+      })
+    }
+    const masseurShare = track === 'wta' && (world.masseurHired ?? false) ? staffPrizeShareCents('masseur', prize, kidFinish) : 0
+    if (masseurShare > 0) {
+      world.fundsCents -= masseurShare
+      addEvent(world, {
+        week: world.week,
+        type: 'expense',
+        category: 'staff',
+        text: `Masseur's share of the prize money – ${staffResultShareBps('masseur', kidFinish) / 100}% of the ${tier.label} cheque`,
+        amountCents: -masseurShare,
+      })
+    }
     // D10 + R15-5: THE FIRST CHEQUE IS A MILESTONE (owner, 01.08: «я believe it's a very memorable
     // moment»). The first week the tennis pays her anything at all - after years of the family
     // paying for everything - is a beat the career keeps: captured into the durable ledger (one row
@@ -2042,11 +2137,61 @@ function finalizeTournament(world: WorldState): void {
   // walked off after five games is priced as the shorter thing it was. Her body then takes the
   // layoff on top, opened below by `retirementInjury` – so the week charges her for the tennis she
   // played and for the injury separately, which is the truth of it.
+  // ⭐ v59 STEP 2 – AND THE HANDS THAT MADE THE TRIP TAKE SOME OF IT BACK (the owner's deep-run
+  // question, «влияет ли он на восстановление на глубоких играх»). `masseurTourRelief` is per
+  // NIGHT BETWEEN ROUNDS – × (matches − 1), capped at the strain – so a first-round exit buys
+  // nothing and a title week buys the most, which is the fare pricing exactly the thing it
+  // insures. Gated on `p.masseurThere`, written in the arm that CHARGED the fare: the bill and
+  // the effect are one decision about one week by construction. Zero draws on any stream.
+  const runMatches = kidMatchesOf(p.result)
+  const runStrain = tournamentRunStrain(event.tier, runMatches)
+  const tourRelief = masseurTourRelief(runMatches.length, runStrain, p.masseurThere ?? false)
   world.condition = clamp(
-    world.condition - tournamentRunStrain(event.tier, kidMatchesOf(p.result)),
+    world.condition - (runStrain - tourRelief),
     ECONOMY.condition.min,
     ECONOMY.condition.max,
   )
+  // The receipt, on a run deep enough to have really used the table – the legibility half of the
+  // plan's §4 law, one bounded line per tournament. Quiet on shallow weeks: a beat for every
+  // R1 exit would teach the player the line means nothing.
+  if (tourRelief > 0 && runMatches.length >= 3) {
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: 'Deep week, fresh legs – the table work on tour kept the run from eating her.',
+    })
+  }
+  // ⭐ ...AND THE WEEK HE BOARDED IS BILLED PER MATCH (owner 22.08: «на неделе выезда по-матчевая
+  // цена заменяет недельную»). `resolveMasseur` stood the weekly rung bill down when the play arm
+  // recorded `masseurThere`; this is the replacement, at the one point the matches are known –
+  // matches played × the $75 session, so a Slam title week is 7 × $75 = $525 (exactly the daily
+  // rung's home week) and a first-round exit is one session. Charged off the recorded fact, not
+  // the current hire – he made the trip whatever the family decided since (the round-21 #2
+  // doctrine). Fare on top, exactly as at home. Zero draws.
+  if (p.masseurThere ?? false) {
+    const tourBill = masseurTourWeekCents(runMatches.length)
+    if (tourBill > 0) {
+      world.fundsCents -= tourBill
+      addEvent(world, {
+        week: world.week,
+        type: 'expense',
+        category: 'staff',
+        text: `Masseur on tour – ${runMatches.length} ${runMatches.length === 1 ? 'match' : 'matches'} worked, billed per match`,
+        amountCents: -tourBill,
+      })
+    }
+    // A trip he MADE settles any older return debt too: the between-rounds relief was this
+    // week's work, and the return she comes home from is this tournament's, not a stale one's.
+    delete world.masseurReturnDue
+  } else if (world.masseurHired ?? false) {
+    // ⭐ THE RETURN-WEEK SESSION'S MARK (owner 22.08: «довесить послетурнирное восстановление 1
+    // сеанс массажа по возвращении»): he was NOT flown, so the first non-played week after this
+    // run gets one extra session's worth of recovery – settled and receipted by
+    // `resolveMasseurReturn`. Written at the commit point for the same reason the cheque is: a
+    // walkover, a skip or a medical withdrawal never reaches finalize, and none of them is a trip
+    // to return from. Overwriting an unspent older mark is correct – she has been home since.
+    world.masseurReturnDue = world.week
+  }
 
   // Effective ranking delta = kid's windowed best-6 sum after adding the result minus before.
   //
@@ -2812,6 +2957,15 @@ export function createWorld(
     retirementOffer: null,
     oneMoreYearCount: 0,
     college: null,
+    // v59: no masseur on day one – he is pro-career gated, and the hire is a decision, never a
+    // default. ⚠ LAST KEYS OF THE LITERAL, deliberately: the frozen-career identity in
+    // tests/coach-travel-edge.test.ts reproduces the pre-v59 hashes by dropping exactly these
+    // three keys, which only works while the rest of the serialisation order is untouched. The
+    // dial opens on the middle rung (the professional default the pricing is anchored to) and the
+    // travel stance opens OFF – the coach's own default: the switch is what buys the seat.
+    masseurHired: false,
+    masseurSessionsPerWeek: ECONOMY.masseur.defaultSessions,
+    masseurTravels: false,
   }
   addEvent(world, {
     week: 0,
@@ -3023,6 +3177,18 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //   from being free money. `reviewSponsors` draws on `seed:offer:<week>`, never MAIN.
   if (isSponsorWindowWeek(world.week) && !inCollege(world)) reviewSponsors(world)
 
+  // ⭐ 0a0c-quater (round 24 item 2, the-face-and-the-court.md §6 STEP 1): AND, FROM EIGHTEEN, THE
+  //         OTHER KIND OF SPONSOR – a non-endemic house paying cash for her face. Weekly rather than
+  //         windowed, because a campaign is not an off-season ritual and the plan's own table says
+  //         the deal LAGS results; the gate (18+, a counting W standing inside the bar, one deal at
+  //         a time) is `reviewAdOffer`'s own. Behind the SAME freeze gate as the kit review one line
+  //         up – «nobody writes to an amateur» silences both kinds of sponsor identically, while a
+  //         deal SIGNED before she enrolled keeps its banked fee and lapses on its own clock, its
+  //         shoot weeks lapsing silently with it (plan §4c – no penalty, ever; `accrueCondition`
+  //         guards the freeze before it charges a shoot). At most one draw, on `seed:ad:<week>`,
+  //         never MAIN: the frozen capture (41550 / e6b0c709) cannot see it.
+  if (!inCollege(world)) reviewAdOffer(world)
+
   // 0a0c-ter (W3-ACT2 §7): AND THE PROFESSIONAL RUNGS PAY A QUARTERLY RETAINER. Four arrivals a
   //         season on fixed offsets (0 / 13 / 26 / 39) rather than one number at the boundary,
   //         because a retainer is a WAGE and one annual figure would read as the cheque the whole
@@ -3171,6 +3337,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   resolveVacation(world)
   resolvePractice(world)
   resolvePhysio(world)
+  // 1c-masseur: MOVED BELOW THE PLAY ARM (owner 22.08, per-match tour pricing). The salary used to
+  //        bill here beside `resolvePhysio`; since «на неделе выезда по-матчевая цена заменяет
+  //        недельную» the bill must know whether the fare was charged this very week, and that fact
+  //        is written by the play arm (`pendingTournament.masseurThere`) – so the charge now sits
+  //        directly after it, reading the recorded fact instead of re-deriving the arm. Zero draws
+  //        either way, and on a home week nothing between the two positions writes a ledger row, so
+  //        the move is invisible everywhere the masseur is not travelling.
 
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)
@@ -3320,22 +3493,24 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     })
     // The week is match-free after all, so she earns the FULL free-week recovery ladder that
     // accrueCondition withheld when it still believed she would play (it ran with played = true, so
-    // she banked matchWeekRecoveryBase instead of recoveryBase + the rest-slider bonus). Written as
-    // the DIFFERENCE so it lands on exactly what a non-playing week pays, whatever the two knobs
-    // are set to – and so this stays byte-consistent with the bench's independent trace, which
-    // reads the week as free. Integer, clamped, zero draws.
+    // she banked matchWeekRecoveryBase instead of recoveryBase + the rest-slider bonus). The
+    // difference is the ONE oracle `withheldFreeWeekRecovery` computes for all three refund sites
+    // ('tournament' names the rung that was banked), so it lands on exactly what a non-playing week
+    // pays, whatever the knobs are set to – and ⭐ on a SHOOT week (ad step 2, §4a) that is the
+    // travel figure she already banked, so nothing is owed: the first ad-shoot bench caught this
+    // exact site refunding a shoot week its rest (+9) through the doctor's arm. Integer, clamped,
+    // zero draws.
     //
     // ⭐ THE NOTE THAT USED TO STAND HERE IS ANSWERED (18.08). It read: "skipEvent (R9-9) hands back
     // the rest-slider bonus ALONE … a skipped event week still under-pays by recoveryBase. NOT touched
     // here: fixing it moves shipped condition traces, which is a tuning call, not a merge call."
     // The owner ruled it a fix rather than a tuning call - the two weeks are the same week - and
-    // `skipEvent` now uses this identical expression. The two paths cannot part again without both
-    // being edited.
+    // `skipEvent` now reads the identical oracle. The paths cannot part again: there is one
+    // expression left to edit.
+    // ⭐ ROUND-25 COLLECT: the oracle also carries the phase base (variant C) and the masseur's
+    // table since the merge – the two waves' parallel edits to this seam, folded into one expression.
     world.condition = clamp(
-      world.condition +
-        (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
-        restRecoveryBonus(world.plan.rest),
-      ECONOMY.condition.min,
+      world.condition + withheldFreeWeekRecovery(world, 'tournament'),      ECONOMY.condition.min,
       ECONOMY.condition.max,
     )
   } else if (enteredThisWeek) {
@@ -3348,6 +3523,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // for free: an injury walkover and a medical withdrawal never pay it, because she never went.
     // Zero draws; see `coachTravelFareFor` for the price and whose figure it is.
     chargeCoachTravel(world, enteredThisWeek)
+    // ⭐ v59 STEP 2 – AND THE NEXT SEAT OVER, on the same line of reasoning and in the same arm:
+    // the masseur's fare is a fare, so it belongs where she actually boarded, and the two no-travel
+    // arms above get their exemption for free. The fare it charged is remembered below on the
+    // pending run itself, because it is the fare that BUYS the between-rounds relief at finalize –
+    // recorded in the arm that paid, never re-derived from a stance that may have flipped since
+    // (the round-21 #2 "asked once, carried" doctrine). Zero draws.
+    const masseurFare = chargeMasseurTravel(world, enteredThisWeek)
     // ...and the WARNING BAND: cleared, but only just. She plays; the doctor goes on record. Emitted
     // after the travel charge so the week reads chronologically in the news feed (trip → the doctor
     // sees her → her matches). Type 'info' rather than 'injury': nothing has happened to her body,
@@ -3364,7 +3546,26 @@ export function tickWeek(world: WorldState, rng: Rng): void {
       })
     }
     world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue, rivalEntries)
+    // The presence the fare bought, carried on the run it was bought for. Written only when a fare
+    // was actually charged, so absence keeps meaning "he stayed home" for every earlier save.
+    if (masseurFare > 0) world.pendingTournament.masseurThere = true
   }
+
+  // 1c-masseur, settled HERE since the per-match tour pricing (v59; the step-1 position was beside
+  // `resolvePhysio` – see the note at 1c). The salary beside the physio bill it must stay
+  // distinguishable from: a FLAT contract per rung, zero draws on any stream, suspended – not
+  // cancelled – at college and on booked family weeks (the coach's own stand-down pair, asked of a
+  // second seat; see masseurWorksThisWeek). His effects ride the same predicate: the rung bonus
+  // inside accrueCondition above, and the rehab cadence inside rollInjury. ⭐ On the week he
+  // BOARDS (`pendingTournament.masseurThere`, written three lines up in the arm that charged the
+  // fare) the weekly bill stands down and finalize bills the week per match – the owner's «на
+  // неделе выезда по-матчевая цена заменяет недельную». The walkover and medical arms above never
+  // set the flag, so a trip that never happened is billed as the home week it really was.
+  resolveMasseur(world)
+  // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
+  // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
+  // non-played week after it gets one extra session's worth of recovery, receipt included.
+  resolveMasseurReturn(world, playedThisWeek)
 
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
   driftCohort(world.cohort, rng)
@@ -3665,11 +3866,13 @@ export function skipEvent(world: WorldState, eventId: string): void {
   //
   // ⚠ THE THIRD CASE IS DELIBERATELY UNTOUCHED, and the owner named it: retiring MID-MATCH through
   // injury. She walked on court and played, so that week is not match-free and never reaches here.
+  //
+  // ⭐ SHOOT-AWARE SINCE AD STEP 2 (§4a): the oracle pays nothing on a shoot week – the travel
+  // figure was banked and the travel figure is what that week's rest is worth, skipped event or no.
+  // ⭐ ROUND-25 COLLECT: the oracle also carries the phase base (variant C) and the masseur's
+  // table since the merge – the two waves' parallel edits to this seam, folded into one expression.
   world.condition = clamp(
-    world.condition +
-      (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
-      restRecoveryBonus(world.plan.rest),
-    ECONOMY.condition.min,
+    world.condition + withheldFreeWeekRecovery(world, 'tournament'),    ECONOMY.condition.min,
     ECONOMY.condition.max,
   )
   // Close the week: the rank recompute + housekeeping that tickWeek deferred to the flow.

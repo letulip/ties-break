@@ -87,8 +87,8 @@ import { seasonIndexOf } from './world/ledger'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
-  AcademyLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason,
-  SponsorTier, TourLetterTerms,
+  AcademyLetterTerms, AdOfferTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine, KitOfferTerms, Offer,
+  PenaltyReason, SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -941,6 +941,22 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
   const err = offerAnswerError(offers, offerId, week)
   if (err) return null
   const offer = offers.find((o) => o.id === offerId)!
+  // ⭐ THE ADVERTISING DEAL SIGNS ON ITS OWN ARM (the-face-and-the-court.md §6 step 1), because every
+  // number below this branch is KIT arithmetic: `dealStartsAt` queues a new contract behind the
+  // signed KIT deal (an ad deal coexists with the kit ladder – different category, different gate),
+  // `dealUntilWeek` anchors a term on the SEASON so a held letter cannot buy extra weeks of kit, and
+  // the closing loop refuses the window's losing brands. None of that is true of a campaign: her
+  // face is theirs from the day the paper is signed, for exactly `termWeeks`, and there is no window
+  // of rival letters to close (`reviewAdOffer` raises at most one at a time by construction). The
+  // fee itself is paid by `acceptOffer` – the world owns the wallet, this file owns the paper.
+  if (offer.kind === 'ad') {
+    const termWeeks = Math.max(1, (offer.terms as AdOfferTerms).termWeeks)
+    offer.state = 'signed'
+    offer.decidedWeek = week
+    offer.fromWeek = week
+    offer.untilWeek = week + termWeeks - 1
+    return offer
+  }
   // Read the start BEFORE the state moves: `dealStartsAt` walks the signed deals, and this one is
   // about to become one of them (with no `untilWeek` yet, so it could not move the answer - but the
   // order is written to be true rather than merely harmless).
@@ -1424,4 +1440,144 @@ export function raiseAcademyLetter(offers: Offer[], week: number, terms: Academy
   }
   offers.push(notice)
   return notice
+}
+
+// =================================================================================================
+// THE ADVERTISING DEAL (round 24 item 2, docs/plans/the-face-and-the-court.md §6 STEP 1)
+// =================================================================================================
+//
+// The other kind of sponsor entirely: a NON-ENDEMIC house paying cash for her face, not kit for her
+// tennis. This section is the paper only – who wrote, whether one is already on the table, and the
+// one roll that decides whether this is the week somebody writes. The GATE (her age, her standing,
+// the college freeze) is the world's business and lives in `world/sponsors.ts` (`reviewAdOffer`),
+// exactly as the kit letters split the same two jobs between `raiseKitOffers` and `reviewSponsors`.
+//
+// RNG DISCIPLINE: `adWritesAt` draws on `seed:ad:<week>` – its own purpose-scoped sub-stream,
+// created here, read once, discarded, keyed on the WEEK so a replayed career gets the same answer at
+// the same boundary. ZERO draws on MAIN, so the frozen capture (41550 / e6b0c709) cannot move by one.
+
+/** The identity of an advertising letter: the week it landed. At most one can be raised per week
+ *  (`adSpokenFor` turns the writer away while one is live or running), so the week is unique, and it
+ *  is stable across a replay the way every other derived id in this file is. */
+export function adOfferId(week: number): string {
+  return `ad-${week}`
+}
+
+/** WHETHER A CAMPAIGN WRITES THIS WEEK - the one random thing about the deal, the same shape as the
+ *  kit ladder's `shopWritesAt` and deliberately NOT the same stream: `seed:ad:<week>` is its own
+ *  purpose scope, so the kit roll and this one can never read each other's dice. */
+export function adWritesAt(seed: string, week: number, chance: number): boolean {
+  const rng = rngFromSeed(`${seed}:ad:${week}`)
+  return rng() < chance
+}
+
+/** ⭐⭐ THE SHOOT WEEKS, CHOSEN BY THE SIGNATURE (the-face-and-the-court.md §4a, step 2 – the
+ *  owner's own design: «наверное в зависимости от всяких съемок и прочего может меняться
+ *  восстанавливающий эффект недели»). NO second calendar, no blocking, no conflicts: these are
+ *  ordinary weeks of her season that will simply recover like travel weeks rather than rest weeks
+ *  (`accrueCondition` reads them through `adShootWeek`), so the whole choice is WHICH weeks the
+ *  letter names.
+ *
+ *  THE CONSTRUCTION, and each clause is a promise the letter makes:
+ *   - `count` of them (Quiet Hour's paper says 2 – `AdOfferTerms.shootCount`, frozen at arrival);
+ *   - IN-SEASON by construction – the off-season weeks are filtered out of every pool, because a
+ *     cost paid in the off-season is free money wearing a cost's clothes (plan §5.2, owner-ruled);
+ *   - SPACED APART – one draw per equal slice of the term, so two shoots cannot bunch into one
+ *     fortnight, and a hard non-adjacency filter besides (a campaign is not a tour);
+ *   - no earlier than `leadWeeks` after the signature, so the player reads the named weeks with
+ *     time to plan around them rather than inside one of them.
+ *
+ *  RNG: `count` draws on `${seed}:ad:shoots:<signWeek>` – the ad post's own purpose scope (the
+ *  allowlist in tests/offers.test.ts names `seed:ad:` deliberately), keyed on the SIGNING week so a
+ *  replayed signature names the same weeks. ZERO draws on MAIN: a player action may draw on a
+ *  purpose-scoped stream at the moment of the action (the arrival roll's own discipline), and the
+ *  frozen capture (41550 / e6b0c709) cannot see it.
+ *
+ *  A degenerate term (shorter than its slices can hold in-season) yields FEWER weeks rather than an
+ *  off-season or bunched one – the promises above outrank the count, and the shipped catalogue
+ *  (52-week term, 3-week off-season, lead 4) leaves every slice ~20 eligible weeks deep. */
+export function chooseShootWeeks(
+  seed: string,
+  signWeek: number,
+  termWeeks: number,
+  count: number,
+  leadWeeks: number,
+): number[] {
+  const rng = rngFromSeed(`${seed}:ad:shoots:${signWeek}`)
+  const until = signWeek + Math.max(1, termWeeks) - 1
+  const from = Math.min(signWeek + Math.max(0, leadWeeks), until)
+  const span = until - from + 1
+  const slice = Math.max(1, Math.floor(span / Math.max(1, count)))
+  const weeks: number[] = []
+  for (let i = 0; i < count; i++) {
+    const lo = from + i * slice
+    const hi = i === count - 1 ? until : Math.min(until, lo + slice - 1)
+    const pool: number[] = []
+    for (let w = lo; w <= hi; w++) {
+      if (isOffSeasonWeek(w)) continue
+      if (weeks.some((s) => Math.abs(s - w) <= 1)) continue
+      pool.push(w)
+    }
+    if (pool.length === 0) continue
+    weeks.push(pool[Math.floor(rng() * pool.length)])
+  }
+  return weeks
+}
+
+/** IS THIS WEEK A SHOOT WEEK OF THE DEAL IN FORCE? The one question the condition accumulator asks
+ *  (`accrueCondition` gives a yes the travel week's recovery instead of the rest week's), answered
+ *  off the signed paper's own named weeks and nothing else – no re-derivation, so the recovery the
+ *  engine charges and the weeks the letter names can never disagree. Pure read, zero draws.
+ *
+ *  ⚠ THE COLLEGE FREEZE IS NOT CHECKED HERE, deliberately – this file owns the paper, the world
+ *  owns the freeze. The caller that charges recovery guards the freeze itself (see
+ *  `accrueCondition`): a shoot week the freeze swallows lapses silently, no penalty, no makeup. */
+export function adShootWeek(offers: Offer[], week: number): boolean {
+  const deal = activeAdDeal(offers, week)
+  if (!deal) return false
+  return ((deal.terms as AdOfferTerms).shootWeeks ?? []).includes(week)
+}
+
+/** THE ADVERTISING DEAL IN FORCE THIS WEEK, or null. Same contract as `activeKitDeal`: honoured
+ *  from `fromWeek` to `untilWeek` and not a week further, off the offer's own frozen terms. */
+export function activeAdDeal(offers: Offer[], week: number): Offer | null {
+  return (
+    offers.find(
+      (o) =>
+        o.kind === 'ad' &&
+        o.state === 'signed' &&
+        week <= (o.untilWeek ?? -1) &&
+        week >= (o.fromWeek ?? o.decidedWeek ?? 0),
+    ) ?? null
+  )
+}
+
+/** ONE DEAL AT A TIME (plan §4.1) – is the post shut against a new advertising letter this week?
+ *  Two ways it can be: a letter still on the table (live: open AND inside its window), or a signed
+ *  term still running. An expired or refused letter shuts nothing – the next house may notice her
+ *  whenever its own week's dice say so – and neither does the KIT ladder: an endorsement and a kit
+ *  deal are different categories and deliberately never read each other. */
+export function adSpokenFor(offers: Offer[], week: number): boolean {
+  return offers.some((o) => o.kind === 'ad' && (isOfferLive(o, week) || (o.state === 'signed' && week <= (o.untilWeek ?? -1))))
+}
+
+/** THE HOUSE WRITES. An `open` letter with a real deadline – refusable and expirable like the kit
+ *  proposals, unlike the desks' notices – raised by `reviewAdOffer` once its gate and its dice have
+ *  both said yes. Idempotent on its id, like every other `raise*` in this file, and NOTHING is
+ *  drawn here: the one roll this deal ever takes happened in `adWritesAt` before the caller called. */
+export function raiseAdOffer(offers: Offer[], week: number, terms: AdOfferTerms, deadlineWeek: number): Offer {
+  const id = adOfferId(week)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const offer: Offer = {
+    id,
+    kind: 'ad',
+    week,
+    deadlineWeek,
+    // The snapshot rule: frozen at arrival, never re-read from ECONOMY afterwards.
+    terms: { ...terms },
+    state: 'open',
+  }
+  offers.push(offer)
+  return offer
 }
