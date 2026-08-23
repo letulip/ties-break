@@ -6,6 +6,20 @@ canonical: false
 last-reviewed: 2026-08-22
 ---
 
+## ⭐ RE-CUT 23.08 – THE SKILL SHIPPED, THE ACTION IS THE OPTIONAL UPGRADE
+
+The owner: «может быть нам лучше тогда скилл на это собрать, и тогда мы сможем его по требованию
+использовать когда нужно?» – ruled and DONE the same day: `.claude/skills/house-review/SKILL.md`
+reviews any branch/PR/range against the repo's own law (two passes: the mechanical checks by
+command, the judgment law by reading the diff), verdict-only, never auto-fixing, zero cloud cost.
+
+What REMAINS in this backlog entry is only the optional upgrade this file argued for: the GitHub
+Action wrapper whose one added property is «nobody forgot to run it» (the sim workflow's
+reader-loop lesson). Blocked, as before, on the owner's two decisions: the `ANTHROPIC_API_KEY`
+repo secret (billing) and advisory-vs-blocking. Size shrinks M → S (the skill IS the prompt; the
+Action wraps it).
+
+
 # The git reviewer – an assistant that reads every change (owner, 23.08.2026)
 
 His ask, verbatim:
