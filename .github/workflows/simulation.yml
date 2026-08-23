@@ -1,3 +1,24 @@
+# THE MONTE-CARLO CALIBRATION – WEEKLY AND ON DEMAND, NEVER IN FRONT OF A PULL REQUEST.
+#
+# ⚠⚠ FINAL RULING (owner, 22.08) – DO NOT REVISIT WITHOUT NEW EVIDENCE. The pull_request trigger
+# was tried for exactly one day, on the owner's own approval, and the runner measured it out:
+# ~330s of serialised sim on a 10-core M-series Mac becomes 20+ minutes on a 2-core ubuntu runner,
+# which brushed the job's own 25-minute ceiling – «неистовое количество времени» and a red X that
+# was the timeout, not the tennis. The owner: «до этого мы договорились делать её оффлайн сами и
+# не тащить на гит… добавить пометку в документацию об этом, чтобы мы в будущем не возвращались к
+# этому вопросу, но при этом запускали её регулярно и знали, что она нормально работает.»
+#
+# So the standing regime, all three parts load-bearing:
+#   1. WEEKLY cron + workflow_dispatch, timeout sized for the slow runner (60), never on a PR;
+#   2. ⭐ A RED WEEKLY RUN FILES AN ISSUE by itself (the failure step below) – this is the piece
+#      that was always missing: rot sat unread for 8 days in August because "the weekly run's
+#      reader loop is nobody"; an Issue lands where the owner already looks;
+#   3. THE WORKING RULE, in CLAUDE.md: touch the match model or a bench tool -> run
+#      `npm run test:sim` YOURSELF, locally, and put the numbers in the PR body.
+#
+# =================================================================================================
+# The one-day experiment's own reasoning, kept as the record of why it was tried:
+#
 # THE MONTE-CARLO CALIBRATION – IN FRONT OF EVERY PULL REQUEST SINCE 22.08 (owner's ruling).
 #
 # ⚠⚠ THE PARAGRAPHS BELOW ARGUED THE OPPOSITE AND THEY ARE KEPT, re-aimed rather than deleted,
@@ -80,19 +101,15 @@
 name: Simulation calibration
 
 on:
-  pull_request:
   schedule:
-    - cron: '0 4 * * 1' # Mondays, 04:00 UTC - the merge-skew backstop
+    - cron: '0 4 * * 1' # Mondays, 04:00 UTC
   workflow_dispatch:
-
-concurrency:
-  group: sim-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   simulation:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # Sized for the 2-core runner: ~330s locally on 10 cores measured as 20+ minutes here.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -101,3 +118,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:sim
+      # Weekly dependency health rides the same weekly slot - not on PRs, where it would flake
+      # on registry weather. High and above only; dev-only advisories do not reach a player.
+      - run: npm audit --omit=dev --audit-level=high
+      # ⭐ THE READER LOOP THAT EXISTS: a red run opens (or refreshes) an Issue the owner will see.
+      - uses: actions/github-script@v7
+        if: failure()
+        with:
+          script: |
+            const title = 'Weekly simulation calibration is RED'
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            const open = await github.rest.issues.listForRepo({ ...context.repo, state: 'open', labels: 'sim-health' })
+            const body = `The weekly \`test:sim\` (or \`npm audit\`) run failed.\n\nRun: ${runUrl}\n\nThe working rule stands: whoever touched the match model last runs \`npm run test:sim\` locally and brings the numbers.`
+            if (open.data.length) {
+              await github.rest.issues.createComment({ ...context.repo, issue_number: open.data[0].number, body })
+            } else {
+              await github.rest.issues.create({ ...context.repo, title, body, labels: ['sim-health'] })
+            }
