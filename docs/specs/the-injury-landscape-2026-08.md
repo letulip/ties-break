@@ -245,6 +245,9 @@ proved live by an absurd-value probe and reverted byte-clean. They are recorded 
 results exist, so the running work and this spec cannot diverge about what was asked.
 
 **Arm A – his own cadence, replayed under base 5.** §4's professional rows are priced on the
+
+> His approval, verbatim (23.08): «сделай пожалуйста, и я тоже поиграю сам на каком-то сейве и отгружу свежие данные позже.» – the live-data columns exist for the second half of that sentence.
+
 reprice spec's pair schedule – a bench player entering 30+ events a season – while §2's honest
 baseline (his five saves, ~a dozen entries a season, «я аккуратно играл и всё равно травмы были»)
 plays a different calendar, and Finding 6 left a debt on exactly that seam: the reference cell
@@ -259,6 +262,9 @@ own cadence lives inside the band. The replay-on-his-own-material method is
 enters.
 
 **Arm B – the rehab-development fraction: 0 / 30 / 50%.** Finding 4's perverse effect has a named
+
+> His approval, verbatim (23.08): «да, надо померить, но звучит хорошо.»
+
 suspect: `growWeek` is injury-blind – world.ts step 3b passes the training plan whatever
 `world.injury` says, so a laid-up week develops at the plan's own full rate, and every forced
 layoff is forced rest AND uninterrupted development. That is half the machinery by which injuries
