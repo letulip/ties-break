@@ -301,6 +301,14 @@ inventing an eight-card carousel component.
 girl growth peak ~11.5) and marks it "THE strategic beat of the childhood prologue". It lands on
 the 11 or 12 card as an event, its mechanical effects deferred to the main game's existing systems.
 
+⭐ **THE SURFACE IS AN ADAPTATION FORK, NOT A DEBUFF ANNOUNCEMENT** (adopted from the Codex
+perspective, 23.08 – `docs/review-codex/12-backlog-perspective-response-2026-08-23.md`). The card
+offers the parent the responses a real family has – rebuild the movement (less competition for a
+stretch) / keep the schedule and accept the inconsistency / shift the training toward coordination
+and strength – and the numbers above stay HONEST in the engine underneath. The event must read as a
+transition in her body, never as the game deleting progress; the later benefit (the post-spurt
+serve/power) is what closes that arc.
+
 **Motivation** stays exactly as the spec sized it: ONE durable number the prologue produces, read
 by the main game in ONE cheap place first (recommendation: the knock's rest/push copy), then
 measured before it earns more. It is what makes the 12 card a consequence instead of a menu.

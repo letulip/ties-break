@@ -26,6 +26,10 @@ unscheduled) · **Parked** (the owner parked it, or the design is not ready) · 
 COMPLETED result, not unfinished work – the house already lives this («measured refusal») and the
 state makes it legible.
 
+The sweep of 23.08 assigned a state to every row in every file here; **Now is deliberately empty –
+Now is assigned by the owner's pick, not by the sweep** – and `(?)` after a state marks the
+ambiguous calls the architect reviews.
+
 ## The gate for every NEW mechanic (adopted the same day, seven questions)
 
 Before a new system is built, answer all seven – in the plan, in writing: 1 what new DECISION does

@@ -2533,3 +2533,17 @@ specs, the review's P1–P9, 22 round ledgers, engine comments and the playwrigh
 surfaced (this chronicle catch-up is one of them, closed the same day). The reviewer ships as the
 on-demand `house-review` skill – the repo's own law applied to a branch – with the GitHub Action
 kept in the backlog as the optional «nobody forgot to run it» upgrade.
+
+---
+
+## 23.08.2026 – THE CODEX BACKLOG PERSPECTIVE: THE LENS ADOPTED, THE INVENTORY CORRECTED
+
+An outside review (`docs/review-codex/11-…`, baseline round-21 main) was reviewed in full
+(`docs/review-codex/12-…response`). ADOPTED: «care under uncertainty, not suffering accurately
+simulated» as a named principle; the five backlog states (Rejected = a COMPLETED result); the
+seven-question gate for every new mechanic; expectation-relative form; the compact event-local
+weather shape; the rejection of hidden catastrophic health and ideation content. REFUSED with
+reasons: protective locks on expensive coaches (freedom + legible prices is the house line); the
+psychology-never-touches-matches hard line (`spirit` is a bounded named term by the perspective's
+own principle); hiding the growth spurt's numbers (engine honest, surface an adaptation fork).
+Four genuinely open owner decisions carried to `docs/backlog/awaiting-his-word.md`.
