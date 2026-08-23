@@ -17,6 +17,25 @@ specified, what blocks it, and its rough size – the argument stays in the plan
 backlog file that restates a plan is a fork that rots; one that points stays true. When work ships,
 the row is removed here and the plan's own status note is the record.
 
+## The five states (adopted from the Codex backlog perspective, 23.08 – the one structural take)
+
+Every row carries one state: **Now** (approved, deps satisfied, next wave) · **Next** (approved
+direction, waiting on the named dependency or measurement) · **Later** (plausible, deliberately
+unscheduled) · **Parked** (the owner parked it, or the design is not ready) · **Rejected**
+(measured or ruled out – kept as evidence against reopening it by accident). ⚠ Rejected is a
+COMPLETED result, not unfinished work – the house already lives this («measured refusal») and the
+state makes it legible.
+
+## The gate for every NEW mechanic (adopted the same day, seven questions)
+
+Before a new system is built, answer all seven – in the plan, in writing: 1 what new DECISION does
+it create (a probability tweak folds into an existing system); 2 what does the player know
+beforehand; 3 what can the player do about it; 4 is it a distinct mental model or does it belong
+inside condition/money/injury; 5 can the player explain the result afterwards; 6 what positive or
+human beat does it enable; 7 what permanent interface cost does it demand, and does it earn it.
+The private-life build, the prologue and the weather item pass this gate today; anything that
+cannot, goes to Parked with the failing question named.
+
 Built by sweeping: every plan in `docs/plans/`, the flagged follow-ups inside shipped specs, the
 2026-08 reviews' P1–P9 and TB-01..24 proposals, the round ledgers' open boxes (re-verified against
 the code on main, 23.08), and the engine's own «its own wave» comments.
