@@ -87,8 +87,13 @@ KNOBS.injuryPlayingMultiplier = argOf('injPlay', KNOBS.injuryPlayingMultiplier)
 //                   the package gain is all she gets that week. Nothing in the engine does this – it
 //                   is the counterfactual the question needs, and it is bench-local by construction
 //                   (see the note where it is applied).
-const CONDITION = ECONOMY.condition as unknown as { recoveryBase: number }
+const CONDITION = ECONOMY.condition as unknown as { recoveryBase: number; proPhaseRecoveryBase: number }
 CONDITION.recoveryBase = argOf('recovery', CONDITION.recoveryBase)
+// ⚠ AND THE PRO PHASE'S OWN BASE (recovery variant C, owner 22.08 – `recoveryBaseFor` reads it while
+// `activeLadderOf === 'wta'`). The injury-landscape spec's interaction question – does the §6
+// sub-knee lever bite harder in a pro era that recovers on 5 instead of 8 – needs the counterfactual
+// arm `--proRecovery 8`, measured, not assumed. Omitted = shipped 5.
+CONDITION.proPhaseRecoveryBase = argOf('proRecovery', CONDITION.proPhaseRecoveryBase)
 const VAC_SCALE = argOf('vacScale', 1)
 if (VAC_SCALE !== 1) {
   for (const pkg of ECONOMY.vacation.packages as unknown as { conditionGain: number }[]) {
@@ -148,6 +153,11 @@ interface SeasonRow {
   /** condition at this season's own opening week (offset 0) */
   firstWeek: number
   injuryOnsets: number
+  /** the landscape spec's columns: what the onsets WERE, not only how many */
+  bySeverity: Record<'minor' | 'moderate' | 'major' | 'severe', number>
+  /** weeks whose PRE-TICK condition (the value injuryTau reads at step 1c) sat below the knee –
+   *  the §6 lever's exposure surface, and the variant-C interaction's whole mechanism */
+  weeksSubKnee: number
   weeksInjured: number
   /** the deepest trough of the season - the "did the re-price merely move the floor" read */
   trough: number
@@ -296,6 +306,8 @@ function probe(seed: string): SeasonRow[] {
       opensNextSeasonAt: 0,
       firstWeek: 0,
       injuryOnsets: 0,
+      bySeverity: { minor: 0, moderate: 0, major: 0, severe: 0 },
+      weeksSubKnee: 0,
       weeksInjured: 0,
       trough: ECONOMY.condition.max,
       penaltyPoints: 0,
@@ -320,6 +332,8 @@ function probe(seed: string): SeasonRow[] {
         }
       }
       const wasInjured = world.injury !== null
+      // the condition rollInjury is about to read (tick step 1c runs before accrueCondition)
+      if (world.condition < ECONOMY.condition.matchStrengthKnee) row.weeksSubKnee += 1
       row.mandatoriesDue += world.season.filter(
         (e) => e.deadlineWeek === world.week + 1 && mandatoryBinds(world, e) && !world.entries.includes(e.id),
       ).length
@@ -329,7 +343,10 @@ function probe(seed: string): SeasonRow[] {
       if (isSuspendedAt(world, world.week)) row.suspendedWeeks += 1
       if (world.injury !== null) {
         row.weeksInjured += 1
-        if (!wasInjured) row.injuryOnsets += 1
+        if (!wasInjured) {
+          row.injuryOnsets += 1
+          row.bySeverity[world.injury.severity] += 1
+        }
       }
       if (world.pendingTournament) {
         const p = world.pendingTournament
@@ -376,7 +393,9 @@ console.log(
   `  knobs under test: recoveryBase ${ECONOMY.condition.recoveryBase} · W surcharges ` +
     `${W_RUNGS.map((t) => ECONOMY.condition.tierMatchFatigue[t]).join('/')} · ladder W ` +
     `[${ECONOMY.condition.runFatigueLadderWta.join(',')}] · injury base ${ECONOMY.availability.injuryBaseChance} ` +
-    `+ slope ${ECONOMY.availability.injuryFatigueSlope}/pt x ${ECONOMY.availability.injuryPlayingMultiplier} playing`,
+    `+ slope ${ECONOMY.availability.injuryFatigueSlope}/pt x ${ECONOMY.availability.injuryPlayingMultiplier} playing` +
+    ` · proPhaseRecoveryBase ${CONDITION.proPhaseRecoveryBase}` +
+    ` · TB_SUBKNEE_K=${process.env.TB_SUBKNEE_K ?? '0'} TB_INJ_CAP=${process.env.TB_INJ_CAP ?? 'shipped'}`,
 )
 console.log(
   `  a rest week returns ${ECONOMY.condition.recoveryBase} + slider ` +
@@ -420,6 +439,34 @@ console.log(
 )
 console.log(`    3. home from a W35 title      ${String(100 - titleCost('w35')).padStart(6)}%  target 70-78%`)
 console.log(`    4. season injury prevalence   ${prevalence.toFixed(0).padStart(6)}%  target 46-54%`)
+
+// --- THE INJURY LANDSCAPE READ (detail/injuries-measure) ---------------------------------------
+// The pro era's row of the landscape spec's tables: onsets with SEM, the severity mix, weeks lost,
+// and the sub-knee exposure the §6 lever prices. Pooled over every measured season.
+{
+  const semOf = (xs: number[]) => {
+    const m = mean(xs)
+    const v = xs.reduce((a, b) => a + (b - m) ** 2, 0) / Math.max(1, xs.length - 1)
+    return Math.sqrt(v / xs.length)
+  }
+  const sev = (['minor', 'moderate', 'major', 'severe'] as const).map((s) =>
+    flat.reduce((a, r) => a + r.bySeverity[s], 0),
+  )
+  const totalMatches = flat.reduce((a, r) => a + r.matches, 0)
+  const totalOnsets = flat.reduce((a, r) => a + r.injuryOnsets, 0)
+  console.log('\n  THE INJURY LANDSCAPE (pooled over all measured seasons)')
+  console.log(
+    `    onsets/season ${mean(flat.map((r) => r.injuryOnsets)).toFixed(2)} ± ${semOf(flat.map((r) => r.injuryOnsets)).toFixed(2)}` +
+      ` · severity mi/mo/ma/se ${sev.join('/')}` +
+      ` · weeks lost/season ${mean(flat.map((r) => r.weeksInjured)).toFixed(1)} ± ${semOf(flat.map((r) => r.weeksInjured)).toFixed(1)}`,
+  )
+  console.log(
+    `    inj per 100 matches ${((100 * totalOnsets) / Math.max(1, totalMatches)).toFixed(2)}` +
+      ` · weeks below knee/season ${mean(flat.map((r) => r.weeksSubKnee)).toFixed(1)} ± ${semOf(flat.map((r) => r.weeksSubKnee)).toFixed(1)}` +
+      ` (of ${WEEKS_PER_YEAR})` +
+      ` · matches/season ${mean(flat.map((r) => r.matches)).toFixed(1)}`,
+  )
+}
 console.log(
   `    entries by tier: ${[...byTier.entries()]
     .sort((a, b) => TIER_LADDER.indexOf(a[0]) - TIER_LADDER.indexOf(b[0]))
