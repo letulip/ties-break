@@ -142,7 +142,12 @@ named failure, so the owner split the step:
    half lands where §3 predicts. *(MEASURED 22.08 – unit-pinned half-price seat + the grid; the
    spec's §§6–7. One honest correction: the psychologist went remote by the ruling above, so the
    «doubled» line of §3 is a 1.5× with the seats that actually exist.)*
-4. Only then tune the effect. *(OPEN – the owner rules on the spec's §5 pricing table.)*
+4. Only then tune the effect. *(23.08: the §5 pricing table WAS ruled the same day this line was
+   written – «утверждаю, для начала точно ок», amended +1/+2/+3 / per-match tour pricing / the
+   return-week session, recorded in the masseur spec §§5, 9. What remains of this step is the
+   OPTIONAL retune window: rungs, `tourRecoveryPerRound`, `returnSessionBonus`, `ECONOMY.staffShare`
+   – one-line constants, the §11 grid re-runs as-is. Indexed in
+   `docs/backlog/the-team-around-her.md`.)*
 
 ⭐ **The psychologist ships with `the-private-life.md` STEP 5**, where shortening the 3b recovery
 makes him legible without a single number. His salary, his remote-only ruling and §6's open travel
