@@ -235,3 +235,204 @@ post-return fragility (`docs/backlog/injuries-gear-and-open-bugs.md` #3) – bot
 **No engine change ships from this spec.** The measurement patch is reverted; the lever, its gate
 and its dose are his ruling to make, and whichever line he picks ships as its own change with the
 invariant-4 bench run this file already is the baseline for.
+
+---
+
+# Appended 23.08 – the two owner-approved arms («сделай пожалуйста» / «да, надо померить»)
+
+Both arms below are MEASUREMENT ONLY, same law as everything above: the levers ran as
+measurement-local, env-driven patches (`TB_SUBKNEE_K` / `TB_SUBKNEE_JUNIOR` in
+`src/engine/world/injury.ts`, `TB_REHAB_F` / `TB_REHAB_LONG` on the growWeek call's `loadFactor`
+channel in `src/engine/world.ts`), proven live by absurd-value probes, and reverted byte-clean –
+`git diff` empty on `src/` at push time, the frozen MAIN capture (41550 / e6b0c709) untouched by
+construction (every patch is a post-draw multiply on a threshold or a growth rate; zero draws move
+on any stream). Every arm ran in a dedicated worktree at commit c173e03 plus exactly those
+uncommitted patches; reader-presence was proved before any real arm was trusted (the null-result
+law): `TB_REHAB_F=-50` collapsed the grinder's 104w skill gain +8.50 → −6.93 (end skill
+56.79 → 41.36), and `TB_SUBKNEE_K=8` reproduced §3's K=8 row TO EVERY DIGIT (6.03 ±0.30 /
+173/51/12/5 / 153/88 / 16.7 ±1.2 / 6.39 / 3.67 ±0.28 / 1.97x / 13/40 ranked) – the recreated
+lever IS §3's lever. One bookkeeping correction to the header while we are here: the header's
+«K=50 moved grinder onsets 3.75→6.08» cannot be right against §3's own K=16 row of 6.67
+(non-monotone); the same probe on the same shape reads 6.92 ±0.26 at K=50, monotone with the table.
+
+**Instruments added 23.08** (committed with this append):
+
+- `tools/his-cadence-read.ts` – the owner's entry CADENCE out of his own saves (20 snapshots,
+  5 careers, read-only law). Each save carries only pruned windows (52w results, 400-event match
+  feed, 60w finance, 20 injury rows); multiple snapshots per career multiply the coverage, and
+  snapshot DELTAS of the monotone `careerTotals.weeksLostToInjury` are exact.
+- `tools/his-cadence-probe.ts` – HIS policy as code, on the pro-season-probe skeleton but with a
+  LIVED career instead of a stamped book (a #1 stamp closes the low W rungs his mature windows
+  still play – his girls sit mid-table). ⚠ It counts onsets AFTER the run commits
+  (`sinceWeek === week`, the fatigue bench's marker): the retirement door opens inside
+  `finalizeTournament`, and a probe that reads `world.injury` between tick and close is blind to
+  the door that feeds 79% of the careful landscape (§1). `tools/pro-season-probe.ts` still counts
+  the old way, so §4's ABSOLUTE onset rates are weekly-door-only; its K comparisons stand – that
+  lever moves only the weekly door.
+- `tools/rehab-lever.ts` – the F × K grid on the fatigue bench's own cells, with the
+  development-side columns (end skills, points, ranked careers, first-ranked week).
+- one line in `tools/fatigue-bench.ts` – the entry loop now asks `entryStatus` before committing.
+  Since the acceptance-cut wave that gate holds the absolute-rank clause (`Grand Slam takes the
+  top 112`) which `tierOpenFor` + `availabilityStatus` do not cover, and every 208w bench run
+  CRASHED mid-week when a strong junior's window reached slam range (measured: seeds 0-9, ~week
+  190). The guard fires exactly where `enterEvent` used to throw and nowhere else – re-running a
+  green 104w cell under it is byte-identical (diffed), so no shipped bench number moves.
+
+## §7 His own cadence, replayed under variant C (arm 1)
+
+**What his saves genuinely say** (his-cadence-read over 20 snapshots; READ-ONLY LAW – derived
+statistics only). His style, constant across careers: plan 75/25 (olivia's 85/15 is his own harsh
+arm), physio ON, hired coach (middle → elite at maturity), NO masseur, potential ~63 / skills
+~60-64 at maturity. The mature cadence (naomi/ines windows, seasons 7-12): **26.6-28.8
+events/season**, ~70-80 matches/season, rest gaps **25% back-to-back / 45% two-week pairs /
+30% three-plus** (mean 2.31w), **6.0 vacation-billed weeks/season**, and the mature windows are
+w50..slam with the junior rungs closed behind her. NOT DERIVABLE, stated rather than invented:
+**condition at entry** (no historical condition series exists anywhere in a save – the entry
+thresholds below are therefore calibrated, not read), vacations beyond each 60-week finance
+window, entry tiers beyond each 52-week results window.
+
+**The engine-version split the mtimes force.** The reprice (recoveryBase → 8) shipped 02-04.08;
+variant C 22.08; the saves were exported 01-21.08 – so §2's pooled 0.68 onsets/season mixes
+engines and eras. Over the intervals that are BOTH base-8-engine and pro-era and 75/25
+(naomi w412→674, ines w208→570; olivia = the 85/15 arm, alice w257→474 = a college freeze,
+zoe/early-naomi = pre-reprice play): **12.0 seasons, 11 onsets, 29 weeks lost, 894 matches →
+0.92 ± 0.28 onsets/season (Poisson SEM), 2.42 weeks lost/season, 1.23/100m** – the honest
+validation target. (Era split over every exact interval: junior 0.38/season, pro 0.80/season –
+the pooled 0.68 was junior-diluted.)
+
+**The instrument measures the man first** (probe under `--proRecovery 8`, policy frozen at
+T1=92 / T0=72 / rescue<65, 16 careers × 3 mature seasons after 8 lived ones, paired seeds):
+
+    quantity                his saves (base 8)   probe @ base 8
+    onsets/season           0.92 ± 0.28          0.92 ± 0.13
+    weeks lost/season       2.42                 2.35 ± 0.44
+    inj per 100 matches     1.23                 1.42
+    events/season           26.8 (mature)        25.0 ± 0.4
+    matches/season          74.5                 64.7
+    vacations/season        6.0                  6.7
+    gap mix 1w/2w/3w+       25/45/30             29/56/14
+
+Landscape, volume and vacation habit reproduce inside noise; the one honest residual is the gap
+TAIL (his 30% three-plus weeks vs 14% – his long gaps partly ARE his layoffs and his own manual
+variance). Equilibrium profile under base 8, for the rows a save cannot carry: mean condition
+83.8 ± 0.4, weeks below the knee 9.9 ± 0.4/season, trough 40.
+
+**The three worlds** (same policy, same seeds; nothing but `proPhaseRecoveryBase` moves):
+
+    quantity                base 8 (his old world)  base 6 (softened C)   base 5 (shipped C)
+    onsets/season           0.92 ± 0.13             0.96 ± 0.14           1.21 ± 0.15
+    weeks lost/season       2.35 ± 0.44             2.50 ± 0.46           3.08 ± 0.51
+    inj per 100 matches     1.42                    1.30                  1.67
+    season prevalence       63%                     63%                   77%
+    mean condition          83.8 ± 0.4              81.2 ± 0.4            80.8 ± 0.4
+    weeks below knee(70)    9.9 ± 0.4               13.0 ± 0.5            13.4 ± 0.5
+    trough                  40                      30                    30
+    events/season           25.0 ± 0.4              28.9 ± 0.3            28.4 ± 0.5
+    matches/season          64.7                    74.0                  72.3
+    vacations/season        6.7                     11.4                  11.4
+    severity mi/mo/ma/se    31/11/1/1               34/9/2/1              43/11/3/1
+
+**Finding 8 – his style does not sit still in the new world: it compensates, and the compensation
+is the first bill.** His own rescue rule (take the family week whenever the game offers one) fires
+almost twice as often under base 5 – **6.7 → 11.4 packages/season** – and the packages keep him
+fresh enough that his back-to-back rule fires MORE (events 25.0 → 28.4). The style he described as
+«я аккуратно играл» becomes, under 5, a style that buys nearly double the medicine to play the
+same tennis – and still pays **+31% onsets (0.92 → 1.21/season), +31% weeks lost (2.35 → 3.08),
+prevalence 63% → 77%**, with the season living 3 points lower and a third more weeks under the
+knee.
+
+**Finding 9 – base 6 hands him back his INJURY landscape but not his week.** At base 6 the
+injury row is his old world within noise (0.96 vs 0.92 onsets, 2.50 vs 2.35 weeks lost,
+prevalence 63% = 63%) at full volume – but the condition profile stays variant-C-shaped (81.2 vs
+83.8, sub-knee 13.0 vs 9.9) and the vacation bill stays doubled (11.4). Base 6 is «his injuries
+back», not «his world back».
+
+**Finding 10 – the extra-rest price of keeping base 5.** Forcing rest into his cadence under
+base 5 (`--minGap 2` = drop every back-to-back: 22.5 events, rest 29.5 wks/season, condition
+88.5, onsets 0.77): interpolating between as-played and no-back-to-backs, his old **condition**
+(83.8) returns at **+2.3 rest weeks/season** and his old **injury rate** (0.92) at **+3.9 rest
+weeks/season** – call it **+2..+4 rest weeks a season, i.e. dropping roughly half his
+back-to-back weeks, at −2..−4 events/season** – ON TOP of the doubled vacation bill his rules
+already pay. (The `--minGap 3` arm overshoots into a different game: 15.3 events, condition 92.9,
+and her rank falls out of the top window – w15-w100 replace the wta500s.)
+
+**His future live data drops into this table's first eight rows.** He will play fresh saves under
+shipped base 5; `npx vite-node tools/his-cadence-read.ts -- --save …` (plus injury-saves-read)
+prints exactly the save-derivable rows: **onsets/season, weeks lost/season, inj/100m,
+events/season, matches/season, gap mix, vacations/season, severity mix** – columns 1-8 of the
+base-5 column, same definitions, same windows. The last four rows (prevalence, mean condition,
+sub-knee weeks, trough) are probe-only – no save carries a condition series – so his live numbers
+land beside the probe's, never replacing those four.
+
+## §8 The rehab-development lever, K-interaction included (arm 2)
+
+**The engine today develops THROUGH rehab.** `growWeek` (tick step 3b) runs every week of every
+career and carries no injury gate – a layoff costs the match-learning bonus and nothing else; the
+knock's rest branch and the summer block gate through `loadFactor`, vacations gate the coach's
+rate, and an injured week trains at full rate. The owner's model says injuries should cost
+progress. The lever measured: rehab weeks develop at fraction F; in sub-100% arms a LONG layoff
+(totalWeeks > 4) develops at 0. Shape: a multiplier on the growWeek call's `loadFactor` channel
+(«how much of the week she actually trained») – zero draws, F=1 unset = shipped byte-identically.
+
+**The grid** – F × K ∈ {0, 8-junior-gated} on the fatigue bench's three policies, 4 profiles ×
+seeds 0-9 = 40 careers per policy per cell, paired across cells; 104w (the §3 horizon). The
+junior gate (`TB_SUBKNEE_JUNIOR=1`, applies while `activeLadderOf !== 'wta'`) is byte-inert at
+this horizon – the F=1 row reproduces §3's ungated K=8 exactly.
+
+    K=8jr             GRINDER                                      CAREFUL
+    F      onsets      wksLost  endSkill     pts    ranked | onsets      endSkill     pts     ranked  1stPtsWk
+    1.0    6.03 ±0.30  16.7     56.78 ±0.45  10 ±3  13/40  | 3.67 ±0.28  53.91 ±0.40  54 ±13  29/40   57
+    0.5    5.80 ±0.31  16.8     56.15 ±0.44   7 ±3  10/40  | 3.52 ±0.26  53.73 ±0.40  57 ±13  29/40   56
+    0.3    5.85 ±0.30  17.0     56.08 ±0.44   7 ±3   9/40  | 3.58 ±0.27  53.70 ±0.40  56 ±13  29/40   56
+    0      5.88 ±0.31  16.1     56.02 ±0.43   6 ±2   9/40  | 3.50 ±0.26  53.64 ±0.40  53 ±12  30/40   57
+
+    K=0 (shipped dose): the F sweep is flat for everyone – grinder 8/40 ranked and careful 29-30/40
+    at every F; grinder endSkill 56.79 → 56.40 (F=0), careful 53.92 → 53.69, both inside one SEM.
+    Balanced tracks careful at both doses (35-36/40 ranked at every F, endSkill −0.44 max).
+
+**Finding 11 – the K=8 perverse effect FLIPS, and F=0.3 is where it is fully repaired at this
+horizon.** §3 Finding 4's substitution (forced layoffs = forced rest → the grinder's ranked
+careers RISE with dose, 8/40 → 13/40 at K=8) comes back down the moment injuries cost
+development: **13/40 → 10 → 9 → 9** across F=1 → 0.5 → 0.3 → 0, with her points (10 → 6) and end
+skills (56.78 → 56.02) returning to the shipped landscape (8/40, 6 ±2, 56.79). At F ≤ 0.3 the
+injury lever is a pure punishment arm again.
+
+**...but only HALF flips at the horizon where the effect is biggest.** At 208w (14→18) the
+perverse effect is far larger than §3 ever saw – K=8jr at F=1 nearly doubles the grinder's ranked
+careers, **19/40 (shipped) → 30/40** – and the F lever claws back only part of it: 30 → 28 (F=0.3)
+→ **25/40 at F=0**, against 17/40 at K=0/F=0. The remainder is the substitution channel itself –
+the forced layoffs genuinely rest a body she refuses to rest, and no development lever can make
+rest not work. If the §6 dose ever ships, it ships with this fact attached: at K=8 the grinder's
+career CONSEQUENCE stays partially repaired even at F=0.
+
+**Finding 12 – the guard holds: no F stalls an honest junior.** Careful at K=8jr, F=1 → 0:
+onsets 3.67 → 3.50 (noise), end skill 53.91 → 53.64 (−0.27, two-thirds of one SEM), ranked 29 →
+30/40, first ranked week 57 → 57 (104w) and 72 → 67 at 208w – the first-points age does NOT move
+(if anything a week earlier, i.e. seed noise), and the same holds at K=0 (53.92 → 53.69). The
+balanced default: 39-40/40 ranked at 208w at every F. The lever is invisible to everyone whose
+weeks-lost budget is the careful 8-9/career; it prices exactly the 16-17-week grinder budget it
+was aimed at.
+
+**Finding 13 – the masseur does NOT become a progress purchase, and the college freeze barely
+feels the lever.** At the owner's own pro cadence (arm 1's probe, base 5, F=0.3): masseur-on vs
+masseur-off moves end skill by **+0.03 points over three seasons** – a mature career has no
+headroom left to protect – while his real product stays the TIME (weeks lost 3.08 → 2.81/season
+at F=1). In the junior era, where headroom exists, he is not sold (the unlock is the pro table).
+And the owner's own alice save prices the college interaction: 2 onsets / 7 rehab weeks across a
+217-week freeze = 1.68 rehab weeks/season – at F=0.3 that forfeits ~2-3% of a college season's
+programme development. Neither interaction argues for or against any F.
+
+**The recommended F, framed as his call:**
+- **F=0.3, long layoffs at 0 – my pick.** Fully repairs the 104w perversion (9/40), claws the
+  208w one back to 28/40, costs the careful junior 0.2 skill points (sub-SEM), moves no
+  first-points age, and is the honest fiction – a rehab week is not a training week, and not a
+  coma either.
+- F=0 – maximal: same at 104w, 25/40 at 208w, careful cost still sub-SEM (−0.27). Pick this if
+  the 208w residual (28 vs 25) matters to him more than the fiction.
+- F=0.5 – audible but incomplete (10/40); no reason to prefer it.
+- F=1 (as shipped) – only if K stays 0: at any real K dose the engine develops the grinder
+  THROUGH her punishments, and §3 Finding 4 is the bill.
+
+**No engine change ships from this append either.** Both levers are reverted; F, its long-layoff
+threshold, and whether it ships with or before the §6 dose are his ruling – and the arm-1 table
+above is the baseline his own fresh saves will be laid against, in the same eight columns.
