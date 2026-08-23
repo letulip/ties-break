@@ -11,7 +11,13 @@
 // ledger after the fact – the season's money and the best result off the 400-row `events` feed, the
 // season start rank off the 52-week `results` ledger – and this one is asked a question that is
 // strictly harder than any of those: what her best-N book looked like on each of forty separate weeks.
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// ⚠ THE 2-CORE RUNNER'S ARITHMETIC (22.08, the round-25 PR): the heaviest test here measures ~7s
+// on a 10-core local machine, and GitHub's ubuntu runner runs this suite at 4-5x local wall clock
+// – past vitest's 20s per-test default with ZERO assertion failures, the documented slow-machine
+// signature (CLAUDE.md). The ceiling is sized ~15x local so it can only fire on a genuine wedge.
+vi.setConfig({ testTimeout: 120_000 })
 import {
   activeLadderOf,
   entryCouldNotMove,
