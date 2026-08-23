@@ -80,9 +80,11 @@ slice returning −1. Verify scope, range arithmetic and anchoring before filing
 `test:sim` NEVER runs in front of a pull request. It was tried for one day and the runner measured
 it out (20+ min on 2 cores against ~5.5 min locally, red by timeout). The regime that stands:
 weekly cron + on-demand in `.github/workflows/simulation.yml`, **a red weekly run files a
-`sim-health` Issue by itself** (the reader loop that was always missing), and the working rule:
-**touch the match model or a bench tool → run `npm run test:sim` yourself and put the numbers in
-the PR body.** The `pull-request` skill asks for exactly this.
+`sim-health` Issue by itself** (the reader loop that was always missing), and the working rule,
+UPGRADED 22.08 at the owner's ask: **every PR assembly runs `npm run test:sim` locally,
+unconditionally** – the August drift came from commits that did not LOOK like model changes, so
+"only when the model moved" is exactly the heuristic that failed. The `pull-request` skill runs it
+as a fixed step and the PR body carries the verdict.
 
 ## Git workflow
 

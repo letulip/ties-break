@@ -20,10 +20,12 @@ a box it has not proven with a command in this session.
      the file. A wrapper's or a pipe's exit code is a documented lie in this repo.
    - Engine purity is inside `check` (`scripts/engine-purity.mjs`) – its line in the log is the
      proof behind the framework-free checkbox.
-   - **If the diff touches the match model, a bench tool, or anything under `src/engine/match/` or
-     `season/`**: also `npm run test:sim` the same way, and carry its numbers into the PR body –
-     the standing regime in CLAUDE.md says the sims never run on the PR itself, so the PR carries
-     the local numbers instead.
+   - **`npm run test:sim`, ALWAYS, the same way** (owner, 22.08: critical functionality runs
+     locally and regularly). ⚠ Not only when the diff "looks like" a model change – the August
+     drift was caused by commits that did not look like one (a season table, a rival skill), which
+     is exactly the heuristic that failed. ~5.5 min locally; the sims never run on the PR itself
+     (CLAUDE.md's standing regime), so the PR body carries the local verdict, with the numbers
+     whenever a corridor moved.
 
 3. **The diff, read before described.** `git log --oneline main..HEAD` and
    `git diff --stat main...HEAD`. The What-section is written from what actually changed, not from
@@ -43,8 +45,8 @@ a box it has not proven with a command in this session.
      re-pin story goes in What and the box is ticked only with it written.
    - *Save schema* – `git diff main...HEAD -- src/engine/migrations.ts src/engine/world.ts` tells
      the truth: untouched → tick; moved → the 4 parts named in What, then tick.
-   - *Sim* – model/bench untouched per the diff → tick; touched → `npm run test:sim` locally
-     (exit code from a file), numbers into What, then tick.
+   - *Sim* – step 2 ran it unconditionally; `TESTSIM_EXIT=0` from the file → tick, numbers into
+     What when a corridor moved.
    A box whose command did not run in this session stays `[ ]`, with one line in What saying why –
    the checklist CI job will hold the merge, which is exactly its job.
 

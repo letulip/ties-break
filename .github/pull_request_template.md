@@ -14,4 +14,4 @@
 - [ ] `npm run check` green locally, exit code read from a file (never through a pipe)
 - [ ] Frozen MAIN capture verdict stated: unmoved (41550 / `e6b0c709`) – or the re-pin explained in **What**
 - [ ] Save schema untouched – or the full 4-part move named (version bump, append-only migration, golden fixture, `npm run e2e:fixtures`)
-- [ ] Match model and benches untouched – or `npm run test:sim` run locally with the numbers in **What**
+- [ ] `npm run test:sim` green locally, exit code from a file – numbers in **What** when a corridor moved
