@@ -45,9 +45,11 @@ The one thing it leaves for this wave to finish, `docs`-side and needing no ruli
 
 Each of these is already diagnosed in writing and none is waiting on a ruling.
 
-- **Round 18 items 1–3, all `[!]`** – three re-reports of one miss (round 17 #14): the coach plaque's
-  text alignment on the main screen, the spacing beside the coach pictures in the picker, and tapping
-  a chosen coach's plaque to reach the coach list. ([round-18.md](rounds/round-18.md).)
+- ~~Round 18 items 1–3~~ – **shipped 13.08 in `c07e2a1`** («round-18 #1, #2, #3: the coach surfaces,
+  on the screen he meant»), six days BEFORE this page listed them as open: the 54px margin is back on
+  Home, the picker's `.cm-art` floor is `ROUND-18 #2` in `style.css`, and the landing-tab rule is
+  `ROUND-18 #3` in `CoachMarketScreen.vue`. The round-18 ledger's `[!]` boxes were the stale source –
+  the same failure as the three items struck below. (Corrected 23.08, backlog sweep.)
 - **Round 16 #8, kit wearing on holiday** – asked three times, never built – and **#20, keeping the
   screen awake during a match**, where no code exists at all (no `wakeLock` reference in `src/`).
   ([round-16.md](rounds/round-16.md).)

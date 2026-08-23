@@ -58,8 +58,25 @@ a box it has not proven with a command in this session.
    and re-aimed guard tests with their ⚠ reasons. Short dash `–` only; no Cyrillic in anything a
    public PR renders except the owner's own quoted rulings.
 
-6. **Hand-off.** Print the finished body in one fenced block, then the compare URL:
-   `https://github.com/letulip/ties-break/pull/new/<branch>`. The owner opens, pastes, merges.
+6. **Hand-off.** Print the finished body in one fenced block, then BOTH links:
+   - for a NEW PR, the pre-filled compare URL – GitHub accepts the body in the query string, so the
+     boxes arrive ticked from the first render and the `checklist` job starts green:
+     `https://github.com/letulip/ties-break/compare/main...<branch>?expand=1&body=<url-encoded body>`
+     (URL-encode with `python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.stdin.read()))"`;
+     if the encoded body pushes the URL past ~8k characters, fall back to the bare compare link and
+     the fenced block to paste);
+   - for an EXISTING PR, the fenced block is the replacement description – the owner pastes it over
+     the body and the `checklist` job re-runs on the edit.
+   The owner opens, pastes if needed, merges.
+
+## ⚠ THE STANDING RULE THIS SKILL EXISTS TO ENFORCE (23.08, learned the hard way)
+
+**A pushed branch is NOT «ready to merge» until this skill has run and the body has been handed
+over.** The day after the checklist job shipped, a branch went up with «мержится» and no assembled
+body – the job sat red on every push, the boxes sat empty, and the owner rightly read it as «наши
+проверки не сработали как было задумано». The failure was not the job and not the template: nothing
+forced this skill to run. So the rule is on the ARCHITECT: the sentence «ветка готова, мержите»
+may only follow a completed run of this skill, and the hand-off block is part of that sentence.
 
 ## What this skill never does
 

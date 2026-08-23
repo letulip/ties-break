@@ -46,6 +46,7 @@ import {
   skipTournament,
   closeTournament,
   availabilityStatus,
+  entryStatus,
   bookPractice,
   bookVacation,
   practiceCaution,
@@ -771,6 +772,16 @@ export function stepFatigueWeek(
     // v21: priced after the academy's share, like the econ bench – what the family is asked for.
     const cost = TIERS[e.tier].entryFeeCents + travelCostFor(world, e)
     if (world.fundsCents < cost) continue
+    // ⚠ THE ONE GATE, ASKED LAST (detail/injury-arms, 23.08). `enterEvent` re-validates through
+    // `entryStatus` (R10-5), and since the acceptance-cut wave that gate holds a clause the two
+    // checks above do NOT cover: the absolute-rank cut on the big W rungs («Grand Slam takes the
+    // top 112 – she is #307»). A 208w career whose sliding window reaches those rungs therefore
+    // CRASHED the bench mid-week – measured on seeds 0-9, horizon 208, where the strong juniors
+    // reach slam range at ~week 190. Asking the engine's own verdict before committing is the
+    // bench's stated policy («asks the engine's own single gate instead of re-deriving»), and it
+    // is byte-identical for every run that did not crash: this predicate fires exactly where
+    // `enterEvent` used to throw, and nowhere else.
+    if (entryStatus(world, e).level === 'blocked') continue
     if (avail.level === 'caution') cautionEntries++ // entered below the tier floor – the tough-parent choice
     enterEvent(world, e.id)
     entriesCommitted++

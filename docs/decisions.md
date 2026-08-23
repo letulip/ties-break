@@ -2405,3 +2405,131 @@ the population, so a pool would repeat within a single career.
 ⚠ **THE MECHANIC IS UNTOUCHED, WHICH IS THE HALF HIS SENTENCE INSISTS ON.** The prompt is still
 refused inside the four-year freeze – a feed row is written, never awaited – and `world.birthdays` is
 not appended to, so those years stay **ABSENT** in the ledger rather than recorded as "gave nothing".
+
+---
+
+## 22.08.2026 – THE COLLEGE YEAR GETS A FLOOR, AND THE CALL-UP IS EARNED (`wave/round24`)
+
+**His ruling, verbatim:** «я бы хотел, чтобы как минимум 1 турнир в год колледжа был. А вызов в
+сборную мы можем и подкрутить для этого… Тогда вызов в сборную можно будет опереть на результаты
+студенческого и тогда у нас будет минимум 1, максимум 2 турнира на учебный год»
+
+**WHAT SHIPPED.** The College League – a draw of eight at season week 12, real matches, watched in
+`MatchReplay`. The floor is ARITHMETIC (52 consecutive weeks contain season week 12 exactly once);
+the ceiling of two holds the same way. The call-up ladder reads the championship: 0.15/0.40/0.65/
+0.85 by rounds won, **0 with no championship on record**. Measured: 0.27→2.63 watchable matches per
+college year, zero years with nothing to open. No points, no money – the amateur line holds.
+
+---
+
+## 22.08.2026 – HER COLLEGE BIRTHDAYS HAPPEN – ⚠ SUPERSEDES 19.08's DIARY-LINE RULING
+
+**His ruling:** «да, день рождения делай». The 19.08 entry above ([]«колледжевые годы получают не
+попап, а свою запись в дневнике») was ruled around a constraint – a blocking dialog inside a
+52-week loop – that round 24 REMOVED: college now runs on the live Home shell, so the year can
+PAUSE on her week and the gift dialog can be answered. The four substitute diary lines
+(`collegeBirthdayLine`) went with the constraint they compensated for – two of them («the news
+reached you late») would contradict a dialog asked on the day. `pendingYearStart` (v57) banks a
+paused year against its opening numbers. Gifts remain free and effect-less by the standing spec
+ruling; `world.birthdays` records the choice.
+
+---
+
+## 22.08.2026 – THE ACADEMIC YEAR: ASK, HOLD, DEPART (`wave/round24`, schema v58)
+
+**His item:** «В колледж она пошла ровно в день своего рождения, а должна была в начале учебного
+года» – confirmed a deliberate design, redesigned to his model: the fork is ASKED when school ends
+(`schoolEndWeek` – 242 for Jan–Aug births, 294 for Sep–Dec), the place is RESERVED (the quote
+locked), she DEPARTS the first September after her 19th. The 52-week gap is her last junior season,
+fully playable – **and the entry release moved from the answer to the departure**, his own
+discussion: an entry made while she still plays is a commitment she made. A terminal ending in the
+gap voids the reservation. Follow-up parked in the spec: an `entryStatus` refusal for events past
+the departure week.
+
+---
+
+## 22.08.2026 – THE MASSEUR IS PRICED LIKE A PROFESSIONAL, AND THE DIAL IS HIS IDEA (`wave/staff-masseur`, v59)
+
+**His challenge, verbatim:** «а не слишком ли дешево это для специалиста? ко мне приезжал массажист
+и брал 50 долларов в час на дружеском тарифе. А здесь мы говорим про спорт профессионала (кстати
+может быть добавлять настройки сколько раз в неделю он дает свои услуги имеет смысл)…»
+
+**WHAT SHIPPED, all approved by him:** the sessions dial 2/4/7 × $75/session ($150/$300/$525 – the
+session priced at the top of the middle coach's hourly band); per-match tour pricing REPLACING the
+weekly bill on travel weeks ($75 × matches played – $525 a Slam title week, exactly his daily home
+rate); the return-week session for the masseur left home; relief kept at 2/night (measured: at 1
+the 8k win channel collapses to noise – his own «не многовато?» answered with the numbers). Injury
+risk stays the physio's – a second hand on one number is the decorative trap, declined with
+measurements.
+
+---
+
+## 22.08.2026 – RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED
+
+**His proposal:** «может быть нам тогда стоит дефолтное восстановление с 10 в неделю на 7 опустить?
+тогда массажист как раз будет еще немного накидывать, может вполне гармонично получиться». Measured
+as three arms (as-is / global / pro-only): the GLOBAL drop bleeds juniors (−1.6..−2.2 condition,
+careers that never turn pro, three new bankruptcies) and SHRINKS the masseur's uplift – the exact
+opposite of his bet. **Pro-only (the masseur's own unlock gate) shipped**: juniors byte-untouched,
+the pro phase honestly harder, and his arithmetic works – a staffed pro recovers 8 where today's
+unstaffed default was 10. `the-masseur-2026-08.md` §10–11 carries every cell.
+
+---
+
+## 22.08.2026 – THE TEAM'S SHARE OF THE PRIZE MONEY (`wave/round25`, no schema move)
+
+**His model, verbatim:** «3млн призовые из них отчисляется процент дочери (скажем 30 для примера) и
+тренеру (скажем 10 для примера) – это будет 900к дочери и 300к тренеру плюс остальные расходы» ·
+«тренер может не ездить, но долю получать наверное за победы или 2е места вполне может. За 2е
+только по-меньше» · same day: «массажисту тоже можно за призовые месте давать бонус, может
+по-меньше чем тренеру».
+
+**WHAT SHIPPED.** A UNIVERSAL rule (the plan's contract-form choice is dead by this ruling): title/
+final only – coach 10%/5%, masseur 3%/1.5% – off the GROSS, family pays, her #18 ramp untouched,
+pro tour, travel-independent, filled seats only. One mechanism, two takers. His example reproduced
+to the cent by a test. Nothing persists → no schema move, proven two ways.
+
+---
+
+## 22.08.2026 – THE SIM CORRIDORS: HIS TWO RULINGS AFTER THE BISECT
+
+The 22.08 bisect attributed both standing sim reds to deliberate-but-ungated balance commits.
+**econ-reach:** «да, проверь пожалуйста, но вообще ручной режим должен быть сложнее, как мне
+кажется» – so 14→6 of 30 is DIRECTION, not defect; re-pinned [3,18] by the file's own procedure,
+solvency-0 proven (the misses are tennis). **fatigue-planner:** «если кто-то из игроков плюнет на
+восстановление – сам будет виноват… я ожидаю, что у играющих неаккуратно должно быть больше
+последствий и жестче» – the measured truth already matches (grinder: 3× blocks, 9× withdrawals,
+8/40 ranked vs 29–35/40) and the TEST's metric was what had inverted; rewritten to the true claim.
+The remaining question – whether the injury FEED itself must read harsher – awaits
+`the-injury-landscape` dose-response measurement.
+
+---
+
+## 22–23.08.2026 – GIT: THE CHECKLIST WORKS, AND THE SIMS LEAVE THE PR FOR GOOD
+
+**His asks:** make the PR checkboxes «проверялись и работали»; more pre-PR checks; the sims off the
+PR – «мы договорились делать её оффлайн сами… добавить пометку в документацию, чтобы мы в будущем
+не возвращались к этому вопросу»; a `pull-request` skill; then «гонять локально более регулярно».
+
+**WHAT SHIPPED.** The `checklist` CI job (an unticked box holds the merge, re-checked on edit);
+`scripts/engine-purity.mjs` (invariant 1 machine-enforced, in `check` and CI); the sims back to
+weekly + dispatch with **an auto-filed `sim-health` Issue on a red run** – the reader loop that was
+always missing; the seven-box template where every tick states a proven fact; the `pull-request`
+skill with `npm run test:sim` UNCONDITIONAL locally (the August drift came from commits that did
+not LOOK like model changes – the conditional heuristic is what failed); runner-sized ceilings on
+the two heaviest unit tests (7s local ≈ 30s+ on 2 cores). FINAL: do not revisit the PR-sims
+question without new evidence – the one-day experiment measured itself out.
+
+---
+
+## 23.08.2026 – THE BACKLOG REBUILT AS POINTERS, AND THE GIT REVIEWER BECOMES A SKILL
+
+**His asks:** «проанализировать всё, что у нас есть нереализованного и создать файлики для беклог…
+со ссылками на спеки» · the reviewer: «может быть нам лучше тогда скилл на это собрать, и тогда мы
+сможем его по требованию использовать когда нужно?»
+
+**WHAT SHIPPED.** `docs/backlog/` – 13 files, 75 pointer rows (never copies), swept from plans,
+specs, the review's P1–P9, 22 round ledgers, engine comments and the playwright plan; orphans
+surfaced (this chronicle catch-up is one of them, closed the same day). The reviewer ships as the
+on-demand `house-review` skill – the repo's own law applied to a branch – with the GitHub Action
+kept in the backlog as the optional «nobody forgot to run it» upgrade.

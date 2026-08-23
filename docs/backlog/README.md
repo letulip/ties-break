@@ -1,0 +1,46 @@
+---
+type: index
+status: current
+area: backlog
+canonical: false
+last-reviewed: 2026-08-22
+---
+
+# The backlog – every recorded piece of unbuilt work, indexed
+
+The owner, 23.08: «я посмотрел, что у нас в беклоге пусто-пусто, хотя вроде бы запланированных
+задач у нас было довольно много. Нужно проанализировать всё, что у нас есть нереализованного и
+создать файлики для беклог… со ссылками на спеки».
+
+**Every file here is a POINTER, never a copy.** An entry names what remains, links WHERE it is
+specified, what blocks it, and its rough size – the argument stays in the plan or spec it links. A
+backlog file that restates a plan is a fork that rots; one that points stays true. When work ships,
+the row is removed here and the plan's own status note is the record.
+
+Built by sweeping: every plan in `docs/plans/`, the flagged follow-ups inside shipped specs, the
+2026-08 reviews' P1–P9 and TB-01..24 proposals, the round ledgers' open boxes (re-verified against
+the code on main, 23.08), and the engine's own «its own wave» comments.
+
+## The files
+
+| file | what it holds |
+| --- | --- |
+| [college-the-remainder.md](college-the-remainder.md) | What round 24's college wave did not build: the re-entry screen, the freeze's refused controls, the between-year decisions, the portrait ART ORDER, the ranking price |
+| [the-private-life-layer.md](the-private-life-layer.md) | The largest unbuilt layer: steps 1–8 (spirit, the standing, the beats), the psychologist, form-and-slump, and everything paused against it |
+| [advertising-and-fame.md](advertising-and-fame.md) | The face-and-court plan's steps 3–6: fame, refusal, her own account, obligations – gated on the private life |
+| [the-team-around-her.md](the-team-around-her.md) | The coach's unbuilt job (training-dials §7–§8), «why pay a coach», the coach-edge re-measures, the staff share and masseur tunes |
+| [the-living-world.md](the-living-world.md) | The field's phase 2: the pro contour (aging, results that move), field-pro fatigue, the J universes, name pools, the champion news, the thin top of the ladder, the 14U event, weather |
+| [screens-and-cards.md](screens-and-cards.md) | Owner-asked surfaces nobody built: the in-tournament player card (the folder's oldest open item), the Team card, the Moments gallery, the per-card counter |
+| [modes-and-the-prologue.md](modes-and-the-prologue.md) | The childhood prologue 6→14, the «until the next decision» speed, truthful onboarding, mom/dad, the difficulty wrapper |
+| [injuries-gear-and-open-bugs.md](injuries-gear-and-open-bugs.md) | Kit wear on holiday (thrice asked), the recklessness-injury proposal with its numbers, post-return fragility, and the two no-repro defects |
+| [the-quality-rig.md](the-quality-rig.md) | The twelve a11y defects, Playwright S3's matrix/axe/publishing, P8's system back, P9's lint/coverage/release discipline, the round-22 spec gap, the wake lock |
+| [the-git-reviewer.md](the-git-reviewer.md) | The owner's 23.08 ask: an assistant reviewing every change against the repo's own law – shaped here as a PR-level reviewer, with the decisions he owns |
+| [awaiting-his-word.md](awaiting-his-word.md) | The pure-ruling queue: the Slam label, the dormant HandoffView fields, the balance methodology – plus cross-references to every ruling parked inside a theme |
+| [the-shop-and-the-broker.md](the-shop-and-the-broker.md) | The owner's round-23 ask: assets, price drift and the elite broker – design intent for what money becomes once the tennis stops needing it |
+| [season-life-future.md](season-life-future.md) | The 25.07 capture: §1 (coach-as-choice) has since SHIPPED as the tiers; §2's injury/mental-health beats still wait on their named missing systems |
+
+## Reading order for a new wave
+
+Route from [now-next-later.md](../now-next-later.md) first – it is the only current delivery
+document. This folder is the reservoir behind it: when a *Next* slot opens, the themes above are
+where the candidates live.
