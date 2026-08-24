@@ -30,9 +30,15 @@ const BARREL = 'src/engine/world.ts'
 const OUTPUT = 'tools/generated/world-symbol-map.md'
 // The barrel opens on an import, so it has no banner comment to read. It is the only module here
 // whose area has to be stated rather than derived – and what it owns is the integration core.
+// ⚠ RE-WORDED 24.08 (R2-10) AND DELIBERATELY CARRIES NO LINE COUNT. It used to end "what genuinely
+// still lives in the 3,600-line file"; the persisted schema and the five weekly phases have left,
+// so the number was wrong the day the first one landed – and TOK-07's rule is that a volatile count
+// inside a comment rots faster than anything around it. The generated header one line down PRINTS
+// the current size from the file itself, which is the honest place for it.
 const BARREL_LABEL =
-  'THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely ' +
-  'still lives in the 3,600-line file'
+  'THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize ' +
+  'trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that ' +
+  'calls the five phases in `world/phase*.ts`'
 
 const args = process.argv.slice(2)
 const check = args.includes('--check')
