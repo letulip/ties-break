@@ -131,9 +131,22 @@ export function resolveCollegeBill(world: WorldState): void {
   const weekly = Math.round(quote.familyPerYearCents / WEEKS_PER_YEAR)
   if (weekly <= 0) return
   world.fundsCents -= weekly
+  // ⚠⚠ `expense`, AND IT WAS `income` FROM v51 UNTIL R2-01 (review-principles-2026-08-23, PROD-06).
+  // The SIGN was always right – `amountCents` has been negative since the line was written, and every
+  // money AGGREGATE in this game folds by sign rather than by type (`accrueFinance` splits
+  // earned/spent on `amountCents > 0`; `financeWindow` and `financeSeries` split income/expense on the
+  // per-CATEGORY total; the Money screen's rows are keyed by category and toned by sign). That is why
+  // the arithmetic never moved and the defect survived a whole round: nothing that adds up money ever
+  // asked this field.
+  //
+  // ⚠ WHAT DID ASK IT WAS THE PROSE. `WeekRecapCard`'s handwritten scrap under the painting is
+  // `weekEvents.find(e => e.type === 'expense').text`, so on every college week the one bill the
+  // family actually pays was invisible to the one card whose job is to say where the week's money
+  // went – it fell through to the empty string. A row that is a debit in the ledger and an 'income'
+  // to the feed is two answers to one question, and this is the half that was wrong.
   addEvent(world, {
     week: world.week,
-    type: 'income',
+    type: 'expense',
     category: 'tuition',
     text: "The family's share of the college year",
     amountCents: -weekly,

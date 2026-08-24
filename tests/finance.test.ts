@@ -9,11 +9,16 @@ import {
   toSnapshot,
   financeWindow,
   availabilityStatus,
+  resolveCollegeBill,
   KID_ID,
   PARENT_INCOME_CENTS,
   START_AGE_YEARS,
   type WorldState,
 } from '../src/engine/world'
+// R2-01's control arm writes one row by hand, and `addEvent` is the ledger's own choke point rather
+// than a re-export on the barrel – see world.ts's note at the `financeWindow` re-export.
+import { addEvent } from '../src/engine/world/ledger'
+import { COLLEGE_TIERS } from '../src/engine/collegeOffer'
 import { DEFAULT_PROFILE, type FinanceWeek } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, isTierAgeOpen, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -200,6 +205,125 @@ describe('financeWindow — pure fold over financeWeeks', () => {
     // net always equals the signed sum of byCategory
     const signed = Object.values(win.byCategory).reduce((s, v) => s + (v ?? 0), 0)
     expect(win.netCents).toBe(signed)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ R2-01 – THE COLLEGE BILL IS AN EXPENSE (review-principles-2026-08-23 PROD-06 / R2-01)
+// =================================================================================================
+//
+// From v51 until this fix `resolveCollegeBill` wrote the family's weekly share of the college year
+// as `type: 'income'` with a NEGATIVE `amountCents`. The sign was right and the classification was
+// not, so the row was a debit in the ledger and an earning to the feed.
+//
+// ⚠⚠ WHY THIS FILE AND NOT A COLLEGE ONE. The claim under test is about the LEDGER's classification
+// – the thing this file is for – and the second case below is the half that matters: the money
+// arithmetic every screen prints must NOT move, because it never read the field that was wrong. The
+// control is the defect itself, kept as a live comparison rather than a sentence.
+//
+// ⚠ NO SCHEMA MOVE, and it is checked here rather than asserted in prose: both 'income' and
+// 'expense' were already members of `WorldEventType`, so no persisted SHAPE changes, no
+// `SAVE_SCHEMA_VERSION` bump, no migration and no golden fixture. Historical saves keep their old
+// rows, which stays truthful about what the engine actually wrote – the same discipline v44's
+// 'facility' split kept when it back-filled nothing.
+
+/** A career enrolled at a place that costs the family exactly `familyPerYearCents` a year, with an
+ *  EMPTY ledger so the fold below sees the bill and nothing else. Everything `resolveCollegeBill`
+ *  reads is set by hand – `inCollege` is derived from the span, and the price comes off the
+ *  persisted offer – so this needs no career walk and no tick. */
+function enrolledAt(seed: string, familyPerYearCents: number): WorldState {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE })
+  world.college = {
+    fromWeek: world.week,
+    untilWeek: world.week + 4 * WEEKS_PER_YEAR,
+    doneWeek: null,
+    years: [],
+    pendingCallUp: null,
+    pendingLeague: null,
+  }
+  world.fork = {
+    askedWeek: world.week,
+    answer: 'college',
+    offer: {
+      quotes: [
+        {
+          tier: 'state',
+          costPerYearCents: COLLEGE_TIERS.state.costPerYearCents,
+          athleticShare: 0.5,
+          needShare: 0,
+          familyPerYearCents,
+          open: true,
+        },
+      ],
+      chosen: 'state',
+      canPayPerYearCents: null,
+    },
+  }
+  world.events = []
+  world.financeWeeks = []
+  world.careerTotals = { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
+  return world
+}
+
+/** $15,600 a year divides into fifty-two exactly, so the weekly quote is a round $300 and every
+ *  figure below is the same number rather than a rounding of it. */
+const TUITION_PER_YEAR_CENTS = 15_600_00
+const TUITION_PER_WEEK_CENTS = 300_00
+
+describe('R2-01 — the weekly college bill is booked as an expense', () => {
+  it('⭐ debits the weekly quote and files it as type expense / category tuition, amount negative', () => {
+    const world = enrolledAt('r2-01-bill', TUITION_PER_YEAR_CENTS)
+    const before = world.fundsCents
+
+    resolveCollegeBill(world)
+
+    // 1. funds decrease by the weekly quote – the arithmetic the fix must not touch
+    expect(Math.round(TUITION_PER_YEAR_CENTS / WEEKS_PER_YEAR)).toBe(TUITION_PER_WEEK_CENTS)
+    expect(before - world.fundsCents).toBe(TUITION_PER_WEEK_CENTS)
+
+    // 2/3. one row, negative, and classified as what it is
+    expect(world.events).toHaveLength(1)
+    const row = world.events[0]
+    expect(row.amountCents).toBe(-TUITION_PER_WEEK_CENTS)
+    expect(row.type).toBe('expense')
+    expect(row.category).toBe('tuition')
+
+    // ⚠ AND THAT IS THE BEHAVIOURAL HALF, not a restatement of the line above. The by-type readers
+    // in the app are the PROSE ones – `WeekRecapCard`'s handwritten scrap under the painting is
+    // `weekEvents.find(e => e.type === 'expense').text` – so before this fix the family's only
+    // college-week outgoing was invisible to every one of them and visible to none.
+    expect(world.events.filter((e) => e.type === 'expense')).toHaveLength(1)
+    expect(world.events.filter((e) => e.type === 'income')).toHaveLength(0)
+  })
+
+  it('⚠ and the money totals do NOT move: every fold the screens read is by SIGN, never by type', () => {
+    const fixed = enrolledAt('r2-01-fold-fixed', TUITION_PER_YEAR_CENTS)
+    resolveCollegeBill(fixed)
+
+    // THE CONTROL IS THE DEFECT ITSELF – the identical signed row under the type it used to carry.
+    // If any money fold ever starts reading `type`, these two stop matching and this test goes red.
+    const defective = enrolledAt('r2-01-fold-defective', TUITION_PER_YEAR_CENTS)
+    addEvent(defective, {
+      week: defective.week,
+      type: 'income',
+      category: 'tuition',
+      text: "The family's share of the college year",
+      amountCents: -TUITION_PER_WEEK_CENTS,
+    })
+
+    expect(financeWindow(fixed.financeWeeks, 0)).toEqual(financeWindow(defective.financeWeeks, 0))
+    expect(fixed.careerTotals).toEqual(defective.careerTotals)
+
+    // ...and both are what the signed ledger says, which is what the Money screen and the season
+    // wrap-up print: one tuition bucket, an expense, no income, net equal to the signed sum.
+    const win = financeWindow(fixed.financeWeeks, 0)
+    expect(win.byCategory).toEqual({ tuition: -TUITION_PER_WEEK_CENTS })
+    expect(win.incomeCents).toBe(0)
+    expect(win.expenseCents).toBe(TUITION_PER_WEEK_CENTS)
+    expect(win.netCents).toBe(-TUITION_PER_WEEK_CENTS)
+    expect(fixed.careerTotals.earnedCents).toBe(0)
+    expect(fixed.careerTotals.spentCents).toBe(TUITION_PER_WEEK_CENTS)
+    expect(fixed.careerTotals.prizeCents).toBe(0)
   })
 })
 
