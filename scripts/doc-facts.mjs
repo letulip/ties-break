@@ -22,8 +22,16 @@ const read = (p) => readFileSync(p, 'utf8')
 const fail = []
 
 // 1. The save schema, quoted in the saves context pack.
-const schema = /SAVE_SCHEMA_VERSION = (\d+)/.exec(read('src/engine/world.ts'))?.[1]
-if (!schema) fail.push('doc-facts: SAVE_SCHEMA_VERSION not found in src/engine/world.ts')
+// ⚠ RE-AIMED, NOT WEAKENED (R2-10 step 1, 24.08). The constant was DECLARED in `src/engine/world.ts`
+// until the persisted schema moved to `src/engine/world/state.ts`; `world.ts` re-exports it, so the
+// public API is unchanged but the DECLARATION – the only place the literal `= 59` is written – is
+// there now. The check reads the declaring module for the same reason it always did: a re-export
+// carries no number to compare. Both halves of the guard are the ones that were here before, and
+// the absent-constant branch still FAILS loudly rather than skipping – which is exactly how this
+// move was caught the minute it happened instead of going green against a stale doc.
+const SCHEMA_HOME = 'src/engine/world/state.ts'
+const schema = /SAVE_SCHEMA_VERSION = (\d+)/.exec(read(SCHEMA_HOME))?.[1]
+if (!schema) fail.push(`doc-facts: SAVE_SCHEMA_VERSION not found in ${SCHEMA_HOME}`)
 else {
   const p = 'docs/context/saves-and-worker.md'
   const lines = read(p).split('\n')
@@ -31,7 +39,7 @@ else {
   if (i < 0) fail.push(`doc-facts: ${p} no longer states the schema version – restore the sentence or retire this check`)
   else {
     const said = /`SAVE_SCHEMA_VERSION` is v(\d+)/.exec(lines[i])[1]
-    if (said !== schema) fail.push(`${p}:${i + 1} says schema v${said}; src/engine/world.ts says v${schema}`)
+    if (said !== schema) fail.push(`${p}:${i + 1} says schema v${said}; ${SCHEMA_HOME} says v${schema}`)
   }
 }
 
