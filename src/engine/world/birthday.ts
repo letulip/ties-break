@@ -49,8 +49,11 @@ import { ageInWords, birthdayTurning } from './age'
 import { guardNotEndedForGood } from './endings'
 // ⭐ R2-18: the college band is chosen by a FACT rather than by an age - see `COLLEGE_BAND` below.
 import { inCollege } from './college'
-import { BIRTHDAY_DAY_NOUN } from '../../shared/protocol'
-import type { BirthdayGift, BirthdayOption, BirthdayPrompt, BirthdayRecord } from '../../shared/protocol'
+// ⭐ R2-09: the gift SHAPE and the day's noun are engine facts and live in a leaf of their own –
+// see the cycle note at the top of world/birthdayGift.ts. They used to sit in shared/protocol.
+import { BIRTHDAY_DAY_NOUN } from './birthdayGift'
+import type { BirthdayGift } from './birthdayGift'
+import type { BirthdayOption, BirthdayPrompt, BirthdayRecord } from '../../shared/protocol'
 import type { WorldState } from '../world'
 
 // =================================================================================================

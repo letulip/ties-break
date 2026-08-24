@@ -9,7 +9,10 @@
 // note is also RATIONED (WEEK_NOTE_CHANCE) - a quiet week that says nothing is the point.
 import { rngFromSeed } from '../rng'
 import { bodyGroupOf, bodyPartOf, type BodyGroup } from '../body'
-import { BIRTHDAY_DAY_NOUN, type DiaryFacts } from '../../shared/protocol'
+// ⭐ R2-09: the noun moved to an engine leaf; the FACTS shape is still the wire's (see the cycle
+// note in world/birthdayGift.ts – this module is inside world/birthday.ts's own import closure).
+import { BIRTHDAY_DAY_NOUN } from '../world/birthdayGift'
+import type { DiaryFacts } from '../../shared/protocol'
 import { ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof } from './words'
 
 // --- W2: THE ORDINARY WEEK GETS THE SAME SCRAP AND THE SAME HAND ------------------------------

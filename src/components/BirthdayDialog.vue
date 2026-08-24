@@ -14,7 +14,7 @@
 // ⚠ AND THERE IS NO PRICE ON THIS SCREEN. The owner: «про цену момент, давай не будем это учитывать
 // в нашем кошельке вообще.» Nothing is charged, so nothing may be shown – a displayed price that is
 // never taken would be a lie on the screen. There is no cents value anywhere in this component,
-// because there is none on the wire either (see protocol `BirthdayGift`: the field does not exist).
+// because there is none on the wire either (engine/world/birthdayGift.ts: the field does not exist).
 //
 // ⭐ SHE ASKS FOR SOMETHING, AND NOTHING MARKS THE ANSWER. The owner, 11.08: «отличный ход написать в
 // этом попапе что-то вроде "она просила …" и один из вариантов это удовлетворит, другие нет», and

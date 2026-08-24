@@ -17,6 +17,7 @@ import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 // at length, INCLUDING documenting what it deliberately no longer does, so a `not.toContain` over
 // raw source fails on a note that merely names the thing it forbids.
 import { codeOf } from './helpers/source'
+import { engineModuleSource } from './worldSource'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -260,9 +261,12 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
     // The key left App.vue with the header – no second copy can drift out of step.
     expect(app).not.toContain('KID_HINT_KEY')
     // NOT in the save: no store/engine surface knows the key.
-    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts', '../src/shared/protocol.ts']) {
+    // ⚠ WIDENED by R2-09 for the protocol arm, NOT weakened: `shared/protocol` is a barrel since
+    // the split, so protocol.ts alone is re-export lines and could not hold the key either way.
+    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts']) {
       expect(read(rel)).not.toContain('kidAvatarHint')
     }
+    expect(engineModuleSource('../shared/protocol')).not.toContain('kidAvatarHint')
   })
 
   it('the hint copy obeys the player-copy rules: short dash, no Cyrillic', () => {

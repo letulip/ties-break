@@ -44,7 +44,9 @@ import {
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
-import type { BirthdayGift } from '../src/shared/protocol'
+// ⚠ RE-AIMED by R2-09, not weakened: `BirthdayGift` left the wire format for the engine leaf that
+// owns the catalogue's shape (src/engine/world/birthdayGift.ts). Same type, same assertions.
+import type { BirthdayGift } from '../src/engine/world/birthdayGift'
 
 /** Every gift that can be on screen together: a band's own list plus the day, which is offered in
  *  every band (spec §2a). Three of a band's gifts are drawn, so ANY pair of them can co-occur and

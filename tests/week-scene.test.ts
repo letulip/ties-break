@@ -25,7 +25,7 @@
 //      story existing. That is the difference between a valve and the game hiding something, and it is
 //      one `&&` away from being broken from either side.
 import { describe, it, expect } from 'vitest'
-import { worldSource } from './worldSource'
+import { engineModuleSource, worldSource } from './worldSource'
 import { existsSync } from 'node:fs'
 import { readFileSync } from 'node:fs'
 import {
@@ -561,7 +561,12 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
     expect(rule).toContain("const AUTO_OPEN_OFF_KEY = 'tb-week-story-off'")
     // ...and nothing about it is in the protocol: a preference is not a fact about her career, and the
     // save is at v26 with a migration ladder and golden saves over it.
-    const protocol = read('../src/shared/protocol.ts')
+    // ⚠ WIDENED by R2-09, NOT weakened. `shared/protocol` is a barrel since the split, and a
+    // negative asked of a file that holds only re-export lines is a guard that cannot fail. The
+    // claim was always about the protocol SURFACE, so it is now asked of the whole module set
+    // (barrel + every src/shared/protocol/*.ts). Mutation-checked: putting `weekStory` on any part
+    // turns this red.
+    const protocol = engineModuleSource('../shared/protocol')
     expect(protocol).not.toContain('weekStory')
     expect(protocol).not.toContain('tb-week-story-off')
   })
