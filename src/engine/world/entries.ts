@@ -241,12 +241,22 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
     // and act 3 is where those grow teeth). WHO took it goes on the paper.
     raiseEntryCancelLetter(world.offers, world.week, event, TIERS[event.tier].label, releasedBy)
   }
+  // ⭐ R2-02 – AND BOTH ROWS BELOW SAY WHICH ENTRY THEY ARE ABOUT, IN STRUCTURE. `releaseEntry` is
+  // the last place in the engine that still knows: the id has already left `world.entries`,
+  // `seasonEntries.rows` and the two cap ledgers by the time anything reads back, and below the pro
+  // rungs no letter is raised either – so without this the tournament survives only inside the
+  // sentence. That is precisely how `InjuryStopDialog`'s cancelled row went blind on 05.08, and the
+  // shared `RELEASE_LINE_PREFIX` below only made the coupling a symbol instead of a spelling: a
+  // reader still had to take a sentence apart to learn a fact. One optional field on the row it was
+  // already writing ends that. See `WorldEventEntryRef`; no schema move, no migration.
+  const entryRef = { id: eventId, label: TIERS[event.tier].label, week: event.week, releasedBy }
   addEvent(world, {
     week: world.week,
     type: 'income',
     category: 'income',
     text: `Entry refunded: ${TIERS[event.tier].label}`,
     amountCents: fee,
+    entryRef,
   })
   // ⚠ THE FEED ROW OBEYS THE SAME RULE AS THE LETTER, and it has to: the letter is one tap away in
   // the inbox, this line is in the news, and a player who reads only the news must not be told he
@@ -272,7 +282,7 @@ export function releaseEntry(world: WorldState, eventId: string, releasedBy: Ent
       line = `${RELEASE_LINE_PREFIX.college}${label} – ${weekLabel(event.week)}, she is taking the scholarship.`
       break
   }
-  addEvent(world, { week: world.week, type: 'entry', text: line })
+  addEvent(world, { week: world.week, type: 'entry', text: line, entryRef })
 }
 
 /** R10-13: CANCEL an entry, at any point before its week starts. THE ESCAPE HATCH.

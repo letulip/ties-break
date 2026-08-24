@@ -649,7 +649,13 @@ describe('R9-9/R9-21a — UI wiring', () => {
     const dialog = readFileSync(new URL('../src/components/InjuryStopDialog.vue', import.meta.url), 'utf8')
     expect(dialog).toContain('playSfx')
     expect(dialog).toContain('injury')
-    expect(dialog).toContain('Entry refunded')
+    // ⭐ R2-02 REPOINTED: this used to pin the literal `'Entry refunded'`, because the popup found
+    // the money by `startsWith('Entry refunded')` on the news feed – the raw-literal half of the
+    // defect R2-02 removed. The claim ("the popup reports the refunds") is unchanged; its source is
+    // now the typed `Snapshot.injuryReport.refundCents`, and the sentence the player reads is the
+    // one pinned here. The engine's feed line still says "Entry refunded"; the UI no longer reads it.
+    expect(dialog).toContain('refundCents')
+    expect(dialog).toContain('Fees refunded')
     const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
     expect(app).toContain('InjuryStopDialog')
     expect(app).not.toContain('she picked up an injury – see the news')

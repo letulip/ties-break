@@ -17,6 +17,11 @@
 // completed-match CONTROL green – which is what says the control is a control rather than a second
 // copy of the same assertion. `circumstance` returning its off-court branch unconditionally kills
 // both dialog retirement tests. Both mutations restored.
+//
+// ⭐ R2-02 (23.08): the dialog is a FORMATTER now – it renders `snapshot.injuryReport` and parses no
+// feed prose at all – so the rows below are fed through `buildInjuryReport`, which is where the
+// `retiredId === KID_ID` question moved. Same rows, same assertions, same mutation (forcing
+// `kind` to 'off-court' in the projection still kills both retirement tests).
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -38,8 +43,10 @@ import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
 import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
 import { KID_ID } from '../../src/engine/world'
+import { buildInjuryReport } from '../../src/engine/world/snapshot'
 import { weekLabel } from '../../src/shared/dates'
 import type { MatchOptions, MatchPlayer } from '../../src/engine/match/types'
+import type { WorldState } from '../../src/engine/world'
 import type { Snapshot } from '../../src/shared/protocol'
 
 // =================================================================================================
@@ -61,10 +68,26 @@ function retirementEvent(over: Record<string, unknown> = {}) {
   }
 }
 
+/** ⭐ R2-02 – THE ROWS GO THROUGH THE PROJECTION NOW, and that is where they always belonged.
+ *
+ *  The dialog stopped reading `snapshot.events`: it renders `snapshot.injuryReport`, which
+ *  `buildInjuryReport` assembles from the same structured facts these rows carry
+ *  (`match.retiredId === KID_ID`, `friendly`). So the rows below are unchanged and every assertion
+ *  in this block is unchanged – they are simply fed to the function that now answers the question,
+ *  and the answer is rendered by a formatter. Building the report by hand here instead would be this
+ *  file asserting its own answer back. */
 function mountDialog(events: unknown[] = []) {
   const game = useGameStore()
+  const world = { week: 40, injury: { ...INJURY }, events, entries: [], season: [] } as unknown as WorldState
   game.$patch({
-    snapshot: { week: 40, ageYears: 16, careerId: 'c1', injury: { ...INJURY }, events } as unknown as Snapshot,
+    snapshot: {
+      week: 40,
+      ageYears: 16,
+      careerId: 'c1',
+      injury: { ...INJURY },
+      injuryReport: buildInjuryReport(world),
+      events,
+    } as unknown as Snapshot,
   })
   return mount(InjuryStopDialog)
 }

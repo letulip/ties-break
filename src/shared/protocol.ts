@@ -239,6 +239,41 @@ export interface WorldEvent {
    *  (0 = champion), so the year-end wrap-up (Round 5 item 16/21) can read the
    *  season's best result straight off the event log – no extra persisted state. */
   finishIdx?: number
+  /** ⭐ R2-02 – THE ENTRY A ROW IS ABOUT, AS A FACT RATHER THAN AS A SENTENCE.
+   *
+   *  ⚠ THIS IS THE ONE FACT THE INJURY REPORT COULD NOT DERIVE, AND IT WAS MEASURED BEFORE IT WAS
+   *  ADDED. `releaseEntry` takes the id out of `world.entries`, out of `seasonEntries.rows` and out
+   *  of the two entry-cap week ledgers, and (below the pro rungs) raises no letter – so a probe run
+   *  on a real career at the onset week found the released tournaments written down NOWHERE except
+   *  in English: two `income` rows reading "Entry refunded: Local Open" and two `entry` rows reading
+   *  "Taken out of Local Open – W12 '31, she is not fit for that week." Re-deriving them from the
+   *  calendar is not possible either: the layoff window held 30 candidate events and four of them
+   *  were the same rung at the same fee, so the fee cannot name which two she actually held. That is
+   *  why `InjuryStopDialog` was parsing prose for four years' worth of rounds, and why the fix has to
+   *  put the fact on the row rather than teach the reader a better regex.
+   *
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – the `MatchResult.retired?` precedent to the letter. Absent
+   *  is exactly what every historical save and every hand-built fixture already mean ("this row is
+   *  not about one entry"), so no migration is owed, no golden fixture is added and
+   *  `SAVE_SCHEMA_VERSION` does not move. Written today by `releaseEntry` on the two rows it emits –
+   *  the refund and the feed line – so a reader can total the money and name the tournaments from
+   *  the same structured field instead of from two different sentences. */
+  entryRef?: WorldEventEntryRef
+}
+
+/** The season event a `WorldEvent` is ABOUT: enough to name it on a screen without re-reading the
+ *  sentence the engine wrote about it. `week` is the week the tournament is PLAYED in, never the
+ *  week the row was written – those differ by the whole length of a layoff, and confusing them is
+ *  the bug this type exists to make unwritable. */
+export interface WorldEventEntryRef {
+  /** the `SeasonEvent.id` – stable, and the only handle that survives a copy edit */
+  id: string
+  /** the tier's display label at the time the row was written (`TIERS[tier].label`) */
+  label: string
+  /** the week the tournament is played in */
+  week: number
+  /** who took her off the list; absent on a row that is not a release */
+  releasedBy?: EntryReleaseReason
 }
 
 // --- finance aggregate (Part A) ----------------------------------------------
@@ -846,6 +881,66 @@ export interface SnapshotInjury {
    *  the return date on screen. Absent (never 0) when he has taken none, so every pre-v59 save and
    *  every masseur-less career serialises byte-for-byte as before. */
   weeksSaved?: number
+}
+
+// --- ⭐ R2-02: the injury report, as facts ------------------------------------
+// WHY THIS TYPE EXISTS. `InjuryStopDialog` recovered four domain facts by reading the news feed's
+// ENGLISH – `startsWith(RELEASE_LINE_PREFIX.injury)` for the cancelled entries and a raw
+// `startsWith('Entry refunded')` for the money – and the file's own header records the same defect
+// biting once before: it matched `'Withdrew from '`, the engine stopped writing that sentence on
+// 05.08, and the row that reports what a layoff COST went silently blind for a week. A copy edit
+// must not be able to break a domain fact. So the engine states the facts and the dialog spells
+// them; the prose stays exactly as it is, because the feed is the player's record.
+//
+// ⚠ DERIVED, NOT PERSISTED. Everything below is rebuilt by `buildInjuryReport` on every snapshot
+// from structured state – `world.injury`, `world.season`, `world.entries`, the layoff window, and
+// the STRUCTURED fields of `WorldEvent` (`match.retiredId`, `entryRef`, `amountCents`). No world
+// field was added, no migration written and `SAVE_SCHEMA_VERSION` did not move.
+
+/** HOW THE LAYOFF STARTED, as the ENGINE distinguishes it – which is two doors and not a taxonomy.
+ *  `world/injury.ts` calls them `InjuryCause = 'week' | 'retirement'` and keeps that type private;
+ *  the only trace either leaves on state is `WorldEvent.match.retiredId === KID_ID`, so these three
+ *  values are exactly what a snapshot can honestly tell apart – the retirement, the retirement in a
+ *  PRACTICE match (`WorldEvent.friendly`), and everything else.
+ *
+ *  ⚠ `'off-court'` IS VAGUE ON PURPOSE, and the dialog's own comment already argued it: the weekly
+ *  roll can land on a training week, a travel week, an arrival week or a family holiday, and the
+ *  engine records which of those it was NOWHERE. Naming one would be inventing a fact. */
+export type InjuryCircumstanceKind = 'retired-match' | 'retired-friendly' | 'off-court'
+
+/** One tournament on the injury report: the id it is, the words it is called, the week it is in.
+ *  The dialog formats the week (`weekLabel`); the wire carries the number. */
+export interface InjuryEntryRow {
+  /** the `SeasonEvent.id` */
+  id: string
+  /** the tier's display label, e.g. "Local Open" */
+  label: string
+  /** the week the tournament is played in */
+  week: number
+}
+
+/** ⭐ WHAT THIS INJURY DID, AS DATA. Non-null exactly while `injury` is non-null; the dialog that
+ *  reads it mounts only on the onset week (`injury.sinceWeek === week`), which is the week
+ *  `cancelled` and `refundCents` describe. */
+export interface InjuryReport {
+  /** the door she came in by */
+  kind: InjuryCircumstanceKind
+  /** the opponent she stopped against, when the retirement row names one */
+  oppName?: string
+  /** the round she had reached, said the way a draw sheet says it ("Quarterfinal", "Round of 32") */
+  stage?: string
+  /** the tournament she stopped in */
+  eventLabel?: string
+  /** what the layoff CANCELLED at onset: entries whose lists were still open, so the fee came back
+   *  and the slot with it. Usually short and often empty – lists close two weeks out, so a 1-2 week
+   *  absence reaches nothing at all. */
+  cancelled: InjuryEntryRow[]
+  /** ...and what it STRANDED: entries inside the layoff whose lists had ALREADY closed, so she keeps
+   *  her place, does not appear, and the week resolves as a walkover with the fee forfeited.
+   *  "Nothing cancelled" is not "nothing lost" – round-20 #2. */
+  stranded: InjuryEntryRow[]
+  /** total of the fees that came back with `cancelled`, in cents */
+  refundCents: number
 }
 
 // --- Season planner (schema v13) ---------------------------------------------
@@ -3313,6 +3408,11 @@ export interface Snapshot {
   condition: number
   /** the kid's active injury, or null when healthy. Always null in slice B (Slice C populates it). */
   injury: SnapshotInjury | null
+  /** ⭐ R2-02 – WHAT THAT INJURY DID, as facts rather than as sentences: the door it came in by, the
+   *  entries the layoff cancelled, the ones it stranded, and the money that came back. Non-null on
+   *  exactly the weeks `injury` is. The dialog that renders it is a FORMATTER: it parses no feed
+   *  prose for anything it shows, so re-wording a news line can no longer silence a report. */
+  injuryReport: InjuryReport | null
   /** whether physio recovery is active (its cost lever is billed in Slice C; in B this just
    *  reflects/sets the flag, default = every coach tier but self-coached). */
   physioActive: boolean
