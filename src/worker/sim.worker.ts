@@ -53,7 +53,7 @@ import {
   deleteCareer,
   touchCareer,
 } from '../db/saves'
-import type { StopReason, ToWorker, ToUI } from '../shared/protocol'
+import type { ErrorReply, SnapshotReply, StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
 // The RNG stream position is part of determinism, and since v35 IT LIVES ON THE WORLD
@@ -113,20 +113,25 @@ function makeCareerId(seed: string): string {
   return `c-${seed}-${Date.now().toString(36)}`
 }
 
+/** ⚠ R2-05: the return type is the SNAPSHOT arm, not the `ToUI` union. That is what deleted the two
+ *  `(msg as { recovered?: true })` casts this function used to need – a union has no `recovered` to
+ *  assign to, its own arm does. The two `if`s are unchanged and the asymmetry between them is
+ *  deliberate: `recovered` is only ever ADDED when true (never written as `false`), which is the
+ *  shape tests/sim-worker-pipeline.test.ts asserts on a clean restore. */
 function snapshotMsg(
   id: number,
   w: WorldState,
   opts: { recovered?: boolean; restoredFrom?: string; stopReasons?: StopReason[] } = {},
-): ToUI {
-  const msg: ToUI = {
+): SnapshotReply {
+  const msg: SnapshotReply = {
     id,
     ok: true,
     type: 'snapshot',
     snapshot: toSnapshot(w, opts.stopReasons),
     revision: committedRevision,
   }
-  if (opts.recovered) (msg as { recovered?: true }).recovered = true
-  if (opts.restoredFrom !== undefined) (msg as { restoredFrom?: string }).restoredFrom = opts.restoredFrom
+  if (opts.recovered) msg.recovered = true
+  if (opts.restoredFrom !== undefined) msg.restoredFrom = opts.restoredFrom
   return msg
 }
 
@@ -198,7 +203,7 @@ async function mutate(
   id: number,
   baseRevision: number,
   command: (world: WorldState, rng: Rng) => StopReason[] | void,
-): Promise<ToUI> {
+): Promise<SnapshotReply> {
   if (!world) throw new Error('No active career')
   if (baseRevision !== committedRevision) throw new StaleRevisionError(committedRevision, baseRevision)
 
@@ -212,6 +217,21 @@ async function mutate(
   return snapshotMsg(id, candidate, { stopReasons })
 }
 
+/**
+ * ⚠ THE SWITCH IS EXPLICIT AND STAYS EXPLICIT – a `case` per command, no handler table, no dynamic
+ * dispatch on `msg.type`. Two things depend on that and neither is negotiable: `noFallthroughCasesInSwitch`
+ * plus this declared return type make a MISSING case a compile error today (TS2366 – the function
+ * would end without returning), and the guard pins in tests/dev-fast-forward.test.ts read the `tick`
+ * case as source text between two `case` markers. A registry would delete both properties silently.
+ *
+ * ⚠ R2-05 – AND WHICH ARM EACH CASE RETURNS IS NOW WRITTEN DOWN, in `REPLY_BY_COMMAND`
+ * (src/shared/protocol.ts). The declared type here stays the full `ToUI` on purpose: this is the
+ * OTHER side of `postMessage`, and a Worker is a separate program – nothing the compiler can say
+ * here binds the client's expectations. What binds them is tests/worker-reply-correlation.test.ts,
+ * which drives this switch over every key of that table and compares the real reply's arm to it.
+ * The builders help from below: `mutate`/`snapshotMsg` return `SnapshotReply` and `errorMsg` returns
+ * `ErrorReply`, so the thirty-odd mutation cases are the right shape by construction.
+ */
 async function handle(msg: ToWorker): Promise<ToUI> {
   switch (msg.type) {
     // ------------------------------------------------------------------ lifecycle
@@ -588,7 +608,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
   }
 }
 
-function errorMsg(id: number, err: unknown): ToUI {
+function errorMsg(id: number, err: unknown): ErrorReply {
   if (err instanceof StaleRevisionError) {
     return { id, ok: false, error: err.message, code: 'STALE_REVISION', revision: err.currentRevision }
   }

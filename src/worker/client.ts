@@ -1,4 +1,4 @@
-import type { ToWorker, ToUI } from '../shared/protocol'
+import { REPLY_BY_COMMAND, type ReplyFor, type ToWorker, type ToUI } from '../shared/protocol'
 
 // UI-side wrapper: request/response correlation over postMessage.
 //
@@ -30,6 +30,22 @@ export class WorkerRestartError extends Error {
   }
 }
 
+/** R2-05 — the worker answered a command with a reply the protocol does not pair it with. This is a
+ *  PROTOCOL BUG, not a runtime condition a player can hit: `REPLY_BY_COMMAND` is compile-enforced on
+ *  this side of the wire, and tests/worker-reply-correlation.test.ts holds the worker's switch to
+ *  the same table. Deliberately NOT a `WorkerRestartError` — nothing is wedged and reloading the
+ *  autosave would recover nothing, so the store must surface it rather than silently reload. */
+export class ReplyMismatchError extends Error {
+  constructor(
+    readonly command: ToWorker['type'],
+    readonly expected: string,
+    readonly received: string,
+  ) {
+    super(`The simulation answered '${command}' with a '${received}' reply where '${expected}' was expected`)
+    this.name = 'ReplyMismatchError'
+  }
+}
+
 // Omit must distribute over the message union, else only shared fields survive.
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
 export type WorkerRequest = DistributiveOmit<ToWorker, 'id'>
@@ -37,10 +53,33 @@ export type WorkerRequest = DistributiveOmit<ToWorker, 'id'>
 interface PendingEntry {
   resolve: (msg: ToUI) => void
   reject: (err: Error) => void
+  /** the command this entry is waiting on — kept for one reason, R2-05: the reply arrives on a
+   *  shared `onmessage` with nothing but an id on it, so this is the only place the pairing can be
+   *  recovered and checked against `REPLY_BY_COMMAND` */
+  command: ToWorker['type']
   /** the worker generation this request was posted into — a response or failure from any OTHER
    *  generation must never touch it */
   generation: number
   timer: ReturnType<typeof setTimeout>
+}
+
+/**
+ * R2-05, THE RUNTIME HALF OF THE CORRELATION — one place, every command.
+ *
+ * The compile-time half (`ReplyFor<K>` below) binds this side of `postMessage`; nothing can bind the
+ * other side, because a Worker is a separate program that could be built from a different revision
+ * of the protocol. So the reply is checked against the table that typed the request, HERE, where the
+ * command and its answer are both in hand — which is the whole of "correlate requests with replies".
+ *
+ * ⚠ FAILURES ARE NOT CHECKED AND MUST NOT BE. The `ok: false` arm carries no `type` at all: every
+ * command may refuse, and a refusal is a legitimate answer to all of them. Checking only the ok arms
+ * is what keeps the error path — engine refusals, STALE_REVISION, SAVE_CONFLICT — byte-for-byte the
+ * behaviour it was.
+ */
+function replyMismatch(command: ToWorker['type'], reply: ToUI): ReplyMismatchError | null {
+  if (!reply.ok) return null
+  const expected = REPLY_BY_COMMAND[command]
+  return reply.type === expected ? null : new ReplyMismatchError(command, expected, reply.type)
 }
 
 let worker: Worker | null = null
@@ -113,6 +152,15 @@ function spawn(): Worker {
     if (!p || p.generation !== gen) return // late response from a dead generation: ignored
     pending.delete(e.data.id)
     clearTimeout(p.timer)
+    // R2-05: the reply is checked against the command that asked for it BEFORE it can resolve, so a
+    // mispaired reply is a typed rejection rather than a value the caller reads the wrong fields off.
+    // ⚠ The generation and timer bookkeeping above is untouched and stays FIRST: a mismatch settles
+    // this one request, exactly like a serialization failure does, and leaves the worker serving.
+    const mismatch = replyMismatch(p.command, e.data)
+    if (mismatch) {
+      p.reject(mismatch)
+      return
+    }
     p.resolve(e.data)
   }
   w.onerror = (e) => teardown(gen, new WorkerRestartError('crash', e.message || 'Sim worker crashed'))
@@ -128,10 +176,26 @@ function ensureWorker(): Worker {
   return worker
 }
 
-export function request(msg: WorkerRequest, transfer: Transferable[] = []): Promise<ToUI> {
+/**
+ * Send one command and get back THE reply that command answers with (R2-05 / TB-06 / PR-07).
+ *
+ * The return type is `ReplyFor<K>` – `K`'s own ok arm, plus the single failure arm – rather than the
+ * `ToUI` union of every reply this used to hand back. So `request({ type: 'advance', … })` resolves
+ * to a snapshot-or-error and `request({ type: 'save', … })` to a slots-or-error, and reading
+ * `.snapshot` off the second is a compile error instead of `undefined` at runtime.
+ *
+ * ⚠ `K` IS INFERRED FROM THE `type` FIELD OF THE ARGUMENT and nothing else has to be spelled out at
+ * the call site – every existing `request({ type: '…', … })` call is unchanged source text. Passing a
+ * value of the whole `WorkerRequest` union still works and degrades honestly: `K` widens to every
+ * command and the result widens back to `ToUI`.
+ */
+export function request<K extends ToWorker['type']>(
+  msg: WorkerRequest & { type: K },
+  transfer: Transferable[] = [],
+): Promise<ReplyFor<K>> {
   const id = nextId++
   const full = { ...msg, id } as ToWorker
-  return new Promise((resolve, reject) => {
+  return new Promise<ReplyFor<K>>((resolve, reject) => {
     const w = ensureWorker()
     const gen = generation
     const timer = setTimeout(() => {
@@ -144,7 +208,11 @@ export function request(msg: WorkerRequest, transfer: Transferable[] = []): Prom
         ),
       )
     }, timeoutFor(msg.type))
-    pending.set(id, { resolve, reject, generation: gen, timer })
+    // ⚠ THE ONE WIDENING IN THE WHOLE CORRELATION, and it is where the correlation is ESTABLISHED
+    // rather than assumed. `postMessage` delivers a bare `ToUI`; only `REPLY_BY_COMMAND` says which
+    // arm belongs to this command, and `replyMismatch` above enforces exactly that before this
+    // resolve is ever called – so the promise cannot settle with an arm `ReplyFor<K>` excludes.
+    pending.set(id, { resolve: resolve as (m: ToUI) => void, reject, command: msg.type, generation: gen, timer })
     try {
       w.postMessage(full, transfer)
     } catch (err) {

@@ -4067,3 +4067,105 @@ export type ToUI =
       /** on STALE_REVISION / SAVE_CONFLICT: the revision the conflict was measured against */
       revision?: number
     }
+
+// =================================================================================================
+// R2-05 — WHICH REPLY ANSWERS WHICH COMMAND (TB-06 / PR-07, open since 18.08).
+//
+// THE DEFECT. `request()` returned `Promise<ToUI>` – the union of every reply – so the store had to
+// narrow by hand after every single command: 36 copies of `if (res.type === 'snapshot')`. That line
+// is not a check, it is a SILENCE: pair a command with the wrong reply and the `if` is simply false,
+// the snapshot is never published, and the screen keeps showing last week with no error anywhere.
+// A wrong pairing was a runtime surprise, and the compiler had nothing to say about it.
+//
+// THE SHAPE CHOSEN, and why this one. A readable type map keyed by the command name, stated ONCE as
+// a runtime table and read back as a type. Typed methods (a `client.advance()` per command) were the
+// alternative the review offers; forty wrappers would restate every payload a second time – and this
+// repo already keeps `LADDER_LABEL` + `LADDER_TRACKS` exactly this way, one table doing both jobs, so
+// the map is the shape the codebase already reads fluently. `satisfies` is what makes it total: a new
+// `ToWorker` arm with no row here fails to compile, and a row for a command that no longer exists
+// fails too – neither can be forgotten, and there is no second copy to go stale (the hazard
+// vite.config.ts's heavy-test note describes: "three statements of one fact").
+//
+// ⚠ THE TABLE IS THE ONE PLACE THIS FACT IS WRITTEN. `src/worker/client.ts` reads it at runtime to
+// verify every reply against the command that asked for it, `src/stores/game.ts` reads the TYPE so
+// each action's reply is already the right arm, and tests/worker-reply-correlation.test.ts drives
+// the real worker switch over every key in it. Add a command: add its row, and all three follow.
+// ⚠ NOT A SCHEMA CHANGE. Nothing here is persisted – these are wire/message types, not `WorldState`.
+// SAVE_SCHEMA_VERSION, engine/migrations.ts and tests/fixtures/saves/ are untouched by construction.
+// =================================================================================================
+
+/** Every successful reply arm. */
+export type OkReply = Extract<ToUI, { ok: true }>
+/** The single failure arm – it carries no `type`, which is why the map below only names ok arms. */
+export type ErrorReply = Extract<ToUI, { ok: false }>
+
+export type SnapshotReply = Extract<OkReply, { type: 'snapshot' }>
+export type SlotsReply = Extract<OkReply, { type: 'slots' }>
+export type CareersReply = Extract<OkReply, { type: 'careers' }>
+export type ExportedReply = Extract<OkReply, { type: 'exported' }>
+export type PeekReply = Extract<OkReply, { type: 'peek' }>
+
+/**
+ * The reply each command answers with, on success. Grouped in the worker's own dispatch order so
+ * the two can be read side by side.
+ *
+ * ⚠ A FAILURE IS ALWAYS POSSIBLE AND IS NOT IN HERE. Every command may come back as the `ok: false`
+ * arm instead – an engine refusal, STALE_REVISION, SAVE_CONFLICT – so `ReplyFor` unions this row
+ * with `ErrorReply`. The map says "if it worked, this is the shape", nothing more.
+ */
+export const REPLY_BY_COMMAND = {
+  // lifecycle – a world crosses the wire, so a Snapshot comes back
+  new: 'snapshot',
+  loadCareer: 'snapshot',
+  restoreSlot: 'snapshot',
+  importSave: 'snapshot',
+  // mutations – every one of them commits and publishes the committed world
+  tick: 'snapshot',
+  advance: 'snapshot',
+  enterEvent: 'snapshot',
+  withdrawEvent: 'snapshot',
+  cancelEntry: 'snapshot',
+  skipEvent: 'snapshot',
+  tournamentReveal: 'snapshot',
+  tournamentSkip: 'snapshot',
+  tournamentClose: 'snapshot',
+  bookVacation: 'snapshot',
+  cancelVacation: 'snapshot',
+  bookPractice: 'snapshot',
+  hireCoach: 'snapshot',
+  hireMasseur: 'snapshot',
+  setMasseurSessions: 'snapshot',
+  setMasseurTravels: 'snapshot',
+  setCoachOnEventWeeks: 'snapshot',
+  setCoachOnJuniorEvents: 'snapshot',
+  cancelPractice: 'snapshot',
+  setPlan: 'snapshot',
+  decideKnock: 'snapshot',
+  chooseGift: 'snapshot',
+  signOffer: 'snapshot',
+  refuseOffer: 'snapshot',
+  setPhysio: 'snapshot',
+  setKitGrade: 'snapshot',
+  answerFork: 'snapshot',
+  answerRetirement: 'snapshot',
+  resumeFromCollege: 'snapshot',
+  endCollegeEarly: 'snapshot',
+  // persistence – these answer with the slot/career LIST they just changed, never with a world
+  save: 'slots',
+  saveNamed: 'slots',
+  deleteSlot: 'slots',
+  deleteCareer: 'careers',
+  // queries
+  getSnapshot: 'snapshot',
+  listSlots: 'slots',
+  listCareers: 'careers',
+  exportSave: 'exported',
+  peekSave: 'peek',
+} as const satisfies Record<ToWorker['type'], OkReply['type']>
+
+/** The ok reply `K` answers with – `REPLY_BY_COMMAND` read as a type. */
+export type OkReplyFor<K extends ToWorker['type']> = Extract<OkReply, { type: (typeof REPLY_BY_COMMAND)[K] }>
+
+/** What `request(K)` resolves to: `K`'s own ok arm, or the one failure arm. This is the type the
+ *  whole of R2-05 exists to produce – `Promise<ToUI>` is what it replaces. */
+export type ReplyFor<K extends ToWorker['type']> = OkReplyFor<K> | ErrorReply
