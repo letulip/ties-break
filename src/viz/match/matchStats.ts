@@ -19,14 +19,25 @@
 //
 // Note: `AnnotatedMatch` carries no player skills, so the two players are passed in for the serve
 // skill and the age the speed model needs (a documented widening of the item's one-arg signature).
+//
+// ⚠ AND THIS FILE MOVED HERE FROM `src/engine/match/matchStats.ts` (R2-06 / ARCH-04), CODE
+// UNCHANGED. It is a BOX SCORE: a table of readings for a screen, derived from a match the engine
+// has already decided. Nothing in `src/engine`, `src/worker` or `src/db` has ever imported it – its
+// only callers are `TournamentFlow.vue`, `PracticeFlow.vue` and `composables/matchStatTable.ts` –
+// while it imported the runtime clock out of `viz/matchClock.ts`, which is the engine depending on
+// the presentation layer. The other two options both cost more and bought less: relocating the
+// clock into a shared leaf would have dragged `viz/timeline.ts` with it (`computeEndsSwaps`), and
+// leaving the module in the engine behind a contract would have kept a presentation-only concept
+// filed under the engine. So the module moved to where its readers and its dependency already were.
+// The direction is now viz -> engine throughout, and `tests/engine-viz-direction.test.ts` holds it.
 
-import type { AnnotatedMatch } from '../../viz/types'
-import type { MatchPlayer, Side } from './types'
-import { pointServeSpeeds } from './serveSpeed'
+import type { AnnotatedMatch } from '../../shared/matchViz'
+import type { MatchPlayer, Side } from '../../engine/match/types'
+import { pointServeSpeeds } from '../../engine/match/serveSpeed'
 // R17 #24: the duration is derived by viz/matchClock.ts and read here rather than computed again.
 // Same rule the serve speed above lives by, and the same reason - the live clock on the court and
 // the "duration" row of this box score are ONE number, so there is one place that decides it.
-import { matchDurationSeconds } from '../../viz/matchClock'
+import { matchDurationSeconds } from '../matchClock'
 
 export interface MatchStats {
   /** rally shots that ended the point as a clean winner, by side */

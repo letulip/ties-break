@@ -49,7 +49,7 @@
 //
 // ⚠ AND IT IS THE SAME NUMBER THE BOX SCORE PRINTS. `MatchStats.durationEstimate` calls
 // `matchDurationSeconds` rather than keeping its own arithmetic, for the reason the serve speed
-// already lives by (engine/match/matchStats.ts): two readings of one fact, computed twice, are how
+// already lives by (viz/match/matchStats.ts): two readings of one fact, computed twice, are how
 // two readings of one fact come to disagree.
 //
 // ⚠ NO RNG, in this module or under it. The inputs are the shot counts, the game/set flags and the

@@ -1,6 +1,6 @@
 // THE FIVE ROWS OF A BOX SCORE, AND THE LINE UNDER IT - written once, read by both match surfaces.
 //
-// ⚠ WHY IT EXISTS. `engine/match/matchStats.ts` already owns the ARITHMETIC and always did; what was
+// ⚠ WHY IT EXISTS. `viz/match/matchStats.ts` already owns the ARITHMETIC and always did; what was
 // duplicated is everything between that and the table: the row interface, the five labels, their
 // order, the side-swap that turns an (a, b) pair into a (her, them) pair, the `km/h` suffix on the
 // serve row, and the one-decimal rally figure. PracticeFlow.vue and TournamentFlow.vue each carried
@@ -19,7 +19,7 @@
 // ⚠ `MatchStatRow`, NOT `StatRow`. `src/components/ui/StatRow.vue` is a different thing entirely -
 // the Money screen's icon/label/figure row - and the two local interfaces this replaces were both
 // called `StatRow`, one import away from being confused with it.
-import type { MatchStats } from '../engine/match/matchStats'
+import type { MatchStats } from '../viz/match/matchStats'
 import type { Side } from '../engine/match/types'
 
 /** One line of the box score, already turned round to her point of view. */
