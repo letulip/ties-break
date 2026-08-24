@@ -12,6 +12,7 @@
 //     exactly the facts that rot silently.
 import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
+import { engineModuleSource } from './worldSource'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { onboardingHeroUrl } from '../src/art/preload'
 
@@ -211,7 +212,12 @@ describe('R: every play style has a pose that ships, and a colour to paint it', 
   const styles = region('const PLAY_STYLES: {', 'const RADAR_OUTER')
   /** The `PlayStyle` union, read out of the protocol rather than listed here – so a fifth style
    *  added there fails every test below until R can offer it, paint it and draw it. */
-  const protocol = read('../src/shared/protocol.ts')
+  // ⚠ RE-AIMED by R2-09 – the EXTRACTION, not the assertion. `shared/protocol` is a BARREL since the
+  // split, so reading protocol.ts alone would slice a file that holds only re-export lines and
+  // `indexOf` would return -1 – the silent-swallow failure this codebase already has a scar from.
+  // `engineModuleSource('../shared/protocol')` is the barrel PLUS every src/shared/protocol/*.ts
+  // part, so the pin is location-independent and the remaining moves need no test edit.
+  const protocol = engineModuleSource('../shared/protocol')
   const IDS = [...protocol
     .slice(protocol.indexOf('export type PlayStyle'), protocol.indexOf('\n', protocol.indexOf('export type PlayStyle')))
     .matchAll(/'([^']+)'/g)].map((m) => m[1])

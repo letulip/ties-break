@@ -14,7 +14,7 @@
 //      a per-day editor, and a second week button that computes its own state.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { componentLogic } from './worldSource'
+import { componentLogic, engineModuleSource } from './worldSource'
 // Comments stripped, so a note that NAMES a forbidden call is not read as making it – the house
 // helper, now in tests/helpers/source.ts. These are source-reading tests, and this codebase
 // documents at length, including documenting what it deliberately did not do.
@@ -945,9 +945,14 @@ describe('the days cross themselves out', () => {
     expect(cross).toContain("const PACE_KEY = 'tb-day-cross-pace'")
     expect(cross).toContain("return localStorage.getItem(OFF_KEY) === '1'")
     expect(cross).toContain('} catch {')
-    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts', '../src/shared/protocol.ts']) {
+    // ⚠ WIDENED by R2-09 for the protocol arm, NOT weakened: `shared/protocol` is a barrel since
+    // the split, so reading protocol.ts alone would ask a file that holds only re-export lines – a
+    // guard that cannot fail. The module-set reader is the surface the claim was always about.
+    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts']) {
       expect(read(rel), `${rel} must not know the flag`).not.toContain('dayCross')
     }
+    expect(engineModuleSource('../shared/protocol'), 'no protocol module may know the flag')
+      .not.toContain('dayCross')
   })
 
   it('the switch is on the settings screen, in the shape its four siblings have', () => {

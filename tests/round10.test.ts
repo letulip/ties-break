@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { worldSource, worldFunction } from './worldSource'
+import { engineModuleSource, worldSource, worldFunction } from './worldSource'
 import { readFileSync, readdirSync } from 'node:fs'
 import {
   createWorld,
@@ -539,7 +539,9 @@ describe('R10-13 — cancel a committed entry (fee forfeited)', () => {
   })
 
   it('is reachable from the UI: protocol message, store action, and a no-refund confirm', () => {
-    const protocol = readFileSync(new URL('../src/shared/protocol.ts', import.meta.url), 'utf8')
+    // ⚠ RE-AIMED by R2-09 – the EXTRACTION, not the assertion. The command union left the barrel
+    // for src/shared/protocol/messages.ts; the module-set reader finds it wherever it now lives.
+    const protocol = engineModuleSource('../shared/protocol')
     expect(protocol).toContain("type: 'cancelEntry'")
     const worker = readFileSync(new URL('../src/worker/sim.worker.ts', import.meta.url), 'utf8')
     expect(worker).toContain("case 'cancelEntry'")
