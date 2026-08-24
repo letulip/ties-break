@@ -28,3 +28,4 @@ R2-18's stage predicate. The status note that is the record is the 13-response's
 | Reasonable-player corridor standardised (R2-14) | injury-landscape spec (his-cadence) | next bench run | S | Next |
 | R2-16 = E1's design (derived preference, parent responds) | 13-response | private-life steps 1–2 (owner's pause) | M | Parked |
 | Wave-5 hygiene list | 07-roadmap wave 5 | волны A–C | rolling | Later |
+| ⭐ A real `offer` STOP for the multi-week advance – R2-13 phase 1 covers offers through the span digest and the inbox cue only; a true stop needs a new `StopReason`, i.e. a `protocol.ts` change that was C1's during the wave and is free now | [07-roadmap](../review-principles-2026-08-23/07-proposals-and-roadmap.md) R2-13 + D1's finding 1 | nothing – S | **Next** |

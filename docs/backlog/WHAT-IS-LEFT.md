@@ -180,3 +180,12 @@ P9's lint/coverage/release discipline) · [the-git-reviewer.md](the-git-reviewer
 shipped; only the Action wrapper remains) ·
 [season-life-future.md](season-life-future.md) (the 25.07 capture, §1 shipped as the coach tiers).
 The states themselves live in those files – this page routes, it does not duplicate.
+
+## ⚙ Added after the sweep – found by wave D as it landed (24.08)
+
+- **A real `offer` stop for the four-week advance** – R2-13's own item text lists offers among the
+  things the span must stop before, and phase 1 does NOT stop for one: it surfaces them through the
+  span digest and the existing inbox cue. A true stop needs a new `StopReason`, which is a
+  `protocol.ts` change – blocked during the wave because that file was being split, and free now.
+  State **Next**, size S. `docs/backlog/the-r2-programme.md` carries the row.
+
