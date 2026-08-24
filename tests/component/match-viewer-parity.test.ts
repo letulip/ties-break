@@ -188,9 +188,19 @@ interface Arm {
   emits: { finish: number; endApplause: number }
 }
 
+/** The half of the viewer's props an arm chooses. `mode` is REQUIRED by the component and is spelled
+ *  out here rather than spread from a bag: a `Record<string, unknown>` spread would hide a missing
+ *  required prop from `vue-tsc`, which is the trap the prop's own comment is about. */
+interface ArmProps {
+  mode: 'live' | 'replay'
+  finalMatch?: boolean
+  proceedLabel?: string | null
+  temperatureC?: number | null
+}
+
 /** One run of the recorded match, captured paint by paint. `script` may click controls at a frame. */
 async function runArm(
-  props: Record<string, unknown>,
+  props: ArmProps,
   script: { atFrame: number; label: string }[] = [],
   preClicks: string[] = [],
 ): Promise<Arm> {
