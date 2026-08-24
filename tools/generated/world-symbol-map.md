@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-269 exported names across 31 owning modules.
+270 exported names across 31 owning modules.
 
 ## Areas
 
@@ -22,8 +22,8 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 13 |
+| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 12 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 12 |
-| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 8 |
@@ -236,6 +236,23 @@ THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a tr
 - `sponsorNeedMet` – `src/engine/world/sponsors.ts`
 - `travelCostFor` – `src/engine/world/sponsors.ts`
 
+### `src/engine/world/birthday.ts`
+
+HER BIRTHDAY, AND WHAT YOU GIVE HER.
+
+- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_COLLEGE_BAND` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
+- `birthdayHeading` – `src/engine/world/birthday.ts`
+- `birthdayHistory` – `src/engine/world/birthday.ts`
+- `birthdayOffer` – `src/engine/world/birthday.ts`
+- `birthdayOptions` – `src/engine/world/birthday.ts`
+- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
+- `chooseGift` – `src/engine/world/birthday.ts`
+- `giftNoun` – `src/engine/world/birthday.ts`
+- `pendingBirthday` – `src/engine/world/birthday.ts`
+
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
@@ -252,22 +269,6 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `resolveCollegeDeparture` – `src/engine/world/endings.ts`
 - `resolveEndings` – `src/engine/world/endings.ts`
 - `wasThereAChild` – `src/engine/world/endings.ts`
-
-### `src/engine/world/birthday.ts`
-
-HER BIRTHDAY, AND WHAT YOU GIVE HER.
-
-- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
-- `birthdayHeading` – `src/engine/world/birthday.ts`
-- `birthdayHistory` – `src/engine/world/birthday.ts`
-- `birthdayOffer` – `src/engine/world/birthday.ts`
-- `birthdayOptions` – `src/engine/world/birthday.ts`
-- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
-- `chooseGift` – `src/engine/world/birthday.ts`
-- `giftNoun` – `src/engine/world/birthday.ts`
-- `pendingBirthday` – `src/engine/world/birthday.ts`
 
 ### `src/engine/world/mandatory.ts`
 
