@@ -18,8 +18,15 @@
 //   F. THE DRIFT GUARD – a seventh refusal cannot be added without this file noticing.
 //
 // ⚠ NO NEW STOPPING MODEL. Every case below drives `advanceWeeks`, the function that has owned this
-// since the first slice; nothing here re-implements a halt, and the phase-1 work added no stop
-// reason, no snapshot field and no schema version.
+// since the first slice; nothing here re-implements a halt, and no snapshot field and no schema
+// version was added by phase 1 or by the `'offer'` stop that finished its item text.
+//
+// ⭐ RE-AIMED, NOT WIDENED (the offer stop). Phase 1 added no stop reason and this file said so; the
+// offer stop adds exactly one, and it enters through the SAME `stops.add` / collect-then-break loop
+// as the thirteen before it. What changed in this file is one case per clause – B gets the halt and
+// its negative, C gets the new slot pinned from both sides, D gets the refusal list's silence about
+// it asserted rather than assumed, A gets the law re-run over a span that stops on it – and nothing
+// here was relaxed to let the new member through.
 import { describe, expect, it, vi } from 'vitest'
 import {
   ACADEMY_NOTICE,
@@ -43,13 +50,14 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
+import { readFileSync } from 'node:fs'
 import { worldFunction } from './worldSource'
-import { before } from './helpers/source'
+import { before, region } from './helpers/source'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
 import { multiOffered } from '../src/composables/weekAction'
-import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, STOP_PRECEDENCE, type Offer, type OfferState, type StopReason } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // Two cases walk real careers (242 and 829 weeks). Deterministic but slow, and the suite runs many
@@ -121,6 +129,39 @@ function injectEvent(world: WorldState, e: { week: number; tier: TierId; deadlin
   return event
 }
 
+/** ONE LETTER ON THE TABLE, dated a week the span is about to reach.
+ *
+ *  ⚠ THE SHAPE IS `settleTourSeasonNotice`'S OWN – a `tour` letter carrying `notice: 'season'` – and
+ *  the two arms that use it differ in `state` and in nothing else, because `state` is the entire
+ *  rule the `'offer'` stop is made of. The `open` arm is the CONTROL rather than a claim that the
+ *  desk writes decisions: it exists so the negative cannot pass by the letter never being read.
+ *  Deadline far enough out that `expireOffers` cannot take it before the span reaches it. */
+function putLetter(world: WorldState, o: { week: number; state: OfferState }): void {
+  const letter: Offer = {
+    id: `r2-13-letter-${o.week}`,
+    kind: 'tour',
+    week: o.week,
+    deadlineWeek: o.week + 4,
+    terms: { notice: 'season' },
+    state: o.state,
+  }
+  world.offers.push(letter)
+}
+
+/** WHERE A REASON SITS IN THE PRECEDENCE, AND IT THROWS WHEN THE REASON IS NOT THERE.
+ *
+ *  ⚠ `list.indexOf(x)` RETURNS -1 FOR A MEMBER WITH NO SLOT, AND -1 IS LESS THAN EVERYTHING – so
+ *  `indexOf(a) < indexOf(b)` passes cheerfully when `a` was never in the list at all. That is the
+ *  same swallowed -1 the source-pin ratchet exists for (scripts/pin-ratchet.mjs says so, and says
+ *  why the array form cannot be ratcheted: it is written identically to the string form). An
+ *  ordering assertion about a member that has been DELETED from STOP_PRECEDENCE is exactly the
+ *  mutation these cases have to fail on, so the lookup throws instead of returning a number. */
+function slotOf(list: readonly StopReason[], reason: StopReason): number {
+  const i = list.indexOf(reason)
+  if (i < 0) throw new Error(`'${reason}' has no slot in STOP_PRECEDENCE`)
+  return i
+}
+
 /** The span, run as ONE press. Returns the reasons and how many weeks it actually bought. */
 function span(world: WorldState, rng: Rng): { stops: StopReason[]; weeks: number } {
   const before = world.week
@@ -186,6 +227,40 @@ describe('R2-13 A – a four-week press taps the identical MAIN sequence as four
     expect(four.world.rngMain.n, 'the arm drew').toBeGreaterThan(0)
     expect(four.world.rngMain).toEqual(ones.world.rngMain)
     expect(JSON.stringify(four.world)).toBe(JSON.stringify(ones.world))
+  })
+
+  it('⚠⚠ ...and it holds on a span that stops on the OFFER – the law over the new reason', () => {
+    // THE LAW, RE-RUN OVER THE MEMBER THIS WAVE ADDED, and it is re-run rather than argued from the
+    // case above because a new stop is exactly the kind of change that could break it: a reason
+    // derived from a state the loop had not read before is one line away from being a reason derived
+    // from a DRAW the loop had not taken before, and the second of those moves the stream.
+    //
+    // ⚠ THE ARM IS A REAL CAREER AND THE LETTER IS THE ENGINE'S, as in block B – the same walk into
+    // the brands' window, both arms, so the two are comparable at week 45 before either presses.
+    const four = quietCareer('r2-13-offer')
+    grantBand(four.world, 400)
+    walkTo(four.world, four.rng, 45)
+    const ones = quietCareer('r2-13-offer')
+    grantBand(ones.world, 400)
+    walkTo(ones.world, ones.rng, 45)
+    expect(JSON.stringify(four.world), 'the two arms start identical').toBe(JSON.stringify(ones.world))
+
+    const { stops, weeks } = span(four.world, four.rng)
+    // ⚠ PROVENANCE BEFORE THE IDENTITY: the arm really stopped, really stopped for THIS reason, and
+    // really left weeks on the table. Without these three the equality below is a tautology.
+    expect(stops, 'the span stopped on the offer').toEqual(['offer'])
+    expect(weeks, 'having bought two of the four it offered').toBe(2)
+    expect(weeks, 'so the remaining weeks were NOT consumed').toBeLessThan(MULTI_WEEK_SPAN)
+
+    for (let i = 0; i < weeks; i++) advanceWeeks(ones.world, resumeMain(ones.world.rngMain), 1)
+
+    expect(four.world.rngMain.n, 'the arm drew on MAIN').toBeGreaterThan(0)
+    expect(four.world.rngMain, 'identical register and draw count either way').toEqual(ones.world.rngMain)
+    expect(JSON.stringify(four.world), 'and identical to the last byte, letter included').toBe(
+      JSON.stringify(ones.world),
+    )
+    // ...and the letter really is in both worlds, so the identity is over a state that contains it.
+    expect(four.world.offers.length, 'the letter is part of what was compared').toBeGreaterThan(0)
   })
 
   it('⚠ the law holds at EVERY prefix – a span of k weeks is k single presses, for every k', () => {
@@ -272,6 +347,67 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     const { stops, weeks } = span(world, rng)
     expect(stops).toEqual(['academy'])
     expect(weeks).toBe(3)
+  })
+
+  it('⭐ OFFER – halts on the week a letter he can still answer lands (walked, not injected)', () => {
+    // R2-13's item text lists «offers» among the events the span must stop before, and phase 1
+    // shipped without one: the letter reached the player through the span digest and the inbox dot,
+    // which is exactly the pair of surfaces round-23 #16 proved insufficient one case above.
+    //
+    // ⚠ THE LETTER IS THE ENGINE'S OWN AND NOTHING IS PUSHED INTO `world.offers`. The career is
+    // walked into the brands' window (`SPONSOR_WINDOW_WEEKS`, the off-season plus two) with a
+    // domestic standing the bottom rung clears, and `reviewSponsors` writes on the week its own dice
+    // say so. A case that injected the paper would prove the stop reads an array; this one proves it
+    // reads the game.
+    const { world, rng } = quietCareer('r2-13-offer')
+    grantBand(world, 400)
+    walkTo(world, rng, 45)
+    expect(world.offers, 'nothing on the table before the window opens').toEqual([])
+
+    const { stops, weeks } = span(world, rng)
+    expect(stops, 'the letter, and nothing else that week').toEqual(['offer'])
+    expect(weeks, 'two of the four – the quiet weeks before it were spent, the letter stopped it').toBe(2)
+    expect(world.week, 'and the span ended ON the arrival week').toBe(47)
+    const letter = world.offers.find((o) => o.week === world.week)
+    expect(letter, 'a real letter, dated the week the span stopped on').toBeTruthy()
+    expect(letter!.state, 'and it is a DECISION – open, with a deadline he can still meet').toBe('open')
+    expect(letter!.deadlineWeek, 'which is the window close, not this week').toBeGreaterThan(world.week)
+    expect(toSnapshot(world, stops).offerOpen, 'the inbox dot agrees with the stop').toBe(true)
+
+    // ⚠⚠ THE OTHER HALF OF THE RULE, AND IT IS THE HALF THAT KEEPS THE PILL A PILL: the SAME letter,
+    // still open and still live for four more weeks, does NOT stop the next span. The stop is about
+    // the paper ARRIVING, not about it lying there – measured, a "there is a live offer" rule costs
+    // 152 extra presses per 72 seasons against this rule's 5, and halts five weeks running.
+    const again = span(world, rng)
+    expect(again.stops, 'the second press is not stopped by the letter it already reported').not.toContain('offer')
+    expect(again.weeks, 'and time really moved').toBeGreaterThan(0)
+    expect(world.offers.some((o) => o.state === 'open'), 'with the letter still open and unanswered').toBe(true)
+  })
+
+  it('⭐ ...and a NOTICE does not halt it – the negative that keeps the rule honest', () => {
+    // ⚠ THIS IS THE CASE THE FEATURE IS AT RISK FROM, NOT THE ONE ABOVE. The inbox carries two kinds
+    // of paper and `OfferState` names the difference: an `open` letter expires unanswered, an `info`
+    // letter «is born terminal – there is nothing to sign and nothing to refuse». Every desk writes
+    // `info` – the entry receipts, the tour's due / penalty / suspension / season notices, the
+    // academy's three letters, a brand's goodbye – and a stop for each of those is the four-week pill
+    // turned back into a press a week, which is the disease R2-13 exists to cure.
+    //
+    // The payload below is `settleTourSeasonNotice`'s own shape. Both arms are the SAME letter on the
+    // SAME seed dated the SAME week; `state` is the only variable, because `state` is the whole rule.
+    const notice = quietCareer('r2-13-offer-notice')
+    putLetter(notice.world, { week: notice.world.week + 2, state: 'info' })
+    const quiet = span(notice.world, notice.rng)
+    expect(quiet.stops, 'a notice is not a decision, so it is not a stop').toEqual([])
+    expect(quiet.weeks, 'and the span ran its whole course through it').toBe(MULTI_WEEK_SPAN)
+    expect(notice.world.offers[0].week, 'the notice really did land inside the span').toBeLessThanOrEqual(notice.world.week)
+
+    // ⚠ THE CONTROL, so the negative above cannot pass by the letter never being seen. One character
+    // of difference – `info` becomes `open` – and the identical fixture halts on the identical week.
+    const decision = quietCareer('r2-13-offer-notice')
+    putLetter(decision.world, { week: decision.world.week + 2, state: 'open' })
+    const halted = span(decision.world, decision.rng)
+    expect(halted.stops, 'the same paper, answerable, stops it').toEqual(['offer'])
+    expect(halted.weeks, 'on its own arrival week').toBe(2)
   })
 
   it('KNOCK – halts on the sore ankle and then refuses to restart until it is answered', () => {
@@ -404,7 +540,7 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     // MECHANICAL, on round11.test.ts's own precedent: the list is hand-written, because derived from
     // STOP_PRECEDENCE it could never catch the member nobody wrote a case for.
     const covered: StopReason[] = [
-      'birthday', 'injury', 'medical', 'walkover', 'academy', 'knock',
+      'birthday', 'injury', 'medical', 'walkover', 'academy', 'offer', 'knock',
       'tournament', 'deadline', 'funds', 'season-end', 'fork', 'retirement', 'ending',
     ]
     const advanceCannotRaise: StopReason[] = ['call-up', 'college-league']
@@ -452,6 +588,45 @@ describe('R2-13 C – a week that is two things reports both, in the documented 
     const snap = toSnapshot(world, stops)
     expect(blockingOverlay(snap), 'the queue still says the birthday is the next question').toBe('birthday')
     expect(snap.pending, 'and the reveal is what is on screen until it is closed').toBeTruthy()
+  })
+
+  it("⭐ OFFER's slot is pinned from BOTH sides – the academy leads it, and it leads the wallet", () => {
+    // The new member's precedence is the only thing about it that is a DOCUMENTED FACT rather than a
+    // behaviour, so it is asserted where it can actually be observed: on a week that really is two
+    // things at once, twice, once against each neighbour that a real career can put beside it.
+    //
+    // ⚠ ABOVE IT, 'academy'. The verdict is a change to the family's money that has ALREADY happened
+    // – the travel cover moved whether or not anybody read the letter – and this list is ordered on
+    // exactly that ("they cost her entries and money the moment they land"). An offer is a proposal:
+    // until it is signed the wallet does not know it exists.
+    const withAcademy = quietCareer('r2-13-offer-academy')
+    withAcademy.world.events.push({
+      id: withAcademy.world.nextEventId++,
+      week: 3,
+      type: 'info',
+      text: `${ACADEMY_NOTICE.arrived} – on a full scholarship.`,
+    })
+    putLetter(withAcademy.world, { week: 3, state: 'open' })
+    const both = span(withAcademy.world, withAcademy.rng)
+    expect(both.weeks, 'one week, and it is two things').toBe(3)
+    expect(both.stops, 'both, the verdict first – STOP_PRECEDENCE order').toEqual(['academy', 'offer'])
+    expect(slotOf(STOP_PRECEDENCE, 'academy')).toBeLessThan(slotOf(STOP_PRECEDENCE, 'offer'))
+
+    // ⚠ BELOW IT, 'funds'. A family under water is told again every week it stays under; a letter is
+    // told once and then expires. The reason that cannot come round again leads the one that will.
+    const underWater = quietCareer('r2-13-offer-funds')
+    underWater.world.fundsCents = -1_000_00
+    putLetter(underWater.world, { week: underWater.world.week + 1, state: 'open' })
+    const pair = span(underWater.world, underWater.rng)
+    expect(pair.weeks).toBe(1)
+    expect(pair.stops, 'both, the letter first').toEqual(['offer', 'funds'])
+    expect(slotOf(STOP_PRECEDENCE, 'offer')).toBeLessThan(slotOf(STOP_PRECEDENCE, 'funds'))
+
+    // ...and the toast speaks for the highest-precedence reason that HAS copy (App.vue, R10-16), so
+    // the slot is also the answer to "which sentence does the player read". Both of these have copy.
+    expect(slotOf(STOP_PRECEDENCE, 'offer')).toBeLessThan(slotOf(STOP_PRECEDENCE, 'deadline'))
+    expect(slotOf(STOP_PRECEDENCE, 'walkover'), 'and everything that already cost her money still leads it')
+      .toBeLessThan(slotOf(STOP_PRECEDENCE, 'offer'))
   })
 
   it('⚠ RETIREMENT + SEASON-END on the wrap week: the question leads the report', () => {
@@ -523,6 +698,52 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     expect(multiOffered(snap, 'training'), 'so the quiet week offers the span').toBe(true)
     expect(multiOffered(snap, 'off-season')).toBe(true)
     expect(multiOffered(snap, 'exam')).toBe(true)
+  })
+
+  it('⭐⭐ an unanswered LETTER is a halt and not a refusal – so the pill stays on offer', () => {
+    // ⚠⚠ THE TWO READERS HAVE TO AGREE ABOUT THE NEW REASON AS WELL, AND HERE THEY AGREE BY BOTH
+    // SAYING NOTHING – which is the answer that needs asserting, because it is the one a later
+    // reader is most likely to "fix". `'offer'` HALTS a span and never REFUSES one: an open letter is
+    // not a question standing in front of the week, the parent is allowed to let it expire («the
+    // window is the feature, not a courtesy», engine/offers.ts), and a pill that stood down while
+    // paper lay on the table would be a refusal the engine does not have – the shell inventing a
+    // rule, which is precisely what `multiOffered`'s header forbids.
+    expect([...ADVANCE_REFUSALS], "the refusal list does not name it, and that is the decision").not.toContain('offer')
+
+    // Driven, not asserted from the list: the walked career of block B, standing on the week its
+    // letter arrived, with the letter open and live for four more weeks.
+    const { world, rng } = quietCareer('r2-13-offer')
+    grantBand(world, 400)
+    walkTo(world, rng, 45)
+    expect(span(world, rng).stops, 'the fixture really is standing on an offer stop').toEqual(['offer'])
+    const live = world.offers.find((o) => o.state === 'open')
+    expect(live, 'and the letter really is unanswered').toBeTruthy()
+    expect(live!.deadlineWeek, 'and really still answerable').toBeGreaterThanOrEqual(world.week)
+
+    const snap = toSnapshot(world)
+    expect(snap.offerOpen, 'the inbox dot is lit').toBe(true)
+    expect(advanceRefusal(world), 'and yet the engine can move time').toBeNull()
+    expect(blockingOverlay(snap), 'nothing is blocking the shell either').toBeNull()
+    expect(multiOffered(snap, 'off-season'), 'so the span is still on offer – no reason to withhold it').toBe(true)
+  })
+
+  it('⭐ the offer stop has toast copy, and the copy keeps the house rules', () => {
+    // R10-16's rule, working the other way round (round12.test.ts makes the same check for the
+    // walkover): a stop reason with NO copy and no owning dialog renders the empty popup the owner
+    // hit on 26.07. This one has copy, so the toast can speak for it; and because it has copy it
+    // must also survive the copy rules – short dash, no Cyrillic in a player-facing string.
+    const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
+    const map = region(app, 'const STOP_REASON_TEXT', 'const stopReasons')
+    expect(map).toContain('offer:')
+    const copy = map.match(/\n {2}offer: '([^']*)'/)![1]
+    expect(copy, 'the short dash, never the long one').not.toContain('—')
+    expect(copy, 'no Cyrillic in player copy').not.toMatch(/[Ѐ-ӿ]/)
+    // ...and the sentence keeps the promise only a DECISION can keep. It says the letter can be
+    // answered, which would be a lie over a receipt – which is the copy's own stake in the rule.
+    expect(copy.toLowerCase(), 'it names the surface and the clock').toContain('inbox')
+    expect(copy.toLowerCase()).toContain('deadline')
+    // and it is in the precedence list, or the filter would silently drop it (R11-1's bug class)
+    expect(STOP_PRECEDENCE).toContain('offer')
   })
 
   it('⚠ ...and never on a week the player came to play', () => {

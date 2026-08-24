@@ -162,8 +162,8 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 // ⭐ R2-13 phase 1: the advance's entry gate and the span report, in a leaf module the shell can
 // import without pulling the integration core in. Re-exported under `engine/world` like every other
 // extraction, so the 280-file public API is unchanged.
-import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount } from './world/multiWeek'
-export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount }
+import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount, stoppableOfferWeek } from './world/multiWeek'
+export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount, stoppableOfferWeek }
 export type { SpanWeek } from './world/multiWeek'
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
@@ -3986,6 +3986,17 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // a click, which is exactly what a stop is for. What it may not do is pass in silence, which is
     // the same complaint R12-15's walkover answered.
     if (academySpokeThisWeek(world)) stops.add('academy')
+    // ⭐ R2-13's OWN ITEM TEXT LISTS «OFFERS» AND PHASE 1 DID NOT STOP FOR ONE. The digest reported
+    // the letter and the inbox dot lit, which is exactly the pair of surfaces round-23 #16 proved
+    // insufficient for the academy's verdict: the parent has no reason to open an inbox he was not
+    // told had anything in it, and unlike every other row a span can bury, this one EXPIRES.
+    //
+    // ⚠ THE RULE IS `stoppableOfferWeek`'s, NOT THIS LINE'S, and it is deliberately narrow: a
+    // DECISION (`state: 'open'`) that ARRIVED this week. A notice does not stop the span and a letter
+    // already lying open does not stop it a second time – see world/multiWeek.ts for both halves.
+    // No new stopping model: one more `stops.add` in the same collect-then-break loop as the twelve
+    // above it, so a week that is an offer AND something else still reports both (R11-1).
+    if (stoppableOfferWeek(world)) stops.add('offer')
     if (world.fundsCents < 0) stops.add('funds')
     // W2-ENDINGS. The three that the week may have just produced. `'ending'` is collected rather
     // than returned early so a week that is BOTH an ending and something else (the classic: the

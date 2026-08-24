@@ -31,6 +31,7 @@
 // NOTHING IS ADDED TO THE SAVE AND NOTHING IS ADDED TO THE SNAPSHOT. Every fact below is already
 // persisted (`world.events`) or already on the wire (`Snapshot.events`); the schema does not move.
 import type { StopReason, WorldEvent } from '../../shared/protocol'
+import { isOfferLive } from '../offers'
 import type { WorldState } from '../world'
 import { pendingBirthday } from './birthday'
 import { pendingKnock } from './knock'
@@ -92,6 +93,55 @@ export function advanceRefusal(world: WorldState): StopReason | null {
   if (world.fork !== null && world.fork.answer === null) return 'fork'
   if (world.retirementOffer !== null) return 'retirement'
   return null
+}
+
+/**
+ * ⭐ DID A LETTER THE PARENT CAN STILL ANSWER LAND ON THE WEEK JUST TICKED? The `'offer'` stop's
+ * whole rule, in one predicate, and the two clauses are the two halves of the argument.
+ *
+ * ⚠⚠ 1. A DECISION, NEVER A NOTICE (`isOfferLive`, which reads `state === 'open'` and nothing else
+ * as its first term). The inbox carries both kinds of paper and `OfferState` already draws the line:
+ * an `open` letter is a proposal with a deadline that EXPIRES unanswered, an `info` letter «is born
+ * terminal – there is nothing to sign and nothing to refuse». Everything the desks write is `info` –
+ * the entry receipts and cancellations, the tour's due / penalty / suspension / season notices, the
+ * academy's three letters, a brand's goodbye – and none of it is worth four weeks of a career: a
+ * notice read four weeks late is the same notice, and it is still in the inbox a decade later. The
+ * letters that are NOT the same four weeks late are the three that can be gone: a kit proposal
+ * (`raiseKitOffers`), its renewal (`raiseKitRenewal`) and the advertising deal (`raiseAdOffer`).
+ *
+ * ⚠⚠ 2. ON THE WEEK IT ARRIVED, ONCE (`o.week === world.week`). Without this clause the stop would
+ * read "there is a live offer", and a sponsor window is FIVE weeks wide – so one unanswered letter
+ * would halt four consecutive spans and the four-week pill would be a press a week again, which is
+ * the disease R2-13 exists to cure and not a stronger version of the cure. The parent is allowed to
+ * let a letter lie: «the window is the feature, not a courtesy» (engine/offers.ts). What he is not
+ * allowed to do is never be told it came. This is the same arrival shape every other collected stop
+ * already uses – `academySpokeThisWeek`, `walkoverWeek === world.week`, `injury.sinceWeek ===
+ * world.week` – and it is why the reason is collected and not a refusal: `advanceRefusal` does not
+ * name it, so the next press moves time whatever he decided.
+ *
+ * ⚠⚠ AND BOTH CLAUSES ARE MEASURED RATHER THAN ARGUED. 12 careers walked six seasons each (3744
+ * weeks, 72 seasons, 2551 presses at a span of four), the three candidate rules replayed over the
+ * SAME walk – which is sound here because MAIN input-independence means the world does not depend on
+ * the span rule, so one walk serves as all three arms:
+ *
+ *     rule                                   letters seen   extra presses vs no stop   longest run
+ *     this one (open + arrived)                    57              +5   (+0.20 %)            2
+ *     "any letter dated this week"                127              +5   (+0.20 %)            2
+ *     "there is a live offer at all"              263            +152   (+6.0  %)            5
+ *
+ * The arrival clause is the expensive one to get wrong: without it a single unanswered letter halts
+ * FIVE spans running, one per week of the window, which is the pill demoted back to a weekly press.
+ * The decision/notice clause cost nothing measurable on this sample – all 70 notice-only weeks
+ * already stopped for another reason, because the desks write their receipts on entry-deadline and
+ * tournament weeks by construction – so it is kept for the reason a measurement cannot supply: the
+ * toast tells the player there is something to ANSWER, and over a receipt that sentence is false.
+ *
+ * ⚠ AND IT IS DERIVED, SO NOTHING IS PERSISTED FOR IT. `Offer.week` is the week the paper is dated
+ * and has been in the save since v32; no field is added, no shape gains a member, and
+ * `SAVE_SCHEMA_VERSION` does not move. Pure, zero draws, no mutation.
+ */
+export function stoppableOfferWeek(world: WorldState): boolean {
+  return world.offers.some((o) => o.week === world.week && isOfferLive(o, world.week))
 }
 
 /** One week of a span, with everything that week wrote in the feed. `rows` is never empty – a week

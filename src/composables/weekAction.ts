@@ -144,6 +144,15 @@ export function useWeekAction(): ComputedRef<WeekAction> {
  * So the two readers are the same rule seen from either side of the wire, and
  * `tests/r2-13-advance-span.test.ts` walks a world into every one of the six and asserts they agree.
  *
+ * ⚠⚠ AND `'offer'` IS DELIBERATELY NOT A SEVENTH CLAUSE, WHICH IS A DECISION AND NOT AN OMISSION.
+ * The offer stop HALTS a span and does not REFUSE one: `advanceRefusal` does not name it, so the
+ * engine will happily tick the week after a letter lands, and a pill that stood down while paper lay
+ * on the table would be a refusal the engine does not have – the two readers disagreeing again, in
+ * the direction that produces the R10-16 dead-ish control (a button withheld for a reason nothing
+ * enforces). The parent is allowed to let a letter expire; «the window is the feature, not a
+ * courtesy» (engine/offers.ts), and `snapshot.offerOpen` is the dot that keeps saying so. Asserted
+ * rather than assumed in `tests/r2-13-advance-span.test.ts` block D.
+ *
  * ⚠ WHY THE SNAPSHOT AND NOT THE ENGINE. The shell holds a `Snapshot`, never a `WorldState`; this is
  * the same move App.vue's birthday gate makes ("the engine sets it from `pendingBirthday`, the
  * identical predicate `advanceWeeks` blocks on") and its injury gate after it. Re-asking is not

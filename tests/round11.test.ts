@@ -232,9 +232,17 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // the round exists to make visible, every single year. It is also the first PAIR in this list
     // that co-occurs by construction – the call-up is read off the championship two weeks earlier –
     // and the ordering between them is asserted below.
+    // ⭐ R2-13 ADDED 'offer', AND ITS CASE FOR A SLOT IS THE ONLY ONE HERE MADE OF A CLOCK. Every
+    // member above either has already happened (the medical trio, the academy's verdict, the two
+    // college reports) or waits for the player indefinitely (the knock, the birthday, the fork, the
+    // retirement offer, a paused reveal) or comes round again (funds, deadline, season-end). An open
+    // letter does none of the three: it EXPIRES when its window closes, so a member filtered out of
+    // the return value for want of a slot would not merely go unreported – the deal behind it would
+    // be gone by the time anything else mentioned it. Slotted immediately below 'academy'; the
+    // argument for that exact line is written beside it in protocol/events.ts.
     // ⚠ THE HAND-WRITTEN LIST IS THE POINT OF THIS TEST and must stay hand-written: derived from
     // STOP_PRECEDENCE it could never catch a member that has no slot, which is the whole bug class.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'call-up', 'college-league']
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'offer', 'call-up', 'college-league']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {

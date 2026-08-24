@@ -587,7 +587,14 @@ describe('R10-16 — no popup may render without copy', () => {
   })
 
   it('every StopReason either has toast copy or an owning dialog – and none is both', () => {
-    const reasons: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical']
+    // ⚠ THE LIST IS NOT TOTAL AND THE TITLE OVERSTATES IT – said out loud rather than left for the
+    // next reader to discover. It was the whole union when R10-16 wrote it and nine members have
+    // been added since ('walkover', 'academy', 'knock', 'birthday', 'ending', 'fork', 'retirement',
+    // 'call-up', 'college-league'), each of which needs its own owner/copy verdict decided by
+    // whoever owns that surface. R2-13's `'offer'` is added here because this wave decided its
+    // verdict – TOAST COPY, no dialog, the walkover's and the academy's shape – and a member with
+    // neither would render R10-16's empty popup all over again.
+    const reasons: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'offer']
     const map = region(app, 'const STOP_REASON_TEXT', 'const stopReasonText')
     const owned: Record<string, boolean> = {
       tournament: true, // TournamentFlow
