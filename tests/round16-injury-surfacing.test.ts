@@ -34,6 +34,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { StopReason } from '../src/shared/protocol'
+import { region } from './helpers/source'
 
 const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
 
@@ -134,10 +135,7 @@ describe('#19 – the popup is gated on STATE, not on a screen having been open'
   // the injury report, the new block's prose said "stopReasons" and the negative assertion below went
   // red on a paragraph about a different popup. A range that reaches into the next thing is the
   // hazard CLAUDE.md records; the injury gate ends where its neighbour's explanation begins.
-  const gate = app.slice(
-    app.indexOf('const showInjuryStop'),
-    app.indexOf('// The end-of-season summary popup'),
-  )
+  const gate = region(app, 'const showInjuryStop', '// The end-of-season summary popup')
 
   it('the slice is the injury gate and nothing else – an empty or runaway range proves nothing', () => {
     expect(gate.length).toBeGreaterThan(200)
@@ -172,7 +170,7 @@ describe('#19 – the popup is gated on STATE, not on a screen having been open'
     // here that is NOT symmetric with the trophy cabinet: the report takes the SENTINEL form of
     // `absent`, so a missing key reads as "she has not been told". Dropping the sentinel would flip
     // it to claim-nothing and silence the very report the item exists to deliver.
-    const block = app.slice(app.indexOf('const INJURY_SEEN_PREFIX'), app.indexOf('function dismissInjuryStop'))
+    const block = region(app, 'const INJURY_SEEN_PREFIX', 'function dismissInjuryStop')
     expect(block.length, 'the injury block moved – re-aim, do not widen').toBeGreaterThan(0)
     expect(block, 'a missing key must mean UNREPORTED, never claim-nothing').toContain('{ value: null }')
     // ...and the gate still asks that question rather than a stop reason (the `it` above) – it is

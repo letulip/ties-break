@@ -27,6 +27,7 @@ import { coachSinceWeek, createWorld, hireCoach, tickWeek, toSnapshot } from '..
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 import { allTrainingReads, movedView, read, runCareer, synthView } from './radarFixtures'
+import { region } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // 6. THE COACH LADDER'S SECOND JOB
@@ -190,7 +191,7 @@ describe('training read – NOT ONE NUMBER reaches the card', () => {
 
   it('player copy: short dash only, no em dash, no Cyrillic, and short enough for the tile', () => {
     const source = read('../src/engine/radar.ts')
-    const pools = source.slice(source.indexOf('const MOVE_POOL'), source.indexOf('export function buildTrainingRead'))
+    const pools = region(source, 'const MOVE_POOL', 'export function buildTrainingRead')
     const lines = [...pools.matchAll(/^\s+'([^']+)',$/gm)].map((m) => m[1])
     expect(lines.length).toBeGreaterThanOrEqual(41)
     for (const text of lines) {

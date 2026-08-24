@@ -13,6 +13,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { encodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import { workerHarness } from './helpers/workerHarness'
+import { region } from './helpers/source'
 
 // =================================================================================================
 // P6 (c) — THE DEV FAST-FORWARD CANNOT OUTRUN A DECISION, in two layers.
@@ -57,7 +58,7 @@ describe('layer 1 — the source carries the ruling and the guard', () => {
   // by "a guard whose only witness is a regex is a guard a refactor can silently drop".
   it("the worker's tick case refuses at entry and stops mid-loop, on every predicate advanceWeeks blocks on", () => {
     expect(worker).toMatch(/import \{[\s\S]*?pendingKnock,[\s\S]*?\} from '\.\.\/engine\/world'/)
-    const tickCase = worker.slice(worker.indexOf("case 'tick':"), worker.indexOf("case 'advance':"))
+    const tickCase = region(worker, "case 'tick':", "case 'advance':")
     // the predicate names all SIX, so nothing the engine blocks on can be missing from the loop
     // ⚠ WIDENED AT v48, NOT WEAKENED: the birthday is the sixth thing `advanceWeeks` refuses to tick
     // past, and the dev fast-forward ships in every build – so a `▶▶ 52` that outran it would carry a

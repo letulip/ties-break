@@ -30,7 +30,7 @@ import { join } from 'node:path'
 // Comments are not code – the same `codeOf` discipline, now in tests/helpers/source.ts. This file is
 // about which element an attribute is ON, and the component documents its own history at length,
 // including quoting the markup it used to have.
-import { codeOf } from './helpers/source'
+import { after, before, codeOf, region, regionToLast } from './helpers/source'
 
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 const read = (p: string) => readFileSync(p, 'utf8')
@@ -48,8 +48,8 @@ const VUE = walk(SRC)
 
 const PAPER = join(SRC, 'components/ui/PaperNote.vue')
 const paper = read(PAPER)
-const paperTemplate = codeOf(paper.slice(paper.indexOf('<template>'), paper.lastIndexOf('</template>')))
-const paperCss = codeOf(paper.slice(paper.indexOf('<style'), paper.lastIndexOf('</style>')))
+const paperTemplate = codeOf(regionToLast(paper, '<template>', '</template>'))
+const paperCss = codeOf(regionToLast(paper, '<style', '</style>'))
 
 // =================================================================================================
 // THE TAPE IS OUTSIDE THE CLIP
@@ -84,12 +84,12 @@ describe('a torn, taped note keeps its whole strip of tape', () => {
 
   it('the TILT is on the wrapper, so the tape turns with the paper it holds down', () => {
     // A strip of tape that stays level while the sheet under it rotates is worse than no tape.
-    const wrapTag = paperTemplate.slice(paperTemplate.indexOf('<div'), paperTemplate.indexOf('>', paperTemplate.indexOf('class="tb-paper-wrap"')))
+    const wrapTag = region(paperTemplate, '<div', '>')
     expect(wrapTag).toContain('tb-paper-wrap')
     expect(wrapTag).toContain('rotate(')
     // and the sheet no longer carries one, or the note would rotate twice
-    const sheetTag = paperTemplate.slice(paperTemplate.indexOf('class="tb-paper"'))
-    expect(sheetTag.slice(0, sheetTag.indexOf('>'))).not.toContain('rotate(')
+    const sheetTag = after(paperTemplate, 'class="tb-paper"')
+    expect(before(sheetTag, '>')).not.toContain('rotate(')
   })
 
   it('the wrapper paints NOTHING – it is a box for the tape to hang off and no more', () => {
@@ -185,7 +185,7 @@ describe('a caller styles the wrapper, and reaches the paper through :deep', () 
     // is load-bearing rather than tidy: the letter's own header QUOTES `<PaperNote>` while explaining
     // why the tilt is zero, so a raw scan finds the prose before it finds the markup.
     const letter = codeOf(read(join(SRC, 'components/OfferLetter.vue')))
-    const tag = letter.slice(letter.indexOf('<PaperNote'), letter.indexOf('>', letter.indexOf('<PaperNote')))
+    const tag = region(letter, '<PaperNote', '>')
     expect(tag, 'the letter is a page, so it takes the letter size').toContain('size="letter"')
     expect(tag, 'the letter grew the house tilt').toMatch(/:tilt="0"/)
     // ...and it asks for none of the three scrap treatments, because a sponsor does not tape his
@@ -199,7 +199,7 @@ describe('a caller styles the wrapper, and reaches the paper through :deep', () 
     const wrong: string[] = []
     for (const path of SITES) {
       const text = read(path)
-      const css = codeOf(text.slice(text.indexOf('<style'), text.lastIndexOf('</style>')))
+      const css = codeOf(regionToLast(text, '<style', '</style>'))
       for (const cls of callers(text)) {
         const decls = ownRule(css, cls)
         if (!decls) continue

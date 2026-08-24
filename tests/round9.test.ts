@@ -30,6 +30,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import { INCOME_CATS } from '../tools/econ-bench'
 import { fnv1aHex } from './helpers/hash'
+import { after, region } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // Round-9 pt3 — engine pack: savings interest (R9-1), per-match tournament
@@ -699,12 +700,11 @@ describe('pt4 — UI wiring', () => {
     const home = read('../src/components/screens/HomeScreen.vue')
     const season = read('../src/components/screens/SeasonScreen.vue')
     for (const [sel, src] of [
-      ['.diary-name', home.slice(home.indexOf('<style scoped>'))],
-      ['.event-tier', season.slice(season.indexOf('<style scoped>'))],
+      ['.diary-name', after(home, '<style scoped>')],
+      ['.event-tier', after(season, '<style scoped>')],
     ] as const) {
-      const at = src.indexOf(`${sel} {`)
-      expect(at, `${sel} must still be declared somewhere`).toBeGreaterThan(-1)
-      expect(src.slice(at, src.indexOf('}', at))).toContain('var(--font-heading)')
+      // ⚠ if this throws, `${sel}` is no longer declared here – re-aim the pin, do not delete it.
+      expect(region(src, `${sel} {`, '}')).toContain('var(--font-heading)')
     }
     expect(css).toContain('.season-topbar h2')
   })

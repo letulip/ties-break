@@ -18,7 +18,7 @@ import { componentLogic } from './worldSource'
 // Comments stripped, so a note that NAMES a forbidden call is not read as making it – the house
 // helper, now in tests/helpers/source.ts. These are source-reading tests, and this codebase
 // documents at length, including documenting what it deliberately did not do.
-import { codeOf } from './helpers/source'
+import { after, at, codeOf, region, regionToLast } from './helpers/source'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -62,7 +62,7 @@ const cross = read('../src/composables/dayCross.ts')
 /** Exactly what the player can see. Comments in this codebase quote the owner in Russian by
  *  convention, in the script AND in the styles, so every copy sweep is bounded to the template –
  *  the same extraction round13-nav.test.ts settled on. */
-const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
+const template = regionToLast(screen, '<template>', '</template>')
 
 /** v47 ticked weeks. Five sessions each, so `planShapeError` would accept either.
  *  `GYM_ON_WEDNESDAY` puts the one fitness session midweek; `DOUBLED_SUMMER` puts five sessions into
@@ -309,7 +309,7 @@ describe('a week belongs to exactly one thing, in one order', () => {
     // The owner's own words are quoted above. Two pins, because the mark appeared twice: the header,
     // which is deleted outright, and the fit verdict under the grid, which is the same borrowed fact
     // on every week except the one she spends at a tournament - so it is gated on the trip.
-    const header = screen.slice(screen.indexOf('<template #header>'), screen.indexOf('</template>', screen.indexOf('<template #header>')))
+    const header = region(screen, '<template #header>', '</template>')
     expect(header, 'the calendar header names a court again').not.toContain('SurfaceMark')
     expect(template).toContain('<p v-if="awayNow && calendar.surfaceNote" class="cal-court">')
     expect(screen).toContain("const awayNow = computed(() => calendar.value?.days[0]?.kind === 'away')")
@@ -753,7 +753,7 @@ describe('the marker opens ONE event, with enter-or-close', () => {
 
   it('ENTER, and then out – the card is a door in, not an entry manager', () => {
     expect(template).toContain('@click="enterMarker(marker)"')
-    const enter = screen.slice(screen.indexOf('function enterMarker'), screen.indexOf('const fundsCents'))
+    const enter = region(screen, 'function enterMarker', 'const fundsCents')
     expect(enter).toContain('game.enterEvent(e.id)')
     expect(enter).toContain('marker.value = null')
     // withdrawing and cancelling stay where the whole horizon is in view
@@ -843,7 +843,7 @@ describe('the calendar reads the snapshot and nothing else', () => {
   // twice as many lines to be wrong, not because anything here got easier.
   it('the coach speaks about her in the third person - never to the daughter', () => {
     const season = read('../src/components/screens/SeasonScreen.vue')
-    const pools = season.slice(season.indexOf('COACH_FIELD_LINES'), season.indexOf('function coachSays'))
+    const pools = region(season, 'COACH_FIELD_LINES', 'function coachSays')
     const lines = [...pools.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((l) => /[a-z]/.test(l))
     expect(lines.length, 'the pools should still be twenty-four lines').toBeGreaterThanOrEqual(24)
     for (const line of lines) {
@@ -931,10 +931,10 @@ describe('the days cross themselves out', () => {
   })
 
   it('OFF is byte-for-byte the old behaviour: press, advance', () => {
-    const run = screen.slice(screen.indexOf('function runWeek'), screen.indexOf('/** ⚠ THE SCREEN'))
+    const run = region(screen, 'function runWeek', '/** ⚠ THE SCREEN')
     expect(run).toContain("emit('advance')")
     // the early return is the whole of "off" - no sweep is scheduled and nothing waits
-    expect(run.indexOf("emit('advance')")).toBeLessThan(run.indexOf('running.value = true'))
+    expect(at(run, "emit('advance')")).toBeLessThan(at(run, 'running.value = true'))
   })
 
   it('the preference is the weekRecap idiom, on its own key, defaulting ON', () => {
@@ -989,7 +989,7 @@ describe('the days cross themselves out', () => {
 
   it('SKIPPABLE: a tap anywhere ends it at once, and the hint says so', () => {
     expect(screen).toContain('skipSweep')
-    const skip = screen.slice(screen.indexOf('function skipSweep'), screen.indexOf('// --- (e) THE MAIN ACTION'))
+    const skip = region(screen, 'function skipSweep', '// --- (e) THE MAIN ACTION')
     expect(skip).toContain('if (!running.value) return') // an ordinary tap costs nothing
     expect(skip).toContain('finishSweep()')
     expect(skip).toContain('crossed.value = calendar.value?.days.length ?? 0')
@@ -1013,7 +1013,7 @@ describe('the days cross themselves out', () => {
     // the duration reaches CSS as a property, because the pace is a setting and a sheet cannot read one
     expect(template).toContain(`'--cal-stroke-ms': \`\${strokeMs}ms\``)
     expect(screen).toContain('transition: transform var(--cal-stroke-ms, 280ms)')
-    const reduced = screen.slice(screen.indexOf('@media (prefers-reduced-motion: reduce)'))
+    const reduced = after(screen, '@media (prefers-reduced-motion: reduce)')
     expect(reduced).toContain('transition: none')
     expect(reduced).toContain('animation: none')
   })

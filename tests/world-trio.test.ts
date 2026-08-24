@@ -64,6 +64,7 @@ import {
   resultShowsOnHerFace,
 } from '../src/shared/avatarEmotion'
 import type { LossStreak, WorldEvent, WorldMatch } from '../src/shared/protocol'
+import { after } from './helpers/source'
 
 /** Tick `weeks` weeks, resolving any tournament reveal immediately so time keeps moving
  *  (the harness shape shared with seasonWrapUp/round10-view). */
@@ -650,7 +651,7 @@ describe('item 3 — the engine counts the streak', () => {
     expect(resultShowsOnHerFace(friendly(2, 2, false))).toBe(false)
     expect(resultShowsOnHerFace(notPlayed(3, 3))).toBe(false)
     const src = worldSource()
-    const walk = src.slice(src.indexOf('export function computeLossStreak'))
+    const walk = after(src, 'export function computeLossStreak')
     expect(walk.slice(0, 600)).toContain('resultShowsOnHerFace(e)')
   })
 
@@ -707,7 +708,7 @@ describe('item 3 — the threshold is drawn once, off a purpose-scoped sub-strea
     // it is a sub-stream, exactly like `:injury:<week>` and `:aitour:<eventId>`
     expect(src).toMatch(/rngFromSeed\(`\$\{world\.seed\}:angry:\$\{startWeek\}`\)/)
     // ...and it is NOT taken from the weekly stream: computeLossStreak accepts no Rng at all.
-    const fn = src.slice(src.indexOf('export function computeLossStreak'))
+    const fn = after(src, 'export function computeLossStreak')
     expect(fn.slice(0, 120)).not.toContain('rng:')
   })
 

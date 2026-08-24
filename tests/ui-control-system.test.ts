@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, extname } from 'node:path'
+import { after, before, region } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // THE CONTROL SYSTEM (owner, 30.07). Three sentences from one playtest, and they are one problem:
@@ -187,7 +188,7 @@ describe('THE ACTION ROW: the affirmative is last, and it does not point (owner 
     for (const [path, skip, watch] of PRE_MATCH) {
       const text = readFileSync(join(root, path), 'utf8')
       const template = /<template>([\s\S]*)<\/template>/.exec(text)?.[1] ?? ''
-      const row = template.slice(template.indexOf('class="tf-actions"'))
+      const row = after(template, 'class="tf-actions"')
       const skipAt = row.indexOf(`>${skip}<`)
       const watchAt = row.indexOf(`>${watch}<`)
       expect(skipAt, `${path}: "${skip}" is in the row`).toBeGreaterThan(-1)
@@ -320,8 +321,8 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
     expect(config, 'the plugin must be declared').toContain("name: 'ties-break:no-stowaways'")
     expect(config, 'and wired into the plugin list').toContain('noStowaways(),')
     // closeBundle, not buildStart: see the note above. A move to buildStart re-opens the race.
-    const plugin = config.slice(config.indexOf('function noStowaways'))
-    expect(plugin.slice(0, plugin.indexOf('\n}')), 'must run after the copy').toContain('closeBundle')
+    const plugin = after(config, 'function noStowaways')
+    expect(before(plugin, '\n}'), 'must run after the copy').toContain('closeBundle')
   })
 
   // The list is from experience rather than from a catalogue of known-bad names: `.textClipping` is
@@ -505,7 +506,7 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
   it('screen E\'s fact tiles draw their glyphs from the assets, not from inline paths', () => {
     const flow = readFileSync(join(root, 'src/components/TournamentFlow.vue'), 'utf8')
     const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
-    const facts = template.slice(template.indexOf('class="tf-facts"'), template.indexOf('class="tf-first"'))
+    const facts = region(template, 'class="tf-facts"', 'class="tf-first"')
     expect(facts, 'the facts row was not found').toContain('tf-fact-tile')
     for (const name of ['dollar', 'trophy', 'spectators']) {
       expect(facts, `${name} tile`).toContain(`<AppIcon name="${name}"`)

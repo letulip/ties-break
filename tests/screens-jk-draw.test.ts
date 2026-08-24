@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { after, before, region } from './helpers/source'
 
 // Screens J and K (docs/design/README.md §J/K) – the championship draw, and the Final as its own
 // moment rather than a list of one. Source-shaped pins in the house style: they protect the
 // DECISIONS, and in particular the two that a later pass would most easily undo.
 const bracket = readFileSync(new URL('../src/components/BracketTabs.vue', import.meta.url), 'utf8')
 const sheet = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
-const template = bracket.slice(bracket.indexOf('<template>'), bracket.indexOf('</template>'))
+const template = region(bracket, '<template>', '</template>')
 
 describe('screen J – the draw', () => {
   it('the round switcher is still U0\'s SegmentedRow (do not undo the port)', () => {
@@ -59,8 +60,8 @@ describe('screen K – the Final', () => {
   it('THE FINAL stays a MUTED label (U0\'s ruling on the app\'s uppercase labels)', () => {
     // The export writes it in gold at a wider tracking; recolouring the app's muted labels is the
     // owner's call, not an extraction's – and the trophy above it carries the gold anyway.
-    const rule = bracket.slice(bracket.indexOf('.bt-final-label {'))
-    const body = rule.slice(0, rule.indexOf('}'))
+    const rule = after(bracket, '.bt-final-label {')
+    const body = before(rule, '}')
     expect(body).toContain('color: var(--muted)')
     expect(body).toContain('font-size: var(--label-size)')
     expect(body).toContain('letter-spacing: var(--label-track)')
@@ -81,7 +82,7 @@ describe('screens J/K – where the styles live', () => {
   })
 
   it('the draw declares no colour of its own', () => {
-    const styles = bracket.slice(bracket.indexOf('<style scoped>')).replace(/\/\*[\s\S]*?\*\//g, '')
+    const styles = after(bracket, '<style scoped>').replace(/\/\*[\s\S]*?\*\//g, '')
     expect(styles).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
     expect(styles).not.toMatch(/rgba?\(\s*\d/)
   })

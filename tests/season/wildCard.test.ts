@@ -57,6 +57,7 @@ import {
 import type { WorldState } from '../../src/engine/world'
 import type { RankingRow, SeasonEvent } from '../../src/engine/season/types'
 import { componentFile } from '../worldSource'
+import { region } from '../helpers/source'
 
 function ticked(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
@@ -143,9 +144,8 @@ describe('the host pool covers every country the player may pick', () => {
   // be checkable only by a person remembering to check it.
   it('contains every code in OnboardingWizard COUNTRIES', () => {
     const src = componentFile('components/OnboardingWizard.vue')
-    const at = src.indexOf('const COUNTRIES = [')
-    expect(at, 'the COUNTRIES array moved – re-aim this pin, do not delete it').toBeGreaterThan(-1)
-    const body = src.slice(at, src.indexOf(']', at))
+    // ⚠ if this throws, the COUNTRIES array moved – re-aim this pin, do not delete it.
+    const body = region(src, 'const COUNTRIES = [', ']')
     const codes = [...body.matchAll(/'([A-Z]{2})'/g)].map((m) => m[1])
     expect(codes.length).toBeGreaterThan(20)
     for (const code of codes) {

@@ -26,6 +26,7 @@ import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { STOP_PRECEDENCE, type StopReason, type WorldEventCategory } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS } from '../tools/econ-bench'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { after, region } from './helpers/source'
 
 // ===========================================================================
 // ROUND 11 — WAVE A (correctness).
@@ -247,7 +248,7 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // there must be exactly one break after the tick – the one that ends the advance.
     const fn = worldFunction('advanceWeeks')
     expect(fn).not.toBe('')
-    const body = fn.slice(fn.indexOf('tickWeek(world, rng)'))
+    const body = after(fn, 'tickWeek(world, rng)')
     const code = body
       .split('\n')
       .filter((line) => !line.trim().startsWith('//')) // prose may say "break" without doing it
@@ -271,8 +272,8 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
   })
 
   it('neither dialog nor the toast asks which tab is showing', () => {
-    const injury = APP.slice(APP.indexOf('const showInjuryStop'), APP.indexOf('const showSeasonSummary'))
-    const summary = APP.slice(APP.indexOf('const showSeasonSummary'), APP.indexOf('function dismissSeasonSummary'))
+    const injury = region(APP, 'const showInjuryStop', 'const showSeasonSummary')
+    const summary = region(APP, 'const showSeasonSummary', 'function dismissSeasonSummary')
     expect(injury).not.toContain('tab.value')
     expect(summary).not.toContain('tab.value')
     // ...and the toast's own render is no longer Home-only either.
@@ -280,8 +281,8 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
   })
 
   it('both dialogs read the SET, and the wrap-up defers to the injury (one overlay, defined order)', () => {
-    const injury = APP.slice(APP.indexOf('const showInjuryStop'), APP.indexOf('const showSeasonSummary'))
-    const summary = APP.slice(APP.indexOf('const showSeasonSummary'), APP.indexOf('function dismissSeasonSummary'))
+    const injury = region(APP, 'const showInjuryStop', 'const showSeasonSummary')
+    const summary = region(APP, 'const showSeasonSummary', 'function dismissSeasonSummary')
     // ⚠ RE-AIMED, NOT RELAXED (11.08, round-16 #18/#19). R11-1's property is the ORDERING – one
     // overlay at a time, the injury first, and never a dead end – and every assertion that states it
     // is below, verbatim. What moved is the injury gate's INPUT, and it moved because reading the
@@ -326,7 +327,7 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
     // it asserts the wrap-up's mark is BUILT over `seasonWrapPrompt`, and that neither the gate nor
     // the mark has gone back to reading the reason that dies with its own advance.
     expect(summary).toContain('seasonWrapUnseen.value')
-    const wrapMark = APP.slice(APP.indexOf('const SEASON_WRAP_PREFIX'), APP.indexOf("// R9-21a: the injury stop"))
+    const wrapMark = region(APP, 'const SEASON_WRAP_PREFIX', "// R9-21a: the injury stop")
     expect(wrapMark.length, 'the wrap-up mark moved – re-aim, do not widen').toBeGreaterThan(0)
     expect(wrapMark, 'the mark is over the snapshot field, not over a stop reason').toContain(
       'game.snapshot?.seasonWrapPrompt',
@@ -463,7 +464,7 @@ describe('R11-12a — the wrap-up summary reconciles with the wallet', () => {
     expect(seasonStartWeek(2 * WEEKS_PER_YEAR + 7)).toBe(2 * WEEKS_PER_YEAR)
     // Both surfaces call the helper – neither re-derives the block boundary for itself, which is
     // how they came to disagree in the first place.
-    const snapshotFold = world.slice(world.indexOf('finance: {'), world.indexOf('financialEvents:'))
+    const snapshotFold = region(world, 'finance: {', 'financialEvents:')
     expect(snapshotFold).toContain('seasonStartWeek(world.week)')
     // the wrap-up function, wherever the P4 decomposition has moved it to
     const wrapUp = worldFunction('maybeFireSeasonWrapUp')
@@ -483,7 +484,7 @@ describe('R11-12a — the wrap-up summary reconciles with the wallet', () => {
     expect(dialog).toContain('v-if="spentCents !== undefined"')
     expect(dialog).toContain('v-if="earnedCents !== undefined"')
     // Player-facing copy: no long dash, no Cyrillic in the rendered strings.
-    const template = dialog.slice(dialog.indexOf('<template>'))
+    const template = after(dialog, '<template>')
     expect(template).not.toMatch(/[—А-Яа-яЁё]/)
   })
 

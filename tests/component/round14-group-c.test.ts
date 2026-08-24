@@ -25,6 +25,7 @@ import { enterActionName } from '../../src/composables/eventName'
 import { weekRange } from '../../src/shared/dates'
 import type { Offer, Snapshot } from '../../src/shared/protocol'
 import { mountSeason } from '../helpers/mountSeason'
+import { after, before, region } from '../helpers/source'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND ITEM 2 IS ABOUT localStorage. The same shim
 // tests/component/home-strip-and-mail.test.ts and round20-ui.test.ts already carry, for the same
@@ -208,9 +209,9 @@ describe('R14-9 – the onboarding wizard wears the app frame', () => {
   })
 
   it('...and it is capped, centred, at the SAME width `#app` uses – one mechanism, not two', () => {
-    const scoped = wizardSrc.slice(wizardSrc.indexOf('<style scoped>'))
+    const scoped = after(wizardSrc, '<style scoped>')
     expect(scoped.length).toBeGreaterThan(500) // a real bound, never a silent empty slice
-    const shellRule = scoped.slice(scoped.indexOf('\n.ob-shell {'), scoped.indexOf('/* --- the step rail'))
+    const shellRule = region(scoped, '\n.ob-shell {', '/* --- the step rail')
     expect(shellRule).toContain('max-width: var(--app-max-width)')
     expect(shellRule).toContain('margin-inline: auto')
     // THE TOKEN IS THE POINT. A hard-coded 880 here would be a second cap that drifts the first
@@ -336,10 +337,10 @@ describe('R14-2 – the inbox is a list you open letters from', () => {
     // Scoped SFC styles are not injected by test-utils, so the class is what the mount can prove and
     // the rule that paints it is pinned in the source it lives in. Two halves of one claim.
     const src = repoFile('src/components/InboxSheet.vue')
-    const scoped = src.slice(src.indexOf('<style scoped>'))
+    const scoped = after(src, '<style scoped>')
     expect(scoped.length).toBeGreaterThan(300)
-    const rule = scoped.slice(scoped.indexOf('.inbox-row.unread'))
-    expect(rule.slice(0, rule.indexOf('}'))).toContain('font-weight: 700')
+    const rule = after(scoped, '.inbox-row.unread')
+    expect(before(rule, '}')).toContain('font-weight: 700')
   })
 })
 

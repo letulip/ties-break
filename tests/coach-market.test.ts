@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { after, region } from './helpers/source'
 
 // SCREEN T - COACH MARKET. Facts about a template, which is exactly the kind of fact that silently
 // rots (tests/round13-nav.test.ts states the house rule). Registration, the door and the copy rules
@@ -71,7 +72,7 @@ describe('screen T renders what the design specified', () => {
     // No hand-written band anywhere the player can SEE - the numbers live in the engine or nowhere.
     // (The script's banner quotes the owner's own sketch; that is a comment, and the point of it is
     // to record that those figures were NOT copied into the code.)
-    const template = market.slice(market.indexOf('<template>'))
+    const template = after(market, '<template>')
     expect(template).not.toMatch(/0-2%|1-3%|2-4%/)
   })
 
@@ -106,7 +107,7 @@ describe('screen T, round 3', () => {
     const rowClasses = ['cm-row', 'cm-art', 'cm-body', 'cm-name', 'cm-meta', 'cm-price', 'cm-action']
     for (const cls of rowClasses) expect(market).toContain(cls)
     // The market template must not reference any of Home\'s coach-card classes.
-    const template = market.slice(market.indexOf('<template>'))
+    const template = after(market, '<template>')
     for (const owned of ['"coach-body"', '"coach-art"', '"coach-card"', '"coach-line"']) {
       expect(template, `${owned} belongs to Home's coach card`).not.toContain(owned)
     }
@@ -137,7 +138,7 @@ describe('screen T, round 3', () => {
     expect(market).not.toContain('market-back')
     expect(css).toContain('.back-link {')
     // No plate: no background, no border, no padding.
-    const rule = css.slice(css.indexOf('.back-link {'), css.indexOf('}', css.indexOf('.back-link {')))
+    const rule = region(css, '.back-link {', '}')
     expect(rule).toMatch(/border: none/)
     expect(rule).toMatch(/background: none/)
     expect(rule).toMatch(/padding: 0/)
@@ -232,14 +233,14 @@ describe('screen T, round 4', () => {
     // block, with the rest of the rules only that page renders. Values unchanged to the digit, and
     // the alpha is still written against `--accent-rgb` so the brand lime stays repairable in one
     // place – which is the fact this line is actually protecting.
-    const homeCss = home.slice(home.indexOf('<style scoped>'))
-    const rule = homeCss.slice(homeCss.indexOf('.coach-sign {'), homeCss.indexOf('}', homeCss.indexOf('.coach-sign {')))
+    const homeCss = after(home, '<style scoped>')
+    const rule = region(homeCss, '.coach-sign {', '}')
     expect(rule).toContain('var(--font-hand)')
     expect(rule).toContain('font-size: 17px')
     expect(rule).toContain('rgba(var(--accent-rgb), 0.72)')
     // The card is a door and a card, not a form: no price, and the signature is a NAME.
-    const region = home.slice(home.indexOf('coach-card'), home.indexOf('Recent memory'))
-    expect(region).not.toContain('$')
+    const card = region(home, 'coach-card', 'Recent memory')
+    expect(card).not.toContain('$')
     // ...and it only signs when there is somebody to sign it.
     expect(home).toContain('v-if="coachSignature"')
   })
