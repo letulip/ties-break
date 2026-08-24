@@ -252,10 +252,19 @@ export interface WorldEvent {
    *  why `InjuryStopDialog` was parsing prose for four years' worth of rounds, and why the fix has to
    *  put the fact on the row rather than teach the reader a better regex.
    *
-   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE – the `MatchResult.retired?` precedent to the letter. Absent
-   *  is exactly what every historical save and every hand-built fixture already mean ("this row is
-   *  not about one entry"), so no migration is owed, no golden fixture is added and
-   *  `SAVE_SCHEMA_VERSION` does not move. Written today by `releaseEntry` on the two rows it emits –
+   *  ⚠ OPTIONAL, AND NOT A SCHEMA MOVE. Absent is exactly what every historical save and every
+   *  hand-built fixture already mean ("this row is not about one entry"), so no migration is owed,
+   *  no golden fixture is added and `SAVE_SCHEMA_VERSION` does not move.
+   *
+   *  ⚠⚠ THE PRECEDENT, CORRECTED AT THE WAVE-A GATE (23.08): the wave first cited a
+   *  `MatchResult.retired?` field, and **no such field exists** – a citation to a plausible memory
+   *  rather than to the tree, which in a repo that treats comments as a second spec is the very
+   *  defect class (TB-10) this wave was sent to reduce. What genuinely stands behind this line is
+   *  two things, both checkable: **this interface already carries five optional persisted fields**
+   *  (`match`, `friendly`, `keep`, `milestoneKey`, `finishIdx`), so widening it in place is its own
+   *  established shape; and the recorded widening precedent is **commit 2763caa**, which added the
+   *  whole `entry` offer family while leaving `SAVE_SCHEMA_VERSION` at 36 – written down twice in
+   *  this same file (see `OfferKind` and `EntryLetterTerms`). Written today by `releaseEntry` on the two rows it emits –
    *  the refund and the feed line – so a reader can total the money and name the tournaments from
    *  the same structured field instead of from two different sentences. */
   entryRef?: WorldEventEntryRef
