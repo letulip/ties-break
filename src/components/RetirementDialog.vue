@@ -22,8 +22,9 @@
 // the week is safe to read it on: an open offer BLOCKS the world, so the table she is on when the
 // card is drawn is the table the offer was raised about. Lower-cased into her sentence – she says
 // "the professional table", not "Professional".
-import { computed } from 'vue'
+import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { activeLadderOfSnapshot } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
@@ -44,23 +45,55 @@ const artStyle = computed(() => {
 async function answer(retire: boolean): Promise<void> {
   await game.answerRetirement(retire)
 }
+
+// ⭐⭐ R2-07 – IT IS A MODAL, AND NOW IT SAYS SO AND HOLDS THE KEYBOARD (composables/dialogFocus.ts
+// carries the argument and the honest limit).
+//
+// ⚠⚠ ESCAPE IS PASSED NO HANDLER, AND THE FINAL CARD IS WHY IT CANNOT BE ANYTHING ELSE. From 29 the
+// card draws two answers and the offer BLOCKS the world until one of them is in, so a dismissal
+// would strand the career; at 38 it draws exactly ONE, because the question has run out, and a key
+// that closed this card would either end a career on a stray press or hand back a card with no
+// refusal left on it. Neither is a dismissal, so there is none.
+//
+// ⚠ AND "One more year" IS NOT THE ESCAPE EITHER, tempting as it looks. It is an ANSWER – the engine
+// records it (`oneMoreYearCount` is on the ending screen) and the offer comes back next winter – so
+// wiring it to Escape would let the keyboard file a decision the player never made, on the card
+// whose whole subject is that the decision is hers. It is also absent on the final card, which is
+// exactly where a uniform Escape policy would have shipped a dead key.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card)
 </script>
 
 <template>
   <div v-if="offer" class="dialog-overlay">
-    <div class="dialog-card retire-card">
+    <!-- ⭐⭐ R2-07 – role/aria-modal on the CARD and not on the scrim: the backdrop is not part of
+         the dialog, it is what the dialog is over. `tabindex="-1"` is the trap's landing place for
+         the frame in which `game.busy` has disabled the answers. NO handler on the scrim, for the
+         same reason there is no Escape: every way out of this card is an answer. -->
+    <div
+      ref="card"
+      class="dialog-card retire-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="retire-dialog-kicker retire-dialog-title"
+      tabindex="-1"
+    >
       <img class="retire-art" :src="artUrl" :style="artStyle" alt="" />
-      <p class="retire-kicker">Off-season – she is {{ age }}</p>
+      <!-- BOTH LINES ARE THE NAME, in the order they are read: when it is being asked and how old
+           she is, then which of the three questions this winter is. ⚠ THE THREE HEADINGS SHARE ONE
+           id AND THAT IS SAFE – they are `v-if`/`v-else-if`/`v-else`, so exactly one is ever in the
+           document, and a per-branch id would make the name depend on which question was asked. -->
+      <p id="retire-dialog-kicker" class="retire-kicker">Off-season – she is {{ age }}</p>
 
       <template v-if="offer.final">
-        <h2 class="retire-title">Nobody is going to ask her again.</h2>
+        <h2 id="retire-dialog-title" class="retire-title">Nobody is going to ask her again.</h2>
         <p class="retire-lede">
           She has been answering this question every winter for years. This is the last winter it
           gets asked, and she has already said what she thinks.
         </p>
       </template>
       <template v-else-if="offer.reason === 'plateau'">
-        <h2 class="retire-title">She said it in the car.</h2>
+        <h2 id="retire-dialog-title" class="retire-title">She said it in the car.</h2>
         <!-- RE-WORDED 12.08. This used to end "- her words, not the game's", an aside meant to say
              "this is HER wish, nothing is being forced" - but it names THE GAME, which is a wall no
              line of copy here is allowed to break, and the owner read it as noise (round-17, his
@@ -73,7 +106,7 @@ async function answer(retire: boolean): Promise<void> {
         </p>
       </template>
       <template v-else>
-        <h2 class="retire-title">Is there another year in this?</h2>
+        <h2 id="retire-dialog-title" class="retire-title">Is there another year in this?</h2>
         <p class="retire-lede">
           The off-season question, the way it gets asked from twenty-nine onward. There is no wrong
           answer and it will be asked again next winter.
