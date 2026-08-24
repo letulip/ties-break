@@ -2547,3 +2547,15 @@ reasons: protective locks on expensive coaches (freedom + legible prices is the 
 psychology-never-touches-matches hard line (`spirit` is a bounded named term by the perspective's
 own principle); hiding the growth spurt's numbers (engine honest, surface an adaptation fork).
 Four genuinely open owner decisions carried to `docs/backlog/awaiting-his-word.md`.
+
+---
+
+## 23.08.2026 – THE FULL-PROJECT REVIEW (ROUND TWO) RECEIVED; THE R2 PROGRAMME AWAITS THE APPROVE
+
+Codex's second full audit (`docs/review-principles-2026-08-23/`, baseline 52a5f13) re-audited its
+own 18.08 findings and corrected its own record honestly. Both headline defects VERIFIED in code
+before verdicts (tuition typed as income; the injury dialog reading English prose). Verdicts in
+`docs/review-codex/13-…response`: waves A–D accepted with executors, R2-15/17 superseded by the
+owner's own built second act and the private-life build, R2-16 adopted as E1's design under the
+standing pause, protective coach-locks refused again. The `review-intake` skill records the
+procedure. Nothing launches before the owner's approve.
