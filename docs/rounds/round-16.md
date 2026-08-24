@@ -63,7 +63,7 @@ his own third Olivia season, `olivia-o1p7_w195` – read locally, never committe
   (`src/engine/world/birthday.ts:74`, `BANDS`/`bandFor`) – schema **v48**, commit `a435d08`, spec
   `docs/specs/birthday-and-gifts.md`. The engine half (`birthdayTurning`, `markBirthday`) was already
   in place, as the triage predicted.
-- [ ] **9b. #100 – the announced birthday age was a year low.** Not an owner-reported item: found by
+- [x] **9b. #100 – the announced birthday age was a year low.** Not an owner-reported item: found by
   the agents while re-anchoring the season, numbered 100 for that reason, and it had to ship BEFORE
   the popup could tell the truth. `birthdayTurning` announced a year low for every girl born on the
   1st–6th of a month, because `kidAgeExact` is month-granular off the week's Monday while
@@ -73,6 +73,10 @@ his own third Olivia season, `olivia-o1p7_w195` – read locally, never committe
   so no tier rung and no injury age-factor moved. ⚠ Listed with an OPEN box only because its
   sibling – the birthday firing a whole WEEK early – is round 17 #7 and was answered there as not
   reproduced. The #100 fix itself is shipped.
+  → ✅ **TICKED 24.08.** A box whose own body says the fix shipped and whose only reason for staying
+  open was a sibling that is itself answered is a false negative, which is the one thing a ledger may
+  not be. Verified in the tree: `birthdayTurning` at `src/engine/world/age.ts:269` and
+  `tests/birthday-announce.test.ts`.
 - [ ] **10. `key` / `full` should drive the MATCH, not just the text.** **EXPLICITLY LEFT ALONE, and
   it is the one item of this round nobody has picked up since.** `round16-commentary.md:11`: «Item
   #10 (key/full driving the playback) is **not** in this slice and was left alone.» ⚠ For whoever

@@ -515,13 +515,24 @@ are analyses OF them; every other item that needs a world builds its own.
   out-return a career, or the optimal play inverts the premise; and the broker sells LEGIBILITY, not
   return - the moment he names a number, he and the shop both stop being decisions.
 
-- [?] **9. «И наверное пора задуматься над логикой психолога и массажиста… Текущие траты у меня в
+- [x] **9. «И наверное пора задуматься над логикой психолога и массажиста… Текущие траты у меня в
   год 70к поездки с носа (того 140к), 23к тренер… Итого примерно 280к затрат только на этих ребят…
   Итого тотал по году примерно 340к затрат. Профессионально звучит, кстати?»**
   – *measure + ask.* He has done the arithmetic himself and wants it checked against the game's real
   numbers, then a view on whether a ~340k year reads professional. ⚠ Not a build this round: it needs
   the count first, and the count decides whether the 50% travel discount becomes the strong offer he
   suspects.
+
+  → ✅ **THE COUNT LANDED AND THE QUESTION IS ANSWERED – ticked 24.08.**
+  [the-travelling-team-2026-08.md](../plans/the-travelling-team-2026-08.md) carries the outgoings
+  table and checks his arithmetic against the engine: «His travel and coach figures are right –
+  $130k and $24k against his 140k and 23k», ≈$220,000 of outgoings on the staffed career and
+  ≈$64,000 on Alice's. Its §Q3 answers «профессионально звучит» directly – yes, a ~340k staffed year
+  is the real shape of a top-100 operation – and adds the finding that reframes it: Ines's interest
+  alone ($251,439) exceeds every outgoing she has, so the two seats are a real decision at 18 and a
+  rounding error at her peak. The two questions that survive the count (does the masseur unlock
+  before the pro career, does the psychologist travel) are indexed once, in
+  [the-team-around-her.md](../backlog/the-team-around-her.md) #7.
 
 - [x] **10. «Я просил уже как-то раз, чтобы local, Regional, national были все игроки с её домашним
   флагом, можешь сделать пожалуйста»**
@@ -1056,11 +1067,14 @@ bug it exists for.
 
 ## Still open after this round
 
+⚠ **This table was three rows stale and is corrected here (24.08), against the tree rather than
+against itself.** Nothing from round 23 is open any more.
+
 | item | why |
 | --- | --- |
-| **4** | `[!]` reopened, diagnosed, not yet built – the fix lives in `src/viz/commentary.ts` |
-| **15** | the local-sponsor rule, still with the architect |
-| **9** | `[?]` still waiting on the owner – the physio/psychologist count and the ~340k question |
+| **4** | `[x]` CLOSED – `MatchReplay.vue:109` passes `preview-event` («ROUND-23 #4: the one prop this screen never passed»), and `PracticeFlow.vue:218` with it; the re-watch no longer falls to the poorest storey |
+| **15** | `[~]` ANSWERED 19.08 – he softened it himself, the numbers say the 25k start is survivable, and the real half of it was fixed under #12/#13 (the domestic rank the sponsor gate reads is honest now). Whether the RULE should be looser is a balance call and stays his |
+| **9** | `[x]` CLOSED 24.08 – the count is in [the-travelling-team-2026-08.md](../plans/the-travelling-team-2026-08.md) and «профессионально звучит» is answered yes; the two residual questions live in [the-team-around-her.md](../backlog/the-team-around-her.md) #7 |
 | **6 · 18** | `[x]` CLOSED 20.08 – he answered both, and both are built and measured |
 
 ⚠ And two findings NOT raised by him, recorded so they are not lost: the acceptance cut behaves

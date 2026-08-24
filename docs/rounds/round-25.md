@@ -46,3 +46,8 @@ commit bodies until this file. The wave collected THREE branches at his instruct
   heaviest unit tests.
 - [?] **9. Перебаланс травм безалаберных** – his direction ruled («у играющих неаккуратно должно
   быть больше последствий и жестче»), the dose awaits `the-injury-landscape` measurement.
+  → ⚠ **THE MEASUREMENT HAS LANDED, so this box is now waiting on HIM alone (re-verified 24.08).**
+  [the-injury-landscape-2026-08.md](../specs/the-injury-landscape-2026-08.md) exists and is
+  «MEASUREMENT ONLY. Not one engine line ships from this spec» – it carries the dose-response curve
+  of the §6 lever, the pro-era interaction with recovery variant C, and his own saves as the
+  baseline. Nothing but the magnitude ruling stands between this and a bench run.

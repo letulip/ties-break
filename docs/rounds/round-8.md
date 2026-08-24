@@ -59,7 +59,7 @@ Status legend: [ ] open · [x] done · (triage) = size/route.
 - [x] **R8-6b. Avatar emotion decay:** sad after a loss lasts only until the next week's tick,
   then norm/serious depending on current condition. (small, pairs with R8-3)
   → `src/shared/avatarEmotion.ts` (+ `tests/avatarEmotion.test.ts`; injury/tired/serious/norm idle)
-- [ ] **R8-3. Avatar wiring:** the round icon only ever shows the `norm` variant when age
+- [x] **R8-3. Avatar wiring:** the round icon only ever shows the `norm` variant when age
   changes; the square avatar on Home could be slightly bigger and reflect CURRENT state
   (emotion by last result + condition). Ties into the portrait-by-age TODO
   (stage(ageYears) × emotion). (medium, one clean slice with R8-6)
@@ -73,6 +73,18 @@ Status legend: [ ] open · [x] done · (triage) = size/route.
   25.07**". So the answer has existed for four days in a different file while this one still says
   "under check". **R8-3 is OPEN, not pending** – and it is the second-oldest open item in the ledger
   after R8-1.
+  → ✅ **CLOSED BY THE 24.08 RE-VERIFICATION, and the 13.08 verdict above was reading only half of
+  the item.** Both halves are answered, one by a ruling and one by a build.
+  **(a) The header's `norm`-only icon is the owner's own ruling of 27.07**, two days after this item
+  was filed: «верхняя круглая аватарка в хедере вообще не должна меняться эмоционально, там всегда
+  norm для возраста стоит». It is not a defect, and it now has a path an emotion cannot travel –
+  `src/composables/headerAvatar.ts` takes an age and nothing else, pinned by
+  `tests/round11-followups.test.ts` (F45-1). Anyone re-opening this is asking to overturn the ruling.
+  **(b) Home's portrait DOES read her current state** – `src/composables/kidEmotion.ts` renders the
+  emotion the ENGINE decides in `snapshot.diary.facts` (R9-13/15, then Diary-1's D2 full-bleed
+  painting), and all five portrait bands × seven emotions are cut under `public/avatars/`.
+  What is genuinely left is neither half of R8-3 but the portrait ART ORDER for the older ages, which
+  is the owner's to place: `docs/backlog/college-the-remainder.md` #4.
 
 - [x] **W-L in the Stats header (R6 debt).** `seasonWins`/`seasonLosses` surfaced on the
   Snapshot; "W–L" tile beside rank/points.

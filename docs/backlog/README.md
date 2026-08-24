@@ -48,6 +48,8 @@ the code on main, 23.08), and the engine's own «its own wave» comments.
 
 | file | what it holds |
 | --- | --- |
+| ⭐ [WHAT-IS-LEFT.md](WHAT-IS-LEFT.md) | **Read this one first.** The whole answer on one page, re-verified against the code 24.08: the R2 review's remainder item by item, the rounds' remainder by round, and everything else open – the five commissioned plans and the rulings queue. A mirror of the files below, not a second copy of them |
+| [the-r2-programme.md](the-r2-programme.md) | The accepted set from the full-project review – what wave A and wave B closed, what waves C and D are holding, and the two items nobody is on |
 | [college-the-remainder.md](college-the-remainder.md) | What round 24's college wave did not build: the re-entry screen, the freeze's refused controls, the between-year decisions, the portrait ART ORDER, the ranking price |
 | [the-private-life-layer.md](the-private-life-layer.md) | The largest unbuilt layer: steps 1–8 (spirit, the standing, the beats), the psychologist, form-and-slump, and everything paused against it |
 | [advertising-and-fame.md](advertising-and-fame.md) | The face-and-court plan's steps 3–6: fame, refusal, her own account, obligations – gated on the private life |
@@ -66,4 +68,12 @@ the code on main, 23.08), and the engine's own «its own wave» comments.
 
 Route from [now-next-later.md](../now-next-later.md) first – it is the only current delivery
 document. This folder is the reservoir behind it: when a *Next* slot opens, the themes above are
-where the candidates live.
+where the candidates live. For the state of the whole reservoir in one read, start at
+[WHAT-IS-LEFT.md](WHAT-IS-LEFT.md).
+
+⚠ **The sweep of 24.08 removed rows for the first time, which is the rule above working.** Wave A's
+R2 row and wave B's four shipped items left [the-r2-programme.md](the-r2-programme.md); round 8's
+avatar wiring left [screens-and-cards.md](screens-and-cards.md); the twelve-a11y-defect row in
+[the-quality-rig.md](the-quality-rig.md) shrank to three. Each departure is noted in its own file's
+prose, per the rule at the top of this page – a removed row that leaves no sentence behind is how a
+backlog loses its memory.

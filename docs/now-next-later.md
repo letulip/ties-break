@@ -38,7 +38,8 @@ the plans, specs and commit bodies – two days after the fact, which is itself 
 row ([backlog/README.md](backlog/README.md) – Now / Next / Later / Parked / Rejected) and **Now is
 deliberately empty**: it is assigned by the owner's pick, not by a sweep. The R2 programme
 ([backlog/the-r2-programme.md](backlog/the-r2-programme.md)) is the one approved-and-launched set –
-wave A is running.
+**waves A and B have shipped, waves C and D are running** (23–24.08), and the one-page mirror of
+what survives them is [backlog/WHAT-IS-LEFT.md](backlog/WHAT-IS-LEFT.md).
 
 ⚠ Older entries below this line are kept as the page's own history; where a round has since been
 ledgered, the ledger wins.
@@ -84,10 +85,11 @@ source was stale. **Naming a source is not the same as checking one.**
 
 ## Later – needs the owner's word, not an engineer's
 
-- **Our own tier labels are literal `WTA 125/250/500/1000` and `Grand Slam`** while `CLAUDE.md`'s
-  invariant says tournament and organisation names are fictional because ITF/WTA/ATP are trademarks –
-  and the ITF rungs ARE fictionalised as `World Tour`. Flagged and untouched.
-  ([round-22.md](rounds/round-22.md), #15–16.)
+- **One tier label is still the sport's own term** – `label: 'Grand Slam'`, while `CLAUDE.md`'s
+  invariant says tournament and organisation names are fictional because ITF/WTA/ATP are trademarks.
+  ⚠ Corrected 24.08: the `WTA 125/250/500/1000` rungs this line named have been
+  `World Tour 125/250/500/1000` in `src/engine/season/calendar.ts` since his own 18.08 instruction,
+  so one word is all that is flagged. ([round-22.md](rounds/round-22.md), #15–16.)
 - **The balance methodology of the review's chapter 04** – distributions not anecdotes, median plus
   tails, corrections separated from tuning – is written up and **not adopted**; it is his call.
   ([balance-methodology-proposal-2026-08-19.md](plans/balance-methodology-proposal-2026-08-19.md).)
