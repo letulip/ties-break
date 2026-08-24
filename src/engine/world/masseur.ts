@@ -177,13 +177,18 @@ export function masseurTourRelief(matchesPlayed: number, strain: number, masseur
 /** IS HE WORKING THIS WEEK – the one predicate the bill, the condition bonus and the rehab
  *  acceleration all read, so the three can never disagree about whether he was there.
  *
- *  The two stand-downs are the COACH'S OWN PRECEDENT (`coachWorksThisWeek` in world.ts), asked of
+ *  The two stand-downs are the COACH'S OWN PRECEDENT (`coachWorksThisWeek`), asked of
  *  a second seat: at COLLEGE the retainer is SUSPENDED, not cancelled – the family stops paying
  *  and the programme has her body, but the hire survives the freeze and resumes with the tour –
  *  and on a booked FAMILY HOLIDAY nobody is on his table, so nothing is billed and nothing is
- *  bought. It cannot be `coachWorksThisWeek` itself: that lives in world.ts, which a leaf may not
- *  import at runtime. Same two questions, second person; a third stand-down added to either
- *  should be weighed for the other (see the note beside `coachWorksThisWeek`).
+ *  bought. It is deliberately not `coachWorksThisWeek` itself: the two seats answer the same two
+ *  questions about DIFFERENT people, and folding them would make one stand-down edit change both.
+ *  ⚠ THE REASON RECORDED HERE UNTIL R2-10 STEP 2 WAS A DIFFERENT ONE AND IS NO LONGER TRUE – it
+ *  read "that lives in world.ts, which a leaf may not import at runtime". `coachWorksThisWeek`
+ *  moved to `world/phaseFinance.ts` with the bill that is its first reader, so a leaf CAN reach it
+ *  now; the separation above is the reason it stays two predicates. Same two questions, second
+ *  person; a third stand-down added to either should be weighed for the other (see the note beside
+ *  `coachWorksThisWeek`).
  *
  *  ⚠ AND HE WORKS THROUGH A LAYOFF – that is when the salary earns hardest (the rehab room is
  *  his), so an injury is deliberately NOT a stand-down. Pure state, zero draws. */
