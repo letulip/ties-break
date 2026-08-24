@@ -264,6 +264,13 @@ async function runArm(
     frames: i,
     cueLog,
     cueCounts: cueLog.reduce<Record<string, number>>((acc, entry) => {
+      // ⚠ NOT A SOURCE PIN, so it stays a raw slice and sits in the ratchet's baseline (R2-12's
+      // header names this exact exemption). `entry` is a RUNTIME string this file built one line
+      // per drained cue – `${paintLabel}:${cue}` – not text read out of a file, so there is no
+      // marker to rot and nothing for `region` to throw on. The FIRST colon is load-bearing rather
+      // than incidental: cue names carry colons of their own (`music:duck`, `music:restore`), so
+      // this drops the paint label and keeps the whole cue name, which is what the frozen fixture
+      // records. A split would keep `music` and silently rewrite the record.
       const key = entry.slice(entry.indexOf(':') + 1)
       return { ...acc, [key]: (acc[key] ?? 0) + 1 }
     }, {}),

@@ -44,6 +44,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { worldFunction } from './worldSource'
+import { before } from './helpers/source'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
@@ -622,7 +623,7 @@ describe('R2-13 F – a seventh refusal cannot be added without this file notici
     expect(loop).toContain('advanceRefusal(world)')
     // The entry gate is one call: no `return ['...']` may reappear above the loop, which is how the
     // engine and the button would drift apart again.
-    const head = loop.slice(0, loop.indexOf('const stops = new Set'))
+    const head = before(loop, 'const stops = new Set')
     expect([...head.matchAll(/return \['/g)]).toHaveLength(0)
   })
 

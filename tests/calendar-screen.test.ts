@@ -18,7 +18,7 @@ import { componentLogic } from './worldSource'
 // Comments stripped, so a note that NAMES a forbidden call is not read as making it – the house
 // helper, now in tests/helpers/source.ts. These are source-reading tests, and this codebase
 // documents at length, including documenting what it deliberately did not do.
-import { codeOf, region } from './helpers/source'
+import { after, codeOf, region, regionToLast } from './helpers/source'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -79,7 +79,7 @@ const sweepSrc = read('../src/composables/dayCrossSweep.ts')
 /** Exactly what the player can see. Comments in this codebase quote the owner in Russian by
  *  convention, in the script AND in the styles, so every copy sweep is bounded to the template –
  *  the same extraction round13-nav.test.ts settled on. */
-const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
+const template = regionToLast(screen, '<template>', '</template>')
 
 /** v47 ticked weeks. Five sessions each, so `planShapeError` would accept either.
  *  `GYM_ON_WEDNESDAY` puts the one fitness session midweek; `DOUBLED_SUMMER` puts five sessions into
@@ -326,7 +326,7 @@ describe('a week belongs to exactly one thing, in one order', () => {
     // The owner's own words are quoted above. Two pins, because the mark appeared twice: the header,
     // which is deleted outright, and the fit verdict under the grid, which is the same borrowed fact
     // on every week except the one she spends at a tournament - so it is gated on the trip.
-    const header = screen.slice(screen.indexOf('<template #header>'), screen.indexOf('</template>', screen.indexOf('<template #header>')))
+    const header = region(screen, '<template #header>', '</template>')
     expect(header, 'the calendar header names a court again').not.toContain('SurfaceMark')
     expect(template).toContain('<p v-if="awayNow && calendar.surfaceNote" class="cal-court">')
     expect(screen).toContain("const awayNow = computed(() => calendar.value?.days[0]?.kind === 'away')")
@@ -770,7 +770,7 @@ describe('the marker opens ONE event, with enter-or-close', () => {
 
   it('ENTER, and then out – the card is a door in, not an entry manager', () => {
     expect(template).toContain('@click="enterMarker(marker)"')
-    const enter = screen.slice(screen.indexOf('function enterMarker'), screen.indexOf('const fundsCents'))
+    const enter = region(screen, 'function enterMarker', 'const fundsCents')
     expect(enter).toContain('game.enterEvent(e.id)')
     expect(enter).toContain('marker.value = null')
     // withdrawing and cancelling stay where the whole horizon is in view
@@ -860,7 +860,7 @@ describe('the calendar reads the snapshot and nothing else', () => {
   // twice as many lines to be wrong, not because anything here got easier.
   it('the coach speaks about her in the third person - never to the daughter', () => {
     const season = read('../src/components/screens/SeasonScreen.vue')
-    const pools = season.slice(season.indexOf('COACH_FIELD_LINES'), season.indexOf('function coachSays'))
+    const pools = region(season, 'COACH_FIELD_LINES', 'function coachSays')
     const lines = [...pools.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((l) => /[a-z]/.test(l))
     expect(lines.length, 'the pools should still be twenty-four lines').toBeGreaterThanOrEqual(24)
     for (const line of lines) {
@@ -1072,7 +1072,7 @@ describe('the days cross themselves out', () => {
     // the duration reaches CSS as a property, because the pace is a setting and a sheet cannot read one
     expect(template).toContain(`'--cal-stroke-ms': \`\${strokeMs}ms\``)
     expect(screen).toContain('transition: transform var(--cal-stroke-ms, 280ms)')
-    const reduced = screen.slice(screen.indexOf('@media (prefers-reduced-motion: reduce)'))
+    const reduced = after(screen, '@media (prefers-reduced-motion: reduce)')
     expect(reduced).toContain('transition: none')
     expect(reduced).toContain('animation: none')
   })
