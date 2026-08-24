@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: engine/body
 canonical: false
-last-reviewed: 2026-08-23
+last-reviewed: 2026-08-24
 ---
 
 # The injury landscape – the full picture behind the §6 ruling
@@ -479,3 +479,404 @@ programme development. Neither interaction argues for or against any F.
 **No engine change ships from this append either.** Both levers are reverted; F, its long-layoff
 threshold, and whether it ships with or before the §6 dose are his ruling – and the arm-1 table
 above is the baseline his own fresh saves will be laid against, in the same eight columns.
+
+---
+
+# Appended 24.08 – the doses measured on HIS OWN CAREERS, not on a bench policy
+
+His ask, verbatim: «может быть ты можешь померять дозу травм на моделировании моих сейвов как-то на
+нашем стенде? Там много сезонов. Можешь это сделать?» – §3 and §8 priced the K and F levers on
+synthetic bench archetypes, §7 priced his POLICY on a reconstructed girl. This append prices both
+levers on **the actual worlds**: twenty-one save files, five careers, loaded through the game's own
+import door (`decodeExportFile`, i.e. the real `migrateSave` path – the sample declares schema v34
+through v54 against a v59 engine) and CONTINUED FORWARD five seasons per arm.
+
+Same law as everything above: **MEASUREMENT ONLY, nothing ships.** The levers ran as the same two
+measurement-local, uncommitted env patches §8 used (`TB_SUBKNEE_K` / `TB_SUBKNEE_JUNIOR` in
+`src/engine/world/injury.ts`, `TB_REHAB_F` / `TB_REHAB_LONG` on the growWeek call's `loadFactor`
+channel in `src/engine/world.ts`), both post-draw multiplies – zero draws move on any stream, the
+frozen MAIN capture (41550 / e6b0c709) untouched by construction – reverted byte-clean, `git diff`
+empty on `src/` at push time. **READ-ONLY LAW: the saves were never copied, never committed, never
+fixtured; the repo keeps only the derived statistics below.**
+
+**Instruments added 24.08** (committed with this append):
+
+- `tools/his-careers-brackets.ts` – the ground truth. Reads the five careers as CONSECUTIVE
+  SNAPSHOT PAIRS (the find: two snapshots of one career bracket a real stretch of his play, with a
+  known start and a known end) and as an EXACT per-season panel. It does not repeat what
+  `injury-saves-read` and `his-cadence-read` already answer; it answers what neither can.
+- `tools/his-careers-dose.ts` – the sweep. Loads each save, resumes its persisted MAIN stream
+  (`rngMain`, v35) and walks five seasons under thirteen paired arms, IMPORTING his entry rule and
+  his vacation habit from `his-cadence-probe.ts` (`nextEntry`, `bookHisVacation`, both newly
+  exported behind the `TB_BENCH_NO_AUTORUN` hatch `fatigue-bench.ts` already uses) rather than
+  keeping a second copy of the policy.
+
+**⚠ AND ONE CORRECTION TO AN INSTRUMENT BEFORE ANY NUMBER BELOW IS READ.**
+`tools/his-cadence-probe.ts` shipped with argv defaults of **T1=80 / T0=55 / rescue<80**, while §7's
+own prose names the validated triple as **T1=92 / T0=72 / rescue<65**. The prose was right and the
+defaults were wrong: run as committed, at `--proRecovery 8`, the probe reads **1.33 ±0.15
+onsets/season, 28.9 events, 74.1 matches, 10.7 vacation packages and a 49% back-to-back share** –
+against §7's 0.92 / 25.0 / 64.7 / 6.7 / 29%, and against his own measured 25% back-to-back. A T1 of
+80 is above her condition most weeks, so the instrument played a cadence that is not his. At
+92/72/65 it reproduces §7's base-8 column **to every digit** (0.92 ±0.13 · 2.35 ±0.44 · 1.42 · 25.0
+±0.4 · 64.7 · 6.7 · 29/56/14 · cond 83.8 ±0.4 · sub-knee 9.9 ±0.4 · trough 40 · 63% prevalence ·
+31/11/1/1). The defaults are now the validated triple. **No §7 number moves** – that table was
+produced at the correct policy, as its prose says; what was broken was the ability to reproduce it.
+
+## §9 What his saves genuinely say – the ground truth, career by career and bracket by bracket
+
+**The sample.** 21 files: `alice-cfbv` (w257, w474) · `ines-xgv7` (w208, w362, w465, w518, w570) ·
+`naomi-3c2i` (w193, w230, w412, w466, w569, w621, w674) · `olivia-o1p7` (w104, w195, w361, w413,
+w464) · `zoe-royv` (w255), plus `academy-demo` (schema v21, not one of his careers – excluded from
+every figure). Five careers, 2437 lived weeks, 47.0 seasons, 2554 matches.
+
+**Three facts make this sample exact where §2 and §7 had to hedge, and they are worth stating
+because they change what can be claimed:**
+
+1. **`injuryHistory` is NOT pruned in any of these careers.** `rollInjury` keeps the last twenty
+   layoffs; the deepest career here holds **eleven**. So every onset of every career is present with
+   its week, severity, weeksOut and body part – the counts below are exact, not floors, and they sum
+   to `careerTotals.weeksLostToInjury` in all five careers (13/8/29/29/11).
+2. **`seasonHistory` is never pruned either.** Every save carries rows from `seasonIndex` 0, so
+   matches, end rank, points and the funds delta are exact for every season of every career.
+3. **The ENGINE can be dated per save from its DECLARED SCHEMA VERSION**, read out of the export
+   header before migration – tighter than the mtimes §7 had to use. The sample declares v34 (31.07)
+   through v54 (20.08). The week reprice (`recoveryBase` 5→8) shipped **02.08**, recovery variant C
+   (`proPhaseRecoveryBase` 5) shipped **22.08**. ⚠ **The newest save in the sample predates variant
+   C by two days: not one week of his recorded play is a variant-C week.** Everything he has ever
+   measured himself against was played on base 8.
+
+### The era gate, on his own careers
+
+The gate variant C uses – and the gate §5 recommends for K – is `activeLadderOf(world) === 'wta'`,
+which latches on `bestFinishByTier`, a never-pruned career high-water mark. **It is a ONE-WAY
+DOOR**: from her first counting W-series result she is on the professional table to the end of the
+game, and `w15` is already a W-series rung.
+
+    career    junior through   professional by   evidence                                    ladder at last snapshot
+    alice     w51              w103              byTrack season 1 banked 98 W points         wta (w474)
+    ines      –                w157              W-track result w157 (w50)                   wta (w570)
+    naomi     –                w160              W-track result w160 (w15)                   wta (w674)
+    olivia    w104             w155              activeLadderOf='itf' at w104; byTrack s2=88 wta (w464)
+    zoe       –                w210              W-track result w210 (wta250)                wta (w255)
+
+**Every one of his five careers is professional by season 4 at the latest, and three of them by
+season 3.** The junior era is 13.0 of his 47.0 recorded seasons – and 19 of his 20 snapshots are
+already `wta` at the week they were saved (only `olivia w104` is still `itf`). Hold that; §10 turns
+on it.
+
+### Per career
+
+    career   seasons  onsets  per season    wksOut/s  matches  inj/100m  mi/mo/ma/se  plan    last rank  career prize
+    alice        9.1       6  0.66 ±0.27        1.42      319      1.88      5/1/0/0  75/25     1 (post-college)  $267,795
+    ines        11.0       4  0.36 ±0.18        0.73      727      0.55      3/1/0/0  75/25    75          $8,757,380
+    naomi       13.0      11  0.85 ±0.26        2.23      787      1.40      9/1/1/0  75/25    85          $1,581,120
+    olivia       8.9       9  1.01 ±0.34        3.24      500      1.80      3/6/0/0  85/15    72          $2,651,420
+    zoe          4.9       2  0.41 ±0.29        2.23      221      0.90      1/0/1/0  75/25    65            $111,250
+
+(SEM is Poisson, √n/seasons.) His injury landscape is **not flat across his own careers**: ines runs
+0.36 a season and olivia 1.01, a factor of 2.8, and the two differences that go with it are the two
+he chose – olivia is his 85/15 plan and played her first ~250 weeks with **physio OFF**, while ines
+ran 75/25 with physio on and an elite coach from season 4. Severity follows: 6 of olivia's 9 onsets
+are moderate; 9 of naomi's 11 and 3 of ines's 4 are minor.
+
+### The brackets – what a consecutive pair actually records
+
+Each row is a real stretch of his play with a known start and a known end. `entries` is the count of
+his committed events inside the bracket that a retained 52-week results window still holds – a
+bracket longer than ~104 weeks has weeks whose entries were deleted years before the question was
+asked, and those rows are marked `*`.
+
+    career  bracket        wks  seas  onsets mi/mo/ma/se wksOut entries  rank       prize        vac  staff
+    alice   w257->w474     217   4.2       2  1/1/0/0         7    1*    62->1      $14,865       0*  COLLEGE FREEZE
+    ines    w208->w362     154   3.0       2  1/1/0/0         5   29*    23->87     $942,720     11*  coach middle->elite
+    ines    w362->w465     103   2.0       0  0/0/0/0         0   25*    87->81   $1,065,450      7*
+    ines    w465->w518      53   1.0       0  0/0/0/0         0   22*    81->77   $4,011,700      8*
+    ines    w518->w570      52   1.0       2  2/0/0/0         3   24     77->75   $2,656,000     12
+    naomi   w193->w230      37   0.7       1  1/0/0/0         2    7      75->6      $18,090      6   coach budget->middle
+    naomi   w230->w412     182   3.5       1  1/0/0/0         1   21*      6->74     $46,040      4*
+    naomi   w412->w466      54   1.0       0  0/0/0/0         0   20*    74->82      $90,150      3*
+    naomi   w466->w569     103   2.0       1  0/0/1/0        12   26*    82->77     $190,500      4*
+    naomi   w569->w621      52   1.0       3  3/0/0/0         4   27     77->84     $162,250      9
+    naomi   w621->w674      53   1.0       3  3/0/0/0         5   27*    84->85   $1,062,840      7*  coach middle->elite
+    olivia  w104->w195      91   1.8       3  1/2/0/0        12   17*     4->59      $43,520      2*  75/25, physio OFF
+    olivia  w195->w361     166   3.2       4  1/3/0/0        12   26*    59->88     $354,150      7*  75/25->85/15, physio ON
+    olivia  w361->w413      52   1.0       1  1/0/0/0         1   30     88->81   $1,095,950      5   85/15
+    olivia  w413->w464      51   1.0       1  0/1/0/0         4   30     81->72   $1,157,800      7   85/15
+    zoe     (single snapshot – no bracket)
+
+Two things a bracket shows that a career total cannot. (a) **His cadence roughly doubles between the
+junior years and the mature tour** – 10.8-16.3 events a season at naomi w193/w230 and olivia
+w104/w195, 25-33 at every mature window, peaking at olivia's 85/15 arm (32.8 at w413). (b) **The
+layoffs cluster.** naomi's last 105 weeks carry 6 of her 11 career onsets; olivia's first
+professional 91 weeks carry 3 of her 9 (and 12 of her 29 lost weeks) at physio OFF. A per-career
+mean of 0.85 hides both.
+
+### The onset rate – which of the three numbers this fuller sample supports
+
+    cut                                          seasons  onsets  per season   wksOut/s  matches  inj/100m  mi/mo/ma/se
+    DI §2: every career, every era, every engine    47.0      32   0.68 ±0.12      1.92     2554      1.25     21/9/2/0
+    DI2 §7: junior (pro from the proof week)        13.0       5   0.38 ±0.17      1.31      716      0.70      3/1/1/0
+    DI2 §7: professional                            34.0      27   0.80 ±0.15      2.15     1838      1.47     18/8/1/0
+    NEW – pro AND post-reprice AND playing          23.9      24   1.00 ±0.20      2.72     1511      1.59     16/7/1/0
+      of which plan 75/25                           18.0      16   0.89 ±0.22      2.12     1180      1.36     14/1/1/0
+      of which plan 85/15 (his own harsh arm)        5.9       8   1.35 ±0.48      4.54      331      2.42      2/6/0/0
+    the college freeze (alice w266-w474)             4.1       2   0.48 ±0.34      1.69        0         -      1/1/0/0
+    pre-reprice weeks (naomi seasons 0-3)            4.0       2   0.50 ±0.35      1.25      208      0.96      1/1/0/0
+    conservative read: proven junior                 3.0       1   0.33 ±0.33      0.33      172      0.58      1/0/0/0
+    conservative read: proven professional          29.0      26   0.90 ±0.18      2.45     1581      1.64     17/8/1/0
+    conservative read: unassignable (pruned)        14.9       5   0.34 ±0.15      1.21      801      0.62      3/1/1/0
+
+**Both of DI's and DI2's published figures reproduce exactly on the full sample** – 0.68 pooled,
+0.38 junior, 0.80 professional – so neither was a sampling artefact, and DI2's diagnosis holds:
+**the 0.68 is junior-diluted and engine-mixed, and 0.68 is the wrong number to calibrate a
+professional dose against.**
+
+**The answer is a FOURTH number: 1.00 ± 0.20 onsets a season.** DI2's 0.92 ± 0.28 was measured on
+12.0 seasons and 11 onsets, restricted to 75/25 play; the same cut widened to every career (pro
+era · post-reprice engine · actually playing) is **23.9 seasons and 24 onsets – twice the sample –
+and reads 1.00 ± 0.20, 2.72 weeks lost a season, 1.59 per 100 matches.** 0.92 sits comfortably
+inside it, so this is a refinement and not a contradiction, and the reason for the drift is
+nameable rather than statistical: **DI2 excluded olivia as "the 85/15 arm", and olivia is a real
+career of his that runs 1.35 ± 0.48.** Split his own way, the two numbers are 0.89 ± 0.22 for
+75/25 and 1.35 ± 0.48 for 85/15 – and the honest single figure for "his professional play" is the
+pooled 1.00.
+
+**What the saves do NOT record, stated rather than inferred:**
+- **Condition at entry, and any condition series.** No save holds one; §7 already said so and it is
+  still true. What does exist is 20 POINT samples of `world.condition` at the export week (mean
+  87.7, range 53-100) – a biased sample, since he exports when he exports, but it is the only
+  observation of his condition that exists at all, and it is not evidence against the probe's
+  equilibrium of 83.8.
+- **Entry tiers outside each snapshot's 52-week results window, and vacations outside its 60-week
+  finance window** – the `*` rows above.
+- **The exact week the professional era opened** on the four careers whose early `byTrack` rows
+  predate v46 (which back-fills nothing). Reported as a bracket, and the 14.9 seasons that fall in
+  those brackets are shown unassigned in the conservative read rather than being assigned.
+- **When each career was STARTED.** A save's declared version dates its last write, not its first
+  week, so the seasons before a career's first snapshot carry an upper bound only.
+
+## §10 The doses on HIS careers – and the era finding that decides the ruling
+
+Every save loaded through `decodeExportFile`, its persisted MAIN stream resumed (`rngMain`, v35),
+then **five seasons walked per arm** under his imported entry rule and vacation habit. Twenty
+snapshots × thirteen arms × 260 weeks = **4963 weeks of continued play per arm**, ~100 season
+observations, paired save-by-save. His money is left exactly as saved (no top-up), so a bankruptcy
+is a real outcome and is counted.
+
+### Null-result law first: every arm is proved to contain its change
+
+Before any null below is believed, both readers were proved live **in the same tree**:
+
+- **The K reader, in the era where the gate is OPEN.** `tools/rehab-lever.ts`, 3 seeds × 4 profiles
+  × 3 policies × 104w, junior era, `TB_SUBKNEE_K=8 TB_SUBKNEE_JUNIOR=1` against the K=0 control:
+  grinder onsets **3.25 ±0.48 → 5.58 ±0.70**, weeks lost **7.4 → 12.8**, ranked careers 2/12 →
+  4/12; careful 3.00 → 3.33. The junior gate does not disable the lever – it fires hard when the
+  era is junior, in the direction and magnitude §3 measured.
+- **The K reader, on HIS careers.** `PROBE-K50` (absurd dose, ungated) moves his own continued
+  careers by **+2.10 ±0.40 onsets and +7.30 ±1.95 weeks lost per save** over five seasons, severity
+  67/27/5/0 → 91/37/13/0.
+- **The F reader.** `TB_REHAB_F=-50` on the junior bench collapses the grinder's 104w skill gain
+  **+8.65 → −4.03** (end skill 57.14 → 44.45), reproducing §8's own probe.
+
+### ⭐ Finding 14 – a junior-gated K cannot touch a single one of his careers, at any dose
+
+    save                startWk  ladder at load  junior weeks in 260 walked
+    olivia-o1p7_w104        104  itf                                      2
+    every other snapshot      –  wta                                      0
+    TOTAL                                              2 of 4963 (0.04%)
+
+`activeLadderOf` latches on `bestFinishByTier`, a never-pruned high-water mark, so the professional
+arm is **a one-way door** – and `w15` is already a W-series rung, which his girls reach in season
+2-4. Nineteen of his twenty snapshots are already `wta` at the week he saved them; the twentieth
+(olivia at w104) latches after **two** more weeks.
+
+The consequence, measured rather than argued:
+
+    arm            d onsets / 5 seasons   d weeks lost      d events      tournaments missed
+    K4jr           +0.00 ±0.00            +0.00 ±0.00       +0.00 ±0.00                     0
+    K8jr           +0.00 ±0.00            +0.00 ±0.00       +0.00 ±0.00                     0
+    PROBE-K50jr    +0.00 ±0.00            +0.00 ±0.00       +0.00 ±0.00                     0
+    (PROBE-K50, the same dose UNGATED, in the same tree, on the same saves:
+     +2.10 ±0.40      +7.30 ±1.95      −1.45 ±0.98      224 tournaments displaced)
+
+**Byte-identical on all twenty snapshots – not "within noise", identical**: same onsets, same
+severity mix, same weeks lost, same events, same prize, same end skill, same rank. **§5's
+recommended lever, at its recommended dose and with its recommended gate, is a no-op on the owner's
+own five careers, and stays a no-op at a dose of fifty.** A lever that cannot reach his careers is
+not the lever he asked for.
+
+### Finding 15 – ungated, the K dose is real but SMALL on his careers: +6.7%, not +61%
+
+    arm        onsets/season   sev mi/mo/ma/se   wksLost/s   events/s  matches/s  meanCond  subknee/s  prize/season
+    SHIPPED    1.04 ±0.09      67/27/5/0             2.69       24.6       70.6      81.1       12.0      $909,152
+    K4         1.09 ±0.10      70/28/6/0             2.85       24.6       70.4      81.1       11.9      $905,276
+    K8         1.11 ±0.11      73/28/5/0             2.83       24.6       70.3      81.1       11.9      $910,731
+    F0.3       1.13 ±0.11      76/28/4/0             2.76       24.6       70.6      80.9       12.1      $920,256
+    F0         1.14 ±0.11      77/28/4/0             2.78       24.6       70.9      80.9       12.2      $938,798
+    K8-F0.3    1.16 ±0.11      78/29/4/0             2.84       24.6       70.4      80.9       12.0      $924,639
+    K8-F0      1.18 ±0.11      80/29/4/0             2.87       24.6       70.7      80.9       12.0      $943,005
+    PROBE-K50  1.48 ±0.12      91/37/13/0            4.22       24.3       69.4      81.1       11.9      $872,946
+
+Paired against SHIPPED, one pair per save (SEM across the 20 snapshots, and in brackets the
+conservative SEM across the FIVE careers, since two snapshots of one career are not independent):
+
+    arm         d onsets / 5 seasons          d weeks lost / 5 seasons     d events / 5 seasons
+    K4          +0.25 ±0.16 (±0.16)           +0.75 ±0.65 (±0.55)          −0.05 ±0.05 (±0.04)
+    K8          +0.35 ±0.20 (±0.19)           +0.65 ±0.36 (±0.32)          −0.10 ±0.16 (±0.10)
+    F0.3        +0.45 ±0.31 (±0.20)           +0.30 ±0.33 (±0.21)          −0.35 ±0.32 (±0.25)
+    F0          +0.50 ±0.35 (±0.19)           +0.40 ±0.45 (±0.26)          −0.20 ±0.32 (±0.28)
+    K8-F0.3     +0.60 ±0.28 (±0.26)           +0.70 ±0.50 (±0.29)          −0.35 ±0.27 (±0.18)
+    K8-F0       +0.70 ±0.35 (±0.27)           +0.85 ±0.56 (±0.28)          −0.05 ±0.20 (±0.12)
+
+**K=8 UNGATED buys +0.07 ± 0.04 onsets a season on his careers – 1.04 → 1.11, +6.7%** – against
+the **+61%** the same dose buys the bench grinder (§3: 3.75 → 6.03 per 104w career). Two SEM puts
+the ceiling at about +14%. And that is not a defect in the lever: **his careers behave like the
+bench's CAREFUL policy, whose §3 response to K=8 is +8.6%.** The three numbers agree, and they say
+the same thing three ways – the lever prices recklessness, and there is no recklessness in his
+saves to price. He plays 24.6 weeks of 52, at mean condition 81.1, with 12.0 weeks a season below
+the knee; the grinder lives at 52 and spends 70% of her weeks there.
+
+### Finding 16 – ⭐ the number he feels: the dose costs him essentially no tournaments
+
+Of the events the SHIPPED arm played, the number this arm did NOT play, over 5 seasons × 20 saves:
+
+    arm         events he loses      events he gains instead    NET events / 5 seasons
+    K4                        6                            5      −0.05 ±0.05
+    K8                       17                           15      −0.10 ±0.16
+    F0.3                     62                           55      −0.35 ±0.32
+    F0                       77                           73      −0.20 ±0.32
+    K8-F0                    86                           85      −0.05 ±0.20
+    PROBE-K50               224                          195      −1.45 ±0.98
+
+**The calendar re-flows around a layoff instead of shrinking.** At K=8 he loses 17 tournaments
+across a hundred continued seasons and gains 15 back – a NET of one tenth of one tournament per
+five seasons, indistinguishable from zero. Even at the absurd K=50 the net cost is **1.45
+tournaments in five seasons**. His cadence has slack: he enters 24.6 of 52 weeks, so a two-week
+layoff lands on weeks he was resting anyway, or pushes an entry one week down the calendar. This is
+the honest answer to "how many of my tournaments would I have missed": under every dose on the
+table, **none that he would notice.** (The larger displacement counts under the F arms are almost
+entirely re-flow, not loss – F moves her skills, her skills move a match, and the schedule
+downstream of that match is different without being shorter. End skill over five seasons moves
+59.58 → 59.55, which is §8's Finding 13 again: a mature career has no development headroom left.)
+
+### Finding 17 – nothing else moves either, and the one career that ends is ended by money
+
+Across every arm: **end rank 83, unchanged. Prize $0.87-0.94M a season, ±3%, with no monotone
+trend in the dose. End skill 59.55-59.58. Mean condition 80.9-81.1. One career ending in every
+arm** – `naomi w412`, and it is `bankruptcy` at **w435, 23 weeks in, at the identical week in all
+thirteen arms including K=50 and F=-50.** She was saved with $8,070 and a middle coach's bill; the
+injury lever is not what threatens that career, her bank balance is. **Career-ending INJURIES: zero
+at every real dose, and zero even at K=50.** The only one in the whole sweep is `naomi w193` under
+`PROBE-F-50` (`injury@w447`) – a girl whose skills the absurd arm is actively destroying, which is
+what an absurd arm is for.
+
+The severity mix is where the ungated dose is at least visible: **minors 67 → 73 and moderates
+27 → 28 at K=8, over ~100 continued seasons; majors 5 → 5, severes 0 → 0 at every real dose.** At
+K=50 it becomes 91/37/13/0. No dose on the table gives him a severe injury.
+
+### Finding 18 – where each lever DOES land on his careers, save by save
+
+Neither lever is uniform across him, and the concentration is the interesting part. Onsets over the
+continued five seasons, per snapshot, SHIPPED → arm (only the snapshots that move are listed; the
+rest are identical):
+
+    K=8 UNGATED moves 3 of 20 snapshots, and they are his DENSE windows
+      olivia w104   6 → 9   (+50%)   his 85/15 arm, the physio-off era
+      olivia w195   7 → 9   (+29%)   his 85/15 arm
+      naomi  w569   7 → 9   (+29%)   28.3 events/season, his busiest naomi window
+      ines (all 5) · alice (both) · zoe · every mature 75/25 naomi window:  +0
+
+    F=0.3 moves 2 of 20 snapshots, and they are his YOUNGEST
+      naomi  w193   3 → 7            season 3, skill 60 against potential 66
+      olivia w195   7 → 12           season 3
+      every mature snapshot (skills at 60-64, potential 63-66):  +0
+
+**This is the discrimination §6 asked for, appearing in his own careers rather than in an
+archetype.** The K lever finds the two windows where he pushed hardest and leaves the eleven mature
+75/25 windows untouched – 0.00, not "within noise". And F behaves exactly as §8's Findings 12-13
+predicted: it prices development, so it can only bite where development headroom is left, and a
+mature career has none. ⚠ Both are DOWNSTREAM effects through the schedule (a lever changes a body,
+the body changes a match, the match changes next season's rungs), so a single snapshot's +4 is one
+draw of a noisy quantity; the pattern across snapshots is the claim, not any one row.
+
+### Finding 19 – his own worlds validate §7's probe, and correct §4's framing of "the pro era"
+
+The continued careers are an independent check on §7's arm-1 reconstruction, and it holds:
+
+    quantity                    §7 probe @ base 5   HIS OWN WORLDS, continued @ base 5
+    onsets/season               1.21 ±0.15          1.04 ±0.09
+    weeks lost/season           3.08 ±0.51          2.69
+    events/season               28.4 ±0.5           24.6
+    mean condition              80.8 ±0.4           81.1
+    weeks below the knee(70)    13.4 ±0.5           12.0
+
+Five rows inside noise on a reconstruction that never saw these worlds. §7's probe measured the man.
+
+⚠ **And that reading corrects §4, which is what the ruling turns on.** §4's headline – «the
+professional season lives below the knee», **42.4 ± 1.0 of 52 weeks** – and Finding 5's «at ANY
+visible dose the knee-70 lever destroys the pro era's own calibration» were both measured on the
+reprice spec's pair schedule. **His own professional careers spend 12.0 of 52 weeks below the
+knee**, a factor of 3.5 lower, because he buys recovery: §7 Finding 8 counted his rescue habit
+firing 6.7-11.4 times a season. **"The pro era lives below the knee" is a fact about a bench
+schedule that never books a family week, not about the professional era.** The calibration the
+junior gate was chosen to protect is not the calibration his careers are in.
+
+## §11 The ruling, framed as HIS decision
+
+He asked for the dose measured on his own saves. It is, and the measurement changes the answer §5
+arrived at from the bench.
+
+**The two numbers that decide it:**
+
+1. **A junior-gated K is +0.00 ± 0.00 on twenty of his twenty snapshots – and still +0.00 at a dose
+   of fifty.** Not small; identical. Nineteen of his twenty saves are already on the professional
+   table when he saved them, the twentieth latches two weeks later, and the latch is a one-way door.
+   §5's recommended lever, at its recommended gate, cannot reach a single week of his play.
+2. **Ungated at K=8 it does exactly what he asked, on his own material: +50% onsets on olivia
+   (6 → 9 over five seasons, his 85/15 arm), +29% on his two next-densest windows, and +0.00 on
+   ines, alice, zoe and every mature 75/25 naomi window.** Pooled that is 1.04 → 1.11 a season
+   (+6.7% ± 3.8%) – the CAREFUL policy's §3 response (+8.6%), which is the right comparison,
+   because his play is careful play.
+
+**And the number that says it is safe to do:** the dose costs him **a net 0.10 ± 0.16 tournaments
+per five seasons** (17 displaced, 15 regained), leaves his rank at 83 and his prize money inside
+3%, and gives him **zero severe injuries at every dose on the table.** The lever cannot cost him a
+career: the only ending in the whole sweep is naomi w412's bankruptcy at w435, identical in all
+thirteen arms.
+
+**My recommendation: K = 8, UNGATED. F = 0.3, on §8's evidence rather than on this one.**
+
+The gate has to go, and the reason is §4's own instrument rather than a change of taste. The gate
+was forced by Finding 5 – an ungated dose blowing the pro era's 46-54% prevalence band to 90-98% –
+and Finding 5 was priced on a schedule that spends 42.4 of 52 weeks below the knee. His careers
+spend 12.0, because he buys recovery packages and the bench player does not. **The gate protects a
+professional who does not exist in his saves, at the price of protecting every professional who
+does.** If the bench reference player is a real playstyle worth protecting, the honest instrument
+is an EXPOSURE gate (sub-knee weeks per season, or the vacation habit), not an ERA gate – and that
+is a separate measurement, not this ruling.
+
+**On F, the honest answer is that his careers cannot decide it.** F moved two of his twenty
+snapshots, both season-3 windows with development headroom, and nothing at all on the sixteen
+mature ones – which is §8's Findings 12-13 reproducing, not new evidence. The perverse effect F
+exists to repair (§3 Finding 4: the grinder's ranked careers RISING with dose) does not occur in
+his careers at any arm, because there is no grinder among them. **F=0.3 stays my pick on §8's
+junior-bench evidence; this measurement neither supports nor contradicts it, and says so.**
+
+**His call, in one line each:**
+
+- **K=8 ungated + F=0.3 – my pick.** +50% on his hardest career, +0.00 on his careful ones, net
+  −0.10 tournaments per five seasons, zero severes. The only option that touches his own play.
+- K=8 ungated + F=1 (shipped rehab) – the same injury result on his careers (F is invisible to a
+  mature career); pick it if §8's junior evidence does not convince him.
+- **K=8 or K=4 junior-gated – rejected by this measurement**, and rejected on the strongest possible
+  grounds: it is provably a no-op on all five of his careers, at every dose up to 50. It is a
+  change he would never see.
+- K=0 – the shipped game already prices his professional play at **1.00 ± 0.20 onsets a season**
+  (§9's fourth number), 2.72 weeks lost, and 1.35 on his 85/15 arm against 0.89 on his 75/25 one.
+  His «я аккуратно играл и всё равно травмы были» is the game working, and the gap between his two
+  own plans is already a real signal.
+
+**No engine change ships from this append either.** Both patches were reverted byte-clean; `git
+diff` is empty on `src/`, `tests/condition.test.ts` is green on the frozen capture (41550 /
+e6b0c709), and the (K, F) pair and its gate remain his ruling to make.
