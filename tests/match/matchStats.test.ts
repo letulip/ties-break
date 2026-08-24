@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
-import { computeMatchStats, formatDuration } from '../../src/engine/match/matchStats'
+import { computeMatchStats, formatDuration } from '../../src/viz/match/matchStats'
 import { matchDurationSeconds } from '../../src/viz/matchClock'
 import type { MatchOptions, MatchPlayer, Surface } from '../../src/engine/match/types'
 import {

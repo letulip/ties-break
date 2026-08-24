@@ -30,7 +30,12 @@
 // stream, and in what order the serves draw from it) therefore moved down here beside the model
 // instead of being copied into the viewer.
 
-import type { AnnotatedPoint } from '../../viz/types'
+// R2-06: `AnnotatedPoint` comes from the neutral leaf `shared/matchViz.ts` rather than from
+// `viz/types.ts`. ⚠ AND THIS MODULE IS THE REASON THE THREE MATCH FILES DID NOT ALL MOVE TO
+// `viz/match/`: `match/point.ts` – the OUTCOME model – imports `serveSpeedBase` and
+// `LEGACY_SNAPSHOT_AGE` from here, so the speed curve is engine property. Relocating it under
+// `viz/` would have inverted the same arrow again, one directory further along.
+import type { AnnotatedPoint } from '../../shared/matchViz'
 import { rngFromSeed } from '../rng'
 import type { MatchPlayer, Side } from './types'
 

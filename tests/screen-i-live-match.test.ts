@@ -1135,8 +1135,14 @@ describe('the serve speed on the court is the same number the box score reports'
 
   it('both readers go through pointServeSpeeds - the viewer imports it and derives nothing', () => {
     // The box score's avg/max rows...
-    const stats = read('../src/engine/match/matchStats.ts')
-    expect(stats).toContain("import { pointServeSpeeds } from './serveSpeed'")
+    // ⚠ RE-AIMED BY R2-06, NOT WEAKENED. The box score moved from `src/engine/match/matchStats.ts`
+    // to `src/viz/match/matchStats.ts` (it is presentation, and only screens read it), so its import
+    // of the speed model is now a relative hop into the engine rather than a sibling `./serveSpeed`.
+    // Both halves of the claim are unchanged: the SAME symbol, from the SAME module, called with the
+    // SAME four arguments. The path read below throws ENOENT if the module moves again, which is how
+    // this pin announced the move in the first place.
+    const stats = read('../src/viz/match/matchStats.ts')
+    expect(stats).toContain("import { pointServeSpeeds } from '../../engine/match/serveSpeed'")
     expect(stats).toContain('pointServeSpeeds(seed, point, playerA, playerB)')
     // ...and the live reading under the court, from the same call.
     expect(viewer).toContain("import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'")
