@@ -9,6 +9,38 @@ const args = new Set(process.argv.slice(2))
 const check = args.has('--check')
 const json = args.has('--json')
 const verbose = args.has('--verbose')
+const updateBaseline = args.has('--update-baseline')
+
+// --- THE BASELINE, AND IT IS A ONE-WAY RATCHET (R2-12; TOK-02, TOK-05) --------------------------
+//
+// ⚠ THE HOLE IT CLOSES. This audit counted 136 unclassified documents and 44 over-budget source
+// files, and then let a 137th and a 45th join them in silence. A count that only ever goes up is a
+// number, not a guard: the review's own words are "snapshot the legacy unclassified set and make it
+// a one-way ratchet – a newly added document needs metadata; an existing unclassified document
+// needs metadata when materially edited. Classify old files only when touched."
+//
+// SO THE TWO HALVES ARE DELIBERATELY DIFFERENT, and the difference is the whole design:
+//
+//   unclassified docs -> ERROR for a new one. Frontmatter costs six lines; there is no legitimate
+//                        reason for a document added today to arrive without it.
+//   source size       -> WARNING, always, for both "newly over" and "grew fast". Everything the
+//                        SOURCE_BUDGETS note below says still stands: a size trigger is a review
+//                        question, not a defect, and a gate that goes red on the first honest
+//                        commit is a gate somebody switches off. The review is explicit: no
+//                        arbitrary line or comment hard cap.
+//
+// A baseline entry that DISAPPEARS never fails. Tightening must not require a co-ordinated commit,
+// or the next person banks their new debt into the baseline instead of paying it.
+const BASELINE_FILE = 'tools/generated/context-baseline.json'
+
+// A file joins the watch list at 60% of a trigger, not at 100%: the interesting warning is the one
+// that arrives BEFORE the threshold, and a baseline listing only over-budget files cannot produce a
+// growth delta for the file that is about to cross.
+const WATCH_FRACTION = 0.6
+
+// What counts as "fast growing" between two runs. Percentage alone flags a 40-line file that gained
+// four; an absolute floor alone never fires on the hubs. Both must hold.
+const GROWTH = { fraction: 0.1, lines: 100, commentCharacters: 4_000, scriptLines: 80 }
 
 const requiredFiles = [
   // ⚠ CLAUDE.md IS THE MOST EXPENSIVE RECURRING DOCUMENT IN THE REPO and it was the only one this
@@ -163,15 +195,21 @@ function scriptLines(text) {
 async function sourceBudgets() {
   const files = (await Promise.all(SOURCE_ROOTS.map((dir) => walkSource(path.join(root, dir))))).flat()
   const over = []
+  // ⚠ MEASURED FOR EVERY FILE, RECORDED FOR THE WATCH LIST ONLY. The delta report needs a previous
+  // number to subtract, and a baseline holding all 189 files would churn on every commit while the
+  // interesting warning – the file about to cross – would still be missing. See WATCH_FRACTION.
+  const measures = {}
   let acknowledged = 0
 
   for (const file of files.sort()) {
     const text = await fs.readFile(file, 'utf8')
     const rel = relative(file)
     const triggers = []
+    const measured = {}
 
     if (rel.endsWith('.vue')) {
       const lines = scriptLines(text)
+      measured.scriptLines = lines
       if (lines > SOURCE_BUDGETS.vueScriptLines) {
         triggers.push({
           measure: 'script lines',
@@ -182,6 +220,7 @@ async function sourceBudgets() {
       }
     } else {
       const lines = text.split(/\r?\n/).length
+      measured.lines = lines
       if (lines > SOURCE_BUDGETS.tsLines) {
         triggers.push({
           measure: 'lines',
@@ -191,6 +230,7 @@ async function sourceBudgets() {
         })
       }
       const { commentCharacters } = commentMetrics(text)
+      measured.commentCharacters = commentCharacters
       if (commentCharacters > SOURCE_BUDGETS.tsCommentCharacters) {
         triggers.push({
           measure: 'comment characters',
@@ -201,6 +241,12 @@ async function sourceBudgets() {
       }
     }
 
+    const watched =
+      (measured.lines ?? 0) >= SOURCE_BUDGETS.tsLines * WATCH_FRACTION ||
+      (measured.commentCharacters ?? 0) >= SOURCE_BUDGETS.tsCommentCharacters * WATCH_FRACTION ||
+      (measured.scriptLines ?? 0) >= SOURCE_BUDGETS.vueScriptLines * WATCH_FRACTION
+    if (watched) measures[rel] = measured
+
     if (!triggers.length) continue
     if (BUDGET_WAIVER.test(text)) {
       acknowledged += 1
@@ -210,7 +256,56 @@ async function sourceBudgets() {
   }
 
   over.sort((a, b) => b.worst - a.worst)
-  return { files: files.length, over, acknowledged }
+  return { files: files.length, over, acknowledged, measures }
+}
+
+/** The committed snapshot the ratchet and the delta report are measured against. */
+async function readBaseline() {
+  try {
+    return JSON.parse(await fs.readFile(path.join(root, BASELINE_FILE), 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+const MEASURE_LABEL = { lines: 'lines', commentCharacters: 'comment characters', scriptLines: 'script lines' }
+
+/** Newly over budget, and growing fast – both WARNINGS, never errors. See the BASELINE_FILE note. */
+function sourceDeltas(source, baseline) {
+  if (!baseline) return { newlyOver: [], growing: [], shrunk: [] }
+  const wasOver = new Set(baseline.sourceOverBudget ?? [])
+  const before = baseline.sourceMeasures ?? {}
+
+  const newlyOver = source.over.filter((entry) => !wasOver.has(entry.file)).map((entry) => ({
+    file: entry.file,
+    triggers: entry.triggers.map((t) => `${t.value.toLocaleString('en-US')} ${t.measure} over ${t.trigger.toLocaleString('en-US')}`),
+  }))
+
+  const growing = []
+  const shrunk = []
+  for (const [file, now] of Object.entries(source.measures)) {
+    const then = before[file]
+    if (!then) continue
+    for (const key of ['lines', 'commentCharacters', 'scriptLines']) {
+      if (typeof now[key] !== 'number' || typeof then[key] !== 'number') continue
+      const delta = now[key] - then[key]
+      if (delta === 0) continue
+      const fast = delta >= GROWTH[key] && delta >= then[key] * GROWTH.fraction
+      const entry = {
+        file,
+        measure: MEASURE_LABEL[key],
+        from: then[key],
+        to: now[key],
+        delta,
+        percent: Math.round((delta / Math.max(then[key], 1)) * 1000) / 10,
+      }
+      if (fast) growing.push(entry)
+      else if (delta <= -GROWTH[key]) shrunk.push(entry)
+    }
+  }
+  growing.sort((a, b) => b.delta - a.delta)
+  shrunk.sort((a, b) => a.delta - b.delta)
+  return { newlyOver, growing, shrunk }
 }
 
 // --- THE CORRECTION PAIR: ONE MECHANIC, TWO DOCUMENTS, BOTH STILL CURRENT ------------------------
@@ -421,7 +516,17 @@ async function main() {
   }
 
   const docs = (await walkMarkdown(docsRoot)).sort()
-  const linkedFiles = [path.join(root, 'AGENTS.md'), path.join(root, 'README.md'), ...docs].filter(
+  // ⚠ CLAUDE.md IS IN THIS LIST NOW, AND IT WAS NOT (24.08). It was already declared required and
+  // already carried a 22,000-character budget – but the budget was never measured, because the file
+  // never entered `records`, so `budgets` skipped it with `if (!record) continue`. A ceiling nobody
+  // computes is a comment. R2-04's own words: "the most expensive recurring document in the repo and
+  // it was the only one this audit did not see." Measured on the day it joined: 20,891 of 22,000.
+  const linkedFiles = [
+    path.join(root, 'CLAUDE.md'),
+    path.join(root, 'AGENTS.md'),
+    path.join(root, 'README.md'),
+    ...docs,
+  ].filter(
     (file) => requiredFiles.includes(relative(file)) || relative(file) === 'README.md' || file.startsWith(docsRoot),
   )
   const records = []
@@ -551,6 +656,42 @@ async function main() {
     .map(({ file, estimatedTokens, lines }) => ({ file, estimatedTokens, lines }))
 
   const source = await sourceBudgets()
+  const baseline = await readBaseline()
+
+  if (updateBaseline) {
+    const next = {
+      note: 'Generated by `npm run context:baseline`. A one-way ratchet – see scripts/context-audit.mjs.',
+      updated: new Date().toISOString().slice(0, 10),
+      unclassifiedDocs: [...unclassified].sort(),
+      sourceOverBudget: source.over.map((entry) => entry.file).sort(),
+      sourceMeasures: Object.fromEntries(Object.entries(source.measures).sort(([a], [b]) => (a < b ? -1 : 1))),
+    }
+    await fs.mkdir(path.dirname(path.join(root, BASELINE_FILE)), { recursive: true })
+    await fs.writeFile(path.join(root, BASELINE_FILE), `${JSON.stringify(next, null, 2)}\n`)
+    console.log(
+      `context baseline written: ${next.unclassifiedDocs.length} unclassified docs, ` +
+        `${next.sourceOverBudget.length} over budget, ${Object.keys(next.sourceMeasures).length} watched source files`,
+    )
+    return
+  }
+
+  // --- THE DOCUMENT RATCHET. A NEW UNCLASSIFIED DOCUMENT IS AN ERROR; THE LEGACY 136 ARE NOT. ----
+  const legacyUnclassified = new Set(baseline?.unclassifiedDocs ?? [])
+  const newlyUnclassified = baseline ? unclassified.filter((file) => !legacyUnclassified.has(file)) : []
+  const classifiedSinceBaseline = baseline
+    ? [...legacyUnclassified].filter((file) => !unclassified.includes(file) && byFile.has(file)).sort()
+    : []
+  for (const file of newlyUnclassified) {
+    errors.push(
+      `${file}: new document with no governance frontmatter – add type/status/area/last-reviewed ` +
+        `(the legacy ${legacyUnclassified.size} are grandfathered, a new one is not)`,
+    )
+  }
+  if (!baseline) {
+    warnings.push(`no ${BASELINE_FILE} – run \`npm run context:baseline\` once to arm the ratchet`)
+  }
+
+  const deltas = sourceDeltas(source, baseline)
 
   const result = {
     ok: errors.length === 0,
@@ -572,6 +713,16 @@ async function main() {
       trigger: SOURCE_BUDGETS,
       acknowledged: source.acknowledged,
       over: source.over.map(({ file, triggers }) => ({ file, triggers })),
+    },
+    // ⚠ ALSO OUTSIDE `errors` AND `warnings`, for the same reason `sourceBudgets` is: a delta is a
+    // review question with a number attached. The review's ruling stands – no line or comment cap.
+    ratchet: {
+      baseline: baseline ? `${BASELINE_FILE} (${baseline.updated})` : null,
+      newUnclassifiedDocs: newlyUnclassified,
+      classifiedSinceBaseline,
+      newlyOverBudget: deltas.newlyOver,
+      growing: deltas.growing,
+      shrunk: deltas.shrunk,
     },
     largest,
     errors,
@@ -616,6 +767,29 @@ async function main() {
     }
     if (source.over.length > shown.length) {
       console.log(`    ... and ${source.over.length - shown.length} more (--verbose to list)`)
+    }
+    // ⚠ THE DELTA REPORT, AND IT IS A WARNING BY CONSTRUCTION. Nothing below touches `errors`.
+    console.log(
+      `  since ${baseline ? `the baseline of ${baseline.updated}` : 'no baseline (run npm run context:baseline)'}:` +
+        (baseline
+          ? ` ${deltas.newlyOver.length} newly over a trigger, ${deltas.growing.length} growing fast, ` +
+            `${deltas.shrunk.length} smaller, ${classifiedSinceBaseline.length} docs classified`
+          : ''),
+    )
+    for (const entry of deltas.newlyOver) {
+      console.log(`    WARNING newly over: ${entry.file} – ${entry.triggers.join('; ')}`)
+    }
+    for (const entry of deltas.growing) {
+      console.log(
+        `    WARNING growing: ${entry.file} ${entry.measure} ${entry.from.toLocaleString('en-US')} -> ` +
+          `${entry.to.toLocaleString('en-US')} (+${entry.delta.toLocaleString('en-US')}, +${entry.percent}%)`,
+      )
+    }
+    for (const entry of deltas.shrunk.slice(0, verbose ? deltas.shrunk.length : 5)) {
+      console.log(
+        `    smaller: ${entry.file} ${entry.measure} ${entry.from.toLocaleString('en-US')} -> ` +
+          `${entry.to.toLocaleString('en-US')} (${entry.delta.toLocaleString('en-US')}, ${entry.percent}%)`,
+      )
     }
     if (correctionPairs.length) {
       console.log(`  correction pairs: ${correctionPairs.length}`)
