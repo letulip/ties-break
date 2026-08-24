@@ -10,9 +10,16 @@
 // pointing backwards, which nothing caught because it deadlocked nothing and changed no outcome.
 // A contract two layers share belongs under both of them.
 //
-// ⚠ THE RE-EXPORT IS NOT A COURTESY, IT IS THE REASON THE MOVE WAS AFFORDABLE. Fifteen files import
-// these names from `../viz/types` and none of them had to change; the barrel is the same discipline
-// `engine/world.ts` keeps for its 280 importers. Presentation code may keep reading either path.
+// ⚠ THE RE-EXPORT IS NOT A COURTESY, IT IS THE REASON THE MOVE WAS AFFORDABLE. 14 files (24.08)
+// read a moved name off this path and NONE of them had to change; the barrel is the same discipline
+// `engine/world.ts` keeps for its own importers. Presentation code may keep reading either path.
+//
+// ⚠ COUNT IT, DO NOT QUOTE IT – and the cheap way to count is WRONG here. Two of the fourteen spell
+// the import across several lines, so a per-line `^import.*from '…viz/types'` pattern skips both and
+// answers 13. Match against the whole file text with the `[\s\S]*?` form the two architecture tests
+// use, over the file list `git grep -lE "from '[^']*viz/types'" -- src tests tools e2e` gives:
+// 14 read a moved name, 4 read only the playback types below.
+//
 // ⚠ ENGINE code may NOT – it reads `shared/matchViz` directly, and
 // `tests/engine-viz-direction.test.ts` fails the build the moment an engine file imports this file.
 //

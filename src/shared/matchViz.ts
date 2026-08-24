@@ -20,9 +20,10 @@
 // rather than a boundary. What is here is what both sides genuinely share, and no more.
 //
 // ⚠ `src/viz/types.ts` RE-EXPORTS EVERY NAME BELOW, so this move cost its consumers nothing: the
-// fifteen files that import `AnnotatedMatch` / `COURT` / `Shot` from `../viz/types` still compile
-// against that path unchanged. Same barrel discipline `engine/world.ts` lives by. New PRESENTATION
-// code may read either path; new ENGINE code must read this one, and
+// 14 files (24.08) that read `AnnotatedMatch` / `COURT` / `Shot` off `../viz/types` still compile
+// against that path unchanged. ⚠ Recount rather than quoting that number, and recount the way the
+// note in `viz/types.ts` says – a per-line grep answers 13. Same barrel discipline `engine/world.ts`
+// lives by. New PRESENTATION code may read either path; new ENGINE code must read this one, and
 // `tests/engine-viz-direction.test.ts` fails the build if it does not.
 //
 // Court coordinates are in METRES, origin = net centre; side 0 defends y < 0, side 1 defends y > 0.

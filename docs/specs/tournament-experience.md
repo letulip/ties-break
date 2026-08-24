@@ -81,7 +81,8 @@ the match has been watched or skipped.
 
 ## Match stats (owner item 14)
 
-`src/engine/match/matchStats.ts` – pure. `computeMatchStats(annotated, playerA, playerB)` (the two
+`src/viz/match/matchStats.ts` – pure (moved out of `src/engine/match/` at R2-06: a box score is
+presentation, and only screens read it). `computeMatchStats(annotated, playerA, playerB)` (the two
 players are needed for serve skill, which `AnnotatedMatch` does not carry – documented deviation from
 the one-arg signature in the item). Per side:
 
