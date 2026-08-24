@@ -327,9 +327,16 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
       <p class="college-rule">{{ collegeAwardsNothing }}</p>
 
       <dl v-if="lastYear" class="college-facts">
+        <!-- ⚠⚠ TWO LABELS, BY THE SIGN (owner, 24.08) – and the word was the whole defect. The
+             figure is `fundsCents` now minus `fundsCents` a year ago: what the BALANCE did, never
+             what she earned. At college she is an amateur, so there is no prize money and the bills
+             keep arriving – the delta is negative in most college years, and the card was printing
+             «Banked -$3,200». Nothing was ever miscomputed; the noun promised the opposite of what
+             the number said. `Math.abs` on the amount, because the label already carries the sign –
+             «Spent -$3,200» would say it twice. -->
         <div>
-          <dt>Banked</dt>
-          <dd>{{ formatCents(lastYear.fundsDeltaCents) }}</dd>
+          <dt>{{ lastYear.fundsDeltaCents < 0 ? 'Spent' : 'Banked' }}</dt>
+          <dd>{{ formatCents(Math.abs(lastYear.fundsDeltaCents)) }}</dd>
         </div>
         <!-- ⭐⭐ THE YEAR'S BILL, BESIDE WHAT THE YEAR BANKED (round 21). One is what the family
              paid, the other is what the balance did anyway. Neither is an opinion about the other. -->
