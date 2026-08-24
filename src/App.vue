@@ -17,6 +17,11 @@ import { needRefresh, applyUpdate } from './pwa'
 // arrival-gate bug, one surface further out. So the label, the mode the handler below switches on and
 // the blocked state are ONE computed with two readers. See composables/weekAction.ts.
 import { useWeekAction } from './composables/weekAction'
+// ⭐ R2-13 PHASE 1 – the span and its report. `MULTI_WEEK_SPAN` is the ONE place the number four is
+// written on the UI side (the composable reads it too, so the button's label and the press cannot
+// disagree), and `spanDigest` is the engine's own answer to "what happened in between" – the shell
+// groups nothing itself, for the reason weekAction.ts's header gives about second opinions.
+import { MULTI_WEEK_SPAN, spanDigest } from './engine/world/multiWeek'
 // ⚠ RE-AIMED, NOT RETIRED: `calendarOwnsWeekAhead` used to decide where a week LANDED and now decides
 // which weeks the calendar PLAYS. That is closer to the owner's original sentence than the landing
 // rule ever was - the Calendar tab is «активной при нетурнирных неделях», and a tab that runs the
@@ -58,6 +63,7 @@ import EndingScreen from './components/EndingScreen.vue'
 // ⭐⭐ ROUND 24 #4 – the last college screen. See `showCollegeDone` for why it reads `world.college`
 // rather than a stop reason, and why one card covers both doors out of the freeze.
 import CollegeDoneDialog from './components/CollegeDoneDialog.vue'
+import WeekSpanReport from './components/WeekSpanReport.vue'
 import ForkDialog from './components/ForkDialog.vue'
 import RetirementDialog from './components/RetirementDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
@@ -757,7 +763,16 @@ const activeRank = computed(() => activeLadderOfSnapshot(game.snapshot).rank)
  *  moment it mounts – see the detour in `playWeek` and `@auto-played` on the component. */
 const calendarPlays = ref(false)
 
+/** ⭐ R2-13 PHASE 1 – THE WEEKS A SPAN JUST SPENT, so the report can say what happened in between.
+ *  `from` is the week the press was made on (exclusive) and `to` the week it landed on. Null when no
+ *  span is outstanding; set only when time actually MOVED, because a report of nothing is R10-16's
+ *  empty popup and a refusal has its own toast. */
+const weekSpan = ref<{ from: number; to: number } | null>(null)
+
 async function playWeek(weeks: 1 | 4): Promise<void> {
+  // ⚠ ANY press clears the last span's report first. A card about weeks 12-15 sitting over week 16
+  // is the stale-screen class of bug, and it costs one line to make impossible rather than to test.
+  weekSpan.value = null
   if (game.snapshot?.pending) {
     tournamentHidden.value = false
     return
@@ -783,7 +798,15 @@ async function playWeek(weeks: 1 | 4): Promise<void> {
     return
   }
   const throughPractice = weeks === 1 && weekAction.value.mode === 'practice'
+  // ⚠⚠ R2-13 – THE WEEK IS READ BEFORE THE PRESS, AND THAT IS THE ONLY WAY THE SPAN CAN BE KNOWN.
+  // `advanceWeeks` stops on the first week that has anything in it, so a press for four can buy one,
+  // two, three or four – the return value says WHY it stopped and never HOW FAR it got. The
+  // difference between the two week numbers is the honest answer, and it is also what lets the card
+  // say "2 weeks passed" instead of the four the button offered.
+  const spanFrom = game.snapshot?.week ?? 0
   await game.advance(weeks)
+  const spanTo = game.snapshot?.week ?? spanFrom
+  if (weeks > 1 && spanTo > spanFrom) weekSpan.value = { from: spanFrom, to: spanTo }
   if (throughPractice) {
     const s = game.snapshot
     const friendly = s?.events.find((e) => e.type === 'match' && e.friendly && e.week === s.week && e.match)
@@ -1073,6 +1096,45 @@ const showSeasonSummary = computed(
 )
 function dismissSeasonSummary(): void {
   markSeasonWrapSeen()
+}
+
+// =================================================================================================
+// ⭐⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE REPORTS EVERY WEEK IT SPENT
+// =================================================================================================
+//
+// ⚠⚠ THE REPORT IS WHAT MAKES THE SECOND BUTTON ALLOWED TO EXIST. The skip-4 was deleted on 28.07
+// because "it was a testing shortcut that offered to skip the thing the player came to play"; R2-13
+// answers the first half of that with a gate (the pill renders only on a quiet week – see
+// `weekAction.multi`) and the second half here. Four weeks that swallow a sponsor letter, a bill or
+// a diary line are worse than four presses, and this app has already lost exactly those things
+// twice: R12-15's forfeited entry fee and round-23 #16's academy verdict, which landed on the one
+// week of the season a player stepping by four could never reach.
+//
+// THE DIGEST IS THE ENGINE'S, not this file's. `spanDigest` filters on the week window and on
+// nothing else – no notion of an "interesting" row – so what the card lists is what the weeks wrote.
+const weekSpanDigest = computed(() =>
+  weekSpan.value ? spanDigest(game.snapshot?.events ?? [], weekSpan.value.from, weekSpan.value.to) : [],
+)
+// ⚠ BEHIND EVERY BLOCKING QUESTION AND BEHIND THE TWO STOP DIALOGS, which is STOP_PRECEDENCE's own
+// order arriving in the shell: a fresh injury and the season's wrap-up are about the week the span
+// ENDED on, they cost her something, and they lead. The span report is the context underneath them,
+// so it is what the player reads once the loud thing has been answered – and `queued`/`popupMayShow`
+// keep it behind a held question and behind a reveal exactly as the summary is kept.
+//
+// ⚠ `weekSpan.to === snapshot.week` IS A STALENESS GUARD AND NOT A TAUTOLOGY. Loading another career
+// or restoring a save replaces the snapshot without going through `playWeek`, and a card about weeks
+// 12-15 of a career the player just left is worse than no card.
+const showWeekSpan = computed(
+  () =>
+    weekSpan.value !== null &&
+    weekSpan.value.to === game.snapshot?.week &&
+    queued.value === null &&
+    popupMayShow('week-span', game.snapshot ?? null, liveSequence.value) &&
+    !showInjuryStop.value &&
+    !showSeasonSummary.value,
+)
+function dismissWeekSpan(): void {
+  weekSpan.value = null
 }
 
 // =================================================================================================
@@ -1439,6 +1501,7 @@ function reopenTour(): void {
     <div
       v-if="(tab === 'home' && !showCollege) || game.snapshot?.pending"
       class="next-week-bar"
+      :class="{ 'with-span': !!weekAction.multi }"
     >
       <!-- R10-7: one button, a label that names the plan for the week it is about to play.
            R13-5/R13-8: it routes through playWeek – a paused tournament re-opens its overlay, a
@@ -1451,6 +1514,23 @@ function reopenTour(): void {
         @click="playWeek(1)"
       >
         {{ weekAction.label }}
+      </button>
+      <!-- ⭐⭐ R2-13 PHASE 1 – THE SPAN, AND IT IS ABSENT FAR MORE OFTEN THAN IT IS HERE. The 28.07
+           deletion of the old skip-4 stands as written ("a testing shortcut that offered to skip the
+           thing the player came to play"); what makes this one a different button is `multi`, which
+           is non-null only on a QUIET week and only while the engine can actually move time. Both
+           halves are `composables/weekAction.ts`'s, so the two week controls cannot disagree about
+           when a span is on offer, and neither of them re-derives the engine's refusal.
+           It routes through the SAME handler as the week button: one press, one place, and the span
+           report below is raised by that handler rather than by this element. -->
+      <button
+        v-if="weekAction.multi"
+        class="span-weeks-btn"
+        data-tour="span-weeks"
+        :disabled="weekAction.disabled"
+        @click="playWeek(MULTI_WEEK_SPAN)"
+      >
+        {{ weekAction.multi.label }}
       </button>
     </div>
 
@@ -1529,6 +1609,19 @@ function reopenTour(): void {
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />
+
+    <!-- ⭐⭐ R2-13 PHASE 1 – WHAT THE FOUR WEEKS DID. Every row those weeks wrote, week by week, so a
+         span cannot swallow the sponsor letter, the bill or the diary line a run of separate presses
+         would have shown one at a time. It is BELOW the injury stop and the season summary in this
+         list and in its own gate: those cost her something and speak for the week the span ended on,
+         and this is the context under them. See `showWeekSpan`. -->
+    <WeekSpanReport
+      v-if="showWeekSpan && weekSpan"
+      :from="weekSpan.from"
+      :to="weekSpan.to"
+      :digest="weekSpanDigest"
+      @close="dismissWeekSpan"
+    />
 
     <!-- ⭐⭐ ROUND 24 #4 – the last college screen, and its Continue is the handover to Home. (The
          owner's own sentence is quoted at `showCollegeDone` in the script; no Cyrillic may appear in

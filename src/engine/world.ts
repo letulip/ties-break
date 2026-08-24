@@ -159,6 +159,12 @@ import {
 export { flipScore, computeLossStreak }
 import { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek } from './world/knock'
 export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek }
+// ⭐ R2-13 phase 1: the advance's entry gate and the span report, in a leaf module the shell can
+// import without pulling the integration core in. Re-exported under `engine/world` like every other
+// extraction, so the 280-file public API is unchanged.
+import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount } from './world/multiWeek'
+export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount }
+export type { SpanWeek } from './world/multiWeek'
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
@@ -3894,35 +3900,15 @@ export function skipEvent(world: WorldState, eventId: string): void {
  *  the order to show them in. ZERO extra RNG draws and the identical number of ticks – the loop
  *  still breaks on the first week that stops it, it just no longer forgets the rest of the news. */
 export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopReason[] {
-  // ⚠ W2-ENDINGS – AND THE STORY HAS NO NEXT WEEK. First, above every other block, because it is
-  // not a pause: there is nothing left to resolve and nothing to come back to. The epilogue's
-  // surface REPLACES the app shell rather than laying a dialog over it, so an advance behind it
-  // would be ticking a world nobody can see. The one ending that resumes clears this latch through
-  // `resumeFromCollege`, which is a command and not a tick.
-  if (world.ending) return ['ending']
-  // A pending reveal must resolve (and close) before time moves on.
-  if (world.pendingTournament) return ['tournament']
-  // ⚠ W4 – AND SO MUST AN UNANSWERED KNOCK. This line is the mechanical heart of the whole slice.
-  //
-  // The owner's complaint was that training weeks «просто скипались» – he pressed +4 and four weeks
-  // of his daughter's life went past without asking him anything. Halting is not enough: a stop the
-  // player can dismiss with one tap and then re-press is a notification, not a decision. So a knock
-  // BLOCKS, on the identical contract `pendingTournament` has above – no tick at all until
-  // `decideKnock` runs. Both branches of the dialog are valid answers, so this can never dead-end a
-  // career (see KnockDialog: there is no third button and no way out that is not a choice).
-  if (pendingKnock(world)) return ['knock']
-  // ⭐ v48 – AND SO DOES AN UNANSWERED BIRTHDAY, on the identical contract, because the owner asked
-  // for the popup to fire ALWAYS («я бы оставил попап на ДР всегда») and a popup a `+4` ticks past
-  // does not always fire. It also forces the shape of the dialog: if the advance could roll on, then
-  // walking away would silently become the "gave nothing" branch and the player would pick it by
-  // accident, every year, and never know. Four buttons, all of them answers, and no other way out.
-  if (pendingBirthday(world) !== null) return ['birthday']
-  // ⚠ ...AND SO DOES AN UNANSWERED FORK OR AN UNANSWERED OFFER, on the identical contract. Two of
-  // the fork's three answers END the career, so a player who could press +4 past it would have the
-  // engine choosing "continue" for him – which is exactly the «просто скипались» complaint the knock
-  // block above exists to answer, one order of magnitude more expensive.
-  if (world.fork !== null && world.fork.answer === null) return ['fork']
-  if (world.retirementOffer !== null) return ['retirement']
+  // ⚠⚠ THE SIX REFUSALS MOVED TO `world/multiWeek.ts` (R2-13 phase 1), COMMENTS AND ORDER INTACT,
+  // AND THEY MOVED FOR ONE REASON: a second week control has to know whether this function will move
+  // time at all, and a button that answers that question for itself is the arrival gate's three
+  // disagreeing answers all over again (composables/weekAction.ts spells that lesson out). One
+  // predicate, two readers: the engine calls it here, and the shell re-asks the same six of the
+  // snapshot through `blockingOverlay` + `pending`, pinned agreeing in tests/r2-13-advance-span.ts.
+  // Nothing about the behaviour changed – zero ticks, one reason, the identical order.
+  const refusal = advanceRefusal(world)
+  if (refusal) return [refusal]
   const stops = new Set<StopReason>()
   for (let i = 0; i < weeks; i++) {
     const nextWeek = world.week + 1

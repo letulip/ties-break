@@ -1409,6 +1409,40 @@ button.primary.risky {
   opacity: 0.5;
 }
 
+/* ⭐ R2-13 PHASE 1 – THE SPAN PILL, BESIDE THE WEEK BUTTON AND DELIBERATELY QUIETER THAN IT.
+   One CTA per screen is the export's rule and the week button is it; this is the second answer to
+   the same question, so it is an outline pill rather than a second lime one. It renders only on a
+   quiet week - see composables/weekAction.ts - so the pair is never on screen while there is
+   something to play.
+   ⚠ THE MIN-WIDTH RELAXATION IS GEOMETRY, NOT TASTE. The week button carries min-width 206px, and
+   206 + 8 + the span pill overflows a 320px screen once the app's 16px inset is taken off. With a
+   sibling present the CTA drops its floor and its own ellipsis safety net - which the rule above
+   says is exactly what min-width 0 is there for - takes over. */
+.next-week-bar {
+  gap: 8px;
+}
+
+.next-week-bar.with-span .next-week-btn {
+  min-width: 0;
+}
+
+.span-weeks-btn {
+  pointer-events: auto;
+  flex: none;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.span-weeks-btn:disabled {
+  opacity: 0.5;
+}
+
 /* Wave 2: only Home carries the floating week button, so only Home reserves room under it. Every
    other screen gets its space back – which is most of a card's height on a 390px phone. */
 .app-content.with-next-week-bar {
@@ -1613,6 +1647,67 @@ button.primary.risky {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+/* ⭐ R2-13 PHASE 1 – THE SPAN REPORT. It is a plain tenant of `.dialog-card`, which is the whole
+   point: the height cap and the scroller live on that shared rule since round-20 #3, so a career
+   whose four weeks wrote thirty rows still has its Close button on the screen. Nothing below
+   declares a height, an overflow or a max-width - inheriting them is the guarantee.
+   The card is wider than the 320px default because its rows are a sentence plus a figure, and a
+   two-column row wrapped at 320 reads as four ragged lines. */
+.week-span {
+  max-width: 380px;
+}
+
+.week-span-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.week-span-lead {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.week-span-empty {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.week-span-week + .week-span-week {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.week-span-week-head {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.week-span-rows {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.week-span-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 0;
+  font-size: 13px;
+}
+
+.week-span-amount {
+  flex: none;
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Package N: Season/Home/Money world UI ------------------------------------ */
