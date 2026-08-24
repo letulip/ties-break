@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (4,270 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (4,256 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-270 exported names across 31 owning modules.
+276 exported names across 32 owning modules.
 
 ## Areas
 
@@ -32,6 +32,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
+| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 6 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
@@ -371,6 +372,17 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `emptyTrophyLedger` – `src/engine/world/milestones.ts`
 - `maybeFireSeasonWrapUp` – `src/engine/world/milestones.ts`
 - `seasonWrapDue` – `src/engine/world/milestones.ts`
+
+### `src/engine/world/multiWeek.ts`
+
+⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS.
+
+- `ADVANCE_REFUSALS` – `src/engine/world/multiWeek.ts`
+- `advanceRefusal` – `src/engine/world/multiWeek.ts`
+- `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
+- `spanDigest` – `src/engine/world/multiWeek.ts`
+- `spanRowCount` – `src/engine/world/multiWeek.ts`
+- `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
 
 ### `src/engine/world/constants.ts`
 

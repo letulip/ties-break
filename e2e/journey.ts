@@ -30,6 +30,13 @@ import { weekDateLine } from '../src/shared/dates'
  * ⚠ IT IS NOT UNIQUE ON THE CALENDAR TAB. `CalendarScreen.vue` renders the same label as its own
  * CTA, so while a tournament is pending and that tab is open, two buttons carry this name. Every
  * journey here stays on Home, where the bar is the only one; a future calendar spec must scope it.
+ *
+ * ⚠⚠ AND SINCE R2-13 THERE IS A SECOND ADVANCE CONTROL ON HOME – the four-week span pill, beside the
+ * bar on quiet weeks (`composables/weekAction.ts`, `.span-weeks-btn`). It is deliberately named
+ * "Next 4 weeks" and NOT "Play 4 weeks" precisely so that it falls outside the closed set above and
+ * this locator stays unambiguous. Two things follow for whoever touches either side: renaming the
+ * pill to anything beginning with "Play" breaks every journey in this suite under strict mode, and a
+ * spec that wants the SPAN must ask for it by its own name rather than widen this one.
  */
 export const WEEK_ACTION_NAME =
   /^(Training week|Practice match|Exam week|Off-season week|Leave on vacation|Injured – walkover|Play .+|.+ \(outgrown\))$/
