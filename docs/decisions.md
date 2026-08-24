@@ -17,6 +17,36 @@ last-reviewed: 2026-08-05
 
 Owner decisions, newest last. Working agreements – revisit explicitly, don't silently drift.
 
+<!-- BEGIN GENERATED: current-decision index – `npm run decisions` -->
+
+## Where the current answer lives
+
+**Generated** by `npm run decisions` from the headings below – 60 dated entries, newest 2026-08-23. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+
+This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
+entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
+and the area column is a hand-maintained keyword map (see `scripts/decision-index.mjs`), not a claim
+the owner made. Nothing below the block has been edited: the archive is append-only and stays exact.
+
+| Area | Entries | Current entry | Date |
+| --- | ---: | --- | --- |
+| age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
+| calendar-and-season | 3 | [Empty weeks are a number, not a gate; and two constants stop deciding for two others](#2026-08-16--empty-weeks-are-a-number-not-a-gate-and-two-constants-stop-deciding-for-two-others-waveround21) | 2026-08-16 |
+| coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
+| college | 12 | [THE ACADEMIC YEAR: ASK, HOLD, DEPART](#22082026--the-academic-year-ask-hold-depart-waveround24-schema-v58) | 2026-08-22 |
+| economy-and-money | 4 | [THE TEAM'S SHARE OF THE PRIZE MONEY](#22082026--the-teams-share-of-the-prize-money-waveround25-no-schema-move) | 2026-08-22 |
+| injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
+| kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
+| narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
+| process-and-git | 7 | [THE FULL-PROJECT REVIEW (ROUND TWO) RECEIVED; THE R2 PROGRAMME AWAITS THE APPROVE](#23082026--the-full-project-review-round-two-received-the-r2-programme-awaits-the-approve) | 2026-08-23 |
+| product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
+| ranking-and-ladder | 6 | [⭐⭐ THE SECOND SEAT: he refused the machinery, and the measurement agreed with him](#17082026---the-second-seat-he-refused-the-machinery-and-the-measurement-agreed-with-him-docsspecsthe-second-seat-2026-08md) | 2026-08-17 |
+| simulation-and-balance | 2 | [THE SIM CORRIDORS: HIS TWO RULINGS AFTER THE BISECT](#22082026--the-sim-corridors-his-two-rulings-after-the-bisect) | 2026-08-22 |
+| ui-and-copy | 4 | [⚠⚠ EIGHTEEN OWNER RULINGS LIVED ONLY IN TWO `.vue` COMMENTS, AND THE COPY RULE WAS ABOUT TO ERASE THEM](#17082026---eighteen-owner-rulings-lived-only-in-two-vue-comments-and-the-copy-rule-was-about-to-erase-them-waveround21) | 2026-08-17 |
+| world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
+
+<!-- END GENERATED: current-decision index -->
+
 ## 2026-07-22 – Initial concept round
 
 **Match presentation**

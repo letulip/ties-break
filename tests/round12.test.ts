@@ -35,6 +35,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { buildSeason, isOffSeasonWeek, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { STOP_PRECEDENCE, type LossStreak } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { region } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -193,7 +194,7 @@ describe('R12-15 — the dead Play button after an injury (the round\'s worst it
 
   it('the walkover stop has toast copy – the R10-16 rule (no copy, no popup) works the other way too', () => {
     const app = read('../src/App.vue')
-    const map = app.slice(app.indexOf('const STOP_REASON_TEXT'), app.indexOf('const stopReasons'))
+    const map = region(app, 'const STOP_REASON_TEXT', 'const stopReasons')
     expect(map).toContain('walkover:')
     // Player copy: short dash, no Cyrillic.
     const copy = map.match(/walkover: '([^']*)'/)![1]

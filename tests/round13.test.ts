@@ -8,6 +8,7 @@ import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
 import { avatarEmotion } from '../src/shared/avatarEmotion'
 import { DIARY_POOL, diaryLine } from '../src/engine/diary'
 import type { DiaryFacts } from '../src/shared/protocol'
+import { at, region } from './helpers/source'
 import {
   bookVacation,
   createWorld,
@@ -248,7 +249,7 @@ describe('R13-5 — the practice week plays THROUGH the flow', () => {
     const action = read('../src/composables/weekAction.ts')
     expect(action).toContain("mode: kind === 'practice' ? 'practice' : 'advance'")
     // read the HANDLER, not the file: the note above the function names the old expression on purpose
-    const handler = app.slice(app.indexOf('async function playWeek'), app.indexOf('// The tournament stop'))
+    const handler = region(app, 'async function playWeek', '// The tournament stop')
     expect(handler).toContain("weekAction.value.mode === 'practice'")
     expect(app).toContain('PracticeFlow')
     expect(app).toContain('practiceLive')
@@ -261,7 +262,7 @@ describe('R13-8 — a paused tournament owns the primary button', () => {
 
   it('weekAhead answers the PENDING state first – before any week-ahead lookup', () => {
     expect(composable).toContain('if (snap.pending) return')
-    expect(composable.indexOf('if (snap.pending) return')).toBeLessThan(composable.indexOf('const arrival = snap.arrival'))
+    expect(at(composable, 'if (snap.pending) return')).toBeLessThan(at(composable, 'const arrival = snap.arrival'))
     // the label keeps promising the championship, tier named off the pending run itself
     expect(composable).toContain('TIER_SHORT[snap.pending.tier]')
   })

@@ -31,6 +31,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { InjurySeverity } from '../src/shared/protocol'
+import { after } from './helpers/source'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -367,7 +368,7 @@ describe('F45-2 — an injury withdraws only the entries inside the layoff', () 
     expect(dialog).toContain('is still booked')
     expect(dialog).toContain('backWeek')
     // player-facing copy: the short dash only, and no Cyrillic (owner's standing rule)
-    const copy = dialog.slice(dialog.indexOf('<template>'))
+    const copy = after(dialog, '<template>')
     expect(copy).not.toContain('—')
     expect(copy).not.toMatch(/[Ѐ-ӿ]/)
   })

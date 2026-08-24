@@ -60,6 +60,7 @@ import {
 } from '../src/composables/weekRecap'
 import type { DiaryFacts, TravelHomeScene, WeekScene, WorldEvent, WorldMatch } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+import { region, regionToLast } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -550,7 +551,7 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
     // switching the page off would silently take the story off the This-week tab as well, which is the
     // one outcome this slice must not produce.
     const rule = read('../src/composables/weekRecap.ts')
-    const body = rule.slice(rule.indexOf('export function recapExists'), rule.indexOf('/** The This-week tab'))
+    const body = region(rule, 'export function recapExists', '/** The This-week tab')
     expect(body).toContain('return !snap.pending')
     expect(body).not.toContain('AutoOpen')
     expect(body).not.toContain('localStorage')
@@ -578,7 +579,7 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
     expect(more).toContain('@click="toggleWeekStory"')
     // the same `role="switch"` + track/knob object Sound, Music and Haptics use – four switches, one
     // idiom, so a settings screen cannot start lying about what a switch is
-    const section = more.slice(more.indexOf('<h2>Week story</h2>'), more.indexOf('<h2>About</h2>'))
+    const section = region(more, '<h2>Week story</h2>', '<h2>About</h2>')
     expect(section).toContain('class="sound-switch"')
     expect(section).toContain(':aria-checked="!weekStoryOff"')
     // ...and the hint says what OFF means, because "Week story: OFF" alone reads as "no story"
@@ -587,7 +588,7 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
 
   it('the settings copy obeys the app\'s rules: short dash only, no Cyrillic', () => {
     const more = read('../src/components/screens/MoreScreen.vue')
-    const template = more.slice(more.indexOf('<template>'), more.lastIndexOf('</template>'))
+    const template = regionToLast(more, '<template>', '</template>')
     expect(template.length).toBeGreaterThan(500)
     expect(template).not.toContain('—')
     expect(template).not.toMatch(/[Ѐ-ӿ]/)

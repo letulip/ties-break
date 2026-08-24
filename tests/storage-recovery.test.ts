@@ -9,6 +9,7 @@ import { encodeExportFile } from '../src/engine/saveCodec'
 // write (allocates disk+1 and persists) - exactly what seeding a standalone career needs.
 import { adoptAutosave, closeDb } from '../src/db/saves'
 import { DEFAULT_PROFILE, type ToWorker, type ToUI } from '../src/shared/protocol'
+import { at } from './helpers/source'
 
 // =================================================================================================
 // W1-INTEGRITY-B (Codex TB-06) — INIT IS A TOTAL TRANSITION: `loading -> ready | recovery`.
@@ -228,7 +229,7 @@ describe('the surfaces exist (source pins)', () => {
     expect(app).toContain('onRecoveryImportPicked')
     // the recovery branch must render BEFORE the loading/splash chain, or a broken database
     // would still show "Loading…" forever
-    expect(app.indexOf(`game.phase === 'recovery'`)).toBeLessThan(app.indexOf('app-loading'))
+    expect(at(app, `game.phase === 'recovery'`)).toBeLessThan(at(app, 'app-loading'))
   })
 
   it('More renders every save-operation outcome (TB-19: no more silent failures)', () => {

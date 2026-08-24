@@ -16,6 +16,7 @@
 // 'finale' || finaleSoundPlayed) return`) turns the second case red with "expected applauseShort,
 // got nothing", which is exactly the owner's report. Restoring it turns it green.
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { region } from '../helpers/source'
 
 const played: string[] = []
 vi.mock('../../src/audio/sfx', () => ({
@@ -63,7 +64,7 @@ describe('the finale screen always sounds when the result is hers', () => {
     const { readFileSync } = await import('node:fs')
     const { resolve } = await import('node:path')
     const src = readFileSync(resolve(process.cwd(), 'src/components/TournamentFlow.vue'), 'utf8')
-    const watcher = src.slice(src.indexOf('watch(\n  phase,'), src.indexOf('watch(isFinalRound'))
+    const watcher = region(src, 'watch(\n  phase,', 'watch(isFinalRound')
     expect(watcher, 'the finale watcher must play something on both paths').toContain('applauseShort')
     expect(watcher).toContain('applauseFinal')
     // ...and it must NOT bail out before playing when a celebration already happened - the exact

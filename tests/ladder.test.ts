@@ -27,6 +27,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import type { RankingRow, SeasonEvent, TierId } from '../src/engine/season/types'
+import { region, regionToLast } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // Ladder-up Part B — the J-level family (docs/specs/ladder-up.md + ladder-up-impl.md).
@@ -1082,7 +1083,7 @@ describe('L10 — UI surfaces cover the whole catalogue and stay fiction-safe', 
       // one, and CSS comments follow the same quote-the-owner-in-Russian convention the script
       // comments do. Bounding at the last `</template>` reads exactly what the player sees, which is
       // what the comment above already said this was for. The assertion is untouched.
-      const template = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+      const template = regionToLast(src, '<template>', '</template>')
       expect(template.length, `${rel} template`).toBeGreaterThan(500) // never a silent empty slice
       expect(template).not.toMatch(/[Ѐ-ӿ]/)
     }
@@ -1167,7 +1168,7 @@ describe('L11 — the whole career still runs (integration smoke)', () => {
 // other test in this file.
 describe('the tournament card does not argue with itself', () => {
   const src = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
-  const coach = src.slice(src.indexOf('const RING_COMFORTABLE'), src.indexOf('// U0: the ring'))
+  const coach = region(src, 'const RING_COMFORTABLE', '// U0: the ring')
 
   it('there is a seam, and it fires on exactly the two combinations that contradict', () => {
     // A strong field with a soft opener, and a field she towers over with the one player who beats
@@ -1181,7 +1182,7 @@ describe('the tournament card does not argue with itself', () => {
   it('the seam has VARIETY, like the field lines it joins', () => {
     // It fires on 22.5% of cards. One wording would be wallpaper inside a season, which is the same
     // complaint that gave the field lines four wordings each in the first place.
-    const clauses = src.slice(src.indexOf('const DRAW_CLAUSES'), src.indexOf('function coachSays'))
+    const clauses = region(src, 'const DRAW_CLAUSES', 'function coachSays')
     expect((clauses.match(/'/g) ?? []).length / 2, 'fewer than three wordings per direction').toBeGreaterThanOrEqual(6)
   })
 

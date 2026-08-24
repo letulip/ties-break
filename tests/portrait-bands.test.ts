@@ -52,6 +52,7 @@ import { cropUrl, portraitUrl } from '../src/art/preload'
 import { portraitAssetStem } from '../src/shared/avatarEmotion'
 import { PAINTING_ONLY_FACES } from '../src/art/faceRects'
 import type { TierId } from '../src/engine/season/types'
+import { after, region } from './helpers/source'
 
 const STAGES: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'lateCareer']
 /** the seven faces a 256px crop is cut for – what `avatarCropPath` is total over */
@@ -331,11 +332,11 @@ describe('MatchScene renders the painting uncropped', () => {
     // face-table bans in the next test are what keep the rejected thing rejected.
     // Sliced on the COMMENT-STRIPPED source: the prose above each rule names the other rule, so
     // slicing the raw file finds a sentence rather than a selector.
-    const fillBlock = code.slice(code.indexOf('.scene--fill .scene-art'))
+    const fillBlock = after(code, '.scene--fill .scene-art')
     expect(fillBlock, 'the fill card must magnify - the owner asked for it twice').toContain('object-fit: cover')
     // ...and the default card - the friendly's, and any future caller that does not pass `fill` -
     // still shows the whole painting in its own square. This is the half of 01.08 that stands.
-    const squareBlock = code.slice(code.indexOf('.scene-art {'), code.indexOf('.scene--fill .scene-art'))
+    const squareBlock = region(code, '.scene-art {', '.scene--fill .scene-art')
     expect(squareBlock).toContain('object-fit: contain')
     expect(squareBlock).not.toContain('object-fit: cover')
     expect(scene).toContain('aspect-ratio: 1 / 1')

@@ -14,6 +14,7 @@ import { resultShowsOnHerFace } from '../src/composables/kidEmotion'
 import type { PlayStyle, WorldEvent, WorldMatch } from '../src/shared/protocol'
 import type { Surface } from '../src/engine/match/types'
 import type { TierId } from '../src/engine/season/types'
+import { after, at, region, regions } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // Round 11, wave C — PRESENTATION ONLY. No engine file is touched by any of these
@@ -55,13 +56,7 @@ const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
 
 /** The body of a CSS rule, by selector (every occurrence – see the round-10 lesson). */
 function cssBodies(selector: string): string[] {
-  const out: string[] = []
-  for (let from = 0; ; ) {
-    const i = css.indexOf(`${selector} {`, from)
-    if (i < 0) return out
-    out.push(css.slice(i, css.indexOf('}', i)))
-    from = i + 1
-  }
+  return regions(css, `${selector} {`, '}')
 }
 
 const STYLES = Object.keys(SURFACE_STYLE_DELTAS) as PlayStyle[]
@@ -87,9 +82,7 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
   // The screen half additionally pins that the card asks for the mark by rendering the component,
   // which is the thing that stops a fourth hand-written copy appearing.
   it('the card carries the export\'s ring mark, with the name beside it', () => {
-    const from = seasonScreen.indexOf('<div class="event-place">')
-    expect(from).toBeGreaterThan(0)
-    const place = seasonScreen.slice(from, seasonScreen.indexOf('</div>', from))
+    const place = region(seasonScreen, '<div class="event-place">', '</div>')
     // the card asks the component for the mark, and hands it the row's OWN surface
     expect(place).toContain('<SurfaceMark :surface="row.event.surface"')
     expect(place).not.toContain('surface-dot') // R10-11's bare dot is still gone
@@ -106,8 +99,7 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
   // and named again in a caption under it - so the fact is "once per card", not "once per file". The
   // card now names the surface by rendering exactly one mark, and the mark prints the name once.
   it('the surface name is printed EXACTLY ONCE on the card – R11-15\'s actual complaint', () => {
-    const from = seasonScreen.indexOf('<div class="event-place">')
-    const card = seasonScreen.slice(from, seasonScreen.indexOf('</div>', from))
+    const card = region(seasonScreen, '<div class="event-place">', '</div>')
     expect(card.split('<SurfaceMark').length - 1).toBe(1)
     expect(surfaceMark.split('{{ surface }}').length - 1).toBe(1)
     // and the screen prints the raw name nowhere else on the card
@@ -187,10 +179,7 @@ describe('R11-2 — no win/loss avatar swap for practice matches', () => {
   })
 
   it('the gate is what the emotion walk actually asks – not a parallel copy', () => {
-    const walk = kidEmotionSrc.slice(
-      kidEmotionSrc.indexOf('function lastKidResultOf'),
-      kidEmotionSrc.indexOf('function lastKidTitleOf'),
-    )
+    const walk = region(kidEmotionSrc, 'function lastKidResultOf', 'function lastKidTitleOf')
     expect(walk).toContain('resultShowsOnHerFace(e)')
     // the old unguarded `if (!match) continue` must not still be the only filter
     expect(walk).not.toMatch(/if \(!match\) continue/)
@@ -229,19 +218,17 @@ describe('R11-14 — "Practice match + coach" is one line in the calendar', () =
   })
 
   it('the controls sit in their own band, so they can never squeeze the text again', () => {
-    const row = seasonScreen.slice(
-      seasonScreen.indexOf("row.kind === 'practice' && row.practice"),
-      seasonScreen.indexOf('<!-- An empty week'),
-    )
+    // ⚠ RE-AIMED BY THE MARKER RATCHET (24.08, R2-12), AND THE PIN HAD BEEN LYING. The end marker
+    // `<!-- An empty week` is not in SeasonScreen.vue – the comment was rewritten to "A WEEK WITH NO
+    // TOURNAMENT" – so the slice ran to the end of the file and "the practice row" was its whole
+    // 30,684-character tail. The three assertions below were reading the rest of the screen.
+    const row = region(seasonScreen, "row.kind === 'practice' && row.practice", '<!-- A WEEK WITH NO TOURNAMENT')
     expect(row).toContain('class="planned-actions"')
     // both controls are inside it
-    expect(row.indexOf('askCancelPractice')).toBeGreaterThan(row.indexOf('planned-actions'))
-    expect(row.indexOf('playPracticeWeek')).toBeGreaterThan(row.indexOf('planned-actions'))
+    expect(at(row, 'askCancelPractice')).toBeGreaterThan(at(row, 'planned-actions'))
+    expect(at(row, 'playPracticeWeek')).toBeGreaterThan(at(row, 'planned-actions'))
     // the vacation row got the same shape – it is the same card
-    const vac = seasonScreen.slice(
-      seasonScreen.indexOf("row.kind === 'vacation' && row.vacation"),
-      seasonScreen.indexOf("row.kind === 'practice' && row.practice"),
-    )
+    const vac = region(seasonScreen, "row.kind === 'vacation' && row.vacation", "row.kind === 'practice' && row.practice")
     expect(vac).toContain('class="planned-actions"')
   })
 
@@ -383,7 +370,7 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     expect(homeScreen).not.toMatch(/(?<![A-Za-z0-9_$])TIERS\[/)
     // ...and the words of a point lock are written in exactly one place
     expect(homeScreen).not.toContain('Reach ')
-    const lock = seasonScreen.slice(seasonScreen.indexOf('function lockLabel'), seasonScreen.indexOf('// --- R11-5a'))
+    const lock = region(seasonScreen, 'function lockLabel', '// --- R11-5a')
     expect(lock).toContain('pointsLockNote(')
     expect(lock).not.toMatch(/`Reach \$/)
   })
@@ -412,7 +399,7 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     // coverage lives in the describe right below this one.
     expect(pointsLockNote('regional', 180)).toBe('Reach 180 national pts')
     expect(pointsLockNote('regional', 180, 112)).toBe('112 / 180 national pts')
-    const lock = seasonScreen.slice(seasonScreen.indexOf('function lockLabel'), seasonScreen.indexOf('// --- R11-5a'))
+    const lock = region(seasonScreen, 'function lockLabel', '// --- R11-5a')
     expect(lock).toContain('e.pointsToEnter')
   })
 
@@ -543,7 +530,7 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
   it('the Season screen names the open-but-unscheduled tiers under the calendar', () => {
     expect(seasonScreen).toContain('openButUnscheduled')
     expect(seasonScreen).toContain('Also open to her:')
-    const note = seasonScreen.slice(seasonScreen.indexOf('Also open to her:'))
+    const note = after(seasonScreen, 'Also open to her:')
     expect(note.slice(0, 220)).toContain('Not locked')
     expect(note.slice(0, 220)).not.toMatch(/[—А-Яа-яЁё]/)
   })

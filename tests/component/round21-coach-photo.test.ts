@@ -54,6 +54,7 @@ import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type CoachTier, type Snapshot } from '../../src/shared/protocol'
 import { TIER_LADDER } from '../../src/engine/season/calendar'
 import { WEEKS_IN_SEASON } from '../../src/shared/dates'
+import { before } from '../helpers/source'
 
 // happy-dom has no `localStorage` on the window the component project builds, and the market's
 // onboarding cue reads one at mount. Same shim as round18-coach.test.ts, and quoted there in full.
@@ -321,7 +322,7 @@ describe('round-21 #6 – the trophy cabinet puts the most recent season first',
     // The fixture wins 1 / 2 / 3 titles across its three seasons, oldest to newest, so newest-first
     // must read 3, 2, 1. This catches two different ways to get the item wrong: leaving the order
     // ascending, and reversing the wrong array so a count detaches from the year it belongs to.
-    const counts = chips.map((c) => Number(c.slice(0, c.indexOf('x'))))
+    const counts = chips.map((c) => Number(before(c, 'x')))
     expect(counts, `chips came out as ${chips.join(' ')}`).toEqual([3, 2, 1])
   })
 })

@@ -38,6 +38,7 @@ import { createWorld, matchesEverPlayed, startingSkills, toSnapshot } from '../s
 import { withHeadStart } from '../src/engine/world/player'
 import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 import { read, runCareer, synthView } from './radarFixtures'
+import { after, before, region } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // 1. THE CONTRACT
@@ -311,7 +312,7 @@ describe('the radar draws every word the engine can hand it', () => {
     RADAR_AXIS_LABEL[k].length > RADAR_AXIS_LABEL[a].length ? k : a, SKILL_KEYS[0])
 
   it('gives the note list a column wide enough for the LONGEST axis label', () => {
-    const block = radar.slice(radar.indexOf('.radar-note-axis {'))
+    const block = after(radar, '.radar-note-axis {')
     const width = Number(block.match(/width: (\d+)px/)![1])
     const needed = RADAR_AXIS_LABEL[longest].length * NOTE_LABEL_PX_PER_CHAR
     expect(
@@ -335,8 +336,8 @@ describe('the radar draws every word the engine can hand it', () => {
     expect(cx * 2, 'the box is not centred on CX - one flank has less room than the other').toBe(boxWidth)
     expect(boxWidth, 'the box was widened to 300 for the five-axis labels; re-measure before shrinking it')
       .toBeGreaterThanOrEqual(300)
-    const svgCss = radar.slice(radar.indexOf('.radar-svg {'))
-    expect(svgCss.slice(0, svgCss.indexOf('}'))).toContain('overflow: visible')
+    const svgCss = after(radar, '.radar-svg {')
+    expect(before(svgCss, '}')).toContain('overflow: visible')
   })
 
   it('reads its labels and its geometry OUT of the engine, so a sixth axis cannot half-land', () => {
@@ -373,7 +374,7 @@ describe('the radar draws every word the engine can hand it', () => {
     expect(radar, 'the rose is scaled by something other than the ring it draws').toContain(
       'const r = (clamp(value) / AXIS_MAX) * R',
     )
-    const script = radar.slice(radar.indexOf('<script setup'), radar.indexOf('</script>', radar.indexOf('<script setup')))
+    const script = region(radar, '<script setup', '</script>')
     const code = script.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
     expect(code, 'the axis top is spelled out somewhere instead of derived').not.toMatch(
       new RegExp(`(?<![.\\d])${SKILL_CEILING_MAX}(?![.\\d])`),

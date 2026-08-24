@@ -16,7 +16,7 @@ import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 // Comments are not code – the house helper, now in tests/helpers/source.ts. This codebase documents
 // at length, INCLUDING documenting what it deliberately no longer does, so a `not.toContain` over
 // raw source fails on a note that merely names the thing it forbids.
-import { codeOf } from './helpers/source'
+import { after, at, codeOf, region, regionToLast } from './helpers/source'
 import { engineModuleSource } from './worldSource'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
@@ -62,7 +62,7 @@ const tour = read('../src/components/OnboardingTour.vue')
 // ===========================================================================
 describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Home in the centre', () => {
   it('TABS carries exactly the five entries, in order, and no Kid entry', () => {
-    const tabs = app.slice(app.indexOf('const TABS'), app.indexOf('/** The one writer'))
+    const tabs = region(app, 'const TABS', '/** The one writer')
     const labels = [...tabs.matchAll(/label: '([^']+)'/g)].map((m) => m[1])
     expect(labels).toEqual(['Season', 'Calendar', 'Home', 'Stats', 'Trophies'])
     const ids = [...tabs.matchAll(/id: '([^']+)'/g)].map((m) => m[1])
@@ -120,7 +120,7 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     // suite slices to the end of the file, which happens to work only because those components have
     // no Cyrillic in their `<style>` – and the rule is specifically about the TEMPLATE: script and
     // style comments may quote the owner in Russian, and this screen's do, at length.
-    const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
+    const template = regionToLast(screen, '<template>', '</template>')
     expect(template).not.toContain('—') // short dash only, in player copy
     expect(template).not.toMatch(/[Ѐ-ӿ]/) // no Cyrillic inside a template, comments included
     // ⚠ THE COLLISION PIN. `weekYear(208) === weekYear(260) === 2035`, so a cabinet built on the
@@ -151,7 +151,7 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     expect(app).toContain(`<CalendarScreen\n        v-else-if="tab === 'calendar'"`)
     expect(app).toContain("import CalendarScreen from './components/screens/CalendarScreen.vue'")
     // `openNav` is still the ONE writer of `tab` from the bar, and it no longer has a slot to refuse.
-    const openNav = app.slice(app.indexOf('function openNav'), app.indexOf('function iconUrl'))
+    const openNav = region(app, 'function openNav', 'function iconUrl')
     expect(openNav).toContain('tab.value = entry.id')
     expect(openNav).not.toContain('soon')
     // Not one piece of the dimming survives – not the flag, not its bindings, not its rule.
@@ -216,7 +216,7 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     expect(kid).not.toContain('tab.value')
     expect(kid).toContain("emit('navigate', 'market')")
     // Copy rules apply to the new screen too: no em dash, no Cyrillic in the template.
-    const marketTemplate = market.slice(market.indexOf('<template>'))
+    const marketTemplate = after(market, '<template>')
     expect(marketTemplate).not.toContain('—')
     expect(marketTemplate).not.toMatch(/[\u0400-\u04ff]/)
   })
@@ -233,7 +233,7 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
   it('the avatar is a button that routes to the kid state – the ONE door', () => {
     expect(home).toContain('data-tour="kid-avatar"')
     expect(home).toContain('@click="openKid"')
-    const openKid = home.slice(home.indexOf('function openKid'), home.indexOf('</script>'))
+    const openKid = region(home, 'function openKid', '</script>')
     expect(openKid).toContain("emit('navigate', 'kid')")
     // ...and nothing else asks for that screen: openKid is the only writer, on either side.
     expect(home.split("'kid'").length - 1).toBe(2) // the emit union, and the emit itself
@@ -256,7 +256,7 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
     // shown iff never dismissed on this device (the TOUR_SEEN_KEY idiom, localStorage)...
     expect(home).toContain('const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))')
     // ...and the first tap both opens the screen and persists the dismissal.
-    const openKid = home.slice(home.indexOf('function openKid'), home.indexOf('</script>'))
+    const openKid = region(home, 'function openKid', '</script>')
     expect(openKid).toContain("localStorage.setItem(KID_HINT_KEY, '1')")
     // The key left App.vue with the header – no second copy can drift out of step.
     expect(app).not.toContain('KID_HINT_KEY')
@@ -276,7 +276,7 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
     // U0 gave Home and Season one, and CSS comments in this codebase quote the owner in Russian by
     // convention. Bounding at the last `</template>` reads exactly what the player can see, which is
     // what the rule was always about. The assertions are untouched and neither is weaker.
-    const template = home.slice(home.indexOf('<template>'), home.lastIndexOf('</template>'))
+    const template = regionToLast(home, '<template>', '</template>')
     expect(template.length).toBeGreaterThan(1000) // a real bound, never a silent empty slice
     expect(template).not.toContain('—')
     expect(template).not.toMatch(/[\u0400-\u04ff]/)
@@ -554,7 +554,7 @@ describe('R13-12 — OnboardingTour anchors survive the restructure', () => {
   })
 
   it('every selector the tour names resolves in a rendered template', () => {
-    const tabs = app.slice(app.indexOf('const TABS'), app.indexOf('/** The one writer'))
+    const tabs = region(app, 'const TABS', '/** The one writer')
     // A PLACEHOLDER slot is not a destination – a coach mark may never point at one.
     const liveTabIds = [...tabs.matchAll(/\{ id: '([^']+)'(?![^}]*soon: true)[^}]*\}/g)].map((m) => m[1])
     // The anchors live in the two templates the tour can be open over: the shell, and Home (the
@@ -639,7 +639,7 @@ describe('W1 — the end of a week lands on the story', () => {
     expect(app).toContain('let seenPendingId: string | null = null')
     expect(app).toContain('seenPendingId = snap.pending?.eventId ?? null')
     // ...and a career switch / a fresh career resets it with the rest of the watermark.
-    const reset = app.slice(app.indexOf('if (!snap) {'), app.indexOf('const sameCareer'))
+    const reset = region(app, 'if (!snap) {', 'const sameCareer')
     expect(reset).toContain('seenPendingId = null')
   })
 
@@ -653,7 +653,7 @@ describe('W1 — the end of a week lands on the story', () => {
     // not the file: the note above it quotes the deleted line verbatim on purpose, so that whoever
     // finds this next knows what used to be here and why it went.
     const rule = read('../src/composables/weekRecap.ts')
-    const body = rule.slice(rule.indexOf('export function recapExists'), rule.indexOf('/** The This-week tab'))
+    const body = region(rule, 'export function recapExists', '/** The This-week tab')
     expect(body).toContain('return !snap.pending')
     expect(body).not.toContain('snap.events')
   })
@@ -673,7 +673,7 @@ describe('W1 — the end of a week lands on the story', () => {
     // guarantee and the reason it can be deleted rather than inverted: `home` is written twice
     // because it is one word, not because there are two rules.
     expect(weekScreen).toContain('const emit = defineEmits<{ close: [] }>()')
-    const dismiss = weekScreen.slice(weekScreen.indexOf('function dismissRecap'))
+    const dismiss = after(weekScreen, 'function dismissRecap')
     expect(dismiss.slice(0, 200)).toContain("emit('close')")
     expect(dismiss.slice(0, 200)).toContain('dismissedRecapKey.value')
     expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />`)
@@ -708,7 +708,7 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     expect(weekScreen).toContain('<PrimaryPill variant="cta" class="week-proceed-btn"')
     expect(weekScreen).toContain("import PrimaryPill from '../ui/PrimaryPill.vue'")
     // ...floating, centred, one thumb off the tab bar - Home's own geometry.
-    const bar = weekScreen.slice(weekScreen.indexOf('.week-proceed {'), weekScreen.indexOf('.week-proceed-btn'))
+    const bar = region(weekScreen, '.week-proceed {', '.week-proceed-btn')
     expect(bar).toContain('position: fixed')
     expect(bar).toContain('justify-content: center')
     expect(bar).toContain('bottom: 58px')
@@ -732,7 +732,7 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     // words contain the old label. That is deliberate - whoever reads these next should find out what
     // the button used to promise and why it stopped. So the sweep is bounded to the template, which is
     // the same discipline the Cyrillic pins in this file use and for the same reason.
-    const rendered = (src: string) => src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+    const rendered = (src: string) => regionToLast(src, '<template>', '</template>')
     const cardT = rendered(card)
     const seasonT = rendered(season)
     expect(cardT.length).toBeGreaterThan(500) // a real bound, never a silent empty slice
@@ -794,7 +794,7 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     // ...and the size is a rung that exists: --fs-value-md (16px) at the 800 weight the design pairs
     // with it for a money figure (D's own Balance). Never a number invented for this row.
     const css = read('../src/style.css')
-    const price = css.slice(css.indexOf('.pkg-price {'), css.indexOf('.pkg-price.ok'))
+    const price = region(css, '.pkg-price {', '.pkg-price.ok')
     expect(price).toContain('font-size: 16px')
     expect(price).toContain('font-weight: 800')
     expect(price).not.toContain('border')
@@ -821,7 +821,7 @@ describe('R13-12 player copy', () => {
     // U0 gave Home and Season one, and CSS comments in this codebase quote the owner in Russian by
     // convention. Bounding at the last `</template>` reads exactly what the player can see, which is
     // what the rule was always about. The assertions are untouched and neither is weaker.
-      const template = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+      const template = regionToLast(src, '<template>', '</template>')
       expect(template.length).toBeGreaterThan(500) // a real bound, never a silent empty slice
       expect(template).not.toContain('—')
       expect(template).not.toMatch(/[Ѐ-ӿ]/)
@@ -937,10 +937,12 @@ describe('the post-advance navigation can be claimed, once, by the screen that o
 
   it('the Season screen claims before its practice advance, and clears a stale claim after', () => {
     const season = read('../src/components/screens/SeasonScreen.vue')
-    const hold = season.indexOf('holdPostAdvanceNav()')
-    const advance = season.indexOf('await game.advance(1)')
-    const clear = season.indexOf('consumePostAdvanceNav()')
-    expect(hold, 'the claim exists').toBeGreaterThan(-1)
+    // ⚠ `at` rather than `indexOf` on the RIGHT-HAND sides too: `expect(clear).toBeGreaterThan(advance)`
+    // passes when `advance` is the one that went missing (-1), which is the ordering family's version
+    // of the widening slice. All three markers must exist for the order to mean anything.
+    const hold = at(season, 'holdPostAdvanceNav()')
+    const advance = at(season, 'await game.advance(1)')
+    const clear = at(season, 'consumePostAdvanceNav()')
     // The watcher fires INSIDE the awaited advance - the claim after the call would be too late.
     expect(hold, 'claim strictly before the advance').toBeLessThan(advance)
     // A knock can block the week before it ticks; the unspent claim is cleared right after, or it
@@ -953,8 +955,8 @@ describe('the post-advance navigation can be claimed, once, by the screen that o
     // tab both keep working; only the auto-switch is silenced. So the hold must live OUTSIDE
     // `recapExists` and `storyOpensItself`, not inside either.
     const recap = read('../src/composables/weekRecap.ts')
-    const existsBody = recap.slice(recap.indexOf('export function recapExists'), recap.indexOf('export function storyOpensItself'))
-    const opensBody = recap.slice(recap.indexOf('export function storyOpensItself'), recap.indexOf('postAdvanceNavHeld'))
+    const existsBody = region(recap, 'export function recapExists', 'export function storyOpensItself')
+    const opensBody = region(recap, 'export function storyOpensItself', 'postAdvanceNavHeld')
     expect(existsBody).not.toContain('postAdvanceNav')
     expect(opensBody).not.toContain('postAdvanceNav')
   })

@@ -1,0 +1,22 @@
+{
+  // THE ON-DEMAND TOOLS SWEEP – R2-12 / TOK-09. `npm run check:tools`.
+  //
+  // ⚠ NOT REFERENCED FROM `tsconfig.json`, AND THAT IS THE POINT. `vue-tsc -b` builds the projects
+  // the root config references; this one is deliberately outside that graph, so the 114 archival
+  // probes in `tools/` stop being typechecked on every `npm run build`. The 24 live instruments are
+  // listed in `tsconfig.app.json` and still are.
+  //
+  // WHAT IT IS FOR. An archival probe is evidence – the reproduction that settled an argument – and
+  // evidence that no longer compiles is evidence you cannot re-run. Sweep the whole directory before
+  // a wave that moves an engine API, and after one: `npm run check:tools`.
+  //
+  // ⚠ `composite: false` on purpose. A composite project would want emit and a build-info file, and
+  // this project never emits anything; it exists to be typechecked and thrown away.
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "tsBuildInfoFile": null
+  },
+  "include": ["tools/**/*.ts"]
+}

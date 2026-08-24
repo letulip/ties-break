@@ -71,7 +71,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
 import { restRecoveryBonus, SAVE_SCHEMA_VERSION } from '../src/engine/world'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Knock, type PlayerProfile, type WeekPlan } from '../src/shared/protocol'
-import { scriptCodeOf } from './helpers/source'
+import { region, scriptCodeOf } from './helpers/source'
 import { fnv1a } from './helpers/hash'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
@@ -812,7 +812,7 @@ describe('W4 — the schema (v26)', () => {
   it('the knock ARRIVAL line reports, it never asks - the dialog is what asks', () => {
     // world.ts AND every world/*.ts part: rollKnock moved to world/knock.ts with the P4 split
     const src = worldSource()
-    const block = src.slice(src.indexOf('const knock = drawKnock(view)'), src.indexOf('coachManagesLoad(tierOf('))
+    const block = region(src, 'const knock = drawKnock(view)', 'coachManagesLoad(tierOf(')
     const lines = [...block.matchAll(/`([^`]*\$\{knock\.part\}[^`]*)`/g)].map((m) => m[1])
     expect(lines.length, 'the two arrival lines should still be here').toBe(2)
     for (const line of lines) {

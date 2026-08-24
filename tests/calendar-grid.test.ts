@@ -76,7 +76,7 @@ import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 // Comments are not code – the house helper, now in tests/helpers/source.ts. This codebase documents
 // at length, INCLUDING documenting what it deliberately did not do, so a `not.toContain` over raw
 // source fails on a note that merely names the thing it forbids.
-import { codeOf } from './helpers/source'
+import { after, codeOf, regionToLast } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const screen = read('../src/components/screens/CalendarScreen.vue')
@@ -752,7 +752,7 @@ describe('a block lands where its hour is', () => {
 // =================================================================================================
 describe('the calendar renders the grid it is handed', () => {
   it('⚠ ONE drawing of the week, on every week – the second one is deleted, not disabled', () => {
-    const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
+    const template = regionToLast(screen, '<template>', '</template>')
     expect(template).toContain('<div v-if="grid" class="cal-time">')
     // ⚠ RE-AIMED TWICE, AND THIS TIME IT LOST HALF ITS SUBJECT. It used to pin that the day strip was
     // the grid's alternative (`v-if="!grid"`), then that a stand-down line sat between the two saying
@@ -829,12 +829,12 @@ describe('the calendar renders the grid it is handed', () => {
     // ...and the beat still washes the column it is going to hold on
     expect(screen).toContain("'cal-col--beat': d.beat !== null")
     // reduced motion kills the grid's animation too
-    const reduced = screen.slice(screen.indexOf('@media (prefers-reduced-motion: reduce)'))
+    const reduced = after(screen, '@media (prefers-reduced-motion: reduce)')
     expect(reduced).toContain('.cal-col--held')
   })
 
   it('no Cyrillic in the template, short dash only – the calendar\'s own copy rule', () => {
-    const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
+    const template = regionToLast(screen, '<template>', '</template>')
     expect(template).not.toMatch(/[Ѐ-ӿ]/)
     expect(template).not.toContain('—')
   })

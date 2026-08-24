@@ -25,6 +25,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { StopReason } from '../src/shared/protocol'
+import { after, before, region, regions } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // Round 10 — the owner's playtest of the wave-3 build. Three correctness knots,
@@ -350,7 +351,7 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     expect(enterFn).not.toContain('enterPointBand')
     expect(enterFn).toContain('entryStatus')
     // ...and neither may the snapshot builder
-    const upcomingFn = src.slice(src.indexOf('function upcomingEvents'), src.indexOf('function computeCountingResults'))
+    const upcomingFn = region(src, 'function upcomingEvents', 'function computeCountingResults')
     expect(upcomingFn).not.toContain('enterPointBand')
     expect(upcomingFn).toContain('entryStatus')
   })
@@ -395,10 +396,10 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     // inherits it (the behavioural half is tests/tier-window.test.ts's "entered events always
     // show"). What this grep keeps asserting is that the SCREEN cannot re-grow a private filter.
     const src = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
-    const filter = src.slice(src.indexOf('const visibleUpcoming'), src.indexOf('const myEntries'))
+    const filter = region(src, 'const visibleUpcoming', 'const myEntries')
     expect(filter).toContain('feedShows')
     const rule = readFileSync(new URL('../src/composables/tierState.ts', import.meta.url), 'utf8')
-    const shows = rule.slice(rule.indexOf('export function feedShows'), rule.indexOf('}', rule.indexOf('export function feedShows')))
+    const shows = region(rule, 'export function feedShows', '}')
     expect(shows).toContain('e.entered ||') // an entered event is never decluttered away
   })
 })
@@ -448,7 +449,7 @@ describe('R10-3 — the outgrown-entry dead end has a way out', () => {
     // The UI-side half of the knot: `plannable` was computed from a calendar the outgrown
     // filter had already emptied, so the rescue card offered an entered week.
     const src = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
-    const rows = src.slice(src.indexOf('const calendarRows'), src.indexOf('function packageLabel'))
+    const rows = region(src, 'const calendarRows', 'function packageLabel')
     expect(rows).toContain('!e.entered') // an entered week is never plannable
     // and the row source now includes entered-but-outgrown events (see visibleUpcoming above)
     expect(rows).toContain('visibleUpcoming')
@@ -550,7 +551,7 @@ describe('R10-13 — cancel a committed entry (fee forfeited)', () => {
     const screen = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
     expect(screen).toContain('game.cancelEntry(')
     // the confirm must state the fee is NOT refunded, and the control must say Cancel
-    const ask = screen.slice(screen.indexOf('function askCancelEntry'), screen.indexOf('function runConfirm'))
+    const ask = region(screen, 'function askCancelEntry', 'function runConfirm')
     expect(ask).toMatch(/not refunded/i)
     expect(ask).not.toMatch(/[—А-Яа-яЁё]/)
   })
@@ -570,7 +571,7 @@ function resolveRadius(css: string, rule: string): number {
   if (direct) return Number(direct[1])
   const token = /border-radius:\s*var\((--[\w-]+)\)/.exec(rule)?.[1]
   if (!token) return NaN
-  const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
+  const root = region(css, ':root {', '\n}\n')
   const declared = new RegExp(`\\n\\s*${token}:\\s*([^;]+);`).exec(root)?.[1]?.trim()
   return Number(/^(\d+(?:\.\d+)?)px$/.exec(declared ?? '')?.[1] ?? NaN)
 }
@@ -579,7 +580,7 @@ describe('R10-16 — no popup may render without copy', () => {
   const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
 
   it('the stop toast is gated on HAVING copy, not merely on a stop reason', () => {
-    const gate = app.slice(app.indexOf('const showStopToast'), app.indexOf('const showSeasonSummary'))
+    const gate = region(app, 'const showStopToast', 'const showSeasonSummary')
     // The empty popup: stopReason 'injury' was excluded from STOP_REASON_TEXT (it owns a blocking
     // dialog) but NOT from the toast's condition, so the toast rendered with an empty <span>.
     expect(gate).toContain('stopReasonText')
@@ -587,7 +588,7 @@ describe('R10-16 — no popup may render without copy', () => {
 
   it('every StopReason either has toast copy or an owning dialog – and none is both', () => {
     const reasons: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical']
-    const map = app.slice(app.indexOf('const STOP_REASON_TEXT'), app.indexOf('const stopReasonText'))
+    const map = region(app, 'const STOP_REASON_TEXT', 'const stopReasonText')
     const owned: Record<string, boolean> = {
       tournament: true, // TournamentFlow
       'season-end': true, // SeasonSummaryDialog
@@ -602,8 +603,8 @@ describe('R10-16 — no popup may render without copy', () => {
 
   it('the injury dialog uses the squarer radius of the top popups, not a pill', () => {
     const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
-    const block = css.slice(css.indexOf('.injury-stop {'))
-    const rule = block.slice(0, block.indexOf('}'))
+    const block = after(css, '.injury-stop {')
+    const rule = before(block, '}')
     expect(rule).toContain('border-radius')
     // the top popups (.stop-toast / .recovered-banner) sit at the panel rung; the capsule idiom is
     // var(--radius-pill) – see the two tests below for why it is a token and not a bare 999px.
@@ -621,8 +622,8 @@ describe('R10-16 — no popup may render without copy', () => {
     // which pins MORE than before: the two must still agree, the value must still be squarer than
     // a pill, AND the radius has to be a rung of the ladder rather than a number someone typed.
     const radius = resolveRadius(css, rule)
-    const toast = css.slice(css.indexOf('.stop-toast {'))
-    const toastRadius = resolveRadius(css, toast.slice(0, toast.indexOf('}')))
+    const toast = after(css, '.stop-toast {')
+    const toastRadius = resolveRadius(css, before(toast, '}'))
     expect(radius).toBe(toastRadius)
     expect(radius).toBeLessThanOrEqual(12)
     expect(radius % 2, 'every rung of the radius ladder is even').toBe(0)
@@ -673,15 +674,7 @@ describe('R10-16 — no popup may render without copy', () => {
     // EVERY occurrence of the selector, not the first: `.bt-tabs .tab-pill` (a flex-only override)
     // sits ~200 lines above `.tab-pill` itself, so a plain indexOf reads the wrong block and the
     // test lies about a passing file. Learned the hard way one run before this comment existed.
-    const bodies = (sel: string): string[] => {
-      const out: string[] = []
-      for (let from = 0; ; ) {
-        const i = css.indexOf(`${sel} {`, from)
-        if (i < 0) return out
-        out.push(css.slice(i, css.indexOf('}', i)))
-        from = i + 1
-      }
-    }
+    const bodies = (sel: string): string[] => regions(css, `${sel} {`, '}')
     for (const sel of CAPSULES) {
       const declaring = bodies(sel).filter((b) => b.includes('border-radius'))
       expect(declaring.length, `${sel} declares a radius somewhere`).toBeGreaterThan(0)
@@ -691,12 +684,12 @@ describe('R10-16 — no popup may render without copy', () => {
 
   it('the availability chip is the one pill that is NOT a capsule (owner: "make this one less round")', () => {
     const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
-    const rule = css.slice(css.indexOf('.avail-chip {'))
+    const rule = after(css, '.avail-chip {')
     // ⚠ RE-AIMED by the radius ladder (owner, 29.07): the chip says `var(--radius-chip)` now
     // instead of a bare `6px`, so the number is read through :root. The owner's 6 did NOT move —
     // it was already even and it is the rung the whole chip family sits on — and the bounds below
     // are untouched, so this still fails if anyone rounds the chip back toward the capsule.
-    const radius = resolveRadius(css, rule.slice(0, rule.indexOf('}')))
+    const radius = resolveRadius(css, before(rule, '}'))
     // Squarer than the capsule it would otherwise inherit from .pill. The bound is the MEASURED
     // rendered capsule radius (10.7px at the chip's 21px height): anything at or above it is not a
     // visible change, which is why 10px – the panel radius – was rejected as too subtle to see.

@@ -41,7 +41,7 @@ import type { TierId } from '../src/engine/season/types'
 // QUOTING. `art/trophies.ts` says in a comment why there is no 'bronze'; the finale's script says
 // what the emoji it replaced used to be. A ban that reads the comments fires on its own
 // documentation, and the only way to satisfy it would be to delete the reasoning.
-import { codeOf } from './helpers/source'
+import { codeOf, region, regionToLast } from './helpers/source'
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 const read = (p: string) => readFileSync(`${ROOT}${p}`, 'utf8')
@@ -63,7 +63,7 @@ function assetPath(url: string): string {
 /** A component's TEMPLATE, root element only. Slicing to the end of the file would drag the <style>
  *  block in, and the copy rules this suite checks are about markup. */
 function templateOf(src: string): string {
-  return src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+  return regionToLast(src, '<template>', '</template>')
 }
 
 /** A full cabinet – every shelf the ledger really carries – with the given weeks on the first tier.
@@ -200,7 +200,7 @@ describe('⚠ THE TAB DOT ASSERTS A FACT, not the "unread" it cannot know', () =
     // `absent` argument OMITTED. So the pin is that the trophy call passes three arguments and no
     // fourth – a sentinel smuggled in here would zero the cabinet on every save that predates the
     // watermark, which is the defect this line has always been about.
-    const trophyCall = app.slice(app.indexOf('const TROPHY_SEEN_PREFIX'), app.indexOf('// The flight is armed'))
+    const trophyCall = region(app, 'const TROPHY_SEEN_PREFIX', '// The flight is armed')
     expect(trophyCall.length, 'the trophy block moved – re-aim, do not widen').toBeGreaterThan(0)
     expect(trophyCall, 'the cabinet must claim nothing when the key is missing').not.toContain('absent')
     expect(trophyCall, 'a sentinel here would zero every pre-watermark cabinet').not.toMatch(/\{\s*value:/)
@@ -344,7 +344,9 @@ describe('the copy rules hold on the markup this slice wrote', () => {
       // block this slice wrote, and none of the file's older prose. Matching the comment with a
       // regex instead would backtrack across `-->` and swallow the whole template.
       const at = m.index ?? 0
-      const block = template.slice(template.lastIndexOf('<!--', at), at + m[0].length)
+      const opener = template.lastIndexOf('<!--', at)
+      expect(opener, 'no comment opener above the poster mark').toBeGreaterThan(-1)
+      const block = template.slice(opener, at + m[0].length)
       expect(block).not.toMatch(/[Ѐ-ӿ]/)
       expect(block).not.toContain('—')
     }

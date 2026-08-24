@@ -49,6 +49,7 @@ import {
 import { worldSource, engineModuleSource } from './worldSource'
 import type { MatchPlayer, MatchOptions, Side } from '../src/engine/match/types'
 import type { SeasonEvent } from '../src/engine/season/types'
+import { lineAt, region } from './helpers/source'
 
 // A pair built to play LONG matches: evenly matched, low stamina, so the fatigue curve past
 // FATIGUE_START is steep and the sampler is actually exercised. Nothing about the retirement reads
@@ -478,13 +479,12 @@ describe('⚠ the invariant that changed is RESTATED, not left lying', () => {
     expect(restatements, 'all three sites must be restated').toBeGreaterThanOrEqual(3)
     // ...and the behaviour the comments describe is the behaviour: nothing in finalizeTournament
     // reduces an award because of a retirement.
-    const finalize = src.slice(src.indexOf('function finalizeTournament'), src.indexOf('export function revealTournamentRound'))
+    const finalize = region(src, 'function finalizeTournament', 'export function revealTournamentRound')
     expect(finalize, 'the retirement must be read, once, to write copy and open the layoff').toContain('retiredMatch')
     // The award lines must not branch on it.
     for (const award of ['const prize = prizeCentsFor(', 'const appearance = appearanceFeeFor(', 'const bonus = resultBonusFor(']) {
-      const at = finalize.indexOf(award)
-      expect(at, `${award} must exist`).toBeGreaterThan(0)
-      const line = finalize.slice(at, finalize.indexOf('\n', at))
+      // ⚠ if this throws, the award line moved – re-aim the marker, do not delete the pin.
+      const line = lineAt(finalize, award)
       expect(line, `${award} must not know about retirements`).not.toContain('retired')
     }
   })

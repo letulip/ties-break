@@ -15,5 +15,41 @@
     "noEmit": true,
     "jsx": "preserve"
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "tests/**/*.ts", "tools/**/*.ts"]
+  // ⚠ `tools/` IS LISTED FILE BY FILE, NOT GLOBBED – R2-12 / TOK-09. The glob pulled all 138
+  // TypeScript files in `tools/` into every build, 114 of which are one-shot archival probes.
+  // These 24 are the live instruments (a package command, an import from the test suite, or a
+  // named entry in `scripts/tools-registry.mjs`); the rest are swept on demand by
+  // `npm run check:tools` (tsconfig.tools.json) and are still in git, unchanged.
+  //
+  // ⚠ DO NOT HAND-EDIT THIS LIST. `npm run tools:registry:check` fails when it disagrees with the
+  // registry and prints the correct list; a hand-added line here is how the build grows back.
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.vue",
+    "tests/**/*.ts",
+    "tools/ad-shoot-bench.ts",
+    "tools/dead-week-probe.ts",
+    "tools/demo-save.ts",
+    "tools/dual-universe-bench.ts",
+    "tools/e2e-fixtures-read.ts",
+    "tools/e2e-fixtures.ts",
+    "tools/econ-bench.ts",
+    "tools/endings-bench.ts",
+    "tools/fatigue-bench.ts",
+    "tools/frozen-key-diff.ts",
+    "tools/injury-landscape.ts",
+    "tools/knock-rate.ts",
+    "tools/ladder-floor.ts",
+    "tools/load-bench.ts",
+    "tools/money-decomposition.ts",
+    "tools/outgrown-entry-probe.ts",
+    "tools/points-economy.ts",
+    "tools/radar-bench.ts",
+    "tools/retired-college-rule.ts",
+    "tools/retirement-rate.ts",
+    "tools/season-mirror.ts",
+    "tools/skill-ceiling.ts",
+    "tools/sponsor-window-bench.ts",
+    "tools/world-turnover.ts"
+  ]
 }

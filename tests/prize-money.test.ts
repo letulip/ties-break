@@ -19,6 +19,7 @@ import type { FamilyBackground } from '../src/shared/protocol'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
 import { firstRoundValue } from './openerValue'
+import { region } from './helpers/source'
 
 // =================================================================================================
 // A2 — PRIZE MONEY (task #17, docs/specs/adult-tour-and-endings.md §3).
@@ -407,7 +408,7 @@ function playOneAdultEvent(seed: string, background: FamilyBackground): AdultRun
 describe('the tournament facts row prints the cheque where one exists, the dash where none does', () => {
   const flow = readFileSync(new URL('../src/components/TournamentFlow.vue', import.meta.url), 'utf8')
   const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
-  const facts = template.slice(template.indexOf('class="tf-facts"'), template.indexOf('class="tf-first"'))
+  const facts = region(template, 'class="tf-facts"', 'class="tf-first"')
 
   it('the money arm reads the tier\'s own table through the engine\'s one reader and the shared formatter', () => {
     expect(flow).toMatch(/import \{[^}]*prizeCentsFor[^}]*\} from '\.\.\/engine\/world'/)

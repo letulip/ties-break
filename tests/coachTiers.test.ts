@@ -41,6 +41,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type PlayStyle } from '../src/shared/protocol'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../src/engine/development'
+import { region } from './helpers/source'
 
 // THE COACH LADDER (docs/specs/coach-tiers.md). Five rungs replacing a boolean, priced per hour by
 // age, billed for as many hours as the training split buys, and read against the game she plays.
@@ -981,9 +982,7 @@ describe('player-facing copy', () => {
     // says otherwise stops the file explaining itself in the house's own voice. The protected fact
     // is unchanged: no Cyrillic and no em dash in the strings this chooser renders.
     const wizard = readFileSync(fileURLToPath(new URL('../src/components/OnboardingWizard.vue', import.meta.url)), 'utf8')
-    const options = wizard
-      .slice(wizard.indexOf('const COACH_OPTIONS'), wizard.indexOf('const PLAY_STYLES'))
-      .replace(/^[ \t]*\/\/.*$/gm, '')
+    const options = region(wizard, 'const COACH_OPTIONS', 'const PLAY_STYLES').replace(/^[ \t]*\/\/.*$/gm, '')
     expect(options).toContain("label: 'Coach yourself'") // the slice is real, not an empty string
     expect(options).not.toMatch(/[Ѐ-ӿ]/)
     expect(options).not.toContain('—')
