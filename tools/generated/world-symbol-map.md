@@ -2,19 +2,19 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (3,666 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (3,370 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-276 exported names across 33 owning modules.
+276 exported names across 34 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
-| `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 21 |
+| `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 18 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 22 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 20 |
@@ -38,6 +38,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
+| `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
 | `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 3 |
 | `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 3 |
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
@@ -54,8 +55,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file.
 
-- `ACADEMY_NOTICE` – `src/engine/world.ts`
-- `academySpokeThisWeek` – `src/engine/world.ts`
 - `advanceWeeks` – `src/engine/world.ts`
 - `closeTournament` – `src/engine/world.ts`
 - `coachWorksThisWeek` – `src/engine/world.ts`
@@ -69,7 +68,6 @@ THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – 
 - `replayMainState` – `src/engine/world.ts`
 - `resumeFromCollege` – `src/engine/world.ts`
 - `revealTournamentRound` – `src/engine/world.ts`
-- `reviewAcademy` – `src/engine/world.ts`
 - `seedWorldForV6` – `src/engine/world.ts`
 - `skipEvent` – `src/engine/world.ts`
 - `skipTournament` – `src/engine/world.ts`
@@ -426,6 +424,14 @@ HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are n
 - `schoolEndWeek` – `src/engine/kidLife.ts`
 - `schoolIsOver` – `src/engine/kidLife.ts`
 - `schoolIsOverForBand` – `src/engine/kidLife.ts`
+
+### `src/engine/world/phaseObligations.ts`
+
+⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS.
+
+- `ACADEMY_NOTICE` – `src/engine/world/phaseObligations.ts`
+- `academySpokeThisWeek` – `src/engine/world/phaseObligations.ts`
+- `reviewAcademy` – `src/engine/world/phaseObligations.ts`
 
 ### `src/engine/world/player.ts`
 
