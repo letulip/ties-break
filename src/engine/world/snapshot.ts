@@ -41,6 +41,9 @@ import {
   type AdOfferTerms,
   type ArrivalPreview,
   type CountingResult,
+  type InjuryCircumstanceKind,
+  type InjuryEntryRow,
+  type InjuryReport,
   type LadderView,
   type PendingView,
   type Snapshot,
@@ -73,7 +76,7 @@ import { alternateQueuePosition } from './ladder'
 import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, fullRanking, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus, tierVerdict } from './medical'
+import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer } from './coachMarket'
@@ -133,6 +136,88 @@ export function seasonSupply(world: WorldState): SeasonSupply {
     weeksLeft: Math.max(0, lastWeek - world.week),
     // Ladder order, strongest last, the one order every other surface reads (TIER_LADDER).
     rows: TIER_LADDER.filter((t) => byTier.has(t)).map((tier) => ({ tier, ...byTier.get(tier)! })),
+  }
+}
+
+/**
+ * ⭐ R2-02 – THE INJURY REPORT, BUILT FROM FACTS.
+ *
+ * ⚠ WHAT THIS REPLACES. `InjuryStopDialog` used to recover four domain facts by reading the news
+ * feed's ENGLISH: `startsWith(RELEASE_LINE_PREFIX.injury)` to find the cancelled entries, a slice
+ * plus a `replace` to get their names back out of the sentence, and a RAW literal
+ * `startsWith('Entry refunded')` for the money. The file's own header records the same defect
+ * biting once before – it matched `'Withdrew from '`, `releasedBy` split that sentence in two on
+ * 05.08, and the one row whose job is to report what a layoff cost went blind for a week without
+ * anything going red. That is the house's most-caught defect class (two sides asking different
+ * functions about one question) wearing a copy editor's hat, and the only durable answer is that
+ * the engine STATES the facts and the surface SPELLS them.
+ *
+ * ⚠ EVERY FIELD IS DERIVED, AND THE ONE THAT COULD NOT BE WAS MEASURED FIRST. `kind`/`oppName`/
+ * `stage` come off the persisted `WorldEvent.match` (`retiredId === KID_ID` is the whole test –
+ * the same field `travelHome` and the season plaque read); `stranded` is recomputed from
+ * `world.entries` against the engine's own `layoffCovering` window; `refundCents` is a sum of
+ * signed cents. Only `cancelled` needed the engine to write anything new, because `releaseEntry`
+ * deletes the id from `world.entries`, from `seasonEntries.rows` and from both cap ledgers, and
+ * raises no letter below the pro rungs – a probe on a real career found the two released
+ * tournaments recorded NOWHERE but in prose, and the calendar could not name them either (30
+ * candidate events in the layoff window, four of them the same rung at the same fee). Hence
+ * `WorldEvent.entryRef`: one optional field, absent on every historical row, no migration, and
+ * `SAVE_SCHEMA_VERSION` unmoved.
+ *
+ * ⚠ RNG: nothing here draws. It is arithmetic and array walks over state.
+ */
+export function buildInjuryReport(world: WorldState): InjuryReport | null {
+  const injury = world.injury
+  if (injury === null) return null
+  // The layoff's OWN week, not "now": they are the same number on the week the report is read
+  // (App.vue gates the dialog on `sinceWeek === week`), and this is the one that stays true.
+  const onset = injury.sinceWeek
+
+  // WHY, as far as the model knows – off the persisted fact, never off the news text. The weekly
+  // roll leaves no record of the week's shape at all (training, travel, arrival, a family holiday –
+  // `injuryVacationFactor` is nonzero), so 'off-court' is deliberately vague rather than lazy: the
+  // same honesty rule the commentary and the diary are held to. Say only what the model knows.
+  const retired = world.events.find((e) => e.week === onset && e.match?.retiredId === KID_ID) ?? null
+  const rm = retired?.match ?? null
+  const retiredEvent = rm ? eventById(world, rm.eventId) : null
+  const kind: InjuryCircumstanceKind = retired === null ? 'off-court' : retired.friendly ? 'retired-friendly' : 'retired-match'
+
+  // WHAT THE LAYOFF CANCELLED, and what came back with it. Both off `entryRef`, so the two halves
+  // of one question are answered by ONE field instead of by two different sentences: the money
+  // cannot be counted from rows the list does not name, and vice versa.
+  const cancelled: InjuryEntryRow[] = []
+  let refundCents = 0
+  for (const e of world.events) {
+    if (e.week !== onset || e.entryRef?.releasedBy !== 'injury') continue
+    if (e.type === 'entry') cancelled.push({ id: e.entryRef.id, label: e.entryRef.label, week: e.entryRef.week })
+    if ((e.amountCents ?? 0) > 0) refundCents += e.amountCents as number
+  }
+
+  // ⚠ AND THE OTHER HALF: "nothing cancelled" IS NOT "nothing lost". An entry whose list has already
+  // closed cannot be withdrawn at all (`releaseEntry` refuses past `deadlineWeek`), so a layoff that
+  // lands on or near the event week cancels NOTHING and she stays on the list: the fee is committed,
+  // she does not appear, and the week resolves as a walkover. Recomputed from the entries she STILL
+  // HOLDS against the engine's own window – not off `upcoming`, which the dialog used to read and
+  // which stops at UPCOMING_WEEKS, so a layoff longer than the horizon hid its own last forfeits.
+  const stranded: InjuryEntryRow[] = []
+  for (const id of world.entries) {
+    const e = eventById(world, id)
+    if (!e || e.week < world.week || layoffCovering(world, e.week) === null) continue
+    stranded.push({ id: e.id, label: TIERS[e.tier].label, week: e.week })
+  }
+  stranded.sort((a, b) => a.week - b.week)
+
+  return {
+    kind,
+    ...(rm?.oppName ? { oppName: rm.oppName } : {}),
+    // The round she had reached, when there IS a draw – a practice match has no bracket, so a stage
+    // there would be a number dressed up as a fact.
+    ...(rm && retiredEvent && kind === 'retired-match'
+      ? { stage: stageLabel(rm.round, TIERS[retiredEvent.tier].drawSize), eventLabel: TIERS[retiredEvent.tier].label }
+      : {}),
+    cancelled,
+    stranded,
+    refundCents,
   }
 }
 
@@ -876,6 +961,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
           ...(world.injury.weeksSaved !== undefined ? { weeksSaved: world.injury.weeksSaved } : {}),
         }
       : null,
+    // ⭐ R2-02: and WHAT IT DID, as facts. See `buildInjuryReport` for why the surface may no longer
+    // reconstruct any of this from the sentences the engine wrote.
+    injuryReport: buildInjuryReport(world),
     physioActive: world.physioActive,
     // v59, the travelling team steps 1+2 – the masseur card's facts, all derived: the flag, the
     // gate (the professional table's own one-way latch), the RUNG's flat weekly bill, his room
