@@ -30,7 +30,13 @@ import { dayCrossRuns } from './composables/dayCross'
 import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
 // R9-21b's news watermark, and the inbox cue that rides beside it (04.08). Both live in
 // composables/inboxCue.ts so Home's bell reads the same rule this bar does - see the module header.
-import { useLetterWatermark, useNewsWatermark } from './composables/inboxCue'
+//
+// ⚠ R2-08: ...AND SO DOES EVERY OTHER MARK IN THIS FILE NOW. Six surfaces here hand-rolled the same
+// read / write / re-read-on-career-switch around their own key; each is one `useWatermark` call
+// below, with the two opposite "what does a missing key mean" rules passed in as `absent` rather
+// than re-argued per block. Nothing in this file touches `localStorage` any more, which is what
+// makes "a browser that throws on storage does not take the app out" one property instead of six.
+import { useDeviceFlag, useLetterWatermark, useNewsWatermark, useWatermark } from './composables/inboxCue'
 // The Trophies tab's dot and the trophy that flies there to leave it. Same shape as the line above:
 // the PREDICATE is a pure function in the composable and this file only wires it to a watermark, so
 // "when does the dot show" is one testable sentence rather than a computed buried in a shell.
@@ -69,7 +75,8 @@ import TrophiesScreen from './components/screens/TrophiesScreen.vue'
 // since the last "New events on the calendar" marker. UI-only state (localStorage), no
 // engine change – the marker text itself is emitted from world.ts's ensureSeason.
 const SEASON_SEEN_KEY = 'tb:lastSeenSeasonWeek'
-// Round 5 item 10: the coach-mark tour is shown once, ever, per device.
+// Round 5 item 10: the coach-mark tour is shown once, ever, per device – so this key is NOT
+// career-scoped, and `useDeviceFlag` rather than `useWatermark` is what says so in code.
 const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 const game = useGameStore()
 
@@ -247,23 +254,37 @@ watch(
 const week = computed(() => game.snapshot?.week ?? 0)
 
 // --- Season tab "new events" accent dot (item 23) ---------------------------
-// `lastSeenSeasonWeek` is mirrored into a reactive ref: a plain localStorage.getItem()
-// inside a computed isn't a tracked dependency, so the dot wouldn't clear until some
-// UNRELATED reactive change (e.g. the next tick) happened to force a re-evaluation.
-const lastSeenSeasonWeek = ref(Number(localStorage.getItem(SEASON_SEEN_KEY) ?? '-1'))
-const seasonHasNew = computed(() => {
-  const events = game.snapshot?.events ?? []
+//
+// ⚠⚠ R2-08 – THIS ONE WAS NOT MERELY DUPLICATED, IT WAS WRONG, and it is the find that pays for the
+// whole consolidation. The key was GLOBAL (`tb:lastSeenSeasonWeek`, no career on it) while the value
+// under it is a WEEK NUMBER, so two careers shared one mark: opening Season on a week-90 career
+// wrote 90, and the week-12 career beside it then read every marker it had never been shown as
+// already seen, for the next seventy-eight weeks. That is precisely the R9-21b collision
+// composables/inboxCue.ts was written to end, still living in the file that learned the lesson.
+// Going through `useWatermark` scopes it by `careerId` and repairs it; a device's season dot lights
+// once more on the changeover, which is the trade every watermark in this app already makes.
+//
+// ⚠ THE MARK NAMES THE MARKER'S WEEK, NOT THE CURRENT ONE. It used to store `week` on the visit; the
+// helper stores whatever `newest` says, which is the newest marker's week. The predicate is
+// unchanged either way – markers are only ever emitted for weeks that have happened, so both values
+// make `latest > seen` false – and the honest one is the one that names what was actually seen.
+const latestSeasonMarkWeek = computed(() => {
   let latest = -1
-  for (const e of events) {
+  for (const e of game.snapshot?.events ?? []) {
     if (e.type === 'info' && e.text === 'New events on the calendar' && e.week > latest) latest = e.week
   }
-  return latest >= 0 && latest > lastSeenSeasonWeek.value
+  return latest
 })
+const { unseen: seasonHasNew, markSeen: markSeasonSeen } = useWatermark(
+  SEASON_SEEN_KEY,
+  latestSeasonMarkWeek,
+  // `now >= 0` is the "there is no marker at all" arm, kept explicit: a sentinel of -1 makes the
+  // comparison alone sufficient today and would stop being sufficient the day the sentinel moved.
+  (now, seen) => now >= 0 && now > seen,
+  { value: -1 },
+)
 watch(tab, (t) => {
-  if (t === 'play') {
-    lastSeenSeasonWeek.value = week.value
-    localStorage.setItem(SEASON_SEEN_KEY, String(week.value))
-  }
+  if (t === 'play') markSeasonSeen()
 })
 
 // --- R13-12: the This-week tab's accent dot – a FRESH recap is unseen -------------
@@ -272,22 +293,25 @@ watch(tab, (t) => {
 // appeared. The seen watermark is the snapshot week at the last visit, persisted per career
 // (careers advance independently, so a global key would collide – the R9-21b news lesson), and
 // re-read on a career switch so a plain load never invents freshness the stored watermark denies.
-const weekSeenKey = () => `tb:lastSeenThisWeek:${game.snapshot?.careerId ?? ''}`
-const lastSeenThisWeek = ref(Number(localStorage.getItem(weekSeenKey()) ?? '-1'))
+//
+// ⚠ R2-08 – IT IS `useWatermark`'s NOW, and the three sentences above are its three parameters.
+// "Persisted per career" is `careerKey` inside the helper; "re-read on a career switch" is
+// `useCareerSync`; "a missing key is -1, i.e. never visited" is the SENTINEL form of `absent`, which
+// is also what keeps this scope from seeding a key for a career nobody has shown anything to. The
+// dot needs the NUMBER rather than the verdict (`thisWeekDotShows` also asks whether a recap
+// exists), which is exactly why `Watermark.seen` is on the interface.
+const WEEK_SEEN_PREFIX = 'tb:lastSeenThisWeek'
+const { seen: lastSeenThisWeek, markSeen: markThisWeekSeen } = useWatermark(
+  WEEK_SEEN_PREFIX,
+  week,
+  // NOT `>`: the mark is "the week I was last on this tab", and a career loaded at an EARLIER week
+  // than the mark (an imported save, a rolled-back device) must re-arm rather than stay silent.
+  // This is character for character the old `lastSeenThisWeek.value !== week.value` write gate.
+  (now, seen) => now !== seen,
+  { value: -1 },
+)
 const weekTabDot = computed(() =>
   thisWeekDotShows(recapExists(game.snapshot), week.value, lastSeenThisWeek.value),
-)
-function markThisWeekSeen(): void {
-  if (lastSeenThisWeek.value !== week.value) {
-    lastSeenThisWeek.value = week.value
-    localStorage.setItem(weekSeenKey(), String(week.value))
-  }
-}
-watch(
-  () => game.snapshot?.careerId,
-  () => {
-    lastSeenThisWeek.value = Number(localStorage.getItem(weekSeenKey()) ?? '-1')
-  },
 )
 watch(tab, (t) => {
   if (t === 'week') markThisWeekSeen()
@@ -517,18 +541,25 @@ watch([latestNewsId, newestLetterId], ([nowNews, nowLetter], [beforeNews, before
 //
 // The watermark is per career, in localStorage, like the news and This-week ones: careers advance
 // independently, so a global key would collide (the R9-21b lesson).
-const trophySeenKey = () => `tb:lastSeenTrophies:${game.snapshot?.careerId ?? ''}`
+//
+// ⚠ A MISSING WATERMARK IS THE CURRENT COUNT, NEVER ZERO. A career with trophies and no stored
+// watermark – a save from before this shipped, another device – is a case where the app does not
+// KNOW whether the cabinet was ever opened, and a dot must not claim a fact it cannot hold. Reading
+// the present count asserts nothing and lets the next trophy be the first one it speaks about.
+//
+// ⚠ R2-08 – THAT PARAGRAPH IS NOW A PARAMETER, WHICH IS THE WHOLE POINT OF THE MOVE. It is
+// `useWatermark`'s CLAIM-NOTHING form – `absent` omitted – and the helper's own header argues it at
+// length beside the opposite rule the reports below take. It also brings the SEEDING WRITE with it:
+// a claim-nothing mark that is never persisted is re-seeded to "now" on every mount (every screen
+// here is a plain `v-if`, so it mounts fresh on each visit) and its dot can never light. That used
+// to be the hand-written `if (getItem(...) === null) markTrophiesSeen()` in the career watcher.
+const TROPHY_SEEN_PREFIX = 'tb:lastSeenTrophies'
 const trophyPieceCount = computed(() => trophyPieces(game.snapshot))
-/** ⚠ A MISSING WATERMARK IS THE CURRENT COUNT, NEVER ZERO. A career with trophies and no stored
- *  watermark – a save from before this shipped, another device – is a case where the app does not
- *  KNOW whether the cabinet was ever opened, and a dot must not claim a fact it cannot hold. Reading
- *  the present count asserts nothing and lets the next trophy be the first one it speaks about. Same
- *  discipline as `if (lastSeenNewsId.value < 0) markNewsSeen()` above. */
-function storedTrophyWatermark(): number {
-  const stored = localStorage.getItem(trophySeenKey())
-  return stored === null ? trophyPieceCount.value : Number(stored)
-}
-const seenTrophyPieces = ref(storedTrophyWatermark())
+const { seen: seenTrophyPieces, markSeen: markTrophiesSeen } = useWatermark(
+  TROPHY_SEEN_PREFIX,
+  trophyPieceCount,
+  (now, seen) => now > seen,
+)
 // The flight is armed by the finale (`TournamentFlow`'s Continue) and rendered below; while it is in
 // the air the dot is held, so it lands WITH the trophy instead of already being there when it
 // arrives. Nothing is withheld from anybody by that: the ledger gained this trophy several taps ago,
@@ -582,19 +613,10 @@ const trophyFlightStyle = computed<Record<string, string> | undefined>(() => {
     '--trophy-scale': String(f.scale),
   }
 })
-function markTrophiesSeen(): void {
-  seenTrophyPieces.value = trophyPieceCount.value
-  localStorage.setItem(trophySeenKey(), String(trophyPieceCount.value))
-}
-watch(
-  () => game.snapshot?.careerId,
-  () => {
-    // switching careers re-reads THAT career's own watermark, and writes one for a career that has
-    // never had one – so a plain load never invents a trophy the player has not been shown.
-    seenTrophyPieces.value = storedTrophyWatermark()
-    if (localStorage.getItem(trophySeenKey()) === null) markTrophiesSeen()
-  },
-)
+// ⚠ THE CAREER WATCHER THAT USED TO SIT HERE IS `useCareerSync`'s, INSIDE THE HELPER – it re-reads
+// THAT career's own watermark on a switch and writes one for a career that has never had one, so a
+// plain load never invents a trophy the player has not been shown. It was the fifth transcription of
+// that rule in this file; there are none left.
 watch(tab, (t) => {
   if (t === 'trophies') markTrophiesSeen()
 })
@@ -631,14 +653,21 @@ const stopToastDismissed = ref(false)
 // plan, hiring a coach or entering an event on the wrap week would raise a recap the player had
 // already continued past, over and over. The identity is the season INDEX, and persisting it is what
 // stops a reload on that same week from re-raising it.
-const seasonWrapSeenKey = () => `tb:seasonWrapSeen:${game.snapshot?.careerId ?? ''}`
-const seasonWrapSeen = ref<string | null>(localStorage.getItem(seasonWrapSeenKey()))
+//
+// ⚠ R2-08: `useWatermark` in its SENTINEL form – a missing key reads as null, "nobody has been shown
+// a wrap-up for this career", which is the rule this popup needs and the opposite of the cabinet's
+// one block up. Both are one parameter now instead of two unrelated pieces of code.
+const SEASON_WRAP_PREFIX = 'tb:seasonWrapSeen'
 const seasonWrapPrompt = computed(() => game.snapshot?.seasonWrapPrompt ?? null)
-watch(
-  () => game.snapshot?.careerId,
-  () => {
-    seasonWrapSeen.value = localStorage.getItem(seasonWrapSeenKey())
-  },
+const seasonWrapIdentity = computed(() =>
+  seasonWrapPrompt.value === null ? null : String(seasonWrapPrompt.value),
+)
+const { unseen: seasonWrapUnseen, markSeen: markSeasonWrapSeen } = useWatermark(
+  SEASON_WRAP_PREFIX,
+  seasonWrapIdentity,
+  // null is never "new": there is no wrap-up to have been shown.
+  (now, seen) => now !== null && now !== seen,
+  { value: null },
 )
 // R9-21a: the injury stop is owned by the blocking InjuryStopDialog (the quiet toast buried
 // it – the owner only noticed the withdrawal three weeks later).
@@ -655,27 +684,31 @@ watch(
 // independently, so a global key would collide – the R9-21b lesson). Persisting it is what stops a
 // reload on the onset week from re-raising a report the player has already read.
 //
-// ⚠ AND AN UNKNOWN INJURY IS AN UNREPORTED ONE – the opposite default to `storedTrophyWatermark`,
+// ⚠ AND AN UNKNOWN INJURY IS AN UNREPORTED ONE – the opposite default to the trophy cabinet's,
 // on purpose. A dot that cannot know whether the cabinet was opened must not claim it was; a popup
 // that cannot know whether she was told she is hurt must ASSUME SHE WAS NOT. #19's whole complaint
 // is a report that never arrived, and the failure modes are not symmetric: showing it twice costs a
 // tap, never showing it costs the player three injuries she found out about from a plaque.
-const injurySeenKey = () => `tb:injuryReported:${game.snapshot?.careerId ?? ''}`
+//
+// ⚠ R2-08: the sentinel form again, and this is the item whose paragraph BECAME the parameter's
+// documentation – `useWatermark`'s `absent` note quotes this popup's rule verbatim ("a popup that
+// cannot know whether she was told she is hurt must assume she was not"). The read, the write and
+// the career re-read are the helper's; what stays here is the IDENTITY, which is this popup's own
+// domain fact and the reason two injuries are two events.
+const INJURY_SEEN_PREFIX = 'tb:injuryReported'
 const injuryIdentity = computed(() => {
   const inj = game.snapshot?.injury
   return inj ? `${inj.sinceWeek}:${inj.kind}` : null
 })
-const injuryReported = ref<string | null>(localStorage.getItem(injurySeenKey()))
-function dismissInjuryStop(): void {
-  injuryReported.value = injuryIdentity.value
-  if (injuryIdentity.value !== null) localStorage.setItem(injurySeenKey(), injuryIdentity.value)
-}
-watch(
-  () => game.snapshot?.careerId,
-  () => {
-    injuryReported.value = localStorage.getItem(injurySeenKey())
-  },
+const { unseen: injuryUnreported, markSeen: markInjuryReported } = useWatermark(
+  INJURY_SEEN_PREFIX,
+  injuryIdentity,
+  (now, seen) => now !== null && now !== seen,
+  { value: null },
 )
+function dismissInjuryStop(): void {
+  markInjuryReported()
+}
 watch(
   () => game.snapshot,
   () => {
@@ -993,7 +1026,10 @@ const showInjuryStop = computed(
     !!game.snapshot?.injury &&
     game.snapshot.injury.sinceWeek === game.snapshot.week &&
     popupMayShow('injury', game.snapshot, liveSequence.value) &&
-    injuryReported.value !== injuryIdentity.value,
+    // R2-08: was `injuryReported.value !== injuryIdentity.value`, spelled out beside a hand-rolled
+    // key. `unseen` IS that comparison – `now !== null && now !== seen` – and the clause above has
+    // already established that `now` is non-null, so the two are the same predicate.
+    injuryUnreported.value,
 )
 // The end-of-season summary popup: auto-shows on the week the wrap-up was banked, until the player
 // hits Continue.
@@ -1029,16 +1065,14 @@ const showSeasonSummary = computed(
     // collision rather than a defensive one - the summary waits behind the question.
     queued.value === null &&
     popupMayShow('season-summary', game.snapshot ?? null, liveSequence.value) &&
-    seasonWrapPrompt.value !== null &&
-    String(seasonWrapPrompt.value) !== seasonWrapSeen.value &&
+    // R2-08: was `seasonWrapPrompt !== null && String(seasonWrapPrompt) !== seasonWrapSeen`, which
+    // is `unseen`'s two arms in the caller's own hand.
+    seasonWrapUnseen.value &&
     !!game.snapshot?.lastSeasonSummary &&
     !showInjuryStop.value,
 )
 function dismissSeasonSummary(): void {
-  const season = seasonWrapPrompt.value
-  if (season === null) return
-  seasonWrapSeen.value = String(season)
-  localStorage.setItem(seasonWrapSeenKey(), seasonWrapSeen.value)
+  markSeasonWrapSeen()
 }
 
 // =================================================================================================
@@ -1063,22 +1097,28 @@ function dismissSeasonSummary(): void {
 // plus one kept milestone. `doneWeek === week` is therefore the whole predicate, and the card's
 // heading is the only thing that differs between them, on a COUNT rather than on a flag.
 //
-// ⚠ THE WATERMARK IS `injuryReported`'s, for `injuryReported`'s reason: `doneWeek` does not move
+// ⚠ THE WATERMARK IS THE INJURY REPORT'S, for the injury report's reason: `doneWeek` does not move
 // again (nothing advances a week until the player presses something), so without one the card would
 // re-open on every fresh snapshot. Keyed per career AND per week, in localStorage, never in the save.
-const collegeDoneKey = () => `tb:collegeDone:${game.snapshot?.careerId ?? ''}`
+// ⚠ R2-08: ...AND SO IS THE MECHANISM. "Keyed per career AND per week, in localStorage, never in the
+// save" is `useWatermark` with the week as the mark's value and the sentinel `absent` – the third
+// report in this file to take the identical parameters, which is the argument for there being one
+// helper rather than three careful copies of one paragraph.
+const COLLEGE_DONE_PREFIX = 'tb:collegeDone'
 /** The week she came out, or null on every career that is not out this week. */
 const collegeDoneWeek = computed(() => {
   const s = game.snapshot
   if (!s || s.ending !== null || s.college === null) return null
   return s.college.doneWeek === s.week ? s.week : null
 })
-const collegeDoneSeen = ref<string | null>(localStorage.getItem(collegeDoneKey()))
-watch(
-  () => game.snapshot?.careerId,
-  () => {
-    collegeDoneSeen.value = localStorage.getItem(collegeDoneKey())
-  },
+const collegeDoneIdentity = computed(() =>
+  collegeDoneWeek.value === null ? null : String(collegeDoneWeek.value),
+)
+const { unseen: collegeDoneUnseen, markSeen: markCollegeDoneSeen } = useWatermark(
+  COLLEGE_DONE_PREFIX,
+  collegeDoneIdentity,
+  (now, seen) => now !== null && now !== seen,
+  { value: null },
 )
 const showCollegeDone = computed(
   () =>
@@ -1088,16 +1128,15 @@ const showCollegeDone = computed(
     // and would be expensive to omit the first time that stops being true.
     queued.value === null &&
     popupMayShow('college-graduation', game.snapshot ?? null, liveSequence.value) &&
-    collegeDoneWeek.value !== null &&
-    String(collegeDoneWeek.value) !== collegeDoneSeen.value,
+    collegeDoneUnseen.value,
 )
 function dismissCollegeDone(): void {
-  const week = collegeDoneWeek.value
-  if (week === null) return
-  collegeDoneSeen.value = String(week)
-  localStorage.setItem(collegeDoneKey(), collegeDoneSeen.value)
+  if (collegeDoneWeek.value === null) return
+  markCollegeDoneSeen()
   // «…потом домашний экран». The card is the last COLLEGE screen and Home is what it hands to, so
   // the handover is stated here rather than left to wherever the player happened to be standing.
+  // ⚠ THE NAVIGATION IS WHY THIS IS STILL A FUNCTION AND NOT A BARE `markSeen` – the mark moved to
+  // the helper, the BEAT did not, and the beat is the shell's job.
   tab.value = 'home'
 }
 
@@ -1200,7 +1239,14 @@ const showTourBriefing = computed(
 // ⚠ SO THE WAY BACK IS NOT OPTIONAL, and that is `reopenTour` below. A bound that can pass a player
 // by needs a door they can open themselves; without one this would just be a narrower version of the
 // same bug.
-const tourSeen = ref(localStorage.getItem(TOUR_SEEN_KEY) === '1')
+//
+// ⚠ R2-08 – IT IS A DEVICE FLAG AND IT STAYS ONE. Every other mark in this file moved onto
+// `useWatermark`, which is career-scoped; this one must NOT, because «once, ever, per device» is the
+// ruling three paragraphs up and career-keying it would re-offer the tour to a player who answered
+// it and then started a second career. `useDeviceFlag` is the read/write half alone, and the half
+// worth taking: a bare `getItem` at setup THROWS in a private-mode browser, and a throw here is
+// above every screen – it took the whole app out rather than one coach mark.
+const { on: tourSeen, set: markTourSeen } = useDeviceFlag(TOUR_SEEN_KEY)
 /** More's "Show the tour again" – it outranks BOTH the seen mark and the week bound. */
 const tourReopened = ref(false)
 const tourWanted = computed(
@@ -1217,9 +1263,8 @@ const showTour = computed(
     popupMayShow('onboarding-tour', game.snapshot ?? null, liveSequence.value),
 )
 function dismissTour(): void {
-  tourSeen.value = true
+  markTourSeen()
   tourReopened.value = false
-  localStorage.setItem(TOUR_SEEN_KEY, '1')
 }
 /** More asks for it again. It moves to Home first: every anchor the tour points at is either the
  *  bottom bar or something on HomeScreen, so a tour opened over Stats would highlight nothing. */

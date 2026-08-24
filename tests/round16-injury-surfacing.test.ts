@@ -160,9 +160,24 @@ describe('#19 – the popup is gated on STATE, not on a screen having been open'
     // the GATE was per advance too. A state gate outlives the advance, so the flag has to name which
     // injury was reported – `sinceWeek:kind` – and it is persisted per career like the news,
     // This-week and trophy watermarks.
+    // ⚠ RE-AIMED BY R2-08, AND THE THREE CLAIMS ARE THE SAME THREE. The report's mark was
+    // hand-rolled in the shell (a composed key, a `ref(getItem(...))`, a career watcher, an inline
+    // `!==`); it is one `useWatermark` call now. Identity, per-career scoping and "unknown means
+    // unreported" all still have to be true – they are stated as ARGUMENTS, so the pin reads those.
     expect(app).toContain('injuryIdentity')
-    expect(app).toContain('tb:injuryReported:')
-    expect(app).toContain('injuryReported.value !== injuryIdentity.value')
+    // the prefix, not the composed key: `careerKey` appends the career inside the helper, and the
+    // per-career behaviour is proved on a live store in tests/component/career-watermarks.test.ts.
+    expect(app).toContain("const INJURY_SEEN_PREFIX = 'tb:injuryReported'")
+    // ⚠ AN UNKNOWN INJURY IS AN UNREPORTED ONE. This was the whole of #19 and it is the one thing
+    // here that is NOT symmetric with the trophy cabinet: the report takes the SENTINEL form of
+    // `absent`, so a missing key reads as "she has not been told". Dropping the sentinel would flip
+    // it to claim-nothing and silence the very report the item exists to deliver.
+    const block = app.slice(app.indexOf('const INJURY_SEEN_PREFIX'), app.indexOf('function dismissInjuryStop'))
+    expect(block.length, 'the injury block moved – re-aim, do not widen').toBeGreaterThan(0)
+    expect(block, 'a missing key must mean UNREPORTED, never claim-nothing').toContain('{ value: null }')
+    // ...and the gate still asks that question rather than a stop reason (the `it` above) – it is
+    // `unseen`, which IS `now !== null && now !== seen`, the comparison this line used to quote.
+    expect(app).toContain('injuryUnreported.value')
   })
 
   it('and the ENGINE stop reason is untouched – it still halts a multi-week advance', () => {

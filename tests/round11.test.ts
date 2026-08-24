@@ -318,7 +318,21 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
     // same shape and the same argument as the injury line above, and the ORDER below is unchanged.
     // The behaviour is proven mounted in tests/component/round19-wrapup.test.ts; this stays a source
     // pin because what it guards is which INPUT the gate reads.
-    expect(summary).toContain('seasonWrapPrompt.value !== null')
+    //
+    // ⚠ RE-AIMED BY R2-08, AND THE GUARDED CLAIM IS UNCHANGED: the gate's INPUT is
+    // `snapshot.seasonWrapPrompt` and NOT a stop reason. The gate used to spell its own watermark
+    // comparison inline (`seasonWrapPrompt.value !== null && String(...) !== seasonWrapSeen.value`);
+    // that comparison is `useWatermark`'s `unseen` now, so the pin follows the input one link back –
+    // it asserts the wrap-up's mark is BUILT over `seasonWrapPrompt`, and that neither the gate nor
+    // the mark has gone back to reading the reason that dies with its own advance.
+    expect(summary).toContain('seasonWrapUnseen.value')
+    const wrapMark = APP.slice(APP.indexOf('const SEASON_WRAP_PREFIX'), APP.indexOf("// R9-21a: the injury stop"))
+    expect(wrapMark.length, 'the wrap-up mark moved – re-aim, do not widen').toBeGreaterThan(0)
+    expect(wrapMark, 'the mark is over the snapshot field, not over a stop reason').toContain(
+      'game.snapshot?.seasonWrapPrompt',
+    )
+    expect(wrapMark).toContain('seasonWrapIdentity')
+    expect(wrapMark).not.toContain('stopReasons')
     expect(summary).not.toContain("stopReasons.value.includes('season-end')")
     // The wrap-up waits behind the injury dialog – never both overlays at once, and never a dead
     // end: dismissing the injury re-evaluates this gate and the summary appears.

@@ -52,6 +52,8 @@ const FLOW = 'src/components/TournamentFlow.vue'
 const CABINET = 'src/components/screens/TrophiesScreen.vue'
 const SHELL = 'src/App.vue'
 const SHEET = 'src/style.css'
+/** R2-08: where the cabinet's mark is actually read and written, since the shell stopped doing it. */
+const WATERMARK = 'src/composables/inboxCue.ts'
 
 /** url -> path on disk (strip the Vite base the builder prepends) – the preload suite's own helper. */
 function assetPath(url: string): string {
@@ -181,13 +183,27 @@ describe('⚠ THE TAB DOT ASSERTS A FACT, not the "unread" it cannot know', () =
   it('the shell uses the shared predicate, a PER-CAREER watermark, and nothing else', () => {
     const app = read(SHELL)
     expect(app).toContain('trophyDotShows(')
+    // ⚠ RE-AIMED BY R2-08, NOT WEAKENED, AND THE TWO CLAIMS ARE THE SAME TWO. The cabinet's mark was
+    // hand-rolled here – a composed key literal and an inline "missing means current" read – and is
+    // now one `useWatermark` call. Both facts still have to be true of the shell; what changed is
+    // that the shell states them as ARGUMENTS instead of as code, so the pin reads the arguments.
+    //
     // Per career: careers advance independently, so a global key would collide (the R9-21b news
-    // lesson, which this file is deliberately copying rather than re-deriving).
-    expect(app).toContain('`tb:lastSeenTrophies:${game.snapshot?.careerId ?? \'\'}`')
+    // lesson, which this file is deliberately copying rather than re-deriving). The composition
+    // `prefix:careerId` is `careerKey`'s, proved in tests/component/career-watermarks.test.ts by
+    // switching careers on a live store – a behaviour claim this text search cannot make.
+    expect(app).toContain("const TROPHY_SEEN_PREFIX = 'tb:lastSeenTrophies'")
+    expect(app).toMatch(/useWatermark\(\s*TROPHY_SEEN_PREFIX/)
     // ⚠ A MISSING WATERMARK IS THE CURRENT COUNT, NEVER ZERO. A career with trophies and no stored
     // watermark is a case where the app does not KNOW whether the cabinet was ever opened, and a dot
-    // must not claim a fact it cannot hold.
-    expect(app).toContain('stored === null ? trophyPieceCount.value : Number(stored)')
+    // must not claim a fact it cannot hold. In `useWatermark` that is the CLAIM-NOTHING form: the
+    // `absent` argument OMITTED. So the pin is that the trophy call passes three arguments and no
+    // fourth – a sentinel smuggled in here would zero the cabinet on every save that predates the
+    // watermark, which is the defect this line has always been about.
+    const trophyCall = app.slice(app.indexOf('const TROPHY_SEEN_PREFIX'), app.indexOf('// The flight is armed'))
+    expect(trophyCall.length, 'the trophy block moved – re-aim, do not widen').toBeGreaterThan(0)
+    expect(trophyCall, 'the cabinet must claim nothing when the key is missing').not.toContain('absent')
+    expect(trophyCall, 'a sentinel here would zero every pre-watermark cabinet').not.toMatch(/\{\s*value:/)
     // ...and it goes out when the cabinet is opened, which is when the sentence stops being true.
     expect(app).toMatch(/if \(t === 'trophies'\) markTrophiesSeen\(\)/)
   })
@@ -228,7 +244,13 @@ describe('⚠ THE TAB DOT ASSERTS A FACT, not the "unread" it cannot know', () =
     // schema bump, no worker message.
     expect(read(ARRIVAL)).toContain("Pick<Snapshot, 'trophiesByTier'>")
     expect(read(ARRIVAL)).toContain("import type { Snapshot } from '../shared/protocol'")
-    expect(read(SHELL)).toContain('localStorage.setItem(trophySeenKey()')
+    // ⚠ RE-AIMED BY R2-08. The claim is "the mark lives in localStorage, not in the save/snapshot",
+    // and it used to be spelled as the shell's own `setItem` call. The shell has no `setItem` any
+    // more – `useWatermark` owns every read and write – so the claim is asserted where it is now
+    // true: the cabinet goes through the localStorage watermark helper, and NOTHING about the
+    // trophy dot reaches the worker or the schema (the two lines below, unchanged).
+    expect(read(SHELL)).toMatch(/useWatermark\(\s*TROPHY_SEEN_PREFIX/)
+    expect(read(WATERMARK), 'the helper is what puts the mark in localStorage').toContain('localStorage.setItem(')
     for (const p of [RESOLVER, ARRIVAL]) {
       expect(read(p), `${p} must not reach into the store or the worker`).not.toContain('stores/game')
       expect(read(p), `${p} must not reach into the worker`).not.toContain('worker/')

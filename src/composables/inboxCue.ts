@@ -30,19 +30,35 @@
 // their own key - which is how the two opposite "missing key" rules ended up as two unrelated pieces
 // of code instead of one parameter with the argument written beside it.
 //
-// ⚠ FOUR OF THOSE FIVE ARE STILL HAND-ROLLED, IN App.vue, AND THIS IS THE NOTE THAT SAYS SO rather
-// than a half-finished job with nothing recording it: `weekSeenKey` / `lastSeenThisWeek`,
-// `trophySeenKey` / `seenTrophyPieces`, `seasonWrapSeenKey` / `seasonWrapSeen` and `injurySeenKey` /
-// `injuryReported`. Each is expressible here without a change of behaviour, and the parameters each
-// one needs are recorded at `absent` below and at `Watermark.seen`. The trophy cabinet is the
-// claim-nothing one; the other three are sentinels (-1, null, null). The blocker is not the code:
-// three source-pin tests read those key literals out of App.vue's text
-// (tests/round13-nav.test.ts, tests/round16-injury-surfacing.test.ts, tests/trophy-podium.test.ts),
-// so moving them is a two-file change and the pins have to be re-aimed at the same commit.
+// ⚠ THAT NOTE IS DISCHARGED (R2-08). It used to read "FOUR OF THOSE FIVE ARE STILL HAND-ROLLED, IN
+// App.vue" and list them; all four are here now, and so are the two the note did not count. The
+// shell keeps no `getItem`/`setItem` of its own:
+//
+//     this-week   `tb:lastSeenThisWeek`  number, sentinel -1     – the recap dot needs the NUMBER
+//     trophies    `tb:lastSeenTrophies`  number, CLAIM NOTHING   – the cabinet's own rule
+//     season wrap `tb:seasonWrapSeen`    string, sentinel null   – a report that must be shown
+//     injury      `tb:injuryReported`    string, sentinel null   – ditto, and the loudest of them
+//     college     `tb:collegeDone`       string, sentinel null   – ditto
+//     season dot  `tb:lastSeenSeasonWeek` number, sentinel -1    – ⚠ AND IT WAS THE BUG, see below
+//
+// ⚠⚠ THE SEASON DOT WAS THE ONE THAT WAS ACTUALLY BROKEN, and finding it is the argument for doing
+// this consolidation rather than leaving six correct copies alone. Its key was GLOBAL – a bare
+// `tb:lastSeenSeasonWeek` with no career on it – while the value under it is a WEEK NUMBER. Two
+// careers are almost never on the same week, so the mark leaked: visiting Season on a week-90 career
+// wrote 90, and the week-12 career next door then had every marker it had never seen read as
+// already-seen, for seventy-eight weeks. That is the R9-21b defect this file was created to fix,
+// still living one block above the fix. Going through `careerKey` is what repairs it; the cost is
+// that one device's season dot lights once more, which is the trade every watermark here makes.
 //
 // `careerKey` and `useCareerSync` are the two halves below the watermark, exported for the one scope
 // that is career-keyed but is NOT a watermark: `inboxMail.ts` stores a SET of letter ids, at
 // per-letter grain, which no high-water mark can hold.
+//
+// ⚠ AND ONE MARK IN THE SHELL IS DELIBERATELY *NOT* A WATERMARK: the coach-mark tour
+// (`tb:onboardingTourSeen`) is «shown once, ever, PER DEVICE» by owner ruling, so career-keying it
+// would be a behaviour change dressed as a consolidation. What it shared with the six above is the
+// half that was really wrong – a bare `getItem` at setup and a bare `setItem` on dismiss, both of
+// which THROW in a private-mode browser. `useDeviceFlag` is that half and only that half.
 import { computed, ref, watch, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import type { Snapshot, WorldEvent } from '../shared/protocol'
@@ -219,6 +235,46 @@ export function useNewsWatermark(
   const game = useGameStore()
   const latestId = computed(() => latestNewsId(game.snapshot))
   return { ...useWatermark(keyPrefix, latestId, (now, seen) => now > seen), latestId }
+}
+
+/**
+ * A ONE-WAY DEVICE FLAG – "this device has answered X", for the one persisted mark in the shell that
+ * is not per career.
+ *
+ * ⚠ NOT A WATERMARK, AND THE DIFFERENCE IS THE OWNER'S RULING RATHER THAN A TYPE. The coach-mark
+ * tour is shown once, ever, per DEVICE; every mark above is per CAREER. Running it through
+ * `careerKey` would re-offer the tour to a player who answered it and then started a second career,
+ * which is not a consolidation, it is a regression with a tidy diff.
+ *
+ * ⚠ WHAT IT DOES SHARE, AND THE ONLY REASON IT IS HERE: storage that throws. A private-mode browser
+ * raises on `localStorage` access, and the shell read this key at SETUP – so the throw landed in
+ * `<script setup>`, above every screen, and took the whole app out rather than one dot. `read`
+ * answers `false` (nobody has answered anything we can prove) and `set` gives up silently, exactly
+ * as `useWatermark` does one function up.
+ *
+ * The value is mirrored into a ref for the same reason the season dot's was: a bare `getItem` inside
+ * a computed is not a tracked dependency, so the gate would not re-evaluate when the flag flipped.
+ */
+export function useDeviceFlag(key: string): { on: ComputedRef<boolean>; set: () => void } {
+  const read = (): boolean => {
+    try {
+      return localStorage.getItem(key) === '1'
+    } catch {
+      return false
+    }
+  }
+  const flag = ref(read())
+  return {
+    on: computed(() => flag.value),
+    set: (): void => {
+      flag.value = true
+      try {
+        localStorage.setItem(key, '1')
+      } catch {
+        // storage unavailable - it holds for this session and will be asked again next launch
+      }
+    },
+  }
 }
 
 /** The inbox watermark: "a letter has landed that this device has not been shown". */
