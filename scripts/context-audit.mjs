@@ -11,6 +11,10 @@ const json = args.has('--json')
 const verbose = args.has('--verbose')
 
 const requiredFiles = [
+  // ⚠ CLAUDE.md IS THE MOST EXPENSIVE RECURRING DOCUMENT IN THE REPO and it was the only one this
+  // audit did not see (R2-04, 23.08): every session loads it whole, so a paragraph added here is a
+  // paragraph paid on every future turn – exactly what the budget mechanism exists to make visible.
+  'CLAUDE.md',
   'AGENTS.md',
   'docs/context-index.md',
   'docs/context/saves-and-worker.md',
@@ -30,6 +34,9 @@ const allowedStatuses = new Set([
 ])
 
 const sizeBudgets = new Map([
+  // Measured 20,189 characters on 23.08; the ceiling leaves ~9% for the invariants to grow into and
+  // turns the next large addition into a decision rather than a drift.
+  ['CLAUDE.md', 22_000],
   ['AGENTS.md', 7_000],
   ['docs/context-index.md', 9_000],
   ['docs/context/saves-and-worker.md', 6_500],

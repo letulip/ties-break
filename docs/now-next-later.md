@@ -3,7 +3,7 @@ type: plan
 status: current
 area: delivery
 canonical: true
-last-reviewed: 2026-08-19
+last-reviewed: 2026-08-23
 ---
 
 # Now / next / later
@@ -25,20 +25,27 @@ last-reviewed: 2026-08-19
 
 ## Now
 
-**`wave/round22` is the live wave and it has its ledger** – [round-22.md](rounds/round-22.md),
-written 19.08 from the commits. ⚠ Read its opening note before its checklist: **the owner's own
-numbered list for round 22 was never captured on any branch**, unlike every other round in the
-folder, so the item numbers come from six commit subjects and the mapping across `#2-5` and `#9-14`
-is stated as unestablished rather than reconstructed.
+⚙ THE LIVE WAVE IS ROUND 25 – this line is machine-checked against the newest ledger in
+`docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-⚠ **The wave was still live when that ledger was written**, and it says so: it is current through
-`faa5a6c` and nothing after. Check the log before reading its tail as final.
+**Rounds 24 and 25 have landed** – [round-24.md](rounds/round-24.md) (the college flow: the freeze
+defect, the Home shell, the College League, the academic year, the birthdays) and
+[round-25.md](rounds/round-25.md) (the masseur and his dial, the shoot weeks, recovery variant C,
+the team's prize share, the sim corridors, the git hygiene). Both ledgers were written 23.08 from
+the plans, specs and commit bodies – two days after the fact, which is itself recorded in them.
 
-The one thing it leaves for this wave to finish, `docs`-side and needing no ruling:
+**What is genuinely NOW is nothing until the owner picks it.** The backlog carries states on every
+row ([backlog/README.md](backlog/README.md) – Now / Next / Later / Parked / Rejected) and **Now is
+deliberately empty**: it is assigned by the owner's pick, not by a sweep. The R2 programme
+([backlog/the-r2-programme.md](backlog/the-r2-programme.md)) is the one approved-and-launched set –
+wave A is running.
 
-- **No spec in `docs/specs/` for this wave's two balance changes** – the tenure ramp and the live
-  professional table. Both were measured; both records live only in commit bodies and source
-  comments. `CLAUDE.md` invariant 4 asks for a spec recording predicted vs measured.
+⚠ Older entries below this line are kept as the page's own history; where a round has since been
+ledgered, the ledger wins.
+
+- ~~**No spec for round 22's two balance changes**~~ – the tenure ramp and the live professional
+  table. Still open at the time of writing and still owed by invariant 4; carried as a row in
+  [backlog/the-quality-rig.md](backlog/the-quality-rig.md) rather than here.
   ([round-22.md](rounds/round-22.md), "What is still open".)
 
 ## Next – named, and nothing has to be decided first
