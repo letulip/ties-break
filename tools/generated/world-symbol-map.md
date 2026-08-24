@@ -2,19 +2,19 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,278 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (1,772 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-276 exported names across 35 owning modules.
+276 exported names across 36 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
-| `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 17 |
+| `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 16 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 22 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 20 |
@@ -46,6 +46,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 2 |
 | `src/engine/world/labels.ts` | FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it | 2 |
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
+| `src/engine/world/bookkeeping.ts` | ⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar | 1 |
 | `src/engine/world/knockHistory.ts` | THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out | 1 |
 | `src/engine/world/phaseFinance.ts` | ⭐ R2-10 STEP 2, PHASE 2 – WHAT THE WEEK COSTS: the family's money, the coach's bill, the college's tuition and the kit that wears out | 1 |
 | `src/engine/world/snapshot.ts` | THE SNAPSHOT: everything the UI is ever allowed to see, built fresh from the world on every command | 1 |
@@ -61,7 +62,6 @@ THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – 
 - `COLLEGE_REVEAL_REFUSAL` – `src/engine/world.ts`
 - `createWorld` – `src/engine/world.ts`
 - `endCollegeEarly` – `src/engine/world.ts`
-- `ensureSeason` – `src/engine/world.ts`
 - `maxMainDraws` – `src/engine/world.ts`
 - `PARENT_INCOME_CENTS` – `src/engine/world.ts`
 - `rankingDeltaSuffix` – `src/engine/world.ts`
@@ -484,6 +484,12 @@ MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the
 
 - `computeLossStreak` – `src/engine/world/matchNews.ts`
 - `flipScore` – `src/engine/world/matchNews.ts`
+
+### `src/engine/world/bookkeeping.ts`
+
+⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar.
+
+- `ensureSeason` – `src/engine/world/bookkeeping.ts`
 
 ### `src/engine/world/knockHistory.ts`
 

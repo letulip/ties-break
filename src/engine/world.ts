@@ -1,4 +1,4 @@
-import { type Rng, type MainRngState, rngFromSeed, initMainState, resumeMain } from './rng'
+import { type Rng, type MainRngState, initMainState, resumeMain } from './rng'
 import {
   DEFAULT_PROFILE,
   STOP_PRECEDENCE,
@@ -6,7 +6,6 @@ import {
   type FamilyBackground,
   type PlayerProfile,
   type StopReason,
-  type WorldEvent,
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
 // THE LAYERING, stated once (fix/world-trio item 2). `src/shared/dates.ts` is deliberately
@@ -23,10 +22,9 @@ import { weekLabel } from '../shared/dates'
 // Type-only on the way back (shared/avatarEmotion imports `type TierId` from engine/season/types),
 // so this is a leaf dependency, not a cycle.
 import type { MatchPlayer } from './match/types'
-import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TournamentResult } from './season/types'
+import type { MatchRecord, SeasonEvent } from './season/types'
 import {
   TIERS,
-  buildSeason,
   WEEKS_PER_YEAR,
   OFF_SEASON_WEEKS } from './season/calendar'
 import { clamp, tournamentRunStrain } from './condition'
@@ -45,17 +43,6 @@ import { rollPotential } from './development'
 import { coachIncludesPhysio } from './coach'
 import { generatePreHistory } from './season/prehistory'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, RANKABLE_MIN, windowedBestSum } from './season/ranking'
-import {
-  byAllocationPriority,
-  selectEntrants,
-  resolveDoubleBookings,
-  runTournament,
-  ON_RAMP,
-  fillOnRamp,
-  WILD_CARD,
-  hostNationOf,
-  wildCardWindow,
-} from './season/tournament'
 // THE FIELD TIER (living-field phase W, 01.08). Field pros are DERIVED, NEVER PERSISTED – see
 // season/fieldPros.ts for the whole argument. world.ts only ever asks three questions of them:
 // the merged W ranking, the W-event candidate universe, and a name for an fp- id on a surface.
@@ -64,7 +51,6 @@ import {
 // out of the persisted ledger (`runAiTournament`).
 import {
   isFieldProId,
-  universeForTier,
 } from './season/fieldPros'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
@@ -82,14 +68,12 @@ import {
 // THE INBOX (v32, docs/specs/offers-and-the-inbox.md). Same dependency shape as the knock and the
 // diary: offers.ts is world-free and takes plain arguments, so world -> offers runs one way. Its
 // only randomness is its own `seed:offer:<week>` sub-stream, so nothing it does can reach the MAIN
-// weekly stream the frozen capture (41550 / e6b0c709) measures.
-import {
-  isSponsorReviewWeek,
-  pruneEntryLetters,
-} from './offers'
+// weekly stream the frozen capture (41550 / e6b0c709) measures. ⚠ Nothing in THIS file reads it any
+// more either: the window review went to world/phaseObligations.ts and the letters' own prune to
+// world/bookkeeping.ts, with the steps that call them (R2-10 step 2).
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
-import { activeLadderOf, playerShortName, toSnapshot } from './world/snapshot'
+import { activeLadderOf, toSnapshot } from './world/snapshot'
 export { activeLadderOf, toSnapshot }
 import {
   flipScore,
@@ -97,7 +81,6 @@ import {
   kidMatchEvent,
   computeLossStreak,
   rivalRetirementNews,
-  tierMakesWorldNews,
 } from './world/matchNews'
 export { flipScore, computeLossStreak }
 import { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek } from './world/knock'
@@ -108,7 +91,7 @@ export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf
 import { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount } from './world/multiWeek'
 export { advanceRefusal, ADVANCE_REFUSALS, MULTI_WEEK_SPAN, spanDigest, spanRowCount }
 export type { SpanWeek } from './world/multiWeek'
-import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
+import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
 import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
@@ -234,7 +217,7 @@ import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
 import { inTrack, fieldProsOf, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars } from './world/ladder'
 export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars }
-import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
+import { KID_ID } from './world/constants'
 export { KID_ID }
 // ⭐⭐ ROUND 24, E2 – THE TWO SENTENCES THE COMMAND GUARD CAN SAY, and the guard that lets the college
 // freeze through. Re-exported off the barrel for the same reason `COLLEGE_REVEAL_REFUSAL` is exported
@@ -242,7 +225,7 @@ export { KID_ID }
 // error channel, so a test that pinned the spelling instead of the symbol would break a report in
 // silence. See the note beside `guardNotEnded` in world/constants.ts for why there are two.
 export { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEndedForGood } from './world/constants'
-import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow, withinAnnualEntryLimit } from './world/entryCaps'
+import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage, proSubCapUsage, proSubCapRefusalDetail, juniorMerit, proMerit, bestJuniorRankInWindow } from './world/entryCaps'
 // P1 – the junior access rulebook (the Accelerator table and the W15 reserved-place door). Re-exported
 // under its own names for the same reason the caps are: the worker, the snapshot and the tools must
 // read ONE implementation. `docs/specs/junior-access-2026-08.md`.
@@ -261,7 +244,6 @@ import {
   penaltyPointsAt,
   quotaPlayedIn,
   quotaShortfallAt,
-  settleMandatoryQuota,
   suspensionWeeksLeft,
 } from './world/mandatory'
 export {
@@ -313,11 +295,18 @@ export { coachWorksThisWeek }
 // ⭐ R2-10 STEP 2, PHASE 3 – her body, the week folded once, and her own competition.
 // `rivalField` and `TourWeek` come back from the substrate module because the AI side below still
 // builds its brackets through the one helper both tournament paths have always shared.
-import { deriveWeekField, rivalField, type TourWeek } from './world/weekField'
+import { deriveWeekField } from './world/weekField'
 import { playHerWeek, resolveBodyAndPlanner } from './world/phaseHerWeek'
 // ⭐ R2-10 STEP 2, PHASE 4 – the cohort's drift, her development, the knock or the college year's
 // own arrivals, and the three dates on the family's calendar.
 import { growAndLive } from './world/phaseGrowth'
+// ⭐ R2-10 STEP 2, PHASE 5 – the canonical AI brackets and the week's close.
+// `ensureSeason` is re-exported under its historical name; `recomputeRankAndMilestones` and
+// `housekeep` come back for the two OTHER closing paths that still live in this file –
+// `finalizeTournament`'s deferred step 5-6 and `skipEvent`.
+import { closeTheWeek } from './world/phaseAiWeek'
+import { ensureSeason, housekeep, recomputeRankAndMilestones } from './world/bookkeeping'
+export { ensureSeason }
 import type { PendingTournament, WorldState } from './world/state'
 export type { PendingTournament, WorldState }
 import { SAVE_SCHEMA_VERSION } from './world/state'
@@ -349,29 +338,10 @@ export { seasonIndexOf, seasonStartWeek, financeWindow, financeSeries }
 // player: moved to world/player.ts (P4 extraction). Imported back below and re-exported under
 // the historical names, so every existing `from '...engine/world'` call site keeps working.
 
-// --- rolling calendar --------------------------------------------------------
-// Extend the season in whole deterministic year-blocks until at least
-// SEASON_MIN_FUTURE weeks ahead are scheduled, then drop resolved (past) weeks and
-// any entries pointing at events that no longer lie in the future.
-export function ensureSeason(world: WorldState): void {
-  // Round 5 item 23: notify the player when a NEW block of the calendar appears –
-  // but not for the very first block a career/migration ever generates (nothing to
-  // be "new" about a calendar the player has never seen yet).
-  const hadSeason = world.season.length > 0
-  const horizonChunk = Math.floor((world.week + SEASON_MIN_FUTURE) / SEASON_CHUNK)
-  let maxWeek = world.week
-  for (const e of world.season) if (e.week > maxWeek) maxWeek = e.week
-  let coveredChunk = world.season.length ? Math.floor(maxWeek / SEASON_CHUNK) : -1
-  while (coveredChunk < horizonChunk) {
-    coveredChunk++
-    const start = coveredChunk * SEASON_CHUNK
-    world.season.push(...buildSeason(`${world.seed}:s${coveredChunk}`, start, SEASON_CHUNK, world.profile.background))
-    if (hadSeason) addEvent(world, { week: world.week, type: 'info', text: 'New events on the calendar' })
-  }
-  world.season = world.season.filter((e) => e.week >= world.week).sort((a, b) => a.week - b.week)
-  const future = new Set(world.season.filter((e) => e.week > world.week).map((e) => e.id))
-  world.entries = world.entries.filter((id) => future.has(id))
-}
+// the rolling calendar (`ensureSeason`), the rank recompute and the housekeeping prunes: moved to
+// world/bookkeeping.ts (R2-10 step 2, phase 5). They are shared by three closing paths – a normal
+// week, a reveal week's `finalizeTournament` and `skipEvent` – so they belong to none of them.
+// `ensureSeason` is imported back below and re-exported under its historical name.
 
 
 // THE LADDER (ranking helpers + tier eligibility) moved to world/ladder.ts (P4 extraction).
@@ -416,46 +386,6 @@ export function ensureSeason(world: WorldState): void {
 // the ONE place both tournament paths build a rival, so it went to the substrate both phases read
 // rather than into either of them; `runAiTournament` below imports it from there.
 
-// Step 5 of a resolved week: recompute the kid's rank vs the whole field and fire rank milestones.
-// Shared by a normal tick (inline) and finalizeTournament (deferred for a reveal week).
-function recomputeRankAndMilestones(world: WorldState): void {
-  world.prevKidRank = world.kidRank
-  // All THREE "before" values, captured together, so no surface can diff across two tables.
-  world.prevKidRankDomestic = world.kidRankDomestic ?? null
-  world.prevKidRankWta = world.kidRankWta ?? null
-  // ⚠ ONE WRITER, ONE MEANING. This used to rank with `computeRanking(results, week, ids)` and NO
-  // track predicate - so it folded BOTH ladders into one table and wrote that into `kidRank`, while
-  // `recomputeKidRank` wrote the ITF rank into the same field and `computeStandings` rendered the
-  // ITF table. Whichever ran last won, so Home and the season wrap-up showed her combined-table
-  // place (#4 on 604 points) while the Stats table showed her ITF row (#128 on 4) - the owner's
-  // playtest finding, and four items on his list are this one bug wearing different clothes.
-  //
-  // The two-ladder slice removed `kidPoints`' default track for exactly this reason; this call site
-  // survived because it reached for `computeRanking` directly instead. It now defers to the one
-  // function that owns the caches, so the field cannot mean two things again.
-  recomputeKidRank(world)
-  // W2-ENDINGS: ...and the ONE milestone this step still fires. It lives here because this is the
-  // step that runs on BOTH paths – inline on a normal week, deferred to finalizeTournament on a
-  // reveal week – which is exactly the pair the crossing can land on (the cheque arrives at
-  // finalize; the costs arrive on any week at all). Idempotent, so being reached twice is free.
-  captureBreakEven(world)
-  // Rank milestones ("top 10/50/1") intentionally removed: in the early season almost no one
-  // has points, so the first result rockets her to a single-digit rank and all of them fire at
-  // once (reads absurdly). A real "world" ranking belief system belongs to the world-news
-  // feature (Phase 4+), not this placeholder cohort ranking.
-}
-
-// Step 6 of a resolved week: prune ledgers/feeds, roll the calendar forward.
-function housekeep(world: WorldState): void {
-  pruneResults(world)
-  pruneEvents(world)
-  pruneFinanceWeeks(world)
-  prunePlannerBookings(world)
-  pruneInternationalEntries(world)
-  // W2-LADDER §6: the tournament desk's receipts age out after a year; contracts never do.
-  world.offers = pruneEntryLetters(world.offers, world.week)
-  ensureSeason(world)
-}
 
 /** The clause appended to a tournament summary that explains the EFFECTIVE ranking change
  *  (round-5 item 1a). `delta` is the change in the kid's windowed best-N sum caused by the
@@ -1001,391 +931,9 @@ export function closeTournament(world: WorldState): void {
   world.pendingTournament = null
 }
 
-// The canonical AI-only bracket for one event. Runs on its OWN EVENT-SCOPED stream
-// `seed:aitour:<event.id>` – the exact mirror of the kid's `seed:kidtour:<event.id>` – covering
-// BOTH the entrant selection and the AI-vs-AI matches. ZERO main-stream draws.
-//
-// Why it is scoped and not on the main weekly stream: the calendar is content. While the brackets
-// drew from the main stream, adding a tier or densifying a cadence changed the per-week draw count
-// by construction, which re-based every frozen invariance pin – the ladder-up slice had to move
-// them for exactly that reason. Scoped by (world.seed, event.id) – two immutable values, and
-// event.id is unique per (year, week, tier) – the AI world is now a pure function of the event, so
-// content is free and a reloaded career replays its brackets by construction rather than by the
-// worker fast-forwarding the main stream onto precisely the right draw.
-//
-// RIVALS BECOME REAL: the field is built through `rivalField`, so the bracket runs on rivals who
-// are tired from their own recent schedule and coloured by how their style suits the surface. That
-// costs no draw – both are pure derivations – so everything above still holds. The awarded rows now
-// record their `tier`, which is what lets next week's reconstruction read them EXACTLY instead of
-// guessing (SeasonResult.tier has always been optional, so this is not a schema bump).
-//
-// EVERY ENTRANT LEAVES A ROW – SCORING OR NOT (fix/rival-fatigue-rows). This loop used to guard on
-// `points > 0`, which was harmless while every finish paid: "has a row" and "played that week" were
-// the same fact. Wave B's first-round zero ended that, and the guard then deleted the ONLY record
-// that half of every draw had played at all – so `season/rival.ts`, which reconstructs a cohort
-// player's strain from her rows, read a rival who lost her opener as having RESTED. She banked
-// `recoveryBase` for a week she spent travelling and playing. Measured on the real engine
-// (tools/rival-fatigue-audit.ts, 12 cells × 30 seeds × 208w): 45.6% of all cohort appearances were
-// charged no strain whatever, the field ran ~4 points of condition fresher than the tennis it
-// played, and the cohort's win% against the kid moved with it.
-//
-// So the row is written for EVERY entrant of the draw and `points` carries the award, 0 included.
-// The two facts now live in two fields instead of one presence check, which is what
-// `isCountingResult` exists to keep honest: nothing that reads the ledger as a STANDINGS table sees
-// a scoreless row (computeRanking / windowedBestSum / the counting-results list all filter it out),
-// and the one system that reads it as a record of PLAY – the rival fatigue window – sees all of it.
-// This is the same shape `season/prehistory.ts` has always written; the live path is what moved.
-//
-// COSTS NOTHING ON THE STREAM: pushing a row draws no RNG on any stream, and the loop already
-// visited every entrant (`result.finishes` is dense over the whole draw). The frozen MAIN capture
-// 41550 / e6b0c709 is untouched by construction – points are post-draw arithmetic, read off a table
-// after the bracket has already been resolved. The ledger roughly doubles in size (a 32-draw writes
-// 32 rows instead of 16); it is still pruned on the same 52-week rule and stays ~2k rows.
-//
-// ⚠ SPLIT IN TWO BY THE NO-DOUBLE-BOOKING RULE (31.07), AND THE SPLIT IS THE LOAD-BEARING PART.
-// The draw and the bracket used to be one call because they share one `aiRng`: `selectEntrants`
-// spends the first N numbers of `seed:aitour:<id>` and `runTournament` continues from N+1. A rule
-// that has to see EVERY event of the week before ANY bracket runs cannot be written inside a
-// function shaped like that – but re-seeding a second stream for the bracket would restart it at
-// draw 0 and move every AI result ever recorded. So `drawAiEntrants` makes the draw and hands the
-// LIVE RNG OBJECT on; `runAiTournament` resumes on exactly the number it would have read anyway.
-// Same stream, same position, same values: the split is invisible to every sub-stream in the game.
-// ⚠⚠ AND SINCE W3-FIELD3 (04.08) A W-TRACK CANONICAL BRACKET IS PLAYED BY PROFESSIONALS.
-//
-// THE SHAPE, in one sentence: the W rungs' candidate universe becomes LIVE cohort ∪ derived field
-// pros positioned by the MERGED W standings – the same `universeForTier` seam, the same
-// `selectEntrants`, the same age gate, the same entrant bands the kid's shadow run has used since
-// living-field phase W – and `runAiTournament` then writes a ledger row for the LIVE entrants ONLY.
-//
-// THE FENCE THIS REPLACES said a pro must never be in a canonical draw BECAUSE a pro must never
-// write a persisted row. The second clause is still law and is enforced one function down; the
-// first turned out not to follow from it, and holding the two together is what shipped a Grand Slam
-// at draw 32 (calendar.ts `slam`) and a professional tour whose events no professional played.
-//
-// WHAT IT COSTS IN PERSISTED STATE: NOTHING, and slightly less than nothing. A 32-draw W event used
-// to push 32 junior rows into `world.results`; it now pushes only as many as it drew LIVE girls,
-// which at the shipped bands is a handful. No schema, no migration, no new field – and the 52-week
-// prune is doing strictly less work than it did yesterday. The two alternatives considered and not
-// taken: a parallel non-persisted results view (a second ledger for `rivalConditions` to read, i.e.
-// a second thing to keep in step with the first) and a bounded per-season pro-results structure (a
-// schema bump to buy a pro a ranking that moves – which is phase 2's pro contour, and it should
-// arrive with aging and retirement rather than ahead of them).
-//
-// WHAT IT COSTS IN FIDELITY, stated so it is not discovered later: a pro's canonical results change
-// nothing about her – her standing stays her derived `wtaPoints`, she banks no fatigue, so she is
-// fresh every week. See the superseded fence in season/fieldPros.ts for the full accounting.
-//
-// ⚠ RNG. Zero MAIN draws, exactly as before: `drawAiEntrants` opens `seed:aitour:<event.id>` and
-// `runAiTournament` resumes on it, and the frozen capture (41550 / e6b0c709) re-derives
-// byte-for-byte on this branch. What DID move is the COMPOSITION of each W event's own sub-stream –
-// `selectEntrants` spends one draw per band candidate and a W band now selects from 563 people
-// rather than 199 – which is the documented mutable class (every band and age re-pick has moved it)
-// and is NOT a fairness break: the count is a function of (seed, week, the kid-free ledger, the
-// derived field), every one of which is independent of what the player has entered or won. The six
-// non-W rungs are byte-identical, because `universeForTier` hands them back the same array instance.
-// `TourWeek` and `W_TRACK_PROBE`: moved to world/weekField.ts with `deriveWeekField`, which is the
-// only thing that builds one (R2-10 step 2, phase 3). The type is imported back for the three
-// functions below that are handed one.
-
-function drawAiEntrants(
-  world: WorldState,
-  event: SeasonEvent,
-  aiRanking: RankingRow[],
-  tour: TourWeek,
-  fatigue: Map<string, number>,
-  /** see `computeShadowTournament`'s own note - the AER ledger, required for the same reason. */
-  entries: ReadonlyMap<string, number>,
-): { event: SeasonEvent; entrants: AiPlayer[]; rng: Rng } {
-  const rng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
-  // `universeForTier` is the seam and it is asked BY TIER, so a non-W event provably gets
-  // `world.cohort` itself back (reference equality, pinned in tests/season/fieldPros.test.ts) and
-  // reads the mixed junior table it always read.
-  const isW = TIERS[event.tier].track === 'wta'
-  const universe = withinAnnualEntryLimit(
-    universeForTier(event.tier, world.cohort, tour.pros),
-    event.tier,
-    entries,
-    TIERS[event.tier].drawSize,
-  ) as AiPlayer[]
-  return {
-    event,
-    entrants: selectEntrants(event, universe, isW ? tour.ranking : aiRanking, rng, fatigue),
-    rng,
-  }
-}
-
-/** THE HELD SLOTS OF THE WHOLE WEEK (W3-ONRAMP, 04.08) – step 4b½, between the week's resolution and
- *  its brackets.
- *
- *  WHY IT IS ITS OWN PASS AND NOT PART OF THE DRAW: `season/tournament.ts`'s ⚠⚠ box has the
- *  measurement. In one sentence – a held slot filled at DRAW time can land on a junior the same
- *  week's J300 has also drawn, `resolveDoubleBookings` then correctly hands her to the higher rung,
- *  and the junior event backfills with a STRONGER player. Every held slot silently upgraded a junior
- *  draw. Filling here, from the players the resolved week has left free, makes "one body, one week"
- *  true of the held slots by construction and leaves the junior tour untouched.
- *
- *  STRONGEST RUNG FIRST, exactly as `resolveDoubleBookings` orders itself – literally so since
- *  round 22: both call the one `byAllocationPriority` in season/tournament.ts, so "exactly as" is a
- *  fact the compiler holds rather than one this comment promises. A graduate good enough for a W100
- *  is therefore not spent on the W15 that happens to sort first in the calendar. The brackets still
- *  PLAY in calendar order (the ledger's row order is unchanged); only the filling is re-ordered, and
- *  each event's own `seed:aitour:<id>` stream sees its draws in the same place either way. */
-function fillWeekOnRamps(
-  world: WorldState,
-  drawn: readonly { event: SeasonEvent; entrants: AiPlayer[]; rng: Rng }[],
-  fields: Map<string, AiPlayer[]>,
-  aiRanking: RankingRow[],
-  tour: TourWeek,
-  fatigue: Map<string, number>,
-  /** the AER ledger - see `computeShadowTournament`'s note. Required for the same reason. */
-  entries: ReadonlyMap<string, number>,
-): void {
-  const booked = new Set<string>()
-  for (const field of fields.values()) for (const p of field) booked.add(p.id)
-  const wEvents = drawn
-    .filter((d) => TIERS[d.event.tier].track === 'wta')
-    .sort((a, b) => byAllocationPriority(a.event, b.event))
-  for (const d of wEvents) {
-    const before = fields.get(d.event.id) ?? d.entrants
-  // ⭐⭐ ...AND THE AER REACHES THE BACKFILLS TOO, which is where the first attempt leaked. Gating
-  // the DRAW's universe left `ai-177` one entry over her row, because the held slots do not come
-  // from that universe: this pool is `world.cohort` itself, and the on-ramp exists precisely to hand
-  // W slots to juniors - the one population the rule caps. A gate the backfills can walk around is
-  // the thing `selectEntrants`' own age-gate comment warns about, one storey up.
-    const after = fillOnRamp(
-      d.event,
-      before,
-      tour.ranking,
-      d.rng,
-      {
-        pool: withinAnnualEntryLimit(world.cohort, d.event.tier, entries, ON_RAMP.slots) as AiPlayer[],
-        ranking: aiRanking,
-        admits: tour.doors.at(d.event.tier),
-        slots: ON_RAMP.slots,
-      },
-      fatigue,
-      booked,
-    )
-    const withCards = fillWildCards(world, d.event, after, tour, fatigue, booked, entries)
-    fields.set(d.event.id, withCards)
-    for (const p of withCards) booked.add(p.id)
-  }
-}
-
-/** ⭐⭐ THE EIGHT WILD CARDS OF A SLAM DRAW (round 21 #2b) – `fillOnRamp` in its second
- *  configuration, and NOT a second held-slot mechanism. See `WILD_CARD` in season/tournament.ts for
- *  what a wild card is here, why the ground is the home nation, and why a returning name is not
- *  expressible.
- *
- *  THE FOUR THINGS THIS CALL SITE DECIDES, all of which `fillOnRamp` then obeys unchanged:
- *
- *  1. **THE POOL IS THE HOST NATION'S PLAYERS** – `fillOnRamp` has no idea what a nation is and is
- *     not being taught one. The whole home-nation ground is a filter on the pool it is handed, which
- *     is the same seam `universeForTier` uses to keep a population question out of bracket code.
- *     ⚠ It is the event's WHOLE universe (cohort ∪ derived professionals), not `world.cohort`: at
- *     #113-#333 of a 1,799-row table almost everybody is a professional, and a wild card drawn from
- *     the live juniors alone would be `ON_RAMP` again under a different name.
- *
- *  2. **THE DOOR IS INVERTED** – `OnRamp.admits` is normally "the rung accepts her"; here it is
- *     `wildCardWindow`, i.e. "the rung REFUSED her and she is still of the level". A direct
- *     acceptance who was also handed a wild card would make the marker on the card a lie.
- *
- *  3. **ITS OWN SUB-STREAM, so the event's `seed:aitour:` draws do not move** – one draw per
- *     host-nation candidate off `seed:wildcard:<eventId>`. Nothing is added to MAIN (invariant 2),
- *     and the field the week already selected is bit-for-bit the field it selected.
- *
- *  4. **AFTER THE ON-RAMP, not before.** Both passes drop the last direct acceptances, so whichever
- *     runs second can displace what the first put in. The order is the entry list's own – places
- *     close, then the tournament announces its wild cards – and it is very nearly moot in practice:
- *     the on-ramp's candidates must clear `doors.at('slam')`, i.e. sit inside #112 of a table with
- *     1,600 professionals in it, which a live junior essentially never does.
- *
- *  ⚠ HER OWN DRAW IS NOT TOUCHED, and that is the seam `fillOnRamp`'s ⚠ SCOPE box already names:
- *  the shadow bracket she plays in (`seed:kidtour:`) fills from professionals alone, so widening it
- *  moves her measured difficulty at every W rung and is a second change wanting its own measurement.
- *  What decides whether SHE holds a wild card is the entry gate, not this function – see
- *  `homeWildCardPlace` in world/ladder.ts, which reads the same `wildCardWindow`. */
-function fillWildCards(
-  world: WorldState,
-  event: SeasonEvent,
-  field: AiPlayer[],
-  tour: TourWeek,
-  fatigue: Map<string, number>,
-  booked: ReadonlySet<string>,
-  /** the AER ledger - see `computeShadowTournament`'s note. A wild card is a DOOR and not an
-   *  exemption: it decides WHO the host nation may promote, never how many events a fifteen-year-old
-   *  may play. Same reading as `fillWeekOnRamps` one function up. */
-  entries: ReadonlyMap<string, number>,
-): AiPlayer[] {
-  if (event.tier !== WILD_CARD.tier || WILD_CARD.slots <= 0) return field
-  const host = hostNationOf(world.seed, event.id)
-  const pool = withinAnnualEntryLimit(
-    tour.universe.filter((p) => p.nation === host),
-    event.tier,
-    entries,
-    WILD_CARD.slots,
-  ) as AiPlayer[]
-  if (!pool.length) return field
-  const accepts = acceptanceRank(world, event.tier)
-  const total = tour.ranking.length
-  const rankOf = new Map<string, number>()
-  for (const r of tour.ranking) rankOf.set(r.playerId, r.rank)
-  return fillOnRamp(
-    event,
-    field,
-    tour.ranking,
-    rngFromSeed(`${world.seed}:wildcard:${event.id}`),
-    {
-      pool,
-      ranking: tour.ranking,
-      admits: (id) => wildCardWindow(event.tier, rankOf.get(id) ?? total, total, accepts),
-      slots: WILD_CARD.slots,
-    },
-    fatigue,
-    booked,
-  )
-}
-
-function runAiTournament(
-  world: WorldState,
-  event: SeasonEvent,
-  entrants: AiPlayer[],
-  aiRng: Rng,
-  fatigue: Map<string, number>,
-): void {
-  const field = rivalField(entrants, event, fatigue)
-  const result = runTournament(event, field, null, world.seed, aiRng)
-  const pts = TIERS[event.tier].points
-  for (const [playerId, finish] of Object.entries(result.finishes)) {
-    // ⚠ THE LEDGER IS FOR LIVE PLAYERS, AND THIS LINE IS THE WHOLE OF THAT RULE (W3-FIELD3). A
-    // field pro is derived state: she has no persisted identity, her standing is `wtaPoints` and
-    // her condition is 100 by construction, so a row for her would be a row nothing ever reads –
-    // bought with permanent bytes in a save that prunes on a 52-week window sized for 199 people.
-    // She played the tournament; the tournament simply does not write her down.
-    // ⭐⭐ v53 – THE FIELD'S POINTS ARE KEPT NOW, AS A TALLY RATHER THAN AS ROWS. This line used to be
-    // a bare `continue`, and the comment above it argued – correctly – that a per-finisher ROW for a
-    // field pro is bytes nobody reads in a save pruned for 199 people. What it did not see is that
-    // throwing the row away also threw away the RESULT: her standing was a pure function of (seed,
-    // season), so no match anybody played could move it. The owner found it from the seat: «таблица
-    // просто "стоит"… и номер 1 мы обыгрывали на шлеме».
-    //
-    // ⚠ SO THE ROW STAYS GONE AND THE POINTS STAY. One number per pro per season, ~3 KB, against
-    // ~6,048 rows – see `WorldState.fieldSeasonPoints`. Zero RNG: the finish is already decided.
-    if (isFieldProId(playerId)) {
-      const earned = pts[finish] ?? 0
-      if (earned > 0) {
-        world.fieldSeasonPoints ??= {}
-        world.fieldSeasonPoints[playerId] = (world.fieldSeasonPoints[playerId] ?? 0) + earned
-      }
-      continue
-    }
-    world.results.push({ playerId, week: world.week, points: pts[finish] ?? 0, tier: event.tier })
-  }
-  announceTourChampion(world, event, result)
-}
-
-// WHICH RUNGS' CANONICAL CHAMPIONS MAKE THE NEWS – now `tierMakesWorldNews` in world/matchNews.ts,
-// moved there whole by round 23 #3b when the retirement line became its second reader. The rule and
-// the feed-budget arithmetic behind it are unchanged; see that function's own note.
-
-/** THE W TOUR CAN NAME ITS CHAMPION NOW, AND SHE CAN BE A PROFESSIONAL (W3-FIELD3, acceptance
- *  criterion 2). Before this wave the canonical brackets resolved in silence and the only champion
- *  line in the game was `finalizeTournament`'s, about the draw SHE played in; the field's ⚠ said in
- *  as many words that AI W-tour news could name LIVE players only, because no pro was ever in a
- *  canonical draw to win one.
- *
- *  ⚠ ONE TOURNAMENT, ONE CHAMPION. The event she ENTERED is skipped here, because her shadow run
- *  and the canonical bracket are two different universes for the same event id (they always have
- *  been – separate streams, separate fields) and printing both would put two champions of one
- *  tournament in one week's news. Hers is the draw she actually played, so hers is the one that
- *  speaks. This reads `world.entries`, i.e. player input – deliberately, and it is confined to a
- *  news row: ZERO RNG, no ledger row, nothing any draw or ranking can see.
- *
- *  Names resolve through `playerShortName`, the same id→name function every bracket surface uses,
- *  so an `fp-` id comes back as a person rather than as an id. */
-function announceTourChampion(world: WorldState, event: SeasonEvent, result: TournamentResult): void {
-  if (!tierMakesWorldNews(event.tier)) return
-  if (world.entries.includes(event.id)) return
-  const championId = Object.entries(result.finishes).find(([, f]) => f === 0)?.[0]
-  if (!championId) return
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    text: `🏆 ${playerShortName(world, championId)} won the ${TIERS[event.tier].label}.`,
-  })
-}
-
-function pruneResults(world: WorldState): void {
-  world.results = world.results.filter((r) => world.week - r.week <= RESULTS_WINDOW)
-}
-
-// ⚠ HER MATCHES ARE PRUNED LAST, AND THE RADAR IS WHY (31.07).
-//
-// `radarViewOf` builds the radar's whole evidence base by scraping `world.events` for her own
-// competitive match records - and this function trims that feed BY COUNT, oldest-first. Those two
-// facts together make an undocumented coupling with teeth: **every non-match row any feature adds
-// permanently displaces one of her matches from the window `axisEvidence` measures over.** The
-// offers slice found it the expensive way - one extra row per season pushed the radar's worst fog
-// re-widening from 0.36 to 0.64 against a 0.5 bound - and designed around it rather than into it.
-//
-// Designing around it does not scale, because the pressure is not the new feature. Measured on a
-// career that plays no tournaments at all, the retained feed is 217 expense + 168 income rows out
-// of 400: the window the radar reads is **overwhelmingly bookkeeping**. Money rows accrue every
-// single week of a career; her matches accrue only on the weeks she competes. Left alone, the
-// arithmetic guarantees that the longer a career runs the less of her tennis the radar can see -
-// which is the exact opposite of what a confidence model is supposed to do.
-//
-// So the budget is unchanged and only the ORDER OF SACRIFICE moves: milestones first (they always
-// were), then her competitive matches, then everything else. The cap still bites at the same size,
-// the feed is still bounded, and a feature that writes to the feed can no longer quietly cost the
-// radar its evidence. A practice friendly is deliberately NOT protected - the radar ignores
-// friendlies by design (R11-2), so protecting one would spend the budget on a row it will not read.
-function isRadarEvidence(e: WorldEvent): boolean {
-  return e.match !== undefined && !e.friendly && (e.match.aId === KID_ID || e.match.bId === KID_ID)
-}
-
-// ⚠⚠ ...AND THE ORDER OF SACRIFICE IS NOT ALLOWED TO REACH ZERO (fix/wallet-and-wrapup, 05.08).
-//
-// The paragraph above is still the rule and still right: an ordinary row is cheaper to lose than one
-// of her matches. What it did not say is what happens when the protected class STOPS LEAVING ROOM,
-// and the answer was measured on the owner's own save at week 412: 382 match rows + 18 kept
-// milestones = 400 = the whole cap, `rest` empty, and therefore EVERY income and expense row of
-// EVERY week deleted on the tick that wrote it. His week recap read «FINANCES · Income +$0 · Spent
-// +$0» beside three real matches, and the Money screen's ledger tab had no transactions at all.
-//
-// The asymmetry is structural rather than accidental: ordinary rows are a FLOW (2-6 a week, for
-// ever) and her matches are a STOCK, so absolute priority for the stock is not a preference between
-// two competing classes – it is a guarantee that the flow reaches zero on a long enough career. The
-// two ledger-side fixes in this wave (the recap's money, the wrap-up's best result) mean no SCREEN
-// depends on this any more, but the feed still owns things nothing else records – the flavour lines,
-// the ledger's individual transactions, the tournament summary the travel note quotes – and none of
-// those is reconstructible from a per-category total. So the newest `EVENTS_ORDINARY_FLOOR` of them
-// are off the table until her matches have been trimmed to their own share. See constants.ts.
-function pruneEvents(world: WorldState): void {
-  if (world.events.length <= EVENTS_CAP) return
-  const kept = world.events.filter((e) => e.keep)
-  const evidence = world.events.filter((e) => !e.keep && isRadarEvidence(e))
-  const rest = world.events.filter((e) => !e.keep && !isRadarEvidence(e))
-  const overflow = world.events.length - EVENTS_CAP
-  // Ordinary rows go first, oldest-first, but only down to the floor.
-  const sacrificeable = Math.max(0, rest.length - EVENTS_ORDINARY_FLOOR)
-  const fromRest = Math.min(overflow, sacrificeable)
-  let stillOver = overflow - fromRest
-  // Then her matches, oldest-first as before.
-  const fromEvidence = Math.min(stillOver, evidence.length)
-  stillOver -= fromEvidence
-  const evidenceTrimmed = evidence.slice(fromEvidence)
-  // And only when trimming every match she has ever played is STILL not enough does the floor
-  // itself give way – a career whose kept milestones alone approach the cap.
-  const restTrimmed = rest.slice(fromRest + stillOver)
-  world.events = [...kept, ...evidenceTrimmed, ...restTrimmed].sort((a, b) => a.id - b.id)
-}
-
-// Drop finance-ledger weeks older than the 60-week trailing window (retain week >= week - 59).
-// Bounded by career length, not event volume, so it stays ≤ ~60 entries no matter the season.
-function pruneFinanceWeeks(world: WorldState): void {
-  world.financeWeeks = world.financeWeeks.filter((w) => w.week >= world.week - (FINANCE_WEEKS - 1))
-}
+// the canonical AI bracket family (`drawAiEntrants` / `fillWeekOnRamps` / `fillWildCards` /
+// `runAiTournament` / `announceTourChampion`): moved to world/phaseAiWeek.ts with the step that is
+// their only caller (R2-10 step 2, phase 5).
 
 // --- the losing streak (fix/world-trio item 3) --------------------------------
 // `angry` finally has a trigger, and it is the owner's: she gets angry after a RUN of losses, of a
@@ -1740,10 +1288,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   // 4. THE WEEK, DERIVED ONCE – the standings, the rivals' condition, the AER ledger and the
   //    professional side, folded before any bracket runs so her competition and the AI's see ONE
-  //    world (world/weekField.ts). Zero draws. Destructured on the next line so the AI step below
-  //    reads exactly as it did.
+  //    world (world/weekField.ts). Zero draws. ⚠ IT IS THE SAME OBJECT BOTH COMPETITIONS ARE HANDED,
+  //    at step 5 and again at step 7, which is the whole point of folding it: two calls to this
+  //    function would be two agreeing derivations rather than one, and agreeing is not identical.
   const field = deriveWeekField(world)
-  const { scheduled, aiRanking, rivalFatigue, rivalEntries, tour: tourWeek } = field
 
   // 5. HER OWN COMPETITION (R2-10 step 2, phase 3b) – step 2 and the masseur's bill, moved whole
   //    into world/phaseHerWeek.ts. Event-scoped RNG only (`seed:kidtour:<event.id>`).
@@ -1755,65 +1303,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //    competition, before the canonical brackets below.
   growAndLive(world, rng)
 
-  // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
-  //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
-  //    touches the weekly draw count. The main stream ends here carrying base costs + drift only.
-  //
-  //    ⚠ DRAW THE WHOLE WEEK, THEN RESOLVE IT, THEN PLAY IT (31.07 – «они физически не могут сразу
-  //    везде играть, ведь так?»). It used to be one loop that drew and played each event in turn,
-  //    which is why the same rival could be in two of a week's draws: each `selectEntrants` call saw
-  //    the same condition map and nothing else about the week. The three phases below are the ONLY
-  //    way to say "not twice" without touching a draw:
-  //      4a. every event draws its field exactly as it always did – same stream, same order, same
-  //          count. Safe to hoist because it always was independent of the brackets: `aiRanking` and
-  //          `rivalFatigue` are snapshots taken above, `world.cohort` is read-only here, and
-  //          `runAiTournament`'s ledger rows are never read back inside the same week. So phase 4a
-  //          returns, event for event, precisely what the old loop's first line returned.
-  //      4b. pure post-draw arithmetic on those arrays – higher tier keeps her, the loser backfills
-  //          by standings position. ZERO draws on any stream (season/tournament.ts).
-  //      4c. the brackets play, in the ORIGINAL calendar order and each on the very number of its
-  //          own sub-stream it was going to read, so the ledger's row order is unchanged too.
-  //
-  //    ⚠ AND A WEEK NOW HOLDS TWO UNIVERSES (W3-FIELD3). The W events draw from LIVE ∪ pros against
-  //    the merged W table; the six junior/domestic rungs draw from the cohort against the mixed one.
-  //    4b spans both with ONE `booked` set, because it has to: the cohort's 16-18s are eligible for
-  //    both tours, so "she cannot be in two draws" is a claim about the WEEK and not about a track.
-  //
-  //    ⚠ AND 4b½: THE HELD SLOTS (W3-ONRAMP). The W rungs keep `ON_RAMP.slots` of their draws for
-  //    LIVE players coming up from the junior table – the closed loop W3-FIELD3 left behind was that
-  //    a cohort player could never be drawn into a W event, so could never earn a W point, so could
-  //    never leave the position that kept her out (measured: 0.0 LIVE W rows a season). It runs
-  //    AFTER 4b on purpose, from the players the resolved week has left free: see `fillWeekOnRamps`.
-  const weekDraws = scheduled.map((e) => drawAiEntrants(world, e, aiRanking, tourWeek, rivalFatigue, rivalEntries))
-  const weekFields = resolveDoubleBookings(weekDraws, world.cohort, aiRanking, rivalFatigue, {
-    universe: tourWeek.universe,
-    ranking: tourWeek.ranking,
-  })
-  fillWeekOnRamps(world, weekDraws, weekFields, aiRanking, tourWeek, rivalFatigue, rivalEntries)
-  for (const d of weekDraws) {
-    runAiTournament(world, d.event, weekFields.get(d.event.id) ?? d.entrants, d.rng, rivalFatigue)
-  }
-
-  // 5-6. rank recompute + housekeeping. For a reveal week these are deferred to finalizeTournament
-  //      (after the kid's points land), so the rank milestones keep their id order behind the kid's
-  //      match/summary events. A normal week resolves them inline as before.
-  if (!world.pendingTournament) {
-    recomputeRankAndMilestones(world)
-    housekeep(world)
-    // ⚠ THE SEASON'S COMMITMENT IS SETTLED ON THE WRAP WEEK AND BEFORE THE WRAP-UP READS ANYTHING
-    // (W3-ACT2 §6). `maybeFireSeasonWrapUp` fires on the first off-season week; the 500-level quota
-    // is a fact about the season that has just finished, so it has to be charged on the same week
-    // and ahead of the summary that reports it. Both are no-ops on every other week and neither
-    // draws. `isSponsorReviewWeek` is the same predicate one line's worth of arithmetic away, which
-    // is deliberate: the tour and the brands both settle up in the first quiet week.
-    if (isSponsorReviewWeek(world.week)) settleMandatoryQuota(world, world.week)
-    maybeFireSeasonWrapUp(world)
-    // 7. W2-ENDINGS – WHERE THE CAREER ENDS. Last, and AFTER the wrap-up, because the natural end's
-    //    offer is a reading of the season that has just closed: `seasonHistory` has to have that
-    //    row in it before the plateau can be measured against it. Pure state, ZERO draws on any
-    //    stream, and `tickWeek` still has no ended-world early return (see world/endings.ts).
-    resolveEndings(world)
-  }
+  // 7. THE REST OF THE WORLD PLAYS, AND THE WEEK CLOSES (R2-10 step 2, phase 5) – steps 4 to 7,
+  //    moved whole into world/phaseAiWeek.ts. Event-scoped RNG only (`seed:aitour:<event.id>`):
+  //    the MAIN stream ended one phase ago carrying base costs + the cohort drift, which is exactly
+  //    what the frozen capture (41550 / e6b0c709) measures.
+  closeTheWeek(world, field)
 }
 
 // entries: moved to world/entries.ts (P4 extraction). Imported back below and re-exported under
