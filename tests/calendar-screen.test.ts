@@ -14,11 +14,11 @@
 //      a per-day editor, and a second week button that computes its own state.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { componentLogic, engineModuleSource } from './worldSource'
+import { componentLogic } from './worldSource'
 // Comments stripped, so a note that NAMES a forbidden call is not read as making it – the house
 // helper, now in tests/helpers/source.ts. These are source-reading tests, and this codebase
 // documents at length, including documenting what it deliberately did not do.
-import { after, at, codeOf, region, regionToLast } from './helpers/source'
+import { codeOf, region } from './helpers/source'
 import {
   DAY_LONG,
   DAY_SHORT,
@@ -59,10 +59,27 @@ const screenLogic = componentLogic('components/screens/CalendarScreen.vue')
 const action = read('../src/composables/weekAction.ts')
 const days = read('../src/composables/weekDays.ts')
 const cross = read('../src/composables/dayCross.ts')
+/** The sweep's STATE OWNER – the crossed/held counters, the timers and the cancel paths, out of the
+ *  screen since R2-11 / ARCH-06. Its behaviour is covered by tests/component/calendar-sweep.test.ts;
+ *  what is read here is the structure a mounted test cannot see. */
+const sweepSrc = read('../src/composables/dayCrossSweep.ts')
+
+/**
+ * A SLICE THAT CANNOT SILENTLY BE EMPTY. `src.slice(src.indexOf(a), src.indexOf(b))` returns `''` –
+ * or worse, the last character – when either marker has moved, and every assertion inside then holds
+ * against nothing. It happened in this very file: the skip pin below sliced from `function skipSweep`
+ * in the `.vue`, that function moved to a composable, `indexOf` returned −1 and the region became the
+ * empty string. CLAUDE.md lists the family (the −1 slice, the `src/`-only grep, the collapsed `sed`
+ * range) and the lesson each time: make the wrong thing FAIL rather than merely discouraging it.
+ */
+// ⚠ THE LOCAL COPY IS GONE (collected 24.08): R2-12 shipped this exact guarantee repo-wide as
+// `region` in tests/helpers/source.ts – same throw on a missing start, same throw on a missing end,
+// and the end searched AFTER the start. Two implementations of one rule is the defect this file's
+// own scar is about; the import above is the one implementation.
 /** Exactly what the player can see. Comments in this codebase quote the owner in Russian by
  *  convention, in the script AND in the styles, so every copy sweep is bounded to the template –
  *  the same extraction round13-nav.test.ts settled on. */
-const template = regionToLast(screen, '<template>', '</template>')
+const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
 
 /** v47 ticked weeks. Five sessions each, so `planShapeError` would accept either.
  *  `GYM_ON_WEDNESDAY` puts the one fitness session midweek; `DOUBLED_SUMMER` puts five sessions into
@@ -309,7 +326,7 @@ describe('a week belongs to exactly one thing, in one order', () => {
     // The owner's own words are quoted above. Two pins, because the mark appeared twice: the header,
     // which is deleted outright, and the fit verdict under the grid, which is the same borrowed fact
     // on every week except the one she spends at a tournament - so it is gated on the trip.
-    const header = region(screen, '<template #header>', '</template>')
+    const header = screen.slice(screen.indexOf('<template #header>'), screen.indexOf('</template>', screen.indexOf('<template #header>')))
     expect(header, 'the calendar header names a court again').not.toContain('SurfaceMark')
     expect(template).toContain('<p v-if="awayNow && calendar.surfaceNote" class="cal-court">')
     expect(screen).toContain("const awayNow = computed(() => calendar.value?.days[0]?.kind === 'away')")
@@ -753,7 +770,7 @@ describe('the marker opens ONE event, with enter-or-close', () => {
 
   it('ENTER, and then out – the card is a door in, not an entry manager', () => {
     expect(template).toContain('@click="enterMarker(marker)"')
-    const enter = region(screen, 'function enterMarker', 'const fundsCents')
+    const enter = screen.slice(screen.indexOf('function enterMarker'), screen.indexOf('const fundsCents'))
     expect(enter).toContain('game.enterEvent(e.id)')
     expect(enter).toContain('marker.value = null')
     // withdrawing and cancelling stay where the whole horizon is in view
@@ -843,7 +860,7 @@ describe('the calendar reads the snapshot and nothing else', () => {
   // twice as many lines to be wrong, not because anything here got easier.
   it('the coach speaks about her in the third person - never to the daughter', () => {
     const season = read('../src/components/screens/SeasonScreen.vue')
-    const pools = region(season, 'COACH_FIELD_LINES', 'function coachSays')
+    const pools = season.slice(season.indexOf('COACH_FIELD_LINES'), season.indexOf('function coachSays'))
     const lines = [...pools.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((l) => /[a-z]/.test(l))
     expect(lines.length, 'the pools should still be twenty-four lines').toBeGreaterThanOrEqual(24)
     for (const line of lines) {
@@ -927,14 +944,24 @@ describe('the days cross themselves out', () => {
     // same question three ways is how they come to disagree.
     expect(cross).toContain('export function dayCrossRuns(animates: boolean): boolean')
     expect(cross).toContain('return animates && !isDayCrossOff() && !prefersReducedMotion()')
-    expect(screen).toContain('!dayCrossRuns(week.animates)')
+    // ⚠ RE-AIMED, NOT WEAKENED (R2-11): the caller is `dayCrossSweep.ts` now rather than the screen's
+    // own `runWeek`. `screenLogic` is the SFC plus every composable it imports, so this positive
+    // claim – "the component asks the composed question somewhere" – is exactly as strong as it was
+    // and survives the next move too. CLAUDE.md's pin-hygiene rule: componentLogic for a positive
+    // claim, componentFile for a negative one.
+    expect(screenLogic).toContain('!dayCrossRuns(week.animates)')
   })
 
   it('OFF is byte-for-byte the old behaviour: press, advance', () => {
-    const run = region(screen, 'function runWeek', '/** ⚠ THE SCREEN')
-    expect(run).toContain("emit('advance')")
+    // ⚠ RE-AIMED (R2-11): the early return moved out with the sweep, so this reads `play()` in the
+    // composable instead of `runWeek` in the screen. The CLAIM is untouched – off, reduced motion or
+    // a week another surface owns means the press advances immediately and nothing is scheduled.
+    const run = region(sweepSrc, 'function play(): void {', '\n  return {')
+    expect(run).toContain('options.onFinish()')
     // the early return is the whole of "off" - no sweep is scheduled and nothing waits
-    expect(at(run, "emit('advance')")).toBeLessThan(at(run, 'running.value = true'))
+    expect(run.indexOf('options.onFinish()')).toBeLessThan(run.indexOf('running.value = true'))
+    // ...and the screen still hands the press to the shell rather than spending the week itself.
+    expect(screen).toContain("onFinish: () => emit('advance')")
   })
 
   it('the preference is the weekRecap idiom, on its own key, defaulting ON', () => {
@@ -945,14 +972,9 @@ describe('the days cross themselves out', () => {
     expect(cross).toContain("const PACE_KEY = 'tb-day-cross-pace'")
     expect(cross).toContain("return localStorage.getItem(OFF_KEY) === '1'")
     expect(cross).toContain('} catch {')
-    // ⚠ WIDENED by R2-09 for the protocol arm, NOT weakened: `shared/protocol` is a barrel since
-    // the split, so reading protocol.ts alone would ask a file that holds only re-export lines – a
-    // guard that cannot fail. The module-set reader is the surface the claim was always about.
-    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts']) {
+    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts', '../src/shared/protocol.ts']) {
       expect(read(rel), `${rel} must not know the flag`).not.toContain('dayCross')
     }
-    expect(engineModuleSource('../shared/protocol'), 'no protocol module may know the flag')
-      .not.toContain('dayCross')
   })
 
   it('the switch is on the settings screen, in the shape its four siblings have', () => {
@@ -970,16 +992,40 @@ describe('the days cross themselves out', () => {
     expect(more).toContain('v-if="!dayCrossOff" class="career-row"')
   })
 
+  // ⚠ THE BEHAVIOUR THIS BLOCK USED TO GUARD IS MOUNTED NOW, in tests/component/calendar-sweep.test.ts
+  // – the review's own instruction ("convert the animation assertions to a mounted fake-timer test",
+  // ARCH-06). That suite presses the real button, turns a fake clock, and asserts on struck-out days,
+  // on `vi.getTimerCount()` after an unmount and on the `advance` that never fires from a switched-away
+  // career. Seven mutation arms; each is named in that file beside the case it kills.
+  //
+  // WHAT STAYS HERE IS THE STRUCTURAL HALF, re-aimed rather than weakened. A mounted test proves the
+  // timers are cleared; it cannot prove they are held in ONE place, and one array cleared together is
+  // the property the cancel paths are built on.
   it('CANCELLABLE: every timer is cleared together, and on unmount', () => {
     // The one way an animation in front of an irreversible act can hurt: a timer surviving the screen
     // and advancing a week from a page nobody is looking at.
-    expect(screen).toContain('let timers: ReturnType<typeof setTimeout>[] = []')
-    expect(screen).toContain('for (const t of timers) clearTimeout(t)')
-    expect(screen).toContain('onBeforeUnmount(resetSweep)')
+    expect(screenLogic).toContain('let timers: ReturnType<typeof setTimeout>[] = []')
+    expect(screenLogic).toContain('for (const t of timers) clearTimeout(t)')
+    expect(screenLogic).toContain('onBeforeUnmount(resetSweep)')
     // ...and a week landing under the sweep puts the grid back, because with the automatic story off
-    // the player stays on this screen and `calendar` has already moved on to the NEXT week.
-    expect(screen).toContain("() => [game.snapshot?.careerId, game.snapshot?.week].join(':')")
-    expect(screen).toContain('() => resetSweep()')
+    // the player stays on this screen and `calendar` has already moved on to the NEXT week. The
+    // identity is the SCREEN's, because only the screen has the store.
+    expect(screen).toContain("runId: () => [game.snapshot?.careerId, game.snapshot?.week].join(':')")
+    expect(screenLogic).toContain('() => resetSweep()')
+  })
+
+  // ⚠ AND THE EXTRACTION ITSELF IS PINNED, as a NEGATIVE claim about the `.vue` alone – which is why
+  // it reads `screen` (componentFile) and not `screenLogic` (which would fold the composable's own
+  // `setTimeout` straight back in and make the assertion a lie). The sweep is a state owner; the
+  // review counted four of them in this one script and this is the one that can spend a week.
+  it('...and the SCREEN owns no timer of its own any more (R2-11 / ARCH-06)', () => {
+    expect(codeOf(screen), 'a timer came back into the screen').not.toContain('setTimeout')
+    expect(codeOf(screen), 'a timer came back into the screen').not.toContain('clearTimeout')
+    expect(screen).toContain("import { useDayCrossSweep } from '../../composables/dayCrossSweep'")
+    // ...and it takes getters rather than the store, which is what makes the owner testable alone.
+    // `codeOf`, because the composable's header EXPLAINS that it does not read the store – and a pin
+    // that cannot tell code from English would read the explanation as the offence.
+    expect(codeOf(sweepSrc), 'the sweep reached for the store').not.toContain('useGameStore')
   })
 
   // ⚠ MEASURED, NOT ASSUMED, AND IT FAILED THE FIRST TIME. On the bubble phase the press that STARTS
@@ -992,17 +1038,25 @@ describe('the days cross themselves out', () => {
     expect(screen).not.toContain('@click="skipSweep"')
   })
 
+  // ⚠ RE-AIMED (R2-11), AND THE OLD SLICE IS THE HOUSE HAZARD IN MINIATURE: the region ran from
+  // `screen.indexOf('function skipSweep')` to the MAIN ACTION marker, and once the function left the
+  // `.vue` the first index was −1, so `slice(-1, …)` returned the empty string and every assertion in
+  // the block "passed" against nothing – it failed loudly here only because `''` contains nothing at
+  // all. That is exactly CLAUDE.md's `indexOf`-returning-−1 family. `region()` at the top of this
+  // file throws on an absent marker instead, so a moved anchor can never be read as a green run.
   it('SKIPPABLE: a tap anywhere ends it at once, and the hint says so', () => {
     expect(screen).toContain('skipSweep')
-    const skip = region(screen, 'function skipSweep', '// --- (e) THE MAIN ACTION')
+    const skip = region(sweepSrc, 'function skipSweep(): void {', '\n  /** Is there anything left')
     expect(skip).toContain('if (!running.value) return') // an ordinary tap costs nothing
     expect(skip).toContain('finishSweep()')
-    expect(skip).toContain('crossed.value = calendar.value?.days.length ?? 0')
+    expect(skip).toContain('crossed.value = options.week()?.days.length ?? 0')
     expect(template).toContain('Tap anywhere to skip')
     // ...and the invitation is gone once there is nothing left to skip, so it is never a dead control
-    expect(screen).toContain('const skippable = computed(() => running.value && crossed.value <')
+    expect(screenLogic).toContain('const skippable = computed(() => running.value && crossed.value <')
     expect(template).toContain('v-if="skippable"')
-    // ...and the press cannot start a second sweep on top of a running one
+    // ...and the press cannot start a second sweep on top of a running one. This one stays on the
+    // SCREEN: the guard is half the CTA's (`action.disabled`) and half the sweep's, so it is the
+    // screen's own sentence and nowhere else's.
     expect(screen).toContain('if (action.value.disabled || running.value) return')
   })
 
@@ -1018,7 +1072,7 @@ describe('the days cross themselves out', () => {
     // the duration reaches CSS as a property, because the pace is a setting and a sheet cannot read one
     expect(template).toContain(`'--cal-stroke-ms': \`\${strokeMs}ms\``)
     expect(screen).toContain('transition: transform var(--cal-stroke-ms, 280ms)')
-    const reduced = after(screen, '@media (prefers-reduced-motion: reduce)')
+    const reduced = screen.slice(screen.indexOf('@media (prefers-reduced-motion: reduce)'))
     expect(reduced).toContain('transition: none')
     expect(reduced).toContain('animation: none')
   })

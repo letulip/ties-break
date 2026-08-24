@@ -16,14 +16,20 @@ import { buildPreview, type PreviewEvent } from '../viz/preview'
 import { buildClockTrack, clockSecondsAt, formatMatchClock, type ClockTrack } from '../viz/matchClock'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { initSfx, playSfx, primeSfx } from '../audio/sfx'
-import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
-import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
 import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'
 import { matchSpeedDefault, matchViewDefault, type MatchSpeed } from '../composables/matchDefaults'
+// R2-11 – THE TWO OWNERS THIS FILE NO LONGER IS. `usePlaybackClock` is the ONE clock: the rAF loop,
+// the pre-match hold, the visibility gate and `playing`/`finished`. `useMatchAudio` is the ONE cue
+// owner: the speed matrix, the intermittent `out` stream and the music duck's refcount. Both take
+// the transport's refs and own neither, so there is exactly one owner per fact.
+import { usePlaybackClock } from '../composables/playbackClock'
+import { useMatchAudio } from '../composables/matchAudio'
+// R2-11 – THE TRANSPORT IS A PROP-DRIVEN LEAF. It takes the two settings as values and says what
+// the player pressed; this screen keeps the match and stops owning the bar as well.
+import MatchControls from './MatchControls.vue'
 import Card from './ui/Card.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
-import SegmentedRow from './ui/SegmentedRow.vue'
 import WeatherPlate from './ui/WeatherPlate.vue'
 
 const props = withDefaults(
@@ -195,8 +201,29 @@ let ctx: CanvasRenderingContext2D | null = null
 // one-way contract the composable's header states.
 const viewMode = ref<ViewMode>(matchViewDefault())
 const speed = ref<MatchSpeed>(matchSpeedDefault())
-const playing = ref(false)
-const finished = ref(false)
+
+// ⚠ THE SOUND OWNER IS DECLARED BEFORE THE CLOCK because the clock asks it for one thing – the
+// pre-match beat – and never the other way round. `seed` is a getter rather than a value so a new
+// `match` prop re-seeds the `out` stream through `resetRun()` without this file holding a copy.
+const audio = useMatchAudio({ speed, seed: () => props.match.result.seed })
+// ⚠ AND THIS IS THE ONE CLOCK. Nothing else in this file may arm a timer or a frame: `playing` and
+// `finished` are ITS refs, `start`/`pause`/`finish`/`resetRun` are the only four doors, and
+// ⚠ IT IS `playback`, NOT `clock`: `clock` is already this file's PLAYBACK POSITION in seconds
+// (`let clock = 0` below), and the diegetic reading on screen comes off it through viz/matchClock.
+// Three different things called a clock is how the second owner gets in.
+// tests/component/match-viewer-clock.test.ts counts the owners on a mounted component to keep it so.
+const playback = usePlaybackClock({
+  speed,
+  viewMode,
+  onPreRollCue: () => audio.cue('seats'),
+  onLoopStart: audio.duckForRun,
+  onFrame: (dt) => {
+    advance(dt)
+    updatePlayers(dt)
+    render()
+  },
+})
+const { playing, finished } = playback
 /** Index of the last point whose point-end event has fired (-1 = match not started yet). */
 const displayedPointIndex = ref(-1)
 /**
@@ -260,11 +287,9 @@ let cursor = 0
 let startedCursor = 0
 let marks: MarkEntry[] = []
 let currentEvent: TimelineEvent | null = timeline.events[0] ?? null
-let rafId: number | null = null
-let lastTs: number | null = null
-/** Pending timer for the pre-match 'takeYourSeats' beat's hold (see startClock +
- *  SEATS_PREROLL_MS); non-null only during that hold, so pauseInternal can cancel it cleanly. */
-let preRollTimer: ReturnType<typeof setTimeout> | null = null
+// ⚠ NO rAF ID, NO TIMER HANDLE AND NO `lastTs` HERE ANY MORE – they are `composables/playbackClock.ts`
+// (R2-11). This block used to declare the clock's three handles in the middle of the timeline walk's
+// own cursors, which is how "who stops playback?" became a question with more than one answer.
 
 // --- round 4 item 3: real side changes (ends-swap state) ---------------------
 // Precomputed once per timeline rebuild; swappedDuring[i] is looked up per frame from
@@ -378,149 +403,12 @@ function updatePlayers(dt: number): void {
  *  shot (on the frame its flight event becomes current), not once per frame. */
 let lastRenderedEvent: TimelineEvent | null = null
 
-/** True once the pre-match 'takeYourSeats' beat (see startClock) has been decided –
- *  played or skipped – for the current playback run; reset on every resetPlayback()
- *  (fresh play, mode change, restart, Watch again, ...) so each run decides exactly
- *  once, on its first startClock() call, and never re-decides on pause/resume. */
-let seatsPlayedForRun = false
-
-// --- round-6: background-music ducking ----------------------------------------
-// Matches must be music-free; menus/screens outside a match are not. `duck()`/`restore()`
-// (src/audio/music.ts) are refcounted, so this component must call each at most once per
-// outstanding duck – `musicDuckedForRun` tracks whether THIS instance currently holds one.
-// Deliberately NOT reset in resetPlayback(): a mode change or a new match prop mid-viewing
-// rebuilds the timeline without ever un-ducking (still watching a match), so beginClockLoop's
-// `if (!musicDuckedForRun)` guard must keep seeing `true` across those rebuilds, or it would
-// duck() again without a matching restore() and leak the refcount. Only the two teardown
-// paths below (match finished, component unmounted) ever flip it back to false.
-let musicDuckedForRun = false
-
-// --- round-5 polish: speed-gated sound matrix ---------------------------------
-// At ×2/×4 the full sound picture (every hit, every miss, every game/set cue) turns
-// into noise well before the eye can track it, so each speed keeps only a curated
-// subset of cues. Every play site in this file that's part of the match soundscape
-// (not the UI `click`) routes through this one gate – it's the single source of
-// truth for "which key, if any, plays at the current speed":
-//
-//   ×1  – everything, except `out` fires only intermittently (~1 in 3–5 out/net points,
-//         seeded per match – see the outRng block below) so a miss-heavy rally doesn't spam it.
-//   ×2  – `hit`, `out` AT HALF THE ×1 RATE (round 16 item 12, owner), `applauseShort` at
-//         game-end/set-end (tiebreak sets use `applauseShort` here too, not `oohApplause`) and
-//         match-end, plus the `takeYourSeats` pre-match beat.
-//   ×4  – only `hit` and a single applause at match-end (no game/set applause, no
-//         `takeYourSeats`).
-//
-// R10-6 amendment: the tournament FINAL's match-end cue is `applauseFinal` at EVERY speed. The
-// old matrix downgraded it to `applauseShort` above ×1 because a long clip dragged behind a
-// sped-up match – R9-24's rate-matching (playLong) removed that reason, and a final gets exactly
-// ONE cue per match, so it is never the noise the per-game/per-set gating is about.
-//
-// 'seats' is special: it's not tied to a timeline event at all (see startClock) – it
-// plays, if this speed allows it, BEFORE the clock starts, not from inside
-// completeEvent like every other site.
-type SoundSite = 'hit' | 'out' | 'ooh' | 'gameEnd' | 'setEnd' | 'setEndTiebreak' | 'matchEnd' | 'seats'
-
-// --- round-7 item 12: intermittent 'out' call --------------------------------------
-// An out/net point plays the `out` call only ~1 in 3–5 times, at ×1 only. Deterministic
-// PER MATCH so a replay sounds identical: a small RNG seeded from the match seed +
-// ':outcall', re-created at every resetPlayback(). `outCounter` counts out/net occurrences
-// since the last fired call; once it reaches `outThreshold` (a fresh 3–5 draw) the call
-// fires and a new threshold is drawn. (Replaced the earlier every-3rd counter.)
-let outRng: Rng = rngFromSeed(props.match.result.seed + ':outcall')
-let outCounter = 0
-let outThreshold = pickInt(outRng, 3, 5)
-
-/**
- * ⚠ ROUND 16 ITEM 12 (owner, 11.08): the `out` call now reaches ×2, at HALF the ×1 rate.
- *
- * It was silent above ×1 because the whole miss-heavy soundscape was, and a call every third miss at
- * double speed is a call every ~1.4 seconds. Half the rate is what makes it a punctuation mark again:
- * the ear still gets told a ball went out, roughly as often per WALL-CLOCK second as it does at ×1,
- * because the points are arriving twice as fast.
- *
- * ⚠ THE RATE IS APPLIED AT THE COMPARISON, NOT AT THE DRAW, and that is what keeps the stream
- * identical. `outRng` is seeded from the match seed, so a replay must hear the same pattern; halving
- * the rate by drawing 6–10 instead of 3–5 would have made the sequence depend on which speed the
- * player happened to be on when each draw came up. Drawing 3–5 always and doubling the TARGET means
- * a mid-match speed change takes effect on the very next miss and changes nothing about what was
- * drawn – the same property the shipped mode switch already has.
- */
-function outCallDue(): boolean {
-  outCounter++
-  if (outCounter < outThreshold * (speed.value === 2 ? 2 : 1)) return false
-  outCounter = 0
-  outThreshold = pickInt(outRng, 3, 5)
-  return true
-}
-
-// R9-24: the LONG cues (applause family + take-your-seats) play rate-matched to the clip at
-// ×2 so they stop dragging behind a sped-up match – capped at 2 inside playSfx (rate-4
-// applause is noise; ×4 already gates most cues off anyway). Short percussive cues (hit /
-// out / ooh / click*) stay at rate 1: they're too brief for the mismatch to register.
-function playLong(key: 'applauseShort' | 'oohApplause' | 'applauseFinal' | 'takeYourSeats'): void {
-  playSfx(key, speed.value > 1 ? { rate: speed.value } : undefined)
-}
-
-function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
-  if (speed.value === 4) {
-    if (site === 'hit') playSfx('hit')
-    else if (site === 'matchEnd') playLong(opts?.final ? 'applauseFinal' : 'applauseShort')
-    return
-  }
-  if (speed.value === 2) {
-    if (site === 'hit') playSfx('hit')
-    // Short and percussive, so it plays at rate 1 like every other cue in its family - `playLong`
-    // is for the applause clips alone (R9-24).
-    else if (site === 'out') {
-      if (outCallDue()) playSfx('out')
-    } else if (site === 'seats') playLong('takeYourSeats')
-    else if (site === 'matchEnd') playLong(opts?.final ? 'applauseFinal' : 'applauseShort')
-    else if (site === 'gameEnd' || site === 'setEnd' || site === 'setEndTiebreak') {
-      playLong('applauseShort')
-    }
-    return
-  }
-  // ×1: everything, as before.
-  switch (site) {
-    case 'hit':
-      playSfx('hit')
-      return
-    case 'out':
-      if (outCallDue()) playSfx('out')
-      return
-    case 'ooh':
-      playSfx('ooh')
-      return
-    case 'seats':
-      playLong('takeYourSeats')
-      return
-    case 'gameEnd':
-      playLong('applauseShort')
-      return
-    case 'setEnd':
-      playLong('applauseShort')
-      return
-    case 'setEndTiebreak':
-      playLong('oohApplause')
-      return
-    case 'matchEnd':
-      playLong(opts?.final ? 'applauseFinal' : 'applauseShort')
-      return
-  }
-}
-
-function pauseInternal(): void {
-  playing.value = false
-  if (preRollTimer !== null) {
-    clearTimeout(preRollTimer)
-    preRollTimer = null
-  }
-  if (rafId !== null) {
-    cancelAnimationFrame(rafId)
-    rafId = null
-  }
-  lastTs = null
-}
+// ⚠ THE SOUND MATRIX, THE INTERMITTENT `out` STREAM AND THE MUSIC DUCK ARE `composables/matchAudio.ts`
+// NOW (R2-11). ~120 lines of cue policy used to sit between the timeline walk and the clock loop, with
+// the run's pre-roll flag and the duck's refcount interleaved among them. Every call site below asks
+// `audio.cue(site)` and the answer is decided in one place. The owner's rulings behind the matrix -
+// R9-24's rate-matching, R10-6's final, round 16 item 12's half-rate `out` at x2 - moved with it,
+// verbatim, into that file's header.
 
 /** How many points up to and including `pointIndex` have setEnd === true, minus one – i.e.
  *  the index into match.result.sets (completed sets only) of the set that just finished at
@@ -553,21 +441,21 @@ function startEvent(ev: TimelineEvent): void {
   // where a tournament final's celebration now lands – on the winning shot, with the result – and
   // the parent is told (`endApplause`) so its finale screen doesn't clap again a click later.
   if (ev.pointIndex === props.match.points.length - 1) {
-    gatedSfx('matchEnd', { final: props.finalMatch })
+    audio.cue('matchEnd', { final: props.finalMatch })
     emit('endApplause')
     return
   }
   if (point?.setEnd) {
     // A set decided by a tiebreak (final games score 7-6/6-7) gets the bigger
     // 'oohApplause' cue at ×1; any other set gets the regular short applause (both
-    // collapse to 'applauseShort' at ×2 – see gatedSfx).
+    // collapse to 'applauseShort' at ×2 – see the matrix in composables/matchAudio.ts).
     const set = props.match.result.sets[completedSetIndex(ev.pointIndex)]
     const tiebreakSet = !!set && ((set.a === 7 && set.b === 6) || (set.a === 6 && set.b === 7))
-    gatedSfx(tiebreakSet ? 'setEndTiebreak' : 'setEnd')
+    audio.cue(tiebreakSet ? 'setEndTiebreak' : 'setEnd')
     return
   }
   if (point?.gameEnd) {
-    gatedSfx('gameEnd')
+    audio.cue('gameEnd')
     return
   }
 
@@ -578,7 +466,7 @@ function startEvent(ev: TimelineEvent): void {
   const lastShot = shots[shots.length - 1]
   const endedOnMiss = lastShot?.result === 'out' || lastShot?.result === 'net'
   const longWinnerRally = shots.length >= 8 && lastShot?.result === 'winner'
-  if (!endedOnMiss && longWinnerRally) gatedSfx('ooh')
+  if (!endedOnMiss && longWinnerRally) audio.cue('ooh')
 }
 
 function completeEvent(ev: TimelineEvent): void {
@@ -590,7 +478,7 @@ function completeEvent(ev: TimelineEvent): void {
       // No sound for a shot that lands in or wins the point – only a miss (out/net) gets a
       // cue at flight end (the ball landing). The 'hit' cue already played when this shot's
       // flight started (see render()).
-      if (shot.result === 'out' || shot.result === 'net') gatedSfx('out')
+      if (shot.result === 'out' || shot.result === 'net') audio.cue('out')
     }
   } else if (ev.kind === 'point-end') {
     // Non-sound completion work only: reveal the point's score once its point-end beat has
@@ -623,8 +511,7 @@ function processUpTo(time: number): void {
 }
 
 function finishNow(): void {
-  pauseInternal()
-  finished.value = true
+  playback.finish()
   if (displayedPointIndex.value < 0) displayedPointIndex.value = props.match.points.length - 1
 }
 
@@ -676,7 +563,7 @@ function render(): void {
   // serveReadingFor), so recomputing it only when that event changes is both exact and free -
   // once every ~0.4s of playback rather than sixty times a second.
   if (currentEvent !== lastRenderedEvent) {
-    if (currentEvent?.kind === 'shot') gatedSfx('hit')
+    if (currentEvent?.kind === 'shot') audio.cue('hit')
     liveServeSpeed.value = serveReadingFor(currentEvent)
     lastRenderedEvent = currentEvent
   }
@@ -702,126 +589,16 @@ function render(): void {
   drawScene(ctx, vp, scene)
 }
 
-/**
- * THE LARGEST REAL-TIME GAP A SINGLE FRAME MAY CARRY, in seconds.
- *
- * ⚠ THIS IS THE HALF OF THE 31.07 VISIBILITY FIX THAT SURVIVES A MISSED EVENT, and it is the half
- * that actually holds the guarantee. `visibilitychange` (below) is the door, but it is not the only
- * way a tab stops painting: iOS backgrounds through `pagehide`/`freeze` without always firing it,
- * and a device can sleep between two frames with nothing dispatched at all. In every one of those
- * cases rAF stops, `lastTs` keeps the timestamp of the last frame BEFORE the gap, and the first
- * frame back hands `frame()` the whole absence as one `dtReal` - which `advance()` would then walk
- * through the timeline in a single call. A minute on the home screen was a minute of match, played
- * with no one watching and the sound cues fired into an empty room; long enough, and the player came
- * back to a finished match he never saw.
- *
- * A quarter of a second is ~15 frames at 60Hz - far beyond any hitch that is still playback (a bad
- * GC pause is a few tens of ms) and far below any absence that is not. Clamping COSTS the missing
- * time rather than skipping any of it: the timeline is a fixed, pre-computed sequence and the walk
- * is strictly ordered, so every event still plays, in order, exactly once. The only thing that
- * changes is that the wall clock does not get to fast-forward the match.
- */
-const MAX_FRAME_DT = 0.25
-
-function frame(ts: number): void {
-  if (lastTs === null) lastTs = ts
-  const dtReal = Math.min((ts - lastTs) / 1000, MAX_FRAME_DT)
-  lastTs = ts
-  const dt = dtReal * speed.value
-  advance(dt)
-  updatePlayers(dt)
-  render()
-  if (playing.value && !finished.value) {
-    rafId = requestAnimationFrame(frame)
-  }
-}
-
-// --- 31.07 item 2: THE MATCH STOPS WHEN THE SCREEN DOES -----------------------------------------
-//
-// Owner: pause the game and the match when the screen is minimised or backgrounded, the way the
-// music does. The music's own listener (src/audio/music.ts, R8-2) is the model this follows
-// deliberately - same event, same "only resume what was actually running" rule - because a player
-// who comes back to a silent app and a running match has been told two different things about
-// whether the game is paused.
-//
-// WHAT WAS ACTUALLY GOING WRONG, and it is not that rAF keeps running - it does not. The damage was
-// all in the RESUME: rAF stops while hidden, `lastTs` holds the last frame before the tab went away,
-// and the first frame back therefore carries the entire absence as one delta. See MAX_FRAME_DT
-// above for that half. This half is the honest one - the match is PAUSED, not merely rate-limited,
-// so nothing plays to an empty room and the pre-roll timer (a `setTimeout`, which is NOT throttled
-// away the way rAF is) cannot start the clock behind the player's back.
-//
-// RESUMING IS CLEAN BY CONSTRUCTION. `pauseInternal()` sets `lastTs = null`, so the first frame after
-// `startClock()` measures zero elapsed time and the clock resumes at exactly the value it was
-// stopped at - no skip, and nothing replayed. Time stops passing; it is never rewound or thrown away.
-//
-// ONE EDGE, stated rather than papered over: hidden DURING the take-your-seats pre-roll, the hold's
-// remainder is dropped and playback begins as soon as the screen comes back (`seatsPlayedForRun` is
-// already true, so `startClock` goes straight to the clock loop). The clip is a pre-match beat, the
-// clock was still at 0, and no match time is involved either way.
-/** Was the match actually running when the screen went away? Only then does coming back start it
- *  again - a match the player had deliberately paused, or one already finished, stays as it was. */
-let resumeOnVisible = false
-
-function onVisibilityChange(): void {
-  if (document.hidden) {
-    resumeOnVisible = playing.value && !finished.value
-    if (resumeOnVisible) pauseInternal()
-  } else if (resumeOnVisible) {
-    resumeOnVisible = false
-    startClock()
-  }
-}
-
-/** Real time the court sits static (players home, clock at 0) after 'takeYourSeats' plays
- *  and before the timeline actually starts – see startClock. Round-7 item 11: held for the
- *  clip's real length (~3.5s) so the match no longer starts over the top of it; was 1.5s,
- *  which cut the clip off. Applies at ×1/×2 (the speeds that play the cue); ×4 skips both
- *  the cue and the hold. Hardcoded to the recorded clip's duration.
- *  R9-24: the clip itself now plays rate-matched at ×2 (see playLong), so the hold scales
- *  with it – effective hold = SEATS_PREROLL_MS / min(speed, 2) (~1800ms at ×2). */
-const SEATS_PREROLL_MS = 3600
-function seatsHoldMs(): number {
-  return SEATS_PREROLL_MS / Math.min(speed.value, 2)
-}
-
-function beginClockLoop(): void {
-  // Playback is actually starting now (immediately at speed ×4, or after the
-  // take-your-seats pre-roll at ×1/×2 – both paths funnel through here) – duck the music.
-  if (!musicDuckedForRun) {
-    musicDuckedForRun = true
-    duck()
-  }
-  lastTs = null
-  rafId = requestAnimationFrame(frame)
-}
-
-function startClock(): void {
-  if (finished.value || viewMode.value === 'skip') return
-  playing.value = true
-  if (!seatsPlayedForRun) {
-    seatsPlayedForRun = true
-    // Pre-match beat (owner spec): on a fresh run, 'takeYourSeats' plays BEFORE the
-    // clock starts – the court sits visible and static for the clip's full length
-    // (SEATS_PREROLL_MS ~3.6s, round-7 item 11), then the timeline begins, so the first
-    // hit never lands on top of the clip. gatedSfx decides whether this speed plays the
-    // cue at all (×1/×2 only); the hold only applies when it does. This replaced the old
-    // wiring where the cue fired on the timeline's own first point-start event.
-    if (speed.value !== 4) {
-      gatedSfx('seats')
-      preRollTimer = setTimeout(() => {
-        preRollTimer = null
-        beginClockLoop()
-      }, seatsHoldMs()) // R9-24: rate-matched clip → rate-matched hold (~1800ms at ×2)
-      return
-    }
-  }
-  beginClockLoop()
-}
+// ⚠ THE FRAME LOOP, THE 0.25s CLAMP, THE VISIBILITY GATE AND THE PRE-MATCH HOLD ARE
+// `composables/playbackClock.ts` NOW (R2-11). They were ~110 lines here and they are the whole of
+// "is the match running": the owner's 31.07 backgrounding ruling, MAX_FRAME_DT's argument for why
+// the clamp holds even when no event fires, and R9-24's rate-matched hold all moved with them,
+// verbatim. What this file hands the clock is one function - walk the timeline by `dt`, move the
+// players, draw - and what it gets back is `playing`, `finished` and four doors.
 
 /** 'skip' mode never walks points – jump straight to the result screen. */
 function jumpToEnd(): void {
-  pauseInternal()
+  playback.pause()
   clock = timeline.duration
   // Skip is silent: no one's watching, so no crowd cues play. Mark every event as already
   // started (without firing its start-hook sound) so a later resume never back-fires them.
@@ -829,13 +606,20 @@ function jumpToEnd(): void {
   cursor = timeline.events.length
   currentEvent = timeline.events[timeline.events.length - 1] ?? null
   displayedPointIndex.value = props.match.points.length - 1
-  finished.value = true
+  // ⚠ THROUGH THE CLOCK, NOT BY WRITING ITS REF. `finished` has exactly one writer; the pause it
+  // performs on the way is a no-op here (this function paused on its first line) and the point of
+  // routing through it is that a second way to end playback cannot appear by habit.
+  playback.finish()
   playerPos = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
   render()
 }
 
 function resetPlayback(startPlaying: boolean): void {
-  pauseInternal()
+  // ⚠ ONE CALL FOR THREE LINES THAT WERE ALWAYS ONE MOVE: stop the clock, clear `finished`, and owe
+  // the pre-match beat again. They were `pauseInternal()` here, `finished.value = false` twelve lines
+  // down and `seatsPlayedForRun = false` four lines after that - three statements of "this is a fresh
+  // run", which is exactly how one of them comes to be forgotten.
+  playback.resetRun()
   timeline = buildTimeline(props.match, viewMode.value)
   clockTrack = buildClockTrack(props.match, timeline)
   endsState = computeEndsSwaps(props.match.points)
@@ -844,14 +628,12 @@ function resetPlayback(startPlaying: boolean): void {
   startedCursor = 0
   marks = []
   displayedPointIndex.value = -1
-  finished.value = false
   currentEvent = timeline.events[0] ?? null
   lastRenderedEvent = null
   // Explicit rather than left to render()'s gate: on an EMPTY timeline `currentEvent` and
   // `lastRenderedEvent` are both null, the gate never fires, and the last run's reading would sit
   // under a court with no match on it.
   liveServeSpeed.value = null
-  seatsPlayedForRun = false
   // The shouts belong to THE RUN, not to the match: a restart, a "Watch again", a mode change or a
   // new match prop all start the watch over, and what was shouted at the last one is not part of
   // this one. (Nothing else has to be undone - a shout changed nothing to undo.)
@@ -859,15 +641,13 @@ function resetPlayback(startPlaying: boolean): void {
   // Same rule for the retirement popup (R17 #10): it belongs to the run that reached the end, so a
   // restart takes it down and the next ending raises it again.
   retirementNotice.value = false
-  outRng = rngFromSeed(props.match.result.seed + ':outcall')
-  outCounter = 0
-  outThreshold = pickInt(outRng, 3, 5)
+  audio.resetRun()
   playerPos = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
   if (viewMode.value === 'skip') {
     jumpToEnd()
   } else {
     render()
-    if (startPlaying) startClock()
+    if (startPlaying) playback.start()
   }
 }
 
@@ -910,7 +690,7 @@ function retimeForMode(previousMode: ViewMode): void {
     return
   }
   const wasPlaying = playing.value
-  pauseInternal()
+  playback.pause()
   timeline = buildTimeline(props.match, viewMode.value)
   clockTrack = buildClockTrack(props.match, timeline)
   // ⚠ THE ANCHOR IS THE POINT ON COURT, NOT THE LAST ONE COMPLETED, and the difference shows on the
@@ -942,7 +722,7 @@ function retimeForMode(previousMode: ViewMode): void {
   startedCursor = resume
   currentEvent = timeline.events[resume]
   render()
-  if (wasPlaying) startClock()
+  if (wasPlaying) playback.start()
 }
 
 function restart(): void {
@@ -951,11 +731,9 @@ function restart(): void {
 }
 
 onMounted(() => {
-  // 31.07 item 2. Per INSTANCE rather than at module load (which is what music.ts does): that
-  // listener guards one long-lived `<audio>` element, this one guards the rAF clock of a component
-  // that mounts and unmounts four times over, and a module-level handler would have to find the live
-  // one. Feature-guarded so the unit environment, which has no `document`, is untouched.
-  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibilityChange)
+  // ⚠ THE VISIBILITY LISTENER IS THE CLOCK'S OWN MOUNT HOOK NOW (composables/playbackClock.ts), and it
+  // still runs FIRST: `usePlaybackClock` is called during setup, above, so its hook is registered
+  // before this one and Vue runs them in registration order. Nothing about the ordering moved.
   // R10-6: a final's celebration clip is the one cue that never plays before the moment it has to
   // land, so it is warmed HERE – a whole match's worth of lead time for ~60 KB, and by the deciding
   // point playSfx has nothing left to fetch. (No-op when this isn't a final, or while muted.)
@@ -975,12 +753,11 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibilityChange)
-  pauseInternal()
-  if (musicDuckedForRun) {
-    musicDuckedForRun = false
-    restore()
-  }
+  // ⚠ THE LISTENER AND THE PAUSE ARE THE CLOCK'S, and its `onBeforeUnmount` runs BEFORE this one for
+  // the same registration-order reason as the mount hook - so the sequence is still: drop the
+  // listener, stop the clock, give the music back. What is left here is the music, because the duck
+  // is the audio owner's refcount and not the clock's.
+  audio.releaseDuck()
 })
 
 // Mode change: rebuild the timeline and RESUME where she was, preserving whatever play state was
@@ -1207,61 +984,15 @@ const visibleRows = computed<LogRow[]>(() => {
 // clamp on the same content, and the newest beat is at the top either way - so there is nothing a
 // "Show more" could still reveal that scrolling does not.
 
-// --- controls: the app's segmented row rather than two <select>s -------------------------------
-// SegmentedRow speaks in VALUES; speed is a number, so this is the one adapter between them (the
-// same shape BracketTabs uses for round ids).
-//
-// ⚠ TWO OPTIONS, NOT THREE: 'skip' LEFT THIS SWITCH ON 06.08 (owner: «а skip оттуда из этого
-// переключателя вообще надо убрать – оно полностью матч пропускает, это вообще неявно в этом
-// месте»). Full and Key are RESOLUTIONS - two answers to "how much of this match do I watch", and
-// either one leaves you watching. Skip ends the watching. A segmented control says "these are the
-// same kind of thing, pick one", and it was saying it about a control that closes the match: the
-// third pill of a settings plate is the last place a player expects to lose the whole match, and
-// he lost one to it.
-// THE CAPABILITY IS UNTOUCHED - `viewMode` still takes 'skip' and every path that reads it
-// (resetPlayback -> jumpToEnd, retimeForMode's exemption, More's default-view picker) is exactly as
-// it was. What moved is the door: `.mv-skip` below, which says what it does out loud.
-const VIEW_OPTIONS = [
-  { value: 'full', label: 'Every point', short: 'Full' },
-  { value: 'key', label: 'Key points only', short: 'Key' },
-] as const
-const SPEED_OPTIONS = [
-  { value: '1', label: 'Normal speed', short: '1×' },
-  { value: '2', label: 'Double speed', short: '2×' },
-  { value: '4', label: 'Quadruple speed', short: '4×' },
-] as const
+// ⚠ THE TRANSPORT'S OWN SCRIPT IS `MatchControls.vue` NOW (R2-11): the two SegmentedRow adapters,
+// the option tables and the skip link, with the owner's rulings behind each of them. They read
+// `viewMode` and `speed` as VALUES and write back through `update:` events, so the two refs still
+// live here - one owner per fact - and the bar knows nothing about a timeline.
 
-const viewSeg = computed({
-  get: () => viewMode.value as string,
-  set: (v: string) => {
-    viewMode.value = v as ViewMode
-    playSfx('clickSoft')
-  },
-})
-const speedSeg = computed({
-  get: () => String(speed.value),
-  set: (v: string) => {
-    speed.value = Number(v) as MatchSpeed
-    playSfx('clickSoft')
-  },
-})
-
-/**
- * SKIP TO THE RESULT - the capability the third pill used to carry, as an action that names itself.
- *
- * It sets exactly the same ref the pill set, so `retimeForMode`'s "'skip' is not a position" branch,
- * `resetPlayback`'s jump and the silence of `jumpToEnd` are all reached by the same road they always
- * were. What is different is only what the player is looking at when they take it: a link that says
- * where it goes, under the two plates rather than inside one of them.
- *
- * A player who has set Skip as their DEFAULT view (More -> match settings) opens straight onto the
- * finished match, so this control is already spent and hides itself with `finished` - and the two
- * pills sit unselected, which is the honest reading of "you asked not to watch this one". Pressing
- * either starts the walk, through the same out-of-skip path as before.
- */
-function skipToResult(): void {
-  playSfx('clickSoft')
-  viewMode.value = 'skip'
+/** Leave the match, at the player's own moment. `finish` is the same event the parent always
+ *  listened to - only the instant it fires has moved. The sound is the bar's, as it always was. */
+function proceed(): void {
+  emit('finish')
 }
 
 // ⚠ THE BOX SCORE'S OWN BINDINGS (finalAcesDfs, winnerName, servePct) WENT WITH ITS CARD - the
@@ -1317,13 +1048,6 @@ function dismissRetirementNotice(): void {
   playSfx('clickSoft')
 }
 
-/** Leave the match, at the player's own moment. `finish` is the same event the parent always
- *  listened to - only the instant it fires has moved. */
-function proceed(): void {
-  playSfx('clickSoft')
-  emit('finish')
-}
-
 /**
  * PLAYBACK HAS ENDED. Two things happen here and only one of them is new.
  *
@@ -1340,10 +1064,7 @@ watch(finished, (isFinished) => {
   if (isFinished) {
     if (retiredIsHers.value) retirementNotice.value = true
     if (props.proceedLabel === null) emit('finish')
-    if (musicDuckedForRun) {
-      musicDuckedForRun = false
-      restore()
-    }
+    audio.releaseDuck()
   }
 })
 </script>
@@ -1583,78 +1304,26 @@ watch(finished, (isFinished) => {
         </ol>
       </Card>
 
-      <!-- ===== CONTROLS =======================================================================
-           The two <select>s became the app's segmented control (U0 SegmentedRow) - the same plate
-           the draw's round switcher uses, so "how much to watch" and "how fast" read as controls
-           rather than as a form.
-           PINNED, NOT FIXED (owner, 30.07). A fixed bar would cost its height off the top of every
-           match screen for the whole watch; sticky costs NOTHING until the bar would otherwise be
-           off the bottom, and then it is there. See `.mv-controls` for the measurement. -->
-      <!-- ⚠ AND ONCE THE MATCH IS OVER THE BAR SWAPS ITS CONTENTS AND STAYS WHERE IT IS - the owner's
-           R17 #10 ruling and his correction to how it landed, both quoted in full on the script side
-           (house convention: his words live where Cyrillic is allowed) at the `proceedLabel` prop.
-           The plates are questions about a match in PROGRESS - how much of it to watch, how fast -
-           and a finished match has no answer to either. What is left is the two things she can do
-           with a match she has just watched, side by side, in the row that was already there:
-           watch it again, or go on. The affirmative is last, which is the app's own order
-           (`.dialog-actions` is Cancel-then-Confirm; pinned in tests/ui-control-system.test.ts).
-           The two callers with nowhere to proceed to pass no label and keep the plates, because for
-           them there is no third thing this bar could say. -->
-      <div v-if="finished && props.proceedLabel" class="mv-controls mv-controls-done">
-        <PrimaryPill class="sfx-watch" variant="ghost" @click="restart">Watch again ↻</PrimaryPill>
-        <PrimaryPill class="sfx-watch" @click="proceed">{{ props.proceedLabel }}</PrimaryPill>
-      </div>
-      <div v-else class="mv-controls">
-        <SegmentedRow
-          v-model="viewSeg"
-          class="mv-seg"
-          :options="VIEW_OPTIONS"
-          group-label="How much of the match to watch"
-        />
-        <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
-        <!-- ⚠ SHOUT IS IN THE PINNED BLOCK (owner, 30.07: keep the shout button in the sticky block on the live match screen). It used to sit below the bar in `.mv-actions`, on the
-             argument that the bar carries SETTINGS and this is an ACTION - and the argument was wrong
-             about this one button. Shouting at your kid is the thing you would reach for mid-rally,
-             which is the same test that pinned the speed and the view; leaving it outside meant the
-             one control the player might actually want during a point was the one that scrolled away
-             as the log filled. It takes a SECOND ROW of the bar rather than squeezing the two plates
-             onto a third of it - see `.mv-shout`, and the measurement of the attempt that did squeeze
-             them.
-             ⚠ AND IT IS A REAL CONTROL NOW, NOT A DISABLED PLACEHOLDER (owner, 30.07: put a set of phrases in a dropdown with a button beside it - pick one, shout it). It read
-             "Shout 📣", disabled, `title="Coming in Phase 6"`; it is a phrase picker and the same
-             verb beside it, and pressing it puts the line in the log. What it does NOT do is touch
-             the match - see `SHOUT_PHRASES` for why that is the only thing it could do and why no
-             label here promises or denies an effect.
-             ⚠ THE PICKER IS A NATIVE `<select>`, AND THAT IS A FINDING RATHER THAN A CHOICE. This app
-             has a control system and it has NO dropdown component: `src/components/ui/` holds eleven
-             components and none of them is one, `SegmentedRow` cannot take six phrases on a 327px bar
-             (its three `short` labels already needed their padding trimmed to fit), and the only
-             designed dropdown in the app is `.ob-select-wrap` in OnboardingWizard - a labelled box
-             with an icon and a chevron, scoped to that screen, built around a real `<select>` with
-             its chrome turned off. What `src/style.css` DOES declare, in the same rule as the text
-             input, is a plain `select` skin, and this is its first live consumer. A native select is
-             also the only version that opens the phone's own picker. So: no seventh control shape
-             invented, no premature component for one caller. The extraction point, if a second caller
-             ever appears, is OnboardingWizard's box - and it should take that box, not this one.
-             The gate is the Live badge's own: ui-inventory §2 says the replay "IS the live match minus
-             the blinking Live and minus shouting", and the owner said it again on 30.07 (there is no Shout on a replay at all - it need not even be shown, same principle as live). After this
-             round three of the four callers are replays, so this is a Season-sandbox control. -->
-        <div v-if="props.mode === 'live' && !finished" class="mv-shout">
-          <select v-model="shoutPhrase" class="mv-shout-pick" aria-label="What to shout">
-            <option v-for="phrase in SHOUT_PHRASES" :key="phrase" :value="phrase">{{ phrase }}</option>
-          </select>
-          <button class="mv-shout-go" @click="shoutIt">Shout 📣</button>
-        </div>
-        <!-- ⚠ WHERE "Skip" WENT (owner, 06.08). It was the third pill of the view plate, beside Full
-             and Key, and it does not belong in a switch: those two are resolutions and this one ends
-             the match. It is a LINK, not a pill and not a button plate, and that is deliberate on two
-             counts - it reads as a way OUT rather than as a setting, and a text row costs ~22px of a
-             phone where a third plate row would have cost ~53 on a screen the same owner has twice
-             asked to give its height to the court and the log. Same shape as the log's own
-             "Show more ⌄" a few lines up, which is the app's existing vocabulary for this weight of
-             control. Hidden once the match is over, because there is nothing left to skip. -->
-        <button v-if="!finished" class="link mv-skip" @click="skipToResult">Skip to the result</button>
-      </div>
+      <!-- ===== CONTROLS – A PROP-DRIVEN LEAF SINCE R2-11 =====================================
+           The bar itself, its two plates, the shout row, the skip link and the finished swap are
+           `MatchControls.vue`, with every one of the owner's rulings about them carried across
+           verbatim. What crosses the boundary is four values and six events, and none of them
+           mentions a timeline: the screen drives the match, the bar asks the player about it.
+           ⚠ `SHOUT_PHRASES` STAYS HERE, and that is the seam rather than an oversight. The pool is
+           COPY - the family's voice, argued at length on the script side - and the log it lands in
+           is this screen's. The bar shows the phrases and says which one was shouted. -->
+      <MatchControls
+        v-model:view="viewMode"
+        v-model:speed="speed"
+        v-model:shout-phrase="shoutPhrase"
+        :finished="finished"
+        :live="props.mode === 'live'"
+        :phrases="SHOUT_PHRASES"
+        :proceed-label="props.proceedLabel"
+        @shout="shoutIt"
+        @restart="restart"
+        @proceed="proceed"
+      />
       <!-- WHAT IS LEFT OUTSIDE THE PINNED BAR, and it is one button on one mode: "Watch again" only
            means anything once the match is over, and a replay is never watched while you are waiting
            for it - so it does not earn permanent screen the way a mid-rally control does.
@@ -1749,9 +1418,12 @@ watch(finished, (isFinished) => {
 
 /* Everything except the log is fixed furniture. Stated rather than left to the defaults, because
    `flex: 0 1 auto` lets a box SHRINK, and in a deficit the court and the controls would give up
-   height alongside the log they are meant to be framing. */
+   height alongside the log they are meant to be framing.
+   ⚠ `.mv-controls` LEFT THIS LIST WITH ITS MARKUP (R2-11) and says `flex: none` in MatchControls.vue
+   instead. A parent's scoped selector does still reach a child component's ROOT, so keeping it here
+   would have worked - by an accident of Vue's scope inheritance, and only until the bar grew a
+   wrapper. The clause is where its element is now; the rule it states is unchanged. */
 .mv-panel,
-.mv-controls,
 .mv-actions {
   flex: none;
 }
@@ -2451,155 +2123,6 @@ watch(finished, (isFinished) => {
   flex: 1 1 auto;
   min-height: 92px;
   overflow-y: auto;
-}
-
-/* THE PINNED CONTROL BAR (owner, 30.07: «maybe we need to make lower buttons on match screen fixed
-   so we could use them anytime?»).
-   ⚠ STICKY, NOT FIXED, AND THE MEASUREMENT IS THE ARGUMENT. On a 375pt phone the takeover's scroller
-   is 737px; the panel + log + this row + the actions come to ~590px, so at the first point the row
-   is already on screen at y=636 and needs no help. Four beats later the log is 220px tall and the
-   row has been pushed to y=806 - off the bottom, which is the bug he hit. A FIXED bar would have
-   fixed that by taking ~53px off the scroller permanently, for the whole watch, including the
-   first point when nothing was wrong; sticky takes NOTHING until the row would otherwise be gone,
-   and then puts it exactly where a fixed bar would have been. Same recovery, none of the rent.
-   The floor is opaque so the log passes UNDER the bar rather than through it, and it
-   is the tone of whatever the viewer is standing on, so the plate is invisible until it pins.
-   ⚠ THAT TONE CHANGED WITH THE OUTER FRAME, 30.07. It was `--panel`, because all three match screens
-   used to put the viewer inside a `--panel`-toned `.tf-card`; the owner has now taken that frame off
-   («давай внешний контур уберем»), so the ground under the viewer is the takeover's own page colour
-   and the floor follows it to `--bg`. Leaving it at `--panel` would have drawn exactly the seam this
-   line used to warn about, with the two tones swapped. The same move is why the segmented plates
-   below are visible at all now: `--panel` on `--bg` reads as a plate, which is what SegmentedRow's
-   default `page` tone is for and what it could not do inside a panel of the same colour.
-   The negative margin eats `.mv-below`'s 10px gap and the top padding pays it back, so the plate is
-   flush against the log instead of leaving a 10px slot for text to show through; the 8px underneath
-   is the only height this costs, and the head row it replaced gave back 34.
-   ⚠ IT IS TWO ROWS NOW, because "Shout" joined it (owner, 30.07: «на экране live матча кнопку shout
-   тоже надо оставить в sticky блоке»). Three controls do not fit one 327px line - the two segmented
-   plates alone want ~275px at this bar's trimmed pill padding and the button is another ~110 - so the
-   shout takes a second row inside the SAME sticky block, which is the whole of what he asked for.
-   ⚠ AND THAT IS WHY THIS IS A GRID AND NOT A FLEX ROW ANY MORE, which is worth writing down because
-   the obvious flex answer is wrong in a way that LOOKS right. `flex-wrap: wrap` plus `flex: 0 0 100%`
-   on the button does force a second line - but only while nothing clamps it, and clamping is exactly
-   what "own row, own width, centred" needs. `max-width: max-content` feeds into the flex item's
-   HYPOTHETICAL main size, so the browser sizes the button at ~109px BEFORE deciding where lines break,
-   finds it fits beside two zero-basis plates, and puts all three on one line: measured 327px wide, 59px
-   tall, and the two plates squeezed to 109px each. Grid decides rows from the template instead of from
-   the items, so `grid-column: 1 / -1` is a row no matter how wide its content is. */
-.mv-controls {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  display: grid;
-  /* Two equal tracks for the two plates. `minmax(0, ...)` rather than a bare `1fr`, so a pill row
-     that overflows shrinks its track instead of pushing the grid wider than the bar. */
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: -10px;
-  padding: 10px 0 8px;
-  background: var(--bg);
-}
-
-/* R17 #10: THE FINISHED BAR IS THE SAME BAR, and it keeps every geometric property of the one it
-   replaces - same sticky floor, same negative margin against the log, same `--bg` skirt - because
-   the guarantee the wrapper above provides is about `.mv-controls`, and swapping the class would
-   have handed the pinned bar's proof to a second selector nobody had measured.
-   ⚠ AND IT IS THE BASE'S OWN TWO TRACKS NOW (owner, 12.08: «2 кнопки рядом просто в этом нижнем
-   блоке с контролами и все: Watch again | Proceed»). This rule used to collapse them to a single
-   full-width cell for one Proceed; two buttons is exactly what `repeat(2, minmax(0, 1fr))` already
-   describes, so what the finished bar needs from this selector is nothing at all - it only has to
-   stop overriding. The two plates and these two buttons now stand on the same pair of tracks, which
-   is also why nothing shifts sideways when the match ends. */
-.mv-controls-done > * {
-  width: 100%;
-}
-
-/* The plates were `flex: 1` when this was a row; the tracks size them now. `min-width: 0` stays -
-   it is what lets a plate's own contents shrink rather than overflow. */
-.mv-seg {
-  min-width: 0;
-}
-
-/* THE SHOUT, ON ITS OWN ROW OF THE PINNED BLOCK: full width of the bar as a CELL. `grid-column` is
-   what the flex version could not express - see the note on `.mv-controls` for the measurement of the
-   attempt that put all three controls on one line.
-   ⚠ IT IS THE ROW NOW, NOT THE BUTTON (30.07). `.mv-shout` used to BE the disabled button, centred in
-   its cell with `justify-self`; it is the picker plus the verb, so it is a flex row filling the cell
-   and the centring is gone with the empty space it used to leave. The grid template above is
-   untouched: two tracks for the two segmented plates, and this spans both. */
-.mv-shout {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* THE PHRASE PICKER. It wears the app's own `select` skin from src/style.css (declared in the same
-   rule as the text input, and this is its first live consumer - see the template note). Two local
-   adjustments, both of them about THIS bar rather than about selects:
-     * it takes the row's spare width, and `min-width: 0` is what lets it shrink instead of pushing
-       the bar wider than the takeover's 327px;
-     * `--panel` instead of the skin's `--bg`, because the bar's own floor IS `--bg`. On the floor a
-       `--bg` field reads as a hole with a hairline round it, while the two segmented plates beside it
-       are `--panel` on `--bg` and read as plates. Same tone, so the second row of the bar looks like
-       the first. Precedent: the pill padding below is trimmed for this bar alone in exactly this way,
-       and the shared rule stays shared. */
-.mv-shout-pick {
-  flex: 1;
-  min-width: 0;
-  background: var(--panel);
-  /* Measured at 375pt: the select came out 36px tall beside a 41px button, because the two shapes
-     resolve their content height off different metrics (a button's line box, a select's UA control
-     height) from the same 8px padding. Stretching is the fix that survives a font change, where
-     hard-coding 41px would not. */
-  align-self: stretch;
-}
-
-.mv-shout-go {
-  flex: none;
-}
-
-/* "Skip to the result" - a row of the pinned block, and a LINK rather than a plate. See the
-   template note: it is a way out, not a setting, and a text row is ~22px where a third plate row
-   would have been ~53 on the screen the owner has twice asked to give its height back. */
-.mv-skip {
-  grid-column: 1 / -1;
-  justify-self: center;
-  margin-top: 2px;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-/* ⚠ "Skip" USED TO RENDER AS "Ski", AND THE SPEED PLATE SAT ON TOP OF IT. The two rows want
-   ~359px of pill between them at the shared `.tab-pill` padding of 16px a side; inside a .tf-card
-   on a 375pt phone they got 293px, so the view row overflowed its half and painted over its
-   neighbour. The padding is the only thing here that was negotiable - the labels are already the
-   `short` forms - so it is trimmed for THIS bar alone. The sheet's own 16px is untouched, and so is
-   every other SegmentedRow (the draw's round tabs have room for theirs).
-   ⚠ STILL NEEDED AFTER THE OUTER FRAME CAME OFF (30.07), and it is worth writing the arithmetic down
-   rather than re-deriving it next time: the bar is 327px wide now instead of 293, and 327 is still
-   short of the 359 the sheet's padding wants. What the extra 34px bought is HEADROOM - the trim
-   brings the two rows to ~275px, so they now clear the bar by 52px instead of overflowing it.
-   ⚠ AND THAT HEADROOM IS WHAT THE OWNER WAS LOOKING AT, 31.07: «the speed and brevity buttons are
-   bunched to the left of their plates - distribute them evenly across the plate, and make it tidy».
-   `.tab-row` is a plain flex row and `.tab-pill` is content-sized, so the 52px the trim recovered
-   became 26px of empty plate at the RIGHT-HAND END of each of the two rows - the pills sat left, the
-   plate ran on past them, and the two rows did not even end in the same place because "Full/Key/Skip"
-   and "1x/2x/4x" are different widths. `flex: 1` hands each plate's width to its own three pills, so
-   they divide it evenly and both rows end where the plate ends.
-   THE PADDING TRIM STAYS, and it is doing a different job now. `flex: 1` is `1 1 0%`, and a flex
-   item's automatic minimum size is its CONTENT size - so the padding no longer sets the pill's width
-   but still sets the width below which it will not shrink. At the sheet's 16px that floor is the
-   ~359px that overflowed in the first place; at 9px it is ~275px, comfortably inside any phone this
-   app targets. Trimmed padding is what keeps `flex: 1` from being a lie on a narrow screen.
-   SCOPED TO THIS BAR, like the padding above it and for the same reason: `.tab-row`/`.tab-pill` are
-   shared vocabulary with five callers, the draw's round tabs deliberately opt their pills OUT of
-   flexing (`.bt-tabs :deep(.tab-pill) { flex: 0 0 auto }` - they scroll horizontally), and Stats and
-   Money are not this slice's screens to move. */
-.mv-controls :deep(.tab-pill) {
-  flex: 1;
-  padding-left: 9px;
-  padding-right: 9px;
 }
 
 .mv-actions {

@@ -62,7 +62,7 @@
 // buttons: Home's floating pill and this screen's CTA read the same label, the same mode and the same
 // blocked state, and the press routes into the shell's one handler. See that file for the whole
 // argument and for the arrival-gate bug it is written against.
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { useCalendarWeek, useLookAhead, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
 // The SECOND drawing of the same week: the design's time x day grid. What a day of each kind looks
@@ -75,9 +75,12 @@ import { GRID_HOURS, blockOffset, hourLabel, hourTop, weekGridFor } from '../../
 // header for the owner's ruling and for why the pick is made here rather than by the sim.
 import { fridgeNoteFor, type NoteMood } from '../../composables/fridgeNote'
 import { useWeekAction } from '../../composables/weekAction'
-// Slice 2: the crossing-out sweep. The SCHEDULE and the preference live in the composable (both paces,
-// the beat holds, the localStorage pair); what is here is the seven spans and the timers.
-import { DAY_CROSS_PACE, dayCrossPace, dayCrossRuns, dayCrossSchedule } from '../../composables/dayCross'
+// Slice 2: the crossing-out sweep, in TWO composables and no longer in this file at all.
+// `dayCross.ts` is the SCHEDULE and the preference (both paces, the beat holds, the localStorage
+// pair, the reduced-motion rule) – all pure. `dayCrossSweep.ts` is the STATE OWNER the review asked
+// for (R2-11 / ARCH-06): the crossed/held counters, every timer, the cancel paths and the skip. What
+// is left here is the seven spans that draw it and the three getters the owner is wired to.
+import { useDayCrossSweep } from '../../composables/dayCrossSweep'
 import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
 import { formatCents, entryFeeLabel } from '../../shared/money'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
@@ -263,117 +266,35 @@ const { academyCoverPct, surfaceVerdict, venueUrl } = useEventCard()
 
 // --- (b) THE DAYS CROSS THEMSELVES OUT ----------------------------------------------------------
 //
-// A SIMPLE ANIMATION OF THE DAYS BEING CROSSED OUT – the owner's own words, verbatim in
-// docs/decisions.md. It runs through, or pauses on a match / an injury / a knock
-// and then continues, and it ends on the end-of-week screen. The last clause is already true and costs
-// nothing: the sweep finishes, the advance fires, and App.vue's own door takes the player to the
-// week's story exactly as it does from Home.
+// ⚠ THE SWEEP IS `composables/dayCrossSweep.ts` NOW (R2-11 / ARCH-06), AND ONLY THE DRAWING IS LEFT.
+// The review counted four state owners in this one script - screen orchestration, the grid
+// projection, the event modal and "a timer/lifecycle-driven irreversible day-cross sweep" - and the
+// fourth is the only one of them that can spend a week. Everything that made it an owner (the
+// crossed/held counters, every timer, the watch, the unmount hook, the run and the skip) moved out
+// verbatim, comments included; the owner's rulings behind it are all in that file's header.
 //
-// ⚠ IT IS THE SCREEN'S DECORATION, NOT THE BUTTON'S, and that is why Home's press still advances
-// instantly. The two controls share their STATE (label, mode, blocked) and that is what "one button in
-// two projections" is about; the sweep is a property of the surface that draws seven days, and Home
-// draws none. A player who wants the beat presses it here.
-//
-// CANCELLABLE, AND SKIPPABLE BY A TAP ANYWHERE.
-//   * every timer is held in one array and cleared together, from the skip, from a career/week change,
-//     and from `onBeforeUnmount` - so a tab switch mid-sweep cannot advance a week from a screen that
-//     is no longer on the page, which is the one way an animation in front of an irreversible act can
-//     actually hurt someone;
-//   * a tap during the sweep goes straight to the end: strike everything out, fire the advance. No
-//     confirmation, no "are you sure" - it is a skip, and skips are instant or they are not skips.
-const crossed = ref(0)
-const heldIndex = ref<number | null>(null)
-const running = ref(false)
-/** How long ONE stroke is drawn over – a single step of the sweep, so a line finishes as the next one
- *  starts. Handed to CSS as a custom property rather than written into the sheet, because the duration
- *  is one constant with two settings and a stylesheet cannot read a setting. Seeded from the default
- *  pace so the very first stroke of a session is not drawn instantly. */
-const strokeMs = ref(dayCrossSchedule(new Array(DAY_LONG.length).fill(false), DAY_CROSS_PACE.brisk).strokeMs)
-let timers: ReturnType<typeof setTimeout>[] = []
-
-function clearTimers(): void {
-  for (const t of timers) clearTimeout(t)
-  timers = []
-}
-
-/** Put everything back. Used by the cancel paths; never advances anything by itself. */
-function resetSweep(): void {
-  clearTimers()
-  running.value = false
-  heldIndex.value = null
-  crossed.value = 0
-}
-
-/** The week is over: hand the press to the shell. `running` stays true and the strokes stay drawn until
- *  this screen unmounts (the story opens over it) or the new week resets them below – a grid that
- *  un-crosses itself for one frame before the story appears would read as the sweep failing. */
-function finishSweep(): void {
-  clearTimers()
-  heldIndex.value = null
-  emit('advance')
-}
-
-// A week landing under the sweep puts the grid back: with the automatic week story switched off the
-// player stays right here, and `calendar` has already recomputed to the NEXT week ahead - which must
-// not arrive pre-crossed.
-watch(
-  () => [game.snapshot?.careerId, game.snapshot?.week].join(':'),
-  () => resetSweep(),
-)
-onBeforeUnmount(resetSweep)
-
-/** THE SKIP. Any tap on the calendar while the sweep is running ends it immediately.
- *
- *  ⚠ IT IS A CAPTURE LISTENER, AND THAT IS THE BUG FIX RATHER THAN A FLOURISH. On the bubble phase the
- *  press that STARTS the sweep also arrives here - the CTA's own handler runs first, sets `running`, and
- *  the same click then bubbles to the shell and cancels the sweep it had just begun. Measured in the
- *  browser: the sweep reached seven struck-out days 5ms after the press, every time. On capture the
- *  order is inverted, so the first press sees `running: false` and falls through to the button, and
- *  every LATER press - anywhere, the button included - is a skip. No flag, no timer, no guessing at
- *  which element was tapped. */
-function skipSweep(): void {
-  if (!running.value) return
-  crossed.value = calendar.value?.days.length ?? 0
-  finishSweep()
-}
-/** Is there anything left to skip? The hint is gated on this rather than on `running` alone: `running`
- *  stays true from the last stroke until the new snapshot lands (it means "the sweep owns this press",
- *  which is what keeps a second press from starting a second sweep in that gap), and inviting a skip
- *  when the week is already over would be a control that does nothing. */
-const skippable = computed(() => running.value && crossed.value < (calendar.value?.days.length ?? 0))
+// WHAT STAYS HERE IS THE PART THAT IS ABOUT THIS SCREEN: seven spans with a struck-out class on
+// them, the capture listener on the shell, and the three getters below - which is why the composable
+// takes getters rather than the store. The press is still handed back through `emit('advance')`, so
+// this screen still never touches `game.advance` (tests/round13-nav.test.ts's property).
+const sweep = useDayCrossSweep({
+  week: () => calendar.value,
+  // A week landing under the sweep, or a career switched underneath it, both stand it down. The
+  // career id is in the identity for the second one: another save's timers left armed over an
+  // irreversible act is exactly the hazard the cancel paths exist for.
+  runId: () => [game.snapshot?.careerId, game.snapshot?.week].join(':'),
+  onFinish: () => emit('advance'),
+})
+const { crossed, heldIndex, running, strokeMs, skippable } = sweep
+const skipSweep = sweep.skip
 
 // --- (e) THE MAIN ACTION ------------------------------------------------------------------------
-/** Hand the press to the shell – after the sweep, or straight away when there is no sweep to run.
- *  The handler is the shell's either way, so nothing about what a press COSTS lives on this screen. */
+/** Hand the press to the sweep, which hands it to the shell – after the strokes, or straight away
+ *  when there is no sweep to run (off, reduced motion, or a week another surface owns). Nothing about
+ *  what a press COSTS lives on this screen. */
 function runWeek(): void {
   if (action.value.disabled || running.value) return
-  const week = calendar.value
-  // Off, or a system reduced-motion preference, or a week another surface owns: the old behaviour,
-  // byte for byte - press, advance. That is the whole promise of the switch.
-  if (!week || !dayCrossRuns(week.animates)) {
-    emit('advance')
-    return
-  }
-  const pace = DAY_CROSS_PACE[dayCrossPace()]
-  const plan = dayCrossSchedule(
-    week.days.map((d) => d.beat !== null),
-    pace,
-  )
-  strokeMs.value = plan.strokeMs
-  running.value = true
-  crossed.value = 0
-  week.days.forEach((day, i) => {
-    timers.push(
-      setTimeout(() => {
-        crossed.value = i + 1
-        if (day.beat === null) return
-        // the pause the owner asked for, and it is VISIBLE: the held day pulses while the sweep waits
-        heldIndex.value = i
-        timers.push(setTimeout(() => (heldIndex.value = null), pace.holdMs))
-      }, plan.at[i]),
-    )
-  })
-  timers.push(setTimeout(finishSweep, plan.total))
+  sweep.play()
 }
 /** The shell asked for the week to be played here: take the flag off it and run the sweep. See the
  *  note at `props` for why this is a mount hook and not a watcher. */
