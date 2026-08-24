@@ -44,8 +44,9 @@
 // lines are untouched (they are the player's record and the owner's voice), and re-wording any of
 // them cannot move a number on this card – `tests/component/injury-cancelled-row.test.ts` mutates
 // the engine's own copy and watches the report stay right.
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
 import type { InjurySeverity } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
@@ -54,7 +55,7 @@ import { weekLabel } from '../shared/dates'
 import { formatCents } from '../shared/money'
 import { facePoint } from '../art/faceRects'
 
-defineEmits<{ continue: [] }>()
+const emit = defineEmits<{ continue: [] }>()
 
 const game = useGameStore()
 const injury = computed(() => game.snapshot?.injury ?? null)
@@ -129,14 +130,44 @@ const refundCents = computed(() => report.value?.refundCents ?? 0)
 
 // The dialog only ever mounts off a real click ("Next week"), so the audio gate is open.
 onMounted(() => playSfx('ooh'))
+
+// ⭐⭐ R2-07 – IT IS A MODAL, AND NOW IT SAYS SO AND HOLDS THE KEYBOARD (composables/dialogFocus.ts
+// carries the argument and the honest limit).
+//
+// ⚠⚠ ESCAPE IS WIRED HERE, AND THAT IS THE DIFFERENCE BETWEEN A REPORT AND A DECISION. This card
+// ASKS NOTHING. It says what happened, how long she is out and what the layoff cost, and Continue
+// only closes it – the injury is already in the world and no key can change it. The card has closed
+// on a click outside it since it shipped (`@click.self` on the scrim), so Escape is the keyboard's
+// spelling of a gesture the mouse has always had, and refusing it would leave a trapped keyboard
+// with no exit at all on a card whose exit is free. Same emit as the scrim and the button, so there
+// is one way out and not three. This is the SeasonSummaryDialog policy, for the same reason.
+//
+// ⚠ THE FORK AND THE RETIREMENT TAKE THE OPPOSITE RULE, and it is deliberately not uniform: their
+// dismissal would BE a decision, so they are passed no handler at all. What is shared between the
+// four cards is the shell, never the policy.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card, () => emit('continue'))
 </script>
 
 <template>
   <div v-if="injury" class="dialog-overlay" @click.self="$emit('continue')">
-    <div class="dialog-card season-summary injury-stop">
+    <!-- ⭐⭐ R2-07 – role/aria-modal on the CARD and not on the scrim: the backdrop is not part of
+         the dialog, it is what the dialog is over. `tabindex="-1"` is the trap's landing place for a
+         card with no control at all; this one always has Continue. -->
+    <div
+      ref="card"
+      class="dialog-card season-summary injury-stop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="injury-stop-kicker injury-stop-title"
+      tabindex="-1"
+    >
       <img class="injury-stop-art" :src="artUrl" :style="artStyle" alt="" />
-      <p class="season-summary-kicker">Injury – {{ weekLabel(onsetWeek) }}</p>
-      <h2 class="season-summary-title">{{ retired ? 'She had to stop.' : "She's hurt." }}</h2>
+      <!-- BOTH LINES ARE THE NAME, in the order they are read: which week it happened, then whether
+           she went down on court. Either alone would name the card worse than it names itself to
+           somebody looking at it. -->
+      <p id="injury-stop-kicker" class="season-summary-kicker">Injury – {{ weekLabel(onsetWeek) }}</p>
+      <h2 id="injury-stop-title" class="season-summary-title">{{ retired ? 'She had to stop.' : "She's hurt." }}</h2>
       <table class="season-summary-table">
         <tbody>
           <tr>
