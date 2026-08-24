@@ -238,6 +238,31 @@ export type StopReason =
    *  Good news rather than a cost, so it sits low in the precedence below; but it landed on the one
    *  week a player stepping by four can never see, and passed in silence for a whole career. */
   | 'academy'
+  /** ⭐ A LETTER SHE CAN STILL ANSWER LANDED THIS WEEK – R2-13's own item text lists «offers» among
+   *  the events the span must stop before, and phase 1 shipped without one: offers reached the
+   *  player through the span digest and the inbox dot only, which is the surface round-23 #16 proved
+   *  insufficient («I did not see when the academy appeared»).
+   *
+   *  ⚠⚠ IT IS RAISED FOR A DECISION AND NEVER FOR A NOTICE, AND THAT LINE IS THE WHOLE FEATURE. The
+   *  inbox carries two kinds of paper and `OfferState` already names the difference: an `open` letter
+   *  is a proposal with a `deadlineWeek` that EXPIRES unanswered (`expireOffers`), while an `info`
+   *  letter «is born terminal – there is nothing to sign and nothing to refuse». The tournament
+   *  desk's receipts, the tour's due/penalty/suspension/season notices, the academy's three letters
+   *  and a brand's goodbye are all `info`: nothing about them is lost by being read four weeks later,
+   *  and a stop for each one would turn the four-week pill back into a press a week, which is the
+   *  disease R2-13 exists to cure. Only the three producers of an `open` letter can raise this –
+   *  `raiseKitOffers`, `raiseKitRenewal` and `raiseAdOffer`.
+   *
+   *  ⚠ AND IT FIRES ON THE WEEK THE PAPER ARRIVED, ONCE – never for as long as it lies open. A
+   *  sponsor window is five weeks wide, so «there is a live offer» as a stop condition would halt
+   *  four consecutive spans over one unanswered letter. `stoppableOfferWeek` is the arrival
+   *  predicate; the same shape `academySpokeThisWeek` and `walkoverWeek === week` already use.
+   *
+   *  ⚠ NOT A BLOCK. `advanceRefusal` does not name it and must not: an unanswered letter is not a
+   *  question standing in front of the week, and the parent is allowed to let one expire – the
+   *  window «is the feature, not a courtesy» (offers.ts). It halts the span it landed in and the
+   *  next press moves time again. */
+  | 'offer'
   /** ⭐⭐ THE COLLEGE WAVE: her country played, and since this wave the rubbers are REAL MATCHES.
    *
    *  ⚠⚠ IT EXISTS FOR THE SAME REASON 'academy' DOES, ONE TURN OF THE SCREW WORSE. The academy's
@@ -332,7 +357,34 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // ROUND 23 #16: BELOW the three that cost her something and above the ordinary week – a
   // scholarship arriving is news she should not miss, and never an emergency.
   'academy',
-  // ⭐⭐ THE COLLEGE CALL-UP, immediately below the academy and above everything dismissable, for
+  // ⭐ THE LETTER HE CAN STILL ANSWER, IMMEDIATELY BELOW THE ACADEMY'S VERDICT AND ABOVE EVERY
+  // REASON THAT WAITS FOR HIM. Two neighbours, two different arguments, and both are read off the
+  // lines they sit between rather than chosen by feel:
+  //
+  //   * BELOW 'academy', because the academy's verdict is a change to the family's money that HAS
+  //     ALREADY HAPPENED – it took her on, changed her share or ended it, and the travel cover moved
+  //     with it whether or not anybody read the letter. That is the metric the whole top of this
+  //     list is ordered on ("they cost her entries and money the moment they land"), one notch
+  //     softer. An offer has cost nothing and given nothing: it is a proposal, and until it is
+  //     signed the wallet does not know it exists. On the one week the two can collide the sentence
+  //     the parent needs is the one about the money that already moved – and it is needed MORE, not
+  //     less, because the offer's own deadline is printed on the offer's own paper in the inbox both
+  //     toasts send him to, while the academy's change to his travel budget is written nowhere else
+  //     that week.
+  //
+  //   * ABOVE 'college-league', 'call-up' and everything under them, because it is the LOWEST reason
+  //     in this list that can be LOST BY NOT BEING READ. Everything below it either waits for the
+  //     player indefinitely (the knock, the birthday, the fork, the retirement offer and a paused
+  //     reveal all block until he answers) or fires again on the next press ('funds' every week
+  //     under water, 'deadline' at the deadline and the week before it, 'season-end' next season);
+  //     the two college reports above them are records of matches already played, and the rows keep.
+  //     An open letter is the one thing here with a clock the player does not control: it expires at
+  //     `deadlineWeek` – for a kit letter that is the sponsor window's close, which can be as little
+  //     as two weeks after it lands – and after that there is nothing left to answer. A stop that
+  //     ranks below a reason that will still be there next week could be swallowed by it exactly
+  //     once, and the once would be the whole deal.
+  'offer',
+  // ⭐⭐ THE COLLEGE CALL-UP, in the academy's own news block and above everything dismissable, for
   // the same reason and with one sharpening: it is the only member of this list that can arrive
   // ALONGSIDE 'ending' every single time it fires, because `resumeFromCollege` re-latches the
   // epilogue on the very call that produces it. 'ending' carries no toast copy (its surface IS the

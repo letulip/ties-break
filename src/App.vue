@@ -852,6 +852,13 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // (`settleAcademyLetters`), so the sentence can honestly point at the inbox, in the voice the
   // 'call-up' line one row down already uses – the surface, named, rather than an instruction.
   academy: 'Stopped: the academy has reviewed her year – the letter is in her inbox, on Home.',
+  // ⭐ THE OFFER STOP – R2-13's own item text lists «offers» among the events the span must stop
+  // before, and phase 1 shipped without one. It is the academy line's sibling and its copy is built
+  // the same way – the surface, named, rather than an instruction – with ONE word the academy's does
+  // not need: an academy notice keeps for ever and this one does not. Only a DECISION raises this
+  // reason (`stoppableOfferWeek`: an `open` letter, on the week it arrived), so the sentence can
+  // promise something to answer without ever being wrong about a receipt.
+  offer: 'Stopped: a new offer is in her inbox, on Home – answer it before its deadline or it lapses.',
   // ⭐⭐ THE COLLEGE WAVE – the only line in this table that a `resumeFromCollege` puts up rather
   // than an advance. Her country played, and since this wave the rubbers are real matches with
   // stored seeds. On the three years that re-latch the epilogue this toast sits behind it and the
