@@ -237,7 +237,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
 // the painting and the painting itself are two authors on one page, and if they rank the week's facts
 // differently the page contradicts itself. So:
 //
-//   * a journey takes the scrap from every other note (`athome` – the licence every WEEK_NOTES line
+//   * a journey takes the scrap from every other note (`notTravellingWeek` – the licence every WEEK_NOTES line
 //     carries – is false on a week `travelHomeScene` is non-null), so it takes the frame too;
 //   * the layoff outranks the holiday, the exams, the off-season and the training week in the words:
 //     every one of those licences carries `f.injured === null` and the layoff band carries none. So
@@ -601,7 +601,7 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     // rather than re-derived, so the flow, the commentary and this scrap describe the same trip.
     coachNote: travelHome && view.coachTravelled ? coachTripNoteFor(view.week, view.seed) : null,
     // W2: the other author of the same scrap. The two can never both speak – `weekNoteFor`'s own
-    // `athome` licence reads `facts.travelHomeScene`, which is non-null on exactly the weeks
+    // `notTravellingWeek` licence reads `facts.travelHomeScene`, which is non-null on exactly the weeks
     // `travelHome` is – so this is one object with two writers rather than two notes.
     weekNote: weekNoteFor(facts, view.seed),
     // The licences cover every state the engine can produce (the coverage sweep in

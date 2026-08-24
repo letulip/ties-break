@@ -36,6 +36,7 @@ import {
   portraitStage,
   type AvatarEmotion,
   type PortraitEmotion,
+  portraitAssetStem,
   type PortraitStage,
 } from '../shared/avatarEmotion'
 import type { FamilyBackground, TravelHomeScene, TravelHomeMood } from '../shared/protocol'
@@ -76,7 +77,8 @@ function base(): string {
 /** Full-size painting URL – the Kid screen / Home portrait. Takes the WIDE union: every painted
  *  face has a file, `rehab` included. */
 export function portraitUrl(stage: PortraitStage, emotion: PortraitEmotion): string {
-  return `${base()}${ART_DIR}${NAME}-${stage}-${emotion}.webp`
+  // ⚠ R2-18: `portraitAssetStem`, not `stage` - the 31+ band was renamed and its files were not.
+  return `${base()}${ART_DIR}${NAME}-${portraitAssetStem(stage)}-${emotion}.webp`
 }
 
 /**
@@ -113,13 +115,14 @@ export function onboardingHeroUrl(): string {
 }
 
 /** 256px crop URL. No clamp any more: `adult` used to redirect to the teen crops because the adult
- *  ones had never been cut, and with `milf` reachable that would have put a teenager's face on a
+ *  ones had never been cut, and with the 31+ band reachable that would have put a teenager's face on a
  *  31-year-old. The missing crops were cut instead, so every stage now has its own — same rule as
  *  shared/avatarEmotion.ts `avatarCropPath`, which is the one the components go through.
  *
  *  NARROW union on purpose: a painting-only face cannot be spelled here (see KID_CROP_EMOTIONS). */
 export function cropUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
-  return `${base()}avatars/${stage}-${emotion}.webp`
+  // ⚠ R2-18: the asset stem, as in `portraitUrl` above and `avatarCropPath` in shared/.
+  return `${base()}avatars/${portraitAssetStem(stage)}-${emotion}.webp`
 }
 
 // --- the journey home (R14-2) ------------------------------------------------------------------
@@ -293,12 +296,12 @@ export function preloadForAge(ageYears: number): string[] {
   return preloadStage(portraitStage(ageYears))
 }
 
-const STAGE_ORDER: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'milf']
+const STAGE_ORDER: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'lateCareer']
 
 /** The stage AFTER hers, but only while she is in the LAST year of her band (10 / 16 / 22 / 30 –
  *  the boundaries in shared/avatarEmotion portraitStage). Null the rest of the time, so a
  *  birthday never costs her a blank portrait and no career pays for a band it is years away
- *  from – a second band would roughly double the bytes for nothing. `milf` is the top of the
+ *  from – a second band would roughly double the bytes for nothing. `lateCareer` is the top of the
  *  ladder, so from 31 on there is never a next band to warm. */
 export function stageDueNext(ageYears: number): PortraitStage | null {
   const stage = portraitStage(ageYears)

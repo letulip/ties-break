@@ -39,7 +39,7 @@ export function useKidEmotion() {
   const emotion = computed<PortraitEmotion>(() => game.snapshot?.diary.facts.emotion ?? 'norm')
 
   // R9-16: the portrait stage follows her age (jun < 11, young 11-16, teen 17-22, adult 23-30,
-  // milf 31+).
+  // lateCareer 31+).
   const stage = computed<PortraitStage>(() => portraitStage(game.snapshot?.ageYears ?? 14))
 
   // 256px card crops live in public/avatars/{stage}-{emotion}.webp. `avatarCropPath` is shared

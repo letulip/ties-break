@@ -99,13 +99,51 @@ export const ANGER_STREAK_MAX = 6
 // portraits show follows the kid's age (owner: young already from 11-12, teen from 17).
 // START_AGE 14 ⇒ a new career OPENS on young-* art – the jun-* placeholder era ends (only the
 // onboarding "first time on court" frame stays jun BY DESIGN: it is a narrative flashback).
-// `milf` is the fifth and last band, and since the owner's 27.07 call it is REACHED, not just
+// `lateCareer` is the fifth and last band, and since the owner's 27.07 call it is REACHED, not just
 // painted: a career that runs long enough now ages into its own face instead of freezing at the
 // adult art. Every band has full crops, so no band borrows another band's face any more.
-export type PortraitStage = 'jun' | 'young' | 'teen' | 'adult' | 'milf'
+//
+// ⚠⚠ R2-18 / PROD-13 – IT WAS CALLED `milf` AND THAT IS WHY IT IS NOT ANY MORE. The review: the
+// vocabulary is unprofessional and leak-prone. It is not player-facing today, and "today" is the
+// whole of the argument – it is one `JSON.stringify` of a snapshot away from a diagnostic, one
+// modding hook away from a tool, and one generated report away from a screenshot. A band name is
+// the sort of thing that escapes by accident, and this one has nowhere good to land.
+//
+// ⚠⚠ AND THE ART IS UNTOUCHED. NO FILE WAS RENAMED, MOVED OR CREATED. The paintings and crops keep
+// their shipped stems (`milf-norm.webp` and the rest) and `portraitAssetStem` below is the one place
+// that knows it. An atomic rename of ~20 assets plus the recovered-rectangle table in
+// art/faceRects.ts is a different change with a different risk, and the review says so in as many
+// words: "retaining an asset alias during an atomic rename if filenames cannot move immediately".
+// The TYPE is what leaks; the type is what moved.
+export type PortraitStage = 'jun' | 'young' | 'teen' | 'adult' | 'lateCareer'
+
+/** ⚠⚠ THE COMPATIBILITY ALIAS, AND THE ONLY PLACE THE OLD WORD SURVIVES IN CODE.
+ *
+ *  A stage is TWO things that happened to be one string: a band of her life, and the stem of the
+ *  files painted for it. Renaming the band without this would have produced
+ *  `avatars/lateCareer-norm.webp` – a 404 on every face of every career past thirty – so the two
+ *  are separated here rather than by touching `public/`.
+ *
+ *  ⚠ EVERY URL AND EVERY CROP-TABLE KEY GOES THROUGH THIS, and there are four builders that compose
+ *  a stem (`portraitUrl`, `cropUrl`, `avatarCropPath`, and the Memory card's `facePoint` lookup).
+ *  A fifth that interpolates the stage directly would work for four bands and 404 on the fifth,
+ *  which is the failure mode worth naming: it is invisible until a career is thirty-one years old.
+ *  tests/portrait-bands.test.ts sweeps every band × emotion against the files on disk. */
+const STAGE_ASSET: Record<PortraitStage, string> = {
+  jun: 'jun',
+  young: 'young',
+  teen: 'teen',
+  adult: 'adult',
+  lateCareer: 'milf',
+}
+
+/** The file stem for a stage – identity for four of the five bands. See `STAGE_ASSET`. */
+export function portraitAssetStem(stage: PortraitStage): string {
+  return STAGE_ASSET[stage]
+}
 
 /** Pure stage resolver – the owner's five bands, 27.07:
- *  `jun <11 · young 11-16 · teen 17-22 · adult 23-30 · milf 31+`.
+ *  `jun <11 · young 11-16 · teen 17-22 · adult 23-30 · lateCareer 31+`.
  *  Owner 25.07: young starts at 11 – the childhood prologue is coming, so the boundary is
  *  deliberately set where the prologue will need it (unreachable before then: START_AGE 14).
  *  `adult` gained an UPPER bound here – it used to swallow every age from 23 up. */
@@ -114,12 +152,12 @@ export function portraitStage(ageYears: number): PortraitStage {
   if (ageYears <= 16) return 'young'
   if (ageYears <= 22) return 'teen'
   if (ageYears <= 30) return 'adult'
-  return 'milf'
+  return 'lateCareer'
 }
 
 /** Where the 256px header/card crop for a stage×emotion lives, relative to the app's BASE_URL.
  *  NO CLAMP. `adult` used to redirect to the teen crops because the adult ones had never been
- *  cut; with the milf band reachable that clamp would have put a 17-year-old's face on a woman of
+ *  cut; with the 31+ band reachable that clamp would have put a 17-year-old's face on a woman of
  *  31, so the missing crops were cut instead (all five bands × seven emotions now exist under
  *  public/avatars/). Kept as one pure function, shared with the emotion-free header (F45-1), so
  *  the two crop surfaces cannot drift apart.
@@ -129,7 +167,9 @@ export function portraitStage(ageYears: number): PortraitStage {
  *  a caller holding a painted face has to narrow through `hasCrop` first. Every string this can
  *  return names a file that exists; there is no branch through which it can produce a 404. */
 export function avatarCropPath(stage: PortraitStage, emotion: AvatarEmotion): string {
-  return `avatars/${stage}-${emotion}.webp`
+  // ⚠ R2-18: the STEM, never the stage - see `portraitAssetStem`. The 31+ band's type name moved
+  // and its paintings did not, so interpolating `stage` here would 404 on every career past thirty.
+  return `avatars/${portraitAssetStem(stage)}-${emotion}.webp`
 }
 
 /** R9-11: how many weeks a TITLE at each tier shields the sad emotion. local titles shield

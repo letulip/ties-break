@@ -48,7 +48,13 @@ import {
   conditionBandOf,
   weekNoteFor,
 } from '../src/engine/diary'
-import { WEEK_PLAN_PRESETS, type ConditionBand, type DiaryFacts, type FundsPressure } from '../src/shared/protocol'
+import {
+  WEEK_PLAN_PRESETS,
+  type ConditionBand,
+  type DiaryFacts,
+  type DiaryLifeStage,
+  type FundsPressure,
+} from '../src/shared/protocol'
 // W6c: the anatomy the pin re-derives from, so a claim about her body is checked against her body.
 import { BODY_REGIONS, bodyGroupOf, bodyPartOf, type BodyGroup } from '../src/engine/body'
 // v48: the birthday catalogue, so the scrap budget is measured on the longest noun it can produce.
@@ -177,6 +183,64 @@ function* sweepWeeks(): Generator<DiaryFacts> {
   }
 }
 
+/**
+ * ⚠⚠ R2-18 – THE LIFE-STAGE AXIS, and it is why the adult voice could go wrong unnoticed for a year.
+ *
+ * `sweepWeeks` above holds `lifeStage` at 'school' on every one of its ~47,000 fixtures, so every
+ * stage-gated line in the pool was licensed in NONE of them and every stage-gated line's absence was
+ * licensed in ALL of them: the honesty pin swept a large space that contained exactly one answer to
+ * the question this item is about. Crossing the stage into the main sweep would multiply it by four
+ * for no new information on the other axes, so the stage gets its own sweep at the shapes that
+ * actually differ, and both feed the pin.
+ *
+ * ⚠ THE STAGE AND ITS TWO NEIGHBOURING FACTS ARE KEPT COHERENT, which the school pin in
+ * tests/diary.test.ts learned the hard way: a sweep that invents a state the engine cannot produce
+ * reports honest lines as bugs. `lifeStage === 'school'` is exactly `!schoolOver`, and `isExamWeek`
+ * returns false once school is over - so an exam week is only ever generated for the school stage.
+ */
+const STAGES: DiaryLifeStage[] = ['school', 'after-school', 'college', 'independent']
+
+function* sweepStages(): Generator<DiaryFacts> {
+  const calendars: Partial<DiaryFacts>[] = [
+    {},
+    { birthdayAge: 22 },
+    { examsWeek: true },
+    { offSeasonWeek: true },
+    { vacationWeek: true },
+    { playedPractice: true },
+  ]
+  for (const lifeStage of STAGES) {
+    const schoolOver = lifeStage !== 'school'
+    for (const calendar of calendars) {
+      if (schoolOver && calendar.examsWeek) continue // the engine cannot produce this week
+      for (const trainPct of [WEEK_PLAN_PRESETS.light.train, WEEK_PLAN_PRESETS.grind.train]) {
+        for (const band of BANDS) {
+          for (const knock of KNOCKS) {
+            for (const injured of INJURIES) {
+              yield homeWeek({
+                lifeStage,
+                schoolOver,
+                ageYears: schoolOver ? 24 : 15,
+                trainPct,
+                condition: BAND_CONDITION[band],
+                injured,
+                ...calendar,
+                ...knock,
+              })
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/** Every fixture the pins run over: the week shapes, and then the stages. */
+function* sweepAll(): Generator<DiaryFacts> {
+  yield* sweepWeeks()
+  yield* sweepStages()
+}
+
 /** The sentence a note actually puts on the scrap. W4: an entry may be a facts-aware template, so the
  *  guards below read THIS and not the raw field - it is the string the player sees. */
 function render(note: (typeof WEEK_NOTES)[number], f: DiaryFacts): string {
@@ -225,7 +289,19 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   offSeason: (f) => f.offSeasonWeek,
   practice: (f) => f.playedPractice,
   fundsTight: (f) => f.fundsPressure === 'tight',
-  athome: (f) => !f.playedTournament && !f.travelled && f.travelHomeScene === null,
+  notTravellingWeek: (f) => !f.playedTournament && !f.travelled && f.travelHomeScene === null,
+  // ⚠⚠ R2-18 – THE KNOWLEDGE LICENCE, RE-DERIVED FROM THE STAGE AND NOT FROM `underOneRoof`. The
+  // whole method of this table is a SECOND spelling of every claim, so a licence and its claim
+  // cannot be wrong together; calling the engine's own predicate here would make this line
+  // decoration. `domestic` asserts the parent was in the house to see it, and the two stages where
+  // that is true are the two below.
+  //
+  // ⚠ THIS IS THE ONE THAT REPLACES A BLACKLIST. The old adult guard listed seven forbidden
+  // substrings ("garage door", "we said no", "homework"…) and was bypassed by the next synonym –
+  // which is exactly how "in front of the television", "the hall mirror" and "the floor" were all
+  // still reachable at thirty-one. This asks the fact instead: whatever the words are, a line that
+  // CLAIMS the parent was there must be unlicensed on every week she was not.
+  domestic: (f) => f.lifeStage === 'school' || f.lifeStage === 'after-school',
   // W4: re-derived off the fact, not off the licence that produced the line - same as every entry
   // above. A rest line on a week she trained through is the exact failure this catches.
   restingKnock: (f) => f.knockChoice === 'rest',
@@ -240,7 +316,7 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
 describe('W2 — the ordinary week note is HONEST', () => {
   it('every licensed line asserts only what the week actually carries', () => {
     let checked = 0
-    for (const f of sweepWeeks()) {
+    for (const f of sweepAll()) {
       for (const note of WEEK_NOTES) {
         if (!note.license(f)) continue
         for (const [claim, value] of Object.entries(note.claims)) {
@@ -288,7 +364,7 @@ describe('W2 — the ordinary week note is HONEST', () => {
       { word: 'handed', group: 'arm' as BodyGroup }, // "one-handed", "left-handed"
     ]
     let checked = 0
-    for (const f of sweepWeeks()) {
+    for (const f of sweepAll()) {
       const hers = f.injured === null ? null : bodyGroupOf(f.injured.kind)
       for (const note of WEEK_NOTES) {
         if (!note.license(f)) continue
@@ -347,7 +423,82 @@ describe('W2 — the ordinary week note is HONEST', () => {
     }
   })
 
-  it('22+ weeks never borrow the schoolgirl or live-at-home voice', () => {
+  // ===============================================================================================
+  // ⚠⚠ R2-18 — THE ADULT KNOWLEDGE LICENCE, BY FACT AND NOT BY A LIST OF WORDS
+  // ===============================================================================================
+  //
+  // THIS TEST USED TO BE A BLACKLIST and the review is right that a blacklist is the wrong shape:
+  //
+  //     expect(line).not.toMatch(/homework|garage door|we said no|doctor's orders, and ours|
+  //                               taller than her mother|before we were up|machine has not stopped|
+  //                               spent on the sofa/i)
+  //
+  // Seven substrings, hand-picked from the lines that existed the day it was written, run over five
+  // fixtures. It passed for a year while «Ice on her knee in front of the television», «Band
+  // exercises for the wrist, in front of the hall mirror», «Ten minutes of core work on a mat in the
+  // hall» and «She has stopped picking things up off the floor» were all licensed on a woman of
+  // thirty-one living four hundred miles away – because none of them contains one of the seven
+  // words. A blacklist is bypassed by the next synonym, and here the next synonym was every one.
+  //
+  // ⚠ SO THE CLAIM REPLACES THE WORDS. `domestic` is what a line ASSERTS about the parent's
+  // vantage point; `lifeStage` is what the week SAYS about it; and the honesty pin above already
+  // holds every claim against its fact over the whole licence space, which now includes the stage.
+  // A new line describing the airing cupboard is caught by the same rule as the hall mirror, with no
+  // list to keep up to date - and a line that FORGETS the claim is caught by the second half below,
+  // which is the mechanical net over the mistake the claim itself cannot see.
+  it('⚠ NO LINE CLAIMS THE PARENT WAS THERE ON A WEEK SHE WAS NOT UNDER THEIR ROOF', () => {
+    let away = 0
+    let athome = 0
+    for (const f of sweepAll()) {
+      const underOneRoof = f.lifeStage === 'school' || f.lifeStage === 'after-school'
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || !note.claims.domestic) continue
+        if (underOneRoof) {
+          athome++
+          continue
+        }
+        away++
+        expect.fail(`"${render(note, f)}" is licensed at lifeStage "${f.lifeStage}"`)
+      }
+    }
+    expect(away).toBe(0)
+    // ...and the guard has to have something to guard: these lines EXIST and are licensed at home.
+    expect(athome, 'no domestic line is licensed anywhere - then this pin proves nothing').toBeGreaterThan(100)
+  })
+
+  it('⚠ ...AND EVERY STAGE STILL HAS WORDS – the licence is a filter, not a silence', () => {
+    // THE COST OF THE RULE, MEASURED RATHER THAN HOPED FOR, and the LAYOFF is where it fell. Nine of
+    // the lines gated by `domestic` are layoff lines – the ice timed twice a day, the counting out
+    // loud, the mat in the hall, the floor – so before the replacements were written the college
+    // arm and trunk pools were ONE line each. A layoff runs up to twenty-two weeks and the layoff
+    // band ALWAYS SPEAKS, so a pool of one is the same sentence for five months: a different defect,
+    // not a fix. Six stage-neutral lines were written for the bands that lost one.
+    //
+    // ⚠ THE FLOOR IS THREE AND IT IS SCOPED TO THE LAYOFF, both on measurement rather than taste.
+    // Measured after the replacements, the injured pools are sch 5-9 / after-school 4-8 / college
+    // 3-5 / independent 4-6, so three is the real floor with the thinnest case (college, an injury
+    // whose `kind` resolves to no body group) sitting exactly on it. It is scoped because the
+    // NON-injured bands have pre-existing minima of two that this wave did not create and does not
+    // get to fail on – college off-season, a rested knock and a friendly were all two before it.
+    for (const f of sweepStages()) {
+      // ⚠ NOT THE EXAM FORTNIGHT. `examsWeek && injured` is its own two-line band (W6b) at the
+      // school stage only, it is two lines today, it was two lines before this wave, and this wave
+      // gated nothing in it. A floor that fails on a pre-existing state is a guard reporting
+      // somebody else's decision as this branch's regression.
+      if (f.injured === null || f.examsWeek) continue
+      const pool = WEEK_NOTES.filter((n) => n.license(f))
+      expect(
+        pool.length,
+        `only ${pool.length} line(s) for ${JSON.stringify({ stage: f.lifeStage, exams: f.examsWeek, injured: f.injured?.kind ?? null, knock: f.knockChoice })}`,
+      ).toBeGreaterThanOrEqual(3)
+    }
+    // ...and the non-injured bands must still not go silent, which is the weaker claim they can bear.
+    for (const f of sweepStages()) {
+      expect(WEEK_NOTES.some((n) => n.license(f)), `nothing licensed at ${f.lifeStage}`).toBe(true)
+    }
+  })
+
+  it('the adult weeks are still SPOKEN – the voice she gets is the one that reaches by phone', () => {
     const adult = { ageYears: 24, lifeStage: 'independent' as const, schoolOver: true }
     const weeks = [
       homeWeek({ ...adult, trainPct: 85, condition: 50 }),
@@ -358,11 +509,6 @@ describe('W2 — the ordinary week note is HONEST', () => {
     ]
     const lines = weeks.flatMap((f) => WEEK_NOTES.filter((n) => n.license(f)).map((n) => render(n, f)))
     expect(lines.length).toBeGreaterThan(10)
-    for (const line of lines) {
-      expect(line, line).not.toMatch(
-        /homework|garage door|we said no|doctor's orders, and ours|taller than her mother|before we were up|machine has not stopped|spent on the sofa/i,
-      )
-    }
     expect(lines.some((line) => /voice note|called|calendar|physio|her own/i.test(line))).toBe(true)
   })
 
@@ -501,7 +647,7 @@ describe('W2 — the cadence: quiet most weeks, and the calendar always speaks',
   it('every week she spends at home has SOMETHING licensed – silence is the coin, not a gap', () => {
     // The distinction matters: the pool must never be empty for a reachable week, because then the
     // "quiet" weeks would be quiet for the wrong reason and no tuning of the coin could fix it.
-    for (const f of sweepWeeks()) {
+    for (const f of sweepAll()) {
       expect(
         WEEK_NOTES.some((n) => n.license(f)),
         `nothing licensed for ${JSON.stringify({ train: f.trainPct, band: f.conditionBand, exams: f.examsWeek, off: f.offSeasonWeek, vac: f.vacationWeek, practice: f.playedPractice, injured: f.injured !== null, knock: f.knockChoice })}`,

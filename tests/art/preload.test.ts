@@ -39,7 +39,7 @@ import type { PortraitStage } from '../../src/shared/avatarEmotion'
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
 const PUBLIC = `${ROOT}public/`
-const STAGES: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'milf']
+const STAGES: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'lateCareer']
 
 /** url -> path on disk (strip the Vite base prefix the builders prepend). */
 function assetPath(url: string): string {
@@ -200,14 +200,14 @@ describe('stageDueNext – only warm the next band on the last year of the curre
     expect(stageDueNext(10)).toBe('young') // jun ends at 10
     expect(stageDueNext(16)).toBe('teen') // young ends at 16
     expect(stageDueNext(22)).toBe('adult') // teen ends at 22
-    expect(stageDueNext(30)).toBe('milf') // adult ends at 30 (it had no upper bound before)
+    expect(stageDueNext(30)).toBe('lateCareer') // adult ends at 30 (it had no upper bound before)
   })
 
   it('stays silent mid-band and at the top of the ladder', () => {
     for (const age of [9, 11, 14, 15, 17, 21]) expect(stageDueNext(age)).toBeNull()
-    expect(stageDueNext(23)).toBeNull() // first year of adult, 7 years from milf
+    expect(stageDueNext(23)).toBeNull() // first year of adult, 7 years from the 31+ band
     expect(stageDueNext(29)).toBeNull()
-    // milf is the LAST band – past it there is never a next one to warm.
+    // the 31+ band is the LAST one – past it there is never a next one to warm.
     expect(stageDueNext(31)).toBeNull()
     expect(stageDueNext(45)).toBeNull()
   })

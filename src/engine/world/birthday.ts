@@ -47,6 +47,8 @@ import { rngFromSeed } from '../rng'
 import { addEvent } from './ledger'
 import { ageInWords, birthdayTurning } from './age'
 import { guardNotEndedForGood } from './endings'
+// ⭐ R2-18: the college band is chosen by a FACT rather than by an age - see `COLLEGE_BAND` below.
+import { inCollege } from './college'
 import { BIRTHDAY_DAY_NOUN } from '../../shared/protocol'
 import type { BirthdayGift, BirthdayOption, BirthdayPrompt, BirthdayRecord } from '../../shared/protocol'
 import type { WorldState } from '../world'
@@ -508,13 +510,99 @@ const BANDS: Band[] = [
   },
 ]
 
+// =================================================================================================
+// ⭐⭐ R2-18 / PROD-10 – THE COLLEGE BAND: FOUR BIRTHDAYS THAT ARE NOT SPENT IN OUR KITCHEN
+// =================================================================================================
+//
+// ROUND 24 MADE THESE BIRTHDAYS HAPPEN. `pendingBirthday` used to skip the college years outright –
+// `resumeFromCollege` spent a whole year in one call and a blocking dialog inside that loop would
+// have stranded it – and the 22.08 ruling («да, день рождения делай») removed that exclusion, so a
+// girl who takes the scholarship now answers FOUR birthdays from a dorm. Nothing was written for
+// them: she fell through `bandFor(age)` into 19-21, which is the INDEPENDENCE band, and was offered
+//
+//     A deposit towards her own place  ·  A car  ·  A kitchen table for her flat
+//
+// on every one of them. "She is furnishing a life we do not live in, and it starts with somewhere to
+// eat" is a good line about a twenty-year-old with a flat and a false one about a twenty-year-old
+// with a room, a meal plan and three years of a scholarship left. That is the review's point exactly
+// – the copy inventing residence the model has not got – and this is a case where the model HAS the
+// fact and the catalogue simply never asked for it.
+//
+// ⚠ ONE BAND, NOT A COLLEGE VARIANT PER AGE BAND. The four years are one situation and the gifts are
+// about the situation rather than about the number: the room, the distance home, the list of books,
+// the fifteen minutes between buildings. An 18-year-old freshman and a 21-year-old senior want the
+// same kinds of thing, which is not true of an 18-year-old and a 21-year-old on tour.
+//
+// ⚠ IT REPLACES THE AGE BAND RATHER THAN MERGING WITH IT, so nothing here can put a car outside a
+// hall of residence. The bands she skips are not lost: `giftNoun` reads the WHOLE catalogue (its own
+// note says why), so a callback to something she was given at seventeen still resolves after she
+// graduates, and the age bands are waiting for her when she comes out.
+//
+// ⚠ AND IT COSTS THE OFF-COLLEGE CAREER NOTHING – not one draw. `birthdayOffer`'s stream is keyed on
+// `seed:birthday:<age>` and is drawn exactly as many times as before; `atCollege` only chooses WHICH
+// list is shuffled, and it is false on every career that never takes the scholarship. A tour career
+// is offered the same four options it was offered yesterday.
+const COLLEGE_BAND: Band = {
+  from: 0,
+  to: 99,
+  gifts: [
+    {
+      id: 'roomkit',
+      label: 'A lamp and a kettle for her room',
+      note: 'The room came with a bed, a desk and a window. Nothing else.',
+      again: 'There is a lamp from us in that room already. This would be the next room.',
+      repeat: 'durable',
+      ask: 'She described her room to us twice, and both times it was mostly the ceiling.',
+      short: 'the lamp and kettle',
+    },
+    {
+      // ⚠ ON THE TIME-TOGETHER AXIS WITHOUT BEING THE DAY (round-18 #10b's rule, one band further
+      // on): the day is a day WITH us and this is a journey TO us, which is the whole difference
+      // when the thing between them is four hundred miles. The ask names the distance, not the unit.
+      id: 'flighthome',
+      label: 'The journey home, whenever she wants it',
+      note: 'Booked open. She picks the date and we do not see the fare.',
+      repeat: 'repeatable',
+      again: 'She had one of these from us before, and used every leg of it.',
+      ask: 'She has been looking up fares home at two in the morning and booking none.',
+      short: 'the journey home',
+    },
+    {
+      id: 'books',
+      label: 'The whole reading list, bought',
+      note: 'Nobody there buys the whole list. She would read every page of it.',
+      again: 'We bought her a list once already. This would be the next year of it.',
+      repeat: 'durable',
+      ask: 'Her reading list came with prices beside it, and she read the prices first.',
+      short: 'the books',
+    },
+    {
+      // ⚠ ITS OWN ID, NOT `bicycle`. A bike at twelve and a bike at twenty are not the same present
+      // and the record should not call the second one a repeat – the same judgement the 17-year-old
+      // suitcase makes in the other direction, where it IS the same present and says so.
+      id: 'campusbike',
+      label: 'A bicycle for getting about there',
+      note: 'Everything is fifteen minutes from everything else, and she walks all of it.',
+      again: 'There is one from us chained up there already. This would be its replacement.',
+      repeat: 'durable',
+      ask: 'She has counted the minutes she spends walking between buildings. It is a lot.',
+      short: 'the bicycle',
+    },
+  ],
+}
+
 /** How many of the band's gifts are offered beside `DAY_TOGETHER`. Four rows in a column, one of
  *  which is always the day (owner, 11.08: «в колонку ставь, там хватит места»). */
 const MATERIAL_OPTIONS = 3
 
-/** The band `age` falls in. Total: clamps below the first band and above the last, so a poked save
- *  or a future age nobody planned for still gets four buttons rather than a crash. */
-function bandFor(age: number): Band {
+/** The band this birthday draws from.
+ *
+ *  ⚠ COLLEGE OUTRANKS THE AGE, and that is the whole of R2-18's gift half – see `COLLEGE_BAND`.
+ *
+ *  Total: clamps below the first band and above the last, so a poked save or a future age nobody
+ *  planned for still gets four buttons rather than a crash. */
+function bandFor(age: number, atCollege: boolean): Band {
+  if (atCollege) return COLLEGE_BAND
   return BANDS.find((b) => age >= b.from && age <= b.to) ?? BANDS[BANDS.length - 1]
 }
 
@@ -572,9 +660,12 @@ export function birthdayOffer(
   seed: string,
   age: number,
   alreadyGiven: readonly string[] = [],
+  /** ⭐ R2-18: is she at college this birthday? See `COLLEGE_BAND`. Defaults to false so the
+   *  catalogue sweeps in tests, and every existing caller, ask the same question they always did. */
+  atCollege = false,
 ): { options: BirthdayGift[]; askedId: string } {
   const rng = rngFromSeed(`${seed}:birthday:${age}`)
-  const band = bandFor(age)
+  const band = bandFor(age, atCollege)
   const material = shuffled(band.gifts, rng).slice(0, MATERIAL_OPTIONS)
   const options = shuffled([...material, DAY_TOGETHER], rng)
   // ⚠ THE DAY TOGETHER IS NEVER SPENT. Every other option is a THING she now owns, and asking for it
@@ -666,7 +757,14 @@ export function birthdayHeading(seed: string, age: number): string {
           : age <= 21
             ? [`${N}. She brought her own plans.`, 'Happy birthday. Dinner fitted around practice.', `${N} today. The day already had opinions.`]
             : age <= 28
-              ? [`${N}. We found a gap in her calendar.`, 'Happy birthday. She chose the time; we kept the cake ready.', `${N} today. Her own keys, our old birthday plates.`]
+              // ⚠ R2-18 / PROD-10 – «Her own keys» IS GONE, AND IT IS A FACT THE MODEL HAS NOT GOT.
+              // It asserted a place of her own on every twenty-two-to-twenty-eight-year-old in the
+              // game: the one who took the scholarship and is in a hall of residence, the one who
+              // never left, and the one who lives out of a suitcase eleven months a year. There is
+              // no residence in `WorldState` – the review is explicit that copy must not assert one
+              // until there is – and the line does not need it. What is TRUE of all three is that
+              // the plates are ours and the day had to be found; that is what it says now.
+              ? [`${N}. We found a gap in her calendar.`, 'Happy birthday. She chose the time; we kept the cake ready.', `${N} today. Her own plans, our old birthday plates.`]
               : [`${N}. The calendar argued with dinner. Dinner won.`, 'Happy birthday. Cake when she could make it.', `${N} today. Still no sensible number of candles.`]
   const rng = rngFromSeed(`${seed}:birthday:${age}:heading`)
   return lines[Math.floor(rng() * lines.length)]
@@ -684,7 +782,7 @@ export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
   const age = pendingBirthday(world)
   if (age === null) return null
   const alreadyGiven = giftsAlreadyGiven(world)
-  const { options, askedId } = birthdayOffer(world.seed, age, alreadyGiven)
+  const { options, askedId } = birthdayOffer(world.seed, age, alreadyGiven, inCollege(world))
   const asked = options.find((g) => g.id === askedId)!
   return {
     week: world.week,
@@ -760,7 +858,11 @@ export function chooseGift(world: WorldState, giftId: string): void {
   // ⚠ DERIVED BEFORE THE PUSH BELOW, which is what keeps this the SAME ask the dialog printed: the
   // row for this birthday does not exist yet, so `giftsAlreadyGiven` sees exactly what
   // `buildBirthdayPrompt` saw. Re-ordering these two lines would record an ask nobody was shown.
-  const { options, askedId } = birthdayOffer(world.seed, age, giftsAlreadyGiven(world))
+  // ⚠ THE COLLEGE FACT IS READ THE SAME WAY IN BOTH PLACES, and it has to be: `chooseGift`
+  // re-derives the offer to validate the answer (invariant 1 – the worker is not the gate), so a
+  // dialog built from the college band and a validation run against the age band would reject every
+  // option the player was actually shown.
+  const { options, askedId } = birthdayOffer(world.seed, age, giftsAlreadyGiven(world), inCollege(world))
   const given = options.find((g) => g.id === giftId)
   // Re-validated engine-side because the worker is not the gate (CLAUDE.md invariant 1): a stale
   // dialog from another week must not be able to record an option this birthday never offered.
@@ -793,7 +895,11 @@ export function birthdayHistory(world: WorldState): BirthdayRecord[] {
  *  callback that crosses a band boundary, which is most of them. */
 export function giftNoun(giftId: string): string | null {
   if (giftId === DAY_TOGETHER.id) return DAY_TOGETHER.short
-  for (const band of BANDS) {
+  // ⚠ R2-18 PUT THE COLLEGE BAND IN THIS WALK, and leaving it out would have been the exact bug the
+  // note above describes one band further along: a girl given the lamp at nineteen and remembered at
+  // twenty-four would have had the callback silently dropped, because by then she is in an age band
+  // that never offered it.
+  for (const band of [...BANDS, COLLEGE_BAND]) {
     const hit = band.gifts.find((g) => g.id === giftId)
     if (hit) return hit.short
   }
@@ -802,7 +908,10 @@ export function giftNoun(giftId: string): string | null {
 
 /** THE CATALOGUE ITSELF, exported for the tests that sweep it (every band offers at least
  *  `MATERIAL_OPTIONS` gifts; no band's ids collide with `day`). Not read by any surface. */
-export const BIRTHDAY_BANDS: readonly Band[] = BANDS
+export const BIRTHDAY_BANDS: readonly Band[] = [...BANDS, COLLEGE_BAND]
+/** The college years' own band, exported so the sweeps can ask about it by name rather than by
+ *  index – it is the one band that is chosen by a FACT and not by an age. */
+export const BIRTHDAY_COLLEGE_BAND: Band = COLLEGE_BAND
 export const BIRTHDAY_DAY_TOGETHER: BirthdayGift = DAY_TOGETHER
 /** The gift ids that are the same want at different sizes, and the unit each one is measured in –
  *  round-18 #10b. Read by `tests/birthday-ask.test.ts` rule 3, and it is the table a morale slice
