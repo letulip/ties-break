@@ -32,6 +32,16 @@ const markupOf = (sfc: string): string =>
 const stylesOf = (sfc: string): string =>
   sfc.slice(sfc.indexOf('<style scoped>')).replace(/\/\*[\s\S]*?\*\//g, '')
 
+// ⚠ THE PINNED CONTROL BAR IS ITS OWN COMPONENT SINCE R2-11 ("prop-driven controls/readout"), so the
+// pins that used to read it out of the viewer read it where it lives. Two bindings, per CLAUDE.md's
+// pin hygiene and `tests/pin-hygiene.test.ts`: `transport` widens to the SFC PLUS the composables it
+// imports and is for POSITIVE claims only; `transportFile` is the `.vue` ALONE and is the only honest
+// corpus for a negative claim or for slicing its markup and styles.
+// ⚠ NOT CALLED `bar`: two tests below already bind that name to a slice of markup and assert
+// negatively on it, and the hygiene guard is name-based and file-scoped.
+const transport = componentLogic('components/MatchControls.vue')
+const transportFile = componentFile('components/MatchControls.vue')
+
 describe('screen I – the commentary is actually on the screen', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
 
@@ -128,13 +138,23 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // крикнул»), so the placeholder is a phrase picker plus a verb and has no such title. The GATE is
     // what §2 is about and the gate is untouched - `props.mode === 'live' && !finished`, the Live
     // badge's own condition, now carried by the row that holds both halves of the control.
-    expect(viewer).toMatch(/v-if="props\.mode === 'live' && !finished" class="mv-shout"/)
+    // ⚠ RE-AIMED (R2-11), AND THE GATE IS NOW TWO HALVES IN TWO FILES – so both are pinned, which is
+    // strictly more than the one line was saying. The bar is a prop-driven leaf
+    // (`MatchControls.vue`); the viewer decides that this is a live match, the bar decides that the
+    // row is therefore drawn. §2's fact is untouched: a replay has no shout.
+    expect(viewerFile, 'the viewer stopped telling the bar which kind of match this is').toMatch(
+      /:live="props\.mode === 'live'"/,
+    )
+    expect(transportFile).toMatch(/v-if="live && !finished" class="mv-shout"/)
     // Read off `markupOf` for the reason this file's own header gives: the ⚠ note that replaced the
     // placeholder QUOTES its tooltip, and a pin a comment can satisfy is not a pin.
     expect(markupOf(viewerFile), 'the placeholder tooltip outlived the placeholder').not.toContain(
       'Coming in Phase 6',
     )
-    expect(viewer).toContain('Shout 📣')
+    expect(markupOf(transportFile), 'the placeholder tooltip came back with the bar').not.toContain(
+      'Coming in Phase 6',
+    )
+    expect(transportFile).toContain('Shout 📣')
   })
 
   // ⚠ ADDED 30.07. `mode` had a DEFAULT of `'live'`, added in round 4 "so existing call sites need no
@@ -189,10 +209,15 @@ describe('screen I – the design and the rulings it has to keep', () => {
   // ⚠ ADDED 30.07 (owner: «можем какой-то набор фраз в дропдаун селект сделать и кнопку рядом.
   // Выбрал, крикнул»). Two facts, and the second one is the load-bearing one.
   it('the shout is a picker plus a verb, and it never enters buildCommentary', () => {
-    const markup = markupOf(viewer)
-    const row = markup.slice(markup.indexOf('class="mv-shout"'), markup.indexOf('class="mv-actions"'))
+    // ⚠ RE-AIMED (R2-11): the row is `MatchControls.vue`'s markup now, and its neighbour below is the
+    // skip link rather than `.mv-actions` (which stayed with the viewer). The two facts are the same
+    // two: a real dropdown, and a verb beside it that shouts.
+    const markup = markupOf(transportFile)
+    const row = markup.slice(markup.indexOf('class="mv-shout"'), markup.indexOf('class="mv-skip"'))
     expect(row, 'the phrases are a real dropdown').toMatch(/<select v-model="shoutPhrase"/)
-    expect(row, 'and a button beside it').toMatch(/<button class="mv-shout-go"[^>]*@click="shoutIt"/)
+    expect(row, 'and a button beside it').toMatch(/<button class="mv-shout-go"[^>]*@click="\$emit\('shout'\)"/)
+    // ...and the phrase the picker writes goes UP to the viewer, which owns the pool and the log.
+    expect(transportFile).toMatch(/'update:shoutPhrase': \[string\]/)
     // A handful, in the parent's voice, short dash only and no Cyrillic in copy the player reads.
     const pool = /const SHOUT_PHRASES = \[([\s\S]*?)\] as const/.exec(viewer)?.[1] ?? ''
     const phrases = [...pool.matchAll(/'([^']+)'/g)].map((m) => m[1])
@@ -222,10 +247,16 @@ describe('screen I – the design and the rulings it has to keep', () => {
   })
 
   it('the controls are the app\'s segmented control, not two <select>s', () => {
-    expect(templateOf(viewerFile)).not.toContain('<select')
-    expect(viewer).toContain("import SegmentedRow from './ui/SegmentedRow.vue'")
+    // ⚠ RE-AIMED (R2-11) AND MADE STRICTER RATHER THAN LOOSER. The claim used to be "the viewer's
+    // template has no `<select>`", which is now trivially true of a file that has no controls in it
+    // at all. It is stated where the controls are, plus the one `<select>` that IS legitimate: the
+    // shout's phrase picker, which is a finding rather than a choice (see its own note in the bar).
+    expect(templateOf(viewerFile), 'a raw select came back to the screen').not.toContain('<select')
+    expect(transportFile).toContain("import SegmentedRow from './ui/SegmentedRow.vue'")
+    expect((markupOf(transportFile).match(/<select/g) ?? []).length, 'the plates went back to selects').toBe(1)
+    expect(markupOf(transportFile)).toContain('class="mv-shout-pick"')
     // Values, never indices – SegmentedRow's contract, and speed is a number so it needs an adapter.
-    expect(viewer).toContain('speedSeg')
+    expect(transportFile).toContain('speedSeg')
   })
 
   it('the match panel is the shared Card, and the screen owns no colour of its own', () => {
@@ -375,13 +406,16 @@ describe('screen I – the design and the rulings it has to keep', () => {
 // =====================================================================================================
 describe('the pinned control bar can never reach the playing surface', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
-
   it('is sticky rather than fixed, so it costs no height until it would otherwise be gone', () => {
     // Owner: «maybe we need to make lower buttons on match screen fixed so we could use them
     // anytime?». Measured at 375pt: the row starts on screen at y=636 and is pushed to y=806 – off
     // the bottom – once the commentary log fills to its four rows. A `position: fixed` bar would
     // have bought that back by charging its height for the whole watch; sticky charges nothing.
-    const styles = stylesOf(viewer)
+    // ⚠ RE-AIMED (R2-11): the rule moved into `MatchControls.vue`'s own scoped block with its markup.
+    // It HAD to move rather than staying behind – a parent's scoped selector reaches a child's root
+    // but nothing under it, so `.mv-seg`, `.mv-shout*`, `.mv-skip` and the `:deep` pill trim would all
+    // have stopped applying. The measurement in the rule's comment is unchanged.
+    const styles = stylesOf(transportFile)
     const bar = styles.slice(styles.indexOf('.mv-controls {'), styles.indexOf('.mv-seg {'))
     expect(bar).toContain('position: sticky')
     expect(bar).toContain('bottom: 0')
@@ -401,12 +435,20 @@ describe('the pinned control bar can never reach the playing surface', () => {
     const panelAt = markup.indexOf('class="mv-panel"')
     const belowAt = markup.indexOf('class="mv-below"')
     const logAt = markup.indexOf('class="mv-log"')
-    const barAt = markup.indexOf('class="mv-controls"')
+    // ⚠ RE-AIMED (R2-11): the bar is a child component, so what the viewer's markup shows is where it
+    // is MOUNTED – which is precisely what this test is about. A sticky element cannot leave its
+    // containing block, and the containing block is decided by where the tag sits, not by which file
+    // the tag's insides live in.
+    const barAt = markup.indexOf('<MatchControls')
     expect(panelAt, 'the panel is still the first thing in the viewer').toBeGreaterThan(-1)
     expect(belowAt, 'the sticky bar still has its own containing block').toBeGreaterThan(panelAt)
     // The log opens the wrapper, so the wrapper's top edge IS the log's top edge – below the panel.
     expect(logAt, 'the log is the wrapper\'s first child').toBeGreaterThan(belowAt)
     expect(barAt, 'the bar is inside .mv-below, after the log').toBeGreaterThan(logAt)
+    // ...and it really is the sticky bar that was mounted there, not a renamed something else.
+    expect(stylesOf(transportFile), 'the mounted child is not the sticky bar').toMatch(
+      /\.mv-controls \{[^}]*position: sticky/,
+    )
     // ⚠ RE-AIMED 12.08: the box score used to be pinned inside the wrapper here, after the bar; the
     // owner had that panel deleted («не нужна всё»), and it may not grow back - the guarantee this
     // test protects (the bar cannot reach the court) never rested on it.
@@ -459,18 +501,21 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // path that reads it (jumpToEnd, retimeForMode's exemption, More's default-view picker) is
     // reached exactly as before. What is pinned is that the door is named and that it is inside the
     // block, where a control you reach for mid-match belongs.
-    const logic = componentLogic('components/MatchViewer.vue')
-    const options = logic.slice(logic.indexOf('const VIEW_OPTIONS'), logic.indexOf('const SPEED_OPTIONS'))
+    // ⚠ RE-AIMED (R2-11): the option tables and the skip link are the transport's. The capability's
+    // own line changed SHAPE and not meaning – the bar no longer holds the ref, it says what the
+    // player chose – so the pin follows it to the emit. Every path that reads `viewMode` is untouched.
+    const options = transport.slice(transport.indexOf('const VIEW_OPTIONS'), transport.indexOf('const SPEED_OPTIONS'))
     expect(options).toContain("value: 'full'")
     expect(options).toContain("value: 'key'")
     expect(options, 'skip is back in the view switch').not.toContain("value: 'skip'")
-    const markup = markupOf(viewer)
-    const bar = markup.slice(markup.indexOf('class="mv-controls"'), markup.indexOf('class="mv-actions"'))
+    const bar = markupOf(transportFile)
     expect(bar).toContain('mv-skip')
     expect(bar).toContain('Skip to the result')
-    expect(logic, 'the skip capability itself was deleted rather than moved').toContain(
-      "viewMode.value = 'skip'",
+    expect(transport, 'the skip capability itself was deleted rather than moved').toContain(
+      "emit('update:view', 'skip')",
     )
+    // ...and the viewer still accepts it, so the door leads somewhere.
+    expect(viewer, "the screen stopped honouring 'skip'").toContain("viewMode.value === 'skip'")
   })
 
   it('pins everything you reach for mid-rally, and nothing you do not', () => {
@@ -489,18 +534,26 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // Proceed` there («2 кнопки рядом просто в этом нижнем блоке с контролами»), so "Watch again is
     // not in the bar" is true of the bar you watch a match through and deliberately not of the bar
     // you are left with. tests/component/match-viewer.test.ts pins the finished row's own contents.
-    const markup = markupOf(viewer)
-    const bar = markup.slice(markup.indexOf('class="mv-controls"'), markup.indexOf('class="mv-actions"'))
+    // ⚠ RE-AIMED (R2-11): the bar's markup is `MatchControls.vue`'s. The slice still lands on the
+    // PLAYING row - `class="mv-controls"` matches only the `v-else`, since the finished one is
+    // `class="mv-controls mv-controls-done"` - and it now runs to the end of that file, because
+    // `.mv-actions` stayed behind with the viewer. "Watch again is not in the playing bar" is
+    // therefore still a real claim: the finished row above the slice has one, and it is excluded.
+    const markup = markupOf(transportFile)
+    const bar = markup.slice(markup.indexOf('class="mv-controls"'))
     expect(bar).toContain('viewSeg')
     expect(bar).toContain('speedSeg')
     expect(bar).toContain('Shout')
     expect(bar).not.toContain('Watch again')
+    expect(markup, 'the slice is vacuous - the finished row has no Watch again to exclude').toContain(
+      'Watch again',
+    )
     // ...and it is ONE sticky block, not a bar with a loose row under it: the shout is a SECOND ROW
     // of `.mv-controls` rather than a sibling that scrolls away on its own, which is the whole
     // complaint. Pinned as a full-bar cell, because the flex version of this silently failed - a
     // `max-width` clamp feeds the hypothetical main size, so all three controls shared one line and
     // the two plates were squeezed to 109px. See the rule's own note for the measurement.
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(transportFile)
     expect(styles).toMatch(/\.mv-controls\s*\{[^}]*display:\s*grid/)
     expect(styles).toMatch(/\.mv-shout\s*\{[^}]*grid-column:\s*1 \/ -1/)
   })
@@ -542,7 +595,7 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // .tf-card on a 375pt phone they get 293px, and the view row used to overflow its half and
     // paint over the speed plate. Trimmed for THIS bar only – the sheet's own padding is untouched,
     // and so is every other SegmentedRow.
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(transportFile)
     expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\)/)
     expect(read('../src/style.css'), 'the shared pill padding stays the shared pill padding').toContain(
       'padding: 6px 16px',
@@ -556,7 +609,7 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // content-sized, so the ~52px the padding trim recovered became empty plate at the right-hand end
     // of each row - and, because "Full/Key/Skip" and "1x/2x/4x" are different widths, the two rows did
     // not even run out at the same place.
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(transportFile)
     expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\) \{[^}]*flex: 1/)
     // THE TRIM IS LOAD-BEARING UNDER `flex: 1`, not leftover: a flex item's automatic minimum size is
     // its content size, so the padding no longer sets the pill's width but still sets the width below
@@ -828,6 +881,8 @@ describe('live and replay open the same way – the popup, which is the one he l
 // =====================================================================================================
 describe('a hidden screen is a stopped match', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
+  /** The `.vue` alone – the only honest corpus for the negative claim below. */
+  const viewerFile = componentFile('components/MatchViewer.vue')
 
   it('pauses on visibilitychange the way the music already does, and only resumes what was running', () => {
     // Owner, 31.07: «pause the game and the match when the screen is minimised, the way music
@@ -850,6 +905,32 @@ describe('a hidden screen is a stopped match', () => {
     // is skipped and none is replayed, and it is easy to break by "tidying" either half away.
     expect(viewer).toMatch(/function pauseInternal\(\)[\s\S]{0,320}lastTs = null/)
     expect(viewer).toMatch(/function frame\(ts: number\)[\s\S]{0,120}if \(lastTs === null\) lastTs = ts/)
+  })
+
+  // ⚠ ADDED WITH R2-11, AND IT IS THE EXTRACTION'S OWN GUARANTEE. The review's rule is "never allow
+  // two clock/timer owners", and the cheapest way a second one arrives is by habit: something needs a
+  // short delay, `setTimeout` is one line, and now two things decide whether the match is running.
+  // The behavioural half is mounted (tests/component/match-viewer-clock.test.ts counts the live
+  // handles); this is the structural half, and it is a NEGATIVE claim about two specific files, so it
+  // reads `componentFile()` – the `.vue` ALONE – exactly as CLAUDE.md's pin hygiene requires.
+  // `componentLogic()` would fold in `playbackClock.ts`, where the one legitimate timer lives, and
+  // the assertion would be a lie about the file it is talking about.
+  it('⚠ neither the screen nor its control bar owns a clock of its own', () => {
+    for (const [name, sfc] of [['MatchViewer', viewerFile], ['MatchControls', transportFile]] as const) {
+      for (const call of ['requestAnimationFrame', 'setTimeout', 'setInterval']) {
+        expect(sfc, `${name} armed a ${call} of its own`).not.toContain(`${call}(`)
+      }
+    }
+    // ...and the one owner is where it says it is, with both of its handles.
+    const clock = read('../src/composables/playbackClock.ts')
+    expect(clock).toContain('rafId = requestAnimationFrame(frame)')
+    expect(clock).toContain('preRollTimer = setTimeout(')
+    expect(clock, 'the pre-roll timeout is not cleared by the one pause').toMatch(
+      /function pauseInternal\(\)[\s\S]{0,320}clearTimeout\(preRollTimer\)/,
+    )
+    expect(clock, 'the frame loop is not cancelled by the one pause').toMatch(
+      /function pauseInternal\(\)[\s\S]{0,320}cancelAnimationFrame\(rafId\)/,
+    )
   })
 
   it('...and a frame can never carry a whole absence, whatever the browser did or did not fire', () => {

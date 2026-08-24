@@ -14,11 +14,20 @@
 // `WorldMatch`-shaped literal, rebuilt through the MatchReplay recipe. A JSON dump of 200 annotated
 // points would have been the same data, thirty times larger, and rottable against the engine.
 //
-// ⚠ WHAT IS CAPTURED PER FRAME: every sfx cue (with its rate), every music duck/restore, every emit,
+// ⚠ WHAT IS CAPTURED PER PAINT: every sfx cue (with its rate), every music duck/restore, every emit,
 // and the four readings the player can actually see move – the point score, the diegetic clock, the
-// set cells and the serving end. One line per paint. The hash is over ALL of them; `changes` holds
-// only the lines that differ from the paint before, because that is what a human reads when it goes
-// red. A refactor that moves a cue by ONE frame changes the hash.
+// set cells and the serving end. `hash` is over ALL of it, every paint, unabridged. The three logs
+// beside it exist so a red run is READABLE rather than a changed hex string: `cueLog` is every cue
+// with the paint it fired on, `viewLog` is every paint where the visible readout stepped, and
+// `clockSamples` is the diegetic clock every hundredth paint. A cue that moves by ONE paint moves
+// `cueLog` and the hash.
+//
+// ⚠ WHAT IT CANNOT SEE, stated so nobody reads more into a green run than is there: the granularity
+// is ONE PAINT. Two effects inside a single click handler are ordered relative to each other but not
+// relative to any observation, so swapping them leaves the record byte-identical – measured, on the
+// view pill's `emit`/`playSfx` pair, and correct: the setting's consequence is a pre-flush watcher
+// and runs after the handler returns either way. Anything that changes WHICH cue fires, HOW MANY
+// times, on WHICH paint, or what the readout says on any paint, does move it.
 //
 // ⚠ REGENERATING IS DELIBERATE AND LOUD: `TB_WRITE_MATCH_PARITY=1 npx vitest run --project component
 // tests/component/match-viewer-parity.test.ts` rewrites the fixture. Do that only when the owner has
