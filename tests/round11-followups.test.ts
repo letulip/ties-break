@@ -15,7 +15,7 @@ import { describe, it, expect } from 'vitest'
 import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { headerCropUrl } from '../src/composables/headerAvatar'
-import { portraitStage, type PortraitEmotion } from '../src/shared/avatarEmotion'
+import { portraitAssetStem, portraitStage, type PortraitEmotion } from '../src/shared/avatarEmotion'
 import {
   createWorld,
   advanceWeeks,
@@ -45,14 +45,15 @@ describe('F45-1 — the header avatar is age-only, never emotional', () => {
   const EMOTIONS: PortraitEmotion[] = ['norm', 'happy', 'sad', 'serious', 'tired', 'injury', 'angry', 'rehab']
 
   it('every age the game can reach resolves to the norm crop of its stage', () => {
-    // 6 (the childhood prologue's floor) through 40 (well past the milf boundary at 31) – the
+    // 6 (the childhood prologue's floor) through 40 (well past the 31+ band's boundary) – the
     // whole span the stage resolver can be asked about.
     for (let age = 6; age <= 40; age++) {
       const url = headerCropUrl(age)
       const stage = portraitStage(age)
       // No clamp any more: every stage has its own crops, so the header wears her OWN age's face
       // at every age. `adult` used to redirect to teen here.
-      expect(url, `age ${age}`).toBe(`/avatars/${stage}-norm.webp`)
+      // ⚠ R2-18: through the asset alias - the 31+ band's type name moved, its crops did not.
+      expect(url, `age ${age}`).toBe(`/avatars/${portraitAssetStem(stage)}-norm.webp`)
       for (const e of EMOTIONS) {
         if (e === 'norm') continue
         expect(url, `age ${age} must not carry ${e}`).not.toContain(e)

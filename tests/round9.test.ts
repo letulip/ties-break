@@ -769,7 +769,7 @@ describe('pt4 — UI wiring', () => {
 // Round-9 pt5 — R9-16 portrait stages by age + the young/teen header crops.
 // ---------------------------------------------------------------------------
 describe('pt5 — R9-16 portrait stages by age', () => {
-  it('portraitStage: jun <11, young 11-16, teen 17-22, adult 23-30, milf 31+', () => {
+  it('portraitStage: jun <11, young 11-16, teen 17-22, adult 23-30, lateCareer 31+', () => {
     expect(portraitStage(10)).toBe('jun')
     // Owner 25.07: young starts at 11 (the childhood prologue will need this boundary).
     expect(portraitStage(11)).toBe('young')
@@ -779,9 +779,9 @@ describe('pt5 — R9-16 portrait stages by age', () => {
     expect(portraitStage(17)).toBe('teen')
     expect(portraitStage(22)).toBe('teen')
     expect(portraitStage(23)).toBe('adult')
-    // Owner 27.07: adult gained an UPPER bound and milf became a real band.
+    // Owner 27.07: adult gained an UPPER bound and the 31+ band became a real one.
     expect(portraitStage(30)).toBe('adult')
-    expect(portraitStage(31)).toBe('milf')
+    expect(portraitStage(31)).toBe('lateCareer')
   })
 
   it('the 256px header crops exist for every young/teen emotion (sips→256→cwebp q82)', () => {

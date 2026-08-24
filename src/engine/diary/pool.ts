@@ -13,7 +13,7 @@
 // ⚠ RNG: `diaryLine` picks on a PURPOSE-SCOPED sub-stream derived from the passed seed, never MAIN.
 import { rngFromSeed } from '../rng'
 import type { DiaryFacts } from '../../shared/protocol'
-import { short, plural, justHurt, quiet, ageWord, capitalise } from './words'
+import { short, plural, justHurt, quiet, ageWord, capitalise, familyHomeVoice, independentVoice } from './words'
 
 // --- the phrase pool ------------------------------------------------------------------------
 
@@ -79,9 +79,10 @@ export interface DiaryPhrase {
   license: (f: DiaryFacts) => boolean
 }
 
-const familyHomeVoice = (f: DiaryFacts): boolean =>
-  f.lifeStage === 'school' || f.lifeStage === 'after-school'
-const independentVoice = (f: DiaryFacts): boolean => f.lifeStage === 'independent'
+// ⚠ R2-18: the two life-stage predicates USED TO BE DECLARED HERE, and identically in weekNotes.ts
+// and travelNotes.ts. One age rule, three editorial tables, three copies – so a stage added to the
+// model would have had to be found in all three. They are `words.ts`'s now, beside the knowledge
+// licence (`underOneRoof`) that this pool did not have and needed.
 
 
 // The Diary-1 pool. ~60 lines across the three surfaces (memory lines live in MEMORY_LINES below

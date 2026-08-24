@@ -50,7 +50,7 @@ import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import {
   answerFork,
-  birthdayOffer,
+  buildBirthdayPrompt,
   chooseGift,
   createWorld,
   decideKnock,
@@ -60,6 +60,7 @@ import {
   pendingKnock,
   resumeFromCollege,
   toSnapshot,
+  type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { POLICIES, stepCareerWeek } from '../tools/econ-bench'
@@ -98,6 +99,25 @@ const collegeView = (over: Partial<KidLifeWorldView['college']> & object = {}) =
 // =================================================================================================
 // 1 – THE TENSE: the cell keeps moving after the last bell
 // =================================================================================================
+/**
+ * ⚠ ASK THE ENGINE WHAT IT IS OFFERING, DO NOT REBUILD IT (R2-18).
+ *
+ * These harnesses used to answer a birthday with `birthdayOffer(world.seed, age).options[0].id` -
+ * a SECOND derivation of the offer, sitting beside the engine's own and agreeing with it only for
+ * as long as the offer depended on nothing but the seed and the age. The moment it depended on one
+ * more fact (`atCollege`, so a girl in a hall of residence is not offered a kitchen table for her
+ * flat) the replay diverged and `chooseGift` rejected every answer these careers gave - which is
+ * the engine's re-validation working exactly as designed, catching a stale client.
+ *
+ * `buildBirthdayPrompt` is what the DIALOG reads, so answering from it is what the PLAYER does, and
+ * no future rule about which band a birthday draws from can make this harness wrong again.
+ */
+function answerableGift(world: WorldState): string {
+  const prompt = buildBirthdayPrompt(world)
+  if (prompt === null) throw new Error('no birthday to answer')
+  return prompt.options[0].id
+}
+
 describe('#6a – the life-stage ladder past the last grade', () => {
   it('⭐⭐ "School finished" is gone from every week of a twenty-five-year career', () => {
     for (const bm of [1, 6, 9, 12]) {
@@ -304,7 +324,7 @@ describe('#6b – on a career that really went', () => {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)
       if (pendingKnock(world)) decideKnock(world, 'rest')
       const age = pendingBirthday(world)
-      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      if (age !== null) chooseGift(world, answerableGift(world))
       stepCareerWeek(world, rng, POLICIES[1])
     }
     expect(world.fork, 'she reached the fork at nineteen').not.toBeNull()
@@ -313,7 +333,7 @@ describe('#6b – on a career that really went', () => {
     // unanswered birthday would now refuse the first college press, exactly as it refuses a `+4`.
     {
       const age = pendingBirthday(world)
-      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      if (age !== null) chooseGift(world, answerableGift(world))
     }
 
     // Before the answer: out of school, no college, no college line.
@@ -330,14 +350,14 @@ describe('#6b – on a career that really went', () => {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)
       if (pendingKnock(world)) decideKnock(world, 'rest')
       const age = pendingBirthday(world)
-      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      if (age !== null) chooseGift(world, answerableGift(world))
       stepCareerWeek(world, rng, POLICIES[1])
     }
     // Press-answer-press (round 24): the year pauses on her birthday so the gift can be answered.
     for (let press = 0; press < 3 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
       const age = pendingBirthday(world)
-      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      if (age !== null) chooseGift(world, answerableGift(world))
     }
     // ONE year lived, and she is still enrolled – the state the shipped flow spends the four years in.
     const enrolled = toSnapshot(world).life
@@ -368,14 +388,14 @@ describe('#6b – on a career that really went', () => {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)
       if (pendingKnock(world)) decideKnock(world, 'rest')
       const age = pendingBirthday(world)
-      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      if (age !== null) chooseGift(world, answerableGift(world))
       stepCareerWeek(world, rng, POLICIES[1])
     }
     // ⚠ ROUND 24: her nineteenth (the fork's own week) is answered before the fork, as the real
     // flow orders it – an unanswered birthday refuses the college press now.
     {
       const age = pendingBirthday(world)
-      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      if (age !== null) chooseGift(world, answerableGift(world))
     }
     answerFork(world, 'college')
     // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
@@ -384,7 +404,7 @@ describe('#6b – on a career that really went', () => {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)
       if (pendingKnock(world)) decideKnock(world, 'rest')
       const age = pendingBirthday(world)
-      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      if (age !== null) chooseGift(world, answerableGift(world))
       stepCareerWeek(world, rng, POLICIES[1])
     }
     // Press-answer-press (round 24): each year pauses on her birthday week.
@@ -392,7 +412,7 @@ describe('#6b – on a career that really went', () => {
       world.fundsCents = Math.max(world.fundsCents, 500_000_00)
       resumeFromCollege(world, rng)
       const age = pendingBirthday(world)
-      if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+      if (age !== null) chooseGift(world, answerableGift(world))
     }
     expect(world.college!.doneWeek, 'the course is over').not.toBeNull()
     expect(world.college!.years.length).toBe(ENDINGS.collegeYears)

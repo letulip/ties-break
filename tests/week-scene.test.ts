@@ -334,7 +334,7 @@ describe('W5 — every arm names a file that is on disk', () => {
     existsSync(new URL(`../public/${url.slice(import.meta.env.BASE_URL.length)}`, import.meta.url))
 
   it('the five layoff paintings, one per band', () => {
-    for (const stage of ['jun', 'young', 'teen', 'adult', 'milf'] as const) {
+    for (const stage of ['jun', 'young', 'teen', 'adult', 'lateCareer'] as const) {
       const url = weekSceneArtUrl({ kind: 'rehab', week: 11, stage })
       expect(url).toBe(portraitUrl(stage, 'rehab'))
       expect(onDisk(url), url).toBe(true)
@@ -368,7 +368,7 @@ describe('W5 — every arm names a file that is on disk', () => {
     // 404 on the day the prologue or the handover puts her outside 14-19, so it is swept rather than
     // reasoned about.
     for (const kind of ['exam', 'knock'] as const) {
-      for (const stage of ['jun', 'young', 'teen', 'adult', 'milf'] as const) {
+      for (const stage of ['jun', 'young', 'teen', 'adult', 'lateCareer'] as const) {
         const url = weekSceneArtUrl({ kind, week: 11, stage })
         expect(url).toBe(weekHomeArtUrl(kind, stage))
         expect(onDisk(url), url).toBe(true)
@@ -382,7 +382,7 @@ describe('W5 — every arm names a file that is on disk', () => {
     // the list, and it is derived from the same table the URL builder spells, so the two cannot drift.
     const reachable = new Set(
       (['exam', 'knock'] as const).flatMap((kind) =>
-        (['jun', 'young', 'teen', 'adult', 'milf'] as const).map((stage) =>
+        (['jun', 'young', 'teen', 'adult', 'lateCareer'] as const).map((stage) =>
           weekHomeArtUrl(kind, stage).replace(/^.*\/(?=[^/]+$)/, '').replace(/\.webp$/, ''),
         ),
       ),

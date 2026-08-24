@@ -186,7 +186,7 @@ const activePhaseId = computed(() => surfaceBlockFor(week.value).id)
  *
  *  ⚠ "BAND" HERE IS THE PORTRAIT BAND, NOT THE AGE BAND, and the word had to be disambiguated once
  *  the one-clock wave gave `ageAtWeek` a name of its own. `portraitStage` cuts jun/young/teen/adult/
- *  milf for the ART; `ageAtWeek` is the coach market's restocking clock, which is the single job that
+ *  the 31+ band for the ART; `ageAtWeek` is the coach market's restocking clock, which is the single job that
  *  ruling left it (PlanWeekSheet.vue prices a booked practice week through it, and that IS the
  *  market's question). So this line is CORRECT as it stands and must not be re-pointed: `ageYears` is
  *  now her real age, and a picture of her should follow the girl rather than a calendar-year cohort.

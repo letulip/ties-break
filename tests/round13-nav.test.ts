@@ -406,10 +406,31 @@ describe('R13-12 — the dot rule (unit): a FRESH recap is unseen', () => {
   })
 
   it('the wiring: per-career watermark, marked seen on visiting the tab AND on a week landing while on it', () => {
-    expect(app).toContain('tb:lastSeenThisWeek:${game.snapshot?.careerId')
-    const block = app.slice(app.indexOf('const weekSeenKey'), app.indexOf('const showKidHint'))
+    // ⚠ RE-AIMED BY R2-08, AND IT WAS BROKEN IN BOTH HALVES BEFORE THE MOVE. The claim is unchanged
+    // and is now stronger; what changed is that it is aimed at something that exists.
+    //
+    // (a) THE KEY. `tb:lastSeenThisWeek:${game.snapshot?.careerId ?? ''}` was built by hand in the
+    //     shell. It is `useWatermark`'s now, which appends the career itself through `careerKey`, so
+    //     the shell names only the PREFIX and the per-career scoping is proved where it is
+    //     implemented (tests/component/career-watermarks.test.ts asserts the composed key and that
+    //     two careers do not share a mark – a claim this text search could never make).
+    //
+    // (b) ⚠⚠ THE SLICE WAS ALREADY READING THE WHOLE FILE. `const showKidHint` is in HomeScreen.vue,
+    //     not in App.vue, so `indexOf` returned -1 and `slice(start, -1)` quietly widened the block
+    //     to everything-but-the-last-character. That is the exact `-1` hazard CLAUDE.md's gotcha
+    //     names, live in a shipped guard: the two assertions below have been passing against the
+    //     entire shell rather than against the This-week block for as long as the marker has been
+    //     wrong. It is anchored on two markers that are BOTH in this file now, and the test asserts
+    //     they were found before it slices – so this cannot rot back into a whole-file search.
+    expect(app).toContain("const WEEK_SEEN_PREFIX = 'tb:lastSeenThisWeek'")
+    const from = app.indexOf('const WEEK_SEEN_PREFIX')
+    const to = app.indexOf('// --- W1: THE WEEK\'S STORY OPENS ITSELF')
+    expect(from, 'the This-week block moved – re-aim the marker, do not widen the slice').toBeGreaterThan(-1)
+    expect(to, 'the end marker moved – a -1 here silently reads the rest of the file').toBeGreaterThan(from)
+    const block = app.slice(from, to)
     expect(block).toContain("if (t === 'week') markThisWeekSeen()")
-    expect(block).toContain("if (tab.value === 'week') markThisWeekSeen()")
+    // ...and the landing-while-on-it clause, which lives in the story watcher just past the block.
+    expect(app).toContain("if (tab.value === 'week') markThisWeekSeen()")
   })
 
   it('epic/redesign-home: the dot MOVED with the tab – the shell decides it, the Home card shows it', () => {
