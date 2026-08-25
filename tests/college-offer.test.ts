@@ -224,13 +224,17 @@ describe('B. nothing removes the third answer', () => {
     }
   })
 
-  it('⚠ every refusal code carries a sentence, and it is player copy', () => {
-    // ⚠ THE MAP IS TOTAL BY TYPE (`Record<CollegeShutReason, string>`), so this case is about the
-    // WORDS rather than about coverage: the app's dash, no Cyrillic, and something a parent can read.
+  // ⚠⚠ RE-AIMED BY ROUND 26 #2, NOT WEAKENED. The map's values are FUNCTIONS of the family's home
+  // now – `COLLEGE_SHUT_DETAIL[code](homeName)` – because round 24's sentence stated the rule's
+  // conclusion («she is not one») and never the fact under it, and the owner asked the same question
+  // a second time. Totality is unchanged (`Record` over the code union), the words are still the
+  // engine's, and this case gains the property the reopening was actually about: **the sentence
+  // names the fact.** The sample is a real country name because that is what the card passes.
+  it('⚠ every refusal code carries a sentence, it is player copy, and it names the fact', () => {
     const codes = Object.keys(COLLEGE_SHUT_DETAIL) as CollegeShutReason[]
     expect(codes.length, 'there is at least one refusal to explain').toBeGreaterThan(0)
     for (const code of codes) {
-      const line = COLLEGE_SHUT_DETAIL[code]
+      const line = COLLEGE_SHUT_DETAIL[code]('Australia')
       expect(line.length, `${code}: says something`).toBeGreaterThan(20)
       expect(line, `${code}: short dash only`).not.toContain('—')
       expect(line, `${code}: no Cyrillic in player copy`).not.toMatch(/[Ѐ-ӿ]/)
@@ -240,6 +244,40 @@ describe('B. nothing removes the third answer', () => {
         expect(line.toLowerCase(), `${code}: no verdict ("${steer}")`).not.toContain(steer)
       }
     }
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ ROUND 26 #2 – THE REFUSAL NAMES THE FACT IT RESTS ON, AND THAT IS WHY THIS REOPENED
+  // ===============================================================================================
+  //
+  // The owner asked why the in-state place was shut, round 24 gave the row a reason, and he asked
+  // AGAIN. The reason was *«The in-state price is only for residents of the state, and she is not
+  // one.»* – a rule and its conclusion, with the premise missing. Nothing on that card, or anywhere
+  // else in the game, says what the game thinks her residence IS, so the sentence was unfalsifiable
+  // from the player's chair: he could not agree with it, disagree with it, or act on it.
+  //
+  // ⚠ IT IS SCOPED TO THE ONE RULE THAT HAS A FACT OF THIS KIND, deliberately. Asserting that EVERY
+  // future code interpolates its argument would be the over-strict widening CLAUDE.md's pin-hygiene
+  // note is about: a later refusal that is a property of the PLACE has no country to name.
+  it('⭐⭐⭐ the residence refusal states where the game thinks the family is from', () => {
+    const line = COLLEGE_SHUT_DETAIL['not-a-resident']('Australia')
+    expect(line, 'the fact, in words').toContain('Australia')
+    expect(line, 'and the rule it makes her fail').toContain('US state')
+    // ⚠ THE ROUND-24 SENTENCE MAY NOT SURVIVE UNDER THE NEW ONE. A line that appended the country to
+    // "she is not one" would pass the two above and still be the sentence he could not read.
+    expect(line, 'the conclusion-only line is gone').not.toContain('she is not one')
+    // ⚠ AND THE ARGUMENT IS REALLY THE SOURCE OF THE NOUN – anti-vacuity for the two `toContain`s.
+    expect(COLLEGE_SHUT_DETAIL['not-a-resident']('Czechia')).toContain('Czechia')
+    expect(COLLEGE_SHUT_DETAIL['not-a-resident']('Czechia')).not.toContain('Australia')
+  })
+
+  // ⚠ AND A CARD THAT DOES NOT KNOW SAYS LESS RATHER THAN GUESSING (`canAfford`'s `null` doctrine).
+  // No live snapshot reaches this – the profile is written before week 0 and never again, which is
+  // the finding of round 26 #2 in one line – so it exists for hand-built fixtures.
+  it('⚠ an unknown home leaves the noun out instead of printing a blank', () => {
+    const line = COLLEGE_SHUT_DETAIL['not-a-resident']('')
+    expect(line.length, 'it is still a sentence').toBeGreaterThan(20)
+    expect(line, 'and it does not trail an empty slot').not.toMatch(/\s{2}|from\s*[.–-]|from\s*$/)
   })
 
   // ⚠ AN EMPTY RECORD IS A WALK-ON, NOT A CLOSED DOOR. She enrols and pays; the answer is still

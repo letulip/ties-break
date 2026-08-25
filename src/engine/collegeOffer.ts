@@ -588,9 +588,40 @@ const COLLEGE_SHUT_RULES: ReadonlyArray<{
  *
  *  ⚠ AND IT SAYS WHAT IS TRUE OF **THIS PLACE**, NOT WHAT SHE SHOULD DO ABOUT IT. Ruling 4 (30.07):
  *  the fork «may not recommend», and "take one of the others instead" is advice. The other rows are
- *  live on the same screen and say so by being pressable. */
-export const COLLEGE_SHUT_DETAIL: Record<CollegeShutReason, string> = {
-  'not-a-resident': 'The in-state price is only for residents of the state, and she is not one.',
+ *  live on the same screen and say so by being pressable.
+ *
+ *  ⭐⭐⭐ ROUND 26 #2 – REOPENED, AND THE SENTENCE IS WHY. Round 24 gave the dead rung a reason and
+ *  the owner asked the SAME question again, which is the tell that a reason is not yet an
+ *  explanation. The shipped line was *«The in-state price is only for residents of the state, and
+ *  she is not one.»* – it named the rule and then asserted its conclusion. **It never named the fact
+ *  the conclusion rests on.** A player who does not already know what the game thinks her residence
+ *  is learns nothing from being told she is not a resident of it, and the measured career the
+ *  complaint came from is exactly that case: her profile says `AU`, chosen on onboarding's country
+ *  step four hundred and forty-four weeks before this card drew.
+ *
+ *  ⚠⚠ SO THE SENTENCE TAKES THE FACT AS AN ARGUMENT AND THE VALUES ARE FUNCTIONS. The map is still
+ *  a total `Record` over the reason codes – a new code still cannot ship without words – and the
+ *  WORDS are still entirely the engine's. What the caller supplies is one noun: the name of the
+ *  place the family started. It supplies no clause, no verdict and no second opinion about WHETHER
+ *  the rung is shut; that is `quoteShutFor`'s and it is untouched.
+ *
+ *  ⚠ WHY THE CALLER AND NOT THIS FILE. The engine holds her country as a two-letter code and there
+ *  is no name table on this side of invariant 1 – `COUNTRY_NAMES` is presentation and says so in its
+ *  own header. Rendering `AU` here would have been the refusal made unreadable a second way.
+ *
+ *  ⚠ AN EMPTY NAME IS "THE CARD DOES NOT KNOW", AND IT SAYS LESS RATHER THAN GUESSING – `canAfford`'s
+ *  `null` doctrine one door along. No live snapshot reaches it (the profile is written before week 0
+ *  and never again), so it is the shape a hand-built fixture takes, and a fixture may not be given a
+ *  country the career never had. */
+export const COLLEGE_SHUT_DETAIL: Record<CollegeShutReason, (homeName: string) => string> = {
+  'not-a-resident': (homeName) =>
+    homeName === ''
+      ? 'The in-state price is only for residents of a US state, and this family is not resident in one.'
+      : // ⚠ THE SECOND CLAUSE MAY NOT SAY "COUNTRY", AND THAT IS A GUARD RATHER THAN A PREFERENCE:
+        // `round24-fork-places.test.ts`'s ruling-4 sweep refuses the substring `try ` in a refusal,
+        // and «coun-try picked» contains it. The check is right and the word was replaceable.
+        `The in-state price is only for residents of a US state, and this family is from ${homeName} – ` +
+        'chosen at the start of the career.',
 }
 
 /** ⚠⚠ IS THIS PLACE HERS TO PICK, AND IF NOT, WHY – THE ONE DECISION. `null` = it is hers.

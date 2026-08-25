@@ -41,6 +41,8 @@ import {
   tierShutFor,
 } from '../../src/engine/collegeOffer'
 import { DEFAULT_PROFILE } from '../../src/shared/protocol'
+// ⚠ ROUND 26 #2 – the card names her home country, and this is the app's one copy of those names.
+import { COUNTRY_NAMES } from '../../src/composables/countries'
 import type { WorldState } from '../../src/engine/world'
 
 /** ⚠ A REAL CAREER STANDING AT THE FORK, and the offer is the engine's own. `resolveEndings` raises
@@ -107,7 +109,12 @@ describe('⭐⭐⭐ round 24 #2a – a refused place says why, in the engine\'s 
         expect(plaque.exists(), `${country} ${tier}: a refused row is never silent`).toBe(true)
         // ⭐ AND THE WORDS ARE THE ENGINE'S, not this card's. A sentence typed into the template
         // passes the line above and fails this one.
-        expect(plaque.text(), `${country} ${tier}: the engine's own sentence`).toBe(COLLEGE_SHUT_DETAIL[shut])
+        // ⚠⚠ RE-AIMED BY ROUND 26 #2: the map holds functions and the sentence names her home. The
+        // argument is resolved the way the CARD resolves it, off `COUNTRY_NAMES`, so a card that
+        // named the wrong country – or the two-letter code – fails on the equality below.
+        expect(plaque.text(), `${country} ${tier}: the engine's own sentence`).toBe(
+          COLLEGE_SHUT_DETAIL[shut](COUNTRY_NAMES[country] ?? country),
+        )
         expect(plaque.text().length, 'and it actually says something').toBeGreaterThan(20)
       }
       expect(refusedSeen, `${country}: the sweep is not vacuous`).toBe(country === 'US' ? 0 : 1)

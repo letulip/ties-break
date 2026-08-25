@@ -72,19 +72,24 @@ const NON_RESIDENT: CollegeOffer = {
   canPayPerYearCents: 31_531_00,
 }
 
-function snapshotWith(offer: CollegeOffer | null): Snapshot {
+/** ⚠⚠ ROUND 26 #2 ADDED THE PROFILE, AND ITS ABSENCE WAS A HOLE RATHER THAN A SIMPLIFICATION. A live
+ *  snapshot has always carried one; this fixture did not, so the card could be asserted against a
+ *  state no career can be in. The refusal sentence names her home country now, so the fixture has to
+ *  say which career this is – and `country` is the one field of it these cases read. */
+function snapshotWith(offer: CollegeOffer | null, country = 'US'): Snapshot {
   return {
     ageYears: 19,
     week: 265,
     kidRank: 210,
     fundsCents: 41_200_00,
     careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+    profile: { kidName: 'Vera', country },
     fork: { askedWeek: 265, ageYears: 19, offer },
   } as unknown as Snapshot
 }
 
-function mountFork(offer: CollegeOffer | null, attach = false) {
-  useGameStore().snapshot = snapshotWith(offer)
+function mountFork(offer: CollegeOffer | null, attach = false, country = 'US') {
+  useGameStore().snapshot = snapshotWith(offer, country)
   return mount(ForkDialog, attach ? { attachTo: document.body } : {})
 }
 
@@ -142,12 +147,22 @@ describe('⭐⭐ the card says what each college place costs', () => {
   // was standing in for survives exactly – **every row states what the place is worth, in its own
   // stated unit, beside the sourced price** – and it is stronger, because the number is now measured
   // out of this build (`tools/college-return-probe.ts`, n = 53 per place) rather than invented.
-  it('⭐⭐ states each place\'s measured odds, and the window it was measured over', () => {
+  // ⚠⚠ RE-AIMED AGAIN BY ROUND 26 #3a, AND FOR THE SECOND TIME THE FIGURE SURVIVED AND THE FRAME DID
+  // NOT. The owner asked what «Top 100 for 74 in 100» meant, which is the same class of complaint
+  // that killed `Squad 55`: a number the card states in a form the player cannot decode. `Top 100`
+  // read as a LABEL and the two numbers after it had no verb between them. The measured quantity is
+  // unchanged – 85 / 93 / 74 careers in a hundred – and what moved is that the row now says which
+  // hundred and what they did. ⚠ THE ASSERTION IS DELIBERATELY ON THE WHOLE PHRASE, not on the bare
+  // digits: `toContain('85')` would pass on a row that printed the number in the old unreadable
+  // frame, which is exactly the defect.
+  it('⭐⭐ states each place\'s measured odds in words, and the window it was measured over', () => {
     const w = mountFork(FUNDED)
     const rows = rowsOf(w)
-    expect(rows[0]).toContain('Top 100 for 85 in 100')
-    expect(rows[1]).toContain('Top 100 for 93 in 100')
-    expect(rows[2]).toContain('Top 100 for 74 in 100')
+    expect(rows[0]).toContain('85 in 100 reach the world top 100')
+    expect(rows[1]).toContain('93 in 100 reach the world top 100')
+    expect(rows[2]).toContain('74 in 100 reach the world top 100')
+    // ⚠ AND THE UNREADABLE FRAME IS OFF THE SURFACE, the same way `Squad \d` is below.
+    expect(w.find('.fork-places').text(), 'the round-24 frame is gone').not.toMatch(/Top 100 for \d/)
     // ⚠ AND A SHARE WITH NO SPAN UNDER IT IS NOT A MEASUREMENT. The window is named once, under the
     // list – a card that printed a bare percentage would be quoting a run it never identified.
     expect(w.find('.fork-places-note').text()).toContain('Four years after she leaves')
@@ -212,14 +227,24 @@ describe('⭐⭐ the card says what each college place costs', () => {
   // ⚠ AND IT IS THE HAND-BUILT ARM ON PURPOSE. `tests/component/round24-fork-places.test.ts` walks a
   // real world into this state and asserts the same property against `tierShutFor`; this case keeps
   // the surface honest for a quote shape the world happens not to produce today.
-  it('⚠ shuts the in-state place to a non-resident and keeps the answer live', () => {
-    const w = mountFork(NON_RESIDENT)
+  // ⚠⚠ RE-AIMED BY ROUND 26 #2, AND THE MAP HOLDS FUNCTIONS NOW. `COLLEGE_SHUT_DETAIL[reason]` takes
+  // the name of the country the profile carries, because «she is not one» was a conclusion with its
+  // premise missing and the owner asked the same question twice. The property is unchanged and is
+  // strictly stronger: the card must render the ENGINE'S sentence FOR THIS CAREER'S OWN HOME, so a
+  // card that dropped the country, hard-coded one, or kept the round-24 line now fails here.
+  it('⚠ shuts the in-state place to a non-resident, names her home, and keeps the answer live', () => {
+    const w = mountFork(NON_RESIDENT, false, 'CZ')
     const places = w.findAll('.fork-place')
     expect(places[0].attributes('disabled')).toBeDefined()
     const shut = quoteShutFor(NON_RESIDENT.quotes[0])
     expect(shut, 'the engine names the rule behind its own `open: false`').not.toBeNull()
     expect(places[0].find('.fork-place-refusal').text(), 'the engine\'s sentence, not the card\'s').toBe(
-      COLLEGE_SHUT_DETAIL[shut!],
+      COLLEGE_SHUT_DETAIL[shut!]('Czechia'),
+    )
+    // ⭐⭐⭐ AND THE FACT IT RESTS ON IS ON THE SCREEN IN WORDS – round 26 #2's whole point.
+    expect(places[0].find('.fork-place-refusal').text(), 'it says what she IS').toContain('Czechia')
+    expect(places[0].find('.fork-place-refusal').text(), 'and the old conclusion-only line is gone').not.toContain(
+      'she is not one',
     )
     expect(places[1].attributes('disabled')).toBeUndefined()
     expect(places[2].attributes('disabled')).toBeUndefined()

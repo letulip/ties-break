@@ -51,6 +51,7 @@ import {
   type CollegeShutReason,
 } from '../engine/collegeOffer'
 import { ENDINGS } from '../engine/ending'
+import { COUNTRY_NAMES } from '../composables/countries'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -158,6 +159,18 @@ const BAND_LABEL: Record<CollegeFundingBand, string> = {
 }
 const pct = (share: number): string => `${Math.round(share * 100)}%`
 
+/** ⭐⭐⭐ ROUND 26 #2 – WHERE THE GAME THINKS THE FAMILY IS FROM, IN WORDS, for the ONE sentence that
+ *  rests on it (see `rows`). The code is the profile's; the name is `COUNTRY_NAMES`, which is the
+ *  app's single copy of it and falls back to the bare code for anything onboarding cannot offer.
+ *
+ *  ⚠⚠ IT DECIDES NOTHING. Reading her country to NAME a refusal is not re-deriving it: the verdict
+ *  is still `quoteShutFor`'s, off the engine's own persisted `quote.open`, and this value never
+ *  reaches that call. The round-24 note below is about a second JUDGEMENT, and a noun is not one. */
+const homeName = computed(() => {
+  const code = snap.value?.profile?.country ?? ''
+  return COUNTRY_NAMES[code] ?? code
+})
+
 // ⭐ THE PLAYER'S PICK. Null until she presses a row – see the ruling note above.
 const picked = ref<CollegeTier | null>(null)
 const quotes = computed(() => offer.value?.quotes ?? [])
@@ -214,12 +227,23 @@ const rows = computed<TierRow[]>(() =>
       shut,
       // ⚠ THE ENGINE'S SENTENCE, LOOKED UP – never written here. `COLLEGE_SHUT_DETAIL` is a total
       // `Record` over the reason codes, so a new refusal cannot reach this card without its words.
-      refusal: shut === null ? null : COLLEGE_SHUT_DETAIL[shut],
+      // ⚠⚠ ROUND 26 #2 – IT IS CALLED WITH THE FACT IT HAS TO NAME. The map holds functions now: the
+      // engine still owns every word, and the one thing passed in is the name of the country the
+      // profile carries. `she is not one` was the whole of the round-24 sentence's failure – it
+      // asserted the rule's conclusion and never said what the game thinks her residence IS.
+      refusal: shut === null ? null : COLLEGE_SHUT_DETAIL[shut](homeName.value),
       name: TIER_LABEL[q.tier],
       // ⭐⭐ THE ODDS REPLACED THE SQUAD (round 21 #2). `Squad 55` was ours, on a scale the card never
       // printed her own number on, so there was nothing to compare it to; this is a measured share of
       // careers out of this build. ⚠ THE WINDOW IS NAMED ONCE UNDER THE LIST, not three times on it.
-      odds: `Top 100 for ${COLLEGE_TIER_ODDS[q.tier].top100In100} in 100`,
+      //
+      // ⭐⭐⭐ ROUND 26 #3a – AND IT IS SAID IN WORDS NOW, BECAUSE `Top 100 for 74 in 100` WAS NOT A
+      // SENTENCE. The owner asked what it meant. It read as a label ("Top 100") followed by two
+      // numbers with no verb between them, so the quantity was unrecoverable: 74 what, out of which
+      // hundred, measured when. It is a COUNT OF CAREERS – of a hundred girls who took this place,
+      // how many touched the world top 100 in the four years after they left – and the line now says
+      // that, with the same figure it always carried. The window stays under the list, once.
+      odds: `${COLLEGE_TIER_ODDS[q.tier].top100In100} in 100 reach the world top 100`,
       price: `${formatCents(q.costPerYearCents)} a year`,
       // ⚠ THE BAND IS THE HEADLINE AND THE PERCENTAGE IS THE WORKING – the name is a summary of the
       // figure and not a replacement for it. A walk-on is named as one: nobody funded her, and she may
@@ -408,8 +432,16 @@ useDialogFocus(card)
               </span>
               <!-- ⭐⭐ MEASURED, WHERE `Squad {{ }}` WAS INVENTED (round 21 #2). The owner asked for
                    the place's quality as an odds he could compare something to, and he was right that
-                   a squad number is not one. ⚠ AND THE THREE ARE NEARLY THE SAME, which is the
-                   finding rather than a bug: what a dearer place changes is the bill, not her odds. -->
+                   a squad number is not one.
+
+                   ⚠⚠ THE COMMENT THAT WAS HERE SAID «THE THREE ARE NEARLY THE SAME» AND IT WAS TWO
+                   TABLES OUT OF DATE (round 26 #3b). It described 38 / 40 / 34, the figures re-measured
+                   away in the same round they were written; the shipped table is 85 / 93 / 74 and the
+                   dear place is NINETEEN points behind the middle one. That is not a bug and not an
+                   inversion – `the-college-answers-2026-08.md` §10i measured it and named the cause:
+                   eleven of 53 careers at the dear place never finish, and among the ones the bill did
+                   not end the row is 85 / 94 / 82. **The dear place's deficit is money, not tennis** –
+                   which is what the bill line under this one is for. -->
               <span class="fork-place-line">{{ row.odds }} · {{ row.award }}</span>
               <span class="fork-place-line">{{ row.bill }}</span>
               <!-- ⚠ A FACT, NEVER A REFUSAL. She may take a place the family cannot pay for: it goes
