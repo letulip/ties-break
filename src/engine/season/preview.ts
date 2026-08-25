@@ -51,7 +51,7 @@ import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 import { fastMatchProbability } from '../match/engine'
 import { ratingOf } from '../match/rating'
-import type { MatchPlayer } from '../match/types'
+import type { MatchPlayer, Surface } from '../match/types'
 import { rivalConditions, rivalMatchPlayer } from './rival'
 import {
   JUNIOR_TOUR,
@@ -143,8 +143,14 @@ function strengthOf(alive: readonly MatchPlayer[], kid: MatchPlayer, ranking: Ra
 
 /** Decorative weather. Its own sub-stream so it can never perturb the draw, and keyed on the event
  *  so a tournament's day is the same every time the card is rendered. Bands are loosely seasonal by
- *  surface: clay is the spring/summer swing, grass high summer, hard the shoulders. */
-export function eventTemperature(seed: string, event: SeasonEvent): number {
+ *  surface: clay is the spring/summer swing, grass high summer, hard the shoulders.
+ *
+ *  ⚠ ROUND 26 #6 – IT TAKES AN ID AND A SURFACE, NOT A `SeasonEvent`, AND THAT IS A WIDENING RATHER
+ *  THAN A CHANGE. A `SeasonEvent` still satisfies it, every existing call site is byte-identical and
+ *  no number moved; what it buys is that the College League – a fixture with no calendar event and
+ *  no rung behind it – gets its day out of the SAME function rather than out of a second copy of
+ *  this formula. Two weather functions is how one tournament comes to have two days. */
+export function eventTemperature(seed: string, event: { id: string; surface: Surface }): number {
   const rng = rngFromSeed(`${seed}:weather:${event.id}`)
   const [lo, hi] =
     event.surface === 'grass' ? [19, 29] : event.surface === 'clay' ? [16, 28] : [12, 26]

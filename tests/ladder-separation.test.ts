@@ -81,7 +81,15 @@ describe('S1 — the tournament overlay reads the table the tournament is played
       if (world.pendingTournament) {
         const snap = toSnapshot(world)
         const pending = snap.pending!
-        const track = TIERS[pending.tier].track
+        // ⚠ ROUND 26 #6 RE-AIM, NOT A WEAKENING. `PendingView.tier` is `TierId | null` now, because
+        // the College League walks this same view and has no rung. The guard below is about the TOUR
+        // – "the overlay quotes the table the tournament is played on" – and the arm it runs in is
+        // `world.pendingTournament`, which is a tour reveal by construction and is never written
+        // inside the college freeze. So the tier is asserted present rather than defaulted: a null
+        // arriving here would mean the amateur view had reached the tour's own reveal field, which
+        // is a real regression and must fail loudly instead of being coerced away.
+        expect(pending.tier, 'a tour reveal always names its rung').not.toBeNull()
+        const track = TIERS[pending.tier!].track
 
         // (a) the overlay is told which table it is on, and it is the event's own.
         expect(pending.ladder).toBe(track)

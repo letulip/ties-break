@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  SAVE_SCHEMA_VERSION,
   createWorld,
   hireMasseur,
   masseurUnlocked,
@@ -420,7 +421,11 @@ describe('6. the save – v58 -> v59 (extended in place by step 2, on the same u
   it('the real v58 fixture migrates to hired false, the middle rung, travel off – and nothing invents a hire', () => {
     const DIR = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
     const save = migrateSave(JSON.parse(readFileSync(`${DIR}/v58.json`, 'utf8')))
-    expect(save.schemaVersion).toBe(59)
+    // ⚠ ROUND 26 #6 RE-AIM: `migrateSave` always lands on the CURRENT schema, and the ladder gained
+    // v60. What this case is about is the v58 -> v59 BLOCK's own output, asserted line by line
+    // below; the version number is the ladder's business and is read from the constant so a future
+    // bump cannot make this a third thing to remember.
+    expect(save.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect(save.masseurHired).toBe(false)
     expect(save.masseurSessionsPerWeek, 'the dial opens on the professional default').toBe(4)
     expect(save.masseurSessionsPerWeek).toBe(ECONOMY.masseur.defaultSessions)

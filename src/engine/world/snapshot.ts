@@ -30,6 +30,12 @@ import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, sch
 // neither closes a cycle back into this file the way `world/college.ts` would.
 import { ENDINGS } from '../ending'
 import { chosenQuoteOf } from '../collegeOffer'
+/** ⭐⭐⭐ ROUND 26 #6 – THE COLLEGE LEAGUE'S REVEAL RIDES ON `Snapshot.pending`. The edge points
+ *  snapshot -> college, the same direction `./endings` -> `./college` already runs; college.ts
+ *  deliberately imports `./ladder` rather than this module (its own TB-07 note) so there is no cycle
+ *  to close here. */
+import { collegeLeagueRevealMatches, collegeLeagueRevealOpen } from './college'
+import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
 import { axisReadings, buildRadar, buildTrainingRead } from '../radar'
 import { previewEvent, eventCrowd, eventTemperature } from '../season/preview'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
@@ -55,6 +61,7 @@ import {
   type StopReason,
   type SeasonSupply,
   type UpcomingEvent,
+  type WorldEvent,
 } from '../../shared/protocol'
 import {
   KID_ID,
@@ -623,11 +630,70 @@ export function playerShortName(world: WorldState, id: string): string {
   return formatShortName(ai?.name ?? id)
 }
 
+/**
+ * ⭐⭐⭐ ROUND 26 #7 – THE FEED'S WINDOW, AND THE ONE PROMISE IT WAS SILENTLY BREAKING.
+ *
+ * The owner, having played four college years: «Реплеев этих матчей из п.6 нигде нет, ни в news
+ * feed, ни в календаре».
+ *
+ * ⚠⚠ THE ROWS WERE THERE THE WHOLE TIME, WHICH IS WHY THIS IS A WINDOW FIX AND NOT A WRITER FIX.
+ * MEASURED ON HIS OWN SAVE (`tennis-sim_alice-cfbv_w502.tsave`, v59, week 502): all eight College
+ * League matches and all three Nations Cup rubbers are still in `world.events`, every one of them
+ * `keep: true`, every one of them carrying its `match` record and its seed. `pruneEvents` had done
+ * its job perfectly. What dropped them was THIS line: a positional `slice(-60)` over a 401-row
+ * ledger. Inside the freeze a college week writes about one row, so at week 480 the sixty-row window
+ * still reached back to week 273 and all eight were openable; the moment she graduated and the tour
+ * started writing again the window collapsed to weeks 493-502 and held twenty income rows, thirty
+ * expense rows, nine info rows and one milestone – ZERO matches. The feed he was looking at had ten
+ * rows in it and not one of them was a match.
+ *
+ * ⚠ SO THE FIX IS THE ENGINE'S OWN WORD HONOURED ONE LAYER FURTHER OUT. `world/college.ts` writes
+ * these rows `keep: true` under a comment that says exactly what the flag is for – «a week she is
+ * still allowed to watch has to still be in the feed to open. Twelve rows at the very outside, over
+ * a whole degree.» `pruneEvents` obeyed that; the snapshot did not, and the two together meant the
+ * promise held in the save and failed on the screen.
+ *
+ * ⚠ MATCH ROWS ONLY, AND THE NARROWNESS IS DELIBERATE. `keep: true` is also carried by every
+ * milestone, and pinning twenty-seven of those to the top of the news feed for the rest of a career
+ * would be a product change nobody asked for. A kept row with a `match` on it is the one thing whose
+ * whole purpose is to be RE-OPENED later, and it is bounded by construction: 39 kept rows in his
+ * 502-week career, of which 11 carry a match, against a 21/0 split in a 570-week career with no
+ * college in it. The cost is a dozen rows at the outside.
+ *
+ * ⚠ AND IT IS A UNION IN LEDGER ORDER, NOT AN APPEND. `world.events` is chronological and every
+ * reader downstream assumes that (HomeScreen groups by week descending, `spanDigest` filters a week
+ * window, `thisWeekScore` scans backwards); a tail with old rows stapled on would put week 324 after
+ * week 502. The rows keep their positions and nothing is duplicated.
+ */
+function snapshotEvents(world: WorldState): WorldEvent[] {
+  const window = world.events.length - SNAPSHOT_EVENTS
+  if (window <= 0) return world.events.slice()
+  const out: WorldEvent[] = []
+  for (let i = 0; i < world.events.length; i++) {
+    const e = world.events[i]
+    if (i >= window || (e.keep === true && e.match !== undefined)) out.push(e)
+  }
+  return out
+}
+
 // The live view of an in-progress reveal (drives TournamentFlow). Lean: the revealed path, the
 // current round's opponent + record, and the finale copy. Scorelines belong to the record and are
 // never shown by the UI before a match has been watched/skipped.
 export function pendingView(world: WorldState): PendingView | undefined {
   const p = world.pendingTournament
+  // ⭐⭐⭐ ROUND 26 #6 – TWO SOURCES, ONE VIEW, AND THAT IS THE WHOLE OF HOW THE COLLEGE LEAGUE GETS
+  // THE TOUR'S FLOW. The owner: «в чем проблема использовать наш флоу турниров полностью и дать
+  // возможность игроку их смотреть и сопереживать? Я уже просил это сделать».
+  //
+  // ⚠⚠ IT IS A PROJECTION AND NOT A SECOND `pendingTournament`, which is what keeps round 24's law
+  // and round 25's amateur line both intact. `world.pendingTournament` is still never written inside
+  // the freeze – so `COLLEGE_REVEAL_REFUSAL` still guards a state that cannot occur – and there is
+  // no `SeasonEvent` and no `TierId` anywhere near this, so `finalizeTournament`'s points table,
+  // `prizeCentsFor` and `trophiesByTier` are unreachable from it by construction rather than by a
+  // branch somebody has to remember. Everything downstream of `snapshot.pending` – TournamentFlow
+  // mounting, the college bar standing down, `screenBusy` holding the popups, the global week bar's
+  // resume press – then works with no change at all, because it was all written against this field.
+  if (!p) return collegeLeaguePendingView(world)
   if (!p) return undefined
   const event = eventById(world, p.eventId)
   if (!event) return undefined
@@ -763,6 +829,89 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // stream nothing (the frozen 41550 / e6b0c709 capture is untouched by construction) and it is
     // the SAME figure the Season card printed while the event was still upcoming.
     crowd: eventCrowd(world.seed, event),
+  }
+}
+
+/** ⭐⭐⭐ ROUND 26 #6 – THE CHAMPIONSHIP, AS THE FLOW SEES IT.
+ *
+ *  ⚠ EVERY FIELD IS EITHER A FACT OF THE RECORD OR A DELIBERATE NULL. The four the tour fills off
+ *  `TIERS[event.tier]` – the rung, the ladder's name, the points and the crowd – have no answer for
+ *  a student field, and each one says so in the way that is true of it rather than by borrowing a
+ *  neighbour's: `tier` is null (there is no rung), `points` is 0 (nothing is awarded), `crowd` is 0
+ *  (we do not model a student gate, and the screen omits the cell rather than dashing it).
+ *
+ *  ⚠ AND THE FINISH INDEX IS DERIVED FROM THE RUN, NOT INVENTED. `rounds - roundsWon` is 0 for the
+ *  champion, 1 for the beaten finalist and so on, so `finishLabel` – the engine's own namer – writes
+ *  «Champion» / «Runner-up» / «Semifinalist» with no second idea of what a round is called, and the
+ *  flow's own `kidChampion` / `isRunnerUp` poster routing works unmodified. */
+function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
+  if (!collegeLeagueRevealOpen(world)) return undefined
+  const reveal = world.college!.leagueReveal!
+  const run = world.college!.pendingLeague
+  const matches = collegeLeagueRevealMatches(world)
+  // Defensive, and it is the shape `pendingView`'s own `if (!event) return undefined` keeps: a
+  // reveal whose rows are gone has nothing to walk, and a flow mounted over nothing is worse than no
+  // flow. `resolveCollegeLeague` writes the rows and the reveal in the same call, so this is a
+  // tripwire rather than a path.
+  if (!run || matches.length === 0) return undefined
+  const revealed = Math.min(reveal.revealed, matches.length)
+  const drawSize = COLLEGE_LEAGUE.drawSize
+  const surface = COLLEGE_LEAGUE.surface
+  const finished = revealed >= matches.length
+  const kidFinish = run.rounds - run.roundsWon
+  const bracket: PendingBracketRound[] = matches.slice(0, revealed).map((m) => ({
+    roundLabel: stageLabel(m.round, drawSize),
+    oppName: formatShortName(m.oppName),
+    kidWon: m.winnerId === KID_ID,
+    score: m.score && m.bId === KID_ID ? flipScore(m.score) : m.score,
+  }))
+  const current = matches[Math.min(revealed, matches.length - 1)]
+  return {
+    // ⚠ THE REVEAL'S OWN ID AND NOT A MATCH'S. App.vue keys `tournamentHidden` off this, so it has to
+    // be one value for the whole walk; it names no tier for `collegeLeagueMatchId`'s own reason.
+    eventId: `college-w${reveal.week}`,
+    tier: null,
+    surface,
+    temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface }),
+    roundLabel: stageLabel(current.round, drawSize),
+    // She is at a university and the family is not paying a coach – `collegeCoachFactor` is the
+    // programme's staff, not a man on a fare. Nobody travelled with her, and the card says nothing.
+    coachTravelled: false,
+    // ⚠ THE LADDER IS CARRIED BECAUSE THE TYPE HOLDS IT AND THE SCREEN DOES NOT PRINT IT HERE. Both
+    // ranks below are null, so there is no comparison for a table name to qualify; `TournamentFlow`
+    // states the amateur rule in that line's place.
+    ladder: 'wta',
+    // ⚠⚠ NULL ON BOTH SIDES, AND IT IS THE SAME RULING `PendingView.ladder` CARRIES READ FROM THE
+    // OTHER END. Her professional rank is a number in a table this fixture is not played in, and the
+    // student across the net has none at all; printing hers beside the other woman's blank would
+    // invite exactly the cross-currency comparison the ladder split exists to stop.
+    kidRank: null,
+    opponent: {
+      name: formatShortName(current.oppName),
+      // ⚠ NO NATION, and `collegeLeagueOpponent` says why in as many words: a tie is her country
+      // against another country and the shirt is the point of it; a student draw is not that.
+      nation: '',
+      rank: null,
+      // ⚠ OFF THE FROZEN MATCH PLAYER, exactly as the tour's own opponent age is, and `undefined` on
+      // a record saved before ages were composed – a blank, never a guess (`LEGACY_SNAPSHOT_AGE` is
+      // the match engine's arithmetic fallback, not a fact about a person).
+      ageYears: current.b.age !== undefined && Number.isFinite(current.b.age) ? Math.floor(current.b.age) : null,
+    },
+    kidMatch: revealed < matches.length ? current : undefined,
+    bracket,
+    // ⚠ EMPTY, AND IT IS AN HONEST EMPTY. `playCollegeLeague` composes her side of the draw and plays
+    // only her matches – the other half of the bracket is never simulated – so there is no full draw
+    // to show and `BracketTabs` correctly draws nothing rather than half a sheet.
+    fullBracket: [],
+    finished,
+    kidChampion: wonTheLeague(run),
+    tierLabel: COLLEGE_LEAGUE.label,
+    // ⚠⚠ ZERO, AND IT IS THE CONSTRAINT RATHER THAN A PLACEHOLDER (round 25's ruling). A student
+    // fixture paying WTA/ITF points would make four years of college a quiet ranking route and the
+    // fork would stop being a real choice.
+    points: 0,
+    finishLabel: kidFinish <= 0 ? finishLabel(0) : finishLabel(Math.min(kidFinish, COLLEGE_LEAGUE_ROUNDS)),
+    crowd: 0,
   }
 }
 
@@ -1013,7 +1162,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // the field stays non-null for the rest of the career (see App.vue's `showTourBriefing`, and the
     // note on `buildTourBriefing` for why the trigger is the crossing rather than the season boundary).
     tourBriefing: buildTourBriefing(world),
-    events: world.events.slice(-SNAPSHOT_EVENTS),
+    events: snapshotEvents(world),
     // ⚠ THE DURABLE LEDGER, WHOLE, and it is here because the 60-event window above is exactly the
     // wrong source for it. Milestone EVENTS carry `keep: true` so they survive `pruneEvents` in the
     // world - but `slice(-60)` is positional, so a first title from four seasons ago falls out of the

@@ -29,6 +29,9 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
+  skipTournament,
+  collegeLeagueRevealOpen,
+  closeTournament,
   createWorld,
   answerFork,
   chooseGift,
@@ -87,11 +90,26 @@ function answerCollegeAndDepart(world: WorldState, rng: Rng, tier?: CollegeTier)
   for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) tickWeek(world, rng)
 }
 
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP, AND IT IS NOT A WEAKENING.
+ *  `resumeFromCollege` used to report the championship week and keep ticking; the owner's complaint
+ *  was exactly that («опять сообщили только постфактум»), so the year now PAUSES on it and
+ *  `TournamentFlow` walks the matches. Every walk helper in this suite therefore has to answer the
+ *  reveal the way the player does, exactly as it already answers her birthday one line down and a
+ *  tour reveal one function up – «Skip all rounds» then the finale's «Continue», which are
+ *  `skipTournament` and `closeTournament` dispatched at the college reveal. What the suite MEASURES
+ *  is unchanged: the same years, the same championships, the same letters. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
   const { world, rng } = atTheFork(seed)
   answerCollegeAndDepart(world, rng, tier)
   for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
   return world
@@ -101,6 +119,7 @@ function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
 function spendYears(world: WorldState, rng: Rng, years: number): void {
   for (let press = 0; press < 3 * years && world.college!.years.length < years && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
 }
@@ -605,10 +624,15 @@ describe('a career migrated mid-college', () => {
     // ...and the years it has LEFT are ordinary years: the next one holds a championship.
     // ⚠ Round 24: an ordinary year pauses on her birthday too – a migrated career's remaining years
     // are asked properly, so the walk is press-answer-press like everyone else's.
+    // ⚠ ROUND 26 #6 re-aim: and it pauses on the championship as well, which is the point of the
+    // round – a migrated career is not cheated of the flow, it simply is not offered one for a year
+    // it already lived. So the loop answers both questions, and its ceiling grows from 3 to 4
+    // presses because the year now holds one more stop than it did.
     const before = world.college!.years.length
     const rng = resumeMain(world.rngMain)
-    for (let press = 0; press < 3 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     const banked = world.college!.years

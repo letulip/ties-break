@@ -930,9 +930,33 @@ const FROZEN = {
    *  running: the dial and the stance are plain state, the fare is a subtraction in the play arm,
    *  and the tour relief is post-strain arithmetic – ZERO draws on any stream. The frozen MAIN
    *  capture (41550 / e6b0c709) is not re-pinned and was re-run green beside this re-freeze. */
-  middleGrinder: '2e45cbb90ff4be9e168f66909792b4aaf8fba13fe9f178a7987d35ef7a85198e',
+  /** ⚠ MOVED WITH ITS TWINS ONCE MORE (25.08, round 26 #6 – the College League is WALKED, schema
+   *  v60), and again by EXACTLY ONE LINE, which this time is the `schemaVersion` number alone: the
+   *  new field lives INSIDE `CollegeState` (`college.leagueReveal`), and `world.college` is null in
+   *  all three of these careers, so not one key was added to their serialisation. `PRE_V60` below is
+   *  the proof rather than the claim: rolling the schema back to 59 on the NEW world reproduces the
+   *  previous three hashes byte for byte, for all three careers, with no key dropped.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, and the control is a detached
+   *  worktree at the branch base `e9f76ff` – this branch with my own work reverted, never the
+   *  previous commit. All three arms run separately with their flags checked against the printed
+   *  headers (the zsh word-split that swallowed them once is recorded two paragraphs up). The
+   *  result: **one line of 69 differs on every arm, and it is `schemaVersion`**
+   *  (3e1e967e9b79 -> 39fa9ec190ee). `rngMain`, `results`, `season`, `cohort`, `events`, `entries`,
+   *  `fundsCents`, `condition`, `injury`, `injuryHistory`, `careerTotals`, `skills`, `kidRank` –
+   *  every other key byte-identical on all three.
+   *
+   *  ⚠ AND THAT IS BY CONSTRUCTION. Everything this wave added is behind the college freeze:
+   *  `resolveCollegeLeague` opens the reveal on `COLLEGE_LEAGUE.seasonWeek` and only when
+   *  `inCollege`, the pause is inside `resumeFromCollege`, and the amateur `pendingView` arm is
+   *  reached only when a reveal is open. Week 156 is 32 weeks short of the fork, which
+   *  `walkFrozenCareer` asserts rather than assumes. `rngMain` is unmoved for the eighteenth wave
+   *  running, and it is the load-bearing half: the reveal is two integers and a cursor over rows the
+   *  tick had already written – ZERO draws on any stream. The frozen MAIN capture
+   *  (41550 / e6b0c709) is not re-pinned and was re-run green beside this re-freeze. */
+  middleGrinder: '34fbf77ad5f9386f988ee178b65c22e7cb27917b67ccc86784c5bcf04e9baf41',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: '748108f4e7a85ea47509da7778d9e3c5d31779bdc1231a9d1b8d246f9d010897',
+  eliteGrinder: '0c840ac02b7e1e39cdece9ad4ca8c7de2c6f5f31a235b07f99c8ecb7d9282759',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1150,7 +1174,7 @@ const FROZEN = {
    *  rolled back by a version number, but swapping ONLY `schemaVersion` on the new world still
    *  reproduces each, which is all those lines ever claimed. The frozen MAIN capture
    *  (41550 / e6b0c709) is untouched and was re-run green beside this re-freeze. */
-  selfTravelling: '2c87f829d75a63674900e88dad48ffe797e5c8a20d9b43e55c2f917b7a2ce2c1',
+  selfTravelling: '01ce24d25c79836ce619a70bdd3f1f4601f50d0191688c9df754946792844fcc',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1211,6 +1235,18 @@ const PRE_V59 = {
   middleGrinder: '3c1876b343be327f440f61f40a4f845e31274e74e729c3ad79807ca54d05e24c',
   eliteGrinder: '1ab7aae6fc3b6a5df9e778e878c6dffff91b099f2c19f00d8bcf3bed8f45927f',
   selfTravelling: '4f3d56881fdc538a6b326c9185de9fe1e3089ce2e077ae445055bd3cfd606e2d',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v59 – the identity that proves the v60 re-freeze
+ *  (round 26 #6, the College League walked through the tour's flow) moved the schema number and
+ *  NOTHING ELSE. These are the v59-era `FROZEN` values verbatim, and unlike v59's rollback no key
+ *  is dropped before hashing: v60's new field is `college.leagueReveal`, nested inside a
+ *  `CollegeState` that is null in every one of these careers, so their top-level serialisation is
+ *  the same 69 keys it was. */
+const PRE_V60 = {
+  middleGrinder: '2e45cbb90ff4be9e168f66909792b4aaf8fba13fe9f178a7987d35ef7a85198e',
+  eliteGrinder: '748108f4e7a85ea47509da7778d9e3c5d31779bdc1231a9d1b8d246f9d010897',
+  selfTravelling: '2c87f829d75a63674900e88dad48ffe797e5c8a20d9b43e55c2f917b7a2ce2c1',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v55 – the identity that proves the v56 re-freeze
@@ -1407,6 +1443,19 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v60: rolling ONLY the schema back to 59 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 26 #6 DID TO THESE THREE CAREERS, as an identity. The championship's
+    // reveal, the year's pause on it and the amateur `pendingView` arm all live behind a college
+    // state that is null here and a latch these careers never wear – asserted in `walkFrozenCareer`,
+    // not assumed. If the pause, the entry guard or the new snapshot arm had leaked into an ordinary
+    // 156-week tour career, THIS case would be red beside the freeze, which is the one signal a
+    // whole-world hash cannot otherwise give.
+    // ⚠ NO KEY IS DROPPED HERE, unlike v59's rollback: v60's field is nested inside `CollegeState`.
+    expect(careerHashAtSchema(5, 0, 59), '25k · middle coach · grinder').toBe(PRE_V60.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 59), '120k · elite coach · grinder').toBe(PRE_V60.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 59), '8k · self-coached · player').toBe(PRE_V60.selfTravelling)
   })
 
   it('⭐⭐ v59: rolling the schema back to 58 – and dropping the keys v59 added – reproduces the previous hashes byte for byte', () => {

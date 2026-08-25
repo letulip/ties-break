@@ -33,6 +33,8 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
+  skipTournament,
+  collegeLeagueRevealOpen,
   createWorld,
   tickWeek,
   enterEvent,
@@ -53,6 +55,20 @@ import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ENDINGS } from '../src/engine/ending'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
+
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
+ *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
+ *  complaint was that the year reported the tournament and ticked on past it. So every walk here
+ *  answers the reveal the way the player does – «Skip all rounds», then the finale's «Continue» –
+ *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
+ *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
+ *  The full note is in tests/college-league.test.ts. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 
 /** A career that has actually been played – a calendar, a cohort with a results ledger behind it and
  *  a junior table with real points on it. `tickWeek` is total (only `advanceWeeks` halts), so the
@@ -149,8 +165,12 @@ function bookAnEntryBetween(world: WorldState, fromWeek: number, toWeek: number)
  *  her birthday week so the gift dialog can be answered, so spending it is press-answer-press. The
  *  day together is the one option every birthday offers, so it is always a legal answer. */
 function spendTheYears(world: WorldState, rng: Rng): void {
-  for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+  // ⚠ ROUND 26 #6 re-aim: a year now holds THREE stops at the outside – the championship, her
+  // birthday, and the year's end – so the ceiling goes from 3 presses a year to 4. Nothing measured
+  // below moved; the walk simply answers one more question, the way a player does.
+  for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
 }
@@ -158,8 +178,9 @@ function spendTheYears(world: WorldState, rng: Rng): void {
 /** Press until ONE more year is banked – the boundary every card is read at. */
 function spendOneYear(world: WorldState, rng: Rng): void {
   const before = world.college!.years.length
-  for (let press = 0; press < 3 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
+  for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   }
 }

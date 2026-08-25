@@ -179,7 +179,12 @@ describe('round 23 #10 — and the VS card is where he actually reads it', () =>
         const oppId = first ? (first.aId === KID_ID ? first.bId : first.aId) : undefined
         const ownNation = oppId ? nationOf.get(oppId) : undefined
 
-        if (TIERS[pending.tier].track === 'domestic') {
+        // ⚠ ROUND 26 #6 RE-AIM: `PendingView.tier` is nullable now (the College League walks the same
+        // view with no rung). This arm is `world.pendingTournament`, a TOUR reveal by construction,
+        // so the rung is asserted present rather than defaulted – see the note in
+        // tests/ladder-separation.test.ts for why a null here would be a real regression.
+        expect(pending.tier, 'a tour reveal always names its rung').not.toBeNull()
+        if (TIERS[pending.tier!].track === 'domestic') {
           domesticSeen++
           expect(pending.opponent.nation).toBe(home)
           if (ownNation !== undefined && ownNation !== home) domesticReflagged++
