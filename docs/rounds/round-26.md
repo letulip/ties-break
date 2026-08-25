@@ -374,3 +374,47 @@ clock he suspects from three directions.
   clamp: «Year 1 of 4 is next – none spent», «Year 4 of 4 is next – 3 spent», «Year 4 of 4 under way
   – 3 spent» (the round-24 birthday pause), «All 4 years spent» for the unreachable state, kept so
   that no two states can ever share a sentence again.
+
+---
+
+## Second pass – his corrections after reading the first report (24.08)
+
+⚠ Four items come back. They are marked `[!]` on their ORIGINAL numbers, not renumbered: a repeat is
+a repeat, and the record has to show the first fix missing.
+
+- [!] **1 (again). «давай сделаем ее во-первых слева от основной, а во-вторых по условию, появляться
+  она должна на тех моментах, где либо в календаре нет ни одного события в ближайшие 5 недель, либо
+  у нее травма на 5+ недель или до конца травмы осталось не меньше 5 недель. Иначе это совершенно
+  дурной элемент управления получается, с которым пропускается всё, а еще и прямо под пальцем.»** –
+  the first pass shipped the pill wherever the engine could move time, which is almost always. His
+  rule is the opposite: it appears only when there is genuinely nothing to do. **build**: left of
+  the week button, and gated on an empty five-week calendar OR a layoff of five-plus weeks (total or
+  remaining).
+
+- [!] **2 (again). «по-моему в каждой стране есть домашний универ»** – ⭐ he is overruling the RULE,
+  not the sentence. The in-state rung is US-only because it models US in-state tuition; his ruling is
+  that a home university exists everywhere. **build**: the cheap rung becomes the home-country place
+  for every country, and the refusal it keeps (if any) must be one a player can meet.
+
+- [!] **4 (again). «надо переписать значит саму фразу для велосипеда … достаток здесь вообще не при
+  чем. У меня нет проблем с велосипедом, может быть это должна быть как раз просьба на первый ДР во
+  время учебы вообще.»** – the means licence was the wrong tool for this row. **build**: the WISH
+  beside `campusbike` is rewritten to be about the bicycle, and the pairing is a candidate for her
+  FIRST college birthday specifically.
+
+- [!] **10 (again). «у меня в ленте предпоследняя новость были из мира "до колледжа" на протяжении
+  всей учебы, а последняя жёлтым про её учебный год. Вот я бы хотел, чтобы "мир жил" и пока она в
+  колледже, пусть и сжато»** – five rows a season is still invisible at eight screens in 208 weeks.
+  **build**: the world must be visibly alive on the college screens themselves, compressed.
+
+- [ ] **14. «Alice поймала 2 травмы за половину сезона до колледжа, как будто многовато, но проверь
+  пожалуйста по всем показателям»** – **measure**, against the shipped rates and her own load.
+
+- [ ] **15. «Посмотри статистику побед/поражений для Alice за эту половину сезона до колледжа и
+  сверь с её показателями скиллов – всё ли соответствует?»** – **measure**: her realised win rate
+  against what her skills predict.
+
+- [ ] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
+  green, so the difference is the runner. Reproduce before guessing.
+
+- [ ] **17. «жду what и checklist проверенный по итогу»** – the PR body, every box earned.
