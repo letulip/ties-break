@@ -795,6 +795,23 @@ describe('the two readouts say the bonus exists, without overstating it', () => 
 // ⚠ `rngMain` IS AMONG THE UNMOVED FOR THE NINTH WAVE RUNNING – a label is not a draw – so the frozen
 // MAIN capture in tests/condition.test.ts is untouched (count 41550, hash e6b0c709).
 // =================================================================================================
+/** ⚠⚠ RE-TAKEN ONCE OVER THE COLLECTED ROUND 26, NOT MERGED (24.08). Two branches of the same round
+ *  moved these careers for different reasons – the college flow's schema v59→v60, and the field
+ *  news's new farewell/turnover lines – and merging two re-freezes TEXTUALLY yields hashes that
+ *  belong to neither tree. The agent that moved them second said so in its own report, and this is
+ *  that instruction carried out: the block is taken whole from one side and every constant re-taken
+ *  against the collected tree.
+ *
+ *  ⚠ PER-KEY DIFF FIRST, control = the branch base in a detached worktree, headers checked against
+ *  the invocation on all three arms: **exactly three keys of 69 differ – `schemaVersion`, `events`
+ *  and `nextEventId`** – and every one is accounted for. `rngMain`, `results`, `season`, `cohort`,
+ *  `fundsCents`, `kidRank` and `skills` are byte-identical, which is the claim that matters: no
+ *  career's tennis moved, only the version number and the news rows the world now prints.
+ *
+ *  ⚠ AND THE HEADER CHECK EARNED ITS KEEP A FOURTH TIME. The first run of this diff printed
+ *  `# preset 0 policy 1` for all three arms – zsh word-splitting had eaten the flags, exactly as
+ *  this file's protocol warns. Those captures were thrown away and the arms re-run with explicit
+ *  arguments. Read the header before believing any diff built from this tool. */
 const FROZEN = {
   /** PRESETS[5] · 25k middle family, middle coach · grinder policy (never travels) */
   /** ⚠ MOVED WITH ITS TWINS A FOURTH TIME (17.08, the college choice – schema v52). All three moved
@@ -930,45 +947,33 @@ const FROZEN = {
    *  running: the dial and the stance are plain state, the fare is a subtraction in the play arm,
    *  and the tour relief is post-strain arithmetic – ZERO draws on any stream. The frozen MAIN
    *  capture (41550 / e6b0c709) is not re-pinned and was re-run green beside this re-freeze. */
-  /** ⭐⭐ RE-FROZEN AGAIN (25.08, ROUND 26 #10 – THE TOUR'S OWN VOICE), AND THE DIFF IS TWO KEYS OF
-   *  SIXTY-SIX ON ALL THREE CAREERS: **`events` and `nextEventId`.** NO SCHEMA MOVED – this wave
-   *  adds no persisted field – so there is no new `PRE_V*` constant; the eight older rollback
-   *  identities are RE-ANCHORED against the new world exactly as the 18.08 rename re-anchored them
-   *  ("this wave changed the CAREER, not a schema field"), and each one still reproduces byte for
-   *  byte when only `schemaVersion` is rolled back, which is the property they exist to assert.
+  /** ⚠ MOVED WITH ITS TWINS ONCE MORE (25.08, round 26 #6 – the College League is WALKED, schema
+   *  v60), and again by EXACTLY ONE LINE, which this time is the `schemaVersion` number alone: the
+   *  new field lives INSIDE `CollegeState` (`college.leagueReveal`), and `world.college` is null in
+   *  all three of these careers, so not one key was added to their serialisation. `PRE_V60` below is
+   *  the proof rather than the claim: rolling the schema back to 59 on the NEW world reproduces the
+   *  previous three hashes byte for byte, for all three careers, with no key dropped.
    *
-   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands. This wave sits alone in its own
-   *  worktree with nothing committed, so the control is a detached worktree at the branch base
-   *  `e9f76ff` – which IS this tree with my change reverted. Null-arm checked BOTH ways (the 17.08
-   *  hazard): the A tree has no `src/engine/world/fieldNews.ts` at all and `grep -c championNote`
-   *  returns 0 in its `phaseAiWeek.ts`, while the B tree carries both the module and its two callers.
-   *  All three arms (preset/policy 5/0, 8/0, 0/1) – and the zsh word-split trap this file already
-   *  warns about bit again on the first run (all three headers came back `# preset 0 policy 1`);
-   *  that run was thrown away and the honest one has headers matching its invocations.
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, and the control is a detached
+   *  worktree at the branch base `e9f76ff` – this branch with my own work reverted, never the
+   *  previous commit. All three arms run separately with their flags checked against the printed
+   *  headers (the zsh word-split that swallowed them once is recorded two paragraphs up). The
+   *  result: **one line of 69 differs on every arm, and it is `schemaVersion`**
+   *  (3e1e967e9b79 -> 39fa9ec190ee). `rngMain`, `results`, `season`, `cohort`, `events`, `entries`,
+   *  `fundsCents`, `condition`, `injury`, `injuryHistory`, `careerTotals`, `skills`, `kidRank` –
+   *  every other key byte-identical on all three.
    *
-   *    MOVED (2 of 66 · 2 of 66 · 2 of 66):  **events · nextEventId**
-   *    UNMOVED IN ALL THREE: **rngMain · schemaVersion · results · season · seasonEntries · entries ·
-   *      cohort · fundsCents · financeWeeks · careerTotals · kidRank(+Wta/Domestic) · skills ·
-   *      condition · milestones · trophiesByTier · bestFinishByTier · offers · academy · injury** –
-   *      i.e. everything that is not the news feed.
-   *
-   *  ⚠ AND THE MECHANISM IS MEASURED RATHER THAN INFERRED. Dumping `world.events[].text` on both arms
-   *  (middle-grinder, 156 weeks): **`nextEventId` 1666 -> 1676, so TEN new rows in three seasons**
-   *  (3.3 a season: a turnover line and an intake line each season plus four named farewells), and
-   *  inside the 400-row window **18 champion lines are the same sentence with an age clause added**
-   *  ("🏆 P. Delgado won the World Tour 500." -> "…, at 27" / "…, at 17 – a first season on tour"),
-   *  two new rows appear at W155/W156, and two ordinary rows from W130 are pushed out by them. That
-   *  last pair IS the row budget being spent, and it is spent on the ORDINARY class alone – no
-   *  milestone and no match row moved, which is `pruneEvents`' own order of sacrifice doing its job.
-   *
-   *  ⚠ `rngMain` IS AMONG THE UNMOVED FOR THE EIGHTEENTH WAVE RUNNING, and it is the load-bearing
-   *  half: `careerAt` and `fieldProsFor` are pure functions of (seed, chair, season) that re-derive
-   *  their own purpose-scoped sub-streams, and a feed row is not a draw. The frozen MAIN capture in
-   *  tests/condition.test.ts is NOT re-pinned (count 41550, hash e6b0c709) and was re-run green
-   *  beside this re-freeze. */
-  middleGrinder: 'ec84bd3a70b073dc2c9dac99b1e0480c67192c6719d37957984e2b0e10a5fd34',
+   *  ⚠ AND THAT IS BY CONSTRUCTION. Everything this wave added is behind the college freeze:
+   *  `resolveCollegeLeague` opens the reveal on `COLLEGE_LEAGUE.seasonWeek` and only when
+   *  `inCollege`, the pause is inside `resumeFromCollege`, and the amateur `pendingView` arm is
+   *  reached only when a reveal is open. Week 156 is 32 weeks short of the fork, which
+   *  `walkFrozenCareer` asserts rather than assumes. `rngMain` is unmoved for the eighteenth wave
+   *  running, and it is the load-bearing half: the reveal is two integers and a cursor over rows the
+   *  tick had already written – ZERO draws on any stream. The frozen MAIN capture
+   *  (41550 / e6b0c709) is not re-pinned and was re-run green beside this re-freeze. */
+  middleGrinder: '0cd2b78b9a31355d8eabb607f178a7a31656daae22b54fcd525a6459cb4c0232',
   /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels) */
-  eliteGrinder: 'f6016239d0b34983c6042ae6c8a82e12449ede6513b33127f1c6435f6db25325',
+  eliteGrinder: '29d54dc0c7d608793e957770827be18ee0021dc2e485579777b4d9ccce0f004c',
   /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
@@ -1186,7 +1191,7 @@ const FROZEN = {
    *  rolled back by a version number, but swapping ONLY `schemaVersion` on the new world still
    *  reproduces each, which is all those lines ever claimed. The frozen MAIN capture
    *  (41550 / e6b0c709) is untouched and was re-run green beside this re-freeze. */
-  selfTravelling: '13eda4a81943465cce2511b910d040e05c83b18cecb800e9feb9fa3195418c07',
+  selfTravelling: '1acaa64e1a8f2ce5b6aa3544b58c920fd0d614163c51c70fc5d76de2329a19b6',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
@@ -1247,6 +1252,18 @@ const PRE_V59 = {
   middleGrinder: 'c33d3d6d468b6263ddad737eb869c7a1facdd880a7aad0deae30c8201beaacc0',
   eliteGrinder: 'e83e59d2362e2409ebd84771c3bcb9ab35e02afe8acdb3827a29ed654378df44',
   selfTravelling: '13c5c38248a05a3825f4cb3d193b11ed976005589df4b53da28f28efb32e7d4f',
+}
+
+/** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v59 – the identity that proves the v60 re-freeze
+ *  (round 26 #6, the College League walked through the tour's flow) moved the schema number and
+ *  NOTHING ELSE. These are the v59-era `FROZEN` values verbatim, and unlike v59's rollback no key
+ *  is dropped before hashing: v60's new field is `college.leagueReveal`, nested inside a
+ *  `CollegeState` that is null in every one of these careers, so their top-level serialisation is
+ *  the same 69 keys it was. */
+const PRE_V60 = {
+  middleGrinder: 'ec84bd3a70b073dc2c9dac99b1e0480c67192c6719d37957984e2b0e10a5fd34',
+  eliteGrinder: 'f6016239d0b34983c6042ae6c8a82e12449ede6513b33127f1c6435f6db25325',
+  selfTravelling: '13eda4a81943465cce2511b910d040e05c83b18cecb800e9feb9fa3195418c07',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v55 – the identity that proves the v56 re-freeze
@@ -1443,6 +1460,19 @@ describe('the byte-identity of a career that does not travel', () => {
 
   it('...and for a self-coached family with the switch ON, which has nobody to send', () => {
     expect(careerHash(0, 1), '8k · self-coached · player').toBe(FROZEN.selfTravelling)
+  })
+
+  it('⭐⭐ v60: rolling ONLY the schema back to 59 reproduces the previous hashes byte for byte', () => {
+    // ⚠ THE WHOLE OF WHAT ROUND 26 #6 DID TO THESE THREE CAREERS, as an identity. The championship's
+    // reveal, the year's pause on it and the amateur `pendingView` arm all live behind a college
+    // state that is null here and a latch these careers never wear – asserted in `walkFrozenCareer`,
+    // not assumed. If the pause, the entry guard or the new snapshot arm had leaked into an ordinary
+    // 156-week tour career, THIS case would be red beside the freeze, which is the one signal a
+    // whole-world hash cannot otherwise give.
+    // ⚠ NO KEY IS DROPPED HERE, unlike v59's rollback: v60's field is nested inside `CollegeState`.
+    expect(careerHashAtSchema(5, 0, 59), '25k · middle coach · grinder').toBe(PRE_V60.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 59), '120k · elite coach · grinder').toBe(PRE_V60.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 59), '8k · self-coached · player').toBe(PRE_V60.selfTravelling)
   })
 
   it('⭐⭐ v59: rolling the schema back to 58 – and dropping the keys v59 added – reproduces the previous hashes byte for byte', () => {
