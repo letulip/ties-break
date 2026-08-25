@@ -3,7 +3,7 @@ type: spec
 status: current
 area: content/birthday
 canonical: true
-last-reviewed: 2026-08-13
+last-reviewed: 2026-08-25
 ---
 
 # The birthday, and what you give her
@@ -106,18 +106,27 @@ account, because she is earning now · the classic eighteenth watch · a trip th
 
 ### 19 to 21 – independence
 A deposit towards her own place · a car · something for a home that is no longer yours – *a kitchen
-table for her flat*, since round-18 #10a.
+table for her flat*, since round-18 #10a · **lessons in the language she keeps apologising for** ·
+**a storage unit for the boxes still in our garage** – the last two added by round-26 #9b, see §10.
 
 ### 22 to 28 – the peak, where things matter less
 A week with the family between seasons · jewellery · the thing she would never buy herself – *the
 painting from the gallery window*, since round-18 #10a. The concept survives in the note ("she has
 the money for it, she has had it for years, and she will not"); what changed is that the button now
-names an object, so a line about her can point at it.
+names an object, so a line about her can point at it. ⚠ **And since round-26 #4 that note is
+LICENSED** – it is the row's `means: 'plenty'` claim and it is swapped for a family that has not got
+the money (§9). **· a dog, and we keep it while she is away · the court at her first club,
+resurfaced** – added by round-26 #9b.
+
+⚠ **The peak band is declared once and the late band uses it** (`PEAK_GIFTS` in
+`world/birthday.ts`). It was two hand-kept copies of the same objects until this round asked both to
+grow.
 
 ### 29 and after – the late career
 **An album of the whole career** – and it is both the most moving option and the cheapest to build,
 because the data is already there: the diary, the memories, `captureMilestone`'s first title and
-first final per tier.
+first final per tier. The album is offered ALONGSIDE the peak band's five (§5.2's licensed repeat),
+so the band holds six.
 
 ## 2. The mechanic – the owner's three rulings, 11.08
 
@@ -403,3 +412,117 @@ call was added or removed. The sub-stream `seed:birthday:<age>` is drawn exactly
 times – `(n-1)` for the band shuffle, three for the four, one for the ask – and the test replays that
 count against an independent generator on the same key, so an extra draw anywhere diverges. MAIN is
 not reached at all: `tests/condition.test.ts` is green on 41550 draws / hash `e6b0c709`, unchanged.
+
+
+## 9. Round-26 #4 – a wish may not assume a wallet the family has not got
+
+**His line, 24.08**, reading `tennis-sim_alice-cfbv_w502.tsave` – Alice, 20, Year 2 of 4 on a
+scholarship:
+
+> «Очень странное пожелание на день рождения **She was looking fares home at two in the morning** для
+> студентки с кошельком 500к+ с предложением подарить велосипед.»
+
+**$584,375 in the family wallet and $59,220 in her own account.** The line is a good one for a family
+that cannot face the fare and a false one for his – the same defect class as R2-18's «Her own keys»,
+which asserted a residence the model had not got, one axis along.
+
+### 9a. The predicate, and where its numbers come from
+
+`src/engine/world/means.ts`. One named function, the shape R2-18 gave the life stage
+(`familyHomeVoice` / `collegeVoice`) rather than a wealth test re-derived per surface:
+
+| band | the wallet | read from |
+| --- | --- | --- |
+| `tight` | at or below **$8,000** | `ECONOMY.startingFundsCents.working` |
+| `comfortable` | between them | – |
+| `moneyed` | at or above **$120,000** | `ECONOMY.startingFundsCents.wealthy` |
+
+⚠ **Neither number is chosen.** The three opening war chests are the only BALANCES the design ever
+named – everything else in `ECONOMY` is a weekly flow or a per-bill factor – and the whole economy
+was tuned against them. `tight` is therefore "poorer than the game's own poorest family is on the day
+it starts", not "poor by a figure somebody liked".
+
+⚠ **The fare is the SANITY CHECK, not the source.** The dearest journey the domestic ladder prices is
+`TIERS.national.travelCostCents` at $400-900. At the `tight` ceiling a $900 fare is **11.3%** of
+everything the family has; at the `moneyed` floor **0.75%**; on his save **0.14%**. A threshold tuned
+against a fare would need re-tuning every time a tier's travel band moved.
+
+⚠ **The wallet is both purses** – `world.fundsCents + world.kidFundsCents`. v54 keeps them apart in
+the ledger and nothing here merges them; the question "is money scarce in this household" is asked of
+the money the household has, and his own report quoted both numbers in one breath.
+
+### 9b. Licence by FACT, not by a blacklist of words
+
+A row DECLARES what its words rest on – `BirthdayGift.means` is `'hardship' | 'plenty'` – and carries
+`unlicensed`, the same sentences for when the claim does not hold. Nothing scans copy for "fare" or
+"afford": the next hardship noun would walk straight past that, exactly as "the hall mirror" walked
+past the week-note blacklist. Three of the 33 rows make a claim:
+
+| row | claim | the swap |
+| --- | --- | --- |
+| `flighthome` | hardship | the ask loses the fares and keeps the distance |
+| `books` | hardship | the ask loses the prices and keeps the reading |
+| `neverbuy` | plenty | the note loses "she has the money" and keeps the years |
+
+⚠ **The asymmetry is deliberate.** Hardship needs the family to be actually `tight`; plenty is
+refused only when money is plainly scarce, because a mid-career family with $60,000 does have the
+money for a painting and stripping the line would be a second false sentence in place of the first.
+
+⚠ **THE OFFER NEVER SEES THE WALLET, AND CANNOT.** `birthdayOffer` takes (seed, age, alreadyGiven,
+atCollege) and no means; §0's ruling – ONE list for every background, no affordability test anywhere
+– is untouched, and the means reaches only `buildBirthdayPrompt` and `birthdayOptions`. What moves is
+a sentence: the identical discipline §8c's `again` is written under.
+
+### 9c. And the gift beside the wish was NOT a defect
+
+He read "a bicycle" as the child's. It is `campusbike` – *"A bicycle for getting about there"*,
+fifteen minutes between buildings – the COLLEGE band's own row, and correct for a girl of twenty in a
+hall of residence. Verified on a walked career rather than asserted: R2-18's band really is being
+picked, and the child's `bicycle` is unreachable at her residence at any age.
+
+## 10. Round-26 #9b – the offer walks the band instead of sampling it
+
+**His line, 24.08:** «Just a day together на день рождения случается подозрительно часто. Сколько у
+нас вариантов подарков? Неужели мы не можем нагенерить так, чтобы они если и повторялись, то не так
+часто?»
+
+**Measured first** (`tools/birthday-pool.ts`, 12 walked careers, 201 tour birthdays and 48 college
+birthdays). His impression was right and understated. The day was never the problem – it is on every
+dialog by his own 11.08 ruling – **the whole dialog repeated**:
+
+| | before | after |
+| --- | --- | --- |
+| consecutive birthdays with the IDENTICAL four rows (tour) | **100/189 = 53%** | **0/189 = 0%** |
+| longest run of identical dialogs in one career | **8** | **1** |
+| consecutive identical at college | **8/36 = 22%** | **0/36 = 0%** |
+| distinct gift ids in the catalogue | 29 | **33** |
+
+**The cause was arithmetic, not luck.** `shuffled(band.gifts).slice(0, 3)` samples WITH REPLACEMENT,
+and four bands held exactly three material gifts – C(3,3) = 1, so there was only ever one dialog to
+sample. The peak band alone is seven consecutive birthdays.
+
+**Both halves were needed, and the shape follows round 24's own ruling** (`docs/decisions.md`,
+19.08, on the college birthday lines): «one line per year and not a random pick, deliberately – four
+college birthdays is the whole of the population, so a pool would repeat within a single career.»
+
+1. **A wider pool.** Two rows each to the 19-21 and the peak bands: C(5,3) = 10 and, with the album,
+   C(6,3) = 20. The rule the tests hold is per birthday, not ">1": **a band must be able to print at
+   least as many dialogs as it holds birthdays**, bounded for the open-ended late band by
+   `ENDINGS.stopAskingAgeYears`. A one-year band (17, 18) cannot repeat inside itself and is left.
+2. **A walk, not a draw.** Every combination of the band is ENUMERATED, shuffled ONCE per career per
+   band on `seed:birthday:cycle:<band>`, and indexed by her age. Consecutive birthdays take
+   consecutive entries, so two in a row can never be identical while the band has more than one
+   combination, and the whole population is seen before anything comes round again.
+
+⚠ **No persisted state, so no schema move.** The walk is a pure function of (seed, band, age) exactly
+as the draw it replaces was a pure function of (seed, age); it is still immutable and still cannot be
+re-rolled by reloading, and a player's choice still cannot move it.
+
+⚠ **The draw counts moved and the guard was re-aimed, not weakened.** There are two sub-streams now:
+`seed:birthday:cycle:<band>` drawn C(n,3)−1 times once per career, and `seed:birthday:<age>` drawn
+exactly **four** times for every band – three to order the rows, one for the ask. MAIN is not reached
+by either: `tests/condition.test.ts` is green on 41550 draws / hash `e6b0c709`, unchanged.
+
+⚠ **§8d's sentence about `gifts.length + 3` is superseded by this section**, and its determinism
+claim is not: every id is still unchanged and still persisted, and `giftNoun` still walks the whole
+catalogue.

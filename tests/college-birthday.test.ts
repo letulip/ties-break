@@ -51,6 +51,9 @@ import {
   tickWeek,
   toSnapshot,
   SAVE_SCHEMA_VERSION,
+  // ⭐ ROUND 26 #4 – the college band and the always-offered day, read by the wish/gift proof below.
+  BIRTHDAY_COLLEGE_BAND,
+  BIRTHDAY_DAY_TOGETHER,
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
@@ -405,5 +408,156 @@ describe('a v56 save migrated mid-college is not retro-asked and not retro-bille
     expect(collegeRows, 'one row, the present week\'s – no retro-offers behind it').toHaveLength(1)
     expect(collegeRows[0].week).toBe(migrated.week)
     expect(pendingBirthday(migrated), 'and the question is spent').toBeNull()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 26 #4 – THE WISH AND THE GIFT BESIDE IT, AT HER STATE AND ON HIS WALLET
+// =================================================================================================
+//
+// The owner, 24.08, on `tennis-sim_alice-cfbv_w502.tsave` – Alice, 20, Year 2 of 4 on a scholarship:
+//
+//   «Очень странное пожелание на день рождения "She was looking fares home at two in the morning"
+//    для студентки с кошельком 500к+ с предложением подарить велосипед.»
+//
+// TWO CLAIMS IN ONE LINE, and they turn out to be different findings:
+//
+//   THE WISH was a real defect. $584,375 in the family wallet and $59,220 in her own account, and
+//   the line assumes a family that cannot face the fare. `world/means.ts` licenses it now.
+//
+//   THE BICYCLE WAS NOT. The row he saw is `campusbike` – "A bicycle for getting about there",
+//   fifteen minutes between buildings – which is the COLLEGE band's own row and correct for a girl
+//   of twenty in a hall of residence. The child's `bicycle` (band 0-14, "for the road to school")
+//   is unreachable at her age and residence, and the assertion below is what proves it rather than
+//   asserts it: R2-18's band really is being picked on a walked career.
+//
+// ⚠ RENDERED, NOT READ OFF THE CATALOGUE. Every string below comes out of
+// `toSnapshot(world).birthdayPrompt`, which is the object BirthdayDialog prints.
+describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got', () => {
+  const FARES = 'She has been looking up fares home at two in the morning and booking none.'
+  const NO_FARES = 'The journey home is four hundred miles and she has never once asked us to book it.'
+
+  /** Every college birthday of one career, rendered, with the household wallet forced on the day. */
+  function collegeBirthdays(seed: string, walletCents: number, kidCents: number) {
+    const { world, rng } = openedAtCollege(seed, 6, 15)
+    const prompts: Array<{ age: number; ask: string; ids: string[]; labels: string[] }> = []
+    for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) === null) continue
+      // ⚠ SET ON THE BIRTHDAY WEEK ITSELF, both purses, because the claim is about what the
+      // household has ON THE DAY and four college years of base costs move it.
+      world.fundsCents = walletCents
+      world.kidFundsCents = kidCents
+      const prompt = toSnapshot(world).birthdayPrompt!
+      prompts.push({
+        age: prompt.age,
+        ask: prompt.ask,
+        ids: prompt.options.map((o) => o.id),
+        labels: prompt.options.map((o) => o.label),
+      })
+      answerBirthday(world)
+    }
+    return prompts
+  }
+
+  it('⭐⭐ ON HIS OWN NUMBERS: no college birthday tells him she was pricing tickets she could not buy', () => {
+    // His save, to the cent: $584,375 in the family wallet, $59,220 in hers.
+    const seen: string[] = []
+    for (const seed of ['means-college-a', 'means-college-b', 'means-college-c']) {
+      const prompts = collegeBirthdays(seed, 584_375_00, 59_220_00)
+      expect(prompts.length, `${seed}: the four college birthdays really happened`).toBe(4)
+      for (const p of prompts) seen.push(p.ask)
+    }
+    expect(seen.length, 'twelve rendered college birthdays').toBe(12)
+    expect(seen, 'the hardship wish reached a family with half a million').not.toContain(FARES)
+  })
+
+  it('⭐⭐ ...and the arm is live: the same wish, the same walk, on a family that really is counting', () => {
+    // ⚠ THE OTHER HALF, AND WITHOUT IT THE TEST ABOVE PROVES NOTHING – an ask that never renders at
+    // all would pass it. Same seeds, same weeks, one number different.
+    const seen: string[] = []
+    for (const seed of ['means-college-a', 'means-college-b', 'means-college-c']) {
+      for (const p of collegeBirthdays(seed, 1_200_00, 0)) seen.push(p.ask)
+    }
+    expect(seen, 'the hardship wish is unreachable even where it is true').toContain(FARES)
+    expect(seen, 'the licensed family got the wealthy wording').not.toContain(NO_FARES)
+  })
+
+  it('⭐ THE GIFT BESIDE THE WISH: the bicycle on her screen is the campus one, at every college birthday', () => {
+    // R2-18's band, verified on a WALKED career rather than on `birthdayOffer(seed, age, [], true)`.
+    // The child's row is "A bicycle" / "For the road to school, and nothing to do with any of this";
+    // hers is "A bicycle for getting about there" / fifteen minutes between buildings.
+    //
+    // ⚠ THE FIXTURE FORCES THE FORK EARLY (see `openedAtCollege` – sixty lived weeks, then the
+    // question), so these birthdays land at fifteen to nineteen rather than at his twenty. That
+    // makes the claim STRONGER rather than weaker: R2-18's rule is that RESIDENCE outranks the age,
+    // and at sixteen the age band would have offered a frame, driving lessons and a winter coat. The
+    // age is recorded in the message so a reader can see which band was overruled. His own age is
+    // covered by the walked-to-the-real-fork case below.
+    const collegeIds = new Set(BIRTHDAY_COLLEGE_BAND.gifts.map((g) => g.id))
+    for (const seed of ['means-college-a', 'means-college-b']) {
+      for (const p of collegeBirthdays(seed, 584_375_00, 59_220_00)) {
+        expect(p.ids, `age ${p.age}: the child's bicycle reached a student`).not.toContain('bicycle')
+        for (const id of p.ids) {
+          if (id === BIRTHDAY_DAY_TOGETHER.id) continue
+          expect(collegeIds.has(id), `"${id}" is not a college-band gift`).toBe(true)
+        }
+        if (p.ids.includes('campusbike')) {
+          expect(p.labels[p.ids.indexOf('campusbike')]).toBe('A bicycle for getting about there')
+        }
+      }
+    }
+  })
+
+  it('⭐⭐⭐ HIS CASE, WALKED TO THE REAL FORK: twenty, Year 2 of 4, $584,375 – and the wish reads true', () => {
+    // ⚠ THE FIXTURE ABOVE IS FAST AND SYNTHETIC; THIS ONE IS HIS. The fork is not hand-set – she is
+    // ticked to it, so it is asked when school ends and the September departure lands where the
+    // calendar puts it, which is what makes her twenty in Year 2 exactly as his save is.
+    const world = createWorld('his-case', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
+    const rng = resumeMain(world.rngMain)
+    world.fundsCents = 584_375_00
+    world.kidFundsCents = 59_220_00
+    for (let i = 0; i < 320 && world.fork === null; i++) {
+      tickWeek(world, rng)
+      finishAnyReveal(world)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      if (pendingBirthday(world) !== null) answerBirthday(world)
+    }
+    expect(world.fork, 'the fork was asked by the calendar, not by the fixture').not.toBeNull()
+    answerFork(world, 'college')
+    for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
+      tickWeek(world, rng)
+      finishAnyReveal(world)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      if (world.ending === null && pendingBirthday(world) !== null) answerBirthday(world)
+    }
+    expect(world.ending?.type, 'she really departed').toBe('college')
+    if (pendingBirthday(world) !== null) answerBirthday(world)
+
+    const rendered: Array<{ year: number; age: number; ask: string; ids: string[] }> = []
+    for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
+      resumeFromCollege(world, rng)
+      if (pendingBirthday(world) === null) continue
+      world.fundsCents = 584_375_00
+      world.kidFundsCents = 59_220_00
+      const prompt = toSnapshot(world).birthdayPrompt!
+      rendered.push({
+        year: world.college!.years.length,
+        age: prompt.age,
+        ask: prompt.ask,
+        ids: prompt.options.map((o) => o.id),
+      })
+      answerBirthday(world)
+    }
+    expect(rendered.length, 'four college birthdays').toBe(4)
+    // HIS BIRTHDAY: Year 2 of 4. The ages are the calendar's, printed so the record is legible.
+    const his = rendered[1]
+    expect(his.age, `the four college birthdays landed at ${rendered.map((r) => r.age).join(', ')}`)
+      .toBeGreaterThanOrEqual(19)
+    expect(his.ask, 'the fares line survived on a family with $643,595').not.toBe(FARES)
+    // ...and not one of the four birthdays carries it, at any of her years
+    expect(rendered.map((r) => r.ask)).not.toContain(FARES)
+    // ...and the bicycle she is offered, where she is offered one, is the campus bicycle
+    for (const r of rendered) expect(r.ids, `year ${r.year}, age ${r.age}`).not.toContain('bicycle')
   })
 })
