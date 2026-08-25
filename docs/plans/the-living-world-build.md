@@ -175,6 +175,19 @@ Steps 1–3 are one wave's worth; each lands green alone. Step 0 is a morning.
    then ask the seat.*
 3. **Retirement news scope**: top-50 farewells (~4 a season) + one annual line, or more?
    *Recommendation: as stated – `EVENTS_CAP` arithmetic above; matches `NOTABLE_DEPARTURE_RANK`.*
+   ⭐⭐ **SHIPPED 25.08 AS RECOMMENDED, AHEAD OF THE REST OF THE PLAN AND WITHOUT IT** – round 26 #10
+   («В новостях во время колледжа вообще пустота»), which is this row arriving from the player's
+   side. [`src/engine/world/fieldNews.ts`](../../src/engine/world/fieldNews.ts): top-50 farewells
+   capped at `FIELD_NEWS.farewellsPerSeason` = 3, one turnover line and one intake line = **5 rows a
+   season**, all ordinary, measured at +7.3% of the freeze's news rows with the events array and its
+   kept count identical (401 / 39 in both arms). ⚠ **THE NEWS HALF ONLY**: nothing about the CARRY
+   (steps 1-2, Q1) shipped with it, so the field still re-deals its books each January and every
+   number in §§2-4 stands unchanged. What the news reports is the SUCCESSION, which `careerAt` has
+   walked since W4-LIVES. A second, unplanned line came out of the same measurement and is worth
+   recording here: the champion line now carries the champion's age and a first/last-season clause
+   at **zero row cost**, because the college freeze runs at `EVENTS_ORDINARY_FLOOR` (rest pinned at
+   120 of the 400) and hands the player only eight screens in 208 weeks – a once-a-season row is
+   outside his window by arithmetic, and a clause on a line already in it is not.
 4. **The champion-news contradiction** (backlog 5, ~91%): the carry makes the canonical universe
    the one that shapes the future – does the news switch to naming canonical champions for her
    entered events too? *Recommendation: yes, decide it WITH this wave; it is one line's source and

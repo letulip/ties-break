@@ -26,7 +26,7 @@ import type { TourWeek, WeekField } from './weekField'
 import { rivalField } from './weekField'
 import { rngFromSeed } from '../rng'
 import { TIERS } from '../season/calendar'
-import { isFieldProId, universeForTier } from '../season/fieldPros'
+import { FIELD, careerAt, isFieldProId, universeForTier } from '../season/fieldPros'
 import {
   ON_RAMP,
   WILD_CARD,
@@ -39,8 +39,8 @@ import {
   wildCardWindow,
 } from '../season/tournament'
 import { isSponsorReviewWeek } from '../offers'
-import { addEvent } from './ledger'
-import { acceptanceRank } from './ladder'
+import { addEvent, seasonIndexOf } from './ledger'
+import { acceptanceRank, fieldProsOf } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { tierMakesWorldNews } from './matchNews'
 import { playerShortName } from './snapshot'
@@ -350,7 +350,52 @@ function runAiTournament(
  *  news row: ZERO RNG, no ledger row, nothing any draw or ranking can see.
  *
  *  Names resolve through `playerShortName`, the same id→name function every bracket surface uses,
- *  so an `fp-` id comes back as a person rather than as an id. */
+ *  so an `fp-` id comes back as a person rather than as an id.
+ *
+ *  ⭐⭐⭐ ROUND 26 #10 – AND SINCE 25.08 THE LINE SAYS WHO SHE IS, NOT ONLY WHAT SHE WON.
+ *
+ *  The owner, of the four college years: «В новостях во время колледжа вообще пустота, как будто мир
+ *  умер». The inventory (`tools/college-news-probe.ts`) found the opposite of an empty feed – the
+ *  Home card at rest holds ~15 rows and ~10 of them are THIS line – so the silence was never a
+ *  missing row. It was that twenty-nine times a season the world said «a stranger won a tournament»
+ *  and there was no way to tell that the strangers were different strangers.
+ *
+ *  ⚠⚠ AND THE FIX HERE COSTS NOT ONE ROW OF THE FEED BUDGET, WHICH IS WHY IT IS A CLAUSE AND NOT A
+ *  SECOND EVENT – measured, not assumed. During a four-year freeze the feed runs at the ORDINARY
+ *  FLOOR and stays there: `rest` is pinned at exactly `EVENTS_ORDINARY_FLOOR` = 120 rows at every
+ *  one of the eight rest states, because her lifetime match rows (241-257, protected as radar
+ *  evidence) plus her kept milestones (23-40) fill the remainder of `EVENTS_CAP` = 400. So the
+ *  ordinary window is ~24 weeks deep, the snapshot then takes the last 60 rows of ALL classes on
+ *  top of that (~11 weeks), and a college player sees the world only at the eight weeks a press
+ *  hands control back. A once-a-season row written at the season boundary is therefore invisible to
+ *  him BY CONSTRUCTION – the arithmetic, not bad luck. A clause on a line that is already in every
+ *  window he opens (~10 of the ~15 rows on the card) is seen every time and costs nothing.
+ *
+ *  ⚠ THREE FACTS, ALL READ AND NONE INVENTED. Her age is `AiPlayer.ageYears` – for a professional
+ *  that is `debutAge + seasons since her debut`, the succession's own arithmetic – and the two
+ *  clauses are `careerAt(...)`: `debutSeason === this season` is a debutante, and a career index
+ *  that changes at the next boundary is somebody playing a last year. They are the same two
+ *  questions `world/fieldNews.ts` asks from the other side, so the champion line and the farewell
+ *  can never tell different stories about one person. Zero draws: pure in (seed, chair, season).
+ *  NO PRONOUN NAMES A PROFESSIONAL, the rule the farewell lines keep one module over.
+ *
+ *  ⚠ THE SENTENCE STILL CONTAINS « won the », which `tests/events.test.ts` matches on by regex. */
+function championNote(world: WorldState, championId: string): string {
+  // The kid is named by her own summary line, never by this one, and a cohort girl's age is on her
+  // row; only a field pro has a chair whose succession can be asked about.
+  const age = isFieldProId(championId)
+    ? fieldProsOf(world).find((p) => p.id === championId)?.ageYears
+    : world.cohort.find((c) => c.id === championId)?.ageYears
+  if (age === undefined) return ''
+  if (!isFieldProId(championId)) return `, at ${age}`
+  const season = seasonIndexOf(world.week)
+  const chair = Number(championId.slice(FIELD.idPrefix.length))
+  const career = careerAt(world.seed, chair, season)
+  if (career.debutSeason === season) return `, at ${age} – a first season on tour`
+  if (careerAt(world.seed, chair, season + 1).index !== career.index) return `, at ${age} – in a last season on tour`
+  return `, at ${age}`
+}
+
 function announceTourChampion(world: WorldState, event: SeasonEvent, result: TournamentResult): void {
   if (!tierMakesWorldNews(event.tier)) return
   if (world.entries.includes(event.id)) return
@@ -359,7 +404,7 @@ function announceTourChampion(world: WorldState, event: SeasonEvent, result: Tou
   addEvent(world, {
     week: world.week,
     type: 'info',
-    text: `🏆 ${playerShortName(world, championId)} won the ${TIERS[event.tier].label}.`,
+    text: `🏆 ${playerShortName(world, championId)} won the ${TIERS[event.tier].label}${championNote(world, championId)}.`,
   })
 }
 

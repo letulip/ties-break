@@ -33,6 +33,7 @@ import { kidAgeAt } from './age'
 import { fullRanking } from './ladder'
 import { fireMilestone } from './milestones'
 import { inCollege } from './college'
+import { announceFieldFarewells, announceFieldIntake, isFieldFarewellWeek } from './fieldNews'
 import { expireKnock } from './knock'
 import {
   settleMandatoryDeadlines,
@@ -229,6 +230,14 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
     // of her standing among those players, not among their replacements. ZERO main-stream draws:
     // the conveyor runs entirely on `seed:conveyor:<season>`. See season/conveyor.ts.
     turnOverField(world, seasonIndexOf(world.week))
+    // ⭐⭐⭐ 0a0d-bis (round 26 #10): AND SO DOES THE TABLE ABOVE HERS – who has just taken a chair on
+    //      the professional tour. AFTER `turnOverField` on purpose: `fieldProsOf` resolves the
+    //      field's name collisions against `world.cohort`, so the new season's field has to be
+    //      derived under the new season's names or the person it announces is not quite the person
+    //      the standings will show. ONE row a season. ZERO main-stream draws – `careerAt` and
+    //      `fieldProsFor` are pure in (seed, chair, season) and re-derive their own sub-streams, so
+    //      the frozen capture (41550 / e6b0c709) cannot see this line. See world/fieldNews.ts.
+    announceFieldIntake(world)
     // 0a0e (08.08): AND THE KIT ALLOWANCE STARTS AGAIN, because the letter says it does.
     //
     // ⚠ THE PAPER PROMISED A SEASON AND THE CODE DELIVERED A TERM. `signOffer` zeroes `coveredCents`
@@ -248,6 +257,22 @@ export function seasonBoundaryAndObligations(world: WorldState): void {
     // own spend rather than the term's. Zero draws.
     rolloverKitAllowance(world)
   }
+
+  // ⭐⭐⭐ 0a0d-ter (round 26 #10): AND ON THE SEASON'S LAST WEEK, THE TOUR SAYS GOODBYE TO THE
+  //         PLAYERS WHO ARE NOT COMING BACK. A week EARLIER than the boundary block above, and that
+  //         is the whole reason it is a second call site rather than a line inside it: this is the
+  //         last week on which the season that is ending is still the LIVE one, so the name, the age
+  //         and the rank in every farewell are read off the very table the player has been looking
+  //         at all year. Asked one week later they would have to be reconstructed from a field the
+  //         cohort renewal has already re-derived.
+  //
+  //         ⚠ NOT GATED ON THE FREEZE. The professional table turns over whether or not she is
+  //         watching; a line that only spoke at college would be college wearing the world's
+  //         clothes. What the four scholarship years change is that nothing else happens in them.
+  //
+  //         At most `FIELD_NEWS.farewellsPerSeason` + 1 rows a season, none of them `keep`, and
+  //         ZERO main-stream draws. See world/fieldNews.ts for the budget arithmetic.
+  if (isFieldFarewellWeek(world.week)) announceFieldFarewells(world)
 
   // 0a0c-bis (30.07, MOVED 01.08): AND THE SPONSORS DECIDE – in the OFF-SEASON, which is where a
   //         contract for next year is really agreed. It used to sit inside the boundary block above,
