@@ -84,7 +84,17 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
     // to next week's plan while a tiny banner holds the truth. App.vue routes the click back into
     // the overlay in this state; time cannot tick past a pending reveal anyway (advanceWeeks
     // returns 'tournament' without a tick), so any other label here would be a lie twice over.
-    if (snap.pending) return { kind: 'tournament', label: `Play ${TIER_SHORT[snap.pending.tier]}` }
+    // ⭐⭐⭐ ROUND 26 #6 – AND A FIXTURE WITH NO RUNG IS NAMED BY ITS OWN LABEL. The College League
+    // reveal comes down this same road (`PendingView.tier === null` is the whole discriminator), and
+    // `TIER_SHORT` has no entry for it because there is no rung to shorten. `tierLabel` is already
+    // on the view and already carries the competition's own name, which is the honest word for the
+    // button on a college week: «Watch the College League», not a tier code invented for it.
+    if (snap.pending) {
+      return {
+        kind: 'tournament',
+        label: snap.pending.tier ? `Play ${TIER_SHORT[snap.pending.tier]}` : `Watch ${snap.pending.tierLabel}`,
+      }
+    }
     const next = snap.week + 1
     // The entered-tournament case, answered by the ENGINE (see the header note). `arrival` is
     // non-null exactly when an entry sits on `next`, so it replaces the old `upcoming` lookup

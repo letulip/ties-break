@@ -26,6 +26,9 @@ import {
   type PlateauView,
 } from '../src/engine/ending'
 import {
+  closeTournament,
+  collegeLeagueRevealOpen,
+  skipTournament,
   createWorld,
   advanceWeeks,
   tickWeek,
@@ -47,8 +50,6 @@ import {
   resolveEndings,
   buildEndingView,
   buildAlbum,
-  skipTournament,
-  closeTournament,
   captureBreakEven,
   toSnapshot,
   type WorldState,
@@ -59,6 +60,20 @@ import { DEFAULT_PROFILE, LADDER_TRACKS } from '../src/shared/protocol'
 import type { SeasonHistoryEntry, SeasonTrackRow } from '../src/shared/protocol'
 import type { LadderTrack } from '../src/engine/season/types'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
+ *  the year on the College League week the way it already pauses on her birthday, because the owner
+ *  had been told about the tournament instead of shown it. So every walk here answers the reveal the
+ *  way the player does – «Skip all rounds», then the finale's «Continue», which are `skipTournament`
+ *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
+ *  answers one more question and its press ceiling grows by one a year. The full note is in
+ *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 
 function autoView(over: Partial<AutoEndingView> = {}): AutoEndingView {
   return {
@@ -708,8 +723,9 @@ describe('#2 college – the only ending that resumes', () => {
     for (let year = 1; year <= ENDINGS.collegeYears; year++) {
       // ⚠ ROUND 24 («да, день рождения делай»): the year PAUSES on her birthday week now, so a year
       // is press-answer-press. Every original assertion is unchanged and asked at the same boundary.
-      for (let press = 0; press < 3 && world.college!.years.length < year; press++) {
+      for (let press = 0; press < 4 && world.college!.years.length < year; press++) {
         resumeFromCollege(world, rng)
+        answerLeagueReveal(world)
         if (pendingBirthday(world) !== null) chooseGift(world, 'day')
       }
       expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
@@ -732,8 +748,9 @@ describe('#2 college – the only ending that resumes', () => {
     world.fork = { askedWeek: world.week, answer: null, offer: null }
     answerCollegeAndDepart(world, rng)
     // Press-answer-press (round 24): each year pauses on her birthday week.
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
@@ -748,8 +765,9 @@ describe('#2 college – the only ending that resumes', () => {
     const from = world.week
     // Press-answer-press (round 24): each year pauses on her birthday week – and the gift charges
     // nothing, which is exactly what this case goes on to measure.
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
@@ -878,8 +896,11 @@ describe('⚠ input-independence survives college', () => {
     // ⚠ ROUND 24 – AND THE PROPERTY GETS STRONGER, NOT DIFFERENT: the years pause on her birthdays
     // and the gifts are answered mid-walk, so the arm now proves that pausing, answering and
     // resuming cost the MAIN stream not one draw either. The B arm never pauses at all.
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && a.ending?.type === 'college'; press++) {
+    for (let press = 0; press < 4 * ENDINGS.collegeYears && a.ending?.type === 'college'; press++) {
       resumeFromCollege(a, rngA)
+      // ⚠ ROUND 26 #6: and the championship's reveal is answered mid-walk too – the arm now proves
+      // that watching a tournament costs the MAIN stream not one draw either.
+      answerLeagueReveal(a)
       if (pendingBirthday(a) !== null) chooseGift(a, 'day')
     }
     while (b.week < a.week) tickWeek(b, rngB)

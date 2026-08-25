@@ -55,14 +55,49 @@ clock he suspects from three directions.
   verify the 18+ share fires on EVERY prize cheque in a real career. **5b build**: it is invisible –
   no surface tells him it happened.
 
-- [!] **6. «За первый год в колледже турнир был, но опять сообщили только постфактум, в чем проблема
+- [x] **6. «За первый год в колледже турнир был, но опять сообщили только постфактум, в чем проблема
   использовать наш флоу турниров полностью и дать возможность игроку их смотреть и сопереживать? Я
   уже просил это сделать»** – REOPENED and it is the round's biggest item. The College League plays
   real matches (G1, round 25) but reports them as a summary. **build**: the tournament flow, not a
   report.
+  **R26-B, shipped.** THE INVENTORY FROM HIS SAVE FIRST (w502, v59, read-only): round 25's tennis
+  was all real – four banked years, leagues 1 / 3 / 0 / 1, eight `college-w<week>-r<n>` rows in
+  `world.events`, every one `friendly: true`, `keep: true`, carrying a `WorldMatch` and its seed.
+  What failed is that the year never STOPPED: `resumeFromCollege` added `'college-league'` to the
+  stop set and kept ticking, so the fixture happened on week 12 of the academic year and the screen
+  came back at week 52. Fixed by giving the week the tour's own road: `resolveCollegeLeague` opens
+  `college.leagueReveal` (v60), the year PAUSES on it in the same block her birthday already pauses
+  in, `pendingView` projects it onto `snapshot.pending`, and `TournamentFlow` mounts over the live
+  Home shell – reached by the same `tournamentReveal` / `tournamentSkip` / `tournamentClose`
+  commands a tour reveal uses (three dispatch lines in `world.ts`; the worker, the store and every
+  button are untouched). ⚠ B1's law is EXTENDED, not weakened: `world.pendingTournament` is still
+  never written inside the freeze (pinned over a walked four-year career), so round 24's throw still
+  guards a state that cannot occur; the new state RETURNS `['college-league']` at the entry guard
+  because – unlike that one – it has a surface. The amateur line holds: `tier` is `null` on the
+  view, `points` 0, no cheque, no cabinet entry, no trophy flight. Proof is mounted, not grepped:
+  `tests/component/round26-college-flow.test.ts` walks a real career to the fixture and asserts the
+  takeover is in the DOM, the college bar has stood down and the global resume press is up.
+  Six mutation arms, all red.
 
-- [ ] **7. «Реплеев этих матчей из п.6 нигде нет, ни в news feed, ни в календаре»** – #6's other
+- [x] **7. «Реплеев этих матчей из п.6 нигде нет, ни в news feed, ни в календаре»** – #6's other
   half: even the retrospective route is missing. **build**.
+  **R26-B, shipped (feed) + answered (calendar).** THE FEED: the route was always there – Home's
+  news feed opens any row carrying a `match` in `MatchReplay` – and the rows had fallen out of the
+  WINDOW. `snapshot.events` was a positional `slice(-60)` over his 401-row ledger: at week 480,
+  inside the freeze, sixty rows still reached back to week 273 and all eight matches were openable;
+  the week she graduated and the tour started writing again the window collapsed to weeks 493-502
+  and held 20 income + 30 expense + 9 info + 1 milestone rows – **zero matches**, ten visible feed
+  rows, exactly what he saw. The snapshot now pins every `keep: true` row that carries a match into
+  the window, in ledger order, no duplicates – the engine's own promise («a week she is still
+  allowed to watch has to still be in the feed to open») honoured one layer further out. Measured
+  on his save: 8 of 8 championship matches and 3 of 3 Nations Cup rubbers reachable, feed 60 -> 71
+  rows. Bounded by construction: only the amateur competitions mark a match row `keep`, so a
+  tour-only career is byte-identical (pinned). THE CALENDAR: **nothing was built there, and the
+  finding is why.** `CalendarScreen` and `SeasonScreen` are strictly FUTURE – `SeasonScreen`'s
+  replay button covers the CURRENT week only, and no past tour match is reachable from either
+  screen either. The league is not treated worse than the tour; the app has one retrospective route
+  and the league now keeps it. A past-results list is a feature, not a fix, and belongs to a round
+  that scopes it.
 
 - [ ] **8. «Another year и Back on tour поменять местами и сделать цветом, сейчас их вообще не
   видно тёмно синие на тёмно синем»** – contrast and order, visible in the screenshot. **build**,

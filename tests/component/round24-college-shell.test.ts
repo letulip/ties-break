@@ -53,6 +53,8 @@ import CollegeYearCard from '../../src/components/CollegeYearCard.vue'
 import CollegeDoneDialog from '../../src/components/CollegeDoneDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
+  skipTournament,
+  collegeLeagueRevealOpen,
   answerFork,
   chooseGift,
   closeTournament,
@@ -226,8 +228,17 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // Round 24: each year pauses on her birthday week – press, answer, press again. Answering as we
     // go is also what keeps a pending birthday from standing ahead of the graduation card below,
     // exactly as the knock line under this loop already explains for the shoulder.
-    for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+    // ⚠ ROUND 26 #6 RE-AIM: the championship pauses the year as well now, so the walk answers that
+    // too – «Skip all rounds» then the finale's «Continue», which are `skipTournament` and
+    // `closeTournament` dispatched at the college reveal. Same reason as the birthday one line up:
+    // a reveal left standing would hold the graduation card behind a takeover. The ceiling grows
+    // from three presses a year to four because the year now holds one more stop.
+    for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      if (collegeLeagueRevealOpen(world)) {
+        skipTournament(world)
+        closeTournament(world)
+      }
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.ending, 'she came out the other side – the latch is off for good').toBeNull()
@@ -265,9 +276,15 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // `endCollegeEarly` and `finishCollege` run the SAME two lines (`leaveCollegeState` + one kept
     // milestone), so a card for only one of them would have left the other as the silent exit it was.
     const { world, rng } = atCollege('r24-grad-early')
-    // Round 24: press-answer-press – the year pauses on her birthday week.
-    for (let press = 0; press < 3 && world.college!.years.length === 0; press++) {
+    // Round 24: press-answer-press – the year pauses on her birthday week. ⚠ Round 26 #6: and on
+    // the championship, which `endCollegeEarly` below would otherwise refuse behind – a paused year
+    // is not at a boundary, and the engine says so.
+    for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
+      if (collegeLeagueRevealOpen(world)) {
+        skipTournament(world)
+        closeTournament(world)
+      }
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     endCollegeEarly(world)

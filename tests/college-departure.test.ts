@@ -27,6 +27,8 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
+  skipTournament,
+  collegeLeagueRevealOpen,
   createWorld,
   tickWeek,
   enterEvent,
@@ -52,6 +54,20 @@ import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ENDINGS } from '../src/engine/ending'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
+
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
+ *  the year on the College League week the way it already pauses on her birthday, because the owner
+ *  had been told about the tournament instead of shown it. So every walk here answers the reveal the
+ *  way the player does – «Skip all rounds», then the finale's «Continue», which are `skipTournament`
+ *  and `closeTournament` dispatched at the college reveal. Nothing measured below moved; the walk
+ *  answers one more question and its press ceiling grows by one a year. The full note is in
+ *  tests/college-league.test.ts, and the flow itself in tests/round26-college-flow.test.ts. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 
 function finishAnyReveal(world: WorldState): void {
   for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
@@ -247,8 +263,9 @@ describe('a v57 save already inside the freeze', () => {
     const rng = resumeMain(world.rngMain)
     const yearsBefore = world.college!.years.length
     const from = world.week
-    for (let press = 0; press < 3 && world.college!.years.length === yearsBefore; press++) {
+    for (let press = 0; press < 4 && world.college!.years.length === yearsBefore; press++) {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.college!.years.length, 'one more year banked').toBe(yearsBefore + 1)
@@ -316,9 +333,10 @@ describe('G1\'s floor and E3\'s pause survive the new enrolment week', () => {
       expect(world.college?.fromWeek).toBe(departs)
 
       const birthdaysBefore = world.birthdays.length
-      for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
+      for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
         world.fundsCents = Math.max(world.fundsCents, 500_000_00)
         resumeFromCollege(world, rng)
+        answerLeagueReveal(world)
         if (pendingBirthday(world) !== null) chooseGift(world, 'day')
       }
 

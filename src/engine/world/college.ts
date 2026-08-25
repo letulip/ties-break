@@ -404,12 +404,82 @@ export function resolveCollegeLeague(world: WorldState): void {
   if (!collegeLeagueWeek(world)) return
   const run: CollegeLeagueRun = { week: world.week, ...playCollegeLeague(world) }
   world.college!.pendingLeague = run
+  // ⭐⭐⭐ ROUND 26 #6 – AND THE WEEK NOW STOPS TO BE WATCHED. The owner, having asked once before:
+  // «в чем проблема использовать наш флоу турниров полностью и дать возможность игроку их смотреть
+  // и сопереживать? Я уже просил это сделать». Round 25 played the matches and wrote the rows; the
+  // parent was handed the scoreline. This is the half that was missing – the reveal, opened here on
+  // the week the fixture happens, so `resumeFromCollege` pauses the year on it and the app's own
+  // `TournamentFlow` walks it round by round.
+  //
+  // ⚠ IT IS OPENED AFTER THE ROWS ARE WRITTEN AND NOT INSTEAD OF THEM. The tour DEFERS its match
+  // events to the reveal because its points, cheque and rank recompute are deferred with them
+  // (`finalizeTournament`); this fixture commits nothing at all, so there is nothing to defer – and
+  // making the record conditional on a flow completing is precisely how round 26 #7 («реплеев этих
+  // матчей нигде нет») would come back. The rows are written by the tick, `keep: true`, exactly as
+  // they were before this shipped; the reveal is a cursor over them.
+  world.college!.leagueReveal = { week: world.week, revealed: 0 }
   addEvent(world, {
     week: world.week,
     type: 'milestone',
     keep: true,
     text: collegeLeagueLine(run),
   })
+}
+
+// -------------------------------------------------------------------------------------------------
+// ⭐⭐⭐ ROUND 26 #6 – THE REVEAL: THE TOUR'S OWN FLOW, OVER A FIXTURE THAT AWARDS NOTHING
+// -------------------------------------------------------------------------------------------------
+//
+// ⚠⚠ THE THREE FUNCTIONS BELOW ARE `revealTournamentRound` / `skipTournament` / `closeTournament`
+// FOR THIS COMPETITION, AND THEY ARE REACHED THROUGH THOSE VERY NAMES. `world.ts` dispatches each of
+// the three to its twin here when a college reveal is the one that is open, so the worker's command
+// table, the store's actions and every button in `TournamentFlow.vue` are untouched: one road, two
+// kinds of tournament on it. That is «использовать наш флоу турниров полностью» taken literally,
+// and it is also the cheapest thing to keep correct – a second set of commands would be a second
+// place for the reveal to strand.
+//
+// ⚠ AND `world.pendingTournament` IS NEVER WRITTEN. Every payout in this game is reached through
+// `TIERS[event.tier]`, and this fixture has no rung (`collegeLeagueMatchId` names none on purpose),
+// so the amateur line is held by the state's SHAPE rather than by a branch somebody has to remember:
+// there is nothing here `finalizeTournament` could be pointed at.
+
+/** IS A CHAMPIONSHIP WAITING TO BE WATCHED? The predicate `resumeFromCollege` refuses on and the
+ *  snapshot builds its `pending` view from. */
+export function collegeLeagueRevealOpen(world: WorldState): boolean {
+  return (world.college?.leagueReveal ?? null) !== null
+}
+
+/** The matches the open reveal is walking – off the feed, exactly like every other reader of these
+ *  records, so the reveal holds a cursor and never a second copy of the run. */
+export function collegeLeagueRevealMatches(world: WorldState): WorldMatch[] {
+  const reveal = world.college?.leagueReveal ?? null
+  return reveal ? collegeLeagueMatchesOf(world, reveal.week) : []
+}
+
+/** Show one more round. ⚠ IT WRITES NO EVENT, which is the one place this differs from
+ *  `revealTournamentRound` and the difference is stated at `resolveCollegeLeague`: the rows are
+ *  already in the feed. Idempotent at the end of the run, exactly like its twin. */
+export function revealCollegeLeagueRound(world: WorldState): void {
+  const reveal = world.college?.leagueReveal ?? null
+  if (!reveal) return
+  const played = collegeLeagueMatchesOf(world, reveal.week).length
+  if (reveal.revealed >= played) return
+  reveal.revealed += 1
+}
+
+/** «Skip all rounds» – straight to the finale. */
+export function skipCollegeLeagueRounds(world: WorldState): void {
+  const reveal = world.college?.leagueReveal ?? null
+  if (!reveal) return
+  reveal.revealed = collegeLeagueMatchesOf(world, reveal.week).length
+}
+
+/** The finale's Continue: the reveal is answered and the year may go on. ⚠ A BARE CLEAR, like
+ *  `closeTournament`, and callable at any point in the walk – the owner is allowed to stop watching,
+ *  and nothing about the record depends on how far he got. */
+export function closeCollegeLeagueReveal(world: WorldState): void {
+  if (!world.college) return
+  world.college.leagueReveal = null
 }
 
 /** ⭐⭐ DID THE CHAMPIONSHIP HAPPEN **THIS** WEEK – the predicate `resumeFromCollege` asks so the week
@@ -572,6 +642,13 @@ export function bankCollegeYear(world: WorldState, start: CollegeYearStart): voi
   // this is nulled – it is now in `years[n].league`, which is the second place that lookup reads. A
   // second «last result» field kept alive across the boundary would be a copy that can drift.
   college.pendingLeague = null
+  // ⭐⭐⭐ v60 – AND THE REVEAL DIES WITH THE YEAR IT BELONGED TO. It cannot normally be open here –
+  // `resumeFromCollege` pauses the year on it and will not spend another week until it is answered –
+  // but a year CUT SHORT BY AN ENDING on the championship week itself reaches this line with one
+  // still standing, and a reveal outliving its college state is a question with no surface left to
+  // ask it on (`collegeProgressOf` is null the moment `doneWeek` is set). Cleared here rather than
+  // guarded against everywhere, which is `pendingCallUp`'s own argument two lines up.
+  college.leagueReveal = null
   // ⭐ v57 – AND THE PAUSED YEAR'S OPENING GOES WITH THEM, whose lifetime it shares: it exists from
   // a birthday pause to the bank, and a start left standing here would open the NEXT year with the
   // LAST year's four numbers. Written unconditionally so the key normalises to null the first time

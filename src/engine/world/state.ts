@@ -166,7 +166,15 @@ import type { AcademySupport } from '../academy'
 // Rows of `injuryHistory` MAY carry `weeksSaved`, written only when he saved something – absent
 // everywhere in old saves, so nothing is back-filled; `pendingTournament` MAY carry `masseurThere`
 // on a week he made the trip. See docs/specs/the-masseur-2026-08.md.
-export const SAVE_SCHEMA_VERSION = 59
+//
+// ⭐⭐⭐ v60 (round 26 #6, THE COLLEGE LEAGUE IS WALKED AND NOT REPORTED): `CollegeState.leagueReveal`
+// – two numbers saying where the player is in the championship's reveal. The owner had asked for
+// this once already («Я уже просил это сделать»), and round 25 answered it with a summary line plus
+// replay buttons on a card, which is exactly «сообщили постфактум». The reveal makes the year STOP
+// on the championship week, the way a tour week stops, and `TournamentFlow` walks it.
+// ⚠ NULL FOR EVERY EARLIER SAVE AND NOTHING IS BACK-FILLED: a championship already lived is not
+// re-offered, so a career mid-freeze resumes with no reveal open and its NEXT year's gets one.
+export const SAVE_SCHEMA_VERSION = 60
 
 
 

@@ -35,6 +35,8 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
+  skipTournament,
+  collegeLeagueRevealOpen,
   CAREER_ENDED_REFUSAL,
   answerFork,
   chooseGift,
@@ -61,6 +63,20 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
+
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
+ *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
+ *  complaint was that the year reported the tournament and ticked on past it. So every walk here
+ *  answers the reveal the way the player does – «Skip all rounds», then the finale's «Continue» –
+ *  which is `skipTournament` + `closeTournament` dispatched at the college reveal. Nothing this
+ *  suite MEASURES moved: the same birthdays, the same pauses, the same banked years.
+ *  The full note is in tests/college-league.test.ts. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 
 function finishAnyReveal(world: WorldState): void {
   for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {
@@ -111,6 +127,27 @@ function openedAtCollege(seed: string, birthMonth: number, birthDay: number): { 
   return { world, rng }
 }
 
+/** ⭐⭐⭐ ROUND 26 #6 RE-AIM – PRESS UNTIL THE CAKE, ANSWERING THE CHAMPIONSHIP ON THE WAY.
+ *
+ *  ⚠⚠ WHAT MOVED IS THE NUMBER OF PRESSES, NOT ONE CLAIM IN THIS FILE. Before this round a college
+ *  year held ONE mid-year stop and the cases below could press once and be standing on it. The year
+ *  now holds two – the championship pauses it as well, which is the whole of round 26 #6 – so for a
+ *  birth date after season week 12 the cake is the SECOND press. Every assertion underneath is
+ *  untouched: the paused year, its persisted opening, the deliverable dialog, the free gift.
+ *
+ *  ⚠ AND IT REFUSES TO PASS SILENTLY. If the walk runs out of presses without reaching a birthday,
+ *  it throws rather than returning the last stops – a helper that quietly hands back the wrong press
+ *  would turn these cases green against a career that never had a birthday at all. */
+function pressToBirthday(world: WorldState, rng: Rng): StopReason[] {
+  for (let guard = 0; guard < 4; guard++) {
+    const stops = resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
+    if (pendingBirthday(world) !== null) return stops
+    if (world.ending?.type !== 'college') break
+  }
+  throw new Error('the walk never reached her birthday')
+}
+
 /** One press of the Home shell's college button, with the stops it reported. */
 type Press = { week: number; stops: StopReason[]; years: number; paused: boolean }
 
@@ -126,6 +163,9 @@ function walkTheFreeze(world: WorldState, rng: Rng, maxPresses = 24): Press[] {
       years: world.college!.years.length,
       paused: (world.college!.pendingYearStart ?? null) !== null,
     })
+    // ⚠ ROUND 26 #6 re-aim: a press can now stop for the championship as well, so the walk answers
+    // that too – see `answerLeagueReveal` at the head of this file.
+    answerLeagueReveal(world)
     if (pendingBirthday(world) !== null) answerBirthday(world)
   }
   return presses
@@ -151,6 +191,7 @@ describe('a walked career through four college years gets four birthdays', () =>
         years: world.college!.years.length,
         paused: (world.college!.pendingYearStart ?? null) !== null,
       })
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) {
         answerBirthday(world)
         feedAtBirthday.push(world.events.filter((e) => e.week === world.week).map((e) => e.text).join(' | '))
@@ -199,8 +240,8 @@ describe('a walked career through four college years gets four birthdays', () =>
     const skillAtOpening = skillMeanOf(world.skills)
     const fundsAtOpening = world.fundsCents
 
-    // Press once: this career pauses mid-year on her birthday.
-    const stops = resumeFromCollege(world, rng)
+    // Press until this career pauses mid-year on her birthday – see `pressToBirthday`.
+    const stops = pressToBirthday(world, rng)
     expect(stops).toContain('birthday')
     expect(world.college!.years, 'the paused year is NOT banked').toHaveLength(0)
     expect(world.college!.pendingYearStart, 'its opening is persisted instead').not.toBeNull()
@@ -211,6 +252,8 @@ describe('a walked career through four college years gets four birthdays', () =>
     answerBirthday(world)
     const fundsAtBank = (() => {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
+      if (world.college!.years.length === 0) resumeFromCollege(world, rng)
       return world.fundsCents
     })()
     expect(world.college!.years, 'now the year banks').toHaveLength(1)
@@ -222,7 +265,7 @@ describe('a walked career through four college years gets four birthdays', () =>
 
   it('⭐⭐ the dialog is deliverable where the pause leaves the player: over the college Home shell', () => {
     const { world, rng } = openedAtCollege('cb-overlay', 6, 15)
-    resumeFromCollege(world, rng)
+    pressToBirthday(world, rng)
     const snap = toSnapshot(world)
     expect(snap.birthdayPrompt, 'the prompt is on the snapshot').not.toBeNull()
     expect(snap.ending?.ending.type, 'the college latch is on underneath it').toBe('college')
@@ -239,7 +282,7 @@ describe('a walked career through four college years gets four birthdays', () =>
 
   it('⚠ a gift costs the family nothing at college, because it costs nothing anywhere – spec §0', () => {
     const { world, rng } = openedAtCollege('cb-free', 6, 15)
-    resumeFromCollege(world, rng)
+    pressToBirthday(world, rng)
     const funds = world.fundsCents
     const rng0 = { ...world.rngMain }
     answerBirthday(world)
@@ -274,8 +317,18 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
     expect(world.college!.pendingLeague, 'the championship really was played this press').not.toBeNull()
     expect(world.college!.years, 'and the year is still open').toHaveLength(0)
 
-    // Answer the cake; press 2 finishes the year and the call-up week (14) lands in the second half.
+    // Answer the cake; the finishing press carries the year out and the call-up week (14) lands in
+    // its second half.
+    // ⚠ ROUND 26 #6: on the collision week the championship and the cake pause the year TOGETHER, so
+    // after the dialog is answered the REVEAL is still open – the same order the UI shows them in
+    // (`popupMayShow` holds the gift behind the takeover, so the player answers the takeover first
+    // and the cake second). A press over an open reveal is the engine's no-op report, exactly like a
+    // press over an unanswered birthday; answer it and the SAME press finishes the year.
     answerBirthday(world)
+    const refusedOverReveal = resumeFromCollege(world, rng)
+    expect(refusedOverReveal, 'the reveal is a question too: reported, nothing ticked').toEqual(['college-league'])
+    expect(world.college!.years, 'and nothing banked behind it').toHaveLength(0)
+    answerLeagueReveal(world)
     const second = resumeFromCollege(world, rng)
     expect(world.college!.years, 'one banked year, not two halves').toHaveLength(1)
     const year = world.college!.years[0]
@@ -297,7 +350,7 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
     // pause and the bank coincide: the year is genuinely over, so it banks – and the prompt stays
     // pending where the player is standing.
     const { world, rng } = openedAtCollege('probe-boundary', 9, 3)
-    const stops = resumeFromCollege(world, rng)
+    const stops = pressToBirthday(world, rng)
     expect(stops).toContain('birthday')
     expect(world.college!.years, 'the completed year banked – a boundary birthday is not a pause').toHaveLength(1)
     expect(world.college!.pendingYearStart ?? null, 'no year is mid-flight').toBeNull()
@@ -315,6 +368,8 @@ describe('the collision year: birthday + championship + call-up all deliver', ()
 
     answerBirthday(world)
     resumeFromCollege(world, rng)
+    answerLeagueReveal(world)
+    if (world.college!.years.length === 1) resumeFromCollege(world, rng)
     expect(world.college!.years, 'answered, the same press works').toHaveLength(2)
   })
 })
@@ -343,15 +398,21 @@ describe('the guards: ended stays ended, and the early return respects the pause
     const { world, rng } = openedAtCollege('cb-early-return', 6, 15)
     // Year 1 pauses on her birthday; a career with a banked year behind it is the precondition the
     // engine already checks, so spend year 1 first, then pause year 2.
-    resumeFromCollege(world, rng) // pause in year 1
+    // ⚠ ROUND 26 #6 re-aim: a year now holds TWO mid-year stops, so «spend a year» is a walk rather
+    // than a fixed number of presses. `pressToBirthday` answers the championship on the way and
+    // throws if it never reaches the cake, so the precondition cannot go quietly wrong.
+    pressToBirthday(world, rng) // pause in year 1
     answerBirthday(world)
     resumeFromCollege(world, rng) // year 1 banks
-    resumeFromCollege(world, rng) // pause in year 2
+    answerLeagueReveal(world)
+    pressToBirthday(world, rng) // pause in year 2
     expect(world.college!.pendingYearStart, 'year 2 is mid-flight').not.toBeNull()
     answerBirthday(world)
     expect(() => endCollegeEarly(world), 'mid-year the door is shut, with the reason').toThrow(/still running/)
     expect(toSnapshot(world).ending?.college?.yearInProgress, 'and the screen is told to stand its button down').toBe(true)
     resumeFromCollege(world, rng) // year 2 banks – a boundary again
+    answerLeagueReveal(world)
+    if ((world.college!.pendingYearStart ?? null) !== null) resumeFromCollege(world, rng)
     expect(world.college!.pendingYearStart ?? null).toBeNull()
     expect(() => endCollegeEarly(world), 'at the boundary the early return works as it always did').not.toThrow()
     expect(world.ending, 'she is back on tour').toBeNull()

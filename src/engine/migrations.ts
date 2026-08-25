@@ -1822,6 +1822,32 @@ export function migrateSave(raw: unknown): WorldState {
     v = 59
   }
 
+  // ⭐⭐⭐ v59 -> v60: THE COLLEGE LEAGUE IS WALKED, NOT REPORTED (round 26 #6). The owner, having
+  // asked once before: «За первый год в колледже турнир был, но опять сообщили только постфактум, в
+  // чем проблема использовать наш флоу турниров полностью и дать возможность игроку их смотреть и
+  // сопереживать? Я уже просил это сделать». One new field on the college state:
+  // `leagueReveal` – where the player is in the championship's reveal (`CollegeLeagueReveal`).
+  //
+  // ⚠⚠ NULL IS THE TRUE VALUE FOR EVERY v59 SAVE AND NOTHING IS BACK-FILLED, WHICH IS A RULING
+  // RATHER THAN A DEFAULT. His own save banks four years whose championships were played, reported
+  // and are still openable from their feed rows; opening a reveal over one of them would be the game
+  // asking him to watch a match it already told him the result of, months later, with the year's
+  // stop standing in front of the career until he did. A championship already lived is history. The
+  // NEXT one his career reaches gets the flow, because `resolveCollegeLeague` opens the reveal when
+  // it plays the fixture and no migration is involved in that.
+  //
+  // ⚠ AND A CAREER WITH NO COLLEGE FALLS STRAIGHT THROUGH – the same shape the v55 and v57 college
+  // migrations keep. Idempotent (`undefined` is the only state it rewrites) and it writes a literal:
+  // ZERO draws on any stream, so the frozen MAIN capture (41550 / e6b0c709) is untouched by
+  // construction.
+  if (v === 59) {
+    const college = save.college as { leagueReveal?: unknown } | null | undefined
+    if (college && typeof college === 'object' && college.leagueReveal === undefined) {
+      college.leagueReveal = null
+    }
+    v = 60
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

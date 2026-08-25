@@ -261,10 +261,17 @@ describe('R13-8 — a paused tournament owns the primary button', () => {
   const composable = read('../src/composables/weekAhead.ts')
 
   it('weekAhead answers the PENDING state first – before any week-ahead lookup', () => {
-    expect(composable).toContain('if (snap.pending) return')
-    expect(at(composable, 'if (snap.pending) return')).toBeLessThan(at(composable, 'const arrival = snap.arrival'))
+    // ⚠ ROUND 26 #6 RE-AIM, NOT A WEAKENING: the branch grew a body because `PendingView.tier` is
+    // nullable now (the College League walks this same view and has no rung), so the one-line
+    // `return` became an `if (snap.pending) {` with two labels in it. What the pin asserts is
+    // unchanged and is asserted in MORE detail: the pending state is still answered FIRST, ahead of
+    // every week-ahead lookup, and the tour arm still names the tier off the pending run itself.
+    expect(composable).toContain('if (snap.pending) {')
+    expect(at(composable, 'if (snap.pending) {')).toBeLessThan(at(composable, 'const arrival = snap.arrival'))
     // the label keeps promising the championship, tier named off the pending run itself
     expect(composable).toContain('TIER_SHORT[snap.pending.tier]')
+    // ...and a fixture with no rung is named by the competition's own label, never by an invented one
+    expect(composable).toContain('`Watch ${snap.pending.tierLabel}`')
   })
 
   it('the click re-opens the overlay instead of ticking past the pause', () => {

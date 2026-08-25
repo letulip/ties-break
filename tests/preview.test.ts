@@ -411,8 +411,15 @@ describe('the weather is decoration, and stays decoration', () => {
     }
     const world = worldSource()
     expect(world).not.toContain(':weather:')
-    expect(world.match(/eventTemperature\(/g) ?? [], 'world.ts uses the weather more than once').toHaveLength(1)
+    // ⚠ ROUND 26 #6 RE-AIM – TWO USES NOW, AND BOTH ARE NAMED SO A THIRD CANNOT HIDE BEHIND THEM.
+    // The claim this pin makes is «the weather is a VIEW ASSEMBLY and the simulation never reads
+    // it», and that is unchanged: both uses are inside `pendingView`, both write `temperatureC` on
+    // the view and nothing else. The second one belongs to the College League's reveal, which walks
+    // the same flow and therefore needs the same decorative day – through the SAME function, because
+    // two weather functions is how one tournament comes to have two days.
+    expect(world.match(/eventTemperature\(/g) ?? [], 'world.ts uses the weather somewhere new').toHaveLength(2)
     expect(world).toContain('temperatureC: eventTemperature(world.seed, event)')
+    expect(world).toContain('temperatureC: eventTemperature(world.seed, { id: `college-w${reveal.week}`, surface })')
   })
 })
 
