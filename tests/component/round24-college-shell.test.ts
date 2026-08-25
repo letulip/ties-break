@@ -23,6 +23,17 @@
 // claim is "this takeover is NOT in the DOM while that state is", and only a mount can make it – a
 // source pin goes green on a gate that reads the right field and renders anyway.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+// ⚠ A RUNNER-SIZED CEILING, AND THE ARITHMETIC IS THE POINT (24.08). Every case here mounts the
+// WHOLE App over a career walked ~60 weeks to the fork and through the college latch – the heaviest
+// shape a component test can take, and deliberately so: the shell's claims are only worth anything
+// against a real world. Measured alone on a quiet machine the slowest case is 1.4 s; the component
+// project runs its files in parallel, and under that load the same case has crossed vitest's 5 s
+// per-test default with ZERO assertion failures – the documented slow-machine signature (CLAUDE.md).
+// 30 s is ~20x the solo cost, so it can only fire on a genuine wedge and never on a slow-but-working
+// run. ⚠ If a case here ever takes tens of seconds ALONE, that is a real regression and this ceiling
+// must not be raised to hide it.
+vi.setConfig({ testTimeout: 30_000 })
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
