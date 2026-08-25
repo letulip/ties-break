@@ -20,7 +20,15 @@
 // ⚠ THE LEDGER ROW ITSELF IS PROVEN NEXT DOOR, on a career that really plays: `tests/
 // round26-world-speaks.test.ts` re-derives every split from outside the till. A component test
 // cannot walk a career that enters tournaments inside happy-dom for the price it is worth.
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+// ⚠ A RUNNER-SIZED CEILING (round 26 #16 – «test-build падает на гите»). These cases mount a real
+// screen over a career walked hundreds of weeks, and locally the slowest sits at 4.7s against
+// vitest's 5s per-test default. GitHub's ubuntu runner is a 2-core box measured at 4-5x local wall
+// clock on this suite, so 5s is crossed there DETERMINISTICALLY while every assertion passes – the
+// documented slow-machine signature, and the reason CI was red while the local gate was green.
+// 30s is ~6x the solo cost: it can only fire on a genuine wedge. ⚠ A case that takes tens of
+// seconds ALONE is a regression and this ceiling must not be raised to hide it.
+vi.setConfig({ testTimeout: 30_000 })
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
