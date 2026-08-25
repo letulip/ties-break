@@ -34,16 +34,89 @@ clock he suspects from three directions.
   arrived without a sentence. He is asking WHAT it is, and the honest answer is that it should have
   introduced itself. **answer + possibly build** (a first-use line).
 
-- [!] **2. «Ещё раз: почему university at home недоступен для Alice, я уже спрашивал, не понимаю и
+- [x] **2. «Ещё раз: почему university at home недоступен для Alice, я уже спрашивал, не понимаю и
   не починено»** – REOPENED. The in-state rung refuses and the card states «The in-state price is
   only for residents of the state, and she is not one» (C2, round 24). Either the residence rule is
   wrong for her, or the sentence does not explain WHY she is not a resident. **build**: the reason
   must name the fact it rests on, or the rule must change.
 
-- [ ] **3. «Что значит Top 100 for 74 in 100 в строке университета? И почему у private этот
+  **R26-D, 25.08 – DIAGNOSED FIRST, AND THE SAVE IS THE EVIDENCE.** Read read-only from
+  `tennis-sim_alice-cfbv_w502.tsave` (schema v59, never copied, never a fixture):
+  `profile = {kidName: Alice, kidLastName: Martin, country: **AU**, background: middle}`; her fork
+  was asked on w258 and her own persisted quote for `state` carries `open: false` while `national`
+  and `private` carry `open: true` (she took `private`).
+
+  1. **THE FACT, AND IT IS TRUE OF HER.** The refusal rests on one rule and one field:
+     `COLLEGE_SHUT_RULES['not-a-resident']` fires when `country !== 'US'`.
+     `tierShutFor('state', 'AU')` returns `not-a-resident`; `quoteShutFor({tier: 'state',
+     open: false})` returns the same code off her persisted quote. **She is Australian, so the rung
+     is correctly shut and the rule is not wrong for her** – in-state tuition IS state residence and
+     a non-resident alien is never in-state (sourced in `collegeOffer.ts`, and two places stay open,
+     so nothing removes the college answer). The defect was never the verdict.
+  2. **⚠ CAN A PLAYER CHANGE IT? NO – AND THAT IS THE PART THAT IS A DESIGN QUESTION, NOT A COPY
+     FIX.** `profile.country` is written in exactly one place in the codebase,
+     `OnboardingWizard.vue:275` (`pickCountry`), on the third onboarding screen – *Where Are You
+     Starting?* There is **no other write anywhere**: no engine command, no dev tool, no migration
+     touches it (audited across `src/`; the only other occurrences are `DEFAULT_PROFILE.country =
+     'US'` and the legacy-save backfill in `db/saves.ts`). So residence is fixed **before week 0 and
+     for the whole career**, and this card draws on w258 – **444 weeks later**.
+     **The rung is reachable, but only by a different career**: of the 24 playable countries in
+     `COUNTRY_NAMES`, **exactly one (US) opens it**. A US career draws three live places (asserted).
+     ⚠ **OWNER QUESTION, NOT ACTIONED HERE:** 23 of 24 starting countries can never see the cheapest
+     place, the choice that decides it is made five real seasons earlier, and **nothing on the
+     onboarding country step says that picking a country prices college.** That is either intended
+     (residence is a real constraint and the game models it) or it wants a line at onboarding. Not
+     changed without a ruling – changing the rule would delete a sourced fact.
+  3. **SHIPPED – THE SENTENCE NAMES THE FACT.** `COLLEGE_SHUT_DETAIL` is still a total `Record` over
+     the reason codes and the words are still 100% the engine's, but the values are FUNCTIONS of the
+     family's home now, so the card passes the one noun it cannot invent. Rendered on a mounted
+     dialog against a real `AU` world (`tests/component/round26-fork-card.test.ts`):
+     *«The in-state price is only for residents of a US state, and this family is from Australia –
+     chosen at the start of the career.»* `open` is still DERIVED from `quoteShutFor`; reading her
+     country to NAME the refusal is not a second judgement and never reaches that call.
+     ⚠ Guard re-aims, all mutation-proved: reverting to the round-24 line turns **1 unit + 6
+     component** cases red; hard-coding the country turns **3** red.
+
+- [x] **3. «Что значит Top 100 for 74 in 100 в строке университета? И почему у private этот
   показатель меньше, чем у state?»** – two asks in one line. **3a**: the string is unreadable –
   what quantity is it? **3b**: private scoring WORSE than state is either a real inversion or a
   mis-read label. **answer + build**.
+
+  **R26-D, 25.08 – 3a SHIPPED, 3b ANSWERED AND DELIBERATELY NOT RETUNED.**
+
+  **3a. WHAT THE NUMBER IS.** `COLLEGE_TIER_ODDS[tier].top100In100` is **a count of careers in a
+  hundred**: of a hundred girls who took that place, how many touched the **world top 100 at any
+  week of the four years back on tour after graduating**. Measured, not designed –
+  `tools/college-return-probe.ts --seeds 6` at commit `3b6d92e`, **n = 53** careers walked to the
+  fork under `POLICIES[1]` and then re-walked once per place
+  (`docs/specs/the-college-answers-2026-08.md` §2a / §10h). The frame was the whole problem: `Top
+  100 for 74 in 100` reads as a LABEL followed by two numbers with no verb between them, so the
+  quantity is unrecoverable – 74 what, out of which hundred, measured when.
+  **The figure is unchanged and the line now says it in words.** Rendered:
+  `85 in 100 reach the world top 100 · A full ride (100%)`. The window stays named once under the
+  list («Four years after she leaves, over 53 careers.») – it is capped at ~49 characters because a
+  two-line caption is what put the dismiss control at y=-25 in round 21.
+
+  **3b. HE IS READING IT CORRECTLY, AND IT IS NOT A LABEL FAULT.** The table as it really is:
+  **state 85 · national 93 · private 74** – the dear place is **19 points behind the middle one and
+  11 behind the cheap one**. Checked on the RENDERED rows by NAME, not by tier id (a mis-map would
+  put another place's figure on the row): *The university at home* carries 85, *A university out of
+  state* 93, *A private university* 74, and the $65,470 sticker is on that same row. **Not
+  mislabelled and not mis-mapped.**
+  **It is deliberate, measured, and recorded** – `the-college-answers-2026-08.md` §10i: the dear
+  place develops her the MOST (+1.37 against +1.21) and still finishes last, because **eleven of 53
+  careers there never finish at all** (the family goes bankrupt paying) and the survivors come out
+  with **$64,903** against the middle place's **$116,844** to fund a comeback with. Among the
+  careers the bill did NOT end the row is **85 / 94 / 82** – so the deficit is money, not a weaker
+  programme. **Nothing here retunes the table** (`COLLEGE_ODDS_MEASURED_AT` is untouched and its
+  staleness pin is still green).
+  ⚠ **TWO THINGS FOR THE OWNER.** (a) The template comment beside this line still said «the three
+  are nearly the same» – it described **38 / 40 / 34**, a table re-measured away in the same round
+  it was written; corrected in place. (b) The spec itself says **a re-measure is owed** the moment
+  the skill wave (`a412162`, `season/fieldPros.ts`) settles – these figures jumped from 38 / 40 / 34
+  to 85 / 93 / 74 on another wave's change, and `COLLEGE_ODDS_MEASURED_AT` **cannot** notice that
+  because it folds only the college tier table. Re-running the probe is a five-minute job that
+  nobody is currently on the hook for.
 
 - [ ] **4. «Очень странное пожелание на день рождения She was looking fares home at two in the
   morning для студентки с кошельком 500к+ с предложением подарить велосипед.»** – the wish pool
