@@ -50,6 +50,13 @@ a box it has not proven with a command in this session.
    A box whose command did not run in this session stays `[ ]`, with one line in What saying why –
    the checklist CI job will hold the merge, which is exactly its job.
 
+4b. **⚠ THE WAVE-CLOSE DOC STEP** (R2-04, 23.08 – the ownership the second review asked for). Before
+   the body is written, close the wave's own record: if the wave shipped player-visible work it owes
+   a line in its round ledger (`docs/rounds/`) or a dated entry in `docs/decisions.md` when the owner
+   ruled something; if it moved a volatile fact, `node scripts/doc-facts.mjs` already failed the gate
+   and told you which. The rule the review earned: **repair without ownership rots in days** – so a
+   wave that changes what is true also changes what the docs say it is, in the same PR.
+
 5. **The body.** Fill `.github/pull_request_template.md` verbatim – What, then the checklist with
    every earned box ticked `[x]`. ⚠ For an EXISTING PR (a red `checklist` job on an open PR is the
    usual reason this skill is invoked) the deliverable is the same body as a REPLACEMENT – the

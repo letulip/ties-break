@@ -11,10 +11,10 @@
 // в момент самой травмы в попапе или еще где-то»). Home used to wear that face for the whole
 // layoff; it wears `rehab` now, and the picture of the moment she went down belongs to the one
 // surface that only exists at that moment. This dialog mounts on the onset week and on no other –
-// App.vue gates it on the 'injury' STOP REASON, which the engine reports for the tick that rolled
-// it – so the emotion here is a CONSTANT, not a decision, and it deliberately does not reach for
-// the emotion composable at all (the same shape OnboardingWizard uses for its fixed jun-norm
-// frame). The only thing that varies is her age band.
+// App.vue gates it on the injury's own `sinceWeek === week` – so the emotion here is a CONSTANT,
+// not a decision, and it deliberately does not reach for the emotion composable at all (the same
+// shape OnboardingWizard uses for its fixed jun-norm frame). The only thing that varies is her age
+// band.
 //
 // R16 #18/#19 – AND IT SAYS WHEN AND WHY NOW, because the popup it used to be could only ever fire
 // for the weekly roll. The gate moved onto the snapshot (App.vue `showInjuryStop`), so this dialog
@@ -22,15 +22,32 @@
 // case the owner reported as a scoreline with no explanation attached to it. Two injuries that cost
 // the same four weeks are not the same week, and the copy has to be able to tell them apart.
 //
-// ⚠ THE CIRCUMSTANCE IS READ OFF STATE, NOT OFF THE NEWS TEXT. `WorldEvent.match.retiredId` is the
-// persisted fact that she stopped on court – the same field `travelHome` and the season plaque read –
-// so this asks the world what happened rather than pattern-matching the sentence the world wrote
-// about it. Presentation-only, exactly like the withdrawn-entry list below: no engine extension, no
-// schema change, and `InjuryCause` stays private to engine/world/injury.ts where it belongs.
-import { computed, onMounted } from 'vue'
+// ⭐⭐ R2-02 – AND IT IS A FORMATTER NOW. IT ASKS THE ENGINE A QUESTION; IT DOES NOT READ THE ENGINE'S
+// PROSE. Every fact below arrives typed on `snapshot.injuryReport` (see `buildInjuryReport` in
+// engine/world/snapshot.ts). This file used to recover four domain facts out of rendered English:
+//
+//   * the cancelled entries, by `e.text.startsWith(RELEASE_LINE_PREFIX.injury)`, then sliced and
+//     `.replace`d to get the tournament's name back out of the sentence;
+//   * the money, by a RAW literal `e.text.startsWith('Entry refunded')` – no shared symbol at all;
+//   * the forfeited entries, off `upcoming`, which stops at UPCOMING_WEEKS – so a layoff longer
+//     than the look-ahead hid its own last forfeits;
+//   * (the circumstance was already read off state, and stays that way.)
+//
+// ⚠ AND THE FIRST OF THOSE HAD ALREADY BITTEN ONCE. The header this replaces recorded it in as many
+// words: the filter read `startsWith('Withdrew from ')`, `releasedBy` split that sentence on 05.08
+// so the desk's own action would stop being reported as the parent's, and the row that exists to
+// say what a layoff COST went blind for a week – a 9-week absence released two Local Opens, refunded
+// both fees, and the popup said "Nothing". The fix then was to import the prefix as a SYMBOL rather
+// than repeat the spelling, which made a rename break the build instead of the report. It did not
+// make the report stop parsing sentences, and the raw `'Entry refunded'` literal three lines below
+// it never even got that much. Now the words and the facts are separate things: the engine's feed
+// lines are untouched (they are the player's record and the owner's voice), and re-wording any of
+// them cannot move a number on this card – `tests/component/injury-cancelled-row.test.ts` mutates
+// the engine's own copy and watches the report stay right.
+import { computed, onMounted, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
-import { KID_ID, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from '../engine/world'
 import type { InjurySeverity } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
@@ -38,10 +55,11 @@ import { weekLabel } from '../shared/dates'
 import { formatCents } from '../shared/money'
 import { facePoint } from '../art/faceRects'
 
-defineEmits<{ continue: [] }>()
+const emit = defineEmits<{ continue: [] }>()
 
 const game = useGameStore()
 const injury = computed(() => game.snapshot?.injury ?? null)
+const report = computed(() => game.snapshot?.injuryReport ?? null)
 const week = computed(() => game.snapshot?.week ?? 0)
 
 const SEVERITY_LABEL: Record<InjurySeverity, string> = {
@@ -56,27 +74,26 @@ const backWeek = computed(() => week.value + (injury.value?.weeksRemaining ?? 0)
 // week this dialog mounts, and reading the injury is the one that stays true if it ever is not.
 const onsetWeek = computed(() => injury.value?.sinceWeek ?? week.value)
 
-// WHY, as far as the model knows. The retirement match she stopped in, if this injury came in by
-// that door – `retiredId === KID_ID` is the whole test (see season/types.ts on the field).
-const retiredMatch = computed(
-  () =>
-    (game.snapshot?.events ?? []).find(
-      (e) => e.week === onsetWeek.value && e.match?.retiredId === KID_ID,
-    ) ?? null,
-)
-/** One sentence naming the MOMENT: on court mid-match, or a body that gave way between them. */
+/** She stopped ON COURT – the one distinction that changes the title as well as the sentence. */
+const retired = computed(() => report.value?.kind === 'retired-match' || report.value?.kind === 'retired-friendly')
+
+/** One sentence naming the MOMENT, spelled from the report's `kind`. The engine distinguishes two
+ *  doors (`InjuryCause = 'week' | 'retirement'`) and one flag on the match row (a friendly), and
+ *  that is exactly the three shapes below – no taxonomy is invented here.
+ *
+ *  ⚠ 'off-court' IS VAGUE ON PURPOSE, AND NOT LAZINESS. The weekly roll can land on a training week,
+ *  a travel week, an arrival week or a family holiday (`injuryVacationFactor` is nonzero – holidays
+ *  do sprain ankles), and the engine records which of those it was NOWHERE. "She felt it in
+ *  training" would be a sentence this dialog cannot support, on the same honesty rule the commentary
+ *  and the diary are held to: say only what the model knows. */
 const circumstance = computed(() => {
-  const e = retiredMatch.value
-  // ⚠ VAGUE ON PURPOSE, AND NOT LAZINESS. The weekly roll can land on a training week, a travel
-  // week, an arrival week or a family holiday (`injuryVacationFactor` is nonzero – holidays do
-  // sprain ankles), and the engine records which of those it was NOWHERE. "She felt it in training"
-  // would be a sentence this dialog cannot support, on the same honesty rule the commentary and the
-  // diary are held to: say only what the model knows.
-  if (!e) return 'Off court – it came on between matches.'
-  const opp = e.match?.oppName
-  return e.friendly
-    ? `On court – she had to stop during a practice match${opp ? ` against ${opp}` : ''}.`
-    : `On court – she had to stop mid-match${opp ? ` against ${opp}` : ''}. The round she had reached is hers.`
+  const r = report.value
+  if (!r || r.kind === 'off-court') return 'Off court – it came on between matches.'
+  const against = r.oppName ? ` against ${r.oppName}` : ''
+  if (r.kind === 'retired-friendly') return `On court – she had to stop during a practice match${against}.`
+  // The round is a fact the draw sheet carries, so it is said when there is one.
+  const where = r.stage ? ` in the ${r.stage}` : ''
+  return `On court – she had to stop mid-match${against}${where}. The round she had reached is hers.`
 })
 
 // The painting of the moment, in her own age band. Already warmed: `injury` stays in the preloaded
@@ -89,62 +106,68 @@ const artStyle = computed(() => {
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
 
-// What the family pulled out of at onset. F45-2: `rollInjury` no longer cancels every open entry –
-// only the ones the LAYOFF SWALLOWS, so this list is usually short and is often empty (entry lists
-// close two weeks out, so a 1-2 week absence reaches nothing at all). The copy below has to say
-// that plainly: the row is about what was CANCELLED, and it must never read as "your season is
-// gone". Presentation-only reads off the snapshot events – no engine extension.
-//
-// ⚠⚠ ROUND-20 #2 – THIS FILTER MATCHED A SENTENCE THE ENGINE STOPPED WRITING, AND THE ROW HAS BEEN
-// BLIND SINCE 05.08. It read `startsWith('Withdrew from ')`, which was the only line `releaseEntry`
-// wrote until `releasedBy` split it in two: the parent's own withdrawal still says "Withdrew from",
-// and the DESK's – which is the only kind an injury produces – says "Taken out of ... she is not fit
-// for that week". So the one row on this popup whose whole job is to report the layoff's cost could
-// only ever see withdrawals the PLAYER made, and reported "Nothing" for every one the injury made.
-// Measured on a real career: a 9-week layoff released two Local Opens and refunded both fees, and
-// this list came back empty. The prefix is now imported from the engine that writes it: a symbol
-// rather than a spelling, so re-wording the row moves BOTH sides at once instead of moving one and
-// silencing the other. The coupling is not gone – it is checked, by a test that drives a real injury
-// and reads the real rendered cell (tests/component/injury-cancelled-row.test.ts).
-const withdrawnEntries = computed(() =>
-  (game.snapshot?.events ?? [])
-    .filter(
-      (e) =>
-        e.week === week.value && e.type === 'entry' && e.text.startsWith(RELEASE_LINE_PREFIX.injury),
-    )
-    // The entry, without the reason clause – it is already standing under the word "Cancelled".
-    .map((e) => e.text.slice(RELEASE_LINE_PREFIX.injury.length).replace(INJURY_RELEASE_SUFFIX, '')),
-)
+/** One row of the Cancelled cell: the tournament, and the week it was in. The DTO carries the week
+ *  as a NUMBER and this is the only place it becomes words – the engine's own release line spells
+ *  the same pair, and the two agreeing is now a property of `weekLabel`, not of a shared prefix. */
+function entryLine(row: { label: string; week: number }): string {
+  return `${row.label} – ${weekLabel(row.week)}`
+}
 
-// ⚠ AND THE OTHER HALF OF THE SAME ITEM: "nothing cancelled" IS NOT "nothing lost". An entry whose
+// F45-2: `rollInjury` no longer cancels every open entry – only the ones the LAYOFF SWALLOWS, so
+// this list is usually short and is often empty (entry lists close two weeks out, so a 1-2 week
+// absence reaches nothing at all). The copy has to say that plainly: the row is about what was
+// CANCELLED, and it must never read as "your season is gone".
+const cancelled = computed(() => report.value?.cancelled ?? [])
+// ⚠ AND THE OTHER HALF OF ROUND-20 #2: "nothing cancelled" IS NOT "nothing lost". An entry whose
 // list has already closed cannot be withdrawn at all – `releaseEntry` requires `world.week <=
 // deadlineWeek` – so a layoff that lands on or near the event week cancels NOTHING and she stays on
-// the list: the fee is committed, she does not appear, and the week resolves as a walkover (App.vue's
-// `walkover` stop reason). That is the shape the owner reported, two weeks running, and the old
-// fallback answered it with "Nothing – every entry stands", which is exactly backwards. These are the
-// entries the layoff swallows that are NOT coming back, read off `upcoming` (week+1 onwards, with the
-// engine's own `entered` flag) rather than re-derived here.
-const strandedEntries = computed(() =>
-  (game.snapshot?.upcoming ?? [])
-    .filter((u) => u.entered && u.week >= week.value && u.week < backWeek.value)
-    .map((u) => `${u.label} – ${weekLabel(u.week)}`),
-)
-const refundCents = computed(() =>
-  (game.snapshot?.events ?? [])
-    .filter((e) => e.week === week.value && e.text.startsWith('Entry refunded'))
-    .reduce((s, e) => s + (e.amountCents ?? 0), 0),
-)
+// the list: the fee is committed, she does not appear, and the week resolves as a walkover. That is
+// the shape the owner reported, two weeks running, and the old fallback answered it with
+// "Nothing – every entry stands", which is exactly backwards. (⚠ THAT PHRASE IS PINNED – round-11
+// followups reads this file for it, so keep it on one line.)
+const stranded = computed(() => report.value?.stranded ?? [])
+const refundCents = computed(() => report.value?.refundCents ?? 0)
 
 // The dialog only ever mounts off a real click ("Next week"), so the audio gate is open.
 onMounted(() => playSfx('ooh'))
+
+// ⭐⭐ R2-07 – IT IS A MODAL, AND NOW IT SAYS SO AND HOLDS THE KEYBOARD (composables/dialogFocus.ts
+// carries the argument and the honest limit).
+//
+// ⚠⚠ ESCAPE IS WIRED HERE, AND THAT IS THE DIFFERENCE BETWEEN A REPORT AND A DECISION. This card
+// ASKS NOTHING. It says what happened, how long she is out and what the layoff cost, and Continue
+// only closes it – the injury is already in the world and no key can change it. The card has closed
+// on a click outside it since it shipped (`@click.self` on the scrim), so Escape is the keyboard's
+// spelling of a gesture the mouse has always had, and refusing it would leave a trapped keyboard
+// with no exit at all on a card whose exit is free. Same emit as the scrim and the button, so there
+// is one way out and not three. This is the SeasonSummaryDialog policy, for the same reason.
+//
+// ⚠ THE FORK AND THE RETIREMENT TAKE THE OPPOSITE RULE, and it is deliberately not uniform: their
+// dismissal would BE a decision, so they are passed no handler at all. What is shared between the
+// four cards is the shell, never the policy.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card, () => emit('continue'))
 </script>
 
 <template>
   <div v-if="injury" class="dialog-overlay" @click.self="$emit('continue')">
-    <div class="dialog-card season-summary injury-stop">
+    <!-- ⭐⭐ R2-07 – role/aria-modal on the CARD and not on the scrim: the backdrop is not part of
+         the dialog, it is what the dialog is over. `tabindex="-1"` is the trap's landing place for a
+         card with no control at all; this one always has Continue. -->
+    <div
+      ref="card"
+      class="dialog-card season-summary injury-stop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="injury-stop-kicker injury-stop-title"
+      tabindex="-1"
+    >
       <img class="injury-stop-art" :src="artUrl" :style="artStyle" alt="" />
-      <p class="season-summary-kicker">Injury – {{ weekLabel(onsetWeek) }}</p>
-      <h2 class="season-summary-title">{{ retiredMatch ? 'She had to stop.' : "She's hurt." }}</h2>
+      <!-- BOTH LINES ARE THE NAME, in the order they are read: which week it happened, then whether
+           she went down on court. Either alone would name the card worse than it names itself to
+           somebody looking at it. -->
+      <p id="injury-stop-kicker" class="season-summary-kicker">Injury – {{ weekLabel(onsetWeek) }}</p>
+      <h2 id="injury-stop-title" class="season-summary-title">{{ retired ? 'She had to stop.' : "She's hurt." }}</h2>
       <table class="season-summary-table">
         <tbody>
           <tr>
@@ -169,16 +192,16 @@ onMounted(() => playSfx('ooh'))
           <tr>
             <th>Cancelled</th>
             <td>
-              <template v-if="withdrawnEntries.length">
-                <div v-for="(entry, i) in withdrawnEntries" :key="i">Withdrawn: {{ entry }}</div>
+              <template v-if="cancelled.length">
+                <div v-for="row in cancelled" :key="row.id">Withdrawn: {{ entryLine(row) }}</div>
                 <div v-if="refundCents > 0" class="positive num">Fees refunded: +{{ formatCents(refundCents) }}</div>
               </template>
               <!-- ROUND-20 #2: nothing was cancelled AND something was still lost. The lists had
                    closed, so she keeps her place and does not appear - which is a walkover and a
                    forfeited fee, not an entry that "stands". -->
-              <template v-else-if="strandedEntries.length">
+              <template v-else-if="stranded.length">
                 <div>Nothing – those lists had closed.</div>
-                <div v-for="(entry, i) in strandedEntries" :key="i">Forfeited: {{ entry }}</div>
+                <div v-for="row in stranded" :key="row.id">Forfeited: {{ entryLine(row) }}</div>
               </template>
               <template v-else>Nothing – the layoff reaches no entry she holds</template>
             </td>

@@ -26,6 +26,7 @@ import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { STOP_PRECEDENCE, type StopReason, type WorldEventCategory } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS } from '../tools/econ-bench'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { after, region } from './helpers/source'
 
 // ===========================================================================
 // ROUND 11 — WAVE A (correctness).
@@ -231,9 +232,17 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // the round exists to make visible, every single year. It is also the first PAIR in this list
     // that co-occurs by construction – the call-up is read off the championship two weeks earlier –
     // and the ordering between them is asserted below.
+    // ⭐ R2-13 ADDED 'offer', AND ITS CASE FOR A SLOT IS THE ONLY ONE HERE MADE OF A CLOCK. Every
+    // member above either has already happened (the medical trio, the academy's verdict, the two
+    // college reports) or waits for the player indefinitely (the knock, the birthday, the fork, the
+    // retirement offer, a paused reveal) or comes round again (funds, deadline, season-end). An open
+    // letter does none of the three: it EXPIRES when its window closes, so a member filtered out of
+    // the return value for want of a slot would not merely go unreported – the deal behind it would
+    // be gone by the time anything else mentioned it. Slotted immediately below 'academy'; the
+    // argument for that exact line is written beside it in protocol/events.ts.
     // ⚠ THE HAND-WRITTEN LIST IS THE POINT OF THIS TEST and must stay hand-written: derived from
     // STOP_PRECEDENCE it could never catch a member that has no slot, which is the whole bug class.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'call-up', 'college-league']
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'offer', 'call-up', 'college-league']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {
@@ -247,7 +256,7 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // there must be exactly one break after the tick – the one that ends the advance.
     const fn = worldFunction('advanceWeeks')
     expect(fn).not.toBe('')
-    const body = fn.slice(fn.indexOf('tickWeek(world, rng)'))
+    const body = after(fn, 'tickWeek(world, rng)')
     const code = body
       .split('\n')
       .filter((line) => !line.trim().startsWith('//')) // prose may say "break" without doing it
@@ -271,8 +280,8 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
   })
 
   it('neither dialog nor the toast asks which tab is showing', () => {
-    const injury = APP.slice(APP.indexOf('const showInjuryStop'), APP.indexOf('const showSeasonSummary'))
-    const summary = APP.slice(APP.indexOf('const showSeasonSummary'), APP.indexOf('function dismissSeasonSummary'))
+    const injury = region(APP, 'const showInjuryStop', 'const showSeasonSummary')
+    const summary = region(APP, 'const showSeasonSummary', 'function dismissSeasonSummary')
     expect(injury).not.toContain('tab.value')
     expect(summary).not.toContain('tab.value')
     // ...and the toast's own render is no longer Home-only either.
@@ -280,8 +289,8 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
   })
 
   it('both dialogs read the SET, and the wrap-up defers to the injury (one overlay, defined order)', () => {
-    const injury = APP.slice(APP.indexOf('const showInjuryStop'), APP.indexOf('const showSeasonSummary'))
-    const summary = APP.slice(APP.indexOf('const showSeasonSummary'), APP.indexOf('function dismissSeasonSummary'))
+    const injury = region(APP, 'const showInjuryStop', 'const showSeasonSummary')
+    const summary = region(APP, 'const showSeasonSummary', 'function dismissSeasonSummary')
     // ⚠ RE-AIMED, NOT RELAXED (11.08, round-16 #18/#19). R11-1's property is the ORDERING – one
     // overlay at a time, the injury first, and never a dead end – and every assertion that states it
     // is below, verbatim. What moved is the injury gate's INPUT, and it moved because reading the
@@ -318,7 +327,21 @@ describe('R11-1 — the popups are not gated on the Home tab', () => {
     // same shape and the same argument as the injury line above, and the ORDER below is unchanged.
     // The behaviour is proven mounted in tests/component/round19-wrapup.test.ts; this stays a source
     // pin because what it guards is which INPUT the gate reads.
-    expect(summary).toContain('seasonWrapPrompt.value !== null')
+    //
+    // ⚠ RE-AIMED BY R2-08, AND THE GUARDED CLAIM IS UNCHANGED: the gate's INPUT is
+    // `snapshot.seasonWrapPrompt` and NOT a stop reason. The gate used to spell its own watermark
+    // comparison inline (`seasonWrapPrompt.value !== null && String(...) !== seasonWrapSeen.value`);
+    // that comparison is `useWatermark`'s `unseen` now, so the pin follows the input one link back –
+    // it asserts the wrap-up's mark is BUILT over `seasonWrapPrompt`, and that neither the gate nor
+    // the mark has gone back to reading the reason that dies with its own advance.
+    expect(summary).toContain('seasonWrapUnseen.value')
+    const wrapMark = region(APP, 'const SEASON_WRAP_PREFIX', "// R9-21a: the injury stop")
+    expect(wrapMark.length, 'the wrap-up mark moved – re-aim, do not widen').toBeGreaterThan(0)
+    expect(wrapMark, 'the mark is over the snapshot field, not over a stop reason').toContain(
+      'game.snapshot?.seasonWrapPrompt',
+    )
+    expect(wrapMark).toContain('seasonWrapIdentity')
+    expect(wrapMark).not.toContain('stopReasons')
     expect(summary).not.toContain("stopReasons.value.includes('season-end')")
     // The wrap-up waits behind the injury dialog – never both overlays at once, and never a dead
     // end: dismissing the injury re-evaluates this gate and the summary appears.
@@ -449,7 +472,7 @@ describe('R11-12a — the wrap-up summary reconciles with the wallet', () => {
     expect(seasonStartWeek(2 * WEEKS_PER_YEAR + 7)).toBe(2 * WEEKS_PER_YEAR)
     // Both surfaces call the helper – neither re-derives the block boundary for itself, which is
     // how they came to disagree in the first place.
-    const snapshotFold = world.slice(world.indexOf('finance: {'), world.indexOf('financialEvents:'))
+    const snapshotFold = region(world, 'finance: {', 'financialEvents:')
     expect(snapshotFold).toContain('seasonStartWeek(world.week)')
     // the wrap-up function, wherever the P4 decomposition has moved it to
     const wrapUp = worldFunction('maybeFireSeasonWrapUp')
@@ -469,7 +492,7 @@ describe('R11-12a — the wrap-up summary reconciles with the wallet', () => {
     expect(dialog).toContain('v-if="spentCents !== undefined"')
     expect(dialog).toContain('v-if="earnedCents !== undefined"')
     // Player-facing copy: no long dash, no Cyrillic in the rendered strings.
-    const template = dialog.slice(dialog.indexOf('<template>'))
+    const template = after(dialog, '<template>')
     expect(template).not.toMatch(/[—А-Яа-яЁё]/)
   })
 

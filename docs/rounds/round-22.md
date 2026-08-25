@@ -161,6 +161,11 @@ shipped under them, from `5aa1e9a`:
     own tier labels are `WTA 125/250/500/1000` and `Grand Slam`, literally, while `CLAUDE.md`'s
     invariant says tournament and organisation names are fictional because ITF/WTA/ATP are
     trademarks – and the ITF rungs ARE fictionalised as `World Tour`.
+    → ⚠ **THREE QUARTERS OF THIS CLOSED THE DAY IT WAS WRITTEN, and the row never said so
+    (re-verified 24.08).** `calendar.ts` carries `World Tour 125/250/500/1000` – his own 18.08
+    instruction, quoted at `src/engine/season/calendar.ts:941` – and `WTA` survives nowhere in a
+    label. **What is left is one word: `label: 'Grand Slam'` at `:1341`.** Indexed as the one live
+    question in `docs/backlog/awaiting-his-word.md` #1.
 
 ### #17–20 – the professional table comes alive
 
@@ -177,9 +182,13 @@ shipped under them, from `5aa1e9a`:
     RE-ORDER. 396 pros scored, 109,107 points awarded, and the probe throws if nothing was tallied.
   - **v52→v53 back-fills EMPTY, and that is a preservation**: every earlier career was played on an
     engine that discarded these results, so an empty tally is what those seasons contained.
-  - [!] ⚠⚠ **THE FIRST CUT ADDED THE TALLY ON TOP OF THE DERIVED BOOK AND KILLED THE CAREER.** Fixed
+  - [x] ⚠⚠ **THE FIRST CUT ADDED THE TALLY ON TOP OF THE DERIVED BOOK AND KILLED THE CAREER.** Fixed
     the same day in `1b22433` – see the entry below and
     [decisions.md](../decisions.md), 19.08.
+    → ✅ **Marker corrected `[!]` → `[x]` on 24.08.** `[!]` means "was reported done, was not"; this
+    sub-bullet reports a defect that WAS fixed, and reading it as an open box is how a closed thing
+    gets carried forward. Verified: the v52→v53 `fieldSeasonPoints` migration stands at
+    `src/engine/migrations.ts:1600`.
 - [x] **DRY-2 watermarks** – `useWatermark` exported and generalised. ⚠ THREE distinct missing-key
   rules were found where the brief assumed one, and `inboxMail` was REFUSED: its fact is a SET at
   per-letter grain, which no high-water mark can hold.
@@ -297,8 +306,12 @@ arrived after the checklist above was drafted and is recorded from the same sour
 3. [x] ~~The `-corrected` pair class is uncatchable by `context:audit`~~ – **closed in `20498b5`**
    the same day it was flagged. Kept in this list so the flag and its closure are in one place.
 4. [?] **The dormant `HandoffView` fields** – confirmed dormant, left standing, he has not ruled.
-5. [?] **Our own tier labels are literal `WTA …` while the invariant says fictional** – flagged in
-   `46998dd`, untouched, his call.
+5. [?] **One tier label is still the sport's own term** – re-verified 24.08 and **narrowed**: the
+   `WTA 125/250/500/1000` rungs this row was written about are `World Tour 125/250/500/1000` in
+   `src/engine/season/calendar.ts` today, on his own 18.08 instruction quoted at `:941`, so the
+   trademark flag is down to `label: 'Grand Slam'` at `:1341`. Rename or accept, one word either
+   way. Flagged in `46998dd`; the live version of the question is
+   [awaiting-his-word.md](../backlog/awaiting-his-word.md) #1.
 6. [?] **The balance methodology of the review's chapter 04** is written up as a proposal and is
    **not adopted**: [balance-methodology-proposal-2026-08-19.md](../plans/balance-methodology-proposal-2026-08-19.md).
 

@@ -22,7 +22,7 @@ import { fileURLToPath } from 'node:url'
 // under it, and quietly widening what a pin cannot see is how a source pin goes green on a
 // violation. The two forms produce byte-identical output on `src/pwa.ts` today – measured – so this
 // is prospective, which is the only kind of hazard worth writing down.
-import { scriptCodeOf } from './helpers/source'
+import { before, scriptCodeOf } from './helpers/source'
 
 const pwa = readFileSync(fileURLToPath(new URL('../src/pwa.ts', import.meta.url)), 'utf8')
 
@@ -45,7 +45,7 @@ describe('the app goes looking for a new build, not just at startup', () => {
     // ⚠ THE OWNER'S RULE: a build must never reload the app underneath him (vite.config
     // registerType: 'prompt'). The checks may discover a worker; only the banner's Update button
     // may activate one. `updateSW(true)` is the reloading call and it belongs to applyUpdate alone.
-    const beforeApply = code.slice(0, code.indexOf('export function applyUpdate'))
+    const beforeApply = before(code, 'export function applyUpdate')
     expect(beforeApply, 'a check must not activate a worker on its own').not.toMatch(/updateSW\?\.\(true\)/)
   })
 

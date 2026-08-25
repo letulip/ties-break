@@ -6,7 +6,9 @@ Two findings from the same conversation, and they solve each other.
 
 ## 1. The serve speed is a fourteen-year-old serving like an adult
 
-`src/engine/match/matchStats.ts`, the whole model in one line:
+`src/engine/match/matchStats.ts` (the box score moved to `src/viz/match/matchStats.ts` at R2-06;
+the speed model has lived in `src/engine/match/serveSpeed.ts` since §1 shipped), the whole model in
+one line:
 
 > base **128 km/h** + serve skill × **0.45**, jitter **±8**, second serve **−14**
 

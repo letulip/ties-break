@@ -57,6 +57,9 @@ jobs:
       - run: npm run context:audit
       # Invariant 1, machine-enforced: src/engine|worker|db|shared import no vue/pinia. Seconds of
       # file reading; the PR template's third checkbox states what this step has already proven.
+      # The volatile facts a machine can source (R2-04): the schema number and the live wave. Both
+      # rotted repeatedly in hand-maintained context packs; seconds of file reading now owns them.
+      - run: node scripts/doc-facts.mjs
       - run: node scripts/engine-purity.mjs
       # ⚠ THE GENERATED SYMBOL MAP, AND THE CHECK IS THE WHOLE POINT OF GENERATING IT (TOK-4).
       # `tools/generated/world-symbol-map.md` says which module DECLARES each of the 233 names the

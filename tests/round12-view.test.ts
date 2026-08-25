@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { ECONOMY } from '../src/engine/economy'
 import { flipScore, isExamWeek } from '../src/engine/world'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { after, region, regions } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // Round 12, wave B — PRESENTATION ONLY. No engine file is touched by any of these items;
@@ -33,20 +34,11 @@ const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
 // The rules are unchanged; only the file they are written in moved. So the reader searches the sheet
 // AND Season's scoped block, which is also what keeps the round-10 lesson intact: it still finds
 // EVERY occurrence, and a rule that exists twice still fails the `.length` checks below.
-const seasonCss = seasonScreen.slice(seasonScreen.indexOf('<style scoped>'))
+const seasonCss = after(seasonScreen, '<style scoped>')
 
 /** The body of a CSS rule, by selector (every occurrence – the round-10 lesson). */
 function cssBodies(selector: string): string[] {
-  const out: string[] = []
-  for (const source of [css, seasonCss]) {
-    for (let from = 0; ; ) {
-      const i = source.indexOf(`${selector} {`, from)
-      if (i < 0) break
-      out.push(source.slice(i, source.indexOf('}', i)))
-      from = i + 1
-    }
-  }
-  return out
+  return [css, seasonCss].flatMap((source) => regions(source, `${selector} {`, '}'))
 }
 
 /** A template/script slice between two unique markers – asserts both exist so a moved block
@@ -183,7 +175,7 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
     // the exact regression this test exists for straight through.
     const rule = cssBodies('.avail-chip')[0]
     expect(rule).toContain('border-radius: var(--radius-chip)')
-    const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
+    const root = region(css, ':root {', '\n}\n')
     expect(/\n\s*--radius-chip:\s*6px;/.test(root), '--radius-chip is still the owner\'s 6px').toBe(true)
     expect(rule).not.toContain('50%')
   })

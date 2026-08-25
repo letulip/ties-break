@@ -3,16 +3,20 @@ import { request, WorkerRestartError } from '../worker/client'
 import {
   DEFAULT_PROFILE,
   type CareerMeta,
+  type CareersReply,
   type CollegeTier,
+  type ErrorReply,
   type ForkAnswer,
   type KitGrade,
   type KitLine,
   type KnockChoice,
+  type OkReply,
   type PlayerProfile,
   type SavePeek,
   type Snapshot,
   type SlotMeta,
-  type ToUI,
+  type SlotsReply,
+  type SnapshotReply,
   type WeekPlan,
   type WorkerErrorCode,
 } from '../shared/protocol'
@@ -38,7 +42,28 @@ export class CommandRejected extends Error {
   }
 }
 
-type OkReply = Extract<ToUI, { ok: true }>
+/**
+ * R2-05 — the assertion the central appliers below are built on.
+ *
+ * ⚠ IT IS NOT A DUPLICATE OF `replyMismatch` IN worker/client.ts, and the difference is which
+ * mistake each one can see. The client holds the COMMAND and checks the reply against the command
+ * that asked for it; that is the wire contract and it needs `REPLY_BY_COMMAND`. This one holds only
+ * the reply and checks it against the arm the consumer is about to read fields off – so it is the
+ * one that fires if a reply reaches an applier by any route that did not come through `request`.
+ *
+ * ⚠ AND IT MUST THROW RATHER THAN RETURN. `this.snapshot = res.snapshot` on a wrong arm assigns
+ * `undefined` and blanks the game; the `if (res.type === 'snapshot')` this replaced merely did
+ * nothing. Neither is acceptable, and only a refusal says what happened – it lands in `run`'s catch,
+ * leaves the previous snapshot standing, and the player sees a message instead of an empty screen.
+ */
+function expectArm<K extends OkReply['type']>(res: OkReply, arm: K): Extract<OkReply, { type: K }> {
+  if (res.type !== arm) {
+    throw new CommandRejected(`The simulation answered '${res.type}' where a '${arm}' reply was expected`)
+  }
+  // The parameter type already guarantees this at every call site in this file; the cast is what
+  // lets the guard exist at all, for the one caller the compiler cannot see coming.
+  return res as Extract<OkReply, { type: K }>
+}
 
 /** Which save-management operation a status row is about – the UI maps these to labels/retries. */
 export type SaveOpKind = 'save' | 'load' | 'delete' | 'delete-career' | 'export' | 'import'
@@ -82,12 +107,37 @@ export const useGameStore = defineStore('game', {
     saveOp: null as SaveOpStatus | null,
   }),
   actions: {
-    /** Unwrap a worker reply: absorb the committed revision, throw typed on refusal. Returning
-     *  the ok-narrowed union keeps each action's `res.type === '…'` dispatch type-safe. */
-    takeOk(res: ToUI): OkReply {
+    /** Unwrap a worker reply: absorb the committed revision, throw typed on refusal.
+     *
+     *  ⚠ R2-05 — IT NOW RETURNS THE COMMAND'S OWN REPLY, not the ok-narrowed union of all of them.
+     *  `T` is whatever `request` inferred for the command that produced `res`, so an `advance`
+     *  arrives here as a `SnapshotReply` and leaves as one. That is what retires the 36 copies of
+     *  `if (res.type === 'snapshot')` this store used to carry: there is nothing left to narrow. */
+    takeOk<T extends OkReply>(res: T | ErrorReply): T {
       if (!res.ok) throw new CommandRejected(res.error, res.code, res.revision)
       this.revision = res.revision
       return res
+    },
+    // ---------------------------------------------------------------------------------------
+    // R2-05 — THE CENTRAL APPLIERS. One place per reply shape where a worker answer becomes UI
+    // state, replacing a per-command `if` at every call site.
+    //
+    // ⚠ WHY THE `if` HAD TO GO RATHER THAN BE TIDIED. `if (res.type === 'snapshot')` reads like a
+    // check and behaves like a SILENCE: on a mispaired reply it is simply false, the snapshot is
+    // never published, no error is raised, and the screen keeps showing the previous week. These
+    // take the exact arm instead, so the same mistake is a compile error – and if the worker itself
+    // ever answers off-contract, `worker/client.ts` has already rejected the request before the
+    // reply can reach one of these (`replyMismatch`, the runtime half of the same table).
+    // ---------------------------------------------------------------------------------------
+    /** THE ONE PLACE A `Snapshot` REACHES THE UI. */
+    applySnapshot(res: SnapshotReply): void {
+      this.snapshot = expectArm(res, 'snapshot').snapshot
+    },
+    applySlots(res: SlotsReply): void {
+      this.slots = expectArm(res, 'slots').slots
+    },
+    applyCareers(res: CareersReply): void {
+      this.careers = expectArm(res, 'careers').careers
     },
     async init() {
       this.phase = 'loading'
@@ -108,7 +158,7 @@ export const useGameStore = defineStore('game', {
           this.phase = 'recovery'
           return
         }
-        if (res.type === 'careers') this.careers = res.careers
+        this.applyCareers(res)
         if (!this.snapshot && this.careers.length) {
           const mostRecent = [...this.careers].sort((a, b) => b.lastPlayedAt - a.lastPlayedAt)[0]
           await this.loadCareer(mostRecent.careerId)
@@ -182,7 +232,7 @@ export const useGameStore = defineStore('game', {
       }
       try {
         const res = this.takeOk(await request({ type: 'loadCareer', careerId }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
         // The required copy (TB-05): the player is told whether unsaved work may have been lost —
         // under TB-03 nothing past the last ok response ever existed, and that is the saved week.
@@ -197,7 +247,7 @@ export const useGameStore = defineStore('game', {
       if (typeof err.revision === 'number') this.revision = err.revision
       try {
         const res = this.takeOk(await request({ type: 'getSnapshot' }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
       } catch {
         /* no active career or a fresh failure – the copy below still explains the refusal */
       }
@@ -218,7 +268,7 @@ export const useGameStore = defineStore('game', {
         seed.trim() || `${profile.kidName.toLowerCase()}-${(Math.random().toString(36).slice(2) + '0000').slice(0, 4)}`
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'new', seed: finalSeed, profile }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         this.recovered = false
         await this.refreshCareers()
         await this.refreshSlots()
@@ -227,7 +277,7 @@ export const useGameStore = defineStore('game', {
     async tick(weeks: number) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'tick', weeks, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
         await this.refreshCareers()
       })
@@ -235,7 +285,7 @@ export const useGameStore = defineStore('game', {
     async advance(weeks: 1 | 4) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'advance', weeks, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
         await this.refreshCareers()
       })
@@ -243,7 +293,7 @@ export const useGameStore = defineStore('game', {
     async enterEvent(eventId: string) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'enterEvent', eventId, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -256,14 +306,14 @@ export const useGameStore = defineStore('game', {
     async answerFork(answer: ForkAnswer, tier?: CollegeTier) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'answerFork', answer, tier, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
     async answerRetirement(retire: boolean) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'answerRetirement', retire, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -276,7 +326,7 @@ export const useGameStore = defineStore('game', {
     async resumeFromCollege() {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'resumeFromCollege', baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -286,14 +336,14 @@ export const useGameStore = defineStore('game', {
     async endCollegeEarly() {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'endCollegeEarly', baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
     async withdrawEvent(eventId: string) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'withdrawEvent', eventId, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -303,7 +353,7 @@ export const useGameStore = defineStore('game', {
     async cancelEntry(eventId: string) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'cancelEntry', eventId, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -311,28 +361,28 @@ export const useGameStore = defineStore('game', {
     async skipEvent(eventId: string) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'skipEvent', eventId, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
     async tournamentReveal() {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'tournamentReveal', baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
     async tournamentSkip() {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'tournamentSkip', baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
     async tournamentClose() {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'tournamentClose', baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -343,7 +393,7 @@ export const useGameStore = defineStore('game', {
         const res = this.takeOk(
           await request({ type: 'bookVacation', week, packageId, baseRevision: this.revision }),
         )
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -351,7 +401,7 @@ export const useGameStore = defineStore('game', {
     async cancelVacation(week: number) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'cancelVacation', week, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -361,7 +411,7 @@ export const useGameStore = defineStore('game', {
         const res = this.takeOk(
           await request({ type: 'bookPractice', week, withCoach, baseRevision: this.revision }),
         )
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -369,7 +419,7 @@ export const useGameStore = defineStore('game', {
     async hireCoach(coachId: string | null) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'hireCoach', coachId, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -378,7 +428,7 @@ export const useGameStore = defineStore('game', {
     async hireMasseur(hire: boolean) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'hireMasseur', hire, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
       })
     },
     /** v59 step 2: the sessions dial – the engine refuses a rung the market does not sell. */
@@ -387,7 +437,7 @@ export const useGameStore = defineStore('game', {
         const res = this.takeOk(
           await request({ type: 'setMasseurSessions', sessions, baseRevision: this.revision }),
         )
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
       })
     },
     /** v59 step 2: the travel stance – one more fare on every trip to a paying rung. */
@@ -396,7 +446,7 @@ export const useGameStore = defineStore('game', {
         const res = this.takeOk(
           await request({ type: 'setMasseurTravels', on, baseRevision: this.revision }),
         )
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
       })
     },
     /** Buy the coach for competition weeks too, or send him home for them. */
@@ -405,7 +455,7 @@ export const useGameStore = defineStore('game', {
         const res = this.takeOk(
           await request({ type: 'setCoachOnEventWeeks', on, baseRevision: this.revision }),
         )
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -416,7 +466,7 @@ export const useGameStore = defineStore('game', {
         const res = this.takeOk(
           await request({ type: 'setCoachOnJuniorEvents', on, baseRevision: this.revision }),
         )
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -424,14 +474,14 @@ export const useGameStore = defineStore('game', {
     async cancelPractice(week: number) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'cancelPractice', week, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
     async setPlan(plan: WeekPlan) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'setPlan', plan, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
       })
     },
     // W4: answer the knock. Nothing else can clear it and the sim will not tick until it is answered,
@@ -439,7 +489,7 @@ export const useGameStore = defineStore('game', {
     async decideKnock(choice: KnockChoice) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'decideKnock', choice, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
       })
     },
     /** ⭐ v48: answer the birthday. Like `decideKnock` above, nothing else can clear it and the sim
@@ -448,7 +498,7 @@ export const useGameStore = defineStore('game', {
     async chooseGift(giftId: string) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'chooseGift', giftId, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
       })
     },
     /** THE INBOX (v32): sign a letter. Irreversible – the UI puts a ConfirmDialog in front of this
@@ -456,7 +506,7 @@ export const useGameStore = defineStore('game', {
     async signOffer(offerId: string) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'signOffer', offerId, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
@@ -464,14 +514,14 @@ export const useGameStore = defineStore('game', {
     async refuseOffer(offerId: string) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'refuseOffer', offerId, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
     async setPhysio(active: boolean) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'setPhysio', active, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
       })
     },
     /** W3-KIT: put one line of her kit on another rung. Moving up buys the item and is billed at
@@ -479,14 +529,14 @@ export const useGameStore = defineStore('game', {
     async setKitGrade(line: KitLine, grade: KitGrade) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'setKitGrade', line, grade, baseRevision: this.revision }))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshSlots()
       })
     },
     async saveManual() {
       await this.runOp('save', async () => {
         const res = this.takeOk(await request({ type: 'save', slot: 'manual' }))
-        if (res.type === 'slots') this.slots = res.slots
+        this.applySlots(res)
       })
     },
     /** TB-01: restore a slot AS THE ACTIVE STATE. The worker commits it as the newest autosave
@@ -495,10 +545,8 @@ export const useGameStore = defineStore('game', {
     async restoreSlot(slot: string) {
       await this.runOp('load', async () => {
         const res = this.takeOk(await request({ type: 'restoreSlot', slot }))
-        if (res.type === 'snapshot') {
-          this.snapshot = res.snapshot
-          this.recovered = res.recovered ?? false
-        }
+        this.applySnapshot(res)
+        this.recovered = res.recovered ?? false
         await this.refreshSlots()
         await this.refreshCareers()
       })
@@ -506,53 +554,57 @@ export const useGameStore = defineStore('game', {
     async saveNamed(name: string) {
       await this.runOp('save', async () => {
         const res = this.takeOk(await request({ type: 'saveNamed', name }))
-        if (res.type === 'slots') this.slots = res.slots
+        this.applySlots(res)
       })
     },
     async loadCareer(careerId: string) {
       await this.runOp('load', async () => {
         const res = this.takeOk(await request({ type: 'loadCareer', careerId }))
-        if (res.type === 'snapshot') {
-          this.snapshot = res.snapshot
-          this.recovered = res.recovered ?? false
-        }
+        this.applySnapshot(res)
+        this.recovered = res.recovered ?? false
         await this.refreshSlots()
       })
     },
     async deleteSlot(slot: string) {
       await this.runOp('delete', async () => {
         const res = this.takeOk(await request({ type: 'deleteSlot', slot }))
-        if (res.type === 'slots') this.slots = res.slots
+        this.applySlots(res)
       })
     },
     async deleteCareer(careerId: string) {
       await this.runOp('delete-career', async () => {
         const res = this.takeOk(await request({ type: 'deleteCareer', careerId }))
-        if (res.type === 'careers') this.careers = res.careers
+        this.applyCareers(res)
         if (this.snapshot?.careerId === careerId) {
           this.snapshot = null
           this.slots = []
         }
       })
     },
+    // ⚠ THE TWO REFRESH HELPERS SWALLOW A FAILED REPLY ON PURPOSE and still do: mid-game a stale
+    // list beats noise, and `init` deliberately does NOT come through here for exactly that reason
+    // (its own note says why). R2-05 removed only the `&& res.type === 'slots'` half of the
+    // condition – the reply's arm is now decided by the command – and left the `res.ok` half alone.
     async refreshSlots() {
       const res = await request({ type: 'listSlots' })
-      if (res.ok && res.type === 'slots') {
+      if (res.ok) {
         this.revision = res.revision
-        this.slots = res.slots
+        this.applySlots(res)
       }
     },
     async refreshCareers() {
       const res = await request({ type: 'listCareers' })
-      if (res.ok && res.type === 'careers') {
+      if (res.ok) {
         this.revision = res.revision
-        this.careers = res.careers
+        this.applyCareers(res)
       }
     },
     async exportSave() {
       await this.runOp('export', async () => {
+        // ⚠ `if (res.type !== 'exported') return` STOOD HERE AND IS GONE (R2-05). It was the export
+        // path's copy of the silence: a mispaired reply left the player with no file and no error.
+        // `exportSave` answers `exported` by the protocol's own table, so `res.bytes` is simply here.
         const res = this.takeOk(await request({ type: 'exportSave' }))
-        if (res.type !== 'exported') return
         const blob = new Blob([res.bytes], { type: 'application/octet-stream' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -580,7 +632,11 @@ export const useGameStore = defineStore('game', {
         // the import would hand the worker a detached ArrayBuffer. A File can be read twice.
         const bytes = await file.arrayBuffer()
         const res = await request({ type: 'peekSave', bytes }, [bytes])
-        if (!res.ok || res.type !== 'peek') return null
+        // ⚠ `!res.ok` STAYS AND IS THE WHOLE POINT OF THIS ACTION – a failed peek is "cannot say",
+        // never "safe". Only the `res.type !== 'peek'` half went with R2-05, and a worker that
+        // answered off-contract would now reject in the client and land in the catch below, which
+        // returns the same cautious `null`.
+        if (!res.ok) return null
         this.revision = res.revision
         return res.peek
       } catch {
@@ -591,7 +647,7 @@ export const useGameStore = defineStore('game', {
       await this.runOp('import', async () => {
         const bytes = await file.arrayBuffer()
         const res = this.takeOk(await request({ type: 'importSave', bytes }, [bytes]))
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        this.applySnapshot(res)
         await this.refreshCareers()
         await this.refreshSlots()
         // A successful import IS a way out of storage recovery – the write went through, so the

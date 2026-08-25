@@ -78,6 +78,15 @@ for this particular round), kept short and close to how he put each point in the
 - [ ] **Weather (Phase 3/4 backlog)** – дождь/жара/ветер, indoor/outdoor флаг
       → не сделано → Phase 3/4 backlog **#67**. Verified 09.08: no weather concept anywhere in
       `src/`, and no indoor/outdoor flag on a tournament. Genuinely open.
+      → ⚠ **REASON CORRECTED 24.08 – "no weather concept anywhere in `src/`" is false, and the item
+      is still open.** A COSMETIC weather layer shipped 29.07 and is live: `eventTemperature`
+      (`src/engine/season/preview.ts:147`) puts a deterministic degrees figure on
+      `EventPreview.temperatureC`, `WeatherPlate.vue` draws it on the Season card and over the
+      court, and `viz/preview.ts` speaks it in the pre-match commentary (round-17 #25). What is
+      absent is everything MECHANICAL the item asked for: no rain, no wind, no indoor/outdoor flag
+      on a tournament, and the temperature reaches nothing in `src/engine/` – it is read only for
+      display. So the row stands, but as "the weather does nothing", not "there is no weather".
+      The backlog row is [the-living-world.md](../backlog/the-living-world.md) #10.
 - [x] **Age curves для точности/мощности (Phase 4)** – свои возрастные кривые, калиброванные
       харнессом
       → **SHIPPED, in a different shape than the ask, and the difference matters.** The engine has

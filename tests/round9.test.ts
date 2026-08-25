@@ -30,6 +30,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import { INCOME_CATS } from '../tools/econ-bench'
 import { fnv1aHex } from './helpers/hash'
+import { after, region } from './helpers/source'
 
 // ---------------------------------------------------------------------------
 // Round-9 pt3 — engine pack: savings interest (R9-1), per-match tournament
@@ -649,7 +650,13 @@ describe('R9-9/R9-21a — UI wiring', () => {
     const dialog = readFileSync(new URL('../src/components/InjuryStopDialog.vue', import.meta.url), 'utf8')
     expect(dialog).toContain('playSfx')
     expect(dialog).toContain('injury')
-    expect(dialog).toContain('Entry refunded')
+    // ⭐ R2-02 REPOINTED: this used to pin the literal `'Entry refunded'`, because the popup found
+    // the money by `startsWith('Entry refunded')` on the news feed – the raw-literal half of the
+    // defect R2-02 removed. The claim ("the popup reports the refunds") is unchanged; its source is
+    // now the typed `Snapshot.injuryReport.refundCents`, and the sentence the player reads is the
+    // one pinned here. The engine's feed line still says "Entry refunded"; the UI no longer reads it.
+    expect(dialog).toContain('refundCents')
+    expect(dialog).toContain('Fees refunded')
     const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
     expect(app).toContain('InjuryStopDialog')
     expect(app).not.toContain('she picked up an injury – see the news')
@@ -693,12 +700,11 @@ describe('pt4 — UI wiring', () => {
     const home = read('../src/components/screens/HomeScreen.vue')
     const season = read('../src/components/screens/SeasonScreen.vue')
     for (const [sel, src] of [
-      ['.diary-name', home.slice(home.indexOf('<style scoped>'))],
-      ['.event-tier', season.slice(season.indexOf('<style scoped>'))],
+      ['.diary-name', after(home, '<style scoped>')],
+      ['.event-tier', after(season, '<style scoped>')],
     ] as const) {
-      const at = src.indexOf(`${sel} {`)
-      expect(at, `${sel} must still be declared somewhere`).toBeGreaterThan(-1)
-      expect(src.slice(at, src.indexOf('}', at))).toContain('var(--font-heading)')
+      // ⚠ if this throws, `${sel}` is no longer declared here – re-aim the pin, do not delete it.
+      expect(region(src, `${sel} {`, '}')).toContain('var(--font-heading)')
     }
     expect(css).toContain('.season-topbar h2')
   })
@@ -763,7 +769,7 @@ describe('pt4 — UI wiring', () => {
 // Round-9 pt5 — R9-16 portrait stages by age + the young/teen header crops.
 // ---------------------------------------------------------------------------
 describe('pt5 — R9-16 portrait stages by age', () => {
-  it('portraitStage: jun <11, young 11-16, teen 17-22, adult 23-30, milf 31+', () => {
+  it('portraitStage: jun <11, young 11-16, teen 17-22, adult 23-30, lateCareer 31+', () => {
     expect(portraitStage(10)).toBe('jun')
     // Owner 25.07: young starts at 11 (the childhood prologue will need this boundary).
     expect(portraitStage(11)).toBe('young')
@@ -773,9 +779,9 @@ describe('pt5 — R9-16 portrait stages by age', () => {
     expect(portraitStage(17)).toBe('teen')
     expect(portraitStage(22)).toBe('teen')
     expect(portraitStage(23)).toBe('adult')
-    // Owner 27.07: adult gained an UPPER bound and milf became a real band.
+    // Owner 27.07: adult gained an UPPER bound and the 31+ band became a real one.
     expect(portraitStage(30)).toBe('adult')
-    expect(portraitStage(31)).toBe('milf')
+    expect(portraitStage(31)).toBe('lateCareer')
   })
 
   it('the 256px header crops exist for every young/teen emotion (sips→256→cwebp q82)', () => {

@@ -45,6 +45,7 @@ import {
   type WeekPlan,
 } from '../../src/shared/protocol'
 import { careerSnapshot } from '../helpers/career'
+import { regionToLast } from '../helpers/source'
 
 /** A real career through the real protocol, so nothing here is a hand-written shape that can drift
  *  from `Snapshot`. Same fixture discipline as season-screen.test.ts. */
@@ -122,7 +123,7 @@ describe('the layout the owner asked for: a line, and seven boxes under it', () 
     const file = readFileSync(resolve(__dirname, '../../src/components/HerWeekTab.vue'), 'utf8')
     expect(file).not.toContain('data-testid')
     // ...and the player-copy rules, on the one template this wave adds.
-    const template = file.slice(file.indexOf('<template>'), file.lastIndexOf('</template>'))
+    const template = regionToLast(file, '<template>', '</template>')
     expect(template).not.toContain('—')
     expect(template).not.toMatch(/[Ѐ-ӿ]/)
   })

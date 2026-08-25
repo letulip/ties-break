@@ -86,7 +86,7 @@ import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../s
 // Comments are not code - the `codeOf` discipline, now in tests/helpers/source.ts. Load-bearing
 // here: this file's subjects document themselves at length, and one of them explains in prose
 // exactly the thing a raw scan is looking for.
-import { codeOf } from './helpers/source'
+import { codeOf, regionToLast } from './helpers/source'
 import { fnv1aHex } from './helpers/hash'
 
 const read = (p: string) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), 'utf8')
@@ -742,7 +742,7 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
 // =================================================================================================
 describe('the letter states its terms in words the player can act on', () => {
   const letter = read('../src/components/OfferLetter.vue')
-  const template = letter.slice(letter.indexOf('<template>'), letter.lastIndexOf('</template>'))
+  const template = regionToLast(letter, '<template>', '</template>')
 
   it('⚠ THE PAPER SAYS WHAT HAPPENS IF SHE FALLS SHORT', () => {
     // The owner, 31.07: «надо при подписании прояснить, что будет, если девочка не выполнит условия,
@@ -857,7 +857,7 @@ describe('the letter states its terms in words the player can act on', () => {
   it('no Cyrillic reaches a template, and the player copy uses the short dash', () => {
     for (const p of ['../src/components/OfferLetter.vue', '../src/components/InboxSheet.vue']) {
       const src = read(p)
-      const tpl = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+      const tpl = regionToLast(src, '<template>', '</template>')
       expect(tpl, `${p} has Cyrillic in its template`).not.toMatch(/[Ѐ-ӿ]/)
       expect(tpl, `${p} uses the long dash`).not.toContain('—')
     }

@@ -65,15 +65,27 @@ CONDITION.proPhaseRecoveryBase = argOf('proRecovery', CONDITION.proPhaseRecovery
 
 const SEEDS = argOf('seeds', 16)
 const SEASONS = argOf('seasons', 3)
+// ⚠⚠ THESE THREE DEFAULTS WERE 55 / 80 / ECONOMY.practice.rescueCondition (80) UNTIL 24.08 AND
+// THAT WAS A REPRODUCIBILITY DEFECT, not a taste: §7's base-8 column was produced at 92 / 72 / 65,
+// its own prose says so, and running this file AS COMMITTED reproduced none of it – 1.33 onsets a
+// season against §7's 0.92, 28.9 events against 25.0, 10.7 vacation packages against 6.7, and a
+// back-to-back share of 49% against his measured 25%. The looser T1 lets her take a second week
+// whenever she is above 80, which is most weeks, so the instrument played a cadence that is not his.
+// Restored to the validated triple, which now reproduces §7 to every digit (0.92 ±0.13 / 2.35 ±0.44
+// / 1.42 / 25.0 ±0.4 / 64.7 / 6.7 / 29-56-14 / 83.8 ±0.4 / 9.9 ±0.4 / trough 40 / 63% prevalence /
+// 31-11-1-1). Verified 24.08, docs/specs/the-injury-landscape-2026-08.md §9.
 /** fit enough to enter at all (a two-week pair) – calibrated, see the header */
-const T0 = argOf('t0', 55)
+const T0 = argOf('t0', 72)
 /** fresh enough to take a back-to-back week – calibrated, see the header */
-const T1 = argOf('t1', 80)
+const T1 = argOf('t1', 92)
 /** the extra-rest lever: a floor under the gap whatever her condition says */
 const MIN_GAP = argOf('minGap', 1)
 /** he takes the rescue whenever the game offers it – the shipped offer knob, like the bench's
  *  balanced planner. 0 switches the habit off. */
-const RESCUE = argOf('rescue', ECONOMY.practice.rescueCondition)
+// ⚠ 65, NOT `ECONOMY.practice.rescueCondition` (80): the shipped offer knob is when the GAME offers
+// a package, and calibrating against his own saves says he takes one at 65, not at every dip below
+// 80. At 80 the probe books 10.7 packages a season against his measured 6.0.
+const RESCUE = argOf('rescue', 65)
 const MASSEUR = args.includes('--masseur')
 const PLAN = argStr('plan', 'balanced') as 'grind' | 'balanced' | 'light'
 /** Seasons LIVED (entering, under his policy) before the measured window opens. His mature
@@ -105,6 +117,46 @@ interface SeasonRow {
   skillMeanEnd: number
 }
 
+/** HIS VACATION HABIT, both halves, extracted verbatim so tools/his-careers-dose.ts can replay the
+ *  SAME rule on a world loaded from his saves rather than keep a copy of it: the off-season family
+ *  week (one elite package a year, the shipped UI offer), and the rescue he takes whenever the game
+ *  makes it (condition below the offer knob -> the cheapest package that returns her to the shipped
+ *  target). Returns true when a package was actually booked. */
+export function bookHisVacation(world: WorldState, target: number, offSeasonBooked: Set<number>): boolean {
+  const offset = target % WEEKS_PER_YEAR
+  const year = Math.floor(target / WEEKS_PER_YEAR)
+  if (offset === WEEKS_PER_YEAR - OFF_SEASON_WEEKS + 1 && !offSeasonBooked.has(year)) {
+    try {
+      bookVacation(world, target, 'elite')
+      offSeasonBooked.add(year)
+      return true
+    } catch {
+      /* not plannable */
+    }
+    return false
+  }
+  if (RESCUE > 0 && world.condition < RESCUE && world.injury === null) {
+    const id = recommendVacationPackage({
+      seed: world.seed,
+      week: target,
+      background: world.profile.background,
+      condition: world.condition,
+      fundsCents: world.fundsCents,
+      budgetCents: world.fundsCents,
+      targetCondition: ECONOMY.practice.rescueTargetCondition,
+    })
+    if (id) {
+      try {
+        bookVacation(world, target, id)
+        return true
+      } catch {
+        /* not plannable */
+      }
+    }
+  }
+  return false
+}
+
 /** HIS entry rule: the strongest rung the engine will accept, committed near the deadline (so the
  *  condition he reads is close to the condition she plays at), gated by how fresh she is:
  *  condition >= T1 allows a back-to-back week, >= T0 allows the two-week pair, below T0 she rests.
@@ -112,7 +164,7 @@ interface SeasonRow {
  *  may push), a BLOCK never is. The track is never filtered: which rungs are on offer is her
  *  earned book's business, exactly as in his careers (the junior rungs close behind her as she
  *  outgrows them, the W window sits where her rank puts it). */
-function nextEntry(world: WorldState, lastPlayWeek: number): string | null {
+export function nextEntry(world: WorldState, lastPlayWeek: number): string | null {
   const gapRequired = Math.max(MIN_GAP, world.condition >= T1 ? 1 : world.condition >= T0 ? 2 : 99)
   if (gapRequired > 90) return null
   const entered = new Set(world.entries)
@@ -174,35 +226,7 @@ function probe(seed: string): SeasonRow[] {
       // HIS vacation habit, both halves: the off-season family week (one elite package a year, the
       // shipped UI offer), and the rescue he takes whenever the game makes it (condition below the
       // offer knob -> the cheapest package that returns her to the shipped target).
-      const offset = target % WEEKS_PER_YEAR
-      const year = Math.floor(target / WEEKS_PER_YEAR)
-      if (offset === WEEKS_PER_YEAR - OFF_SEASON_WEEKS + 1 && !offSeasonBooked.has(year)) {
-        try {
-          bookVacation(world, target, 'elite')
-          offSeasonBooked.add(year)
-          row.vacationsBooked++
-        } catch {
-          /* not plannable */
-        }
-      } else if (RESCUE > 0 && world.condition < RESCUE && world.injury === null) {
-        const id = recommendVacationPackage({
-          seed: world.seed,
-          week: target,
-          background: world.profile.background,
-          condition: world.condition,
-          fundsCents: world.fundsCents,
-          budgetCents: world.fundsCents,
-          targetCondition: ECONOMY.practice.rescueTargetCondition,
-        })
-        if (id) {
-          try {
-            bookVacation(world, target, id)
-            row.vacationsBooked++
-          } catch {
-            /* not plannable */
-          }
-        }
-      }
+      if (bookHisVacation(world, target, offSeasonBooked)) row.vacationsBooked++
       const id = nextEntry(world, lastPlayWeek)
       if (id) {
         try {
@@ -259,6 +283,14 @@ function probe(seed: string): SeasonRow[] {
   return rows.slice(PRE_SEASONS, PRE_SEASONS + SEASONS)
 }
 
+// ⚠ THE POLICY IS NOW IMPORTABLE, and the sweep below is guarded so importing it does not run one.
+// Same escape hatch tools/fatigue-bench.ts gives tools/points-curve.ts and tools/rehab-lever.ts:
+// tools/his-careers-dose.ts replays HIS entry rule (`nextEntry` + the vacation habit above) on a
+// world LOADED FROM HIS SAVES rather than on a walked career, and it must be the SAME rule, not a
+// copy of it. Set TB_BENCH_NO_AUTORUN before importing; never when running this probe.
+if (!process.env.VITEST && !process.env.TB_BENCH_NO_AUTORUN) main()
+
+function main(): void {
 const all: SeasonRow[][] = []
 for (let s = 0; s < SEEDS; s++) all.push(probe(`his-cadence-${s}`))
 const flat = all.flat()
@@ -332,3 +364,4 @@ console.log(
     .map(([t, n]) => `${t} ${(n / flat.length).toFixed(1)}`)
     .join(' · ')}`,
 )
+}

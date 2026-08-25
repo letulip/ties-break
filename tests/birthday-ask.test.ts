@@ -28,6 +28,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   BIRTHDAY_BANDS,
+  BIRTHDAY_COLLEGE_BAND,
   BIRTHDAY_DAY_TOGETHER,
   BIRTHDAY_TIME_TOGETHER,
   birthdayOffer,
@@ -35,6 +36,7 @@ import {
   chooseGift,
   createWorld,
   decideKnock,
+  giftNoun,
   pendingBirthday,
   pendingKnock,
   tickWeek,
@@ -42,7 +44,9 @@ import {
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
-import type { BirthdayGift } from '../src/shared/protocol'
+// ⚠ RE-AIMED by R2-09, not weakened: `BirthdayGift` left the wire format for the engine leaf that
+// owns the catalogue's shape (src/engine/world/birthdayGift.ts). Same type, same assertions.
+import type { BirthdayGift } from '../src/engine/world/birthdayGift'
 
 /** Every gift that can be on screen together: a band's own list plus the day, which is offered in
  *  every band (spec §2a). Three of a band's gifts are drawn, so ANY pair of them can co-occur and
@@ -389,6 +393,13 @@ describe('⚠ the copy work costs the stream nothing', () => {
       return out
     }
     for (const band of BIRTHDAY_BANDS) {
+      // ⚠ RE-AIMED BY R2-18, NOT WEAKENED. Every band used to be reachable by AGE alone, so
+      // `birthdayOffer(seed, age)` was enough to replay it. The college band is chosen by a FACT
+      // (`atCollege`) and spans 0-99, so replaying it by age would silently replay the 0-14 band
+      // instead – the counted draw would still be a real draw and the test would still pass, while
+      // checking the wrong list. The flag is passed through here, which is also what makes the
+      // college band's own draw count load-bearing.
+      const atCollege = band === BIRTHDAY_COLLEGE_BAND
       const age = Math.max(band.from, 14)
       let draws = 0
       const rng = rngFromSeed(`draws:birthday:${age}`)
@@ -404,7 +415,7 @@ describe('⚠ the copy work costs the stream nothing', () => {
       const askedId = options[Math.floor(counted() * options.length)].id
       expect(draws, `${bandName(band)}: (n-1) to shuffle the band, three for the four, one for the ask`)
         .toBe(band.gifts.length + 3)
-      const real = birthdayOffer('draws', age)
+      const real = birthdayOffer('draws', age, [], atCollege)
       expect(
         [real.options.map((o) => o.id), real.askedId],
         `${bandName(band)}: the real offer and the counted replay must be the same draw`,
@@ -418,5 +429,85 @@ describe('⚠ the copy work costs the stream nothing', () => {
     const fresh = birthdayOffer('long-record', 20)
     const loaded = birthdayOffer('long-record', 20, ['car', 'deposit', 'home', 'day', 'laptop'])
     expect(loaded.options.map((o) => o.id)).toEqual(fresh.options.map((o) => o.id))
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ R2-18 / PROD-10 — THE COLLEGE BIRTHDAYS ARE NOT SPENT IN A FLAT SHE HAS NOT GOT
+// =================================================================================================
+//
+// Round 24 made four of her birthdays happen at college (`pendingBirthday` lost its college
+// exclusion on the 22.08 ruling) and nothing was written for them: she fell through `bandFor(age)`
+// into the 19-21 INDEPENDENCE band and was offered a deposit for a place of her own, a car, and «A
+// kitchen table for her flat» whose note reads "She is furnishing a life we do not live in". She is
+// in a hall of residence with three years of a scholarship left.
+//
+// ⚠⚠ THE TEST IS BY FACT, NOT BY A WORD LIST, which is the review's explicit instruction and the
+// right one. It does NOT scan the copy for "flat", "keys" or "kitchen" – the next residence noun
+// would walk straight past that, exactly as "the hall mirror" walked past the week-note blacklist.
+// It asserts the STRUCTURAL fact instead: while she is at college, every option on the screen comes
+// from the band written for college. A new age-band gift asserting a mortgage cannot reach her,
+// whatever it is called, because it is not in the set.
+describe('R2-18 — a girl at college is offered gifts for the life she is actually living', () => {
+  const COLLEGE_IDS = new Set([...BIRTHDAY_COLLEGE_BAND.gifts.map((g) => g.id), BIRTHDAY_DAY_TOGETHER.id])
+
+  it('⭐ every option on a college birthday comes from the college band, at every age', () => {
+    // The whole span a scholarship can cover, and then some: the point is that AGE stops deciding.
+    for (let age = 17; age <= 30; age++) {
+      const { options, askedId } = birthdayOffer('college-sweep', age, [], true)
+      expect(options).toHaveLength(4)
+      for (const o of options) {
+        expect(COLLEGE_IDS.has(o.id), `age ${age}: "${o.label}" is not a college-band gift`).toBe(true)
+      }
+      // ...and the ask is one of the four she can see – §2ab, which the new band must not break.
+      expect(options.map((o) => o.id)).toContain(askedId)
+      // the day is always one of them (spec §2a): "nothing" stays a real answer at college too
+      expect(options.map((o) => o.id)).toContain(BIRTHDAY_DAY_TOGETHER.id)
+    }
+  })
+
+  it('⭐ ...and the age bands she skips are the ones that assert a home – she cannot reach them', () => {
+    // Stated as the complement of the rule above rather than as a second rule: these are the ids the
+    // 19-21 and 22-28 bands offer, and the assertion is that the college set does not intersect them.
+    const ageBandIds = new Set(
+      BIRTHDAY_BANDS.filter((b) => b !== BIRTHDAY_COLLEGE_BAND).flatMap((b) => b.gifts.map((g) => g.id)),
+    )
+    for (const id of BIRTHDAY_COLLEGE_BAND.gifts.map((g) => g.id)) {
+      expect(ageBandIds.has(id), `${id} is in an age band too – a repeat the record cannot explain`).toBe(false)
+    }
+    // and the three the review named are genuinely in the age bands, or this proves nothing
+    for (const id of ['deposit', 'car', 'home']) expect(ageBandIds.has(id)).toBe(true)
+  })
+
+  it('⚠ A CAREER THAT NEVER GOES TO COLLEGE IS OFFERED EXACTLY WHAT IT WAS – not one draw moved', () => {
+    // ⚠ THE RNG CLAIM, AS A TEST RATHER THAN AS A COMMENT. `atCollege` chooses which list is
+    // shuffled; it adds and removes no `rng()` call, and it is false on every tour career. So the
+    // sub-stream `seed:birthday:<age>` is drawn the identical number of times and every existing
+    // save is offered the identical four options in the identical order.
+    //
+    // Mutation: make `atCollege` default to `true` in `birthdayOffer` and this goes red at once.
+    for (let age = 14; age <= 32; age++) {
+      const withFlag = birthdayOffer('tour-career', age, [], false)
+      const withoutFlag = birthdayOffer('tour-career', age)
+      expect([withFlag.options.map((o) => o.id), withFlag.askedId]).toEqual([
+        withoutFlag.options.map((o) => o.id),
+        withoutFlag.askedId,
+      ])
+      // ...and none of them is a college gift, which is the other half of the same fact
+      for (const o of withoutFlag.options) {
+        if (o.id === BIRTHDAY_DAY_TOGETHER.id) continue
+        expect(COLLEGE_IDS.has(o.id), `age ${age}: a tour career was offered "${o.label}"`).toBe(false)
+      }
+    }
+  })
+
+  it('⭐ the diary can still name a college gift years later – `giftNoun` walks the whole catalogue', () => {
+    // The trap this closes: a callback is by definition about a gift given at a DIFFERENT age, and
+    // by the time she is remembered for the lamp she is in an age band that never offered it. If
+    // `giftNoun` had kept looking only through `BANDS`, every college callback would have gone
+    // silently null – the exact failure its own comment warns about for cross-band callbacks.
+    for (const gift of BIRTHDAY_COLLEGE_BAND.gifts) {
+      expect(giftNoun(gift.id), `${gift.id} has no noun for the diary`).toBe(gift.short)
+    }
   })
 })

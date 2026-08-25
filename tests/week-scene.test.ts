@@ -25,7 +25,7 @@
 //      story existing. That is the difference between a valve and the game hiding something, and it is
 //      one `&&` away from being broken from either side.
 import { describe, it, expect } from 'vitest'
-import { worldSource } from './worldSource'
+import { engineModuleSource, worldSource } from './worldSource'
 import { existsSync } from 'node:fs'
 import { readFileSync } from 'node:fs'
 import {
@@ -60,6 +60,7 @@ import {
 } from '../src/composables/weekRecap'
 import type { DiaryFacts, TravelHomeScene, WeekScene, WorldEvent, WorldMatch } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+import { region, regionToLast } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -334,7 +335,7 @@ describe('W5 — every arm names a file that is on disk', () => {
     existsSync(new URL(`../public/${url.slice(import.meta.env.BASE_URL.length)}`, import.meta.url))
 
   it('the five layoff paintings, one per band', () => {
-    for (const stage of ['jun', 'young', 'teen', 'adult', 'milf'] as const) {
+    for (const stage of ['jun', 'young', 'teen', 'adult', 'lateCareer'] as const) {
       const url = weekSceneArtUrl({ kind: 'rehab', week: 11, stage })
       expect(url).toBe(portraitUrl(stage, 'rehab'))
       expect(onDisk(url), url).toBe(true)
@@ -368,7 +369,7 @@ describe('W5 — every arm names a file that is on disk', () => {
     // 404 on the day the prologue or the handover puts her outside 14-19, so it is swept rather than
     // reasoned about.
     for (const kind of ['exam', 'knock'] as const) {
-      for (const stage of ['jun', 'young', 'teen', 'adult', 'milf'] as const) {
+      for (const stage of ['jun', 'young', 'teen', 'adult', 'lateCareer'] as const) {
         const url = weekSceneArtUrl({ kind, week: 11, stage })
         expect(url).toBe(weekHomeArtUrl(kind, stage))
         expect(onDisk(url), url).toBe(true)
@@ -382,7 +383,7 @@ describe('W5 — every arm names a file that is on disk', () => {
     // the list, and it is derived from the same table the URL builder spells, so the two cannot drift.
     const reachable = new Set(
       (['exam', 'knock'] as const).flatMap((kind) =>
-        (['jun', 'young', 'teen', 'adult', 'milf'] as const).map((stage) =>
+        (['jun', 'young', 'teen', 'adult', 'lateCareer'] as const).map((stage) =>
           weekHomeArtUrl(kind, stage).replace(/^.*\/(?=[^/]+$)/, '').replace(/\.webp$/, ''),
         ),
       ),
@@ -550,7 +551,7 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
     // switching the page off would silently take the story off the This-week tab as well, which is the
     // one outcome this slice must not produce.
     const rule = read('../src/composables/weekRecap.ts')
-    const body = rule.slice(rule.indexOf('export function recapExists'), rule.indexOf('/** The This-week tab'))
+    const body = region(rule, 'export function recapExists', '/** The This-week tab')
     expect(body).toContain('return !snap.pending')
     expect(body).not.toContain('AutoOpen')
     expect(body).not.toContain('localStorage')
@@ -561,7 +562,12 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
     expect(rule).toContain("const AUTO_OPEN_OFF_KEY = 'tb-week-story-off'")
     // ...and nothing about it is in the protocol: a preference is not a fact about her career, and the
     // save is at v26 with a migration ladder and golden saves over it.
-    const protocol = read('../src/shared/protocol.ts')
+    // ⚠ WIDENED by R2-09, NOT weakened. `shared/protocol` is a barrel since the split, and a
+    // negative asked of a file that holds only re-export lines is a guard that cannot fail. The
+    // claim was always about the protocol SURFACE, so it is now asked of the whole module set
+    // (barrel + every src/shared/protocol/*.ts). Mutation-checked: putting `weekStory` on any part
+    // turns this red.
+    const protocol = engineModuleSource('../shared/protocol')
     expect(protocol).not.toContain('weekStory')
     expect(protocol).not.toContain('tb-week-story-off')
   })
@@ -573,7 +579,7 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
     expect(more).toContain('@click="toggleWeekStory"')
     // the same `role="switch"` + track/knob object Sound, Music and Haptics use – four switches, one
     // idiom, so a settings screen cannot start lying about what a switch is
-    const section = more.slice(more.indexOf('<h2>Week story</h2>'), more.indexOf('<h2>About</h2>'))
+    const section = region(more, '<h2>Week story</h2>', '<h2>About</h2>')
     expect(section).toContain('class="sound-switch"')
     expect(section).toContain(':aria-checked="!weekStoryOff"')
     // ...and the hint says what OFF means, because "Week story: OFF" alone reads as "no story"
@@ -582,7 +588,7 @@ describe('W5 — the handle in settings, and the thing it must not do', () => {
 
   it('the settings copy obeys the app\'s rules: short dash only, no Cyrillic', () => {
     const more = read('../src/components/screens/MoreScreen.vue')
-    const template = more.slice(more.indexOf('<template>'), more.lastIndexOf('</template>'))
+    const template = regionToLast(more, '<template>', '</template>')
     expect(template.length).toBeGreaterThan(500)
     expect(template).not.toContain('—')
     expect(template).not.toMatch(/[Ѐ-ӿ]/)

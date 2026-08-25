@@ -66,6 +66,27 @@ const collegeHeading = computed(() => {
   return `Year ${Math.min(c.yearsDone + 1, c.totalYears)} of ${c.totalYears}`
 })
 
+/**
+ * ⭐⭐ R2-18 / PROD-11 – THE RANKING RULE, STATED ONCE.
+ *
+ * It was stated FOUR TIMES on one card, and the review counted them: the lead called it "a closed
+ * league that pays no ranking points", the next-year line said "Student tennis, no ranking points",
+ * the call-up note ended "No prize money and no ranking points; there are none to award", and the
+ * championship note ended "No prize money and no ranking points; a student field awards neither".
+ * A card that repeats its own terms four times reads as a card arguing with the player, and the
+ * fourth repetition teaches nothing the first did not.
+ *
+ * ⚠ THE FACTS ARE NOT DROPPED, THEY ARE HOISTED. Both currencies are still named, and named for both
+ * competitions – which is more than any single one of the four repetitions did. What the three
+ * result lines below do now is describe the RESULT, which is what a player reads them for.
+ *
+ * ⚠ AND IT IS ALWAYS ON THE CARD, including the first year before anything has been played. That is
+ * deliberate: it is a term of the scholarship rather than a footnote to a result, and the year she
+ * most needs to be told is the one where she has not seen it yet.
+ */
+const collegeAwardsNothing =
+  'None of it pays ranking points or prize money. A student field and a national squad award neither.'
+
 /** The one-line answer to "what was that year". Empty before the first one is spent. */
 const collegeLead = computed(() => {
   const c = college.value
@@ -74,7 +95,9 @@ const collegeLead = computed(() => {
     // ⭐ 17.08 – IT NAMES THE PLACE SHE PICKED. ⚠ NULL ON A CAREER THAT ENTERED BEFORE THE CHOICE
     // EXISTED – it says nothing rather than naming a place it was never told.
     const place = c.tier ? `${COLLEGE_PLACE[c.tier]}. ` : ''
-    return `${place}A scholarship, a closed league that pays no ranking points, and the family pays whatever the award does not. She can leave at the end of any year.`
+    // R2-18: «a closed league that pays no ranking points» moved to `collegeAwardsNothing`, which
+    // is on the card above this line in every year rather than only in the first.
+    return `${place}A scholarship, and the family pays whatever the award does not. She can leave at the end of any year.`
   }
   if (c.final) return 'One year of the scholarship left. After it she is out either way.'
   return `${c.yearsDone} ${c.yearsDone === 1 ? 'year' : 'years'} spent, ${c.totalYears - c.yearsDone} left on the scholarship.`
@@ -99,9 +122,9 @@ const collegeBillLine = computed(() => {
  *  It is still said BEFORE she agrees, which is the whole of round 21's fix. */
 const nextYearLine = computed(() => {
   const bill = collegeBillLine.value
-  return bill === null
-    ? 'Student tennis, no ranking points, and the award covers the whole year.'
-    : `Student tennis, no ranking points – ${bill}.`
+  // R2-18: this line is about the PRICE of the next year; the ranking rule is stated once at the
+  // top of the same card and does not need repeating inside a sentence about money.
+  return bill === null ? 'Student tennis again, and the award covers the whole year.' : `Student tennis again – ${bill}.`
 })
 
 /** #A -> #B across the year, or a dash at either end where she is on no list at all. `null` is not
@@ -126,7 +149,9 @@ const collegeCallNote = computed(() => {
     c.rubbersPlayed === 0
       ? 'named in the squad, never on court'
       : `${c.rubbersWon} of ${c.rubbersPlayed} rubbers won`
-  return `Her country called – ${court}, and the nation finished ${c.nationFinish}th. No prize money and no ranking points; there are none to award.`
+  // R2-18: the tail «No prize money and no ranking points; there are none to award» is the card's
+  // one rule line now. What is left is the fact this note exists to report.
+  return `Her country called – ${court}, and the nation finished ${c.nationFinish}th.`
 })
 
 // --- ⭐⭐ THE COMPETITION, WATCHED ---------------------------------------------------------------
@@ -171,9 +196,10 @@ const leagueNote = computed(() => {
   if (run === null) return ''
   const played = leagueMatchesPlayed(run)
   const matches = `${played} ${played === 1 ? 'match' : 'matches'}, ${run.roundsWon} ${run.roundsWon === 1 ? 'win' : 'wins'}`
+  // R2-18: as for the call-up note – the rule is on the card once, the result is here.
   return wonTheLeague(run)
-    ? `She won it – ${matches}. No prize money and no ranking points; a student field awards neither.`
-    : `She went out in the ${leagueExitLabel(run)} – ${matches}. No prize money and no ranking points; a student field awards neither.`
+    ? `She won it – ${matches}.`
+    : `She went out in the ${leagueExitLabel(run)} – ${matches}.`
 })
 
 /** ⭐ THE ONE LINE ON THIS CARD THAT NAMES A MECHANISM, and it is a fact rather than advice: the
@@ -297,11 +323,20 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
     <div class="college-year">
       <p class="college-heading">{{ collegeHeading }}</p>
       <p class="college-lead">{{ collegeLead }}</p>
+      <!-- ⭐ R2-18 / PROD-11: the ranking rule, ONCE. See `collegeAwardsNothing`. -->
+      <p class="college-rule">{{ collegeAwardsNothing }}</p>
 
       <dl v-if="lastYear" class="college-facts">
+        <!-- ⚠⚠ TWO LABELS, BY THE SIGN (owner, 24.08) – and the word was the whole defect. The
+             figure is `fundsCents` now minus `fundsCents` a year ago: what the BALANCE did, never
+             what she earned. At college she is an amateur, so there is no prize money and the bills
+             keep arriving – the delta is negative in most college years, and the card was printing
+             «Banked -$3,200». Nothing was ever miscomputed; the noun promised the opposite of what
+             the number said. `Math.abs` on the amount, because the label already carries the sign –
+             «Spent -$3,200» would say it twice. -->
         <div>
-          <dt>Banked</dt>
-          <dd>{{ formatCents(lastYear.fundsDeltaCents) }}</dd>
+          <dt>{{ lastYear.fundsDeltaCents < 0 ? 'Spent' : 'Banked' }}</dt>
+          <dd>{{ formatCents(Math.abs(lastYear.fundsDeltaCents)) }}</dd>
         </div>
         <!-- ⭐⭐ THE YEAR'S BILL, BESIDE WHAT THE YEAR BANKED (round 21). One is what the family
              paid, the other is what the balance did anyway. Neither is an opinion about the other. -->
@@ -398,6 +433,7 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
 }
 
 .college-lead,
+.college-rule,
 .college-call,
 .college-next {
   margin: 0;
@@ -407,6 +443,9 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
   color: var(--ink-soft);
 }
 
+/* R2-18: the terms line. Dimmed like the next-year line – it is a rule rather than news, and it is
+   on the card every year, so it must not compete with the result it sits above. */
+.college-rule,
 .college-next {
   color: var(--ink-dim);
 }

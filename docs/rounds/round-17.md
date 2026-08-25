@@ -38,7 +38,7 @@ cost of not keeping it: #14 was reported shipped and was not fixed on his screen
   injured) and the Bills screen now says so – round-16 #15's fix finished the legibility.
 - [x] **13. Season money table.** Redesigned per the owner's correction – the running balance left
   both surfaces; and the naive identity provably does not close (off-season moves the balance).
-- [!] **14. Coach-card text off the picture.** ⚠ REOPENED 12.08: the first fix (54→66px) aimed at
+- [x] **14. Coach-card text off the picture.** ⚠ REOPENED 12.08: the first fix (54→66px) aimed at
   the mask's opaque stop; the fade runs to 96% and the man was still under the words. Now 80px –
   the target is the image, not the opaque band.
   → ⚠ **`[x]` → `[!]` BY THE 13.08 AUDIT (round-18 item 6, task #88). BOTH fixes landed on the wrong
@@ -53,6 +53,10 @@ cost of not keeping it: #14 was reported shipped and was not fixed on his screen
   height-driven, so widening the margin narrows the quote, which makes the card taller, which makes
   the portrait WIDER – 54px → card 193px / portrait 117px, 80px → card 265px / portrait 162px. **The
   overlap was worse at 80 than at 54.** Home is back to 54px; the fix that was owed went next door.
+  → ✅ **CLOSED, ticked by the 24.08 re-verification.** The fix he actually asked for is in the tree:
+  `src/style.css:3736` gives `.cm-art` a width on the picker's cards («ROUND-18 #2 – THE STRIP HAS A
+  WIDTH NOW, AND THAT IS THE WHOLE FIX»), with the 104px row floor at `:3624`; Home's revert is
+  `HomeScreen.vue:2234`. Both landed under round-18 items 1 and 2 and neither ledger was ticked.
 - [>] **15. Why pay a coach.** Measured (`what-money-buys-2026-08.md`): money is a ZERO on the
   ladder; above `budget` no rung beats self-coaching; the design answer is
   `docs/specs/coach-as-the-eye.md` and its aim-value measurement is running now.

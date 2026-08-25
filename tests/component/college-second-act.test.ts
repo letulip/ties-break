@@ -273,7 +273,12 @@ describe('P5 – the college year block', () => {
     expect(text).toContain('Her country called')
     expect(text).toContain('1 of 2 rubbers won')
     expect(text).toContain('finished 11th')
-    expect(text).toContain('No prize money and no ranking points')
+    // ⚠ RE-AIMED BY R2-18 AND STRICTLY STRONGER. This asserted that the call-up note carried the
+    // tail «No prize money and no ranking points» – true, and true of three other lines on the same
+    // card, which is the defect PROD-11 counted. The claim ("the card says what it paid, which is
+    // nothing, in both currencies") is unchanged and is now checked ONCE and by both currencies, in
+    // the dedicated test below. What stays here is the call-up's own facts.
+    expect(text).toMatch(/ranking points/)
     wrapper.unmount()
   })
 
@@ -483,7 +488,8 @@ describe('P5 – the college year block', () => {
     // Two wins in a draw of three rounds is the final, lost – stated with no adjective near it.
     expect(text).toContain('Final')
     expect(text).toContain('3 matches, 2 wins')
-    expect(text).toContain('No prize money and no ranking points')
+    // ⚠ RE-AIMED BY R2-18 – see the note on the call-up test above. The championship note reports
+    // the RESULT; the rule it used to restate is asserted once, below.
     const rows = wrapper.findAll('.college-league-match')
     expect(rows, 'one row per match she played').toHaveLength(3)
     expect(rows[0].text()).toContain('Quarterfinal')
@@ -656,6 +662,40 @@ describe('⚠⚠ P5 – the college question fits a phone, and the measurement c
     const answers = wrapper.findAll('.college-answer').map((n) => n.element)
     bar.style.position = 'static'
     expect(() => assertBarFits(bar, answers, PHONE, 'HomeScreen (college answers)')).toThrow(/not `fixed`/)
+    wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ R2-18 / PROD-11 — THE CARD STATES ITS RULE ONCE
+// =================================================================================================
+describe('R2-18 — the ranking rule is said once, not four times', () => {
+  it('⭐ both currencies are named, and the rule appears exactly ONCE on the whole card', async () => {
+    const wrapper = await openCollegeHome(collegeView())
+    const text = wrapper.find('.college-year').text()
+    // The FACTS, which is what the four repetitions were carrying between them – and the hoisted
+    // line carries both for both competitions, which no single one of the four did.
+    expect(text).toMatch(/ranking points/)
+    expect(text).toMatch(/prize money/)
+    // ...and it is said once. ⚠ COUNTED, NOT `toContain`: "does the card mention the rule" was true
+    // of the version this item exists to fix. The count is the assertion.
+    expect(text.match(/ranking points/g) ?? [], 'the rule, restated').toHaveLength(1)
+    expect(text.match(/prize money/g) ?? [], 'the rule, restated').toHaveLength(1)
+    // and it lives in its own element rather than inside a result sentence, so a future result line
+    // cannot absorb it back
+    expect(wrapper.findAll('.college-rule'), 'one rule line').toHaveLength(1)
+    expect(wrapper.find('.college-rule').text()).toMatch(/ranking points/)
+    wrapper.unmount()
+  })
+
+  it('⭐ ...and it is on the card in the FIRST year, before there is any result to attach it to', async () => {
+    // The year the terms most need saying is the one where nothing has been played yet, and the old
+    // full statement was in `collegeLead`'s `yearsDone === 0` branch only – so it was said four
+    // times on the years she did not need it and once on the year she did.
+    const wrapper = await openCollegeHome(collegeView({ yearsDone: 0, last: null, league: null }))
+    const text = wrapper.find('.college-year').text()
+    expect(text).toMatch(/ranking points/)
+    expect(text.match(/ranking points/g) ?? []).toHaveLength(1)
     wrapper.unmount()
   })
 })

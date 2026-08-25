@@ -27,10 +27,17 @@ import type { ToWorker } from '../../src/shared/protocol'
  *  its common keys ({ id, type }) and rejects every payload field. */
 export type WorkerMsg<T = ToWorker> = T extends { id: number } ? Omit<T, 'id'> : never
 
-/** The Worker global the module under test believes it is running inside. */
+/** The Worker global the module under test believes it is running inside.
+ *
+ *  ⚠ `transfer` IS DECLARED EVEN THOUGH THIS HARNESS IGNORES IT (R2-05). The worker posts its
+ *  export reply as `postMessage(msg, [msg.bytes])` – the transfer list that stops a whole save
+ *  being structured-cloned – and a one-parameter signature makes that second argument invisible to
+ *  every test: a suite cannot even WRAP `postMessage` to look at it, because a two-parameter
+ *  function is not assignable to a one-parameter type. Optional, so all four existing callers and
+ *  the factory's own implementation below are unchanged. */
 export interface WorkerGlobal {
   onmessage: null | ((e: { data: ToWorker }) => void)
-  postMessage(m: unknown): void
+  postMessage(m: unknown, transfer?: Transferable[]): void
 }
 
 /** The only shape this harness needs of a reply: the id it is answering. */

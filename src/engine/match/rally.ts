@@ -5,6 +5,11 @@
 // influences outcomes. RNG is seeded per point and independent of the outcome RNG.
 
 import type { MatchPlayer, MatchOptions, MatchResult, Side } from './types'
+// R2-06: the annotation vocabulary and the court's own dimensions come from the neutral leaf
+// `shared/matchViz.ts`, NOT from `viz/types.ts` where they used to live. This module PRODUCES a
+// `Rally`; the renderer consumes one; a contract both sides need cannot be owned by one of them,
+// and an engine file importing `src/viz` is invariant 1 backwards. `viz/types.ts` re-exports every
+// name below, so nothing on the presentation side moved. See tests/engine-viz-direction.test.ts.
 import type {
   AnnotatedMatch,
   AnnotatedPoint,
@@ -14,8 +19,8 @@ import type {
   ServeDirection,
   RallyDirection,
   ShotResult,
-} from '../../viz/types'
-import { COURT } from '../../viz/types'
+} from '../../shared/matchViz'
+import { COURT } from '../../shared/matchViz'
 import { createScore, awardPoint } from './scoring'
 import { basePServe } from './point'
 import { rngFromSeed, type Rng } from '../rng'

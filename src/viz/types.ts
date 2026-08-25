@@ -1,64 +1,44 @@
-// Shared contract for Phase 2 (match visualization). Source of truth for
-// rally generation (engine/match/rally.ts), live win probability (engine/match/liveProb.ts),
-// the playback timeline (viz/timeline.ts) and the canvas renderer (viz/courtRenderer.ts).
+// PLAYBACK TYPES for Phase 2 (match visualization) – what a screen shows, in what order, for how
+// long. Source of truth for the playback timeline (viz/timeline.ts), the canvas renderer
+// (viz/courtRenderer.ts) and MatchViewer's own state.
+//
+// ⚠ THE ANNOTATION CONTRACT MOVED OUT OF THIS FILE AND THIS FILE RE-EXPORTS IT (R2-06 / ARCH-04).
+// `CourtPoint`, `COURT`, `Shot`, `Rally`, `AnnotatedPoint`, `AnnotatedMatch` and the three direction
+// /result unions now live in `src/shared/matchViz.ts`, unchanged, because the ENGINE needs them too:
+// `engine/match/rally.ts` produces a `Rally` and `engine/match/serveSpeed.ts` reads an
+// `AnnotatedPoint`, and until this move both reached UP into `src/viz` to get them – invariant 1
+// pointing backwards, which nothing caught because it deadlocked nothing and changed no outcome.
+// A contract two layers share belongs under both of them.
+//
+// ⚠ THE RE-EXPORT IS NOT A COURTESY, IT IS THE REASON THE MOVE WAS AFFORDABLE. 14 files (24.08)
+// read a moved name off this path and NONE of them had to change; the barrel is the same discipline
+// `engine/world.ts` keeps for its own importers. Presentation code may keep reading either path.
+//
+// ⚠ COUNT IT, DO NOT QUOTE IT – and the cheap way to count is WRONG here. Two of the fourteen spell
+// the import across several lines, so a per-line `^import.*from '…viz/types'` pattern skips both and
+// answers 13. Match against the whole file text with the `[\s\S]*?` form the two architecture tests
+// use, over the file list `git grep -lE "from '[^']*viz/types'" -- src tests tools e2e` gives:
+// 14 read a moved name, 4 read only the playback types below.
+//
+// ⚠ ENGINE code may NOT – it reads `shared/matchViz` directly, and
+// `tests/engine-viz-direction.test.ts` fails the build the moment an engine file imports this file.
+//
+// What stayed: `ViewMode`, `TimelineEventKind`, `TimelineEvent`, `Timeline`. No engine module has
+// ever named one of them, and they are about the WATCHING rather than the match.
 
-import type { Side, MatchResult, PointLogEntry } from '../engine/match/types'
-
-/** Court coordinates in meters. Origin = net center; side 0 defends y < 0, side 1 defends y > 0. */
-export interface CourtPoint {
-  x: number
-  y: number
-}
-
-export const COURT = {
-  /** singles half-width */
-  halfWidth: 4.115,
-  /** baseline distance from net */
-  halfLength: 11.885,
-  /** service line distance from net */
-  serviceLine: 6.4,
-  /** doubles half-width (visual margin only) */
-  doublesHalfWidth: 5.485,
-} as const
-
-export type ServeDirection = 'wide' | 'body' | 'T'
-export type RallyDirection = 'cross' | 'middle' | 'line'
-export type ShotResult = 'in' | 'winner' | 'net' | 'out'
-
-export interface Shot {
-  by: Side
-  kind: 'serve1' | 'serve2' | 'rally'
-  direction: ServeDirection | RallyDirection
-  /** where the ball lands; for result 'net' the y is ~0 */
-  bounce: CourtPoint
-  result: ShotResult
-}
-
-export interface Rally {
-  pointNumber: number
-  /** alternating hitters starting with the server; serve faults repeat the server */
-  shots: Shot[]
-  ace: boolean
-  doubleFault: boolean
-}
-
-export interface AnnotatedPoint {
-  entry: PointLogEntry
-  rally: Rally
-  /** side A's match-win probability AFTER this point (1 or 0 after the last point) */
-  winProbA: number
-  /** true if this point was served into the deuce court (even point-parity in the game) */
-  deuceCourt: boolean
-  /** a regular game ended with this point */
-  gameEnd: boolean
-  /** a set ended with this point */
-  setEnd: boolean
-}
-
-export interface AnnotatedMatch {
-  result: MatchResult
-  points: AnnotatedPoint[]
-}
+export type {
+  CourtPoint,
+  ServeDirection,
+  RallyDirection,
+  ShotResult,
+  Shot,
+  Rally,
+  AnnotatedPoint,
+  AnnotatedMatch,
+} from '../shared/matchViz'
+// ⚠ THE ONE RUNTIME NAME HERE: the court's own dimensions, re-exported as a value rather than a
+// type. `viz/geometry.ts`, `viz/courtRenderer.ts` and MatchViewer read it off this path.
+export { COURT } from '../shared/matchViz'
 
 /** Playback modes: 'skip' shows no points (straight to the result screen). */
 export type ViewMode = 'full' | 'key' | 'skip'

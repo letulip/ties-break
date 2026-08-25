@@ -23,6 +23,17 @@
 // claim is "this takeover is NOT in the DOM while that state is", and only a mount can make it – a
 // source pin goes green on a gate that reads the right field and renders anyway.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+// ⚠ A RUNNER-SIZED CEILING, AND THE ARITHMETIC IS THE POINT (24.08). Every case here mounts the
+// WHOLE App over a career walked ~60 weeks to the fork and through the college latch – the heaviest
+// shape a component test can take, and deliberately so: the shell's claims are only worth anything
+// against a real world. Measured alone on a quiet machine the slowest case is 1.4 s; the component
+// project runs its files in parallel, and under that load the same case has crossed vitest's 5 s
+// per-test default with ZERO assertion failures – the documented slow-machine signature (CLAUDE.md).
+// 30 s is ~20x the solo cost, so it can only fire on a genuine wedge and never on a slow-but-working
+// run. ⚠ If a case here ever takes tens of seconds ALONE, that is a real regression and this ceiling
+// must not be raised to hide it.
+vi.setConfig({ testTimeout: 30_000 })
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -391,6 +402,80 @@ describe('⚠⚠ a REAL ending still gets the epilogue, album and all', () => {
     expect(game.snapshot?.ending?.college, 'the progress view is gone with the open question').toBeNull()
     expect(w.findComponent(EndingScreen).exists()).toBe(true)
     expect(w.findComponent(CollegeYearCard).exists()).toBe(false)
+    w.unmount()
+  })
+})
+
+// ⚠⚠ PROD-11's OTHER HALF – THE LABEL, NOT THE NUMBER (owner, 24.08: «две подписи по знаку»).
+//
+// `fundsDeltaCents` is what the BALANCE did over a college year, never what she earned. At college
+// she is an amateur: no prize money, the bills unchanged – so the figure is negative in most years
+// and the card printed «Banked -$3,200». The arithmetic was always right; the noun said the
+// opposite of the number.
+//
+// ⚠ SCOPE, DELIBERATELY: the claim is presentational – «a negative figure is not called banked, and
+// the sign is not printed twice» – so the subject is a mounted card over a snapshot whose banked
+// row carries each sign. Driving a real college year to a bank would test the ENGINE's arithmetic,
+// which `tests/college-second-act.test.ts` already owns and which was never in doubt here. The
+// career underneath is still a walked one, so the card renders in its real surroundings.
+//
+// The tests assert the PAIRING, not the spelling: a copy edit may rename either word; what may
+// never return is a negative amount under a word that promises accumulation, or a doubled sign.
+describe('PROD-11 – the college year names what the balance did', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    backing.clear()
+    document.body.innerHTML = ''
+  })
+
+  /** The banked row a college year leaves behind, at the sign under test. */
+  const bankedYear = (fundsDeltaCents: number) => ({
+    index: 1,
+    fundsDeltaCents,
+    startRank: 300,
+    endRank: 280,
+    callUp: null,
+    league: null,
+  })
+
+  /** The balance row, found by its own two candidate labels rather than by position. */
+  function moneyRow(w: ReturnType<typeof mount>) {
+    const row = w
+      .findAll('.college-facts div')
+      .find((d) => /^(Spent|Banked)$/.test(d.find('dt').text().trim()))
+    expect(row, 'the college facts carry a balance row').toBeTruthy()
+    return { label: row!.find('dt').text().trim(), amount: row!.find('dd').text() }
+  }
+
+  async function cardWith(seed: string, fundsDeltaCents: number) {
+    const { world } = atCollege(seed)
+    const game = useGameStore()
+    vi.spyOn(game, 'init').mockResolvedValue(undefined)
+    game.$patch({ ready: true, phase: 'ready' })
+    const snap = toSnapshot(world)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(snap.ending!.college as any).last = bankedYear(fundsDeltaCents)
+    game.snapshot = snap
+    const w = mount(App, { attachTo: document.body, global: { stubs: { teleport: true } } })
+    w.findComponent(SplashScreen).vm.$emit('done')
+    await flushPromises()
+    return w
+  }
+
+  it('a year that COST the family is not called banked, and the sign is not doubled', async () => {
+    const w = await cardWith('prod-11-negative', -3_200_00)
+    const { label, amount } = moneyRow(w)
+    expect(label, 'a negative year is not «banked»').toBe('Spent')
+    expect(amount, 'the label carries the sign, so the amount does not repeat it').not.toContain('-')
+    expect(amount).toContain('3,200')
+    w.unmount()
+  })
+
+  it('a year that ADDED to the balance keeps the accumulating word', async () => {
+    const w = await cardWith('prod-11-positive', 1_500_00)
+    const { label, amount } = moneyRow(w)
+    expect(label).toBe('Banked')
+    expect(amount).toContain('1,500')
     w.unmount()
   })
 })

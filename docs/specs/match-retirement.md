@@ -333,7 +333,7 @@ The owner: «не забудь про соответствующие запис�
 
 | The week | Where its words come from | New? |
 |---|---|---|
-| **Withdrawal before her first match** | the walkover news line + the `athome && injured` layoff band of `WEEK_NOTES` | **reused** – it is honest: nothing in that band claims she travelled or played |
+| **Withdrawal before her first match** | the walkover news line + the `notTravellingWeek && injured` layoff band of `WEEK_NOTES` | **reused** – it is honest: nothing in that band claims she travelled or played |
 | **An ordinary defeat** | the journey-home pool's `plainLoss` band | unchanged |
 | **A retirement** | the journey-home pool's new `retired` band | **six new lines** |
 

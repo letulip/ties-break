@@ -104,7 +104,13 @@ export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | nu
  *  ⚠ `college-graduation` JOINED IT IN ROUND 24 (#4) AND THAT IS THIS HEADER'S PREDICTION COMING
  *  TRUE A SECOND TIME. It is the card that closes the college years, and because college stopped
  *  borrowing the epilogue as its shell that week is now an ORDINARY week on the tab shell – so the
- *  new report inherits the wait by being named here instead of by growing a private `!pending`. */
+ *  new report inherits the wait by being named here instead of by growing a private `!pending`.
+ *
+ *  ⚠ `week-span` JOINED IT AT R2-13 AND IT IS THE PREDICTION'S THIRD OUTING. It is the report of a
+ *  four-week advance, and its collision is the ordinary one: a span that ends on a tournament week
+ *  hands the screen to `TournamentFlow`, so a card listing what the four weeks cost must wait for
+ *  the reveal exactly as the season summary does. Named here rather than carrying its own
+ *  `!pending`, which is the whole discipline of this set. */
 export type Popup =
   | BlockingOverlay
   | 'injury'
@@ -112,6 +118,7 @@ export type Popup =
   | 'tour-briefing'
   | 'onboarding-tour'
   | 'college-graduation'
+  | 'week-span'
 
 /** ⭐ THE POPUPS THAT MAY LAND ON A BUSY SCREEN, and there are exactly two.
  *

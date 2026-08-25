@@ -16,6 +16,7 @@ import { TIERS, TIER_LADDER, hasAcceptanceList } from '../src/engine/season/cale
 import { entryBandTrack, tierOpensWhen, tierState, type TierStateInput } from '../src/composables/tierState'
 import { activeLadderOfSnapshot, LADDER_POINTS_LABEL, rankChipTrack } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+import { regionToLast } from './helpers/source'
 
 // =================================================================================================
 // THE TWO TABLES STAY TWO TABLES — the guards for fix/ladder-separation (31.07)
@@ -439,7 +440,7 @@ describe('S6 — the Stats switch covers every table there is (round 15, item 2)
     expect(src).toContain('W15 and up – the paid tour. Junior points never cross over.')
     expect(src).toContain('Professional points only. Junior and national results do not count here.')
     expect(src).toContain('She has not played a professional event yet.')
-    const template = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+    const template = regionToLast(src, '<template>', '</template>')
     expect(template).not.toContain('—')
     expect(template).not.toMatch(/[Ѐ-ӿ]/)
   })

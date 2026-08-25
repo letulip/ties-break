@@ -249,12 +249,16 @@ describe('⭐ round-21 #9 – the idle rule, and its one exception', () => {
   it('⭐ EXACTLY TWO popups may interrupt, and they are the ending and the injury', () => {
     // Stated as a total over the union rather than as two spot checks: a popup added to `Popup`
     // without a decision about this rule shows up here as a wrong answer, which is the point.
-    const all: Popup[] = ['ending', 'knock', 'birthday', 'fork', 'retirement', 'injury', 'season-summary', 'tour-briefing', 'onboarding-tour']
+    // ⚠ RE-AIMED, NOT WEAKENED (R2-13). The list is hand-written on purpose – derived from the
+    // union it could never catch the member nobody thought about – and it had fallen two behind
+    // it: `college-graduation` (round 24 #4) and now `week-span` (the four-week advance's report).
+    // Both are added here rather than quietly left out, which is what makes the word TOTAL true.
+    const all: Popup[] = ['ending', 'knock', 'birthday', 'fork', 'retirement', 'injury', 'season-summary', 'tour-briefing', 'onboarding-tour', 'college-graduation', 'week-span']
     expect(all.filter(popupInterrupts)).toEqual(['ending', 'injury'])
   })
 
   it('⭐ on a busy screen every other popup is held – and on an idle one all of them may show', () => {
-    const held: Popup[] = ['knock', 'birthday', 'fork', 'retirement', 'season-summary', 'tour-briefing', 'onboarding-tour']
+    const held: Popup[] = ['knock', 'birthday', 'fork', 'retirement', 'season-summary', 'tour-briefing', 'onboarding-tour', 'college-graduation', 'week-span']
     for (const id of held) {
       expect(popupMayShow(id, busy), `${id} waits for the screen`).toBe(false)
       expect(popupMayShow(id, only({})), `${id} on a free screen`).toBe(true)

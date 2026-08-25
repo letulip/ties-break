@@ -24,6 +24,7 @@ import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { Surface } from '../src/engine/match/types'
 import type { DiaryFacts, FamilyBackground, FinanceWeek } from '../src/shared/protocol'
+import { after, at, region, regionToLast } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
@@ -39,25 +40,23 @@ const css = read('../src/style.css')
 // finding its rule fails loudly instead of quietly reading an empty string – which is exactly the
 // "lying test" trap the round-10 pass wrote up.
 /** Home's scoped block – the rules that only this page renders. */
-const homeCss = home.slice(home.indexOf('<style scoped>'))
+const homeCss = after(home, '<style scoped>')
 /** Home's TEMPLATE, and only the template: the style block below it legitimately quotes the owner in
  *  Russian, and the copy guards must not read that as player-facing text. */
-const homeTemplate = home.slice(home.indexOf('<template>'), home.lastIndexOf('</template>'))
+const homeTemplate = regionToLast(home, '<template>', '</template>')
 /** A shared component's file, for a rule that is no longer any one screen's. */
 const ui = (name: string) => read(`../src/components/ui/${name}.vue`)
 
 /** The body of a rule, by selector, from whichever source is passed. Throws rather than returning
  *  '' when the selector is absent, so a moved rule can never pass a `toContain` by vacuous truth. */
 function ruleBody(source: string, selector: string): string {
-  const i = source.indexOf(`${selector} {`)
-  if (i < 0) throw new Error(`rule not found: ${selector}`)
-  return source.slice(i, source.indexOf('}', i))
+  return region(source, `${selector} {`, '}')
 }
 
 /** A rung of THE RADIUS LADDER, in px, read off :root (owner, 29.07 — every radius in the sheet
  *  is a `--radius-*` token now, so a test that wants the NUMBER has to resolve one). */
 function resolveRadiusToken(sheet: string, token: string): number {
-  const root = sheet.slice(sheet.indexOf(':root {'), sheet.indexOf('\n}\n', sheet.indexOf(':root {')))
+  const root = region(sheet, ':root {', '\n}\n')
   const declared = new RegExp(`\\n\\s*${token}:\\s*([^;]+);`).exec(root)?.[1]?.trim()
   return Number(/^(\d+(?:\.\d+)?)px$/.exec(declared ?? '')?.[1] ?? NaN)
 }
@@ -552,7 +551,12 @@ describe('the diary page: the structure the redesign decided', () => {
 
   it('the header, the greeting and her name are laid ON the photograph, as the export draws them', () => {
     // The hero is not a card: it is the top of the page, and everything sits on it.
-    const hero = home.slice(home.indexOf('class="diary-hero"'), home.indexOf('class="diary-body"'))
+    // ⚠ RE-AIMED BY THE MARKER RATCHET (24.08, R2-12), AND THE PIN HAD BEEN LYING. The end marker
+    // was `class="diary-body"` – a class that does not exist anywhere in HomeScreen.vue and may
+    // never have. `indexOf` returned -1, `slice(start, -1)` ran to the end of the file, and "the
+    // hero" was 59,944 of the file's 126,815 characters: every assertion below was satisfied by
+    // markup somewhere else on the page. `class="card-grid"` is the hero's real next sibling.
+    const hero = region(home, 'class="diary-hero"', 'class="card-grid"')
     for (const part of ['diary-date', 'diary-greeting', 'diary-name', 'diary-age', 'diary-rank', 'diary-caption']) {
       expect(hero, `the hero must carry ${part}`).toContain(part)
     }
@@ -596,8 +600,8 @@ describe('the diary page: the structure the redesign decided', () => {
     expect(home).toContain('class="note-empty"')
     expect(home.match(/class="note-empty"/g)!.length).toBeGreaterThanOrEqual(3)
     expect(home).toContain('v-if="nearestEntered"')
-    const card = home.slice(home.indexOf('Next tournament'), home.indexOf('Family budget'))
-    expect(card.indexOf('v-if="nearestEntered"')).toBeLessThan(card.indexOf('venue-art'))
+    const card = region(home, 'Next tournament', 'Family budget')
+    expect(at(card, 'v-if="nearestEntered"')).toBeLessThan(at(card, 'venue-art'))
   })
 
   it('the venue painting is picked by the engine-seeded rule, never by the component', () => {
@@ -630,12 +634,12 @@ describe('the diary page: the structure the redesign decided', () => {
     // that predates the redesign, restored verbatim, and the card carries no figure at all.
     expect(home).toContain('coachUrlFor')
     expect(home).toContain('COACH_QUOTES')
-    const template = home.slice(home.indexOf('<template>'))
+    const template = after(home, '<template>')
     expect(template).toContain('Coach note')
     expect(template).toContain('{{ coachQuote }}')
     // No money, no week counts – the card is about a person. (Scoped to the coach card: the BUDGET
     // card legitimately says "Last 12 weeks" over its chart.)
-    const card = template.slice(template.indexOf('coach-card'), template.indexOf('Recent memory'))
+    const card = region(template, 'coach-card', 'Recent memory')
     expect(card).not.toContain('coachSpend')
     expect(card).not.toContain('Last 12 weeks')
     expect(card).not.toMatch(/\$/)
@@ -645,7 +649,7 @@ describe('the diary page: the structure the redesign decided', () => {
     // Five lines per play style, and the rotation is deterministic and SLOW (a coach's read on her
     // settles for a month rather than flipping every week).
     expect(home).toContain('Math.floor(week.value / 4) % 5')
-    const pool = home.slice(home.indexOf('const COACH_QUOTES'), home.indexOf('const coachQuote'))
+    const pool = region(home, 'const COACH_QUOTES', 'const coachQuote')
     for (const style of ['aggressive:', 'counterpuncher:', "'serve-first':", "'all-court':"]) {
       expect(pool, `missing pool for ${style}`).toContain(style)
     }
@@ -739,7 +743,7 @@ describe('the style foundation later slices reuse', () => {
   })
 
   it('the surface tokens ARE the design export, and the dead Home furniture went with them', () => {
-    const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}', css.indexOf(':root {')))
+    const root = region(css, ':root {', '\n}')
     // DECLARATIONS only – the comment above them deliberately quotes the old values.
     const declared = (name: string) => root.match(new RegExp(`\\n\\s*${name}: ([^;]+);`))?.[1]
     expect(declared('--bg')).toBe('#0a0e13')
@@ -786,7 +790,7 @@ describe('the style foundation later slices reuse', () => {
 describe('player copy on every surface this slice touched', () => {
   it('short dash only, and no Cyrillic in anything rendered', () => {
     // ⚠ RE-AIMED by U0, and this is a re-aim of the EXTRACTION, not of the assertion. The slice was
-    // `src.slice(src.indexOf('<template>'))` – everything from the template to the end of the file –
+    // `after(src, '<template>')` – everything from the template to the end of the file –
     // which was the whole template only while these SFCs had no <style> block after it. U0 gave Home
     // and Season one, and this codebase writes CSS comments that quote the owner in Russian, which
     // is normal and allowed. Reading them as player copy would make the guard fail on a legal file
@@ -798,7 +802,7 @@ describe('player copy on every surface this slice touched', () => {
       ['App.vue', app],
       ['OnboardingTour.vue', read('../src/components/OnboardingTour.vue')],
     ] as const) {
-      const template = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+      const template = regionToLast(src, '<template>', '</template>')
       expect(template, `${name} template`).not.toContain('—')
       expect(template, `${name} template`).not.toMatch(/[Ѐ-ӿ]/)
     }

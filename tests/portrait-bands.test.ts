@@ -1,7 +1,7 @@
 // The owner's 27.07 call, pinned: FIVE portrait bands, `angry` a real emotion, and no band
 // wearing another band's face.
 //
-//   jun <11 · young 11-16 · teen 17-22 · adult 23-30 · milf 31+
+//   jun <11 · young 11-16 · teen 17-22 · adult 23-30 · lateCareer 31+ (files: milf-*, see the alias)
 //
 // Three things are worth a test here and one thing is worth a test AGAINST:
 //   1. the band boundaries, including the upper bound `adult` did not used to have;
@@ -48,10 +48,13 @@ import {
   type PortraitStage,
 } from '../src/shared/avatarEmotion'
 import { cropUrl, portraitUrl } from '../src/art/preload'
+// ⚠ R2-18: the band's TYPE name and its FILE stem are two different strings now - see the alias.
+import { portraitAssetStem } from '../src/shared/avatarEmotion'
 import { PAINTING_ONLY_FACES } from '../src/art/faceRects'
 import type { TierId } from '../src/engine/season/types'
+import { after, region } from './helpers/source'
 
-const STAGES: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'milf']
+const STAGES: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'lateCareer']
 /** the seven faces a 256px crop is cut for – what `avatarCropPath` is total over */
 const EMOTIONS: AvatarEmotion[] = [...CROPPABLE_EMOTIONS]
 /** the eight faces a full painting exists for – what the portrait surfaces accept */
@@ -68,7 +71,7 @@ describe('the five portrait bands', () => {
       [11, 'young'], [14, 'young'], [16, 'young'],
       [17, 'teen'], [22, 'teen'],
       [23, 'adult'], [30, 'adult'],
-      [31, 'milf'], [45, 'milf'],
+      [31, 'lateCareer'], [45, 'lateCareer'],
     ]
     for (const [age, stage] of expected) expect(portraitStage(age), `age ${age}`).toBe(stage)
   })
@@ -89,13 +92,20 @@ describe('the five portrait bands', () => {
   })
 
   it('a 31-year-old does not wear a 17-year-old\'s face – the adult->teen clamp is gone', () => {
+    // ⚠ RE-AIMED BY R2-18, AND THE CLAIM IS UNCHANGED: every band resolves to its OWN file, so no
+    // band borrows another's face. What moved is that the fifth band's TYPE NAME is no longer its
+    // FILE NAME - the paintings were not renamed and must not be (see `portraitAssetStem`) - so the
+    // expectation is built through the alias instead of by interpolating the stage.
     expect(avatarCropPath('adult', 'norm')).toBe('avatars/adult-norm.webp')
-    expect(avatarCropPath('milf', 'norm')).toBe('avatars/milf-norm.webp')
+    expect(avatarCropPath('lateCareer', 'norm')).toBe('avatars/milf-norm.webp')
     for (const stage of STAGES) {
       for (const emotion of EMOTIONS) {
-        expect(avatarCropPath(stage, emotion)).toBe(`avatars/${stage}-${emotion}.webp`)
+        expect(avatarCropPath(stage, emotion)).toBe(`avatars/${portraitAssetStem(stage)}-${emotion}.webp`)
       }
     }
+    // ...and the alias is a BIJECTION over the bands: two stages sharing a stem would put one
+    // band's face on another, which is the very thing this test is named for.
+    expect(new Set(STAGES.map(portraitAssetStem)).size, 'two bands share a stem').toBe(STAGES.length)
     // ...and no surface reintroduces it behind the shared helper's back.
     for (const f of ['../src/shared/avatarEmotion.ts', '../src/art/preload.ts', '../src/composables/kidEmotion.ts']) {
       expect(read(f), `${f} still clamps a stage`).not.toMatch(/===\s*'adult'\s*\?/)
@@ -115,13 +125,16 @@ describe('the art matrix is complete on disk', () => {
   it('every stage x PAINTED emotion has a full painting – the wider set, rehab included', () => {
     for (const stage of STAGES) {
       for (const emotion of PAINTED) {
-        const rel = `images/fem-euro-brunnet/fem-euro-brunnet-${stage}-${emotion}.webp`
+        // ⚠ R2-18: the FILE stem, not the band's type name - the 31+ band was renamed and its
+        // paintings deliberately were not. This is the check that would have caught a stem built by
+        // hand anywhere else, and on the first run of the rename it did exactly that.
+        const rel = `images/fem-euro-brunnet/fem-euro-brunnet-${portraitAssetStem(stage)}-${emotion}.webp`
         expect(existsSync(asset(rel)), `missing painting ${stage}-${emotion}`).toBe(true)
       }
     }
   })
 
-  it('the url builders agree with the files – milf, angry and rehab included', () => {
+  it('the url builders agree with the files – the 31+ band, angry and rehab included', () => {
     const strip = (u: string) => u.slice(import.meta.env.BASE_URL.length)
     for (const stage of STAGES) {
       for (const emotion of EMOTIONS) {
@@ -141,7 +154,8 @@ describe('the art matrix is complete on disk', () => {
     // 1. the files really are absent – the loop above must not be silently satisfiable by cutting
     //    five crops nobody renders (see the note at the top of this file for why they are not cut)
     for (const stage of STAGES) {
-      expect(existsSync(asset(`avatars/${stage}-rehab.webp`)), `${stage}-rehab crop should NOT exist`).toBe(false)
+      const stem = portraitAssetStem(stage)
+      expect(existsSync(asset(`avatars/${stem}-rehab.webp`)), `${stem}-rehab crop should NOT exist`).toBe(false)
     }
     // 2. the two unions differ by exactly `rehab`, and the narrowing guard agrees with both
     expect(PAINTED.filter((e) => !(EMOTIONS as PortraitEmotion[]).includes(e))).toEqual(['rehab'])
@@ -156,7 +170,7 @@ describe('the art matrix is complete on disk', () => {
 describe('`angry` is reachable only through its trigger', () => {
   it('is a member of the union the surfaces accept', () => {
     // Compile-time is the real assertion; this keeps it honest at runtime too.
-    expect(avatarCropPath('milf', 'angry')).toBe('avatars/milf-angry.webp')
+    expect(avatarCropPath('lateCareer', 'angry')).toBe('avatars/milf-angry.webp')
   })
 
   it('the art pipeline no longer skips it', () => {
@@ -254,7 +268,9 @@ describe('the avatar crop table covers every face the code can request', () => {
     const missing: string[] = []
     for (const stage of STAGES) {
       for (const emotion of PAINTED) {
-        if (!(`${stage}-${emotion}` in CROPS)) missing.push(`${stage}-${emotion}`)
+        // R2-18: `CROPS` is the ART side's table and is keyed on the painting's stem.
+        const key = `${portraitAssetStem(stage)}-${emotion}`
+        if (!(key in CROPS)) missing.push(key)
       }
     }
     expect(missing, 'stage x emotion pairs with no face rectangle').toEqual([])
@@ -316,11 +332,11 @@ describe('MatchScene renders the painting uncropped', () => {
     // face-table bans in the next test are what keep the rejected thing rejected.
     // Sliced on the COMMENT-STRIPPED source: the prose above each rule names the other rule, so
     // slicing the raw file finds a sentence rather than a selector.
-    const fillBlock = code.slice(code.indexOf('.scene--fill .scene-art'))
+    const fillBlock = after(code, '.scene--fill .scene-art')
     expect(fillBlock, 'the fill card must magnify - the owner asked for it twice').toContain('object-fit: cover')
     // ...and the default card - the friendly's, and any future caller that does not pass `fill` -
     // still shows the whole painting in its own square. This is the half of 01.08 that stands.
-    const squareBlock = code.slice(code.indexOf('.scene-art {'), code.indexOf('.scene--fill .scene-art'))
+    const squareBlock = region(code, '.scene-art {', '.scene--fill .scene-art')
     expect(squareBlock).toContain('object-fit: contain')
     expect(squareBlock).not.toContain('object-fit: cover')
     expect(scene).toContain('aspect-ratio: 1 / 1')

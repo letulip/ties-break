@@ -1,0 +1,7 @@
+{
+  "allowed": [
+    "tests/component/match-viewer-parity.test.ts\tentry.slice(entry.indexOf(':') + 1)",
+    "tests/component/round21-coach-photo.test.ts\tc.slice(c.indexOf(\"'\") + 1)",
+    "tests/trophy-podium.test.ts\turl.slice(url.lastIndexOf('/') + 1)"
+  ]
+}

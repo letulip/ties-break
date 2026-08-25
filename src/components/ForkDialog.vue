@@ -35,8 +35,9 @@
 //
 // ⚠ AND ABSENT-OVER-DISABLED, the round-17 note's own choice, is now moot rather than overruled.
 // There is no case in which this card draws two answers.
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useDialogFocus } from '../composables/dialogFocus'
 import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../engine/season/calendar'
 import {
   COLLEGE_SHUT_DETAIL,
@@ -291,14 +292,49 @@ async function answer(a: ForkAnswer): Promise<void> {
   // the command's own shape in `protocol.ts`.
   await game.answerFork(a, a === 'college' ? (effective.value ?? undefined) : undefined)
 }
+
+// ⭐⭐ R2-07 – IT IS A MODAL, AND NOW IT SAYS SO AND HOLDS THE KEYBOARD (the argument and the honest
+// limit are in composables/dialogFocus.ts; this is adoption of that shell, not a second copy of it).
+//
+// ⚠⚠ ESCAPE IS PASSED NO HANDLER, AND ON THIS CARD THAT IS THE LOAD-BEARING HALF. This is the most
+// expensive click in the game: two of the three answers end the career and the third books the end
+// of the junior years. There is no fourth thing Escape could mean. It cannot cancel – the engine
+// refuses to tick until the fork is answered, so a dismissal would strand the career exactly as a
+// Cancel on the knock would; and it cannot pick, because a key that resolves the fork picks one of
+// three answers for the player, which is ruling 4 (30.07 – the card «may not recommend») broken by
+// a keystroke instead of by a style. So Escape falls through to the browser, which does nothing
+// with it, and the card keeps the focus. `ConfirmDialog` wires the opposite policy for the opposite
+// reason: its Escape lands on Cancel, which commits nothing.
+//
+// ⚠ INITIAL FOCUS IS THE FIRST ENABLED CONTROL – the first college place that is open to her, or the
+// first answer when the offer draws no rows. It is NOT a recommendation and the house has already
+// settled that: KnockDialog's two answers are equal-weight and it focuses the first, and
+// BirthdayDialog's four rows are unmarked by the owner's own ruling (quoted on that file's script
+// side; this file carries no Cyrillic at all, comments included) and it focuses the first too.
+// `aria-pressed` stays false on every row until the player presses one, which is where a
+// preselection would actually show, and a focus ring commits nothing.
+const card = useTemplateRef<HTMLElement>('card')
+useDialogFocus(card)
 </script>
 
 <template>
   <div v-if="fork" class="dialog-overlay">
-    <div class="dialog-card fork-card">
+    <!-- ⭐⭐ R2-07 – role/aria-modal on the CARD and not on the scrim: the backdrop is not part of
+         the dialog, it is what the dialog is over. `tabindex="-1"` is the trap's landing place for
+         the frame in which `game.busy` has disabled every control. NO handler on the scrim: this
+         card has no way out that is not an answer, and a stray tap beside it may not be one. -->
+    <div
+      ref="card"
+      class="dialog-card fork-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fork-dialog-kicker fork-dialog-title"
+      tabindex="-1"
+    >
       <img class="fork-art" :src="artUrl" :style="artStyle" alt="" />
-      <p class="fork-kicker">She is {{ fork.ageYears }}</p>
-      <h2 class="fork-title">School is over.</h2>
+      <!-- BOTH LINES ARE THE NAME, in the order they are read: her age, then what has happened. -->
+      <p id="fork-dialog-kicker" class="fork-kicker">She is {{ fork.ageYears }}</p>
+      <h2 id="fork-dialog-title" class="fork-title">School is over.</h2>
       <!-- ⚠ ROUND 24 #5 – the lede carries the ONE new fact of the redesign: college is a
            reservation taken up at the academic year's start, and the season until then is played.
            It may not recommend (ruling 4), so it states the three roads' timing and stops. -->

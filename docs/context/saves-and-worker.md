@@ -12,10 +12,14 @@ last-reviewed: 2026-08-03
 
 - The worker owns the mutable `WorldState`; UI code talks through the typed protocol and
   consumes snapshots.
-- `SAVE_SCHEMA_VERSION` is v53 (`src/engine/world.ts`); the persisted main RNG position arrived at
+- `SAVE_SCHEMA_VERSION` is v59 (`src/engine/world.ts`); the persisted main RNG position arrived at
   v35, so loads resume `{s, n}` rather than replaying the career.
-- ⚠ THAT NUMBER ROTS SILENTLY BECAUSE NOTHING CHECKS IT – wrong three times now (v36, v45, and v52
-  when v53 shipped the field's season ledger on 19.08 without this line moving with it).
+- ⭐ THAT NUMBER NO LONGER ROTS SILENTLY – `scripts/doc-facts.mjs` reads the constant out of
+  `src/engine/world.ts` and fails the gate when this line disagrees (in `npm run check` and in CI
+  since 23.08). It had been wrong FOUR times before that – v36, v45, v52, and again at v53 while
+  the code ran to v59, which is what the second full-project review caught. The lesson the fix
+  encodes: a fact a machine can source must BE sourced; repair without ownership rots again in
+  days. Everything else on this page is reasoning, and stays prose.
   `context:audit` covers structure, links, metadata and budgets; the only claim it reads the engine
   for is the age grid. So verify without trusting this file: the highest fixture in
   `tests/fixtures/saves/` IS the current version, since `goldenSaves.test.ts` enforces one per

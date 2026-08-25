@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { componentLogic, componentFile } from './worldSource'
+// The marker helpers (R2-12). Every one of them THROWS on an absent marker instead of letting
+// `indexOf`'s -1 reach a `slice` bound and widen the region to the rest of the file – the family
+// this repo has been burned by, and which had bitten this very file (see the shout row below).
+import { after, region, regionToLast } from './helpers/source'
 import { readdirSync, readFileSync } from 'node:fs'
 import { courtToCanvas, courtScale, type Viewport } from '../src/viz/geometry'
 import { COURT } from '../src/viz/types'
@@ -10,7 +14,7 @@ import { COURT } from '../src/viz/types'
 const read = (rel: string): string => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
 /** The SFC's <template> block, so a mention of a tag in a code comment is not mistaken for markup. */
-const templateOf = (sfc: string): string => sfc.slice(sfc.indexOf('<template>'), sfc.indexOf('</template>'))
+const templateOf = (sfc: string): string => region(sfc, '<template>', '</template>')
 /**
  * THE WHOLE template, as MARKUP ONLY.
  *
@@ -25,12 +29,20 @@ const templateOf = (sfc: string): string => sfc.slice(sfc.indexOf('<template>'),
  * pin that a comment can satisfy is not a pin.
  */
 const markupOf = (sfc: string): string =>
-  sfc
-    .slice(sfc.indexOf('<template>'), sfc.lastIndexOf('</template>'))
-    .replace(/<!--[\s\S]*?-->/g, '')
+  regionToLast(sfc, '<template>', '</template>').replace(/<!--[\s\S]*?-->/g, '')
 /** The <style scoped> block with its comments stripped – prose about a colour is not a colour. */
 const stylesOf = (sfc: string): string =>
-  sfc.slice(sfc.indexOf('<style scoped>')).replace(/\/\*[\s\S]*?\*\//g, '')
+  after(sfc, '<style scoped>').replace(/\/\*[\s\S]*?\*\//g, '')
+
+// ⚠ THE PINNED CONTROL BAR IS ITS OWN COMPONENT SINCE R2-11 ("prop-driven controls/readout"), so the
+// pins that used to read it out of the viewer read it where it lives. Two bindings, per CLAUDE.md's
+// pin hygiene and `tests/pin-hygiene.test.ts`: `transport` widens to the SFC PLUS the composables it
+// imports and is for POSITIVE claims only; `transportFile` is the `.vue` ALONE and is the only honest
+// corpus for a negative claim or for slicing its markup and styles.
+// ⚠ NOT CALLED `bar`: two tests below already bind that name to a slice of markup and assert
+// negatively on it, and the hygiene guard is name-based and file-scoped.
+const transport = componentLogic('components/MatchControls.vue')
+const transportFile = componentFile('components/MatchControls.vue')
 
 describe('screen I – the commentary is actually on the screen', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
@@ -43,11 +55,10 @@ describe('screen I – the commentary is actually on the screen', () => {
   // against a grid column's centre), and nearly is what the owner was looking at.
   it('the rail and the commentary dots are placed from ONE number, so they cannot drift apart', () => {
     const styles = stylesOf(viewer)
-    const rule = (sel: string): string => {
-      const at = styles.indexOf(`${sel} {`)
-      expect(at, `no ${sel} rule`).toBeGreaterThan(-1)
-      return styles.slice(at, styles.indexOf('}', at))
-    }
+    // `region` makes BOTH halves loud. The hand-written `expect(at).toBeGreaterThan(-1)` this
+    // replaces guarded the SELECTOR only; the closing `}` was unguarded, so a rule that lost its
+    // brace would have run the block to the end of the stylesheet in silence. Same claim, both ends.
+    const rule = (sel: string): string => region(styles, `${sel} {`, '}')
     // The custom property is declared once, on the list that owns the rail...
     expect(rule('.mv-log-list')).toMatch(/--mv-rail-x:\s*[\d.]+px/)
     // ...and BOTH the rail and the dot are positioned off it. Either one carrying a bare number is
@@ -128,13 +139,23 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // крикнул»), so the placeholder is a phrase picker plus a verb and has no such title. The GATE is
     // what §2 is about and the gate is untouched - `props.mode === 'live' && !finished`, the Live
     // badge's own condition, now carried by the row that holds both halves of the control.
-    expect(viewer).toMatch(/v-if="props\.mode === 'live' && !finished" class="mv-shout"/)
+    // ⚠ RE-AIMED (R2-11), AND THE GATE IS NOW TWO HALVES IN TWO FILES – so both are pinned, which is
+    // strictly more than the one line was saying. The bar is a prop-driven leaf
+    // (`MatchControls.vue`); the viewer decides that this is a live match, the bar decides that the
+    // row is therefore drawn. §2's fact is untouched: a replay has no shout.
+    expect(viewerFile, 'the viewer stopped telling the bar which kind of match this is').toMatch(
+      /:live="props\.mode === 'live'"/,
+    )
+    expect(transportFile).toMatch(/v-if="live && !finished" class="mv-shout"/)
     // Read off `markupOf` for the reason this file's own header gives: the ⚠ note that replaced the
     // placeholder QUOTES its tooltip, and a pin a comment can satisfy is not a pin.
     expect(markupOf(viewerFile), 'the placeholder tooltip outlived the placeholder').not.toContain(
       'Coming in Phase 6',
     )
-    expect(viewer).toContain('Shout 📣')
+    expect(markupOf(transportFile), 'the placeholder tooltip came back with the bar').not.toContain(
+      'Coming in Phase 6',
+    )
+    expect(transportFile).toContain('Shout 📣')
   })
 
   // ⚠ ADDED 30.07. `mode` had a DEFAULT of `'live'`, added in round 4 "so existing call sites need no
@@ -189,10 +210,25 @@ describe('screen I – the design and the rulings it has to keep', () => {
   // ⚠ ADDED 30.07 (owner: «можем какой-то набор фраз в дропдаун селект сделать и кнопку рядом.
   // Выбрал, крикнул»). Two facts, and the second one is the load-bearing one.
   it('the shout is a picker plus a verb, and it never enters buildCommentary', () => {
-    const markup = markupOf(viewer)
-    const row = markup.slice(markup.indexOf('class="mv-shout"'), markup.indexOf('class="mv-actions"'))
+    // ⚠ RE-AIMED (R2-11): the row is `MatchControls.vue`'s markup now, and its neighbour below is the
+    // skip link rather than `.mv-actions` (which stayed with the viewer). The two facts are the same
+    // two: a real dropdown, and a verb beside it that shouts.
+    // ⚠⚠ RE-AIMED 24.08, AND THE OLD END MARKER WAS NEVER THERE. The end read `class="mv-skip"`;
+    // the skip link is written `class="link mv-skip"` – it takes the shared `.link` skin – so
+    // `indexOf` returned -1 for the whole life of this pin, `slice(start, -1)` ran to one character
+    // before the end of the markup, and "the shout row" was in fact the shout row PLUS the skip
+    // button PLUS the bar's closing tags (414 chars where the row is 335). Green throughout, because
+    // both claims below are positive and both needles live in the first third of the widened text.
+    // This is the -1 slice CLAUDE.md lists, caught by `region` on its first pass over this file.
+    // NOTHING ASSERTED HERE CHANGES – the two facts are still "a real dropdown" and "a verb beside
+    // it", and both still hold on the narrowed row; what changes is that the pin now reads the row
+    // it names, and dies loudly if the skip link is renamed again.
+    const markup = markupOf(transportFile)
+    const row = region(markup, 'class="mv-shout"', 'class="link mv-skip"')
     expect(row, 'the phrases are a real dropdown').toMatch(/<select v-model="shoutPhrase"/)
-    expect(row, 'and a button beside it').toMatch(/<button class="mv-shout-go"[^>]*@click="shoutIt"/)
+    expect(row, 'and a button beside it').toMatch(/<button class="mv-shout-go"[^>]*@click="\$emit\('shout'\)"/)
+    // ...and the phrase the picker writes goes UP to the viewer, which owns the pool and the log.
+    expect(transportFile).toMatch(/'update:shoutPhrase': \[string\]/)
     // A handful, in the parent's voice, short dash only and no Cyrillic in copy the player reads.
     const pool = /const SHOUT_PHRASES = \[([\s\S]*?)\] as const/.exec(viewer)?.[1] ?? ''
     const phrases = [...pool.matchAll(/'([^']+)'/g)].map((m) => m[1])
@@ -222,10 +258,16 @@ describe('screen I – the design and the rulings it has to keep', () => {
   })
 
   it('the controls are the app\'s segmented control, not two <select>s', () => {
-    expect(templateOf(viewerFile)).not.toContain('<select')
-    expect(viewer).toContain("import SegmentedRow from './ui/SegmentedRow.vue'")
+    // ⚠ RE-AIMED (R2-11) AND MADE STRICTER RATHER THAN LOOSER. The claim used to be "the viewer's
+    // template has no `<select>`", which is now trivially true of a file that has no controls in it
+    // at all. It is stated where the controls are, plus the one `<select>` that IS legitimate: the
+    // shout's phrase picker, which is a finding rather than a choice (see its own note in the bar).
+    expect(templateOf(viewerFile), 'a raw select came back to the screen').not.toContain('<select')
+    expect(transportFile).toContain("import SegmentedRow from './ui/SegmentedRow.vue'")
+    expect((markupOf(transportFile).match(/<select/g) ?? []).length, 'the plates went back to selects').toBe(1)
+    expect(markupOf(transportFile)).toContain('class="mv-shout-pick"')
     // Values, never indices – SegmentedRow's contract, and speed is a number so it needs an adapter.
-    expect(viewer).toContain('speedSeg')
+    expect(transportFile).toContain('speedSeg')
   })
 
   it('the match panel is the shared Card, and the screen owns no colour of its own', () => {
@@ -296,7 +338,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // one measurement above stand for both bands (see the ⚠ note).
     const styles = stylesOf(viewer)
     const sizeIn = (rule: string): number => {
-      const block = styles.slice(styles.indexOf(rule), styles.indexOf('}', styles.indexOf(rule)))
+      const block = region(styles, rule, '}')
       return Number(/font-size: ([\d.]+)px/.exec(block)?.[1])
     }
     expect(sizeIn('.mv-speed {')).toBeLessThan(sizeIn('.mv-score {'))
@@ -350,7 +392,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // ⚠ BOTH NEGATIVES READ `viewerFile`, THE .vue ALONE - `tests/pin-hygiene.test.ts` enforces it and
     // it is right to: the claim is about what this FILE does not do, and the widened corpus would
     // trip on a composable that legitimately mentions the speed.
-    const mirror = viewerFile.slice(viewerFile.indexOf('elapsedMatchSeconds.value ='))
+    const mirror = after(viewerFile, 'elapsedMatchSeconds.value =')
     expect(mirror.slice(0, 120), 'the clock was scaled by hand instead of read off the clock').not.toContain('speed')
     // The engine still has no time model of its own - the derivation is presentation, and it lives in
     // viz/. A clock built out of WALL-CLOCK seconds would be the invented number all over again.
@@ -375,14 +417,17 @@ describe('screen I – the design and the rulings it has to keep', () => {
 // =====================================================================================================
 describe('the pinned control bar can never reach the playing surface', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
-
   it('is sticky rather than fixed, so it costs no height until it would otherwise be gone', () => {
     // Owner: «maybe we need to make lower buttons on match screen fixed so we could use them
     // anytime?». Measured at 375pt: the row starts on screen at y=636 and is pushed to y=806 – off
     // the bottom – once the commentary log fills to its four rows. A `position: fixed` bar would
     // have bought that back by charging its height for the whole watch; sticky charges nothing.
-    const styles = stylesOf(viewer)
-    const bar = styles.slice(styles.indexOf('.mv-controls {'), styles.indexOf('.mv-seg {'))
+    // ⚠ RE-AIMED (R2-11): the rule moved into `MatchControls.vue`'s own scoped block with its markup.
+    // It HAD to move rather than staying behind – a parent's scoped selector reaches a child's root
+    // but nothing under it, so `.mv-seg`, `.mv-shout*`, `.mv-skip` and the `:deep` pill trim would all
+    // have stopped applying. The measurement in the rule's comment is unchanged.
+    const styles = stylesOf(transportFile)
+    const bar = region(styles, '.mv-controls {', '.mv-seg {')
     expect(bar).toContain('position: sticky')
     expect(bar).toContain('bottom: 0')
     expect(bar).not.toContain('position: fixed')
@@ -401,12 +446,20 @@ describe('the pinned control bar can never reach the playing surface', () => {
     const panelAt = markup.indexOf('class="mv-panel"')
     const belowAt = markup.indexOf('class="mv-below"')
     const logAt = markup.indexOf('class="mv-log"')
-    const barAt = markup.indexOf('class="mv-controls"')
+    // ⚠ RE-AIMED (R2-11): the bar is a child component, so what the viewer's markup shows is where it
+    // is MOUNTED – which is precisely what this test is about. A sticky element cannot leave its
+    // containing block, and the containing block is decided by where the tag sits, not by which file
+    // the tag's insides live in.
+    const barAt = markup.indexOf('<MatchControls')
     expect(panelAt, 'the panel is still the first thing in the viewer').toBeGreaterThan(-1)
     expect(belowAt, 'the sticky bar still has its own containing block').toBeGreaterThan(panelAt)
     // The log opens the wrapper, so the wrapper's top edge IS the log's top edge – below the panel.
     expect(logAt, 'the log is the wrapper\'s first child').toBeGreaterThan(belowAt)
     expect(barAt, 'the bar is inside .mv-below, after the log').toBeGreaterThan(logAt)
+    // ...and it really is the sticky bar that was mounted there, not a renamed something else.
+    expect(stylesOf(transportFile), 'the mounted child is not the sticky bar').toMatch(
+      /\.mv-controls \{[^}]*position: sticky/,
+    )
     // ⚠ RE-AIMED 12.08: the box score used to be pinned inside the wrapper here, after the bar; the
     // owner had that panel deleted («не нужна всё»), and it may not grow back - the guarantee this
     // test protects (the bar cannot reach the court) never rested on it.
@@ -429,11 +482,10 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // flexible row, and `min-height: 0` is what lets a long log scroll inside itself instead of
     // pushing the block back off the bottom.
     const styles = stylesOf(viewer)
-    const rule = (sel: string): string => {
-      const at = styles.indexOf(`${sel} {`)
-      expect(at, `no ${sel} rule`).toBeGreaterThan(-1)
-      return styles.slice(at, styles.indexOf('}', at))
-    }
+    // `region` makes BOTH halves loud. The hand-written `expect(at).toBeGreaterThan(-1)` this
+    // replaces guarded the SELECTOR only; the closing `}` was unguarded, so a rule that lost its
+    // brace would have run the block to the end of the stylesheet in silence. Same claim, both ends.
+    const rule = (sel: string): string => region(styles, `${sel} {`, '}')
     expect(rule('.mv')).toMatch(/flex:\s*1/)
     expect(rule('.mv'), 'without this the log cannot shrink and the block is pushed off').toMatch(
       /min-height:\s*0/,
@@ -459,18 +511,21 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // path that reads it (jumpToEnd, retimeForMode's exemption, More's default-view picker) is
     // reached exactly as before. What is pinned is that the door is named and that it is inside the
     // block, where a control you reach for mid-match belongs.
-    const logic = componentLogic('components/MatchViewer.vue')
-    const options = logic.slice(logic.indexOf('const VIEW_OPTIONS'), logic.indexOf('const SPEED_OPTIONS'))
+    // ⚠ RE-AIMED (R2-11): the option tables and the skip link are the transport's. The capability's
+    // own line changed SHAPE and not meaning – the bar no longer holds the ref, it says what the
+    // player chose – so the pin follows it to the emit. Every path that reads `viewMode` is untouched.
+    const options = region(transport, 'const VIEW_OPTIONS', 'const SPEED_OPTIONS')
     expect(options).toContain("value: 'full'")
     expect(options).toContain("value: 'key'")
     expect(options, 'skip is back in the view switch').not.toContain("value: 'skip'")
-    const markup = markupOf(viewer)
-    const bar = markup.slice(markup.indexOf('class="mv-controls"'), markup.indexOf('class="mv-actions"'))
+    const bar = markupOf(transportFile)
     expect(bar).toContain('mv-skip')
     expect(bar).toContain('Skip to the result')
-    expect(logic, 'the skip capability itself was deleted rather than moved').toContain(
-      "viewMode.value = 'skip'",
+    expect(transport, 'the skip capability itself was deleted rather than moved').toContain(
+      "emit('update:view', 'skip')",
     )
+    // ...and the viewer still accepts it, so the door leads somewhere.
+    expect(viewer, "the screen stopped honouring 'skip'").toContain("viewMode.value === 'skip'")
   })
 
   it('pins everything you reach for mid-rally, and nothing you do not', () => {
@@ -489,18 +544,26 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // Proceed` there («2 кнопки рядом просто в этом нижнем блоке с контролами»), so "Watch again is
     // not in the bar" is true of the bar you watch a match through and deliberately not of the bar
     // you are left with. tests/component/match-viewer.test.ts pins the finished row's own contents.
-    const markup = markupOf(viewer)
-    const bar = markup.slice(markup.indexOf('class="mv-controls"'), markup.indexOf('class="mv-actions"'))
+    // ⚠ RE-AIMED (R2-11): the bar's markup is `MatchControls.vue`'s. The slice still lands on the
+    // PLAYING row - `class="mv-controls"` matches only the `v-else`, since the finished one is
+    // `class="mv-controls mv-controls-done"` - and it now runs to the end of that file, because
+    // `.mv-actions` stayed behind with the viewer. "Watch again is not in the playing bar" is
+    // therefore still a real claim: the finished row above the slice has one, and it is excluded.
+    const markup = markupOf(transportFile)
+    const bar = after(markup, 'class="mv-controls"')
     expect(bar).toContain('viewSeg')
     expect(bar).toContain('speedSeg')
     expect(bar).toContain('Shout')
     expect(bar).not.toContain('Watch again')
+    expect(markup, 'the slice is vacuous - the finished row has no Watch again to exclude').toContain(
+      'Watch again',
+    )
     // ...and it is ONE sticky block, not a bar with a loose row under it: the shout is a SECOND ROW
     // of `.mv-controls` rather than a sibling that scrolls away on its own, which is the whole
     // complaint. Pinned as a full-bar cell, because the flex version of this silently failed - a
     // `max-width` clamp feeds the hypothetical main size, so all three controls shared one line and
     // the two plates were squeezed to 109px. See the rule's own note for the measurement.
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(transportFile)
     expect(styles).toMatch(/\.mv-controls\s*\{[^}]*display:\s*grid/)
     expect(styles).toMatch(/\.mv-shout\s*\{[^}]*grid-column:\s*1 \/ -1/)
   })
@@ -522,7 +585,7 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // THE ROOM MUST SURVIVE THE MOVE, which is the half a careless "fix" would drop: measured before
     // and after, scrollHeight 839 -> 839, and the last card still stands 24.2px off the bottom edge.
     const sheet = read('../src/style.css')
-    const body = sheet.slice(sheet.indexOf('.tf-body {\n  padding-bottom'))
+    const body = after(sheet, '.tf-body {\n  padding-bottom')
     expect(body, 'the scrollport is padding the bottom again').toMatch(/^\.tf-body \{\s*padding-bottom: 0;/)
     // ...and the room it gave up is back as content, so nothing is flush against the bottom edge.
     expect(sheet).toMatch(/\.tf-body::after \{[\s\S]*?height: 24px/)
@@ -542,7 +605,7 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // .tf-card on a 375pt phone they get 293px, and the view row used to overflow its half and
     // paint over the speed plate. Trimmed for THIS bar only – the sheet's own padding is untouched,
     // and so is every other SegmentedRow.
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(transportFile)
     expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\)/)
     expect(read('../src/style.css'), 'the shared pill padding stays the shared pill padding').toContain(
       'padding: 6px 16px',
@@ -556,7 +619,7 @@ describe('the pinned control bar can never reach the playing surface', () => {
     // content-sized, so the ~52px the padding trim recovered became empty plate at the right-hand end
     // of each row - and, because "Full/Key/Skip" and "1x/2x/4x" are different widths, the two rows did
     // not even run out at the same place.
-    const styles = stylesOf(viewer)
+    const styles = stylesOf(transportFile)
     expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\) \{[^}]*flex: 1/)
     // THE TRIM IS LOAD-BEARING UNDER `flex: 1`, not leftover: a flex item's automatic minimum size is
     // its content size, so the padding no longer sets the pill's width but still sets the width below
@@ -594,11 +657,15 @@ describe('one header slot per match screen, and it says where it takes you', () 
    * again, and again only the landmark. Matching the `#sub>` end of the tag rather than a fixed
    * prefix is what makes this survive the next attribute somebody puts on it.
    */
+  // ⚠ THE START IS A REGEX, so it cannot be handed to `region` as a marker – the MATCHED TAG TEXT
+  // is, which is the same landmark and keeps the note above true. The END was the unguarded half:
+  // `m.indexOf('</template>', at)` returning -1 would have widened the slot to the rest of the
+  // markup, silently, exactly the way the shout row above did. `region` throws on it instead.
   const subOf = (sfc: string): string => {
     const m = markupOf(sfc)
-    const at = m.search(/<template[^>]*\s#sub>/)
-    expect(at, 'the header sub line is a #sub slot').toBeGreaterThan(-1)
-    return m.slice(at, m.indexOf('</template>', at))
+    const tag = /<template[^>]*\s#sub>/.exec(m)?.[0]
+    if (!tag) throw new Error('the header sub line is a #sub slot')
+    return region(m, tag, '</template>')
   }
 
   it('the tournament never offers the one-match exit and the whole-draw exit at once', () => {
@@ -828,6 +895,8 @@ describe('live and replay open the same way – the popup, which is the one he l
 // =====================================================================================================
 describe('a hidden screen is a stopped match', () => {
   const viewer = componentLogic('components/MatchViewer.vue')
+  /** The `.vue` alone – the only honest corpus for the negative claim below. */
+  const viewerFile = componentFile('components/MatchViewer.vue')
 
   it('pauses on visibilitychange the way the music already does, and only resumes what was running', () => {
     // Owner, 31.07: «pause the game and the match when the screen is minimised, the way music
@@ -850,6 +919,32 @@ describe('a hidden screen is a stopped match', () => {
     // is skipped and none is replayed, and it is easy to break by "tidying" either half away.
     expect(viewer).toMatch(/function pauseInternal\(\)[\s\S]{0,320}lastTs = null/)
     expect(viewer).toMatch(/function frame\(ts: number\)[\s\S]{0,120}if \(lastTs === null\) lastTs = ts/)
+  })
+
+  // ⚠ ADDED WITH R2-11, AND IT IS THE EXTRACTION'S OWN GUARANTEE. The review's rule is "never allow
+  // two clock/timer owners", and the cheapest way a second one arrives is by habit: something needs a
+  // short delay, `setTimeout` is one line, and now two things decide whether the match is running.
+  // The behavioural half is mounted (tests/component/match-viewer-clock.test.ts counts the live
+  // handles); this is the structural half, and it is a NEGATIVE claim about two specific files, so it
+  // reads `componentFile()` – the `.vue` ALONE – exactly as CLAUDE.md's pin hygiene requires.
+  // `componentLogic()` would fold in `playbackClock.ts`, where the one legitimate timer lives, and
+  // the assertion would be a lie about the file it is talking about.
+  it('⚠ neither the screen nor its control bar owns a clock of its own', () => {
+    for (const [name, sfc] of [['MatchViewer', viewerFile], ['MatchControls', transportFile]] as const) {
+      for (const call of ['requestAnimationFrame', 'setTimeout', 'setInterval']) {
+        expect(sfc, `${name} armed a ${call} of its own`).not.toContain(`${call}(`)
+      }
+    }
+    // ...and the one owner is where it says it is, with both of its handles.
+    const clock = read('../src/composables/playbackClock.ts')
+    expect(clock).toContain('rafId = requestAnimationFrame(frame)')
+    expect(clock).toContain('preRollTimer = setTimeout(')
+    expect(clock, 'the pre-roll timeout is not cleared by the one pause').toMatch(
+      /function pauseInternal\(\)[\s\S]{0,320}clearTimeout\(preRollTimer\)/,
+    )
+    expect(clock, 'the frame loop is not cancelled by the one pause').toMatch(
+      /function pauseInternal\(\)[\s\S]{0,320}cancelAnimationFrame\(rafId\)/,
+    )
   })
 
   it('...and a frame can never carry a whole absence, whatever the browser did or did not fire', () => {
@@ -921,8 +1016,8 @@ describe('who is serving is said twice, attached to something, and never in a sp
     // is untouched and still asserted here: the band is used the way the top one is, the counter is
     // inside the court box rather than costing a row of panel, and it still says both things the
     // deleted serve row said.
-    const chrome = styles.slice(styles.indexOf('.mv-chrome {'), styles.indexOf('.mv-live {'))
-    const runoff = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('.mv-score {'))
+    const chrome = region(styles, '.mv-chrome {', '.mv-live {')
+    const runoff = region(styles, '.mv-runoff {', '.mv-score {')
     expect(chrome).toMatch(/top: 6px/)
     expect(chrome).toMatch(/right: 10px/)
     expect(runoff).toMatch(/bottom: 6px/)
@@ -980,7 +1075,7 @@ describe('who is serving is said twice, attached to something, and never in a sp
     // clock's centre is 187.5 in BOTH modes, which is the canvas centre exactly.
     // THE PROTECTED FACT IS UNCHANGED and is now asserted by the thing that actually delivers it:
     // one row, centred on each other, and NO piece's position depending on another piece existing.
-    const chrome = styles.slice(styles.indexOf('.mv-chrome {'), styles.indexOf('.mv-live {'))
+    const chrome = region(styles, '.mv-chrome {', '.mv-live {')
     expect(chrome).toMatch(/display: grid/)
     expect(chrome).toMatch(/grid-template-columns: minmax\(0, 1fr\) auto minmax\(0, 1fr\)/)
     expect(chrome).toMatch(/align-items: center/)
@@ -1040,8 +1135,14 @@ describe('the serve speed on the court is the same number the box score reports'
 
   it('both readers go through pointServeSpeeds - the viewer imports it and derives nothing', () => {
     // The box score's avg/max rows...
-    const stats = read('../src/engine/match/matchStats.ts')
-    expect(stats).toContain("import { pointServeSpeeds } from './serveSpeed'")
+    // ⚠ RE-AIMED BY R2-06, NOT WEAKENED. The box score moved from `src/engine/match/matchStats.ts`
+    // to `src/viz/match/matchStats.ts` (it is presentation, and only screens read it), so its import
+    // of the speed model is now a relative hop into the engine rather than a sibling `./serveSpeed`.
+    // Both halves of the claim are unchanged: the SAME symbol, from the SAME module, called with the
+    // SAME four arguments. The path read below throws ENOENT if the module moves again, which is how
+    // this pin announced the move in the first place.
+    const stats = read('../src/viz/match/matchStats.ts')
+    expect(stats).toContain("import { pointServeSpeeds } from '../../engine/match/serveSpeed'")
     expect(stats).toContain('pointServeSpeeds(seed, point, playerA, playerB)')
     // ...and the live reading under the court, from the same call.
     expect(viewer).toContain("import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'")
@@ -1057,7 +1158,7 @@ describe('the serve speed on the court is the same number the box score reports'
     // the fact was already on the props. The same is true of the ages and the serve skills, which
     // ride `MatchPlayer`. Nothing was added to the payload for this reading, and the pin says so in
     // the two places it could have been: the prop list, and the number of props the callers pass.
-    const propsBlock = viewer.slice(viewer.indexOf('defineProps<{'), viewer.indexOf('}>(),'))
+    const propsBlock = region(viewer, 'defineProps<{', '}>(),')
     for (const invented of ['seed', 'serveSpeed', 'speeds', 'kmh']) {
       expect(propsBlock, `a "${invented}" prop was added for a fact the viewerFile already had`).not.toContain(
         `${invented}?:`,
@@ -1077,7 +1178,7 @@ describe('the run-off band reads speed · score · speed, and the speed is on th
     // COURT rather than of the row's remaining space - and it has to be, because only one end is
     // ever occupied, so a `space-between` score would sit off centre nearly all the time and jump
     // sideways every time a serve landed.
-    const runoff = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('.mv-score {'))
+    const runoff = region(styles, '.mv-runoff {', '.mv-score {')
     expect(runoff).toMatch(/display: grid/)
     expect(runoff).toMatch(/grid-template-columns: minmax\(0, 1fr\) auto minmax\(0, 1fr\)/)
     expect(runoff).not.toMatch(/justify-content: space-between/)
@@ -1089,7 +1190,7 @@ describe('the run-off band reads speed · score · speed, and the speed is on th
     // ...and the two insets are EQUAL, or the middle column is not the court's middle. Measured at
     // 375pt, an 8/10 pair (which is what the top row uses, for the Live badge's sake) puts the score
     // 1px off centre - invisible, but free to get exactly right.
-    const runoffRule = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('}', styles.indexOf('.mv-runoff {')))
+    const runoffRule = region(styles, '.mv-runoff {', '}')
     const left = /left: (\d+)px/.exec(runoffRule)?.[1]
     const right = /right: (\d+)px/.exec(runoffRule)?.[1]
     expect(left, 'the band is inset unequally, so "in the middle" is off by half the difference').toBe(right)
@@ -1110,7 +1211,7 @@ describe('the run-off band reads speed · score · speed, and the speed is on th
     // Naming a column without naming a row is what allowed it, so both readings name both.
     expect(styles).toMatch(/\.mv-score \{[^}]*grid-row: 1/)
     expect(
-      styles.slice(styles.indexOf('.mv-speed {'), styles.indexOf('.mv-speed.left {')),
+      region(styles, '.mv-speed {', '.mv-speed.left {'),
       'the row pin belongs on the shared .mv-speed rule, so the two ends cannot drift apart again',
     ).toMatch(/grid-row: 1/)
   })
@@ -1121,7 +1222,7 @@ describe('the run-off band reads speed · score · speed, and the speed is on th
     // their midpoints matched while their digits did not. Measured with the rows pinned: `center`
     // still leaves the speed 1px high, `baseline` lands it at 0.5px, which is font rounding.
     // Baseline is what "level with" means for text, and it keeps holding if either size ever moves.
-    const runoff = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('.mv-score {'))
+    const runoff = region(styles, '.mv-runoff {', '.mv-score {')
     expect(runoff).toMatch(/align-items: baseline/)
   })
 
@@ -1133,9 +1234,9 @@ describe('the run-off band reads speed · score · speed, and the speed is on th
     // `minmax(0, 1fr)` gives the EDGE columns a zero floor, so under pressure they are the ones that
     // give; `nowrap` + `clip` means the speed then loses its tail instead of wrapping onto the
     // playing surface above or sliding under the score.
-    const runoff = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('.mv-score {'))
+    const runoff = region(styles, '.mv-runoff {', '.mv-score {')
     expect(runoff).toContain('minmax(0, 1fr)')
-    const speed = styles.slice(styles.indexOf('.mv-speed {'), styles.indexOf('.mv-speed.left {'))
+    const speed = region(styles, '.mv-speed {', '.mv-speed.left {')
     expect(speed).toMatch(/white-space: nowrap/)
     expect(speed).toMatch(/overflow: hidden/)
     // A row of readings over the court that is not a control must not eat taps meant for the canvas,
@@ -1176,7 +1277,7 @@ describe('the run-off band reads speed · score · speed, and the speed is on th
     expect(viewer).toMatch(/ev\.kind !== 'shot' && ev\.kind !== 'point-end'/)
     for (const ceremony of ['game-end', 'set-end', 'change-ends', 'gap']) {
       expect(
-        viewer.slice(viewer.indexOf('function serveReadingFor'), viewer.indexOf('function updatePlayers')),
+        region(viewer, 'function serveReadingFor', 'function updatePlayers'),
         `serveReadingFor learned about '${ceremony}' - the allow-list became a deny-list`,
       ).not.toContain(`'${ceremony}'`)
     }

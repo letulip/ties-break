@@ -20,17 +20,26 @@ build waits on one word from him about which ladder.
 
 ## The eleven
 
-- [!] **1. «На главном экране верни выравнивание текста на плашке тренера как было раньше»** –
+- [x] **1. «На главном экране верни выравнивание текста на плашке тренера как было раньше»** –
   `.coach-body` on `HomeScreen.vue` goes back to `margin-left: 54px`. 54 was the export's own
   geometry and was never the thing he was complaining about; it went 54 → 66 → 80 chasing a
   complaint that lived on another screen.
-- [!] **2. «Я просил отодвинуть текст от картинок тренеров внутри раздела с выбором тренеров»** –
+  → ✅ **SHIPPED, ticked by the 24.08 re-verification** – `HomeScreen.vue:2234` is
+  `margin-left: 54px`, under the argument at `:2201` («54 IS THE EXPORT'S OWN GEOMETRY AND IT IS
+  BACK»). The box read `[!]` after the fix had landed, which is the drift this folder's README §
+  "Keeping this true" exists to stop.
+- [x] **2. «Я просил отодвинуть текст от картинок тренеров внутри раздела с выбором тренеров»** –
   the REAL round-17 #14, twice reported, never touched: the coach cards in `CoachMarketScreen.vue`.
   Same shape of fix (text column past the portrait), the surface he actually meant.
-- [!] **3. «Если тренер выбран, при клике на плашку переходить в список тренеров»** – found:
+  → ✅ **SHIPPED, ticked 24.08** – `src/style.css:3736` («ROUND-18 #2 – THE STRIP HAS A WIDTH NOW,
+  AND THAT IS THE WHOLE FIX»), with the 104px `.cm-row` floor that keeps it honest at `:3624` and
+  the wrapping allowance at `:3817`. Closes round-17 #14 as well.
+- [x] **3. «Если тренер выбран, при клике на плашку переходить в список тренеров»** – found:
   `CoachMarketScreen.vue:58` is `const tab = ref<string>('week')` – the screen ALWAYS opens on Her
   Week, so his click on the coach note lands on the training dials and never on the coaches. With a
   coach hired it must open on the coaches tab.
+  → ✅ **SHIPPED, ticked 24.08** – `CoachMarketScreen.vue:70`, «ROUND-18 #3 – THE SCREEN CHOOSES ITS
+  LANDING TAB, AND A HIRED COACH LANDS ON THE COACHES».
 - [x] **4. «Флажок и неактивный раздел самокоучинга при выбранном тренере»** – ⚠ §Q1 ANSWERED 13.08,
   and A was already the design: «она дублирующий элемент управления для отказа от коуча, мы это уже
   обсуждали. Пока галочка не стоит – вся панель неактивна … можно и твой замок поверх нарисовать
@@ -62,7 +71,7 @@ build waits on one word from him about which ladder.
 - [~] **7. The brutal season** – Slams/1000/500 all losses, mandatory entry, big money, and the first
   `angry` he has caught. Read from the save in §7 below; no build, but it is the evidence for 8 and
   11.
-- [>] **8. «Перед началом сезона больших призов присылать уведомление/попап – что она реально должна
+- [x] **8. «Перед началом сезона больших призов присылать уведомление/попап – что она реально должна
   там участвовать, что есть такой регламент»** – ⚠ §Q2 WITHDRAWN, I was wrong about it before I read
   the code: the regulation EXISTS and is his own (W3-ACT2 §6). `mandatoryBindsRank` binds by rank, a
   skipped mandatory writes a `mandatoryMiss` row that takes one of her **eighteen** counting slots
@@ -75,6 +84,9 @@ build waits on one word from him about which ladder.
   career, plus a quieter season letter after it; every number read from `ECONOMY.mandatory`, no
   schema move (the "has anybody been told" watermark is per-career `localStorage`, the same shape the
   news feed and trophy cabinet already use).
+  → ✅ **Box flipped `[>]` → `[x]` on 24.08.** The body already said «Shipped» while the marker still
+  read "in flight": `src/components/TourBriefingDialog.vue` is the blocking briefing and
+  `src/components/OfferLetter.vue:456` carries the quieter season notice.
 - [x] **9. «Off season – rest, school, family в 21 год»** – the engine was right all along
   (`schoolEndWeek` = 242, W35 '35, age 18; his save is 171 weeks past it). `DiaryFacts` carried
   `examsWeek` but NOT `schoolOver`, so a phrase could not gate on school even if its author wanted

@@ -58,6 +58,7 @@ import { createWorld, decideKnock, enterEvent, pendingKnock, tickWeek, toSnapsho
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import type { MatchOptions, MatchPlayer } from '../../src/engine/match/types'
+import { after } from '../helpers/source'
 
 /** ⚠ IT ALSO REFUSES TO RUN BLIND, for `assertLegible`'s reason: a document with no stylesheet
  *  computes every property to its initial value, which would make "is this card painted" pass on the
@@ -122,7 +123,7 @@ function modalClassLists(): { file: string; classes: string }[] {
   for (const file of files) {
     const src = readFileSync(file, 'utf8')
     for (const m of src.matchAll(/class="([^"]*\b(?:dialog-card|guide-card)\b[^"]*)"/g)) {
-      found.push({ file: file.slice(file.indexOf('src/')), classes: m[1] })
+      found.push({ file: after(file, 'src/'), classes: m[1] })
     }
   }
   return found

@@ -41,6 +41,9 @@ import { useHeaderAvatar } from '../../composables/headerAvatar'
 // will not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
 import { facePoint } from '../../art/faceRects'
+// ⚠ R2-18: `CROPS` is keyed on the PAINTING's stem, and the 31+ band's type name moved while its
+// paintings did not - so every key built from a stage goes through the asset alias.
+import { portraitAssetStem } from '../../shared/avatarEmotion'
 import { coachPortraitUrl, coachUrlFor, portraitUrl as portraitArtUrl } from '../../art/preload'
 import { venueArtUrl } from '../../art/venues'
 import { TIER_SHORT } from '../../composables/weekAhead'
@@ -110,7 +113,7 @@ function openKid(): void {
 // (snapshot.diary), same as the caption under it – image and words cannot disagree by construction.
 const { portraitUrl, stage, emotion } = useKidEmotion()
 const photoStyle = computed(() => {
-  const p = facePoint(`${stage.value}-${emotion.value}`)
+  const p = facePoint(`${portraitAssetStem(stage.value)}-${emotion.value}`)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
 // The ONE phrase under her name (D2) – null on a deliberately quiet week. It appears exactly once
@@ -163,7 +166,9 @@ const memoryArt = computed(() =>
 )
 const memoryStyle = computed(() => {
   if (!memory.value) return undefined
-  const p = facePoint(`${memory.value.stage}-${memory.value.emotion}`)
+  // ⚠ R2-18: `CROPS` is keyed on the PAINTING's stem, so the lookup goes through the asset alias
+  // like every URL builder does - the 31+ band's type name moved and the paintings did not.
+  const p = facePoint(`${portraitAssetStem(memory.value.stage)}-${memory.value.emotion}`)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
 

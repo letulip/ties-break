@@ -45,6 +45,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { isExamWeek, TIER_SHORT, tierFromLabel } from '../src/engine/season/calendar'
 import { TIER_SHORT as TIER_SHORT_VIA_UI } from '../src/composables/weekAhead'
 import { CROPS, facePoint } from '../src/art/faceRects'
+import { region, regionToLast } from './helpers/source'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -992,7 +993,7 @@ describe('surfaces + shared tables', () => {
     // here – the number appears exactly ONCE, it is the engine's own condition rendered verbatim,
     // and none of the WORDS left with it.
     const home = read('../src/components/screens/HomeScreen.vue')
-    const template = home.slice(home.indexOf('<template>'), home.lastIndexOf('</template>'))
+    const template = regionToLast(home, '<template>', '</template>')
     // ⚠ RE-AIMED TWICE, AND THE PROTECTED FACT HAS NOT MOVED EITHER TIME. U0 put the label inside
     // `ui/ProgressRing.vue` but left the `<b>…</b><i>%</i>` pair for each caller to hand-write; the
     // owner then asked for one entity instead of four – «вообще из этого надо компонент сделать и
@@ -1141,7 +1142,7 @@ describe('the durable ledger reaches the screen that needs it', () => {
     // Source-level, and deliberately so: jsdom renders no layout and the failure mode here is not a
     // thrown error but an empty strip on a save nobody in CI plays for long enough to reach.
     const kid = readFileSync(new URL('../src/components/screens/KidScreen.vue', import.meta.url), 'utf8')
-    const moments = kid.slice(kid.indexOf('const moments = computed'), kid.indexOf('// --- THE SKILLS RADAR'))
+    const moments = region(kid, 'const moments = computed', '// --- THE SKILLS RADAR')
     expect(moments).toContain('snap.milestones')
     expect(moments, 'the moments strip is back on the volatile feed').not.toContain('snap.events')
   })

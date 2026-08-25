@@ -2,19 +2,19 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (4,270 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (1,783 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-269 exported names across 31 owning modules.
+277 exported names across 36 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
-| `src/engine/world.ts` | THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file | 24 |
+| `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 16 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 22 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 20 |
@@ -22,13 +22,14 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 13 |
+| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 12 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 12 |
-| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
+| `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
@@ -37,45 +38,41 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
+| `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
 | `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 3 |
+| `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 3 |
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
 | `src/engine/world/album.ts` | THE ALBUM: seven polaroids, and the rule printed on every one of them | 2 |
 | `src/engine/world/bookings.ts` | THE BOOKINGS, read side: what the family has put in the diary for a given week | 2 |
 | `src/engine/world/labels.ts` | FINISH AND STAGE LABELS: how far she got, said the way a draw sheet says it | 2 |
 | `src/engine/world/matchNews.ts` | MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the streak the Home card reads off them | 2 |
+| `src/engine/world/bookkeeping.ts` | ⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar | 1 |
 | `src/engine/world/knockHistory.ts` | THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out | 1 |
+| `src/engine/world/phaseFinance.ts` | ⭐ R2-10 STEP 2, PHASE 2 – WHAT THE WEEK COSTS: the family's money, the coach's bill, the college's tuition and the kit that wears out | 1 |
 | `src/engine/world/snapshot.ts` | THE SNAPSHOT: everything the UI is ever allowed to see, built fresh from the world on every command | 1 |
 
 ## Symbols by owner
 
 ### `src/engine/world.ts`
 
-THE INTEGRATION CORE: the world state, the save schema, and the weekly tick – what genuinely still lives in the 3,600-line file.
+THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts`.
 
-- `ACADEMY_NOTICE` – `src/engine/world.ts`
-- `academySpokeThisWeek` – `src/engine/world.ts`
 - `advanceWeeks` – `src/engine/world.ts`
 - `closeTournament` – `src/engine/world.ts`
-- `coachWorksThisWeek` – `src/engine/world.ts`
 - `COLLEGE_REVEAL_REFUSAL` – `src/engine/world.ts`
 - `createWorld` – `src/engine/world.ts`
 - `endCollegeEarly` – `src/engine/world.ts`
-- `ensureSeason` – `src/engine/world.ts`
 - `maxMainDraws` – `src/engine/world.ts`
 - `PARENT_INCOME_CENTS` – `src/engine/world.ts`
-- `PendingTournament` *(type)* – `src/engine/world.ts`
 - `rankingDeltaSuffix` – `src/engine/world.ts`
 - `replayMainState` – `src/engine/world.ts`
 - `resumeFromCollege` – `src/engine/world.ts`
 - `revealTournamentRound` – `src/engine/world.ts`
-- `reviewAcademy` – `src/engine/world.ts`
-- `SAVE_SCHEMA_VERSION` – `src/engine/world.ts`
 - `seedWorldForV6` – `src/engine/world.ts`
 - `skipEvent` – `src/engine/world.ts`
 - `skipTournament` – `src/engine/world.ts`
 - `STARTING_FUNDS_CENTS` – `src/engine/world.ts`
 - `tickWeek` – `src/engine/world.ts`
-- `WorldState` *(type)* – `src/engine/world.ts`
 
 ### `src/engine/world/college.ts`
 
@@ -236,6 +233,23 @@ THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a tr
 - `sponsorNeedMet` – `src/engine/world/sponsors.ts`
 - `travelCostFor` – `src/engine/world/sponsors.ts`
 
+### `src/engine/world/birthday.ts`
+
+HER BIRTHDAY, AND WHAT YOU GIVE HER.
+
+- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_COLLEGE_BAND` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
+- `birthdayHeading` – `src/engine/world/birthday.ts`
+- `birthdayHistory` – `src/engine/world/birthday.ts`
+- `birthdayOffer` – `src/engine/world/birthday.ts`
+- `birthdayOptions` – `src/engine/world/birthday.ts`
+- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
+- `chooseGift` – `src/engine/world/birthday.ts`
+- `giftNoun` – `src/engine/world/birthday.ts`
+- `pendingBirthday` – `src/engine/world/birthday.ts`
+
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
@@ -252,22 +266,6 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `resolveCollegeDeparture` – `src/engine/world/endings.ts`
 - `resolveEndings` – `src/engine/world/endings.ts`
 - `wasThereAChild` – `src/engine/world/endings.ts`
-
-### `src/engine/world/birthday.ts`
-
-HER BIRTHDAY, AND WHAT YOU GIVE HER.
-
-- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
-- `birthdayHeading` – `src/engine/world/birthday.ts`
-- `birthdayHistory` – `src/engine/world/birthday.ts`
-- `birthdayOffer` – `src/engine/world/birthday.ts`
-- `birthdayOptions` – `src/engine/world/birthday.ts`
-- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
-- `chooseGift` – `src/engine/world/birthday.ts`
-- `giftNoun` – `src/engine/world/birthday.ts`
-- `pendingBirthday` – `src/engine/world/birthday.ts`
 
 ### `src/engine/world/mandatory.ts`
 
@@ -336,6 +334,18 @@ INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recove
 - `resolvePhysio` – `src/engine/world/injury.ts`
 - `retirementInjury` – `src/engine/world/injury.ts`
 - `rollInjury` – `src/engine/world/injury.ts`
+
+### `src/engine/world/multiWeek.ts`
+
+⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS.
+
+- `ADVANCE_REFUSALS` – `src/engine/world/multiWeek.ts`
+- `advanceRefusal` – `src/engine/world/multiWeek.ts`
+- `MULTI_WEEK_SPAN` – `src/engine/world/multiWeek.ts`
+- `spanDigest` – `src/engine/world/multiWeek.ts`
+- `spanRowCount` – `src/engine/world/multiWeek.ts`
+- `SpanWeek` *(type)* – `src/engine/world/multiWeek.ts`
+- `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
 
 ### `src/engine/world/planner.ts`
 
@@ -416,6 +426,14 @@ HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are n
 - `schoolIsOver` – `src/engine/kidLife.ts`
 - `schoolIsOverForBand` – `src/engine/kidLife.ts`
 
+### `src/engine/world/phaseObligations.ts`
+
+⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS.
+
+- `ACADEMY_NOTICE` – `src/engine/world/phaseObligations.ts`
+- `academySpokeThisWeek` – `src/engine/world/phaseObligations.ts`
+- `reviewAcademy` – `src/engine/world/phaseObligations.ts`
+
 ### `src/engine/world/player.ts`
 
 THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes.
@@ -423,6 +441,14 @@ THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbe
 - `kidMatchPlayer` – `src/engine/world/player.ts`
 - `kidMatchPlayerFor` – `src/engine/world/player.ts`
 - `startingSkills` – `src/engine/world/player.ts`
+
+### `src/engine/world/state.ts`
+
+⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION.
+
+- `PendingTournament` *(type)* – `src/engine/world/state.ts`
+- `SAVE_SCHEMA_VERSION` – `src/engine/world/state.ts`
+- `WorldState` *(type)* – `src/engine/world/state.ts`
 
 ### `src/engine/world/summer.ts`
 
@@ -460,11 +486,23 @@ MATCH NEWS: turning a resolved tournament into the lines the feed shows, and the
 - `computeLossStreak` – `src/engine/world/matchNews.ts`
 - `flipScore` – `src/engine/world/matchNews.ts`
 
+### `src/engine/world/bookkeeping.ts`
+
+⭐ R2-10 STEP 2 – CLOSING THE BOOKS ON A RESOLVED WEEK: the rank recompute, the prunes and the rolling calendar.
+
+- `ensureSeason` – `src/engine/world/bookkeeping.ts`
+
 ### `src/engine/world/knockHistory.ts`
 
 THE KNOCK'S RECORD: the capped history of every knock she has had, and the one writer that closes one out.
 
 - `KNOCK_HISTORY_MAX` – `src/engine/world/knockHistory.ts`
+
+### `src/engine/world/phaseFinance.ts`
+
+⭐ R2-10 STEP 2, PHASE 2 – WHAT THE WEEK COSTS: the family's money, the coach's bill, the college's tuition and the kit that wears out.
+
+- `coachWorksThisWeek` – `src/engine/world/phaseFinance.ts`
 
 ### `src/engine/world/snapshot.ts`
 
