@@ -53,7 +53,6 @@ import {
   resumeFromCollege,
   collegeLeagueRevealOpen,
   skipTournament,
-  closeTournament,
   revealTournamentRound,
   tickWeek,
   toSnapshot,
