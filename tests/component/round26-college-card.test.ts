@@ -51,6 +51,9 @@ import {
   measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
+  collegeLeagueRevealOpen,
+  skipTournament,
+  closeTournament,
   revealTournamentRound,
   tickWeek,
   toSnapshot,
@@ -166,11 +169,24 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
 
 let walked: Snapshot | null = null
 
+/** ⚠ ADDED AT THE ROUND-26 COLLECT. This file was written on a branch where a college year paused
+ *  only for her birthday. Another branch of the SAME round taught the year to pause for the
+ *  championship too (#6 – the owner's «сообщили только постфактум»), and a walk that answers one
+ *  pause but not the other stalls on the first league week: these cases read ZERO banked years
+ *  where four are lived. The player answers it with «Skip all rounds» then «Continue», which is
+ *  what these two commands are. */
+function answerLeagueReveal(world: WorldState): void {
+  if (!collegeLeagueRevealOpen(world)) return
+  skipTournament(world)
+  closeTournament(world)
+}
+
 /** The base snapshot every fixture case is mounted over: a real career, one year into college. */
 function walkedCollegeSnapshot(): Snapshot {
   if (walked) return walked
   const { world, rng } = atCollege('r26-card-base')
   resumeFromCollege(world, rng)
+  answerLeagueReveal(world)
   if (pendingBirthday(world) !== null) chooseGift(world, 'day')
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {
@@ -228,6 +244,7 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
     const rest: { yearsDone: number; latched: boolean }[] = []
     for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
       const view = toSnapshot(world).ending?.college ?? null
       rest.push({ yearsDone: view?.yearsDone ?? world.college!.years.length, latched: view !== null })
@@ -266,6 +283,7 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
     const { world, rng } = atCollege('r26-fifth')
     for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
+      answerLeagueReveal(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
