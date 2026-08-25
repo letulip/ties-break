@@ -59,6 +59,33 @@ export interface BirthdayGift {
   ask: string
   /** the diary's noun for it – "the headphones" – so a callback three seasons later reads as English */
   short: string
+  /** ⭐⭐ ROUND 26 #4 – WHAT THIS ROW'S DEFAULT WORDS ASSUME ABOUT THE FAMILY'S MONEY, declared as a
+   *  fact rather than left to be inferred from the sentence.
+   *
+   *  The owner, reading a girl with $584,375 behind her: «Очень странное пожелание на день рождения
+   *  "She was looking fares home at two in the morning" … для студентки с кошельком 500к+». The line
+   *  is a good one for a family that cannot afford the fare and a false one for his.
+   *
+   *  `hardship` – the words only make sense if money is scarce (fares looked up and not booked, a
+   *  reading list read for its prices). `plenty` – the words only make sense if it is not (she has
+   *  had the money for that painting for years and will not spend it).
+   *
+   *  ⚠ ABSENT IS THE NORMAL CASE AND MEANS "THIS ROW SAYS NOTHING ABOUT MONEY", which is true of 26
+   *  of the 29 rows. It is not a default to be filled in; a row earns this field by making a claim.
+   *  `world/means.ts` decides whether the claim holds. */
+  means?: 'hardship' | 'plenty'
+  /** ⭐ THE SAME ROW'S WORDS WHEN THE FAMILY'S MEANS DO NOT LICENCE THE DEFAULT ONES.
+   *
+   *  ⚠ IT REPLACES, IT DOES NOT APPEND – the identical discipline `again` is written under, and for
+   *  the identical reason: a note plus an afterthought grows the row and makes it visually taller
+   *  than the others, which is a mark by accident.
+   *
+   *  ⚠ AND IT CHANGES NO OPTION, NO POSITION AND NO DRAW. The catalogue stays ONE LIST for every
+   *  background (spec §0, the 11.08 ruling that keeps this a gift and not a shop): nothing here can
+   *  add, remove or reorder a row, and `birthdayOffer` – the function that picks the four – is not
+   *  even given the means. Only the sentences under and above the buttons move. Each key is optional
+   *  because a row usually makes its claim in exactly one of them. */
+  unlicensed?: { ask?: string; note?: string; again?: string }
 }
 
 /** ⚠ THE DIARY'S NOUN FOR "just the day together", AND THE ONE SPELLING OF IT.

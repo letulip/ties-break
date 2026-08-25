@@ -119,9 +119,43 @@ clock he suspects from three directions.
   nobody is currently on the hook for.
 
 - [ ] **4. «Очень странное пожелание на день рождения She was looking fares home at two in the
+- [x] **4. «Очень странное пожелание на день рождения She was looking fares home at two in the
   morning для студентки с кошельком 500к+ с предложением подарить велосипед.»** – the wish pool
   assumes a poor family. Her wallet is $500k+. **build**: wishes must read the family's means (and
   her college residence), or the pool must be gated.
+
+  **R26-C, `round26/birthdays`.** Two findings, and they are different.
+
+  **THE WISH WAS THE DEFECT.** A row now DECLARES what its words rest on (`BirthdayGift.means` =
+  `hardship | plenty`) and `src/engine/world/means.ts` answers whether that is true of this family –
+  a named predicate, the shape R2-18 gave the life stage, **licensed by fact and not by a word
+  list**. Three of the 33 rows make a money claim: `flighthome` and `books` (hardship),
+  `neverbuy` (plenty); each carries the sentences for when it does not hold.
+
+  **THE THRESHOLD, AND WHERE IT IS READ FROM.** `tight` ≤ **$8,000** =
+  `ECONOMY.startingFundsCents.working`; `moneyed` ≥ **$120,000** = `.wealthy`. Neither is chosen –
+  the three opening war chests are the only BALANCES the design ever named, everything else in
+  `ECONOMY` is a weekly flow or a per-bill factor, and the economy was tuned against them.
+  `STARTING_FUNDS_CENTS` moved from `world.ts` into `economy.ts` so a leaf could read it (world.ts
+  keeps the historical export, twelve readers untouched). The FARE is the sanity check and not the
+  source: at the tight ceiling the dearest domestic fare (`TIERS.national.travelCostCents` = $900)
+  is 11.3% of the wallet, at the moneyed floor 0.75%, on his save 0.14%. The wallet is both purses,
+  `fundsCents + kidFundsCents`.
+
+  **PROVEN RENDERED**, walked to the real fork, his own numbers, Year 2 of 4, age 20, wallet
+  $643,595 (`tests/college-birthday.test.ts`):
+  * ASK: *"The journey home is four hundred miles and she has never once asked us to book it."*
+  * the same walk at $1,200: *"She has been looking up fares home at two in the morning and booking
+    none."* – so the arm is live and the absence above is a licence, not a dead string.
+
+  **AND THE BICYCLE WAS NOT A DEFECT.** The row he read is `campusbike` – "A bicycle for getting
+  about there", fifteen minutes between buildings – the COLLEGE band's own row, correct for a girl
+  of twenty in a hall of residence. R2-18's band IS being picked: verified on a walked career, the
+  child's `bicycle` is unreachable at her residence at any age. ⚠ Measured beside it: **0 of 48**
+  walked college birthdays are in the `tight` band (median wallet $133,514), which is exactly why
+  the fares line read as absurd – it was printing where it can essentially never be true.
+
+  Spec: `docs/specs/birthday-and-gifts.md` §9. No schema move.
 
 - [ ] **5. «Проверь пожалуйста что со всех выигрышей после своего счета в банке в 18 лет она
   получает свои отчисления и неплохо бы об этом где-то игроку сообщать, кстати»** – **5a measure**:
@@ -159,9 +193,45 @@ clock he suspects from three directions.
   re-asserted: both answers take the same edge, the same fill and the same single class; neither is
   the lime CTA. Equal weight is not the same claim as invisible.
 
-- [ ] **9. «Just a day together на день рождения случается подозрительно часто. Сколько у нас
+- [x] **9. «Just a day together на день рождения случается подозрительно часто. Сколько у нас
   вариантов подарков? Неужели мы не можем нагенерить так, чтобы они если и повторялись, то не так
   часто?»** – **9a answer**: the pool's real size. **9b build**: repetition control.
+
+  **R26-C, `round26/birthdays`. 9a – THE ANSWER, MEASURED** (`tools/birthday-pool.ts`, 12 walked
+  careers = 201 tour birthdays + 48 college birthdays):
+
+  * **29 distinct gifts** in the catalogue before the fix (28 material + the day), across 9 bands.
+  * **The day was never the problem.** It is on 100% of dialogs by his own 11.08 ruling – four rows,
+    one of them always the day. It is ASKED for on 30% of birthdays, a little over the 25% its share
+    implies, because the ask skips presents she already owns and the day is never spent.
+  * **The whole dialog was the problem.** 53% of consecutive birthdays (100/189) printed the
+    IDENTICAL four rows, and the worst career ran **eight in a row**. At college, 22% (8/36).
+  * **The cause is arithmetic, not luck.** Four bands held exactly three material gifts and a dialog
+    shows three: C(3,3) = 1, so there was literally one dialog to draw. The peak band (22-28) alone
+    is seven consecutive birthdays of it.
+
+  **9b – WHAT WAS BUILT: both, and the shape follows round 24's own ruling** rather than inventing
+  one. `docs/decisions.md`, 19.08, on the college birthday lines: «one line per year and not a
+  random pick, deliberately – four college birthdays is the whole of the population, so a pool would
+  repeat within a single career.»
+
+  1. **A wider pool** – two rows each to the 19-21 band (`languages`, `storage`) and the peak band
+     (`dog`, `oldclub`, which the late band inherits): **33 distinct gifts**. The rule the guard
+     holds is per birthday and not ">1": a band must print at least as many dialogs as it holds
+     birthdays, bounded for the open-ended late band by `ENDINGS.stopAskingAgeYears`. One-year bands
+     (17, 18) cannot repeat inside themselves and are left alone.
+  2. **A walk, not a draw** – every combination of a band is enumerated, shuffled ONCE per career per
+     band on `seed:birthday:cycle:<band>`, and indexed by her age. Consecutive birthdays take
+     consecutive entries.
+
+  **MEASURED AFTER**, same tool, same 12 careers: back-to-back identical **53% → 0%** (0/189), worst
+  run **8 → 1**; college **22% → 0%** (0/36), worst run **3 → 1**, and her four college birthdays are
+  now four DIFFERENT dialogs – the whole population of that band, exactly as round 24 asked.
+
+  ⚠ **RNG.** Two purpose-scoped sub-streams, neither of them MAIN: `…:cycle:<band>` drawn C(n,3)−1
+  times once per career, `…:birthday:<age>` drawn exactly four times for every band (three to order
+  the rows, one for the ask). `tests/condition.test.ts` green, **41550 / `e6b0c709`**, unchanged. No
+  persisted state, so **no schema move**. Spec: `docs/specs/birthday-and-gifts.md` §10.
 
 - [ ] **10. «В новостях во время колледжа вообще пустота, как будто мир умер, мы вроде делали, чтобы
   он жил, при том, что даже в highlights на результатах есть какие-то события»** – the world runs

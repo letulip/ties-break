@@ -266,8 +266,13 @@ import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, ageWindowStartWeek, birthdayWeek, birthdayTurning }
 // ⭐ v48 – THE BIRTHDAY POPUP AND THE GIFT (docs/specs/birthday-and-gifts.md). Re-exported under the
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
-import { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
-export { birthdayOffer, birthdayOptions, birthdayHeading, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
+import { birthdayOffer, birthdayOptions, birthdayWords, birthdayHeading, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
+export { birthdayOffer, birthdayOptions, birthdayWords, birthdayHeading, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
+// ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
+// reader and because a future copy surface should find it on the same barrel (world/means.ts).
+import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
+export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
+export type { FamilyMeans } from './world/means'
 
 // ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA DECLARES ITSELF IN `./world/state.ts` NOW.
 //
@@ -312,11 +317,12 @@ export type { PendingTournament, WorldState }
 import { SAVE_SCHEMA_VERSION } from './world/state'
 export { SAVE_SCHEMA_VERSION }
 
-export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
-  wealthy: 120_000_00,
-  middle: 25_000_00,
-  working: 8_000_00,
-}
+// ⚠ ROUND 26 #4 – THE NUMBERS MOVED TO `./economy`, THE NAME DID NOT. Same alias shape as
+// `PARENT_INCOME_CENTS` eight lines below, and for the same reason: the economy tuning surface is one
+// object. What forced it is `world/means.ts`, which turns a balance into a means band and may not
+// import `world.ts` back – that edge is a runtime cycle, and `economy.ts` is a leaf. Every one of the
+// twelve readers of this export (MoneyScreen, EndingScreen, five tests, two tools) is untouched.
+export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = ECONOMY.startingFundsCents
 
 // The economy tuning surface now lives in ./economy (the owner's single "ручки регулировки"
 // knob object). These aliases keep the old call sites + the public PARENT_INCOME_CENTS export

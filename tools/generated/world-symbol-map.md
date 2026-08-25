@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (1,783 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (1,789 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-277 exported names across 36 owning modules.
+283 exported names across 37 owning modules.
 
 ## Areas
 
@@ -21,8 +21,8 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 15 |
+| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 13 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 13 |
-| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 12 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 12 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
@@ -34,6 +34,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
+| `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
@@ -215,6 +216,24 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
 
+### `src/engine/world/birthday.ts`
+
+HER BIRTHDAY, AND WHAT YOU GIVE HER.
+
+- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_COLLEGE_BAND` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
+- `birthdayHeading` – `src/engine/world/birthday.ts`
+- `birthdayHistory` – `src/engine/world/birthday.ts`
+- `birthdayOffer` – `src/engine/world/birthday.ts`
+- `birthdayOptions` – `src/engine/world/birthday.ts`
+- `birthdayWords` – `src/engine/world/birthday.ts`
+- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
+- `chooseGift` – `src/engine/world/birthday.ts`
+- `giftNoun` – `src/engine/world/birthday.ts`
+- `pendingBirthday` – `src/engine/world/birthday.ts`
+
 ### `src/engine/world/sponsors.ts`
 
 THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
@@ -232,23 +251,6 @@ THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a tr
 - `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
 - `sponsorNeedMet` – `src/engine/world/sponsors.ts`
 - `travelCostFor` – `src/engine/world/sponsors.ts`
-
-### `src/engine/world/birthday.ts`
-
-HER BIRTHDAY, AND WHAT YOU GIVE HER.
-
-- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_COLLEGE_BAND` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
-- `birthdayHeading` – `src/engine/world/birthday.ts`
-- `birthdayHistory` – `src/engine/world/birthday.ts`
-- `birthdayOffer` – `src/engine/world/birthday.ts`
-- `birthdayOptions` – `src/engine/world/birthday.ts`
-- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
-- `chooseGift` – `src/engine/world/birthday.ts`
-- `giftNoun` – `src/engine/world/birthday.ts`
-- `pendingBirthday` – `src/engine/world/birthday.ts`
 
 ### `src/engine/world/endings.ts`
 
@@ -390,6 +392,16 @@ THE SHARED IDS AND CAPS: the handful of constants more than one world module nee
 - `guardNotEnded` – `src/engine/world/constants.ts`
 - `guardNotEndedForGood` – `src/engine/world/constants.ts`
 - `KID_ID` – `src/engine/world/constants.ts`
+
+### `src/engine/world/means.ts`
+
+WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet.
+
+- `familyMeans` – `src/engine/world/means.ts`
+- `FamilyMeans` *(type)* – `src/engine/world/means.ts`
+- `householdWalletCents` – `src/engine/world/means.ts`
+- `MEANS_BANDS` – `src/engine/world/means.ts`
+- `meansOfCents` – `src/engine/world/means.ts`
 
 ### `src/engine/condition.ts`
 

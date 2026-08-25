@@ -41,7 +41,16 @@ import {
   pendingKnock,
   tickWeek,
   toSnapshot,
+  // ⭐ ROUND 26 #4 – the means licence and the predicate behind it (src/engine/world/means.ts).
+  birthdayWords,
+  familyMeans,
+  meansOfCents,
+  MEANS_BANDS,
+  type FamilyMeans,
 } from '../src/engine/world'
+import { answerFork } from '../src/engine/world/endings'
+import { ENDINGS } from '../src/engine/ending'
+import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 // ⚠ RE-AIMED by R2-09, not weakened: `BirthdayGift` left the wire format for the engine leaf that
@@ -333,8 +342,15 @@ describe('a repeat is played, not silent – round-18 #10c', () => {
 
   it('⭐ ON A REAL CAREER: the second car says it is the second, in the dialog he reads', () => {
     // The owner's own sentence, made into a fixture: «чтобы мы новую машину не раз в год покупали».
-    // The 19-21 band offers exactly three material gifts, so a car given at nineteen is offered
-    // again at twenty with certainty – which is the whole reason he noticed.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 26 #9b, AND THE THING THAT MOVED IS THE FIXTURE'S PREMISE, NOT ITS CLAIM.
+    // This read "the 19-21 band offers exactly three material gifts, so a car given at nineteen is
+    // offered again at twenty WITH CERTAINTY – which is the whole reason he noticed". That certainty
+    // was the defect #9b removed: the band held one possible dialog and printed it three years
+    // running. The band is five rows now and the offer WALKS its combinations, so the car comes back
+    // within the cycle rather than the very next year. The claim under test is unchanged and is
+    // still round-18 #10c's – when the car IS offered again, the row says so – so the fixture walks
+    // to the next birthday that offers it instead of assuming the next birthday will.
     const world = createWorld('two-cars', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
     const rng = rngFromSeed(world.seed)
     const runToBirthday = (): number => {
@@ -363,33 +379,71 @@ describe('a repeat is played, not silent – round-18 #10c', () => {
     chooseGift(world, 'car')
     tickWeek(world, rng)
 
-    // ...and offered again the next year, saying what it is.
-    expect(runToBirthday(), 'and she has another birthday in this band').toBeGreaterThan(0)
-    const second = toSnapshot(world).birthdayPrompt!
-    const carAgain = second.options.find((o) => o.id === 'car')!
+    // ...and offered again within the band's cycle, saying what it is.
+    let second: ReturnType<typeof toSnapshot>['birthdayPrompt'] = null
+    let nextYear: ReturnType<typeof toSnapshot>['birthdayPrompt'] = null
+    for (let year = 0; year < 6 && second === null; year++) {
+      expect(runToBirthday(), 'and she has another birthday').toBeGreaterThan(0)
+      const prompt = toSnapshot(world).birthdayPrompt!
+      if (nextYear === null) nextYear = prompt
+      if (prompt.options.some((o) => o.id === 'car')) second = prompt
+      else {
+        chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+        tickWeek(world, rng)
+      }
+    }
+    expect(second, 'the car comes back inside the cycle').not.toBeNull()
+    const carAgain = second!.options.find((o) => o.id === 'car')!
     expect(carAgain.note, 'a second car does not arrive in silence').toMatch(/already/i)
     expect(carAgain.note).not.toBe(carFirst.note)
     // ...and she does not ASK for it either, which is round-17 #18 still holding.
-    expect(second.ask).not.toBe(first.options.length ? carFirst.label : '')
-    expect(second.options.map((o) => o.id).sort(), 'the same four rows, unchanged').toEqual(
+    expect(second!.ask).not.toBe(first.options.length ? carFirst.label : '')
+    // ⭐ ROUND 26 #9b, AND IT IS THE ASSERTION THAT WAS INVERTED. This used to demand «the same four
+    // rows, unchanged» – true then, and precisely the owner's complaint two rounds later. The very
+    // next birthday must now differ from this one, which is the no-repeat window as a behaviour.
+    expect(nextYear, 'she had a next birthday at all').not.toBeNull()
+    expect(nextYear!.options.map((o) => o.id).sort(), 'the next birthday is not the same dialog').not.toEqual(
       first.options.map((o) => o.id).sort(),
     )
   })
 })
 
 describe('⚠ the copy work costs the stream nothing', () => {
-  it('⭐ the sub-stream is drawn exactly `gifts + 3` times, for every band', () => {
-    // CLAUDE.md invariant 2. The offer is three draws' worth of shuffling plus one for the ask, on
-    // top of the band shuffle: (n-1) + 3 + 1. Replayed here off an INDEPENDENT generator on the same
-    // key, counting as it goes – so an extra `rng()` call anywhere in `birthdayOffer` makes the
-    // replayed order diverge from the real one and this fails. Mutation-verified by adding a bare
-    // `rng()` before the ask draw.
+  it('⭐ the two sub-streams are drawn exactly C(n,3)-1 and 4 times, for every band', () => {
+    // CLAUDE.md invariant 2. Replayed off INDEPENDENT generators on the same keys, counting as they
+    // go – so an extra `rng()` call anywhere in `birthdayOffer` makes the replayed order diverge
+    // from the real one and this fails. Mutation-verified by adding a bare `rng()` before the ask
+    // draw, and again by reversing the enumeration order of the combinations.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 26 #9b, AND THE SHAPE OF THE CLAIM CHANGED WITH THE MECHANISM. It used to
+    // be ONE stream and `(n-1) + 3 + 1` draws: the band was shuffled per AGE and the top three
+    // taken, which is sampling with replacement and is exactly what made 53% of consecutive
+    // birthdays print the identical four rows. There are two streams now:
+    //
+    //   `seed:birthday:cycle:<band>`  the band's whole population of combinations, shuffled ONCE per
+    //                                career per band – C(n,3)-1 draws, and NOT keyed on the age,
+    //                                which is what makes consecutive ages walk one permutation.
+    //   `seed:birthday:<age>`        four draws, always: three to order the four rows on screen and
+    //                                one for the ask. It no longer depends on the band's size.
+    //
+    // ⚠ NEITHER IS MAIN, so the frozen capture (41550 / e6b0c709) cannot move, and neither key
+    // carries a week or a choice, so nothing here can be re-rolled by reloading.
     const shuffle = <T,>(items: readonly T[], rng: () => number): T[] => {
       const out = items.slice()
       for (let i = out.length - 1; i > 0; i--) {
         const j = Math.floor(rng() * (i + 1))
         ;[out[i], out[j]] = [out[j], out[i]]
       }
+      return out
+    }
+    /** The engine's own enumeration, replayed – combinations in index order. */
+    const combinations = <T,>(items: readonly T[], k: number): T[][] => {
+      const out: T[][] = []
+      const walk = (start: number, acc: T[]): void => {
+        if (acc.length === k) return void out.push(acc.slice())
+        for (let i = start; i < items.length; i++) walk(i + 1, [...acc, items[i]])
+      }
+      walk(0, [])
       return out
     }
     for (const band of BIRTHDAY_BANDS) {
@@ -401,20 +455,31 @@ describe('⚠ the copy work costs the stream nothing', () => {
       // college band's own draw count load-bearing.
       const atCollege = band === BIRTHDAY_COLLEGE_BAND
       const age = Math.max(band.from, 14)
+      const population = combinations(band.gifts, 3)
+
+      let cycleDraws = 0
+      const cycleRng = rngFromSeed(`draws:birthday:cycle:${atCollege ? 'college' : `${band.from}-${band.to}`}`)
+      const countedCycle = () => {
+        cycleDraws++
+        return cycleRng()
+      }
+      const order = shuffle(population, countedCycle)
+      const material = order[age % order.length]
+      expect(cycleDraws, `${bandName(band)}: one Fisher-Yates over C(n,3) combinations`)
+        .toBe(population.length - 1)
+
       let draws = 0
       const rng = rngFromSeed(`draws:birthday:${age}`)
       const counted = () => {
         draws++
         return rng()
       }
-      const material = shuffle(band.gifts, counted).slice(0, 3)
       const options = shuffle([...material, BIRTHDAY_DAY_TOGETHER], counted)
       // ⚠ THE ASK IS REPLAYED TOO, AND THAT IS WHAT MAKES THE COUNT LOAD-BEARING. The first draft
       // compared only the four ids, so an extra `rng()` AFTER the shuffles moved the ask and nothing
       // noticed. The ask is the last draw on the stream: shift it by one and it lands elsewhere.
       const askedId = options[Math.floor(counted() * options.length)].id
-      expect(draws, `${bandName(band)}: (n-1) to shuffle the band, three for the four, one for the ask`)
-        .toBe(band.gifts.length + 3)
+      expect(draws, `${bandName(band)}: three to order the four rows, one for the ask`).toBe(4)
       const real = birthdayOffer('draws', age, [], atCollege)
       expect(
         [real.options.map((o) => o.id), real.askedId],
@@ -509,5 +574,297 @@ describe('R2-18 — a girl at college is offered gifts for the life she is actua
     for (const gift of BIRTHDAY_COLLEGE_BAND.gifts) {
       expect(giftNoun(gift.id), `${gift.id} has no noun for the diary`).toBe(gift.short)
     }
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 26 #4 – A WISH MAY NOT ASSUME A WALLET THE FAMILY HAS NOT GOT
+// =================================================================================================
+//
+// The owner, 24.08, reading his own save:
+//
+//   «Очень странное пожелание на день рождения "She was looking fares home at two in the morning"
+//    для студентки с кошельком 500к+ с предложением подарить велосипед.»
+//
+// $584,375 in the family wallet, $59,220 in hers, a scholarship, and a girl scanning ticket prices
+// at two in the morning because she cannot face the fare. It is a good line for the family it was
+// written for and a false one for his.
+//
+// ⚠⚠ THE RULE IS BY FACT AND NOT BY A WORD LIST, which is the standing instruction and the reason
+// the old adult guard passed for a year. Nothing below greps the copy for "fare" or "afford". A row
+// DECLARES what its words rest on (`BirthdayGift.means`) and `world/means.ts` answers whether that
+// is true of this family; the sweep checks the DECLARATION and the RENDERING, so the next hardship
+// noun cannot walk past it by being spelled differently.
+describe('ROUND 26 #4 – the wish is licensed by what the family has', () => {
+  const claiming = BIRTHDAY_BANDS.flatMap((b) => b.gifts).filter((g) => g.means !== undefined)
+
+  it('⭐ the bands are read off the economy, not chosen – and the fare check is the sanity check', () => {
+    // ⚠ THE THRESHOLD'S PROVENANCE, AS AN ASSERTION. Both numbers ARE `ECONOMY.startingFundsCents`
+    // – the only balances the design ever named – and neither is a figure somebody liked the look
+    // of. Mutation: replace either bound with a literal and this goes red the next time the economy
+    // is retuned, which is exactly when a hand-copied threshold would have gone quietly wrong.
+    expect(MEANS_BANDS.tightAtOrBelowCents).toBe(ECONOMY.startingFundsCents.working)
+    expect(MEANS_BANDS.moneyedAtOrAboveCents).toBe(ECONOMY.startingFundsCents.wealthy)
+    // the three opening reserves land in the three bands they name, which is what makes the table
+    // readable as "poorer than the poorest family" / "richer than the richest"
+    expect(meansOfCents(ECONOMY.startingFundsCents.working)).toBe('tight')
+    expect(meansOfCents(ECONOMY.startingFundsCents.middle)).toBe('comfortable')
+    expect(meansOfCents(ECONOMY.startingFundsCents.wealthy)).toBe('moneyed')
+    // ...and a family under water is tight rather than an edge case
+    expect(meansOfCents(-1)).toBe('tight')
+  })
+
+  it('⭐ a row that makes a money claim carries the words for when it is false, and no other row does', () => {
+    expect(claiming.length, 'the catalogue makes at least one money claim').toBeGreaterThan(0)
+    for (const gift of claiming) {
+      expect(['hardship', 'plenty']).toContain(gift.means)
+      const alt = gift.unlicensed ?? {}
+      expect(
+        Object.keys(alt).length,
+        `${gift.id} declares means="${gift.means}" and has nothing to say when it does not hold`,
+      ).toBeGreaterThan(0)
+      for (const [slot, text] of Object.entries(alt)) {
+        expect(text, `${gift.id}.unlicensed.${slot} is empty`).toBeTruthy()
+        expect(text, `${gift.id}.unlicensed.${slot} repeats the licensed wording`).not.toBe(
+          (gift as unknown as Record<string, string>)[slot],
+        )
+      }
+    }
+    // ...and the other direction: no row carries alternate words without saying what they are for.
+    for (const band of BIRTHDAY_BANDS) {
+      for (const gift of poolOf(band)) {
+        if (gift.unlicensed === undefined) continue
+        expect(gift.means, `${gift.id} has unlicensed words and declares no claim`).toBeDefined()
+      }
+    }
+  })
+
+  it('⭐ the swapped wording obeys every rule the licensed wording obeys', () => {
+    // ⚠ THE HALF THAT IS EASY TO FORGET. An alternate ask is still an ask: it has to hook its own
+    // row and nothing else (rule 2) and it may not drop a scale word in (rule 3's second test).
+    // Checked by building the row as the player would read it under the failing licence and running
+    // the same functions over it.
+    const units = [...new Set(Object.values(BIRTHDAY_TIME_TOGETHER))]
+    for (const band of BIRTHDAY_BANDS) {
+      const pool = poolOf(band)
+      for (const gift of pool) {
+        if (gift.means === undefined) continue
+        const bad: FamilyMeans = gift.means === 'hardship' ? 'moneyed' : 'tight'
+        const words = birthdayWords(gift, bad)
+        const swapped: BirthdayGift = { ...gift, ask: words.ask, note: words.note, again: words.again }
+        const rivals = pool.map((h) => (h.id === gift.id ? swapped : h))
+        expect(
+          hooks(swapped, rivals).length,
+          `${bandName(band)} ${gift.id}: the unlicensed ask hooks nothing – "${swapped.ask}"`,
+        ).toBeGreaterThan(0)
+        expect(PLACEHOLDER_HEAD.test(swapped.label)).toBe(false)
+        if (BIRTHDAY_TIME_TOGETHER[gift.id] === undefined) {
+          for (const unit of units) {
+            expect(
+              unitRe(unit).test(swapped.ask),
+              `${bandName(band)} ${gift.id}: the unlicensed ask says "${unit}" – "${swapped.ask}"`,
+            ).toBe(false)
+          }
+        }
+      }
+    }
+  })
+
+  it('⚠ the OFFER never sees the wallet – §0 holds, and it holds structurally', () => {
+    // The 11.08 ruling that keeps this a gift and not a shop: ONE list for every background, no
+    // affordability test anywhere. `birthdayOffer` takes (seed, age, alreadyGiven, atCollege) and
+    // there is no means to pass it – so a wealth gate cannot come back through this door however the
+    // copy is written. Asserted over every age and both residences.
+    for (let age = 14; age <= 32; age++) {
+      for (const atCollege of [false, true]) {
+        const a = birthdayOffer('offer-blind', age, [], atCollege)
+        const b = birthdayOffer('offer-blind', age, [], atCollege)
+        expect([a.options.map((o) => o.id), a.askedId]).toEqual([b.options.map((o) => o.id), b.askedId])
+      }
+    }
+    // ...and the means can only reach the WORDS: rendered at all three bands the ids and the labels
+    // are identical and only a note may move. This is §0 as a property of the renderer, not of a
+    // signature – a means argument added to `birthdayOffer` later would break it here first.
+    for (const band of BIRTHDAY_BANDS) {
+      const { options } = birthdayOffer('offer-blind', Math.max(band.from, 14), [], band === BIRTHDAY_COLLEGE_BAND)
+      const rendered = (['tight', 'comfortable', 'moneyed'] as FamilyMeans[]).map((m) => birthdayOptions(options, [], m))
+      for (const rows of rendered) {
+        expect(rows.map((r) => r.id)).toEqual(rendered[0].map((r) => r.id))
+        expect(rows.map((r) => r.label)).toEqual(rendered[0].map((r) => r.label))
+      }
+    }
+  })
+
+  it('⭐⭐ RENDERED, ON A REAL CAREER: the painting stops claiming she has the money when she has not', () => {
+    // ⚠ THE PROOF IS THE DIALOG, not the catalogue. Two identical careers walked to the same
+    // birthday in the peak band, differing in one number – the household wallet – and read off
+    // `toSnapshot(world).birthdayPrompt`, which is the object the component renders.
+    const promptAt = (walletCents: number) => {
+      const world = createWorld('means-render', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
+      const rng = rngFromSeed(world.seed)
+      for (let guard = 0; guard < 700; guard++) {
+        if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
+        if (pendingKnock(world)) decideKnock(world, 'rest')
+        const age = pendingBirthday(world)
+        if (age !== null) {
+          // ⚠ SET ON THE BIRTHDAY WEEK ITSELF. A wallet set once at week 0 is spent by twenty-two;
+          // the claim is about what the family has ON THE DAY, so the arm is applied on the day.
+          if (age >= 22) {
+            world.fundsCents = walletCents
+            world.kidFundsCents = 0
+            const found = toSnapshot(world).birthdayPrompt!
+            if (found.options.some((o) => o.id === 'neverbuy')) return found
+          }
+          chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+        }
+        tickWeek(world, rng)
+      }
+      return null
+    }
+    const rich = promptAt(600_000_00)
+    const poor = promptAt(1_000_00)
+    expect(rich, 'the fixture reached the painting on the rich arm').not.toBeNull()
+    expect(poor, 'the fixture reached the painting on the poor arm').not.toBeNull()
+    const richRow = rich!.options.find((o) => o.id === 'neverbuy')!
+    const poorRow = poor!.options.find((o) => o.id === 'neverbuy')!
+    expect(richRow.note).toBe('She has the money for it, she has had it for years, and she will not.')
+    expect(poorRow.note).toBe('She has stood at that window for years and never once asked what it costs.')
+    // ...and NOTHING ELSE ABOUT THE DIALOG MOVED: same four ids, same order, same labels. The offer
+    // is means-blind and this is that claim rendered rather than argued.
+    expect(poor!.options.map((o) => o.id)).toEqual(rich!.options.map((o) => o.id))
+    expect(poor!.options.map((o) => o.label)).toEqual(rich!.options.map((o) => o.label))
+  })
+
+  it('⚠ ...and a world is what decides it – the same row reads both ways off `familyMeans`', () => {
+    // The predicate itself, on a world rather than on a number, because that is how it is called.
+    const world = createWorld('means-world', DEFAULT_PROFILE)
+    world.fundsCents = ECONOMY.startingFundsCents.working
+    world.kidFundsCents = 0
+    expect(familyMeans(world)).toBe('tight')
+    // ⚠ HER OWN ACCOUNT COUNTS. v54 keeps the two purses apart in the ledger and this predicate sums
+    // them, because "she looked up the fares and booked none" is false if either could have paid.
+    world.kidFundsCents = ECONOMY.startingFundsCents.wealthy
+    expect(familyMeans(world)).toBe('moneyed')
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 26 #9b – THE SAME DIALOG MAY NOT COME ROUND TWICE RUNNING
+// =================================================================================================
+//
+// The owner, 24.08: «Just a day together на день рождения случается подозрительно часто. Сколько у
+// нас вариантов подарков? Неужели мы не можем нагенерить так, чтобы они если и повторялись, то не
+// так часто?»
+//
+// ⚠ MEASURED FIRST (tools/birthday-pool.ts, 12 careers × 201 birthdays): 53% of consecutive
+// birthdays printed the IDENTICAL four rows and the worst career ran EIGHT in a row. The day was
+// never the problem – it is on every dialog by his own 11.08 ruling – the whole dialog was.
+describe('ROUND 26 #9b – the offer walks the band instead of sampling it', () => {
+  const bandKeyOf = (b: (typeof BIRTHDAY_BANDS)[number]) =>
+    b === BIRTHDAY_COLLEGE_BAND ? 'college' : `${b.from}-${b.to}`
+  const combinationCount = (n: number, k: number): number => {
+    let out = 1
+    for (let i = 0; i < k; i++) out = (out * (n - i)) / (i + 1)
+    return Math.round(out)
+  }
+
+  it('⭐ a band holds at least as many dialogs as it holds birthdays – the root cause, as a rule', () => {
+    // ⚠ THIS IS THE CAUSE ITSELF AND NOT A SYMPTOM. Four bands held exactly three material gifts and
+    // a dialog shows three, so C(3,3) = 1: there was literally one dialog to draw, and the walk
+    // below cannot help a population of one. Mutation: delete `dog` and `oldclub` from PEAK_GIFTS
+    // and this goes red on the peak band at once (7 birthdays, 1 dialog).
+    //
+    // ⚠ THE RULE IS PER BIRTHDAY, NOT ">1", because a ONE-YEAR band (17, 18) cannot repeat inside
+    // itself whatever it holds – she has exactly one birthday there – and demanding two dialogs of
+    // it would be content for the sake of a number. The bound on the open-ended late band is the
+    // game's own: `ENDINGS.stopAskingAgeYears` is the age it stops asking her to go on.
+    for (const band of BIRTHDAY_BANDS) {
+      const birthdays =
+        band === BIRTHDAY_COLLEGE_BAND
+          ? ENDINGS.collegeYears
+          : Math.min(band.to, ENDINGS.stopAskingAgeYears) - Math.max(band.from, 14) + 1
+      expect(
+        combinationCount(band.gifts.length, 3),
+        `${bandName(band)}: ${birthdays} birthdays are spent here and it can print ` +
+          `${combinationCount(band.gifts.length, 3)} dialogs`,
+      ).toBeGreaterThanOrEqual(birthdays)
+    }
+  })
+
+  it('⭐⭐ two birthdays in a row never print the same four rows, at any age, on any seed', () => {
+    // The walk's whole guarantee, swept: consecutive ages take consecutive entries of one shuffled
+    // permutation, so they cannot collide while the band has more than one combination.
+    // Mutation: key the cycle stream on the age and this fails within a handful of seeds.
+    const failures: string[] = []
+    for (let s = 0; s < 40; s++) {
+      for (const atCollege of [false, true]) {
+        for (let age = 15; age <= 40; age++) {
+          const prev = birthdayOffer(`walk-${s}`, age - 1, [], atCollege)
+          const now = birthdayOffer(`walk-${s}`, age, [], atCollege)
+          const a = prev.options.map((o) => o.id).sort().join('|')
+          const b = now.options.map((o) => o.id).sort().join('|')
+          // A band BOUNDARY is allowed to repeat – two different bands share ids by design (the late
+          // career re-offers the peak's, §5.2) and they have no common cycle to walk. Everything
+          // inside one band is the claim.
+          const sameBand =
+            (atCollege && true) ||
+            BIRTHDAY_BANDS.find((x) => age - 1 >= x.from && age - 1 <= x.to) ===
+              BIRTHDAY_BANDS.find((x) => age >= x.from && age <= x.to)
+          if (sameBand && a === b) failures.push(`seed ${s} college=${atCollege} age ${age - 1}->${age}: ${a}`)
+        }
+      }
+    }
+    expect(failures.slice(0, 6), 'a birthday repeated last year\'s dialog exactly').toEqual([])
+  })
+
+  it('⭐ ...and the WHOLE population is walked before anything comes round again', () => {
+    // Round 24's ruling, one level up (docs/decisions.md, 19.08): «one line per year and not a
+    // random pick, deliberately – four college birthdays is the whole of the population, so a pool
+    // would repeat within a single career.» Enumerate, shuffle once, walk. Over C(n,3) consecutive
+    // ages every combination appears exactly once.
+    for (const band of BIRTHDAY_BANDS) {
+      const total = combinationCount(band.gifts.length, 3)
+      const seen = new Map<string, number>()
+      for (let i = 0; i < total; i++) {
+        const { options } = birthdayOffer('population', 100 + i, [], band === BIRTHDAY_COLLEGE_BAND)
+        // the age bands are keyed by age, so only the college band can be swept this way; for the
+        // others the sweep runs inside the band's own span below
+        if (band !== BIRTHDAY_COLLEGE_BAND) continue
+        const key = options.map((o) => o.id).filter((id) => id !== BIRTHDAY_DAY_TOGETHER.id).sort().join('|')
+        seen.set(key, (seen.get(key) ?? 0) + 1)
+      }
+      if (band !== BIRTHDAY_COLLEGE_BAND) continue
+      expect(seen.size, `${bandKeyOf(band)}: ${total} combinations, ${seen.size} distinct in a full cycle`).toBe(total)
+      for (const [key, n] of seen) expect(n, `${key} appeared ${n} times in one cycle`).toBe(1)
+    }
+  })
+
+  it('⭐⭐ HER FOUR COLLEGE BIRTHDAYS ARE FOUR DIFFERENT DIALOGS – the population is exactly four', () => {
+    // C(4,3) = 4 and she has four birthdays there, so the walk hands her every combination the band
+    // owns and never repeats one. Before the walk this was 22% back-to-back identical with a worst
+    // run of three (tools/birthday-pool.ts).
+    for (let s = 0; s < 30; s++) {
+      const seen = new Set<string>()
+      for (let age = 18; age <= 21; age++) {
+        const { options } = birthdayOffer(`four-years-${s}`, age, [], true)
+        seen.add(options.map((o) => o.id).sort().join('|'))
+      }
+      expect(seen.size, `seed ${s}: four college birthdays, ${seen.size} distinct dialogs`).toBe(4)
+    }
+  })
+
+  it('⚠ the walk is immutable and cannot be re-rolled – it depends on the seed, the band and the age', () => {
+    // The property the whole scene rests on (spec §2ab): reloading cannot move the offer, and what
+    // the player chose last year cannot move it either.
+    const a = birthdayOffer('immutable', 24, [])
+    const b = birthdayOffer('immutable', 24, ['familyweek', 'jewellery', 'dog', 'day'])
+    expect(b.options.map((o) => o.id)).toEqual(a.options.map((o) => o.id))
+    // ...and a different career gets a different walk, or the "population" is one global list
+    const other = birthdayOffer('immutable-other', 24, [])
+    const differs = Array.from({ length: 12 }, (_, i) =>
+      birthdayOffer(`walk-seed-${i}`, 24, []).options.map((o) => o.id).sort().join('|'),
+    )
+    expect(new Set(differs).size, 'twelve careers, one dialog between them').toBeGreaterThan(1)
+    expect(other.options).toHaveLength(4)
   })
 })
