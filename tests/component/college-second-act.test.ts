@@ -374,10 +374,13 @@ describe('P5 – the college year block', () => {
     wrapper.unmount()
   })
 
+  // ⚠ RE-AIMED BY ROUND 26 #8, NOT WEAKENED: «Another year и Back on tour поменять местами». The
+  // claim is the one it was – there are TWO answers and the early return is one of them – and the
+  // ORDER is his. Both still wear one class and one weight (ruling 4), which the case below checks.
   it('⭐ TWO ANSWERS, and the early return is one of them', async () => {
     const wrapper = await openCollegeHome(collegeView())
     const labels = wrapper.findAll('.college-answer').map((n) => n.text())
-    expect(labels).toEqual(['Another year', 'Back on tour now'])
+    expect(labels).toEqual(['Back on tour now', 'Another year'])
     wrapper.unmount()
   })
 

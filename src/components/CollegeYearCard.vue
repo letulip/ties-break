@@ -59,11 +59,70 @@ const game = useGameStore()
 const college = computed(() => game.snapshot?.ending?.college ?? null)
 const lastYear = computed(() => college.value?.last ?? null)
 
-/** «Year 1 of 4» – off the engine's own count, never a template's idea of four. */
+/**
+ * ⭐⭐⭐ ROUND 26 #13 / #12 / #11 – «Мне кажется мы что-то напутали с годами колледжа» AND THE CLOCK
+ * IS RIGHT. His save reads `fromWeek 294`, `untilWeek 502`, `doneWeek 502` with four years banked:
+ * 208 weeks, exactly 4.00 years. A walked career reproduces it to the week (86 -> 294, 208 weeks,
+ * four banked years, and `resumeFromCollege` then refuses a fifth with «She is not at college»).
+ * Nothing was ever wrong with the count. What was wrong is THIS LINE, in two ways at once.
+ *
+ * ⚠⚠ (1) IT NAMED THE YEAR AHEAD WHILE EVERYTHING UNDER IT REPORTED THE YEAR BEHIND. At the rest
+ * state with three years banked it read «Year 4 of 4» – the year she has not played yet – above a
+ * facts list, a championship and a call-up that are all year THREE's. That is #12 («хотя вроде бы
+ * колледж всё») and #11 («увидел только одну запись… в разделе Year 4 of 4») in one string: the
+ * player was told the scholarship was over and then shown one grey match row as its whole tennis.
+ *
+ * ⚠⚠ (2) `Math.min(yearsDone + 1, totalYears)` CLAMPED, so three-banked and four-banked printed the
+ * same four words – and the clamp was DEAD as well as ambiguous, which is worth saying once so the
+ * next reader does not restore it. `collegeProgressOf` returns null the moment `doneWeek` is set,
+ * and `resumeFromCollege` graduates her in the SAME call that banks the fourth year, so this card
+ * cannot be on screen with four years behind her: `CollegeDoneDialog` is what draws there. The state
+ * the clamp was defending is the graduation dialog's; the state it made unreadable is the one the
+ * player sits in at every boundary.
+ *
+ * So: one sentence per state, no clamp, and the finished state – unreachable here, kept as a
+ * TRIPWIRE and not as a second gate – says something no other state says.
+ */
 const collegeHeading = computed(() => {
   const c = college.value
   if (!c) return ''
-  return `Year ${Math.min(c.yearsDone + 1, c.totalYears)} of ${c.totalYears}`
+  if (c.yearsDone >= c.totalYears) return `All ${c.totalYears} years spent`
+  const spent = c.yearsDone === 0 ? 'none spent' : `${c.yearsDone} spent`
+  // ⭐ ROUND 24's BIRTHDAY PAUSE IS A STATE HERE TOO. `yearInProgress` is the engine's own fact and
+  // the bottom control already reads it («Finish the year»); a heading calling the year NEXT while
+  // it is half-run would part from the button it stands over by exactly one press.
+  return c.yearInProgress
+    ? `Year ${c.yearsDone + 1} of ${c.totalYears} under way – ${spent}`
+    : `Year ${c.yearsDone + 1} of ${c.totalYears} is next – ${spent}`
+})
+
+/** ⭐⭐ ROUND 26 #11 – WHICH YEAR THE REPORT UNDER IT IS, and it is the year that CLOSED. The facts,
+ *  the championship and the call-up all belong to it, and nothing on the card said so; under a
+ *  heading naming the year ahead, one match row read as the current year's whole season.
+ *
+ *  ⚠ OFF THE BANKED ROW'S OWN `index`, not off a count – `bankCollegeYear` writes
+ *  `years.length + 1`, so the row carries its own number and this line cannot drift from it. Null
+ *  before the first year, where there is no report to head. */
+const collegeReportHead = computed(() => {
+  const y = lastYear.value
+  return y === null ? null : `Year ${y.index}, as it happened`
+})
+
+/** ⭐⭐ ROUND 26 #11 – THE YEAR'S RESULT AS A FACT, and not only as a sentence. «На 4й год увидел
+ *  только одну запись Quarterfinal lost watch… это настолько неявно и не очевидно»: the year's one
+ *  guaranteed tournament finished, and what said so was 13.5px of grey prose among five other lines
+ *  of it. So the outcome is stated where the money and the rank are stated – a label and a value, at
+ *  the rank of a fact – and the sentence below keeps its job of describing the run.
+ *
+ *  ⚠ IT IS THE DRAW SHEET'S OWN WORDS AND NOTHING ELSE (ruling 4, and §6: the game does not grade
+ *  her). «Won it» and «Quarterfinal» are stated identically; there is no adjective in either.
+ *
+ *  ⚠ IT READS THE SAME `league` VIEW THE CHAMPIONSHIP BLOCK BELOW DOES – one field, two readers, so
+ *  the fact and the sentence cannot come to disagree about what happened. */
+const leagueFact = computed(() => {
+  const run = league.value
+  if (run === null) return null
+  return wonTheLeague(run) ? 'Won it' : leagueExitLabel(run)
 })
 
 /**
@@ -326,6 +385,12 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
       <!-- ⭐ R2-18 / PROD-11: the ranking rule, ONCE. See `collegeAwardsNothing`. -->
       <p class="college-rule">{{ collegeAwardsNothing }}</p>
 
+      <!-- ⭐⭐ ROUND 26 #11 – WHOSE YEAR THIS IS. Everything from here to the call-up note is the
+           year that just closed, and the heading above names the one ahead; without this line the
+           two were one block and the owner read the older year's single match row as the new
+           year's whole season. -->
+      <p v-if="collegeReportHead" class="college-report-head">{{ collegeReportHead }}</p>
+
       <dl v-if="lastYear" class="college-facts">
         <!-- ⚠⚠ TWO LABELS, BY THE SIGN (owner, 24.08) – and the word was the whole defect. The
              figure is `fundsCents` now minus `fundsCents` a year ago: what the BALANCE did, never
@@ -347,6 +412,14 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
         <div>
           <dt>Rank</dt>
           <dd>{{ collegeRankSpan }}</dd>
+        </div>
+        <!-- ⭐⭐ ROUND 26 #11 – THE YEAR'S COMPETITION, AT THE RANK OF A FACT. It spans the row
+             because it is the one fact here whose value is a word rather than a figure: «Quarterfinal»
+             at the dd's own size does not fit a 90px column on a 375px phone, and a fact that
+             collides with the one beside it is not more legible than the sentence it came from. -->
+        <div v-if="leagueFact" class="college-fact-wide">
+          <dt>{{ COLLEGE_LEAGUE.label }}</dt>
+          <dd>{{ leagueFact }}</dd>
         </div>
       </dl>
       <!-- ⭐⭐⭐ ROUND 24 – THE ONE TOURNAMENT THE YEAR IS GUARANTEED, and it is drawn ABOVE the
@@ -450,11 +523,30 @@ const collegeCalendar = computed<CollegeWeekRow[]>(() => {
   color: var(--ink-dim);
 }
 
+/* ⭐⭐ ROUND 26 #11 – THE REPORT'S OWN SIGNPOST. The same 10px label the championship and calendar
+   blocks carry, because it is the same kind of thing: the name of the block under it. Declared here
+   rather than added to `.college-league-head`'s selector list on purpose – that block is being
+   worked on in the same wave, and a shared selector is a merge conflict for a cosmetic gain. */
+.college-report-head {
+  margin: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
 .college-facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
   gap: 10px;
   margin: 0;
+}
+
+/* The one fact whose value is a word – it takes the row so a long round name cannot run into the
+   figure beside it. See the template's note. */
+.college-fact-wide {
+  grid-column: 1 / -1;
 }
 
 .college-facts div {
