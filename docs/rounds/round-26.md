@@ -50,10 +50,32 @@ clock he suspects from three directions.
   assumes a poor family. Her wallet is $500k+. **build**: wishes must read the family's means (and
   her college residence), or the pool must be gated.
 
-- [ ] **5. «Проверь пожалуйста что со всех выигрышей после своего счета в банке в 18 лет она
+- [x] **5. «Проверь пожалуйста что со всех выигрышей после своего счета в банке в 18 лет она
   получает свои отчисления и неплохо бы об этом где-то игроку сообщать, кстати»** – **5a measure**:
   verify the 18+ share fires on EVERY prize cheque in a real career. **5b build**: it is invisible –
   no surface tells him it happened.
+  · **5a MEASURED, AND IT IS CLEAN.** `tools/kid-share-audit.ts` walks careers and rebuilds every
+  cheque from OUTSIDE the till – the `tournament` summary row's own `finishIdx`, `prizeCentsFor`,
+  `kidAgeYears`, `kidPrizeShareCents` – then compares with what `world.kidFundsCents` actually did.
+  **5,593 paying cheques over 36 careers to week 620; 4,737 of them from her eighteenth; every one
+  paid the exact ramp amount to the cent; 0 skipped; 0 rounding drift; 0 credits with no cheque
+  behind them (one writer).** The per-age realised rate lands exactly on `ECONOMY.kidShare`:
+  10 / 15 / 20 / 25 / 30 / 35 / 40 / 45 %. There is **only one payer** – `prizeCentsFor` has a
+  single engine call site (`finalizeTournament`, world.ts:528) – so no path can pay a cheque that
+  skips her. The freeze arm shows the four-year hole where it should be (ages 20-22: zero cheques)
+  and full payment at her new rate on the far side. ⚠ The one boundary worth naming: the APPEARANCE
+  FEE and the SPONSOR BONUS are not prize money and land whole in the family wallet – a recorded
+  prior decision (`shared/protocol/offers.ts`: «a brand buys her face, not the family's», the split
+  «until that ships»), not a defect. His own save cross-checks: `kidFundsCents` = $59,220.00 against
+  `careerTotals.prizeCents` = $592,710.00, i.e. gross $651,930.00 and a realised 9.08% – consistent
+  with a career that earned at 10-15% after eighteen and 0% before it, and impossible under any
+  higher rate.
+  · **5b BUILT.** The prize ledger row now names the money and not only the rate –
+  «World Tour 500 prize money – Champion, less her 35% share ($1,750.00)» – so the transfer is
+  legible AT THE MOMENT, on the surface where money speaks; and the Money screen carries a share
+  strip above its tabs (her balance and the ramp, engine-composed via `kidLife.ownAccountNote`, plus
+  the sentence nothing had ever said: the cheque is split **before it reaches this account**).
+  Mounted in `tests/component/round26-money-share.test.ts`, walked in `tests/round26-world-speaks.test.ts`.
 
 - [!] **6. «За первый год в колледже турнир был, но опять сообщили только постфактум, в чем проблема
   использовать наш флоу турниров полностью и дать возможность игроку их смотреть и сопереживать? Я
@@ -72,9 +94,36 @@ clock he suspects from three directions.
   вариантов подарков? Неужели мы не можем нагенерить так, чтобы они если и повторялись, то не так
   часто?»** – **9a answer**: the pool's real size. **9b build**: repetition control.
 
-- [ ] **10. «В новостях во время колледжа вообще пустота, как будто мир умер, мы вроде делали, чтобы
+- [x] **10. «В новостях во время колледжа вообще пустота, как будто мир умер, мы вроде делали, чтобы
   он жил, при том, что даже в highlights на результатах есть какие-то события»** – the world runs
   during the freeze (rivals age, retire, win) and the feed says nothing. **build**.
+  · **THE INVENTORY FIRST, AND IT SAYS «WRITTEN, NOT FILTERED, AND NOT ABOUT ANYTHING».**
+  `tools/college-news-probe.ts`, 5 careers × 4 years = 1,040 freeze weeks: the freeze **writes 3,616
+  rows (3.48/week)**, of which **799 reach the news list (0.77/week, on 49% of freeze weeks)**, and
+  the Home card at the eight rest states holds **15 rows over 9 week groups, 10 of them about the
+  field – and not one of the 40 rest states was empty.** Nothing is being filtered out. What the
+  feed said was «🏆 a stranger won the World Tour 500» **29 times a season** with nothing in it that
+  could ever change. Two structural facts came out of the same probe and shaped the fix: the freeze
+  runs at the **ordinary-row FLOOR** (`rest` pinned at exactly `EVENTS_ORDINARY_FLOOR` = 120 at all
+  40 rest states, because her 241-257 protected match rows plus 23-40 kept milestones fill the rest
+  of `EVENTS_CAP` = 400), so the world's memory is only ~24-30 weeks deep; and the snapshot's last-60
+  window is ~11-14 weeks on top of that. **A once-a-season row is therefore invisible to a college
+  player by arithmetic**, not by luck.
+  · **WHAT NOW SPEAKS.** (1) Every champion line carries the champion's AGE and, where it applies, a
+  «a first season on tour» / «in a last season on tour» clause – **zero new rows**, riding the ~10
+  lines already in every window he opens. (2) `world/fieldNews.ts`: on the season's last week, up to
+  3 named farewells («👋 R. Delaney (#4) has played a last match on tour – retiring at 28 after 10
+  seasons.») plus one turnover line («The tour turns over: 138 professionals retire at the end of
+  this season, 5 of them from the top 100.»); on the boundary, one intake line naming the
+  highest-placed newcomer. All read off `careerAt`, the succession the field has walked since
+  W4-LIVES and never mentioned.
+  · **THE ROW BUDGET, CHOSEN AND MEASURED.** 5 rows a season by construction (3 + 1 + 1), matching
+  the plan's «+~5 lines fits» arithmetic; **20 over a four-year freeze**. Measured over the freeze:
+  news rows 799 → 857 (+7.3%), and the events array at graduation is **401 rows with 39 kept in BOTH
+  arms** – her history is untouched, because every new row is ordinary and the ordinary class is
+  already at its floor. Generational lines visible on the card at a rest state: **0/40 before, 1.8
+  mean after, 33 of 40 rest states carrying at least one.** No points, no prize money, no result
+  rows – `amountCents` is undefined on all of them.
 
 - [ ] **11. «На 4й год увидел только одну запись Quarterfinal lost watch на домашнем экране в
   разделе Year 4 of 4 – это настолько неявно и не очевидно.»** – same root as #6/#7: the year's

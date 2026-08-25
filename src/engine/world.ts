@@ -565,9 +565,19 @@ function finalizeTournament(world: WorldState): void {
       // line against the travel line two rows up and feel the arithmetic. Short dash only.
       // ⚠ AND IT NAMES THE SPLIT WHEN THERE IS ONE, because a prize row that quietly shrank by half
       // would read as a bug in the till. Silent before her eighteenth, where nothing is deducted.
+      //
+      // ⭐⭐ ROUND 26 #5b – ...AND SINCE 25.08 IT NAMES THE MONEY AND NOT ONLY THE RATE. The owner:
+      // «неплохо бы об этом где-то игроку сообщать, кстати». The percentage alone cannot be read
+      // against the figure beside it: a parent looking at «+$3,250.00 · less her 35% share» has to
+      // do the arithmetic to learn what left, and the whole design of this row is that he should be
+      // able to READ it. The `info` row two blocks down already carries the cents, but it has no
+      // `amountCents` and `snapshot.financialEvents` filters on exactly that – so on the MONEY
+      // screen, the one surface a parent opens to look at money, the transfer was invisible. Same
+      // rounding, same variable: `herShare` is the cents the account actually received, not a second
+      // computation of it, so the two rows can never disagree.
       text:
         herShare > 0
-          ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow) / 100}% share`
+          ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow) / 100}% share (${formatCents(herShare)})`
           : `${tier.label} prize money – ${finishLabel(kidFinish)}`,
       amountCents: familyShare,
     })

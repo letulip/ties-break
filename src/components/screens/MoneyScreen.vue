@@ -48,7 +48,7 @@
 //     the export is written on (docs/design/README.md §3, "цвет = смысл").
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { ECONOMY } from '../../engine/economy'
+import { ECONOMY, kidPrizeShareBps } from '../../engine/economy'
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
@@ -128,6 +128,47 @@ const funds = computed(() => formatCents(fundsCents.value))
 // written about – and its "must match world.ts" comment was the drift this screen now cannot have:
 // retune the engine, and this line retunes with it. tests/money-format.test.ts pins the wiring.
 const startingBudget = computed(() => (game.snapshot ? formatCents(STARTING_FUNDS_CENTS[game.snapshot.profile.background]) : ''))
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 26 #5b – HER SHARE, ON THE SCREEN THAT IS ABOUT MONEY
+// =================================================================================================
+//
+// THE OWNER, 24.08: «Проверь пожалуйста что со всех выигрышей после своего счета в банке в 18 лет
+// она получает свои отчисления и неплохо бы об этом где-то игроку сообщать, кстати».
+//
+// ⚠ THE MEASUREMENT SAYS THE MECHANIC IS SOUND AND ONLY THE TELLING WAS MISSING. `tools/
+// kid-share-audit.ts` walked 36 careers past her eighteenth and rebuilt every cheque from outside
+// the till (`prizeCentsFor` on the `tournament` row's own `finishIdx`, `kidPrizeShareCents` on her
+// real age): 4,737 paying cheques from eighteen, every one paid the exact ramp amount to the cent,
+// none skipped, one writer. So this is a surface, not a fix.
+//
+// ⚠ AND WHY IT IS THIS SCREEN. Round-23 #18 put her balance on HER page, which is right and is not
+// where a parent looks at money. The Money screen is – and it was the one place the transfer could
+// not be seen at all: the `info` row `finalizeTournament` writes carries no `amountCents` (booking
+// it as a family expense would count the same cents twice against `careerTotals.spentCents`), and
+// `snapshot.financialEvents` filters on exactly that. So the ledger showed a prize row that had
+// quietly shrunk and nothing that said where the rest went.
+//
+// ⚠ THE SENTENCE IS HONEST ABOUT THE DIRECTION, which is the mechanic the owner asked for – «родитель
+// смотрит, как его доля уменьшается». It says the cheque is split BEFORE this account sees it,
+// because that is what the till does (`world.fundsCents += familyShare`), and it says it without
+// turning into a complaint: the money is hers and the page states it as a fact.
+//
+// ⚠ EVERY FIGURE IS THE ENGINE'S OWN – `trainingBillNote`'s rule twenty lines down and
+// `startingBudget`'s above. The percentage is `kidPrizeShareBps`, the very function the till divides
+// by, read at HER AGE (`snapshot.ageYears`, the one-clock ruling of 09.08 – the same input
+// `finalizeTournament` uses); the ceiling is `ECONOMY.kidShare`; and the balance sentence is the
+// engine-composed `snapshot.life.ownAccount` (kidLife.ownAccountNote), reused rather than re-worded
+// so her page and this strip can never promise different shares.
+const kidShareBps = computed(() => kidPrizeShareBps(game.snapshot?.ageYears ?? 0))
+/** Null before the ramp starts – there is no account, no transfer and nothing to explain yet, which
+ *  is exactly when `ownAccountNote` returns '' too. */
+const kidShareNote = computed<string | null>(() => {
+  const snap = game.snapshot
+  if (!snap || kidShareBps.value <= 0) return null
+  const held = snap.life.ownAccount
+  return held.length > 0 ? held : null
+})
 
 // --- THE PERIOD SWITCHER -----------------------------------------------------------------------
 // U0's SegmentedRow finally absorbs this control. Its own header says so: "THE MONEY SCREEN'S
@@ -789,6 +830,21 @@ const TAB_OPTIONS = [
         before the money runs out for good. One week back in the black clears it.
       </p>
 
+      <!-- ====================== 1a-bis. HER SHARE OF THE CHEQUES ======================
+           ROUND 26 #5b. His words are in the script block above and in
+           tests/component/round26-money-share.test.ts, because Cyrillic inside a <template> is
+           forbidden (tests/template-copy-rules.test.ts). Above the tabs, so it is on the screen
+           whichever tab is open – including the ledger, where the prize rows it is about live. Two
+           sentences and no control: the first is the engine's own (`kidLife.ownAccountNote`,
+           balance + the ramp), the second is the DIRECTION, which is the half nothing in the game
+           had ever said out loud. Absent before her eighteenth. -->
+      <p v-if="kidShareNote" class="money-share" role="note">
+        <strong>{{ kidShareNote }}</strong>
+        Every prize cheque is split before it reaches this account: her part goes to her, the family
+        banks the rest. The prize rows below are what the family kept, and each one names the share
+        that left.
+      </p>
+
       <!-- ========================= 1b. THE SECTION SWITCHER =========================
            Three tabs over what used to be one very long page. Which block sits behind which tab,
            and why the summary cannot be parted from the period switcher, is argued at
@@ -1204,6 +1260,27 @@ const TAB_OPTIONS = [
 }
 
 .money-debt strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ROUND 26 #5b – her share. The debt strip's box, in the app's own "money came in" colour rather
+   than the warning one: this is not a problem, it is where a part of the family's money now goes.
+   `--money-in` is the single token for that meaning (see note 3 in the script header). */
+.money-share {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  border: var(--stroke-hair) solid var(--money-in);
+  background: color-mix(in srgb, var(--money-in) 10%, transparent);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.money-share strong {
+  display: block;
+  margin-bottom: 4px;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
