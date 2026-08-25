@@ -504,6 +504,11 @@ describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got
     const prompts: Array<{ age: number; ask: string; ids: string[]; labels: string[] }> = []
     for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
       resumeFromCollege(world, rng)
+      // ⚠ ADDED AT THE ROUND-26 COLLECT: this walk was written on a branch where the year paused
+      // only for the cake. Another branch of the SAME round taught it to pause for the championship
+      // too, and a walk answering one pause but not the other stalls on the first league week - it
+      // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
+      answerLeagueReveal(world)
       if (pendingBirthday(world) === null) continue
       // ⚠ SET ON THE BIRTHDAY WEEK ITSELF, both purses, because the claim is about what the
       // household has ON THE DAY and four college years of base costs move it.
@@ -598,6 +603,11 @@ describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got
     const rendered: Array<{ year: number; age: number; ask: string; ids: string[] }> = []
     for (let guard = 0; guard < 24 && world.ending?.type === 'college'; guard++) {
       resumeFromCollege(world, rng)
+      // ⚠ ADDED AT THE ROUND-26 COLLECT: this walk was written on a branch where the year paused
+      // only for the cake. Another branch of the SAME round taught it to pause for the championship
+      // too, and a walk answering one pause but not the other stalls on the first league week - it
+      // read 0 college birthdays where four happen. The helper is B's; the call is the merge.
+      answerLeagueReveal(world)
       if (pendingBirthday(world) === null) continue
       world.fundsCents = 584_375_00
       world.kidFundsCents = 59_220_00
