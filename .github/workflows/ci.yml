@@ -42,14 +42,13 @@ jobs:
     # on a wedge and never on a slow-but-working run.
     #
     # ⚠ RAISED 25 -> 35 ON 26.08, AND THE CEILING HAD STOPPED MEANING WHAT ITS NOTE SAYS. The unit
-    # shards it was sized against ran ~4 min locally; round 26 took them to 424 s (the bulk pool went
-    # over birpc's wall and twelve files were given processes of their own - scripts/heavy-tests.mjs
-    # carries the measurement). At CI's ~1.9x that is ~13.5 min for `npm test` alone and ~17 for the
-    # job, so 25 was no longer «well above the honest worst case» - it was 1.5x it, and it would have
-    # started firing on slow-but-working runs, which is the one thing this note says it must never do.
-    # 35 restores the original margin against the measured job. ⚠ IT IS NOT A FIX FOR A STALL: a
-    # wedged bulk pass burns the whole ceiling whatever it is set to, and the fix for that is the
-    # sharding, not this number.
+    # shards it was sized against ran ~4 min locally; round 26's stall fix took them to 328 s - the
+    # bulk pool went over birpc's wall, and the two files genuinely near it now get a process each
+    # (scripts/heavy-tests.mjs carries the measurement, and the twelve-file first attempt that cost
+    # the owner seven minutes of wall clock). 25 was no longer «well above the honest worst case» and
+    # would have started firing on slow-but-working runs, which is the one thing this note says it
+    # must never do. ⚠ IT IS NOT A FIX FOR A STALL: a wedged pass burns whatever ceiling it is given,
+    # and the fix for that is upstream, in the sharding and ultimately in the files themselves.
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v7

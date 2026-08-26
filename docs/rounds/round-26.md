@@ -118,7 +118,6 @@ clock he suspects from three directions.
   because it folds only the college tier table. Re-running the probe is a five-minute job that
   nobody is currently on the hook for.
 
-- [ ] **4. «Очень странное пожелание на день рождения She was looking fares home at two in the
 - [x] **4. «Очень странное пожелание на день рождения She was looking fares home at two in the
   morning для студентки с кошельком 500к+ с предложением подарить велосипед.»** – the wish pool
   assumes a poor family. Her wallet is $500k+. **build**: wishes must read the family's means (and
@@ -157,7 +156,6 @@ clock he suspects from three directions.
 
   Spec: `docs/specs/birthday-and-gifts.md` §9. No schema move.
 
-- [ ] **5. «Проверь пожалуйста что со всех выигрышей после своего счета в банке в 18 лет она
 - [x] **5. «Проверь пожалуйста что со всех выигрышей после своего счета в банке в 18 лет она
   получает свои отчисления и неплохо бы об этом где-то игроку сообщать, кстати»** – **5a measure**:
   verify the 18+ share fires on EVERY prize cheque in a real career. **5b build**: it is invisible –
@@ -291,7 +289,6 @@ clock he suspects from three directions.
   the rows, one for the ask). `tests/condition.test.ts` green, **41550 / `e6b0c709`**, unchanged. No
   persisted state, so **no schema move**. Spec: `docs/specs/birthday-and-gifts.md` §10.
 
-- [ ] **10. «В новостях во время колледжа вообще пустота, как будто мир умер, мы вроде делали, чтобы
 - [x] **10. «В новостях во время колледжа вообще пустота, как будто мир умер, мы вроде делали, чтобы
   он жил, при том, что даже в highlights на результатах есть какие-то события»** – the world runs
   during the freeze (rivals age, retire, win) and the feed says nothing. **build**.
@@ -758,35 +755,54 @@ a repeat, and the record has to show the first fix missing.
   (`ladder.ts:688`). Both are real and neither is on any screen: **backlog, not a defect** – the
   onboarding country step still says nothing about either.
 
-- [ ] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
+- [x] **16. «test-build падает на гите»** – **build/diagnose**: CI is red and the local gate is
   green, so the difference is the runner. Reproduce before guessing.
+  · **REPRODUCED, AND IT WAS DETERMINISTIC RATHER THAN FLAKY.** `round26-money-share.test.ts` had
+  cases landing at 4.5-4.7 s against vitest's 5 s default, on a runner 4-5x slower than this Mac -
+  so the case did not «sometimes» miss the ceiling, it always did. Ceilings raised to 30 s with the
+  arithmetic written above them, and the whole component project was swept for the same shape: the
+  slowest survivor is 1.4 s. Independently confirmed by agent R26-F.
+  · ⚠ **AND THE SAME JOB CAME BACK TWICE MORE, for two different reasons** - the birpc stall and
+  then the seven minutes my own fix for it cost him. Both are #18 below; this item is the timeout
+  ceilings only.
 
-- [x] **18 (his, 26.08, watching the PR). «test-build висит уже 19 минут, подозреваю, что скоро упадет
-  по тайм-ауту»** – he was right, and it was the birpc wall for the THIRD time. Not a wedge and not
-  his PR's content: `npm test` (`scripts/units.mjs`) stalls on the bulk pass, retries once, stalls
-  again, and burns the 25-minute ceiling.
+- [x] **18 (his, 26.08, watching the PR). «test-build висит уже 19 минут… он всё-таки собрался за 21
+  минуту, но это мне кажется очень долго тем не менее»** – both halves are right, and the second half
+  is a correction of my own first fix.
 
-  ⭐ **REPRODUCED ON A QUIET MAC BEFORE ANYTHING WAS TOUCHED**, which is what turned a suspicion into
-  a diagnosis: `TB_UNIT_SKIP_HEAVY=1 npx vitest run --project unit --reporter=json` returned
-  **`success: true`, 3455 tests, 0 failed – and exit 1**. The same all-green-non-zero shape the two
-  earlier occurrences wear. It had already appeared once THIS session, in the first re-gate of #17.
+  **The stall.** birpc's 60 s reporter wall, the third occurrence. `npm test` hangs on the bulk pass,
+  retries once by its own logic, hangs again, and burns the ceiling. Reproduced on a quiet Mac before
+  anything was touched: `TB_UNIT_SKIP_HEAVY=1 npx vitest run --project unit --reporter=json` returned
+  **`success: true`, 3455 tests, 0 failed – and exit 1**, the same all-green-non-zero shape the two
+  earlier occurrences wear.
 
-  ⚠ **AND THE CAUSE IS NEW: no single file is heavy any more – the POOL is.** Every candidate was
-  measured both in-pool and solo, and the contention penalty came out uniformly **x2.9**. The worst
-  file, `college-birthday`, is **77.7 s in-pool and 27 s solo** – nowhere near birpc's 60 s window on
-  its own, and far past it inside a pool of 172 files. Twelve files crossed this repo's own bar (a
-  file near 40 s in-pool is past the window at CI's ~1.9x, so the line is ~32 s); all twelve now have
-  a process each, exactly as the eight before them do. **Not one assertion was trimmed:
-  3642 tests before, 3642 after** – 375 of them simply moved out of the pool. Bulk fell 128 s/3455
-  tests to 95 s/3080, and the slowest shard is now 27 s (~51 s at CI's 1.9x, inside the window).
+  ⚠⚠ **AND THEN I SIZED THE FIX WITH THE WRONG INSTRUMENT.** I ranked candidates by their IN-POOL
+  wall and promoted the twelve above ~32 s. But this Mac has **10 logical cores and 4 performance
+  cores**, and vitest raises ~9 workers – so «in-pool» measured MY LAPTOP'S OVERSUBSCRIPTION (the
+  penalty came out at x2.9, which is just workers/perf-cores) and not anything CI does. A two-core
+  runner raises about two workers: it is already 1:1, so those inflated numbers describe a machine
+  the gate never runs on. The honest per-file cost is the SOLO number, and by that measure only two
+  of the twelve were new to the danger zone – `college-birthday` at 27 s and `coach-travel-edge` at
+  22 s. The other ten were serialised for nothing.
 
-  ⚠ **THE GATE GOT DEARER AND THAT IS THE TRADE**: `unit` went 252 s to **424 s** locally, because
-  twenty shards run serially. The job is now ~17 min against a ceiling of 25 that had been sized for
-  a 4-minute unit step – so the ceiling went to 35, which is the same margin the note claims for
-  itself rather than a new policy. ⚠ Raising it is NOT the fix for a stall: a wedged pass burns
-  whatever ceiling it is given. **The honest next step, when the serial tail costs more than the pool
-  saves, is fewer workers per core – measured – and never fewer tests.** Written into
-  `scripts/heavy-tests.mjs` so the next person meets it there.
+  **What it cost him:** `unit` 252 s -> 411 s locally, and his CI job 10-14 min -> 21. Twenty shards
+  run strictly one at a time, so the serial tail uses ONE core of the runner's two – the worst
+  possible shape on the machine that matters. Corrected to ten heavy files (the original eight, plus
+  the two genuinely slow newcomers, plus the frozen capture for isolation at 11 s): **295 s**, green.
+
+  ⭐ **MEASURED ALTERNATIVES, so the next person does not re-derive them.** All 192 unit files in ONE
+  invocation with `--maxWorkers=4`: **205 s, exit 0, 3642 tests** – faster than both the sharded
+  arrangement AND the original. The heavy tail as three bounded groups instead of twenty singles:
+  **84 s against 331 s serial**. ⚠ Neither is proposed, and the reason is the same as the mistake
+  above: both are levers against OVERSUBSCRIPTION, which is this Mac's problem and not the two-core
+  runner's. Capping workers on a box that already runs 1:1 changes nothing.
+
+  ⚠ **SO THE RESIDUAL RISK IS NAMED RATHER THAN HIDDEN.** On CI a file's wall is roughly its solo
+  cost, and serialising a file does not make it cheaper – it only stops it being slowed FURTHER.
+  `college-birthday` at 27 s solo here is the file genuinely near the window on a slower core, and
+  this repo's own precedent for that is to CUT THE FILE, as `radar` was cut on 11.08 (three files,
+  the same 61 tests, not one seed trimmed). That is the durable fix and it is his call, not mine to
+  take mid-wave. **3642 tests before and after every step above; not one assertion was trimmed.**
 
 - [x] **17. «жду what и checklist проверенный по итогу»** – the PR body, every box earned. Handed over
   26.08 against `2937502`: `CHECK_EXIT=0` from a file (engine purity ok, unit green in 255s, component

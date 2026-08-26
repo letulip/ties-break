@@ -135,19 +135,9 @@ export const HEAVY_UNIT_FILES = [
   // honest next step is fewer workers per core, measured – not fewer tests.
   'tests/college-birthday.test.ts',
   'tests/coach-travel-edge.test.ts',
-  'tests/season-mirror.test.ts',
-  'tests/viz/commentary.test.ts',
-  'tests/blocking-overlay.test.ts',
-  'tests/college-second-act.test.ts',
-  'tests/goldenSaves.test.ts',
-  'tests/world-trio.test.ts',
-  'tests/coach-load.test.ts',
-  'tests/round23-kid-share.test.ts',
   // ⚠ THE FROZEN MAIN CAPTURE LIVES HERE NOW. A shard placement changes nothing it asserts – the
   // capture is still 41550 / e6b0c709 and still fails the same way – but it does mean the RNG law's
   // own guard can no longer be lost to a runner stall that has nothing to do with it.
-  'tests/condition.test.ts',
-  'tests/round26-world-speaks.test.ts',
 ]
 
 /** The same list in the form a VITEST PROJECT's `include`/`exclude` needs.

@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: college
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-08-26
 ---
 
 # College – what the round-24 wave did NOT build
@@ -23,7 +23,7 @@ indexes what remains** – the content lives in those two files and is not resta
 | 5 | **The ranking price** (§7a) – P4 measured that college costs no ranking only because only unranked girls ever take it. The fork becomes a real question in years 2–4 the day a RANKED girl can choose it – mostly already true, needs a career where it can bite, and a re-measure. | [college-as-a-place.md](../plans/college-as-a-place.md) §0, §7a; [college-as-a-second-act-2026-08.md](../specs/college-as-a-second-act-2026-08.md) | a measurement wave, not a ruling | M | Next |
 | 6 | **The politer entry refusal** – entering an event past the departure week is legal and comes back as a full-refund release; «she leaves before this one» as an `entryStatus` reason would refuse at the door instead. Flagged for the owner; touches C2's refusal codes. | [college-departure-2026-08.md](../specs/college-departure-2026-08.md) §3, last bullet | owner's word (it changes a shipped ruling's surface) | S | Next |
 | 7 | **Her opinion at the fork (E1)** – «где-то её мнение увидеть» – PAUSED by the owner 22.08 until the private-life layer's steps 1–2 exist, so the game does not grow a second opinion system. | [college-the-flow.md](../plans/college-the-flow.md) E1 + ruling 4; [the-private-life.md](../plans/the-private-life.md) | private-life steps 1–2 | S (once the stat exists) | Parked |
-| 8 | **A postcard from the year** – one derived line per completed college year (campus detail, the call, coming home). Proposed in the human-language follow-on list; the birthday half was built differently (the pause), the texture half was not. | [human-language-proposals-2026-08-19.md](../plans/human-language-proposals-2026-08-19.md) §P1 | judged against playtest repetition, per that file's own rule | S–M | Later |
+| 8 | **A postcard from the year** – one derived line per completed college year (campus detail, the call, coming home). Proposed in the human-language follow-on list; the birthday half was built differently (the pause), the texture half was not. ⚠ **Round 26 #10 built something ADJACENT and it is not this row**: `campusDigestLine` writes one compressed line per rest week about the WORLD she is away from (rivals aging, retiring, winning), which is why the feed no longer looks dead. The postcard is about HER year – campus detail, the call, coming home – and nobody has written it. | [human-language-proposals-2026-08-19.md](../plans/human-language-proposals-2026-08-19.md) §P1 | judged against playtest repetition, per that file's own rule | S–M | Later |
 
 Related but not college's own: the wallet's four-year rest is the shop's best moment –
 [the-shop-and-the-broker.md](the-shop-and-the-broker.md) §0a, argued in
